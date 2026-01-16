@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-01-08T01:40:02Z",
+    "created": "2026-01-16T08:06:46Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_physics-cb399395-599e-4953-8db0-bfc81d37951f",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_physics-b62c6d49-26a9-48eb-8029-c9221330c8b1",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_physics",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "1286257a27d54d1fe55fad9650ca04c21efbe6e3"
+          "checksumValue": "baf3679b820134b4bf402ae8c22e67163f1bc284"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,327 +27,89 @@
   "name": "deep_causality_physics",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-mlx-sys-0.2.0",
-      "description": "Low-level interface and binding generation for the mlx library",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/mlx-sys@0.2.0",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "mlx-sys",
-      "versionInfo": "0.2.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-unicode-ident-1.0.22",
-      "description": "Determine whether characters have the XID_Start or XID_Continue properties according to Unicode Standard Annex #31",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/unicode-ident@1.0.22",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "(MIT OR Apache-2.0) AND Unicode-3.0",
-      "licenseDeclared": "(MIT OR Apache-2.0) AND Unicode-3.0",
-      "name": "unicode-ident",
-      "versionInfo": "1.0.22"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-serde--core-1.0.228",
-      "description": "Serde traits only, with no support for derive -- use the `serde` crate instead",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/serde_core@1.0.228",
-          "referenceType": "purl"
-        }
-      ],
-      "homepage": "https://serde.rs",
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "serde_core",
-      "versionInfo": "1.0.228"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--topology-0.2.5",
-      "description": "Topological data structures for the DeepCausality project",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_topology",
-      "versionInfo": "0.2.5"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--metric-0.1.1",
-      "description": "Metric signature types and sign conventions for Clifford algebras and physics",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_metric",
-      "versionInfo": "0.1.1"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--ast-0.1.4",
+      "SPDXID": "SPDXRef-Package-deep--causality--ast-0.1.5",
       "description": "AST data structure for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_ast",
-      "versionInfo": "0.1.4"
+      "versionInfo": "0.1.5"
     },
     {
-      "SPDXID": "SPDXRef-Package-serde--derive-1.0.228",
-      "description": "Macros 1.1 implementation of #[derive(Serialize, Deserialize)]",
+      "SPDXID": "SPDXRef-Package-wasip2-1.0.2-plus-wasi-0.2.9",
+      "description": "WASIp2 API bindings for Rust",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/serde_derive@1.0.228",
+          "referenceLocator": "pkg:cargo/wasip2@1.0.2%2Bwasi-0.2.9",
           "referenceType": "purl"
         }
       ],
-      "homepage": "https://serde.rs",
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "serde_derive",
-      "versionInfo": "1.0.228"
+      "licenseConcluded": "Apache-2.0 OR Apache-2.0 OR MIT",
+      "licenseDeclared": "Apache-2.0 OR Apache-2.0 OR MIT",
+      "name": "wasip2",
+      "versionInfo": "1.0.2+wasi-0.2.9"
     },
     {
-      "SPDXID": "SPDXRef-Package-strsim-0.11.1",
-      "description": "Implementations of string similarity metrics. Includes Hamming, Levenshtein,\nOSA, Damerau-Levenshtein, Jaro, Jaro-Winkler, and Sørensen-Dice.\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/strsim@0.11.1",
-          "referenceType": "purl"
-        }
-      ],
-      "homepage": "https://github.com/rapidfuzz/strsim-rs",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "strsim",
-      "versionInfo": "0.11.1"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-toml--parser-1.0.6-plus-spec-1.1.0",
-      "description": "Yet another format-preserving TOML parser.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/toml_parser@1.0.6%2Bspec-1.1.0",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "toml_parser",
-      "versionInfo": "1.0.6+spec-1.1.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-proc-macro-crate-3.4.0",
-      "description": "Replacement for crate (macro_rules keyword) in proc-macros\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/proc-macro-crate@3.4.0",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "proc-macro-crate",
-      "versionInfo": "3.4.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-bitflags-2.10.0",
-      "description": "A macro to generate structures which behave like bitflags.\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/bitflags@2.10.0",
-          "referenceType": "purl"
-        }
-      ],
-      "homepage": "https://github.com/bitflags/bitflags",
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "bitflags",
-      "versionInfo": "2.10.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-parking--lot-0.12.5",
-      "description": "More compact and efficient implementations of the standard synchronization primitives.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/parking_lot@0.12.5",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "parking_lot",
-      "versionInfo": "0.12.5"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.11",
-      "description": "Number utils for for deep_causality crate.",
+      "SPDXID": "SPDXRef-Package-deep--causality--rand-0.1.10",
+      "description": "Random number utils for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.1.11"
+      "name": "deep_causality_rand",
+      "versionInfo": "0.1.10"
     },
     {
-      "SPDXID": "SPDXRef-Package-paste-1.0.15",
-      "description": "Macros for all your token pasting needs",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/paste@1.0.15",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "paste",
-      "versionInfo": "1.0.15"
+      "SPDXID": "SPDXRef-Package-deep--causality--physics-0.4.0",
+      "description": "Standard library of physics formulas and engineering primitives for DeepCausality.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_physics",
+      "versionInfo": "0.4.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-thiserror-impl-2.0.17",
-      "description": "Implementation detail of the `thiserror` crate",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/thiserror-impl@2.0.17",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "thiserror-impl",
-      "versionInfo": "2.0.17"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--sparse-0.1.3",
+      "SPDXID": "SPDXRef-Package-deep--causality--sparse-0.1.4",
       "description": "Spare matrix data structure for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_sparse",
-      "versionInfo": "0.1.3"
+      "versionInfo": "0.1.4"
     },
     {
-      "SPDXID": "SPDXRef-Package-num-traits-0.2.19",
-      "description": "Numeric traits for generic mathematics",
+      "SPDXID": "SPDXRef-Package-libm-0.2.15",
+      "description": "libm in pure Rust",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/num-traits@0.2.19",
+          "referenceLocator": "pkg:cargo/libm@0.2.15",
           "referenceType": "purl"
         }
       ],
-      "homepage": "https://github.com/rust-num/num-traits",
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "num-traits",
-      "versionInfo": "0.2.19"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-thiserror-2.0.17",
-      "description": "derive(Error)",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/thiserror@2.0.17",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "thiserror",
-      "versionInfo": "2.0.17"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-itertools-0.14.0",
-      "description": "Extra iterator adaptors, iterator methods, free functions, and macros.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/itertools@0.14.0",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "itertools",
-      "versionInfo": "0.14.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-crunchy-0.2.4",
-      "description": "Crunchy unroller: deterministically unroll constant loops",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/crunchy@0.2.4",
-          "referenceType": "purl"
-        }
-      ],
-      "homepage": "https://github.com/eira-fransham/crunchy",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "crunchy",
-      "versionInfo": "0.2.4"
+      "name": "libm",
+      "versionInfo": "0.2.15"
     },
     {
-      "SPDXID": "SPDXRef-Package-indexmap-2.12.1",
-      "description": "A hash table with consistent order and fast iteration.",
+      "SPDXID": "SPDXRef-Package-wit-bindgen-0.51.0",
+      "description": "Rust bindings generator and runtime support for WIT and the component model.\nUsed when compiling Rust programs to the component model.\n",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/indexmap@2.12.1",
+          "referenceLocator": "pkg:cargo/wit-bindgen@0.51.0",
           "referenceType": "purl"
         }
       ],
-      "licenseConcluded": "Apache-2.0 OR MIT",
-      "licenseDeclared": "Apache-2.0 OR MIT",
-      "name": "indexmap",
-      "versionInfo": "2.12.1"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-half-2.7.1",
-      "description": "Half-precision floating point f16 and bf16 types for Rust implementing the IEEE 754-2008 standard binary16 and bfloat16 types.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/half@2.7.1",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "half",
-      "versionInfo": "2.7.1"
+      "homepage": "https://github.com/bytecodealliance/wit-bindgen",
+      "licenseConcluded": "Apache-2.0 OR Apache-2.0 OR MIT",
+      "licenseDeclared": "Apache-2.0 OR Apache-2.0 OR MIT",
+      "name": "wit-bindgen",
+      "versionInfo": "0.51.0"
     },
     {
       "SPDXID": "SPDXRef-Package-r-efi-5.3.0",
@@ -367,458 +129,56 @@
       "versionInfo": "5.3.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-darling--core-0.21.3",
-      "description": "Helper crate for proc-macro library for reading attributes into structs when\nimplementing custom derives. Use https://crates.io/crates/darling in your code.\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/darling_core@0.21.3",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "darling_core",
-      "versionInfo": "0.21.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-winnow-0.7.14",
-      "description": "A byte-oriented, zero-copy, parser combinators library",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/winnow@0.7.14",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "winnow",
-      "versionInfo": "0.7.14"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-wit-bindgen-0.46.0",
-      "description": "Rust bindings generator and runtime support for WIT and the component model.\nUsed when compiling Rust programs to the component model.\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/wit-bindgen@0.46.0",
-          "referenceType": "purl"
-        }
-      ],
-      "homepage": "https://github.com/bytecodealliance/wit-bindgen",
-      "licenseConcluded": "Apache-2.0 OR Apache-2.0 OR MIT",
-      "licenseDeclared": "Apache-2.0 OR Apache-2.0 OR MIT",
-      "name": "wit-bindgen",
-      "versionInfo": "0.46.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-mach-sys-0.5.4",
-      "description": "forked from original mach, and merge from mach2/machx. A Rust interface to the user-space API of the Mach 3.0 kernel that underlies OSX.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/mach-sys@0.5.4",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "GPL-3.0 OR Apache-2.0",
-      "licenseDeclared": "GPL-3.0 OR Apache-2.0",
-      "name": "mach-sys",
-      "versionInfo": "0.5.4"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.2.7",
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.3.0",
       "description": "HKT traits for for the deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_haft",
-      "versionInfo": "0.2.7"
+      "versionInfo": "0.3.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-darling--macro-0.21.3",
-      "description": "Internal support for a proc-macro library for reading attributes into structs when\nimplementing custom derives. Use https://crates.io/crates/darling in your code.\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/darling_macro@0.21.3",
-          "referenceType": "purl"
-        }
-      ],
+      "SPDXID": "SPDXRef-Package-deep--causality--topology-0.3.0",
+      "description": "Topological data structures for the DeepCausality project",
+      "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "darling_macro",
-      "versionInfo": "0.21.3"
+      "name": "deep_causality_topology",
+      "versionInfo": "0.3.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-toml--edit-0.23.10-plus-spec-1.0.0",
-      "description": "Yet another format-preserving TOML parser.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/toml_edit@0.23.10%2Bspec-1.0.0",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "toml_edit",
-      "versionInfo": "0.23.10+spec-1.0.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-fnv-1.0.7",
-      "description": "Fowler–Noll–Vo hash function",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/fnv@1.0.7",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "Apache-2.0 OR MIT",
-      "licenseDeclared": "Apache-2.0 OR MIT",
-      "name": "fnv",
-      "versionInfo": "1.0.7"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-windows-link-0.2.1",
-      "description": "Linking for Windows",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/windows-link@0.2.1",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "windows-link",
-      "versionInfo": "0.2.1"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-getrandom-0.3.4",
-      "description": "A small cross-platform library for retrieving random data from system source",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/getrandom@0.3.4",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "getrandom",
-      "versionInfo": "0.3.4"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--tensor-0.2.2",
+      "SPDXID": "SPDXRef-Package-deep--causality--tensor-0.3.0",
       "description": "Tensor data structure for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_tensor",
-      "versionInfo": "0.2.2"
+      "versionInfo": "0.3.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-ident--case-1.0.1",
-      "description": "Utility for applying case rules to Rust identifiers.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/ident_case@1.0.1",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "ident_case",
-      "versionInfo": "1.0.1"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-zerocopy-0.8.31",
-      "description": "Zerocopy makes zero-cost memory manipulation effortless. We write \"unsafe\" so you don't have to.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/zerocopy@0.8.31",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "BSD-2-Clause OR Apache-2.0 OR MIT",
-      "licenseDeclared": "BSD-2-Clause OR Apache-2.0 OR MIT",
-      "name": "zerocopy",
-      "versionInfo": "0.8.31"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-mlx-macros-0.25.3",
-      "description": "Procedural macros for mlx-rs",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/mlx-macros@0.25.3",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "mlx-macros",
-      "versionInfo": "0.25.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-num--enum--derive-0.7.5",
-      "description": "Internal implementation details for ::num_enum (Procedural macros to make inter-operation between primitives and enums easier)",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/num_enum_derive@0.7.5",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "BSD-3-Clause OR MIT OR Apache-2.0",
-      "licenseDeclared": "BSD-3-Clause OR MIT OR Apache-2.0",
-      "name": "num_enum_derive",
-      "versionInfo": "0.7.5"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-lock--api-0.4.14",
-      "description": "Wrappers to create fully-featured Mutex and RwLock types. Compatible with no_std.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/lock_api@0.4.14",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "lock_api",
-      "versionInfo": "0.4.14"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--rand-0.1.9",
-      "description": "Random number utils for for deep_causality crate.",
+      "SPDXID": "SPDXRef-Package-deep--causality--multivector-0.3.0",
+      "description": "Multivector and MultiField implementation for DeepCausality",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_rand",
-      "versionInfo": "0.1.9"
+      "name": "deep_causality_multivector",
+      "versionInfo": "0.3.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-wasip2-1.0.1-plus-wasi-0.2.4",
-      "description": "WASIp2 API bindings for Rust",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/wasip2@1.0.1%2Bwasi-0.2.4",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "Apache-2.0 OR Apache-2.0 OR MIT",
-      "licenseDeclared": "Apache-2.0 OR Apache-2.0 OR MIT",
-      "name": "wasip2",
-      "versionInfo": "1.0.1+wasi-0.2.4"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-either-1.15.0",
-      "description": "The enum `Either` with variants `Left` and `Right` is a general purpose sum type with two cases.\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/either@1.15.0",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "either",
-      "versionInfo": "1.15.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--physics-0.3.1",
-      "description": "Standard library of physics formulas and engineering primitives for DeepCausality.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_physics",
-      "versionInfo": "0.3.1"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-mlx-internal-macros-0.25.3",
-      "description": "Internal procedural macros for mlx-rs",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/mlx-internal-macros@0.25.3",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "mlx-internal-macros",
-      "versionInfo": "0.25.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-smallvec-1.15.1",
-      "description": "'Small vector' optimization: store up to a small number of items on the stack",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/smallvec@1.15.1",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "smallvec",
-      "versionInfo": "1.15.1"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-mlx-rs-0.25.3",
-      "description": "Unofficial rust wrapper for Apple's mlx machine learning library.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/mlx-rs@0.25.3",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "mlx-rs",
-      "versionInfo": "0.25.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-darling-0.21.3",
-      "description": "A proc-macro library for reading attributes into structs when\nimplementing custom derives.\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/darling@0.21.3",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "darling",
-      "versionInfo": "0.21.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-hashbrown-0.16.1",
-      "description": "A Rust port of Google's SwissTable hash map",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/hashbrown@0.16.1",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "hashbrown",
-      "versionInfo": "0.16.1"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-strum--macros-0.27.2",
-      "description": "Helpful macros for working with enums and strings",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/strum_macros@0.27.2",
-          "referenceType": "purl"
-        }
-      ],
-      "homepage": "https://github.com/Peternator7/strum",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "strum_macros",
-      "versionInfo": "0.27.2"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-syn-2.0.111",
-      "description": "Parser for Rust source code",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/syn@2.0.111",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "syn",
-      "versionInfo": "2.0.111"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-libm-0.2.15",
-      "description": "libm in pure Rust",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/libm@0.2.15",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "libm",
-      "versionInfo": "0.2.15"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-equivalent-1.0.2",
-      "description": "Traits for key comparison in maps.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/equivalent@1.0.2",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "Apache-2.0 OR MIT",
-      "licenseDeclared": "Apache-2.0 OR MIT",
-      "name": "equivalent",
-      "versionInfo": "1.0.2"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-libc-0.2.178",
+      "SPDXID": "SPDXRef-Package-libc-0.2.180",
       "description": "Raw FFI bindings to platform libraries like libc.",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/libc@0.2.178",
+          "referenceLocator": "pkg:cargo/libc@0.2.180",
           "referenceType": "purl"
         }
       ],
       "licenseConcluded": "MIT OR Apache-2.0",
       "licenseDeclared": "MIT OR Apache-2.0",
       "name": "libc",
-      "versionInfo": "0.2.178"
+      "versionInfo": "0.2.180"
     },
     {
       "SPDXID": "SPDXRef-Package-cfg-if-1.0.4",
@@ -837,586 +197,99 @@
       "versionInfo": "1.0.4"
     },
     {
-      "SPDXID": "SPDXRef-Package-heck-0.5.0",
-      "description": "heck is a case conversion library.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/heck@0.5.0",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "heck",
-      "versionInfo": "0.5.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-proc-macro2-1.0.104",
-      "description": "A substitute implementation of the compiler's `proc_macro` API to decouple token-based libraries from the procedural macro use case.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/proc-macro2@1.0.104",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "proc-macro2",
-      "versionInfo": "1.0.104"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-scopeguard-1.2.0",
-      "description": "A RAII scope guard that will run a given closure when it goes out of scope,\neven if the code between panics (assuming unwinding panic).\n\nDefines the macros `defer!`, `defer_on_unwind!`, `defer_on_success!` as\nshorthands for guards with one of the implemented strategies.\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/scopeguard@1.2.0",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "scopeguard",
-      "versionInfo": "1.2.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-num-complex-0.4.6",
-      "description": "Complex numbers implementation for Rust",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/num-complex@0.4.6",
-          "referenceType": "purl"
-        }
-      ],
-      "homepage": "https://github.com/rust-num/num-complex",
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "num-complex",
-      "versionInfo": "0.4.6"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-zerocopy-derive-0.8.31",
-      "description": "Custom derive for traits from the zerocopy crate",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/zerocopy-derive@0.8.31",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "BSD-2-Clause OR Apache-2.0 OR MIT",
-      "licenseDeclared": "BSD-2-Clause OR Apache-2.0 OR MIT",
-      "name": "zerocopy-derive",
-      "versionInfo": "0.8.31"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-strum-0.27.2",
-      "description": "Helpful macros for working with enums and strings",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/strum@0.27.2",
-          "referenceType": "purl"
-        }
-      ],
-      "homepage": "https://github.com/Peternator7/strum",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "strum",
-      "versionInfo": "0.27.2"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--core-0.0.3",
+      "SPDXID": "SPDXRef-Package-deep--causality--core-0.0.4",
       "description": "Core types for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_core",
-      "versionInfo": "0.0.3"
+      "versionInfo": "0.0.4"
     },
     {
-      "SPDXID": "SPDXRef-Package-redox--syscall-0.5.18",
-      "description": "A Rust library to access raw Redox system calls",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/redox_syscall@0.5.18",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "redox_syscall",
-      "versionInfo": "0.5.18"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-memchr-2.7.6",
-      "description": "Provides extremely fast (uses SIMD on x86_64, aarch64 and wasm32) routines for\n1, 2 or 3 byte search and single substring search.\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/memchr@2.7.6",
-          "referenceType": "purl"
-        }
-      ],
-      "homepage": "https://github.com/BurntSushi/memchr",
-      "licenseConcluded": "Unlicense OR MIT",
-      "licenseDeclared": "Unlicense OR MIT",
-      "name": "memchr",
-      "versionInfo": "2.7.6"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-toml--datetime-0.7.5-plus-spec-1.1.0",
-      "description": "A TOML-compatible datetime type",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/toml_datetime@0.7.5%2Bspec-1.1.0",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "toml_datetime",
-      "versionInfo": "0.7.5+spec-1.1.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--multivector-0.2.5",
-      "description": "Multivector and MultiField implementation for DeepCausality",
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.12",
+      "description": "Number utils for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_multivector",
-      "versionInfo": "0.2.5"
+      "name": "deep_causality_num",
+      "versionInfo": "0.1.12"
     },
     {
-      "SPDXID": "SPDXRef-Package-quote-1.0.42",
-      "description": "Quasi-quoting macro quote!(...)",
+      "SPDXID": "SPDXRef-Package-getrandom-0.3.4",
+      "description": "A small cross-platform library for retrieving random data from system source",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/quote@1.0.42",
+          "referenceLocator": "pkg:cargo/getrandom@0.3.4",
           "referenceType": "purl"
         }
       ],
       "licenseConcluded": "MIT OR Apache-2.0",
       "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "quote",
-      "versionInfo": "1.0.42"
+      "name": "getrandom",
+      "versionInfo": "0.3.4"
     },
     {
-      "SPDXID": "SPDXRef-Package-num--enum-0.7.5",
-      "description": "Procedural macros to make inter-operation between primitives and enums easier.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/num_enum@0.7.5",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "BSD-3-Clause OR MIT OR Apache-2.0",
-      "licenseDeclared": "BSD-3-Clause OR MIT OR Apache-2.0",
-      "name": "num_enum",
-      "versionInfo": "0.7.5"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-parking--lot--core-0.9.12",
-      "description": "An advanced API for creating custom synchronization primitives.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/parking_lot_core@0.9.12",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "parking_lot_core",
-      "versionInfo": "0.9.12"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-rustversion-1.0.22",
-      "description": "Conditional compilation according to rustc compiler version",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/rustversion@1.0.22",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "rustversion",
-      "versionInfo": "1.0.22"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-dyn-clone-1.0.20",
-      "description": "Clone trait that is dyn-compatible",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/dyn-clone@1.0.20",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "dyn-clone",
-      "versionInfo": "1.0.20"
+      "SPDXID": "SPDXRef-Package-deep--causality--metric-0.1.2",
+      "description": "Metric signature types and sign conventions for Clifford algebras and physics",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_metric",
+      "versionInfo": "0.1.2"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-toml--edit-0.23.10-plus-spec-1.0.0",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-proc-macro-crate-3.4.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.4.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-dyn-clone-1.0.20",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.5",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-proc-macro2-1.0.104",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-internal-macros-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.11",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.2.2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-quote-1.0.42",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-darling--macro-0.21.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-syn-2.0.111",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-strum--macros-0.27.2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.2.2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-mlx-sys-0.2.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ident--case-1.0.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-darling--core-0.21.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.2.2",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.2.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--sparse-0.1.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.2.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.11",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.1.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-parking--lot-0.12.5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-parking--lot--core-0.9.12",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-parking--lot-0.12.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-wasip2-1.0.1-plus-wasi-0.2.4",
+      "relatedSpdxElement": "SPDXRef-Package-wasip2-1.0.2-plus-wasi-0.2.9",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-getrandom-0.3.4"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-mlx-macros-0.25.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.1.4"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-cfg-if-1.0.4",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-half-2.7.1"
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-syn-2.0.111",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.3.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-serde--derive-1.0.228"
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.4.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-proc-macro2-1.0.104",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.12",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-strum--macros-0.27.2"
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.7",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--topology-0.3.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.2.5"
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.4.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-half-2.7.1",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.10",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-num-traits-0.2.19",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.12",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.15",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-num-traits-0.2.19"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-quote-1.0.42",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-num--enum--derive-0.7.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-proc-macro2-1.0.104",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-macros-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-proc-macro2-1.0.104",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-serde--derive-1.0.228"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.11",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.2.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-darling-0.21.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-macros-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-quote-1.0.42",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-strum--macros-0.27.2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-serde--core-1.0.228",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-toml--datetime-0.7.5-plus-spec-1.1.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-darling--core-0.21.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-darling--macro-0.21.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-indexmap-2.12.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-toml--edit-0.23.10-plus-spec-1.0.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-cfg-if-1.0.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-parking--lot--core-0.9.12"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--physics-0.3.1",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_physics"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.0.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.2.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-num-complex-0.4.6",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-syn-2.0.111",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-darling--core-0.21.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-num--enum-0.7.5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-toml--parser-1.0.6-plus-spec-1.1.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-toml--edit-0.23.10-plus-spec-1.0.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-hashbrown-0.16.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-indexmap-2.12.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-serde--derive-1.0.228",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-serde--core-1.0.228"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-cfg-if-1.0.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-getrandom-0.3.4"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--core-0.0.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-itertools-0.14.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-paste-1.0.15",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.11",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.2.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.11",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.9"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-darling-0.21.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-internal-macros-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-zerocopy-0.8.31",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-half-2.7.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--multivector-0.2.5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.2.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-quote-1.0.42",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-macros-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-libc-0.2.178",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-getrandom-0.3.4"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-proc-macro2-1.0.104",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-num--enum--derive-0.7.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-mach-sys-0.5.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-quote-1.0.42",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-internal-macros-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-mlx-rs-0.25.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.2.2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-smallvec-1.15.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--multivector-0.2.5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.3.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-proc-macro-crate-3.4.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-num--enum--derive-0.7.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-mlx-rs-0.25.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.3.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-either-1.15.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-itertools-0.14.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-quote-1.0.42",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-zerocopy-derive-0.8.31"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-syn-2.0.111",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-num--enum--derive-0.7.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-equivalent-1.0.2",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-indexmap-2.12.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-winnow-0.7.14",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-toml--parser-1.0.6-plus-spec-1.1.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-proc-macro2-1.0.104",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-quote-1.0.42"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-strsim-0.11.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-darling--core-0.21.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.4.0"
     },
     {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_physics",
@@ -1424,309 +297,134 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-unicode-ident-1.0.22",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-syn-2.0.111"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-syn-2.0.111",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-darling--macro-0.21.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.1.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.2.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--sparse-0.1.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.3.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-unicode-ident-1.0.22",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-proc-macro2-1.0.104"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-rustversion-1.0.22",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-num--enum-0.7.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-proc-macro2-1.0.104",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-syn-2.0.111"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-num-traits-0.2.19",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-num-complex-0.4.6"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-memchr-2.7.6",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-winnow-0.7.14"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-libc-0.2.178",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-bitflags-2.10.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-redox--syscall-0.5.18"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-syn-2.0.111",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-macros-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--topology-0.2.5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.3.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-proc-macro2-1.0.104",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-darling--core-0.21.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-quote-1.0.42",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-serde--derive-1.0.228"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-smallvec-1.15.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-parking--lot--core-0.9.12"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-fnv-1.0.7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-darling--core-0.21.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.0.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.3.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-itertools-0.14.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-internal-macros-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-mlx-internal-macros-0.25.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-proc-macro2-1.0.104",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-zerocopy-derive-0.8.31"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-redox--syscall-0.5.18",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-parking--lot--core-0.9.12"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-num--enum--derive-0.7.5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-num--enum-0.7.5"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-r-efi-5.3.0",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-getrandom-0.3.4"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.7",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.1.2",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.2.5"
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.1.1",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.1.2",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.2.5"
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.9",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.3.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.3.1"
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.11",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.12",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.3.1"
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-num-traits-0.2.19",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-half-2.7.1"
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.7",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.0.4",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.2.2"
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-syn-2.0.111",
+      "relatedSpdxElement": "SPDXRef-Package-wit-bindgen-0.51.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-internal-macros-0.25.3"
+      "spdxElementId": "SPDXRef-Package-wasip2-1.0.2-plus-wasi-0.2.9"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.2.2",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.12",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.3.1"
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.3.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--physics-0.4.0",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_physics"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-libm-0.2.15",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.1.11"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-quote-1.0.42",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-syn-2.0.111"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-libc-0.2.178",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-parking--lot--core-0.9.12"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.1.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.3.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.3.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-toml--datetime-0.7.5-plus-spec-1.1.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-toml--edit-0.23.10-plus-spec-1.0.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.2.2",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.2.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-crunchy-0.2.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-half-2.7.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-mlx-rs-0.25.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.2.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-syn-2.0.111",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-zerocopy-derive-0.8.31"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-thiserror-impl-2.0.17",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-thiserror-2.0.17"
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.1.12"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-getrandom-0.3.4",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.9"
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.10"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-quote-1.0.42",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.12",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-darling--core-0.21.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.10"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.7",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.10",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.1.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.4.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-heck-0.5.0",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--multivector-0.3.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-strum--macros-0.27.2"
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.4.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-scopeguard-1.2.0",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--sparse-0.1.4",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-lock--api-0.4.14"
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.4.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-windows-link-0.2.1",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.3.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-parking--lot--core-0.9.12"
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-proc-macro2-1.0.104",
+      "relatedSpdxElement": "SPDXRef-Package-libc-0.2.180",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-thiserror-impl-2.0.17"
+      "spdxElementId": "SPDXRef-Package-getrandom-0.3.4"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-strum-0.27.2",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.1.2",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.4.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-syn-2.0.111",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.12",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-thiserror-impl-2.0.17"
+      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.1.4"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-zerocopy-derive-0.8.31",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.0.4",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-zerocopy-0.8.31"
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.4.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-darling--core-0.21.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--sparse-0.1.4",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-darling-0.21.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-quote-1.0.42",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--multivector-0.3.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-thiserror-impl-2.0.17"
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-lock--api-0.4.14",
+      "relatedSpdxElement": "SPDXRef-Package-cfg-if-1.0.4",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-parking--lot-0.12.5"
+      "spdxElementId": "SPDXRef-Package-getrandom-0.3.4"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-winnow-0.7.14",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-toml--edit-0.23.10-plus-spec-1.0.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-darling--macro-0.21.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-darling-0.21.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-strum--macros-0.27.2",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-strum-0.27.2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-wit-bindgen-0.46.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-wasip2-1.0.1-plus-wasi-0.2.4"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-thiserror-2.0.17",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-mlx-rs-0.25.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--core-0.0.4"
     }
   ],
   "spdxVersion": "SPDX-2.3"

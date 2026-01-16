@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-12-03T03:23:43Z",
+    "created": "2026-01-16T08:06:47Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_tensor-3dab8d88-1e71-498a-84ec-0551b77ece1e",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_tensor-0e8c7eb1-4402-4c7a-aede-6208de5c847c",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_tensor",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "71ed1fe493c0c6d11fa333372fe6ce6b1fe3d2f0"
+          "checksumValue": "baf3679b820134b4bf402ae8c22e67163f1bc284"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -26,24 +26,6 @@
   ],
   "name": "deep_causality_tensor",
   "packages": [
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--tensor-0.1.9",
-      "description": "Tensor data structure for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_tensor",
-      "versionInfo": "0.1.9"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.8",
-      "description": "Number utils for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.1.8"
-    },
     {
       "SPDXID": "SPDXRef-Package-libm-0.2.15",
       "description": "libm in pure Rust",
@@ -61,29 +43,57 @@
       "versionInfo": "0.2.15"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.2.4",
-      "description": "HKT traits for for the deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_haft",
-      "versionInfo": "0.2.4"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--ast-0.1.2",
+      "SPDXID": "SPDXRef-Package-deep--causality--ast-0.1.5",
       "description": "AST data structure for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_ast",
-      "versionInfo": "0.1.2"
+      "versionInfo": "0.1.5"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--tensor-0.3.0",
+      "description": "Tensor data structure for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_tensor",
+      "versionInfo": "0.3.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.3.0",
+      "description": "HKT traits for for the deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_haft",
+      "versionInfo": "0.3.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.12",
+      "description": "Number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num",
+      "versionInfo": "0.1.12"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.8",
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.15",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.1.9"
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.1.12"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.3.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.3.0",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_tensor"
     },
     {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_tensor",
@@ -91,29 +101,14 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.4",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.1.9"
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.2",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.12",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.1.9"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.8",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--haft-0.2.4"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.15",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.1.8"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.1.9",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_tensor"
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.3.0"
     }
   ],
   "spdxVersion": "SPDX-2.3"
