@@ -352,9 +352,9 @@ where
     ) -> Result<GaugeField<G, F2, R>, TopologyError>
     where
         G: GaugeGroup,
-        A: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Clone,
-        B: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Clone,
-        F2: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Clone + Default, // Must serve as M
+        A: Field + Copy + Default + PartialOrd + Clone,
+        B: Field + Copy + Default + PartialOrd + Clone,
+        F2: Field + Copy + Default + PartialOrd + Clone + Default, // Must serve as M
         R: RealField,
         Func: Fn(&A, &B) -> F2,
     {
@@ -409,8 +409,8 @@ where
     ) -> Result<GaugeField<G, F2, R>, TopologyError>
     where
         G: GaugeGroup,
-        A: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Clone,
-        F2: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Clone + Default,
+        A: Field + Copy + Default + PartialOrd + Clone,
+        F2: Field + Copy + Default + PartialOrd + Clone + Default,
         R: RealField,
         Func: Fn(&A) -> F2,
     {
@@ -464,7 +464,7 @@ where
     ) -> Option<CausalTensor<T>>
     where
         G: GaugeGroup,
-        T: Field + Copy + Default + PartialOrd + Send + Sync + 'static, // T is from impl bounds
+        T: Field + Copy + Default + PartialOrd, // T is from impl bounds
         R: RealField,
     {
         if !G::IS_ABELIAN {

@@ -11,7 +11,7 @@ use std::marker::PhantomData;
 
 impl<
     G: GaugeGroup,
-    M: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Debug,
+    M: Field + Copy + Default + PartialOrd + Debug,
     R: RealField + FromPrimitive + deep_causality_num::ToPrimitive,
 > LinkVariable<G, M, R>
 {

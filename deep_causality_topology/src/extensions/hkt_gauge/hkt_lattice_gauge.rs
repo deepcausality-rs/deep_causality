@@ -62,7 +62,7 @@ impl<G: GaugeGroup, const D: usize, M> LatticeGaugeFieldWitness<G, D, M> {
 
 impl<G: GaugeGroup, const D: usize, M> HKT for LatticeGaugeFieldWitness<G, D, M>
 where
-    M: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
+    M: Field + Copy + Default + PartialOrd,
 {
     type Constraint = NoConstraint;
     type Type<R>
@@ -85,7 +85,7 @@ where
 impl<G: GaugeGroup, const D: usize, M> Functor<LatticeGaugeFieldWitness<G, D, M>>
     for LatticeGaugeFieldWitness<G, D, M>
 where
-    M: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
+    M: Field + Copy + Default + PartialOrd,
 {
     /// Map a function over the beta parameter of the lattice gauge field.
     ///
@@ -115,7 +115,7 @@ where
 impl<G: GaugeGroup, const D: usize, M> Applicative<LatticeGaugeFieldWitness<G, D, M>>
     for LatticeGaugeFieldWitness<G, D, M>
 where
-    M: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
+    M: Field + Copy + Default + PartialOrd,
 {
     /// Apply a function wrapped in a field to a value wrapped in a field.
     fn apply<A, B, F>(
@@ -147,7 +147,7 @@ where
 impl<G: GaugeGroup, const D: usize, M> Pure<LatticeGaugeFieldWitness<G, D, M>>
     for LatticeGaugeFieldWitness<G, D, M>
 where
-    M: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
+    M: Field + Copy + Default + PartialOrd,
 {
     /// Lift a value into a lattice gauge field context.
     ///
@@ -178,7 +178,7 @@ where
 impl<G: GaugeGroup, const D: usize, M> Monad<LatticeGaugeFieldWitness<G, D, M>>
     for LatticeGaugeFieldWitness<G, D, M>
 where
-    M: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
+    M: Field + Copy + Default + PartialOrd,
 {
     /// Monadic bind for chaining lattice gauge field transformations.
     fn bind<A, B, F>(ma: LatticeGaugeField<G, D, M, A>, f: F) -> LatticeGaugeField<G, D, M, B>
@@ -218,8 +218,8 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
         mut f: F,
     ) -> LatticeGaugeField<G, D, B, R>
     where
-        A: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Debug + Clone,
-        B: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Debug + Clone,
+        A: Field + Copy + Default + PartialOrd + Debug + Clone,
+        B: Field + Copy + Default + PartialOrd + Debug + Clone,
         F: FnMut(A) -> B,
     {
         let lattice = field.lattice_arc().clone();
@@ -270,7 +270,7 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
         mut f: F,
     ) -> Result<LatticeGaugeField<G, D, T, R>, TopologyError>
     where
-        T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Debug + Clone,
+        T: Field + Copy + Default + PartialOrd + Clone + std::fmt::Debug,
         F: FnMut(&T, &T) -> T,
     {
         // Validate lattice shapes match
@@ -327,12 +327,9 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
             + Copy
             + Default
             + PartialOrd
-            + Send
-            + Sync
-            + 'static
-            + Debug
             + Clone
-            + std::ops::Mul<Output = T>,
+            + std::ops::Mul<Output = T>
+            + std::fmt::Debug,
     {
         let factor_clone = factor;
         Self::map_field(field, move |x| x * factor_clone)
@@ -346,16 +343,13 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
         beta: R,
     ) -> Result<LatticeGaugeField<G, D, T, R>, TopologyError>
     where
-        T: deep_causality_num::Field
+        T: Field
             + Copy
             + Default
             + PartialOrd
-            + Send
-            + Sync
-            + 'static
-            + Debug
             + ComplexField<R>
-            + DivisionAlgebra<R>,
+            + DivisionAlgebra<R>
+            + std::fmt::Debug,
     {
         LatticeGaugeField::try_identity(lattice, beta)
     }
@@ -367,10 +361,11 @@ fn map_link_variable<G: GaugeGroup, A, B, R, F>(
     f: &mut F,
 ) -> LinkVariable<G, B, R>
 where
-    A: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Debug + Clone,
-    B: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Debug + Clone,
+    A: Field + Copy + Default + PartialOrd + Clone,
+    B: Field + Copy + Default + PartialOrd + Clone,
     R: RealField,
     F: FnMut(A) -> B,
+    A: Debug,
 {
     let n = G::matrix_dim();
 
@@ -390,9 +385,10 @@ fn zip_link_variables<G: GaugeGroup, T, R, F>(
     f: &mut F,
 ) -> LinkVariable<G, T, R>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Debug + Clone,
+    T: Field + Copy + Default + PartialOrd + Clone,
     R: RealField,
     F: FnMut(&T, &T) -> T,
+    T: Debug,
 {
     let n = G::matrix_dim();
     let data_a = link_a.as_slice();

@@ -36,7 +36,7 @@ use std::fmt::Debug;
 /// assert_eq!(Lorentz::LIE_ALGEBRA_DIM, 6);
 /// assert!(!Lorentz::IS_ABELIAN);
 /// ```
-pub trait GaugeGroup: Clone + Debug + Send + Sync + 'static {
+pub trait GaugeGroup: Clone + Debug {
     /// Dimension of the Lie algebra (number of generators).
     ///
     /// This equals the number of gauge bosons in the theory:

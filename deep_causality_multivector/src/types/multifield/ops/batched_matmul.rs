@@ -9,14 +9,14 @@ use deep_causality_tensor::{CausalTensor, Tensor};
 /// Trait to support batched matrix multiplication.
 pub trait BatchedMatMul<T>
 where
-    T: Field + Ring + Copy + Default + PartialOrd + Send + Sync,
+    T: Field + Ring + Copy + Default + PartialOrd,
 {
     fn batched_matmul(&self, other: &Self) -> Self;
 }
 
 impl<T> BatchedMatMul<T> for CausalTensor<T>
 where
-    T: Field + Ring + Copy + Default + PartialOrd + Send + Sync + 'static,
+    T: Field + Ring + Copy + Default + PartialOrd,
 {
     fn batched_matmul(&self, other: &Self) -> Self {
         let shape = self.shape().to_vec();
