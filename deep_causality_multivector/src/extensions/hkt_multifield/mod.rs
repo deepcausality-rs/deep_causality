@@ -101,10 +101,10 @@ where
             // Extract data and apply function
             let data_vec = fa_concrete.data().as_slice();
             let transformed: Vec<T> = data_vec
-                .into_iter()
+                .iter()
                 .map(|x| {
                     // Transmute T -> A, apply f, transmute result -> T
-                    let a_val = std::mem::transmute_copy::<T, A>(&x);
+                    let a_val = std::mem::transmute_copy::<T, A>(x);
                     let c_val = f(a_val);
                     std::mem::transmute_copy::<C, T>(&c_val)
                 })

@@ -10,8 +10,8 @@ mod tensor_product;
 mod tensor_reduction;
 /// Defines tensor shape manipulation operations (e.g., reshape, ravel).
 mod tensor_shape;
+mod tensor_stack;
 mod tensor_svd;
+mod tensor_svd_decomp;
 /// Defines tensor view operations (e.g., slicing).
 mod tensor_view;
-mod tensor_stack;
-mod tensor_svd_decomp;

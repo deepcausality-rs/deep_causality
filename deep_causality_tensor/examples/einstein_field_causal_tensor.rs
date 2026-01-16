@@ -58,8 +58,7 @@ fn main() {
     let scalar_curvature_val = 0.05;
 
     // HKT Power: We "lift" a raw scalar value into the CausalTensor context using `pure`.
-    let r_scalar =
-        CausalTensorWitness::pure(scalar_curvature_val);
+    let r_scalar = CausalTensorWitness::pure(scalar_curvature_val);
 
     println!("Scalar Curvature (R): {:.4}", scalar_curvature_val);
     println!("--------------------------------------------------");
@@ -83,13 +82,11 @@ fn main() {
     // Create a function tensor that multiplies by this scalar
     let mul_by_scalar_fn = |x: f64| x * scalar_val;
     // Lift the function into the context
-    let fn_tensor =
-        CausalTensorWitness::pure(mul_by_scalar_fn);
+    let fn_tensor = CausalTensorWitness::pure(mul_by_scalar_fn);
 
     // HKT Power: `apply` broadcasts the function tensor over the data tensor `g_uv`.
     // This abstracts away the iteration logic.
-    let term_2 =
-        CausalTensorWitness::apply(fn_tensor, g_uv.clone());
+    let term_2 = CausalTensorWitness::apply(fn_tensor, g_uv.clone());
 
     // Step 4c: G_uv = R_uv + term_2
     // We use the standard `Add` implementation for tensor-tensor addition.
@@ -104,8 +101,7 @@ fn main() {
 
     // Use HKT to scale g_uv by Lambda
     let lambda_fn = |x: f64| x * lambda;
-    let lambda_fn_tensor =
-        CausalTensorWitness::pure(lambda_fn);
+    let lambda_fn_tensor = CausalTensorWitness::pure(lambda_fn);
     let lambda_term = <CausalTensorWitness as Applicative<CausalTensorWitness>>::apply(
         lambda_fn_tensor,
         g_uv.clone(),
@@ -146,15 +142,14 @@ fn main() {
     // Example: Detect "High Energy" regions relative to neighbors.
     // We'll define a "smoothness" check: abs(center - neighbor).
     // Since the tensor is flattened, we check the immediate neighbor in memory for simplicity.
-    let anomaly_map =
-        CausalTensorWitness::extend(&t_uv, |view| {
-            let data = view.data();
-            let center = data[0];
-            // Check next neighbor (wrapping)
-            let neighbor = if data.len() > 1 { data[1] } else { center };
-            // Calculate gradient/difference
-            (center - neighbor).abs()
-        });
+    let anomaly_map = CausalTensorWitness::extend(&t_uv, |view| {
+        let data = view.data();
+        let center = data[0];
+        // Check next neighbor (wrapping)
+        let neighbor = if data.len() > 1 { data[1] } else { center };
+        // Calculate gradient/difference
+        (center - neighbor).abs()
+    });
 
     print_tensor("Anomaly Map (Local Gradients)", &anomaly_map);
 

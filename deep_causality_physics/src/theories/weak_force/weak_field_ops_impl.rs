@@ -9,13 +9,13 @@ use crate::theories::WeakField;
 use crate::{WeakFieldOps, WeakIsospin};
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
 use deep_causality_num::{RealField, ToPrimitive};
-use deep_causality_tensor::{CausalTensor};
+use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{BaseTopology, GaugeField, GaugeFieldWitness, Manifold};
 use std::f64::consts::PI;
 
 impl<S> WeakFieldOps<S> for WeakField<S>
 where
-    S: RealField + ToPrimitive + From<f64> + Into<f64> +Default
+    S: RealField + ToPrimitive + From<f64> + Into<f64> + Default,
 {
     fn new_field(base: Manifold<S, S>, connection: CausalTensor<S>) -> Result<Self, PhysicsError> {
         // Enforce West Coast metric (+---)

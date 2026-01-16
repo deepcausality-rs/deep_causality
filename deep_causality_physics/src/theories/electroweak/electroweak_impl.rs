@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{
-    ElectroweakField, ElectroweakOps, ElectroweakParams, PhysicsError, EM, SIN2_THETA_W, W_MASS,
+    EM, ElectroweakField, ElectroweakOps, ElectroweakParams, PhysicsError, SIN2_THETA_W, W_MASS,
     Z_MASS,
 };
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};

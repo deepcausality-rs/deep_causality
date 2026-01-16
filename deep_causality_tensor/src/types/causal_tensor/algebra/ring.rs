@@ -49,6 +49,11 @@ where
         Self::from_vec_and_shape_unchecked(data, shape)
     }
 
+    /// Alias for `one`. Creates a tensor of ones with the specified shape.
+    pub fn ones(shape: &[usize]) -> Self {
+        Self::one(shape)
+    }
+
     /// Creates an identity matrix (square tensor with 1s on diagonal).
     /// Typically 2D, but can be higher dim (generalized).
     /// For 2D: (N, N)

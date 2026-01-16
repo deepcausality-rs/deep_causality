@@ -79,7 +79,7 @@ pub fn geodesic_deviation_kernel<T>(
     n: &[T],
 ) -> Result<Vec<T>, PhysicsError>
 where
-    T: Field + Float + From<f64>
+    T: Field + Float + From<f64>,
 {
     // A^u = - R^u_vrs U^v n^r U^s
     // Direct contraction without einsum for generic T
@@ -143,7 +143,7 @@ pub fn geodesic_integrator_kernel<T>(
     num_steps: usize,
 ) -> Result<Vec<(Vec<T>, Vec<T>)>, PhysicsError>
 where
-    T: Field + Float + From<f64> + Copy
+    T: Field + Float + From<f64> + Copy,
 {
     // Validate inputs
     if initial_position.len() != initial_velocity.len() {

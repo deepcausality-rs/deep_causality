@@ -18,7 +18,7 @@ pub struct CausalTensorWitness;
 impl HKT for CausalTensorWitness {
     type Constraint = NoConstraint;
     type Type<T>
-    = CausalTensor<T>
+        = CausalTensor<T>
     where
         T: Satisfies<NoConstraint>;
 }
@@ -124,8 +124,8 @@ impl Applicative<CausalTensorWitness> for CausalTensorWitness {
             let data: Vec<B> = args.into_iter().map(f).collect();
             CausalTensor::from_vec(data, &shape)
         } else {
-             // Return empty tensor on mismatch, as expected by tests
-             CausalTensor::from_vec(vec![], &[0])
+            // Return empty tensor on mismatch, as expected by tests
+            CausalTensor::from_vec(vec![], &[0])
         }
     }
 }

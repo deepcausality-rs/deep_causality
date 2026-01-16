@@ -144,14 +144,7 @@ impl<T> From<TensorVector<T>> for Vec<T> {
 
 impl<T> RiemannMap<CurvatureTensorWitness<T>> for CurvatureTensorWitness<T>
 where
-    T: Field
-        + Float
-        + Clone
-        + From<f64>
-        + Into<f64>
-        + Satisfies<NoConstraint>
-        + Copy
-        + PartialOrd,
+    T: Field + Float + Clone + From<f64> + Into<f64> + Satisfies<NoConstraint> + Copy + PartialOrd,
 {
     /// Computes curvature contraction R(u,v)w.
     ///
@@ -238,13 +231,7 @@ where
 
 impl<T> CurvatureTensorWitness<T>
 where
-    T: Field
-        + Float
-        + Clone
-        + From<f64>
-        + Into<f64>     
-        + Copy
-        + PartialOrd,
+    T: Field + Float + Clone + From<f64> + Into<f64> + Copy + PartialOrd,
 {
     /// Internal implementation of geodesic deviation.
     fn geodesic_deviation_impl<A, B, C, D>(

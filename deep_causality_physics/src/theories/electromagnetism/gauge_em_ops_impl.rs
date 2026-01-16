@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::error::PhysicsError;
 use crate::GaugeEmOps;
+use crate::error::PhysicsError;
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::RealField;

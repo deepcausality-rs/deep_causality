@@ -7,7 +7,7 @@ use std::ops::{Add, Mul};
 
 impl<T> CausalTensor<T>
 where
-    T: Clone + Default + PartialOrd + Add<Output=T> + Mul<Output=T>,
+    T: Clone + Default + PartialOrd + Add<Output = T> + Mul<Output = T>,
 {
     pub(crate) fn stack_impl(
         tensors: &[CausalTensor<T>],

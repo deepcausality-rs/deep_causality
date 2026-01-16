@@ -170,7 +170,7 @@ where
 
 impl<S> AdmOps<S> for AdmState<S>
 where
-    S: Field + Clone + Copy+ From<f64> + Into<f64>,
+    S: Field + Clone + Copy + From<f64> + Into<f64>,
 {
     fn hamiltonian_constraint(
         &self,

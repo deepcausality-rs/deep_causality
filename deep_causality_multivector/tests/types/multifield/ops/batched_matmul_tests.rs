@@ -6,7 +6,7 @@
 //! Tests for BatchedMatMul trait implementations.
 
 use deep_causality_multivector::BatchedMatMul;
-use deep_causality_tensor::{CausalTensor};
+use deep_causality_tensor::CausalTensor;
 
 #[test]
 fn test_batched_matmul_rank_2_fallback() {

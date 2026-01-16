@@ -3,9 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::Tensor;
-use crate::{
-    CausalTensor, CausalTensorError, EinSumAST, EinSumValidationError,
-};
+use crate::{CausalTensor, CausalTensorError, EinSumAST, EinSumValidationError};
 use std::ops::{Add, Mul};
 
 impl<T> CausalTensor<T>

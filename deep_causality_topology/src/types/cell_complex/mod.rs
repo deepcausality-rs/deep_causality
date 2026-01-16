@@ -8,8 +8,8 @@ pub mod boundary_operator;
 use crate::traits::cw_complex::{CWComplex, Cell};
 pub use boundary_operator::BoundaryOperator;
 use deep_causality_sparse::CsrMatrix;
-use std::collections::HashMap;
 use deep_causality_tensor::{CausalTensor, Tensor};
+use std::collections::HashMap;
 
 /// A CW complex with arbitrary cell types.
 ///
@@ -145,7 +145,6 @@ impl<C: Cell> CWComplex for CellComplex<C> {
 
 impl<C: Cell> CellComplex<C> {
     fn rank_of_matrix(&self, k: usize) -> usize {
-
         let matrix = self.boundary_matrix(k);
         let (rows, cols) = matrix.shape();
         if rows == 0 || cols == 0 {
@@ -175,7 +174,7 @@ impl<C: Cell> CellComplex<C> {
 
         // SVD: M = U S V^T
         // Sigmas are in S (vector)
-           let (_, s, _) = tensor.svd().expect("SVD failed");
+        let (_, s, _) = tensor.svd().expect("SVD failed");
 
         // Count non-zero singular values
         let s_vec: Vec<f64> = s.to_vec();

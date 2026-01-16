@@ -9,7 +9,7 @@ use crate::types::causal_tensor::CausalTensor;
 // Private helper methods
 impl<T> CausalTensor<T>
 where
-    T: Clone + Default + PartialOrd,
+    T: Clone + PartialOrd,
 {
     /// Helper for element-wise binary operations with broadcasting.
     /// This function determines the broadcasted shape, iterates through the result
@@ -20,8 +20,8 @@ where
         op: F,
     ) -> Result<Self, CausalTensorError>
     where
-        U: Clone + Default + PartialOrd,
-        T: Clone + Default + PartialOrd,
+        U: Clone + PartialOrd,
+        T: Clone + PartialOrd,
         F: Fn(T, U) -> Result<T, CausalTensorError>, // op now returns Result
     {
         // 1. Handle empty tensors

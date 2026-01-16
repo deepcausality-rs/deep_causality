@@ -42,8 +42,7 @@ pub struct CausalTensor<T> {
     strides: Vec<usize>,
 }
 
-impl<T> CausalTensor<T>
-{
+impl<T> CausalTensor<T> {
     ///
     /// This constructor validates that the total number of elements implied by the `shape`
     /// matches the length of the provided `data` vector. It also internally calculates
@@ -83,12 +82,6 @@ impl<T> CausalTensor<T>
         })
     }
 
-
-    /// Creates a tensor from a function applied to each index.
-    ///
-    /// # Arguments
-    /// * `shape` - Dimensions of the tensor
-    /// * `f` - Function mapping indices to values
     /// Creates a tensor from a function applied to each index.
     ///
     /// # Arguments
@@ -124,7 +117,6 @@ impl<T> CausalTensor<T>
         Self::from_vec_and_shape_unchecked(data, shape)
     }
 
-    
     /// Internal constructor that calculates strides.
     /// Call only when shape is known to be valid.
     pub(super) fn from_vec_and_shape_unchecked(data: Vec<T>, shape: &[usize]) -> Self {
@@ -144,9 +136,9 @@ impl<T> CausalTensor<T>
     }
 }
 
-
 impl<T> CausalTensor<T>
-where T: Clone
+where
+    T: Clone,
 {
     /// Creates a tensor from a slice (infallible, clones data).
     pub fn from_slice(data: &[T], shape: &[usize]) -> Self {
@@ -155,9 +147,10 @@ where T: Clone
 }
 
 impl<T> CausalTensor<T>
-where T: Clone + Default
+where
+    T: Clone + Default,
 {
-     /// Creates a tensor of zeros with the given shape.
+    /// Creates a tensor of zeros with the given shape.
     pub fn zeros(shape: &[usize]) -> Self {
         let total_elements: usize = shape.iter().product();
         let data = vec![T::default(); total_elements];

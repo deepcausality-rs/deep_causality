@@ -87,7 +87,7 @@ pub struct CurvatureTensor<T, A, B, C, D> {
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: Field + Copy  + PartialOrd,
+    T: Field + Copy + PartialOrd,
 {
     /// Creates a new curvature tensor from components.
     ///
@@ -192,7 +192,7 @@ where
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: Field + Copy + PartialOrd  + Clone,
+    T: Field + Copy + PartialOrd + Clone,
 {
     /// Returns a reference to the tensor components.
     #[inline]
@@ -221,7 +221,7 @@ where
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: Field + Copy + PartialOrd  + Float + From<f64> + Into<f64>,
+    T: Field + Copy + PartialOrd + Float + From<f64> + Into<f64>,
 {
     /// Checks if the tensor is flat (all zero).
     pub fn is_flat(&self) -> bool {
@@ -600,7 +600,7 @@ where
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: Field + Copy + Default + PartialOrd  + Clone,
+    T: Field + Copy + Default + PartialOrd + Clone,
 {
     /// Converts to a CurvatureTensor with different type parameters.
     ///

@@ -9,7 +9,7 @@
 //! Spacetime is sliced into spatial hypersurfaces Σ_t evolved by a time coordinate t.
 use crate::PhysicsError;
 use deep_causality_num::Field;
-use deep_causality_tensor::{CausalTensor};
+use deep_causality_tensor::CausalTensor;
 
 /// ADM Formalism operations, generic over scalar type `S`.
 ///
@@ -17,7 +17,7 @@ use deep_causality_tensor::{CausalTensor};
 /// * `S` - Scalar type (e.g., `f32`, `f64`, `DoubleFloat`)
 pub trait AdmOps<S>
 where
-    S: Field + Clone + From<f64> + Into<f64>
+    S: Field + Clone + From<f64> + Into<f64>,
 {
     /// Computes the Hamiltonian constraint.
     ///

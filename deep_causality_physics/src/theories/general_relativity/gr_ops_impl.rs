@@ -10,8 +10,8 @@
 use crate::theories::general_relativity::gr_lie_mapping::expand_lie_to_riemann;
 use crate::theories::general_relativity::gr_utils;
 use crate::{
-    geodesic_integrator_kernel, parallel_transport_kernel, proper_time_kernel, GeodesicState, GrOps, PhysicsError,
-    GR,
+    GR, GeodesicState, GrOps, PhysicsError, geodesic_integrator_kernel, parallel_transport_kernel,
+    proper_time_kernel,
 };
 use deep_causality_haft::RiemannMap;
 use deep_causality_metric::{EastCoastMetric, LorentzianMetric};

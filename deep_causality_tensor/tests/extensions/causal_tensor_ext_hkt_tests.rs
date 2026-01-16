@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative ,Foldable, Functor, HKT, Monad, Pure, CoMonad};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 // --- HKT Tests ---

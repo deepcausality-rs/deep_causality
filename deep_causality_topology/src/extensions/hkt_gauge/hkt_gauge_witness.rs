@@ -582,7 +582,7 @@ where
     ) -> CausalTensor<T>
     where
         G: GaugeGroup,
-        T: Field + Copy + PartialOrd, 
+        T: Field + Copy + PartialOrd,
         R: Field,
     {
         let connection = field.connection();
