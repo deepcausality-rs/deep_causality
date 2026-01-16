@@ -13,7 +13,7 @@ use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyEr
 use deep_causality_num::{
     ComplexField, DivisionAlgebra, Field, Float, FromPrimitive, RealField, ToPrimitive,
 };
-use deep_causality_tensor::TensorData;
+// use deep_causality_tensor::TensorData; // Removed
 use std::fmt::Debug;
 
 // ============================================================================
@@ -23,7 +23,16 @@ use std::fmt::Debug;
 impl<
     G: GaugeGroup,
     const D: usize,
-    M: TensorData + Debug + ComplexField<R> + DivisionAlgebra<R>,
+    M: Field
+        + Copy
+        + Default
+        + PartialOrd
+        + Send
+        + Sync
+        + 'static
+        + Debug
+        + ComplexField<R>
+        + DivisionAlgebra<R>,
     R: RealField + FromPrimitive + ToPrimitive + Float,
 > LatticeGaugeField<G, D, M, R>
 {

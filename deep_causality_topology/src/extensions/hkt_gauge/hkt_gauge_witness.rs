@@ -6,7 +6,7 @@ use crate::{GaugeField, GaugeGroup, TopologyError};
 use deep_causality_haft::{HKT3Unbound, NoConstraint, ParametricMonad, Promonad, Satisfies};
 use deep_causality_num::Field;
 use deep_causality_num::RealField;
-use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 
 /// HKT3 witness for GaugeField<G, A, F>.
@@ -352,9 +352,9 @@ where
     ) -> Result<GaugeField<G, F2, R>, TopologyError>
     where
         G: GaugeGroup,
-        A: TensorData + Clone,
-        B: TensorData + Clone,
-        F2: TensorData + Clone + Default, // Must serve as M
+        A: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Clone,
+        B: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Clone,
+        F2: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Clone + Default, // Must serve as M
         R: RealField,
         Func: Fn(&A, &B) -> F2,
     {
@@ -409,8 +409,8 @@ where
     ) -> Result<GaugeField<G, F2, R>, TopologyError>
     where
         G: GaugeGroup,
-        A: TensorData + Clone,
-        F2: TensorData + Clone + Default,
+        A: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Clone,
+        F2: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Clone + Default,
         R: RealField,
         Func: Fn(&A) -> F2,
     {
@@ -464,7 +464,7 @@ where
     ) -> Option<CausalTensor<T>>
     where
         G: GaugeGroup,
-        T: TensorData, // T is from impl bounds
+        T: Field + Copy + Default + PartialOrd + Send + Sync + 'static, // T is from impl bounds
         R: RealField,
     {
         if !G::IS_ABELIAN {
@@ -582,7 +582,7 @@ where
     ) -> CausalTensor<T>
     where
         G: GaugeGroup,
-        T: TensorData,
+        T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
         R: Field,
     {
         let connection = field.connection();

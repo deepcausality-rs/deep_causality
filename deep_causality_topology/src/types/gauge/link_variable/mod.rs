@@ -14,7 +14,7 @@ use crate::{GaugeGroup, LinkVariableError};
 use deep_causality_num::{
     ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
 };
-use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 
 mod display;
@@ -49,7 +49,9 @@ pub struct LinkVariable<G: GaugeGroup, M, R> {
     _scalar: PhantomData<R>,
 }
 
-impl<G: GaugeGroup, M: TensorData, R: RealField> LinkVariable<G, M, R> {
+impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd + Send + Sync + 'static, R: RealField>
+    LinkVariable<G, M, R>
+{
     /// Create the identity link (unit element of G).
     ///
     /// Returns the N×N identity matrix for SU(N).

@@ -279,7 +279,6 @@ Performance measured on Apple M3 Max.
 | **Addition**          | Euclidean 3D | ~39.1 ns      |
 | **Reversion**         | PGA 3D       | ~37.3 ns      |
 
-Find detailed benchmarks in [BENCHMARKS](README_BENCHMARKS.md).
 
 ## License
 

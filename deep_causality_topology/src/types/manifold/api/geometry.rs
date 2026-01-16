@@ -5,12 +5,35 @@
 
 //! Public geometry API for Manifold.
 //!
-//! Dispatches to CPU or MLX implementations based on feature flags and heuristics.
 
-// No re-export needed for inherent impls
+use crate::{Manifold, Simplex, TopologyError};
 
-#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-mod geometry_mlx;
-
-#[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
-mod geometry_cpu;
+impl<C, D> Manifold<C, D>
+where
+    C: deep_causality_num::Float
+        + deep_causality_num::Zero
+        + Copy
+        + PartialOrd
+        + From<f64>
+        + Into<f64>
+        + std::iter::Product
+        + std::fmt::Debug,
+{
+    /// Computes the squared volume of a k-simplex using Cayley-Menger determinant.
+    ///
+    /// # Arguments
+    /// * `simplex` - The simplex to compute volume for
+    ///
+    /// # Returns
+    /// * `Ok(f64)` - The squared volume
+    /// * `Err(TopologyError)` - If metric is missing or edges not found
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// let volume_sq = manifold.simplex_volume_squared(&simplex)?;
+    /// ```
+    pub fn simplex_volume_squared(&self, simplex: &Simplex) -> Result<f64, TopologyError> {
+        self.simplex_volume_squared_cpu(simplex)
+            .map(|v: C| v.into())
+    }
+}

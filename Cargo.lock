@@ -561,7 +561,6 @@ dependencies = [
  "deep_causality_rand",
  "deep_causality_sparse",
  "deep_causality_tensor",
- "mlx-rs",
 ]
 
 [[package]]

@@ -5,13 +5,13 @@
 
 use crate::{GaugeGroup, LinkVariable, LinkVariableError};
 use deep_causality_num::{ComplexField, Field, FromPrimitive, RealField};
-use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_tensor::CausalTensor;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
 impl<
     G: GaugeGroup,
-    M: TensorData + Debug,
+    M: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Debug,
     R: RealField + FromPrimitive + deep_causality_num::ToPrimitive,
 > LinkVariable<G, M, R>
 {

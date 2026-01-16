@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Manifold type for smooth geometric structures with optional MLX acceleration.
+//! Manifold type for smooth geometric structures.
 //!
 //! A `Manifold<T>` wraps a `SimplicialComplex` and provides geometric operations
 //! including volume computation, differential operators, and covariance analysis.
@@ -21,8 +21,6 @@ mod utils;
 
 mod differential;
 mod topology;
-
-// Re-export public API
 
 /// A newtype wrapper around `SimplicialComplex` that represents a Manifold.
 ///

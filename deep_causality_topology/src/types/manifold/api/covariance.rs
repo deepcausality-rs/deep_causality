@@ -4,13 +4,34 @@
  */
 
 //! Public covariance analysis API for Manifold.
-//!
-//! Dispatches to CPU or MLX implementations based on feature flags and data size.
+use crate::{Manifold, TopologyError};
 
-// No re-export needed for inherent impls
+impl<C, D> Manifold<C, D>
+where
+    D: Into<f64> + Copy,
+{
+    /// Computes the covariance matrix of the field data.
+    ///
+    ///
+    /// # Returns
+    /// * `Ok(Vec<Vec<f64>>)` - The covariance matrix
+    /// * `Err(TopologyError)` - If data is empty or computation fails
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// let cov = manifold.covariance_matrix()?;
+    /// ```
+    pub fn covariance_matrix(&self) -> Result<Vec<Vec<f64>>, TopologyError> {
+        self.covariance_matrix_cpu()
+    }
 
-#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-mod covariance_mlx;
-
-#[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
-mod covariance_cpu;
+    /// Computes eigenvalues of the covariance matrix for field analysis.
+    ///
+    ///
+    /// # Returns
+    /// * `Ok(Vec<f64>)` - Eigenvalues sorted in descending order
+    /// * `Err(TopologyError)` - If computation fails
+    pub fn eigen_covariance(&self) -> Result<Vec<f64>, TopologyError> {
+        self.eigen_covariance_cpu()
+    }
+}

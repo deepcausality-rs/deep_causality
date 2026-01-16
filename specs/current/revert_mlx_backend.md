@@ -6,6 +6,12 @@ This document specifies the complete removal of the MLX (Apple Metal) GPU accele
 project. The removal follows a three-stage process aligned with the dependency chain, ensuring clean compilation at each
 stage.
 
+Last commit before MLX was added to the tensor crate:
+
+82766f93e415c0ab23e786ab09eb46caec4aa970
+
+
+
 ---
 
 ## Problem Statement
