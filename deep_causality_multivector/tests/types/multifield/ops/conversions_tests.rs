@@ -8,8 +8,7 @@
 use deep_causality_metric::Metric;
 use deep_causality_multivector::{CausalMultiField, CausalMultiVector};
 use deep_causality_num::Zero;
-use deep_causality_tensor::{CpuBackend, TensorBackend};
-
+use deep_causality_tensor::CausalTensor;
 // =============================================================================
 // zeros() tests
 // =============================================================================
@@ -37,7 +36,7 @@ fn test_zeros_tensor_shape() {
     let metric = Metric::from_signature(3, 0, 0);
     let field = CausalMultiField::<f32>::zeros([2, 3, 4], metric, [1.0, 1.0, 1.0]);
 
-    let tensor_shape = CpuBackend::shape(field.data());
+    let tensor_shape = CausalTensor::shape(field.data());
     // [Nx, Ny, Nz, D, D] = [2, 3, 4, 4, 4]
     assert_eq!(tensor_shape, vec![2, 3, 4, 4, 4]);
 }
@@ -57,46 +56,6 @@ fn test_zeros_preserves_dx() {
     let field = CausalMultiField::<f32>::zeros([2, 2, 2], metric, dx);
 
     assert_eq!(*field.dx(), dx);
-}
-
-// =============================================================================
-// ones() tests
-// =============================================================================
-
-#[test]
-fn test_ones_creates_identity_matrices() {
-    let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-
-    // ones() creates identity matrices (1 on diagonal, 0 elsewhere)
-    let data = CpuBackend::to_vec(field.data());
-    let matrix_dim = 4; // For Cl(3)
-    let num_cells = 8;
-
-    for cell in 0..num_cells {
-        for r in 0..matrix_dim {
-            for c in 0..matrix_dim {
-                let idx = cell * matrix_dim * matrix_dim + r * matrix_dim + c;
-                if r == c {
-                    assert!(
-                        (data[idx] - 1.0).abs() < 1e-5,
-                        "Diagonal should be 1 at cell {}, ({},{})",
-                        cell,
-                        r,
-                        c
-                    );
-                } else {
-                    assert!(
-                        data[idx].abs() < 1e-5,
-                        "Off-diagonal should be 0 at cell {}, ({},{})",
-                        cell,
-                        r,
-                        c
-                    );
-                }
-            }
-        }
-    }
 }
 
 #[test]

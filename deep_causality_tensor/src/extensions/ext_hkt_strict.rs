@@ -67,7 +67,7 @@ pub struct StrictCausalTensorWitness;
 impl HKT for StrictCausalTensorWitness {
     type Constraint = TensorConstraint;
     type Type<T>
-        = CausalTensor<T>
+    = CausalTensor<T>
     where
         T: Satisfies<TensorConstraint>;
 }

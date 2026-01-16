@@ -5,7 +5,7 @@
 
 use crate::{AdmOps, PhysicsError};
 use deep_causality_num::Field;
-use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 
 /// Represents the state of a spatial slice in the 3+1 decomposition.
@@ -15,7 +15,7 @@ use std::marker::PhantomData;
 #[derive(Debug, Clone)]
 pub struct AdmState<S>
 where
-    S: Field + Clone + From<f64> + Into<f64> + TensorData,
+    S: Field + Clone + From<f64> + Into<f64>,
 {
     /// Spatial metric γ_ij (3x3 tensor)
     spatial_metric: CausalTensor<S>,
@@ -35,7 +35,7 @@ where
 
 impl<S> Default for AdmState<S>
 where
-    S: Field + Clone + From<f64> + Into<f64> + TensorData,
+    S: Field + Clone + From<f64> + Into<f64> + Default,
 {
     fn default() -> Self {
         let zero = <S as From<f64>>::from(0.0);
@@ -53,7 +53,7 @@ where
 
 impl<S> AdmState<S>
 where
-    S: Field + Clone + From<f64> + Into<f64> + TensorData,
+    S: Field + Clone + From<f64> + Into<f64> + Copy,
 {
     pub fn spatial_metric(&self) -> &CausalTensor<S> {
         &self.spatial_metric
@@ -170,7 +170,7 @@ where
 
 impl<S> AdmOps<S> for AdmState<S>
 where
-    S: Field + Clone + From<f64> + Into<f64> + TensorData,
+    S: Field + Clone + Copy+ From<f64> + Into<f64>,
 {
     fn hamiltonian_constraint(
         &self,
@@ -180,15 +180,14 @@ where
         let inv_gamma = self.inverse_spatial_metric()?;
         let k_tensor = self.extrinsic_curvature.as_slice();
 
-        let zero = <S as From<f64>>::from(0.0);
-        let mut k_mixed_trace = zero;
-        let mut k_sq_contracted = zero;
+        let mut k_mixed_trace = S::zero();
+        let mut k_sq_contracted = S::zero();
 
-        let mut k_upper = [[zero; 3]; 3];
+        let mut k_upper = [[S::zero(); 3]; 3];
 
         for i in 0..3 {
             for j in 0..3 {
-                let mut sum = zero;
+                let mut sum = S::zero();
                 for a in 0..3 {
                     for b in 0..3 {
                         let k_ab = k_tensor[a * 3 + b];
@@ -215,8 +214,8 @@ where
 
         let r = self.spatial_ricci_scalar;
         let rho = match matter_density {
-            Some(t) => t.as_slice().first().cloned().unwrap_or(zero),
-            None => zero,
+            Some(t) => t.as_slice().first().cloned().unwrap_or(S::zero()),
+            None => S::zero(),
         };
 
         let pi_16 = <S as From<f64>>::from(16.0 * std::f64::consts::PI);
@@ -249,11 +248,8 @@ where
         let inv_gamma = self.inverse_spatial_metric()?;
         let k_tensor = self.extrinsic_curvature.as_slice();
 
-        let zero = <S as From<f64>>::from(0.0);
-        let one = <S as From<f64>>::from(1.0);
-
         // Compute K = trace of K^i_j
-        let mut k_trace = zero;
+        let mut k_trace = S::zero();
         for i in 0..3 {
             for j in 0..3 {
                 k_trace = k_trace + inv_gamma[i][j] * k_tensor[i * 3 + j];
@@ -261,10 +257,10 @@ where
         }
 
         // Compute K^j_i = γ^jk K_ki
-        let mut k_mixed = [[zero; 3]; 3]; // K^j_i
+        let mut k_mixed = [[S::zero(); 3]; 3]; // K^j_i
         for j in 0..3 {
             for i in 0..3 {
-                let mut sum = zero;
+                let mut sum = S::zero();
                 for k in 0..3 {
                     sum = sum + inv_gamma[j][k] * k_tensor[k * 3 + i];
                 }
@@ -273,11 +269,11 @@ where
         }
 
         // Compute M_i = D_j (K^j_i - δ^j_i K) - 8πj_i
-        let mut m = [zero, zero, zero];
+        let mut m = [S::zero(), S::zero(), S::zero()];
 
         // Helper closures
         let gamma_trace = |k: usize| -> S {
-            let mut sum = zero;
+            let mut sum = S::zero();
             for j in 0..3 {
                 sum = sum + gamma_data[j * 9 + j * 3 + k];
             }
@@ -289,12 +285,12 @@ where
         for (i, m_i) in m.iter_mut().enumerate() {
             // T^j_i = K^j_i - δ^j_i K
             let t = |j: usize, i_inner: usize| -> S {
-                let delta = if j == i_inner { one } else { zero };
+                let delta = if j == i_inner { S::one() } else { S::zero() };
                 k_mixed[j][i_inner] - delta * k_trace
             };
 
             // Connection terms: Γ^j_jk T^k_i - Γ^k_ji T^j_k
-            let mut conn_term = zero;
+            let mut conn_term = S::zero();
             for k in 0..3 {
                 conn_term = conn_term + gamma_trace(k) * t(k, i);
             }
@@ -306,8 +302,8 @@ where
 
             // Matter momentum term
             let j_i = match matter_momentum {
-                Some(j_tensor) => j_tensor.as_slice().get(i).cloned().unwrap_or(zero),
-                None => zero,
+                Some(j_tensor) => j_tensor.as_slice().get(i).cloned().unwrap_or(S::zero()),
+                None => S::zero(),
             };
 
             let pi_8 = <S as From<f64>>::from(8.0 * std::f64::consts::PI);

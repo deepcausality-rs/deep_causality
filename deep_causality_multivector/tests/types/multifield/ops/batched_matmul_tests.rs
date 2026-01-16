@@ -6,7 +6,7 @@
 //! Tests for BatchedMatMul trait implementations.
 
 use deep_causality_multivector::BatchedMatMul;
-use deep_causality_tensor::{CausalTensor, CpuBackend, TensorBackend};
+use deep_causality_tensor::{CausalTensor};
 
 #[test]
 fn test_batched_matmul_rank_2_fallback() {
@@ -25,7 +25,7 @@ fn test_batched_matmul_rank_2_fallback() {
 
     assert_eq!(*result.shape(), shape);
 
-    let res_data = CpuBackend::to_vec(&result);
+    let res_data = CausalTensor::to_vec(result);
     // Should be equal to A
     assert_eq!(res_data, vec![1.0, 2.0, 3.0, 4.0]);
 }
@@ -54,7 +54,7 @@ fn test_batched_matmul_rank_3() {
 
     assert_eq!(*result.shape(), shape);
 
-    let res_data = CpuBackend::to_vec(&result);
+    let res_data = CausalTensor::to_vec(result);
 
     // Expected:
     // Batch 0: I * 2I = 2I -> [2, 0, 0, 2]
@@ -83,7 +83,7 @@ fn test_batched_matmul_rank_4() {
 
     assert_eq!(*result.shape(), shape);
 
-    let res_data = CpuBackend::to_vec(&result);
+    let res_data = CausalTensor::to_vec(result);
 
     // Every element should be 2.0
     for val in res_data {

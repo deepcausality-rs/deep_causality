@@ -11,7 +11,7 @@
 use crate::TensorVector;
 use deep_causality_metric::Metric;
 use deep_causality_num::{Field, Float};
-use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 
 /// Symmetry properties of curvature tensors.
@@ -87,7 +87,7 @@ pub struct CurvatureTensor<T, A, B, C, D> {
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: TensorData + Clone,
+    T: Field + Copy  + PartialOrd,
 {
     /// Creates a new curvature tensor from components.
     ///
@@ -128,7 +128,7 @@ where
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: TensorData + Field + Float + Clone + From<f64> + Into<f64>,
+    T: Field + Copy + Default + PartialOrd + Float + From<f64> + Into<f64>,
 {
     /// Creates a flat (zero curvature) tensor with Minkowski metric.
     pub fn flat(dim: usize) -> Self {
@@ -192,7 +192,7 @@ where
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: TensorData + Clone,
+    T: Field + Copy + PartialOrd  + Clone,
 {
     /// Returns a reference to the tensor components.
     #[inline]
@@ -221,7 +221,7 @@ where
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: TensorData + Field + Float + Clone + From<f64> + Into<f64>,
+    T: Field + Copy + PartialOrd  + Float + From<f64> + Into<f64>,
 {
     /// Checks if the tensor is flat (all zero).
     pub fn is_flat(&self) -> bool {
@@ -247,7 +247,7 @@ where
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: TensorData + Field + Float + Clone + From<f64> + Into<f64>,
+    T: Field + Copy + PartialOrd + Float + From<f64> + Into<f64>,
 {
     /// Contracts the curvature tensor with three vectors: R(u,v)w.
     ///
@@ -600,7 +600,7 @@ where
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: TensorData + Clone,
+    T: Field + Copy + Default + PartialOrd  + Clone,
 {
     /// Converts to a CurvatureTensor with different type parameters.
     ///

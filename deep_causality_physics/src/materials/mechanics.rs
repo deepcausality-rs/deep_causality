@@ -4,7 +4,7 @@
  */
 
 use crate::{PhysicsError, Temperature};
-use deep_causality_tensor::{CausalTensor, EinSumOp};
+use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 /// Calculates generalized Hooke's Law: $\sigma_{ij} = C_{ijkl} \epsilon_{kl}$.
 ///

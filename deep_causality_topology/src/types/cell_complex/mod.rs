@@ -9,6 +9,7 @@ use crate::traits::cw_complex::{CWComplex, Cell};
 pub use boundary_operator::BoundaryOperator;
 use deep_causality_sparse::CsrMatrix;
 use std::collections::HashMap;
+use deep_causality_tensor::{CausalTensor, Tensor};
 
 /// A CW complex with arbitrary cell types.
 ///
@@ -144,9 +145,6 @@ impl<C: Cell> CWComplex for CellComplex<C> {
 
 impl<C: Cell> CellComplex<C> {
     fn rank_of_matrix(&self, k: usize) -> usize {
-        // We use CpuBackend for SVD computation to determine rank
-        // This makes CellComplex depend on Tensor capability for homology
-        use deep_causality_tensor::{CpuBackend, LinearAlgebraBackend, TensorBackend};
 
         let matrix = self.boundary_matrix(k);
         let (rows, cols) = matrix.shape();
@@ -173,18 +171,15 @@ impl<C: Cell> CellComplex<C> {
             }
         }
 
-        let tensor = <CpuBackend as TensorBackend>::create(&data, &[rows, cols]);
+        let tensor = CausalTensor::new(data, vec![rows, cols]).expect("Failed to create tensor");
 
         // SVD: M = U S V^T
         // Sigmas are in S (vector)
-        // SVD: M = U S V^T
-        // Sigmas are in S (vector)
-        // CpuBackend::svd panics on error, returns tuple directly
-        let (_, s, _) = <CpuBackend as LinearAlgebraBackend>::svd(&tensor);
+           let (_, s, _) = tensor.svd().expect("SVD failed");
 
         // Count non-zero singular values
-        let s_vec: Vec<f64> = <CpuBackend as TensorBackend>::to_vec(&s);
+        let s_vec: Vec<f64> = s.to_vec();
         let tolerance = 1e-5;
-        s_vec.iter().filter(|x| x.abs() > tolerance).count()
+        s_vec.iter().filter(|&x| x.abs() > tolerance).count()
     }
 }

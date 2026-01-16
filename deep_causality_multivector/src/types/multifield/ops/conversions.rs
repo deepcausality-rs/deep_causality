@@ -168,7 +168,7 @@ where
         let coeffs = &coeffs_raw * &scale_tensor;
 
         // Download and chunk into Multivectors
-        let flat_coeffs = coeffs.to_vec();
+        let flat_coeffs = coeffs.into_vec();
 
         flat_coeffs
             .chunks(num_blades)

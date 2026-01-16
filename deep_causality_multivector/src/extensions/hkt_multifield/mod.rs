@@ -99,7 +99,7 @@ where
             let fa_concrete = &*fa_ptr;
 
             // Extract data and apply function
-            let data_vec = fa_concrete.data().to_vec();
+            let data_vec = fa_concrete.data().as_slice();
             let transformed: Vec<T> = data_vec
                 .into_iter()
                 .map(|x| {
@@ -238,7 +238,7 @@ where
             let ma_concrete = &*ma_ptr;
 
             // Extract first coefficient and apply f
-            let data_vec = ma_concrete.data().to_vec();
+            let data_vec = ma_concrete.data().as_slice();
             if let Some(&first_val) = data_vec.first() {
                 let a_val = std::mem::transmute_copy::<T, A>(&first_val);
                 let result = f(a_val);
@@ -294,7 +294,7 @@ where
             let fa_ptr = fa as *const CausalMultiField<A> as *const CausalMultiField<T>;
             let fa_concrete = &*fa_ptr;
 
-            let data_vec = fa_concrete.data().to_vec();
+            let data_vec = fa_concrete.data().as_slice();
             let first_val = data_vec.first().copied().unwrap_or_else(T::zero);
 
             std::mem::transmute_copy::<T, A>(&first_val)

@@ -90,7 +90,7 @@ where
             strides[i] = strides[i + 1] * shape[i + 1];
         }
 
-        let data_vec = self.data.to_vec();
+        let data_vec = self.data.clone().to_vec();
         let axis_stride = strides[axis_idx];
         let two_dx = self.dx[axis_idx] + self.dx[axis_idx];
         let inv_two_dx = T::one() / two_dx;

@@ -3,12 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::GaugeEmOps;
 use crate::error::PhysicsError;
+use crate::GaugeEmOps;
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::RealField;
-use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     BaseTopology, GaugeField, GaugeFieldWitness, Manifold, Simplex, SimplicialComplexBuilder, U1,
 };
@@ -16,7 +16,7 @@ use deep_causality_topology::{
 /// Blanket implementation of GaugeEmOps for GaugeField<U1, S, S> where S: Field + Float + TensorData
 impl<S> GaugeEmOps<S> for GaugeField<U1, S, S>
 where
-    S: RealField + TensorData + From<f64> + Into<f64>,
+    S: RealField + From<f64> + Into<f64> + std::default::Default,
 {
     fn from_fields(
         base: Manifold<S, S>,
@@ -328,7 +328,7 @@ fn cross_product_3d<S>(
     b: &CausalMultiVector<S>,
 ) -> Result<CausalMultiVector<S>, PhysicsError>
 where
-    S: RealField + TensorData + Clone + From<f64> + Default,
+    S: RealField + Clone + From<f64> + Default,
 {
     let a_data = a.data();
     let b_data = b.data();

@@ -35,7 +35,7 @@ where
         let scaled = &coeffs_tensor * &basis_gammas;
 
         // Sum along the batch axis (0) to get result matrix [matrix_dim, matrix_dim]
-        let sum = scaled.sum(&[0]);
+        let sum = scaled.sum_axes(&[0]).unwrap();
 
         // Reshape result to [D, D]
         sum.reshape(&[matrix_dim, matrix_dim])
@@ -61,7 +61,7 @@ where
         let product = &matrix_batch * &dual_basis;
 
         // Sum along R and C axes (1, 2) to get [num_blades]
-        let sum = product.sum(&[1, 2]);
+        let sum = product.sum_axes(&[1, 2]).unwrap();
 
         // Normalization: divide by matrix_dim
         let mut dim_t = T::zero();

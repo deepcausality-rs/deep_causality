@@ -3,17 +3,17 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{
-    EM, ElectroweakField, ElectroweakOps, ElectroweakParams, PhysicsError, SIN2_THETA_W, W_MASS,
+    ElectroweakField, ElectroweakOps, ElectroweakParams, PhysicsError, EM, SIN2_THETA_W, W_MASS,
     Z_MASS,
 };
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
 use deep_causality_num::RealField;
-use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{BaseTopology, GaugeField, GaugeFieldWitness, Manifold, U1};
 
 impl<S> ElectroweakOps<S> for ElectroweakField<S>
 where
-    S: RealField + Clone + From<f64> + Into<f64> + TensorData,
+    S: RealField + Clone + From<f64> + Into<f64> + Default,
 {
     fn new_field(base: Manifold<S, S>, connection: CausalTensor<S>) -> Result<Self, PhysicsError> {
         let metric = WestCoastMetric::minkowski_4d().into_metric();

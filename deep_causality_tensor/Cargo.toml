@@ -23,20 +23,6 @@ exclude = [
     ".bazelrc",
     "tests/**/*",
 ]
-
-[features]
-default = []
-# future feature; cuda support will be added later.
-cuda = []
-# MLX acceleration for Apple Silicon (M Series).
-# Enables GPU-accelerated tensor operations via mlx-rs.
-# Note: Only builds on macOS aarch64. f64 tensors are downcast to f32 for MLX based GPU execution.
-mlx = ["dep:mlx-rs"]
-
-# MLX dependency - only available on macOS aarch64
-[target.'cfg(all(target_os = "macos", target_arch = "aarch64"))'.dependencies]
-mlx-rs = { version = "0.25.3", features = ["metal"], optional = true }
-
 [dependencies.deep_causality_ast]
 path = "../deep_causality_ast"
 version = "0.1"
@@ -47,12 +33,11 @@ version = "0.3"
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.1.12"
+version = "0.1"
 
 [dev-dependencies]
 criterion = { version = "0.8.1" }
 deep_causality_rand = { path = "../deep_causality_rand" }
-
 
 
 [[example]]

@@ -75,10 +75,10 @@ where
     ///
     /// Uses the L2 norm of the matrix representation.
     pub fn squared_magnitude(&self) -> T {
-        let data_vec = self.data.to_vec();
+        let data_vec = self.data.as_slice();
         let mut sum = T::zero();
         for val in data_vec {
-            sum += val * val;
+            sum += *val * *val;
         }
         sum
     }

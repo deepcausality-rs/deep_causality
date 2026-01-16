@@ -7,7 +7,7 @@
 
 use deep_causality_metric::Metric;
 use deep_causality_multivector::{CausalMultiField, CausalMultiVector};
-use deep_causality_tensor::{CpuBackend, TensorBackend};
+use deep_causality_tensor::CausalTensor;
 
 // =============================================================================
 // metric() tests
@@ -164,14 +164,12 @@ fn test_matrix_dim_for_minkowski() {
 
 #[test]
 fn test_data_returns_tensor_reference() {
-    use deep_causality_tensor::TensorBackend;
-
     let metric = Metric::from_signature(3, 0, 0);
     let shape = [2, 2, 2];
     let field = CausalMultiField::<f32>::zeros(shape, metric, [1.0, 1.0, 1.0]);
 
     let data = field.data();
-    let tensor_shape = CpuBackend::shape(data);
+    let tensor_shape = CausalTensor::shape(data);
 
     // Shape should be [Nx, Ny, Nz, D, D] = [2, 2, 2, 4, 4]
     assert_eq!(tensor_shape.len(), 5);
@@ -200,6 +198,6 @@ fn test_data_from_coefficients_preserves_values() {
 
     // Verify dimensions are correct
     let data = field.data();
-    let tensor_shape = CpuBackend::shape(data);
+    let tensor_shape = CausalTensor::shape(data);
     assert_eq!(tensor_shape, vec![2, 2, 2, 4, 4]);
 }

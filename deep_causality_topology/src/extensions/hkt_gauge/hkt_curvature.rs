@@ -150,11 +150,7 @@ where
         + From<f64>
         + Into<f64>
         + Satisfies<NoConstraint>
-        + Send
-        + Sync
-        + 'static
         + Copy
-        + Default
         + PartialOrd,
 {
     /// Computes curvature contraction R(u,v)w.
@@ -246,12 +242,8 @@ where
         + Float
         + Clone
         + From<f64>
-        + Into<f64>
-        + Send
-        + Sync
-        + 'static
+        + Into<f64>     
         + Copy
-        + Default
         + PartialOrd,
 {
     /// Internal implementation of geodesic deviation.

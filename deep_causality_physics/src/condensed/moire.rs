@@ -6,7 +6,7 @@
 use crate::{Displacement, Energy, Momentum, PhysicsError, Ratio, Speed, Stiffness, TwistAngle};
 
 use deep_causality_num::Complex;
-use deep_causality_tensor::CausalTensor;
+use deep_causality_tensor::{CausalTensor, Tensor};
 
 use crate::constants::GRAPHENE_LATTICE_CONST;
 use deep_causality_topology::Manifold;

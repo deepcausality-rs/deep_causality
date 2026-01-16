@@ -34,7 +34,7 @@ fn test_multifield_ones_creates_identity_matrices() {
     let dx = [0.1f32, 0.1, 0.1];
 
     let field = CausalMultiField::ones(shape, metric, dx);
-    let data_vec = field.data().to_vec();
+    let data_vec = field.data().clone().to_vec();
 
     // For a single cell with 2x2 matrix, should be identity
     // [1, 0, 0, 1] in row-major order
@@ -74,7 +74,7 @@ fn test_multifield_add() {
     let result = &field1 + &field2;
 
     // zeros + zeros = zeros
-    let data = result.data().to_vec();
+    let data = result.data().clone().to_vec();
     for val in data {
         assert!(val.abs() < 1e-6);
     }
@@ -92,7 +92,7 @@ fn test_multifield_sub() {
     let result = field1 - field2;
 
     // ones - zeros = ones (identity matrices)
-    let data = result.data().to_vec();
+    let data = result.data().clone().to_vec();
     assert!((data[0] - 1.0).abs() < 1e-6);
     assert!((data[3] - 1.0).abs() < 1e-6);
 }

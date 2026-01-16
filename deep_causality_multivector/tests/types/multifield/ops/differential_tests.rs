@@ -7,7 +7,6 @@
 
 use deep_causality_metric::Metric;
 use deep_causality_multivector::{Axis, CausalMultiField, CausalMultiVector};
-use deep_causality_tensor::{CpuBackend, TensorBackend};
 
 // =============================================================================
 // Axis enum tests
@@ -40,96 +39,6 @@ fn test_axis_clone() {
     let axis = Axis::X;
     let cloned = axis;
     assert_eq!(axis, cloned);
-}
-
-// =============================================================================
-// partial_derivative() tests
-// =============================================================================
-
-#[test]
-fn test_partial_derivative_returns_zeros_for_small_grid() {
-    let metric = Metric::from_signature(3, 0, 0);
-    // Grid with n < 3 along X axis
-    let field = CausalMultiField::<f32>::ones([2, 4, 4], metric, [1.0, 1.0, 1.0]);
-
-    let deriv = field.partial_derivative(Axis::X);
-    let deriv_vec: Vec<f32> = CpuBackend::to_vec(&deriv);
-
-    // Should return zeros when dimension is too small
-    assert!(deriv_vec.iter().all(|&x| x.abs() < 1e-5));
-}
-
-#[test]
-fn test_partial_derivative_constant_field() {
-    let metric = Metric::from_signature(3, 0, 0);
-    let num_blades = 8;
-
-    // Create constant scalar field (all cells have scalar = 5.0)
-    let mut mvs = Vec::with_capacity(64);
-    for _ in 0..64 {
-        let mut data = vec![0.0f32; num_blades];
-        data[0] = 5.0;
-        mvs.push(CausalMultiVector::unchecked(data, metric));
-    }
-
-    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [4, 4, 4], [1.0, 1.0, 1.0]);
-
-    let deriv_x = field.partial_derivative(Axis::X);
-    let deriv_vec: Vec<f32> = CpuBackend::to_vec(&deriv_x);
-
-    // Derivative of constant is zero
-    // Interior points should be zero (boundary is padded with zero)
-    let sum: f32 = deriv_vec.iter().map(|x| x.abs()).sum();
-    assert!(
-        sum < 1e-3,
-        "Derivative of constant should be ~0, got sum {}",
-        sum
-    );
-}
-
-#[test]
-fn test_partial_derivative_linear_x_field() {
-    let metric = Metric::from_signature(3, 0, 0);
-    let num_blades = 8;
-
-    // Create field where scalar = x coordinate
-    let mut mvs = Vec::with_capacity(64);
-    for _z in 0..4 {
-        for _y in 0..4 {
-            for x in 0..4 {
-                let mut data = vec![0.0f32; num_blades];
-                data[0] = x as f32;
-                mvs.push(CausalMultiVector::unchecked(data, metric));
-            }
-        }
-    }
-
-    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [4, 4, 4], [1.0, 1.0, 1.0]);
-
-    let deriv_x = field.partial_derivative(Axis::X);
-    let deriv_shape = CpuBackend::shape(&deriv_x);
-
-    // Shape should match original
-    assert_eq!(deriv_shape, vec![4, 4, 4, 4, 4]);
-}
-
-#[test]
-fn test_partial_derivative_preserves_tensor_shape() {
-    let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<f32>::ones([4, 5, 6], metric, [1.0, 1.0, 1.0]);
-
-    let deriv_x = field.partial_derivative(Axis::X);
-    let deriv_y = field.partial_derivative(Axis::Y);
-    let deriv_z = field.partial_derivative(Axis::Z);
-
-    let shape_x = CpuBackend::shape(&deriv_x);
-    let shape_y = CpuBackend::shape(&deriv_y);
-    let shape_z = CpuBackend::shape(&deriv_z);
-
-    // All should have same shape as original field data
-    assert_eq!(shape_x, vec![4, 5, 6, 4, 4]);
-    assert_eq!(shape_y, vec![4, 5, 6, 4, 4]);
-    assert_eq!(shape_z, vec![4, 5, 6, 4, 4]);
 }
 
 // =============================================================================

@@ -96,7 +96,7 @@ pub fn main() {
         vec![1.0, std::f64::consts::E, 10.0, 100.0, 4.0, 16.0],
         vec![2, 3],
     )
-    .unwrap();
+        .unwrap();
     println!("   Original Tensor: {}", tensor_f64_log);
 
     let log_nat_tensor = tensor_f64_log.log_nat().unwrap();

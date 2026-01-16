@@ -10,13 +10,13 @@
 use crate::theories::general_relativity::gr_lie_mapping::expand_lie_to_riemann;
 use crate::theories::general_relativity::gr_utils;
 use crate::{
-    GR, GeodesicState, GrOps, PhysicsError, geodesic_integrator_kernel, parallel_transport_kernel,
-    proper_time_kernel,
+    geodesic_integrator_kernel, parallel_transport_kernel, proper_time_kernel, GeodesicState, GrOps, PhysicsError,
+    GR,
 };
 use deep_causality_haft::RiemannMap;
 use deep_causality_metric::{EastCoastMetric, LorentzianMetric};
 use deep_causality_num::{Field, Float};
-use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::GaugeFieldWitness;
 use deep_causality_topology::{
     CurvatureSymmetry, CurvatureTensor, CurvatureTensorVector, CurvatureTensorWitness, TensorVector,
@@ -24,7 +24,7 @@ use deep_causality_topology::{
 
 impl<S> GrOps<S> for GR<S>
 where
-    S: Field + Float + Clone + From<f64> + Into<f64> + Copy + TensorData,
+    S: Field + Float + Clone + From<f64> + Into<f64> + Copy,
 {
     fn ricci_tensor(&self) -> Result<CausalTensor<S>, PhysicsError> {
         let riemann = self.field_strength();
