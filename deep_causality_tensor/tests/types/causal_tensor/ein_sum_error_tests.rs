@@ -5,9 +5,7 @@
 
 //! Tests for error paths in ein_sum_impl.rs
 
-use deep_causality_tensor::{
-    CausalTensor, CausalTensorError, EinSumAST, EinSumOp, EinSumValidationError, utils_tests,
-};
+use deep_causality_tensor::{CausalTensor, CausalTensorError, EinSumAST, EinSumOp, EinSumValidationError, utils_tests, Tensor};
 
 // ============================================================================
 // Contraction error tests
@@ -177,7 +175,7 @@ fn test_trace_shape_mismatch() {
 fn test_diagonal_axes_identical() {
     let operand = utils_tests::matrix_tensor(vec![1.0, 2.0, 3.0, 4.0], 2, 2);
 
-    let ast = EinSumOp::diagonal_extraction(operand, 0, 0); // Same axis
+    let ast = EinSumOp::<f64>::diagonal_extraction(operand, 0, 0); // Same axis
     let err = CausalTensor::ein_sum(&ast).unwrap_err();
     assert!(matches!(
         err,
@@ -191,7 +189,7 @@ fn test_diagonal_axes_identical() {
 fn test_diagonal_axis_out_of_bounds() {
     let operand = utils_tests::matrix_tensor(vec![1.0, 2.0, 3.0, 4.0], 2, 2);
 
-    let ast = EinSumOp::diagonal_extraction(operand, 0, 10); // axis2=10 out of bounds
+    let ast = EinSumOp::<f64>::diagonal_extraction(operand, 0, 10); // axis2=10 out of bounds
     let err = CausalTensor::ein_sum(&ast).unwrap_err();
     assert!(matches!(
         err,
@@ -206,7 +204,7 @@ fn test_diagonal_shape_mismatch() {
     // Create a 2x3 matrix - axes 0 and 1 have different sizes
     let operand = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
 
-    let ast = EinSumOp::diagonal_extraction(operand, 0, 1);
+    let ast = EinSumOp::<f64>::diagonal_extraction(operand, 0, 1);
     let err = CausalTensor::ein_sum(&ast).unwrap_err();
     assert!(matches!(
         err,
@@ -224,7 +222,7 @@ fn test_batch_mat_mul_lhs_rank_too_low() {
     let lhs = utils_tests::matrix_tensor(vec![1.0, 2.0, 3.0, 4.0], 2, 2);
     let rhs = CausalTensor::new(vec![1.0; 8], vec![2, 2, 2]).unwrap();
 
-    let ast = EinSumOp::batch_mat_mul(lhs, rhs);
+    let ast = EinSumOp::<f64>::batch_mat_mul(lhs, rhs);
     let err = CausalTensor::ein_sum(&ast).unwrap_err();
     assert!(matches!(
         err,
@@ -237,11 +235,11 @@ fn test_batch_mat_mul_lhs_rank_too_low() {
 
 #[test]
 fn test_batch_mat_mul_rhs_rank_too_low() {
-    let lhs = CausalTensor::new(vec![1.0; 8], vec![2, 2, 2]).unwrap();
+    let lhs: CausalTensor<f64> = CausalTensor::new(vec![1.0; 8], vec![2, 2, 2]).unwrap();
     // rhs has only 2 dimensions, needs at least 3
-    let rhs = utils_tests::matrix_tensor(vec![1.0, 2.0, 3.0, 4.0], 2, 2);
+    let rhs: CausalTensor<f64> = utils_tests::matrix_tensor(vec![1.0, 2.0, 3.0, 4.0], 2, 2);
 
-    let ast = EinSumOp::batch_mat_mul(lhs, rhs);
+    let ast = EinSumOp::<f64>::batch_mat_mul(lhs, rhs);
     let err = CausalTensor::ein_sum(&ast).unwrap_err();
     assert!(matches!(
         err,
@@ -258,7 +256,7 @@ fn test_batch_mat_mul_batch_size_mismatch() {
     let lhs = CausalTensor::new(vec![1.0; 8], vec![2, 2, 2]).unwrap();
     let rhs = CausalTensor::new(vec![1.0; 12], vec![3, 2, 2]).unwrap();
 
-    let ast = EinSumOp::batch_mat_mul(lhs, rhs);
+    let ast = EinSumOp::<f64>::batch_mat_mul(lhs, rhs);
     let err = CausalTensor::ein_sum(&ast).unwrap_err();
     assert!(matches!(
         err,
