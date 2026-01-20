@@ -117,6 +117,8 @@ pub trait RealField:
     /// ```
     fn sin(self) -> Self;
 
+    fn asin(self) -> Self;
+
     /// Computes the cosine of a number (in radians).
     /// # Example
     /// ```
@@ -419,6 +421,10 @@ impl RealField for f32 {
     fn atan(self) -> Self {
         f32::atan(self)
     }
+    #[inline]
+    fn asin(self) -> Self {
+        f32::asin(self)
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -599,7 +605,13 @@ impl RealField for f64 {
         f64::EPSILON
     }
 
+    #[inline]
     fn atan(self) -> Self {
         f64::atan(self)
+    }
+
+    #[inline]
+    fn asin(self) -> Self {
+        f64::asin(self)
     }
 }
