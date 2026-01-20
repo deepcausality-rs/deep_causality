@@ -15,9 +15,11 @@
 //! | Electroweak   | 4       | No      | SU(2)×U(1) unified     |
 //! | StandardModel | 12      | No      | Full SM (except gravity)|
 //! | Lorentz       | 6       | No      | General Relativity     |
+//! | SE(3)         | 6       | No      | Rigid Body Motions     |
 
 mod electroweak;
 mod lorentz;
+mod se3;
 mod standard_model;
 mod su2;
 mod su3;
@@ -25,6 +27,7 @@ mod u1;
 
 pub use electroweak::Electroweak;
 pub use lorentz::Lorentz;
+pub use se3::SE3;
 pub use standard_model::StandardModel;
 pub use su2::SU2;
 pub use su3::SU3;
