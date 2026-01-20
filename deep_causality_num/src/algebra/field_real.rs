@@ -117,6 +117,15 @@ pub trait RealField:
     /// ```
     fn sin(self) -> Self;
 
+    /// Computes the arcsine of a number. Return value is in radians in the
+    /// range [-pi/2, pi/2] or NaN if the number is outside the range [-1, 1].
+    /// # Example
+    /// ```
+    /// use deep_causality_num::RealField;
+    /// use std::f64::consts;
+    /// let val = 1.0f64;
+    /// assert!((val.asin() - consts::FRAC_PI_2).abs() < 1e-9);
+    /// ```
     fn asin(self) -> Self;
 
     /// Computes the cosine of a number (in radians).
@@ -128,6 +137,15 @@ pub trait RealField:
     /// ```
     fn cos(self) -> Self;
 
+    /// Computes the arccosine of a number. Return value is in radians in the
+    /// range [0, pi] or NaN if the number is outside the range [-1, 1].
+    /// # Example
+    /// ```
+    /// use deep_causality_num::RealField;
+    /// use std::f64::consts;
+    /// let val = 1.0f64;
+    /// assert!((val.acos() - 0.0).abs() < 1e-9);
+    /// ```
     fn acos(self) -> Self;
 
     /// Computes the tangent of a number (in radians).

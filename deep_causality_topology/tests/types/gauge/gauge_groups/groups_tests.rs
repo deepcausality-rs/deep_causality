@@ -8,7 +8,7 @@
 //! Covers U1, SU2, SU3, Electroweak, StandardModel, and Lorentz groups.
 
 use deep_causality_metric::Metric;
-use deep_causality_topology::{Electroweak, GaugeGroup, Lorentz, SU2, SU3, StandardModel, U1};
+use deep_causality_topology::{Electroweak, GaugeGroup, Lorentz, SE3, SU2, SU3, StandardModel, U1};
 
 // ============================================================================
 // U1 Tests
@@ -316,7 +316,72 @@ fn test_lorentz_clone_debug() {
 }
 
 // ============================================================================
+// SE(3) Tests
+// ============================================================================
+
+#[test]
+fn test_se3_lie_algebra_dim() {
+    assert_eq!(
+        SE3::LIE_ALGEBRA_DIM,
+        6,
+        "SE(3) has 6 generators (3 rot + 3 trans)"
+    );
+}
+
+#[test]
+fn test_se3_is_abelian() {
+    const { assert!(!SE3::IS_ABELIAN) }; // SE(3) is non-abelian
+}
+
+#[test]
+fn test_se3_name() {
+    assert_eq!(SE3::name(), "SE(3)");
+}
+
+#[test]
+fn test_se3_matrix_dim() {
+    assert_eq!(SE3::matrix_dim(), 4, "SE(3) uses 4x4 homogeneous matrices");
+}
+
+#[test]
+fn test_se3_structure_constant_rot_rot() {
+    // [Jᵢ, Jⱼ] = εᵢⱼₖ Jₖ (Standard SO(3) algebra)
+    assert_eq!(SE3::structure_constant(0, 1, 2), 1.0);
+    assert_eq!(SE3::structure_constant(1, 2, 0), 1.0);
+    assert_eq!(SE3::structure_constant(0, 2, 1), -1.0);
+}
+
+#[test]
+fn test_se3_structure_constant_rot_trans() {
+    // [Jᵢ, Pⱼ] = εᵢⱼₖ Pₖ (Rotations rotate translations)
+    // J: 0,1,2 | P: 3,4,5
+    // [J0, P1] = P2 -> [0, 4] = 5 -> structure(0, 4, 5) = 1.0
+    assert_eq!(SE3::structure_constant(0, 4, 5), 1.0);
+
+    // [J1, P2] = P0 -> [1, 5] = 3 -> structure(1, 5, 3) = 1.0
+    assert_eq!(SE3::structure_constant(1, 5, 3), 1.0);
+
+    // [P1, J0] = -P2 -> [4, 0] = 5 -> structure(4, 0, 5) = -1.0
+    assert_eq!(SE3::structure_constant(4, 0, 5), -1.0);
+}
+
+#[test]
+fn test_se3_structure_constant_trans_trans() {
+    // [Pᵢ, Pⱼ] = 0 (Translations commute)
+    assert_eq!(SE3::structure_constant(3, 4, 5), 0.0);
+    assert_eq!(SE3::structure_constant(4, 5, 3), 0.0);
+}
+
+#[test]
+fn test_se3_clone_debug() {
+    let se3 = SE3;
+    let _cloned = se3.clone();
+    let _debug = format!("{:?}", se3);
+}
+
+// ============================================================================
 // GaugeGroup Trait Default Implementation Tests
+
 // ============================================================================
 
 #[test]
