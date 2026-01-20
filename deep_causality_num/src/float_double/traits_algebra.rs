@@ -163,6 +163,11 @@ impl RealField for DoubleFloat {
     }
 
     #[inline]
+    fn asin(self) -> Self {
+        <Self as Float>::asin(self)
+    }
+
+    #[inline]
     fn cos(self) -> Self {
         <Self as Float>::cos(self)
     }
