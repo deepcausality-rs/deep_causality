@@ -273,3 +273,42 @@ fn test_display() {
     let display_str = format!("{}", x);
     assert!(display_str.contains("42"));
 }
+
+#[test]
+fn test_trig() {
+    let angle_val = 0.5_f64;
+    let angle = DoubleFloat::from_f64(angle_val);
+
+    // sin
+    let s = RealField::sin(angle);
+    assert!((s.to_f64() - angle_val.sin()).abs() < 1e-12, "sin failed");
+
+    // cos
+    let c = RealField::cos(angle);
+    assert!((c.to_f64() - angle_val.cos()).abs() < 1e-12, "cos failed");
+
+    // tan
+    let t = RealField::tan(angle);
+    assert!((t.to_f64() - angle_val.tan()).abs() < 1e-12, "tan failed");
+
+    // asin
+    let as_val = RealField::asin(angle);
+    assert!(
+        (as_val.to_f64() - angle_val.asin()).abs() < 1e-12,
+        "asin failed"
+    );
+
+    // acos
+    let ac_val = RealField::acos(angle);
+    assert!(
+        (ac_val.to_f64() - angle_val.acos()).abs() < 1e-12,
+        "acos failed"
+    );
+
+    // atan
+    let at_val = RealField::atan(angle);
+    assert!(
+        (at_val.to_f64() - angle_val.atan()).abs() < 1e-12,
+        "atan failed"
+    );
+}

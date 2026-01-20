@@ -78,6 +78,8 @@ fn test_trig() {
     assert!((RealField::cos(angle) - angle.cos()).abs() < 1e-6);
     assert!((RealField::tan(angle) - angle.tan()).abs() < 1e-6);
     assert!((RealField::acos(1.0_f32) - 0.0_f32).abs() < 1e-6);
+    assert!((RealField::asin(0.5_f32) - 0.5_f32.asin()).abs() < 1e-6);
+    assert!((RealField::atan(1.0_f32) - 1.0_f32.atan()).abs() < 1e-6);
 }
 
 #[test]
