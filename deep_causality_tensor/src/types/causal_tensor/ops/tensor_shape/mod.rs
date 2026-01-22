@@ -17,11 +17,59 @@ where
         if new_len != self.len() {
             return Err(CausalTensorError::ShapeMismatch);
         }
-        // This is a metadata-only operation, so we clone the data but re-calculate strides.
-        Ok(Self::from_vec_and_shape_unchecked(
-            self.data.clone(),
-            new_shape,
-        ))
+
+        // If the tensor is contiguous (standard logical order), we can just clone.
+        // If not (e.g. permuted), we must materialize the data in logical order first.
+        let data = if self.is_contiguous() {
+            self.data.clone()
+        } else {
+            // Materialize data in logical order
+
+            // Revisiting the `from_shape_fn` implementation in `mod.rs`:
+            // It iterates total_elements and maintains an `index` vec.
+            let total_elements = self.len();
+            let mut data = Vec::with_capacity(total_elements);
+            let rank = self.num_dim();
+            let mut index = vec![0; rank];
+
+            for _ in 0..total_elements {
+                // We need to handle error here, but get_ref returns Result.
+                // Reshape signature is Result.
+                if let Some(val) = self.get(&index) {
+                    data.push(val.clone());
+                } else {
+                    // Should not match, verified by len check.
+                    return Err(CausalTensorError::IndexOutOfBounds);
+                }
+
+                // Increment index
+                if rank > 0 {
+                    for j in (0..rank).rev() {
+                        index[j] += 1;
+                        if index[j] < self.shape[j] {
+                            break;
+                        }
+                        index[j] = 0;
+                    }
+                }
+            }
+            data
+        };
+
+        Ok(Self::from_vec_and_shape_unchecked(data, new_shape))
+    }
+
+    fn is_contiguous(&self) -> bool {
+        // Calculate expected standard strides
+        let mut expected_strides = vec![0; self.shape.len()];
+        if !self.shape.is_empty() {
+            let mut current_stride = 1;
+            for i in (0..self.shape.len()).rev() {
+                expected_strides[i] = current_stride;
+                current_stride *= self.shape[i];
+            }
+        }
+        self.strides == expected_strides
     }
 
     pub(in crate::types::causal_tensor) fn ravel_impl(mut self) -> Self {
