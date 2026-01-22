@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.0.4...deep_causality_core-v0.0.5) - 2026-01-22
+
+### Other
+
+- *(deep_causality)* Fixed multipple bugs in Causaloid.
+- *(deep_causality_core)* Fixed failing test.
+- *(deep_causality_core)* Fixed Diamond bug.
+
 ## [0.0.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.0.3...deep_causality_core-v0.0.4) - 2026-01-09
 
 ### Added

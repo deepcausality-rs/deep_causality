@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.3.0...deep_causality_tensor-v0.4.0) - 2026-01-22
+
+### Added
+
+- *(deep_causality_tensor)* Updated tests.
+- *(deep_causality_tensor)* Finalized MLX removal.
+- *(deep_causality_tensor)* Removed MLX backed.
+
+### Other
+
+- *(deep_causality_tensor)* Fixed  numerous bugs.
+- Updated SBOM of and applied docstring fixes.
+- Updated SBOM of recently changed crates.
+
 ## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.2.2...deep_causality_tensor-v0.3.0) - 2026-01-09
 
 ### Added

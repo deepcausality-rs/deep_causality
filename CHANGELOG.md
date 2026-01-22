@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.13.2...deep_causality-v0.13.3) - 2026-01-22
+
+### Fixed
+
+- fixed typo in README.md
+
+### Other
+
+- *(deep_causality)* Fixed multipple bugs in Context.
+- *(deep_causality)* Fixed multipple bugs in Causaloid.
+- Updated SBOM of and applied docstring fixes.
+
 ## [0.13.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.13.1...deep_causality-v0.13.2) - 2026-01-09
 
 ### Added

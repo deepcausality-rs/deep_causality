@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.1.12...deep_causality_num-v0.2.0) - 2026-01-22
+
+### Other
+
+- *(deep_causality_num)* Renamed DoubleFloat to Float106 for consistency with existing float types.
+- *(deep_causality_num)* Renamed DoubleFloat to Float106 for consistency with existing float types.
+- *(deep_causality_num)* Fixed Complex::powi bug where negative exponents produced incorrect results.
+- *(deep_causality_num)* Tested asin, acos, and atan tests to increase test coverage.
+- *(deep_causality_num)* Added asin impl to RealField and default impl.
+- Merge remote-tracking branch 'origin/main'
+- Fixed and lints.
+- *(deep_causality_num)* Added atan impl to RealField and default impl.
+- *(deep_causality_topology)* Added first example that verifies the correctness of the Lattice Gaugle Field up to 1e-31(!)
+
 ## [0.1.12](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.1.11...deep_causality_num-v0.1.12) - 2026-01-09
 
 ### Added

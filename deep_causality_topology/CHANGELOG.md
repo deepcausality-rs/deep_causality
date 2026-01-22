@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.3.0...deep_causality_topology-v0.4.0) - 2026-01-22
+
+### Added
+
+- *(deep_causality_topology)* Added SE3 Gauge Group of rigid body motions. .
+- *(deep_causality_tensor)* Finalized MLX removal.
+- *(deep_causality_tensor)* Removed MLX backed.
+- *(deep_causality_topology)* Removed MLX backed.
+- *(deep_causality_multivector)* Removed MLX backed.
+- *(deep_causality_topology)* Updated and revised implementation of Lattice Gauge Field.
+- *(deep_causality_topology)* Updated and revised implementation of Lattice Gauge Field.
+- *(deep_causality_topology)* Initial implementation of Lattice Gauge Field.
+
+### Fixed
+
+- *(deep_causality_topology)* Applied lints and fixes.
+
+### Other
+
+- *(deep_causality_topology)* Renamed Guage Groups to their definition names.
+- *(deep_causality_num)* Renamed DoubleFloat to Float106 for consistency with existing float types.
+- *(deep_causality_topology)* Fixed  numerous bugs.
+- remoced unneccessary trait bounds.
+- Updated SBOM of and applied docstring fixes.
+- Updated SBOM of recently changed crates.
+- Updated Bazel config
+- Applied lints and fixes across crates.
+- *(deep_causality_topology)* Applied lints and fixes.
+- *(deep_causality_topology)* Refeactoring to allow for genric fields and ComplexFiels in GaugeField and LatticeGauge Field
+- *(deep_causality_topology)* Initial verification of the Lattice Gauge Field.
+- *(deep_causality_topology)* Applied lints and fixes.
+- *(deep_causality_topology)* Applied lints and fixes.
+- *(deep_causality_topology)* Applied lints and fixes.
+- *(deep_causality_topology)* Increased test coverage, applied lints and fixes.
+- *(deep_causality_topology)* Increased test coverage, applied lints and fixes.
+- *(deep_causality_topology)* Increasded test coverage, applied lints and fixes.
+- *(deep_causality_topology)* Increasded test coverage, applied lints and fixes.
+- *(deep_causality_topology)* Increasded test coverage.
+- Merge branch 'deepcausality-rs:main' into main
+- *(deep_causality_topology)* Updated SBOM
+- *(deep_causality_topology)* Added exaple for Lattice Gauge Field impl.
+- *(deep_causality_topology)* Documented  and revised Lattice Gauge Field impl.
+- *(deep_causality_topology)* Reviewed initial implementation of Lattice Gauge Field.
+- *(deep_causality_topology)* Tested initial implementation of Lattice Gauge Field.
+
 ## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.2.5...deep_causality_topology-v0.3.0) - 2026-01-09
 
 ### Added

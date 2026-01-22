@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.12](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.3.11...deep_causality_uncertain-v0.3.12) - 2026-01-22
+
+### Other
+
+- *(deep_causality_uncertain)* Fixed Monte Carlo Sampling bug.
+
 ## [0.3.11](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.3.10...deep_causality_uncertain-v0.3.11) - 2026-01-09
 
 ### Other
