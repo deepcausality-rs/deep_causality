@@ -23,7 +23,8 @@ impl<
     const D: usize,
     M: Field + Copy + Default + PartialOrd + Debug + ComplexField<R> + DivisionAlgebra<R>,
     R: RealField + FromPrimitive + ToPrimitive,
-> LatticeGaugeField<G, D, M, R>
+    S,
+> LatticeGaugeField<G, D, M, R, S>
 {
     /// Apply a gauge transformation (infallible version).
     ///

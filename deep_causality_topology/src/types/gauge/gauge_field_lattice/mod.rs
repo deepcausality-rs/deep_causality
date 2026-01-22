@@ -71,7 +71,7 @@ mod utils;
 /// * `M` - Matrix element type (Field + `DivisionAlgebra<R>`)
 /// * `R` - Scalar type (RealField)
 #[derive(Debug, Clone)]
-pub struct LatticeGaugeField<G: GaugeGroup, const D: usize, M, R> {
+pub struct LatticeGaugeField<G: GaugeGroup, const D: usize, M, R, S = ()> {
     /// The underlying lattice structure.
     lattice: Arc<Lattice<D>>,
 
@@ -81,6 +81,10 @@ pub struct LatticeGaugeField<G: GaugeGroup, const D: usize, M, R> {
 
     /// Coupling parameter β = 2N/g².
     beta: R,
+
+    /// The Source that generates the field.
+    /// Defaults to () for Vacuum.
+    source: S,
 }
 
 // ============================================================================
@@ -92,7 +96,8 @@ impl<
     const D: usize,
     M: Field + Copy + Default + PartialOrd + Debug + ComplexField<R> + DivisionAlgebra<R>,
     R: RealField + FromPrimitive + ToPrimitive,
-> LatticeGaugeField<G, D, M, R>
+    S: Default + Clone,
+> LatticeGaugeField<G, D, M, R, S>
 {
     /// Create with all links set to identity.
     ///
@@ -118,6 +123,7 @@ impl<
             lattice,
             links,
             beta,
+            source: S::default(),
         })
     }
 
@@ -169,6 +175,7 @@ impl<
             lattice,
             links,
             beta,
+            source: S::default(),
         })
     }
 
@@ -216,6 +223,7 @@ impl<
             lattice,
             links,
             beta,
+            source: S::default(),
         })
     }
 
@@ -238,7 +246,7 @@ impl<
 }
 
 // Separate impl block without Clone + Default bounds for HKT compatibility
-impl<G: GaugeGroup, const D: usize, M, R> LatticeGaugeField<G, D, M, R> {
+impl<G: GaugeGroup, const D: usize, M, R, S> LatticeGaugeField<G, D, M, R, S> {
     /// Create from explicit link data without validation.
     ///
     /// This constructor has minimal bounds for HKT compatibility.
@@ -248,6 +256,7 @@ impl<G: GaugeGroup, const D: usize, M, R> LatticeGaugeField<G, D, M, R> {
     /// * `lattice` - The underlying lattice structure
     /// * `links` - Map of edge cells to link variables
     /// * `beta` - Coupling parameter
+    /// * `source` - The source field
     ///
     /// # Returns
     ///
@@ -256,11 +265,41 @@ impl<G: GaugeGroup, const D: usize, M, R> LatticeGaugeField<G, D, M, R> {
         lattice: Arc<Lattice<D>>,
         links: HashMap<LatticeCell<D>, LinkVariable<G, M, R>>,
         beta: R,
+        source: S,
     ) -> Self {
         Self {
             lattice,
             links,
             beta,
+            source,
+        }
+    }
+
+    /// Returns a reference to the field source.
+    pub fn source(&self) -> &S {
+        &self.source
+    }
+
+    /// Returns a mutable reference to the field source.
+    pub fn source_mut(&mut self) -> &mut S {
+        &mut self.source
+    }
+
+    /// Replaces the source and returns the old one.
+    pub fn replace_source(&mut self, new_source: S) -> S {
+        std::mem::replace(&mut self.source, new_source)
+    }
+
+    /// Attaches a new source to the field, transforming the type.
+    ///
+    /// Consumes the current field and returns a new field with the given source.
+    /// The link variables and lattice structure are preserved.
+    pub fn with_source<NewS>(self, source: NewS) -> LatticeGaugeField<G, D, M, R, NewS> {
+        LatticeGaugeField {
+            lattice: self.lattice,
+            links: self.links,
+            beta: self.beta,
+            source,
         }
     }
 }

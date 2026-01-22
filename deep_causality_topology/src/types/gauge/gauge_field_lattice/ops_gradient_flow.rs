@@ -55,7 +55,8 @@ impl<
     const D: usize,
     M: Field + Copy + Default + PartialOrd + Debug + ComplexField<R> + DivisionAlgebra<R>,
     R: RealField + FromPrimitive + ToPrimitive,
-> LatticeGaugeField<G, D, M, R>
+    S: Clone,
+> LatticeGaugeField<G, D, M, R, S>
 {
     /// Perform gradient flow integration.
     ///
@@ -160,6 +161,7 @@ impl<
             lattice: self.lattice.clone(),
             links: new_links,
             beta: self.beta,
+            source: self.source.clone(),
         })
     }
 
@@ -181,6 +183,7 @@ impl<
             lattice: self.lattice.clone(),
             links: new_links,
             beta: self.beta, // beta doesn't really scale in this context
+            source: self.source.clone(),
         })
     }
 
@@ -208,6 +211,7 @@ impl<
             lattice: self.lattice.clone(),
             links: new_links,
             beta: self.beta,
+            source: self.source.clone(),
         })
     }
 
@@ -298,6 +302,7 @@ impl<
             lattice: self.lattice.clone(),
             links: new_links,
             beta: self.beta,
+            source: self.source.clone(),
         })
     }
 

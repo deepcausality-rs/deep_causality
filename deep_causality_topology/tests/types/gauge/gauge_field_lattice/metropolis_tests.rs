@@ -33,10 +33,11 @@ fn test_metropolis_sweep_empty_lattice() {
 
     use std::collections::HashMap;
     let empty_links = HashMap::new();
-    let mut field = LatticeGaugeField::<U1, 1, Complex<f64>, f64>::from_links_unchecked(
+    let mut field = LatticeGaugeField::<U1, 1, Complex<f64>, f64, ()>::from_links_unchecked(
         lattice,
         empty_links,
         1.0,
+        (),
     );
 
     // Verify it is empty

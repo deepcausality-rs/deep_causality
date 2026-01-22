@@ -5,7 +5,9 @@
 use crate::{GaugeGroup, LatticeGaugeField};
 use std::fmt::{Debug, Display};
 
-impl<G: GaugeGroup, const D: usize, M: Debug, R: Debug> Display for LatticeGaugeField<G, D, M, R> {
+impl<G: GaugeGroup, const D: usize, M: Debug, R: Debug, S: Debug> Display
+    for LatticeGaugeField<G, D, M, R, S>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

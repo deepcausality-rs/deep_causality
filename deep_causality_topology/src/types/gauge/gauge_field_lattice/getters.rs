@@ -7,7 +7,7 @@ use crate::{GaugeGroup, Lattice, LatticeCell, LatticeGaugeField, LinkVariable};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-impl<G: GaugeGroup, const D: usize, M, R> LatticeGaugeField<G, D, M, R> {
+impl<G: GaugeGroup, const D: usize, M, R, S> LatticeGaugeField<G, D, M, R, S> {
     /// The underlying lattice (dereferenced for convenience).
     ///
     /// # Returns

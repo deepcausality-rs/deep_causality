@@ -12,7 +12,8 @@ impl<
     const D: usize,
     M: Field + Copy + Default + PartialOrd + Debug + ComplexField<R> + DivisionAlgebra<R>,
     R: RealField + FromPrimitive + ToPrimitive,
-> LatticeGaugeField<G, D, M, R>
+    S,
+> LatticeGaugeField<G, D, M, R, S>
 {
     /// Get a link, returning identity if not found.
     pub(crate) fn get_link_or_identity(&self, edge: &LatticeCell<D>) -> LinkVariable<G, M, R> {

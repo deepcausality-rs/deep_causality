@@ -78,8 +78,8 @@ fn test_lattice_gauge_field_try_from_links_missing() {
 fn test_lattice_gauge_field_from_links_unchecked() {
     let lattice = create_1d_lattice();
     let links = std::collections::HashMap::new();
-    let field: LatticeGaugeField<U1, 1, Complex<f64>, f64> =
-        LatticeGaugeField::from_links_unchecked(lattice, links, 2.0);
+    let field: LatticeGaugeField<U1, 1, Complex<f64>, f64, ()> =
+        LatticeGaugeField::from_links_unchecked(lattice, links, 2.0, ());
     assert!((*field.beta() - 2.0).abs() < 1e-10);
 }
 
@@ -640,8 +640,8 @@ fn test_lattice_gauge_field_try_improved_action_random() {
 fn test_metropolis_sweep_empty_lattice() {
     let lattice = create_1d_lattice(); // Just a dummy lattice
     let links = std::collections::HashMap::new(); // Empty links
-    let mut field: LatticeGaugeField<U1, 1, Complex<f64>, f64> =
-        LatticeGaugeField::from_links_unchecked(lattice, links, 1.0);
+    let mut field: LatticeGaugeField<U1, 1, Complex<f64>, f64, ()> =
+        LatticeGaugeField::from_links_unchecked(lattice, links, 1.0, ());
 
     let mut rng = deep_causality_rand::rng();
     let rate = field.try_metropolis_sweep(0.1, &mut rng);
