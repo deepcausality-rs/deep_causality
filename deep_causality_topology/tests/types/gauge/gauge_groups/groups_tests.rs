@@ -8,7 +8,7 @@
 //! Covers U1, SU2, SU3, Electroweak, StandardModel, and Lorentz groups.
 
 use deep_causality_metric::Metric;
-use deep_causality_topology::{Electroweak, GaugeGroup, Lorentz, SE3, SU2, SU3, StandardModel, U1};
+use deep_causality_topology::{GaugeGroup, SE3, SO3_1, SU2, SU2_U1, SU3, SU3_SU2_U1, U1};
 
 // ============================================================================
 // U1 Tests
@@ -174,32 +174,28 @@ fn test_su3_clone_debug() {
 
 #[test]
 fn test_electroweak_lie_algebra_dim() {
-    assert_eq!(
-        Electroweak::LIE_ALGEBRA_DIM,
-        4,
-        "SU(2)×U(1) has 4 generators"
-    );
+    assert_eq!(SU2_U1::LIE_ALGEBRA_DIM, 4, "SU(2)×U(1) has 4 generators");
 }
 
 #[test]
 fn test_electroweak_is_abelian() {
-    const { assert!(!Electroweak::IS_ABELIAN) }; // Electroweak is non-abelian (SU(2) factor)
+    const { assert!(!SU2_U1::IS_ABELIAN) }; // Electroweak is non-abelian (SU(2) factor)
 }
 
 #[test]
 fn test_electroweak_name() {
-    assert_eq!(Electroweak::name(), "SU(2)×U(1)");
+    assert_eq!(SU2_U1::name(), "SU(2)×U(1)");
 }
 
 #[test]
 fn test_electroweak_default_metric() {
-    let metric = Electroweak::default_metric();
+    let metric = SU2_U1::default_metric();
     assert!(matches!(metric, Metric::Minkowski(4)));
 }
 
 #[test]
 fn test_electroweak_clone_debug() {
-    let ew = Electroweak;
+    let ew = SU2_U1;
     let _cloned = ew.clone();
     let _debug = format!("{:?}", ew);
 }
@@ -211,7 +207,7 @@ fn test_electroweak_clone_debug() {
 #[test]
 fn test_standard_model_lie_algebra_dim() {
     assert_eq!(
-        StandardModel::LIE_ALGEBRA_DIM,
+        SU3_SU2_U1::LIE_ALGEBRA_DIM,
         12,
         "SU(3)×SU(2)×U(1) has 12 generators"
     );
@@ -219,23 +215,23 @@ fn test_standard_model_lie_algebra_dim() {
 
 #[test]
 fn test_standard_model_is_abelian() {
-    const { assert!(!StandardModel::IS_ABELIAN) }; // Standard Model is non-abelian
+    const { assert!(!SU3_SU2_U1::IS_ABELIAN) }; // Standard Model is non-abelian
 }
 
 #[test]
 fn test_standard_model_name() {
-    assert_eq!(StandardModel::name(), "SU(3)×SU(2)×U(1)");
+    assert_eq!(SU3_SU2_U1::name(), "SU(3)×SU(2)×U(1)");
 }
 
 #[test]
 fn test_standard_model_default_metric() {
-    let metric = StandardModel::default_metric();
+    let metric = SU3_SU2_U1::default_metric();
     assert!(matches!(metric, Metric::Minkowski(4)));
 }
 
 #[test]
 fn test_standard_model_clone_debug() {
-    let sm = StandardModel;
+    let sm = SU3_SU2_U1;
     let _cloned = sm.clone();
     let _debug = format!("{:?}", sm);
 }
@@ -247,7 +243,7 @@ fn test_standard_model_clone_debug() {
 #[test]
 fn test_lorentz_lie_algebra_dim() {
     assert_eq!(
-        Lorentz::LIE_ALGEBRA_DIM,
+        SO3_1::LIE_ALGEBRA_DIM,
         6,
         "SO(3,1) has 6 generators (3 rot + 3 boost)"
     );
@@ -255,22 +251,22 @@ fn test_lorentz_lie_algebra_dim() {
 
 #[test]
 fn test_lorentz_is_abelian() {
-    const { assert!(!Lorentz::IS_ABELIAN) }; // Lorentz group is non-abelian
+    const { assert!(!SO3_1::IS_ABELIAN) }; // Lorentz group is non-abelian
 }
 
 #[test]
 fn test_lorentz_name() {
-    assert_eq!(Lorentz::name(), "SO(3,1)");
+    assert_eq!(SO3_1::name(), "SO(3,1)");
 }
 
 #[test]
 fn test_lorentz_matrix_dim() {
-    assert_eq!(Lorentz::matrix_dim(), 4, "SO(3,1) uses 4x4 matrices");
+    assert_eq!(SO3_1::matrix_dim(), 4, "SO(3,1) uses 4x4 matrices");
 }
 
 #[test]
 fn test_lorentz_default_metric_east_coast() {
-    let metric = Lorentz::default_metric();
+    let metric = SO3_1::default_metric();
     // East Coast: p=3 (positive spatial), q=1 (negative time)
     assert!(matches!(metric, Metric::Generic { p: 3, q: 1, r: 0 }));
 }
@@ -279,17 +275,17 @@ fn test_lorentz_default_metric_east_coast() {
 fn test_lorentz_structure_constant_rotation_rotation() {
     // [Jᵢ, Jⱼ] = εᵢⱼₖ Jₖ (rotation-rotation → rotation)
     // J0, J1, J2 are indices 0, 1, 2
-    assert_eq!(Lorentz::structure_constant(0, 1, 2), 1.0); // [J0, J1] = J2
-    assert_eq!(Lorentz::structure_constant(1, 2, 0), 1.0); // [J1, J2] = J0
-    assert_eq!(Lorentz::structure_constant(2, 0, 1), 1.0); // [J2, J0] = J1
-    assert_eq!(Lorentz::structure_constant(0, 2, 1), -1.0); // antisymmetry
+    assert_eq!(SO3_1::structure_constant(0, 1, 2), 1.0); // [J0, J1] = J2
+    assert_eq!(SO3_1::structure_constant(1, 2, 0), 1.0); // [J1, J2] = J0
+    assert_eq!(SO3_1::structure_constant(2, 0, 1), 1.0); // [J2, J0] = J1
+    assert_eq!(SO3_1::structure_constant(0, 2, 1), -1.0); // antisymmetry
 }
 
 #[test]
 fn test_lorentz_structure_constant_rotation_boost() {
     // [Jᵢ, Kⱼ] = εᵢⱼₖ Kₖ (rotation-boost → boost)
     // K0, K1, K2 are indices 3, 4, 5
-    assert_eq!(Lorentz::structure_constant(0, 3, 5), 0.0); // Need correct indices
+    assert_eq!(SO3_1::structure_constant(0, 3, 5), 0.0); // Need correct indices
     // More complex due to index mapping
 }
 
@@ -297,20 +293,20 @@ fn test_lorentz_structure_constant_rotation_boost() {
 fn test_lorentz_structure_constant_boost_boost() {
     // [Kᵢ, Kⱼ] = -εᵢⱼₖ Jₖ (boost-boost → rotation with minus)
     // K0=3, K1=4, K2=5, result in J0=0, J1=1, J2=2
-    assert_eq!(Lorentz::structure_constant(3, 4, 2), -1.0); // [K0, K1] = -J2
+    assert_eq!(SO3_1::structure_constant(3, 4, 2), -1.0); // [K0, K1] = -J2
 }
 
 #[test]
 fn test_lorentz_structure_constant_zero_cases() {
     // Mixed cases that don't match patterns
-    assert_eq!(Lorentz::structure_constant(0, 0, 0), 0.0);
-    assert_eq!(Lorentz::structure_constant(3, 3, 3), 0.0);
-    assert_eq!(Lorentz::structure_constant(0, 3, 0), 0.0);
+    assert_eq!(SO3_1::structure_constant(0, 0, 0), 0.0);
+    assert_eq!(SO3_1::structure_constant(3, 3, 3), 0.0);
+    assert_eq!(SO3_1::structure_constant(0, 3, 0), 0.0);
 }
 
 #[test]
 fn test_lorentz_clone_debug() {
-    let lorentz = Lorentz;
+    let lorentz = SO3_1;
     let _cloned = lorentz.clone();
     let _debug = format!("{:?}", lorentz);
 }
@@ -390,9 +386,9 @@ fn test_default_spacetime_dim_is_4() {
     assert_eq!(U1::SPACETIME_DIM, 4);
     assert_eq!(SU2::SPACETIME_DIM, 4);
     assert_eq!(SU3::SPACETIME_DIM, 4);
-    assert_eq!(Electroweak::SPACETIME_DIM, 4);
-    assert_eq!(StandardModel::SPACETIME_DIM, 4);
-    assert_eq!(Lorentz::SPACETIME_DIM, 4);
+    assert_eq!(SU2_U1::SPACETIME_DIM, 4);
+    assert_eq!(SU3_SU2_U1::SPACETIME_DIM, 4);
+    assert_eq!(SO3_1::SPACETIME_DIM, 4);
 }
 
 #[test]
@@ -425,9 +421,9 @@ fn test_gauge_groups_default() {
     let _u1: U1 = Default::default();
     let _su2: SU2 = Default::default();
     let _su3: SU3 = Default::default();
-    let _ew: Electroweak = Default::default();
-    let _sm: StandardModel = Default::default();
-    let _lorentz: Lorentz = Default::default();
+    let _ew: SU2_U1 = Default::default();
+    let _sm: SU3_SU2_U1 = Default::default();
+    let _lorentz: SO3_1 = Default::default();
 }
 
 #[test]

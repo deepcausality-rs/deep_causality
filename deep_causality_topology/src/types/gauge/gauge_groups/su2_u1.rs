@@ -32,10 +32,11 @@ use crate::traits::gauge_group::GaugeGroup;
 /// # Weinberg Angle
 ///
 /// The mixing between SU(2) and U(1) is characterized by the Weinberg angle θ_W ≈ 28.7°.
+#[allow(non_camel_case_types)]
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct Electroweak;
+pub struct SU2_U1;
 
-impl GaugeGroup for Electroweak {
+impl GaugeGroup for SU2_U1 {
     const LIE_ALGEBRA_DIM: usize = 4; // 3 + 1
     const IS_ABELIAN: bool = false;
 

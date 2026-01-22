@@ -36,9 +36,9 @@ use deep_causality_metric::Metric;
 /// GR traditionally uses the East Coast (MTW) convention:
 /// η = diag(-1, +1, +1, +1)
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct Lorentz;
+pub struct SO3_1;
 
-impl GaugeGroup for Lorentz {
+impl GaugeGroup for SO3_1 {
     const LIE_ALGEBRA_DIM: usize = 6;
     const IS_ABELIAN: bool = false;
 

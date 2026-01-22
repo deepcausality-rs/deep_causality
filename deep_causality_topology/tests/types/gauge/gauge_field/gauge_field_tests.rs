@@ -7,7 +7,7 @@ use deep_causality_metric::Metric;
 use deep_causality_num::Complex;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
-    BaseTopology, GaugeField, Lorentz, Manifold, PointCloud, Simplex, SimplicialComplexBuilder, U1,
+    BaseTopology, GaugeField, Manifold, PointCloud, SO3_1, Simplex, SimplicialComplexBuilder, U1,
 };
 
 fn create_test_manifold() -> Manifold<f64, f64> {
@@ -93,7 +93,7 @@ fn test_gauge_field_with_default_metric() {
     let lorentz_conn = CausalTensor::from_vec(vec![1.0; 24], &[1, 4, 6]); // 4D spacetime, 6D lie algebra
     let lorentz_fs = CausalTensor::from_vec(vec![0.0; 96], &[1, 4, 4, 6]);
 
-    let gr_field: GaugeField<Lorentz, f64, f64> =
+    let gr_field: GaugeField<SO3_1, f64, f64> =
         GaugeField::with_default_metric(manifold, lorentz_conn, lorentz_fs)
             .expect("Failed to create Lorentz field");
 

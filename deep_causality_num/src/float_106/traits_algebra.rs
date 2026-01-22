@@ -11,7 +11,7 @@
 //! - `AbelianGroup`, `DivisionAlgebra`, `RealField` (algebra traits)
 //! - Marker traits (`Associative`, `Commutative`, `Distributive`)
 
-use crate::DoubleFloat;
+use crate::Float106;
 use crate::{
     AbelianGroup, Associative, Commutative, Distributive, DivisionAlgebra, Float, Num, One,
     RealField, Zero,
@@ -21,7 +21,7 @@ use crate::{
 // Identity Traits
 // =============================================================================
 
-impl Zero for DoubleFloat {
+impl Zero for Float106 {
     #[inline]
     fn zero() -> Self {
         Self::from_f64(0.0)
@@ -33,7 +33,7 @@ impl Zero for DoubleFloat {
     }
 }
 
-impl One for DoubleFloat {
+impl One for Float106 {
     #[inline]
     fn one() -> Self {
         Self::from_f64(1.0)
@@ -49,27 +49,27 @@ impl One for DoubleFloat {
 // Numeric Trait
 // =============================================================================
 
-impl Num for DoubleFloat {}
+impl Num for Float106 {}
 
 // =============================================================================
 // Marker Traits (algebra properties)
 // =============================================================================
 
-impl Associative for DoubleFloat {}
-impl Commutative for DoubleFloat {}
-impl Distributive for DoubleFloat {}
+impl Associative for Float106 {}
+impl Commutative for Float106 {}
+impl Distributive for Float106 {}
 
 // =============================================================================
 // Abelian Group (additive)
 // =============================================================================
 
-impl AbelianGroup for DoubleFloat {}
+impl AbelianGroup for Float106 {}
 
 // =============================================================================
 // Division Algebra
 // =============================================================================
 
-impl DivisionAlgebra<DoubleFloat> for DoubleFloat {
+impl DivisionAlgebra<Float106> for Float106 {
     /// The conjugate of a real number is itself.
     #[inline]
     fn conjugate(&self) -> Self {
@@ -78,7 +78,7 @@ impl DivisionAlgebra<DoubleFloat> for DoubleFloat {
 
     /// The squared norm of a DoubleFloat `x` is `x*x`.
     #[inline]
-    fn norm_sqr(&self) -> DoubleFloat {
+    fn norm_sqr(&self) -> Float106 {
         *self * *self
     }
 
@@ -95,7 +95,7 @@ impl DivisionAlgebra<DoubleFloat> for DoubleFloat {
 // Real Field
 // =============================================================================
 
-impl RealField for DoubleFloat {
+impl RealField for Float106 {
     #[inline]
     fn nan() -> Self {
         <Self as Float>::nan()

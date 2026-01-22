@@ -34,9 +34,10 @@ use crate::traits::gauge_group::GaugeGroup;
 /// The Standard Model does NOT include gravity.
 /// For gravity, use the Lorentz gauge group separately.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct StandardModel;
+#[allow(non_camel_case_types)]
+pub struct SU3_SU2_U1;
 
-impl GaugeGroup for StandardModel {
+impl GaugeGroup for SU3_SU2_U1 {
     const LIE_ALGEBRA_DIM: usize = 12; // 8 + 3 + 1
     const IS_ABELIAN: bool = false;
 

@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::DoubleFloat;
+use crate::Float106;
 
-impl DoubleFloat {
+impl Float106 {
     /// Returns the high-order component.
     #[inline(always)]
     pub const fn hi(self) -> f64 {

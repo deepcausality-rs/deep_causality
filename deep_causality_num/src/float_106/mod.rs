@@ -43,7 +43,7 @@ mod traits_algebra;
 mod traits_float;
 mod traits_num;
 
-/// A high-precision floating point number represented as the sum of two `f64`s.
+/// A high-precision 106bit floating point number represented as the sum of two `f64`s.
 ///
 /// Precision: ~31 decimal digits (106 bits significand).
 /// Range: Same as `f64` (approx $10^{\pm 308}$).
@@ -56,7 +56,7 @@ mod traits_num;
 /// For normalized values: `|lo| <= 0.5 * ulp(hi)`
 #[derive(Copy, Clone, Default)]
 #[repr(C, align(16))]
-pub struct DoubleFloat {
+pub struct Float106 {
     /// High-order component (most significant bits)
     pub(crate) hi: f64,
     /// Low-order component (correction term)
@@ -67,7 +67,7 @@ pub struct DoubleFloat {
 // Constructors
 // =============================================================================
 
-impl DoubleFloat {
+impl Float106 {
     /// Creates a new `DoubleFloat` from high and low components.
     ///
     /// The components are normalized so that `|lo| <= 0.5 * ulp(hi)`.
