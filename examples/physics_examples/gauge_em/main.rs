@@ -26,7 +26,7 @@
 //! - **Classical EM via gauge field formalism** using deep_causality_physics
 
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
-use deep_causality_num::{Float106, Float, Zero};
+use deep_causality_num::{Float, Float106, Zero};
 use deep_causality_physics::{EM, GaugeEmOps};
 
 // =============================================================================

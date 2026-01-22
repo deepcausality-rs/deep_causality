@@ -5,7 +5,7 @@
 
 //! Tests for DoubleFloat attribute methods.
 
-use deep_causality_num::{Float106, Float};
+use deep_causality_num::{Float, Float106};
 
 // =============================================================================
 // is_nan Tests

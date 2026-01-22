@@ -14,7 +14,7 @@
 //! type alias. All numeric literals are converted using the `flt!` macro.
 //!
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
-use deep_causality_num::{Float106, Float};
+use deep_causality_num::{Float, Float106};
 use deep_causality_physics::{AdmOps, GrOps, LorentzianMetric};
 use deep_causality_physics::{AdmState, EastCoastMetric, GR, SPEED_OF_LIGHT};
 use deep_causality_tensor::CausalTensor;

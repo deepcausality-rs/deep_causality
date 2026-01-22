@@ -6,7 +6,7 @@
 //! Tests for Float trait implementation on DoubleFloat.
 
 use core::num::FpCategory;
-use deep_causality_num::{Float106, Float};
+use deep_causality_num::{Float, Float106};
 
 const EPSILON: f64 = 1e-14;
 

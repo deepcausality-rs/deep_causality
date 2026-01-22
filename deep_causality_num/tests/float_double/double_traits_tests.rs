@@ -6,8 +6,8 @@
 //! Trait compliance tests for `DoubleFloat`.
 
 use deep_causality_num::{
-    AbelianGroup, Associative, Commutative, Distributive, DivisionAlgebra, Float106, Field,
-    Float, Num, NumCast, One, RealField, ToPrimitive, Zero,
+    AbelianGroup, Associative, Commutative, Distributive, DivisionAlgebra, Field, Float, Float106,
+    Num, NumCast, One, RealField, ToPrimitive, Zero,
 };
 
 // =============================================================================

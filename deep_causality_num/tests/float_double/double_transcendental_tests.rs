@@ -5,7 +5,7 @@
 
 //! Transcendental function tests for `DoubleFloat`.
 
-use deep_causality_num::{Float106, Float, RealField};
+use deep_causality_num::{Float, Float106, RealField};
 
 // =============================================================================
 // Helper Functions
@@ -368,14 +368,8 @@ fn test_signum() {
 
 #[test]
 fn test_clamp() {
-    assert_eq!(
-        <Float106 as Float>::clamp(d(5.0), d(0.0), d(10.0)),
-        d(5.0)
-    );
-    assert_eq!(
-        <Float106 as Float>::clamp(d(-5.0), d(0.0), d(10.0)),
-        d(0.0)
-    );
+    assert_eq!(<Float106 as Float>::clamp(d(5.0), d(0.0), d(10.0)), d(5.0));
+    assert_eq!(<Float106 as Float>::clamp(d(-5.0), d(0.0), d(10.0)), d(0.0));
     assert_eq!(
         <Float106 as Float>::clamp(d(15.0), d(0.0), d(10.0)),
         d(10.0)

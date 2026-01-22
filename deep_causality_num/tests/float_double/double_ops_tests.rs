@@ -5,7 +5,7 @@
 
 //! Arithmetic operation tests for `DoubleFloat`.
 
-use deep_causality_num::{Float106, Float, One, Zero};
+use deep_causality_num::{Float, Float106, One, Zero};
 
 // =============================================================================
 // Helper Functions

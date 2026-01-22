@@ -8,8 +8,8 @@
 //! Implements transcendental functions using high-precision Taylor series
 //! with range reduction techniques.
 
-use crate::Float106;
 use crate::Float;
+use crate::Float106;
 use core::num::FpCategory;
 
 // =============================================================================
