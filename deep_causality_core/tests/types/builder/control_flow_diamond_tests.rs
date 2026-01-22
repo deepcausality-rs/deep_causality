@@ -83,6 +83,11 @@ fn test_diamond_graph_execution_bug() {
     builder.connect(n1, n3);
     builder.connect(n2, n3);
 
+    let graph = builder.build();
+    let mut queue = std::collections::VecDeque::new();
+    // Start at n0 (id 0) with input 1
+    let _ = graph.execute(1.to_protocol(), n0.id(), 20, &mut queue);
+
     let n3_count = NODE_3_EXECUTIONS.load(Ordering::SeqCst);
 
     // We assert 1 here to FAIL if the bug is present (Regression Test logic)
