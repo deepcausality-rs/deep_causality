@@ -41,6 +41,12 @@ impl HalfLife {
     /// # Errors
     /// Returns `PhysicsError` if `val <= 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "HalfLife must be finite: {}",
+                val
+            )));
+        }
         if val <= 0.0 {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "HalfLife must be positive (zero implies infinite decay rate)".into(),

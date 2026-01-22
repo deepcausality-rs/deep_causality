@@ -99,8 +99,8 @@ rusty_fork_test! {
         );
 
         // Low confidence makes it easier to conclude, but requires sufficient samples to be stable.
-        // Increased max_samples to 100 to make the test more robust.
-        let result_low_conf = sprt_eval::evaluate_hypothesis(&ub_60, 0.5, 0.70, 0.01, 100, 0).unwrap();
+        // Increased max_samples to 500 to make the test robust with random sampling.
+        let result_low_conf = sprt_eval::evaluate_hypothesis(&ub_60, 0.5, 0.70, 0.01, 500, 0).unwrap();
         assert!(result_low_conf, "Should conclude true with low confidence");
     }
 

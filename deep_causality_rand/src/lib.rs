@@ -68,8 +68,10 @@ impl Rng for ThreadRng {}
 
 /// Returns a new random number generator.
 ///
-/// By default, this returns a `SipHash13Rng`. If the `os-random` feature is enabled,
-/// it returns an `OsRandomRng`.
+/// By default, this returns a `ThreadRng` backed by `Xoshiro256` PRNG, with each
+/// thread getting a unique seed derived from the thread ID.
+/// If the `os-random` feature is enabled, it returns an `OsRandomRng` that
+/// sources entropy from the operating system.
 pub fn rng() -> impl Rng {
     #[cfg(feature = "os-random")]
     {

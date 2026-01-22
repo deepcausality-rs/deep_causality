@@ -19,8 +19,18 @@ impl Default for Xoshiro256 {
 
 impl Xoshiro256 {
     pub fn new() -> Self {
-        // Seeding with a fixed value to ensure deterministic behavior for tests.
-        let seed = 0x736f6d6570736575u64;
+        use std::collections::hash_map::RandomState;
+        use std::hash::BuildHasher;
+        use std::thread;
+
+        // Base seed for deterministic behavior within a single thread
+        let base_seed = 0x736f6d6570736575u64;
+
+        // Combine base seed with thread ID to ensure each thread gets a unique seed
+        let hash_builder = RandomState::new();
+        let thread_component = hash_builder.hash_one(thread::current().id());
+
+        let seed = base_seed.wrapping_add(thread_component);
         let mut sm_state = seed;
 
         let mut s = [0; 4];

@@ -153,16 +153,15 @@ impl<
             TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
         })?;
 
-        // ΔS = β * (Re[Tr(U·V†)] - Re[Tr(U'·V†)]) / N
+        // ΔS = β * (Re[Tr(U·V)] - Re[Tr(U'·V)]) / N
         // (This is the change in action, negative means lower action)
 
-        let staple_dag = staple.dagger();
         let old_tr = old_link
-            .try_mul(&staple_dag)
+            .try_mul(&staple)
             .map_err(TopologyError::from)?
             .re_trace();
         let new_tr = new_link
-            .try_mul(&staple_dag)
+            .try_mul(&staple)
             .map_err(TopologyError::from)?
             .re_trace();
 

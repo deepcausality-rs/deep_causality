@@ -197,16 +197,36 @@ impl<
         // Convert epsilon to M for scaling
         let eps_m = M::from_re_im(epsilon, R::zero());
 
+        // Create a traceless Hermitian matrix X in `new_data` buffer
+        let mut x_data = vec![M::zero(); n * n];
+
+        let mut diagonal_sum = M::zero();
+
+        // 1. Fill off-diagonal elements (upper triangular) and mirror to lower triangular (Hermitian)
         for i in 0..n {
-            for j in 0..n {
-                // Generate uniform in [-0.5, 0.5] from RandomField
+            for j in (i + 1)..n {
                 let r_val = M::generate_uniform(rng);
-
-                // perturbation = epsilon * r_val
-                let perturbation = eps_m * r_val;
-
-                new_data[i * n + j] = new_data[i * n + j] + perturbation;
+                x_data[i * n + j] = r_val;
+                x_data[j * n + i] = ComplexField::conjugate(&r_val);
             }
+        }
+
+        // 2. Fill diagonal elements
+        // For i < n-1, fill with random real values (imaginary part = 0 for Hermitian diagonal)
+        // For i == n-1, set value to make trace = 0
+        for i in 0..(n - 1) {
+            let r_val = M::generate_uniform(rng);
+            let val = r_val + ComplexField::conjugate(&r_val);
+            x_data[i * n + i] = val;
+            diagonal_sum = diagonal_sum + val;
+        }
+
+        // Set last diagonal element to -sum(others) to ensure Tr(X) = 0
+        x_data[(n - 1) * n + (n - 1)] = M::zero() - diagonal_sum;
+
+        // 3. Compute U' = I + epsilon * X
+        for i in 0..(n * n) {
+            new_data[i] = new_data[i] + eps_m * x_data[i];
         }
 
         // Create perturbed matrix and project to SU(N)
@@ -217,5 +237,3 @@ impl<
         perturbed.project_sun().map_err(TopologyError::from)
     }
 }
-
-// Helper for f64 conversion when T: Into<f64>

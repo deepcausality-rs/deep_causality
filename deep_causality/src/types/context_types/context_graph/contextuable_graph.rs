@@ -70,9 +70,19 @@ where
         new_node: Contextoid<D, S, T, ST, SYM, VS, VT>,
     ) -> Result<(), ContextIndexError> {
         if let Some(&index_to_update) = self.id_to_index_map.get(&node_id) {
+            let new_node_id = new_node.id(); // Extract the new node's ID
+
             self.base_context
                 .update_node(index_to_update, new_node)
-                .map_err(|e| ContextIndexError(e.to_string()))
+                .map_err(|e| ContextIndexError(e.to_string()))?;
+
+            // Update id_to_index_map if the ID changed to maintain consistency
+            if new_node_id != node_id {
+                self.id_to_index_map.remove(&node_id);
+                self.id_to_index_map.insert(new_node_id, index_to_update);
+            }
+
+            Ok(())
         } else {
             Err(ContextIndexError(format!(
                 "Cannot update node. Contextoid with ID {node_id} not found in context"

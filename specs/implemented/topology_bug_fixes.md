@@ -188,6 +188,8 @@ Several factors have hidden this bug:
 6. **Documentation ambiguity**: The `shifted_view` function's documentation describes it as implementing "periodic boundary conditions" without specifying that it only works correctly for shifts along the first dimension.
 
 
+---
+
 # Summary
 - **Context**: The `generate_small_su_n_update` function in `ops_metropolis.rs` generates proposal matrices for the Metropolis algorithm, which is used for Monte Carlo sampling of gauge field configurations in lattice gauge theory simulations.
 - **Bug**: The function generates perturbations that are NOT traceless, contradicting its own documentation which states it creates "R ≈ 𝟙 + ε·X where X is a random traceless Hermitian matrix."
@@ -584,6 +586,8 @@ where
 Alternatively, for a more rigorous approach, generate the perturbation in the Lie algebra basis (e.g., Pauli matrices for SU(2), Gell-Mann matrices for SU(3)).
 
 
+---
+
 # Summary
 - **Context**: The `try_local_action_change` method in `ops_monte_carlo.rs` computes the change in the Wilson gauge action when a link variable is updated, which is used by the Metropolis algorithm to decide whether to accept Monte Carlo updates.
 - **Bug**: The method incorrectly uses `staple.dagger()` instead of `staple` when computing the trace, resulting in the conjugate transpose being applied to the staple matrix when it should not be.
@@ -952,9 +956,9 @@ The bug has gone undetected for several reasons:
 1. **Tests only check that the method runs without error**: The existing test `test_lattice_gauge_field_try_local_action_change` only verifies that the method completes without error when replacing identity with identity, where ΔS should be zero. In this special case, the bug doesn't manifest because the staple is also close to identity, and I† ≈ I.
 
 2. **Metropolis tests don't validate correctness**: The Metropolis algorithm tests (e.g., `test_metropolis_update_acceptance`, `test_metropolis_sweep_f64_optimization`) only check that:
-    - The acceptance rate is between 0 and 1
-    - The algorithm runs without crashing
-    - Some updates are accepted and some rejected
+   - The acceptance rate is between 0 and 1
+   - The algorithm runs without crashing
+   - Some updates are accepted and some rejected
 
    They don't validate that the algorithm samples the correct distribution or that computed action changes match actual action changes.
 
@@ -963,9 +967,9 @@ The bug has gone undetected for several reasons:
 4. **Complex observables mask the error**: Physical observables like Wilson loops or Polyakov loops are complex functions of many links. Small systematic biases in individual link updates may not immediately show up as obviously wrong results.
 
 5. **No regression tests comparing ΔS to actual action change**: There were no tests that:
-    - Start with a non-trivial gauge configuration (hot start)
-    - Propose an update to a link
-    - Compare the computed ΔS to the actual change in Wilson action
+   - Start with a non-trivial gauge configuration (hot start)
+   - Propose an update to a link
+   - Compare the computed ΔS to the actual change in Wilson action
 
    Such a test (as provided in `bug_verify_fix.rs`) immediately reveals the bug.
 
@@ -1020,3 +1024,287 @@ And update the inline comment at line 156:
 ```rust
 // ΔS = β * (Re[Tr(U·V)] - Re[Tr(U'·V)]) / N
 ```
+
+
+--
+# Summary
+- **Context**: `Topology::new` is the primary constructor for the `Topology<T>` type, which represents a discrete field defined on a k-skeleton of a simplicial complex, used throughout the topology library for differential geometry operations.
+- **Bug**: The constructor accepts invalid inputs without validation, allowing creation of malformed `Topology` instances with out-of-bounds cursors, invalid grades, or mismatched data/skeleton sizes.
+- **Actual vs. expected**: The constructor currently accepts any values without checking invariants, whereas it should validate that cursor is within data bounds, grade exists in the complex, and data size matches the skeleton size.
+- **Impact**: Invalid `Topology` instances cause panics at runtime in operations like `extract` (comonad), `cup_product`, and other topology operations, making debugging difficult since the error occurs far from the point where the invalid instance was created.
+
+# Code with bug
+`deep_causality_topology/src/types/topology/mod.rs`:
+```rust
+impl<T> Topology<T> {
+    pub fn new(
+        complex: Arc<SimplicialComplex>,
+        grade: usize,
+        data: CausalTensor<T>,
+        cursor: usize,
+    ) -> Self {
+        Self {  // <-- BUG 🔴 No validation of inputs
+            complex,
+            grade,
+            data,
+            cursor,
+        }
+    }
+}
+```
+
+# Evidence
+
+## Failing test
+
+### Test script
+`deep_causality_topology/tests/types/topology/validation_bug_test.rs`:
+```rust
+/*
+ * Test to demonstrate that Topology::new does not validate its inputs
+ */
+
+use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::utils_tests::create_triangle_complex;
+use deep_causality_topology::Topology;
+use std::sync::Arc;
+
+#[test]
+fn test_topology_allows_out_of_bounds_cursor() {
+    let complex = Arc::new(create_triangle_complex());
+
+    // The complex has 3 vertices (grade 0), so data has length 3
+    // But we set cursor to 10, which is out of bounds
+    let data = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
+    let topology = Topology::new(complex.clone(), 0, data, 10);
+
+    // This should have been rejected, but it succeeds
+    assert_eq!(topology.cursor(), 10);
+    assert_eq!(topology.data().as_slice().len(), 3);
+    // cursor is 10 but data only has 3 elements - this is invalid!
+}
+
+#[test]
+fn test_topology_allows_invalid_grade() {
+    let complex = Arc::new(create_triangle_complex());
+
+    // The complex only has dimensions 0, 1, 2 (max dimension is 2)
+    // But we set grade to 5, which doesn't exist
+    let data = CausalTensor::new(vec![1.0], vec![1]).unwrap();
+    let topology = Topology::new(complex.clone(), 5, data, 0);
+
+    // This should have been rejected, but it succeeds
+    assert_eq!(topology.grade(), 5);
+    assert_eq!(complex.max_simplex_dimension(), 2);
+    // grade is 5 but max dimension is 2 - this is invalid!
+}
+
+#[test]
+fn test_topology_allows_data_skeleton_mismatch() {
+    let complex = Arc::new(create_triangle_complex());
+
+    // Grade 0 (vertices) has 3 simplices, but we only provide 1 data value
+    let data = CausalTensor::new(vec![1.0], vec![1]).unwrap();
+    let topology = Topology::new(complex.clone(), 0, data, 0);
+
+    // This should have been rejected, but it succeeds
+    assert_eq!(topology.grade(), 0);
+    assert_eq!(topology.data().as_slice().len(), 1);
+    assert_eq!(complex.skeletons()[0].simplices().len(), 3);
+    // data has 1 element but skeleton has 3 simplices - this is invalid!
+}
+
+#[test]
+#[should_panic(expected = "Data/Skeleton mismatch")]
+fn test_invalid_topology_causes_panic_in_cup_product() {
+    let complex = Arc::new(create_triangle_complex());
+
+    // Create topology with mismatched data - only 1 value for 3 vertices
+    let data0 = CausalTensor::new(vec![1.0], vec![1]).unwrap();
+    let topo0 = Topology::new(complex.clone(), 0, data0, 0);
+
+    let data1 = CausalTensor::new(vec![0.5, 1.5, 2.5], vec![3]).unwrap();
+    let topo1 = Topology::new(complex.clone(), 1, data1, 0);
+
+    // This will panic because topo0 doesn't have enough data
+    let _result = topo0.cup_product(&topo1);
+}
+```
+
+### Test output
+```
+running 4 tests
+test types::topology::validation_bug_test::test_topology_allows_data_skeleton_mismatch ... ok
+test types::topology::validation_bug_test::test_invalid_topology_causes_panic_in_cup_product - should panic ... ok
+test types::topology::validation_bug_test::test_topology_allows_invalid_grade ... ok
+test types::topology::validation_bug_test::test_topology_allows_out_of_bounds_cursor ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 155 filtered out; finished in 0.00s
+```
+
+All four tests pass, confirming that:
+1. Out-of-bounds cursor values are accepted (test 1)
+2. Invalid grade values are accepted (test 2)
+3. Data/skeleton size mismatches are accepted (test 3)
+4. Invalid topologies cause panics in downstream operations (test 4)
+
+## Example
+
+Consider creating a `Topology` with an out-of-bounds cursor:
+
+```rust
+let complex = Arc::new(create_triangle_complex());
+let data = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
+let topology = Topology::new(complex, 0, data, 10);
+```
+
+This succeeds despite cursor=10 being invalid (data only has 3 elements). Later, when using the comonad's `extract` operation:
+
+```rust
+// From hkt_topology.rs:
+fn extract<A>(fa: &Topology<A>) -> A
+where
+    A: Clone,
+{
+    fa.data
+        .as_slice()
+        .get(fa.cursor)  // Tries to access index 10
+        .cloned()
+        .expect("Cursor OOB")  // <-- Panics here!
+}
+```
+
+The panic occurs in `extract`, far from where the invalid `Topology` was created, making debugging difficult. The error message "Cursor OOB" doesn't indicate what the cursor value was, what the valid range was, or where the invalid `Topology` was constructed.
+
+## Inconsistency within the codebase
+
+### Reference code
+`deep_causality_topology/src/types/topology/cup_product.rs`:
+```rust
+pub fn cup_product(&self, other: &Topology<T>) -> Result<Topology<T>, TopologyError> {
+    // ...validation checks...
+
+    // Ensure both fields live on the same Complex
+    if !Arc::ptr_eq(&self.complex, &other.complex) {
+        return Err(TopologyError::GenericError("Complex Mismatch".to_string()));
+    }
+
+    // If grade exceeds manifold dimension, the result is zero.
+    if r > self.complex.max_simplex_dimension() {
+        // Returns a zero field...
+    }
+
+    // ...
+}
+```
+
+### Current code
+`deep_causality_topology/src/types/topology/mod.rs`:
+```rust
+impl<T> Topology<T> {
+    pub fn new(
+        complex: Arc<SimplicialComplex>,
+        grade: usize,
+        data: CausalTensor<T>,
+        cursor: usize,
+    ) -> Self {
+        Self {
+            complex,
+            grade,
+            data,
+            cursor,
+        }
+    }
+}
+```
+
+### Contradiction
+The `cup_product` method performs careful validation and returns `Result<Topology<T>, TopologyError>` to handle invalid cases gracefully. However, the constructor performs no validation at all and returns a bare `Self`, allowing invalid instances to be created. This is inconsistent - the constructor is the natural place to enforce invariants that other methods rely on.
+
+Furthermore, the codebase has a comprehensive `TopologyError` type with variants like `InvalidInput`, `IndexOutOfBounds`, and `InvalidGradeOperation` (see `src/errors/topology_error.rs`), but these are not used in the constructor.
+
+# Full context
+
+The `Topology<T>` struct represents a discrete field defined on the k-skeleton of a simplicial complex. It's a core type in the library, publicly exported in `src/lib.rs` and used throughout the codebase for differential geometry operations.
+
+The struct has four fields that have mathematical constraints:
+1. `complex`: The underlying simplicial complex (the "mesh")
+2. `grade`: The dimension of simplices the data lives on (must be ≤ max dimension of complex)
+3. `data`: A tensor containing values for each simplex at the given grade (length must match skeleton size)
+4. `cursor`: The current focus point for comonadic extraction (must be < data.len())
+
+The `Topology` type is used in several critical operations:
+- **Comonadic operations** (`hkt_topology.rs`): The `extract` function reads the value at `cursor`, which panics if cursor is out of bounds with message "Cursor OOB"
+- **Cup product** (`cup_product.rs`): Expects data length to match skeleton size at the given grade, panics with "Data/Skeleton mismatch" if invalid
+- **Other geometric operations**: Various operations assume the topology is well-formed
+
+The bug allows creating `Topology` instances that violate these invariants. When these invalid instances are used in downstream operations, they cause panics with error messages that don't help identify where the invalid instance was created.
+
+# Why has this bug gone undetected?
+
+This bug has gone undetected for several reasons:
+
+1. **Tests always use valid inputs**: All existing tests in the codebase create `Topology` instances with correct parameters that match the underlying complex structure. The test code follows good practices and doesn't accidentally create invalid topologies.
+
+2. **Internal usage patterns are careful**: The library developers who write the test code understand the constraints and naturally create valid topologies. The constructor is primarily used in tests and examples, not in complex production scenarios.
+
+3. **The bug manifests as panics, not silent corruption**: When invalid topologies are used, they cause panics rather than silent incorrect results. This means bugs are caught during development if they occur, but it also means the validation gap isn't discovered until someone tries to use the library incorrectly.
+
+4. **Limited production usage**: The library appears to be relatively new (initial implementation in commit b80d08bb, with the topology type introduced recently). There may not yet be extensive production usage where users might accidentally create invalid topologies.
+
+5. **Constructor simplicity masks the issue**: The constructor is so simple (just assigns fields) that it's not obvious validation is missing. It's easy to assume validation happens elsewhere or that callers are expected to validate inputs.
+
+# Recommended fix
+
+The constructor should validate its inputs and return a `Result<Self, TopologyError>` instead of `Self`. The validation should check:
+
+1. **Cursor bounds**: `cursor < data.len()` - return `TopologyError::IndexOutOfBounds` if violated
+2. **Grade validity**: `grade <= complex.max_simplex_dimension()` - return `TopologyError::InvalidGradeOperation` if violated
+3. **Data/skeleton size match**: `data.len() == complex.skeletons()[grade].simplices().len()` - return `TopologyError::InvalidInput` if violated
+
+Example fix:
+```rust
+impl<T> Topology<T> {
+    pub fn new(
+        complex: Arc<SimplicialComplex>,
+        grade: usize,
+        data: CausalTensor<T>,
+        cursor: usize,
+    ) -> Result<Self, TopologyError> {  // <-- FIX 🟢 Return Result
+        // Validate grade
+        if grade > complex.max_simplex_dimension() {
+            return Err(TopologyError::InvalidGradeOperation(
+                format!("grade {} exceeds max dimension {}",
+                        grade, complex.max_simplex_dimension())
+            ));
+        }
+
+        // Validate data size matches skeleton
+        let expected_size = complex.skeletons()[grade].simplices().len();
+        if data.len() != expected_size {
+            return Err(TopologyError::InvalidInput(
+                format!("data length {} does not match skeleton size {} for grade {}",
+                        data.len(), expected_size, grade)
+            ));
+        }
+
+        // Validate cursor bounds
+        if cursor >= data.len() && data.len() > 0 {  // <-- FIX 🟢 Check cursor bounds
+            return Err(TopologyError::IndexOutOfBounds(
+                format!("cursor {} is out of bounds for data length {}",
+                        cursor, data.len())
+            ));
+        }
+
+        Ok(Self {
+            complex,
+            grade,
+            data,
+            cursor,
+        })
+    }
+}
+```
+
+Note: This is a breaking API change. All call sites would need to be updated to handle the `Result`. Alternatively, for backwards compatibility, a new `try_new` method could be added while keeping the existing `new` method (though this delays fixing the root issue).
+

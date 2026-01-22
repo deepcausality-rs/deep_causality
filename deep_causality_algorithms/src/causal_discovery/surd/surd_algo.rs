@@ -367,7 +367,7 @@ fn analyze_single_target_state(
                     .filter(|&(_, &len)| len == l + 1)
                     .for_each(|(val, _)| {
                         if *val < max_prev_level {
-                            *val = 0.0;
+                            *val = max_prev_level;
                         }
                     });
             }

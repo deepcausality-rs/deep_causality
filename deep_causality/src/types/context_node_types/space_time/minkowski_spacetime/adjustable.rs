@@ -11,11 +11,33 @@ impl Adjustable<f64> for MinkowskiSpacetime {
         &mut self,
         array_grid: &ArrayGrid<f64, W, H, D, C>,
     ) -> Result<(), UpdateError> {
-        // Create a 3D PointIndex for each of the updated x,y,z coordinates
-        let p1 = PointIndex::new3d(0, 0, 0);
-        let p2 = PointIndex::new3d(0, 0, 1);
-        let p3 = PointIndex::new3d(0, 0, 2);
-        let p4 = PointIndex::new3d(0, 0, 3);
+        // Use type-specific indices based on array dimensionality
+        let (p1, p2, p3, p4) = match array_grid {
+            ArrayGrid::ArrayGrid1D(_) => (
+                PointIndex::new1d(0),
+                PointIndex::new1d(1),
+                PointIndex::new1d(2),
+                PointIndex::new1d(3),
+            ),
+            ArrayGrid::ArrayGrid2D(_) => (
+                PointIndex::new2d(0, 0),
+                PointIndex::new2d(1, 0),
+                PointIndex::new2d(2, 0),
+                PointIndex::new2d(3, 0),
+            ),
+            ArrayGrid::ArrayGrid3D(_) => (
+                PointIndex::new3d(0, 0, 0),
+                PointIndex::new3d(0, 0, 1),
+                PointIndex::new3d(0, 0, 2),
+                PointIndex::new3d(0, 0, 3),
+            ),
+            ArrayGrid::ArrayGrid4D(_) => (
+                PointIndex::new4d(0, 0, 0, 0),
+                PointIndex::new4d(0, 0, 0, 1),
+                PointIndex::new4d(0, 0, 0, 2),
+                PointIndex::new4d(0, 0, 0, 3),
+            ),
+        };
 
         // Get the data at the index position from the array grid
         let new_x = array_grid.get(p1);
@@ -60,11 +82,33 @@ impl Adjustable<f64> for MinkowskiSpacetime {
         &mut self,
         array_grid: &ArrayGrid<f64, W, H, D, C>,
     ) -> Result<(), AdjustmentError> {
-        // Create a 3D PointIndex for each of the updated x,y,z coordinates
-        let p1 = PointIndex::new3d(0, 0, 0);
-        let p2 = PointIndex::new3d(0, 0, 1);
-        let p3 = PointIndex::new3d(0, 0, 2);
-        let p4 = PointIndex::new3d(0, 0, 3);
+        // Use type-specific indices based on array dimensionality
+        let (p1, p2, p3, p4) = match array_grid {
+            ArrayGrid::ArrayGrid1D(_) => (
+                PointIndex::new1d(0),
+                PointIndex::new1d(1),
+                PointIndex::new1d(2),
+                PointIndex::new1d(3),
+            ),
+            ArrayGrid::ArrayGrid2D(_) => (
+                PointIndex::new2d(0, 0),
+                PointIndex::new2d(1, 0),
+                PointIndex::new2d(2, 0),
+                PointIndex::new2d(3, 0),
+            ),
+            ArrayGrid::ArrayGrid3D(_) => (
+                PointIndex::new3d(0, 0, 0),
+                PointIndex::new3d(0, 0, 1),
+                PointIndex::new3d(0, 0, 2),
+                PointIndex::new3d(0, 0, 3),
+            ),
+            ArrayGrid::ArrayGrid4D(_) => (
+                PointIndex::new4d(0, 0, 0, 0),
+                PointIndex::new4d(0, 0, 0, 1),
+                PointIndex::new4d(0, 0, 0, 2),
+                PointIndex::new4d(0, 0, 0, 3),
+            ),
+        };
 
         // get the data at the index position
         let new_x = array_grid.get(p1);

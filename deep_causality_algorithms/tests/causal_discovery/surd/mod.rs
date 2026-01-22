@@ -9,6 +9,8 @@ mod surd_algo_cdl_tests;
 #[cfg(test)]
 mod surd_algo_tests;
 #[cfg(test)]
+mod surd_consistency_tests;
+#[cfg(test)]
 mod surd_max_order_tests;
 #[cfg(test)]
 mod surd_result_tests;

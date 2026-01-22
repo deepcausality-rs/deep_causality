@@ -67,38 +67,13 @@ impl<T> CsrMatrix<T> {
             let row_cols = &self.col_indices[start..end];
             let row_vals = &self.values[start..end];
 
-            // 4 Independent accumulators to break dependency chains.
-            // This allows the CPU to pipeline the math operations.
-            let mut sum0 = T::zero();
-            let mut sum1 = T::zero();
-            let mut sum2 = T::zero();
-            let mut sum3 = T::zero();
+            // Sequential accumulation for numerical stability.
+            // This avoids catastrophic cancellation that can occur with parallel
+            // accumulators when a row contains large values with opposite signs
+            // (e.g., 1e20 and -1e20) alongside smaller values.
+            let mut final_sum = T::zero();
 
-            // Process 4 elements at a time.
-            let mut chunks_cols = row_cols.chunks_exact(4);
-            let mut chunks_vals = row_vals.chunks_exact(4);
-
-            // The main "Pseudo-SIMD" loop.
-            // The iterator handles the loop logic efficiently.
-            while let (Some(c), Some(v)) = (chunks_cols.next(), chunks_vals.next()) {
-                // Note: x[c[0]] involves a bounds check.
-                // Without 'unsafe', we cannot remove it, but splitting the
-                // accumulators helps hide the latency of that check/load.
-                sum0 = sum0 + (v[0] * x[c[0]]);
-                sum1 = sum1 + (v[1] * x[c[1]]);
-                sum2 = sum2 + (v[2] * x[c[2]]);
-                sum3 = sum3 + (v[3] * x[c[3]]);
-            }
-
-            // Reduce the parallel accumulators
-            let mut final_sum = (sum0 + sum1) + (sum2 + sum3);
-
-            // Handle the remainder (0 to 3 elements left)
-            // The compiler will likely unroll this small loop or turn it into a jump table.
-            let rem_cols = chunks_cols.remainder();
-            let rem_vals = chunks_vals.remainder();
-
-            for (&c, &v) in rem_cols.iter().zip(rem_vals.iter()) {
+            for (&c, &v) in row_cols.iter().zip(row_vals.iter()) {
                 final_sum = final_sum + (v * x[c]);
             }
 

@@ -37,7 +37,7 @@ impl<T> CausalTensor<T> {
         let mut augmented_data = Vec::with_capacity(n * 2 * n);
         for r in 0..n {
             for c in 0..n {
-                augmented_data.push(self.data[r * n + c]);
+                augmented_data.push(*self.get_ref(r, c)?);
             }
             for c in 0..n {
                 if r == c {

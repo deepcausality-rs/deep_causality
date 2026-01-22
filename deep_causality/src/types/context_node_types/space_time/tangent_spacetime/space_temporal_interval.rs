@@ -7,6 +7,7 @@ use crate::{SpaceTemporalInterval, TangentSpacetime};
 
 impl SpaceTemporalInterval for TangentSpacetime {
     fn time(&self) -> f64 {
+        // TangentSpacetime does not have a time_scale field, assuming time is always in seconds
         self.t
     }
     fn position(&self) -> [f64; 3] {

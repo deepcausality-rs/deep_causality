@@ -81,6 +81,17 @@ fn test_complex_powi() {
     let c_sq = c.powi(2);
     utils_complex_tests::assert_complex_approx_eq(c_sq, Complex::new(0.0, 2.0), 1e-9);
 
+    // Test for negative exponents with |n| > 1 (Regression tests)
+    let c_neg_2 = c.powi(-2); // (1+i)^-2 = 1/(2i) = -0.5i
+    utils_complex_tests::assert_complex_approx_eq(c_neg_2, Complex::new(0.0, -0.5), 1e-9);
+
+    let c2 = Complex::new(2.0, 0.0);
+    let c2_neg_2 = c2.powi(-2); // 2^-2 = 0.25
+    utils_complex_tests::assert_complex_approx_eq(c2_neg_2, Complex::new(0.25, 0.0), 1e-9);
+
+    let c2_neg_3 = c2.powi(-3); // 2^-3 = 0.125
+    utils_complex_tests::assert_complex_approx_eq(c2_neg_3, Complex::new(0.125, 0.0), 1e-9);
+
     let c_neg = c.powi(-1);
     utils_complex_tests::assert_complex_approx_eq(c_neg, Complex::new(0.5, -0.5), 1e-9);
 

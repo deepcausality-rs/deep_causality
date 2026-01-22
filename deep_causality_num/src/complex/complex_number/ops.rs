@@ -35,7 +35,7 @@ impl<T: RealField> Complex<T> {
             n_abs /= 2;
         }
 
-        if n < 0 { self._inverse_impl() } else { res }
+        if n < 0 { res._inverse_impl() } else { res }
     }
 
     /// Raises a to a real (scalar) power.

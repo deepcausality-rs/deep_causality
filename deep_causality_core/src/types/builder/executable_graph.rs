@@ -48,7 +48,17 @@ impl<P: ControlFlowProtocol> ExecutableGraph<P> {
         let mut steps = 0;
         let mut last_result = None;
 
+        // Track nodes currently in the queue to prevent duplicate entries (combining fan-in).
+        // We use 'enqueued' state instead of 'visited' complexity to allow re-visiting nodes (cycles)
+        // once they have been processed, while preventing the same node from accumulating
+        // multiple times in the queue during a single wave.
+        let mut enqueued = vec![false; self.nodes.len()];
+        enqueued[start_node] = true;
+
         while let Some((node_idx, node_input)) = queue.pop_front() {
+            // Node is processed, remove from enqueued state so it can be re-visited if the graph cycles
+            enqueued[node_idx] = false;
+
             if steps >= max_steps {
                 return Err(GraphError::MaxStepsExceeded(max_steps));
             }
@@ -63,7 +73,11 @@ impl<P: ControlFlowProtocol> ExecutableGraph<P> {
             // Propagate to neighbors
             if let Some(neighbors) = self.adjacency.get(node_idx) {
                 for &neighbor_idx in neighbors {
-                    queue.push_back((neighbor_idx, output.clone()));
+                    // Only push if not already waiting in the queue
+                    if !enqueued[neighbor_idx] {
+                        queue.push_back((neighbor_idx, output.clone()));
+                        enqueued[neighbor_idx] = true;
+                    }
                 }
             }
 
