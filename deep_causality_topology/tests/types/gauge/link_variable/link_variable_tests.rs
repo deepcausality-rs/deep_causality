@@ -389,7 +389,7 @@ fn test_link_variable_error_conversion() {
 
 #[test]
 fn test_gauge_groups_matrix_dim() {
-    use deep_causality_topology::{GaugeGroup, Lorentz, SU3};
+    use deep_causality_topology::{GaugeGroup, SO3_1, SU3};
 
     // U1: 1x1
     assert_eq!(U1::matrix_dim(), 1);
@@ -401,5 +401,5 @@ fn test_gauge_groups_matrix_dim() {
     assert_eq!(SU3::matrix_dim(), 3);
 
     // Lorentz (SO(3,1)): 4x4
-    assert_eq!(Lorentz::matrix_dim(), 4);
+    assert_eq!(SO3_1::matrix_dim(), 4);
 }

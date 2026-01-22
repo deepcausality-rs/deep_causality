@@ -68,8 +68,6 @@ pub use crate::types::differential_form::DifferentialForm;
 pub use crate::types::gauge::gauge_field_lattice::ops_actions::ActionCoeffs;
 pub use crate::types::gauge::gauge_field_lattice::ops_gradient_flow::{FlowMethod, FlowParams};
 pub use crate::types::gauge::gauge_field_lattice::ops_smearing::SmearingParams;
-pub use crate::types::gauge::gauge_groups::{
-    Electroweak, Lorentz, SE3, SU2, SU3, StandardModel, U1,
-};
+pub use crate::types::gauge::gauge_groups::{SE3, SO3_1, SU2, SU2_U1, SU3, SU3_SU2_U1, U1};
 pub use crate::types::gauge::link_variable::random::RandomField;
 pub use crate::types::gauge::{GaugeField, LatticeGaugeField, LinkVariable};
