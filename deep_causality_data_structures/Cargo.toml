@@ -3,7 +3,7 @@
 
 [package]
 name = "deep_causality_data_structures"
-version = "0.10.10"
+version = "0.10.11"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
