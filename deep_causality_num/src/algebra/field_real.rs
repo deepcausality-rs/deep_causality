@@ -29,6 +29,59 @@ pub trait RealField:
     /// Returns the `NaN` value.
     fn nan() -> Self;
 
+    /// Returns `true` if this value is `NaN` and false otherwise.
+    ///
+    /// ```
+    /// use deep_causality_num::Float;
+    /// use core::f64;
+    ///
+    /// let nan = f64::NAN;
+    /// let f = 7.0;
+    ///
+    /// assert!(nan.is_nan());
+    /// assert!(!f.is_nan());
+    /// ```
+    fn is_nan(self) -> bool;
+
+    /// Returns `true` if this value is positive infinity or negative infinity and
+    /// false otherwise.
+    ///
+    /// ```
+    /// use deep_causality_num::Float;
+    /// use core::f32;
+    ///
+    /// let f = 7.0f32;
+    /// let inf: f32 = Float::infinity();
+    /// let neg_inf: f32 = Float::neg_infinity();
+    /// let nan: f32 = f32::NAN;
+    ///
+    /// assert!(!f.is_infinite());
+    /// assert!(!nan.is_infinite());
+    ///
+    /// assert!(inf.is_infinite());
+    /// assert!(neg_inf.is_infinite());
+    /// ```
+    fn is_infinite(self) -> bool;
+
+    /// Returns `true` if this number is neither infinite nor `NaN`.
+    ///
+    /// ```
+    /// use deep_causality_num::Float;
+    /// use core::f32;
+    ///
+    /// let f = 7.0f32;
+    /// let inf: f32 = Float::infinity();
+    /// let neg_inf: f32 = Float::neg_infinity();
+    /// let nan: f32 = f32::NAN;
+    ///
+    /// assert!(f.is_finite());
+    ///
+    /// assert!(!nan.is_finite());
+    /// assert!(!inf.is_finite());
+    /// assert!(!neg_inf.is_finite());
+    /// ```
+    fn is_finite(self) -> bool;
+
     fn clamp(self, min: Self, max: Self) -> Self;
 
     /// Computes the principal square root of a number.
@@ -266,14 +319,21 @@ impl RealField for f32 {
         f32::NAN
     }
 
-    #[inline]
-    fn clamp(self, min: Self, max: Self) -> Self {
-        f32::clamp(self, min, max)
+    fn is_nan(self) -> bool {
+        f32::is_nan(self)
+    }
+
+    fn is_infinite(self) -> bool {
+        f32::is_infinite(self)
+    }
+
+    fn is_finite(self) -> bool {
+        f32::is_finite(self)
     }
 
     #[inline]
-    fn abs(self) -> Self {
-        self.abs()
+    fn clamp(self, min: Self, max: Self) -> Self {
+        f32::clamp(self, min, max)
     }
 
     #[inline]
@@ -283,6 +343,11 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::sqrtf(self);
+    }
+
+    #[inline]
+    fn abs(self) -> Self {
+        self.abs()
     }
 
     #[inline]
@@ -358,6 +423,11 @@ impl RealField for f32 {
     }
 
     #[inline]
+    fn asin(self) -> Self {
+        f32::asin(self)
+    }
+
+    #[inline]
     fn cos(self) -> Self {
         #[cfg(feature = "std")]
         return self.cos();
@@ -412,6 +482,11 @@ impl RealField for f32 {
     }
 
     #[inline]
+    fn atan(self) -> Self {
+        f32::atan(self)
+    }
+
+    #[inline]
     fn atan2(self, other: Self) -> Self {
         #[cfg(feature = "std")]
         return self.atan2(other);
@@ -429,19 +504,9 @@ impl RealField for f32 {
     fn e() -> Self {
         core::f32::consts::E
     }
-
     #[inline]
     fn epsilon() -> Self {
         f32::EPSILON
-    }
-
-    #[inline]
-    fn atan(self) -> Self {
-        f32::atan(self)
-    }
-    #[inline]
-    fn asin(self) -> Self {
-        f32::asin(self)
     }
 }
 
@@ -631,5 +696,17 @@ impl RealField for f64 {
     #[inline]
     fn asin(self) -> Self {
         f64::asin(self)
+    }
+
+    fn is_nan(self) -> bool {
+        f64::is_nan(self)
+    }
+
+    fn is_infinite(self) -> bool {
+        f64::is_infinite(self)
+    }
+
+    fn is_finite(self) -> bool {
+        f64::is_finite(self)
     }
 }
