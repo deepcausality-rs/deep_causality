@@ -5,6 +5,9 @@
 
 #[cfg(test)]
 mod control_flow_builder_tests;
+
+#[cfg(test)]
+mod control_flow_diamond_tests;
 #[cfg(test)]
 mod executable_edge_tests;
 #[cfg(test)]
