@@ -68,4 +68,8 @@ fn test_verify_graph_fails_on_cycle() {
         DeonticError::GraphIsCyclic(_)
     ));
     assert!(!ethos.is_verified());
+    assert!(
+        !ethos.is_frozen(),
+        "Graph should be unfrozen after a failed verification"
+    );
 }
