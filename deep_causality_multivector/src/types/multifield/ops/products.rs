@@ -40,28 +40,26 @@ where
         product.grade_project(0)
     }
 
-    /// Computes the outer product (antisymmetric part).
+    /// Computes the outer product (wedge product).
     ///
-    /// A ∧ B = (AB - BA) / 2
-    pub fn outer_product(&self, rhs: &Self) -> Self {
+    /// Implemented via coefficient extraction and basis blade logic to ensure correctness
+    /// for mixed-grade multivectors. (AB - BA)/2 is only valid for vectors.
+    pub fn outer_product(&self, rhs: &Self) -> Self 
+    where T: std::ops::Neg<Output = T> + std::ops::AddAssign + std::ops::SubAssign
+    {
         assert_eq!(self.metric, rhs.metric, "Metric mismatch");
         assert_eq!(self.shape, rhs.shape, "Shape mismatch");
 
-        let ab_data = self.data.batched_matmul(&rhs.data);
-        let ba_data = rhs.data.batched_matmul(&self.data);
-        let diff = &ab_data - &ba_data;
+        let mvs_a = self.to_coefficients();
+        let mvs_b = rhs.to_coefficients();
 
-        // Scale by 0.5
-        let half = T::one() / (T::one() + T::one());
-        let half_tensor = CausalTensor::<T>::from_shape_fn(&[1], |_| half);
-        let result = &diff * &half_tensor;
+        let mvs_res: Vec<_> = mvs_a
+            .iter()
+            .zip(mvs_b.iter())
+            .map(|(a, b)| a.outer_product(b))
+            .collect();
 
-        Self {
-            data: result,
-            metric: self.metric,
-            dx: self.dx,
-            shape: self.shape,
-        }
+        Self::from_coefficients(&mvs_res, self.shape, self.dx)
     }
 
     /// Computes the cross product via Hodge dual of wedge.
