@@ -91,6 +91,11 @@ where
                     )
                     .bind(|output_effect_val, _, _| match output_effect_val {
                         EffectValue::Value(v) => causable_utils::log_output(v, self.id),
+                        EffectValue::None => PropagatingEffect::from_error(CausalityError(
+                            deep_causality_core::CausalityErrorEnum::Custom(
+                                "Causaloid::evaluate: causal_fn returned None output".into(),
+                            ),
+                        )),
                         _ => PropagatingEffect::from_effect_value(output_effect_val),
                     })
             }

@@ -226,111 +226,6 @@ fn test_evaluate_graph_error() {
 }
 
 #[test]
-fn test_context_error_paths() {
-    // Test case: Context is None
-    let _id: IdentificationValue = 1;
-    let _description = "context missing test";
-
-    // We can't easily construct a Causaloid with context_causal_fn but NO context using public API
-    // because new_with_context() requires passing a context.
-    // However, we can construct one manually if we really need to, or check if there's an internal path.
-    // Actually, looking at the struct, context is Option<CTX>.
-    // But new_with_context sets it to Some(context).
-    // Let's see if we can trick it or if we need to modify the test to be more intrusive/unit-testy or
-    // if there's a constructor I missed.
-    // Ah, Causaloid struct fields are private.
-    // Unless we use unsafe or have a constructor that allows None context.
-    // Wait, the code in causable_utils.rs checks `if let Some(context) = causaloid.context.as_ref()`.
-    // If we can't create such a state via public API, then that branch is unreachable in normal usage
-    // and might be dead code, OR we might need to use a builder pattern if one existed.
-    // Currently, `new_with_context` always sets internal context to Some.
-    // So that branch `else { PropagatingEffect::from_error(...) }` in `execute_causal_logic` might be technically unreachable
-    // via public types unless we implement a custom constructor for testing or if I missed something.
-
-    // Actually, let's look at `Causaloid` definition again.
-    // `context: Option<CTX>`.
-
-    // If we can't easily hit that branch via public API, maybe we skip it or accept it's dead code?
-    // User wants 100% coverage.
-    // Let's try to mock or see if we can create a causaloid and then somehow mutate it? No, immutable.
-    // Wait, maybe `from_causal_collection` or others leave context as None?
-    // `from_causal_collection` sets `context: None`, `context_causal_fn: None`.
-    // `execute_causal_logic` checks `if let Some(context_fn) = &causaloid.context_causal_fn`.
-    // So if `context_causal_fn` is None, it goes to `else if let Some(causal_fn)`.
-
-    // The specific branch in `causable_utils.rs` is:
-    // if let Some(context_fn) = &causaloid.context_causal_fn {
-    //    if let Some(context) = causaloid.context.as_ref() { ... } else { ERROR }
-    // }
-
-    // To hit the else (ERROR), we need `context_causal_fn` to be Some, but `context` to be None.
-    // `new_with_context` sets both to Some.
-    // `new` sets both to None.
-    // `from_causal_collection` sets both to None.
-    // `from_causal_collection_with_context` sets `context` to Some, but `context_causal_fn` to None!
-
-    // There seems to be NO public constructor that sets `context_causal_fn` to Some and `context` to None.
-    // So that error path "Causaloid::evaluate: context is None" is likely unreachable with current constructors.
-    // However, I can't remove the code. I can try to use unsafe to force it for the test if I want 100% coverage.
-    // Or I can add a test-only constructor.
-    // Since I cannot modify src code easily to add test-only constructors without cluttering, maybe I can use `std::mem::transmute`
-    // or just accept I can't cover it if it's true unreachable.
-    // BUT, the user requested 100%.
-
-    // Wait, let's look at `execute_causal_logic` again.
-    // `else { let err_msg = format!("Causaloid {} is missing both ...") ... }`
-    // This path is reachable if both are None.
-    // But `evaluate` calls `execute_causal_logic` ONLY for `CausaloidType::Singleton`.
-
-    // `new` sets `causal_fn` to Some.
-    // `new_with_context` sets `context_causal_fn` to Some.
-    // So a Singleton ALWAYS has one of them.
-
-    // If I create a Singleton that has NEITHER, I hit the "missing both" error.
-    // If I create a Singleton with `context_causal_fn` but NO `context`, I hit the "context is None" error.
-
-    // How to create such a malformed Causaloid?
-    // Constructing it manually in the test module?
-    // The test module differs from the src module, it likely can't see private fields.
-    // Unless I make fields pub(crate) and the test is in the same crate?
-    // The test file `causaloid_singleton_tests.rs` is in `tests/`. It treats `deep_causality` as an external crate.
-    // So I cannot access private fields.
-
-    // Conclusion: These error paths are defensive programming against invalid internal state that ideally shouldn't exist.
-    // If I really want to test them, I might need to add a "Testing" constructor or similar, or just skip if unreachable.
-    // BUT coverage tools report it as missing.
-
-    // Let's verify if I can reach "missing both" error.
-    // `from_causal_collection` creates a `Collection` type. `evaluate` handles `Collection` separately (returns error).
-    // So `evaluate` won't call `execute_causal_logic` for Collection.
-
-    // So `execute_causal_logic` is ONLY called for Singleton.
-    // And Singletons result from `new` or `new_with_context`.
-    // Both ensure valid state.
-
-    // So those branches ARE unreachable via public API.
-    // I will write the tests that ARE possible (the Collection/Graph evaluation errors).
-    // For the reachable error paths:
-    // 1. `ctx.is_none()` inside `contextual_causal_fn` logic - wait, that's inside the user-provided function!
-    //    We CAN test that if we pass a context function that fails.
-    //    `execute_causal_logic` calls the user function.
-    //    `let process = context_fn(ev, PS::default(), Some(context.clone()));`
-    //    It ALWAYS passes Some(context). So user function receives Some.
-
-    //    Wait, `execute_causal_logic` lines 44-55:
-    //    `match process.value.into_value() { Some(val) => ..., None => error }`
-    //    We CAN test this! If the user function returns a process with None value.
-
-    //    Also `context_causal_fn` return type `PropagatingProcess` can contain error.
-    //    If it contains error and None value, `execute_causal_logic` propagates it.
-    //    If it contains None value and NO error, `execute_causal_logic` creates a custom error "context_fn returned None...".
-
-    // So I CAN test:
-    // 1. User function returning None value + No Error -> checks the synthetic error generation.
-    // 2. User function returning None value + Error -> checks error propagation.
-}
-
-#[test]
 fn test_contextual_fn_returning_none() {
     let id: IdentificationValue = 99;
     let description = "test none return";
@@ -359,4 +254,121 @@ fn test_contextual_fn_returning_none() {
     assert!(res.is_err());
     let err = res.error.unwrap().to_string();
     assert!(err.contains("context_fn returned None value"));
+}
+
+#[test]
+fn test_error_priority_over_value() {
+    let id: IdentificationValue = 100;
+    let description = "test error priority";
+    let context = get_base_context();
+
+    fn problematic_fn(
+        _obs: EffectValue<f64>,
+        _state: (),
+        _ctx: Option<Arc<RwLock<BaseContext>>>,
+    ) -> PropagatingProcess<f64, (), Arc<RwLock<BaseContext>>> {
+        let mut process = PropagatingProcess::pure(42.0);
+        process.error = Some(CausalityError::new(CausalityErrorEnum::Custom(
+            "This error should take priority".into(),
+        )));
+        process
+    }
+
+    let causaloid = BaseCausaloid::<f64, f64>::new_with_context(
+        id,
+        problematic_fn,
+        Arc::new(RwLock::new(context)),
+        description,
+    );
+
+    let effect = PropagatingEffect::from_value(1.0);
+    let result = causaloid.evaluate(&effect);
+
+    assert!(
+        result.error.is_some(),
+        "Error should be preserved even when value is present"
+    );
+    let err_msg = result.error.unwrap().to_string();
+    assert!(err_msg.contains("This error should take priority"));
+}
+
+#[test]
+fn test_contextual_link_preservation() {
+    let id: IdentificationValue = 101;
+    let description = "test contextual link preservation";
+    let context = get_base_context();
+
+    fn contextual_causal_fn(
+        _obs: EffectValue<NumericalValue>,
+        _state: (),
+        _ctx: Option<Arc<RwLock<BaseContext>>>,
+    ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
+        let contextual_link = EffectValue::ContextualLink(42, 100);
+        PropagatingProcess::from_effect_value(contextual_link)
+    }
+
+    let causaloid = BaseCausaloid::<NumericalValue, bool>::new_with_context(
+        id,
+        contextual_causal_fn,
+        Arc::new(RwLock::new(context)),
+        description,
+    );
+
+    let effect = PropagatingEffect::from_value(0.5);
+    let result = causaloid.evaluate(&effect);
+
+    assert!(result.is_ok());
+    assert!(matches!(result.value, EffectValue::ContextualLink(42, 100)));
+}
+
+#[test]
+fn test_relay_to_preservation() {
+    let id: IdentificationValue = 102;
+    let description = "test relay_to preservation";
+    let context = get_base_context();
+
+    fn relay_causal_fn(
+        _obs: EffectValue<NumericalValue>,
+        _state: (),
+        _ctx: Option<Arc<RwLock<BaseContext>>>,
+    ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
+        let relay_effect = PropagatingEffect::from_value(true);
+        let relay_to = EffectValue::RelayTo(5, Box::new(relay_effect));
+        PropagatingProcess::from_effect_value(relay_to)
+    }
+
+    let causaloid = BaseCausaloid::<NumericalValue, bool>::new_with_context(
+        id,
+        relay_causal_fn,
+        Arc::new(RwLock::new(context)),
+        description,
+    );
+
+    let effect = PropagatingEffect::from_value(0.5);
+    let result = causaloid.evaluate(&effect);
+
+    assert!(result.is_ok());
+    assert!(matches!(result.value, EffectValue::RelayTo(5, _)));
+}
+
+#[test]
+fn test_none_output_error() {
+    let id: IdentificationValue = 103;
+    let description = "test none output error";
+
+    fn none_fn(_obs: NumericalValue) -> PropagatingEffect<bool> {
+        PropagatingEffect::from_effect_value(EffectValue::None)
+    }
+
+    let causaloid = BaseCausaloid::<NumericalValue, bool>::new(id, none_fn, description);
+
+    let effect = PropagatingEffect::from_value(0.5);
+    let result = causaloid.evaluate(&effect);
+
+    assert!(
+        result.is_err(),
+        "Result should be an error when causal function returns None"
+    );
+    let err_msg = result.error.unwrap().to_string();
+    assert!(err_msg.contains("causal_fn returned None output"));
 }

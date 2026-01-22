@@ -41,17 +41,17 @@ where
             let process = context_fn(ev, PS::default(), Some(context.clone()));
 
             // Convert PropagatingProcess to PropagatingEffect, preserving logs.
-            let mut effect = match process.value.into_value() {
-                Some(val) => PropagatingEffect::pure(val),
-                None => {
-                    let error = process.error.unwrap_or_else(|| {
-                        CausalityError(deep_causality_core::CausalityErrorEnum::Custom(
-                            "execute_causal_logic: context_fn returned None value and no error"
-                                .into(),
-                        ))
-                    });
-                    PropagatingEffect::from_error(error)
-                }
+            // Convert PropagatingProcess to PropagatingEffect, preserving logs.
+            let mut effect = if let Some(error) = process.error {
+                PropagatingEffect::from_error(error)
+            } else if process.value.is_none() {
+                PropagatingEffect::from_error(CausalityError(
+                    deep_causality_core::CausalityErrorEnum::Custom(
+                        "execute_causal_logic: context_fn returned None value and no error".into(),
+                    ),
+                ))
+            } else {
+                PropagatingEffect::from_effect_value(process.value)
             };
             effect.logs = process.logs;
             effect
