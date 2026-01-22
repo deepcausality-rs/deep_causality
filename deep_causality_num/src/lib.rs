@@ -11,7 +11,7 @@ mod alias;
 mod cast;
 mod complex;
 pub mod float;
-mod float_double;
+mod float_106;
 mod float_option;
 mod identity;
 pub mod num;
@@ -61,7 +61,7 @@ pub use crate::complex::quaternion_number::{Quaternion, Quaternion32, Quaternion
 
 // Float number types
 pub use crate::float::Float;
-pub use crate::float_double::DoubleFloat;
+pub use crate::float_106::Float106;
 pub use crate::float_option::FloatOption;
 
 //  General numeric traits

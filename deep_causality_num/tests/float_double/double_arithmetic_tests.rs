@@ -6,7 +6,7 @@
 //! Tests for remaining arithmetic operations on DoubleFloat.
 #![allow(clippy::op_ref)]
 
-use deep_causality_num::DoubleFloat;
+use deep_causality_num::Float106;
 
 const EPSILON: f64 = 1e-14;
 
@@ -16,7 +16,7 @@ const EPSILON: f64 = 1e-14;
 
 #[test]
 fn test_add_doublefloat_f64() {
-    let a = DoubleFloat::from_f64(3.0);
+    let a = Float106::from_f64(3.0);
     let b = 2.0_f64;
     let result = a + b;
     assert!((result.hi() - 5.0).abs() < EPSILON);
@@ -25,7 +25,7 @@ fn test_add_doublefloat_f64() {
 #[test]
 fn test_add_f64_doublefloat() {
     let a = 3.0_f64;
-    let b = DoubleFloat::from_f64(2.0);
+    let b = Float106::from_f64(2.0);
     let result = a + b;
     assert!((result.hi() - 5.0).abs() < EPSILON);
 }
@@ -36,7 +36,7 @@ fn test_add_f64_doublefloat() {
 
 #[test]
 fn test_sub_doublefloat_f64() {
-    let a = DoubleFloat::from_f64(5.0);
+    let a = Float106::from_f64(5.0);
     let b = 2.0_f64;
     let result = a - b;
     assert!((result.hi() - 3.0).abs() < EPSILON);
@@ -45,7 +45,7 @@ fn test_sub_doublefloat_f64() {
 #[test]
 fn test_sub_f64_doublefloat() {
     let a = 5.0_f64;
-    let b = DoubleFloat::from_f64(2.0);
+    let b = Float106::from_f64(2.0);
     let result = a - b;
     assert!((result.hi() - 3.0).abs() < EPSILON);
 }
@@ -56,7 +56,7 @@ fn test_sub_f64_doublefloat() {
 
 #[test]
 fn test_mul_doublefloat_f64() {
-    let a = DoubleFloat::from_f64(3.0);
+    let a = Float106::from_f64(3.0);
     let b = 4.0_f64;
     let result = a * b;
     assert!((result.hi() - 12.0).abs() < EPSILON);
@@ -65,7 +65,7 @@ fn test_mul_doublefloat_f64() {
 #[test]
 fn test_mul_f64_doublefloat() {
     let a = 3.0_f64;
-    let b = DoubleFloat::from_f64(4.0);
+    let b = Float106::from_f64(4.0);
     let result = a * b;
     assert!((result.hi() - 12.0).abs() < EPSILON);
 }
@@ -76,7 +76,7 @@ fn test_mul_f64_doublefloat() {
 
 #[test]
 fn test_div_doublefloat_f64() {
-    let a = DoubleFloat::from_f64(12.0);
+    let a = Float106::from_f64(12.0);
     let b = 4.0_f64;
     let result = a / b;
     assert!((result.hi() - 3.0).abs() < EPSILON);
@@ -85,7 +85,7 @@ fn test_div_doublefloat_f64() {
 #[test]
 fn test_div_f64_doublefloat() {
     let a = 12.0_f64;
-    let b = DoubleFloat::from_f64(4.0);
+    let b = Float106::from_f64(4.0);
     let result = a / b;
     assert!((result.hi() - 3.0).abs() < EPSILON);
 }
@@ -96,7 +96,7 @@ fn test_div_f64_doublefloat() {
 
 #[test]
 fn test_add_assign_f64() {
-    let mut a = DoubleFloat::from_f64(3.0);
+    let mut a = Float106::from_f64(3.0);
     a += 2.0_f64;
     assert!((a.hi() - 5.0).abs() < EPSILON);
 }
@@ -107,7 +107,7 @@ fn test_add_assign_f64() {
 
 #[test]
 fn test_sub_assign_f64() {
-    let mut a = DoubleFloat::from_f64(5.0);
+    let mut a = Float106::from_f64(5.0);
     a -= 2.0_f64;
     assert!((a.hi() - 3.0).abs() < EPSILON);
 }
@@ -118,7 +118,7 @@ fn test_sub_assign_f64() {
 
 #[test]
 fn test_mul_assign_f64() {
-    let mut a = DoubleFloat::from_f64(3.0);
+    let mut a = Float106::from_f64(3.0);
     a *= 4.0_f64;
     assert!((a.hi() - 12.0).abs() < EPSILON);
 }
@@ -129,7 +129,7 @@ fn test_mul_assign_f64() {
 
 #[test]
 fn test_div_assign_f64() {
-    let mut a = DoubleFloat::from_f64(12.0);
+    let mut a = Float106::from_f64(12.0);
     a /= 4.0_f64;
     assert!((a.hi() - 3.0).abs() < EPSILON);
 }
@@ -140,15 +140,15 @@ fn test_div_assign_f64() {
 
 #[test]
 fn test_rem() {
-    let a = DoubleFloat::from_f64(7.0);
-    let b = DoubleFloat::from_f64(3.0);
+    let a = Float106::from_f64(7.0);
+    let b = Float106::from_f64(3.0);
     let result = a % b;
     assert!((result.hi() - 1.0).abs() < EPSILON);
 }
 
 #[test]
 fn test_rem_f64() {
-    let a = DoubleFloat::from_f64(7.0);
+    let a = Float106::from_f64(7.0);
     let b = 3.0_f64;
     let result = a % b;
     assert!((result.hi() - 1.0).abs() < EPSILON);
@@ -156,15 +156,15 @@ fn test_rem_f64() {
 
 #[test]
 fn test_rem_assign() {
-    let mut a = DoubleFloat::from_f64(7.0);
-    let b = DoubleFloat::from_f64(3.0);
+    let mut a = Float106::from_f64(7.0);
+    let b = Float106::from_f64(3.0);
     a %= b;
     assert!((a.hi() - 1.0).abs() < EPSILON);
 }
 
 #[test]
 fn test_rem_assign_f64() {
-    let mut a = DoubleFloat::from_f64(7.0);
+    let mut a = Float106::from_f64(7.0);
     a %= 3.0_f64;
     assert!((a.hi() - 1.0).abs() < EPSILON);
 }
@@ -175,28 +175,28 @@ fn test_rem_assign_f64() {
 
 #[test]
 fn test_neg_positive() {
-    let a = DoubleFloat::from_f64(42.0);
+    let a = Float106::from_f64(42.0);
     let result = -a;
     assert!((result.hi() - (-42.0)).abs() < EPSILON);
 }
 
 #[test]
 fn test_neg_negative() {
-    let a = DoubleFloat::from_f64(-42.0);
+    let a = Float106::from_f64(-42.0);
     let result = -a;
     assert!((result.hi() - 42.0).abs() < EPSILON);
 }
 
 #[test]
 fn test_neg_zero() {
-    let a = DoubleFloat::from_f64(0.0);
+    let a = Float106::from_f64(0.0);
     let result = -a;
     assert!((result.hi() - 0.0).abs() < EPSILON);
 }
 
 #[test]
 fn test_neg_with_lo() {
-    let a = DoubleFloat::new(42.0, 1e-20);
+    let a = Float106::new(42.0, 1e-20);
     let result = -a;
     assert!((result.hi() - (-42.0)).abs() < EPSILON);
     assert!((result.lo() - (-1e-20)).abs() < 1e-30);
@@ -208,48 +208,48 @@ fn test_neg_with_lo() {
 
 #[test]
 fn test_add_ref_ref() {
-    let a = DoubleFloat::from_f64(3.0);
-    let b = DoubleFloat::from_f64(2.0);
+    let a = Float106::from_f64(3.0);
+    let b = Float106::from_f64(2.0);
     let result = &a + &b;
     assert!((result.hi() - 5.0).abs() < EPSILON);
 }
 
 #[test]
 fn test_sub_ref_ref() {
-    let a = DoubleFloat::from_f64(5.0);
-    let b = DoubleFloat::from_f64(2.0);
+    let a = Float106::from_f64(5.0);
+    let b = Float106::from_f64(2.0);
     let result = &a - &b;
     assert!((result.hi() - 3.0).abs() < EPSILON);
 }
 
 #[test]
 fn test_mul_ref_ref() {
-    let a = DoubleFloat::from_f64(3.0);
-    let b = DoubleFloat::from_f64(4.0);
+    let a = Float106::from_f64(3.0);
+    let b = Float106::from_f64(4.0);
     let result = &a * &b;
     assert!((result.hi() - 12.0).abs() < EPSILON);
 }
 
 #[test]
 fn test_div_ref_ref() {
-    let a = DoubleFloat::from_f64(12.0);
-    let b = DoubleFloat::from_f64(4.0);
+    let a = Float106::from_f64(12.0);
+    let b = Float106::from_f64(4.0);
     let result = &a / &b;
     assert!((result.hi() - 3.0).abs() < EPSILON);
 }
 
 #[test]
 fn test_add_ref_owned() {
-    let a = DoubleFloat::from_f64(3.0);
-    let b = DoubleFloat::from_f64(2.0);
+    let a = Float106::from_f64(3.0);
+    let b = Float106::from_f64(2.0);
     let result = &a + b;
     assert!((result.hi() - 5.0).abs() < EPSILON);
 }
 
 #[test]
 fn test_add_owned_ref() {
-    let a = DoubleFloat::from_f64(3.0);
-    let b = DoubleFloat::from_f64(2.0);
+    let a = Float106::from_f64(3.0);
+    let b = Float106::from_f64(2.0);
     let result = a + &b;
     assert!((result.hi() - 5.0).abs() < EPSILON);
 }

@@ -5,7 +5,7 @@
 
 //! Arithmetic operations for `DoubleFloat` using Error-Free Transformations.
 
-use crate::float_double::{DoubleFloat, quick_two_sum, two_prod, two_sum};
+use crate::float_106::{Float106, quick_two_sum, two_prod, two_sum};
 use core::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
@@ -14,7 +14,7 @@ use core::ops::{
 // Negation
 // =============================================================================
 
-impl Neg for DoubleFloat {
+impl Neg for Float106 {
     type Output = Self;
 
     #[inline]
@@ -30,7 +30,7 @@ impl Neg for DoubleFloat {
 // Addition
 // =============================================================================
 
-impl Add for DoubleFloat {
+impl Add for Float106 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -43,7 +43,7 @@ impl Add for DoubleFloat {
     }
 }
 
-impl Add<f64> for DoubleFloat {
+impl Add<f64> for Float106 {
     type Output = Self;
 
     #[inline]
@@ -52,23 +52,23 @@ impl Add<f64> for DoubleFloat {
     }
 }
 
-impl Add<DoubleFloat> for f64 {
-    type Output = DoubleFloat;
+impl Add<Float106> for f64 {
+    type Output = Float106;
 
     #[inline]
-    fn add(self, rhs: DoubleFloat) -> Self::Output {
-        DoubleFloat::from_f64(self) + rhs
+    fn add(self, rhs: Float106) -> Self::Output {
+        Float106::from_f64(self) + rhs
     }
 }
 
-impl AddAssign for DoubleFloat {
+impl AddAssign for Float106 {
     #[inline]
     fn add_assign(&mut self, rhs: Self) {
         *self = *self + rhs;
     }
 }
 
-impl AddAssign<f64> for DoubleFloat {
+impl AddAssign<f64> for Float106 {
     #[inline]
     fn add_assign(&mut self, rhs: f64) {
         *self = *self + rhs;
@@ -79,7 +79,7 @@ impl AddAssign<f64> for DoubleFloat {
 // Subtraction
 // =============================================================================
 
-impl Sub for DoubleFloat {
+impl Sub for Float106 {
     type Output = Self;
 
     #[inline]
@@ -90,7 +90,7 @@ impl Sub for DoubleFloat {
     }
 }
 
-impl Sub<f64> for DoubleFloat {
+impl Sub<f64> for Float106 {
     type Output = Self;
 
     #[inline]
@@ -99,23 +99,23 @@ impl Sub<f64> for DoubleFloat {
     }
 }
 
-impl Sub<DoubleFloat> for f64 {
-    type Output = DoubleFloat;
+impl Sub<Float106> for f64 {
+    type Output = Float106;
 
     #[inline]
-    fn sub(self, rhs: DoubleFloat) -> Self::Output {
-        DoubleFloat::from_f64(self) - rhs
+    fn sub(self, rhs: Float106) -> Self::Output {
+        Float106::from_f64(self) - rhs
     }
 }
 
-impl SubAssign for DoubleFloat {
+impl SubAssign for Float106 {
     #[inline]
     fn sub_assign(&mut self, rhs: Self) {
         *self = *self - rhs;
     }
 }
 
-impl SubAssign<f64> for DoubleFloat {
+impl SubAssign<f64> for Float106 {
     #[inline]
     fn sub_assign(&mut self, rhs: f64) {
         *self = *self - rhs;
@@ -126,7 +126,7 @@ impl SubAssign<f64> for DoubleFloat {
 // Multiplication
 // =============================================================================
 
-impl Mul for DoubleFloat {
+impl Mul for Float106 {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -143,7 +143,7 @@ impl Mul for DoubleFloat {
     }
 }
 
-impl Mul<f64> for DoubleFloat {
+impl Mul<f64> for Float106 {
     type Output = Self;
 
     fn mul(self, rhs: f64) -> Self::Output {
@@ -155,23 +155,23 @@ impl Mul<f64> for DoubleFloat {
     }
 }
 
-impl Mul<DoubleFloat> for f64 {
-    type Output = DoubleFloat;
+impl Mul<Float106> for f64 {
+    type Output = Float106;
 
     #[inline]
-    fn mul(self, rhs: DoubleFloat) -> Self::Output {
+    fn mul(self, rhs: Float106) -> Self::Output {
         rhs * self
     }
 }
 
-impl MulAssign for DoubleFloat {
+impl MulAssign for Float106 {
     #[inline]
     fn mul_assign(&mut self, rhs: Self) {
         *self = *self * rhs;
     }
 }
 
-impl MulAssign<f64> for DoubleFloat {
+impl MulAssign<f64> for Float106 {
     #[inline]
     fn mul_assign(&mut self, rhs: f64) {
         *self = *self * rhs;
@@ -182,7 +182,7 @@ impl MulAssign<f64> for DoubleFloat {
 // Division
 // =============================================================================
 
-impl Div for DoubleFloat {
+impl Div for Float106 {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
@@ -204,7 +204,7 @@ impl Div for DoubleFloat {
     }
 }
 
-impl Div<f64> for DoubleFloat {
+impl Div<f64> for Float106 {
     type Output = Self;
 
     fn div(self, rhs: f64) -> Self::Output {
@@ -219,23 +219,23 @@ impl Div<f64> for DoubleFloat {
     }
 }
 
-impl Div<DoubleFloat> for f64 {
-    type Output = DoubleFloat;
+impl Div<Float106> for f64 {
+    type Output = Float106;
 
     #[inline]
-    fn div(self, rhs: DoubleFloat) -> Self::Output {
-        DoubleFloat::from_f64(self) / rhs
+    fn div(self, rhs: Float106) -> Self::Output {
+        Float106::from_f64(self) / rhs
     }
 }
 
-impl DivAssign for DoubleFloat {
+impl DivAssign for Float106 {
     #[inline]
     fn div_assign(&mut self, rhs: Self) {
         *self = *self / rhs;
     }
 }
 
-impl DivAssign<f64> for DoubleFloat {
+impl DivAssign<f64> for Float106 {
     #[inline]
     fn div_assign(&mut self, rhs: f64) {
         *self = *self / rhs;
@@ -246,7 +246,7 @@ impl DivAssign<f64> for DoubleFloat {
 // Remainder
 // =============================================================================
 
-impl Rem for DoubleFloat {
+impl Rem for Float106 {
     type Output = Self;
 
     fn rem(self, rhs: Self) -> Self::Output {
@@ -257,7 +257,7 @@ impl Rem for DoubleFloat {
     }
 }
 
-impl Rem<f64> for DoubleFloat {
+impl Rem<f64> for Float106 {
     type Output = Self;
 
     #[inline]
@@ -266,23 +266,23 @@ impl Rem<f64> for DoubleFloat {
     }
 }
 
-impl Rem<DoubleFloat> for f64 {
-    type Output = DoubleFloat;
+impl Rem<Float106> for f64 {
+    type Output = Float106;
 
     #[inline]
-    fn rem(self, rhs: DoubleFloat) -> Self::Output {
-        DoubleFloat::from_f64(self) % rhs
+    fn rem(self, rhs: Float106) -> Self::Output {
+        Float106::from_f64(self) % rhs
     }
 }
 
-impl RemAssign for DoubleFloat {
+impl RemAssign for Float106 {
     #[inline]
     fn rem_assign(&mut self, rhs: Self) {
         *self = *self % rhs;
     }
 }
 
-impl RemAssign<f64> for DoubleFloat {
+impl RemAssign<f64> for Float106 {
     #[inline]
     fn rem_assign(&mut self, rhs: f64) {
         *self = *self % rhs;
@@ -293,137 +293,137 @@ impl RemAssign<f64> for DoubleFloat {
 // Reference Operations
 // =============================================================================
 
-impl Add<&DoubleFloat> for DoubleFloat {
+impl Add<&Float106> for Float106 {
     type Output = Self;
 
     #[inline]
-    fn add(self, rhs: &DoubleFloat) -> Self::Output {
+    fn add(self, rhs: &Float106) -> Self::Output {
         self + *rhs
     }
 }
 
-impl Add<DoubleFloat> for &DoubleFloat {
-    type Output = DoubleFloat;
+impl Add<Float106> for &Float106 {
+    type Output = Float106;
 
     #[inline]
-    fn add(self, rhs: DoubleFloat) -> Self::Output {
+    fn add(self, rhs: Float106) -> Self::Output {
         *self + rhs
     }
 }
 
-impl Add<&DoubleFloat> for &DoubleFloat {
-    type Output = DoubleFloat;
+impl Add<&Float106> for &Float106 {
+    type Output = Float106;
 
     #[inline]
-    fn add(self, rhs: &DoubleFloat) -> Self::Output {
+    fn add(self, rhs: &Float106) -> Self::Output {
         *self + *rhs
     }
 }
 
-impl Sub<&DoubleFloat> for DoubleFloat {
+impl Sub<&Float106> for Float106 {
     type Output = Self;
 
     #[inline]
-    fn sub(self, rhs: &DoubleFloat) -> Self::Output {
+    fn sub(self, rhs: &Float106) -> Self::Output {
         self - *rhs
     }
 }
 
-impl Sub<DoubleFloat> for &DoubleFloat {
-    type Output = DoubleFloat;
+impl Sub<Float106> for &Float106 {
+    type Output = Float106;
 
     #[inline]
-    fn sub(self, rhs: DoubleFloat) -> Self::Output {
+    fn sub(self, rhs: Float106) -> Self::Output {
         *self - rhs
     }
 }
 
-impl Sub<&DoubleFloat> for &DoubleFloat {
-    type Output = DoubleFloat;
+impl Sub<&Float106> for &Float106 {
+    type Output = Float106;
 
     #[inline]
-    fn sub(self, rhs: &DoubleFloat) -> Self::Output {
+    fn sub(self, rhs: &Float106) -> Self::Output {
         *self - *rhs
     }
 }
 
-impl Mul<&DoubleFloat> for DoubleFloat {
+impl Mul<&Float106> for Float106 {
     type Output = Self;
 
     #[inline]
-    fn mul(self, rhs: &DoubleFloat) -> Self::Output {
+    fn mul(self, rhs: &Float106) -> Self::Output {
         self * *rhs
     }
 }
 
-impl Mul<DoubleFloat> for &DoubleFloat {
-    type Output = DoubleFloat;
+impl Mul<Float106> for &Float106 {
+    type Output = Float106;
 
     #[inline]
-    fn mul(self, rhs: DoubleFloat) -> Self::Output {
+    fn mul(self, rhs: Float106) -> Self::Output {
         *self * rhs
     }
 }
 
-impl Mul<&DoubleFloat> for &DoubleFloat {
-    type Output = DoubleFloat;
+impl Mul<&Float106> for &Float106 {
+    type Output = Float106;
 
     #[inline]
-    fn mul(self, rhs: &DoubleFloat) -> Self::Output {
+    fn mul(self, rhs: &Float106) -> Self::Output {
         *self * *rhs
     }
 }
 
-impl Div<&DoubleFloat> for DoubleFloat {
+impl Div<&Float106> for Float106 {
     type Output = Self;
 
     #[inline]
-    fn div(self, rhs: &DoubleFloat) -> Self::Output {
+    fn div(self, rhs: &Float106) -> Self::Output {
         self / *rhs
     }
 }
 
-impl Div<DoubleFloat> for &DoubleFloat {
-    type Output = DoubleFloat;
+impl Div<Float106> for &Float106 {
+    type Output = Float106;
 
     #[inline]
-    fn div(self, rhs: DoubleFloat) -> Self::Output {
+    fn div(self, rhs: Float106) -> Self::Output {
         *self / rhs
     }
 }
 
-impl Div<&DoubleFloat> for &DoubleFloat {
-    type Output = DoubleFloat;
+impl Div<&Float106> for &Float106 {
+    type Output = Float106;
 
     #[inline]
-    fn div(self, rhs: &DoubleFloat) -> Self::Output {
+    fn div(self, rhs: &Float106) -> Self::Output {
         *self / *rhs
     }
 }
 
-impl Rem<&DoubleFloat> for DoubleFloat {
+impl Rem<&Float106> for Float106 {
     type Output = Self;
 
     #[inline]
-    fn rem(self, rhs: &DoubleFloat) -> Self::Output {
+    fn rem(self, rhs: &Float106) -> Self::Output {
         self % *rhs
     }
 }
 
-impl Rem<DoubleFloat> for &DoubleFloat {
-    type Output = DoubleFloat;
+impl Rem<Float106> for &Float106 {
+    type Output = Float106;
 
     #[inline]
-    fn rem(self, rhs: DoubleFloat) -> Self::Output {
+    fn rem(self, rhs: Float106) -> Self::Output {
         *self % rhs
     }
 }
 
-impl Rem<&DoubleFloat> for &DoubleFloat {
-    type Output = DoubleFloat;
+impl Rem<&Float106> for &Float106 {
+    type Output = Float106;
 
     #[inline]
-    fn rem(self, rhs: &DoubleFloat) -> Self::Output {
+    fn rem(self, rhs: &Float106) -> Self::Output {
         *self % *rhs
     }
 }

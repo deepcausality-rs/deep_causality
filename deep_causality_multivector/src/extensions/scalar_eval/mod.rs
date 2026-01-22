@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::ScalarEval;
-use deep_causality_num::{Complex, DoubleFloat, RealField};
+use deep_causality_num::{Complex, Float106, RealField};
 use std::iter::Sum;
 
 impl ScalarEval for f32 {
@@ -34,8 +34,8 @@ impl ScalarEval for f64 {
     }
 }
 
-impl ScalarEval for DoubleFloat {
-    type Real = DoubleFloat;
+impl ScalarEval for Float106 {
+    type Real = Float106;
 
     #[inline]
     fn modulus_squared(&self) -> Self::Real {

@@ -15,15 +15,15 @@
 //! 4. **Analysis**: Lifetime and width calculations
 
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
-use deep_causality_num::DoubleFloat;
+use deep_causality_num::Float106;
 use deep_causality_physics::{WeakField, WeakFieldOps, WeakIsospin};
 
 // =============================================================================
 // FLOAT TYPE CONFIGURATION
 // =============================================================================
 
-// Change this to f32 or DoubleFloat to use different precision
-type FloatType = DoubleFloat;
+// Change this to f32 , f64, or Float106 to use different precision
+type FloatType = Float106;
 type WeakTheory = WeakField<FloatType>;
 
 /// Macro to convert f64 literals to FloatType

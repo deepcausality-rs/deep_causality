@@ -15,14 +15,14 @@
 //! 4. **Resonance**: Compute Z pole cross-section
 
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
-use deep_causality_num::{DoubleFloat, RealField};
+use deep_causality_num::{Float106, RealField};
 use deep_causality_physics::ElectroweakParams;
 
 // =============================================================================
 // FLOAT TYPE CONFIGURATION
 // =============================================================================
 
-type FloatType = DoubleFloat;
+type FloatType = Float106;
 
 /// Macro to convert f64 literals to target FloatType
 macro_rules! flt {

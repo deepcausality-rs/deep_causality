@@ -26,15 +26,15 @@
 //! - **Classical EM via gauge field formalism** using deep_causality_physics
 
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
-use deep_causality_num::{DoubleFloat, Float, Zero};
+use deep_causality_num::{Float106, Float, Zero};
 use deep_causality_physics::{EM, GaugeEmOps};
 
 // =============================================================================
 // FLOAT TYPE CONFIGURATION
 // =============================================================================
 
-// Change this to f32 or DoubleFloat to use different precision
-type FloatType = DoubleFloat;
+// Change this to f32 , f64, or Float106 to use different precision
+type FloatType = Float106;
 type EmTheory = EM<FloatType>;
 
 /// Macro to convert f64 literals to FloatType

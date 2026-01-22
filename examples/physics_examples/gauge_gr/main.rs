@@ -14,7 +14,7 @@
 //! type alias. All numeric literals are converted using the `flt!` macro.
 //!
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
-use deep_causality_num::{DoubleFloat, Float};
+use deep_causality_num::{Float106, Float};
 use deep_causality_physics::{AdmOps, GrOps, LorentzianMetric};
 use deep_causality_physics::{AdmState, EastCoastMetric, GR, SPEED_OF_LIGHT};
 use deep_causality_tensor::CausalTensor;
@@ -24,8 +24,8 @@ use std::error::Error;
 // FLOAT TYPE CONFIGURATION
 // =============================================================================
 
-// Change this to f32 or DoubleFloat to use different precision
-type FloatType = DoubleFloat;
+// Change this to f32 , f64, or Float106 to use different precision
+type FloatType = Float106;
 type GRTheory = GR<FloatType>;
 
 /// Macro to convert f64 literals to FloatType

@@ -5,18 +5,18 @@
 
 //! Arithmetic operation tests for `DoubleFloat`.
 
-use deep_causality_num::{DoubleFloat, Float, One, Zero};
+use deep_causality_num::{Float106, Float, One, Zero};
 
 // =============================================================================
 // Helper Functions
 // =============================================================================
 
-fn d(x: f64) -> DoubleFloat {
-    DoubleFloat::from_f64(x)
+fn d(x: f64) -> Float106 {
+    Float106::from_f64(x)
 }
 
-fn approx_eq(a: DoubleFloat, b: DoubleFloat, epsilon: f64) -> bool {
-    let diff = <DoubleFloat as Float>::abs(a - b);
+fn approx_eq(a: Float106, b: Float106, epsilon: f64) -> bool {
+    let diff = <Float106 as Float>::abs(a - b);
     diff.hi() < epsilon
 }
 
@@ -36,7 +36,7 @@ fn test_addition_basic() {
 fn test_addition_with_cancellation() {
     // Test high-precision addition where f64 would lose precision
     let a = d(1.0);
-    let small = DoubleFloat::new(0.0, 1e-20);
+    let small = Float106::new(0.0, 1e-20);
     let result = a + small;
     assert_eq!(result.hi(), 1.0);
     assert!(result.lo() > 0.0); // Small value preserved
@@ -116,7 +116,7 @@ fn test_remainder() {
 
 #[test]
 fn test_nan_propagation() {
-    let nan = <DoubleFloat as Float>::nan();
+    let nan = <Float106 as Float>::nan();
     assert!(nan.is_nan());
     assert!((nan + d(1.0)).is_nan());
     assert!((nan * d(1.0)).is_nan());
@@ -124,7 +124,7 @@ fn test_nan_propagation() {
 
 #[test]
 fn test_infinity() {
-    let inf = <DoubleFloat as Float>::infinity();
+    let inf = <Float106 as Float>::infinity();
     assert!(inf.is_infinite());
     assert!(!inf.is_finite());
     assert!(inf > d(f64::MAX));
@@ -132,15 +132,15 @@ fn test_infinity() {
 
 #[test]
 fn test_neg_infinity() {
-    let neg_inf = <DoubleFloat as Float>::neg_infinity();
+    let neg_inf = <Float106 as Float>::neg_infinity();
     assert!(neg_inf.is_infinite());
     assert!(neg_inf < d(f64::MIN));
 }
 
 #[test]
 fn test_zero_and_one() {
-    let zero = DoubleFloat::zero();
-    let one = DoubleFloat::one();
+    let zero = Float106::zero();
+    let one = Float106::one();
 
     assert!(zero.is_zero());
     assert!(one.is_one());
@@ -178,8 +178,8 @@ fn test_ordering() {
 
 #[test]
 fn test_ordering_with_lo_component() {
-    let a = DoubleFloat::new(1.0, 1e-20);
-    let b = DoubleFloat::new(1.0, 2e-20);
+    let a = Float106::new(1.0, 1e-20);
+    let b = Float106::new(1.0, 2e-20);
     assert!(a < b);
 }
 
@@ -277,7 +277,7 @@ fn test_distributivity() {
 
 #[test]
 fn test_high_precision_constants() {
-    let pi = DoubleFloat::PI;
+    let pi = Float106::PI;
     // Verify pi.hi + pi.lo is close to the true value
     let sum = pi.hi() + pi.lo();
     let expected = core::f64::consts::PI;
@@ -288,7 +288,7 @@ fn test_high_precision_constants() {
 fn test_precision_beyond_f64() {
     // Create a value that requires DoubleFloat precision
     let a = d(1.0);
-    let tiny = DoubleFloat::new(0.0, 1e-17);
+    let tiny = Float106::new(0.0, 1e-17);
     let result = a + tiny;
     // The tiny addition should be preserved in lo component
     assert_eq!(result.hi(), 1.0);
@@ -301,7 +301,7 @@ fn test_precision_beyond_f64() {
 
 #[test]
 fn test_from_f64() {
-    let x = DoubleFloat::from_f64(42.0);
+    let x = Float106::from_f64(42.0);
     assert_eq!(x.hi(), 42.0);
     assert_eq!(x.lo(), 0.0);
 }
@@ -314,7 +314,7 @@ fn test_to_f64() {
 
 #[test]
 fn test_from_i32() {
-    let x: DoubleFloat = 42_i32.into();
+    let x: Float106 = 42_i32.into();
     assert_eq!(x.hi(), 42.0);
 }
 

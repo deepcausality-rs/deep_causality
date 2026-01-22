@@ -5,14 +5,14 @@
 
 //! Comparison operations for `DoubleFloat`.
 
-use crate::float_double::DoubleFloat;
+use crate::float_106::Float106;
 use core::cmp::Ordering;
 
 // =============================================================================
 // Equality
 // =============================================================================
 
-impl PartialEq for DoubleFloat {
+impl PartialEq for Float106 {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         // Since DoubleFloat maintains the invariant |lo| <= 0.5 * ulp(hi),
@@ -21,16 +21,16 @@ impl PartialEq for DoubleFloat {
     }
 }
 
-impl PartialEq<f64> for DoubleFloat {
+impl PartialEq<f64> for Float106 {
     #[inline]
     fn eq(&self, other: &f64) -> bool {
         self.hi == *other && self.lo == 0.0
     }
 }
 
-impl PartialEq<DoubleFloat> for f64 {
+impl PartialEq<Float106> for f64 {
     #[inline]
-    fn eq(&self, other: &DoubleFloat) -> bool {
+    fn eq(&self, other: &Float106) -> bool {
         *self == other.hi && other.lo == 0.0
     }
 }
@@ -39,7 +39,7 @@ impl PartialEq<DoubleFloat> for f64 {
 // Ordering
 // =============================================================================
 
-impl PartialOrd for DoubleFloat {
+impl PartialOrd for Float106 {
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         // Lexicographical comparison: hi component dominates
@@ -70,16 +70,16 @@ impl PartialOrd for DoubleFloat {
     }
 }
 
-impl PartialOrd<f64> for DoubleFloat {
+impl PartialOrd<f64> for Float106 {
     #[inline]
     fn partial_cmp(&self, other: &f64) -> Option<Ordering> {
         self.partial_cmp(&Self::from_f64(*other))
     }
 }
 
-impl PartialOrd<DoubleFloat> for f64 {
+impl PartialOrd<Float106> for f64 {
     #[inline]
-    fn partial_cmp(&self, other: &DoubleFloat) -> Option<Ordering> {
-        DoubleFloat::from_f64(*self).partial_cmp(other)
+    fn partial_cmp(&self, other: &Float106) -> Option<Ordering> {
+        Float106::from_f64(*self).partial_cmp(other)
     }
 }

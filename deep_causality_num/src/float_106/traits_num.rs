@@ -5,14 +5,14 @@
 
 //! Numeric trait implementations for `DoubleFloat`.
 
-use crate::DoubleFloat;
+use crate::Float106;
 use crate::{FromPrimitive, NumCast, ToPrimitive};
 
 // =============================================================================
 // ToPrimitive
 // =============================================================================
 
-impl ToPrimitive for DoubleFloat {
+impl ToPrimitive for Float106 {
     #[inline]
     fn to_isize(&self) -> Option<isize> {
         self.hi.to_isize()
@@ -88,7 +88,7 @@ impl ToPrimitive for DoubleFloat {
 // FromPrimitive
 // =============================================================================
 
-impl FromPrimitive for DoubleFloat {
+impl FromPrimitive for Float106 {
     #[inline]
     fn from_i64(n: i64) -> Option<Self> {
         Some(Self::from_f64(n as f64))
@@ -164,7 +164,7 @@ impl FromPrimitive for DoubleFloat {
 // NumCast
 // =============================================================================
 
-impl NumCast for DoubleFloat {
+impl NumCast for Float106 {
     #[inline]
     fn from<T: ToPrimitive>(n: T) -> Option<Self> {
         n.to_f64().map(Self::from_f64)
@@ -177,25 +177,25 @@ impl NumCast for DoubleFloat {
 
 use core::iter::{Product, Sum};
 
-impl Sum for DoubleFloat {
+impl Sum for Float106 {
     fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
         iter.fold(Self::from_f64(0.0), |acc, x| acc + x)
     }
 }
 
-impl<'a> Sum<&'a DoubleFloat> for DoubleFloat {
+impl<'a> Sum<&'a Float106> for Float106 {
     fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
         iter.fold(Self::from_f64(0.0), |acc, x| acc + *x)
     }
 }
 
-impl Product for DoubleFloat {
+impl Product for Float106 {
     fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
         iter.fold(Self::from_f64(1.0), |acc, x| acc * x)
     }
 }
 
-impl<'a> Product<&'a DoubleFloat> for DoubleFloat {
+impl<'a> Product<&'a Float106> for Float106 {
     fn product<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
         iter.fold(Self::from_f64(1.0), |acc, x| acc * *x)
     }

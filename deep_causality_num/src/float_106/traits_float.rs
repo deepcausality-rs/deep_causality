@@ -8,7 +8,7 @@
 //! Implements transcendental functions using high-precision Taylor series
 //! with range reduction techniques.
 
-use crate::DoubleFloat;
+use crate::Float106;
 use crate::Float;
 use core::num::FpCategory;
 
@@ -16,7 +16,7 @@ use core::num::FpCategory;
 // High-Precision Constants
 // =============================================================================
 
-impl DoubleFloat {
+impl Float106 {
     /// π to ~31 decimal digits
     /// 3.14159265358979323846264338327950288...
     pub const PI: Self = Self {
@@ -72,7 +72,7 @@ impl DoubleFloat {
 // Float Trait Implementation
 // =============================================================================
 
-impl Float for DoubleFloat {
+impl Float for Float106 {
     #[inline]
     fn nan() -> Self {
         Self {

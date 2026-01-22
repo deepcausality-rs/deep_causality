@@ -21,7 +21,7 @@
 //!
 //! M. Creutz, *Quarks, Gluons and Lattices*, Cambridge University Press (1983), Chapter 8
 
-use deep_causality_num::{Complex, DoubleFloat, Float};
+use deep_causality_num::{Complex, Float106, Float};
 use deep_causality_topology::{Lattice, LatticeGaugeField, U1};
 use std::sync::Arc;
 
@@ -30,7 +30,7 @@ use std::sync::Arc;
 // =============================================================================
 
 // Change this to f32 or f64 to use different precision
-type FloatType = DoubleFloat;
+type FloatType = Float106;
 
 /// Macro to convert f64 literals to FloatType
 macro_rules! flt {
