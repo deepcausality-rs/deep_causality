@@ -51,7 +51,8 @@ impl<
     const D: usize,
     M: Field + Copy + Default + PartialOrd + Debug + ComplexField<R> + DivisionAlgebra<R>,
     R: RealField + FromPrimitive + ToPrimitive,
-> LatticeGaugeField<G, D, M, R>
+    S: Clone,
+> LatticeGaugeField<G, D, M, R, S>
 {
     /// Apply APE smearing to the gauge field.
     ///

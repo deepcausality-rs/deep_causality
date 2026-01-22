@@ -102,7 +102,7 @@ where
         let beta = f(beta_a);
 
         // Create empty field with new beta (links cannot be transformed without Clone)
-        LatticeGaugeField::from_links_unchecked(lattice, HashMap::new(), beta)
+        LatticeGaugeField::from_links_unchecked(lattice, HashMap::new(), beta, ())
     }
 }
 
@@ -134,7 +134,7 @@ where
         let b_beta = f_beta(a_beta);
 
         // Create new field
-        LatticeGaugeField::from_links_unchecked(lattice_a, HashMap::new(), b_beta)
+        LatticeGaugeField::from_links_unchecked(lattice_a, HashMap::new(), b_beta, ())
     }
 }
 
@@ -160,7 +160,7 @@ where
         let lattice = Arc::new(Lattice::new(shape, [true; D]));
         let links = HashMap::new();
 
-        LatticeGaugeField::from_links_unchecked(lattice, links, value)
+        LatticeGaugeField::from_links_unchecked(lattice, links, value, ())
     }
 }
 
@@ -246,7 +246,7 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
             new_links.insert(cell.clone(), new_link);
         }
 
-        LatticeGaugeField::from_links_unchecked(lattice, new_links, beta_new)
+        LatticeGaugeField::from_links_unchecked(lattice, new_links, beta_new, ())
     }
 
     /// Combine two lattice gauge fields using a binary operation on scalars.
@@ -304,7 +304,10 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
         }
 
         Ok(LatticeGaugeField::from_links_unchecked(
-            lattice, new_links, beta,
+            lattice,
+            new_links,
+            beta,
+            (),
         ))
     }
 

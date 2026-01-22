@@ -153,15 +153,16 @@ fn test_zip_with_missing_link() {
     let shape = [2, 2];
     let lattice = Arc::new(Lattice::new(shape, [true, true]));
     let field_a =
-        LatticeGaugeField::<TestGroup, D, Complex<f64>, f64>::identity(lattice.clone(), 1.0);
+        LatticeGaugeField::<TestGroup, D, Complex<f64>, f64, ()>::identity(lattice.clone(), 1.0);
 
     // Create field B with a missing link
     // We can use from_links_unchecked with an empty map (which is invalid but good for this test)
     use std::collections::HashMap;
-    let field_b = LatticeGaugeField::<TestGroup, D, Complex<f64>, f64>::from_links_unchecked(
+    let field_b = LatticeGaugeField::<TestGroup, D, Complex<f64>, f64, ()>::from_links_unchecked(
         lattice,
         HashMap::new(), // Empty links
         1.0,
+        (),
     );
 
     let err = LatticeGaugeFieldWitness::zip_with(&field_a, &field_b, |a, b| *a + *b);
