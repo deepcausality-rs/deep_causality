@@ -59,7 +59,8 @@ fn test_space_temporal_trait() {
 fn test_lorentzian_time_and_position() {
     let s = LorentzianSpacetime::new(1, 1.0, 2.0, 3.0, 42.0, TimeScale::Millisecond);
 
-    assert_eq!(s.time(), 42.0);
+    // time() returns seconds: 42 milliseconds = 0.042 seconds
+    assert_eq!(s.time(), 0.042);
     assert_eq!(s.position(), [1.0, 2.0, 3.0]);
 }
 
