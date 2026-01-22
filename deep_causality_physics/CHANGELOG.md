@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.4.0...deep_causality_physics-v0.5.0) - 2026-01-22
+
+### Added
+
+- *(deep_causality_tensor)* Finalized MLX removal.
+- *(deep_causality_tensor)* Removed MLX backed.
+- *(deep_causality_topology)* Initial implementation of Lattice Gauge Field.
+
+### Other
+
+- *(deep_causality_topology)* Renamed Guage Groups to their definition names.
+- *(deep_causality_physics)* Fixed  numerous bugs.
+- Updated SBOM of and applied docstring fixes.
+- Updated SBOM of recently changed crates.
+- you added specification for removing the MLX backend from all affected crates.
+- Applied lints and fixes across crates.
+- *(deep_causality_topology)* Refeactoring to allow for genric fields and ComplexFiels in GaugeField and LatticeGauge Field
+- Merge branch 'deepcausality-rs:main' into main
+
 ## [0.4.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.3.1...deep_causality_physics-v0.4.0) - 2026-01-09
 
 ### Added

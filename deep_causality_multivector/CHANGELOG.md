@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.3.0...deep_causality_multivector-v0.4.0) - 2026-01-22
+
+### Added
+
+- *(deep_causality_multivector)* Applied lints and fixes.
+- *(deep_causality_multivector)* Increased test coverage.
+- *(deep_causality_tensor)* Finalized MLX removal.
+- *(deep_causality_tensor)* Removed MLX backed.
+- *(deep_causality_topology)* Removed MLX backed.
+- *(deep_causality_multivector)* Updated tests and applied lints & fixes.
+- *(deep_causality_multivector)* Removed MLX backed.
+
+### Other
+
+- *(deep_causality_num)* Renamed DoubleFloat to Float106 for consistency with existing float types.
+- *(deep_causality_discovery)* Fixed numerous bugs.
+- *(deep_causality_multivector)* Fixed a number of bugs.
+- remoced unneccessary trait bounds.
+- Updated SBOM of and applied docstring fixes.
+- Updated SBOM of recently changed crates.
+
 ## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.2.5...deep_causality_multivector-v0.3.0) - 2026-01-09
 
 ### Added
