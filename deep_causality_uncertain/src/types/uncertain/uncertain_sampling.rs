@@ -34,7 +34,12 @@ impl Uncertain<f64> {
     }
 
     pub fn take_samples(&self, n: usize) -> Result<Vec<f64>, UncertainError> {
-        (0..n).map(|i| self.sample_with_index(i as u64)).collect()
+        (0..n)
+            .map(|_| {
+                let sample_index = deep_causality_rand::rng().random::<u64>();
+                self.sample_with_index(sample_index)
+            })
+            .collect()
     }
 }
 
@@ -64,6 +69,11 @@ impl Uncertain<bool> {
     }
 
     pub fn take_samples(&self, n: usize) -> Result<Vec<bool>, UncertainError> {
-        (0..n).map(|i| self.sample_with_index(i as u64)).collect()
+        (0..n)
+            .map(|_| {
+                let sample_index = deep_causality_rand::rng().random::<u64>();
+                self.sample_with_index(sample_index)
+            })
+            .collect()
     }
 }
