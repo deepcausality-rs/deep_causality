@@ -101,6 +101,18 @@ impl RealField for Float106 {
         <Self as Float>::nan()
     }
 
+    fn is_nan(self) -> bool {
+        self.hi.is_nan()
+    }
+
+    fn is_infinite(self) -> bool {
+        self.hi.is_infinite()
+    }
+
+    fn is_finite(self) -> bool {
+        self.hi.is_finite()
+    }
+
     #[inline]
     fn clamp(self, min: Self, max: Self) -> Self {
         if self < min {

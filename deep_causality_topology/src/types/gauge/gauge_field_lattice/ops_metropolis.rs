@@ -11,7 +11,7 @@
 use crate::types::gauge::link_variable::random::RandomField;
 use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
 use deep_causality_num::{
-    ComplexField, DivisionAlgebra, Field, Float, FromPrimitive, RealField, ToPrimitive,
+    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
 };
 // use deep_causality_tensor::TensorData; // Removed
 use std::fmt::Debug;
@@ -24,7 +24,7 @@ impl<
     G: GaugeGroup,
     const D: usize,
     M: Field + Copy + Default + PartialOrd + Debug + ComplexField<R> + DivisionAlgebra<R>,
-    R: RealField + FromPrimitive + ToPrimitive + Float,
+    R: RealField + FromPrimitive + ToPrimitive,
 > LatticeGaugeField<G, D, M, R>
 {
     /// Perform a single Metropolis update on a link.
