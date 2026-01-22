@@ -44,8 +44,9 @@ where
     ///
     /// Implemented via coefficient extraction and basis blade logic to ensure correctness
     /// for mixed-grade multivectors. (AB - BA)/2 is only valid for vectors.
-    pub fn outer_product(&self, rhs: &Self) -> Self 
-    where T: std::ops::Neg<Output = T> + std::ops::AddAssign + std::ops::SubAssign
+    pub fn outer_product(&self, rhs: &Self) -> Self
+    where
+        T: std::ops::Neg<Output = T> + std::ops::AddAssign + std::ops::SubAssign,
     {
         assert_eq!(self.metric, rhs.metric, "Metric mismatch");
         assert_eq!(self.shape, rhs.shape, "Shape mismatch");

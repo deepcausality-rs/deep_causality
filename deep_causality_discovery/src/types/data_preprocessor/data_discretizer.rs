@@ -74,6 +74,12 @@ fn bin_equal_width(data: &[f64], num_bins: usize) -> Result<Vec<f64>, Preprocess
         ));
     }
 
+    if data.iter().any(|&x| x.is_nan()) {
+        return Err(PreprocessError::BinningError(
+            "Cannot bin data containing NaN values. Use MissingValueImputer first.".to_string(),
+        ));
+    }
+
     let min = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
     let max = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
@@ -100,6 +106,12 @@ fn bin_equal_frequency(data: &[f64], num_bins: usize) -> Result<Vec<f64>, Prepro
     if num_bins < 2 {
         return Err(PreprocessError::ConfigError(
             "Number of bins must be at least 2".to_string(),
+        ));
+    }
+
+    if data.iter().any(|&x| x.is_nan()) {
+        return Err(PreprocessError::BinningError(
+            "Cannot bin data containing NaN values. Use MissingValueImputer first.".to_string(),
         ));
     }
     let n = data.len();
