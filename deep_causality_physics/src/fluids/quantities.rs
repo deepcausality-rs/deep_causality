@@ -11,6 +11,12 @@ pub struct Pressure(f64);
 
 impl Pressure {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Pressure must be finite: {}",
+                val
+            )));
+        }
         if val < 0.0 {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Negative Pressure".into(),
@@ -37,6 +43,12 @@ pub struct Density(f64);
 
 impl Density {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Density must be finite: {}",
+                val
+            )));
+        }
         if val < 0.0 {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Negative Density".into(),
@@ -63,6 +75,12 @@ pub struct Viscosity(f64);
 
 impl Viscosity {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Viscosity must be finite: {}",
+                val
+            )));
+        }
         if val < 0.0 {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Negative Viscosity".into(),
