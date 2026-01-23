@@ -297,37 +297,50 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
         // Create block-diagonal matrix with phase in U(1) sector
         let mut data = vec![M::zero(); n * n];
 
-        match n {
-            1 => {
-                // Pure U(1): exp(iφ)
-                data[0] = M::from_polar(R::one(), phase);
-            }
-            2 => {
-                // SU(2): encode as exp(iφσ_3/2) = diag(exp(iφ/2), exp(-iφ/2))
-                // This preserves det = 1
-                let two = R::one() + R::one();
-                let half_phase = phase / two;
-                data[0] = M::from_polar(R::one(), half_phase);
-                data[3] = M::from_polar(R::one(), -half_phase);
-            }
-            3 => {
-                // SU(2)×U(1): block-diagonal (2×2 SU(2) identity) + (1×1 U(1) phase)
-                // [[1, 0, 0],
-                //  [0, 1, 0],
-                //  [0, 0, exp(iφ)]]
-                data[0] = M::one(); // SU(2) block: identity
-                data[4] = M::one(); // SU(2) block: identity
-                data[8] = M::from_polar(R::one(), phase); // U(1) sector: exp(iφ)
-            }
-            _ => {
-                // General SU(n): encode phase along diagonal with det = 1
-                // diag(exp(iφ), exp(-iφ/(n-1)), exp(-iφ/(n-1)), ...)
-                let n_minus_1_f = R::from_usize(n - 1).unwrap_or(R::one());
-                let compensating_phase = -phase / n_minus_1_f;
+        if G::name() == "SU2_U1" && n == 3 {
+            // SU(2)×U(1) block
+            data[0] = M::one();
+            data[4] = M::one();
+            data[8] = M::from_polar(R::one(), phase);
+        } else {
+            // other cases that are non SU2_U1
+            match n {
+                1 => {
+                    // Pure U(1): exp(iφ)
+                    data[0] = M::from_polar(R::one(), phase);
+                }
+                2 => {
+                    // SU(2): encode as exp(iφσ_3/2) = diag(exp(iφ/2), exp(-iφ/2))
+                    // This preserves det = 1
+                    let two = R::one() + R::one();
+                    let half_phase = phase / two;
+                    data[0] = M::from_polar(R::one(), half_phase);
+                    data[3] = M::from_polar(R::one(), -half_phase);
+                }
+                3 => {
+                    // SU(2)×U(1): block-diagonal (2×2 SU(2) identity) + (1×1 U(1) phase)
+                    // [[1, 0, 0],
+                    //  [0, 1, 0],
+                    //  [0, 0, exp(iφ)]]
+                    data[0] = M::one(); // SU(2) block: identity
+                    data[4] = M::one(); // SU(2) block: identity
+                    data[8] = M::from_polar(R::one(), phase); // U(1) sector: exp(iφ)
+                }
+                _ => {
+                    // General SU(n): encode phase along diagonal with det = 1
+                    // diag(exp(iφ), exp(-iφ/(n-1)), exp(-iφ/(n-1)), ...)
+                    let n_minus_1_f = R::from_usize(n - 1).ok_or_else(|| {
+                        LinkVariableError::NumericalError(format!(
+                            "Cannot represent dimension {} as underlying real type",
+                            n - 1
+                        ))
+                    })?;
+                    let compensating_phase = -phase / n_minus_1_f;
 
-                data[0] = M::from_polar(R::one(), phase);
-                for i in 1..n {
-                    data[i * n + i] = M::from_polar(R::one(), compensating_phase);
+                    data[0] = M::from_polar(R::one(), phase);
+                    for i in 1..n {
+                        data[i * n + i] = M::from_polar(R::one(), compensating_phase);
+                    }
                 }
             }
         }
@@ -338,7 +351,7 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
                 _gauge: PhantomData,
                 _scalar: PhantomData,
             })
-            .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
+            .map_err(|e| LinkVariableError::TensorCreation(e.to_string()))
     }
 
     /// Create a link variable from a U(1) phase angle (convenience method).
