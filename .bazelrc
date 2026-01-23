@@ -61,9 +61,6 @@ common --experimental_profile_include_primary_output
 # Debug toolchain resolution
 # build --toolchain_resolution_debug='@bazel_tools//tools/cpp:toolchain_type
 
-# Required for cargo_build_script support before Bazel 7
-build --incompatible_merge_fixed_and_default_shell_env
-
 # Required to resolve C/C++ toolchain.
 # https://github.com/bazel-contrib/musl-toolchain?tab=readme-ov-file#setup
 build --incompatible_enable_cc_toolchain_resolution
