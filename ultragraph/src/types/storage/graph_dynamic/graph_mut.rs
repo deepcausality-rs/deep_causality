@@ -15,8 +15,7 @@ impl<N, W> GraphMut<N, W> for DynamicGraph<N, W> {
         let index = self.nodes.len();
         self.nodes.push(Some(node));
 
-        if self.num_edges_per_node.is_some() {
-            let edge_capacity = self.num_edges_per_node.unwrap();
+        if let Some(edge_capacity) = self.num_edges_per_node {
             self.edges.push(Vec::with_capacity(edge_capacity)); // Add a corresponding edge list with edge_capacity
         } else {
             self.edges.push(Vec::default()); // Add a corresponding empty edge list
