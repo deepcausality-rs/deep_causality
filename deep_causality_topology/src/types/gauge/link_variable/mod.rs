@@ -241,4 +241,119 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
         // Project to SU(N) to ensure unitarity and det = 1
         random_matrix.project_sun()
     }
+
+    /// Create a link variable from a U(1) phase angle.
+    ///
+    /// Constructs a gauge group element that encodes a phase rotation in the
+    /// U(1) sector of the gauge group. For pure U(1), this is exp(iφ). For
+    /// product groups like SU(2)×U(1), the phase is encoded in the U(1) factor
+    /// while the SU(2) factor remains identity.
+    ///
+    /// # Mathematics
+    ///
+    /// For a phase φ:
+    /// - **U(1)**: Returns exp(iφ) ∈ U(1)
+    /// - **SU(2)×U(1)**: Returns diag(1, 1, exp(iφ)) - identity in SU(2), phase in U(1)
+    /// - **SU(n)**: Returns diag(exp(iφ), exp(-iφ/(n-1)), ...) to preserve det = 1
+    ///
+    /// # Physics Application
+    ///
+    /// In chrono-gauge theory, the phase encodes gravitational time dilation:
+    /// - φ ∝ (1 - dτ/dt) where dτ/dt is the clock drift rate
+    /// - The Polyakov loop then measures ∏_t exp(iφ_t) ≈ exp(-GM/rc²)
+    ///
+    /// # Arguments
+    ///
+    /// * `phase` - The phase angle in radians
+    ///
+    /// # Returns
+    ///
+    /// A link variable encoding the phase rotation.
+    ///
+    /// # Errors
+    ///
+    /// Returns `LinkVariableError::TensorCreation` if matrix allocation fails.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use deep_causality_topology::{LinkVariable, SU2_U1};
+    /// use deep_causality_num::Complex;
+    ///
+    /// let phase = 0.001;  // Small phase for weak gravitational field
+    /// let link: LinkVariable<SU2_U1, Complex<f64>, f64> =
+    ///     LinkVariable::try_from_phase(phase)?;
+    /// ```
+    pub fn try_from_phase(phase: R) -> Result<Self, LinkVariableError>
+    where
+        M: ComplexField<R> + Field,
+        R: RealField + FromPrimitive,
+    {
+        let n = G::matrix_dim();
+        if n == 0 {
+            return Err(LinkVariableError::InvalidDimension(n));
+        }
+
+        // Create block-diagonal matrix with phase in U(1) sector
+        let mut data = vec![M::zero(); n * n];
+
+        match n {
+            1 => {
+                // Pure U(1): exp(iφ)
+                data[0] = M::from_polar(R::one(), phase);
+            }
+            2 => {
+                // SU(2): encode as exp(iφσ_3/2) = diag(exp(iφ/2), exp(-iφ/2))
+                // This preserves det = 1
+                let two = R::one() + R::one();
+                let half_phase = phase / two;
+                data[0] = M::from_polar(R::one(), half_phase);
+                data[3] = M::from_polar(R::one(), -half_phase);
+            }
+            3 => {
+                // SU(2)×U(1): block-diagonal (2×2 SU(2) identity) + (1×1 U(1) phase)
+                // [[1, 0, 0],
+                //  [0, 1, 0],
+                //  [0, 0, exp(iφ)]]
+                data[0] = M::one(); // SU(2) block: identity
+                data[4] = M::one(); // SU(2) block: identity
+                data[8] = M::from_polar(R::one(), phase); // U(1) sector: exp(iφ)
+            }
+            _ => {
+                // General SU(n): encode phase along diagonal with det = 1
+                // diag(exp(iφ), exp(-iφ/(n-1)), exp(-iφ/(n-1)), ...)
+                let n_minus_1_f = R::from_usize(n - 1).unwrap_or(R::one());
+                let compensating_phase = -phase / n_minus_1_f;
+
+                data[0] = M::from_polar(R::one(), phase);
+                for i in 1..n {
+                    data[i * n + i] = M::from_polar(R::one(), compensating_phase);
+                }
+            }
+        }
+
+        CausalTensor::new(data, vec![n, n])
+            .map(|tensor| Self {
+                data: tensor,
+                _gauge: PhantomData,
+                _scalar: PhantomData,
+            })
+            .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
+    }
+
+    /// Create a link variable from a U(1) phase angle (convenience method).
+    ///
+    /// See [`try_from_phase`](Self::try_from_phase) for details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if tensor creation fails (should never happen for valid groups).
+    pub fn from_phase(phase: R) -> Self
+    where
+        M: ComplexField<R> + Field,
+        R: RealField + FromPrimitive,
+    {
+        Self::try_from_phase(phase)
+            .unwrap_or_else(|e| panic!("Phase link creation failed for {}: {}", G::name(), e))
+    }
 }
