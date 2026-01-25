@@ -26,3 +26,7 @@ deep_causality_rand = { path = "../deep_causality_rand" }
 [[bench]]
 name = "bench_main"
 harness = false
+
+[[example]]
+name = "ultraph_example"
+path = "examples/ultraph_example.rs"
