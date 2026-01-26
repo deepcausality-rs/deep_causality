@@ -237,7 +237,7 @@ impl Display for Data {
 }
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
-     let mut g = UltraGraph::with_capacity(10, None);
+    let mut g = UltraGraph::with_capacity(10, None);
     assert!(g.is_empty());
 
     // Add nodes to the graph
@@ -273,6 +273,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
 ```
 
 ## 🙏 Credits
