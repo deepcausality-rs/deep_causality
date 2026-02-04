@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.4.0...deep_causality_topology-v0.5.0) - 2026-02-04
+
+### Other
+
+- Fixed more lints.
+- *(deep_causality_topology)* Added Stry_from_phase to gauge link.
+- *(deep_causality_topology)* Added Source of the Field to the Lattice Gauge Field.
+- *(deep_causality_num)* Added is_nan, is_infinite, and is_finite to Float106 type
+
 ## [0.4.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.3.0...deep_causality_topology-v0.4.0) - 2026-01-22
 
 ### Added
