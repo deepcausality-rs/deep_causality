@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_effects"
-version = "0.0.5"
+version = "0.0.6"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -13,7 +13,7 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 [dependencies]
 deep_causality_tensor = { path = "../deep_causality_tensor", version = "0.4" }
 deep_causality_multivector = { path = "../deep_causality_multivector", version = "0.4" }
-deep_causality_topology = { path = "../deep_causality_topology", version = "0.4" }
+deep_causality_topology = { path = "../deep_causality_topology", version = "0.5" }
 
 
 [dev-dependencies]

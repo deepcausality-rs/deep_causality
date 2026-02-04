@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_topology"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 authors = ["The DeepCausality Authors and Contributors"]
 description = "Topological data structures for the DeepCausality project"
@@ -23,7 +23,7 @@ os-random = ["deep_causality_rand/os-random"]
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.2.0"
+version = "0.3.0"
 default-features = false
 
 [dependencies.deep_causality_rand]
@@ -32,7 +32,7 @@ version = "0.1"
 
 [dependencies.deep_causality_sparse]
 path = "../deep_causality_sparse"
-version = "0.1.5"
+version = "0.1.6"
 default-features = false
 
 [dependencies.deep_causality_haft]
@@ -41,7 +41,7 @@ version = "0.3.0"
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
-version = "0.4.0"
+version = "0.4.1"
 
 [dependencies.deep_causality_metric]
 path = "../deep_causality_metric"
@@ -49,7 +49,7 @@ version = "0.2"
 
 [dependencies.deep_causality_multivector]
 path = "../deep_causality_multivector"
-version = "0.4.0"
+version = "0.4.1"
 
 [[example]]
 name = "basic_graph"
