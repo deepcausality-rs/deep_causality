@@ -36,7 +36,7 @@ path = "../deep_causality_num"
 version = "0.2"
 
 [dev-dependencies]
-criterion = { version = "0.8.1" }
+criterion = { version = "0.8.2" }
 deep_causality_rand = { path = "../deep_causality_rand" }
 
 
