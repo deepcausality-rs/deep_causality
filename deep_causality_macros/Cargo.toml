@@ -17,6 +17,3 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 [dependencies]
 
-
-[package.metadata.docs.rs]
-all-features = true

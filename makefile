@@ -12,6 +12,8 @@ help:
 	@echo '    make install   	Tests and installs all make script dependencies.'
 	@echo '    make start   	Starts the dev day with updating rust, pulling from git remote, and build the project.'
 	@echo '    make test   	Runs all tests across all crates.'
+	@echo '    make update   	Update all dependencies for all crates'
+	@echo '    make sbom   	Generate SBOM for all crates'
 
 # "---------------------------------------------------------"
 # "---------------------------------------------------------"
@@ -61,6 +63,10 @@ test:
 .PHONY: sbom
 sbom:
 	 @source build/scripts/sbom.sh
+
+.PHONY: update
+update:
+	 @source build/scripts/update.sh
 
 .PHONY: vendor
 vendor:
