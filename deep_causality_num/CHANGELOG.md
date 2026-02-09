@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.2.0...deep_causality_num-v0.3.0) - 2026-02-09
+
+### Other
+
+- *(deep_causality_num)* Added is_nan, is_infinite, and is_finite to Float106 type
+
 ## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.1.12...deep_causality_num-v0.2.0) - 2026-01-22
 
 ### Other
