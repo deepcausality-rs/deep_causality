@@ -42,7 +42,6 @@ use std::cell::RefCell;
 #[cfg(feature = "aead-random")]
 use crate::types::ChaCha20Rng;
 
-
 #[cfg(not(feature = "os-random"))]
 thread_local! {
     static THREAD_RNG: RefCell<Xoshiro256> = RefCell::new(Xoshiro256::new());
