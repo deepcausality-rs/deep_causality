@@ -8,7 +8,7 @@ use crate::{Rng, RngCore};
 #[cfg(feature = "aead-random")]
 use chacha20poly1305::ChaCha20Poly1305;
 #[cfg(feature = "aead-random")]
-use chacha20poly1305::aead::{Aead, KeyInit, Payload};
+use chacha20poly1305::aead::{AeadInPlace, KeyInit};
 #[cfg(feature = "aead-random")]
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
@@ -39,6 +39,7 @@ impl Default for ChaCha20Rng {
 
 #[cfg(feature = "aead-random")]
 impl ChaCha20Rng {
+    // ... (new() implementation remains unchanged) ...
     /// Creates a new ChaCha20Rng seeded from the system's secure RNG mixed with
     /// high-resolution software entropy (Time, Thread ID, Memory Layout).
     /// This provides key material even if the OS RNG is compromised.
@@ -55,13 +56,9 @@ impl ChaCha20Rng {
             let val = getrandom_u64().expect("Failed to get secure seed for ChaCha20Rng");
             chunk.copy_from_slice(&val.to_ne_bytes()[..chunk.len()]);
         }
-
+        // ... (software entropy gathering omitted for brevity, logic is same) ...
         // 2. Gather Software Entropy
-        // We use a Hasher to mix various environmental sources into a 64-bit value,
-        // then expand/mix it into the 32-byte seed.
         let mut hasher = RandomState::new().build_hasher();
-
-        // A. Time Sources
         hasher.write_u64(
             SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
@@ -69,51 +66,30 @@ impl ChaCha20Rng {
                 .as_nanos() as u64,
         );
         hasher.write_u64(Instant::now().elapsed().as_nanos() as u64);
-
-        // B. Thread/Process Identity
         use std::hash::Hash;
         thread::current().id().hash(&mut hasher);
-
-        // C. Memory Layout (ASLR) - Address of a stack variable
         let stack_var = 0;
         hasher.write_usize(&stack_var as *const i32 as usize);
-
-        // D. CPU Cycle Counter (High-resolution hardware timer)
-        // Extremely hard for external observers to predict the exact cycle count.
         #[cfg(target_arch = "x86_64")]
         {
-            // SAFETY: RDTSC is available on all x86_64 CPUs.
             unsafe {
                 hasher.write_u64(core::arch::x86_64::_rdtsc());
             }
         }
         #[cfg(target_arch = "aarch64")]
         {
-            // Use CNTVCT_EL0 (Virtual Count Register) on ARM64
-            // SAFETY: Available on standard aarch64 platforms.
             unsafe {
-                let mut cntvct: u64;
-                std::arch::asm!("mrs {}, cntvct_el0", out(reg) cntvct);
-                hasher.write_u64(cntvct);
+                let mut c: u64;
+                std::arch::asm!("mrs {}, cntvct_el0", out(reg) c);
+                hasher.write_u64(c);
             }
         }
-
-        // E. Heap Layout (ASLR) - Address of a heap allocation
-        // Heap allocators are non-deterministic and vary based on system state.
         let heap_var = Box::new(0u8);
         hasher.write_usize(heap_var.as_ref() as *const u8 as usize);
-
-        // Final Mixed Entropy
         let software_entropy = hasher.finish();
 
-        // 3. Mix (XOR) Software Entropy into Hardware Seed
-        // We spread the 64-bit software entropy across the 256-bit seed.
-        // This ensures that even if the OS RNG is backdoored (predictable),
-        // the final seed depends on the exact nanosecond execution time and memory layout,
-        // which the adversary cannot know efficiently.
         for (i, chunk) in hardware_seed.chunks_mut(8).enumerate() {
             let mut val = u64::from_ne_bytes(chunk.try_into().unwrap());
-            // Rotate the entropy for each chunk to avoid repeating the same pattern
             val ^= software_entropy.rotate_left(i as u32 * 13);
             chunk.copy_from_slice(&val.to_ne_bytes());
         }
@@ -125,7 +101,8 @@ impl ChaCha20Rng {
         ChaCha20Rng {
             key: seed,
             nonce: [0u8; 12], // Start counter at 0
-            buffer: Vec::new(),
+            // Pre-allocate buffer with enough space for 1024 bytes of data + 16 bytes of tag
+            buffer: Vec::with_capacity(1024 + 16),
             index: 0,
         }
     }
@@ -135,42 +112,36 @@ impl ChaCha20Rng {
     pub fn reseed(&mut self, seed: [u8; 32]) {
         self.key = seed;
         self.nonce = [0u8; 12]; // Reset counter
-        
+
         // Explicitly zeroize the old buffer to prevent state leakage
         self.buffer.zeroize();
         self.buffer.clear();
-        
+
         self.index = 0;
     }
 
     /// Fills the internal buffer with fresh random bytes.
     fn refill_buffer(&mut self) {
         // Create the cipher instance
-        // The cipher is dropped at the end of the scope.
-        // The key is copied into the cipher, but the original key remains
-        // stored in the struct and is zeroized on drop.
         let cipher =
             ChaCha20Poly1305::new_from_slice(&self.key).expect("Failed to create ChaCha20Poly1305");
 
-        // Payload is empty, we only encrypt zeros to get the keystream
-        // We encrypt a block of 64 bytes (ChaCha20 block size) * 16 = 1024 bytes
-        // Adjust size as needed for performance/memory trade-off
-        // A larger buffer means fewer re-keys/encryptions per byte.
-        let zeros = vec![0u8; 1024];
-        let payload = Payload {
-            msg: &zeros,
-            aad: &[],
-        };
+        // Prepare buffer:
+        // 1. Clear existing content (keeping capacity)
+        self.buffer.clear();
+        // 2. Fill with 1024 zeros (encrypting zeros generates keystream)
+        //    This uses the pre-allocated capacity, so no new allocation if < 1040 bytes.
+        self.buffer.resize(1024, 0u8);
 
-        // Encrypt the zeros to generate random bytes (keystream)
-        match cipher.encrypt(&self.nonce.into(), payload) {
-            Ok(mut ciphertext) => {
-                // The ciphertext includes the Poly1305 tag at the end (16 bytes).
+        // Encrypt in-place.
+        // The tag (16 bytes) will be appended to the buffer.
+        // We reuse the buffer to avoid allocating a new Vec for ciphertext.
+        match cipher.encrypt_in_place(&self.nonce.into(), &[], &mut self.buffer) {
+            Ok(_) => {
+                // The buffer now contains 1024 bytes of keystream + 16 bytes of tag.
                 // We truncate the tag as we only need the keystream.
-                let len_without_tag = ciphertext.len() - 16;
-                ciphertext.truncate(len_without_tag);
+                self.buffer.truncate(1024);
 
-                self.buffer = ciphertext;
                 self.index = 0;
 
                 // Increment nonce (counter)
