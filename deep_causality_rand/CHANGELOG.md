@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.13](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.1.12...deep_causality_rand-v0.1.13) - 2026-02-10
+
+### Added
+
+- *(deep_causality_rand)* Added default to ChaCha20Rng impl.
+
+### Fixed
+
+- *(deep_causality_rand)* Fixed  Buffer Allocation
+- *(deep_causality_rand)* Fixed zerioization in ChaCha20Poly1305 CSPRNG
+- *(deep_causality_rand)* Added Osrandomrn in scope
+
+### Other
+
+- Merge remote-tracking branch 'origin/main'
+- regenerated SBMO for rand crate. Code formatting.
+- Added hardware secure CSPRNG to rand crate
+
 ## [0.1.12](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.1.11...deep_causality_rand-v0.1.12) - 2026-02-09
 
 ### Other
