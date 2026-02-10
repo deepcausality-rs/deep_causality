@@ -11,8 +11,8 @@ use deep_causality_rand::types::ChaCha20Rng;
 #[cfg(feature = "aead-random")]
 fn test_chacha_rng_determinism() {
     let seed = [1u8; 32];
-    let mut rng1 = ChaCha20Rng::new(seed);
-    let mut rng2 = ChaCha20Rng::new(seed);
+    let mut rng1 = ChaCha20Rng::from_seed(seed);
+    let mut rng2 = ChaCha20Rng::from_seed(seed);
 
     let val1 = rng1.next_u64();
     let val2 = rng2.next_u64();
@@ -36,8 +36,8 @@ fn test_chacha_rng_determinism() {
 fn test_chacha_rng_diff_seeds() {
     let seed1 = [1u8; 32];
     let seed2 = [2u8; 32];
-    let mut rng1 = ChaCha20Rng::new(seed1);
-    let mut rng2 = ChaCha20Rng::new(seed2);
+    let mut rng1 = ChaCha20Rng::from_seed(seed1);
+    let mut rng2 = ChaCha20Rng::from_seed(seed2);
 
     assert_ne!(
         rng1.next_u64(),
@@ -50,7 +50,7 @@ fn test_chacha_rng_diff_seeds() {
 #[cfg(feature = "aead-random")]
 fn test_reseed() {
     let seed = [1u8; 32];
-    let mut rng = ChaCha20Rng::new(seed);
+    let mut rng = ChaCha20Rng::from_seed(seed);
     let val1 = rng.next_u64();
 
     // Reseed with same seed -> should restart sequence
@@ -71,7 +71,7 @@ fn test_reseed() {
 #[cfg(feature = "aead-random")]
 fn test_large_buffer_refill() {
     let seed = [42u8; 32];
-    let mut rng = ChaCha20Rng::new(seed);
+    let mut rng = ChaCha20Rng::from_seed(seed);
 
     // Consume more than 1024 bytes (internal buffer size) to trigger refill
     let mut buf = vec![0u8; 2000];

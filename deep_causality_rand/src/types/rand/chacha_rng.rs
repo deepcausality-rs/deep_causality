@@ -2,11 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::traits::rng::Rng;
 
 #[cfg(feature = "aead-random")]
-use crate::traits::rng_core::RngCore;
-
+use crate::{Rng, RngCore};
 #[cfg(feature = "aead-random")]
 use chacha20poly1305::ChaCha20Poly1305;
 #[cfg(feature = "aead-random")]
@@ -34,8 +32,97 @@ pub struct ChaCha20Rng {
 }
 
 #[cfg(feature = "aead-random")]
+impl Default for ChaCha20Rng {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(feature = "aead-random")]
 impl ChaCha20Rng {
-    pub fn new(seed: [u8; 32]) -> Self {
+    /// Creates a new ChaCha20Rng seeded from the system's secure RNG mixed with
+    /// high-resolution software entropy (Time, Thread ID, Memory Layout).
+    /// This provides key material even if the OS RNG is compromised.
+    pub fn new() -> Self {
+        use getrandom::u64 as getrandom_u64;
+        use std::collections::hash_map::RandomState;
+        use std::hash::{BuildHasher, Hasher};
+        use std::thread;
+        use std::time::{Instant, SystemTime};
+
+        // 1. Get Hardware Entropy (OS RNG)
+        let mut hardware_seed = [0u8; 32];
+        for chunk in hardware_seed.chunks_mut(8) {
+            let val = getrandom_u64().expect("Failed to get secure seed for ChaCha20Rng");
+            chunk.copy_from_slice(&val.to_ne_bytes()[..chunk.len()]);
+        }
+
+        // 2. Gather Software Entropy
+        // We use a Hasher to mix various environmental sources into a 64-bit value,
+        // then expand/mix it into the 32-byte seed.
+        let mut hasher = RandomState::new().build_hasher();
+
+        // A. Time Sources
+        hasher.write_u64(
+            SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos() as u64,
+        );
+        hasher.write_u64(Instant::now().elapsed().as_nanos() as u64);
+
+        // B. Thread/Process Identity
+        use std::hash::Hash;
+        thread::current().id().hash(&mut hasher);
+
+        // C. Memory Layout (ASLR) - Address of a stack variable
+        let stack_var = 0;
+        hasher.write_usize(&stack_var as *const i32 as usize);
+
+        // D. CPU Cycle Counter (High-resolution hardware timer)
+        // Extremely hard for external observers to predict the exact cycle count.
+        #[cfg(target_arch = "x86_64")]
+        {
+            // SAFETY: RDTSC is available on all x86_64 CPUs.
+            unsafe {
+                hasher.write_u64(core::arch::x86_64::_rdtsc());
+            }
+        }
+        #[cfg(target_arch = "aarch64")]
+        {
+            // Use CNTVCT_EL0 (Virtual Count Register) on ARM64
+            // SAFETY: Available on standard aarch64 platforms.
+            unsafe {
+                let mut cntvct: u64;
+                std::arch::asm!("mrs {}, cntvct_el0", out(reg) cntvct);
+                hasher.write_u64(cntvct);
+            }
+        }
+
+        // E. Heap Layout (ASLR) - Address of a heap allocation
+        // Heap allocators are non-deterministic and vary based on system state.
+        let heap_var = Box::new(0u8);
+        hasher.write_usize(heap_var.as_ref() as *const u8 as usize);
+
+        // Final Mixed Entropy
+        let software_entropy = hasher.finish();
+
+        // 3. Mix (XOR) Software Entropy into Hardware Seed
+        // We spread the 64-bit software entropy across the 256-bit seed.
+        // This ensures that even if the OS RNG is backdoored (predictable),
+        // the final seed depends on the exact nanosecond execution time and memory layout,
+        // which the adversary cannot know efficiently.
+        for (i, chunk) in hardware_seed.chunks_mut(8).enumerate() {
+            let mut val = u64::from_ne_bytes(chunk.try_into().unwrap());
+            // Rotate the entropy for each chunk to avoid repeating the same pattern
+            val ^= software_entropy.rotate_left(i as u32 * 13);
+            chunk.copy_from_slice(&val.to_ne_bytes());
+        }
+
+        Self::from_seed(hardware_seed)
+    }
+
+    pub fn from_seed(seed: [u8; 32]) -> Self {
         ChaCha20Rng {
             key: seed,
             nonce: [0u8; 12], // Start counter at 0
@@ -165,7 +252,7 @@ mod tests {
 
     #[test]
     fn test_initial_increment() {
-        let mut rng = ChaCha20Rng::new([0u8; 32]);
+        let mut rng = ChaCha20Rng::from_seed([0u8; 32]);
         rng.increment_nonce();
         // Lower 64 bits should be 1
         assert_eq!(rng.nonce[0], 1);
@@ -176,7 +263,7 @@ mod tests {
 
     #[test]
     fn test_overflow_64bit() {
-        let mut rng = ChaCha20Rng::new([0u8; 32]);
+        let mut rng = ChaCha20Rng::from_seed([0u8; 32]);
 
         // Set nonce to max u64
         let max_u64_bytes = u64::MAX.to_le_bytes();
@@ -194,7 +281,7 @@ mod tests {
 
     #[test]
     fn test_full_96bit_overflow() {
-        let mut rng = ChaCha20Rng::new([0u8; 32]);
+        let mut rng = ChaCha20Rng::from_seed([0u8; 32]);
 
         // Set nonce to max 96-bit value
         rng.nonce = [0xFF; 12];
