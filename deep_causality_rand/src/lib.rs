@@ -81,6 +81,9 @@ pub fn rng() -> impl Rng {
     }
     #[cfg(all(feature = "os-random", not(feature = "aead-random")))]
     {
+        #[cfg(feature = "os-random")]
+        use crate::types::OsRandomRng;
+
         OsRandomRng::new().expect("Failed to create OsRandomRng")
     }
     #[cfg(all(not(feature = "os-random"), not(feature = "aead-random")))]
