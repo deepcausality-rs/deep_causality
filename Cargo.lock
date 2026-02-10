@@ -507,7 +507,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_rand"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "chacha20poly1305",
  "deep_causality_num",
