@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_rand"
-version = "0.1.11"
+version = "0.1.12"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -26,7 +26,7 @@ exclude = [
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.2.0"
+version = "0.3.0"
 
 
 [features]

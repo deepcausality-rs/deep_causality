@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.14](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.8.13...ultragraph-v0.8.14) - 2026-02-09
+
+### Other
+
+- updated all cargo dependencies to the latest version.
+- *(ultragraph)* Fixed typo in README code example
+- Fixed typo
+- *(ultragraph)* Added example correctly to Cargo.toml
+- Fixed some lints.
+
 ## [0.8.13](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.8.12...ultragraph-v0.8.13) - 2026-01-09
 
 ### Other

@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_topology"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 authors = ["The DeepCausality Authors and Contributors"]
 description = "Topological data structures for the DeepCausality project"
@@ -23,7 +23,7 @@ os-random = ["deep_causality_rand/os-random"]
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.2"
+version = "0.3"
 default-features = false
 
 [dependencies.deep_causality_rand]
