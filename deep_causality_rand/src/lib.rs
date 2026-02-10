@@ -39,8 +39,8 @@ use crate::types::Xoshiro256;
 #[cfg(not(feature = "os-random"))]
 use std::cell::RefCell;
 
-#[cfg(feature = "os-random")]
-use crate::types::rand::os_random_rng::OsRandomRng;
+#[cfg(feature = "aead-random")]
+use crate::types::ChaCha20Rng;
 
 #[cfg(not(feature = "os-random"))]
 thread_local! {
@@ -72,12 +72,21 @@ impl Rng for ThreadRng {}
 /// thread getting a unique seed derived from the thread ID.
 /// If the `os-random` feature is enabled, it returns an `OsRandomRng` that
 /// sources entropy from the operating system.
+/// If the `aead-random` feature is enabled, it returns a `ChaCha20Rng` seeded from
+/// the OS CSPRNG. This is the preferred secure option.
 pub fn rng() -> impl Rng {
-    #[cfg(feature = "os-random")]
+    #[cfg(feature = "aead-random")]
     {
+        ChaCha20Rng::new()
+    }
+    #[cfg(all(feature = "os-random", not(feature = "aead-random")))]
+    {
+        #[cfg(feature = "os-random")]
+        use crate::types::OsRandomRng;
+
         OsRandomRng::new().expect("Failed to create OsRandomRng")
     }
-    #[cfg(not(feature = "os-random"))]
+    #[cfg(all(not(feature = "os-random"), not(feature = "aead-random")))]
     {
         ThreadRng
     }
