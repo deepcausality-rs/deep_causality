@@ -94,7 +94,7 @@ rust_proc_macro(
     }),
     version = "0.1.16",
     deps = [
-        "//thirdparty/crates/getrandom-0.2.16:getrandom",
+        "//thirdparty/crates/getrandom-0.2.17:getrandom",
         "//thirdparty/crates/once_cell-1.21.3:once_cell",
         "//thirdparty/crates/tiny-keccak-2.0.2:tiny_keccak",
     ],
