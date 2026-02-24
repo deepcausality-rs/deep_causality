@@ -103,7 +103,7 @@ rust_library(
     }),
     version = "0.2.19",
     deps = [
-        "//thirdparty/crates/libm-0.2.15:libm",
+        "//thirdparty/crates/libm-0.2.16:libm",
         "//thirdparty/crates/num-traits-0.2.19:build_script_build",
     ],
 )
