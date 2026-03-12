@@ -23,7 +23,7 @@ crates_vendor(
         "parquet": crate.spec(
             default_features = False,
             package = "parquet",
-            version = "57",
+            version = "58",
         ),
         "libm": crate.spec(
             default_features = True,

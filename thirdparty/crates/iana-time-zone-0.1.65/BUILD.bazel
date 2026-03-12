@@ -64,6 +64,7 @@ rust_library(
         "@rules_rust//rust/platform:aarch64-unknown-nto-qnx710": [],
         "@rules_rust//rust/platform:aarch64-unknown-uefi": [],
         "@rules_rust//rust/platform:arm-unknown-linux-gnueabi": [],
+        "@rules_rust//rust/platform:arm-unknown-linux-musleabi": [],
         "@rules_rust//rust/platform:armv7-linux-androideabi": [],
         "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi": [],
         "@rules_rust//rust/platform:i686-apple-darwin": [],
@@ -125,9 +126,9 @@ rust_library(
             "//thirdparty/crates/windows-core-0.62.2:windows_core",  # cfg(target_os = "windows")
         ],
         "@rules_rust//rust/platform:wasm32-unknown-unknown": [
-            "//thirdparty/crates/js-sys-0.3.88:js_sys",  # cfg(all(target_arch = "wasm32", target_os = "unknown"))
+            "//thirdparty/crates/js-sys-0.3.91:js_sys",  # cfg(all(target_arch = "wasm32", target_os = "unknown"))
             "//thirdparty/crates/log-0.4.29:log",  # cfg(all(target_arch = "wasm32", target_os = "unknown"))
-            "//thirdparty/crates/wasm-bindgen-0.2.111:wasm_bindgen",  # cfg(all(target_arch = "wasm32", target_os = "unknown"))
+            "//thirdparty/crates/wasm-bindgen-0.2.114:wasm_bindgen",  # cfg(all(target_arch = "wasm32", target_os = "unknown"))
         ],
         "@rules_rust//rust/platform:x86_64-apple-darwin": [
             "//thirdparty/crates/core-foundation-sys-0.8.7:core_foundation_sys",  # cfg(target_vendor = "apple")
