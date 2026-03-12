@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_effects"
-version = "0.0.6"
+version = "0.0.7"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }

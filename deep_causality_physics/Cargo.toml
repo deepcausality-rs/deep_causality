@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_physics"
-version = "0.5.1"
+version = "0.5.2"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -34,7 +34,7 @@ os-random = ["deep_causality_rand/os-random"] # required for lund hadronization
 
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
-version = "0.0.5"
+version = "0.0.6"
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
