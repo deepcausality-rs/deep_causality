@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.13](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_data_structures-v0.10.12...deep_causality_data_structures-v0.10.13) - 2026-03-12
+
+### Other
+
+- Updated all SBOMS to reflect lates depdency versions.
+
 ## [0.10.12](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_data_structures-v0.10.11...deep_causality_data_structures-v0.10.12) - 2026-02-09
 
 ### Other

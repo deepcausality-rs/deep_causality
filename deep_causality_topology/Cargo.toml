@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_topology"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 authors = ["The DeepCausality Authors and Contributors"]
 description = "Topological data structures for the DeepCausality project"

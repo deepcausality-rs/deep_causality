@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.3.4...deep_causality_discovery-v0.3.5) - 2026-03-12
+
+### Other
+
+- Updated all SBOMS to reflect lates depdency versions.
+- Updated all Cargo deps to latest version.
+
 ## [0.3.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.3.3...deep_causality_discovery-v0.3.4) - 2026-01-22
 
 ### Other
