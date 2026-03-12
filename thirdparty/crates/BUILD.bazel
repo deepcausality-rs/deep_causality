@@ -55,14 +55,14 @@ alias(
 )
 
 alias(
-    name = "parquet-57.3.0",
-    actual = "//thirdparty/crates/parquet-57.3.0:parquet",
+    name = "parquet-58.0.0",
+    actual = "//thirdparty/crates/parquet-58.0.0:parquet",
     tags = ["manual"],
 )
 
 alias(
     name = "parquet",
-    actual = "//thirdparty/crates/parquet-57.3.0:parquet",
+    actual = "//thirdparty/crates/parquet-58.0.0:parquet",
     tags = ["manual"],
 )
 
@@ -79,13 +79,13 @@ alias(
 )
 
 alias(
-    name = "tempfile-3.25.0",
-    actual = "//thirdparty/crates/tempfile-3.25.0:tempfile",
+    name = "tempfile-3.27.0",
+    actual = "//thirdparty/crates/tempfile-3.27.0:tempfile",
     tags = ["manual"],
 )
 
 alias(
     name = "tempfile",
-    actual = "//thirdparty/crates/tempfile-3.25.0:tempfile",
+    actual = "//thirdparty/crates/tempfile-3.27.0:tempfile",
     tags = ["manual"],
 )

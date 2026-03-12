@@ -83,6 +83,10 @@ rust_library(
             "getrandom",  # arm-unknown-linux-gnueabi
             "runtime-rng",  # arm-unknown-linux-gnueabi
         ],
+        "@rules_rust//rust/platform:arm-unknown-linux-musleabi": [
+            "getrandom",  # arm-unknown-linux-musleabi
+            "runtime-rng",  # arm-unknown-linux-musleabi
+        ],
         "@rules_rust//rust/platform:armv7-linux-androideabi": [
             "getrandom",  # armv7-linux-androideabi
             "runtime-rng",  # armv7-linux-androideabi
@@ -228,6 +232,7 @@ rust_library(
         "@rules_rust//rust/platform:aarch64-unknown-nto-qnx710": [],
         "@rules_rust//rust/platform:aarch64-unknown-uefi": [],
         "@rules_rust//rust/platform:arm-unknown-linux-gnueabi": [],
+        "@rules_rust//rust/platform:arm-unknown-linux-musleabi": [],
         "@rules_rust//rust/platform:armv7-linux-androideabi": [],
         "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi": [],
         "@rules_rust//rust/platform:i686-apple-darwin": [],
@@ -263,7 +268,7 @@ rust_library(
     deps = [
         "//thirdparty/crates/ahash-0.8.12:build_script_build",
         "//thirdparty/crates/cfg-if-1.0.4:cfg_if",
-        "//thirdparty/crates/zerocopy-0.8.39:zerocopy",
+        "//thirdparty/crates/zerocopy-0.8.42:zerocopy",
     ] + select({
         "@rules_rust//rust/platform:aarch64-apple-darwin": [
             "//thirdparty/crates/getrandom-0.3.4:getrandom",  # aarch64-apple-darwin
@@ -307,6 +312,10 @@ rust_library(
         ],
         "@rules_rust//rust/platform:arm-unknown-linux-gnueabi": [
             "//thirdparty/crates/getrandom-0.3.4:getrandom",  # arm-unknown-linux-gnueabi
+            "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
+        ],
+        "@rules_rust//rust/platform:arm-unknown-linux-musleabi": [
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # arm-unknown-linux-musleabi
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:armv7-linux-androideabi": [
@@ -490,6 +499,10 @@ cargo_build_script(
         "@rules_rust//rust/platform:arm-unknown-linux-gnueabi": [
             "getrandom",  # arm-unknown-linux-gnueabi
             "runtime-rng",  # arm-unknown-linux-gnueabi
+        ],
+        "@rules_rust//rust/platform:arm-unknown-linux-musleabi": [
+            "getrandom",  # arm-unknown-linux-musleabi
+            "runtime-rng",  # arm-unknown-linux-musleabi
         ],
         "@rules_rust//rust/platform:armv7-linux-androideabi": [
             "getrandom",  # armv7-linux-androideabi
