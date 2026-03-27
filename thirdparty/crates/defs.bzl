@@ -295,7 +295,7 @@ _NORMAL_DEPENDENCIES = {
         _COMMON_CONDITION: {
             "csv": Label("//thirdparty/crates/csv-1.4.0:csv"),
             "libm": Label("//thirdparty/crates/libm-0.2.16:libm"),
-            "parquet": Label("//thirdparty/crates/parquet-58.0.0:parquet"),
+            "parquet": Label("//thirdparty/crates/parquet-58.1.0:parquet"),
             "rusty-fork": Label("//thirdparty/crates/rusty-fork-0.3.1:rusty_fork"),
             "tempfile": Label("//thirdparty/crates/tempfile-3.27.0:tempfile"),
         },

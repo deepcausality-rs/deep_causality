@@ -15,7 +15,7 @@ bazel_dep(name = "rules_rust", version = "0.69.0")
 ###############################################################################
 RUST_EDITION = "2024"
 
-RUST_VERSION = "1.93.1"
+RUST_VERSION = "1.94.1"
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
