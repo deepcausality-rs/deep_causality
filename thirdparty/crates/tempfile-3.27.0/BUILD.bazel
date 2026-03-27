@@ -100,7 +100,7 @@ rust_library(
     version = "3.27.0",
     deps = [
         "//thirdparty/crates/fastrand-2.3.0:fastrand",
-        "//thirdparty/crates/once_cell-1.21.3:once_cell",
+        "//thirdparty/crates/once_cell-1.21.4:once_cell",
     ] + select({
         "@rules_rust//rust/platform:aarch64-apple-darwin": [
             "//thirdparty/crates/getrandom-0.4.2:getrandom",  # aarch64-apple-darwin
