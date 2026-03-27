@@ -55,14 +55,14 @@ alias(
 )
 
 alias(
-    name = "parquet-58.0.0",
-    actual = "//thirdparty/crates/parquet-58.0.0:parquet",
+    name = "parquet-58.1.0",
+    actual = "//thirdparty/crates/parquet-58.1.0:parquet",
     tags = ["manual"],
 )
 
 alias(
     name = "parquet",
-    actual = "//thirdparty/crates/parquet-58.0.0:parquet",
+    actual = "//thirdparty/crates/parquet-58.1.0:parquet",
     tags = ["manual"],
 )
 

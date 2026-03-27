@@ -95,7 +95,7 @@ rust_library(
     }),
     version = "0.3.91",
     deps = [
-        "//thirdparty/crates/once_cell-1.21.3:once_cell",
+        "//thirdparty/crates/once_cell-1.21.4:once_cell",
         "//thirdparty/crates/wasm-bindgen-0.2.114:wasm_bindgen",
     ],
 )
