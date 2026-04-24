@@ -197,7 +197,7 @@ where
                 }
                 // Use HashSet for efficient deduplication
                 let unique_neighbors: HashSet<usize> = neighbors_to_process.drain(..).collect();
-                neighbors_to_process.extend(unique_neighbors.into_iter());
+                neighbors_to_process.extend(unique_neighbors);
             }
 
             for &w in &neighbors_to_process {
