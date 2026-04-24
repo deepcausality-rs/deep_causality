@@ -403,7 +403,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_algorithms"
-version = "0.2.12"
+version = "0.2.13"
 dependencies = [
  "criterion",
  "deep_causality_num",
@@ -432,7 +432,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_discovery"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "csv",
  "deep_causality_algorithms",
@@ -1395,7 +1395,7 @@ checksum = "40ce102ab67701b8526c123c1bab5cbe42d7040ccfd0f64af1a385808d2f43de"
 
 [[package]]
 name = "ultragraph"
-version = "0.8.15"
+version = "0.8.16"
 dependencies = [
  "criterion",
  "deep_causality_rand",
