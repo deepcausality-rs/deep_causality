@@ -55,7 +55,7 @@ impl DataLoader for CsvDataLoader {
                 data.extend(row_values);
             }
 
-            let height = if width == 0 { 0 } else { data.len() / width };
+            let height = data.len().checked_div(width).unwrap_or_default();
             CausalTensor::new(data, vec![height, width])
                 .map_err(|e| DataLoadingError::OsError(e.to_string()))
         } else {

@@ -41,7 +41,7 @@ path = "../deep_causality_num"
 version = "0.3.1"
 
 [dependencies.rayon]
-version = "1.11"
+version = "1.12"
 optional = true
 
 

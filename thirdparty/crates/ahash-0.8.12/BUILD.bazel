@@ -47,6 +47,10 @@ rust_library(
             "getrandom",  # aarch64-apple-ios
             "runtime-rng",  # aarch64-apple-ios
         ],
+        "@rules_rust//rust/platform:aarch64-apple-ios-macabi": [
+            "getrandom",  # aarch64-apple-ios-macabi
+            "runtime-rng",  # aarch64-apple-ios-macabi
+        ],
         "@rules_rust//rust/platform:aarch64-apple-ios-sim": [
             "getrandom",  # aarch64-apple-ios-sim
             "runtime-rng",  # aarch64-apple-ios-sim
@@ -135,9 +139,17 @@ rust_library(
             "getrandom",  # s390x-unknown-linux-gnu
             "runtime-rng",  # s390x-unknown-linux-gnu
         ],
+        "@rules_rust//rust/platform:thumbv6m-none-eabi": [
+            "getrandom",  # thumbv6m-none-eabi
+            "runtime-rng",  # thumbv6m-none-eabi
+        ],
         "@rules_rust//rust/platform:thumbv7em-none-eabi": [
             "getrandom",  # thumbv7em-none-eabi
             "runtime-rng",  # thumbv7em-none-eabi
+        ],
+        "@rules_rust//rust/platform:thumbv7em-none-eabihf": [
+            "getrandom",  # thumbv7em-none-eabihf
+            "runtime-rng",  # thumbv7em-none-eabihf
         ],
         "@rules_rust//rust/platform:thumbv8m.main-none-eabi": [
             "getrandom",  # thumbv8m.main-none-eabi
@@ -170,6 +182,10 @@ rust_library(
         "@rules_rust//rust/platform:x86_64-apple-ios": [
             "getrandom",  # x86_64-apple-ios
             "runtime-rng",  # x86_64-apple-ios
+        ],
+        "@rules_rust//rust/platform:x86_64-apple-ios-macabi": [
+            "getrandom",  # x86_64-apple-ios-macabi
+            "runtime-rng",  # x86_64-apple-ios-macabi
         ],
         "@rules_rust//rust/platform:x86_64-linux-android": [
             "getrandom",  # x86_64-linux-android
@@ -223,6 +239,7 @@ rust_library(
     target_compatible_with = select({
         "@rules_rust//rust/platform:aarch64-apple-darwin": [],
         "@rules_rust//rust/platform:aarch64-apple-ios": [],
+        "@rules_rust//rust/platform:aarch64-apple-ios-macabi": [],
         "@rules_rust//rust/platform:aarch64-apple-ios-sim": [],
         "@rules_rust//rust/platform:aarch64-linux-android": [],
         "@rules_rust//rust/platform:aarch64-pc-windows-msvc": [],
@@ -245,7 +262,9 @@ rust_library(
         "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:riscv64gc-unknown-none-elf": [],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [],
+        "@rules_rust//rust/platform:thumbv6m-none-eabi": [],
         "@rules_rust//rust/platform:thumbv7em-none-eabi": [],
+        "@rules_rust//rust/platform:thumbv7em-none-eabihf": [],
         "@rules_rust//rust/platform:thumbv8m.main-none-eabi": [],
         "@rules_rust//rust/platform:wasm32-unknown-emscripten": [],
         "@rules_rust//rust/platform:wasm32-unknown-unknown": [],
@@ -254,6 +273,7 @@ rust_library(
         "@rules_rust//rust/platform:wasm32-wasip2": [],
         "@rules_rust//rust/platform:x86_64-apple-darwin": [],
         "@rules_rust//rust/platform:x86_64-apple-ios": [],
+        "@rules_rust//rust/platform:x86_64-apple-ios-macabi": [],
         "@rules_rust//rust/platform:x86_64-linux-android": [],
         "@rules_rust//rust/platform:x86_64-pc-windows-msvc": [],
         "@rules_rust//rust/platform:x86_64-unknown-freebsd": [],
@@ -268,7 +288,7 @@ rust_library(
     deps = [
         "//thirdparty/crates/ahash-0.8.12:build_script_build",
         "//thirdparty/crates/cfg-if-1.0.4:cfg_if",
-        "//thirdparty/crates/zerocopy-0.8.47:zerocopy",
+        "//thirdparty/crates/zerocopy-0.8.48:zerocopy",
     ] + select({
         "@rules_rust//rust/platform:aarch64-apple-darwin": [
             "//thirdparty/crates/getrandom-0.3.4:getrandom",  # aarch64-apple-darwin
@@ -276,6 +296,10 @@ rust_library(
         ],
         "@rules_rust//rust/platform:aarch64-apple-ios": [
             "//thirdparty/crates/getrandom-0.3.4:getrandom",  # aarch64-apple-ios
+            "//thirdparty/crates/once_cell-1.21.4:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
+        ],
+        "@rules_rust//rust/platform:aarch64-apple-ios-macabi": [
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # aarch64-apple-ios-macabi
             "//thirdparty/crates/once_cell-1.21.4:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:aarch64-apple-ios-sim": [
@@ -366,8 +390,14 @@ rust_library(
             "//thirdparty/crates/getrandom-0.3.4:getrandom",  # s390x-unknown-linux-gnu
             "//thirdparty/crates/once_cell-1.21.4:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
+        "@rules_rust//rust/platform:thumbv6m-none-eabi": [
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # thumbv6m-none-eabi
+        ],
         "@rules_rust//rust/platform:thumbv7em-none-eabi": [
             "//thirdparty/crates/getrandom-0.3.4:getrandom",  # thumbv7em-none-eabi
+        ],
+        "@rules_rust//rust/platform:thumbv7em-none-eabihf": [
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # thumbv7em-none-eabihf
         ],
         "@rules_rust//rust/platform:thumbv8m.main-none-eabi": [
             "//thirdparty/crates/getrandom-0.3.4:getrandom",  # thumbv8m.main-none-eabi
@@ -398,6 +428,10 @@ rust_library(
         ],
         "@rules_rust//rust/platform:x86_64-apple-ios": [
             "//thirdparty/crates/getrandom-0.3.4:getrandom",  # x86_64-apple-ios
+            "//thirdparty/crates/once_cell-1.21.4:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
+        ],
+        "@rules_rust//rust/platform:x86_64-apple-ios-macabi": [
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # x86_64-apple-ios-macabi
             "//thirdparty/crates/once_cell-1.21.4:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:x86_64-linux-android": [
@@ -463,6 +497,10 @@ cargo_build_script(
         "@rules_rust//rust/platform:aarch64-apple-ios": [
             "getrandom",  # aarch64-apple-ios
             "runtime-rng",  # aarch64-apple-ios
+        ],
+        "@rules_rust//rust/platform:aarch64-apple-ios-macabi": [
+            "getrandom",  # aarch64-apple-ios-macabi
+            "runtime-rng",  # aarch64-apple-ios-macabi
         ],
         "@rules_rust//rust/platform:aarch64-apple-ios-sim": [
             "getrandom",  # aarch64-apple-ios-sim
@@ -552,9 +590,17 @@ cargo_build_script(
             "getrandom",  # s390x-unknown-linux-gnu
             "runtime-rng",  # s390x-unknown-linux-gnu
         ],
+        "@rules_rust//rust/platform:thumbv6m-none-eabi": [
+            "getrandom",  # thumbv6m-none-eabi
+            "runtime-rng",  # thumbv6m-none-eabi
+        ],
         "@rules_rust//rust/platform:thumbv7em-none-eabi": [
             "getrandom",  # thumbv7em-none-eabi
             "runtime-rng",  # thumbv7em-none-eabi
+        ],
+        "@rules_rust//rust/platform:thumbv7em-none-eabihf": [
+            "getrandom",  # thumbv7em-none-eabihf
+            "runtime-rng",  # thumbv7em-none-eabihf
         ],
         "@rules_rust//rust/platform:thumbv8m.main-none-eabi": [
             "getrandom",  # thumbv8m.main-none-eabi
@@ -587,6 +633,10 @@ cargo_build_script(
         "@rules_rust//rust/platform:x86_64-apple-ios": [
             "getrandom",  # x86_64-apple-ios
             "runtime-rng",  # x86_64-apple-ios
+        ],
+        "@rules_rust//rust/platform:x86_64-apple-ios-macabi": [
+            "getrandom",  # x86_64-apple-ios-macabi
+            "runtime-rng",  # x86_64-apple-ios-macabi
         ],
         "@rules_rust//rust/platform:x86_64-linux-android": [
             "getrandom",  # x86_64-linux-android
