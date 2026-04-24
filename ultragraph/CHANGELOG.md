@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.16](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.8.15...ultragraph-v0.8.16) - 2026-04-24
+
+### Other
+
+- Applied minor lints.
+
 ## [0.8.15](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.8.14...ultragraph-v0.8.15) - 2026-03-12
 
 ### Other

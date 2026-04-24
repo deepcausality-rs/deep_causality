@@ -3,7 +3,7 @@
 
 [package]
 name = "ultragraph"
-version = "0.8.15"
+version = "0.8.16"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
