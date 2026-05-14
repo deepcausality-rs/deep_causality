@@ -13,7 +13,7 @@ authors:
     corresponding: true
     affiliation: 1
 affiliations:
-  - name: Center for Dynamic Causality
+  - name: Center for Dynamic Causality, United Kingdom
     index: 1
 date: 14 May 2026
 bibliography: paper.bib
@@ -96,7 +96,7 @@ Language (CDL).
 
 **Physics & metrics.** *Physics* is a standard library of physics kernels and causal wrappers organized by domain—
 Astrophysics, Quantum Mechanics, Electromagnetism, Relativity, Thermodynamics—leveraging Geometric Algebra and Gauge
-Fields [@tong2018gauge; @furey2024algebraic] and drawing on recent results in quantum geometry [@kang2024qgt;
+Fields [@furey2024algebraic] and drawing on recent results in quantum geometry [@kang2024qgt;
 @haruna2025logical]. *Metric* defines foundational signatures for consistent handling of geometric properties.
 
 **Data structures.** *Topology* implements `Graph` (sparse-matrix based), `Hypergraph`, `SimplicialComplex`, and
@@ -149,7 +149,8 @@ The two meet through `PropagatingEffect` (Figure 2).
 *Figure 2: Causaloid and Causal Monad are co-equal primitives targeting orthogonal concerns (structure vs.
 sequencing). They meet through `PropagatingEffect`, the shared value type produced by Causaloid evaluation and consumed
 by monadic `bind`, which makes structural and sequenced models freely interleavable.*
- A Causaloid's evaluation produces a `PropagatingEffect`, which is also the
+
+A Causaloid's evaluation produces a `PropagatingEffect`, which is also the
 value carried by the Causal Monad's `bind`. As a result, structure and sequencing become freely composable: an
 arbitrarily complex causal graph can be lifted as a single monadic step, a monadic pipeline can sit inside a Causaloid,
 and the two can be interleaved at any granularity. A user can build a pure DAG of Causaloids, a pure monadic pipeline,
