@@ -52,7 +52,118 @@ Real systems rarely sit in only one regime. A flight-envelope monitor mixes dete
 sensor models, non-Markovian fatigue history, and dynamic context. A tumor-treatment model mixes deterministic
 pharmacokinetics, probabilistic response, and non-Markovian patient history. DeepCausality provides a single,
 high-performance, type-safe framework in which such models can be expressed, composed, intervened on, and executed in
-real time—rather than forcing the practitioner to re-implement bridging code between several incompatible toolkits.
+real time, rather than forcing the practitioner to re-implement bridging code between several incompatible toolkits.
+
+# State of the field
+
+Computational causality is a mature interdisciplinary field with several coexisting paradigms, each addressing a
+different facet of the cause-and-effect problem and each implemented in a distinct ecosystem of tools.
+
+## Foundational frameworks
+
+The dominant paradigm is the **Structural Causal Model (SCM)** developed by Pearl and colleagues [@pearl2009causality].
+SCMs represent causal mechanisms as systems of structural equations defined over a Directed Acyclic Graph (DAG); the
+*do-calculus* provides three axiomatic rules for inferring the effects of interventions from observational data and
+the graph, supporting prediction of post-intervention distributions $P(Y \mid do(X=x))$ even when direct experimentation
+is unavailable. The same machinery extends to counterfactual queries through the three-step procedure of abduction,
+action, and prediction.
+
+Alongside SCMs, the **Potential Outcomes framework** [@rubin1974estimating; @holland1986statistics], also known as
+the Rubin Causal Model, grounds causal inference in unit-level potential outcomes $Y_i(1), Y_i(0)$ and supplies the
+toolkit underlying most applied causal analysis in econometrics and the social sciences: matching, propensity scores,
+instrumental variables, difference-in-differences, and regression discontinuity. The two frameworks are largely
+complementary and are often unified in modern practice.
+
+For time-series data, **Granger causality** [@granger1969investigating] established the foundational
+predictive-improvement test, later generalised through vector-autoregressive methods, non-linear extensions, and
+information-theoretic measures such as transfer entropy. Dynamic graphical models extend this to systems whose causal
+structure itself evolves.
+
+## Discovery, invariance, and representation
+
+A substantial body of work targets **causal discovery**: learning graph structure from data through constraint-based
+methods (such as PC and FCI), score-based methods, and continuous-optimisation approaches such as NOTEARS
+[@zheng2018notears]. Each approach faces fundamental limitations under unobserved confounding.
+
+The principle that true causal mechanisms remain invariant under distribution shift has been operationalised in
+**Invariant Causal Prediction** [@peters2016invariant] and the deep-learning extension **Invariant Risk Minimization**
+[@arjovsky2019irm]. **Causal Representation Learning** [@scholkopf2021toward] then aims to learn latent variables
+that correspond to underlying causal factors, with implications for robustness and out-of-distribution generalisation.
+
+Recent work extends classical causal frameworks to structures the original formalisms could not address, including
+**hierarchical causal models** [@weinstein2024hierarchical] for nested data and **hypergraph-based causal effect
+estimation** [@ma2022hypersci] for multi-way interference. **Causal inference at industry scale** is supported by
+**Double/Debiased Machine Learning** [@chernozhukov2018double], which controls high-dimensional confounding without
+sacrificing the validity of treatment-effect estimates.
+
+## Existing computational causality libraries
+
+The Python ecosystem dominates implementation. **DoWhy** [@sharma2020dowhy] provides an end-to-end SCM workflow with
+explicit separation of modelling, identification, estimation, and refutation. **EconML** targets heterogeneous
+treatment effects through Double Machine Learning, Orthogonal Random Forests, and meta-learners. **CausalML** focuses
+on uplift modelling and tree-based methods. **CausalNex** emphasises Bayesian-network structure learning. **Meridian**
+addresses marketing-mix modelling with Bayesian causal inference. The R ecosystem provides **bnlearn**, **dagitty**,
+**causaleffect**, and **dosearch** for identification and structure learning; Julia offers **CausalInference.jl** for
+similar tasks. In all of these, the model is a *static* structural artifact; interventions are graph-surgery operations
+performed before query evaluation; and the runtime substrate is a numerical or statistical kernel rather than a typed
+effect system.
+
+A parallel research stream applies **Large Language Models** to causal reasoning [@kiciman2023causal], with benchmarks
+such as CLadder [@jin2023cladder] probing the extent to which LLMs can distinguish causation from association. This
+work is complementary rather than competing: it asks whether learned models can reason causally, not how to encode
+causal models in deployed software.
+
+## The Rust scientific-computing landscape
+
+The Rust ecosystem offers strong numerical primitives (`ndarray`, `nalgebra`, `polars`), graph backends, and ML
+frameworks (`burn`, `candle`), but no end-to-end causal-reasoning library prior to DeepCausality. Experimental crates
+for higher-kinded types (`higher`, partial support in `frunk`) demonstrate Functor and Monad at the type level but are
+not used as the substrate of a domain library. The combination of zero-cost abstractions, static dispatch, and `no_std`
+support is attractive for embedded and safety-critical causal applications, none of which existing Python or R tools
+can target.
+
+## Boundaries of classical methods
+
+Across the SCM, Potential Outcomes, and Granger traditions, three shared assumptions limit applicability to dynamic
+systems:
+
+* **Acyclicity** of the causal graph prohibits genuine feedback loops.
+* **Static causal structure** rules out scenarios in which the causal mechanisms themselves change over time, such as
+  regime shifts in financial markets, dynamic phase alignment in turbulent flows [@milanese2021dynamic], or climate
+  tipping points.
+* **Fixed background spacetime** assumes a Euclidean substrate and a single uniform temporal progression, which is at
+  odds with relativistic, non-Euclidean, and multi-scale temporal phenomena.
+
+These restrictions are intrinsic to the formal underpinnings of the dominant frameworks; they are not implementation
+choices that a library can paper over. The need for a generalised foundation is acknowledged in physics
+[@hardy2005causaloid], where the **causaloid** formalism proposes a theory-neutral mathematical object capable of
+expressing both probabilistic and deterministic causal structure without a fixed causal order. Hardy's causaloid is
+the conceptual ancestor of the Causaloid in DeepCausality.
+
+## Where DeepCausality sits
+
+DeepCausality occupies a position not filled by any existing library:
+
+* It targets *dynamic causality* (the three boundaries above) rather than statistical estimation on a fixed graph,
+  taking the causaloid formalism as its starting point.
+* It is implemented in **Rust** with a typed effect monad, enabling embedded, safety-critical, and real-time use cases
+  that Python and R cannot address.
+* It exposes **do-calculus interventions as a runtime monadic operator** over a propagating value, rather than as a
+  static graph rewrite performed before query evaluation.
+* It integrates an HKT substrate (`deep_causality_haft`) so that heterogeneous domain types (manifolds, tensors,
+  multivectors, propagating effects) share Functor and Monad surface. This pattern is not available in other Rust
+  libraries, and is uncommon in mainstream languages outside Haskell, Scala, and OCaml.
+* It integrates **physics and topology** (gauge fields, Clifford algebra, simplicial complexes, manifolds) with the
+  causal layer through the shared HKT traits, enabling physics-informed causal modelling that requires bridging across
+  several disparate packages in any other ecosystem.
+* It includes a programmable **deontic verification layer** (`Ethos`) [@olson2024ddic] for runtime action approval,
+  supporting safety-critical autonomous systems.
+
+The full state-of-the-field survey underlying this section, including extended treatments of context-aware causality,
+geometric deep learning for causal inference, and the boundaries of classical methods relative to physics, is
+developed at book length in an in-progress monograph, *The Effect Propagation Process*
+(<https://github.com/deepcausality-rs/deep_causality/blob/main/papers/effect_propagation_process/epp.pdf>), for which
+the DeepCausality library is the formal computational substrate.
 
 # Software design
 
