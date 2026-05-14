@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doi_batch xmlns="http://www.crossref.org/schema/5.3.1"
+           xmlns:ai="http://www.crossref.org/AccessIndicators.xsd"
+           xmlns:rel="http://www.crossref.org/relations.xsd"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           version="5.3.1"
+           xsi:schemaLocation="http://www.crossref.org/schema/5.3.1 http://www.crossref.org/schemas/crossref5.3.1.xsd">
+  <head>
+    <doi_batch_id>20260514142322-48111b6443335509d8d80b2ff64f484a7da22fb4</doi_batch_id>
+    <timestamp>20260514142322</timestamp>
+    <depositor>
+      <depositor_name>JOSS Admin</depositor_name>
+      <email_address>admin@theoj.org</email_address>
+    </depositor>
+    <registrant>The Open Journal</registrant>
+  </head>
+  <body>
+    <journal>
+      <journal_metadata>
+        <full_title>Journal of Open Source Software</full_title>
+        <abbrev_title>JOSS</abbrev_title>
+        <issn media_type="electronic">2475-9066</issn>
+        <doi_data>
+          <doi>10.21105/joss</doi>
+          <resource>https://joss.theoj.org</resource>
+        </doi_data>
+      </journal_metadata>
+      <journal_issue>
+        <publication_date media_type="online">
+          <month>01</month>
+          <year>1970</year>
+        </publication_date>
+        <journal_volume>
+          <volume>¿VOL?</volume>
+        </journal_volume>
+        <issue>¿ISSUE?</issue>
+      </journal_issue>
+      <journal_article publication_type="full_text">
+        <titles>
+          <title>DeepCausality: A Hypergeometric Computational Causality Library for Rust</title>
+        </titles>
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Marvin</given_name>
+            <surname>Hansen</surname>
+            <affiliations>
+              <institution><institution_name>Center for Dynamic Causality</institution_name></institution>
+            </affiliations>
+            <ORCID>https://orcid.org/0009-0000-1159-8173</ORCID>
+          </person_name>
+        </contributors>
+        <publication_date>
+          <month>01</month>
+          <day>01</day>
+          <year>1970</year>
+        </publication_date>
+        <pages>
+          <first_page>¿PAGE?</first_page>
+        </pages>
+        <publisher_item>
+          <identifier id_type="doi">N/A</identifier>
+        </publisher_item>
+        <ai:program name="AccessIndicators">
+          <ai:license_ref applies_to="vor">http://creativecommons.org/licenses/by/4.0/</ai:license_ref>
+          <ai:license_ref applies_to="am">http://creativecommons.org/licenses/by/4.0/</ai:license_ref>
+          <ai:license_ref applies_to="tdm">http://creativecommons.org/licenses/by/4.0/</ai:license_ref>
+        </ai:program>
+        <rel:program>
+          <rel:related_item>
+            <rel:description>Software archive</rel:description>
+            <rel:inter_work_relation relationship-type="references" identifier-type="doi">10.5281</rel:inter_work_relation>
+          </rel:related_item>
+          <rel:related_item>
+            <rel:description>GitHub review issue</rel:description>
+            <rel:inter_work_relation relationship-type="hasReview" identifier-type="uri">https://github.com/openjournals</rel:inter_work_relation>
+          </rel:related_item>
+        </rel:program>
+        <doi_data>
+          <doi>N/A</doi>
+          <resource>https://joss.theoj.org/papers/N/A</resource>
+          <collection property="text-mining">
+            <item>
+              <resource mime_type="application/pdf">https://joss.theoj.org/papers/N/A.pdf</resource>
+            </item>
+          </collection>
+        </doi_data>
+        <citation_list>
+          <citation key="hardy2005causaloid">
+            <article_title>Probability theories with dynamic causal structure: A new framework for quantum gravity</article_title>
+            <author>Hardy</author>
+            <journal_title>arXiv preprint</journal_title>
+            <cYear>2005</cYear>
+            <unstructured_citation>Hardy, L. (2005). Probability theories with dynamic causal structure: A new framework for quantum gravity. arXiv Preprint. https://arxiv.org/abs/gr-qc/0509120</unstructured_citation>
+          </citation>
+          <citation key="martinez2025surd">
+            <article_title>Observational causality by states and interaction type for scientific discovery</article_title>
+            <author>Martínez-Sánchez</author>
+            <journal_title>arXiv preprint</journal_title>
+            <cYear>2025</cYear>
+            <unstructured_citation>Martínez-Sánchez, Á., &amp; Lozano-Durán, A. (2025). Observational causality by states and interaction type for scientific discovery. arXiv Preprint. https://arxiv.org/abs/2505.10878</unstructured_citation>
+          </citation>
+          <citation key="zhao2019mrmr">
+            <article_title>Maximum relevance and minimum redundancy feature selection methods for a marketing machine learning platform</article_title>
+            <author>Zhao</author>
+            <journal_title>arXiv preprint</journal_title>
+            <cYear>2019</cYear>
+            <unstructured_citation>Zhao, Z., Anand, R., &amp; Wang, M. (2019). Maximum relevance and minimum redundancy feature selection methods for a marketing machine learning platform. arXiv Preprint. https://arxiv.org/abs/1908.05376</unstructured_citation>
+          </citation>
+          <citation key="bornholt2014uncertain">
+            <article_title>Uncertain&lt;t&gt;: A first-order type for uncertain data</article_title>
+            <author>Bornholt</author>
+            <journal_title>Proceedings of the 19th international conference on architectural support for programming languages and operating systems (ASPLOS ’14)</journal_title>
+            <doi>10.1145/2541940.2541958</doi>
+            <cYear>2014</cYear>
+            <unstructured_citation>Bornholt, J., Mytkowicz, T., &amp; McKinley, K. S. (2014). Uncertain&lt;t&gt;: A first-order type for uncertain data. Proceedings of the 19th International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS ’14). https://doi.org/10.1145/2541940.2541958</unstructured_citation>
+          </citation>
+          <citation key="kang2024qgt">
+            <article_title>Measurements of the quantum geometric tensor in solids</article_title>
+            <author>Kang</author>
+            <journal_title>Nature Physics</journal_title>
+            <issue>1</issue>
+            <volume>21</volume>
+            <doi>10.1038/s41567-024-02678-8</doi>
+            <cYear>2024</cYear>
+            <unstructured_citation>Kang, M., Kim, S., Qian, Y., Neves, P. M., Ye, L., Jung, J., Puntel, D., Mazzola, F., Fang, S., Jozwiak, C., Bostwick, A., Rotenberg, E., Fujii, J., Vobornik, I., Park, J.-H., Checkelsky, J. G., Yang, B.-J., &amp; Comin, R. (2024). Measurements of the quantum geometric tensor in solids. Nature Physics, 21(1), 110–117. https://doi.org/10.1038/s41567-024-02678-8</unstructured_citation>
+          </citation>
+          <citation key="liu2022nwhy">
+            <article_title>NWHy: A framework for hypergraph analytics: Representations, data structures, and algorithms</article_title>
+            <author>Liu</author>
+            <journal_title>2022 IEEE international parallel and distributed processing symposium workshops (IPDPSW)</journal_title>
+            <doi>10.1109/IPDPSW55747.2022.00057</doi>
+            <cYear>2022</cYear>
+            <unstructured_citation>Liu, X. T., Firoz, J., Gebremedhin, A. H., &amp; Lumsdaine, A. (2022). NWHy: A framework for hypergraph analytics: Representations, data structures, and algorithms. 2022 IEEE International Parallel and Distributed Processing Symposium Workshops (IPDPSW), 275–284. https://doi.org/10.1109/IPDPSW55747.2022.00057</unstructured_citation>
+          </citation>
+          <citation key="olson2024ddic">
+            <article_title>A defeasible deontic calculus for resolving norm conflicts</article_title>
+            <author>Olson</author>
+            <journal_title>Proceedings of the international conference on principles of knowledge representation and reasoning (KR)</journal_title>
+            <cYear>2024</cYear>
+            <unstructured_citation>Olson, T., Salas-Damian, R., &amp; Forbus, K. D. (2024). A defeasible deontic calculus for resolving norm conflicts. Proceedings of the International Conference on Principles of Knowledge Representation and Reasoning (KR).</unstructured_citation>
+          </citation>
+          <citation key="tong2018gauge">
+            <article_title>Gauge theory</article_title>
+            <author>Tong</author>
+            <cYear>2018</cYear>
+            <unstructured_citation>Tong, D. (2018). Gauge theory. http://www.damtp.cam.ac.uk/user/tong/gaugetheory.html</unstructured_citation>
+          </citation>
+          <citation key="furey2024algebraic">
+            <article_title>An algebraic roadmap of particle theories, part i: General construction</article_title>
+            <author>Furey</author>
+            <journal_title>arXiv preprint</journal_title>
+            <cYear>2024</cYear>
+            <unstructured_citation>Furey, N. (2024). An algebraic roadmap of particle theories, part i: General construction. arXiv Preprint. https://arxiv.org/abs/2312.12377</unstructured_citation>
+          </citation>
+          <citation key="haruna2025logical">
+            <article_title>Note on logical gates by gauge field formalism of quantum error correction</article_title>
+            <author>Haruna</author>
+            <journal_title>arXiv preprint</journal_title>
+            <cYear>2025</cYear>
+            <unstructured_citation>Haruna, J. (2025). Note on logical gates by gauge field formalism of quantum error correction. arXiv Preprint. https://arxiv.org/abs/2511.15224</unstructured_citation>
+          </citation>
+        </citation_list>
+      </journal_article>
+    </journal>
+  </body>
+</doi_batch>
