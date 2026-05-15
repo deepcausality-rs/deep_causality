@@ -260,6 +260,14 @@ cargo run --example example_sensor_processing
 cargo run --example example_clinical_trial 
 ```
 
+## Benchmarks
+
+```bash
+cargo bench -p deep_causality_uncertain --bench maybe_uncertain_benchmarks
+
+cargo bench -p deep_causality_uncertain --bench uncertain_benchmarks
+```
+
 ## Acknowledgements
 
 This crate is inspired by the Blog post ["Uncertain⟨T⟩"](https://nshipster.com/uncertainty) by [@Mattt](https://github.com/mattt) and his Implementation of [Uncertain for Swift](https://github.com/mattt/Uncertain).

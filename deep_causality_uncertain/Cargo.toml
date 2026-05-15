@@ -58,3 +58,7 @@ criterion = {  version = "0.8" }
 [[bench]]
 name = "uncertain_benchmarks"
 harness = false
+
+[[bench]]
+name = "maybe_uncertain_benchmarks"
+harness = false
