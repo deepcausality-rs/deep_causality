@@ -1,0 +1,182 @@
+\section{Background and Related Work}
+\label{sec:background}
+
+Four communities have addressed pieces of the problem
+\texttt{MaybeUncertain<T>} solves. None has combined them into a value-level
+type with statistically-gated lifting. We survey each in turn and state what
+each does not provide.
+
+\subsection{The \texttt{Uncertain<T>} lineage}
+\label{sec:bg:uncertain}
+
+Bornholt et al.~\cite{bornholt2014uncertain,bornholt2013thesis}
+introduced \texttt{Uncertain<T>} at ASPLOS 2014. The type encapsulates a
+random variable of a numeric type $T$ and overloads arithmetic, comparison,
+and logical operators to construct a Bayesian network of computations.
+Conditionals on \texttt{Uncertain<bool>} are discharged by Wald's sequential
+probability ratio test~\cite{wald1945sprt,wald1948optimum}, which
+draws samples until the evidence supports rejecting either the null or the
+alternate hypothesis at the chosen confidence level. McKinley's POPL 2016
+keynote~\cite{mckinley2016popl} retrospectively framed
+\texttt{Uncertain<T>} as a programming-language abstraction for uncertain data
+and invited extensions in other languages.
+
+The companion line at the same group includes probabilistic
+assertions~\cite{sampson2014passert}, which verify quantitative properties of
+randomised programs via distribution extraction, and
+EnerJ~\cite{sampson2011enerj} and Rely~\cite{carbin2013rely}, which apply
+type-level reasoning to approximate computing. Stanley-Marbell et al.'s recent
+survey~\cite{stanley2025approxsurvey} positions \texttt{Uncertain<T>} as the
+leading programming-language abstraction in this space and notes no presence
+extension among its descendants.
+
+Community ports include a Swift implementation by Thompson~\cite{mattt2019swiftuncertain}
+and an independent Rust port (\texttt{uncertain-rs})~\cite{uncertainrs}. Neither
+introduces a presence factor. \texttt{MaybeUncertain<T>} is implemented in the
+\texttt{deep\_causality\_uncertain} crate of the DeepCausality
+project~\cite{hansen_deepcausality} and is, to our knowledge, the first
+value-level type that factors probabilistic presence from value uncertainty.
+
+\paragraph{What this lineage does not provide.} The presence of the value is
+assumed. Missing data is silently absorbed into a degenerate distribution at
+the value itself, conflating measurement noise with the failure to measure.
+
+\subsection{Probabilistic programming languages}
+\label{sec:bg:ppl}
+
+Probabilistic programming languages (PPLs) form a large
+landscape~\cite{tolpin2016anglican,carpenter2017stan,bingham2019pyro,ge2025turing,cusumano2019gen,narayanan2016hakaru,holtzen2020dice,gehr2016psi,gehr2020lambdapsi,milch2005blog,kimmig2011problog,pfeffer2009figaro}.
+The relevant question for this paper is narrow: do any of them model the
+optional-ness of a value as a type-level concept distinct from the value's
+distribution? The closest mechanical analogue is Pyro's
+\texttt{MaskedDistribution} and the \texttt{pyro.mask} handler~\cite{bingham2019pyro},
+which let users zero out the log-density contribution of observations during
+inference. This is a runtime decorator on a distribution object, not a value
+type. The masked observation is still numerically present in the
+data structure; the mask only affects how the inference engine accounts for it.
+
+Stan models missing data by promoting absent values to additional parameters
+of the model~\cite{carpenter2017stan}. The user writes the missingness model
+by hand. Turing.jl~\cite{ge2025turing} forwards Julia's \texttt{Missing} union
+through the inference pipeline and treats missing observations as latent
+variables. In each case the abstraction lives at the model layer; the
+programmer writes presence into the model, rather than receiving a value-level
+type that already encodes it.
+
+\paragraph{Probabilistic program verification logics.} Recent work has
+extended type systems and Hoare logics with relational and probabilistic
+reasoning. \emph{Safe Couplings}~\cite{vasilenko2022safecouplings} lifts
+refinement types in Liquid Haskell to relational probabilistic properties via
+couplings, with case studies on Temporal Difference learning and Stochastic
+Gradient Descent stability. eRHL~\cite{avanzini2025erhl} is a quantitative
+relational Hoare logic with soundness and completeness for almost-surely
+terminating programs and characterises statistical distance and differential
+privacy. Both occupy the verification-logic layer above the value-abstraction
+layer where \texttt{MaybeUncertain<T>} lives; neither targets the
+presence-vs-value factoring.
+
+\paragraph{What PPLs do not provide.} A first-class value-level type that
+encapsulates presence-uncertainty and composes through ordinary arithmetic
+operators is not present in any PPL we surveyed. The factoring exists at the
+inference layer and at the modelling layer; it does not exist at the type
+layer.
+
+\subsection{Missing-data statistics}
+\label{sec:bg:missingdata}
+
+Rubin's 1976 taxonomy~\cite{rubin1976missing} distinguishes three
+missingness mechanisms. Data is \emph{missing completely at random} (MCAR) if
+the probability of missingness is independent of both observed and unobserved
+values. Data is \emph{missing at random} (MAR) if missingness depends only on
+observed values. Data is \emph{missing not at random} (MNAR) if missingness
+depends on the unobserved value itself. The standard
+text~\cite{littlerubin2019} develops estimators for each regime and the
+boundary cases~\cite{mealli2015mar,seaman2013mar} clarify when the
+distinctions matter for inference. Recent machine-learning work treats MNAR
+directly~\cite{ipsen2021notmiwae}.
+
+\texttt{MaybeUncertain<T>}'s independence assumption between $\mathit{is\_present}$
+and $\mathit{value}$ corresponds to MAR semantics. We state this assumption
+explicitly in~\Cref{sec:type} and revisit its limitations in~\Cref{sec:discussion}.
+
+\paragraph{What the statistics literature does not provide.} A programming
+abstraction. The literature gives the semantics; \texttt{MaybeUncertain<T>}
+provides the type that implements it.
+
+\subsection{Adjacent constructions: probabilistic databases and sensor fusion}
+\label{sec:bg:adjacent}
+
+Two communities have already factored presence from value in their own
+settings.
+
+\emph{Probabilistic databases} model tuple-existence probability separately
+from attribute-value uncertainty. ULDBs~\cite{benjelloun2006uldb} attach
+existence probabilities to tuples and propagate lineage through queries.
+MayBMS~\cite{antova2007maybms} uses world-set decompositions that formally
+separate ``the tuple exists'' from ``the attribute has this value.''
+Orion~\cite{cheng2008orion} extends relational systems with both
+tuple-level and attribute-level uncertainty. The standard
+text~\cite{suciu2011pdb} synthesises the field. The factoring is structurally
+identical to what \texttt{MaybeUncertain<T>} performs at the value level, but
+occurs at the relational layer; it does not give the application programmer a
+value-level type usable anywhere \texttt{Option<T>} would go.
+
+\emph{Sensor fusion and intermittent observations} factor presence from
+value inside numerical filters. Sinopoli et al.~\cite{sinopoli2004kalman}
+analyse Kalman filtering when measurements arrive according to a Bernoulli
+process; subsequent work~\cite{liu2004kalman,censi2011kalmansemi} refines the
+convergence theory, and out-of-sequence-measurement
+methods~\cite{orton2005oosm,barshalom2004oosm} treat asynchronous arrivals.
+The factoring is mathematically the same Bernoulli-times-Gaussian construction
+\texttt{MaybeUncertain<T>} implements, but lives inside a specific numerical
+filter rather than as a general-purpose type.
+
+\paragraph{What these communities do not provide.} A value-level type usable
+in arbitrary application code. Probabilistic databases solve the conceptual
+problem at the relation level; sensor-fusion methods solve it inside a filter.
+Neither exports the factoring to ordinary host-language values.
+
+\subsection{Effect systems and the probability monad}
+\label{sec:bg:effects}
+
+The categorical foundations are well established. Giry's measure
+monad~\cite{giry1981categorical} and Kozen's probabilistic dynamic
+logic~\cite{kozen1985probpdl} provide the semantic ground. Algebraic effects
+and handlers~\cite{plotkin2009handlers,bauer2015eff,leijen2014koka} give a
+compositional framework in which probability and partiality can be combined,
+and graded or parametric effect monads~\cite{katsumata2014parametric}
+formalise the stack structure that a \texttt{Maybe}-over-probability
+construction inhabits. Statistical model checking~\cite{younes2006sprtmc} uses
+SPRT inside verification tools, demonstrating SPRT's relevance beyond
+Bornholt's setting.
+
+\texttt{MaybeUncertain<T>} sits adjacent to this literature without
+instantiating any specific construction from it. The implementation provides
+no monadic combinators; no \texttt{bind} or \texttt{flat\_map} operation is
+exposed, and the type does not implement the \texttt{Monad},
+\texttt{Functor}, or \texttt{Applicative} traits available in the sibling
+\texttt{deep\_causality\_haft} crate. Formalising the type as a (graded)
+monad with stated and proved laws is left for future work. Probabilistic
+affine forms~\cite{bouissou2016probaffine} and classical interval
+analysis~\cite{moore1966interval} offer guaranteed enclosures rather than
+sampled distributions and are complementary rather than competing.
+
+\paragraph{What this layer does not provide.} A specific, implementable type
+for a working programming language. The effect-system literature gives the
+algebra; \texttt{MaybeUncertain<T>} instantiates it as a Rust type with
+operators, an SPRT-gated bridge to \texttt{Uncertain<T>}, and measured
+overhead.
+
+\subsection{Summary}
+
+\texttt{MaybeUncertain<T>} occupies a small gap in a well-populated landscape.
+The \texttt{Uncertain<T>} lineage provides the value-uncertainty type and the
+SPRT machinery but not the presence axis. PPLs handle missing data at the
+modelling or inference layer but not at the type layer. Statistics gives the
+semantics but not the abstraction. Probabilistic databases and sensor fusion
+factor presence from value but at the wrong abstraction layer for a
+general-purpose program. The effect-system literature gives the algebra but
+not a concrete usable type. \texttt{MaybeUncertain<T>} fills the gap with a
+small, principled extension of \texttt{Uncertain<T>}: one Bernoulli node per
+leaf, AND-propagation on operators, one gating operator built on the existing
+SPRT.

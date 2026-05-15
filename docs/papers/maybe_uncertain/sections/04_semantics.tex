@@ -1,0 +1,147 @@
+\section{Semantics}
+\label{sec:semantics}
+
+The semantics of \texttt{MaybeUncertain<T>} are inherited almost entirely from
+the underlying \texttt{Uncertain<T>} machinery. This section makes the
+inheritance precise. We describe the computation graph that operators build,
+the hypothesis test that the gating operator runs, and the way the two types
+compose.
+
+\subsection{The computation graph}
+\label{sec:semantics:graph}
+
+\texttt{Uncertain<T>} represents every value as a node in a directed acyclic
+graph whose internal node enum is \texttt{UncertainNodeContent}. The variants
+include leaf nodes (\texttt{Value}, \texttt{DistributionF64},
+\texttt{DistributionBool}), arithmetic operators
+(\texttt{ArithmeticOp}, \texttt{NegationOp}), logical operators
+(\texttt{LogicalOp}), comparisons (\texttt{ComparisonOp}), conditionals
+(\texttt{ConditionalOp}), and a small set of higher-kinded variants
+(\texttt{PureOp}, \texttt{FmapOp}, \texttt{ApplyOp}, \texttt{BindOp}) that
+the public API does not currently surface.
+
+A \texttt{MaybeUncertain<T>} value is two such graphs, one rooted at
+\texttt{is\_present} and one rooted at \texttt{value}. Operators construct
+nodes in both graphs simultaneously. Binary arithmetic on
+\texttt{MaybeUncertain<f64>} appends an \texttt{ArithmeticOp} node to the
+value graph and a \texttt{LogicalOp::And} node to the presence graph; unary
+negation appends a \texttt{NegationOp} to the value graph and leaves presence
+unchanged. \Cref{fig:graph} sketches the combined structure.
+
+\begin{figure}[h]
+\centering
+% TODO: TikZ sketch of two graphs (is_present, value) for c = a + b.
+\fbox{\parbox{0.7\linewidth}{\centering [Figure to be drawn: Bayesian
+network for $c = a + b$ where $a,b$ are \texttt{MaybeUncertain<f64>}. Two
+panels: presence axis with an AND gate over the two Bernoulli leaves, value
+axis with an addition node over the two value sub-graphs.]}}
+\caption{Combined computation graph of $c = a + b$ over
+\texttt{MaybeUncertain<f64>}. The presence axis builds a logical-AND graph;
+the value axis builds the standard \texttt{Uncertain<T>} arithmetic graph.}
+\label{fig:graph}
+\end{figure}
+
+\paragraph{Sampling the graph.} Each \texttt{Uncertain<T>} instance carries
+a unique integer identifier assigned at construction. A sample is the result
+of recursively evaluating the graph from the root, with leaf draws keyed by
+$(\text{node id}, \text{sample index})$ in a thread-safe global cache so that
+shared sub-graphs are evaluated once per index. Top-level \texttt{sample()}
+draws a fresh random index from the thread-local generator on each call;
+\texttt{sample\_with\_index} takes the index as an argument and produces a
+deterministic draw for that pair.
+
+The two-stage sampling of \texttt{MaybeUncertain<T>} described
+in~\Cref{sec:type:sampling} sits on top of this machinery. The
+\texttt{is\_present} graph is sampled with one index and, conditionally on a
+true result, the \texttt{value} graph is sampled with a separately drawn
+index. Independence between the two axes is therefore a property of the
+implementation as written, not only of the type definition.
+
+\subsection{The SPRT at the gate}
+\label{sec:semantics:sprt}
+
+\texttt{lift\_to\_uncertain} discharges its decision to
+\texttt{Uncertain<bool>::to\_bool}, which in turn calls the implementation of
+Wald's sequential probability ratio test~\cite{wald1945sprt,wald1948optimum}
+shipped with the crate. The test as implemented compares a null and an
+alternate hypothesis separated by an indifference region:
+\begin{align*}
+H_0 &: \Prob[\mathit{is\_present} = \text{true}] \le p_{\text{threshold}} - \varepsilon, \\
+H_1 &: \Prob[\mathit{is\_present} = \text{true}] > p_{\text{threshold}} + \varepsilon.
+\end{align*}
+Here $p_{\text{threshold}}$ is the caller-supplied
+\texttt{threshold\_prob\_some} and $\varepsilon$ is the caller-supplied
+\texttt{epsilon}. The values $p_0 = p_{\text{threshold}} - \varepsilon$ and
+$p_1 = p_{\text{threshold}} + \varepsilon$ are clamped to the open interval
+$(0, 1)$ before use.
+
+The test sets Type I and Type II error budgets to
+$\alpha = \beta = 1 - \mathit{confidence\_level}$, where
+\texttt{confidence\_level} is the third parameter to
+\texttt{lift\_to\_uncertain}. Wald's two boundaries follow directly:
+$$
+A = \ln \frac{\beta}{1 - \alpha}, \qquad
+B = \ln \frac{1 - \beta}{\alpha}.
+$$
+The test draws samples in batches of ten. After each batch it computes the
+log-likelihood ratio for the $n$ samples drawn so far with $x$ successes,
+\begin{equation*}
+\Lambda_n = x \cdot \ln \frac{p_1}{p_0}
+          + (n - x) \cdot \ln \frac{1 - p_1}{1 - p_0},
+\end{equation*}
+and compares to the boundaries. If $\Lambda_n \le A$, $H_0$ is accepted and
+the gate returns false. If $\Lambda_n \ge B$, $H_1$ is accepted and the gate
+returns true. Otherwise a new batch is drawn. If \texttt{max\_samples} is
+reached without a decision, the implementation falls back to comparing the
+empirical success rate $x/n$ to $p_{\text{threshold}}$ and returns the result
+of that comparison.
+
+Two consequences for callers matter in practice. The first is that termination
+is not guaranteed in fewer than \texttt{max\_samples} batches; Wald's
+guarantee is on expected sample size, and the fallback decision exists
+precisely to bound the worst case. The second is that the indifference
+region $[\,p_{\text{threshold}} - \varepsilon,\, p_{\text{threshold}} + \varepsilon\,]$
+makes the test asymmetric in a useful way: presence probabilities inside the
+indifference region produce slow decisions, and the empirical results
+in~\Cref{sec:evaluation} confirm this regime is single-digit microseconds
+slower than the easy-accept and easy-reject regimes.
+
+\subsection{Composition with \texttt{Uncertain<T>}}
+\label{sec:semantics:composition}
+
+The two types are connected in both directions, although the connection is
+not symmetric.
+
+\paragraph{Injection.} Any \texttt{Uncertain<T>} embeds into
+\texttt{MaybeUncertain<T>} via \texttt{from\_uncertain}. The injection sets
+\texttt{is\_present} to a point distribution at true and copies the value
+graph unchanged. Operations on the result behave exactly as on the original
+\texttt{Uncertain<T>} value, except that the presence axis carries an AND of
+\texttt{point(true)} leaves and therefore remains structurally true.
+
+\paragraph{Projection.} The reverse direction is partial. A
+\texttt{MaybeUncertain<T>} projects back to \texttt{Uncertain<T>} only when
+\texttt{lift\_to\_uncertain} concludes that the SPRT supports the presence
+hypothesis at the caller's chosen confidence; otherwise the projection
+returns a \texttt{PresenceError}. The asymmetry is deliberate. An injection
+adds information (``this value is definitely present''); a projection
+discards information (the presence axis is collapsed to a single Boolean
+verdict), and the discarding is only safe when statistical evidence
+supports it.
+
+\paragraph{Equational reading.} For any \texttt{Uncertain<T>} value $u$,
+\texttt{lift\_to\_uncertain} on \texttt{from\_uncertain(u)} succeeds and
+returns a clone of $u$, regardless of the confidence parameters. This holds
+because the presence axis of \texttt{from\_uncertain(u)} is
+\texttt{point(true)}, on which any SPRT against any threshold strictly less
+than one trivially concludes acceptance after the first batch. The two
+operations therefore compose as expected on the inhabited diagonal.
+
+\paragraph{Predicates as observers.} \texttt{is\_some} and \texttt{is\_none}
+expose the presence axis as a first-class \texttt{Uncertain<bool>}. Callers
+can compose these with the existing \texttt{Uncertain<bool>} operators
+(\texttt{\&}, \texttt{|}, \texttt{!}, \texttt{\^{}}) to build presence-aware
+conditions over multiple \texttt{MaybeUncertain} values, and discharge those
+conditions via the existing SPRT-backed methods such as
+\texttt{probability\_exceeds} or \texttt{implicit\_conditional} on
+\texttt{Uncertain<bool>}. No new machinery is needed.

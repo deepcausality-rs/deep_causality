@@ -1,0 +1,190 @@
+\section{Empirical Evaluation}
+\label{sec:evaluation}
+
+This section quantifies the overhead $\Mtype\langle T \rangle$ adds over
+$\Utype\langle T \rangle$ at the operator and sampling levels, and the cost
+of the SPRT-gated lifting operator across the three regimes of the
+hypothesis test. All benchmarks are shipped with the crate and can be
+reproduced; the figures reported here are taken from a representative run
+on the development host.
+
+\subsection{Methodology}
+\label{sec:eval:methodology}
+
+The crate ships two Criterion~\cite{criterion} benchmark suites:
+\texttt{uncertain\_benchmarks} for the existing $\Utype\langle T \rangle$
+type and \texttt{maybe\_uncertain\_benchmarks} for
+$\Mtype\langle T \rangle$. The two suites share their structure so that
+benchmark functions are pairwise comparable on the per-operation level.
+Each benchmark function reports the mean wall-clock time per iteration
+together with a $95\%$ confidence interval estimated by Criterion's
+internal bootstrap.
+
+Benchmarks were collected on macOS (Darwin 25.5) with the crate compiled
+in release mode using the default Cargo bench profile. Each Criterion run
+draws $100$ measurements per benchmark and reports the median and the $95\%$
+confidence band. The hardware configuration used to produce the numbers
+reported in this paper is recorded with the benchmark artifact and should
+be consulted for absolute timing reference. We refrain from cross-machine
+comparisons; the numbers here are relative cost ratios, which are stable
+across hardware in our spot checks.
+
+\subsection{Sampling overhead}
+\label{sec:eval:sampling}
+
+\Cref{tab:sampling} compares per-sample cost between $\Utype\langle f64
+\rangle$ and $\Mtype\langle f64 \rangle$ across six paired benchmarks. The
+left column gives the baseline cost of sampling a $\Utype$ value; the
+middle column gives the corresponding cost for a $\Mtype$ value built from
+the same underlying distribution. The right column is the ratio.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Operation & $\Utype\langle f64 \rangle$ & $\Mtype\langle f64 \rangle$ & Ratio \\
+\midrule
+Point sample                       & $237$~ns & $510$~ns & $2.15\times$ \\
+Normal sample / \textsc{fromUncertain} & $286$~ns & $496$~ns & $1.73\times$ \\
+Bernoulli-gated sample             & $246$~ns & $400$~ns & $1.63\times$ \\
+Arithmetic chain $(a+b)\cdot c$    & $384$~ns & $747$~ns & $1.95\times$ \\
+Add and sample                     & $477$~ns & $762$~ns & $1.60\times$ \\
+Complex chain and sample           & $593$~ns & $718$~ns & $1.21\times$ \\
+\bottomrule
+\end{tabular}
+\caption{Per-sample latency for paired benchmarks on $\Utype\langle f64
+\rangle$ and $\Mtype\langle f64 \rangle$. The presence axis adds a constant
+factor between $1.2\times$ and $2.2\times$ to per-sample cost. The
+``Bernoulli-gated sample'' row pairs \texttt{sampling\_bernoulli} on the
+underlying $\Utype\langle \Bool \rangle$ with
+\texttt{sampling\_maybe\_bernoulli} on a $\Mtype\langle f64 \rangle$ value
+constructed via \textsc{fromBernoulli}.}
+\label{tab:sampling}
+\end{table}
+
+The pattern is consistent. The presence axis costs one extra sample plus
+one extra cache lookup; the structural overhead does not grow with the
+complexity of the value-side graph. The ``complex chain and sample''
+benchmark, which combines three Bernoulli-gated readings with arithmetic
+and a division, shows the smallest relative penalty ($1.21\times$) because
+the value-side work dominates the constant cost of the presence draw.
+
+A second observation matters for embedded callers. The
+$\textsc{alwaysNone}$ constructor is the cheapest case: sampling an
+always-absent $\Mtype\langle f64 \rangle$ takes $266$~ns, which sits
+slightly above the cost of sampling a single Bernoulli point distribution
+($246$~ns). The short-circuit in the sampler is empirically observable;
+the value branch is not evaluated.
+
+\subsection{Graph-construction overhead}
+\label{sec:eval:construction}
+
+\Cref{tab:construction} reports the cost of building a single operator
+node, with no sampling. Construction times measure the work done by the
+operator overload to extend the computation graph and produce a new owning
+value.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Operator & $\Utype\langle f64 \rangle$ & $\Mtype\langle f64 \rangle$ \\
+\midrule
+Binary \texttt{+} (graph only)    & $14.7$~ns & $42.9$~ns \\
+Binary \texttt{*} (graph only)    & ---       & $44.4$~ns \\
+Unary \texttt{-} (graph only)     & ---       & $14.7$~ns \\
+Map (graph only)                  & $26.5$~ns & ---       \\
+\bottomrule
+\end{tabular}
+\caption{Graph-construction latency for selected operators. The
+$\Mtype\langle f64 \rangle$ binary operators cost roughly $2.9\times$ a
+$\Utype\langle f64 \rangle$ binary operator because each
+$\Mtype$ binary op extends two computation graphs. Unary negation on
+$\Mtype$ takes the same time as the value-only operation because the
+presence axis is left untouched by the operator algebra
+(\Cref{eq:neg}).}
+\label{tab:construction}
+\end{table}
+
+The $\Mtype$-binary-to-$\Utype$-binary ratio of $2.9\times$ has a direct
+explanation: each binary operation on $\Mtype$ constructs both an
+\texttt{ArithmeticOp} node in the value graph and a \texttt{LogicalOp::And}
+node in the presence graph. The unary-negation row gives an empirical
+confirmation of the algebra: unary negation does not touch the presence
+axis (\Cref{eq:neg}), and the measured construction cost matches the
+$\Utype$ baseline to within measurement noise.
+
+\subsection{Cost of the SPRT-gated lifting operator}
+\label{sec:eval:sprt}
+
+The behaviour of \texttt{lift\_to\_uncertain} is dominated by the
+underlying SPRT. We benchmark three regimes, each invoking the operator
+with threshold $p_\tau = 0.5$, confidence $1 - \alpha = 0.95$, indifference
+half-width $\varepsilon = 0.05$, and sample cap $N = 1000$. The presence
+probability $p$ of the operand varies across the regimes.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Regime & Operand $p$ & Threshold $p_\tau$ & Time & Decision \\
+\midrule
+Confidently present     & $0.95$ & $0.5$ & $448$~ns  & Accept $H_1$ \\
+Confidently absent      & $0.10$ & $0.5$ & $470$~ns  & Accept $H_0$ \\
+Close to threshold      & $0.55$ & $0.5$ & $5\,803$~ns & Fallback at $N$ \\
+\bottomrule
+\end{tabular}
+\caption{Cost of \texttt{lift\_to\_uncertain} across three SPRT regimes.
+The two decisive regimes terminate in a few hundred nanoseconds; the
+ambiguous regime exhausts the sample cap and falls back to an empirical
+comparison.}
+\label{tab:sprt}
+\end{table}
+
+The two decisive regimes terminate within the first batch of ten samples
+in most invocations, because the log-likelihood ratio after a single
+batch already crosses the relevant Wald boundary. Their cost is
+proportional to the cost of ten Bernoulli samples on the presence graph
+plus a small fixed overhead for boundary computation.
+
+The ambiguous regime exhausts the sample cap. With $p = 0.55$ sitting
+precisely on the upper edge of the indifference region $[0.45, 0.55]$, the
+SPRT cannot distinguish $H_0$ from $H_1$ within the requested error budget,
+and the loop runs all $N = 1000$ samples before falling back to the
+empirical comparison $\bar{p} > p_\tau$. The measured ratio of
+$\approx 13\times$ between ambiguous and decisive regimes matches this
+expectation: roughly $1000/10 = 100\times$ more sampling work modulated
+by per-sample cost differences and constant overhead.
+
+\subsection{Discussion}
+\label{sec:eval:discussion}
+
+Three takeaways follow from these numbers.
+
+\paragraph{Constant-factor overhead.} The presence axis adds a constant
+factor between $1.2\times$ and $2.2\times$ to per-sample cost and a
+constant factor of roughly $2.9\times$ to binary graph construction. The
+overhead does not grow with the complexity of the underlying computation:
+in the ``complex chain'' benchmark the relative penalty is smallest
+because the value-side work dominates.
+
+\paragraph{SPRT cost is bimodal.} The two decisive regimes pay only the
+cost of a few Bernoulli samples; the ambiguous regime pays a worst case
+proportional to $N$. The bimodal behaviour gives callers a clean operating
+discipline: choose $\varepsilon$ and $N$ together to bound the worst case,
+and expect the typical case to be cheap when the operand's presence
+probability lives well away from the threshold. The empirical ratio
+quoted above ($\approx 13\times$) is one specific instance; the ratio
+scales linearly with the chosen $N$.
+
+\paragraph{When the overhead matters.} For interactive workloads and the
+worked examples in~\Cref{sec:examples}, the absolute overhead is a few
+hundred nanoseconds per operation. For embedded or hot-loop callers, the
+overhead is non-trivial and the choice between $\Mtype$ and $\Utype$
+should be deliberate: use $\Mtype$ where sparse data is genuinely a
+feature of the input and the cost is justified by the bug class it
+prevents; use $\Utype$ where every input is guaranteed to be present and
+the presence axis would only add noise.

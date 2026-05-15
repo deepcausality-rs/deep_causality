@@ -1,0 +1,82 @@
+% MaybeUncertain<T>: An Extension of Uncertain<T> for Probabilistically-Present Data
+% Preprint -- do not distribute without permission of the author.
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{microtype}
+
+% Notation shortcuts.
+\newcommand{\Utype}{\mathcal{U}}
+\newcommand{\Mtype}{\mathcal{M}}
+\newcommand{\Bool}{\mathrm{bool}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\E}{\mathbb{E}}
+
+% Rust listings style.
+\lstdefinelanguage{Rust}{
+  keywords={fn, let, mut, pub, struct, impl, trait, for, in, if, else, match, return, use, mod, self, Self, as, where, type, const, static, unsafe, async, await, move, ref, dyn, box, true, false},
+  keywordstyle=\color{blue!70!black}\bfseries,
+  ndkeywords={f64, bool, usize, isize, u32, i32, u64, i64, String, Option, Result, Vec, Box},
+  ndkeywordstyle=\color{purple!70!black},
+  sensitive=true,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{gray!70!black}\itshape,
+  stringstyle=\color{olive!70!black},
+  morestring=[b]"
+}
+\lstset{
+  language=Rust,
+  basicstyle=\ttfamily\small,
+  showstringspaces=false,
+  breaklines=true,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=8pt,
+  frame=single,
+  rulecolor=\color{gray!40},
+  xleftmargin=2em
+}
+
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+
+\title{\texttt{MaybeUncertain<T>}: An Extension of \texttt{Uncertain<T>} for Probabilistically-Present Data}
+\author{Marvin Hansen\thanks{The Center for Dynamic Causality, \texttt{marvin.hansen@causalcenter.com}}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Bornholt et al.'s \texttt{Uncertain<T>} type captures value uncertainty: a quantity exists and only its measurement is noisy. Real workloads also exhibit \emph{presence uncertainty}: clinical reports go missing, sensors drop readings, GPS fixes vanish in tunnels. Folding such absent data into a wide distribution leaks fabricated numbers; wrapping it as \texttt{Option<Uncertain<T>>} collapses a probability into a Boolean and reintroduces the very uncertainty bugs \texttt{Uncertain<T>} eliminates. We present \texttt{MaybeUncertain<T>}, an extension that factors the two axes into a pair of independent random variables, $(\mathit{is\_present}: \Utype\langle \Bool \rangle,\, \mathit{value}: \Utype\langle T \rangle)$. Arithmetic propagates both axes; presence combines under AND. A statistically-gated operator \texttt{lift\_to\_uncertain} converts the type back to plain \texttt{Uncertain<T>} only when a sequential probability ratio test (SPRT) on the presence axis clears a confidence threshold. The implementation reuses Bornholt's sampling machinery, the SPRT logic, and a global sample cache, costing roughly $1.6$ to $2\times$ per sample in benchmark and single-digit microseconds in the worst SPRT case. Three worked examples (clinical trials, intermittent sensors, GPS dropouts) illustrate the extension closing a class of sparse-data bugs that the original abstraction cannot reach.
+\end{abstract}
+
+\input{sections/01_intro}
+\input{sections/02_background}
+\input{sections/03_type}
+\input{sections/04_semantics}
+\input{sections/05_implementation}
+\input{sections/06_evaluation}
+\input{sections/07_case_studies}
+\input{sections/08_discussion}
+\input{sections/09_conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

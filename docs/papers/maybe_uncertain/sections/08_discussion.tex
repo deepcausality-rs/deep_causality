@@ -1,0 +1,130 @@
+\section{Discussion and Limitations}
+\label{sec:discussion}
+
+We state honestly what $\Mtype\langle T \rangle$ does not do, and where
+adjacent literature handles similar problems differently. The aim is to
+prevent claims the type cannot support, and to mark the boundary of the
+contribution so that future work has a clear target.
+
+\subsection{The independence assumption}
+\label{sec:disc:independence}
+
+The two components of a $\Mtype\langle T \rangle$ value are modelled as
+independent random variables. In Rubin's terms this is missing at random
+(MAR)~\cite{rubin1976missing}: the event of presence carries no
+information about the value the variable would take if observed. The
+assumption is a deliberate scope choice. It captures intermittent sensors
+and many clinical-trial reporting patterns, and it lets the
+implementation reuse the existing $\Utype\langle T \rangle$ sampling and
+caching machinery without change.
+
+The assumption fails for missing-not-at-random (MNAR) data, where the
+unobserved value influences the probability of being observed. A glucose
+sensor that fails preferentially during high readings, a survey
+respondent who declines to answer when the answer is socially
+undesirable, and a patient who stops reporting because the drug stopped
+working all violate independence. For these workloads, the correct
+construction is a joint distribution over presence and value, and the
+type would need a new constructor accepting that joint distribution
+together with new sampling logic that respects the conditional structure.
+We mark this as the principal direction for future work.
+
+\subsection{SPRT termination}
+\label{sec:disc:sprt}
+
+The gating operator runs an SPRT against a caller-supplied sample cap.
+Wald's optimality result~\cite{wald1948optimum} bounds the
+\emph{expected} number of samples; it does not bound the worst case.
+When the operand's true presence probability sits inside the
+indifference region $[p_\tau - \varepsilon, p_\tau + \varepsilon]$, the
+test typically runs to the cap before falling back to the empirical
+comparison $\bar p > p_\tau$. The benchmark in~\Cref{sec:eval:sprt}
+quantifies this regime at a few microseconds with the default cap of
+$N = 1000$.
+
+The fallback decision is sound under the empirical evidence collected but
+does not carry the same Type I and Type II error guarantees as the
+SPRT-accepted outcomes. Callers needing tight worst-case error budgets
+should choose $\varepsilon$ and $N$ together, with $\varepsilon$ large
+enough to keep the operand out of the indifference region under expected
+operating conditions and $N$ large enough that the fallback rate is
+acceptable. Group-sequential alternatives~\cite{jennison2000groupseq}
+exist that provide closed worst-case bounds; we did not adopt one for
+this work but note them as a candidate replacement for the SPRT.
+
+\subsection{Nested presence}
+\label{sec:disc:nesting}
+
+Constructions of the form $\Mtype\langle \Mtype\langle T \rangle \rangle$
+are not the intended use of the type. The trait bound
+\texttt{ProbabilisticType} requires \texttt{Clone}, \texttt{Send},
+\texttt{Sync}, and \texttt{IntoSampledValue} / \texttt{FromSampledValue}
+on the carrier type; $\Mtype\langle T \rangle$ does not implement these
+trait conversions, so the Rust type system refuses the nesting at
+compile time. The design rationale is that two layers of probabilistic
+presence are almost never what an application means: nested presence
+collapses semantically (``the optional optional value'' is just the
+optional value), and the nested encoding obscures the single Bernoulli
+that the modeller actually cares about. We treat the absence of nesting
+as a feature rather than a limitation.
+
+\subsection{Quality of the presence prior}
+\label{sec:disc:prior}
+
+The Bernoulli parameter $p$ supplied to $\textsc{fromBernoulli}$ is the
+modeller's responsibility. A wrong $p$ poisons the analysis: too high
+and the gating operator passes data that should have been excluded; too
+low and the operator excludes data that should have been included. The
+type does not estimate $p$ for the caller; it accepts what is given. For
+intermittent sensors $p$ can be estimated from historical drop rates;
+for clinical trials it can be estimated from prior reporting compliance.
+We expect future versions of the crate to provide helpers for these
+common estimators, but the abstraction itself is intentionally agnostic.
+
+\subsection{Adjacent constructions this work does not displace}
+\label{sec:disc:notdisplace}
+
+Four communities have already addressed pieces of the problem
+$\Mtype\langle T \rangle$ solves, and a careful reading should clarify
+where this work sits relative to each.
+
+Probabilistic databases~\cite{antova2007maybms,cheng2008orion} factor
+tuple existence from attribute value in the relational setting. The
+mathematical content is the same as $\Mtype\langle T \rangle$; the
+delivery is different. A probabilistic database manages this factoring
+inside a query engine, exposing it through SQL-flavoured query languages
+and ad-hoc lineage tracking. $\Mtype\langle T \rangle$ exposes the same
+factoring as a value-level type usable anywhere
+\texttt{Option<T>} would go. Applications that already use a relational
+backend should keep using it; applications that compute over values in
+the host language now have a type that matches the semantics they need.
+
+Sensor-fusion control theory~\cite{sinopoli2004kalman} factors presence
+from value inside specific numerical filters. Sinopoli et al.'s analysis
+of Kalman filtering with intermittent observations is mathematically
+identical to the Bernoulli-times-Gaussian construction
+$\Mtype\langle f64 \rangle$ implements, and the convergence theory there
+gives strong guidance for designing filters that survive dropouts.
+$\Mtype\langle T \rangle$ does not replace this work; it complements it
+by making the factoring available to application code that lives
+outside the filter.
+
+Probabilistic programming languages handle missing data at the modelling
+layer~\cite{carpenter2017stan,bingham2019pyro,ge2025turing}. Pyro's
+\texttt{MaskedDistribution} is the closest mechanical analogue. PPL
+encodings let the modeller state the missingness model and run inference
+on it; they require the user to commit to a modelling layer and an
+inference engine. $\Mtype\langle T \rangle$ does not run inference. It is
+a value-level type that supports sampling and SPRT-gated lifting,
+suitable for application code where a full PPL would be the wrong tool.
+
+Probabilistic refinement type systems and relational program
+logics~\cite{vasilenko2022safecouplings,avanzini2025erhl} verify
+quantitative relational properties of probabilistic programs.
+$\Mtype\langle T \rangle$ does not aspire to this layer of the stack. It
+is a runtime abstraction with measured overhead, not a verification
+formalism. A natural follow-up is to specify and verify properties of
+programs that use $\Mtype\langle T \rangle$ using one of these logics;
+we leave that to future work.
+
+\newpage

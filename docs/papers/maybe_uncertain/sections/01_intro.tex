@@ -1,0 +1,103 @@
+\section{Introduction}
+\label{sec:intro}
+
+Estimates pervade modern programs. GPS readings, sensor streams, machine-learning
+predictions, and survey data all arrive carrying error. Discrete types
+(\texttt{float}, \texttt{int}, \texttt{bool}) encourage developers to treat
+these estimates as facts, and Bornholt et al.~\cite{bornholt2014uncertain}
+characterised three resulting bug classes: using estimates as facts ignores
+random error, computation compounds that error, and Boolean questions on
+probabilistic data create false positives and false negatives. Their
+\texttt{Uncertain<T>} type addresses all three by lifting random variables into
+the type system, propagating distributions through arithmetic, and discharging
+conditionals via Wald's sequential probability ratio test~\cite{wald1945sprt}.
+
+\texttt{Uncertain<T>} assumes the value exists. The only uncertainty it models
+is in the measurement. Many real workloads violate this assumption. A patient
+in a headache trial reports pain reduction on some days and not others;
+when a report arrives, the reduction itself is noisy. A temperature sensor on
+an embedded device occasionally drops a sample;
+when a sample arrives, the reading carries Gaussian noise. A vehicle entering
+a tunnel loses its GPS fix for fifteen seconds;
+when fixes resume, each carries a horizontal-accuracy radius.
+Three failure modes appear in practice when programmers handle such data with
+existing tools.
+
+\paragraph{Phantom presence.} The simplest workaround is to assume the value
+always arrives and assign a wide distribution to the missing case. This
+silently injects a fabricated number into downstream arithmetic. The result
+looks uncertain, in the type-system sense, but the uncertainty has no
+empirical grounding.
+
+\paragraph{Hard-gated drop.} A more careful programmer wraps the type as
+\texttt{Option<Uncertain<T>>} and calls \texttt{is\_some} before using the
+value. This collapses the probabilistic presence into a deterministic Boolean
+at the boundary, recreating the very class of false-positive and false-negative
+bugs that motivated \texttt{Uncertain<T>}.
+
+\paragraph{Imputation laundering.} Statistical practice replaces missing
+values with means, zeros, or model-based imputations. The imputed quantity then
+flows through computation indistinguishable from real data. Inside a
+probabilistic type system the laundering is invisible: the type says
+``uncertain value,'' the underlying distribution is whatever the imputation
+chose, and no flag records that the number was synthesised rather than
+measured.
+
+\medskip
+
+The statistical literature names this problem cleanly. Rubin~\cite{rubin1976missing}
+distinguishes missing completely at random (MCAR), missing at random (MAR), and
+missing not at random (MNAR), and a large body of work explores estimation
+under each regime~\cite{littlerubin2019}. What is missing is a programming
+abstraction that lets the developer state, at the level of a single value,
+which assumption applies and propagates that assumption through subsequent
+computation.
+
+This paper proposes such an abstraction. \texttt{MaybeUncertain<T>} factors
+the two sources of uncertainty into a pair of independent random variables:
+$\mathit{is\_present}$, an \texttt{Uncertain<bool>} drawn from a Bernoulli
+distribution that governs whether the value exists at all, and
+$\mathit{value}$, an \texttt{Uncertain<T>} describing the value's distribution
+conditional on presence. Arithmetic operators propagate both axes; presence
+combines under AND. A statistically-gated operator,
+\texttt{lift\_to\_uncertain}, returns a plain \texttt{Uncertain<T>} only when
+an SPRT on the presence axis clears a confidence threshold; otherwise it
+returns a \texttt{PresenceError}.
+
+This is an extension, not a replacement. \texttt{MaybeUncertain<T>} reuses
+Bornholt's Bayesian-network sampling semantics, the SPRT machinery at
+conditionals, and the global sample cache. The new construction is one
+additional Bernoulli node attached to each leaf, plus AND-propagation on
+arithmetic, plus the gating operator. Per-sample overhead in our benchmarks
+falls between $1.6\times$ and $2\times$; the SPRT gate costs a few hundred
+nanoseconds when the evidence is decisive and a few microseconds when the true
+presence probability is close to the threshold.
+
+\paragraph{Contributions.} This paper makes four contributions.
+
+\begin{enumerate}
+  \item A taxonomy of three sparse-data uncertainty bugs (phantom presence,
+        hard-gated drop, imputation laundering) that the original
+        \texttt{Uncertain<T>} taxonomy does not catch.
+  \item The \texttt{MaybeUncertain<T>} type, formalised as a product of two
+        independent \texttt{Uncertain} random variables, with operator
+        semantics that propagate presence under AND.
+  \item The \texttt{lift\_to\_uncertain} gating operator, which uses SPRT on
+        the presence axis to expose the inner value type with a stated
+        confidence level.
+  \item An open-source Rust implementation in the \texttt{deep\_causality\_uncertain}
+        crate of the DeepCausality project~\cite{hansen_deepcausality}, with
+        three worked examples (clinical trial, intermittent sensor, GPS dropouts)
+        and a Criterion benchmark suite quantifying the overhead.
+\end{enumerate}
+
+\Cref{sec:background} surveys the prior work that
+\texttt{MaybeUncertain<T>} extends and the adjacent communities whose
+constructions partially overlap with ours. \Cref{sec:type}
+defines the type, its constructors, and its algebra. \Cref{sec:semantics}
+gives the sampling semantics, the Bayesian-network embedding, and the SPRT
+hypothesis at the gate. \Cref{sec:implementation} describes the Rust API and
+the reuse of existing infrastructure. \Cref{sec:evaluation} reports
+benchmark results, and \Cref{sec:examples} presents the three worked examples.
+\Cref{sec:discussion} addresses limitations honestly, and
+\Cref{sec:conclusion} concludes.
