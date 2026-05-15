@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use DeepCausality, please cite it as below."
+title: "DeepCausality"
+authors:
+  - family-names: Hansen
+    given-names: Marvin
+    orcid: "https://orcid.org/0009-0000-1159-8173"
+    affiliation: "Center for Dynamic Causality"
+repository-code: "https://github.com/deepcausality-rs/deep_causality"
+license: MIT
+type: software
