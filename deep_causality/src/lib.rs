@@ -3,15 +3,18 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! DeepCausality is a hyper-geometric computational causality library
-//! that enables fast and deterministic context-aware causal reasoning over complex causality models.
+//! DeepCausality is a Rust framework for dynamic causality. It enables fast, deterministic,
+//! context-aware causal reasoning over complex multi-stage causal models, and stays correct
+//! when both the data and the rules evolve at runtime.
 //!
 //! Why DeepCausality?
-//! * DeepCausality is written in Rust with production-grade safety, reliability, and performance in mind.
-//! * DeepCausality provides recursive causal data structures that concisely express arbitrary complex causal structures.
-//! * DeepCausality enables context awareness across data-like, time-like, space-like, spacetime-like entities stored within (multiple) context-hyper-graphs.
-//! * DeepCausality simplifies modeling of complex tempo-spatial patterns.
-//! * DeepCausality comes with Causal State Machine (CSM)
+//! * Written in Rust with production-grade safety, reliability, and performance in mind.
+//! * Provides recursive causal data structures that concisely express arbitrary complex causal structures.
+//! * Threads context awareness across data-like, time-like, space-like, and spacetime-like entities stored within one or more context hypergraphs.
+//! * Models complex tempo-spatial patterns through the Causal Monad and the Effect Propagation Process.
+//! * Ships with a Causal State Machine (CSM) for pairing inference with action.
+//!
+//! See <https://deepcausality.com/> for the documentation, the worked examples, and the EPP monograph.
 //!
 mod alias;
 mod errors;
