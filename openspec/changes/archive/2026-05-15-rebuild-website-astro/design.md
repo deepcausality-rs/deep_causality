@@ -36,12 +36,14 @@ Constraints from `AGENTS.md`:
 ## Decisions
 
 ### D1. Framework: Astro
-- **Choice**: Astro 4.x with the Markdown/MDX content collections API.
-- **Why**: Native Markdown + frontmatter, first-class i18n routing, islands architecture keeps JS payload near zero for a marketing/docs site, deploys cleanly to Cloudflare Pages.
+- **Choice (originally planned)**: Astro 4.x with the Markdown/MDX content collections API.
+- **Shipped**: **Astro 6.3.2** with `@astrojs/mdx` 5.0.5. The site started on 5.x (4.x was already EOL) and was upgraded cleanly to 6 with no API changes in our code; the content-collection glob loader, `<Code>` component, and i18n config all work identically across the 5→6 step.
+- **Why Astro**: Native Markdown + frontmatter, first-class i18n routing, islands architecture keeps JS payload near zero for a marketing/docs site, deploys cleanly to Cloudflare Pages.
 - **Alternatives considered**: Next.js (heavier, React-mandated, overkill for static-first content), Docusaurus (docs-shaped, weaker for marketing landing), Zola (Rust-native but smaller ecosystem, weaker i18n + MDX story), staying with Hugo (rejected — that's the problem).
 
 ### D2. Hosting: Cloudflare Pages
-- **Choice**: Cloudflare Pages with the Astro `@astrojs/cloudflare` adapter set to static output for launch.
+- **Choice**: Cloudflare Pages, **static output** (no adapter needed — Pages serves `dist/` directly).
+- **Shipped**: Live at https://deep-causality.pages.dev. Cloudflare's existing fork→preview / main→production auto-deploy already exists; no GitHub Actions workflow added by this change.
 - **Why**: Free tier sufficient for traffic; Workers available later for any dynamic edge logic; user has prior Cloudflare familiarity.
 - **Alternatives considered**: Vercel/Netlify (fine but no reason to switch ecosystems), self-hosted (unnecessary ops burden).
 
@@ -76,17 +78,37 @@ Below the fold:
 4. Pillars: Causaloid, Context, Effect Ethos — one card each, linking to docs.
 5. Footer.
 
-### D8. Six code-example domain selection (initial slate)
-Chosen to span fields engineers recognize and to exercise different parts of the library:
+### D8. Code-example slate (final)
+The original draft picked six domains _by what would resonate with engineers_, not by what existed in `examples/`. User review caught that several picks (quant-finance, observability-SRE in the form imagined) had no real example to draw from. The final slate is six domains backed by **real, compilable crates already shipping under `examples/`**:
 
-1. **Quant finance / trading** — multi-stage causal rule firing on a price stream (uses `deep_causality` + sliding window from `deep_causality_data_structures`).
-2. **Robotics / control** — context-aware effect propagation with a dynamic spacetime context (uses `Context` hypergraph + `deep_causality_topology`).
-3. **Observability / SRE** — causal root-cause chain on log/metric events (uses `Causaloid` composition).
-4. **Bioinformatics / signal processing** — MRMR feature selection from `deep_causality_algorithms`.
-5. **Physics simulation** — effect propagation under changing constraints (uses `deep_causality_physics` + `deep_causality_multivector`).
-6. **Policy / compliance** — Effect Ethos verifying operational rules at runtime (uses `deep_causality_ethos`).
+| Slug | Domain | Backing crate |
+|---|---|---|
+| `async-event-inference` | Async / Tokio | `examples/tokio_example/` |
+| `pearl-counterfactual` | Counterfactuals | `examples/starter_example/` |
+| `sensor-monitoring-csm` | Sensor monitoring | `examples/csm_examples/csm_basic/` |
+| `aerospace-flight-envelope` | Aerospace | `examples/avionics_examples/flight_envelope_monitor/` |
+| `biomedical-tumor-treatment` | Biomedical | `examples/medicine_examples/tumor_treatment/` |
+| `physics-maxwell` | Physics | `examples/physics_examples/maxwell/` |
 
-Each detail page: longer code, runnable instructions, link to the corresponding crate(s) and to the relevant monograph chapter.
+Landing-page order (left-to-right, top-to-bottom): Tokio → Pearl → CSM → aerospace → biomedical → physics.
+
+Four further detail pages added at user request, listed only on `/examples/` (not on the landing-page grid): `protein-folding`, `event-horizon-probe`, `grmhd`, `gm-recovery`.
+
+Two original-slate domains (**quant-finance** and **observability-SRE**) have no real example yet. Each was scoped as a separate OpenSpec change for a new Rust example crate. Both were **dropped** by the user during the website project; can be re-proposed when those use cases materialize.
+
+Each detail page: file map, line-anchored code excerpts pulled directly from the real source, walkthrough, run instructions (`cargo run --release -p <crate> --example <name>`), related-crate pills, and links into the docs concept pages.
+
+### D8a. Category grouping (added during shipping)
+With ten detail pages, the master `/examples/` list got long. User added a four-group taxonomy via a `category` enum field on the examples content schema:
+
+| Category | Examples |
+|---|---|
+| Foundations | Pearl counterfactual · Sensor monitoring CSM · Async event inference |
+| Aerospace | Flight envelope monitor |
+| Physics | Maxwell · Event horizon probe · GRMHD · GM recovery |
+| Medicine | Tumor treatment · Protein folding |
+
+Surface: top-nav "Examples" item is a dropdown that opens on hover and on focus-within (desktop) or expands as a nested sub-list under "Examples" in the mobile disclosure menu. Each category has its own static page at `/examples/<category>/`; the master `/examples/` page also carries a quick tag-row for non-dropdown access. Detail-page URLs are unchanged (`/examples/<slug>/`), so every inbound link from blog posts and concept pages keeps working.
 
 ### D9. Documentation tree (new, not migrated)
 Source of truth = monograph in `papers/` + current crate state.

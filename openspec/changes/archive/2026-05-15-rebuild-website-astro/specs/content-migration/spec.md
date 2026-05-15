@@ -30,7 +30,15 @@ Brand and content imagery from `ctx/static/` SHALL be migrated into `website/web
 - **THEN** the migrated page SHALL reference the image at the corresponding path under `/img/` and the image SHALL load with HTTP 200
 
 ### Requirement: Curated allowlist for non-blog evergreen pages
-A small allowlist of evergreen non-blog pages from `ctx/content/` (about, license, and similar static pages) SHALL be migrated. A contact page SHALL NOT be migrated; the new site has no contact form. The legacy long-form documentation pages on the live deepcausality.com site SHALL NOT be migrated verbatim and SHALL be considered superseded by the newly authored documentation.
+A small allowlist of evergreen non-blog pages from `ctx/content/` (about, license, accessibility, community, and similar static pages) SHALL be migrated. A contact page SHALL NOT be migrated; the new site has no contact form. The legacy long-form documentation pages on the live deepcausality.com site SHALL NOT be migrated verbatim and SHALL be considered superseded by the newly authored documentation.
+
+#### Scenario: About / community / accessibility routes resolve
+- **WHEN** the site is built
+- **THEN** static routes at `/about/`, `/community/`, and `/accessibility/` SHALL exist with content rebranded to "dynamic causality" and with all outbound links pointing at the current monorepo
+
+#### Scenario: No `/contact/` route is generated
+- **WHEN** the site is built
+- **THEN** no `/contact/` route SHALL exist; the contact page from the legacy site is intentionally excluded
 
 ### Requirement: `ctx/docs/` intro material is used as a source, not migrated verbatim
 The high-level intro files in `ctx/docs/` (`INTRO.md`, `CORE.md`, `DEEP_DIVE.md`, `HAFT.md`, `ETHOS.md`, `DISCOVERY.md`, `PHYSICS.md`, `TOPOLOGY.md`, `TENSOR.md`, `UNIFORM_MATH.md`) SHALL be treated as raw source material for the newly authored `/docs/concepts/` and `/docs/reference/` pages. They SHALL be rewritten to apply the "dynamic causality" rebrand and the AI Styleguide; their original file structure SHALL NOT be preserved on the new site.
