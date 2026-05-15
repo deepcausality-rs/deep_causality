@@ -54,16 +54,19 @@
 
 <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; text-align: center;">
 
-[Website](https://deepcausality.com) | [Getting started](https://deepcausality.com/getting-started/) | [Documentation](https://deepcausality.com/docs/intro/) | [Blog](https://deepcausality.com/blog/) | [Discord](https://discord.gg/Bxj9P7JXSj) | [Crates](https://crates.io/crates/deep_causality)
+[Website](https://deepcausality.com) | [Getting started](https://deepcausality.com/getting-started/) | [Blog](https://deepcausality.com/blog/) | [Discord](https://discord.gg/Bxj9P7JXSj) | [Crates](https://crates.io/crates/deep_causality)
 
 </div>
 
 # DeepCausality: Dynamic Causality
 
-DeepCausality is the reference implementation of the **Effect Propagation Process (EPP)**, a single axiomatic foundation for dynamic causality based on Whitehead's process metaphysics, with the consequence that the resulting framework is general-relativistic-native and quantum-native. Classical computational causality frameworks (Pearl's SCM, Granger
-causality, DBNs) assume fixed background spacetime and static causal structure and thus cannot handle dynamic causal structures; DeepCausality contributes **dynamic, adaptive, and emergent** causality as first-class modalities, with a programmable deontic layer for verifiable safety while [classical causality still can be expressed](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples). 
-
-DeepCausality is hosted as a sandbox project at the [Linux Foundation for Data & AI](https://landscape.lfai.foundation/).
+DeepCausality is the reference implementation of the **Effect Propagation Process (EPP)**, a single axiomatic foundation
+for dynamic causality based on Whitehead's process metaphysics, with the consequence that the resulting framework is
+general-relativistic-native and quantum-native. Classical computational causality frameworks (Pearl's SCM, Granger
+causality, DBNs) assume fixed background spacetime and static causal structure and thus cannot handle dynamic causal
+structures; DeepCausality contributes **dynamic, adaptive, and emergent** causality as first-class modalities, with a
+programmable deontic layer for verifiable safety. DeepCausality is hosted as a sandbox project at
+the [Linux Foundation for Data & AI](https://landscape.lfai.foundation/).
 
 ## Getting Started
 
@@ -109,6 +112,9 @@ This walks **Pearl's Ladder of Causation**:
 2. **Intervention** (Rung 2): `intervene(3.0)` forces a value mid-chain.
 3. **Counterfactual** (Rung 3): Same chain, different outcome under the intervention.
 
+DeepCausality can express
+all [major frameworks of classical computation causality](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples).
+
 ---
 
 ## Examples
@@ -127,17 +133,17 @@ See [examples/README.md](examples/README.md) for the full catalogue of available
 
 ## What is Unique
 
-|                                                      |                                                                                                                 |
-|------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| **One axiom, three primitives**                      | Causaloid, Context, and Causal State Machine derived from a single functional-dependency axiom                  |
-| **Three causal modalities**                          | Dynamic, adaptive, and emergent causality, going beyond the static-structure assumption                         |
-| **Effect Propagation Monads**                        | `PropagatingEffect` and `PropagatingProcess` for composable  causal pipelines                                   |
-| **Effect Ethos**                                     | Defeasible deontic calculus (after Forbus) that verifies actions against an immutable ethos before execution    |
-| **Uniform mathematics**                              | Tensors, MultiVectors, Manifolds, and `PropagatingEffect` share one categorical interface (Functor / Monad / Comonad) via arity-5 HKT in stable Rust; multi-physics pipelines compose across domains in a single monadic flow |
-| **Geometric Algebra**                                | Clifford algebras (Pauli, spacetime, conformal, projective, Dixon, Spin(10) GUA) with shared metric conventions |
-| **Differential Topology**                            | Manifolds, simplicial complexes, lattice gauge theory verified against 24 reference results from Creutz         |
-| **Float106 precision**                               | 106-bit float (~32 decimal digits) on stable Rust, several × faster than IEEE binary128                         |
-| **Causal Discovery**                                 | SURD and MRMR algorithms wrapped in a typestate DSL that closes the loop from data to model                     |
+|                                 |                                                                                                                                                                                                                               |
+|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **One axiom, three primitives** | Causaloid, Context, and Causal State Machine derived from a single functional-dependency axiom                                                                                                                                |
+| **Three causal modalities**     | Dynamic, adaptive, and emergent causality, going beyond the static-structure assumption                                                                                                                                       |
+| **Effect Propagation Monads**   | `PropagatingEffect` and `PropagatingProcess` for composable  causal pipelines                                                                                                                                                 |
+| **Effect Ethos**                | Defeasible deontic calculus (after Forbus) that verifies actions against an immutable ethos before execution                                                                                                                  |
+| **Uniform mathematics**         | Tensors, MultiVectors, Manifolds, and `PropagatingEffect` share one categorical interface (Functor / Monad / Comonad) via arity-5 HKT in stable Rust; multi-physics pipelines compose across domains in a single monadic flow |
+| **Geometric Algebra**           | Clifford algebras (Pauli, spacetime, conformal, projective, Dixon, Spin(10) GUA) with shared metric conventions                                                                                                               |
+| **Differential Topology**       | Manifolds, simplicial complexes, lattice gauge theory verified against 24 reference results from Creutz                                                                                                                       |
+| **Float106 precision**          | 106-bit float (~32 decimal digits) on stable Rust, several × faster than IEEE binary128                                                                                                                                       |
+| **Causal Discovery**            | SURD and MRMR algorithms wrapped in a typestate DSL that closes the loop from data to model                                                                                                                                   |
 
 ---
 
@@ -220,34 +226,16 @@ all in one monadic chain. The [Maxwell example](examples/physics_examples/maxwel
 grades of a single electromagnetic field `F = ∇A`, which cuts the scalar count from six to four (~50% compute reduction)
 and is directly applicable to 5G/6G phased-array antenna design.
 
-### Layered Stack
-
-The reference implementation is a layered scientific-computing stack; each layer is independently usable, and layers
-compose monadically through the HKT machinery in the foundation.
-
-```
-┌─────────────────────────────────────────────────┐
-│  Causal Discovery   deep_causality_discovery    │
-├─────────────────────────────────────────────────┤
-│  Causal Framework   deep_causality_core         │
-│                     deep_causality              │
-│                     deep_causality_ethos        │
-├─────────────────────────────────────────────────┤
-│  Physics            deep_causality_physics      │
-├─────────────────────────────────────────────────┤
-│  Mathematics        deep_causality_tensor       │
-│                     deep_causality_multivector  │
-│                     deep_causality_topology     │
-├─────────────────────────────────────────────────┤
-│  Foundation         deep_causality_num          │
-│                     deep_causality_haft         │
-│                     deep_causality_metric  ─── shared sign conventions
-└─────────────────────────────────────────────────┘
-```
-
 ---
 
 ## Crate Ecosystem
+
+### Causal Discovery
+
+| Crate                                                              | Description                                                                           |
+|--------------------------------------------------------------------|---------------------------------------------------------------------------------------|
+| [`deep_causality_discovery`](deep_causality_discovery/README.md)   | Causal Discovery Language (typestate DSL: load → clean → select → discover → analyse) |
+| [`deep_causality_algorithms`](deep_causality_algorithms/README.md) | SURD, MRMR, and feature-selection primitives                                          |
 
 ### Causal Framework
 
@@ -257,14 +245,6 @@ compose monadically through the HKT machinery in the foundation.
 | [`deep_causality_core`](deep_causality_core/README.md)           | `PropagatingEffect`, `PropagatingProcess`, `CausalMonad`, `CausalEffectSystem`, `ControlFlowBuilder` |
 | [`deep_causality_ethos`](deep_causality_ethos/README.md)         | `EffectEthos` and `Teloid` for defeasible deontic reasoning                                          |
 | [`deep_causality_uncertain`](deep_causality_uncertain/README.md) | `Uncertain<T>` and `MaybeUncertain<T>` (after Bornholt et al.)                                       |
-| [`ultragraph`](ultragraph/README.md)                             | Two-phase hypergraph backend for CausaloidGraph and Context                                          |
-
-### Causal Discovery
-
-| Crate                                                              | Description                                                                           |
-|--------------------------------------------------------------------|---------------------------------------------------------------------------------------|
-| [`deep_causality_discovery`](deep_causality_discovery/README.md)   | Causal Discovery Language (typestate DSL: load → clean → select → discover → analyse) |
-| [`deep_causality_algorithms`](deep_causality_algorithms/README.md) | SURD, MRMR, and feature-selection primitives                                          |
 
 ### Physics
 
@@ -288,6 +268,7 @@ compose monadically through the HKT machinery in the foundation.
 | [`deep_causality_num`](deep_causality_num/README.md)       | Magma → Field algebraic hierarchy, `Float106`, Complex/Quaternion/Octonion division algebras      |
 | [`deep_causality_haft`](deep_causality_haft/README.md)     | Arity-5 higher-kinded types via witness pattern; Effect / Functor / Applicative / Monad / CoMonad |
 | [`deep_causality_metric`](deep_causality_metric/README.md) | Single source of truth for metric signatures (East Coast, West Coast, Cl(p,q,r))                  |
+| [`ultragraph`](ultragraph/README.md)                       | Two-phase hypergraph backend for CausaloidGraph and Context                                       |
 
 ### Utilities
 
@@ -299,7 +280,7 @@ compose monadically through the HKT machinery in the foundation.
 
 ---
 
-##  Build & Test
+## Build & Test
 
 ```bash
 # Optimized build with SIMD
@@ -356,7 +337,6 @@ Inspired by research from:
 * [Judea Pearl](http://bayes.cs.ucla.edu/jp_home.html): Structural Causal Models
 * [Lucien Hardy](https://perimeterinstitute.ca/people/lucien-hardy): Causaloid framework
 * [Elias Bareinboim](https://causalai.net/): Transportability and data fusion
-* [Kenneth Forbus](https://users.cs.northwestern.edu/~forbus/): Defeasible deontic calculus
 
 Implements research from:
 
@@ -392,3 +372,43 @@ See [SECURITY.md](SECURITY.md) for security policies.
 [![JetBrains logo.](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg)](https://jb.gg/OpenSource)
 
 [JetBrains](https://www.jetbrains.com/) provides the project with an all-product license.
+
+<a href="https://www.causalcenter.com">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="img/causal_center_logo_dark.svg">
+    <img src="img/causal_center_logo.svg" alt="Center for Dynamic Causality" width="140">
+  </picture>
+</a>
+
+The [Center for Dynamic Causality](https://www.causalcenter.com) contributes ongoing research and resources to the DeepCausality project.
+
+
+---
+
+## Citation
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20195214.svg)](https://doi.org/10.5281/zenodo.20195214)
+
+If you use DeepCausality in your research, please cite it using the metadata in [`CITATION.cff`](CITATION.cff), or
+directly as follows.
+
+**APA:**
+
+> Hansen, M. (2026). *DeepCausality* [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.20195214
+
+**BibTeX:**
+
+```bibtex
+@software{hansen_deepcausality,
+    author = {Hansen, Marvin},
+    title = {DeepCausality: A Hypergeometric Computational Causality Library for Rust},
+    publisher = {Zenodo},
+    url = {https://github.com/deepcausality-rs/deep_causality},
+    doi = {10.5281/zenodo.20195214},
+    orcid = {0009-0000-1159-8173}
+}
+```
+
+The DOI above represents all versions, and will always
+resolve to the latest one. To cite a specific release, use the version-specific DOI listed on the
+project's [Zenodo record](https://doi.org/10.5281/zenodo.20195214).
