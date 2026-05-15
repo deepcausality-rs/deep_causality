@@ -1,0 +1,47 @@
+---
+// "What is dynamic causality?" — below-the-fold plain-language explainer.
+// Three short paragraphs, prose-measure constrained, no decorative imagery.
+---
+<section class="explainer">
+  <div class="explainer-inner">
+    <p class="eyebrow">What is dynamic causality</p>
+    <h2>Causal reasoning that doesn&rsquo;t freeze the world.</h2>
+    <div class="prose">
+      <p>
+        Most causal-inference libraries assume a static graph and a fixed set of rules. Real systems
+        rarely cooperate. A trading regime shifts; a robot enters a new room; a service mesh reroutes
+        traffic. The variables stay the same; the relationships between them do not.
+      </p>
+      <p>
+        DeepCausality treats causality as a spacetime-agnostic functional dependency. Causaloids
+        encode each rule as a small composable unit. A Context hypergraph encodes the environment
+        those rules operate in. The Effect Ethos verifies that whatever the rules conclude still
+        satisfies the operational policies you have to honor.
+      </p>
+      <p>
+        The framework is written in Rust, runs in real time, and stays correct when both the data
+        and the rules evolve under it.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .explainer {
+    padding: var(--space-9) 0;
+    border-top: 1px solid var(--line-1);
+  }
+  .explainer-inner {
+    max-width: var(--w-prose);
+    margin: 0 auto;
+    padding: 0 var(--space-5);
+    display: flex; flex-direction: column; gap: var(--space-4);
+  }
+  .eyebrow {
+    margin: 0;
+    font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase; color: var(--fg-2);
+  }
+  h2 { margin: 0 0 var(--space-3) 0; }
+  .prose p { color: var(--fg-1); max-width: var(--measure); }
+</style>

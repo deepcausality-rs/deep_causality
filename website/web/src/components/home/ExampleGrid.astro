@@ -1,0 +1,45 @@
+---
+import ExampleCard from './ExampleCard.astro';
+import { examples } from './examples';
+---
+<section class="examples">
+  <div class="examples-inner">
+    <header class="examples-head">
+      <p class="eyebrow">Six fields, one framework</p>
+      <h2>What can you build with it</h2>
+    </header>
+    <div class="example-grid" role="list">
+      {examples.map((ex, i) => (
+        <div role="listitem"><ExampleCard example={ex} index={i} /></div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .examples { padding: var(--space-9) 0; }
+  .examples-inner { max-width: var(--w-page); margin: 0 auto; padding: 0 var(--space-5); }
+  .examples-head { margin-bottom: var(--space-6); display: flex; flex-direction: column; gap: var(--space-2); }
+  .eyebrow {
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin: 0;
+  }
+  .examples-head h2 { margin: 0; }
+
+  .example-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+  }
+
+  @media (max-width: 1080px) {
+    .example-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 720px) {
+    .example-grid { grid-template-columns: 1fr; }
+  }
+</style>

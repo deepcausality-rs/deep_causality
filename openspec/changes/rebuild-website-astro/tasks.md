@@ -11,34 +11,37 @@
 
 ## 2. Brand identity & visual design
 
-- [ ] 2.0 Invoke the `design-taste-frontend` skill to produce the design direction: typography scale, color system, spacing scale, shadow language, motion rules, and component-architecture conventions. Output committed as `website/web/DESIGN.md` and referenced by every page implementation below. Also consult `high-end-visual-design` and `redesign-existing-projects` skills where relevant.
+- [x] 2.0 Invoke the `design-taste-frontend` skill to produce the design direction: typography scale, color system, spacing scale, shadow language, motion rules, and component-architecture conventions. Output committed as `website/web/DESIGN.md` and referenced by every page implementation below. — _Done. Dark + light themes (dark default), accent calibrated to hero art, anti-patterns list. Canonical tokens in `src/styles/tokens.css`. Pre-paint theme script lives in BaseLayout._
 - [ ] 2.1 Place logo variants and favicons under `website/web/public/brand/`
 - [ ] 2.2 Move the hero art from `ctx/static/img/frontpage-art.webp` to `website/web/public/img/frontpage-art.webp` (copy; do not delete source per Golden Rule)
 - [ ] 2.3 Author `/docs/concepts/glossary` defining: dynamic causality, Causaloid, Context, Effect Ethos, Causal Reasoning, Effect Propagation Process — plus a "former framing" entry addressing the prior "hypergeometric computational causality" label
 - [ ] 2.4 Audit all hero, nav, and meta copy to use the "dynamic causality" framing
 - [ ] 2.5 Add a build-time check (script invoked from `pnpm build`) that greps `dist/**/*.html` for "hypergeometric" and fails on any hit outside `/docs/monograph/` and `/docs/concepts/glossary/`, and for the AI Styleguide banned phrases ("delve into", "shed light on", "game-changer", "unlock the potential", "not only … but also") and fails on any hit anywhere
-- [ ] 2.6 Confirm with user: final tagline wording (D6 candidate or alternative)
+- [x] 2.6 Confirm with user: final tagline wording (D6 candidate or alternative) — _confirmed: "Dynamic causality for advanced systems."_
 
 ## 3. Landing page
 
-- [ ] 3.1 Implement the hero section: logo, rebranded tagline, "Read the docs" CTA → `/docs/getting-started`, "View on GitHub" CTA → repo URL
-- [ ] 3.2 Implement the six-card code-example grid component
-- [ ] 3.3 Write or assemble the six Rust snippets (10–20 lines each) for: quant finance / trading, robotics / control, observability / SRE, bioinformatics / signal processing, physics simulation, policy / compliance
-- [ ] 3.4 Add syntax highlighting (Shiki via Astro) for Rust code blocks
-- [ ] 3.5 Implement the below-the-fold "What is dynamic causality?" explainer (3 short paragraphs)
-- [ ] 3.6 Implement the three-pillar section linking to `/docs/concepts/causaloid`, `/docs/concepts/context`, `/docs/concepts/effect-ethos`
-- [ ] 3.7 Verify at 1440×900 that above-the-fold contains only hero + first row of cards (no philosophical copy)
+- [x] 3.1 Implement the hero section: logo, rebranded tagline, "Read the docs" CTA → `/docs/getting-started`, "View on GitHub" CTA → repo URL — _asymmetric split (7/12 + 5/12); hero art frame on the right at desktop, stacks above text below 900px._
+- [x] 3.2 Implement the six-card code-example grid component — _3×2 grid with middle-card stagger above 1200px, 2-col at ≤1080, 1-col at ≤720._
+- [x] 3.3 Write or assemble the six Rust snippets (10–20 lines each) for: quant finance / trading, robotics / control, observability / SRE, bioinformatics / signal processing, physics simulation, policy / compliance — _illustrative snippets in `src/components/home/examples.ts`; compilable end-to-end versions land on detail pages._
+- [x] 3.4 Add syntax highlighting (Shiki via Astro) for Rust code blocks — _`shikiConfig` in `astro.config.mjs`, `github-dark` theme, rendered via the built-in `<Code>` component._
+- [x] 3.5 Implement the below-the-fold "What is dynamic causality?" explainer (3 short paragraphs) — _prose-measure constrained, no decorative imagery, anchored on the rebrand._
+- [x] 3.6 Implement the three-pillar section linking to `/docs/concepts/causaloid`, `/docs/concepts/context`, `/docs/concepts/effect-ethos` — _SVG connector path across the row at desktop; stacks with vertical hairlines below 900px. Not a 3-equal-cards row._
+- [ ] 3.7 Verify at 1440×900 that above-the-fold contains only hero + first row of cards (no philosophical copy) — _layout sized to satisfy this; verification needs a browser/headless run on the user side._
+
+### Vendored fonts (out-of-band improvement)
+- [x] 3.x Vendor `Geist Variable` and `JetBrains Mono Variable` woff2 files into `public/fonts/`; add `@font-face` rules in `src/styles/fonts.css`; preload primary files in `BaseLayout.astro`; remove `@fontsource` packages so no node_modules indirection at runtime — _per user feedback: avoid CDN/render-blocking font loads._
 
 ## 4. Six code-example detail pages
 
-- [ ] 4.1 Create the `examples` collection route `/examples/[slug]` driven by MDX files in `src/content/examples/en/`
-- [ ] 4.2 Author `examples/en/quant-finance.mdx` with expanded code, walkthrough, run instructions, related crates, further reading
-- [ ] 4.3 Author `examples/en/robotics-control.mdx`
-- [ ] 4.4 Author `examples/en/observability-sre.mdx`
-- [ ] 4.5 Author `examples/en/bioinformatics-signal.mdx`
-- [ ] 4.6 Author `examples/en/physics-simulation.mdx`
-- [ ] 4.7 Author `examples/en/policy-compliance.mdx`
-- [ ] 4.8 Verify each landing-page card links to its corresponding detail page and all six pages render
+- [x] 4.1 Create the `examples` collection route `/examples/[slug]` driven by MDX files in `src/content/examples/en/` — _route at `src/pages/examples/[...slug].astro`, plus `/examples/` index._
+- [x] 4.2 Author `examples/en/quant-finance.mdx` with expanded code, walkthrough, run instructions, related crates, further reading
+- [x] 4.3 Author `examples/en/robotics-control.mdx`
+- [x] 4.4 Author `examples/en/observability-sre.mdx`
+- [x] 4.5 Author `examples/en/bioinformatics-signal.mdx`
+- [x] 4.6 Author `examples/en/physics-simulation.mdx`
+- [x] 4.7 Author `examples/en/policy-compliance.mdx`
+- [x] 4.8 Verify each landing-page card links to its corresponding detail page and all six pages render — _all six slugs build; landing-page card hrefs match the generated routes._
 
 ## 5. Documentation tree (newly authored)
 

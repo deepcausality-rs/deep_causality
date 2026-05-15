@@ -1,0 +1,93 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+const path = Astro.url.pathname;
+const isActive = (href: string) => path === href || (href !== '/' && path.startsWith(href));
+---
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="/" aria-label="DeepCausality home">
+      <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4">
+        <path d="M4 11 L11 4 L18 11 L11 18 Z" />
+        <circle cx="11" cy="11" r="2" fill="currentColor" stroke="none"/>
+        <path d="M4 11 L11 11 M11 4 L11 18 M18 11 L11 11" stroke-width="0.8" opacity="0.5"/>
+      </svg>
+      <span>DeepCausality</span>
+    </a>
+
+    <nav class="primary" aria-label="Primary">
+      <a href="/docs/getting-started/" class:list={["nav-link", isActive('/docs/') && 'is-active']}>Docs</a>
+      <a href="/examples/" class:list={["nav-link", isActive('/examples/') && 'is-active']}>Examples</a>
+      <a href="/blog/" class:list={["nav-link", isActive('/blog/') && 'is-active']}>Blog</a>
+      <a href="/docs/monograph/" class:list={["nav-link", isActive('/docs/monograph/') && 'is-active']}>Monograph</a>
+    </nav>
+
+    <div class="utility">
+      <ThemeToggle />
+      <a class="gh" href="https://github.com/deepcausality-rs/deep_causality" aria-label="GitHub repository">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+          <path d="M12 .5a11.5 11.5 0 0 0-3.63 22.42c.57.1.78-.25.78-.55v-2.06c-3.18.69-3.86-1.36-3.86-1.36-.52-1.34-1.27-1.7-1.27-1.7-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.76 2.68 1.25 3.34.96.1-.74.4-1.25.73-1.54-2.54-.29-5.21-1.27-5.21-5.66 0-1.25.45-2.27 1.18-3.07-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.15 1.17a10.94 10.94 0 0 1 5.74 0c2.19-1.48 3.15-1.17 3.15-1.17.62 1.58.23 2.75.11 3.04.74.8 1.18 1.82 1.18 3.07 0 4.4-2.68 5.37-5.23 5.65.41.36.78 1.06.78 2.13v3.16c0 .3.21.66.79.55A11.5 11.5 0 0 0 12 .5Z"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</header>
+
+<style>
+  .skip-link {
+    position: absolute; left: -10000px; top: auto;
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-1); color: var(--fg-0);
+    border: 1px solid var(--line-1); border-radius: var(--radius-sm);
+  }
+  .skip-link:focus { left: var(--space-3); top: var(--space-3); z-index: 50; }
+
+  .site-header {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--bg-0) 92%, transparent);
+    border-bottom: 1px solid var(--line-1);
+  }
+  .site-header-inner {
+    max-width: var(--w-page);
+    margin: 0 auto;
+    height: 64px;
+    padding: 0 var(--space-5);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--space-6);
+  }
+  .brand {
+    display: inline-flex; align-items: center; gap: var(--space-2);
+    color: var(--fg-0); font-weight: 540; letter-spacing: -0.005em;
+    border-bottom: none;
+  }
+  .brand svg { color: var(--accent); }
+
+  .primary { display: flex; gap: var(--space-5); }
+  .nav-link {
+    position: relative;
+    color: var(--fg-1);
+    padding: var(--space-2) 0;
+    border-bottom: none;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .nav-link::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -1px;
+    height: 2px; background: var(--accent);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform var(--dur-med) var(--ease-out);
+  }
+  .nav-link:hover { color: var(--fg-0); }
+  .nav-link.is-active { color: var(--fg-0); }
+  .nav-link.is-active::after { transform: scaleX(1); }
+
+  .utility { display: inline-flex; align-items: center; gap: var(--space-3); }
+  .gh { color: var(--fg-1); display: inline-grid; place-items: center; width: 32px; height: 32px; border-bottom: none; }
+  .gh:hover { color: var(--fg-0); }
+
+  @media (max-width: 768px) {
+    .site-header-inner { grid-template-columns: auto 1fr auto; gap: var(--space-3); padding: 0 var(--space-4); }
+    .primary { display: none; }
+  }
+</style>

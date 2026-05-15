@@ -1,0 +1,88 @@
+---
+// Three pillars connected by a thin SVG path. Not a 3-equal-cards row.
+// Below 900px the row stacks vertically with a vertical connector.
+const pillars = [
+  {
+    name: 'Causaloid',
+    href: '/docs/concepts/causaloid/',
+    body: 'A self-contained unit of causality. Compose Causaloids into larger structures with the same algebra you would use for functions.',
+  },
+  {
+    name: 'Context',
+    href: '/docs/concepts/context/',
+    body: 'An explicit hypergraph encoding the environment. Spacetime nodes, relational edges, and dynamic update semantics.',
+  },
+  {
+    name: 'Effect Ethos',
+    href: '/docs/concepts/effect-ethos/',
+    body: 'A programmable verification layer. Encode operational rules once and check every inference against them at runtime.',
+  },
+];
+---
+<section class="pillars">
+  <div class="pillars-inner">
+    <p class="eyebrow">Three primitives</p>
+    <h2>The pieces it&rsquo;s built from</h2>
+
+    <div class="pillar-row">
+      <svg class="pillar-connector" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 600 40">
+        <path d="M30 20 L290 20 L310 20 L570 20" fill="none" stroke="currentColor" stroke-width="1" />
+        <circle cx="30" cy="20" r="3" fill="currentColor" />
+        <circle cx="300" cy="20" r="3" fill="currentColor" />
+        <circle cx="570" cy="20" r="3" fill="currentColor" />
+      </svg>
+      {pillars.map((p) => (
+        <a class="pillar" href={p.href}>
+          <h3>{p.name}</h3>
+          <p>{p.body}</p>
+          <span class="pillar-cta">Read more <span aria-hidden="true">→</span></span>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .pillars { padding: var(--space-9) 0; border-top: 1px solid var(--line-1); }
+  .pillars-inner { max-width: var(--w-page); margin: 0 auto; padding: 0 var(--space-5); }
+  .eyebrow {
+    margin: 0;
+    font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase; color: var(--fg-2);
+  }
+  h2 { margin: var(--space-2) 0 var(--space-7) 0; }
+
+  .pillar-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+  }
+  .pillar-connector {
+    position: absolute;
+    inset: 0 0 auto 0;
+    top: 12px;
+    width: 100%;
+    height: 24px;
+    color: var(--line-2);
+    pointer-events: none;
+  }
+
+  .pillar {
+    position: relative;
+    padding-top: var(--space-6);
+    color: var(--fg-0);
+    border-bottom: none;
+    display: flex; flex-direction: column; gap: var(--space-3);
+  }
+  .pillar h3 { margin: 0; font-size: var(--t-h3); }
+  .pillar p { margin: 0; color: var(--fg-1); max-width: 36ch; }
+  .pillar-cta { color: var(--accent); font-size: var(--t-body-sm); }
+  .pillar:hover h3 { color: var(--accent); }
+
+  @media (max-width: 900px) {
+    .pillar-row { grid-template-columns: 1fr; gap: var(--space-7); }
+    .pillar-connector { display: none; }
+    .pillar { padding-top: var(--space-4); border-top: 1px solid var(--line-1); }
+  }
+</style>

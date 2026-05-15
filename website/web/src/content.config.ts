@@ -20,6 +20,7 @@ const docs = defineCollection({
     description: z.string().optional(),
     order: z.number().default(0),
     section: z.enum(['getting-started', 'concepts', 'guides', 'reference', 'monograph']),
+    sectionLabel: z.string().optional(),
   }),
 });
 
@@ -31,6 +32,9 @@ const examples = defineCollection({
     summary: z.string(),
     crates: z.array(z.string()).default([]),
     order: z.number().default(0),
+    further: z
+      .array(z.object({ label: z.string(), href: z.string() }))
+      .default([]),
   }),
 });
 

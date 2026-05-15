@@ -1,0 +1,64 @@
+---
+title: MRMR feature selection on a noisy expression matrix
+domain: Bioinformatics
+summary: Pull the most relevant, least redundant features from a high-dimensional dataset in a few lines of code.
+order: 4
+crates:
+  - deep_causality_algorithms
+further:
+  - label: Algorithms reference
+    href: /docs/reference/deep_causality_algorithms/
+  - label: Causal Discovery Language guide
+    href: /docs/guides/cdl-pipeline/
+---
+
+## The problem
+
+Twenty thousand genes, three hundred samples, one phenotype. Feeding the full matrix to a downstream model wastes compute and overfits. You want a small, non-redundant subset that still tracks the response.
+
+## The shape of the code
+
+`deep_causality_algorithms` ships an MRMR (Minimum Redundancy, Maximum Relevance) implementation that returns an ordered list of feature indices.
+
+```rust
+use deep_causality_algorithms::mrmr;
+use deep_causality_tensor::Matrix;
+
+let expression: Matrix<f64> = load_expression_matrix("expr.tsv")?;
+let response: Vec<f64> = load_response("phenotype.tsv")?;
+let gene_names: Vec<String> = load_gene_names("genes.tsv")?;
+
+let selected = mrmr::select(
+    &expression,
+    &response,
+    /* k = */ 12,
+    mrmr::Criterion::Difference,
+)?;
+
+println!("rank  gene                      score");
+for (rank, (idx, score)) in selected.iter().enumerate() {
+    println!("{:>4}  {:<24} {:>8.4}", rank + 1, gene_names[*idx], score);
+}
+```
+
+## Walkthrough
+
+`mrmr::select` returns a vector of `(usize, f64)` pairs. The `usize` is the column index into the expression matrix; the `f64` is the per-feature score under the chosen criterion. Ordering of the returned list is the selection order: most informative first.
+
+`Criterion::Difference` corresponds to MID (Mutual Information Difference). `Criterion::Quotient` selects MIQ. Both are documented on docs.rs and both behave well on continuous response variables.
+
+`Matrix<f64>` here is the dense tensor type from `deep_causality_tensor`. The selection function does not assume any particular storage; a sparse adapter from `deep_causality_sparse` works the same way.
+
+## Run it
+
+```bash
+cargo new --bin gene_select
+cd gene_select
+cargo add deep_causality_algorithms deep_causality_tensor
+# place expr.tsv, phenotype.tsv, genes.tsv next to Cargo.toml
+cargo run --release
+```
+
+## Why this is a good fit
+
+The function call is the algorithm. There is no pipeline, no DSL to learn, no framework to set up. When you need a full discovery workflow rather than a single function call, switch to the CDL (`deep_causality_discovery`).

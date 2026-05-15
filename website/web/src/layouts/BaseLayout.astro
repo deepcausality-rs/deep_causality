@@ -7,14 +7,14 @@ interface Props {
 }
 
 const {
-  title = 'DeepCausality — dynamic causality for Rust',
-  description = 'DeepCausality is a Rust framework for dynamic causality: causal reasoning over systems where time, context, and rules evolve.',
+  title = 'DeepCausality — dynamic causality for advanced systems',
+  description = 'DeepCausality is a Rust framework for dynamic causality. Causal reasoning for advanced systems where time, context, and rules evolve.',
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site).toString();
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -22,25 +22,65 @@ const canonical = new URL(Astro.url.pathname, Astro.site).toString();
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    <script is:inline>
+      // Resolve theme before first paint to avoid FOUC. Default: dark.
+      try {
+        var saved = localStorage.getItem('dc-theme');
+        var theme = saved === 'light' || saved === 'dark' ? saved : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (_) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    </script>
   </head>
   <body>
-    <header>
-      <nav>
-        <a href="/" aria-label="DeepCausality home">DeepCausality</a>
-        <a href="/docs/getting-started/">Docs</a>
-        <a href="https://github.com/deepcausality-rs/deep_causality">GitHub</a>
-      </nav>
-    </header>
-    <main>
+    <main id="main">
       <slot />
     </main>
-    <footer>
-      <small>DeepCausality · dynamic causality framework · MIT licensed</small>
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <div class="col">
+          <h4>Project</h4>
+          <a href="/docs/getting-started/">Docs</a>
+          <a href="/examples/">Examples</a>
+          <a href="/blog/">Blog</a>
+          <a href="/docs/monograph/">Monograph</a>
+        </div>
+        <div class="col">
+          <h4>Community</h4>
+          <a href="https://github.com/deepcausality-rs/deep_causality">GitHub</a>
+          <a href="https://github.com/deepcausality-rs/deep_causality/issues">Issues</a>
+          <a href="https://github.com/deepcausality-rs/deep_causality/discussions">Discussions</a>
+          <a href="https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE">License</a>
+        </div>
+        <div class="col">
+          <h4>DeepCausality</h4>
+          <p>An open-source Rust framework for dynamic causality. Built and maintained by an
+          independent group of contributors. MIT-licensed.</p>
+        </div>
+      </div>
     </footer>
+    <style is:global>
+      .site-footer { border-top: 1px solid var(--line-1); padding: var(--space-8) 0; margin-top: var(--space-9); }
+      .site-footer-inner {
+        max-width: var(--w-page); margin: 0 auto; padding: 0 var(--space-5);
+        display: grid; grid-template-columns: 1fr 1fr 2fr; gap: var(--space-7);
+      }
+      .site-footer .col { display: flex; flex-direction: column; gap: var(--space-2); }
+      .site-footer h4 { margin: 0 0 var(--space-2) 0; font-size: var(--t-body-sm); color: var(--fg-0); }
+      .site-footer a { color: var(--fg-1); border-bottom: none; }
+      .site-footer a:hover { color: var(--fg-0); }
+      .site-footer p { margin: 0; color: var(--fg-1); max-width: 52ch; }
+      @media (max-width: 720px) {
+        .site-footer-inner { grid-template-columns: 1fr; gap: var(--space-6); }
+      }
+    </style>
   </body>
 </html>

@@ -1,0 +1,95 @@
+---
+interface Props {
+  title: string;
+  domain: string;
+  summary: string;
+  crates: string[];
+  further: { label: string; href: string }[];
+}
+
+const { title, domain, summary, crates, further } = Astro.props;
+---
+<article class="ex-detail">
+  <header class="ex-head">
+    <p class="eyebrow">{domain}</p>
+    <h1>{title}</h1>
+    <p class="summary">{summary}</p>
+    {crates.length > 0 && (
+      <ul class="crate-row" aria-label="Related crates">
+        {crates.map((c) => <li><a href={`/docs/reference/${c}/`}><code>{c}</code></a></li>)}
+      </ul>
+    )}
+  </header>
+
+  <section class="ex-body">
+    <slot />
+  </section>
+
+  {further.length > 0 && (
+    <aside class="ex-further">
+      <h2>Further reading</h2>
+      <ul>
+        {further.map((f) => <li><a href={f.href}>{f.label}</a></li>)}
+      </ul>
+    </aside>
+  )}
+
+  <nav class="ex-back" aria-label="Back to examples">
+    <a href="/examples/">&larr; All examples</a>
+  </nav>
+</article>
+
+<style>
+  .ex-detail { max-width: var(--w-page); margin: 0 auto; padding: var(--space-9) var(--space-5); }
+  .ex-head { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-7); max-width: 60ch; }
+  .eyebrow {
+    margin: 0;
+    font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase; color: var(--fg-2);
+  }
+  h1 { margin: 0; font-size: var(--t-h1); line-height: var(--lh-h1); letter-spacing: var(--ls-h1); }
+  .summary { margin: 0; color: var(--fg-1); font-size: var(--t-h4); line-height: var(--lh-h3); max-width: 56ch; }
+
+  .crate-row {
+    list-style: none; padding: 0; margin: var(--space-2) 0 0 0;
+    display: flex; flex-wrap: wrap; gap: var(--space-2);
+  }
+  .crate-row a {
+    display: inline-block;
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-pill);
+    color: var(--fg-1);
+    border-bottom: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+  .crate-row code { background: transparent; padding: 0; }
+  .crate-row a:hover { color: var(--fg-0); border-color: var(--line-2); }
+
+  .ex-body { max-width: var(--w-prose); }
+  .ex-body :global(h2) { margin: var(--space-7) 0 var(--space-3); }
+  .ex-body :global(h3) { margin: var(--space-6) 0 var(--space-2); }
+  .ex-body :global(p) { color: var(--fg-1); max-width: var(--measure); }
+  .ex-body :global(pre) {
+    background: var(--bg-2); border-radius: var(--radius-md); padding: var(--space-5);
+    overflow: auto; margin: var(--space-4) 0;
+    font-size: var(--t-mono-block); line-height: var(--lh-body);
+  }
+  .ex-body :global(pre code) { background: transparent; padding: 0; }
+  .ex-body :global(ul) { color: var(--fg-1); }
+  .ex-body :global(li) { margin: var(--space-2) 0; }
+
+  .ex-further {
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--line-1);
+    max-width: var(--w-prose);
+  }
+  .ex-further h2 { margin: 0 0 var(--space-3); font-size: var(--t-h3); }
+  .ex-further ul { list-style: none; padding: 0; margin: 0; }
+  .ex-further li { margin: var(--space-2) 0; }
+
+  .ex-back { margin-top: var(--space-8); }
+  .ex-back a { color: var(--fg-1); border-bottom: none; }
+  .ex-back a:hover { color: var(--fg-0); }
+</style>

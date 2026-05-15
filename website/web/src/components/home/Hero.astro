@@ -1,0 +1,89 @@
+---
+// Asymmetric split hero. Text left (7/12), hero art right (5/12).
+// Stacks below 900px; on stack, the raster moves above the text.
+---
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <p class="eyebrow">Rust framework</p>
+      <h1>DeepCausality</h1>
+      <p class="tagline">Dynamic causality for advanced systems.</p>
+      <p class="sub">
+        A causal-reasoning library for engineering systems where time, context, and rules evolve.
+        Built around three primitives: the Causaloid, the Context hypergraph, and the Effect Ethos.
+      </p>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/getting-started/">Read the docs</a>
+        <a class="btn btn-ghost" href="https://github.com/deepcausality-rs/deep_causality">View on GitHub <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+    <div class="hero-art-frame" aria-hidden="true">
+      <img src="/img/frontpage-art.webp" alt="" loading="eager" decoding="async" width="1200" height="630" />
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero { padding: var(--space-9) 0 var(--space-7); border-bottom: 1px solid var(--line-1); }
+  .hero-inner {
+    max-width: var(--w-wide);
+    margin: 0 auto;
+    padding: 0 var(--space-5);
+    display: grid;
+    grid-template-columns: 7fr 5fr;
+    gap: var(--space-8);
+    align-items: center;
+  }
+  .hero-text { display: flex; flex-direction: column; gap: var(--space-4); max-width: 56ch; }
+  .eyebrow {
+    margin: 0;
+    font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase; color: var(--fg-2);
+  }
+  h1 {
+    font-size: var(--t-display);
+    line-height: var(--lh-display);
+    letter-spacing: var(--ls-display);
+    margin: 0;
+  }
+  .tagline {
+    margin: 0;
+    font-size: var(--t-h3); line-height: var(--lh-h3); letter-spacing: var(--ls-h3);
+    color: var(--fg-1);
+  }
+  .sub { margin: var(--space-2) 0 0 0; color: var(--fg-1); max-width: 52ch; }
+  .cta { display: flex; gap: var(--space-3); margin-top: var(--space-3); flex-wrap: wrap; }
+
+  .btn {
+    height: 44px;
+    padding: 0 var(--space-5);
+    display: inline-flex; align-items: center; gap: var(--space-2);
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    font-weight: 540;
+    border-bottom: none;
+    transition: transform var(--dur-fast) var(--ease-out),
+                background-color var(--dur-fast) var(--ease-out),
+                border-color var(--dur-fast) var(--ease-out);
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover { background: color-mix(in srgb, var(--accent) 90%, white); }
+  .btn-ghost { color: var(--fg-0); border-color: var(--line-1); background: transparent; }
+  .btn-ghost:hover { border-color: var(--line-2); }
+
+  .hero-art-frame {
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-2);
+    background: var(--bg-1);
+  }
+  .hero-art-frame img { display: block; width: 100%; height: auto; }
+
+  @media (max-width: 900px) {
+    .hero-inner { grid-template-columns: 1fr; gap: var(--space-6); }
+    .hero-art-frame { order: -1; }
+    h1 { font-size: 2.75rem; }
+  }
+</style>

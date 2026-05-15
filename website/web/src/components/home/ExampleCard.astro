@@ -1,0 +1,106 @@
+---
+import { Code } from 'astro:components';
+import type { Example } from './examples';
+
+interface Props { example: Example; index: number }
+const { example, index } = Astro.props;
+
+// Six monoline domain glyphs (16×16). One per slug, never an emoji.
+const glyphs: Record<string, string> = {
+  'quant-finance':
+    '<path d="M2 13 L6 7 L9 10 L14 3" /><path d="M11 3 L14 3 L14 6"/>',
+  'robotics-control':
+    '<rect x="2" y="6" width="12" height="6" rx="1"/><circle cx="5" cy="13.5" r="1"/><circle cx="11" cy="13.5" r="1"/><path d="M8 6 L8 3 L11 3"/>',
+  'observability-sre':
+    '<path d="M2 8 L5 8 L7 4 L9 12 L11 8 L14 8"/>',
+  'bioinformatics-signal':
+    '<path d="M3 3 C 7 5, 9 11, 13 13 M13 3 C 9 5, 7 11, 3 13"/><circle cx="3" cy="3" r="1"/><circle cx="13" cy="3" r="1"/><circle cx="3" cy="13" r="1"/><circle cx="13" cy="13" r="1"/>',
+  'physics-simulation':
+    '<circle cx="8" cy="8" r="2"/><ellipse cx="8" cy="8" rx="6" ry="2.5"/><ellipse cx="8" cy="8" rx="6" ry="2.5" transform="rotate(60 8 8)"/><ellipse cx="8" cy="8" rx="6" ry="2.5" transform="rotate(120 8 8)"/>',
+  'policy-compliance':
+    '<path d="M8 2 L13 4 L13 9 C 13 12, 10 14, 8 14 C 6 14, 3 12, 3 9 L3 4 Z"/><path d="M6 8 L7.5 9.5 L10 6.5"/>',
+};
+const glyph = glyphs[example.slug] ?? '';
+
+// Stagger middle card of each row by 16px y at desktop >1200px.
+const staggered = index === 1 || index === 4;
+---
+<a class:list={["example-card", staggered && 'is-staggered']} href={`/examples/${example.slug}/`}>
+  <header class="ec-head">
+    <span class="ec-eyebrow">{example.domain}</span>
+    <svg class="ec-glyph" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" set:html={glyph} />
+  </header>
+  <h3 class="ec-headline">{example.headline}</h3>
+  <div class="ec-code">
+    <Code code={example.snippet} lang="rust" theme="github-dark" />
+  </div>
+  <footer class="ec-foot">
+    <span>Open example</span>
+    <span aria-hidden="true">→</span>
+  </footer>
+</a>
+
+<style>
+  .example-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    background: var(--bg-1);
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-md);
+    color: var(--fg-0);
+    border-bottom: 1px solid var(--line-1);
+    box-shadow: var(--shadow-1);
+    text-decoration: none;
+    transition: transform var(--dur-med) var(--ease-out), border-color var(--dur-med) var(--ease-out);
+    will-change: auto;
+  }
+  .example-card:hover {
+    transform: translate3d(0, -2px, 0);
+    border-color: var(--line-2);
+  }
+  .example-card:focus-visible { outline-offset: 4px; }
+
+  @media (min-width: 1200px) {
+    .example-card.is-staggered { transform: translate3d(0, 16px, 0); }
+    .example-card.is-staggered:hover { transform: translate3d(0, 14px, 0); }
+  }
+
+  .ec-head { display: flex; align-items: center; justify-content: space-between; }
+  .ec-eyebrow {
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-1);
+  }
+  .ec-glyph { color: var(--accent); }
+
+  .ec-headline {
+    font-size: var(--t-h4);
+    line-height: var(--lh-h4);
+    color: var(--fg-0);
+    margin: 0;
+    font-weight: 540;
+  }
+
+  .ec-code {
+    background: var(--bg-2);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    overflow: auto;
+    font-size: var(--t-mono-block);
+    line-height: var(--lh-body);
+  }
+  .ec-code :global(pre) { background: transparent !important; margin: 0; }
+  .ec-code :global(code) { font-family: var(--font-mono); }
+
+  .ec-foot {
+    margin-top: auto;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--accent);
+    font-size: var(--t-body-sm);
+  }
+</style>

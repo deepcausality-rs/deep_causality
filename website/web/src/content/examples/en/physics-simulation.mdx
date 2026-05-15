@@ -1,0 +1,64 @@
+---
+title: Propagate effects under a constraint that mutates each tick
+domain: Physics
+summary: A simulation loop where the field equations stay the same and the constraint surface evolves with the system.
+order: 5
+crates:
+  - deep_causality
+  - deep_causality_physics
+  - deep_causality_multivector
+further:
+  - label: Physics reference
+    href: /docs/reference/deep_causality_physics/
+  - label: Multivector reference
+    href: /docs/reference/deep_causality_multivector/
+---
+
+## The problem
+
+A physics simulation under a fixed potential is straightforward. A simulation under a constraint that changes with state — a body falling toward a planet whose gravity field you treat as a function of position and time — needs to recompute its causal structure every step, not just its numbers.
+
+## The shape of the code
+
+The field is a Causaloid. The constraint is part of the Context, updated each tick before propagation.
+
+```rust
+use deep_causality::*;
+use deep_causality_physics::{gravity_at, Field};
+use deep_causality_multivector::Multivector;
+
+let mut particles: Vec<Particle<Multivector>> = initial_state();
+let mut ctx = Context::from(spacetime);
+let field: Field = Field::newtonian();
+
+let dt = 1e-3;
+for step in sim.steps() {
+    ctx.update_constraint(gravity_at(step.t));
+    let effect = field.propagate(&ctx, &particles)?;
+    integrator.advance(&mut particles, &effect, dt);
+}
+
+trajectory::dump("orbit.csv", &particles)?;
+```
+
+## Walkthrough
+
+`gravity_at(step.t)` returns a constraint value at the current simulation time. `Context::update_constraint` replaces the active constraint in place. The Causaloid `field` does not change between steps; what changes is the context it propagates against.
+
+`Particle<Multivector>` uses the multivector type from `deep_causality_multivector` so position, velocity, and angular components live in a single algebraic object. `integrator.advance` consumes the `PropagatingEffect` and updates the particle vector in place.
+
+The simulation loop is two lines of substance plus one line of bookkeeping. The rules and the state are visibly separate.
+
+## Run it
+
+```bash
+cargo new --bin orbit_sim
+cd orbit_sim
+cargo add deep_causality deep_causality_physics deep_causality_multivector
+cargo run --release
+gnuplot -e "plot 'orbit.csv' using 2:3 with lines" -persist
+```
+
+## Why this is a good fit
+
+The same code handles a fixed-gravity case, a time-varying-gravity case, and a multi-body case. You change the constraint, not the loop.

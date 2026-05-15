@@ -62,7 +62,7 @@ Constraints from `AGENTS.md`:
 - **Old → New**:
   - "hypergeometric computational causality" → "dynamic causality"
   - "computational causality library" → "dynamic causality framework" (when used in marketing copy; the crate description in `AGENTS.md` may remain technical)
-  - Tagline candidate: "Dynamic causality for systems where time, context, and rules don't stand still."
+  - Tagline (confirmed): "Dynamic causality for advanced systems."
 - Technical terms that stay: Causaloid, Context, Effect Ethos, Causal Reasoning, Effect Propagation Process.
 - A short glossary page at `/docs/concepts/glossary` codifies this so future contributors don't drift.
 
@@ -176,6 +176,6 @@ Rollback: DNS cutover is reversible by repointing back to the existing Hugo depl
 ## Open Questions
 
 - ~~Do we want client-side search (Pagefind) at launch, or defer?~~ **Decided: Pagefind at build time, included at launch.**
-- Final wording of the tagline — D6 has a candidate; user signoff needed before launch.
+- ~~Final wording of the tagline~~ **Decided: "Dynamic causality for advanced systems."**
 - Which evergreen pages from `ctx/content/` (beyond blog) actually migrate? Decide during task execution by reviewing the tree.
 - Locale plan beyond English — which is the likely second locale (drives any framework-level choices that should be made now vs. later)?

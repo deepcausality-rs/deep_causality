@@ -1,0 +1,80 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import SiteHeader from '../components/nav/SiteHeader.astro';
+import DocsSidebar from '../components/docs/DocsSidebar.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  sectionLabel?: string;
+}
+const { title, description, sectionLabel } = Astro.props;
+---
+<BaseLayout title={`${title} — DeepCausality`} description={description ?? title}>
+  <SiteHeader />
+  <div class="docs-shell">
+    <DocsSidebar />
+    <article class="docs-article">
+      <header class="doc-head">
+        {sectionLabel && <p class="eyebrow">{sectionLabel}</p>}
+        <h1>{title}</h1>
+      </header>
+      <div class="doc-prose">
+        <slot />
+      </div>
+    </article>
+  </div>
+
+  <style is:global>
+    .docs-shell {
+      max-width: var(--w-doc);
+      margin: 0 auto;
+      padding: 0 var(--space-5);
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: var(--space-8);
+    }
+    .docs-article {
+      padding: var(--space-9) 0;
+      min-width: 0;
+    }
+    .doc-head { margin-bottom: var(--space-6); }
+    .doc-head .eyebrow {
+      margin: 0 0 var(--space-2) 0;
+      font-size: var(--t-eyebrow);
+      letter-spacing: var(--ls-eyebrow);
+      text-transform: uppercase;
+      color: var(--fg-2);
+    }
+    .doc-head h1 { margin: 0; }
+    .doc-prose { max-width: var(--w-prose); }
+    .doc-prose p,
+    .doc-prose li { color: var(--fg-1); }
+    .doc-prose p { max-width: var(--measure); margin: 0 0 var(--space-4) 0; }
+    .doc-prose h2 { margin: var(--space-7) 0 var(--space-3) 0; }
+    .doc-prose h3 { margin: var(--space-6) 0 var(--space-2) 0; }
+    .doc-prose ul, .doc-prose ol { padding-left: var(--space-5); margin: 0 0 var(--space-4) 0; }
+    .doc-prose li { margin: var(--space-2) 0; }
+    .doc-prose pre {
+      background: var(--bg-2);
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      overflow: auto;
+      margin: var(--space-4) 0;
+      font-size: var(--t-mono-block);
+      line-height: var(--lh-body);
+    }
+    .doc-prose pre code { background: transparent; padding: 0; }
+    .doc-prose blockquote {
+      margin: var(--space-4) 0;
+      padding: var(--space-3) var(--space-5);
+      border-left: 3px solid var(--accent);
+      background: var(--bg-1);
+      color: var(--fg-1);
+    }
+    .doc-prose blockquote p:last-child { margin-bottom: 0; }
+    @media (max-width: 900px) {
+      .docs-shell { grid-template-columns: 1fr; gap: 0; }
+    }
+  </style>
+</BaseLayout>

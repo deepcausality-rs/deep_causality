@@ -1,0 +1,63 @@
+---
+title: Context-aware effect propagation for a robot arm
+domain: Robotics
+summary: Plan and execute motion against a spacetime Context that updates as the world updates.
+order: 2
+crates:
+  - deep_causality
+  - deep_causality_topology
+further:
+  - label: Context concept page
+    href: /docs/concepts/context/
+  - label: Effect propagation process
+    href: /docs/concepts/effect-propagation-process/
+---
+
+## The problem
+
+A static motion plan breaks the moment the world stops cooperating: the object slipped, the gripper drifted, the base moved. The plan was right at `t=0` and wrong at `t=1`. You want a plan that is a function of the live world, not a frozen artifact.
+
+## The shape of the code
+
+The world is a `Context`: a hypergraph of spacetime frames and the relations between them. Causaloids generate a `PropagatingEffect` against that context. Each control step pulls the current context, propagates effects forward, and turns the result into an actuator command.
+
+```rust
+use deep_causality::prelude::*;
+use deep_causality_topology::Twist;
+
+let mut ctx = Context::new("arm")
+    .with_node(Spacetime::frame("base"))
+    .with_node(Spacetime::frame("tcp"))
+    .with_edge("base", "tcp", Twist::identity());
+
+let plan = causal_plan(&goal)?;
+
+loop {
+    ctx.update_edge("base", "tcp", sensors.read_tcp_pose()?);
+    let effect = plan.propagate(&ctx)?;
+    for step in effect.iter() {
+        arm.execute(step)?;
+    }
+    if effect.reached_goal() { break; }
+}
+```
+
+## Walkthrough
+
+`Context` is the explicit environment a Causaloid reasons over. Here it carries two spacetime nodes and a `Twist` edge representing the relative pose between them. The `update_edge` call replaces that edge in place every control cycle, which is the *dynamic* part of dynamic causality.
+
+`propagate` is the second algebra alongside conjunction. It walks the Causaloid graph forward against the current context and produces a `PropagatingEffect`: an ordered list of partial decisions the actuator can consume. The function is pure; replaying it against the same context gives the same effect, which makes it testable offline against logged contexts.
+
+## Run it
+
+```bash
+cargo new --bin arm_demo
+cd arm_demo
+cargo add deep_causality deep_causality_topology
+# paste the example, wire `sensors` and `arm` to your hardware abstraction
+cargo run --release
+```
+
+## Why this is a good fit
+
+The loop is short. The plan is a value, not a state machine you maintain by hand. New constraints (a tool change, a workspace bound) land as new Causaloids without rewriting the controller.

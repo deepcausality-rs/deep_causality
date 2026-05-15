@@ -1,0 +1,69 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+
+const entries = (await getCollection('examples')).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+---
+<BaseLayout title="Examples — DeepCausality" description="Six code examples across distinct engineering fields.">
+  <SiteHeader />
+  <section class="ex-index">
+    <header>
+      <p class="eyebrow">Examples</p>
+      <h1>Six fields, one framework</h1>
+      <p class="lede">Pick the field that looks closest to the problem you have in front of you. Each page carries a runnable snippet, a walkthrough, and pointers into the docs and the monograph.</p>
+    </header>
+    <ul class="list" role="list">
+      {entries.map((e) => (
+        <li>
+          <a href={`/examples/${e.id.replace(/^en\//, '')}/`}>
+            <div class="meta">
+              <span class="dom">{e.data.domain}</span>
+              <span class="open" aria-hidden="true">→</span>
+            </div>
+            <h2>{e.data.title}</h2>
+            <p>{e.data.summary}</p>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <style>
+    .ex-index { max-width: var(--w-page); margin: 0 auto; padding: var(--space-9) var(--space-5); }
+    .ex-index header { max-width: 56ch; margin-bottom: var(--space-7); }
+    .eyebrow {
+      margin: 0;
+      font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
+      text-transform: uppercase; color: var(--fg-2);
+    }
+    h1 { margin: var(--space-2) 0 var(--space-3) 0; }
+    .lede { color: var(--fg-1); }
+
+    .list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; }
+    .list li + li { border-top: 1px solid var(--line-1); }
+    .list a {
+      display: grid;
+      grid-template-rows: auto auto;
+      gap: var(--space-2);
+      padding: var(--space-6) 0;
+      color: var(--fg-0);
+      border-bottom: none;
+      transition: padding-left var(--dur-med) var(--ease-out);
+    }
+    .list a:hover { padding-left: var(--space-3); }
+    .meta {
+      display: flex; justify-content: space-between; align-items: baseline;
+      color: var(--fg-2);
+    }
+    .dom {
+      font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
+      text-transform: uppercase;
+    }
+    .open { color: var(--accent); }
+    .list h2 { margin: 0; font-size: var(--t-h3); }
+    .list p { margin: 0; color: var(--fg-1); max-width: var(--measure); }
+  </style>
+</BaseLayout>
