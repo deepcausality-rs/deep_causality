@@ -5,7 +5,7 @@
 <section class="explainer">
   <div class="explainer-inner">
     <p class="eyebrow">What is dynamic causality</p>
-    <h2>Causal reasoning that doesn&rsquo;t freeze the world.</h2>
+    <h2>Causal reasoning for a dynamic world.</h2>
     <div class="prose">
       <p>
         Most causal-inference libraries assume a static graph and a fixed set of rules. Real systems
@@ -28,14 +28,18 @@
 
 <style>
   .explainer {
-    padding: var(--space-9) 0;
+    padding: var(--space-8) 0;
     border-top: 1px solid var(--line-1);
   }
   .explainer-inner {
     max-width: var(--w-prose);
     margin: 0 auto;
-    padding: 0 var(--space-5);
+    padding: 0 var(--space-4);
     display: flex; flex-direction: column; gap: var(--space-4);
+  }
+  @media (min-width: 720px) {
+    .explainer { padding: var(--space-9) 0; }
+    .explainer-inner { padding: 0 var(--space-5); }
   }
   .eyebrow {
     margin: 0;

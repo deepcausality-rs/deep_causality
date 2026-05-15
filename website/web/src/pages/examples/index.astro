@@ -32,7 +32,8 @@ const entries = (await getCollection('examples')).sort(
   </section>
 
   <style>
-    .ex-index { max-width: var(--w-page); margin: 0 auto; padding: var(--space-9) var(--space-5); }
+    .ex-index { max-width: var(--w-page); margin: 0 auto; padding: var(--space-7) var(--space-4); }
+    @media (min-width: 720px) { .ex-index { padding: var(--space-9) var(--space-5); } }
     .ex-index header { max-width: 56ch; margin-bottom: var(--space-7); }
     .eyebrow {
       margin: 0;

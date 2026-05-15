@@ -3,19 +3,19 @@
 // Below 900px the row stacks vertically with a vertical connector.
 const pillars = [
   {
+    name: 'Causal Monad',
+    href: '/docs/concepts/causal-monad/',
+    body: 'The pure/bind algebra that composes causal effects. Carries value, state, context, error, and an audit log through every step.',
+  },
+  {
     name: 'Causaloid',
     href: '/docs/concepts/causaloid/',
-    body: 'A self-contained unit of causality. Compose Causaloids into larger structures with the same algebra you would use for functions.',
+    body: 'A self-contained unit of causality. Compose causaloids into larger structures with the same algebra you would use for functions.',
   },
   {
     name: 'Context',
     href: '/docs/concepts/context/',
     body: 'An explicit hypergraph encoding the environment. Spacetime nodes, relational edges, and dynamic update semantics.',
-  },
-  {
-    name: 'Effect Ethos',
-    href: '/docs/concepts/effect-ethos/',
-    body: 'A programmable verification layer. Encode operational rules once and check every inference against them at runtime.',
   },
 ];
 ---
@@ -43,8 +43,9 @@ const pillars = [
 </section>
 
 <style>
-  .pillars { padding: var(--space-9) 0; border-top: 1px solid var(--line-1); }
-  .pillars-inner { max-width: var(--w-page); margin: 0 auto; padding: 0 var(--space-5); }
+  .pillars { padding: var(--space-8) 0; border-top: 1px solid var(--line-1); }
+  .pillars-inner { max-width: var(--w-page); margin: 0 auto; padding: 0 var(--space-4); }
+  @media (min-width: 720px) { .pillars { padding: var(--space-9) 0; } .pillars-inner { padding: 0 var(--space-5); } }
   .eyebrow {
     margin: 0;
     font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
@@ -52,13 +53,16 @@ const pillars = [
   }
   h2 { margin: var(--space-2) 0 var(--space-7) 0; }
 
+  /* Mobile-first: stack, no connector. Three columns + horizontal connector at ≥900px. */
   .pillar-row {
     position: relative;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr;
     gap: var(--space-6);
   }
+  .pillar-row > * { min-width: 0; }
   .pillar-connector {
+    display: none;
     position: absolute;
     inset: 0 0 auto 0;
     top: 12px;
@@ -66,6 +70,10 @@ const pillars = [
     height: 24px;
     color: var(--line-2);
     pointer-events: none;
+  }
+  @media (min-width: 900px) {
+    .pillar-row { grid-template-columns: repeat(3, 1fr); gap: var(--space-6); }
+    .pillar-connector { display: block; }
   }
 
   .pillar {
@@ -80,9 +88,4 @@ const pillars = [
   .pillar-cta { color: var(--accent); font-size: var(--t-body-sm); }
   .pillar:hover h3 { color: var(--accent); }
 
-  @media (max-width: 900px) {
-    .pillar-row { grid-template-columns: 1fr; gap: var(--space-7); }
-    .pillar-connector { display: none; }
-    .pillar { padding-top: var(--space-4); border-top: 1px solid var(--line-1); }
-  }
 </style>

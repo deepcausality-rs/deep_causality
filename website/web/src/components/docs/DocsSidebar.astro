@@ -3,19 +3,28 @@ import { getCollection } from 'astro:content';
 
 const all = await getCollection('docs');
 const sections = [
-  { id: 'getting-started', label: 'Getting started' },
-  { id: 'concepts', label: 'Concepts' },
-  { id: 'guides', label: 'Guides' },
-  { id: 'reference', label: 'Reference' },
-  { id: 'monograph', label: 'Monograph' },
+  { id: 'getting-started', label: 'Getting started', sort: 'order' },
+  { id: 'concepts', label: 'Concepts', sort: 'alpha' },
+  { id: 'guides', label: 'Guides', sort: 'alpha' },
+  { id: 'reference', label: 'Reference', sort: 'alpha' },
+  { id: 'monograph', label: 'Monograph', sort: 'order' },
 ] as const;
 
-const grouped = sections.map((s) => ({
-  ...s,
-  entries: all
-    .filter((e) => e.data.section === s.id)
-    .sort((a, b) => a.data.order - b.data.order),
-}));
+const grouped = sections.map((s) => {
+  const entries = all.filter((e) => e.data.section === s.id);
+  if (s.sort === 'alpha') {
+    // Pin the glossary to the end; sort everything else by title.
+    entries.sort((a, b) => {
+      const aGloss = a.id.endsWith('glossary');
+      const bGloss = b.id.endsWith('glossary');
+      if (aGloss !== bGloss) return aGloss ? 1 : -1;
+      return a.data.title.localeCompare(b.data.title);
+    });
+  } else {
+    entries.sort((a, b) => a.data.order - b.data.order);
+  }
+  return { ...s, entries };
+});
 
 const here = Astro.url.pathname;
 const idToHref = (id: string) => `/docs/${id.replace(/\/index$/, '/')}/`.replace(/\/+/g, '/');
@@ -40,12 +49,20 @@ const idToHref = (id: string) => `/docs/${id.replace(/\/index$/, '/')}/`.replace
 </aside>
 
 <style>
+  /* Mobile-first: flat block at the top of the docs page; sticky sidebar at ≥900px. */
   .docs-sidebar {
-    position: sticky; top: 80px; align-self: start;
-    border-right: 1px solid var(--line-1);
-    padding: var(--space-6) var(--space-5) var(--space-9) 0;
-    max-height: calc(100vh - 80px);
-    overflow: auto;
+    border-bottom: 1px solid var(--line-1);
+    padding: var(--space-5) 0;
+  }
+  @media (min-width: 900px) {
+    .docs-sidebar {
+      position: sticky; top: 80px; align-self: start;
+      border-right: 1px solid var(--line-1);
+      border-bottom: none;
+      padding: var(--space-6) var(--space-5) var(--space-9) 0;
+      max-height: calc(100vh - 80px);
+      overflow: auto;
+    }
   }
   .docs-sidebar section + section { margin-top: var(--space-5); }
   .docs-sidebar h4 {
@@ -69,12 +86,4 @@ const idToHref = (id: string) => `/docs/${id.replace(/\/index$/, '/')}/`.replace
   .docs-sidebar a:hover { color: var(--fg-0); }
   .docs-sidebar a.is-here { color: var(--fg-0); background: var(--bg-2); }
 
-  @media (max-width: 900px) {
-    .docs-sidebar {
-      position: static; max-height: none;
-      border-right: none;
-      border-bottom: 1px solid var(--line-1);
-      padding: var(--space-4) 0;
-    }
-  }
 </style>

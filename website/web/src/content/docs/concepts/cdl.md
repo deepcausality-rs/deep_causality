@@ -19,13 +19,13 @@ The CDL keeps the type safety. Each stage of the pipeline returns a new typestat
 
 The current stages (drawn from `deep_causality_discovery::src/types/`):
 
-1. **Configure** — `CdlConfig` is the builder for the whole pipeline. Set the data source, the cleaning strategy, the feature-selection criterion, the discovery algorithm, the analysis pass.
-2. **Load** — read observations from CSV, Parquet, or an in-memory matrix.
-3. **Clean** — handle missing values, outliers, type coercions.
-4. **Select features** — pick the most informative subset of variables. The default is MRMR; SURD is available for information-theoretic decomposition.
-5. **Discover** — run the chosen causal-discovery algorithm against the selected features.
-6. **Analyze** — produce stability, sparsity, and significance metrics on the discovered structure.
-7. **Finalize** — emit a `Causaloid` (or `CausaloidGraph`) that downstream code can consume directly.
+1. **Configure**: `CdlConfig` is the builder for the whole pipeline. Set the data source, the cleaning strategy, the feature-selection criterion, the discovery algorithm, the analysis pass.
+2. **Load**: read observations from CSV, Parquet, or an in-memory matrix.
+3. **Clean**: handle missing values, outliers, type coercions.
+4. **Select features**: pick the most informative subset of variables. The default is MRMR; SURD is available for information-theoretic decomposition.
+5. **Discover**: run the chosen causal-discovery algorithm against the selected features.
+6. **Analyze**: produce stability, sparsity, and significance metrics on the discovered structure.
+7. **Finalize**: emit a `Causaloid` (or `CausaloidGraph`) that downstream code can consume directly.
 
 The output of step 7 is the input to the rest of DeepCausality. The pipeline ends where the inference workflow begins.
 

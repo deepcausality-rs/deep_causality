@@ -2,7 +2,7 @@
 title: Hello, Causaloid
 description: Build, compose, and evaluate a Causaloid in the smallest possible program.
 section: getting-started
-order: 2
+order: 3
 ---
 
 This page walks through the smallest program that exercises the library: a Causaloid that wraps a pure predicate, then a second Causaloid composed with the first, then evaluation against a value.

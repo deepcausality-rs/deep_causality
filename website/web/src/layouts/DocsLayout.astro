@@ -29,14 +29,24 @@ const { title, description, sectionLabel } = Astro.props;
     .docs-shell {
       max-width: var(--w-doc);
       margin: 0 auto;
-      padding: 0 var(--space-5);
+      padding: 0 var(--space-4);
       display: grid;
-      grid-template-columns: 240px 1fr;
-      gap: var(--space-8);
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    @media (min-width: 900px) {
+      .docs-shell {
+        padding: 0 var(--space-5);
+        grid-template-columns: 240px 1fr;
+        gap: var(--space-8);
+      }
     }
     .docs-article {
-      padding: var(--space-9) 0;
+      padding: var(--space-7) 0;
       min-width: 0;
+    }
+    @media (min-width: 900px) {
+      .docs-article { padding: var(--space-9) 0; }
     }
     .doc-head { margin-bottom: var(--space-6); }
     .doc-head .eyebrow {
@@ -73,8 +83,5 @@ const { title, description, sectionLabel } = Astro.props;
       color: var(--fg-1);
     }
     .doc-prose blockquote p:last-child { margin-bottom: 0; }
-    @media (max-width: 900px) {
-      .docs-shell { grid-template-columns: 1fr; gap: 0; }
-    }
   </style>
 </BaseLayout>

@@ -1,0 +1,66 @@
+---
+title: Flight-envelope monitor for a safety-critical aircraft
+domain: Aerospace
+summary: A five-stage PropagatingProcess that fuses sensor health, folds risk, runs a Kalman update, and walks an envelope hypergraph.
+order: 4
+source: examples/avionics_examples/flight_envelope_monitor/main.rs
+crates:
+  - deep_causality
+  - deep_causality_core
+further:
+  - label: Effect Propagation Process
+    href: /docs/concepts/effect-propagation-process/
+  - label: Causaloid concept page
+    href: /docs/concepts/causaloid/
+---
+
+This example lives at [`examples/avionics_examples/flight_envelope_monitor/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/avionics_examples/flight_envelope_monitor) in the repo. It is the most direct demonstration of `PropagatingProcess` with non-trivial state and context: five sequential `bind` calls thread a `FlightState` and an `AircraftConfig` through every step.
+
+## The chain
+
+The pipeline does five things, in order:
+
+1. **Sensor health collection** under `AggregateLogic::All` over five sensors.
+2. **Health fold** that turns joint health into a risk delta `risk += 1.0 − joint_health`.
+3. **Kalman covariance update**, one scalar iteration.
+4. **Estimate step** that writes the resulting estimate vector into `state.estimate`.
+5. **Envelope hypergraph**: BFS over six risk nodes that produces the final verdict.
+
+The five steps are defined as ordinary functions in the example's `model.rs`. The pipeline binds them together. The state, context, value, and log all thread through the same five-field `PropagatingProcess` shape.
+
+```rust
+let initial: FlightProcess<SensorReading> = PropagatingProcess {
+    value: EffectValue::Value(reading),
+    state: FlightState::default(),
+    context: Some(config),
+    error: None,
+    logs: EffectLog::new(),
+};
+
+initial
+    .bind(|v, s, c| run_sensor_collection(v, s, c, failing_airspeed))
+    .bind(|v, s, c| health_fold(v, s, c, seed_estimate.clone()))
+    .bind(|v, s, c| kalman_step(v, s, c))
+    .bind(|v, s, c| estimate_step(v, s, c))
+    .bind(|v, s, c| run_envelope_graph(v, s, c))
+```
+
+## What to look at in the source
+
+- `model.rs`: definitions of the five steps. Each takes the upstream `value`, `state`, and `context` and returns a new `FlightProcess`.
+- `model_types.rs`: `FlightProcess`, `FlightState`, `AircraftConfig`, `SafetyVerdict`. The `SafetyVerdict::from_risk(state.risk)` call is what turns a numeric risk into a verdict at the end.
+- `main.rs`: the entry point that prints both a nominal run and a failing-sensor run side by side.
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p avionics_examples --bin flight_envelope_monitor
+```
+
+The output prints the verdict, the final state, and the full `EffectLog` for both the nominal and failing runs. The failing run is the one where the `failing_airspeed` flag is true; compare the logs to see exactly which step's predicate flipped.
+
+## Why this is a good fit
+
+A flight-envelope monitor is the canonical "many small rules, one decision, full audit trail" workload. Each step is testable in isolation; the chain composes them without losing the structured log; the final verdict can be replayed against historical readings without rebuilding anything.

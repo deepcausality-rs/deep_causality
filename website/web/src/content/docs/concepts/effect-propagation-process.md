@@ -21,7 +21,7 @@ This struct is the unit of work that flows between Causaloids. The five fields a
 
 ## The five fields
 
-**`value`** — the propagating effect's payload, wrapped in an `EffectValue<T>` enum:
+**`value`**: the propagating effect's payload, wrapped in an `EffectValue<T>` enum:
 
 ```rust
 pub enum EffectValue<T> {
@@ -38,13 +38,13 @@ The variants are not arbitrary. `None` is an explicit *no effect*. `Value(T)` is
 
 A Causaloid's wrapped function returns a `PropagatingEffect<T>` whose `value` is one of those variants. The richer variants exist so that downstream rules can do work the upstream rule could not yet do, without losing the audit trail in between.
 
-**`state`** — caller-supplied state threaded through the chain. For the stateless case, `State = ()` and the field carries no information.
+**`state`**: caller-supplied state threaded through the chain. For the stateless case, `State = ()` and the field carries no information.
 
-**`context`** — an optional `Context` value. When a contextual Causaloid runs it threads the Context through here; when a stateless rule runs it stays `None`.
+**`context`**: an optional `Context` value. When a contextual Causaloid runs it threads the Context through here; when a stateless rule runs it stays `None`.
 
-**`error`** — `Option<Error>`. The chain short-circuits when this is `Some`. The presence of an error does not stop the log from accumulating; the failure point is recorded with everything else.
+**`error`**: `Option<Error>`. The chain short-circuits when this is `Some`. The presence of an error does not stop the log from accumulating; the failure point is recorded with everything else.
 
-**`logs`** — an append-only `EffectLog`. Every Causaloid that runs adds an entry. The log is the audit trail.
+**`logs`**: an append-only `EffectLog`. Every Causaloid that runs adds an entry. The log is the audit trail.
 
 ## The aliases
 

@@ -32,26 +32,26 @@ cargo add deep_causality
 
 Reach for one of these when the umbrella is broader than you need:
 
-- `deep_causality_algorithms` — MRMR feature selection, SURD information decomposition.
-- `deep_causality_data_structures` — sliding-window and grid-array containers, useful on stream workloads.
-- `deep_causality_discovery` — the Causal Discovery Language (CDL) pipeline.
-- `deep_causality_ethos` — the Effect Ethos and its Teloids.
-- `deep_causality_topology`, `deep_causality_physics`, `deep_causality_multivector` — math and physics primitives.
-- `deep_causality_tensor`, `deep_causality_sparse` — numerical containers.
-- `deep_causality_uncertain` — a first-order type for uncertain values.
+- `deep_causality_algorithms`: MRMR feature selection, SURD information decomposition.
+- `deep_causality_data_structures`: sliding-window and grid-array containers, useful on stream workloads.
+- `deep_causality_discovery`: the Causal Discovery Language (CDL) pipeline.
+- `deep_causality_ethos`: the Effect Ethos and its Teloids.
+- `deep_causality_topology`, `deep_causality_physics`, `deep_causality_multivector`: math and physics primitives.
+- `deep_causality_tensor`, `deep_causality_sparse`: numerical containers.
+- `deep_causality_uncertain`: a first-order type for uncertain values.
 
 Each crate stands on its own and links back to the others through clear seams. The [reference section](/docs/reference/deep_causality/) carries one page per crate.
 
 ## Verify the install
 
-A two-line program is enough to prove the install is wired:
+A tiny program that lifts a value into a `PropagatingEffect` is enough to prove the install is wired:
 
 ```rust
+use deep_causality::PropagatingEffect;
+
 fn main() {
-    println!(
-        "deep_causality version: {}",
-        deep_causality::VERSION,
-    );
+    let effect: PropagatingEffect<f64> = PropagatingEffect::pure(42.0);
+    println!("ok: {:?}", effect.value);
 }
 ```
 
@@ -59,7 +59,7 @@ fn main() {
 cargo run --release
 ```
 
-If the version prints, you are ready to write a Causaloid. The [next page](/docs/getting-started/hello-causaloid/) does exactly that.
+If you see `ok: Value(42.0)`, you are ready to write a Causaloid. The [next page](/docs/getting-started/hello-causaloid/) does exactly that.
 
 ## A note on the docs.rs reference
 

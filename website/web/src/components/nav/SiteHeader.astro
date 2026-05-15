@@ -16,7 +16,7 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
     </a>
 
     <nav class="primary" aria-label="Primary">
-      <a href="/docs/getting-started/" class:list={["nav-link", isActive('/docs/') && 'is-active']}>Docs</a>
+      <a href="/docs/getting-started/install/" class:list={["nav-link", isActive('/docs/') && 'is-active']}>Docs</a>
       <a href="/examples/" class:list={["nav-link", isActive('/examples/') && 'is-active']}>Examples</a>
       <a href="/blog/" class:list={["nav-link", isActive('/blog/') && 'is-active']}>Blog</a>
       <a href="/docs/monograph/" class:list={["nav-link", isActive('/docs/monograph/') && 'is-active']}>Monograph</a>
@@ -31,6 +31,15 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
       </a>
     </div>
   </div>
+  <details class="mobile-nav">
+    <summary>Menu</summary>
+    <ul>
+      <li><a href="/docs/getting-started/install/">Docs</a></li>
+      <li><a href="/examples/">Examples</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/docs/monograph/">Monograph</a></li>
+    </ul>
+  </details>
 </header>
 
 <style>
@@ -47,15 +56,24 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
     background: color-mix(in srgb, var(--bg-0) 92%, transparent);
     border-bottom: 1px solid var(--line-1);
   }
+  /* Mobile-first: just brand + utility, primary nav collapses into a details/summary disclosure below. */
   .site-header-inner {
     max-width: var(--w-page);
     margin: 0 auto;
-    height: 64px;
-    padding: 0 var(--space-5);
+    min-height: 56px;
+    padding: 0 var(--space-4);
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 1fr auto;
     align-items: center;
-    gap: var(--space-6);
+    gap: var(--space-3);
+  }
+  @media (min-width: 900px) {
+    .site-header-inner {
+      min-height: 64px;
+      padding: 0 var(--space-5);
+      grid-template-columns: auto 1fr auto;
+      gap: var(--space-6);
+    }
   }
   .brand {
     display: inline-flex; align-items: center; gap: var(--space-2);
@@ -64,7 +82,8 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
   }
   .brand svg { color: var(--accent); }
 
-  .primary { display: flex; gap: var(--space-5); }
+  .primary { display: none; gap: var(--space-5); }
+  @media (min-width: 900px) { .primary { display: flex; } }
   .nav-link {
     position: relative;
     color: var(--fg-1);
@@ -86,8 +105,19 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
   .gh { color: var(--fg-1); display: inline-grid; place-items: center; width: 32px; height: 32px; border-bottom: none; }
   .gh:hover { color: var(--fg-0); }
 
-  @media (max-width: 768px) {
-    .site-header-inner { grid-template-columns: auto 1fr auto; gap: var(--space-3); padding: 0 var(--space-4); }
-    .primary { display: none; }
+  /* Mobile disclosure nav under the header bar. */
+  .mobile-nav { display: block; border-top: 1px solid var(--line-1); }
+  .mobile-nav summary {
+    list-style: none;
+    cursor: pointer;
+    padding: var(--space-3) var(--space-4);
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
   }
+  .mobile-nav summary::-webkit-details-marker { display: none; }
+  .mobile-nav summary::after { content: '＋'; float: right; color: var(--fg-2); }
+  .mobile-nav[open] summary::after { content: '−'; }
+  .mobile-nav ul { list-style: none; padding: 0 var(--space-4) var(--space-3); margin: 0; display: grid; gap: var(--space-2); }
+  .mobile-nav a { color: var(--fg-0); border-bottom: none; padding: var(--space-2) 0; }
+  @media (min-width: 900px) { .mobile-nav { display: none; } }
 </style>

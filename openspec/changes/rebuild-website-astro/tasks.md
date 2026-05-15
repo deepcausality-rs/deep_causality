@@ -14,7 +14,7 @@
 - [x] 2.0 Invoke the `design-taste-frontend` skill to produce the design direction: typography scale, color system, spacing scale, shadow language, motion rules, and component-architecture conventions. Output committed as `website/web/DESIGN.md` and referenced by every page implementation below. — _Done. Dark + light themes (dark default), accent calibrated to hero art, anti-patterns list. Canonical tokens in `src/styles/tokens.css`. Pre-paint theme script lives in BaseLayout._
 - [ ] 2.1 Place logo variants and favicons under `website/web/public/brand/`
 - [ ] 2.2 Move the hero art from `ctx/static/img/frontpage-art.webp` to `website/web/public/img/frontpage-art.webp` (copy; do not delete source per Golden Rule)
-- [ ] 2.3 Author `/docs/concepts/glossary` defining: dynamic causality, Causaloid, Context, Effect Ethos, Causal Reasoning, Effect Propagation Process — plus a "former framing" entry addressing the prior "hypergeometric computational causality" label
+- [x] 2.3 Author `/docs/concepts/glossary` defining: dynamic causality, Causaloid, Context, Effect Ethos, Causal Reasoning, Effect Propagation Process — plus a "former framing" entry addressing the prior "hypergeometric computational causality" label — _written at `src/content/docs/concepts/glossary.md`; covers all required terms plus Causal Monad, HKT, CDL, Teloid, Contextoid, plus former-framing note and three-modalities table._
 - [ ] 2.4 Audit all hero, nav, and meta copy to use the "dynamic causality" framing
 - [ ] 2.5 Add a build-time check (script invoked from `pnpm build`) that greps `dist/**/*.html` for "hypergeometric" and fails on any hit outside `/docs/monograph/` and `/docs/concepts/glossary/`, and for the AI Styleguide banned phrases ("delve into", "shed light on", "game-changer", "unlock the potential", "not only … but also") and fails on any hit anywhere
 - [x] 2.6 Confirm with user: final tagline wording (D6 candidate or alternative) — _confirmed: "Dynamic causality for advanced systems."_
@@ -45,18 +45,18 @@
 
 ## 5. Documentation tree (newly authored)
 
-- [ ] 5.0 Read `docs/writing_guides/Ai Styleguide.md` and `ctx/docs/*.md` before authoring any of the pages below; treat the styleguide as binding for every prose page in §3, §4, §5, §6, and §7
-- [ ] 5.1 Author `/docs/getting-started/install.md`
-- [ ] 5.2 Author `/docs/getting-started/hello-causaloid.md` with a copy-pasteable end-to-end runnable example
-- [ ] 5.3 Author `/docs/getting-started/hello-context.md`
-- [ ] 5.4 Author `/docs/concepts/dynamic-causality.md` (the umbrella concept page)
-- [ ] 5.5 Author `/docs/concepts/causaloid.md`
-- [ ] 5.6 Author `/docs/concepts/context.md`
-- [ ] 5.7 Author `/docs/concepts/effect-ethos.md`
-- [ ] 5.8 Author `/docs/concepts/effect-propagation-process.md`
-- [ ] 5.9 Author `/docs/concepts/causal-monad.md` sourced from `deep_causality_core/src/types/causal_monad/`
-- [ ] 5.10 Author `/docs/concepts/hkt.md` sourced from `deep_causality_haft/src/hkt/` and `deep_causality_core/src/types/causal_effect_propagation_process/hkt.rs`
-- [ ] 5.11 Author `/docs/concepts/cdl.md` introducing the Causal Discovery Language, the typestate-builder pipeline (config → load → feature selection → discovery → analysis), and when to reach for it, sourced from `deep_causality_discovery/README.md` and `deep_causality_discovery/src/`
+- [x] 5.0 Read `docs/writing_guides/Ai Styleguide.md` and `ctx/docs/*.md` before authoring any of the pages below; treat the styleguide as binding for every prose page in §3, §4, §5, §6, and §7 — _styleguide internalized; concept pages also drew from monograph (`papers/src/EPP/`) and `deep_causality_core` source via Explore-agent surveys before authoring._
+- [x] 5.1 Author `/docs/getting-started/install.md`
+- [x] 5.2 Author `/docs/getting-started/hello-causaloid.md` with a copy-pasteable end-to-end runnable example
+- [x] 5.3 Author `/docs/getting-started/hello-context.md`
+- [x] 5.4 Author `/docs/concepts/dynamic-causality.md` (the umbrella concept page) — _grounded in the monograph's three-modality framing (static/dynamic/emergent) and the `m₂ = m₁ >>= f` axiom from `causality_as_epp.tex`._
+- [x] 5.5 Author `/docs/concepts/causaloid.md` — _quotes the actual struct from `deep_causality/src/types/causal_types/causaloid/mod.rs`; covers Singleton/Collection/Graph isomorphism._
+- [x] 5.6 Author `/docs/concepts/context.md` — _quotes the actual struct from `deep_causality/src/types/context_types/context_graph/mod.rs`; covers the five Contextoid payload kinds._
+- [x] 5.7 Author `/docs/concepts/effect-ethos.md` — _grounded in `teleology.tex` and the `deep_causality_ethos` crate; covers Teloid + DDIC + Lex Posterior/Specialis/Superior._
+- [x] 5.8 Author `/docs/concepts/effect-propagation-process.md` — _shows the literal `CausalEffectPropagationProcess<V,S,C,E,L>` struct and the EffectValue enum._
+- [x] 5.9 Author `/docs/concepts/causal-monad.md` sourced from `deep_causality_core/src/types/causal_monad/` — _includes the actual `pure`/`bind` signatures and the monad-law statement._
+- [x] 5.10 Author `/docs/concepts/hkt.md` sourced from `deep_causality_haft/src/hkt/` and `deep_causality_core/src/types/causal_effect_propagation_process/hkt.rs` — _explains the witness pattern and HKT5/HKT3 traits._
+- [x] 5.11 Author `/docs/concepts/cdl.md` introducing the Causal Discovery Language, the typestate-builder pipeline (config → load → feature selection → discovery → analysis), and when to reach for it, sourced from `deep_causality_discovery/README.md` and `deep_causality_discovery/src/`
 - [ ] 5.12 Author `/docs/guides/cdl-pipeline.md` — end-to-end CDL walkthrough based on `deep_causality_discovery/examples/main.rs`, with copy-pasteable code blocks and run instructions
 - [ ] 5.13 Author one `/docs/guides/<domain>.md` per landing-page example (six pages, deeper than the example detail pages)
 - [ ] 5.14 Author one `/docs/reference/<crate-name>.md` per published crate (20 pages), each with summary, primary types/traits, and a link to docs.rs

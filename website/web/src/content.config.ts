@@ -8,7 +8,7 @@ const blog = defineCollection({
     date: z.coerce.date(),
     author: z.string().default('DeepCausality'),
     tags: z.array(z.string()).default([]),
-    summary: z.string().optional(),
+    description: z.string().optional(),
     draft: z.boolean().default(false),
   }),
 });
@@ -32,6 +32,8 @@ const examples = defineCollection({
     summary: z.string(),
     crates: z.array(z.string()).default([]),
     order: z.number().default(0),
+    /** Repo-relative path to the canonical source file this example points at. */
+    source: z.string().optional(),
     further: z
       .array(z.object({ label: z.string(), href: z.string() }))
       .default([]),

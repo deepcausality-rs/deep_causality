@@ -14,11 +14,11 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const { Content } = await render(entry);
-const { title, domain, summary, crates, further } = entry.data;
+const { title, domain, summary, crates, source, further } = entry.data;
 ---
 <BaseLayout title={`${title} — DeepCausality`} description={summary}>
   <SiteHeader />
-  <ExampleDetail title={title} domain={domain} summary={summary} crates={crates} further={further}>
+  <ExampleDetail title={title} domain={domain} summary={summary} crates={crates} source={source} further={further}>
     <Content />
   </ExampleDetail>
 </BaseLayout>

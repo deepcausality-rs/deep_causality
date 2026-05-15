@@ -1,0 +1,83 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('blog', ({ data }) => !data.draft);
+  return entries.map((entry) => ({
+    params: { slug: entry.id.replace(/^en\//, '').replace(/\.md$/, '') },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { title, description, author, date } = entry.data;
+const fmtDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+<BaseLayout title={`${title} — DeepCausality`} description={description ?? title}>
+  <SiteHeader />
+  <article class="post">
+    <header>
+      <p class="eyebrow">Blog</p>
+      <h1>{title}</h1>
+      <p class="byline"><span>{author}</span><span aria-hidden="true">·</span><time datetime={date.toISOString()}>{fmtDate}</time></p>
+    </header>
+    <div class="prose">
+      <Content />
+    </div>
+    <nav class="back" aria-label="Back to blog">
+      <a href="/blog/">&larr; All posts</a>
+    </nav>
+  </article>
+
+  <style is:global>
+    .post { max-width: var(--w-prose); margin: 0 auto; padding: var(--space-7) var(--space-4); }
+    @media (min-width: 720px) { .post { padding: var(--space-9) var(--space-5); } }
+    .post header { margin-bottom: var(--space-6); }
+    .post .eyebrow {
+      margin: 0;
+      font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
+      text-transform: uppercase; color: var(--fg-2);
+    }
+    .post h1 { margin: var(--space-2) 0 var(--space-3) 0; font-size: var(--t-h1); line-height: var(--lh-h1); letter-spacing: var(--ls-h1); }
+    .post .byline { margin: 0; color: var(--fg-2); font-size: var(--t-body-sm); display: flex; gap: var(--space-2); align-items: baseline; }
+
+    .post .prose p,
+    .post .prose li { color: var(--fg-1); }
+    .post .prose p { max-width: var(--measure); margin: 0 0 var(--space-4) 0; }
+    .post .prose h2 { margin: var(--space-7) 0 var(--space-3) 0; }
+    .post .prose h3 { margin: var(--space-6) 0 var(--space-2) 0; }
+    .post .prose ul, .post .prose ol { padding-left: var(--space-5); margin: 0 0 var(--space-4) 0; }
+    .post .prose li { margin: var(--space-2) 0; }
+    .post .prose img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: var(--space-5) 0;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--line-1);
+    }
+    .post .prose pre {
+      background: var(--bg-2);
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      overflow: auto;
+      margin: var(--space-4) 0;
+      font-size: var(--t-mono-block);
+      line-height: var(--lh-body);
+    }
+    .post .prose pre code { background: transparent; padding: 0; }
+    .post .prose blockquote {
+      margin: var(--space-4) 0;
+      padding: var(--space-3) var(--space-5);
+      border-left: 3px solid var(--accent);
+      background: var(--bg-1);
+      color: var(--fg-1);
+    }
+    .post .back { margin-top: var(--space-8); }
+    .post .back a { color: var(--fg-1); border-bottom: none; }
+    .post .back a:hover { color: var(--fg-0); }
+  </style>
+</BaseLayout>

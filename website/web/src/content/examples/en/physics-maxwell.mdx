@@ -1,0 +1,66 @@
+---
+title: Maxwell field derivation as a four-step monadic chain
+domain: Physics
+summary: A plane-wave configuration becomes a vector potential, then an EM field, then a gauge check, then a Poynting flux. Four bind calls.
+order: 6
+source: examples/physics_examples/maxwell/main.rs
+crates:
+  - deep_causality
+  - deep_causality_core
+  - deep_causality_multivector
+further:
+  - label: Causal Monad
+    href: /docs/concepts/causal-monad/
+  - label: Effect Propagation Process
+    href: /docs/concepts/effect-propagation-process/
+---
+
+This example lives at [`examples/physics_examples/maxwell/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples/maxwell). It is the simplest demonstration of monadic composition over a physics chain: each step is a pure function from one physical state to the next, and `bind` glues them.
+
+The chain reads top-to-bottom as the textbook derivation:
+
+```
+PlaneWaveConfig → Vector Potential (A) → EM Field (F = ∇A) → Gauge Check → Poynting Flux
+```
+
+## The chain
+
+```rust
+use deep_causality::PropagatingEffect;
+use model::{MaxwellState, PlaneWaveConfig};
+
+let initial_state = MaxwellState::from_config(&config);
+
+let result: PropagatingEffect<MaxwellState> =
+    PropagatingEffect::pure(initial_state).bind(|state, _, _| {
+        model::compute_potential(state.into_value().unwrap_or_default())
+            .bind(|s, _, _| model::compute_em_field(s.into_value().unwrap_or_default()))
+            .bind(|s, _, _| model::check_lorenz_gauge(s.into_value().unwrap_or_default()))
+            .bind(|s, _, _| model::compute_poynting_flux(s.into_value().unwrap_or_default()))
+    });
+
+let final_state = result.value.into_value().unwrap_or_default();
+```
+
+Each `bind` receives the upstream `MaxwellState` and returns a new `PropagatingEffect<MaxwellState>` with a populated downstream field. The Lorenz-gauge check fails into the chain's `error` slot if the divergence is non-zero; the Poynting-flux step still adds its log entry on top of whatever ran before it.
+
+## What to look at in the source
+
+- `model.rs`: `MaxwellState`, `PlaneWaveConfig`, and the four step functions. The implementation uses the `deep_causality_multivector` crate for geometric-algebra operations.
+- `main.rs`: the chain plus the result-extraction block that prints the field magnitudes, the gauge verdict, and the Poynting flux.
+
+The crate ships sibling examples for GRMHD, quantum mechanics, thermodynamics, and fluid dynamics. They live alongside Maxwell under `examples/physics_examples/`.
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p physics_examples --bin maxwell
+```
+
+The output prints the vector potential, the E and B fields, the Poynting flux, and the divergence test for the Lorenz gauge.
+
+## Why this is a good fit
+
+A physics derivation is a sequence of well-defined transformations on a state. The monadic form preserves that sequence as a value: the chain can be tested, refactored, replayed against a different initial configuration, or extended with an extra step without rewriting the surrounding code.

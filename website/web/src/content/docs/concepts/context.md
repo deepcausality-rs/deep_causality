@@ -44,11 +44,11 @@ Seven generic parameters look intimidating; they are how the library remains pol
 
 A `Contextoid` is the atomic unit of context. It carries an id and a typed payload:
 
-- **`Datoid`** — arbitrary data with a name and value. The everyday case for tunable thresholds, model parameters, current state snapshots.
-- **`Spaceoid`** — a spatial position or region in the chosen space type.
-- **`Tempoid`** — a temporal position or interval.
-- **`SpaceTempoid`** — a combined spacetime point or extent.
-- **`Symboid`** — a symbolic entity (a label, a category, an external reference).
+- **`Datoid`**: arbitrary data with a name and value. The everyday case for tunable thresholds, model parameters, current state snapshots.
+- **`Spaceoid`**: a spatial position or region in the chosen space type.
+- **`Tempoid`**: a temporal position or interval.
+- **`SpaceTempoid`**: a combined spacetime point or extent.
+- **`Symboid`**: a symbolic entity (a label, a category, an external reference).
 
 Contextoids are *not* recursive. A Contextoid cannot contain another Contextoid. The monograph treats this as a deliberate guard against self-referential paradox; the engineering payoff is that walking the graph stays predictable.
 

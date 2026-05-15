@@ -5,27 +5,26 @@ import type { Example } from './examples';
 interface Props { example: Example; index: number }
 const { example, index } = Astro.props;
 
-// Six monoline domain glyphs (16×16). One per slug, never an emoji.
+// Per-slug monoline glyphs (16×16). Never an emoji. Fallback is a small node-link mark.
 const glyphs: Record<string, string> = {
-  'quant-finance':
-    '<path d="M2 13 L6 7 L9 10 L14 3" /><path d="M11 3 L14 3 L14 6"/>',
-  'robotics-control':
-    '<rect x="2" y="6" width="12" height="6" rx="1"/><circle cx="5" cy="13.5" r="1"/><circle cx="11" cy="13.5" r="1"/><path d="M8 6 L8 3 L11 3"/>',
-  'observability-sre':
+  'aerospace-flight-envelope':
+    '<path d="M2 11 L8 4 L14 11 Z"/><path d="M8 4 L8 14"/><circle cx="8" cy="11" r="1.2"/>',
+  'sensor-monitoring-csm':
     '<path d="M2 8 L5 8 L7 4 L9 12 L11 8 L14 8"/>',
-  'bioinformatics-signal':
+  'async-event-inference':
+    '<circle cx="8" cy="8" r="5.5"/><path d="M8 4 L8 8 L11 9.5"/>',
+  'biomedical-tumor-treatment':
     '<path d="M3 3 C 7 5, 9 11, 13 13 M13 3 C 9 5, 7 11, 3 13"/><circle cx="3" cy="3" r="1"/><circle cx="13" cy="3" r="1"/><circle cx="3" cy="13" r="1"/><circle cx="13" cy="13" r="1"/>',
-  'physics-simulation':
+  'physics-maxwell':
     '<circle cx="8" cy="8" r="2"/><ellipse cx="8" cy="8" rx="6" ry="2.5"/><ellipse cx="8" cy="8" rx="6" ry="2.5" transform="rotate(60 8 8)"/><ellipse cx="8" cy="8" rx="6" ry="2.5" transform="rotate(120 8 8)"/>',
-  'policy-compliance':
-    '<path d="M8 2 L13 4 L13 9 C 13 12, 10 14, 8 14 C 6 14, 3 12, 3 9 L3 4 Z"/><path d="M6 8 L7.5 9.5 L10 6.5"/>',
+  'pearl-counterfactual':
+    '<circle cx="4" cy="4" r="1.4"/><circle cx="12" cy="8" r="1.4"/><circle cx="4" cy="12" r="1.4"/><path d="M5 5 L11 7"/><path d="M11 9 L5 11"/>',
 };
-const glyph = glyphs[example.slug] ?? '';
+const fallback = '<circle cx="4" cy="8" r="1.4"/><circle cx="12" cy="8" r="1.4"/><path d="M5.5 8 L10.5 8"/>';
+const glyph = glyphs[example.slug] ?? fallback;
 
-// Stagger middle card of each row by 16px y at desktop >1200px.
-const staggered = index === 1 || index === 4;
 ---
-<a class:list={["example-card", staggered && 'is-staggered']} href={`/examples/${example.slug}/`}>
+<a class="example-card" href={`/examples/${example.slug}/`}>
   <header class="ec-head">
     <span class="ec-eyebrow">{example.domain}</span>
     <svg class="ec-glyph" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" set:html={glyph} />
@@ -50,22 +49,17 @@ const staggered = index === 1 || index === 4;
     border: 1px solid var(--line-1);
     border-radius: var(--radius-md);
     color: var(--fg-0);
-    border-bottom: 1px solid var(--line-1);
     box-shadow: var(--shadow-1);
     text-decoration: none;
+    min-width: 0; /* critical: lets a grid item shrink below its content's intrinsic width */
+    height: 100%; /* uniform card heights inside a stretching grid row */
     transition: transform var(--dur-med) var(--ease-out), border-color var(--dur-med) var(--ease-out);
-    will-change: auto;
   }
   .example-card:hover {
     transform: translate3d(0, -2px, 0);
     border-color: var(--line-2);
   }
   .example-card:focus-visible { outline-offset: 4px; }
-
-  @media (min-width: 1200px) {
-    .example-card.is-staggered { transform: translate3d(0, 16px, 0); }
-    .example-card.is-staggered:hover { transform: translate3d(0, 14px, 0); }
-  }
 
   .ec-head { display: flex; align-items: center; justify-content: space-between; }
   .ec-eyebrow {
@@ -88,11 +82,20 @@ const staggered = index === 1 || index === 4;
     background: var(--bg-2);
     border-radius: var(--radius-md);
     padding: var(--space-4);
-    overflow: auto;
     font-size: var(--t-mono-block);
     line-height: var(--lh-body);
+    min-width: 0;
+    overflow: hidden; /* the inner <pre> scrolls; the card itself never widens past the column */
+    flex-grow: 1; /* claim vertical slack so all cards in the row end the same height */
+    display: flex;
+    flex-direction: column;
   }
-  .ec-code :global(pre) { background: transparent !important; margin: 0; }
+  .ec-code :global(pre) {
+    background: transparent !important;
+    margin: 0;
+    overflow-x: auto; /* horizontal scroll on the code, not on the card */
+    flex-grow: 1;
+  }
   .ec-code :global(code) { font-family: var(--font-mono); }
 
   .ec-foot {

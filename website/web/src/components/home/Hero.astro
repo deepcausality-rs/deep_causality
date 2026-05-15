@@ -10,7 +10,7 @@
       <p class="tagline">Dynamic causality for advanced systems.</p>
       <p class="sub">
         A causal-reasoning library for engineering systems where time, context, and rules evolve.
-        Built around three primitives: the Causaloid, the Context hypergraph, and the Effect Ethos.
+        Built around three primitives: the causal monad, the causaloid, and the context.
       </p>
       <div class="cta">
         <a class="btn btn-primary" href="/docs/getting-started/">Read the docs</a>
@@ -24,24 +24,37 @@
 </section>
 
 <style>
-  .hero { padding: var(--space-9) 0 var(--space-7); border-bottom: 1px solid var(--line-1); }
+  /* Mobile-first: stack, hero art above text. Expand to 7/5 split at ≥900px. */
+  .hero { padding: var(--space-7) 0; border-bottom: 1px solid var(--line-1); }
   .hero-inner {
     max-width: var(--w-wide);
     margin: 0 auto;
-    padding: 0 var(--space-5);
+    padding: 0 var(--space-4);
     display: grid;
-    grid-template-columns: 7fr 5fr;
-    gap: var(--space-8);
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
     align-items: center;
   }
+  .hero-inner > * { min-width: 0; }
   .hero-text { display: flex; flex-direction: column; gap: var(--space-4); max-width: 56ch; }
+
+  @media (min-width: 900px) {
+    .hero { padding: var(--space-9) 0 var(--space-7); }
+    .hero-inner {
+      grid-template-columns: 7fr 5fr;
+      gap: var(--space-8);
+      padding: 0 var(--space-5);
+    }
+    .hero-art-frame { order: 0; }
+  }
   .eyebrow {
     margin: 0;
     font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
     text-transform: uppercase; color: var(--fg-2);
   }
   h1 {
-    font-size: var(--t-display);
+    /* Fluid display size: smaller on phones, scales up on desktop. */
+    font-size: clamp(2.25rem, 6vw + 0.5rem, 3.75rem);
     line-height: var(--lh-display);
     letter-spacing: var(--ls-display);
     margin: 0;
@@ -81,9 +94,6 @@
   }
   .hero-art-frame img { display: block; width: 100%; height: auto; }
 
-  @media (max-width: 900px) {
-    .hero-inner { grid-template-columns: 1fr; gap: var(--space-6); }
-    .hero-art-frame { order: -1; }
-    h1 { font-size: 2.75rem; }
-  }
+  /* Stack order on small viewports: art above text so the brand image is the first thing seen. */
+  .hero-art-frame { order: -1; }
 </style>

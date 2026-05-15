@@ -2,7 +2,7 @@
 title: Hello, Context
 description: Add a Context hypergraph and let a Causaloid read from it.
 section: getting-started
-order: 3
+order: 4
 ---
 
 The Causaloid in the [previous page](/docs/getting-started/hello-causaloid/) took an input and returned an effect. That covers a surprising amount of practical work, and it stops covering it the moment your rule needs to know something about the world beyond its input.

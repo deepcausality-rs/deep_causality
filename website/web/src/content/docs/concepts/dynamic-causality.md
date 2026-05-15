@@ -41,11 +41,11 @@ The default position is dynamic: the rules are fixed during a run, the context u
 
 Everything else in the library descends from three things.
 
-[**Causaloid**](/docs/concepts/causaloid/) — a self-contained unit of causality. Wraps a function from input (and optionally context) to a `PropagatingEffect`. Composes recursively: a graph of Causaloids is itself a Causaloid. Borrowed from physicist Lucian Hardy's work on quantum gravity, where the construction first appeared as a way to talk about causal structure without assuming a fixed temporal order.
+[**Causaloid**](/docs/concepts/causaloid/): a self-contained unit of causality. Wraps a function from input (and optionally context) to a `PropagatingEffect`. Composes recursively: a graph of Causaloids is itself a Causaloid. Borrowed from physicist Lucian Hardy's work on quantum gravity, where the construction first appeared as a way to talk about causal structure without assuming a fixed temporal order.
 
-[**Context**](/docs/concepts/context/) — an explicit hypergraph encoding the environment. Nodes are typed `Contextoid`s carrying data, space, time, spacetime, or symbolic payloads. Edges are arbitrary n-ary relations. Mutating the Context is how the model becomes dynamic; running counterfactuals is how the model interrogates itself.
+[**Context**](/docs/concepts/context/): an explicit hypergraph encoding the environment. Nodes are typed `Contextoid`s carrying data, space, time, spacetime, or symbolic payloads. Edges are arbitrary n-ary relations. Mutating the Context is how the model becomes dynamic; running counterfactuals is how the model interrogates itself.
 
-[**Effect Ethos**](/docs/concepts/effect-ethos/) — a verification layer that sits above effect propagation. Encodes operational rules as `Teloid`s and evaluates every action against them with a defeasible deontic calculus. The conflict-resolution machinery (Lex Posterior, Lex Specialis, Lex Superior) gives you a principled way to reconcile contradictory norms.
+[**Effect Ethos**](/docs/concepts/effect-ethos/): a verification layer that sits above effect propagation. Encodes operational rules as `Teloid`s and evaluates every action against them with a defeasible deontic calculus. The conflict-resolution machinery (Lex Posterior, Lex Specialis, Lex Superior) gives you a principled way to reconcile contradictory norms.
 
 ## What this earns you
 
