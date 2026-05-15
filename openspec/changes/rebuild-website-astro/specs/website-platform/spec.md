@@ -33,6 +33,17 @@ The site SHALL be configured with Astro's built-in i18n routing using `en` as th
 - **WHEN** a new locale `de` is added in the future
 - **THEN** German content SHALL be added under a `de/` segment in the relevant content collection, and German routes SHALL be served under `/de/...`, without changes to English routes
 
+### Requirement: UI design driven by the design-taste skill
+All UI design decisions (layout, typography scale, color system, spacing scale, shadow language, motion, and component architecture) SHALL be produced through the `design-taste-frontend` skill. Generic AI-default patterns — centered hero with gradient background, rounded-2xl shadow-md card stacks, uniform Tailwind-default grids — SHALL NOT be shipped. Component architecture and CSS performance rules from the skill (hardware-accelerated transforms, no layout-thrashing animations) SHALL be enforced in review.
+
+#### Scenario: Skill applied before UI work begins
+- **WHEN** a developer starts implementation of any page or reusable component listed in this change
+- **THEN** the `design-taste-frontend` skill SHALL have been invoked to produce the design direction, and the resulting tokens / component spec SHALL be the reference the implementation builds against
+
+#### Scenario: Generic-default patterns rejected
+- **WHEN** a PR for this change is reviewed
+- **THEN** any component matching a flagged generic-default pattern (per the skill's rules) SHALL be sent back for revision rather than merged
+
 ### Requirement: Shared layout and brand tokens
 The site SHALL provide a shared base layout used by all pages, a brand-token module (colors, typography, spacing) consumed via CSS variables, and a global header/footer.
 

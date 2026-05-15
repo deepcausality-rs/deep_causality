@@ -9,8 +9,9 @@
 - [ ] 1.7 Define content collection schemas in `src/content/config.ts` for: `blog`, `docs`, `examples`, `monograph`
 - [ ] 1.8 Verify `pnpm install && pnpm build` produces a static site in `website/web/dist/`
 
-## 2. Brand identity
+## 2. Brand identity & visual design
 
+- [ ] 2.0 Invoke the `design-taste-frontend` skill to produce the design direction: typography scale, color system, spacing scale, shadow language, motion rules, and component-architecture conventions. Output committed as `website/web/DESIGN.md` and referenced by every page implementation below. Also consult `high-end-visual-design` and `redesign-existing-projects` skills where relevant.
 - [ ] 2.1 Place logo variants and favicons under `website/web/public/brand/`
 - [ ] 2.2 Move the hero art from `ctx/static/img/frontpage-art.webp` to `website/web/public/img/frontpage-art.webp` (copy; do not delete source per Golden Rule)
 - [ ] 2.3 Author `/docs/concepts/glossary` defining: dynamic causality, Causaloid, Context, Effect Ethos, Causal Reasoning, Effect Propagation Process — plus a "former framing" entry addressing the prior "hypergeometric computational causality" label
@@ -96,6 +97,7 @@
 - [ ] 9.2 Manual smoke test on the beta domain: landing page above-the-fold, all six example pages, docs index, monograph index, a sample blog post
 - [ ] 9.3 Run the build-time forbidden-phrase check and confirm zero violations (covers "hypergeometric" plus the AI Styleguide banned phrases: "delve into", "shed light on", "game-changer", "unlock the potential", "not only … but also")
 - [ ] 9.3a Run a styleguide audit script: em-dash density ≤ 4/1k words per page, filler-word ratio < 2%, "Additionally|Furthermore" paragraph-opener ratio < 0.4; fail loudly on any violation
+- [ ] 9.3b Visual-design review pass against the `design-taste-frontend` skill output: no generic-default patterns shipped, component architecture matches `DESIGN.md`, motion/perf rules followed
 - [ ] 9.4 Lighthouse pass on landing page (target: performance ≥ 95 mobile, accessibility ≥ 95)
 - [ ] 9.5 User review on the beta domain
 
