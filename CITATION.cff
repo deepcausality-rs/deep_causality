@@ -1,11 +1,21 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
 cff-version: 1.2.0
-message: "If you use DeepCausality, please cite it as below."
-title: "DeepCausality"
+title: DeepCausality
+message: 'If you use DeepCausality, please cite it as below.'
+type: software
 authors:
   - family-names: Hansen
     given-names: Marvin
-    orcid: "https://orcid.org/0009-0000-1159-8173"
-    affiliation: "Center for Dynamic Causality"
-repository-code: "https://github.com/deepcausality-rs/deep_causality"
+    orcid: 'https://orcid.org/0009-0000-1159-8173'
+    affiliation: Center for Dynamic Causality
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.20195214
+    description: >-
+      This DOI represents all versions, and will always
+      resolve to the latest one.
+repository-code: 'https://github.com/deepcausality-rs/deep_causality'
+url: 'https://www.deepcausality.com'
 license: MIT
-type: software
