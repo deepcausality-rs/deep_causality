@@ -1,13 +1,13 @@
 ## 1. Astro project bootstrap
 
-- [ ] 1.1 Create `website/web/` directory and initialize an Astro 4.x project with TypeScript, MDX, and the Cloudflare adapter (static output)
-- [ ] 1.2 Configure pnpm; add `package.json`, `pnpm-lock.yaml`, `.npmrc`, and a `.gitignore` for `node_modules` and `dist`
-- [ ] 1.3 Verify the Rust Cargo workspace is unaffected (`cargo metadata` from repo root still resolves; no member added)
-- [ ] 1.4 Configure `astro.config.mjs` with `i18n: { defaultLocale: 'en', locales: ['en'], routing: { prefixDefaultLocale: false } }`
-- [ ] 1.5 Add brand-token CSS module (colors, typography, spacing) and a global stylesheet
-- [ ] 1.6 Create `BaseLayout.astro` with shared header, footer, and meta defaults using rebranded copy
-- [ ] 1.7 Define content collection schemas in `src/content/config.ts` for: `blog`, `docs`, `examples`, `monograph`
-- [ ] 1.8 Verify `pnpm install && pnpm build` produces a static site in `website/web/dist/`
+- [x] 1.1 Create `website/web/` directory and initialize an Astro 4.x project with TypeScript, MDX, and the Cloudflare adapter (static output) — _used Astro 5.18 (current stable); static output, no Cloudflare adapter needed since Pages serves `dist/` directly. Adapter can be added later if SSR is wanted._
+- [x] 1.2 Configure pnpm; add `package.json`, `pnpm-lock.yaml`, `.npmrc`, and a `.gitignore` for `node_modules` and `dist` — _plus `pnpm-workspace.yaml` `allowBuilds` for esbuild/sharp under pnpm 11, and root `.gitignore` updated._
+- [x] 1.3 Verify the Rust Cargo workspace is unaffected (`cargo metadata` from repo root still resolves; no member added) — _30 workspace members, none under `website/`._
+- [x] 1.4 Configure `astro.config.mjs` with `i18n: { defaultLocale: 'en', locales: ['en'], routing: { prefixDefaultLocale: false } }`
+- [x] 1.5 Add brand-token CSS module (colors, typography, spacing) and a global stylesheet — _bootstrap-only tokens at `src/styles/tokens.css`, marked as placeholder until task 2.0 produces the real design system._
+- [x] 1.6 Create `BaseLayout.astro` with shared header, footer, and meta defaults using rebranded copy
+- [x] 1.7 Define content collection schemas in `src/content.config.ts` for: `blog`, `docs`, `examples`, `monograph`
+- [x] 1.8 Verify `pnpm install && pnpm build` produces a static site in `website/web/dist/` — _builds clean, sitemap and Pagefind index generated._
 
 ## 2. Brand identity & visual design
 

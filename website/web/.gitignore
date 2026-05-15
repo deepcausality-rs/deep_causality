@@ -1,0 +1,8 @@
+node_modules
+dist
+.astro
+.env
+.env.production
+.DS_Store
+.cache
+.pagefind

@@ -1,0 +1,46 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'DeepCausality — dynamic causality for Rust',
+  description = 'DeepCausality is a Rust framework for dynamic causality: causal reasoning over systems where time, context, and rules evolve.',
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <header>
+      <nav>
+        <a href="/" aria-label="DeepCausality home">DeepCausality</a>
+        <a href="/docs/getting-started/">Docs</a>
+        <a href="https://github.com/deepcausality-rs/deep_causality">GitHub</a>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer>
+      <small>DeepCausality · dynamic causality framework · MIT licensed</small>
+    </footer>
+  </body>
+</html>

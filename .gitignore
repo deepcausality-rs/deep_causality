@@ -28,6 +28,15 @@ coverage
 .idea/
 .idea/*.*
 
+# Mac stuff
 .DS_Store
 */.DS_Store
-.aider*
+
+# Astro site (website/web)
+website/web/node_modules
+website/web/dist
+website/web/.astro
+website/web/.pagefind
+website/web/.cache
+website/web/.env
+website/web/.env.production
