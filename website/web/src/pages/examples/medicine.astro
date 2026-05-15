@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import CategoryList from '../../components/examples/CategoryList.astro';
+---
+<BaseLayout title="Medicine — Examples — DeepCausality" description="Biomedical examples built on DeepCausality: tumor treatment optimization and protein folding under non-Markovian dynamics.">
+  <SiteHeader />
+  <CategoryList
+    category="medicine"
+    eyebrow="Examples · Medicine"
+    title="Medicine"
+    description="Biomedical work that exercises the framework's stronger patterns: a Metropolis-style optimizer wrapped in a PropagatingEffect, and a Generalized Master Equation that carries the memory ordinary Markov dynamics throw away."
+  />
+</BaseLayout>

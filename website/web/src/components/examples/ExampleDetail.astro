@@ -89,9 +89,14 @@ const sourceHref = source ? `${repoBase}/${source}` : undefined;
   .ex-body :global(h3) { margin: var(--space-6) 0 var(--space-2); }
   .ex-body :global(p) { color: var(--fg-1); max-width: var(--measure); }
   .ex-body :global(pre) {
-    background: var(--bg-2); border-radius: var(--radius-md); padding: var(--space-5);
-    overflow: auto; margin: var(--space-4) 0;
-    font-size: var(--t-mono-block); line-height: var(--lh-body);
+    background: var(--bg-2);
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-md);
+    padding: var(--space-5);
+    overflow: auto;
+    margin: var(--space-4) 0;
+    font-size: var(--t-mono-block);
+    line-height: var(--lh-body);
   }
   .ex-body :global(pre code) { background: transparent; padding: 0; }
   .ex-body :global(ul) { color: var(--fg-1); }

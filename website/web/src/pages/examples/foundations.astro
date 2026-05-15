@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import CategoryList from '../../components/examples/CategoryList.astro';
+---
+<BaseLayout title="Foundations — Examples — DeepCausality" description="Foundational examples that teach the DeepCausality calling conventions: Pearl's ladder of causation, the Causal State Machine, and async event inference on Tokio.">
+  <SiteHeader />
+  <CategoryList
+    category="foundations"
+    eyebrow="Examples · Foundations"
+    title="Foundations"
+    description="The examples to read first. They teach the framework's calling conventions: how to wrap a value in a PropagatingEffect, how to compose with bind, how to wire a Causaloid into a state machine, and how to run inference on an async runtime."
+  />
+</BaseLayout>

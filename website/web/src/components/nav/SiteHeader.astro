@@ -7,19 +7,31 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
 <header class="site-header">
   <div class="site-header-inner">
     <a class="brand" href="/" aria-label="DeepCausality home">
-      <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4">
-        <path d="M4 11 L11 4 L18 11 L11 18 Z" />
-        <circle cx="11" cy="11" r="2" fill="currentColor" stroke="none"/>
-        <path d="M4 11 L11 11 M11 4 L11 18 M18 11 L11 11" stroke-width="0.8" opacity="0.5"/>
-      </svg>
-      <span>DeepCausality</span>
+      <img class="logo logo-light" src="/img/logo_black.svg" alt="DeepCausality" width="170" height="36" />
+      <img class="logo logo-dark"  src="/img/logo_white.svg" alt="DeepCausality" width="170" height="36" />
     </a>
 
     <nav class="primary" aria-label="Primary">
       <a href="/docs/getting-started/install/" class:list={["nav-link", isActive('/docs/') && 'is-active']}>Docs</a>
-      <a href="/examples/" class:list={["nav-link", isActive('/examples/') && 'is-active']}>Examples</a>
+      <div class="nav-dropdown">
+        <a href="/examples/" class:list={["nav-link nav-link-trigger", isActive('/examples/') && 'is-active']} aria-haspopup="true">
+          Examples
+          <svg class="caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2.5 4 L5 6.5 L7.5 4"/>
+          </svg>
+        </a>
+        <ul class="dropdown-menu" role="menu">
+          <li><a href="/examples/" role="menuitem">All examples</a></li>
+          <li class="sep" aria-hidden="true"></li>
+          <li><a href="/examples/foundations/" role="menuitem">Foundations</a></li>
+          <li><a href="/examples/aerospace/" role="menuitem">Aerospace</a></li>
+          <li><a href="/examples/physics/" role="menuitem">Physics</a></li>
+          <li><a href="/examples/medicine/" role="menuitem">Medicine</a></li>
+        </ul>
+      </div>
       <a href="/blog/" class:list={["nav-link", isActive('/blog/') && 'is-active']}>Blog</a>
-      <a href="/docs/monograph/" class:list={["nav-link", isActive('/docs/monograph/') && 'is-active']}>Monograph</a>
+      <a href="/community/" class:list={["nav-link", isActive('/community/') && 'is-active']}>Community</a>
+      <a href="/about/" class:list={["nav-link", isActive('/about/') && 'is-active']}>About</a>
     </nav>
 
     <div class="utility">
@@ -35,9 +47,18 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
     <summary>Menu</summary>
     <ul>
       <li><a href="/docs/getting-started/install/">Docs</a></li>
-      <li><a href="/examples/">Examples</a></li>
+      <li>
+        <a href="/examples/">Examples</a>
+        <ul class="sub">
+          <li><a href="/examples/foundations/">Foundations</a></li>
+          <li><a href="/examples/aerospace/">Aerospace</a></li>
+          <li><a href="/examples/physics/">Physics</a></li>
+          <li><a href="/examples/medicine/">Medicine</a></li>
+        </ul>
+      </li>
       <li><a href="/blog/">Blog</a></li>
-      <li><a href="/docs/monograph/">Monograph</a></li>
+      <li><a href="/community/">Community</a></li>
+      <li><a href="/about/">About</a></li>
     </ul>
   </details>
 </header>
@@ -76,11 +97,20 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
     }
   }
   .brand {
-    display: inline-flex; align-items: center; gap: var(--space-2);
-    color: var(--fg-0); font-weight: 540; letter-spacing: -0.005em;
+    display: inline-flex; align-items: center;
     border-bottom: none;
+    line-height: 0;
   }
-  .brand svg { color: var(--accent); }
+  .logo {
+    display: block;
+    height: 32px;
+    width: auto;
+  }
+  /* Theme-aware swap. :global() on the parent selector lets the rule reach
+     [data-theme] on <html>, which sits outside the component scope. */
+  .logo-light, .logo-dark { display: none; }
+  :global([data-theme='light']) .logo-light { display: block; }
+  :global([data-theme='dark'])  .logo-dark  { display: block; }
 
   .primary { display: none; gap: var(--space-5); }
   @media (min-width: 900px) { .primary { display: flex; } }
@@ -101,6 +131,70 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
   .nav-link.is-active { color: var(--fg-0); }
   .nav-link.is-active::after { transform: scaleX(1); }
 
+  /* Dropdown wrapper around the Examples nav item. */
+  .nav-dropdown { position: relative; }
+  /* Invisible hover bridge below the trigger keeps the menu open while the
+     cursor crosses the small gap between the trigger and the panel. */
+  .nav-dropdown::after {
+    content: '';
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    height: 6px;
+  }
+  .nav-link-trigger { display: inline-flex; align-items: center; gap: var(--space-1); }
+  .nav-link-trigger .caret { transition: transform var(--dur-fast) var(--ease-out); }
+  .nav-dropdown:hover .nav-link-trigger .caret,
+  .nav-dropdown:focus-within .nav-link-trigger .caret { transform: rotate(180deg); }
+
+  .dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: -8px;
+    min-width: 200px;
+    list-style: none;
+    margin: 0;
+    padding: var(--space-2);
+    background: var(--bg-1);
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-2);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity var(--dur-fast) var(--ease-out),
+                transform var(--dur-fast) var(--ease-out),
+                visibility 0s linear var(--dur-fast);
+    z-index: 30;
+  }
+  .nav-dropdown:hover .dropdown-menu,
+  .nav-dropdown:focus-within .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition-delay: 0s;
+  }
+  .dropdown-menu li { margin: 0; }
+  .dropdown-menu li.sep {
+    height: 1px;
+    margin: var(--space-2) 0;
+    background: var(--line-1);
+  }
+  .dropdown-menu a {
+    display: block;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    color: var(--fg-1);
+    border-bottom: none;
+    font-size: var(--t-body-sm);
+    transition: background var(--dur-fast) var(--ease-out),
+                color var(--dur-fast) var(--ease-out);
+  }
+  .dropdown-menu a:hover,
+  .dropdown-menu a:focus-visible {
+    background: var(--bg-2);
+    color: var(--fg-0);
+  }
+
   .utility { display: inline-flex; align-items: center; gap: var(--space-3); }
   .gh { color: var(--fg-1); display: inline-grid; place-items: center; width: 32px; height: 32px; border-bottom: none; }
   .gh:hover { color: var(--fg-0); }
@@ -119,5 +213,16 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
   .mobile-nav[open] summary::after { content: '−'; }
   .mobile-nav ul { list-style: none; padding: 0 var(--space-4) var(--space-3); margin: 0; display: grid; gap: var(--space-2); }
   .mobile-nav a { color: var(--fg-0); border-bottom: none; padding: var(--space-2) 0; }
+  .mobile-nav ul.sub {
+    padding: var(--space-2) 0 0 var(--space-4);
+    gap: var(--space-1);
+    border-left: 1px solid var(--line-1);
+    margin-left: var(--space-2);
+  }
+  .mobile-nav ul.sub a {
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+  }
+  .mobile-nav ul.sub a:hover { color: var(--fg-0); }
   @media (min-width: 900px) { .mobile-nav { display: none; } }
 </style>

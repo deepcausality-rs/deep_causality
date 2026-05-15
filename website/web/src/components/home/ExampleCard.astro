@@ -31,7 +31,7 @@ const glyph = glyphs[example.slug] ?? fallback;
   </header>
   <h3 class="ec-headline">{example.headline}</h3>
   <div class="ec-code">
-    <Code code={example.snippet} lang="rust" theme="github-dark" />
+    <Code code={example.snippet} lang="rust" themes={{ light: 'github-light', dark: 'github-dark' }} defaultColor={false} />
   </div>
   <footer class="ec-foot">
     <span>Open example</span>

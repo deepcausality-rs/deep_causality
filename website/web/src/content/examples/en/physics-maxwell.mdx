@@ -3,6 +3,7 @@ title: Maxwell field derivation as a four-step monadic chain
 domain: Physics
 summary: A plane-wave configuration becomes a vector potential, then an EM field, then a gauge check, then a Poynting flux. Four bind calls.
 order: 6
+category: physics
 source: examples/physics_examples/maxwell/main.rs
 crates:
   - deep_causality
@@ -56,7 +57,7 @@ The crate ships sibling examples for GRMHD, quantum mechanics, thermodynamics, a
 ```bash
 git clone https://github.com/deepcausality-rs/deep_causality
 cd deep_causality
-cargo run --release -p physics_examples --bin maxwell
+cargo run --release -p physics_examples --example maxwell_example
 ```
 
 The output prints the vector potential, the E and B fields, the Poynting flux, and the divergence test for the Lorenz gauge.

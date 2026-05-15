@@ -1,0 +1,96 @@
+---
+title: Recovering Earth's mass from satellite clocks
+domain: Chronometric geodesy
+summary: One week of Galileo broadcast clock and orbit data, a five-stage CausalMonad pipeline, and Earth's mass falls out within 0.2% of the IERS reference.
+order: 10
+category: physics
+source: examples/chronometric_examples/gm_recovery/main.rs
+crates:
+  - deep_causality_core
+  - deep_causality_num
+  - deep_causality_physics
+further:
+  - label: Causal Monad
+    href: /docs/concepts/causal-monad/
+  - label: Effect Propagation Process
+    href: /docs/concepts/effect-propagation-process/
+---
+
+The full crate lives at [`examples/chronometric_examples/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/chronometric_examples). The example takes one full GPS week of broadcast clock data from Galileo satellite E14, runs a J2-corrected weak-field 1PN inversion (Bjerhammar 1975, Vermeer 1983), and recovers Earth's geocentric gravitational parameter $GM_\oplus$. Dividing by Newton's gravitational constant gives Earth's mass. The result lands within 0.2% of the IERS 2010 reference.
+
+The physics input is *time-dilation differences between satellites at different altitudes*. That's it.
+
+## The result
+
+```text
+                       Recovered          Reference (JGM-3 / IERS 2010)
+  GM_Earth  [m³/s²]    3.994180e14        3.986004e14
+  M_Earth   [kg]       5.984418e24        5.972190e24
+
+  Relative error (GM):   0.2051 %   (2.051e-3)
+  Relative error (M):    0.2047 %   (2.047e-3)
+```
+
+Earth's mass, weighed by satellite clocks accurate to 0.2%.
+
+## The pipeline
+
+`main.rs` keeps the structural showcase up front. Five stages, each returning a `PropagatingEffect`, composed through `.bind`:
+
+```rust
+use deep_causality_core::{EffectValue, PropagatingEffect};
+use deep_causality_num::Float106;
+
+let result: PropagatingEffect<GmReport<FloatType>> = PropagatingEffect::pure(inputs)
+    .bind(stage_load::<FloatType>)
+    .bind(stage_align)
+    .bind(stage_pair)
+    .bind(stage_solve_gm)
+    .bind(stage_aggregate);
+```
+
+[`main.rs:68`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/chronometric_examples/gm_recovery/main.rs#L68). Each stage is generic over the floating-point type. The default `FloatType` alias is `Float106`, a double-double providing roughly 32 decimal digits. Switching to `f64` is a one-line change to the alias.
+
+## What each stage does
+
+**Load.** Reads `.clk` and `.sp3` files for a single satellite across the bundled GPS-week datasets (seven daily files), concatenates the records, sorts by timestamp.
+
+**Align.** Runs a 10th-order Lagrange interpolation on the orbit data to resample the coarse 15-minute orbit grid onto the dense 30-second clock grid. Output: a vector of `SpaceTimeCoordinate` samples where position, velocity, and clock drift are co-located in time.
+
+**Pair.** Slides a window across the coordinate vector, picking pairs separated by roughly 50 minutes of orbital phase. The sliding scheme matches chronometric-geodesy convention and avoids the all-pairs failure mode where every pair ends up anchored to the first few coordinates.
+
+**Solve GM.** Applies the J2-corrected 1PN kernel (`solve_gm_analytical`) from `deep_causality_physics::chronometric` to each pair. Each pair yields an independent GM estimate.
+
+**Aggregate.** Filters per-pair estimates through Median Absolute Deviation outlier rejection, then reduces to mean, median, standard deviation. Earth's mass is derived as $M = GM / G$.
+
+## The inputs
+
+```rust
+const SAT_ID: &str = "E14";
+
+const DATASETS: &[&str] = &[
+    "gbm18770", "gbm18771", "gbm18772", "gbm18773", "gbm18774", "gbm18775", "gbm18776",
+];
+```
+
+[`main.rs:37`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/chronometric_examples/gm_recovery/main.rs#L37). E14 is the Galileo IOV satellite with the most eccentric orbit, providing the radial range required to invert GM. The datasets are bundled with the crate; no external download is needed at run time.
+
+## What the bind chain earns
+
+A single-satellite inversion is a small problem. The structural lesson is what happens when the pipeline grows: a second satellite, a different kernel, a Monte-Carlo wrapper around the aggregate step. Each addition is a `bind` call against the same `PropagatingEffect` shape, with the typed stages staying intact.
+
+The `EffectLog` accumulates across the chain. A run that errors out in stage 4 still carries the records of stages 1 through 3. The audit trail is the log; you do not write a logger.
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p chronometric_examples --example gm_recovery
+```
+
+Expected output: a header section describing the run, then the recovered values printed against the IERS 2010 reference.
+
+## Why this is a good fit
+
+The example is the strongest case in the repo for why monadic effect propagation matters in scientific computing. The kernels are dense numerical code; the kernels alone are not interesting. The interesting part is the pipeline: typed stages, deterministic ordering, a high-precision arithmetic backend that can be swapped at a single line, an audit trail that survives errors. That whole assembly is roughly fifty lines of `main.rs`.

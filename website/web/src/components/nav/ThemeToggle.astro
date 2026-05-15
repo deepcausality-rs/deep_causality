@@ -31,9 +31,11 @@
     transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
   }
   .theme-toggle:hover { border-color: var(--line-2); }
+  /* The :global() wrapper keeps the [data-theme] attribute on <html> outside
+     Astro's component-scope hash; without it the selector never matched. */
   .ico { display: none; }
-  [data-theme='dark']  .ico-sun  { display: block; }
-  [data-theme='light'] .ico-moon { display: block; }
+  :global([data-theme='dark']) .ico-sun  { display: block; }
+  :global([data-theme='light']) .ico-moon { display: block; }
 </style>
 
 <script>

@@ -3,6 +3,7 @@ title: TTFields electrode optimization for a glioblastoma volume
 domain: Biomedical
 summary: A Metropolis-style optimizer that proposes a new electrode angle, evaluates the disruption via a causal effect chain, and accepts or rejects.
 order: 5
+category: medicine
 source: examples/medicine_examples/tumor_treatment/main.rs
 crates:
   - deep_causality
@@ -63,7 +64,7 @@ The crate ships sibling examples for protein folding, tissue classification, ane
 ```bash
 git clone https://github.com/deepcausality-rs/deep_causality
 cd deep_causality
-cargo run --release -p medicine_examples --bin tumor_treatment
+cargo run --release -p medicine_examples --example tumor_treatment
 ```
 
 The output prints one line per optimization step with the current score and the proposed angle.
