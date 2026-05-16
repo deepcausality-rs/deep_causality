@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use criterion::{criterion_group, criterion_main, Criterion};
-use deep_causality_uncertain::{with_global_cache, SampledValue, Uncertain};
+use criterion::{Criterion, criterion_group, criterion_main};
+use deep_causality_uncertain::{SampledValue, Uncertain, with_global_cache};
 
 // --- Sampling Performance Benchmarks ---
 
