@@ -1,4 +1,4 @@
-# 🔍 deep_causality_discovery 🔍
+# deep_causality_discovery 
 
 [![Crates.io][crates-badge]][crates-url]
 [![Docs.rs][docs-badge]][docs-url]
