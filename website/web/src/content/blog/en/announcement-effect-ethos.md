@@ -81,7 +81,7 @@ The Effect Ethos is a foundational component for building trustworthy autonomous
   and safety boundaries can adapt in real-time to a changing world, ensuring that its behavior remains appropriate
   and aligned with its core principles.
 
-## Further reading:
+## Further reading
 
 This blog post only scratches the surface of the capabilities of the Effect Ethos. For more information on the
 theoretical foundation of DeepCausality and the Effect Ethos, please see the following resources:

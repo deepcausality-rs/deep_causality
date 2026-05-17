@@ -12,7 +12,7 @@ author: Marvin Hansen
 This post briefly summarizes my current thoughts on machine learning in Rust. I wonder how these may change five years
 from now.
 
-## Why Rust for machine learning?
+## Why Rust for machine learning
 
 Those companies that moved their ML production to Rust see more benefits
 than [just a 25X speedup](https://www.lpalmieri.com/posts/2019-12-01-taking-ml-to-production-with-rust-a-25x-speedup/).
@@ -42,7 +42,7 @@ has [increased significantly](https://lib.rs/science/ml), the
 large number of Rust wrappers around existing libraries confirms that there isn't a high demand for reinventing the
 wheel in a different language.
 
-## Python!
+## Python
 
 Historically, companies build all their R&D in Python, and when data scientists came up with something of commercial
 value, the engineers ported it to C++ and plugged it into the production system. With the advent of ML servers, the ML

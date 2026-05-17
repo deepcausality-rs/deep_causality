@@ -40,7 +40,7 @@ a few sanity checks, observability, and error propagation. It is meant purely fo
 what can be done already today with Rust, Fluvio, and DeepCausality with a sneak peak into the future at the end of this
 post.
 
-## Why?
+## Why
 
 ### Why this project?
 
@@ -759,7 +759,7 @@ message processing. You will never notice it if your real-time system operates a
 system operates at a microsecond level, adding single-digit microseconds might be acceptable. When it's not, you can
 still optimize the context with some clever lookup tables and probably get it faster.
 
-## What was left out?
+## What was left out
 
 Looking through the repo, you will unavoidably find things not mentioned in this post, simply because explaining the
 entire code base in a single blog post post is infeasible. However, I have good news for you because this project is

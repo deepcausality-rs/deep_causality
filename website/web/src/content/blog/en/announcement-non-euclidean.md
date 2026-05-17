@@ -22,7 +22,7 @@ implementation, and unified causal reasoning.
 - **Added relative temporal index** for simplified handling of time graphs.
 - **Unified `Adjustable` trait** implementation across all context types
 
-## ⚡ Added support for Tokio & Async Rust!
+## ⚡ Added support for Tokio & Async Rust
 
 In DeepCausality 0.8, all Causaloids, Contextoids, and Model types are now able to be `Send` and `Sync`, enabling
 concurrency and thus true parallel inference pipelines. See the

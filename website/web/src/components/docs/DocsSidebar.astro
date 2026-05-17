@@ -68,9 +68,21 @@ const idToHref = (id: string) => `/docs/${id.replace(/\/index$/, '/')}/`.replace
   .docs-sidebar h4 {
     margin: 0 0 var(--space-2) 0;
     font-size: var(--t-eyebrow);
-    letter-spacing: var(--ls-eyebrow);
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--fg-2);
+    /* Mono section label matches the home page eyebrow language. */
+    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    gap: 0.55em;
+  }
+  .docs-sidebar h4::before {
+    content: '';
+    flex: 0 0 10px;
+    height: 1px;
+    background: var(--accent);
+    opacity: 0.7;
   }
   .docs-sidebar ul { list-style: none; padding: 0; margin: 0; }
   .docs-sidebar li { margin: 0; }
@@ -84,6 +96,15 @@ const idToHref = (id: string) => `/docs/${id.replace(/\/index$/, '/')}/`.replace
     transition: color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
   }
   .docs-sidebar a:hover { color: var(--fg-0); }
-  .docs-sidebar a.is-here { color: var(--fg-0); background: var(--bg-2); }
+  /* Active "you are here" item: 2px accent left edge (inset shadow, no layout
+     shift) plus a quiet cyan halo. Carries the futurism language from the home
+     page into the docs surface without distracting from the article. */
+  .docs-sidebar a.is-here {
+    color: var(--fg-0);
+    background: var(--bg-2);
+    box-shadow:
+      inset 2px 0 0 var(--accent),
+      0 0 26px -16px color-mix(in srgb, var(--accent) 55%, transparent);
+  }
 
 </style>

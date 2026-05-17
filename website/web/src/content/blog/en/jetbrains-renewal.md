@@ -29,7 +29,7 @@ The project team expresses its sincere gratitude towards JetBrains continuous co
 
 The LF AI & Data Foundation supports an open artificial intelligence (AI) and data community and drives open source innovation in the AI and data domains by enabling collaboration and the creation of new opportunities for all members of the community. For more information, please visit [lfaidata.foundation](https://lfaidata.foundation).
 
-## Attributions:
+## Attributions
 
 Copyright © 2000-2025 JetBrains s.r.o. JetBrains and the JetBrains logo are registered trademarks of JetBrains s.r.o.
 
