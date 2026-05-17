@@ -31,28 +31,46 @@ The output of step 7 is the input to the rest of DeepCausality. The pipeline end
 
 ## What the code looks like
 
+The pipeline is a monadic sequence over `CdlEffect<T>`. `CdlBuilder::build()` lifts an empty `CDL<NoData>` typestate into the effect; every `.bind(|cdl| ...)` advances the typestate one stage and threads any error or warning through the chain. The shape is taken directly from `deep_causality_discovery/examples/main.rs`:
+
 ```rust
-use deep_causality_discovery::*;
+use deep_causality_discovery::{
+    CdlBuilder, MaxOrder, OptionNoneDataCleaner, mrmr_features_selector, surd_states_cdl,
+};
 
-let model = CdlConfig::new()
-    .with_loader(CsvLoader::new("observations.csv"))
-    .with_cleaner(Cleaner::default())
-    .with_feature_selector(MrmrSelector::new(20, mrmr::Criterion::Difference))
-    .with_discoverer(Pc::default())
-    .with_analyzer(StabilityAnalyzer::default())
-    .build()?
-    .load()?
-    .clean()?
-    .select_features()?
-    .discover()?
-    .analyze()?
-    .finalize()?;
+let target_index = 3;
 
-// `model` is a CausaloidGraph wired to a Context built from the observations.
-let effect = model.evaluate(&fresh_observation)?;
+let result_effect = CdlBuilder::build()
+    .bind(|cdl| cdl.load_data(&file_path, target_index, vec![]))
+    .bind(|cdl| cdl.clean_data(OptionNoneDataCleaner))
+    .bind(|cdl| {
+        cdl.feature_select(|tensor| {
+            mrmr_features_selector(tensor, 3, target_index)
+        })
+    })
+    .bind(|cdl| {
+        cdl.causal_discovery(|tensor| {
+            surd_states_cdl(tensor, MaxOrder::Max).map_err(Into::into)
+        })
+    })
+    .bind(|cdl| cdl.analyze())
+    .bind(|cdl| cdl.finalize());
+
+result_effect.print_results();
 ```
 
-Each method returns a new typestate. The compiler will not let you call `.discover()` before `.select_features()`; the method does not exist on the previous typestate. The pipeline either compiles, or it does not have the right shape.
+`CdlEffect<T>` is defined in `deep_causality_discovery::types::cdl_effect`:
+
+```rust
+pub struct CdlEffect<T> {
+    pub inner: Result<T, CdlError>,
+    pub warnings: CdlWarningLog,
+}
+```
+
+It carries either the next-stage `CDL<...>` typestate or a `CdlError`, plus a list of accumulated warnings. The HKT witness `CdlEffectWitness<CdlError, CdlWarningLog>` implements `Functor`, `Pure`, `Applicative`, and `Monad` from `deep_causality_haft`; `CdlBuilder` plugs into the `Effect3` machinery and fixes the error and warning channels. `bind` short-circuits on the first error, concatenates warnings on success, and lets the typestate inside `CDL<...>` advance one stage per step.
+
+Two layers of safety run at the same time. The outer `CdlEffect` monad sequences and short-circuits. The inner `CDL<State>` typestate enforces stage order: the method that runs causal discovery only exists on the typestate that has features selected, so calling it before `feature_select` is a compile error, not a runtime error.
 
 ## When to reach for it
 
@@ -72,19 +90,9 @@ Most production systems use both. The CDL produces an initial Causaloid graph fr
 
 ## The relationship to other concepts
 
-The CDL is a *producer* of [Causaloid graphs](/docs/concepts/causaloid/). It is not a separate inference engine; the model it produces uses the same `Causaloid` and `Context` types as a hand-written model. Once the pipeline finalizes, the discovered model is indistinguishable from a hand-built one.
+The CDL is a *producer* of [Causaloid graphs](/docs/concepts/causaloid/). It is not a separate inference engine; the model the `finalize` stage emits uses the same `Causaloid` and `Context` types as a hand-written model. Once the pipeline finishes, the discovered model is indistinguishable from a hand-built one and feeds the rest of the framework directly.
 
-The CDL builds a `Context` for you. The Context holds the observed feature space, the relationships discovered between features, and any side metadata (sample sizes, confidence intervals) the analyzer surfaced. You can replace the Context after the fact; the discovered Causaloid graph does not care where the Context came from.
-
-The CDL respects the AI Styleguide and the rebrand: outputs are framed as Causaloids and Contexts. The pipeline does not export private types.
-
-## What it is not
-
-The CDL is not a graphical interface. It is a Rust DSL. If you want a notebook front end, embed the pipeline in your notebook of choice and run it from there.
-
-The CDL is not a full statistical workbench. It does discovery and analysis. It does not replace your data-cleaning library or your modelling stack.
-
-The CDL is not coupled to a particular algorithm. The discoverer is a trait; ship a custom impl if the bundled ones do not fit.
+The CDL does not invent a Context. A `Context` is the engineer's job: assemble the Contextoids the discovered Causaloids should evaluate against and hand them in. The pipeline produces the rules; you supply the world they read from.
 
 ## Where to look next
 

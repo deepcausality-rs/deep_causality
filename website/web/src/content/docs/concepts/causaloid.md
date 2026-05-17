@@ -52,7 +52,10 @@ The three shapes are *isomorphic*. A Singleton is a Collection of one element; a
 ## Construction
 
 ```rust
-use deep_causality::prelude::*;
+use deep_causality::{
+    AggregateLogic, BaseCausaloid, BaseContext, Causaloid, CausaloidGraph, PropagatingEffect,
+};
+use std::sync::Arc;
 
 // 1. Stateless, no context. The default for simple rules.
 let above_zero: BaseCausaloid<f64> = Causaloid::from_causal_fn(
@@ -118,14 +121,6 @@ It earns it at debugging time. A misbehaving production system needs you to ask,
 **Counterfactuals.** Clone the Context, mutate the relevant Contextoids, evaluate the same Causaloid against the new Context. The result is the counterfactual effect.
 
 **Hot-swap.** A Causaloid's `causal_fn` field is a function pointer, not a trait object. Replacing the rule is a struct-update operation, not a vtable swap.
-
-## What it is not
-
-A Causaloid is not a state machine. It does not advance through phases on its own. Each `evaluate` call is independent.
-
-A Causaloid is not a Bayesian network node. It does not carry conditional probability tables. If you want probabilistic effects, return `PropagatingEffect::Probabilistic(p)` from the wrapped function; the type accepts it but does not infer it.
-
-A Causaloid is not a constraint solver. It does not search; it evaluates. If you need search, build the search loop around the Causaloid.
 
 ## Where to look next
 

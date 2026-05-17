@@ -112,14 +112,6 @@ DeepCausality keeps the five together because the chain *is* the five together. 
 
 **Explicit dispatch with `RelayTo`.** A graph that wants conditional dispatch (rule A goes to rule B if condition X, rule C otherwise) emits `RelayTo(idx, sub_effect)` to route the effect.
 
-## What it is not
-
-The Effect Propagation Process is not a stream type. It does not implement `Iterator` or `Stream`. A run is a value, not a sequence in the iterator sense.
-
-The Effect Propagation Process is not async. The chain runs synchronously inside `evaluate`. You can wrap an entire chain in `tokio::task::spawn_blocking` to push it off an async runtime, but the propagation itself does not yield to a scheduler.
-
-The Effect Propagation Process is not an event bus. It does not publish; it returns.
-
 ## Where to look next
 
 [Causal Monad](/docs/concepts/causal-monad/) is the algebra that composes processes. [HKT](/docs/concepts/hkt/) is how the algebra is encoded in Rust's type system. [Causaloid](/docs/concepts/causaloid/) is what produces the processes in the first place.

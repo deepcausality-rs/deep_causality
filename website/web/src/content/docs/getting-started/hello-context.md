@@ -20,7 +20,10 @@ Full concept page is [here](/docs/concepts/context/).
 We will rewrite the trading example so the volume threshold is not hard-coded. Instead it lives in the Context as a tunable.
 
 ```rust
-use deep_causality::prelude::*;
+use deep_causality::{
+    BaseCausaloid, BaseContext, Causaloid, CausalityError, Context, Contextoid,
+    ContextoidType, Data, PropagatingEffect,
+};
 use std::sync::Arc;
 
 #[derive(Default, Clone, Debug)]

@@ -74,7 +74,7 @@ The shape is intentionally close to what you would write in Haskell. Substitute 
 ## A minimal example
 
 ```rust
-use deep_causality_core::*;
+use deep_causality_core::CausalMonad;
 
 let final_process = CausalMonad::<i32, String>::bind(
     CausalMonad::<i32, String>::pure(10),
@@ -123,14 +123,6 @@ Three concrete payoffs.
 **Logs accumulate without instrumentation.** `LogAppend::append` runs inside every bind. A consumer that wants to print or persist the trace gets the full ordered sequence without any side-channel.
 
 **Refactoring stays safe.** The laws guarantee that breaking a long chain into helper functions, or composing several chains into a larger one, does not change the result. You get the kind of refactoring confidence that pure functional code usually offers.
-
-## What it is not
-
-The Causal Monad is not the only monad on the planet. It is one specific structure tailored to causal effect propagation, with five fixed parameter slots. It does not subsume `Result`, `Option`, or `Future`.
-
-The Causal Monad is not implicit. There is no `do` block. Rust does not have monadic sugar; the calls to `pure` and `bind` are visible at the call site. That visibility is sometimes annoying and sometimes useful; the library cannot remove the cost of Rust's surface syntax for you.
-
-The Causal Monad is not free of cost. `bind` performs a struct move and a log append per step. Negligible for inference chains; nontrivial if you call it in a tight inner loop a billion times. Profile if you suspect the latter.
 
 ## Where to look next
 

@@ -72,7 +72,7 @@ A second witness, `PropagatingEffectWitness<E, L>`, fixes the state and context 
 Almost nothing. The witnesses live behind aliases and are not part of the day-to-day API surface. Most code looks like:
 
 ```rust
-use deep_causality::prelude::*;
+use deep_causality::{CausalMonad, PropagatingEffect};
 
 let m: PropagatingEffect<i32> = CausalMonad::<(), ()>::pure(10);
 let n = CausalMonad::<(), ()>::bind(m, |x| CausalMonad::pure(x + 1));
@@ -95,14 +95,6 @@ You are writing a new monad on top of the existing machinery. Pick `HKT3` or `HK
 You are writing a function that should be polymorphic across multiple effects. The function signature carries the witness type as a generic. Most application code does not need this; library code that wants to be reusable across effects does.
 
 You are debugging a confusing type error inside a `bind` chain. The error message will mention `Type<T>` somewhere; knowing what `Type<T>` is helps you read it.
-
-## What it is not
-
-The HKT machinery is not a runtime feature. There is no dispatch at runtime. The witness is zero-sized.
-
-The HKT machinery is not equivalent to GATs. Rust's Generic Associated Types help inside this encoding (the `type Type<T>` is a GAT), but they do not give you HKTs by themselves. The witness pattern is what closes the gap.
-
-The HKT machinery is not pretending to be Haskell. It encodes the parts the library actually uses. It does not try to import the whole typeclass hierarchy from Prelude.
 
 ## Where to look next
 

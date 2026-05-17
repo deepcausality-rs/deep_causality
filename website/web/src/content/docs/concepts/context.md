@@ -55,7 +55,8 @@ Contextoids are *not* recursive. A Contextoid cannot contain another Contextoid.
 ## Adding nodes and edges
 
 ```rust
-use deep_causality::prelude::*;
+use deep_causality::{BaseContext, Context, Contextoid, ContextoidType, Data, Time};
+use std::time::SystemTime;
 
 let mut ctx: BaseContext = Context::with_capacity(1, "trading", 64);
 
@@ -114,14 +115,6 @@ A value belongs in the Context when one of these is true:
 - The value is a shared piece of state that more than one Causaloid reads from.
 
 Values that fail every test stay in the closure. The Context is not a junk drawer; it is the structured shared state.
-
-## What it is not
-
-A Context is not a key-value store. The typed Contextoid variants exist to keep the meaning of each node explicit; reading a `Tempoid` as if it were a `Datoid` is a compile-time error, not a runtime cast.
-
-A Context is not a global. The Causaloid captures an `Arc<Context>`; the Context itself is reference-counted, sharable across rules, and mutable through the standard interior-mutability mechanisms when contention requires it.
-
-A Context is not a database. It lives in process memory. If you need durability, persist the Context yourself (a snapshot file, an event log, a Parquet roundtrip) and rebuild on start.
 
 ## Where to look next
 

@@ -15,6 +15,10 @@ html, body {
   line-height: var(--lh-body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Mobile-first safety net: stop any rogue child from forcing a horizontal scroll.
+     `clip` is preferred over `hidden` because it does not establish a new
+     scroll container and leaves `position: sticky` intact. */
+  overflow-x: clip;
 }
 
 :root {

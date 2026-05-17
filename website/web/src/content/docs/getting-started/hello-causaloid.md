@@ -18,7 +18,7 @@ The full concept page is [here](/docs/concepts/causaloid/). For now you only nee
 ## A first Causaloid
 
 ```rust
-use deep_causality::prelude::*;
+use deep_causality::{BaseCausaloid, Causaloid, CausalityError, PropagatingEffect};
 
 fn main() -> Result<(), CausalityError> {
     // A Causaloid wrapping a stateless predicate on f64.
@@ -50,7 +50,7 @@ The wrapped function returns `Result<PropagatingEffect, CausalityError>`. `Propa
 A trading-style example: a fast/slow moving-average cross plus a volume confirmation. Each rule is its own Causaloid. The conjunction is a graph node whose evaluation depends on both.
 
 ```rust
-use deep_causality::prelude::*;
+use deep_causality::{BaseCausaloid, Causaloid, CausaloidGraph, CausalityError, PropagatingEffect};
 
 #[derive(Default, Clone, Debug)]
 struct Tick {

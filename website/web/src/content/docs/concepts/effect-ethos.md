@@ -45,7 +45,7 @@ The monograph chapter `teleology.tex` introduces Teloids as the answer to the qu
 ## Building an Ethos
 
 ```rust
-use deep_causality_ethos::*;
+use deep_causality_ethos::{EffectEthos, Verdict};
 
 let ethos = EffectEthos::new()
     .forbid("pii_leaves_region",       rule::pii_leaves_region)
@@ -101,14 +101,6 @@ The monograph chapter `metaphysics.tex` frames this as the prospective guardrail
 **Time-windowed Teloids.** A Teloid can carry a temporal condition that consults the Context. A rule that applies only between two timestamps disappears outside that window without code changes.
 
 **Replay.** Persist the action and the Context snapshot; re-run `verify` against a future version of the Ethos to detect rule-set drift.
-
-## What it is not
-
-The Effect Ethos is not a rules engine in the Drools sense. It is not pattern-matching against a working memory. It is a structured deontic check on a known action.
-
-The Effect Ethos is not an interpreter for an external rule language. The Teloids are Rust values. If you want to load rules from a configuration file, deserialize the file into Teloids and register them; do not invent a DSL.
-
-The Effect Ethos is not a policy framework like OPA. It is in-process, embedded, and intended to live in the same binary as the Causaloid graph it guards.
 
 ## Where to look next
 
