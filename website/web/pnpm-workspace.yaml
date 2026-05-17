@@ -1,3 +1,5 @@
 allowBuilds:
   esbuild: true
   sharp: true
+  # Required so `wrangler deploy` can run its packaging step under pnpm 11.
+  workerd: true
