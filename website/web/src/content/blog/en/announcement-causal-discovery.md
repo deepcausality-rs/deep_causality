@@ -27,7 +27,7 @@ This approach lacks structure, formal verification, is prone to pipeline errors 
 
 The **Causal Discovery Language (CDL)** solves this by treating the discovery process as a **Monadic Pipeline**.
 
-Built on the [DeepCausality HAFT](announcement-haft-hkt.md) foundation, the CDL uses a type-safe Builder pattern to ensure that every stage of the discovery process happens in the correct order. You cannot run a discovery algorithm before selecting features; you cannot select features before loading data.
+Built on the [DeepCausality HAFT](/blog/announcement-haft-hkt/) foundation, the CDL uses a type-safe Builder pattern to ensure that every stage of the discovery process happens in the correct order. You cannot run a discovery algorithm before selecting features; you cannot select features before loading data.
 
 The pipeline is wrapped in a `CdlEffect`, a monadic structure that handles:
 *   **State Propagation**: Passing the data tensor between stages.

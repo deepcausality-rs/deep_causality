@@ -69,15 +69,20 @@ const ogImageUrl = new URL(ogImage, Astro.site).toString();
         <div class="col">
           <h4>Community</h4>
           <a href="/community/">Community</a>
-          <a href="https://github.com/deepcausality-rs/deep_causality">GitHub</a>
-          <a href="https://github.com/deepcausality-rs/deep_causality/issues">Issues</a>
-          <a href="https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE">License</a>
+          <a href="https://lists.lfaidata.foundation/g/DeepCausality-announce">Mailing list</a>
           <a href="/accessibility/">Accessibility</a>
         </div>
         <div class="col">
+          <h4>GitHub</h4>
+          <a href="https://github.com/deepcausality-rs/deep_causality">Repository</a>
+          <a href="https://github.com/deepcausality-rs/deep_causality/issues">Issues</a>
+          <a href="https://github.com/deepcausality-rs/deep_causality/discussions">Discussions</a>
+          <a href="https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE">License</a>
+        </div>
+        <div class="col">
           <h4>DeepCausality</h4>
-          <p>An open-source Rust framework for dynamic causality. Built and maintained by an
-          independent group of contributors. MIT-licensed.</p>
+          <p>An open-source Rust framework for dynamic causality. Hosted as a sandbox project at
+          the <a href="https://lfaidata.foundation/">Linux Foundation for AI &amp; Data</a>.</p>
         </div>
       </div>
     </footer>
@@ -89,13 +94,17 @@ const ogImageUrl = new URL(ogImage, Astro.site).toString();
       }
       @media (min-width: 720px) {
         .site-footer { padding: var(--space-8) 0; margin-top: var(--space-9); }
-        .site-footer-inner { padding: 0 var(--space-5); grid-template-columns: 1fr 1fr 2fr; gap: var(--space-7); }
+        .site-footer-inner { padding: 0 var(--space-5); grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+      }
+      @media (min-width: 1024px) {
+        .site-footer-inner { grid-template-columns: 1fr 1fr 1fr 2fr; gap: var(--space-7); }
       }
       .site-footer .col { display: flex; flex-direction: column; gap: var(--space-2); }
       .site-footer h4 { margin: 0 0 var(--space-2) 0; font-size: var(--t-body-sm); color: var(--fg-0); }
       .site-footer a { color: var(--fg-1); border-bottom: none; }
       .site-footer a:hover { color: var(--fg-0); }
       .site-footer p { margin: 0; color: var(--fg-1); max-width: 52ch; }
+      .site-footer p a { text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 2px; }
     </style>
   </body>
 </html>

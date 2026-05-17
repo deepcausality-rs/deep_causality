@@ -13,7 +13,7 @@ In scientific computing, we often work in silos. We use one library for Tensors 
 
 DeepCausality introduces a **Uniform Mathematical Foundation** based on Category Theory. By treating Tensors, MultiVectors, and Topological Manifolds as **composable monadic structures**, the library allows you to express complex, multi-domain physics simulations in a single, fluent flow of logic.
 
-This is made possible by the [DeepCausality HAFT](announcement-haft-hkt.md) crate, which provides the Higher-Kinded Type (HKT) machinery required to abstract over these disparate data structures.
+This is made possible by the [DeepCausality HAFT](/blog/announcement-haft-hkt/) crate, which provides the Higher-Kinded Type (HKT) machinery required to abstract over these disparate data structures.
 
 ## 🏗️ The Problem: The Tower of Babel
 

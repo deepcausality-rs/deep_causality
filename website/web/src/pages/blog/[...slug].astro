@@ -77,6 +77,29 @@ const fmtDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long
       background: var(--bg-1);
       color: var(--fg-1);
     }
+    .post .prose .table-wrap { overflow-x: auto; margin: var(--space-4) 0; }
+    .post .prose table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--t-body-sm);
+      background: var(--bg-1);
+      border: 1px solid var(--line-1);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    .post .prose thead { background: var(--bg-2); }
+    .post .prose th,
+    .post .prose td {
+      padding: var(--space-2) var(--space-3);
+      text-align: left;
+      border-bottom: 1px solid var(--line-1);
+      color: var(--fg-1);
+      vertical-align: top;
+    }
+    .post .prose th { color: var(--fg-0); font-weight: 600; }
+    .post .prose tbody tr:last-child td { border-bottom: 0; }
+    .post .prose tbody tr:hover { background: var(--bg-2); }
+
     .post .back { margin-top: var(--space-8); }
     .post .back a { color: var(--fg-1); border-bottom: none; }
     .post .back a:hover { color: var(--fg-0); }

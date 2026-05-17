@@ -17,7 +17,7 @@ While Rust has an exploding ecosystem for linear algebra (`ndarray`, `nalgebra`)
 
 Scientific computing is often fragmented. You use one library for Tensors, another for Geometric Algebra, and a third for Topology. Connecting them requires writing brittle "glue code" that swallows errors and hides physical meaning.
 
-This crate is built on the **[Uniform Mathematical Foundation](announcement-uniform-math.md)** introduced in DeepCausality. Powered by our **[Higher-Order Abstract Functional Traits (HAFT)](announcement-haft-hkt.md)**, it treats Tensors, MultiVectors, and Topological Manifolds as composable, monadic structures.
+This crate is built on the **[Uniform Mathematical Foundation](/blog/announcement-uniform-math/)** introduced in DeepCausality. Powered by our **[Higher-Order Abstract Functional Traits (HAFT)](/blog/announcement-haft-hkt/)**, it treats Tensors, MultiVectors, and Topological Manifolds as composable, monadic structures.
 
 This means you can take a **Tensor** representing a gravitational field, map it into a **MultiVector** to compute electromagnetic interactions, and project the result onto a **Topological Manifold** all within a single, type-safe, and mathematically rigorous flow.
 
