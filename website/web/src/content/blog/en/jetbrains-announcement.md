@@ -19,9 +19,9 @@ to the DeepCausality project. The project team expresses its gratitude towards J
 * [Blog](https://blog.jetbrains.com/)
 
 ### DeepCausality Key Links
-* [Website](https://deepcausality.com/)
+* [Website](https://www.deepcausality.com/)
 * [GitHub](https://github.com/deepcausality-rs)
-* [Blog](https://deepcausality.com/blog/)
+* [Blog](https://www.deepcausality.com/blog/)
 
 ### Attributions:
 

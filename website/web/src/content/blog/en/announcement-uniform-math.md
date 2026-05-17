@@ -118,11 +118,11 @@ Get Started with Uniform Math:
 
 *   **[Read the Docs](https://docs.rs/deep_causality_core)**
 *   **[Explore the Physics Examples](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples)**: Includes Regge Calculus, Quantum Error Correction, and more.
-*   **[Join the Community](https://deepcausality.com/community/)**
+*   **[Join the Community](https://www.deepcausality.com/community/)**
 
 ## About
 
-[DeepCausality](https://deepcausality.com/) is a dynamic-causality framework that enables fast and
+[DeepCausality](https://www.deepcausality.com/) is a dynamic-causality framework that enables fast and
 deterministic context-aware causal reasoning in Rust. Please give us
 a [star on GitHub](https://github.com/deepcausality-rs/deep_causality).
 

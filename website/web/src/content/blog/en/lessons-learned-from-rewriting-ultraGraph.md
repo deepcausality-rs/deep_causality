@@ -38,7 +38,7 @@ lock-free analytics becomes a lot easier. Conversely, without analytics, locking
 there is no consideration for performance any longer. Then the central question became: Can you have both without the
 trade-off?
 
-The most [fundamental design decision in UltraGraph 0.8 ](https://deepcausality.com/blog/announcement-ultragraph-0-8)was to reject a one-size-fits-all approach. Instead, we embraced
+The most [fundamental design decision in UltraGraph 0.8 ](https://www.deepcausality.com/blog/announcement-ultragraph-0-8)was to reject a one-size-fits-all approach. Instead, we embraced
 a two-state architecture, recognizing that graph construction and graph analysis are two fundamentally different
 problems with different performance requirements that lead to two different internal data structures:
 
@@ -126,12 +126,12 @@ positive side effect of AI usage is that more brain power is used to write bette
 Get Started with DeepCausality. The Future is Now!
 
 * Explore the [code examples on GitHub](https://github.com/deepcausality-rs/deep_causality/tree/main/examples).
-* Join the [community](https://deepcausality.com/community/).
+* Join the [community](https://www.deepcausality.com/community/).
 * Join the [Discord Server](https://discord.gg/Bxj9P7JXSj).
 
 ## About
 
-[DeepCausality](https://deepcausality.com/) is a dynamic-causality framework that enables fast and
+[DeepCausality](https://www.deepcausality.com/) is a dynamic-causality framework that enables fast and
 deterministic context-aware causal reasoning in Rust. Please give us
 a [star on GitHub](https://github.com/deepcausality-rs/deep_causality).
 

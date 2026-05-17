@@ -15,7 +15,7 @@ The full set of articles, sources, and citations lives in the [papers folder of 
 
 ## About
 
-[DeepCausality](https://deepcausality.com/) is a dynamic-causality framework that enables fast and
+[DeepCausality](https://www.deepcausality.com/) is a dynamic-causality framework that enables fast and
 deterministic context-aware causal reasoning in Rust. Learn more about DeepCausality
 on [GitHub](https://github.com/deepcausality-rs/deep_causality) and join
 the [DeepCausality-Announce Mailing List](https://lists.lfaidata.foundation/g/DeepCausality-announce).

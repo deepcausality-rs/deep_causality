@@ -135,7 +135,7 @@ contributes three key novelties:
    parts, selected sub-graphs or the entire graph. As a result, you can break down otherwise complex models into smaller
    parts and freely assemble them together. As we will see later, the composability extends even further to crates,
 
-The [DeepCausality context guide](https://deepcausality.com/docs/concepts/context/) elaborates on all three topics in more
+The [DeepCausality context guide](https://www.deepcausality.com/docs/concepts/context/) elaborates on all three topics in more
 detail.
 
 With Rust, Fluvio, and DeepCausality selected, I was good to go. Next, let’s look at the project
@@ -615,7 +615,7 @@ missing, feel free to open an issue or submit a pull request.
 
 The context is a central piece of the model. It is the place where all related data are stored for the model.
 
-In [DeepCausality, a context](https://deepcausality.com/docs/concepts/context/) can be static or dynamic, depending on
+In [DeepCausality, a context](https://www.deepcausality.com/docs/concepts/context/) can be static or dynamic, depending on
 the situation. The context structure is defined beforehand for a static context, whereas for a dynamic context, the
 structure is generated dynamically at runtime. Regardless of the specific structure, DeepCausality uses a hypergraph to
 internally represent arbitrary complex context structures.
@@ -773,7 +773,7 @@ At this point, the internet provides an abundance of material to learn Rust; jus
 to find the best Rust resources for you.
 
 I've omitted a general introduction to computational causality, mainly to keep the post readable. The DeepCausality
-project has [documentation that covers the basics and more](https://deepcausality.com/docs/getting-started/install/). For a gentle
+project has [documentation that covers the basics and more](https://www.deepcausality.com/docs/getting-started/install/). For a gentle
 introduction to the field,
 read ["The Book of Why?" by Judea Pearl](https://www.amazon.com/Book-Why-Science-Cause-Effect/dp/046509760X),
 the grandfather of computational causality.
@@ -882,7 +882,7 @@ capabilities. Apply your custom programs to
 aggregate, correlate, and transform data records in real time as they move over the network. Read more on the [Fluvio
 website](https://www.fluvio.io/).
 
-[DeepCausality](https://deepcausality.com/) is a dynamic-causality framework that enables fast and
+[DeepCausality](https://www.deepcausality.com/) is a dynamic-causality framework that enables fast and
 deterministic context-aware causal reasoning in Rust. Learn more about DeepCausality
 on [GitHub](https://github.com/deepcausality-rs/deep_causality) and join
 the [DeepCausality-Announce Mailing List](https://lists.lfaidata.foundation/g/DeepCausality-announce).

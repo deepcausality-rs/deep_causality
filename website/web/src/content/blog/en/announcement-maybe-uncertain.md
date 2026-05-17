@@ -204,12 +204,12 @@ better, more informed decisions.
 Get Started with DeepCausality. The Future is Now!
 
 * Explore the [code examples on GitHub](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_uncertain/examples).
-* Join the [community](https://deepcausality.com/community/).
+* Join the [community](https://www.deepcausality.com/community/).
 * Join the [Discord Server](https://discord.gg/Bxj9P7JXSj).
 
 ## About
 
-[DeepCausality](https://deepcausality.com/) is a dynamic-causality framework that enables fast and
+[DeepCausality](https://www.deepcausality.com/) is a dynamic-causality framework that enables fast and
 deterministic context-aware causal reasoning in Rust. Please give us
 a [star on GitHub](https://github.com/deepcausality-rs/deep_causality).
 

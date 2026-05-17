@@ -98,13 +98,13 @@ We invite **physicists, engineers, and scientific computing experts** to collabo
 
 *   **[Explore the Code](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_physics)**
 *   **[Run the Examples](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples)**
-*   **[Join the Discussion](https://deepcausality.com/community/)**
+*   **[Join the Discussion](https://www.deepcausality.com/community/)**
 
 Let's build the future of scientific simulation together.
 
 ## About
 
-[DeepCausality](https://deepcausality.com/) is a dynamic-causality framework that enables fast and
+[DeepCausality](https://www.deepcausality.com/) is a dynamic-causality framework that enables fast and
 deterministic context-aware causal reasoning in Rust. Please give us
 a [star on GitHub](https://github.com/deepcausality-rs/deep_causality).
 

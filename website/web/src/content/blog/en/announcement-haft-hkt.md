@@ -163,11 +163,11 @@ Get Started with HAFT today!
 
 *   Explore the [API Documentation](https://docs.rs/deep_causality_haft).
 *   Review the [examples](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_haft/examples).
-*   Join the [community](https://deepcausality.com/community/).
+*   Join the [community](https://www.deepcausality.com/community/).
 
 ## About
 
-[DeepCausality](https://deepcausality.com/) is a dynamic-causality framework that enables fast and
+[DeepCausality](https://www.deepcausality.com/) is a dynamic-causality framework that enables fast and
 deterministic context-aware causal reasoning in Rust. Please give us
 a [star on GitHub](https://github.com/deepcausality-rs/deep_causality).
 

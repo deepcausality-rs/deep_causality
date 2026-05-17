@@ -53,12 +53,12 @@ DeepCausality 0.11 represents a major step towards a truly independent, secure, 
 Get Started with DeepCausality 0.11. The Future is Now!
 
 *   Explore the [code and examples on GitHub](https://github.com/deepcausality-rs/deep_causality).
-*   Join the [community](https://deepcausality.com/community/).
+*   Join the [community](https://www.deepcausality.com/community/).
 *   Join the [Discord Server](https://discord.gg/Bxj9P7JXSj)
 
 ## About
 
-[DeepCausality](https://deepcausality.com/) is a dynamic-causality framework that enables fast and
+[DeepCausality](https://www.deepcausality.com/) is a dynamic-causality framework that enables fast and
 deterministic context-aware causal reasoning in Rust. Please give us
 a [star on GitHub](https://github.com/deepcausality-rs/deep_causality).
 

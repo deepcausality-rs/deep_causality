@@ -102,12 +102,12 @@ strategy based on the current context while adhering to a set of permissible rul
 Get Started with DeepCausality 0.9. The Future is Now!
 
 * Explore the [code examples on GitHub](https://github.com/deepcausality-rs/deep_causality/tree/main/examples).
-* Join the [community](https://deepcausality.com/community/).
+* Join the [community](https://www.deepcausality.com/community/).
 * Join the [Discord Server](https://discord.gg/Bxj9P7JXSj)
 
 ## About
 
-[DeepCausality](https://deepcausality.com/) is a dynamic-causality framework that enables fast and
+[DeepCausality](https://www.deepcausality.com/) is a dynamic-causality framework that enables fast and
 deterministic context-aware causal reasoning in Rust. Please give us
 a [star on GitHub.](https://github.com/deepcausality-rs/deep_causality)
 
