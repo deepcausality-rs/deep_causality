@@ -1,0 +1,158 @@
+\section{Worked Examples}
+\label{sec:examples}
+
+We illustrate $\Mtype\langle T \rangle$ on three fabricated scenarios. The
+first is anchored in real code shipped with the
+crate~\cite{hansen_deepcausality}; the second and third are design
+sketches at the same abstraction level as the type theory
+in~\Cref{sec:type}, included to show how the same pattern carries to
+other sparse-data domains. We mark the status of each example explicitly.
+
+\subsection{Aspirin headache trial}
+\label{sec:examples:trial}
+
+\paragraph{Status.} Fully worked example. Anchored in
+\texttt{examples/clinical\_trial/clinical\_trial.rs} in the crate.
+
+\paragraph{Setup.} A small fabricated trial compares aspirin against a
+control placebo on five patients, each contributing a pain-reduction
+report. The reports are deliberately heterogeneous: some patients report
+every day with a tight value, some report intermittently with a noisy
+value, and at least one patient produces no data at all. The four
+constructors of $\Mtype\langle f64 \rangle$ map onto the situations
+one-to-one. Patient A (control) is a known fact and uses
+$\textsc{fromValue}(0.5)$. Patient B (strong responder) reports every day
+with noisy value and uses $\textsc{fromUncertain}$ over a $\mathcal{N}(6,2)$
+distribution. Patient C (weak intermittent responder) has presence
+probability $0.3$ and uses $\textsc{fromBernoulli}(0.3,\,\mathcal{N}(1.0,
+0.5))$. Patient D (moderate good-reporter) uses
+$\textsc{fromBernoulli}(0.8,\,\mathcal{N}(4.0, 2.5))$. Patient E (control,
+missing data) uses $\textsc{alwaysNone}$.
+
+\paragraph{Behaviour under the algebra.} Adding two patient values is the
+canonical use of the AND rule on presence:
+$$
+\Mtype\text{-sum}(A, B) = \bigl(\,x_A \wedge x_B,\; v_A + v_B\,\bigr).
+$$
+For patients A and B, both presence axes are $\delta_{\text{true}}$, so
+the result is always present. For patients A and C, the result is present
+with probability $0.3$, since A is certainly present and C carries the
+Bernoulli factor. Sampling $\Mtype\text{-sum}(A, C)$ returns $\bot$ roughly
+$70\%$ of the time, and a real value sampled from the sum distribution the
+remaining $30\%$. The AND-on-presence rule prevents the sum from
+synthesising a numeric value for a patient who did not report.
+
+\paragraph{Decision via the gating operator.} The example demonstrates the
+strict-versus-lax operating points of $\textsc{lift}$ on the same data.
+Lifting patient D with $(p_\tau, 1-\alpha, \varepsilon, N) = (0.7, 0.95,
+0.05, 1000)$ succeeds because the true presence probability $0.8$ is well
+above the threshold; the result is a plain $\Utype\langle f64 \rangle$
+whose mean can be inspected with $1000$ samples. Lifting patient C with
+threshold $0.8$ fails with $\mathrm{PresenceError}$ because the true
+presence probability $0.3$ is far below the threshold; SPRT accepts $H_0$
+quickly. Lifting patient E with any threshold strictly greater than zero
+fails for the same reason. The example then aggregates only the
+successfully-lifted aspirin-group reductions, computes their average via
+$\Utype$ division, and compares against the control via the
+\texttt{greater\_than} comparator on $\Utype\langle f64 \rangle$. The
+decision is made with $\texttt{probability\_exceeds}(0.9, 0.95, 0.05,
+1000)$ on the result.
+
+\paragraph{What the example shows.} Three things. First, the four
+constructors are sufficient to encode a realistic mix of patient
+reporting behaviours. Second, $\textsc{lift}$ functions as a programmable
+inclusion criterion: the threshold and confidence parameters are the
+trial designer's knobs for how strict to be about which patients
+contribute to the aggregate. Third, the AND rule on presence is the
+right default for arithmetic on intermittent data; the sum of a complete
+report and a missing report is missing, not zero and not the
+complete-report value.
+
+\subsection{Intermittent sensor}
+\label{sec:examples:sensor}
+
+\paragraph{Status.} Design sketch. The crate's
+\texttt{examples/sensor/sensor\_processing.rs} demonstrates
+$\Utype\langle T \rangle$ on noisy sensors but does not exercise
+$\Mtype\langle T \rangle$. The pattern below is the natural extension.
+
+\paragraph{Setup.} An embedded sensor produces a noisy reading every
+$\Delta t$ seconds; when the sensor is healthy a reading $r \sim
+\mathcal{N}(\mu, \sigma^2)$ arrives, but on each tick the sensor has
+probability $1 - p$ of dropping the reading. The application computes a
+moving average of the last $k$ readings and triggers a downstream alert
+if the average crosses a threshold.
+
+\paragraph{Three baselines.} Three encodings of the same sensor are
+useful to compare. The first treats every tick as a measurement and
+substitutes a fallback value (often zero or a recent mean) on drop; this
+is the imputation-laundering baseline that injects fabricated numbers
+into the moving average. The second wraps each reading in
+\texttt{Option<Uncertain<f64>>} and only includes \texttt{Some} readings;
+this is the hard-gated-drop baseline that collapses presence into a
+deterministic boolean. The third uses $\Mtype\langle f64 \rangle$ with
+each reading constructed by $\textsc{fromBernoulli}(p,\,\mathcal{N}(\mu,
+\sigma^2))$.
+
+\paragraph{Behaviour under the algebra.} The moving average is a sum of
+$k$ readings divided by $k$. Under the $\Mtype$ encoding, the AND rule on
+presence makes the moving average present only if every tick in the
+window was present; otherwise the moving average is $\bot$. The alert
+condition can then be expressed as a presence-gated comparison: lift the
+moving average to $\Utype\langle f64 \rangle$ at a threshold of $p^k -
+\varepsilon$, and compare to the alert level using
+\texttt{probability\_exceeds}. The window-presence threshold $p^k$
+follows from independence of the per-tick Bernoulli draws and gives the
+designer a single statistical parameter to control sensitivity in the
+sparse regime.
+
+\paragraph{What this sketch shows.} The presence axis combined with the
+gating operator gives a natural place to encode the dropout-rate
+assumption explicitly. The imputation baseline buries it in the choice of
+fallback value; the hard-gated baseline buries it in the choice of
+threshold for $k$. With $\Mtype$, the assumption appears in the
+$\textsc{fromBernoulli}$ parameter and is propagated through the moving
+average automatically.
+
+\subsection{GPS dropouts}
+\label{sec:examples:gps}
+
+\paragraph{Status.} Design sketch. The crate's
+\texttt{examples/gps/gps\_navigation.rs} demonstrates $\Utype\langle T
+\rangle$ on noisy GPS readings but does not exercise $\Mtype\langle T
+\rangle$. The pattern below is the natural extension.
+
+\paragraph{Setup.} A vehicle's GPS receiver produces a fix every second.
+When the receiver has line-of-sight the fix is noisy but valid; in
+tunnels and urban canyons the receiver loses the fix entirely. A
+navigation application computes speed from consecutive fixes by the
+finite difference $v = \Delta d / \Delta t$.
+
+\paragraph{The bug class to prevent.} Computing speed from a pair of
+fixes one of which is missing is the central failure mode the example
+addresses. Three encodings give three different bugs. Substituting the
+last known fix for the missing one synthesises a zero speed and reports
+``vehicle stopped'' even though the vehicle is moving inside a tunnel.
+Dropping the pair entirely produces silent gaps in the speed trace and
+leaves the user with no signal that anything was missing. Reporting a
+``best effort'' speed by extrapolation invents both a value and a
+confidence that the data does not support.
+
+\paragraph{The $\Mtype$ encoding.} Each fix is a $\Mtype\langle f64
+\rangle$ value (one for latitude, one for longitude, or a struct of two
+$\Mtype$ values), with presence governed by a Bernoulli factor learned
+from the historical dropout rate. The finite difference $\Delta d$ is a
+subtraction between two $\Mtype$ fixes; under the AND rule the result is
+present only when both fixes were present. Dividing by $\Delta t$
+preserves the presence axis, so $v = \Delta d / \Delta t$ is a
+$\Mtype\langle f64 \rangle$ that is present exactly when both fixes were
+present. The application can then decide what to do with absent speed
+samples: skip the update, raise an alert, fall back to a separate
+inertial estimate, or expose the presence probability through
+$\textsc{isSome}$ and let downstream code decide.
+
+\paragraph{What this sketch shows.} The same pattern carries: the
+presence axis records the structural fact that an output depends on the
+existence of inputs, the AND rule propagates that dependence through
+arithmetic without further code, and the gating operator gives the
+application a principled place to make decisions about partial data.

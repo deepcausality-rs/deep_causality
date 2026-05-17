@@ -1,0 +1,124 @@
+@import './fonts.css';
+@import './tokens.css';
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-0);
+  color: var(--fg-0);
+  font-family: var(--font-sans);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* Mobile-first safety net: stop any rogue child from forcing a horizontal scroll.
+     `clip` is preferred over `hidden` because it does not establish a new
+     scroll container and leaves `position: sticky` intact. */
+  overflow-x: clip;
+}
+
+:root {
+  color-scheme: dark light;
+}
+[data-theme='light'] { color-scheme: light; }
+[data-theme='dark']  { color-scheme: dark; }
+
+html, body { transition: background-color var(--dur-med) var(--ease-out), color var(--dur-med) var(--ease-out); }
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+a:hover { border-bottom-color: currentColor; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+h1, h2, h3, h4 { font-weight: 540; color: var(--fg-0); margin: 0; }
+h1 { font-size: var(--t-h1); line-height: var(--lh-h1); letter-spacing: var(--ls-h1); }
+h2 { font-size: var(--t-h2); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); }
+h3 { font-size: var(--t-h3); line-height: var(--lh-h3); letter-spacing: var(--ls-h3); }
+h4 { font-size: var(--t-h4); line-height: var(--lh-h4); }
+
+p { margin: 0 0 var(--space-4) 0; }
+
+code, pre {
+  font-family: var(--font-mono);
+  font-size: var(--t-mono-sm);
+}
+:not(pre) > code {
+  background: var(--bg-3);
+  padding: 0 0.3em;
+  border-radius: var(--radius-sm);
+}
+
+/*
+ * Shiki output: theme-aware surface + token colors.
+ *
+ * Two surfaces produce Shiki HTML on this site:
+ *   - landing-page <Code> uses `defaultColor: false`, so each span carries
+ *     BOTH --shiki-light and --shiki-dark as inline CSS variables; no
+ *     `color`/`background-color` is baked in.
+ *   - markdown code fences use `defaultColor: 'dark'`, so the dark theme is
+ *     baked into inline `color`/`background-color`, and --shiki-light /
+ *     --shiki-light-bg are emitted as variables for the alternate.
+ *
+ * Surface: force every <pre.astro-code> to use the design-system `--bg-2`,
+ * regardless of which mode produced it. Cards can override with their own
+ * higher-specificity transparent rule when they want the card surface itself
+ * to show through.
+ */
+pre.astro-code {
+  background-color: var(--bg-2) !important;
+}
+
+/* Dark mode: no !important — inline dark colors (markdown) win as-is, and
+   landing-page spans with no inline color pick up var(--shiki-dark). */
+[data-theme='dark'] pre.astro-code,
+[data-theme='dark'] pre.astro-code span {
+  color: var(--shiki-dark);
+}
+
+/* Light mode: override the baked-in dark with --shiki-light. Markdown spans
+   need !important to beat their inline color. */
+[data-theme='light'] pre.astro-code,
+[data-theme='light'] pre.astro-code span {
+  color: var(--shiki-light) !important;
+}
+
+main { display: block; }
+
+/* Shared layout for the small static pages: about, accessibility, community. */
+.static-page {
+  max-width: var(--w-prose);
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-4);
+}
+@media (min-width: 720px) {
+  .static-page { padding: var(--space-9) var(--space-5); }
+}
+.static-page header { margin-bottom: var(--space-6); }
+.static-page .eyebrow {
+  margin: 0;
+  font-size: var(--t-eyebrow);
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+.static-page h1 { margin: var(--space-2) 0 var(--space-3) 0; }
+.static-page .lede { color: var(--fg-1); margin: 0 0 var(--space-4) 0; max-width: var(--measure); }
+.static-page .prose h2 { margin: var(--space-7) 0 var(--space-3) 0; }
+.static-page .prose p,
+.static-page .prose li { color: var(--fg-1); }
+.static-page .prose p { max-width: var(--measure); margin: 0 0 var(--space-4) 0; }
+.static-page .prose ul { padding-left: var(--space-5); margin: 0 0 var(--space-4) 0; }
+.static-page .prose li { margin: var(--space-2) 0; }

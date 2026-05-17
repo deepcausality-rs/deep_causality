@@ -1,0 +1,56 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/nav/SiteHeader.astro';
+---
+<BaseLayout title="Community — DeepCausality" description="Discord, GitHub discussions, and Linux Foundation mailing lists for the DeepCausality community.">
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">Community</p>
+      <h1>Join the DeepCausality community</h1>
+      <p class="lede">
+        Real-time chat on Discord, threaded discussions on GitHub, and announcement lists hosted by the
+        Linux Foundation. Pick the channel that matches what you want to do.
+      </p>
+    </header>
+
+    <div class="prose">
+      <h2>Discord</h2>
+      <ul>
+        <li><a href="https://discord.gg/Bxj9P7JXSj">DeepCausality Discord server</a></li>
+      </ul>
+
+      <h2>GitHub Discussions</h2>
+      <ul>
+        <li>
+          <a href="https://github.com/orgs/deepcausality-rs/discussions/categories/announcements">Announcements</a>:
+          top-level milestone messages that affect the whole ecosystem.
+        </li>
+        <li>
+          <a href="https://github.com/orgs/deepcausality-rs/discussions/categories/general">General</a>:
+          technical discussions and open-ended questions.
+        </li>
+        <li>
+          <a href="https://github.com/orgs/deepcausality-rs/discussions/categories/q-a">Q&amp;A</a>:
+          questions and answers related to the library and the framework.
+        </li>
+      </ul>
+
+      <h2>Mailing lists</h2>
+      <ul>
+        <li>
+          <a href="https://lists.lfaidata.foundation/g/DeepCausality-announce">DeepCausality-announce</a>:
+          top-level milestone messages.
+        </li>
+        <li>
+          <a href="https://lists.lfaidata.foundation/g/DeepCausality-technical-discuss">DeepCausality-technical-discuss</a>:
+          general technical discussion.
+        </li>
+        <li>
+          <a href="https://lists.lfaidata.foundation/g/deepcausality-tsc">DeepCausality TSC</a>:
+          governance discussions, agendas, and minutes. Open to anyone, not only TSC members.
+        </li>
+      </ul>
+    </div>
+  </article>
+</BaseLayout>

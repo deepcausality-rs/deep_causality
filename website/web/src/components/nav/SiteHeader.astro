@@ -1,0 +1,375 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+const path = Astro.url.pathname;
+const isActive = (href: string) => path === href || (href !== '/' && path.startsWith(href));
+---
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="/" aria-label="DeepCausality home">
+      <img class="logo logo-light" src="/img/logo_black.svg" alt="DeepCausality" width="170" height="36" />
+      <img class="logo logo-dark"  src="/img/logo_white.svg" alt="DeepCausality" width="170" height="36" />
+    </a>
+
+    <nav class="primary" aria-label="Primary">
+      <a href="/docs/getting-started/install/" class:list={["nav-link", isActive('/docs/') && 'is-active']}>Docs</a>
+      <div class="nav-dropdown">
+        <a href="/examples/" class:list={["nav-link nav-link-trigger", isActive('/examples/') && 'is-active']} aria-haspopup="true">
+          Examples
+          <svg class="caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2.5 4 L5 6.5 L7.5 4"/>
+          </svg>
+        </a>
+        <ul class="dropdown-menu" role="menu">
+          <li><a href="/examples/" role="menuitem">All examples</a></li>
+          <li class="sep" aria-hidden="true"></li>
+          <li><a href="/examples/foundations/" role="menuitem">Foundations</a></li>
+          <li><a href="/examples/aerospace/" role="menuitem">Aerospace</a></li>
+          <li><a href="/examples/physics/" role="menuitem">Physics</a></li>
+          <li><a href="/examples/medicine/" role="menuitem">Medicine</a></li>
+        </ul>
+      </div>
+      <a href="/blog/" class:list={["nav-link", isActive('/blog/') && 'is-active']}>Blog</a>
+      <a href="/community/" class:list={["nav-link", isActive('/community/') && 'is-active']}>Community</a>
+      <a href="/about/" class:list={["nav-link", isActive('/about/') && 'is-active']}>About</a>
+    </nav>
+
+    <div class="utility">
+      <ThemeToggle />
+      <a class="gh" href="https://github.com/deepcausality-rs/deep_causality" aria-label="GitHub repository">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+          <path d="M12 .5a11.5 11.5 0 0 0-3.63 22.42c.57.1.78-.25.78-.55v-2.06c-3.18.69-3.86-1.36-3.86-1.36-.52-1.34-1.27-1.7-1.27-1.7-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.76 2.68 1.25 3.34.96.1-.74.4-1.25.73-1.54-2.54-.29-5.21-1.27-5.21-5.66 0-1.25.45-2.27 1.18-3.07-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.15 1.17a10.94 10.94 0 0 1 5.74 0c2.19-1.48 3.15-1.17 3.15-1.17.62 1.58.23 2.75.11 3.04.74.8 1.18 1.82 1.18 3.07 0 4.4-2.68 5.37-5.23 5.65.41.36.78 1.06.78 2.13v3.16c0 .3.21.66.79.55A11.5 11.5 0 0 0 12 .5Z"/>
+        </svg>
+      </a>
+      <button class="burger" type="button"
+              aria-label="Open menu"
+              aria-controls="mobile-menu-sheet"
+              aria-expanded="false"
+              data-mobile-menu-toggle>
+        <span class="burger-bar" aria-hidden="true"></span>
+        <span class="burger-bar" aria-hidden="true"></span>
+        <span class="burger-bar" aria-hidden="true"></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu-sheet" data-mobile-menu hidden>
+  <div class="mobile-menu-scrim" data-mobile-menu-close></div>
+  <nav class="mobile-menu-sheet" aria-label="Mobile">
+    <div class="mobile-menu-head">
+      <span class="mobile-menu-title">Menu</span>
+      <button class="mobile-menu-close" type="button" aria-label="Close menu" data-mobile-menu-close>
+        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <path d="M5 5 L15 15 M15 5 L5 15"/>
+        </svg>
+      </button>
+    </div>
+    <ul class="mobile-menu-list">
+      <li><a href="/docs/getting-started/install/">Docs</a></li>
+      <li>
+        <a href="/examples/">Examples</a>
+        <ul class="mobile-menu-sub">
+          <li><a href="/examples/foundations/">Foundations</a></li>
+          <li><a href="/examples/aerospace/">Aerospace</a></li>
+          <li><a href="/examples/physics/">Physics</a></li>
+          <li><a href="/examples/medicine/">Medicine</a></li>
+        </ul>
+      </li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/community/">Community</a></li>
+      <li><a href="/about/">About</a></li>
+    </ul>
+  </nav>
+</div>
+
+<script>
+  const sheet = document.querySelector<HTMLElement>('[data-mobile-menu]');
+  const toggle = document.querySelector<HTMLButtonElement>('[data-mobile-menu-toggle]');
+  const closers = document.querySelectorAll<HTMLElement>('[data-mobile-menu-close]');
+
+  function setOpen(open: boolean) {
+    if (!sheet || !toggle) return;
+    if (open) {
+      sheet.hidden = false;
+      // Force layout so the transition fires.
+      void sheet.offsetWidth;
+      sheet.setAttribute('data-open', '');
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      sheet.removeAttribute('data-open');
+      document.documentElement.style.overflow = '';
+      window.setTimeout(() => { if (sheet && !sheet.hasAttribute('data-open')) sheet.hidden = true; }, 220);
+    }
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    toggle.classList.toggle('is-open', open);
+  }
+
+  toggle?.addEventListener('click', () => setOpen(!sheet?.hasAttribute('data-open')));
+  closers.forEach((el) => el.addEventListener('click', () => setOpen(false)));
+  sheet?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+</script>
+
+<style>
+  .skip-link {
+    position: absolute; left: -10000px; top: auto;
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-1); color: var(--fg-0);
+    border: 1px solid var(--line-1); border-radius: var(--radius-sm);
+  }
+  .skip-link:focus { left: var(--space-3); top: var(--space-3); z-index: 50; }
+
+  .site-header {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--bg-0) 92%, transparent);
+    border-bottom: 1px solid var(--line-1);
+  }
+  /* Mobile-first: brand + utility (theme/gh/burger). Primary nav shows ≥ 900px. */
+  .site-header-inner {
+    max-width: var(--w-page);
+    margin: 0 auto;
+    min-height: 56px;
+    padding: 0 var(--space-4);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  @media (min-width: 900px) {
+    .site-header-inner {
+      min-height: 64px;
+      padding: 0 var(--space-5);
+      grid-template-columns: auto 1fr auto;
+      gap: var(--space-6);
+    }
+  }
+  .brand {
+    display: inline-flex; align-items: center;
+    border-bottom: none;
+    line-height: 0;
+  }
+  .logo {
+    display: block;
+    height: 32px;
+    width: auto;
+  }
+  .logo-light, .logo-dark { display: none; }
+  :global([data-theme='light']) .logo-light { display: block; }
+  :global([data-theme='dark'])  .logo-dark  { display: block; }
+
+  .primary { display: none; gap: var(--space-5); }
+  @media (min-width: 900px) { .primary { display: flex; } }
+  .nav-link {
+    position: relative;
+    color: var(--fg-1);
+    padding: var(--space-2) 0;
+    border-bottom: none;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .nav-link::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -1px;
+    height: 2px; background: var(--accent);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform var(--dur-med) var(--ease-out);
+  }
+  .nav-link:hover { color: var(--fg-0); }
+  .nav-link.is-active { color: var(--fg-0); }
+  .nav-link.is-active::after { transform: scaleX(1); }
+
+  .nav-dropdown { position: relative; }
+  .nav-dropdown::after {
+    content: '';
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    height: 6px;
+  }
+  .nav-link-trigger { display: inline-flex; align-items: center; gap: var(--space-1); }
+  .nav-link-trigger .caret { transition: transform var(--dur-fast) var(--ease-out); }
+  .nav-dropdown:hover .nav-link-trigger .caret,
+  .nav-dropdown:focus-within .nav-link-trigger .caret { transform: rotate(180deg); }
+
+  .dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: -8px;
+    min-width: 200px;
+    list-style: none;
+    margin: 0;
+    padding: var(--space-2);
+    background: var(--bg-1);
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-2);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity var(--dur-fast) var(--ease-out),
+                transform var(--dur-fast) var(--ease-out),
+                visibility 0s linear var(--dur-fast);
+    z-index: 30;
+  }
+  .nav-dropdown:hover .dropdown-menu,
+  .nav-dropdown:focus-within .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition-delay: 0s;
+  }
+  .dropdown-menu li { margin: 0; }
+  .dropdown-menu li.sep {
+    height: 1px;
+    margin: var(--space-2) 0;
+    background: var(--line-1);
+  }
+  .dropdown-menu a {
+    display: block;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    color: var(--fg-1);
+    border-bottom: none;
+    font-size: var(--t-body-sm);
+    transition: background var(--dur-fast) var(--ease-out),
+                color var(--dur-fast) var(--ease-out);
+  }
+  .dropdown-menu a:hover,
+  .dropdown-menu a:focus-visible {
+    background: var(--bg-2);
+    color: var(--fg-0);
+  }
+
+  .utility { display: inline-flex; align-items: center; gap: var(--space-3); }
+  .gh { color: var(--fg-1); display: inline-grid; place-items: center; width: 32px; height: 32px; border-bottom: none; }
+  .gh:hover { color: var(--fg-0); }
+
+  /* Burger: visible only below 900px, top-right of the header. */
+  .burger {
+    display: inline-grid;
+    place-items: center;
+    width: 36px; height: 36px;
+    padding: 0;
+    background: transparent;
+    color: var(--fg-1);
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: color var(--dur-fast) var(--ease-out),
+                border-color var(--dur-fast) var(--ease-out);
+  }
+  .burger:hover { color: var(--fg-0); border-color: var(--line-2); }
+  .burger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .burger-bar {
+    display: block;
+    width: 18px; height: 2px;
+    margin: 2px 0;
+    background: currentColor;
+    border-radius: 1px;
+    transition: transform var(--dur-fast) var(--ease-out),
+                opacity var(--dur-fast) var(--ease-out);
+  }
+  .burger.is-open .burger-bar:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .burger.is-open .burger-bar:nth-child(2) { opacity: 0; }
+  .burger.is-open .burger-bar:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+  @media (min-width: 900px) { .burger { display: none; } }
+</style>
+
+<style is:global>
+  /* Mobile menu sheet — full-page overlay with translucent scrim. */
+  .mobile-menu {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: 1fr min(86vw, 320px);
+    pointer-events: none;
+  }
+  .mobile-menu[hidden] { display: none; }
+  .mobile-menu-scrim {
+    background: color-mix(in srgb, var(--bg-0) 70%, transparent);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity var(--dur-med) var(--ease-out);
+    pointer-events: auto;
+  }
+  .mobile-menu-sheet {
+    background: var(--bg-1);
+    border-left: 1px solid var(--line-1);
+    box-shadow: var(--shadow-3);
+    transform: translateX(100%);
+    transition: transform var(--dur-med) var(--ease-out);
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+    overflow-y: auto;
+  }
+  .mobile-menu[data-open] .mobile-menu-scrim { opacity: 1; }
+  .mobile-menu[data-open] .mobile-menu-sheet { transform: translateX(0); }
+
+  .mobile-menu-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--line-1);
+  }
+  .mobile-menu-title {
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+  .mobile-menu-close {
+    display: inline-grid;
+    place-items: center;
+    width: 36px; height: 36px;
+    padding: 0;
+    background: transparent;
+    color: var(--fg-1);
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+  .mobile-menu-close:hover { color: var(--fg-0); border-color: var(--line-2); }
+  .mobile-menu-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .mobile-menu-list {
+    list-style: none;
+    margin: 0;
+    padding: var(--space-3) var(--space-4) var(--space-5);
+    display: grid;
+    gap: var(--space-1);
+  }
+  .mobile-menu-list > li > a {
+    display: block;
+    color: var(--fg-0);
+    border-bottom: none;
+    padding: var(--space-3) 0;
+    font-size: var(--t-body);
+  }
+  .mobile-menu-sub {
+    list-style: none;
+    margin: 0 0 var(--space-2) var(--space-2);
+    padding: var(--space-1) 0 var(--space-1) var(--space-4);
+    border-left: 1px solid var(--line-1);
+    display: grid;
+    gap: var(--space-1);
+  }
+  .mobile-menu-sub a {
+    display: block;
+    color: var(--fg-1);
+    border-bottom: none;
+    padding: var(--space-2) 0;
+    font-size: var(--t-body-sm);
+  }
+  .mobile-menu-sub a:hover { color: var(--fg-0); }
+
+  @media (min-width: 900px) {
+    .mobile-menu, .mobile-menu[data-open] { display: none !important; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-menu-scrim, .mobile-menu-sheet { transition: none; }
+  }
+</style>

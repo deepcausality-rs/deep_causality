@@ -4,18 +4,19 @@ This directory contains examples demonstrating various features and applications
 
 ## Example Categories
 
-| Category | Description |
-|----------|-------------|
-| [Starter Example](#starter-example) | Basic introduction to DeepCausality |
+| Category | Description                                                         |
+|----------|---------------------------------------------------------------------|
+| [Starter Example](#starter-example) | Basic introduction to DeepCausality                                 |
 | [Classical Causality](#classical-causality-examples) | Traditional causal inference methods (CATE, DBN, Granger, RCM, SCM) |
-| [CSM Examples](#csm-examples) | Causal State Machine patterns |
-| [Core Examples](#core-examples) | PropagatingEffect and PropagatingProcess fundamentals |
-| [Avionics Examples](#avionics-examples) | High-assurance GNC and Safety Critical Systems |
-| [Chronometric Examples](#chronometric-examples) | Chronometric geodesy from satellite clock data |
-| [Physics Examples](#physics-examples) | Multi-physics simulations with Geometric Algebra |
-| [Medicine Examples](#medicine-examples) | Biomedical and life sciences applications |
-| [Material Examples](#material-examples) | Material Science and Metamaterials |
-| [Tokio Example](#tokio-example) | Async integration with tokio runtime |
+| [CSM Examples](#csm-examples) | Causal State Machine patterns                                       |
+| [Core Examples](#core-examples) | PropagatingEffect and PropagatingProcess fundamentals               |
+| [Avionics Examples](#avionics-examples) | High-assurance GNC and Safety Critical Systems                      |
+| [Chronometric Examples](#chronometric-examples) | Chronometric geodesy from satellite clock data                      |
+| [Mathematics Examples](#mathematics-examples) | Multi-mathematics composition (HKT, Causal Monad)                   |
+| [Physics Examples](#physics-examples) | Multi-physics simulations with Geometric Algebra                    |
+| [Medicine Examples](#medicine-examples) | Biomedical and life sciences applications                           |
+| [Material Examples](#material-examples) | Material Science and Metamaterials                                  |
+| [Tokio Example](#tokio-example) | Async integration with tokio runtime                                |
 
 ---
 
@@ -110,6 +111,48 @@ Chronometric geodesy demonstrations using the J2-corrected weak-field 1PN kernel
 | [gm_recovery](chronometric_examples/README.md) | Geodesy | Recovers Earth's geocentric gravitational constant ($GM_\oplus$) and derived planetary mass ($M_\oplus = GM_\oplus / G$) from one full GPS week of Galileo broadcast clock and SP3 orbit data (satellite E14). Validates against published JGM-3 / IERS 2010 references at ~0.2 % relative error | `cargo run -p chronometric_examples --example gm_recovery` |
 
 See [chronometric_examples/README.md](chronometric_examples/README.md) for detailed documentation.
+
+---
+
+## Mathematics Examples
+
+**Location:** `examples/mathematics_examples`
+
+Multi-mathematics composition through Higher-Kinded Types (`Functor`, `Monad`, `CoMonad`) and the `CausalEffectPropagationProcess` monad. Each example demonstrates how tensor, geometric algebra (multivector), topology (simplicial manifolds), and the causal effect system compose through one uniform API. 
+
+### Standalone
+
+| Example | Domain | Command |
+|---------|--------|---------|
+| [algebraic_scanner](mathematics_examples/algebraic_scanner/README.md) | Abstract Algebra | `cargo run -p mathematics_examples --example algebraic_scanner` |
+
+### HKT-Only Composition (Functor, Monad, CoMonad)
+
+These examples compose two or three crates through witness traits, with no effect machinery.
+
+| Example | Composes              | Description | Command |
+|---------|-----------------------|-------------|---------|
+| [tensor_x_algebra_rotation_field](mathematics_examples/tensor_x_algebra_rotation_field/README.md) | tensor x multivector  | Rotates a grid of vectors by a single Clifford rotor via `Functor::fmap` on a tensor of multivectors | `cargo run -p mathematics_examples --example tensor_x_algebra_rotation_field` |
+| [tensor_x_topology_laplacian](mathematics_examples/tensor_x_topology_laplacian/README.md) | tensor x topology     | Discrete Laplacian on a 1D simplicial manifold via `ManifoldWitness::extend` (CoMonad) | `cargo run -p mathematics_examples --example tensor_x_topology_laplacian` |
+| [triple_hkt_stress_field](mathematics_examples/triple_hkt_stress_field/README.md) | tensor x multivector x topology | 3D linear-elastic stress analysis blueprint on a tetrahedral mesh; six-step pipeline (strain, Hooke, normal, Cauchy traction, material rotor, von Mises) in one `extend` call. Documented placeholders show where to plug in a real material model, mesh source, or failure criterion | `cargo run -p mathematics_examples --example triple_hkt_stress_field` |
+
+### Causal Monad Composition (CausalEffectPropagationProcess)
+
+These examples wrap operations in the causal monad. Each step is a `bind` with logging and short-circuit error propagation.
+
+| Example | Composes | Description | Command |
+|---------|----------|-------------|---------|
+| [effect_kalman_predict_correct](mathematics_examples/effect_kalman_predict_correct/README.md) | tensor + multivector + core | Predict / correct / verify skeleton (the structural shape of a Kalman filter); tensor matrix-multiply for predict, Clifford rotor for correct, NaN gate for verify. README enumerates the eight pieces a production filter adds | `cargo run -p mathematics_examples --example effect_kalman_predict_correct` |
+| [effect_diffusion_on_manifold](mathematics_examples/effect_diffusion_on_manifold/README.md) | topology + tensor + core | Heat equation on a 1D manifold: spatial Laplacian via `extend` (CoMonad), time stepping via `bind` (Monad), with stability short-circuit on CFL violation | `cargo run -p mathematics_examples --example effect_diffusion_on_manifold` |
+| [effect_tensor_algebra_roundtrip](mathematics_examples/effect_tensor_algebra_roundtrip/README.md) | tensor + multivector + core | Lift a 3-vector into `Cl(3,0)`, rotate, lower back, verify norm preservation by tensor dot product. Carried value type changes between `bind` calls; the monad threads them | `cargo run -p mathematics_examples --example effect_tensor_algebra_roundtrip` |
+
+### Capstone
+
+| Example | Composes | Description | Command |
+|---------|----------|-------------|---------|
+| [capstone_spinor_minkowski](mathematics_examples/capstone_spinor_minkowski/README.md) | all three + core | Parallel transport of a unit timelike spinor along a discretized Minkowski worldline in `Cl(3,1)`. Topology supplies the path, tensor stores per-edge rapidities, multivector builds the boost rotors, the causal monad orders the steps. Final drift versus the closed-form `cosh(theta), sinh(theta)` is ~1.7e-31 at `Float106`, fifteen orders of magnitude tighter than f64 | `cargo run -p mathematics_examples --example capstone_spinor_minkowski` |
+
+See [mathematics_examples/README.md](mathematics_examples/README.md) for detailed documentation, including the precision-abstraction decision tree (`f32` vs `f64` vs `Float106`).
 
 ---
 

@@ -1,0 +1,216 @@
+---
+title: A Causal State Machine wired to three real-time sensors
+domain: Sensor monitoring
+summary: Smoke, fire, and explosion sensors each get a Causaloid and an Action. The CSM routes per-tick readings and fires the matching alert when a predicate holds.
+order: 3
+category: foundations
+source: examples/csm_examples/csm_basic/main.rs
+crates:
+  - deep_causality
+further:
+  - label: Causaloid concept page
+    href: /docs/concepts/causaloid/
+  - label: Effect Propagation Process
+    href: /docs/concepts/effect-propagation-process/
+  - label: Context concept page
+    href: /docs/concepts/context/
+---
+
+The full crate lives at [`examples/csm_examples/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/csm_examples). The basic example covered on this page is one of three siblings:
+
+- `csm_basic`: a stateless CSM with three sensors. Covered below.
+- `csm_context`: a contextual CSM that shares mutable data across the causal graph via `Arc<RwLock<BaseContext>>`.
+- `csm_effect_ethos`: a CSM guarded by an Effect Ethos that checks whether each action is normatively permissible before it fires.
+
+The Causal State Machine is the DeepCausality construct that bridges *inference* (a Causaloid) and *action* (a side-effecting function). Each state in the machine pairs the two; the machine routes per-state evidence and runs the action when its paired Causaloid's predicate holds.
+
+## File map (`csm_basic/`)
+
+```
+csm_examples/csm_basic/
+├── main.rs           # CSM wiring and the per-tick evaluation loop
+├── model.rs          # Three sensor Causaloids + the synthetic data series
+├── model_actions.rs  # Three CausalActions (the side effects)
+└── types.rs          # CsmCausaloid type alias
+```
+
+Four files, each under a hundred lines. The structure makes the responsibilities explicit: predicates in `model.rs`, side effects in `model_actions.rs`, glue in `main.rs`.
+
+## The sensor predicates (`csm_basic/model.rs`)
+
+Each sensor is a `Causaloid` that compares an observation against a threshold. The pattern repeats three times. Smoke:
+
+```rust
+pub(crate) fn get_smoke_sensor_causaloid() -> CsmCausaloid {
+    let id: IdentificationValue = 1;
+    let description = "Tests whether smoke signal exceeds threshold of 65.0";
+
+    fn causal_fn(obs: NumericalValue) -> PropagatingEffect<bool> {
+        if let Err(e) = verify_obs(obs) {
+            return PropagatingEffect::from_error(e);
+        }
+        let threshold: NumericalValue = 65.0;
+        let is_active = obs.ge(&threshold);
+        PropagatingEffect::pure(is_active)
+    }
+
+    Causaloid::new(id, causal_fn, description)
+}
+```
+
+[`model.rs:30`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/csm_examples/csm_basic/model.rs#L30). The function pointer pattern is deliberate. `causal_fn` is a free function declared inside the constructor, not a closure. `Causaloid::new` stores the pointer; the predicate has zero heap allocation and zero virtual dispatch at evaluation time.
+
+Fire and explosion follow the same shape with different thresholds:
+
+| Sensor | Threshold | Domain meaning |
+|---|---|---|
+| Smoke | `65.0` | smoke density reading |
+| Fire | `85.0` | temperature in Celsius (185 °F) |
+| Explosion | `100.0` | air pressure in PSI (atmospheric baseline is `14.696`) |
+
+[`model.rs:47`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/csm_examples/csm_basic/model.rs#L47) and [`model.rs:64`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/csm_examples/csm_basic/model.rs#L64).
+
+The `verify_obs` helper at the bottom of the file guards against three sentinel inputs:
+
+```rust
+fn verify_obs(obs: NumericalValue) -> Result<(), CausalityError> {
+    if obs.is_nan()           { return Err(/* "Observation is NULL/NAN" */); }
+    if obs.is_infinite()      { return Err(/* "Observation is infinite" */); }
+    if obs.is_sign_negative() { return Err(/* "Observation is negative" */); }
+    Ok(())
+}
+```
+
+[`model.rs:82`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/csm_examples/csm_basic/model.rs#L82). A bad reading turns into a `PropagatingEffect::from_error(...)` rather than a panic. The CSM downstream surfaces the error through `eval_single_state` so the main loop can log it without taking the rest of the system down.
+
+The synthetic time series (twelve readings per sensor) lives next to the predicates:
+
+```rust
+pub(crate) fn get_smoke_sensor_data() -> [NumericalValue; 12] {
+    [10.0, 8.0, 3.4, 7.0, 12.1, 30.89, 45.3, 60.89, 78.23, 89.8, 88.7, 91.3]
+}
+```
+
+The smoke series stays below threshold for the first seven ticks, then crosses 65.0 at tick 7 and stays there. The fire series crosses 85.0 at tick 7 as well. The explosion series spikes above 100.0 only at ticks 3 and 4. The example is engineered so all three sensors fire at recognizable points in the run.
+
+## The actions (`csm_basic/model_actions.rs`)
+
+```rust
+pub(crate) fn get_smoke_alert_action() -> CausalAction {
+    let func = raise_smoke_alert;
+    let descr = "Action that triggers the smoke alert";
+    let version = 1;
+
+    fn raise_smoke_alert() -> Result<(), ActionError> {
+        println!("Sensor detected smoke and raised smoke alert");
+        Ok(())
+    }
+
+    CausalAction::new(func, descr, version)
+}
+```
+
+[`model_actions.rs:8`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/csm_examples/csm_basic/model_actions.rs#L8). Three actions, same shape, different `println!`. In a production system these would emit a Slack notification, write to a metrics gauge, page an on-call rotation, or kick off a remediation runbook. The `CausalAction` type carries the function pointer plus a description and a version; the version matters once you start hot-swapping actions while the CSM is running.
+
+The action signature is `fn() -> Result<(), ActionError>`. It takes no arguments by design. The action runs *because* the paired Causaloid fired; the action does not relitigate the decision. If the action needs context (which user to alert, which region), that context lives in the Causaloid's closure capture or in the shared `BaseContext` of a `csm_context`-style CSM.
+
+## The wiring (`csm_basic/main.rs`)
+
+```rust
+const SMOKE_SENSOR: usize = 1;
+const FIRE_SENSOR: usize = 2;
+const EXPLOSION_SENSOR: usize = 3;
+
+fn main() {
+    let default_data: PropagatingEffect<f64> = PropagatingEffect::pure(0.0);
+
+    let smoke_causaloid = get_smoke_sensor_causaloid();
+    let smoke_cs = CausalState::new(SMOKE_SENSOR, 1, default_data.clone(), smoke_causaloid, None);
+    let smoke_ca = get_smoke_alert_action();
+
+    let fire_causaloid = get_fire_sensor_causaloid();
+    let fire_cs = CausalState::new(FIRE_SENSOR, 1, default_data.clone(), fire_causaloid, None);
+    let fire_ca = get_fire_alert_action();
+
+    let explosion_causaloid = get_explosion_sensor_causaloid();
+    let explosion_cs = CausalState::new(EXPLOSION_SENSOR, 1, default_data, explosion_causaloid, None);
+    let explosion_ca = get_explosion_alert_action();
+
+    let state_actions = &[(&smoke_cs, &smoke_ca), (&fire_cs, &fire_ca)];
+    let csm = CSM::new(state_actions);
+
+    csm.add_single_state((explosion_cs, explosion_ca))
+        .expect("Failed to add Explosion sensor");
+```
+
+[`main.rs:24`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/csm_examples/csm_basic/main.rs#L24) onward.
+
+Four things happen in order. A `CausalState` is constructed for each sensor; it pairs the sensor id, a version, a default `PropagatingEffect`, the Causaloid, and an optional `BaseContext` reference. The CSM is initialized with two of the three states bound to their actions. The third (`explosion`) is added afterwards via `add_single_state`. That demonstrates the registration pattern: states are not fixed at construction; a service can grow its sensor list at runtime.
+
+`CausalState::new(id, version, default_data, causaloid, context)` is worth pausing on. The version field is what lets the CSM tell two iterations of the same sensor apart when one is hot-swapped for another. The `context` is `None` here because the predicate is self-contained; in `csm_context` it carries the shared environment.
+
+## The evaluation loop (`csm_basic/main.rs:49-73`)
+
+```rust
+let smoke_data = get_smoke_sensor_data();
+let fire_data = get_fire_sensor_data();
+let exp_data = get_explosion_sensor_data();
+
+for i in 0..12 {
+    wait();
+
+    let smoke_evidence: PropagatingEffect<f64> = PropagatingEffect::pure(smoke_data[i]);
+    if let Err(e) = csm.eval_single_state(SMOKE_SENSOR, &smoke_evidence) {
+        eprintln!("[CSM Error] Smoke sensor evaluation failed: {e}");
+    }
+
+    let fire_evidence: PropagatingEffect<f64> = PropagatingEffect::pure(fire_data[i]);
+    if let Err(e) = csm.eval_single_state(FIRE_SENSOR, &fire_evidence) {
+        eprintln!("[CSM Error] Fire sensor evaluation failed: {e}");
+    }
+
+    let explosion_effect: PropagatingEffect<f64> = PropagatingEffect::pure(exp_data[i]);
+    if let Err(e) = csm.eval_single_state(EXPLOSION_SENSOR, &explosion_effect) {
+        eprintln!("[CSM Error] Explosion sensor evaluation failed: {e}");
+    }
+}
+```
+
+Twelve ticks. Each tick wraps every sensor reading in a `PropagatingEffect::pure(...)` and routes it to its sensor by id. The CSM looks up the matching `CausalState`, evaluates its Causaloid against the evidence, and fires the paired action if the predicate returns true.
+
+`eval_single_state` returns a `Result`; failure cases (the sensor id is unregistered, the predicate produced an error, the action returned an `ActionError`) surface through that result. Logging the error keeps the run going for the other sensors.
+
+The `wait()` helper sleeps 100ms between ticks so the printed output stays readable:
+
+```rust
+fn wait() {
+    println!("\nReading Sensors...");
+    thread::sleep(Duration::from_millis(100));
+}
+```
+
+[`main.rs:75`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/csm_examples/csm_basic/main.rs#L75).
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p csm_examples --example csm_example
+```
+
+Expected output: twelve "Reading Sensors..." sections; ticks 3 and 4 fire the explosion alert; ticks 7 and beyond fire smoke and fire alerts.
+
+## Where to take it next
+
+The basic example sets a foundation; the two sibling CSMs build on it.
+
+`csm_context`: share a `BaseContext` across the sensors so the smoke threshold can be tuned at runtime, the fire predicate can read the current ambient temperature, and the explosion predicate can consult a building-specific baseline. The Causaloids become contextual: their function pointers take both an observation and the shared context.
+
+`csm_effect_ethos`: guard the actions with an Effect Ethos. The smoke alert raises a notification; the explosion alert evacuates a building. The Ethos checks whether the action is permissible (do we have the operator's approval window? is the building occupied?) before firing. The same CSM, an extra layer.
+
+For your own work, the structure is reusable as-is. Swap the synthetic data for a real sensor feed (one `mpsc::Receiver` per sensor, or a single combined channel with a sensor id on each message). Replace the `println!` actions with whatever your alerting stack expects. The Causaloid threshold values move out of `model.rs` and into a configuration file or a `BaseContext` Datoid set.
+
+## Why this is a load-bearing example
+
+The CSM is what most production users of DeepCausality eventually build. A bare Causaloid is the inference. The CSM is the inference plus the routing plus the action plus the error surface. Almost every alerting system, every safety monitor, every "if-this-then-that" pipeline a real engineering team ships is shaped like this. The basic example shows the shape in seventy-three lines of `main.rs`.

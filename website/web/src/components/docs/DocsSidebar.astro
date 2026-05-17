@@ -1,0 +1,89 @@
+---
+import { getCollection } from 'astro:content';
+
+const all = await getCollection('docs');
+const sections = [
+  { id: 'getting-started', label: 'Getting started', sort: 'order' },
+  { id: 'concepts', label: 'Concepts', sort: 'alpha' },
+  { id: 'guides', label: 'Guides', sort: 'alpha' },
+  { id: 'reference', label: 'Reference', sort: 'alpha' },
+  { id: 'monograph', label: 'Monograph', sort: 'order' },
+] as const;
+
+const grouped = sections.map((s) => {
+  const entries = all.filter((e) => e.data.section === s.id);
+  if (s.sort === 'alpha') {
+    // Pin the glossary to the end; sort everything else by title.
+    entries.sort((a, b) => {
+      const aGloss = a.id.endsWith('glossary');
+      const bGloss = b.id.endsWith('glossary');
+      if (aGloss !== bGloss) return aGloss ? 1 : -1;
+      return a.data.title.localeCompare(b.data.title);
+    });
+  } else {
+    entries.sort((a, b) => a.data.order - b.data.order);
+  }
+  return { ...s, entries };
+});
+
+const here = Astro.url.pathname;
+const idToHref = (id: string) => `/docs/${id.replace(/\/index$/, '/')}/`.replace(/\/+/g, '/');
+---
+<aside class="docs-sidebar">
+  <nav aria-label="Documentation">
+    {grouped.map((g) => g.entries.length > 0 && (
+      <section>
+        <h4>{g.label}</h4>
+        <ul>
+          {g.entries.map((e) => {
+            const href = idToHref(e.id);
+            const isHere = here === href;
+            return (
+              <li><a href={href} class:list={[isHere && 'is-here']}>{e.data.title}</a></li>
+            );
+          })}
+        </ul>
+      </section>
+    ))}
+  </nav>
+</aside>
+
+<style>
+  /* Mobile-first: flat block at the top of the docs page; sticky sidebar at ≥900px. */
+  .docs-sidebar {
+    border-bottom: 1px solid var(--line-1);
+    padding: var(--space-5) 0;
+  }
+  @media (min-width: 900px) {
+    .docs-sidebar {
+      position: sticky; top: 80px; align-self: start;
+      border-right: 1px solid var(--line-1);
+      border-bottom: none;
+      padding: var(--space-6) var(--space-5) var(--space-9) 0;
+      max-height: calc(100vh - 80px);
+      overflow: auto;
+    }
+  }
+  .docs-sidebar section + section { margin-top: var(--space-5); }
+  .docs-sidebar h4 {
+    margin: 0 0 var(--space-2) 0;
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+  .docs-sidebar ul { list-style: none; padding: 0; margin: 0; }
+  .docs-sidebar li { margin: 0; }
+  .docs-sidebar a {
+    display: block;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    color: var(--fg-1);
+    border-bottom: none;
+    font-size: var(--t-body-sm);
+    transition: color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+  }
+  .docs-sidebar a:hover { color: var(--fg-0); }
+  .docs-sidebar a.is-here { color: var(--fg-0); background: var(--bg-2); }
+
+</style>

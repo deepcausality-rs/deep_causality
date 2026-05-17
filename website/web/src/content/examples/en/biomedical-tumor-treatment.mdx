@@ -1,0 +1,74 @@
+---
+title: TTFields electrode optimization for a glioblastoma volume
+domain: Biomedical
+summary: A Metropolis-style optimizer that proposes a new electrode angle, evaluates the disruption via a causal effect chain, and accepts or rejects.
+order: 5
+category: medicine
+source: examples/medicine_examples/tumor_treatment/main.rs
+crates:
+  - deep_causality
+  - deep_causality_core
+further:
+  - label: Effect Propagation Process
+    href: /docs/concepts/effect-propagation-process/
+  - label: Causal Monad
+    href: /docs/concepts/causal-monad/
+---
+
+This example lives at [`examples/medicine_examples/tumor_treatment/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/medicine_examples/tumor_treatment). It models the [Tumor Treating Fields](https://en.wikipedia.org/wiki/Tumor_Treating_Fields) (TTFields) optimization problem on a glioblastoma volume: given a 3D grid of tumor voxels with directional cell-division axes, find the electrode angle that maximizes disruption.
+
+The optimizer is Metropolis-style. Each iteration:
+
+1. Proposes a new `(theta, phi)`.
+2. Evaluates the proposed configuration's efficacy as a causal effect chain.
+3. Accepts the proposal if the score improves, rejects otherwise.
+
+The interesting move is step 2: the physics simulation is wrapped in `PropagatingEffect::pure(new_params).bind(...)` so the optimizer composes against the same effect-propagation machinery the rest of the library uses.
+
+## The chain
+
+```rust
+use deep_causality_core::{CausalityError, EffectValue, PropagatingEffect};
+
+let effect = PropagatingEffect::pure(new_params).bind(|params, _, _| {
+    let p = match params {
+        EffectValue::Value(v) => v,
+        _ => (0.0, 0.0),
+    };
+    let score = match model::evaluate_efficacy(&tumor, p) {
+        Ok(s) => s,
+        Err(e) => return PropagatingEffect::from_error(/* ... */),
+    };
+    PropagatingEffect::pure(score)
+});
+
+if let EffectValue::Value(new_score) = effect.value() {
+    if *new_score > current_score {
+        current_params = new_params;
+        current_score = *new_score;
+    }
+}
+```
+
+The `bind` is a pure function: it takes the proposed `(theta, phi)`, runs the physics simulation, and returns a new `PropagatingEffect` carrying the score. The optimizer reads the score off the effect's value.
+
+## What to look at in the source
+
+- `model.rs`: `evaluate_efficacy`, `build_mock_tumor`, the physics that turns an electrode angle into a disruption score.
+- `main.rs`: the optimization loop, the Metropolis accept/reject, and the temperature schedule.
+
+The crate ships sibling examples for protein folding, tissue classification, aneurysm hemodynamics, decompression, and epilepsy. They live next to this one under `examples/medicine_examples/`.
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p medicine_examples --example tumor_treatment
+```
+
+The output prints one line per optimization step with the current score and the proposed angle.
+
+## Why this is a good fit
+
+The optimization loop is glue; the physics is heavy. Wrapping the physics in a `PropagatingEffect` keeps the loop indifferent to the implementation. Swap `evaluate_efficacy` for a different model, the loop does not change. Add an audit log of every proposal, the `EffectLog` is already collecting it.

@@ -1,0 +1,46 @@
+---
+// "What is dynamic causality?" — below-the-fold plain-language explainer.
+// Three short paragraphs, prose-measure constrained, no decorative imagery.
+---
+<section class="explainer">
+  <div class="explainer-inner">
+    <p class="eyebrow">What is dynamic causality</p>
+    <h2>Causal reasoning for a dynamic world.</h2>
+    <div class="prose">
+      <p>
+        DeepCausality treats causality as a spacetime-agnostic dependency. The Causal Monad
+        sequences causal processes. Causaloids encode each causal relation as a small composable unit in an
+        isomorphic recursive structure. The PropagatingEffect composes Causal Monads and Causaloids
+        together. A Context hypergraph encodes the environment those rules operate in. The Effect
+        Ethos verifies that whatever the rules conclude still satisfies the operational policies
+        you have to honor.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .explainer {
+    padding: var(--space-8) 0;
+    border-top: 1px solid var(--line-1);
+  }
+  .explainer-inner {
+    max-width: var(--w-prose);
+    margin: 0 auto;
+    padding: 0 var(--space-4);
+    display: flex; flex-direction: column; gap: var(--space-4);
+  }
+  .explainer-inner > .eyebrow,
+  .explainer-inner > h2 { text-align: center; }
+  @media (min-width: 720px) {
+    .explainer { padding: var(--space-9) 0; }
+    .explainer-inner { padding: 0 var(--space-5); }
+  }
+  .eyebrow {
+    margin: 0;
+    font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase; color: var(--fg-2);
+  }
+  h2 { margin: 0 0 var(--space-3) 0; }
+  .prose p { color: var(--fg-1); max-width: var(--measure); }
+</style>

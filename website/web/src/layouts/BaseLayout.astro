@@ -1,0 +1,110 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const {
+  title = 'DeepCausality — dynamic causality for advanced systems',
+  description = 'DeepCausality is a Rust framework for dynamic causality. Causal reasoning for advanced systems where time, context, and rules evolve.',
+  ogImage = '/img/social-share.jpg',
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+const ogImageUrl = new URL(ogImage, Astro.site).toString();
+---
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="preload" href="/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="DeepCausality — dynamic causality for advanced systems" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <script is:inline>
+      // Resolve theme before first paint to avoid FOUC. Default: dark.
+      try {
+        var saved = localStorage.getItem('dc-theme');
+        var theme = saved === 'light' || saved === 'dark' ? saved : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (_) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    </script>
+  </head>
+  <body>
+    <main id="main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <div class="col">
+          <h4>Project</h4>
+          <a href="/docs/getting-started/install/">Docs</a>
+          <a href="/examples/">Examples</a>
+          <a href="/blog/">Blog</a>
+          <a href="/about/">About</a>
+        </div>
+        <div class="col">
+          <h4>Community</h4>
+          <a href="/community/">Community</a>
+          <a href="https://lists.lfaidata.foundation/g/DeepCausality-announce">Mailing list</a>
+          <a href="/accessibility/">Accessibility</a>
+        </div>
+        <div class="col">
+          <h4>GitHub</h4>
+          <a href="https://github.com/deepcausality-rs/deep_causality">Repository</a>
+          <a href="https://github.com/deepcausality-rs/deep_causality/issues">Issues</a>
+          <a href="https://github.com/deepcausality-rs/deep_causality/discussions">Discussions</a>
+          <a href="https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE">License</a>
+        </div>
+        <div class="col">
+          <h4>DeepCausality</h4>
+          <p>An open-source Rust framework for dynamic causality. Hosted as a sandbox project at
+          the <a href="https://lfaidata.foundation/">Linux Foundation for AI &amp; Data</a>.</p>
+        </div>
+      </div>
+    </footer>
+    <style is:global>
+      .site-footer { border-top: 1px solid var(--line-1); padding: var(--space-7) 0; margin-top: var(--space-8); }
+      .site-footer-inner {
+        max-width: var(--w-page); margin: 0 auto; padding: 0 var(--space-4);
+        display: grid; grid-template-columns: 1fr; gap: var(--space-6);
+      }
+      @media (min-width: 720px) {
+        .site-footer { padding: var(--space-8) 0; margin-top: var(--space-9); }
+        .site-footer-inner { padding: 0 var(--space-5); grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+      }
+      @media (min-width: 1024px) {
+        .site-footer-inner { grid-template-columns: 1fr 1fr 1fr 2fr; gap: var(--space-7); }
+      }
+      .site-footer .col { display: flex; flex-direction: column; gap: var(--space-2); }
+      .site-footer h4 { margin: 0 0 var(--space-2) 0; font-size: var(--t-body-sm); color: var(--fg-0); }
+      .site-footer a { color: var(--fg-1); border-bottom: none; }
+      .site-footer a:hover { color: var(--fg-0); }
+      .site-footer p { margin: 0; color: var(--fg-1); max-width: 52ch; }
+      .site-footer p a { text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 2px; }
+    </style>
+  </body>
+</html>

@@ -1,0 +1,243 @@
+\section{Implementation}
+\label{sec:implementation}
+
+We implement \texttt{MaybeUncertain<T>} in the Rust crate
+\texttt{deep\_causality\_uncertain}, which is part of the DeepCausality
+project~\cite{hansen_deepcausality}. The implementation reuses the
+\texttt{UncertainNodeContent} enum, the \texttt{SequentialSampler},
+the \texttt{sprt\_eval} module, and the global sample cache already used
+for $\Utype\langle T \rangle$; the only new code is a struct, four
+constructors, five operator overloads, the \texttt{sample} method, two
+presence predicates, and the SPRT-gated lifting operator, comprising
+roughly two hundred lines of Rust across two files. This section
+presents the relevant API surface and the design choices behind it.
+
+\subsection{Type and trait bounds}
+\label{sec:impl:type}
+
+The struct declaration is two-fielded and generic over a type parameter
+bounded by the crate's \texttt{ProbabilisticType} trait:
+
+\begin{lstlisting}
+pub struct MaybeUncertain<T: ProbabilisticType> {
+    is_present: Uncertain<bool>,
+    value:      Uncertain<T>,
+}
+\end{lstlisting}
+
+The trait \texttt{ProbabilisticType} extends \texttt{IntoSampledValue},
+\texttt{FromSampledValue}, \texttt{Clone}, \texttt{Send}, \texttt{Sync},
+and \texttt{'static}; it provides a \texttt{default\_value} constant for
+the placeholder used in \texttt{always\_none}. The crate provides
+implementations for \texttt{f64} and \texttt{bool}.
+
+Both struct fields are private. Callers construct values exclusively
+through the four constructors of~\Cref{sec:type:ctors}, and they observe
+values through \texttt{sample}, the presence predicates, and the gating
+operator. The library exposes two type aliases for the supported
+specialisations:
+
+\begin{lstlisting}
+pub type MaybeUncertainF64  = MaybeUncertain<f64>;
+pub type MaybeUncertainBool = MaybeUncertain<bool>;
+\end{lstlisting}
+
+\subsection{Constructors}
+\label{sec:impl:ctors}
+
+The four constructors map directly onto~\Cref{tab:constructors}. For the
+\texttt{f64} specialisation:
+
+\begin{lstlisting}
+pub fn from_value(value: f64) -> Self {
+    Self {
+        is_present: Uncertain::<bool>::point(true),
+        value:      Uncertain::<f64>::point(value),
+    }
+}
+
+pub fn from_uncertain(value: Uncertain<f64>) -> Self {
+    Self { is_present: Uncertain::<bool>::point(true), value }
+}
+
+pub fn always_none() -> Self {
+    Self {
+        is_present: Uncertain::<bool>::point(false),
+        value:      Uncertain::<f64>::point(0.0),
+    }
+}
+
+pub fn from_bernoulli_and_uncertain(
+    prob_some:          f64,
+    present_value_dist: Uncertain<f64>,
+) -> Self {
+    Self {
+        is_present: Uncertain::bernoulli(prob_some),
+        value:      present_value_dist,
+    }
+}
+\end{lstlisting}
+
+The placeholder $0.0$ in \texttt{always\_none} is never observed at
+runtime because the sampler short-circuits when the presence draw is
+false. The \texttt{bool} specialisation is structurally identical except
+that the placeholder is \texttt{false} instead of $0.0$.
+
+\subsection{Sampling}
+\label{sec:impl:sampling}
+
+The two-stage sampling procedure from~\Cref{alg:sample} is implemented
+as a single method that delegates to the underlying \texttt{sample}
+methods on the two component types:
+
+\begin{lstlisting}
+pub fn sample(&self) -> Result<Option<f64>, UncertainError> {
+    if self.is_present.sample()? {
+        Ok(Some(self.value.sample()?))
+    } else {
+        Ok(None)
+    }
+}
+\end{lstlisting}
+
+Each \texttt{Uncertain::sample} call draws a fresh random sample index from
+the thread-local generator and queries the global sample cache keyed by
+$(\text{node id}, \text{sample index})$. Two consequences follow. First,
+repeated \texttt{sample} calls on the same \texttt{MaybeUncertain} value
+yield independent draws, since the indices differ between calls. Second,
+within a single sampling operation, the underlying graph evaluates shared
+sub-nodes exactly once because the cache lookup succeeds for any leaf
+reached through more than one path.
+
+The SPRT loop uses a stricter variant, \texttt{sample\_with\_index}, which
+takes a caller-supplied index. The loop in
+\texttt{sprt\_eval::evaluate\_hypothesis} sweeps a contiguous range of
+indices starting from a base, drawing one bool per index and accumulating
+log-likelihood ratios. This is the only place in the crate that exercises
+the deterministic-index path; ordinary user code uses \texttt{sample},
+which is non-deterministic by design.
+
+\subsection{Operator overloads}
+\label{sec:impl:ops}
+
+The five operators on \texttt{MaybeUncertain<f64>} are implemented through
+Rust's \texttt{std::ops} traits. Every binary operator follows the same
+pattern; the \texttt{Add} implementation is representative:
+
+\begin{lstlisting}
+impl Add for MaybeUncertain<f64> {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            is_present: self.is_present & rhs.is_present,
+            value:      self.value + rhs.value,
+        }
+    }
+}
+\end{lstlisting}
+
+Two distinct things happen on each call. The value field uses
+\texttt{Uncertain<f64>}'s overloaded \texttt{+}, which appends an
+\texttt{ArithmeticOp} node to the computation graph rooted at
+\texttt{value}. The presence field uses \texttt{BitAnd} on
+\texttt{Uncertain<bool>}, which appends a \texttt{LogicalOp::And} node to
+the computation graph rooted at \texttt{is\_present}. Both ops consume the
+operands by value, taking advantage of Rust's affine-type discipline; no
+hidden cloning is performed.
+
+The \texttt{Sub}, \texttt{Mul}, and \texttt{Div} implementations are
+structurally identical, differing only in the arithmetic operator applied
+to the value branch. The unary \texttt{Neg} implementation leaves the
+presence axis untouched:
+
+\begin{lstlisting}
+impl Neg for MaybeUncertain<f64> {
+    type Output = Self;
+    fn neg(self) -> Self::Output {
+        Self { is_present: self.is_present, value: -self.value }
+    }
+}
+\end{lstlisting}
+
+\subsection{Presence predicates and the gating operator}
+\label{sec:impl:lift}
+
+The two presence predicates are one-line shims that clone the
+\texttt{is\_present} field and optionally negate it:
+
+\begin{lstlisting}
+pub fn is_some(&self) -> Uncertain<bool> {  self.is_present.clone()   }
+pub fn is_none(&self) -> Uncertain<bool> { !self.is_present.clone()   }
+\end{lstlisting}
+
+The \texttt{!} in \texttt{is\_none} is the \texttt{Not} impl on
+\texttt{Uncertain<bool>} and constructs a \texttt{LogicalOp::Not} node
+rather than computing a Boolean. Both predicates therefore return new
+\texttt{Uncertain<bool>} values that can be sampled, composed with other
+Boolean operators, or passed to any of the existing SPRT-backed methods on
+\texttt{Uncertain<bool>}.
+
+The gating operator \texttt{lift\_to\_uncertain} is the only method that
+introduces new control flow specific to \texttt{MaybeUncertain<T>}:
+
+\begin{lstlisting}
+pub fn lift_to_uncertain(
+    &self,
+    threshold_prob_some: f64,
+    confidence_level:    f64,
+    epsilon:             f64,
+    max_samples:         usize,
+) -> Result<Uncertain<f64>, UncertainError> {
+    let is_present = self.is_present.to_bool(
+        threshold_prob_some,
+        confidence_level,
+        epsilon,
+        max_samples,
+    )?;
+    if is_present {
+        Ok(self.value.clone())
+    } else {
+        Err(UncertainError::PresenceError(
+            "Insufficient evidence for presence".to_string(),
+        ))
+    }
+}
+\end{lstlisting}
+
+The method delegates the statistical decision to
+\texttt{Uncertain<bool>::to\_bool}, which in turn calls the SPRT
+implementation described in~\Cref{sec:semantics:sprt}. If the SPRT
+accepts the presence hypothesis the method returns a clone of the value
+graph; otherwise it returns a \texttt{PresenceError}. The error is a
+distinct \texttt{UncertainError} variant so that callers can handle
+gate-failure separately from sampling or graph-construction errors.
+
+\subsection{Scope and current limitations}
+\label{sec:impl:scope}
+
+We state honestly what the current implementation does not provide.
+
+\paragraph{Specialisations.} Only \texttt{f64} and \texttt{bool} are
+supported. Generalising to other numeric types would require extending the
+inherent-impl blocks; the type itself is generic.
+
+\paragraph{Boolean algebra.} The \texttt{MaybeUncertain<bool>}
+specialisation does not implement logical operators. Boolean expressions
+over multiple presence-uncertain values require the caller to project the
+components, operate on \texttt{Uncertain<bool>} directly, and reconstruct.
+
+\paragraph{Closed-form moments.} The crate provides no closed-form
+expressions for the mean, variance, or any other moment of a
+\texttt{MaybeUncertain<T>} value. All numerical summaries are estimated by
+sampling.
+
+\paragraph{Joint presence-value distribution.} The two components are
+modelled as independent random variables. There is no constructor that
+takes a joint distribution; missing-not-at-random workloads are out of
+scope (\Cref{sec:discussion}).
+
+\paragraph{Conditional and comparison operators.} The crate does not
+currently lift conditional expressions
+(\texttt{Uncertain::conditional}) or scalar comparison operators onto
+\texttt{MaybeUncertain<T>}. Callers needing them work on the underlying
+components.

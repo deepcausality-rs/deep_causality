@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import CategoryList from '../../components/examples/CategoryList.astro';
+---
+<BaseLayout title="Physics — Examples — DeepCausality" description="Physics examples built on DeepCausality: Maxwell field derivation, general relativity, magnetohydrodynamics, and chronometric geodesy.">
+  <SiteHeader />
+  <CategoryList
+    category="physics"
+    eyebrow="Examples · Physics"
+    title="Physics"
+    description="Causal chains over field equations, regime-switching near a black hole, multi-physics coupling between general relativity and magnetohydrodynamics, and the recovery of Earth's gravitational parameter from satellite clocks."
+  />
+</BaseLayout>

@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/nav/SiteHeader.astro';
+---
+<BaseLayout title="About — DeepCausality" description="About DeepCausality: what the project is, where it lives, and how it handles your privacy.">
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">About</p>
+      <h1>About DeepCausality</h1>
+    </header>
+
+    <div class="prose">
+      <h2>What is DeepCausality</h2>
+      <p>
+        DeepCausality is a dynamic-causality framework that enables fast, deterministic, context-aware causal
+        reasoning over complex multi-stage causal models. The library adds only minimal overhead and runs in
+        real time without specialized acceleration hardware.
+      </p>
+      <p>
+        It is used in dynamic control systems for the IoT industry, in monitoring systems for the cloud
+        industry, and in dynamic market models in the financial industry. Start-ups looking to disrupt
+        established categories also find the library a useful foundation.
+      </p>
+      <p>
+        See the <a href="/docs/concepts/dynamic-causality/">documentation</a> for the formal treatment, and
+        check the <a href="/blog/">blog</a> for project updates.
+      </p>
+
+      <h2>Center of Dynamic Causality</h2>
+      <p>
+        The <a href="https://www.causalcenter.com">Center of Dynamic Causality</a> contributes
+        research and ongoing support to the DeepCausality project. Its work informs the formal
+        foundations of the framework and feeds back into the library&rsquo;s design.
+      </p>
+
+      <h2>Linux Foundation</h2>
+      <p>
+        DeepCausality is hosted as a sandbox project at the
+        <a href="https://lfaidata.foundation/">Linux Foundation for data and artificial intelligence</a>. The
+        Linux Foundation is the world&rsquo;s leading home for collaboration on open-source software,
+        hardware, standards, and data. Linux Foundation projects are critical to the world&rsquo;s
+        infrastructure, including Linux, Kubernetes, Node.js, ONAP, RISC-V, SPDX, and OpenChain. The Linux
+        Foundation focuses on advancing best practices and addressing the needs of contributors, users, and
+        solution providers to create sustainable models for open collaboration. More at
+        <a href="https://www.linuxfoundation.org/">linuxfoundation.org</a>.
+      </p>
+
+      <h2>No cookies. No tracking.</h2>
+      <p>
+        The project deliberately chooses user privacy over analytics. The deepcausality.com website:
+      </p>
+      <ul>
+        <li>Does not use cookies.</li>
+        <li>Does not use Google Analytics or any other form of user tracking.</li>
+        <li>Does not use web beacons or tracking pixels.</li>
+      </ul>
+      <p>
+        The site&rsquo;s full source code lives in the
+        <a href="https://github.com/deepcausality-rs/deep_causality/tree/main/website/web">website/web folder of the
+        DeepCausality monorepo on GitHub</a>. If
+        you find anything that violates this policy, please
+        <a href="https://github.com/deepcausality-rs/deep_causality/issues">open an issue</a>.
+      </p>
+    </div>
+  </article>
+
+</BaseLayout>

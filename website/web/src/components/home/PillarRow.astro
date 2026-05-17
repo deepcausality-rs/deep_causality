@@ -1,0 +1,92 @@
+---
+// Three pillars connected by a thin SVG path. Not a 3-equal-cards row.
+// Below 900px the row stacks vertically with a vertical connector.
+const pillars = [
+  {
+    name: 'Causal Monad',
+    href: '/docs/concepts/causal-monad/',
+    body: 'The pure/bind algebra that composes causal effects. Carries value, state, context, error, and an audit log through every step.',
+  },
+  {
+    name: 'Causaloid',
+    href: '/docs/concepts/causaloid/',
+    body: 'A self-contained unit of causality. Compose Causaloids into larger structures with the same algebra you would use for functions.',
+  },
+  {
+    name: 'Context',
+    href: '/docs/concepts/context/',
+    body: 'An explicit hypergraph encoding the environment. Spacetime nodes, relational edges, and dynamic update semantics.',
+  },
+];
+---
+<section class="pillars">
+  <div class="pillars-inner">
+    <p class="eyebrow">The primitives</p>
+    <h2>The foundation of DeepCausality</h2>
+
+    <div class="pillar-row">
+      <svg class="pillar-connector" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 600 40">
+        <path d="M30 20 L290 20 L310 20 L570 20" fill="none" stroke="currentColor" stroke-width="1" />
+        <circle cx="30" cy="20" r="3" fill="currentColor" />
+        <circle cx="300" cy="20" r="3" fill="currentColor" />
+        <circle cx="570" cy="20" r="3" fill="currentColor" />
+      </svg>
+      {pillars.map((p) => (
+        <a class="pillar" href={p.href}>
+          <h3>{p.name}</h3>
+          <p>{p.body}</p>
+          <span class="pillar-cta">Read more <span aria-hidden="true">→</span></span>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .pillars { padding: var(--space-8) 0; border-top: 1px solid var(--line-1); }
+  .pillars-inner { max-width: var(--w-page); margin: 0 auto; padding: 0 var(--space-4); }
+  @media (min-width: 720px) { .pillars { padding: var(--space-9) 0; } .pillars-inner { padding: 0 var(--space-5); } }
+  .eyebrow {
+    margin: 0;
+    font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase; color: var(--fg-2);
+    text-align: center;
+  }
+  h2 { margin: var(--space-2) 0 var(--space-7) 0; text-align: center; }
+
+  /* Mobile-first: stack, no connector. Three columns + horizontal connector at ≥900px. */
+  .pillar-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+  .pillar-row > * { min-width: 0; }
+  .pillar-connector {
+    display: none;
+    position: absolute;
+    inset: 0 0 auto 0;
+    top: 12px;
+    width: 100%;
+    height: 24px;
+    color: var(--line-2);
+    pointer-events: none;
+  }
+  @media (min-width: 900px) {
+    .pillar-row { grid-template-columns: repeat(3, 1fr); gap: var(--space-6); }
+    .pillar-connector { display: block; }
+  }
+
+  .pillar {
+    position: relative;
+    padding-top: var(--space-6);
+    color: var(--fg-0);
+    border-bottom: none;
+    display: flex; flex-direction: column; gap: var(--space-3);
+  }
+  .pillar h3 { margin: 0; font-size: var(--t-h3); }
+  .pillar p { margin: 0; color: var(--fg-1); max-width: 36ch; }
+  .pillar-cta { color: var(--accent); font-size: var(--t-body-sm); }
+  .pillar:hover h3 { color: var(--accent); }
+
+</style>

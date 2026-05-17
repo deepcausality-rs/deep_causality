@@ -1,0 +1,190 @@
+\section{The \texttt{MaybeUncertain<T>} Type}
+\label{sec:type}
+
+This section defines the type at the abstract level: its mathematical
+structure, the four constructors, the sampling semantics, the operator
+algebra, and the gating operator. Rust API details and the surrounding
+machinery appear in~\Cref{sec:implementation}.
+
+\subsection{Definition}
+\label{sec:type:def}
+
+A \texttt{MaybeUncertain<T>} value is an element of the product
+\begin{equation}
+\Mtype\langle T \rangle \;=\; \Utype\langle \Bool \rangle \,\times\, \Utype\langle T \rangle,
+\label{eq:mtype}
+\end{equation}
+where $\Utype\langle T \rangle$ denotes the Bornholt-style uncertain type
+over base type $T$. We write a value as a pair $(x, v)$, with $x \in
+\Utype\langle \Bool \rangle$ the \emph{presence} component and $v \in
+\Utype\langle T \rangle$ the \emph{value} component. The presence component
+is a Bernoulli-distributed random variable governing whether the value
+exists; the value component carries the distribution of the value
+conditional on its existence.
+
+\paragraph{Independence assumption.} The two components of a
+$\Mtype\langle T \rangle$ value are independent random variables. In Rubin's
+terms~\cite{rubin1976missing}, this restricts the semantics to data that is
+missing at random: the event of presence carries no information about the
+value the variable would take if observed. We state the assumption
+explicitly here and revisit its consequences for missing-not-at-random
+workloads in~\Cref{sec:discussion}.
+
+\paragraph{Specialisations.} The library realises two instantiations,
+$\Mtype\langle f64 \rangle$ and $\Mtype\langle \Bool \rangle$. The former
+carries the full operator algebra described in~\Cref{sec:type:algebra};
+the latter provides constructors, sampling, the presence predicates, and the
+gating operator only. We note this asymmetry as a scope limitation
+in~\Cref{sec:discussion}, not as a property of the type theory.
+
+\subsection{Constructors}
+\label{sec:type:ctors}
+
+Four constructors cover the situations that arise in sparse-data programs.
+Each constructor specifies the presence component and the value component
+independently. Let $\delta_b$ denote the point distribution at $b$, and let
+$\mathrm{Bern}(p)$ denote the Bernoulli distribution with success
+probability $p$.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Constructor & Presence component $x$ & Value component $v$ \\
+\midrule
+$\textsc{fromValue}(c)$              & $\delta_{\text{true}}$ & $\delta_c$ \\
+$\textsc{fromUncertain}(u)$          & $\delta_{\text{true}}$ & $u$ \\
+$\textsc{alwaysNone}()$              & $\delta_{\text{false}}$ & $\bot$ \\
+$\textsc{fromBernoulli}(p,\, u)$     & $\mathrm{Bern}(p)$ & $u$ \\
+\bottomrule
+\end{tabular}
+\caption{The four constructors of $\Mtype\langle T \rangle$ and the
+distributions they assign to each component. The placeholder $\bot$ in
+$\textsc{alwaysNone}$ is never observed because the sampling semantics
+short-circuit when the presence draw is false (\Cref{sec:type:sampling}).}
+\label{tab:constructors}
+\end{table}
+
+The four constructors model four distinct situations. \textsc{fromValue}
+represents a fact: the value exists with certainty and equals a known
+scalar. \textsc{fromUncertain} represents a noisy reading that was definitely
+received; presence is certain, value is uncertain. \textsc{alwaysNone}
+represents structural absence. \textsc{fromBernoulli} is the canonical
+sparse-data case: presence is governed by a Bernoulli trial, and the
+caller supplies the conditional value distribution.
+
+\subsection{Sampling semantics}
+\label{sec:type:sampling}
+
+Sampling a $\Mtype\langle T \rangle$ value $(x, v)$ produces an element of
+$\{\bot\} \cup T$ by the two-stage procedure shown
+in~\Cref{alg:sample}. The presence component is sampled first; the value
+component is sampled only when the presence draw yields true.
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.65\linewidth}{%
+\textbf{Algorithm: $\mathrm{sample}(x, v)$.} \\[2pt]
+\textbf{Input:} a $\Mtype\langle T \rangle$ value $(x, v)$. \\
+\textbf{Output:} an element of $\{\bot\} \cup T$. \\[4pt]
+\hspace*{1em} 1.\; Draw $b \sim x$ from the presence component. \\
+\hspace*{1em} 2.\; \textbf{if} $b = \text{true}$ \textbf{then} draw $t \sim v$ and \textbf{return} $t$. \\
+\hspace*{1em} 3.\; \textbf{else return} $\bot$.
+}}
+\caption{Two-stage sampling. The value component is sampled only on the
+presence-true branch.}
+\label{alg:sample}
+\end{figure}
+
+The induced output distribution is a mixture with an atom at $\bot$. Let
+$p = \Prob[x = \text{true}]$. Then for any measurable $S \subseteq T$,
+\begin{equation}
+\Prob[\mathrm{sample}(x, v) \in S] \;=\; p \cdot \Prob[v \in S \mid x = \text{true}],
+\quad \Prob[\mathrm{sample}(x, v) = \bot] \;=\; 1 - p.
+\label{eq:mixture}
+\end{equation}
+Under the independence assumption, the conditional $\Prob[v \in S \mid x =
+\text{true}]$ equals $\Prob[v \in S]$, so~\eqref{eq:mixture} simplifies to
+$p \cdot \Prob[v \in S]$ on the value side. Repeated sampling treats each
+draw as an independent realisation of the joint random variable;
+deterministic re-sampling for tests and for the SPRT-gated operator is
+discussed in~\Cref{sec:semantics}.
+
+\subsection{Operator algebra}
+\label{sec:type:algebra}
+
+The $f64$ specialisation supports five operators: $+$, $-$, $\times$,
+$\div$, and unary negation. Every binary operator follows the same pattern.
+For an operator $\oplus$ acting on $\Utype\langle f64 \rangle$, the lifted
+operator on $\Mtype\langle f64 \rangle$ is defined by
+\begin{equation}
+(x_1, v_1) \oplus (x_2, v_2) \;=\; \bigl(\,x_1 \wedge x_2,\; v_1 \oplus v_2\,\bigr),
+\label{eq:algebra}
+\end{equation}
+where $\wedge$ denotes the logical-AND operator on
+$\Utype\langle \Bool \rangle$. Unary negation acts on the value component
+only and leaves the presence component unchanged:
+\begin{equation}
+-(x, v) \;=\; (\,x,\; -v\,).
+\label{eq:neg}
+\end{equation}
+
+\paragraph{Choice of AND on the presence axis.} The result of a binary
+operation between two $\Mtype\langle T \rangle$ values exists only if both
+operands existed. We considered the dual choice in which absent operands
+act as a neutral element under OR; that rule produces values whose
+existence is invented by the operation itself, and contradicts the basic
+sanity check that adding to an absent value should not summon one into
+existence. We adopt~\eqref{eq:algebra} on those grounds.
+
+\paragraph{Boolean specialisation.} The $\Bool$ specialisation does not
+currently provide a lifted operator algebra. Compound presence-aware
+Boolean expressions require operating on the presence and value components
+separately; we note the gap in~\Cref{sec:discussion}.
+
+\subsection{Predicates and the gating operator}
+\label{sec:type:predicates}
+
+Three additional operations connect $\Mtype\langle T \rangle$ to the
+existing $\Utype$ infrastructure.
+
+\paragraph{Presence predicates.} The operators $\textsc{isSome}$ and
+$\textsc{isNone}$ project a $\Mtype\langle T \rangle$ value onto its
+presence component and its negation, respectively:
+\begin{equation*}
+\textsc{isSome}(x, v) = x, \qquad \textsc{isNone}(x, v) = \neg x.
+\end{equation*}
+Both return $\Utype\langle \Bool \rangle$ values, recoverable by the existing
+machinery; in particular, callers can compose them with the standard
+Boolean operators on $\Utype\langle \Bool \rangle$ to express
+presence-aware conditions over multiple $\Mtype\langle T \rangle$ values.
+
+\paragraph{Lifting to $\Utype\langle T \rangle$.} The gating operator
+$\textsc{lift}$ converts a $\Mtype\langle T \rangle$ value into a plain
+$\Utype\langle T \rangle$ value, but only when statistical evidence
+supports the presence hypothesis. Its signature is
+\begin{equation*}
+\textsc{lift} : \Mtype\langle T \rangle \,\times\, [0,1] \,\times\, [0,1] \,\times\, [0,1] \,\times\, \mathbb{N} \;\to\; \Utype\langle T \rangle \,\cup\, \{\mathrm{PresenceError}\},
+\end{equation*}
+with arguments $(x, v)$, threshold $p_\tau$, confidence $1 - \alpha$,
+indifference half-width $\varepsilon$, and sample cap $N$. The operator
+runs a sequential probability ratio test on the presence component $x$
+against the hypotheses
+\begin{equation*}
+H_0 : \Prob[x = \text{true}] \le p_\tau - \varepsilon
+\qquad\text{versus}\qquad
+H_1 : \Prob[x = \text{true}] > p_\tau + \varepsilon,
+\end{equation*}
+at Type I and Type II error budgets each equal to $\alpha$. If the test
+accepts $H_1$, the operator returns the value component $v$; if it accepts
+$H_0$, it returns a $\mathrm{PresenceError}$. The full SPRT machinery is
+described in~\Cref{sec:semantics:sprt}.
+
+\paragraph{Strict and lax gating.} The same operator supports very different
+operating points by choice of parameters. A high threshold with high
+confidence and a large sample cap yields strict gating for safety-critical
+paths; a low threshold with modest confidence yields lax gating suitable
+for exploratory analysis. The decision is at the call site, not at the
+type. We exploit this flexibility in the worked examples
+(\Cref{sec:examples}).

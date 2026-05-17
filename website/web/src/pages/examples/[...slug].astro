@@ -1,0 +1,24 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import ExampleDetail from '../../components/examples/ExampleDetail.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('examples');
+  return entries.map((entry) => ({
+    params: { slug: entry.id.replace(/^en\//, '') },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { title, domain, summary, crates, source, further } = entry.data;
+---
+<BaseLayout title={`${title} — DeepCausality`} description={summary}>
+  <SiteHeader />
+  <ExampleDetail title={title} domain={domain} summary={summary} crates={crates} source={source} further={further}>
+    <Content />
+  </ExampleDetail>
+</BaseLayout>

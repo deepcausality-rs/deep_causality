@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/nav/SiteHeader.astro';
+---
+<BaseLayout title="Accessibility — DeepCausality" description="Accessibility statement for deepcausality.com.">
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">Accessibility</p>
+      <h1>Accessibility statement</h1>
+    </header>
+
+    <div class="prose">
+      <p>
+        We are committed to making deepcausality.com usable for everyone. That commitment starts at the site
+        itself: layouts, components, and content should be reachable by anyone, regardless of input device,
+        screen reader, motor ability, or visual constraint.
+      </p>
+
+      <h2>The standard we target</h2>
+      <p>
+        The site targets the
+        <a href="https://www.w3.org/WAI/standards-guidelines/wcag/">Web Content Accessibility Guidelines (WCAG)</a>
+        version 2.1, level AA. Those guidelines cover sensory, cognitive, and motor disabilities; honoring them
+        produces a site that works better for every reader, not only the ones with assistive technology.
+      </p>
+
+      <h2>What this means in practice</h2>
+      <ul>
+        <li>Body text meets the WCAG AAA contrast threshold; secondary text meets AA.</li>
+        <li>Every interactive element shows a visible focus ring.</li>
+        <li>Headings follow a strict hierarchy on every page; no jumps from <code>h1</code> to <code>h3</code>.</li>
+        <li>Non-decorative images carry meaningful <code>alt</code> text; decorative SVGs are marked <code>aria-hidden</code>.</li>
+        <li><code>prefers-reduced-motion</code> is honored. Transitions reduce to zero when the OS signals the preference.</li>
+        <li>A skip-to-content link is the first focusable item on every page.</li>
+        <li>Both dark and light themes pass the same contrast requirements.</li>
+      </ul>
+
+      <h2>Reporting a problem</h2>
+      <p>
+        If anything on the site is hard to use, please
+        <a href="https://github.com/deepcausality-rs/deep_causality/issues">open an issue on GitHub</a> with
+        the page URL, a short description, and the browser or assistive technology you were using. We treat
+        accessibility regressions as bugs.
+      </p>
+    </div>
+  </article>
+</BaseLayout>

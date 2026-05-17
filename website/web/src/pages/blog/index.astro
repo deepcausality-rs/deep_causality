@@ -1,0 +1,67 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const fmtDate = (d: Date) =>
+  d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+<BaseLayout title="Blog — DeepCausality" description="Announcements, design notes, and write-ups from the DeepCausality project.">
+  <SiteHeader />
+  <section class="blog-index">
+    <header>
+      <p class="eyebrow">Blog</p>
+      <h1>Announcements and write-ups</h1>
+      <p class="lede">Project updates, design notes, and longer-form pieces. Sorted newest first.</p>
+    </header>
+    <ul class="list" role="list">
+      {posts.map((p) => (
+        <li>
+          <a href={`/blog/${p.id.replace(/^en\//, '').replace(/\.md$/, '')}/`}>
+            <div class="meta">
+              <time datetime={p.data.date.toISOString()}>{fmtDate(p.data.date)}</time>
+              <span class="author">{p.data.author}</span>
+            </div>
+            <h2>{p.data.title}</h2>
+            {p.data.description && <p>{p.data.description}</p>}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <style>
+    .blog-index { max-width: var(--w-page); margin: 0 auto; padding: var(--space-7) var(--space-4); }
+    @media (min-width: 720px) { .blog-index { padding: var(--space-9) var(--space-5); } }
+    .blog-index header { max-width: 60ch; margin-bottom: var(--space-7); }
+    .eyebrow {
+      margin: 0;
+      font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
+      text-transform: uppercase; color: var(--fg-2);
+    }
+    h1 { margin: var(--space-2) 0 var(--space-3) 0; }
+    .lede { color: var(--fg-1); }
+
+    .list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; }
+    .list li + li { border-top: 1px solid var(--line-1); }
+    .list a {
+      display: grid; gap: var(--space-2);
+      padding: var(--space-6) 0;
+      color: var(--fg-0);
+      border-bottom: none;
+      transition: padding-left var(--dur-med) var(--ease-out);
+    }
+    .list a:hover { padding-left: var(--space-3); }
+    .meta {
+      display: flex; gap: var(--space-3); align-items: baseline;
+      color: var(--fg-2);
+      font-size: var(--t-body-sm);
+    }
+    .author { color: var(--fg-2); }
+    .list h2 { margin: 0; font-size: var(--t-h3); line-height: var(--lh-h3); letter-spacing: var(--ls-h3); }
+    .list p { margin: 0; color: var(--fg-1); max-width: var(--measure); }
+  </style>
+</BaseLayout>

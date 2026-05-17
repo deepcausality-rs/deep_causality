@@ -1,0 +1,52 @@
+---
+import ExampleCard from './ExampleCard.astro';
+import { examples } from './examples';
+---
+<section class="examples">
+  <div class="examples-inner">
+    <header class="examples-head">
+      <p class="eyebrow">One framework, many fields</p>
+      <h2>What can you build with DeepCausality</h2>
+    </header>
+    <div class="example-grid" role="list">
+      {examples.map((ex, i) => (
+        <div role="listitem"><ExampleCard example={ex} index={i} /></div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .examples { padding: var(--space-8) 0; border-top: 1px solid var(--line-1); }
+  .examples-inner { max-width: var(--w-page); margin: 0 auto; padding: 0 var(--space-4); }
+  @media (min-width: 720px) { .examples { padding: var(--space-9) 0; } .examples-inner { padding: 0 var(--space-5); } }
+  .examples-head { margin-bottom: var(--space-6); display: flex; flex-direction: column; gap: var(--space-2); align-items: center; text-align: center; }
+  .eyebrow {
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin: 0;
+  }
+  .examples-head h2 { margin: 0; }
+
+  /* Mobile-first: one column on small viewports, expand from there. */
+  .example-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    align-items: stretch; /* uniform row heights */
+  }
+  .example-grid > [role='listitem'] {
+    min-width: 0; /* lets the card honor the column width instead of overflowing */
+    display: flex;
+  }
+  .example-grid > [role='listitem'] > * { flex: 1 1 auto; min-width: 0; }
+
+  @media (min-width: 720px) {
+    .example-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-5); }
+  }
+  @media (min-width: 1080px) {
+    .example-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>

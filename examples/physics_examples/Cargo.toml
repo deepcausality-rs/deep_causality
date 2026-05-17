@@ -26,11 +26,6 @@ deep_causality_rand = { path = "../../deep_causality_rand", features = [
     "os-random",
 ] }
 
-
-[[example]]
-name = "algebraic_scanner"
-path = "algebraic_scanner/main.rs"
-
 [[example]]
 name = "bernoulli_flow_network"
 path = "bernoulli_flow_network/main.rs"

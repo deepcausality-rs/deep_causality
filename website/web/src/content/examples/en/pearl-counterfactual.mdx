@@ -1,0 +1,174 @@
+---
+title: "Pearl's Ladder of Causation: association, intervention, counterfactual"
+domain: Counterfactuals
+summary: Walk all three rungs of Pearl's ladder against the same Smoking → Tar → Cancer chain. The difference between the rungs is one method call.
+order: 2
+category: foundations
+source: examples/starter_example/src/main.rs
+crates:
+  - deep_causality_core
+further:
+  - label: Effect Propagation Process
+    href: /docs/concepts/effect-propagation-process/
+  - label: Causal Monad
+    href: /docs/concepts/causal-monad/
+  - label: Dynamic causality
+    href: /docs/concepts/dynamic-causality/
+---
+
+The full crate lives at [`examples/starter_example/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/starter_example). It is a single file, around 230 lines, no dependencies beyond `deep_causality_core`. The crate is the canonical demonstration of Pearl's Ladder of Causation expressed as DeepCausality code, and it is the shortest path to understanding why monadic effect propagation matters for causal reasoning.
+
+The causal model is the textbook one: *smoking causes tar accumulation; tar causes cancer*. The example runs the same chain three times (once observationally, once with intervention, once counterfactually) and prints the difference each rung makes.
+
+## The mental model
+
+Pearl named three rungs:
+
+1. **Association (Seeing).** What is the probability of an outcome given an observation? A correlation; no causal claim.
+2. **Intervention (Doing).** What happens if I *force* a value mid-process? A causal effect.
+3. **Counterfactual (Imagining).** Given that I observed a specific history, what would have happened under a different choice?
+
+The implementation difference between rungs 2 and 3 turns out to be exactly one thing: *where* in the chain you call `intervene`. Mid-chain is intervention. At the start is counterfactual.
+
+## The two underlying functions (`src/main.rs:194-228`)
+
+```rust
+fn nicotine_to_tar(nicotine: f64) -> f64 {
+    if nicotine > 0.5 { 0.8 }       // Heavy smoker → high tar
+    else if nicotine > 0.2 { 0.4 }  // Moderate → some tar
+    else { 0.1 }                    // Non-smoker → minimal (environmental baseline)
+}
+
+fn tar_to_cancer(tar: f64) -> f64 {
+    if tar > 0.6 { 0.85 }       // High tar → very high risk
+    else if tar > 0.3 { 0.45 }  // Moderate tar → elevated risk
+    else { 0.15 }               // Low tar → baseline risk
+}
+```
+
+[`main.rs:209`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L209) and [`main.rs:220`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L220). Two stepwise functions. They encode the causal mechanism, the same mechanism for all three rungs. Notice that there is no probability distribution, no statistical model. Pearl's ladder works on functional dependencies; the rungs differ in *how* you walk the chain, not in *what* the chain computes.
+
+The chain stitched together looks like this:
+
+```rust
+fn causal_chain(nicotine: f64) -> f64 {
+    let result = PropagatingEffect::pure(nicotine)
+        .bind(|nic, _, _| {
+            let n = nic.into_value().unwrap_or_default();
+            PropagatingEffect::pure(nicotine_to_tar(n))
+        })
+        .bind(|tar, _, _| {
+            let t = tar.into_value().unwrap_or_default();
+            PropagatingEffect::pure(tar_to_cancer(t))
+        });
+
+    result.value.into_value().unwrap_or_default()
+}
+```
+
+[`main.rs:194`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L194). `PropagatingEffect::pure` lifts the input into the monad. Two `bind` calls thread the value through the two mechanism functions. The result is read off the final `value` field. This shape, `pure(input).bind(step1).bind(step2)`, is the entire DeepCausality calling convention for stateless causal computation.
+
+## Rung 1: association (`src/main.rs:47-68`)
+
+```rust
+fn rung1_association() {
+    let smoker_result = causal_chain(0.8);     // High nicotine
+    let non_smoker_result = causal_chain(0.1); // Low nicotine
+
+    println!("Heavy smoker (nicotine=0.8): → Cancer risk: {:.0}%", smoker_result * 100.0);
+    println!("Non-smoker (nicotine=0.1):   → Cancer risk: {:.0}%", non_smoker_result * 100.0);
+}
+```
+
+Two runs of the same chain with two different inputs. The chain itself does not know it is being used for association. The output is the difference in outcome between the two inputs, and that difference is what statistics has been calling *correlation* since Pearson.
+
+For the heavy smoker: nicotine `0.8` → tar `0.8` → cancer risk `0.85`. For the non-smoker: nicotine `0.1` → tar `0.1` → cancer risk `0.15`. The 70-point gap is the observed association.
+
+## Rung 2: intervention (`src/main.rs:77-127`)
+
+```rust
+let after = PropagatingEffect::pure(0.8_f64)
+    .bind(|nic, _, _| {
+        let n = nic.into_value().unwrap_or_default();
+        PropagatingEffect::pure(nicotine_to_tar(n))   // would produce tar = 0.8
+    })
+    .intervene(0.1)   // ← INTERVENTION: force tar to 0.1
+    .bind(|tar, _, _| {
+        let t = tar.into_value().unwrap_or_default();
+        PropagatingEffect::pure(tar_to_cancer(t))
+    });
+```
+
+[`main.rs:95`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L95). The chain is identical to rung 1 up to `nicotine_to_tar`. After that step, `.intervene(0.1)` replaces the propagating value with the constant `0.1`. The next `bind` operates on the substituted value as if it were the natural output.
+
+In Pearl's notation this is `do(Tar := 0.1)`. The intervention says: *forget what the upstream computation produced; pretend tar was 0.1*. Downstream behaviour is whatever the rest of the chain computes from that injected value.
+
+The output for this run: nicotine `0.8` → tar would have been `0.8` → intervened to `0.1` → cancer risk `0.15`. The intervention drops cancer risk from 85% to 15% without changing the smoker's nicotine level at all. The chain is telling you that the *tar* is the proximate cause, not the nicotine itself; remove the tar and the cancer risk follows.
+
+The `intervene` method comes from the `Intervenable` trait in `deep_causality_core`. Importing the trait is what makes the call work: [`main.rs:15`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L15) reads `use deep_causality_core::{Intervenable, PropagatingEffect};`.
+
+## Rung 3: counterfactual (`src/main.rs:136-187`)
+
+```rust
+let counterfactual = PropagatingEffect::pure(0.8_f64)
+    .intervene(0.0)    // ← Counterfactual: "Had they never smoked"
+    .bind(|nic, _, _| {
+        let n = nic.into_value().unwrap_or_default();
+        PropagatingEffect::pure(nicotine_to_tar(n))
+    })
+    .bind(|tar, _, _| {
+        let t = tar.into_value().unwrap_or_default();
+        PropagatingEffect::pure(tar_to_cancer(t))
+    });
+```
+
+[`main.rs:154`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L154). Same syntax as rung 2. The only difference: `intervene(0.0)` runs *before* the first `bind`. The counterfactual question is "what if the patient had never smoked?", and "never smoked" is encoded as substituting zero for the original nicotine value at the very start of the chain.
+
+The factual run uses `nicotine = 0.8` and reaches a cancer risk of 85%. The counterfactual run substitutes `nicotine := 0`, walks the same mechanism, and reaches a cancer risk of 15%. The 70-percentage-point difference is what the example calls the **Individual Causal Effect (ICE)**.
+
+Position matters. Intervene early and you change the input the chain reasons from. Intervene mid-chain and you change the intermediate state. Intervene late and you change the output before it reaches consumers. The library does not distinguish "intervention" from "counterfactual" at the type level; the position of the call is the only difference, and that mirrors Pearl's formal treatment.
+
+## The full output of the example
+
+Run the example and you get all three rungs printed in sequence, with section headers and a summary at the end. The shape:
+
+```
+═══ RUNG 1: ASSOCIATION (Seeing) ═══
+Heavy smoker (nicotine=0.8):  → Cancer risk: 85%
+Non-smoker (nicotine=0.1):    → Cancer risk: 15%
+
+═══ RUNG 2: INTERVENTION (Doing) ═══
+Before intervention (natural chain):
+  Nicotine(0.8) → Tar(0.8) → Cancer Risk: 85%
+After intervention:
+  Nicotine(0.8) → Tar(0.8) → [intervene(0.1)] → Cancer Risk: 15%
+
+═══ RUNG 3: COUNTERFACTUAL (Imagining) ═══
+Factual world (was a heavy smoker):
+  Nicotine(0.8) → Tar(0.8) → Cancer Risk: 85%
+Counterfactual world (had they never smoked):
+  [intervene(0.0)] → Tar(0.1) → Cancer Risk: 15%
+Individual Causal Effect (ICE): 70% increased cancer risk from smoking
+```
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p starter_example
+```
+
+The whole run takes under a second.
+
+## Where to take it next
+
+The chain has two stages. Add a third. A real model has more than three; a clinical model might have ten. The shape, `.bind(...).bind(...)`, does not change with depth.
+
+The mechanism functions are pure. They take a `f64` and return a `f64`. Replace them with regression fits, with conditional probability tables, with calls into a learned model. The chain consumes the return value, not the implementation.
+
+`intervene` is one of several methods on the `Intervenable` trait. A real counterfactual analysis often replaces a *variable* rather than a *value*: the patient took aspirin instead of warfarin, the operator ran the slow query instead of the fast one. Composing two interventions, or interrogating which intervention dominates, is straightforward once the chain is in this shape.
+
+## Why this is the example to start with
+
+Three rungs of Pearl's ladder in 230 lines of Rust, with one new method (`intervene`) standing for the entire conceptual jump from correlation to causation. Engineers who have read Pearl's *Book of Why* recognize the model instantly. Engineers who have not get a self-contained tour. Either way, the next example they read is the same calling convention applied to a different domain.

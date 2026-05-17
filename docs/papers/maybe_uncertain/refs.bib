@@ -1,0 +1,499 @@
+% Bibliography for MaybeUncertain<T> preprint.
+% Entries grouped by topic for maintainability.
+
+% --- DeepCausality project (this work's host crate) ---
+
+@software{hansen_deepcausality,
+  author    = {Hansen, Marvin},
+  title     = {{DeepCausality}: A Hypergeometric Computational Causality Library for {R}ust},
+  publisher = {Zenodo},
+  url       = {https://github.com/deepcausality-rs/deep_causality},
+  doi       = {10.5281/zenodo.20195214},
+  note      = {ORCID: 0009-0000-1159-8173}
+}
+
+% --- Uncertain<T> lineage and approximate computing ---
+
+@inproceedings{bornholt2014uncertain,
+  author    = {James Bornholt and Todd Mytkowicz and Kathryn S. McKinley},
+  title     = {{Uncertain<T>}: A First-Order Type for Uncertain Data},
+  booktitle = {Proc. 19th Int. Conf. on Architectural Support for Programming Languages and Operating Systems (ASPLOS)},
+  year      = {2014},
+  pages     = {51--66},
+  doi       = {10.1145/2541940.2541958}
+}
+
+@phdthesis{bornholt2013thesis,
+  author = {James Bornholt},
+  title  = {Abstractions and Techniques for Programming with Uncertain Data},
+  school = {Australian National University},
+  type   = {Honours Thesis},
+  year   = {2013}
+}
+
+@inproceedings{mckinley2016popl,
+  author    = {Kathryn S. McKinley},
+  title     = {Programming the World of Uncertain Things (Keynote)},
+  booktitle = {Proc. 43rd ACM SIGPLAN-SIGACT Symp. on Principles of Programming Languages (POPL)},
+  year      = {2016},
+  pages     = {1--2},
+  doi       = {10.1145/2837614.2843895}
+}
+
+@inproceedings{sampson2014passert,
+  author    = {Adrian Sampson and Pavel Panchekha and Todd Mytkowicz and Kathryn S. McKinley and Dan Grossman and Luis Ceze},
+  title     = {Expressing and Verifying Probabilistic Assertions},
+  booktitle = {Proc. 35th ACM SIGPLAN Conf. on Programming Language Design and Implementation (PLDI)},
+  year      = {2014},
+  pages     = {112--122},
+  doi       = {10.1145/2594291.2594294}
+}
+
+@inproceedings{sampson2011enerj,
+  author    = {Adrian Sampson and Werner Dietl and Emily Fortuna and Danushen Gnanapragasam and Luis Ceze and Dan Grossman},
+  title     = {{EnerJ}: Approximate Data Types for Safe and General Low-Power Computation},
+  booktitle = {Proc. 32nd ACM SIGPLAN Conf. on Programming Language Design and Implementation (PLDI)},
+  year      = {2011},
+  pages     = {164--174},
+  doi       = {10.1145/1993498.1993518}
+}
+
+@inproceedings{carbin2013rely,
+  author    = {Michael Carbin and Sasa Misailovic and Martin C. Rinard},
+  title     = {Verifying Quantitative Reliability for Programs that Execute on Unreliable Hardware},
+  booktitle = {Proc. ACM SIGPLAN Int. Conf. on Object-Oriented Programming, Systems, Languages, and Applications (OOPSLA)},
+  year      = {2013},
+  pages     = {33--52},
+  doi       = {10.1145/2509136.2509546}
+}
+
+@inproceedings{misailovic2014chisel,
+  author    = {Sasa Misailovic and Michael Carbin and Sara Achour and Zichao Qi and Martin C. Rinard},
+  title     = {Chisel: Reliability- and Accuracy-Aware Optimization of Approximate Computational Kernels},
+  booktitle = {Proc. ACM SIGPLAN Int. Conf. on Object-Oriented Programming, Systems, Languages, and Applications (OOPSLA)},
+  year      = {2014},
+  pages     = {309--328},
+  doi       = {10.1145/2660193.2660231}
+}
+
+@article{stanley2025approxsurvey,
+  author  = {Phillip Stanley-Marbell and others},
+  title   = {Approximate Computing Survey, Part {I}: Terminology and Software \& Hardware Approximation Techniques},
+  journal = {ACM Computing Surveys},
+  year    = {2025},
+  doi     = {10.1145/3716845},
+  note    = {arXiv:2307.11124}
+}
+
+@misc{criterion,
+  author       = {Jorge Aparicio and Brook Heisler and {The Criterion contributors}},
+  title        = {Criterion.rs: Statistics-Driven Microbenchmarking in {R}ust},
+  howpublished = {\url{https://github.com/bheisler/criterion.rs}},
+  year         = {2014--}
+}
+
+@misc{uncertainrs,
+  author = {{Various}},
+  title  = {uncertain-rs: A Rust port of {Uncertain<T>}},
+  howpublished = {crates.io},
+  year   = {2023},
+  note   = {Confirm version and presence on crates.io before publication.}
+}
+
+@misc{mattt2019swiftuncertain,
+  author = {Mattt Thompson},
+  title  = {Uncertain: A Swift library for uncertainty-aware programming},
+  howpublished = {\url{https://github.com/mattt/Uncertain}},
+  year   = {2019}
+}
+
+% --- Missing data statistics ---
+
+@article{rubin1976missing,
+  author  = {Donald B. Rubin},
+  title   = {Inference and Missing Data},
+  journal = {Biometrika},
+  volume  = {63},
+  number  = {3},
+  pages   = {581--592},
+  year    = {1976},
+  doi     = {10.1093/biomet/63.3.581}
+}
+
+@book{littlerubin2019,
+  author    = {Roderick J. A. Little and Donald B. Rubin},
+  title     = {Statistical Analysis with Missing Data},
+  edition   = {3rd},
+  publisher = {Wiley},
+  year      = {2019},
+  doi       = {10.1002/9781119482260}
+}
+
+@article{mealli2015mar,
+  author  = {Fabrizia Mealli and Donald B. Rubin},
+  title   = {Clarifying Missing at Random and Related Definitions, and Implications When Coupled with Exchangeability},
+  journal = {Biometrika},
+  volume  = {102},
+  number  = {4},
+  pages   = {995--1000},
+  year    = {2015},
+  doi     = {10.1093/biomet/asv035}
+}
+
+@article{seaman2013mar,
+  author  = {Shaun Seaman and John Galati and Dan Jackson and John Carlin},
+  title   = {What Is Meant by ``Missing at Random''?},
+  journal = {Statistical Science},
+  volume  = {28},
+  number  = {2},
+  pages   = {257--268},
+  year    = {2013},
+  note    = {arXiv:1306.2812}
+}
+
+@inproceedings{ipsen2021notmiwae,
+  author    = {Niels Bruun Ipsen and Pierre-Alexandre Mattei and Jes Frellsen},
+  title     = {not-{MIWAE}: Deep Generative Modelling with Missing Not at Random Data},
+  booktitle = {Int. Conf. on Learning Representations (ICLR)},
+  year      = {2021},
+  note      = {arXiv:2006.12871}
+}
+
+% --- Probabilistic programming languages ---
+
+@inproceedings{tolpin2016anglican,
+  author    = {David Tolpin and Jan-Willem van de Meent and Hongseok Yang and Frank Wood},
+  title     = {Design and Implementation of Probabilistic Programming Language {Anglican}},
+  booktitle = {Proc. 28th Symp. on Implementation and Application of Functional Programming Languages (IFL)},
+  year      = {2016},
+  doi       = {10.1145/3064899.3064910},
+  note      = {arXiv:1608.05263}
+}
+
+@article{carpenter2017stan,
+  author  = {Bob Carpenter and Andrew Gelman and Matthew D. Hoffman and Daniel Lee and Ben Goodrich and Michael Betancourt and Marcus Brubaker and Jiqiang Guo and Peter Li and Allen Riddell},
+  title   = {Stan: A Probabilistic Programming Language},
+  journal = {Journal of Statistical Software},
+  volume  = {76},
+  number  = {1},
+  year    = {2017},
+  doi     = {10.18637/jss.v076.i01}
+}
+
+@article{bingham2019pyro,
+  author  = {Eli Bingham and Jonathan P. Chen and Martin Jankowiak and Fritz Obermeyer and Neeraj Pradhan and Theofanis Karaletsos and Rohit Singh and Paul Szerlip and Paul Horsfall and Noah D. Goodman},
+  title   = {Pyro: Deep Universal Probabilistic Programming},
+  journal = {Journal of Machine Learning Research},
+  volume  = {20},
+  number  = {28},
+  pages   = {1--6},
+  year    = {2019}
+}
+
+@article{ge2025turing,
+  author  = {Hong Ge and Kai Xu and Zoubin Ghahramani},
+  title   = {{Turing.jl}: A General-Purpose Probabilistic Programming Language},
+  journal = {ACM Transactions on Probabilistic Machine Learning},
+  year    = {2025},
+  doi     = {10.1145/3711897}
+}
+
+@inproceedings{cusumano2019gen,
+  author    = {Marco F. Cusumano-Towner and Feras A. Saad and Alexander K. Lew and Vikash K. Mansinghka},
+  title     = {{Gen}: A General-Purpose Probabilistic Programming System with Programmable Inference},
+  booktitle = {Proc. 40th ACM SIGPLAN Conf. on Programming Language Design and Implementation (PLDI)},
+  year      = {2019},
+  doi       = {10.1145/3314221.3314642}
+}
+
+@inproceedings{narayanan2016hakaru,
+  author    = {Praveen Narayanan and Jacques Carette and Wren Romano and Chung-chieh Shan and Robert Zinkov},
+  title     = {Probabilistic Inference by Program Transformation in {Hakaru} (System Description)},
+  booktitle = {Functional and Logic Programming (FLOPS)},
+  year      = {2016},
+  pages     = {62--79},
+  doi       = {10.1007/978-3-319-29604-3_5}
+}
+
+@inproceedings{holtzen2020dice,
+  author    = {Steven Holtzen and Guy Van den Broeck and Todd Millstein},
+  title     = {Scaling Exact Inference for Discrete Probabilistic Programs},
+  booktitle = {Proc. ACM SIGPLAN Int. Conf. on Object-Oriented Programming, Systems, Languages, and Applications (OOPSLA)},
+  year      = {2020},
+  doi       = {10.1145/3428208},
+  note      = {arXiv:2005.09089}
+}
+
+@inproceedings{gehr2016psi,
+  author    = {Timon Gehr and Sasa Misailovic and Martin Vechev},
+  title     = {{PSI}: Exact Symbolic Inference for Probabilistic Programs},
+  booktitle = {Computer Aided Verification (CAV)},
+  year      = {2016},
+  pages     = {62--83},
+  doi       = {10.1007/978-3-319-41528-4_4}
+}
+
+@inproceedings{gehr2020lambdapsi,
+  author    = {Timon Gehr and Samuel Steffen and Martin Vechev},
+  title     = {{$\lambda$PSI}: Exact Inference for Higher-Order Probabilistic Programs},
+  booktitle = {Proc. 41st ACM SIGPLAN Conf. on Programming Language Design and Implementation (PLDI)},
+  year      = {2020},
+  pages     = {883--897},
+  doi       = {10.1145/3385412.3386006}
+}
+
+@inproceedings{milch2005blog,
+  author    = {Brian Milch and Bhaskara Marthi and Stuart Russell and David Sontag and Daniel L. Ong and Andrey Kolobov},
+  title     = {{BLOG}: Probabilistic Models with Unknown Objects},
+  booktitle = {Proc. 19th Int. Joint Conf. on Artificial Intelligence (IJCAI)},
+  year      = {2005},
+  pages     = {1352--1359}
+}
+
+@article{kimmig2011problog,
+  author  = {Angelika Kimmig and Bart Demoen and Luc De Raedt and V{\'\i}tor Santos Costa and Ricardo Rocha},
+  title   = {On the Implementation of the Probabilistic Logic Programming Language {ProbLog}},
+  journal = {Theory and Practice of Logic Programming},
+  volume  = {11},
+  number  = {2--3},
+  pages   = {235--262},
+  year    = {2011},
+  doi     = {10.1017/S1471068410000566}
+}
+
+@techreport{pfeffer2009figaro,
+  author      = {Avi Pfeffer},
+  title       = {Figaro: An Object-Oriented Probabilistic Programming Language},
+  institution = {Charles River Analytics},
+  year        = {2009}
+}
+
+% --- Probabilistic program verification logics ---
+
+@article{vasilenko2022safecouplings,
+  author    = {Elizaveta Vasilenko and Niki Vazou and Gilles Barthe},
+  title     = {Safe Couplings: Coupled Refinement Types},
+  journal   = {Proc. ACM Program. Lang.},
+  volume    = {6},
+  number    = {ICFP},
+  articleno = {112},
+  year      = {2022},
+  doi       = {10.1145/3547643}
+}
+
+@article{avanzini2025erhl,
+  author    = {Martin Avanzini and Gilles Barthe and Davide Davoli and Benjamin Gr{\'e}goire},
+  title     = {A Quantitative Probabilistic Relational Hoare Logic},
+  journal   = {Proc. ACM Program. Lang.},
+  volume    = {9},
+  number    = {POPL},
+  articleno = {40},
+  year      = {2025},
+  doi       = {10.1145/3704876}
+}
+
+% --- Sensor fusion with intermittent observations ---
+
+@article{sinopoli2004kalman,
+  author  = {Bruno Sinopoli and Luca Schenato and Massimo Franceschetti and Kameshwar Poolla and Michael I. Jordan and Shankar S. Sastry},
+  title   = {Kalman Filtering with Intermittent Observations},
+  journal = {IEEE Transactions on Automatic Control},
+  volume  = {49},
+  number  = {9},
+  pages   = {1453--1464},
+  year    = {2004},
+  doi     = {10.1109/TAC.2004.834121}
+}
+
+@article{censi2011kalmansemi,
+  author  = {Andrea Censi},
+  title   = {Kalman Filtering with Intermittent Observations: Convergence for Semi-{M}arkov Chains and an Intrinsic Performance Measure},
+  journal = {IEEE Transactions on Automatic Control},
+  volume  = {56},
+  number  = {2},
+  pages   = {376--381},
+  year    = {2011},
+  doi     = {10.1109/TAC.2010.2090707}
+}
+
+@article{orton2005oosm,
+  author  = {Matthew Orton and William Marrs},
+  title   = {Particle Filters for Tracking with Out-of-Sequence Measurements},
+  journal = {IEEE Transactions on Aerospace and Electronic Systems},
+  volume  = {41},
+  number  = {2},
+  pages   = {693--702},
+  year    = {2005},
+  doi     = {10.1109/TAES.2005.1468758}
+}
+
+@article{barshalom2004oosm,
+  author  = {Yaakov Bar-Shalom and Huimin Chen and Mahendra Mallick},
+  title   = {One-Step Solution for the Multistep Out-of-Sequence-Measurement Problem in Tracking},
+  journal = {IEEE Transactions on Aerospace and Electronic Systems},
+  volume  = {40},
+  number  = {1},
+  pages   = {27--37},
+  year    = {2004},
+  doi     = {10.1109/TAES.2004.1292140}
+}
+
+@inproceedings{liu2004kalman,
+  author    = {Xiangheng Liu and Andrea Goldsmith},
+  title     = {{K}alman Filtering with Partial Observation Losses},
+  booktitle = {43rd IEEE Conf. on Decision and Control (CDC)},
+  year      = {2004},
+  doi       = {10.1109/CDC.2004.1429421}
+}
+
+% --- Probabilistic databases ---
+
+@inproceedings{benjelloun2006uldb,
+  author    = {Omar Benjelloun and Anish Das Sarma and Alon Halevy and Jennifer Widom},
+  title     = {{ULDBs}: Databases with Uncertainty and Lineage},
+  booktitle = {Proc. 32nd Int. Conf. on Very Large Data Bases (VLDB)},
+  year      = {2006},
+  pages     = {953--964}
+}
+
+@inproceedings{antova2007maybms,
+  author    = {Lyublena Antova and Christoph Koch and Dan Olteanu},
+  title     = {{MayBMS}: Managing Incomplete Information with Probabilistic World-Set Decompositions},
+  booktitle = {Proc. 23rd IEEE Int. Conf. on Data Engineering (ICDE)},
+  year      = {2007},
+  pages     = {1479--1480},
+  doi       = {10.1109/ICDE.2007.369050}
+}
+
+@book{suciu2011pdb,
+  author    = {Dan Suciu and Dan Olteanu and Christopher R{\'e} and Christoph Koch},
+  title     = {Probabilistic Databases},
+  publisher = {Morgan \& Claypool},
+  year      = {2011},
+  doi       = {10.2200/S00362ED1V01Y201105DTM016}
+}
+
+@inproceedings{cheng2008orion,
+  author    = {Reynold Cheng and Sarvjeet Singh and Sunil Prabhakar},
+  title     = {Database Support for Probabilistic Attributes and Tuples},
+  booktitle = {Proc. 24th IEEE Int. Conf. on Data Engineering (ICDE)},
+  year      = {2008},
+  pages     = {1053--1061},
+  doi       = {10.1109/ICDE.2008.4497513}
+}
+
+% --- Sequential testing ---
+
+@article{wald1945sprt,
+  author  = {Abraham Wald},
+  title   = {Sequential Tests of Statistical Hypotheses},
+  journal = {Annals of Mathematical Statistics},
+  volume  = {16},
+  number  = {2},
+  pages   = {117--186},
+  year    = {1945},
+  doi     = {10.1214/aoms/1177731118}
+}
+
+@article{wald1948optimum,
+  author  = {Abraham Wald and Jacob Wolfowitz},
+  title   = {Optimum Character of the Sequential Probability Ratio Test},
+  journal = {Annals of Mathematical Statistics},
+  volume  = {19},
+  number  = {3},
+  pages   = {326--339},
+  year    = {1948},
+  doi     = {10.1214/aoms/1177730197}
+}
+
+@book{jennison2000groupseq,
+  author    = {Christopher Jennison and Bruce W. Turnbull},
+  title     = {Group Sequential Methods with Applications to Clinical Trials},
+  publisher = {Chapman \& Hall/CRC},
+  year      = {2000}
+}
+
+@article{younes2006sprtmc,
+  author  = {H{\aa}kan L. S. Younes and Reid G. Simmons},
+  title   = {Statistical Probabilistic Model Checking with a Focus on Time-Bounded Properties},
+  journal = {Information and Computation},
+  volume  = {204},
+  number  = {9},
+  pages   = {1368--1409},
+  year    = {2006},
+  doi     = {10.1016/j.ic.2006.05.002}
+}
+
+% --- Effect systems, probability monad, interval analysis ---
+
+@inproceedings{giry1981categorical,
+  author    = {Mich{\`e}le Giry},
+  title     = {A Categorical Approach to Probability Theory},
+  booktitle = {Categorical Aspects of Topology and Analysis, LNM 915},
+  year      = {1981},
+  pages     = {68--85},
+  doi       = {10.1007/BFb0092872}
+}
+
+@inproceedings{plotkin2009handlers,
+  author    = {Gordon Plotkin and Matija Pretnar},
+  title     = {Handlers of Algebraic Effects},
+  booktitle = {European Symp. on Programming (ESOP)},
+  year      = {2009},
+  pages     = {80--94},
+  doi       = {10.1007/978-3-642-00590-9_7}
+}
+
+@article{bauer2015eff,
+  author  = {Andrej Bauer and Matija Pretnar},
+  title   = {Programming with Algebraic Effects and Handlers},
+  journal = {Journal of Logical and Algebraic Methods in Programming},
+  volume  = {84},
+  number  = {1},
+  pages   = {108--123},
+  year    = {2015},
+  doi     = {10.1016/j.jlamp.2014.02.001}
+}
+
+@article{leijen2014koka,
+  author  = {Daan Leijen},
+  title   = {Koka: Programming with Row-Polymorphic Effect Types},
+  journal = {arXiv preprint arXiv:1406.2061},
+  year    = {2014}
+}
+
+@inproceedings{katsumata2014parametric,
+  author    = {Shin-ya Katsumata},
+  title     = {Parametric Effect Monads and Semantics of Effect Systems},
+  booktitle = {Proc. 41st ACM SIGPLAN-SIGACT Symp. on Principles of Programming Languages (POPL)},
+  year      = {2014},
+  pages     = {633--645},
+  doi       = {10.1145/2535838.2535846}
+}
+
+@article{kozen1985probpdl,
+  author  = {Dexter Kozen},
+  title   = {A Probabilistic {PDL}},
+  journal = {Journal of Computer and System Sciences},
+  volume  = {30},
+  number  = {2},
+  pages   = {162--178},
+  year    = {1985},
+  doi     = {10.1016/0022-0000(85)90012-1}
+}
+
+@inproceedings{bouissou2016probaffine,
+  author    = {Olivier Bouissou and Eric Goubault and Sylvie Putot and Aleksandar Chakarov and Sriram Sankaranarayanan},
+  title     = {Uncertainty Propagation Using Probabilistic Affine Forms and Concentration of Measure Inequalities},
+  booktitle = {Tools and Algorithms for the Construction and Analysis of Systems (TACAS)},
+  year      = {2016},
+  pages     = {225--243},
+  doi       = {10.1007/978-3-662-49674-9_13}
+}
+
+@book{moore1966interval,
+  author    = {Ramon E. Moore},
+  title     = {Interval Analysis},
+  publisher = {Prentice-Hall},
+  year      = {1966}
+}

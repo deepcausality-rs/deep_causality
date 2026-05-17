@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import CategoryList from '../../components/examples/CategoryList.astro';
+---
+<BaseLayout title="Aerospace — Examples — DeepCausality" description="Aerospace and safety-critical examples built on DeepCausality: sensor fusion, flight-envelope monitoring, and risk hypergraphs.">
+  <SiteHeader />
+  <CategoryList
+    category="aerospace"
+    eyebrow="Examples · Aerospace"
+    title="Aerospace"
+    description="Safety-critical aerospace work: sensor fusion, Kalman updates, risk hypergraphs, and the kinds of multi-stage pipelines a flight-envelope monitor needs. More aerospace examples are on the way."
+  />
+</BaseLayout>

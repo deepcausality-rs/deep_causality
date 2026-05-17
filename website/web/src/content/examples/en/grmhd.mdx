@@ -1,0 +1,95 @@
+---
+title: General-relativistic magnetohydrodynamics as a five-stage monadic pipeline
+domain: Astrophysics
+summary: Couple a GR solver, a coupling layer, and an MHD solver through monadic bind. Curvature picks the metric; the metric drives the plasma physics; stability falls out at the end.
+order: 9
+category: physics
+source: examples/physics_examples/grmhd/main.rs
+crates:
+  - deep_causality
+  - deep_causality_tensor
+  - deep_causality_multivector
+further:
+  - label: Causal Monad
+    href: /docs/concepts/causal-monad/
+  - label: Effect Propagation Process
+    href: /docs/concepts/effect-propagation-process/
+---
+
+The full crate lives at [`examples/physics_examples/grmhd/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples/grmhd). It is the "multi-physics monad": gravity (tensor calculus) couples to plasma (multivector geometric algebra) through a binding stage that picks the right metric based on the local curvature. Five stages, one chain, one final state.
+
+## The chain
+
+```text
+Spacetime Metric (g_uv) → Einstein Tensor (G_uv) → Metric Selection
+                                                       ↓
+                                           Lorentz Force (F = J·B)
+                                                       ↓
+                                               EM Stress-Energy
+                                                       ↓
+                                                Stability Analysis
+```
+
+Five `bind` calls. Each one is a pure function from a `GrmhdState` to a `PropagatingEffect<GrmhdState>`.
+
+```rust
+use deep_causality::PropagatingEffect;
+use model::{GrmhdState, SimulationConfig};
+
+let result: PropagatingEffect<GrmhdState> = PropagatingEffect::pure(GrmhdState::new(&config))
+    .bind(|state, _, _| model::calculate_curvature(state.into_value().unwrap_or_default()))
+    .bind(|state, _, _| model::select_metric(state.into_value().unwrap_or_default()))
+    .bind(|state, _, _| model::calculate_lorentz_force(state.into_value().unwrap_or_default()))
+    .bind(|state, _, _| model::calculate_energy_momentum(state.into_value().unwrap_or_default()))
+    .bind(|state, _, _| model::analyze_stability(state.into_value().unwrap_or_default()));
+```
+
+[`main.rs:54`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/physics_examples/grmhd/main.rs#L54).
+
+## The five stages
+
+The `model` module owns the stage functions. Each one is a pure function that takes a `GrmhdState` and returns a new `PropagatingEffect<GrmhdState>` with one more field populated.
+
+**Stage 1: GR solver.** Computes spacetime curvature from the input metric. Uses `CausalTensor` from the tensor crate; the Einstein tensor is a contraction of the Ricci tensor under a simplified weak-field assumption.
+
+**Stage 2: Coupling layer.** Reads `state.curvature_intensity` and selects the appropriate metric for the downstream solver. Below the curvature threshold the chain uses Euclidean; above it, Minkowski. The selection is a small expression that updates a label on the state.
+
+**Stage 3: MHD solver.** Computes the Lorentz force `F = J × B` using `CausalMultiVector` from the multivector crate. The selected metric drives the inner product; the same code handles both flat and curved space without branching.
+
+**Stage 4: Stress-energy coupling.** Derives the electromagnetic stress-energy density from the Lorentz force; this is what feeds back into general relativity in a real simulation. The example writes the scalar into `state.em_energy_density` and stops there.
+
+**Stage 5: Stability analysis.** Reads the accumulated state and emits a stability verdict (stable / marginal / unstable) plus a status string.
+
+## The configuration
+
+```rust
+let config = SimulationConfig {
+    current_density: 10.0,    // Plasma current J
+    magnetic_field: 2.0,      // Magnetic field B
+    curvature_threshold: 0.05,
+};
+```
+
+Three knobs. Increasing the current density raises the Lorentz force. Increasing the curvature threshold delays the Euclidean→Minkowski switch. Both can be exercised without recompiling the chain.
+
+## What the architecture earns you
+
+Multi-physics simulation usually runs into a structural problem: two solvers, each with its own state model, need to exchange information at every tick. The naïve coupling is a tangle of mutable references; the careful coupling is a custom interface that takes weeks to design.
+
+The monadic version: the state is a value. Each stage is a pure function. The bind operator threads the state through. Adding a third solver is one more `.bind(...)` call. Removing one is the inverse. The chain is testable end-to-end without a harness because the input is a value and the output is a value.
+
+If any stage fails, the chain short-circuits: the `error` field becomes `Some(...)`, every downstream `bind` becomes a no-op, and the `EffectLog` preserves the trace of every stage that ran before the failure.
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p physics_examples --example grmhd_example
+```
+
+Expected output: a stage-labelled trace, then a summary block with curvature intensity, selected metric, Lorentz force magnitude, EM energy density, and the final stability status.
+
+## Why this is a good fit
+
+Extreme-environment simulation (accretion disks, neutron-star magnetospheres, gamma-ray bursts) is exactly the case where you need both general relativity and magnetohydrodynamics, and you need them coupled. The Causal Monad turns the coupling problem into a list of stages and a bind chain. Mathematical correctness sits at the stage boundaries, where the input and output are typed values you can write tests for.

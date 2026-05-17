@@ -1,0 +1,43 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Bornholt et al.'s $\Utype\langle T \rangle$ improved how programs handle
+noisy measurements by lifting random variables into the type system and
+discharging conditionals through sequential testing. The abstraction
+assumes the measurement exists. Many real workloads do not satisfy that
+assumption: clinical reports go missing, sensors drop readings, GPS fixes
+vanish in tunnels. Treating absent data as a wide distribution leaks
+fabricated numbers; wrapping it as $\texttt{Option<Uncertain<T>>}$
+collapses a probability into a Boolean and reintroduces the uncertainty
+bugs the original type was designed to eliminate.
+
+$\Mtype\langle T \rangle$ closes this gap with a small, principled
+extension. The type is a product of two independent
+$\Utype$-valued random variables, one for presence and one for value;
+arithmetic propagates both axes, with presence combining under AND; a
+single new operator, $\textsc{lift}$, runs SPRT on the presence axis and
+returns a plain $\Utype\langle T \rangle$ only when the evidence
+supports the presence hypothesis at the caller's chosen confidence. The
+implementation reuses the existing $\Utype$ machinery and adds roughly
+two hundred lines of Rust across two files. Per-sample overhead is a
+constant factor between $1.2\times$ and $2.2\times$; SPRT-gated lifting
+costs a few hundred nanoseconds in decisive regimes and a few
+microseconds when the operand's presence probability sits inside the
+indifference region.
+
+The construction does not claim mathematical novelty. The factoring of
+presence from value appears in probabilistic databases, in Kalman
+filtering with intermittent observations, and in probabilistic
+programming idioms. The contribution is making the factoring available
+as a value-level type in a general-purpose programming language, with
+operator-level support and a statistically-gated bridge back to the
+unfactored type. The principal direction for future work is dropping the
+independence assumption to support missing-not-at-random workloads
+through a joint presence-value distribution; supporting more numeric
+specialisations beyond $f64$ and $\Bool$; and lifting compound Boolean
+expressions on $\Mtype\langle \Bool \rangle$ to first-class operators.
+A complementary direction is formal verification of programs that use
+$\Mtype\langle T \rangle$ using one of the recent relational
+probabilistic program logics.
+
+\newpage
