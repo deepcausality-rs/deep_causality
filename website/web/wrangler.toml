@@ -1,0 +1,23 @@
+# Cloudflare Workers + Static Assets config for the DeepCausality website.
+#
+# The site is fully static — no SSR, no API routes, no `main` worker entry.
+# Wrangler uploads the contents of `dist/` as the Worker's static assets and
+# serves them directly from Cloudflare's edge. The custom domain attached in
+# the Cloudflare dashboard (www.deepcausality.com) routes to this Worker.
+
+name = "deepcausality-prod"
+compatibility_date = "2026-05-01"
+
+[assets]
+directory = "./dist"
+# Conventional binding name. Required if the Worker ever adds a `main` entry
+# that wants to call `env.ASSETS.fetch(request)`; harmless on a pure static
+# Worker. Matches the binding on the sibling Cloudflare project.
+binding = "ASSETS"
+# No 404.html in the build today, so let Cloudflare return its default 404.
+# Switch to "404-page" once an Astro 404.astro page is added.
+not_found_handling = "none"
+
+# Observability: surface Worker logs in the Cloudflare dashboard. Free tier.
+[observability]
+enabled = true
