@@ -17,7 +17,11 @@
         <a class="btn btn-ghost" href="https://github.com/deepcausality-rs/deep_causality">View on GitHub <span aria-hidden="true">→</span></a>
       </div>
     </div>
-    <div class="hero-art-frame" aria-hidden="true">
+    <div class="hero-art-frame reticle-host" aria-hidden="true">
+      <span class="reticle reticle-tl"></span>
+      <span class="reticle reticle-tr"></span>
+      <span class="reticle reticle-bl"></span>
+      <span class="reticle reticle-br"></span>
       <img src="/img/frontpage-art.webp" alt="" loading="eager" decoding="async" width="1200" height="630" />
     </div>
   </div>
@@ -25,7 +29,7 @@
 
 <style>
   /* Mobile-first: stack, hero art above text. Expand to 7/5 split at ≥900px. */
-  .hero { padding: var(--space-7) 0; border-bottom: 1px solid var(--line-1); }
+  .hero { padding: var(--space-7) 0; }
   .hero-inner {
     max-width: var(--w-wide);
     margin: 0 auto;
@@ -89,9 +93,19 @@
     border: 1px solid var(--line-1);
     border-radius: var(--radius-lg);
     overflow: hidden;
-    box-shadow: var(--shadow-2);
+    /* Ambient cyan halo + the existing tinted drop shadow. The halo is a
+       soft outer glow tied to --accent so it picks up the per-theme accent
+       automatically; in light mode the deeper teal renders as a quiet wash. */
+    box-shadow:
+      0 0 80px -28px color-mix(in srgb, var(--accent) 38%, transparent),
+      var(--shadow-2);
     background: var(--bg-1);
   }
+  /* Reticle corners on the hero frame use the larger radius. */
+  .hero-art-frame > .reticle-tl { border-top-left-radius: var(--radius-lg); }
+  .hero-art-frame > .reticle-tr { border-top-right-radius: var(--radius-lg); }
+  .hero-art-frame > .reticle-bl { border-bottom-left-radius: var(--radius-lg); }
+  .hero-art-frame > .reticle-br { border-bottom-right-radius: var(--radius-lg); }
   .hero-art-frame img { display: block; width: 100%; height: auto; }
 
   /* Stack order on small viewports: art above text so the brand image is the first thing seen. */

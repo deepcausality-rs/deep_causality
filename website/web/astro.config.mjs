@@ -5,7 +5,7 @@ import sitemap from '@astrojs/sitemap';
 // Static output. Cloudflare Pages serves dist/ directly; no adapter needed
 // for fully static builds. Switch to @astrojs/cloudflare if/when SSR is added.
 export default defineConfig({
-  site: 'https://deepcausality.com',
+  site: 'https://www.deepcausality.com',
   output: 'static',
   integrations: [mdx(), sitemap()],
   i18n: {

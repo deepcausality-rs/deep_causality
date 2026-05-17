@@ -24,7 +24,11 @@ const fallback = '<circle cx="4" cy="8" r="1.4"/><circle cx="12" cy="8" r="1.4"/
 const glyph = glyphs[example.slug] ?? fallback;
 
 ---
-<a class="example-card" href={`/examples/${example.slug}/`}>
+<a class="example-card reticle-host" href={`/examples/${example.slug}/`}>
+  <span class="reticle reticle-tl" aria-hidden="true"></span>
+  <span class="reticle reticle-tr" aria-hidden="true"></span>
+  <span class="reticle reticle-bl" aria-hidden="true"></span>
+  <span class="reticle reticle-br" aria-hidden="true"></span>
   <header class="ec-head">
     <span class="ec-eyebrow">{example.domain}</span>
     <svg class="ec-glyph" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" set:html={glyph} />
@@ -58,15 +62,29 @@ const glyph = glyphs[example.slug] ?? fallback;
   .example-card:hover {
     transform: translate3d(0, -2px, 0);
     border-color: var(--line-2);
+    box-shadow:
+      0 0 40px -22px color-mix(in srgb, var(--accent) 32%, transparent),
+      var(--shadow-1);
   }
   .example-card:focus-visible { outline-offset: 4px; }
 
   .ec-head { display: flex; align-items: center; justify-content: space-between; }
   .ec-eyebrow {
+    font-family: var(--font-mono);
     font-size: var(--t-eyebrow);
-    letter-spacing: var(--ls-eyebrow);
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--fg-1);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+  }
+  .ec-eyebrow::before {
+    content: '';
+    flex: 0 0 10px;
+    height: 1px;
+    background: var(--accent);
+    opacity: 0.7;
   }
   .ec-glyph { color: var(--accent); }
 

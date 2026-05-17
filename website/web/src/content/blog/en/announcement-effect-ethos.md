@@ -81,7 +81,7 @@ The Effect Ethos is a foundational component for building trustworthy autonomous
   and safety boundaries can adapt in real-time to a changing world, ensuring that its behavior remains appropriate
   and aligned with its core principles.
 
-## Further reading:
+## Further reading
 
 This blog post only scratches the surface of the capabilities of the Effect Ethos. For more information on the
 theoretical foundation of DeepCausality and the Effect Ethos, please see the following resources:
@@ -102,12 +102,12 @@ strategy based on the current context while adhering to a set of permissible rul
 Get Started with DeepCausality 0.9. The Future is Now!
 
 * Explore the [code examples on GitHub](https://github.com/deepcausality-rs/deep_causality/tree/main/examples).
-* Join the [community](https://deepcausality.com/community/).
+* Join the [community](https://www.deepcausality.com/community/).
 * Join the [Discord Server](https://discord.gg/Bxj9P7JXSj)
 
 ## About
 
-[DeepCausality](https://deepcausality.com/) is a dynamic-causality framework that enables fast and
+[DeepCausality](https://www.deepcausality.com/) is a dynamic-causality framework that enables fast and
 deterministic context-aware causal reasoning in Rust. Please give us
 a [star on GitHub.](https://github.com/deepcausality-rs/deep_causality)
 

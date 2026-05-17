@@ -21,12 +21,15 @@ const pillars = [
 ---
 <section class="pillars">
   <div class="pillars-inner">
-    <p class="eyebrow">The primitives</p>
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">04 / 04</span>
+      <span class="lb">THE PRIMITIVES</span>
+    </p>
     <h2>The foundation of DeepCausality</h2>
 
     <div class="pillar-row">
-      <svg class="pillar-connector" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 600 40">
-        <path d="M30 20 L290 20 L310 20 L570 20" fill="none" stroke="currentColor" stroke-width="1" />
+      <svg class="pillar-connector" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 600 40" data-anim-draw>
+        <path d="M30 20 L290 20 L310 20 L570 20" pathLength="100" fill="none" stroke="currentColor" stroke-width="1" />
         <circle cx="30" cy="20" r="3" fill="currentColor" />
         <circle cx="300" cy="20" r="3" fill="currentColor" />
         <circle cx="570" cy="20" r="3" fill="currentColor" />
@@ -43,7 +46,7 @@ const pillars = [
 </section>
 
 <style>
-  .pillars { padding: var(--space-8) 0; border-top: 1px solid var(--line-1); }
+  .pillars { padding: var(--space-8) 0; }
   .pillars-inner { max-width: var(--w-page); margin: 0 auto; padding: 0 var(--space-4); }
   @media (min-width: 720px) { .pillars { padding: var(--space-9) 0; } .pillars-inner { padding: 0 var(--space-5); } }
   .eyebrow {

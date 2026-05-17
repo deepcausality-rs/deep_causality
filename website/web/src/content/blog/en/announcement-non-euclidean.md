@@ -22,7 +22,7 @@ implementation, and unified causal reasoning.
 - **Added relative temporal index** for simplified handling of time graphs.
 - **Unified `Adjustable` trait** implementation across all context types
 
-## ⚡ Added support for Tokio & Async Rust!
+## ⚡ Added support for Tokio & Async Rust
 
 In DeepCausality 0.8, all Causaloids, Contextoids, and Model types are now able to be `Send` and `Sync`, enabling
 concurrency and thus true parallel inference pipelines. See the
@@ -185,7 +185,7 @@ robust, and reliable.
 - The is_active, number_active, and percent_active API methods are gone for good as these became untenable in the new
   unified reasoning design.
 - DeepCausality 0.8 updated to UltraGraph 0.8, which boost performance on a range of 12 benchmarks on average by 300x.
-  See the [UltraGraph announcement for details.](https://deepcausality.com/blog/announcement-ultragraph-0-8)
+  See the [UltraGraph announcement for details.](https://www.deepcausality.com/blog/announcement-ultragraph-0-8)
 - Groundwork for emergent dynamic causality has been done via an initial implementation of a generic generative process
   that dynamically constructs causal graphs or context at runtime. This starts the implementation of dynamic causal
   emergence as outlined in the Effect Propagation Process article. However, due to the novelty of dynamic causal
@@ -201,12 +201,12 @@ that is end to end explainable to support advanced use cases for dynamic causal 
 Get Started with DeepCausality 0.8. The Future is Now!
 
 * Explore the [code examples on GitHub](https://github.com/deepcausality-rs/deep_causality/tree/main/examples).
-* Join the [community](https://deepcausality.com/community/).
+* Join the [community](https://www.deepcausality.com/community/).
 * Join the [Discord Server](https://discord.gg/Bxj9P7JXSj)
 
 ## About
 
-[DeepCausality](https://deepcausality.com/) is a dynamic-causality framework that enables fast and
+[DeepCausality](https://www.deepcausality.com/) is a dynamic-causality framework that enables fast and
 deterministic context-aware causal reasoning in Rust. Please give us
 a [star on GitHub.](https://github.com/deepcausality-rs/deep_causality)
 

@@ -18,18 +18,18 @@ The project team expresses its sincere gratitude towards JetBrains continuous co
 * [Blog](https://blog.jetbrains.com/)
 
 ## DeepCausality
-* [Website](https://deepcausality.com/)
+* [Website](https://www.deepcausality.com/)
 * [GitHub](https://github.com/deepcausality-rs)
-* [Blog](https://deepcausality.com/blog/)
+* [Blog](https://www.deepcausality.com/blog/)
 
 
 ## About
 
-[DeepCausality](https://deepcausality.com/) is a dynamic-causality framework that enables fast and deterministic context-aware causal reasoning in Rust. Please give us a [star on GitHub](https://github.com/deepcausality-rs/deep_causality).
+[DeepCausality](https://www.deepcausality.com/) is a dynamic-causality framework that enables fast and deterministic context-aware causal reasoning in Rust. Please give us a [star on GitHub](https://github.com/deepcausality-rs/deep_causality).
 
 The LF AI & Data Foundation supports an open artificial intelligence (AI) and data community and drives open source innovation in the AI and data domains by enabling collaboration and the creation of new opportunities for all members of the community. For more information, please visit [lfaidata.foundation](https://lfaidata.foundation).
 
-## Attributions:
+## Attributions
 
 Copyright © 2000-2025 JetBrains s.r.o. JetBrains and the JetBrains logo are registered trademarks of JetBrains s.r.o.
 

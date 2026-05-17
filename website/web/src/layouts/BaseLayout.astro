@@ -57,6 +57,29 @@ const ogImageUrl = new URL(ogImage, Astro.site).toString();
     <main id="main">
       <slot />
     </main>
+    <script>
+      // One-shot draw-in for any element flagged `data-anim-draw` when it
+      // scrolls into view. Used by SectionDivider and the PillarRow connector.
+      // Honors prefers-reduced-motion via CSS; the class flip is harmless there.
+      const drawables = document.querySelectorAll('[data-anim-draw]');
+      if (drawables.length > 0 && 'IntersectionObserver' in window) {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const e of entries) {
+              if (e.isIntersecting) {
+                e.target.classList.add('in-view');
+                io.unobserve(e.target);
+              }
+            }
+          },
+          { rootMargin: '0px 0px -10% 0px', threshold: 0.15 }
+        );
+        drawables.forEach((el) => io.observe(el));
+      } else {
+        // No IO support: just show everything immediately.
+        drawables.forEach((el) => el.classList.add('in-view'));
+      }
+    </script>
     <footer class="site-footer">
       <div class="site-footer-inner">
         <div class="col">

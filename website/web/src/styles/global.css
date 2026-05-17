@@ -97,6 +97,97 @@ pre.astro-code {
 
 main { display: block; }
 
+/* --- Futurism layer: base eyebrow treatment, site-wide --- */
+/* Every .eyebrow (home, docs, blog, examples, static pages) shares the
+   instrument-label feel: monospaced caps preceded by a small cyan tick.
+   The tick is a 12px horizontal line drawn from the accent color. */
+.eyebrow {
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+}
+.eyebrow::before {
+  content: '';
+  flex: 0 0 12px;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.7;
+}
+
+/* --- Futurism layer: coordinate-style section eyebrows --- */
+/* Worn alongside .eyebrow. Splits the row into a dim index ("01 / 04") and
+   a slightly brighter label. Reads as instrument telemetry. */
+.eyebrow-coord {
+  /* Re-state display to keep the tick + coord spans on one inline row. */
+  display: inline-flex;
+  gap: 0.6em;
+  align-items: baseline;
+  letter-spacing: 0.06em;
+}
+.eyebrow-coord .ix { color: var(--fg-2); }
+.eyebrow-coord .lb { color: var(--fg-1); }
+
+/* --- Futurism layer: reticle corners (HUD/scope) --- */
+.reticle {
+  position: absolute;
+  width: 12px; height: 12px;
+  pointer-events: none;
+  border: 1px solid var(--accent);
+  opacity: 0.55;
+  transition: opacity var(--dur-med) var(--ease-out);
+}
+.reticle-tl { top: -1px; left: -1px; border-right: none; border-bottom: none; border-top-left-radius: var(--radius-md); }
+.reticle-tr { top: -1px; right: -1px; border-left: none; border-bottom: none; border-top-right-radius: var(--radius-md); }
+.reticle-bl { bottom: -1px; left: -1px; border-right: none; border-top: none; border-bottom-left-radius: var(--radius-md); }
+.reticle-br { bottom: -1px; right: -1px; border-left: none; border-top: none; border-bottom-right-radius: var(--radius-md); }
+.reticle-host { position: relative; }
+.reticle-host:hover > .reticle { opacity: 1; }
+
+/* --- Futurism layer: section divider (SVG hairline with three node dots) --- */
+.section-divider {
+  display: block;
+  width: 100%;
+  max-width: var(--w-page);
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  box-sizing: border-box;
+}
+@media (min-width: 720px) {
+  .section-divider { padding: 0 var(--space-5); }
+}
+.section-divider svg { display: block; width: 100%; height: 16px; overflow: visible; }
+.section-divider line { stroke: var(--line-1); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.section-divider circle { fill: var(--accent); opacity: 0; }
+
+/* One-shot draw-in for any SVG flagged with data-anim-draw. */
+[data-anim-draw] line { stroke-dasharray: 100; stroke-dashoffset: 100; }
+[data-anim-draw] path  { stroke-dasharray: 100; stroke-dashoffset: 100; }
+[data-anim-draw] circle { opacity: 0; }
+[data-anim-draw].in-view line,
+[data-anim-draw].in-view path { stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  [data-anim-draw] line,
+  [data-anim-draw] path {
+    transition: stroke-dashoffset 700ms var(--ease-out);
+  }
+  [data-anim-draw] circle {
+    transform-origin: center;
+    transform: scale(0.4);
+    transition: opacity 280ms var(--ease-out), transform 280ms var(--ease-out);
+  }
+  [data-anim-draw].in-view circle { transform: scale(1); }
+  [data-anim-draw].in-view circle:nth-of-type(1) { transition-delay: 360ms; }
+  [data-anim-draw].in-view circle:nth-of-type(2) { transition-delay: 480ms; }
+  [data-anim-draw].in-view circle:nth-of-type(3) { transition-delay: 600ms; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-anim-draw] line,
+  [data-anim-draw] path { stroke-dashoffset: 0; }
+  [data-anim-draw] circle { opacity: 1 !important; }
+}
+[data-anim-draw].in-view circle { opacity: 1; }
+
 /* Shared layout for the small static pages: about, accessibility, community. */
 .static-page {
   max-width: var(--w-prose);

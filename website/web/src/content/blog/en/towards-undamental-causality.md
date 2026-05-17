@@ -15,7 +15,7 @@ However, complex systems with dynamic feedback loops may not adhere to those fam
 
 DeepCausality emerges from a different premise: that the modeling paradigms must strive to match the structural richness and dynamic nature of reality itself, even if this path entails a departure from familiar concepts.
 The motivation to depart from familiar concepts stems from practical challenges of applying causal inference to non-linear temporal structures such as temporal graphs or dynamic feedback loops. The root of the problem is that conventional causality pre-supposes a time-asymmetric order, which directly conflicts with non-linear temporal structures that lack a fixed temporal order.
-To reconcile causality with non-linear temporal structures, DeepCausality implements the [Effect Propagation Process](https://deepcausality.com/docs/concepts/effect-propagation-process/), a spacetime-agnostic definition of post-quantum causality, enabling uniform causal inference over non-linear temporal structures and non-Euclidean spaces.
+To reconcile causality with non-linear temporal structures, DeepCausality implements the [Effect Propagation Process](https://www.deepcausality.com/docs/concepts/effect-propagation-process/), a spacetime-agnostic definition of post-quantum causality, enabling uniform causal inference over non-linear temporal structures and non-Euclidean spaces.
 
 Central to DeepCausality's approach is the Causaloid, an idea borrowed from pioneering work by Lucien Hardy[^1] at the Perimeter Institute of Theoretical Physics. The causaloid is a unit where the traditional separation of cause and effect is  folded into a singular, encapsulated, testable causal function that is spacetime-agnostic.
 
