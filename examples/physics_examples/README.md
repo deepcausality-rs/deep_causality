@@ -16,7 +16,6 @@ cargo run -p physics_examples --example <example_name>
 
 | Example | Domain | Description |
 |---------|--------|-------------|
-| [algebraic_scanner](algebraic_scanner/README.md) | Abstract Algebra | Scans Clifford Algebras for complex structure (I²=-1) |
 | [bernoulli_flow_network](bernoulli_flow_network/README.md) | Fluid Dynamics | Pipe network with Venturi effect and hydrostatic gain |
 | [carnot_cycle_engine](carnot_cycle_engine/README.md) | Thermodynamics | 4-stage heat engine at Carnot efficiency limit |
 | [laser_resonator_stability](laser_resonator_stability/README.md) | Optics | Gaussian beam propagation via ABCD matrices |

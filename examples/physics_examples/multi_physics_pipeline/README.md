@@ -105,7 +105,7 @@ This is a **pedagogical demonstration**.
 
 ---
 
-## 🚀 Path to Production Code
+## Path to Production Code
 
 To evolve this example into realistic simulation:
 

@@ -42,7 +42,7 @@ const DATASETS: &[&str] = &[
     "gbm18770", "gbm18771", "gbm18772", "gbm18773", "gbm18774", "gbm18775", "gbm18776",
 ];
 
-/// Change this to `f64` for standard precision or use `Float106` for high precision.
+/// Change this to `f32` for low precision  `f64` for standard precision or use `Float106` for high precision.
 pub type FloatType = Float106;
 
 fn main() {
