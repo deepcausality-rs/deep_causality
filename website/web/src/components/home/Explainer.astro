@@ -1,48 +1,134 @@
 ---
 // "What is dynamic causality?" — below-the-fold plain-language explainer.
-// Three short paragraphs, prose-measure constrained, no decorative imagery.
+// One lede sentence + five named primitives, framed in the same HUD
+// container as the example panel and the community cards.
+const primitives = [
+  { term: 'Causal Monad',      body: 'Sequences causal processes through pure and bind.' },
+  { term: 'Causaloid',         body: 'Encodes each causal relation as a small composable unit.' },
+  { term: 'PropagatingEffect', body: 'Composes Causal Monads and Causaloids into one chain.' },
+  { term: 'Context',           body: 'A hypergraph that encodes the environment the rules operate in.' },
+  { term: 'Effect Ethos',      body: 'Verifies the conclusions against the operational policies you must honor.' },
+];
 ---
 <section class="explainer">
   <div class="explainer-inner">
-    <p class="eyebrow eyebrow-coord">
-      <span class="ix">01 / 05</span>
-      <span class="lb">WHAT IS DYNAMIC CAUSALITY</span>
-    </p>
     <h2>Causal reasoning for a dynamic world</h2>
-    <div class="prose">
-      <p>
-        DeepCausality treats causality as a spacetime-agnostic dependency. The Causal Monad
-        sequences causal processes. Causaloids encode each causal relation as a small composable unit in an
-        isomorphic recursive structure. The PropagatingEffect composes Causal Monads and Causaloids
-        together. A Context hypergraph encodes the environment those rules operate in. The Effect
-        Ethos verifies that whatever the rules conclude still satisfies the operational policies
-        you have to honor.
+
+    <div class="frame reticle-host">
+      <span class="reticle reticle-tl" aria-hidden="true"></span>
+      <span class="reticle reticle-tr" aria-hidden="true"></span>
+      <span class="reticle reticle-bl" aria-hidden="true"></span>
+      <span class="reticle reticle-br" aria-hidden="true"></span>
+
+      <p class="lede">
+        DeepCausality treats causality as a <em>spacetime-agnostic functional dependency</em>.
+        Five primitives compose the runtime.
       </p>
+
+      <dl class="primitives">
+        {primitives.map((p) => (
+          <div class="row">
+            <dt>{p.term}</dt>
+            <dd>{p.body}</dd>
+          </div>
+        ))}
+      </dl>
     </div>
   </div>
 </section>
 
 <style>
-  .explainer {
-    padding: var(--space-8) 0;
-  }
+  .explainer { padding: var(--space-8) 0; }
   .explainer-inner {
     max-width: var(--w-page);
     margin: 0 auto;
     padding: 0 var(--space-4);
-    display: flex; flex-direction: column; gap: var(--space-4);
+    display: flex; flex-direction: column; gap: var(--space-5);
   }
-  .explainer-inner > .eyebrow,
-  .explainer-inner > h2 { text-align: left; }
+  .explainer-inner > h2 { text-align: center; margin: 0; }
   @media (min-width: 720px) {
     .explainer { padding: var(--space-9) 0; }
     .explainer-inner { padding: 0 var(--space-5); }
   }
-  .eyebrow {
-    margin: 0;
-    font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
-    text-transform: uppercase; color: var(--fg-2);
+
+  /* HUD frame, identical structure to the example panel and community cards. */
+  .frame {
+    position: relative;
+    align-self: center;
+    width: 100%;
+    max-width: 980px;
+    padding: var(--space-6);
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--bg-1) 70%, transparent) 0%,
+        var(--bg-1) 100%
+      );
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
   }
-  h2 { margin: 0 0 var(--space-3) 0; }
-  .prose p { color: var(--fg-1); max-width: var(--measure); }
+  @media (min-width: 720px) { .frame { padding: var(--space-7); } }
+
+  .lede {
+    margin: 0 0 var(--space-5) 0;
+    color: var(--fg-0);
+    font-size: var(--t-h4);
+    line-height: 1.4;
+    max-width: 60ch;
+  }
+  .lede em {
+    color: var(--accent);
+    font-style: normal;
+    font-weight: 540;
+  }
+
+  /* Five-row HUD readout. dt = mono accent label, dd = one-line definition. */
+  .primitives {
+    margin: 0;
+    padding: var(--space-4) 0 0 0;
+    border-top: 1px solid var(--line-1);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+  .primitives .row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  @media (min-width: 600px) {
+    .primitives .row {
+      grid-template-columns: 200px 1fr;
+      column-gap: var(--space-5);
+      align-items: baseline;
+      gap: 0;
+    }
+  }
+
+  .primitives dt {
+    font-family: var(--font-mono);
+    font-size: var(--t-body-sm);
+    color: var(--accent);
+    letter-spacing: 0.02em;
+    font-weight: 600;
+    position: relative;
+    padding-left: 14px;
+  }
+  .primitives dt::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 8px;
+    height: 1px;
+    background: var(--accent);
+    opacity: 0.7;
+  }
+  .primitives dd {
+    margin: 0;
+    color: var(--fg-1);
+    font-size: var(--t-body);
+    line-height: 1.55;
+  }
 </style>
