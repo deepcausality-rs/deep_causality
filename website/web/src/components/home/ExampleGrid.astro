@@ -1,29 +1,122 @@
 ---
-import ExampleCard from './ExampleCard.astro';
+import { Code } from 'astro:components';
 import { examples } from './examples';
 ---
 <section class="examples">
   <div class="examples-inner">
     <header class="examples-head">
-      <p class="eyebrow eyebrow-coord">
-        <span class="ix">02 / 04</span>
-        <span class="lb">ONE FRAMEWORK, MANY FIELDS</span>
-      </p>
       <h2>What can you build with DeepCausality</h2>
     </header>
-    <div class="example-grid" role="list">
+
+    <div class="example-tabs reticle-host" data-example-tabs>
+      <span class="reticle reticle-tl" aria-hidden="true"></span>
+      <span class="reticle reticle-tr" aria-hidden="true"></span>
+      <span class="reticle reticle-bl" aria-hidden="true"></span>
+      <span class="reticle reticle-br" aria-hidden="true"></span>
+
+      <div class="tablist" role="tablist" aria-label="Example domains">
+        {examples.map((ex, i) => (
+          <button
+            type="button"
+            role="tab"
+            id={`ex-tab-${ex.slug}`}
+            aria-controls={`ex-panel-${ex.slug}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? 0 : -1}
+            data-tab={ex.slug}
+            class:list={["tab", i === 0 && 'is-active']}
+          >
+            <span class="tab-indicator" aria-hidden="true"></span>
+            <span class="tab-index">{String(i + 1).padStart(2, '0')}</span>
+            <span class="tab-label">{ex.domain}</span>
+          </button>
+        ))}
+      </div>
+
       {examples.map((ex, i) => (
-        <div role="listitem"><ExampleCard example={ex} index={i} /></div>
+        <article
+          role="tabpanel"
+          id={`ex-panel-${ex.slug}`}
+          aria-labelledby={`ex-tab-${ex.slug}`}
+          data-panel={ex.slug}
+          hidden={i !== 0}
+          class="panel"
+        >
+          <header class="panel-head">
+            <h3 class="panel-headline">{ex.headline}</h3>
+          </header>
+          <div class="panel-code">
+            <Code code={ex.snippet} lang="rust" themes={{ light: 'github-light', dark: 'github-dark' }} defaultColor={false} />
+          </div>
+          <footer class="panel-foot">
+            <a class="panel-open" href={`/examples/${ex.slug}/`}>
+              <span>Open example</span>
+              <span aria-hidden="true">→</span>
+            </a>
+          </footer>
+        </article>
       ))}
     </div>
   </div>
 </section>
 
+<script>
+  const root = document.querySelector<HTMLElement>('[data-example-tabs]');
+  if (root) {
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('[role="tabpanel"]'));
+
+    function activate(slug: string) {
+      tabs.forEach((t) => {
+        const active = t.dataset.tab === slug;
+        t.setAttribute('aria-selected', active ? 'true' : 'false');
+        t.tabIndex = active ? 0 : -1;
+        t.classList.toggle('is-active', active);
+      });
+      panels.forEach((p) => {
+        const active = p.dataset.panel === slug;
+        if (active) p.removeAttribute('hidden');
+        else p.setAttribute('hidden', '');
+      });
+    }
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => {
+        const slug = tab.dataset.tab;
+        if (slug) activate(slug);
+      });
+      tab.addEventListener('keydown', (e) => {
+        let next = i;
+        if (e.key === 'ArrowRight') next = (i + 1) % tabs.length;
+        else if (e.key === 'ArrowLeft') next = (i - 1 + tabs.length) % tabs.length;
+        else if (e.key === 'Home') next = 0;
+        else if (e.key === 'End') next = tabs.length - 1;
+        else return;
+        e.preventDefault();
+        const nextTab = tabs[next];
+        const slug = nextTab.dataset.tab;
+        if (slug) {
+          activate(slug);
+          nextTab.focus();
+        }
+      });
+    });
+  }
+</script>
+
 <style>
   .examples { padding: var(--space-8) 0; }
   .examples-inner { max-width: var(--w-page); margin: 0 auto; padding: 0 var(--space-4); }
   @media (min-width: 720px) { .examples { padding: var(--space-9) 0; } .examples-inner { padding: 0 var(--space-5); } }
-  .examples-head { margin-bottom: var(--space-6); display: flex; flex-direction: column; gap: var(--space-2); align-items: center; text-align: center; }
+
+  .examples-head {
+    margin-bottom: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    align-items: center;
+    text-align: center;
+  }
   .eyebrow {
     font-size: var(--t-eyebrow);
     letter-spacing: var(--ls-eyebrow);
@@ -33,23 +126,204 @@ import { examples } from './examples';
   }
   .examples-head h2 { margin: 0; }
 
-  /* Mobile-first: one column on small viewports, expand from there. */
-  .example-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-4);
-    align-items: stretch; /* uniform row heights */
+  /* The frame: focused width, reticle corners, HUD feel. */
+  .example-tabs {
+    position: relative;
+    max-width: 980px;
+    margin: 0 auto;
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--bg-1) 70%, transparent) 0%,
+        var(--bg-1) 100%
+      );
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
   }
-  .example-grid > [role='listitem'] {
-    min-width: 0; /* lets the card honor the column width instead of overflowing */
-    display: flex;
-  }
-  .example-grid > [role='listitem'] > * { flex: 1 1 auto; min-width: 0; }
 
-  @media (min-width: 720px) {
-    .example-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-5); }
+  /* Tab row: segmented bar with equal slots and hairline dividers. */
+  .tablist {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid var(--line-1);
+    overflow-x: auto;
+    scrollbar-width: thin;
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--bg-2) 60%, transparent) 0%,
+        transparent 100%
+      );
   }
-  @media (min-width: 1080px) {
-    .example-grid { grid-template-columns: repeat(3, 1fr); }
+  .tablist::-webkit-scrollbar { height: 4px; }
+  .tablist::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 2px; }
+
+  .tab {
+    appearance: none;
+    position: relative;
+    flex: 1 1 0;
+    min-width: 140px;
+    background: transparent;
+    color: var(--fg-1);
+    border: 0;
+    border-right: 1px solid var(--line-1);
+    padding: var(--space-4) var(--space-3);
+    font: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: color var(--dur-fast) var(--ease-out),
+                background var(--dur-fast) var(--ease-out);
+  }
+  .tab:last-child { border-right: 0; }
+
+  /* HUD-style indicator on top of the active tab. */
+  .tab-indicator {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform var(--dur-med) var(--ease-out),
+                opacity var(--dur-med) var(--ease-out);
+    opacity: 0.85;
+  }
+  .tab-index {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--fg-2);
+    line-height: 1;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .tab-label {
+    font-size: var(--t-body-sm);
+    font-weight: 540;
+    letter-spacing: 0.01em;
+    line-height: 1.2;
+    color: inherit;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 100%;
+  }
+
+  .tab:hover {
+    color: var(--fg-0);
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+  }
+  .tab:hover .tab-index { color: var(--accent); }
+  .tab:hover .tab-indicator { transform: scaleX(0.4); opacity: 0.5; }
+
+  .tab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -3px;
+  }
+
+  .tab.is-active {
+    color: var(--fg-0);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+  .tab.is-active .tab-index { color: var(--accent); }
+  .tab.is-active .tab-indicator { transform: scaleX(1); opacity: 1; }
+
+  /* Panel */
+  .panel { padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); }
+  .panel[hidden] { display: none; }
+  @media (min-width: 720px) { .panel { padding: var(--space-6); } }
+
+  .panel-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  @media (min-width: 720px) {
+    .panel-head { flex-direction: row; align-items: center; gap: var(--space-5); }
+  }
+  .panel-headline {
+    margin: 0;
+    font-size: var(--t-h3);
+    line-height: 1.25;
+    color: var(--fg-0);
+    font-weight: 540;
+    max-width: 60ch;
+    /* Reserve room for up to two lines so the frame height stays constant. */
+    min-height: calc(var(--t-h3) * 1.25 * 2);
+  }
+  /* Footer: separator that spans only the code-box width (i.e. the panel
+     content area, not the full frame), with the action link below it. */
+  .panel-foot {
+    border-top: 1px solid var(--line-1);
+    padding-top: var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-open {
+    color: var(--accent);
+    font-size: var(--t-body-sm);
+    white-space: nowrap;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    width: 100%;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+  .panel-open:hover { border-bottom-color: var(--accent); }
+
+  /* Code area: snug border, reticle-style corner accents, scoped scroll.
+     Fixed height keeps the outer frame stable as tabs swap; the inner code
+     scrolls if a snippet is taller than the box. */
+  .panel-code {
+    position: relative;
+    background: var(--bg-2);
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-sm);
+    padding: var(--space-4);
+    font-size: 14px;
+    line-height: 1.55;
+    overflow: hidden;
+    height: 360px;
+  }
+  @media (min-width: 720px) { .panel-code { height: 460px; } }
+  .panel-code::before,
+  .panel-code::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: color-mix(in srgb, var(--accent) 60%, var(--line-2));
+    border-style: solid;
+    pointer-events: none;
+  }
+  .panel-code::before {
+    top: -1px; left: -1px;
+    border-width: 1px 0 0 1px;
+  }
+  .panel-code::after {
+    bottom: -1px; right: -1px;
+    border-width: 0 1px 1px 0;
+  }
+  .panel-code :global(pre) {
+    background: transparent !important;
+    margin: 0;
+    height: 100%;
+    overflow: auto;
+  }
+  .panel-code :global(code) {
+    font-family: var(--font-mono);
+    font-size: inherit;
   }
 </style>

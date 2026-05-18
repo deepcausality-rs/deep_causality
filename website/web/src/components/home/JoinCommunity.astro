@@ -1,0 +1,114 @@
+---
+const links = [
+  {
+    name: 'GitHub',
+    href: 'https://github.com/deepcausality-rs/deep_causality',
+    body: 'Issues, pull requests, releases, and the full source. Star the repo to keep an eye on the project.',
+    cta: 'View on GitHub',
+    icon: 'github',
+  },
+  {
+    name: 'Discord',
+    href: 'https://discord.gg/Bxj9P7JXSj',
+    body: 'Real-time chat with maintainers and contributors. Drop in with questions, ideas, or use-cases.',
+    cta: 'Join the server',
+    icon: 'discord',
+  },
+];
+---
+<section class="community">
+  <div class="community-inner">
+    <h2>Join the community</h2>
+
+    <div class="community-row">
+      {links.map((l) => (
+        <a class="community-card reticle-host" href={l.href} rel="noopener noreferrer" target="_blank">
+          <span class="reticle reticle-tl" aria-hidden="true"></span>
+          <span class="reticle reticle-tr" aria-hidden="true"></span>
+          <span class="reticle reticle-bl" aria-hidden="true"></span>
+          <span class="reticle reticle-br" aria-hidden="true"></span>
+          <span class="community-icon" aria-hidden="true">
+            {l.icon === 'github' ? (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 .5a11.5 11.5 0 0 0-3.63 22.42c.57.1.78-.25.78-.55v-2.06c-3.18.69-3.86-1.36-3.86-1.36-.52-1.34-1.27-1.7-1.27-1.7-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.76 2.68 1.25 3.34.96.1-.74.4-1.25.73-1.54-2.54-.29-5.21-1.27-5.21-5.66 0-1.25.45-2.27 1.18-3.07-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.15 1.17a10.94 10.94 0 0 1 5.74 0c2.19-1.48 3.15-1.17 3.15-1.17.62 1.58.23 2.75.11 3.04.74.8 1.18 1.82 1.18 3.07 0 4.4-2.68 5.37-5.23 5.65.41.36.78 1.06.78 2.13v3.16c0 .3.21.66.79.55A11.5 11.5 0 0 0 12 .5Z"/>
+              </svg>
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.317 4.369A19.79 19.79 0 0 0 16.558 3a14.07 14.07 0 0 0-.617 1.265 18.34 18.34 0 0 0-5.486 0A12.9 12.9 0 0 0 9.838 3 19.74 19.74 0 0 0 6.078 4.37C2.527 9.522 1.566 14.546 2.046 19.5a19.93 19.93 0 0 0 6.034 3.04 14.66 14.66 0 0 0 1.27-2.04 12.78 12.78 0 0 1-2.01-.96c.169-.123.334-.252.493-.385a14.13 14.13 0 0 0 12.327 0c.16.133.325.262.494.385a12.79 12.79 0 0 1-2.014.96 14.36 14.36 0 0 0 1.27 2.04 19.84 19.84 0 0 0 6.034-3.04c.508-5.731-.83-10.7-3.622-15.13ZM8.02 16.42c-1.183 0-2.156-1.085-2.156-2.42 0-1.334.952-2.42 2.156-2.42 1.203 0 2.176 1.086 2.156 2.42 0 1.335-.952 2.42-2.156 2.42Zm7.96 0c-1.183 0-2.156-1.085-2.156-2.42 0-1.334.952-2.42 2.156-2.42 1.203 0 2.176 1.086 2.156 2.42 0 1.335-.952 2.42-2.156 2.42Z"/>
+              </svg>
+            )}
+          </span>
+          <h3>{l.name}</h3>
+          <p>{l.body}</p>
+          <span class="community-cta">{l.cta} <span aria-hidden="true">→</span></span>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .community { padding: var(--space-8) 0; }
+  .community-inner { max-width: var(--w-page); margin: 0 auto; padding: 0 var(--space-4); }
+  @media (min-width: 720px) { .community { padding: var(--space-9) 0; } .community-inner { padding: 0 var(--space-5); } }
+
+  h2 { margin: 0 0 var(--space-7) 0; text-align: center; }
+
+  .community-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    max-width: 880px;
+    margin: 0 auto;
+  }
+  @media (min-width: 720px) {
+    .community-row { grid-template-columns: repeat(2, 1fr); gap: var(--space-6); }
+  }
+
+  .community-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-5) var(--space-5) var(--space-4);
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--bg-1) 70%, transparent) 0%,
+        var(--bg-1) 100%
+      );
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
+    color: var(--fg-0);
+    border-bottom: 1px solid var(--line-1);
+    transition: border-color var(--dur-fast) var(--ease-out),
+                background var(--dur-fast) var(--ease-out),
+                transform var(--dur-fast) var(--ease-out);
+  }
+  .community-card:hover {
+    border-color: var(--line-2);
+    border-bottom-color: var(--line-2);
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--bg-1) 70%, transparent) 0%,
+        color-mix(in srgb, var(--bg-1) 92%, var(--accent)) 100%
+      );
+    transform: translateY(-1px);
+  }
+
+  .community-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 40px; height: 40px;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+  }
+
+  .community-card h3 { margin: 0; font-size: var(--t-h3); }
+  .community-card p { margin: 0; color: var(--fg-1); max-width: 44ch; }
+  .community-cta { color: var(--accent); font-size: var(--t-body-sm); margin-top: var(--space-1); }
+  .community-card:hover h3 { color: var(--accent); }
+</style>

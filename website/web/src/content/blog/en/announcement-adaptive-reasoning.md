@@ -66,11 +66,11 @@ the [examples directory](https://github.com/deepcausality-rs/deep_causality/tree
 examples demonstrate how to express a number of existing methodologies with DeepCausality. Specifically, we added
 examples for:
 
-* CATE: [Conditional Average Treatment Effects.](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/epp_cate)
-* DBN: [Dynamic Bayesian Networks.](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/epp_dbn)
-* Granger: [Granger Causality for time series.](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/epp_granger)
-* RCM: [Rubin Causal Model.](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/epp_rcm)
-* SCM: [Structural Causal Model.](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/epp_scm)
+* CATE: [Conditional Average Treatment Effects.](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples/cate)
+* DBN: [Dynamic Bayesian Networks.](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples/dbn)
+* Granger: [Granger Causality for time series.](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples/granger)
+* RCM: [Rubin Causal Model.](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples/rcm)
+* SCM: [Structural Causal Model.](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples/scm)
 
 The informed reader may wonder how DeepCausality can possibly express so many different causal methods in a uniform way. A large
 part of the generalization DeepCausality achieves is due to its foundation in a single, axiomatic, generalized

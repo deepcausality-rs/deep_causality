@@ -64,7 +64,7 @@ let effect = schwarzschild_radius(&mass)
 
 ## 🧪 Case Study: Multi-Physics Pipeline
 
-To demonstrate the power of this approach, we included a **[Multi-Physics Pipeline example](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples/examples/multi_physics_pipeline)** in the repository.
+To demonstrate the power of this approach, we included a **[Multi-Physics Pipeline example](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples/multi_physics_pipeline)** in the repository.
 
 This example simulates the decay of a Higgs-like particle, requiring **zero-copy data transformation** across three distinct branches of physics:
 
