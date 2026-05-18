@@ -8,6 +8,38 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
 
 const fmtDate = (d: Date) =>
   d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+const monthName = (m: number) =>
+  new Date(2000, m, 1).toLocaleDateString('en-US', { month: 'long' });
+
+type Post = (typeof posts)[number];
+
+type MonthBucket = { month: number; posts: Post[] };
+type YearBucket = { year: number; months: MonthBucket[]; total: number };
+
+const byYear: YearBucket[] = [];
+for (const p of posts) {
+  const d = p.data.date;
+  const y = d.getUTCFullYear();
+  const m = d.getUTCMonth();
+  let yearBucket = byYear.find((b) => b.year === y);
+  if (!yearBucket) {
+    yearBucket = { year: y, months: [], total: 0 };
+    byYear.push(yearBucket);
+  }
+  yearBucket.total++;
+  let monthBucket = yearBucket.months.find((b) => b.month === m);
+  if (!monthBucket) {
+    monthBucket = { month: m, posts: [] };
+    yearBucket.months.push(monthBucket);
+  }
+  monthBucket.posts.push(p);
+}
+// Sort months descending within each year (year-sort is preserved from posts ordering).
+for (const y of byYear) y.months.sort((a, b) => b.month - a.month);
+
+const monthAnchor = (y: number, m: number) => `month-${y}-${String(m + 1).padStart(2, '0')}`;
+const yearAnchor = (y: number) => `year-${y}`;
 ---
 <BaseLayout title="Blog — DeepCausality" description="Announcements, design notes, and write-ups from the DeepCausality project.">
   <SiteHeader />
@@ -17,25 +49,101 @@ const fmtDate = (d: Date) =>
       <h1>Announcements and write-ups</h1>
       <p class="lede">Project updates, design notes, and longer-form pieces. Sorted newest first.</p>
     </header>
-    <ul class="list" role="list">
-      {posts.map((p) => (
-        <li>
-          <a href={`/blog/${p.id.replace(/^en\//, '').replace(/\.md$/, '')}/`}>
-            <div class="meta">
-              <time datetime={p.data.date.toISOString()}>{fmtDate(p.data.date)}</time>
-              <span class="author">{p.data.author}</span>
-            </div>
-            <h2>{p.data.title}</h2>
-            {p.data.description && <p>{p.data.description}</p>}
-          </a>
-        </li>
-      ))}
-    </ul>
+
+    <div class="blog-grid">
+      <div class="blog-main">
+        {byYear.map((y) => (
+          <section class="year-group" id={yearAnchor(y.year)}>
+            <h2 class="year-heading">{y.year}</h2>
+            {y.months.map((mb) => (
+              <div class="month-group" id={monthAnchor(y.year, mb.month)}>
+                <h3 class="month-heading">{monthName(mb.month)}</h3>
+                <ul class="list" role="list">
+                  {mb.posts.map((p) => (
+                    <li>
+                      <a href={`/blog/${p.id.replace(/^en\//, '').replace(/\.md$/, '')}/`}>
+                        <div class="meta">
+                          <time datetime={p.data.date.toISOString()}>{fmtDate(p.data.date)}</time>
+                          <span class="author">{p.data.author}</span>
+                        </div>
+                        <h4>{p.data.title}</h4>
+                        {p.data.description && <p>{p.data.description}</p>}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </section>
+        ))}
+      </div>
+
+      <aside class="blog-aside" aria-label="Archive">
+        <details class="archive-shell">
+          <summary class="archive-summary">
+            <span class="archive-summary-label">Archive</span>
+            <span class="archive-summary-count">{posts.length}&nbsp;posts</span>
+            <svg class="archive-caret" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 4.5 L6 7.5 L9 4.5"/>
+            </svg>
+          </summary>
+          <nav class="archive">
+            <h2 class="archive-heading">Archive</h2>
+            <ul class="archive-list">
+              {byYear.map((y) => (
+                <li>
+                  <a class="archive-year" href={`#${yearAnchor(y.year)}`}>
+                    <span>{y.year}</span>
+                    <span class="count">{y.total}</span>
+                  </a>
+                  <ul class="archive-months">
+                    {y.months.map((mb) => (
+                      <li>
+                        <a href={`#${monthAnchor(y.year, mb.month)}`}>
+                          <span>{monthName(mb.month)}</span>
+                          <span class="count">{mb.posts.length}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </details>
+      </aside>
+    </div>
   </section>
 
+  <script>
+    // Keep the archive panel expanded on desktop, collapsed on mobile.
+    // Closing the <details> on mobile gives the user back the screen real estate;
+    // on desktop it should always read as a sticky sidebar.
+    const details = document.querySelector<HTMLDetailsElement>('.archive-shell');
+    const mq = window.matchMedia('(min-width: 900px)');
+    function sync() {
+      if (!details) return;
+      if (mq.matches) details.open = true;
+    }
+    sync();
+    mq.addEventListener('change', sync);
+  </script>
+
   <style>
-    .blog-index { max-width: var(--w-page); margin: 0 auto; padding: var(--space-7) var(--space-4); }
-    @media (min-width: 720px) { .blog-index { padding: var(--space-9) var(--space-5); } }
+    /* Mirror the static-page side padding so the blog has the same breathing room
+       as About/Community while keeping the wider page width for the two-column grid. */
+    .blog-index {
+      max-width: var(--w-page);
+      margin: 0 auto;
+      padding: var(--space-6) var(--space-4);
+    }
+    @media (min-width: 480px) {
+      .blog-index { padding: var(--space-7) var(--space-5); }
+    }
+    @media (min-width: 720px) {
+      .blog-index { padding: var(--space-9) var(--space-6); }
+    }
+
     .blog-index header { max-width: 60ch; margin-bottom: var(--space-7); }
     .eyebrow {
       margin: 0;
@@ -45,11 +153,45 @@ const fmtDate = (d: Date) =>
     h1 { margin: var(--space-2) 0 var(--space-3) 0; }
     .lede { color: var(--fg-1); }
 
+    /* Single column on mobile; main + sidebar at ≥900px. */
+    .blog-grid {
+      display: grid;
+      gap: var(--space-7);
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 900px) {
+      .blog-grid {
+        grid-template-columns: minmax(0, 1fr) 220px;
+        gap: var(--space-8);
+      }
+    }
+
+    .blog-main { min-width: 0; }
+
+    .year-group + .year-group { margin-top: var(--space-7); }
+    .year-group { scroll-margin-top: 80px; }
+    .year-heading {
+      margin: 0 0 var(--space-3) 0;
+      font-size: var(--t-h2);
+      line-height: var(--lh-h2);
+      letter-spacing: var(--ls-h2);
+    }
+    .month-group + .month-group { margin-top: var(--space-5); }
+    .month-group { scroll-margin-top: 80px; }
+    .month-heading {
+      margin: 0 0 var(--space-2) 0;
+      font-size: var(--t-eyebrow);
+      letter-spacing: var(--ls-eyebrow);
+      text-transform: uppercase;
+      color: var(--fg-2);
+      font-family: var(--font-mono);
+    }
+
     .list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; }
     .list li + li { border-top: 1px solid var(--line-1); }
     .list a {
       display: grid; gap: var(--space-2);
-      padding: var(--space-6) 0;
+      padding: var(--space-5) 0;
       color: var(--fg-0);
       border-bottom: none;
       transition: padding-left var(--dur-med) var(--ease-out);
@@ -61,7 +203,132 @@ const fmtDate = (d: Date) =>
       font-size: var(--t-body-sm);
     }
     .author { color: var(--fg-2); }
-    .list h2 { margin: 0; font-size: var(--t-h3); line-height: var(--lh-h3); letter-spacing: var(--ls-h3); }
-    .list p { margin: 0; color: var(--fg-1); max-width: var(--measure); }
+    .list h4 {
+      margin: 0;
+      font-size: var(--t-h3);
+      line-height: var(--lh-h3);
+      letter-spacing: var(--ls-h3);
+      overflow-wrap: anywhere;
+    }
+    .list p { margin: 0; color: var(--fg-1); max-width: var(--measure); overflow-wrap: anywhere; }
+
+    /* Sidebar archive nav. Collapsed disclosure on mobile, sticky nav at ≥900px. */
+    .blog-aside { min-width: 0; }
+    @media (min-width: 900px) {
+      .blog-aside {
+        position: sticky; top: 80px; align-self: start;
+        border-left: 1px solid var(--line-1);
+        padding-left: var(--space-5);
+        max-height: calc(100vh - 80px);
+        overflow: auto;
+      }
+    }
+
+    /* The <details> shell collapses the archive on small screens. At ≥900px it is
+       forced open and the summary chevron is hidden so the nav reads as a sticky
+       sidebar (same shape as the original design). */
+    .archive-shell { width: 100%; }
+    .archive-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      padding: var(--space-3) var(--space-3);
+      border: 1px solid var(--line-1);
+      border-radius: var(--radius-md);
+      background: var(--bg-1);
+      color: var(--fg-1);
+      cursor: pointer;
+      font-size: var(--t-body-sm);
+      list-style: none;
+    }
+    .archive-summary::-webkit-details-marker { display: none; }
+    .archive-summary:hover { color: var(--fg-0); border-color: var(--line-2); }
+    .archive-summary-label {
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: var(--ls-eyebrow);
+      font-size: var(--t-eyebrow);
+      color: var(--fg-2);
+    }
+    .archive-summary-count { color: var(--fg-2); font-variant-numeric: tabular-nums; }
+    .archive-caret {
+      transition: transform var(--dur-fast) var(--ease-out);
+      margin-left: auto;
+    }
+    .archive-shell[open] .archive-caret { transform: rotate(180deg); }
+    .archive-shell[open] .archive { margin-top: var(--space-3); }
+
+    @media (min-width: 900px) {
+      /* On desktop the disclosure is decoration only: the small script below
+         keeps the <details> open at this breakpoint and we hide the summary. */
+      .archive-summary { display: none; }
+      .archive-shell > .archive { margin-top: 0 !important; }
+    }
+
+    .archive-heading {
+      margin: 0 0 var(--space-3) 0;
+      font-size: var(--t-eyebrow);
+      letter-spacing: var(--ls-eyebrow);
+      text-transform: uppercase;
+      color: var(--fg-2);
+      font-family: var(--font-mono);
+      display: flex;
+      align-items: center;
+      gap: 0.55em;
+    }
+    .archive-heading::before {
+      content: '';
+      flex: 0 0 10px;
+      height: 1px;
+      background: var(--accent);
+      opacity: 0.7;
+    }
+
+    .archive-list, .archive-months {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .archive-list > li + li { margin-top: var(--space-3); }
+    .archive-year {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-2);
+      padding: var(--space-1) var(--space-2);
+      color: var(--fg-0);
+      border-bottom: none;
+      border-radius: var(--radius-sm);
+      font-size: var(--t-body-sm);
+      font-weight: 600;
+    }
+    .archive-year:hover { background: var(--bg-2); }
+
+    .archive-months {
+      margin: var(--space-1) 0 0 0;
+      padding-left: var(--space-3);
+      border-left: 1px solid var(--line-1);
+    }
+    .archive-months li { margin: 0; }
+    .archive-months a {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-2);
+      padding: var(--space-1) var(--space-2);
+      color: var(--fg-1);
+      border-bottom: none;
+      border-radius: var(--radius-sm);
+      font-size: var(--t-body-sm);
+      transition: color var(--dur-fast) var(--ease-out),
+                  background var(--dur-fast) var(--ease-out);
+    }
+    .archive-months a:hover { color: var(--fg-0); background: var(--bg-2); }
+    .count {
+      color: var(--fg-2);
+      font-variant-numeric: tabular-nums;
+      font-size: var(--t-body-xs, var(--t-body-sm));
+    }
   </style>
 </BaseLayout>

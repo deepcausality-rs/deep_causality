@@ -9,7 +9,7 @@ DeepCausality treats uncertainty as a first-class type. Two related types ship i
 
 ## The uncertainty bug
 
-Most engineering code treats a noisy estimate as an exact value. A single `f64` represents a sensor reading whose real distribution might be `Normal(50.0, 2.5)`. Compound a few of these and the final number carries no record of where it came from or how confident it is. Conditionals on such values silently produce false positives and false negatives. The crate README calls this "the uncertainty bug" and gives it a name worth fixing in the type system.
+Most engineering code treats a noisy estimate as an exact value. A single `f64` represents a sensor reading whose real distribution might be `Normal(50.0, 2.5)`. Compound a few of these and the final number carries no record of where it came from or how confident it is. Conditionals on such values silently produce false positives and false negatives.
 
 ## Uncertain&lt;T&gt;
 

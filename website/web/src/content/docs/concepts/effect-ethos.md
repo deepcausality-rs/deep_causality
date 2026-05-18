@@ -1,17 +1,36 @@
 ---
 title: Effect Ethos
-description: The verification layer that checks every effect against the rules you have to honor.
+description: The deontic guardrail that intercepts every action the Causal State Machine proposes before it executes.
 section: concepts
 order: 4
 ---
 
-A Causaloid says what the system *infers*. The Effect Ethos says what the system is *allowed to act on*. They are different jobs, and the library keeps them in different crates.
+A Causaloid or Causal Monad determines what the system *infers*. The [Causal State Machine](/docs/concepts/csm/) (CSM) translates that inference into a proposed action. The Effect Ethos says whether that proposed action is *allowed to execute*. The three layers encode different responsibilites.
 
-## The problem
+## The three-layer flow
 
-Inference and policy get conflated in most codebases. A trading rule fires; somewhere downstream a function checks for compliance flags; somewhere else a manual approval is recorded; somewhere else again a `if user.is_admin` clause silently changes the path. The rules are scattered, the audit is partial, and the day a regulator asks *which check failed and why*, the code cannot answer.
+DeepCausality separates reasoning from action by design:
 
-The Effect Ethos pulls those scattered checks into one structured object that can answer.
+1. **Reasoning**: a Causaloid (Singleton, Collection, or hypergraph) and the Causal Monad produce a `PropagatingEffect`. This is the inference layer. It answers "what is the case?"
+2. **Action proposal**: the CSM reads the propagating effect, evaluates which of its registered causal states have become active, and constructs a `ProposedAction` for each active state. This is the bridge between inference and the outside world. It answers "what to do next?"
+3. **Action verification**: the Effect Ethos intercepts every proposed action before it fires. It evaluates the proposal against a graph of Teloids and returns a `Verdict`. This is the guardrail layer. It answers "is the system *allowed* to do that here, now, under these rules?"
+
+The Effect Ethos is what safeguards the CSM. An action that the CSM would otherwise fire does not fire if the Ethos returns an impermissible verdict.
+
+## The Origin of the Effect Ethos
+
+The Effect Ethos exists because dynamic, emergent causality is intrinsically non-deterministic. The [Dynamic causality page](/docs/concepts/dynamic-causality/) lays out the four reasoning modalities and shows where the determinism boundary breaks: static, dynamic, and adaptive reasoning are formally verifiable, but emergent reasoning is not. The causal graph can rewire itself at runtime in ways no upfront proof can cover. Once that capability is on the table, "the reasoning is correct" stops being a property you can establish in advance. Something else has to absorb the verification burden.
+
+The realization was that every action the system is about to take needs an independent check, expressed in rules that do not change while the reasoning evolves. The check has to handle conflicting rules, audit trails, and overrides without losing determinism. That is a deontic problem, not a causal one, and it had already been studied.
+
+The answer came from Olson, Salas-Damian, and Forbus at Northwestern University in [*A Defeasible Deontic Calculus for Resolving Norm Conflicts*](https://github.com/deepcausality-rs/deep_causality/blob/main/docs/papers/ddic.pdf). The paper introduces the Defeasible Deontic Inheritance Calculus (DDIC): a formalism for resolving a continuous stream of possibly conflicting norms. It defines the three deontic modalities (Obligatory, Optional, Impermissible), characterizes the three conflict types (direct, indirect, intersecting), and proves that three resolution heuristics (Lex Specialis, Lex Posterior, Lex Superior) are sufficient to axiomatize conflict resolution under deontic inheritance. The paper goes further and shows that one widely used multi-agent strategy is a red herring once defeasance is modelled correctly.
+
+The Effect Ethos is an implementation of DDIC inside DeepCausality. A `Teloid` is one norm tuple from the calculus. The `TeloidGraph` carries the inheritance and defeasance edges DDIC requires. `evaluate_action` runs the activation, conflict detection, and resolution steps from the paper, in the order DDIC prescribes, and returns a `Verdict` whose justification field is the audit trail the formalism implies. The mapping is intentional. DDIC gave a theoretically justified axiomatization of norm conflict detection and resolution; the Effect Ethos makes it runnable, embeds it in a typed context, and wires it to the Causal State Machine so that every proposed action passes through the calculus before it executes.
+
+
+## The problem the Ethos solves
+
+The Effect Ethos pulls scattered checks into one structured object that can answer the thorny questions. The CSM hands every proposed action to the Ethos before execution. The Ethos returns a verdict carrying both the outcome and the chain of Teloids that justified it.
 
 ## What it is
 
@@ -32,76 +51,71 @@ where
 
 Two parts to read. The `teloid_store` holds the active rules. The `teloid_graph` and `tag_index` make the rules navigable, both by id and by category.
 
-A `Teloid` is the atom inside the store. It is a computable unit of purpose, and it instantiates one rule from a defeasible deontic calculus (DDIC). Concretely a Teloid carries:
+A `Teloid` is the atom inside the store. It is a computable unit of purpose, and it instantiates one norm tuple from the DDIC calculus described in the [origin section above](#the-origin-of-the-effect-ethos). Concretely a Teloid carries:
 
-- A **deontic modality**: obligatory, impermissible, or optional.
-- A **condition** under which the modality applies.
-- A **scope tag** for indexing.
-- An **id** that survives logging.
-- A reference to the **Context query** the rule will evaluate against.
+- A **deontic modality**: `Obligatory`, `Impermissible`, or `Optional(cost)`.
+- A **condition** evaluated against the Context (either a deterministic Causaloid or an `Uncertain` predicate).
+- A **scope tag** used by the CSM to filter which Teloids apply to a given proposed action.
+- An **id** that survives logging and shows up in every audit trail.
 
 The [Teleology preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/teleology_effect_propagation_process/epp_teleology.pdf) introduces Teloids as the answer to the question, "What stops an emergent system from inferring its way into a state you cannot let it act on?"
 
 ## Building an Ethos
 
-```rust
-use deep_causality_ethos::{EffectEthos, Verdict};
+Norms are added through `add_deterministic_norm` (for deterministic Causaloid conditions) or `add_uncertain_norm` (for `Uncertain` predicates). Inheritance and defeasance edges between Teloids are wired up with `link_inheritance` and `link_defeasance`. Before the Ethos can be queried by a CSM, it must be `freeze()`'d. Freezing finalizes the Teloid graph the same way it finalizes a Causaloid graph, switching the underlying [`ultragraph`](https://github.com/deepcausality-rs/deep_causality/tree/main/ultragraph) backend to its query-optimized CSR form.
 
-let ethos = EffectEthos::new()
-    .forbid("pii_leaves_region",       rule::pii_leaves_region)
-    .require("audit_log_present",      rule::audit_log_present)
-    .require("approval_when_over_10k", rule::approval_when_over(10_000))
-    .require("kyc_completed",          rule::kyc_completed);
+```rust
+use deep_causality_ethos::EffectEthos;
+
+let mut ethos: EffectEthos<_, _, _, _, _, _, _> = EffectEthos::new();
+// ethos.add_deterministic_norm(...);
+// ethos.link_inheritance(general_id, specific_id);
+ethos.freeze();
 ```
 
-The named rules are not decoration. The string is the stable identifier that shows up in every violation report, every audit log, and every rejection message returned to a caller.
+The full API is on [docs.rs](https://docs.rs/deep_causality_ethos).
 
-## Verifying an action
+## Evaluating a proposed action
+
+The CSM hands a `ProposedAction` to the Ethos along with the current Context and the scope tags that apply to the proposal. The Ethos returns a `Verdict`:
 
 ```rust
-let verdict = ethos.verify(&action)?;
+use deep_causality_ethos::{DeonticInferable, TeloidModal};
 
-match verdict {
-    Verdict::Pass => commit(action)?,
-    Verdict::Fail(violations) => {
-        for v in &violations {
-            audit_log.write(v)?;
-        }
-        return Err(reject_with(violations));
-    }
+let verdict = ethos.evaluate_action(&proposed_action, &context, &tags)?;
+
+match verdict.outcome() {
+    TeloidModal::Obligatory     => csm.fire(proposed_action)?,
+    TeloidModal::Impermissible  => csm.reject(verdict.justification())?,
+    TeloidModal::Optional(cost) => csm.fire_if_within_budget(proposed_action, *cost)?,
 }
 ```
 
-`verify` evaluates every Teloid against the action. It does not stop at the first failure. The returned `Verdict::Fail` carries the full list of violations, each tagged with its Teloid name and the condition that failed. The audit log gets the complete picture; the caller gets a single rejection.
+The verdict carries both the outcome and a justification: the ordered list of Teloid ids that produced it. The CSM uses the outcome to decide whether to fire; the justification goes into the audit log so any decision the system makes can be replayed later with the same Context and the same Ethos.
 
 ## Conflict resolution
 
-Real rule sets contradict each other. Two requirements both apply, one says obligatory, the other says impermissible. The Effect Ethos resolves the contradiction with three principles drawn from legal reasoning:
+Real rule sets contradict each other. Two requirements both apply, one says obligatory, the other says impermissible. The Effect Ethos resolves the contradiction with three principles:
 
-- **Lex Posterior** — the later-issued rule wins over the earlier one.
-- **Lex Specialis** — the more specific rule wins over the more general one.
-- **Lex Superior** — the higher-priority rule wins over the lower-priority one.
+- **Lex Posterior**: the later-issued rule wins over the earlier one.
+- **Lex Specialis**: the more specific rule wins over the more general one.
+- **Lex Superior**: the higher-priority rule wins over the lower-priority one.
 
-These run in a fixed order when the Ethos is asked to reconcile a conflict. The combination is enough to handle most rule-set evolution in practice without giving up determinism.
+These run in a fixed order when the Ethos is asked to reconcile a conflict. The combination is enough to handle most rule-set evolution in practice without giving up determinism. The proof that these three heuristics are sufficient, and the analysis of which common resolution strategies they subsume, comes from the [DDIC paper](https://github.com/deepcausality-rs/deep_causality/blob/main/docs/papers/ddic.pdf) cited above.
 
-## Why this is a separate concept
+## Why this is the right place to guardrail
 
-The Effect Ethos is not just the negation of the Causaloid graph. It can disagree with the Causaloid graph, and the disagreement is the point.
+The Effect Ethos can disagree with the inference layer, and the disagreement is the point.
 
-A Causaloid graph reasons forward from inputs to a propagating effect. It is concerned with *what is inferable*. An Ethos reasons against that effect from operational constraints. It is concerned with *what is permissible*. The two answers disagree often enough to be worth modelling separately. When they agree, the action commits. When they disagree, the rejection is structured and explainable.
+A Causaloid graph reasons forward from inputs to a propagating effect. It is concerned with *what is inferable*. The CSM translates that inference into a *proposed action*. The Ethos reasons against the proposal from operational constraints. It is concerned with *what is permissible*. The two answers disagree often enough to be worth modelling separately. When they agree, the CSM fires. When they disagree, the rejection is structured and explainable.
 
-The [Metaphysics preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/metaphysics_effect_propagation_process/epp_metaphysics.pdf) frames this as the prospective guardrail for emergent systems: as the causal structure becomes able to evolve, the action layer needs an independent check that the evolved structure has not produced an output you cannot let leave the building.
-
-## Common patterns
-
-**Per-environment Ethoses.** Define one Ethos per deployment target (sandbox, staging, prod). The same Causaloids fire; the verdict differs because the Teloids differ.
-
-**Layered Ethoses.** A general Ethos plus a regional Ethos plus a per-customer Ethos. Compose by chaining `verify` calls; reject if any layer fails.
-
-**Time-windowed Teloids.** A Teloid can carry a temporal condition that consults the Context. A rule that applies only between two timestamps disappears outside that window without code changes.
-
-**Replay.** Persist the action and the Context snapshot; re-run `verify` against a future version of the Ethos to detect rule-set drift.
+This is what restores verifiability under emergent reasoning. The [Dynamic causality page](/docs/concepts/dynamic-causality/) breaks the four reasoning modalities at the determinism boundary: static, dynamic, and adaptive reasoning are all formally verifiable, while emergent reasoning is not. The reasoning graph may evolve in ways no static proof can foresee. The Effect Ethos accepts that reality and moves the verifiability checkpoint to the one place where it stays feasible: the action layer. Every action the CSM proposes is checked against an immutable Ethos before it leaves the system. The reasoning is free to be emergent; the actions are not.
 
 ## Where to look next
 
-[Causaloid](/docs/concepts/causaloid/) is the inference layer the Ethos sits above. The API reference is on docs.rs at [`deep_causality_ethos`](https://docs.rs/deep_causality_ethos). The [Teleology preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/teleology_effect_propagation_process/epp_teleology.pdf) is the formal treatment.
+[Causal State Machine](/docs/concepts/csm/) is the layer that proposes the actions the Ethos checks. [Causaloid](/docs/concepts/causaloid/) is the inference layer the CSM reads from. The API reference is on docs.rs at [`deep_causality_ethos`](https://docs.rs/deep_causality_ethos).
+
+Two papers ground the design:
+
+- Olson, T., Salas-Damian, R., and Forbus, K. D. [*A Defeasible Deontic Calculus for Resolving Norm Conflicts*](https://github.com/deepcausality-rs/deep_causality/blob/main/docs/papers/ddic.pdf), Northwestern University. The DDIC formalism. This is where the Effect Ethos comes from.
+- The [Teleology preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/teleology_effect_propagation_process/epp_teleology.pdf) shows how DDIC is embedded into the Effect Propagation Process and the DeepCausality runtime.

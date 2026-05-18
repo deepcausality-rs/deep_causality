@@ -5,13 +5,11 @@ section: getting-started
 order: 4
 ---
 
-The Causaloid in the [previous page](/docs/getting-started/hello-causaloid/) took an input and returned an effect. That covers a surprising amount of practical work, and it stops covering it the moment a rule needs to know something about the world beyond its input.
-
-The [`Context`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality) is the explicit place that world lives.
+The Causaloid in the [previous page](/docs/getting-started/hello-causaloid/) took an input and returned an effect. That covers a surprising amount of practical work. Howeve, it stops the moment a rule needs to know something about the world beyond its input.  The [`Context`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality) is the explicit place that world lives.
 
 ## What a Context is
 
-A Context is a typed weighted hypergraph whose nodes are `Contextoid`s, each one carrying a typed payload: data, space, time, spacetime, or symbolic. The graph can be queried by id, walked along its edges, and mutated in place. Mutating it is the *dynamic* in dynamic causality: the same Causaloid evaluated against a new Context yields a new propagating effect. The [Context concept page](/docs/concepts/context/) is the full treatment.
+A Context is a typed weighted hypergraph whose nodes are `Contextoid`s, each one carrying a typed payload: data, space, time, spacetime, or symbolic. The graph can be queried by id, walked along its edges, and mutated in place. Mutating it is the *dynamic* in dynamic causality: the same Causaloid evaluated against a new Context yields a new propagating effect. The [Context concept page](/docs/concepts/context/) explain this further..
 
 The `BaseContext` alias pins the seven generic parameters of `Context` to a sensible Euclidean default, which is what every example below uses. The base context lives in [`deep_causality`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality) and is built on top of the [`ultragraph`](https://github.com/deepcausality-rs/deep_causality/tree/main/ultragraph) hypergraph backend.
 
@@ -129,16 +127,14 @@ let new_threshold = Contextoid::new(
 ctx.write().unwrap().update_node(10, new_threshold).unwrap();
 ```
 
-The Causaloid never moved. The rule never moved. The world moved. The library treats that as a first-class case, not as a fragile assumption.
+The Causaloid never moved. The rule never moved. The world moved. The library treats that as a first-class case.
 
 The [Context concept page](/docs/concepts/context/) covers the related `Adjustable` trait, which exposes `update` and `adjust` methods on node payloads for the case where the structure stays fixed but incoming sensor data needs to be replaced or corrected for drift.
 
 ## When to add to the Context
 
-A rule of thumb: if the rule needs to see a value that changes during a run, a value that an operator might tune without rebuilding, or a value that a counterfactual scenario might want to replace, that value belongs in the Context. Once-and-done compile-time constants stay in the closure.
-
-The Context's real power shows up in the [Effect Propagation Process](/docs/concepts/effect-propagation-process/) page, where it threads through a chain of Causaloids and accumulates structured state along the way.
+A rule of thumb: if the rule needs to see a value that changes during a run, a value that an operator might tune without rebuilding, or a value that a counterfactual scenario might want to replace, that value belongs in the Context. Also, all external data feeds usually go through the context first.
 
 ## What's next
 
-You now have all three core moving parts: a Causaloid, a Context, and a propagating effect. The concept pages cover what each of them really is. The [examples](/examples/) take six different fields and show what those three primitives let you build.
+You now have the core moving parts: a Causal Monad, a Causaloid, a Context, and the propagating effect that flows between them. The [next page](/docs/getting-started/hello-effect-propagation/) shows how these compose into one chain, and how a non-Markovian `PropagatingEffect` lifts into a Markovian `PropagatingProcess` when a downstream step needs state. The concept pages cover each piece in more detail, and the [examples](/examples/) show what the primitives let you build.

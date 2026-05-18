@@ -19,7 +19,7 @@ Where `m₁` and `m₂` are propagating effects, `f` is a causal function, and `
 
 Pearl SCMs, dynamic Bayesian networks, Granger causality, the Rubin causal model, and conditional average treatment effects are all parametric specializations of the same axiom. The [classical causality examples](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples) walk each one through in code.
 
-## What "dynamic" commits to
+## What "dynamic" means
 
 Classical computational causality, from Pearl's Structural Causal Models to Granger time-series analysis, assumes a fixed background spacetime and a static causal structure. At the frontiers of science and engineering, that assumption breaks. Regime shifts in financial markets, multi-scale feedback in autonomous vehicles, and the dynamic spacetime of general relativity all share a property: the causal rules themselves can evolve.
 
@@ -47,28 +47,24 @@ Section 4.9.5 of the EPP states the trade-off plainly:
 
 The non-verifiability of emergent reasoning is not a flaw in the formalism. It is a property of the world the system is coupled to. When a causal graph evolves in response to a sensor stream, the system reads from an open environment. The generative function cannot be proven deterministic in the abstract, because it consumes data from a world that is not itself bounded.
 
-The EPP responds with an architectural answer rather than a formal one. Chapter 7 introduces the **Effect Ethos**, an operational guardrail that uses a Defeasible Deontic Inheritance Calculus (DDIC, after Olson, Salas-Damian, and Forbus). The Effect Ethos sits above the Causal State Machine and intercepts every proposed action. It evaluates the action against a graph of Teloids, each one a computable norm. Conflict between norms is resolved by three principles:
+The EPP responds with an architectural answer: the **Effect Ethos**, an operational guardrail that uses a Defeasible Deontic Inheritance Calculus (DDIC, after Olson, Salas-Damian, and Forbus). The Effect Ethos sits above the Causal State Machine and intercepts every proposed action. It evaluates the action against a graph of Teloids, each one a computable norm. Conflict between norms is resolved by three principles:
 
 - **Lex Posterior**: the more recent norm wins.
 - **Lex Specialis**: the more specific norm wins.
 - **Lex Superior**: the higher-priority norm wins.
 
-Verifiability is restored at the action layer rather than the reasoning layer. The reasoning graph may evolve in ways no static proof can chase, yet every action that leaves the system has been checked against an immutable ethos. The monograph pairs this with adversarial stress-testing through deep reinforcement learning, which probes the ethos for emergent loopholes the designer did not enumerate. The result is a discipline for managing emergence, not a proof that emergence is safe.
+Verifiability is restored at the action layer rather than the reasoning layer. The reasoning graph may evolve in ways no static proof can foresee, yet every action that leaves the system has been checked against an immutable ethos. The result is a discipline for managing emergence via programmable ethics.
 
 ## The operational pieces
 
-Three primitives operationalize the axiom:
+Five primitives operationalize the axiom:
 
 - [**Causaloid**](/docs/concepts/causaloid/): a self-contained unit of causality. Wraps a function from input (and optionally context) to a `PropagatingEffect`. Composes isomorphic-recursively into Collections and hypergraphs that share the same trait surface.
 - [**Context**](/docs/concepts/context/): an explicit hypergraph encoding the environment. Nodes are typed Contextoids carrying data, space, time, spacetime, or symbolic payloads. The Context is what makes a Causaloid evaluation context-relative without committing to a fixed background spacetime.
+- [**Causal Monad**](/docs/concepts/causal-monad/): the sequential primitive. Exposes `pure`, `bind`, and `intervene` directly on the propagating-effect carrier. `pure` lifts a value into the monad; `bind` chains a function and threads value, state, context, error, and log through every step; `intervene` implements Pearl's `do()` operator mid-chain, which is what makes counterfactual analysis a first-class operation rather than a separate engine.
+- [**Propagating Effect**](/docs/concepts/effect-propagation-process/): the shared carrier that both the Causaloid and the Causal Monad emit and consume. It is realized as a 5-arity container `CausalEffectPropagationProcess<V, S, C, E, L>` in [`deep_causality_core`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core) and exposed through two aliases: the non-Markovian `PropagatingEffect<T>` with state and context fixed to the unit type, and the Markovian `PropagatingProcess<T, S, C>` that keeps both generic. Lifting from one to the other is one constructor call. Because the carrier is uniform, structural reasoning (Causaloid) and sequential reasoning (Causal Monad) compose without bridge code.
 - [**Effect Ethos**](/docs/concepts/effect-ethos/): the deontic verification layer described above. Required wherever emergent reasoning is in play. Optional otherwise.
 
-The axiom itself is realized as a 5-arity monad in [`deep_causality_core`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core), which the preprint does not yet cover. The container `CausalEffectPropagationProcess<V, S, C, E, L>` carries a value, a state, a context, an error, and a log. Two aliases narrow the parameter space:
-
-- `PropagatingEffect<T>` is the stateless case, with `S = C = ()`. The everyday return type for a Causaloid's function.
-- `PropagatingProcess<T, S, C>` is the stateful case, used when state or context carry real information.
-
-`pure` lifts a plain value into the monad. `bind` chains a function and threads value, state, context, error, and log through every step. `intervene` implements Pearl's `do()` operator at the chain level: it replaces the current value mid-chain and preserves the log, which is what makes counterfactual analysis a first-class operation rather than a separate engine. The full surface is documented in [`docs/CORE.md`](https://github.com/deepcausality-rs/deep_causality/blob/main/docs/CORE.md).
 
 ## What this earns you
 

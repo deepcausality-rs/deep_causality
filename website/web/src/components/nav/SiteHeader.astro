@@ -12,7 +12,19 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
     </a>
 
     <nav class="primary" aria-label="Primary">
-      <a href="/docs/getting-started/install/" class:list={["nav-link", isActive('/docs/') && 'is-active']}>Docs</a>
+      <div class="nav-dropdown">
+        <a href="/docs/" class:list={["nav-link nav-link-trigger", isActive('/docs/') && 'is-active']} aria-haspopup="true">
+          Docs
+          <svg class="caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2.5 4 L5 6.5 L7.5 4"/>
+          </svg>
+        </a>
+        <ul class="dropdown-menu" role="menu">
+          <li><a href="/docs/getting-started/install/" role="menuitem">Getting started</a></li>
+          <li><a href="/docs/overview/why/" role="menuitem">Overview</a></li>
+          <li><a href="/docs/concepts/dynamic-causality/" role="menuitem">Concepts</a></li>
+        </ul>
+      </div>
       <div class="nav-dropdown">
         <a href="/examples/" class:list={["nav-link nav-link-trigger", isActive('/examples/') && 'is-active']} aria-haspopup="true">
           Examples
@@ -66,7 +78,14 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
       </button>
     </div>
     <ul class="mobile-menu-list">
-      <li><a href="/docs/getting-started/install/">Docs</a></li>
+      <li>
+        <a href="/docs/">Docs</a>
+        <ul class="mobile-menu-sub">
+          <li><a href="/docs/getting-started/install/">Getting started</a></li>
+          <li><a href="/docs/overview/why/">Overview</a></li>
+          <li><a href="/docs/concepts/dynamic-causality/">Concepts</a></li>
+        </ul>
+      </li>
       <li>
         <a href="/examples/">Examples</a>
         <ul class="mobile-menu-sub">

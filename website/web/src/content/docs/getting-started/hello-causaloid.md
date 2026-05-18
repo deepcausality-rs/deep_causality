@@ -5,13 +5,13 @@ section: getting-started
 order: 3
 ---
 
-This page walks through the smallest program that exercises [`Causaloid`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality): a single Causaloid that wraps a predicate, then a two-node graph that composes two Causaloids, then evaluation. The goal is a runnable seed you can mutate.
+This page walks through the smallest program that exercises [`Causaloid`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality): a single Causaloid that wraps a predicate, then a two-node graph that composes two Causaloids, then evaluation.
 
 ## What a Causaloid is
 
 A Causaloid is a self-contained unit of causality. It carries an identifier, a human-readable description, and a causal function from an input value to a [`PropagatingEffect`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core). Causaloids compose isomorphic-recursively into Collections and hypergraphs that share the same trait surface, which is what the [Causaloid concept page](/docs/concepts/causaloid/) covers in full.
 
-For this page you only need the shape.
+For this exampke you only need a simple causaloid.
 
 ## A first Causaloid
 

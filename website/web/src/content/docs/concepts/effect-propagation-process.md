@@ -5,7 +5,7 @@ section: concepts
 order: 5
 ---
 
-The Effect Propagation Process is not a metaphor. It is a Rust type:
+The Effect Propagation Process (EPP) is the load-bearing abstraction of DeepCausality. Every other piece of the library, the Causaloid, the Causal Monad, the Context, the Causal State Machine, the Effect Ethos, exchanges work through one type:
 
 ```rust
 pub struct CausalEffectPropagationProcess<Value, State, Context, Error, Log> {
@@ -17,9 +17,19 @@ pub struct CausalEffectPropagationProcess<Value, State, Context, Error, Log> {
 }
 ```
 
-This struct is the unit of work that flows between Causaloids. The five fields are everything a downstream rule needs to know about the upstream rule's output, and everything the surrounding machinery needs to reason about the chain as a whole.
+This is the runtime realization of the theory described in the [Effect Propagation Process preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/effect_propagation_process/epp.pdf). The paper reframes causality as a spacetime-agnostic functional dependency between an input and a propagated effect. The struct above is that dependency made concrete and runnable.
 
-## The five fields
+## What the EPP contributes
+
+Most causal libraries split reasoning across several incompatible vocabularies. Structural causal models live in one type. Sequential probabilistic chains live in another. State is held in a host struct. Errors propagate through `Result`. Logs end up in a tracing subscriber. Context is encoded implicitly. The EPP collapses that fragmentation. One container carries everything a chain needs to know about itself:
+
+1. **Unified carrier for heterogeneous reasoning.** Structural reasoning (a Causaloid Singleton, Collection, or Graph) and sequential reasoning (a Causal Monad bind-chain) both return an EPP. The two reasoning styles share a single boundary type, which is what makes them composable without bridge code. A graph emits an EPP, a `bind` consumes it, another graph evaluates against the result. Nothing translates between worlds.
+
+2. **Non-Markovian and Markovian under one type.** The same struct represents both. `PropagatingEffect<T>` fixes `State = ()` and `Context = ()`; each step depends only on its input, and the chain stays Markov-free. `PropagatingProcess<T, S, C>` keeps the state and context generic; each step receives the threaded state and context, and the chain becomes Markovian. Lifting between the two is a single constructor call. The boundary is real, but it is movable.
+
+3. **Audit and replay.** Because the EPP carries the log inline with the value, every step appends to the same record, and a chain can be replayed off disk with no missing context. There is no separate tracing infrastructure to align, no out-of-band state to reconstruct.
+
+## The EffectValue Type 
 
 **`value`**: the propagating effect's payload, wrapped in an `EffectValue<T>` enum:
 
@@ -34,9 +44,9 @@ pub enum EffectValue<T> {
 }
 ```
 
-The variants are not arbitrary. `None` is an explicit *no effect*. `Value(T)` is the everyday case. `ContextualLink` says "the value is whatever the Context says it is at these two ids" and defers the fetch. `RelayTo` is a dispatch command: route this effect to the rule at index N. `Map` carries a labelled bundle of sub-effects, useful for branching results.
+`None` is an explicit *no effect*. `Value(T)` is the everyday case. `ContextualLink` says "the value is whatever the Context says it is at these two ids" and defers the fetch. `RelayTo` is a dispatch command: route this effect to the rule at index N. `Map` carries a labelled bundle of sub-effects.
 
-A Causaloid's wrapped function returns a `PropagatingEffect<T>` whose `value` is one of those variants. The richer variants exist so that downstream rules can do work the upstream rule could not yet do, without losing the audit trail in between.
+A Causaloid's wrapped function returns a `PropagatingEffect<T>` whose `value` is one of those variants. The richer variants exist so that downstream rules can do work the upstream rule without losing the audit trail in between.
 
 **`state`**: caller-supplied state threaded through the chain. For the stateless case, `State = ()` and the field carries no information.
 
@@ -100,18 +110,16 @@ The `error` field is checked before this match. The `logs` field is appended to 
 
 ## Why a five-field record
 
-Most libraries pick two or three of the five and put the rest somewhere else. State sits in a parent struct, errors propagate through `Result`, logs live in a tracing subscriber, contexts hide inside thread locals. That works until you need to reason about the chain as a whole, at which point the pieces have to be reassembled from scattered sources.
+The five fields are the irreducible set. Drop any one and a contribution from the list above collapses:
 
-DeepCausality keeps the five together because the chain *is* the five together. A test that replays an effect off disk has everything. A debugger that wants to step backward through a propagation has everything. A counterfactual run that swaps the Context has everything except the Context, which it now controls.
+- Without **`value`** there is nothing to propagate.
+- Without **`state`** the Markovian case cannot be expressed without a separate type, and the unification falls apart.
+- Without **`context`** spatial, temporal, and symbolic conditioning leak out into ambient state.
+- Without **`error`** the chain cannot short-circuit cleanly, and partial-failure replay becomes guesswork.
+- Without **`logs`** audit and replay stop being intrinsic and become an external concern again.
 
-## Common patterns
-
-**Branching with `Map`.** A rule that needs to fan out to multiple downstream Causaloids returns `EffectValue::Map(parts)` where `parts` is a labelled bundle. Each label corresponds to a downstream rule.
-
-**Deferred resolution with `ContextualLink`.** A rule that knows *which Context nodes to compare* but not *what the answer is yet* returns `EffectValue::ContextualLink(a, b)`. A later rule, perhaps after the Context has been refreshed, resolves the link.
-
-**Explicit dispatch with `RelayTo`.** A graph that wants conditional dispatch (rule A goes to rule B if condition X, rule C otherwise) emits `RelayTo(idx, sub_effect)` to route the effect.
+DeepCausality keeps the five together to enable verifiable end to end reasoning. A test that replays an effect off disk has everything. A debugger that wants to step backward through a propagation has everything for fine grained diagnistic.
 
 ## Where to look next
 
-[Causal Monad](/docs/concepts/causal-monad/) is the algebra that composes processes. [HKT](/docs/concepts/hkt/) is how the algebra is encoded in Rust's type system. [Causaloid](/docs/concepts/causaloid/) is what produces the processes in the first place.
+[Causal Monad](/docs/concepts/causal-monad/) is the algebra that composes processes. [HKT](/docs/concepts/hkt/) is how the algebra is encoded in Rust's type system. [Causaloid](/docs/concepts/causaloid/) is what produces the processes in the first place. [Effect Ethos](/docs/concepts/effect-ethos/) is what verifies the actions an EPP chain ultimately proposes. The [Effect Propagation Process preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/effect_propagation_process/epp.pdf) is the formal treatment of the model this page implements.

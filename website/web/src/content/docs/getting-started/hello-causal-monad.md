@@ -5,18 +5,16 @@ section: getting-started
 order: 2
 ---
 
-The Causaloid is the unit. The Context is the environment. The thing that flows between Causaloids, threading through them with value, state, context, errors, and an audit log, is the Causal Monad.
-
-This page introduces the monad on its own, before any Causaloid appears, because everything else in the library composes on top of `pure` and `bind`. Understanding those two operations once is enough to read every other example.
+This page introduces the monad on its own, before any Causaloid appears, because everything else in the library composes on top of `pure` and `bind`. Understanding those two operations is important to read every other example.
 
 ## What a monad is
 
 A monad is two operations:
 
-- **`pure(v)`**: wrap a plain value in the monad. Trivial.
+- **`pure(v)`**: wrap a plain value in the monad.
 - **`bind(m, f)`**: given a wrapped value and a function that *also* produces a wrapped value, chain them. The function gets to see the unwrapped value, and its result becomes the next link in the chain.
 
-That's it. Everything else follows from those two operations satisfying three identities (the *monad laws*). The library encodes both operations on the [`CausalEffectPropagationProcess`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core) struct, which is what the Causal Monad threads through.
+Everything else follows from those two operations satisfying three identities (the *monad laws*). The library encodes both operations on the [`CausalEffectPropagationProcess`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core) struct, which is what the Causal Monad threads through.
 
 ## The smallest possible program
 

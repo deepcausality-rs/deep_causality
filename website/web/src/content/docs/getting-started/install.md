@@ -5,11 +5,11 @@ section: getting-started
 order: 1
 ---
 
-DeepCausality is a workspace of twenty independently published crates. Pick only the ones you need.
+DeepCausality is a workspace of twenty independently published crates. Pick what you need.
 
 ## Prerequisites
 
-DeepCausality targets the Rust 2024 edition and requires a stable toolchain at version 1.90 or newer:
+DeepCausality targets the Rust 2024 edition:
 
 ```bash
 rustup update stable
