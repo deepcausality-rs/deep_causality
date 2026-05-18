@@ -88,15 +88,56 @@ const sourceHref = source ? `${repoBase}/${source}` : undefined;
   .ex-body :global(h2) { margin: var(--space-7) 0 var(--space-3); }
   .ex-body :global(h3) { margin: var(--space-6) 0 var(--space-2); }
   .ex-body :global(p) { color: var(--fg-1); max-width: var(--measure); }
+  /* Code listings get the same HUD-frame treatment as the home-page
+     example panel and the community cards: subtle vertical gradient
+     (via background-image to bypass the global `!important`
+     background-color on pre.astro-code), border + shadow, scoped
+     scrollbars, and an accent-colored L-bracket on all four corners. */
   .ex-body :global(pre) {
-    background: var(--bg-2);
+    position: relative;
+    background-image: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--bg-2) 80%, transparent) 0%,
+      var(--bg-2) 100%
+    );
     border: 1px solid var(--line-1);
     border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
     padding: var(--space-5);
-    overflow: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
     margin: var(--space-4) 0;
     font-size: var(--t-mono-block);
     line-height: var(--lh-body);
+    /* Hide scrollbars completely on both axes while keeping scroll
+       capability — matches the front-page panel that never shows a bar. */
+    scrollbar-width: none;
+  }
+  .ex-body :global(pre)::-webkit-scrollbar { display: none; }
+
+  /* One ::before paints all four accent L-brackets via a four-layer mask
+     filled with --accent. */
+  .ex-body :global(pre)::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    pointer-events: none;
+    z-index: 1;
+    background-color: var(--accent);
+    --l-tl: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M15 1 H1 V15' fill='none' stroke='black' stroke-width='2'/></svg>");
+    --l-tr: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M1 1 H15 V15' fill='none' stroke='black' stroke-width='2'/></svg>");
+    --l-bl: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M15 15 H1 V1' fill='none' stroke='black' stroke-width='2'/></svg>");
+    --l-br: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M1 15 H15 V1' fill='none' stroke='black' stroke-width='2'/></svg>");
+    -webkit-mask:
+      var(--l-tl) top left / 14px 14px no-repeat,
+      var(--l-tr) top right / 14px 14px no-repeat,
+      var(--l-bl) bottom left / 14px 14px no-repeat,
+      var(--l-br) bottom right / 14px 14px no-repeat;
+    mask:
+      var(--l-tl) top left / 14px 14px no-repeat,
+      var(--l-tr) top right / 14px 14px no-repeat,
+      var(--l-bl) bottom left / 14px 14px no-repeat,
+      var(--l-br) bottom right / 14px 14px no-repeat;
   }
   .ex-body :global(pre code) { background: transparent; padding: 0; }
   .ex-body :global(ul) { color: var(--fg-1); }

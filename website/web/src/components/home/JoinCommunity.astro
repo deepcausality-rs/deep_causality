@@ -26,7 +26,11 @@ const links = [
 
     <div class="community-row">
       {links.map((l) => (
-        <a class="community-card" href={l.href} rel="noopener noreferrer" target="_blank">
+        <a class="community-card reticle-host" href={l.href} rel="noopener noreferrer" target="_blank">
+          <span class="reticle reticle-tl" aria-hidden="true"></span>
+          <span class="reticle reticle-tr" aria-hidden="true"></span>
+          <span class="reticle reticle-bl" aria-hidden="true"></span>
+          <span class="reticle reticle-br" aria-hidden="true"></span>
           <span class="community-icon" aria-hidden="true">
             {l.icon === 'github' ? (
               <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -72,13 +76,20 @@ const links = [
   }
 
   .community-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
     padding: var(--space-5) var(--space-5) var(--space-4);
-    background: var(--bg-1);
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--bg-1) 70%, transparent) 0%,
+        var(--bg-1) 100%
+      );
     border: 1px solid var(--line-1);
     border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
     color: var(--fg-0);
     border-bottom: 1px solid var(--line-1);
     transition: border-color var(--dur-fast) var(--ease-out),
@@ -88,7 +99,12 @@ const links = [
   .community-card:hover {
     border-color: var(--line-2);
     border-bottom-color: var(--line-2);
-    background: color-mix(in srgb, var(--bg-1) 92%, var(--accent));
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--bg-1) 70%, transparent) 0%,
+        color-mix(in srgb, var(--bg-1) 92%, var(--accent)) 100%
+      );
     transform: translateY(-1px);
   }
 

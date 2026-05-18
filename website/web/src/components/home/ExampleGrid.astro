@@ -48,13 +48,16 @@ import { examples } from './examples';
         >
           <header class="panel-head">
             <h3 class="panel-headline">{ex.headline}</h3>
-            <a class="panel-open" href={`/examples/${ex.slug}/`}>
-              Open example <span aria-hidden="true">→</span>
-            </a>
           </header>
           <div class="panel-code">
             <Code code={ex.snippet} lang="rust" themes={{ light: 'github-light', dark: 'github-dark' }} defaultColor={false} />
           </div>
+          <footer class="panel-foot">
+            <a class="panel-open" href={`/examples/${ex.slug}/`}>
+              <span>Open example</span>
+              <span aria-hidden="true">→</span>
+            </a>
+          </footer>
         </article>
       ))}
     </div>
@@ -237,6 +240,7 @@ import { examples } from './examples';
 
   /* Panel */
   .panel { padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); }
+  .panel[hidden] { display: none; }
   @media (min-width: 720px) { .panel { padding: var(--space-6); } }
 
   .panel-head {
@@ -256,6 +260,17 @@ import { examples } from './examples';
     color: var(--fg-0);
     font-weight: 540;
     max-width: 60ch;
+    /* Reserve room for up to two lines so the frame height stays constant. */
+    min-height: calc(var(--t-h3) * 1.25 * 2);
+  }
+  /* Footer: separator that spans only the code-box width (i.e. the panel
+     content area, not the full frame), with the action link below it. */
+  .panel-foot {
+    border-top: 1px solid var(--line-1);
+    padding-top: var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
   .panel-open {
     color: var(--accent);
@@ -263,11 +278,18 @@ import { examples } from './examples';
     white-space: nowrap;
     text-decoration: none;
     border-bottom: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    width: 100%;
     transition: border-color var(--dur-fast) var(--ease-out);
   }
   .panel-open:hover { border-bottom-color: var(--accent); }
 
-  /* Code area: snug border, reticle-style corner accents, scoped scroll. */
+  /* Code area: snug border, reticle-style corner accents, scoped scroll.
+     Fixed height keeps the outer frame stable as tabs swap; the inner code
+     scrolls if a snippet is taller than the box. */
   .panel-code {
     position: relative;
     background: var(--bg-2);
@@ -277,7 +299,9 @@ import { examples } from './examples';
     font-size: 14px;
     line-height: 1.55;
     overflow: hidden;
+    height: 360px;
   }
+  @media (min-width: 720px) { .panel-code { height: 460px; } }
   .panel-code::before,
   .panel-code::after {
     content: '';
@@ -299,7 +323,8 @@ import { examples } from './examples';
   .panel-code :global(pre) {
     background: transparent !important;
     margin: 0;
-    overflow-x: auto;
+    height: 100%;
+    overflow: auto;
   }
   .panel-code :global(code) {
     font-family: var(--font-mono);
