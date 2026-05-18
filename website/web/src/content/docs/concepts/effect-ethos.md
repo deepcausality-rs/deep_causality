@@ -5,7 +5,7 @@ section: concepts
 order: 4
 ---
 
-A Causaloid or Causal Monad determines what the system *infers*. The [Causal State Machine](/docs/concepts/csm/) (CSM) translates that inference into a proposed action. The Effect Ethos says whether that proposed action is *allowed to execute*. The three layers encode different responsibilites.
+A Causaloid or Causal Monad determines what the system *infers*. The [Causal State Machine](/docs/concepts/csm/) (CSM) translates that inference into a proposed action. The Effect Ethos says whether that proposed action is *allowed to execute*. The three layers encode different responsibilities.
 
 ## The three-layer flow
 
@@ -23,7 +23,7 @@ The Effect Ethos exists because dynamic, emergent causality is intrinsically non
 
 The realization was that every action the system is about to take needs an independent check, expressed in rules that do not change while the reasoning evolves. The check has to handle conflicting rules, audit trails, and overrides without losing determinism. That is a deontic problem, not a causal one, and it had already been studied.
 
-The answer came from Olson, Salas-Damian, and Forbus at Northwestern University in [*A Defeasible Deontic Calculus for Resolving Norm Conflicts*](https://github.com/deepcausality-rs/deep_causality/blob/main/docs/papers/ddic.pdf). The paper introduces the Defeasible Deontic Inheritance Calculus (DDIC): a formalism for resolving a continuous stream of possibly conflicting norms. It defines the three deontic modalities (Obligatory, Optional, Impermissible), characterizes the three conflict types (direct, indirect, intersecting), and proves that three resolution heuristics (Lex Specialis, Lex Posterior, Lex Superior) are sufficient to axiomatize conflict resolution under deontic inheritance. The paper goes further and shows that one widely used multi-agent strategy is a red herring once defeasance is modelled correctly.
+The answer came from Olson, Salas-Damian, and Forbus at Northwestern University in [*A Defeasible Deontic Calculus for Resolving Norm Conflicts*](https://github.com/deepcausality-rs/deep_causality/blob/main/docs/papers/ddic.pdf). The paper introduces the Defeasible Deontic Inheritance Calculus (DDIC): a formalism for resolving a continuous stream of possibly conflicting norms. It defines the three deontic modalities (Obligatory, Optional, Impermissible), characterizes the three conflict types (direct, indirect, intersecting), and proves that three resolution heuristics (Lex Specialis, Lex Posterior, Lex Superior) are sufficient to axiomatize conflict resolution under deontic inheritance. The paper goes further and shows that one widely used multi-agent strategy is a red herring once defeasance is modeled correctly.
 
 The Effect Ethos is an implementation of DDIC inside DeepCausality. A `Teloid` is one norm tuple from the calculus. The `TeloidGraph` carries the inheritance and defeasance edges DDIC requires. `evaluate_action` runs the activation, conflict detection, and resolution steps from the paper, in the order DDIC prescribes, and returns a `Verdict` whose justification field is the audit trail the formalism implies. The mapping is intentional. DDIC gave a theoretically justified axiomatization of norm conflict detection and resolution; the Effect Ethos makes it runnable, embeds it in a typed context, and wires it to the Causal State Machine so that every proposed action passes through the calculus before it executes.
 

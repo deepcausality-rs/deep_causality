@@ -11,7 +11,7 @@ This page walks through the smallest program that exercises [`Causaloid`](https:
 
 A Causaloid is a self-contained unit of causality. It carries an identifier, a human-readable description, and a causal function from an input value to a [`PropagatingEffect`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core). Causaloids compose isomorphic-recursively into Collections and hypergraphs that share the same trait surface, which is what the [Causaloid concept page](/docs/concepts/causaloid/) covers in full.
 
-For this exampke you only need a simple causaloid.
+For this example you only need a simple causaloid.
 
 ## A first Causaloid
 
@@ -89,7 +89,7 @@ A `PropagatingEffect`'s `value` field is an [`EffectValue<T>`](https://github.co
 - `None`: the explicit absence of a value.
 - `ContextualLink(id1, id2)`: a deferred reference into the Context.
 - `RelayTo(idx, effect)`: a dispatch command that routes the effect to a different node in the graph. This is what powers adaptive reasoning.
-- `Map(parts)`: a labelled bundle of sub-effects for fan-out.
+- `Map(parts)`: a labeled bundle of sub-effects for fan-out.
 
 You typically pattern-match on the variant you expect:
 

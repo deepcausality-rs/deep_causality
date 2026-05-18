@@ -7,7 +7,7 @@ order: 11
 
 DeepCausality treats algebra, geometry, topology, and effect propagation as a single mathematical surface. The same `Functor`, `Monad`, and `CoMonad` operations run over tensors, multivectors, manifolds, sparse matrices, and propagating effects. Two crates do the work: [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_haft) provides the Higher-Kinded Type machinery; [`deep_causality_num`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_num) provides the algebraic trait floor that the math containers stand on.
 
-## Why Uniform Mathematic matters
+## Why Uniform Mathematics matters
 
 Scientific code typically pays a hidden tax: every time the math crosses a domain (a mesh walk to a tensor contraction, a tensor to a rotor, a rotor back to a scalar field), the developer writes bridge code. Indices get repacked. Loops get rewritten. The contraction lives in one library, the rotation in another, the per-vertex traversal in a third. Each crossing is a place where bugs hide and where one library's conventions clash with another's.
 
@@ -19,6 +19,55 @@ The practical consequences are real:
 - **Cross-domain pipelines stay readable.** Mesh walk and tensor algebra and rotor application can share a single closure. The structure of the code matches the structure of the math.
 - **Numerical precision becomes a parameter, not an assumption.** Because the algebraic floor is generic, every container honors the same `RealField` / `Field` / `Ring` traits, and the float type can be changed in one place.
 - **Algebraic laws are compile-time guarantees.** A type that is not associative cannot be passed where associativity is required. The compiler enforces what mathematicians prove by hand.
+
+## A concrete example: GRMHD
+
+The [`grmhd`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples/grmhd) example (General Relativistic Magnetohydrodynamics) is the sharpest demonstration of what the unification enables. It couples a general-relativity solver to a plasma physics solver, picks a metric signature dynamically based on local spacetime curvature, computes the Lorentz force in the selected geometry, and feeds the electromagnetic stress-energy back into the spacetime metric. Every one of those steps lives in a different mathematical regime. They are composed by a `bind` chain over the Causal Monad:
+
+```rust
+let result: PropagatingEffect<GrmhdState> = PropagatingEffect::pure(GrmhdState::new(&config))
+    .bind(|state, _, _| {
+        // [Step 1] GR Solver — tensor algebra.
+        // Builds the Schwarzschild metric g_uv and Ricci tensor,
+        // contracts them into the Einstein tensor G_uv = R_uv - ½ R g_uv.
+        model::calculate_curvature(state.into_value().unwrap_or_default())
+    })
+    .bind(|state, _, _| {
+        // [Step 2] Causal coupling — metric-signature selection.
+        // Branches on curvature intensity and picks Metric::Minkowski(4)
+        // (relativistic regime) or Metric::Euclidean(3) (classical regime).
+        model::select_metric(state.into_value().unwrap_or_default())
+    })
+    .bind(|state, _, _| {
+        // [Step 3] MHD Solver — Clifford Algebra.
+        // Wraps the current J and magnetic field B as CausalMultiVector<f64>
+        // in the metric chosen above, then computes F = J ∧ B as a bivector
+        // through the Clifford geometric product.
+        model::calculate_lorentz_force(state.into_value().unwrap_or_default())
+    })
+    .bind(|state, _, _| {
+        // [Step 4] GRMHD coupling — back to tensor algebra.
+        // Builds the EM field strength tensor F^uv (rank-2 CausalTensor)
+        // and contracts it with the spacetime metric g_uv from Step 1
+        // to produce the EM stress-energy tensor T^uv.
+        model::calculate_energy_momentum(state.into_value().unwrap_or_default())
+    })
+    .bind(|state, _, _| {
+        // [Step 5] Stability analysis
+        // Scalar branching on the bivector intensity.
+        model::analyze_stability(state.into_value().unwrap_or_default())
+    });
+```
+
+Look at what the chain crosses. Step 1 is pure tensor algebra in `deep_causality_tensor`. Step 2 makes a runtime decision in `deep_causality_metric` that changes the geometry of the next step. Step 3 leaves tensor algebra entirely and computes in Clifford / geometric algebra through `deep_causality_multivector`. Step 4 returns to tensor algebra, but now coupled to the same spacetime metric produced in Step 1, which is what closes the GRMHD feedback loop. Step 5 is ordinary Rust.
+
+With the uniform surface, `CausalTensor` and `CausalMultiVector` and `Metric` are all Functor / Monad instances over the same `PropagatingEffect` carrier. The Causal Monad's `bind` is the only composition operator. Each stage consumes a `GrmhdState` and returns an updated `GrmhdState` wrapped in a `PropagatingEffect`, regardless of which mathematical regime it works in. The pipeline reads like the physics: curvature → metric selection → Lorentz force → stress-energy → stability.
+
+This is what "uniform mathematical foundation" means in practice. It is the ability to write a five-stage GR-plus-plasma simulation as a five-line monadic chain, with the type system enforcing dimensional consistency and the algebraic floor guaranteeing that every step uses the same scalar field at the same precision.
+
+The [`mathematics_examples`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples) tree extends the same composition further: a Kalman predict-correct chain mixing tensor and rotor steps, a heat equation alternating `extend` for the spatial Laplacian with `bind` for the time step, and the `capstone_spinor_minkowski` example parallel-transporting a unit timelike spinor through `Cl(3,1)` along a discretized worldline. Same composition law in every case.
+
+The uniform mathematical foundation is enabled by two distinct capabilities on the Deep Causality Project: Higher kinder types and an algebraic trait hierarchy.
 
 ## HKT in Rust via the witness pattern
 
@@ -39,8 +88,6 @@ Higher-arity traits (`HKT2` through `HKT5`) handle type constructors with more t
 
 A type-encoded effect system sits on top of the multi-arity HKTs. `Effect3`/`Effect4`/`Effect5` plus `MonadEffect3`/`MonadEffect4`/`MonadEffect5` let an effect type carry a primary value plus several fixed channels (error, log, trace) through `pure` and `bind`. The compiler checks that effects are handled or propagated; nothing leaks implicitly.
 
-## The witness table for the math crates
-
 The same pattern lifts the math containers into the same surface:
 
 | Domain | Type | Witness | Role |
@@ -55,38 +102,8 @@ Each one implements `Functor` and `Monad` through HAFT. `Manifold` additionally 
 
 Adjunctions (`BoundedAdjunction`) formally link Geometry (Multivectors) and Topology (Manifolds), so a problem stated in one category can be translated to the other along a typed bridge rather than ad-hoc glue.
 
-## A concrete example: three crates, one closure
 
-The [`triple_hkt_stress_field`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples/triple_hkt_stress_field) example is the clearest demonstration of why the unification pays off. It runs a six-step linear-elastic stress pipeline on a 3D simplicial mesh and produces per-vertex von Mises stress in Pascals. The interesting part is that the entire pipeline lives inside one `ManifoldWitness::extend` call:
-
-```rust
-let result = ManifoldWitness::extend(&manifold, |w| {
-    let i = w.cursor();
-    if i >= N_VERTICES { return 0.0; }
-
-    let strain   = prescribed_strain(i);                                 // STEP 1
-    let stress   = hooke_isotropic(&strain, lambda, mu);                 // STEP 2  (tensor)
-    let normal   = vertex_normal(i);                                     // STEP 3
-    let traction = cauchy_traction(&stress, &normal);                    // STEP 4  (tensor)
-    let _t_local = rotate_into_frame(&traction, &rotor, &rotor_rev);     // STEP 5  (multivector)
-    von_mises(&stress)                                                   // STEP 6
-});
-```
-
-Three crates participate in that closure:
-
-- **`deep_causality_topology`** supplies the manifold and the per-vertex walk. `extend` is the comonadic operation that focuses each vertex in turn and exposes its neighborhood.
-- **`deep_causality_tensor`** runs the constitutive law (Hooke's law mapping strain to stress) and the Cauchy traction contraction `t_i = σ_ij n_j` via `EinSumOp`.
-- **`deep_causality_multivector`** applies the material-frame rotor sandwich `R t R~` in `Cl(3,0)`. The rotor is a Clifford-algebra multivector; the rotation is a geometric product.
-
-
-With the uniform surface, `extend` walks the mesh. The tensor and multivector operations run on the focused value. The same closure that computes `stress` consumes a tensor and returns a tensor; the same closure that rotates `traction` consumes a multivector and returns a multivector. The composition is the closure body.
-
-The same pattern scales. Replace the placeholder strain with a real displacement field; replace isotropic Hooke with J2 plasticity; replace the fixed rotor with a per-vertex material frame from a polar decomposition. The `extend` skeleton stays the same. Each step is a standalone function that the closure stitches together through ordinary Rust composition. The cross-crate algebra is the language of the closure, not a feature of any one step.
-
-The [`effect_kalman_predict_correct`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples/effect_kalman_predict_correct), [`effect_diffusion_on_manifold`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples/effect_diffusion_on_manifold), and [`capstone_spinor_minkowski`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples/capstone_spinor_minkowski) examples push the same composition further: a Kalman predict-correct chain mixes tensor and rotor steps under a monadic `bind`; a heat equation alternates `extend` for the spatial Laplacian and `bind` for the time step; the capstone parallel-transports a unit timelike spinor along a discretized Minkowski worldline by composing all three crates plus the causal monad. Same composition law in every case.
-
-## The algebraic trait floor
+## The algebraic trait hierarchy
 
 The numeric layer underneath ships an explicit algebraic hierarchy in [`deep_causality_num`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_num). The trait names follow standard abstract algebra:
 

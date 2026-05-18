@@ -20,7 +20,7 @@ A useful intuition is a ripple in a pond. One ripple is an effect. It propagates
 
 ## Classical methods drop out of the same axiom
 
-Pearl's Structural Causal Models, dynamic Bayesian networks, Granger causality, the Rubin causal model, and conditional average treatment effects are all parametric specializations of this one axiom. Setting the monadic context to the unit type and applying three further restrictions on the carried function recovers Pearl's classical definition exactly. The [classical causality examples](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples) walks you through implementing any of the classical methods of computational causality expressed via DeepCausality.
+Pearl's Structural Causal Models, dynamic Bayesian networks, Granger causality, the Rubin causal model, and conditional average treatment effects are all parametric specializations of this one axiom. Setting the monadic context to the unit type and applying three further restrictions on the carried function recovers Pearl's classical definition exactly. The [classical causality examples](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples) walk you through implementing any of the classical methods of computational causality expressed via DeepCausality.
 
 ## Where to go from here
 

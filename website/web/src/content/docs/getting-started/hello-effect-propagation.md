@@ -80,6 +80,6 @@ The [flight envelope monitor example](https://github.com/deepcausality-rs/deep_c
 
 ## What this enables
 
-Most of the advanced examples in the repository depend on this composition. The pattern is the same in each: a Causaloid (Singleton, Collection, or Graph) supplies the structural reasoning, and a Causal Monad bind-chain sequences the rest, both sharing the same propagating-effect carrier. The boundary between "structural" and "sequential" is fluid and you can move that boundary as the problem evolves. Start with a simple non-Markovian causal monad. Add structure later with a causaloid,  At state later into the Markovian part of the chain, and then combine all parts fluently.
+Most of the advanced examples in the repository depend on this composition. The pattern is the same in each: a Causaloid (Singleton, Collection, or Graph) supplies the structural reasoning, and a Causal Monad bind-chain sequences the rest, both sharing the same propagating-effect carrier. The boundary between "structural" and "sequential" is fluid and you can move that boundary as the problem evolves. Start with a simple non-Markovian causal monad. Add structure later with a Causaloid. Add state later into the Markovian part of the chain, and then combine all parts fluently.
 
 The concept pages on [Causaloid](/docs/concepts/causaloid/), [Causal Monad](/docs/concepts/causal-monad/), and [Effect Propagation Process](/docs/concepts/effect-propagation-process/) go deeper on the algebra. The [examples](/examples/) put the composition to work.

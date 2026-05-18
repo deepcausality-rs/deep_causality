@@ -44,9 +44,9 @@ pub enum EffectValue<T> {
 }
 ```
 
-`None` is an explicit *no effect*. `Value(T)` is the everyday case. `ContextualLink` says "the value is whatever the Context says it is at these two ids" and defers the fetch. `RelayTo` is a dispatch command: route this effect to the rule at index N. `Map` carries a labelled bundle of sub-effects.
+`None` is an explicit *no effect*. `Value(T)` is the everyday case. `ContextualLink` says "the value is whatever the Context says it is at these two ids" and defers the fetch. `RelayTo` is a dispatch command: route this effect to the rule at index N. `Map` carries a labeled bundle of sub-effects.
 
-A Causaloid's wrapped function returns a `PropagatingEffect<T>` whose `value` is one of those variants. The richer variants exist so that downstream rules can do work the upstream rule without losing the audit trail in between.
+A Causaloid's wrapped function returns a `PropagatingEffect<T>` whose `value` is one of those variants. The richer variants exist so that downstream rules can do work for the upstream rule without losing the audit trail in between.
 
 **`state`**: caller-supplied state threaded through the chain. For the stateless case, `State = ()` and the field carries no information.
 
@@ -118,7 +118,7 @@ The five fields are the irreducible set. Drop any one and a contribution from th
 - Without **`error`** the chain cannot short-circuit cleanly, and partial-failure replay becomes guesswork.
 - Without **`logs`** audit and replay stop being intrinsic and become an external concern again.
 
-DeepCausality keeps the five together to enable verifiable end to end reasoning. A test that replays an effect off disk has everything. A debugger that wants to step backward through a propagation has everything for fine grained diagnistic.
+DeepCausality keeps the five together to enable verifiable end-to-end reasoning. A test that replays an effect off disk has everything. A debugger that wants to step backward through a propagation has everything for fine-grained diagnostics.
 
 ## Where to look next
 

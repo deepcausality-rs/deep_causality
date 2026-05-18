@@ -5,11 +5,11 @@ section: getting-started
 order: 4
 ---
 
-The Causaloid in the [previous page](/docs/getting-started/hello-causaloid/) took an input and returned an effect. That covers a surprising amount of practical work. Howeve, it stops the moment a rule needs to know something about the world beyond its input.  The [`Context`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality) is the explicit place that world lives.
+The Causaloid in the [previous page](/docs/getting-started/hello-causaloid/) took an input and returned an effect. That covers a surprising amount of practical work. However, it stops the moment a rule needs to know something about the world beyond its input. The [`Context`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality) is the explicit place that world lives.
 
 ## What a Context is
 
-A Context is a typed weighted hypergraph whose nodes are `Contextoid`s, each one carrying a typed payload: data, space, time, spacetime, or symbolic. The graph can be queried by id, walked along its edges, and mutated in place. Mutating it is the *dynamic* in dynamic causality: the same Causaloid evaluated against a new Context yields a new propagating effect. The [Context concept page](/docs/concepts/context/) explain this further..
+A Context is a typed weighted hypergraph whose nodes are `Contextoid`s, each one carrying a typed payload: data, space, time, spacetime, or symbolic. The graph can be queried by id, walked along its edges, and mutated in place. Mutating it is the *dynamic* in dynamic causality: the same Causaloid evaluated against a new Context yields a new propagating effect. The [Context concept page](/docs/concepts/context/) explains this further.
 
 The `BaseContext` alias pins the seven generic parameters of `Context` to a sensible Euclidean default, which is what every example below uses. The base context lives in [`deep_causality`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality) and is built on top of the [`ultragraph`](https://github.com/deepcausality-rs/deep_causality/tree/main/ultragraph) hypergraph backend.
 

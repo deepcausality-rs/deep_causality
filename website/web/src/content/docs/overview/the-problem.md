@@ -5,7 +5,7 @@ section: overview
 order: 2
 ---
 
-Classical computational causality, pioneered by Judea Pearl and others, is powerful, well-validated, and covers a large class of useful problems. However, classical computational causality roots in three assumptions that prevent its application to dynamic systems.
+Classical computational causality, pioneered by Judea Pearl and others, is powerful, well-validated, and covers a large class of useful problems. However, classical computational causality is rooted in three assumptions that prevent its application to dynamic systems.
 
 ## The classical way of thinking
 
