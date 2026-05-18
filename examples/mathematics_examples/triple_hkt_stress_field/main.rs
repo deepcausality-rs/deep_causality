@@ -66,26 +66,31 @@ const VERTICES: [[FloatType; 3]; 5] = [
 ];
 
 /// Sorted-order tetrahedra.
-const TETS: [[usize; 4]; 2] = [
-    [0, 1, 2, 3],
-    [1, 2, 3, 4],
-];
+const TETS: [[usize; 4]; 2] = [[0, 1, 2, 3], [1, 2, 3, 4]];
 
 /// 9 distinct edges.
 const EDGES: [[usize; 2]; 9] = [
-    [0, 1], [0, 2], [0, 3],
-    [1, 2], [1, 3], [1, 4],
-    [2, 3], [2, 4],
+    [0, 1],
+    [0, 2],
+    [0, 3],
+    [1, 2],
+    [1, 3],
+    [1, 4],
+    [2, 3],
+    [2, 4],
     [3, 4],
 ];
 
 /// 7 distinct triangles. The interior one is [1,2,3] (shared by both tets).
 const TRIANGLES: [[usize; 3]; 7] = [
-    [0, 1, 2], [0, 1, 3], [0, 2, 3],
+    [0, 1, 2],
+    [0, 1, 3],
+    [0, 2, 3],
     [1, 2, 3], // shared interior face
-    [1, 2, 4], [1, 3, 4], [2, 3, 4],
+    [1, 2, 4],
+    [1, 3, 4],
+    [2, 3, 4],
 ];
-
 
 fn main() {
     println!("=== Triple HKT: 3D Stress Analysis Blueprint ===");
@@ -262,14 +267,7 @@ fn prescribed_strain(vertex_idx: usize) -> Sym3 {
     let [x, _y, _z] = VERTICES[vertex_idx];
     // Uniaxial stretch in x with the corresponding Poisson contraction in
     // y and z, plus a shear term to exercise the off-diagonal components.
-    [
-        1.0e-3 * x,
-        -0.3e-3 * x,
-        -0.3e-3 * x,
-        0.5e-3 * x,
-        0.0,
-        0.0,
-    ]
+    [1.0e-3 * x, -0.3e-3 * x, -0.3e-3 * x, 0.5e-3 * x, 0.0, 0.0]
 }
 
 // ============================================================================
@@ -341,9 +339,8 @@ fn mesh_centroid() -> [FloatType; 3] {
 // anisotropic stiffness response.
 fn cauchy_traction(stress: &Sym3, normal: &[FloatType; 3]) -> [FloatType; 3] {
     let sigma_full = vec![
-        stress[0], stress[3], stress[4],
-        stress[3], stress[1], stress[5],
-        stress[4], stress[5], stress[2],
+        stress[0], stress[3], stress[4], stress[3], stress[1], stress[5], stress[4], stress[5],
+        stress[2],
     ];
     let sigma_tensor = CausalTensor::new(sigma_full, vec![3, 3]).unwrap();
     let normal_tensor = CausalTensor::new(normal.to_vec(), vec![3]).unwrap();
@@ -413,8 +410,7 @@ fn von_mises(sigma: &Sym3) -> FloatType {
     let s12 = sigma[3];
     let s13 = sigma[4];
     let s23 = sigma[5];
-    let dev_sq = 0.5
-        * ((s11 - s22).powi(2) + (s22 - s33).powi(2) + (s33 - s11).powi(2))
+    let dev_sq = 0.5 * ((s11 - s22).powi(2) + (s22 - s33).powi(2) + (s33 - s11).powi(2))
         + 3.0 * (s12 * s12 + s13 * s13 + s23 * s23);
     dev_sq.sqrt()
 }
