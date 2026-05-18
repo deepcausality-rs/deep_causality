@@ -13,7 +13,7 @@
         Built around three primitives: the causal monad, the causaloid, and the context.
       </p>
       <div class="cta">
-        <a class="btn btn-primary" href="/docs/getting-started/install/">Read the docs</a>
+        <a class="btn btn-primary" href="/docs/getting-started/install/">Get started</a>
         <a class="btn btn-ghost" href="https://github.com/deepcausality-rs/deep_causality">View on GitHub <span aria-hidden="true">→</span></a>
       </div>
     </div>
@@ -78,16 +78,36 @@
     border-radius: var(--radius-sm);
     border: 1px solid transparent;
     font-weight: 540;
-    border-bottom: none;
+    text-decoration: none;
     transition: transform var(--dur-fast) var(--ease-out),
                 background-color var(--dur-fast) var(--ease-out),
-                border-color var(--dur-fast) var(--ease-out);
+                border-color var(--dur-fast) var(--ease-out),
+                box-shadow var(--dur-fast) var(--ease-out);
   }
   .btn:active { transform: translateY(1px); }
-  .btn-primary { background: var(--accent); color: var(--accent-ink); }
-  .btn-primary:hover { background: color-mix(in srgb, var(--accent) 90%, white); }
-  .btn-ghost { color: var(--fg-0); border-color: var(--line-1); background: transparent; }
-  .btn-ghost:hover { border-color: var(--line-2); }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent);
+    box-shadow: 0 1px 0 0 color-mix(in srgb, var(--accent) 60%, black) inset,
+                0 1px 2px 0 color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+  .btn-primary:hover {
+    background: color-mix(in srgb, var(--accent) 90%, white);
+    border-color: color-mix(in srgb, var(--accent) 90%, white);
+    border-bottom-color: color-mix(in srgb, var(--accent) 90%, white);
+  }
+  .btn-ghost {
+    color: var(--fg-0);
+    border-color: var(--fg-2);
+    background: transparent;
+  }
+  .btn-ghost:hover {
+    border-color: var(--fg-1);
+    border-bottom-color: var(--fg-1);
+    color: var(--fg-0);
+    background: color-mix(in srgb, var(--fg-2) 8%, transparent);
+  }
 
   .hero-art-frame {
     border: 1px solid var(--line-1);
