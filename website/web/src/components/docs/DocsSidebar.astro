@@ -4,10 +4,8 @@ import { getCollection } from 'astro:content';
 const all = await getCollection('docs');
 const sections = [
   { id: 'getting-started', label: 'Getting started', sort: 'order' },
+  { id: 'overview', label: 'Overview', sort: 'order' },
   { id: 'concepts', label: 'Concepts', sort: 'alpha' },
-  { id: 'guides', label: 'Guides', sort: 'alpha' },
-  { id: 'reference', label: 'Reference', sort: 'alpha' },
-  { id: 'monograph', label: 'Monograph', sort: 'order' },
 ] as const;
 
 const grouped = sections.map((s) => {

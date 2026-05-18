@@ -1,14 +1,14 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
 ---
-<DocsLayout title="Documentation" description="DeepCausality documentation: getting started, concepts, guides, reference, monograph." sectionLabel="Overview">
-  <p>The documentation is organized into five sections.</p>
+<DocsLayout title="Documentation" description="DeepCausality documentation: getting started, overview, concepts, examples, monograph, API reference." sectionLabel="Overview">
+  <p>The documentation is organized into five entry points.</p>
   <ul>
-    <li><a href="/docs/getting-started/install/">Getting started</a> — install the crates and run your first Causaloid.</li>
-    <li><a href="/docs/concepts/dynamic-causality/">Concepts</a> — the eight ideas the rest of the library rests on.</li>
-    <li><a href="/docs/guides/cdl-pipeline/">Guides</a> — end-to-end walkthroughs of specific workflows.</li>
-    <li><a href="/docs/reference/deep_causality/">Reference</a> — one-page overview per published crate.</li>
-    <li><a href="/docs/monograph/">Monograph</a> — the six EPP preprint volumes that ground the formal theory.</li>
+    <li><a href="/docs/getting-started/install/">Getting started</a>: install the crates and run your first Causaloid.</li>
+    <li><a href="/docs/overview/why/">Overview</a>: what computational causality is, why classical methods break in dynamic systems, and the core idea behind DeepCausality.</li>
+    <li><a href="/docs/concepts/dynamic-causality/">Concepts</a>: the ideas the rest of the library rests on.</li>
+    <li><a href="/examples/">Examples</a>: end-to-end runnable programs across physics, aerospace, medicine, and foundations.</li>
+    <li><a href="https://github.com/deepcausality-rs/deep_causality/blob/main/papers/effect_propagation_process/epp.pdf">Monograph</a>: the EPP preprint and companion volumes that ground the formal theory.</li>
   </ul>
-  <p>The monograph in <code>papers/src/EPP/</code> remains canonical for the formal theory. The pages here are operational documentation aimed at engineers using the library day to day.</p>
+  <p>The exhaustive per-crate API reference lives on <a href="https://docs.rs/deep_causality">docs.rs</a>. The pages here are operational documentation aimed at engineers using the library day to day.</p>
 </DocsLayout>

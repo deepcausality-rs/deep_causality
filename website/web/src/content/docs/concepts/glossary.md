@@ -5,7 +5,7 @@ section: concepts
 order: 99
 ---
 
-This page is the single source of truth for terminology. The other concept pages link here. The monograph in `papers/src/EPP/` is the formal authority; this page is the operational synopsis.
+This page is the single source of truth for terminology. The other concept pages link here. The [EPP preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/effect_propagation_process/epp.pdf) and its companion volumes are the formal authority; this page is the operational synopsis.
 
 ## Core terms
 
@@ -13,7 +13,7 @@ This page is the single source of truth for terminology. The other concept pages
 
 **Causaloid Graph**: A directed graph whose nodes are Causaloids and whose edges express the order of evaluation. The result of evaluating the graph is the effect produced at its terminal node(s).
 
-**Causal Discovery Language (CDL)**: A typestate-builder pipeline that ingests observational data and produces a Causaloid graph. Lives in `deep_causality_discovery`. See [CDL](/docs/concepts/cdl/).
+**Causal Discovery Language (CDL)**: A typestate-builder pipeline that ingests observational data and produces a Causaloid graph. Lives in [`deep_causality_discovery`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_discovery). See [CDL](/docs/concepts/cdl/).
 
 **Causal Function**: The pure function a Causaloid wraps. Two signatures: stateless (`CausalFn<I, O>`) takes the input alone; contextual (`ContextualCausalFn<I, O, STATE, CTX>`) also receives a Context.
 
@@ -21,7 +21,7 @@ This page is the single source of truth for terminology. The other concept pages
 
 **Causal Reasoning**: The act of running one or more Causaloids against a Context and consuming the resulting propagating effect.
 
-**Causal State Machine (CSM)**: A higher-level construct that links recognized causal states to deterministic actions. Used in the Effect Ethos for separating inference from action. The monograph introduces it in `teleology.tex`.
+**Causal State Machine (CSM)**: A higher-level construct that links recognized causal states to deterministic actions. Used in the Effect Ethos for separating inference from action. Introduced in the [Teleology preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/teleology_effect_propagation_process/epp_teleology.pdf).
 
 **Context**: An explicit hypergraph encoding the environment in which Causaloids operate. Nodes are Contextoids; edges are typed relations. See [Context](/docs/concepts/context/).
 
@@ -31,32 +31,18 @@ This page is the single source of truth for terminology. The other concept pages
 
 **Dynamic Causality**: The library's framing of causality as a process whose structure (or context, or both) can evolve. The default operating mode. See [Dynamic Causality](/docs/concepts/dynamic-causality/).
 
-**Effect Ethos**: The verification layer that checks every causal effect against a set of named Teloids. Implements defeasible deontic inference with Lex Posterior, Lex Specialis, and Lex Superior. Lives in `deep_causality_ethos`. See [Effect Ethos](/docs/concepts/effect-ethos/).
+**Effect Ethos**: The verification layer that checks every causal effect against a set of named Teloids. Implements defeasible deontic inference with Lex Posterior, Lex Specialis, and Lex Superior. Lives in [`deep_causality_ethos`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_ethos). See [Effect Ethos](/docs/concepts/effect-ethos/).
 
 **Effect Log**: An append-only audit log carried by every `CausalEffectPropagationProcess`. Every Causaloid invocation contributes one entry; `bind` merges logs across the chain.
 
-**Effect Propagation Process (EPP)**: Both a concept and a literal type in code. The concept: the directed flow of effects through a Causaloid chain. The type: `CausalEffectPropagationProcess<Value, State, Context, Error, Log>` in `deep_causality_core`. See [Effect Propagation Process](/docs/concepts/effect-propagation-process/).
+**Effect Propagation Process (EPP)**: Both a concept and a literal type in code. The concept: the directed flow of effects through a Causaloid chain. The type: `CausalEffectPropagationProcess<Value, State, Context, Error, Log>` in [`deep_causality_core`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core). See [Effect Propagation Process](/docs/concepts/effect-propagation-process/).
 
 **Effect Value**: The enum that holds the payload of a propagating effect: `None`, `Value(T)`, `ContextualLink`, `RelayTo`, or `Map`.
 
 **Evidence**: A unit of factual data in the monograph's ontology. In code, evidence enters the system as Contextoids of type `Datoid`.
 
-**Higher-Kinded Types (HKT)**: Type-level functions that take types as arguments and return types. The library encodes them via the witness pattern (`HKT3`, `HKT5`) defined in `deep_causality_haft`. See [HKT](/docs/concepts/hkt/).
+**Higher-Kinded Types (HKT)**: Type-level functions that take types as arguments and return types. The library encodes them via the witness pattern (`HKT3`, `HKT5`) defined in [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_haft). See [HKT](/docs/concepts/hkt/).
 
 **Propagating Effect**: The stateless alias `PropagatingEffect<T> = CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>`. The everyday return type of a Causaloid's function.
 
-**Teloid**: The atomic deontic rule inside an Effect Ethos. Encodes a modality (obligatory, impermissible, optional), a condition, and a Context query. The monograph defines them in `teleology.tex`.
-
-## Former framing
-
-The project was previously described in some materials as "hypergeometric computational causality". That phrase is retired. The framework's surface (Causaloid, Context, Effect Ethos) and its formal axiom (`m₂ = m₁ >>= f`) are about **dynamic causality**, and the public documentation uses that phrase consistently. The monograph itself never used the older phrase; the rebrand is a cleanup, not a pivot.
-
-## On the three modalities
-
-The monograph distinguishes three modalities of causal model:
-
-- **Static**: fixed Causaloid structure, fixed Context. Recovers classical causality (Pearl SCMs, Bayesian networks, Granger). Epistemology: correspondence theory.
-- **Dynamic**: fixed Causaloid structure, mutable Context. The library's default operating mode. Epistemology: coherence theory.
-- **Emergent**: mutable Causaloid structure, mutable Context. The frontier case where the rules themselves evolve. Epistemology: pragmatic efficacy.
-
-All three are first-class. The same crates support all three. Choose by configuration, not by library swap.
+**Teloid**: The atomic deontic rule inside an Effect Ethos. Encodes a modality (obligatory, impermissible, optional), a condition, and a Context query. Defined in the [Teleology preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/teleology_effect_propagation_process/epp_teleology.pdf).

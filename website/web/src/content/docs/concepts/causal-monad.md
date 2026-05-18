@@ -11,7 +11,7 @@ The library exposes the monad through a single type and two operations: `pure` a
 
 ## The axiom, again
 
-From the monograph chapter `causality_as_epp.tex`:
+From the [EPP preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/effect_propagation_process/epp.pdf):
 
 > A causal relation is a monadic dependency, in which one propagating effect is obtained from another by composition with a causal function in a monadic context of the causal process.
 
@@ -89,7 +89,7 @@ assert_eq!(unwrap_value(final_process.value), 11);
 assert_eq!(final_process.logs.len(), 1);
 ```
 
-This is the test case `tests/types/causal_monad/causal_monad_tests.rs::test_bind` distilled to its essentials. Two binds and you have a chain. Five binds and you have a pipeline. Five hundred and you have a system.
+Two binds and you have a chain. Five binds and you have a pipeline. Five hundred and you have a system.
 
 ## The monad laws
 

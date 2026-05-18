@@ -84,7 +84,7 @@ Two things are worth pausing on. The closure receives the value, the threaded `s
 
 A naïve implementation would write a state machine: explicit transitions, explicit guards, explicit storage of "which regime am I in right now". The monadic version writes the regime check inline, dispatches in one expression, and lets the surrounding chain stay agnostic. If a third regime lands later (a horizon-crossing model, a Hawking-radiation correction), it is a new branch in the bind closure, not a new piece of infrastructure.
 
-The relativistic branch reaches for `CausalMultiVector` from `deep_causality_multivector`. Geometric algebra lets the rapidity calculation stay coordinate-free; the Minkowski metric is selected via the `Metric::Minkowski(4)` constructor.
+The relativistic branch reaches for `CausalMultiVector` from [`deep_causality_multivector`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_multivector). Geometric algebra lets the rapidity calculation stay coordinate-free; the Minkowski metric is selected via the `Metric::Minkowski(4)` constructor.
 
 ## Run it
 

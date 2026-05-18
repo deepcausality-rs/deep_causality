@@ -105,7 +105,7 @@ In Pearl's notation this is `do(Tar := 0.1)`. The intervention says: *forget wha
 
 The output for this run: nicotine `0.8` → tar would have been `0.8` → intervened to `0.1` → cancer risk `0.15`. The intervention drops cancer risk from 85% to 15% without changing the smoker's nicotine level at all. The chain is telling you that the *tar* is the proximate cause, not the nicotine itself; remove the tar and the cancer risk follows.
 
-The `intervene` method comes from the `Intervenable` trait in `deep_causality_core`. Importing the trait is what makes the call work: [`main.rs:15`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L15) reads `use deep_causality_core::{Intervenable, PropagatingEffect};`.
+The `intervene` method comes from the `Intervenable` trait in [`deep_causality_core`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core). Importing the trait is what makes the call work: [`main.rs:15`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L15) reads `use deep_causality_core::{Intervenable, PropagatingEffect};`.
 
 ## Rung 3: counterfactual (`src/main.rs:136-187`)
 

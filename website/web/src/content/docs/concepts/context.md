@@ -11,7 +11,7 @@ Concretely, a Context is a typed weighted hypergraph whose nodes are `Contextoid
 
 ## The type
 
-The Rust definition (parent crate `deep_causality`, file `src/types/context_types/context_graph/mod.rs`):
+The Rust definition lives in [`deep_causality/src/types/context_types/context_graph/mod.rs`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/types/context_types/context_graph/mod.rs):
 
 ```rust
 pub struct Context<D, S, T, ST, SYM, VS, VT>
@@ -90,6 +90,21 @@ ctx.update_node(10, updated)?;
 
 The Causaloids that read from this Context do not need to be rebuilt. They evaluate against whatever the Context currently holds. The `previous_data_map` field on `Context` preserves a one-step history, so a rule can compare *now* against *just-before-now* when the change itself is the relevant signal.
 
+## Adjusting nodes in place
+
+Mutation by full replacement is the coarse case. Production systems often need something finer: the Context graph is structurally fixed, but the incoming sensor data is irregular. A feed drops packets. A reading drifts. A reading arrives but is known to be biased. You want to correct what is already in the node rather than rebuild the node.
+
+The [`Adjustable`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/traits/adjustable/mod.rs) trait is the seam for that. Each Contextoid payload that admits correction implements two methods:
+
+- `update`: replace the stored value outright with a value supplied from an `ArrayGrid`. The default implementation under [`context_node_types`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality/src/types/context_node_types) sanity-checks the incoming value and rejects it if it is the type's default (a zero sentinel), preventing accidental wipes. Use this when you have detected the stored value is invalid and you want to overwrite it.
+- `adjust`: apply a correction relative to the stored value. The default implementation adds a delta from the supplied `ArrayGrid` and rejects the result if it would go negative. Use this when the stored value is approximately right but a drift has been observed and needs correcting.
+
+Both methods are const-generic over the grid dimensions (`WIDTH`, `HEIGHT`, `DEPTH`, `TIME`), so the correction data can be 1D for a scalar, 2D for a spatial frame, 3D for a volumetric field, or 4D for a spacetime patch. The trait default does nothing, so a node type that should never be touched at runtime is correct by default.
+
+A companion trait, [`UncertainAdjustable`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/traits/adjustable/mod.rs), covers nodes whose payload is an `Uncertain<T>` rather than a fixed value. It takes a typed `Data` argument instead of an `ArrayGrid` and is the right hook when the correction itself carries uncertainty.
+
+The split between *update* and *adjust* is deliberate. Replacement is destructive and asymmetric. Adjustment is incremental and preserves whatever calibration was already in the node. Mixing them at the same call site would obscure intent, so the trait surfaces them as two separate methods and lets the caller pick by name.
+
 ## Counterfactuals via extra contexts
 
 The `extra_contexts` field carries parallel hypothetical contexts. Build a counterfactual the same way you build the primary Context, register it under an `extra_context_id`, and evaluate the same Causaloid against it.
@@ -114,7 +129,7 @@ A value belongs in the Context when one of these is true:
 - The value is something a counterfactual run might want to replace.
 - The value is a shared piece of state that more than one Causaloid reads from.
 
-Values that fail every test stay in the closure. The Context is not a junk drawer; it is the structured shared state.
+Values that fail every test stay in the closure. The Context is the structured shared state for a causal model and is designed to be accessed from multiple Causaloids. It is also a foundational pillar of dynamic causality.
 
 ## Where to look next
 
