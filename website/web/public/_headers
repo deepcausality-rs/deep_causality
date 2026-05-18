@@ -52,14 +52,18 @@
   Cache-Control: public, max-age=3600, must-revalidate
 
 # --- Everything else: HTML pages and any unmatched asset ---
-# Browser revalidates after 10 minutes; the edge serves cached HTML for 24
-# hours (a deploy purges this anyway); stale-while-revalidate keeps the page
-# fast for repeat visitors during the brief revalidation window.
+# No `Cache-Control` here on purpose. Cloudflare's `_headers` merges header
+# values across every matching rule rather than letting the more specific
+# rule win, so a `Cache-Control` on `/*` would concatenate with the
+# `/_astro/*`, `/fonts/*`, etc. rules and corrupt the per-asset directives.
+# Edge caching for HTML is handled by the Cloudflare Cache Rule on the
+# `www.deepcausality.com` hostname; browser caching falls back to the edge's
+# default for unmarked responses, which is fine for a static content site
+# whose deploys auto-purge.
 #
-# Baseline security headers ride along here so every HTML response carries
-# them without needing a separate Cloudflare Transform Rule.
+# Baseline security headers ride along here so every response carries them
+# without needing a separate Cloudflare Transform Rule.
 /*
-  Cache-Control: public, max-age=600, s-maxage=86400, stale-while-revalidate=604800
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: DENY
