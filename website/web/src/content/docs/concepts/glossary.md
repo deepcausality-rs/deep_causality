@@ -46,17 +46,3 @@ This page is the single source of truth for terminology. The other concept pages
 **Propagating Effect**: The stateless alias `PropagatingEffect<T> = CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>`. The everyday return type of a Causaloid's function.
 
 **Teloid**: The atomic deontic rule inside an Effect Ethos. Encodes a modality (obligatory, impermissible, optional), a condition, and a Context query. Defined in the [Teleology preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/teleology_effect_propagation_process/epp_teleology.pdf).
-
-## Former framing
-
-The project was previously described in some materials as "hypergeometric computational causality". That phrase is retired. The framework's surface (Causaloid, Context, Effect Ethos) and its formal axiom (`m₂ = m₁ >>= f`) are about **dynamic causality**, and the public documentation uses that phrase consistently. The monograph itself never used the older phrase; the rebrand is a cleanup, not a pivot.
-
-## On the three modalities
-
-The monograph distinguishes three modalities of causal model:
-
-- **Static**: fixed Causaloid structure, fixed Context. Recovers classical causality (Pearl SCMs, Bayesian networks, Granger). Epistemology: correspondence theory.
-- **Dynamic**: fixed Causaloid structure, mutable Context. The library's default operating mode. Epistemology: coherence theory.
-- **Emergent**: mutable Causaloid structure, mutable Context. The frontier case where the rules themselves evolve. Epistemology: pragmatic efficacy.
-
-All three are first-class. The same crates support all three. Choose by configuration, not by library swap.
