@@ -23,7 +23,7 @@ use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, ManifoldWitness, Simplex, SimplicialComplex, Skeleton};
 
 /// `f64` is the right precision here: the Laplacian stencil on integer inputs
-/// produces integer outputs, so Float106 yields no observable gain. 
+/// produces integer outputs, so Float106 yields no observable gain.
 pub type FloatType = f64;
 
 const N_VERTICES: usize = 7;

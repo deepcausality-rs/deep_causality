@@ -12,15 +12,15 @@
     "check": "astro check"
   },
   "dependencies": {
-    "@astrojs/mdx": "^5.0.5",
+    "@astrojs/mdx": "^5.0.6",
     "@astrojs/sitemap": "^3.7.2",
-    "astro": "^6.3.2",
+    "astro": "^6.3.3",
     "pagefind": "^1.1.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.0",
     "typescript": "^5.6.0",
-    "wrangler": "4.91.0"
+    "wrangler": "4.92.0"
   },
   "packageManager": "pnpm@11.0.9",
   "pnpm": {
