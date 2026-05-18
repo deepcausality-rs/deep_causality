@@ -26,7 +26,7 @@ implementation, and unified causal reasoning.
 
 In DeepCausality 0.8, all Causaloids, Contextoids, and Model types are now able to be `Send` and `Sync`, enabling
 concurrency and thus true parallel inference pipelines. See the
-new [Tokio code example](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/tokio) for details about
+new [Tokio code example](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/tokio_example) for details about
 how to build concurrent causal inference with DeepCausality.
 
 ## 💡 Added Unified Causal Reasoning

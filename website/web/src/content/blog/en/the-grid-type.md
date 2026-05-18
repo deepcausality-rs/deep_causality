@@ -149,7 +149,7 @@ Because of the interior mutability, borrow and borrow_mut become required when a
 in the set and get methods. Type T must implement Default because of the PhantomData binding in the type signature. The
 complete Grid type implementation is relatively verbose, the listing below shows only the important parts.
 The full source code
-is [available on Github](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality/src/types/grid_types).
+is [available on Github](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_data_structures/examples/array_grid).
 
 ```rust
 
