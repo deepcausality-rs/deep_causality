@@ -5,11 +5,11 @@ section: concepts
 order: 11
 ---
 
-DeepCausality treats algebra, geometry, topology, and effect propagation as a single mathematical surface. The same `Functor`, `Monad`, and `CoMonad` operations run over tensors, multivectors, manifolds, sparse matrices, and propagating effects. Two crates do the work: `deep_causality_haft` provides the Higher-Kinded Type machinery; `deep_causality_num` provides the algebraic trait floor that the math containers stand on.
+DeepCausality treats algebra, geometry, topology, and effect propagation as a single mathematical surface. The same `Functor`, `Monad`, and `CoMonad` operations run over tensors, multivectors, manifolds, sparse matrices, and propagating effects. Two crates do the work: [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_haft) provides the Higher-Kinded Type machinery; [`deep_causality_num`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_num) provides the algebraic trait floor that the math containers stand on.
 
 ## HKT in Rust via the witness pattern
 
-Rust has no native Higher-Kinded Types. HAFT adds the abstraction with a witness pattern: a zero-sized struct that implements the `HKT` trait and stands in for the type constructor. Code generic over the witness picks up any container that implements the same functional trait. From `deep_causality_haft/README.md`:
+Rust has no native Higher-Kinded Types. HAFT adds the abstraction with a witness pattern: a zero-sized struct that implements the `HKT` trait and stands in for the type constructor. Code generic over the witness picks up any container that implements the same functional trait:
 
 ```rust
 fn double_value<F>(m_a: F::Type<i32>) -> F::Type<i32>
@@ -28,7 +28,7 @@ A type-encoded effect system sits on top of the multi-arity HKTs. `Effect3`/`Eff
 
 ## The witness table for the math crates
 
-The same pattern lifts the math containers into the same surface (`docs/UNIFORM_MATH.md`):
+The same pattern lifts the math containers into the same surface:
 
 | Domain | Type | Witness | Role |
 |---|---|---|---|
@@ -44,7 +44,7 @@ Adjunctions (`BoundedAdjunction`) formally link Geometry (Multivectors) and Topo
 
 ## The algebraic trait floor
 
-The numeric layer underneath ships an explicit algebraic hierarchy in `deep_causality_num`. The trait names follow standard abstract algebra:
+The numeric layer underneath ships an explicit algebraic hierarchy in [`deep_causality_num`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_num). The trait names follow standard abstract algebra:
 
 ```
 Magma → Semigroup → Monoid → Group → AbelianGroup
@@ -52,7 +52,7 @@ Magma → Semigroup → Monoid → Group → AbelianGroup
                                        Ring → CommutativeRing → Field → RealField → ComplexField<R>
 ```
 
-with `Module<R>`, `Algebra<R>`, `AssociativeAlgebra<R>`, `DivisionAlgebra<R>`, and `EuclideanDomain` for vector and ring-with-division structures. Marker traits (`Associative`, `Commutative`, `Distributive`) make algebraic laws compile-time promises rather than convention. Concrete classifications from `README_ALGEBRA_TRAITS.md`:
+with `Module<R>`, `Algebra<R>`, `AssociativeAlgebra<R>`, `DivisionAlgebra<R>`, and `EuclideanDomain` for vector and ring-with-division structures. Marker traits (`Associative`, `Commutative`, `Distributive`) make algebraic laws compile-time promises rather than convention. Concrete classifications:
 
 | Type | Primary traits |
 |---|---|
@@ -67,7 +67,7 @@ The library will not let an algorithm that requires associativity use a non-asso
 
 ## What this buys you in practice
 
-The `examples/mathematics_examples` tree is the proof. Every example exposes a single type alias near the top of `main.rs`:
+The [`examples/mathematics_examples`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples) tree is the proof. Every example exposes a single type alias near the top of `main.rs`:
 
 ```rust
 pub type FloatType = Float106;  // or f64, or f32
@@ -90,6 +90,6 @@ The same example tree also makes the opposite point. Integer arithmetic, fixed s
 
 ## See also
 
-- Reference: `docs/UNIFORM_MATH.md`, `deep_causality_haft/README.md`, `deep_causality_num/README_ALGEBRA_TRAITS.md`.
-- Examples: `examples/mathematics_examples/` covers HKT composition (`tensor_x_algebra_rotation_field`, `tensor_x_topology_laplacian`, `triple_hkt_stress_field`), causal-monad composition (`effect_kalman_predict_correct`, `effect_diffusion_on_manifold`, `effect_tensor_algebra_roundtrip`), and the `Cl(3,1)` spinor capstone.
+- Reference READMEs: [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_haft/README.md), [`deep_causality_num`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_num/README.md).
+- Examples: [`examples/mathematics_examples`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples) covers HKT composition (`tensor_x_algebra_rotation_field`, `tensor_x_topology_laplacian`, `triple_hkt_stress_field`), causal-monad composition (`effect_kalman_predict_correct`, `effect_diffusion_on_manifold`, `effect_tensor_algebra_roundtrip`), and the `Cl(3,1)` spinor capstone.
 - Concept: [Higher-Kinded Types](/docs/concepts/hkt/), [Causal Monad](/docs/concepts/causal-monad/), [Effect Propagation Process](/docs/concepts/effect-propagation-process/).

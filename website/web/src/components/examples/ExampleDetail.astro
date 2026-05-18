@@ -19,7 +19,7 @@ const sourceHref = source ? `${repoBase}/${source}` : undefined;
     <p class="summary">{summary}</p>
     {crates.length > 0 && (
       <ul class="crate-row" aria-label="Related crates">
-        {crates.map((c) => <li><a href={`/docs/reference/${c}/`}><code>{c}</code></a></li>)}
+        {crates.map((c) => <li><a href={`https://docs.rs/${c}`}><code>{c}</code></a></li>)}
       </ul>
     )}
     {sourceHref && (

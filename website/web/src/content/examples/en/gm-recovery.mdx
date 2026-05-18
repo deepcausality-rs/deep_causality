@@ -59,7 +59,7 @@ let result: PropagatingEffect<GmReport<FloatType>> = PropagatingEffect::pure(inp
 
 **Pair.** Slides a window across the coordinate vector, picking pairs separated by roughly 50 minutes of orbital phase. The sliding scheme matches chronometric-geodesy convention and avoids the all-pairs failure mode where every pair ends up anchored to the first few coordinates.
 
-**Solve GM.** Applies the J2-corrected 1PN kernel (`solve_gm_analytical`) from `deep_causality_physics::chronometric` to each pair. Each pair yields an independent GM estimate.
+**Solve GM.** Applies the J2-corrected 1PN kernel (`solve_gm_analytical`) from [`deep_causality_physics::chronometric`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_physics) to each pair. Each pair yields an independent GM estimate.
 
 **Aggregate.** Filters per-pair estimates through Median Absolute Deviation outlier rejection, then reduces to mean, median, standard deviation. Earth's mass is derived as $M = GM / G$.
 

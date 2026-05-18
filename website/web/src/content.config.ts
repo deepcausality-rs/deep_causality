@@ -19,7 +19,7 @@ const docs = defineCollection({
     title: z.string(),
     description: z.string().optional(),
     order: z.number().default(0),
-    section: z.enum(['getting-started', 'concepts', 'guides', 'reference', 'monograph']),
+    section: z.enum(['getting-started', 'overview', 'concepts', 'guides', 'reference', 'monograph']),
     sectionLabel: z.string().optional(),
   }),
 });

@@ -47,7 +47,7 @@ Each `bind` receives the upstream `MaxwellState` and returns a new `PropagatingE
 
 ## What to look at in the source
 
-- `model.rs`: `MaxwellState`, `PlaneWaveConfig`, and the four step functions. The implementation uses the `deep_causality_multivector` crate for geometric-algebra operations.
+- `model.rs`: `MaxwellState`, `PlaneWaveConfig`, and the four step functions. The implementation uses the [`deep_causality_multivector`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_multivector) crate for geometric-algebra operations.
 - `main.rs`: the chain plus the result-extraction block that prints the field magnitudes, the gauge verdict, and the Poynting flux.
 
 The crate ships sibling examples for GRMHD, quantum mechanics, thermodynamics, and fluid dynamics. They live alongside Maxwell under `examples/physics_examples/`.

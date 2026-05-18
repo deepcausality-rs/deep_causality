@@ -5,7 +5,7 @@ section: concepts
 order: 10
 ---
 
-DeepCausality treats uncertainty as a first-class type. Two related types ship in the `deep_causality_uncertain` crate. Both follow the design in Bornholt, Mytkowicz, and McKinley, "Uncertain⟨T⟩: A First-Order Type for Uncertain Data" (ASPLOS '14).
+DeepCausality treats uncertainty as a first-class type. Two related types ship in the [`deep_causality_uncertain`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_uncertain) crate. Both follow the design in Bornholt, Mytkowicz, and McKinley, "Uncertain⟨T⟩: A First-Order Type for Uncertain Data" (ASPLOS '14).
 
 ## The uncertainty bug
 
@@ -71,7 +71,7 @@ A `CausalState` carries an optional `UncertainParameter`, so a Causaloid that em
 
 ## See also
 
-- Crate README: `deep_causality_uncertain/README.md`.
-- Examples: `deep_causality_uncertain/examples/gps`, `examples/sensor`, `examples/clinical_trial` cover route choice under noise, sensor fusion with anomaly detection, and trial data with probabilistic presence.
+- Crate README: [`deep_causality_uncertain`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_uncertain/README.md).
+- Examples: [`gps`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_uncertain/examples/gps), [`sensor`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_uncertain/examples/sensor), and [`clinical_trial`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_uncertain/examples/clinical_trial) cover route choice under noise, sensor fusion with anomaly detection, and trial data with probabilistic presence.
 - Concept: [Causal State Machine](/docs/concepts/csm/), which uses `UncertainParameter` to gate action firing.
 - Background: Bornholt, J., Mytkowicz, T., McKinley, K. S. "Uncertain⟨T⟩: A First-Order Type for Uncertain Data." ASPLOS '14.

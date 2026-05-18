@@ -9,13 +9,13 @@ A `Causaloid` is the fundamental unit of causality in DeepCausality. Three prope
 
 1. It wraps a function that takes input, optionally consults a context, and returns a `PropagatingEffect`.
 2. It carries enough metadata (id, name, description) to remain identifiable when it shows up in a log.
-3. It composes recursively. A collection of Causaloids is a Causaloid. A graph of Causaloids is a Causaloid. The composition has the same shape as its parts.
+3. It composes isomorphic-recursively. A Causaloid, a collection of Causaloids, and a graph of Causaloids all implement the same `Causable` + `MonadicCausable` trait surface, so each one stands in for any other and they nest into each other without limit.
 
 The third property is the load-bearing one. It is borrowed from physicist Lucian Hardy's work on quantum gravity, where a *causaloid* folds cause and effect into a single object so that causal structure can be discussed without assuming a fixed temporal order.
 
 ## The type
 
-The Rust definition (parent crate `deep_causality`, file `src/types/causal_types/causaloid/mod.rs`):
+The Rust definition lives in [`deep_causality/src/types/causal_types/causaloid/mod.rs`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/types/causal_types/causaloid/mod.rs):
 
 ```rust
 pub struct Causaloid<I, O, STATE, CTX>
@@ -41,13 +41,17 @@ where
 
 Four generic parameters do real work. `I` is the input type; `O` is the output effect's value type. `STATE` carries any per-evaluation state the rule wants to thread through. `CTX` is the context type. For the common case where you do not need state or context, the `BaseCausaloid<I>` alias pins them to `()` and `BaseContext`.
 
+## The structure
+
 A Causaloid is one of three shapes, recorded in `CausaloidType`:
 
-- **Singleton** — a single causal function. The atomic case.
-- **Collection** — a `Vec<Causaloid>` evaluated together under an `AggregateLogic` (conjunction, disjunction, threshold). The "many rules, one decision" case.
-- **Graph** — a `CausaloidGraph<Self>`. The "rules with structure" case, where the order and reachability of evaluation matters.
+- **Singleton**: a single causal function. The atomic case.
+- **Collection**: a native Rust collection of Causaloids evaluated together under an `AggregateLogic` (conjunction, disjunction, threshold). The "many rules, one decision" case. Slices, `VecDeque`, `HashMap`, and `BTreeMap` all pick up the [`MonadicCausableCollection`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/extensions/causable/mod.rs) blanket impl, so any of them works.
+- **Graph**: a proper `CausaloidGraph<Self>` hypergraph (backed by [`ultragraph`](https://github.com/deepcausality-rs/deep_causality/tree/main/ultragraph)). The "rules with structure" case. Order and reachability of evaluation matter, and a single hyperedge can connect more than two Causaloids at once.
 
-The three shapes are *isomorphic*. A Singleton is a Collection of one element; a Collection is a Graph with no edges. The library exploits that to give you one type to think about rather than three.
+The three shapes are *isomorphic-recursive*. A Singleton, a Collection, and a Graph are distinct concrete structures, yet each one implements the same [`Causable`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/types/causal_types/causaloid/causable.rs) and `MonadicCausable` trait surface. As far as the rest of the library is concerned, each one *is* a Causaloid. That uniformity is what makes them composable into each other. A Causaloid wrapping a Graph can be a node in another Graph, an entry in a Collection, or the operand of a `bind` step. The structure nests to arbitrary depth without the calling code changing shape.
+
+This is the central representational move. Classical causality frameworks force you to pick a structure up front. A Pearl SCM is a graph. A Granger model is a set. A Bayesian network is a graph with a specific edge semantics. Changing the structure means rewriting the model. DeepCausality lets you choose your structure for any specific problem, combine different structures for complex cases, and encapsulate sub-modules into single Causaloids to make larger models manageable and composable.
 
 ## Construction
 
@@ -103,24 +107,6 @@ let effect = pipeline.evaluate(&tick)?;
 For a Singleton the result is the function's return value. For a Collection the per-element effects are reduced under `AggregateLogic`. For a Graph the children are evaluated in topological order against the parent's effect, and the final node's effect is returned.
 
 Errors short-circuit the chain. The `EffectLog` accumulates regardless, so a failed run still produces an audit trail of where it failed.
-
-## Why this shape
-
-The Causaloid earns its keep in two places.
-
-It earns it at composition time. Three rules into one looks the same in the code as three thousand into one. The graph constructor accepts whatever shape you build; the evaluation engine does not care how deep the recursion goes.
-
-It earns it at debugging time. A misbehaving production system needs you to ask, *which rule fired, against which inputs, in which order?* The `EffectLog` answers that without instrumentation. Every Causaloid that runs leaves a structured entry with its id, name, and the effect it produced.
-
-## Common patterns
-
-**Stage gates.** Compose a chain of Causaloids that progressively narrow a decision. Each stage is its own Causaloid; the pipeline is the graph.
-
-**Voting.** A Collection under `AggregateLogic::Threshold(n)` returns `Deterministic(true)` when at least `n` of its members fire. Useful for fault-tolerant signals.
-
-**Counterfactuals.** Clone the Context, mutate the relevant Contextoids, evaluate the same Causaloid against the new Context. The result is the counterfactual effect.
-
-**Hot-swap.** A Causaloid's `causal_fn` field is a function pointer, not a trait object. Replacing the rule is a struct-update operation, not a vtable swap.
 
 ## Where to look next
 

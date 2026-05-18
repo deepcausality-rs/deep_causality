@@ -9,14 +9,14 @@ The Causaloid is the unit. The Context is the environment. The thing that flows 
 
 This page introduces the monad on its own, before any Causaloid appears, because everything else in the library composes on top of `pure` and `bind`. Understanding those two operations once is enough to read every other example.
 
-## What a monad is, without the academic preamble
+## What a monad is
 
 A monad is two operations:
 
 - **`pure(v)`**: wrap a plain value in the monad. Trivial.
 - **`bind(m, f)`**: given a wrapped value and a function that *also* produces a wrapped value, chain them. The function gets to see the unwrapped value, and its result becomes the next link in the chain.
 
-That's it. Everything else follows from those two operations satisfying three identities (the *monad laws*). The library encodes both operations on the `CausalEffectPropagationProcess` struct, which is what the Causal Monad threads through.
+That's it. Everything else follows from those two operations satisfying three identities (the *monad laws*). The library encodes both operations on the [`CausalEffectPropagationProcess`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core) struct, which is what the Causal Monad threads through.
 
 ## The smallest possible program
 
@@ -41,7 +41,7 @@ fn main() {
 
 Three lines of substance. `pure(10)` lifts the integer into a `PropagatingEffect<i32>`. The first `bind` unwraps the value, increments it, and re-wraps. The second `bind` unwraps again, doubles, re-wraps. The final value is read off `result.value`.
 
-`PropagatingEffect<T>` is the everyday alias for the Causal Monad. The full name is `CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>`: five type parameters, three of them pinned to defaults. The defaults are sane for almost every starting program, which is why the alias is what most code reaches for.
+`PropagatingEffect<T>` is the everyday alias for the Causal Monad, exported from both [`deep_causality`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality) and [`deep_causality_core`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core). The full name is `CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>`: five type parameters, three of them pinned to defaults. The defaults are sane for almost every starting program, which is why the alias is what most code reaches for.
 
 Run this:
 
@@ -123,14 +123,10 @@ A monad earns its name by satisfying three identities. The Causal Monad satisfie
 - **Right identity.** `m.bind(pure)` is the same as `m`.
 - **Associativity.** `(m.bind(f)).bind(g)` is the same as `m.bind(|x| f(x).bind(g))`.
 
-In practice this means you can freely refactor a chain. Pull a step out into a helper. Inline a step back in. Regroup three steps into two-then-one or one-then-two. The chain still computes the same answer. The library's test suite covers all three laws explicitly; the laws are not a marketing claim.
+In practice this means you can freely refactor a chain. Pull a step out into a helper. Inline a step back in. Regroup three steps into two-then-one or one-then-two. The chain still computes the same answer. The library's test suite covers all three laws explicitly.
 
 ## Where this goes next
 
-The next page wraps a function in a [Causaloid](/docs/concepts/causaloid/) and evaluates it. A Causaloid is essentially a named, identified, composable causal function whose evaluation returns a `PropagatingEffect`. Once you can write a `PropagatingEffect`-producing closure, and you can now, wrapping it as a Causaloid is one constructor call.
+The [next page](/docs/getting-started/hello-causaloid/) wraps a function in a [Causaloid](/docs/concepts/causaloid/) and evaluates it. A Causaloid is a named, identified, composable causal function whose evaluation returns a `PropagatingEffect`. Wrapping the kind of closure you wrote above as a Causaloid is one constructor call. For a complete, runnable end-to-end version that walks Pearl's Ladder of Causation through `pure`, `bind`, and `intervene`, see [`examples/starter_example`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/starter_example).
 
 The page after that adds a [Context](/docs/concepts/context/). The Context is the third argument the bind closure has been ignoring on this page. When the rule needs to read from the world, the Context is where the world lives.
-
-## What to keep in your head
-
-Two operations. `pure` lifts a value. `bind` threads it through a function. The chain carries value, state, context, error, and log together as one structured record. Everything else in the library composes on top.

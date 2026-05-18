@@ -15,7 +15,7 @@ The Effect Ethos pulls those scattered checks into one structured object that ca
 
 ## What it is
 
-The `EffectEthos` lives in the `deep_causality_ethos` crate. The shape:
+The `EffectEthos` lives in the [`deep_causality_ethos`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_ethos) crate. The shape:
 
 ```rust
 pub struct EffectEthos<D, S, T, ST, SYM, VS, VT>
@@ -40,7 +40,7 @@ A `Teloid` is the atom inside the store. It is a computable unit of purpose, and
 - An **id** that survives logging.
 - A reference to the **Context query** the rule will evaluate against.
 
-The monograph chapter `teleology.tex` introduces Teloids as the answer to the question, "What stops an emergent system from inferring its way into a state you cannot let it act on?"
+The [Teleology preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/teleology_effect_propagation_process/epp_teleology.pdf) introduces Teloids as the answer to the question, "What stops an emergent system from inferring its way into a state you cannot let it act on?"
 
 ## Building an Ethos
 
@@ -90,7 +90,7 @@ The Effect Ethos is not just the negation of the Causaloid graph. It can disagre
 
 A Causaloid graph reasons forward from inputs to a propagating effect. It is concerned with *what is inferable*. An Ethos reasons against that effect from operational constraints. It is concerned with *what is permissible*. The two answers disagree often enough to be worth modelling separately. When they agree, the action commits. When they disagree, the rejection is structured and explainable.
 
-The monograph chapter `metaphysics.tex` frames this as the prospective guardrail for emergent systems: as the causal structure becomes able to evolve, the action layer needs an independent check that the evolved structure has not produced an output you cannot let leave the building.
+The [Metaphysics preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/metaphysics_effect_propagation_process/epp_metaphysics.pdf) frames this as the prospective guardrail for emergent systems: as the causal structure becomes able to evolve, the action layer needs an independent check that the evolved structure has not produced an output you cannot let leave the building.
 
 ## Common patterns
 
@@ -104,4 +104,4 @@ The monograph chapter `metaphysics.tex` frames this as the prospective guardrail
 
 ## Where to look next
 
-[Causaloid](/docs/concepts/causaloid/) is the inference layer the Ethos sits above. The [Ethos crate reference](/docs/reference/deep_causality_ethos/) covers the API surface. The monograph chapter `teleology.tex` is the formal treatment.
+[Causaloid](/docs/concepts/causaloid/) is the inference layer the Ethos sits above. The API reference is on docs.rs at [`deep_causality_ethos`](https://docs.rs/deep_causality_ethos). The [Teleology preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/teleology_effect_propagation_process/epp_teleology.pdf) is the formal treatment.

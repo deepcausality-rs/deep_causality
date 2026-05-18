@@ -28,7 +28,7 @@ A monad implementation needs `M` to be a parameter. Rust lacks the syntax. The w
 
 ## The encoding
 
-The crate `deep_causality_haft` defines the trait hierarchy:
+The crate [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_haft) defines the trait hierarchy:
 
 ```rust
 pub trait HKT {
@@ -90,7 +90,7 @@ A sibling payoff: the type-checker becomes the law-checker. If a `bind` impl pro
 
 Three cases.
 
-You are writing a new monad on top of the existing machinery. Pick `HKT3` or `HKT5` depending on how many parameters you need to fix; define a witness; implement `Functor`, `Pure`, `Applicative`, and `Monad` against it. The existing impls in `deep_causality_core::types::causal_effect_propagation_process::hkt` are the worked examples.
+You are writing a new monad on top of the existing machinery. Pick `HKT3` or `HKT5` depending on how many parameters you need to fix; define a witness; implement `Functor`, `Pure`, `Applicative`, and `Monad` against it. The existing impls in [`deep_causality_core/src/types/causal_effect_propagation_process/hkt.rs`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_core/src/types/causal_effect_propagation_process/hkt.rs) are the worked examples.
 
 You are writing a function that should be polymorphic across multiple effects. The function signature carries the witness type as a generic. Most application code does not need this; library code that wants to be reusable across effects does.
 
@@ -98,4 +98,4 @@ You are debugging a confusing type error inside a `bind` chain. The error messag
 
 ## Where to look next
 
-[Causal Monad](/docs/concepts/causal-monad/) is the user of the HKT encoding. [Effect Propagation Process](/docs/concepts/effect-propagation-process/) is the type the encoding parameterizes. The `deep_causality_haft` crate's docs.rs page has the formal definitions for `HKT`, `HKT3`, and `HKT5`.
+[Causal Monad](/docs/concepts/causal-monad/) is the user of the HKT encoding. [Effect Propagation Process](/docs/concepts/effect-propagation-process/) is the type the encoding parameterizes. The formal definitions for `HKT`, `HKT3`, and `HKT5` are on [docs.rs/deep_causality_haft](https://docs.rs/deep_causality_haft).

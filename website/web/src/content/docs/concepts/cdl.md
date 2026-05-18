@@ -5,7 +5,7 @@ section: concepts
 order: 8
 ---
 
-The Causal Discovery Language (CDL) is the DSL that bridges raw observational data and an executable causal model. It lives in the `deep_causality_discovery` crate and uses Rust's typestate pattern to encode the pipeline stages in the type system.
+The Causal Discovery Language (CDL) is the DSL that bridges raw observational data and an executable causal model. It lives in the [`deep_causality_discovery`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_discovery) crate and uses Rust's typestate pattern to encode the pipeline stages in the type system.
 
 The library's other concepts assume you already have a Causaloid. The CDL is for the case where you do not.
 
@@ -17,9 +17,9 @@ The CDL keeps the type safety. Each stage of the pipeline returns a new typestat
 
 ## The pipeline
 
-The current stages (drawn from `deep_causality_discovery::src/types/`):
+The pipeline has seven stages:
 
-1. **Configure**: `CdlConfig` is the builder for the whole pipeline. Set the data source, the cleaning strategy, the feature-selection criterion, the discovery algorithm, the analysis pass.
+1. **Configure**: [`CdlConfig`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_discovery/src/types/config) is the builder for the whole pipeline. Set the data source, the cleaning strategy, the feature-selection criterion, the discovery algorithm, the analysis pass.
 2. **Load**: read observations from CSV, Parquet, or an in-memory matrix.
 3. **Clean**: handle missing values, outliers, type coercions.
 4. **Select features**: pick the most informative subset of variables. The default is MRMR; SURD is available for information-theoretic decomposition.
@@ -31,7 +31,7 @@ The output of step 7 is the input to the rest of DeepCausality. The pipeline end
 
 ## What the code looks like
 
-The pipeline is a monadic sequence over `CdlEffect<T>`. `CdlBuilder::build()` lifts an empty `CDL<NoData>` typestate into the effect; every `.bind(|cdl| ...)` advances the typestate one stage and threads any error or warning through the chain. The shape is taken directly from `deep_causality_discovery/examples/main.rs`:
+The pipeline is a monadic sequence over `CdlEffect<T>`. `CdlBuilder::build()` lifts an empty `CDL<NoData>` typestate into the effect; every `.bind(|cdl| ...)` advances the typestate one stage and threads any error or warning through the chain. The full runnable version is in [`deep_causality_discovery/examples/main.rs`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_discovery/examples/main.rs):
 
 ```rust
 use deep_causality_discovery::{
@@ -59,7 +59,7 @@ let result_effect = CdlBuilder::build()
 result_effect.print_results();
 ```
 
-`CdlEffect<T>` is defined in `deep_causality_discovery::types::cdl_effect`:
+[`CdlEffect<T>`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_discovery/src/types/cdl_effect/mod.rs) is:
 
 ```rust
 pub struct CdlEffect<T> {
@@ -68,7 +68,7 @@ pub struct CdlEffect<T> {
 }
 ```
 
-It carries either the next-stage `CDL<...>` typestate or a `CdlError`, plus a list of accumulated warnings. The HKT witness `CdlEffectWitness<CdlError, CdlWarningLog>` implements `Functor`, `Pure`, `Applicative`, and `Monad` from `deep_causality_haft`; `CdlBuilder` plugs into the `Effect3` machinery and fixes the error and warning channels. `bind` short-circuits on the first error, concatenates warnings on success, and lets the typestate inside `CDL<...>` advance one stage per step.
+It carries either the next-stage `CDL<...>` typestate or a `CdlError`, plus a list of accumulated warnings. The HKT witness `CdlEffectWitness<CdlError, CdlWarningLog>` implements `Functor`, `Pure`, `Applicative`, and `Monad` from [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_haft); `CdlBuilder` plugs into the `Effect3` machinery and fixes the error and warning channels. `bind` short-circuits on the first error, concatenates warnings on success, and lets the typestate inside `CDL<...>` advance one stage per step.
 
 Two layers of safety run at the same time. The outer `CdlEffect` monad sequences and short-circuits. The inner `CDL<State>` typestate enforces stage order: the method that runs causal discovery only exists on the typestate that has features selected, so calling it before `feature_select` is a compile error, not a runtime error.
 
@@ -96,4 +96,4 @@ The CDL does not invent a Context. A `Context` is the engineer's job: assemble t
 
 ## Where to look next
 
-The end-to-end walkthrough is in the [CDL pipeline guide](/docs/guides/cdl-pipeline/). The crate reference is at [deep_causality_discovery](/docs/reference/deep_causality_discovery/). The bioinformatics [example](/examples/bioinformatics-signal/) uses the underlying MRMR primitive directly, without the full pipeline, and is the simplest end-to-end exposure to the algorithms layer.
+The runnable end-to-end walkthrough is [`deep_causality_discovery/examples/main.rs`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_discovery/examples/main.rs). The API reference lives on docs.rs at [`deep_causality_discovery`](https://docs.rs/deep_causality_discovery). The underlying MRMR and SURD primitives are in [`deep_causality_algorithms`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_algorithms), which you can use directly when the full pipeline is more than you need.
