@@ -10,10 +10,6 @@ compatibility_date = "2026-05-01"
 
 [assets]
 directory = "./dist"
-# Conventional binding name. Required if the Worker ever adds a `main` entry
-# that wants to call `env.ASSETS.fetch(request)`; harmless on a pure static
-# Worker. Matches the binding on the sibling Cloudflare project.
-binding = "ASSETS"
 # No 404.html in the build today, so let Cloudflare return its default 404.
 # Switch to "404-page" once an Astro 404.astro page is added.
 not_found_handling = "none"
