@@ -12,12 +12,6 @@
 * [Cloudflare pages](https://pages.cloudflare.com/)
 
 
-## Cloudflare pages
-
-* [Tutorial](https://www.nickersonj.com/posts/setting-up-hugo/)
-* [Git integration (Publish page on push)](https://developers.cloudflare.com/pages/get-started/guide/)
-* [Hugo config](https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/)
-
 ## License
 
 All software source code is licensed under the [MIT License](https://opensource.org/license/mit/).
