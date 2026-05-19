@@ -6,3 +6,4 @@ comment:
 ignore:
   - "deep_causality/examples"  # ignore folders and all its contents
   - "thirdparty"  # ignore folders and all its contents
+  - "yanked"  # ignore folders and all its contents
