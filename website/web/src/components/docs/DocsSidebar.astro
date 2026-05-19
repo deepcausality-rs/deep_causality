@@ -83,6 +83,20 @@ const idToHref = (id: string) => `/docs/${id.replace(/\/index$/, '/')}/`.replace
   closers.forEach((el) => el.addEventListener('click', () => setOpen(false)));
   drawer?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+
+  // Crossing the desktop breakpoint must always release the body scroll lock,
+  // otherwise an open mobile drawer leaves the desktop docs page non-scrollable
+  // after a resize or rotation.
+  const desktop = window.matchMedia('(min-width: 900px)');
+  const onBreakpointChange = (e: MediaQueryListEvent | MediaQueryList) => {
+    if (e.matches && drawer?.hasAttribute('data-open')) setOpen(false);
+  };
+  if (typeof desktop.addEventListener === 'function') {
+    desktop.addEventListener('change', onBreakpointChange);
+  } else {
+    // Safari <14 fallback.
+    (desktop as MediaQueryList).addListener(onBreakpointChange);
+  }
 </script>
 
 <style>
