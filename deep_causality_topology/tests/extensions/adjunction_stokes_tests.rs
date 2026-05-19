@@ -269,6 +269,33 @@ fn test_adjunction_right_adjunct_empty_output_chain() {
 }
 
 #[test]
+fn test_boundary_1_chain_non_trivial() {
+    // boundary of a 1-chain with weights produces a 0-chain via the inner dot-product path.
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex.clone());
+
+    let num_edges = ctx.num_simplices(1);
+    assert!(num_edges >= 1);
+
+    // 1-chain with weight 1.0 on first edge
+    let triplets: Vec<(usize, usize, f64)> = (0..num_edges).map(|i| (0, i, 1.0)).collect();
+    let weights = deep_causality_sparse::CsrMatrix::from_triplets(1, num_edges, &triplets).unwrap();
+    let chain = Chain::new(Arc::new(complex), 1, weights);
+
+    let bd = StokesAdjunction::boundary(&ctx, &chain);
+    assert_eq!(bd.grade(), 0);
+    // For a triangle, summing all edge boundaries with +1 weights yields a chain at vertices.
+}
+
+#[test]
+fn test_stokes_context_complex_getter() {
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex);
+    let c = ctx.complex();
+    assert_eq!(c.dimension(), 2);
+}
+
+#[test]
 #[should_panic(expected = "Counit requires at least one value in the form's chain to evaluate")]
 fn test_adjunction_counit_empty_chain_in_form() {
     let complex = simple_complex();

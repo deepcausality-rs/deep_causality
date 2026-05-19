@@ -8,16 +8,19 @@
 use deep_causality_num::{Float, Zero};
 use std::iter::Product;
 
-use crate::{Manifold, Simplex, TopologyError};
+use crate::{Manifold, Simplex, SimplicialComplex, TopologyError};
 use deep_causality_tensor::{CausalTensor, CausalTensorError};
 use std::collections::HashMap;
 
-impl<C, D> Manifold<C, D>
+impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
     C: Float + Zero + Copy + PartialOrd + From<f64> + Into<f64> + Product,
 {
     /// CPU implementation of simplex volume squared calculation.
-    pub(crate) fn simplex_volume_squared_cpu(&self, simplex: &Simplex) -> Result<C, TopologyError> {
+    pub(crate) fn simplex_volume_squared_impl(
+        &self,
+        simplex: &Simplex,
+    ) -> Result<C, TopologyError> {
         let k = simplex.vertices.len() - 1; // k is the dimension of the simplex
 
         if k == 0 {
@@ -31,7 +34,7 @@ where
         let mut cm_matrix_data = vec![C::zero(); matrix_dim * matrix_dim];
 
         // Get the squared edge lengths for the simplex
-        let squared_lengths = self.get_simplex_edge_lengths_squared_cpu(simplex)?;
+        let squared_lengths = self.get_simplex_edge_lengths_squared_impl(simplex)?;
 
         // Fill the Cayley-Menger matrix
         // Top row and left column are 1s, except for (0,0) which is 0.
@@ -64,7 +67,7 @@ where
 
         let cm_tensor = CausalTensor::new(cm_matrix_data, vec![matrix_dim, matrix_dim])?;
         let det =
-            determinant_cpu(&cm_tensor).map_err(|e| TopologyError::TensorError(e.to_string()))?;
+            determinant_impl(&cm_tensor).map_err(|e| TopologyError::TensorError(e.to_string()))?;
 
         // Formula for squared k-volume
         let k_fac = (1..=k)
@@ -88,7 +91,7 @@ where
     }
 
     /// CPU implementation: get all edge lengths for a given simplex.
-    fn get_simplex_edge_lengths_squared_cpu(
+    fn get_simplex_edge_lengths_squared_impl(
         &self,
         simplex: &Simplex,
     ) -> Result<HashMap<(usize, usize), C>, TopologyError> {
@@ -132,7 +135,7 @@ where
 }
 
 /// CPU implementation of determinant using Laplace expansion.
-pub(crate) fn determinant_cpu<T>(matrix: &CausalTensor<T>) -> Result<T, CausalTensorError>
+pub(crate) fn determinant_impl<T>(matrix: &CausalTensor<T>) -> Result<T, CausalTensorError>
 where
     T: Float + Zero + Copy + PartialOrd + From<f64> + Into<f64>,
 {
@@ -174,7 +177,7 @@ where
             }
         }
         let sub_matrix = CausalTensor::new(sub_matrix_data, vec![n - 1, n - 1])?;
-        det = det + sign * *matrix.get(&[0, j1]).unwrap() * determinant_cpu(&sub_matrix)?;
+        det = det + sign * *matrix.get(&[0, j1]).unwrap() * determinant_impl(&sub_matrix)?;
     }
 
     Ok(det)

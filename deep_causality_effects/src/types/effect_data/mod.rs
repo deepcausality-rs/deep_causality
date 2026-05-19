@@ -10,7 +10,7 @@ use std::sync::Arc;
 use crate::NumericValue;
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud, SimplicialComplex};
+use deep_causality_topology::{PointCloud, SimplicialComplex, SimplicialManifold};
 
 pub mod effect_data_from;
 
@@ -43,7 +43,7 @@ pub enum EffectData {
     /// A SimplicialComplex (Higher-order structure).
     SimplicialComplex(SimplicialComplex<f64>),
     /// A Manifold (Valid SimplicialComplex), fixed to `f64`.
-    Manifold(Manifold<f64, f64>),
+    Manifold(SimplicialManifold<f64, f64>),
     /// An escape hatch for storing any other type that implements `Any + Send + Sync`.
     /// Note: This uses `Arc` to support cheap cloning of the reference.
     Custom(Arc<dyn Any + Send + Sync>),

@@ -8,7 +8,7 @@
 //! Implements the Wilson flow equation to continuously smooth gauge fields
 //! towards the stationary points of the action. Used for scale setting and renormalization.
 
-use crate::{CWComplex, GaugeGroup, LatticeGaugeField, TopologyError};
+use crate::{ChainComplex, GaugeGroup, LatticeGaugeField, TopologyError};
 use deep_causality_num::{
     ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
 };

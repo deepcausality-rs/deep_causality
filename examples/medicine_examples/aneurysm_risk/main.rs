@@ -15,7 +15,7 @@
 
 use deep_causality_core::{CausalityError, CausalityErrorEnum, EffectValue, PropagatingEffect};
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud};
+use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
 
 // Constants (simplified for demo)
 const BLOOD_VISCOSITY: f64 = 0.0035; // Pa.s
@@ -111,7 +111,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Physics Kernel: Approximates Wall Shear Stress using Manifold derivatives
 fn calculate_wall_shear_stress(
-    _manifold: &Manifold<f64, f64>,
+    _manifold: &SimplicialManifold<f64, f64>,
     velocities: &[Vec<f64>],
 ) -> Vec<f64> {
     velocities
@@ -129,7 +129,7 @@ fn calculate_wall_shear_stress(
 /// Helper to build a mock vessel
 fn build_mock_aneurysm(
     n: usize,
-) -> Result<(Manifold<f64, f64>, VesselState), Box<dyn std::error::Error>> {
+) -> Result<(SimplicialManifold<f64, f64>, VesselState), Box<dyn std::error::Error>> {
     let mut positions_flat = Vec::with_capacity(n * 3);
     let mut positions_vec = Vec::with_capacity(n);
     let mut velocities = Vec::with_capacity(n);

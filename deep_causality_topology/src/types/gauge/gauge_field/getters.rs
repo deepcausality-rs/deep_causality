@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{GaugeField, GaugeGroup, Manifold};
+use crate::{GaugeField, GaugeGroup, Manifold, SimplicialComplex};
 use deep_causality_metric::Metric;
 use deep_causality_tensor::CausalTensor;
 
@@ -14,7 +14,7 @@ impl<G: GaugeGroup, M, R> GaugeField<G, M, R> {
     ///
     /// Reference to the underlying spacetime manifold.
     #[inline]
-    pub fn base(&self) -> &Manifold<R, R> {
+    pub fn base(&self) -> &Manifold<SimplicialComplex<R>, R> {
         &self.base
     }
 

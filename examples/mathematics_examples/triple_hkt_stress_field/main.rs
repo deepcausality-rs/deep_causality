@@ -30,7 +30,9 @@ use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
-use deep_causality_topology::{Manifold, ManifoldWitness, Simplex, SimplicialComplex, Skeleton};
+use deep_causality_topology::{
+    Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
+};
 
 /// `f64` is the right precision here: stress magnitudes span ~10 orders of
 /// magnitude and engineering accuracy lives at four to six digits. Float106
@@ -217,7 +219,7 @@ fn build_d3() -> CsrMatrix<i8> {
     CsrMatrix::from_triplets(TRIANGLES.len(), TETS.len(), &triplets).unwrap()
 }
 
-fn build_cube_manifold() -> Manifold<f64, FloatType> {
+fn build_cube_manifold() -> SimplicialManifold<f64, FloatType> {
     let vertices: Vec<Simplex> = (0..N_VERTICES).map(|i| Simplex::new(vec![i])).collect();
     let edges: Vec<Simplex> = EDGES.iter().map(|e| Simplex::new(e.to_vec())).collect();
     let triangles: Vec<Simplex> = TRIANGLES.iter().map(|t| Simplex::new(t.to_vec())).collect();

@@ -11,7 +11,7 @@ use deep_causality_tensor::CausalTensor;
 
 use super::super::Manifold;
 
-impl<C, D> Manifold<C, D>
+impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
     C: Default + Copy + Clone + PartialEq + Zero,
     D: Default + Copy + Clone + PartialEq + Zero,
@@ -39,7 +39,7 @@ where
         data: CausalTensor<D>,
         cursor: usize,
     ) -> Result<Self, TopologyError> {
-        Self::new_cpu(complex, data, cursor)
+        Self::new_impl(complex, data, cursor)
     }
 
     /// Creates a Manifold with an associated Regge geometry metric.
@@ -59,17 +59,53 @@ where
         metric: Option<ReggeGeometry<C>>,
         cursor: usize,
     ) -> Result<Self, TopologyError> {
-        Self::with_metric_cpu(complex, data, metric, cursor)
+        Self::with_metric_impl(complex, data, metric, cursor)
     }
 }
 
-impl<C, D> Manifold<C, D>
+impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
     C: Clone,
     D: Clone,
 {
     /// Creates a shallow clone of the Manifold with cursor reset to 0.
     pub fn clone_shallow(&self) -> Self {
-        Self::clone_shallow_cpu(self)
+        Self::clone_shallow_impl(self)
+    }
+}
+
+// -- Cubical constructors (Stage C) ----------------------------------------
+
+use crate::types::lattice_complex::LatticeComplex;
+
+impl<const D: usize, F> Manifold<LatticeComplex<D>, F> {
+    /// Construct a manifold over a cubical complex without a metric (raw assembly).
+    ///
+    /// Stage C ships this minimal cubical constructor so that `Manifold<LatticeComplex<D>, F>`
+    /// can be assembled by examples and tests. It does not validate the cell count against
+    /// `data.len()`; richer validation belongs in a follow-up that lifts the simplicial
+    /// `new`/`with_metric` validation logic to a complex-agnostic trait method.
+    pub fn from_cubical(complex: LatticeComplex<D>, data: CausalTensor<F>, cursor: usize) -> Self {
+        Self {
+            complex,
+            data,
+            metric: None,
+            cursor,
+        }
+    }
+
+    /// Construct a manifold over a cubical complex with a `CubicalReggeGeometry<D>` (unit-edge).
+    pub fn from_cubical_with_metric(
+        complex: LatticeComplex<D>,
+        data: CausalTensor<F>,
+        metric: crate::CubicalReggeGeometry<D>,
+        cursor: usize,
+    ) -> Self {
+        Self {
+            complex,
+            data,
+            metric: Some(metric),
+            cursor,
+        }
     }
 }

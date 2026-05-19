@@ -403,3 +403,180 @@ fn test_gauge_groups_matrix_dim() {
     // Lorentz (SO(3,1)): 4x4
     assert_eq!(SO3_1::matrix_dim(), 4);
 }
+
+// ============================================================================
+// try_from_phase Tests (constructor branch coverage)
+// ============================================================================
+
+#[test]
+fn test_link_variable_try_from_phase_u1() {
+    // n=1 branch: pure U(1) returns exp(i*phi)
+    let link: LinkVariable<U1, Complex<f64>, f64> =
+        LinkVariable::try_from_phase(0.5).expect("phase u1");
+    let z = link.as_slice()[0];
+    assert!((z.re - 0.5_f64.cos()).abs() < 1e-10);
+    assert!((z.im - 0.5_f64.sin()).abs() < 1e-10);
+}
+
+#[test]
+fn test_link_variable_try_from_phase_su2() {
+    // n=2 branch: diag(exp(i*phi/2), exp(-i*phi/2))
+    let phi = 0.4;
+    let link: LinkVariable<SU2, Complex<f64>, f64> =
+        LinkVariable::try_from_phase(phi).expect("phase su2");
+    let s = link.as_slice();
+    assert!((s[0].re - (phi / 2.0).cos()).abs() < 1e-10);
+    assert!((s[0].im - (phi / 2.0).sin()).abs() < 1e-10);
+    assert!((s[3].re - (phi / 2.0).cos()).abs() < 1e-10);
+    assert!((s[3].im + (phi / 2.0).sin()).abs() < 1e-10);
+    // off-diag zero
+    assert!(s[1].norm() < 1e-10);
+    assert!(s[2].norm() < 1e-10);
+}
+
+#[test]
+fn test_link_variable_try_from_phase_su2_u1() {
+    // SU2_U1 has name "SU(2)×U(1)" and matrix_dim=3
+    // The name check in source uses "SU2_U1" so it falls through
+    // to the general n=3 branch (identity 2x2 + phase 1x1).
+    use deep_causality_topology::SU2_U1;
+    let phi = 0.7;
+    let link: LinkVariable<SU2_U1, Complex<f64>, f64> =
+        LinkVariable::try_from_phase(phi).expect("phase su2_u1");
+    let s = link.as_slice();
+    // First two diagonal: identity 1.0
+    assert!((s[0] - Complex::new(1.0, 0.0)).norm() < 1e-10);
+    assert!((s[4] - Complex::new(1.0, 0.0)).norm() < 1e-10);
+    // Last diag = exp(i*phi)
+    assert!((s[8].re - phi.cos()).abs() < 1e-10);
+    assert!((s[8].im - phi.sin()).abs() < 1e-10);
+}
+
+#[test]
+fn test_link_variable_try_from_phase_su3() {
+    // n=3 branch (SU3 has name "SU(3)", matrix_dim=3): 2x2 identity + phase
+    use deep_causality_topology::SU3;
+    let phi = 0.3;
+    let link: LinkVariable<SU3, Complex<f64>, f64> =
+        LinkVariable::try_from_phase(phi).expect("phase su3");
+    let s = link.as_slice();
+    // Diagonal element [2,2] should be exp(i*phi)
+    assert!((s[8].re - phi.cos()).abs() < 1e-10);
+}
+
+#[test]
+fn test_link_variable_try_from_phase_n4() {
+    // n=4 branch: SO(3,1) general SU(n) diagonal encoding
+    use deep_causality_topology::SO3_1;
+    let phi = 0.2;
+    let link: LinkVariable<SO3_1, Complex<f64>, f64> =
+        LinkVariable::try_from_phase(phi).expect("phase so3_1");
+    let s = link.as_slice();
+    // First diag: exp(i*phi)
+    assert!((s[0].re - phi.cos()).abs() < 1e-10);
+    assert!((s[0].im - phi.sin()).abs() < 1e-10);
+    // Other diagonals: exp(-i*phi/(n-1)) = exp(-i*phi/3)
+    let comp = -phi / 3.0;
+    assert!((s[5].re - comp.cos()).abs() < 1e-10);
+    assert!((s[5].im - comp.sin()).abs() < 1e-10);
+}
+
+#[test]
+fn test_link_variable_from_phase_convenience() {
+    let link: LinkVariable<U1, Complex<f64>, f64> = LinkVariable::from_phase(0.0);
+    // exp(0) = 1
+    assert!((link.as_slice()[0] - Complex::new(1.0, 0.0)).norm() < 1e-10);
+}
+
+// Custom zero-dim group to hit InvalidDimension branches in try_identity, try_zero,
+// try_random, try_from_phase.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+struct ZeroDimGroup;
+impl deep_causality_topology::GaugeGroup for ZeroDimGroup {
+    const LIE_ALGEBRA_DIM: usize = 0;
+    const IS_ABELIAN: bool = true;
+    fn matrix_dim() -> usize {
+        0
+    }
+    fn name() -> &'static str {
+        "ZeroDim"
+    }
+}
+
+#[test]
+fn test_link_variable_try_identity_zero_dim_errors() {
+    let r: Result<LinkVariable<ZeroDimGroup, Complex<f64>, f64>, _> = LinkVariable::try_identity();
+    assert!(matches!(
+        r.unwrap_err(),
+        LinkVariableError::InvalidDimension(0)
+    ));
+}
+
+#[test]
+fn test_link_variable_try_zero_zero_dim_errors() {
+    let r: Result<LinkVariable<ZeroDimGroup, Complex<f64>, f64>, _> = LinkVariable::try_zero();
+    assert!(matches!(
+        r.unwrap_err(),
+        LinkVariableError::InvalidDimension(0)
+    ));
+}
+
+#[test]
+fn test_link_variable_try_random_zero_dim_errors() {
+    let mut rng = deep_causality_rand::rng();
+    let r: Result<LinkVariable<ZeroDimGroup, Complex<f64>, f64>, _> =
+        LinkVariable::try_random(&mut rng);
+    assert!(matches!(
+        r.unwrap_err(),
+        LinkVariableError::InvalidDimension(0)
+    ));
+}
+
+#[test]
+fn test_link_variable_try_from_phase_zero_dim_errors() {
+    let r: Result<LinkVariable<ZeroDimGroup, Complex<f64>, f64>, _> =
+        LinkVariable::try_from_phase(0.5);
+    assert!(matches!(
+        r.unwrap_err(),
+        LinkVariableError::InvalidDimension(0)
+    ));
+}
+
+// ============================================================================
+// Operations: non-identity matrix coverage
+// ============================================================================
+
+#[test]
+fn test_link_variable_dagger_non_trivial() {
+    // Construct [[1+2i, 3], [4, 5-i]], dagger should transpose + conjugate
+    let data = vec![
+        Complex::new(1.0, 2.0),
+        Complex::new(3.0, 0.0),
+        Complex::new(4.0, 0.0),
+        Complex::new(5.0, -1.0),
+    ];
+    let tensor = CausalTensor::new(data, vec![2, 2]).unwrap();
+    let link: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::from_matrix_unchecked(tensor);
+    let d = link.try_dagger().unwrap();
+    let s = d.as_slice();
+    // d[0,0] = conj(link[0,0]) = 1 - 2i
+    assert!((s[0] - Complex::new(1.0, -2.0)).norm() < 1e-10);
+    // d[0,1] = conj(link[1,0]) = 4
+    assert!((s[1] - Complex::new(4.0, 0.0)).norm() < 1e-10);
+    // d[1,0] = conj(link[0,1]) = 3
+    assert!((s[2] - Complex::new(3.0, 0.0)).norm() < 1e-10);
+    // d[1,1] = conj(link[1,1]) = 5 + i
+    assert!((s[3] - Complex::new(5.0, 1.0)).norm() < 1e-10);
+}
+
+#[test]
+fn test_link_variable_project_sun_general_su3() {
+    use deep_causality_topology::SU3;
+    // Scaled identity 3x3 — should project back to identity (with det=1 phase normalization)
+    let id: LinkVariable<SU3, Complex<f64>, f64> = LinkVariable::identity();
+    let scaled = id.scale(&Complex::new(2.0, 0.0));
+    let projected = scaled.project_sun().expect("projection should succeed");
+    // Trace should be close to 3 (or with phase normalization, det=1 enforced)
+    let tr = projected.trace();
+    assert!(tr.norm() > 2.0);
+}

@@ -9,10 +9,10 @@ use deep_causality_physics::{
     proca_equation,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud};
+use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
 
 // Helper to create a simple triangular manifold (Same as in fields_tests.rs)
-fn create_simple_manifold() -> Manifold<f64, f64> {
+fn create_simple_manifold() -> SimplicialManifold<f64, f64> {
     let points = CausalTensor::new(
         vec![
             0.0, 0.0, // v0

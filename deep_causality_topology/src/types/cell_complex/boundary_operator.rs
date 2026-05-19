@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::traits::cw_complex::{CWComplex, Cell};
+use crate::traits::cell::Cell;
+use crate::traits::chain_complex::ChainComplex;
 use crate::types::cell_complex::CellComplex;
 use deep_causality_sparse::CsrMatrix;
 use std::collections::HashMap;
@@ -22,7 +23,7 @@ pub struct BoundaryOperator<C: Cell> {
 
 impl<C: Cell> BoundaryOperator<C> {
     pub fn new(complex: Arc<CellComplex<C>>, k: usize) -> Self {
-        let matrix = complex.boundary_matrix(k);
+        let matrix = complex.boundary_matrix(k).into_owned();
         Self { matrix, complex, k }
     }
 

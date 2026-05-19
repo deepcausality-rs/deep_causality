@@ -22,7 +22,7 @@
 //! M. Creutz, *Quarks, Gluons and Lattices*, Cambridge University Press (1983), Chapter 8
 
 use deep_causality_num::{Complex, Float, Float106};
-use deep_causality_topology::{Lattice, LatticeGaugeField, U1};
+use deep_causality_topology::{CubicalComplex, LatticeGaugeField, U1};
 use std::sync::Arc;
 
 // =============================================================================
@@ -89,7 +89,10 @@ fn main() {
 
     // Create a 2D lattice with periodic boundary conditions
     let lattice_size = 16;
-    let lattice = Arc::new(Lattice::new([lattice_size, lattice_size], [true, true]));
+    let lattice = Arc::new(CubicalComplex::new(
+        [lattice_size, lattice_size],
+        [true, true],
+    ));
 
     println!(
         "Lattice: {}×{} with periodic boundaries",
@@ -150,7 +153,11 @@ struct VerificationResult {
 /// 1. Identity configuration gives ⟨P⟩ = 1.0 (trivial vacuum)
 /// 2. Two independent algorithms (series expansion vs continued fraction)
 ///    agree to within DoubleFloat precision
-fn verify_plaquette(lattice: Arc<Lattice<2>>, beta: f64, tolerance: f64) -> VerificationResult {
+fn verify_plaquette(
+    lattice: Arc<CubicalComplex<2>>,
+    beta: f64,
+    tolerance: f64,
+) -> VerificationResult {
     let beta_t = flt!(beta);
     let tolerance_t = flt!(tolerance);
 

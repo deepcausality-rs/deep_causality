@@ -29,6 +29,6 @@ where
         data: CausalTensor<T>,
         cursor: usize,
     ) -> Result<Self, TopologyError> {
-        Self::new_cpu(incidence, data, cursor)
+        Self::new_impl(incidence, data, cursor)
     }
 }

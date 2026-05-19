@@ -646,14 +646,16 @@ fn test_plane_wave_polarization_one() {
 fn test_from_fields_creates_valid_field() {
     use deep_causality_metric::WestCoastMetric;
     use deep_causality_tensor::CausalTensor;
-    use deep_causality_topology::{Manifold, Simplex, SimplicialComplexBuilder};
+    use deep_causality_topology::{
+        Manifold, Simplex, SimplicialComplexBuilder, SimplicialManifold,
+    };
 
     // Create a minimal manifold
     let mut builder = SimplicialComplexBuilder::new(0);
     let _ = builder.add_simplex(Simplex::new(vec![0]));
     let complex = builder.build().unwrap();
     let data = CausalTensor::new(vec![0.0], vec![1]).unwrap();
-    let base: Manifold<f64, f64> = Manifold::new(complex, data, 0).unwrap();
+    let base: SimplicialManifold<f64, f64> = Manifold::new(complex, data, 0).unwrap();
 
     // Create E and B multivectors with same metric
     let metric = WestCoastMetric::minkowski_4d().into_metric();
@@ -679,14 +681,16 @@ fn test_from_fields_creates_valid_field() {
 fn test_from_fields_metric_mismatch_error() {
     use deep_causality_metric::{EastCoastMetric, WestCoastMetric};
     use deep_causality_tensor::CausalTensor;
-    use deep_causality_topology::{Manifold, Simplex, SimplicialComplexBuilder};
+    use deep_causality_topology::{
+        Manifold, Simplex, SimplicialComplexBuilder, SimplicialManifold,
+    };
 
     // Create a minimal manifold
     let mut builder = SimplicialComplexBuilder::new(0);
     let _ = builder.add_simplex(Simplex::new(vec![0]));
     let complex = builder.build().unwrap();
     let data = CausalTensor::new(vec![0.0], vec![1]).unwrap();
-    let base: Manifold<f64, f64> = Manifold::new(complex, data, 0).unwrap();
+    let base: SimplicialManifold<f64, f64> = Manifold::new(complex, data, 0).unwrap();
 
     // Create E and B with DIFFERENT metrics
     let west_metric = WestCoastMetric::minkowski_4d().into_metric();

@@ -7,10 +7,11 @@ use deep_causality_metric::Metric;
 use deep_causality_num::Complex;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
-    BaseTopology, GaugeField, Manifold, PointCloud, SO3_1, Simplex, SimplicialComplexBuilder, U1,
+    BaseTopology, GaugeField, Manifold, PointCloud, SO3_1, Simplex, SimplicialComplexBuilder,
+    SimplicialManifold, U1,
 };
 
-fn create_test_manifold() -> Manifold<f64, f64> {
+fn create_test_manifold() -> SimplicialManifold<f64, f64> {
     let mut builder = SimplicialComplexBuilder::new(0);
     builder
         .add_simplex(Simplex::new(vec![0]))

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_topology::{CWComplex, Cell, CellComplex};
+use deep_causality_topology::{Cell, CellComplex, ChainComplex};
 
 // Test cell implementation with proper boundary
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -87,7 +87,7 @@ fn test_cell_complex_cells_vec() {
 }
 
 // ============================================================================
-// CWComplex trait implementation
+// ChainComplex trait implementation
 // ============================================================================
 
 #[test]
@@ -100,7 +100,7 @@ fn test_cell_complex_cw_cells_iterator() {
 
     let complex = CellComplex::from_cells(cells);
 
-    let vertices: Vec<_> = CWComplex::cells(&complex, 0).collect();
+    let vertices: Vec<_> = ChainComplex::cells(&complex, 0).collect();
     assert_eq!(vertices.len(), 3);
 }
 
@@ -109,12 +109,12 @@ fn test_cell_complex_max_dim() {
     let cells = vec![SimpleCell::Vertex(0), SimpleCell::Edge(0, 1)];
 
     let complex = CellComplex::from_cells(cells.clone());
-    assert_eq!(CWComplex::max_dim(&complex), 1);
+    assert_eq!(ChainComplex::max_dim(&complex), 1);
 
     // Just vertices
     let vertex_only = vec![SimpleCell::Vertex(0)];
     let complex2 = CellComplex::from_cells(vertex_only);
-    assert_eq!(CWComplex::max_dim(&complex2), 0);
+    assert_eq!(ChainComplex::max_dim(&complex2), 0);
 }
 
 // ============================================================================
@@ -172,7 +172,7 @@ fn test_cell_complex_betti_number_single_vertex() {
     let cells = vec![SimpleCell::Vertex(0)];
     let complex = CellComplex::from_cells(cells);
 
-    let b0 = CWComplex::betti_number(&complex, 0);
+    let b0 = ChainComplex::betti_number(&complex, 0);
     assert_eq!(b0, 1);
 }
 
@@ -182,7 +182,7 @@ fn test_cell_complex_betti_number_two_vertices() {
     let cells = vec![SimpleCell::Vertex(0), SimpleCell::Vertex(1)];
     let complex = CellComplex::from_cells(cells);
 
-    let b0 = CWComplex::betti_number(&complex, 0);
+    let b0 = ChainComplex::betti_number(&complex, 0);
     assert_eq!(b0, 2);
 }
 
@@ -196,7 +196,7 @@ fn test_cell_complex_betti_number_connected_edge() {
     ];
     let complex = CellComplex::from_cells(cells);
 
-    let b0 = CWComplex::betti_number(&complex, 0);
+    let b0 = ChainComplex::betti_number(&complex, 0);
     assert_eq!(b0, 1);
 }
 
@@ -214,10 +214,10 @@ fn test_cell_complex_betti_number_filled_triangle() {
     ];
     let complex = CellComplex::from_cells(cells);
 
-    let b0 = CWComplex::betti_number(&complex, 0);
+    let b0 = ChainComplex::betti_number(&complex, 0);
     assert_eq!(b0, 1);
 
-    let b1 = CWComplex::betti_number(&complex, 1);
+    let b1 = ChainComplex::betti_number(&complex, 1);
     assert_eq!(b1, 0);
 }
 

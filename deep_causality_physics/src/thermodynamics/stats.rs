@@ -6,7 +6,7 @@
 use crate::BOLTZMANN_CONSTANT;
 use crate::{AmountOfSubstance, Energy, PhysicsError, Pressure, Probability, Temperature, Volume};
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::Manifold;
+use deep_causality_topology::SimplicialManifold;
 
 /// Calculates the Heat Equation step: $\frac{\partial u}{\partial t} = \alpha \Delta u$.
 ///
@@ -20,7 +20,7 @@ use deep_causality_topology::Manifold;
 /// # Returns
 /// * `Result<CausalTensor<f64>, PhysicsError>` - Rate of change tensor $\frac{du}{dt}$.
 pub fn heat_diffusion_kernel(
-    temp_manifold: &Manifold<f64, f64>,
+    temp_manifold: &SimplicialManifold<f64, f64>,
     diffusivity: f64,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     // Heat Eq: du/dt = - alpha * Laplacian(u)
