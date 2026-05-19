@@ -34,7 +34,7 @@
 //! - **Plaquettes:** Ordered product around elementary squares
 //! - **Wilson action:** S = β Σ_p (1 - Re[Tr(U_p)]/N)
 
-use crate::{CWComplex, GaugeGroup, RandomField};
+use crate::{ChainComplex, GaugeGroup, RandomField};
 use crate::{Lattice, LatticeCell, LinkVariable, TopologyError};
 use deep_causality_num::{
     ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,

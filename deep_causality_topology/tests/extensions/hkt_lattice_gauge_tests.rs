@@ -5,7 +5,7 @@
 
 use deep_causality_haft::{Applicative, Functor, Monad, Pure};
 use deep_causality_topology::{
-    CWComplex, GaugeGroup, Lattice, LatticeGaugeField, LatticeGaugeFieldWitness, TopologyError,
+    ChainComplex, GaugeGroup, Lattice, LatticeGaugeField, LatticeGaugeFieldWitness, TopologyError,
     TopologyErrorEnum,
 };
 use std::sync::Arc;

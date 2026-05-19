@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::traits::cw_complex::Cell;
+use crate::traits::cell::Cell;
 
 /// A k-cell in a D-dimensional regular lattice.
 ///

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_topology::{CWComplex, Lattice, LatticeCell};
+use deep_causality_topology::{ChainComplex, Lattice, LatticeCell};
 
 #[test]
 fn test_lattice_construction() {

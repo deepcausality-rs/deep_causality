@@ -9,25 +9,56 @@ pub mod specialized;
 
 pub use lattice_cell::LatticeCell;
 
-use crate::traits::cw_complex::{CWComplex, Cell};
+use crate::traits::cell::Cell;
+use crate::traits::chain_complex::ChainComplex;
 use deep_causality_sparse::CsrMatrix;
+use std::borrow::Cow;
 use std::collections::HashMap;
+use std::sync::Mutex;
 
 /// A D-dimensional regular lattice.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct Lattice<const D: usize> {
     /// Dimensions of the lattice [L₀, L₁, ..., L_{D-1}]
     shape: [usize; D],
     /// Periodic boundary conditions per dimension
     periodic: [bool; D],
+    /// Lazy memo of coboundary matrices: δ_k = (∂_{k+1})ᵀ.
+    /// Populated on first call to `coboundary_matrix(k)`; ignored for equality.
+    /// `Mutex` (not `RefCell`) so `Lattice<D>` stays `Send + Sync` for the existing
+    /// `Arc<Lattice<D>>` consumers in `gauge_field_lattice`.
+    coboundary_cache: Mutex<HashMap<usize, CsrMatrix<i8>>>,
 }
+
+impl<const D: usize> Clone for Lattice<D> {
+    fn clone(&self) -> Self {
+        Self {
+            shape: self.shape,
+            periodic: self.periodic,
+            // Cache intentionally not cloned: cheaper to recompute lazily on the clone.
+            coboundary_cache: Mutex::new(HashMap::new()),
+        }
+    }
+}
+
+impl<const D: usize> PartialEq for Lattice<D> {
+    fn eq(&self, other: &Self) -> bool {
+        self.shape == other.shape && self.periodic == other.periodic
+    }
+}
+
+impl<const D: usize> Eq for Lattice<D> {}
 
 impl<const D: usize> Lattice<D> {
     // --- Constructors ---
 
     /// Create a new lattice with given shape and boundary conditions.
     pub fn new(shape: [usize; D], periodic: [bool; D]) -> Self {
-        Self { shape, periodic }
+        Self {
+            shape,
+            periodic,
+            coboundary_cache: Mutex::new(HashMap::new()),
+        }
     }
 
     /// Create a fully periodic (toroidal) lattice.
@@ -183,11 +214,15 @@ impl<'a, const D: usize> Iterator for LatticeCellIterator<'a, D> {
     }
 }
 
-impl<const D: usize> CWComplex for Lattice<D> {
+impl<const D: usize> ChainComplex for Lattice<D> {
     type CellType = LatticeCell<D>;
+    type CellIter<'a>
+        = LatticeCellIterator<'a, D>
+    where
+        Self: 'a;
 
-    fn cells(&self, k: usize) -> Box<dyn Iterator<Item = Self::CellType> + '_> {
-        Box::new(self.iter_cells(k))
+    fn cells(&self, k: usize) -> Self::CellIter<'_> {
+        self.iter_cells(k)
     }
 
     fn num_cells(&self, k: usize) -> usize {
@@ -219,7 +254,7 @@ impl<const D: usize> CWComplex for Lattice<D> {
         D
     }
 
-    fn boundary_matrix(&self, k: usize) -> CsrMatrix<i8> {
+    fn boundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>> {
         let rows = self.num_cells(k - 1);
         let cols = self.num_cells(k);
 
@@ -239,7 +274,28 @@ impl<const D: usize> CWComplex for Lattice<D> {
             }
         }
 
-        CsrMatrix::from_triplets(rows, cols, &triplets).unwrap_or_else(|_| CsrMatrix::new())
+        Cow::Owned(
+            CsrMatrix::from_triplets(rows, cols, &triplets).unwrap_or_else(|_| CsrMatrix::new()),
+        )
+    }
+
+    fn coboundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>> {
+        // Lazy memo: δ_k = (∂_{k+1})ᵀ.
+        {
+            let cache = self
+                .coboundary_cache
+                .lock()
+                .expect("coboundary_cache poisoned");
+            if let Some(m) = cache.get(&k) {
+                return Cow::Owned(m.clone());
+            }
+        }
+        let computed = self.boundary_matrix(k + 1).into_owned().transpose();
+        self.coboundary_cache
+            .lock()
+            .expect("coboundary_cache poisoned")
+            .insert(k, computed.clone());
+        Cow::Owned(computed)
     }
 
     fn betti_number(&self, k: usize) -> usize {

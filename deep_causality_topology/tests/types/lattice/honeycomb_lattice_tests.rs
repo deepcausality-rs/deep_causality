@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_topology::{CWComplex, HoneycombLattice};
+use deep_causality_topology::{ChainComplex, HoneycombLattice};
 
 // ============================================================================
 // HoneycombLattice construction
@@ -61,7 +61,7 @@ fn test_honeycomb_as_cell_complex_dimension() {
     let lattice = HoneycombLattice::new([2, 2], [false, false]);
     let complex = lattice.as_cell_complex();
 
-    assert_eq!(CWComplex::max_dim(&complex), 2);
+    assert_eq!(ChainComplex::max_dim(&complex), 2);
 }
 
 #[test]

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::traits::cw_complex::Cell;
+use crate::traits::cell::Cell;
 use crate::types::cell_complex::CellComplex;
 
 use std::hash::Hash;

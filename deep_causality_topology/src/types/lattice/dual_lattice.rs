@@ -113,11 +113,11 @@ impl<const D: usize> DualLattice<D> {
         // Primal boundary of the dual cell
         // NOTE: primal.boundary() returns Vec<(C, i8)> ???
         // Lattice::boundary calls cell.boundary().
-        // Lattice struct implements CWComplex.
+        // Lattice struct implements ChainComplex.
         // Wait, Lattice struct doesn't have a 'boundary' method directly exposed that returns Chain?
-        // Lattice implements CWComplex.
-        // CWComplex trait DOES NOT have cell-wise boundary method?
-        // CWComplex has `boundary_matrix`.
+        // Lattice implements ChainComplex.
+        // ChainComplex trait DOES NOT have cell-wise boundary method?
+        // ChainComplex has `boundary_matrix`.
         // Cell trait has `boundary`.
         // `dual` is a Cell. `dual.boundary()` works.
         // `self.primal` is `Lattice`. `Lattice` implies cells are `LatticeCell`.

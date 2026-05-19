@@ -41,6 +41,23 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "traits",
+    srcs = glob([
+        "traits/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_sparse",
+    ],
+)
+
+rust_test_suite(
     name = "types/chain",
     srcs = glob([
         "types/chain/*_tests.rs",

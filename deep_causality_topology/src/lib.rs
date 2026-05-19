@@ -32,7 +32,8 @@ pub use crate::extensions::hkt_gauge::hkt_gauge_witness::{GaugeFieldHKT, GaugeFi
 pub use crate::extensions::hkt_gauge::hkt_lattice_gauge::LatticeGaugeFieldWitness;
 // Re-export traits
 pub use crate::traits::base_topology::BaseTopology;
-pub use crate::traits::cw_complex::{CWComplex, Cell};
+pub use crate::traits::cell::Cell;
+pub use crate::traits::chain_complex::ChainComplex;
 pub use crate::traits::gauge_group::GaugeGroup;
 pub use crate::traits::graph_topology::GraphTopology;
 pub use crate::traits::hypergraph_topology::HypergraphTopology;
