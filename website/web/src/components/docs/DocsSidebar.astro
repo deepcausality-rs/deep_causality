@@ -11,7 +11,6 @@ const sections = [
 const grouped = sections.map((s) => {
   const entries = all.filter((e) => e.data.section === s.id);
   if (s.sort === 'alpha') {
-    // Pin the glossary to the end; sort everything else by title.
     entries.sort((a, b) => {
       const aGloss = a.id.endsWith('glossary');
       const bGloss = b.id.endsWith('glossary');
@@ -27,7 +26,18 @@ const grouped = sections.map((s) => {
 const here = Astro.url.pathname;
 const idToHref = (id: string) => `/docs/${id.replace(/\/index$/, '/')}/`.replace(/\/+/g, '/');
 ---
-<aside class="docs-sidebar">
+<!-- Scrim for the mobile slide-in drawer (rendered fixed-positioned). -->
+<div class="docs-menu-scrim" data-docs-menu-close hidden></div>
+
+<aside class="docs-sidebar" id="docs-menu-drawer" data-docs-menu>
+  <div class="docs-menu-head">
+    <span class="docs-menu-title">Documentation</span>
+    <button class="docs-menu-close" type="button" aria-label="Close documentation menu" data-docs-menu-close>
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <path d="M5 5 L15 15 M15 5 L5 15"/>
+      </svg>
+    </button>
+  </div>
   <nav aria-label="Documentation">
     {grouped.map((g) => g.entries.length > 0 && (
       <section>
@@ -46,15 +56,110 @@ const idToHref = (id: string) => `/docs/${id.replace(/\/index$/, '/')}/`.replace
   </nav>
 </aside>
 
-<style>
-  /* Mobile-first: flat block at the top of the docs page; sticky sidebar at ≥900px. */
-  .docs-sidebar {
-    border-bottom: 1px solid var(--line-1);
-    padding: var(--space-5) 0;
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-docs-menu-toggle]');
+  const drawer = document.querySelector<HTMLElement>('[data-docs-menu]');
+  const scrim = document.querySelector<HTMLElement>('.docs-menu-scrim');
+  const closers = document.querySelectorAll<HTMLElement>('[data-docs-menu-close]');
+
+  function setOpen(open: boolean) {
+    if (!drawer || !toggle) return;
+    if (open) {
+      drawer.setAttribute('data-open', '');
+      if (scrim) { scrim.hidden = false; void scrim.offsetWidth; scrim.setAttribute('data-open', ''); }
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      drawer.removeAttribute('data-open');
+      if (scrim) {
+        scrim.removeAttribute('data-open');
+        window.setTimeout(() => { if (scrim && !scrim.hasAttribute('data-open')) scrim.hidden = true; }, 220);
+      }
+      document.documentElement.style.overflow = '';
+    }
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
+
+  toggle?.addEventListener('click', () => setOpen(!drawer?.hasAttribute('data-open')));
+  closers.forEach((el) => el.addEventListener('click', () => setOpen(false)));
+  drawer?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+</script>
+
+<style>
+  /* ---- Mobile slide-in drawer ---- */
+  .docs-sidebar {
+    /* Mobile: off-canvas slide-in from the left, fixed full-height drawer. */
+    position: fixed;
+    top: 0; bottom: 0; left: 0;
+    z-index: 45;
+    width: min(86vw, 320px);
+    background: var(--bg-1);
+    border-right: 1px solid var(--line-1);
+    box-shadow: var(--shadow-3);
+    padding: 0 var(--space-4) var(--space-5);
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform var(--dur-med) var(--ease-out);
+  }
+  .docs-sidebar[data-open] { transform: translateX(0); }
+
+  .docs-menu-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) 0;
+    margin-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line-1);
+  }
+  .docs-menu-title {
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    font-family: var(--font-mono);
+  }
+  .docs-menu-close {
+    display: inline-grid;
+    place-items: center;
+    width: 36px; height: 36px;
+    padding: 0;
+    background: transparent;
+    color: var(--fg-1);
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+  .docs-menu-close:hover { color: var(--fg-0); border-color: var(--line-2); }
+  .docs-menu-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---- Mobile scrim ---- */
+  .docs-menu-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 44;
+    background: color-mix(in srgb, var(--bg-0) 70%, transparent);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity var(--dur-med) var(--ease-out);
+  }
+  .docs-menu-scrim[data-open] { opacity: 1; }
+
+  /* ---- Desktop layout (≥900px): scrim disappears, sidebar
+       becomes the sticky in-flow column it used to be. ---- */
   @media (min-width: 900px) {
+    .docs-menu-scrim,
+    .docs-menu-head { display: none !important; }
     .docs-sidebar {
-      position: sticky; top: 80px; align-self: start;
+      position: sticky;
+      top: 80px;
+      align-self: start;
+      width: auto;
+      transform: none;
+      transition: none;
+      z-index: auto;
+      background: transparent;
+      box-shadow: none;
       border-right: 1px solid var(--line-1);
       border-bottom: none;
       padding: var(--space-6) var(--space-5) var(--space-9) 0;
@@ -62,6 +167,8 @@ const idToHref = (id: string) => `/docs/${id.replace(/\/index$/, '/')}/`.replace
       overflow: auto;
     }
   }
+
+  /* ---- Shared list styling ---- */
   .docs-sidebar section + section { margin-top: var(--space-5); }
   .docs-sidebar h4 {
     margin: 0 0 var(--space-2) 0;
@@ -69,7 +176,6 @@ const idToHref = (id: string) => `/docs/${id.replace(/\/index$/, '/')}/`.replace
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--fg-2);
-    /* Mono section label matches the home page eyebrow language. */
     font-family: var(--font-mono);
     display: flex;
     align-items: center;
@@ -94,9 +200,6 @@ const idToHref = (id: string) => `/docs/${id.replace(/\/index$/, '/')}/`.replace
     transition: color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
   }
   .docs-sidebar a:hover { color: var(--fg-0); }
-  /* Active "you are here" item: 2px accent left edge (inset shadow, no layout
-     shift) plus a quiet cyan halo. Carries the futurism language from the home
-     page into the docs surface without distracting from the article. */
   .docs-sidebar a.is-here {
     color: var(--fg-0);
     background: var(--bg-2);
@@ -104,5 +207,4 @@ const idToHref = (id: string) => `/docs/${id.replace(/\/index$/, '/')}/`.replace
       inset 2px 0 0 var(--accent),
       0 0 26px -16px color-mix(in srgb, var(--accent) 55%, transparent);
   }
-
 </style>
