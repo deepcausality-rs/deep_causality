@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.2.4...deep_causality_ethos-v0.2.5) - 2026-05-19
+
+### Other
+
+- Added a README.md to the deep_causality_ethos crate
+- Updated the README file.
+- Updated project README.md
+- Updated example. Read me to add the latest example and add a more sensible ordering of all existing examples.
+- Edited. Readme again.
+- Added writing guides and updated the README.md
+
 ## [0.2.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.2.3...deep_causality_ethos-v0.2.4) - 2026-03-12
 
 ### Other
