@@ -1,0 +1,47 @@
+#SPDX-License-Identifier: MIT
+#Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+name: Miri
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Sundays at 00:00 UTC (GitHub Actions cron is UTC).
+    - cron: '0 0 * * 0'
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  miri:
+    name: cargo miri test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Phase 0 pilot: validate plumbing on a single small crate with a
+        # well-defined unsafe primitive (`SparseMatrix::from_parts`).
+        # Additional crates are added in subsequent phases — see issue #536.
+        crate:
+          - deep_causality_sparse
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install nightly toolchain with Miri
+        run: |
+          rustup toolchain install nightly --component miri --profile minimal
+          rustup override set nightly
+          cargo miri setup
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: miri
+          cache-on-failure: true
+
+      - name: Run Miri
+        env:
+          MIRIFLAGS: -Zmiri-strict-provenance -Zmiri-symbolic-alignment-check
+        run: cargo miri test -p ${{ matrix.crate }}
