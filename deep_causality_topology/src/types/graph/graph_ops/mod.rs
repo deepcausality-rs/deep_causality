@@ -5,4 +5,4 @@
 
 //! Graph operations implementations.
 
-mod graph_ops_cpu;
+mod graph_ops_impl;

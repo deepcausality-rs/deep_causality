@@ -8,11 +8,10 @@
 //! Contains Hodge-Laplacian, exterior derivative, codifferential,
 //! and Hodge star operators. These are sparse matrix operations.
 
-// CPU implementations (sparse matrix operations)
-mod codifferential_cpu;
-mod exterior_cpu;
-mod hodge_cpu;
-mod laplacian_cpu;
+mod codifferential;
+mod exterior;
+mod hodge;
+mod laplacian;
 
 // Shared utilities
 pub(super) mod utils_differential;

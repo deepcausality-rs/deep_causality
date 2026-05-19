@@ -33,7 +33,9 @@ use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::{Float106, RealField};
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, ManifoldWitness, Simplex, SimplicialComplex, Skeleton};
+use deep_causality_topology::{
+    Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
+};
 use mathematics_examples::effect_helpers::{
     Process, ProcessWitness, expect_value, fail, ok, print_log,
 };
@@ -110,7 +112,7 @@ fn main() {
 
 /// Build the discretized timelike path manifold with per-edge rapidities stored in the
 /// data tensor. Vertex entries hold zero; edge entries hold the rapidity.
-fn build_path_manifold(rapidities: &[FloatType]) -> Manifold<f64, FloatType> {
+fn build_path_manifold(rapidities: &[FloatType]) -> SimplicialManifold<f64, FloatType> {
     assert_eq!(rapidities.len(), N_EDGES);
 
     let vertices: Vec<Simplex> = (0..N_VERTICES).map(|i| Simplex::new(vec![i])).collect();
@@ -140,7 +142,7 @@ fn build_path_manifold(rapidities: &[FloatType]) -> Manifold<f64, FloatType> {
 /// comonadic cursor and using `extract`. This demonstrates the topology and
 /// tensor cooperating: the manifold provides the addressing, the tensor
 /// provides the storage.
-fn read_edge_rapidity(m: &Manifold<f64, FloatType>, e: usize) -> FloatType {
+fn read_edge_rapidity(m: &SimplicialManifold<f64, FloatType>, e: usize) -> FloatType {
     let cursor = N_VERTICES + e;
     let repositioned =
         Manifold::new(m.complex().clone(), m.data().clone(), cursor).expect("reposition");
@@ -175,7 +177,7 @@ fn boost_rotor(theta: FloatType) -> (CausalMultiVector<FloatType>, CausalMultiVe
 /// manifold, builds the rotor, and applies `psi -> B psi B~`.
 fn transport_across_edge(
     psi: CausalMultiVector<FloatType>,
-    manifold: &Manifold<f64, FloatType>,
+    manifold: &SimplicialManifold<f64, FloatType>,
     e: usize,
 ) -> Process<CausalMultiVector<FloatType>> {
     let theta = read_edge_rapidity(manifold, e);

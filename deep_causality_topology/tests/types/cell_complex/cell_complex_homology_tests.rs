@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_topology::{CWComplex, Cell, CellComplex};
+use deep_causality_topology::{Cell, CellComplex, ChainComplex};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 enum TestCell {
@@ -73,8 +73,8 @@ fn test_homology_circle() {
     // b1 = 1 (1 hole)
     let complex = create_circle_complex();
 
-    assert_eq!(CWComplex::betti_number(&complex, 0), 1);
-    assert_eq!(CWComplex::betti_number(&complex, 1), 1);
+    assert_eq!(ChainComplex::betti_number(&complex, 0), 1);
+    assert_eq!(ChainComplex::betti_number(&complex, 1), 1);
 }
 
 #[test]
@@ -93,8 +93,8 @@ fn test_homology_disk() {
     ];
     let complex = CellComplex::from_cells(cells);
 
-    assert_eq!(CWComplex::betti_number(&complex, 0), 1);
-    assert_eq!(CWComplex::betti_number(&complex, 1), 0);
+    assert_eq!(ChainComplex::betti_number(&complex, 0), 1);
+    assert_eq!(ChainComplex::betti_number(&complex, 1), 0);
 }
 
 #[test]
@@ -111,9 +111,9 @@ fn test_homology_two_components() {
     let complex = CellComplex::from_cells(cells);
 
     // b0 = 2 components
-    assert_eq!(CWComplex::betti_number(&complex, 0), 2);
+    assert_eq!(ChainComplex::betti_number(&complex, 0), 2);
     // b1 = 0 loops
-    assert_eq!(CWComplex::betti_number(&complex, 1), 0);
+    assert_eq!(ChainComplex::betti_number(&complex, 1), 0);
 }
 
 #[test]
@@ -159,5 +159,5 @@ fn test_rank_of_matrix_calculation() {
     // d_1: C_1 -> C_0 (rank 2) -> Im d_1 (dim 2)
     // b_0 = 3 - 2 = 1. Correct.
 
-    assert_eq!(CWComplex::betti_number(&complex, 0), 1);
+    assert_eq!(ChainComplex::betti_number(&complex, 0), 1);
 }

@@ -29,6 +29,6 @@ impl<C, D> PointCloud<C, D> {
         C: Default + Copy + Clone + PartialEq + Zero,
         D: Default + Copy + Clone + PartialEq + Zero,
     {
-        Self::new_cpu(points, metadata, cursor)
+        Self::new_impl(points, metadata, cursor)
     }
 }

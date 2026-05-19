@@ -12,7 +12,7 @@ use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, Hi
 use deep_causality_num::Complex;
 use deep_causality_num::DivisionAlgebra;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::Manifold;
+use deep_causality_topology::SimplicialManifold;
 
 pub type Operator = HilbertState;
 pub type Gate = HilbertState;
@@ -38,7 +38,7 @@ pub type Gate = HilbertState;
 /// # Returns
 /// * `Result<CausalTensor<f64>, PhysicsError>` - The result of applying the operator $O(\psi)$.
 pub fn klein_gordon_kernel(
-    psi_manifold: &Manifold<f64, f64>,
+    psi_manifold: &SimplicialManifold<f64, f64>,
     mass: f64,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     // 1. Term A: Laplacian(psi) = Delta psi

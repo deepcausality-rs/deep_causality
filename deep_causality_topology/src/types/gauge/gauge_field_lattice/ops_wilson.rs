@@ -7,7 +7,7 @@
 //!
 //! Implements the standard Wilson gauge action and Wilson/Polyakov loop observables.
 
-use crate::{CWComplex, GaugeGroup, LatticeCell, LatticeGaugeField, TopologyError};
+use crate::{ChainComplex, GaugeGroup, LatticeCell, LatticeGaugeField, TopologyError};
 use deep_causality_num::{
     ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
 };

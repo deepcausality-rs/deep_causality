@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{BaseTopology, GaugeGroup, Manifold, TopologyError};
+use crate::{BaseTopology, GaugeGroup, Manifold, SimplicialComplex, TopologyError};
 use deep_causality_metric::Metric;
 use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
@@ -49,7 +49,7 @@ use deep_causality_num::{Field, RealField};
 #[derive(Debug, Clone)]
 pub struct GaugeField<G: GaugeGroup, M, R> {
     /// Base manifold (spacetime). Private for invariant preservation.
-    base: Manifold<R, R>,
+    base: Manifold<SimplicialComplex<R>, R>,
 
     /// Spacetime metric signature (Minkowski, Euclidean, etc.).
     metric: Metric,
@@ -102,7 +102,7 @@ impl<G: GaugeGroup, M: Field, R: RealField> GaugeField<G, M, R> {
     /// )?;
     /// ```
     pub fn new(
-        base: Manifold<R, R>,
+        base: Manifold<SimplicialComplex<R>, R>,
         metric: Metric,
         connection: CausalTensor<M>,
         field_strength: CausalTensor<M>,
@@ -177,7 +177,7 @@ impl<G: GaugeGroup, M: Field, R: RealField> GaugeField<G, M, R> {
     ///
     /// Returns `TopologyError::GaugeFieldError` if tensor shapes don't match expected dimensions.
     pub fn with_default_metric(
-        base: Manifold<R, R>,
+        base: Manifold<SimplicialComplex<R>, R>,
         connection: CausalTensor<M>,
         field_strength: CausalTensor<M>,
     ) -> Result<Self, TopologyError> {

@@ -24,7 +24,7 @@ impl GaugeGroup for TestGroup {
 
 #[test]
 fn test_gauge_field_display() {
-    use deep_causality_topology::{Manifold, Simplex, SimplicialComplexBuilder};
+    use deep_causality_topology::{Simplex, SimplicialComplexBuilder, SimplicialManifold};
 
     let metric = Metric::Minkowski(4);
 
@@ -53,7 +53,7 @@ fn test_gauge_field_display() {
     // Try to create manifold.
     // If 1-simplex isn't a valid manifold, we'll get error again.
     // But it should be.
-    let base = Manifold::<f64, f64>::new(complex, mf_tensor, 0).unwrap();
+    let base = SimplicialManifold::<f64, f64>::new(complex, mf_tensor, 0).unwrap();
 
     let gf = GaugeField::<TestGroup, f64, f64>::new(base, metric, conn, fs).unwrap();
 

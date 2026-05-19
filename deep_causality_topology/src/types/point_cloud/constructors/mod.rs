@@ -5,4 +5,4 @@
 
 //! Constructor implementations for PointCloud.
 
-mod constructors_cpu;
+mod constructors_impl;

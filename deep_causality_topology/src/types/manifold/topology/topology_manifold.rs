@@ -4,9 +4,9 @@
  */
 
 use crate::types::manifold::utils;
-use crate::{Manifold, ManifoldTopology};
+use crate::{Manifold, ManifoldTopology, SimplicialComplex};
 
-impl<C, D> ManifoldTopology for Manifold<C, D> {
+impl<C, D> ManifoldTopology for Manifold<SimplicialComplex<C>, D> {
     fn is_oriented(&self) -> bool {
         utils::is_oriented(&self.complex)
     }

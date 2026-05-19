@@ -11,7 +11,7 @@ use deep_causality_physics::{
     magnetic_reconnection_rate, resistive_diffusion,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud};
+use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
 
 // ============================================================================
 // Ideal MHD Wrapper Tests
@@ -132,7 +132,7 @@ fn test_magnetic_reconnection_rate_wrapper_high_lundquist() {
 // Ideal Induction and Resistive Diffusion Wrapper Tests (Require Manifold)
 // ============================================================================
 
-fn create_test_manifold() -> Manifold<f64, f64> {
+fn create_test_manifold() -> SimplicialManifold<f64, f64> {
     // Create a simple triangular mesh
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 0.866], vec![3, 2]).unwrap();
     let scalar_field = CausalTensor::new(vec![0.0; 3], vec![3]).unwrap();

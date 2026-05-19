@@ -24,7 +24,7 @@
 //! - **Pure::pure**: Lift a value into a minimal field context
 //! - **Monad::bind**: Chain field transformations
 
-use crate::{GaugeGroup, Lattice, LatticeGaugeField, LinkVariable, TopologyError};
+use crate::{GaugeGroup, LatticeComplex, LatticeGaugeField, LinkVariable, TopologyError};
 use deep_causality_haft::{Applicative, Functor, HKT, Monad, NoConstraint, Pure, Satisfies};
 use deep_causality_num::{
     ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
@@ -157,7 +157,7 @@ where
         T: Satisfies<NoConstraint>,
     {
         let shape = [1usize; D];
-        let lattice = Arc::new(Lattice::new(shape, [true; D]));
+        let lattice = Arc::new(LatticeComplex::new(shape, [true; D]));
         let links = HashMap::new();
 
         LatticeGaugeField::from_links_unchecked(lattice, links, value, ())
@@ -276,7 +276,7 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
         // Validate lattice shapes match
         if field_a.lattice().shape() != field_b.lattice().shape() {
             return Err(TopologyError::LatticeGaugeError(format!(
-                "Lattice shape mismatch: {:?} vs {:?}",
+                "LatticeComplex shape mismatch: {:?} vs {:?}",
                 field_a.lattice().shape(),
                 field_b.lattice().shape()
             )));
@@ -342,7 +342,7 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
     ///
     /// Convenience wrapper that enforces proper type constraints.
     pub fn identity_field<T>(
-        lattice: Arc<Lattice<D>>,
+        lattice: Arc<LatticeComplex<D>>,
         beta: R,
     ) -> Result<LatticeGaugeField<G, D, T, R>, TopologyError>
     where

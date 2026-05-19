@@ -7,7 +7,7 @@ use crate::{Density, PhysicalField, PhysicsError};
 use deep_causality_multivector::MultiVector;
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, SimplicialComplex};
+use deep_causality_topology::{SimplicialComplex, SimplicialManifold};
 use std::collections::HashMap;
 
 /// Calculates the characteristic speed of Alfven waves.
@@ -98,8 +98,8 @@ pub fn magnetic_pressure_kernel(
 /// *   `Result<CausalTensor<f64>, PhysicsError>` - Rate of change of B (2-form), i.e., $-\partial_t B$.
 ///     Wait, the equation is $\partial_t B = \dots$. The function returns $\partial_t B$.
 pub fn ideal_induction_kernel(
-    v_manifold: &Manifold<f64, f64>,
-    b_manifold: &Manifold<f64, f64>,
+    v_manifold: &SimplicialManifold<f64, f64>,
+    b_manifold: &SimplicialManifold<f64, f64>,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     // 1. Validation
     let complex = v_manifold.complex();

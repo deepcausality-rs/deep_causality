@@ -6,6 +6,7 @@
 //! Utility functions for Manifold validation and analysis.
 
 use crate::SimplicialComplex;
+use crate::traits::chain_complex::ChainComplex;
 
 /// Checks if the simplicial complex is oriented.
 pub(crate) fn is_oriented<T>(complex: &SimplicialComplex<T>) -> bool {
@@ -14,24 +15,26 @@ pub(crate) fn is_oriented<T>(complex: &SimplicialComplex<T>) -> bool {
         return true; // Points are oriented
     }
 
-    // Convention: boundary_operators[k] maps (k+1)-simplices to k-simplices
-    // So boundary_operators[max_dim - 1] maps max_dim-simplices to (max_dim-1)-simplices
-    if let Some(boundary_op) = complex.boundary_operators.get(max_dim - 1) {
-        let rows = boundary_op.shape().0;
-        let row_indices = boundary_op.row_indices();
-        let values = boundary_op.values();
+    // Route through ChainComplex::boundary_matrix(max_dim) — Cow::Borrowed on SimplicialComplex.
+    let boundary_cow = ChainComplex::boundary_matrix(complex, max_dim);
+    let boundary_op: &deep_causality_sparse::CsrMatrix<i8> = &boundary_cow;
+    let rows = boundary_op.shape().0;
+    if rows == 0 {
+        return true;
+    }
+    let row_indices = boundary_op.row_indices();
+    let values = boundary_op.values();
 
-        for r in 0..rows {
-            let start = row_indices[r];
-            let end = row_indices[r + 1];
-            let mut sum: i8 = 0;
-            for &val in &values[start..end] {
-                sum += val;
-            }
+    for r in 0..rows {
+        let start = row_indices[r];
+        let end = row_indices[r + 1];
+        let mut sum: i8 = 0;
+        for &val in &values[start..end] {
+            sum += val;
+        }
 
-            if sum.abs() > 1 {
-                return false;
-            }
+        if sum.abs() > 1 {
+            return false;
         }
     }
     true
@@ -104,19 +107,22 @@ pub(crate) fn has_boundary<T>(complex: &SimplicialComplex<T>) -> bool {
         return false; // Points don't have boundary in this context
     }
 
-    // Convention: boundary_operators[k] maps (k+1)-simplices to k-simplices
-    if let Some(boundary_op) = complex.boundary_operators.get(max_dim - 1) {
-        let rows = boundary_op.shape().0;
-        let row_indices = boundary_op.row_indices();
+    // Route through ChainComplex::boundary_matrix(max_dim) — Cow::Borrowed on SimplicialComplex.
+    let boundary_cow = ChainComplex::boundary_matrix(complex, max_dim);
+    let boundary_op: &deep_causality_sparse::CsrMatrix<i8> = &boundary_cow;
+    let rows = boundary_op.shape().0;
+    if rows == 0 {
+        return false;
+    }
+    let row_indices = boundary_op.row_indices();
 
-        for r in 0..rows {
-            let start = row_indices[r];
-            let end = row_indices[r + 1];
-            let count = end - start;
+    for r in 0..rows {
+        let start = row_indices[r];
+        let end = row_indices[r + 1];
+        let count = end - start;
 
-            if count == 1 {
-                return true;
-            }
+        if count == 1 {
+            return true;
         }
     }
     false

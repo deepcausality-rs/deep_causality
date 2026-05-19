@@ -6,7 +6,7 @@
 use deep_causality_num::Complex;
 use deep_causality_rand::types::Xoshiro256;
 use deep_causality_topology::GaugeGroup;
-use deep_causality_topology::Lattice;
+use deep_causality_topology::LatticeComplex;
 use deep_causality_topology::LatticeGaugeField;
 use std::sync::Arc;
 
@@ -29,7 +29,7 @@ impl GaugeGroup for U1 {
 #[test]
 fn test_metropolis_sweep_empty_lattice() {
     let shape = [1];
-    let lattice = Arc::new(Lattice::new(shape, [false]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [false]));
 
     use std::collections::HashMap;
     let empty_links = HashMap::new();
@@ -52,7 +52,7 @@ fn test_metropolis_sweep_empty_lattice() {
 #[test]
 fn test_metropolis_update_acceptance() {
     let shape = [4, 4];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let beta = 1.0;
 
     let mut field =
@@ -76,7 +76,7 @@ fn test_metropolis_update_acceptance() {
 #[test]
 fn test_metropolis_sweep_f64_optimization() {
     let shape = [4, 4];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let beta = 1.0;
     let mut field =
         LatticeGaugeField::<U1, 2, Complex<f64>, f64>::try_identity(lattice, beta).unwrap();
@@ -94,7 +94,7 @@ fn test_metropolis_update_nan_handling() {
 #[test]
 fn test_generate_small_su_n_update() {
     let shape = [2];
-    let lattice = Arc::new(Lattice::new(shape, [true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true]));
     let mut field =
         LatticeGaugeField::<U1, 1, Complex<f64>, f64>::try_identity(lattice, 1.0).unwrap();
     let mut rng = Xoshiro256::new();

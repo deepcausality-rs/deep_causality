@@ -5,4 +5,4 @@
 
 //! Constructor implementations for Manifold.
 
-mod constructors_cpu;
+mod constructors_impl;

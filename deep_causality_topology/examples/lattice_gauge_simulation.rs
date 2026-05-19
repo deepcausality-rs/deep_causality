@@ -23,7 +23,7 @@
 use deep_causality_num::Complex;
 use deep_causality_rand::rng;
 use deep_causality_topology::{
-    FlowParams, GaugeGroup, Lattice, LatticeGaugeField, SU3, SmearingParams,
+    CubicalComplex, FlowParams, GaugeGroup, LatticeGaugeField, SU3, SmearingParams,
 };
 use std::sync::Arc;
 
@@ -43,7 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let shape = [L, L, L, L];
     // All dimensions periodic
     let periodic = [true; D];
-    let lattice = Arc::new(Lattice::new(shape, periodic));
+    let lattice = Arc::new(CubicalComplex::new(shape, periodic));
 
     println!("\n[1] Initializing Field (Hot Start)...");
     let mut rng = rng();

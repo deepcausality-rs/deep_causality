@@ -5,7 +5,7 @@
 
 use deep_causality_num::Complex;
 use deep_causality_topology::GaugeGroup;
-use deep_causality_topology::Lattice;
+use deep_causality_topology::LatticeComplex;
 use deep_causality_topology::LatticeGaugeField;
 use std::sync::Arc;
 
@@ -28,7 +28,7 @@ impl GaugeGroup for U1 {
 #[test]
 fn test_field_strength_diagonal() {
     let shape = [4, 4];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let site = [0, 0];
@@ -43,7 +43,7 @@ fn test_field_strength_diagonal() {
 #[test]
 fn test_field_strength_calculation() {
     let shape = [4, 4];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let site = [0, 0];
@@ -58,7 +58,7 @@ fn test_field_strength_calculation() {
 #[test]
 fn test_topological_charge_density_low_dim() {
     let shape = [4, 4]; // 2D
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let site = [0, 0];
@@ -71,7 +71,7 @@ fn test_topological_charge_density_low_dim() {
 #[test]
 fn test_topological_charge_density_4d() {
     let shape = [4, 4, 4, 4];
-    let lattice = Arc::new(Lattice::new(shape, [true; 4]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true; 4]));
     let field = LatticeGaugeField::<U1, 4, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let site = [0, 0, 0, 0];

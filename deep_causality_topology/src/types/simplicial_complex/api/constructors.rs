@@ -25,7 +25,7 @@ impl<T> SimplicialComplex<T> {
         coboundary_operators: Vec<CsrMatrix<i8>>,
         hodge_star_operators: Vec<CsrMatrix<T>>,
     ) -> Self {
-        Self::new_cpu(
+        Self::new_impl(
             skeletons,
             boundary_operators,
             coboundary_operators,

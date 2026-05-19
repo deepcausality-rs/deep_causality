@@ -7,11 +7,11 @@
 
 //! Display trait implementation for Manifold.
 
-use crate::Manifold;
+use crate::{Manifold, SimplicialComplex};
 use core::fmt;
 use std::fmt::Formatter;
 
-impl<C, D> fmt::Display for Manifold<C, D> {
+impl<C, D> fmt::Display for Manifold<SimplicialComplex<C>, D> {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(
             f,

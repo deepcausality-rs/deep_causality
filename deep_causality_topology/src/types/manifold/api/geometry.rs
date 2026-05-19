@@ -6,9 +6,9 @@
 //! Public geometry API for Manifold.
 //!
 
-use crate::{Manifold, Simplex, TopologyError};
+use crate::{Manifold, Simplex, SimplicialComplex, TopologyError};
 
-impl<C, D> Manifold<C, D>
+impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
     C: deep_causality_num::Float
         + deep_causality_num::Zero
@@ -33,7 +33,7 @@ where
     /// let volume_sq = manifold.simplex_volume_squared(&simplex)?;
     /// ```
     pub fn simplex_volume_squared(&self, simplex: &Simplex) -> Result<f64, TopologyError> {
-        self.simplex_volume_squared_cpu(simplex)
+        self.simplex_volume_squared_impl(simplex)
             .map(|v: C| v.into())
     }
 }

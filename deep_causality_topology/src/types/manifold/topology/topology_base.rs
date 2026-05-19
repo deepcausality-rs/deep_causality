@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{BaseTopology, Manifold};
+use crate::{BaseTopology, Manifold, SimplicialComplex};
 
-impl<C, D> BaseTopology for Manifold<C, D> {
+impl<C, D> BaseTopology for Manifold<SimplicialComplex<C>, D> {
     fn dimension(&self) -> usize {
         // The dimension of the complex is the dimension of the highest-dimensional skeleton.
         // We assume skeletons are ordered by dimension.

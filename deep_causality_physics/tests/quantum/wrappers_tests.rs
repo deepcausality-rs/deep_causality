@@ -10,10 +10,10 @@ use deep_causality_physics::{
     haruna_hadamard_gate, haruna_s_gate, haruna_t_gate, haruna_x_gate, haruna_z_gate, klein_gordon,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud};
+use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
 
 // Helper to create a simple triangular manifold (Taken from fields_tests.rs)
-fn create_simple_manifold() -> Manifold<f64, f64> {
+fn create_simple_manifold() -> SimplicialManifold<f64, f64> {
     let points = CausalTensor::new(
         vec![
             0.0, 0.0, // v0
