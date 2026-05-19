@@ -5,10 +5,12 @@
 
 //! Manifold type for smooth geometric structures.
 //!
-//! A `Manifold<T>` wraps a `SimplicialComplex` and provides geometric operations
-//! including volume computation, differential operators, and covariance analysis.
+//! `Manifold<K, F>` wraps any `ChainComplex` (simplicial, cubical, or user-defined) and
+//! carries an associated field tensor + an optional metric typed via `K::Metric`.
+//! `SimplicialManifold<C, F>` is the textbook alias for the simplicial case.
 
-use crate::{ReggeGeometry, SimplicialComplex};
+use crate::SimplicialComplex;
+use crate::traits::chain_complex::ChainComplex;
 use deep_causality_tensor::CausalTensor;
 
 mod api;
@@ -22,18 +24,26 @@ mod utils;
 mod differential;
 mod topology;
 
-/// A newtype wrapper around `SimplicialComplex` that represents a Manifold.
+/// A newtype wrapper around any `ChainComplex` that represents a Manifold.
 ///
 /// Its construction enforces geometric properties essential for physics simulations.
-/// The type parameter T represents data living on the manifold's simplices.
+/// `K` is the underlying chain complex; `F` is the field data type living on cells.
+/// The optional metric is typed by the complex via `ChainComplex::Metric`.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Manifold<C, D> {
-    /// The underlying simplicial complex, guaranteed to satisfy manifold properties.
-    pub(crate) complex: SimplicialComplex<C>,
-    /// The data associated with the manifold (e.g., scalar field values on simplices).
-    pub(crate) data: CausalTensor<D>,
-    /// The metric information of the manifold, containing edge lengths.
-    pub(crate) metric: Option<ReggeGeometry<C>>,
+pub struct Manifold<K: ChainComplex, F> {
+    /// The underlying chain complex, guaranteed to satisfy manifold properties when set.
+    pub(crate) complex: K,
+    /// The data associated with the manifold (e.g., scalar field values on cells).
+    pub(crate) data: CausalTensor<F>,
+    /// The metric information of the manifold (e.g. edge lengths for Regge geometry,
+    /// unit-edge flag for cubical complexes).
+    pub(crate) metric: Option<K::Metric>,
     /// The Focus (Cursor) for Comonadic extraction.
     pub(crate) cursor: usize,
 }
+
+/// Textbook alias for the simplicial case: `Manifold<SimplicialComplex<C>, F>`.
+///
+/// `C` is the simplex coordinate type, `F` is the field data type on simplices.
+/// Eases migration from the previous `Manifold<C, D>` signature.
+pub type SimplicialManifold<C, F> = Manifold<SimplicialComplex<C>, F>;

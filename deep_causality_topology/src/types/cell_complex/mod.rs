@@ -5,16 +5,31 @@
 
 pub mod boundary_operator;
 
-use crate::traits::cw_complex::{CWComplex, Cell};
+use crate::traits::cell::Cell;
+use crate::traits::chain_complex::ChainComplex;
 pub use boundary_operator::BoundaryOperator;
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::{CausalTensor, Tensor};
+use std::borrow::Cow;
 use std::collections::HashMap;
+use std::iter::Cloned;
+use std::slice::Iter;
+
+/// Concrete cell iterator returned by `<CellComplex<C> as ChainComplex>::cells`.
+/// Wraps `Cloned<Iter<'a, C>>` so the GAT `type CellIter<'a>` has a nameable type.
+pub struct CellComplexCellIter<'a, C: Cell>(Cloned<Iter<'a, C>>);
+
+impl<'a, C: Cell> Iterator for CellComplexCellIter<'a, C> {
+    type Item = C;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
 
 /// A CW complex with arbitrary cell types.
 ///
 /// This structure holds the explicit collection of cells and their incidence relations.
-/// It is more general than a Lattice or SimplicialComplex, allowing for any topology
+/// It is more general than a LatticeComplex or SimplicialComplex, allowing for any topology
 /// built from cells implementing the `Cell` trait.
 pub struct CellComplex<C: Cell> {
     /// cells[k] = all k-cells
@@ -75,7 +90,7 @@ impl<C: Cell> CellComplex<C> {
     /// Since we can't mutate `self` in `boundary_matrix` (Common pattern),
     /// we might compute it on demand and return it, or use interior mutability.
     /// Given `cells` are fixed, we can compute it deterministically.
-    /// The trait `CWComplex` requires `boundary_matrix(&self)`.
+    /// The trait `ChainComplex` requires `boundary_matrix(&self)`.
     pub fn compute_boundary_matrix(&self, k: usize) -> CsrMatrix<i8> {
         if k == 0 || k >= self.cells.len() {
             return CsrMatrix::new();
@@ -108,11 +123,16 @@ impl<C: Cell> CellComplex<C> {
     }
 }
 
-impl<C: Cell> CWComplex for CellComplex<C> {
+impl<C: Cell> ChainComplex for CellComplex<C> {
     type CellType = C;
+    type CellIter<'a>
+        = CellComplexCellIter<'a, C>
+    where
+        Self: 'a;
+    type Metric = ();
 
-    fn cells(&self, k: usize) -> Box<dyn Iterator<Item = Self::CellType> + '_> {
-        Box::new(self.cells_vec(k).iter().cloned())
+    fn cells(&self, k: usize) -> Self::CellIter<'_> {
+        CellComplexCellIter(self.cells_vec(k).iter().cloned())
     }
 
     fn num_cells(&self, k: usize) -> usize {
@@ -123,8 +143,13 @@ impl<C: Cell> CWComplex for CellComplex<C> {
         self.dimension()
     }
 
-    fn boundary_matrix(&self, k: usize) -> CsrMatrix<i8> {
-        self.compute_boundary_matrix(k)
+    fn boundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>> {
+        Cow::Owned(self.compute_boundary_matrix(k))
+    }
+
+    fn coboundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>> {
+        // No internal memoization for CellComplex; recompute as δ_k = (∂_{k+1})ᵀ on each call.
+        Cow::Owned(self.compute_boundary_matrix(k + 1).transpose())
     }
 
     fn betti_number(&self, k: usize) -> usize {

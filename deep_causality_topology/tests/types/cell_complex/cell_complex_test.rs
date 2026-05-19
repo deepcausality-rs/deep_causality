@@ -4,7 +4,7 @@
  */
 
 use deep_causality_topology::Cell;
-use deep_causality_topology::{CWComplex, CellComplex};
+use deep_causality_topology::{CellComplex, ChainComplex};
 
 /// A mock cell with proper boundary implementation for testing
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -240,7 +240,7 @@ fn test_betti_number_triangle() {
 }
 
 // =============================================================================
-// CWComplex trait implementation tests
+// ChainComplex trait implementation tests
 // =============================================================================
 
 #[test]
@@ -284,7 +284,7 @@ fn test_cwcomplex_boundary_matrix() {
 
     let complex = CellComplex::from_cells(cells);
 
-    // Test via CWComplex trait
+    // Test via ChainComplex trait
     let bdry = complex.boundary_matrix(1);
     let (rows, cols) = bdry.shape();
 

@@ -5,7 +5,7 @@
 
 use deep_causality_num::Complex;
 use deep_causality_topology::GaugeGroup;
-use deep_causality_topology::Lattice;
+use deep_causality_topology::LatticeComplex;
 use deep_causality_topology::LatticeGaugeField;
 use std::sync::Arc;
 
@@ -27,7 +27,7 @@ impl GaugeGroup for U1 {
 #[test]
 fn test_wilson_loop_invalid_dirs() {
     let shape = [4, 4];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let site = [0, 0];
@@ -44,7 +44,7 @@ fn test_wilson_loop_invalid_dirs() {
 #[test]
 fn test_wilson_loop_zero_size() {
     let shape = [4, 4];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let site = [0, 0];
@@ -55,7 +55,7 @@ fn test_wilson_loop_zero_size() {
 #[test]
 fn test_wilson_loop_identity() {
     let shape = [4, 4];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let site = [0, 0];
@@ -67,7 +67,7 @@ fn test_wilson_loop_identity() {
 #[test]
 fn test_polyakov_loop_invalid_dir() {
     let shape = [4, 4];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let site = [0, 0];
@@ -78,7 +78,7 @@ fn test_polyakov_loop_invalid_dir() {
 #[test]
 fn test_polyakov_loop_identity() {
     let shape = [4, 4];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let site = [0, 0];

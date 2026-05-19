@@ -9,7 +9,7 @@
 //! and gradient flow.
 
 use deep_causality_num::Complex;
-use deep_causality_topology::{CWComplex, Lattice, LatticeGaugeField, LinkVariable, U1};
+use deep_causality_topology::{ChainComplex, LatticeComplex, LatticeGaugeField, LinkVariable, U1};
 use std::sync::Arc;
 
 // ============================================================================
@@ -17,13 +17,13 @@ use std::sync::Arc;
 // ============================================================================
 
 /// Create a small 2x2 lattice for testing
-fn create_test_lattice() -> Arc<Lattice<2>> {
-    Arc::new(Lattice::new([2, 2], [true, true]))
+fn create_test_lattice() -> Arc<LatticeComplex<2>> {
+    Arc::new(LatticeComplex::new([2, 2], [true, true]))
 }
 
 /// Create a small 1D lattice for simpler tests
-fn create_1d_lattice() -> Arc<Lattice<1>> {
-    Arc::new(Lattice::new([4], [true]))
+fn create_1d_lattice() -> Arc<LatticeComplex<1>> {
+    Arc::new(LatticeComplex::new([4], [true]))
 }
 
 // ============================================================================

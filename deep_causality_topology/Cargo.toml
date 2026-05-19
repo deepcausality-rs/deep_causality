@@ -1,10 +1,11 @@
 [package]
 name = "deep_causality_topology"
 version = "0.5.1"
-edition = "2021"
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
 authors = ["The DeepCausality Authors and Contributors"]
 description = "Topological data structures for the DeepCausality project"
-license = "MIT"
 repository = "https://github.com/deepcausality-rs/deep_causality"
 documentation = "https://docs.rs/deep_causality_topology"
 readme = "README.md"
@@ -66,6 +67,10 @@ path = "examples/complex_operators.rs"
 [[example]]
 name = "differential_field"
 path = "examples/differential_field.rs"
+
+[[example]]
+name = "cubical_heat_diffusion"
+path = "examples/cubical_heat_diffusion.rs"
 
 [[example]]
 name = "hkt_graph_convolution"

@@ -7,7 +7,7 @@
 //!
 //! Gauge transformations are local group rotations that preserve physics.
 
-use crate::traits::cw_complex::CWComplex;
+use crate::traits::chain_complex::ChainComplex;
 use crate::{GaugeGroup, LatticeGaugeField, LinkVariable, TopologyError};
 use deep_causality_num::{
     ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,

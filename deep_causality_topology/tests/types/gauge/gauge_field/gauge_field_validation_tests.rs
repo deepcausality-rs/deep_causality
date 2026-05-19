@@ -6,12 +6,12 @@
 use deep_causality_metric::Metric;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
-    GaugeField, GaugeGroup, Manifold, Simplex, SimplicialComplexBuilder, TopologyError,
-    TopologyErrorEnum, U1,
+    GaugeField, GaugeGroup, Manifold, Simplex, SimplicialComplexBuilder, SimplicialManifold,
+    TopologyError, TopologyErrorEnum, U1,
 };
 
 // Helper to create valid inputs
-fn create_test_data() -> (Manifold<f64, f64>, CausalTensor<f64>) {
+fn create_test_data() -> (SimplicialManifold<f64, f64>, CausalTensor<f64>) {
     // Create a 0D manifold (single point) which is a valid manifold
     let mut builder = SimplicialComplexBuilder::new(0);
     builder

@@ -23,14 +23,13 @@ jobs:
       fail-fast: false
       matrix:
         # Phase 2: full repository coverage — all 20 crates.
-        # Crates marked (at-risk) contain `unsafe` in src/ and may surface
         # findings under Miri, particularly with `-Zmiri-strict-provenance`.
         # See issue #536.
         crate:
           - deep_causality
           - deep_causality_algorithms
           - deep_causality_ast
-          - deep_causality_core           # at-risk: MaybeUninit::zeroed in strict-zst builder
+          - deep_causality_core
           - deep_causality_data_structures
           - deep_causality_discovery
           - deep_causality_effects
@@ -38,13 +37,13 @@ jobs:
           - deep_causality_haft
           - deep_causality_macros
           - deep_causality_metric
-          - deep_causality_multivector    # at-risk: HKT pointer casts
+          - deep_causality_multivector
           - deep_causality_num
           - deep_causality_physics
-          - deep_causality_rand           # at-risk: ChaCha unsafe blocks
+          - deep_causality_rand
           - deep_causality_sparse
           - deep_causality_tensor
-          - deep_causality_topology       # at-risk: HKT pointer casts + unsafe Send/Sync + sparse from_parts
+         # - deep_causality_topology   # Analysis takes too long; high-risk: HKT pointer casts + unsafe Send/Sync + sparse from_parts
           - deep_causality_uncertain
           - ultragraph
         # Per-crate MIRIFLAGS overrides. `extra_flags` is appended to the

@@ -7,7 +7,7 @@ use crate::EffectData;
 use crate::NumericValue;
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud, SimplicialComplex};
+use deep_causality_topology::{PointCloud, SimplicialComplex, SimplicialManifold};
 use std::any::Any;
 use std::sync::Arc;
 
@@ -81,8 +81,8 @@ impl From<SimplicialComplex<f64>> for EffectData {
     }
 }
 
-impl From<Manifold<f64, f64>> for EffectData {
-    fn from(val: Manifold<f64, f64>) -> Self {
+impl From<SimplicialManifold<f64, f64>> for EffectData {
+    fn from(val: SimplicialManifold<f64, f64>) -> Self {
         EffectData::Manifold(val)
     }
 }

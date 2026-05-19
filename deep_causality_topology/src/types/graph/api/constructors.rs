@@ -28,6 +28,6 @@ where
         data: CausalTensor<T>,
         cursor: usize,
     ) -> Result<Self, TopologyError> {
-        Self::new_cpu(num_vertices, data, cursor)
+        Self::new_impl(num_vertices, data, cursor)
     }
 }

@@ -8,7 +8,9 @@
 //! Calculates fundamental gauge invariant quantities like plaquettes (1x1 loops)
 //! and rectangles (1x2 loops) used in actions and observables.
 
-use crate::{CWComplex, GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
+use crate::{
+    ChainComplex, GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError,
+};
 use deep_causality_num::{
     ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
 };

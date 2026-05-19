@@ -19,7 +19,9 @@
 use deep_causality_haft::{CoMonad, Monad, Pure};
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, ManifoldWitness, Simplex, SimplicialComplex, Skeleton};
+use deep_causality_topology::{
+    Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
+};
 use mathematics_examples::effect_helpers::{Process, ProcessWitness, expect_value, fail, ok};
 
 /// `f64` is the right precision here: `alpha = 0.25` and integer initial data
@@ -45,7 +47,7 @@ fn main() {
     let manifold = build_manifold(initial);
     println!("t=0 phi: {:?}", snapshot(&manifold));
 
-    let mut process: Process<Manifold<f64, FloatType>> = ProcessWitness::pure(manifold);
+    let mut process: Process<SimplicialManifold<f64, FloatType>> = ProcessWitness::pure(manifold);
 
     for step in 1..=N_STEPS {
         process = ProcessWitness::bind(process, diffuse_one_step);
@@ -77,7 +79,7 @@ fn main() {
     println!("Both abstractions act on the same value at different layers.");
 }
 
-fn build_manifold(vertex_values: Vec<FloatType>) -> Manifold<f64, FloatType> {
+fn build_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<f64, FloatType> {
     let vertices: Vec<Simplex> = (0..N_VERTICES).map(|i| Simplex::new(vec![i])).collect();
     let skeleton_0 = Skeleton::new(0, vertices);
     let edges: Vec<Simplex> = (0..N_VERTICES - 1)
@@ -103,7 +105,9 @@ fn build_manifold(vertex_values: Vec<FloatType>) -> Manifold<f64, FloatType> {
 
 /// One explicit Euler step of the heat equation. Returns a new manifold whose
 /// vertex values are `phi + alpha * Delta phi`.
-fn diffuse_one_step(m: Manifold<f64, FloatType>) -> Process<Manifold<f64, FloatType>> {
+fn diffuse_one_step(
+    m: SimplicialManifold<f64, FloatType>,
+) -> Process<SimplicialManifold<f64, FloatType>> {
     let two = FloatType::from(2.0);
     let zero = FloatType::from(0.0);
     let a = alpha();
@@ -141,6 +145,6 @@ fn diffuse_one_step(m: Manifold<f64, FloatType>) -> Process<Manifold<f64, FloatT
     ok(updated, format!("step ok: max |phi| = {}", max_abs))
 }
 
-fn snapshot(m: &Manifold<f64, FloatType>) -> Vec<FloatType> {
+fn snapshot(m: &SimplicialManifold<f64, FloatType>) -> Vec<FloatType> {
     m.data().as_slice()[..N_VERTICES].to_vec()
 }

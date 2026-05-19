@@ -5,4 +5,4 @@
 
 //! Boundary operator implementations for SimplicialComplex.
 
-mod boundary_cpu;
+mod boundary_impl;

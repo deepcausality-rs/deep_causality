@@ -6,7 +6,7 @@ use crate::PhysicsError;
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::Manifold;
+use deep_causality_topology::SimplicialManifold;
 
 /// Operations for Gauge-Theoretic Electromagnetism — U(1) Gauge Field Theory.
 ///
@@ -53,7 +53,7 @@ where
     /// - F_{0i} = E_i (electric field components)
     /// - F_{ij} = -ε_{ijk} B_k (magnetic field components)
     fn from_fields(
-        base: Manifold<S, S>,
+        base: SimplicialManifold<S, S>,
         electric_field: CausalMultiVector<S>,
         magnetic_field: CausalMultiVector<S>,
     ) -> Result<Self, PhysicsError>

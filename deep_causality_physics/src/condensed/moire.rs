@@ -9,7 +9,7 @@ use deep_causality_num::Complex;
 use deep_causality_tensor::{CausalTensor, Tensor};
 
 use crate::constants::GRAPHENE_LATTICE_CONST;
-use deep_causality_topology::Manifold;
+use deep_causality_topology::SimplicialManifold;
 use std::f64::consts::PI;
 
 /// Constructs the Bistritzer-MacDonald Continuum Hamiltonian for Twisted Bilayer Graphene (TBG).
@@ -254,8 +254,8 @@ pub fn foppl_von_karman_strain_simple_kernel(
 /// # Returns
 /// *   `Result<CausalTensor<f64>, PhysicsError>` - The computed Stress Tensor field.
 pub fn foppl_von_karman_strain_kernel(
-    u_manifold: &Manifold<f64, f64>,
-    w_manifold: &Manifold<f64, f64>,
+    u_manifold: &SimplicialManifold<f64, f64>,
+    w_manifold: &SimplicialManifold<f64, f64>,
     youngs_modulus: Stiffness,
     poisson_ratio: Ratio,
 ) -> Result<CausalTensor<f64>, PhysicsError> {

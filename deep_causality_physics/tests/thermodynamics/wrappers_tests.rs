@@ -8,10 +8,10 @@ use deep_causality_physics::{
     heat_capacity, heat_diffusion, ideal_gas_law, partition_function, shannon_entropy,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud};
+use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
 
 // Helper
-fn create_temp_manifold() -> Manifold<f64, f64> {
+fn create_temp_manifold() -> SimplicialManifold<f64, f64> {
     let points = CausalTensor::new(
         vec![
             0.0, 0.0, // v0

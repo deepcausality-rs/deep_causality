@@ -7,7 +7,7 @@
 //!
 //! These methods extract continuum field theory quantities from lattice configurations.
 
-use crate::{CWComplex, GaugeGroup, LatticeGaugeField, LinkVariable, TopologyError};
+use crate::{ChainComplex, GaugeGroup, LatticeGaugeField, LinkVariable, TopologyError};
 use deep_causality_num::{
     ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
 };
@@ -55,7 +55,7 @@ impl<
     ///
     /// # Arguments
     ///
-    /// * `site` - Lattice site coordinates
+    /// * `site` - LatticeComplex site coordinates
     /// * `mu` - First Lorentz index (0 to D-1)
     /// * `nu` - Second Lorentz index (0 to D-1)
     ///
@@ -136,7 +136,7 @@ impl<
     ///
     /// # Arguments
     ///
-    /// * `site` - Lattice site coordinates
+    /// * `site` - LatticeComplex site coordinates
     ///
     /// # Returns
     ///

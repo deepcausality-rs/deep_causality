@@ -5,9 +5,11 @@
 
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, Simplex, SimplicialComplex, SimplicialComplexBuilder};
+use deep_causality_topology::{
+    Manifold, Simplex, SimplicialComplex, SimplicialComplexBuilder, SimplicialManifold,
+};
 
-pub(crate) fn make_1d_manifold(data: Vec<f64>) -> Manifold<f64, f64> {
+pub(crate) fn make_1d_manifold(data: Vec<f64>) -> SimplicialManifold<f64, f64> {
     let n = data.len(); // 10
     let mut builder = SimplicialComplexBuilder::new(1);
 

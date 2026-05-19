@@ -19,7 +19,7 @@ impl<T> SimplicialComplex<T> {
     /// # Returns
     /// Reference to the boundary matrix or error if dimension is invalid.
     pub fn boundary_operator(&self, k: usize) -> Result<&CsrMatrix<i8>, TopologyError> {
-        self.boundary_operator_cpu(k)
+        self.boundary_operator_impl(k)
     }
 
     /// Returns the coboundary operator δ for dimension k.
@@ -32,6 +32,6 @@ impl<T> SimplicialComplex<T> {
     /// # Returns
     /// Reference to the coboundary matrix or error if dimension is invalid.
     pub fn coboundary_operator(&self, k: usize) -> Result<&CsrMatrix<i8>, TopologyError> {
-        self.coboundary_operator_cpu(k)
+        self.coboundary_operator_impl(k)
     }
 }

@@ -20,7 +20,9 @@
 use deep_causality_haft::CoMonad;
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, ManifoldWitness, Simplex, SimplicialComplex, Skeleton};
+use deep_causality_topology::{
+    Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
+};
 
 /// `f64` is the right precision here: the Laplacian stencil on integer inputs
 /// produces integer outputs, so Float106 yields no observable gain.
@@ -80,7 +82,7 @@ fn main() {
     println!("Neumann reflection (phi outside = phi at boundary).");
 }
 
-fn build_line_manifold(vertex_values: Vec<FloatType>) -> Manifold<f64, FloatType> {
+fn build_line_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<f64, FloatType> {
     assert_eq!(vertex_values.len(), N_VERTICES);
 
     let vertices: Vec<Simplex> = (0..N_VERTICES).map(|i| Simplex::new(vec![i])).collect();

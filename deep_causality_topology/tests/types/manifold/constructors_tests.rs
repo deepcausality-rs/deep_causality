@@ -3,10 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Tests for Manifold constructors covering all error paths in constructors_cpu.rs
+//! Tests for Manifold constructors covering all error paths in constructors_impl.rs
 
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, TopologyErrorEnum};
+use deep_causality_topology::{
+    CubicalReggeGeometry, LatticeComplex, Manifold, PointCloud, ReggeGeometry, TopologyErrorEnum,
+};
 
 /// Helper to create a valid manifold complex and data
 fn setup_valid_manifold_parts() -> (
@@ -177,4 +179,124 @@ fn test_manifold_getters() {
         manifold.metric().is_some(),
         "metric() should return the metric"
     );
+}
+
+// =============================================================================
+// Cubical constructors (Stage C)
+// =============================================================================
+
+#[test]
+fn test_from_cubical_no_metric() {
+    let complex = LatticeComplex::<2>::new([3, 3], [false, false]);
+    let data = CausalTensor::new(vec![0.0_f64; 4], vec![4]).unwrap();
+
+    let manifold: Manifold<LatticeComplex<2>, f64> = Manifold::from_cubical(complex, data, 0);
+
+    assert!(manifold.metric().is_none(), "from_cubical sets metric None");
+    assert_eq!(manifold.cursor(), 0);
+    assert_eq!(manifold.data().len(), 4);
+}
+
+#[test]
+fn test_from_cubical_preserves_cursor() {
+    let complex = LatticeComplex::<2>::new([4, 4], [true, true]);
+    let data = CausalTensor::new(vec![1.0_f64; 16], vec![16]).unwrap();
+
+    let manifold = Manifold::from_cubical(complex, data, 7);
+    assert_eq!(manifold.cursor(), 7);
+}
+
+#[test]
+fn test_from_cubical_with_metric_unit() {
+    let complex = LatticeComplex::<2>::new([3, 3], [false, false]);
+    let data = CausalTensor::new(vec![0.0_f64; 4], vec![4]).unwrap();
+    let metric = CubicalReggeGeometry::<2>::unit();
+
+    let manifold: Manifold<LatticeComplex<2>, f64> =
+        Manifold::from_cubical_with_metric(complex, data, metric, 2);
+
+    assert!(
+        manifold.metric().is_some(),
+        "from_cubical_with_metric stores Some(metric)"
+    );
+    assert_eq!(manifold.cursor(), 2);
+}
+
+// =============================================================================
+// Non-manifold error paths (check_is_manifold_impl)
+// =============================================================================
+
+#[test]
+fn test_new_non_manifold_three_triangles_sharing_edge() {
+    // 3 triangles sharing edge (0,1) — edge has 3 incident faces → not orientable as manifold.
+    use deep_causality_topology::{Simplex, SimplicialComplexBuilder};
+    let mut builder = SimplicialComplexBuilder::new(2);
+    builder.add_simplex(Simplex::new(vec![0, 1, 2])).unwrap();
+    builder.add_simplex(Simplex::new(vec![0, 1, 3])).unwrap();
+    builder.add_simplex(Simplex::new(vec![0, 1, 4])).unwrap();
+    let complex: deep_causality_topology::SimplicialComplex<f64> = builder.build().unwrap();
+
+    // Count total simplices for data size
+    let total: usize = complex
+        .skeletons()
+        .iter()
+        .map(|s| s.simplices().len())
+        .sum();
+    let data = CausalTensor::new(vec![1.0_f64; total], vec![total]).unwrap();
+
+    let res = Manifold::new(complex, data, 0);
+    assert!(res.is_err(), "non-manifold complex must error");
+    match res.unwrap_err().0 {
+        TopologyErrorEnum::ManifoldError(_) => {}
+        other => panic!("Expected ManifoldError, got {:?}", other),
+    }
+}
+
+#[test]
+fn test_with_metric_non_manifold_errors() {
+    use deep_causality_topology::{Simplex, SimplicialComplexBuilder};
+    let mut builder = SimplicialComplexBuilder::new(2);
+    builder.add_simplex(Simplex::new(vec![0, 1, 2])).unwrap();
+    builder.add_simplex(Simplex::new(vec![0, 1, 3])).unwrap();
+    builder.add_simplex(Simplex::new(vec![0, 1, 4])).unwrap();
+    let complex: deep_causality_topology::SimplicialComplex<f64> = builder.build().unwrap();
+
+    let total: usize = complex
+        .skeletons()
+        .iter()
+        .map(|s| s.simplices().len())
+        .sum();
+    let data = CausalTensor::new(vec![1.0_f64; total], vec![total]).unwrap();
+
+    let res = Manifold::with_metric(complex, data, None, 0);
+    assert!(res.is_err());
+    match res.unwrap_err().0 {
+        TopologyErrorEnum::ManifoldError(_) => {}
+        other => panic!("Expected ManifoldError, got {:?}", other),
+    }
+}
+
+#[test]
+fn test_with_metric_cursor_out_of_bounds() {
+    let (complex, data) = setup_valid_manifold_parts();
+    let edge_lengths = CausalTensor::new(vec![1.0, 1.1, 1.2], vec![3]).unwrap();
+    let metric = ReggeGeometry::new(edge_lengths);
+
+    let result = Manifold::with_metric(complex, data, Some(metric), 999);
+    assert!(result.is_err());
+    match result.unwrap_err().0 {
+        TopologyErrorEnum::IndexOutOfBounds(_) => {}
+        other => panic!("Expected IndexOutOfBounds, got {:?}", other),
+    }
+}
+
+#[test]
+fn test_from_cubical_with_metric_3d() {
+    let complex = LatticeComplex::<3>::cubic_torus(2);
+    let data = CausalTensor::new(vec![0.0_f64; 8], vec![8]).unwrap();
+    let metric = CubicalReggeGeometry::<3>::uniform(0.5);
+
+    let manifold = Manifold::from_cubical_with_metric(complex, data, metric, 0);
+    assert!(manifold.metric().is_some());
+    assert_eq!(manifold.data().len(), 8);
 }

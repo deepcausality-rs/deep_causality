@@ -20,8 +20,10 @@ pub use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 pub use crate::extensions::hkt_cell_complex::CellComplexWitness;
 pub use crate::extensions::hkt_graph::GraphWitness;
 pub use crate::extensions::hkt_hypergraph::HypergraphWitness;
-pub use crate::extensions::hkt_lattice::LatticeWitness;
-pub use crate::extensions::hkt_manifold::ManifoldWitness;
+pub use crate::extensions::hkt_lattice_complex::LatticeComplexWitness;
+pub use crate::extensions::hkt_manifold::{
+    GenericManifoldWitness, ManifoldWitness, SimplicialManifoldWitness,
+};
 pub use crate::extensions::hkt_point_cloud::PointCloudWitness;
 pub use crate::extensions::hkt_simplicial_complex::ChainWitness;
 pub use crate::extensions::hkt_topology::TopologyWitness;
@@ -32,11 +34,13 @@ pub use crate::extensions::hkt_gauge::hkt_gauge_witness::{GaugeFieldHKT, GaugeFi
 pub use crate::extensions::hkt_gauge::hkt_lattice_gauge::LatticeGaugeFieldWitness;
 // Re-export traits
 pub use crate::traits::base_topology::BaseTopology;
-pub use crate::traits::cw_complex::{CWComplex, Cell};
+pub use crate::traits::cell::Cell;
+pub use crate::traits::chain_complex::ChainComplex;
 pub use crate::traits::gauge_group::GaugeGroup;
 pub use crate::traits::graph_topology::GraphTopology;
 pub use crate::traits::hypergraph_topology::HypergraphTopology;
 pub use crate::traits::manifold_topology::ManifoldTopology;
+pub use crate::traits::neighborhood::{CellId, Neighborhood};
 pub use crate::traits::simplicial_topology::SimplicialTopology;
 pub use extensions::hkt_gauge::hkt_adjunction_stokes::{
     BoundaryWitness, ExteriorDerivativeWitness, StokesAdjunction, StokesContext,
@@ -45,14 +49,27 @@ pub use extensions::hkt_gauge::hkt_adjunction_stokes::{
 // Re-export types
 pub use crate::types::cell_complex::{BoundaryOperator, CellComplex};
 pub use crate::types::chain::Chain;
-pub use crate::types::graph::Graph;
-pub use crate::types::hypergraph::Hypergraph;
-pub use crate::types::lattice::dual_lattice::DualLattice;
-pub use crate::types::lattice::specialized::{
+pub use crate::types::lattice_complex::dual_lattice_complex::DualLatticeComplex;
+pub use crate::types::lattice_complex::specialized::{
     HeavyHexLattice, HoneycombLattice, KagomeLattice, TriangularLattice,
 };
-pub use crate::types::lattice::{Lattice, LatticeCell};
-pub use crate::types::manifold::Manifold;
+pub use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
+
+/// Textbook alias: a cubical complex is the regular cellular decomposition of a
+/// lattice. Both terms refer to the same structure here; `LatticeComplex<D>` is the
+/// canonical name (it makes the underlying ℤᴰ grid explicit and stays consistent with
+/// the physics vocabulary used elsewhere in the crate, e.g. `LatticeGaugeField`).
+pub type CubicalComplex<const D: usize> = LatticeComplex<D>;
+/// Textbook alias for `LatticeCell<D>`. See `CubicalComplex<D>`.
+pub type CubicalCell<const D: usize> = LatticeCell<D>;
+pub use crate::types::cubical_regge_geometry::CubicalReggeGeometry;
+pub use crate::types::graph::Graph;
+pub use crate::types::hypergraph::Hypergraph;
+pub use crate::types::manifold::{Manifold, SimplicialManifold};
+pub use crate::types::neighborhood::{
+    CofaceAdjacent, CofaceAdjacentIter, FaceAdjacent, FaceAdjacentIter, KRing, KRingIter, Moore,
+    MooreIter, VonNeumann, VonNeumannIter,
+};
 pub use crate::types::point_cloud::PointCloud;
 pub use crate::types::regge_geometry::ReggeGeometry;
 pub use crate::types::simplex::Simplex;

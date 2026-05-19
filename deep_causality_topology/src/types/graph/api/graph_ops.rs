@@ -19,17 +19,17 @@ where
     /// * `Ok(false)` - Edge already existed
     /// * `Err(TopologyError)` - If vertices are out of bounds
     pub fn add_edge(&mut self, u: usize, v: usize) -> Result<bool, TopologyError> {
-        self.add_edge_cpu(u, v)
+        self.add_edge_impl(u, v)
     }
 
     /// Checks if an edge exists between two vertices.
     pub fn has_edge(&self, u: usize, v: usize) -> Result<bool, TopologyError> {
-        self.has_edge_cpu(u, v)
+        self.has_edge_impl(u, v)
     }
 
     /// Returns a reference to the neighbors of a given vertex.
     pub fn neighbors(&self, u: usize) -> Result<&Vec<usize>, TopologyError> {
-        self.neighbors_cpu(u)
+        self.neighbors_impl(u)
     }
 
     /// Returns the current cursor position.

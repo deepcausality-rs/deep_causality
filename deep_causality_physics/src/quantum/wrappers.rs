@@ -11,11 +11,11 @@ use deep_causality_multivector::HilbertState;
 
 use crate::Probability;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::Manifold;
+use deep_causality_topology::SimplicialManifold;
 
 /// Causal wrapper for [`mechanics::klein_gordon_kernel`].
 pub fn klein_gordon(
-    psi_manifold: &Manifold<f64, f64>,
+    psi_manifold: &SimplicialManifold<f64, f64>,
     mass: f64,
 ) -> PropagatingEffect<CausalTensor<f64>> {
     match mechanics::klein_gordon_kernel(psi_manifold, mass) {

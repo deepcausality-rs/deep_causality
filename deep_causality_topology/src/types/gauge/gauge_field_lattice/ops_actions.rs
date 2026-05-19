@@ -8,7 +8,7 @@
 //! Implements Symanzik-improved actions including Lüscher-Weisz, Iwasaki, and DBW2.
 //! These actions reduce discretization errors from $O(a^2)$ to $O(a^4)$ or better.
 
-use crate::{CWComplex, GaugeGroup, LatticeGaugeField, TopologyError};
+use crate::{ChainComplex, GaugeGroup, LatticeGaugeField, TopologyError};
 use deep_causality_num::Field; // TensorData removed
 use deep_causality_num::{ComplexField, DivisionAlgebra, FromPrimitive, RealField, ToPrimitive};
 use std::fmt::Debug;

@@ -11,10 +11,10 @@ use deep_causality_physics::{
     haruna_t_gate_kernel, haruna_x_gate_kernel, haruna_z_gate_kernel, klein_gordon_kernel,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud};
+use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
 
 // Helper to create a simple manifold for Klein-Gordon test
-fn create_simple_manifold() -> Manifold<f64, f64> {
+fn create_simple_manifold() -> SimplicialManifold<f64, f64> {
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 0.866], vec![3, 2]).unwrap();
     let point_cloud =
         PointCloud::new(points, CausalTensor::new(vec![0.0; 3], vec![3]).unwrap(), 0).unwrap();

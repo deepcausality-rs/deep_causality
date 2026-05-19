@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{GaugeGroup, Lattice, LatticeCell, LatticeGaugeField, LinkVariable};
+use crate::{GaugeGroup, LatticeCell, LatticeComplex, LatticeGaugeField, LinkVariable};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -12,9 +12,9 @@ impl<G: GaugeGroup, const D: usize, M, R, S> LatticeGaugeField<G, D, M, R, S> {
     ///
     /// # Returns
     ///
-    /// Reference to the inner `Lattice` struct.
+    /// Reference to the inner `LatticeComplex` struct.
     #[inline]
-    pub fn lattice(&self) -> &Lattice<D> {
+    pub fn lattice(&self) -> &LatticeComplex<D> {
         &self.lattice
     }
 
@@ -22,9 +22,9 @@ impl<G: GaugeGroup, const D: usize, M, R, S> LatticeGaugeField<G, D, M, R, S> {
     ///
     /// # Returns
     ///
-    /// Reference to the `Arc<Lattice>`.
+    /// Reference to the `Arc<LatticeComplex>`.
     #[inline]
-    pub fn lattice_arc(&self) -> &Arc<Lattice<D>> {
+    pub fn lattice_arc(&self) -> &Arc<LatticeComplex<D>> {
         &self.lattice
     }
 
@@ -60,7 +60,7 @@ impl<G: GaugeGroup, const D: usize, M, R, S> LatticeGaugeField<G, D, M, R, S> {
     pub fn into_parts(
         self,
     ) -> (
-        Arc<Lattice<D>>,
+        Arc<LatticeComplex<D>>,
         HashMap<LatticeCell<D>, LinkVariable<G, M, R>>,
         R,
     ) {
