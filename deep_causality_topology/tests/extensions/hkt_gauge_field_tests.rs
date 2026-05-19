@@ -364,6 +364,42 @@ fn test_gauge_rotation_invalid_shapes() {
 }
 
 #[test]
+fn test_compute_field_strength_non_abelian_zero_coupling() {
+    // coupling = 0 skips the non-abelian inner loop entirely.
+    let manifold = create_test_manifold();
+    let lie_dim = 3;
+    let dim = 4;
+    let num_points = 1;
+
+    let conn_data: Vec<f64> = (0..(num_points * dim * lie_dim))
+        .map(|i| (i as f64) * 0.1)
+        .collect();
+    let connection = CausalTensor::from_vec(conn_data, &[num_points, dim, lie_dim]);
+    let fs = CausalTensor::zeros(&[num_points, dim, dim, lie_dim]);
+
+    let field: GaugeField<SU2, f64, f64> =
+        GaugeField::with_default_metric(manifold, connection, fs).expect("create field");
+
+    let result = GaugeFieldWitness::compute_field_strength_non_abelian(&field, 0.0);
+    assert_eq!(result.shape(), &[num_points, dim, dim, lie_dim]);
+}
+
+#[test]
+fn test_compute_field_strength_abelian_non_abelian_returns_none() {
+    let manifold = create_test_manifold();
+    let lie_dim = 3;
+    let dim = 4;
+    let conn = CausalTensor::from_vec(vec![1.0; dim * lie_dim], &[1, dim, lie_dim]);
+    let fs = CausalTensor::zeros(&[1, dim, dim, lie_dim]);
+    let field: GaugeField<SU2, f64, f64> =
+        GaugeField::with_default_metric(manifold, conn, fs).expect("create field");
+
+    // SU2 is non-abelian => returns None
+    let result = GaugeFieldWitness::compute_field_strength_abelian(&field);
+    assert!(result.is_none());
+}
+
+#[test]
 fn test_gauge_rotation_invalid_indices() {
     // Valid shapes but indices out of bounds
     let conn = CausalTensor::from_vec(vec![1.0; 8], &[1, 4, 2]);

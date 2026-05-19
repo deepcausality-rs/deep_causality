@@ -3,10 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 #[cfg(test)]
-mod cell_complex_boundary_operator_tests;
+mod coface_adjacent_tests;
 #[cfg(test)]
-mod cell_complex_boundary_tests;
+mod face_adjacent_tests;
 #[cfg(test)]
-mod cell_complex_homology_tests;
+mod k_ring_tests;
 #[cfg(test)]
-mod cell_complex_test;
+mod moore_tests;
+#[cfg(test)]
+mod von_neumann_tests;

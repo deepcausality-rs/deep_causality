@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 #[cfg(test)]
+mod api_neighbors_tests;
+#[cfg(test)]
 mod base_topology_tests;
 #[cfg(test)]
 mod constructors_tests;

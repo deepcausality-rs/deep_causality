@@ -323,6 +323,54 @@ fn test_iter_cells_all_dimensions() {
 // num_cells edge cases
 // =============================================================================
 
+// =============================================================================
+// Clone / PartialEq / coboundary_matrix cache tests
+// =============================================================================
+
+#[test]
+fn test_lattice_complex_clone_equals_original() {
+    let lat = LatticeComplex::<2>::square_torus(3);
+    let cloned = lat.clone();
+    assert_eq!(lat, cloned);
+    assert_eq!(cloned.shape(), &[3, 3]);
+    assert!(cloned.periodic().iter().all(|&p| p));
+}
+
+#[test]
+fn test_lattice_complex_partial_eq_different_shape() {
+    let a = LatticeComplex::<2>::new([3, 3], [true, true]);
+    let b = LatticeComplex::<2>::new([4, 4], [true, true]);
+    assert_ne!(a, b);
+}
+
+#[test]
+fn test_lattice_complex_partial_eq_different_periodicity() {
+    let a = LatticeComplex::<2>::new([3, 3], [true, true]);
+    let b = LatticeComplex::<2>::new([3, 3], [true, false]);
+    assert_ne!(a, b);
+}
+
+#[test]
+fn test_lattice_complex_coboundary_matrix_returns_transpose_of_next_boundary() {
+    let lat = LatticeComplex::<2>::square_torus(3);
+    let bdry_1 = lat.boundary_matrix(1);
+    let cob_0 = lat.coboundary_matrix(0);
+    // δ_k has shape ((cols of ∂_{k+1}), (rows of ∂_{k+1}))
+    let (b_rows, b_cols) = bdry_1.shape();
+    let (c_rows, c_cols) = cob_0.shape();
+    assert_eq!(c_rows, b_cols);
+    assert_eq!(c_cols, b_rows);
+}
+
+#[test]
+fn test_lattice_complex_coboundary_matrix_cache_hit_returns_same_shape() {
+    // First call populates cache; second call exercises the hit branch (early return).
+    let lat = LatticeComplex::<2>::square_torus(2);
+    let first = lat.coboundary_matrix(1);
+    let second = lat.coboundary_matrix(1);
+    assert_eq!(first.shape(), second.shape());
+}
+
 #[test]
 fn test_num_cells_zero_dimension_edge_case() {
     // Test with shape containing zeros - edge case for dim_len == 0

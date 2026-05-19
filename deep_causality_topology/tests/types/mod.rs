@@ -13,6 +13,7 @@ mod graph;
 mod hypergraph;
 mod lattice_complex;
 mod manifold;
+mod neighborhood;
 mod point_cloud;
 mod regge_geometry;
 mod simplex;
