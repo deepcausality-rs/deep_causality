@@ -47,8 +47,9 @@ The `Cell` marker trait SHALL be declared in `src/traits/cell.rs`, separately fr
 #### Scenario: Lattice satisfies the trait via lazy-memoized Cow::Owned
 
 - **WHEN** `Lattice<D>` implements `ChainComplex`
-- **THEN** `coboundary_matrix(k)` lazily computes `boundary_matrix(k + 1).into_owned().transpose()` on first call, stores the result in an internal `RefCell<HashMap<usize, CsrMatrix<i8>>>`, and returns `Cow::Owned(matrix.clone())` from the cache on subsequent calls
+- **THEN** `coboundary_matrix(k)` lazily computes `boundary_matrix(k + 1).into_owned().transpose()` on first call, stores the result in an internal `Mutex<HashMap<usize, CsrMatrix<i8>>>`, and returns `Cow::Owned(matrix.clone())` from the cache on subsequent calls
 - **AND** the implementation does not use `unsafe`
+- **AND** the cache uses `std::sync::Mutex` (not `RefCell`) so that `Lattice<D>` remains `Send + Sync`, preserving the existing `Arc<Lattice<D>>` consumers in `gauge_field_lattice`
 
 #### Scenario: CellComplex satisfies the trait without internal memoization
 

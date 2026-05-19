@@ -18,13 +18,18 @@
 
 ### Requirement: Differential operators read the complex through the trait
 
-The methods that compute exterior derivative, codifferential, Hodge ⋆, and Laplacian on a `Manifold<K, F>` SHALL access the underlying complex's boundary and coboundary operators only through the `ChainComplex` trait. They SHALL NOT pattern-match on the concrete complex type or read complex-specific fields directly.
+The methods that compute exterior derivative and codifferential on a `Manifold<K, F>` SHALL access the underlying complex's boundary and coboundary operators only through the `ChainComplex` trait. They SHALL NOT pattern-match on the concrete complex type or read complex-specific fields directly.
+
+The Hodge ⋆ and Laplacian operators are *currently simplicial-only* and read from `SimplicialComplex::hodge_star_operators`, which is not part of the `ChainComplex` trait. They are implemented on `Manifold<SimplicialComplex<C>, D>` (i.e. `SimplicialManifold<C, D>`), not on the generic `Manifold<K, F>`. Adding a Hodge ⋆ method to `ChainComplex` so the cubical path can carry it is deferred to a follow-up issue (per design D7: "Hodge ⋆ on non-unit / non-regular cubes — defer to a follow-up"). This scope decision is intentional: the unit-edge cubical case ships in this change set; the irregular metric and the generic Hodge ⋆ are tracked separately.
+
+The helper functions `is_oriented` and `has_boundary` in `manifold/utils/utils_manifold.rs` SHALL also route through `ChainComplex::boundary_matrix` so the audit test below applies to them uniformly. They take `&SimplicialComplex<T>` directly today; the routing keeps the no-direct-field-access invariant consistent without requiring an exception clause.
 
 #### Scenario: Exterior derivative is generic
 
-- **WHEN** the exterior derivative of a 1-form is computed on `Manifold<SimplicialComplex<C>, f64>` and on `Manifold<CubicalComplex<2>, f64>`
+- **WHEN** the exterior derivative of a 1-form is computed on `SimplicialManifold<C, f64>` (after Stage B) or on `Manifold<CubicalComplex<2>, f64>` (after Stage C wires the impl)
 - **THEN** both computations succeed
-- **AND** for the simplicial case the result equals today's `manifold/differential/exterior_cpu.rs` output bit-for-bit
+- **AND** for the simplicial case the result equals today's `manifold/differential/exterior.rs` output bit-for-bit (renamed from `exterior_cpu.rs` as part of the Stage A `_cpu` cleanup)
+- **AND** the codifferential follows the same pattern (`codifferential.rs`, renamed from `codifferential_cpu.rs`)
 
 #### Scenario: No direct field access on concrete complex
 
@@ -39,12 +44,17 @@ The methods that compute exterior derivative, codifferential, Hodge ⋆, and Lap
 
 ### Requirement: Comonad iteration is unchanged, neighborhood is queried inside the closure
 
-`CoMonad::extend` on `Manifold<K, F>` SHALL continue to iterate the cursor over every cell (preserving today's order and cursor semantics) and pass the manifold view to the user's closure. A new helper `Manifold::neighbors<N: Neighborhood<K>>(&self, n: N, cell: CellId) -> N::Iter<'_>` SHALL be added so that the closure can pick a neighborhood strategy at the point of use.
+The existing `ManifoldWitness<C>` (and its alias `SimplicialManifoldWitness<C>`) SHALL remain the simplicial-specific HKT entry point. Its `Functor` / `Monad` / `Applicative` / `CoMonad` impls continue to operate on `Manifold<SimplicialComplex<C>, _>`. `CoMonad::extend` on this witness SHALL continue to iterate the cursor over every cell (preserving today's order and cursor semantics) and pass the manifold view to the user's closure.
+
+A separate arbitrary-K manifold witness (e.g. `GenericManifoldWitness<K>`) over any `K: ChainComplex` SHALL be introduced in Stage C (per tasks.md task 3.11a) so the comonad pattern can apply to `Manifold<CubicalComplex<D>, F>` as well. It is NOT introduced in Stage B because the existing witness's `Functor`/`Monad`/etc. impls assume simplicial-specific bounds in their bodies (e.g. cloning a default-constructible complex); lifting `K` requires fresh bounds and an HKT-machinery redesign that is orthogonal to the Stage B genericization of the `Manifold` struct itself.
+
+A new helper `Manifold::neighbors<N: Neighborhood<K>>(&self, n: N, cell: CellId) -> N::Iter<'_>` SHALL be added in Stage C so that the closure can pick a neighborhood strategy at the point of use.
 
 #### Scenario: extend preserves iteration order
 
-- **WHEN** `<ManifoldWitness<K> as CoMonad<...>>::extend(&m, f)` is called
+- **WHEN** `<ManifoldWitness<C> as CoMonad<...>>::extend(&m, f)` is called on `SimplicialManifold<C, F>` (the simplicial entry point shipped in Stage B)
 - **THEN** the closure `f` is invoked once for each cell index `i` in `0..m.data.len()` in ascending order, each time with `m.cursor = i`
+- **AND** the cursor / iteration semantics carry over to the Stage C `GenericManifoldWitness<K>` once it ships
 
 #### Scenario: Neighborhood query inside extend closure
 
