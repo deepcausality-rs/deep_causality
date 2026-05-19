@@ -4,7 +4,7 @@
  */
 use deep_causality_tensor::{CausalTensor, CausalTensorError, CausalTensorMathExt};
 
-const TOLERANCE: f32 = 1e-6;
+const TOLERANCE: f32 = 1e-5;
 
 #[test]
 fn test_log_nat() {

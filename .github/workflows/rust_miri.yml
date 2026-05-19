@@ -22,14 +22,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Phase 1: pilot crate (deep_causality_sparse) plus all crates with
-        # zero `unsafe` in src/, no FFI, and no build scripts. The remaining
-        # at-risk crates (core, rand, multivector, topology) are added
-        # incrementally in subsequent phases — see issue #536.
+        # Phase 2: full repository coverage — all 20 crates.
+        # Crates marked (at-risk) contain `unsafe` in src/ and may surface
+        # findings under Miri, particularly with `-Zmiri-strict-provenance`.
+        # See issue #536.
         crate:
           - deep_causality
           - deep_causality_algorithms
           - deep_causality_ast
+          - deep_causality_core           # at-risk: MaybeUninit::zeroed in strict-zst builder
           - deep_causality_data_structures
           - deep_causality_discovery
           - deep_causality_effects
@@ -37,12 +38,28 @@ jobs:
           - deep_causality_haft
           - deep_causality_macros
           - deep_causality_metric
+          - deep_causality_multivector    # at-risk: HKT pointer casts
           - deep_causality_num
           - deep_causality_physics
+          - deep_causality_rand           # at-risk: ChaCha unsafe blocks
           - deep_causality_sparse
           - deep_causality_tensor
+          - deep_causality_topology       # at-risk: HKT pointer casts + unsafe Send/Sync + sparse from_parts
           - deep_causality_uncertain
           - ultragraph
+        # Per-crate MIRIFLAGS overrides. `extra_flags` is appended to the
+        # default flags in the "Run Miri" step. Crates listed here need to
+        # touch the host environment (clock_gettime, open, etc.) which Miri
+        # blocks by default under isolation. None of these are soundness
+        # issues — disabling isolation only opts those tests into reading
+        # real time / files.
+        include:
+          - crate: deep_causality
+            extra_flags: -Zmiri-disable-isolation       # clock_gettime in test setup
+          - crate: deep_causality_discovery
+            extra_flags: -Zmiri-disable-isolation       # DSL opens files
+          - crate: deep_causality_uncertain
+            extra_flags: -Zmiri-disable-isolation       # open() in tests/mod.rs binary
     steps:
       - uses: actions/checkout@v6
 
@@ -59,5 +76,5 @@ jobs:
 
       - name: Run Miri
         env:
-          MIRIFLAGS: -Zmiri-strict-provenance -Zmiri-symbolic-alignment-check
+          MIRIFLAGS: -Zmiri-strict-provenance -Zmiri-symbolic-alignment-check ${{ matrix.extra_flags }}
         run: cargo miri test -p ${{ matrix.crate }}
