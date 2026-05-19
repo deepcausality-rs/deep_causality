@@ -15,6 +15,19 @@ const { title, description, sectionLabel } = Astro.props;
   <div class="docs-shell">
     <DocsSidebar />
     <article class="docs-article">
+      <button
+        class="docs-menu-toggle"
+        type="button"
+        aria-label="Open documentation menu"
+        aria-controls="docs-menu-drawer"
+        aria-expanded="false"
+        data-docs-menu-toggle
+      >
+        <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <path d="M3 5 H17 M3 10 H17 M3 15 H17"/>
+        </svg>
+        <span>Docs menu</span>
+      </button>
       <header class="doc-head">
         {sectionLabel && <p class="eyebrow">{sectionLabel}</p>}
         <h1>{title}</h1>
@@ -47,6 +60,31 @@ const { title, description, sectionLabel } = Astro.props;
     }
     @media (min-width: 900px) {
       .docs-article { padding: var(--space-9) 0; }
+    }
+
+    /* Mobile-only hamburger that opens the docs drawer. Placed inline
+       above the article header so it never participates in the desktop
+       grid layout. */
+    .docs-menu-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      margin: 0 0 var(--space-5) 0;
+      background: transparent;
+      color: var(--fg-1);
+      border: 1px solid var(--line-1);
+      border-radius: var(--radius-sm);
+      font: inherit;
+      font-size: var(--t-body-sm);
+      cursor: pointer;
+      transition: color var(--dur-fast) var(--ease-out),
+                  border-color var(--dur-fast) var(--ease-out);
+    }
+    .docs-menu-toggle:hover { color: var(--fg-0); border-color: var(--line-2); }
+    .docs-menu-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    @media (min-width: 900px) {
+      .docs-menu-toggle { display: none; }
     }
     .doc-head { margin-bottom: var(--space-6); }
     .doc-head .eyebrow {

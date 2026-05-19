@@ -42,18 +42,7 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
         </ul>
       </div>
       <a href="/blog/" class:list={["nav-link", isActive('/blog/') && 'is-active']}>Blog</a>
-      <div class="nav-dropdown">
-        <a href="/community/" class:list={["nav-link nav-link-trigger", isActive('/community/') && 'is-active']} aria-haspopup="true">
-          Community
-          <svg class="caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M2.5 4 L5 6.5 L7.5 4"/>
-          </svg>
-        </a>
-        <ul class="dropdown-menu" role="menu">
-          <li><a href="/community/" role="menuitem">Community</a></li>
-          <li><a href="https://discord.gg/Bxj9P7JXSj" role="menuitem" rel="noopener noreferrer" target="_blank">Discord</a></li>
-        </ul>
-      </div>
+      <a href="/community/" class:list={["nav-link", isActive('/community/') && 'is-active']}>Community</a>
       <a href="/about/" class:list={["nav-link", isActive('/about/') && 'is-active']}>About</a>
     </nav>
 
@@ -112,13 +101,7 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
         </ul>
       </li>
       <li><a href="/blog/">Blog</a></li>
-      <li>
-        <a href="/community/">Community</a>
-        <ul class="mobile-menu-sub">
-          <li><a href="/community/">Community</a></li>
-          <li><a href="https://discord.gg/Bxj9P7JXSj" rel="noopener noreferrer" target="_blank">Discord</a></li>
-        </ul>
-      </li>
+      <li><a href="/community/">Community</a></li>
       <li><a href="/about/">About</a></li>
     </ul>
   </nav>
