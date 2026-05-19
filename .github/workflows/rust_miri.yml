@@ -22,11 +22,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Phase 0 pilot: validate plumbing on a single small crate with a
-        # well-defined unsafe primitive (`SparseMatrix::from_parts`).
-        # Additional crates are added in subsequent phases — see issue #536.
+        # Phase 1: pilot crate (deep_causality_sparse) plus all crates with
+        # zero `unsafe` in src/, no FFI, and no build scripts. The remaining
+        # at-risk crates (core, rand, multivector, topology) are added
+        # incrementally in subsequent phases — see issue #536.
         crate:
+          - deep_causality
+          - deep_causality_algorithms
+          - deep_causality_ast
+          - deep_causality_data_structures
+          - deep_causality_discovery
+          - deep_causality_effects
+          - deep_causality_ethos
+          - deep_causality_haft
+          - deep_causality_macros
+          - deep_causality_metric
+          - deep_causality_num
+          - deep_causality_physics
           - deep_causality_sparse
+          - deep_causality_tensor
+          - deep_causality_uncertain
+          - ultragraph
     steps:
       - uses: actions/checkout@v6
 
