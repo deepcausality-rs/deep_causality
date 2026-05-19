@@ -155,10 +155,16 @@ fn edge_length_at_indexes_per_edge() {
 #[test]
 fn edge_lengths_slice_only_for_per_edge() {
     assert!(CubicalReggeGeometry::<3>::unit().edge_lengths().is_none());
-    assert!(CubicalReggeGeometry::<3>::uniform(1.0).edge_lengths().is_none());
-    assert!(CubicalReggeGeometry::<3>::per_axis([1.0, 1.0, 1.0])
-        .edge_lengths()
-        .is_none());
+    assert!(
+        CubicalReggeGeometry::<3>::uniform(1.0)
+            .edge_lengths()
+            .is_none()
+    );
+    assert!(
+        CubicalReggeGeometry::<3>::per_axis([1.0, 1.0, 1.0])
+            .edge_lengths()
+            .is_none()
+    );
 
     let g = CubicalReggeGeometry::<2>::from_edge_lengths(vec![1.0, 2.0, 3.0]);
     assert_eq!(g.edge_lengths(), Some([1.0, 2.0, 3.0].as_slice()));
@@ -226,8 +232,8 @@ fn equality_distinguishes_representations() {
 
 #[test]
 fn clone_preserves_state() {
-    let g =
-        CubicalReggeGeometry::<3>::per_axis([0.5, 1.0, 2.0]).with_timelike_axes([true, false, false]);
+    let g = CubicalReggeGeometry::<3>::per_axis([0.5, 1.0, 2.0])
+        .with_timelike_axes([true, false, false]);
     let c = g.clone();
     assert_eq!(g, c);
     assert_eq!(c.axis_lengths(), Some([0.5, 1.0, 2.0]));
