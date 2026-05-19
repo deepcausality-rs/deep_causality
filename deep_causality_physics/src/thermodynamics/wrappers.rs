@@ -9,11 +9,11 @@ use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_tensor::CausalTensor;
 
 use crate::Probability;
-use deep_causality_topology::Manifold;
+use deep_causality_topology::SimplicialManifold;
 
 /// Causal wrapper for [`stats::heat_diffusion_kernel`].
 pub fn heat_diffusion(
-    temp_manifold: &Manifold<f64, f64>,
+    temp_manifold: &SimplicialManifold<f64, f64>,
     diffusivity: f64,
 ) -> PropagatingEffect<CausalTensor<f64>> {
     match stats::heat_diffusion_kernel(temp_manifold, diffusivity) {

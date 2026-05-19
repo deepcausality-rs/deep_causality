@@ -220,6 +220,7 @@ impl<const D: usize> ChainComplex for Lattice<D> {
         = LatticeCellIterator<'a, D>
     where
         Self: 'a;
+    type Metric = crate::CubicalMetric<D>;
 
     fn cells(&self, k: usize) -> Self::CellIter<'_> {
         self.iter_cells(k)

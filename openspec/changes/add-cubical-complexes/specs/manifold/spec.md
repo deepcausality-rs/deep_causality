@@ -52,9 +52,27 @@ The methods that compute exterior derivative, codifferential, Hodge ⋆, and Lap
 - **AND** passes it to `CoMonad::extend` on `Manifold<CubicalComplex<3>, f64>`
 - **THEN** every output cell holds the sum of its 26 Moore neighbors' input values
 
-### Requirement: ReggeGeometry on cubical complexes supports the unit-edge case
+### Requirement: Manifold carries an optional metric typed per complex
 
-`Manifold<CubicalComplex<D>, F>` SHALL accept a metric for the unit-edge case (every edge has length 1.0). Non-uniform / scaled / curved cubical metrics are out of scope for this change and SHALL be tracked in a separate follow-up issue.
+`Manifold<K, F>` SHALL store its optional metric as `metric: Option<K::Metric>`, using the `ChainComplex::Metric` associated type. This routes the metric type through the trait at compile time without `dyn`, without an enum at the Manifold level, and without coupling `Manifold` to any concrete metric implementation.
+
+#### Scenario: Simplicial metric stays ReggeGeometry
+
+- **WHEN** the user calls `SimplicialManifold::<f64, f64>::with_metric(complex, data, Some(regge), 0)`
+- **THEN** the metric argument's static type is `Option<ReggeGeometry<f64>>`
+- **AND** all existing Regge geometry tests pass without modification
+
+#### Scenario: Cubical metric is the unit-edge case
+
+- **WHEN** the user calls `Manifold::<CubicalComplex<3>, f64>::with_metric(complex, data, Some(CubicalMetric::unit()), 0)`
+- **THEN** the metric argument's static type is `Option<CubicalMetric<3>>`
+- **AND** every edge length used by volume / Hodge computations is `1.0`
+
+#### Scenario: Non-uniform cubical metrics deferred
+
+- **WHEN** non-unit / scaled / curved cubical metrics are needed
+- **THEN** they are out of scope for this change set
+- **AND** they SHALL be tracked in a separate follow-up issue
 
 #### Scenario: Unit-edge cubical metric
 

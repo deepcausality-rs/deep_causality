@@ -2,13 +2,14 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::Manifold;
+use crate::traits::chain_complex::ChainComplex;
 use crate::types::manifold::differential::utils_differential;
+use crate::{Manifold, SimplicialComplex};
 use core::ops::Mul;
 use deep_causality_num::{Field, Float, FromPrimitive, Zero};
 use deep_causality_tensor::CausalTensor;
 
-impl<C, D> Manifold<C, D>
+impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
     C: Float
         + Copy
@@ -59,9 +60,9 @@ where
         let mass_k = &self.complex.hodge_star_operators[k];
 
         // B_k (Boundary Operator: k -> k-1)
-        // Convention: boundary_operators[k-1] maps k-simplices (cols) to k-1 simplices (rows)
-        // This follows the documented convention where boundary_operators[j] = ∂_{j+1}
-        let boundary_k = &self.complex.boundary_operators[k - 1];
+        // Route through ChainComplex::boundary_matrix(k) — Cow::Borrowed on SimplicialComplex.
+        let boundary_k_cow = self.complex.boundary_matrix(k);
+        let boundary_k: &deep_causality_sparse::CsrMatrix<i8> = &boundary_k_cow;
 
         // M_{k-1} (Mass Matrix for k-1 simplices)
         // We need the inverse of this. Since we store it as a diagonal CsrMatrix,

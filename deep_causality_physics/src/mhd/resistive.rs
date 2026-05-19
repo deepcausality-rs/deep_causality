@@ -6,7 +6,7 @@
 use crate::mhd::quantities::{AlfvenSpeed, Diffusivity};
 use crate::{PhysicsError, Speed};
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::Manifold;
+use deep_causality_topology::SimplicialManifold;
 
 /// Calculates the diffusion term of the induction equation.
 /// $$ \frac{\partial \mathbf{B}}{\partial t}_{diff} = \eta \nabla^2 \mathbf{B} $$
@@ -23,7 +23,7 @@ use deep_causality_topology::Manifold;
 /// # Returns
 /// *   `Result<CausalTensor<f64>, PhysicsError>` - Rate of change tensor (2-form).
 pub fn resistive_diffusion_kernel(
-    b_manifold: &Manifold<f64, f64>,
+    b_manifold: &SimplicialManifold<f64, f64>,
     diffusivity: Diffusivity,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     let eta = diffusivity.value();

@@ -4,10 +4,10 @@
  */
 
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, Simplex};
+use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, Simplex, SimplicialManifold};
 
 // Helper to create a manifold with a known metric i.e. Regge geometry
-fn setup_manifold_with_metric() -> Manifold<f64, f64> {
+fn setup_manifold_with_metric() -> SimplicialManifold<f64, f64> {
     // Create a single triangle (0-1-2) with known edge lengths.
     // Let's use a 3-4-5 right triangle for easy area calculation.
     // Lengths: 0-1 = 3, 0-2 = 4, 1-2 = 5 (hypotenuse)

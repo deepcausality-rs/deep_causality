@@ -70,6 +70,34 @@ Every implementor of `ChainComplex` SHALL satisfy two algebraic invariants: (a) 
 - **WHEN** the conformance test compares `coboundary_matrix(k)` against `boundary_matrix(k + 1)` for each impl
 - **THEN** for every `k` in `0..complex.max_dim()`, the two matrices are transposes of each other (entry-by-entry equality after index swap)
 
+### Requirement: ChainComplex exposes an associated Metric type
+
+`ChainComplex` SHALL expose an associated `type Metric;` so that `Manifold<K, F>` can carry an optional metric typed per-complex without forcing `dyn`, an enum, or coupling `Manifold` to any concrete metric type. The trait MUST NOT impose bounds on `Metric` — bounds belong on use sites where metric-specific operations are invoked.
+
+Implementations:
+- `SimplicialComplex<T>::Metric = ReggeGeometry<T>` — the existing Regge geometry stays the simplicial path's metric.
+- `Lattice<D>::Metric = CubicalMetric<D>` — a new unit-edge metric type introduced in this change set.
+- `CellComplex<C>::Metric = ()` — no metric for the abstract cell-complex type; the unit type satisfies the trait without imposing a real metric.
+
+#### Scenario: Each impl declares its Metric
+
+- **WHEN** a downstream user reads the public API
+- **THEN** `<SimplicialComplex<f64> as ChainComplex>::Metric` resolves to `ReggeGeometry<f64>`
+- **AND** `<Lattice<3> as ChainComplex>::Metric` resolves to `CubicalMetric<3>`
+- **AND** `<CellComplex<MyCell> as ChainComplex>::Metric` resolves to `()`
+
+#### Scenario: Manifold uses K::Metric
+
+- **WHEN** the user constructs `Manifold::<SimplicialComplex<f64>, f64>::with_metric(complex, data, Some(metric), 0)`
+- **THEN** the `metric` argument's type is `Option<ReggeGeometry<f64>>` (i.e. `Option<<SimplicialComplex<f64> as ChainComplex>::Metric>`)
+- **AND** the construction is type-checked without runtime dispatch
+
+#### Scenario: No bound on Metric at the trait level
+
+- **WHEN** the `ChainComplex` trait is inspected
+- **THEN** the associated `type Metric;` declaration has no `where` clause and no supertrait bound
+- **AND** bounds (e.g. `K::Metric: Clone`) appear only on `impl` blocks that need them
+
 ### Requirement: ChainComplex preserves topological queries
 
 `ChainComplex` SHALL retain the queries already provided by `CWComplex`: cell count per grade, maximum dimension, and k-th Betti number.

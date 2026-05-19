@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::Manifold;
+use crate::{Manifold, SimplicialComplex};
 use deep_causality_haft::{
     Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
 };
@@ -17,13 +17,20 @@ use std::marker::PhantomData;
 
 pub struct ManifoldWitness<C>(PhantomData<C>);
 
+/// Textbook alias for the simplicial case. `ManifoldWitness<C>` is currently
+/// simplicial-specific in its impls (it maps via `SimplicialComplex<C>`), so this
+/// alias names the same witness with explicit "simplicial" framing for migration
+/// and discoverability. A separate witness over arbitrary `ChainComplex` may be
+/// added in a follow-up; this alias preserves the simplicial entry point.
+pub type SimplicialManifoldWitness<C> = ManifoldWitness<C>;
+
 impl<C> HKT for ManifoldWitness<C>
 where
     C: Satisfies<NoConstraint>,
 {
     type Constraint = NoConstraint;
     type Type<T>
-        = Manifold<C, T>
+        = Manifold<SimplicialComplex<C>, T>
     where
         T: Satisfies<NoConstraint>;
 }
@@ -32,7 +39,10 @@ impl<C> Functor<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     C: Satisfies<NoConstraint> + Clone,
 {
-    fn fmap<A, B, Func>(m_a: Manifold<C, A>, f: Func) -> Manifold<C, B>
+    fn fmap<A, B, Func>(
+        m_a: Manifold<SimplicialComplex<C>, A>,
+        f: Func,
+    ) -> Manifold<SimplicialComplex<C>, B>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
@@ -57,7 +67,7 @@ impl<C> Foldable<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     C: Satisfies<NoConstraint>,
 {
-    fn fold<A, B, Func>(fa: Manifold<C, A>, init: B, f: Func) -> B
+    fn fold<A, B, Func>(fa: Manifold<SimplicialComplex<C>, A>, init: B, f: Func) -> B
     where
         A: Satisfies<NoConstraint>,
         Func: FnMut(B, A) -> B,
@@ -70,7 +80,7 @@ impl<C> Pure<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     C: Satisfies<NoConstraint> + Default,
 {
-    fn pure<T>(value: T) -> Manifold<C, T>
+    fn pure<T>(value: T) -> Manifold<SimplicialComplex<C>, T>
     where
         T: Satisfies<NoConstraint>,
     {
@@ -88,7 +98,10 @@ impl<C> Monad<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     C: Satisfies<NoConstraint> + Clone + Default,
 {
-    fn bind<A, B, Func>(m_a: Manifold<C, A>, mut f: Func) -> Manifold<C, B>
+    fn bind<A, B, Func>(
+        m_a: Manifold<SimplicialComplex<C>, A>,
+        mut f: Func,
+    ) -> Manifold<SimplicialComplex<C>, B>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
@@ -118,7 +131,10 @@ impl<C> Applicative<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     C: Satisfies<NoConstraint> + Clone + Default,
 {
-    fn apply<A, B, Func>(f_ab: Manifold<C, Func>, f_a: Manifold<C, A>) -> Manifold<C, B>
+    fn apply<A, B, Func>(
+        f_ab: Manifold<SimplicialComplex<C>, Func>,
+        f_a: Manifold<SimplicialComplex<C>, A>,
+    ) -> Manifold<SimplicialComplex<C>, B>
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint>,
@@ -151,7 +167,7 @@ impl<C> CoMonad<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     C: Satisfies<NoConstraint> + Clone,
 {
-    fn extract<A>(fa: &Manifold<C, A>) -> A
+    fn extract<A>(fa: &Manifold<SimplicialComplex<C>, A>) -> A
     where
         A: Satisfies<NoConstraint> + Clone,
     {
@@ -165,9 +181,12 @@ where
             .expect("Cursor out of bounds")
     }
 
-    fn extend<A, B, Func>(fa: &Manifold<C, A>, mut f: Func) -> Manifold<C, B>
+    fn extend<A, B, Func>(
+        fa: &Manifold<SimplicialComplex<C>, A>,
+        mut f: Func,
+    ) -> Manifold<SimplicialComplex<C>, B>
     where
-        Func: FnMut(&Manifold<C, A>) -> B,
+        Func: FnMut(&Manifold<SimplicialComplex<C>, A>) -> B,
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint>,
     {

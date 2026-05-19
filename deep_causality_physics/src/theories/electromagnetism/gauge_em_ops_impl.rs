@@ -10,7 +10,8 @@ use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
-    BaseTopology, GaugeField, GaugeFieldWitness, Manifold, Simplex, SimplicialComplexBuilder, U1,
+    BaseTopology, GaugeField, GaugeFieldWitness, Manifold, Simplex, SimplicialComplexBuilder,
+    SimplicialManifold, U1,
 };
 
 /// Blanket implementation of GaugeEmOps for GaugeField<U1, S, S> where S: Field + Float + TensorData
@@ -19,7 +20,7 @@ where
     S: RealField + From<f64> + Into<f64> + std::default::Default,
 {
     fn from_fields(
-        base: Manifold<S, S>,
+        base: SimplicialManifold<S, S>,
         electric_field: CausalMultiVector<S>,
         magnetic_field: CausalMultiVector<S>,
     ) -> Result<Self, PhysicsError> {
@@ -99,7 +100,7 @@ where
             PhysicsError::DimensionMismatch(format!("Failed to create tensor: {:?}", e))
         })?;
 
-        let base: Manifold<S, S> = Manifold::new(complex, data, 0).map_err(|e| {
+        let base: SimplicialManifold<S, S> = Manifold::new(complex, data, 0).map_err(|e| {
             PhysicsError::DimensionMismatch(format!("Failed to create default manifold: {:?}", e))
         })?;
 

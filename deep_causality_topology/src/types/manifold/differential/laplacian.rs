@@ -3,13 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::Manifold;
+use crate::{Manifold, SimplicialComplex};
 
 use core::ops::Mul;
 use deep_causality_num::{Field, Float, FromPrimitive, Zero};
 use deep_causality_tensor::CausalTensor;
 
-impl<C, D> Manifold<C, D>
+impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
     C: Field
         + Float

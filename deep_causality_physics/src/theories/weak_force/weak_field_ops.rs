@@ -38,7 +38,7 @@ where
 {
     /// Creates a new Weak Interaction Field (SU(2)) with West Coast metric.
     fn new_field(
-        base: deep_causality_topology::Manifold<S, S>,
+        base: deep_causality_topology::SimplicialManifold<S, S>,
         connection: CausalTensor<S>,
     ) -> Result<Self, PhysicsError>
     where

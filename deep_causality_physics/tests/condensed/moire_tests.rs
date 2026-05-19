@@ -10,7 +10,7 @@ use deep_causality_physics::{
     foppl_von_karman_strain_simple_kernel,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud};
+use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
 
 #[test]
 fn test_bistritzer_macdonald_shape() {
@@ -58,7 +58,7 @@ fn test_foppl_von_karman_strain_simple() {
 }
 
 // Helper for manifold tests
-fn create_flat_manifold() -> Manifold<f64, f64> {
+fn create_flat_manifold() -> SimplicialManifold<f64, f64> {
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 0.866], vec![3, 2]).unwrap();
     let point_cloud =
         PointCloud::new(points, CausalTensor::new(vec![0.0; 3], vec![3]).unwrap(), 0).unwrap();

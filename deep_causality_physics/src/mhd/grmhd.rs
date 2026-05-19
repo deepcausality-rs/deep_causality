@@ -6,7 +6,7 @@
 use crate::{LorentzianMetric, PhysicsError};
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
-use deep_causality_topology::Manifold;
+use deep_causality_topology::SimplicialManifold;
 
 /// Calculates relativistic current density J^μ via covariant divergence.
 ///
@@ -36,7 +36,7 @@ use deep_causality_topology::Manifold;
 /// - `DimensionMismatch`: Manifold dimension < 4 or metric dimension mismatch
 /// - `CalculationError`: Missing differential operators
 pub fn relativistic_current_kernel<M: LorentzianMetric>(
-    em_manifold: &Manifold<f64, f64>,
+    em_manifold: &SimplicialManifold<f64, f64>,
     spacetime_metric: &M,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     let complex = em_manifold.complex();

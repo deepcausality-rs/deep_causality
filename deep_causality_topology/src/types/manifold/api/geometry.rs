@@ -6,9 +6,9 @@
 //! Public geometry API for Manifold.
 //!
 
-use crate::{Manifold, Simplex, TopologyError};
+use crate::{Manifold, Simplex, SimplicialComplex, TopologyError};
 
-impl<C, D> Manifold<C, D>
+impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
     C: deep_causality_num::Float
         + deep_causality_num::Zero

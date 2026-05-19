@@ -6,10 +6,12 @@
 use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, Monad, Pure};
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, ManifoldWitness, Simplex, SimplicialComplex, Skeleton};
+use deep_causality_topology::{
+    Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
+};
 
 // Helper to create a valid manifold (line segment)
-fn create_line_manifold() -> Manifold<f64, f64> {
+fn create_line_manifold() -> SimplicialManifold<f64, f64> {
     let vertices = vec![Simplex::new(vec![0]), Simplex::new(vec![1])];
     let skeleton_0 = Skeleton::new(0, vertices);
 
@@ -86,7 +88,7 @@ fn test_manifold_extend() {
 #[test]
 fn test_manifold_pure() {
     // Pure::pure wraps a single value into a minimal Manifold
-    let manifold: Manifold<f64, i32> = ManifoldWitness::pure(42);
+    let manifold: SimplicialManifold<f64, i32> = ManifoldWitness::pure(42);
 
     // Verify the value is stored in the data tensor
     assert_eq!(manifold.data().as_slice(), &[42]);
@@ -108,10 +110,10 @@ fn test_manifold_fold() {
 fn test_manifold_bind() {
     // Use Pure to create manifolds since we can't access private fields
     // The bind operation itself exercises the code, even if we can't verify the exact output
-    let manifold: Manifold<f64, f64> = ManifoldWitness::pure(5.0);
+    let manifold: SimplicialManifold<f64, f64> = ManifoldWitness::pure(5.0);
 
     // Bind: For each value, create a manifold with that value doubled using Pure
-    let bound: Manifold<f64, f64> =
+    let bound: SimplicialManifold<f64, f64> =
         ManifoldWitness::bind(manifold, |x| ManifoldWitness::pure(x * 2.0));
 
     // The result manifold should have data from the bound operation
@@ -127,7 +129,8 @@ fn test_manifold_bind() {
 fn test_manifold_applicative_single_func() {
     // Test the `funcs.len() == 1` branch in Applicative::apply
     // Create a manifold with a single function using Pure (avoids trait bounds issue)
-    let func_manifold: Manifold<f64, fn(f64) -> f64> = ManifoldWitness::pure(|x: f64| x * 3.0);
+    let func_manifold: SimplicialManifold<f64, fn(f64) -> f64> =
+        ManifoldWitness::pure(|x: f64| x * 3.0);
 
     // Create a data manifold with multiple values
     let complex = create_line_manifold().complex().clone();
@@ -135,7 +138,7 @@ fn test_manifold_applicative_single_func() {
     let data_manifold = Manifold::new(complex, data, 0).unwrap();
 
     // Apply single function to all values
-    let result: Manifold<f64, f64> = ManifoldWitness::apply(func_manifold, data_manifold);
+    let result: SimplicialManifold<f64, f64> = ManifoldWitness::apply(func_manifold, data_manifold);
 
     // Single func applied to all: [1*3, 2*3, 3*3] = [3, 6, 9]
     assert_eq!(result.data().as_slice(), &[3.0, 6.0, 9.0]);

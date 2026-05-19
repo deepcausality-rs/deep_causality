@@ -5,9 +5,9 @@
 
 //! CPU implementation of covariance analysis for Manifold fields.
 
-use crate::{Manifold, TopologyError};
+use crate::{Manifold, SimplicialComplex, TopologyError};
 
-impl<C, D> Manifold<C, D>
+impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
     D: Into<f64> + Copy,
 {

@@ -6,10 +6,10 @@
 //! Tests for Manifold covariance analysis (covariance_cpu.rs)
 
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud};
+use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
 
 /// Helper to create a valid manifold with specified data values
-fn setup_manifold_with_data(data_values: Vec<f64>) -> Manifold<f64, f64> {
+fn setup_manifold_with_data(data_values: Vec<f64>) -> SimplicialManifold<f64, f64> {
     // Create a simple triangle from points
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0], vec![3, 2]).unwrap();
     let metadata = CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap();

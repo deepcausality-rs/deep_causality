@@ -23,6 +23,11 @@ pub trait ChainComplex {
     where
         Self: 'a;
 
+    /// The metric associated with this complex. Used by `Manifold<K, F>` as
+    /// `metric: Option<K::Metric>`. The trait imposes no bound on `Metric` —
+    /// bounds belong on use sites that exercise metric-specific operations.
+    type Metric;
+
     /// Iterate over all k-cells in the complex.
     fn cells(&self, k: usize) -> Self::CellIter<'_>;
 

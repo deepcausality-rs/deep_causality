@@ -21,7 +21,7 @@ pub use crate::extensions::hkt_cell_complex::CellComplexWitness;
 pub use crate::extensions::hkt_graph::GraphWitness;
 pub use crate::extensions::hkt_hypergraph::HypergraphWitness;
 pub use crate::extensions::hkt_lattice::LatticeWitness;
-pub use crate::extensions::hkt_manifold::ManifoldWitness;
+pub use crate::extensions::hkt_manifold::{ManifoldWitness, SimplicialManifoldWitness};
 pub use crate::extensions::hkt_point_cloud::PointCloudWitness;
 pub use crate::extensions::hkt_simplicial_complex::ChainWitness;
 pub use crate::extensions::hkt_topology::TopologyWitness;
@@ -46,6 +46,7 @@ pub use extensions::hkt_gauge::hkt_adjunction_stokes::{
 // Re-export types
 pub use crate::types::cell_complex::{BoundaryOperator, CellComplex};
 pub use crate::types::chain::Chain;
+pub use crate::types::cubical_metric::CubicalMetric;
 pub use crate::types::graph::Graph;
 pub use crate::types::hypergraph::Hypergraph;
 pub use crate::types::lattice::dual_lattice::DualLattice;
@@ -53,7 +54,7 @@ pub use crate::types::lattice::specialized::{
     HeavyHexLattice, HoneycombLattice, KagomeLattice, TriangularLattice,
 };
 pub use crate::types::lattice::{Lattice, LatticeCell};
-pub use crate::types::manifold::Manifold;
+pub use crate::types::manifold::{Manifold, SimplicialManifold};
 pub use crate::types::point_cloud::PointCloud;
 pub use crate::types::regge_geometry::ReggeGeometry;
 pub use crate::types::simplex::Simplex;

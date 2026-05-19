@@ -7,9 +7,9 @@ use deep_causality_physics::{
     AlfvenSpeed, Diffusivity, magnetic_reconnection_rate_kernel, resistive_diffusion_kernel,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud};
+use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
 
-fn create_dummy_manifold() -> Manifold<f64, f64> {
+fn create_dummy_manifold() -> SimplicialManifold<f64, f64> {
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 0.866], vec![3, 2]).unwrap();
     let point_cloud =
         PointCloud::new(points, CausalTensor::new(vec![0.0; 3], vec![3]).unwrap(), 0).unwrap();

@@ -9,10 +9,10 @@ use deep_causality_physics::{
     poynting_vector_kernel, proca_equation_kernel,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud};
+use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
 
 // Helper to create a simple triangular manifold
-fn create_simple_manifold() -> Manifold<f64, f64> {
+fn create_simple_manifold() -> SimplicialManifold<f64, f64> {
     let points = CausalTensor::new(
         vec![
             0.0, 0.0, // v0

@@ -3,12 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::Manifold;
+use crate::{Manifold, SimplicialComplex};
 use core::ops::Mul;
 use deep_causality_num::Field;
 use deep_causality_tensor::CausalTensor;
 
-impl<C, D> Manifold<C, D>
+impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
     C: Default + Copy + PartialEq + deep_causality_num::Zero,
     D: Field + Default + Copy + PartialEq,

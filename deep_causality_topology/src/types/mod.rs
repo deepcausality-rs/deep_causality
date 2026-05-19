@@ -5,6 +5,7 @@
 
 pub mod cell_complex;
 pub mod chain;
+pub mod cubical_metric;
 pub mod curvature_tensor;
 pub mod differential_form;
 pub mod gauge;

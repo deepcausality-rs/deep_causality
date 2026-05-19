@@ -4,9 +4,9 @@
  */
 
 //! Public covariance analysis API for Manifold.
-use crate::{Manifold, TopologyError};
+use crate::{Manifold, SimplicialComplex, TopologyError};
 
-impl<C, D> Manifold<C, D>
+impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
     D: Into<f64> + Copy,
 {

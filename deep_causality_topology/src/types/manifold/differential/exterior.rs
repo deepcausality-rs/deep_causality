@@ -2,13 +2,15 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::SimplicialComplex;
+use crate::traits::chain_complex::ChainComplex;
 use crate::types::manifold::Manifold;
 use crate::types::manifold::differential::utils_differential;
 use core::fmt::Debug;
 use deep_causality_num::Field;
 use deep_causality_tensor::CausalTensor;
 
-impl<C, D> Manifold<C, D>
+impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
     C: Default + Copy + PartialEq + deep_causality_num::Zero,
     D: Field + Copy + Default + PartialEq + core::ops::Neg<Output = D> + Debug,
@@ -34,12 +36,14 @@ where
     /// the exterior derivative is represented by the coboundary operator.
     pub fn exterior_derivative(&self, k: usize) -> CausalTensor<D> {
         // The exterior derivative d_k is represented by the coboundary operator C_k = B_{k+1}^T.
-        if k >= self.complex.coboundary_operators.len() {
+        // Route through the ChainComplex trait — Cow::Borrowed on SimplicialComplex (zero copy).
+        if k >= self.complex.max_dim() {
             // d of the highest dimension is zero
             return CausalTensor::new(vec![], vec![0]).expect("Tensor alloc failed");
         }
 
-        let coboundary = &self.complex.coboundary_operators[k];
+        let coboundary_cow = self.complex.coboundary_matrix(k);
+        let coboundary: &deep_causality_sparse::CsrMatrix<i8> = &coboundary_cow;
         let k_form_data = self.get_k_form_data(k);
 
         // Operation: C_k * omega_k

@@ -8,11 +8,11 @@
 use deep_causality_num::{Float, Zero};
 use std::iter::Product;
 
-use crate::{Manifold, Simplex, TopologyError};
+use crate::{Manifold, Simplex, SimplicialComplex, TopologyError};
 use deep_causality_tensor::{CausalTensor, CausalTensorError};
 use std::collections::HashMap;
 
-impl<C, D> Manifold<C, D>
+impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
     C: Float + Zero + Copy + PartialOrd + From<f64> + Into<f64> + Product,
 {

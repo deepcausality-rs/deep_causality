@@ -15,7 +15,7 @@ use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::Complex;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::Manifold;
+use deep_causality_topology::SimplicialManifold;
 
 // ============================================================================
 // QGT Wrappers
@@ -127,8 +127,8 @@ pub fn foppl_von_karman_strain_simple(
 
 /// Wrapper for [`moire::foppl_von_karman_strain_kernel`].
 pub fn foppl_von_karman_strain(
-    u_manifold: &Manifold<f64, f64>,
-    w_manifold: &Manifold<f64, f64>,
+    u_manifold: &SimplicialManifold<f64, f64>,
+    w_manifold: &SimplicialManifold<f64, f64>,
     youngs_modulus: Stiffness,
     poisson_ratio: Ratio,
 ) -> PropagatingEffect<CausalTensor<f64>> {

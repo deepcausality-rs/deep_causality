@@ -8,7 +8,7 @@ use crate::{fields, forces};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::Manifold;
+use deep_causality_topology::SimplicialManifold;
 
 /// Causal wrapper for [`forces::lorentz_force_kernel`].
 pub fn lorentz_force(
@@ -23,7 +23,7 @@ pub fn lorentz_force(
 
 /// Causal wrapper for [`fields::maxwell_gradient_kernel`].
 pub fn maxwell_gradient(
-    potential_manifold: &Manifold<f64, f64>,
+    potential_manifold: &SimplicialManifold<f64, f64>,
 ) -> PropagatingEffect<CausalTensor<f64>> {
     match fields::maxwell_gradient_kernel(potential_manifold) {
         Ok(f) => PropagatingEffect::pure(f),
@@ -33,7 +33,7 @@ pub fn maxwell_gradient(
 
 /// Causal wrapper for [`fields::lorenz_gauge_kernel`].
 pub fn lorenz_gauge(
-    potential_manifold: &Manifold<f64, f64>,
+    potential_manifold: &SimplicialManifold<f64, f64>,
 ) -> PropagatingEffect<CausalTensor<f64>> {
     match fields::lorenz_gauge_kernel(potential_manifold) {
         Ok(val) => PropagatingEffect::pure(val),
@@ -68,8 +68,8 @@ pub fn magnetic_helicity_density(
 
 /// Causal wrapper for [`fields::proca_equation_kernel`].
 pub fn proca_equation(
-    field_manifold: &Manifold<f64, f64>,
-    potential_manifold: &Manifold<f64, f64>,
+    field_manifold: &SimplicialManifold<f64, f64>,
+    potential_manifold: &SimplicialManifold<f64, f64>,
     mass: f64,
 ) -> PropagatingEffect<CausalTensor<f64>> {
     match fields::proca_equation_kernel(field_manifold, potential_manifold, mass) {

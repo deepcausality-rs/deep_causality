@@ -9,7 +9,7 @@
 use crate::{Manifold, ReggeGeometry, SimplicialComplex};
 use deep_causality_tensor::CausalTensor;
 
-impl<C, D> Manifold<C, D> {
+impl<C, D> Manifold<SimplicialComplex<C>, D> {
     /// Returns a reference to the underlying simplicial complex.
     pub fn complex(&self) -> &SimplicialComplex<C> {
         &self.complex

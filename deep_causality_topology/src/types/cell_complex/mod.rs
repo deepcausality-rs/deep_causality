@@ -129,6 +129,7 @@ impl<C: Cell> ChainComplex for CellComplex<C> {
         = CellComplexCellIter<'a, C>
     where
         Self: 'a;
+    type Metric = ();
 
     fn cells(&self, k: usize) -> Self::CellIter<'_> {
         CellComplexCellIter(self.cells_vec(k).iter().cloned())

@@ -11,7 +11,7 @@ use deep_causality_tensor::CausalTensor;
 
 use super::super::{Manifold, utils};
 
-impl<C, D> Manifold<C, D>
+impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
     C: Default + Copy + Clone + PartialEq + Zero,
     D: Default + Copy + Clone + PartialEq + Zero,
@@ -130,7 +130,7 @@ where
     }
 }
 
-impl<C, D> Manifold<C, D>
+impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
     C: Clone,
     D: Clone,
