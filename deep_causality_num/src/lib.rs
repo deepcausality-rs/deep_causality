@@ -14,6 +14,7 @@ pub mod float;
 mod float_106;
 mod float_option;
 mod identity;
+pub mod iso;
 pub mod num;
 mod ops;
 pub mod utils_tests;
@@ -58,6 +59,9 @@ pub use crate::cast::to_primitive::ToPrimitive;
 pub use crate::complex::complex_number::{Complex, Complex32, Complex64};
 pub use crate::complex::octonion_number::{Octonion, Octonion32, Octonion64};
 pub use crate::complex::quaternion_number::{Quaternion, Quaternion32, Quaternion64};
+
+// Isomorphism trait markers (Tier 1)
+pub use crate::iso::{AlgebraIso, DivisionAlgebraIso, FieldIso, GroupIso, RingIso};
 
 // Float number types
 pub use crate::float::Float;
