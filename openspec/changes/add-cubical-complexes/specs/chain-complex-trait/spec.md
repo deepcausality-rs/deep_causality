@@ -10,33 +10,65 @@ The crate `deep_causality_topology` SHALL expose a public trait `ChainComplex` t
 - **THEN** the trait requires an associated `type CellIter<'a>: Iterator<Item = Self::CellType> where Self: 'a`
 - **AND** the method `fn cells(&self, k: usize) -> Self::CellIter<'_>` returns the iterator by value, not boxed
 
-#### Scenario: No dyn Iterator in public API
+#### Scenario: No dyn Iterator in trait or impls
 
 - **WHEN** the crate is built with `cargo build -p deep_causality_topology`
 - **AND** the test suite is built with `cargo test -p deep_causality_topology`
-- **THEN** `grep -RIn "dyn Iterator" src/traits/` returns no matches in the `ChainComplex` definition or its impls
+- **THEN** `grep -RIn 'dyn Iterator' src/traits/ src/types/lattice/ src/types/cell_complex/ src/types/simplicial_complex/topology/` returns zero matches
 
-### Requirement: ChainComplex exposes boundary and coboundary uniformly
+### Requirement: Cell trait lives in its own module
 
-`ChainComplex` SHALL require methods to retrieve both the boundary matrix ∂_k and the coboundary matrix δ_k for any grade k, so that downstream code (notably `Manifold`'s differential operators) can read them without reaching into any concrete complex's storage layout.
+The `Cell` marker trait SHALL be declared in `src/traits/cell.rs`, separately from `ChainComplex`. Both SHALL be re-exported from `src/traits/mod.rs` and from `src/lib.rs`. The previous bundling of `Cell` inside `cw_complex.rs` is replaced by the split.
 
-#### Scenario: Boundary and coboundary are first-class trait methods
+#### Scenario: Cell is importable on its own
+
+- **WHEN** a user writes `use deep_causality_topology::Cell;`
+- **THEN** the import resolves
+- **AND** `Cell` and `ChainComplex` are declared in distinct source files (`src/traits/cell.rs` and `src/traits/chain_complex.rs` respectively)
+
+### Requirement: ChainComplex exposes boundary and coboundary via Cow
+
+`ChainComplex` SHALL require methods to retrieve both the boundary matrix ∂_k and the coboundary matrix δ_k for any grade k. Both methods SHALL return `std::borrow::Cow<'_, CsrMatrix<i8>>` so that cache-rich implementors can vend `Cow::Borrowed` (zero copy) and compute-on-demand implementors can vend `Cow::Owned` without forcing a `clone()` at the trait boundary. `coboundary_matrix` is a brand-new method on the trait surface — today's `CWComplex` exposes only `boundary_matrix`, and every existing implementor SHALL gain the new method as part of this change.
+
+#### Scenario: Boundary and coboundary are first-class trait methods returning Cow
 
 - **WHEN** a generic function `fn f<K: ChainComplex>(k: &K)` is written
-- **THEN** it can call `k.boundary_matrix(grade)` and `k.coboundary_matrix(grade)` returning `CsrMatrix<i8>`
+- **THEN** it can call `k.boundary_matrix(grade)` and `k.coboundary_matrix(grade)`, each returning `Cow<'_, CsrMatrix<i8>>`
 - **AND** the call compiles without referencing any concrete complex type
 
-#### Scenario: SimplicialComplex satisfies the trait via its cached operators
+#### Scenario: SimplicialComplex satisfies the trait via zero-copy Cow::Borrowed
 
 - **WHEN** `SimplicialComplex<C>` implements `ChainComplex`
-- **THEN** `coboundary_matrix(k)` returns the matrix from its pre-existing `coboundary_operators` cache
-- **AND** the cached values are bit-for-bit identical to those used today by `manifold/differential/exterior_cpu.rs`
+- **THEN** `boundary_matrix(k)` returns `Cow::Borrowed(&self.boundary_operators[k - 1])`
+- **AND** `coboundary_matrix(k)` returns `Cow::Borrowed(&self.coboundary_operators[k])`
+- **AND** no `CsrMatrix` clone is performed on the read path
+- **AND** the returned matrix contents are bit-for-bit identical to those used today by `manifold/differential/exterior_cpu.rs`
 
-#### Scenario: CubicalComplex satisfies the trait without a pre-computed cache
+#### Scenario: Lattice satisfies the trait via lazy-memoized Cow::Owned
 
-- **WHEN** `CubicalComplex<D>` implements `ChainComplex`
-- **THEN** `coboundary_matrix(k)` returns a matrix algebraically equal to `boundary_matrix(k+1).transpose()`
-- **AND** the implementation MAY memoize lazily but MUST NOT require the caller to pre-populate it
+- **WHEN** `Lattice<D>` implements `ChainComplex`
+- **THEN** `coboundary_matrix(k)` lazily computes `boundary_matrix(k + 1).into_owned().transpose()` on first call, stores the result in an internal `RefCell<HashMap<usize, CsrMatrix<i8>>>`, and returns `Cow::Owned(matrix.clone())` from the cache on subsequent calls
+- **AND** the implementation does not use `unsafe`
+
+#### Scenario: CellComplex satisfies the trait without internal memoization
+
+- **WHEN** `CellComplex<C>` implements `ChainComplex`
+- **THEN** `coboundary_matrix(k)` computes the transpose of `boundary_matrix(k + 1)` on each call and returns `Cow::Owned`
+- **AND** lazy memoization is intentionally not added in this stage (its usage pattern does not justify the `RefCell` complexity)
+
+### Requirement: Boundary matrix shape and transpose-coboundary identity hold for every impl
+
+Every implementor of `ChainComplex` SHALL satisfy two algebraic invariants: (a) `boundary_matrix(k)` has shape `(num_cells(k - 1), num_cells(k))` for every `k > 0`; (b) `coboundary_matrix(k)` is the transpose of `boundary_matrix(k + 1)` as a sparse matrix. These invariants SHALL be verified by a parametric conformance test that runs against `SimplicialComplex`, `Lattice<D>`, and `CellComplex<C>`.
+
+#### Scenario: Shape invariant holds across all impls
+
+- **WHEN** the conformance test invokes `boundary_matrix(k)` on each of `SimplicialComplex<f64>::new(...)`, `Lattice::<3>::cubic_open(4)`, and a small `CellComplex<...>`
+- **THEN** for every `k` in `1..=complex.max_dim()`, the returned matrix has `nrows == num_cells(k - 1)` and `ncols == num_cells(k)`
+
+#### Scenario: Transpose invariant holds across all impls
+
+- **WHEN** the conformance test compares `coboundary_matrix(k)` against `boundary_matrix(k + 1)` for each impl
+- **THEN** for every `k` in `0..complex.max_dim()`, the two matrices are transposes of each other (entry-by-entry equality after index swap)
 
 ### Requirement: ChainComplex preserves topological queries
 

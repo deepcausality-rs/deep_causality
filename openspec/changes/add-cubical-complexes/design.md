@@ -33,13 +33,13 @@ Constraints (from AGENTS.md):
 
 ### D1. Replace `CWComplex` with `ChainComplex` using GAT iterators
 
-**Decision:** Rename the trait, replace `fn cells(&self, k) -> Box<dyn Iterator<...>>` with an associated `type CellIter<'a>: Iterator<Item = Self::CellType> where Self: 'a` and a method `fn cells(&self, k: usize) -> Self::CellIter<'_>`. Add `fn coboundary_matrix(&self, k: usize) -> CsrMatrix<i8>` to the trait surface.
+**Decision:** Rename the trait, replace `fn cells(&self, k) -> Box<dyn Iterator<...>>` with an associated `type CellIter<'a>: Iterator<Item = Self::CellType> where Self: 'a` and a method `fn cells(&self, k: usize) -> Self::CellIter<'_>`. Add `fn coboundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>>` to the trait surface and widen `fn boundary_matrix(&self, k: usize)` to the same `Cow<'_, CsrMatrix<i8>>` return type (see D8).
 
-**Why:** `Box<dyn Iterator>` allocates and erases the iterator type, blocking inlining and monomorphization. AGENTS.md mandates static dispatch. GATs (stable since Rust 1.65) give exactly the abstraction shape we need with zero overhead. Adding `coboundary_matrix` to the trait makes Manifold's differential code generic without reaching into the concrete complex's storage.
+**Why:** `Box<dyn Iterator>` allocates and erases the iterator type, blocking inlining and monomorphization. AGENTS.md mandates static dispatch. GATs (stable since Rust 1.65, project MSRV is 1.90) give exactly the abstraction shape we need with zero overhead. Adding `coboundary_matrix` to the trait makes Manifold's differential code generic without reaching into the concrete complex's storage. The `coboundary_matrix` method is a brand-new addition to the trait, not a consolidation of an existing one — today's `CWComplex` exposes only `boundary_matrix`.
 
 **Alternatives considered:**
 - *Keep `Box<dyn Iterator>`*: rejected — violates static-dispatch rule, hurts hot paths.
-- *Return `impl Iterator` directly*: not yet stable in trait method positions in all forms we need across lifetimes; GAT is the explicit, portable shape.
+- *Return `impl Iterator` directly via RPITIT*: available on MSRV 1.90 but cannot constrain `Send`/`Sync` on the associated iterator type or expose it as a named type in other generic contexts; GAT is the more portable shape.
 - *Concrete enum iterator (`CellIterEnum<Simplex, CubicalCell<D>>`)*: rejected — closes the trait to user-defined complexes, defeats extensibility.
 
 ### D2. `Manifold<K: ChainComplex, F>` instead of `Manifold<C, D>`
@@ -54,9 +54,9 @@ Constraints (from AGENTS.md):
 
 ### D3. Move coboundary access behind the trait
 
-**Decision:** Today `Manifold` reads `self.complex.coboundary_operators[k]` directly ([exterior_cpu.rs:42](deep_causality_topology/src/types/manifold/differential/exterior_cpu.rs#L42)). The new `ChainComplex::coboundary_matrix(k)` becomes the single access path. `SimplicialComplex` keeps its precomputed cache and returns a reference to it from the trait method. `CubicalComplex` computes `boundary_matrix(k+1).transpose()` on demand (or memoizes lazily — implementation detail, not trait contract).
+**Decision:** Today `Manifold` reads `self.complex.coboundary_operators[k]` directly ([exterior_cpu.rs:42](deep_causality_topology/src/types/manifold/differential/exterior_cpu.rs#L42)). The new `ChainComplex::coboundary_matrix(k)` becomes the single access path, returning `Cow<'_, CsrMatrix<i8>>` (see D8). `SimplicialComplex` keeps its precomputed cache and vends a `Cow::Borrowed` from the trait method. `CubicalComplex` lazily memoizes `boundary_matrix(k+1).transpose()` inside a `RefCell<HashMap<usize, CsrMatrix<i8>>>` and vends a `Cow::Owned` of the cached matrix on first call (subsequent calls also return `Cow::Owned` clones — `Cow` cannot borrow through `RefCell`; the clone here is from a known-built matrix, not a recomputation). `CellComplex` recomputes on each call and vends `Cow::Owned` — its usage is infrequent enough that lazy memoization is not justified.
 
-**Why:** Decouples Manifold from any single complex's storage layout. Lets each complex choose its own caching policy.
+**Why:** Decouples Manifold from any single complex's storage layout. Lets each complex choose its own caching policy. The `Cow` return shape (D8) lets cache-rich impls avoid the `clone()` that a by-value trait return would force.
 
 **Alternatives considered:**
 - *Force every complex to pre-store coboundaries*: rejected — wastes memory for complexes built from huge synthetic grids where most strata are never queried.
@@ -108,6 +108,26 @@ Users add custom strategies (anisotropic LIDAR cones, half-space RF) by implemen
 
 **Why:** This is the textbook cellular-automaton CoKleisli pattern. Iteration order is complex-agnostic; neighborhood choice is operation-agnostic. Decoupling them is the whole reason the comonad abstraction is useful.
 
+### D8. Trait matrix-return type is `Cow<'_, CsrMatrix<i8>>`
+
+**Decision:** Both `boundary_matrix(k)` and `coboundary_matrix(k)` on the `ChainComplex` trait return `std::borrow::Cow<'_, CsrMatrix<i8>>`. Cache-rich implementors (`SimplicialComplex`) vend `Cow::Borrowed(&self.boundary_operators[k - 1])` — zero copy. Compute-on-demand implementors (`Lattice`, `CellComplex`) vend `Cow::Owned(matrix)`. Call sites that need to consume the matrix call `.into_owned()`; call sites that only need to read call `&*matrix` or `matrix.as_ref()`.
+
+**Why:** Today's signature is by value (`-> CsrMatrix<i8>`). Today's `SimplicialComplex` fast path is by reference (`boundary_operator_cpu -> Result<&CsrMatrix, _>`). `Manifold`'s current differential code reads through the reference and never clones. If Part B routes those reads through a by-value trait method, every exterior-derivative / codifferential / Hodge / Laplacian call on a `SimplicialManifold` clones a `CsrMatrix` per grade — a silent perf regression that "tests still pass" would never catch. `Cow` lets the cache-rich path stay zero-copy without forcing compute-on-demand impls to manufacture a `'static` reference they don't have.
+
+**Alternatives considered:**
+- *By value (`-> CsrMatrix<i8>`)*: rejected — `SimplicialComplex` would clone its cached matrices on every call, regressing hot paths.
+- *By reference (`-> &CsrMatrix<i8>`)*: rejected — forces `Lattice` and `CellComplex` to memoize internally just to vend a reference, even when the caller would have been fine with a fresh matrix. Spreads `RefCell` and complicates the trait's borrow story.
+- *Result-wrapped (`-> Result<Cow<'_, CsrMatrix<i8>>, TopologyError>`)*: rejected for Part A — the existing trait is infallible and existing tests rely on that. Out-of-range `k` is a programming error; impls panic (consistent with today's `boundary_operators[k - 1]` indexing behavior) or return an empty matrix as `Lattice` does today.
+
+### D9. Co-locate `Cell` trait in its own file
+
+**Decision:** Move the `Cell` marker trait out of `traits/cw_complex.rs` (renamed to `traits/chain_complex.rs`) and into a new `traits/cell.rs`. Re-export both from `traits/mod.rs`.
+
+**Why:** The `Cell` trait is conceptually distinct from `ChainComplex` (a `Cell` is an atomic unit; a `ChainComplex` is the algebra over many cells). They are bundled today because both fit on one page. While we are touching the file anyway, splitting them aligns with the project rule "one type, one Rust module" (AGENTS.md §"One type, one Rust module"). Cost is one extra file; benefit is the file structure now matches the conceptual structure, and grep-for-trait stops returning two hits.
+
+**Alternatives considered:**
+- *Leave `Cell` in the renamed `chain_complex.rs`*: low-cost status quo but inconsistent with the project convention and slightly misleading to readers expecting one trait per file.
+
 ### D7. `ReggeGeometry` on cubes — unit-edge case only
 
 **Decision:** Keep `ReggeGeometry<C>` simplicial-flavored. Add a parallel `CubicalMetric<D>` (or a `MetricKind` enum at the `Manifold` level) that, for the unit-edge case, returns `1.0` for every edge length and short-circuits volume computations to integer lattice volumes. Non-uniform / scaled / curved cubical metrics are deferred.
@@ -129,10 +149,19 @@ Users add custom strategies (anisotropic LIDAR cones, half-space RF) by implemen
 
 ## Migration Plan
 
-- **Within this change set:** All three Parts (A, B, C) land in one PR with three task groups. Each task group leaves `make build && make test` green for the whole monorepo.
+- **Within this change set:** All three Parts (A, B, C) land sequentially under stage gates. Each task group leaves `make build && make test` green for the whole monorepo before the next stage begins.
 - **Downstream:** `deep_causality` and any other consumer of topology types updates imports in the same change. No deprecation window — the rename is atomic.
-- **Rollback:** Revert the merge commit. No data migration is involved (library types only).
+- **Rollback:** Revert the relevant commit(s). Because each stage lands as its own commit (per the gate protocol below), Part A and Part B can be reverted independently if needed. No data migration is involved (library types only).
+
+## Stage gates (binding)
+
+The proposal establishes a binding gate between stages. Repeated here so design and tasks share the same contract:
+
+1. **Per-stage completion criteria:** all checkboxes in the stage's task group complete; `cargo build -p deep_causality_topology` + `cargo test -p deep_causality_topology` green; `make format && make fix` clean; spec scenarios for that stage verified.
+2. **Sign-off:** the agent presents a stage-completion summary (changes, verification evidence, deviations). The user reviews and either approves explicitly (in writing) or requests revisions. Implicit approval does not count.
+3. **Commit:** per AGENTS.md §"Golden Rules" rule 1, the agent NEVER commits. After user sign-off, the agent prepares a commit message and the user commits. Only after the commit lands does the next stage begin.
+4. **Failed review:** the stage returns to in-progress; the gate does not advance until the user re-approves.
 
 ## Open Questions
 
-None remaining. The neighborhood vocabulary (D5), the rename policy (D4), and the sequencing (one change set, three task groups) were settled with the user before this design was written.
+None remaining. Neighborhood vocabulary (D5), rename policy (D4), sequencing, the trait matrix-return type (D8), and the `Cell` trait co-location (D9) are all settled.

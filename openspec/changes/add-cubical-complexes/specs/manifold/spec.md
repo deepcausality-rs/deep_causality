@@ -28,8 +28,14 @@ The methods that compute exterior derivative, codifferential, Hodge ⋆, and Lap
 
 #### Scenario: No direct field access on concrete complex
 
-- **WHEN** the codebase is scanned with `grep -RIn "complex.coboundary_operators" src/types/manifold/`
+- **WHEN** the codebase is scanned with `grep -RIn "complex.coboundary_operators\|complex.boundary_operators" src/types/manifold/`
 - **THEN** there are no matches outside the trait-impl boundary
+
+#### Scenario: Differential reads go through zero-copy Cow on SimplicialComplex
+
+- **WHEN** an exterior-derivative / codifferential / Hodge / Laplacian operation runs on `SimplicialManifold<C, F>`
+- **THEN** each `coboundary_matrix(k)` call returns `Cow::Borrowed`
+- **AND** no `CsrMatrix<i8>::clone` is performed on the read path (verified by an `#[inline(never)]` instrumented test or a `cargo flamegraph` smoke run if available; at minimum, the source path uses `&*cow` rather than `cow.into_owned()`)
 
 ### Requirement: Comonad iteration is unchanged, neighborhood is queried inside the closure
 

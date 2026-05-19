@@ -1,19 +1,28 @@
 ## ADDED Requirements
 
-### Requirement: SimplicialComplex implements ChainComplex
+### Requirement: SimplicialComplex implements ChainComplex with zero-copy Cow
 
-`SimplicialComplex<C>` SHALL implement the `ChainComplex` trait. The implementation SHALL preserve today's caching strategy: the pre-computed `boundary_operators` and `coboundary_operators` collections continue to live on the complex and are returned through the trait methods. No structural change to `SimplicialComplex`'s storage is required.
+`SimplicialComplex<C>` SHALL implement the `ChainComplex` trait. The implementation SHALL preserve today's caching strategy: the pre-computed `boundary_operators` and `coboundary_operators` collections continue to live on the complex and are returned through the trait methods as `Cow::Borrowed`. No structural change to `SimplicialComplex`'s storage is required. The `Cow::Borrowed` return SHALL guarantee that no `CsrMatrix` clone is performed on the read path used by `Manifold`'s differential operators in Part B.
 
-#### Scenario: Boundary matrix returned from cache
+#### Scenario: Boundary matrix returned as zero-copy Cow::Borrowed
 
-- **WHEN** `<SimplicialComplex<C> as ChainComplex>::boundary_matrix(k)` is called
-- **THEN** the returned `CsrMatrix<i8>` is the value already cached in `boundary_operators[k]`
-- **AND** the cached value is bit-for-bit identical to what today's code reads
+- **WHEN** `<SimplicialComplex<C> as ChainComplex>::boundary_matrix(k)` is called with `k > 0`
+- **THEN** the returned `Cow<'_, CsrMatrix<i8>>` is `Cow::Borrowed(&self.boundary_operators[k - 1])`
+- **AND** no clone of the underlying `CsrMatrix` is performed
+- **AND** the dereferenced value is bit-for-bit identical to what today's `boundary_operator_cpu(k)` returns
 
-#### Scenario: Coboundary matrix returned from cache
+#### Scenario: Coboundary matrix returned as zero-copy Cow::Borrowed
 
 - **WHEN** `<SimplicialComplex<C> as ChainComplex>::coboundary_matrix(k)` is called
-- **THEN** the returned `CsrMatrix<i8>` is the value already cached in `coboundary_operators[k]`
+- **THEN** the returned `Cow<'_, CsrMatrix<i8>>` is `Cow::Borrowed(&self.coboundary_operators[k])`
+- **AND** no clone of the underlying `CsrMatrix` is performed
+- **AND** the dereferenced value is bit-for-bit identical to what today's `coboundary_operator_cpu(k)` returns
+
+#### Scenario: Index convention matches today's storage layout
+
+- **WHEN** `boundary_matrix(k)` is called on a `SimplicialComplex<C>` for `k > 0`
+- **THEN** the returned matrix has `nrows == num_cells(k - 1)` and `ncols == num_cells(k)` (i.e. it represents ∂_k, with the existing `boundary_operators[k - 1]` indexing convention preserved)
+- **AND** calling `boundary_matrix(0)` panics or returns an empty matrix consistent with the trait's documented behavior at grade 0
 
 #### Scenario: Cell iteration is static dispatch
 

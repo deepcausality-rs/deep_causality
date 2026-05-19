@@ -4,13 +4,14 @@ GitHub issue #487 asks for cubical complexes to support efficient spatial sensor
 
 ## What Changes
 
-**Part A — Static-dispatch chain-complex trait (pure refactor, no behavior change)**
+**Part A — Static-dispatch chain-complex trait (refactor + one new trait method, no observable behavior change for existing callers)**
 
 - **BREAKING (internal trait surface only):** Rename `CWComplex` → `ChainComplex` to align with algebraic-topology textbook terminology.
 - **BREAKING:** Replace `fn cells(&self, k) -> Box<dyn Iterator<...>>` with a GAT-backed `type CellIter<'a>` returning `impl Iterator`. Eliminates `dyn` per AGENTS.md static-dispatch rule.
-- Add `fn coboundary_matrix(&self, k: usize) -> CsrMatrix<i8>` to the trait contract so the differential stack can be written generically.
+- **BREAKING (return-type widening):** Change `fn boundary_matrix(&self, k) -> CsrMatrix<i8>` to `fn boundary_matrix(&self, k) -> Cow<'_, CsrMatrix<i8>>`. Cache-rich impls (`SimplicialComplex`) vend `Cow::Borrowed`; compute-on-demand impls (`Lattice`, `CellComplex`) vend `Cow::Owned`. Avoids the silent perf regression of forcing a `clone()` on every cached read.
+- **NEW METHOD:** Add `fn coboundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>>` to the trait contract so the differential stack can be written generically. This is a new addition, not a consolidation — today `CWComplex` has only `boundary_matrix`. Every existing impl (`CellComplex`, `Lattice`) gains this method as part of Part A.
 - Implement `ChainComplex` for `SimplicialComplex` (today it has equivalent methods but does not wear the trait).
-- Update existing `Lattice<D>` impl to the new trait surface.
+- Update existing `Lattice<D>` and `CellComplex<C>` impls (the two extant `CWComplex` implementors) to the new trait surface. `Lattice<D>` adds an internal `RefCell<HashMap<usize, CsrMatrix<i8>>>` lazy memo for coboundary matrices so repeated reads (which Part B's Manifold differential code will produce) don't recompute on every call.
 
 **Part B — Genericize `Manifold` over `ChainComplex`**
 
@@ -80,7 +81,15 @@ GitHub issue #487 asks for cubical complexes to support efficient spatial sensor
 - Tests mirror src structure and are registered in `tests/mod.rs` + `tests/BUILD.bazel`.
 - No `pub use` back-compat shims for renamed items (per AGENTS.md preference for clean diffs).
 
-**Sequencing inside the change** (single OpenSpec change, three task groups in `tasks.md`):
-1. Part A (chain-complex trait refactor) — must land first; no behavior change.
-2. Part B (Manifold genericization) — depends on Part A; existing simplicial tests must continue to pass unchanged.
-3. Part C (cubical surfacing + neighborhood strategies + example) — depends on Part B; this is the change that actually closes #487.
+**Sequencing inside the change** (single OpenSpec change, three task groups in `tasks.md`, each gated):
+
+1. **Part A** (chain-complex trait refactor) — must land first; no behavior change for existing simplicial callers.
+2. **Part B** (Manifold genericization) — depends on Part A; existing simplicial tests must continue to pass unchanged.
+3. **Part C** (cubical surfacing + neighborhood strategies + example) — depends on Part B; this is the change that actually closes #487.
+
+**Stage gates (binding).** Each stage MUST receive explicit user sign-off before the next stage starts:
+
+- Stage completion criteria: all tasks in the stage checked off, `cargo build -p deep_causality_topology` + `cargo test -p deep_causality_topology` green, `make format && make fix` clean, no new clippy warnings, and the stage's spec scenarios verified.
+- Sign-off protocol: agent presents a stage-completion summary (what changed, what was verified, any deviations from spec). User reviews and either (a) signs off in writing ("approved" / "looks good" / explicit go-ahead for next stage) or (b) requests revisions. Implicit approval is not sufficient.
+- Commit protocol: per AGENTS.md golden rule §1, the agent NEVER commits. After sign-off, the agent prepares a commit message and the user runs the commit. Only after the commit lands does the next stage begin.
+- A stage that fails review returns to in-progress; the gate does not advance until the user re-approves.
