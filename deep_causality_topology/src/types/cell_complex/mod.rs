@@ -29,7 +29,7 @@ impl<'a, C: Cell> Iterator for CellComplexCellIter<'a, C> {
 /// A CW complex with arbitrary cell types.
 ///
 /// This structure holds the explicit collection of cells and their incidence relations.
-/// It is more general than a Lattice or SimplicialComplex, allowing for any topology
+/// It is more general than a LatticeComplex or SimplicialComplex, allowing for any topology
 /// built from cells implementing the `Cell` trait.
 pub struct CellComplex<C: Cell> {
     /// cells[k] = all k-cells

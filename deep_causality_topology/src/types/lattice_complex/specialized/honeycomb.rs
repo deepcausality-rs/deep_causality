@@ -23,7 +23,7 @@ pub struct HoneycombCell {
     /// Dim 1: 0=Bond(A-B), 1=Bond(A-B_left), 2=Bond(A-B_top)
     /// Dim 2: 0=Hexagon
     coords: [usize; 3],
-    /// Lattice width (cols) needed for consistent ID calculation
+    /// LatticeComplex width (cols) needed for consistent ID calculation
     cols: usize,
 }
 

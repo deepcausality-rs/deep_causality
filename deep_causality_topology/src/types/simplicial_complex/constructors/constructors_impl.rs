@@ -10,7 +10,7 @@ use deep_causality_sparse::CsrMatrix;
 
 impl<T> SimplicialComplex<T> {
     /// CPU implementation of SimplicialComplex constructor.
-    pub(crate) fn new_cpu(
+    pub(crate) fn new_impl(
         skeletons: Vec<Skeleton>,
         boundary_operators: Vec<CsrMatrix<i8>>,
         coboundary_operators: Vec<CsrMatrix<i8>>,

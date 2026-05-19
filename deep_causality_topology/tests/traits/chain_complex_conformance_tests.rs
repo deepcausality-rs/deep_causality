@@ -12,7 +12,7 @@
 //!       return `Cow::Borrowed` (zero copy from the pre-computed cache).
 
 use deep_causality_topology::{
-    ChainComplex, Lattice, Simplex, SimplicialComplex, SimplicialComplexBuilder,
+    ChainComplex, LatticeComplex, Simplex, SimplicialComplex, SimplicialComplexBuilder,
 };
 use std::borrow::Cow;
 
@@ -94,13 +94,13 @@ fn shape_invariant_simplicial_complex() {
 
 #[test]
 fn shape_invariant_lattice_2d_open() {
-    let lattice = Lattice::<2>::open([3, 3]);
+    let lattice = LatticeComplex::<2>::open([3, 3]);
     assert_shape_invariant(&lattice);
 }
 
 #[test]
 fn shape_invariant_lattice_3d_torus() {
-    let lattice = Lattice::<3>::torus([2, 2, 2]);
+    let lattice = LatticeComplex::<3>::torus([2, 2, 2]);
     assert_shape_invariant(&lattice);
 }
 
@@ -112,13 +112,13 @@ fn transpose_invariant_simplicial_complex() {
 
 #[test]
 fn transpose_invariant_lattice_2d_open() {
-    let lattice = Lattice::<2>::open([3, 3]);
+    let lattice = LatticeComplex::<2>::open([3, 3]);
     assert_transpose_invariant(&lattice);
 }
 
 #[test]
 fn transpose_invariant_lattice_3d_torus() {
-    let lattice = Lattice::<3>::torus([2, 2, 2]);
+    let lattice = LatticeComplex::<3>::torus([2, 2, 2]);
     assert_transpose_invariant(&lattice);
 }
 
@@ -152,7 +152,7 @@ fn simplicial_coboundary_matrix_returns_borrowed() {
 #[test]
 fn lattice_coboundary_matrix_lazy_memo() {
     // Two consecutive calls must yield equal matrices (memo correctness).
-    let lattice = Lattice::<2>::torus([3, 3]);
+    let lattice = LatticeComplex::<2>::torus([3, 3]);
     let first = lattice.coboundary_matrix(0).into_owned();
     let second = lattice.coboundary_matrix(0).into_owned();
     assert!(csr_eq(&first, &second));

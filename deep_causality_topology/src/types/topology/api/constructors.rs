@@ -27,6 +27,6 @@ impl<T> Topology<T> {
         data: CausalTensor<T>,
         cursor: usize,
     ) -> Result<Self, TopologyError> {
-        Self::new_cpu(complex, grade, data, cursor)
+        Self::new_impl(complex, grade, data, cursor)
     }
 }

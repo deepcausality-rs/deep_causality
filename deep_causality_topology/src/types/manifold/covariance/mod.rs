@@ -14,7 +14,7 @@ where
     /// CPU implementation of covariance matrix computation.
     ///
     /// Computes the covariance matrix of the field data across simplices.
-    pub(crate) fn covariance_matrix_cpu(&self) -> Result<Vec<Vec<f64>>, TopologyError> {
+    pub(crate) fn covariance_matrix_impl(&self) -> Result<Vec<Vec<f64>>, TopologyError> {
         let data = self.data.as_slice();
         let n = data.len();
 
@@ -42,8 +42,8 @@ where
     /// CPU implementation of eigenvalue decomposition for covariance analysis.
     ///
     /// Returns eigenvalues sorted in descending order.
-    pub(crate) fn eigen_covariance_cpu(&self) -> Result<Vec<f64>, TopologyError> {
-        let cov = self.covariance_matrix_cpu()?;
+    pub(crate) fn eigen_covariance_impl(&self) -> Result<Vec<f64>, TopologyError> {
+        let cov = self.covariance_matrix_impl()?;
 
         // For 1x1 matrix, eigenvalue is just the variance
         if cov.len() == 1 && cov[0].len() == 1 {

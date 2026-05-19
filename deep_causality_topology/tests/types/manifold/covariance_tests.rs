@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Tests for Manifold covariance analysis (covariance_cpu.rs)
+//! Tests for Manifold covariance analysis (covariance_impl.rs)
 
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
@@ -23,7 +23,7 @@ fn setup_manifold_with_data(data_values: Vec<f64>) -> SimplicialManifold<f64, f6
 }
 
 #[test]
-fn test_covariance_matrix_cpu_success() {
+fn test_covariance_matrix_impl_success() {
     // Create manifold with varied data for meaningful covariance
     let manifold = setup_manifold_with_data(vec![10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0]);
 
@@ -39,7 +39,7 @@ fn test_covariance_matrix_cpu_success() {
 }
 
 #[test]
-fn test_covariance_matrix_cpu_uniform_data() {
+fn test_covariance_matrix_impl_uniform_data() {
     // Create manifold with uniform data - variance should be 0
     let manifold = setup_manifold_with_data(vec![5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0]);
 
@@ -54,7 +54,7 @@ fn test_covariance_matrix_cpu_uniform_data() {
 }
 
 #[test]
-fn test_eigen_covariance_cpu_1x1() {
+fn test_eigen_covariance_impl_1x1() {
     // Create manifold with varied data
     let manifold = setup_manifold_with_data(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
 

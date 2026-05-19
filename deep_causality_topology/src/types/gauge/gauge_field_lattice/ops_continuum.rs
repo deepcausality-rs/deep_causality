@@ -55,7 +55,7 @@ impl<
     ///
     /// # Arguments
     ///
-    /// * `site` - Lattice site coordinates
+    /// * `site` - LatticeComplex site coordinates
     /// * `mu` - First Lorentz index (0 to D-1)
     /// * `nu` - Second Lorentz index (0 to D-1)
     ///
@@ -136,7 +136,7 @@ impl<
     ///
     /// # Arguments
     ///
-    /// * `site` - Lattice site coordinates
+    /// * `site` - LatticeComplex site coordinates
     ///
     /// # Returns
     ///

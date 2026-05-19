@@ -15,7 +15,7 @@ where
     T: Default + Copy + Clone + PartialEq + Zero,
 {
     /// CPU implementation of Hypergraph constructor.
-    pub(crate) fn new_cpu(
+    pub(crate) fn new_impl(
         incidence: CsrMatrix<i8>,
         data: CausalTensor<T>,
         cursor: usize,

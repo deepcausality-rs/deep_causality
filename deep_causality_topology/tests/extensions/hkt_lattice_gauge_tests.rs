@@ -5,8 +5,8 @@
 
 use deep_causality_haft::{Applicative, Functor, Monad, Pure};
 use deep_causality_topology::{
-    ChainComplex, GaugeGroup, Lattice, LatticeGaugeField, LatticeGaugeFieldWitness, TopologyError,
-    TopologyErrorEnum,
+    ChainComplex, GaugeGroup, LatticeComplex, LatticeGaugeField, LatticeGaugeFieldWitness,
+    TopologyError, TopologyErrorEnum,
 };
 use std::sync::Arc;
 
@@ -74,7 +74,7 @@ fn test_monad() {
 fn test_map_field_full() {
     // This tests the type-safe map_field that preserves links
     let shape = [2, 2];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field = LatticeGaugeField::<TestGroup, D, Complex<f64>, f64>::identity(lattice, 1.0);
 
     // Scale all link matrices by 2.0 and beta by 2.0
@@ -95,7 +95,7 @@ fn test_map_field_full() {
 #[test]
 fn test_scale_field() {
     let shape = [2, 2];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field = LatticeGaugeField::<TestGroup, D, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let scaled = LatticeGaugeFieldWitness::scale_field(field, Complex::new(0.5, 0.0));
@@ -115,7 +115,7 @@ fn test_scale_field() {
 #[test]
 fn test_zip_with_success() {
     let shape = [2, 2];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field_a =
         LatticeGaugeField::<TestGroup, D, Complex<f64>, f64>::identity(lattice.clone(), 1.0);
     let field_b = LatticeGaugeField::<TestGroup, D, Complex<f64>, f64>::identity(lattice, 2.0);
@@ -135,8 +135,8 @@ fn test_zip_with_success() {
 fn test_zip_with_lattice_mismatch() {
     let shape1 = [2, 2];
     let shape2 = [3, 3];
-    let lattice1 = Arc::new(Lattice::new(shape1, [true, true]));
-    let lattice2 = Arc::new(Lattice::new(shape2, [true, true]));
+    let lattice1 = Arc::new(LatticeComplex::new(shape1, [true, true]));
+    let lattice2 = Arc::new(LatticeComplex::new(shape2, [true, true]));
 
     let field_a = LatticeGaugeField::<TestGroup, D, Complex<f64>, f64>::identity(lattice1, 1.0);
     let field_b = LatticeGaugeField::<TestGroup, D, Complex<f64>, f64>::identity(lattice2, 1.0);
@@ -151,7 +151,7 @@ fn test_zip_with_lattice_mismatch() {
 #[test]
 fn test_zip_with_missing_link() {
     let shape = [2, 2];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field_a =
         LatticeGaugeField::<TestGroup, D, Complex<f64>, f64, ()>::identity(lattice.clone(), 1.0);
 
@@ -176,7 +176,7 @@ fn test_zip_with_missing_link() {
 fn test_identity_field_wrapper() {
     // Just verify the convenience wrapper works
     let shape = [2, 2];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field =
         LatticeGaugeFieldWitness::<TestGroup, D, f64>::identity_field::<Complex<f64>>(lattice, 1.0)
             .unwrap();

@@ -3,17 +3,17 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_topology::{DualLattice, Lattice, LatticeCell};
+use deep_causality_topology::{DualLatticeComplex, LatticeCell, LatticeComplex};
 use std::sync::Arc;
 
 // ============================================================================
-// DualLattice Constructors
+// DualLatticeComplex Constructors
 // ============================================================================
 
 #[test]
 fn test_dual_lattice_new() {
-    let primal = Lattice::<2>::new([4, 4], [true, true]);
-    let dual = DualLattice::new(primal);
+    let primal = LatticeComplex::<2>::new([4, 4], [true, true]);
+    let dual = DualLatticeComplex::new(primal);
 
     assert_eq!(dual.primal().shape(), &[4, 4]);
     assert_eq!(dual.primal().periodic(), &[true, true]);
@@ -21,21 +21,21 @@ fn test_dual_lattice_new() {
 
 #[test]
 fn test_dual_lattice_new_arc() {
-    let primal = Arc::new(Lattice::<3>::cubic_torus(3));
-    let dual = DualLattice::new_arc(Arc::clone(&primal));
+    let primal = Arc::new(LatticeComplex::<3>::cubic_torus(3));
+    let dual = DualLatticeComplex::new_arc(Arc::clone(&primal));
 
     assert_eq!(dual.primal().shape(), &[3, 3, 3]);
 }
 
 // ============================================================================
-// DualLattice Duality Operations
+// DualLatticeComplex Duality Operations
 // ============================================================================
 
 #[test]
 fn test_dual_cell_vertex_to_volume() {
     // In 2D: dual of vertex (0-cell) is a face (2-cell)
-    let primal = Lattice::<2>::square_torus(4);
-    let dual = DualLattice::new(primal);
+    let primal = LatticeComplex::<2>::square_torus(4);
+    let dual = DualLatticeComplex::new(primal);
 
     let vertex = LatticeCell::<2>::vertex([1, 1]);
     let dual_cell = dual.dual_cell(&vertex);
@@ -47,8 +47,8 @@ fn test_dual_cell_vertex_to_volume() {
 #[test]
 fn test_dual_cell_edge_to_edge() {
     // In 2D: dual of edge (1-cell) is an edge (1-cell)
-    let primal = Lattice::<2>::square_torus(4);
-    let dual = DualLattice::new(primal);
+    let primal = LatticeComplex::<2>::square_torus(4);
+    let dual = DualLatticeComplex::new(primal);
 
     let edge_x = LatticeCell::<2>::edge([1, 1], 0); // x-direction
     let dual_edge = dual.dual_cell(&edge_x);
@@ -62,8 +62,8 @@ fn test_dual_cell_edge_to_edge() {
 #[test]
 fn test_dual_cell_face_to_vertex() {
     // In 2D: dual of face (2-cell) is a vertex (0-cell)
-    let primal = Lattice::<2>::square_torus(4);
-    let dual = DualLattice::new(primal);
+    let primal = LatticeComplex::<2>::square_torus(4);
+    let dual = DualLatticeComplex::new(primal);
 
     let face = LatticeCell::<2>::new([0, 0], 0b11);
     let dual_cell = dual.dual_cell(&face);
@@ -75,8 +75,8 @@ fn test_dual_cell_face_to_vertex() {
 #[test]
 fn test_dual_cell_3d_edge_to_face() {
     // In 3D: dual of edge (1-cell) is a face (2-cell)
-    let primal = Lattice::<3>::cubic_torus(3);
-    let dual = DualLattice::new(primal);
+    let primal = LatticeComplex::<3>::cubic_torus(3);
+    let dual = DualLatticeComplex::new(primal);
 
     let edge_z = LatticeCell::<3>::edge([0, 0, 0], 2); // z-direction (0b100)
     let dual_cell = dual.dual_cell(&edge_z);
@@ -90,8 +90,8 @@ fn test_dual_cell_3d_edge_to_face() {
 #[test]
 fn test_dual_dual_equals_original() {
     // Poincaré duality: dual(dual(cell)) = cell
-    let primal = Lattice::<2>::square_torus(4);
-    let dual = DualLattice::new(primal);
+    let primal = LatticeComplex::<2>::square_torus(4);
+    let dual = DualLatticeComplex::new(primal);
 
     let vertex = LatticeCell::<2>::vertex([2, 3]);
     let double_dual = dual.dual_cell(&dual.dual_cell(&vertex));
@@ -101,14 +101,14 @@ fn test_dual_dual_equals_original() {
 }
 
 // ============================================================================
-// DualLattice Coboundary
+// DualLatticeComplex Coboundary
 // ============================================================================
 
 #[test]
 fn test_dual_coboundary_vertex() {
     // Coboundary of a vertex gives edges incident to that vertex
-    let primal = Lattice::<2>::square_torus(3);
-    let dual = DualLattice::new(primal);
+    let primal = LatticeComplex::<2>::square_torus(3);
+    let dual = DualLatticeComplex::new(primal);
 
     let vertex = LatticeCell::<2>::vertex([1, 1]);
     let coboundary = dual.coboundary(&vertex);
@@ -121,8 +121,8 @@ fn test_dual_coboundary_vertex() {
 #[test]
 fn test_dual_coboundary_edge() {
     // Coboundary of an edge gives faces incident to that edge
-    let primal = Lattice::<2>::square_torus(3);
-    let dual = DualLattice::new(primal);
+    let primal = LatticeComplex::<2>::square_torus(3);
+    let dual = DualLatticeComplex::new(primal);
 
     let edge = LatticeCell::<2>::edge([0, 0], 0);
     let coboundary = dual.coboundary(&edge);

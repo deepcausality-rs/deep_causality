@@ -10,7 +10,7 @@ use deep_causality_sparse::CsrMatrix;
 
 impl<T> SimplicialComplex<T> {
     /// CPU implementation: returns boundary operator for dimension k.
-    pub(crate) fn boundary_operator_cpu(&self, k: usize) -> Result<&CsrMatrix<i8>, TopologyError> {
+    pub(crate) fn boundary_operator_impl(&self, k: usize) -> Result<&CsrMatrix<i8>, TopologyError> {
         if k == 0 {
             return Err(TopologyError::DimensionMismatch(
                 "Cannot get boundary operator for dimension 0".to_string(),
@@ -23,7 +23,7 @@ impl<T> SimplicialComplex<T> {
     }
 
     /// CPU implementation: returns coboundary operator for dimension k.
-    pub(crate) fn coboundary_operator_cpu(
+    pub(crate) fn coboundary_operator_impl(
         &self,
         k: usize,
     ) -> Result<&CsrMatrix<i8>, TopologyError> {

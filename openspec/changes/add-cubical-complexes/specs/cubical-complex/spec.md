@@ -1,20 +1,29 @@
 ## ADDED Requirements
 
-### Requirement: CubicalComplex is the public textbook name
+### Requirement: LatticeComplex is canonical, CubicalComplex is a textbook alias
 
-The crate `deep_causality_topology` SHALL expose `CubicalComplex<const D: usize>` and `CubicalCell<const D: usize>` as the public types representing a D-dimensional cubical complex and its elementary cubes respectively. The previous names `Lattice` and `LatticeCell` SHALL be removed from the public surface. No `pub use Lattice = CubicalComplex` aliases are provided.
+The crate `deep_causality_topology` SHALL expose **`LatticeComplex<const D: usize>`** and **`LatticeCell<const D: usize>`** as the canonical public types representing a D-dimensional cubical complex on a regular ℤᴰ lattice and its elementary cubes respectively. It SHALL additionally expose **`CubicalComplex<const D: usize>`** and **`CubicalCell<const D: usize>`** as `pub type` aliases on `LatticeComplex<D>` and `LatticeCell<D>`. Both names refer to the same structure.
 
-#### Scenario: Public names match textbook usage
+The rename reconciles two mathematical traditions: the physics-domain term "lattice" (a regular ℤᴰ grid, used elsewhere in the crate via `LatticeGaugeField` etc.) and the algebraic-topology term "cubical complex" (the cellular decomposition of that grid with ∂, δ, ⋆ operators). The canonical name names the underlying *substrate* (the lattice) — the alias names the *algebraic structure* (the cubical complex on top of it).
 
-- **WHEN** a user writes `use deep_causality_topology::CubicalComplex;`
-- **THEN** the import resolves
+The previous bare `Lattice<D>` name from before this change set is removed; callers must use either `LatticeComplex<D>` or `CubicalComplex<D>`.
+
+#### Scenario: Both names resolve
+
+- **WHEN** a user writes either `use deep_causality_topology::LatticeComplex;` or `use deep_causality_topology::CubicalComplex;`
+- **THEN** both imports resolve to the same type
 - **AND** `use deep_causality_topology::Lattice;` fails to compile with an unresolved-import error
 
-#### Scenario: Cell type renamed in lock-step
+#### Scenario: Cell type follows the same naming dual
 
-- **WHEN** a user writes `use deep_causality_topology::CubicalCell;`
-- **THEN** the import resolves to the type previously known as `LatticeCell`
+- **WHEN** a user writes either `use deep_causality_topology::LatticeCell;` or `use deep_causality_topology::CubicalCell;`
+- **THEN** both resolve to the same type
 - **AND** the type retains its `Cell` trait impl, `boundary()` method, `vertices()` method, and bitmask-based orientation encoding unchanged
+
+#### Scenario: Dual and witness follow the same convention
+
+- **WHEN** a user writes `use deep_causality_topology::{DualLatticeComplex, DualCubicalComplex, LatticeComplexWitness, CubicalComplexWitness};`
+- **THEN** all four imports resolve, with the cubical-prefixed names being `pub type` aliases on the lattice-prefixed canonical types
 
 ### Requirement: CubicalComplex implements ChainComplex
 

@@ -15,47 +15,115 @@ simplicial complexes), enabling advanced reasoning about the "shape" and connect
     * **Hypergraph**: Modeling higher-order relationships (hyperedges) between multiple nodes.
     * **SimplicialComplex**: Generalizing graphs to higher dimensions (triangles, tetrahedra) to capture voids and
       holes.
-    * **Manifold**: Validated geometric structures for differential geometry operations.
+    * **LatticeComplex** (alias `CubicalComplex`): The cubical complex of a regular ℤᴰ grid, with optional periodic
+      boundaries — the natural substrate for voxel grids, sensor arrays, and lattice gauge theory.
+    * **CellComplex**: General CW-complex over arbitrary user-defined cells.
+    * **Manifold**: Validated geometric structures, generic over any chain complex (`Manifold<K: ChainComplex, F>`).
     * **PointCloud**: Raw multi-dimensional data with Vietoris-Rips triangulation capabilities.
+* **Unified Chain-Complex Abstraction**:
+    * **`ChainComplex` trait**: A single static-dispatch trait (GAT-backed cell iteration, `Cow`-returning
+      boundary/coboundary matrices) that `SimplicialComplex`, `LatticeComplex`, and `CellComplex` all implement.
+      Downstream code (notably `Manifold`'s differential operators) reads ∂ and δ through the trait — zero-copy on
+      the cache-rich simplicial path, lazy-memoized on the cubical path.
 * **Topological Algorithms**:
     * **Vietoris-Rips Triangulation**: Convert point clouds into simplicial complexes at a given scale.
     * **Euler Characteristic**: Compute topological invariants ($\chi$) to classify shapes (e.g., healthy vs.
       pathological tissue).
     * **Boundary/Coboundary Operators**: Sparse matrix operators for algebraic topology computations.
+    * **Betti Numbers**: Counting independent k-dimensional holes via the rank of ∂.
 * **Algebraic Topology & Differential Geometry**:
     * **Chain Algebra**: Perform algebraic operations on chains (formal sums of simplices) and verify fundamental
       topological theorems like `∂∂=0`.
     * **Differential Operators**: Compute the exterior derivative (`d`), Hodge star (`⋆`), codifferential (`δ`), and
-      Hodge-Laplacian (`Δ`) on discrete differential forms.
+      Hodge-Laplacian (`Δ`) on discrete differential forms. The simplicial path is the full implementation; the
+      cubical Hodge ⋆ on irregular metrics is a deferred follow-up.
     * **Hodge Theory**: Detect topological features like holes and voids by finding harmonic forms (solutions to
       `Δω = 0`).
+* **Neighborhood Strategies** (static-dispatch zero-sized strategy types):
+    * **Chain-complex-generic**: `FaceAdjacent`, `CofaceAdjacent` — defined via ∂ and δ, work on any `ChainComplex`.
+    * **Grid-only**: `VonNeumann`, `Moore`, `KRing<const K: usize>` — implemented for `LatticeComplex<D>` only.
+      Useful for cellular-automata, sensor fusion, image filters, voxel-based diffusion.
+    * Users add their own strategies (anisotropic LIDAR cones, half-space RF, etc.) by implementing
+      `Neighborhood<K>` for a custom zero-sized type.
 * **Higher-Kinded Types (HKT)**:
     * Implements `Functor`, `BoundedComonad` (Extract/Extend), and `BoundedAdjunction` (Unit/Counit) via
       `deep_causality_haft`.
     * Enables functional geometric patterns like "neighborhood extraction" (Comonad) and "geometric realization" (
       Adjunction).
+    * Witnesses ship for each topology: `SimplicialManifoldWitness<C>` (full HKT stack), `GenericManifoldWitness<K>`
+      (Functor over any chain complex), and `LatticeComplexWitness<D>` for the lattice-complex HKT plumbing.
 
 ## Core Concepts
 
-| Type                  | Description                                         | Mathematical Structure      |
-|:----------------------|:----------------------------------------------------|:----------------------------|
-| **PointCloud**        | Set of points in $\mathbb{R}^n$ with metadata.      | Discrete Metric Space       |
-| **Graph**             | Nodes and binary edges.                             | 1-Complex                   |
-| **Hypergraph**        | Nodes and hyperedges (subsets of nodes).            | Hypergraph                  |
-| **SimplicialComplex** | Collection of simplices closed under sub-simplices. | Simplicial Complex $K$      |
-| **Manifold**          | A topological space that is locally Euclidean.      | Manifold $M$                |
-| **Lattice**           | Regular discrete grid with periodic boundaries.     | $\mathbb{Z}^D$ Lattice      |
-| **CellComplex**       | Generalized simplicial complex (CW-complex).        | CW-Complex                  |
-| **Chain**             | Formal sum of simplices for algebraic topology.     | Chain Group $C_n$           |
-| **Skeleton**          | k-skeleton of a complex (simplices up to dim k).    | Skeleton $K^{(k)}$          |
-| **Simplex**           | Basic building block (vertex, edge, triangle...).   | $n$-Simplex                 |
-| **Topology**          | Abstract topological space with graded data.        | Graded Vector Space         |
-| **DifferentialForm**  | Discrete differential k-forms on a complex.         | $\Omega^k(M)$               |
-| **CurvatureTensor**   | Riemann/Ricci curvature tensor.                     | $R^{\mu}_{\nu\rho\sigma}$   |
-| **ReggeGeometry**     | Discrete gravity via deficit angles.                | Regge Calculus              |
-| **GaugeField**        | Gauge field on a manifold (connections).            | Principal Bundle Connection |
-| **LatticeGaugeField** | Wilson-formulation lattice gauge theory.            | $U_\mu(n) \in G$            |
-| **LinkVariable**      | Group element on a lattice edge.                    | $\text{SU}(N)$ Element      |
+| Type                                 | Description                                                                       | Mathematical Structure                      |
+|:-------------------------------------|:----------------------------------------------------------------------------------|:--------------------------------------------|
+| **PointCloud**                       | Set of points in $\mathbb{R}^n$ with metadata.                                    | Discrete Metric Space                       |
+| **Graph**                            | Nodes and binary edges.                                                           | 1-Complex                                   |
+| **Hypergraph**                       | Nodes and hyperedges (subsets of nodes).                                          | Hypergraph                                  |
+| **SimplicialComplex**                | Collection of simplices closed under sub-simplices.                               | Simplicial Complex $K$                      |
+| **LatticeComplex&lt;D&gt;**          | Canonical: cubical complex of a regular $\mathbb{Z}^D$ grid (optional periodic).  | Lattice-supported cubical complex           |
+| **CubicalComplex&lt;D&gt;**          | Textbook alias for `LatticeComplex<D>` (see *Naming convention* below).           | (same)                                      |
+| **LatticeCell&lt;D&gt; / CubicalCell** | Elementary k-cube (position + orientation bitmask).                             | Elementary cube $\prod_i [a_i, a_i {+} \epsilon_i]$ |
+| **CellComplex**                      | Generalized simplicial complex over user-defined cells.                           | CW-Complex                                  |
+| **Manifold&lt;K, F&gt;**             | A complex `K: ChainComplex` + field `F` + optional `K::Metric` + cursor.          | Discrete manifold over $K$                  |
+| **SimplicialManifold&lt;C, F&gt;**   | Alias for `Manifold<SimplicialComplex<C>, F>` (the textbook simplicial case).     | (specialization)                            |
+| **Chain**                            | Formal sum of simplices for algebraic topology.                                   | Chain Group $C_n$                           |
+| **Skeleton**                         | k-skeleton of a complex (simplices up to dim k).                                  | Skeleton $K^{(k)}$                          |
+| **Simplex**                          | Basic building block (vertex, edge, triangle...).                                 | $n$-Simplex                                 |
+| **Topology**                         | Abstract topological space with graded data.                                      | Graded Vector Space                         |
+| **DifferentialForm**                 | Discrete differential k-forms on a complex.                                       | $\Omega^k(M)$                               |
+| **CurvatureTensor**                  | Riemann/Ricci curvature tensor.                                                   | $R^{\mu}_{\nu\rho\sigma}$                   |
+| **ReggeGeometry&lt;T&gt;**           | Simplicial metric (edge lengths, deficit angles). Implements `Manifold` `Metric`. | Regge Calculus                              |
+| **CubicalReggeGeometry&lt;D&gt;**           | Cubical analogue of Regge geometry on a `LatticeComplex<D>` (Stage C: edge-length storage + signature; derived volumes / deficit angles / Hodge ⋆ forward-looking). | Cubical Regge calculus                      |
+| **GaugeField**                       | Gauge field on a manifold (connections).                                          | Principal Bundle Connection                 |
+| **LatticeGaugeField**                | Wilson-formulation lattice gauge theory (physics term, retained).                 | $U_\mu(n) \in G$                            |
+| **LinkVariable**                     | Group element on a lattice edge.                                                  | $\text{SU}(N)$ Element                      |
+
+### Traits
+
+| Trait                          | Purpose                                                                                              |
+|:-------------------------------|:-----------------------------------------------------------------------------------------------------|
+| **`ChainComplex`**             | Unifies `SimplicialComplex`, `LatticeComplex`, `CellComplex`. Exposes cell iteration (GAT, static dispatch), `boundary_matrix(k)` / `coboundary_matrix(k)` returning `Cow<'_, CsrMatrix<i8>>`, `betti_number(k)`, and an associated `Metric` type. |
+| **`Cell`**                     | Marker for elementary cells: `dim()` + signed `boundary()` chain.                                    |
+| **`Neighborhood<K>`**          | Static-dispatch strategy for enumerating cell neighbors. Concrete impls: `FaceAdjacent`, `CofaceAdjacent`, `VonNeumann`, `Moore`, `KRing<const K>`. |
+| **`BaseTopology`, `SimplicialTopology`, `ManifoldTopology`, `GraphTopology`, `HypergraphTopology`** | Capability-graded topology queries.                |
+
+## Mathematical Naming Convention
+
+This crate uses dual names only where the same mathematical object lives at the intersection of two equally-canonical traditions — never as a back-compat shim or cosmetic preservation. The principle, applied object by object:
+
+### `LatticeComplex<D>` ↔ `CubicalComplex<D>`
+
+The struct stores `shape: [usize; D] + periodic: [bool; D]` — a **regular $\mathbb{Z}^D$ grid**, with elementary cubes computed on demand. Two mathematical traditions describe this same object, each emphasizing a different structural layer:
+
+- **Physics / number theory: "lattice."** Meaning #3 in standard math vocabulary — a regular integer grid such as $\mathbb{Z}^D$ or a bounded box thereof. The substrate-emphasizing name. Used by `LatticeGaugeField`, lattice QCD, the Ising model, crystallography.
+- **Algebraic topology: "cubical complex."** Kaczynski–Mischaikow–Mrozek (*Computational Homology*, 2004, Def. 2.36) and Edelsbrunner–Harer (*Computational Topology*). The cellular-decomposition-emphasizing name — the cubes are products of degenerate and non-degenerate intervals (which is exactly what the orientation bitmask on `LatticeCell<D>` encodes).
+
+Both names are equally canonical for what they emphasize. `LatticeComplex<D>` is the declared type; `CubicalComplex<D>` is a `pub type` alias on it. Use whichever name fits the surrounding text — neither is a "primary" choice over the other.
+
+The same dual-name principle applies to the elementary cell: **`LatticeCell<D>` ↔ `CubicalCell<D>`**. No other aliases exist in the lattice family — types like `DualLatticeComplex<D>`, `LatticeComplexWitness<D>`, or the per-axis iterators have only their canonical name because there is no genuinely distinct cubic-specialization reading for them.
+
+**Scope note.** `LatticeComplex<D>` represents specifically the cubical complex of a *regular* $\mathbb{Z}^D$ grid. It is **not** a sparse cubical complex (only-active-cubes) or an irregular one (cubes of varying side lengths) — those are deferred follow-ups.
+
+### `ReggeGeometry<T>` ↔ `CubicalReggeGeometry<D>`
+
+These are parallel by role, not by alias: each is the discrete-geometry / metric data on its respective complex, and each is named after the **same construction** (Regge calculus) transported to a different cellular world:
+
+- **`ReggeGeometry<T>`** — Tullio Regge's original 1961 construction for simplicial complexes: edge lengths plus deficit angles on codimension-2 hinges, yielding a discrete general relativity.
+- **`CubicalReggeGeometry<D>`** — the same construction on a cubical complex. Sometimes called "cubical Regge calculus" or "hypercubic Regge calculus" in the lattice quantum gravity literature. Stage C ships the edge-length storage layer (unit / isotropic / per-axis / per-edge) and the Lorentzian-signature computation; cell volumes, deficit angles, Hodge ⋆, and per-cell metric tensors are forward-looking and tracked as a follow-up.
+
+The naming is parallel because the *math* is parallel.
+
+### `Manifold<K: ChainComplex, F>` ↔ `SimplicialManifold<C, F>`
+
+The struct is generic over the underlying chain complex `K` and the field data type `F`:
+
+- **`Manifold<K, F>`** — the general form. `K` can be any `ChainComplex` (currently `SimplicialComplex<C>`, `LatticeComplex<D>`, `CellComplex<C>`, or user-defined). The optional metric is typed via `K::Metric` (the associated type on `ChainComplex`), so a simplicial manifold carries `Option<ReggeGeometry<C>>` and a lattice manifold carries `Option<CubicalReggeGeometry<D>>` — with no `dyn`, no enum, no runtime dispatch.
+- **`SimplicialManifold<C, F>` = `Manifold<SimplicialComplex<C>, F>`** — alias for the textbook simplicial case. Existing simplicial code uses this name unchanged.
+
+### `ChainComplex` (was `CWComplex`)
+
+The trait was renamed to align with algebraic-topology textbook usage. *Chain complex* is the standard term for a sequence of abelian groups (here, free $\mathbb{Z}$-modules generated by k-cells) connected by boundary operators with $\partial \circ \partial = 0$. The previous name `CWComplex` referred more narrowly to the underlying CW (Closure-finite, Weak topology) cellular structure. Functionally identical; just the textbook-correct name.
 
 ## Lattice Gauge Field Verification ✓
 
@@ -176,6 +244,15 @@ This crate leverages `deep_causality_haft` to provide functional geometric abstr
     * *Unit*: Embed discrete data into a topological structure.
     * *Counit*: Project/Integrate topological data back into a flat representation.
 
+### Witnesses
+
+| Witness                          | Operates on                              | HKT impls available                            |
+|:---------------------------------|:-----------------------------------------|:-----------------------------------------------|
+| `SimplicialManifoldWitness<C>`   | `SimplicialManifold<C, _>`               | `HKT`, `Functor`, `Foldable`, `Pure`, `Monad`, `Applicative`, `CoMonad` |
+| `GenericManifoldWitness<K>`      | `Manifold<K, _>` for any `K: ChainComplex` | `HKT`, `Functor` (others deferred to follow-up) |
+| `LatticeComplexWitness<D>` | `LatticeComplex<D>` HKT plumbing | `HKT` and related                              |
+| Graph / Hypergraph / PointCloud / CellComplex / Topology / Chain witnesses | Their namesake types        | Per-type capability set                        |
+
 ## Examples
 
 | File Name                      | Description                             | Engineering Value                                                  |
@@ -186,6 +263,8 @@ This crate leverages `deep_causality_haft` to provide functional geometric abstr
 | `chain_algebra.rs`             | Chain complex algebra & `∂∂=0`          | Foundational verification for homological algebra.                 |
 | `differential_field.rs`        | Solving the Heat Equation on a manifold | Simulating physical diffusion processes on complex shapes.         |
 | `hodge_theory.rs`              | Finding harmonic forms to detect holes  | Advanced topological feature detection using the Hodge-Laplacian.  |
+| `cubical_heat_diffusion.rs`    | Heat equation on a `CubicalComplex<2>` via Moore neighborhood + CoMonad-style stencil | Voxel-grid sensor fusion and grid-native physics simulation. |
+| `lattice_gauge_simulation.rs`  | 4D SU(3) lattice gauge field simulation | Wilson-formulation lattice QCD prototyping.                        |
 
 To run examples:
 

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Lattice Gauge Field type for lattice gauge theory computations.
+//! LatticeComplex Gauge Field type for lattice gauge theory computations.
 //!
 //! A lattice gauge field assigns group-valued link variables to each edge
 //! of a discrete lattice, enabling Wilson-formulation gauge theory.
@@ -19,7 +19,7 @@
 //! | Coupling Limits | 2 | Strong coupling ⟨P⟩ ≈ β/2, Weak coupling ⟨P⟩ → 1 |
 //! | Wilson/Polyakov Loops | 2 | W(R,T) = 1 and P = 1 for identity config |
 //! | Improved Actions | 4 | Symanzik, Iwasaki, DBW2 coefficients + normalization |
-//! | Lattice Structure | 3 | Plaquette counting in 2D, 3D, 4D |
+//! | LatticeComplex Structure | 3 | Plaquette counting in 2D, 3D, 4D |
 //! | Gauge Invariance | 2 | Wilson action and ⟨P⟩ invariant under gauge transform |
 //! | Topology Detection | 3 | Perturbation detection, random vs identity, 4D Q=0 |
 //! | Thermalization | 3 | Hot/cold difference, Metropolis sweep, field modification |
@@ -29,13 +29,13 @@
 //!
 //! # Mathematical Structure
 //!
-//! - **Lattice:** Discrete spacetime Γ ⊂ ℤᴰ with spacing a
+//! - **LatticeComplex:** Discrete spacetime Γ ⊂ ℤᴰ with spacing a
 //! - **Link variables:** U_μ(x) ∈ G on each edge
 //! - **Plaquettes:** Ordered product around elementary squares
 //! - **Wilson action:** S = β Σ_p (1 - Re[Tr(U_p)]/N)
 
 use crate::{ChainComplex, GaugeGroup, RandomField};
-use crate::{Lattice, LatticeCell, LinkVariable, TopologyError};
+use crate::{LatticeCell, LatticeComplex, LinkVariable, TopologyError};
 use deep_causality_num::{
     ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
 };
@@ -73,7 +73,7 @@ mod utils;
 #[derive(Debug, Clone)]
 pub struct LatticeGaugeField<G: GaugeGroup, const D: usize, M, R, S = ()> {
     /// The underlying lattice structure.
-    lattice: Arc<Lattice<D>>,
+    lattice: Arc<LatticeComplex<D>>,
 
     /// Link variables indexed by LatticeCell (1-cells only).
     /// Key: edge cell, Value: group element
@@ -106,7 +106,7 @@ impl<
     /// # Errors
     ///
     /// Returns `TopologyError` if link creation fails.
-    pub fn try_identity(lattice: Arc<Lattice<D>>, beta: R) -> Result<Self, TopologyError>
+    pub fn try_identity(lattice: Arc<LatticeComplex<D>>, beta: R) -> Result<Self, TopologyError>
     where
         M: Field,
         R: RealField,
@@ -132,7 +132,7 @@ impl<
     /// # Panics
     ///
     /// Panics if link creation fails (should not happen for valid lattice).
-    pub fn identity(lattice: Arc<Lattice<D>>, beta: R) -> Self
+    pub fn identity(lattice: Arc<LatticeComplex<D>>, beta: R) -> Self
     where
         M: Field,
         R: RealField,
@@ -157,7 +157,7 @@ impl<
     ///
     /// Returns error if links are missing for some edges.
     pub fn try_from_links(
-        lattice: Arc<Lattice<D>>,
+        lattice: Arc<LatticeComplex<D>>,
         links: HashMap<LatticeCell<D>, LinkVariable<G, M, R>>,
         beta: R,
     ) -> Result<Self, TopologyError> {
@@ -203,7 +203,7 @@ impl<
     ///
     /// Returns `TopologyError` if link creation fails.
     pub fn try_random<RngType>(
-        lattice: Arc<Lattice<D>>,
+        lattice: Arc<LatticeComplex<D>>,
         beta: R,
         rng: &mut RngType,
     ) -> Result<Self, TopologyError>
@@ -234,7 +234,7 @@ impl<
     /// # Panics
     ///
     /// Panics if link creation fails.
-    pub fn random<RngType>(lattice: Arc<Lattice<D>>, beta: R, rng: &mut RngType) -> Self
+    pub fn random<RngType>(lattice: Arc<LatticeComplex<D>>, beta: R, rng: &mut RngType) -> Self
     where
         RngType: deep_causality_rand::Rng,
         M: RandomField + DivisionAlgebra<R> + Field,
@@ -262,7 +262,7 @@ impl<G: GaugeGroup, const D: usize, M, R, S> LatticeGaugeField<G, D, M, R, S> {
     ///
     /// A new `LatticeGaugeField`.
     pub fn from_links_unchecked(
-        lattice: Arc<Lattice<D>>,
+        lattice: Arc<LatticeComplex<D>>,
         links: HashMap<LatticeCell<D>, LinkVariable<G, M, R>>,
         beta: R,
         source: S,

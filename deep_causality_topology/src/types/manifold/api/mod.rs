@@ -7,3 +7,4 @@
 mod constructors;
 mod covariance;
 mod geometry;
+mod neighbors;

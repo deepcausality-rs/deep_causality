@@ -22,7 +22,7 @@ where
     /// let cov = manifold.covariance_matrix()?;
     /// ```
     pub fn covariance_matrix(&self) -> Result<Vec<Vec<f64>>, TopologyError> {
-        self.covariance_matrix_cpu()
+        self.covariance_matrix_impl()
     }
 
     /// Computes eigenvalues of the covariance matrix for field analysis.
@@ -32,6 +32,6 @@ where
     /// * `Ok(Vec<f64>)` - Eigenvalues sorted in descending order
     /// * `Err(TopologyError)` - If computation fails
     pub fn eigen_covariance(&self) -> Result<Vec<f64>, TopologyError> {
-        self.eigen_covariance_cpu()
+        self.eigen_covariance_impl()
     }
 }

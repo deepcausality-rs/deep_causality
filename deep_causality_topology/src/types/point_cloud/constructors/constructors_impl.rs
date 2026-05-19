@@ -11,7 +11,7 @@ use deep_causality_tensor::CausalTensor;
 
 impl<C, D> PointCloud<C, D> {
     /// CPU implementation of PointCloud constructor.
-    pub(crate) fn new_cpu(
+    pub(crate) fn new_impl(
         points: CausalTensor<C>,
         metadata: CausalTensor<D>,
         cursor: usize,

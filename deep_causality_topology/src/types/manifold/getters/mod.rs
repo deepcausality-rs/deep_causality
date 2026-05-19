@@ -6,22 +6,23 @@
 //! Getter methods for Manifold.
 //! Getter methods for Manifold fields.
 
-use crate::{Manifold, ReggeGeometry, SimplicialComplex};
+use crate::Manifold;
+use crate::traits::chain_complex::ChainComplex;
 use deep_causality_tensor::CausalTensor;
 
-impl<C, D> Manifold<SimplicialComplex<C>, D> {
-    /// Returns a reference to the underlying simplicial complex.
-    pub fn complex(&self) -> &SimplicialComplex<C> {
+impl<K: ChainComplex, F> Manifold<K, F> {
+    /// Returns a reference to the underlying chain complex.
+    pub fn complex(&self) -> &K {
         &self.complex
     }
 
     /// Returns a reference to the tensor data.
-    pub fn data(&self) -> &CausalTensor<D> {
+    pub fn data(&self) -> &CausalTensor<F> {
         &self.data
     }
 
-    /// Returns an optional reference to the Regge geometry metric.
-    pub fn metric(&self) -> Option<&ReggeGeometry<C>> {
+    /// Returns an optional reference to the metric (`K::Metric`).
+    pub fn metric(&self) -> Option<&K::Metric> {
         self.metric.as_ref()
     }
 

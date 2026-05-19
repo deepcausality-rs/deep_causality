@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Tests for Manifold constructors covering all error paths in constructors_cpu.rs
+//! Tests for Manifold constructors covering all error paths in constructors_impl.rs
 
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, TopologyErrorEnum};

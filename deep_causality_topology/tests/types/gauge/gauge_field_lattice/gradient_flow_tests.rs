@@ -6,7 +6,7 @@
 use deep_causality_num::Complex;
 use deep_causality_topology::FlowParams;
 use deep_causality_topology::GaugeGroup;
-use deep_causality_topology::Lattice;
+use deep_causality_topology::LatticeComplex;
 use deep_causality_topology::LatticeGaugeField;
 use std::sync::Arc;
 
@@ -35,7 +35,7 @@ fn test_flow_params_default() {
 #[test]
 fn test_try_add_success() {
     let shape = [2, 2];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let _f1 = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice.clone(), 1.0);
     let _f2 = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice.clone(), 1.0);
 
@@ -45,7 +45,7 @@ fn test_try_add_success() {
 #[test]
 fn test_try_find_t0_success() {
     let shape = [4, 4];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let mut field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice, 1.0);
 
     // Identity field has E(t)=0, so t^2 E(t) = 0. Never reaches 0.3.
@@ -71,7 +71,7 @@ fn test_try_find_t0_success() {
 fn test_try_find_t0_failure_msg() {
     // Force failure by using identity field (E=0)
     let shape = [2, 2];
-    let lattice = Arc::new(Lattice::new(shape, [true, true]));
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let params = FlowParams {

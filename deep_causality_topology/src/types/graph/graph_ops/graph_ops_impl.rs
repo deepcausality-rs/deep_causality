@@ -13,7 +13,7 @@ where
     T: Default + Copy + Clone + PartialEq + Zero,
 {
     /// CPU implementation of add_edge.
-    pub(crate) fn add_edge_cpu(&mut self, u: usize, v: usize) -> Result<bool, TopologyError> {
+    pub(crate) fn add_edge_impl(&mut self, u: usize, v: usize) -> Result<bool, TopologyError> {
         if u >= self.num_vertices || v >= self.num_vertices {
             return Err(TopologyError::GraphError(format!(
                 "Vertex index out of bounds: num_vertices={}, u={}, v={}",
@@ -43,7 +43,7 @@ where
     }
 
     /// CPU implementation of has_edge.
-    pub(crate) fn has_edge_cpu(&self, u: usize, v: usize) -> Result<bool, TopologyError> {
+    pub(crate) fn has_edge_impl(&self, u: usize, v: usize) -> Result<bool, TopologyError> {
         if u >= self.num_vertices || v >= self.num_vertices {
             return Err(TopologyError::GraphError(format!(
                 "Vertex index out of bounds: num_vertices={}, u={}, v={}",
@@ -57,7 +57,7 @@ where
     }
 
     /// CPU implementation of neighbors.
-    pub(crate) fn neighbors_cpu(&self, u: usize) -> Result<&Vec<usize>, TopologyError> {
+    pub(crate) fn neighbors_impl(&self, u: usize) -> Result<&Vec<usize>, TopologyError> {
         if u >= self.num_vertices {
             return Err(TopologyError::GraphError(format!(
                 "Vertex index out of bounds: num_vertices={}, u={}",

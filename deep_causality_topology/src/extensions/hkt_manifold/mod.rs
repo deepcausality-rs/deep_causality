@@ -211,3 +211,54 @@ where
         }
     }
 }
+
+// ============================================================================
+// PART 2: Generic-K Witness — "GenericManifoldWitness<K>"
+// Use Case: HKT machinery over any `ChainComplex` (notably cubical).
+// Ships with `HKT` and `Functor` only; `Monad`/`Applicative`/`CoMonad` are deferred
+// because they need a default-constructible complex or other simplicial-specific
+// bounds. See tasks.md task 3.11a.
+// ============================================================================
+
+use crate::traits::chain_complex::ChainComplex;
+
+pub struct GenericManifoldWitness<K>(PhantomData<K>);
+
+impl<K> HKT for GenericManifoldWitness<K>
+where
+    K: ChainComplex + Satisfies<NoConstraint>,
+{
+    type Constraint = NoConstraint;
+    type Type<T>
+        = Manifold<K, T>
+    where
+        T: Satisfies<NoConstraint>;
+}
+
+impl<K> Functor<GenericManifoldWitness<K>> for GenericManifoldWitness<K>
+where
+    K: ChainComplex + Satisfies<NoConstraint> + Clone,
+    K::Metric: Clone,
+{
+    fn fmap<A, B, Func>(m_a: Manifold<K, A>, f: Func) -> Manifold<K, B>
+    where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        Func: FnMut(A) -> B,
+    {
+        let new_data_tensor = CausalTensorWitness::fmap(m_a.data, f);
+        // Complex and metric are invariant under fmap (no dependence on A or B).
+        Manifold {
+            complex: m_a.complex.clone(),
+            data: new_data_tensor,
+            metric: m_a.metric.clone(),
+            cursor: m_a.cursor,
+        }
+    }
+}
+
+// `Pure`, `Monad`, `Applicative`, `CoMonad` impls for `GenericManifoldWitness<K>` are
+// intentionally deferred. `Pure::pure` needs `K: Default`; `Monad::bind` clones the
+// complex; `Applicative::apply` and `CoMonad::extend` need additional bounds that
+// don't fall out generically. The simplicial fast path remains available via
+// `SimplicialManifoldWitness<C>` which encodes those bounds directly.

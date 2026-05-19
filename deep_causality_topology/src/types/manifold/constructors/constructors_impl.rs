@@ -17,7 +17,7 @@ where
     D: Default + Copy + Clone + PartialEq + Zero,
 {
     /// CPU implementation of Manifold constructor.
-    pub(crate) fn new_cpu(
+    pub(crate) fn new_impl(
         complex: SimplicialComplex<C>,
         data: CausalTensor<D>,
         cursor: usize,
@@ -36,7 +36,7 @@ where
             ));
         }
 
-        if !Self::check_is_manifold_cpu(&complex) {
+        if !Self::check_is_manifold_impl(&complex) {
             return Err(TopologyError::ManifoldError(
                 "SimplicialComplex does not satisfy manifold properties".to_string(),
             ));
@@ -51,7 +51,7 @@ where
     }
 
     /// CPU implementation of Manifold constructor with metric.
-    pub(crate) fn with_metric_cpu(
+    pub(crate) fn with_metric_impl(
         complex: SimplicialComplex<C>,
         data: CausalTensor<D>,
         metric: Option<ReggeGeometry<C>>,
@@ -85,7 +85,7 @@ where
             ));
         }
 
-        if !Self::check_is_manifold_cpu(&complex) {
+        if !Self::check_is_manifold_impl(&complex) {
             return Err(TopologyError::ManifoldError(
                 "SimplicialComplex does not satisfy manifold properties".to_string(),
             ));
@@ -100,7 +100,7 @@ where
     }
 
     /// CPU implementation: check if complex satisfies manifold properties.
-    fn check_is_manifold_cpu(complex: &SimplicialComplex<C>) -> bool {
+    fn check_is_manifold_impl(complex: &SimplicialComplex<C>) -> bool {
         // Basic check: complex must have at least one skeleton
         if complex.skeletons.is_empty() {
             return false;
@@ -136,7 +136,7 @@ where
     D: Clone,
 {
     /// CPU implementation of shallow clone.
-    pub(crate) fn clone_shallow_cpu(manifold: &Self) -> Self {
+    pub(crate) fn clone_shallow_impl(manifold: &Self) -> Self {
         Manifold {
             complex: manifold.complex.clone(),
             data: manifold.data.clone(),

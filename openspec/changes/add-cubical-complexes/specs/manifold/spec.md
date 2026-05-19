@@ -74,8 +74,8 @@ A new helper `Manifold::neighbors<N: Neighborhood<K>>(&self, n: N, cell: CellId)
 
 #### Scenario: Cubical metric is the unit-edge case
 
-- **WHEN** the user calls `Manifold::<CubicalComplex<3>, f64>::with_metric(complex, data, Some(CubicalMetric::unit()), 0)`
-- **THEN** the metric argument's static type is `Option<CubicalMetric<3>>`
+- **WHEN** the user calls `Manifold::<CubicalComplex<3>, f64>::with_metric(complex, data, Some(CubicalReggeGeometry::unit()), 0)`
+- **THEN** the metric argument's static type is `Option<CubicalReggeGeometry<3>>`
 - **AND** every edge length used by volume / Hodge computations is `1.0`
 
 #### Scenario: Non-uniform cubical metrics deferred

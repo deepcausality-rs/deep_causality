@@ -45,8 +45,8 @@ fn no_dyn_iterator_in_chain_complex_trait() {
 }
 
 #[test]
-fn no_dyn_iterator_in_lattice_impl() {
-    assert_no_dyn_iterator("src/types/lattice/mod.rs");
+fn no_dyn_iterator_in_lattice_complex_impl() {
+    assert_no_dyn_iterator("src/types/lattice_complex/mod.rs");
 }
 
 #[test]

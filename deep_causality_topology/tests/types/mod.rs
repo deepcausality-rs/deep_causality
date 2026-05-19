@@ -11,7 +11,7 @@ mod differential_form;
 mod gauge;
 mod graph;
 mod hypergraph;
-mod lattice;
+mod lattice_complex;
 mod manifold;
 mod point_cloud;
 mod regge_geometry;

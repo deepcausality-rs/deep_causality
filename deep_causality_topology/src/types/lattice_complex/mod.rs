@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-pub mod dual_lattice;
+pub mod dual_lattice_complex;
 pub mod lattice_cell;
 pub mod specialized;
 
@@ -16,21 +16,20 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-/// A D-dimensional regular lattice.
 #[derive(Debug)]
-pub struct Lattice<const D: usize> {
+pub struct LatticeComplex<const D: usize> {
     /// Dimensions of the lattice [L₀, L₁, ..., L_{D-1}]
     shape: [usize; D],
     /// Periodic boundary conditions per dimension
     periodic: [bool; D],
     /// Lazy memo of coboundary matrices: δ_k = (∂_{k+1})ᵀ.
     /// Populated on first call to `coboundary_matrix(k)`; ignored for equality.
-    /// `Mutex` (not `RefCell`) so `Lattice<D>` stays `Send + Sync` for the existing
-    /// `Arc<Lattice<D>>` consumers in `gauge_field_lattice`.
+    /// `Mutex` (not `RefCell`) so `LatticeComplex<D>` stays `Send + Sync` for the existing
+    /// `Arc<LatticeComplex<D>>` consumers in `gauge_field_lattice`.
     coboundary_cache: Mutex<HashMap<usize, CsrMatrix<i8>>>,
 }
 
-impl<const D: usize> Clone for Lattice<D> {
+impl<const D: usize> Clone for LatticeComplex<D> {
     fn clone(&self) -> Self {
         Self {
             shape: self.shape,
@@ -41,15 +40,15 @@ impl<const D: usize> Clone for Lattice<D> {
     }
 }
 
-impl<const D: usize> PartialEq for Lattice<D> {
+impl<const D: usize> PartialEq for LatticeComplex<D> {
     fn eq(&self, other: &Self) -> bool {
         self.shape == other.shape && self.periodic == other.periodic
     }
 }
 
-impl<const D: usize> Eq for Lattice<D> {}
+impl<const D: usize> Eq for LatticeComplex<D> {}
 
-impl<const D: usize> Lattice<D> {
+impl<const D: usize> LatticeComplex<D> {
     // --- Constructors ---
 
     /// Create a new lattice with given shape and boundary conditions.
@@ -134,7 +133,7 @@ impl<const D: usize> Lattice<D> {
 // --- Iterator ---
 
 pub struct LatticeCellIterator<'a, const D: usize> {
-    lattice: &'a Lattice<D>,
+    lattice: &'a LatticeComplex<D>,
     // k is used in new() but not stored
     orientations: Vec<u32>,
     current_orientation_idx: usize,
@@ -143,7 +142,7 @@ pub struct LatticeCellIterator<'a, const D: usize> {
 }
 
 impl<'a, const D: usize> LatticeCellIterator<'a, D> {
-    fn new(lattice: &'a Lattice<D>, k: usize) -> Self {
+    fn new(lattice: &'a LatticeComplex<D>, k: usize) -> Self {
         // Generate all k-bit patterns in D bits
         let mut orientations = Vec::new();
         let limit: usize = 1 << D;
@@ -214,13 +213,13 @@ impl<'a, const D: usize> Iterator for LatticeCellIterator<'a, D> {
     }
 }
 
-impl<const D: usize> ChainComplex for Lattice<D> {
+impl<const D: usize> ChainComplex for LatticeComplex<D> {
     type CellType = LatticeCell<D>;
     type CellIter<'a>
         = LatticeCellIterator<'a, D>
     where
         Self: 'a;
-    type Metric = crate::CubicalMetric<D>;
+    type Metric = crate::CubicalReggeGeometry<D>;
 
     fn cells(&self, k: usize) -> Self::CellIter<'_> {
         self.iter_cells(k)
@@ -326,7 +325,7 @@ impl<const D: usize> ChainComplex for Lattice<D> {
 
 // --- Specialized Constructors ---
 
-impl Lattice<2> {
+impl LatticeComplex<2> {
     pub fn square_torus(l: usize) -> Self {
         Self::new([l, l], [true, true])
     }
@@ -335,7 +334,7 @@ impl Lattice<2> {
     }
 }
 
-impl Lattice<3> {
+impl LatticeComplex<3> {
     pub fn cubic_torus(l: usize) -> Self {
         Self::new([l, l, l], [true, true, true])
     }
@@ -344,7 +343,7 @@ impl Lattice<3> {
     }
 }
 
-impl Lattice<4> {
+impl LatticeComplex<4> {
     pub fn hypercubic_torus(l: usize) -> Self {
         Self::new([l, l, l, l], [true, true, true, true])
     }

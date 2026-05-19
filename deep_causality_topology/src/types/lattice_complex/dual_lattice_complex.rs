@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use super::Lattice;
 use super::LatticeCell;
+use super::LatticeComplex;
 
 use crate::Cell;
 use std::sync::Arc;
@@ -12,25 +12,25 @@ use std::sync::Arc;
 ///
 /// For a D-dimensional lattice, a primal k-cell corresponds to a dual (D-k)-cell.
 /// This structure is essential for discrete exterior calculus (Hodge star).
-pub struct DualLattice<const D: usize> {
-    primal: Arc<Lattice<D>>,
+pub struct DualLatticeComplex<const D: usize> {
+    primal: Arc<LatticeComplex<D>>,
 }
 
-impl<const D: usize> DualLattice<D> {
+impl<const D: usize> DualLatticeComplex<D> {
     /// Create the dual of a primal lattice.
-    pub fn new(primal: Lattice<D>) -> Self {
+    pub fn new(primal: LatticeComplex<D>) -> Self {
         Self {
             primal: Arc::new(primal),
         }
     }
 
     /// Create from an Arc.
-    pub fn new_arc(primal: Arc<Lattice<D>>) -> Self {
+    pub fn new_arc(primal: Arc<LatticeComplex<D>>) -> Self {
         Self { primal }
     }
 
     /// Access the primal lattice.
-    pub fn primal(&self) -> &Lattice<D> {
+    pub fn primal(&self) -> &LatticeComplex<D> {
         &self.primal
     }
 
@@ -52,7 +52,7 @@ impl<const D: usize> DualLattice<D> {
     ///
     /// In `LatticeCell`, we identify cells by the "lower-left" corner.
     /// Dual mesh is usually staggered.
-    /// Or we can treat `DualLattice` as an abstract view.
+    /// Or we can treat `DualLatticeComplex` as an abstract view.
     ///
     /// Let's implement the logical duality:
     /// Orientation: complement bitmask.
@@ -86,7 +86,7 @@ impl<const D: usize> DualLattice<D> {
         // Dual vertices are at x + 0.5.
         //
         // Given we return `LatticeCell<D>`, we are restricted to integer coordinates.
-        // So we are defining an isomorphism to another Lattice grid.
+        // So we are defining an isomorphism to another LatticeComplex grid.
 
         LatticeCell::new(*cell.position(), dual_orientation)
     }
@@ -98,7 +98,7 @@ impl<const D: usize> DualLattice<D> {
     /// If we want `coboundary` of a primal cell (which raises dimension),
     /// we compute boundary of its dual? No.
     ///
-    /// `Lattice::coboundary` was in the spec.
+    /// `LatticeComplex::coboundary` was in the spec.
     /// Let's implement `coboundary` here as an operation on the dual.
     pub fn coboundary(&self, cell: &LatticeCell<D>) -> Vec<(LatticeCell<D>, i8)> {
         // δ = * ∂ *^{-1}
@@ -112,15 +112,15 @@ impl<const D: usize> DualLattice<D> {
 
         // Primal boundary of the dual cell
         // NOTE: primal.boundary() returns Vec<(C, i8)> ???
-        // Lattice::boundary calls cell.boundary().
-        // Lattice struct implements ChainComplex.
-        // Wait, Lattice struct doesn't have a 'boundary' method directly exposed that returns Chain?
-        // Lattice implements ChainComplex.
+        // LatticeComplex::boundary calls cell.boundary().
+        // LatticeComplex struct implements ChainComplex.
+        // Wait, LatticeComplex struct doesn't have a 'boundary' method directly exposed that returns Chain?
+        // LatticeComplex implements ChainComplex.
         // ChainComplex trait DOES NOT have cell-wise boundary method?
         // ChainComplex has `boundary_matrix`.
         // Cell trait has `boundary`.
         // `dual` is a Cell. `dual.boundary()` works.
-        // `self.primal` is `Lattice`. `Lattice` implies cells are `LatticeCell`.
+        // `self.primal` is `LatticeComplex`. `LatticeComplex` implies cells are `LatticeCell`.
 
         let dual_boundary = dual.boundary();
 

@@ -5,3 +5,4 @@
 
 mod chain_complex_conformance_tests;
 mod chain_complex_static_dispatch_tests;
+mod neighborhood_tests;

@@ -77,14 +77,14 @@ Every implementor of `ChainComplex` SHALL satisfy two algebraic invariants: (a) 
 
 Implementations:
 - `SimplicialComplex<T>::Metric = ReggeGeometry<T>` — the existing Regge geometry stays the simplicial path's metric.
-- `Lattice<D>::Metric = CubicalMetric<D>` — a new unit-edge metric type introduced in this change set.
+- `Lattice<D>::Metric = CubicalReggeGeometry<D>` — a new unit-edge metric type introduced in this change set.
 - `CellComplex<C>::Metric = ()` — no metric for the abstract cell-complex type; the unit type satisfies the trait without imposing a real metric.
 
 #### Scenario: Each impl declares its Metric
 
 - **WHEN** a downstream user reads the public API
 - **THEN** `<SimplicialComplex<f64> as ChainComplex>::Metric` resolves to `ReggeGeometry<f64>`
-- **AND** `<Lattice<3> as ChainComplex>::Metric` resolves to `CubicalMetric<3>`
+- **AND** `<Lattice<3> as ChainComplex>::Metric` resolves to `CubicalReggeGeometry<3>`
 - **AND** `<CellComplex<MyCell> as ChainComplex>::Metric` resolves to `()`
 
 #### Scenario: Manifold uses K::Metric

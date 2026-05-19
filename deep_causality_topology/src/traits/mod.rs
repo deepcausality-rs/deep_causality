@@ -48,4 +48,5 @@ pub mod gauge_group;
 pub mod graph_topology;
 pub mod hypergraph_topology;
 pub mod manifold_topology;
+pub mod neighborhood;
 pub mod simplicial_topology;

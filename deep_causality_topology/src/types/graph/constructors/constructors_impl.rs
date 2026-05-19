@@ -15,7 +15,7 @@ where
     T: Default + Copy + Clone + PartialEq + Zero,
 {
     /// CPU implementation of Graph constructor.
-    pub(crate) fn new_cpu(
+    pub(crate) fn new_impl(
         num_vertices: usize,
         data: CausalTensor<T>,
         cursor: usize,
