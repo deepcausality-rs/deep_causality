@@ -162,6 +162,23 @@ The proposal establishes a binding gate between stages. Repeated here so design 
 3. **Commit:** per AGENTS.md §"Golden Rules" rule 1, the agent NEVER commits. After user sign-off, the agent prepares a commit message and the user commits. Only after the commit lands does the next stage begin.
 4. **Failed review:** the stage returns to in-progress; the gate does not advance until the user re-approves.
 
+## Deviations log (implementation reconciliation)
+
+This section records intentional differences between the as-written design / spec and the as-implemented code. Each entry is paired with its Stage of origin and the spec text that was reconciled.
+
+### Stage A
+
+- **D1-actual.** `Lattice<D>` coboundary cache uses `std::sync::Mutex<HashMap<...>>` instead of `RefCell<HashMap<...>>`. `RefCell` would have made `Lattice<D>: !Sync`, breaking the existing `Arc<Lattice<D>>` consumers in `gauge_field_lattice`. Spec text in `chain-complex-trait/spec.md` § "Lattice satisfies the trait via lazy-memoized Cow::Owned" updated to reflect `Mutex`.
+- **D2-actual.** `Cell` was not implemented for `Simplex` in the pre-Stage-A tree (because the original `CWComplex` impl for `SimplicialComplex` did not exist). Stage A adds `impl Cell for Simplex` with the standard signed-face boundary. Recorded as a requirement in `simplicial-complex/spec.md` § "Simplex implements the Cell marker trait".
+- **D3-actual.** `SimplicialComplex::betti_number` was a new method (the trait required it, the type didn't have it). Implementation lifts the boundary `CsrMatrix<i8>` to `f64` and computes rank via SVD with tolerance `1e-5`, mirroring `CellComplex::rank_of_matrix`. Recorded in `simplicial-complex/spec.md` § "SimplicialComplex::betti_number is computed via SVD-based rank".
+- **D4-actual.** `_cpu` filename suffix dropped from leftover files; function-name suffix renamed to `_impl` (kept the api/impl two-layer wrapper pattern at the user's direction). 12 file renames, 14 function-name renames. Recorded in `simplicial-complex/spec.md` scenario notes (`boundary_operator_cpu` → `boundary_operator_impl`).
+
+### Stage B
+
+- **D5-actual.** `ManifoldWitness<C>` was NOT re-parameterized over `K: ChainComplex` (despite original Stage B task wording). Its `Functor`/`Monad`/`Applicative`/`CoMonad` impl bodies assume simplicial-specific bounds (`Default::default()` on the complex, `Clone` on `K::Metric`, etc.). Lifting `K` requires a fresh HKT-machinery design that is orthogonal to the `Manifold` struct genericization. Stage B ships only the alias `SimplicialManifoldWitness<C> = ManifoldWitness<C>` as the textbook entry point. A separate `GenericManifoldWitness<K>` is queued for Stage C (tasks.md task 3.11a). Recorded in `manifold/spec.md` § "Comonad iteration is unchanged …".
+- **D6-actual.** `manifold/differential/hodge.rs` and `manifold/differential/laplacian.rs` were left unmodified by Stage B. On audit, neither reads the boundary/coboundary cache directly — they call the already-routed `exterior_derivative` / `codifferential` methods and the `hodge_star_operators` field (which is simplicial-only and not part of `ChainComplex`). Adding Hodge ⋆ to the trait is design D7's explicit "deferred to follow-up" item, so the simplicial-only restriction on `hodge.rs` / `laplacian.rs` is correct. Recorded in `manifold/spec.md` § "Differential operators read the complex through the trait" (the Hodge ⋆ scope paragraph).
+- **D7-actual.** `manifold/utils/utils_manifold.rs` (`is_oriented`, `has_boundary`) was migrated through `ChainComplex::boundary_matrix` even though the file was not in Stage B task 2.5's list. The audit grep would otherwise have flagged these helpers, requiring an exception clause; routing them through the trait keeps the audit rule uniform. Recorded in `manifold/spec.md` § "Differential operators read the complex through the trait".
+
 ## Open Questions
 
-None remaining. Neighborhood vocabulary (D5), rename policy (D4), sequencing, the trait matrix-return type (D8), and the `Cell` trait co-location (D9) are all settled.
+None remaining. Neighborhood vocabulary (D5), rename policy (D4), sequencing, the trait matrix-return type (D8), and the `Cell` trait co-location (D9) are all settled. The deviations above are reconciled in the spec files and recorded here for traceability; they do not introduce new open questions.
