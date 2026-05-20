@@ -88,6 +88,7 @@ rust_test_suite(
         "//deep_causality_topology",
         # Internal deps
         "//deep_causality_metric",
+        "//deep_causality_tensor",
     ],
 )
 

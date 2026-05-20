@@ -126,6 +126,9 @@ pub(crate) fn quick_two_sum(a: f64, b: f64) -> (f64, f64) {
 #[inline]
 pub(crate) fn two_prod(a: f64, b: f64) -> (f64, f64) {
     let p = a * b;
+    #[cfg(feature = "std")]
     let e = a.mul_add(b, -p);
+    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+    let e = libm::fma(a, b, -p);
     (p, e)
 }

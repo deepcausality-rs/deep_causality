@@ -10,5 +10,6 @@ mod float_double;
 mod float_option;
 mod identity;
 mod integer;
+mod iso;
 mod num;
 mod ops;

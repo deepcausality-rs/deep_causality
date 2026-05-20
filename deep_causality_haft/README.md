@@ -368,6 +368,64 @@ let res: Result<i32, &str> = Ok(10);
 let new_res = ResultWitness::bimap(res, |x| x * 2.0, |e| e.len()); // Result<f64, usize>
 ```
 
+## Natural Isomorphisms (Tier 3 Iso Traits)
+
+This crate also provides traits for **natural isomorphisms** between HKT witnesses — bijections between two type constructors that commute with `fmap`. They sit at Tier 3 of the three-tier isomorphism design (Tiers 1 and 2 live in `deep_causality_num` for concrete-type isos; Tier 3 lifts the idea to type constructors).
+
+Because HKT witnesses are zero-sized markers without values, `From`/`Into` cannot apply at this level — a witness-typed trait is required. Each `NaturalIso*` is parameterised over the two witnesses `F` and `G` and exposes `to_target` / `to_source`:
+
+| Trait | Base HKT | Free type parameters |
+|---|---|---|
+| `NaturalIso<F, G>` | `HKT` | `T` |
+| `NaturalIso2<F, G>` | `HKT2Unbound` | `A, B` |
+| `NaturalIso3<F, G>` | `HKT3Unbound` | `A, B, C` |
+| `NaturalIso4<F, G>` | `HKT4Unbound` | `A, B, C, D` |
+| `NaturalIso5<F, G>` | `HKT5Unbound` | `V, S, C, E, L` |
+
+### Laws
+
+Every implementer must satisfy, for every type parameter tuple permitted by both witnesses' constraints:
+
+1. **Round-trip identity** (both directions independently):
+   * `to_source(to_target(fa)) == fa`
+   * `to_target(to_source(ga)) == ga`
+2. **Naturality**: `to_target(F::fmap(fa, h)) == G::fmap(to_target(fa), h)` for any function `h: T -> U` (and the symmetric law through `to_source`). Naturality is the law that makes the iso a *structure-preserving* one — not just a bijection of carriers, but one that respects every later `fmap`.
+
+The `deep_causality_haft::iso::test_support` module provides `assert_natural_iso_round_trip` and `assert_natural_iso_naturality` helpers for property-style verification in downstream crates.
+
+### Example: `NaturalIso` between `Option` and a structurally-equivalent twin
+
+```rust,ignore
+use deep_causality_haft::{HKT, NaturalIso, NoConstraint, OptionWitness, Satisfies};
+
+#[derive(Debug, Clone, PartialEq)]
+enum MyOption<T> { MySome(T), MyNone }
+
+struct MyOptionWitness;
+impl HKT for MyOptionWitness {
+    type Constraint = NoConstraint;
+    type Type<T> = MyOption<T>;
+}
+
+struct OptionMyOptionIso;
+impl NaturalIso<OptionWitness, MyOptionWitness> for OptionMyOptionIso {
+    fn to_target<T>(fa: Option<T>) -> MyOption<T>
+    where T: Satisfies<NoConstraint> + Satisfies<NoConstraint> {
+        match fa { Some(t) => MyOption::MySome(t), None => MyOption::MyNone }
+    }
+    fn to_source<T>(ga: MyOption<T>) -> Option<T>
+    where T: Satisfies<NoConstraint> + Satisfies<NoConstraint> {
+        match ga { MyOption::MySome(t) => Some(t), MyOption::MyNone => None }
+    }
+}
+```
+
+### Use cases
+
+* **Carrier-shape refactors**: prove two representations of the same conceptual container (e.g. `Option<T>` vs a domain-specific `Maybe<T>` newtype) are interchangeable, without re-deriving every `Functor`/`Monad` impl.
+* **Effect-system migration**: `NaturalIso5` is the natural fit for swapping the propagating-effect carrier `<V, S, C, E, L>` with an equivalent shape (e.g. a logging-only specialisation), with naturality guaranteeing that any pipeline written against the old carrier still composes against the new one.
+* **Theory-side equivalences**: encode "these two functors are the same" as a checked law rather than a comment.
+
 ## non-std support
 
 The `deep_causality_haft` crate provides support for `no-std` environments. This is particularly useful for embedded systems or other contexts where the standard library is not available. Note, the `std` feature is enabled by default thus you need to opt-into non-std via feature flags.

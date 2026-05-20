@@ -424,7 +424,11 @@ impl RealField for f32 {
 
     #[inline]
     fn asin(self) -> Self {
-        f32::asin(self)
+        #[cfg(feature = "std")]
+        return self.asin();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::asinf(self);
     }
 
     #[inline]
@@ -483,7 +487,11 @@ impl RealField for f32 {
 
     #[inline]
     fn atan(self) -> Self {
-        f32::atan(self)
+        #[cfg(feature = "std")]
+        return self.atan();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::atanf(self);
     }
 
     #[inline]
@@ -690,12 +698,20 @@ impl RealField for f64 {
 
     #[inline]
     fn atan(self) -> Self {
-        f64::atan(self)
+        #[cfg(feature = "std")]
+        return self.atan();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::atan(self);
     }
 
     #[inline]
     fn asin(self) -> Self {
-        f64::asin(self)
+        #[cfg(feature = "std")]
+        return self.asin();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::asin(self);
     }
 
     fn is_nan(self) -> bool {
