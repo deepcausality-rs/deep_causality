@@ -11,8 +11,6 @@
 ![Tests][test-url]
 [![OpenSSF Best Practices][ossf-badge]][ossf-url]
 [![codecov][codecov-badge]][codecov-url]
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdeepcausality-rs%2Fdeep_causality.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdeepcausality-rs%2Fdeep_causality?ref=badge_shield&issueType=license)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdeepcausality-rs%2Fdeep_causality.svg?type=small)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdeepcausality-rs%2Fdeep_causality?ref=badge_small)
 
 [codefactor-badge]: https://www.codefactor.io/repository/github/deepcausality-rs/deep_causality/badge
 
