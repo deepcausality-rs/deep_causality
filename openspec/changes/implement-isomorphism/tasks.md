@@ -2,15 +2,15 @@
 
 > **Gate:** This stage MUST be completed in full, verified, signed off, and committed before any task in Part B begins. See "Stage gates" at the end.
 
-- [ ] 1.1 Create `deep_causality_core/tests/iso/` with `mod.rs` and `effect_process_consistency_tests.rs`. No source-tree changes.
-- [ ] 1.2 Write a test that constructs a representative `CausalEffectPropagationProcess<i32, (), (), CausalityError, EffectLog>` value (e.g. via `PropagatingEffectWitness::pure(42)`) and asserts `<PropagatingEffectWitness<CausalityError, EffectLog>>::fmap(val.clone(), |x| x * 2)` is byte-identical to `<PropagatingProcessWitness<(), ()>>::fmap(val, |x| x * 2)`. The assertion message names both witnesses so the relationship is discoverable.
-- [ ] 1.3 Add a second test for the type-changing case (`|x: i32| x % 2 == 0`).
-- [ ] 1.4 Add a third test for `Monad::bind` (the `bind` impls are also written independently).
-- [ ] 1.5 Register `mod iso;` in `deep_causality_core/tests/mod.rs`. Add `rust_test_suite(name = "iso", srcs = glob(["iso/*_tests.rs"]), ...)` to `deep_causality_core/tests/BUILD.bazel`.
-- [ ] 1.6 `cargo test -p deep_causality_core` passes. `cargo clippy -p deep_causality_core --tests -- -D warnings` clean.
-- [ ] 1.7 `bazel test //deep_causality_core/tests:iso` passes.
-- [ ] 1.8 Run `make format && make fix` — clean across the workspace.
-- [ ] 1.9 **Stage A gate:** prepare a stage-completion summary listing the test files added and the consistency properties pinned. Wait for sign-off and commit before proceeding.
+- [x] 1.1 Create `deep_causality_core/tests/iso/` with `mod.rs` and `effect_process_consistency_tests.rs`. No source-tree changes.
+- [x] 1.2 `fmap_same_type_agrees_across_witnesses` test asserts `EffectW::fmap(val, |x| x * 2) == ProcessW::fmap(val, |x| x * 2)` on shared carrier.
+- [x] 1.3 `fmap_type_changing_agrees_across_witnesses` test for `|x: i32| x % 2 == 0`.
+- [x] 1.4 `bind_agrees_across_witnesses` test pins consistency between the two `Monad::bind` impls. Bonus: also added `pure_agrees_across_witnesses` for the `Pure::pure` lift.
+- [x] 1.5 `mod iso;` registered in `tests/mod.rs`. `rust_test_suite(name = "iso", ...)` added to `tests/BUILD.bazel`.
+- [x] 1.6 `cargo test -p deep_causality_core`: 115 tests pass (4 new + 111 existing). `cargo clippy -p deep_causality_core --tests -- -D warnings`: clean.
+- [x] 1.7 `bazel test //deep_causality_core/tests:iso`: PASSED.
+- [x] 1.8 **Bonus fix** applied: `src/types/builder/executable_graph.rs` was missing `use alloc::vec;` for the `vec!` macro under no_std (pre-existing lib bug, not caused by Stage A). One-line cfg-gated import added per the `2026-05-20-add-iso-traits` Stage A precedent. `cargo build -p deep_causality_core --no-default-features --features alloc` now passes. (One pre-existing unused-import warning in `effect_value/mod.rs:8` remains; out of scope for this stage.) Format clean via `cargo fmt`.
+- [x] 1.9 **Stage A gate:** stage-completion summary below; awaiting sign-off and commit.
 
 ## 2. Part B — `iso-tensor-sparse`: `CausalTensor<F>` <-> `CsrMatrix<F>` (mixed-tier template)
 

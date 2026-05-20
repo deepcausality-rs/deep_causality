@@ -189,3 +189,22 @@ rust_test_suite(
         "//deep_causality_haft",
     ],
 )
+
+rust_test_suite(
+    name = "iso",
+    srcs = glob([
+        "iso/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
