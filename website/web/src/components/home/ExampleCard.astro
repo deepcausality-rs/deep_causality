@@ -2,8 +2,8 @@
 import { Code } from 'astro:components';
 import type { Example } from './examples';
 
-interface Props { example: Example; index: number }
-const { example, index } = Astro.props;
+interface Props { example: Example }
+const { example } = Astro.props;
 
 // Per-slug monoline glyphs (16×16). Never an emoji. Fallback is a small node-link mark.
 const glyphs: Record<string, string> = {

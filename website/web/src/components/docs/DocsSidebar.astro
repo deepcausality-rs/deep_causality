@@ -88,15 +88,10 @@ const idToHref = (id: string) => `/docs/${id.replace(/\/index$/, '/')}/`.replace
   // otherwise an open mobile drawer leaves the desktop docs page non-scrollable
   // after a resize or rotation.
   const desktop = window.matchMedia('(min-width: 900px)');
-  const onBreakpointChange = (e: MediaQueryListEvent | MediaQueryList) => {
+  const onBreakpointChange = (e: MediaQueryListEvent) => {
     if (e.matches && drawer?.hasAttribute('data-open')) setOpen(false);
   };
-  if (typeof desktop.addEventListener === 'function') {
-    desktop.addEventListener('change', onBreakpointChange);
-  } else {
-    // Safari <14 fallback.
-    (desktop as MediaQueryList).addListener(onBreakpointChange);
-  }
+  desktop.addEventListener('change', onBreakpointChange);
 </script>
 
 <style>
