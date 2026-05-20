@@ -5,7 +5,7 @@
 
 //! Tests for `CubicalReggeGeometry<D>` — the cubical Regge geometry primitive.
 
-use super::CubicalReggeGeometry;
+use deep_causality_topology::CubicalReggeGeometry;
 use deep_causality_metric::Metric;
 
 // -- Constructors / classification -------------------------------------------------

@@ -20,3 +20,4 @@ mod simplex;
 mod simplicial_complex;
 mod skeleton;
 mod topology;
+pub mod cubical_regge_geometry;

@@ -65,9 +65,6 @@
 
 use deep_causality_metric::Metric;
 
-#[cfg(test)]
-mod cubical_regge_geometry_tests;
-
 /// Cubical Regge geometry: discrete metric data on a D-dimensional cubical complex.
 ///
 /// Parallels `ReggeGeometry<T>` for the simplicial case. See the module-level doc for
