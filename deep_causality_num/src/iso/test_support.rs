@@ -42,23 +42,28 @@ use crate::{Algebra, DivisionAlgebra, Field, Group, Ring};
 /// Verifies the Tier 1 base law: any `From` pair participating in a Tier 1
 /// marker subtrait must satisfy `S::from(T::from(s)) == s` and
 /// `T::from(S::from(t)) == t`.
-pub fn assert_iso_from_round_trip<S, T>(s: S)
+///
+/// Both checks are exercised against independent inputs: deriving `t` from
+/// `s` would only cover the subset of `T` reachable via `T::from`, leaving
+/// pairs where `S::from` is many-to-one (i.e. `T` values outside `T::from`'s
+/// image collapse to the same `S`) undetected.
+pub fn assert_iso_from_round_trip<S, T>(s: S, t: T)
 where
     S: From<T> + Clone + PartialEq + core::fmt::Debug,
     T: From<S> + Clone + PartialEq + core::fmt::Debug,
 {
-    let t: T = T::from(s.clone());
-    let s_back: S = S::from(t.clone());
+    let t_from_s: T = T::from(s.clone());
+    let s_back: S = S::from(t_from_s);
     assert_eq!(
         s, s_back,
         "From round-trip S -> T -> S failed: original {:?} differs from S::from(T::from(original))",
         s
     );
 
-    let s_again: S = S::from(t.clone());
-    let t_again: T = T::from(s_again);
+    let s_from_t: S = S::from(t.clone());
+    let t_back: T = T::from(s_from_t);
     assert_eq!(
-        t, t_again,
+        t, t_back,
         "From round-trip T -> S -> T failed: original {:?} differs from T::from(S::from(original))",
         t
     );

@@ -37,28 +37,38 @@ use crate::iso::witness::iso::Iso;
 use crate::iso::witness::ring_iso::RingIso;
 use crate::{Algebra, DivisionAlgebra, Field, Group, Ring};
 
-/// Asserts the round-trip identity law for a witness-typed [`Iso<S, T>`] impl.
+/// Asserts the round-trip identity law for a witness-typed [`Iso<S, T>`] impl
+/// in both directions independently.
 ///
-/// Verifies `to_source(to_target(s)) == s` for a representative source
-/// value `s: S`. The symmetric law `to_target(to_source(t)) == t` is implied
-/// by purity of the witness methods — if the forward round-trip holds for
-/// `t = to_target(s)`, then substituting `t` into the reverse round-trip
-/// gives `to_target(to_source(to_target(s))) == to_target(s)`, which follows
-/// from the first identity. Testing the reverse independently would require
-/// a separate `t: T` input; pairs that violate only the reverse direction
-/// cannot exist for pure-function witnesses.
-pub fn assert_witness_iso_round_trip<W, S, T>(s: S)
+/// Verifies:
+/// 1. `to_source(to_target(s)) == s` (S -> T -> S), and
+/// 2. `to_target(to_source(t)) == t` (T -> S -> T)
+///
+/// Both checks are necessary: deriving `t` from `s` would only exercise the
+/// subset of `T` reachable via `to_target`, leaving witnesses where
+/// `to_source` is many-to-one (i.e. `T` values outside `to_target`'s image
+/// collapse to the same `S`) undetected. Callers must supply an independent
+/// `t: T` so non-bijective witnesses cannot slip through.
+pub fn assert_witness_iso_round_trip<W, S, T>(s: S, t: T)
 where
     W: Iso<S, T>,
     S: Clone + PartialEq + core::fmt::Debug,
     T: Clone + PartialEq + core::fmt::Debug,
 {
-    let t: T = W::to_target(s.clone());
-    let s_back: S = W::to_source(t.clone());
+    let t_from_s: T = W::to_target(s.clone());
+    let s_back: S = W::to_source(t_from_s);
     assert_eq!(
         s, s_back,
         "Witness iso round-trip S -> T -> S failed: original {:?} differs from to_source(to_target(original))",
         s
+    );
+
+    let s_from_t: S = W::to_source(t.clone());
+    let t_back: T = W::to_target(s_from_t);
+    assert_eq!(
+        t, t_back,
+        "Witness iso round-trip T -> S -> T failed: original {:?} differs from to_target(to_source(original))",
+        t
     );
 }
 

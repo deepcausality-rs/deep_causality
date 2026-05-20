@@ -81,9 +81,18 @@ fn standard_iso_blanket_iso_to_source() {
 
 #[test]
 fn standard_iso_round_trip_via_helper() {
-    assert_witness_iso_round_trip::<StandardIso<FloatWrap, f64>, FloatWrap, f64>(FloatWrap(2.5));
-    assert_witness_iso_round_trip::<StandardIso<FloatWrap, f64>, FloatWrap, f64>(FloatWrap(0.0));
-    assert_witness_iso_round_trip::<StandardIso<FloatWrap, f64>, FloatWrap, f64>(FloatWrap(-3.7));
+    assert_witness_iso_round_trip::<StandardIso<FloatWrap, f64>, FloatWrap, f64>(
+        FloatWrap(2.5),
+        2.5,
+    );
+    assert_witness_iso_round_trip::<StandardIso<FloatWrap, f64>, FloatWrap, f64>(
+        FloatWrap(0.0),
+        0.0,
+    );
+    assert_witness_iso_round_trip::<StandardIso<FloatWrap, f64>, FloatWrap, f64>(
+        FloatWrap(-3.7),
+        -3.7,
+    );
 }
 
 // =============================================================================

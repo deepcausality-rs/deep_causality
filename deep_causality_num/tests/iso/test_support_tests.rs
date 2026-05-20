@@ -18,25 +18,25 @@ use deep_causality_num::iso::test_support::assert_iso_from_round_trip;
 
 #[test]
 fn round_trip_identity_i32_succeeds() {
-    assert_iso_from_round_trip::<i32, i32>(42);
-    assert_iso_from_round_trip::<i32, i32>(0);
-    assert_iso_from_round_trip::<i32, i32>(-1);
-    assert_iso_from_round_trip::<i32, i32>(i32::MAX);
-    assert_iso_from_round_trip::<i32, i32>(i32::MIN);
+    assert_iso_from_round_trip::<i32, i32>(42, 42);
+    assert_iso_from_round_trip::<i32, i32>(0, 0);
+    assert_iso_from_round_trip::<i32, i32>(-1, -1);
+    assert_iso_from_round_trip::<i32, i32>(i32::MAX, i32::MAX);
+    assert_iso_from_round_trip::<i32, i32>(i32::MIN, i32::MIN);
 }
 
 #[test]
 fn round_trip_identity_f64_succeeds() {
-    assert_iso_from_round_trip::<f64, f64>(1.5);
-    assert_iso_from_round_trip::<f64, f64>(0.0);
-    assert_iso_from_round_trip::<f64, f64>(-42.0);
+    assert_iso_from_round_trip::<f64, f64>(1.5, 1.5);
+    assert_iso_from_round_trip::<f64, f64>(0.0, 0.0);
+    assert_iso_from_round_trip::<f64, f64>(-42.0, -42.0);
 }
 
 #[test]
 fn round_trip_identity_u64_succeeds() {
-    assert_iso_from_round_trip::<u64, u64>(0);
-    assert_iso_from_round_trip::<u64, u64>(1);
-    assert_iso_from_round_trip::<u64, u64>(u64::MAX);
+    assert_iso_from_round_trip::<u64, u64>(0, 0);
+    assert_iso_from_round_trip::<u64, u64>(1, 1);
+    assert_iso_from_round_trip::<u64, u64>(u64::MAX, u64::MAX);
 }
 
 // A wrapper that breaks the round-trip in the T -> S direction.
@@ -63,7 +63,7 @@ impl From<BadRoundTrip> for i32 {
 #[should_panic(expected = "From round-trip S -> T -> S failed")]
 fn round_trip_broken_panics_on_forward_direction() {
     // 42 -> BadRoundTrip(42) -> 0 != 42, so the S -> T -> S branch panics.
-    assert_iso_from_round_trip::<i32, BadRoundTrip>(42);
+    assert_iso_from_round_trip::<i32, BadRoundTrip>(42, BadRoundTrip(0));
 }
 
 // A wrapper that breaks the round-trip in the S -> T direction.
@@ -90,5 +90,35 @@ impl From<AsymmetricBackwards> for u32 {
 #[should_panic(expected = "From round-trip")]
 fn round_trip_broken_panics_when_forward_is_lossy() {
     // 7 -> AsymmetricBackwards(0) -> 0 != 7. Hits the S -> T -> S panic.
-    assert_iso_from_round_trip::<u32, AsymmetricBackwards>(7);
+    assert_iso_from_round_trip::<u32, AsymmetricBackwards>(7, AsymmetricBackwards(0));
+}
+
+// A wrapper that passes the S -> T -> S round-trip for every valid `S`
+// (`u32`) but fails the T -> S -> T round-trip for any negative `i32`
+// wrapped in `ReverseLossy`. S::from collapses the sign via `unsigned_abs`,
+// so two distinct `T` values (`ReverseLossy(5)` and `ReverseLossy(-5)`) map
+// to the same `S = 5u32`, then back to `ReverseLossy(5)`, losing the sign.
+// This pins the independent T -> S -> T check.
+#[derive(Clone, PartialEq, Debug)]
+struct ReverseLossy(i32);
+
+impl From<u32> for ReverseLossy {
+    fn from(x: u32) -> Self {
+        ReverseLossy(x as i32)
+    }
+}
+
+impl From<ReverseLossy> for u32 {
+    fn from(w: ReverseLossy) -> Self {
+        w.0.unsigned_abs()
+    }
+}
+
+#[test]
+#[should_panic(expected = "From round-trip T -> S -> T failed")]
+fn round_trip_panics_independently_on_reverse_direction() {
+    // S -> T -> S: u32::from(ReverseLossy::from(7u32)) = 7 ✓
+    // T -> S -> T: ReverseLossy::from(u32::from(ReverseLossy(-5)))
+    //            = ReverseLossy::from(5u32) = ReverseLossy(5) != ReverseLossy(-5)
+    assert_iso_from_round_trip::<u32, ReverseLossy>(7, ReverseLossy(-5));
 }

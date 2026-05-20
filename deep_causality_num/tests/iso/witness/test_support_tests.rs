@@ -22,7 +22,7 @@ fn helpers_accept_id_witness_across_full_marker_stack() {
     // One witness, every helper level. Verifies the witness can be passed
     // through the entire Tier 2 marker hierarchy without re-implementing
     // anything per level.
-    assert_witness_iso_round_trip::<IdWitness, FloatWrap, f64>(FloatWrap(2.0));
+    assert_witness_iso_round_trip::<IdWitness, FloatWrap, f64>(FloatWrap(2.0), 2.0);
     assert_witness_group_iso_law::<IdWitness, FloatWrap, f64>(FloatWrap(2.0), FloatWrap(3.0));
     assert_witness_ring_iso_laws::<IdWitness, FloatWrap, f64>(FloatWrap(2.0), FloatWrap(3.0));
     assert_witness_field_iso_laws::<IdWitness, FloatWrap, f64>(FloatWrap(2.0));
@@ -32,8 +32,8 @@ fn helpers_accept_id_witness_across_full_marker_stack() {
 
 #[test]
 fn round_trip_helper_handles_zero_and_negative_inputs() {
-    assert_witness_iso_round_trip::<IdWitness, FloatWrap, f64>(FloatWrap(0.0));
-    assert_witness_iso_round_trip::<IdWitness, FloatWrap, f64>(FloatWrap(-100.0));
-    assert_witness_iso_round_trip::<IdWitness, FloatWrap, f64>(FloatWrap(1e-9));
-    assert_witness_iso_round_trip::<IdWitness, FloatWrap, f64>(FloatWrap(1e9));
+    assert_witness_iso_round_trip::<IdWitness, FloatWrap, f64>(FloatWrap(0.0), 0.0);
+    assert_witness_iso_round_trip::<IdWitness, FloatWrap, f64>(FloatWrap(-100.0), -100.0);
+    assert_witness_iso_round_trip::<IdWitness, FloatWrap, f64>(FloatWrap(1e-9), 1e-9);
+    assert_witness_iso_round_trip::<IdWitness, FloatWrap, f64>(FloatWrap(1e9), 1e9);
 }

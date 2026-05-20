@@ -68,8 +68,9 @@ impl deep_causality_num::iso::witness::AlgebraIso<FloatWrap, f64, f64> for BadWi
 impl deep_causality_num::iso::witness::DivisionAlgebraIso<FloatWrap, f64, f64> for BadWitness {}
 
 /// Broken-only-on-T-to-S witness. `to_target` is correct; `to_source` always
-/// returns `FloatWrap(0.0)`. Used to exercise the second branch of the
-/// round-trip assertion (the `T -> S -> T` direction).
+/// returns `FloatWrap(0.0)`. Used to exercise the `S -> T -> S` branch of
+/// `assert_witness_iso_round_trip`: for any non-zero `s`, `to_target(s)` is
+/// a non-zero `t`, but `to_source(t) = FloatWrap(0.0) != s`.
 pub(crate) struct BadReverseWitness;
 
 impl Iso<FloatWrap, f64> for BadReverseWitness {
@@ -79,6 +80,24 @@ impl Iso<FloatWrap, f64> for BadReverseWitness {
 
     fn to_source(_: f64) -> FloatWrap {
         FloatWrap(0.0)
+    }
+}
+
+/// `to_target` is identity; `to_source` collapses the sign via `abs`. The
+/// `S -> T -> S` branch passes for every non-negative `s` (sign is never
+/// destroyed in that direction), but the `T -> S -> T` branch fails for any
+/// negative `t`: `to_source(-2.5) = FloatWrap(2.5)`, then
+/// `to_target(FloatWrap(2.5)) = 2.5 != -2.5`. Used to pin the independent
+/// `T -> S -> T` check in `assert_witness_iso_round_trip`.
+pub(crate) struct AbsReverseWitness;
+
+impl Iso<FloatWrap, f64> for AbsReverseWitness {
+    fn to_target(s: FloatWrap) -> f64 {
+        s.0
+    }
+
+    fn to_source(t: f64) -> FloatWrap {
+        FloatWrap(t.abs())
     }
 }
 
