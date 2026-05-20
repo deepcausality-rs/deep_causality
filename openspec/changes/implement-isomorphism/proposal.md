@@ -10,9 +10,8 @@ The seventh candidate from the survey (`EffectProcessIso`, Tier 3) was dropped a
 
 Six concrete iso instances, grouped into four capabilities by crate-pair, plus a small consistency test in `deep_causality_core`:
 
-**Capability `iso-num-multivector` (`deep_causality_multivector`):**
-- `Complex<F>` <-> `CausalMultiVector<F>` in Cl(0,1). Mixed-tier: forward `From` in multivector; reverse via named witness `ComplexCl01Iso`. Markers: `FieldIso`, `DivisionAlgebraIso`.
-- `Quaternion<F>` <-> `CausalMultiVector<F>` as Cl(3,0)-even rotor. Mixed-tier with partial reverse: forward `From`, reverse `TryFrom` (filters odd-grade coefficients), Tier 2 witness `QuaternionRotorIso` for the always-valid path. Markers: `DivisionAlgebraIso` (no `FieldIso` since quaternions are non-commutative).
+**~~Capability `iso-num-multivector`~~ — POSTPONED**
+- `Complex<F>` <-> `CausalMultiVector<F>` in Cl(0,1) and `Quaternion<F>` <-> `CausalMultiVector<F>` as Cl(3,0)-even rotor were dropped from this change during Stage C implementation. The spec assumed `CausalMultiVector<F>` implemented the `deep_causality_num` algebraic-trait stack; it does not. Worse, `Field` cannot be honestly impl'd because `Commutative` depends on the runtime metric, not the type. Unlocking these isos requires either phantom-typed metrics (breaking change to all multivector callers) or per-algebra newtype wrappers (`Cl01<F>`, `Cl30Even<F>`) — both of which are separate design exercises out of scope here. The isos remain real and useful; they will land in a follow-up change that ships the prerequisite. See `tasks.md` Part C section.
 
 **Capability `iso-multifield-tensor` (`deep_causality_multivector`):**
 - `CausalMultiField<T>` <-> `(CausalTensor<T>, Metric, [T; 3], [usize; 3])`. Same-crate Tier 2 pack/unpack. No algebraic markers.
@@ -33,7 +32,7 @@ Each iso ships with property-style tests against the existing helper modules (`a
 ## Capabilities
 
 ### New Capabilities
-- `iso-num-multivector`: Algebraic isos between `deep_causality_num` complex / quaternion types and Clifford-algebra multivectors in `deep_causality_multivector`. Implements two pairs: Complex <-> Cl(0,1) and Quaternion <-> Cl(3,0)-even.
+- ~~`iso-num-multivector`~~: **POSTPONED**. The Complex <-> Cl(0,1) and Quaternion <-> Cl(3,0)-even isos were dropped during Stage C implementation due to unmet algebraic-trait prerequisites on `CausalMultiVector` and the structural impossibility of an honest `Field` impl without phantom-typed metrics or per-algebra newtypes. Deferred to a follow-up change. The capability spec file was removed from this change.
 - `iso-multifield-tensor`: Structural iso between `CausalMultiField<T>` and its underlying `(CausalTensor<T>, Metric, [T; 3], [usize; 3])` carrier in `deep_causality_multivector`.
 - `iso-tensor-sparse`: Cross-crate mixed-tier iso between rank-2 `CausalTensor<F>` and `CsrMatrix<F>`. Establishes the orphan-rule mixed-tier template (Tier 1 forward + Tier 2 reverse) for future cross-crate isos.
 - `iso-topology`: Two structural isos in `deep_causality_topology`: simplicial-complex <-> cell-complex (partial reverse) and primal lattice <-> Poincaré-dual lattice (full bijection via named `PoincareIso<D>` witness).

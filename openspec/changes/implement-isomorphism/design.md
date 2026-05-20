@@ -35,6 +35,20 @@ Four capabilities (`iso-num-multivector`, `iso-multifield-tensor`, `iso-tensor-s
 
 This is the template established by `IsoFollowUps.md §2`; subsequent cross-crate isos copy the pattern.
 
+### D2b. Algebraic-marker subtraits require the substrate type to actually implement the algebraic structure
+
+Discovered mid-implementation in Stage C: declaring `impl FieldIso<S, T> for W` requires both `S: Field` and `T: Field`. `CausalMultiVector<F>` does NOT implement `Field` (or `Ring`, `Group`, `Algebra`, `DivisionAlgebra`, or the marker traits `Commutative`, `Associative`, `Distributive`, `AbelianGroup`). The compile errors point at the marker subtrait bound, but the root cause is the absence of an algebraic-structure impl on the substrate.
+
+**Two distinct gaps:**
+
+1. **Trivially fillable**: `Neg`, `MulAssign<Self>`, `Div<Self>`, `DivAssign<Self>`, `Zero`, `One`, `conjugate`, infallible `inverse`, plus markers `Associative`, `Distributive`, `AbelianGroup`. ~300-500 LoC of mechanical impls. Gets `Ring`, `Algebra<F>`, `DivisionAlgebra<F>` for free via blanket impls.
+
+2. **Structurally blocked**: `Commutative`. The marker is a type-level promise. `CausalMultiVector<F>` has the metric as a runtime field, and only some metrics (Cl(0,1), Cl(1,0), Cl(0,0)) are commutative. A blanket `impl Commutative for CausalMultiVector<F>` would lie about Cl(3,0) and friends.
+
+**Therefore**: `Field` and `FieldIso` are unavailable for `CausalMultiVector<F>` without either phantom-typed metrics (breaking change to every existing call site) or per-algebra newtype wrappers (`Cl01<F>`, `Cl30Even<F>`).
+
+**Stage C was postponed** rather than ship a partial trait stack or an unhonest `Commutative` impl. The lesson for future iso changes: verify the substrate algebraic-trait stack BEFORE writing spec scenarios that demand marker subtraits.
+
 ### D2a. Cross-crate iso deps are feature-gated and live in `extensions/`
 
 When the iso adds a new transitive dependency to the downstream crate (e.g. `deep_causality_sparse` gaining a tensor dep), the iso module ships under a Cargo feature flag and lives in `src/extensions/` alongside other cross-crate bridges (`ext_hkt.rs`). The feature is OFF by default so downstream consumers who don't need the iso don't pay the dep cost. The Bazel build enables the feature unconditionally since Bazel users curate the dep graph explicitly anyway.

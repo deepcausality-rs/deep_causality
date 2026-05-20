@@ -29,41 +29,40 @@
 - [x] 2.11 `cargo fmt -p deep_causality_sparse --check`: clean.
 - [x] 2.12 **Stage B gate:** stage-completion summary below; awaiting sign-off.
 
-## 3. Part C — `iso-num-multivector`: Complex <-> Cl(0,1) and Quaternion <-> Cl(3,0)-even
+## 3. Part C — `iso-num-multivector`: Complex <-> Cl(0,1) and Quaternion <-> Cl(3,0)-even — **POSTPONED**
 
-> **Gate:** Part B MUST be signed off and committed before any task here begins.
+> **Status:** POSTPONED during the implement-isomorphism change. Stage was rolled back without landing.
 
-### 3.A. Complex <-> Cl(0,1) multivector
+### Reason for postponement
 
-- [ ] 3.1 Create module `deep_causality_multivector/src/iso/` with `mod.rs`, `complex_iso.rs`.
-- [ ] 3.2 Declare `impl<F> From<Complex<F>> for CausalMultiVector<F>` in `complex_iso.rs`. Hard-code the Cl(0,1) metric. Embed: scalar = `re`, e₁ = `im`.
-- [ ] 3.3 Declare `pub struct ComplexCl01Iso;` and `impl<F> Iso<CausalMultiVector<F>, Complex<F>> for ComplexCl01Iso`. `to_target` reads the scalar and e₁ coefficients; panics on wrong metric. `to_source` delegates to the forward `From`.
-- [ ] 3.4 Declare marker impls: `impl<F> GroupIso<CausalMultiVector<F>, Complex<F>> for ComplexCl01Iso`, `impl<F> RingIso<...>`, `impl<F> FieldIso<...>`, `impl<F> AlgebraIso<..., F>`, `impl<F> DivisionAlgebraIso<..., F>`. Each empty body.
-- [ ] 3.5 Tests in `deep_causality_multivector/tests/iso/complex_iso_tests.rs`: direct call assertions, `assert_witness_iso_round_trip`, `assert_witness_group_iso_law`, `assert_witness_ring_iso_laws`, `assert_witness_field_iso_laws`, `assert_witness_algebra_iso_law`, `assert_witness_division_algebra_iso_law`. Plus a `#[should_panic]` for wrong-metric input on `to_target`.
+The Stage C spec assumed `CausalMultiVector<F>` already implemented the `deep_causality_num` algebraic-trait hierarchy (`Group`, `Ring`, `Field`, `Algebra<F>`, `DivisionAlgebra<F>`, plus the marker traits `Associative`, `Commutative`, `Distributive`, `AbelianGroup`). During implementation it became clear that:
 
-### 3.B. Quaternion <-> Cl(3,0)-even rotor
+1. None of these impls exist on `CausalMultiVector<F>` today. Adding the full stack honestly is ~300-500 LoC of new trait impls (Neg, MulAssign<Self>, Div<Self>/DivAssign<Self>, Zero, One, conjugate, infallible inverse, plus the markers).
+2. **`Field` cannot be honestly impl'd on `CausalMultiVector<F>` at all**, because `Field` requires `Commutative`, and the geometric product is non-commutative for most metrics (Cl(3,0), Cl(3,1), etc.) and commutative only for a few (Cl(0,1), Cl(1,0), Cl(0,0)). `Commutative` is a marker trait — either impl'd or not — and the metric is a **runtime** field on `CausalMultiVector<F>`, not a type parameter. We cannot make the impl conditional on runtime state.
 
-- [ ] 3.6 Create `deep_causality_multivector/src/iso/quaternion_iso.rs`.
-- [ ] 3.7 Declare `impl<F> From<Quaternion<F>> for CausalMultiVector<F>`. Hard-code Cl(3,0) metric. Lift `w` to the scalar, `x/y/z` to the e₂e₃ / e₃e₁ / e₁e₂ bivectors (east-coast convention; doc-comment the choice).
-- [ ] 3.8 Declare `impl<F> TryFrom<CausalMultiVector<F>> for Quaternion<F>`. Error variant for non-rotor inputs (any non-zero coefficient on vector or pseudoscalar basis blades). Returns `Err`, does NOT panic.
-- [ ] 3.9 Declare `pub struct QuaternionRotorIso;` and `impl<F> Iso<CausalMultiVector<F>, Quaternion<F>> for QuaternionRotorIso`. `to_target` extracts the rotor coefficients (panics on non-rotor input — caller must have filtered via `TryFrom`); `to_source` delegates to forward `From`.
-- [ ] 3.10 Declare marker impls: `GroupIso`, `RingIso`, `AlgebraIso<..., F>`, `DivisionAlgebraIso<..., F>`. Do NOT impl `FieldIso` (quaternions are non-commutative).
-- [ ] 3.11 Tests in `deep_causality_multivector/tests/iso/quaternion_iso_tests.rs`: forward `From` direct calls, `TryFrom` success path, `TryFrom` failure path on non-rotor input, `assert_witness_iso_round_trip` on rotor input, `assert_witness_ring_iso_laws`, `assert_witness_algebra_iso_law`, `assert_witness_division_algebra_iso_law`. Plus a `#[should_panic]` for non-rotor input on the Tier 2 `to_target`.
+Therefore the original spec requirement that `ComplexCl01Iso` satisfy `FieldIso<CausalMultiVector<F>, Complex<F>>` cannot be met without either:
 
-### 3.C. Wiring
+- **Phantom-typed metrics** (`CausalMultiVector<F, M: MetricMarker>`): breaking change to every existing call site. Out of scope.
+- **Per-algebra newtype wrappers** (`Cl01<F>`, `Cl30Even<F>`, etc.): cleaner mathematically but a separate design exercise. Out of scope for this change.
 
-- [ ] 3.12 Update `deep_causality_multivector/src/iso/mod.rs` to re-export `ComplexCl01Iso` and `QuaternionRotorIso`.
-- [ ] 3.13 Update `deep_causality_multivector/src/lib.rs` re-exports.
-- [ ] 3.14 Register `mod iso;` in `deep_causality_multivector/tests/mod.rs`. Add `rust_test_suite` entry to `deep_causality_multivector/tests/BUILD.bazel`.
-- [ ] 3.15 `cargo build -p deep_causality_multivector` and `cargo test -p deep_causality_multivector` pass. Verify no new clippy warnings.
-- [ ] 3.16 `bazel test //deep_causality_multivector/tests:iso` passes.
-- [ ] 3.17 `cargo build -p deep_causality_multivector --no-default-features` passes (or the crate's no_std flag).
-- [ ] 3.18 Run `make format && make fix` — clean.
-- [ ] 3.19 **Stage C gate:** stage-completion summary; sign-off; commit.
+### What was done before rollback
+
+Files were drafted at `deep_causality_multivector/src/extensions/iso_complex/mod.rs` and `iso_quaternion/mod.rs`. Compile failures uncovered the algebraic-trait gap. All files were removed; `src/extensions/mod.rs` and `src/lib.rs` reverted to the state before Stage C.
+
+### Follow-up
+
+The Cl(0,1)-Complex and Cl(3,0)-even-Quaternion isos remain real and useful. They should land in a future change that first introduces either (a) phantom-typed metrics on `CausalMultiVector`, or (b) per-algebra newtype wrappers. The decision between (a) and (b) belongs to that future change.
+
+Per-task checklist preserved for the future change reference:
+
+- [ ] 3.1 (postponed) ~~Create module~~ — pending newtype/phantom-metric prerequisite.
+- [ ] 3.2 - 3.19 (postponed) ~~Stage C tasks 3.2-3.19~~ — see future change.
+
+The `iso-num-multivector` capability spec file has been removed from this change. It belongs to the future change that lands the prerequisite work.
 
 ## 4. Part D — `iso-multifield-tensor`: `CausalMultiField<T>` <-> tuple
 
-> **Gate:** Part C MUST be signed off and committed before any task here begins.
+> **Gate:** Part B MUST be signed off and committed before any task here begins. (Part C was POSTPONED; this stage proceeds independently.)
 
 - [ ] 4.1 Add `multifield_iso.rs` under `deep_causality_multivector/src/iso/`.
 - [ ] 4.2 Declare `impl<T> From<CausalMultiField<T>> for (CausalTensor<T>, Metric, [T; 3], [usize; 3])`. Unpack the four fields directly (move semantics; no copying).
@@ -117,10 +116,10 @@ Per AGENTS.md golden rule §1 (NEVER commit) and the protocol established in `20
 
 ## Sequencing rationale
 
-Order chosen by ascending difficulty and dependency:
+Order chosen by ascending difficulty and dependency. **Part C was POSTPONED** mid-change after discovering an unmet prerequisite (no algebraic-trait impls on `CausalMultiVector`, and `Field` cannot be honestly impl'd without phantom-typed metrics or per-algebra newtype wrappers). The change ships Parts A, B, D, E.
 
-1. **Part A** (effect/process consistency test). Smallest diff; test-only; warms up the test infrastructure in `deep_causality_core/tests/iso/`.
-2. **Part B** (tensor/sparse). Canonical mixed-tier template. Worked example in `IsoFollowUps.md`.
-3. **Part C** (num/multivector). First real exercise of full marker-subtrait coverage (`FieldIso`, `DivisionAlgebraIso`). Two pairs; Cl(0,1) is the simpler warm-up before the Cl(3,0)-rotor.
-4. **Part D** (multifield/tensor). Trivial pack/unpack; uses `StandardIso`. Could land earlier but kept after C so the multivector crate's iso surface is established first.
+1. **Part A** (effect/process consistency test). Smallest diff; test-only; warms up the test infrastructure in `deep_causality_core/tests/iso/`. **DONE.**
+2. **Part B** (tensor/sparse). Canonical mixed-tier template. Establishes the feature-gated extension pattern (D2a). Worked example in `IsoFollowUps.md`. **DONE.**
+3. ~~**Part C** (num/multivector).~~ **POSTPONED.** See Part C section above for the reason. Deferred to a future change that lands the algebraic-trait prerequisite (phantom metrics or per-algebra newtypes).
+4. **Part D** (multifield/tensor). Trivial pack/unpack; uses `StandardIso`. No algebraic markers needed; proceeds independently of the postponed Stage C.
 5. **Part E** (topology). The Poincaré dual is the only sub-task with non-trivial body algorithm; landed last so all the template patterns are established.
