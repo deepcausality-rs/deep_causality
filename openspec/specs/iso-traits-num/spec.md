@@ -1,5 +1,8 @@
-## ADDED Requirements
+# iso-traits-num Specification
 
+## Purpose
+TBD - created by archiving change 2026-05-20-add-iso-traits. Update Purpose after archive.
+## Requirements
 ### Requirement: Tier 1 marker subtraits expose structure-preserving isomorphism over `From`/`Into`
 
 The crate `deep_causality_num` SHALL expose a family of marker subtraits in a new module `src/iso/`: `GroupIso<T>`, `RingIso<T>`, `FieldIso<T>`, `AlgebraIso<T, R>`, and `DivisionAlgebraIso<T, R>`. Each subtrait SHALL have an empty body. The subtraits SHALL bound on bidirectional `From` in their `where`-clauses (i.e. both `Self: From<T>` and `T: From<Self>`) together with the corresponding algebraic-structure trait on both `Self` and `T`. Implementing a subtrait is a marker promise that the bidirectional `From` impls form the corresponding structure-preserving homomorphism. The promise is verified by property tests; the type system does not enforce it.
@@ -79,7 +82,7 @@ The crate `deep_causality_num` SHALL expose marker subtraits in `src/iso/witness
 
 ### Requirement: `StandardIso<S, T>` generic witness with blanket impls auto-derives marker subtraits
 
-The crate `deep_causality_num` SHALL expose a generic zero-sized witness type `StandardIso<S, T>(core::marker::PhantomData<(S, T)>)` in `src/iso/witness/standard.rs`. `StandardIso<S, T>` SHALL implement `Iso<S, T>` whenever bidirectional `From` is available. `StandardIso<S, T>` SHALL additionally implement every applicable Tier 2 marker subtrait (`GroupIso<S, T>`, `RingIso<S, T>`, `FieldIso<S, T>`, `AlgebraIso<S, T, R>`, `DivisionAlgebraIso<S, T, R>`) via blanket impls that fire when `S` and `T` satisfy the corresponding algebraic-structure bounds plus bidirectional `From`. No manual marker impls are required for the common case.
+The crate `deep_causality_num` SHALL expose a generic zero-sized witness type `StandardIso<S, T>` in `src/iso/witness/standard.rs`. The type SHALL be a named-field struct with two separate `PhantomData<fn() -> X>` fields (one for `S`, one for `T`) rather than a single `PhantomData<(S, T)>` tuple. The split-field form avoids `clippy::type_complexity` on the tuple shape and avoids spurious auto-trait bounds on `S` and `T`. `StandardIso<S, T>` SHALL implement `Iso<S, T>` whenever bidirectional `From` is available. `StandardIso<S, T>` SHALL additionally implement every applicable Tier 2 marker subtrait (`GroupIso<S, T>`, `RingIso<S, T>`, `FieldIso<S, T>`, `AlgebraIso<S, T, R>`, `DivisionAlgebraIso<S, T, R>`) via blanket impls that fire when `S` and `T` satisfy the corresponding algebraic-structure bounds plus bidirectional `From`. No manual marker impls are required for the common case.
 
 #### Scenario: StandardIso implements Iso when bidirectional From exists
 
@@ -126,7 +129,7 @@ The Tier 1 and Tier 2 marker subtraits share short names (`GroupIso`, `RingIso`,
 
 ### Requirement: Iso trait surface compiles under `no_std`
 
-The Tier 1 marker subtraits and the Tier 2 `Iso<S, T>`, marker subtraits, and `StandardIso<S, T>` SHALL compile under `cargo build -p deep_causality_num --no-default-features --features libm_math`. The trait declarations and `StandardIso<S, T>` SHALL use `core::marker::PhantomData` (not `std::marker::PhantomData`) where applicable. Property-test helpers in `test_support.rs` modules MAY require `std` and SHALL be gated behind `#[cfg(test)]`.
+The Tier 1 marker subtraits and the Tier 2 `Iso<S, T>`, marker subtraits, and `StandardIso<S, T>` SHALL compile under `cargo build -p deep_causality_num --no-default-features --features libm_math`. The trait declarations and `StandardIso<S, T>` SHALL use `core::marker::PhantomData` (not `std::marker::PhantomData`) where applicable. Property-test helpers in `test_support.rs` modules SHALL be exposed as `pub mod` (NOT `#[cfg(test)]`-gated) because Bazel's per-crate build cannot reach `tests/` from `src/`. The helpers themselves use only `core::fmt::Debug` and `assert_eq!` and remain `no_std`-compatible.
 
 #### Scenario: Tier 1 trait declarations build under no_std
 
@@ -142,23 +145,27 @@ The Tier 1 marker subtraits and the Tier 2 `Iso<S, T>`, marker subtraits, and `S
 
 ### Requirement: Property-test infrastructure exists for every iso marker
 
-Property-test helpers SHALL exist in `deep_causality_num/src/iso/test_support.rs` (Tier 1) and `deep_causality_num/src/iso/witness/test_support.rs` (Tier 2). The helpers SHALL be `#[cfg(test)]`-gated and SHALL be generic over the impl under test. Each marker subtrait SHALL have a corresponding `assert_*_law` helper that exercises the appropriate round-trip or homomorphism property using `assert_eq!` with descriptive failure messages. The helpers MAY assume that callers wrap them in `proptest!` blocks for randomized-input testing; no in-helper `proptest!` invocation is required.
+Property-test helpers SHALL exist in `deep_causality_num/src/iso/test_support.rs` (Tier 1) and `deep_causality_num/src/iso/witness/test_support.rs` (Tier 2). The helpers SHALL be exposed as `pub mod` (reachable from integration tests under `deep_causality_num/tests/`). The helpers SHALL be generic over the impl under test. Each marker subtrait SHALL have a corresponding `assert_*_law` helper that exercises the appropriate round-trip or homomorphism property using `assert_eq!` with descriptive failure messages. Helpers exercise only their own marker's contribution to the homomorphism chain; consumers verifying a deeper marker (e.g. `FieldIso`) compose with the parent helpers.
 
-#### Scenario: Tier 1 round-trip helper exists
+#### Scenario: Tier 1 round-trip helper takes independent S and T inputs
 
 - **WHEN** a reviewer inspects `deep_causality_num/src/iso/test_support.rs`
-- **THEN** the module SHALL export a function `assert_iso_from_round_trip<S, T>(s: S)` where `S: From<T> + Clone + PartialEq + std::fmt::Debug` and `T: From<S> + Clone + PartialEq + std::fmt::Debug`
-- **AND** the function asserts `S::from(T::from(s.clone())) == s` and the symmetric case
+- **THEN** the module SHALL export a function `assert_iso_from_round_trip<S, T>(s: S, t: T)` where `S: From<T> + Clone + PartialEq + core::fmt::Debug` and `T: From<S> + Clone + PartialEq + core::fmt::Debug`
+- **AND** the function asserts `S::from(T::from(s.clone())) == s` and `T::from(S::from(t.clone())) == t`
+- **AND** the `(s, t)` pair is independent (not derived from each other) so that non-bijective conversions where one direction is many-to-one cannot pass undetected
 - **AND** the failure message identifies which round-trip direction failed
 
-#### Scenario: Tier 2 witness round-trip helper exists
+#### Scenario: Tier 2 witness round-trip helper takes independent S and T inputs
 
 - **WHEN** a reviewer inspects `deep_causality_num/src/iso/witness/test_support.rs`
-- **THEN** the module SHALL export a function `assert_witness_iso_round_trip<W, S, T>(s: S)` where `W: Iso<S, T>`, `S: Clone + PartialEq + std::fmt::Debug`, `T: Clone + PartialEq + std::fmt::Debug`
-- **AND** the function asserts `W::to_source(W::to_target(s.clone())) == s` and the symmetric case
+- **THEN** the module SHALL export a function `assert_witness_iso_round_trip<W, S, T>(s: S, t: T)` where `W: Iso<S, T>`, `S: Clone + PartialEq + core::fmt::Debug`, `T: Clone + PartialEq + core::fmt::Debug`
+- **AND** the function asserts `W::to_source(W::to_target(s.clone())) == s` and `W::to_target(W::to_source(t.clone())) == t`
+- **AND** the same independent-inputs rationale as the Tier 1 helper applies
 
 #### Scenario: Homomorphism helpers exist for each algebraic level
 
 - **WHEN** a reviewer inspects the test_support modules
 - **THEN** each algebraic level (Group, Ring, Field, Algebra, DivisionAlgebra) SHALL have a corresponding `assert_*_law` helper for both Tier 1 and Tier 2
-- **AND** each helper asserts the corresponding homomorphism law (e.g. `T::from(a · b) == T::from(a) · T::from(b)` for `GroupIso`) with descriptive failure messages
+- **AND** each helper asserts ONLY the homomorphism contribution of the marker it names (e.g. `assert_field_iso_from_laws` checks multiplicative-inverse preservation only; ring-level laws are inherited and must be exercised via the ring helper)
+- **AND** failure messages describe the specific law that failed
+

@@ -47,6 +47,7 @@ mod alias;
 pub(crate) mod effect_system;
 pub(crate) mod extensions;
 pub(crate) mod hkt;
+pub mod iso;
 pub(crate) mod traits;
 pub mod utils_tests;
 // ============================================================================
@@ -60,6 +61,9 @@ pub use alias::alias_foldable::AliasFoldable;
 pub use alias::alias_functor::AliasFunctor;
 pub use alias::alias_monad::AliasMonad;
 pub use alias::alias_profunctor::AliasProfunctor;
+
+// Tier 3 Iso
+pub use crate::iso::{NaturalIso, NaturalIso2, NaturalIso3, NaturalIso4, NaturalIso5};
 
 // HKT
 pub use crate::hkt::{HKT, HKT2, HKT3, HKT4, HKT5, Satisfies};

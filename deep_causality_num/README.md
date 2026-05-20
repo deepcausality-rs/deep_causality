@@ -128,6 +128,21 @@ on most hardware since it uses native f64 FMA operations.
 * One / OneConst
 * Zero / Zero Const
 
+### Isomorphism Traits
+
+A two-tier vocabulary for declaring **isomorphisms** between algebraic structures. The result is a type-checked, structure-preserving bijection that lets generic code accept either representation transparently.
+
+| Tier | Module | Foundation | Use when |
+|---|---|---|---|
+| **Tier 1** | `iso::*` | Bidirectional `From` + empty marker subtraits | Both types live in (or are reachable from) your crate |
+| **Tier 2** | `iso::witness::*` | Witness-typed `Iso<S, T>` with `to_target` / `to_source` | Cross-crate isos blocked by the orphan rule |
+
+Both tiers expose the same algebraic hierarchy (`GroupIso` -> `RingIso` -> `FieldIso`; `AlgebraIso` -> `DivisionAlgebraIso`) and a matching suite of property-test helpers under `iso::test_support` and `iso::witness::test_support`. Tier 2 also provides `StandardIso<S, T>`: a zero-sized generic witness with blanket impls that automatically satisfy every marker subtrait when bidirectional `From` exists.
+
+A companion **Tier 3** (`NaturalIso<F, G>` through `NaturalIso5`) lifts the same vocabulary to type constructors (HKTs); it lives in [`deep_causality_haft`](../deep_causality_haft/README.md#natural-isomorphisms-tier-3-iso-traits).
+
+See [Isomorphism Reference](README_ISOMORPHISM.md) for the full three-tier design, trait-by-trait usage, helper signatures, and worked examples.
+
 ## non-std support
 
 The `deep_causality_num` crate provides support for `no-std` environments. This is particularly useful for embedded
