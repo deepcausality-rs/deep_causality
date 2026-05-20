@@ -3,7 +3,4 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-mod hkt_multifield;
-mod hkt_multivector;
-mod iso_multifield;
-mod scalar_multivector;
+mod iso_multifield_tests;

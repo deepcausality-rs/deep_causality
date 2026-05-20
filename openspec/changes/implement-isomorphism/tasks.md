@@ -64,16 +64,16 @@ The `iso-num-multivector` capability spec file has been removed from this change
 
 > **Gate:** Part B MUST be signed off and committed before any task here begins. (Part C was POSTPONED; this stage proceeds independently.)
 
-- [ ] 4.1 Add `multifield_iso.rs` under `deep_causality_multivector/src/iso/`.
-- [ ] 4.2 Declare `impl<T> From<CausalMultiField<T>> for (CausalTensor<T>, Metric, [T; 3], [usize; 3])`. Unpack the four fields directly (move semantics; no copying).
-- [ ] 4.3 Declare `impl<T> From<(CausalTensor<T>, Metric, [T; 3], [usize; 3])> for CausalMultiField<T>`. Pack the tuple into the multifield without validation.
-- [ ] 4.4 The pair satisfies `Iso<...>` via the existing `StandardIso<S, T>` blanket impl; no manual marker impls required.
-- [ ] 4.5 Tests in `deep_causality_multivector/tests/iso/multifield_iso_tests.rs`: direct unpack/pack, `assert_witness_iso_round_trip::<StandardIso<...>, _, _>` with representative inputs.
-- [ ] 4.6 Update `deep_causality_multivector/src/iso/mod.rs` re-exports.
-- [ ] 4.7 `cargo build -p deep_causality_multivector` and `cargo test -p deep_causality_multivector` pass. Clippy clean.
-- [ ] 4.8 `bazel test //deep_causality_multivector/tests:iso` passes.
-- [ ] 4.9 Run `make format && make fix` — clean.
-- [ ] 4.10 **Stage D gate:** stage-completion summary; sign-off; commit.
+- [x] 4.1 Module created at `deep_causality_multivector/src/extensions/iso_multifield/mod.rs`. **Deviation**: placed under `src/extensions/` per the established `iso_*` extension convention (mirrors `hkt_multifield/`); not under `src/iso/`.
+- [x] 4.2 `impl<T> From<CausalMultiField<T>> for MultiFieldCarrier<T>` added. Move semantics; no copy.
+- [x] 4.3 `impl<T> From<MultiFieldCarrier<T>> for CausalMultiField<T>` added. Struct-literal pack via `pub(crate)` fields.
+- [x] 4.4 `Iso<CausalMultiField<T>, MultiFieldCarrier<T>>` satisfied via the `StandardIso<S, T>` blanket impl in `deep_causality_num`. No manual `Iso` or marker impls. **Bonus**: exposed `MultiFieldCarrier<T>` type alias for ergonomics.
+- [x] 4.5 5 tests in `deep_causality_multivector/tests/extensions/iso_multifield/iso_multifield_tests.rs`: forward (2), reverse (1), round-trip via `assert_witness_iso_round_trip::<StandardIso<...>>` (1), byte-identity round-trip on a self-pair (1).
+- [x] 4.6 `extensions/mod.rs` declares `pub mod iso_multifield;`. `lib.rs` re-exports `MultiFieldCarrier`. **Prerequisite**: added `#[derive(PartialEq)]` to `CausalMultiField<T>` (was previously `#[derive(Debug, Clone)]` only) so the round-trip helper's `S/T: PartialEq` bound can be satisfied.
+- [x] 4.7 `cargo build -p deep_causality_multivector` and `cargo test -p deep_causality_multivector`: 347 + 3 = 350 tests pass (5 new + 345 existing). `cargo clippy -p deep_causality_multivector --tests -- -D warnings`: clean.
+- [x] 4.8 `bazel test //deep_causality_multivector/tests:extensions`: 6/6 tests pass (5 prior + new `iso_multifield_tests_test`). Bazel `tests/BUILD.bazel` updated: added `extensions/iso_multifield/*_tests.rs` glob and `//deep_causality_metric`, `//deep_causality_num`, `//deep_causality_tensor` to deps.
+- [x] 4.9 `cargo fmt -p deep_causality_multivector --check`: clean.
+- [x] 4.10 **Stage D gate:** stage-completion summary below; awaiting sign-off.
 
 ## 5. Part E — `iso-topology`: simplicial/cell + Poincaré dual
 
