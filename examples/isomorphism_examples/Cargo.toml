@@ -1,0 +1,33 @@
+[package]
+name = "isomorphism_examples"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "no_lib.rs"
+
+[dependencies]
+deep_causality_core = { path = "../../deep_causality_core" }
+deep_causality_haft = { path = "../../deep_causality_haft" }
+deep_causality_metric = { path = "../../deep_causality_metric" }
+deep_causality_multivector = { path = "../../deep_causality_multivector" }
+deep_causality_num = { path = "../../deep_causality_num" }
+deep_causality_tensor = { path = "../../deep_causality_tensor" }
+# Sparse with the `tensor-iso` feature enabled so the tensor/sparse iso
+# (`CsrMatrix::try_from(CausalTensor)` and `to_dense()`) is in scope.
+deep_causality_sparse = { path = "../../deep_causality_sparse", features = ["tensor-iso"] }
+
+[[example]]
+name = "tensor_sparse_memory_budget"
+path = "tensor_sparse_memory_budget/main.rs"
+
+[[example]]
+name = "effect_process_witness_duality"
+path = "effect_process_witness_duality/main.rs"
+
+[[example]]
+name = "multifield_data_pipeline"
+path = "multifield_data_pipeline/main.rs"
