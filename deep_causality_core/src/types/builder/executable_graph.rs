@@ -8,6 +8,8 @@ use crate::ExecutableNode;
 use crate::errors::graph_error::GraphError;
 #[cfg(feature = "alloc")]
 use alloc::collections::VecDeque;
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+use alloc::vec;
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 

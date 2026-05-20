@@ -5,4 +5,5 @@
 
 mod hkt_multifield;
 mod hkt_multivector;
+mod iso_multifield;
 mod scalar_multivector;

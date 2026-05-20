@@ -10,4 +10,6 @@ mod types;
 // Sparse type
 pub use crate::errors::SparseMatrixError;
 pub use crate::extensions::ext_hkt::CsrMatrixWitness;
+#[cfg(feature = "tensor-iso")]
+pub use crate::extensions::ext_iso::CsrFromTensorError;
 pub use crate::types::sparse_matrix::CsrMatrix;

@@ -20,6 +20,7 @@ pub use crate::errors::causal_multivector_error::CausalMultiVectorError;
 // Extensions
 pub use crate::extensions::hkt_multifield::CausalMultiFieldWitness;
 pub use crate::extensions::hkt_multivector::CausalMultiVectorWitness;
+pub use crate::extensions::iso_multifield::MultiFieldCarrier;
 
 // Traits
 pub use crate::traits::l2_norm::MultiVectorL2Norm;

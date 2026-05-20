@@ -20,6 +20,7 @@ rust_test_suite(
     srcs = glob([
         "extensions/hkt_multifield/*_tests.rs",
         "extensions/hkt_multivector/*_tests.rs",
+        "extensions/iso_multifield/*_tests.rs",
         "extensions/scalar_multivector/*_tests.rs",
     ]),
     tags = [
@@ -31,6 +32,9 @@ rust_test_suite(
         "//deep_causality_multivector",
         # Deps
         "//deep_causality_haft",
+        "//deep_causality_metric",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
     ],
 )
 

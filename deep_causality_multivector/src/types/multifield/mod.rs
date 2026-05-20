@@ -53,7 +53,7 @@ use deep_causality_tensor::CausalTensor;
 /// # Memory Layout
 ///
 /// Shape: `[Nx, Ny, Nz, Matrix_Dim, Matrix_Dim]`
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CausalMultiField<T> {
     /// Storage: [Nx, Ny, Nz, Matrix_Dim, Matrix_Dim]
     /// Stored entirely in Matrix Isomorphism representation
