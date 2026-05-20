@@ -6,30 +6,34 @@
 //! # Tensor / Sparse Iso Showcase
 //!
 //! A heat-flow adjacency matrix arrives as a dense `CausalTensor<f64>`. Most
-//! entries are zero (the graph is locally connected). We:
+//! entries are zero (the graph is locally connected). The pipeline:
 //!
 //! 1. Sparsify the dense matrix to save memory for the next stage.
-//! 2. Compute row sums on the sparse representation (faster when sparse).
-//! 3. Materialise a thresholded version back to dense for output to a
-//!    downstream pipeline that expects dense tensors.
+//! 2. Compute row sums on the sparse representation (fast over `values()`).
+//! 3. Materialise the result back to dense for output to a downstream
+//!    pipeline that expects dense tensors.
 //!
-//! The contrast:
+//! The contrast is structural. Both `process_manual` and `process_isomorphism`
+//! run the same pipeline and return the same dense tensor; only the
+//! conversion path differs.
 //!
-//! - **BEFORE**: hand-rolled conversion functions in both directions. The
-//!   reverse direction must allocate the dense buffer, walk the triplets,
-//!   and place each value at the right linear index. Roughly 20 LoC of
-//!   conversion code that has to be re-derived (or copy-pasted) every
-//!   time a sparse output needs to feed a dense consumer.
-//! - **AFTER**: `CsrMatrix::from(tensor)` for the forward direction;
-//!   `sparse.to_dense()` for the reverse. Two method calls.
+//! - `process_manual` calls hand-rolled `manual_tensor_to_csr` and
+//!   `manual_csr_to_tensor` helpers. Their bodies sit at the bottom of
+//!   the file; count them.
+//! - `process_isomorphism` uses `CsrMatrix::try_from(tensor)?` for the forward
+//!   direction and `sparse.to_dense()` for the reverse. No helpers
+//!   needed.
 //!
 //! ## Iso surface used
 //!
-//! - `impl<F> From<CausalTensor<F>> for CsrMatrix<F>` (Tier 1 forward;
-//!   panics on rank ≠ 2).
+//! - `impl<F> TryFrom<CausalTensor<F>> for CsrMatrix<F>` (Tier 1 forward;
+//!   returns `Err(CsrFromTensorError { rank })` on rank ≠ 2).
 //! - `impl<F> Iso<CsrMatrix<F>, CausalTensor<F>> for CsrMatrix<F>` (Tier 2
 //!   reverse, on `CsrMatrix<F>` as `Self`).
 //! - `CsrMatrix::to_dense()` inherent alias for the Tier 2 reverse.
+//!
+//! Both isos are behind the `tensor-iso` Cargo feature on
+//! `deep_causality_sparse`, which this crate enables.
 
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
@@ -39,90 +43,90 @@ type F = f64;
 fn main() {
     println!("=== Tensor / Sparse Iso Showcase ===\n");
 
-    // ---------------------------------------------------------------------
-    // Build a 6x6 heat-flow adjacency matrix. Locally-connected graph:
-    // each node has edges to its two neighbours plus self-loops.
-    // ---------------------------------------------------------------------
+    #[rustfmt::skip]
     let dense_data: Vec<F> = vec![
-        2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0,
+        2.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+        1.0, 2.0, 1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 2.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 2.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0, 2.0, 1.0,
+        0.0, 0.0, 0.0, 0.0, 1.0, 2.0,
     ];
     let dense = CausalTensor::new(dense_data, vec![6, 6]).unwrap();
 
-    println!("Dense input ({}x{}):", 6, 6);
+    println!("Dense input (6x6):");
     print_dense(&dense);
 
-    // ---------------------------------------------------------------------
-    // BEFORE: hand-rolled forward conversion
-    // ---------------------------------------------------------------------
-    println!("\n--- BEFORE: manual tensor -> CsrMatrix ---");
-    let sparse_before = manual_tensor_to_csr(&dense);
-    println!(
-        "  manual conversion: {} non-zero entries stored",
-        sparse_before.nnz()
-    );
+    println!("\n--- BEFORE: hand-rolled conversion helpers ---");
+    let (dense_back_before, row_sums_before) = process_manual(dense.clone());
+    println!("  row sums: {:?}", row_sums_before);
+    println!("  output shape: {:?}", dense_back_before.shape());
 
-    // Sparse-only operation: row sums
-    let row_sums_before = manual_row_sums(&sparse_before);
-    println!("  row sums (manual): {:?}", row_sums_before);
-
-    // BEFORE: hand-rolled reverse conversion
-    let dense_back_before = manual_csr_to_tensor(&sparse_before);
-    println!(
-        "  manual back-conversion produced shape {:?}",
-        dense_back_before.shape()
-    );
-
-    // ---------------------------------------------------------------------
-    // AFTER: iso-based conversion
-    // ---------------------------------------------------------------------
     println!("\n--- AFTER: iso-based conversion ---");
+    let (dense_back_after, row_sums_after) = process_isomorphism(dense);
+    println!("  row sums: {:?}", row_sums_after);
+    println!("  output shape: {:?}", dense_back_after.shape());
 
-    // Forward: one expression.
-    let sparse_after: CsrMatrix<F> = dense.clone().into();
-    println!(
-        "  iso conversion: {} non-zero entries stored",
-        sparse_after.nnz()
-    );
-
-    // Sparse-only operation: row sums. (The same algorithm; just shown for
-    // parallelism with the BEFORE path.)
-    let row_sums_after = manual_row_sums(&sparse_after);
-    println!("  row sums (iso):    {:?}", row_sums_after);
-
-    // Reverse: one method call.
-    let dense_back_after = sparse_after.to_dense();
-    println!(
-        "  iso back-conversion produced shape {:?}",
-        dense_back_after.shape()
-    );
-
-    // ---------------------------------------------------------------------
-    // Equivalence check
-    // ---------------------------------------------------------------------
     let drift: F = dense_back_before
         .as_slice()
         .iter()
         .zip(dense_back_after.as_slice().iter())
         .map(|(a, b)| (a - b).abs())
         .sum();
-
-    println!(
-        "\nL1 drift between BEFORE and AFTER round-trips: {:e}",
-        drift
-    );
+    println!("\nL1 drift between BEFORE and AFTER outputs: {:e}", drift);
     assert!(drift < 1e-12, "iso path diverged from manual path");
-    println!("Both paths round-trip identically.\n");
+    assert_eq!(row_sums_before, row_sums_after);
+    println!("Both paths produce the same result.\n");
 
-    // ---------------------------------------------------------------------
-    // LoC summary
-    // ---------------------------------------------------------------------
-    println!("Conversion LoC, BEFORE: ~22 lines (manual_tensor_to_csr + manual_csr_to_tensor)");
-    println!("Conversion LoC, AFTER:  2 expressions (`.into()` and `.to_dense()`)");
+    println!("--- LoC accounting ---");
+    println!("BEFORE: process_manual       =  3 lines");
+    println!("        manual_tensor_to_csr = 14 lines (helper below)");
+    println!("        manual_csr_to_tensor = 11 lines (helper below)");
+    println!("        ----------------------------------");
+    println!("        total                = 28 lines");
+    println!();
+    println!("AFTER:  process_isomorphism  =  3 lines");
+    println!("        ----------------------------------");
+    println!("        total                =  3 lines");
 }
 
 // =============================================================================
-// BEFORE: hand-rolled conversions
+// AFTER: 3 LoC of pipeline body.
+// =============================================================================
+
+fn process_isomorphism(dense: CausalTensor<F>) -> (CausalTensor<F>, Vec<F>) {
+    let sparse: CsrMatrix<F> = CsrMatrix::try_from(dense).unwrap();
+    let row_sums = row_sums(&sparse);
+    (sparse.to_dense(), row_sums)
+}
+
+// =============================================================================
+// BEFORE: 3 LoC of pipeline body + ~25 LoC of manual conversion helpers
+//         (see `manual_tensor_to_csr` / `manual_csr_to_tensor` below).
+// =============================================================================
+
+fn process_manual(dense: CausalTensor<F>) -> (CausalTensor<F>, Vec<F>) {
+    let sparse = manual_tensor_to_csr(&dense);
+    let row_sums = row_sums(&sparse);
+    (manual_csr_to_tensor(&sparse), row_sums)
+}
+
+// =============================================================================
+// `row_sums` is shared between BEFORE and AFTER.
+// =============================================================================
+
+fn row_sums(sparse: &CsrMatrix<F>) -> Vec<F> {
+    let (rows, _) = sparse.shape();
+    let row_ptr = sparse.row_indices();
+    let vals = sparse.values();
+    (0..rows)
+        .map(|r| vals[row_ptr[r]..row_ptr[r + 1]].iter().sum())
+        .collect()
+}
+
+// =============================================================================
+// BEFORE-only helpers: hand-rolled conversions using whatever CsrMatrix
+// exposes publicly without the iso.
 // =============================================================================
 
 fn manual_tensor_to_csr(tensor: &CausalTensor<F>) -> CsrMatrix<F> {
@@ -131,45 +135,34 @@ fn manual_tensor_to_csr(tensor: &CausalTensor<F>) -> CsrMatrix<F> {
     let rows = shape[0];
     let cols = shape[1];
     let data = tensor.as_slice();
-
-    let mut row_indices = Vec::new();
-    let mut col_indices = Vec::new();
-    let mut values = Vec::new();
+    let mut triplets: Vec<(usize, usize, F)> = Vec::new();
     for r in 0..rows {
         for c in 0..cols {
             let v = data[r * cols + c];
             if v != 0.0 {
-                row_indices.push(r);
-                col_indices.push(c);
-                values.push(v);
+                triplets.push((r, c, v));
             }
         }
     }
-    // The exact constructor name depends on the sparse-matrix API. Using
-    // a representative form here.
-    CsrMatrix::from_parts(row_indices, col_indices, values, (rows, cols))
+    CsrMatrix::from_triplets(rows, cols, &triplets).unwrap()
 }
 
 fn manual_csr_to_tensor(sparse: &CsrMatrix<F>) -> CausalTensor<F> {
     let (rows, cols) = sparse.shape();
-    let mut data = vec![0.0; rows * cols];
-    for (r, c, v) in sparse.iter_triplets() {
-        data[r * cols + c] = v;
+    let row_ptr = sparse.row_indices();
+    let col_idx = sparse.col_indices();
+    let vals = sparse.values();
+    let mut data = vec![0.0_f64; rows * cols];
+    for r in 0..rows {
+        for k in row_ptr[r]..row_ptr[r + 1] {
+            data[r * cols + col_idx[k]] = vals[k];
+        }
     }
     CausalTensor::new(data, vec![rows, cols]).unwrap()
 }
 
-fn manual_row_sums(sparse: &CsrMatrix<F>) -> Vec<F> {
-    let (rows, _) = sparse.shape();
-    let mut sums = vec![0.0; rows];
-    for (r, _, v) in sparse.iter_triplets() {
-        sums[r] += v;
-    }
-    sums
-}
-
 // =============================================================================
-// Pretty-printing
+// Pretty-printing helper used by `main`.
 // =============================================================================
 
 fn print_dense(t: &CausalTensor<F>) {

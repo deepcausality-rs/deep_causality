@@ -12,27 +12,22 @@ path = "no_lib.rs"
 [dependencies]
 deep_causality_core = { path = "../../deep_causality_core" }
 deep_causality_haft = { path = "../../deep_causality_haft" }
-deep_causality_num = { path = "../../deep_causality_num" }
+deep_causality_metric = { path = "../../deep_causality_metric" }
 deep_causality_multivector = { path = "../../deep_causality_multivector" }
+deep_causality_num = { path = "../../deep_causality_num" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
-deep_causality_sparse = { path = "../../deep_causality_sparse" }
-
-[[example]]
-name = "quaternion_rotor_pipeline"
-path = "quaternion_rotor_pipeline/main.rs"
+# Sparse with the `tensor-iso` feature enabled so the tensor/sparse iso
+# (`CsrMatrix::try_from(CausalTensor)` and `to_dense()`) is in scope.
+deep_causality_sparse = { path = "../../deep_causality_sparse", features = ["tensor-iso"] }
 
 [[example]]
 name = "tensor_sparse_memory_budget"
 path = "tensor_sparse_memory_budget/main.rs"
 
 [[example]]
-name = "complex_clifford_equivalence"
-path = "complex_clifford_equivalence/main.rs"
-
-[[example]]
 name = "effect_process_witness_duality"
 path = "effect_process_witness_duality/main.rs"
 
 [[example]]
-name = "either_input_generic_api"
-path = "either_input_generic_api/main.rs"
+name = "multifield_data_pipeline"
+path = "multifield_data_pipeline/main.rs"

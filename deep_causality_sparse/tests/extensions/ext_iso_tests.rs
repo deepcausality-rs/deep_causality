@@ -7,18 +7,18 @@
 
 use deep_causality_num::iso::witness::Iso;
 use deep_causality_num::iso::witness::test_support::assert_witness_iso_round_trip;
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_sparse::{CsrFromTensorError, CsrMatrix};
 use deep_causality_tensor::CausalTensor;
 
 // =============================================================================
-// Forward: CausalTensor (rank 2) -> CsrMatrix via `From`
+// Forward: CausalTensor (rank 2) -> CsrMatrix via `TryFrom`
 // =============================================================================
 
 #[test]
-fn forward_from_dense_to_sparse_drops_zeros() {
+fn forward_try_from_dense_to_sparse_drops_zeros() {
     let dense = CausalTensor::new(vec![1.0_f64, 0.0, 0.0, 4.0, 0.0, 6.0], vec![2, 3]).unwrap();
 
-    let sparse: CsrMatrix<f64> = dense.into();
+    let sparse: CsrMatrix<f64> = CsrMatrix::try_from(dense).unwrap();
 
     assert_eq!(sparse.shape(), (2, 3));
     assert_eq!(sparse.values(), &vec![1.0, 4.0, 6.0]);
@@ -26,25 +26,25 @@ fn forward_from_dense_to_sparse_drops_zeros() {
 }
 
 #[test]
-fn forward_from_all_zeros_yields_empty_sparse() {
+fn forward_try_from_all_zeros_yields_empty_sparse() {
     let dense = CausalTensor::new(vec![0.0_f64; 6], vec![2, 3]).unwrap();
-    let sparse: CsrMatrix<f64> = dense.into();
+    let sparse: CsrMatrix<f64> = CsrMatrix::try_from(dense).unwrap();
     assert_eq!(sparse.shape(), (2, 3));
     assert_eq!(sparse.values().len(), 0);
 }
 
 #[test]
-#[should_panic(expected = "CausalTensor -> CsrMatrix requires rank 2")]
-fn forward_panics_on_rank_one() {
+fn forward_try_from_returns_err_on_rank_one() {
     let dense = CausalTensor::new(vec![1.0_f64, 2.0, 3.0], vec![3]).unwrap();
-    let _: CsrMatrix<f64> = dense.into();
+    let err = CsrMatrix::try_from(dense).unwrap_err();
+    assert_eq!(err, CsrFromTensorError { rank: 1 });
 }
 
 #[test]
-#[should_panic(expected = "CausalTensor -> CsrMatrix requires rank 2")]
-fn forward_panics_on_rank_three() {
+fn forward_try_from_returns_err_on_rank_three() {
     let dense = CausalTensor::new(vec![1.0_f64; 8], vec![2, 2, 2]).unwrap();
-    let _: CsrMatrix<f64> = dense.into();
+    let err = CsrMatrix::try_from(dense).unwrap_err();
+    assert_eq!(err, CsrFromTensorError { rank: 3 });
 }
 
 // =============================================================================
@@ -84,17 +84,36 @@ fn reverse_to_dense_handles_empty_sparse() {
 }
 
 // =============================================================================
-// Round-trip (independent inputs, per the Tier 2 helper contract)
+// Iso::to_source still panics (Tier 2 trait demands infallible)
+// =============================================================================
+
+#[test]
+#[should_panic(expected = "Iso::to_source requires a rank-2 CausalTensor")]
+fn iso_to_source_panics_on_wrong_rank() {
+    // The trait `Iso<S, T>::to_source(t: T) -> S` is infallible by
+    // contract. The forward direction is intrinsically partial; the iso
+    // surface therefore panics when handed a non-rank-2 tensor. Callers
+    // wanting graceful failure use `CsrMatrix::try_from(...)` directly.
+    let dense = CausalTensor::new(vec![1.0_f64; 8], vec![2, 2, 2]).unwrap();
+    let _: CsrMatrix<f64> =
+        <CsrMatrix<f64> as Iso<CsrMatrix<f64>, CausalTensor<f64>>>::to_source(dense);
+}
+
+// =============================================================================
+// Round-trip with genuinely independent inputs
 // =============================================================================
 
 #[test]
 fn round_trip_holds_with_independent_inputs() {
-    // Independent (s, t) pair: a sparse matrix and an unrelated dense
-    // tensor of the SAME shape. The helper checks both
-    // F->G->F (sparse->dense->sparse) and G->F->G (dense->sparse->dense).
+    // `sparse` and `dense` are independent matrices of the same shape.
+    // They represent DIFFERENT matrices, so the helper genuinely tests:
+    //   F->G->F: sparsify the sparse (round-trip its data via dense), and
+    //   G->F->G: densify the dense (round-trip its data via sparse).
+    // Using the same matrix in both slots would collapse the two
+    // branches into one data path.
     let sparse =
         CsrMatrix::from_triplets(2, 3, &[(0, 0, 1.0_f64), (1, 0, 4.0), (1, 2, 6.0)]).unwrap();
-    let dense = CausalTensor::new(vec![1.0_f64, 0.0, 0.0, 4.0, 0.0, 6.0], vec![2, 3]).unwrap();
+    let dense = CausalTensor::new(vec![0.0_f64, 7.0, 0.0, 0.0, 0.0, 8.0], vec![2, 3]).unwrap();
 
     assert_witness_iso_round_trip::<CsrMatrix<f64>, CsrMatrix<f64>, CausalTensor<f64>>(
         sparse, dense,

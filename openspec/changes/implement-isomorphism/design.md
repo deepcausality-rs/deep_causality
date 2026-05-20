@@ -82,7 +82,7 @@ The `Quaternion <-> Cl(3,0)-even rotor` case has a partial reverse (multivectors
 
 The Tier 2 `to_source` on the always-valid path is allowed to panic on invariant violation (since callers have already filtered); the panic message names the invariant.
 
-The `CausalTensor <-> CsrMatrix` forward direction (`CausalTensor` -> `CsrMatrix`) has the same shape: total reverse, partial forward (only rank-2 inputs). It follows the same convention: panicking `From` plus a TODO to add `TryFrom` later if pipeline code wants the result-typed form. (Decision: ship `From` first; `TryFrom` is a follow-up if downstream code asks for it.)
+The `CausalTensor <-> CsrMatrix` forward direction (`CausalTensor` -> `CsrMatrix`) has the same shape: total reverse, partial forward (only rank-2 inputs). It ships **`TryFrom`** rather than a panicking `From` because `From` is by convention infallible — using it for an intrinsically partial conversion lies about the contract. The typed error is `CsrFromTensorError { rank: usize }`, re-exported from the crate root. The Tier 2 `Iso::to_source` (which the trait requires to be infallible) delegates via `try_from(...).expect(...)` so the panic happens at the iso boundary with a message pointing callers at `TryFrom` for graceful failure. **Updated** after a review comment flagged the panicking `From` as bad Rust hygiene.
 
 ### D4. Named witnesses for cross-crate isos, no `StandardIso`
 

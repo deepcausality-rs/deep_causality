@@ -1,24 +1,25 @@
 ## ADDED Requirements
 
-### Requirement: `CausalTensor<F>` (rank-2) -> `CsrMatrix<F>` via Tier 1 `From`
+### Requirement: `CausalTensor<F>` (rank-2) -> `CsrMatrix<F>` via Tier 1 `TryFrom`
 
-The crate `deep_causality_sparse` SHALL expose `impl<F> From<CausalTensor<F>> for CsrMatrix<F>` for any `F: Zero + PartialEq + Clone`. The conversion SHALL iterate the tensor's data in row-major order and emit a triplet for each non-zero value. The conversion SHALL panic with a descriptive message when the input tensor has rank other than 2.
+The crate `deep_causality_sparse` SHALL expose `impl<F> TryFrom<CausalTensor<F>> for CsrMatrix<F>` for any `F: Clone + Copy + Zero + PartialEq`. The conversion SHALL iterate the tensor's data in row-major order and emit a triplet for each non-zero value. The conversion SHALL return `Err(CsrFromTensorError { rank })` (a typed error exposed from the crate root) when the input tensor has rank other than 2. `From` is NOT used because the conversion is intrinsically partial; only rank-2 tensors are matrices, and `From` is reserved for total conversions.
 
-#### Scenario: Forward From converts dense rank-2 tensor into sparse matrix
+#### Scenario: Forward TryFrom converts dense rank-2 tensor into sparse matrix
 
-- **WHEN** a downstream user invokes `CsrMatrix::<f64>::from(tensor)` for a rank-2 `CausalTensor<f64>` with shape `[2, 3]` and data `[1.0, 0.0, 0.0, 4.0, 0.0, 6.0]`
-- **THEN** the resulting `CsrMatrix` SHALL have shape `(2, 3)`
+- **WHEN** a downstream user invokes `CsrMatrix::<f64>::try_from(tensor)` for a rank-2 `CausalTensor<f64>` with shape `[2, 3]` and data `[1.0, 0.0, 0.0, 4.0, 0.0, 6.0]`
+- **THEN** the result SHALL be `Ok(matrix)` where `matrix.shape() == (2, 3)`
 - **AND** the stored triplets SHALL be `(0, 0, 1.0)`, `(1, 0, 4.0)`, `(1, 2, 6.0)` in some canonical order
 - **AND** no zero values SHALL be stored
 
-#### Scenario: Forward From panics on rank ≠ 2
+#### Scenario: Forward TryFrom returns Err on rank ≠ 2
 
-- **WHEN** a downstream user invokes `CsrMatrix::from(tensor)` for a tensor with rank 0, 1, 3, or higher
-- **THEN** the call SHALL panic with a message naming the actual rank
+- **WHEN** a downstream user invokes `CsrMatrix::try_from(tensor)` for a tensor with rank 0, 1, 3, or higher
+- **THEN** the result SHALL be `Err(CsrFromTensorError { rank })` with `rank` set to the actual input rank
+- **AND** the call SHALL NOT panic
 
 ### Requirement: `CsrMatrix<F>` -> `CausalTensor<F>` via Tier 2 `Iso<CsrMatrix<F>, CausalTensor<F>>`
 
-The crate `deep_causality_sparse` SHALL expose `impl<F> Iso<CsrMatrix<F>, CausalTensor<F>> for CsrMatrix<F>` for any `F: Zero + Clone`. The `to_target` method SHALL materialise a rank-2 dense `CausalTensor<F>` of the matching shape, populating non-zero entries from the triplets and leaving other positions at `F::zero()`. The `to_source` method SHALL delegate to the forward `From` impl. An inherent method `CsrMatrix::to_dense(self) -> CausalTensor<F>` SHALL be provided as an ergonomic alias for `<Self as Iso<CsrMatrix<F>, CausalTensor<F>>>::to_target(self)`.
+The crate `deep_causality_sparse` SHALL expose `impl<F> Iso<CsrMatrix<F>, CausalTensor<F>> for CsrMatrix<F>` for any `F: Clone + Copy + Zero + PartialEq`. The `to_target` method SHALL materialise a rank-2 dense `CausalTensor<F>` of the matching shape, populating non-zero entries from the triplets and leaving other positions at `F::zero()`. The `to_source` method SHALL delegate to the fallible forward `TryFrom` impl via `.expect(...)`; the Tier 2 trait surface is by contract infallible, so non-rank-2 inputs SHALL panic at this layer with a message directing callers to `TryFrom` for graceful failure. An inherent method `CsrMatrix::to_dense(self) -> CausalTensor<F>` SHALL be provided as an ergonomic alias for `<Self as Iso<CsrMatrix<F>, CausalTensor<F>>>::to_target(self)`.
 
 #### Scenario: to_target materialises a dense tensor from sparse matrix
 

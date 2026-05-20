@@ -12,8 +12,7 @@
 //! CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>
 //! ```
 //!
-//! At the value level they are literally interchangeable. The compiler
-//! already knows this; no iso wrapper adds anything. What the codebase
+//! At the value level they are interchangeable.What the codebase
 //! actually ships is **two separate HKT witnesses** for the same carrier:
 //!
 //! - `PropagatingEffectWitness<CausalityError, EffectLog>`
@@ -43,15 +42,12 @@
 //! ## Why no iso trait here
 //!
 //! An iso requires a bijection. The Markovian / non-Markovian distinction
-//! (state-bearing vs. stateless) is fundamentally lossy when state is
+//! (statefull vs. stateless) is fundamentally lossy when state is
 //! non-trivial. The trivial `S = (), C = ()` case is identity (type alias
 //! collapse), which adds nothing the compiler doesn't already know. So
 //! this example uses the carrier and the two `Functor` impls directly,
 //! with no `NaturalIso` trait between them.
 //!
-//! If a future change adds total `From` / partial `TryFrom` conversions
-//! for the non-trivial state case (the design sketch is in
-//! `openspec/notes/IsoFollowUps.md`), those are conversions, not isos.
 
 use deep_causality_core::{
     CausalityError, EffectLog, PropagatingEffect, PropagatingEffectWitness, PropagatingProcess,
@@ -164,9 +160,7 @@ fn main() {
     println!("- Two `Functor`/`Monad` impl paths exist, written independently.");
     println!("- Both paths produce identical results on the shared carrier.");
     println!("- Pinned by a direct consistency test in the iso-traits change,");
-    println!("  NOT by a `NaturalIso` wrapper (which would be identity bodies).");
 }
-
 /// A downstream API that wants a `PropagatingProcess<T, (), ()>`. Callers
 /// holding a `PropagatingEffect<T>` pass it through directly — they are the
 /// same type. No iso conversion, no method call.

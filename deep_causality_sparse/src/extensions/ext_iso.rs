@@ -23,9 +23,10 @@
 //! rooted in this crate:
 //!
 //! - **Forward** (`CausalTensor<F>` -> `CsrMatrix<F>`): Tier 1
-//!   `impl From<CausalTensor<F>> for CsrMatrix<F>`. Panics on rank ≠ 2;
-//!   matches the rest of the tensor API which panics on shape
-//!   preconditions. A `TryFrom` form is deferred to a follow-up.
+//!   `impl TryFrom<CausalTensor<F>> for CsrMatrix<F>`. Returns
+//!   [`CsrFromTensorError`] on rank ≠ 2. Uses `TryFrom` (not `From`)
+//!   because the conversion is intrinsically partial — only rank-2
+//!   tensors are matrices.
 //! - **Reverse** (`CsrMatrix<F>` -> `CausalTensor<F>`): Tier 2
 //!   `impl Iso<CsrMatrix<F>, CausalTensor<F>> for CsrMatrix<F>` with
 //!   `CsrMatrix<F>` as `Self` (orphan-safe). An inherent ergonomic
@@ -39,34 +40,57 @@
 //! right surface.
 
 use crate::CsrMatrix;
+use core::fmt;
 use deep_causality_num::Zero;
 use deep_causality_num::iso::witness::Iso;
 use deep_causality_tensor::CausalTensor;
 
+/// Error returned by [`CsrMatrix::try_from`] when the input
+/// [`CausalTensor`] has a rank other than 2.
+///
+/// The forward direction of the tensor / sparse iso is intrinsically
+/// partial: only rank-2 tensors are matrices. `From` is reserved for
+/// total conversions, so the surface uses `TryFrom` instead.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CsrFromTensorError {
+    /// The rank of the input tensor (which must be 2 for the conversion
+    /// to succeed).
+    pub rank: usize,
+}
+
+impl fmt::Display for CsrFromTensorError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "CausalTensor -> CsrMatrix requires rank 2, got rank {}",
+            self.rank
+        )
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for CsrFromTensorError {}
+
 // =============================================================================
-// Forward (Tier 1): CausalTensor<F> -> CsrMatrix<F>
+// Forward (Tier 1): CausalTensor<F> -> CsrMatrix<F> via TryFrom
 // =============================================================================
 
-impl<F> From<CausalTensor<F>> for CsrMatrix<F>
+impl<F> TryFrom<CausalTensor<F>> for CsrMatrix<F>
 where
     F: Clone + Copy + Zero + PartialEq,
 {
+    type Error = CsrFromTensorError;
+
     /// Materialise a rank-2 [`CausalTensor`] as a sparse matrix. Non-zero
     /// entries are stored in row-major order; zero entries are dropped.
     ///
-    /// # Panics
-    ///
-    /// Panics if `tensor.num_dim() != 2`. The forward direction is partial;
-    /// callers handling unknown ranks should pattern-match `tensor.shape()`
-    /// first.
-    fn from(tensor: CausalTensor<F>) -> Self {
+    /// Returns [`CsrFromTensorError`] when `tensor.num_dim() != 2`. The
+    /// forward direction is partial; `From` would lie about being total.
+    fn try_from(tensor: CausalTensor<F>) -> Result<Self, Self::Error> {
         let shape = tensor.shape();
-        assert_eq!(
-            shape.len(),
-            2,
-            "CausalTensor -> CsrMatrix requires rank 2, got rank {}",
-            shape.len()
-        );
+        if shape.len() != 2 {
+            return Err(CsrFromTensorError { rank: shape.len() });
+        }
         let rows = shape[0];
         let cols = shape[1];
         let data = tensor.data();
@@ -82,8 +106,8 @@ where
         }
         // Construction cannot fail: row/col bounds are honoured by the
         // double loop above.
-        CsrMatrix::from_triplets(rows, cols, &triplets)
-            .expect("triplets are within bounds by construction")
+        Ok(CsrMatrix::from_triplets(rows, cols, &triplets)
+            .expect("triplets are within bounds by construction"))
     }
 }
 
@@ -117,9 +141,21 @@ where
             .expect("rows * cols matches data length by construction")
     }
 
-    /// Delegate to the forward [`From`] impl.
+    /// Delegate to the fallible forward [`TryFrom`] impl.
+    ///
+    /// # Panics
+    ///
+    /// The Tier 2 `Iso<S, T>` trait requires an infallible `to_source`.
+    /// Since the forward direction is intrinsically partial (only rank-2
+    /// tensors can become matrices), this method calls
+    /// `CsrMatrix::try_from(t).expect(...)` and panics on rank ≠ 2.
+    /// Callers wanting graceful failure should use
+    /// `CsrMatrix::try_from(t)` directly instead of the `Iso` trait
+    /// surface.
     fn to_source(t: CausalTensor<F>) -> CsrMatrix<F> {
-        CsrMatrix::from(t)
+        CsrMatrix::try_from(t).expect(
+            "Iso::to_source requires a rank-2 CausalTensor; use TryFrom for graceful failure",
+        )
     }
 }
 
