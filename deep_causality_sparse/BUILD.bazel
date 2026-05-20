@@ -7,6 +7,7 @@ rust_library(
     ]),
     crate_features = [
         "std",
+        "tensor-iso",
     ],
     crate_root = "src/lib.rs",
     tags = [
@@ -17,6 +18,8 @@ rust_library(
         # Internal crates
         "//deep_causality_num",
         "//deep_causality_haft",
+        # tensor-iso feature dep
+        "//deep_causality_tensor",
     ],
 )
 

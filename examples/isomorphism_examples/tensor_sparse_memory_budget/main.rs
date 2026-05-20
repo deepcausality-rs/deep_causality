@@ -44,12 +44,8 @@ fn main() {
     // each node has edges to its two neighbours plus self-loops.
     // ---------------------------------------------------------------------
     let dense_data: Vec<F> = vec![
-        2.0, 1.0, 0.0, 0.0, 0.0, 0.0,
-        1.0, 2.0, 1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 2.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 2.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0, 2.0, 1.0,
-        0.0, 0.0, 0.0, 0.0, 1.0, 2.0,
+        2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0,
     ];
     let dense = CausalTensor::new(dense_data, vec![6, 6]).unwrap();
 
@@ -111,7 +107,10 @@ fn main() {
         .map(|(a, b)| (a - b).abs())
         .sum();
 
-    println!("\nL1 drift between BEFORE and AFTER round-trips: {:e}", drift);
+    println!(
+        "\nL1 drift between BEFORE and AFTER round-trips: {:e}",
+        drift
+    );
     assert!(drift < 1e-12, "iso path diverged from manual path");
     println!("Both paths round-trip identically.\n");
 

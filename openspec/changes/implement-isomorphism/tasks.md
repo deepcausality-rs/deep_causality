@@ -16,18 +16,18 @@
 
 > **Gate:** Part A MUST be signed off and committed before any task here begins.
 
-- [ ] 2.1 Create module `deep_causality_sparse/src/iso/` (or under `src/types/sparse_matrix/`) with `mod.rs`, `from_tensor.rs`, `iso.rs`, and `to_dense.rs`.
-- [ ] 2.2 Declare `impl<F> From<CausalTensor<F>> for CsrMatrix<F> where F: Zero + PartialEq + Clone` in `from_tensor.rs`. Iterate row-major; emit triplets for non-zero values; panic on rank ≠ 2.
-- [ ] 2.3 Declare `impl<F> Iso<CsrMatrix<F>, CausalTensor<F>> for CsrMatrix<F> where F: Zero + Clone` in `iso.rs`. `to_target` materialises the dense tensor; `to_source` delegates to the forward `From`.
-- [ ] 2.4 Add `impl<F> CsrMatrix<F> { pub fn to_dense(self) -> CausalTensor<F> { ... } }` ergonomic alias in `to_dense.rs`.
-- [ ] 2.5 Update `deep_causality_sparse/src/lib.rs` re-exports.
-- [ ] 2.6 Create `deep_causality_sparse/tests/iso/` with `mod.rs` and `tensor_sparse_tests.rs`. Tests cover: forward `From`, reverse `to_dense()` / `Iso::to_target`, `assert_witness_iso_round_trip` with independent `(sparse, dense)` inputs, `#[should_panic]` test for rank ≠ 2 input on the forward direction.
-- [ ] 2.7 Register `mod iso;` in `deep_causality_sparse/tests/mod.rs`. Add `rust_test_suite` entry to `deep_causality_sparse/tests/BUILD.bazel`.
-- [ ] 2.8 `cargo build -p deep_causality_sparse` and `cargo test -p deep_causality_sparse` pass. Verify no new clippy warnings.
-- [ ] 2.9 `bazel test //deep_causality_sparse/tests:iso` passes.
-- [ ] 2.10 `cargo build -p deep_causality_sparse --no-default-features --features alloc` passes (or whatever the crate's no_std flag is).
-- [ ] 2.11 Run `make format && make fix` — clean.
-- [ ] 2.12 **Stage B gate:** stage-completion summary; sign-off; commit.
+- [x] 2.1 Module created at `deep_causality_sparse/src/extensions/ext_iso.rs`. **Deviation**: per code-review feedback, moved to `src/extensions/` following the existing `ext_hkt.rs` convention (anything bridging sparse to another DC crate is an `ext_*` extension). Gated behind the `tensor-iso` Cargo feature so default sparse consumers don't pay the tensor-dep cost.
+- [x] 2.2 `impl<F> From<CausalTensor<F>> for CsrMatrix<F> where F: Clone + Copy + Zero + PartialEq` added. Iterates row-major, drops zeros, panics on rank ≠ 2 with descriptive message.
+- [x] 2.3 `impl<F> Iso<CsrMatrix<F>, CausalTensor<F>> for CsrMatrix<F>` added. `to_target` walks CSR row-pointer / col-index arrays to populate the dense buffer; `to_source` delegates to forward `From`.
+- [x] 2.4 Inherent `CsrMatrix::to_dense(self) -> CausalTensor<F>` ergonomic alias added (also gated behind `tensor-iso`).
+- [x] 2.5 No new lib.rs re-export needed; both `CsrMatrix` and the trait surface are already public via existing paths. **Cargo.toml** adds `deep_causality_tensor` as an `optional = true` dep plus a new `tensor-iso` feature `["dep:deep_causality_tensor"]` (NOT in default). Default builds compile zero tensor code.
+- [x] 2.6 9 tests at `deep_causality_sparse/tests/extensions/ext_iso_tests.rs`: forward (3 incl. 2 panic-paths for rank 1 and rank 3), reverse (3 incl. iso vs. alias consistency), round-trip with independent inputs (2 incl. all-zero case). **Deviation**: tests live under `tests/extensions/` (alongside `ext_hkt_tests.rs`) following the same `ext_*` convention; cfg-gated behind `feature = "tensor-iso"`.
+- [x] 2.7 `mod ext_iso_tests;` registered (cfg-gated) in `tests/extensions/mod.rs`. `rust_test_suite(name = "extensions", ...)` added to `tests/BUILD.bazel` with `crate_features = ["tensor-iso"]` and the matching deps. (Pre-existing gap: `extensions/` test_suite did not exist; this change adds it for both `ext_hkt_tests` and `ext_iso_tests`.)
+- [x] 2.8 `cargo test -p deep_causality_sparse` (default, no feature): 86 + 19 = 105 tests pass; **zero tensor dep pulled** (verified via `cargo tree`). `cargo test -p deep_causality_sparse --features tensor-iso`: 95 + 19 + 9 new = 123 tests pass. `cargo clippy -p deep_causality_sparse --tests --features tensor-iso -- -D warnings`: clean.
+- [x] 2.9 `bazel test //deep_causality_sparse/tests:extensions`: both `ext_hkt_tests_test` and `ext_iso_tests_test` PASS. `bazel test //deep_causality_sparse/tests:all`: 10/10 pass. **Bazel BUILD.bazel update**: `crate_features = ["std", "tensor-iso"]` on the lib (Bazel users get the iso unconditionally; this is consistent with Bazel's explicit-deps model where the dep graph is hand-curated anyway).
+- [x] 2.10 `cargo build -p deep_causality_sparse --no-default-features` passes (no iso, no tensor dep).
+- [x] 2.11 `cargo fmt -p deep_causality_sparse --check`: clean.
+- [x] 2.12 **Stage B gate:** stage-completion summary below; awaiting sign-off.
 
 ## 3. Part C — `iso-num-multivector`: Complex <-> Cl(0,1) and Quaternion <-> Cl(3,0)-even
 

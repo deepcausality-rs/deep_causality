@@ -35,6 +35,14 @@ Four capabilities (`iso-num-multivector`, `iso-multifield-tensor`, `iso-tensor-s
 
 This is the template established by `IsoFollowUps.md §2`; subsequent cross-crate isos copy the pattern.
 
+### D2a. Cross-crate iso deps are feature-gated and live in `extensions/`
+
+When the iso adds a new transitive dependency to the downstream crate (e.g. `deep_causality_sparse` gaining a tensor dep), the iso module ships under a Cargo feature flag and lives in `src/extensions/` alongside other cross-crate bridges (`ext_hkt.rs`). The feature is OFF by default so downstream consumers who don't need the iso don't pay the dep cost. The Bazel build enables the feature unconditionally since Bazel users curate the dep graph explicitly anyway.
+
+Naming convention: each extension file is `ext_*.rs` (e.g. `ext_hkt.rs`, `ext_iso.rs`). Each test file mirrors the source name (e.g. `tests/extensions/ext_iso_tests.rs`). Per-file feature gates go on the `mod` declaration in `extensions/mod.rs` and on the test-side `mod` declaration in `tests/extensions/mod.rs`.
+
+This pattern was established by Stage B (sparse + `tensor-iso` feature). Subsequent cross-crate isos that add new deps follow the same shape.
+
 ### D3. Partial reverses are `TryFrom`, not panicking `From`
 
 The `Quaternion <-> Cl(3,0)-even rotor` case has a partial reverse (multivectors with non-zero odd-grade coefficients aren't quaternions). Same for `SimplicialComplex <-> CellComplex<Simplex>` (cell complexes with non-simplex cells aren't simplicial). Both ship:

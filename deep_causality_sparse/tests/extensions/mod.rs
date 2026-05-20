@@ -4,3 +4,6 @@
  */
 
 mod ext_hkt_tests;
+
+#[cfg(feature = "tensor-iso")]
+mod ext_iso_tests;

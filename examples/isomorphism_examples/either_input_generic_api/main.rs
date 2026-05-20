@@ -133,9 +133,12 @@ fn main() {
     // ---------------------------------------------------------------------
     // 3. Verify the two outputs are iso-equivalent (within FP epsilon).
     // ---------------------------------------------------------------------
-    let drift =
-        (out_complex.re - out_mv_as_complex.re).abs() + (out_complex.im - out_mv_as_complex.im).abs();
-    println!("\nL1 drift between Complex and Cl(0,1) outputs: {:e}", drift);
+    let drift = (out_complex.re - out_mv_as_complex.re).abs()
+        + (out_complex.im - out_mv_as_complex.im).abs();
+    println!(
+        "\nL1 drift between Complex and Cl(0,1) outputs: {:e}",
+        drift
+    );
     assert!(drift < 1e-12, "iso paths diverged");
     println!("Same input -> same output, regardless of representation chosen.\n");
 
@@ -151,7 +154,10 @@ fn main() {
 
     for (i, sig) in inputs.into_iter().enumerate() {
         let rotated = dispatch_rotate(sig, angle);
-        println!("  signal #{}: rotated -> {} + {}i", i, rotated.re, rotated.im);
+        println!(
+            "  signal #{}: rotated -> {} + {}i",
+            i, rotated.re, rotated.im
+        );
     }
 
     println!("\n--- Compile-time guard ---");

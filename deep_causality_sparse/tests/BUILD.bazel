@@ -31,3 +31,26 @@ rust_test_suite(
         "//deep_causality_num",
     ],
 )
+
+rust_test_suite(
+    name = "extensions",
+    srcs = glob([
+        "extensions/*_tests.rs",
+    ]),
+    crate_features = [
+        "tensor-iso",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_sparse",
+        # Deps
+        "//deep_causality_num",
+        "//deep_causality_haft",
+        # tensor-iso feature dep
+        "//deep_causality_tensor",
+    ],
+)

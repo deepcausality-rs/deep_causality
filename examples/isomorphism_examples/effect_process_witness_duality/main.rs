@@ -67,7 +67,10 @@ fn main() {
     // ---------------------------------------------------------------------
     let eff: PropagatingEffect<i32> =
         PropagatingEffectWitness::<CausalityError, EffectLog>::pure(42);
-    println!("Initial value (via PropagatingEffectWitness::pure): {:?}", eff);
+    println!(
+        "Initial value (via PropagatingEffectWitness::pure): {:?}",
+        eff
+    );
 
     // The same value, viewed through the PropagatingProcessWitness type alias.
     // No conversion: the types are literally equal.
@@ -81,10 +84,8 @@ fn main() {
     println!("--- Two witness paths, same operation ---");
     let h = |x: i32| x * 2;
 
-    let via_effect = <PropagatingEffectWitness<CausalityError, EffectLog> as Functor<_>>::fmap(
-        eff.clone(),
-        h,
-    );
+    let via_effect =
+        <PropagatingEffectWitness<CausalityError, EffectLog> as Functor<_>>::fmap(eff.clone(), h);
     let via_process = <PropagatingProcessWitness<(), ()> as Functor<_>>::fmap(proc.clone(), h);
 
     println!("  via PropagatingEffectWitness:  {:?}", via_effect);
@@ -102,10 +103,15 @@ fn main() {
     };
     let bound_via_effect =
         <PropagatingEffectWitness<CausalityError, EffectLog> as Monad<_>>::bind(eff.clone(), k);
-    let bound_via_process =
-        <PropagatingProcessWitness<(), ()> as Monad<_>>::bind(proc.clone(), k);
-    println!("  bind via PropagatingEffectWitness:  {:?}", bound_via_effect);
-    println!("  bind via PropagatingProcessWitness: {:?}", bound_via_process);
+    let bound_via_process = <PropagatingProcessWitness<(), ()> as Monad<_>>::bind(proc.clone(), k);
+    println!(
+        "  bind via PropagatingEffectWitness:  {:?}",
+        bound_via_effect
+    );
+    println!(
+        "  bind via PropagatingProcessWitness: {:?}",
+        bound_via_process
+    );
     assert_eq!(
         bound_via_effect, bound_via_process,
         "Monad impls on the two witnesses disagree on the shared carrier"
@@ -132,8 +138,14 @@ fn main() {
         doubled_via::<PropagatingEffectWitness<CausalityError, EffectLog>>(eff.clone());
     let result_process = doubled_via::<PropagatingProcessWitness<(), ()>>(proc.clone());
 
-    println!("  doubled via PropagatingEffectWitness:  {:?}", result_effect);
-    println!("  doubled via PropagatingProcessWitness: {:?}", result_process);
+    println!(
+        "  doubled via PropagatingEffectWitness:  {:?}",
+        result_effect
+    );
+    println!(
+        "  doubled via PropagatingProcessWitness: {:?}",
+        result_process
+    );
     assert_eq!(result_effect, result_process);
     println!("  -> identical results from either witness path\n");
 
@@ -142,7 +154,10 @@ fn main() {
     // ---------------------------------------------------------------------
     println!("--- Practical use: passing across an API boundary ---");
     let answer = consume_a_process(eff);
-    println!("  consume_a_process accepted a PropagatingEffect directly: {:?}", answer);
+    println!(
+        "  consume_a_process accepted a PropagatingEffect directly: {:?}",
+        answer
+    );
 
     println!("\n--- Summary ---");
     println!("- The carrier is one type with two HKT witnesses.");

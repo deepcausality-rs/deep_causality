@@ -66,12 +66,10 @@ fn main() {
     // Path 3: witness round-trip (lift through the iso, multiply natively,
     // then lift back). Demonstrates the iso composes with native ops.
     // ---------------------------------------------------------------------
-    let a_back: Complex<F> = <ComplexCl01Iso as Iso<_, _>>::to_target(
-        <ComplexCl01Iso as Iso<_, _>>::to_source(a),
-    );
-    let b_back: Complex<F> = <ComplexCl01Iso as Iso<_, _>>::to_target(
-        <ComplexCl01Iso as Iso<_, _>>::to_source(b),
-    );
+    let a_back: Complex<F> =
+        <ComplexCl01Iso as Iso<_, _>>::to_target(<ComplexCl01Iso as Iso<_, _>>::to_source(a));
+    let b_back: Complex<F> =
+        <ComplexCl01Iso as Iso<_, _>>::to_target(<ComplexCl01Iso as Iso<_, _>>::to_source(b));
     let p3 = a_back * b_back;
     println!("Path 3 (iso round-trip):   {} + {}i", p3.re, p3.im);
 
@@ -90,8 +88,7 @@ fn main() {
     // ---------------------------------------------------------------------
     use deep_causality_num::iso::witness::test_support::{
         assert_witness_division_algebra_iso_law, assert_witness_field_iso_laws,
-        assert_witness_group_iso_law, assert_witness_iso_round_trip,
-        assert_witness_ring_iso_laws,
+        assert_witness_group_iso_law, assert_witness_iso_round_trip, assert_witness_ring_iso_laws,
     };
 
     println!("\n--- Marker-subtrait law verification ---");
@@ -119,12 +116,9 @@ fn main() {
     );
     println!("  FieldIso (inverse preservation):  OK");
 
-    assert_witness_division_algebra_iso_law::<
-        ComplexCl01Iso,
-        CausalMultiVector<F>,
-        Complex<F>,
-        F,
-    >(CausalMultiVector::from(a));
+    assert_witness_division_algebra_iso_law::<ComplexCl01Iso, CausalMultiVector<F>, Complex<F>, F>(
+        CausalMultiVector::from(a),
+    );
     println!("  DivisionAlgebraIso (conjugation): OK");
 
     println!("\nThe iso satisfies every law in the chain:");

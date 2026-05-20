@@ -60,9 +60,18 @@ fn main() {
     let v2_before = apply_rotor(&v1_before, &r2_before, &r2_rev_before);
     let v3_before = apply_rotor(&v2_before, &r3_before, &r3_rev_before);
 
-    println!("  after rotor 1 (XY 90°):  {:?}", extract_vector(&v1_before));
-    println!("  after rotor 2 (YZ 45°):  {:?}", extract_vector(&v2_before));
-    println!("  after rotor 3 (ZX 30°):  {:?}", extract_vector(&v3_before));
+    println!(
+        "  after rotor 1 (XY 90°):  {:?}",
+        extract_vector(&v1_before)
+    );
+    println!(
+        "  after rotor 2 (YZ 45°):  {:?}",
+        extract_vector(&v2_before)
+    );
+    println!(
+        "  after rotor 3 (ZX 30°):  {:?}",
+        extract_vector(&v3_before)
+    );
 
     // ---------------------------------------------------------------------
     // AFTER: quaternion construction + iso lift
