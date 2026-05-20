@@ -75,34 +75,36 @@ The `iso-num-multivector` capability spec file has been removed from this change
 - [x] 4.9 `cargo fmt -p deep_causality_multivector --check`: clean.
 - [x] 4.10 **Stage D gate:** stage-completion summary below; awaiting sign-off.
 
-## 5. Part E — `iso-topology`: simplicial/cell + Poincaré dual
+## 5. Part E — `iso-topology`: simplicial/cell + Poincaré dual — **POSTPONED**
 
-> **Gate:** Part D MUST be signed off and committed before any task here begins.
+> **Status:** POSTPONED during the implement-isomorphism change. Both sub-isos were dropped before implementation after a feasibility audit revealed structural mismatches with the spec.
 
-### 5.A. SimplicialComplex <-> CellComplex<Simplex>
+### Reason for postponement
 
-- [ ] 5.1 Create module `deep_causality_topology/src/iso/` with `mod.rs` and `simplicial_cell_iso.rs`.
-- [ ] 5.2 Declare `impl<T> From<SimplicialComplex<T>> for CellComplex<Simplex>`. Iterate simplices; append each as a cell.
-- [ ] 5.3 Declare `impl<T> TryFrom<CellComplex<Simplex>> for SimplicialComplex<T>`. Error variant for non-simplex cells. No panic.
-- [ ] 5.4 Tests in `deep_causality_topology/tests/iso/simplicial_cell_tests.rs`: forward `From` success, `TryFrom` success path, `TryFrom` failure path on non-simplex input.
+**5.A. SimplicialComplex <-> CellComplex<Simplex> is not an iso.** The two types are structurally distinct, not different representations of the same data:
 
-### 5.B. LatticeComplex<D> <-> DualLatticeComplex<D> (Poincaré)
+- `SimplicialComplex<T>` carries `Vec<Skeleton>` plus three sets of pre-computed sparse matrices (`boundary_operators: Vec<CsrMatrix<i8>>`, `coboundary_operators: Vec<CsrMatrix<i8>>`, `hodge_star_operators: Vec<CsrMatrix<T>>`).
+- `CellComplex<C>` is `Vec<Vec<C>>` — dimension-stratified cell lists, no matrices.
 
-- [ ] 5.5 Add `poincare_iso.rs` under `deep_causality_topology/src/iso/`.
-- [ ] 5.6 Declare `pub struct PoincareIso<const D: usize>;` and `impl<const D: usize> Iso<LatticeComplex<D>, DualLatticeComplex<D>> for PoincareIso<D>`.
-- [ ] 5.7 Implement `to_target`: for each k-cell in the primal, emit a (D-k)-cell in the dual; preserve incidence relations.
-- [ ] 5.8 Implement `to_source`: inverse of `to_target` (same algorithm, dimensions reversed).
-- [ ] 5.9 Tests in `deep_causality_topology/tests/iso/poincare_iso_tests.rs`: `assert_witness_iso_round_trip` for D ∈ {1, 2, 3}, plus a domain-specific `assert_poincare_dualizes_boundary` helper that validates the boundary <-> coboundary correspondence.
+Forward (`From<SimplicialComplex<T>> for CellComplex<Simplex>`) is **lossy**: drops all three matrix sets and the `T` parameter. Reverse (`TryFrom<CellComplex<Simplex>> for SimplicialComplex<T>`) has to **fabricate** the matrices; boundary and coboundary can be computed from simplicial structure, but Hodge-star matrices need T-valued metric data that the cell complex doesn't carry — would produce `SimplicialComplex<()>` at best. Round-trip loses information in both directions; the pair fails the iso bijectivity test.
 
-### 5.C. Wiring
+These are useful **conversions**, but not isomorphisms. They belong in a separate change focused on inter-topology-type conversions, not in `implement-isomorphism`.
 
-- [ ] 5.10 Update `deep_causality_topology/src/iso/mod.rs` to re-export `PoincareIso`.
-- [ ] 5.11 Update `deep_causality_topology/src/lib.rs` re-exports.
-- [ ] 5.12 Register `mod iso;` in `deep_causality_topology/tests/mod.rs`. Add `rust_test_suite` entry to `deep_causality_topology/tests/BUILD.bazel`.
-- [ ] 5.13 `cargo build -p deep_causality_topology` and `cargo test -p deep_causality_topology` pass. Clippy clean.
-- [ ] 5.14 `bazel test //deep_causality_topology/tests:iso` passes.
-- [ ] 5.15 Run `make format && make fix` — clean.
-- [ ] 5.16 **Stage E gate (final):** stage-completion summary; sign-off; commit. Change is complete after Stage E lands.
+**5.B. LatticeComplex<D> <-> DualLatticeComplex<D> Poincaré is too trivial to justify the machinery.** The actual `DualLatticeComplex<D>` is `{ primal: Arc<LatticeComplex<D>> }` — a thin `Arc`-wrapper. There are no materialised cells in either struct; lattice cells are computed on demand from `shape`. The iso at the data level reduces to `wrap` / `unwrap`. The "Poincaré dual k-cell <-> (D-k)-cell mapping" the spec scenarios called for is a statement about how operations on the dual interpret indices — not about data transformation. Implementing the iso adds the witness type but no real algorithmic content; the spec's `assert_poincare_dualizes_boundary` test would be testing operation semantics on the existing API, not iso correctness.
+
+### What was done before postponement
+
+Nothing in source. The feasibility audit happened before any file was created in `deep_causality_topology/`. No code rollback needed.
+
+### Follow-up
+
+The simplicial/cell conversions could land in a separate change focused on inter-topology-type conversions (not iso). The Poincaré-dual iso could land if a future consumer materialises cells separately in either lattice or dual, but the current API doesn't justify it.
+
+The `iso-topology` capability spec file has been removed from this change.
+
+Per-task checklist preserved for the future-change reference:
+
+- [ ] 5.1 - 5.16 (postponed) ~~Stage E tasks~~ — see Stage E section above for the structural-mismatch reason.
 
 ## Stage gates
 
@@ -116,10 +118,10 @@ Per AGENTS.md golden rule §1 (NEVER commit) and the protocol established in `20
 
 ## Sequencing rationale
 
-Order chosen by ascending difficulty and dependency. **Part C was POSTPONED** mid-change after discovering an unmet prerequisite (no algebraic-trait impls on `CausalMultiVector`, and `Field` cannot be honestly impl'd without phantom-typed metrics or per-algebra newtype wrappers). The change ships Parts A, B, D, E.
+**Parts C and E were POSTPONED** mid-change after feasibility audits exposed structural mismatches between the spec and the substrate types. The change ships **Parts A, B, and D** — three concrete iso instances plus the propagating-effect consistency test.
 
 1. **Part A** (effect/process consistency test). Smallest diff; test-only; warms up the test infrastructure in `deep_causality_core/tests/iso/`. **DONE.**
 2. **Part B** (tensor/sparse). Canonical mixed-tier template. Establishes the feature-gated extension pattern (D2a). Worked example in `IsoFollowUps.md`. **DONE.**
-3. ~~**Part C** (num/multivector).~~ **POSTPONED.** See Part C section above for the reason. Deferred to a future change that lands the algebraic-trait prerequisite (phantom metrics or per-algebra newtypes).
-4. **Part D** (multifield/tensor). Trivial pack/unpack; uses `StandardIso`. No algebraic markers needed; proceeds independently of the postponed Stage C.
-5. **Part E** (topology). The Poincaré dual is the only sub-task with non-trivial body algorithm; landed last so all the template patterns are established.
+3. ~~**Part C** (num/multivector).~~ **POSTPONED.** `CausalMultiVector<F>` lacks the algebraic-trait stack, and `Field` cannot be honestly impl'd because `Commutative` is metric-dependent (and the metric is a runtime field, not a type parameter). Unlocking needs either phantom-typed metrics or per-algebra newtypes — both out of scope.
+4. **Part D** (multifield/tensor). Structural pack/unpack via `StandardIso`. No algebraic markers needed; proceeded independently of the postponed Stage C. **DONE.**
+5. ~~**Part E** (topology).~~ **POSTPONED.** `SimplicialComplex<T>` <-> `CellComplex<Simplex>` is lossy in both directions (not an iso); `LatticeComplex<D>` <-> `DualLatticeComplex<D>` reduces to a trivial Arc-wrap because cells aren't materialised in either struct. Neither pair clears the iso bar with the current type definitions. See Stage E section.

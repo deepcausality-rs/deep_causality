@@ -35,6 +35,22 @@ Four capabilities (`iso-num-multivector`, `iso-multifield-tensor`, `iso-tensor-s
 
 This is the template established by `IsoFollowUps.md §2`; subsequent cross-crate isos copy the pattern.
 
+### D2c. The iso vocabulary doesn't fit lossy projections or wrap/unwrap-only pairs
+
+Discovered in Stage E feasibility:
+
+- `SimplicialComplex<T>` <-> `CellComplex<Simplex>` is NOT an iso. The two structures carry different data shapes (the simplicial complex carries pre-computed boundary, coboundary, and Hodge-star matrices; the cell complex carries only dimension-stratified cells). Round-trip drops the matrices in one direction and fabricates them with default content in the other; the `T` parameter has no home on the cell-complex side. Useful as a *conversion*, but trying to express it as an `Iso<S, T>` would lie about bijectivity.
+
+- `LatticeComplex<D>` <-> `DualLatticeComplex<D>` Poincaré dual is technically an iso but **trivially** so. `DualLatticeComplex<D>` is `{ primal: Arc<LatticeComplex<D>> }` — a thin `Arc`-wrapper. Cells in the lattice are computed on demand from `shape`, not materialised. The "iso" reduces to `Arc::new(primal)` wrap / unwrap. The mathematically interesting content (k-cell <-> (D-k)-cell mapping under Poincaré duality) lives in the operation semantics of the existing `DualLatticeComplex` API, not in data movement. Adding a witness type for this iso adds boilerplate without unlocking new behaviour.
+
+**Lesson**: before drafting `iso-*` spec scenarios, verify that the type pair is:
+1. A genuine bijection (no information loss either direction), AND
+2. Non-trivial enough that the iso machinery adds value over already-available APIs.
+
+Spec scenarios that fail (1) belong in a separate conversions-focused change. Pairs that fail (2) should be left to direct API use.
+
+Stage E was postponed (both sub-isos dropped) rather than ship dishonest iso impls or unhelpful witness types.
+
 ### D2b. Algebraic-marker subtraits require the substrate type to actually implement the algebraic structure
 
 Discovered mid-implementation in Stage C: declaring `impl FieldIso<S, T> for W` requires both `S: Field` and `T: Field`. `CausalMultiVector<F>` does NOT implement `Field` (or `Ring`, `Group`, `Algebra`, `DivisionAlgebra`, or the marker traits `Commutative`, `Associative`, `Distributive`, `AbelianGroup`). The compile errors point at the marker subtrait bound, but the root cause is the absence of an algebraic-structure impl on the substrate.
