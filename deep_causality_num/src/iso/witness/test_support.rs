@@ -11,16 +11,23 @@
 //! This follows the codebase convention established by [`crate::utils_tests`]
 //! and the Tier 1 equivalents in [`crate::iso::test_support`].
 //!
-//! Each helper exercises one law from the Tier 2 marker hierarchy:
+//! Each helper exercises **only** its marker subtrait's own contribution to
+//! the homomorphism chain. Inherited laws are not re-checked — consumers
+//! verifying a deeper marker should compose with the parent helpers to
+//! cover the full chain.
 //!
 //! - [`assert_witness_iso_round_trip`] — round-trip identity through
 //!   `Iso<S, T>::to_target` and `Iso<S, T>::to_source`.
 //! - [`assert_witness_group_iso_law`] — additive group homomorphism.
-//! - [`assert_witness_ring_iso_laws`] — ring homomorphism (addition AND
-//!   multiplication).
-//! - [`assert_witness_field_iso_laws`] — field homomorphism (ring + inverse).
+//! - [`assert_witness_ring_iso_laws`] — addition AND multiplication
+//!   homomorphism (addition is also inherited from `GroupIso<S, T>` but
+//!   re-asserted here because the helper takes the same `(a, b)` pair).
+//! - [`assert_witness_field_iso_laws`] — multiplicative inverse preservation
+//!   only (the field-specific contribution; ring laws are NOT re-checked).
 //! - [`assert_witness_algebra_iso_law`] — scalar multiplication preservation.
-//! - [`assert_witness_division_algebra_iso_law`] — conjugation preservation.
+//! - [`assert_witness_division_algebra_iso_law`] — conjugation preservation
+//!   only (the division-algebra-specific contribution; algebra-product
+//!   preservation from `AlgebraIso<S, T, R>` is NOT re-checked).
 
 use crate::iso::witness::algebra_iso::AlgebraIso;
 use crate::iso::witness::division_algebra_iso::DivisionAlgebraIso;
@@ -94,8 +101,19 @@ where
     );
 }
 
-/// Asserts the field homomorphism laws for a witness-typed [`FieldIso<S, T>`]
-/// impl. Caller passes a non-zero `a`.
+/// Asserts the **field-specific** homomorphism law for a witness-typed
+/// [`FieldIso<S, T>`] impl: multiplicative inverse preservation only.
+///
+/// `FieldIso<S, T>` extends `RingIso<S, T>` which extends `GroupIso<S, T>`.
+/// The ring-level laws (addition and multiplication homomorphism) and the
+/// group-level law (round-trip) are **not** re-checked here — by design,
+/// each helper exercises only the marker subtrait's own contribution.
+/// Consumers verifying a `FieldIso<S, T>` impl should also run
+/// [`assert_witness_iso_round_trip`], [`assert_witness_group_iso_law`], and
+/// [`assert_witness_ring_iso_laws`] against the same witness to cover the
+/// inherited laws.
+///
+/// Caller is responsible for passing a non-zero `a`.
 pub fn assert_witness_field_iso_laws<W, S, T>(a: S)
 where
     W: FieldIso<S, T>,

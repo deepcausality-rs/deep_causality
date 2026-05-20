@@ -11,14 +11,23 @@
 //! [`crate::utils_tests`] — Bazel cannot access files in `tests/` from `src/`,
 //! so coverage-counting test utilities must live in the `src` tree.
 //!
-//! Each helper exercises one law from the Tier 1 marker hierarchy:
+//! Each helper exercises **only** its marker subtrait's own contribution to
+//! the homomorphism chain. Inherited laws are not re-checked — consumers
+//! verifying a deeper marker (e.g. `FieldIso<T>`) should compose with the
+//! parent helpers to cover the full chain.
 //!
 //! - [`assert_iso_from_round_trip`] — bidirectional `From` round-trip identity.
-//! - [`assert_group_iso_from_law`] — additive group homomorphism.
-//! - [`assert_ring_iso_from_laws`] — ring homomorphism (addition AND multiplication).
-//! - [`assert_field_iso_from_laws`] — field homomorphism (ring + multiplicative inverse).
+//! - [`assert_group_iso_from_law`] — additive group homomorphism (`+`).
+//! - [`assert_ring_iso_from_laws`] — addition AND multiplication homomorphism
+//!   (the ring-specific contribution: multiplication; addition is inherited
+//!   from `GroupIso<T>` and re-asserted here for completeness because the
+//!   helper takes the same `(a, b)` pair).
+//! - [`assert_field_iso_from_laws`] — multiplicative inverse preservation only
+//!   (the field-specific contribution; ring laws are NOT re-checked).
 //! - [`assert_algebra_iso_from_law`] — scalar multiplication preservation.
-//! - [`assert_division_algebra_iso_from_law`] — conjugation preservation.
+//! - [`assert_division_algebra_iso_from_law`] — conjugation preservation only
+//!   (the division-algebra-specific contribution; algebra-product preservation
+//!   from `AlgebraIso<T, R>` is NOT re-checked).
 //!
 //! The helpers take owned values (caller provides representative inputs) and
 //! use `assert_eq!` with descriptive failure messages. No randomized input
@@ -98,8 +107,17 @@ where
     );
 }
 
-/// Asserts the field homomorphism laws for a [`crate::iso::FieldIso<T>`] impl:
-/// addition, multiplication, AND multiplicative inverse preserved.
+/// Asserts the **field-specific** homomorphism law for a
+/// [`crate::iso::FieldIso<T>`] impl: multiplicative inverse preservation.
+///
+/// `FieldIso<T>` extends `RingIso<T>` which extends `GroupIso<T>`. The
+/// ring-level laws (addition and multiplication homomorphism) and the
+/// group-level law (round-trip) are **not** re-checked here — by design,
+/// each helper exercises only the marker subtrait's own contribution.
+/// Consumers verifying a `FieldIso<T>` impl should therefore also run
+/// [`assert_iso_from_round_trip`], [`assert_group_iso_from_law`], and
+/// [`assert_ring_iso_from_laws`] against the same type pair to cover the
+/// inherited laws.
 ///
 /// Caller is responsible for passing a non-zero `a`. For `a == 0`, the inverse
 /// is undefined / returns Infinity per IEEE 754 for floating-point fields, and

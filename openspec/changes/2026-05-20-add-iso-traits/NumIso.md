@@ -545,28 +545,63 @@ Three things:
 
 ---
 
-## 6. Sample implementation: `CausalTensor<F>` ↔ `CsrMatrix<F>` (Tier 1)
+## 6. Sample implementation: `CausalTensor<F>` ↔ `CsrMatrix<F>` (Tier 1 forward + Tier 2 reverse)
 
-The trivial single-convention case. No new traits — just bidirectional `From` plus the structure-preserving markers, with `StandardIso<S, T>` blanket-implementing the marker hierarchy for free.
+A cross-crate hybrid. The forward direction (`CausalTensor` → `CsrMatrix`) fits Tier 1 cleanly because `CsrMatrix<F>` is local to `deep_causality_sparse`. The reverse direction (`CsrMatrix` → `CausalTensor`) is blocked from Tier 1 by the orphan rule and uses Tier 2 instead. The example demonstrates how the two tiers can coexist on a single conceptual iso when the dependency graph dictates it.
 
-### 6.1 The trait impl
+### 6.1 Why bidirectional `From` doesn't work here
+
+`CausalTensor<F>` lives in [`deep_causality_tensor`](../../deep_causality_tensor/); `CsrMatrix<F>` lives in [`deep_causality_sparse`](../../deep_causality_sparse/). The dependency is one-way: `deep_causality_sparse` depends on `deep_causality_tensor`, never the reverse.
+
+For Tier 1, both directions of `From` would need to compile:
+
+- `impl<F: RealField> From<CausalTensor<F>> for CsrMatrix<F>` — `Self = CsrMatrix<F>` is local to `deep_causality_sparse`, the impl can live there, and the crate sees `CausalTensor<F>` via its dependency. **Allowed.**
+- `impl<F: RealField> From<CsrMatrix<F>> for CausalTensor<F>` — `Self = CausalTensor<F>` is foreign (lives in `deep_causality_tensor`). The trait is foreign too. The orphan rule requires the first local type in the impl to appear before any foreign type containing uncovered type parameters; here `CausalTensor<F>` (foreign, contains uncovered `F`) precedes the local `CsrMatrix<F>` in trait-parameter position. **Blocked.** Adding the impl in `deep_causality_tensor` would require that crate to depend on `deep_causality_sparse`, creating a cycle.
+
+### 6.2 The trait impl (mixed tier)
+
+Forward direction via Tier 1 `From`:
 
 ```rust
+// In deep_causality_sparse/src/iso/tensor_csr.rs
 impl<F: RealField> From<CausalTensor<F>> for CsrMatrix<F> {
     fn from(t: CausalTensor<F>) -> Self {
         // Pack non-zero entries of t into CSR format.
         // (Convention: zero threshold is exact equality with F::zero().)
     }
 }
+```
 
-impl<F: RealField> From<CsrMatrix<F>> for CausalTensor<F> {
-    fn from(m: CsrMatrix<F>) -> Self {
+Reverse direction via Tier 2 `Iso<S, T>` on `CsrMatrix<F>` as `Self` (the locally-owned type, which sidesteps the orphan rule the same way Quaternion ↔ rotor did in §5):
+
+```rust
+// In deep_causality_sparse/src/iso/tensor_csr.rs
+impl<F: RealField> Iso<CsrMatrix<F>, CausalTensor<F>> for CsrMatrix<F> {
+    fn to_target(s: CsrMatrix<F>) -> CausalTensor<F> {
         // Expand sparse entries into a dense tensor with zeros elsewhere.
+    }
+    fn to_source(t: CausalTensor<F>) -> CsrMatrix<F> {
+        // Delegates to the forward From impl above.
+        CsrMatrix::from(t)
+    }
+}
+
+impl<F: RealField> GroupIso<CsrMatrix<F>, CausalTensor<F>> for CsrMatrix<F> {}
+impl<F: RealField> RingIso<CsrMatrix<F>, CausalTensor<F>> for CsrMatrix<F> {}
+impl<F: RealField> AlgebraIso<CsrMatrix<F>, CausalTensor<F>, F> for CsrMatrix<F> {}
+```
+
+Domain-specific aliases as inherent methods on `CsrMatrix<F>` give call sites a cleaner idiom for the reverse direction:
+
+```rust
+impl<F: RealField> CsrMatrix<F> {
+    pub fn to_dense(self) -> CausalTensor<F> {
+        <Self as Iso<CsrMatrix<F>, CausalTensor<F>>>::to_target(self)
     }
 }
 ```
 
-**No manual marker impls required.** The two `From` impls plus the algebraic-structure impls on `CausalTensor<F>` and `CsrMatrix<F>` (`Ring`, `Algebra<F>`, etc., which already exist in their respective crates) are enough. `StandardIso<CausalTensor<F>, CsrMatrix<F>>` automatically implements `Iso`, `GroupIso`, `RingIso`, and `AlgebraIso` via the blanket impls in §2.2.1. Generic code that requires `StandardIso<CausalTensor<F>, CsrMatrix<F>>: RingIso<CausalTensor<F>, CsrMatrix<F>>` compiles without further effort.
+**What's lost compared to a pure Tier 1 example:** `StandardIso<CausalTensor<F>, CsrMatrix<F>>` does NOT auto-derive every marker in this case, because the blanket-impl bounds require bidirectional `From` and only the forward direction exists. The example demonstrates that the design tolerates partial Tier 1 + Tier 2 hybrid placement; for a clean Tier 1 demonstration the two types would need to live in the same crate.
 
 ### 6.2 The usage scenario
 
@@ -592,48 +627,52 @@ The hazard is silent: if `from_dense_lossy` and `densify` are not exact inverses
 
 ### 6.4 With the iso
 
-The two `From` impls plus the blanket-implied marker hierarchy on `StandardIso<CausalTensor<f64>, CsrMatrix<f64>>` mean standard `.into()` ergonomics with structure-preservation guarantees:
+Forward direction uses standard `.into()` ergonomics (Tier 1). Reverse direction uses the `to_dense()` inherent method that delegates to the Tier 2 iso (or equivalently, the Tier 2 trait method directly):
 
 ```rust
 let dense_laplacian: CausalTensor<f64> = manifold.laplacian(0);
+
+// Forward: Tier 1 `From`/`Into`.
 let sparse: CsrMatrix<f64> = dense_laplacian.into();
+
 let result_sparse = sparse_solve(sparse, &rhs);
-let result_dense: CausalTensor<f64> = result_sparse.into();
+
+// Reverse: inherent method delegating to the Tier 2 iso.
+let result_dense: CausalTensor<f64> = result_sparse.to_dense();
 ```
 
-The real value emerges in generic numerical code that bounds on the iso to assert structure preservation:
+Generic numerical code that crosses the iso boundary bounds on the actual impls it uses — `From<CausalTensor<f64>>` for the forward leg, `Iso<CsrMatrix<f64>, CausalTensor<f64>>` for the reverse leg:
 
 ```rust
-fn matrix_exponential_adaptive<S>(
-    operator: S,
+fn matrix_exponential_adaptive(
+    operator: CausalTensor<f64>,
     duration: f64,
     steps: usize,
-) -> S
-where
-    S: Ring + From<CsrMatrix<f64>>,
-    CsrMatrix<f64>: From<S>,
-    StandardIso<S, CsrMatrix<f64>>: RingIso<S, CsrMatrix<f64>>,
-{
-    let sparse: CsrMatrix<f64> = operator.into();
+) -> CausalTensor<f64> {
+    let sparse: CsrMatrix<f64> = operator.into();           // Tier 1
     let exp = sparse_matrix_exp_via_krylov(sparse, duration, steps);
-    S::from(exp)
+    exp.to_dense()                                          // Tier 2 via inherent alias
 }
 
 let dense_op: CausalTensor<f64> = build_evolution_operator();
 let evolved = matrix_exponential_adaptive(dense_op, dt, 50);
 ```
 
-The `StandardIso<S, CsrMatrix<f64>>: RingIso<S, CsrMatrix<f64>>` bound is a compile-time assertion that the round-trip preserves ring structure. If you tried to call this function with a type whose `From` impls were lossy — silently dropping small entries, or expanding zeros into sentinel values that broke the ring homomorphism — the marker trait's blanket-impl prerequisites would fail and the call would refuse to compile.
+For a fully generic version that abstracts over the source type, the bound surface is split across the two tiers — `S: From<CsrMatrix<f64>>` plus `CsrMatrix<f64>: Iso<CsrMatrix<f64>, S>`. In practice, this kind of hybrid bound is awkward enough that most generic code commits to a single tier and accepts a concrete type pair.
+
+The `RingIso<CsrMatrix<f64>, CausalTensor<f64>>` marker on `CsrMatrix<f64>` (Tier 2) is the compile-time assertion that the reverse-direction iso preserves ring structure. The forward direction is verified separately via property tests on the `From` impl.
 
 ### 6.5 The value
 
-Three things:
+Three things, with one honest caveat:
 
-1. **Adaptive storage becomes routine.** Dense for small / hot regions, sparse for large / cold regions, `.into()` between them with property-tested round-trip. The choice of representation is local to the function that needs it; callers don't care.
-2. **Generic numerical code expresses its correctness preconditions in types.** A function that says "I require the iso to preserve ring structure" gets a compile-time check that the chosen type pair satisfies that requirement. The fragile hand-rolled "densify/sparsify" utilities common in scientific Rust code become structurally disciplined.
-3. **The cost is one `From` pair plus one `proptest!` block per type pair.** No new traits at the call site, no witness type to manage, no marker impls to write. The blanket impls on `StandardIso<S, T>` do the marker-trait wiring. The boilerplate-to-guarantee ratio is the best of the three tiers when the single-convention assumption holds.
+1. **Adaptive storage becomes routine.** Dense for small / hot regions, sparse for large / cold regions, with `.into()` in one direction and `.to_dense()` in the other. The choice of representation is local to the function that needs it; callers don't see the tier split.
+2. **Structure preservation is verified per-tier.** The forward `From` carries a `proptest!` block exercising the round-trip and homomorphism laws on the `From` path. The reverse Tier 2 impl carries equivalent property tests through the witness's `to_target` / `to_source`. Both legs of the iso get the same discipline.
+3. **The cost is one `From` impl plus one Tier 2 impl plus property tests for both.** Higher than a pure in-crate Tier 1 example, but the orphan rule dictates this is the minimum viable structure for cross-crate cases with asymmetric dependencies.
 
-**Where it lives:** [`deep_causality_sparse/src/iso/tensor_csr.rs`](../../deep_causality_sparse/src/iso/tensor_csr.rs) (does not exist yet). `deep_causality_sparse` already depends on `deep_causality_tensor`, so both types are reachable.
+**Honest caveat: `StandardIso<S, T>` does not auto-derive markers here.** The blanket impls on `StandardIso<S, T>` require bidirectional `From`, which is unavailable for this type pair. The "zero-boilerplate Tier 1" benefit applies only to fully-in-crate cases. For mixed-tier cross-crate cases like this one, the marker impls are written manually on the Tier 2 implementer (`CsrMatrix<F>` here).
+
+**Where it lives:** [`deep_causality_sparse/src/iso/tensor_csr.rs`](../../deep_causality_sparse/src/iso/tensor_csr.rs) (does not exist yet). `deep_causality_sparse` already depends on `deep_causality_tensor`, so both types are reachable from a single crate — but the dependency is one-way, which is exactly what forces the mixed-tier shape.
 
 ### 6.6 Summary: where each tier earns its keep
 
@@ -653,28 +692,28 @@ Each tier's value is concrete and demonstrable on existing or near-term code pat
 
 Both Tier 1 and Tier 2 use the trait-inheritance-for-free pattern: implementing the most specific marker subtrait automatically satisfies all parent markers.
 
-**Tier 1 example (single-convention dense ↔ sparse):**
+**Tier 1 example (single-convention, in-crate):**
 
 ```rust
-// AlgebraIso requires: Self: Algebra<F> + From<T>, T: Algebra<F> + From<Self>
-// Since both From impls exist and both sides are Algebra<F>, the bound is satisfied.
-impl<F: RealField> AlgebraIso<CsrMatrix<F>, F> for CausalTensor<F> {}
-
-// AlgebraIso<T, R> doesn't extend RingIso<T> in the current sketch because the
-// algebra-vs-ring distinction is orthogonal; if the user wants both, both impls
-// are written. Empty bodies, marker discipline.
-impl<F: RealField> RingIso<CsrMatrix<F>> for CausalTensor<F> {}
-impl<F: RealField> GroupIso<CsrMatrix<F>> for CausalTensor<F> {}
+// Hypothetical in-crate type pair `MyTypeA` and `MyTypeB` where bidirectional
+// From is implementable (both types are local to the same crate, or the
+// dependency graph allows both impl directions). Tier 1 marker impls go on
+// the source type and stack up empty:
+impl GroupIso<MyTypeB> for MyTypeA {}
+impl RingIso<MyTypeB> for MyTypeA {}
+impl AlgebraIso<MyTypeB, f64> for MyTypeA {}
 ```
 
-**Tier 2 example (multi-convention quaternion ↔ rotor):**
+**Tier 2 example (cross-crate, source/target as `Self`):**
 
 ```rust
-// Witness type is the implementer; the where-clauses constrain S and T.
+// CausalMultiVector<F> is local to deep_causality_multivector (per §5).
 // DivisionAlgebraIso extends AlgebraIso which extends Iso, so implementing the
-// most specific marker satisfies the chain.
-impl<F: RealField> DivisionAlgebraIso<Quaternion<F>, CausalMultiVector<F>, F>
-    for QuaternionRotorIsoEastCoast {}
+// most specific marker requires every parent in the chain to also be
+// implemented (empty bodies). Per-level impls:
+impl<F: RealField> GroupIso<Quaternion<F>, CausalMultiVector<F>> for CausalMultiVector<F> {}
+impl<F: RealField> AlgebraIso<Quaternion<F>, CausalMultiVector<F>, F> for CausalMultiVector<F> {}
+impl<F: RealField> DivisionAlgebraIso<Quaternion<F>, CausalMultiVector<F>, F> for CausalMultiVector<F> {}
 ```
 
 For types that satisfy only a subset of the hierarchy (e.g., a quaternion-to-rotor iso satisfies `DivisionAlgebraIso` but not `FieldIso` because quaternions are non-commutative), the corresponding subtraits simply remain unimplemented. The compiler refuses to substitute them where the unimplemented levels are required.
