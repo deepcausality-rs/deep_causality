@@ -8,6 +8,7 @@ mod common;
 mod division_algebra_iso_tests;
 mod field_iso_tests;
 mod group_iso_tests;
+mod iso_tests;
 mod ring_iso_tests;
+mod standard_tests;
 mod test_support_tests;
-mod witness;

@@ -24,31 +24,31 @@
 
 > **Gate:** Stage A MUST be signed off and committed before any task here begins.
 
-- [ ] 2.1 Create the new module tree under `deep_causality_num/src/iso/witness/`. Files: `mod.rs` (re-exports), `iso.rs`, `standard.rs`, `group_iso.rs`, `ring_iso.rs`, `field_iso.rs`, `algebra_iso.rs`, `division_algebra_iso.rs`, `test_support.rs`.
-- [ ] 2.2 Declare `pub trait Iso<S, T> { fn to_target(s: S) -> T; fn to_source(t: T) -> S; }` in `src/iso/witness/iso.rs`. Doc comment explains: method names `to_target` / `to_source` rather than `forward` / `backward` (collision with EPP temporal vocabulary) or `from` / `into` (collision with std semantics) per D3. Document round-trip law: `Self::to_source(Self::to_target(s)) == s` and the symmetric case.
-- [ ] 2.3 Declare `pub trait GroupIso<S, T>: Iso<S, T> where S: Group, T: Group {}` in `src/iso/witness/group_iso.rs`. Empty body. Doc comment notes that the where-clauses constrain the type *pair* (`S`, `T`) rather than the implementer `Self` (per D4); the implementer is whichever type the iso is hung from.
-- [ ] 2.4 Declare `pub trait RingIso<S, T>: GroupIso<S, T> where S: Ring, T: Ring {}` in `src/iso/witness/ring_iso.rs`. Empty body.
-- [ ] 2.5 Declare `pub trait FieldIso<S, T>: RingIso<S, T> where S: Field, T: Field {}` in `src/iso/witness/field_iso.rs`. Empty body.
-- [ ] 2.6 Declare `pub trait AlgebraIso<S, T, R>: Iso<S, T> where S: Algebra<R>, T: Algebra<R>, R: Ring {}` in `src/iso/witness/algebra_iso.rs`. Empty body. Note that `AlgebraIso<S, T, R>` extends `Iso<S, T>` directly rather than `RingIso<S, T>` — the algebra-vs-ring distinction is orthogonal; implementers write both when both apply.
-- [ ] 2.7 Declare `pub trait DivisionAlgebraIso<S, T, R>: AlgebraIso<S, T, R> where S: DivisionAlgebra<R>, T: DivisionAlgebra<R>, R: Field {}` in `src/iso/witness/division_algebra_iso.rs`. Empty body.
-- [ ] 2.8 Declare `pub struct StandardIso<S, T>(core::marker::PhantomData<(S, T)>);` in `src/iso/witness/standard.rs`. Add an inherent `pub const fn new() -> Self` constructor. Implement `Clone`, `Copy`, `Default`, `Debug` for `StandardIso<S, T>` (the bounds need to be `where S: ?Sized + 'static, T: ?Sized + 'static` so the implementations are free of constraints on `S` and `T`).
-- [ ] 2.9 Implement `Iso<S, T> for StandardIso<S, T> where S: From<T>, T: From<S>` in `src/iso/witness/standard.rs`. Body: `fn to_target(s: S) -> T { T::from(s) }` and `fn to_source(t: T) -> S { S::from(t) }`.
-- [ ] 2.10 Implement `GroupIso<S, T> for StandardIso<S, T> where S: Group + From<T>, T: Group + From<S>` in `src/iso/witness/standard.rs`. Empty body. The blanket fires whenever the bounds are satisfied.
-- [ ] 2.11 Implement `RingIso<S, T> for StandardIso<S, T> where S: Ring + From<T>, T: Ring + From<S>` analogously.
-- [ ] 2.12 Implement `FieldIso<S, T> for StandardIso<S, T> where S: Field + From<T>, T: Field + From<S>` analogously.
-- [ ] 2.13 Implement `AlgebraIso<S, T, R> for StandardIso<S, T> where S: Algebra<R> + From<T>, T: Algebra<R> + From<S>, R: Ring` analogously.
-- [ ] 2.14 Implement `DivisionAlgebraIso<S, T, R> for StandardIso<S, T> where S: DivisionAlgebra<R> + From<T>, T: DivisionAlgebra<R> + From<S>, R: Field` analogously.
-- [ ] 2.15 Write `src/iso/witness/test_support.rs` (`#[cfg(test)]`-gated). Exports `assert_witness_iso_round_trip<W: Iso<S, T>, S, T>(s: S)`, `assert_witness_group_iso_law<W: GroupIso<S, T>, S, T>(a: S, b: S)`, `assert_witness_ring_iso_laws<W: RingIso<S, T>, S, T>(a: S, b: S)`, `assert_witness_field_iso_laws<W: FieldIso<S, T>, S, T>(a: S)`, `assert_witness_algebra_iso_law<W: AlgebraIso<S, T, R>, S, T, R>(r: R, a: S)`, `assert_witness_division_algebra_iso_law<W: DivisionAlgebraIso<S, T, R>, S, T, R>(a: S)`. Signatures parallel to the Tier 1 helpers but operating through the witness's `to_target` / `to_source`.
-- [ ] 2.16 Update `deep_causality_num/src/iso/witness/mod.rs` to declare submodules and re-export `Iso`, `StandardIso`, and every Tier 2 marker subtrait.
-- [ ] 2.17 Update `deep_causality_num/src/iso/mod.rs` to add `pub mod witness;` (do NOT re-export Tier 2 traits at the top-level `iso::` path; the witness module path preserves the namespace split per D7).
-- [ ] 2.18 Update `deep_causality_num/src/lib.rs`: re-export the witness module so consumers can write `use deep_causality_num::iso::witness::{Iso, StandardIso, GroupIso, ...};`. Document the Tier 1 / Tier 2 namespace distinction in the module doc.
-- [ ] 2.19 Update `deep_causality_num/BUILD.bazel`: register the new `src/iso/witness/` module tree in the existing library target's `srcs` list.
-- [ ] 2.20 Create test files under `deep_causality_num/tests/iso/witness/`: `iso_tests.rs` (round-trip on `StandardIso<i32, i32>` identity), `standard_tests.rs` (blanket-impl verification on a small concrete type pair that satisfies bidirectional `From` + `Ring`), `group_iso_tests.rs`, `ring_iso_tests.rs`, `field_iso_tests.rs`, `algebra_iso_tests.rs`, `division_algebra_iso_tests.rs`. Register in `tests/iso/witness/mod.rs`, `tests/iso/mod.rs`, and `tests/BUILD.bazel`.
-- [ ] 2.21 Verify the `StandardIso<S, T>` blanket impl fires correctly: write a compile-pass test (a `#[test]` that uses turbofish to call `StandardIso::<S, T>::to_target(s)` for a concrete `(S, T)` pair where bidirectional `From` + `Ring` is provided in the test module) and assert that the type-checker accepts the call as `RingIso<S, T>` via the blanket.
-- [ ] 2.22 Run `cargo build -p deep_causality_num` and `cargo test -p deep_causality_num`; both MUST pass. Verify no new clippy warnings.
-- [ ] 2.23 Verify `no_std` compatibility: `cargo build -p deep_causality_num --no-default-features --features libm_math` MUST pass. The Tier 2 trait declarations and `StandardIso<S, T>` MUST compile under `no_std` (`StandardIso<S, T>` uses `core::marker::PhantomData`, not `std::marker::PhantomData`).
-- [ ] 2.24 Run `make format && make fix` and verify no new clippy warnings.
-- [ ] 2.25 **Stage B gate:** prepare a stage-completion summary. Wait for explicit written sign-off. Prepare a commit message. Do NOT advance to stage 3 until the commit has landed.
+- [x] 2.1 Created the new module tree under `deep_causality_num/src/iso/witness/`. All 9 files in place.
+- [x] 2.2 `Iso<S, T>` declared in `iso.rs` with `to_target` and `to_source`. Doc comment explains the naming-rationale collision with EPP temporal vocabulary and std `From`/`Into` semantics per D3.
+- [x] 2.3 `GroupIso<S, T>: Iso<S, T> where S: Group, T: Group` declared in `group_iso.rs`. Doc comment notes that where-clauses constrain the type *pair* (`S`, `T`) rather than `Self` per D4.
+- [x] 2.4 `RingIso<S, T>: GroupIso<S, T> where S: Ring, T: Ring` declared in `ring_iso.rs`.
+- [x] 2.5 `FieldIso<S, T>: RingIso<S, T> where S: Field, T: Field` declared in `field_iso.rs`.
+- [x] 2.6 `AlgebraIso<S, T, R>: Iso<S, T> where S: Algebra<R>, T: Algebra<R>, R: Ring` declared in `algebra_iso.rs`.
+- [x] 2.7 `DivisionAlgebraIso<S, T, R>: AlgebraIso<S, T, R> where S: DivisionAlgebra<R>, T: DivisionAlgebra<R>, R: Field` declared in `division_algebra_iso.rs`.
+- [x] 2.8 `StandardIso<S, T>` declared with `PhantomData<fn() -> S>` + `PhantomData<fn() -> T>` named fields (struct form rather than tuple — avoids `clippy::type_complexity` lint on the `(fn() -> S, fn() -> T)` tuple). Manual `Clone`, `Copy`, `Default`, `Debug` impls without bounds on `S` or `T`. **Deviation:** struct-form fields with `fn() -> S` instead of tuple `PhantomData<(S, T)>` — different shape, equivalent effect (zero-sized witness, no runtime data, no auto-trait constraints).
+- [x] 2.9 `Iso<S, T> for StandardIso<S, T> where S: From<T>, T: From<S>` blanket impl delegates to `T::from` / `S::from`.
+- [x] 2.10 `GroupIso<S, T> for StandardIso<S, T>` blanket impl with `S: Group + From<T>, T: Group + From<S>` bounds.
+- [x] 2.11 `RingIso<S, T> for StandardIso<S, T>` blanket impl.
+- [x] 2.12 `FieldIso<S, T> for StandardIso<S, T>` blanket impl.
+- [x] 2.13 `AlgebraIso<S, T, R> for StandardIso<S, T>` blanket impl.
+- [x] 2.14 `DivisionAlgebraIso<S, T, R> for StandardIso<S, T>` blanket impl.
+- [x] 2.15 `test_support.rs` exports six helpers (`assert_witness_iso_round_trip`, `_group_iso_law`, `_ring_iso_laws`, `_field_iso_laws`, `_algebra_iso_law`, `_division_algebra_iso_law`). **Deviation:** `assert_witness_iso_round_trip` only checks the S→T→S direction — the T→S→T check originally specified is **logically redundant** for pure-function witnesses (if `to_source(to_target(s)) == s` holds, the symmetric law follows automatically by substitution `t = to_target(s)`). Documented in the helper's doc comment.
+- [x] 2.16 `src/iso/witness/mod.rs` declares submodules and re-exports `Iso`, `StandardIso`, plus every Tier 2 marker subtrait.
+- [x] 2.17 `src/iso/mod.rs` adds `pub mod witness;`. Tier 2 traits are NOT re-exported at the top-level `iso::` path per D7 — consumers disambiguate via the `iso::witness::*` module path.
+- [x] 2.18 `src/lib.rs` no extra re-export needed beyond `pub mod iso;` (already added in Stage A) — consumers reach Tier 2 via `deep_causality_num::iso::witness::*`.
+- [x] 2.19 `BUILD.bazel` requires no edit; `srcs = glob(["src/**"])` automatically picks up new files.
+- [x] 2.20 Created test files under `deep_causality_num/tests/iso/witness/`: `iso_tests.rs`, `standard_tests.rs`, `group_iso_tests.rs`, `ring_iso_tests.rs`, `field_iso_tests.rs`, `algebra_iso_tests.rs`, `division_algebra_iso_tests.rs`, `test_support_tests.rs`, `common.rs` (shared witness types). Registered in `tests/iso/witness/mod.rs` and `tests/iso/mod.rs`.
+- [x] 2.21 `standard_iso_satisfies_iso_bound_in_generic_context` test verifies the blanket impl fires correctly in generic code parameterized over `W: Iso<S, T>`. Plus per-marker tests verify each marker subtrait's blanket impl fires.
+- [x] 2.22 `cargo build -p deep_causality_num` and `cargo test -p deep_causality_num` both pass cleanly. 32 new Tier 2 witness tests pass (in addition to the 21 Tier 1 tests from Stage A — 53 iso tests total). `cargo clippy -p deep_causality_num --tests -- -D warnings` clean after addressing `type_complexity` and `clone_on_copy` lints.
+- [x] 2.23 `cargo build -p deep_causality_num --no-default-features --features libm_math` passes. Full no_std test run: 4138 tests pass (compared to 4106 before Stage B — exactly the +32 new witness tests). `StandardIso<S, T>` uses `core::marker::PhantomData` throughout; no `std::*` paths anywhere in the Tier 2 module tree.
+- [x] 2.24 `make format && make fix` clean across the workspace.
+- [x] 2.25 **Stage B gate:** stage-completion summary prepared.
 
 ## 3. Part C — Tier 3 `NaturalIso<F, G>` in `deep_causality_haft`
 

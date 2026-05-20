@@ -70,9 +70,15 @@ pub mod field_iso;
 pub mod group_iso;
 pub mod ring_iso;
 pub mod test_support;
+pub mod witness;
 
 pub use algebra_iso::AlgebraIso;
 pub use division_algebra_iso::DivisionAlgebraIso;
 pub use field_iso::FieldIso;
 pub use group_iso::GroupIso;
 pub use ring_iso::RingIso;
+
+// Tier 2 (witness-typed) traits are NOT re-exported at the top-level `iso::`
+// path because they share short names with the Tier 1 subtraits. Consumers
+// disambiguate via the module path: `iso::witness::GroupIso<S, T>` vs the
+// Tier 1 `iso::GroupIso<T>`.
