@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.5.1...deep_causality_topology-v0.6.0) - 2026-05-20
+
+### Added
+
+- *(deep_causality_num)* add Tier 1 isomorphism marker subtraits (iso-traits Stage A)
+- *(topology)* Increased test coverage.
+- *(topology)* Completed #487.
+- *(topology)* LatticeComplex + cubical aliases + Neighborhood strategies (Stage C)
+- *(topology)* genericize Manifold over ChainComplex (Stage B)
+
+### Other
+
+- *(topology)* introduce ChainComplex trait, drop _cpu suffix
+
 ## [0.5.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.5.0...deep_causality_topology-v0.5.1) - 2026-03-12
 
 ### Other
