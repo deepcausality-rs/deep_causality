@@ -252,7 +252,10 @@ impl Rem for Float106 {
     fn rem(self, rhs: Self) -> Self::Output {
         // r = a - n * b, where n = trunc(a / b)
         let div = self / rhs;
+        #[cfg(feature = "std")]
         let n = div.hi.trunc();
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        let n = libm::trunc(div.hi);
         self - (rhs * Self::from_f64(n))
     }
 }

@@ -48,8 +48,12 @@ fn test_round() {
 
 #[test]
 fn test_exp() {
+    // Use tolerance comparison: `RealField::exp` may dispatch through the
+    // `libm` path (no_std + libm_math feature) while `f64::exp` is the std
+    // inherent method. The two implementations agree to ~1 ULP. Match the
+    // pattern used by `test_ln` immediately below.
     let x = 1.0_f64;
-    assert_eq!(RealField::exp(x), x.exp());
+    assert!((RealField::exp(x) - x.exp()).abs() < 1e-10);
 }
 
 #[test]

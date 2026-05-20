@@ -177,7 +177,11 @@ fn sqrt_neg() {
 }
 #[test]
 fn exp_val() {
-    assert_eq!(Float::exp(1.0f64), std::f64::consts::E);
+    // Tolerance comparison: `Float::exp` may dispatch through libm (no_std +
+    // libm_math feature) which can differ from the std `f64` constant by ~1
+    // ULP. The std `f64` build matches exactly; no_std mode matches within
+    // tolerance.
+    assert!((Float::exp(1.0f64) - std::f64::consts::E).abs() < 1e-10);
 }
 #[test]
 fn exp2_val() {
