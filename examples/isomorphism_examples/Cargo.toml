@@ -1,0 +1,28 @@
+[package]
+name = "isomorphism_examples"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "no_lib.rs"
+
+[dependencies]
+deep_causality_num = { path = "../../deep_causality_num" }
+deep_causality_multivector = { path = "../../deep_causality_multivector" }
+deep_causality_tensor = { path = "../../deep_causality_tensor" }
+deep_causality_sparse = { path = "../../deep_causality_sparse" }
+
+[[example]]
+name = "quaternion_rotor_pipeline"
+path = "quaternion_rotor_pipeline/main.rs"
+
+[[example]]
+name = "tensor_sparse_memory_budget"
+path = "tensor_sparse_memory_budget/main.rs"
+
+[[example]]
+name = "complex_clifford_equivalence"
+path = "complex_clifford_equivalence/main.rs"
