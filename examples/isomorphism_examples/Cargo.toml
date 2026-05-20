@@ -10,6 +10,8 @@ publish = false
 path = "no_lib.rs"
 
 [dependencies]
+deep_causality_core = { path = "../../deep_causality_core" }
+deep_causality_haft = { path = "../../deep_causality_haft" }
 deep_causality_num = { path = "../../deep_causality_num" }
 deep_causality_multivector = { path = "../../deep_causality_multivector" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
@@ -26,3 +28,11 @@ path = "tensor_sparse_memory_budget/main.rs"
 [[example]]
 name = "complex_clifford_equivalence"
 path = "complex_clifford_equivalence/main.rs"
+
+[[example]]
+name = "effect_process_witness_duality"
+path = "effect_process_witness_duality/main.rs"
+
+[[example]]
+name = "either_input_generic_api"
+path = "either_input_generic_api/main.rs"

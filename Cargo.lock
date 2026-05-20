@@ -780,6 +780,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8bb03732005da905c88227371639bf1ad885cc712789c011c31c5fb3ab3ccf02"
 
 [[package]]
+name = "isomorphism_examples"
+version = "0.1.0"
+dependencies = [
+ "deep_causality_core",
+ "deep_causality_haft",
+ "deep_causality_multivector",
+ "deep_causality_num",
+ "deep_causality_sparse",
+ "deep_causality_tensor",
+]
+
+[[package]]
 name = "itertools"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

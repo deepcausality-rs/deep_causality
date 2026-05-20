@@ -6,7 +6,7 @@ Showcase examples that demonstrate where the three-tier iso surface (from `deep_
 
 Each example is structured as a **BEFORE / AFTER** comparison so the simplification is visible at the point of use. Every example also asserts that the two paths produce byte-identical results, so the iso isn't just shorter — it's provably the same.
 
-## The three examples
+## The five examples
 
 ### 1. `quaternion_rotor_pipeline`
 
@@ -32,6 +32,24 @@ Demonstrate that complex multiplication is exactly the Cl(0,1) geometric product
 
 **Why it matters**: this is the foundational "Clifford is a generalisation of complex" worked example. It also exercises the full marker-subtrait chain (Iso -> GroupIso -> RingIso -> FieldIso -> DivisionAlgebraIso) on one type pair, which no other example covers.
 
+### 4. `effect_process_witness_duality`
+
+`PropagatingEffect<T>` and `PropagatingProcess<T, (), ()>` are both type aliases for the same concrete `CausalEffectPropagationProcess` carrier; each ships its own HKT witness with independently-written `Functor` / `Monad` impls. This example shows that both witness paths produce byte-identical outputs, and writes a generic pipeline parameterised over an arbitrary `Functor<W>` that accepts either witness interchangeably.
+
+**Iso used**: none — the example explains *why* no `NaturalIso` is needed (the carrier is one type; the iso bodies would be identity), and demonstrates the dual-witness pattern that replaces it.
+
+**Why it matters**: practitioners moving across the Markovian / non-Markovian boundary need to know that the unit-state, unit-context case is free (same type) while the non-trivial case is a lossy conversion (a separate follow-up will ship `From` / `TryFrom` for that). This example pins the free case and points at the right place for the lossy case.
+
+### 5. `either_input_generic_api`
+
+A library function rotates the phase of a "signal." Without iso bounds, a generic `where X: Field` signature accepts any field — including ones that aren't iso to `Complex` (like `Quaternion`). Adding a `FieldIso` bound makes the equivalence between two representations part of the type signature; the compiler then enforces that the caller passes interchangeable types.
+
+The example demonstrates: (1) a permissive `where X: Field` API, (2) a strict `where X: FieldIso<Complex<F>>` API, and (3) a dispatch enum `SignalRep::Native(Complex) | SignalRep::Lifted(CausalMultiVector)` whose variants are provably equivalent.
+
+**Iso used**: `FieldIso<Complex<F>>` (Tier 1 marker) plus the `ComplexCl01Iso` witness for the lifted side.
+
+**Why it matters**: this is the most practitioner-relevant example. API authors who today rely on doc comments to communicate "this works on complex numbers OR their Clifford-algebra equivalent" can replace the comment with a type-checked bound. Misuse (passing a `Quaternion` where a `Complex`-equivalent was expected) becomes a compile error, not a runtime gotcha.
+
 ## Running
 
 Once the `implement-isomorphism` change lands:
@@ -40,4 +58,6 @@ Once the `implement-isomorphism` change lands:
 cargo run --example quaternion_rotor_pipeline -p isomorphism_examples
 cargo run --example tensor_sparse_memory_budget -p isomorphism_examples
 cargo run --example complex_clifford_equivalence -p isomorphism_examples
+cargo run --example effect_process_witness_duality -p isomorphism_examples
+cargo run --example either_input_generic_api -p isomorphism_examples
 ```
