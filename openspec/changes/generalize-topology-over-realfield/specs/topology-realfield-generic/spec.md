@@ -137,24 +137,55 @@ The trait method SHALL be declared `fn structure_constant<R: RealField>(a: usize
 - **WHEN** a test calls `create_triangle_complex::<f32>()`
 - **THEN** the result SHALL be a `SimplicialComplex<f32>`
 
-### Requirement: `RealField::from_f64` is added to `deep_causality_num`
+### Requirement: `RealField` gains four literal-conversion constructors in `deep_causality_num`
 
-The `RealField` trait SHALL gain a method `fn from_f64(value: f64) -> Self` with no default implementation. The `f32` and `f64` impls SHALL be provided as one-line conversions.
+The `RealField` trait SHALL gain four methods with no default implementations:
 
-#### Scenario: `f64` constructor
+```rust
+fn from_f64(value: f64) -> Self;
+fn from_f32(value: f32) -> Self;
+fn from_i64(value: i64) -> Self;
+fn from_i32(value: i32) -> Self;
+```
+
+The `f32` and `f64` impls SHALL be provided as one-line `value as Self` conversions for each method. The four methods cover the dominant numeric-literal conversion patterns:
+
+- `from_f64` — the default Rust floating-point literal type (`1.5e-3` etc.).
+- `from_f32` — lifting an existing `f32` value into a higher-precision `R`.
+- `from_i64` — index-derived and count-derived quantities (e.g. `R::from_i64(num_hinges as i64)` for averaging across a hinge count).
+- `from_i32` — the common 32-bit signed integer case.
+
+Each method's doc comment SHALL note precision-narrowing risk when `Self`'s representation has fewer bits than the source type (e.g. `f32::from_i64(very_large_i64)` rounds; `f64::from_i64(very_large_i64)` may lose low bits beyond `f64`'s 53-bit mantissa).
+
+#### Scenario: `from_f64` at `f64` is identity
 
 - **WHEN** `f64::from_f64(2.5)` is called
 - **THEN** the result SHALL equal `2.5_f64`
 
-#### Scenario: `f32` constructor
+#### Scenario: `from_f64` at `f32` narrows precision
 
 - **WHEN** `f32::from_f64(2.5)` is called
 - **THEN** the result SHALL equal `2.5_f32`
 
-#### Scenario: No default impl forces every implementor to provide the method
+#### Scenario: `from_f32` at `f64` widens precision
 
-- **WHEN** an external type implements `RealField` without supplying `from_f64`
-- **THEN** the compiler SHALL produce an error requiring the method to be defined
+- **WHEN** `f64::from_f32(2.5_f32)` is called
+- **THEN** the result SHALL equal `2.5_f32 as f64`
+
+#### Scenario: `from_i64` at `f64`
+
+- **WHEN** `f64::from_i64(42_i64)` is called
+- **THEN** the result SHALL equal `42.0_f64`
+
+#### Scenario: `from_i32` at `f32`
+
+- **WHEN** `f32::from_i32(-7_i32)` is called
+- **THEN** the result SHALL equal `-7.0_f32`
+
+#### Scenario: No default impls force every implementor to provide all four methods
+
+- **WHEN** an external type implements `RealField` without supplying any one of `from_f64`, `from_f32`, `from_i64`, `from_i32`
+- **THEN** the compiler SHALL produce an error naming the missing method
 
 ### Requirement: Behavior at `R = f64` is bit-identical to the pre-R0 baseline
 

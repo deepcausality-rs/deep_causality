@@ -1,23 +1,40 @@
 ## ADDED Requirements
 
-### Requirement: Zero hardcoded `f64` or `f32` in the public API of `deep_causality_physics`
+### Requirement: Zero hardcoded `f64` or `f32` in the public API of `deep_causality_physics`, with one carve-out for physical constants
 
-The crate's public API SHALL contain no hardcoded `f64` or `f32` in any struct field, function/method signature, trait method, error variant, trait bound, or `pub const` declaration. Every floating-point quantity SHALL be `R: RealField` for some `R` chosen by the caller. The only permitted exceptions are internal RNG sample conversions (`R::from_f64(rng.random::<f64>())` in the Lund fragmentation routines), each tagged `// PERMITTED-F64: RNG boundary`.
+The crate's public API SHALL contain no hardcoded `f64` or `f32` in any struct field, function/method signature, trait method, error variant, or trait bound. Every floating-point *quantity that participates in a calculation* SHALL be `R: RealField` for some `R` chosen by the caller.
 
-#### Scenario: Grep finds no public `f64`/`f32` outside permitted exceptions
+The single carve-out is **physical constant declarations under `deep_causality_physics/src/constants/` and the PDG quark-mass constants in `nuclear/pdg.rs`**. These SHALL remain `pub const X: f64 = literal` and SHALL NOT be converted to `pub fn name<R: RealField>() -> R` form. The rationale: the values themselves do not benefit from precision-parametricity (exact-defined CODATA constants fit in `f64` exactly; measured constants have measurement uncertainty far below `f64` precision), and the breaking-change cost of converting 76 constants and updating every downstream consumer is not justified by zero precision gain.
 
-- **WHEN** the command `grep -rn -E '(\bf64\b|\bf32\b)' deep_causality_physics/src/ --include='*.rs'` is run and the output is filtered to lines representing public signatures, struct fields, trait methods, error variants, trait bounds, or `pub const` declarations
-- **THEN** the filtered output SHALL contain only lines tagged `// PERMITTED-F64`
+Consumers at `R` precision SHALL convert the constant at the call site via `R::from_f64(SPEED_OF_LIGHT)` (using `RealField::from_f64` added by R0). This is a one-token cost at the call site equivalent to a `speed_of_light::<R>()` function call.
 
-#### Scenario: No `pub const X: f64` survives
+A second permitted exception is internal RNG sample conversions (`R::from_f64(rng.random::<f64>())` in the Lund fragmentation routines), each tagged `// PERMITTED-F64: RNG boundary`.
 
-- **WHEN** the source is searched for `pub const \w+: f64` and `pub const \w+: f32`
-- **THEN** zero matches SHALL appear
+#### Scenario: Grep finds no public `f64`/`f32` outside permitted carve-outs
+
+- **WHEN** the command `grep -rn -E '(\bf64\b|\bf32\b)' deep_causality_physics/src/ --include='*.rs'` is run and the output is filtered to lines representing public signatures, struct fields, trait methods, error variants, or trait bounds (and is NOT filtered to remove `constants/` paths)
+- **THEN** the filtered output SHALL contain only:
+  - lines under `deep_causality_physics/src/constants/` declaring `pub const X: f64 = literal`,
+  - the analogous PDG quark-mass `pub const` declarations in `nuclear/pdg.rs`,
+  - lines tagged `// PERMITTED-F64: RNG boundary`
+
+#### Scenario: Physical constants stay as `pub const X: f64`
+
+- **WHEN** the source is searched for `pub const \w+: f64` within `deep_causality_physics/src/constants/` and `nuclear/pdg.rs`
+- **THEN** the existing declarations SHALL be preserved unchanged (no `pub fn` conversion)
+
+- **AND WHEN** the same search is run anywhere else in `deep_causality_physics/src/`
+- **THEN** zero matches SHALL appear (no `pub const X: f64` outside the carved-out locations)
 
 #### Scenario: No `From<f64>`, `Into<f64>`, or `Mul<f64, Output = T>` trait bounds remain
 
 - **WHEN** the source is searched for `From<f64>`, `Into<f64>`, and `Mul<f64, Output`
 - **THEN** zero matches SHALL appear in any `impl` block or trait bound declaration
+
+#### Scenario: Consumer uses a constant at `f32`
+
+- **WHEN** an `f32`-precision calculation needs the speed of light
+- **THEN** the call site SHALL write `f32::from_f64(SPEED_OF_LIGHT)` (or `R::from_f64(SPEED_OF_LIGHT)` inside generic code) — the constant value SHALL round-trip through `f64` losslessly because `299_792_458.0` is an exact integer that fits in both `f32` and `f64` mantissas without precision loss
 
 ### Requirement: Every wrapper struct is generic over `R: RealField`
 
@@ -41,27 +58,6 @@ Cross-crate-storage wrappers (`PhysicalVector`, `SpacetimeVector`, `PhysicalFiel
 
 - **WHEN** `JonesVector::<f32>::new(...)` is constructed
 - **THEN** the internal storage SHALL be `CausalTensor<Complex<f32>>` with no `f64` round-trip
-
-### Requirement: Physical constants are functions, not `pub const` declarations
-
-Every physical constant in `constants/{universal,atomic,electromagnetic,thermodynamics,particle,electro_weak,earth}.rs` and the PDG quark-mass constants in `nuclear/pdg.rs` SHALL be exposed as `pub fn name<R: RealField>() -> R { R::from_f64(literal) }`. No `pub const X: f64` or `pub const X: f32` SHALL survive.
-
-The function form SHALL be marked `#[inline]` so the LLVM optimizer inlines the call to a constant load at `R = f64`.
-
-#### Scenario: Speed of light at `f64`
-
-- **WHEN** `speed_of_light::<f64>()` is called
-- **THEN** the result SHALL equal `299_792_458.0_f64`
-
-#### Scenario: Speed of light at `f32`
-
-- **WHEN** `speed_of_light::<f32>()` is called
-- **THEN** the result SHALL equal `299_792_458.0_f32` (with `f32` precision rounding applied by `from_f64`)
-
-#### Scenario: Inlined performance at `R = f64`
-
-- **WHEN** a hot loop reads `speed_of_light::<f64>()` per iteration
-- **THEN** the LLVM-emitted code SHALL be equivalent (within negligible variation) to the same hot loop reading a `pub const SPEED_OF_LIGHT: f64`; no function-call overhead SHALL appear in the inner loop
 
 ### Requirement: Wrapper struct constructors, accessors, and conversions retype
 

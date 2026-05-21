@@ -70,31 +70,26 @@ Every wrapper struct carries one type parameter `R: RealField`. The 47 wrappers 
 
 **Why single `R`, not separate `R_position`, `R_momentum`, etc.:** every multi-field struct's components are dimensionally consistent (a `FourMomentum`'s four components live in the same field; mixed precision would corrupt the Lorentz invariant). Single `R` enforces this by construction.
 
-### Decision 2: Physical constants become free functions, not `pub const`s
+### Decision 2: Physical constants stay as `pub const X: f64` (carve-out)
 
-`pub const X: f64 = literal;` cannot be parameterized over `R` at the language level (`const` items don't accept type generics in their bodies in stable Rust). The unambiguous fix is to convert every constant declaration:
+The 76 physical-constant declarations under `deep_causality_physics/src/constants/{universal,atomic,electromagnetic,thermodynamics,particle,electro_weak,earth}.rs` and the PDG quark-mass constants in `nuclear/pdg.rs` SHALL remain unchanged as `pub const X: f64 = literal`. They are explicitly carved out of the "zero hardcoded `f64`" invariant in the spec.
 
-```rust
-// Before:
-pub const SPEED_OF_LIGHT: f64 = 299_792_458.0;
+**Why no parameterization:** physical constants are *values*, not computations. Generalizing them adds zero precision benefit:
 
-// After:
-pub fn speed_of_light<R: RealField>() -> R {
-    R::from_f64(299_792_458.0)
-}
-```
+- **Exact-defined CODATA constants** (post-2019 SI: `c`, `h`, `k_B`, `e`, `N_A`, `Δν_Cs`) are integers or short decimals that fit in `f64` exactly. `f128::from_f64(SPEED_OF_LIGHT)` is bit-identical to the true `f128` value because `299_792_458.0` has no precision loss in `f64` to begin with.
+- **Measured constants** (`G`, `α`, electron mass, etc.) have measurement uncertainty far worse than `f64` precision. `G` is known to ~5 sig figs; `f64` over-represents it by ~10 orders of magnitude. `f128` adds no real precision because the *measurement* is the precision floor.
+- **The only place precision parametricity matters** is the *calculation* that consumes the constant. Calculations are at `R`; reading `R::from_f64(SPEED_OF_LIGHT)` lifts the constant into `R` losslessly for the exact-defined case and with insignificant rounding for the measured case.
 
-**Migration impact:** every consumer that referenced `SPEED_OF_LIGHT` as a value updates to `speed_of_light()` as a call. At `R = f64`, the LLVM optimizer inlines the `from_f64` call to a `f64` literal load — performance is identical to the `pub const` version.
+**Consumer pattern:** at `R` precision, read a constant via `R::from_f64(SPEED_OF_LIGHT)` (using R0's `RealField::from_f64`). This is a one-token cost at the call site; the resulting `R`-typed value flows into the calculation normally.
 
-**Naming convention:** the `pub const SCREAMING_SNAKE` becomes `pub fn snake_case`. The change is visible at every call site (no aliasing, no preserving the old name). This is the hard rip-and-replace policy.
-
-**Why not a `Constants<R>` zero-sized struct with associated functions?** Premature decomposition. A flat namespace of free functions is the minimum sufficient API and matches the existing `pub const` flat namespace.
-
-**Why not a `Constants<R>` trait with associated `const` items?** `const` trait items also can't be generic over `R` (the `const_trait_impl` feature is unstable and orthogonal). The free-function path is the only stable option today.
+**Why not convert to `pub fn` form anyway for ergonomic consistency:** the breaking-change cost (76 constants × every downstream call site in workspace binaries, examples, tests) is real; the precision benefit is zero. The cost-benefit math is negative. If the ergonomic improvement is wanted later, it ships as a separate trivial change set (`add-physics-constants-fns`) without changing any of the precision math.
 
 **Alternatives considered:**
-- Keep `pub const X: f64` and add `pub fn x<R: RealField>() -> R { R::from_f64(X) }` alongside. Rejected: bridge code, violates rip-and-replace policy.
+- Convert every `pub const X: f64` to `pub fn x<R: RealField>() -> R { R::from_f64(X) }`. Rejected: wide breaking-change ripple for zero precision gain.
 - Pre-bake one constant per precision: `SPEED_OF_LIGHT_F64`, `SPEED_OF_LIGHT_F32`. Rejected: combinatorial explosion as precisions are added; doesn't compose with generic call sites.
+- Add `pub fn x<R: RealField>() -> R` alongside the existing `pub const X: f64`. Rejected: bridge code, violates rip-and-replace policy.
+
+The four invariant greps from R0 task 11 (`f64`, `From<f64>`, `Into<f64>`, `Mul<f64`) are run inside `deep_causality_physics/src/` post-change with the carve-out in mind: hits inside `constants/` and the PDG masses in `nuclear/pdg.rs` are expected and permitted; hits elsewhere are not.
 
 ### Decision 3: Method bodies use `R::from_f64` for ad-hoc literals, `RealField` methods for derivable values
 
@@ -102,7 +97,7 @@ Inside the rewritten wrapper methods, RK4 solvers, and ODE step routines:
 
 - Algebraic constants like `0.5`, `2.0`, `6.0` (RK4 coefficients) — recommended pattern is `R::from_f64(0.5)` for clarity. `R::one() / (R::one() + R::one())` for `0.5` is more `RealField`-native but reads worse.
 - Mathematical constants — `R::pi()`, `R::e()`, `R::epsilon()` from the trait.
-- Physical constants — call the new function form: `speed_of_light::<R>()`, `planck_constant::<R>()`, etc.
+- Physical constants — read the `pub const X: f64` declaration and convert at the call site: `R::from_f64(SPEED_OF_LIGHT)`, `R::from_f64(PLANCK_CONSTANT)`, etc. The constants themselves are untouched (Decision 2 carve-out).
 - Comparisons against zero — `R::epsilon()` for the tolerance, not `R::from_f64(0.0)` for the value (use `R::zero()` instead, from the `Zero` supertrait on `RealField`).
 
 **Why not require maximally `RealField`-native expressions everywhere?** Readability. `R::one() / (R::one() + R::one())` for `0.5` is a four-token expression replacing a one-token literal. The `R::from_f64(0.5)` form is one token shorter and clearer, with identical inlined performance.
@@ -153,17 +148,12 @@ Identical policy to R0:
 - No default type parameters (`<R = f64>`) — rejected.
 - No `#[deprecated]` `f64`-returning methods alongside generic replacements — rejected.
 - No `From<f64>` impls on generalized wrapper types — rejected.
-- No "use the constant or call the function, your choice" `pub const` survives — rejected.
 
 Downstream library `deep_causality_effects` temporarily pins its physics consumption to `::<f64>` until its own change set lands, tagged `// TEMP: removed by generalize-effects-over-realfield`. This is the single permitted exception, mirroring R0's permitted exception for physics.
 
 ## Risks / Trade-offs
 
-- **[Risk] `pub const` → `pub fn` migration is a wide breaking-change ripple.** Every consumer of `SPEED_OF_LIGHT`, `PLANCK_CONSTANT`, `BOLTZMANN_CONSTANT`, etc. (in this crate, in physics examples, in any downstream binary or test) needs the `_CONST` → `_fn_call()` update. The audit finds ~76 constants; downstream call sites are unknown without a workspace-wide grep.
-  → **Mitigation:** the change set's task list includes a workspace-wide grep for every constant name post-rename. Each hit is patched mechanically. Compile errors from `cargo build --workspace` enumerate any missed site.
-
-- **[Risk] LLVM optimizer doesn't inline `pub fn x<R: RealField>() -> R { R::from_f64(literal) }` to a constant load.** If the function call survives to the final binary, every physical-constant access is a function call instead of a constant load — measurable performance regression.
-  → **Mitigation:** add `#[inline]` to every constant function (the bodies are one line). Verify by `cargo asm` or benchmarking that at `R = f64`, the call inlines to the same instruction sequence as the `pub const` baseline.
+- **[Note] Physical constants stay as `pub const X: f64`.** No breaking change on the constants surface; consumers at `R` precision add a one-token `R::from_f64(SPEED_OF_LIGHT)` at the call site. See Decision 2 for the rationale.
 
 - **[Risk] Multi-field structs need `Clone + Copy` on `R` to support method-chaining patterns like `FourMomentum::new(...).boost_z(beta)`.** `RealField` requires `Copy`, so this is satisfied; but custom precisions (e.g. arbitrary-precision rationals) may not implement `Copy`. The audit needs to confirm no struct method requires `Copy` beyond what `RealField` already requires.
   → **Mitigation:** audit during implementation. If a method body relies on `R: Copy` beyond the trait's existing `Copy` superbound, refactor to use `&R` or `.clone()` explicitly.
@@ -185,23 +175,20 @@ Downstream library `deep_causality_effects` temporarily pins its physics consump
 
 ## Migration Plan
 
-1. **Precondition:** R0 (`generalize-topology-over-realfield`) has shipped. Verify by running the four invariant greps from R0's task 11 in `deep_causality_topology/src/`. Verify `RealField::from_f64` is on the `deep_causality_num` trait.
+1. **Precondition:** R0 (`generalize-topology-over-realfield`) has shipped. Verify by running the four invariant greps from R0's task 11 in `deep_causality_topology/src/`. Verify `RealField::from_f64`, `from_f32`, `from_i64`, `from_i32` are all on the `deep_causality_num` trait.
 2. **Phase 1 (Infrastructure, ~0.5 h):** verify R0's preconditions; create a small test fixture for the `f32` duplicate test pattern.
 3. **Phase 2 (Mechanics & Materials, ~2 h):** retype 12 wrappers in `dynamics/quantities.rs` and `materials/quantities.rs`; retype the Kalman filter in `dynamics/estimation.rs`; remove R0 pins.
-4. **Phase 3 (Electromagnetism, ~2 h):** retype 3 wrappers in `em/quantities.rs`; retype the 11 EM constants in `constants/electromagnetic.rs`; retype the Maxwell solver.
-5. **Phase 4 (Thermodynamics, ~1 h):** retype 2 wrappers in `thermodynamics/thermodynamics_quantities.rs`; retype the 8 thermodynamics constants.
-6. **Phase 5 (Relativity & Chronometry, ~3 h):** retype 2 wrappers in `relativity/quantities.rs`; retype the RK4 solver in `relativity/gravity.rs`; retype the ODE step in `chronometric/solve_gm.rs`; retype the ADM state in `theories/general_relativity/adm_state.rs`; retype the 10 universal constants in `constants/universal.rs`.
-7. **Phase 6 (Nuclear & Particle Physics, ~2 h):** retype 7 wrappers in `nuclear/quantities.rs`; retype `FourMomentum` and its methods; retype Lund fragmentation in `nuclear/lund/`; retype the PDG database; retype the 5 PDG constants + 7 particle / 9 electroweak constants.
-8. **Phase 7 (Photonics, ~2 h):** retype 11 wrappers in `photonics/quantities.rs`; retype `JonesVector`, `StokesVector`, `AbcdMatrix`, `ComplexBeamParameter` with `Complex<R>` storage; retype the 9 atomic constants.
-9. **Phase 8 (Constants cleanup, ~0.5 h):** sweep for any remaining `pub const X: f64` in `constants/` not yet caught (recall: 76 total); rename and rewrite.
-10. **Phase 9 (Effects temporary pin, ~0.5 h):** `cargo build --workspace` reveals any `deep_causality_effects` consumption sites that need `::<f64>` pins; tag each `// TEMP: removed by generalize-effects-over-realfield`.
-11. **Phase 10 (Verification, ~0.5 h):** `cargo test -p deep_causality_physics`; benchmark vs. baseline; run the four invariant greps from R0 task 11 inside `deep_causality_physics/src/`.
-12. **Rollback:** revert. Behavior at `R = f64` is bit-identical pre and post; rollback restores the old surface.
+4. **Phase 3 (Electromagnetism, ~1.5 h):** retype 3 wrappers in `em/quantities.rs`; retype the Maxwell solver. Constants in `constants/electromagnetic.rs` stay as `pub const X: f64` (Decision 2).
+5. **Phase 4 (Thermodynamics, ~1 h):** retype 2 wrappers in `thermodynamics/thermodynamics_quantities.rs`. Constants stay.
+6. **Phase 5 (Relativity & Chronometry, ~2.5 h):** retype 2 wrappers in `relativity/quantities.rs`; retype the RK4 solver in `relativity/gravity.rs`; retype the ODE step in `chronometric/solve_gm.rs`; retype the ADM state in `theories/general_relativity/adm_state.rs`. Constants in `constants/universal.rs` stay.
+7. **Phase 6 (Nuclear & Particle Physics, ~2 h):** retype 7 wrappers in `nuclear/quantities.rs`; retype `FourMomentum` and its methods; retype Lund fragmentation in `nuclear/lund/`; retype the PDG database. PDG quark-mass constants in `nuclear/pdg.rs` and constants in `constants/particle.rs`, `constants/electro_weak.rs` stay.
+8. **Phase 7 (Photonics, ~2 h):** retype 11 wrappers in `photonics/quantities.rs`; retype `JonesVector`, `StokesVector`, `AbcdMatrix`, `ComplexBeamParameter` with `Complex<R>` storage. Constants in `constants/atomic.rs` stay.
+9. **Phase 8 (Effects temporary pin, ~0.5 h):** `cargo build --workspace` reveals any `deep_causality_effects` consumption sites that need `::<f64>` pins; tag each `// TEMP: removed by generalize-effects-over-realfield`.
+10. **Phase 9 (Verification, ~0.5 h):** `cargo test -p deep_causality_physics`; benchmark vs. baseline; run the four invariant greps from R0 task 11 inside `deep_causality_physics/src/` (with the `constants/` and `nuclear/pdg.rs` carve-out applied). `Phase 8 (Constants cleanup)` from the prior plan is removed entirely — constants are left alone.
+11. **Rollback:** revert. Behavior at `R = f64` is bit-identical pre and post; rollback restores the old surface.
 
 ## Open Questions
 
 1. **Should `ParticleData<R>` be a `Vec`-constructed-on-demand database or a `LazyLock<HashMap<i32, ParticleData<R>>>` per-precision cache?** Recommendation: `Vec` constructed on demand. The PDG lookup pattern is typically once per simulation initialization; the allocation cost is negligible. A `LazyLock` would require keying by precision (separate cache per `R`), which is awkward.
-2. **Does the audit miss any internal `pub const` outside `constants/`?** Grep `pub const \w+: f64` across the entire `deep_causality_physics/src/` at implementation time to confirm. The PDG quark masses in `nuclear/pdg.rs` are an example; expect a handful of similar in-domain constants.
-3. **Does `RealField` need `from_f32` alongside `from_f64`?** Recommendation: no. The few `f32`-precision literal sites can use `R::from_f64(value as f64)` with a documented intentional precision-narrowing. Adding `from_f32` doubles the surface for marginal benefit.
-4. **Should the constants migration include a centralized `pub trait PhysicsConstants<R: RealField>` with all 76 as methods?** Recommendation: no in this change set. Free functions are simpler and the audit doesn't show a use case for the trait shape (no code needs to be generic over "any source of physics constants"). If demand appears, add the trait later in a small follow-up.
-5. **Should `Mass::new(value)` validation (`value >= 0`) use `R::epsilon()` or strict equality with `R::zero()`?** Recommendation: strict equality. `Mass::new(R::zero())` is valid; `Mass::new(-R::epsilon())` is not. Match the pre-change `f64` baseline behavior.
+2. **Are there any `pub const X: f64` declarations *outside* `constants/` and `nuclear/pdg.rs`?** Grep `pub const \w+: f64` across `deep_causality_physics/src/` at implementation time. Any hits outside the carved-out locations should either be moved into `constants/` (if they're genuinely physical constants) or generalized appropriately (if they're tolerance values or other algorithm-internal constants). Audit during implementation.
+3. **Should `Mass::new(value)` validation (`value >= 0`) use `R::epsilon()` or strict equality with `R::zero()`?** Recommendation: strict equality. `Mass::new(R::zero())` is valid; `Mass::new(-R::epsilon())` is not. Match the pre-change `f64` baseline behavior.

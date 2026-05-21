@@ -1,7 +1,7 @@
 ## 1. Preconditions
 
 - [ ] 1.1 Verify R0 (`generalize-topology-over-realfield`) has shipped. Run R0 task 11 invariant greps inside `deep_causality_topology/src/` — must produce zero hits.
-- [ ] 1.2 Verify `RealField::from_f64` is available on `deep_causality_num`'s `RealField` trait with impls for `f32` and `f64`.
+- [ ] 1.2 Verify all four constructors (`RealField::from_f64`, `from_f32`, `from_i64`, `from_i32`) are available on `deep_causality_num`'s `RealField` trait with impls for `f32` and `f64`.
 - [ ] 1.3 Grep `// TEMP: removed by generalize-physics-over-realfield` across the workspace; record every site as the cleanup checklist for Phase 9.
 - [ ] 1.4 Snapshot current benchmark numbers for at least `deep_causality_physics` mechanics, relativity, photonics — used in Phase 10 to verify no regression.
 
@@ -21,14 +21,14 @@
 - [ ] 3.2 Retype `MagneticFlux(f64)` → `MagneticFlux<R>(R)` at line 32.
 - [ ] 3.3 Retype `PhysicalField(pub CausalMultiVector<f64>)` → `PhysicalField<R>(pub CausalMultiVector<R>)` at line 54. Remove R0 pin.
 - [ ] 3.4 Retype every Maxwell-solver function in `em/` to propagate `R`. Audit-time: re-grep `em/` for `f64` and patch each hit.
-- [ ] 3.5 Convert 11 EM constants in `constants/electromagnetic.rs` from `pub const X: f64` to `pub fn x<R: RealField>() -> R { R::from_f64(literal) }`. Mark each `#[inline]`.
-- [ ] 3.6 Update existing EM tests to explicit `::<f64>`; add `_f32` duplicates for the Maxwell evolution invariants and constant-retrieval tests.
+- [ ] 3.5 Constants in `constants/electromagnetic.rs` stay as `pub const X: f64`; verify by re-grep no `pub const` declarations were touched. Maxwell-solver call sites that read constants convert via `R::from_f64(CONST)` at the call site.
+- [ ] 3.6 Update existing EM tests to explicit `::<f64>`; add `_f32` duplicates for the Maxwell evolution invariants.
 
 ## 4. Phase 4 — Thermodynamics
 
 - [ ] 4.1 Retype `Entropy(f64)` → `Entropy<R>(R)` in `thermodynamics/thermodynamics_quantities.rs:10`.
 - [ ] 4.2 Retype `Efficiency(f64)` → `Efficiency<R>(R)` at line 31.
-- [ ] 4.3 Convert 8 thermodynamic constants in `constants/thermodynamics.rs` from `pub const` to `pub fn` with `#[inline]`. Includes Boltzmann, Stefan-Boltzmann, etc.
+- [ ] 4.3 Constants in `constants/thermodynamics.rs` stay as `pub const X: f64` (Boltzmann, Stefan-Boltzmann, etc.). Internal call sites convert via `R::from_f64(CONST)`.
 - [ ] 4.4 Update existing thermodynamics tests to explicit `::<f64>`; add `_f32` duplicates for the validation roundtrips.
 
 ## 5. Phase 5 — Relativity & Chronometry
@@ -39,7 +39,7 @@
 - [ ] 5.4 In the same file, rewrite every `<T as From<f64>>::from(literal)` to `R::from_f64(literal)`. The audit identified lines 52, 218, 228, 244–247; verify by re-grep after the edit.
 - [ ] 5.5 In `chronometric/solve_gm.rs:161, 196`, drop the `R: RealField + From<f64>` bound's `+ From<f64>` half.
 - [ ] 5.6 In `theories/general_relativity/adm_state.rs:18`, replace `S: Field + Clone + From<f64> + Into<f64>` with `S: RealField`.
-- [ ] 5.7 Convert 10 universal constants in `constants/universal.rs` from `pub const` to `pub fn` with `#[inline]`. Includes `speed_of_light`, `newtonian_constant_of_gravitation`, `planck_constant`, etc.
+- [ ] 5.7 Constants in `constants/universal.rs` stay as `pub const X: f64` (`SPEED_OF_LIGHT`, `NEWTONIAN_CONSTANT_OF_GRAVITATION`, `PLANCK_CONSTANT`, etc.). RK4 / ODE / ADM call sites convert via `R::from_f64(CONST)` where they read these.
 - [ ] 5.8 Update existing relativity / chronometry tests to explicit `::<f64>`; add `_f32` duplicates for the RK4 convergence and ADM evolution tests.
 
 ## 6. Phase 6 — Nuclear & Particle Physics
@@ -52,7 +52,7 @@
 - [ ] 6.6 Retype Lund fragmentation routines in `nuclear/lund/flavor.rs` — `select_quark_flavor`, `select_meson_spin`, `generate_transverse_momentum`. Generic over `R: RealField` for control parameters; preserve the `let rnd: f64 = rng.random();` line tagged `// PERMITTED-F64: RNG boundary`; convert via `R::from_f64`.
 - [ ] 6.7 Retype `ParticleData` in `nuclear/pdg.rs:15–26` to `ParticleData<R: RealField>`. Replace `static`-lifetime PDG table with `pub fn pdg_database<R: RealField>() -> Vec<ParticleData<R>>`.
 - [ ] 6.8 Retype `pub fn pdg_mass(pdg_id: i32) -> f64` at line 174 to `pub fn pdg_mass<R: RealField>(pdg_id: i32) -> Option<R>` (returning `Option` for unknown IDs is cleaner; verify the existing behavior on unknown IDs and pick the right error shape).
-- [ ] 6.9 Convert 5 PDG quark-mass constants in `nuclear/pdg.rs` (M_U, M_D, M_S, M_C, M_B), 7 particle constants in `constants/particle.rs`, and 9 electroweak constants in `constants/electro_weak.rs` from `pub const` to `pub fn` with `#[inline]`.
+- [ ] 6.9 PDG quark-mass constants in `nuclear/pdg.rs` (M_U, M_D, M_S, M_C, M_B), particle constants in `constants/particle.rs`, and electroweak constants in `constants/electro_weak.rs` stay as `pub const X: f64`. Internal consumers convert via `R::from_f64(CONST)` at the call site.
 - [ ] 6.10 Update existing tests to explicit `::<f64>`; add `_f32` duplicates for FourMomentum Lorentz-invariant preservation, Lund fragmentation distribution moments, and PDG lookup tests.
 
 ## 7. Phase 7 — Photonics
@@ -63,13 +63,13 @@
 - [ ] 7.4 Retype `StokesVector(CausalTensor<f64>)` → `StokesVector<R: RealField>(CausalTensor<R>)` at line 161. Remove R0 pin.
 - [ ] 7.5 Retype `ComplexBeamParameter(Complex<f64>)` → `ComplexBeamParameter<R: RealField>(Complex<R>)` at line 191.
 - [ ] 7.6 Retype every method on these photonics types to propagate `R`.
-- [ ] 7.7 Convert 9 atomic constants in `constants/atomic.rs` (electron mass, Bohr radius, Rydberg constant, etc.) from `pub const` to `pub fn` with `#[inline]`.
+- [ ] 7.7 Constants in `constants/atomic.rs` (electron mass, Bohr radius, Rydberg constant, etc.) stay as `pub const X: f64`. Photonics call sites convert via `R::from_f64(CONST)`.
 - [ ] 7.8 Update existing photonics tests to explicit `::<f64>`; add `_f32` duplicates for ABCD-matrix round-trip and Jones-vector polarization tests.
 
-## 8. Phase 8 — Earth-constants & Stragglers
+## 8. Phase 8 — Constants carve-out verification
 
-- [ ] 8.1 Convert 7 Earth-related constants in `constants/earth.rs` (GM, radius, J2, etc.) from `pub const` to `pub fn` with `#[inline]`.
-- [ ] 8.2 Sweep `deep_causality_physics/src/` for any `pub const X: f64` or `pub const X: f32` declarations the audit missed. Convert each to the `pub fn` form.
+- [ ] 8.1 Constants in `constants/earth.rs` (GM, radius, J2, etc.) stay as `pub const X: f64`.
+- [ ] 8.2 Grep `pub const \w+: f64` across `deep_causality_physics/src/`. Every hit MUST fall under one of: (a) `constants/{universal,atomic,electromagnetic,thermodynamics,particle,electro_weak,earth}.rs`, (b) the PDG quark-mass constants in `nuclear/pdg.rs`. Any hit outside these locations is either (i) a misplaced constant that should be moved into `constants/`, or (ii) an algorithm-internal tolerance that should be replaced with a `RealField`-native expression — decide per occurrence.
 - [ ] 8.3 Sweep for any remaining `f64` literals in struct field declarations (audit must have caught all 47 wrappers but verify).
 
 ## 9. Phase 9 — Remove R0 temporary pins, install effects pins
@@ -87,12 +87,12 @@
 - [ ] 10.4 `cargo fmt --check` is clean.
 - [ ] 10.5 `bazel test //deep_causality_physics/...` passes.
 - [ ] 10.6 Compare current benchmarks against Phase 1.4 snapshot. No regression >2% at `R = f64`.
-- [ ] 10.7 Run the four invariant greps from R0 task 11 (`f64`, `From<f64>`, `Into<f64>`, `Mul<f64`) inside `deep_causality_physics/src/`. Zero hits permitted, except `// PERMITTED-F64`-tagged lines.
-- [ ] 10.8 Additional grep: `pub const \w+: f64` inside `deep_causality_physics/src/`. Zero hits required.
+- [ ] 10.7 Run the four invariant greps from R0 task 11 (`f64`, `From<f64>`, `Into<f64>`, `Mul<f64`) inside `deep_causality_physics/src/`. Permitted hit locations: (a) `// PERMITTED-F64`-tagged lines (RNG boundary in Lund), (b) `pub const X: f64` declarations under `constants/` and `nuclear/pdg.rs`. Any hit outside these is a defect.
+- [ ] 10.8 Additional grep: `pub const \w+: f64` inside `deep_causality_physics/src/`. Hits MUST appear only under `constants/` and `nuclear/pdg.rs`; zero hits elsewhere.
 - [ ] 10.9 `make build` and `make test` workspace-level pass.
 
 ## 11. Commit prep
 
 - [ ] 11.1 Stage the changes per AGENTS.md (Golden Rule 1 — agent does not commit; user commits).
-- [ ] 11.2 Draft a commit message summarizing the physics generalization, the 47 wrappers, the 76 constants converted to functions, the `_f32` test additions, and the temporary effects pins installed in Phase 9.
+- [ ] 11.2 Draft a commit message summarizing the physics generalization, the 47 wrappers retyped over `R: RealField`, the `pub const X: f64` constants kept as-is (spec carve-out), the `_f32` test additions, and the temporary effects pins installed in Phase 9.
 - [ ] 11.3 Leave the commit for the user to inspect and run.
