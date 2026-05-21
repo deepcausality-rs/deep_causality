@@ -47,7 +47,7 @@ use deep_causality_num::{Field, RealField};
 /// | QCD    | SU(3)       | Gluon field G_μ^a | G_μν^a            |
 /// | GR     | SO(3,1)     | Christoffel Γ     | Riemann R^ρ_σμν   |
 #[derive(Debug, Clone)]
-pub struct GaugeField<G: GaugeGroup, M, R> {
+pub struct GaugeField<G: GaugeGroup, M, R: RealField> {
     /// Base manifold (spacetime). Private for invariant preservation.
     base: Manifold<SimplicialComplex<R>, R>,
 

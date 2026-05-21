@@ -5,13 +5,13 @@
 
 use crate::{Manifold, SimplicialComplex};
 use core::ops::Mul;
-use deep_causality_num::Field;
+use deep_causality_num::{Field, RealField};
 use deep_causality_tensor::CausalTensor;
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
-    C: Default + Copy + PartialEq + deep_causality_num::Zero,
-    D: Field + Default + Copy + PartialEq,
+    C: RealField + Default,
+    D: RealField + Default + PartialEq,
 {
     /// Helper to extract data for a specific k-form from the flat storage.
     pub(super) fn get_k_form_data(&self, k: usize) -> Vec<D> {

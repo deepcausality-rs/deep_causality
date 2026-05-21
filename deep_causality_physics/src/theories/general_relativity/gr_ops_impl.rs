@@ -24,7 +24,7 @@ use deep_causality_topology::{
 
 impl<S> GrOps<S> for GR<S>
 where
-    S: Field + Float + Clone + From<f64> + Into<f64> + Copy,
+    S: Field + Float + Clone + From<f64> + Into<f64> + Copy + deep_causality_num::RealField,
 {
     fn ricci_tensor(&self) -> Result<CausalTensor<S>, PhysicsError> {
         let riemann = self.field_strength();
@@ -64,7 +64,7 @@ where
                 let idx = mu * dim + nu;
                 let g_upper = inv_metric[idx];
                 let r_lower = ricci_data.get(idx).copied().unwrap_or(S::zero());
-                scalar = scalar + (g_upper * r_lower);
+                scalar += g_upper * r_lower;
             }
         }
 
@@ -301,7 +301,7 @@ where
                         .get(k_offset + i * 3 + j)
                         .copied()
                         .unwrap_or(S::zero());
-                    k_trace = k_trace + g_inv_ij * k_ij;
+                    k_trace += g_inv_ij * k_ij;
                 }
             }
 
@@ -314,7 +314,7 @@ where
                             .get(k_offset + k * 3 + i)
                             .copied()
                             .unwrap_or(S::zero());
-                        *val = *val + g_inv_jk * k_ki;
+                        *val += g_inv_jk * k_ki;
                     }
                 }
             }
@@ -355,10 +355,9 @@ where
                                     let d_gamma_il = (gamma_n[i][l] - gamma[i][l]) * weight;
                                     let d_gamma_ij = (gamma_n[i][j] - gamma[i][j]) * weight;
 
-                                    christoffel[k][i][j] = christoffel[k][i][j]
-                                        + half
-                                            * gamma_inv[k][l]
-                                            * (d_gamma_jl + d_gamma_il - d_gamma_ij);
+                                    christoffel[k][i][j] += half
+                                        * gamma_inv[k][l]
+                                        * (d_gamma_jl + d_gamma_il - d_gamma_ij);
                                 }
                             }
                         }
@@ -383,7 +382,7 @@ where
                                 .get(n_k_offset + i * 3 + j)
                                 .copied()
                                 .unwrap_or(S::zero());
-                            k_trace_n = k_trace_n + g_n_inv_ij * k_ij;
+                            k_trace_n += g_n_inv_ij * k_ij;
                         }
                     }
 
@@ -395,7 +394,7 @@ where
                                     .get(n_k_offset + k * 3 + i)
                                     .copied()
                                     .unwrap_or(S::zero());
-                                *val = *val + g_n_inv_jk * k_ki;
+                                *val += g_n_inv_jk * k_ki;
                             }
                         }
                     }
@@ -411,7 +410,7 @@ where
                     let weight = S::one() / <S as From<f64>>::from(neighbors.len() as f64);
                     for i in 0..3 {
                         for j in 0..3 {
-                            partial_div[i] = partial_div[i] + (t_n[j][i] - t_tensor[j][i]) * weight;
+                            partial_div[i] += (t_n[j][i] - t_tensor[j][i]) * weight;
                         }
                     }
                 }
@@ -422,10 +421,8 @@ where
             for i in 0..3 {
                 for j in 0..3 {
                     for k in 0..3 {
-                        connection_term[i] =
-                            connection_term[i] + christoffel[j][j][k] * t_tensor[k][i];
-                        connection_term[i] =
-                            connection_term[i] - christoffel[k][j][i] * t_tensor[j][k];
+                        connection_term[i] += christoffel[j][j][k] * t_tensor[k][i];
+                        connection_term[i] -= christoffel[k][j][i] * t_tensor[j][k];
                     }
                 }
             }

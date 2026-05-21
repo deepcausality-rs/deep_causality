@@ -40,7 +40,10 @@ use crate::traits::neighborhood::CellId;
 use crate::types::lattice_complex::LatticeComplex;
 
 /// Maximum coordinate (exclusive upper bound) for top-cube positions along axis `axis`.
-fn top_axis_range<const D: usize>(complex: &LatticeComplex<D>, axis: usize) -> usize {
+fn top_axis_range<const D: usize, R: deep_causality_num::RealField>(
+    complex: &LatticeComplex<D, R>,
+    axis: usize,
+) -> usize {
     let shape = complex.shape()[axis];
     if complex.periodic()[axis] {
         shape
@@ -53,8 +56,8 @@ fn top_axis_range<const D: usize>(complex: &LatticeComplex<D>, axis: usize) -> u
 
 /// Linear cell_id → grid position for top cubes. `None` if `cell_id` is out of range.
 #[allow(clippy::needless_range_loop)]
-pub(super) fn cell_id_to_top_pos<const D: usize>(
-    complex: &LatticeComplex<D>,
+pub(super) fn cell_id_to_top_pos<const D: usize, R: deep_causality_num::RealField>(
+    complex: &LatticeComplex<D, R>,
     cell_id: CellId,
 ) -> Option<[usize; D]> {
     let mut pos = [0usize; D];
@@ -72,8 +75,8 @@ pub(super) fn cell_id_to_top_pos<const D: usize>(
 
 /// Grid position → linear cell_id. `None` if any coordinate is out of range.
 #[allow(clippy::needless_range_loop)]
-pub(super) fn top_pos_to_cell_id<const D: usize>(
-    complex: &LatticeComplex<D>,
+pub(super) fn top_pos_to_cell_id<const D: usize, R: deep_causality_num::RealField>(
+    complex: &LatticeComplex<D, R>,
     pos: [usize; D],
 ) -> Option<CellId> {
     let mut cell_id = 0usize;
@@ -91,8 +94,8 @@ pub(super) fn top_pos_to_cell_id<const D: usize>(
 
 /// Shift one coordinate by `delta`. Honors periodic vs open boundaries.
 /// Returns `None` if the shifted coordinate lies outside an open boundary.
-pub(super) fn shift_coord<const D: usize>(
-    complex: &LatticeComplex<D>,
+pub(super) fn shift_coord<const D: usize, R: deep_causality_num::RealField>(
+    complex: &LatticeComplex<D, R>,
     axis: usize,
     coord: usize,
     delta: i64,

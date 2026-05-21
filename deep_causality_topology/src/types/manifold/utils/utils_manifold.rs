@@ -9,7 +9,9 @@ use crate::SimplicialComplex;
 use crate::traits::chain_complex::ChainComplex;
 
 /// Checks if the simplicial complex is oriented.
-pub(crate) fn is_oriented<T>(complex: &SimplicialComplex<T>) -> bool {
+pub(crate) fn is_oriented<T: deep_causality_num::RealField>(
+    complex: &SimplicialComplex<T>,
+) -> bool {
     let max_dim = complex.max_simplex_dimension();
     if max_dim == 0 {
         return true; // Points are oriented
@@ -41,7 +43,9 @@ pub(crate) fn is_oriented<T>(complex: &SimplicialComplex<T>) -> bool {
 }
 
 /// Checks if the simplicial complex satisfies the link condition for manifolds.
-pub(crate) fn satisfies_link_condition<T>(complex: &SimplicialComplex<T>) -> bool {
+pub(crate) fn satisfies_link_condition<T: deep_causality_num::RealField>(
+    complex: &SimplicialComplex<T>,
+) -> bool {
     let max_dim = complex.max_simplex_dimension();
     if max_dim == 0 {
         return true; // 0-manifold (points) satisfies link condition trivially
@@ -86,7 +90,9 @@ pub(crate) fn satisfies_link_condition<T>(complex: &SimplicialComplex<T>) -> boo
 
 /// Computes the Euler characteristic of the simplicial complex.
 #[allow(dead_code)]
-pub(crate) fn euler_characteristic<T>(complex: &SimplicialComplex<T>) -> isize {
+pub(crate) fn euler_characteristic<T: deep_causality_num::RealField>(
+    complex: &SimplicialComplex<T>,
+) -> isize {
     let mut chi: isize = 0;
     for skeleton in &complex.skeletons {
         let count = skeleton.simplices.len() as isize;
@@ -101,7 +107,9 @@ pub(crate) fn euler_characteristic<T>(complex: &SimplicialComplex<T>) -> isize {
 
 /// Checks if the simplicial complex has a boundary.
 #[allow(dead_code)]
-pub(crate) fn has_boundary<T>(complex: &SimplicialComplex<T>) -> bool {
+pub(crate) fn has_boundary<T: deep_causality_num::RealField>(
+    complex: &SimplicialComplex<T>,
+) -> bool {
     let max_dim = complex.max_simplex_dimension();
     if max_dim == 0 {
         return false; // Points don't have boundary in this context

@@ -39,7 +39,7 @@ fn collect<I: Iterator<Item = usize>>(it: I) -> Vec<usize> {
 #[test]
 fn moore_3d_interior_yields_26_neighbors() {
     // 4×4×4 open grid: top cubes occupy 3×3×3 = 27 positions; the center is at [1,1,1].
-    let cubes = LatticeComplex::<3>::open([4, 4, 4]);
+    let cubes = LatticeComplex::<3, f64>::open([4, 4, 4]);
     let center_pos = [1usize, 1, 1];
     // cell_id of center: position[0] + position[1]*3 + position[2]*9 = 1 + 3 + 9 = 13.
     let center_id = 1 + 3 + 9;
@@ -52,7 +52,7 @@ fn moore_3d_interior_yields_26_neighbors() {
 #[test]
 fn k_ring_2_2d_interior_yields_24_neighbors() {
     // 6×6 open grid: top cubes occupy 5×5 = 25 positions; an interior cell at [2,2].
-    let cubes = LatticeComplex::<2>::open([6, 6]);
+    let cubes = LatticeComplex::<2, f64>::open([6, 6]);
     let center_id = 2 + 2 * 5usize; // = 12
     let neighbors = collect(KRing::<2>.neighbors(&cubes, center_id));
     assert_eq!(
@@ -66,7 +66,7 @@ fn k_ring_2_2d_interior_yields_24_neighbors() {
 #[test]
 fn von_neumann_2d_torus_wraps() {
     // 4×4 torus: corner cell at [0,0] (cell_id = 0) wraps to all 4 face-adjacent neighbors.
-    let cubes = LatticeComplex::<2>::torus([4, 4]);
+    let cubes = LatticeComplex::<2, f64>::torus([4, 4]);
     let neighbors = collect(VonNeumann.neighbors(&cubes, 0));
     assert_eq!(neighbors.len(), 4, "torus corner cell: {neighbors:?}");
     // Expected wrap-around: ±1 in each axis. shape[0] = shape[1] = 4.
@@ -79,7 +79,7 @@ fn von_neumann_2d_torus_wraps() {
 #[test]
 fn von_neumann_2d_open_corner_yields_two_neighbors() {
     // 4×4 open grid: top cubes occupy 3×3; corner at [0,0] (cell_id = 0) has 2 in-bounds neighbors.
-    let cubes = LatticeComplex::<2>::open([4, 4]);
+    let cubes = LatticeComplex::<2, f64>::open([4, 4]);
     let neighbors = collect(VonNeumann.neighbors(&cubes, 0));
     assert_eq!(
         neighbors.len(),
@@ -95,7 +95,7 @@ fn von_neumann_2d_open_corner_yields_two_neighbors() {
 fn face_adjacent_coincides_with_von_neumann_on_top_cubes() {
     // On a regular cubical grid, FaceAdjacent (via ∂) and VonNeumann (via grid coords)
     // must yield the SAME set of neighbors for every interior top cell.
-    let cubes = LatticeComplex::<2>::open([5, 5]);
+    let cubes = LatticeComplex::<2, f64>::open([5, 5]);
     let n_top = ChainComplex::num_cells(&cubes, 2);
     for cell_id in 0..n_top {
         let face_adj = collect(FaceAdjacent.neighbors(&cubes, cell_id));
@@ -110,7 +110,7 @@ fn face_adjacent_coincides_with_von_neumann_on_top_cubes() {
 #[test]
 fn moore_open_corner_yields_three_neighbors_in_2d() {
     // 4×4 open grid: top cubes 3×3, corner at [0,0]. Moore = {[1,0], [0,1], [1,1]}.
-    let cubes = LatticeComplex::<2>::open([4, 4]);
+    let cubes = LatticeComplex::<2, f64>::open([4, 4]);
     let neighbors = collect(Moore.neighbors(&cubes, 0));
     assert_eq!(neighbors.len(), 3, "Moore open corner 2D: {neighbors:?}");
 }

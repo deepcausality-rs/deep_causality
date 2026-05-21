@@ -27,10 +27,14 @@ use deep_causality_topology::{
 };
 use std::sync::Arc;
 
+/// Precision for the gauge-field simulation. `f64` is the standard choice for lattice
+/// gauge theory of this size; bump to `Float106` for higher-precision Wilson flow runs.
+pub type FloatType = f64;
+
 // Simulation parameters
 const L: usize = 4; // Lattice size L^4 (small for example speed)
 const D: usize = 4; // Spacetime dimension
-const BETA: f64 = 6.0; // Inverse coupling β = 2N/g² (approx physical QCD)
+const BETA: FloatType = 6.0; // Inverse coupling β = 2N/g² (approx physical QCD)
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== DeepCausality Lattice Gauge Simulation ===");
@@ -49,7 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut rng = rng();
 
     // Create random configuration (Hot Start)
-    let mut field = LatticeGaugeField::<SU3, D, Complex<f64>, f64>::try_random(
+    let mut field = LatticeGaugeField::<SU3, D, Complex<FloatType>, FloatType>::try_random(
         lattice.clone(),
         BETA,
         &mut rng,
@@ -104,7 +108,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             count += 1;
         }
     }
-    let w_2x2_avg = w_2x2_sum / (count as f64 * SU3::matrix_dim() as f64);
+    let w_2x2_avg = w_2x2_sum / (count as FloatType * SU3::matrix_dim() as FloatType);
     println!("    2x2 Wilson Loop:   {:.6}", w_2x2_avg);
 
     // Observable C: Polyakov Loop
@@ -116,7 +120,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // If T=f64, it's already the value.
     println!(
         "    Polyakov Loop:     {:.6}",
-        poly_loop / SU3::matrix_dim() as f64
+        poly_loop / SU3::matrix_dim() as FloatType
     );
 
     // 4. Advanced: Smearing
@@ -143,7 +147,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Gradient flow smooths the field continuously to find the reference scale t0
     // t0 is defined where t^2 * <E(t)> = 0.3
 
-    let flow_params = FlowParams::<f64> {
+    let flow_params = FlowParams::<FloatType> {
         epsilon: 0.01,
         t_max: 0.2, // Short flow for example
         method: deep_causality_topology::FlowMethod::RungeKutta3,

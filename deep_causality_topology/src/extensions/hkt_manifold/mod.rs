@@ -3,6 +3,20 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! HKT witnesses for `Manifold`.
+//!
+//! Under the Option 2C design (`ChainComplex::Metric` is a plain associated type;
+//! `Manifold<K, F>` has no struct-level bound on `F`), the witness types implement the
+//! full `deep_causality_haft` trait surface on stable Rust: `HKT`, `Functor`, `Foldable`,
+//! `Pure`, `Monad`, `CoMonad`, and (for the simplicial witness) `Applicative`. All impls
+//! use `T: Satisfies<NoConstraint>` only — no `RealField` bounds at the witness layer.
+//!
+//! Cross-algebra composition is supported by design: `F` may be a scalar (`f64`, `f32`,
+//! `Float106`), a multivector from `deep_causality_multivector`, a tensor from
+//! `deep_causality_tensor`, a dual number for automatic differentiation, or any other
+//! algebraic value type that flows through `CausalTensor<F>`.
+
+use crate::traits::chain_complex::ChainComplex;
 use crate::{Manifold, SimplicialComplex};
 use deep_causality_haft::{
     Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
@@ -11,22 +25,18 @@ use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 use std::marker::PhantomData;
 
 // ============================================================================
-// PART 1: Free (Unbounded) Witness - "ManifoldWitness"
-// Use Case: General computation, chaining, dynamic pipelines.
+// PART 1: Simplicial witness — `ManifoldWitness<C>` / `SimplicialManifoldWitness<C>`
 // ============================================================================
 
 pub struct ManifoldWitness<C>(PhantomData<C>);
 
-/// Textbook alias for the simplicial case. `ManifoldWitness<C>` is currently
-/// simplicial-specific in its impls (it maps via `SimplicialComplex<C>`), so this
-/// alias names the same witness with explicit "simplicial" framing for migration
-/// and discoverability. A separate witness over arbitrary `ChainComplex` may be
-/// added in a follow-up; this alias preserves the simplicial entry point.
+/// Textbook alias for the simplicial case.
 pub type SimplicialManifoldWitness<C> = ManifoldWitness<C>;
 
 impl<C> HKT for ManifoldWitness<C>
 where
-    C: Satisfies<NoConstraint>,
+    SimplicialComplex<C>: ChainComplex,
+    C: Satisfies<NoConstraint> + deep_causality_num::RealField,
 {
     type Constraint = NoConstraint;
     type Type<T>
@@ -37,7 +47,9 @@ where
 
 impl<C> Functor<ManifoldWitness<C>> for ManifoldWitness<C>
 where
-    C: Satisfies<NoConstraint> + Clone,
+    SimplicialComplex<C>: ChainComplex + Clone,
+    <SimplicialComplex<C> as ChainComplex>::Metric: Clone,
+    C: Satisfies<NoConstraint> + Clone + deep_causality_num::RealField,
 {
     fn fmap<A, B, Func>(
         m_a: Manifold<SimplicialComplex<C>, A>,
@@ -48,12 +60,9 @@ where
         B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
-        // 1. Map Data
-        // Capture f in a closure for data mapping
+        // Metric is preserved across fmap: under Option 2C, `K::Metric` is a single
+        // concrete type independent of the data type, so the metric clones through.
         let new_data_tensor = CausalTensorWitness::fmap(m_a.data, f);
-
-        // 2. Complex and Metric are INVARIANT because they depend on C, not A or B.
-        // We can just clone them.
         Manifold {
             complex: m_a.complex.clone(),
             data: new_data_tensor,
@@ -65,7 +74,8 @@ where
 
 impl<C> Foldable<ManifoldWitness<C>> for ManifoldWitness<C>
 where
-    C: Satisfies<NoConstraint>,
+    SimplicialComplex<C>: ChainComplex,
+    C: Satisfies<NoConstraint> + deep_causality_num::RealField,
 {
     fn fold<A, B, Func>(fa: Manifold<SimplicialComplex<C>, A>, init: B, f: Func) -> B
     where
@@ -78,7 +88,8 @@ where
 
 impl<C> Pure<ManifoldWitness<C>> for ManifoldWitness<C>
 where
-    C: Satisfies<NoConstraint> + Default,
+    SimplicialComplex<C>: ChainComplex + Default,
+    C: Satisfies<NoConstraint> + Default + deep_causality_num::RealField,
 {
     fn pure<T>(value: T) -> Manifold<SimplicialComplex<C>, T>
     where
@@ -96,7 +107,9 @@ where
 
 impl<C> Monad<ManifoldWitness<C>> for ManifoldWitness<C>
 where
-    C: Satisfies<NoConstraint> + Clone + Default,
+    SimplicialComplex<C>: ChainComplex + Clone + Default,
+    <SimplicialComplex<C> as ChainComplex>::Metric: Clone,
+    C: Satisfies<NoConstraint> + Clone + Default + deep_causality_num::RealField,
 {
     fn bind<A, B, Func>(
         m_a: Manifold<SimplicialComplex<C>, A>,
@@ -108,16 +121,12 @@ where
         Func: FnMut(A) -> <Self as HKT>::Type<B>,
     {
         let mut result_data = Vec::with_capacity(m_a.data.len());
-
         for a in m_a.data.into_vec() {
             let mb = f(a);
             result_data.extend(mb.data.into_vec());
         }
-
         let new_len = result_data.len();
         let new_tensor = CausalTensor::from_vec(result_data, &[new_len]);
-
-        // We clone the input structure.
         Manifold {
             complex: m_a.complex.clone(),
             data: new_tensor,
@@ -129,7 +138,9 @@ where
 
 impl<C> Applicative<ManifoldWitness<C>> for ManifoldWitness<C>
 where
-    C: Satisfies<NoConstraint> + Clone + Default,
+    SimplicialComplex<C>: ChainComplex + Clone + Default,
+    <SimplicialComplex<C> as ChainComplex>::Metric: Clone,
+    C: Satisfies<NoConstraint> + Clone + Default + deep_causality_num::RealField,
 {
     fn apply<A, B, Func>(
         f_ab: Manifold<SimplicialComplex<C>, Func>,
@@ -152,8 +163,6 @@ where
         };
 
         let new_tensor = CausalTensor::from_vec(new_data, &shape);
-
-        // Preserve topology from A
         Manifold {
             complex: f_a.complex.clone(),
             data: new_tensor,
@@ -165,7 +174,9 @@ where
 
 impl<C> CoMonad<ManifoldWitness<C>> for ManifoldWitness<C>
 where
-    C: Satisfies<NoConstraint> + Clone,
+    SimplicialComplex<C>: ChainComplex + Clone,
+    <SimplicialComplex<C> as ChainComplex>::Metric: Clone,
+    C: Satisfies<NoConstraint> + Clone + deep_causality_num::RealField,
 {
     fn extract<A>(fa: &Manifold<SimplicialComplex<C>, A>) -> A
     where
@@ -199,28 +210,19 @@ where
                 f(&view)
             })
             .collect();
-
         let new_tensor = CausalTensor::from_vec(new_data, &shape);
-
-        // Preserve topology and metric from A!
         Manifold {
             complex: fa.complex.clone(),
             data: new_tensor,
             metric: fa.metric.clone(),
-            cursor: fa.cursor, // Maintain orig cursor? Or reset?
+            cursor: fa.cursor,
         }
     }
 }
 
 // ============================================================================
-// PART 2: Generic-K Witness — "GenericManifoldWitness<K>"
-// Use Case: HKT machinery over any `ChainComplex` (notably cubical).
-// Ships with `HKT` and `Functor` only; `Monad`/`Applicative`/`CoMonad` are deferred
-// because they need a default-constructible complex or other simplicial-specific
-// bounds. See tasks.md task 3.11a.
+// PART 2: Generic witness — `GenericManifoldWitness<K>` over any `ChainComplex`
 // ============================================================================
-
-use crate::traits::chain_complex::ChainComplex;
 
 pub struct GenericManifoldWitness<K>(PhantomData<K>);
 
@@ -238,30 +240,25 @@ where
 impl<K> Functor<GenericManifoldWitness<K>> for GenericManifoldWitness<K>
 where
     K: ChainComplex + Satisfies<NoConstraint> + Clone,
+    K::Metric: Clone,
 {
     fn fmap<A, B, Func>(m_a: Manifold<K, A>, f: Func) -> Manifold<K, B>
     where
-        A: Satisfies<NoConstraint> + deep_causality_num::RealField,
-        B: Satisfies<NoConstraint> + deep_causality_num::RealField,
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         let new_data_tensor = CausalTensorWitness::fmap(m_a.data, f);
-        // Under the GAT `K::Metric<R>`, the metric's type depends on the field-data
-        // precision. When fmap changes `A → B` with potentially different precisions,
-        // there is no precision-preserving way to carry `K::Metric<A>` into
-        // `Option<K::Metric<B>>`. The metric is dropped on fmap; callers that need to
-        // preserve a metric across an fmap should reattach it on the output manifold.
         Manifold {
             complex: m_a.complex.clone(),
             data: new_data_tensor,
-            metric: None,
+            metric: m_a.metric.clone(),
             cursor: m_a.cursor,
         }
     }
 }
 
-// `Pure`, `Monad`, `Applicative`, `CoMonad` impls for `GenericManifoldWitness<K>` are
-// intentionally deferred. `Pure::pure` needs `K: Default`; `Monad::bind` clones the
-// complex; `Applicative::apply` and `CoMonad::extend` need additional bounds that
-// don't fall out generically. The simplicial fast path remains available via
-// `SimplicialManifoldWitness<C>` which encodes those bounds directly.
+// `Pure`, `Monad`, `Applicative`, `CoMonad` impls for `GenericManifoldWitness<K>` remain
+// deferred to a follow-up: `Pure` needs `K: Default` and the others need additional
+// bounds that don't fall out generically. The simplicial fast path covers the common
+// case via `SimplicialManifoldWitness<C>`.

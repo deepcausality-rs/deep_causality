@@ -4,7 +4,7 @@
  */
 
 use deep_causality_metric::Metric;
-use deep_causality_num::{FromPrimitive, RealField, Zero};
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 
 use crate::{Simplex, SimplicialComplex};
@@ -173,8 +173,8 @@ where
     let eigenvalues = compute_eigenvalues(&gram, gram_dim);
 
     // Count positive, negative, and zero eigenvalues
-    let epsilon = <R as FromPrimitive>::from_f64(1e-10)
-        .expect("1e-10 is representable in every RealField"); // Tolerance for zero detection
+    let epsilon =
+        <R as FromPrimitive>::from_f64(1e-10).expect("1e-10 is representable in every RealField"); // Tolerance for zero detection
     let mut p = 0usize;
     let mut q = 0usize;
     let mut r_zero = 0usize;
@@ -212,12 +212,10 @@ where
 
     // Jacobi rotation method for small symmetric matrices
     let max_iterations = 100;
-    let tolerance =
-        <R as FromPrimitive>::from_f64(1e-12).expect("1e-12 fits in every RealField");
+    let tolerance = <R as FromPrimitive>::from_f64(1e-12).expect("1e-12 fits in every RealField");
     let two = <R as FromPrimitive>::from_f64(2.0).expect("2.0 fits in every RealField");
     let half = <R as FromPrimitive>::from_f64(0.5).expect("0.5 fits in every RealField");
-    let tiny =
-        <R as FromPrimitive>::from_f64(1e-15).expect("1e-15 fits in every RealField");
+    let tiny = <R as FromPrimitive>::from_f64(1e-15).expect("1e-15 fits in every RealField");
     let pi_over_four = <R as FromPrimitive>::from_f64(std::f64::consts::FRAC_PI_4)
         .expect("FRAC_PI_4 fits in every RealField");
 
@@ -260,8 +258,7 @@ where
         let a_pq = a[p][q_idx];
 
         a[p][p] = cos_t * cos_t * a_pp - two * cos_t * sin_t * a_pq + sin_t * sin_t * a_qq;
-        a[q_idx][q_idx] =
-            sin_t * sin_t * a_pp + two * cos_t * sin_t * a_pq + cos_t * cos_t * a_qq;
+        a[q_idx][q_idx] = sin_t * sin_t * a_pp + two * cos_t * sin_t * a_pq + cos_t * cos_t * a_qq;
         a[p][q_idx] = R::zero();
         a[q_idx][p] = R::zero();
 

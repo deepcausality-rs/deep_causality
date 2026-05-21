@@ -7,6 +7,10 @@ use deep_causality_haft::{CoMonad, Functor};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Graph, GraphWitness};
 
+/// Node-feature precision. `f64` is fine for a 4-node toy graph; the GNN code
+/// flows through any `RealField` implementor.
+pub type FloatType = f64;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== HKT Graph Convolution (GNN) Example ===\n");
 
@@ -59,7 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // It returns the new value for that node.
     // Rule: New Value = (Self + Sum(Neighbors)) / (1 + Num_Neighbors)
     // This is a simple mean-pooling diffusion.
-    let diffusion_kernel = |g: &Graph<f64>| {
+    let diffusion_kernel = |g: &Graph<FloatType>| {
         // 1. Get value of focused node (Self)
         let current_val = GraphWitness::extract(g);
 
@@ -80,7 +84,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         // 4. Compute Average
-        let count = 1.0 + neighbors.len() as f64;
+        let count = 1.0 + neighbors.len() as FloatType;
         (current_val + sum_neighbors) / count
     };
 
@@ -105,7 +109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn print_graph_state(g: &Graph<f64>) {
+fn print_graph_state(g: &Graph<FloatType>) {
     let data = g.data().as_slice();
     println!("Node Values: {:?}", data);
 }

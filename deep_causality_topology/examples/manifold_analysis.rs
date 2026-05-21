@@ -9,6 +9,11 @@ use deep_causality_topology::{
     BaseTopology, Manifold, ManifoldTopology, Simplex, SimplicialComplex, Skeleton,
 };
 
+/// Precision for this manifold. `f64` is sufficient; the example only checks
+/// topological invariants (Euler characteristic, orientation), not numerical ones.
+/// Swap to `Float106` to verify the topology layer rounds-trips through higher precision.
+pub type FloatType = f64;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Manifold Analysis Example ===");
 
@@ -44,14 +49,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // (1, 0) -> 1  (Vertex 1)
     let d1 = CsrMatrix::from_triplets(2, 1, &[(0, 0, -1i8), (1, 0, 1i8)])?;
 
-    // 3. Create Simplicial Complex
-    let complex: SimplicialComplex<f64> =
+    // 3. Create Simplicial Complex (precision = FloatType)
+    let complex: SimplicialComplex<FloatType> =
         SimplicialComplex::new(vec![skeleton_0, skeleton_1], vec![d1], vec![], vec![]);
 
     // 4. Create Manifold
     // Data for 3 simplices (2 vertices + 1 edge)
-    let data = CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3])?;
-    let manifold = Manifold::new(complex, data, 0)?;
+    let data = CausalTensor::new(vec![FloatType::from(1.0); 3], vec![3])?;
+    let manifold: Manifold<SimplicialComplex<FloatType>, FloatType> =
+        Manifold::new(complex, data, 0)?;
 
     println!("Manifold Created: {}", manifold);
     println!("Dimension: {}", manifold.dimension());

@@ -6,6 +6,7 @@
 // mod backend;
 mod cell_complex;
 mod chain;
+pub mod cubical_regge_geometry;
 mod curvature_tensor;
 mod differential_form;
 mod gauge;
@@ -20,4 +21,3 @@ mod simplex;
 mod simplicial_complex;
 mod skeleton;
 mod topology;
-pub mod cubical_regge_geometry;

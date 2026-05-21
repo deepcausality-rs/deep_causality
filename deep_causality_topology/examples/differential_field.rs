@@ -5,6 +5,11 @@
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud};
 
+/// `f64` is the right precision for this diffusion demo — short stepping, small
+/// triangle. Bump to `Float106` to see higher-precision Laplacian conservation
+/// (the metric layer is generic over `R: RealField`).
+pub type FloatType = f64;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Differential Field Example: Heat Equation ===\n");
 
@@ -92,7 +97,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Verification: Total Energy Conservation?
     // In a closed system, heat spreads but sum(u_i * Mass_i) should be constant.
     // Or simply, temperature equilibrates.
-    let final_v: &[f64] = &manifold.data().as_slice()[0..3];
+    let final_v: &[FloatType] = &manifold.data().as_slice()[0..3];
     println!(
         "Final:   [{:.2}, {:.2}, {:.2}]",
         final_v[0], final_v[1], final_v[2]

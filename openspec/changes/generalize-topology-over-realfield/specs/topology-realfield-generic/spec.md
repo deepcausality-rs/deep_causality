@@ -14,49 +14,84 @@ The crate's public API SHALL contain no hardcoded `f64` or `f32` in any struct f
 - **WHEN** the crate's source is searched for the patterns `From<f64>`, `Into<f64>`, and `Mul<f64, Output`
 - **THEN** zero matches SHALL appear in any `impl` block or trait bound declaration
 
-### Requirement: `ChainComplex::Metric` is a generic associated type (GAT) parameterized over `R: RealField`
+### Requirement: `ChainComplex::Metric` is a plain associated type; metric precision lives on the complex
 
-The `ChainComplex` trait SHALL declare its `Metric` associated type as a generic associated type:
+The `ChainComplex` trait SHALL declare its `Metric` associated type as a **plain associated type**, not a generic associated type:
 
 ```rust
 pub trait ChainComplex {
     // ...
-    type Metric<R: RealField>;
+    type Metric;
     // ...
 }
 ```
 
-This places precision as a parameter on the *metric*, not on the chain complex itself. A chain complex is a combinatorial object; the metric is a precision-carrying layer over it. The GAT lets `LatticeComplex<D>` (purely combinatorial, no `R`-typed storage) keep a single type identity while binding `type Metric<R: RealField> = CubicalReggeGeometry<D, R>`. The same `LatticeComplex<D>` instance can be used with metrics at different precisions.
+Precision-carrying chain complexes SHALL carry their metric precision as a type parameter on the *complex* (which already holds precision-typed combinatorial caches such as Hodge mass matrices), and the `Metric` associated type SHALL be bound to a concrete metric type at that precision:
 
-Implementors SHALL provide the GAT binding:
+- `impl<R: RealField> ChainComplex for SimplicialComplex<R>` → `type Metric = ReggeGeometry<R>;`
+- `impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R>` → `type Metric = CubicalReggeGeometry<D, R>;`
+- `impl<C> ChainComplex for CellComplex<C>` → `type Metric = ();` (no metric available).
+- Any other `ChainComplex` implementor SHALL similarly bind `Metric` to a concrete type.
 
-- `impl<const D: usize> ChainComplex for LatticeComplex<D>` → `type Metric<R: RealField> = CubicalReggeGeometry<D, R>;`
-- `impl<C> ChainComplex for SimplicialComplex<C>` (with appropriate bounds on `C`) → `type Metric<R: RealField> = ReggeGeometry<R>;`
-- `impl<C> ChainComplex for CellComplex<C>` → `type Metric<R: RealField> = ();` (no metric available; works for any `R`)
-- Any other `ChainComplex` implementor SHALL similarly provide a `Metric<R: RealField> = ...` binding.
+`Manifold<K, F>` SHALL store the metric as `metric: Option<K::Metric>` — there is **no precision parameter on the metric at the use site**. The complex's own precision determines the metric type. Every `K::Metric` use site in the crate (`extensions/hkt_manifold`, `manifold/getters`, etc.) SHALL refer to the associated type without a type-argument list.
 
-`Manifold<K, F>` SHALL retype its `metric` field from `Option<K::Metric>` to `Option<K::Metric<F>>` where `F` is the manifold's field-data type (already bounded `F: RealField + FromPrimitive` per the propagation policy). Every `K::Metric` use site in the crate (`extensions/hkt_manifold`, `manifold/getters`, etc.) SHALL retype to `K::Metric<R>` with `R` in scope from the surrounding generic context.
+**The data precision `F` of `Manifold<K, F>` is decoupled from the metric precision.** `F` SHALL NOT carry an `R: RealField` bound at the struct level. The data tensor `CausalTensor<F>` accepts any `F`; only operations that compute numerically with `F` (volumes, curvature contractions, covariance) SHALL bound `F: RealField` (or `F: RealField + FromPrimitive`) at the impl block. This decoupling is the precondition for restoring the full HKT surface on `Manifold` (see the "HKT impls SHALL be preserved on `Manifold`" requirement below) and for cross-algebra composition where cell data is a multivector, a tensor, or a non-`RealField` algebraic value.
 
-#### Scenario: `LatticeComplex<D>` stays combinatorial
+**LatticeComplex gains an explicit precision parameter.** Pre-Option-2C, `LatticeComplex<D>` was purely combinatorial. Under Option 2C, the cubical lattice carries the precision of its associated metric: `LatticeComplex<const D: usize, R: RealField>`. The combinatorial caches (open-cube counts, neighbor maps) do not depend on `R`; the parameter exists to determine the metric type via the `Metric = CubicalReggeGeometry<D, R>` binding. A `PhantomData<R>` field is acceptable in the struct definition.
+
+**Rationale (the rejected GAT approach).** An earlier R0 draft made `ChainComplex::Metric<R: RealField>` a GAT so the same complex could host metrics at multiple precisions. That design forced `Manifold<K, F>` to carry `F: RealField` at the struct level (so `K::Metric<F>` was nameable), which in turn forced `F` to be a `RealField` everywhere — including inside HKT impls. The struct-level bound made the HKT trait surface (`Functor`, `Monad`, `CoMonad`, etc. in `deep_causality_haft`) impossible to implement without modifying haft, because the haft `Type<T> where T: Satisfies<Self::Constraint>` GAT cannot carry a stricter `RealField` bound at the impl. The pivot to a plain associated type with precision on the complex unlocks the HKT surface on stable Rust without any haft change. The "one combinatorial complex hosting metrics at multiple precisions" use case was speculative and is rejected as motivation; in practice, choosing precision once per complex instance is the common case and a non-restriction for multi-precision workflows (instantiate a second complex at the second precision — the combinatorial structure is trivially re-derivable).
+
+#### Scenario: `LatticeComplex<D, R>` carries its metric precision
 
 - **WHEN** the source is inspected for `LatticeComplex<...>` declarations
-- **THEN** `LatticeComplex<D>` SHALL carry exactly one type parameter (`const D: usize`); no `R`, no `PhantomData<R>`, no precision marker SHALL be added to the complex itself
+- **THEN** `LatticeComplex` SHALL carry exactly two type parameters: `const D: usize` and `R: RealField`; the combinatorial caches SHALL be `R`-independent; a `PhantomData<R>` field MAY be present to anchor the type parameter
 
-#### Scenario: One lattice, two precisions of metric
+#### Scenario: `CellComplex<C>` has no metric
 
-- **WHEN** a single `LatticeComplex::<3>::new(...)` instance is constructed
-- **AND** that instance is referenced from `Manifold<LatticeComplex<3>, f64>` and `Manifold<LatticeComplex<3>, f32>` in the same program
-- **THEN** both manifolds SHALL be valid; the lattice SHALL be the same `LatticeComplex<3>` value used by both; the metrics SHALL be `CubicalReggeGeometry<3, f64>` and `CubicalReggeGeometry<3, f32>` respectively
+- **WHEN** `Manifold<CellComplex<C>, F>::metric()` is called for any `F`
+- **THEN** the field SHALL be `Option<()>` (i.e. the cell complex has no metric)
 
-#### Scenario: `CellComplex<C>` has no metric at any precision
+#### Scenario: `K::Metric` resolves at use sites without precision argument
 
-- **WHEN** `Manifold<CellComplex<C>, F>::metric()` is called for any `F: RealField + FromPrimitive`
-- **THEN** the field SHALL be `Option<()>` (i.e. the cell complex has no metric; the `()` placeholder satisfies the GAT for any `R`)
+- **WHEN** a generic function bounds `K: ChainComplex` and accepts `metric: Option<K::Metric>`
+- **THEN** the code SHALL compile; the resolved `K::Metric` SHALL be whatever concrete metric type that `K` binds, and the call site SHALL NOT need to thread a precision parameter through the `Metric` reference
 
-#### Scenario: `K::Metric<F>` resolves the GAT at use sites
+#### Scenario: Manifold data type is unconstrained at the struct level
 
-- **WHEN** a generic function bounds `K: ChainComplex` and `F: RealField + FromPrimitive` and accepts `metric: Option<K::Metric<F>>`
-- **THEN** the code SHALL compile and the resolved `K::Metric<F>` SHALL be the appropriate concrete metric type for `K` at precision `F`
+- **WHEN** `Manifold<K, F>` is named for some arbitrary `F` (including non-`RealField` types such as multivectors, tensors, dual numbers, complex numbers)
+- **THEN** the type SHALL be well-formed; no `F: RealField` bound SHALL be required at the struct definition
+
+### Requirement: HKT impls SHALL be preserved on `Manifold`
+
+`ManifoldWitness<C>` and `GenericManifoldWitness<K>` SHALL implement the `deep_causality_haft` `HKT` trait family without modification to `deep_causality_haft`. Specifically:
+
+- `HKT` (the GAT-shaped witness trait) SHALL be implemented.
+- `Functor`, `Foldable`, `Pure`, `Monad`, `CoMonad` SHALL be implemented with `Constraint = NoConstraint`, mirroring the pre-precision-refactor surface.
+- `Applicative` SHALL be implemented for the simplicial witness (function-valued `Manifold<_, Func>` data is well-formed under the decoupled-precision design, as `Func` is now an arbitrary `F` rather than required to be `RealField`).
+
+These impls SHALL operate at the haft witness layer with `T: Satisfies<NoConstraint>` bounds only; numerical operations that need `RealField` SHALL live in separate inherent methods or in impl blocks that bound the manifold's `F` parameter at the impl level, not on the witness.
+
+**Rationale.** Manifold's defining design feature is cross-algebra composition through HKT — the manifold can carry multivector cell values from `deep_causality_multivector`, tensor cell values from `deep_causality_tensor`, scalar cell values from `deep_causality_num`, or dual-number cell values for automatic differentiation, with composition expressed through `Functor::fmap`, `Monad::bind`, and `CoMonad::extend`. The earlier GAT-on-Metric approach broke this by forcing `F: RealField` at the struct level. Option 2C decouples metric precision from data precision so the HKT surface is restorable on stable Rust.
+
+#### Scenario: `Functor::fmap` is implementable through the haft trait
+
+- **WHEN** `<ManifoldWitness<C> as Functor<ManifoldWitness<C>>>::fmap(manifold, |x| f(x))` is called
+- **THEN** the call SHALL type-check and produce a new `Manifold<SimplicialComplex<C>, B>` where `B` is the closure's return type, with no constraint on `B` beyond `Satisfies<NoConstraint>`
+
+#### Scenario: Metric is preserved across `fmap`
+
+- **WHEN** a manifold with a metric of type `K::Metric` is mapped through `Functor::fmap`
+- **THEN** the resulting manifold's `metric` field SHALL be a clone of the original's metric — the metric SHALL NOT be dropped (the type of `K::Metric` does not depend on the data type, so the precision-locking that necessitated dropping the metric under the GAT design no longer applies)
+
+#### Scenario: `Monad::bind`, `CoMonad::extract`, `CoMonad::extend` are implementable
+
+- **WHEN** the bind / extract / extend methods are called via the haft trait surface
+- **THEN** each call SHALL type-check and produce the expected result; no inherent-method shim layer SHALL be needed
+
+#### Scenario: Cross-algebra composition through Manifold's witness
+
+- **WHEN** a `Manifold<SimplicialComplex<f64>, Multivector<f64, ...>>` is constructed and traversed through `Functor::fmap` or `CoMonad::extend`
+- **THEN** the construction and traversal SHALL type-check; the multivector cell type SHALL not be required to implement `RealField`
 
 ### Requirement: `CubicalReggeGeometry<D>` is parameterized over `R: RealField`
 

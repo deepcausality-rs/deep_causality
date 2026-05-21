@@ -64,7 +64,7 @@
 //! fields are sufficient inputs for all of them.
 
 use deep_causality_metric::Metric;
-use deep_causality_num::{One, RealField};
+use deep_causality_num::RealField;
 
 /// Cubical Regge geometry: discrete metric data on a D-dimensional cubical complex.
 ///

@@ -11,7 +11,7 @@ use deep_causality_topology::{HeavyHexLattice, KagomeLattice, LatticeComplex, Tr
 
 #[test]
 fn test_lattice_2d_square_torus() {
-    let lattice = LatticeComplex::<2>::square_torus(5);
+    let lattice = LatticeComplex::<2, f64>::square_torus(5);
 
     assert_eq!(lattice.shape(), &[5, 5]);
     assert_eq!(lattice.periodic(), &[true, true]);
@@ -20,7 +20,7 @@ fn test_lattice_2d_square_torus() {
 
 #[test]
 fn test_lattice_2d_square_open() {
-    let lattice = LatticeComplex::<2>::square_open(4);
+    let lattice = LatticeComplex::<2, f64>::square_open(4);
 
     assert_eq!(lattice.shape(), &[4, 4]);
     assert_eq!(lattice.periodic(), &[false, false]);
@@ -33,7 +33,7 @@ fn test_lattice_2d_square_open() {
 
 #[test]
 fn test_lattice_3d_cubic_torus() {
-    let lattice = LatticeComplex::<3>::cubic_torus(3);
+    let lattice = LatticeComplex::<3, f64>::cubic_torus(3);
 
     assert_eq!(lattice.shape(), &[3, 3, 3]);
     assert_eq!(lattice.periodic(), &[true, true, true]);
@@ -42,7 +42,7 @@ fn test_lattice_3d_cubic_torus() {
 
 #[test]
 fn test_lattice_3d_cubic_open() {
-    let lattice = LatticeComplex::<3>::cubic_open(4);
+    let lattice = LatticeComplex::<3, f64>::cubic_open(4);
 
     assert_eq!(lattice.shape(), &[4, 4, 4]);
     assert_eq!(lattice.periodic(), &[false, false, false]);
@@ -55,7 +55,7 @@ fn test_lattice_3d_cubic_open() {
 
 #[test]
 fn test_lattice_4d_hypercubic_torus() {
-    let lattice = LatticeComplex::<4>::hypercubic_torus(2);
+    let lattice = LatticeComplex::<4, f64>::hypercubic_torus(2);
 
     assert_eq!(lattice.shape(), &[2, 2, 2, 2]);
     assert_eq!(lattice.periodic(), &[true, true, true, true]);
@@ -68,7 +68,7 @@ fn test_lattice_4d_hypercubic_torus() {
 
 #[test]
 fn test_lattice_generic_torus() {
-    let lattice = LatticeComplex::<3>::torus([2, 3, 4]);
+    let lattice = LatticeComplex::<3, f64>::torus([2, 3, 4]);
 
     assert_eq!(lattice.shape(), &[2, 3, 4]);
     assert_eq!(lattice.periodic(), &[true, true, true]);
@@ -76,7 +76,7 @@ fn test_lattice_generic_torus() {
 
 #[test]
 fn test_lattice_generic_open() {
-    let lattice = LatticeComplex::<2>::open([5, 10]);
+    let lattice = LatticeComplex::<2, f64>::open([5, 10]);
 
     assert_eq!(lattice.shape(), &[5, 10]);
     assert_eq!(lattice.periodic(), &[false, false]);
@@ -85,7 +85,7 @@ fn test_lattice_generic_open() {
 #[test]
 fn test_lattice_mixed_boundary() {
     // Create a lattice with mixed boundary conditions
-    let lattice = LatticeComplex::<3>::new([4, 4, 4], [true, false, true]);
+    let lattice = LatticeComplex::<3, f64>::new([4, 4, 4], [true, false, true]);
 
     assert_eq!(lattice.shape(), &[4, 4, 4]);
     assert_eq!(lattice.periodic(), &[true, false, true]);

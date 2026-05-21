@@ -26,8 +26,7 @@
 //! - Bit-string basis indexing in `CausalMultiVector` (`Cl(3,1)`)
 //! - Composition of rotors via repeated `bind`
 
-use deep_causality_haft::CoMonad;
-use deep_causality_haft::{Monad, Pure};
+use deep_causality_haft::{CoMonad, Monad, Pure};
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::{Float106, RealField};

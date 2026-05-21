@@ -154,7 +154,7 @@ struct VerificationResult {
 /// 2. Two independent algorithms (series expansion vs continued fraction)
 ///    agree to within DoubleFloat precision
 fn verify_plaquette(
-    lattice: Arc<CubicalComplex<2>>,
+    lattice: Arc<CubicalComplex<2, FloatType>>,
     beta: f64,
     tolerance: f64,
 ) -> VerificationResult {

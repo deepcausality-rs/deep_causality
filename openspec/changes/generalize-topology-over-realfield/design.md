@@ -39,7 +39,7 @@ Stakeholders: anyone implementing the cubical Regge calculus roadmap (R1–R6), 
 
 ## Decisions
 
-### Decision 1: Precision lives where precision is used — generalized types carry `R: RealField`; combinatorial types do not
+### Decision 1: Precision lives where precision is used — generalized types carry `R: RealField`; `ChainComplex::Metric` is a plain associated type; `Manifold<K, F>` decouples data precision from metric precision
 
 Every type whose semantics depend on a real-field precision carries an `R: RealField` parameter. Every type whose semantics are purely combinatorial does not. Examples:
 
@@ -48,44 +48,66 @@ Every type whose semantics depend on a real-field precision carries an `R: RealF
 - `ReggeGeometry<R: RealField>` — stores `R`-typed simplicial edge lengths and curvature data.
 - `CurvatureTensor<R: RealField, ...>` — stores `R`-typed tensor components.
 - `DifferentialForm<T, R: RealField>` — adds an `R` parameter to support `T: Mul<R, Output = T>`.
+- `SimplicialComplex<R: RealField>` — already T-parameterized; the `T` is the precision of its Hodge mass matrices.
+- `LatticeComplex<const D: usize, R: RealField>` — the combinatorial caches do not depend on `R`, but the parameter exists to anchor the precision of its associated metric (a `PhantomData<R>` field carries the type).
 
-**Combinatorial types** (no `R` parameter):
-- `LatticeComplex<D>` — stores `shape: [usize; D]`, `periodic: [bool; D]`, integer-indexed caches. No `R`-typed data.
-- `CellComplex<C>` — already generic over `C` (cell-data type); no additional precision parameter.
-
-**The bridge between the two is a GAT on `ChainComplex::Metric`:**
+**Trait surface — plain associated type, not GAT:**
 
 ```rust
 pub trait ChainComplex {
     type CellType: Cell;
     type CellIter<'a>: Iterator<Item = Self::CellType> where Self: 'a;
-    type Metric<R: RealField>;
+    type Metric;                       // plain associated type
     // ... combinatorial methods unchanged
 }
 
-impl<const D: usize> ChainComplex for LatticeComplex<D> {
-    type Metric<R: RealField> = CubicalReggeGeometry<D, R>;
+impl<R: RealField> ChainComplex for SimplicialComplex<R> {
+    type Metric = ReggeGeometry<R>;    // precision flows from the complex's R
     // ...
 }
 
-pub struct Manifold<K: ChainComplex, F: RealField + FromPrimitive> {
-    field: CausalTensor<F>,
-    metric: Option<K::Metric<F>>,  // F serves as both field-data precision and metric precision
+impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
+    type Metric = CubicalReggeGeometry<D, R>;
     // ...
+}
+
+pub struct Manifold<K: ChainComplex, F> {   // ← F is unconstrained at the struct level
+    complex: K,
+    data: CausalTensor<F>,
+    metric: Option<K::Metric>,              // ← K::Metric is a concrete type; no F dependency
+    cursor: usize,
 }
 ```
 
-This matches the mathematical structure: a chain complex is a combinatorial object; the metric is a *choice* layered on top. Two lattices with identical combinatorial structure but different metric precisions are the *same* lattice, with two different metric attachments.
+The complex carries its own precision; the metric type follows directly via the plain associated type. The Manifold's data precision `F` is independent of the metric's precision and unconstrained at the struct level.
 
-**Why a GAT and not a parameter on the complex itself:** an earlier R0 draft considered `LatticeComplex<D, R: RealField>` with `PhantomData<R>`. Rejected because (a) `LatticeComplex` stores no `R`-typed data, so the parameter would be purely phantom; (b) it inverts the mathematical structure (precision becomes part of the complex's identity); (c) `LatticeComplex<3, f32>` and `LatticeComplex<3, f64>` would be distinct types despite being the same combinatorial object — you couldn't share one lattice fixture across two precisions.
+**Why this shape (the Option 2C decision):**
 
-**Why a GAT and not three parameters on `Manifold<K, F, M>`:** a parallel draft considered dropping `Metric` from `ChainComplex` entirely and attaching the metric via a third Manifold parameter. Rejected as a deeper API restructuring than R0's scope warrants. The GAT preserves the "complex has a canonical metric type at every precision" idiom while making precision parametric.
+1. **Restores the full HKT trait surface on `Manifold`.** Under the earlier GAT-on-Metric design, `Manifold<K, F>` needed `F: RealField` at the struct level (so `K::Metric<F>` was nameable). That bound made every `<W as Functor<W>>::fmap` impl require `B: RealField` inside the impl, which the `deep_causality_haft` trait machinery rejects with "impl has stricter requirements than trait" (haft declares `B: Satisfies<F::Constraint>` only). The plain-associated-type design removes the `F: RealField` struct bound entirely: `K::Metric` is a single concrete type independent of `F`, so the struct is well-formed for any `F`, and the haft `Satisfies<NoConstraint>` bounds suffice. `Functor`, `Pure`, `Monad`, `CoMonad`, `Foldable`, and `Applicative` all become implementable on the existing haft trait surface without modifying haft.
+
+2. **Restores cross-algebra composition.** Manifold's defining feature is composing across the multivector and tensor crates through HKT — `Manifold<K, Multivector<f64, ...>>`, `Manifold<K, CausalTensor<f64>>`, `Manifold<K, DualNumber<f64>>`. Multivectors, tensors, and dual numbers are not `RealField` (Clifford algebra isn't totally ordered; tensors are not a field). The earlier GAT design forced `F: RealField` and made these cell-data shapes unrepresentable. Option 2C removes that block.
+
+3. **Preserves the metric across `Functor::fmap`.** Under the GAT design, `fmap A → B` had to drop the metric because `K::Metric<A>` and `K::Metric<B>` were distinct types with no precision-preserving transformation. Under Option 2C, `K::Metric` is a single type independent of the data, so `m_a.metric.clone()` flows through `fmap` naturally. This restores a behavior that the GAT design silently broke.
+
+4. **Matches the mathematical reality more honestly.** The constraint "metric precision equals data precision" is not a mathematical invariant — it was a type-system artifact of the GAT. Real workflows want `f32` metric + `f64` data (memory-bound mesh storage with high-precision field computation), scalar metric + multivector data (Clifford-algebra fields on real geometry), real metric + complex data (Lorentzian QFT), concrete-precision metric + dual-number data (automatic differentiation). The plain-associated-type design supports all of these.
+
+**Why `LatticeComplex` gains an `R` parameter while its combinatorial caches stay `R`-independent:** the parameter exists to anchor the metric type via the `Metric = CubicalReggeGeometry<D, R>` binding. A `PhantomData<R>` field carries the type without adding storage. The "one combinatorial complex hosting metrics at multiple precisions" use case from the earlier GAT draft is rejected — choosing a precision once per complex instance is the common case, and instantiating a second complex at a second precision is trivial because the combinatorial structure is re-derivable from `[shape, periodic]`.
+
+**Why `SimplicialComplex<R>` already had this shape:** the simplicial type carries `hodge_star_operators: Vec<CsrMatrix<T>>` where `T` is the Hodge mass-matrix precision. The pre-R0 design had this T-parameter; Option 2C keeps it and renames T to R to reflect the precision-as-parameter role. The `Manifold<SimplicialComplex<R>, F>` instantiation now allows `F ≠ R` (e.g. multivector cell data on f64 simplicial geometry).
 
 **Why one `R` parameter per precision-carrying type, not separate `R_lengths`, `R_angles`, etc.:** these values are connected by closed forms within a single type. Splitting creates unenforceable consistency constraints; one `R` ensures all derived quantities live in the same field by construction.
 
-**Why no default `R = f64`:** the entire point is to make precision a *choice*. A default of `f64` would let new call sites silently fall back to `f64` and accumulate the same precision loss the parameter is meant to solve.
+**Why no default `R = f64` and no default `F = R`:** the entire point is to make precision a *choice*. A default would let new call sites silently fall back and accumulate the same precision loss the parameter is meant to solve.
 
-**Stability note:** GATs (generic associated types) are stable on Rust 1.65+. The `type Metric<R: RealField>` pattern here uses no lifetimes in the GAT itself, only a plain type parameter, which is the simplest and best-supported GAT shape. No HRTB gymnastics are required at use sites.
+**Where `F: RealField` bounds DO live:** only on the impl blocks that perform numerical operations against `F` — covariance, simplex volume, curvature contractions, Cayley-Menger, Laplacian, codifferential. The HKT impls, the constructors, the getters, and any combinatorial / shape-passing operation are bound-free in `F`.
+
+**Rejected alternatives:**
+- **GAT on `Metric<R>`** (the earlier R0 draft). Rejected for the reasons enumerated above — broke HKT and cross-algebra composition.
+- **Three parameters on `Manifold<K, F, M>`.** Considered; rejected as a deeper API restructuring than necessary. The plain associated type on `ChainComplex::Metric` is the minimum change that achieves the goal.
+- **Sibling type `ManifoldWithMetric<K, F, M>` parallel to `Manifold<K, F>`.** Rejected — parallel structures are forbidden by user direction.
+- **`PhantomData<R>` on Manifold to anchor metric precision while leaving F unconstrained.** Considered; rejected because it duplicates the precision parameter (the complex already carries it via `K`).
+
+**Stability note:** plain associated types are stable since Rust 1.0. The Option 2C design uses no GATs, no HRTBs, no nightly features — strictly less Rust complexity than the rejected GAT design.
 
 ### Decision 2: Use the existing `FromPrimitive` trait for numeric-literal conversions; no new methods on `RealField`
 

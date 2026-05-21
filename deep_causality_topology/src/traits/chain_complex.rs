@@ -4,7 +4,6 @@
  */
 
 use crate::traits::cell::Cell;
-use deep_causality_num::RealField;
 use deep_causality_sparse::CsrMatrix;
 use std::borrow::Cow;
 
@@ -24,11 +23,18 @@ pub trait ChainComplex {
     where
         Self: 'a;
 
-    /// The metric associated with this complex, parameterized by the precision `R: RealField`.
-    /// Used by `Manifold<K, F>` as `metric: Option<K::Metric<F>>`. A chain complex is a
-    /// combinatorial object; the metric is a precision-carrying layer over it. Implementors
-    /// that have no metric (e.g. `CellComplex`) bind `type Metric<R: RealField> = ();`.
-    type Metric<R: RealField>;
+    /// The metric type associated with this complex.
+    ///
+    /// Precision-carrying complexes (e.g. `SimplicialComplex<R: RealField>`,
+    /// `LatticeComplex<const D, R: RealField>`) bind this to a concrete metric type
+    /// at their own `R`: `type Metric = ReggeGeometry<R>;`, `type Metric =
+    /// CubicalReggeGeometry<D, R>;`. The combinatorial `CellComplex<C>` has no metric
+    /// and binds `type Metric = ();`. The metric precision flows from the complex's
+    /// own type parameters, not from a generic argument on this associated type.
+    ///
+    /// See `design.md` Decision 1 of `generalize-topology-over-realfield` for the
+    /// rationale for picking a plain associated type over a GAT.
+    type Metric;
 
     /// Iterate over all k-cells in the complex.
     fn cells(&self, k: usize) -> Self::CellIter<'_>;

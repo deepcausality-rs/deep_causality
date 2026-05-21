@@ -6,15 +6,15 @@
 //! CPU implementation of Manifold constructors.
 
 use crate::{ReggeGeometry, SimplicialComplex, TopologyError};
-use deep_causality_num::Zero;
+use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
 
 use super::super::{Manifold, utils};
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
-    C: Default + Copy + Clone + PartialEq + Zero,
-    D: Default + Copy + Clone + PartialEq + Zero,
+    C: RealField + Default,
+    D: RealField + Default + PartialEq,
 {
     /// CPU implementation of Manifold constructor.
     pub(crate) fn new_impl(
@@ -132,7 +132,7 @@ where
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
-    C: Clone,
+    C: RealField,
     D: Clone,
 {
     /// CPU implementation of shallow clone.

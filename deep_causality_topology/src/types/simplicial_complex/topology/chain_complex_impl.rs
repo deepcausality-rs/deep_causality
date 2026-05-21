@@ -33,13 +33,13 @@ impl<'a> Iterator for SimplicialCellIter<'a> {
     }
 }
 
-impl<T> ChainComplex for SimplicialComplex<T> {
+impl<T: deep_causality_num::RealField> ChainComplex for SimplicialComplex<T> {
     type CellType = Simplex;
     type CellIter<'a>
         = SimplicialCellIter<'a>
     where
         Self: 'a;
-    type Metric<R: deep_causality_num::RealField> = crate::ReggeGeometry<R>;
+    type Metric = crate::ReggeGeometry<T>;
 
     fn cells(&self, k: usize) -> Self::CellIter<'_> {
         let inner = self
