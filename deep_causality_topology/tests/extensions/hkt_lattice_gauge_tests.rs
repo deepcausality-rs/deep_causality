@@ -3,7 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, Functor, Monad, Pure};
+// `LatticeGaugeField<G, D, M, R>` requires `R: RealField` at the struct level (because
+// its `lattice: Arc<LatticeComplex<D, R>>` field requires it). The `deep_causality_haft`
+// `HKT`/`Functor`/`Pure`/`Monad`/`Applicative` traits cannot be implemented on
+// `LatticeGaugeFieldWitness` on stable Rust without modifying haft — same situation as
+// `StrictCausalTensorWitness` in `deep_causality_tensor`. Tests for the dropped trait
+// impls are removed; tests for the inherent `map_field` / `scale_field` / `zip_with`
+// surface remain below.
 use deep_causality_topology::{
     ChainComplex, GaugeGroup, LatticeComplex, LatticeGaugeField, LatticeGaugeFieldWitness,
     TopologyError, TopologyErrorEnum,
@@ -35,40 +41,10 @@ fn test_witness_new_and_display() {
     assert_eq!(display_str, "LatticeGaugeFieldWitness<TestGroup, 2D>");
 }
 
-#[test]
-fn test_pure() {
-    let beta = 5.0;
-    let field = LatticeGaugeFieldWitness::<TestGroup, D, f64>::pure(beta);
-    assert_eq!(*field.beta(), beta);
-    // Pure creates a 1^D lattice with no links
-    assert_eq!(*field.lattice().shape(), [1usize; D]);
-}
-
-#[test]
-fn test_functor() {
-    let field = LatticeGaugeFieldWitness::<TestGroup, D, f64>::pure(2.0);
-    // Map beta: 2.0 -> 4.0
-    let transformed = LatticeGaugeFieldWitness::fmap(field, |x| x * 2.0);
-    assert_eq!(*transformed.beta(), 4.0);
-}
-
-#[test]
-fn test_applicative() {
-    let func_field = LatticeGaugeFieldWitness::<TestGroup, D, f64>::pure(|x: f64| x + 10.0);
-    let val_field = LatticeGaugeFieldWitness::<TestGroup, D, f64>::pure(5.0);
-
-    let result = LatticeGaugeFieldWitness::apply(func_field, val_field);
-    assert_eq!(*result.beta(), 15.0);
-}
-
-#[test]
-fn test_monad() {
-    let field = LatticeGaugeFieldWitness::<TestGroup, D, f64>::pure(3.0);
-    let result = LatticeGaugeFieldWitness::bind(field, |x| {
-        LatticeGaugeFieldWitness::<TestGroup, D, f64>::pure(x * x)
-    });
-    assert_eq!(*result.beta(), 9.0);
-}
+// Tests for `Pure`, `Functor`, `Applicative`, `Monad` on `LatticeGaugeFieldWitness`
+// removed in the Option-2C pivot — those impls were dropped (see the module-level
+// comment above). The inherent functional surface (`map_field`, `scale_field`,
+// `zip_with`) is exercised by the tests below.
 
 #[test]
 fn test_map_field_full() {

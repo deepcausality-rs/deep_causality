@@ -25,11 +25,9 @@
 //! - **Monad::bind**: Chain field transformations
 
 use crate::{GaugeGroup, LatticeComplex, LatticeGaugeField, LinkVariable, TopologyError};
-use deep_causality_haft::{Applicative, Functor, HKT, Monad, NoConstraint, Pure, Satisfies};
 use deep_causality_num::{
     ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
 };
-// use deep_causality_tensor::TensorData; // Removed
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -57,141 +55,23 @@ impl<G: GaugeGroup, const D: usize, M> LatticeGaugeFieldWitness<G, D, M> {
 }
 
 // ============================================================================
-// HKT Implementation
+// HKT trait impls are intentionally deferred.
+//
+// `LatticeGaugeField<G, D, M, R>` requires `R: RealField` at the struct level
+// (because `lattice: Arc<LatticeComplex<D, R>>` requires it). The
+// `deep_causality_haft` `HKT`/`Functor`/`Pure`/`Monad`/`Applicative` traits
+// declare their inner-type bounds as `T: Satisfies<F::Constraint>`, and Rust's
+// "impl has stricter requirements than trait" rule rejects adding `R: RealField`
+// to the impl methods. Same situation as `StrictCausalTensorWitness` in
+// `deep_causality_tensor` — verified to compile on nightly with `-Znext-solver`;
+// stable unblock is gated on the next-generation trait solver stabilizing or on
+// `deep_causality_haft` growing a capability-bridging `Constraint` mechanism.
+//
+// The cross-algebra composition story is preserved on `Manifold` (see
+// `extensions/hkt_manifold/mod.rs`) — that is the central composition surface.
+// The lattice gauge field's functional surface remains available via the inherent
+// `map_field` / `zip_with` / `scale_field` / `identity_field` methods below.
 // ============================================================================
-
-impl<G: GaugeGroup, const D: usize, M> HKT for LatticeGaugeFieldWitness<G, D, M>
-where
-    M: Field + Copy + Default + PartialOrd,
-{
-    type Constraint = NoConstraint;
-    type Type<R>
-        = LatticeGaugeField<G, D, M, R>
-    where
-        R: Satisfies<NoConstraint>;
-}
-
-// ============================================================================
-// Functor Implementation
-// ============================================================================
-
-/// Functor implementation: map over the beta parameter.
-///
-/// # Limitation
-///
-/// Due to trait bound constraints, this only transforms beta.
-/// For full field transformations, use `LatticeGaugeFieldWitness::map_field()`.
-/// Functor implementation: map over the beta parameter.
-impl<G: GaugeGroup, const D: usize, M> Functor<LatticeGaugeFieldWitness<G, D, M>>
-    for LatticeGaugeFieldWitness<G, D, M>
-where
-    M: Field + Copy + Default + PartialOrd,
-{
-    /// Map a function over the beta parameter of the lattice gauge field.
-    ///
-    /// Note: This creates an empty field with transformed beta.
-    /// For full link variable transformation, use `map_field()`.
-    fn fmap<A, B, F>(fa: LatticeGaugeField<G, D, M, A>, mut f: F) -> LatticeGaugeField<G, D, M, B>
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        F: FnMut(A) -> B,
-    {
-        // Consume the field to get components
-        let (lattice, _links, beta_a) = fa.into_parts();
-        let beta = f(beta_a);
-
-        // Create empty field with new beta (links cannot be transformed without Clone)
-        LatticeGaugeField::from_links_unchecked(lattice, HashMap::new(), beta, ())
-    }
-}
-
-// ============================================================================
-// Applicative Implementation
-// ============================================================================
-
-/// Applicative implementation: apply a wrapped function to a wrapped value.
-/// Applicative implementation: apply a wrapped function to a wrapped value.
-impl<G: GaugeGroup, const D: usize, M> Applicative<LatticeGaugeFieldWitness<G, D, M>>
-    for LatticeGaugeFieldWitness<G, D, M>
-where
-    M: Field + Copy + Default + PartialOrd,
-{
-    /// Apply a function wrapped in a field to a value wrapped in a field.
-    fn apply<A, B, F>(
-        fab: LatticeGaugeField<G, D, M, F>,
-        fa: LatticeGaugeField<G, D, M, A>,
-    ) -> LatticeGaugeField<G, D, M, B>
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        F: FnOnce(A) -> B + Satisfies<NoConstraint>,
-    {
-        let (_lattice_f, _links_f, f_beta) = fab.into_parts();
-        let (lattice_a, _links_a, a_beta) = fa.into_parts();
-
-        // Apply function to value
-        let b_beta = f_beta(a_beta);
-
-        // Create new field
-        LatticeGaugeField::from_links_unchecked(lattice_a, HashMap::new(), b_beta, ())
-    }
-}
-
-// ============================================================================
-// Pure Implementation
-// ============================================================================
-
-/// Pure implementation: lift a value into a minimal field context.
-/// Pure implementation: lift a value into a minimal field context.
-impl<G: GaugeGroup, const D: usize, M> Pure<LatticeGaugeFieldWitness<G, D, M>>
-    for LatticeGaugeFieldWitness<G, D, M>
-where
-    M: Field + Copy + Default + PartialOrd,
-{
-    /// Lift a value into a lattice gauge field context.
-    ///
-    /// Creates a minimal gauge field with no links and the given value as beta.
-    fn pure<T>(value: T) -> LatticeGaugeField<G, D, M, T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
-        let shape = [1usize; D];
-        let lattice = Arc::new(LatticeComplex::new(shape, [true; D]));
-        let links = HashMap::new();
-
-        LatticeGaugeField::from_links_unchecked(lattice, links, value, ())
-    }
-}
-
-// ============================================================================
-// Monad Implementation
-// ============================================================================
-
-/// Monad implementation: chain field transformations.
-///
-/// # Physics Interpretation
-///
-/// This enables chaining gauge field operations where each step
-/// produces a new field configuration.
-/// Monad implementation: chain field transformations.
-impl<G: GaugeGroup, const D: usize, M> Monad<LatticeGaugeFieldWitness<G, D, M>>
-    for LatticeGaugeFieldWitness<G, D, M>
-where
-    M: Field + Copy + Default + PartialOrd,
-{
-    /// Monadic bind for chaining lattice gauge field transformations.
-    fn bind<A, B, F>(ma: LatticeGaugeField<G, D, M, A>, f: F) -> LatticeGaugeField<G, D, M, B>
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        F: FnMut(A) -> LatticeGaugeField<G, D, M, B>,
-    {
-        let (_lattice, _links, beta_a) = ma.into_parts();
-        let mut func = f;
-        func(beta_a)
-    }
-}
 
 // ============================================================================
 // Type-Safe Operations (with proper Clone + Default bounds)
@@ -342,7 +222,7 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
     ///
     /// Convenience wrapper that enforces proper type constraints.
     pub fn identity_field<T>(
-        lattice: Arc<LatticeComplex<D>>,
+        lattice: Arc<LatticeComplex<D, R>>,
         beta: R,
     ) -> Result<LatticeGaugeField<G, D, T, R>, TopologyError>
     where

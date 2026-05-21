@@ -5,31 +5,12 @@
 use crate::traits::chain_complex::ChainComplex;
 use crate::types::manifold::differential::utils_differential;
 use crate::{Manifold, SimplicialComplex};
-use core::ops::Mul;
-use deep_causality_num::{Field, Float, FromPrimitive, Zero};
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 
-impl<C, D> Manifold<SimplicialComplex<C>, D>
+impl<R> Manifold<SimplicialComplex<R>, R>
 where
-    C: Float
-        + Copy
-        + FromPrimitive
-        + core::ops::Neg<Output = C>
-        + Default
-        + PartialEq
-        + Zero
-        + std::fmt::Debug
-        + From<f64>,
-    D: Field
-        + Float
-        + Copy
-        + FromPrimitive
-        + core::ops::Neg<Output = D>
-        + Default
-        + PartialEq
-        + Zero
-        + std::fmt::Debug
-        + Mul<C, Output = D>,
+    R: RealField + FromPrimitive + Default + PartialEq,
 {
     /// Computes the codifferential `δ` (delta) of a k-form.
     ///
@@ -46,54 +27,32 @@ where
     ///
     /// # Returns
     /// A `CausalTensor` representing the (k-1)-form.
-    pub fn codifferential(&self, k: usize) -> CausalTensor<D> {
+    pub fn codifferential(&self, k: usize) -> CausalTensor<R> {
         if k == 0 {
-            // delta of a 0-form is zero
             return CausalTensor::new(vec![], vec![0]).unwrap();
         }
 
-        // 1. Get Data: omega_k
         let k_form_data = self.get_k_form_data(k);
-
-        // 2. Get Operators
-        // M_k (Mass Matrix for k-simplices)
         let mass_k = &self.complex.hodge_star_operators[k];
 
-        // B_k (Boundary Operator: k -> k-1)
-        // Route through ChainComplex::boundary_matrix(k) — Cow::Borrowed on SimplicialComplex.
         let boundary_k_cow = self.complex.boundary_matrix(k);
         let boundary_k: &deep_causality_sparse::CsrMatrix<i8> = &boundary_k_cow;
 
-        // M_{k-1} (Mass Matrix for k-1 simplices)
-        // We need the inverse of this. Since we store it as a diagonal CsrMatrix,
-        // we can compute the inverse values element-wise.
         let mass_k_minus_1 = &self.complex.hodge_star_operators[k - 1];
 
-        // 3. Compute: y = M_k * omega_k
-        // Element-wise multiplication since M_k is diagonal
         let weighted_form = utils_differential::apply_metric_operator(mass_k, &k_form_data);
-
-        // 4. Compute: z = B_k * y
-        // Sparse matrix multiplication
         let integrated_form = utils_differential::apply_operator(boundary_k, &weighted_form);
 
-        // 5. Compute: res = M_{k-1}^{-1} * z
-        // Apply inverse weights.
         let prev_dim_size = self.complex.skeletons()[k - 1].simplices().len();
         let mut result_data = Vec::with_capacity(prev_dim_size);
 
-        // We assume mass_k_minus_1 is strictly diagonal and aligned with the skeleton.
-        // In CsrMatrix, diagonal means row_indices[i]..row_indices[i+1] contains col=i.
-        // We iterate manually to be safe and efficient.
+        let zero_tol = <R as FromPrimitive>::from_f64(1e-12)
+            .expect("1e-12 is representable in every RealField");
 
-        // Fallback map if matrix is sparse/missing entries
-        // In a full implementation, we'd use a dedicated DiagonalMatrix type.
-        // Here we parse the CSR structure.
         for i in 0..prev_dim_size {
-            let numerator = integrated_form.get(i).copied().unwrap_or(D::zero());
+            let numerator = integrated_form.get(i).copied().unwrap_or(R::zero());
 
-            // Find diagonal value M_{ii}
-            let mut mass_val = C::zero();
+            let mut mass_val = R::zero();
             let start = mass_k_minus_1.row_indices()[i];
             let end = mass_k_minus_1.row_indices()[i + 1];
 
@@ -104,12 +63,10 @@ where
                 }
             }
 
-            // Apply Inverse Mass: 1 / M_{ii}
-            // If Mass is 0 (degenerate), we effectively zero out the result to avoid NaN.
-            if mass_val.abs() > <C as From<f64>>::from(1e-12) {
-                result_data.push(numerator * (<C as From<f64>>::from(1.0) / mass_val));
+            if mass_val.abs() > zero_tol {
+                result_data.push(numerator * (R::one() / mass_val));
             } else {
-                result_data.push(D::zero());
+                result_data.push(R::zero());
             }
         }
 

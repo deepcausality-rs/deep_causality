@@ -56,10 +56,11 @@ pub use crate::types::lattice_complex::specialized::{
 pub use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
 
 /// Textbook alias: a cubical complex is the regular cellular decomposition of a
-/// lattice. Both terms refer to the same structure here; `LatticeComplex<D>` is the
-/// canonical name (it makes the underlying ℤᴰ grid explicit and stays consistent with
-/// the physics vocabulary used elsewhere in the crate, e.g. `LatticeGaugeField`).
-pub type CubicalComplex<const D: usize> = LatticeComplex<D>;
+/// lattice. Both terms refer to the same structure here; `LatticeComplex<D, R>` is the
+/// canonical name (it makes the underlying ℤᴰ grid and the metric precision explicit
+/// and stays consistent with the physics vocabulary used elsewhere in the crate,
+/// e.g. `LatticeGaugeField`).
+pub type CubicalComplex<const D: usize, R> = LatticeComplex<D, R>;
 /// Textbook alias for `LatticeCell<D>`. See `CubicalComplex<D>`.
 pub type CubicalCell<const D: usize> = LatticeCell<D>;
 pub use crate::types::cubical_regge_geometry::CubicalReggeGeometry;

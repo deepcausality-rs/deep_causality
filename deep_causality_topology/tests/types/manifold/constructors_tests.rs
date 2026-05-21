@@ -187,10 +187,10 @@ fn test_manifold_getters() {
 
 #[test]
 fn test_from_cubical_no_metric() {
-    let complex = LatticeComplex::<2>::new([3, 3], [false, false]);
+    let complex = LatticeComplex::<2, f64>::new([3, 3], [false, false]);
     let data = CausalTensor::new(vec![0.0_f64; 4], vec![4]).unwrap();
 
-    let manifold: Manifold<LatticeComplex<2>, f64> = Manifold::from_cubical(complex, data, 0);
+    let manifold: Manifold<LatticeComplex<2, f64>, f64> = Manifold::from_cubical(complex, data, 0);
 
     assert!(manifold.metric().is_none(), "from_cubical sets metric None");
     assert_eq!(manifold.cursor(), 0);
@@ -199,7 +199,7 @@ fn test_from_cubical_no_metric() {
 
 #[test]
 fn test_from_cubical_preserves_cursor() {
-    let complex = LatticeComplex::<2>::new([4, 4], [true, true]);
+    let complex = LatticeComplex::<2, f64>::new([4, 4], [true, true]);
     let data = CausalTensor::new(vec![1.0_f64; 16], vec![16]).unwrap();
 
     let manifold = Manifold::from_cubical(complex, data, 7);
@@ -208,11 +208,11 @@ fn test_from_cubical_preserves_cursor() {
 
 #[test]
 fn test_from_cubical_with_metric_unit() {
-    let complex = LatticeComplex::<2>::new([3, 3], [false, false]);
+    let complex = LatticeComplex::<2, f64>::new([3, 3], [false, false]);
     let data = CausalTensor::new(vec![0.0_f64; 4], vec![4]).unwrap();
-    let metric = CubicalReggeGeometry::<2>::unit();
+    let metric = CubicalReggeGeometry::<2, f64>::unit();
 
-    let manifold: Manifold<LatticeComplex<2>, f64> =
+    let manifold: Manifold<LatticeComplex<2, f64>, f64> =
         Manifold::from_cubical_with_metric(complex, data, metric, 2);
 
     assert!(
@@ -292,9 +292,9 @@ fn test_with_metric_cursor_out_of_bounds() {
 
 #[test]
 fn test_from_cubical_with_metric_3d() {
-    let complex = LatticeComplex::<3>::cubic_torus(2);
+    let complex = LatticeComplex::<3, f64>::cubic_torus(2);
     let data = CausalTensor::new(vec![0.0_f64; 8], vec![8]).unwrap();
-    let metric = CubicalReggeGeometry::<3>::uniform(0.5);
+    let metric = CubicalReggeGeometry::<3, f64>::uniform(0.5);
 
     let manifold = Manifold::from_cubical_with_metric(complex, data, metric, 0);
     assert!(manifold.metric().is_some());

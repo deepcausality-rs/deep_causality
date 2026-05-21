@@ -11,42 +11,164 @@ path = "no_lib.rs"
 
 [dependencies]
 deep_causality_core = { path = "../../deep_causality_core" }
-deep_causality_tensor = { path = "../../deep_causality_tensor" }
-deep_causality_topology = { path = "../../deep_causality_topology" }
+deep_causality_haft = { path = "../../deep_causality_haft" }
 deep_causality_metric = { path = "../../deep_causality_metric" }
 deep_causality_multivector = { path = "../../deep_causality_multivector" }
-deep_causality_haft = { path = "../../deep_causality_haft" }
 deep_causality_num = { path = "../../deep_causality_num" }
+deep_causality_rand = { path = "../../deep_causality_rand" }
 deep_causality_sparse = { path = "../../deep_causality_sparse" }
+deep_causality_tensor = { path = "../../deep_causality_tensor" }
+deep_causality_topology = { path = "../../deep_causality_topology" }
+
+# ============================================================================
+# composable_multi_math — cross-crate composition examples (HKT, monads, effect
+# propagation across tensor + multivector + topology).
+# ============================================================================
 
 [[example]]
-name = "algebraic_scanner"
-path = "algebraic_scanner/main.rs"
+name = "algebraic_scanner_examples"
+path = "algebra/algebraic_scanner/main.rs"
 
 [[example]]
-name = "tensor_x_algebra_rotation_field"
-path = "tensor_x_algebra_rotation_field/main.rs"
+name = "tensor_x_algebra_rotation_field_examples"
+path = "composable_multi_math/tensor_x_algebra_rotation_field/main.rs"
 
 [[example]]
-name = "tensor_x_topology_laplacian"
-path = "tensor_x_topology_laplacian/main.rs"
+name = "tensor_x_topology_laplacian_examples"
+path = "composable_multi_math/tensor_x_topology_laplacian/main.rs"
 
 [[example]]
-name = "triple_hkt_stress_field"
-path = "triple_hkt_stress_field/main.rs"
+name = "triple_hkt_stress_field_examples"
+path = "composable_multi_math/triple_hkt_stress_field/main.rs"
 
 [[example]]
-name = "effect_kalman_predict_correct"
-path = "effect_kalman_predict_correct/main.rs"
+name = "effect_kalman_predict_correct_examples"
+path = "composable_multi_math/effect_kalman_predict_correct/main.rs"
 
 [[example]]
-name = "effect_diffusion_on_manifold"
-path = "effect_diffusion_on_manifold/main.rs"
+name = "effect_diffusion_on_manifold_examples"
+path = "composable_multi_math/effect_diffusion_on_manifold/main.rs"
 
 [[example]]
-name = "effect_tensor_algebra_roundtrip"
-path = "effect_tensor_algebra_roundtrip/main.rs"
+name = "effect_tensor_algebra_roundtrip_examples"
+path = "composable_multi_math/effect_tensor_algebra_roundtrip/main.rs"
 
 [[example]]
-name = "capstone_spinor_minkowski"
-path = "capstone_spinor_minkowski/main.rs"
+name = "capstone_spinor_minkowski_examples"
+path = "composable_multi_math/capstone_spinor_minkowski/main.rs"
+
+# ============================================================================
+# algebra — multivector / Clifford algebra examples (deep_causality_multivector).
+# ============================================================================
+
+[[example]]
+name = "basic_multivector_examples"
+path = "algebra/basic_multivector.rs"
+
+[[example]]
+name = "clifford_mhd_multivector_examples"
+path = "algebra/clifford_mhd_multivector.rs"
+
+[[example]]
+name = "dixon_multivector_examples"
+path = "algebra/dixon_multivector.rs"
+
+[[example]]
+name = "geometric_tilt_estimator_examples"
+path = "algebra/geometric_tilt_estimator.rs"
+
+[[example]]
+name = "grmhd_multivector_examples"
+path = "algebra/grmhd_integration.rs"
+
+[[example]]
+name = "hkt_multivector_examples"
+path = "algebra/hkt_multivector.rs"
+
+[[example]]
+name = "hopf_multivector_examples"
+path = "algebra/hopf_fibration_multivector.rs"
+
+[[example]]
+name = "maxwell_multivector_examples"
+path = "algebra/maxwell_multivector.rs"
+
+[[example]]
+name = "pga3d_multivector_examples"
+path = "algebra/pga3d_multivector.rs"
+
+# ============================================================================
+# sparse — sparse matrix examples (deep_causality_sparse).
+# ============================================================================
+
+[[example]]
+name = "basic_csr_ops_examples"
+path = "sparse/basic_csr_ops.rs"
+
+[[example]]
+name = "hkt_csr_ops_examples"
+path = "sparse/hkt_csr_ops.rs"
+
+# ============================================================================
+# tensor — CausalTensor examples (deep_causality_tensor).
+# ============================================================================
+
+[[example]]
+name = "applicative_causal_tensor_examples"
+path = "tensor/applicative_causal_tensor.rs"
+
+[[example]]
+name = "basic_causal_tensor_examples"
+path = "tensor/basic_causal_tensor.rs"
+
+[[example]]
+name = "effect_system_causal_tensor_examples"
+path = "tensor/effect_system_causal_tensor.rs"
+
+[[example]]
+name = "ein_sum_causal_tensor_examples"
+path = "tensor/ein_sum_causal_tensor.rs"
+
+[[example]]
+name = "einstein_field_causal_tensor_examples"
+path = "tensor/einstein_field_causal_tensor.rs"
+
+[[example]]
+name = "functor_causal_tensor_examples"
+path = "tensor/functor_causal_tensor.rs"
+
+# ============================================================================
+# topology — topological data structure examples (deep_causality_topology).
+# ============================================================================
+
+[[example]]
+name = "basic_graph_examples"
+path = "topology/basic_graph.rs"
+
+[[example]]
+name = "chain_algebra_examples"
+path = "topology/chain_algebra.rs"
+
+[[example]]
+name = "complex_operators_examples"
+path = "topology/complex_operators.rs"
+
+[[example]]
+name = "cubical_heat_diffusion_examples"
+path = "topology/cubical_heat_diffusion.rs"
+
+[[example]]
+name = "differential_field_examples"
+path = "topology/differential_field.rs"
+
+[[example]]
+name = "hkt_graph_convolution_examples"
+path = "topology/hkt_graph_convolution.rs"
+
+[[example]]
+name = "lattice_gauge_simulation_examples"
+path = "topology/lattice_gauge_simulation.rs"
+
+[[example]]
+name = "manifold_analysis_examples"
+path = "topology/manifold_analysis.rs"

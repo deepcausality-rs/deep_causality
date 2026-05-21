@@ -43,14 +43,16 @@ impl Iterator for MooreIter {
     }
 }
 
-impl<const D: usize> Neighborhood<LatticeComplex<D>> for Moore {
+impl<const D: usize, R: deep_causality_num::RealField> Neighborhood<LatticeComplex<D, R>>
+    for Moore
+{
     type Iter<'a>
         = MooreIter
     where
-        LatticeComplex<D>: 'a;
+        LatticeComplex<D, R>: 'a;
 
     #[allow(clippy::needless_range_loop)]
-    fn neighbors<'a>(&self, complex: &'a LatticeComplex<D>, cell: CellId) -> Self::Iter<'a> {
+    fn neighbors<'a>(&self, complex: &'a LatticeComplex<D, R>, cell: CellId) -> Self::Iter<'a> {
         let Some(pos) = super::cell_id_to_top_pos(complex, cell) else {
             return MooreIter {
                 inner: Vec::new().into_iter(),

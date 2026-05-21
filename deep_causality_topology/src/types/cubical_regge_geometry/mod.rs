@@ -64,18 +64,17 @@
 //! fields are sufficient inputs for all of them.
 
 use deep_causality_metric::Metric;
-
-#[cfg(test)]
-mod cubical_regge_geometry_tests;
+use deep_causality_num::RealField;
 
 /// Cubical Regge geometry: discrete metric data on a D-dimensional cubical complex.
 ///
-/// Parallels `ReggeGeometry<T>` for the simplicial case. See the module-level doc for
+/// Parallels `ReggeGeometry<R>` for the simplicial case. See the module-level doc for
 /// the four supported levels of edge-length uniformity and the forward-looking scope of
-/// derived geometric quantities.
+/// derived geometric quantities. Parameterized over `R: RealField` so the precision of
+/// stored edge lengths is a choice at construction time (`f32`, `f64`, `Float106`, etc.).
 #[derive(Debug, Clone, PartialEq)]
-pub struct CubicalReggeGeometry<const D: usize> {
-    edge_lengths: EdgeLengths<D>,
+pub struct CubicalReggeGeometry<const D: usize, R: RealField> {
+    edge_lengths: EdgeLengths<D, R>,
     /// Optional per-axis flag marking timelike axes for Lorentzian / Minkowski lattices.
     /// `None` ⇒ all axes spacelike (Euclidean metric). `Some([..])` ⇒ flagged axes are
     /// timelike. Forward-looking: drives the metric-signature methods listed in the
@@ -87,24 +86,26 @@ pub struct CubicalReggeGeometry<const D: usize> {
 /// inadvertently depend on the variant layout; access is through the public constructors
 /// and the `axis_length` / `edge_length` getters.
 #[derive(Debug, Clone, PartialEq)]
-enum EdgeLengths<const D: usize> {
-    /// Every edge has length `1.0`. The Stage C / voxel-grid fast path.
+enum EdgeLengths<const D: usize, R: RealField> {
+    /// Every edge has length `1.0`. The Stage C / voxel-grid fast path. Carries no `R`-typed
+    /// storage; the `R: RealField` parameter exists only to satisfy the type-level binding.
     UnitEdge,
     /// Every edge has length `length`. Isotropic lattice with a single spacing.
-    Uniform { length: f64 },
+    Uniform { length: R },
     /// Edges within each axis are uniform; lengths may differ between axes.
-    PerAxis { lengths: [f64; D] },
+    PerAxis { lengths: [R; D] },
     /// Fully general per-edge lengths, indexed by edge cell_id in the lattice's
     /// `iter_cells(1)` ordering. Required for curved cubical metrics.
-    PerEdge { lengths: Vec<f64> },
+    PerEdge { lengths: Vec<R> },
 }
 
-impl<const D: usize> CubicalReggeGeometry<D> {
+impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R> {
     // -- Constructors -----------------------------------------------------------------
 
     /// The unit-edge cubical Regge geometry: every edge has length `1.0`.
     ///
     /// The canonical metric for voxel grids and the Stage C / issue #487 fast path.
+    /// Returns `R::one()` for uniform / axis / edge queries.
     pub fn unit() -> Self {
         Self {
             edge_lengths: EdgeLengths::UnitEdge,
@@ -115,7 +116,7 @@ impl<const D: usize> CubicalReggeGeometry<D> {
     /// Isotropic lattice with a single spacing `length` on every edge.
     ///
     /// Equivalent to the lattice-spacing scalar `a` used throughout lattice gauge theory.
-    pub fn uniform(length: f64) -> Self {
+    pub fn uniform(length: R) -> Self {
         Self {
             edge_lengths: EdgeLengths::Uniform { length },
             timelike_axes: None,
@@ -126,7 +127,7 @@ impl<const D: usize> CubicalReggeGeometry<D> {
     ///
     /// All edges in dimension `i` have length `lengths[i]`. Useful for stretched lattices,
     /// asymmetric voxel grids, and anisotropic-coupling lattice gauge studies.
-    pub fn per_axis(lengths: [f64; D]) -> Self {
+    pub fn per_axis(lengths: [R; D]) -> Self {
         Self {
             edge_lengths: EdgeLengths::PerAxis { lengths },
             timelike_axes: None,
@@ -138,7 +139,7 @@ impl<const D: usize> CubicalReggeGeometry<D> {
     /// `lengths[i]` is the length of the i-th edge in the lattice complex's
     /// `iter_cells(1)` enumeration order. Required for curved cubical metrics
     /// (non-flat lattices, dynamic spacetimes, deficit-angle-bearing geometries).
-    pub fn from_edge_lengths(lengths: Vec<f64>) -> Self {
+    pub fn from_edge_lengths(lengths: Vec<R>) -> Self {
         Self {
             edge_lengths: EdgeLengths::PerEdge { lengths },
             timelike_axes: None,
@@ -177,21 +178,21 @@ impl<const D: usize> CubicalReggeGeometry<D> {
     }
 
     /// The uniform edge length, if every edge has the same length.
-    /// `Some(1.0)` for UnitEdge, `Some(length)` for Uniform, `None` otherwise.
-    pub fn uniform_length(&self) -> Option<f64> {
+    /// `Some(R::one())` for UnitEdge, `Some(length)` for Uniform, `None` otherwise.
+    pub fn uniform_length(&self) -> Option<R> {
         match &self.edge_lengths {
-            EdgeLengths::UnitEdge => Some(1.0),
+            EdgeLengths::UnitEdge => Some(R::one()),
             EdgeLengths::Uniform { length } => Some(*length),
             _ => None,
         }
     }
 
     /// Per-axis uniform lengths, if the geometry is axis-aligned.
-    /// `Some([1.0; D])` for UnitEdge, `Some([length; D])` for Uniform, `Some(lengths)` for
-    /// PerAxis, `None` for PerEdge.
-    pub fn axis_lengths(&self) -> Option<[f64; D]> {
+    /// `Some([R::one(); D])` for UnitEdge, `Some([length; D])` for Uniform, `Some(lengths)`
+    /// for PerAxis, `None` for PerEdge.
+    pub fn axis_lengths(&self) -> Option<[R; D]> {
         match &self.edge_lengths {
-            EdgeLengths::UnitEdge => Some([1.0; D]),
+            EdgeLengths::UnitEdge => Some([R::one(); D]),
             EdgeLengths::Uniform { length } => Some([*length; D]),
             EdgeLengths::PerAxis { lengths } => Some(*lengths),
             EdgeLengths::PerEdge { .. } => None,
@@ -200,12 +201,12 @@ impl<const D: usize> CubicalReggeGeometry<D> {
 
     /// Edge length for an edge along axis `axis`. Returns `None` if `axis >= D` or if the
     /// geometry is per-edge (in which case `edge_length_at(edge_id)` is the right call).
-    pub fn axis_length(&self, axis: usize) -> Option<f64> {
+    pub fn axis_length(&self, axis: usize) -> Option<R> {
         if axis >= D {
             return None;
         }
         match &self.edge_lengths {
-            EdgeLengths::UnitEdge => Some(1.0),
+            EdgeLengths::UnitEdge => Some(R::one()),
             EdgeLengths::Uniform { length } => Some(*length),
             EdgeLengths::PerAxis { lengths } => Some(lengths[axis]),
             EdgeLengths::PerEdge { .. } => None,
@@ -216,9 +217,9 @@ impl<const D: usize> CubicalReggeGeometry<D> {
     /// ordering). Defined for all four representations: returns the uniform value for the
     /// degenerate cases, the per-edge value for the general case. `None` if `edge_id` is
     /// out of range for a per-edge geometry.
-    pub fn edge_length_at(&self, edge_id: usize) -> Option<f64> {
+    pub fn edge_length_at(&self, edge_id: usize) -> Option<R> {
         match &self.edge_lengths {
-            EdgeLengths::UnitEdge => Some(1.0),
+            EdgeLengths::UnitEdge => Some(R::one()),
             EdgeLengths::Uniform { length } => Some(*length),
             EdgeLengths::PerAxis { .. } => {
                 // For per-axis representation, edge_id alone is not enough — the axis must
@@ -234,7 +235,7 @@ impl<const D: usize> CubicalReggeGeometry<D> {
     ///
     /// `Some(slice)` for PerEdge, `None` for the three uniform cases (where there is no
     /// materialized per-edge vector to slice).
-    pub fn edge_lengths(&self) -> Option<&[f64]> {
+    pub fn edge_lengths(&self) -> Option<&[R]> {
         match &self.edge_lengths {
             EdgeLengths::PerEdge { lengths } => Some(lengths.as_slice()),
             _ => None,

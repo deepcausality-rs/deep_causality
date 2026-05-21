@@ -7,13 +7,13 @@ use crate::traits::chain_complex::ChainComplex;
 use crate::types::manifold::Manifold;
 use crate::types::manifold::differential::utils_differential;
 use core::fmt::Debug;
-use deep_causality_num::Field;
+use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
-    C: Default + Copy + PartialEq + deep_causality_num::Zero,
-    D: Field + Copy + Default + PartialEq + core::ops::Neg<Output = D> + Debug,
+    C: RealField + Default,
+    D: RealField + Default + PartialEq + Debug,
 {
     /// Computes the exterior derivative of a k-form.
     ///

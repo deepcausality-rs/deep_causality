@@ -44,12 +44,12 @@ fn test_manifold_neighbors_face_adjacent_out_of_range() {
 #[test]
 fn test_manifold_neighbors_lattice_von_neumann() {
     // 3x3 lattice manifold; manifold over a LatticeComplex (no metric required).
-    let complex: LatticeComplex<2> = LatticeComplex::<2>::square_torus(3);
+    let complex: LatticeComplex<2, f64> = LatticeComplex::<2, f64>::square_torus(3);
     let n_top =
-        <LatticeComplex<2> as deep_causality_topology::ChainComplex>::num_cells(&complex, 2);
+        <LatticeComplex<2, f64> as deep_causality_topology::ChainComplex>::num_cells(&complex, 2);
     let data = CausalTensor::new(vec![0.0f64; n_top], vec![n_top]).unwrap();
 
-    let manifold: Manifold<LatticeComplex<2>, f64> = Manifold::from_cubical(complex, data, 0);
+    let manifold: Manifold<LatticeComplex<2, f64>, f64> = Manifold::from_cubical(complex, data, 0);
 
     // Von Neumann neighborhood on a torus must have neighbors for cell 0.
     let neighbors: Vec<_> = manifold.neighbors(VonNeumann, 0).collect();
@@ -62,12 +62,12 @@ fn test_manifold_neighbors_lattice_von_neumann() {
 #[test]
 fn test_manifold_neighbors_lattice_moore_matches_direct() {
     // Confirms the manifold's neighbors() method is a pure delegation.
-    let complex: LatticeComplex<2> = LatticeComplex::<2>::square_torus(3);
+    let complex: LatticeComplex<2, f64> = LatticeComplex::<2, f64>::square_torus(3);
     let n_top =
-        <LatticeComplex<2> as deep_causality_topology::ChainComplex>::num_cells(&complex, 2);
+        <LatticeComplex<2, f64> as deep_causality_topology::ChainComplex>::num_cells(&complex, 2);
     let data = CausalTensor::new(vec![0.0f64; n_top], vec![n_top]).unwrap();
 
-    let manifold: Manifold<LatticeComplex<2>, f64> = Manifold::from_cubical(complex, data, 0);
+    let manifold: Manifold<LatticeComplex<2, f64>, f64> = Manifold::from_cubical(complex, data, 0);
 
     let via_manifold: Vec<_> = manifold.neighbors(Moore, 0).collect();
     let via_strategy: Vec<_> = Moore.neighbors(manifold.complex(), 0).collect();

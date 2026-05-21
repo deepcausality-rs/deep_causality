@@ -11,44 +11,57 @@ pub use lattice_cell::LatticeCell;
 
 use crate::traits::cell::Cell;
 use crate::traits::chain_complex::ChainComplex;
+use deep_causality_num::RealField;
 use deep_causality_sparse::CsrMatrix;
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::marker::PhantomData;
 use std::sync::Mutex;
 
+/// A combinatorial cubical lattice in `D` dimensions, paired with a metric precision `R`.
+///
+/// `D` is the lattice dimensionality (always a compile-time constant); `R` is the
+/// precision of the associated metric, threaded through to `Metric = CubicalReggeGeometry<D, R>`
+/// via the `ChainComplex` impl. The combinatorial caches (`shape`, `periodic`, coboundary
+/// memo) are `R`-independent — the `PhantomData<R>` field exists only to anchor the
+/// metric-precision parameter. See `design.md` Decision 1 of the
+/// `generalize-topology-over-realfield` change set for the rationale.
 #[derive(Debug)]
-pub struct LatticeComplex<const D: usize> {
+pub struct LatticeComplex<const D: usize, R: RealField> {
     /// Dimensions of the lattice [L₀, L₁, ..., L_{D-1}]
     shape: [usize; D],
     /// Periodic boundary conditions per dimension
     periodic: [bool; D],
     /// Lazy memo of coboundary matrices: δ_k = (∂_{k+1})ᵀ.
     /// Populated on first call to `coboundary_matrix(k)`; ignored for equality.
-    /// `Mutex` (not `RefCell`) so `LatticeComplex<D>` stays `Send + Sync` for the existing
-    /// `Arc<LatticeComplex<D>>` consumers in `gauge_field_lattice`.
+    /// `Mutex` (not `RefCell`) so `LatticeComplex<D, R>` stays `Send + Sync` for the existing
+    /// `Arc<LatticeComplex<D, R>>` consumers in `gauge_field_lattice`.
     coboundary_cache: Mutex<HashMap<usize, CsrMatrix<i8>>>,
+    /// Anchors the metric-precision parameter `R`. Zero-sized.
+    _precision: PhantomData<R>,
 }
 
-impl<const D: usize> Clone for LatticeComplex<D> {
+impl<const D: usize, R: RealField> Clone for LatticeComplex<D, R> {
     fn clone(&self) -> Self {
         Self {
             shape: self.shape,
             periodic: self.periodic,
             // Cache intentionally not cloned: cheaper to recompute lazily on the clone.
             coboundary_cache: Mutex::new(HashMap::new()),
+            _precision: PhantomData,
         }
     }
 }
 
-impl<const D: usize> PartialEq for LatticeComplex<D> {
+impl<const D: usize, R: RealField> PartialEq for LatticeComplex<D, R> {
     fn eq(&self, other: &Self) -> bool {
         self.shape == other.shape && self.periodic == other.periodic
     }
 }
 
-impl<const D: usize> Eq for LatticeComplex<D> {}
+impl<const D: usize, R: RealField> Eq for LatticeComplex<D, R> {}
 
-impl<const D: usize> LatticeComplex<D> {
+impl<const D: usize, R: RealField> LatticeComplex<D, R> {
     // --- Constructors ---
 
     /// Create a new lattice with given shape and boundary conditions.
@@ -57,6 +70,7 @@ impl<const D: usize> LatticeComplex<D> {
             shape,
             periodic,
             coboundary_cache: Mutex::new(HashMap::new()),
+            _precision: PhantomData,
         }
     }
 
@@ -125,15 +139,15 @@ impl<const D: usize> LatticeComplex<D> {
     }
 
     /// Iterator over all cells of a given dimension k.
-    pub fn iter_cells(&self, k: usize) -> LatticeCellIterator<'_, D> {
+    pub fn iter_cells(&self, k: usize) -> LatticeCellIterator<'_, D, R> {
         LatticeCellIterator::new(self, k)
     }
 }
 
 // --- Iterator ---
 
-pub struct LatticeCellIterator<'a, const D: usize> {
-    lattice: &'a LatticeComplex<D>,
+pub struct LatticeCellIterator<'a, const D: usize, R: RealField> {
+    lattice: &'a LatticeComplex<D, R>,
     // k is used in new() but not stored
     orientations: Vec<u32>,
     current_orientation_idx: usize,
@@ -141,8 +155,8 @@ pub struct LatticeCellIterator<'a, const D: usize> {
     done: bool,
 }
 
-impl<'a, const D: usize> LatticeCellIterator<'a, D> {
-    fn new(lattice: &'a LatticeComplex<D>, k: usize) -> Self {
+impl<'a, const D: usize, R: RealField> LatticeCellIterator<'a, D, R> {
+    fn new(lattice: &'a LatticeComplex<D, R>, k: usize) -> Self {
         // Generate all k-bit patterns in D bits
         let mut orientations = Vec::new();
         let limit: usize = 1 << D;
@@ -164,7 +178,7 @@ impl<'a, const D: usize> LatticeCellIterator<'a, D> {
     }
 }
 
-impl<'a, const D: usize> Iterator for LatticeCellIterator<'a, D> {
+impl<'a, const D: usize, R: RealField> Iterator for LatticeCellIterator<'a, D, R> {
     type Item = LatticeCell<D>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -213,13 +227,13 @@ impl<'a, const D: usize> Iterator for LatticeCellIterator<'a, D> {
     }
 }
 
-impl<const D: usize> ChainComplex for LatticeComplex<D> {
+impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
     type CellType = LatticeCell<D>;
     type CellIter<'a>
-        = LatticeCellIterator<'a, D>
+        = LatticeCellIterator<'a, D, R>
     where
         Self: 'a;
-    type Metric = crate::CubicalReggeGeometry<D>;
+    type Metric = crate::CubicalReggeGeometry<D, R>;
 
     fn cells(&self, k: usize) -> Self::CellIter<'_> {
         self.iter_cells(k)
@@ -325,7 +339,7 @@ impl<const D: usize> ChainComplex for LatticeComplex<D> {
 
 // --- Specialized Constructors ---
 
-impl LatticeComplex<2> {
+impl<R: RealField> LatticeComplex<2, R> {
     pub fn square_torus(l: usize) -> Self {
         Self::new([l, l], [true, true])
     }
@@ -334,7 +348,7 @@ impl LatticeComplex<2> {
     }
 }
 
-impl LatticeComplex<3> {
+impl<R: RealField> LatticeComplex<3, R> {
     pub fn cubic_torus(l: usize) -> Self {
         Self::new([l, l, l], [true, true, true])
     }
@@ -343,7 +357,7 @@ impl LatticeComplex<3> {
     }
 }
 
-impl LatticeComplex<4> {
+impl<R: RealField> LatticeComplex<4, R> {
     pub fn hypercubic_torus(l: usize) -> Self {
         Self::new([l, l, l, l], [true, true, true, true])
     }

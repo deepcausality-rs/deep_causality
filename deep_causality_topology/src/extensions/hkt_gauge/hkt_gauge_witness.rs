@@ -583,7 +583,7 @@ where
     where
         G: GaugeGroup,
         T: Field + Copy + PartialOrd,
-        R: Field,
+        R: deep_causality_num::RealField,
     {
         let connection = field.connection();
         let dim = G::SPACETIME_DIM;

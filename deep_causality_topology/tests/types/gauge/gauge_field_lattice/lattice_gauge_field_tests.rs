@@ -17,12 +17,12 @@ use std::sync::Arc;
 // ============================================================================
 
 /// Create a small 2x2 lattice for testing
-fn create_test_lattice() -> Arc<LatticeComplex<2>> {
+fn create_test_lattice() -> Arc<LatticeComplex<2, f64>> {
     Arc::new(LatticeComplex::new([2, 2], [true, true]))
 }
 
 /// Create a small 1D lattice for simpler tests
-fn create_1d_lattice() -> Arc<LatticeComplex<1>> {
+fn create_1d_lattice() -> Arc<LatticeComplex<1, f64>> {
     Arc::new(LatticeComplex::new([4], [true]))
 }
 

@@ -71,9 +71,9 @@ mod utils;
 /// * `M` - Matrix element type (Field + `DivisionAlgebra<R>`)
 /// * `R` - Scalar type (RealField)
 #[derive(Debug, Clone)]
-pub struct LatticeGaugeField<G: GaugeGroup, const D: usize, M, R, S = ()> {
+pub struct LatticeGaugeField<G: GaugeGroup, const D: usize, M, R: RealField, S = ()> {
     /// The underlying lattice structure.
-    lattice: Arc<LatticeComplex<D>>,
+    lattice: Arc<LatticeComplex<D, R>>,
 
     /// Link variables indexed by LatticeCell (1-cells only).
     /// Key: edge cell, Value: group element
@@ -106,7 +106,7 @@ impl<
     /// # Errors
     ///
     /// Returns `TopologyError` if link creation fails.
-    pub fn try_identity(lattice: Arc<LatticeComplex<D>>, beta: R) -> Result<Self, TopologyError>
+    pub fn try_identity(lattice: Arc<LatticeComplex<D, R>>, beta: R) -> Result<Self, TopologyError>
     where
         M: Field,
         R: RealField,
@@ -132,7 +132,7 @@ impl<
     /// # Panics
     ///
     /// Panics if link creation fails (should not happen for valid lattice).
-    pub fn identity(lattice: Arc<LatticeComplex<D>>, beta: R) -> Self
+    pub fn identity(lattice: Arc<LatticeComplex<D, R>>, beta: R) -> Self
     where
         M: Field,
         R: RealField,
@@ -157,7 +157,7 @@ impl<
     ///
     /// Returns error if links are missing for some edges.
     pub fn try_from_links(
-        lattice: Arc<LatticeComplex<D>>,
+        lattice: Arc<LatticeComplex<D, R>>,
         links: HashMap<LatticeCell<D>, LinkVariable<G, M, R>>,
         beta: R,
     ) -> Result<Self, TopologyError> {
@@ -203,7 +203,7 @@ impl<
     ///
     /// Returns `TopologyError` if link creation fails.
     pub fn try_random<RngType>(
-        lattice: Arc<LatticeComplex<D>>,
+        lattice: Arc<LatticeComplex<D, R>>,
         beta: R,
         rng: &mut RngType,
     ) -> Result<Self, TopologyError>
@@ -234,7 +234,7 @@ impl<
     /// # Panics
     ///
     /// Panics if link creation fails.
-    pub fn random<RngType>(lattice: Arc<LatticeComplex<D>>, beta: R, rng: &mut RngType) -> Self
+    pub fn random<RngType>(lattice: Arc<LatticeComplex<D, R>>, beta: R, rng: &mut RngType) -> Self
     where
         RngType: deep_causality_rand::Rng,
         M: RandomField + DivisionAlgebra<R> + Field,
@@ -246,7 +246,7 @@ impl<
 }
 
 // Separate impl block without Clone + Default bounds for HKT compatibility
-impl<G: GaugeGroup, const D: usize, M, R, S> LatticeGaugeField<G, D, M, R, S> {
+impl<G: GaugeGroup, const D: usize, M, R: RealField, S> LatticeGaugeField<G, D, M, R, S> {
     /// Create from explicit link data without validation.
     ///
     /// This constructor has minimal bounds for HKT compatibility.
@@ -262,7 +262,7 @@ impl<G: GaugeGroup, const D: usize, M, R, S> LatticeGaugeField<G, D, M, R, S> {
     ///
     /// A new `LatticeGaugeField`.
     pub fn from_links_unchecked(
-        lattice: Arc<LatticeComplex<D>>,
+        lattice: Arc<LatticeComplex<D, R>>,
         links: HashMap<LatticeCell<D>, LinkVariable<G, M, R>>,
         beta: R,
         source: S,

@@ -6,15 +6,14 @@
 //! Constructors for Manifold type.
 
 use crate::{ReggeGeometry, SimplicialComplex, TopologyError};
-use deep_causality_num::Zero;
+use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
 
 use super::super::Manifold;
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
-    C: Default + Copy + Clone + PartialEq + Zero,
-    D: Default + Copy + Clone + PartialEq + Zero,
+    C: RealField,
 {
     /// Attempts to create a new `Manifold` from a `SimplicialComplex` and data.
     ///
@@ -65,10 +64,16 @@ where
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
-    C: Clone,
+    C: RealField,
     D: Clone,
 {
     /// Creates a shallow clone of the Manifold with cursor reset to 0.
+    ///
+    /// `D` carries no `RealField` bound here — only `Clone`. This method is purely
+    /// structural (cloning complex, data tensor, metric, and cursor), so cross-algebra
+    /// cell data (multivectors, tensors, dual numbers) flows through unchanged. `C`
+    /// must be `RealField` because that is what the underlying `SimplicialComplex<C>`
+    /// requires to exist as a `ChainComplex`.
     pub fn clone_shallow(&self) -> Self {
         Self::clone_shallow_impl(self)
     }
@@ -78,14 +83,23 @@ where
 
 use crate::types::lattice_complex::LatticeComplex;
 
-impl<const D: usize, F> Manifold<LatticeComplex<D>, F> {
+impl<const D: usize, R: RealField, F> Manifold<LatticeComplex<D, R>, F> {
     /// Construct a manifold over a cubical complex without a metric (raw assembly).
     ///
-    /// Stage C ships this minimal cubical constructor so that `Manifold<LatticeComplex<D>, F>`
-    /// can be assembled by examples and tests. It does not validate the cell count against
-    /// `data.len()`; richer validation belongs in a follow-up that lifts the simplicial
-    /// `new`/`with_metric` validation logic to a complex-agnostic trait method.
-    pub fn from_cubical(complex: LatticeComplex<D>, data: CausalTensor<F>, cursor: usize) -> Self {
+    /// `R` is the lattice (metric) precision; `F` is the data type carried in cells.
+    /// The two are independent per the Option 2C design: `F` may be a scalar (`f32`,
+    /// `f64`, `Float106`), a multivector from `deep_causality_multivector`, a tensor
+    /// from `deep_causality_tensor`, a dual number, etc. The cubical lattice's
+    /// precision does not constrain what flavor of value sits on its cells.
+    ///
+    /// Validation is minimal here; richer cell-count validation belongs in a follow-up
+    /// that lifts the simplicial `new`/`with_metric` validation logic to a
+    /// complex-agnostic trait method.
+    pub fn from_cubical(
+        complex: LatticeComplex<D, R>,
+        data: CausalTensor<F>,
+        cursor: usize,
+    ) -> Self {
         Self {
             complex,
             data,
@@ -94,11 +108,13 @@ impl<const D: usize, F> Manifold<LatticeComplex<D>, F> {
         }
     }
 
-    /// Construct a manifold over a cubical complex with a `CubicalReggeGeometry<D>` (unit-edge).
+    /// Construct a manifold over a cubical complex with a `CubicalReggeGeometry<D, R>`.
+    ///
+    /// Metric precision `R` is independent of cell-data type `F` (see `from_cubical`).
     pub fn from_cubical_with_metric(
-        complex: LatticeComplex<D>,
+        complex: LatticeComplex<D, R>,
         data: CausalTensor<F>,
-        metric: crate::CubicalReggeGeometry<D>,
+        metric: crate::CubicalReggeGeometry<D, R>,
         cursor: usize,
     ) -> Self {
         Self {

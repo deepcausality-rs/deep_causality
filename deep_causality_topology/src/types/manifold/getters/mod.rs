@@ -21,7 +21,7 @@ impl<K: ChainComplex, F> Manifold<K, F> {
         &self.data
     }
 
-    /// Returns an optional reference to the metric (`K::Metric`).
+    /// Returns an optional reference to the metric.
     pub fn metric(&self) -> Option<&K::Metric> {
         self.metric.as_ref()
     }

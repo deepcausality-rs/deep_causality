@@ -33,7 +33,7 @@ impl<'a> Iterator for SimplicialCellIter<'a> {
     }
 }
 
-impl<T> ChainComplex for SimplicialComplex<T> {
+impl<T: deep_causality_num::RealField> ChainComplex for SimplicialComplex<T> {
     type CellType = Simplex;
     type CellIter<'a>
         = SimplicialCellIter<'a>

@@ -4,36 +4,22 @@
  */
 
 //! Public geometry API for Manifold.
-//!
 
 use crate::{Manifold, Simplex, SimplicialComplex, TopologyError};
+use deep_causality_num::{FromPrimitive, RealField};
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
-    C: deep_causality_num::Float
-        + deep_causality_num::Zero
-        + Copy
-        + PartialOrd
-        + From<f64>
-        + Into<f64>
-        + std::iter::Product
-        + std::fmt::Debug,
+    C: RealField + FromPrimitive,
 {
     /// Computes the squared volume of a k-simplex using Cayley-Menger determinant.
     ///
-    /// # Arguments
-    /// * `simplex` - The simplex to compute volume for
-    ///
     /// # Returns
-    /// * `Ok(f64)` - The squared volume
-    /// * `Err(TopologyError)` - If metric is missing or edges not found
-    ///
-    /// # Example
-    /// ```rust,ignore
-    /// let volume_sq = manifold.simplex_volume_squared(&simplex)?;
-    /// ```
-    pub fn simplex_volume_squared(&self, simplex: &Simplex) -> Result<f64, TopologyError> {
+    /// * `Ok(C)` - The squared volume in **metric precision** `C` (the precision of
+    ///   the underlying `ReggeGeometry<C>`). The manifold's data precision `D`
+    ///   does not enter this computation; the volume is a metric quantity.
+    /// * `Err(TopologyError)` - If metric is missing or edges not found.
+    pub fn simplex_volume_squared(&self, simplex: &Simplex) -> Result<C, TopologyError> {
         self.simplex_volume_squared_impl(simplex)
-            .map(|v: C| v.into())
     }
 }

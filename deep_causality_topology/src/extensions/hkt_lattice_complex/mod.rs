@@ -5,22 +5,23 @@
 
 use crate::LatticeComplex;
 use deep_causality_haft::{HKT, NoConstraint, Satisfies};
+use deep_causality_num::RealField;
 use std::sync::Arc;
 
-/// HKT witness for `LatticeComplex<D>` as a functor over field values.
-pub struct LatticeComplexWitness<const D: usize>;
+/// HKT witness for `LatticeComplex<D, R>` as a functor over field values.
+pub struct LatticeComplexWitness<const D: usize, R: RealField>(std::marker::PhantomData<R>);
 
-impl<const D: usize> HKT for LatticeComplexWitness<D> {
+impl<const D: usize, R: RealField> HKT for LatticeComplexWitness<D, R> {
     type Constraint = NoConstraint;
     type Type<T>
-        = LatticeField<D, T>
+        = LatticeField<D, R, T>
     where
         T: Satisfies<NoConstraint>;
 }
 
 /// A field assignment over lattice cells.
 /// Simplified implementation: map from cell indices (or linearized index) to value.
-pub struct LatticeField<const D: usize, T> {
-    pub lattice: Arc<LatticeComplex<D>>,
+pub struct LatticeField<const D: usize, R: RealField, T> {
+    pub lattice: Arc<LatticeComplex<D, R>>,
     pub values: Vec<T>, // Linearized values
 }

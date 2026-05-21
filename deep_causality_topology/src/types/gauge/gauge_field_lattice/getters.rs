@@ -7,14 +7,16 @@ use crate::{GaugeGroup, LatticeCell, LatticeComplex, LatticeGaugeField, LinkVari
 use std::collections::HashMap;
 use std::sync::Arc;
 
-impl<G: GaugeGroup, const D: usize, M, R, S> LatticeGaugeField<G, D, M, R, S> {
+impl<G: GaugeGroup, const D: usize, M, R: deep_causality_num::RealField, S>
+    LatticeGaugeField<G, D, M, R, S>
+{
     /// The underlying lattice (dereferenced for convenience).
     ///
     /// # Returns
     ///
     /// Reference to the inner `LatticeComplex` struct.
     #[inline]
-    pub fn lattice(&self) -> &LatticeComplex<D> {
+    pub fn lattice(&self) -> &LatticeComplex<D, R> {
         &self.lattice
     }
 
@@ -24,7 +26,7 @@ impl<G: GaugeGroup, const D: usize, M, R, S> LatticeGaugeField<G, D, M, R, S> {
     ///
     /// Reference to the `Arc<LatticeComplex>`.
     #[inline]
-    pub fn lattice_arc(&self) -> &Arc<LatticeComplex<D>> {
+    pub fn lattice_arc(&self) -> &Arc<LatticeComplex<D, R>> {
         &self.lattice
     }
 
@@ -60,7 +62,7 @@ impl<G: GaugeGroup, const D: usize, M, R, S> LatticeGaugeField<G, D, M, R, S> {
     pub fn into_parts(
         self,
     ) -> (
-        Arc<LatticeComplex<D>>,
+        Arc<LatticeComplex<D, R>>,
         HashMap<LatticeCell<D>, LinkVariable<G, M, R>>,
         R,
     ) {

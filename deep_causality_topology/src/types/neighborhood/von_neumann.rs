@@ -32,13 +32,15 @@ impl Iterator for VonNeumannIter {
     }
 }
 
-impl<const D: usize> Neighborhood<LatticeComplex<D>> for VonNeumann {
+impl<const D: usize, R: deep_causality_num::RealField> Neighborhood<LatticeComplex<D, R>>
+    for VonNeumann
+{
     type Iter<'a>
         = VonNeumannIter
     where
-        LatticeComplex<D>: 'a;
+        LatticeComplex<D, R>: 'a;
 
-    fn neighbors<'a>(&self, complex: &'a LatticeComplex<D>, cell: CellId) -> Self::Iter<'a> {
+    fn neighbors<'a>(&self, complex: &'a LatticeComplex<D, R>, cell: CellId) -> Self::Iter<'a> {
         let Some(pos) = super::cell_id_to_top_pos(complex, cell) else {
             return VonNeumannIter {
                 inner: Vec::new().into_iter(),
