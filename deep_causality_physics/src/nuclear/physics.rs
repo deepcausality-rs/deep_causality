@@ -29,7 +29,7 @@ use deep_causality_num::{FromPrimitive, RealField};
 pub fn radioactive_decay_kernel<R>(
     n0: &AmountOfSubstance<R>,
     half_life: &HalfLife<R>,
-    time: &Time<f64>,
+    time: &Time<R>,
 ) -> Result<AmountOfSubstance<R>, PhysicsError>
 where
     R: RealField + FromPrimitive,
@@ -43,10 +43,8 @@ where
 
     let two = R::from_f64(2.0)
         .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(2.0) failed".into()))?;
-    let t = R::from_f64(time.value())
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(time) failed".into()))?;
 
-    let decay_ratio = t / half_life.value();
+    let decay_ratio = time.value() / half_life.value();
     let remaining = n0.value() * two.powf(-decay_ratio);
 
     AmountOfSubstance::new(remaining)
@@ -59,10 +57,12 @@ where
 ///
 /// # Returns
 /// * `Ok(Energy)` - Binding energy $E$.
-pub fn binding_energy_kernel(mass_defect: &Mass<f64>) -> Result<Energy<f64>, PhysicsError> {
-    // E = m c^2
-    // Mass-Energy Equivalence
-    let c = SPEED_OF_LIGHT;
+pub fn binding_energy_kernel<R>(mass_defect: &Mass<R>) -> Result<Energy<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
+    let c = R::from_f64(SPEED_OF_LIGHT)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(c)".into()))?;
     let e = mass_defect.value() * c * c;
     Energy::new(e)
 }

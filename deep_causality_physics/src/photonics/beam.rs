@@ -6,7 +6,7 @@
 use crate::PhysicsError;
 use crate::dynamics::quantities::Length;
 use crate::photonics::quantities::{AbcdMatrix, ComplexBeamParameter, Wavelength};
-use deep_causality_num::{Complex, DivisionAlgebra, FromPrimitive, RealField};
+use deep_causality_num::{Complex, DivisionAlgebra, RealField};
 
 /// Propagates a Gaussian beam's complex $q$-parameter through an ABCD optical system.
 ///
@@ -74,14 +74,13 @@ where
 /// *   `wavelength` - Wavelength $\lambda$.
 ///
 /// # Returns
-/// *   `Result<Length<f64>, PhysicsError>` - Beam radius $w(z)$. Length output is pinned to `f64`
-///     until the Length wrapper is retyped (see mech-hub slice).
+/// *   `Result<Length<R>, PhysicsError>` - Beam radius $w(z)$.
 pub fn beam_spot_size_kernel<R>(
     q: ComplexBeamParameter<R>,
     wavelength: Wavelength<R>,
-) -> Result<Length<f64>, PhysicsError>
+) -> Result<Length<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive + Into<f64>,
+    R: RealField,
 {
     let q_val = q.value();
     let lambda = wavelength.value();
@@ -103,5 +102,5 @@ where
     let w_sq = -lambda / (pi * im_inv_q);
     let w = w_sq.sqrt();
 
-    Length::new(w.into())
+    Length::new(w)
 }

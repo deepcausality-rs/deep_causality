@@ -37,10 +37,10 @@ fn create_temp_manifold() -> SimplicialManifold<f64, f64> {
 
 #[test]
 fn test_ideal_gas_law_wrapper_success() {
-    let p = Pressure::new(101325.0).unwrap();
-    let v = Volume::new(0.0224).unwrap();
+    let p = Pressure::<f64>::new(101325.0).unwrap();
+    let v = Volume::<f64>::new(0.0224).unwrap();
     let n = AmountOfSubstance::<f64>::new(1.0).unwrap();
-    let t = Temperature::new(273.15).unwrap();
+    let t = Temperature::<f64>::new(273.15).unwrap();
 
     let effect = ideal_gas_law(p, v, n, t);
     assert!(effect.is_ok());
@@ -48,10 +48,10 @@ fn test_ideal_gas_law_wrapper_success() {
 
 #[test]
 fn test_ideal_gas_law_wrapper_error() {
-    let p = Pressure::new(100.0).unwrap();
-    let v = Volume::new(1.0).unwrap();
+    let p = Pressure::<f64>::new(100.0).unwrap();
+    let v = Volume::<f64>::new(1.0).unwrap();
     let n = AmountOfSubstance::<f64>::new(0.0).unwrap(); // Zero moles
-    let t = Temperature::new(300.0).unwrap();
+    let t = Temperature::<f64>::new(300.0).unwrap();
 
     let effect = ideal_gas_law(p, v, n, t);
     assert!(effect.is_err());
@@ -59,8 +59,8 @@ fn test_ideal_gas_law_wrapper_error() {
 
 #[test]
 fn test_carnot_efficiency_wrapper_success() {
-    let th = Temperature::new(500.0).unwrap();
-    let tc = Temperature::new(300.0).unwrap();
+    let th = Temperature::<f64>::new(500.0).unwrap();
+    let tc = Temperature::<f64>::new(300.0).unwrap();
 
     let effect = carnot_efficiency(th, tc);
     assert!(effect.is_ok());
@@ -71,8 +71,8 @@ fn test_carnot_efficiency_wrapper_success() {
 
 #[test]
 fn test_carnot_efficiency_wrapper_error() {
-    let th = Temperature::new(300.0).unwrap();
-    let tc = Temperature::new(300.0).unwrap(); // Tc >= Th
+    let th = Temperature::<f64>::new(300.0).unwrap();
+    let tc = Temperature::<f64>::new(300.0).unwrap(); // Tc >= Th
 
     let effect = carnot_efficiency(th, tc);
     assert!(effect.is_err());
@@ -81,7 +81,7 @@ fn test_carnot_efficiency_wrapper_error() {
 #[test]
 fn test_boltzmann_factor_wrapper_success() {
     let e = Energy::<f64>::new(0.0).unwrap();
-    let t = Temperature::new(300.0).unwrap();
+    let t = Temperature::<f64>::new(300.0).unwrap();
 
     let effect = boltzmann_factor(e, t);
     assert!(effect.is_ok());
@@ -90,7 +90,7 @@ fn test_boltzmann_factor_wrapper_success() {
 #[test]
 fn test_boltzmann_factor_wrapper_error() {
     let e = Energy::<f64>::new(0.0).unwrap();
-    let t = Temperature::new(0.0).unwrap(); // T=0
+    let t = Temperature::<f64>::new(0.0).unwrap(); // T=0
     let effect = boltzmann_factor(e, t);
     assert!(effect.is_err());
 }
@@ -113,7 +113,7 @@ fn test_shannon_entropy_wrapper_error() {
 #[test]
 fn test_heat_capacity_wrapper_success() {
     let de = Energy::<f64>::new(100.0).unwrap();
-    let dt = Temperature::new(10.0).unwrap();
+    let dt = Temperature::<f64>::new(10.0).unwrap();
 
     let effect = heat_capacity(de, dt);
     assert!(effect.is_ok());
@@ -125,7 +125,7 @@ fn test_heat_capacity_wrapper_success() {
 #[test]
 fn test_heat_capacity_wrapper_error() {
     let de = Energy::<f64>::new(100.0).unwrap();
-    let dt = Temperature::new(0.0).unwrap(); // Zero dT
+    let dt = Temperature::<f64>::new(0.0).unwrap(); // Zero dT
 
     let effect = heat_capacity(de, dt);
     assert!(effect.is_err());
@@ -134,7 +134,7 @@ fn test_heat_capacity_wrapper_error() {
 #[test]
 fn test_partition_function_wrapper_success() {
     let energies = CausalTensor::new(vec![0.0, 1e-21, 2e-21], vec![3]).unwrap();
-    let t = Temperature::new(300.0).unwrap();
+    let t = Temperature::<f64>::new(300.0).unwrap();
 
     let effect = partition_function(&energies, t);
     assert!(effect.is_ok());
@@ -143,7 +143,7 @@ fn test_partition_function_wrapper_success() {
 #[test]
 fn test_partition_function_wrapper_error() {
     let energies = CausalTensor::new(vec![0.0], vec![1]).unwrap();
-    let t = Temperature::new(0.0).unwrap(); // T=0
+    let t = Temperature::<f64>::new(0.0).unwrap(); // T=0
     let effect = partition_function(&energies, t);
     assert!(effect.is_err());
 }

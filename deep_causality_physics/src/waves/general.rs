@@ -8,36 +8,19 @@
 //! This module implements core wave mechanics kernels, focusing on classical wave propagation
 //! and Doppler effects. The implementation prioritizes type safety and physical correctness,
 //! ensuring that operations respect domain limits (e.g., sonic singularities).
-//!
-//! ## Mathematical Context
-//!
-//! - **Wave Speed (`v`)**: The speed at which the wave phase propagates.
-//!   Formula: $v = f \cdot \lambda$
-//!
-//! - **Doppler Effect**: Calculating the observed frequency $f_{obs}$ based on the relative
-//!   velocities of the source ($v_s$) and observer ($v_o$) relative to the medium.
-//!   Formula (General Longitudinal):
-//!   $$ f_{obs} = f_{src} \left( \frac{v \pm v_o}{v \mp v_s} \right) $$
-//!   where signs depend on direction (approaching vs receding).
 use crate::{Frequency, Length, PhysicsError, Speed};
+use deep_causality_num::{FromPrimitive, RealField};
 
 /// Calculates the speed of a wave given its frequency and wavelength.
-///
-/// # Arguments
-/// * `frequency` - The frequency ($f$) of the wave.
-/// * `wavelength` - The wavelength ($\lambda$) of the wave.
-///
-/// # Returns
-/// * `Ok(Speed)` - The calculated wave speed.
-/// * `Err(PhysicsError)` - If the resulting speed violates physical invariants (negative), though types prevent this input.
-pub fn wave_speed_kernel(
-    frequency: &Frequency<f64>,
-    wavelength: &Length<f64>,
-) -> Result<Speed<f64>, PhysicsError> {
-    // v = f * lambda
+pub fn wave_speed_kernel<R>(
+    frequency: &Frequency<R>,
+    wavelength: &Length<R>,
+) -> Result<Speed<R>, PhysicsError>
+where
+    R: RealField,
+{
     let v = frequency.value() * wavelength.value();
 
-    // Check for potential overflow or infinite values if required, though basic mul is usually safe.
     if v.is_infinite() {
         return Err(PhysicsError::NumericalInstability(
             "Wave speed calculation resulted in infinity".into(),
@@ -49,48 +32,31 @@ pub fn wave_speed_kernel(
 
 /// Calculates the observed frequency due to the Doppler effect for longitudinal motion.
 ///
-/// This kernel assumes the "Approaching" scenario where source and observer move towards each other.
-/// For receding motion, one might intuitively negate the speeds, but since `Speed` is non-negative,
-/// a separate function or directional flag would be safer. This implementation strictly valid
-/// for the **Approaching** case:
-/// - Observer moving towards source (+vo)
-/// - Source moving towards observer (-vs in denominator)
-///
 /// Formula: $f_{obs} = f_{src} \frac{v + v_o}{v - v_s}$
-///
-/// # Arguments
-/// * `freq_source` - Frequency emitted by the source.
-/// * `wave_speed` - Speed of the wave in the medium ($v$).
-/// * `obs_speed` - Speed of the observer relative to the medium ($v_o$).
-/// * `src_speed` - Speed of the source relative to the medium ($v_s$).
-///
-/// # Errors
-/// * `PhysicsError::MetricSingularity` - If $v_s \ge v$, causing a sonic boom (denominator zero or negative).
-pub fn doppler_effect_kernel(
-    freq_source: &Frequency<f64>,
-    wave_speed: &Speed<f64>,
-    obs_speed: &Speed<f64>, // Observer moving towards source
-    src_speed: &Speed<f64>, // Source moving towards observer
-) -> Result<Frequency<f64>, PhysicsError> {
+pub fn doppler_effect_kernel<R>(
+    freq_source: &Frequency<R>,
+    wave_speed: &Speed<R>,
+    obs_speed: &Speed<R>,
+    src_speed: &Speed<R>,
+) -> Result<Frequency<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
     let v = wave_speed.value();
     let vo = obs_speed.value();
     let vs = src_speed.value();
 
-    // Check for sonic boom / singularity (Source catching up to wavefronts)
     let denominator = v - vs;
 
-    // Use an epsilon for float comparison to catch effective zeros
-    if denominator <= 1e-9 {
-        return Err(PhysicsError::MetricSingularity(format!(
-            "Source speed ({}) equals or exceeds wave speed ({}) - Sonic Singularity",
-            vs, v
-        )));
+    let eps = R::from_f64(1e-9)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(1e-9)".into()))?;
+    if denominator <= eps {
+        return Err(PhysicsError::MetricSingularity(
+            "Source speed equals or exceeds wave speed - Sonic Singularity".into(),
+        ));
     }
 
-    // Calculate observed frequency
-    // f_obs = f_src * (v + vo) / (v - vs)
     let f_obs = freq_source.value() * ((v + vo) / denominator);
 
-    // Construct result, validating constraints
     Frequency::new(f_obs)
 }

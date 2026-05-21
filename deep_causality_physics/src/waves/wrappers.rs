@@ -5,15 +5,18 @@
 
 use crate::waves::general;
 use crate::{Frequency, Length, Speed};
+use core::fmt::Debug;
 use deep_causality_core::PropagatingEffect;
+use deep_causality_num::{FromPrimitive, RealField};
 
 /// Monadic wrapper for [`general::wave_speed_kernel`].
-///
-/// Returns a `PropagatingEffect<Speed<f64>>` usable in causal chains.
-pub fn wave_speed(
-    frequency: &Frequency<f64>,
-    wavelength: &Length<f64>,
-) -> PropagatingEffect<Speed<f64>> {
+pub fn wave_speed<R>(
+    frequency: &Frequency<R>,
+    wavelength: &Length<R>,
+) -> PropagatingEffect<Speed<R>>
+where
+    R: RealField + Debug,
+{
     match general::wave_speed_kernel(frequency, wavelength) {
         Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(e.into()),
@@ -21,14 +24,15 @@ pub fn wave_speed(
 }
 
 /// Monadic wrapper for [`general::doppler_effect_kernel`] (Approaching case).
-///
-/// Returns a `PropagatingEffect<Frequency<f64>>` usable in causal chains.
-pub fn doppler_effect_approaching(
-    freq_source: &Frequency<f64>,
-    wave_speed: &Speed<f64>,
-    obs_speed: &Speed<f64>,
-    src_speed: &Speed<f64>,
-) -> PropagatingEffect<Frequency<f64>> {
+pub fn doppler_effect_approaching<R>(
+    freq_source: &Frequency<R>,
+    wave_speed: &Speed<R>,
+    obs_speed: &Speed<R>,
+    src_speed: &Speed<R>,
+) -> PropagatingEffect<Frequency<R>>
+where
+    R: RealField + FromPrimitive + Debug,
+{
     match general::doppler_effect_kernel(freq_source, wave_speed, obs_speed, src_speed) {
         Ok(f) => PropagatingEffect::pure(f),
         Err(e) => PropagatingEffect::from_error(e.into()),

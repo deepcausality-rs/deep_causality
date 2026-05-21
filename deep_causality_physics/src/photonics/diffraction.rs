@@ -6,6 +6,7 @@
 use crate::PhysicsError;
 use crate::dynamics::quantities::Length;
 use crate::photonics::quantities::{RayAngle, Wavelength};
+use deep_causality_num::{FromPrimitive, RealField};
 use std::f64::consts::PI;
 
 /// Calculates the Single Slit Diffraction Irradiance.
@@ -13,22 +14,16 @@ use std::f64::consts::PI;
 /// Fraunhofer approximation:
 /// $$ I(\theta) = I_0 \left( \frac{\sin \beta}{\beta} \right)^2 $$
 /// where $\beta = \frac{\pi a \sin \theta}{\lambda}$.
-///
-/// # Arguments
-/// *   `i0` - Peak irradiance $I_0$ at $\theta = 0$.
-/// *   `slit_width` - Width of the slit $a$.
-/// *   `theta` - Diffraction angle $\theta$.
-/// *   `wavelength` - Wavelength $\lambda$.
-///
-/// # Returns
-/// *   `Result<f64, PhysicsError>` - Irradiance at angle $\theta$.
-pub fn single_slit_irradiance_kernel(
-    i0: f64,
-    slit_width: Length<f64>,
-    theta: RayAngle<f64>,
-    wavelength: Wavelength<f64>,
-) -> Result<f64, PhysicsError> {
-    if i0 < 0.0 {
+pub fn single_slit_irradiance_kernel<R>(
+    i0: R,
+    slit_width: Length<R>,
+    theta: RayAngle<R>,
+    wavelength: Wavelength<R>,
+) -> Result<R, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
+    if i0 < R::zero() {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Irradiance i0 cannot be negative".into(),
         ));
@@ -38,14 +33,18 @@ pub fn single_slit_irradiance_kernel(
     let lambda = wavelength.value();
     let angle = theta.value();
 
-    if lambda == 0.0 {
+    if lambda == R::zero() {
         return Err(PhysicsError::Singularity("Wavelength is zero".into()));
     }
 
-    let beta = (PI * a * angle.sin()) / lambda;
+    let pi = R::from_f64(PI)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(PI)".into()))?;
+    let beta = (pi * a * angle.sin()) / lambda;
 
     // Limit lim beta->0 (sin beta / beta) = 1
-    if beta.abs() < 1e-9 {
+    let eps = R::from_f64(1e-9)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(1e-9)".into()))?;
+    if beta.abs() < eps {
         return Ok(i0);
     }
 
@@ -58,29 +57,22 @@ pub fn single_slit_irradiance_kernel(
 /// Calculates the diffraction angle for a Grating using the Grating Equation.
 ///
 /// $$ d (\sin \theta_m - \sin \theta_i) = m \lambda $$
-///
-/// Solves for $\theta_m$.
-///
-/// # Arguments
-/// *   `pitch` - Grating pitch $d$ (distance between grooves).
-/// *   `order` - Diffraction order $m$ (integer).
-/// *   `incidence` - Angle of incidence $\theta_i$.
-/// *   `wavelength` - Wavelength $\lambda$.
-///
-/// # Returns
-/// *   `Result<RayAngle, PhysicsError>` - Diffraction angle $\theta_m$.
-pub fn grating_equation_kernel(
-    pitch: Length<f64>,
+pub fn grating_equation_kernel<R>(
+    pitch: Length<R>,
     order: i32,
-    incidence: RayAngle<f64>,
-    wavelength: Wavelength<f64>,
-) -> Result<RayAngle<f64>, PhysicsError> {
+    incidence: RayAngle<R>,
+    wavelength: Wavelength<R>,
+) -> Result<RayAngle<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
     let d = pitch.value();
-    let m = order as f64;
+    let m = R::from_f64(order as f64)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(order)".into()))?;
     let lambda = wavelength.value();
     let theta_i = incidence.value();
 
-    if d <= 0.0 {
+    if d <= R::zero() {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Grating pitch must be positive".into(),
         ));
@@ -89,13 +81,12 @@ pub fn grating_equation_kernel(
     // sin(theta_m) = (m * lambda / d) + sin(theta_i)
     let sin_theta_m = (m * lambda / d) + theta_i.sin();
 
-    if sin_theta_m.abs() > 1.0 {
-        return Err(PhysicsError::PhysicalInvariantBroken(format!(
-            "Diffraction order {} does not exist for this configuration (sin_theta = {})",
-            order, sin_theta_m
-        )));
+    if sin_theta_m.abs() > R::one() {
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Diffraction order does not exist for this configuration".into(),
+        ));
     }
 
     let theta_m = sin_theta_m.asin();
-    RayAngle::<f64>::new(theta_m)
+    RayAngle::<R>::new(theta_m)
 }

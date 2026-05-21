@@ -16,7 +16,7 @@ use deep_causality_physics::{
 #[test]
 fn test_kinetic_energy_kernel_valid() {
     // KE = 0.5 * m * v^2
-    let mass = Mass::new(2.0).unwrap();
+    let mass = Mass::<f64>::new(2.0).unwrap();
     // Create a 3D velocity vector [3, 4, 0] with magnitude 5
     let velocity = CausalMultiVector::new(
         vec![0.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -35,7 +35,7 @@ fn test_kinetic_energy_kernel_valid() {
 
 #[test]
 fn test_kinetic_energy_kernel_zero_velocity() {
-    let mass = Mass::new(10.0).unwrap();
+    let mass = Mass::<f64>::new(10.0).unwrap();
     let velocity = CausalMultiVector::new(
         vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
@@ -54,7 +54,7 @@ fn test_kinetic_energy_kernel_zero_velocity() {
 
 #[test]
 fn test_kinetic_energy_kernel_zero_mass() {
-    let mass = Mass::new(0.0).unwrap();
+    let mass = Mass::<f64>::new(0.0).unwrap();
     let velocity = CausalMultiVector::new(
         vec![0.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
@@ -75,8 +75,8 @@ fn test_kinetic_energy_kernel_zero_mass() {
 #[test]
 fn test_rotational_kinetic_energy_kernel_valid() {
     // KE_rot = 0.5 * I * omega^2
-    let inertia = MomentOfInertia::new(4.0).unwrap();
-    let omega = Frequency::new(3.0).unwrap();
+    let inertia = MomentOfInertia::<f64>::new(4.0).unwrap();
+    let omega = Frequency::<f64>::new(3.0).unwrap();
 
     let result = rotational_kinetic_energy_kernel(inertia, omega);
     assert!(result.is_ok());
@@ -88,8 +88,8 @@ fn test_rotational_kinetic_energy_kernel_valid() {
 
 #[test]
 fn test_rotational_kinetic_energy_kernel_zero_omega() {
-    let inertia = MomentOfInertia::new(10.0).unwrap();
-    let omega = Frequency::new(0.0).unwrap();
+    let inertia = MomentOfInertia::<f64>::new(10.0).unwrap();
+    let omega = Frequency::<f64>::new(0.0).unwrap();
 
     let result = rotational_kinetic_energy_kernel(inertia, omega);
     assert!(result.is_ok());

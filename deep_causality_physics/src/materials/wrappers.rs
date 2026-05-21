@@ -36,10 +36,13 @@ where
 }
 
 /// Causal wrapper for [`mechanics::thermal_expansion_kernel`].
-pub fn thermal_expansion(
-    coeff: f64,
-    delta_temp: Temperature<f64>,
-) -> PropagatingEffect<CausalTensor<f64>> {
+pub fn thermal_expansion<R>(
+    coeff: R,
+    delta_temp: Temperature<R>,
+) -> PropagatingEffect<CausalTensor<R>>
+where
+    R: deep_causality_num::RealField + Default + PartialOrd + core::fmt::Debug,
+{
     match mechanics::thermal_expansion_kernel(coeff, delta_temp) {
         Ok(t) => PropagatingEffect::pure(t),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),

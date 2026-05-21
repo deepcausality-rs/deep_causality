@@ -117,14 +117,17 @@ where
 /// * `delta_temp` - Change in temperature $\Delta T$.
 ///
 /// # Returns
-/// * `Ok(CausalTensor<f64>)` - Isotropic strain tensor (3x3).
-pub fn thermal_expansion_kernel(
-    coeff: f64,
-    delta_temp: Temperature<f64>,
-) -> Result<CausalTensor<f64>, PhysicsError> {
+/// * `Ok(CausalTensor<R>)` - Isotropic strain tensor (3x3).
+pub fn thermal_expansion_kernel<R>(
+    coeff: R,
+    delta_temp: Temperature<R>,
+) -> Result<CausalTensor<R>, PhysicsError>
+where
+    R: deep_causality_num::RealField + Default + PartialOrd,
+{
     // epsilon_ij = alpha * dT * delta_ij
     let val = coeff * delta_temp.value();
-    let identity = CausalTensor::<f64>::identity(&[3, 3])?;
+    let identity = CausalTensor::<R>::identity(&[3, 3])?;
     let strain = identity * val;
     Ok(strain)
 }

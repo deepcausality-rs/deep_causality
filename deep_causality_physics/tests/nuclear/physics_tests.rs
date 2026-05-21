@@ -17,7 +17,7 @@ fn test_radioactive_decay_kernel_valid() {
     // N(t) = N0 × (1/2)^(t/t_half)
     let n0 = AmountOfSubstance::<f64>::new(1000.0).unwrap();
     let half_life = HalfLife::<f64>::new(5730.0).unwrap(); // C-14 half-life in years (approx)
-    let time = Time::new(5730.0).unwrap(); // One half-life
+    let time = Time::<f64>::new(5730.0).unwrap(); // One half-life
 
     let result = radioactive_decay_kernel(&n0, &half_life, &time);
     assert!(result.is_ok());
@@ -35,7 +35,7 @@ fn test_radioactive_decay_kernel_valid() {
 fn test_radioactive_decay_two_half_lives() {
     let n0 = AmountOfSubstance::<f64>::new(1000.0).unwrap();
     let half_life = HalfLife::<f64>::new(100.0).unwrap();
-    let time = Time::new(200.0).unwrap(); // Two half-lives
+    let time = Time::<f64>::new(200.0).unwrap(); // Two half-lives
 
     let result = radioactive_decay_kernel(&n0, &half_life, &time);
     assert!(result.is_ok());
@@ -53,7 +53,7 @@ fn test_radioactive_decay_two_half_lives() {
 fn test_radioactive_decay_zero_time() {
     let n0 = AmountOfSubstance::<f64>::new(1000.0).unwrap();
     let half_life = HalfLife::<f64>::new(100.0).unwrap();
-    let time = Time::new(0.0).unwrap();
+    let time = Time::<f64>::new(0.0).unwrap();
 
     let result = radioactive_decay_kernel(&n0, &half_life, &time);
     assert!(result.is_ok());
@@ -93,9 +93,9 @@ fn test_radioactive_decay_monotonic_decrease() {
     let n0 = AmountOfSubstance::<f64>::new(1000.0).unwrap();
     let half_life = HalfLife::<f64>::new(100.0).unwrap();
 
-    let t1 = Time::new(50.0).unwrap();
-    let t2 = Time::new(100.0).unwrap();
-    let t3 = Time::new(200.0).unwrap();
+    let t1 = Time::<f64>::new(50.0).unwrap();
+    let t2 = Time::<f64>::new(100.0).unwrap();
+    let t3 = Time::<f64>::new(200.0).unwrap();
 
     let n1 = radioactive_decay_kernel(&n0, &half_life, &t1).unwrap();
     let n2 = radioactive_decay_kernel(&n0, &half_life, &t2).unwrap();
@@ -112,7 +112,7 @@ fn test_radioactive_decay_monotonic_decrease() {
 #[test]
 fn test_binding_energy_kernel_valid() {
     // E = mc²
-    let mass_defect = Mass::new(1e-27).unwrap(); // Small mass
+    let mass_defect = Mass::<f64>::new(1e-27).unwrap(); // Small mass
 
     let result = binding_energy_kernel(&mass_defect);
     assert!(result.is_ok());
@@ -130,7 +130,7 @@ fn test_binding_energy_kernel_valid() {
 
 #[test]
 fn test_binding_energy_kernel_zero_mass() {
-    let mass_defect = Mass::new(0.0).unwrap();
+    let mass_defect = Mass::<f64>::new(0.0).unwrap();
 
     let result = binding_energy_kernel(&mass_defect);
     assert!(result.is_ok());
@@ -146,7 +146,7 @@ fn test_binding_energy_kernel_zero_mass() {
 #[test]
 fn test_binding_energy_mc2_formula() {
     // 1 amu ≈ 1.66054e-27 kg
-    let one_amu = Mass::new(1.66054e-27).unwrap();
+    let one_amu = Mass::<f64>::new(1.66054e-27).unwrap();
 
     let result = binding_energy_kernel(&one_amu);
     assert!(result.is_ok());

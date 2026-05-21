@@ -85,9 +85,9 @@ where
     }
 }
 
-pub fn degree_of_polarization<R>(stokes: &StokesVector<R>) -> PropagatingEffect<Ratio<f64>>
+pub fn degree_of_polarization<R>(stokes: &StokesVector<R>) -> PropagatingEffect<Ratio<R>>
 where
-    R: RealField + FromPrimitive + Into<f64>,
+    R: RealField + FromPrimitive + Debug,
 {
     match polarization::degree_of_polarization_kernel(stokes) {
         Ok(r) => PropagatingEffect::pure(r),
@@ -115,9 +115,9 @@ where
 pub fn beam_spot_size<R>(
     q: ComplexBeamParameter<R>,
     wavelength: Wavelength<R>,
-) -> PropagatingEffect<Length<f64>>
+) -> PropagatingEffect<Length<R>>
 where
-    R: RealField + FromPrimitive + Into<f64>,
+    R: RealField + Debug,
 {
     match beam::beam_spot_size_kernel(q, wavelength) {
         Ok(w) => PropagatingEffect::pure(w),
@@ -129,24 +129,30 @@ where
 // Diffraction
 // ============================================================================
 
-pub fn single_slit_irradiance(
-    i0: f64,
-    slit_width: Length<f64>,
-    theta: RayAngle<f64>,
-    wavelength: Wavelength<f64>,
-) -> PropagatingEffect<f64> {
+pub fn single_slit_irradiance<R>(
+    i0: R,
+    slit_width: Length<R>,
+    theta: RayAngle<R>,
+    wavelength: Wavelength<R>,
+) -> PropagatingEffect<R>
+where
+    R: RealField + FromPrimitive + Default + Debug,
+{
     match diffraction::single_slit_irradiance_kernel(i0, slit_width, theta, wavelength) {
         Ok(i) => PropagatingEffect::pure(i),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }
 
-pub fn grating_equation(
-    pitch: Length<f64>,
+pub fn grating_equation<R>(
+    pitch: Length<R>,
     order: i32,
-    incidence: RayAngle<f64>,
-    wavelength: Wavelength<f64>,
-) -> PropagatingEffect<RayAngle<f64>> {
+    incidence: RayAngle<R>,
+    wavelength: Wavelength<R>,
+) -> PropagatingEffect<RayAngle<R>>
+where
+    R: RealField + FromPrimitive + Debug,
+{
     match diffraction::grating_equation_kernel(pitch, order, incidence, wavelength) {
         Ok(angle) => PropagatingEffect::pure(angle),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),

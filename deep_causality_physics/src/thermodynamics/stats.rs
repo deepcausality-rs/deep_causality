@@ -5,6 +5,8 @@
 
 use crate::BOLTZMANN_CONSTANT;
 use crate::{AmountOfSubstance, Energy, PhysicsError, Pressure, Probability, Temperature, Volume};
+use core::fmt::Debug;
+use core::iter::Sum;
 use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::SimplicialManifold;
@@ -20,23 +22,21 @@ use deep_causality_topology::SimplicialManifold;
 ///
 /// # Returns
 /// * `Result<CausalTensor<f64>, PhysicsError>` - Rate of change tensor $\frac{du}{dt}$.
-pub fn heat_diffusion_kernel(
-    temp_manifold: &SimplicialManifold<f64, f64>,
-    diffusivity: f64,
-) -> Result<CausalTensor<f64>, PhysicsError> {
-    // Heat Eq: du/dt = - alpha * Laplacian(u)
-
-    if diffusivity < 0.0 {
+pub fn heat_diffusion_kernel<R>(
+    temp_manifold: &SimplicialManifold<R, R>,
+    diffusivity: R,
+) -> Result<CausalTensor<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+{
+    if diffusivity < R::zero() {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Negative diffusivity violates second law of thermodynamics".into(),
         ));
     }
 
-    // 1. Compute Laplacian
     let laplacian = temp_manifold.laplacian(0);
 
-    // 2. Multiply by -alpha
-    // CausalTensor * scalar.
     let diff_tensor = laplacian * (-diffusivity);
 
     Ok(diff_tensor)
@@ -52,24 +52,21 @@ pub fn heat_diffusion_kernel(
 ///
 /// # Returns
 /// * `Ok(f64)` - Calculated Gas Constant $R$.
-pub fn ideal_gas_law_kernel(
-    pressure: Pressure<f64>,
-    volume: Volume<f64>,
-    moles: AmountOfSubstance<f64>,
-    temp: Temperature<f64>,
-) -> Result<f64, PhysicsError> {
-    // PV = nRT -> R = PV / nT
-    // Calculates the Gas Constant R implied by the state variables.
-    // If input variables are consistent with Ideal Gas, R should be close to 8.314
-
+pub fn ideal_gas_law_kernel<R>(
+    pressure: Pressure<R>,
+    volume: Volume<R>,
+    moles: AmountOfSubstance<R>,
+    temp: Temperature<R>,
+) -> Result<R, PhysicsError>
+where
+    R: RealField,
+{
     let p = pressure.value();
     let v = volume.value();
     let n = moles.value();
     let t = temp.value();
 
-    if n == 0.0 || t == 0.0 {
-        // Singularity or invalid state for gas law derivation
-        // Technically strict zero T is allowed only if P*V is 0
+    if n == R::zero() || t == R::zero() {
         return Err(PhysicsError::Singularity(
             "Zero moles or zero temp in ideal gas calculation".into(),
         ));
@@ -87,25 +84,27 @@ pub fn ideal_gas_law_kernel(
 ///
 /// # Returns
 /// * `Ok(f64)` - Efficiency $\eta$.
-pub fn carnot_efficiency_kernel(
-    temp_hot: Temperature<f64>,
-    temp_cold: Temperature<f64>,
-) -> Result<f64, PhysicsError> {
+pub fn carnot_efficiency_kernel<R>(
+    temp_hot: Temperature<R>,
+    temp_cold: Temperature<R>,
+) -> Result<R, PhysicsError>
+where
+    R: RealField,
+{
     let th = temp_hot.value();
     let tc = temp_cold.value();
 
-    if th <= 0.0 || tc < 0.0 {
+    if th <= R::zero() || tc < R::zero() {
         return Err(PhysicsError::ZeroKelvinViolation());
     }
 
     if tc >= th {
-        // Not a heat engine if Tc >= Th (or strictly invalid for Carnot cycle)
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Cold reservoir >= Hot reservoir".into(),
         ));
     }
 
-    let eff = 1.0 - (tc / th);
+    let eff = R::one() - (tc / th);
     Ok(eff)
 }
 
@@ -122,18 +121,17 @@ pub fn carnot_efficiency_kernel(
 /// * `Result<Probability, PhysicsError>` - Boltzmann factor.
 pub fn boltzmann_factor_kernel<R>(
     energy: Energy<R>,
-    temp: Temperature<f64>,
+    temp: Temperature<R>,
 ) -> Result<Probability<R>, PhysicsError>
 where
     R: RealField + FromPrimitive,
 {
-    if temp.value() == 0.0 {
+    if temp.value() == R::zero() {
         return Err(PhysicsError::ZeroKelvinViolation());
     }
 
     let e = energy.value();
-    let t = R::from_f64(temp.value())
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(temp) failed".into()))?;
+    let t = temp.value();
     let k = R::from_f64(BOLTZMANN_CONSTANT).ok_or_else(|| {
         PhysicsError::NumericalInstability("R::from_f64(BOLTZMANN_CONSTANT) failed".into())
     })?;
@@ -151,11 +149,10 @@ where
 ///
 /// # Returns
 /// * `Result<f64, PhysicsError>` - Entropy in nats.
-pub fn shannon_entropy_kernel(probs: &CausalTensor<f64>) -> Result<f64, PhysicsError> {
-    // H = - Sum p_i log(p_i)
-    // Using as_slice() assuming it gives access to underlying data
-
-    // Using as_slice() assuming it gives access to underlying data
+pub fn shannon_entropy_kernel<R>(probs: &CausalTensor<R>) -> Result<R, PhysicsError>
+where
+    R: RealField + Sum,
+{
     let data = probs.as_slice();
 
     if data.is_empty() {
@@ -164,18 +161,15 @@ pub fn shannon_entropy_kernel(probs: &CausalTensor<f64>) -> Result<f64, PhysicsE
         ));
     }
 
-    // Validate sum of probabilities ~ 1? Or just values?
-    // Shannon entropy requires p >= 0.
-    // Check for negative probabilities?
-    if data.iter().any(|&p| p < 0.0) {
+    if data.iter().any(|&p| p < R::zero()) {
         return Err(PhysicsError::NormalizationError(
             "Negative probability in Shannon Entropy".into(),
         ));
     }
 
-    let entropy: f64 = data
+    let entropy: R = data
         .iter()
-        .filter(|&&p| p > 0.0) // lim x->0 x log x = 0. Exclude 0 and negative.
+        .filter(|&&p| p > R::zero()) // lim x->0 x log x = 0. Exclude 0 and negative.
         .map(|&p| -p * p.ln())
         .sum();
 
@@ -192,21 +186,19 @@ pub fn shannon_entropy_kernel(probs: &CausalTensor<f64>) -> Result<f64, PhysicsE
 /// * `Result<f64, PhysicsError>` - Heat capacity.
 pub fn heat_capacity_kernel<R>(
     diff_energy: Energy<R>,
-    diff_temp: Temperature<f64>,
+    diff_temp: Temperature<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: RealField + FromPrimitive,
+    R: RealField,
 {
-    if diff_temp.value() == 0.0 {
+    if diff_temp.value() == R::zero() {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Zero temperature difference in heat capacity".into(),
         ));
     }
 
     let de = diff_energy.value();
-    let dt = R::from_f64(diff_temp.value()).ok_or_else(|| {
-        PhysicsError::NumericalInstability("R::from_f64(diff_temp) failed".into())
-    })?;
+    let dt = diff_temp.value();
 
     Ok(de / dt)
 }
@@ -219,21 +211,23 @@ where
 ///
 /// # Returns
 /// * `Result<f64, PhysicsError>` - Partition function $Z$.
-pub fn partition_function_kernel(
-    energies: &CausalTensor<f64>,
-    temp: Temperature<f64>,
-) -> Result<f64, PhysicsError> {
-    // Z = Sum exp(-E_i / kT)
-
+pub fn partition_function_kernel<R>(
+    energies: &CausalTensor<R>,
+    temp: Temperature<R>,
+) -> Result<R, PhysicsError>
+where
+    R: RealField + FromPrimitive + Sum,
+{
     let t = temp.value();
-    let k = BOLTZMANN_CONSTANT;
+    let k = R::from_f64(BOLTZMANN_CONSTANT).ok_or_else(|| {
+        PhysicsError::NumericalInstability("R::from_f64(BOLTZMANN_CONSTANT) failed".into())
+    })?;
 
-    // Check T=0 handled?
-    if t == 0.0 {
+    if t == R::zero() {
         return Err(PhysicsError::ZeroKelvinViolation());
     }
 
-    let beta = 1.0 / (k * t);
+    let beta = R::one() / (k * t);
     if !beta.is_finite() {
         return Err(PhysicsError::NumericalInstability(
             "Invalid beta in partition function".into(),
@@ -242,11 +236,14 @@ pub fn partition_function_kernel(
     let data = energies.as_slice();
 
     // Prevent overflow in exp by clamping exponent to a safe range
-    // f64::EXP_MAX ~ 709 for e^x; clamp to, e.g., [-700, 700]
-    let z: f64 = data
+    let lo = R::from_f64(-700.0)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(-700)".into()))?;
+    let hi = R::from_f64(700.0)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(700)".into()))?;
+    let z: R = data
         .iter()
         .map(|&e| {
-            let x = (-beta * e).clamp(-700.0, 700.0);
+            let x = (-beta * e).clamp(lo, hi);
             x.exp()
         })
         .sum();

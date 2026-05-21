@@ -12,8 +12,8 @@ use deep_causality_physics::{Frequency, Length, Speed, doppler_effect_kernel, wa
 #[test]
 fn test_wave_speed_kernel_valid() {
     // v = f * λ
-    let f = Frequency::new(440.0).unwrap(); // 440 Hz
-    let lambda = Length::new(0.775).unwrap(); // ~0.775m for 440Hz in air
+    let f = Frequency::<f64>::new(440.0).unwrap(); // 440 Hz
+    let lambda = Length::<f64>::new(0.775).unwrap(); // ~0.775m for 440Hz in air
 
     let result = wave_speed_kernel(&f, &lambda);
     assert!(result.is_ok());
@@ -25,8 +25,8 @@ fn test_wave_speed_kernel_valid() {
 
 #[test]
 fn test_wave_speed_kernel_zero_frequency() {
-    let f = Frequency::new(0.0).unwrap();
-    let lambda = Length::new(1.0).unwrap();
+    let f = Frequency::<f64>::new(0.0).unwrap();
+    let lambda = Length::<f64>::new(1.0).unwrap();
 
     let result = wave_speed_kernel(&f, &lambda);
     assert!(result.is_ok());
@@ -42,10 +42,10 @@ fn test_wave_speed_kernel_zero_frequency() {
 #[test]
 fn test_doppler_effect_kernel_approaching() {
     // Approaching: f_obs = f_src * (v + vo) / (v - vs)
-    let f_src = Frequency::new(1000.0).unwrap();
-    let v = Speed::new(340.0).unwrap(); // Speed of sound
-    let vo = Speed::new(10.0).unwrap(); // Observer moving towards
-    let vs = Speed::new(10.0).unwrap(); // Source moving towards
+    let f_src = Frequency::<f64>::new(1000.0).unwrap();
+    let v = Speed::<f64>::new(340.0).unwrap(); // Speed of sound
+    let vo = Speed::<f64>::new(10.0).unwrap(); // Observer moving towards
+    let vs = Speed::<f64>::new(10.0).unwrap(); // Source moving towards
 
     let result = doppler_effect_kernel(&f_src, &v, &vo, &vs);
     assert!(result.is_ok());
@@ -58,10 +58,10 @@ fn test_doppler_effect_kernel_approaching() {
 #[test]
 fn test_doppler_effect_kernel_stationary() {
     // No relative motion
-    let f_src = Frequency::new(1000.0).unwrap();
-    let v = Speed::new(340.0).unwrap();
-    let vo = Speed::new(0.0).unwrap();
-    let vs = Speed::new(0.0).unwrap();
+    let f_src = Frequency::<f64>::new(1000.0).unwrap();
+    let v = Speed::<f64>::new(340.0).unwrap();
+    let vo = Speed::<f64>::new(0.0).unwrap();
+    let vs = Speed::<f64>::new(0.0).unwrap();
 
     let result = doppler_effect_kernel(&f_src, &v, &vo, &vs);
     assert!(result.is_ok());
@@ -73,10 +73,10 @@ fn test_doppler_effect_kernel_stationary() {
 #[test]
 fn test_doppler_effect_kernel_sonic_singularity() {
     // Source speed = wave speed => sonic boom
-    let f_src = Frequency::new(1000.0).unwrap();
-    let v = Speed::new(340.0).unwrap();
-    let vo = Speed::new(0.0).unwrap();
-    let vs = Speed::new(340.0).unwrap(); // Source at Mach 1
+    let f_src = Frequency::<f64>::new(1000.0).unwrap();
+    let v = Speed::<f64>::new(340.0).unwrap();
+    let vo = Speed::<f64>::new(0.0).unwrap();
+    let vs = Speed::<f64>::new(340.0).unwrap(); // Source at Mach 1
 
     let result = doppler_effect_kernel(&f_src, &v, &vo, &vs);
     assert!(result.is_err(), "Sonic singularity should error");
@@ -85,10 +85,10 @@ fn test_doppler_effect_kernel_sonic_singularity() {
 #[test]
 fn test_doppler_effect_kernel_supersonic_error() {
     // Source speed > wave speed
-    let f_src = Frequency::new(1000.0).unwrap();
-    let v = Speed::new(340.0).unwrap();
-    let vo = Speed::new(0.0).unwrap();
-    let vs = Speed::new(400.0).unwrap(); // Supersonic
+    let f_src = Frequency::<f64>::new(1000.0).unwrap();
+    let v = Speed::<f64>::new(340.0).unwrap();
+    let vo = Speed::<f64>::new(0.0).unwrap();
+    let vs = Speed::<f64>::new(400.0).unwrap(); // Supersonic
 
     let result = doppler_effect_kernel(&f_src, &v, &vo, &vs);
     assert!(result.is_err(), "Supersonic source should error");

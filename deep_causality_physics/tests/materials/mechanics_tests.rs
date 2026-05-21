@@ -131,8 +131,8 @@ fn test_von_mises_stress_kernel_shape_error() {
 
 #[test]
 fn test_thermal_expansion_kernel_valid() {
-    let alpha = 12e-6;
-    let delta_temp = Temperature::new(100.0).unwrap();
+    let alpha: f64 = 12e-6;
+    let delta_temp = Temperature::<f64>::new(100.0).unwrap();
 
     let result = thermal_expansion_kernel(alpha, delta_temp);
     assert!(result.is_ok());
@@ -151,8 +151,8 @@ fn test_thermal_expansion_kernel_valid() {
 
 #[test]
 fn test_thermal_expansion_kernel_zero_temp() {
-    let alpha = 12e-6;
-    let delta_temp = Temperature::new(0.0).unwrap();
+    let alpha: f64 = 12e-6;
+    let delta_temp = Temperature::<f64>::new(0.0).unwrap();
 
     let result = thermal_expansion_kernel(alpha, delta_temp);
     assert!(result.is_ok());

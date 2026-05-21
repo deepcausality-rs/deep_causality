@@ -40,10 +40,13 @@ where
 }
 
 /// Causal wrapper for [`kinematics::kinetic_energy_kernel`].
-pub fn kinetic_energy(
-    mass: &Mass<f64>,
-    velocity: &CausalMultiVector<f64>,
-) -> PropagatingEffect<Energy<f64>> {
+pub fn kinetic_energy<R>(
+    mass: &Mass<R>,
+    velocity: &CausalMultiVector<R>,
+) -> PropagatingEffect<Energy<R>>
+where
+    R: RealField + deep_causality_num::FromPrimitive + Default + Debug,
+{
     match kinematics::kinetic_energy_kernel(*mass, velocity) {
         Ok(v) => match Energy::new(v) {
             Ok(e) => PropagatingEffect::pure(e),
@@ -54,10 +57,13 @@ pub fn kinetic_energy(
 }
 
 /// Causal wrapper for [`kinematics::rotational_kinetic_energy_kernel`].
-pub fn rotational_kinetic_energy(
-    moment_of_inertia: &MomentOfInertia<f64>,
-    angular_velocity: &Frequency<f64>,
-) -> PropagatingEffect<Energy<f64>> {
+pub fn rotational_kinetic_energy<R>(
+    moment_of_inertia: &MomentOfInertia<R>,
+    angular_velocity: &Frequency<R>,
+) -> PropagatingEffect<Energy<R>>
+where
+    R: RealField + deep_causality_num::FromPrimitive + Default + Debug,
+{
     match kinematics::rotational_kinetic_energy_kernel(*moment_of_inertia, *angular_velocity) {
         Ok(v) => match Energy::new(v) {
             Ok(e) => PropagatingEffect::pure(e),

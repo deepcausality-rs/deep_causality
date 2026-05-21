@@ -43,24 +43,30 @@ impl<R: RealField> PhysicalVector<R> {
 /// # Returns
 /// * `Ok(f64)` - Kinetic energy in Joules.
 /// * `Err(PhysicsError)` - If an error occurs (unlikely with valid inputs).
-pub fn kinetic_energy_kernel(
-    mass: Mass<f64>,
-    velocity: &CausalMultiVector<f64>,
-) -> Result<f64, PhysicsError> {
-    // Ensure physically meaningful squared speed
+pub fn kinetic_energy_kernel<R>(
+    mass: Mass<R>,
+    velocity: &CausalMultiVector<R>,
+) -> Result<R, PhysicsError>
+where
+    R: deep_causality_num::RealField + deep_causality_num::FromPrimitive,
+{
     let v_sq = velocity.squared_magnitude();
     if !v_sq.is_finite() {
         return Err(PhysicsError::NumericalInstability(
             "Velocity squared magnitude is not finite".into(),
         ));
     }
-    if v_sq < -1e-12 {
+    let neg_eps = R::from_f64(-1e-12)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(-1e-12)".into()))?;
+    if v_sq < neg_eps {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Negative squared speed in kinetic energy calculation".into(),
         ));
     }
-    let v_sq_clamped = if v_sq < 0.0 { 0.0 } else { v_sq };
-    let e = 0.5 * mass.value() * v_sq_clamped;
+    let v_sq_clamped = if v_sq < R::zero() { R::zero() } else { v_sq };
+    let half = R::from_f64(0.5)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(0.5)".into()))?;
+    let e = half * mass.value() * v_sq_clamped;
     Ok(e)
 }
 
@@ -72,13 +78,17 @@ pub fn kinetic_energy_kernel(
 ///
 /// # Returns
 /// * `Ok(f64)` - Rotational kinetic energy in Joules.
-pub fn rotational_kinetic_energy_kernel(
-    inertia: MomentOfInertia<f64>,
-    omega: Frequency<f64>,
-) -> Result<f64, PhysicsError> {
-    // KE_rot = 0.5 * I * w^2
+pub fn rotational_kinetic_energy_kernel<R>(
+    inertia: MomentOfInertia<R>,
+    omega: Frequency<R>,
+) -> Result<R, PhysicsError>
+where
+    R: deep_causality_num::RealField + deep_causality_num::FromPrimitive,
+{
     let w = omega.value();
-    let e = 0.5 * inertia.value() * w * w;
+    let half = R::from_f64(0.5)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(0.5)".into()))?;
+    let e = half * inertia.value() * w * w;
     Ok(e)
 }
 
