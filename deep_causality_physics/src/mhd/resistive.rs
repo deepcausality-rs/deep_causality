@@ -5,30 +5,23 @@
 
 use crate::mhd::quantities::{AlfvenSpeed, Diffusivity};
 use crate::{PhysicsError, Speed};
+use core::fmt::Debug;
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::SimplicialManifold;
 
 /// Calculates the diffusion term of the induction equation.
 /// $$ \frac{\partial \mathbf{B}}{\partial t}_{diff} = \eta \nabla^2 \mathbf{B} $$
-/// On a manifold, this is $-\eta \Delta B$ where $\Delta = d\delta + \delta d$ is the Hodge Laplacian.
-/// Note that $\nabla^2$ in vector calc usually corresponds to $-\Delta$ (negative Laplacian).
-/// The standard diffusion eq is $\partial_t u = + D \nabla^2 u$.
-/// The Hodge Laplacian $\Delta$ is positive definite. So $\nabla^2 \approx -\Delta$.
-/// Thus $\partial_t B = - \eta \Delta B$.
-///
-/// # Arguments
-/// *   `b_manifold` - Manifold containing the magnetic flux 2-form $B$.
-/// *   `diffusivity` - Magnetic diffusivity $\eta$.
-///
-/// # Returns
-/// *   `Result<CausalTensor<f64>, PhysicsError>` - Rate of change tensor (2-form).
-pub fn resistive_diffusion_kernel(
-    b_manifold: &SimplicialManifold<f64, f64>,
-    diffusivity: Diffusivity<f64>,
-) -> Result<CausalTensor<f64>, PhysicsError> {
+pub fn resistive_diffusion_kernel<R>(
+    b_manifold: &SimplicialManifold<R, R>,
+    diffusivity: Diffusivity<R>,
+) -> Result<CausalTensor<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+{
     let eta = diffusivity.value();
 
-    if eta < 0.0 {
+    if eta < R::zero() {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Diffusivity cannot be negative".into(),
         ));
@@ -38,7 +31,6 @@ pub fn resistive_diffusion_kernel(
     let laplacian = b_manifold.laplacian(2);
 
     // Rate = - eta * Laplacian
-    // CausalTensor supports scalar multiplication
     let rate = laplacian * (-eta);
 
     Ok(rate)
@@ -46,21 +38,16 @@ pub fn resistive_diffusion_kernel(
 
 /// Estimates reconnection rate (Sweet-Parker model simplified).
 /// $$ v_{in} = \frac{v_A}{\sqrt{S}} $$
-/// where $S$ is the Lundquist number.
-///
-/// # Arguments
-/// *   `alfven_speed` - Alfven speed $v_A$.
-/// *   `lundquist` - Lundquist number $S$.
-///
-/// # Returns
-/// *   `Result<Speed<f64>, PhysicsError>` - Inflow velocity $v_{in}$.
-pub fn magnetic_reconnection_rate_kernel(
-    alfven_speed: AlfvenSpeed<f64>,
-    lundquist: f64,
-) -> Result<Speed<f64>, PhysicsError> {
+pub fn magnetic_reconnection_rate_kernel<R>(
+    alfven_speed: AlfvenSpeed<R>,
+    lundquist: R,
+) -> Result<Speed<R>, PhysicsError>
+where
+    R: RealField,
+{
     let va = alfven_speed.value();
 
-    if lundquist <= 0.0 {
+    if lundquist <= R::zero() {
         return Err(PhysicsError::Singularity(
             "Lundquist number must be positive for reconnection".into(),
         ));

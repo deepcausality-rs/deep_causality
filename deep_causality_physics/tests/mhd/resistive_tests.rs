@@ -26,7 +26,7 @@ fn create_dummy_manifold() -> SimplicialManifold<f64, f64> {
 #[test]
 fn test_resistive_diffusion() {
     let m = create_dummy_manifold();
-    let eta = Diffusivity::new(0.1).unwrap();
+    let eta = Diffusivity::<f64>::new(0.1).unwrap();
 
     // Should run, result depends on laplacian of zero field -> zero
     let res = resistive_diffusion_kernel(&m, eta);
@@ -35,7 +35,7 @@ fn test_resistive_diffusion() {
 
 #[test]
 fn test_reconnection_rate() {
-    let va = AlfvenSpeed::new(100.0).unwrap();
+    let va = AlfvenSpeed::<f64>::new(100.0).unwrap();
     let s = 100.0; // Lundquist
 
     let res = magnetic_reconnection_rate_kernel(va, s);

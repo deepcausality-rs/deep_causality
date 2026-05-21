@@ -56,17 +56,23 @@ pub fn ideal_induction(
 // Resistive MHD Wrappers
 // ============================================================================
 
-pub fn resistive_diffusion(
-    b: &SimplicialManifold<f64, f64>,
-    eta: Diffusivity<f64>,
-) -> PropagatingEffect<CausalTensor<f64>> {
+pub fn resistive_diffusion<R>(
+    b: &SimplicialManifold<R, R>,
+    eta: Diffusivity<R>,
+) -> PropagatingEffect<CausalTensor<R>>
+where
+    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+{
     match resistive::resistive_diffusion_kernel(b, eta) {
         Ok(t) => PropagatingEffect::pure(t),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }
 
-pub fn magnetic_reconnection_rate(va: AlfvenSpeed<f64>, s: f64) -> PropagatingEffect<Speed<f64>> {
+pub fn magnetic_reconnection_rate<R>(va: AlfvenSpeed<R>, s: R) -> PropagatingEffect<Speed<R>>
+where
+    R: RealField + Debug,
+{
     match resistive::magnetic_reconnection_rate_kernel(va, s) {
         Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -107,7 +113,7 @@ pub fn energy_momentum_tensor_em(
 // ============================================================================
 
 pub fn debye_length<R>(
-    t: Temperature<f64>,
+    t: Temperature<R>,
     n: R,
     eps0: R,
     e: R,
@@ -122,13 +128,13 @@ where
 }
 
 pub fn larmor_radius<R>(
-    m: Mass<f64>,
-    v: Speed<f64>,
+    m: Mass<R>,
+    v: Speed<R>,
     q: R,
     b: &PhysicalField<R>,
 ) -> PropagatingEffect<LarmorRadius<R>>
 where
-    R: RealField + FromPrimitive + Debug,
+    R: RealField + Debug,
 {
     match plasma::larmor_radius_kernel(m, v, q, b) {
         Ok(r) => PropagatingEffect::pure(r),

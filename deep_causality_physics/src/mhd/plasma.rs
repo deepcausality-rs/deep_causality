@@ -12,7 +12,7 @@ use deep_causality_num::{FromPrimitive, RealField};
 /// $$ \lambda_D = \sqrt{\frac{\epsilon_0 k_B T_e}{n_e e^2}} $$
 ///
 /// # Arguments
-/// *   `temp` - Electron temperature $T_e$ (pinned to `f64` until Temperature is retyped).
+/// *   `temp` - Electron temperature $T_e$.
 /// *   `density_n` - Electron number density $n_e$ ($m^{-3}$).
 /// *   `epsilon_0` - Permittivity of free space.
 /// *   `elementary_charge` - Charge $e$.
@@ -20,7 +20,7 @@ use deep_causality_num::{FromPrimitive, RealField};
 /// # Returns
 /// *   `Result<DebyeLength<R>, PhysicsError>` - Debye length.
 pub fn debye_length_kernel<R>(
-    temp: Temperature<f64>,
+    temp: Temperature<R>,
     density_n: R,
     epsilon_0: R,
     elementary_charge: R,
@@ -40,11 +40,8 @@ where
     let kb = R::from_f64(BOLTZMANN_CONSTANT).ok_or_else(|| {
         PhysicsError::NumericalInstability("R::from_f64(BOLTZMANN_CONSTANT) failed".into())
     })?;
-    let temp_r = R::from_f64(temp.value()).ok_or_else(|| {
-        PhysicsError::NumericalInstability("R::from_f64(temp.value()) failed".into())
-    })?;
 
-    let num = epsilon_0 * kb * temp_r;
+    let num = epsilon_0 * kb * temp.value();
     let den = density_n * (elementary_charge * elementary_charge);
 
     let lambda = (num / den).sqrt();
@@ -55,21 +52,21 @@ where
 /// $$ r_L = \frac{m v_\perp}{|q| B} $$
 ///
 /// # Arguments
-/// *   `mass` - Particle mass $m$ (pinned to `f64` until Mass is retyped).
-/// *   `velocity_perp` - Perpendicular velocity $v_\perp$ (pinned to `f64` until Speed is retyped).
+/// *   `mass` - Particle mass $m$.
+/// *   `velocity_perp` - Perpendicular velocity $v_\perp$.
 /// *   `charge` - Particle charge $q$.
 /// *   `b_field` - Magnetic field $B$.
 ///
 /// # Returns
 /// *   `Result<LarmorRadius<R>, PhysicsError>` - Larmor radius $r_L$.
 pub fn larmor_radius_kernel<R>(
-    mass: Mass<f64>,
-    velocity_perp: Speed<f64>,
+    mass: Mass<R>,
+    velocity_perp: Speed<R>,
     charge: R,
     b_field: &PhysicalField<R>,
 ) -> Result<LarmorRadius<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive,
+    R: RealField,
 {
     let b_mag = b_field.inner().squared_magnitude().sqrt();
 
@@ -84,14 +81,7 @@ where
         ));
     }
 
-    let mass_r = R::from_f64(mass.value()).ok_or_else(|| {
-        PhysicsError::NumericalInstability("R::from_f64(mass.value()) failed".into())
-    })?;
-    let velocity_r = R::from_f64(velocity_perp.value()).ok_or_else(|| {
-        PhysicsError::NumericalInstability("R::from_f64(velocity_perp.value()) failed".into())
-    })?;
-
-    let num = mass_r * velocity_r;
+    let num = mass.value() * velocity_perp.value();
     let den = charge.abs() * b_mag;
 
     LarmorRadius::new(num / den)

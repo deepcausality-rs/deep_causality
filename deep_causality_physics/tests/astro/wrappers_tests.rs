@@ -13,8 +13,8 @@ use deep_causality_physics::{
 
 #[test]
 fn test_orbital_velocity_wrapper_success() {
-    let mass = Mass::new(5.972e24).unwrap();
-    let radius = Length::new(6.371e6).unwrap();
+    let mass = Mass::<f64>::new(5.972e24).unwrap();
+    let radius = Length::<f64>::new(6.371e6).unwrap();
 
     let effect = orbital_velocity(&mass, &radius);
     assert!(effect.is_ok(), "Expected successful PropagatingEffect");
@@ -25,8 +25,8 @@ fn test_orbital_velocity_wrapper_success() {
 
 #[test]
 fn test_orbital_velocity_wrapper_error() {
-    let mass = Mass::new(1e24).unwrap();
-    let radius = Length::new(0.0).unwrap();
+    let mass = Mass::<f64>::new(1e24).unwrap();
+    let radius = Length::<f64>::new(0.0).unwrap();
 
     let effect = orbital_velocity(&mass, &radius);
     assert!(
@@ -41,8 +41,8 @@ fn test_orbital_velocity_wrapper_error() {
 
 #[test]
 fn test_escape_velocity_wrapper_success() {
-    let mass = Mass::new(5.972e24).unwrap();
-    let radius = Length::new(6.371e6).unwrap();
+    let mass = Mass::<f64>::new(5.972e24).unwrap();
+    let radius = Length::<f64>::new(6.371e6).unwrap();
 
     let effect = escape_velocity(&mass, &radius);
     assert!(effect.is_ok());
@@ -53,8 +53,8 @@ fn test_escape_velocity_wrapper_success() {
 
 #[test]
 fn test_escape_velocity_wrapper_error() {
-    let mass = Mass::new(1e24).unwrap();
-    let radius = Length::new(0.0).unwrap();
+    let mass = Mass::<f64>::new(1e24).unwrap();
+    let radius = Length::<f64>::new(0.0).unwrap();
 
     let effect = escape_velocity(&mass, &radius);
     assert!(effect.is_err());
@@ -66,7 +66,7 @@ fn test_escape_velocity_wrapper_error() {
 
 #[test]
 fn test_schwarzschild_radius_wrapper_success() {
-    let mass = Mass::new(1.989e30).unwrap();
+    let mass = Mass::<f64>::new(1.989e30).unwrap();
 
     let effect = schwarzschild_radius(&mass);
     assert!(effect.is_ok());
@@ -77,7 +77,7 @@ fn test_schwarzschild_radius_wrapper_success() {
 
 #[test]
 fn test_schwarzschild_radius_wrapper_zero_mass() {
-    let mass = Mass::new(0.0).unwrap();
+    let mass = Mass::<f64>::new(0.0).unwrap();
 
     let effect = schwarzschild_radius(&mass);
     assert!(effect.is_ok());
