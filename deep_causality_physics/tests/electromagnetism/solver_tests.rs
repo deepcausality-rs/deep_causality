@@ -25,7 +25,7 @@ fn test_field_calculation_success() {
     let a = CausalMultiVector::new(a_data, metric).unwrap();
 
     // F = d ^ A = e1 ^ e2 = e12
-    let f = MaxwellSolver::calculate_field_tensor(&d, &a).unwrap();
+    let f = MaxwellSolver::calculate_field_tensor::<f64>(&d, &a).unwrap();
 
     let mag = f.squared_magnitude();
     assert!(
@@ -40,7 +40,7 @@ fn test_field_calculation_metric_mismatch() {
     let d = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
     let a = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
 
-    let result = MaxwellSolver::calculate_field_tensor(&d, &a);
+    let result = MaxwellSolver::calculate_field_tensor::<f64>(&d, &a);
     match result {
         Err(e) => match e.0 {
             PhysicsErrorEnum::DimensionMismatch(_) => {}
@@ -62,7 +62,7 @@ fn test_field_calculation_non_finite_input() {
     let a = CausalMultiVector::new(a_data, metric).unwrap();
 
     // If input is infinite, geometric product will be infinite/NaN
-    let result = MaxwellSolver::calculate_field_tensor(&d, &a);
+    let result = MaxwellSolver::calculate_field_tensor::<f64>(&d, &a);
     assert!(
         result.is_err(),
         "Should detect non-finite result via validate_finiteness"
@@ -85,7 +85,7 @@ fn test_potential_divergence_success_zero() {
     a_data[2] = 1.0; // e2
     let a = CausalMultiVector::new(a_data, metric).unwrap();
 
-    let div = MaxwellSolver::calculate_potential_divergence(&d, &a).unwrap();
+    let div = MaxwellSolver::calculate_potential_divergence::<f64>(&d, &a).unwrap();
     assert_eq!(div, 0.0);
 }
 
@@ -101,7 +101,7 @@ fn test_potential_divergence_non_zero() {
     a_data[1] = 1.0;
     let a = CausalMultiVector::new(a_data, metric).unwrap();
 
-    let div = MaxwellSolver::calculate_potential_divergence(&d, &a).unwrap();
+    let div = MaxwellSolver::calculate_potential_divergence::<f64>(&d, &a).unwrap();
     assert!((div - 1.0).abs() < 1e-9);
 }
 
@@ -109,7 +109,7 @@ fn test_potential_divergence_non_zero() {
 fn test_potential_divergence_metric_mismatch() {
     let d = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
     let a = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
-    assert!(MaxwellSolver::calculate_potential_divergence(&d, &a).is_err());
+    assert!(MaxwellSolver::calculate_potential_divergence::<f64>(&d, &a).is_err());
 }
 
 #[test]
@@ -120,7 +120,7 @@ fn test_potential_divergence_non_finite() {
     let d = CausalMultiVector::new(d_data, metric).unwrap();
     let a = CausalMultiVector::new(vec![1.0; 16], metric).unwrap();
 
-    match MaxwellSolver::calculate_potential_divergence(&d, &a) {
+    match MaxwellSolver::calculate_potential_divergence::<f64>(&d, &a) {
         Err(e) => match e.0 {
             // Either grade validation catches it as non-pure-vector or finiteness check catches NaN
             PhysicsErrorEnum::NumericalInstability(_)
@@ -155,7 +155,7 @@ fn test_current_density_success() {
     f_data[6] = 1.0; // e12
     let f = CausalMultiVector::new(f_data, metric).unwrap();
 
-    let j = MaxwellSolver::calculate_current_density(&d, &f).unwrap();
+    let j = MaxwellSolver::calculate_current_density::<f64>(&d, &f).unwrap();
 
     // Check J is e2 (index 4)
     let val = j.data()[4];
@@ -173,7 +173,7 @@ fn test_current_density_success() {
 fn test_current_density_mismatch() {
     let d = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
     let f = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
-    assert!(MaxwellSolver::calculate_current_density(&d, &f).is_err());
+    assert!(MaxwellSolver::calculate_current_density::<f64>(&d, &f).is_err());
 }
 
 // ============================================================================
@@ -196,7 +196,7 @@ fn test_poynting_flux_success() {
     b_data[2] = 1.0;
     let b = CausalMultiVector::new(b_data, metric).unwrap();
 
-    let s = MaxwellSolver::calculate_poynting_flux(&e, &b).unwrap();
+    let s = MaxwellSolver::calculate_poynting_flux::<f64>(&e, &b).unwrap();
 
     // Check index 3
     let val = s.data()[3];
@@ -207,5 +207,5 @@ fn test_poynting_flux_success() {
 fn test_poynting_flux_mismatch() {
     let e = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
     let b = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
-    assert!(MaxwellSolver::calculate_poynting_flux(&e, &b).is_err());
+    assert!(MaxwellSolver::calculate_poynting_flux::<f64>(&e, &b).is_err());
 }
