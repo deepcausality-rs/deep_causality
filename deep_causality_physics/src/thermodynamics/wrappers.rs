@@ -53,7 +53,7 @@ pub fn carnot_efficiency(
 }
 
 /// Causal wrapper for [`stats::boltzmann_factor_kernel`].
-pub fn boltzmann_factor(energy: Energy, temp: Temperature) -> PropagatingEffect<Probability<f64>> {
+pub fn boltzmann_factor(energy: Energy<f64>, temp: Temperature) -> PropagatingEffect<Probability<f64>> {
     match stats::boltzmann_factor_kernel(energy, temp) {
         Ok(p) => PropagatingEffect::pure(p),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -69,7 +69,7 @@ pub fn shannon_entropy(probs: &CausalTensor<f64>) -> PropagatingEffect<f64> {
 }
 
 /// Causal wrapper for [`stats::heat_capacity_kernel`].
-pub fn heat_capacity(diff_energy: Energy, diff_temp: Temperature) -> PropagatingEffect<f64> {
+pub fn heat_capacity(diff_energy: Energy<f64>, diff_temp: Temperature) -> PropagatingEffect<f64> {
     match stats::heat_capacity_kernel(diff_energy, diff_temp) {
         Ok(val) => PropagatingEffect::pure(val),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),

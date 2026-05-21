@@ -170,8 +170,8 @@ pub fn quasi_qgt_kernel(
 /// # Returns
 /// *   `Result<BandDrudeWeight, PhysicsError>` - The physical Drude Weight.
 pub fn effective_band_drude_weight_kernel(
-    energy_n: Energy,
-    energy_0: Energy,
+    energy_n: Energy<f64>,
+    energy_0: Energy<f64>,
     curvature_ii: f64,
     quantum_metric: QuantumMetric,
     lattice_const: Length,

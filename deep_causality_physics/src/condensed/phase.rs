@@ -44,7 +44,7 @@ pub fn ginzburg_landau_free_energy_kernel(
     beta: f64,
     gradient_psi: &CausalMultiVector<Complex<f64>>,
     vector_potential: Option<&VectorPotential>,
-) -> Result<Energy, PhysicsError> {
+) -> Result<Energy<f64>, PhysicsError> {
     let val = psi.value();
     let mag_sq = psi.magnitude_squared();
 

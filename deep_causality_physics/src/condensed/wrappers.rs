@@ -67,8 +67,8 @@ pub fn quasi_qgt(
 
 /// Wrapper for [`qgt::effective_band_drude_weight_kernel`].
 pub fn effective_band_drude_weight(
-    energy_n: Energy,
-    energy_0: Energy,
+    energy_n: Energy<f64>,
+    energy_0: Energy<f64>,
     curvature_ii: f64,
     quantum_metric: QuantumMetric,
     lattice_const: Length,
@@ -92,7 +92,7 @@ pub fn effective_band_drude_weight(
 /// Wrapper for [`moire::bistritzer_macdonald_kernel`].
 pub fn bistritzer_macdonald(
     twist_angle: TwistAngle,
-    interlayer_coupling: Energy,
+    interlayer_coupling: Energy<f64>,
     fermi_velocity: Speed,
     k_point: Momentum,
     shell_cutoff: usize,
@@ -154,7 +154,7 @@ pub fn ginzburg_landau_free_energy(
     beta: f64,
     gradient_psi: &CausalMultiVector<Complex<f64>>,
     vector_potential: Option<&VectorPotential>,
-) -> PropagatingEffect<Energy> {
+) -> PropagatingEffect<Energy<f64>> {
     match phase::ginzburg_landau_free_energy_kernel(
         psi,
         alpha,

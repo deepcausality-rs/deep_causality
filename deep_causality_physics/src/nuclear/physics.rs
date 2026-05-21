@@ -59,7 +59,7 @@ where
 ///
 /// # Returns
 /// * `Ok(Energy)` - Binding energy $E$.
-pub fn binding_energy_kernel(mass_defect: &Mass) -> Result<Energy, PhysicsError> {
+pub fn binding_energy_kernel(mass_defect: &Mass) -> Result<Energy<f64>, PhysicsError> {
     // E = m c^2
     // Mass-Energy Equivalence
     let c = SPEED_OF_LIGHT;

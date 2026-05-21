@@ -120,7 +120,7 @@ pub fn carnot_efficiency_kernel(
 /// # Returns
 /// * `Result<Probability, PhysicsError>` - Boltzmann factor.
 pub fn boltzmann_factor_kernel(
-    energy: Energy,
+    energy: Energy<f64>,
     temp: Temperature,
 ) -> Result<Probability<f64>, PhysicsError> {
     // P = exp(-E / kT)  (unnormalized factor)
@@ -193,7 +193,7 @@ pub fn shannon_entropy_kernel(probs: &CausalTensor<f64>) -> Result<f64, PhysicsE
 /// # Returns
 /// * `Result<f64, PhysicsError>` - Heat capacity.
 pub fn heat_capacity_kernel(
-    diff_energy: Energy,
+    diff_energy: Energy<f64>,
     diff_temp: Temperature,
 ) -> Result<f64, PhysicsError> {
     // C = dE / dT
