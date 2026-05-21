@@ -44,7 +44,7 @@ fn test_spacetime_interval_into_f64() {
 
 #[test]
 fn test_spacetime_vector_default() {
-    let vec = SpacetimeVector::default();
+    let vec = SpacetimeVector::<f64>::default();
     // Default uses Minkowski(0) metric
     assert_eq!(vec.inner().metric(), Metric::Minkowski(0));
 }

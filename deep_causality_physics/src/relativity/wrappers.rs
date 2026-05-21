@@ -7,8 +7,10 @@ use crate::quantum::quantities::PhaseAngle;
 use crate::relativity::gravity;
 use crate::relativity::quantities::SpacetimeVector;
 use crate::relativity::spacetime;
+use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::{CausalMultiVector, Metric};
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 
 /// Causal wrapper for [`gravity::einstein_tensor_kernel`].
@@ -38,7 +40,10 @@ pub fn geodesic_deviation(
 }
 
 /// Causal wrapper for [`spacetime::spacetime_interval_kernel`].
-pub fn spacetime_interval(x: &CausalMultiVector<f64>, metric: &Metric) -> PropagatingEffect<f64> {
+pub fn spacetime_interval<R>(x: &CausalMultiVector<R>, metric: &Metric) -> PropagatingEffect<R>
+where
+    R: RealField + Default + Debug,
+{
     match spacetime::spacetime_interval_kernel(x, metric) {
         Ok(s2) => PropagatingEffect::pure(s2),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -46,10 +51,13 @@ pub fn spacetime_interval(x: &CausalMultiVector<f64>, metric: &Metric) -> Propag
 }
 
 /// Causal wrapper for [`spacetime::time_dilation_angle_kernel`].
-pub fn time_dilation_angle(
-    t1: &CausalMultiVector<f64>,
-    t2: &CausalMultiVector<f64>,
-) -> PropagatingEffect<PhaseAngle> {
+pub fn time_dilation_angle<R>(
+    t1: &CausalMultiVector<R>,
+    t2: &CausalMultiVector<R>,
+) -> PropagatingEffect<PhaseAngle<R>>
+where
+    R: RealField + FromPrimitive + Debug,
+{
     match spacetime::time_dilation_angle_kernel(t1, t2) {
         Ok(p) => PropagatingEffect::pure(p),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -57,11 +65,14 @@ pub fn time_dilation_angle(
 }
 
 /// Causal wrapper for [`spacetime::chronometric_volume_kernel`].
-pub fn chronometric_volume(
-    a: &CausalMultiVector<f64>,
-    b: &CausalMultiVector<f64>,
-    c: &CausalMultiVector<f64>,
-) -> PropagatingEffect<SpacetimeVector> {
+pub fn chronometric_volume<R>(
+    a: &CausalMultiVector<R>,
+    b: &CausalMultiVector<R>,
+    c: &CausalMultiVector<R>,
+) -> PropagatingEffect<SpacetimeVector<R>>
+where
+    R: RealField + Debug,
+{
     match spacetime::chronometric_volume_kernel(a, b, c) {
         Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),

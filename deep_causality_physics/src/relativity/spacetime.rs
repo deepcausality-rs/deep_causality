@@ -8,7 +8,7 @@ use crate::relativity::quantities::SpacetimeVector;
 use crate::error::PhysicsError;
 use crate::quantum::quantities::PhaseAngle;
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
-use deep_causality_num::{Field, Float};
+use deep_causality_num::{Field, Float, FromPrimitive, RealField};
 
 // Kernels
 
@@ -20,10 +20,13 @@ use deep_causality_num::{Field, Float};
 ///
 /// # Returns
 /// * `Ok(f64)` - Spacetime interval $s^2$.
-pub fn spacetime_interval_kernel(
-    x: &CausalMultiVector<f64>,
+pub fn spacetime_interval_kernel<R>(
+    x: &CausalMultiVector<R>,
     metric: &Metric,
-) -> Result<f64, PhysicsError> {
+) -> Result<R, PhysicsError>
+where
+    R: RealField,
+{
     // s^2 = g_uv x^u x^v
     // Validate that the vector's internal metric matches the context metric.
     // CausalMultiVector stores its immutable metric.
@@ -50,10 +53,13 @@ pub fn spacetime_interval_kernel(
 ///
 /// # Returns
 /// * `Result<PhaseAngle, PhysicsError>` - Rapidity $\eta$.
-pub fn time_dilation_angle_kernel(
-    t1: &CausalMultiVector<f64>,
-    t2: &CausalMultiVector<f64>,
-) -> Result<PhaseAngle, PhysicsError> {
+pub fn time_dilation_angle_kernel<R>(
+    t1: &CausalMultiVector<R>,
+    t2: &CausalMultiVector<R>,
+) -> Result<PhaseAngle<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
     // Ensure compatible Minkowski metric
     if t1.metric() != t2.metric() {
         return Err(PhysicsError::MetricSingularity(
@@ -77,12 +83,16 @@ pub fn time_dilation_angle_kernel(
 
     // Verify that non-scalar components (index > 0) are effectively zero
     // In dense representation (e.g. 16 dims), inner product of vectors should be scalar (index 0).
-    let non_scalar_magnitude: f64 = inner.data().iter().skip(1).map(|v| v.abs()).sum();
-    if non_scalar_magnitude > 1e-9 {
-        return Err(PhysicsError::PhysicalInvariantBroken(format!(
-            "Inner product did not yield scalar grade (non-scalar mag: {})",
-            non_scalar_magnitude
-        )));
+    let mut non_scalar_magnitude = R::zero();
+    for v in inner.data().iter().skip(1) {
+        non_scalar_magnitude += v.abs();
+    }
+    let eps = R::from_f64(1e-9)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(1e-9) failed".into()))?;
+    if non_scalar_magnitude > eps {
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Inner product did not yield scalar grade".into(),
+        ));
     }
 
     let dot = inner.data()[0];
@@ -90,7 +100,8 @@ pub fn time_dilation_angle_kernel(
     // Timelike check: squared magnitudes strictly positive in (+---)
     let s1 = t1.squared_magnitude();
     let s2 = t2.squared_magnitude();
-    if !(s1 > 0.0 && s2 > 0.0) {
+    let zero = R::zero();
+    if !(s1 > zero && s2 > zero) {
         return Err(PhysicsError::CausalityViolation(
             "Non-timelike vector encountered".into(),
         ));
@@ -99,26 +110,26 @@ pub fn time_dilation_angle_kernel(
     let mag2 = s2.sqrt();
 
     let denom = mag1 * mag2;
-    if denom == 0.0 || !denom.is_finite() {
+    if denom == zero || !denom.is_finite() {
         return Err(PhysicsError::NumericalInstability(
             "Invalid normalization in gamma computation".into(),
         ));
     }
 
     // Clamp gamma to handle floating-point noise
+    let one = R::one();
     let mut gamma = dot / denom;
-    let eps = 1e-9;
-    if gamma < 1.0 && (1.0 - gamma) <= eps {
-        gamma = 1.0;
+    if gamma < one && (one - gamma) <= eps {
+        gamma = one;
     }
-    if gamma < 1.0 {
-        return Err(PhysicsError::CausalityViolation(format!(
-            "Invalid Lorentz factor < 1.0: {}",
-            gamma
-        )));
+    if gamma < one {
+        return Err(PhysicsError::CausalityViolation(
+            "Invalid Lorentz factor < 1.0".into(),
+        ));
     }
 
-    let eta = gamma.acosh();
+    // acosh(gamma) = ln(gamma + sqrt(gamma^2 - 1))
+    let eta = (gamma + (gamma * gamma - one).sqrt()).ln();
     PhaseAngle::new(eta)
 }
 
@@ -134,11 +145,14 @@ pub fn time_dilation_angle_kernel(
 ///
 /// # Returns
 /// * `Result<SpacetimeVector, PhysicsError>` - Trivector result (wrapped).
-pub fn chronometric_volume_kernel(
-    a: &CausalMultiVector<f64>,
-    b: &CausalMultiVector<f64>,
-    c: &CausalMultiVector<f64>,
-) -> Result<SpacetimeVector, PhysicsError> {
+pub fn chronometric_volume_kernel<R>(
+    a: &CausalMultiVector<R>,
+    b: &CausalMultiVector<R>,
+    c: &CausalMultiVector<R>,
+) -> Result<SpacetimeVector<R>, PhysicsError>
+where
+    R: RealField,
+{
     // Volume formed by trivector a ^ b ^ c
     // V = a ^ b ^ c
 

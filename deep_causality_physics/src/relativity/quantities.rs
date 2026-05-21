@@ -34,27 +34,28 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<SpacetimeInterval<R>> fo
 }
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
+use deep_causality_num::RealField;
 
 /// Wrapper for CausalMultiVector representing a vector in Spacetime.
 ///
 /// Implements Default using Minkowski metric.
 #[derive(Debug, Clone, PartialEq)]
-pub struct SpacetimeVector(pub CausalMultiVector<f64>);
+pub struct SpacetimeVector<R: RealField>(pub CausalMultiVector<R>);
 
-impl Default for SpacetimeVector {
+impl<R: RealField> Default for SpacetimeVector<R> {
     fn default() -> Self {
-        Self(CausalMultiVector::new(vec![0.0], Metric::Minkowski(0)).unwrap())
+        Self(CausalMultiVector::new(vec![R::zero()], Metric::Minkowski(0)).unwrap())
     }
 }
 
-impl SpacetimeVector {
-    pub fn new(val: CausalMultiVector<f64>) -> Self {
+impl<R: RealField> SpacetimeVector<R> {
+    pub fn new(val: CausalMultiVector<R>) -> Self {
         Self(val)
     }
-    pub fn inner(&self) -> &CausalMultiVector<f64> {
+    pub fn inner(&self) -> &CausalMultiVector<R> {
         &self.0
     }
-    pub fn into_inner(self) -> CausalMultiVector<f64> {
+    pub fn into_inner(self) -> CausalMultiVector<R> {
         self.0
     }
 }

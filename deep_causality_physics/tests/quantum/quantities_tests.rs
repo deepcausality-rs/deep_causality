@@ -74,32 +74,32 @@ fn test_probability_into_f64() {
 
 #[test]
 fn test_phase_angle_new_valid() {
-    let angle = PhaseAngle::new(PI);
+    let angle = PhaseAngle::<f64>::new(PI);
     assert!(angle.is_ok());
     assert!((angle.unwrap().value() - PI).abs() < 1e-10);
 }
 
 #[test]
 fn test_phase_angle_new_nan_error() {
-    let angle = PhaseAngle::new(f64::NAN);
+    let angle = PhaseAngle::<f64>::new(f64::NAN);
     assert!(angle.is_err());
 }
 
 #[test]
 fn test_phase_angle_new_infinity_error() {
-    let angle = PhaseAngle::new(f64::INFINITY);
+    let angle = PhaseAngle::<f64>::new(f64::INFINITY);
     assert!(angle.is_err());
 }
 
 #[test]
 fn test_phase_angle_default() {
-    let angle = PhaseAngle::default();
+    let angle = PhaseAngle::<f64>::default();
     assert!((angle.value() - 0.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_phase_angle_into_f64() {
-    let angle = PhaseAngle::new_unchecked(1.23);
+    let angle = PhaseAngle::<f64>::new_unchecked(1.23);
     let val: f64 = angle.into();
     assert!((val - 1.23).abs() < 1e-10);
 }
