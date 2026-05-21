@@ -5,6 +5,7 @@
 
 use crate::dynamics::estimation;
 use crate::dynamics::kinematics;
+use crate::dynamics::kinematics::PhysicalVector;
 use crate::units::types::energy::Energy;
 use crate::{Frequency, Mass, MomentOfInertia, Probability};
 use core::fmt::Debug;
@@ -12,7 +13,6 @@ use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
-use crate::dynamics::kinematics::PhysicalVector;
 
 /// Causal wrapper for [`estimation::kalman_filter_linear_kernel`].
 pub fn kalman_filter_linear<R>(
@@ -40,7 +40,10 @@ where
 }
 
 /// Causal wrapper for [`kinematics::kinetic_energy_kernel`].
-pub fn kinetic_energy(mass: &Mass, velocity: &CausalMultiVector<f64>) -> PropagatingEffect<Energy<f64>> {
+pub fn kinetic_energy(
+    mass: &Mass,
+    velocity: &CausalMultiVector<f64>,
+) -> PropagatingEffect<Energy<f64>> {
     match kinematics::kinetic_energy_kernel(*mass, velocity) {
         Ok(v) => match Energy::new(v) {
             Ok(e) => PropagatingEffect::pure(e),

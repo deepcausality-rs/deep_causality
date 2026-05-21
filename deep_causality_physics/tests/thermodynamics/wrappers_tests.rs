@@ -80,7 +80,7 @@ fn test_carnot_efficiency_wrapper_error() {
 
 #[test]
 fn test_boltzmann_factor_wrapper_success() {
-    let e = Energy::new(0.0).unwrap();
+    let e = Energy::<f64>::new(0.0).unwrap();
     let t = Temperature::new(300.0).unwrap();
 
     let effect = boltzmann_factor(e, t);
@@ -89,7 +89,7 @@ fn test_boltzmann_factor_wrapper_success() {
 
 #[test]
 fn test_boltzmann_factor_wrapper_error() {
-    let e = Energy::new(0.0).unwrap();
+    let e = Energy::<f64>::new(0.0).unwrap();
     let t = Temperature::new(0.0).unwrap(); // T=0
     let effect = boltzmann_factor(e, t);
     assert!(effect.is_err());
@@ -112,7 +112,7 @@ fn test_shannon_entropy_wrapper_error() {
 
 #[test]
 fn test_heat_capacity_wrapper_success() {
-    let de = Energy::new(100.0).unwrap();
+    let de = Energy::<f64>::new(100.0).unwrap();
     let dt = Temperature::new(10.0).unwrap();
 
     let effect = heat_capacity(de, dt);
@@ -124,7 +124,7 @@ fn test_heat_capacity_wrapper_success() {
 
 #[test]
 fn test_heat_capacity_wrapper_error() {
-    let de = Energy::new(100.0).unwrap();
+    let de = Energy::<f64>::new(100.0).unwrap();
     let dt = Temperature::new(0.0).unwrap(); // Zero dT
 
     let effect = heat_capacity(de, dt);

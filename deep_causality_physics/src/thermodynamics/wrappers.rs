@@ -9,6 +9,8 @@ use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_tensor::CausalTensor;
 
 use crate::Probability;
+use core::fmt::Debug;
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_topology::SimplicialManifold;
 
 /// Causal wrapper for [`stats::heat_diffusion_kernel`].
@@ -53,7 +55,13 @@ pub fn carnot_efficiency(
 }
 
 /// Causal wrapper for [`stats::boltzmann_factor_kernel`].
-pub fn boltzmann_factor(energy: Energy<f64>, temp: Temperature) -> PropagatingEffect<Probability<f64>> {
+pub fn boltzmann_factor<R>(
+    energy: Energy<R>,
+    temp: Temperature,
+) -> PropagatingEffect<Probability<R>>
+where
+    R: RealField + FromPrimitive + Debug,
+{
     match stats::boltzmann_factor_kernel(energy, temp) {
         Ok(p) => PropagatingEffect::pure(p),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -69,7 +77,10 @@ pub fn shannon_entropy(probs: &CausalTensor<f64>) -> PropagatingEffect<f64> {
 }
 
 /// Causal wrapper for [`stats::heat_capacity_kernel`].
-pub fn heat_capacity(diff_energy: Energy<f64>, diff_temp: Temperature) -> PropagatingEffect<f64> {
+pub fn heat_capacity<R>(diff_energy: Energy<R>, diff_temp: Temperature) -> PropagatingEffect<R>
+where
+    R: RealField + FromPrimitive + Default + Debug,
+{
     match stats::heat_capacity_kernel(diff_energy, diff_temp) {
         Ok(val) => PropagatingEffect::pure(val),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),

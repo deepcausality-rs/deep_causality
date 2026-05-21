@@ -5,6 +5,7 @@
 
 use crate::BOLTZMANN_CONSTANT;
 use crate::{AmountOfSubstance, Energy, PhysicsError, Pressure, Probability, Temperature, Volume};
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::SimplicialManifold;
 
@@ -119,31 +120,28 @@ pub fn carnot_efficiency_kernel(
 ///
 /// # Returns
 /// * `Result<Probability, PhysicsError>` - Boltzmann factor.
-pub fn boltzmann_factor_kernel(
-    energy: Energy<f64>,
+pub fn boltzmann_factor_kernel<R>(
+    energy: Energy<R>,
     temp: Temperature,
-) -> Result<Probability<f64>, PhysicsError> {
-    // P = exp(-E / kT)  (unnormalized factor)
-    // Actually usually return probability *if* normalized, but here it's likely the factor.
-    // Spec says "Boltzmann Factor -> Probability".
-    // Usually means exp(-beta E). If E=0, factor=1.
-    // If Prob is constrained <= 1, then this assumes E >= 0 and Energy is relative to ground state.
-
-    let e = energy.value();
-    let t = temp.value();
-    let k = BOLTZMANN_CONSTANT;
-
-    if t == 0.0 {
+) -> Result<Probability<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
+    if temp.value() == 0.0 {
         return Err(PhysicsError::ZeroKelvinViolation());
     }
 
-    let beta = 1.0 / (k * t);
+    let e = energy.value();
+    let t = R::from_f64(temp.value())
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(temp) failed".into()))?;
+    let k = R::from_f64(BOLTZMANN_CONSTANT).ok_or_else(|| {
+        PhysicsError::NumericalInstability("R::from_f64(BOLTZMANN_CONSTANT) failed".into())
+    })?;
+
+    let beta = R::one() / (k * t);
     let factor = (-beta * e).exp();
 
-    // Note: factor can be > 1 if E < 0. Assuming E is kinetic energy or excitation > 0.
-    // Probability new() checks for [0, 1].
-
-    Probability::<f64>::new(factor)
+    Probability::<R>::new(factor)
 }
 
 /// Calculates Shannon Entropy: $H = -\sum p_i \ln(p_i)$.
@@ -192,22 +190,25 @@ pub fn shannon_entropy_kernel(probs: &CausalTensor<f64>) -> Result<f64, PhysicsE
 ///
 /// # Returns
 /// * `Result<f64, PhysicsError>` - Heat capacity.
-pub fn heat_capacity_kernel(
-    diff_energy: Energy<f64>,
+pub fn heat_capacity_kernel<R>(
+    diff_energy: Energy<R>,
     diff_temp: Temperature,
-) -> Result<f64, PhysicsError> {
-    // C = dE / dT
-    let de = diff_energy.value();
-    let dt = diff_temp.value();
-
-    if dt == 0.0 {
+) -> Result<R, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
+    if diff_temp.value() == 0.0 {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Zero temperature difference in heat capacity".into(),
         ));
     }
 
-    let c = de / dt;
-    Ok(c)
+    let de = diff_energy.value();
+    let dt = R::from_f64(diff_temp.value()).ok_or_else(|| {
+        PhysicsError::NumericalInstability("R::from_f64(diff_temp) failed".into())
+    })?;
+
+    Ok(de / dt)
 }
 
 /// Calculates Partition Function: $Z = \sum e^{-E_i / k_B T}$.

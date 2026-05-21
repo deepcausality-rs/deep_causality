@@ -76,7 +76,7 @@ fn test_carnot_efficiency_kernel_cold_ge_hot_error() {
 #[test]
 fn test_boltzmann_factor_kernel_ground_state() {
     // E=0 => factor = 1
-    let e = Energy::new(0.0).unwrap();
+    let e = Energy::<f64>::new(0.0).unwrap();
     let t = Temperature::new(300.0).unwrap();
 
     let result = boltzmann_factor_kernel(e, t);
@@ -109,7 +109,7 @@ fn test_shannon_entropy_kernel_uniform() {
 
 #[test]
 fn test_heat_capacity_kernel_valid() {
-    let de = Energy::new(100.0).unwrap();
+    let de = Energy::<f64>::new(100.0).unwrap();
     let dt = Temperature::new(10.0).unwrap();
 
     let result = heat_capacity_kernel(de, dt);
@@ -121,7 +121,7 @@ fn test_heat_capacity_kernel_valid() {
 
 #[test]
 fn test_heat_capacity_kernel_zero_dt_error() {
-    let de = Energy::new(100.0).unwrap();
+    let de = Energy::<f64>::new(100.0).unwrap();
     let dt = Temperature::new(0.0).unwrap();
 
     let result = heat_capacity_kernel(de, dt);
@@ -159,7 +159,7 @@ fn test_partition_function_kernel_error() {
 
 #[test]
 fn test_boltzmann_factor_kernel_error() {
-    let e = Energy::new(0.0).unwrap();
+    let e = Energy::<f64>::new(0.0).unwrap();
     let t = Temperature::new(0.0).unwrap(); // T=0 error
 
     let result = boltzmann_factor_kernel(e, t);
