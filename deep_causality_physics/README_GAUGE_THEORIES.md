@@ -1,8 +1,12 @@
 # Gauge Theories & Geometric Algebra
 
 In `deep_causality_physics`, we adopt a modern, unified approach to theoretical physics by leveraging **Geometric
-Algebra (GA)** and **Gauge Fields** as our foundational abstractions. This document explains why we chose this
-architecture and how it unifies diverse physical phenomena.
+Algebra (GA)** and **Gauge Fields** as our foundational abstractions. This document covers the **theory layer**
+(`src/theories/`) — the high-level implementations of complete physical theories that integrate with
+`deep_causality_topology` and compose across domains.
+
+For the **kernel layer** — isolated pure-function kernels per physics domain — see
+[README_KERNELS.md](./README_KERNELS.md). For the project overview see [README.md](./README.md).
 
 ---
 
@@ -76,7 +80,7 @@ Because all fields are grounded in the same topological manifold (`deep_causalit
 consistency:
 
 * **Gap Closure**: We recently identified and closed gaps where physics implementation diverged from topological
-  defintions (e.g., [Weinberg Mixing](./src/theories/electroweak/electroweak_impl.rs)
+  definitions (e.g., [Weinberg Mixing](./src/theories/electroweak/electroweak_impl.rs)
   and [Kretschmann Scalar](./src/theories/general_relativity/gr_ops_impl.rs)).
 * **Precision**: Topological operations often yield higher precision by preserving geometric invariants that standard
   floating-point arithmetic might violate.
@@ -133,9 +137,10 @@ specified precision.
     * Defines `GaugeField<G>`, `Manifold`, `CurvatureTensor`.
     * Implements universal algorithms (`gauge_rotation`, `kretschmann_scalar_with_metric`).
 
-2. **Physics Kernel Layer (`src/*/*.rs`)**:
+2. **Physics Kernel Layer (`src/kernels/*`)**:
     * Implements isolated equations (`einstein_tensor_kernel`, `lorentz_force_kernel`).
     * Used when you just need a number, not a simulation.
+    * Detailed in [README_KERNELS.md](./README_KERNELS.md).
 
 3. **Physics Theory Layer (`src/theories/*`)**:
     * **The "Sweet Spot"**: Combines 1 & 2.
@@ -145,8 +150,7 @@ specified precision.
 
 ---
 
-> **Summary**: Use **Kernels** for isolated equations. Use **Theories** for full simulations. The Theories are powered
-> by **GA** and **Gauge Fields**.
+> **Summary**: Use **[Kernels](./README_KERNELS.md)** for isolated equations. Use **Theories** (this document)
+> for full simulations. The Theories are powered by **GA** and **Gauge Fields**.
 
 ---
-

@@ -135,7 +135,7 @@ fn test_try_from_hilbert_state_success() {
     let mut hilbert_data = vec![Complex::new(0.0, 0.0); 1024];
     hilbert_data[0] = s; // alpha
     hilbert_data[1] = s; // beta
-    let hilbert_state = HilbertState::new_spin10(hilbert_data).unwrap();
+    let hilbert_state = HilbertState::<f64>::new_spin10(hilbert_data).unwrap();
 
     let hopf_state = HopfState::try_from(&hilbert_state).unwrap();
 
@@ -155,7 +155,7 @@ fn test_try_from_hilbert_state_success() {
 fn test_new_hilbert_state_error_dimension_mismatch() {
     // HilbertState with insufficient data for HopfState (needs at least 2 for alpha/beta extraction)
     let hilbert_data = vec![Complex::new(1.0, 0.0); 1]; // Only 1 element
-    let res = HilbertState::new(hilbert_data, Metric::NonEuclidean(1)); // Create a valid HilbertState
+    let res = HilbertState::<f64>::new(hilbert_data, Metric::NonEuclidean(1)); // Create a valid HilbertState
     assert!(res.is_err());
 }
 

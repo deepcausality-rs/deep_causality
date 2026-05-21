@@ -55,7 +55,7 @@ where
     L: HKT,
     R: HKT,
 {
-    /// The Unit of the Adjunction: A → R<L<A>>
+    /// The Unit of the Adjunction: `A → R<L<A>>`
     ///
     /// Embeds a value into the Right-Left context.
     ///
@@ -66,20 +66,20 @@ where
     ///
     /// # Returns
     ///
-    /// The value embedded in the R<L<_>> structure.
+    /// The value embedded in the `R<L<_>>` structure.
     fn unit<A>(ctx: &Context, a: A) -> R::Type<L::Type<A>>
     where
         A: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,
         L::Type<A>: Satisfies<R::Constraint>;
 
-    /// The Counit of the Adjunction: L<R<B>> → B
+    /// The Counit of the Adjunction: `L<R<B>> → B`
     ///
     /// Collapses the Left-Right context back to a value.
     ///
     /// # Arguments
     ///
     /// - `ctx`: Runtime context for the operation
-    /// - `lrb`: The nested L<R<B>> structure to collapse
+    /// - `lrb`: The nested `L<R<B>>` structure to collapse
     ///
     /// # Returns
     ///
@@ -89,7 +89,7 @@ where
         B: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,
         R::Type<B>: Satisfies<L::Constraint>;
 
-    /// The Left Adjunct: (L<A> → B) → (A → R<B>)
+    /// The Left Adjunct: `(L<A> → B) → (A → R<B>)`
     ///
     /// Transforms a function on the "Left" structure to a function on the "Right" structure.
     ///
@@ -97,11 +97,11 @@ where
     ///
     /// - `ctx`: Runtime context for the operation
     /// - `a`: The input value
-    /// - `f`: A function from L<A> to B
+    /// - `f`: A function from `L<A>` to B
     ///
     /// # Returns
     ///
-    /// The result of applying the transformed function, yielding R<B>.
+    /// The result of applying the transformed function, yielding `R<B>`.
     fn left_adjunct<A, B, Func>(ctx: &Context, a: A, f: Func) -> R::Type<B>
     where
         A: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,
@@ -109,7 +109,7 @@ where
         L::Type<A>: Satisfies<R::Constraint>,
         Func: Fn(L::Type<A>) -> B;
 
-    /// The Right Adjunct: (A → R<B>) → (L<A> → B)
+    /// The Right Adjunct: `(A → R<B>) → (L<A> → B)`
     ///
     /// Transforms a function on the "Right" structure to a function on the "Left" structure.
     ///
@@ -117,7 +117,7 @@ where
     ///
     /// - `ctx`: Runtime context for the operation
     /// - `la`: The input value wrapped in L
-    /// - `f`: A function from A to R<B>
+    /// - `f`: A function from A to `R<B>`
     ///
     /// # Returns
     ///

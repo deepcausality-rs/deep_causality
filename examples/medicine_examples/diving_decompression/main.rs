@@ -21,6 +21,9 @@ use deep_causality_core::{CausalEffectPropagationProcess, EffectValue};
 use deep_causality_physics::Density;
 use deep_causality_tensor::CausalTensor;
 
+/// Switch this alias to `f32` for low precision, `f64` for standard precision,
+/// or `Float106` for high precision.
+pub type FloatType = f64;
 // =============================================================================
 // Constants: Bühlmann ZH-L16C Parameters
 // =============================================================================
@@ -107,7 +110,7 @@ fn simulate_dive(max_depth: f64, bottom_time: f64) -> DiveProfile {
     let process = CausalEffectPropagationProcess::with_state(
         CausalEffectPropagationProcess::pure(()),
         initial_state,
-        None::<Density>,
+        None::<Density<FloatType>>,
     )
     .bind(|_, state, _| {
         // Access the current state
@@ -204,8 +207,8 @@ fn simulate_dive(max_depth: f64, bottom_time: f64) -> DiveProfile {
                     }
                     let parts: Vec<&str> = s.split('@').collect();
                     if parts.len() == 2 {
-                        let time = parts[0].replace("min", "").parse::<f64>().ok()?;
-                        let depth = parts[1].replace("m", "").parse::<f64>().ok()?;
+                        let time = parts[0].replace("min", "").parse::<FloatType>().ok()?;
+                        let depth = parts[1].replace("m", "").parse::<FloatType>().ok()?;
                         Some((depth, time))
                     } else {
                         None
@@ -305,9 +308,13 @@ fn cns_accumulation(depth: f64, time_minutes: f64) -> f64 {
 }
 
 /// Updates tissue tensions for all 16 compartments
-fn update_tissues(tensions: &CausalTensor<f64>, depth: f64, time: f64) -> CausalTensor<f64> {
+fn update_tissues(
+    tensions: &CausalTensor<FloatType>,
+    depth: f64,
+    time: f64,
+) -> CausalTensor<FloatType> {
     let p_inspired = inspired_n2_pp(depth);
-    let new_tensions: Vec<f64> = tensions
+    let new_tensions: Vec<FloatType> = tensions
         .as_slice()
         .iter()
         .enumerate()
@@ -318,7 +325,7 @@ fn update_tissues(tensions: &CausalTensor<f64>, depth: f64, time: f64) -> Causal
 }
 
 /// Finds the controlling compartment (highest ceiling)
-fn find_ceiling(tensions: &CausalTensor<f64>, gf: f64) -> (usize, f64) {
+fn find_ceiling(tensions: &CausalTensor<FloatType>, gf: f64) -> (usize, f64) {
     let mut max_ceiling = 0.0;
     let mut controlling = 0;
 
@@ -582,7 +589,7 @@ fn print_detailed_simulation(max_depth: f64, bottom_time: f64) {
 struct DiverState {
     depth: f64,
     elapsed_time: f64,
-    tissue_tensions: CausalTensor<f64>,
+    tissue_tensions: CausalTensor<FloatType>,
     cns_percent: f64,
     phase: String,
 }

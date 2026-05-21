@@ -21,6 +21,10 @@ use deep_causality_multivector::{HilbertState, Metric};
 use deep_causality_num::{Complex, DivisionAlgebra};
 use deep_causality_physics::{Operator, commutator_kernel};
 
+/// Switch this alias to `f32` for low precision, `f64` for standard precision,
+/// or `Float106` for high precision.
+pub type FloatType = f64;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== IKKT Matrix Model: Emergent Gravity ===\n");
 
@@ -30,12 +34,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Initialize 4 "spacetime coordinate" matrices as random-ish multivectors
     // In a real simulation, these would be NxN matrices. Here we use MultiVectors.
-    let mut x_matrices: Vec<Operator> = (0..4)
+    let mut x_matrices: Vec<Operator<FloatType>> = (0..4)
         .map(|i| {
-            let data: Vec<Complex<f64>> = (0..size)
+            let data: Vec<Complex<FloatType>> = (0..size)
                 .map(|j| Complex::new((i as f64 + j as f64) * 0.1, 0.0))
                 .collect();
-            HilbertState::new(data, metric).expect("Failed to create operator")
+            HilbertState::<FloatType>::new(data, metric).expect("Failed to create operator")
         })
         .collect();
 
@@ -71,13 +75,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // In a real simulation, you'd compute dS/dX and update accordingly.
         // Here, we just shrink the matrices slightly to reduce commutators.
         for x in x_matrices.iter_mut() {
-            let scaled_data: Vec<Complex<f64>> = x
+            let scaled_data: Vec<Complex<FloatType>> = x
                 .as_inner()
                 .data()
                 .iter()
                 .map(|c| *c * Complex::new(1.0 - learning_rate, 0.0))
                 .collect();
-            *x = HilbertState::new(scaled_data, metric)?;
+            *x = HilbertState::<FloatType>::new(scaled_data, metric)?;
         }
 
         // Early exit if action is small enough
@@ -95,7 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .data()
             .iter()
             .map(|c| c.norm_sqr())
-            .sum::<f64>()
+            .sum::<FloatType>()
             .sqrt();
         println!("  ||X_{}|| = {:.6}", i, norm);
     }

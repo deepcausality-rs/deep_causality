@@ -129,8 +129,8 @@ fn main() -> Result<(), PhysicsError> {
     println!("GEOMETRIC transport persists via the quantum metric!\n");
 
     // Parameters for TBG-like system
-    let energy_flat = Energy::new(1e-3)?; // 1 meV (flat band)
-    let energy_remote = Energy::new(10e-3)?; // 10 meV (remote band)
+    let energy_flat = Energy::<f64>::new(1e-3)?; // 1 meV (flat band)
+    let energy_remote = Energy::<f64>::new(10e-3)?; // 10 meV (remote band)
     let band_curvature = 0.0; // Flat band → zero curvature (conventional transport = 0)
     let quantum_metric = QuantumMetric::new(0.5)?; // Significant geometric contribution
     let lattice_const = Length::new(0.246e-9)?; // Graphene lattice constant (nm)

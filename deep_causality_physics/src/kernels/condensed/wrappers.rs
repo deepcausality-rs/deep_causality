@@ -1,0 +1,180 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+use crate::kernels::condensed::moire;
+use crate::kernels::condensed::phase;
+use crate::kernels::condensed::qgt;
+use crate::{
+    BandDrudeWeight, ChemicalPotentialGradient, Concentration, Displacement, Energy, Length,
+    Mobility, Momentum, OrderParameter, QuantumEigenvector, QuantumMetric, QuantumVelocity, Ratio,
+    Speed, Stiffness, TwistAngle, VectorPotential,
+};
+use deep_causality_core::{CausalityError, PropagatingEffect};
+use deep_causality_multivector::CausalMultiVector;
+use deep_causality_num::Complex;
+use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::SimplicialManifold;
+
+// ============================================================================
+// QGT Wrappers
+// ============================================================================
+
+/// Wrapper for [`qgt::quantum_geometric_tensor_kernel`].
+pub fn quantum_geometric_tensor(
+    eigenvalues: &CausalTensor<f64>,
+    eigenvectors: &QuantumEigenvector,
+    velocity_i: &QuantumVelocity,
+    velocity_j: &QuantumVelocity,
+    band_n: usize,
+    regularization: f64,
+) -> PropagatingEffect<Complex<f64>> {
+    match qgt::quantum_geometric_tensor_kernel(
+        eigenvalues,
+        eigenvectors,
+        velocity_i,
+        velocity_j,
+        band_n,
+        regularization,
+    ) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Wrapper for [`qgt::quasi_qgt_kernel`].
+pub fn quasi_qgt(
+    eigenvalues: &CausalTensor<f64>,
+    eigenvectors: &QuantumEigenvector,
+    velocity_i: &QuantumVelocity,
+    velocity_j: &QuantumVelocity,
+    band_n: usize,
+    regularization: f64,
+) -> PropagatingEffect<Complex<f64>> {
+    match qgt::quasi_qgt_kernel(
+        eigenvalues,
+        eigenvectors,
+        velocity_i,
+        velocity_j,
+        band_n,
+        regularization,
+    ) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Wrapper for [`qgt::effective_band_drude_weight_kernel`].
+pub fn effective_band_drude_weight(
+    energy_n: Energy<f64>,
+    energy_0: Energy<f64>,
+    curvature_ii: f64,
+    quantum_metric: QuantumMetric<f64>,
+    lattice_const: Length<f64>,
+) -> PropagatingEffect<BandDrudeWeight<f64>> {
+    match qgt::effective_band_drude_weight_kernel(
+        energy_n,
+        energy_0,
+        curvature_ii,
+        quantum_metric,
+        lattice_const,
+    ) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+// ============================================================================
+// Moiré Wrappers
+// ============================================================================
+
+/// Wrapper for [`moire::bistritzer_macdonald_kernel`].
+pub fn bistritzer_macdonald(
+    twist_angle: TwistAngle<f64>,
+    interlayer_coupling: Energy<f64>,
+    fermi_velocity: Speed<f64>,
+    k_point: Momentum,
+    shell_cutoff: usize,
+) -> PropagatingEffect<CausalTensor<Complex<f64>>> {
+    match moire::bistritzer_macdonald_kernel(
+        twist_angle,
+        interlayer_coupling,
+        fermi_velocity,
+        k_point,
+        shell_cutoff,
+    ) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Wrapper for [`moire::foppl_von_karman_strain_simple_kernel`].
+pub fn foppl_von_karman_strain_simple(
+    displacement_u: &Displacement,
+    youngs_modulus: Stiffness<f64>,
+    poisson_ratio: Ratio<f64>,
+) -> PropagatingEffect<CausalTensor<f64>> {
+    match moire::foppl_von_karman_strain_simple_kernel(
+        displacement_u,
+        youngs_modulus,
+        poisson_ratio,
+    ) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Wrapper for [`moire::foppl_von_karman_strain_kernel`].
+pub fn foppl_von_karman_strain(
+    u_manifold: &SimplicialManifold<f64, f64>,
+    w_manifold: &SimplicialManifold<f64, f64>,
+    youngs_modulus: Stiffness<f64>,
+    poisson_ratio: Ratio<f64>,
+) -> PropagatingEffect<CausalTensor<f64>> {
+    match moire::foppl_von_karman_strain_kernel(
+        u_manifold,
+        w_manifold,
+        youngs_modulus,
+        poisson_ratio,
+    ) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+// ============================================================================
+// Phase Wrappers
+// ============================================================================
+
+/// Wrapper for [`phase::ginzburg_landau_free_energy_kernel`].
+pub fn ginzburg_landau_free_energy(
+    psi: OrderParameter,
+    alpha: f64,
+    beta: f64,
+    gradient_psi: &CausalMultiVector<Complex<f64>>,
+    vector_potential: Option<&VectorPotential>,
+) -> PropagatingEffect<Energy<f64>> {
+    match phase::ginzburg_landau_free_energy_kernel(
+        psi,
+        alpha,
+        beta,
+        gradient_psi,
+        vector_potential,
+    ) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Wrapper for [`phase::cahn_hilliard_flux_kernel`].
+pub fn cahn_hilliard_flux(
+    concentration: &Concentration,
+    mobility: Mobility<f64>,
+    chem_potential_grad: &ChemicalPotentialGradient,
+) -> PropagatingEffect<CausalTensor<f64>> {
+    match phase::cahn_hilliard_flux_kernel(concentration, mobility, chem_potential_grad) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}

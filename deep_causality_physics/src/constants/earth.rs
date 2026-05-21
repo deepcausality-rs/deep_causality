@@ -21,7 +21,7 @@ pub const EARTH_ROTATION_RATE: f64 = 7.292_115_146_706_979e-5; // IERS 2010 (rad
 pub const EARTH_ANGULAR_MOMENTUM: f64 = 5.86e33;
 
 /// Earth's J2 Oblateness coefficient (JGM-3)
-/// https://www.sciencedirect.com/topics/engineering/oblateness
+/// <https://www.sciencedirect.com/topics/engineering/oblateness>
 pub const EARTH_J2: f64 = 1.082_63e-3;
 
 /// Earth's Equatorial Radius (WGS-84)
