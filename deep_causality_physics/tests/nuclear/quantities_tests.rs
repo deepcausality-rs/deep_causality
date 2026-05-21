@@ -145,7 +145,7 @@ fn test_energy_density_into_f64() {
 
 #[test]
 fn test_four_momentum_creation_and_accessors() {
-    let p = FourMomentum::new(10.0, 1.0, 2.0, 3.0);
+    let p = FourMomentum::<f64>::new(10.0, 1.0, 2.0, 3.0);
     assert_eq!(p.e(), 10.0);
     assert_eq!(p.px(), 1.0);
     assert_eq!(p.py(), 2.0);
@@ -154,7 +154,7 @@ fn test_four_momentum_creation_and_accessors() {
 
 #[test]
 fn test_four_momentum_at_rest() {
-    let p = FourMomentum::at_rest(5.0);
+    let p = FourMomentum::<f64>::at_rest(5.0);
     assert_eq!(p.e(), 5.0);
     assert_eq!(p.invariant_mass(), 5.0);
     assert_eq!(p.momentum_magnitude(), 0.0);
@@ -167,15 +167,15 @@ fn test_four_momentum_from_mass_and_momentum() {
     let py = 0.0;
     let pz = 0.0;
     // E should be sqrt(3^2 + 4^2) = sqrt(9+16) = 5
-    let p = FourMomentum::from_mass_and_momentum(mass, px, py, pz);
+    let p = FourMomentum::<f64>::from_mass_and_momentum(mass, px, py, pz);
     assert!((p.e() - 5.0).abs() < 1e-10);
     assert!((p.invariant_mass() - 3.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_four_momentum_math() {
-    let p1 = FourMomentum::new(10.0, 1.0, 0.0, 0.0);
-    let p2 = FourMomentum::new(5.0, -1.0, 0.0, 0.0);
+    let p1 = FourMomentum::<f64>::new(10.0, 1.0, 0.0, 0.0);
+    let p2 = FourMomentum::<f64>::new(5.0, -1.0, 0.0, 0.0);
 
     let p_sum = p1 + p2;
     assert_eq!(p_sum.e(), 15.0);
@@ -189,27 +189,27 @@ fn test_four_momentum_math() {
 #[test]
 fn test_rapidity_and_pseudorapidity() {
     // E=10, pz=0 => rapidity = 0
-    let p_rest = FourMomentum::new(10.0, 1.0, 0.0, 0.0);
+    let p_rest = FourMomentum::<f64>::new(10.0, 1.0, 0.0, 0.0);
     assert_eq!(p_rest.rapidity(), 0.0);
     assert!(p_rest.pseudorapidity().abs() < 1e-10); // Check magnitude near zero
 
     // Beam direction particle
     // E=10, pz=8
-    let p_boost = FourMomentum::new(10.0, 0.0, 0.0, 8.0);
+    let p_boost = FourMomentum::<f64>::new(10.0, 0.0, 0.0, 8.0);
     // Rapidity should be positive
     assert!(p_boost.rapidity() > 0.0);
 }
 
 #[test]
 fn test_lightcone_coordinates() {
-    let p = FourMomentum::new(10.0, 0.0, 0.0, 5.0);
+    let p = FourMomentum::<f64>::new(10.0, 0.0, 0.0, 5.0);
     assert_eq!(p.lightcone_plus(), 15.0); // 10+5
     assert_eq!(p.lightcone_minus(), 5.0); // 10-5
 }
 
 #[test]
 fn test_boost_z() {
-    let p = FourMomentum::at_rest(1.0); // m=1, E=1, p=0
+    let p = FourMomentum::<f64>::at_rest(1.0); // m=1, E=1, p=0
     let beta = 0.6; // gamma = 1/0.8 = 1.25
 
     let p_boosted = p.boost_z(beta);
@@ -232,9 +232,9 @@ fn test_boost_z() {
 
 #[test]
 fn test_hadron_properties() {
-    let p = FourMomentum::new(5.0, 3.0, 4.0, 0.0); // E=5, px=3, py=4, pz=0
+    let p = FourMomentum::<f64>::new(5.0, 3.0, 4.0, 0.0); // E=5, px=3, py=4, pz=0
     // pt = sqrt(3^2+4^2) = 5. Mass should be 0 (lightlike) ideally, but here E^2 - p^2 = 25 - 25 = 0.
-    let h = Hadron::new(211, p); // 211 = pi+
+    let h = Hadron::<f64>::new(211, p); // 211 = pi+
 
     assert_eq!(h.pdg_id(), 211);
     assert_eq!(h.energy(), 5.0);

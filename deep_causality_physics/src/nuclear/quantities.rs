@@ -156,133 +156,155 @@ use core::ops::{Add, Sub};
 ///
 /// Components are stored in (+---) signature convention (particle physics).
 /// Energy E is component 0, spatial momentum (px, py, pz) are components 1-3.
-#[derive(Debug, Clone, Copy, Default, PartialEq)]
-pub struct FourMomentum {
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct FourMomentum<R: deep_causality_num::RealField> {
     /// Energy component E (GeV)
-    e: f64,
+    e: R,
     /// x-component of 3-momentum px (GeV/c)
-    px: f64,
+    px: R,
     /// y-component of 3-momentum py (GeV/c)
-    py: f64,
+    py: R,
     /// z-component of 3-momentum pz (GeV/c)
-    pz: f64,
+    pz: R,
 }
 
-impl FourMomentum {
+impl<R: deep_causality_num::RealField> Default for FourMomentum<R> {
+    fn default() -> Self {
+        Self {
+            e: R::zero(),
+            px: R::zero(),
+            py: R::zero(),
+            pz: R::zero(),
+        }
+    }
+}
+
+impl<R: deep_causality_num::RealField> FourMomentum<R> {
     /// Creates a new 4-momentum.
-    pub const fn new(e: f64, px: f64, py: f64, pz: f64) -> Self {
+    pub const fn new(e: R, px: R, py: R, pz: R) -> Self {
         Self { e, px, py, pz }
     }
 
     /// Creates a 4-momentum from mass and 3-momentum.
     ///
     /// Computes E = √(m² + |p|²)
-    pub fn from_mass_and_momentum(mass: f64, px: f64, py: f64, pz: f64) -> Self {
+    pub fn from_mass_and_momentum(mass: R, px: R, py: R, pz: R) -> Self {
         let p_sq = px * px + py * py + pz * pz;
         let e = (mass * mass + p_sq).sqrt();
         Self { e, px, py, pz }
     }
 
     /// Creates a 4-momentum for a particle at rest.
-    pub const fn at_rest(mass: f64) -> Self {
+    pub fn at_rest(mass: R) -> Self {
         Self {
             e: mass,
-            px: 0.0,
-            py: 0.0,
-            pz: 0.0,
+            px: R::zero(),
+            py: R::zero(),
+            pz: R::zero(),
         }
     }
 
     /// Energy component E.
-    pub const fn e(&self) -> f64 {
+    pub fn e(&self) -> R {
         self.e
     }
 
     /// x-component of 3-momentum.
-    pub const fn px(&self) -> f64 {
+    pub fn px(&self) -> R {
         self.px
     }
 
     /// y-component of 3-momentum.
-    pub const fn py(&self) -> f64 {
+    pub fn py(&self) -> R {
         self.py
     }
 
     /// z-component of 3-momentum.
-    pub const fn pz(&self) -> f64 {
+    pub fn pz(&self) -> R {
         self.pz
     }
 
     /// Lorentz-invariant mass squared: m² = E² - |p|²
-    pub fn invariant_mass_squared(&self) -> f64 {
+    pub fn invariant_mass_squared(&self) -> R {
         self.e * self.e - self.px * self.px - self.py * self.py - self.pz * self.pz
     }
 
     /// Lorentz-invariant mass: m = √(E² - |p|²)
     ///
-    /// Returns 0.0 for massless or spacelike 4-vectors.
-    pub fn invariant_mass(&self) -> f64 {
+    /// Returns 0 for massless or spacelike 4-vectors.
+    pub fn invariant_mass(&self) -> R {
         let m_sq = self.invariant_mass_squared();
-        if m_sq > 0.0 { m_sq.sqrt() } else { 0.0 }
+        if m_sq > R::zero() {
+            m_sq.sqrt()
+        } else {
+            R::zero()
+        }
     }
 
     /// Magnitude of 3-momentum: |p| = √(px² + py² + pz²)
-    pub fn momentum_magnitude(&self) -> f64 {
+    pub fn momentum_magnitude(&self) -> R {
         (self.px * self.px + self.py * self.py + self.pz * self.pz).sqrt()
     }
 
     /// Transverse momentum: pT = √(px² + py²)
-    pub fn transverse_momentum(&self) -> f64 {
+    pub fn transverse_momentum(&self) -> R {
         (self.px * self.px + self.py * self.py).sqrt()
     }
 
     /// Transverse mass: mT = √(m² + pT²)
-    pub fn transverse_mass(&self) -> f64 {
+    pub fn transverse_mass(&self) -> R {
         let m_sq = self.invariant_mass_squared();
         let pt_sq = self.px * self.px + self.py * self.py;
         (m_sq + pt_sq).sqrt()
     }
 
+    /// Lightcone plus component: p+ = E + pz
+    pub fn lightcone_plus(&self) -> R {
+        self.e + self.pz
+    }
+
+    /// Lightcone minus component: p- = E - pz
+    pub fn lightcone_minus(&self) -> R {
+        self.e - self.pz
+    }
+
+    /// Azimuthal angle φ in the transverse plane.
+    pub fn phi(&self) -> R {
+        self.py.atan2(self.px)
+    }
+}
+
+impl<R: deep_causality_num::RealField + deep_causality_num::FromPrimitive> FourMomentum<R> {
     /// Rapidity: y = 0.5 * ln((E + pz) / (E - pz))
     ///
     /// Returns 0.0 if denominator is near zero.
-    pub fn rapidity(&self) -> f64 {
+    pub fn rapidity(&self) -> R {
         let denom = self.e - self.pz;
-        if denom.abs() < 1e-10 {
-            return 0.0;
+        let eps = R::from_f64(1e-10).expect("R::from_f64(1e-10) failed");
+        if denom.abs() < eps {
+            return R::zero();
         }
-        0.5 * ((self.e + self.pz) / denom).ln()
+        let half = R::from_f64(0.5).expect("R::from_f64(0.5) failed");
+        half * ((self.e + self.pz) / denom).ln()
     }
 
     /// Pseudorapidity: η = -ln(tan(θ/2))
     ///
     /// where θ is the polar angle from the beam axis (z).
-    pub fn pseudorapidity(&self) -> f64 {
+    pub fn pseudorapidity(&self) -> R {
         let p = self.momentum_magnitude();
-        if p.abs() < 1e-10 {
-            return 0.0;
+        let eps = R::from_f64(1e-10).expect("R::from_f64(1e-10) failed");
+        if p.abs() < eps {
+            return R::zero();
         }
-        0.5 * ((p + self.pz) / (p - self.pz)).ln()
-    }
-
-    /// Azimuthal angle φ in the transverse plane.
-    pub fn phi(&self) -> f64 {
-        self.py.atan2(self.px)
-    }
-
-    /// Lightcone plus component: p+ = E + pz
-    pub fn lightcone_plus(&self) -> f64 {
-        self.e + self.pz
-    }
-
-    /// Lightcone minus component: p- = E - pz
-    pub fn lightcone_minus(&self) -> f64 {
-        self.e - self.pz
+        let half = R::from_f64(0.5).expect("R::from_f64(0.5) failed");
+        half * ((p + self.pz) / (p - self.pz)).ln()
     }
 
     /// Lorentz boost along z-axis.
-    pub fn boost_z(&self, beta: f64) -> Self {
-        let gamma = 1.0 / (1.0 - beta * beta).sqrt();
+    pub fn boost_z(&self, beta: R) -> Self {
+        let one = R::one();
+        let gamma = one / (one - beta * beta).sqrt();
         let e_new = gamma * (self.e - beta * self.pz);
         let pz_new = gamma * (self.pz - beta * self.e);
         Self {
@@ -294,7 +316,7 @@ impl FourMomentum {
     }
 }
 
-impl Add for FourMomentum {
+impl<R: deep_causality_num::RealField> Add for FourMomentum<R> {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -307,7 +329,7 @@ impl Add for FourMomentum {
     }
 }
 
-impl Sub for FourMomentum {
+impl<R: deep_causality_num::RealField> Sub for FourMomentum<R> {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -322,16 +344,16 @@ impl Sub for FourMomentum {
 
 /// A produced hadron from string fragmentation.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Hadron {
+pub struct Hadron<R: deep_causality_num::RealField> {
     /// PDG Monte Carlo particle ID
     pdg_id: i32,
     /// 4-momentum in the lab frame
-    momentum: FourMomentum,
+    momentum: FourMomentum<R>,
 }
 
-impl Hadron {
+impl<R: deep_causality_num::RealField> Hadron<R> {
     /// Creates a new hadron.
-    pub const fn new(pdg_id: i32, momentum: FourMomentum) -> Self {
+    pub const fn new(pdg_id: i32, momentum: FourMomentum<R>) -> Self {
         Self { pdg_id, momentum }
     }
 
@@ -341,27 +363,29 @@ impl Hadron {
     }
 
     /// 4-momentum in the lab frame.
-    pub const fn momentum(&self) -> FourMomentum {
+    pub fn momentum(&self) -> FourMomentum<R> {
         self.momentum
     }
 
     /// Invariant mass of the hadron.
-    pub fn mass(&self) -> f64 {
+    pub fn mass(&self) -> R {
         self.momentum.invariant_mass()
     }
 
     /// Energy of the hadron.
-    pub fn energy(&self) -> f64 {
+    pub fn energy(&self) -> R {
         self.momentum.e()
     }
 
     /// Transverse momentum.
-    pub fn pt(&self) -> f64 {
+    pub fn pt(&self) -> R {
         self.momentum.transverse_momentum()
     }
+}
 
+impl<R: deep_causality_num::RealField + deep_causality_num::FromPrimitive> Hadron<R> {
     /// Rapidity.
-    pub fn rapidity(&self) -> f64 {
+    pub fn rapidity(&self) -> R {
         self.momentum.rapidity()
     }
 }
