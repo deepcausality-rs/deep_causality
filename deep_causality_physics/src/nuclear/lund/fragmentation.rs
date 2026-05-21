@@ -16,6 +16,7 @@ use super::flavor::{
 use super::kinematics::sample_z;
 use super::string::LundString;
 
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_rand::Rng;
 
 /// Lund string fragmentation kernel.
@@ -71,11 +72,15 @@ use deep_causality_rand::Rng;
 /// let mut rng = rand::thread_rng();
 /// let hadrons = lund_string_fragmentation_kernel(&endpoints, &params, &mut rng)?;
 /// ```
-pub fn lund_string_fragmentation_kernel<R: Rng>(
-    string_endpoints: &[(FourMomentum<f64>, FourMomentum<f64>)],
+pub fn lund_string_fragmentation_kernel<R, RNG>(
+    string_endpoints: &[(FourMomentum<R>, FourMomentum<R>)],
     params: &LundParameters,
-    rng: &mut R,
-) -> Result<Vec<Hadron<f64>>, PhysicsError> {
+    rng: &mut RNG,
+) -> Result<Vec<Hadron<R>>, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+    RNG: Rng,
+{
     let mut all_hadrons = Vec::new();
 
     for (quark_p, antiquark_p) in string_endpoints {
@@ -87,35 +92,43 @@ pub fn lund_string_fragmentation_kernel<R: Rng>(
 }
 
 /// Fragment a single string into hadrons.
-fn fragment_single_string<R: Rng>(
-    quark_p: FourMomentum<f64>,
-    antiquark_p: FourMomentum<f64>,
+fn fragment_single_string<R, RNG>(
+    quark_p: FourMomentum<R>,
+    antiquark_p: FourMomentum<R>,
     params: &LundParameters,
-    rng: &mut R,
-) -> Result<Vec<Hadron<f64>>, PhysicsError> {
+    rng: &mut RNG,
+) -> Result<Vec<Hadron<R>>, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+    RNG: Rng,
+{
     let mut hadrons = Vec::new();
-    let mut string = LundString::new(quark_p, antiquark_p);
+    let mut string: LundString<R> = LundString::new(quark_p, antiquark_p);
 
     // Initial quark flavors at string endpoints (assume u-ubar for now)
-    // In a full implementation, these would come from the parton shower
     let mut quark_end = QuarkFlavor::Up;
     let mut antiquark_end = QuarkFlavor::Up;
 
-    // Track which end to fragment from (alternate for symmetry)
     let mut from_quark_end = true;
 
-    // Iterate until string can't fragment
-    let max_iterations = 100; // Safety limit
+    let max_iterations = 100;
     let mut iteration = 0;
 
-    while string.can_fragment(params.min_invariant_mass()) && iteration < max_iterations {
+    let min_mass = R::from_f64(params.min_invariant_mass())
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(min_inv_mass)".into()))?;
+    let lund_a = R::from_f64(params.lund_a())
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(lund_a)".into()))?;
+    let lund_b = R::from_f64(params.lund_b())
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(lund_b)".into()))?;
+
+    while string.can_fragment(min_mass) && iteration < max_iterations {
         iteration += 1;
 
         // 1. Select new quark flavor for string breaking
         let new_flavor = select_quark_flavor(rng, params.strange_suppression());
 
-        // 2. Generate transverse momentum
-        let (pt_x, pt_y) = generate_transverse_momentum(rng, params.sigma_pt());
+        // 2. Generate transverse momentum (lifted from f64 RNG)
+        let (pt_x, pt_y): (R, R) = generate_transverse_momentum(rng, params.sigma_pt());
 
         // 3. Form meson from endpoint quark and new antiquark
         let (meson, _endpoint_flavor) = if from_quark_end {
@@ -135,11 +148,11 @@ fn fragment_single_string<R: Rng>(
         };
 
         // 4. Get meson mass
-        let meson_mass = meson.mass();
+        let meson_mass: R = meson.mass();
         let mt_sq = meson_mass * meson_mass + pt_x * pt_x + pt_y * pt_y;
 
         // 5. Sample z from Lund function
-        let z = sample_z(rng, params.lund_a(), params.lund_b(), mt_sq);
+        let z = sample_z(rng, lund_a, lund_b, mt_sq);
 
         // 6. Extract hadron momentum from string
         let hadron_p = if from_quark_end {
@@ -164,15 +177,16 @@ fn fragment_single_string<R: Rng>(
     }
 
     // Final hadron from remaining string
-    if string.invariant_mass() > 0.1 {
-        // Form final meson from remaining quarks
+    let final_mass_threshold = R::from_f64(0.1)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(0.1)".into()))?;
+    if string.invariant_mass() > final_mass_threshold {
         let final_meson = MesonState {
             q1: quark_end,
             q2: antiquark_end,
             is_vector: select_meson_spin(rng, params.vector_meson_fraction()),
         };
 
-        let final_p = string.final_hadron(final_meson.mass());
+        let final_p = string.final_hadron(final_meson.mass::<R>());
         let final_hadron = Hadron::new(final_meson.pdg_id(), final_p);
         hadrons.push(final_hadron);
     }

@@ -4,6 +4,9 @@
  */
 
 use crate::{LorentzianMetric, PhysicsError};
+use core::fmt::Debug;
+use core::iter::Sum;
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 use deep_causality_topology::SimplicialManifold;
@@ -30,15 +33,15 @@ use deep_causality_topology::SimplicialManifold;
 /// * `spacetime_metric` - Spacetime signature implementing `LorentzianMetric`
 ///
 /// # Returns
-/// Current density 1-form J as a `CausalTensor`
-///
-/// # Errors
-/// - `DimensionMismatch`: Manifold dimension < 4 or metric dimension mismatch
-/// - `CalculationError`: Missing differential operators
-pub fn relativistic_current_kernel<M: LorentzianMetric>(
-    em_manifold: &SimplicialManifold<f64, f64>,
+/// Current density 1-form J as a `CausalTensor<R>`.
+pub fn relativistic_current_kernel<R, M>(
+    em_manifold: &SimplicialManifold<R, R>,
     spacetime_metric: &M,
-) -> Result<CausalTensor<f64>, PhysicsError> {
+) -> Result<CausalTensor<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+    M: LorentzianMetric,
+{
     let complex = em_manifold.complex();
     let skeletons = complex.skeletons();
 
@@ -60,7 +63,6 @@ pub fn relativistic_current_kernel<M: LorentzianMetric>(
     let hodge_ops = complex.hodge_star_operators();
     let coboundary_ops = complex.coboundary_operators();
 
-    // Validate operators exist
     if hodge_ops.len() < 4 {
         return Err(PhysicsError::CalculationError(format!(
             "Missing Hodge star operators: need 4, have {}",
@@ -88,27 +90,34 @@ pub fn relativistic_current_kernel<M: LorentzianMetric>(
         ));
     }
 
-    let f_2form: Vec<f64> = data[n0 + n1..n0 + n1 + n2].to_vec();
+    let f_2form: Vec<R> = data[n0 + n1..n0 + n1 + n2].to_vec();
 
     // 4. Compute J = ★d★F (codifferential of F)
-    // Step 4a: ★F (apply Hodge star to 2-form)
-    let star_f = apply_csr_f64(&hodge_ops[2], &f_2form);
+    // Step 4a: ★F (apply Hodge star to 2-form). Hodge ops carry R (manifold scalar).
+    let star_f = apply_csr_real(&hodge_ops[2], &f_2form);
 
-    // Step 4b: d(★F) (apply coboundary/exterior derivative)
-    let d_star_f = apply_csr_i8_f64(&coboundary_ops[2], &star_f);
+    // Step 4b: d(★F) (apply coboundary / exterior derivative).
+    // Coboundary operators are CsrMatrix<i8>: their entries are pure ±1 (orientation
+    // signs from the simplicial complex's incidence structure). They carry no
+    // measurement and never need higher precision than i8, so we keep them as i8
+    // and lift the i8 → R conversion only at multiply-time.
+    let d_star_f = apply_csr_i8(&coboundary_ops[2], &star_f);
 
     // Step 4c: ★(d★F) (apply Hodge star to get 1-form)
-    let j_data = apply_csr_f64(&hodge_ops[3], &d_star_f);
+    let j_data = apply_csr_real(&hodge_ops[3], &d_star_f);
 
-    // 5. Return as CausalTensor (1-form)
-    CausalTensor::new(j_data.clone(), vec![j_data.len()]).map_err(PhysicsError::from)
+    let len = j_data.len();
+    CausalTensor::new(j_data, vec![len]).map_err(PhysicsError::from)
 }
 
-/// Helper: Apply CSR matrix with f64 values to f64 vector.
+/// Helper: Apply a CSR matrix carrying R values to an R vector.
 #[allow(clippy::needless_range_loop)]
-fn apply_csr_f64(matrix: &CsrMatrix<f64>, vec: &[f64]) -> Vec<f64> {
+fn apply_csr_real<R>(matrix: &CsrMatrix<R>, vec: &[R]) -> Vec<R>
+where
+    R: RealField,
+{
     let n_rows = matrix.shape().0;
-    let mut result = vec![0.0; n_rows];
+    let mut result = vec![R::zero(); n_rows];
 
     for row in 0..n_rows {
         let row_start = matrix.row_indices()[row];
@@ -126,11 +135,19 @@ fn apply_csr_f64(matrix: &CsrMatrix<f64>, vec: &[f64]) -> Vec<f64> {
     result
 }
 
-/// Helper: Apply CSR matrix with i8 values to f64 vector.
+/// Helper: Apply a CSR matrix of pure orientation signs (i8) to an R vector.
+///
+/// The coboundary/boundary operators of a simplicial complex are intrinsically
+/// integer (±1) — they only carry the orientation of how (k-1)-simplices bound
+/// k-simplices. We keep them as `CsrMatrix<i8>` for memory locality and convert
+/// the small i8 sign into R only at the multiplication site.
 #[allow(clippy::needless_range_loop)]
-fn apply_csr_i8_f64(matrix: &CsrMatrix<i8>, vec: &[f64]) -> Vec<f64> {
+fn apply_csr_i8<R>(matrix: &CsrMatrix<i8>, vec: &[R]) -> Vec<R>
+where
+    R: RealField + FromPrimitive,
+{
     let n_rows = matrix.shape().0;
-    let mut result = vec![0.0; n_rows];
+    let mut result = vec![R::zero(); n_rows];
 
     for row in 0..n_rows {
         let row_start = matrix.row_indices()[row];
@@ -138,7 +155,11 @@ fn apply_csr_i8_f64(matrix: &CsrMatrix<i8>, vec: &[f64]) -> Vec<f64> {
 
         for idx in row_start..row_end {
             let col = matrix.col_indices()[idx];
-            let val = matrix.values()[idx] as f64;
+            let val_i8 = matrix.values()[idx];
+            // i8 -> R via f64 detour (RealField does not implement From<i8> directly;
+            // FromPrimitive::from_f64 is the existing carve-out convention for lifting
+            // numeric literals into R across the crate).
+            let val = R::from_f64(val_i8 as f64).expect("R::from_f64(i8) failed");
             if col < vec.len() {
                 result[row] += val * vec[col];
             }
@@ -156,11 +177,14 @@ fn apply_csr_i8_f64(matrix: &CsrMatrix<i8>, vec: &[f64]) -> Vec<f64> {
 /// *   `metric` - Metric tensor $g_{\mu\nu}$ (Rank 2, Covariant).
 ///
 /// # Returns
-/// *   `Result<CausalTensor<f64>, PhysicsError>` - Stress-energy tensor $T^{\mu\nu}$.
-pub fn energy_momentum_tensor_em_kernel(
-    em_tensor: &CausalTensor<f64>,
-    metric: &CausalTensor<f64>,
-) -> Result<CausalTensor<f64>, PhysicsError> {
+/// *   `Result<CausalTensor<R>, PhysicsError>` - Stress-energy tensor $T^{\mu\nu}$.
+pub fn energy_momentum_tensor_em_kernel<R>(
+    em_tensor: &CausalTensor<R>,
+    metric: &CausalTensor<R>,
+) -> Result<CausalTensor<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive + Sum + Default + PartialOrd + Debug,
+{
     if em_tensor.num_dim() != 2 || metric.num_dim() != 2 {
         return Err(PhysicsError::DimensionMismatch(
             "Tensors must be Rank 2".into(),
@@ -168,16 +192,13 @@ pub fn energy_momentum_tensor_em_kernel(
     }
 
     // 1. Compute covariant F_αβ = g_αμ * F^μν * g_νβ
-    // In matrix notation, this is F_lower = g * F * g
     let gf = metric.matmul(em_tensor)?;
     let f_lower = gf.matmul(metric)?;
 
     // 2. Compute Scalar F^2 = F^ab * F_ab (Contraction)
-    // Contract em_tensor [a, b] with f_lower [a, b]
     let f2_op =
-        EinSumOp::<f64>::contraction(em_tensor.clone(), f_lower.clone(), vec![0, 1], vec![0, 1]);
+        EinSumOp::<R>::contraction(em_tensor.clone(), f_lower.clone(), vec![0, 1], vec![0, 1]);
     let f2_tensor = CausalTensor::ein_sum(&f2_op)?;
-    // Extract scalar
     let f2_val = if f2_tensor.shape().is_empty()
         || (f2_tensor.shape().len() == 1 && f2_tensor.shape()[0] == 1)
     {
@@ -190,20 +211,15 @@ pub fn energy_momentum_tensor_em_kernel(
 
     // 3. Compute Term 1: T1^uv = F^ua * F^v_a
     let f_mixed = em_tensor.matmul(metric)?;
-
-    // Now T1^uv = F^u_alpha * F^v_alpha?
-    // Formula: F^mu^alpha * F^nu_alpha.
-    // Indices:
-    // F_upper [mu, alpha]
-    // F_mixed [nu, alpha] (This is F^nu_alpha)
-    let f_mixed_t_op = EinSumOp::<f64>::transpose(f_mixed.clone(), vec![1, 0]);
+    let f_mixed_t_op = EinSumOp::<R>::transpose(f_mixed.clone(), vec![1, 0]);
     let f_mixed_t = CausalTensor::ein_sum(&f_mixed_t_op)?;
     let term1 = em_tensor.matmul(&f_mixed_t)?;
 
     // 4. Compute Term 2: 1/4 * g^uv * F^2
-    // We have g_uv (metric). We need g^uv (inverse metric).
     let metric_inv = metric.inverse()?;
-    let term2 = metric_inv * (0.25 * f2_val);
+    let quarter = R::from_f64(0.25)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(0.25) failed".into()))?;
+    let term2 = metric_inv * (quarter * f2_val);
 
     // 5. Result T = Term1 - Term2
     let stress_energy = term1 - term2;

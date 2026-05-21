@@ -75,13 +75,13 @@ fn test_relativistic_current_kernel_4d() {
 #[test]
 fn test_energy_momentum_tensor() {
     // Flat space 2D. F = [[0, E], [-E, 0]].
-    let e = 1.0;
+    let e = 1.0_f64;
     let f_data = vec![0.0, e, -e, 0.0];
-    let em = CausalTensor::new(f_data, vec![2, 2]).unwrap();
+    let em: CausalTensor<f64> = CausalTensor::new(f_data, vec![2, 2]).unwrap();
 
     // Metric diag(-1, 1) (Spacelike convention to get positive energy with standard formula)
-    let g_data = vec![-1.0, 0.0, 0.0, 1.0];
-    let metric = CausalTensor::new(g_data, vec![2, 2]).unwrap();
+    let g_data = vec![-1.0_f64, 0.0, 0.0, 1.0];
+    let metric: CausalTensor<f64> = CausalTensor::new(g_data, vec![2, 2]).unwrap();
 
     let res = energy_momentum_tensor_em_kernel(&em, &metric);
     assert!(res.is_ok());

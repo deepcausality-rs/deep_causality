@@ -42,10 +42,13 @@ where
     }
 }
 
-pub fn ideal_induction(
-    v: &SimplicialManifold<f64, f64>,
-    b: &SimplicialManifold<f64, f64>,
-) -> PropagatingEffect<CausalTensor<f64>> {
+pub fn ideal_induction<R>(
+    v: &SimplicialManifold<R, R>,
+    b: &SimplicialManifold<R, R>,
+) -> PropagatingEffect<CausalTensor<R>>
+where
+    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+{
     match ideal::ideal_induction_kernel(v, b) {
         Ok(t) => PropagatingEffect::pure(t),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -88,20 +91,27 @@ use crate::LorentzianMetric;
 /// Wrapper for relativistic current density calculation.
 ///
 /// Computes J = ★d★F using differential forms on the manifold.
-pub fn relativistic_current<M: LorentzianMetric>(
-    em_manifold: &SimplicialManifold<f64, f64>,
+pub fn relativistic_current<R, M>(
+    em_manifold: &SimplicialManifold<R, R>,
     spacetime_metric: &M,
-) -> PropagatingEffect<CausalTensor<f64>> {
+) -> PropagatingEffect<CausalTensor<R>>
+where
+    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+    M: LorentzianMetric,
+{
     match grmhd::relativistic_current_kernel(em_manifold, spacetime_metric) {
         Ok(j) => PropagatingEffect::pure(j),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }
 
-pub fn energy_momentum_tensor_em(
-    em: &CausalTensor<f64>,
-    metric: &CausalTensor<f64>,
-) -> PropagatingEffect<CausalTensor<f64>> {
+pub fn energy_momentum_tensor_em<R>(
+    em: &CausalTensor<R>,
+    metric: &CausalTensor<R>,
+) -> PropagatingEffect<CausalTensor<R>>
+where
+    R: RealField + FromPrimitive + core::iter::Sum + Default + PartialOrd + Debug,
+{
     match grmhd::energy_momentum_tensor_em_kernel(em, metric) {
         Ok(t) => PropagatingEffect::pure(t),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),

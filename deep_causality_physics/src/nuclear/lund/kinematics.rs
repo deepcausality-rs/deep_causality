@@ -11,25 +11,28 @@
 //! - m²_T = m² + p²_T (transverse mass squared)
 //!
 //! The key relation is: p+ * p- = m²_T
+//!
+//! Internally these data carriers are generic over `R: RealField`. Random
+//! sampling in `sample_z` still happens at f64 via `deep_causality_rand`
+//! (its `Standard` / `StandardNormal` distributions only implement
+//! `Distribution` for `f32` and `f64`), with sampled uniforms lifted into `R`
+//! via `R::from_f64` at the RNG boundary.
 
 use crate::nuclear::quantities::FourMomentum;
+use deep_causality_num::{FromPrimitive, RealField};
 
 /// A string endpoint in lightcone coordinates.
 #[derive(Debug, Clone, Copy)]
-pub struct LightconeEndpoint {
-    /// Forward lightcone momentum p+
-    pub p_plus: f64,
-    /// Backward lightcone momentum p-
-    pub p_minus: f64,
-    /// Transverse momentum x-component
-    pub pt_x: f64,
-    /// Transverse momentum y-component
-    pub pt_y: f64,
+pub struct LightconeEndpoint<R: RealField> {
+    pub p_plus: R,
+    pub p_minus: R,
+    pub pt_x: R,
+    pub pt_y: R,
 }
 
-impl LightconeEndpoint {
+impl<R: RealField + FromPrimitive> LightconeEndpoint<R> {
     /// Create from 4-momentum.
-    pub fn from_four_momentum(p: &FourMomentum<f64>) -> Self {
+    pub fn from_four_momentum(p: &FourMomentum<R>) -> Self {
         Self {
             p_plus: p.lightcone_plus(),
             p_minus: p.lightcone_minus(),
@@ -40,31 +43,30 @@ impl LightconeEndpoint {
 
     /// Convert to 4-momentum.
     #[allow(clippy::wrong_self_convention)]
-    pub fn to_four_momentum(&self) -> FourMomentum<f64> {
-        let e = (self.p_plus + self.p_minus) / 2.0;
-        let pz = (self.p_plus - self.p_minus) / 2.0;
-        FourMomentum::<f64>::new(e, self.pt_x, self.pt_y, pz)
+    pub fn to_four_momentum(&self) -> FourMomentum<R> {
+        let two = R::from_f64(2.0).expect("R::from_f64(2.0) failed");
+        let e = (self.p_plus + self.p_minus) / two;
+        let pz = (self.p_plus - self.p_minus) / two;
+        FourMomentum::<R>::new(e, self.pt_x, self.pt_y, pz)
     }
 
     /// Invariant mass squared.
     #[allow(dead_code)]
-    pub fn invariant_mass_squared(&self) -> f64 {
+    pub fn invariant_mass_squared(&self) -> R {
         self.p_plus * self.p_minus - self.pt_x * self.pt_x - self.pt_y * self.pt_y
     }
 }
 
 /// A string segment in lightcone coordinates.
 #[derive(Debug, Clone, Copy)]
-pub struct StringSegment {
-    /// Quark endpoint
-    pub quark: LightconeEndpoint,
-    /// Antiquark endpoint
-    pub antiquark: LightconeEndpoint,
+pub struct StringSegment<R: RealField> {
+    pub quark: LightconeEndpoint<R>,
+    pub antiquark: LightconeEndpoint<R>,
 }
 
-impl StringSegment {
+impl<R: RealField + FromPrimitive> StringSegment<R> {
     /// Create from two 4-momenta (quark moving in +z, antiquark in -z).
-    pub fn from_endpoints(quark: &FourMomentum<f64>, antiquark: &FourMomentum<f64>) -> Self {
+    pub fn from_endpoints(quark: &FourMomentum<R>, antiquark: &FourMomentum<R>) -> Self {
         Self {
             quark: LightconeEndpoint::from_four_momentum(quark),
             antiquark: LightconeEndpoint::from_four_momentum(antiquark),
@@ -72,24 +74,28 @@ impl StringSegment {
     }
 
     /// Total invariant mass squared of the string.
-    pub fn invariant_mass_squared(&self) -> f64 {
+    pub fn invariant_mass_squared(&self) -> R {
         let total = self.quark.to_four_momentum() + self.antiquark.to_four_momentum();
         total.invariant_mass_squared()
     }
 
     /// Total invariant mass.
-    pub fn invariant_mass(&self) -> f64 {
+    pub fn invariant_mass(&self) -> R {
         let m_sq = self.invariant_mass_squared();
-        if m_sq > 0.0 { m_sq.sqrt() } else { 0.0 }
+        if m_sq > R::zero() {
+            m_sq.sqrt()
+        } else {
+            R::zero()
+        }
     }
 
     /// Total available lightcone momentum for fragmentation from quark end.
-    pub fn w_plus(&self) -> f64 {
+    pub fn w_plus(&self) -> R {
         self.quark.p_plus + self.antiquark.p_plus
     }
 
     /// Total available lightcone momentum for fragmentation from antiquark end.
-    pub fn w_minus(&self) -> f64 {
+    pub fn w_minus(&self) -> R {
         self.quark.p_minus + self.antiquark.p_minus
     }
 }
@@ -97,31 +103,41 @@ impl StringSegment {
 /// Compute the momentum fraction z for hadron production.
 ///
 /// Using the Lund symmetric fragmentation function:
-/// f(z) = (1/z) * (1-z)^a * exp(-b * m_T^2 / z)
+/// $$ f(z) = \frac{1}{z} (1-z)^a \exp(-b m_T^2 / z) $$
 ///
-/// We sample z using the rejection method.
-pub fn sample_z<R: deep_causality_rand::Rng>(
-    rng: &mut R,
-    lund_a: f64,
-    lund_b: f64,
-    mt_squared: f64,
-) -> f64 {
-    // Use rejection sampling for the Lund function
-    // Maximum is approximately at z_max = 1 / (1 + b * m_T^2 / a)
-    let z_max = 1.0 / (1.0 + lund_b * mt_squared / (lund_a + 1.0).max(0.01));
+/// We sample z using the rejection method. The uniforms used by rejection
+/// sampling come from the RNG at f64 (per the precision-boundary note above)
+/// and are lifted into `R`.
+pub fn sample_z<R, RNG>(rng: &mut RNG, lund_a: R, lund_b: R, mt_squared: R) -> R
+where
+    R: RealField + FromPrimitive,
+    RNG: deep_causality_rand::Rng,
+{
+    let one = R::one();
+    let small = R::from_f64(0.01).expect("R::from_f64(0.01) failed");
+
+    // Maximum is approximately at z_max = 1 / (1 + b * m_T^2 / (a+1))
+    let denom_factor = if lund_a + one > small {
+        lund_a + one
+    } else {
+        small
+    };
+    let z_max = one / (one + lund_b * mt_squared / denom_factor);
     let f_max = lund_function(z_max, lund_a, lund_b, mt_squared);
 
-    loop {
-        // Sample z uniformly in [z_min, z_max_cutoff]
-        let z_min = 0.01;
-        let z_max_cutoff = 0.99;
-        let z: f64 = z_min + (z_max_cutoff - z_min) * rng.random::<f64>();
+    let z_min = R::from_f64(0.01).expect("R::from_f64(0.01) failed");
+    let z_max_cutoff = R::from_f64(0.99).expect("R::from_f64(0.99) failed");
 
-        // Evaluate function
+    loop {
+        // Sample uniform z in [z_min, z_max_cutoff].
+        let u: R = R::from_f64(rng.random::<f64>()).expect("R::from_f64(rng) failed");
+        let z = z_min + (z_max_cutoff - z_min) * u;
+
         let f_z = lund_function(z, lund_a, lund_b, mt_squared);
 
-        // Accept/reject
-        if rng.random::<f64>() * f_max < f_z {
+        // Accept/reject — second uniform also lifted from f64.
+        let u2: R = R::from_f64(rng.random::<f64>()).expect("R::from_f64(rng) failed");
+        if u2 * f_max < f_z {
             return z;
         }
     }
@@ -130,12 +146,12 @@ pub fn sample_z<R: deep_causality_rand::Rng>(
 /// Evaluate the Lund symmetric fragmentation function.
 ///
 /// f(z) = (1/z) * (1-z)^a * exp(-b * m_T^2 / z)
-fn lund_function(z: f64, a: f64, b: f64, mt_sq: f64) -> f64 {
-    if z <= 0.0 || z >= 1.0 {
-        return 0.0;
+fn lund_function<R: RealField>(z: R, a: R, b: R, mt_sq: R) -> R {
+    if z <= R::zero() || z >= R::one() {
+        return R::zero();
     }
 
-    (1.0 / z) * (1.0 - z).powf(a) * (-b * mt_sq / z).exp()
+    (R::one() / z) * (R::one() - z).powf(a) * (-b * mt_sq / z).exp()
 }
 
 #[cfg(test)]
@@ -145,7 +161,7 @@ mod tests {
     #[test]
     fn test_lightcone_round_trip() {
         let p = FourMomentum::<f64>::new(10.0, 1.0, 2.0, 8.0);
-        let lc = LightconeEndpoint::from_four_momentum(&p);
+        let lc: LightconeEndpoint<f64> = LightconeEndpoint::from_four_momentum(&p);
         let p_back = lc.to_four_momentum();
 
         assert!((p.e() - p_back.e()).abs() < 1e-10);
@@ -157,10 +173,10 @@ mod tests {
     #[test]
     fn test_lund_function_bounds() {
         // Should be 0 at boundaries
-        assert_eq!(lund_function(0.0, 0.68, 0.98, 0.5), 0.0);
-        assert_eq!(lund_function(1.0, 0.68, 0.98, 0.5), 0.0);
+        assert_eq!(lund_function::<f64>(0.0, 0.68, 0.98, 0.5), 0.0);
+        assert_eq!(lund_function::<f64>(1.0, 0.68, 0.98, 0.5), 0.0);
 
         // Should be positive inside
-        assert!(lund_function(0.5, 0.68, 0.98, 0.5) > 0.0);
+        assert!(lund_function::<f64>(0.5, 0.68, 0.98, 0.5) > 0.0);
     }
 }
