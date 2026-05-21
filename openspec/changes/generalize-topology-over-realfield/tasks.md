@@ -1,11 +1,27 @@
-## 1. `deep_causality_num` — `RealField::from_f64`
+## 1. `deep_causality_num` — verify `FromPrimitive` is the literal-conversion path
 
-- [ ] 1.1 Add `fn from_f64(value: f64) -> Self;` method to the `RealField` trait in `deep_causality_num/src/algebra/field_real.rs`. No default impl.
-- [ ] 1.2 Implement `from_f64` for `f64` as `value` (identity).
-- [ ] 1.3 Implement `from_f64` for `f32` as `value as f32`.
-- [ ] 1.4 Add doc comment to `from_f64` documenting the precision-narrowing risk for impls where `Self` has more bits than `f64`.
-- [ ] 1.5 Add a unit test for each impl: `f64::from_f64(2.5) == 2.5_f64`, `f32::from_f64(2.5) == 2.5_f32`.
-- [ ] 1.6 Verify no other workspace crate's existing `RealField` impl breaks: `cargo build --workspace` after the trait change.
+- [x] 1.1 Confirm `deep_causality_num::cast::from_primitive::FromPrimitive` is exposed and implemented for `f32`, `f64`, and `Float106`. (Design pivot: no new methods on `RealField`; topology code uses the existing `FromPrimitive` trait for numeric-literal materialization.)
+- [x] 1.2 Confirm the convention: every topology site that previously would have called `R::from_f64(literal)` instead calls `<R as FromPrimitive>::from_f64(literal).expect("documented invariant")`.
+- [x] 1.3 No `RealField` trait modification. The `RealField` trait surface stays as it was pre-R0.
+- [x] 1.4 No new unit tests in `deep_causality_num`. `FromPrimitive`'s existing test coverage is sufficient.
+- [x] 1.5 (Removed — was `from_f64` impl for `f64`; obsolete under the pivot.)
+- [x] 1.6 `cargo build --workspace` after the pivot confirms the baseline still compiles.
+
+## 1b. `ChainComplex::Metric` becomes a GAT `Metric<R: RealField>`
+
+Architectural prelude to Phase 2. The `ChainComplex` trait's `Metric` associated type becomes a generic associated type so precision can be a parameter of the metric without forcing it onto the combinatorial complex itself.
+
+- [ ] 1b.1 In `deep_causality_topology/src/traits/chain_complex.rs`, change `type Metric;` to `type Metric<R: RealField>;`. Add `use deep_causality_num::RealField;` if not already imported.
+- [ ] 1b.2 In `deep_causality_topology/src/types/lattice_complex/mod.rs`, update the `ChainComplex` impl: `type Metric<R: RealField> = CubicalReggeGeometry<D, R>;`. (Phase 2 retypes `CubicalReggeGeometry` to take this second parameter; sequence the changes so the trait impl compiles by the end of Phase 2.)
+- [ ] 1b.3 In `deep_causality_topology/src/types/simplicial_complex/...`, update the `ChainComplex` impl: `type Metric<R: RealField> = ReggeGeometry<R>;`. (Phase 3 retypes `ReggeGeometry`; same sequencing note.)
+- [ ] 1b.4 In `deep_causality_topology/src/types/cell_complex/...`, update the `ChainComplex` impl: `type Metric<R: RealField> = ();` (no metric available; works for any `R`).
+- [ ] 1b.5 Grep `impl .* ChainComplex for` across the crate; update every additional impl found.
+- [ ] 1b.6 In `deep_causality_topology/src/types/manifold/mod.rs`, retype `metric: Option<K::Metric>` to `metric: Option<K::Metric<F>>`. Add `F: RealField + FromPrimitive` bound at the struct level or document why per-impl-block bounding is preferred.
+- [ ] 1b.7 In `deep_causality_topology/src/types/manifold/getters/mod.rs`, retype `metric() -> Option<&K::Metric>` to `metric() -> Option<&K::Metric<F>>`.
+- [ ] 1b.8 In `deep_causality_topology/src/extensions/hkt_manifold/mod.rs`, retype every `K::Metric` use site to `K::Metric<F>` (or whichever precision parameter is in scope). The `K::Metric: Clone` bound at line 241 becomes `K::Metric<F>: Clone` with `F` in scope.
+- [ ] 1b.9 In `deep_causality_topology/src/types/manifold/api/constructors.rs`, retype every constructor that takes a `metric: K::Metric` parameter to `metric: K::Metric<F>`.
+- [ ] 1b.10 Grep `K::Metric` (with word boundary) across the crate; verify every use site has been retyped to `K::Metric<F>` (or appropriate precision).
+- [ ] 1b.11 Build check: `cargo build -p deep_causality_topology` after Phases 2 and 3 are far enough along that `CubicalReggeGeometry<D, R>` and `ReggeGeometry<R>` exist. Fix any remaining GAT-related errors.
 
 ## 2. `CubicalReggeGeometry` — parameterize over `R: RealField`
 
@@ -26,7 +42,7 @@
 - [ ] 3.4 In `curvature.rs:133`, retype `compute_dihedral_angle` to return `Result<R, TopologyError>`.
 - [ ] 3.5 In `curvature.rs:198, 213`, replace the helper bounds `T: Float + Zero + Copy + PartialOrd + From<f64>` with `R: RealField`.
 - [ ] 3.6 In `curvature.rs:326, 346, 407, 416, 434`, retype every internal helper (determinant, area, volume) to return `R` instead of `f64`.
-- [ ] 3.7 Rewrite every `<T as From<f64>>::from(literal)` call in `regge_geometry/` to `R::from_f64(literal)` or a `RealField`-native expression. Workspace grep `From<f64>` in this directory after the rewrite must return zero hits.
+- [ ] 3.7 Rewrite every `<T as From<f64>>::from(literal)` call in `regge_geometry/` to `<R as FromPrimitive>::from_f64(literal).expect("...")` (or a `RealField`-native expression where one exists). Workspace grep `From<f64>` in this directory after the rewrite must return zero hits.
 - [ ] 3.8 Update every existing `ReggeGeometry<f64>` test to add explicit `::<f64>` where inference fails.
 - [ ] 3.9 Add `f32` duplicates for the dihedral-angle, Ricci-curvature, and determinant tests.
 
@@ -34,7 +50,7 @@
 
 - [ ] 4.1 In `deep_causality_topology/src/types/curvature_tensor/mod.rs`, change every `T: Field + Copy + Default + PartialOrd + Float + From<f64> + Into<f64>` bound to `R: RealField` (rename `T` → `R`).
 - [ ] 4.2 Bounds appear at lines 131, 224, 250 — confirm by re-grep after the edit that no `From<f64>` remains.
-- [ ] 4.3 Replace every internal `<T as From<f64>>::from(literal)` call (lines 142, 270, 274, 294, 299, 314, 318, 329, 368, 438, 466) with `R::from_f64(literal)` or a `RealField`-native expression.
+- [ ] 4.3 Replace every internal `<T as From<f64>>::from(literal)` call (lines 142, 270, 274, 294, 299, 314, 318, 329, 368, 438, 466) with `<R as FromPrimitive>::from_f64(literal).expect("...")` (or a `RealField`-native expression where one exists).
 - [ ] 4.4 Retype every public method's return type from `T` to `R` (mechanical rename).
 - [ ] 4.5 Retype existing tests with explicit `::<f64>` and add `f32` duplicates for the flat-tensor, index-raise, Ricci, and Kretschmann tests.
 
@@ -43,12 +59,12 @@
 - [ ] 5.1 In `deep_causality_topology/src/types/manifold/api/covariance.rs:11`, drop the `D: Into<f64> + Copy` bound and replace with `D: RealField`.
 - [ ] 5.2 Retype `covariance_matrix() -> Result<Vec<Vec<D>>, TopologyError>` (line 24) — return the manifold's own field-data type.
 - [ ] 5.3 Retype `eigen_covariance() -> Result<Vec<D>, TopologyError>` (line 34).
-- [ ] 5.4 If `eigen_covariance` internally calls an `f64`-only eigenvalue solver, document the internal precision floor in the doc comment and convert at the boundary via `D::from_f64(eigenvalue_as_f64)`.
+- [ ] 5.4 If `eigen_covariance` internally calls an `f64`-only eigenvalue solver, document the internal precision floor in the doc comment and convert at the boundary via `<D as FromPrimitive>::from_f64(eigenvalue_as_f64).expect("eigenvalue fits")`.
 - [ ] 5.5 In `manifold/api/geometry.rs:35`, retype `simplex_volume_squared(simplex) -> Result<C, TopologyError>`.
 - [ ] 5.6 In `manifold/api/geometry.rs:17-18`, drop `C: From<f64> + Into<f64>` from the bound; require `C: RealField`.
 - [ ] 5.7 In `manifold/geometry/mod.rs:17`, replace the Cayley-Menger bound with `C: RealField`.
 - [ ] 5.8 In `manifold/covariance/mod.rs:17`, retype the private `covariance_matrix_impl` return to `Result<Vec<Vec<D>>, _>` with the same generalization.
-- [ ] 5.9 In `manifold/differential/laplacian.rs:23` and `manifold/differential/codifferential.rs:22`, drop the `From<f64>` bound and replace internal `1e-12` tolerance constants with `R::epsilon()` or `R::from_f64(1e-12)`.
+- [ ] 5.9 In `manifold/differential/laplacian.rs:23` and `manifold/differential/codifferential.rs:22`, drop the `From<f64>` bound and replace internal `1e-12` tolerance constants with `R::epsilon()` or `<R as FromPrimitive>::from_f64(1e-12).expect("epsilon fits")`.
 - [ ] 5.10 Update existing manifold tests with explicit `::<f64>` and add `f32` duplicates for covariance, eigen, simplex-volume, and laplacian tests.
 
 ## 6. `DifferentialForm::scale` — replace `Mul<f64>` with `Mul<R>`
@@ -63,13 +79,13 @@
 
 - [ ] 7.1 In `deep_causality_topology/src/types/point_cloud/ops/op_triangulate.rs:28`, replace the bound `T: Float + Sum + From<f64>` with `T: RealField + Sum`.
 - [ ] 7.2 At lines 90 and 113, repeat the bound replacement.
-- [ ] 7.3 Replace every internal `<T as From<f64>>::from(literal)` call (lines 35, 84, 95, 263, 270, 271) with `T::from_f64(literal)` or a `RealField`-native expression.
+- [ ] 7.3 Replace every internal `<T as From<f64>>::from(literal)` call (lines 35, 84, 95, 263, 270, 271) with `<T as FromPrimitive>::from_f64(literal).expect("...")` (or a `RealField`-native expression where one exists).
 - [ ] 7.4 Update existing triangulate tests with explicit `::<f64>` and add `f32` duplicates for the Gaussian elimination and Hodge dual tests.
 
 ## 8. `GaugeGroup` trait — generalize `structure_constant` over `R: RealField`
 
 - [ ] 8.1 In `deep_causality_topology/src/traits/gauge_group.rs:107`, change the trait method signature to `fn structure_constant<R: RealField>(a: usize, b: usize, c: usize) -> R;` with no default implementation.
-- [ ] 8.2 In `gauge_groups/su2.rs:40`, implement the method via `R::from_f64(literal)` for each hardcoded coefficient.
+- [ ] 8.2 In `gauge_groups/su2.rs:40`, implement the method via `<R as FromPrimitive>::from_f64(literal).expect("structure constant fits")` for each hardcoded coefficient.
 - [ ] 8.3 In `gauge_groups/se3.rs:55, 57`, same retype.
 - [ ] 8.4 In `gauge_groups/so3_1.rs:74, 76`, same retype.
 - [ ] 8.5 If a `SU3` impl exists (search), retype the same way.
@@ -79,7 +95,7 @@
 ## 9. Metropolis acceptance ratio — generalize to `R`
 
 - [ ] 9.1 In `deep_causality_topology/src/types/gauge/gauge_field_lattice/ops_metropolis.rs:149`, retype `metropolis_step` to return `Result<R, TopologyError>` where `R` is the gauge field's real-scalar parameter.
-- [ ] 9.2 At line 100, keep the RNG sample as `let rnd: f64 = rng.random();` (documented exception); add `let rnd: R = R::from_f64(rnd);` immediately after.
+- [ ] 9.2 At line 100, keep the RNG sample as `let rnd: f64 = rng.random();` (documented exception); add `let rnd: R = <R as FromPrimitive>::from_f64(rnd).expect("f64 RNG sample fits in any RealField");` immediately after.
 - [ ] 9.3 Tag the `f64` line as `// PERMITTED-F64: RNG boundary; see design.md Decision 7`.
 - [ ] 9.4 Update existing Metropolis tests with explicit `::<f64>` and add an `f32` duplicate test.
 
@@ -92,7 +108,7 @@
 
 ## 11. Internal cleanup — remove all surviving `f64` references in `deep_causality_topology/src/`
 
-- [ ] 11.1 Run `grep -rn -E '\bf64\b' deep_causality_topology/src/ --include='*.rs'`. Every hit must fall into one of: (a) the documented Metropolis RNG-boundary line, (b) `R::from_f64(...)` calls, (c) doc-comments / module-level `//!` strings, (d) test code that explicitly tests `f64`-precision behavior. No other hits are permitted.
+- [ ] 11.1 Run `grep -rn -E '\bf64\b' deep_causality_topology/src/ --include='*.rs'`. Every hit must fall into one of: (a) the documented Metropolis RNG-boundary line, (b) `<R as FromPrimitive>::from_f64(...).expect(...)` calls, (c) doc-comments / module-level `//!` strings, (d) test code that explicitly tests `f64`-precision behavior. No other hits are permitted.
 - [ ] 11.2 Run `grep -rn 'From<f64>' deep_causality_topology/src/`. Zero hits required.
 - [ ] 11.3 Run `grep -rn 'Into<f64>' deep_causality_topology/src/`. Zero hits required.
 - [ ] 11.4 Run `grep -rn 'Mul<f64' deep_causality_topology/src/`. Zero hits required.

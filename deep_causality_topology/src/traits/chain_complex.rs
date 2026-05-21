@@ -4,6 +4,7 @@
  */
 
 use crate::traits::cell::Cell;
+use deep_causality_num::RealField;
 use deep_causality_sparse::CsrMatrix;
 use std::borrow::Cow;
 
@@ -23,10 +24,11 @@ pub trait ChainComplex {
     where
         Self: 'a;
 
-    /// The metric associated with this complex. Used by `Manifold<K, F>` as
-    /// `metric: Option<K::Metric>`. The trait imposes no bound on `Metric` —
-    /// bounds belong on use sites that exercise metric-specific operations.
-    type Metric;
+    /// The metric associated with this complex, parameterized by the precision `R: RealField`.
+    /// Used by `Manifold<K, F>` as `metric: Option<K::Metric<F>>`. A chain complex is a
+    /// combinatorial object; the metric is a precision-carrying layer over it. Implementors
+    /// that have no metric (e.g. `CellComplex`) bind `type Metric<R: RealField> = ();`.
+    type Metric<R: RealField>;
 
     /// Iterate over all k-cells in the complex.
     fn cells(&self, k: usize) -> Self::CellIter<'_>;

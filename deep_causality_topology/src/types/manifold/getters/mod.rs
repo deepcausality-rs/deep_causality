@@ -10,7 +10,7 @@ use crate::Manifold;
 use crate::traits::chain_complex::ChainComplex;
 use deep_causality_tensor::CausalTensor;
 
-impl<K: ChainComplex, F> Manifold<K, F> {
+impl<K: ChainComplex, F: deep_causality_num::RealField> Manifold<K, F> {
     /// Returns a reference to the underlying chain complex.
     pub fn complex(&self) -> &K {
         &self.complex
@@ -21,8 +21,8 @@ impl<K: ChainComplex, F> Manifold<K, F> {
         &self.data
     }
 
-    /// Returns an optional reference to the metric (`K::Metric`).
-    pub fn metric(&self) -> Option<&K::Metric> {
+    /// Returns an optional reference to the metric (`K::Metric<F>`).
+    pub fn metric(&self) -> Option<&K::Metric<F>> {
         self.metric.as_ref()
     }
 

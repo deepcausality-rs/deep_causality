@@ -39,7 +39,7 @@ impl<T> ChainComplex for SimplicialComplex<T> {
         = SimplicialCellIter<'a>
     where
         Self: 'a;
-    type Metric = crate::ReggeGeometry<T>;
+    type Metric<R: deep_causality_num::RealField> = crate::ReggeGeometry<R>;
 
     fn cells(&self, k: usize) -> Self::CellIter<'_> {
         let inner = self

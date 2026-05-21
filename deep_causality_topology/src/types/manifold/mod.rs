@@ -28,16 +28,18 @@ mod topology;
 ///
 /// Its construction enforces geometric properties essential for physics simulations.
 /// `K` is the underlying chain complex; `F` is the field data type living on cells.
-/// The optional metric is typed by the complex via `ChainComplex::Metric`.
+/// `F: RealField` doubles as the precision parameter for the metric — the metric is typed
+/// by the complex via the GAT `ChainComplex::Metric<F>`.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Manifold<K: ChainComplex, F> {
+pub struct Manifold<K: ChainComplex, F: deep_causality_num::RealField> {
     /// The underlying chain complex, guaranteed to satisfy manifold properties when set.
     pub(crate) complex: K,
     /// The data associated with the manifold (e.g., scalar field values on cells).
     pub(crate) data: CausalTensor<F>,
     /// The metric information of the manifold (e.g. edge lengths for Regge geometry,
-    /// unit-edge flag for cubical complexes).
-    pub(crate) metric: Option<K::Metric>,
+    /// unit-edge flag for cubical complexes). Typed via the GAT `K::Metric<F>` so the
+    /// metric's precision matches the field data's precision.
+    pub(crate) metric: Option<K::Metric<F>>,
     /// The Focus (Cursor) for Comonadic extraction.
     pub(crate) cursor: usize,
 }

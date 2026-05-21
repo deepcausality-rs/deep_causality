@@ -219,7 +219,7 @@ impl<const D: usize> ChainComplex for LatticeComplex<D> {
         = LatticeCellIterator<'a, D>
     where
         Self: 'a;
-    type Metric = crate::CubicalReggeGeometry<D>;
+    type Metric<R: deep_causality_num::RealField> = crate::CubicalReggeGeometry<D, R>;
 
     fn cells(&self, k: usize) -> Self::CellIter<'_> {
         self.iter_cells(k)

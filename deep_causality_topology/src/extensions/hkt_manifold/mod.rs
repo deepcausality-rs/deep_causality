@@ -238,20 +238,23 @@ where
 impl<K> Functor<GenericManifoldWitness<K>> for GenericManifoldWitness<K>
 where
     K: ChainComplex + Satisfies<NoConstraint> + Clone,
-    K::Metric: Clone,
 {
     fn fmap<A, B, Func>(m_a: Manifold<K, A>, f: Func) -> Manifold<K, B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
+        A: Satisfies<NoConstraint> + deep_causality_num::RealField,
+        B: Satisfies<NoConstraint> + deep_causality_num::RealField,
         Func: FnMut(A) -> B,
     {
         let new_data_tensor = CausalTensorWitness::fmap(m_a.data, f);
-        // Complex and metric are invariant under fmap (no dependence on A or B).
+        // Under the GAT `K::Metric<R>`, the metric's type depends on the field-data
+        // precision. When fmap changes `A → B` with potentially different precisions,
+        // there is no precision-preserving way to carry `K::Metric<A>` into
+        // `Option<K::Metric<B>>`. The metric is dropped on fmap; callers that need to
+        // preserve a metric across an fmap should reattach it on the output manifold.
         Manifold {
             complex: m_a.complex.clone(),
             data: new_data_tensor,
-            metric: m_a.metric.clone(),
+            metric: None,
             cursor: m_a.cursor,
         }
     }

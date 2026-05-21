@@ -20,8 +20,8 @@ Stakeholders: anyone implementing the cubical Regge calculus roadmap (R1–R6), 
 
 - After R0 ships, the public API of `deep_causality_topology` contains **zero** hardcoded `f64` or `f32` in any struct field, function/method signature, trait method, error variant, or trait bound.
 - Every floating-point quantity in the crate's public API is `R: RealField` for some `R` chosen by the caller.
-- The `From<f64> + Into<f64>` and `Mul<f64, Output = T>` trait-bound crutches are removed in full; their replacement is `R: RealField` plus a small additive `RealField::from_f64` constructor (Decision 2).
-- Internal computation operates on `R` end-to-end with no `f64` round-trips. Every `<T as From<f64>>::from(literal)` site is rewritten to a `RealField`-native expression or `R::from_f64(literal)`.
+- The `From<f64> + Into<f64>` and `Mul<f64, Output = T>` trait-bound crutches are removed in full; their replacement is `R: RealField + FromPrimitive` where the existing `FromPrimitive` trait covers numeric-literal materialization (Decision 2).
+- Internal computation operates on `R` end-to-end with no `f64` round-trips. Every `<T as From<f64>>::from(literal)` site is rewritten to a `RealField`-native expression or `<R as FromPrimitive>::from_f64(literal).expect("...")`.
 - The `GaugeGroup` trait's `structure_constant` method generalizes to return `R: RealField`. All four in-crate impls (`SU2`, `SU3`, `SE3`, `SO(3,1)`) retype.
 - The internal `let rnd: f64 = rng.random()` in the Metropolis step generalizes to `R`. A small `RandomField` impl path lands so an `R: RealField` random sample is well-defined.
 - The behavior at `R = f64` is bit-identical to the pre-R0 baseline. Every existing test passes after retyping call sites to explicit `<f64>`.
@@ -35,49 +35,80 @@ Stakeholders: anyone implementing the cubical Regge calculus roadmap (R1–R6), 
 - Generalizing over `ComplexField<R>`. No complex-valued quantity exists in the public API today; R0 only opens the door for downstream change sets to add them.
 - Type aliases like `CubicalReggeGeometry64<const D: usize>` for ergonomics. Explicitly rejected — bridge code is bridge code.
 - Default type parameters like `<R = f64>` on any generalized type. Explicitly rejected — defaults hide the precision choice.
-- Performance improvements to `RealField` impls in `deep_causality_num`. The `from_f64` addition is the only cross-crate change.
+- Touching `deep_causality_num`. Under the Decision 2 pivot, R0 uses the existing `FromPrimitive` trait and adds zero methods to `RealField`. No cross-crate change is required.
 
 ## Decisions
 
-### Decision 1: One `R: RealField` parameter per generalized type, threaded into every method
+### Decision 1: Precision lives where precision is used — generalized types carry `R: RealField`; combinatorial types do not
 
-Every generalized struct / enum carries exactly one real-field parameter. Examples:
+Every type whose semantics depend on a real-field precision carries an `R: RealField` parameter. Every type whose semantics are purely combinatorial does not. Examples:
 
-- `CubicalReggeGeometry<D, R: RealField>` — replaces `CubicalReggeGeometry<D>`. The private `EdgeLengths<D, R>` enum's `Uniform`, `PerAxis`, `PerEdge` variants carry `R` in place of `f64`.
-- `ReggeGeometry<R: RealField>` — renamed from `ReggeGeometry<T>`. The `Float + From<f64> + Into<f64>` bound is replaced with `R: RealField`.
-- `CurvatureTensor<R: RealField, ...>` — renamed from `CurvatureTensor<T, ...>`. Same bound replacement.
-- `DifferentialForm<T, R: RealField>` — adds the `R` parameter; `T: Mul<R, Output = T>` replaces `T: Mul<f64, Output = T>`.
+**Precision-carrying types** (gain an `R` parameter):
+- `CubicalReggeGeometry<D, R: RealField>` — stores `R`-typed edge lengths.
+- `ReggeGeometry<R: RealField>` — stores `R`-typed simplicial edge lengths and curvature data.
+- `CurvatureTensor<R: RealField, ...>` — stores `R`-typed tensor components.
+- `DifferentialForm<T, R: RealField>` — adds an `R` parameter to support `T: Mul<R, Output = T>`.
 
-**Why one parameter, not separate `R_lengths`, `R_angles`, etc.:** these values are connected by closed forms. Splitting the parameter creates unenforceable consistency constraints; one parameter ensures all derived quantities live in the same field by construction.
+**Combinatorial types** (no `R` parameter):
+- `LatticeComplex<D>` — stores `shape: [usize; D]`, `periodic: [bool; D]`, integer-indexed caches. No `R`-typed data.
+- `CellComplex<C>` — already generic over `C` (cell-data type); no additional precision parameter.
+
+**The bridge between the two is a GAT on `ChainComplex::Metric`:**
+
+```rust
+pub trait ChainComplex {
+    type CellType: Cell;
+    type CellIter<'a>: Iterator<Item = Self::CellType> where Self: 'a;
+    type Metric<R: RealField>;
+    // ... combinatorial methods unchanged
+}
+
+impl<const D: usize> ChainComplex for LatticeComplex<D> {
+    type Metric<R: RealField> = CubicalReggeGeometry<D, R>;
+    // ...
+}
+
+pub struct Manifold<K: ChainComplex, F: RealField + FromPrimitive> {
+    field: CausalTensor<F>,
+    metric: Option<K::Metric<F>>,  // F serves as both field-data precision and metric precision
+    // ...
+}
+```
+
+This matches the mathematical structure: a chain complex is a combinatorial object; the metric is a *choice* layered on top. Two lattices with identical combinatorial structure but different metric precisions are the *same* lattice, with two different metric attachments.
+
+**Why a GAT and not a parameter on the complex itself:** an earlier R0 draft considered `LatticeComplex<D, R: RealField>` with `PhantomData<R>`. Rejected because (a) `LatticeComplex` stores no `R`-typed data, so the parameter would be purely phantom; (b) it inverts the mathematical structure (precision becomes part of the complex's identity); (c) `LatticeComplex<3, f32>` and `LatticeComplex<3, f64>` would be distinct types despite being the same combinatorial object — you couldn't share one lattice fixture across two precisions.
+
+**Why a GAT and not three parameters on `Manifold<K, F, M>`:** a parallel draft considered dropping `Metric` from `ChainComplex` entirely and attaching the metric via a third Manifold parameter. Rejected as a deeper API restructuring than R0's scope warrants. The GAT preserves the "complex has a canonical metric type at every precision" idiom while making precision parametric.
+
+**Why one `R` parameter per precision-carrying type, not separate `R_lengths`, `R_angles`, etc.:** these values are connected by closed forms within a single type. Splitting creates unenforceable consistency constraints; one `R` ensures all derived quantities live in the same field by construction.
 
 **Why no default `R = f64`:** the entire point is to make precision a *choice*. A default of `f64` would let new call sites silently fall back to `f64` and accumulate the same precision loss the parameter is meant to solve.
 
-### Decision 2: Add `RealField::from_f64(value: f64) -> Self` to `deep_causality_num`
+**Stability note:** GATs (generic associated types) are stable on Rust 1.65+. The `type Metric<R: RealField>` pattern here uses no lifetimes in the GAT itself, only a plain type parameter, which is the simplest and best-supported GAT shape. No HRTB gymnastics are required at use sites.
+
+### Decision 2: Use the existing `FromPrimitive` trait for numeric-literal conversions; no new methods on `RealField`
 
 The current `RealField` trait exposes `pi`, `e`, `epsilon`, and the transcendentals, but no general-purpose constructor for arbitrary numeric literals. Several internal sites in `deep_causality_topology` materialize constants like `1e-12` (epsilon tolerances), `2.0` (binary half), `8πG` (Einstein-Hilbert prefactor), etc., that aren't reachable through `R::one()`, `R::pi()`, `R::epsilon()` alone.
 
-R0 adds one method to the `RealField` trait:
+`deep_causality_num` already exposes a `FromPrimitive` trait (`deep_causality_num/src/cast/from_primitive/mod.rs`) with fallible `-> Option<Self>` constructors for every primitive numeric type (`from_f64`, `from_f32`, `from_i64`, `from_i32`, plus `i8`/`i16`/`i128`/`u*`/`isize`/`usize`). **R0 uses this existing trait instead of adding methods to `RealField`.**
+
+Topology generic-code sites that materialize literals SHALL bound `R: RealField + FromPrimitive` and call:
 
 ```rust
-pub trait RealField: /* existing bounds */ {
-    // ... existing methods ...
-
-    /// Constructs a value from an `f64` literal. Used for numeric constants
-    /// that cannot be expressed through `one()`, `pi()`, `e()`, or `epsilon()`.
-    fn from_f64(value: f64) -> Self;
-}
-
-impl RealField for f32 { fn from_f64(v: f64) -> Self { v as f32 } /* ... */ }
-impl RealField for f64 { fn from_f64(v: f64) -> Self { v } /* ... */ }
+<R as FromPrimitive>::from_f64(0.5).expect("0.5 is representable in every RealField")
 ```
 
-**No default impl.** Every implementor provides the method explicitly. `f32` and `f64` impls are one-line casts. Future impls (`f128`, dual numbers, fixed-point, arbitrary precision) implement the trivial conversion.
+**Why the existing trait, not new methods on `RealField`:** an early attempt at R0 added four constructors (`from_f64`, `from_f32`, `from_i64`, `from_i32`) directly to `RealField`. The collision with the existing `FromPrimitive` trait — which already declares those exact method names with `Option<Self>` return — created ~50 ambiguous-method-resolution errors across the workspace, all of which the compiler suggested resolving by disambiguating to `<T as FromPrimitive>::from_X(...)`. The compiler was telling us the answer: use the trait that already exists. The pivot is to remove the `RealField` additions and lean on `FromPrimitive` directly.
 
-**Why this and not `R::from_i64`, `R::two()`, `R::half()`, etc.:** `from_f64` is the minimum sufficient surface. The alternatives are all derivable from it; offering all of them would be API surface inflation. The cost is one method on a trait that already has ~30 methods.
+**Tradeoff: the `.expect(...)` syntactic cost.** `FromPrimitive::from_f64` returns `Option<Self>` because primitive-to-narrower-primitive conversions can fail (e.g. `from_f64(NaN)` to an integer type). For the `R: RealField` case the conversion is always infallible — `f32`, `f64`, and `Float106` never reject a literal like `0.5`. The `.expect("invariant message")` documents this invariant at the call site. Slightly more verbose than a hypothetical `<R as FromPrimitive>::from_f64(0.5).expect("0.5 fits")` infallible call, but it reuses an existing trait surface with established semantics.
 
-**Why not `R: From<f64>` as a bound where needed?** That's the exact crutch we're removing. `From<f64>` is a marker trait that any wrapper type can claim; `from_f64` lives on `RealField` itself, anchoring the conversion to the precision-parametric abstraction.
+**Why not make `RealField: FromPrimitive` a supertrait?** This would tighten the trait surface (every `RealField` implementor must also implement `FromPrimitive`), which is fine in practice (`f32`, `f64`, `Float106` all do). But it isn't necessary — topology call sites can bound `R: RealField + FromPrimitive` explicitly at the use site, leaving `RealField` itself untouched. Keeping the traits orthogonal is a smaller change and leaves room for future precisions that might not want `FromPrimitive` (e.g. a verified-correctness fixed-point type that rejects `f64` inputs).
 
-**Why not a separate `FromLiteral` trait?** Premature decomposition. One method on `RealField` is sufficient and keeps the dependency footprint minimal.
+**Alternatives considered:**
+- Add `from_f64`/`from_f32`/`from_i64`/`from_i32` as new methods on `RealField` (the original R0 design). Rejected: collides with existing `FromPrimitive` trait.
+- Introduce a new `FromLiteral` trait specific to the topology refactor. Rejected: premature decomposition; `FromPrimitive` already covers the use case.
+- Make `RealField: FromPrimitive` a supertrait. Considered; rejected for minimum-change reasons (see preceding paragraph).
 
 ### Decision 3: Drop `From<f64> + Into<f64>` from every existing generic bound; rewire internals
 
@@ -87,8 +118,8 @@ R0 rewrites those internals to operate on `R: RealField` end-to-end:
 
 - `arctan2`, `sqrt`, `powf`, `sin`, `cos`, etc. are all on `RealField`.
 - Constants like `R::pi()`, `R::e()`, `R::epsilon()` come from the trait.
-- Numeric literals come from `R::from_f64(literal)`.
-- Algebraic constants like `R::one() + R::one()` for `2`, or `R::one() / (R::one() + R::one())` for `0.5`, are used where they read more naturally than `R::from_f64(2.0)`.
+- Numeric literals come from `<R as FromPrimitive>::from_f64(literal).expect("...")`.
+- Algebraic constants like `R::one() + R::one()` for `2`, or `R::one() / (R::one() + R::one())` for `0.5`, are used where they read more naturally than `<R as FromPrimitive>::from_f64(2.0).expect("2.0 fits")`.
 
 After the rewrite, every bound becomes `R: RealField` (or `T: Mul<R, Output = T>, R: RealField` for the scale-shaped variants). The `Float + Zero + Copy + PartialOrd` superset is satisfied by `RealField` directly.
 
@@ -108,7 +139,7 @@ This is a hard `f64` lock on the entire gauge-group abstraction. R0 changes the 
 fn structure_constant<R: RealField>(a: usize, b: usize, c: usize) -> R;
 ```
 
-**Method-level generic, not trait-level.** A trait-level parameter `trait GaugeGroup<R: RealField>` would force each implementor to pick its precision at trait-impl time; a method-level generic lets `SU2` etc. produce structure constants at whatever precision the caller asks for. The four in-crate impls (`SU2`, `SU3`, `SE3`, `SO(3,1)`) each implement the method via `R::from_f64(literal)` for their hardcoded coefficient values.
+**Method-level generic, not trait-level.** A trait-level parameter `trait GaugeGroup<R: RealField>` would force each implementor to pick its precision at trait-impl time; a method-level generic lets `SU2` etc. produce structure constants at whatever precision the caller asks for. The four in-crate impls (`SU2`, `SU3`, `SE3`, `SO(3,1)`) each implement the method via `<R as FromPrimitive>::from_f64(literal).expect("...")` for their hardcoded coefficient values.
 
 **No default impl.** The current `0.0` default disappears — implementors must provide the structure constants explicitly. Compile-time forcing is strictly better than the runtime "zero" silent failure for an Abelian-group misuse.
 
@@ -142,7 +173,7 @@ R0 picks **(b)** wherever the result is naturally in the same field as the input
 
 ### Decision 6: `PointCloud::triangulate` and friends generalize the existing `T` parameter
 
-`PointCloud::triangulate` is bounded `T: Float + Sum + From<f64> + ...`. The `T` parameter is the field-data type of the point cloud. R0 changes the bound to `T: RealField`, removes the `From<f64>` half, and rewrites the internal Gaussian elimination / Hodge dual / volume helpers to use `T::from_f64(...)` for the few literal constants they need (epsilon tolerances, fixed coefficients).
+`PointCloud::triangulate` is bounded `T: Float + Sum + From<f64> + ...`. The `T` parameter is the field-data type of the point cloud. R0 changes the bound to `T: RealField`, removes the `From<f64>` half, and rewrites the internal Gaussian elimination / Hodge dual / volume helpers to use `<T as FromPrimitive>::from_f64(...).expect("...")` for the few literal constants they need (epsilon tolerances, fixed coefficients).
 
 No new type parameter is introduced. The existing `T` is widened from "any `Float` with f64 round-trip" to "any `RealField`".
 
@@ -150,9 +181,9 @@ No new type parameter is introduced. The existing `T` is widened from "any `Floa
 
 `metropolis_step -> Result<f64, _>` becomes `metropolis_step -> Result<R, _>` where `R` is the gauge field's real-scalar parameter (already exposed via `GaugeField<G, M, R>`).
 
-The internal `let rnd: f64 = rng.random()` becomes `let rnd: R = R::from_f64(rng.random::<f64>())`. The RNG is consulted at `f64` precision (cheap, fast, and the source of the random bits doesn't need to be `R`-aware) and the result is converted up. **This is the one allowed `f64` literal in the entire crate post-R0** — it is internal, not part of the public API, and reflects the practical reality that `deep_causality_rand`'s RNG primitives produce `f64`.
+The internal `let rnd: f64 = rng.random()` becomes `let rnd: R = <R as FromPrimitive>::from_f64(rng.random::<f64>()).expect("RNG sample fits in any RealField")`. The RNG is consulted at `f64` precision (cheap, fast, and the source of the random bits doesn't need to be `R`-aware) and the result is converted up. **This is the one allowed `f64` literal in the entire crate post-R0** — it is internal, not part of the public API, and reflects the practical reality that `deep_causality_rand`'s RNG primitives produce `f64`.
 
-If a future change set wants RNG output natively at `R` precision (for `f128`-resolution Monte Carlo), the `R::from_f64(...)` site is the single point to revise.
+If a future change set wants RNG output natively at `R` precision (for `f128`-resolution Monte Carlo), the `<R as FromPrimitive>::from_f64(...).expect("...")` site is the single point to revise.
 
 ### Decision 8: Test utilities go generic; tests retype call sites to `::<f64>` explicitly
 
@@ -187,8 +218,8 @@ If an `f32` duplicate fails where the `f64` original passes by a wide margin, it
 - **[Risk] Workspace consumers (`deep_causality_physics`, `deep_causality_effects`) won't compile after R0 unless their topology call sites are patched.**
   → **Mitigation:** R0's task list includes a final task group that adds `::<f64>` turbofish at every `physics` / `effects` call site that names a topology type. This is the minimum mechanical patch to keep CI green. Each library's deeper "f64 in disguise" cleanup is its own change set. The temporary `::<f64>` pins are tagged `// TEMP: removed by generalize-{physics,effects}-over-realfield` to be greppable.
 
-- **[Risk] `RealField::from_f64` round-trips lose precision when `R` has higher precision than `f64`.** Calling `f128::from_f64(some_literal)` extends an `f64` to `f128`, but the bits beyond `f64` precision are zero — the value is the `f64` approximation lifted, not the true `f128` value of the source literal.
-  → **Mitigation:** documented in the doc comment of `from_f64`. The method is a convenience for materializing constants from `f64` literals (the standard Rust literal type); callers who need true higher-precision constants use the precision's native constructor or `RealField::pi() / R::e() / R::from_f64` of derived expressions. The vast majority of `from_f64` call sites in `deep_causality_topology` are tolerance constants (`1e-12`) where `f64` precision is already overkill.
+- **[Risk] `FromPrimitive::from_f64` round-trips lose precision when `R` has higher precision than `f64`.** Calling `f128::from_f64(some_literal)` extends an `f64` to `f128`, but the bits beyond `f64` precision are zero — the value is the `f64` approximation lifted, not the true `f128` value of the source literal.
+  → **Mitigation:** documented at every `<R as FromPrimitive>::from_f64(...).expect(...)` call site via the `expect` message. The `FromPrimitive` trait is a convenience for materializing constants from `f64` literals (the standard Rust literal type); callers who need true higher-precision constants use the precision's native constructor or `RealField::pi()` / `R::e()` / derived `RealField` expressions. The vast majority of `from_f64` call sites in `deep_causality_topology` are tolerance constants (`1e-12`) where `f64` precision is already overkill.
 
 - **[Risk] Performance regression vs. hand-tuned `f64` paths.** `RealField` method calls go through trait dispatch. The Rust monomorphizer should inline to identical machine code at `R = f64`, but in rare cases (cross-crate generic instantiation behind `#[inline]` gates) it does not.
   → **Mitigation:** R0's verification task runs the existing `f64` benchmarks against the new generic surface at `R = f64` and asserts no measurable regression (>2%). If a regression appears, add `#[inline]` to the hot `RealField` impl methods on `f64` in `deep_causality_num`.
@@ -197,7 +228,7 @@ If an `f32` duplicate fails where the `f64` original passes by a wide margin, it
   → **Mitigation:** in practice every call site is inside a generic function or impl block that already has an `R: RealField` parameter in scope; inference resolves `R` automatically. The audit found ~5 internal call sites; all of them are in generic contexts. If a future call site needs the turbofish, it's a one-line addition.
 
 - **[Risk] `Manifold` covariance / eigenvalue routines might depend on `f64`-only numerical libraries internally.** If `Manifold::eigen_covariance` calls a third-party eigenvalue solver that's `f64`-only, R0's generic return type is a lie — the result is always computed at `f64` and converted.
-  → **Mitigation:** audit during implementation. If a true `f64`-only dependency exists, the conversion is `R::from_f64(eigenvalue_as_f64)` at the boundary, and a doc-comment flags the internal precision floor. This is acceptable for an internal-precision-limit case (the caller asked for `R`, the algorithm provided what it could). The crate's own algorithms (Cayley-Menger, deficit angles, Hodge ⋆) have no such dependency.
+  → **Mitigation:** audit during implementation. If a true `f64`-only dependency exists, the conversion is `<R as FromPrimitive>::from_f64(eigenvalue_as_f64).expect("eigenvalue fits")` at the boundary, and a doc-comment flags the internal precision floor. This is acceptable for an internal-precision-limit case (the caller asked for `R`, the algorithm provided what it could). The crate's own algorithms (Cayley-Menger, deficit angles, Hodge ⋆) have no such dependency.
 
 - **[Risk] The breaking changes ripple wider than expected.** A workspace-wide grep may find consumers we haven't audited.
   → **Mitigation:** R0's first task is `cargo build --workspace` after the refactor; every compile error is a missed call site. The compile-error list IS the migration checklist for downstream patches.
@@ -210,9 +241,9 @@ If an `f32` duplicate fails where the `f64` original passes by a wide margin, it
 
 ## Migration Plan
 
-1. **`deep_causality_num`:** add `RealField::from_f64`. One-line additions to `f32` and `f64` impls. No default impl on the trait. Verify nothing else in `deep_causality_num` needs touching.
+1. **`deep_causality_num`:** no changes needed. The existing `FromPrimitive` trait covers numeric-literal materialization. Verify by greppping the workspace for the four primitive constructors and confirming `FromPrimitive` is implemented for `f32`, `f64`, and `Float106`.
 2. **`deep_causality_topology` — schema pass:** add `<R: RealField>` parameters and retype signatures. The bodies stay structurally identical at this stage — anywhere they reference an `f64` literal or `.into()`, those lines compile-error and are listed for step 3.
-3. **`deep_causality_topology` — body rewrites:** replace every `f64` literal with a `RealField`-native expression (`R::one()`, `R::pi()`, `R::epsilon()`) or a `R::from_f64(literal)` call. Remove every `as f64` and `.into()` round-trip.
+3. **`deep_causality_topology` — body rewrites:** replace every `f64` literal with a `RealField`-native expression (`R::one()`, `R::pi()`, `R::epsilon()`) or a `<R as FromPrimitive>::from_f64(literal).expect("...")` call. Remove every `as f64` and `.into()` round-trip.
 4. **`deep_causality_topology` — internal call sites:** update every test file, example, benchmark, and internal helper to thread `R` or set explicit `<f64>`.
 5. **`deep_causality_topology` — `f32` property tests:** duplicate the algorithmically-meaningful tests against `R = f32` with widened tolerances.
 6. **`deep_causality_topology` — verification:** `cargo build`, `cargo test`, `cargo clippy -- -D warnings`, `cargo fmt --check`, benchmarks at `R = f64` (no regression > 2%), `bazel test //deep_causality_topology/...`.
@@ -223,8 +254,8 @@ If an `f32` duplicate fails where the `f64` original passes by a wide margin, it
 
 ## Open Questions
 
-1. **Does `RealField` need `from_f64` only, or also `from_i64` for integer literal materialization?** Recommendation: `from_f64` only. Integer-to-`R` paths in topology code can use `R::one()` iteratively (rare; mostly indices, which stay `usize`) or `R::from_f64(i as f64)` (uncommon). If a future change set needs `from_i64`, add it then.
+1. **(Resolved by Decision 2 pivot)** Originally: does `RealField` need `from_f64` only, or also `from_i64`? Resolution: neither. R0 does not add methods to `RealField`. Numeric-literal materialization uses the existing `FromPrimitive` trait, which already covers `from_f64`, `from_f32`, `from_i64`, `from_i32`, and all other primitive conversions.
 2. **Does `Manifold::eigen_covariance` use an internal `f64`-only eigenvalue solver?** Audit-time check. If yes, document the internal precision floor; the public return type still generalizes to `R`.
-3. **Does `deep_causality_rand` need an `R: RealField`-aware random-number primitive?** Recommendation: no in R0. Convert `f64` samples via `R::from_f64` at the boundary (Decision 7). If demand appears, a follow-up change adds native `R`-precision sampling.
+3. **Does `deep_causality_rand` need an `R: RealField`-aware random-number primitive?** Recommendation: no in R0. Convert `f64` samples via `FromPrimitive::from_f64` at the boundary (Decision 7). If demand appears, a follow-up change adds native `R`-precision sampling.
 4. **Does the project use `proptest` or a hand-rolled multi-precision test harness?** Audit at implementation time; macro-generate the `f32` duplicates if there's no shared harness.
 5. **Is there a `cargo-public-api` or similar tool that can verify the "zero hardcoded `f64`" invariant mechanically?** Recommendation: add a CI grep step (`! grep -r 'f64' deep_causality_topology/src/ --include='*.rs' | grep -v -E '(test|comment|doc)'`) to keep the invariant from regressing. Implementation detail; not strictly part of R0.
