@@ -4,7 +4,7 @@
  */
 
 use crate::{JonesVector, PhysicsError, Ratio, RayAngle, StokesVector};
-use deep_causality_num::{Complex, DivisionAlgebra};
+use deep_causality_num::{Complex, DivisionAlgebra, FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 
 /// Rotates a Jones Matrix (operator) by an angle $\phi$.
@@ -22,11 +22,14 @@ use deep_causality_tensor::CausalTensor;
 /// *   `angle` - Rotation angle $\\phi$.
 ///
 /// # Returns
-/// *   `Result<CausalTensor<Complex<f64>>, PhysicsError>` - The rotated Jones matrix.
-pub fn jones_rotation_kernel(
-    jones_matrix: &CausalTensor<Complex<f64>>,
-    angle: RayAngle<f64>,
-) -> Result<CausalTensor<Complex<f64>>, PhysicsError> {
+/// *   `Result<CausalTensor<Complex<R>>, PhysicsError>` - The rotated Jones matrix.
+pub fn jones_rotation_kernel<R>(
+    jones_matrix: &CausalTensor<Complex<R>>,
+    angle: RayAngle<R>,
+) -> Result<CausalTensor<Complex<R>>, PhysicsError>
+where
+    R: RealField + Default,
+{
     if jones_matrix.shape() != [2, 2] {
         return Err(PhysicsError::DimensionMismatch(
             "Jones matrix must be 2x2".into(),
@@ -38,8 +41,6 @@ pub fn jones_rotation_kernel(
     let s = phi.sin();
 
     // M' = R(-phi) * M * R(phi)
-    // We compute this manually since Complex<f64> does not implement PartialOrd required by CausalTensor::matmul
-
     // jones_matrix M data: [m00, m01, m10, m11]
     let m_data = jones_matrix.data();
     let m00 = m_data[0];
@@ -47,31 +48,17 @@ pub fn jones_rotation_kernel(
     let m10 = m_data[2];
     let m11 = m_data[3];
 
-    // R(phi) components
-    let rc = Complex::new(c, 0.0);
-    let rs = Complex::new(s, 0.0);
+    // R(phi) components as complex scalars
+    let rc = Complex::new(c, R::zero());
+    let rs = Complex::new(s, R::zero());
 
     // Intermediate: T = M * R(phi)
-    // T = [m00, m01] * [ c, s]
-    //     [m10, m11]   [-s, c]
-    // t00 = m00*c - m01*s
-    // t01 = m00*s + m01*c
-    // t10 = m10*c - m11*s
-    // t11 = m10*s + m11*c
-
     let t00 = m00 * rc - m01 * rs;
     let t01 = m00 * rs + m01 * rc;
     let t10 = m10 * rc - m11 * rs;
     let t11 = m10 * rs + m11 * rc;
 
     // Final: M' = R(-phi) * T
-    // R(-phi) = [ c, -s]
-    //           [ s,  c]
-    // m'00 = c*t00 - s*t10
-    // m'01 = c*t01 - s*t11
-    // m'10 = s*t00 + c*t10
-    // m'11 = s*t01 + c*t11
-
     let res00 = rc * t00 - rs * t10;
     let res01 = rc * t01 - rs * t11;
     let res10 = rs * t00 + rc * t10;
@@ -94,8 +81,11 @@ pub fn jones_rotation_kernel(
 /// *   `jones` - Input Jones vector $\begin{pmatrix} E_x \\ E_y \end{pmatrix}$.
 ///
 /// # Returns
-/// *   `Result<StokesVector, PhysicsError>` - The corresponding Stokes vector.
-pub fn stokes_from_jones_kernel(jones: &JonesVector) -> Result<StokesVector, PhysicsError> {
+/// *   `Result<StokesVector<R>, PhysicsError>` - The corresponding Stokes vector.
+pub fn stokes_from_jones_kernel<R>(jones: &JonesVector<R>) -> Result<StokesVector<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive + Default,
+{
     let t = jones.inner();
     if t.shape() != [2] {
         return Err(PhysicsError::DimensionMismatch(
@@ -114,10 +104,13 @@ pub fn stokes_from_jones_kernel(jones: &JonesVector) -> Result<StokesVector, Phy
     // Ex * Ey*
     let cross = ex * ey_conj;
 
+    let two = R::from_f64(2.0)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(2.0) failed".into()))?;
+
     let s0 = ex_sq + ey_sq;
     let s1 = ex_sq - ey_sq;
-    let s2 = 2.0 * cross.re;
-    let s3 = -2.0 * cross.im;
+    let s2 = two * cross.re;
+    let s3 = -two * cross.im;
 
     let stokes_data = vec![s0, s1, s2, s3];
     let stokes_tensor = CausalTensor::new(stokes_data, vec![4])?;
@@ -133,8 +126,12 @@ pub fn stokes_from_jones_kernel(jones: &JonesVector) -> Result<StokesVector, Phy
 /// *   `stokes` - Input Stokes vector.
 ///
 /// # Returns
-/// *   `Result<Ratio, PhysicsError>` - DOP (0 to 1).
-pub fn degree_of_polarization_kernel(stokes: &StokesVector) -> Result<Ratio, PhysicsError> {
+/// *   `Result<Ratio, PhysicsError>` - DOP (0 to 1). Ratio output is pinned to `f64`
+///     until the Ratio wrapper is retyped (see units slice).
+pub fn degree_of_polarization_kernel<R>(stokes: &StokesVector<R>) -> Result<Ratio, PhysicsError>
+where
+    R: RealField + FromPrimitive + Into<f64>,
+{
     let t = stokes.inner();
     if t.shape() != [4] {
         return Err(PhysicsError::DimensionMismatch(
@@ -148,8 +145,8 @@ pub fn degree_of_polarization_kernel(stokes: &StokesVector) -> Result<Ratio, Phy
     let s2 = d[2];
     let s3 = d[3];
 
-    if s0 <= 0.0 {
-        if s0 == 0.0 && s1 == 0.0 && s2 == 0.0 && s3 == 0.0 {
+    if s0 <= R::zero() {
+        if s0 == R::zero() && s1 == R::zero() && s2 == R::zero() && s3 == R::zero() {
             return Ratio::new(0.0); // Zero intensity, undefined DOP, return 0
         }
         return Err(PhysicsError::PhysicalInvariantBroken(
@@ -160,13 +157,15 @@ pub fn degree_of_polarization_kernel(stokes: &StokesVector) -> Result<Ratio, Phy
     let pol_mag = (s1 * s1 + s2 * s2 + s3 * s3).sqrt();
     let dop = pol_mag / s0;
 
-    if dop > 1.000001 {
-        // Allow tiny float error
-        return Err(PhysicsError::PhysicalInvariantBroken(format!(
-            "DOP > 1 ({}), unphysical Stokes vector",
-            dop
-        )));
+    let one = R::one();
+    let tolerance = R::from_f64(1.000001)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(1.000001) failed".into()))?;
+    if dop > tolerance {
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "DOP > 1, unphysical Stokes vector".into(),
+        ));
     }
 
-    Ratio::new(dop.min(1.0))
+    let clamped = if dop > one { one } else { dop };
+    Ratio::new(clamped.into())
 }

@@ -26,7 +26,7 @@ fn test_jones_rotation() {
     ];
     let id = CausalTensor::new(id_data, vec![2, 2]).unwrap();
 
-    let angle = RayAngle::new(PI / 2.0).unwrap();
+    let angle = RayAngle::<f64>::new(PI / 2.0).unwrap();
     let res = jones_rotation_kernel(&id, angle);
     assert!(res.is_ok());
     let rot = res.unwrap();
@@ -39,7 +39,7 @@ fn test_jones_rotation() {
 #[test]
 fn test_jones_rotation_error() {
     let m = CausalTensor::new(vec![Complex::new(1.0, 0.0)], vec![1]).unwrap();
-    let angle = RayAngle::new(0.0).unwrap();
+    let angle = RayAngle::<f64>::new(0.0).unwrap();
     assert!(jones_rotation_kernel(&m, angle).is_err());
 }
 
@@ -48,7 +48,7 @@ fn test_stokes_from_jones() {
     // H = [1, 0]. Stokes = [1, 1, 0, 0]
     let j_data = vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)];
     let j_tensor = CausalTensor::new(j_data, vec![2]).unwrap();
-    let jones = JonesVector::new(j_tensor);
+    let jones = JonesVector::<f64>::new(j_tensor);
 
     let res = stokes_from_jones_kernel(&jones);
     assert!(res.is_ok());
@@ -63,7 +63,8 @@ fn test_stokes_from_jones() {
 
 #[test]
 fn test_stokes_from_jones_error() {
-    let j = JonesVector::new(CausalTensor::new(vec![Complex::new(1.0, 0.0)], vec![1]).unwrap());
+    let j =
+        JonesVector::<f64>::new(CausalTensor::new(vec![Complex::new(1.0, 0.0)], vec![1]).unwrap());
     assert!(stokes_from_jones_kernel(&j).is_err());
 }
 
@@ -72,7 +73,7 @@ fn test_dop() {
     // Fully polarized [1, 1, 0, 0]
     let s_data = vec![1.0, 1.0, 0.0, 0.0];
     let s_tensor = CausalTensor::new(s_data, vec![4]).unwrap();
-    let stokes = StokesVector::new(s_tensor).unwrap();
+    let stokes = StokesVector::<f64>::new(s_tensor).unwrap();
 
     let res = degree_of_polarization_kernel(&stokes);
     assert!(res.is_ok());
@@ -80,7 +81,8 @@ fn test_dop() {
 
     // Unpolarized [1, 0, 0, 0]
     let s_unpol =
-        StokesVector::new(CausalTensor::new(vec![1.0, 0.0, 0.0, 0.0], vec![4]).unwrap()).unwrap();
+        StokesVector::<f64>::new(CausalTensor::new(vec![1.0, 0.0, 0.0, 0.0], vec![4]).unwrap())
+            .unwrap();
     let res2 = degree_of_polarization_kernel(&s_unpol);
     assert!((res2.unwrap().value() - 0.0).abs() < 1e-10);
 }
@@ -92,7 +94,8 @@ fn test_dop_errors() {
     // If S0 < 0, S0^2 is positive. So we can have S0 = -1, S1=0,0,0.
     // However, degree_of_polarization_kernel checks S0 <= 0.
     let s_neg =
-        StokesVector::new(CausalTensor::new(vec![-1.0, 0.0, 0.0, 0.0], vec![4]).unwrap()).unwrap();
+        StokesVector::<f64>::new(CausalTensor::new(vec![-1.0, 0.0, 0.0, 0.0], vec![4]).unwrap())
+            .unwrap();
     assert!(degree_of_polarization_kernel(&s_neg).is_err());
 
     // DOP > 1
@@ -106,9 +109,9 @@ fn test_dop_errors() {
 fn test_stokes_vector_new_error() {
     // Shape error
     let t_wrong = CausalTensor::new(vec![1.0], vec![1]).unwrap();
-    assert!(StokesVector::new(t_wrong).is_err());
+    assert!(StokesVector::<f64>::new(t_wrong).is_err());
 
     // Invariant error: S0^2 < S1^2 + S2^2 + S3^2
     let t_inv = CausalTensor::new(vec![1.0, 1.0, 1.0, 1.0], vec![4]).unwrap();
-    assert!(StokesVector::new(t_inv).is_err());
+    assert!(StokesVector::<f64>::new(t_inv).is_err());
 }

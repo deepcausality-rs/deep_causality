@@ -228,13 +228,13 @@ impl<R: deep_causality_num::RealField> AbcdMatrix<R> {
 
 /// Jones Vector. Polarized Electric Field. Rank 1, Dim 2 Complex Tensor.
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct JonesVector(CausalTensor<Complex<f64>>);
+pub struct JonesVector<R: deep_causality_num::RealField>(CausalTensor<Complex<R>>);
 
-impl JonesVector {
-    pub fn new(tensor: CausalTensor<Complex<f64>>) -> Self {
+impl<R: deep_causality_num::RealField> JonesVector<R> {
+    pub fn new(tensor: CausalTensor<Complex<R>>) -> Self {
         Self(tensor)
     }
-    pub fn inner(&self) -> &CausalTensor<Complex<f64>> {
+    pub fn inner(&self) -> &CausalTensor<Complex<R>> {
         &self.0
     }
 }
@@ -242,10 +242,10 @@ impl JonesVector {
 /// Stokes Vector. Intensity vector $(S_0, S_1, S_2, S_3)$. Rank 1, Dim 4 Tensor.
 /// Constraint: $S_0^2 \ge S_1^2 + S_2^2 + S_3^2$.
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct StokesVector(CausalTensor<f64>);
+pub struct StokesVector<R: deep_causality_num::RealField>(CausalTensor<R>);
 
-impl StokesVector {
-    pub fn new(tensor: CausalTensor<f64>) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> StokesVector<R> {
+    pub fn new(tensor: CausalTensor<R>) -> Result<Self, PhysicsError> {
         if tensor.shape() != [4] {
             return Err(PhysicsError::DimensionMismatch(
                 "StokesVector must be a 4-element tensor".into(),
@@ -264,7 +264,7 @@ impl StokesVector {
         Ok(Self(tensor))
     }
 
-    pub fn inner(&self) -> &CausalTensor<f64> {
+    pub fn inner(&self) -> &CausalTensor<R> {
         &self.0
     }
 }
@@ -272,21 +272,21 @@ impl StokesVector {
 /// Complex Beam Parameter ($q(z) = z + i z_R$).
 /// Constraint: $\text{Im}(q) > 0$.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub struct ComplexBeamParameter(Complex<f64>);
+pub struct ComplexBeamParameter<R: deep_causality_num::RealField>(Complex<R>);
 
-impl ComplexBeamParameter {
-    pub fn new(val: Complex<f64>) -> Result<Self, PhysicsError> {
-        if val.im <= 0.0 {
+impl<R: deep_causality_num::RealField> ComplexBeamParameter<R> {
+    pub fn new(val: Complex<R>) -> Result<Self, PhysicsError> {
+        if val.im <= R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Imaginary part of q (Rayleigh range) must be positive".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: Complex<f64>) -> Self {
+    pub fn new_unchecked(val: Complex<R>) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> Complex<f64> {
+    pub fn value(&self) -> Complex<R> {
         self.0
     }
 }

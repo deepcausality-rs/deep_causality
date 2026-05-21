@@ -51,11 +51,11 @@ fn test_beam_waist() {
 
 #[test]
 fn test_complex_beam_parameter() {
-    let q = ComplexBeamParameter::new(Complex::new(1.0, 2.0)).unwrap();
+    let q = ComplexBeamParameter::<f64>::new(Complex::new(1.0, 2.0)).unwrap();
     assert_eq!(q.value(), Complex::new(1.0, 2.0));
 
     // Im(q) must be positive
-    let err = ComplexBeamParameter::new(Complex::new(1.0, -1.0));
+    let err = ComplexBeamParameter::<f64>::new(Complex::new(1.0, -1.0));
     assert!(err.is_err());
 }
 
@@ -63,7 +63,7 @@ fn test_complex_beam_parameter() {
 fn test_jones_vector() {
     let data = vec![Complex::new(1.0, 0.0), Complex::new(0.0, 1.0)];
     let t = CausalTensor::new(data, vec![2]).unwrap();
-    let j = JonesVector::new(t);
+    let j = JonesVector::<f64>::new(t);
     assert_eq!(j.inner().shape(), vec![2]);
 }
 
@@ -91,7 +91,7 @@ fn test_beam_waist_new_unchecked() {
 
 #[test]
 fn test_complex_beam_parameter_new_unchecked() {
-    let q = ComplexBeamParameter::new_unchecked(Complex::new(1.0, 2.0));
+    let q = ComplexBeamParameter::<f64>::new_unchecked(Complex::new(1.0, 2.0));
     assert_eq!(q.value(), Complex::new(1.0, 2.0));
 }
 
@@ -131,7 +131,7 @@ fn test_beam_waist_default() {
 
 #[test]
 fn test_complex_beam_parameter_default() {
-    let q: ComplexBeamParameter = Default::default();
+    let q: ComplexBeamParameter<f64> = Default::default();
     assert_eq!(q.value(), Complex::new(0.0, 0.0));
 }
 
@@ -155,13 +155,13 @@ fn test_abcd_matrix_default() {
 
 #[test]
 fn test_jones_vector_default() {
-    let j: JonesVector = Default::default();
+    let j: JonesVector<f64> = Default::default();
     assert!(j.inner().is_empty());
 }
 
 #[test]
 fn test_stokes_vector_default() {
-    let s: StokesVector = Default::default();
+    let s: StokesVector<f64> = Default::default();
     assert!(s.inner().is_empty());
 }
 

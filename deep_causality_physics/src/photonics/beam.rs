@@ -6,9 +6,7 @@
 use crate::PhysicsError;
 use crate::dynamics::quantities::Length;
 use crate::photonics::quantities::{AbcdMatrix, ComplexBeamParameter, Wavelength};
-use deep_causality_num::{Complex, DivisionAlgebra};
-
-use std::f64::consts::PI;
+use deep_causality_num::{Complex, DivisionAlgebra, FromPrimitive, RealField};
 
 /// Propagates a Gaussian beam's complex $q$-parameter through an ABCD optical system.
 ///
@@ -19,11 +17,14 @@ use std::f64::consts::PI;
 /// *   `matrix` - ABCD ray transfer matrix.
 ///
 /// # Returns
-/// *   `Result<ComplexBeamParameter, PhysicsError>` - Output $q_{out}$.
-pub fn gaussian_q_propagation_kernel(
-    q_in: ComplexBeamParameter,
-    matrix: &AbcdMatrix<f64>,
-) -> Result<ComplexBeamParameter, PhysicsError> {
+/// *   `Result<ComplexBeamParameter<R>, PhysicsError>` - Output $q_{out}$.
+pub fn gaussian_q_propagation_kernel<R>(
+    q_in: ComplexBeamParameter<R>,
+    matrix: &AbcdMatrix<R>,
+) -> Result<ComplexBeamParameter<R>, PhysicsError>
+where
+    R: RealField + Default,
+{
     let m = matrix.inner();
     if m.shape() != [2, 2] {
         return Err(PhysicsError::DimensionMismatch(
@@ -40,10 +41,10 @@ pub fn gaussian_q_propagation_kernel(
     let q = q_in.value();
 
     // q_out = (A*q + B) / (C*q + D)
-    let num = q * a + Complex::new(b, 0.0);
-    let den = q * c + Complex::new(dd, 0.0);
+    let num = q * a + Complex::new(b, R::zero());
+    let den = q * c + Complex::new(dd, R::zero());
 
-    if den.norm_sqr() == 0.0 {
+    if den.norm_sqr() == R::zero() {
         return Err(PhysicsError::Singularity(
             "Gaussian beam propagation singularity (denominator zero)".into(),
         ));
@@ -51,18 +52,7 @@ pub fn gaussian_q_propagation_kernel(
 
     let q_out = num / den;
 
-    // Invariant check: Im(q) must be related to spot size, should not be negative for physical beams
-    // if propagating in free space. However, ABCD matrices for negative index materials could flip it?
-    // Standard optics: Im(1/q) = -lambda / (pi w^2).
-    // 1/q = (z - i z_R) / (z^2 + z_R^2). Im(1/q) < 0.
-    // q = z + i z_R. Im(q) = z_R = pi w0^2 / lambda > 0.
-    // We check Im(q_out) > 0.
-    // Some matrices (like complex conjugation/phase conjugation) might flip it, but standard ABCD keeps z_R > 0.
-
-    if q_out.im <= 0.0 {
-        // Technically Im(q) can be negative if we model converging wavefronts? No, wavefront is Re(1/q).
-        // z_R is beam waist parameter, must be positive.
-        // Let's enforce physical realizability for now.
+    if q_out.im <= R::zero() {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Resulting Gaussian q-parameter has non-positive imaginary part".into(),
         ));
@@ -84,43 +74,34 @@ pub fn gaussian_q_propagation_kernel(
 /// *   `wavelength` - Wavelength $\lambda$.
 ///
 /// # Returns
-/// *   `Result<Length, PhysicsError>` - Beam radius $w(z)$.
-pub fn beam_spot_size_kernel(
-    q: ComplexBeamParameter,
-    wavelength: Wavelength<f64>,
-) -> Result<Length, PhysicsError> {
+/// *   `Result<Length, PhysicsError>` - Beam radius $w(z)$. Length output is pinned to `f64`
+///     until the Length wrapper is retyped (see mech-hub slice).
+pub fn beam_spot_size_kernel<R>(
+    q: ComplexBeamParameter<R>,
+    wavelength: Wavelength<R>,
+) -> Result<Length, PhysicsError>
+where
+    R: RealField + FromPrimitive + Into<f64>,
+{
     let q_val = q.value();
     let lambda = wavelength.value();
 
-    if q_val.norm_sqr() == 0.0 {
+    if q_val.norm_sqr() == R::zero() {
         return Err(PhysicsError::Singularity("q parameter is zero".into()));
     }
 
-    let inv_q = Complex::new(1.0, 0.0) / q_val;
+    let inv_q = Complex::new(R::one(), R::zero()) / q_val;
     let im_inv_q = inv_q.im;
 
-    // Im(1/q) = - lambda / (pi * w^2)
-    // w^2 = - lambda / (pi * Im(1/q))
-    // w = sqrt( ... )
-
-    // Check sign. Im(1/q) should be negative for physical beam (since q=z+iz_R, z_R>0 -> 1/q ~ -i).
-    // -lambda is negative.
-    // If Im(1/q) is positive, we get sqrt(negative).
-
-    if im_inv_q >= 0.0 {
-        // q has negative or zero imaginary part?
-        // q = z + i z_R. inv_q = (z - i z_R)/... Im is -z_R.
-        // If Im(inv_q) >= 0, then z_R <= 0.
-        // This should have been caught by ComplexBeamParameter invariant, but double check.
-        // If z_R very small, might be 0.
-        return Err(PhysicsError::PhysicalInvariantBroken(format!(
-            "Invalid q parameter for spot size extraction: Im(1/q) = {}",
-            im_inv_q
-        )));
+    if im_inv_q >= R::zero() {
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Invalid q parameter for spot size extraction: Im(1/q) >= 0".into(),
+        ));
     }
 
-    let w_sq = -lambda / (PI * im_inv_q);
+    let pi = R::pi();
+    let w_sq = -lambda / (pi * im_inv_q);
     let w = w_sq.sqrt();
 
-    Length::new(w)
+    Length::new(w.into())
 }

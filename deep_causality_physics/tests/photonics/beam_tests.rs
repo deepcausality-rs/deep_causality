@@ -14,9 +14,9 @@ use deep_causality_tensor::CausalTensor;
 fn test_gaussian_propagation() {
     // Free space d=1. Matrix [1, 1; 0, 1]
     let m_data = vec![1.0, 1.0, 0.0, 1.0];
-    let mat = AbcdMatrix::new(CausalTensor::new(m_data, vec![2, 2]).unwrap());
+    let mat = AbcdMatrix::<f64>::new(CausalTensor::new(m_data, vec![2, 2]).unwrap());
 
-    let q_in = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap(); // Waist at z=0, zR=1
+    let q_in = ComplexBeamParameter::<f64>::new(Complex::new(0.0, 1.0)).unwrap(); // Waist at z=0, zR=1
 
     let res = gaussian_q_propagation_kernel(q_in, &mat);
     assert!(res.is_ok());
@@ -33,8 +33,8 @@ fn test_beam_spot_size() {
     // Let lambda = pi. Then zR = w0^2. Let w0 = 2. zR = 4.
     // q = 4i.
 
-    let q = ComplexBeamParameter::new(Complex::new(0.0, 4.0)).unwrap();
-    let lambda = Wavelength::new(std::f64::consts::PI).unwrap();
+    let q = ComplexBeamParameter::<f64>::new(Complex::new(0.0, 4.0)).unwrap();
+    let lambda = Wavelength::<f64>::new(std::f64::consts::PI).unwrap();
 
     let res = beam_spot_size_kernel(q, lambda);
     assert!(res.is_ok());
@@ -50,9 +50,9 @@ fn test_beam_spot_size() {
 fn test_gaussian_propagation_wrong_matrix_shape() {
     // Matrix must be 2x2, using 3x3 instead
     let m_data = vec![1.0; 9];
-    let mat = AbcdMatrix::new(CausalTensor::new(m_data, vec![3, 3]).unwrap());
+    let mat = AbcdMatrix::<f64>::new(CausalTensor::new(m_data, vec![3, 3]).unwrap());
 
-    let q_in = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
+    let q_in = ComplexBeamParameter::<f64>::new(Complex::new(0.0, 1.0)).unwrap();
     let res = gaussian_q_propagation_kernel(q_in, &mat);
     assert!(res.is_err());
 }
@@ -72,8 +72,8 @@ fn test_gaussian_propagation_singularity() {
     // For norm_sqr=0, both parts must be 0: Ca + D = 0 AND Cb = 0. Since q must have b>0, C=0.
     // Then Ca + D = D = 0. So C=0, D=0 triggers singularity.
     let m_data = vec![1.0, 1.0, 0.0, 0.0]; // C=0, D=0
-    let mat = AbcdMatrix::new(CausalTensor::new(m_data, vec![2, 2]).unwrap());
-    let q_in = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
+    let mat = AbcdMatrix::<f64>::new(CausalTensor::new(m_data, vec![2, 2]).unwrap());
+    let q_in = ComplexBeamParameter::<f64>::new(Complex::new(0.0, 1.0)).unwrap();
     let res = gaussian_q_propagation_kernel(q_in, &mat);
     assert!(res.is_err());
 }
@@ -88,19 +88,19 @@ fn test_beam_spot_size_zero_q_error() {
 #[test]
 fn test_complex_beam_parameter_new_non_positive_im_error() {
     // Test the ComplexBeamParameter constructor validation
-    let res = ComplexBeamParameter::new(Complex::new(1.0, 0.0));
+    let res = ComplexBeamParameter::<f64>::new(Complex::new(1.0, 0.0));
     assert!(res.is_err());
 
-    let res2 = ComplexBeamParameter::new(Complex::new(1.0, -1.0));
+    let res2 = ComplexBeamParameter::<f64>::new(Complex::new(1.0, -1.0));
     assert!(res2.is_err());
 }
 
 #[test]
 fn test_gaussian_propagation_unphysical_output_error() {
-    let q_in = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
+    let q_in = ComplexBeamParameter::<f64>::new(Complex::new(0.0, 1.0)).unwrap();
     // Matrix [1, 0, 0, -1] -> q_out = -q_in = -i. Im = -1.
     let m = CausalTensor::new(vec![1.0, 0.0, 0.0, -1.0], vec![2, 2]).unwrap();
-    let mat = AbcdMatrix::new(m);
+    let mat = AbcdMatrix::<f64>::new(m);
 
     let res = gaussian_q_propagation_kernel(q_in, &mat);
     assert!(res.is_err());
@@ -114,8 +114,8 @@ fn test_beam_spot_size_invalid_q_error() {
     // To make Im(inv_q) >= 0, we need z_R <= 0.
     // But ComplexBeamParameter constructor requires z_R > 0.
     // To test this kernel's check, we must use new_unchecked or hit it via logic.
-    let q = ComplexBeamParameter::new_unchecked(Complex::new(0.0, -1.0));
-    let lambda = Wavelength::new(1.0).unwrap();
+    let q = ComplexBeamParameter::<f64>::new_unchecked(Complex::new(0.0, -1.0));
+    let lambda = Wavelength::<f64>::new(1.0).unwrap();
     let res = beam_spot_size_kernel(q, lambda);
     assert!(res.is_err());
 }

@@ -112,7 +112,7 @@ fn test_wrapper_lens_maker_error() {
 #[test]
 fn test_wrapper_stokes_from_jones() {
     // Horizontally polarized light: [1, 0]
-    let j = JonesVector::new(
+    let j = JonesVector::<f64>::new(
         CausalTensor::new(
             vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)],
             vec![2],
@@ -136,7 +136,8 @@ fn test_wrapper_stokes_from_jones() {
 
 #[test]
 fn test_wrapper_stokes_from_jones_error() {
-    let j = JonesVector::new(CausalTensor::new(vec![Complex::new(1.0, 0.0)], vec![1]).unwrap());
+    let j =
+        JonesVector::<f64>::new(CausalTensor::new(vec![Complex::new(1.0, 0.0)], vec![1]).unwrap());
     let result = stokes_from_jones(&j);
     assert!(result.is_err());
 }
@@ -176,7 +177,8 @@ fn test_wrapper_jones_rotation_error() {
 fn test_wrapper_degree_of_polarization() {
     // Fully polarized light
     let stokes =
-        StokesVector::new(CausalTensor::new(vec![1.0, 1.0, 0.0, 0.0], vec![4]).unwrap()).unwrap();
+        StokesVector::<f64>::new(CausalTensor::new(vec![1.0, 1.0, 0.0, 0.0], vec![4]).unwrap())
+            .unwrap();
 
     let result = degree_of_polarization(&stokes);
     assert!(result.is_ok());
@@ -191,7 +193,8 @@ fn test_wrapper_degree_of_polarization() {
 fn test_wrapper_degree_of_polarization_partial() {
     // Partially polarized light
     let stokes =
-        StokesVector::new(CausalTensor::new(vec![1.0, 0.5, 0.0, 0.0], vec![4]).unwrap()).unwrap();
+        StokesVector::<f64>::new(CausalTensor::new(vec![1.0, 0.5, 0.0, 0.0], vec![4]).unwrap())
+            .unwrap();
 
     let result = degree_of_polarization(&stokes);
     assert!(result.is_ok());
@@ -205,7 +208,8 @@ fn test_wrapper_degree_of_polarization_partial() {
 #[test]
 fn test_wrapper_degree_of_polarization_error() {
     let s =
-        StokesVector::new(CausalTensor::new(vec![-1.0, 0.0, 0.0, 0.0], vec![4]).unwrap()).unwrap();
+        StokesVector::<f64>::new(CausalTensor::new(vec![-1.0, 0.0, 0.0, 0.0], vec![4]).unwrap())
+            .unwrap();
     let result = degree_of_polarization(&s);
     assert!(result.is_err());
 }
@@ -217,9 +221,10 @@ fn test_wrapper_degree_of_polarization_error() {
 #[test]
 fn test_wrapper_gaussian_q_propagation() {
     // q = z_R * i at waist
-    let q_in = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
+    let q_in = ComplexBeamParameter::<f64>::new(Complex::new(0.0, 1.0)).unwrap();
     // Free space propagation matrix
-    let m = AbcdMatrix::<f64>::new(CausalTensor::new(vec![1.0, 0.5, 0.0, 1.0], vec![2, 2]).unwrap());
+    let m =
+        AbcdMatrix::<f64>::new(CausalTensor::new(vec![1.0, 0.5, 0.0, 1.0], vec![2, 2]).unwrap());
 
     let result = gaussian_q_propagation(q_in, &m);
     assert!(result.is_ok());
@@ -233,7 +238,7 @@ fn test_wrapper_gaussian_q_propagation() {
 
 #[test]
 fn test_wrapper_gaussian_q_propagation_error() {
-    let q = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
+    let q = ComplexBeamParameter::<f64>::new(Complex::new(0.0, 1.0)).unwrap();
     let m = AbcdMatrix::<f64>::new(CausalTensor::new(vec![1.0], vec![1]).unwrap());
     let result = gaussian_q_propagation(q, &m);
     assert!(result.is_err());
@@ -241,7 +246,7 @@ fn test_wrapper_gaussian_q_propagation_error() {
 
 #[test]
 fn test_wrapper_beam_spot_size() {
-    let q = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
+    let q = ComplexBeamParameter::<f64>::new(Complex::new(0.0, 1.0)).unwrap();
     let w = Wavelength::<f64>::new(1e-6).unwrap(); // 1 μm
 
     let result = beam_spot_size(q, w);
@@ -255,7 +260,7 @@ fn test_wrapper_beam_spot_size() {
 
 #[test]
 fn test_wrapper_beam_spot_size_error() {
-    let q = ComplexBeamParameter::new_unchecked(Complex::new(1.0, 0.0));
+    let q = ComplexBeamParameter::<f64>::new_unchecked(Complex::new(1.0, 0.0));
     let w = Wavelength::<f64>::new(1e-6).unwrap();
     let result = beam_spot_size(q, w);
     assert!(result.is_err());
@@ -375,11 +380,13 @@ fn test_wrappers_combined() {
     assert!(lens_maker(n2, 1.0, -1.0).is_ok());
 
     // Jones
-    let j = JonesVector::new(CausalTensor::new(vec![Complex::new(1.0, 0.0); 2], vec![2]).unwrap());
+    let j = JonesVector::<f64>::new(
+        CausalTensor::new(vec![Complex::new(1.0, 0.0); 2], vec![2]).unwrap(),
+    );
     assert!(stokes_from_jones(&j).is_ok());
 
     // Beam
-    let q = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
+    let q = ComplexBeamParameter::<f64>::new(Complex::new(0.0, 1.0)).unwrap();
     let w = Wavelength::<f64>::new(1e-6).unwrap();
     assert!(beam_spot_size(q, w).is_ok());
 

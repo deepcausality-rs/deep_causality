@@ -10,7 +10,7 @@ use crate::photonics::quantities::{
 use crate::{IndexOfRefraction, Length, Ratio};
 use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
-use deep_causality_num::{Complex, RealField};
+use deep_causality_num::{Complex, FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 
 // Import all kernels from their respective modules
@@ -62,24 +62,33 @@ where
 // Polarization
 // ============================================================================
 
-pub fn jones_rotation(
-    jones_matrix: &CausalTensor<Complex<f64>>,
-    angle: RayAngle<f64>,
-) -> PropagatingEffect<CausalTensor<Complex<f64>>> {
+pub fn jones_rotation<R>(
+    jones_matrix: &CausalTensor<Complex<R>>,
+    angle: RayAngle<R>,
+) -> PropagatingEffect<CausalTensor<Complex<R>>>
+where
+    R: RealField + Default + Debug,
+{
     match polarization::jones_rotation_kernel(jones_matrix, angle) {
         Ok(m) => PropagatingEffect::pure(m),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }
 
-pub fn stokes_from_jones(jones: &JonesVector) -> PropagatingEffect<StokesVector> {
+pub fn stokes_from_jones<R>(jones: &JonesVector<R>) -> PropagatingEffect<StokesVector<R>>
+where
+    R: RealField + FromPrimitive + Default + Debug,
+{
     match polarization::stokes_from_jones_kernel(jones) {
         Ok(s) => PropagatingEffect::pure(s),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }
 
-pub fn degree_of_polarization(stokes: &StokesVector) -> PropagatingEffect<Ratio> {
+pub fn degree_of_polarization<R>(stokes: &StokesVector<R>) -> PropagatingEffect<Ratio>
+where
+    R: RealField + FromPrimitive + Into<f64>,
+{
     match polarization::degree_of_polarization_kernel(stokes) {
         Ok(r) => PropagatingEffect::pure(r),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -90,20 +99,26 @@ pub fn degree_of_polarization(stokes: &StokesVector) -> PropagatingEffect<Ratio>
 // Gaussian Beam
 // ============================================================================
 
-pub fn gaussian_q_propagation(
-    q_in: ComplexBeamParameter,
-    matrix: &AbcdMatrix<f64>,
-) -> PropagatingEffect<ComplexBeamParameter> {
+pub fn gaussian_q_propagation<R>(
+    q_in: ComplexBeamParameter<R>,
+    matrix: &AbcdMatrix<R>,
+) -> PropagatingEffect<ComplexBeamParameter<R>>
+where
+    R: RealField + Default + Debug,
+{
     match beam::gaussian_q_propagation_kernel(q_in, matrix) {
         Ok(q) => PropagatingEffect::pure(q),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }
 
-pub fn beam_spot_size(
-    q: ComplexBeamParameter,
-    wavelength: Wavelength<f64>,
-) -> PropagatingEffect<Length> {
+pub fn beam_spot_size<R>(
+    q: ComplexBeamParameter<R>,
+    wavelength: Wavelength<R>,
+) -> PropagatingEffect<Length>
+where
+    R: RealField + FromPrimitive + Into<f64>,
+{
     match beam::beam_spot_size_kernel(q, wavelength) {
         Ok(w) => PropagatingEffect::pure(w),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
