@@ -53,7 +53,7 @@ pub fn carnot_efficiency(
 }
 
 /// Causal wrapper for [`stats::boltzmann_factor_kernel`].
-pub fn boltzmann_factor(energy: Energy, temp: Temperature) -> PropagatingEffect<Probability> {
+pub fn boltzmann_factor(energy: Energy, temp: Temperature) -> PropagatingEffect<Probability<f64>> {
     match stats::boltzmann_factor_kernel(energy, temp) {
         Ok(p) => PropagatingEffect::pure(p),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),

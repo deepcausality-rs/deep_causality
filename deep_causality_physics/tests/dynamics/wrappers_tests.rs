@@ -166,8 +166,8 @@ fn test_generalized_master_equation_wrapper_success() {
     use deep_causality_physics::Probability;
     use deep_causality_physics::generalized_master_equation;
 
-    let state = vec![Probability::new(0.5).unwrap()];
-    let history: Vec<Vec<Probability>> = vec![];
+    let state = vec![Probability::<f64>::new(0.5).unwrap()];
+    let history: Vec<Vec<Probability<f64>>> = vec![];
     let mk: Vec<CausalTensor<f64>> = vec![];
 
     // Test simple identity/zero op case
@@ -184,9 +184,9 @@ fn test_generalized_master_equation_wrapper_error() {
     use deep_causality_physics::Probability;
     use deep_causality_physics::generalized_master_equation;
 
-    let state = vec![Probability::new(0.5).unwrap()];
+    let state = vec![Probability::<f64>::new(0.5).unwrap()];
     // Error condition: History length does not match Memory Kernel length (0 != 1)
-    let history: Vec<Vec<Probability>> = vec![];
+    let history: Vec<Vec<Probability<f64>>> = vec![];
     let k = CausalTensor::new(vec![0.1], vec![1, 1]).unwrap();
     let mk = vec![k];
 

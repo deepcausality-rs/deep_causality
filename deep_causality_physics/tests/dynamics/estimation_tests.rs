@@ -23,7 +23,7 @@ fn test_kalman_filter_linear_kernel_identity() {
     let r = CausalTensor::new(vec![1.0], vec![1, 1]).unwrap(); // Measurement noise
     let q = CausalTensor::new(vec![0.0], vec![1, 1]).unwrap(); // Process noise (unused)
 
-    let result = kalman_filter_linear_kernel(&x_pred, &p_pred, &measurement, &h, &r, &q);
+    let result = kalman_filter_linear_kernel::<f64>(&x_pred, &p_pred, &measurement, &h, &r, &q);
 
     assert!(result.is_ok(), "Kalman filter failed: {:?}", result.err());
 
@@ -62,7 +62,7 @@ fn test_kalman_filter_singular_error() {
     let r = CausalTensor::new(vec![0.0], vec![1, 1]).unwrap(); // Zero noise -> singularity
     let q = CausalTensor::new(vec![0.0], vec![1, 1]).unwrap();
 
-    let result = kalman_filter_linear_kernel(&x_pred, &p_pred, &measurement, &h, &r, &q);
+    let result = kalman_filter_linear_kernel::<f64>(&x_pred, &p_pred, &measurement, &h, &r, &q);
 
     // Attempting to invert singular matrix S should return error
     assert!(result.is_err(), "Should return error for singular S matrix");
@@ -84,7 +84,7 @@ fn test_kalman_filter_innovation_covariance_shape_mismatch() {
     let r = CausalTensor::new(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap();
     let q = CausalTensor::new(vec![0.0], vec![1, 1]).unwrap();
 
-    let result = kalman_filter_linear_kernel(&x_pred, &p_pred, &measurement, &h, &r, &q);
+    let result = kalman_filter_linear_kernel::<f64>(&x_pred, &p_pred, &measurement, &h, &r, &q);
 
     assert!(result.is_err());
     let err = result.unwrap_err();
@@ -115,7 +115,7 @@ fn test_kalman_filter_state_update_shape_mismatch() {
     let r = CausalTensor::new(vec![1.0], vec![1, 1]).unwrap();
     let q = CausalTensor::new(vec![0.0], vec![1, 1]).unwrap();
 
-    let result = kalman_filter_linear_kernel(&x_pred, &p_pred, &measurement, &h, &r, &q);
+    let result = kalman_filter_linear_kernel::<f64>(&x_pred, &p_pred, &measurement, &h, &r, &q);
 
     assert!(result.is_err());
     let err = result.unwrap_err();
@@ -163,7 +163,7 @@ fn test_kalman_filter_identity_shape_mismatch() {
     let r = CausalTensor::new(vec![1.0], vec![1, 1]).unwrap();
     let q = CausalTensor::new(vec![0.0], vec![1, 1]).unwrap();
 
-    let result = kalman_filter_linear_kernel(&x_pred, &p_pred, &measurement, &h, &r, &q);
+    let result = kalman_filter_linear_kernel::<f64>(&x_pred, &p_pred, &measurement, &h, &r, &q);
 
     assert!(result.is_err());
 }
@@ -174,8 +174,8 @@ fn test_generalized_master_equation_kernel() {
     use deep_causality_physics::generalized_master_equation_kernel;
 
     // Test Case 1: Zero State, Empty History
-    let state = vec![Probability::new(0.0).unwrap()];
-    let history: Vec<Vec<Probability>> = vec![];
+    let state = vec![Probability::<f64>::new(0.0).unwrap()];
+    let history: Vec<Vec<Probability<f64>>> = vec![];
     let mk: Vec<CausalTensor<f64>> = vec![];
     let res = generalized_master_equation_kernel(&state, &history, None, &mk);
     assert!(res.is_ok());
@@ -185,7 +185,7 @@ fn test_generalized_master_equation_kernel() {
 
     // Test Case 2: Markov Limit (T * P)
     // P = [0.5], T = [0.8] -> Result 0.4
-    let state = vec![Probability::new(0.5).unwrap()];
+    let state = vec![Probability::<f64>::new(0.5).unwrap()];
     let t = CausalTensor::new(vec![0.8], vec![1, 1]).unwrap();
     let res = generalized_master_equation_kernel(&state, &history, Some(&t), &mk);
     assert!(res.is_ok());
@@ -193,8 +193,8 @@ fn test_generalized_master_equation_kernel() {
 
     // Test Case 3: Memory Only
     // Hist = [0.5], K = [0.1] -> Result 0.05
-    let state_zero = vec![Probability::new(0.0).unwrap()];
-    let history = vec![vec![Probability::new(0.5).unwrap()]];
+    let state_zero = vec![Probability::<f64>::new(0.0).unwrap()];
+    let history = vec![vec![Probability::<f64>::new(0.5).unwrap()]];
     let k = CausalTensor::new(vec![0.1], vec![1, 1]).unwrap();
     let mk = vec![k];
     let res = generalized_master_equation_kernel(&state_zero, &history, None, &mk);
@@ -210,14 +210,14 @@ fn test_generalized_master_equation_kernel() {
     assert!((res.unwrap()[0].value() - 0.45).abs() < 1e-10);
 
     // Test Case 5: Validation Error (Hist != Kernel length)
-    let history_empty: Vec<Vec<Probability>> = vec![];
+    let history_empty: Vec<Vec<Probability<f64>>> = vec![];
     let res = generalized_master_equation_kernel(&state, &history_empty, None, &mk);
     assert!(res.is_err());
 
     // Test Case 6: Validation Error (History dimension mismatch)
     let history_wrong = vec![vec![
-        Probability::new(0.5).unwrap(),
-        Probability::new(0.5).unwrap(),
+        Probability::<f64>::new(0.5).unwrap(),
+        Probability::<f64>::new(0.5).unwrap(),
     ]];
     let res = generalized_master_equation_kernel(&state, &history_wrong, None, &mk);
     assert!(res.is_err());

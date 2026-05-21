@@ -7,19 +7,24 @@ use crate::dynamics::estimation;
 use crate::dynamics::kinematics;
 use crate::units::types::energy::Energy;
 use crate::{Frequency, Mass, MomentOfInertia, Probability};
+use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
+use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
 
 /// Causal wrapper for [`estimation::kalman_filter_linear_kernel`].
-pub fn kalman_filter_linear(
-    x_pred: &CausalTensor<f64>,
-    p_pred: &CausalTensor<f64>,
-    measurement: &CausalTensor<f64>,
-    measurement_matrix: &CausalTensor<f64>,
-    measurement_noise: &CausalTensor<f64>,
-    process_noise: &CausalTensor<f64>,
-) -> PropagatingEffect<(CausalTensor<f64>, CausalTensor<f64>)> {
+pub fn kalman_filter_linear<R>(
+    x_pred: &CausalTensor<R>,
+    p_pred: &CausalTensor<R>,
+    measurement: &CausalTensor<R>,
+    measurement_matrix: &CausalTensor<R>,
+    measurement_noise: &CausalTensor<R>,
+    process_noise: &CausalTensor<R>,
+) -> PropagatingEffect<(CausalTensor<R>, CausalTensor<R>)>
+where
+    R: RealField + Default + Debug + core::iter::Sum,
+{
     match estimation::kalman_filter_linear_kernel(
         x_pred,
         p_pred,
@@ -81,12 +86,15 @@ pub fn angular_momentum(
 }
 
 /// Causal wrapper for [`estimation::generalized_master_equation_kernel`].
-pub fn generalized_master_equation(
-    state: &[Probability],
-    history: &[Vec<Probability>],
-    markov_operator: Option<&CausalTensor<f64>>,
-    memory_kernel: &[CausalTensor<f64>],
-) -> PropagatingEffect<Vec<Probability>> {
+pub fn generalized_master_equation<R>(
+    state: &[Probability<R>],
+    history: &[Vec<Probability<R>>],
+    markov_operator: Option<&CausalTensor<R>>,
+    memory_kernel: &[CausalTensor<R>],
+) -> PropagatingEffect<Vec<Probability<R>>>
+where
+    R: RealField + Default + Debug,
+{
     match estimation::generalized_master_equation_kernel(
         state,
         history,

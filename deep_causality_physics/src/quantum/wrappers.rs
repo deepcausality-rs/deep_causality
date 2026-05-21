@@ -28,9 +28,9 @@ pub fn klein_gordon(
 pub fn born_probability(
     state: &HilbertState,
     basis: &HilbertState,
-) -> PropagatingEffect<Probability> {
+) -> PropagatingEffect<Probability<f64>> {
     match mechanics::born_probability_kernel(state, basis) {
-        Ok(val) => match Probability::new(val) {
+        Ok(val) => match Probability::<f64>::new(val) {
             Ok(p) => PropagatingEffect::pure(p),
             Err(e) => PropagatingEffect::from_error(e.into()),
         },
@@ -117,9 +117,12 @@ pub fn haruna_t_gate(field: &CausalMultiVector<f64>) -> PropagatingEffect<Operat
 }
 
 /// Causal wrapper for [`mechanics::fidelity_kernel`].
-pub fn fidelity(ideal: &HilbertState, actual: &HilbertState) -> PropagatingEffect<Probability> {
+pub fn fidelity(
+    ideal: &HilbertState,
+    actual: &HilbertState,
+) -> PropagatingEffect<Probability<f64>> {
     match mechanics::fidelity_kernel(ideal, actual) {
-        Ok(val) => match Probability::new(val) {
+        Ok(val) => match Probability::<f64>::new(val) {
             Ok(p) => PropagatingEffect::pure(p),
             Err(e) => PropagatingEffect::from_error(e.into()),
         },

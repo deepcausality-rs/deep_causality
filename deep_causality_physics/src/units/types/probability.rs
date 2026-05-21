@@ -3,41 +3,41 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::PhysicsError;
+use deep_causality_num::RealField;
 
 /// Probability value [0, 1].
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Probability(f64);
+pub struct Probability<R: RealField>(R);
 
-impl Default for Probability {
+impl<R: RealField> Default for Probability<R> {
     fn default() -> Self {
-        Self(0.0)
+        Self(R::zero())
     }
 }
 
-impl Probability {
+impl<R: RealField> Probability<R> {
     /// Creates a new `Probability` instance.
     ///
     /// # Errors
-    /// Returns `PhysicsError::NormalizationError` if `val` is not in [0, 1].
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
-        if !(0.0..=1.0).contains(&val) {
-            return Err(PhysicsError::NormalizationError(format!(
-                "Probability must be between 0 and 1, got {}",
-                val
-            )));
+    /// Returns `PhysicsError::NormalizationError` if `val` is not in `[0, 1]`.
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if !val.is_finite() || val < R::zero() || val > R::one() {
+            return Err(PhysicsError::NormalizationError(
+                "Probability must be between 0 and 1".into(),
+            ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
 
-impl From<Probability> for f64 {
-    fn from(val: Probability) -> Self {
-        val.0
+impl<R: RealField + Into<f64>> From<Probability<R>> for f64 {
+    fn from(val: Probability<R>) -> Self {
+        val.0.into()
     }
 }

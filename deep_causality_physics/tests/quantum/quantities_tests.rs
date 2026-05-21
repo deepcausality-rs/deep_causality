@@ -11,59 +11,59 @@ use std::f64::consts::PI;
 
 #[test]
 fn test_probability_new_valid() {
-    let prob = Probability::new(0.5);
+    let prob = Probability::<f64>::new(0.5);
     assert!(prob.is_ok());
     assert!((prob.unwrap().value() - 0.5).abs() < 1e-10);
 }
 
 #[test]
 fn test_probability_new_zero() {
-    let prob = Probability::new(0.0);
+    let prob = Probability::<f64>::new(0.0);
     assert!(prob.is_ok());
     assert!((prob.unwrap().value() - 0.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_probability_new_one() {
-    let prob = Probability::new(1.0);
+    let prob = Probability::<f64>::new(1.0);
     assert!(prob.is_ok());
     assert!((prob.unwrap().value() - 1.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_probability_new_error_negative() {
-    let prob = Probability::new(-0.1);
+    let prob = Probability::<f64>::new(-0.1);
     assert!(prob.is_err());
 }
 
 #[test]
 fn test_probability_new_error_greater_than_one() {
-    let prob = Probability::new(1.1);
+    let prob = Probability::<f64>::new(1.1);
     assert!(prob.is_err());
 }
 
 #[test]
 fn test_probability_new_nan_error() {
-    let prob = Probability::new(f64::NAN);
+    let prob = Probability::<f64>::new(f64::NAN);
     assert!(prob.is_err());
 }
 
 #[test]
 fn test_probability_new_infinity_error() {
-    let prob = Probability::new(f64::INFINITY);
+    let prob = Probability::<f64>::new(f64::INFINITY);
     assert!(prob.is_err());
 }
 
 #[test]
 fn test_probability_new_unchecked() {
-    let prob = Probability::new_unchecked(1.5);
+    let prob = Probability::<f64>::new_unchecked(1.5);
     // Unchecked allows invalid values
     assert!((prob.value() - 1.5).abs() < 1e-10);
 }
 
 #[test]
 fn test_probability_into_f64() {
-    let prob = Probability::new(0.75).unwrap();
+    let prob = Probability::<f64>::new(0.75).unwrap();
     let val: f64 = prob.into();
     assert!((val - 0.75).abs() < 1e-10);
 }
