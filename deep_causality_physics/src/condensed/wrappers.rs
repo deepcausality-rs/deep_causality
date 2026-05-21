@@ -71,7 +71,7 @@ pub fn effective_band_drude_weight(
     energy_0: Energy<f64>,
     curvature_ii: f64,
     quantum_metric: QuantumMetric<f64>,
-    lattice_const: Length,
+    lattice_const: Length<f64>,
 ) -> PropagatingEffect<BandDrudeWeight<f64>> {
     match qgt::effective_band_drude_weight_kernel(
         energy_n,
@@ -93,7 +93,7 @@ pub fn effective_band_drude_weight(
 pub fn bistritzer_macdonald(
     twist_angle: TwistAngle<f64>,
     interlayer_coupling: Energy<f64>,
-    fermi_velocity: Speed,
+    fermi_velocity: Speed<f64>,
     k_point: Momentum,
     shell_cutoff: usize,
 ) -> PropagatingEffect<CausalTensor<Complex<f64>>> {

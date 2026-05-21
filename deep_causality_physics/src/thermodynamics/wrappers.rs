@@ -27,7 +27,7 @@ pub fn heat_diffusion(
 /// Causal wrapper for [`stats::ideal_gas_law_kernel`]. Returns result as `Ratio` (or scalar).
 pub fn ideal_gas_law(
     pressure: Pressure<f64>,
-    volume: Volume,
+    volume: Volume<f64>,
     moles: AmountOfSubstance<f64>,
     temp: Temperature<f64>,
 ) -> PropagatingEffect<Ratio<f64>> {

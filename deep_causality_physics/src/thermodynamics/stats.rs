@@ -54,7 +54,7 @@ pub fn heat_diffusion_kernel(
 /// * `Ok(f64)` - Calculated Gas Constant $R$.
 pub fn ideal_gas_law_kernel(
     pressure: Pressure<f64>,
-    volume: Volume,
+    volume: Volume<f64>,
     moles: AmountOfSubstance<f64>,
     temp: Temperature<f64>,
 ) -> Result<f64, PhysicsError> {

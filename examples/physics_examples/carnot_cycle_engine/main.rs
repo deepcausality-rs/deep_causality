@@ -20,7 +20,7 @@ pub type FloatType = f64;
 #[derive(Debug, Clone, Default)]
 struct EngineState {
     p: Pressure<FloatType>,
-    v: Volume,
+    v: Volume<FloatType>,
     t: Temperature<FloatType>,
     entropy_s: f64,
     work_done: f64,
@@ -38,7 +38,7 @@ fn main() -> Result<(), PhysicsError> {
 
     // Initial State (Start of Isothermal Expansion)
     // Point A: High T, Low V, High P
-    let v_a = Volume::new(0.01)?; // 10 Liters
+    let v_a = Volume::<FloatType>::new(0.01)?; // 10 Liters
     let p_a = Pressure::<FloatType>::new(415_700.0)?; // ~4 atm (Derived from PV=nRT: 1*8.314*500 / 0.01)
 
     let initial_state = EngineState {
@@ -66,7 +66,7 @@ fn main() -> Result<(), PhysicsError> {
         // Temperature constant (Th). Volume increases.
         // Heat Qin absorbed. Entropy increases.
 
-        let v_b = Volume::new(state.v.value() * compression_ratio).unwrap();
+        let v_b = Volume::<FloatType>::new(state.v.value() * compression_ratio).unwrap();
         let t_b = temp_hot;
 
         // Calculate P_b using Ideal Gas Law wrapper (returns Ratio R, we check consistency)
@@ -104,7 +104,7 @@ fn main() -> Result<(), PhysicsError> {
         // V_c = V_b * (Tb/Tc)^(1/(gamma-1))
         let t_ratio = prev.t.value() / temp_cold.value();
         let v_ratio = t_ratio.powf(1.0 / (gamma - 1.0));
-        let v_c = Volume::new(prev.v.value() * v_ratio).unwrap();
+        let v_c = Volume::<FloatType>::new(prev.v.value() * v_ratio).unwrap();
 
         let p_val = (n_moles.value() * r_const * temp_cold.value()) / v_c.value();
         let p_c = Pressure::<FloatType>::new(p_val).unwrap();
@@ -136,7 +136,7 @@ fn main() -> Result<(), PhysicsError> {
 
         // V_d = V_c / ratio (Symmetric cycle for simplicity if constructed right, but let's calculate)
         // Actually V_c / V_d = V_b / V_a = ratio
-        let v_d = Volume::new(prev.v.value() / compression_ratio).unwrap();
+        let v_d = Volume::<FloatType>::new(prev.v.value() / compression_ratio).unwrap();
 
         let p_val = (n_moles.value() * r_const * temp_cold.value()) / v_d.value();
         let p_d = Pressure::<FloatType>::new(p_val).unwrap();
@@ -176,7 +176,7 @@ fn main() -> Result<(), PhysicsError> {
 
         let next_state = EngineState {
             p: Pressure::<FloatType>::new(415_700.0).unwrap(), // Back to P_a
-            v: Volume::new(0.01).unwrap(),                     // Back to V_a
+            v: Volume::<FloatType>::new(0.01).unwrap(),        // Back to V_a
             t: temp_hot,
             entropy_s: prev.entropy_s, // Constant
             work_done: prev.work_done + work,

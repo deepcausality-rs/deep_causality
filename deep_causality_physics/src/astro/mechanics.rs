@@ -15,9 +15,9 @@ use crate::{NEWTONIAN_CONSTANT_OF_GRAVITATION, SPEED_OF_LIGHT};
 /// # Returns
 /// * `Ok(Speed)` - Orbital velocity $v$.
 pub fn orbital_velocity_kernel(
-    mass_primary: &Mass,
-    radius: &Length,
-) -> Result<Speed, PhysicsError> {
+    mass_primary: &Mass<f64>,
+    radius: &Length<f64>,
+) -> Result<Speed<f64>, PhysicsError> {
     let r = radius.value();
     if r <= 0.0 {
         return Err(PhysicsError::MetricSingularity(
@@ -37,7 +37,10 @@ pub fn orbital_velocity_kernel(
 ///
 /// # Returns
 /// * `Ok(Speed)` - Escape velocity $v_e$.
-pub fn escape_velocity_kernel(mass_primary: &Mass, radius: &Length) -> Result<Speed, PhysicsError> {
+pub fn escape_velocity_kernel(
+    mass_primary: &Mass<f64>,
+    radius: &Length<f64>,
+) -> Result<Speed<f64>, PhysicsError> {
     // v = sqrt(2GM / r)
     // v = sqrt(2GM / r)
     let gm = NEWTONIAN_CONSTANT_OF_GRAVITATION * mass_primary.value();
@@ -57,7 +60,7 @@ pub fn escape_velocity_kernel(mass_primary: &Mass, radius: &Length) -> Result<Sp
 ///
 /// # Returns
 /// * `Ok(Length)` - Schwarzschild radius $r_s$.
-pub fn schwarzschild_radius_kernel(mass: &Mass) -> Result<Length, PhysicsError> {
+pub fn schwarzschild_radius_kernel(mass: &Mass<f64>) -> Result<Length<f64>, PhysicsError> {
     // r_s = 2GM / c^2
     // r_s = 2GM / c^2
     let c = SPEED_OF_LIGHT;

@@ -66,7 +66,7 @@ pub fn resistive_diffusion(
     }
 }
 
-pub fn magnetic_reconnection_rate(va: AlfvenSpeed<f64>, s: f64) -> PropagatingEffect<Speed> {
+pub fn magnetic_reconnection_rate(va: AlfvenSpeed<f64>, s: f64) -> PropagatingEffect<Speed<f64>> {
     match resistive::magnetic_reconnection_rate_kernel(va, s) {
         Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -122,8 +122,8 @@ where
 }
 
 pub fn larmor_radius<R>(
-    m: Mass,
-    v: Speed,
+    m: Mass<f64>,
+    v: Speed<f64>,
     q: R,
     b: &PhysicalField<R>,
 ) -> PropagatingEffect<LarmorRadius<R>>

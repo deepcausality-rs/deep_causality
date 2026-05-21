@@ -53,11 +53,11 @@ pub fn resistive_diffusion_kernel(
 /// *   `lundquist` - Lundquist number $S$.
 ///
 /// # Returns
-/// *   `Result<Speed, PhysicsError>` - Inflow velocity $v_{in}$.
+/// *   `Result<Speed<f64>, PhysicsError>` - Inflow velocity $v_{in}$.
 pub fn magnetic_reconnection_rate_kernel(
     alfven_speed: AlfvenSpeed<f64>,
     lundquist: f64,
-) -> Result<Speed, PhysicsError> {
+) -> Result<Speed<f64>, PhysicsError> {
     let va = alfven_speed.value();
 
     if lundquist <= 0.0 {

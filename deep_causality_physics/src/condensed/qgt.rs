@@ -174,7 +174,7 @@ pub fn effective_band_drude_weight_kernel(
     energy_0: Energy<f64>,
     curvature_ii: f64,
     quantum_metric: QuantumMetric<f64>,
-    lattice_const: Length,
+    lattice_const: Length<f64>,
 ) -> Result<BandDrudeWeight<f64>, PhysicsError> {
     if !curvature_ii.is_finite() {
         return Err(PhysicsError::NumericalInstability(

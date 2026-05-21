@@ -25,7 +25,7 @@ where
 }
 
 /// Causal wrapper for [`physics::binding_energy_kernel`].
-pub fn binding_energy(mass_defect: &Mass) -> PropagatingEffect<Energy<f64>> {
+pub fn binding_energy(mass_defect: &Mass<f64>) -> PropagatingEffect<Energy<f64>> {
     match physics::binding_energy_kernel(mass_defect) {
         Ok(e) => PropagatingEffect::pure(e),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),

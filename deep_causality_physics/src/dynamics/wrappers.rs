@@ -41,7 +41,7 @@ where
 
 /// Causal wrapper for [`kinematics::kinetic_energy_kernel`].
 pub fn kinetic_energy(
-    mass: &Mass,
+    mass: &Mass<f64>,
     velocity: &CausalMultiVector<f64>,
 ) -> PropagatingEffect<Energy<f64>> {
     match kinematics::kinetic_energy_kernel(*mass, velocity) {
@@ -55,8 +55,8 @@ pub fn kinetic_energy(
 
 /// Causal wrapper for [`kinematics::rotational_kinetic_energy_kernel`].
 pub fn rotational_kinetic_energy(
-    moment_of_inertia: &MomentOfInertia,
-    angular_velocity: &Frequency,
+    moment_of_inertia: &MomentOfInertia<f64>,
+    angular_velocity: &Frequency<f64>,
 ) -> PropagatingEffect<Energy<f64>> {
     match kinematics::rotational_kinetic_energy_kernel(*moment_of_inertia, *angular_velocity) {
         Ok(v) => match Energy::new(v) {

@@ -52,7 +52,7 @@ use std::f64::consts::PI;
 pub fn bistritzer_macdonald_kernel(
     twist_angle: TwistAngle<f64>,
     interlayer_coupling: Energy<f64>,
-    fermi_velocity: Speed,
+    fermi_velocity: Speed<f64>,
     k_point: Momentum,
     shell_cutoff: usize,
 ) -> Result<CausalTensor<Complex<f64>>, PhysicsError> {

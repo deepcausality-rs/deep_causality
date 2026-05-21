@@ -115,7 +115,7 @@ where
 pub fn beam_spot_size<R>(
     q: ComplexBeamParameter<R>,
     wavelength: Wavelength<R>,
-) -> PropagatingEffect<Length>
+) -> PropagatingEffect<Length<f64>>
 where
     R: RealField + FromPrimitive + Into<f64>,
 {
@@ -131,7 +131,7 @@ where
 
 pub fn single_slit_irradiance(
     i0: f64,
-    slit_width: Length,
+    slit_width: Length<f64>,
     theta: RayAngle<f64>,
     wavelength: Wavelength<f64>,
 ) -> PropagatingEffect<f64> {
@@ -142,7 +142,7 @@ pub fn single_slit_irradiance(
 }
 
 pub fn grating_equation(
-    pitch: Length,
+    pitch: Length<f64>,
     order: i32,
     incidence: RayAngle<f64>,
     wavelength: Wavelength<f64>,

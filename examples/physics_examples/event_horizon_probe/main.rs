@@ -13,6 +13,10 @@ use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{Length, Mass, PhysicsError};
 use deep_causality_physics::{escape_velocity, schwarzschild_radius, time_dilation_angle};
 
+/// Switch this alias to `f32` for low precision, `f64` for standard precision,
+/// or `Float106` for high precision.
+pub type FloatType = f64;
+
 #[derive(Debug, Clone, Default)]
 struct ProbeState {
     distance: f64, // Meters from singularity
@@ -25,7 +29,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Event Horizon Probe Simulation ===\n");
 
     // 1. Setup: Supermassive Black Hole (Sagittarius A* approx)
-    let black_hole_mass = Mass::new(4.0e6 * 1.989e30).map_err(|e: PhysicsError| e.to_string())?; // 4 million solar masses
+    let black_hole_mass =
+        Mass::<FloatType>::new(4.0e6 * 1.989e30).map_err(|e: PhysicsError| e.to_string())?; // 4 million solar masses
     let rs_effect = schwarzschild_radius(&black_hole_mass);
     let r_s = rs_effect.value().clone().into_value().unwrap().value();
 
@@ -67,9 +72,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             current_state.clone(),
             Some(black_hole_mass),
         )
-        .bind(|_, state, ctx: Option<Mass>| {
+        .bind(|_, state, ctx: Option<Mass<FloatType>>| {
             let bh_mass = ctx.unwrap(); // Context has BH mass
-            let r = Length::new(state.distance).unwrap();
+            let r = Length::<FloatType>::new(state.distance).unwrap();
 
             // A. Calculate expected orbital/escape velocities (Context assessment)
             let v_esc_effect = escape_velocity(&bh_mass, &r);

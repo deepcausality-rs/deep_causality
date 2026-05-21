@@ -74,12 +74,12 @@ where
 /// *   `wavelength` - Wavelength $\lambda$.
 ///
 /// # Returns
-/// *   `Result<Length, PhysicsError>` - Beam radius $w(z)$. Length output is pinned to `f64`
+/// *   `Result<Length<f64>, PhysicsError>` - Beam radius $w(z)$. Length output is pinned to `f64`
 ///     until the Length wrapper is retyped (see mech-hub slice).
 pub fn beam_spot_size_kernel<R>(
     q: ComplexBeamParameter<R>,
     wavelength: Wavelength<R>,
-) -> Result<Length, PhysicsError>
+) -> Result<Length<f64>, PhysicsError>
 where
     R: RealField + FromPrimitive + Into<f64>,
 {

@@ -63,8 +63,8 @@ where
 /// # Returns
 /// *   `Result<LarmorRadius<R>, PhysicsError>` - Larmor radius $r_L$.
 pub fn larmor_radius_kernel<R>(
-    mass: Mass,
-    velocity_perp: Speed,
+    mass: Mass<f64>,
+    velocity_perp: Speed<f64>,
     charge: R,
     b_field: &PhysicalField<R>,
 ) -> Result<LarmorRadius<R>, PhysicsError>

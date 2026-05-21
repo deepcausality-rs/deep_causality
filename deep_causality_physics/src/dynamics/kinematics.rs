@@ -44,7 +44,7 @@ impl<R: RealField> PhysicalVector<R> {
 /// * `Ok(f64)` - Kinetic energy in Joules.
 /// * `Err(PhysicsError)` - If an error occurs (unlikely with valid inputs).
 pub fn kinetic_energy_kernel(
-    mass: Mass,
+    mass: Mass<f64>,
     velocity: &CausalMultiVector<f64>,
 ) -> Result<f64, PhysicsError> {
     // Ensure physically meaningful squared speed
@@ -73,8 +73,8 @@ pub fn kinetic_energy_kernel(
 /// # Returns
 /// * `Ok(f64)` - Rotational kinetic energy in Joules.
 pub fn rotational_kinetic_energy_kernel(
-    inertia: MomentOfInertia,
-    omega: Frequency,
+    inertia: MomentOfInertia<f64>,
+    omega: Frequency<f64>,
 ) -> Result<f64, PhysicsError> {
     // KE_rot = 0.5 * I * w^2
     let w = omega.value();

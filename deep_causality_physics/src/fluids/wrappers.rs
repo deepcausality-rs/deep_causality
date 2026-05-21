@@ -13,7 +13,7 @@ use deep_causality_num::{FromPrimitive, RealField};
 pub fn hydrostatic_pressure<R>(
     p0: &Pressure<R>,
     density: &Density<R>,
-    depth: &Length,
+    depth: &Length<f64>,
 ) -> PropagatingEffect<Pressure<R>>
 where
     R: RealField + FromPrimitive + Debug,
@@ -27,10 +27,10 @@ where
 /// Causal wrapper for [`mechanics::bernoulli_pressure_kernel`].
 pub fn bernoulli_pressure<R>(
     p1: &Pressure<R>,
-    v1: &Speed,
-    h1: &Length,
-    v2: &Speed,
-    h2: &Length,
+    v1: &Speed<f64>,
+    h1: &Length<f64>,
+    v2: &Speed<f64>,
+    h2: &Length<f64>,
     density: &Density<R>,
 ) -> PropagatingEffect<Pressure<R>>
 where

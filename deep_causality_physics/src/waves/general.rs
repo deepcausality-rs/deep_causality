@@ -31,9 +31,9 @@ use crate::{Frequency, Length, PhysicsError, Speed};
 /// * `Ok(Speed)` - The calculated wave speed.
 /// * `Err(PhysicsError)` - If the resulting speed violates physical invariants (negative), though types prevent this input.
 pub fn wave_speed_kernel(
-    frequency: &Frequency,
-    wavelength: &Length,
-) -> Result<Speed, PhysicsError> {
+    frequency: &Frequency<f64>,
+    wavelength: &Length<f64>,
+) -> Result<Speed<f64>, PhysicsError> {
     // v = f * lambda
     let v = frequency.value() * wavelength.value();
 
@@ -67,11 +67,11 @@ pub fn wave_speed_kernel(
 /// # Errors
 /// * `PhysicsError::MetricSingularity` - If $v_s \ge v$, causing a sonic boom (denominator zero or negative).
 pub fn doppler_effect_kernel(
-    freq_source: &Frequency,
-    wave_speed: &Speed,
-    obs_speed: &Speed, // Observer moving towards source
-    src_speed: &Speed, // Source moving towards observer
-) -> Result<Frequency, PhysicsError> {
+    freq_source: &Frequency<f64>,
+    wave_speed: &Speed<f64>,
+    obs_speed: &Speed<f64>, // Observer moving towards source
+    src_speed: &Speed<f64>, // Source moving towards observer
+) -> Result<Frequency<f64>, PhysicsError> {
     let v = wave_speed.value();
     let vo = obs_speed.value();
     let vs = src_speed.value();

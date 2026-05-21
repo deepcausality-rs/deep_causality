@@ -17,8 +17,8 @@ pub type FloatType = f64;
 #[derive(Debug, Clone, Default)]
 struct FluidState {
     pressure: Pressure<FloatType>,
-    velocity: Speed,
-    height: Length,
+    velocity: Speed<FloatType>,
+    height: Length<FloatType>,
     description: String,
 }
 
@@ -34,8 +34,8 @@ fn main() -> Result<(), PhysicsError> {
     // 1. Initial State (Reservoir)
     let initial_state = FluidState {
         pressure: Pressure::<FloatType>::new(200_000.0)?,
-        velocity: Speed::new(0.0)?,
-        height: Length::new(10.0)?,
+        velocity: Speed::<FloatType>::new(0.0)?,
+        height: Length::<FloatType>::new(10.0)?,
         description: "Reservoir".to_string(),
     };
 
@@ -61,13 +61,13 @@ fn main() -> Result<(), PhysicsError> {
     .bind(|_, state, _| {
         // --- Segment 1: Main Pipe ---
         // First bind uses `state` (initial state) since value is ()
-        let new_diam = Length::new(0.2).unwrap();
+        let new_diam = Length::<FloatType>::new(0.2).unwrap();
         let new_height = state.height;
 
         // Calculate velocity from continuity: A1v1 = A2v2 = Q
         let area = std::f64::consts::PI * (new_diam.value() / 2.0).powi(2);
         let new_vel_val = flow_rate_volumetric / area;
-        let new_vel = Speed::new(new_vel_val).unwrap();
+        let new_vel = Speed::<FloatType>::new(new_vel_val).unwrap();
 
         // Calculate Pressure via Bernoulli
         let p_effect = bernoulli_pressure(
@@ -103,12 +103,12 @@ fn main() -> Result<(), PhysicsError> {
         // --- Segment 2: Venturi Constriction ---
         // prev_state is FluidState from Segment 1
         let prev = prev_state.into_value().unwrap();
-        let new_diam = Length::new(0.1).unwrap(); // Constriction
+        let new_diam = Length::<FloatType>::new(0.1).unwrap(); // Constriction
         let new_height = prev.height;
 
         let area = std::f64::consts::PI * (new_diam.value() / 2.0).powi(2);
         let new_vel_val = flow_rate_volumetric / area;
-        let new_vel = Speed::new(new_vel_val).unwrap();
+        let new_vel = Speed::<FloatType>::new(new_vel_val).unwrap();
 
         let p_effect = bernoulli_pressure(
             &prev.pressure,
@@ -141,12 +141,12 @@ fn main() -> Result<(), PhysicsError> {
         // --- Segment 3: Vertical Drop ---
         // prev_state is FluidState from Segment 2
         let prev = prev_state.into_value().unwrap();
-        let new_diam = Length::new(0.2).unwrap(); // Back to main size
-        let new_height = Length::new(0.0).unwrap(); // Drop to ground
+        let new_diam = Length::<FloatType>::new(0.2).unwrap(); // Back to main size
+        let new_height = Length::<FloatType>::new(0.0).unwrap(); // Drop to ground
 
         let area = std::f64::consts::PI * (new_diam.value() / 2.0).powi(2);
         let new_vel_val = flow_rate_volumetric / area;
-        let new_vel = Speed::new(new_vel_val).unwrap();
+        let new_vel = Speed::<FloatType>::new(new_vel_val).unwrap();
 
         // Use Bernoulli for the drop as well (captures potential energy conversion)
         let p_effect = bernoulli_pressure(

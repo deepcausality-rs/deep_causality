@@ -9,8 +9,11 @@ use deep_causality_core::PropagatingEffect;
 
 /// Monadic wrapper for [`general::wave_speed_kernel`].
 ///
-/// Returns a `PropagatingEffect<Speed>` usable in causal chains.
-pub fn wave_speed(frequency: &Frequency, wavelength: &Length) -> PropagatingEffect<Speed> {
+/// Returns a `PropagatingEffect<Speed<f64>>` usable in causal chains.
+pub fn wave_speed(
+    frequency: &Frequency<f64>,
+    wavelength: &Length<f64>,
+) -> PropagatingEffect<Speed<f64>> {
     match general::wave_speed_kernel(frequency, wavelength) {
         Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(e.into()),
@@ -19,13 +22,13 @@ pub fn wave_speed(frequency: &Frequency, wavelength: &Length) -> PropagatingEffe
 
 /// Monadic wrapper for [`general::doppler_effect_kernel`] (Approaching case).
 ///
-/// Returns a `PropagatingEffect<Frequency>` usable in causal chains.
+/// Returns a `PropagatingEffect<Frequency<f64>>` usable in causal chains.
 pub fn doppler_effect_approaching(
-    freq_source: &Frequency,
-    wave_speed: &Speed,
-    obs_speed: &Speed,
-    src_speed: &Speed,
-) -> PropagatingEffect<Frequency> {
+    freq_source: &Frequency<f64>,
+    wave_speed: &Speed<f64>,
+    obs_speed: &Speed<f64>,
+    src_speed: &Speed<f64>,
+) -> PropagatingEffect<Frequency<f64>> {
     match general::doppler_effect_kernel(freq_source, wave_speed, obs_speed, src_speed) {
         Ok(f) => PropagatingEffect::pure(f),
         Err(e) => PropagatingEffect::from_error(e.into()),

@@ -24,7 +24,7 @@ use std::f64::consts::PI;
 /// *   `Result<f64, PhysicsError>` - Irradiance at angle $\theta$.
 pub fn single_slit_irradiance_kernel(
     i0: f64,
-    slit_width: Length,
+    slit_width: Length<f64>,
     theta: RayAngle<f64>,
     wavelength: Wavelength<f64>,
 ) -> Result<f64, PhysicsError> {
@@ -70,7 +70,7 @@ pub fn single_slit_irradiance_kernel(
 /// # Returns
 /// *   `Result<RayAngle, PhysicsError>` - Diffraction angle $\theta_m$.
 pub fn grating_equation_kernel(
-    pitch: Length,
+    pitch: Length<f64>,
     order: i32,
     incidence: RayAngle<f64>,
     wavelength: Wavelength<f64>,
