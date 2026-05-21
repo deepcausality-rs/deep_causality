@@ -2,21 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-mod astro;
-mod chronometric;
-mod condensed;
 mod constants;
-mod dynamics;
-mod electromagnetism;
 mod error;
-mod fluids;
-mod materials;
-mod mhd;
-mod nuclear;
-mod photonics;
-mod quantum;
-mod relativity;
+mod kernels;
 mod theories;
-mod thermodynamics;
 mod units;
-mod waves;

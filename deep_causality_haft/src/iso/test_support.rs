@@ -8,7 +8,7 @@
 //! These helpers are exposed as `pub fn` (not `#[cfg(test)]`-gated) so they
 //! are reachable from integration tests under `deep_causality_haft/tests/`.
 //! This follows the convention already established by
-//! [`crate::utils_tests`] and the Tier 1 / Tier 2 equivalents in
+//! `crate::utils_tests` and the Tier 1 / Tier 2 equivalents in
 //! `deep_causality_num` (Bazel cannot see `tests/` from `src/`, so
 //! coverage-counting test utilities must live in `src/`).
 //!
