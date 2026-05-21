@@ -183,3 +183,97 @@ fn test_conductivity_default() {
     let s: Conductivity<f64> = Default::default();
     assert!(s.value() > 0.0);
 }
+
+// =============================================================================
+// NaN/Infinity validation paths
+// =============================================================================
+
+#[test]
+fn test_alfven_speed_new_nan_error() {
+    assert!(AlfvenSpeed::<f64>::new(f64::NAN).is_err());
+    assert!(AlfvenSpeed::<f64>::new(f64::INFINITY).is_err());
+}
+
+#[test]
+fn test_plasma_beta_new_nan_error() {
+    assert!(PlasmaBeta::<f64>::new(f64::NAN).is_err());
+    assert!(PlasmaBeta::<f64>::new(f64::INFINITY).is_err());
+}
+
+#[test]
+fn test_magnetic_pressure_new_nan_error() {
+    assert!(MagneticPressure::<f64>::new(f64::NAN).is_err());
+    assert!(MagneticPressure::<f64>::new(f64::INFINITY).is_err());
+}
+
+#[test]
+fn test_larmor_radius_new_nan_error() {
+    assert!(LarmorRadius::<f64>::new(f64::NAN).is_err());
+    assert!(LarmorRadius::<f64>::new(f64::INFINITY).is_err());
+}
+
+#[test]
+fn test_debye_length_new_nan_error() {
+    assert!(DebyeLength::<f64>::new(f64::NAN).is_err());
+    assert!(DebyeLength::<f64>::new(f64::INFINITY).is_err());
+}
+
+#[test]
+fn test_plasma_frequency_new_nan_error() {
+    assert!(PlasmaFrequency::<f64>::new(f64::NAN).is_err());
+    assert!(PlasmaFrequency::<f64>::new(f64::INFINITY).is_err());
+}
+
+#[test]
+fn test_conductivity_new_nan_error() {
+    assert!(Conductivity::<f64>::new(f64::NAN).is_err());
+    assert!(Conductivity::<f64>::new(f64::INFINITY).is_err());
+}
+
+#[test]
+fn test_diffusivity_new_nan_error() {
+    assert!(Diffusivity::<f64>::new(f64::NAN).is_err());
+    assert!(Diffusivity::<f64>::new(f64::INFINITY).is_err());
+}
+
+// =============================================================================
+// Trait coverage: Debug / Clone / Copy / PartialEq / PartialOrd
+// =============================================================================
+
+#[test]
+fn test_mhd_scalars_traits() {
+    let a = AlfvenSpeed::<f64>::new(1.0).unwrap();
+    let b = a;
+    assert_eq!(a, b);
+    assert_eq!(a, a.clone());
+    assert!(a < AlfvenSpeed::<f64>::new(2.0).unwrap());
+    let _ = format!("{:?}", a);
+
+    let pb = PlasmaBeta::<f64>::new(0.5).unwrap();
+    assert!(pb < PlasmaBeta::<f64>::new(1.0).unwrap());
+    let _ = format!("{:?}", pb);
+
+    let mp = MagneticPressure::<f64>::new(100.0).unwrap();
+    assert!(mp < MagneticPressure::<f64>::new(200.0).unwrap());
+    let _ = format!("{:?}", mp);
+
+    let lr = LarmorRadius::<f64>::new(1.0).unwrap();
+    assert!(lr < LarmorRadius::<f64>::new(2.0).unwrap());
+    let _ = format!("{:?}", lr);
+
+    let dl = DebyeLength::<f64>::new(1.0).unwrap();
+    assert!(dl < DebyeLength::<f64>::new(2.0).unwrap());
+    let _ = format!("{:?}", dl);
+
+    let pf = PlasmaFrequency::<f64>::new(1.0).unwrap();
+    assert!(pf < PlasmaFrequency::<f64>::new(2.0).unwrap());
+    let _ = format!("{:?}", pf);
+
+    let c = Conductivity::<f64>::new(1.0).unwrap();
+    assert!(c < Conductivity::<f64>::new(2.0).unwrap());
+    let _ = format!("{:?}", c);
+
+    let d = Diffusivity::<f64>::new(1.0).unwrap();
+    assert!(d < Diffusivity::<f64>::new(2.0).unwrap());
+    let _ = format!("{:?}", d);
+}

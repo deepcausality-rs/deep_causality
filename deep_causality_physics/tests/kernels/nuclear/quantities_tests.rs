@@ -272,3 +272,57 @@ fn test_lund_parameters_custom() {
     assert_eq!(params.lund_a(), 0.5);
     assert_eq!(params.min_invariant_mass(), 0.3);
 }
+
+// =============================================================================
+// Default impls + trait coverage for scalar wrappers
+// =============================================================================
+
+#[test]
+fn test_amount_of_substance_default() {
+    let a: AmountOfSubstance<f64> = AmountOfSubstance::default();
+    assert_eq!(a.value(), 0.0);
+}
+
+#[test]
+fn test_half_life_default_uses_epsilon() {
+    let h: HalfLife<f64> = HalfLife::default();
+    // Default uses R::epsilon() to preserve strict-positive invariant
+    assert!(h.value() > 0.0);
+}
+
+#[test]
+fn test_activity_default() {
+    let a: Activity<f64> = Activity::default();
+    assert_eq!(a.value(), 0.0);
+}
+
+#[test]
+fn test_energy_density_default() {
+    let e: EnergyDensity<f64> = EnergyDensity::default();
+    assert_eq!(e.value(), 0.0);
+}
+
+#[test]
+fn test_half_life_new_nan_error() {
+    assert!(HalfLife::<f64>::new(f64::NAN).is_err());
+    assert!(HalfLife::<f64>::new(f64::INFINITY).is_err());
+}
+
+#[test]
+fn test_nuclear_scalars_traits() {
+    let a = AmountOfSubstance::<f64>::new(1.0).unwrap();
+    assert_eq!(a, a.clone());
+    let _ = format!("{:?}", a);
+
+    let h = HalfLife::<f64>::new(100.0).unwrap();
+    assert_eq!(h, h.clone());
+    let _ = format!("{:?}", h);
+
+    let act = Activity::<f64>::new(1.0).unwrap();
+    assert_eq!(act, act.clone());
+    let _ = format!("{:?}", act);
+
+    let ed = EnergyDensity::<f64>::new(1.0).unwrap();
+    assert_eq!(ed, ed.clone());
+    let _ = format!("{:?}", ed);
+}

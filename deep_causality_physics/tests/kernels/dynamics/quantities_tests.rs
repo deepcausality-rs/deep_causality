@@ -454,3 +454,106 @@ fn test_torque_into_f64() {
     let val: f64 = torque.into();
     assert!((val - 50.0).abs() < 1e-10);
 }
+
+// =============================================================================
+// Default impls — covering the remaining scalars
+// =============================================================================
+
+#[test]
+fn test_speed_default() {
+    let s: Speed<f64> = Speed::default();
+    assert_eq!(s.value(), 0.0);
+}
+
+#[test]
+fn test_acceleration_default() {
+    let a: Acceleration<f64> = Acceleration::default();
+    assert_eq!(a.value(), 0.0);
+}
+
+#[test]
+fn test_force_default() {
+    let f: Force<f64> = Force::default();
+    assert_eq!(f.value(), 0.0);
+}
+
+#[test]
+fn test_torque_default() {
+    let t: Torque<f64> = Torque::default();
+    assert_eq!(t.value(), 0.0);
+}
+
+#[test]
+fn test_area_default() {
+    let a: Area<f64> = Area::default();
+    assert_eq!(a.value(), 0.0);
+}
+
+#[test]
+fn test_volume_default() {
+    let v: Volume<f64> = Volume::default();
+    assert_eq!(v.value(), 0.0);
+}
+
+#[test]
+fn test_moment_of_inertia_default() {
+    let m: MomentOfInertia<f64> = MomentOfInertia::default();
+    assert_eq!(m.value(), 0.0);
+}
+
+#[test]
+fn test_frequency_default() {
+    let f: Frequency<f64> = Frequency::default();
+    assert_eq!(f.value(), 0.0);
+}
+
+// =============================================================================
+// Trait coverage: Debug / Clone / Copy / PartialEq / PartialOrd
+// =============================================================================
+
+#[test]
+fn test_dynamics_scalars_traits() {
+    let m1 = Mass::<f64>::new(1.0).unwrap();
+    let m2 = m1;
+    let m3 = m1.clone();
+    assert_eq!(m1, m2);
+    assert_eq!(m1, m3);
+    assert!(m1 < Mass::<f64>::new(2.0).unwrap());
+    let _ = format!("{:?}", m1);
+
+    let s = Speed::<f64>::new(3.0).unwrap();
+    assert!(s < Speed::<f64>::new(4.0).unwrap());
+    let _ = format!("{:?}", s);
+
+    let a = Acceleration::<f64>::new(-1.0).unwrap();
+    let _ = format!("{:?}", a);
+    assert_eq!(a.clone(), a);
+
+    let f = Force::<f64>::new(-5.0).unwrap();
+    let _ = format!("{:?}", f);
+    assert_eq!(f, f.clone());
+
+    let t = Torque::<f64>::new(2.0).unwrap();
+    let _ = format!("{:?}", t);
+    assert_eq!(t, t.clone());
+
+    let l = Length::<f64>::new(2.0).unwrap();
+    assert!(l < Length::<f64>::new(3.0).unwrap());
+    let _ = format!("{:?}", l);
+
+    let ar = Area::<f64>::new(4.0).unwrap();
+    assert!(ar < Area::<f64>::new(5.0).unwrap());
+    let _ = format!("{:?}", ar);
+
+    let v = Volume::<f64>::new(1.0).unwrap();
+    assert!(v < Volume::<f64>::new(2.0).unwrap());
+    let _ = format!("{:?}", v);
+
+    let i = MomentOfInertia::<f64>::new(0.5).unwrap();
+    assert!(i < MomentOfInertia::<f64>::new(1.0).unwrap());
+    let _ = format!("{:?}", i);
+
+    let fr = Frequency::<f64>::new(60.0).unwrap();
+    assert!(fr < Frequency::<f64>::new(120.0).unwrap());
+    let _ = format!("{:?}", fr);
+}
