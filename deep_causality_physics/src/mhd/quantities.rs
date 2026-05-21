@@ -7,17 +7,23 @@ use crate::PhysicsError;
 
 /// Alfven Speed ($v_A$). Characteristic speed of magnetic waves in plasma.
 /// Unit: m/s. Constraint: >= 0.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct AlfvenSpeed(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct AlfvenSpeed<R: deep_causality_num::RealField>(R);
 
-impl AlfvenSpeed {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for AlfvenSpeed<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> AlfvenSpeed<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Alfven Speed must be finite".into(),
             ));
         }
-        if val < 0.0 {
+        if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Alfven Speed cannot be negative".into(),
             ));
@@ -26,11 +32,17 @@ impl AlfvenSpeed {
     }
     /// Creates a new `AlfvenSpeed` without validation.
     /// Use only if the value is guaranteed to be non-negative.
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<AlfvenSpeed<R>> for f64 {
+    fn from(val: AlfvenSpeed<R>) -> Self {
+        val.0.into()
     }
 }
 
@@ -75,96 +87,122 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<PlasmaBeta<R>> for f64 {
 
 /// Magnetic Pressure ($P_B$). Energy density of the magnetic field.
 /// Unit: Pascals (Pa). Constraint: >= 0.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct MagneticPressure(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct MagneticPressure<R: deep_causality_num::RealField>(R);
 
-impl MagneticPressure {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for MagneticPressure<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> MagneticPressure<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Magnetic Pressure must be finite".into(),
             ));
         }
-        if val < 0.0 {
+        if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Magnetic Pressure cannot be negative".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<MagneticPressure<R>> for f64 {
+    fn from(val: MagneticPressure<R>) -> Self {
+        val.0.into()
     }
 }
 
 /// Larmor Radius ($r_L$). Gyroradius of a charged particle.
 /// Unit: Meters (m). Constraint: > 0.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct LarmorRadius(f64);
+pub struct LarmorRadius<R: deep_causality_num::RealField>(R);
 
-impl LarmorRadius {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> LarmorRadius<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Larmor Radius must be finite".into(),
             ));
         }
-        if val <= 0.0 {
+        if val <= R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Larmor Radius must be positive".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
 
-impl Default for LarmorRadius {
-    /// Returns the smallest positive value that satisfies the > 0 constraint.
+impl<R: deep_causality_num::RealField> Default for LarmorRadius<R> {
+    /// Returns machine epsilon as the smallest representable positive value
+    /// that satisfies the > 0 constraint.
     fn default() -> Self {
-        Self(f64::MIN_POSITIVE)
+        Self(R::epsilon())
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<LarmorRadius<R>> for f64 {
+    fn from(val: LarmorRadius<R>) -> Self {
+        val.0.into()
     }
 }
 
 /// Debye Length ($\lambda_D$). Screening length in plasma.
 /// Unit: Meters (m). Constraint: > 0.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct DebyeLength(f64);
+pub struct DebyeLength<R: deep_causality_num::RealField>(R);
 
-impl DebyeLength {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> DebyeLength<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Debye Length must be finite".into(),
             ));
         }
-        if val <= 0.0 {
+        if val <= R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Debye Length must be positive".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
 
-impl Default for DebyeLength {
-    /// Returns the smallest positive value that satisfies the > 0 constraint.
+impl<R: deep_causality_num::RealField> Default for DebyeLength<R> {
+    /// Returns machine epsilon as the smallest representable positive value
+    /// that satisfies the > 0 constraint.
     fn default() -> Self {
-        Self(f64::MIN_POSITIVE)
+        Self(R::epsilon())
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<DebyeLength<R>> for f64 {
+    fn from(val: DebyeLength<R>) -> Self {
+        val.0.into()
     }
 }
 
@@ -252,27 +290,39 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<Conductivity<R>> for f64
 
 /// Magnetic Diffusivity ($\eta$).
 /// Unit: $m^2/s$. Constraint: >= 0.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct Diffusivity(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Diffusivity<R: deep_causality_num::RealField>(R);
 
-impl Diffusivity {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for Diffusivity<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> Diffusivity<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Diffusivity must be finite".into(),
             ));
         }
-        if val < 0.0 {
+        if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Diffusivity cannot be negative".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<Diffusivity<R>> for f64 {
+    fn from(val: Diffusivity<R>) -> Self {
+        val.0.into()
     }
 }

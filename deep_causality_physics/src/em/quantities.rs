@@ -66,24 +66,24 @@ impl<R: RealField + Into<f64>> From<MagneticFlux<R>> for f64 {
 /// Wrapper for CausalMultiVector representing a physical field (E, B, etc.).
 /// Implements Default to return a zero vector.
 #[derive(Debug, Clone, PartialEq)]
-pub struct PhysicalField(pub CausalMultiVector<f64>);
+pub struct PhysicalField<R: RealField>(pub CausalMultiVector<R>);
 
-impl Default for PhysicalField {
+impl<R: RealField> Default for PhysicalField<R> {
     fn default() -> Self {
         // Default to a zero vector in 3D Euclidean space.
         // Size of 3D Euclidean multivector is 2^3 = 8.
-        Self(CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap())
+        Self(CausalMultiVector::new(vec![R::zero(); 8], Metric::Euclidean(3)).unwrap())
     }
 }
 
-impl PhysicalField {
-    pub fn new(val: CausalMultiVector<f64>) -> Self {
+impl<R: RealField> PhysicalField<R> {
+    pub fn new(val: CausalMultiVector<R>) -> Self {
         Self(val)
     }
-    pub fn inner(&self) -> &CausalMultiVector<f64> {
+    pub fn inner(&self) -> &CausalMultiVector<R> {
         &self.0
     }
-    pub fn into_inner(self) -> CausalMultiVector<f64> {
+    pub fn into_inner(self) -> CausalMultiVector<R> {
         self.0
     }
 }

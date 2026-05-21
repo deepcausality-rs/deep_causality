@@ -19,10 +19,10 @@ use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
 
 #[test]
 fn test_alfven_speed_wrapper_success() {
-    let b = PhysicalField::new(
+    let b = PhysicalField::<f64>::new(
         CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
-    let rho = Density::new(1.0).unwrap();
+    let rho = Density::<f64>::new(1.0).unwrap();
 
     let result = alfven_speed(&b, &rho, 1.0);
     assert!(result.is_ok());
@@ -37,10 +37,10 @@ fn test_alfven_speed_wrapper_success() {
 #[test]
 fn test_alfven_speed_wrapper_with_physical_values() {
     // B = 1 T, rho = 1000 kg/m³, mu0 = 4*pi*1e-7
-    let b = PhysicalField::new(
+    let b = PhysicalField::<f64>::new(
         CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
-    let rho = Density::new(1000.0).unwrap();
+    let rho = Density::<f64>::new(1000.0).unwrap();
     let mu0 = 4.0 * std::f64::consts::PI * 1e-7;
 
     let result = alfven_speed(&b, &rho, mu0);
@@ -54,7 +54,7 @@ fn test_alfven_speed_wrapper_with_physical_values() {
 
 #[test]
 fn test_magnetic_pressure_wrapper_success() {
-    let b = PhysicalField::new(
+    let b = PhysicalField::<f64>::new(
         CausalMultiVector::new(vec![0.0, 2.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
 
@@ -69,7 +69,7 @@ fn test_magnetic_pressure_wrapper_success() {
 
 #[test]
 fn test_magnetic_pressure_wrapper_zero_field() {
-    let b = PhysicalField::new(
+    let b = PhysicalField::<f64>::new(
         CausalMultiVector::new(vec![0.0, 0.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
 
@@ -87,10 +87,10 @@ fn test_magnetic_pressure_wrapper_zero_field() {
 
 #[test]
 fn test_magnetic_reconnection_rate_wrapper_success() {
-    let b = PhysicalField::new(
+    let b = PhysicalField::<f64>::new(
         CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
-    let rho = Density::new(1.0).unwrap();
+    let rho = Density::<f64>::new(1.0).unwrap();
     let va = alfven_speed(&b, &rho, 1.0)
         .value()
         .clone()
@@ -108,10 +108,10 @@ fn test_magnetic_reconnection_rate_wrapper_success() {
 
 #[test]
 fn test_magnetic_reconnection_rate_wrapper_high_lundquist() {
-    let b = PhysicalField::new(
+    let b = PhysicalField::<f64>::new(
         CausalMultiVector::new(vec![0.0, 10.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
-    let rho = Density::new(1.0).unwrap();
+    let rho = Density::<f64>::new(1.0).unwrap();
     let va = alfven_speed(&b, &rho, 1.0)
         .value()
         .clone()
@@ -161,7 +161,7 @@ fn test_ideal_induction_wrapper() {
 #[test]
 fn test_resistive_diffusion_wrapper() {
     let man = create_test_manifold();
-    let eta = Diffusivity::new(0.1).unwrap();
+    let eta = Diffusivity::<f64>::new(0.1).unwrap();
 
     let result = resistive_diffusion(&man, eta);
     // The wrapper should propagate the result
@@ -259,7 +259,7 @@ fn test_larmor_radius_wrapper_success() {
     let mass = Mass::new(9.109e-31).unwrap(); // Electron mass
     let v = Speed::new(1e6).unwrap(); // 1000 km/s
     let charge = 1.602e-19;
-    let b = PhysicalField::new(
+    let b = PhysicalField::<f64>::new(
         CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
 
@@ -278,7 +278,7 @@ fn test_larmor_radius_wrapper_proton() {
     let mass = Mass::new(1.673e-27).unwrap(); // Proton mass
     let v = Speed::new(1e5).unwrap();
     let charge = 1.602e-19;
-    let b = PhysicalField::new(
+    let b = PhysicalField::<f64>::new(
         CausalMultiVector::new(vec![0.0, 0.1, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
 
@@ -297,10 +297,10 @@ fn test_larmor_radius_wrapper_proton() {
 
 #[test]
 fn test_alfven_speed_error_zero_density() {
-    let b = PhysicalField::new(
+    let b = PhysicalField::<f64>::new(
         CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
-    let rho = Density::new(0.0).unwrap();
+    let rho = Density::<f64>::new(0.0).unwrap();
 
     let result = alfven_speed(&b, &rho, 1.0);
     // Wrapper should propagate the error
@@ -309,7 +309,7 @@ fn test_alfven_speed_error_zero_density() {
 
 #[test]
 fn test_magnetic_pressure_error_negative_permeability() {
-    let b = PhysicalField::new(
+    let b = PhysicalField::<f64>::new(
         CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
 
@@ -321,10 +321,10 @@ fn test_magnetic_pressure_error_negative_permeability() {
 
 #[test]
 fn test_reconnection_rate_error_negative_lundquist() {
-    let b = PhysicalField::new(
+    let b = PhysicalField::<f64>::new(
         CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
-    let rho = Density::new(1.0).unwrap();
+    let rho = Density::<f64>::new(1.0).unwrap();
     let va = alfven_speed(&b, &rho, 1.0)
         .value()
         .clone()
@@ -346,7 +346,7 @@ fn test_debye_length_error_zero_density() {
 fn test_larmor_radius_error_zero_field() {
     let mass = Mass::new(1e-27).unwrap();
     let v = Speed::new(1e5).unwrap();
-    let b = PhysicalField::new(
+    let b = PhysicalField::<f64>::new(
         CausalMultiVector::new(vec![0.0, 0.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
 
@@ -358,7 +358,7 @@ fn test_larmor_radius_error_zero_field() {
 fn test_larmor_radius_error_zero_charge() {
     let mass = Mass::new(1e-27).unwrap();
     let v = Speed::new(1e5).unwrap();
-    let b = PhysicalField::new(
+    let b = PhysicalField::<f64>::new(
         CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
 

@@ -27,8 +27,8 @@ fn create_dummy_manifold() -> SimplicialManifold<f64, f64> {
 #[test]
 fn test_alfven_speed() {
     let b_vec = CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
-    let b_field = PhysicalField::new(b_vec);
-    let rho = Density::new(1.0).unwrap();
+    let b_field = PhysicalField::<f64>::new(b_vec);
+    let rho = Density::<f64>::new(1.0).unwrap();
     let mu0 = 1.0;
 
     let res = alfven_speed_kernel(&b_field, &rho, mu0);
@@ -40,22 +40,22 @@ fn test_alfven_speed() {
 #[test]
 fn test_alfven_speed_errors() {
     let b_vec = CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
-    let b_field = PhysicalField::new(b_vec);
-    let rho_valid = Density::new(1.0).unwrap();
+    let b_field = PhysicalField::<f64>::new(b_vec);
+    let rho_valid = Density::<f64>::new(1.0).unwrap();
 
     // Permeability error
     assert!(alfven_speed_kernel(&b_field, &rho_valid, 0.0).is_err());
     assert!(alfven_speed_kernel(&b_field, &rho_valid, -1.0).is_err());
 
     // Density error (zero)
-    let rho_zero = Density::new_unchecked(0.0);
+    let rho_zero = Density::<f64>::new_unchecked(0.0);
     assert!(alfven_speed_kernel(&b_field, &rho_zero, 1.0).is_err());
 }
 
 #[test]
 fn test_magnetic_pressure() {
     let b_vec = CausalMultiVector::new(vec![0.0, 2.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
-    let b_field = PhysicalField::new(b_vec);
+    let b_field = PhysicalField::<f64>::new(b_vec);
     let mu0 = 1.0;
 
     let res = magnetic_pressure_kernel(&b_field, mu0);
@@ -67,7 +67,7 @@ fn test_magnetic_pressure() {
 #[test]
 fn test_magnetic_pressure_error() {
     let b_vec = CausalMultiVector::new(vec![0.0, 2.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
-    let b_field = PhysicalField::new(b_vec);
+    let b_field = PhysicalField::<f64>::new(b_vec);
     assert!(magnetic_pressure_kernel(&b_field, 0.0).is_err());
 }
 

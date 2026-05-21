@@ -10,7 +10,7 @@ use deep_causality_core::{CausalityError, PropagatingEffect};
 /// Causal wrapper for [`mechanics::hydrostatic_pressure_kernel`].
 pub fn hydrostatic_pressure(
     p0: &Pressure,
-    density: &Density,
+    density: &Density<f64>,
     depth: &Length,
 ) -> PropagatingEffect<Pressure> {
     match mechanics::hydrostatic_pressure_kernel(p0, density, depth) {
@@ -26,7 +26,7 @@ pub fn bernoulli_pressure(
     h1: &Length,
     v2: &Speed,
     h2: &Length,
-    density: &Density,
+    density: &Density<f64>,
 ) -> PropagatingEffect<Pressure> {
     match mechanics::bernoulli_pressure_kernel(p1, v1, h1, v2, h2, density) {
         Ok(p) => PropagatingEffect::pure(p),

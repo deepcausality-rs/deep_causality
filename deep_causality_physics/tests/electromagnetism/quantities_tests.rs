@@ -81,7 +81,7 @@ fn test_magnetic_flux_into_f64() {
 
 #[test]
 fn test_physical_field_default() {
-    let field = PhysicalField::default();
+    let field = PhysicalField::<f64>::default();
     assert!((field.inner().data()[0] - 0.0).abs() < 1e-10);
 }
 
@@ -92,7 +92,7 @@ fn test_physical_field_new_and_accessors() {
         Metric::Euclidean(3),
     )
     .unwrap();
-    let field = PhysicalField::new(mv.clone());
+    let field = PhysicalField::<f64>::new(mv.clone());
 
     assert_eq!(field.inner().data(), mv.data());
 

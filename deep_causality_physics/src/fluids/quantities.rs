@@ -38,34 +38,40 @@ impl From<Pressure> for f64 {
 }
 
 /// Density (kg/m^3).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct Density(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Density<R: deep_causality_num::RealField>(R);
 
-impl Density {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for Density<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> Density<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::PhysicalInvariantBroken(format!(
-                "Density must be finite: {}",
-                val
-            )));
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Density must be finite".into(),
+            ));
         }
-        if val < 0.0 {
+        if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Negative Density".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<Density> for f64 {
-    fn from(val: Density) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<Density<R>> for f64 {
+    fn from(val: Density<R>) -> Self {
+        val.0.into()
     }
 }
 

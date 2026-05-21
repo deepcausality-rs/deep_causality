@@ -53,26 +53,26 @@ fn test_pressure_into_f64() {
 
 #[test]
 fn test_density_new_valid() {
-    let density = Density::new(1000.0); // water
+    let density = Density::<f64>::new(1000.0); // water
     assert!(density.is_ok());
     assert!((density.unwrap().value() - 1000.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_density_new_negative_error() {
-    let density = Density::new(-1.0);
+    let density = Density::<f64>::new(-1.0);
     assert!(density.is_err());
 }
 
 #[test]
 fn test_density_new_unchecked() {
-    let density = Density::new_unchecked(7874.0); // iron
+    let density = Density::<f64>::new_unchecked(7874.0); // iron
     assert!((density.value() - 7874.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_density_into_f64() {
-    let density = Density::new(100.0).unwrap();
+    let density = Density::<f64>::new(100.0).unwrap();
     let val: f64 = density.into();
     assert!((val - 100.0).abs() < 1e-10);
 }

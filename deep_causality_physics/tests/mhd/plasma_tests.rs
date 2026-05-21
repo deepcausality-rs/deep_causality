@@ -27,7 +27,7 @@ fn test_larmor_radius() {
     let q = 1.0;
 
     let b_vec = CausalMultiVector::new(vec![0.0, 5.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
-    let b = PhysicalField::new(b_vec);
+    let b = PhysicalField::<f64>::new(b_vec);
 
     let res = larmor_radius_kernel(m, v, q, &b);
     assert!(res.is_ok());

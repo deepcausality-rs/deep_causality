@@ -10,11 +10,11 @@ use deep_causality_physics::{
 
 #[test]
 fn test_alfven_speed() {
-    let v = AlfvenSpeed::new(100.0).unwrap();
+    let v = AlfvenSpeed::<f64>::new(100.0).unwrap();
     assert_eq!(v.value(), 100.0);
-    assert!(AlfvenSpeed::new(-1.0).is_err());
-    assert!(AlfvenSpeed::new(f64::NAN).is_err());
-    assert!(AlfvenSpeed::new(f64::INFINITY).is_err());
+    assert!(AlfvenSpeed::<f64>::new(-1.0).is_err());
+    assert!(AlfvenSpeed::<f64>::new(f64::NAN).is_err());
+    assert!(AlfvenSpeed::<f64>::new(f64::INFINITY).is_err());
 }
 
 #[test]
@@ -28,29 +28,29 @@ fn test_plasma_beta() {
 
 #[test]
 fn test_magnetic_pressure() {
-    let p = MagneticPressure::new(1000.0).unwrap();
+    let p = MagneticPressure::<f64>::new(1000.0).unwrap();
     assert_eq!(p.value(), 1000.0);
-    assert!(MagneticPressure::new(-10.0).is_err());
-    assert!(MagneticPressure::new(f64::NAN).is_err());
-    assert!(MagneticPressure::new(f64::INFINITY).is_err());
+    assert!(MagneticPressure::<f64>::new(-10.0).is_err());
+    assert!(MagneticPressure::<f64>::new(f64::NAN).is_err());
+    assert!(MagneticPressure::<f64>::new(f64::INFINITY).is_err());
 }
 
 #[test]
 fn test_larmor_radius() {
-    let r = LarmorRadius::new(1.0).unwrap();
+    let r = LarmorRadius::<f64>::new(1.0).unwrap();
     assert_eq!(r.value(), 1.0);
-    assert!(LarmorRadius::new(0.0).is_err()); // Must be positive
-    assert!(LarmorRadius::new(f64::NAN).is_err());
-    assert!(LarmorRadius::new(f64::INFINITY).is_err());
+    assert!(LarmorRadius::<f64>::new(0.0).is_err()); // Must be positive
+    assert!(LarmorRadius::<f64>::new(f64::NAN).is_err());
+    assert!(LarmorRadius::<f64>::new(f64::INFINITY).is_err());
 }
 
 #[test]
 fn test_debye_length() {
-    let l = DebyeLength::new(1e-6).unwrap();
+    let l = DebyeLength::<f64>::new(1e-6).unwrap();
     assert_eq!(l.value(), 1e-6);
-    assert!(DebyeLength::new(0.0).is_err());
-    assert!(DebyeLength::new(f64::NAN).is_err());
-    assert!(DebyeLength::new(f64::INFINITY).is_err());
+    assert!(DebyeLength::<f64>::new(0.0).is_err());
+    assert!(DebyeLength::<f64>::new(f64::NAN).is_err());
+    assert!(DebyeLength::<f64>::new(f64::INFINITY).is_err());
 }
 
 #[test]
@@ -73,11 +73,11 @@ fn test_conductivity() {
 
 #[test]
 fn test_diffusivity() {
-    let eta = Diffusivity::new(1.0).unwrap();
+    let eta = Diffusivity::<f64>::new(1.0).unwrap();
     assert_eq!(eta.value(), 1.0);
-    assert!(Diffusivity::new(-1.0).is_err());
-    assert!(Diffusivity::new(f64::NAN).is_err());
-    assert!(Diffusivity::new(f64::INFINITY).is_err());
+    assert!(Diffusivity::<f64>::new(-1.0).is_err());
+    assert!(Diffusivity::<f64>::new(f64::NAN).is_err());
+    assert!(Diffusivity::<f64>::new(f64::INFINITY).is_err());
 }
 
 // ===========================================================================
@@ -86,7 +86,7 @@ fn test_diffusivity() {
 
 #[test]
 fn test_alfven_speed_new_unchecked() {
-    let v = AlfvenSpeed::new_unchecked(100.0);
+    let v = AlfvenSpeed::<f64>::new_unchecked(100.0);
     assert_eq!(v.value(), 100.0);
 }
 
@@ -98,19 +98,19 @@ fn test_plasma_beta_new_unchecked() {
 
 #[test]
 fn test_magnetic_pressure_new_unchecked() {
-    let p = MagneticPressure::new_unchecked(1000.0);
+    let p = MagneticPressure::<f64>::new_unchecked(1000.0);
     assert_eq!(p.value(), 1000.0);
 }
 
 #[test]
 fn test_larmor_radius_new_unchecked() {
-    let r = LarmorRadius::new_unchecked(1.0);
+    let r = LarmorRadius::<f64>::new_unchecked(1.0);
     assert_eq!(r.value(), 1.0);
 }
 
 #[test]
 fn test_debye_length_new_unchecked() {
-    let l = DebyeLength::new_unchecked(1e-6);
+    let l = DebyeLength::<f64>::new_unchecked(1e-6);
     assert_eq!(l.value(), 1e-6);
 }
 
@@ -128,7 +128,7 @@ fn test_conductivity_new_unchecked() {
 
 #[test]
 fn test_diffusivity_new_unchecked() {
-    let eta = Diffusivity::new_unchecked(1.0);
+    let eta = Diffusivity::<f64>::new_unchecked(1.0);
     assert_eq!(eta.value(), 1.0);
 }
 
@@ -138,7 +138,7 @@ fn test_diffusivity_new_unchecked() {
 
 #[test]
 fn test_alfven_speed_default() {
-    let v: AlfvenSpeed = Default::default();
+    let v: AlfvenSpeed<f64> = Default::default();
     assert_eq!(v.value(), 0.0);
 }
 
@@ -150,25 +150,25 @@ fn test_plasma_beta_default() {
 
 #[test]
 fn test_magnetic_pressure_default() {
-    let p: MagneticPressure = Default::default();
+    let p: MagneticPressure<f64> = Default::default();
     assert_eq!(p.value(), 0.0);
 }
 
 #[test]
 fn test_diffusivity_default() {
-    let eta: Diffusivity = Default::default();
+    let eta: Diffusivity<f64> = Default::default();
     assert_eq!(eta.value(), 0.0);
 }
 
 #[test]
 fn test_larmor_radius_default() {
-    let r: LarmorRadius = Default::default();
+    let r: LarmorRadius<f64> = Default::default();
     assert!(r.value() > 0.0);
 }
 
 #[test]
 fn test_debye_length_default() {
-    let l: DebyeLength = Default::default();
+    let l: DebyeLength<f64> = Default::default();
     assert!(l.value() > 0.0);
 }
 

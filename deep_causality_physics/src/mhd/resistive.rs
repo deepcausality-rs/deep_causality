@@ -24,7 +24,7 @@ use deep_causality_topology::SimplicialManifold;
 /// *   `Result<CausalTensor<f64>, PhysicsError>` - Rate of change tensor (2-form).
 pub fn resistive_diffusion_kernel(
     b_manifold: &SimplicialManifold<f64, f64>,
-    diffusivity: Diffusivity,
+    diffusivity: Diffusivity<f64>,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     let eta = diffusivity.value();
 
@@ -55,7 +55,7 @@ pub fn resistive_diffusion_kernel(
 /// # Returns
 /// *   `Result<Speed, PhysicsError>` - Inflow velocity $v_{in}$.
 pub fn magnetic_reconnection_rate_kernel(
-    alfven_speed: AlfvenSpeed,
+    alfven_speed: AlfvenSpeed<f64>,
     lundquist: f64,
 ) -> Result<Speed, PhysicsError> {
     let va = alfven_speed.value();

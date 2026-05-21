@@ -16,7 +16,7 @@ use crate::{Density, G, Length, PhysicsError, Pressure, Speed};
 /// * `Ok(Pressure)` - Total pressure at depth.
 pub fn hydrostatic_pressure_kernel(
     p0: &Pressure,
-    density: &Density,
+    density: &Density<f64>,
     depth: &Length,
 ) -> Result<Pressure, PhysicsError> {
     // P = P0 + rho * g * h
@@ -49,7 +49,7 @@ pub fn bernoulli_pressure_kernel(
     h1: &Length,
     v2: &Speed,
     h2: &Length,
-    density: &Density,
+    density: &Density<f64>,
 ) -> Result<Pressure, PhysicsError> {
     // P1 + 0.5 * rho * v1^2 + rho * g * h1 = P2 + 0.5 * rho * v2^2 + rho * g * h2
     // Solve for P2:

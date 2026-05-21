@@ -14,7 +14,7 @@ use deep_causality_topology::SimplicialManifold;
 pub fn lorentz_force(
     j: &CausalMultiVector<f64>,
     b: &CausalMultiVector<f64>,
-) -> PropagatingEffect<PhysicalField> {
+) -> PropagatingEffect<PhysicalField<f64>> {
     match forces::lorentz_force_kernel(j, b) {
         Ok(f) => PropagatingEffect::pure(PhysicalField(f)),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -45,7 +45,7 @@ pub fn lorenz_gauge(
 pub fn poynting_vector(
     e: &CausalMultiVector<f64>,
     b: &CausalMultiVector<f64>,
-) -> PropagatingEffect<PhysicalField> {
+) -> PropagatingEffect<PhysicalField<f64>> {
     match fields::poynting_vector_kernel(e, b) {
         Ok(val) => PropagatingEffect::pure(PhysicalField(val)),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),

@@ -5,6 +5,7 @@
 use crate::mhd::quantities::{AlfvenSpeed, MagneticPressure};
 use crate::{Density, PhysicalField, PhysicsError};
 use deep_causality_multivector::MultiVector;
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{SimplicialComplex, SimplicialManifold};
@@ -19,28 +20,31 @@ use std::collections::HashMap;
 /// *   `permeability` - Magnetic permeability $\mu_0$.
 ///
 /// # Returns
-/// *   `Result<AlfvenSpeed, PhysicsError>` - Alfven speed $v_A$.
-pub fn alfven_speed_kernel(
-    b_field: &PhysicalField,
-    density: &Density,
-    permeability: f64,
-) -> Result<AlfvenSpeed, PhysicsError> {
+/// *   `Result<AlfvenSpeed<R>, PhysicsError>` - Alfven speed $v_A$.
+pub fn alfven_speed_kernel<R>(
+    b_field: &PhysicalField<R>,
+    density: &Density<R>,
+    permeability: R,
+) -> Result<AlfvenSpeed<R>, PhysicsError>
+where
+    R: RealField,
+{
     let b_mag = b_field.inner().squared_magnitude().sqrt();
     let rho = density.value();
 
-    if permeability <= 0.0 {
+    if permeability <= R::zero() {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Permeability must be positive".into(),
         ));
     }
 
-    if rho < 0.0 {
+    if rho < R::zero() {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Density cannot be negative".into(),
         ));
     }
 
-    if rho == 0.0 {
+    if rho == R::zero() {
         return Err(PhysicsError::Singularity(
             "Zero density in Alfven speed".into(),
         ));
@@ -60,20 +64,25 @@ pub fn alfven_speed_kernel(
 /// *   `permeability` - Magnetic permeability $\mu_0$.
 ///
 /// # Returns
-/// *   `Result<MagneticPressure, PhysicsError>` - Magnetic pressure $P_B$.
-pub fn magnetic_pressure_kernel(
-    b_field: &PhysicalField,
-    permeability: f64,
-) -> Result<MagneticPressure, PhysicsError> {
+/// *   `Result<MagneticPressure<R>, PhysicsError>` - Magnetic pressure $P_B$.
+pub fn magnetic_pressure_kernel<R>(
+    b_field: &PhysicalField<R>,
+    permeability: R,
+) -> Result<MagneticPressure<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
     let b_sq = b_field.inner().squared_magnitude();
 
-    if permeability <= 0.0 {
+    if permeability <= R::zero() {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Permeability must be positive".into(),
         ));
     }
 
-    let pb = b_sq / (2.0 * permeability);
+    let two = R::from_f64(2.0)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(2.0) failed".into()))?;
+    let pb = b_sq / (two * permeability);
     MagneticPressure::new(pb)
 }
 
