@@ -5,28 +5,31 @@
 
 use crate::{Frequency, Mass, MomentOfInertia, PhysicsError};
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
+use deep_causality_num::RealField;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct PhysicalVector(pub CausalMultiVector<f64>);
+pub struct PhysicalVector<R: RealField>(pub CausalMultiVector<R>);
 
-impl Default for PhysicalVector {
+impl<R: RealField> Default for PhysicalVector<R> {
     fn default() -> Self {
-        // Return a scalar 0 multivector with Euclidean metric
         Self(
-            CausalMultiVector::new(vec![0.0], deep_causality_multivector::Metric::Euclidean(0))
-                .unwrap(),
+            CausalMultiVector::new(
+                vec![R::zero()],
+                deep_causality_multivector::Metric::Euclidean(0),
+            )
+            .unwrap(),
         )
     }
 }
 
-impl PhysicalVector {
-    pub fn new(val: CausalMultiVector<f64>) -> Self {
+impl<R: RealField> PhysicalVector<R> {
+    pub fn new(val: CausalMultiVector<R>) -> Self {
         Self(val)
     }
-    pub fn inner(&self) -> &CausalMultiVector<f64> {
+    pub fn inner(&self) -> &CausalMultiVector<R> {
         &self.0
     }
-    pub fn into_inner(self) -> CausalMultiVector<f64> {
+    pub fn into_inner(self) -> CausalMultiVector<R> {
         self.0
     }
 }
@@ -89,12 +92,13 @@ pub fn rotational_kinetic_energy_kernel(
 ///
 /// # Returns
 /// * `Result<PhysicalVector, PhysicsError>` - The torque bivector wrapped in a physical vector.
-pub fn torque_kernel(
-    radius: &CausalMultiVector<f64>,
-    force: &CausalMultiVector<f64>,
-) -> Result<PhysicalVector, PhysicsError> {
-    // Torque = r x F (Outer product in GA gives Bivector torque)
-    // T = r ^ F
+pub fn torque_kernel<R>(
+    radius: &CausalMultiVector<R>,
+    force: &CausalMultiVector<R>,
+) -> Result<PhysicalVector<R>, PhysicsError>
+where
+    R: RealField,
+{
     if radius.metric() != force.metric() {
         return Err(PhysicsError::DimensionMismatch(format!(
             "Metric mismatch: {:?} != {:?}",
@@ -114,11 +118,13 @@ pub fn torque_kernel(
 ///
 /// # Returns
 /// * `Result<PhysicalVector, PhysicsError>` - The angular momentum bivector.
-pub fn angular_momentum_kernel(
-    radius: &CausalMultiVector<f64>,
-    momentum: &CausalMultiVector<f64>,
-) -> Result<PhysicalVector, PhysicsError> {
-    // L = r x p = r ^ p
+pub fn angular_momentum_kernel<R>(
+    radius: &CausalMultiVector<R>,
+    momentum: &CausalMultiVector<R>,
+) -> Result<PhysicalVector<R>, PhysicsError>
+where
+    R: RealField,
+{
     if radius.metric() != momentum.metric() {
         return Err(PhysicsError::DimensionMismatch(format!(
             "Metric mismatch: {:?} != {:?}",

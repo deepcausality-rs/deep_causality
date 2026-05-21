@@ -122,7 +122,7 @@ fn test_torque_kernel_valid() {
     let result = torque_kernel(&radius, &force);
     assert!(result.is_ok());
 
-    let torque: PhysicalVector = result.unwrap();
+    let torque: PhysicalVector<f64> = result.unwrap();
     // The result is a bivector (torque plane)
     assert!(!torque.inner().data().is_empty());
 }
@@ -167,7 +167,7 @@ fn test_angular_momentum_kernel_valid() {
     let result = angular_momentum_kernel(&radius, &momentum);
     assert!(result.is_ok());
 
-    let l: PhysicalVector = result.unwrap();
+    let l: PhysicalVector<f64> = result.unwrap();
     assert!(!l.inner().data().is_empty());
 }
 
@@ -177,7 +177,7 @@ fn test_angular_momentum_kernel_valid() {
 
 #[test]
 fn test_physical_vector_default() {
-    let pv = PhysicalVector::default();
+    let pv = PhysicalVector::<f64>::default();
     // Default should be a scalar 0 multivector
     assert!((pv.inner().data()[0] - 0.0).abs() < 1e-10);
 }

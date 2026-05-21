@@ -12,6 +12,7 @@ use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
+use crate::dynamics::kinematics::PhysicalVector;
 
 /// Causal wrapper for [`estimation::kalman_filter_linear_kernel`].
 pub fn kalman_filter_linear<R>(
@@ -64,10 +65,13 @@ pub fn rotational_kinetic_energy(
 }
 
 /// Causal wrapper for [`kinematics::torque_kernel`].
-pub fn torque(
-    radius: &CausalMultiVector<f64>,
-    force: &CausalMultiVector<f64>,
-) -> PropagatingEffect<crate::dynamics::kinematics::PhysicalVector> {
+pub fn torque<R>(
+    radius: &CausalMultiVector<R>,
+    force: &CausalMultiVector<R>,
+) -> PropagatingEffect<PhysicalVector<R>>
+where
+    R: RealField + Debug,
+{
     match kinematics::torque_kernel(radius, force) {
         Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -75,10 +79,13 @@ pub fn torque(
 }
 
 /// Causal wrapper for [`kinematics::angular_momentum_kernel`].
-pub fn angular_momentum(
-    radius: &CausalMultiVector<f64>,
-    momentum: &CausalMultiVector<f64>,
-) -> PropagatingEffect<kinematics::PhysicalVector> {
+pub fn angular_momentum<R>(
+    radius: &CausalMultiVector<R>,
+    momentum: &CausalMultiVector<R>,
+) -> PropagatingEffect<PhysicalVector<R>>
+where
+    R: RealField + Debug,
+{
     match kinematics::angular_momentum_kernel(radius, momentum) {
         Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
