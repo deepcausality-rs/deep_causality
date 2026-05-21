@@ -4,6 +4,7 @@
  */
 
 use crate::{Density, G, Length, PhysicsError, Pressure, Speed};
+use deep_causality_num::{FromPrimitive, RealField};
 
 /// Calculates hydrostatic pressure: $P = P_0 + \rho g h$.
 ///
@@ -14,13 +15,19 @@ use crate::{Density, G, Length, PhysicsError, Pressure, Speed};
 ///
 /// # Returns
 /// * `Ok(Pressure)` - Total pressure at depth.
-pub fn hydrostatic_pressure_kernel(
-    p0: &Pressure,
-    density: &Density<f64>,
+pub fn hydrostatic_pressure_kernel<R>(
+    p0: &Pressure<R>,
+    density: &Density<R>,
     depth: &Length,
-) -> Result<Pressure, PhysicsError> {
-    // P = P0 + rho * g * h
-    let rho_g_h = density.value() * G * depth.value();
+) -> Result<Pressure<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
+    let g = R::from_f64(G)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(G) failed".into()))?;
+    let h = R::from_f64(depth.value())
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(depth) failed".into()))?;
+    let rho_g_h = density.value() * g * h;
     let p_total = p0.value() + rho_g_h;
 
     Pressure::new(p_total)
@@ -43,21 +50,33 @@ pub fn hydrostatic_pressure_kernel(
 ///
 /// # Returns
 /// * `Ok(Pressure)` - Pressure at point 2.
-pub fn bernoulli_pressure_kernel(
-    p1: &Pressure,
+pub fn bernoulli_pressure_kernel<R>(
+    p1: &Pressure<R>,
     v1: &Speed,
     h1: &Length,
     v2: &Speed,
     h2: &Length,
-    density: &Density<f64>,
-) -> Result<Pressure, PhysicsError> {
-    // P1 + 0.5 * rho * v1^2 + rho * g * h1 = P2 + 0.5 * rho * v2^2 + rho * g * h2
-    // Solve for P2:
-    // P2 = P1 + 0.5*rho*(v1^2 - v2^2) + rho*g*(h1 - h2)
+    density: &Density<R>,
+) -> Result<Pressure<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
+    let lift = |x: f64| -> Result<R, PhysicsError> {
+        R::from_f64(x).ok_or_else(|| {
+            PhysicsError::NumericalInstability("R::from_f64 lift failed in Bernoulli".into())
+        })
+    };
+
+    let half = lift(0.5)?;
+    let g = lift(G)?;
+    let v1_r = lift(v1.value())?;
+    let v2_r = lift(v2.value())?;
+    let h1_r = lift(h1.value())?;
+    let h2_r = lift(h2.value())?;
+
     let rho = density.value();
-    // Use proper f64 methods
-    let term_kinetic = 0.5 * rho * (v1.value().powi(2) - v2.value().powi(2));
-    let term_potential = rho * G * (h1.value() - h2.value());
+    let term_kinetic = half * rho * (v1_r * v1_r - v2_r * v2_r);
+    let term_potential = rho * g * (h1_r - h2_r);
 
     let p2 = p1.value() + term_kinetic + term_potential;
 

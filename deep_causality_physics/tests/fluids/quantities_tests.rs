@@ -11,20 +11,20 @@ use deep_causality_physics::{Density, PhysicsErrorEnum, Pressure, Viscosity};
 
 #[test]
 fn test_pressure_new_valid() {
-    let pressure = Pressure::new(101325.0);
+    let pressure = Pressure::<f64>::new(101325.0);
     assert!(pressure.is_ok());
     assert!((pressure.unwrap().value() - 101325.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_pressure_new_zero() {
-    let pressure = Pressure::new(0.0);
+    let pressure = Pressure::<f64>::new(0.0);
     assert!(pressure.is_ok());
 }
 
 #[test]
 fn test_pressure_new_negative_error() {
-    let pressure = Pressure::new(-1.0);
+    let pressure = Pressure::<f64>::new(-1.0);
     assert!(pressure.is_err());
     match &pressure.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
@@ -36,13 +36,13 @@ fn test_pressure_new_negative_error() {
 
 #[test]
 fn test_pressure_new_unchecked() {
-    let pressure = Pressure::new_unchecked(50000.0);
+    let pressure = Pressure::<f64>::new_unchecked(50000.0);
     assert!((pressure.value() - 50000.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_pressure_into_f64() {
-    let pressure = Pressure::new(1000.0).unwrap();
+    let pressure = Pressure::<f64>::new(1000.0).unwrap();
     let val: f64 = pressure.into();
     assert!((val - 1000.0).abs() < 1e-10);
 }

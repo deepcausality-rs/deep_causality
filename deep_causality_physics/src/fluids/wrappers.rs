@@ -5,14 +5,19 @@
 
 use crate::fluids::mechanics;
 use crate::{Density, Length, Pressure, Speed};
+use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
+use deep_causality_num::{FromPrimitive, RealField};
 
 /// Causal wrapper for [`mechanics::hydrostatic_pressure_kernel`].
-pub fn hydrostatic_pressure(
-    p0: &Pressure,
-    density: &Density<f64>,
+pub fn hydrostatic_pressure<R>(
+    p0: &Pressure<R>,
+    density: &Density<R>,
     depth: &Length,
-) -> PropagatingEffect<Pressure> {
+) -> PropagatingEffect<Pressure<R>>
+where
+    R: RealField + FromPrimitive + Debug,
+{
     match mechanics::hydrostatic_pressure_kernel(p0, density, depth) {
         Ok(p) => PropagatingEffect::pure(p),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -20,14 +25,17 @@ pub fn hydrostatic_pressure(
 }
 
 /// Causal wrapper for [`mechanics::bernoulli_pressure_kernel`].
-pub fn bernoulli_pressure(
-    p1: &Pressure,
+pub fn bernoulli_pressure<R>(
+    p1: &Pressure<R>,
     v1: &Speed,
     h1: &Length,
     v2: &Speed,
     h2: &Length,
-    density: &Density<f64>,
-) -> PropagatingEffect<Pressure> {
+    density: &Density<R>,
+) -> PropagatingEffect<Pressure<R>>
+where
+    R: RealField + FromPrimitive + Debug,
+{
     match mechanics::bernoulli_pressure_kernel(p1, v1, h1, v2, h2, density) {
         Ok(p) => PropagatingEffect::pure(p),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),

@@ -14,8 +14,8 @@ use deep_causality_physics::{
 #[test]
 fn test_hydrostatic_pressure_kernel_valid() {
     // P = P0 + ρgh
-    let p0 = Pressure::new(101325.0).unwrap(); // 1 atm
-    let density = Density::new(1000.0).unwrap(); // water
+    let p0 = Pressure::<f64>::new(101325.0).unwrap(); // 1 atm
+    let density = Density::<f64>::new(1000.0).unwrap(); // water
     let depth = Length::new(10.0).unwrap(); // 10 meters
 
     let result = hydrostatic_pressure_kernel(&p0, &density, &depth);
@@ -34,8 +34,8 @@ fn test_hydrostatic_pressure_kernel_valid() {
 
 #[test]
 fn test_hydrostatic_pressure_kernel_zero_depth() {
-    let p0 = Pressure::new(101325.0).unwrap();
-    let density = Density::new(1000.0).unwrap();
+    let p0 = Pressure::<f64>::new(101325.0).unwrap();
+    let density = Density::<f64>::new(1000.0).unwrap();
     let depth = Length::new(0.0).unwrap();
 
     let result = hydrostatic_pressure_kernel(&p0, &density, &depth);
@@ -55,12 +55,12 @@ fn test_hydrostatic_pressure_kernel_zero_depth() {
 #[test]
 fn test_bernoulli_pressure_kernel_valid() {
     // P2 = P1 + 0.5*ρ*(v1² - v2²) + ρ*g*(h1 - h2)
-    let p1 = Pressure::new(100000.0).unwrap();
+    let p1 = Pressure::<f64>::new(100000.0).unwrap();
     let v1 = Speed::new(5.0).unwrap();
     let h1 = Length::new(10.0).unwrap();
     let v2 = Speed::new(10.0).unwrap();
     let h2 = Length::new(5.0).unwrap();
-    let density = Density::new(1000.0).unwrap();
+    let density = Density::<f64>::new(1000.0).unwrap();
 
     let result = bernoulli_pressure_kernel(&p1, &v1, &h1, &v2, &h2, &density);
     assert!(result.is_ok());
@@ -83,10 +83,10 @@ fn test_bernoulli_pressure_kernel_valid() {
 /// Bernoulli at same height and velocity should give same pressure
 #[test]
 fn test_bernoulli_pressure_kernel_same_height_velocity() {
-    let p1 = Pressure::new(50000.0).unwrap();
+    let p1 = Pressure::<f64>::new(50000.0).unwrap();
     let v = Speed::new(10.0).unwrap();
     let h = Length::new(5.0).unwrap();
-    let density = Density::new(1000.0).unwrap();
+    let density = Density::<f64>::new(1000.0).unwrap();
 
     let result = bernoulli_pressure_kernel(&p1, &v, &h, &v, &h, &density);
     assert!(result.is_ok());
@@ -101,11 +101,11 @@ fn test_bernoulli_pressure_kernel_same_height_velocity() {
 /// Physics invariant: Energy conservation - faster flow = lower pressure (Venturi effect)
 #[test]
 fn test_bernoulli_venturi_effect() {
-    let p1 = Pressure::new(100000.0).unwrap();
+    let p1 = Pressure::<f64>::new(100000.0).unwrap();
     let v1 = Speed::new(2.0).unwrap();
     let v2 = Speed::new(10.0).unwrap(); // Faster flow
     let h = Length::new(0.0).unwrap(); // Same height
-    let density = Density::new(1000.0).unwrap();
+    let density = Density::<f64>::new(1000.0).unwrap();
 
     let result = bernoulli_pressure_kernel(&p1, &v1, &h, &v2, &h, &density);
     assert!(result.is_ok());

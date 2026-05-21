@@ -6,34 +6,40 @@
 use crate::PhysicsError;
 
 /// Pressure (Pascals).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct Pressure(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Pressure<R: deep_causality_num::RealField>(R);
 
-impl Pressure {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for Pressure<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> Pressure<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::PhysicalInvariantBroken(format!(
-                "Pressure must be finite: {}",
-                val
-            )));
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Pressure must be finite".into(),
+            ));
         }
-        if val < 0.0 {
+        if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Negative Pressure".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<Pressure> for f64 {
-    fn from(val: Pressure) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<Pressure<R>> for f64 {
+    fn from(val: Pressure<R>) -> Self {
+        val.0.into()
     }
 }
 

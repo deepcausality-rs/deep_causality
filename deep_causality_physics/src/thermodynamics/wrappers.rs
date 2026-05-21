@@ -24,7 +24,7 @@ pub fn heat_diffusion(
 
 /// Causal wrapper for [`stats::ideal_gas_law_kernel`]. Returns result as `Ratio` (or scalar).
 pub fn ideal_gas_law(
-    pressure: Pressure,
+    pressure: Pressure<f64>,
     volume: Volume,
     moles: AmountOfSubstance,
     temp: Temperature,
