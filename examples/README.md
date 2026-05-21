@@ -118,41 +118,43 @@ See [chronometric_examples/README.md](chronometric_examples/README.md) for detai
 
 **Location:** `examples/mathematics_examples`
 
-Multi-mathematics composition through Higher-Kinded Types (`Functor`, `Monad`, `CoMonad`) and the `CausalEffectPropagationProcess` monad. Each example demonstrates how tensor, geometric algebra (multivector), topology (simplicial manifolds), and the causal effect system compose through one uniform API. 
+Consolidated examples for all four major DeepCausality mathematics crates
+(`deep_causality_multivector`, `deep_causality_sparse`, `deep_causality_tensor`,
+`deep_causality_topology`), plus the cross-crate composition examples that show
+how they fit together through HKT (`Functor`, `Monad`, `CoMonad`) and the causal
+effect monad.
 
-### Standalone
+### Subfolders
 
-| Example | Domain | Command |
-|---------|--------|---------|
-| [algebraic_scanner](mathematics_examples/algebraic_scanner/README.md) | Abstract Algebra | `cargo run -p mathematics_examples --example algebraic_scanner` |
+| Subfolder | Crate | Description |
+|-----------|-------|-------------|
+| [algebra](mathematics_examples/algebra/README.md) | `deep_causality_multivector` | Clifford and geometric-algebra examples (basic, PGA3D, Dixon, Maxwell, Hopf, GRMHD, plus the `algebraic_scanner` study of complex structure) |
+| [sparse](mathematics_examples/sparse/README.md) | `deep_causality_sparse` | CSR-format sparse matrix ops and the HKT functor view |
+| [tensor](mathematics_examples/tensor/README.md) | `deep_causality_tensor` | `CausalTensor` construction, `EinSumOp`, Einstein-field index gymnastics, HKT (Functor, Applicative) |
+| [topology](mathematics_examples/topology/README.md) | `deep_causality_topology` | Graphs, simplicial and cubical complexes, manifolds, differential forms, lattice gauge fields |
+| [composable_multi_math](mathematics_examples/composable_multi_math/README.md) | cross-crate | HKT and causal-monad composition across two or three of the above crates |
 
-### HKT-Only Composition (Functor, Monad, CoMonad)
+### Highlights
 
-These examples compose two or three crates through witness traits, with no effect machinery.
+| Example | Crate | Description | Command |
+|---------|-------|-------------|---------|
+| [algebraic_scanner](mathematics_examples/algebra/algebraic_scanner/README.md) | multivector | Scans Clifford algebras `Cl(p, q, r)` for complex structure (`I² = -1`) | `cargo run -p mathematics_examples --example algebraic_scanner_examples` |
+| [maxwell_multivector](mathematics_examples/algebra/maxwell_multivector.rs) | multivector | Unifies electric and magnetic fields into a single electromagnetic-field bivector | `cargo run -p mathematics_examples --example maxwell_multivector_examples` |
+| [pga3d_multivector](mathematics_examples/algebra/pga3d_multivector.rs) | multivector | Projective Geometric Algebra (PGA) for rigid-body motions in graphics and robotics | `cargo run -p mathematics_examples --example pga3d_multivector_examples` |
+| [basic_csr_ops](mathematics_examples/sparse/basic_csr_ops.rs) | sparse | Constructing a `CsrMatrix` from triplets; row/column iteration | `cargo run -p mathematics_examples --example basic_csr_ops_examples` |
+| [ein_sum_causal_tensor](mathematics_examples/tensor/ein_sum_causal_tensor.rs) | tensor | Einstein-summation contractions via `EinSumOp` | `cargo run -p mathematics_examples --example ein_sum_causal_tensor_examples` |
+| [einstein_field_causal_tensor](mathematics_examples/tensor/einstein_field_causal_tensor.rs) | tensor | Index raising and lowering with the metric; Ricci-style contractions | `cargo run -p mathematics_examples --example einstein_field_causal_tensor_examples` |
+| [manifold_analysis](mathematics_examples/topology/manifold_analysis.rs) | topology | Constructing a `Manifold<SimplicialComplex<R>, F>`; Euler characteristic; orientation | `cargo run -p mathematics_examples --example manifold_analysis_examples` |
+| [cubical_heat_diffusion](mathematics_examples/topology/cubical_heat_diffusion.rs) | topology | Explicit-Euler heat diffusion on a cubical manifold with a Moore-neighborhood stencil | `cargo run -p mathematics_examples --example cubical_heat_diffusion_examples` |
+| [lattice_gauge_simulation](mathematics_examples/topology/lattice_gauge_simulation.rs) | topology | SU(3) lattice gauge theory: Metropolis thermalization, plaquette, Wilson loop, Polyakov loop, APE smearing, Wilson flow | `cargo run -p mathematics_examples --example lattice_gauge_simulation_examples` |
+| [tensor_x_topology_laplacian](mathematics_examples/composable_multi_math/tensor_x_topology_laplacian/README.md) | composition | Discrete Laplacian on a 1D simplicial manifold via `ManifoldWitness::extend` (CoMonad) | `cargo run -p mathematics_examples --example tensor_x_topology_laplacian_examples` |
+| [triple_hkt_stress_field](mathematics_examples/composable_multi_math/triple_hkt_stress_field/README.md) | composition | 3D linear-elastic stress on a tetrahedral mesh: strain, Hooke, normal, Cauchy traction, material rotor, von Mises in one `extend` call | `cargo run -p mathematics_examples --example triple_hkt_stress_field_examples` |
+| [effect_diffusion_on_manifold](mathematics_examples/composable_multi_math/effect_diffusion_on_manifold/README.md) | composition | Heat equation: spatial Laplacian via `extend`, time stepping via `bind`, stability short-circuit on CFL violation | `cargo run -p mathematics_examples --example effect_diffusion_on_manifold_examples` |
+| [capstone_spinor_minkowski](mathematics_examples/composable_multi_math/capstone_spinor_minkowski/README.md) | composition (capstone) | Parallel transport of a unit timelike spinor along a discretized Minkowski worldline in `Cl(3,1)`. Final drift versus closed-form `(cosh θ, sinh θ)` is ~1.7e-31 at `Float106`, fifteen orders of magnitude tighter than f64 | `cargo run -p mathematics_examples --example capstone_spinor_minkowski_examples` |
 
-| Example | Composes              | Description | Command |
-|---------|-----------------------|-------------|---------|
-| [tensor_x_algebra_rotation_field](mathematics_examples/tensor_x_algebra_rotation_field/README.md) | tensor x multivector  | Rotates a grid of vectors by a single Clifford rotor via `Functor::fmap` on a tensor of multivectors | `cargo run -p mathematics_examples --example tensor_x_algebra_rotation_field` |
-| [tensor_x_topology_laplacian](mathematics_examples/tensor_x_topology_laplacian/README.md) | tensor x topology     | Discrete Laplacian on a 1D simplicial manifold via `ManifoldWitness::extend` (CoMonad) | `cargo run -p mathematics_examples --example tensor_x_topology_laplacian` |
-| [triple_hkt_stress_field](mathematics_examples/triple_hkt_stress_field/README.md) | tensor x multivector x topology | 3D linear-elastic stress analysis blueprint on a tetrahedral mesh; six-step pipeline (strain, Hooke, normal, Cauchy traction, material rotor, von Mises) in one `extend` call. Documented placeholders show where to plug in a real material model, mesh source, or failure criterion | `cargo run -p mathematics_examples --example triple_hkt_stress_field` |
-
-### Causal Monad Composition (CausalEffectPropagationProcess)
-
-These examples wrap operations in the causal monad. Each step is a `bind` with logging and short-circuit error propagation.
-
-| Example | Composes | Description | Command |
-|---------|----------|-------------|---------|
-| [effect_kalman_predict_correct](mathematics_examples/effect_kalman_predict_correct/README.md) | tensor + multivector + core | Predict / correct / verify skeleton (the structural shape of a Kalman filter); tensor matrix-multiply for predict, Clifford rotor for correct, NaN gate for verify. README enumerates the eight pieces a production filter adds | `cargo run -p mathematics_examples --example effect_kalman_predict_correct` |
-| [effect_diffusion_on_manifold](mathematics_examples/effect_diffusion_on_manifold/README.md) | topology + tensor + core | Heat equation on a 1D manifold: spatial Laplacian via `extend` (CoMonad), time stepping via `bind` (Monad), with stability short-circuit on CFL violation | `cargo run -p mathematics_examples --example effect_diffusion_on_manifold` |
-| [effect_tensor_algebra_roundtrip](mathematics_examples/effect_tensor_algebra_roundtrip/README.md) | tensor + multivector + core | Lift a 3-vector into `Cl(3,0)`, rotate, lower back, verify norm preservation by tensor dot product. Carried value type changes between `bind` calls; the monad threads them | `cargo run -p mathematics_examples --example effect_tensor_algebra_roundtrip` |
-
-### Capstone
-
-| Example | Composes | Description | Command |
-|---------|----------|-------------|---------|
-| [capstone_spinor_minkowski](mathematics_examples/capstone_spinor_minkowski/README.md) | all three + core | Parallel transport of a unit timelike spinor along a discretized Minkowski worldline in `Cl(3,1)`. Topology supplies the path, tensor stores per-edge rapidities, multivector builds the boost rotors, the causal monad orders the steps. Final drift versus the closed-form `cosh(theta), sinh(theta)` is ~1.7e-31 at `Float106`, fifteen orders of magnitude tighter than f64 | `cargo run -p mathematics_examples --example capstone_spinor_minkowski` |
-
-See [mathematics_examples/README.md](mathematics_examples/README.md) for detailed documentation, including the precision-abstraction decision tree (`f32` vs `f64` vs `Float106`).
+See [mathematics_examples/README.md](mathematics_examples/README.md) for the full
+table of all 32 registered examples and the precision-abstraction decision tree
+(`f32` vs `f64` vs `Float106`).
 
 ---
 

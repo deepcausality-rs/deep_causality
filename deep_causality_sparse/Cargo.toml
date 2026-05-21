@@ -48,14 +48,6 @@ version = "0.4"
 default-features = false
 optional = true
 
-[[example]]
-name = "basic_matrix_ops"
-path = "examples/basic_csr_ops.rs"
-
-[[example]]
-name = "hkt_csr_ops"
-path = "examples/hkt_csr_ops.rs"
-
 [dev-dependencies]
 criterion = { version = "0.8" }
 deep_causality_rand = { path = "../deep_causality_rand" }

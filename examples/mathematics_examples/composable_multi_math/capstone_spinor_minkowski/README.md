@@ -6,14 +6,14 @@ This is the relativistic version of "carry a state forward in time and watch it 
 
 Where this matters in practice: GPS satellites need relativistic corrections of about 38 microseconds per day or the position error grows by 10 km within a day. Particle accelerators (LHC, Fermilab) simulate beam dynamics with relativistic transports along every magnet section. Astrodynamics codes for deep-space missions track frame transformations along long worldlines. Quantum-optics simulations propagate qubit states by chained unitary rotors, which is structurally the same operation in a different signature. Anywhere a "thing with orientation or spin" moves through "a path made of segments," this is the inner loop.
 
-The capstone is also where the architecture shows it value. Five mathematical structures (topology, tensor, geometric algebra, monadic effect chain, high-precision scalar) collaborate. The composition is exactly the one [`docs/UNIFORM_MATH.md`](../../../docs/UNIFORM_MATH.md) describes: extract from the manifold, contract a tensor, rotate a multivector, advance one step in the causal monad, repeat. The final spinor differs from the closed-form expected value by roughly `1.7e-31` at `Float106`, which is fifteen orders of magnitude tighter than the same calculation at `f64`.
+The capstone is also where the architecture shows it value. Five mathematical structures (topology, tensor, geometric algebra, monadic effect chain, high-precision scalar) collaborate. The composition is exactly the one [`docs/UNIFORM_MATH.md`](../../../../docs/UNIFORM_MATH.md) describes: extract from the manifold, contract a tensor, rotate a multivector, advance one step in the causal monad, repeat. The final spinor differs from the closed-form expected value by roughly `1.7e-31` at `Float106`, which is fifteen orders of magnitude tighter than the same calculation at `f64`.
 
 A unit timelike spinor is parallel-transported along a discretized worldline in flat Minkowski spacetime. Every core crate participates and the four-step composition is wired through the causal monad.
 
 ## How to Run
 
 ```bash
-cargo run -p mathematics_examples --example capstone_spinor_minkowski
+cargo run -p mathematics_examples --example capstone_spinor_minkowski_examples
 ```
 
 ## What It Demonstrates

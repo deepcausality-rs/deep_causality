@@ -12,7 +12,7 @@ That sequence shows up in structural engineering (bridges, buildings, machined p
 ## How to Run
 
 ```bash
-cargo run -p mathematics_examples --example triple_hkt_stress_field
+cargo run -p mathematics_examples --example triple_hkt_stress_field_examples
 ```
 
 ## Sample Output

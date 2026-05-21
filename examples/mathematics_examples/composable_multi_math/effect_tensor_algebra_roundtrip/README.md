@@ -13,7 +13,7 @@ A 3-vector travels through four `bind` steps: lift into `Cl(3,0)`, rotate, lower
 ## How to Run
 
 ```bash
-cargo run -p mathematics_examples --example effect_tensor_algebra_roundtrip
+cargo run -p mathematics_examples --example effect_tensor_algebra_roundtrip_examples
 ```
 
 ## What It Demonstrates

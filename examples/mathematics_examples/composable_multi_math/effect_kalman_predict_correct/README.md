@@ -11,7 +11,7 @@ A 2-vector state passes through three monadic steps: a tensor matrix-multiply (p
 ## How to Run
 
 ```bash
-cargo run -p mathematics_examples --example effect_kalman_predict_correct
+cargo run -p mathematics_examples --example effect_kalman_predict_correct_examples
 ```
 
 ## What It Demonstrates

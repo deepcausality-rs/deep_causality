@@ -11,7 +11,7 @@ A scalar field on the vertices of a `Manifold` is processed with `ManifoldWitnes
 ## How to Run
 
 ```bash
-cargo run -p mathematics_examples --example tensor_x_topology_laplacian
+cargo run -p mathematics_examples --example tensor_x_topology_laplacian_examples
 ```
 
 ## What It Demonstrates

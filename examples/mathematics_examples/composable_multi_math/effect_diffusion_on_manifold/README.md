@@ -11,7 +11,7 @@ The discrete heat equation on a 1D manifold uses two abstractions at once: `exte
 ## How to Run
 
 ```bash
-cargo run -p mathematics_examples --example effect_diffusion_on_manifold
+cargo run -p mathematics_examples --example effect_diffusion_on_manifold_examples
 ```
 
 ## What It Demonstrates

@@ -5,7 +5,7 @@ This example demonstrates an automated search through Clifford Algebras to find 
 ## How to Run
 
 ```bash
-cargo run -p physics_examples --example algebraic_scanner
+cargo run -p mathematics_examples --example algebraic_scanner_examples
 ```
 
 ---

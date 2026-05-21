@@ -11,7 +11,7 @@ A `CausalTensor` holds a grid of `CausalMultiVector` values. Each cell is rotate
 ## How to Run
 
 ```bash
-cargo run -p mathematics_examples --example tensor_x_algebra_rotation_field
+cargo run -p mathematics_examples --example tensor_x_algebra_rotation_field_examples
 ```
 
 ## What It Demonstrates
