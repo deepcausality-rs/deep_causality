@@ -36,6 +36,10 @@ use deep_causality_physics::{
 use deep_causality_tensor::CausalTensor;
 mod model;
 
+/// Switch this alias to `f32` for low precision, `f64` for standard precision,
+/// or `Float106` for high precision.
+pub type FloatType = f64;
+
 // =============================================================================
 // MAIN: Pipeline Composition via Causal Monad
 // =============================================================================
@@ -81,10 +85,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// - Change energy scaling independently
 /// - Add multiple q-q̄ pairs for multi-jet events
 fn stage_field_to_partons(
-    evolved_tensor: CausalTensor<f64>,
+    evolved_tensor: CausalTensor<FloatType>,
     _: (),
     _: Option<()>,
-) -> PropagatingEffect<Vec<(FourMomentum<f64>, FourMomentum<f64>)>> {
+) -> PropagatingEffect<Vec<(FourMomentum<FloatType>, FourMomentum<FloatType>)>> {
     println!("Stage 1: Klein-Gordon Scalar Field");
     println!("───────────────────────────────────");
 
@@ -93,7 +97,7 @@ fn stage_field_to_partons(
         .data()
         .iter()
         .map(|&v| v.abs().powi(2))
-        .sum::<f64>()
+        .sum::<FloatType>()
         * 0.01;
 
     let cms_energy = field_energy.clamp(10.0, 500.0);
@@ -101,8 +105,8 @@ fn stage_field_to_partons(
 
     // Create virtual q-q̄ pair (back-to-back in CM frame)
     let half_e = cms_energy / 2.0;
-    let quark = FourMomentum::<f64>::new(half_e, 0.0, 0.0, half_e);
-    let antiquark = FourMomentum::<f64>::new(half_e, 0.0, 0.0, -half_e);
+    let quark = FourMomentum::<FloatType>::new(half_e, 0.0, 0.0, half_e);
+    let antiquark = FourMomentum::<FloatType>::new(half_e, 0.0, 0.0, -half_e);
 
     println!("Stage 2: QCD String Creation");
     println!("────────────────────────────");
@@ -127,7 +131,7 @@ fn stage_field_to_partons(
 /// - Replace with different fragmentation model
 /// - Add particle filtering or cuts
 fn stage_lund_fragmentation(
-    endpoints: Vec<(FourMomentum<f64>, FourMomentum<f64>)>,
+    endpoints: Vec<(FourMomentum<FloatType>, FourMomentum<FloatType>)>,
     _: (),
     _: Option<()>,
 ) -> PropagatingEffect<(usize, f64)> {
@@ -139,7 +143,8 @@ fn stage_lund_fragmentation(
 
     match lund_string_fragmentation_kernel(&endpoints, &params, &mut rng) {
         Ok(hadrons) => {
-            let valid: Vec<&Hadron<f64>> = hadrons.iter().filter(|h| h.energy() > 0.0).collect();
+            let valid: Vec<&Hadron<FloatType>> =
+                hadrons.iter().filter(|h| h.energy() > 0.0).collect();
 
             println!(
                 "  Produced {} hadrons ({} physical)",
@@ -179,7 +184,7 @@ fn stage_thermalization(
 
     // Scale to MeV (typical QGP temperature ~ 150-400 MeV)
     let temp_scale = (total_energy * 0.5).clamp(100.0, 500.0);
-    let initial_temp: Vec<f64> = (0..10)
+    let initial_temp: Vec<FloatType> = (0..10)
         .map(|i| temp_scale * (1.0 - i as f64 * 0.02))
         .collect();
     let temp_manifold = model::make_1d_manifold(initial_temp.clone());
@@ -190,12 +195,12 @@ fn stage_thermalization(
     // Use diffused result if valid, otherwise use initial average
     let avg_temp = match heat_result.value() {
         EffectValue::Value(final_temp) => {
-            let avg = final_temp.data().iter().sum::<f64>() / 10.0;
+            let avg = final_temp.data().iter().sum::<FloatType>() / 10.0;
             if avg.abs() > 1.0 {
                 avg.abs()
             } else {
                 // Fallback: use initial temperature average
-                initial_temp.iter().sum::<f64>() / 10.0
+                initial_temp.iter().sum::<FloatType>() / 10.0
             }
         }
         _ => temp_scale * 0.9, // Slight cooling
@@ -238,10 +243,12 @@ fn stage_quantum_detection(
     let psi_orth = Complex::new((1.0 - psi_val).sqrt(), 0.0);
 
     let metric = Metric::Euclidean(1);
-    let state = HilbertState::<f64>::new(vec![psi, psi_orth], metric).unwrap();
-    let basis =
-        HilbertState::<f64>::new(vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)], metric)
-            .unwrap();
+    let state = HilbertState::<FloatType>::new(vec![psi, psi_orth], metric).unwrap();
+    let basis = HilbertState::<FloatType>::new(
+        vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)],
+        metric,
+    )
+    .unwrap();
 
     let detection = born_probability(&state, &basis);
     let prob = match detection.value() {
@@ -265,7 +272,7 @@ fn stage_quantum_detection(
 // =============================================================================
 
 /// Prints a sample of produced hadrons.
-fn print_hadron_sample(hadrons: &[&Hadron<f64>]) {
+fn print_hadron_sample(hadrons: &[&Hadron<FloatType>]) {
     println!("\n  Sample hadrons:");
     for (i, h) in hadrons.iter().take(5).enumerate() {
         println!(

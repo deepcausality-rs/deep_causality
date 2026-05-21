@@ -22,6 +22,9 @@ use deep_causality_core::EffectValue;
 use deep_causality_physics::{Probability, generalized_master_equation};
 use deep_causality_tensor::CausalTensor;
 
+/// Switch this alias to `f32` for low precision, `f64` for standard precision,
+/// or `Float106` for high precision.
+pub type FloatType = f64;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Protein Folding: Generalized Master Equation ===\n");
 
@@ -33,11 +36,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let num_states = 4;
 
     // Initial state: 100% in Unfolded state
-    let mut state: Vec<Probability<f64>> = vec![
-        Probability::<f64>::new(1.0).unwrap(),
-        Probability::<f64>::new(0.0).unwrap(),
-        Probability::<f64>::new(0.0).unwrap(),
-        Probability::<f64>::new(0.0).unwrap(),
+    let mut state: Vec<Probability<FloatType>> = vec![
+        Probability::<FloatType>::new(1.0).unwrap(),
+        Probability::<FloatType>::new(0.0).unwrap(),
+        Probability::<FloatType>::new(0.0).unwrap(),
+        Probability::<FloatType>::new(0.0).unwrap(),
     ];
 
     println!("Initial Conformational Distribution:");
@@ -45,7 +48,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // History: past states (for non-Markovian memory effects)
     // History length must match memory kernel length
-    let mut history: Vec<Vec<Probability<f64>>> = vec![state.clone(), state.clone(), state.clone()];
+    let mut history: Vec<Vec<Probability<FloatType>>> =
+        vec![state.clone(), state.clone(), state.clone()];
 
     // Markov Transition Matrix (instantaneous folding)
     // For matmul T * P where P is [n,1], T should be [n,n]
@@ -68,7 +72,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Memory Kernels: small corrections based on history
     // These represent memory effects (e.g., protein "remembers" recent conformations)
-    let memory_kernels: Vec<CausalTensor<f64>> = (0..3)
+    let memory_kernels: Vec<CausalTensor<FloatType>> = (0..3)
         .map(|lag| {
             // Decay factor for this lag
             let decay = (-0.5 * (lag as f64 + 1.0)).exp() * 0.02;
@@ -110,8 +114,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .iter()
                     .map(|p| {
                         let normalized = (p.value() / total).clamp(0.0, 1.0);
-                        Probability::<f64>::new(if normalized.is_nan() { 0.0 } else { normalized })
-                            .unwrap_or(Probability::<f64>::new(0.0).unwrap())
+                        Probability::<FloatType>::new(if normalized.is_nan() {
+                            0.0
+                        } else {
+                            normalized
+                        })
+                        .unwrap_or(Probability::<FloatType>::new(0.0).unwrap())
                     })
                     .collect();
 
@@ -145,7 +153,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn print_state(state: &[Probability<f64>]) {
+fn print_state(state: &[Probability<FloatType>]) {
     let labels = ["Unfolded", "Intermed1", "Intermed2", "Native  "];
     for (i, p) in state.iter().enumerate() {
         let bar_len = (p.value() * 20.0) as usize;

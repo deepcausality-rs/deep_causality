@@ -11,9 +11,12 @@
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue};
 use deep_causality_physics::{Density, Length, PhysicsError, Pressure, Speed, bernoulli_pressure};
 
+/// Switch this alias to `f32` for low precision, `f64` for standard precision,
+/// or `Float106` for high precision.
+pub type FloatType = f64;
 #[derive(Debug, Clone, Default)]
 struct FluidState {
-    pressure: Pressure<f64>,
+    pressure: Pressure<FloatType>,
     velocity: Speed,
     height: Length,
     description: String,
@@ -22,7 +25,7 @@ struct FluidState {
 fn main() -> Result<(), PhysicsError> {
     println!("=== Bernoulli Flow Network Simulation ===\n");
 
-    let density = Density::<f64>::new(1000.0)?;
+    let density = Density::<FloatType>::new(1000.0)?;
     let flow_rate_volumetric = 0.1;
 
     println!("Fluid: Water (1000 kg/m^3)");
@@ -30,7 +33,7 @@ fn main() -> Result<(), PhysicsError> {
 
     // 1. Initial State (Reservoir)
     let initial_state = FluidState {
-        pressure: Pressure::<f64>::new(200_000.0)?,
+        pressure: Pressure::<FloatType>::new(200_000.0)?,
         velocity: Speed::new(0.0)?,
         height: Length::new(10.0)?,
         description: "Reservoir".to_string(),

@@ -14,11 +14,14 @@ use deep_causality_physics::{
     ideal_gas_law,
 };
 
+/// Switch this alias to `f32` for low precision, `f64` for standard precision,
+/// or `Float106` for high precision.
+pub type FloatType = f64;
 #[derive(Debug, Clone, Default)]
 struct EngineState {
-    p: Pressure<f64>,
+    p: Pressure<FloatType>,
     v: Volume,
-    t: Temperature<f64>,
+    t: Temperature<FloatType>,
     entropy_s: f64,
     work_done: f64,
     phase: String,
@@ -28,15 +31,15 @@ fn main() -> Result<(), PhysicsError> {
     println!("=== Carnot Heat Engine Simulation ===\n");
 
     // Configuration
-    let n_moles = AmountOfSubstance::<f64>::new(1.0)?;
-    let temp_hot = Temperature::<f64>::new(500.0)?; // 500 K
-    let temp_cold = Temperature::<f64>::new(300.0)?; // 300 K
+    let n_moles = AmountOfSubstance::<FloatType>::new(1.0)?;
+    let temp_hot = Temperature::<FloatType>::new(500.0)?; // 500 K
+    let temp_cold = Temperature::<FloatType>::new(300.0)?; // 300 K
     let compression_ratio = 2.0;
 
     // Initial State (Start of Isothermal Expansion)
     // Point A: High T, Low V, High P
     let v_a = Volume::new(0.01)?; // 10 Liters
-    let p_a = Pressure::<f64>::new(415_700.0)?; // ~4 atm (Derived from PV=nRT: 1*8.314*500 / 0.01)
+    let p_a = Pressure::<FloatType>::new(415_700.0)?; // ~4 atm (Derived from PV=nRT: 1*8.314*500 / 0.01)
 
     let initial_state = EngineState {
         p: p_a,
@@ -70,7 +73,7 @@ fn main() -> Result<(), PhysicsError> {
         // Here we invert the logic: P = nRT / V
         let r_const = 8.314; // J/(mol K)
         let p_val = (n_moles.value() * r_const * t_b.value()) / v_b.value();
-        let p_b = Pressure::<f64>::new(p_val).unwrap();
+        let p_b = Pressure::<FloatType>::new(p_val).unwrap();
 
         // Work Done = nRT * ln(Vb/Va)
         let work =
@@ -104,7 +107,7 @@ fn main() -> Result<(), PhysicsError> {
         let v_c = Volume::new(prev.v.value() * v_ratio).unwrap();
 
         let p_val = (n_moles.value() * r_const * temp_cold.value()) / v_c.value();
-        let p_c = Pressure::<f64>::new(p_val).unwrap();
+        let p_c = Pressure::<FloatType>::new(p_val).unwrap();
 
         // Work Done = - Delta U = - Cv * (Tc - Th) = Cv(Th - Tc)
         // Cv = 3/2 nR
@@ -136,7 +139,7 @@ fn main() -> Result<(), PhysicsError> {
         let v_d = Volume::new(prev.v.value() / compression_ratio).unwrap();
 
         let p_val = (n_moles.value() * r_const * temp_cold.value()) / v_d.value();
-        let p_d = Pressure::<f64>::new(p_val).unwrap();
+        let p_d = Pressure::<FloatType>::new(p_val).unwrap();
 
         // Work is negative (done ON gas)
         let work =
@@ -172,8 +175,8 @@ fn main() -> Result<(), PhysicsError> {
         let work = cv * (prev.t.value() - temp_hot.value()); // Negative diff -> Positive work (compression)
 
         let next_state = EngineState {
-            p: Pressure::<f64>::new(415_700.0).unwrap(), // Back to P_a
-            v: Volume::new(0.01).unwrap(),               // Back to V_a
+            p: Pressure::<FloatType>::new(415_700.0).unwrap(), // Back to P_a
+            v: Volume::new(0.01).unwrap(),                     // Back to V_a
             t: temp_hot,
             entropy_s: prev.entropy_s, // Constant
             work_done: prev.work_done + work,

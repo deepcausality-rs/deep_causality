@@ -39,10 +39,6 @@ use mathematics_examples::effect_helpers::{
     Process, ProcessWitness, expect_value, fail, ok, print_log,
 };
 
-/// Switch this alias to `f32` for low precision, `f64` for standard precision,
-/// or `Float106` for high precision.
-pub type FloatType = Float106;
-
 const N_VERTICES: usize = 5;
 const N_EDGES: usize = N_VERTICES - 1;
 
@@ -54,6 +50,10 @@ const I_E1: usize = 0b0010; //     2  -> e1   (spacelike, e1^2 = -1)
 const I_E2: usize = 0b0100; //     4  -> e2
 const I_E3: usize = 0b1000; //     8  -> e3
 const I_E01: usize = 0b0011; //    3  -> e0^e1  (boost generator, squares to +1)
+
+/// Switch this alias to `f32` for low precision, `f64` for standard precision,
+/// or `Float106` for high precision.
+pub type FloatType = Float106;
 
 // The applied mathematical  structures:
 //

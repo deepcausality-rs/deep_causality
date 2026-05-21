@@ -21,11 +21,14 @@ use deep_causality_core::CausalEffectPropagationProcess;
 use deep_causality_multivector::{HilbertState, Metric};
 use deep_causality_num::{Complex, DivisionAlgebra};
 
+/// Switch this alias to `f32` for low precision, `f64` for standard precision,
+/// or `Float106` for high precision.
+pub type FloatType = f64;
 /// Holds the history of quantum states for counterfactual debugging.
 /// Each state represents a snapshot at a different point in time.
 #[derive(Debug, Clone, Default)]
 struct QuantumHistory {
-    states: Vec<HilbertState<f64>>,
+    states: Vec<HilbertState<FloatType>>,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,7 +37,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 1. Initial State: |0> + |1> (Superposition)
     let metric = Metric::Euclidean(1); // 1 Qubit approx
     let psi_0 = vec![Complex::new(0.707, 0.0), Complex::new(0.707, 0.0)];
-    let initial_state = HilbertState::<f64>::new(psi_0, metric).expect("Failed to create state");
+    let initial_state =
+        HilbertState::<FloatType>::new(psi_0, metric).expect("Failed to create state");
 
     let history = QuantumHistory {
         states: vec![initial_state],
@@ -52,7 +56,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Here we simulate a "drift" to an error state.
             // Error State: |1> (flipped from desired |0>)
             let bad_psi = vec![Complex::new(0.01, 0.0), Complex::new(0.99, 0.0)];
-            let bad_state = HilbertState::<f64>::new(bad_psi, Metric::Euclidean(1)).unwrap();
+            let bad_state = HilbertState::<FloatType>::new(bad_psi, Metric::Euclidean(1)).unwrap();
 
             hist.states.push(bad_state);
 
@@ -94,7 +98,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 // Let's say we force it back to |0>
                 let corrected_psi = vec![Complex::new(0.99, 0.0), Complex::new(0.01, 0.0)];
                 let corrected_state =
-                    HilbertState::<f64>::new(corrected_psi, Metric::Euclidean(1)).unwrap();
+                    HilbertState::<FloatType>::new(corrected_psi, Metric::Euclidean(1)).unwrap();
 
                 hist.states.push(corrected_state);
                 println!("[t=4] Applied Correction (X Gate).");
