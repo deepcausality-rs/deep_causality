@@ -512,6 +512,7 @@ fn test_frequency_default() {
 // =============================================================================
 
 #[test]
+#[allow(clippy::clone_on_copy)] // exercising Clone impl for coverage
 fn test_dynamics_scalars_traits() {
     let m1 = Mass::<f64>::new(1.0).unwrap();
     let m2 = m1;

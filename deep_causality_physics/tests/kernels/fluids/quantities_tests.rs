@@ -178,10 +178,11 @@ fn test_viscosity_new_infinity_error() {
 // =============================================================================
 
 #[test]
+#[allow(clippy::clone_on_copy)] // exercising Clone impl for coverage
 fn test_pressure_traits() {
     let p1 = Pressure::<f64>::new(1.0).unwrap();
     let p2 = p1; // Copy
-    let p3 = p1.clone(); // Clone
+    let p3 = p1.clone(); // Clone (deliberately on Copy type)
     assert_eq!(p1, p2);
     assert_eq!(p1, p3);
     assert!(p1 < Pressure::<f64>::new(2.0).unwrap());
