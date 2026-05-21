@@ -5,6 +5,7 @@
 
 use crate::constants::universal::SPEED_OF_LIGHT;
 use crate::{AmountOfSubstance, Energy, HalfLife, Mass, PhysicsError, Time};
+use deep_causality_num::{FromPrimitive, RealField};
 
 // Kernels
 
@@ -25,21 +26,28 @@ use crate::{AmountOfSubstance, Energy, HalfLife, Mass, PhysicsError, Time};
 ///
 /// # Errors
 /// * `Singularity` - If `half_life` is zero (infinite decay rate).
-pub fn radioactive_decay_kernel(
-    n0: &AmountOfSubstance,
-    half_life: &HalfLife,
+pub fn radioactive_decay_kernel<R>(
+    n0: &AmountOfSubstance<R>,
+    half_life: &HalfLife<R>,
     time: &Time,
-) -> Result<AmountOfSubstance, PhysicsError> {
-    if half_life.value() == 0.0 {
+) -> Result<AmountOfSubstance<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
+    let zero = R::zero();
+    if half_life.value() == zero {
         return Err(PhysicsError::Singularity(
             "Radioactive half-life cannot be zero".into(),
         ));
     }
 
-    // Calculation: N(t) = N0 * 2^(-t / t_half)
-    // We use base 2 for numerical stability with half-life calculations.
-    let decay_ratio = time.value() / half_life.value();
-    let remaining = n0.value() * 2.0_f64.powf(-decay_ratio);
+    let two = R::from_f64(2.0)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(2.0) failed".into()))?;
+    let t = R::from_f64(time.value())
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(time) failed".into()))?;
+
+    let decay_ratio = t / half_life.value();
+    let remaining = n0.value() * two.powf(-decay_ratio);
 
     AmountOfSubstance::new(remaining)
 }

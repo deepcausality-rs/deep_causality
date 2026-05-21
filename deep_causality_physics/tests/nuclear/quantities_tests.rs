@@ -14,14 +14,14 @@ use deep_causality_physics::{
 
 #[test]
 fn test_amount_of_substance_new_valid() {
-    let amount = AmountOfSubstance::new(1.0);
+    let amount = AmountOfSubstance::<f64>::new(1.0);
     assert!(amount.is_ok());
     assert!((amount.unwrap().value() - 1.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_amount_of_substance_new_negative_error() {
-    let amount = AmountOfSubstance::new(-1.0);
+    let amount = AmountOfSubstance::<f64>::new(-1.0);
     assert!(amount.is_err());
     match &amount.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
@@ -33,13 +33,13 @@ fn test_amount_of_substance_new_negative_error() {
 
 #[test]
 fn test_amount_of_substance_new_unchecked() {
-    let amount = AmountOfSubstance::new_unchecked(5.0);
+    let amount = AmountOfSubstance::<f64>::new_unchecked(5.0);
     assert!((amount.value() - 5.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_amount_of_substance_into_f64() {
-    let amount = AmountOfSubstance::new(2.5).unwrap();
+    let amount = AmountOfSubstance::<f64>::new(2.5).unwrap();
     let val: f64 = amount.into();
     assert!((val - 2.5).abs() < 1e-10);
 }
@@ -50,32 +50,32 @@ fn test_amount_of_substance_into_f64() {
 
 #[test]
 fn test_half_life_new_valid() {
-    let hl = HalfLife::new(5730.0); // C-14
+    let hl = HalfLife::<f64>::new(5730.0); // C-14
     assert!(hl.is_ok());
 }
 
 #[test]
 fn test_half_life_new_zero() {
     // Zero half-life is invalid because it implies infinite decay rate
-    let hl = HalfLife::new(0.0);
+    let hl = HalfLife::<f64>::new(0.0);
     assert!(hl.is_err(), "Zero half-life should be rejected");
 }
 
 #[test]
 fn test_half_life_new_negative_error() {
-    let hl = HalfLife::new(-100.0);
+    let hl = HalfLife::<f64>::new(-100.0);
     assert!(hl.is_err());
 }
 
 #[test]
 fn test_half_life_new_unchecked() {
-    let hl = HalfLife::new_unchecked(1600.0); // Ra-226
+    let hl = HalfLife::<f64>::new_unchecked(1600.0); // Ra-226
     assert!((hl.value() - 1600.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_half_life_from_f64() {
-    let hl = HalfLife::new(123.0).unwrap();
+    let hl = HalfLife::<f64>::new(123.0).unwrap();
     let val: f64 = hl.into();
     assert!((val - 123.0).abs() < 1e-10);
 }

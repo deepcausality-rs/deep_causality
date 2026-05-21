@@ -15,8 +15,8 @@ use deep_causality_physics::{
 #[test]
 fn test_radioactive_decay_kernel_valid() {
     // N(t) = N0 × (1/2)^(t/t_half)
-    let n0 = AmountOfSubstance::new(1000.0).unwrap();
-    let half_life = HalfLife::new(5730.0).unwrap(); // C-14 half-life in years (approx)
+    let n0 = AmountOfSubstance::<f64>::new(1000.0).unwrap();
+    let half_life = HalfLife::<f64>::new(5730.0).unwrap(); // C-14 half-life in years (approx)
     let time = Time::new(5730.0).unwrap(); // One half-life
 
     let result = radioactive_decay_kernel(&n0, &half_life, &time);
@@ -33,8 +33,8 @@ fn test_radioactive_decay_kernel_valid() {
 
 #[test]
 fn test_radioactive_decay_two_half_lives() {
-    let n0 = AmountOfSubstance::new(1000.0).unwrap();
-    let half_life = HalfLife::new(100.0).unwrap();
+    let n0 = AmountOfSubstance::<f64>::new(1000.0).unwrap();
+    let half_life = HalfLife::<f64>::new(100.0).unwrap();
     let time = Time::new(200.0).unwrap(); // Two half-lives
 
     let result = radioactive_decay_kernel(&n0, &half_life, &time);
@@ -51,8 +51,8 @@ fn test_radioactive_decay_two_half_lives() {
 
 #[test]
 fn test_radioactive_decay_zero_time() {
-    let n0 = AmountOfSubstance::new(1000.0).unwrap();
-    let half_life = HalfLife::new(100.0).unwrap();
+    let n0 = AmountOfSubstance::<f64>::new(1000.0).unwrap();
+    let half_life = HalfLife::<f64>::new(100.0).unwrap();
     let time = Time::new(0.0).unwrap();
 
     let result = radioactive_decay_kernel(&n0, &half_life, &time);
@@ -69,8 +69,8 @@ fn test_radioactive_decay_zero_time() {
 #[test]
 fn test_radioactive_decay_zero_half_life() {
     // Zero half-life is now rejected at construction time
-    // This test verifies that HalfLife::new(0.0) correctly returns an error
-    let half_life_result = HalfLife::new(0.0);
+    // This test verifies that HalfLife::<f64>::new(0.0) correctly returns an error
+    let half_life_result = HalfLife::<f64>::new(0.0);
     assert!(
         half_life_result.is_err(),
         "Zero half-life should be rejected at construction"
@@ -90,8 +90,8 @@ fn test_radioactive_decay_zero_half_life() {
 /// Physics invariant: Decay is monotonically decreasing with time
 #[test]
 fn test_radioactive_decay_monotonic_decrease() {
-    let n0 = AmountOfSubstance::new(1000.0).unwrap();
-    let half_life = HalfLife::new(100.0).unwrap();
+    let n0 = AmountOfSubstance::<f64>::new(1000.0).unwrap();
+    let half_life = HalfLife::<f64>::new(100.0).unwrap();
 
     let t1 = Time::new(50.0).unwrap();
     let t2 = Time::new(100.0).unwrap();

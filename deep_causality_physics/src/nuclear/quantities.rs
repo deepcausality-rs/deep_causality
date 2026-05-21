@@ -6,64 +6,77 @@
 use crate::error::PhysicsError;
 
 /// Amount of Substance (Moles).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct AmountOfSubstance(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct AmountOfSubstance<R: deep_causality_num::RealField>(R);
 
-impl AmountOfSubstance {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
-        if val < 0.0 {
+impl<R: deep_causality_num::RealField> Default for AmountOfSubstance<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> AmountOfSubstance<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Negative AmountOfSubstance".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<AmountOfSubstance> for f64 {
-    fn from(val: AmountOfSubstance) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<AmountOfSubstance<R>> for f64 {
+    fn from(val: AmountOfSubstance<R>) -> Self {
+        val.0.into()
     }
 }
 
 /// Half-Life (Seconds).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct HalfLife(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct HalfLife<R: deep_causality_num::RealField>(R);
 
-impl HalfLife {
+impl<R: deep_causality_num::RealField> Default for HalfLife<R> {
+    fn default() -> Self {
+        Self(R::epsilon())
+    }
+}
+
+impl<R: deep_causality_num::RealField> HalfLife<R> {
     /// Creates a new `HalfLife` instance.
     ///
     /// # Errors
     /// Returns `PhysicsError` if `val <= 0.0`.
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::PhysicalInvariantBroken(format!(
-                "HalfLife must be finite: {}",
-                val
-            )));
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "HalfLife must be finite".into(),
+            ));
         }
-        if val <= 0.0 {
+        if val <= R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "HalfLife must be positive (zero implies infinite decay rate)".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<HalfLife> for f64 {
-    fn from(val: HalfLife) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<HalfLife<R>> for f64 {
+    fn from(val: HalfLife<R>) -> Self {
+        val.0.into()
     }
 }
 

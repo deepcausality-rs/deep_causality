@@ -13,8 +13,8 @@ use deep_causality_physics::{
 
 #[test]
 fn test_radioactive_decay_wrapper_success() {
-    let n0 = AmountOfSubstance::new(1000.0).unwrap();
-    let half_life = HalfLife::new(100.0).unwrap();
+    let n0 = AmountOfSubstance::<f64>::new(1000.0).unwrap();
+    let half_life = HalfLife::<f64>::new(100.0).unwrap();
     let time = Time::new(50.0).unwrap();
 
     let effect = radioactive_decay(&n0, &half_life, &time);

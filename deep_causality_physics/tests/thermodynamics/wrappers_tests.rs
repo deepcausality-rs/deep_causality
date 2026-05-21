@@ -39,7 +39,7 @@ fn create_temp_manifold() -> SimplicialManifold<f64, f64> {
 fn test_ideal_gas_law_wrapper_success() {
     let p = Pressure::new(101325.0).unwrap();
     let v = Volume::new(0.0224).unwrap();
-    let n = AmountOfSubstance::new(1.0).unwrap();
+    let n = AmountOfSubstance::<f64>::new(1.0).unwrap();
     let t = Temperature::new(273.15).unwrap();
 
     let effect = ideal_gas_law(p, v, n, t);
@@ -50,7 +50,7 @@ fn test_ideal_gas_law_wrapper_success() {
 fn test_ideal_gas_law_wrapper_error() {
     let p = Pressure::new(100.0).unwrap();
     let v = Volume::new(1.0).unwrap();
-    let n = AmountOfSubstance::new(0.0).unwrap(); // Zero moles
+    let n = AmountOfSubstance::<f64>::new(0.0).unwrap(); // Zero moles
     let t = Temperature::new(300.0).unwrap();
 
     let effect = ideal_gas_law(p, v, n, t);

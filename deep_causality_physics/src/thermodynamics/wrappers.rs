@@ -26,7 +26,7 @@ pub fn heat_diffusion(
 pub fn ideal_gas_law(
     pressure: Pressure<f64>,
     volume: Volume,
-    moles: AmountOfSubstance,
+    moles: AmountOfSubstance<f64>,
     temp: Temperature,
 ) -> PropagatingEffect<Ratio> {
     match stats::ideal_gas_law_kernel(pressure, volume, moles, temp) {

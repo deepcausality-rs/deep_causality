@@ -54,7 +54,7 @@ pub fn heat_diffusion_kernel(
 pub fn ideal_gas_law_kernel(
     pressure: Pressure<f64>,
     volume: Volume,
-    moles: AmountOfSubstance,
+    moles: AmountOfSubstance<f64>,
     temp: Temperature,
 ) -> Result<f64, PhysicsError> {
     // PV = nRT -> R = PV / nT

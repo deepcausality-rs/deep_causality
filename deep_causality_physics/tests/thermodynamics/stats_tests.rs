@@ -20,7 +20,7 @@ fn test_ideal_gas_law_kernel_valid() {
     // Use values that give R ~ 8.314 J/(mol·K)
     let p = Pressure::new(101325.0).unwrap(); // 1 atm in Pa
     let v = Volume::new(0.0224).unwrap(); // ~22.4 L = 0.0224 m³
-    let n = AmountOfSubstance::new(1.0).unwrap(); // 1 mol
+    let n = AmountOfSubstance::<f64>::new(1.0).unwrap(); // 1 mol
     let t = Temperature::new(273.15).unwrap(); // 0°C = 273.15K
 
     let result = ideal_gas_law_kernel(p, v, n, t);
@@ -35,7 +35,7 @@ fn test_ideal_gas_law_kernel_valid() {
 fn test_ideal_gas_law_kernel_zero_moles_error() {
     let p = Pressure::new(100.0).unwrap();
     let v = Volume::new(1.0).unwrap();
-    let n = AmountOfSubstance::new(0.0).unwrap();
+    let n = AmountOfSubstance::<f64>::new(0.0).unwrap();
     let t = Temperature::new(300.0).unwrap();
 
     let result = ideal_gas_law_kernel(p, v, n, t);
