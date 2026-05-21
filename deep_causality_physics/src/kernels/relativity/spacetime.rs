@@ -8,7 +8,7 @@ use crate::kernels::relativity::quantities::SpacetimeVector;
 use crate::error::PhysicsError;
 use crate::kernels::quantum::quantities::PhaseAngle;
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
-use deep_causality_num::{Field, Float, FromPrimitive, RealField};
+use deep_causality_num::{Field, Float, RealField};
 
 // Kernels
 
@@ -58,7 +58,7 @@ pub fn time_dilation_angle_kernel<R>(
     t2: &CausalMultiVector<R>,
 ) -> Result<PhaseAngle<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive,
+    R: RealField,
 {
     // Ensure compatible Minkowski metric
     if t1.metric() != t2.metric() {
@@ -87,15 +87,27 @@ where
     for v in inner.data().iter().skip(1) {
         non_scalar_magnitude += v.abs();
     }
-    let eps = R::from_f64(1e-9)
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(1e-9) failed".into()))?;
-    if non_scalar_magnitude > eps {
+    let dot = inner.data()[0];
+
+    // Precision-aware grade-purity tolerance: scale by the scalar magnitude so
+    // the test is meaningful at any precision (f32 / f64 / Float106). Using a
+    // fixed absolute 1e-9 would under-tolerate near-c boosts at f32 and
+    // over-tolerate at higher precisions.
+    let eps_rel = R::epsilon().sqrt();
+    // Scale by max(|dot|, 1) — fall back to 1 when |dot| is very small so the
+    // tolerance never collapses to zero. RealField has no `max`, so do it
+    // inline with a comparison.
+    let dot_scale = if dot.abs() > R::one() {
+        dot.abs()
+    } else {
+        R::one()
+    };
+    let grade_tol = eps_rel * dot_scale;
+    if non_scalar_magnitude > grade_tol {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Inner product did not yield scalar grade".into(),
         ));
     }
-
-    let dot = inner.data()[0];
 
     // Timelike check: squared magnitudes strictly positive in (+---)
     let s1 = t1.squared_magnitude();
@@ -116,10 +128,13 @@ where
         ));
     }
 
-    // Clamp gamma to handle floating-point noise
+    // Clamp gamma to handle floating-point noise near 1.0. The tolerance is
+    // sqrt(epsilon) — the natural first-order precision around unity — so the
+    // clamp adapts to f32 / f64 / Float106 without false-failing near-1 gammas
+    // at lower precisions.
     let one = R::one();
     let mut gamma = dot / denom;
-    if gamma < one && (one - gamma) <= eps {
+    if gamma < one && (one - gamma) <= eps_rel {
         gamma = one;
     }
     if gamma < one {

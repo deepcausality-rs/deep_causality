@@ -11,7 +11,9 @@ use std::fmt::{Display, Formatter};
 /// This represents a Minimal Left Ideal of the algebra Cl(10) (or others), acting as the Hilbert Space.
 ///
 /// # Invariants
-/// * The coefficients are `Complex<R>` where R defaults to `f64`.
+/// * The coefficients are `Complex<R>` for any `R: RealField` chosen by the caller
+///   (`f32`, `f64`, `Float106`, …). The type parameter has no default — call sites
+///   must spell the precision explicitly (e.g. `HilbertState::<f64>::new(...)`).
 /// * The Metric is fixed at construction time (preventing mixed-algebra operations).
 #[derive(Debug, Clone, PartialEq)]
 pub struct HilbertState<R: RealField> {

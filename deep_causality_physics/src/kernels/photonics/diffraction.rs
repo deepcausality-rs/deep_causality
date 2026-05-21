@@ -7,7 +7,6 @@ use crate::PhysicsError;
 use crate::kernels::dynamics::quantities::Length;
 use crate::kernels::photonics::quantities::{RayAngle, Wavelength};
 use deep_causality_num::{FromPrimitive, RealField};
-use std::f64::consts::PI;
 
 /// Calculates the Single Slit Diffraction Irradiance.
 ///
@@ -37,13 +36,15 @@ where
         return Err(PhysicsError::Singularity("Wavelength is zero".into()));
     }
 
-    let pi = R::from_f64(PI)
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(PI)".into()))?;
-    let beta = (pi * a * angle.sin()) / lambda;
+    // Use R::pi() — the precision-native π — instead of round-tripping the f64
+    // literal through R::from_f64, which would cap precision at f64 even for
+    // Float106 callers.
+    let beta = (R::pi() * a * angle.sin()) / lambda;
 
-    // Limit lim beta->0 (sin beta / beta) = 1
-    let eps = R::from_f64(1e-9)
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(1e-9)".into()))?;
+    // Precision-aware near-zero check on beta: at f32, 1e-9 is well below
+    // representable precision; at Float106 it is far too loose. `sqrt(epsilon)`
+    // is the natural first-order tolerance for "is this number near zero".
+    let eps = R::epsilon().sqrt();
     if beta.abs() < eps {
         return Ok(i0);
     }

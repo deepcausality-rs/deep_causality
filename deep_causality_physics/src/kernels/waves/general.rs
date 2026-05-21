@@ -9,7 +9,7 @@
 //! and Doppler effects. The implementation prioritizes type safety and physical correctness,
 //! ensuring that operations respect domain limits (e.g., sonic singularities).
 use crate::{Frequency, Length, PhysicsError, Speed};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::RealField;
 
 /// Calculates the speed of a wave given its frequency and wavelength.
 pub fn wave_speed_kernel<R>(
@@ -40,7 +40,7 @@ pub fn doppler_effect_kernel<R>(
     src_speed: &Speed<R>,
 ) -> Result<Frequency<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive,
+    R: RealField,
 {
     let v = wave_speed.value();
     let vo = obs_speed.value();
@@ -48,8 +48,12 @@ where
 
     let denominator = v - vs;
 
-    let eps = R::from_f64(1e-9)
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(1e-9)".into()))?;
+    // Precision-aware, scale-relative sonic-singularity check:
+    // scale the tolerance by |wave_speed| so the test is meaningful at any
+    // precision (f32, f64, Float106) and at any wave-speed magnitude (sound,
+    // light, ...). `sqrt(R::epsilon())` is the standard relative-tolerance
+    // choice for first-order conditions in floating-point arithmetic.
+    let eps = R::epsilon().sqrt() * v.abs();
     if denominator <= eps {
         return Err(PhysicsError::MetricSingularity(
             "Source speed equals or exceeds wave speed - Sonic Singularity".into(),

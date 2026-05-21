@@ -44,7 +44,12 @@ pub struct SpacetimeVector<R: RealField>(pub CausalMultiVector<R>);
 
 impl<R: RealField> Default for SpacetimeVector<R> {
     fn default() -> Self {
-        Self(CausalMultiVector::new(vec![R::zero()], Metric::Minkowski(0)).unwrap())
+        // 4D Minkowski spacetime: 2^4 = 16 multivector components, matching the
+        // convention used by every other spacetime vector constructed in this crate
+        // (see relativity/spacetime.rs and the test fixtures). A 0-dimensional
+        // Minkowski metric would degenerate to a single scalar and would not
+        // represent a meaningful spacetime quantity.
+        Self(CausalMultiVector::new(vec![R::zero(); 16], Metric::Minkowski(4)).unwrap())
     }
 }
 

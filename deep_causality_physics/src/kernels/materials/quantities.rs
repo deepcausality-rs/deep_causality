@@ -50,8 +50,16 @@ impl<R: RealField> Stiffness<R> {
     /// Creates a new `Stiffness` instance.
     ///
     /// # Errors
-    /// Returns `PhysicsError` if `val < 0`.
+    /// Returns `PhysicsError` if `val` is not finite (NaN, ±∞) or if `val < 0`.
     pub fn new(val: R) -> Result<Self, PhysicsError> {
+        // Explicit finiteness check: `NaN < R::zero()` is `false`, so without
+        // this guard a NaN input would silently pass the sign check and
+        // construct an invalid Stiffness.
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Stiffness must be finite".into(),
+            ));
+        }
         if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Negative Stiffness (Scalar)".into(),
