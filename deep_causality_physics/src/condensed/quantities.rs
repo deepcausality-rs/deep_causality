@@ -42,20 +42,27 @@ impl From<QuantumMetric> for f64 {
 /// It acts like a magnetic field in momentum space, influencing electron dynamics (anomalous velocity).
 ///
 /// *   **Dimensions**: Area ($L^2$) or dimensionless depending on $k$-space normalization.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct BerryCurvature(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct BerryCurvature<R: deep_causality_num::RealField>(R);
 
-impl BerryCurvature {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for BerryCurvature<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> BerryCurvature<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<BerryCurvature> for f64 {
-    fn from(val: BerryCurvature) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<BerryCurvature<R>> for f64 {
+    fn from(val: BerryCurvature<R>) -> Self {
+        val.0.into()
     }
 }
 
@@ -83,48 +90,62 @@ impl From<BandDrudeWeight> for f64 {
 /// Orbital Angular Momentum ($L$).
 ///
 /// Intrinsic orbital moment of the Bloch packet.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct OrbitalAngularMomentum(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct OrbitalAngularMomentum<R: deep_causality_num::RealField>(R);
 
-impl OrbitalAngularMomentum {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for OrbitalAngularMomentum<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> OrbitalAngularMomentum<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<OrbitalAngularMomentum> for f64 {
-    fn from(val: OrbitalAngularMomentum) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<OrbitalAngularMomentum<R>> for f64 {
+    fn from(val: OrbitalAngularMomentum<R>) -> Self {
+        val.0.into()
     }
 }
 
 /// Electrical Conductance ($G$).
 ///
 /// Units: Siemens ($S = Ω^{-1}$).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct Conductance(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Conductance<R: deep_causality_num::RealField>(R);
 
-impl Conductance {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
-        if val < 0.0 {
+impl<R: deep_causality_num::RealField> Default for Conductance<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> Conductance<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Negative Conductance".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<Conductance> for f64 {
-    fn from(val: Conductance) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<Conductance<R>> for f64 {
+    fn from(val: Conductance<R>) -> Self {
+        val.0.into()
     }
 }
 

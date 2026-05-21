@@ -19,11 +19,11 @@ fn test_alfven_speed() {
 
 #[test]
 fn test_plasma_beta() {
-    let beta = PlasmaBeta::new(0.5).unwrap();
+    let beta = PlasmaBeta::<f64>::new(0.5).unwrap();
     assert_eq!(beta.value(), 0.5);
-    assert!(PlasmaBeta::new(-0.1).is_err());
-    assert!(PlasmaBeta::new(f64::NAN).is_err());
-    assert!(PlasmaBeta::new(f64::INFINITY).is_err());
+    assert!(PlasmaBeta::<f64>::new(-0.1).is_err());
+    assert!(PlasmaBeta::<f64>::new(f64::NAN).is_err());
+    assert!(PlasmaBeta::<f64>::new(f64::INFINITY).is_err());
 }
 
 #[test]
@@ -55,20 +55,20 @@ fn test_debye_length() {
 
 #[test]
 fn test_plasma_frequency() {
-    let w = PlasmaFrequency::new(1e9).unwrap();
+    let w = PlasmaFrequency::<f64>::new(1e9).unwrap();
     assert_eq!(w.value(), 1e9);
-    assert!(PlasmaFrequency::new(0.0).is_err());
-    assert!(PlasmaFrequency::new(f64::NAN).is_err());
-    assert!(PlasmaFrequency::new(f64::INFINITY).is_err());
+    assert!(PlasmaFrequency::<f64>::new(0.0).is_err());
+    assert!(PlasmaFrequency::<f64>::new(f64::NAN).is_err());
+    assert!(PlasmaFrequency::<f64>::new(f64::INFINITY).is_err());
 }
 
 #[test]
 fn test_conductivity() {
-    let s = Conductivity::new(1e7).unwrap();
+    let s = Conductivity::<f64>::new(1e7).unwrap();
     assert_eq!(s.value(), 1e7);
-    assert!(Conductivity::new(0.0).is_err());
-    assert!(Conductivity::new(f64::NAN).is_err());
-    assert!(Conductivity::new(f64::INFINITY).is_err());
+    assert!(Conductivity::<f64>::new(0.0).is_err());
+    assert!(Conductivity::<f64>::new(f64::NAN).is_err());
+    assert!(Conductivity::<f64>::new(f64::INFINITY).is_err());
 }
 
 #[test]
@@ -92,7 +92,7 @@ fn test_alfven_speed_new_unchecked() {
 
 #[test]
 fn test_plasma_beta_new_unchecked() {
-    let beta = PlasmaBeta::new_unchecked(0.5);
+    let beta = PlasmaBeta::<f64>::new_unchecked(0.5);
     assert_eq!(beta.value(), 0.5);
 }
 
@@ -116,13 +116,13 @@ fn test_debye_length_new_unchecked() {
 
 #[test]
 fn test_plasma_frequency_new_unchecked() {
-    let w = PlasmaFrequency::new_unchecked(1e9);
+    let w = PlasmaFrequency::<f64>::new_unchecked(1e9);
     assert_eq!(w.value(), 1e9);
 }
 
 #[test]
 fn test_conductivity_new_unchecked() {
-    let s = Conductivity::new_unchecked(1e7);
+    let s = Conductivity::<f64>::new_unchecked(1e7);
     assert_eq!(s.value(), 1e7);
 }
 
@@ -144,7 +144,7 @@ fn test_alfven_speed_default() {
 
 #[test]
 fn test_plasma_beta_default() {
-    let beta: PlasmaBeta = Default::default();
+    let beta: PlasmaBeta<f64> = Default::default();
     assert_eq!(beta.value(), 0.0);
 }
 
@@ -174,12 +174,12 @@ fn test_debye_length_default() {
 
 #[test]
 fn test_plasma_frequency_default() {
-    let w: PlasmaFrequency = Default::default();
+    let w: PlasmaFrequency<f64> = Default::default();
     assert!(w.value() > 0.0);
 }
 
 #[test]
 fn test_conductivity_default() {
-    let s: Conductivity = Default::default();
+    let s: Conductivity<f64> = Default::default();
     assert!(s.value() > 0.0);
 }

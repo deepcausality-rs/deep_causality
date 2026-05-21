@@ -12,7 +12,7 @@ use deep_causality_physics::{SpacetimeInterval, SpacetimeVector};
 
 #[test]
 fn test_spacetime_interval_new_valid() {
-    let interval = SpacetimeInterval::new(100.0);
+    let interval = SpacetimeInterval::<f64>::new(100.0);
     assert!(interval.is_ok());
     assert!((interval.unwrap().value() - 100.0).abs() < 1e-10);
 }
@@ -20,20 +20,20 @@ fn test_spacetime_interval_new_valid() {
 #[test]
 fn test_spacetime_interval_new_negative() {
     // Negative intervals are spacelike
-    let interval = SpacetimeInterval::new(-25.0);
+    let interval = SpacetimeInterval::<f64>::new(-25.0);
     assert!(interval.is_ok());
     assert!((interval.unwrap().value() - (-25.0)).abs() < 1e-10);
 }
 
 #[test]
 fn test_spacetime_interval_default() {
-    let interval = SpacetimeInterval::default();
+    let interval = SpacetimeInterval::<f64>::default();
     assert!((interval.value() - 0.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_spacetime_interval_into_f64() {
-    let interval = SpacetimeInterval::new_unchecked(42.0);
+    let interval = SpacetimeInterval::<f64>::new_unchecked(42.0);
     let val: f64 = interval.into();
     assert!((val - 42.0).abs() < 1e-10);
 }

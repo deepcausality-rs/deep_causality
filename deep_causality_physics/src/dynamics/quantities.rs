@@ -83,29 +83,35 @@ impl From<Speed> for f64 {
 
 /// Linear acceleration (m/s^2).
 /// Can be negative to indicate direction in 1D context.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct Acceleration(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Acceleration<R: deep_causality_num::RealField>(R);
 
-impl Acceleration {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for Acceleration<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> Acceleration<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::PhysicalInvariantBroken(format!(
-                "Acceleration must be finite: {}",
-                val
-            )));
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Acceleration must be finite".into(),
+            ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<Acceleration> for f64 {
-    fn from(val: Acceleration) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<Acceleration<R>> for f64 {
+    fn from(val: Acceleration<R>) -> Self {
+        val.0.into()
     }
 }
 
@@ -139,28 +145,35 @@ impl From<Force> for f64 {
 
 /// Torque (N·m).
 /// Can be negative to indicate direction (e.g. clockwise vs counter-clockwise).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct Torque(f64);
-impl Torque {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Torque<R: deep_causality_num::RealField>(R);
+
+impl<R: deep_causality_num::RealField> Default for Torque<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> Torque<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::PhysicalInvariantBroken(format!(
-                "Torque must be finite: {}",
-                val
-            )));
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Torque must be finite".into(),
+            ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<Torque> for f64 {
-    fn from(val: Torque) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<Torque<R>> for f64 {
+    fn from(val: Torque<R>) -> Self {
+        val.0.into()
     }
 }
 
@@ -201,38 +214,44 @@ impl From<Length> for f64 {
 }
 
 /// Area (m^2).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct Area(f64);
-impl Area {
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Area<R: deep_causality_num::RealField>(R);
+
+impl<R: deep_causality_num::RealField> Default for Area<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> Area<R> {
     /// Creates a new `Area` instance.
     ///
     /// # Errors
-    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0.0`.
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0`.
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::PhysicalInvariantBroken(format!(
-                "Area must be finite: {}",
-                val
-            )));
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Area must be finite".into(),
+            ));
         }
-        if val < 0.0 {
-            return Err(PhysicsError::PhysicalInvariantBroken(format!(
-                "Area cannot be negative: {}",
-                val
-            )));
+        if val < R::zero() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Area cannot be negative".into(),
+            ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<Area> for f64 {
-    fn from(val: Area) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<Area<R>> for f64 {
+    fn from(val: Area<R>) -> Self {
+        val.0.into()
     }
 }
 

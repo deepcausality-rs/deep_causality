@@ -42,9 +42,9 @@ pub fn ideal_gas_law(
 pub fn carnot_efficiency(
     temp_hot: Temperature,
     temp_cold: Temperature,
-) -> PropagatingEffect<Efficiency> {
+) -> PropagatingEffect<Efficiency<f64>> {
     match stats::carnot_efficiency_kernel(temp_hot, temp_cold) {
-        Ok(val) => match Efficiency::new(val) {
+        Ok(val) => match Efficiency::<f64>::new(val) {
             Ok(eff) => PropagatingEffect::pure(eff),
             Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
         },

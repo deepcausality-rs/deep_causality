@@ -12,7 +12,7 @@ use deep_causality_physics::{ElectricPotential, MagneticFlux, PhysicalField};
 
 #[test]
 fn test_electric_potential_new_valid() {
-    let pot = ElectricPotential::new(120.0);
+    let pot = ElectricPotential::<f64>::new(120.0);
     assert!(pot.is_ok());
     assert!((pot.unwrap().value() - 120.0).abs() < 1e-10);
 }
@@ -20,27 +20,27 @@ fn test_electric_potential_new_valid() {
 #[test]
 fn test_electric_potential_negative() {
     // Potential can be negative
-    let pot = ElectricPotential::new(-5.0);
+    let pot = ElectricPotential::<f64>::new(-5.0);
     assert!(pot.is_ok());
     assert!((pot.unwrap().value() - (-5.0)).abs() < 1e-10);
 }
 
 #[test]
 fn test_electric_potential_new_unchecked() {
-    let pot = ElectricPotential::new_unchecked(42.0);
+    let pot = ElectricPotential::<f64>::new_unchecked(42.0);
     assert!((pot.value() - 42.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_electric_potential_into_f64() {
-    let pot = ElectricPotential::new(10.0).unwrap();
+    let pot = ElectricPotential::<f64>::new(10.0).unwrap();
     let val: f64 = pot.into();
     assert!((val - 10.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_electric_potential_default() {
-    let pot = ElectricPotential::default();
+    let pot = ElectricPotential::<f64>::default();
     assert!((pot.value() - 0.0).abs() < 1e-10);
 }
 
@@ -50,7 +50,7 @@ fn test_electric_potential_default() {
 
 #[test]
 fn test_magnetic_flux_new_valid() {
-    let flux = MagneticFlux::new(0.5);
+    let flux = MagneticFlux::<f64>::new(0.5);
     assert!(flux.is_ok());
     assert!((flux.unwrap().value() - 0.5).abs() < 1e-10);
 }
@@ -58,19 +58,19 @@ fn test_magnetic_flux_new_valid() {
 #[test]
 fn test_magnetic_flux_negative() {
     // Flux can be negative (direction dependent)
-    let flux = MagneticFlux::new(-1.0);
+    let flux = MagneticFlux::<f64>::new(-1.0);
     assert!(flux.is_ok());
 }
 
 #[test]
 fn test_magnetic_flux_new_unchecked() {
-    let flux = MagneticFlux::new_unchecked(2.5);
+    let flux = MagneticFlux::<f64>::new_unchecked(2.5);
     assert!((flux.value() - 2.5).abs() < 1e-10);
 }
 
 #[test]
 fn test_magnetic_flux_into_f64() {
-    let flux = MagneticFlux::new(3.0).unwrap();
+    let flux = MagneticFlux::<f64>::new(3.0).unwrap();
     let val: f64 = flux.into();
     assert!((val - 3.0).abs() < 1e-10);
 }

@@ -6,23 +6,30 @@
 use deep_causality_core::CausalityError;
 
 /// Spacetime Interval ($s^2$).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct SpacetimeInterval(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct SpacetimeInterval<R: deep_causality_num::RealField>(R);
 
-impl SpacetimeInterval {
-    pub fn new(val: f64) -> Result<Self, CausalityError> {
+impl<R: deep_causality_num::RealField> Default for SpacetimeInterval<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> SpacetimeInterval<R> {
+    pub fn new(val: R) -> Result<Self, CausalityError> {
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<SpacetimeInterval> for f64 {
-    fn from(val: SpacetimeInterval) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<SpacetimeInterval<R>> for f64 {
+    fn from(val: SpacetimeInterval<R>) -> Self {
+        val.0.into()
     }
 }
 

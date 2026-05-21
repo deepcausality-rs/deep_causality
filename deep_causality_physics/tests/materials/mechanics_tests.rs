@@ -4,7 +4,7 @@
  */
 
 use deep_causality_physics::{
-    PhysicsErrorEnum, Strain, StiffnessTensor, StressTensor, Temperature, hookes_law_kernel,
+    PhysicsErrorEnum, StiffnessTensor, Strain, StressTensor, Temperature, hookes_law_kernel,
     thermal_expansion_kernel, von_mises_stress_kernel,
 };
 use deep_causality_tensor::CausalTensor;
@@ -26,7 +26,11 @@ fn test_hookes_law_kernel_valid() {
     assert!(result.is_ok());
 
     let stress = result.unwrap();
-    assert_eq!(stress.inner().num_dim(), 2, "Result should be rank-2 tensor");
+    assert_eq!(
+        stress.inner().num_dim(),
+        2,
+        "Result should be rank-2 tensor"
+    );
 }
 
 #[test]

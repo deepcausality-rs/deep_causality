@@ -83,25 +83,25 @@ fn test_density_into_f64() {
 
 #[test]
 fn test_viscosity_new_valid() {
-    let visc = Viscosity::new(0.001); // water at 20°C
+    let visc = Viscosity::<f64>::new(0.001); // water at 20°C
     assert!(visc.is_ok());
 }
 
 #[test]
 fn test_viscosity_new_negative_error() {
-    let visc = Viscosity::new(-0.5);
+    let visc = Viscosity::<f64>::new(-0.5);
     assert!(visc.is_err());
 }
 
 #[test]
 fn test_viscosity_new_unchecked() {
-    let visc = Viscosity::new_unchecked(1.0);
+    let visc = Viscosity::<f64>::new_unchecked(1.0);
     assert!((visc.value() - 1.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_viscosity_into_f64() {
-    let visc = Viscosity::new(0.005).unwrap();
+    let visc = Viscosity::<f64>::new(0.005).unwrap();
     let val: f64 = visc.into();
     assert!((val - 0.005).abs() < 1e-10);
 }

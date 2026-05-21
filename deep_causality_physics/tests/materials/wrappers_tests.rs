@@ -4,7 +4,7 @@
  */
 
 use deep_causality_physics::{
-    Strain, StiffnessTensor, StressTensor, Temperature, hookes_law, thermal_expansion,
+    StiffnessTensor, Strain, StressTensor, Temperature, hookes_law, thermal_expansion,
     von_mises_stress,
 };
 use deep_causality_tensor::CausalTensor;

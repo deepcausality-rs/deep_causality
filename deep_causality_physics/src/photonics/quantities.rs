@@ -9,15 +9,27 @@ use deep_causality_tensor::CausalTensor;
 
 /// Focal Length ($f$).
 /// Unit: Meters. Constraint: None (can be negative for diverging lens).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct FocalLength(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct FocalLength<R: deep_causality_num::RealField>(R);
 
-impl FocalLength {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for FocalLength<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> FocalLength<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<FocalLength<R>> for f64 {
+    fn from(val: FocalLength<R>) -> Self {
+        val.0.into()
     }
 }
 
@@ -59,45 +71,69 @@ impl Wavelength {
 
 /// Numerical Aperture ($NA = n \sin \theta$).
 /// Unit: Dimensionless. Constraint: > 0.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct NumericalAperture(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct NumericalAperture<R: deep_causality_num::RealField>(R);
 
-impl NumericalAperture {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
-        if val <= 0.0 {
+impl<R: deep_causality_num::RealField> Default for NumericalAperture<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> NumericalAperture<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if val <= R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Numerical Aperture must be positive".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<NumericalAperture<R>> for f64 {
+    fn from(val: NumericalAperture<R>) -> Self {
+        val.0.into()
     }
 }
 
 /// Beam Waist ($w_0$). Minimum radius of Gaussian beam.
 /// Unit: Meters. Constraint: > 0.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct BeamWaist(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct BeamWaist<R: deep_causality_num::RealField>(R);
 
-impl BeamWaist {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
-        if val <= 0.0 {
+impl<R: deep_causality_num::RealField> Default for BeamWaist<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> BeamWaist<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if val <= R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Beam Waist must be positive".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<BeamWaist<R>> for f64 {
+    fn from(val: BeamWaist<R>) -> Self {
+        val.0.into()
     }
 }
 

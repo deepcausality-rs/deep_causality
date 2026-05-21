@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{PhysicsError, Strain, StiffnessTensor, Stress, StressTensor, Temperature};
+use crate::{PhysicsError, StiffnessTensor, Strain, Stress, StressTensor, Temperature};
 use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
@@ -74,9 +74,8 @@ where
         return Err(PhysicsError::CalculationError("Trace failed".into()));
     };
 
-    let three = R::from_f64(3.0).ok_or_else(|| {
-        PhysicsError::NumericalInstability("R::from_f64(3.0) failed".into())
-    })?;
+    let three = R::from_f64(3.0)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(3.0) failed".into()))?;
     let sigma_m = trace_val / three;
 
     // 2. Deviatoric stress S = sigma - sigma_m * I
@@ -102,9 +101,8 @@ where
         ));
     };
 
-    let half = R::from_f64(0.5).ok_or_else(|| {
-        PhysicsError::NumericalInstability("R::from_f64(0.5) failed".into())
-    })?;
+    let half = R::from_f64(0.5)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(0.5) failed".into()))?;
     let j2 = half * j2_val;
 
     // 4. Sigma_vm = sqrt(3 * J2)

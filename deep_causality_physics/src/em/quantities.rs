@@ -5,46 +5,61 @@
 
 use deep_causality_core::CausalityError;
 use deep_causality_multivector::{CausalMultiVector, Metric};
+use deep_causality_num::RealField;
 
 /// Electric Potential (Volts or J/C).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct ElectricPotential(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct ElectricPotential<R: RealField>(R);
 
-impl ElectricPotential {
-    pub fn new(val: f64) -> Result<Self, CausalityError> {
+impl<R: RealField> Default for ElectricPotential<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: RealField> ElectricPotential<R> {
+    pub fn new(val: R) -> Result<Self, CausalityError> {
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<ElectricPotential> for f64 {
-    fn from(val: ElectricPotential) -> Self {
-        val.0
+
+impl<R: RealField + Into<f64>> From<ElectricPotential<R>> for f64 {
+    fn from(val: ElectricPotential<R>) -> Self {
+        val.0.into()
     }
 }
 
 /// Magnetic Flux (Webers).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct MagneticFlux(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct MagneticFlux<R: RealField>(R);
 
-impl MagneticFlux {
-    pub fn new(val: f64) -> Result<Self, CausalityError> {
+impl<R: RealField> Default for MagneticFlux<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: RealField> MagneticFlux<R> {
+    pub fn new(val: R) -> Result<Self, CausalityError> {
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<MagneticFlux> for f64 {
-    fn from(val: MagneticFlux) -> Self {
-        val.0
+
+impl<R: RealField + Into<f64>> From<MagneticFlux<R>> for f64 {
+    fn from(val: MagneticFlux<R>) -> Self {
+        val.0.into()
     }
 }
 

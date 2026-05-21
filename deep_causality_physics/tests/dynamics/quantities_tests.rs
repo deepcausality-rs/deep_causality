@@ -170,38 +170,38 @@ fn test_length_into_f64() {
 
 #[test]
 fn test_area_new_valid() {
-    let area = Area::new(100.0);
+    let area = Area::<f64>::new(100.0);
     assert!(area.is_ok());
     assert!((area.unwrap().value() - 100.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_area_new_negative_error() {
-    let area = Area::new(-10.0);
+    let area = Area::<f64>::new(-10.0);
     assert!(area.is_err());
 }
 
 #[test]
 fn test_area_new_nan_error() {
-    let area = Area::new(f64::NAN);
+    let area = Area::<f64>::new(f64::NAN);
     assert!(area.is_err());
 }
 
 #[test]
 fn test_area_new_infinity_error() {
-    let area = Area::new(f64::INFINITY);
+    let area = Area::<f64>::new(f64::INFINITY);
     assert!(area.is_err());
 }
 
 #[test]
 fn test_area_new_unchecked() {
-    let area = Area::new_unchecked(50.5);
+    let area = Area::<f64>::new_unchecked(50.5);
     assert!((area.value() - 50.5).abs() < 1e-10);
 }
 
 #[test]
 fn test_area_into_f64() {
-    let area = Area::new(25.0).unwrap();
+    let area = Area::<f64>::new(25.0).unwrap();
     let val: f64 = area.into();
     assert!((val - 25.0).abs() < 1e-10);
 }
@@ -335,39 +335,39 @@ fn test_frequency_into_f64() {
 
 #[test]
 fn test_acceleration_new_positive() {
-    let acc = Acceleration::new(9.81);
+    let acc = Acceleration::<f64>::new(9.81);
     assert!(acc.is_ok());
 }
 
 #[test]
 fn test_acceleration_new_negative() {
     // Negative acceleration is valid (deceleration)
-    let acc = Acceleration::new(-5.0);
+    let acc = Acceleration::<f64>::new(-5.0);
     assert!(acc.is_ok());
     assert!((acc.unwrap().value() - (-5.0)).abs() < 1e-10);
 }
 
 #[test]
 fn test_acceleration_new_nan_error() {
-    let acc = Acceleration::new(f64::NAN);
+    let acc = Acceleration::<f64>::new(f64::NAN);
     assert!(acc.is_err());
 }
 
 #[test]
 fn test_acceleration_new_infinity_error() {
-    let acc = Acceleration::new(f64::INFINITY);
+    let acc = Acceleration::<f64>::new(f64::INFINITY);
     assert!(acc.is_err());
 }
 
 #[test]
 fn test_acceleration_new_unchecked() {
-    let acc = Acceleration::new_unchecked(-9.81);
+    let acc = Acceleration::<f64>::new_unchecked(-9.81);
     assert!((acc.value() - (-9.81)).abs() < 1e-10);
 }
 
 #[test]
 fn test_acceleration_into_f64() {
-    let acc = Acceleration::new(9.8).unwrap();
+    let acc = Acceleration::<f64>::new(9.8).unwrap();
     let val: f64 = acc.into();
     assert!((val - 9.8).abs() < 1e-10);
 }
@@ -419,38 +419,38 @@ fn test_force_into_f64() {
 
 #[test]
 fn test_torque_new_positive() {
-    let torque = Torque::new(25.0);
+    let torque = Torque::<f64>::new(25.0);
     assert!(torque.is_ok());
 }
 
 #[test]
 fn test_torque_new_negative() {
     // Negative torque = clockwise rotation
-    let torque = Torque::new(-25.0);
+    let torque = Torque::<f64>::new(-25.0);
     assert!(torque.is_ok());
 }
 
 #[test]
 fn test_torque_new_nan_error() {
-    let torque = Torque::new(f64::NAN);
+    let torque = Torque::<f64>::new(f64::NAN);
     assert!(torque.is_err());
 }
 
 #[test]
 fn test_torque_new_infinity_error() {
-    let torque = Torque::new(f64::INFINITY);
+    let torque = Torque::<f64>::new(f64::INFINITY);
     assert!(torque.is_err());
 }
 
 #[test]
 fn test_torque_new_unchecked() {
-    let torque = Torque::new_unchecked(-25.0);
+    let torque = Torque::<f64>::new_unchecked(-25.0);
     assert!((torque.value() - (-25.0)).abs() < 1e-10);
 }
 
 #[test]
 fn test_torque_into_f64() {
-    let torque = Torque::new(50.0).unwrap();
+    let torque = Torque::<f64>::new(50.0).unwrap();
     let val: f64 = torque.into();
     assert!((val - 50.0).abs() < 1e-10);
 }

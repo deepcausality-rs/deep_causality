@@ -70,33 +70,39 @@ impl From<Density> for f64 {
 }
 
 /// Dynamic Viscosity (Pa·s).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct Viscosity(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Viscosity<R: deep_causality_num::RealField>(R);
 
-impl Viscosity {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for Viscosity<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> Viscosity<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::PhysicalInvariantBroken(format!(
-                "Viscosity must be finite: {}",
-                val
-            )));
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Viscosity must be finite".into(),
+            ));
         }
-        if val < 0.0 {
+        if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Negative Viscosity".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<Viscosity> for f64 {
-    fn from(val: Viscosity) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<Viscosity<R>> for f64 {
+    fn from(val: Viscosity<R>) -> Self {
+        val.0.into()
     }
 }

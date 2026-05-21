@@ -86,25 +86,25 @@ fn test_half_life_from_f64() {
 
 #[test]
 fn test_activity_new_valid() {
-    let activity = Activity::new(3.7e10); // 1 Curie in Becquerels
+    let activity = Activity::<f64>::new(3.7e10); // 1 Curie in Becquerels
     assert!(activity.is_ok());
 }
 
 #[test]
 fn test_activity_new_negative_error() {
-    let activity = Activity::new(-1.0);
+    let activity = Activity::<f64>::new(-1.0);
     assert!(activity.is_err());
 }
 
 #[test]
 fn test_activity_new_unchecked() {
-    let activity = Activity::new_unchecked(1e6);
+    let activity = Activity::<f64>::new_unchecked(1e6);
     assert!((activity.value() - 1e6).abs() < 1.0);
 }
 
 #[test]
 fn test_activity_from_f64() {
-    let activity = Activity::new(500.0).unwrap();
+    let activity = Activity::<f64>::new(500.0).unwrap();
     let val: f64 = activity.into();
     assert!((val - 500.0).abs() < 1e-10);
 }
@@ -115,26 +115,26 @@ fn test_activity_from_f64() {
 
 #[test]
 fn test_energy_density_new_valid() {
-    let ed = EnergyDensity::new(100.0);
+    let ed = EnergyDensity::<f64>::new(100.0);
     assert!(ed.is_ok());
     assert!((ed.unwrap().value() - 100.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_energy_density_new_negative_error() {
-    let ed = EnergyDensity::new(-50.0);
+    let ed = EnergyDensity::<f64>::new(-50.0);
     assert!(ed.is_err());
 }
 
 #[test]
 fn test_energy_density_unchecked() {
-    let ed = EnergyDensity::new_unchecked(25.0);
+    let ed = EnergyDensity::<f64>::new_unchecked(25.0);
     assert!((ed.value() - 25.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_energy_density_into_f64() {
-    let ed = EnergyDensity::new(10.0).unwrap();
+    let ed = EnergyDensity::<f64>::new(10.0).unwrap();
     let val: f64 = ed.into();
     assert!((val - 10.0).abs() < 1e-10);
 }

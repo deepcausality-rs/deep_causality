@@ -4,7 +4,7 @@
  */
 
 use crate::materials::mechanics;
-use crate::{Strain, StiffnessTensor, Stress, StressTensor, Temperature};
+use crate::{StiffnessTensor, Strain, Stress, StressTensor, Temperature};
 use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_num::{FromPrimitive, RealField};

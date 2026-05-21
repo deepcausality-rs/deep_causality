@@ -56,9 +56,9 @@ pub fn poynting_vector(
 pub fn magnetic_helicity_density(
     potential: &CausalMultiVector<f64>,
     field: &CausalMultiVector<f64>,
-) -> PropagatingEffect<MagneticFlux> {
+) -> PropagatingEffect<MagneticFlux<f64>> {
     match fields::magnetic_helicity_density_kernel(potential, field) {
-        Ok(val) => match MagneticFlux::new(val) {
+        Ok(val) => match MagneticFlux::<f64>::new(val) {
             Ok(h) => PropagatingEffect::pure(h),
             Err(e) => PropagatingEffect::from_error(e),
         },

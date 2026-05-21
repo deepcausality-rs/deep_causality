@@ -68,54 +68,68 @@ impl From<HalfLife> for f64 {
 }
 
 /// Radioactivity (Becquerels).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct Activity(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Activity<R: deep_causality_num::RealField>(R);
 
-impl Activity {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
-        if val < 0.0 {
+impl<R: deep_causality_num::RealField> Default for Activity<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> Activity<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Negative Activity".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<Activity> for f64 {
-    fn from(val: Activity) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<Activity<R>> for f64 {
+    fn from(val: Activity<R>) -> Self {
+        val.0.into()
     }
 }
 
 /// Energy Density (Joules per cubic meter).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct EnergyDensity(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct EnergyDensity<R: deep_causality_num::RealField>(R);
 
-impl EnergyDensity {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
-        if val < 0.0 {
+impl<R: deep_causality_num::RealField> Default for EnergyDensity<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> EnergyDensity<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Negative EnergyDensity".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<EnergyDensity> for f64 {
-    fn from(val: EnergyDensity) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<EnergyDensity<R>> for f64 {
+    fn from(val: EnergyDensity<R>) -> Self {
+        val.0.into()
     }
 }
 

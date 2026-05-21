@@ -36,28 +36,40 @@ impl AlfvenSpeed {
 
 /// Plasma Beta ($\beta$). Ratio of thermal to magnetic pressure.
 /// Unit: Dimensionless. Constraint: >= 0.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct PlasmaBeta(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct PlasmaBeta<R: deep_causality_num::RealField>(R);
 
-impl PlasmaBeta {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for PlasmaBeta<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> PlasmaBeta<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Plasma Beta must be finite".into(),
             ));
         }
-        if val < 0.0 {
+        if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Plasma Beta cannot be negative".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<PlasmaBeta<R>> for f64 {
+    fn from(val: PlasmaBeta<R>) -> Self {
+        val.0.into()
     }
 }
 
@@ -159,68 +171,82 @@ impl Default for DebyeLength {
 /// Plasma Frequency ($\omega_{pe}$). Natural oscillation frequency.
 /// Unit: Rad/s. Constraint: > 0.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct PlasmaFrequency(f64);
+pub struct PlasmaFrequency<R: deep_causality_num::RealField>(R);
 
-impl PlasmaFrequency {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> PlasmaFrequency<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Plasma Frequency must be finite".into(),
             ));
         }
-        if val <= 0.0 {
+        if val <= R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Plasma Frequency must be positive".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
 
-impl Default for PlasmaFrequency {
-    /// Returns the smallest positive value that satisfies the > 0 constraint.
+impl<R: deep_causality_num::RealField> Default for PlasmaFrequency<R> {
+    /// Returns machine epsilon as the smallest representable positive value
+    /// that satisfies the > 0 constraint.
     fn default() -> Self {
-        Self(f64::MIN_POSITIVE)
+        Self(R::epsilon())
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<PlasmaFrequency<R>> for f64 {
+    fn from(val: PlasmaFrequency<R>) -> Self {
+        val.0.into()
     }
 }
 
 /// Electrical Conductivity ($\sigma$).
 /// Unit: Siemens/m (S/m). Constraint: > 0.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Conductivity(f64);
+pub struct Conductivity<R: deep_causality_num::RealField>(R);
 
-impl Conductivity {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Conductivity<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Conductivity must be finite".into(),
             ));
         }
-        if val <= 0.0 {
+        if val <= R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Conductivity must be positive".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
 
-impl Default for Conductivity {
-    /// Returns the smallest positive value that satisfies the > 0 constraint.
+impl<R: deep_causality_num::RealField> Default for Conductivity<R> {
+    /// Returns machine epsilon as the smallest representable positive value
+    /// that satisfies the > 0 constraint.
     fn default() -> Self {
-        Self(f64::MIN_POSITIVE)
+        Self(R::epsilon())
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<Conductivity<R>> for f64 {
+    fn from(val: Conductivity<R>) -> Self {
+        val.0.into()
     }
 }
 

@@ -19,7 +19,7 @@ fn test_quantum_metric() {
 
 #[test]
 fn test_berry_curvature() {
-    let bc = BerryCurvature::new(1.0).unwrap();
+    let bc = BerryCurvature::<f64>::new(1.0).unwrap();
     assert_eq!(bc.value(), 1.0);
     let val: f64 = bc.into();
     assert_eq!(val, 1.0);
@@ -35,7 +35,7 @@ fn test_band_drude_weight() {
 
 #[test]
 fn test_orbital_angular_momentum() {
-    let oam = OrbitalAngularMomentum::new(-3.0).unwrap();
+    let oam = OrbitalAngularMomentum::<f64>::new(-3.0).unwrap();
     assert_eq!(oam.value(), -3.0);
     let val: f64 = oam.into();
     assert_eq!(val, -3.0);
@@ -43,10 +43,10 @@ fn test_orbital_angular_momentum() {
 
 #[test]
 fn test_conductance() {
-    let c = Conductance::new(0.1).unwrap();
+    let c = Conductance::<f64>::new(0.1).unwrap();
     assert_eq!(c.value(), 0.1);
 
-    let err = Conductance::new(-0.1);
+    let err = Conductance::<f64>::new(-0.1);
     assert!(err.is_err());
     match err.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(_) => {}
@@ -86,7 +86,7 @@ fn test_order_parameter() {
 
 #[test]
 fn test_conductance_new_unchecked() {
-    let c = Conductance::new_unchecked(0.1);
+    let c = Conductance::<f64>::new_unchecked(0.1);
     assert_eq!(c.value(), 0.1);
 }
 
@@ -108,7 +108,7 @@ fn test_quantum_metric_default() {
 
 #[test]
 fn test_berry_curvature_default() {
-    let bc: BerryCurvature = Default::default();
+    let bc: BerryCurvature<f64> = Default::default();
     assert_eq!(bc.value(), 0.0);
 }
 
@@ -120,13 +120,13 @@ fn test_band_drude_weight_default() {
 
 #[test]
 fn test_orbital_angular_momentum_default() {
-    let oam: OrbitalAngularMomentum = Default::default();
+    let oam: OrbitalAngularMomentum<f64> = Default::default();
     assert_eq!(oam.value(), 0.0);
 }
 
 #[test]
 fn test_conductance_default() {
-    let c: Conductance = Default::default();
+    let c: Conductance<f64> = Default::default();
     assert_eq!(c.value(), 0.0);
 }
 

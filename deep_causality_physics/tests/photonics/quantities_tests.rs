@@ -12,7 +12,7 @@ use deep_causality_tensor::CausalTensor;
 
 #[test]
 fn test_focal_length() {
-    let f = FocalLength::new(-0.5).unwrap();
+    let f = FocalLength::<f64>::new(-0.5).unwrap();
     assert_eq!(f.value(), -0.5);
 }
 
@@ -33,19 +33,19 @@ fn test_wavelength() {
 
 #[test]
 fn test_numerical_aperture() {
-    let na = NumericalAperture::new(0.5).unwrap();
+    let na = NumericalAperture::<f64>::new(0.5).unwrap();
     assert_eq!(na.value(), 0.5);
 
-    let err = NumericalAperture::new(0.0);
+    let err = NumericalAperture::<f64>::new(0.0);
     assert!(err.is_err());
 }
 
 #[test]
 fn test_beam_waist() {
-    let w0 = BeamWaist::new(1e-3).unwrap();
+    let w0 = BeamWaist::<f64>::new(1e-3).unwrap();
     assert_eq!(w0.value(), 1e-3);
 
-    let err = BeamWaist::new(-1.0);
+    let err = BeamWaist::<f64>::new(-1.0);
     assert!(err.is_err());
 }
 
@@ -79,13 +79,13 @@ fn test_wavelength_new_unchecked() {
 
 #[test]
 fn test_numerical_aperture_new_unchecked() {
-    let na = NumericalAperture::new_unchecked(0.5);
+    let na = NumericalAperture::<f64>::new_unchecked(0.5);
     assert_eq!(na.value(), 0.5);
 }
 
 #[test]
 fn test_beam_waist_new_unchecked() {
-    let w0 = BeamWaist::new_unchecked(1e-3);
+    let w0 = BeamWaist::<f64>::new_unchecked(1e-3);
     assert_eq!(w0.value(), 1e-3);
 }
 
@@ -101,7 +101,7 @@ fn test_complex_beam_parameter_new_unchecked() {
 
 #[test]
 fn test_focal_length_default() {
-    let f: FocalLength = Default::default();
+    let f: FocalLength<f64> = Default::default();
     assert_eq!(f.value(), 0.0);
 }
 
@@ -119,13 +119,13 @@ fn test_wavelength_default() {
 
 #[test]
 fn test_numerical_aperture_default() {
-    let na: NumericalAperture = Default::default();
+    let na: NumericalAperture<f64> = Default::default();
     assert_eq!(na.value(), 0.0);
 }
 
 #[test]
 fn test_beam_waist_default() {
-    let w0: BeamWaist = Default::default();
+    let w0: BeamWaist<f64> = Default::default();
     assert_eq!(w0.value(), 0.0);
 }
 
