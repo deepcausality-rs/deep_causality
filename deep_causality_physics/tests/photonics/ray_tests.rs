@@ -14,10 +14,10 @@ fn test_ray_transfer() {
     // Identity matrix
     let m_data = vec![1.0, 0.0, 0.0, 1.0];
     let tensor = CausalTensor::new(m_data, vec![2, 2]).unwrap();
-    let matrix = AbcdMatrix::new(tensor);
+    let matrix = AbcdMatrix::<f64>::new(tensor);
 
-    let h = RayHeight::new(1.0).unwrap();
-    let a = RayAngle::new(0.1).unwrap();
+    let h = RayHeight::<f64>::new(1.0).unwrap();
+    let a = RayAngle::<f64>::new(0.1).unwrap();
 
     let res = ray_transfer_kernel(&matrix, h, a);
     assert!(res.is_ok());
@@ -29,9 +29,9 @@ fn test_ray_transfer() {
 #[test]
 fn test_ray_transfer_error() {
     let m = CausalTensor::new(vec![1.0], vec![1]).unwrap();
-    let matrix = AbcdMatrix::new(m);
-    let h = RayHeight::new(1.0).unwrap();
-    let a = RayAngle::new(0.1).unwrap();
+    let matrix = AbcdMatrix::<f64>::new(m);
+    let h = RayHeight::<f64>::new(1.0).unwrap();
+    let a = RayAngle::<f64>::new(0.1).unwrap();
 
     let res = ray_transfer_kernel(&matrix, h, a);
     assert!(res.is_err());
@@ -39,9 +39,9 @@ fn test_ray_transfer_error() {
 
 #[test]
 fn test_snells_law() {
-    let n1 = IndexOfRefraction::new(1.0).unwrap();
-    let n2 = IndexOfRefraction::new(1.5).unwrap();
-    let theta1 = RayAngle::new(0.5).unwrap(); // Radians
+    let n1 = IndexOfRefraction::<f64>::new(1.0).unwrap();
+    let n2 = IndexOfRefraction::<f64>::new(1.5).unwrap();
+    let theta1 = RayAngle::<f64>::new(0.5).unwrap(); // Radians
 
     let res = snells_law_kernel(n1, n2, theta1);
     assert!(res.is_ok());
@@ -54,9 +54,9 @@ fn test_snells_law() {
 
 #[test]
 fn test_snells_law_tir() {
-    let n1 = IndexOfRefraction::new(1.5).unwrap();
-    let n2 = IndexOfRefraction::new(1.0).unwrap();
-    let theta1 = RayAngle::new(1.0).unwrap(); // Large angle
+    let n1 = IndexOfRefraction::<f64>::new(1.5).unwrap();
+    let n2 = IndexOfRefraction::<f64>::new(1.0).unwrap();
+    let theta1 = RayAngle::<f64>::new(1.0).unwrap(); // Large angle
 
     // sin(t2) = 1.5 * sin(1.0) = 1.5 * 0.84 = 1.26 > 1
     let res = snells_law_kernel(n1, n2, theta1);
@@ -65,7 +65,7 @@ fn test_snells_law_tir() {
 
 #[test]
 fn test_lens_maker() {
-    let n = IndexOfRefraction::new(1.5).unwrap();
+    let n = IndexOfRefraction::<f64>::new(1.5).unwrap();
     // Biconvex: R1 > 0, R2 < 0.
     // Spec kernel takes r1: Length, r2: Length? No, I updated kernel to take f64 for signed radii.
     // Wait, let's check what I implemented.
@@ -84,7 +84,7 @@ fn test_lens_maker() {
 
 #[test]
 fn test_lens_maker_error() {
-    let n = IndexOfRefraction::new(1.5).unwrap();
+    let n = IndexOfRefraction::<f64>::new(1.5).unwrap();
     // Zero radius
     assert!(lens_maker_kernel(n, 0.0, 0.5).is_err());
     assert!(lens_maker_kernel(n, 0.5, 0.0).is_err());

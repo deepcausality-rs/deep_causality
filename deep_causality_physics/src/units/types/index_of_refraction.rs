@@ -4,29 +4,36 @@
  */
 
 use crate::PhysicsError;
+use deep_causality_num::RealField;
 
 /// Index of refraction for a medium (ratio of c to phase velocity).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct IndexOfRefraction(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct IndexOfRefraction<R: RealField>(R);
 
-impl IndexOfRefraction {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: RealField> Default for IndexOfRefraction<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: RealField> IndexOfRefraction<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         // Technically can be negative in metamaterials, but typically positive.
         // We'll enforce non-zero for now to avoid division errors in calculations.
-        if val == 0.0 {
+        if val == R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Index of Refraction cannot be zero".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
 
-impl From<IndexOfRefraction> for f64 {
-    fn from(val: IndexOfRefraction) -> Self {
-        val.0
+impl<R: RealField + Into<f64>> From<IndexOfRefraction<R>> for f64 {
+    fn from(val: IndexOfRefraction<R>) -> Self {
+        val.0.into()
     }
 }

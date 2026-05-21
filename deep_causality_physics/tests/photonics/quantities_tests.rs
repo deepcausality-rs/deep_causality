@@ -18,16 +18,16 @@ fn test_focal_length() {
 
 #[test]
 fn test_optical_power() {
-    let p = OpticalPower::new(2.0).unwrap();
+    let p = OpticalPower::<f64>::new(2.0).unwrap();
     assert_eq!(p.value(), 2.0);
 }
 
 #[test]
 fn test_wavelength() {
-    let w = Wavelength::new(500e-9).unwrap();
+    let w = Wavelength::<f64>::new(500e-9).unwrap();
     assert_eq!(w.value(), 500e-9);
 
-    let err = Wavelength::new(-1.0);
+    let err = Wavelength::<f64>::new(-1.0);
     assert!(err.is_err());
 }
 
@@ -73,7 +73,7 @@ fn test_jones_vector() {
 
 #[test]
 fn test_wavelength_new_unchecked() {
-    let w = Wavelength::new_unchecked(500e-9);
+    let w = Wavelength::<f64>::new_unchecked(500e-9);
     assert_eq!(w.value(), 500e-9);
 }
 
@@ -107,13 +107,13 @@ fn test_focal_length_default() {
 
 #[test]
 fn test_optical_power_default() {
-    let p: OpticalPower = Default::default();
+    let p: OpticalPower<f64> = Default::default();
     assert_eq!(p.value(), 0.0);
 }
 
 #[test]
 fn test_wavelength_default() {
-    let w: Wavelength = Default::default();
+    let w: Wavelength<f64> = Default::default();
     assert_eq!(w.value(), 0.0);
 }
 
@@ -137,19 +137,19 @@ fn test_complex_beam_parameter_default() {
 
 #[test]
 fn test_ray_height_default() {
-    let y: RayHeight = Default::default();
+    let y: RayHeight<f64> = Default::default();
     assert_eq!(y.value(), 0.0);
 }
 
 #[test]
 fn test_ray_angle_default() {
-    let theta: RayAngle = Default::default();
+    let theta: RayAngle<f64> = Default::default();
     assert_eq!(theta.value(), 0.0);
 }
 
 #[test]
 fn test_abcd_matrix_default() {
-    let m: AbcdMatrix = Default::default();
+    let m: AbcdMatrix<f64> = Default::default();
     assert!(m.inner().is_empty());
 }
 
@@ -167,12 +167,12 @@ fn test_stokes_vector_default() {
 
 #[test]
 fn test_ray_height_new() {
-    let y = RayHeight::new(10.0).unwrap();
+    let y = RayHeight::<f64>::new(10.0).unwrap();
     assert_eq!(y.value(), 10.0);
 }
 
 #[test]
 fn test_ray_angle_new() {
-    let a = RayAngle::new(0.5).unwrap();
+    let a = RayAngle::<f64>::new(0.5).unwrap();
     assert_eq!(a.value(), 0.5);
 }

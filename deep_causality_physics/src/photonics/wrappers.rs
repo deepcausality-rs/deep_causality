@@ -8,8 +8,9 @@ use crate::photonics::quantities::{
     Wavelength,
 };
 use crate::{IndexOfRefraction, Length, Ratio};
+use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
-use deep_causality_num::Complex;
+use deep_causality_num::{Complex, RealField};
 use deep_causality_tensor::CausalTensor;
 
 // Import all kernels from their respective modules
@@ -19,29 +20,38 @@ use crate::photonics::{beam, diffraction, polarization, ray};
 // Ray Optics
 // ============================================================================
 
-pub fn ray_transfer(
-    m: &AbcdMatrix,
-    h: RayHeight,
-    a: RayAngle,
-) -> PropagatingEffect<(RayHeight, RayAngle)> {
+pub fn ray_transfer<R>(
+    m: &AbcdMatrix<R>,
+    h: RayHeight<R>,
+    a: RayAngle<R>,
+) -> PropagatingEffect<(RayHeight<R>, RayAngle<R>)>
+where
+    R: RealField + Default + Debug,
+{
     match ray::ray_transfer_kernel(m, h, a) {
         Ok(res) => PropagatingEffect::pure(res),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }
 
-pub fn snells_law(
-    n1: IndexOfRefraction,
-    n2: IndexOfRefraction,
-    theta1: RayAngle,
-) -> PropagatingEffect<RayAngle> {
+pub fn snells_law<R>(
+    n1: IndexOfRefraction<R>,
+    n2: IndexOfRefraction<R>,
+    theta1: RayAngle<R>,
+) -> PropagatingEffect<RayAngle<R>>
+where
+    R: RealField + Debug,
+{
     match ray::snells_law_kernel(n1, n2, theta1) {
         Ok(theta2) => PropagatingEffect::pure(theta2),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }
 
-pub fn lens_maker(n: IndexOfRefraction, r1: f64, r2: f64) -> PropagatingEffect<OpticalPower> {
+pub fn lens_maker<R>(n: IndexOfRefraction<R>, r1: R, r2: R) -> PropagatingEffect<OpticalPower<R>>
+where
+    R: RealField + Debug,
+{
     match ray::lens_maker_kernel(n, r1, r2) {
         Ok(p) => PropagatingEffect::pure(p),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -54,7 +64,7 @@ pub fn lens_maker(n: IndexOfRefraction, r1: f64, r2: f64) -> PropagatingEffect<O
 
 pub fn jones_rotation(
     jones_matrix: &CausalTensor<Complex<f64>>,
-    angle: RayAngle,
+    angle: RayAngle<f64>,
 ) -> PropagatingEffect<CausalTensor<Complex<f64>>> {
     match polarization::jones_rotation_kernel(jones_matrix, angle) {
         Ok(m) => PropagatingEffect::pure(m),
@@ -82,7 +92,7 @@ pub fn degree_of_polarization(stokes: &StokesVector) -> PropagatingEffect<Ratio>
 
 pub fn gaussian_q_propagation(
     q_in: ComplexBeamParameter,
-    matrix: &AbcdMatrix,
+    matrix: &AbcdMatrix<f64>,
 ) -> PropagatingEffect<ComplexBeamParameter> {
     match beam::gaussian_q_propagation_kernel(q_in, matrix) {
         Ok(q) => PropagatingEffect::pure(q),
@@ -92,7 +102,7 @@ pub fn gaussian_q_propagation(
 
 pub fn beam_spot_size(
     q: ComplexBeamParameter,
-    wavelength: Wavelength,
+    wavelength: Wavelength<f64>,
 ) -> PropagatingEffect<Length> {
     match beam::beam_spot_size_kernel(q, wavelength) {
         Ok(w) => PropagatingEffect::pure(w),
@@ -107,8 +117,8 @@ pub fn beam_spot_size(
 pub fn single_slit_irradiance(
     i0: f64,
     slit_width: Length,
-    theta: RayAngle,
-    wavelength: Wavelength,
+    theta: RayAngle<f64>,
+    wavelength: Wavelength<f64>,
 ) -> PropagatingEffect<f64> {
     match diffraction::single_slit_irradiance_kernel(i0, slit_width, theta, wavelength) {
         Ok(i) => PropagatingEffect::pure(i),
@@ -119,9 +129,9 @@ pub fn single_slit_irradiance(
 pub fn grating_equation(
     pitch: Length,
     order: i32,
-    incidence: RayAngle,
-    wavelength: Wavelength,
-) -> PropagatingEffect<RayAngle> {
+    incidence: RayAngle<f64>,
+    wavelength: Wavelength<f64>,
+) -> PropagatingEffect<RayAngle<f64>> {
     match diffraction::grating_equation_kernel(pitch, order, incidence, wavelength) {
         Ok(angle) => PropagatingEffect::pure(angle),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),

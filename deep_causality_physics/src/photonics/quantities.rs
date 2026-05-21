@@ -35,37 +35,61 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<FocalLength<R>> for f64 
 
 /// Optical Power ($D = 1/f$).
 /// Unit: Diopters ($m^{-1}$). Constraint: None.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct OpticalPower(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct OpticalPower<R: deep_causality_num::RealField>(R);
 
-impl OpticalPower {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for OpticalPower<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> OpticalPower<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<OpticalPower<R>> for f64 {
+    fn from(val: OpticalPower<R>) -> Self {
+        val.0.into()
     }
 }
 
 /// Wavelength ($\lambda$).
 /// Unit: Meters. Constraint: > 0.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct Wavelength(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Wavelength<R: deep_causality_num::RealField>(R);
 
-impl Wavelength {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
-        if val <= 0.0 {
+impl<R: deep_causality_num::RealField> Default for Wavelength<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> Wavelength<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if val <= R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Wavelength must be positive".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<Wavelength<R>> for f64 {
+    fn from(val: Wavelength<R>) -> Self {
+        val.0.into()
     }
 }
 
@@ -139,41 +163,65 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<BeamWaist<R>> for f64 {
 
 /// Ray Height ($y$). Distance from optical axis.
 /// Unit: Meters.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct RayHeight(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct RayHeight<R: deep_causality_num::RealField>(R);
 
-impl RayHeight {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for RayHeight<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> RayHeight<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<RayHeight<R>> for f64 {
+    fn from(val: RayHeight<R>) -> Self {
+        val.0.into()
     }
 }
 
 /// Ray Angle ($\theta$). Angle relative to optical axis.
 /// Unit: Radians.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct RayAngle(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct RayAngle<R: deep_causality_num::RealField>(R);
 
-impl RayAngle {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for RayAngle<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> RayAngle<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<RayAngle<R>> for f64 {
+    fn from(val: RayAngle<R>) -> Self {
+        val.0.into()
     }
 }
 
 /// ABCD Matrix. $2 \times 2$ Ray Transfer Matrix.
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct AbcdMatrix(CausalTensor<f64>);
+pub struct AbcdMatrix<R: deep_causality_num::RealField>(CausalTensor<R>);
 
-impl AbcdMatrix {
-    pub fn new(tensor: CausalTensor<f64>) -> Self {
+impl<R: deep_causality_num::RealField> AbcdMatrix<R> {
+    pub fn new(tensor: CausalTensor<R>) -> Self {
         Self(tensor)
     }
-    pub fn inner(&self) -> &CausalTensor<f64> {
+    pub fn inner(&self) -> &CausalTensor<R> {
         &self.0
     }
 }

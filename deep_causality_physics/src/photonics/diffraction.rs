@@ -25,8 +25,8 @@ use std::f64::consts::PI;
 pub fn single_slit_irradiance_kernel(
     i0: f64,
     slit_width: Length,
-    theta: RayAngle,
-    wavelength: Wavelength,
+    theta: RayAngle<f64>,
+    wavelength: Wavelength<f64>,
 ) -> Result<f64, PhysicsError> {
     if i0 < 0.0 {
         return Err(PhysicsError::PhysicalInvariantBroken(
@@ -72,9 +72,9 @@ pub fn single_slit_irradiance_kernel(
 pub fn grating_equation_kernel(
     pitch: Length,
     order: i32,
-    incidence: RayAngle,
-    wavelength: Wavelength,
-) -> Result<RayAngle, PhysicsError> {
+    incidence: RayAngle<f64>,
+    wavelength: Wavelength<f64>,
+) -> Result<RayAngle<f64>, PhysicsError> {
     let d = pitch.value();
     let m = order as f64;
     let lambda = wavelength.value();
@@ -97,5 +97,5 @@ pub fn grating_equation_kernel(
     }
 
     let theta_m = sin_theta_m.asin();
-    RayAngle::new(theta_m)
+    RayAngle::<f64>::new(theta_m)
 }

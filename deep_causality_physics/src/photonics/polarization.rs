@@ -25,7 +25,7 @@ use deep_causality_tensor::CausalTensor;
 /// *   `Result<CausalTensor<Complex<f64>>, PhysicsError>` - The rotated Jones matrix.
 pub fn jones_rotation_kernel(
     jones_matrix: &CausalTensor<Complex<f64>>,
-    angle: RayAngle,
+    angle: RayAngle<f64>,
 ) -> Result<CausalTensor<Complex<f64>>, PhysicsError> {
     if jones_matrix.shape() != [2, 2] {
         return Err(PhysicsError::DimensionMismatch(

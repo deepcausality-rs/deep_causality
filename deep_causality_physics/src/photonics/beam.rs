@@ -22,7 +22,7 @@ use std::f64::consts::PI;
 /// *   `Result<ComplexBeamParameter, PhysicsError>` - Output $q_{out}$.
 pub fn gaussian_q_propagation_kernel(
     q_in: ComplexBeamParameter,
-    matrix: &AbcdMatrix,
+    matrix: &AbcdMatrix<f64>,
 ) -> Result<ComplexBeamParameter, PhysicsError> {
     let m = matrix.inner();
     if m.shape() != [2, 2] {
@@ -87,7 +87,7 @@ pub fn gaussian_q_propagation_kernel(
 /// *   `Result<Length, PhysicsError>` - Beam radius $w(z)$.
 pub fn beam_spot_size_kernel(
     q: ComplexBeamParameter,
-    wavelength: Wavelength,
+    wavelength: Wavelength<f64>,
 ) -> Result<Length, PhysicsError> {
     let q_val = q.value();
     let lambda = wavelength.value();

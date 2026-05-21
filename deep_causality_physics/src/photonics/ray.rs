@@ -6,6 +6,7 @@
 use crate::photonics::quantities::{AbcdMatrix, OpticalPower, RayAngle, RayHeight};
 
 use crate::{IndexOfRefraction, PhysicsError};
+use deep_causality_num::RealField;
 use deep_causality_tensor::{CausalTensor, Tensor};
 
 /// Applies an ABCD matrix to a ray vector.
@@ -21,12 +22,15 @@ use deep_causality_tensor::{CausalTensor, Tensor};
 /// *   `angle` - Input ray angle $\theta$.
 ///
 /// # Returns
-/// *   `Result<(RayHeight, RayAngle), PhysicsError>` - The output ray height and angle.
-pub fn ray_transfer_kernel(
-    matrix: &AbcdMatrix,
-    height: RayHeight,
-    angle: RayAngle,
-) -> Result<(RayHeight, RayAngle), PhysicsError> {
+/// *   `Result<(RayHeight<R>, RayAngle<R>), PhysicsError>` - The output ray height and angle.
+pub fn ray_transfer_kernel<R>(
+    matrix: &AbcdMatrix<R>,
+    height: RayHeight<R>,
+    angle: RayAngle<R>,
+) -> Result<(RayHeight<R>, RayAngle<R>), PhysicsError>
+where
+    R: RealField + Default,
+{
     let m = matrix.inner();
     if m.shape() != [2, 2] {
         return Err(PhysicsError::DimensionMismatch(
@@ -41,7 +45,7 @@ pub fn ray_transfer_kernel(
     let input_vec = CausalTensor::new(vec![y_in, theta_in], vec![2, 1])?;
 
     // Matrix multiplication: [y_out, theta_out] = M * [y_in, theta_in]
-    let output_vec = m.matmul(&input_vec)?; // output_vec will be [2, 1]
+    let output_vec = m.matmul(&input_vec)?;
 
     let y_out = output_vec.data()[0];
     let theta_out = output_vec.data()[1];
@@ -59,15 +63,18 @@ pub fn ray_transfer_kernel(
 /// *   `theta1` - Angle of incidence (relative to normal).
 ///
 /// # Returns
-/// *   `Result<RayAngle, PhysicsError>` - Angle of refraction.
+/// *   `Result<RayAngle<R>, PhysicsError>` - Angle of refraction.
 ///
 /// # Errors
 /// *   `PhysicalInvariantBroken` - If total internal reflection occurs ($\sin \theta_2 > 1$).
-pub fn snells_law_kernel(
-    n1: IndexOfRefraction,
-    n2: IndexOfRefraction,
-    theta1: RayAngle,
-) -> Result<RayAngle, PhysicsError> {
+pub fn snells_law_kernel<R>(
+    n1: IndexOfRefraction<R>,
+    n2: IndexOfRefraction<R>,
+    theta1: RayAngle<R>,
+) -> Result<RayAngle<R>, PhysicsError>
+where
+    R: RealField,
+{
     let n1_val = n1.value();
     let n2_val = n2.value();
     let theta1_val = theta1.value();
@@ -75,7 +82,7 @@ pub fn snells_law_kernel(
     // sin(theta2) = (n1 / n2) * sin(theta1)
     let sin_theta2 = (n1_val / n2_val) * theta1_val.sin();
 
-    if sin_theta2.abs() > 1.0 {
+    if sin_theta2.abs() > R::one() {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Total Internal Reflection: sin(theta2) > 1".into(),
         ));
@@ -100,21 +107,24 @@ pub fn snells_law_kernel(
 /// *   `r2` - Radius of curvature of the second surface.
 ///
 /// # Returns
-/// *   `Result<OpticalPower, PhysicsError>` - Optical power in Diopters.
-pub fn lens_maker_kernel(
-    n: IndexOfRefraction,
-    r1: f64,
-    r2: f64,
-) -> Result<OpticalPower, PhysicsError> {
+/// *   `Result<OpticalPower<R>, PhysicsError>` - Optical power in Diopters.
+pub fn lens_maker_kernel<R>(
+    n: IndexOfRefraction<R>,
+    r1: R,
+    r2: R,
+) -> Result<OpticalPower<R>, PhysicsError>
+where
+    R: RealField,
+{
     // P = (n - 1) * (1/R1 - 1/R2)
     let n_val = n.value();
 
-    if r1 == 0.0 || r2 == 0.0 {
+    if r1 == R::zero() || r2 == R::zero() {
         return Err(PhysicsError::Singularity(
             "Radius of curvature cannot be zero".into(),
         ));
     }
 
-    let power = (n_val - 1.0) * ((1.0 / r1) - (1.0 / r2));
+    let power = (n_val - R::one()) * ((R::one() / r1) - (R::one() / r2));
     OpticalPower::new(power)
 }

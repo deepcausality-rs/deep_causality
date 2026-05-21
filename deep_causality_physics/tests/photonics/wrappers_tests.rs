@@ -19,9 +19,9 @@ use deep_causality_tensor::CausalTensor;
 
 #[test]
 fn test_wrapper_ray_transfer() {
-    let m = AbcdMatrix::new(CausalTensor::identity(&[2, 2]).unwrap());
-    let h = RayHeight::default();
-    let a = RayAngle::default();
+    let m = AbcdMatrix::<f64>::new(CausalTensor::identity(&[2, 2]).unwrap());
+    let h = RayHeight::<f64>::default();
+    let a = RayAngle::<f64>::default();
 
     let result = ray_transfer(&m, h, a);
     assert!(result.is_ok());
@@ -29,9 +29,9 @@ fn test_wrapper_ray_transfer() {
 
 #[test]
 fn test_wrapper_ray_transfer_error() {
-    let m = AbcdMatrix::new(CausalTensor::new(vec![1.0], vec![1]).unwrap());
-    let h = RayHeight::default();
-    let a = RayAngle::default();
+    let m = AbcdMatrix::<f64>::new(CausalTensor::new(vec![1.0], vec![1]).unwrap());
+    let h = RayHeight::<f64>::default();
+    let a = RayAngle::<f64>::default();
 
     let result = ray_transfer(&m, h, a);
     assert!(result.is_err());
@@ -41,9 +41,9 @@ fn test_wrapper_ray_transfer_error() {
 fn test_wrapper_ray_transfer_free_space() {
     // Free space propagation matrix: [[1, d], [0, 1]]
     let d = 0.1; // 10 cm
-    let m = AbcdMatrix::new(CausalTensor::new(vec![1.0, d, 0.0, 1.0], vec![2, 2]).unwrap());
-    let h = RayHeight::new(0.01).unwrap(); // 1 cm height
-    let a = RayAngle::new(0.1).unwrap(); // 0.1 rad angle
+    let m = AbcdMatrix::<f64>::new(CausalTensor::new(vec![1.0, d, 0.0, 1.0], vec![2, 2]).unwrap());
+    let h = RayHeight::<f64>::new(0.01).unwrap(); // 1 cm height
+    let a = RayAngle::<f64>::new(0.1).unwrap(); // 0.1 rad angle
 
     let result = ray_transfer(&m, h, a);
     assert!(result.is_ok());
@@ -56,9 +56,9 @@ fn test_wrapper_ray_transfer_free_space() {
 
 #[test]
 fn test_wrapper_snells_law() {
-    let n1 = IndexOfRefraction::new(1.0).unwrap();
-    let n2 = IndexOfRefraction::new(1.5).unwrap();
-    let theta1 = RayAngle::new(0.3).unwrap();
+    let n1 = IndexOfRefraction::<f64>::new(1.0).unwrap();
+    let n2 = IndexOfRefraction::<f64>::new(1.5).unwrap();
+    let theta1 = RayAngle::<f64>::new(0.3).unwrap();
 
     let result = snells_law(n1, n2, theta1);
     assert!(result.is_ok());
@@ -74,9 +74,9 @@ fn test_wrapper_snells_law() {
 #[test]
 fn test_wrapper_snells_law_tir() {
     // Total internal reflection case
-    let n1 = IndexOfRefraction::new(1.5).unwrap();
-    let n2 = IndexOfRefraction::new(1.0).unwrap();
-    let theta1 = RayAngle::new(1.0).unwrap(); // Beyond critical angle
+    let n1 = IndexOfRefraction::<f64>::new(1.5).unwrap();
+    let n2 = IndexOfRefraction::<f64>::new(1.0).unwrap();
+    let theta1 = RayAngle::<f64>::new(1.0).unwrap(); // Beyond critical angle
 
     let result = snells_law(n1, n2, theta1);
     // Should error for TIR
@@ -85,7 +85,7 @@ fn test_wrapper_snells_law_tir() {
 
 #[test]
 fn test_wrapper_lens_maker() {
-    let n = IndexOfRefraction::new(1.5).unwrap();
+    let n = IndexOfRefraction::<f64>::new(1.5).unwrap();
     let r1 = 0.1; // 10 cm radius
     let r2 = -0.1; // -10 cm (convex-convex)
 
@@ -100,7 +100,7 @@ fn test_wrapper_lens_maker() {
 
 #[test]
 fn test_wrapper_lens_maker_error() {
-    let n = IndexOfRefraction::new(1.5).unwrap();
+    let n = IndexOfRefraction::<f64>::new(1.5).unwrap();
     let result = lens_maker(n, 0.0, 0.1);
     assert!(result.is_err());
 }
@@ -154,7 +154,7 @@ fn test_wrapper_jones_rotation() {
         vec![2, 2],
     )
     .unwrap();
-    let angle = RayAngle::new(std::f64::consts::PI / 4.0).unwrap(); // 45 degrees
+    let angle = RayAngle::<f64>::new(std::f64::consts::PI / 4.0).unwrap(); // 45 degrees
 
     let result = jones_rotation(&jones, angle);
     assert!(result.is_ok());
@@ -167,7 +167,7 @@ fn test_wrapper_jones_rotation() {
 #[test]
 fn test_wrapper_jones_rotation_error() {
     let m = CausalTensor::new(vec![Complex::new(1.0, 0.0)], vec![1]).unwrap();
-    let a = RayAngle::default();
+    let a = RayAngle::<f64>::default();
     let result = jones_rotation(&m, a);
     assert!(result.is_err());
 }
@@ -219,7 +219,7 @@ fn test_wrapper_gaussian_q_propagation() {
     // q = z_R * i at waist
     let q_in = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
     // Free space propagation matrix
-    let m = AbcdMatrix::new(CausalTensor::new(vec![1.0, 0.5, 0.0, 1.0], vec![2, 2]).unwrap());
+    let m = AbcdMatrix::<f64>::new(CausalTensor::new(vec![1.0, 0.5, 0.0, 1.0], vec![2, 2]).unwrap());
 
     let result = gaussian_q_propagation(q_in, &m);
     assert!(result.is_ok());
@@ -234,7 +234,7 @@ fn test_wrapper_gaussian_q_propagation() {
 #[test]
 fn test_wrapper_gaussian_q_propagation_error() {
     let q = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
-    let m = AbcdMatrix::new(CausalTensor::new(vec![1.0], vec![1]).unwrap());
+    let m = AbcdMatrix::<f64>::new(CausalTensor::new(vec![1.0], vec![1]).unwrap());
     let result = gaussian_q_propagation(q, &m);
     assert!(result.is_err());
 }
@@ -242,7 +242,7 @@ fn test_wrapper_gaussian_q_propagation_error() {
 #[test]
 fn test_wrapper_beam_spot_size() {
     let q = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
-    let w = Wavelength::new(1e-6).unwrap(); // 1 μm
+    let w = Wavelength::<f64>::new(1e-6).unwrap(); // 1 μm
 
     let result = beam_spot_size(q, w);
     assert!(result.is_ok());
@@ -256,7 +256,7 @@ fn test_wrapper_beam_spot_size() {
 #[test]
 fn test_wrapper_beam_spot_size_error() {
     let q = ComplexBeamParameter::new_unchecked(Complex::new(1.0, 0.0));
-    let w = Wavelength::new(1e-6).unwrap();
+    let w = Wavelength::<f64>::new(1e-6).unwrap();
     let result = beam_spot_size(q, w);
     assert!(result.is_err());
 }
@@ -269,8 +269,8 @@ fn test_wrapper_beam_spot_size_error() {
 fn test_wrapper_single_slit_irradiance() {
     let i0 = 1.0; // Initial intensity
     let slit_width = Length::new(1e-4).unwrap(); // 100 μm
-    let theta = RayAngle::new(0.01).unwrap(); // 0.01 rad
-    let wavelength = Wavelength::new(500e-9).unwrap(); // 500 nm
+    let theta = RayAngle::<f64>::new(0.01).unwrap(); // 0.01 rad
+    let wavelength = Wavelength::<f64>::new(500e-9).unwrap(); // 500 nm
 
     let result = single_slit_irradiance(i0, slit_width, theta, wavelength);
     assert!(result.is_ok());
@@ -286,8 +286,8 @@ fn test_wrapper_single_slit_irradiance() {
 fn test_wrapper_single_slit_irradiance_center() {
     let i0 = 1.0;
     let slit_width = Length::new(1e-4).unwrap();
-    let theta = RayAngle::new(0.0).unwrap(); // Center: maximum
-    let wavelength = Wavelength::new(500e-9).unwrap();
+    let theta = RayAngle::<f64>::new(0.0).unwrap(); // Center: maximum
+    let wavelength = Wavelength::<f64>::new(500e-9).unwrap();
 
     let result = single_slit_irradiance(i0, slit_width, theta, wavelength);
     assert!(result.is_ok());
@@ -302,8 +302,8 @@ fn test_wrapper_single_slit_irradiance_center() {
 fn test_wrapper_single_slit_irradiance_error() {
     let i0 = -1.0;
     let l = Length::new(1.0).unwrap();
-    let a = RayAngle::default();
-    let w = Wavelength::new(1e-6).unwrap();
+    let a = RayAngle::<f64>::default();
+    let w = Wavelength::<f64>::new(1e-6).unwrap();
     let result = single_slit_irradiance(i0, l, a, w);
     assert!(result.is_err());
 }
@@ -312,8 +312,8 @@ fn test_wrapper_single_slit_irradiance_error() {
 fn test_wrapper_grating_equation() {
     let pitch = Length::new(1e-6).unwrap(); // 1 μm grating period
     let order = 1; // First order
-    let incidence = RayAngle::new(0.0).unwrap(); // Normal incidence
-    let wavelength = Wavelength::new(500e-9).unwrap(); // 500 nm
+    let incidence = RayAngle::<f64>::new(0.0).unwrap(); // Normal incidence
+    let wavelength = Wavelength::<f64>::new(500e-9).unwrap(); // 500 nm
 
     let result = grating_equation(pitch, order, incidence, wavelength);
     assert!(result.is_ok());
@@ -329,8 +329,8 @@ fn test_wrapper_grating_equation() {
 fn test_wrapper_grating_equation_zero_order() {
     let pitch = Length::new(1e-6).unwrap();
     let order = 0; // Zero order = specular reflection
-    let incidence = RayAngle::new(0.3).unwrap();
-    let wavelength = Wavelength::new(500e-9).unwrap();
+    let incidence = RayAngle::<f64>::new(0.3).unwrap();
+    let wavelength = Wavelength::<f64>::new(500e-9).unwrap();
 
     let result = grating_equation(pitch, order, incidence, wavelength);
     assert!(result.is_ok());
@@ -346,8 +346,8 @@ fn test_wrapper_grating_equation_error_evanescent() {
     // High order that would result in evanescent wave
     let pitch = Length::new(1e-6).unwrap();
     let order = 5; // Too high
-    let incidence = RayAngle::new(0.0).unwrap();
-    let wavelength = Wavelength::new(800e-9).unwrap();
+    let incidence = RayAngle::<f64>::new(0.0).unwrap();
+    let wavelength = Wavelength::<f64>::new(800e-9).unwrap();
 
     let result = grating_equation(pitch, order, incidence, wavelength);
     // sin(θ) = 5 * 800e-9 / 1e-6 = 4.0 > 1, should error
@@ -361,14 +361,14 @@ fn test_wrapper_grating_equation_error_evanescent() {
 #[test]
 fn test_wrappers_combined() {
     // Ray Transfer
-    let m = AbcdMatrix::new(CausalTensor::identity(&[2, 2]).unwrap());
-    let h = RayHeight::default();
-    let a = RayAngle::default();
+    let m = AbcdMatrix::<f64>::new(CausalTensor::identity(&[2, 2]).unwrap());
+    let h = RayHeight::<f64>::default();
+    let a = RayAngle::<f64>::default();
     assert!(ray_transfer(&m, h, a).is_ok());
 
     // Snells
-    let n1 = IndexOfRefraction::new(1.0).unwrap();
-    let n2 = IndexOfRefraction::new(1.5).unwrap();
+    let n1 = IndexOfRefraction::<f64>::new(1.0).unwrap();
+    let n2 = IndexOfRefraction::<f64>::new(1.5).unwrap();
     assert!(snells_law(n1, n2, a).is_ok());
 
     // Lens
@@ -380,7 +380,7 @@ fn test_wrappers_combined() {
 
     // Beam
     let q = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
-    let w = Wavelength::new(1e-6).unwrap();
+    let w = Wavelength::<f64>::new(1e-6).unwrap();
     assert!(beam_spot_size(q, w).is_ok());
 
     // Diffraction
