@@ -20,7 +20,7 @@ use deep_causality_num::{FromPrimitive, RealField};
 /// # Returns
 /// *   `Result<DebyeLength<R>, PhysicsError>` - Debye length.
 pub fn debye_length_kernel<R>(
-    temp: Temperature,
+    temp: Temperature<f64>,
     density_n: R,
     epsilon_0: R,
     elementary_charge: R,

@@ -85,7 +85,7 @@ where
     }
 }
 
-pub fn degree_of_polarization<R>(stokes: &StokesVector<R>) -> PropagatingEffect<Ratio>
+pub fn degree_of_polarization<R>(stokes: &StokesVector<R>) -> PropagatingEffect<Ratio<f64>>
 where
     R: RealField + FromPrimitive + Into<f64>,
 {

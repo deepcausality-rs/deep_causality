@@ -126,9 +126,11 @@ where
 /// *   `stokes` - Input Stokes vector.
 ///
 /// # Returns
-/// *   `Result<Ratio, PhysicsError>` - DOP (0 to 1). Ratio output is pinned to `f64`
+/// *   `Result<Ratio<f64>, PhysicsError>` - DOP (0 to 1). Ratio output is pinned to `f64`
 ///     until the Ratio wrapper is retyped (see units slice).
-pub fn degree_of_polarization_kernel<R>(stokes: &StokesVector<R>) -> Result<Ratio, PhysicsError>
+pub fn degree_of_polarization_kernel<R>(
+    stokes: &StokesVector<R>,
+) -> Result<Ratio<f64>, PhysicsError>
 where
     R: RealField + FromPrimitive + Into<f64>,
 {
@@ -147,7 +149,7 @@ where
 
     if s0 <= R::zero() {
         if s0 == R::zero() && s1 == R::zero() && s2 == R::zero() && s3 == R::zero() {
-            return Ratio::new(0.0); // Zero intensity, undefined DOP, return 0
+            return Ratio::<f64>::new(0.0); // Zero intensity, undefined DOP, return 0
         }
         return Err(PhysicsError::PhysicalInvariantBroken(
             "S0 must be positive".into(),
@@ -167,5 +169,5 @@ where
     }
 
     let clamped = if dop > one { one } else { dop };
-    Ratio::new(clamped.into())
+    Ratio::<f64>::new(clamped.into())
 }

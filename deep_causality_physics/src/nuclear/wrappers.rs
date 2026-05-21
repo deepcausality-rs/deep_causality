@@ -13,7 +13,7 @@ use deep_causality_num::{FromPrimitive, RealField};
 pub fn radioactive_decay<R>(
     n0: &AmountOfSubstance<R>,
     half_life: &HalfLife<R>,
-    time: &Time,
+    time: &Time<f64>,
 ) -> PropagatingEffect<AmountOfSubstance<R>>
 where
     R: RealField + FromPrimitive + Debug,

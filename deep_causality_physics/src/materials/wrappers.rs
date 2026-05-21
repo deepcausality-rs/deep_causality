@@ -38,7 +38,7 @@ where
 /// Causal wrapper for [`mechanics::thermal_expansion_kernel`].
 pub fn thermal_expansion(
     coeff: f64,
-    delta_temp: Temperature,
+    delta_temp: Temperature<f64>,
 ) -> PropagatingEffect<CausalTensor<f64>> {
     match mechanics::thermal_expansion_kernel(coeff, delta_temp) {
         Ok(t) => PropagatingEffect::pure(t),

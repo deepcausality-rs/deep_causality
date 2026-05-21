@@ -106,7 +106,12 @@ pub fn energy_momentum_tensor_em(
 // Plasma Wrappers
 // ============================================================================
 
-pub fn debye_length<R>(t: Temperature, n: R, eps0: R, e: R) -> PropagatingEffect<DebyeLength<R>>
+pub fn debye_length<R>(
+    t: Temperature<f64>,
+    n: R,
+    eps0: R,
+    e: R,
+) -> PropagatingEffect<DebyeLength<R>>
 where
     R: RealField + FromPrimitive + Debug,
 {

@@ -29,7 +29,7 @@ use deep_causality_num::{FromPrimitive, RealField};
 pub fn radioactive_decay_kernel<R>(
     n0: &AmountOfSubstance<R>,
     half_life: &HalfLife<R>,
-    time: &Time,
+    time: &Time<f64>,
 ) -> Result<AmountOfSubstance<R>, PhysicsError>
 where
     R: RealField + FromPrimitive,

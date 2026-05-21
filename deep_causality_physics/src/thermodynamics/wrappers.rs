@@ -29,10 +29,10 @@ pub fn ideal_gas_law(
     pressure: Pressure<f64>,
     volume: Volume,
     moles: AmountOfSubstance<f64>,
-    temp: Temperature,
-) -> PropagatingEffect<Ratio> {
+    temp: Temperature<f64>,
+) -> PropagatingEffect<Ratio<f64>> {
     match stats::ideal_gas_law_kernel(pressure, volume, moles, temp) {
-        Ok(val) => match Ratio::new(val) {
+        Ok(val) => match Ratio::<f64>::new(val) {
             Ok(r) => PropagatingEffect::pure(r),
             Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
         },
@@ -42,8 +42,8 @@ pub fn ideal_gas_law(
 
 /// Causal wrapper for [`stats::carnot_efficiency_kernel`].
 pub fn carnot_efficiency(
-    temp_hot: Temperature,
-    temp_cold: Temperature,
+    temp_hot: Temperature<f64>,
+    temp_cold: Temperature<f64>,
 ) -> PropagatingEffect<Efficiency<f64>> {
     match stats::carnot_efficiency_kernel(temp_hot, temp_cold) {
         Ok(val) => match Efficiency::<f64>::new(val) {
@@ -57,7 +57,7 @@ pub fn carnot_efficiency(
 /// Causal wrapper for [`stats::boltzmann_factor_kernel`].
 pub fn boltzmann_factor<R>(
     energy: Energy<R>,
-    temp: Temperature,
+    temp: Temperature<f64>,
 ) -> PropagatingEffect<Probability<R>>
 where
     R: RealField + FromPrimitive + Debug,
@@ -77,7 +77,7 @@ pub fn shannon_entropy(probs: &CausalTensor<f64>) -> PropagatingEffect<f64> {
 }
 
 /// Causal wrapper for [`stats::heat_capacity_kernel`].
-pub fn heat_capacity<R>(diff_energy: Energy<R>, diff_temp: Temperature) -> PropagatingEffect<R>
+pub fn heat_capacity<R>(diff_energy: Energy<R>, diff_temp: Temperature<f64>) -> PropagatingEffect<R>
 where
     R: RealField + FromPrimitive + Default + Debug,
 {
@@ -90,7 +90,7 @@ where
 /// Causal wrapper for [`stats::partition_function_kernel`].
 pub fn partition_function(
     energies: &CausalTensor<f64>,
-    temp: Temperature,
+    temp: Temperature<f64>,
 ) -> PropagatingEffect<f64> {
     match stats::partition_function_kernel(energies, temp) {
         Ok(val) => PropagatingEffect::pure(val),

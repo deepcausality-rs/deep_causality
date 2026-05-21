@@ -56,7 +56,7 @@ pub fn ideal_gas_law_kernel(
     pressure: Pressure<f64>,
     volume: Volume,
     moles: AmountOfSubstance<f64>,
-    temp: Temperature,
+    temp: Temperature<f64>,
 ) -> Result<f64, PhysicsError> {
     // PV = nRT -> R = PV / nT
     // Calculates the Gas Constant R implied by the state variables.
@@ -88,8 +88,8 @@ pub fn ideal_gas_law_kernel(
 /// # Returns
 /// * `Ok(f64)` - Efficiency $\eta$.
 pub fn carnot_efficiency_kernel(
-    temp_hot: Temperature,
-    temp_cold: Temperature,
+    temp_hot: Temperature<f64>,
+    temp_cold: Temperature<f64>,
 ) -> Result<f64, PhysicsError> {
     let th = temp_hot.value();
     let tc = temp_cold.value();
@@ -122,7 +122,7 @@ pub fn carnot_efficiency_kernel(
 /// * `Result<Probability, PhysicsError>` - Boltzmann factor.
 pub fn boltzmann_factor_kernel<R>(
     energy: Energy<R>,
-    temp: Temperature,
+    temp: Temperature<f64>,
 ) -> Result<Probability<R>, PhysicsError>
 where
     R: RealField + FromPrimitive,
@@ -192,7 +192,7 @@ pub fn shannon_entropy_kernel(probs: &CausalTensor<f64>) -> Result<f64, PhysicsE
 /// * `Result<f64, PhysicsError>` - Heat capacity.
 pub fn heat_capacity_kernel<R>(
     diff_energy: Energy<R>,
-    diff_temp: Temperature,
+    diff_temp: Temperature<f64>,
 ) -> Result<R, PhysicsError>
 where
     R: RealField + FromPrimitive,
@@ -221,7 +221,7 @@ where
 /// * `Result<f64, PhysicsError>` - Partition function $Z$.
 pub fn partition_function_kernel(
     energies: &CausalTensor<f64>,
-    temp: Temperature,
+    temp: Temperature<f64>,
 ) -> Result<f64, PhysicsError> {
     // Z = Sum exp(-E_i / kT)
 

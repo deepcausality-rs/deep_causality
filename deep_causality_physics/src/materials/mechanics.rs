@@ -120,7 +120,7 @@ where
 /// * `Ok(CausalTensor<f64>)` - Isotropic strain tensor (3x3).
 pub fn thermal_expansion_kernel(
     coeff: f64,
-    delta_temp: Temperature,
+    delta_temp: Temperature<f64>,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     // epsilon_ij = alpha * dT * delta_ij
     let val = coeff * delta_temp.value();

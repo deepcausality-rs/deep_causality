@@ -3,66 +3,77 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::PhysicsError;
+use deep_causality_num::{FromPrimitive, RealField};
 
 /// Absolute Temperature (Kelvin).
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct Temperature(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Temperature<R: RealField>(R);
 
 const ZERO_CELSIUS_IN_KELVIN: f64 = 273.15;
 
-impl Temperature {
+impl<R: RealField> Default for Temperature<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: RealField> Temperature<R> {
     /// Creates a new `Temperature` instance from Kelvin.
-    ///
-    /// # Errors
-    /// Returns `PhysicsError::ZeroKelvinViolation` if `val < 0.0`.
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
-        if val < 0.0 {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if val < R::zero() {
             return Err(PhysicsError::ZeroKelvinViolation());
         }
         Ok(Self(val))
     }
 
-    /// Creates a new `Temperature` instance from Celsius.
-    ///
-    /// # Errors
-    /// Returns `PhysicsError::ZeroKelvinViolation` if `val < -273.15`.
-    pub fn from_celsius(celsius: f64) -> Result<Self, PhysicsError> {
-        let kelvin = celsius + ZERO_CELSIUS_IN_KELVIN;
-        Self::new(kelvin)
-    }
-
-    /// Creates a new `Temperature` instance from Fahrenheit.
-    ///
-    /// # Errors
-    /// Returns `PhysicsError::ZeroKelvinViolation` if `val < -459.67`.
-    pub fn from_fahrenheit(fahrenheit: f64) -> Result<Self, PhysicsError> {
-        let celsius = (fahrenheit - 32.0) * (5.0 / 9.0);
-        Self::from_celsius(celsius)
-    }
-
-    /// Creates a new `Temperature` instance without validation.
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
 
-    /// Returns the temperature in Kelvin.
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
-    }
-
-    /// Returns the temperature in Celsius.
-    pub fn as_celsius(&self) -> f64 {
-        self.0 - ZERO_CELSIUS_IN_KELVIN
-    }
-
-    /// Returns the temperature in Fahrenheit.
-    pub fn as_fahrenheit(&self) -> f64 {
-        (self.as_celsius() * (9.0 / 5.0)) + 32.0
     }
 }
 
-impl From<Temperature> for f64 {
-    fn from(val: Temperature) -> Self {
-        val.0
+impl<R: RealField + FromPrimitive> Temperature<R> {
+    /// Creates a new `Temperature` instance from Celsius.
+    pub fn from_celsius(celsius: R) -> Result<Self, PhysicsError> {
+        let k = R::from_f64(ZERO_CELSIUS_IN_KELVIN).ok_or_else(|| {
+            PhysicsError::NumericalInstability("R::from_f64(ZERO_CELSIUS_IN_KELVIN) failed".into())
+        })?;
+        Self::new(celsius + k)
+    }
+
+    /// Creates a new `Temperature` instance from Fahrenheit.
+    pub fn from_fahrenheit(fahrenheit: R) -> Result<Self, PhysicsError> {
+        let thirty_two = R::from_f64(32.0)
+            .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(32) failed".into()))?;
+        let five = R::from_f64(5.0)
+            .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(5) failed".into()))?;
+        let nine = R::from_f64(9.0)
+            .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(9) failed".into()))?;
+        let celsius = (fahrenheit - thirty_two) * (five / nine);
+        Self::from_celsius(celsius)
+    }
+
+    /// Returns the temperature in Celsius.
+    pub fn as_celsius(&self) -> R {
+        let k = R::from_f64(ZERO_CELSIUS_IN_KELVIN)
+            .expect("R::from_f64(ZERO_CELSIUS_IN_KELVIN) failed");
+        self.0 - k
+    }
+
+    /// Returns the temperature in Fahrenheit.
+    pub fn as_fahrenheit(&self) -> R {
+        let nine = R::from_f64(9.0).expect("R::from_f64(9) failed");
+        let five = R::from_f64(5.0).expect("R::from_f64(5) failed");
+        let thirty_two = R::from_f64(32.0).expect("R::from_f64(32) failed");
+        (self.as_celsius() * (nine / five)) + thirty_two
+    }
+}
+
+impl<R: RealField + Into<f64>> From<Temperature<R>> for f64 {
+    fn from(val: Temperature<R>) -> Self {
+        val.0.into()
     }
 }
