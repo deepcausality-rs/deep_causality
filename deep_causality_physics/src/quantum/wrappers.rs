@@ -26,8 +26,8 @@ pub fn klein_gordon(
 
 /// Causal wrapper for [`mechanics::born_probability_kernel`].
 pub fn born_probability(
-    state: &HilbertState,
-    basis: &HilbertState,
+    state: &HilbertState<f64>,
+    basis: &HilbertState<f64>,
 ) -> PropagatingEffect<Probability<f64>> {
     match mechanics::born_probability_kernel(state, basis) {
         Ok(val) => match Probability::<f64>::new(val) {
@@ -39,7 +39,7 @@ pub fn born_probability(
 }
 
 /// Causal wrapper for [`mechanics::expectation_value_kernel`].
-pub fn expectation_value(state: &HilbertState, operator: &Operator) -> PropagatingEffect<f64> {
+pub fn expectation_value(state: &HilbertState<f64>, operator: &Operator) -> PropagatingEffect<f64> {
     match mechanics::expectation_value_kernel(state, operator) {
         Ok(val) => PropagatingEffect::pure(val),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -47,7 +47,7 @@ pub fn expectation_value(state: &HilbertState, operator: &Operator) -> Propagati
 }
 
 /// Causal wrapper for [`mechanics::apply_gate_kernel`].
-pub fn apply_gate(state: &HilbertState, gate: &Gate) -> PropagatingEffect<HilbertState> {
+pub fn apply_gate(state: &HilbertState<f64>, gate: &Gate) -> PropagatingEffect<HilbertState<f64>> {
     match mechanics::apply_gate_kernel(state, gate) {
         Ok(val) => PropagatingEffect::pure(val),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -55,7 +55,7 @@ pub fn apply_gate(state: &HilbertState, gate: &Gate) -> PropagatingEffect<Hilber
 }
 
 /// Causal wrapper for [`mechanics::commutator_kernel`].
-pub fn commutator(a: &Operator, b: &Operator) -> PropagatingEffect<HilbertState> {
+pub fn commutator(a: &Operator, b: &Operator) -> PropagatingEffect<HilbertState<f64>> {
     match mechanics::commutator_kernel(a, b) {
         Ok(res) => PropagatingEffect::pure(res),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -118,8 +118,8 @@ pub fn haruna_t_gate(field: &CausalMultiVector<f64>) -> PropagatingEffect<Operat
 
 /// Causal wrapper for [`mechanics::fidelity_kernel`].
 pub fn fidelity(
-    ideal: &HilbertState,
-    actual: &HilbertState,
+    ideal: &HilbertState<f64>,
+    actual: &HilbertState<f64>,
 ) -> PropagatingEffect<Probability<f64>> {
     match mechanics::fidelity_kernel(ideal, actual) {
         Ok(val) => match Probability::<f64>::new(val) {

@@ -25,7 +25,7 @@ pub struct LundString {
 
 impl LundString {
     /// Create a new string from endpoint 4-momenta.
-    pub fn new(quark: FourMomentum, antiquark: FourMomentum) -> Self {
+    pub fn new(quark: FourMomentum<f64>, antiquark: FourMomentum<f64>) -> Self {
         Self {
             segment: StringSegment::from_endpoints(&quark, &antiquark),
             z_used_quark: 0.0,
@@ -56,7 +56,13 @@ impl LundString {
     /// Take a momentum fraction z from the quark end.
     ///
     /// Returns the hadron 4-momentum.
-    pub fn take_from_quark(&mut self, z: f64, pt_x: f64, pt_y: f64, mass: f64) -> FourMomentum {
+    pub fn take_from_quark(
+        &mut self,
+        z: f64,
+        pt_x: f64,
+        pt_y: f64,
+        mass: f64,
+    ) -> FourMomentum<f64> {
         let w_plus = self.w_plus();
         let hadron_p_plus = z * w_plus;
 
@@ -77,13 +83,19 @@ impl LundString {
         let e = (hadron_p_plus + hadron_p_minus) / 2.0;
         let pz = (hadron_p_plus - hadron_p_minus) / 2.0;
 
-        FourMomentum::new(e, pt_x, pt_y, pz)
+        FourMomentum::<f64>::new(e, pt_x, pt_y, pz)
     }
 
     /// Take a momentum fraction z from the antiquark end.
     ///
     /// Returns the hadron 4-momentum.
-    pub fn take_from_antiquark(&mut self, z: f64, pt_x: f64, pt_y: f64, mass: f64) -> FourMomentum {
+    pub fn take_from_antiquark(
+        &mut self,
+        z: f64,
+        pt_x: f64,
+        pt_y: f64,
+        mass: f64,
+    ) -> FourMomentum<f64> {
         let w_minus = self.w_minus();
         let hadron_p_minus = z * w_minus;
 
@@ -104,7 +116,7 @@ impl LundString {
         let e = (hadron_p_plus + hadron_p_minus) / 2.0;
         let pz = (hadron_p_plus - hadron_p_minus) / 2.0;
 
-        FourMomentum::new(e, pt_x, pt_y, pz)
+        FourMomentum::<f64>::new(e, pt_x, pt_y, pz)
     }
 
     /// Get quark endpoint.
@@ -122,7 +134,7 @@ impl LundString {
     /// Create the final hadron from remaining string momentum.
     ///
     /// This is called when the string can't fragment further.
-    pub fn final_hadron(&self, _mass: f64) -> FourMomentum {
+    pub fn final_hadron(&self, _mass: f64) -> FourMomentum<f64> {
         // Use remaining momentum
         let p_plus = self.w_plus();
         let p_minus = self.w_minus();
@@ -131,7 +143,7 @@ impl LundString {
         let pz = (p_plus - p_minus) / 2.0;
 
         // Transverse momentum is approximately zero for final hadron
-        FourMomentum::new(e, 0.0, 0.0, pz)
+        FourMomentum::<f64>::new(e, 0.0, 0.0, pz)
     }
 }
 
@@ -141,8 +153,8 @@ mod tests {
 
     #[test]
     fn test_lund_string_creation() {
-        let q = FourMomentum::new(50.0, 0.0, 0.0, 50.0);
-        let qbar = FourMomentum::new(50.0, 0.0, 0.0, -50.0);
+        let q = FourMomentum::<f64>::new(50.0, 0.0, 0.0, 50.0);
+        let qbar = FourMomentum::<f64>::new(50.0, 0.0, 0.0, -50.0);
         let string = LundString::new(q, qbar);
 
         assert!(string.invariant_mass() > 99.0);
@@ -151,8 +163,8 @@ mod tests {
 
     #[test]
     fn test_take_from_quark() {
-        let q = FourMomentum::new(50.0, 0.0, 0.0, 50.0);
-        let qbar = FourMomentum::new(50.0, 0.0, 0.0, -50.0);
+        let q = FourMomentum::<f64>::new(50.0, 0.0, 0.0, 50.0);
+        let qbar = FourMomentum::<f64>::new(50.0, 0.0, 0.0, -50.0);
         let mut string = LundString::new(q, qbar);
 
         let hadron = string.take_from_quark(0.3, 0.0, 0.0, 0.14);

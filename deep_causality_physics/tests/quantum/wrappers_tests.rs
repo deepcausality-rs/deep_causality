@@ -37,7 +37,7 @@ fn create_simple_manifold() -> SimplicialManifold<f64, f64> {
     .unwrap()
 }
 
-fn create_test_state() -> HilbertState {
+fn create_test_state() -> HilbertState<f64> {
     let data = vec![
         Complex::new(1.0, 0.0),
         Complex::new(0.0, 0.0),
@@ -49,7 +49,7 @@ fn create_test_state() -> HilbertState {
         Complex::new(0.0, 0.0),
     ];
     let mv = CausalMultiVector::new(data, Metric::Euclidean(3)).unwrap();
-    HilbertState::from_multivector(mv)
+    HilbertState::<f64>::from_multivector(mv)
 }
 
 fn create_real_field() -> CausalMultiVector<f64> {
@@ -83,8 +83,9 @@ fn test_born_probability_wrapper_error() {
 
     // Create state with large magnitude
     let data = vec![Complex::new(100.0, 0.0); 8];
-    let state =
-        HilbertState::from_multivector(CausalMultiVector::new(data, Metric::Euclidean(3)).unwrap());
+    let state = HilbertState::<f64>::from_multivector(
+        CausalMultiVector::new(data, Metric::Euclidean(3)).unwrap(),
+    );
     let basis = state.clone(); // <psi|psi> will be huge -> Prob >> 1.0 -> NormalizationError
 
     let effect = born_probability(&state, &basis);
@@ -104,8 +105,9 @@ fn test_expectation_value_wrapper_success() {
 fn test_expectation_value_wrapper_error() {
     let state = create_test_state();
     let data = vec![Complex::new(0.0, 0.0); 4]; // 2D metric
-    let operator =
-        HilbertState::from_multivector(CausalMultiVector::new(data, Metric::Euclidean(2)).unwrap());
+    let operator = HilbertState::<f64>::from_multivector(
+        CausalMultiVector::new(data, Metric::Euclidean(2)).unwrap(),
+    );
 
     // Metric mismatch should trigger error
     let effect = expectation_value(&state, &operator);
@@ -125,8 +127,9 @@ fn test_apply_gate_wrapper_success() {
 fn test_apply_gate_wrapper_error() {
     let state = create_test_state();
     let data = vec![Complex::new(0.0, 0.0); 4]; // 2D metric
-    let gate =
-        HilbertState::from_multivector(CausalMultiVector::new(data, Metric::Euclidean(2)).unwrap());
+    let gate = HilbertState::<f64>::from_multivector(
+        CausalMultiVector::new(data, Metric::Euclidean(2)).unwrap(),
+    );
 
     // Metric mismatch
     let effect = apply_gate(&state, &gate);
@@ -146,8 +149,9 @@ fn test_commutator_wrapper_success() {
 fn test_commutator_wrapper_error() {
     let a = create_test_state();
     let data = vec![Complex::new(0.0, 0.0); 4]; // 2D metric
-    let b =
-        HilbertState::from_multivector(CausalMultiVector::new(data, Metric::Euclidean(2)).unwrap());
+    let b = HilbertState::<f64>::from_multivector(
+        CausalMultiVector::new(data, Metric::Euclidean(2)).unwrap(),
+    );
 
     // Metric mismatch
     let effect = commutator(&a, &b);
@@ -168,8 +172,9 @@ fn test_fidelity_wrapper_error() {
     // Fidelity uses born_probability internally.
     // Trigger normalization error with large magnitude state.
     let data = vec![Complex::new(100.0, 0.0); 8];
-    let ideal =
-        HilbertState::from_multivector(CausalMultiVector::new(data, Metric::Euclidean(3)).unwrap());
+    let ideal = HilbertState::<f64>::from_multivector(
+        CausalMultiVector::new(data, Metric::Euclidean(3)).unwrap(),
+    );
     let actual = ideal.clone();
 
     let effect = fidelity(&ideal, &actual);

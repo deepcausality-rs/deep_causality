@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let data: Vec<Complex<f64>> = (0..size)
                 .map(|j| Complex::new((i as f64 + j as f64) * 0.1, 0.0))
                 .collect();
-            HilbertState::new(data, metric).expect("Failed to create operator")
+            HilbertState::<f64>::new(data, metric).expect("Failed to create operator")
         })
         .collect();
 
@@ -77,7 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .iter()
                 .map(|c| *c * Complex::new(1.0 - learning_rate, 0.0))
                 .collect();
-            *x = HilbertState::new(scaled_data, metric)?;
+            *x = HilbertState::<f64>::new(scaled_data, metric)?;
         }
 
         // Early exit if action is small enough

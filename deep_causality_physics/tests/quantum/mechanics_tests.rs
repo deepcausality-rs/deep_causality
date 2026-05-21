@@ -30,7 +30,7 @@ fn create_simple_manifold() -> SimplicialManifold<f64, f64> {
 }
 
 // Helper to create a normalized quantum state
-fn create_test_state() -> HilbertState {
+fn create_test_state() -> HilbertState<f64> {
     let data = vec![
         Complex::new(1.0, 0.0),
         Complex::new(0.0, 0.0),
@@ -42,7 +42,7 @@ fn create_test_state() -> HilbertState {
         Complex::new(0.0, 0.0),
     ];
     let mv = CausalMultiVector::new(data, Metric::Euclidean(3)).unwrap();
-    HilbertState::from_multivector(mv)
+    HilbertState::<f64>::from_multivector(mv)
 }
 
 // Helper to create a real-valued multivector field
@@ -120,7 +120,7 @@ fn test_born_probability_kernel_dimension_error() {
     let state = create_test_state();
     let data_wrong = vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)];
     let mv_wrong = CausalMultiVector::new(data_wrong, Metric::Euclidean(1)).unwrap();
-    let basis_wrong = HilbertState::from_multivector(mv_wrong);
+    let basis_wrong = HilbertState::<f64>::from_multivector(mv_wrong);
 
     let result = born_probability_kernel(&state, &basis_wrong);
     assert!(result.is_err());
@@ -142,7 +142,7 @@ fn test_born_probability_kernel_orthogonal() {
         Complex::new(0.0, 0.0),
     ];
     let mv2 = CausalMultiVector::new(data2, Metric::Euclidean(3)).unwrap();
-    let state2 = HilbertState::from_multivector(mv2);
+    let state2 = HilbertState::<f64>::from_multivector(mv2);
 
     let result = born_probability_kernel(&state1, &state2);
     assert!(result.is_ok());
@@ -173,7 +173,7 @@ fn test_expectation_value_kernel_dimension_error() {
     let state = create_test_state();
     let data_wrong = vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)];
     let mv_wrong = CausalMultiVector::new(data_wrong, Metric::Euclidean(1)).unwrap();
-    let operator_wrong = HilbertState::from_multivector(mv_wrong);
+    let operator_wrong = HilbertState::<f64>::from_multivector(mv_wrong);
 
     let result = expectation_value_kernel(&state, &operator_wrong);
     assert!(result.is_err());
@@ -197,7 +197,7 @@ fn test_apply_gate_kernel_dimension_error() {
     let state = create_test_state();
     let data_wrong = vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)];
     let mv_wrong = CausalMultiVector::new(data_wrong, Metric::Euclidean(1)).unwrap();
-    let gate_wrong = HilbertState::from_multivector(mv_wrong);
+    let gate_wrong = HilbertState::<f64>::from_multivector(mv_wrong);
 
     let result = apply_gate_kernel(&state, &gate_wrong);
     assert!(result.is_err());
@@ -221,7 +221,7 @@ fn test_commutator_kernel_dimension_error() {
     let op_a = create_test_state();
     let data_wrong = vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)];
     let mv_wrong = CausalMultiVector::new(data_wrong, Metric::Euclidean(1)).unwrap();
-    let op_wrong = HilbertState::from_multivector(mv_wrong);
+    let op_wrong = HilbertState::<f64>::from_multivector(mv_wrong);
 
     let result = commutator_kernel(&op_a, &op_wrong);
     assert!(result.is_err());

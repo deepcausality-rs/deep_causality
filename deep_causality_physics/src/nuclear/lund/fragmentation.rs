@@ -72,10 +72,10 @@ use deep_causality_rand::Rng;
 /// let hadrons = lund_string_fragmentation_kernel(&endpoints, &params, &mut rng)?;
 /// ```
 pub fn lund_string_fragmentation_kernel<R: Rng>(
-    string_endpoints: &[(FourMomentum, FourMomentum)],
+    string_endpoints: &[(FourMomentum<f64>, FourMomentum<f64>)],
     params: &LundParameters,
     rng: &mut R,
-) -> Result<Vec<Hadron>, PhysicsError> {
+) -> Result<Vec<Hadron<f64>>, PhysicsError> {
     let mut all_hadrons = Vec::new();
 
     for (quark_p, antiquark_p) in string_endpoints {
@@ -88,11 +88,11 @@ pub fn lund_string_fragmentation_kernel<R: Rng>(
 
 /// Fragment a single string into hadrons.
 fn fragment_single_string<R: Rng>(
-    quark_p: FourMomentum,
-    antiquark_p: FourMomentum,
+    quark_p: FourMomentum<f64>,
+    antiquark_p: FourMomentum<f64>,
     params: &LundParameters,
     rng: &mut R,
-) -> Result<Vec<Hadron>, PhysicsError> {
+) -> Result<Vec<Hadron<f64>>, PhysicsError> {
     let mut hadrons = Vec::new();
     let mut string = LundString::new(quark_p, antiquark_p);
 

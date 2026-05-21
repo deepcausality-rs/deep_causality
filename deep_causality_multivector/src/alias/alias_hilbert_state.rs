@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{CausalMultiVector, CausalMultiVectorError, Metric};
-use deep_causality_num::Complex;
+use deep_causality_num::{Complex, RealField, Zero};
 use std::fmt::{Display, Formatter};
 
 /// A strong type representing a Quantum State Vector (Ket) |ψ>.
@@ -11,70 +11,68 @@ use std::fmt::{Display, Formatter};
 /// This represents a Minimal Left Ideal of the algebra Cl(10) (or others), acting as the Hilbert Space.
 ///
 /// # Invariants
-/// * The coefficients are always `Complex<f64>`.
+/// * The coefficients are `Complex<R>` where R defaults to `f64`.
 /// * The Metric is fixed at construction time (preventing mixed-algebra operations).
 #[derive(Debug, Clone, PartialEq)]
-pub struct HilbertState {
-    mv: CausalMultiVector<Complex<f64>>,
+pub struct HilbertState<R: RealField> {
+    mv: CausalMultiVector<Complex<R>>,
 }
 
-impl HilbertState {
+impl<R: RealField> HilbertState<R> {
     /// Creates a new Hilbert State for the Grand Unified Algebra (Spin(10)).
     /// This enforces the metric Cl(10) (NonEuclidean, 10D).
-    pub fn new_spin10(data: Vec<Complex<f64>>) -> Result<Self, CausalMultiVectorError> {
+    pub fn new_spin10(data: Vec<Complex<R>>) -> Result<Self, CausalMultiVectorError> {
         let metric = Metric::NonEuclidean(10);
         let mv = CausalMultiVector::new(data, metric)?;
         Ok(Self { mv })
     }
 
     /// Generic constructor for other quantum systems (e.g. Qubits / Cl(2)).
-    pub fn new(data: Vec<Complex<f64>>, metric: Metric) -> Result<Self, CausalMultiVectorError> {
+    pub fn new(data: Vec<Complex<R>>, metric: Metric) -> Result<Self, CausalMultiVectorError> {
         let mv = CausalMultiVector::new(data, metric)?;
         Ok(Self { mv })
     }
 
-    pub fn new_unchecked(data: Vec<Complex<f64>>, metric: Metric) -> Self {
+    pub fn new_unchecked(data: Vec<Complex<R>>, metric: Metric) -> Self {
         let mv = CausalMultiVector::unchecked(data, metric);
         Self { mv }
     }
 
-    pub fn from_multivector(mv: CausalMultiVector<Complex<f64>>) -> Self {
+    pub fn from_multivector(mv: CausalMultiVector<Complex<R>>) -> Self {
         Self { mv }
     }
 
     /// Unwraps the state to access the underlying algebraic object.
     /// Useful when you need to perform raw geometric operations.
-    pub fn into_inner(self) -> CausalMultiVector<Complex<f64>> {
+    pub fn into_inner(self) -> CausalMultiVector<Complex<R>> {
         self.mv
     }
 
     /// Borrows the underlying algebraic object.
-    pub fn as_inner(&self) -> &CausalMultiVector<Complex<f64>> {
+    pub fn as_inner(&self) -> &CausalMultiVector<Complex<R>> {
         &self.mv
     }
 
-    pub fn mv(&self) -> &CausalMultiVector<Complex<f64>> {
+    pub fn mv(&self) -> &CausalMultiVector<Complex<R>> {
         &self.mv
     }
 }
 
-impl Default for HilbertState {
+impl<R: RealField> Default for HilbertState<R> {
     fn default() -> Self {
-        use deep_causality_num::Zero;
         // Default to Scalar 0 in Euclidean(0) or similar
         let metric = Metric::Euclidean(0);
         let data = vec![Complex::zero()];
-        let mv = CausalMultiVector::new(data, metric)
-            .unwrap_or(CausalMultiVector::unchecked(vec![Complex::zero()], metric));
+        let mv = CausalMultiVector::new(data.clone(), metric)
+            .unwrap_or(CausalMultiVector::unchecked(data, metric));
         Self { mv }
     }
 }
 
 // Allow adding two Quantum States: |psi> + |phi> (Superposition)
-impl core::ops::Add for HilbertState {
+impl<R: RealField> core::ops::Add for HilbertState<R> {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
-        // Delegate to underlying MultiVector addition
         Self {
             mv: self.mv + rhs.mv,
         }
@@ -82,14 +80,14 @@ impl core::ops::Add for HilbertState {
 }
 
 // Allow scaling a State: c * |psi>
-impl core::ops::Mul<Complex<f64>> for HilbertState {
+impl<R: RealField> core::ops::Mul<Complex<R>> for HilbertState<R> {
     type Output = Self;
-    fn mul(self, rhs: Complex<f64>) -> Self::Output {
+    fn mul(self, rhs: Complex<R>) -> Self::Output {
         Self { mv: self.mv * rhs }
     }
 }
 
-impl Display for HilbertState {
+impl<R: RealField + core::fmt::Debug> Display for HilbertState<R> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self.mv)
     }

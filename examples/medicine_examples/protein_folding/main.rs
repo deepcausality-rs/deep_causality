@@ -33,11 +33,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let num_states = 4;
 
     // Initial state: 100% in Unfolded state
-    let mut state: Vec<Probability> = vec![
-        Probability::new(1.0).unwrap(),
-        Probability::new(0.0).unwrap(),
-        Probability::new(0.0).unwrap(),
-        Probability::new(0.0).unwrap(),
+    let mut state: Vec<Probability<f64>> = vec![
+        Probability::<f64>::new(1.0).unwrap(),
+        Probability::<f64>::new(0.0).unwrap(),
+        Probability::<f64>::new(0.0).unwrap(),
+        Probability::<f64>::new(0.0).unwrap(),
     ];
 
     println!("Initial Conformational Distribution:");
@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // History: past states (for non-Markovian memory effects)
     // History length must match memory kernel length
-    let mut history: Vec<Vec<Probability>> = vec![state.clone(), state.clone(), state.clone()];
+    let mut history: Vec<Vec<Probability<f64>>> = vec![state.clone(), state.clone(), state.clone()];
 
     // Markov Transition Matrix (instantaneous folding)
     // For matmul T * P where P is [n,1], T should be [n,n]
@@ -110,8 +110,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .iter()
                     .map(|p| {
                         let normalized = (p.value() / total).clamp(0.0, 1.0);
-                        Probability::new(if normalized.is_nan() { 0.0 } else { normalized })
-                            .unwrap_or(Probability::new(0.0).unwrap())
+                        Probability::<f64>::new(if normalized.is_nan() { 0.0 } else { normalized })
+                            .unwrap_or(Probability::<f64>::new(0.0).unwrap())
                     })
                     .collect();
 
@@ -145,7 +145,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn print_state(state: &[Probability]) {
+fn print_state(state: &[Probability<f64>]) {
     let labels = ["Unfolded", "Intermed1", "Intermed2", "Native  "];
     for (i, p) in state.iter().enumerate() {
         let bar_len = (p.value() * 20.0) as usize;

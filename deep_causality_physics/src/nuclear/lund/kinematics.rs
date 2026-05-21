@@ -29,7 +29,7 @@ pub struct LightconeEndpoint {
 
 impl LightconeEndpoint {
     /// Create from 4-momentum.
-    pub fn from_four_momentum(p: &FourMomentum) -> Self {
+    pub fn from_four_momentum(p: &FourMomentum<f64>) -> Self {
         Self {
             p_plus: p.lightcone_plus(),
             p_minus: p.lightcone_minus(),
@@ -40,10 +40,10 @@ impl LightconeEndpoint {
 
     /// Convert to 4-momentum.
     #[allow(clippy::wrong_self_convention)]
-    pub fn to_four_momentum(&self) -> FourMomentum {
+    pub fn to_four_momentum(&self) -> FourMomentum<f64> {
         let e = (self.p_plus + self.p_minus) / 2.0;
         let pz = (self.p_plus - self.p_minus) / 2.0;
-        FourMomentum::new(e, self.pt_x, self.pt_y, pz)
+        FourMomentum::<f64>::new(e, self.pt_x, self.pt_y, pz)
     }
 
     /// Invariant mass squared.
@@ -64,7 +64,7 @@ pub struct StringSegment {
 
 impl StringSegment {
     /// Create from two 4-momenta (quark moving in +z, antiquark in -z).
-    pub fn from_endpoints(quark: &FourMomentum, antiquark: &FourMomentum) -> Self {
+    pub fn from_endpoints(quark: &FourMomentum<f64>, antiquark: &FourMomentum<f64>) -> Self {
         Self {
             quark: LightconeEndpoint::from_four_momentum(quark),
             antiquark: LightconeEndpoint::from_four_momentum(antiquark),
@@ -144,7 +144,7 @@ mod tests {
 
     #[test]
     fn test_lightcone_round_trip() {
-        let p = FourMomentum::new(10.0, 1.0, 2.0, 8.0);
+        let p = FourMomentum::<f64>::new(10.0, 1.0, 2.0, 8.0);
         let lc = LightconeEndpoint::from_four_momentum(&p);
         let p_back = lc.to_four_momentum();
 

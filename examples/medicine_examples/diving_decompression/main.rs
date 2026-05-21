@@ -107,7 +107,7 @@ fn simulate_dive(max_depth: f64, bottom_time: f64) -> DiveProfile {
     let process = CausalEffectPropagationProcess::with_state(
         CausalEffectPropagationProcess::pure(()),
         initial_state,
-        None::<Density>,
+        None::<Density<f64>>,
     )
     .bind(|_, state, _| {
         // Access the current state

@@ -14,8 +14,8 @@ use deep_causality_num::DivisionAlgebra;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::SimplicialManifold;
 
-pub type Operator = HilbertState;
-pub type Gate = HilbertState;
+pub type Operator = HilbertState<f64>;
+pub type Gate = HilbertState<f64>;
 
 /// Calculates the Klein-Gordon operator action: $(\Delta + m^2)\psi$.
 ///
@@ -112,8 +112,8 @@ pub fn klein_gordon_kernel(
 /// # Returns
 /// * `Ok(f64)` - Probability $P$.
 pub fn born_probability_kernel(
-    state: &HilbertState,
-    basis: &HilbertState,
+    state: &HilbertState<f64>,
+    basis: &HilbertState<f64>,
 ) -> Result<f64, PhysicsError> {
     // Ensure the states live in the same Hilbert space (metric/dimension)
     if state.mv().metric() != basis.mv().metric() {
@@ -156,7 +156,7 @@ pub fn born_probability_kernel(
 /// # Returns
 /// * `Ok(f64)` - Expectation value (Real part of complex result).
 pub fn expectation_value_kernel(
-    state: &HilbertState,
+    state: &HilbertState<f64>,
     operator: &Operator,
 ) -> Result<f64, PhysicsError> {
     // Check metric compatibility
@@ -182,7 +182,10 @@ pub fn expectation_value_kernel(
 ///
 /// # Returns
 /// * `Ok(HilbertState)` - New state $|\psi'\rangle$.
-pub fn apply_gate_kernel(state: &HilbertState, gate: &Gate) -> Result<HilbertState, PhysicsError> {
+pub fn apply_gate_kernel(
+    state: &HilbertState<f64>,
+    gate: &Gate,
+) -> Result<HilbertState<f64>, PhysicsError> {
     // New State = Gate * State
     // Need underlying multiplication.
     if state.mv().metric() != gate.mv().metric() {
@@ -207,7 +210,7 @@ pub fn apply_gate_kernel(state: &HilbertState, gate: &Gate) -> Result<HilbertSta
     }
 
     // Wrap back in HilbertState
-    Ok(HilbertState::from_multivector(new_inner))
+    Ok(HilbertState::<f64>::from_multivector(new_inner))
 }
 
 /// Calculates commutator $[A, B] = AB - BA$.
@@ -217,8 +220,8 @@ pub fn apply_gate_kernel(state: &HilbertState, gate: &Gate) -> Result<HilbertSta
 /// * `b` - Operator $B$.
 ///
 /// # Returns
-/// * `Result<HilbertState, PhysicsError>` - Commutator result.
-pub fn commutator_kernel(a: &Operator, b: &Operator) -> Result<HilbertState, PhysicsError> {
+/// * `Result<HilbertState<f64>, PhysicsError>` - Commutator result.
+pub fn commutator_kernel(a: &Operator, b: &Operator) -> Result<HilbertState<f64>, PhysicsError> {
     // [A, B] = AB - BA
     // Operators are HilbertStates wrapping CausalMultiVector<Complex<f64>>
     let a_mv = a.mv();
@@ -237,7 +240,7 @@ pub fn commutator_kernel(a: &Operator, b: &Operator) -> Result<HilbertState, Phy
 
     let commutator = ab - ba;
 
-    Ok(HilbertState::from_multivector(commutator))
+    Ok(HilbertState::<f64>::from_multivector(commutator))
 }
 
 /// Calculates Quantum Fidelity: $F = |\langle \psi_{\text{ideal}} | \psi_{\text{actual}} \rangle|^2$.
@@ -248,7 +251,10 @@ pub fn commutator_kernel(a: &Operator, b: &Operator) -> Result<HilbertState, Phy
 ///
 /// # Returns
 /// * `Result<f64, PhysicsError>` - Fidelity $F$.
-pub fn fidelity_kernel(ideal: &HilbertState, actual: &HilbertState) -> Result<f64, PhysicsError> {
+pub fn fidelity_kernel(
+    ideal: &HilbertState<f64>,
+    actual: &HilbertState<f64>,
+) -> Result<f64, PhysicsError> {
     // F = |<ideal|actual>|^2
     // Reuse born_probability_kernel logic
     born_probability_kernel(actual, ideal)
@@ -264,7 +270,7 @@ pub fn haruna_s_gate_kernel(field: &CausalMultiVector<f64>) -> Result<Operator, 
     // Compute Logical S Gate
     let result = gates_haruna::logical_s(&field_complex);
 
-    Ok(HilbertState::from_multivector(result))
+    Ok(HilbertState::<f64>::from_multivector(result))
 }
 
 /// Implements Haruna's Logical Z-Gate.
@@ -274,7 +280,7 @@ pub fn haruna_z_gate_kernel(field: &CausalMultiVector<f64>) -> Result<Operator, 
     let field_complex = CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, 0.0));
     let result = gates_haruna::logical_z(&field_complex);
 
-    Ok(HilbertState::from_multivector(result))
+    Ok(HilbertState::<f64>::from_multivector(result))
 }
 
 /// Implements Haruna's Logical X-Gate.
@@ -284,7 +290,7 @@ pub fn haruna_x_gate_kernel(field: &CausalMultiVector<f64>) -> Result<Operator, 
     let field_complex = CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, 0.0));
     let result = gates_haruna::logical_x(&field_complex);
 
-    Ok(HilbertState::from_multivector(result))
+    Ok(HilbertState::<f64>::from_multivector(result))
 }
 
 /// Implements Haruna's Logical Hadamard Gate.
@@ -307,7 +313,7 @@ pub fn haruna_hadamard_gate_kernel(
 
     let result = gates_haruna::logical_hadamard(&a_complex, &b_complex);
 
-    Ok(HilbertState::from_multivector(result))
+    Ok(HilbertState::<f64>::from_multivector(result))
 }
 
 /// Implements Haruna's Logical CZ Gate.
@@ -330,7 +336,7 @@ pub fn haruna_cz_gate_kernel(
 
     let result = gates_haruna::logical_cz(&a1_complex, &a2_complex);
 
-    Ok(HilbertState::from_multivector(result))
+    Ok(HilbertState::<f64>::from_multivector(result))
 }
 
 /// Implements Haruna's Logical T-Gate.
@@ -340,5 +346,5 @@ pub fn haruna_t_gate_kernel(field: &CausalMultiVector<f64>) -> Result<Operator, 
     let field_complex = CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, 0.0));
     let result = gates_haruna::logical_t(&field_complex);
 
-    Ok(HilbertState::from_multivector(result))
+    Ok(HilbertState::<f64>::from_multivector(result))
 }

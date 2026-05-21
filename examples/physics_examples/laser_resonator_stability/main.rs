@@ -19,7 +19,7 @@ use deep_causality_tensor::CausalTensor;
 fn main() -> Result<(), PhysicsError> {
     println!("=== Laser Resonator Stability Analysis ===\n");
 
-    let wavelength = Wavelength::new(1064e-9)?; // YAG laser
+    let wavelength = Wavelength::<f64>::new(1064e-9)?; // YAG laser
     println!("Wavelength: {:.1} nm", wavelength.value() * 1e9);
 
     // Initial Beam: Waist w0 = 1mm at z=0 (Plane wavefront R=inf)
@@ -129,7 +129,7 @@ fn main() -> Result<(), PhysicsError> {
     Ok(())
 }
 
-fn report_beam(q: ComplexBeamParameter, lambda: Wavelength, label: &str) {
+fn report_beam(q: ComplexBeamParameter<f64>, lambda: Wavelength<f64>, label: &str) {
     let w_eff = beam_spot_size(q, lambda);
     if let EffectValue::Value(w) = w_eff.value() {
         println!(

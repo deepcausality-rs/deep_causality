@@ -13,7 +13,7 @@ use deep_causality_physics::{Density, Length, PhysicsError, Pressure, Speed, ber
 
 #[derive(Debug, Clone, Default)]
 struct FluidState {
-    pressure: Pressure,
+    pressure: Pressure<f64>,
     velocity: Speed,
     height: Length,
     description: String,
@@ -22,7 +22,7 @@ struct FluidState {
 fn main() -> Result<(), PhysicsError> {
     println!("=== Bernoulli Flow Network Simulation ===\n");
 
-    let density = Density::new(1000.0)?;
+    let density = Density::<f64>::new(1000.0)?;
     let flow_rate_volumetric = 0.1;
 
     println!("Fluid: Water (1000 kg/m^3)");
@@ -30,7 +30,7 @@ fn main() -> Result<(), PhysicsError> {
 
     // 1. Initial State (Reservoir)
     let initial_state = FluidState {
-        pressure: Pressure::new(200_000.0)?,
+        pressure: Pressure::<f64>::new(200_000.0)?,
         velocity: Speed::new(0.0)?,
         height: Length::new(10.0)?,
         description: "Reservoir".to_string(),

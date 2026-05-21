@@ -84,7 +84,7 @@ fn stage_field_to_partons(
     evolved_tensor: CausalTensor<f64>,
     _: (),
     _: Option<()>,
-) -> PropagatingEffect<Vec<(FourMomentum, FourMomentum)>> {
+) -> PropagatingEffect<Vec<(FourMomentum<f64>, FourMomentum<f64>)>> {
     println!("Stage 1: Klein-Gordon Scalar Field");
     println!("───────────────────────────────────");
 
@@ -101,8 +101,8 @@ fn stage_field_to_partons(
 
     // Create virtual q-q̄ pair (back-to-back in CM frame)
     let half_e = cms_energy / 2.0;
-    let quark = FourMomentum::new(half_e, 0.0, 0.0, half_e);
-    let antiquark = FourMomentum::new(half_e, 0.0, 0.0, -half_e);
+    let quark = FourMomentum::<f64>::new(half_e, 0.0, 0.0, half_e);
+    let antiquark = FourMomentum::<f64>::new(half_e, 0.0, 0.0, -half_e);
 
     println!("Stage 2: QCD String Creation");
     println!("────────────────────────────");
@@ -127,7 +127,7 @@ fn stage_field_to_partons(
 /// - Replace with different fragmentation model
 /// - Add particle filtering or cuts
 fn stage_lund_fragmentation(
-    endpoints: Vec<(FourMomentum, FourMomentum)>,
+    endpoints: Vec<(FourMomentum<f64>, FourMomentum<f64>)>,
     _: (),
     _: Option<()>,
 ) -> PropagatingEffect<(usize, f64)> {
@@ -139,7 +139,7 @@ fn stage_lund_fragmentation(
 
     match lund_string_fragmentation_kernel(&endpoints, &params, &mut rng) {
         Ok(hadrons) => {
-            let valid: Vec<&Hadron> = hadrons.iter().filter(|h| h.energy() > 0.0).collect();
+            let valid: Vec<&Hadron<f64>> = hadrons.iter().filter(|h| h.energy() > 0.0).collect();
 
             println!(
                 "  Produced {} hadrons ({} physical)",
@@ -238,9 +238,10 @@ fn stage_quantum_detection(
     let psi_orth = Complex::new((1.0 - psi_val).sqrt(), 0.0);
 
     let metric = Metric::Euclidean(1);
-    let state = HilbertState::new(vec![psi, psi_orth], metric).unwrap();
+    let state = HilbertState::<f64>::new(vec![psi, psi_orth], metric).unwrap();
     let basis =
-        HilbertState::new(vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)], metric).unwrap();
+        HilbertState::<f64>::new(vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)], metric)
+            .unwrap();
 
     let detection = born_probability(&state, &basis);
     let prob = match detection.value() {
@@ -264,7 +265,7 @@ fn stage_quantum_detection(
 // =============================================================================
 
 /// Prints a sample of produced hadrons.
-fn print_hadron_sample(hadrons: &[&Hadron]) {
+fn print_hadron_sample(hadrons: &[&Hadron<f64>]) {
     println!("\n  Sample hadrons:");
     for (i, h) in hadrons.iter().take(5).enumerate() {
         println!(

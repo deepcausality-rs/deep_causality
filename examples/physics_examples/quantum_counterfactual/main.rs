@@ -25,7 +25,7 @@ use deep_causality_num::{Complex, DivisionAlgebra};
 /// Each state represents a snapshot at a different point in time.
 #[derive(Debug, Clone, Default)]
 struct QuantumHistory {
-    states: Vec<HilbertState>,
+    states: Vec<HilbertState<f64>>,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 1. Initial State: |0> + |1> (Superposition)
     let metric = Metric::Euclidean(1); // 1 Qubit approx
     let psi_0 = vec![Complex::new(0.707, 0.0), Complex::new(0.707, 0.0)];
-    let initial_state = HilbertState::new(psi_0, metric).expect("Failed to create state");
+    let initial_state = HilbertState::<f64>::new(psi_0, metric).expect("Failed to create state");
 
     let history = QuantumHistory {
         states: vec![initial_state],
@@ -52,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Here we simulate a "drift" to an error state.
             // Error State: |1> (flipped from desired |0>)
             let bad_psi = vec![Complex::new(0.01, 0.0), Complex::new(0.99, 0.0)];
-            let bad_state = HilbertState::new(bad_psi, Metric::Euclidean(1)).unwrap();
+            let bad_state = HilbertState::<f64>::new(bad_psi, Metric::Euclidean(1)).unwrap();
 
             hist.states.push(bad_state);
 
@@ -94,7 +94,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 // Let's say we force it back to |0>
                 let corrected_psi = vec![Complex::new(0.99, 0.0), Complex::new(0.01, 0.0)];
                 let corrected_state =
-                    HilbertState::new(corrected_psi, Metric::Euclidean(1)).unwrap();
+                    HilbertState::<f64>::new(corrected_psi, Metric::Euclidean(1)).unwrap();
 
                 hist.states.push(corrected_state);
                 println!("[t=4] Applied Correction (X Gate).");
