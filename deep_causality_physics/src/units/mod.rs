@@ -3,11 +3,16 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-pub mod types;
+pub(crate) mod energy;
+pub(crate) mod index_of_refraction;
+pub(crate) mod probability;
+pub(crate) mod ratio;
+pub(crate) mod temperature;
+pub(crate) mod time;
 
-pub use types::energy::Energy;
-pub use types::index_of_refraction::IndexOfRefraction;
-pub use types::probability::Probability;
-pub use types::ratio::Ratio;
-pub use types::temperature::Temperature;
-pub use types::time::Time;
+pub use energy::Energy;
+pub use index_of_refraction::IndexOfRefraction;
+pub use probability::Probability;
+pub use ratio::Ratio;
+pub use temperature::Temperature;
+pub use time::Time;

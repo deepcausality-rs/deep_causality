@@ -6,7 +6,7 @@
 use crate::dynamics::estimation;
 use crate::dynamics::kinematics;
 use crate::dynamics::kinematics::PhysicalVector;
-use crate::units::types::energy::Energy;
+use crate::units::energy::Energy;
 use crate::{Frequency, Mass, MomentOfInertia, Probability};
 use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
