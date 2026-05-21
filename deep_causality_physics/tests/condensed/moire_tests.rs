@@ -44,7 +44,7 @@ fn test_foppl_von_karman_strain_simple() {
     let disp_u = Displacement::new(eps_tensor);
     // disp_w removed
 
-    let e = Stiffness::new(100.0).unwrap();
+    let e = Stiffness::<f64>::new(100.0).unwrap();
     let nu = Ratio::new(0.5).unwrap();
 
     let res = foppl_von_karman_strain_simple_kernel(&disp_u, e, nu);
@@ -77,7 +77,7 @@ fn create_flat_manifold() -> SimplicialManifold<f64, f64> {
 fn test_foppl_von_karman_strain_full() {
     let u_man = create_flat_manifold();
     let w_man = create_flat_manifold();
-    let e = Stiffness::new(100.0).unwrap();
+    let e = Stiffness::<f64>::new(100.0).unwrap();
     let nu = Ratio::new(0.3).unwrap();
 
     let res = foppl_von_karman_strain_kernel(&u_man, &w_man, e, nu);

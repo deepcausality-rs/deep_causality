@@ -119,7 +119,7 @@ fn test_wrapper_moire_magic_angle() {
 #[test]
 fn test_wrapper_strain_simple() {
     let eps = Displacement::new(CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap());
-    let e = Stiffness::new(100.0).unwrap();
+    let e = Stiffness::<f64>::new(100.0).unwrap();
     let nu = Ratio::new(0.3).unwrap();
 
     let effect = foppl_von_karman_strain_simple(&eps, e, nu);
@@ -143,7 +143,7 @@ fn create_flat_manifold() -> SimplicialManifold<f64, f64> {
 #[test]
 fn test_wrapper_strain_full() {
     let man = create_flat_manifold();
-    let e = Stiffness::new(100.0).unwrap();
+    let e = Stiffness::<f64>::new(100.0).unwrap();
     let nu = Ratio::new(0.3).unwrap();
 
     let effect = foppl_von_karman_strain(&man, &man, e, nu);

@@ -3,7 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::{Temperature, hookes_law, thermal_expansion, von_mises_stress};
+use deep_causality_physics::{
+    Strain, StiffnessTensor, StressTensor, Temperature, hookes_law, thermal_expansion,
+    von_mises_stress,
+};
 use deep_causality_tensor::CausalTensor;
 
 // =============================================================================
@@ -12,8 +15,9 @@ use deep_causality_tensor::CausalTensor;
 
 #[test]
 fn test_hookes_law_wrapper_success() {
-    let stiffness = CausalTensor::new(vec![0.0; 81], vec![3, 3, 3, 3]).unwrap();
-    let strain = CausalTensor::new(vec![0.0; 9], vec![3, 3]).unwrap();
+    let stiffness =
+        StiffnessTensor::<f64>::new(CausalTensor::new(vec![0.0; 81], vec![3, 3, 3, 3]).unwrap());
+    let strain = Strain::<f64>::new(CausalTensor::new(vec![0.0; 9], vec![3, 3]).unwrap());
 
     let effect = hookes_law(&stiffness, &strain);
     assert!(effect.is_ok());
@@ -21,8 +25,9 @@ fn test_hookes_law_wrapper_success() {
 
 #[test]
 fn test_hookes_law_wrapper_error() {
-    let stiffness = CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap(); // Wrong rank
-    let strain = CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap();
+    let stiffness =
+        StiffnessTensor::<f64>::new(CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap());
+    let strain = Strain::<f64>::new(CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap());
 
     let effect = hookes_law(&stiffness, &strain);
     assert!(effect.is_err());
@@ -34,11 +39,13 @@ fn test_hookes_law_wrapper_error() {
 
 #[test]
 fn test_von_mises_stress_wrapper_success() {
-    let stress = CausalTensor::new(
-        vec![100e6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        vec![3, 3],
-    )
-    .unwrap();
+    let stress = StressTensor::<f64>::new(
+        CausalTensor::new(
+            vec![100e6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            vec![3, 3],
+        )
+        .unwrap(),
+    );
 
     let effect = von_mises_stress(&stress);
     assert!(effect.is_ok());
@@ -46,7 +53,7 @@ fn test_von_mises_stress_wrapper_success() {
 
 #[test]
 fn test_von_mises_stress_wrapper_error() {
-    let stress = CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap(); // Wrong shape
+    let stress = StressTensor::<f64>::new(CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap());
 
     let effect = von_mises_stress(&stress);
     assert!(effect.is_err());

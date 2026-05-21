@@ -4,15 +4,20 @@
  */
 
 use crate::materials::mechanics;
-use crate::{Stress, Temperature};
+use crate::{Strain, StiffnessTensor, Stress, StressTensor, Temperature};
+use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 
 /// Causal wrapper for [`mechanics::hookes_law_kernel`].
-pub fn hookes_law(
-    stiffness: &CausalTensor<f64>,
-    strain: &CausalTensor<f64>,
-) -> PropagatingEffect<CausalTensor<f64>> {
+pub fn hookes_law<R>(
+    stiffness: &StiffnessTensor<R>,
+    strain: &Strain<R>,
+) -> PropagatingEffect<StressTensor<R>>
+where
+    R: RealField + Default + Debug,
+{
     match mechanics::hookes_law_kernel(stiffness, strain) {
         Ok(s) => PropagatingEffect::pure(s),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
@@ -20,7 +25,10 @@ pub fn hookes_law(
 }
 
 /// Causal wrapper for [`mechanics::von_mises_stress_kernel`].
-pub fn von_mises_stress(stress: &CausalTensor<f64>) -> PropagatingEffect<Stress> {
+pub fn von_mises_stress<R>(stress: &StressTensor<R>) -> PropagatingEffect<Stress<R>>
+where
+    R: RealField + Default + FromPrimitive + Debug,
+{
     match mechanics::von_mises_stress_kernel(stress) {
         Ok(s) => PropagatingEffect::pure(s),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),

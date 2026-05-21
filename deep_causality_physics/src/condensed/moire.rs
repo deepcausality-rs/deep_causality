@@ -188,7 +188,7 @@ pub fn bistritzer_macdonald_kernel(
 /// *   `Result<CausalTensor<f64>, PhysicsError>` - Stress Tensor $\boldsymbol{\sigma}$.
 pub fn foppl_von_karman_strain_simple_kernel(
     displacement_u: &Displacement,
-    youngs_modulus: Stiffness,
+    youngs_modulus: Stiffness<f64>,
     poisson_ratio: Ratio,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     let epsilon = displacement_u.inner();
@@ -256,7 +256,7 @@ pub fn foppl_von_karman_strain_simple_kernel(
 pub fn foppl_von_karman_strain_kernel(
     u_manifold: &SimplicialManifold<f64, f64>,
     w_manifold: &SimplicialManifold<f64, f64>,
-    youngs_modulus: Stiffness,
+    youngs_modulus: Stiffness<f64>,
     poisson_ratio: Ratio,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     // 1. Non-linear term: 1/2 (grad w)^2

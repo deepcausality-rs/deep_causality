@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{PhysicsError, Temperature};
+use crate::{PhysicsError, Strain, StiffnessTensor, Stress, StressTensor, Temperature};
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 /// Calculates generalized Hooke's Law: $\sigma_{ij} = C_{ijkl} \epsilon_{kl}$.
@@ -15,31 +16,31 @@ use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 /// * `strain` - Strain tensor $\epsilon$ (Rank 2).
 ///
 /// # Returns
-/// * `Ok(CausalTensor<f64>)` - Stress tensor $\sigma$ (Rank 2).
-pub fn hookes_law_kernel(
-    stiffness: &CausalTensor<f64>,
-    strain: &CausalTensor<f64>,
-) -> Result<CausalTensor<f64>, PhysicsError> {
-    // Sigma_ij = C_ijkl * Epsilon_kl
-    // Stiffness C is Rank 4 [i, j, k, l]
-    if stiffness.num_dim() != 4 || strain.num_dim() != 2 {
+/// * `Ok(StressTensor<R>)` - Stress tensor $\sigma$ (Rank 2).
+pub fn hookes_law_kernel<R>(
+    stiffness: &StiffnessTensor<R>,
+    strain: &Strain<R>,
+) -> Result<StressTensor<R>, PhysicsError>
+where
+    R: RealField + Default,
+{
+    if stiffness.inner().num_dim() != 4 || strain.inner().num_dim() != 2 {
         return Err(PhysicsError::DimensionMismatch(format!(
             "Hooke's Law requires Stiffness Rank 4 and Strain Rank 2. Got {} and {}",
-            stiffness.num_dim(),
-            strain.num_dim()
+            stiffness.inner().num_dim(),
+            strain.inner().num_dim()
         )));
     }
 
-    let op = EinSumOp::<f64>::contraction(
-        stiffness.clone(),
-        strain.clone(),
+    let op = EinSumOp::<R>::contraction(
+        stiffness.inner().clone(),
+        strain.inner().clone(),
         vec![2, 3], // C indices k, l
         vec![0, 1], // E indices k, l
     );
 
-    // Execute EinSum
     let res = CausalTensor::ein_sum(&op)?;
-    Ok(res)
+    Ok(StressTensor::new(res))
 }
 
 /// Calculates Von Mises Stress from a 3x3 Stress Tensor.
@@ -50,28 +51,21 @@ pub fn hookes_law_kernel(
 /// * `stress` - Cauchy stress tensor (3x3).
 ///
 /// # Returns
-/// * `Ok(Stress)` - Von Mises stress scalar.
-pub fn von_mises_stress_kernel(stress: &CausalTensor<f64>) -> Result<crate::Stress, PhysicsError> {
-    // Von Mises Stress via Deviatoric Stress Invariant J2
-    // sigma_vm = sqrt(3 * J2)
-    // J2 = 0.5 * (S : S)
-    // S = sigma - sigma_m * I
-    // sigma_m = tr(sigma) / 3
-
-    if stress.num_dim() != 2 || stress.shape() != [3, 3] {
+/// * `Ok(Stress<R>)` - Von Mises stress scalar.
+pub fn von_mises_stress_kernel<R>(stress: &StressTensor<R>) -> Result<Stress<R>, PhysicsError>
+where
+    R: RealField + Default + FromPrimitive,
+{
+    let s = stress.inner();
+    if s.num_dim() != 2 || s.shape() != [3, 3] {
         return Err(PhysicsError::DimensionMismatch(
             "Von Mises requires 3x3 Stress Tensor".into(),
         ));
     }
 
-    // 1. Calculate Mean Stress (Hydrostatic)
-    // EinSumOp::trace(operand, axis1, axis2)
-    // axes 0, 1
-    let trace_op = EinSumOp::<f64>::trace(stress.clone(), 0, 1);
-    let trace_tensor = CausalTensor::ein_sum(&trace_op)?; // Should be scalar (Rank 0) or 1 element?
-    // Trace returns a tensor with reduced dimensions. For 2D, it should be 0D (Scalar).
-
-    // Extract value
+    // 1. Mean (hydrostatic) stress sigma_m = tr(sigma) / 3
+    let trace_op = EinSumOp::<R>::trace(s.clone(), 0, 1);
+    let trace_tensor = CausalTensor::ein_sum(&trace_op)?;
     let trace_val = if trace_tensor.shape().is_empty()
         || (trace_tensor.shape().len() == 1 && trace_tensor.shape()[0] == 1)
     {
@@ -80,21 +74,18 @@ pub fn von_mises_stress_kernel(stress: &CausalTensor<f64>) -> Result<crate::Stre
         return Err(PhysicsError::CalculationError("Trace failed".into()));
     };
 
-    let sigma_m = trace_val / 3.0;
+    let three = R::from_f64(3.0).ok_or_else(|| {
+        PhysicsError::NumericalInstability("R::from_f64(3.0) failed".into())
+    })?;
+    let sigma_m = trace_val / three;
 
-    // 2. Calculate Deviatoric Stress S
-    // S = sigma - sigma_m * I
-    let identity = CausalTensor::identity(&[3, 3])?;
+    // 2. Deviatoric stress S = sigma - sigma_m * I
+    let identity = CausalTensor::<R>::identity(&[3, 3])?;
     let mean_stress_tensor = identity * sigma_m;
-    let s_deviatoric: CausalTensor<f64> = stress.clone() - mean_stress_tensor; // Assuming Sub impl works
+    let s_deviatoric: CausalTensor<R> = s.clone() - mean_stress_tensor;
 
-    // 3. Calculate J2 = 0.5 * (S : S)
-    // Double dot product / Full contraction
-    // Contraction of S[0,1] with S[0,1] ?
-    // Or element-wise separation then sum?
-    // S_ij S_ij summation.
-    // Use EinSum contraction on all axes.
-    let j2_op = EinSumOp::<f64>::contraction(
+    // 3. J2 = 0.5 * (S : S)
+    let j2_op = EinSumOp::<R>::contraction(
         s_deviatoric.clone(),
         s_deviatoric.clone(),
         vec![0, 1],
@@ -106,18 +97,19 @@ pub fn von_mises_stress_kernel(stress: &CausalTensor<f64>) -> Result<crate::Stre
     {
         j2_tensor.data()[0]
     } else {
-        // Fallback for full contraction if it didn't reduce fully (should not happen with generic contraction logic)
         return Err(PhysicsError::CalculationError(
             "J2 calculation failed".into(),
         ));
     };
 
-    let j2 = 0.5 * j2_val;
+    let half = R::from_f64(0.5).ok_or_else(|| {
+        PhysicsError::NumericalInstability("R::from_f64(0.5) failed".into())
+    })?;
+    let j2 = half * j2_val;
 
-    // 4. Sigma_vm
-    let vm = f64::sqrt(3.0 * j2);
-
-    crate::Stress::new(vm)
+    // 4. Sigma_vm = sqrt(3 * J2)
+    let vm = (three * j2).sqrt();
+    Stress::new(vm)
 }
 
 /// Calculates thermal expansion strain: $\epsilon = \alpha \Delta T$.

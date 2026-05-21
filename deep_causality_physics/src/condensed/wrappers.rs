@@ -112,7 +112,7 @@ pub fn bistritzer_macdonald(
 /// Wrapper for [`moire::foppl_von_karman_strain_simple_kernel`].
 pub fn foppl_von_karman_strain_simple(
     displacement_u: &Displacement,
-    youngs_modulus: Stiffness,
+    youngs_modulus: Stiffness<f64>,
     poisson_ratio: Ratio,
 ) -> PropagatingEffect<CausalTensor<f64>> {
     match moire::foppl_von_karman_strain_simple_kernel(
@@ -129,7 +129,7 @@ pub fn foppl_von_karman_strain_simple(
 pub fn foppl_von_karman_strain(
     u_manifold: &SimplicialManifold<f64, f64>,
     w_manifold: &SimplicialManifold<f64, f64>,
-    youngs_modulus: Stiffness,
+    youngs_modulus: Stiffness<f64>,
     poisson_ratio: Ratio,
 ) -> PropagatingEffect<CausalTensor<f64>> {
     match moire::foppl_von_karman_strain_kernel(
