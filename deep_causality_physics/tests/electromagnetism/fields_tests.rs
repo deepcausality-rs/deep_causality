@@ -42,12 +42,12 @@ fn test_poynting_vector_kernel_valid() {
     // E = [0, 1, 0, 0] (x)
     // B = [0, 0, 1, 0] (y)
     // S should be x^y bivector
-    let e = CausalMultiVector::new(
+    let e = CausalMultiVector::<f64>::new(
         vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
     .unwrap();
-    let b = CausalMultiVector::new(
+    let b = CausalMultiVector::<f64>::new(
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
@@ -62,12 +62,12 @@ fn test_poynting_vector_kernel_valid() {
 
 #[test]
 fn test_poynting_vector_kernel_dimension_error() {
-    let e = CausalMultiVector::new(
+    let e = CausalMultiVector::<f64>::new(
         vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
     .unwrap();
-    let b = CausalMultiVector::new(vec![0.0, 0.0, 1.0, 0.0], Metric::Euclidean(2)).unwrap();
+    let b = CausalMultiVector::<f64>::new(vec![0.0, 0.0, 1.0, 0.0], Metric::Euclidean(2)).unwrap();
 
     let result = poynting_vector_kernel(&e, &b);
     assert!(result.is_err());
@@ -75,12 +75,12 @@ fn test_poynting_vector_kernel_dimension_error() {
 
 #[test]
 fn test_poynting_vector_kernel_nan_error() {
-    let e = CausalMultiVector::new(
+    let e = CausalMultiVector::<f64>::new(
         vec![f64::NAN, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
     .unwrap();
-    let b = CausalMultiVector::new(
+    let b = CausalMultiVector::<f64>::new(
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
@@ -93,12 +93,12 @@ fn test_poynting_vector_kernel_nan_error() {
 #[test]
 fn test_magnetic_helicity_density_kernel_valid() {
     // h = A . B
-    let a = CausalMultiVector::new(
+    let a = CausalMultiVector::<f64>::new(
         vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
     .unwrap();
-    let b = CausalMultiVector::new(
+    let b = CausalMultiVector::<f64>::new(
         vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
@@ -114,12 +114,12 @@ fn test_magnetic_helicity_density_kernel_valid() {
 
 #[test]
 fn test_magnetic_helicity_density_error() {
-    let a = CausalMultiVector::new(
+    let a = CausalMultiVector::<f64>::new(
         vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
     .unwrap();
-    let b = CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
+    let b = CausalMultiVector::<f64>::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
 
     let result = magnetic_helicity_density_kernel(&a, &b);
     assert!(result.is_err());
@@ -194,14 +194,14 @@ fn test_energy_density_kernel_valid() {
     // E = (1, 0, 0) at indices 2,3,4 (4D multivector)
     // B = (0, 1, 0) at indices 2,3,4
     // u = (│E│² + │B│²) / 2 = (1 + 1) / 2 = 1.0
-    let e = CausalMultiVector::new(
+    let e = CausalMultiVector::<f64>::new(
         vec![
             0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
         ],
         Metric::Euclidean(4),
     )
     .unwrap();
-    let b = CausalMultiVector::new(
+    let b = CausalMultiVector::<f64>::new(
         vec![
             0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
         ],
@@ -218,12 +218,12 @@ fn test_energy_density_kernel_valid() {
 
 #[test]
 fn test_energy_density_kernel_zero_fields() {
-    let e = CausalMultiVector::new(
+    let e = CausalMultiVector::<f64>::new(
         vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
     .unwrap();
-    let b = CausalMultiVector::new(
+    let b = CausalMultiVector::<f64>::new(
         vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
@@ -236,12 +236,12 @@ fn test_energy_density_kernel_zero_fields() {
 
 #[test]
 fn test_energy_density_kernel_dimension_mismatch() {
-    let e = CausalMultiVector::new(
+    let e = CausalMultiVector::<f64>::new(
         vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
     .unwrap();
-    let b = CausalMultiVector::new(vec![0.0, 0.0, 1.0, 0.0], Metric::Euclidean(2)).unwrap();
+    let b = CausalMultiVector::<f64>::new(vec![0.0, 0.0, 1.0, 0.0], Metric::Euclidean(2)).unwrap();
 
     let result = energy_density_kernel(&e, &b);
     assert!(result.is_err());
@@ -249,12 +249,12 @@ fn test_energy_density_kernel_dimension_mismatch() {
 
 #[test]
 fn test_energy_density_kernel_nan_error() {
-    let e = CausalMultiVector::new(
+    let e = CausalMultiVector::<f64>::new(
         vec![f64::NAN, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
     .unwrap();
-    let b = CausalMultiVector::new(
+    let b = CausalMultiVector::<f64>::new(
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
@@ -272,14 +272,14 @@ fn test_energy_density_kernel_nan_error() {
 fn test_lagrangian_density_kernel_valid() {
     // E = (1, 0, 0), B = (0, 1, 0) at indices 2,3,4
     // L = (│E│² - │B│²) / 2 = (1 - 1) / 2 = 0.0
-    let e = CausalMultiVector::new(
+    let e = CausalMultiVector::<f64>::new(
         vec![
             0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
         ],
         Metric::Euclidean(4),
     )
     .unwrap();
-    let b = CausalMultiVector::new(
+    let b = CausalMultiVector::<f64>::new(
         vec![
             0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
         ],
@@ -299,14 +299,14 @@ fn test_lagrangian_density_kernel_valid() {
 fn test_lagrangian_density_kernel_electric_dominated() {
     // E = (2, 0, 0), B = (0, 1, 0) at indices 2,3,4
     // L = (│E│² - │B│²) / 2 = (4 - 1) / 2 = 1.5
-    let e = CausalMultiVector::new(
+    let e = CausalMultiVector::<f64>::new(
         vec![
             0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
         ],
         Metric::Euclidean(4),
     )
     .unwrap();
-    let b = CausalMultiVector::new(
+    let b = CausalMultiVector::<f64>::new(
         vec![
             0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
         ],
@@ -325,14 +325,14 @@ fn test_lagrangian_density_kernel_electric_dominated() {
 fn test_lagrangian_density_kernel_magnetic_dominated() {
     // E = (1, 0, 0), B = (0, 2, 0) at indices 2,3,4
     // L = (│E│² - │B│²) / 2 = (1 - 4) / 2 = -1.5
-    let e = CausalMultiVector::new(
+    let e = CausalMultiVector::<f64>::new(
         vec![
             0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
         ],
         Metric::Euclidean(4),
     )
     .unwrap();
-    let b = CausalMultiVector::new(
+    let b = CausalMultiVector::<f64>::new(
         vec![
             0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
         ],
@@ -349,12 +349,12 @@ fn test_lagrangian_density_kernel_magnetic_dominated() {
 
 #[test]
 fn test_lagrangian_density_kernel_dimension_mismatch() {
-    let e = CausalMultiVector::new(
+    let e = CausalMultiVector::<f64>::new(
         vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
     .unwrap();
-    let b = CausalMultiVector::new(vec![0.0, 0.0, 1.0, 0.0], Metric::Euclidean(2)).unwrap();
+    let b = CausalMultiVector::<f64>::new(vec![0.0, 0.0, 1.0, 0.0], Metric::Euclidean(2)).unwrap();
 
     let result = lagrangian_density_kernel(&e, &b);
     assert!(result.is_err());

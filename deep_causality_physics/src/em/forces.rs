@@ -5,6 +5,7 @@
 
 use crate::error::PhysicsError;
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
+use deep_causality_num::RealField;
 
 // Kernels
 
@@ -19,17 +20,15 @@ use deep_causality_multivector::{CausalMultiVector, MultiVector};
 /// * `b` - Magnetic field vector $B$.
 ///
 /// # Returns
-/// * `Ok(CausalMultiVector<f64>)` - Force bivector ($J \wedge B$).
+/// * `Ok(CausalMultiVector<R>)` - Force bivector ($J \wedge B$).
 /// * `Err(PhysicsError)` - If dimension mismatch occurs.
-pub fn lorentz_force_kernel(
-    j: &CausalMultiVector<f64>,
-    b: &CausalMultiVector<f64>,
-) -> Result<CausalMultiVector<f64>, PhysicsError> {
-    // F = J x B
-    // Calculates the magnetic force density component of the Lorentz Force.
-    // Full Lorentz force density: f = \rho E + J \times B
-    // This kernel specifically computes the J \times B term.
-    // Check for metric compatibility
+pub fn lorentz_force_kernel<R>(
+    j: &CausalMultiVector<R>,
+    b: &CausalMultiVector<R>,
+) -> Result<CausalMultiVector<R>, PhysicsError>
+where
+    R: RealField,
+{
     if j.metric() != b.metric() {
         return Err(PhysicsError::DimensionMismatch(format!(
             "Metric mismatch in Lorentz Force: {:?} vs {:?}",

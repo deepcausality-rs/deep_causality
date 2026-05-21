@@ -8,6 +8,8 @@ use deep_causality_multivector::{CausalMultiVector, MultiVector};
 // Kernels
 
 use crate::PhysicsError;
+use core::fmt::Debug;
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::SimplicialManifold;
 
@@ -20,13 +22,14 @@ use deep_causality_topology::SimplicialManifold;
 /// * `potential_manifold` - Manifold containing the potential 1-form $A$ on its 1-simplices.
 ///
 /// # Returns
-/// * `Result<CausalTensor<f64>, PhysicsError>` - Field tensor $F$ (2-form) on the 2-simplices.
-pub fn maxwell_gradient_kernel(
-    potential_manifold: &SimplicialManifold<f64, f64>,
-) -> Result<CausalTensor<f64>, PhysicsError> {
-    // F = dA (Exterior Derivative) on 1-forms -> 2-forms
+/// * `Result<CausalTensor<R>, PhysicsError>` - Field tensor $F$ (2-form) on the 2-simplices.
+pub fn maxwell_gradient_kernel<R>(
+    potential_manifold: &SimplicialManifold<R, R>,
+) -> Result<CausalTensor<R>, PhysicsError>
+where
+    R: RealField + Default + PartialEq + Debug,
+{
     let f_tensor = potential_manifold.exterior_derivative(1);
-    // Validate that a 2-form was actually produced (non-empty, expected rank)
     if f_tensor.is_empty() || f_tensor.shape().is_empty() {
         return Err(PhysicsError::DimensionMismatch(
             "Maxwell gradient produced empty or invalid 2-form".into(),
@@ -43,14 +46,13 @@ pub fn maxwell_gradient_kernel(
 /// * `potential_manifold` - Manifold containing the potential 1-form $A$.
 ///
 /// # Returns
-/// * `Result<CausalTensor<f64>, PhysicsError>` - Divergence scalar field (0-form) on vertices.
-pub fn lorenz_gauge_kernel(
-    potential_manifold: &SimplicialManifold<f64, f64>,
-) -> Result<CausalTensor<f64>, PhysicsError> {
-    // Lorenz Gauge: Div A = 0
-    // Div A is represented by codifferential delta(A) for a 1-form.
-    // delta: k-form -> (k-1)-form.
-    // Result is a 0-form (scalar field on vertices).
+/// * `Result<CausalTensor<R>, PhysicsError>` - Divergence scalar field (0-form) on vertices.
+pub fn lorenz_gauge_kernel<R>(
+    potential_manifold: &SimplicialManifold<R, R>,
+) -> Result<CausalTensor<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive + Default + PartialEq,
+{
     let divergence = potential_manifold.codifferential(1);
     Ok(divergence)
 }
@@ -65,11 +67,14 @@ pub fn lorenz_gauge_kernel(
 /// * `b` - Magnetic field vector $B$ (spatial components at indices 2, 3, 4).
 ///
 /// # Returns
-/// * `Result<CausalMultiVector<f64>, PhysicsError>` - Poynting vector $S = E \times B$.
-pub fn poynting_vector_kernel(
-    e: &CausalMultiVector<f64>,
-    b: &CausalMultiVector<f64>,
-) -> Result<CausalMultiVector<f64>, PhysicsError> {
+/// * `Result<CausalMultiVector<R>, PhysicsError>` - Poynting vector $S = E \times B$.
+pub fn poynting_vector_kernel<R>(
+    e: &CausalMultiVector<R>,
+    b: &CausalMultiVector<R>,
+) -> Result<CausalMultiVector<R>, PhysicsError>
+where
+    R: RealField,
+{
     if e.metric() != b.metric() {
         return Err(PhysicsError::DimensionMismatch(format!(
             "Metric mismatch in Poynting Vector: {:?} vs {:?}",
@@ -83,7 +88,6 @@ pub fn poynting_vector_kernel(
         ));
     }
 
-    // Classical cross product: S = E × B
     let s = e.euclidean_cross_product_3d(b);
 
     if s.data().iter().any(|v| !v.is_finite()) {
@@ -102,14 +106,14 @@ pub fn poynting_vector_kernel(
 /// * `field` - Magnetic field $B$.
 ///
 /// # Returns
-/// * `Result<f64, PhysicsError>` - Helicity density scalar.
-pub fn magnetic_helicity_density_kernel(
-    potential: &CausalMultiVector<f64>,
-    field: &CausalMultiVector<f64>,
-) -> Result<f64, crate::PhysicsError> {
-    // Helicity Density h = A . B
-    // Total Helicity H is the integral of h over volume.
-    // This function computes the local density.
+/// * `Result<R, PhysicsError>` - Helicity density scalar.
+pub fn magnetic_helicity_density_kernel<R>(
+    potential: &CausalMultiVector<R>,
+    field: &CausalMultiVector<R>,
+) -> Result<R, PhysicsError>
+where
+    R: RealField,
+{
     if potential.metric() != field.metric() {
         return Err(PhysicsError::DimensionMismatch(format!(
             "Metric mismatch in Magnetic Helicity: {:?} vs {:?}",
@@ -134,17 +138,15 @@ pub fn magnetic_helicity_density_kernel(
 /// * `mass` - Mass of the photon $m$ (typically $\approx 0$, but $>0$ in Proca theory).
 ///
 /// # Returns
-/// * `Result<CausalTensor<f64>, PhysicsError>` - Current density 1-form $J$.
-pub fn proca_equation_kernel(
-    field_manifold: &SimplicialManifold<f64, f64>,
-    potential_manifold: &SimplicialManifold<f64, f64>,
-    mass: f64,
-) -> Result<CausalTensor<f64>, PhysicsError> {
-    // Proca: delta F + m^2 A = J
-    // F is 2-form. delta F is 1-form.
-    // A is 1-form. m^2 A is 1-form.
-    // Result J is 1-form.
-
+/// * `Result<CausalTensor<R>, PhysicsError>` - Current density 1-form $J$.
+pub fn proca_equation_kernel<R>(
+    field_manifold: &SimplicialManifold<R, R>,
+    potential_manifold: &SimplicialManifold<R, R>,
+    mass: R,
+) -> Result<CausalTensor<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+{
     // 1. Compute delta F (codifferential of 2-form)
     let delta_f = field_manifold.codifferential(2);
 
@@ -153,22 +155,21 @@ pub fn proca_equation_kernel(
             "Non-finite mass in Proca".into(),
         ));
     }
-    if delta_f.as_slice().iter().any(|v: &f64| !v.is_finite()) {
+    if delta_f.as_slice().iter().any(|v: &R| !v.is_finite()) {
         return Err(PhysicsError::NumericalInstability(
             "delta(F) has non-finite entries".into(),
         ));
     }
 
-    // 2. Compute m^2 A (ensure it's a 1-form tensor compatible with delta F)
+    // 2. Compute m^2 A
     let m2 = mass * mass;
     if !m2.is_finite() {
         return Err(PhysicsError::NumericalInstability(
             "m^2 overflowed in Proca".into(),
         ));
     }
-    let a_full = potential_manifold.data(); // underlying data tensor
+    let a_full = potential_manifold.data();
 
-    // Build an A tensor on the same shape as delta_f (1-form domain)
     let a_shape = delta_f.shape().to_vec();
     let needed_len = delta_f.len();
     if a_full.len() < needed_len {
@@ -180,7 +181,7 @@ pub fn proca_equation_kernel(
     }
     if a_full.as_slice()[..needed_len]
         .iter()
-        .any(|v: &f64| !v.is_finite())
+        .any(|v: &R| !v.is_finite())
     {
         return Err(PhysicsError::NumericalInstability(
             "A(1-form) has non-finite entries".into(),
@@ -196,8 +197,6 @@ pub fn proca_equation_kernel(
     }
 
     // 3. Sum: J = delta F + m^2 A
-    // Note: CausalTensor implements Add
-    // Check shapes before addition (J = delta_f + m2_a)
     if delta_f.shape() != m2_a.shape() {
         return Err(PhysicsError::DimensionMismatch(format!(
             "Shape mismatch in Proca Equation: delta F {:?} vs m^2 A {:?}",
@@ -207,7 +206,7 @@ pub fn proca_equation_kernel(
     }
     let j = delta_f + m2_a;
 
-    if j.as_slice().iter().any(|v: &f64| !v.is_finite()) {
+    if j.as_slice().iter().any(|v: &R| !v.is_finite()) {
         return Err(PhysicsError::NumericalInstability(
             "Proca current J has non-finite entries".into(),
         ));
@@ -225,14 +224,14 @@ pub fn proca_equation_kernel(
 /// * `b` - Magnetic field vector $B$.
 ///
 /// # Returns
-/// * `Result<f64, PhysicsError>` - Energy density scalar $u$.
-pub fn energy_density_kernel(
-    e: &CausalMultiVector<f64>,
-    b: &CausalMultiVector<f64>,
-) -> Result<f64, PhysicsError> {
-    // u = (E² + B²) / 2  (in natural units where ε₀ = μ₀ = 1)
-    // E² = |E|² = E · E (squared magnitude)
-    // B² = |B|² = B · B (squared magnitude)
+/// * `Result<R, PhysicsError>` - Energy density scalar $u$.
+pub fn energy_density_kernel<R>(
+    e: &CausalMultiVector<R>,
+    b: &CausalMultiVector<R>,
+) -> Result<R, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
     if e.metric() != b.metric() {
         return Err(PhysicsError::DimensionMismatch(format!(
             "Metric mismatch in Energy Density: {:?} vs {:?}",
@@ -241,15 +240,12 @@ pub fn energy_density_kernel(
         )));
     }
 
-    // Check for non-finite inputs
     if e.data().iter().any(|v| !v.is_finite()) || b.data().iter().any(|v| !v.is_finite()) {
         return Err(PhysicsError::NumericalInstability(
             "Non-finite input in Energy Density".into(),
         ));
     }
 
-    // Compute Euclidean squared magnitudes of 3D spatial vectors.
-    // We use Euclidean norm (not Lorentzian) because energy density is positive-definite.
     let e_squared = e.euclidean_squared_magnitude_3d();
     let b_squared = b.euclidean_squared_magnitude_3d();
 
@@ -259,8 +255,9 @@ pub fn energy_density_kernel(
         ));
     }
 
-    // Energy density in natural units: u = ½(|E|² + |B|²)
-    let u = 0.5 * (e_squared + b_squared);
+    let half = R::from_f64(0.5)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(0.5) failed".into()))?;
+    let u = half * (e_squared + b_squared);
 
     if !u.is_finite() {
         return Err(PhysicsError::NumericalInstability(
@@ -280,14 +277,14 @@ pub fn energy_density_kernel(
 /// * `b` - Magnetic field vector $B$.
 ///
 /// # Returns
-/// * `Result<f64, PhysicsError>` - Lagrangian density scalar $\mathcal{L}$.
-pub fn lagrangian_density_kernel(
-    e: &CausalMultiVector<f64>,
-    b: &CausalMultiVector<f64>,
-) -> Result<f64, PhysicsError> {
-    // L = -¼ F_μν F^μν = ½(E² - B²)  (West Coast convention)
-    // In particle physics convention (+---), F_{0i} = E_i and F_{ij} = ε_{ijk}B_k
-    // The Lagrangian density is L = (E² - B²)/2
+/// * `Result<R, PhysicsError>` - Lagrangian density scalar $\mathcal{L}$.
+pub fn lagrangian_density_kernel<R>(
+    e: &CausalMultiVector<R>,
+    b: &CausalMultiVector<R>,
+) -> Result<R, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
     if e.metric() != b.metric() {
         return Err(PhysicsError::DimensionMismatch(format!(
             "Metric mismatch in Lagrangian Density: {:?} vs {:?}",
@@ -296,14 +293,12 @@ pub fn lagrangian_density_kernel(
         )));
     }
 
-    // Check for non-finite inputs
     if e.data().iter().any(|v| !v.is_finite()) || b.data().iter().any(|v| !v.is_finite()) {
         return Err(PhysicsError::NumericalInstability(
             "Non-finite input in Lagrangian Density".into(),
         ));
     }
 
-    // Compute Euclidean squared magnitudes of 3D spatial vectors.
     let e_squared = e.euclidean_squared_magnitude_3d();
     let b_squared = b.euclidean_squared_magnitude_3d();
 
@@ -313,8 +308,9 @@ pub fn lagrangian_density_kernel(
         ));
     }
 
-    // Lagrangian density (West Coast: L = (E² - B²)/2)
-    let lagrangian = 0.5 * (e_squared - b_squared);
+    let half = R::from_f64(0.5)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(0.5) failed".into()))?;
+    let lagrangian = half * (e_squared - b_squared);
 
     if !lagrangian.is_finite() {
         return Err(PhysicsError::NumericalInstability(
