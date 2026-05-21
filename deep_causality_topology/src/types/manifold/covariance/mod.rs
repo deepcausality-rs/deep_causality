@@ -20,10 +20,13 @@ where
         let data = self.data.as_slice();
         let n = data.len();
 
-        if n == 0 {
-            return Err(TopologyError::InvalidInput(
-                "Cannot compute covariance of empty data".to_string(),
-            ));
+        if n < 2 {
+            // Sample variance uses Bessel's correction (divide by n - 1). Single-sample
+            // and empty inputs leave that divisor at 0 or negative; the statistic is
+            // undefined either way.
+            return Err(TopologyError::InvalidInput(format!(
+                "Cannot compute covariance from {n} sample(s); need at least 2"
+            )));
         }
 
         let n_d = <D as FromPrimitive>::from_usize(n)

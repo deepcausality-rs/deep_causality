@@ -13,8 +13,7 @@ use super::super::{Manifold, utils};
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
-    C: RealField + Default,
-    D: RealField + Default + PartialEq,
+    C: RealField,
 {
     /// CPU implementation of Manifold constructor.
     pub(crate) fn new_impl(
