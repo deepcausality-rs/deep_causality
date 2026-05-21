@@ -11,7 +11,7 @@ use deep_causality_physics::{
 
 #[test]
 fn test_quantum_metric() {
-    let qm = QuantumMetric::new(-0.5).unwrap();
+    let qm = QuantumMetric::<f64>::new(-0.5).unwrap();
     assert_eq!(qm.value(), -0.5);
     let val: f64 = qm.into();
     assert_eq!(val, -0.5);
@@ -27,7 +27,7 @@ fn test_berry_curvature() {
 
 #[test]
 fn test_band_drude_weight() {
-    let bdw = BandDrudeWeight::new(2.5).unwrap();
+    let bdw = BandDrudeWeight::<f64>::new(2.5).unwrap();
     assert_eq!(bdw.value(), 2.5);
     let val: f64 = bdw.into();
     assert_eq!(val, 2.5);
@@ -56,19 +56,19 @@ fn test_conductance() {
 
 #[test]
 fn test_mobility() {
-    let m = Mobility::new(100.0).unwrap();
+    let m = Mobility::<f64>::new(100.0).unwrap();
     assert_eq!(m.value(), 100.0);
 
-    let err = Mobility::new(-1.0);
+    let err = Mobility::<f64>::new(-1.0);
     assert!(err.is_err());
 }
 
 #[test]
 fn test_twist_angle() {
-    let ta = TwistAngle::new(1.0); // radians
+    let ta = TwistAngle::<f64>::new(1.0); // radians
     assert!(ta.is_ok());
 
-    let deg = TwistAngle::from_degrees(180.0);
+    let deg = TwistAngle::<f64>::from_degrees(180.0);
     assert!((deg.value() - std::f64::consts::PI).abs() < 1e-10);
     assert!((deg.as_degrees() - 180.0).abs() < 1e-10);
 }
@@ -92,7 +92,7 @@ fn test_conductance_new_unchecked() {
 
 #[test]
 fn test_mobility_new_unchecked() {
-    let m = Mobility::new_unchecked(100.0);
+    let m = Mobility::<f64>::new_unchecked(100.0);
     assert_eq!(m.value(), 100.0);
 }
 
@@ -102,7 +102,7 @@ fn test_mobility_new_unchecked() {
 
 #[test]
 fn test_quantum_metric_default() {
-    let qm: QuantumMetric = Default::default();
+    let qm: QuantumMetric<f64> = Default::default();
     assert_eq!(qm.value(), 0.0);
 }
 
@@ -114,7 +114,7 @@ fn test_berry_curvature_default() {
 
 #[test]
 fn test_band_drude_weight_default() {
-    let bdw: BandDrudeWeight = Default::default();
+    let bdw: BandDrudeWeight<f64> = Default::default();
     assert_eq!(bdw.value(), 0.0);
 }
 
@@ -132,6 +132,6 @@ fn test_conductance_default() {
 
 #[test]
 fn test_mobility_default() {
-    let m: Mobility = Default::default();
+    let m: Mobility<f64> = Default::default();
     assert_eq!(m.value(), 0.0);
 }

@@ -122,7 +122,7 @@ pub fn ginzburg_landau_free_energy_kernel(
 /// *   `Result<CausalTensor<f64>, PhysicsError>` - Flux vector field $\mathbf{J}$.
 pub fn cahn_hilliard_flux_kernel(
     concentration: &Concentration,
-    mobility: Mobility,
+    mobility: Mobility<f64>,
     chem_potential_grad: &ChemicalPotentialGradient,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     let grad_mu = chem_potential_grad.inner();

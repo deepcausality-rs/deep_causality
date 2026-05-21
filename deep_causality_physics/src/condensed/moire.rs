@@ -50,7 +50,7 @@ use std::f64::consts::PI;
 /// # Errors
 /// *   `CalculationError` - If `shell_cutoff` is not 1.
 pub fn bistritzer_macdonald_kernel(
-    twist_angle: TwistAngle,
+    twist_angle: TwistAngle<f64>,
     interlayer_coupling: Energy<f64>,
     fermi_velocity: Speed,
     k_point: Momentum,

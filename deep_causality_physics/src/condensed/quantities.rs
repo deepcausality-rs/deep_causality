@@ -18,21 +18,28 @@ use deep_causality_tensor::CausalTensor;
 /// It measures the "distance" between quantum states in parameter space.
 ///
 /// *   **Dimensions**: Usually dimensionless (if $k$ is dimensionless) or $L^2$.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct QuantumMetric(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct QuantumMetric<R: deep_causality_num::RealField>(R);
 
-impl QuantumMetric {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for QuantumMetric<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> QuantumMetric<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         // Metric components can be negative (off-diagonal), so no invariant check here.
         Ok(Self(val))
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<QuantumMetric> for f64 {
-    fn from(val: QuantumMetric) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<QuantumMetric<R>> for f64 {
+    fn from(val: QuantumMetric<R>) -> Self {
+        val.0.into()
     }
 }
 
@@ -70,20 +77,27 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<BerryCurvature<R>> for f
 ///
 /// A measure of coherent electron transport (conductivity weight) in a band.
 /// Includes both conventional (kinetic) and geometric contributions.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct BandDrudeWeight(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct BandDrudeWeight<R: deep_causality_num::RealField>(R);
 
-impl BandDrudeWeight {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Default for BandDrudeWeight<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> BandDrudeWeight<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<BandDrudeWeight> for f64 {
-    fn from(val: BandDrudeWeight) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<BandDrudeWeight<R>> for f64 {
+    fn from(val: BandDrudeWeight<R>) -> Self {
+        val.0.into()
     }
 }
 
@@ -152,55 +166,75 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<Conductance<R>> for f64 
 /// Charge Carrier Mobility ($μ$).
 ///
 /// Units: $m^2 / (V · s)$.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct Mobility(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Mobility<R: deep_causality_num::RealField>(R);
 
-impl Mobility {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
-        // Mobility is typically magnitude, thus non-negative.
-        if val < 0.0 {
+impl<R: deep_causality_num::RealField> Default for Mobility<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> Mobility<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Negative Mobility".into(),
             ));
         }
         Ok(Self(val))
     }
-    pub fn new_unchecked(val: f64) -> Self {
+    pub fn new_unchecked(val: R) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> R {
         self.0
     }
 }
-impl From<Mobility> for f64 {
-    fn from(val: Mobility) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<Mobility<R>> for f64 {
+    fn from(val: Mobility<R>) -> Self {
+        val.0.into()
     }
 }
 
 /// Moiré Twist Angle ($θ$).
 ///
 /// Units: Radians.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-pub struct TwistAngle(f64);
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct TwistAngle<R: deep_causality_num::RealField>(R);
 
-impl TwistAngle {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
-        Ok(Self(val))
-    }
-    pub fn value(&self) -> f64 {
-        self.0
-    }
-    pub fn as_degrees(&self) -> f64 {
-        self.0.to_degrees()
-    }
-    pub fn from_degrees(deg: f64) -> Self {
-        Self(deg.to_radians())
+impl<R: deep_causality_num::RealField> Default for TwistAngle<R> {
+    fn default() -> Self {
+        Self(R::zero())
     }
 }
-impl From<TwistAngle> for f64 {
-    fn from(val: TwistAngle) -> Self {
-        val.0
+
+impl<R: deep_causality_num::RealField> TwistAngle<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        Ok(Self(val))
+    }
+    pub fn value(&self) -> R {
+        self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + deep_causality_num::FromPrimitive> TwistAngle<R> {
+    pub fn as_degrees(&self) -> R {
+        let factor =
+            R::from_f64(180.0 / core::f64::consts::PI).expect("R::from_f64(180/PI) failed");
+        self.0 * factor
+    }
+    pub fn from_degrees(deg: R) -> Self {
+        let factor =
+            R::from_f64(core::f64::consts::PI / 180.0).expect("R::from_f64(PI/180) failed");
+        Self(deg * factor)
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<TwistAngle<R>> for f64 {
+    fn from(val: TwistAngle<R>) -> Self {
+        val.0.into()
     }
 }
 

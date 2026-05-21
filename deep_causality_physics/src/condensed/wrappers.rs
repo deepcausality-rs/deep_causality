@@ -70,9 +70,9 @@ pub fn effective_band_drude_weight(
     energy_n: Energy<f64>,
     energy_0: Energy<f64>,
     curvature_ii: f64,
-    quantum_metric: QuantumMetric,
+    quantum_metric: QuantumMetric<f64>,
     lattice_const: Length,
-) -> PropagatingEffect<BandDrudeWeight> {
+) -> PropagatingEffect<BandDrudeWeight<f64>> {
     match qgt::effective_band_drude_weight_kernel(
         energy_n,
         energy_0,
@@ -91,7 +91,7 @@ pub fn effective_band_drude_weight(
 
 /// Wrapper for [`moire::bistritzer_macdonald_kernel`].
 pub fn bistritzer_macdonald(
-    twist_angle: TwistAngle,
+    twist_angle: TwistAngle<f64>,
     interlayer_coupling: Energy<f64>,
     fermi_velocity: Speed,
     k_point: Momentum,
@@ -170,7 +170,7 @@ pub fn ginzburg_landau_free_energy(
 /// Wrapper for [`phase::cahn_hilliard_flux_kernel`].
 pub fn cahn_hilliard_flux(
     concentration: &Concentration,
-    mobility: Mobility,
+    mobility: Mobility<f64>,
     chem_potential_grad: &ChemicalPotentialGradient,
 ) -> PropagatingEffect<CausalTensor<f64>> {
     match phase::cahn_hilliard_flux_kernel(concentration, mobility, chem_potential_grad) {

@@ -168,14 +168,14 @@ pub fn quasi_qgt_kernel(
 ///     *   If inputs are already physical, pass $a=1.0$.
 ///
 /// # Returns
-/// *   `Result<BandDrudeWeight, PhysicsError>` - The physical Drude Weight.
+/// *   `Result<BandDrudeWeight<f64>, PhysicsError>` - The physical Drude Weight.
 pub fn effective_band_drude_weight_kernel(
     energy_n: Energy<f64>,
     energy_0: Energy<f64>,
     curvature_ii: f64,
-    quantum_metric: QuantumMetric,
+    quantum_metric: QuantumMetric<f64>,
     lattice_const: Length,
-) -> Result<BandDrudeWeight, PhysicsError> {
+) -> Result<BandDrudeWeight<f64>, PhysicsError> {
     if !curvature_ii.is_finite() {
         return Err(PhysicsError::NumericalInstability(
             "Band curvature is not finite".into(),
