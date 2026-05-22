@@ -32,9 +32,9 @@ Depends on Block 0. Lands the new capability trait, the cubical implementation, 
 
 ### R4.1 Trait scaffolding
 
-- [ ] R4.1.1 Create `deep_causality_topology/src/traits/has_hodge_star.rs` with `pub trait HasHodgeStar<R: RealField>` per Decision 2 of the refined design.
-- [ ] R4.1.2 Register the trait in `src/traits/mod.rs` and re-export from `src/lib.rs`.
-- [ ] R4.1.3 Write a one-trait-per-file test stub under `tests/traits/has_hodge_star_tests.rs`; register in `tests/traits/mod.rs` and `tests/BUILD.bazel`.
+- [x] R4.1.1 Create `deep_causality_topology/src/traits/has_hodge_star.rs` with `pub trait HasHodgeStar<R: RealField>` per Decision 2 of the refined design. **Done** with the refined associated-type-on-`Complex` shape and `Cow<'_, CsrMatrix<R>>` return per the [chain_complex.rs](../../../deep_causality_topology/src/traits/chain_complex.rs) precedent — design issue surfaced during implementation, design.md Decision 2 updated to match.
+- [x] R4.1.2 Register the trait in `src/traits/mod.rs` and re-export from `src/lib.rs`.
+- [x] R4.1.3 Write a one-trait-per-file test stub under `tests/traits/has_hodge_star_tests.rs`; register in `tests/traits/mod.rs` and `tests/BUILD.bazel`. **Bazel registration not needed** — the existing `traits` suite uses `glob(["traits/*_tests.rs"])`, the new file is picked up automatically. 3 tests passing.
 
 ### R4.2 Simplicial `HasHodgeStar` impl
 

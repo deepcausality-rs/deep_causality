@@ -58,13 +58,32 @@ The Hodge ⋆ is metric-dependent: it cannot live on `ChainComplex` itself becau
 
 ```rust
 pub trait HasHodgeStar<R: RealField> {
-    fn hodge_star_matrix(&self, k: usize) -> CsrMatrix<R>;
+    type Complex: ChainComplex;
+    fn hodge_star_matrix<'a>(
+        &'a self,
+        complex: &'a Self::Complex,
+        k: usize,
+    ) -> Cow<'a, CsrMatrix<R>>;
 }
 
-impl<R: RealField + FromPrimitive> HasHodgeStar<R> for ReggeGeometry<R> { /* simplicial */ }
+impl<R: RealField + FromPrimitive> HasHodgeStar<R> for ReggeGeometry<R> {
+    type Complex = SimplicialComplex<R>;
+    /* simplicial — delegates to the cached `complex.hodge_star_operators()[k]` */
+}
+
 impl<const D: usize, R: RealField + FromPrimitive, S: SignatureMarker>
-    HasHodgeStar<R> for CubicalReggeGeometry<D, R, S> { /* cubical */ }
+    HasHodgeStar<R> for CubicalReggeGeometry<D, R, S>
+{
+    type Complex = LatticeComplex<D, R>;
+    /* cubical — computes on the fly from volume data + cell enumeration */
+}
 ```
+
+**Why the associated type instead of a free generic `complex: &impl ChainComplex`:**
+The simplicial `ReggeGeometry<R>` impl reads from `SimplicialComplex<R>::hodge_star_operators` (a private cache), and the cubical impl reads from `LatticeComplex<D, R>`'s cell enumeration. Neither implementation works against an *arbitrary* `ChainComplex` — each pairs naturally with one concrete complex type. The associated type `Complex` encodes that pairing and lets the `Manifold` bound be expressed as `K::Metric: HasHodgeStar<R, Complex = K>`, which is the precise constraint we need.
+
+**Why `Cow<'_, CsrMatrix<R>>` instead of `CsrMatrix<R>`:**
+Mirrors the existing `ChainComplex::boundary_matrix` / `coboundary_matrix` shape ([chain_complex.rs:52](../../../deep_causality_topology/src/traits/chain_complex.rs#L52)). Simplicial impls vend `Cow::Borrowed` against the cached field (zero copy); cubical impls vend `Cow::Owned` since the Hodge ⋆ is computed on demand. This keeps the existing simplicial performance characteristic intact while admitting compute-on-demand backends.
 
 The generic differential operators then take a `where K::Metric: HasHodgeStar<R>` bound. Complexes whose metric is `()` (e.g. `CellComplex<C>`) silently lose access to `manifold.hodge_star(k)` and `manifold.laplacian(k)` — correct behavior, since those operators are not defined without a metric.
 
@@ -149,12 +168,13 @@ After this change set, these become:
 impl<K, R> Manifold<K, R>
 where
     K: ChainComplex,
-    K::Metric: HasHodgeStar<R>,
+    K::Metric: HasHodgeStar<R, Complex = K>,
     R: RealField + FromPrimitive,
 {
     pub fn hodge_star(&self, k: usize) -> CausalTensor<R> {
-        let star = self.metric.as_ref().expect("metric required").hodge_star_matrix(k);
-        /* wrap the CsrMatrix<R> into a CausalTensor<R> per the existing API */
+        let metric = self.metric.as_ref().expect("metric required");
+        let star: Cow<'_, CsrMatrix<R>> = metric.hodge_star_matrix(&self.complex, k);
+        /* apply `star` to the k-form slice and wrap the result into a CausalTensor<R> */
     }
 }
 ```

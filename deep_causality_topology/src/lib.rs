@@ -38,6 +38,7 @@ pub use crate::traits::cell::Cell;
 pub use crate::traits::chain_complex::ChainComplex;
 pub use crate::traits::gauge_group::GaugeGroup;
 pub use crate::traits::graph_topology::GraphTopology;
+pub use crate::traits::has_hodge_star::HasHodgeStar;
 pub use crate::traits::hypergraph_topology::HypergraphTopology;
 pub use crate::traits::manifold_topology::ManifoldTopology;
 pub use crate::traits::neighborhood::{CellId, Neighborhood};

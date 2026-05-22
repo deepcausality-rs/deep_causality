@@ -46,6 +46,7 @@ pub mod cell;
 pub mod chain_complex;
 pub mod gauge_group;
 pub mod graph_topology;
+pub mod has_hodge_star;
 pub mod hypergraph_topology;
 pub mod manifold_topology;
 pub mod neighborhood;
