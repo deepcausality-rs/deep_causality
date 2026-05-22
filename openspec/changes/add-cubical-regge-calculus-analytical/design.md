@@ -6,7 +6,7 @@
 2. **The Euclidean / Lorentzian signature distinction is not tracked at the type level.** `CubicalReggeGeometry<D>` carries `timelike_axes: Option<[bool; D]>` as a runtime flag that R1–R3 ignores. Lattice gauge theory + GR, anisotropic spacetime work, and any Lorentzian-flavored research need a typed distinction.
 3. **There is no way to perform Markov-chain Monte Carlo over edge-length configurations.** The Regge action is computable (per R3) but its gradient is not, and there is no Metropolis-update primitive.
 
-The forward-looking design note [openspec/notes/CubicalReggeCalculus.md](../../notes/CubicalReggeCalculus.md) §§3.R4–R6 lays out the implementation; this change set delivers all three phases as one reviewable unit because they share a non-trivial amount of infrastructure:
+The forward-looking design note [openspec/notes/CubicalReggeCalculus.md](../add-cubical-regge-calculus-core/CubicalReggeCalculus.md) §§3.R4–R6 lays out the implementation; this change set delivers all three phases as one reviewable unit because they share a non-trivial amount of infrastructure:
 
 - R5's per-cell metric tensor (`metric_tensor_at`) is the same Gram-matrix machinery that R4's Hodge ⋆ relies on (dual/primal volume ratios fall out of the per-cell metric).
 - R6's gradient consumes both R3's Euclidean Regge action and R5's Lorentzian variant.

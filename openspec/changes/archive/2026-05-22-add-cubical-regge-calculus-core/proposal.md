@@ -47,4 +47,4 @@ This change set delivers the geometric core (phases R1–R3 of the design note) 
 - **Tests:** ~28 property tests across the three phases, registered under `tests/types/cubical_regge_geometry/` mirroring the source-tree layout, with corresponding entries in `deep_causality_topology/tests/BUILD.bazel`.
 - **Effort:** ~570 LOC of source, ~28 tests, ~7 hours of focused work per the design note.
 - **Out of scope for this change set (covered by a separate later proposal `add-cubical-regge-calculus-analytical`):** the cubical Hodge ⋆ on `LatticeComplex<D>` and the resulting promotion of `manifold/differential/{hodge,laplacian}.rs` to be generic over `ChainComplex` (R4); the Lorentzian variant and per-cell metric signature (R5); the action gradient and Metropolis updates (R6). Sparse cubical complexes, GPU backends, non-cubical regular tilings, and persistent-homology extensions are also out of scope.
-- **Reference:** [openspec/notes/CubicalReggeCalculus.md](../../notes/CubicalReggeCalculus.md), §§3.R1–R3.
+- **Reference:** [openspec/notes/CubicalReggeCalculus.md](CubicalReggeCalculus.md), §§3.R1–R3.

@@ -42,4 +42,4 @@ The downstream `add-hodge-decomposition` change set (§7 of the design note) dep
 - **Effort per the design note:** R4 ~350 LOC / ~15 tests / 5 h, R5 ~250 LOC / ~12 tests / 4 h, R6 ~400 LOC / ~10 tests / 6 h. Total ~1000 LOC, ~37 tests, ~15 hours of focused work.
 - **Sequencing:** depends on `add-cubical-regge-calculus-core` having shipped (cell volumes, hinge enumeration, dihedral angles, deficit angle, Euclidean Regge action are inputs to R4 and R6). Unblocks `add-hodge-decomposition` (§7 of the design note), which builds the uniform discrete Hodge–Helmholtz decomposition on top of R4's `HasHodgeStar` trait.
 - **Out of scope:** the Hodge–Helmholtz decomposition itself (separate change set `add-hodge-decomposition`); causal-flow analysis (`add-causal-flow-analysis`); sparse cubical complexes; GPU paths; non-cubical regular tilings; categorical-coherence property tests via `proptest`.
-- **Reference:** [openspec/notes/CubicalReggeCalculus.md](../../notes/CubicalReggeCalculus.md), §§3.R4–R6.
+- **Reference:** [openspec/notes/CubicalReggeCalculus.md](../add-cubical-regge-calculus-core/CubicalReggeCalculus.md), §§3.R4–R6.

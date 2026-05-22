@@ -1,6 +1,6 @@
 # 3D Causal Fluid Dynamics with State-Augmented Propagating Process — forward-looking design note
 
-**Status:** Forward-looking. Builds directly on the geometric and analytical phases proposed in [`CubicalReggeCalculus.md`](./CubicalReggeCalculus.md) (R1–R4 + H1–H3). Identifies a specific methodological contribution to the causal analysis of three-dimensional turbulent flows: replacing the lossy autoencoder + k-means state extraction pipeline of Martínez-Sánchez & Lozano-Durán (2026) with topologically-grounded Hodge-signature features carried through a Markovian `PropagatingProcess` with rolling temporal state. This combination is novel, computationally cheap, and reduces the published causality-leak baseline of 67% to an estimated 12–20% on the same DNS data class.
+**Status:** Forward-looking. Builds directly on the geometric and analytical phases proposed in [`CubicalReggeCalculus.md`](../../add-cubical-regge-calculus-core/CubicalReggeCalculus.md) (R1–R4 + H1–H3). Identifies a specific methodological contribution to the causal analysis of three-dimensional turbulent flows: replacing the lossy autoencoder + k-means state extraction pipeline of Martínez-Sánchez & Lozano-Durán (2026) with topologically-grounded Hodge-signature features carried through a Markovian `PropagatingProcess` with rolling temporal state. This combination is novel, computationally cheap, and reduces the published causality-leak baseline of 67% to an estimated 12–20% on the same DNS data class.
 
 The note is concrete: each phase below lists the exact files, methods, and validation targets a follow-up change set would need. The sequencing assumes the geometric foundation from `CubicalReggeCalculus.md` is in place.
 
@@ -44,7 +44,7 @@ What is novel about this combination — none of the three published 2026 papers
 2. **`PropagatingProcess` as the temporal-accumulation primitive.** Mori-Zwanzig / Takens-style state augmentation expressed natively in the type system. The `S` channel carries exactly what the compression destroyed about the Markov property of the underlying Navier-Stokes evolution.
 3. **SURD operating on the topological joint distribution.** SURD-states (already in `deep_causality_algorithms`) consumes the topological signature stream rather than the autoencoder latent stream. Same algorithm, dramatically lower-leak inputs.
 4. **Type-encoded fluid invariants.** Newtype wrappers (`SolenoidalField<F>`, `Circulation<F>`, `Vorticity<F>`) following the existing `Speed` / `Mass` / `FourMomentum` convention in `deep_causality_physics`. Construction-time validity replaces runtime conservation checks for the cases where the invariant is structural.
-5. **`CausaloidGraph` emission.** The existing SURD → graph bridge in [`deep_causality_discovery/README.md`](../../deep_causality_discovery/README.md) ("Strong unique influence → direct edge", "synergy → `AggregateLogic::All`") is consumed unchanged. The output is an executable DeepCausality model, not a static plot.
+5. **`CausaloidGraph` emission.** The existing SURD → graph bridge in [`deep_causality_discovery/README.md`](../../../../deep_causality_discovery/README.md) ("Strong unique influence → direct edge", "synergy → `AggregateLogic::All`") is consumed unchanged. The output is an executable DeepCausality model, not a static plot.
 
 The composition is the contribution. Each element exists in published literature; no published pipeline puts them together.
 
@@ -244,7 +244,7 @@ Each phase has a verifiable target and is independently shippable. The phases as
 
 ### Phase F4 — `CausaloidGraph` emission
 
-**Goal:** the existing SURD → graph bridge documented in [`deep_causality_discovery/README.md`](../../deep_causality_discovery/README.md) section "Connecting CDL to DeepCausality", specialized to fluid features.
+**Goal:** the existing SURD → graph bridge documented in [`deep_causality_discovery/README.md`](../../../../deep_causality_discovery/README.md) section "Connecting CDL to DeepCausality", specialized to fluid features.
 
 **Where it lives:**
 - Extends the existing `SurdResultAnalyzer` in [`deep_causality_discovery/src/types/analyzer/mod.rs`](../../deep_causality_discovery/src/types/analyzer/mod.rs) with a fluid-specific variant.
@@ -346,7 +346,7 @@ The composition demonstrates the architectural separation cleanly: physics invar
 
 **Effort:** ~15 hours.
 
-**Total Phase F1–F9 effort:** ~99 hours focused work, ~3 weeks at sustained pace. Roughly half the original §8 budget in [`CubicalReggeCalculus.md`](./CubicalReggeCalculus.md), because the existing SURD / CDL / topology / physics infrastructure is now credited correctly.
+**Total Phase F1–F9 effort:** ~99 hours focused work, ~3 weeks at sustained pace. Roughly half the original §8 budget in [`CubicalReggeCalculus.md`](../../add-cubical-regge-calculus-core/CubicalReggeCalculus.md), because the existing SURD / CDL / topology / physics infrastructure is now credited correctly.
 
 ---
 
@@ -436,9 +436,9 @@ This work depends on prior change sets and unblocks downstream ones.
 
 1. **`add-cubical-complexes` (Stage A–C)** — already shipped. `LatticeComplex<D>`, `CubicalReggeGeometry<D>` scaffolding, `Manifold::from_cubical_with_metric` constructors. No further work needed here.
 
-2. **`add-cubical-regge-calculus` Phases R1–R4** from [`CubicalReggeCalculus.md`](./CubicalReggeCalculus.md) §3. Required: cubical Hodge ⋆ generic over `ChainComplex`. Without R4, the existing simplicial-only differential operators do not work on `LatticeComplex<3>` and the entire pipeline cannot start. **Phase R5 (Lorentzian) and R6 (Metropolis) are NOT required** by this proposal — they are needed only for compressible-flow causal-cone work and quantum-gravity dynamics, both of which are outside the scope of this note.
+2. **`add-cubical-regge-calculus` Phases R1–R4** from [`CubicalReggeCalculus.md`](../../add-cubical-regge-calculus-core/CubicalReggeCalculus.md) §3. Required: cubical Hodge ⋆ generic over `ChainComplex`. Without R4, the existing simplicial-only differential operators do not work on `LatticeComplex<3>` and the entire pipeline cannot start. **Phase R5 (Lorentzian) and R6 (Metropolis) are NOT required** by this proposal — they are needed only for compressible-flow causal-cone work and quantum-gravity dynamics, both of which are outside the scope of this note.
 
-3. **`add-hodge-decomposition` Phases H1–H3** from [`CubicalReggeCalculus.md`](./CubicalReggeCalculus.md) §7. Required: `HasHodgeStar` trait, `HodgeDecomposition<F>` data structure, two-backend property tests. **Phases H4–H7 are NOT strictly required** by Phase F1–F8 of this proposal — F1 needs the decomposition primitive, not the per-edge metric closed form (H4) or the writeup (H7). Land H4 if a methods paper is the explicit goal; defer otherwise.
+3. **`add-hodge-decomposition` Phases H1–H3** from [`CubicalReggeCalculus.md`](../../add-cubical-regge-calculus-core/CubicalReggeCalculus.md) §7. Required: `HasHodgeStar` trait, `HodgeDecomposition<F>` data structure, two-backend property tests. **Phases H4–H7 are NOT strictly required** by Phase F1–F8 of this proposal — F1 needs the decomposition primitive, not the per-edge metric closed form (H4) or the writeup (H7). Land H4 if a methods paper is the explicit goal; defer otherwise.
 
 ### What this unblocks
 
