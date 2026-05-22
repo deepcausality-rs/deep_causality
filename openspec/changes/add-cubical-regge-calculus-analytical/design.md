@@ -133,29 +133,35 @@ star[k][cell_id] = volume(dual_cell(cell_id, D-k)) / volume(primal_cell(cell_id,
 
 ### Decision 5: Generic differential operators via trait-bound widening
 
-The existing `manifold/differential/{hodge,laplacian,codifferential}.rs` files have impls of the form:
+The existing `manifold/differential/{hodge,laplacian,codifferential}.rs` files currently have impls of the form:
 
 ```rust
-impl<C, F: FloatType> Manifold<SimplicialComplex<C>, F> {
-    pub fn hodge_star(&self, k: usize) -> CsrMatrix<F> { /* uses ReggeGeometry */ }
+impl<R> Manifold<SimplicialComplex<R>, R>
+where R: RealField + FromPrimitive
+{
+    pub fn hodge_star(&self, k: usize) -> CausalTensor<R> { /* uses ReggeGeometry */ }
 }
 ```
 
 After this change set, these become:
 
 ```rust
-impl<K: ChainComplex, F: FloatType> Manifold<K, F>
-where K::Metric: HasHodgeStar
+impl<K, R> Manifold<K, R>
+where
+    K: ChainComplex,
+    K::Metric: HasHodgeStar<R>,
+    R: RealField + FromPrimitive,
 {
-    pub fn hodge_star(&self, k: usize) -> CsrMatrix<F> {
-        self.metric.as_ref().expect("metric required").hodge_star_matrix(k)
+    pub fn hodge_star(&self, k: usize) -> CausalTensor<R> {
+        let star = self.metric.as_ref().expect("metric required").hodge_star_matrix(k);
+        /* wrap the CsrMatrix<R> into a CausalTensor<R> per the existing API */
     }
 }
 ```
 
-Call sites for existing simplicial users resolve identically because `ReggeGeometry<T>: HasHodgeStar` is added in this change set. Lattice users gain access for the first time.
+Call sites for existing simplicial users resolve identically because `impl<R: RealField + FromPrimitive> HasHodgeStar<R> for ReggeGeometry<R>` is added in this change set. Lattice users gain access for the first time via the symmetric `impl<const D: usize, R: RealField + FromPrimitive, S: SignatureMarker> HasHodgeStar<R> for CubicalReggeGeometry<D, R, S>`.
 
-**Note on call-site source compatibility:** any downstream code that has its own `impl Manifold<MyComplex, F>` blocks could in principle observe the trait-bound widening as a coherence change. We accept this. The trait `Manifold` is not user-implementable (no `unsafe impl` paths, no extension points), so the practical impact is zero in current downstream code.
+**Note on call-site source compatibility:** any downstream code that has its own `impl Manifold<MyComplex, R>` blocks could in principle observe the trait-bound widening as a coherence change. We accept this. The struct `Manifold` is not user-implementable in the trait-impl sense (no `unsafe impl` paths, no extension points), so the practical impact is zero in current downstream code.
 
 **The `Laplacian` follows for free.** `Δ_k = δ_k d_k + d_{k-1} δ_{k-1}` is built from `d = coboundary_matrix` (already generic over `ChainComplex`) and `δ = ⋆⁻¹ d ⋆` (becomes generic once ⋆ does). The `Manifold::laplacian(k)` method ships generically as a side effect of R4.
 
@@ -199,9 +205,7 @@ The Lorentzian Regge action returns `Complex<R>` (real part = Euclidean action; 
 - **Generic in-house type:** `pub struct Complex<R: RealField> { re: R, im: R }` with the four arithmetic ops, exposed from `deep_causality_num`. ~80 LOC.
 - **External `num-complex` crate:** mature, widely used. Adds an external dependency to the workspace, violating the AGENTS.md rule. Rejected on that basis alone.
 
-**Recommendation:** generic in-house type under `deep_causality_num`, since complex numbers will be useful for several other future change sets (Hodge ⋆ in higher signatures, quantum-gravity observables, GR-spinor work in `deep_causality_physics`). Build it once, use it across the crate graph. This is a coordinated change to `deep_causality_num`, called out explicitly in the impact section.
-
-**Open question:** if `deep_causality_num::complex_number` already exposes a `Complex` type, inspect whether it is already generic over `R: RealField`. If yes, reuse unchanged. If it is hard-coded to `f64`, generalising it is itself a small coordinated change against `deep_causality_num` and is a prerequisite to R5.6 of `tasks.md`. Verified at Block 0 of `tasks.md`.
+**Resolution (Block 0 audit):** `deep_causality_num` already exposes `Complex<T: RealField>` at the crate root ([`deep_causality_num/src/lib.rs:59`](../../../deep_causality_num/src/lib.rs#L59)), defined in [`src/complex/complex_number/mod.rs`](../../../deep_causality_num/src/complex/complex_number/mod.rs) with shape `pub struct Complex<T: RealField> { pub re: T, pub im: T }` and a full arithmetic/algebra/cast/identity/rotation impl tree. Aliases `Complex32` and `Complex64` are also re-exported. Reuse unchanged. No coordinated change to `deep_causality_num` is needed.
 
 ### Decision 9: Light-cone-violation detection at construction, not at action evaluation
 
@@ -219,7 +223,7 @@ The Lorentzian constructor `with_timelike_axes_lorentzian(lengths, timelike_axes
   → **Mitigation:** allocate explicit derivation time in the task list, and gate R4's per-edge implementation on a successful cross-check against the simplicial Hodge ⋆ on the unit square / cube. If the derivation slips, ship R4 with unit-edge + per-axis support only (already covers ~90% of use cases) and mark per-edge as an explicit follow-up.
 
 - **[Risk] `Manifold<K, F>` users who hand-impl methods on the concrete type `Manifold<SimplicialComplex<C>, F>` could see coherence conflicts.**
-  → **Mitigation:** audit the workspace before landing for downstream impls. Currently none exist outside `deep_causality_topology` itself; the trait-bound widening is safe in practice. If a future external crate hits this, the breakage is detectable at compile time and the fix is to use the generic `Manifold<K, F>` impl.
+  → **Mitigation:** audit the workspace before landing for downstream impls. Currently none exist outside `deep_causality_topology` itself; the trait-bound widening is safe in practice. If a future external crate hits this, the breakage is detectable at compile time and the fix is to use the generic `Manifold<K, R>` impl.
 
 - **[Risk] `CubicalReggeGeometry<D>` → `CubicalReggeGeometry<D, S = Euclidean>` is a signature change.** R1–R3 documentation uses the bare `CubicalReggeGeometry<D>` form; turbofish call sites like `CubicalReggeGeometry::<3>::unit_edge()` continue to work because of the default, but explicit signatures `let g: CubicalReggeGeometry<3> = ...` break if the project enforces `#![deny(elided_lifetimes_in_paths)]` or similar lints on this kind of elision.
   → **Mitigation:** double-check workspace lint config; the `S = Euclidean` default is the standard Rust idiom for adding a parameter without breaking call sites. If a project-wide lint forbids elided generic arguments, add a `#[allow(...)]` at the type definition site or change R1–R3's call sites to be explicit. Audit happens during the implementation pass.
@@ -251,13 +255,13 @@ This change is structurally non-breaking but semantically extends R1–R3's surf
   - `AcceptReject` enum added.
   - New methods on `CubicalReggeGeometry<D, S>`: `hodge_star_matrix`, `metric_tensor_at`, `regge_action_lorentzian` (Lorentzian only), `regge_gradient`, `metropolis_update`.
   - `Manifold::hodge_star`, `Manifold::laplacian`, `Manifold::codifferential` widen their trait bounds — source-compatible for all known downstream code.
-  - `deep_causality_num` gains (or is generalised to expose) a `Complex<R: RealField>` type — coordinated change to that crate.
+  - `deep_causality_num::Complex<R: RealField>` is reused unchanged (already exposed at the crate root); no coordinated change required.
 - **Rollback:** revert the change set. No persisted state. The R1–R3 surface is preserved exactly. Downstream code that started using the new Hodge / Lorentzian / Metropolis surfaces would need to be reverted as well, but no R1–R3 user is affected.
 - **Sequencing:** depends on `add-cubical-regge-calculus-core` having shipped. Unblocks `add-hodge-decomposition` (the uniform discrete Hodge–Helmholtz decomposition, §7 of the design note).
 
 ## Open Questions
 
-1. **Does `deep_causality_num::complex_number` already expose a `Complex<R: RealField>` generic type?** The directory exists; inspect whether the type is generic or hard-coded to `f64`. If generic, reuse unchanged. If `f64`-bound, generalising it is a coordinated micro-change against `deep_causality_num` and is a prerequisite to R5.6 of `tasks.md`. Verify at Block 0.
+1. ~~**Does `deep_causality_num::complex_number` already expose a `Complex<R: RealField>` generic type?**~~ **Resolved at Block 0:** yes. `pub use crate::complex::complex_number::{Complex, Complex32, Complex64}` at [`deep_causality_num/src/lib.rs:59`](../../../deep_causality_num/src/lib.rs#L59); `Complex<T: RealField>` is fully generic. Reuse unchanged.
 2. **Should the `S` parameter be a marker type (`Euclidean`, `Lorentzian`) or a const generic (`const S: SignatureKind`)?** Recommendation in design.md: marker types, because const generics over enums are unstable on the project's MSRV (verify) and marker types are equally expressive.
 3. **Should `Manifold::laplacian(k)` return `CsrMatrix<F>` or `CausalTensor<F>`?** R4 ships it as `CsrMatrix<F>` because that's what the existing simplicial impl uses. If a future change set wants a tensor view, it can wrap.
 4. **Adaptive step-size tuning for `metropolis_update`?** Recommendation: out of scope here; callers tune their own.

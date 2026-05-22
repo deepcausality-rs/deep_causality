@@ -6,24 +6,24 @@ This change set delivers R4 (cubical Hodge ⋆ + generic differential operators)
 
 Before any code lands, the proposal and design must be reconciled with the `R: RealField` parameterisation that R1–R3 already shipped. This is a documentation-only block.
 
-- [ ] 0.1 Rewrite `proposal.md` so every `f64` in a public signature becomes `R: RealField` (with `+ FromPrimitive` where literal construction is required). Affected surfaces:
+- [x] 0.1 Rewrite `proposal.md` so every `f64` in a public signature becomes `R: RealField` (with `+ FromPrimitive` where literal construction is required). Affected surfaces:
   - `hodge_star_matrix(...) -> CsrMatrix<R>` (was `CsrMatrix<f64>`).
   - `metric_tensor_at(...) -> CausalTensor<R>` (was `CausalTensor<f64>`).
   - `regge_action_lorentzian(...) -> Complex<R>` (was `Complex<f64>`).
   - `regge_gradient(...) -> Vec<R>` (was `Vec<f64>`).
   - `metropolis_update<Rng>(&mut self, ..., beta: R) -> AcceptReject<R>` (was untyped `beta`).
-- [ ] 0.2 Promote `CubicalReggeGeometry<D, S = Euclidean>` to `CubicalReggeGeometry<const D, R, S = Euclidean>` throughout the proposal so it matches the live type signature.
-- [ ] 0.3 Update `design.md` Decision 2 to lock the trait shape as:
+- [x] 0.2 Promote `CubicalReggeGeometry<D, S = Euclidean>` to `CubicalReggeGeometry<const D, R, S = Euclidean>` throughout the proposal so it matches the live type signature.
+- [x] 0.3 Update `design.md` Decision 2 to lock the trait shape as:
   ```rust
   pub trait HasHodgeStar<R: RealField> {
       fn hodge_star_matrix(&self, complex: &impl ChainComplex, k: usize) -> CsrMatrix<R>;
   }
   ```
   with `impl<R: RealField + FromPrimitive> HasHodgeStar<R> for ReggeGeometry<R>` and `impl<const D: usize, R: RealField + FromPrimitive, S: SignatureMarker> HasHodgeStar<R> for CubicalReggeGeometry<D, R, S>`.
-- [ ] 0.4 Close Open Question 7 in `design.md` with the decision above.
-- [ ] 0.5 Update Decision 5 (generic differential operators) to widen `Manifold` impls to `impl<K, R> Manifold<K, R> where K: ChainComplex, K::Metric: HasHodgeStar<R>, R: RealField + FromPrimitive`.
-- [ ] 0.6 Resolve Open Question 1 (does `deep_causality_num` expose `Complex`?): inspect [`deep_causality_num/src/complex/`](../../../deep_causality_num/src/complex/) and record the answer in `design.md`. The directory exists (`complex_number/`, `octonion_number/`, `quaternion_number/`); the assumption is the shim is already there. If yes, reuse; if it is not generic over `R`, generalise it as part of this change set or open a coordinated micro-change against `deep_causality_num`.
-- [ ] 0.7 Update the proposal's Impact section so `Complex<R>` (or the equivalent reused type) appears with its actual provenance.
+- [x] 0.4 Close Open Question 7 in `design.md` with the decision above.
+- [x] 0.5 Update Decision 5 (generic differential operators) to widen `Manifold` impls to `impl<K, R> Manifold<K, R> where K: ChainComplex, K::Metric: HasHodgeStar<R>, R: RealField + FromPrimitive`.
+- [x] 0.6 Resolve Open Question 1 (does `deep_causality_num` expose `Complex`?): **Resolved — `deep_causality_num::Complex<T: RealField>` is already exposed at the crate root ([`src/lib.rs:59`](../../../deep_causality_num/src/lib.rs#L59)) with the required generic shape, including `Complex32` / `Complex64` aliases. Reuse unchanged; no coordinated change to `deep_causality_num` is needed.**
+- [x] 0.7 Update the proposal's Impact section so `Complex<R>` (or the equivalent reused type) appears with its actual provenance.
 - [ ] 0.8 Block-0 gate: user reviews the refined proposal + design, signs off, commits. No code starts until G0 closes.
 
 ## Block R4 — Cubical Hodge ⋆ + generic differential operators
