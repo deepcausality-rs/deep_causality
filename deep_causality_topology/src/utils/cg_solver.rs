@@ -74,9 +74,6 @@ where
         return Ok(x);
     }
 
-    let zero_tol = <R as FromPrimitive>::from_f64(1e-30)
-        .expect("1e-30 is representable in every supported RealField");
-
     for iter in 0..max_iterations {
         let ap = apply(&p);
         if ap.len() != n {
@@ -86,7 +83,13 @@ where
             });
         }
         let pap = dot(&p, &ap);
-        if pap.abs() < zero_tol {
+        // Algebraic breakdown only. A relative threshold here would either
+        // (a) fire spuriously on the very small `pap` values that arise at
+        // Float106 / f32 precision near convergence, or (b) miss true
+        // breakdowns at large magnitudes. Exact-zero is the only check that
+        // is precision-invariant; non-convergence past `max_iterations`
+        // catches every other failure mode.
+        if pap == R::zero() {
             return Err(CgFailure {
                 iterations: iter,
                 residual: rsold.sqrt(),

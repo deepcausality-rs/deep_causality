@@ -21,6 +21,10 @@ mod display_tests;
 #[cfg(test)]
 mod geometry_tests;
 #[cfg(test)]
+mod hodge_decomposition_cross_backend_tests;
+#[cfg(test)]
+mod hodge_decomposition_property_tests;
+#[cfg(test)]
 mod hodge_decomposition_tests;
 #[cfg(test)]
 mod manifold_topology_tests;

@@ -149,9 +149,17 @@ where
             return Err(HodgeFailReason::<R>::MissingMetric.into_topology_error());
         }
 
-        let tolerance = opts
-            .tolerance
-            .unwrap_or_else(|| <R as FromPrimitive>::from_f64(1e-10).unwrap_or_else(R::epsilon));
+        let tolerance = opts.tolerance.unwrap_or_else(|| {
+            // Default convergence threshold: tight relative residual (1e-10),
+            // but clamped to `R::epsilon() * 100` from below so the threshold
+            // stays representable at low-precision backends. At f64 this stays
+            // at 1e-10; at f32 (epsilon ≈ 1.19e-7) it floors to ~1.19e-5;
+            // at Float106 it floors to ~1e-30. Without this clamp, the f32
+            // path tries to converge below its own representable noise.
+            let candidate = <R as FromPrimitive>::from_f64(1e-10).unwrap_or_else(R::epsilon);
+            let floor = R::epsilon() * <R as FromPrimitive>::from_f64(100.0).unwrap_or(R::one());
+            if candidate > floor { candidate } else { floor }
+        });
         let max_iter = opts.max_iterations.unwrap_or(1000);
 
         let omega: Vec<R> = field.as_slice().to_vec();
