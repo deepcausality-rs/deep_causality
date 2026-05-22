@@ -13,6 +13,7 @@ pub mod alias;
 pub mod utils_tests;
 
 // Re-export errors
+pub use crate::errors::light_cone_violation::LightConeViolation;
 pub use crate::errors::link_variable_error::LinkVariableError;
 pub use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 
@@ -64,7 +65,9 @@ pub use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
 pub type CubicalComplex<const D: usize, R> = LatticeComplex<D, R>;
 /// Textbook alias for `LatticeCell<D>`. See `CubicalComplex<D>`.
 pub type CubicalCell<const D: usize> = LatticeCell<D>;
-pub use crate::types::cubical_regge_geometry::CubicalReggeGeometry;
+pub use crate::types::cubical_regge_geometry::{
+    CubicalReggeGeometry, Euclidean, Lorentzian, SignatureMarker,
+};
 pub use crate::types::graph::Graph;
 pub use crate::types::hypergraph::Hypergraph;
 pub use crate::types::manifold::{Manifold, SimplicialManifold};

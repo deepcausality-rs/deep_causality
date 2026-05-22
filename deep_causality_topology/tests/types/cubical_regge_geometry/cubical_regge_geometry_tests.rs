@@ -199,16 +199,28 @@ fn timelike_axes_default_is_none() {
 }
 
 #[test]
-fn with_timelike_axes_attaches_pattern() {
-    let g = CubicalReggeGeometry::<4, f64>::unit().with_timelike_axes([false, false, false, true]);
+fn with_timelike_axes_promotes_to_lorentzian_marker() {
+    // R5.2: `with_timelike_axes` repurposed as the type-level Lorentzian
+    // constructor. Returns `Result<CubicalReggeGeometry<D, R, Lorentzian>,
+    // LightConeViolation>`.
+    let g = CubicalReggeGeometry::<4, f64>::unit()
+        .with_timelike_axes([false, false, false, true])
+        .expect("at least one timelike axis ⇒ valid Lorentzian");
     assert_eq!(g.timelike_axes(), Some(&[false, false, false, true]));
     assert!(g.is_lorentzian());
 }
 
 #[test]
-fn all_spacelike_axes_is_not_lorentzian() {
-    let g = CubicalReggeGeometry::<3, f64>::unit().with_timelike_axes([false, false, false]);
-    assert!(!g.is_lorentzian());
+fn all_spacelike_axes_rejected_by_lorentzian_constructor() {
+    // R5.2: a Lorentzian signature requires at least one timelike axis;
+    // an all-false pattern is degenerate and rejected at construction.
+    let err = CubicalReggeGeometry::<3, f64>::unit()
+        .with_timelike_axes([false, false, false])
+        .expect_err("all-spacelike must error");
+    assert!(matches!(
+        err,
+        deep_causality_topology::LightConeViolation::AllSpacelike
+    ));
 }
 
 // -- Signature -----------------------------------------------------------------
@@ -226,7 +238,9 @@ fn signature_euclidean_for_unflagged() {
 
 #[test]
 fn signature_lorentzian_for_one_timelike_axis() {
-    let g = CubicalReggeGeometry::<4, f64>::unit().with_timelike_axes([false, false, false, true]);
+    let g = CubicalReggeGeometry::<4, f64>::unit()
+        .with_timelike_axes([false, false, false, true])
+        .unwrap();
     let m = g.signature();
     // (3, 1, 0) — three spacelike + one timelike → Lorentzian 4D.
     match m {
@@ -250,9 +264,10 @@ fn equality_distinguishes_representations() {
 }
 
 #[test]
-fn clone_preserves_state() {
+fn clone_preserves_state_on_lorentzian_promotion() {
     let g = CubicalReggeGeometry::<3, f64>::per_axis([0.5, 1.0, 2.0])
-        .with_timelike_axes([true, false, false]);
+        .with_timelike_axes([true, false, false])
+        .unwrap();
     let c = g.clone();
     assert_eq!(g, c);
     assert_eq!(c.axis_lengths(), Some([0.5, 1.0, 2.0]));

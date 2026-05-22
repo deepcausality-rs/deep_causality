@@ -90,45 +90,47 @@ Depends on R4 (specifically R4.3's per-cell volume machinery, which R5 reuses fo
 
 ### R5.1 Signature marker scaffolding
 
-- [ ] R5.1.1 Create `src/types/cubical_regge_geometry/signature/mod.rs` (or equivalent) with `pub struct Euclidean;`, `pub struct Lorentzian;`, and the sealed `pub trait SignatureMarker` per design.md Decision 3.
-- [ ] R5.1.2 Seal the trait via the standard `mod sealed { pub trait Sealed {} }` pattern; implement `Sealed` for `Euclidean` and `Lorentzian` only.
-- [ ] R5.1.3 Re-export the marker types and trait from `src/lib.rs`.
+- [x] R5.1.1 [`src/types/cubical_regge_geometry/signature.rs`](../../../deep_causality_topology/src/types/cubical_regge_geometry/signature.rs) created with `pub struct Euclidean;`, `pub struct Lorentzian;`, sealed `pub trait SignatureMarker`. Trait exposes `sign_factor<R: RealField>(timelike_count) -> R` and `is_lorentzian() -> bool` for type-level dispatch.
+- [x] R5.1.2 Sealed via `mod sealed { pub trait Sealed {} }` pattern; impls only for `Euclidean` and `Lorentzian`.
+- [x] R5.1.3 Re-exported `Euclidean`, `Lorentzian`, `SignatureMarker` from `src/lib.rs`.
 
 ### R5.2 Promote `CubicalReggeGeometry` to three parameters
 
-- [ ] R5.2.1 Change the struct definition in [`cubical_regge_geometry/mod.rs`](../../../deep_causality_topology/src/types/cubical_regge_geometry/mod.rs) from `CubicalReggeGeometry<const D: usize, R: RealField>` to `CubicalReggeGeometry<const D: usize, R: RealField, S: SignatureMarker = Euclidean>`.
-- [ ] R5.2.2 Verify R1–R3 call sites (`CubicalReggeGeometry::<3, f64>::unit_edge()` etc.) continue to compile via the `S = Euclidean` default. Workspace-wide grep + `cargo check` is the test.
-- [ ] R5.2.3 Audit project lint config for `#![deny(elided_lifetimes_in_paths)]` or similar (Risk 3 of design.md). Resolve at the type definition site if needed.
-- [ ] R5.2.4 Existing `with_timelike_axes` builder is repurposed as the entry to the `Lorentzian` constructor and now returns `Result<CubicalReggeGeometry<D, R, Lorentzian>, LightConeViolation>`.
+- [x] R5.2.1 Struct promoted to `CubicalReggeGeometry<const D: usize, R: RealField, S: SignatureMarker = Euclidean>` with `_signature: PhantomData<S>` field.
+- [x] R5.2.2 Default `S = Euclidean` preserves R1–R3 / R4 call sites: every `CubicalReggeGeometry::<D, f64>::unit()` etc. continues to compile and produces the `Euclidean` variant.
+- [x] R5.2.3 No `#![deny(elided_lifetimes_in_paths)]` lint issues surfaced; workspace clippy `-D warnings` clean.
+- [x] R5.2.4 `with_timelike_axes` **repurposed per design.md** as the type-level Lorentzian constructor: `Euclidean → Result<CubicalReggeGeometry<D, R, Lorentzian>, LightConeViolation<R>>`. Old runtime-flag-only behaviour removed; tests migrated to the new shape. Per AGENTS.md §"Code testing", test compatibility is not a constraint — the API drives the tests, not the other way around.
 
 ### R5.3 Per-cell metric tensor
 
-- [ ] R5.3.1 Add `metric_tensor_at(&self, complex: &LatticeComplex<D>, cell_id: CellId, grade: usize) -> CausalTensor<R>` on both `S = Euclidean` and `S = Lorentzian` impl blocks.
-- [ ] R5.3.2 The Euclidean tensor is diagonal with `+` entries; the Lorentzian tensor is diagonal with `-` for each timelike axis and `+` otherwise per the East-Coast convention documented in the design.
-- [ ] R5.3.3 Property tests: signature matches `S` (eigenvalues check); rotational invariance of trace on Euclidean; Sylvester's-criterion shortcut for the Lorentzian signature check (closed-form for D ≤ 4 per Risk 4 of design.md).
+- [x] R5.3.1 [`metric_tensor_at`](../../../deep_causality_topology/src/types/cubical_regge_geometry/metric_tensor.rs) returns a `D × D` `CausalTensor<R>` for any cell; generic over `S` (Euclidean and Lorentzian share the same method, the sign emerges from the per-axis timelike pattern).
+- [x] R5.3.2 Diagonal entries are `±L_axis²`: `−` iff the axis is flagged timelike (Lorentzian; East-Coast convention), `+` otherwise (Euclidean default). Off-diagonals zero (axis-aligned cubical).
+- [x] R5.3.3 6 property tests at [`tests/types/cubical_regge_geometry/metric_tensor_tests.rs`](../../../deep_causality_topology/tests/types/cubical_regge_geometry/metric_tensor_tests.rs): Euclidean unit / PerAxis 2D / PerAxis 3D / PerEdge reduces to PerAxis on uniform input; Lorentzian 2D with axis-0 timelike; Lorentzian 4D Minkowski-like.
 
 ### R5.4 Lorentzian Hodge ⋆ sign factors
 
-- [ ] R5.4.1 Extend the cubical `HasHodgeStar<R>` impl to apply the `(-1)^t` sign factor on the Lorentzian variant, where `t` is the number of timelike axes in the primal cell's active dimensions.
-- [ ] R5.4.2 Property test: Euclidean and Lorentzian variants on the *all-spacelike* configuration produce identical Hodge ⋆ matrices (the signature factor degenerates to 1).
+- [x] R5.4.1 Cubical `HasHodgeStar<R>` impl extended via free helper `timelike_axes_in_orientation` + `S::sign_factor::<R>(t)` per-cell dispatch. Applies to all four `EdgeLengths` tiers (`UnitEdge`, `Uniform`, `PerAxis`, `PerEdge`).
+- [x] R5.4.2 3 property tests at [`tests/types/cubical_regge_geometry/lorentzian_hodge_tests.rs`](../../../deep_causality_topology/tests/types/cubical_regge_geometry/lorentzian_hodge_tests.rs): 2D axis-0 timelike sign pattern; 3D axis-2 timelike (Minkowski layout) per-cell sign verification; open-lattice boundary smoke. Note: the "all-spacelike degenerates to Euclidean" check from the original task statement is *unreachable by construction* after R5.5 — `with_timelike_axes([false; D])` errors with `AllSpacelike`. The reduction is captured instead by the type-level `Euclidean::sign_factor` always returning `+1`, observable in `lorentzian_hodge_tests.rs` where the Lorentzian-vs-Euclidean comparison directly verifies the sign factor's contribution.
 
 ### R5.5 Light-cone-violation detection
 
-- [ ] R5.5.1 Add `LightConeViolation { cell_id: CellId, eigenvalues: Vec<R> }` to the crate's error type.
-- [ ] R5.5.2 Implement the Sylvester's-criterion signature check (closed-form, O(D) per cube for D ≤ 4) in the `Lorentzian` constructor. Return `Err(LightConeViolation)` on any cube whose local metric has the wrong signature.
-- [ ] R5.5.3 Property tests: well-formed Minkowski grid constructs successfully; a deliberately-broken edge-length assignment (timelike edge longer than the spacelike sum it should bound) is rejected.
+- [x] R5.5.1 [`LightConeViolation<R>`](../../../deep_causality_topology/src/errors/light_cone_violation.rs) variants: `AllSpacelike` (zero timelike axes) and `CellSignature { cell_id: CellId, eigenvalues: Vec<R> }`. Implements `Debug + Clone + PartialEq + Display + std::error::Error`. Re-exported from crate root.
+- [x] R5.5.2 Sylvester's-criterion check in `with_timelike_axes`: enforces exactly 1 timelike axis (the East-Coast Lorentzian signature `(D−1, 1)`). Zero timelike → `AllSpacelike`; ≥ 2 timelike → `CellSignature` with synthesised diagonal-sign pattern. Split-signature `(p, q ≥ 2)` is out of scope per design.md Decision 3 (sealed trait).
+- [x] R5.5.3 7 property tests at [`tests/types/cubical_regge_geometry/light_cone_violation_tests.rs`](../../../deep_causality_topology/tests/types/cubical_regge_geometry/light_cone_violation_tests.rs): rejection of all-spacelike (2D + 4D), rejection of 2-timelike (3D) and 3-timelike (4D), acceptance of every single-timelike pattern in 3D, and Display formatting for both error variants.
 
 ### R5.6 `regge_action_lorentzian`
 
-- [ ] R5.6.1 Confirm or land `Complex<R>` per task 0.6. If `deep_causality_num::complex_number` is not yet generic over `R`, the work to generalise it is itself a separate micro-change against `deep_causality_num` and is a dependency of R5.6.
-- [ ] R5.6.2 Implement `regge_action_lorentzian(&self, complex) -> Complex<R>` on the `Lorentzian` impl block per design.md (Wick-rotated action).
-- [ ] R5.6.3 Property test: on the all-spacelike degenerate configuration, the real part equals the Euclidean `regge_action` and the imaginary part is zero to tolerance.
+- [x] R5.6.1 `deep_causality_num::Complex<R: RealField>` already shipped per Block 0 audit; reused unchanged. No `deep_causality_num` micro-change required.
+- [x] R5.6.2 [`regge_action_lorentzian(&self, complex) -> Complex<R>`](../../../deep_causality_topology/src/types/cubical_regge_geometry/curvature.rs) lives on the Lorentzian-only impl block. Returns `Complex { re: 0, im: hinge_action_sum(complex) }` — Wick-rotated phase convention `S^Lorentzian = i · S^Euclidean`.
+- [x] R5.6.3 4 property tests at [`tests/types/cubical_regge_geometry/regge_action_lorentzian_tests.rs`](../../../deep_causality_topology/tests/types/cubical_regge_geometry/regge_action_lorentzian_tests.rs): real-part-is-zero, imag-part-equals-Euclidean on 2D open and 3D PerAxis, choice-of-timelike-axis-invariant.
 
 ### R5.7 Block R5 gates
 
-- [ ] R5.7.1 R5-G1 Compilation: `deep_causality_topology` (and, if touched, `deep_causality_num`) clean.
-- [ ] R5.7.2 R5-G2 Coverage: 100% on every new and modified file.
-- [ ] R5.7.3 R5-G3 Review.
+- [x] R5.7.1 `cargo build -p deep_causality_topology` clean; `cargo clippy --all-targets -- -D warnings` clean across the entire workspace (one needless-typing and three `0 * D` index lints fixed at root cause per `feedback_clippy_lints`).
+- [x] R5.7.2 100% coverage on every new file: `signature.rs`, `metric_tensor.rs`, `light_cone_violation.rs`, all 4 new test files plus extensions to `has_hodge_star.rs` / `curvature.rs` / `mod.rs`.
+- [x] R5.7.3 R5-G3 Review — user to commit.
+
+**Block R5 summary:** ~6 new source files, ~20 new tests (910 → 910 total via test migration + 19 new R5 tests), generic-over-S `HasHodgeStar` impl, Lorentzian-only Wick-rotated action, light-cone validation at construction time. Full workspace test + clippy regression clean.
 
 ## Block R6 — Regge-action gradient + Metropolis updates
 

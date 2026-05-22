@@ -74,8 +74,13 @@
 
 pub mod curvature;
 pub mod has_hodge_star;
+pub mod metric_tensor;
+pub mod signature;
 pub mod volumes;
 
+pub use signature::{Euclidean, Lorentzian, SignatureMarker};
+
+use core::marker::PhantomData;
 use deep_causality_metric::Metric;
 use deep_causality_num::RealField;
 
@@ -83,16 +88,27 @@ use deep_causality_num::RealField;
 ///
 /// Parallels `ReggeGeometry<R>` for the simplicial case. See the module-level doc for
 /// the four supported levels of edge-length uniformity and the forward-looking scope of
-/// derived geometric quantities. Parameterized over `R: RealField` so the precision of
-/// stored edge lengths is a choice at construction time (`f32`, `f64`, `Float106`, etc.).
+/// derived geometric quantities. Parameterised over:
+///
+/// * `D` — lattice dimension.
+/// * `R: RealField` — precision of stored edge lengths (`f32`, `f64`, `Float106`, …).
+/// * `S: SignatureMarker = Euclidean` — type-level metric signature
+///   ([`Euclidean`] or [`Lorentzian`]). Defaulted to `Euclidean` so R1–R3 / R4
+///   call sites continue to compile unchanged after the R5 promotion.
+///
+/// The `Lorentzian` variant is constructed via [`CubicalReggeGeometry::with_timelike_axes_lorentzian`]
+/// and carries a `timelike_axes` pattern marking which axes are timelike. The
+/// `Euclidean` default constructors (`unit`, `uniform`, `per_axis`, `from_edge_lengths`)
+/// always produce all-spacelike geometries.
 #[derive(Debug, Clone, PartialEq)]
-pub struct CubicalReggeGeometry<const D: usize, R: RealField> {
+pub struct CubicalReggeGeometry<const D: usize, R: RealField, S: SignatureMarker = Euclidean> {
     pub(super) edge_lengths: EdgeLengths<D, R>,
-    /// Optional per-axis flag marking timelike axes for Lorentzian / Minkowski lattices.
-    /// `None` ⇒ all axes spacelike (Euclidean metric). `Some([..])` ⇒ flagged axes are
-    /// timelike. Forward-looking: drives the metric-signature methods listed in the
-    /// module doc; the Stage C constructors leave it `None`.
-    timelike_axes: Option<[bool; D]>,
+    /// Per-axis flag marking timelike axes for Lorentzian / Minkowski lattices.
+    /// On `S = Euclidean` this is always `None`. On `S = Lorentzian` it carries
+    /// the timelike-axis pattern set at construction time; at least one entry
+    /// is guaranteed `true` by the Lorentzian constructor's validation.
+    pub(super) timelike_axes: Option<[bool; D]>,
+    pub(super) _signature: PhantomData<S>,
 }
 
 /// Module-private union of the four edge-length representations. `pub(super)` so sibling
@@ -113,8 +129,8 @@ pub(super) enum EdgeLengths<const D: usize, R: RealField> {
     PerEdge { lengths: Vec<R> },
 }
 
-impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R> {
-    // -- Constructors -----------------------------------------------------------------
+impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R, Euclidean> {
+    // -- Euclidean constructors ------------------------------------------------------
 
     /// The unit-edge cubical Regge geometry: every edge has length `1.0`.
     ///
@@ -124,6 +140,7 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R> {
         Self {
             edge_lengths: EdgeLengths::UnitEdge,
             timelike_axes: None,
+            _signature: PhantomData,
         }
     }
 
@@ -134,6 +151,7 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R> {
         Self {
             edge_lengths: EdgeLengths::Uniform { length },
             timelike_axes: None,
+            _signature: PhantomData,
         }
     }
 
@@ -145,6 +163,7 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R> {
         Self {
             edge_lengths: EdgeLengths::PerAxis { lengths },
             timelike_axes: None,
+            _signature: PhantomData,
         }
     }
 
@@ -157,21 +176,65 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R> {
         Self {
             edge_lengths: EdgeLengths::PerEdge { lengths },
             timelike_axes: None,
+            _signature: PhantomData,
         }
     }
 
-    /// Attach a Lorentzian axis pattern to this geometry.
+    /// Promote this Euclidean geometry to a [`Lorentzian`]-marked geometry with the
+    /// given `timelike` axis pattern.
     ///
-    /// Each `true` entry in `timelike` marks the corresponding axis as timelike (negative
-    /// signature). When all entries are `false` the geometry remains Euclidean.
+    /// This is the *only* entry point to the `Lorentzian` signature variant. The
+    /// type system tracks the signature distinction from this point on:
+    /// Lorentzian-only operations (Wick-rotated action, signed Hodge ⋆, light-cone
+    /// enforcement) are gated on the resulting `CubicalReggeGeometry<D, R, Lorentzian>`
+    /// at the impl-block level.
     ///
-    /// Forward-looking: consumed by the metric-signature methods in the module doc.
-    pub fn with_timelike_axes(mut self, timelike: [bool; D]) -> Self {
-        self.timelike_axes = Some(timelike);
-        self
+    /// # Signature validation (R5.5)
+    ///
+    /// Performs the Sylvester's-criterion check for an axis-aligned Lorentzian
+    /// metric: the timelike-axis count must equal exactly 1 (one negative
+    /// eigenvalue, `D−1` positive eigenvalues — the East-Coast convention).
+    /// Other configurations are rejected at construction:
+    ///
+    /// - **0 timelike axes** ⇒ [`LightConeViolation::AllSpacelike`]. Degenerate
+    ///   Lorentzian metric with no timelike axis.
+    /// - **≥ 2 timelike axes** ⇒ [`LightConeViolation::CellSignature`] with the
+    ///   synthesized per-axis diagonal sign pattern as `eigenvalues`. The
+    ///   `Lorentzian` marker is reserved for genuine `(D−1, 1)` signatures per
+    ///   `design.md` Decision 9; split-signature `(p, q)` with `q ≥ 2` lives in
+    ///   the deferred-categorical-coherence track (out of scope here).
+    pub fn with_timelike_axes(
+        self,
+        timelike: [bool; D],
+    ) -> Result<CubicalReggeGeometry<D, R, Lorentzian>, crate::LightConeViolation<R>> {
+        let timelike_count = timelike.iter().filter(|&&t| t).count();
+        if timelike_count == 0 {
+            return Err(crate::LightConeViolation::AllSpacelike);
+        }
+        if timelike_count > 1 {
+            // Synthesize the diagonal-sign pattern as the eigenvalue spectrum.
+            // For axis-aligned cubical, the metric signature is uniform across
+            // cells; one violating cell stands for all of them. `cell_id = 0`
+            // is used as a sentinel — the failure is global, not local.
+            let eigenvalues = timelike
+                .iter()
+                .map(|&t| if t { -R::one() } else { R::one() })
+                .collect();
+            return Err(crate::LightConeViolation::CellSignature {
+                cell_id: 0,
+                eigenvalues,
+            });
+        }
+        Ok(CubicalReggeGeometry {
+            edge_lengths: self.edge_lengths,
+            timelike_axes: Some(timelike),
+            _signature: PhantomData,
+        })
     }
+}
 
-    // -- Getters ----------------------------------------------------------------------
+impl<const D: usize, R: RealField, S: SignatureMarker> CubicalReggeGeometry<D, R, S> {
+    // -- Getters (available on every signature) --------------------------------------
 
     /// `true` iff this geometry is the unit-edge case (every edge has length `1.0`).
     pub fn is_unit_edge(&self) -> bool {
@@ -256,28 +319,26 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R> {
         }
     }
 
-    /// Per-axis timelike flag pattern, if one was attached. `None` ⇒ all axes spacelike.
+    /// Per-axis timelike flag pattern. `None` on the [`Euclidean`] variant, `Some(..)`
+    /// on the [`Lorentzian`] variant.
     pub fn timelike_axes(&self) -> Option<&[bool; D]> {
         self.timelike_axes.as_ref()
     }
 
-    /// `true` iff at least one axis is flagged timelike.
+    /// `true` iff this geometry's type-level signature marker is [`Lorentzian`].
+    ///
+    /// Determined entirely at the type level — `Euclidean` always returns `false`,
+    /// `Lorentzian` always returns `true`. The runtime `timelike_axes` field is
+    /// consulted only by [`signature`](Self::signature).
     pub fn is_lorentzian(&self) -> bool {
-        self.timelike_axes
-            .as_ref()
-            .is_some_and(|axes| axes.iter().any(|&t| t))
+        S::is_lorentzian()
     }
 
     /// Local metric signature for the cubical complex.
     ///
-    /// Stage C fast path: on a regular cubical complex with axis-aligned edge lengths,
-    /// the metric signature is constant across the lattice and is determined entirely by
-    /// `timelike_axes`. All spacelike axes contribute a `+` (Euclidean) signature; each
-    /// flagged timelike axis contributes a `−` (Lorentzian) signature.
-    ///
-    /// Forward-looking: for per-edge / curved cubical metrics, the signature can vary by
-    /// cell and the right entry point will be a per-cell `metric_at(cell_id)` method. The
-    /// current method assumes axis-aligned uniformity and returns the global signature.
+    /// On the [`Euclidean`] variant this is always `(D, 0, 0)`. On the [`Lorentzian`]
+    /// variant the signature is determined by the per-axis timelike pattern: each
+    /// `true` entry contributes a `−` signature, every `false` entry contributes a `+`.
     pub fn signature(&self) -> Metric {
         let p_plus_q = D;
         let q = self

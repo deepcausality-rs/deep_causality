@@ -60,7 +60,7 @@
 //! - ⋆_1 entries = `b/a` for edges along axis 0, `a/b` for edges along axis 1.
 //! - ⋆_2 entry = `1 / (a · b)` (2-cube → vertex ratio).
 
-use super::{CubicalReggeGeometry, EdgeLengths};
+use super::{CubicalReggeGeometry, EdgeLengths, SignatureMarker};
 use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::types::lattice_complex::LatticeComplex;
@@ -68,9 +68,25 @@ use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_sparse::CsrMatrix;
 use std::borrow::Cow;
 
-impl<const D: usize, R> HasHodgeStar<R> for CubicalReggeGeometry<D, R>
+/// Count how many of a primal k-cell's active axes are flagged as timelike,
+/// per the `timelike_axes` pattern carried on a `Lorentzian` geometry. Returns
+/// `0` when no pattern is attached (the `Euclidean` case).
+fn timelike_axes_in_orientation<const D: usize>(
+    orientation: u32,
+    timelike_axes: Option<&[bool; D]>,
+) -> usize {
+    let Some(pattern) = timelike_axes else {
+        return 0;
+    };
+    (0..D)
+        .filter(|&axis| (orientation & (1u32 << axis)) != 0 && pattern[axis])
+        .count()
+}
+
+impl<const D: usize, R, S> HasHodgeStar<R> for CubicalReggeGeometry<D, R, S>
 where
     R: RealField + FromPrimitive,
+    S: SignatureMarker,
 {
     type Complex = LatticeComplex<D, R>;
 
@@ -87,20 +103,26 @@ where
 
         let n = complex.num_cells(k);
         let mut triplets: Vec<(usize, usize, R)> = Vec::with_capacity(n);
+        let timelike_axes = self.timelike_axes.as_ref();
 
+        // R5.4: per-cell sign factor `(−1)^t` where t = timelike axes in the
+        // primal cell's active dimensions. `Euclidean::sign_factor` always
+        // returns +1, so the simplicial sign-less behaviour is preserved when
+        // `S = Euclidean`.
         match &self.edge_lengths {
             EdgeLengths::UnitEdge => {
-                // Identity matrix: every diagonal entry is 1.
-                for i in 0..n {
-                    triplets.push((i, i, R::one()));
+                // Identity matrix on Euclidean; Lorentzian applies sign per cell.
+                for (i, cell) in complex.cells(k).enumerate() {
+                    let t = timelike_axes_in_orientation::<D>(cell.orientation(), timelike_axes);
+                    triplets.push((i, i, S::sign_factor::<R>(t)));
                 }
             }
             EdgeLengths::Uniform { length } => {
-                // Diagonal entry = length^(D - 2k). For k = D/2 with even D this
-                // is 1; otherwise it is length raised to a signed integer power.
-                let entry = pow_signed(*length, (D as isize) - 2 * (k as isize));
-                for i in 0..n {
-                    triplets.push((i, i, entry));
+                // Diagonal magnitude = length^(D - 2k). Per-cell sign from S.
+                let magnitude = pow_signed(*length, (D as isize) - 2 * (k as isize));
+                for (i, cell) in complex.cells(k).enumerate() {
+                    let t = timelike_axes_in_orientation::<D>(cell.orientation(), timelike_axes);
+                    triplets.push((i, i, S::sign_factor::<R>(t) * magnitude));
                 }
             }
             EdgeLengths::PerAxis { lengths } => {
@@ -121,7 +143,8 @@ where
                             dual *= *length;
                         }
                     }
-                    triplets.push((i, i, dual / primal));
+                    let t = timelike_axes_in_orientation::<D>(orientation, timelike_axes);
+                    triplets.push((i, i, S::sign_factor::<R>(t) * (dual / primal)));
                 }
             }
             EdgeLengths::PerEdge { lengths } => {
@@ -175,7 +198,8 @@ where
                     let divisor = <R as FromPrimitive>::from_usize(valid_count)
                         .expect("usize fits in every RealField");
                     let dual = dual_sum / divisor;
-                    triplets.push((i, i, dual / primal));
+                    let t = timelike_axes_in_orientation::<D>(orientation, timelike_axes);
+                    triplets.push((i, i, S::sign_factor::<R>(t) * (dual / primal)));
                 }
             }
         }

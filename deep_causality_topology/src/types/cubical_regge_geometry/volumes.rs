@@ -13,11 +13,11 @@
 //! See `openspec/changes/add-cubical-regge-calculus-core/tasks.md` §2 and
 //! `openspec/notes/CubicalReggeCalculus.md` §3.R1.
 
-use super::{CubicalReggeGeometry, EdgeLengths};
+use super::{CubicalReggeGeometry, EdgeLengths, SignatureMarker};
 use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
 use deep_causality_num::RealField;
 
-impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R> {
+impl<const D: usize, R: RealField, S: SignatureMarker> CubicalReggeGeometry<D, R, S> {
     /// k-volume of a single lattice cell, where `k = cell.cell_dim()`.
     ///
     /// For a k-cube with active dimensions `{i₁, …, iₖ}` (bits set in `cell.orientation()`),

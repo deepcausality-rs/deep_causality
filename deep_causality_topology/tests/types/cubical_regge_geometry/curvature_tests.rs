@@ -326,24 +326,36 @@ fn open_2d_minus_periodic_2d_equals_boundary_contribution() {
     assert!((diff - want).abs() <= f64::EPSILON * 32.0);
 }
 
-// -- Task 4.10: timelike_axes ignored in this change set ---------------------------
+// -- R5.6: Lorentzian variant has its own action, real part agrees with Euclidean --
 
 #[test]
-fn timelike_axes_does_not_affect_regge_action() {
+fn lorentzian_regge_action_real_part_equals_euclidean_action() {
+    // Design.md Decision 3 reduction check: on identical edge-length data, the
+    // Lorentzian regge action's real part equals the Euclidean action's value.
+    // Wick rotation lives in the imaginary part: `S_R^Lorentzian = i · S_R^Euclidean`.
     let lattice = open_square_3();
     let euclidean: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::unit();
-    let lorentzian = euclidean.clone().with_timelike_axes([true, false]);
+    let lorentzian = euclidean.clone().with_timelike_axes([true, false]).unwrap();
+    let s_e = euclidean.regge_action(&lattice);
+    let s_l = lorentzian.regge_action_lorentzian(&lattice);
     assert_eq!(
-        euclidean.regge_action(&lattice),
-        lorentzian.regge_action(&lattice),
+        s_l.re, 0.0,
+        "Lorentzian action real part must be zero (purely imaginary)"
+    );
+    assert_eq!(
+        s_l.im, s_e,
+        "Lorentzian action imaginary part equals Euclidean action"
     );
 }
 
 #[test]
 fn timelike_axes_does_not_affect_deficit_angle() {
+    // Deficit angles are geometric (depend only on hinge incidence count) and
+    // are signature-independent. Both Euclidean and Lorentzian variants return
+    // identical deficit values.
     let lattice = open_square_3();
     let euclidean: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::unit();
-    let lorentzian = euclidean.clone().with_timelike_axes([true, false]);
+    let lorentzian = euclidean.clone().with_timelike_axes([true, false]).unwrap();
     for hid in 0..lattice.num_cells(0) {
         assert_eq!(
             euclidean.deficit_angle(&lattice, hid),

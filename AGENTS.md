@@ -247,6 +247,9 @@ Never ever fix any test to make a broken or incorrect API pass a bogus test. Nev
 
 If you encounter a severe bug that requires refactoring beyond the first level implementation, and you suspect a large blast radius of breaking changes, ask the user how to proceed.
 
+If you can derive a cleaner or better architecture, please do so and refactor downstream tests. This is okay. However, do not compromise any architecture for test compatibility, because remember, test exists to decide if the API is correct or not. If the API changes, so do the tests to veify that the new architectue is correct. 
+
+
 ## Code structure
 
 Each crate adheres to the following base structure
