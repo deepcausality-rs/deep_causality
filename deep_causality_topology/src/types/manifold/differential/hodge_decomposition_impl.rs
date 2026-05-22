@@ -160,6 +160,18 @@ where
             let floor = R::epsilon() * <R as FromPrimitive>::from_f64(100.0).unwrap_or(R::one());
             if candidate > floor { candidate } else { floor }
         });
+        // Reject non-positive tolerances explicitly. A zero or negative
+        // threshold makes the relative-residual convergence check
+        // (`rsold.sqrt() < abs_tol`) unreachable: `sqrt()` is non-negative
+        // and `tolerance * b_norm` is non-positive, so CG would run to the
+        // iteration cap and surface a misleading `Nonconvergence` error
+        // whose actual cause is a caller-supplied invalid threshold.
+        if tolerance <= R::zero() {
+            return Err(TopologyError::HodgeDecompositionFailed(format!(
+                "tolerance must be strictly positive, got {}",
+                tolerance
+            )));
+        }
         let max_iter = opts.max_iterations.unwrap_or(1000);
 
         let omega: Vec<R> = field.as_slice().to_vec();

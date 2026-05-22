@@ -99,7 +99,7 @@ use deep_causality_num::RealField;
 ///   ([`Euclidean`] or [`Lorentzian`]). Defaulted to `Euclidean` so R1–R3 / R4
 ///   call sites continue to compile unchanged after the R5 promotion.
 ///
-/// The `Lorentzian` variant is constructed via [`CubicalReggeGeometry::with_timelike_axes_lorentzian`]
+/// The `Lorentzian` variant is constructed via [`CubicalReggeGeometry::with_timelike_axes`]
 /// and carries a `timelike_axes` pattern marking which axes are timelike. The
 /// `Euclidean` default constructors (`unit`, `uniform`, `per_axis`, `from_edge_lengths`)
 /// always produce all-spacelike geometries.
@@ -409,7 +409,21 @@ impl<const D: usize, R: RealField, S: SignatureMarker> CubicalReggeGeometry<D, R
                     return R::one();
                 }
                 let idx = complex.edge_index(probe, axis);
-                lengths.get(idx).copied().unwrap_or_else(R::one)
+                // A `PerEdge` lengths vector whose `len()` does not match the
+                // lattice's edge count is malformed geometry input. Silently
+                // substituting `R::one()` for an out-of-range index would mask
+                // the bug and yield wrong-but-plausible metric / gradient
+                // values downstream. Fail loud instead.
+                *lengths.get(idx).unwrap_or_else(|| {
+                    panic!(
+                        "PerEdge edge_lengths.len() = {} does not cover edge_index(probe = {:?}, axis = {}) = {}; \
+                         the lengths vector must be sized to match the lattice's edge count (sum over axes of edges_along(axis))",
+                        lengths.len(),
+                        probe,
+                        axis,
+                        idx,
+                    )
+                })
             }
         }
     }
