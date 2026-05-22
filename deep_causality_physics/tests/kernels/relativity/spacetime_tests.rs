@@ -412,7 +412,11 @@ fn test_time_dilation_angle_gamma_clamp_near_one() {
     let t = CausalMultiVector::new(data, Metric::Minkowski(4)).unwrap();
     let eta = time_dilation_angle_kernel(&t, &t).unwrap();
     let val: f64 = eta.value();
-    assert!(val.abs() < 1e-10, "Identical vectors give eta=0, got {}", val);
+    assert!(
+        val.abs() < 1e-10,
+        "Identical vectors give eta=0, got {}",
+        val
+    );
 }
 
 #[test]

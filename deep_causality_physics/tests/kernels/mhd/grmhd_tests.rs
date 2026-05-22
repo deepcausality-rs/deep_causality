@@ -103,9 +103,12 @@ fn test_relativistic_current_kernel_low_dim_metric_error() {
     let cloud = PointCloud::new(point_tensor, CausalTensor::<f64>::zeros(&[5]), 0).unwrap();
     let complex = cloud.triangulate(1.5).unwrap();
     let total = complex.total_simplices();
-    let manifold =
-        Manifold::new(complex, CausalTensor::new(vec![0.0; total], vec![total]).unwrap(), 0)
-            .unwrap();
+    let manifold = Manifold::new(
+        complex,
+        CausalTensor::new(vec![0.0; total], vec![total]).unwrap(),
+        0,
+    )
+    .unwrap();
 
     let metric_3d = EastCoastMetric::new_nd(3).unwrap();
     let r = relativistic_current_kernel(&manifold, &metric_3d);
@@ -119,9 +122,12 @@ fn test_relativistic_current_kernel_low_skeleton_error() {
     let cloud = PointCloud::new(points, CausalTensor::<f64>::zeros(&[3]), 0).unwrap();
     let complex = cloud.triangulate(1.5).unwrap();
     let total = complex.total_simplices();
-    let manifold =
-        Manifold::new(complex, CausalTensor::new(vec![0.0; total], vec![total]).unwrap(), 0)
-            .unwrap();
+    let manifold = Manifold::new(
+        complex,
+        CausalTensor::new(vec![0.0; total], vec![total]).unwrap(),
+        0,
+    )
+    .unwrap();
 
     let metric = EastCoastMetric::minkowski_4d();
     let r = relativistic_current_kernel(&manifold, &metric);

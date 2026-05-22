@@ -730,10 +730,7 @@ fn test_momentum_constraint_with_matter_momentum() {
     let gr: GR<f64> = GaugeField::new(base, topo_metric, connection, riemann).unwrap();
 
     let k = CausalTensor::zeros(&[n, 3, 3]);
-    let j = CausalTensor::from_vec(
-        vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
-        &[n * 3],
-    );
+    let j = CausalTensor::from_vec(vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0], &[n * 3]);
 
     let m = gr.momentum_constraint_field(&k, Some(&j)).unwrap();
     assert_eq!(m.shape(), &[n, 3]);
