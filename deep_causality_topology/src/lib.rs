@@ -8,11 +8,13 @@ mod errors;
 mod extensions;
 mod traits;
 mod types;
+mod utils;
 
 pub mod alias;
 pub mod utils_tests;
 
 // Re-export errors
+pub use crate::errors::light_cone_violation::LightConeViolation;
 pub use crate::errors::link_variable_error::LinkVariableError;
 pub use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 
@@ -38,6 +40,7 @@ pub use crate::traits::cell::Cell;
 pub use crate::traits::chain_complex::ChainComplex;
 pub use crate::traits::gauge_group::GaugeGroup;
 pub use crate::traits::graph_topology::GraphTopology;
+pub use crate::traits::has_hodge_star::HasHodgeStar;
 pub use crate::traits::hypergraph_topology::HypergraphTopology;
 pub use crate::traits::manifold_topology::ManifoldTopology;
 pub use crate::traits::neighborhood::{CellId, Neighborhood};
@@ -63,9 +66,13 @@ pub use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
 pub type CubicalComplex<const D: usize, R> = LatticeComplex<D, R>;
 /// Textbook alias for `LatticeCell<D>`. See `CubicalComplex<D>`.
 pub type CubicalCell<const D: usize> = LatticeCell<D>;
-pub use crate::types::cubical_regge_geometry::CubicalReggeGeometry;
+pub use crate::types::cubical_regge_geometry::{
+    AcceptReject, CubicalReggeGeometry, Euclidean, Lorentzian, RejectReason, SignatureMarker,
+};
 pub use crate::types::graph::Graph;
+pub use crate::types::hodge_decomposition::HodgeDecomposition;
 pub use crate::types::hypergraph::Hypergraph;
+pub use crate::types::manifold::HodgeDecomposeOptions;
 pub use crate::types::manifold::{Manifold, SimplicialManifold};
 pub use crate::types::neighborhood::{
     CofaceAdjacent, CofaceAdjacentIter, FaceAdjacent, FaceAdjacentIter, KRing, KRingIter, Moore,
@@ -76,6 +83,7 @@ pub use crate::types::regge_geometry::ReggeGeometry;
 pub use crate::types::simplex::Simplex;
 pub use crate::types::simplicial_complex::{SimplicialComplex, SimplicialComplexBuilder};
 pub use crate::types::skeleton::Skeleton;
+pub use crate::types::topological_invariants::TopologicalInvariants;
 pub use crate::types::topology::Topology;
 
 // Re-export gauge field types

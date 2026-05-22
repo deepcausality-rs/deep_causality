@@ -148,8 +148,27 @@ where
         let mut skeletons = vec![zero_skeleton, one_skeleton];
 
         // 3. Build Higher Skeletons (Clique Expansion)
+        //
+        // The clique-expansion loop is capped at the ambient dimension `dim`.
+        // A k-simplex with k > ambient_dim has at least k+1 vertices lying in
+        // an ambient_dim-dimensional space, so it is necessarily degenerate
+        // (zero signed volume). Building such a simplex produces a complex
+        // whose lumped-mass Hodge ⋆ at grade 0 collapses to zero, which in
+        // turn makes the simplicial codifferential return identically zero
+        // for any field on it. The cap is therefore both mathematically
+        // correct (degenerate simplices carry no geometric information) and
+        // necessary for downstream consumers such as `Manifold::laplacian`,
+        // `Manifold::codifferential`, and `Manifold::hodge_decompose` to
+        // produce non-trivial output.
+        //
+        // For non-degenerate point clouds where `num_points <= ambient_dim + 1`,
+        // the cap never fires because the clique expansion naturally
+        // terminates before reaching grade `dim + 1`.
         let mut k = 2;
         loop {
+            if k > dim {
+                break;
+            }
             let prev_skel = &skeletons[k - 1];
             if prev_skel.simplices.is_empty() {
                 break;

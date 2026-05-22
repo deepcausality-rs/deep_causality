@@ -5,4 +5,6 @@
 #[cfg(test)]
 mod curvature_tests;
 #[cfg(test)]
+mod has_hodge_star_tests;
+#[cfg(test)]
 mod regge_geometry_tests;

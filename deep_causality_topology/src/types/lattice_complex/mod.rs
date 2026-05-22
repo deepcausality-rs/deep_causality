@@ -180,6 +180,39 @@ impl<const D: usize, R: RealField> LatticeComplex<D, R> {
         idx + offset
     }
 
+    /// Inverse of [`Self::edge_index`]: recover the `(position, axis)` of the
+    /// 1-cell at flat index `edge_id`. O(D) work — closed-form decomposition
+    /// of the canonical iteration ordering.
+    ///
+    /// Returns `None` for out-of-range `edge_id` or for axes that have no
+    /// edges (e.g. a zero-extent dimension on an open lattice).
+    ///
+    /// Used by `CubicalReggeGeometry::regge_gradient_at_edge` to enumerate
+    /// only the hinges containing a given edge, dropping the per-edge gradient
+    /// cost from O(num_hinges · 2^D) to O(D · 2^D).
+    pub(crate) fn edge_id_to_position_axis(&self, edge_id: usize) -> Option<([usize; D], usize)> {
+        let mut count = 0usize;
+        for axis in 0..D {
+            let along_axis = self.edges_along(axis);
+            if edge_id < count + along_axis {
+                let mut local = edge_id - count;
+                let target = 1u32 << axis;
+                let mut position = [0usize; D];
+                for (d, p) in position.iter_mut().enumerate() {
+                    let vp = self.valid_positions(d, target);
+                    if vp == 0 {
+                        return None;
+                    }
+                    *p = local % vp;
+                    local /= vp;
+                }
+                return Some((position, axis));
+            }
+            count += along_axis;
+        }
+        None
+    }
+
     /// Number of 1-cells along a given axis on this lattice. `pub(crate)` so the cubical
     /// Regge volume / curvature modules can size `PerEdge` buffers and validate inputs.
     pub(crate) fn edges_along(&self, axis: usize) -> usize {

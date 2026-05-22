@@ -11,7 +11,7 @@ use deep_causality_physics::{
     magnetic_reconnection_rate, resistive_diffusion,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
+use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
 
 // ============================================================================
 // Ideal MHD Wrapper Tests
@@ -133,15 +133,21 @@ fn test_magnetic_reconnection_rate_wrapper_high_lundquist() {
 // ============================================================================
 
 fn create_test_manifold() -> SimplicialManifold<f64, f64> {
-    // Create a simple triangular mesh
+    // Create a simple triangular mesh with a unit-edge metric attached
+    // (required by R4.5: `resistive_diffusion` calls `manifold.laplacian()`
+    // which now requires a metric).
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 0.866], vec![3, 2]).unwrap();
     let scalar_field = CausalTensor::new(vec![0.0; 3], vec![3]).unwrap();
     let point_cloud = PointCloud::new(points, scalar_field, 0).unwrap();
     let complex = point_cloud.triangulate(1.1).unwrap();
     let num = complex.total_simplices();
-    Manifold::new(
+    let num_edges = complex.skeletons()[1].simplices().len();
+    let metric =
+        ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges]).unwrap());
+    Manifold::with_metric(
         complex,
         CausalTensor::new(vec![0.0; num], vec![num]).unwrap(),
+        Some(metric),
         0,
     )
     .unwrap()

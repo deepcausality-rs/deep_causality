@@ -69,6 +69,27 @@ fn uniform_length_is_none_for_per_edge() {
     assert!(g.uniform_length().is_none());
 }
 
+// -- Malformed PerEdge input surfaces as a panic, not a silent unit fallback ---
+
+#[test]
+#[should_panic(expected = "PerEdge edge_lengths.len()")]
+fn metric_tensor_at_panics_on_malformed_per_edge_lengths() {
+    // A 2x2 open lattice has 12 edges (4 horizontal interior + 4 horizontal boundary +
+    // 4 vertical) — well, the exact count is the lattice's, not the user's. The point
+    // is that passing a length-2 vector to `from_edge_lengths` is clearly malformed for
+    // any non-trivial lattice. Before the fix, this would silently fall back to
+    // `R::one()` for unindexed positions and produce wrong-but-plausible metric
+    // tensors; the fix turns it into a panic with a discriminating message.
+    use deep_causality_topology::LatticeComplex;
+    let lattice: LatticeComplex<2, f64> = LatticeComplex::square_open(2);
+    let geom = CubicalReggeGeometry::<2, f64>::from_edge_lengths(vec![1.0, 2.0]); // intentionally malformed
+    let first_cell = lattice
+        .iter_cells(2)
+        .next()
+        .expect("2-cell exists in a 2x2 open lattice");
+    let _ = geom.metric_tensor_at(&lattice, &first_cell);
+}
+
 // -- axis_lengths getter ---------------------------------------------------------
 
 #[test]
@@ -199,16 +220,28 @@ fn timelike_axes_default_is_none() {
 }
 
 #[test]
-fn with_timelike_axes_attaches_pattern() {
-    let g = CubicalReggeGeometry::<4, f64>::unit().with_timelike_axes([false, false, false, true]);
+fn with_timelike_axes_promotes_to_lorentzian_marker() {
+    // R5.2: `with_timelike_axes` repurposed as the type-level Lorentzian
+    // constructor. Returns `Result<CubicalReggeGeometry<D, R, Lorentzian>,
+    // LightConeViolation>`.
+    let g = CubicalReggeGeometry::<4, f64>::unit()
+        .with_timelike_axes([false, false, false, true])
+        .expect("at least one timelike axis ⇒ valid Lorentzian");
     assert_eq!(g.timelike_axes(), Some(&[false, false, false, true]));
     assert!(g.is_lorentzian());
 }
 
 #[test]
-fn all_spacelike_axes_is_not_lorentzian() {
-    let g = CubicalReggeGeometry::<3, f64>::unit().with_timelike_axes([false, false, false]);
-    assert!(!g.is_lorentzian());
+fn all_spacelike_axes_rejected_by_lorentzian_constructor() {
+    // R5.2: a Lorentzian signature requires at least one timelike axis;
+    // an all-false pattern is degenerate and rejected at construction.
+    let err = CubicalReggeGeometry::<3, f64>::unit()
+        .with_timelike_axes([false, false, false])
+        .expect_err("all-spacelike must error");
+    assert!(matches!(
+        err,
+        deep_causality_topology::LightConeViolation::AllSpacelike
+    ));
 }
 
 // -- Signature -----------------------------------------------------------------
@@ -225,14 +258,42 @@ fn signature_euclidean_for_unflagged() {
 }
 
 #[test]
-fn signature_lorentzian_for_one_timelike_axis() {
-    let g = CubicalReggeGeometry::<4, f64>::unit().with_timelike_axes([false, false, false, true]);
-    let m = g.signature();
-    // (3, 1, 0) — three spacelike + one timelike → Lorentzian 4D.
-    match m {
+fn signature_axis_0_timelike_is_canonical_east_coast_lorentzian() {
+    // Per the `deep_causality_metric` integration (R5.7): when *axis 0* is
+    // the only timelike axis, signature returns `Metric::Lorentzian(D)` (the
+    // East-Coast canonical layout `(-, +, +, +)`).
+    let g = CubicalReggeGeometry::<4, f64>::unit()
+        .with_timelike_axes([true, false, false, false])
+        .unwrap();
+    match g.signature() {
         Metric::Lorentzian(d) => assert_eq!(d, 4),
         other => panic!("expected Lorentzian(4), got {other:?}"),
     }
+}
+
+#[test]
+fn signature_non_axis_0_timelike_is_custom_per_axis() {
+    // When the timelike axis is *not* axis 0, the canonical Lorentzian(D)
+    // can't express the per-axis layout (East-Coast pins axis 0 as the time
+    // axis). Returns `Metric::Custom` with the timelike axis encoded in
+    // `neg_mask` instead — lossless per-axis information.
+    let g = CubicalReggeGeometry::<4, f64>::unit()
+        .with_timelike_axes([false, false, false, true])
+        .unwrap();
+    match g.signature() {
+        Metric::Custom {
+            dim,
+            neg_mask,
+            zero_mask,
+        } => {
+            assert_eq!(dim, 4);
+            assert_eq!(neg_mask, 0b1000); // axis 3
+            assert_eq!(zero_mask, 0);
+        }
+        other => panic!("expected Custom for axis-3 timelike, got {other:?}"),
+    }
+    // Signature counts (p, q, r) still aggregate to (3, 1, 0) regardless.
+    assert_eq!(g.signature().signature(), (3, 1, 0));
 }
 
 // -- Equality / Debug / Clone --------------------------------------------------
@@ -250,9 +311,10 @@ fn equality_distinguishes_representations() {
 }
 
 #[test]
-fn clone_preserves_state() {
+fn clone_preserves_state_on_lorentzian_promotion() {
     let g = CubicalReggeGeometry::<3, f64>::per_axis([0.5, 1.0, 2.0])
-        .with_timelike_axes([true, false, false]);
+        .with_timelike_axes([true, false, false])
+        .unwrap();
     let c = g.clone();
     assert_eq!(g, c);
     assert_eq!(c.axis_lengths(), Some([0.5, 1.0, 2.0]));

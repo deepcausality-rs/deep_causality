@@ -10,6 +10,7 @@ use deep_causality_tensor::CausalTensor;
 use crate::{Simplex, SimplicialComplex};
 
 mod curvature;
+mod has_hodge_star;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReggeGeometry<R: RealField> {

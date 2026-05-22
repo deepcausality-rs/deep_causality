@@ -1,492 +1,549 @@
-# 3D Causal Fluid Dynamics with State-Augmented Propagating Process — forward-looking design note
+# 3D Causal Fluid Dynamics with State-Augmented Propagating Process
 
-**Status:** Forward-looking. Builds directly on the geometric and analytical phases proposed in [`CubicalReggeCalculus.md`](./CubicalReggeCalculus.md) (R1–R4 + H1–H3). Identifies a specific methodological contribution to the causal analysis of three-dimensional turbulent flows: replacing the lossy autoencoder + k-means state extraction pipeline of Martínez-Sánchez & Lozano-Durán (2026) with topologically-grounded Hodge-signature features carried through a Markovian `PropagatingProcess` with rolling temporal state. This combination is novel, computationally cheap, and reduces the published causality-leak baseline of 67% to an estimated 12–20% on the same DNS data class.
+**Status:** Forward-looking design note. Replaces the prior conflated-`TopologicalSignature` sketch with a clean topology/physics split aligned to crate-responsibility boundaries, and an explicit typed pipeline through `CausalEffectPropagationProcess`.
 
-The note is concrete: each phase below lists the exact files, methods, and validation targets a follow-up change set would need. The sequencing assumes the geometric foundation from `CubicalReggeCalculus.md` is in place.
+**Scope of this note:** the *pipeline core*, *physics integration*, and *type-encoded invariants*. Reproduction of the published Martínez-Sánchez & Lozano-Durán (2026) measurement on JHU channel-flow DNS is **explicitly deferred** to a follow-up note `3DCausalFluidDynamicsValidation.md` to be opened after Blocks B1b–B5 ship. The methodology stands or falls on the synthetic ground-truth test in B3; the JHU reproduction is a publishability concern, not a correctness concern.
 
----
+**Prerequisites (must ship before B1b opens):**
 
-## 0. Where we are now
+1. `add-cubical-regge-calculus-analytical` (R4 + R5 + R6) — `HasHodgeStar<R>` capability trait, generic differential operators on `Manifold<K, R> where K::Metric: HasHodgeStar<R>`, signature marker `S ∈ {Euclidean, Lorentzian}` on `CubicalReggeGeometry<const D, R, S>`. **Shipped 2026-05-22.**
+2. `add-hodge-decomposition` — `HodgeDecomposition<R>` carrier type and `Manifold::hodge_decompose(field, k) -> Result<HodgeDecomposition<R>, TopologyError>`. **Shipped 2026-05-22**, archived as `openspec/changes/archive/2026-05-22-add-hodge-decomposition/`.
+3. `B1a: TopologicalInvariants extractor` — pure-topology product of the Hodge decomposition (Betti numbers + per-component L2 norms). **Shipped 2026-05-22** as part of this note. `pub fn HodgeDecomposition::topological_invariants<K>(&self, &Manifold<K, R>) -> Result<TopologicalInvariants<R>, TopologyError>` is live in `deep_causality_topology`.
 
-The DeepCausality monorepo already ships every primitive this work needs except the Hodge-decomposition layer:
-
-- **`deep_causality_algorithms`** — native Rust port of the SURD-states algorithm (`surd_states`, `surd_states_cdl`) from Martínez-Sánchez et al. (2024). Decomposes mutual information into Synergistic / Unique / Redundant components. Parallelizable via `rayon`. Includes `MaxOrder` capping for tractable analysis at high source counts. Source: [`deep_causality_algorithms/src/`](../../deep_causality_algorithms/src/).
-- **`deep_causality_discovery`** — typestate CDL pipeline that monadically chains load → clean → feature-select → causal-discovery → analyze → finalize via `CdlEffect<T>`. The `bind` short-circuits on error, concatenates warnings. The output stage already documents the SURD → `CausaloidGraph` mapping. Source: [`deep_causality_discovery/src/`](../../deep_causality_discovery/src/).
-- **`deep_causality_topology`** — `LatticeComplex<D>` with periodic / open boundaries, `(position, orientation_bitmask)` cell encoding, lazy coboundary cache. `CubicalReggeGeometry<D>` ships edge-length storage at four uniformity tiers (`UnitEdge` / `Uniform` / `PerAxis` / `PerEdge`) plus `timelike_axes` flags. `Manifold<K, F>` generic over any `ChainComplex`. Source: [`deep_causality_topology/src/`](../../deep_causality_topology/src/).
-- **`deep_causality_core`** — `PropagatingEffect<T>` (non-Markovian) and `PropagatingProcess<T, S, C>` (Markovian) as aliases over the same 5-arity `CausalEffectPropagationProcess<V, S, C, E, L>`. Lifting one to the other is one constructor call: `PropagatingProcess::with_state(effect, initial_state, initial_context)`. Source: [`deep_causality_core/src/`](../../deep_causality_core/src/).
-- **`deep_causality_physics`** — kernels-vs-theories split. `Fluids` ships static scalar kernels (Bernoulli, Reynolds, viscosity, pressure); `MHD` and `GRMHD` theories demonstrate the gauge-field-over-manifold pattern. Configurable precision via `f32` / `f64` / `DoubleFloat`. Source: [`deep_causality_physics/src/`](../../deep_causality_physics/src/).
-- **`deep_causality_tensor`** and **`deep_causality_sparse`** — `CausalTensor<F>` is the field-data type carried by `Manifold<K, F>`; `CsrMatrix<F>` is used by the existing simplicial differential operators and would back the cubical Hodge ⋆ once Phase R4 lands.
-
-Missing for the proposed pipeline: (i) the cubical Hodge ⋆ on `LatticeComplex<D>` for the per-edge metric (delivered by Phase R4 of `CubicalReggeCalculus.md`), (ii) the discrete Hodge–Helmholtz decomposition (delivered by Phases H1–H3 of the same note), (iii) the topological-signature feature extractor proposed below, (iv) the rolling-history state design, and (v) the wiring into the existing CDL pipeline.
+Without all three prerequisites in place, B1b cannot start.
 
 ---
 
 ## 1. The methodological contribution
 
-A pipeline of the following shape:
+A typed pipeline of the following shape, with `R: RealField` flowing end-to-end and every `bind` producing one typed value. The pipeline splits cleanly along the API surface exposed by `deep_causality_core`: stage 1 uses the trait-based `deep_causality_haft::Monad::bind` (clean closure, raw value in, no `EffectValue` boilerplate); stage 2 uses the inherent `bind` on `CausalEffectPropagationProcess` (closure receives `(EffectValue<Value>, State, Option<Context>)` so it can read state and context).
 
 ```rust
-PropagatingEffect::pure(dns_snapshot)
-    .bind(|s, _, _| hodge_decompose_3d(s))
-    .bind(|s, _, _| topological_signature(s))
-    .lift_to_process(RollingHistory::<N>::default(), FluidContext::new())
-    .bind(|sig, history, ctx| update_history(sig, history))
-    .bind(|sig, history, ctx| surd_states_cdl(joint_distribution(sig, history)))
-    .bind(|surd, history, ctx| emit_causaloid_graph(surd, history))
-    .bind(|graph, history, ctx| finalize(graph))
+use deep_causality_haft::{Monad, Pure};
+use deep_causality_core::{
+    PropagatingEffect, PropagatingEffectWitness, PropagatingProcess,
+    EffectValue, CausalityError, EffectLog,
+};
+
+type EffectW = PropagatingEffectWitness<CausalityError, EffectLog>;
+
+// ── Stage 1 — per-timestep decomposition + dual extraction ──
+// PropagatingEffect, non-Markovian, parallelisable per snapshot.
+// External invariants (manifold, nu) captured by reference in the closure environment.
+
+let snapshot_eff: PropagatingEffect<CausalTensor<R>>      = EffectW::pure(snapshot);
+let hodge_eff:    PropagatingEffect<HodgeDecomposition<R>> = EffectW::bind(snapshot_eff,
+    |raw| EffectW::pure(hodge_decompose(raw, &manifold)));
+let signature_eff: PropagatingEffect<FluidSignature<R>>    = EffectW::bind(hodge_eff,
+    |hd|  EffectW::pure(compose_fluid_signature(&hd, &manifold, nu)?));
+
+// ── Lift Effect → Process at the spatial/temporal boundary ──
+// Associated function on PropagatingProcess; not a fluent method on Effect.
+
+let process = PropagatingProcess::<FluidSignature<R>, RollingHistory<N, R>, FluidContext<R>>::with_state(
+    signature_eff,
+    RollingHistory::new(),
+    Some(FluidContext::new(lattice_geometry, reynolds, ...)),
+);
+
+// ── Stage 2 — temporal accumulation + SURD attribution ──
+// PropagatingProcess, Markovian, sequential. Closure receives EffectValue + State + Option<Context>
+// so it can read history and context as the rolling state advances.
+
+let surd_proc = process.bind(|ev, history, ctx| {
+    let sig = match ev { EffectValue::Value(s) => s, _ => return PropagatingProcess::from_error(...) };
+    let mut new_history = history.clone();
+    new_history.push(sig.clone());
+    let surd = fluid_surd_decompose(&sig, &new_history, ctx.as_ref().unwrap())?;
+    PropagatingProcess { value: EffectValue::Value(surd), state: new_history, context: ctx,
+                         error: None, logs: EffectLog::new() }
+});
+
+// ── Consume ──
+// The SurdResult<f64> is consumed by the existing SurdResultAnalyzer in
+// deep_causality_discovery, which produces a ProcessAnalysis (Vec<String>) of
+// human-readable categorisations against caller-supplied thresholds. No new
+// SURD-output consumer is built in this note; downstream consumers (causal
+// graph emission, dashboarding, ablation studies) attach to the same SurdResult
+// via their own analyzers in their own change sets.
+
+use deep_causality_discovery::{SurdResultAnalyzer, ProcessResultAnalyzer, AnalyzeConfig};
+
+let analyzer = SurdResultAnalyzer;
+let report = match surd_proc.value {
+    EffectValue::Value(ref surd) => analyzer.analyze(surd, &AnalyzeConfig::default())?,
+    _ => return Err(/* propagate the process's error state */),
+};
 ```
 
-Each stage is a `bind` over `CausalEffectPropagationProcess`. The lift from `PropagatingEffect` to `PropagatingProcess` happens at a scientifically meaningful boundary: spatial decomposition (non-Markovian, parallelizable per timestep) gives way to temporal accumulation (Markovian, sequential). The state channel carries the rolling history of topological signatures; the context channel carries the lattice geometry and any physical-invariant constraints.
+Why the two-API split:
 
-What is novel about this combination — none of the three published 2026 papers in [`ctx/adl/`](../../ctx/adl/) use any of these elements; the broader DEC literature ships individual ingredients but not the composition:
+- The trait-based `Monad::bind` from `deep_causality_haft` is the idiomatic clean-closure API: `Func: FnOnce(A) -> Self::Type<B>`, the closure receives raw `A`, no `EffectValue` pattern matching, no `Default` bound on `B` (both witnesses set `Constraint = NoConstraint`). Stage 1 is context-free, so this is the natural fit.
+- The inherent `bind` on `CausalEffectPropagationProcess` is the API that gives the closure read access to `State` and `Option<Context>`. Stage 2 needs that — the rolling-history push and the SURD-context lookup both happen inside the closure body — so the heavier closure shape `(EffectValue<Value>, State, Option<Context>) -> CausalEffectPropagationProcess<NewValue, …>` is the correct ergonomic cost for what state accumulation actually does.
 
-1. **Topological-signature quantization** as a state-extraction step. Replaces autoencoder + k-means with `(β₀, β₁, β₂, ‖exact‖₂, ‖co-exact‖₂, ‖harmonic‖₂, vortex_centroids, ...)` — a low-dimensional, physically interpretable, *exact* feature vector derived from Hodge decomposition. The published baseline loses 24.8–49.8% of field energy at the autoencoder reconstruction stage alone before k-means is even applied.
-2. **`PropagatingProcess` as the temporal-accumulation primitive.** Mori-Zwanzig / Takens-style state augmentation expressed natively in the type system. The `S` channel carries exactly what the compression destroyed about the Markov property of the underlying Navier-Stokes evolution.
-3. **SURD operating on the topological joint distribution.** SURD-states (already in `deep_causality_algorithms`) consumes the topological signature stream rather than the autoencoder latent stream. Same algorithm, dramatically lower-leak inputs.
-4. **Type-encoded fluid invariants.** Newtype wrappers (`SolenoidalField<F>`, `Circulation<F>`, `Vorticity<F>`) following the existing `Speed` / `Mass` / `FourMomentum` convention in `deep_causality_physics`. Construction-time validity replaces runtime conservation checks for the cases where the invariant is structural.
-5. **`CausaloidGraph` emission.** The existing SURD → graph bridge in [`deep_causality_discovery/README.md`](../../deep_causality_discovery/README.md) ("Strong unique influence → direct edge", "synergy → `AggregateLogic::All`") is consumed unchanged. The output is an executable DeepCausality model, not a static plot.
+The consistency tests at [`deep_causality_core/tests/iso/effect_process_consistency_tests.rs`](../../../deep_causality_core/tests/iso/effect_process_consistency_tests.rs) pin the iso between the two witnesses on the shared carrier `CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>`. The same operation produces bit-identical output through either dispatch path; this guarantees that the trait-based stage 1 and the inherent-bind stage 2 compose without semantic surprises.
 
-The composition is the contribution. Each element exists in published literature; no published pipeline puts them together.
+The lift from `PropagatingEffect` to `PropagatingProcess` happens at a scientifically meaningful boundary: spatial decomposition (non-Markovian, parallelisable per timestep) gives way to temporal accumulation (Markovian, sequential). The state channel carries the rolling history of signatures; the context channel carries the lattice geometry and runtime physical invariants.
 
----
-
-## 2. Why the published baseline loses 67%
-
-Martínez-Sánchez & Lozano-Durán (2026), *J. Phys.: Conf. Ser.* 3230, 012013 — section 4.1 reports a causality leak of approximately 67% on `Re_τ ≈ 950` channel-flow DNS analyzing VLSM dynamics. The leak decomposes into compounded preprocessing losses:
-
-| Loss source | Contribution | Mechanism |
-|---|---|---|
-| Autoencoder reconstruction error | ~25–35% | Reported L₂ errors: `u_V` 24.8%, `u_L` 43.3%, `v_L` 49.8%, `w_L` 46.4%. The latent representation discards half of the cross-flow field energy before SURD ever sees the data. |
-| k-means at K=100 on d_ℓ=8 latent | ~15–20% | `100^(1/8) ≈ 1.78` effective bins per latent dimension. Joint state space `K⁴ = 10⁸` cells against `~5×10⁵` samples — already severely under-sampled, forcing the coarse K. |
-| 2D wall-parallel plane restriction | ~15–25% | VLSMs are wall-attached 3D structures; the plane at `y/h = 0.4` is causally coupled to dynamics at other heights that are absent from the input. Hidden variables map directly to leak. |
-| Residual-field exclusion (small-scale motions cut at `Δ_R = h/2`) | ~5–10% | Small scales feed VLSMs through nonlinear energy transfer. Excluded from the input → contributes to leak. |
-| Genuine unobserved forcing / stochasticity | <5% | Navier-Stokes is deterministic at this `Re_τ`; this term is small. |
-
-Multiplicative compounding: `0.65 × 0.80 × 0.75 × 0.90 ≈ 0.35` retained ↔ ~65% leak. The measured 67% lines up cleanly with that compounding. The number is real; it reports honestly on a pipeline that loses ~25% per stage across four stages.
-
-The first three rows are **methodological** — choices about state extraction, fixable by changing the representation. The fourth is **scope** — fixable by including more variables. Only the last is **fundamental**.
-
-The proposal addresses rows 1–3 structurally, without changing SURD or any of its theoretical underpinnings.
-
----
-
-## 3. Proposed leak budget
-
-| Pipeline | Estimated leak | Cost relative to baseline |
-|---|---|---|
-| 2D + autoencoder + k-means (paper as published) | **67%** (measured) | baseline |
-| 3D + Hodge-signature on `PropagatingEffect` (non-Markovian) | ~25–35% | lower (no neural training, lossless decomposition) |
-| **3D + Hodge-signature on `PropagatingProcess` with rolling state (this proposal)** | **~12–20%** | low + small `S` budget |
-| 4D `LatticeComplex<4>` Euclidean | ~15–25% | high (full spacetime complex) |
-| 4D `LatticeComplex<4>` Lorentzian | ~10–20% | high + Phase H4 derivation |
-
-The Markovian-lifted 3D row is the new sweet spot. It captures most of what 4D was offering for causal inference purposes at a fraction of the implementation cost.
-
-The mechanism: Navier-Stokes is Markovian in the full 3D state, but the full 3D state is unobservable in practice (you compress it). Therefore your observation sequence is not Markovian even though the underlying physics is. State accumulation augments the compressed observation back into a (effectively) Markovian augmented state — Takens / Mori-Zwanzig. `PropagatingProcess<T, S, C>` is the framework-native expression of that augmentation.
-
----
-
-## 4. Pipeline architecture
-
-The complete data flow, expressed as types:
-
-```
-DnsSnapshot
-  → Manifold<LatticeComplex<3>, f64>            (constructor, PerAxis metric)
-  → HodgeDecomposition<f64>                     (exact, co-exact, harmonic; lossless)
-  → TopologicalSignature                         (β-numbers + component norms + centroids)
-  → PropagatingEffect<TopologicalSignature>
-  ──[lift]──
-  → PropagatingProcess<TopologicalSignature, RollingHistory<N>, FluidContext>
-  → JointDistribution                             (current signature × accumulated history)
-  → SurdResult<f64>                              (via existing surd_states_cdl)
-  → CausaloidGraph                               (via existing discovery → graph bridge)
-```
-
-Each arrow is a `bind` over the `CausalEffectPropagationProcess`. The lift inserts state and context channels. Errors short-circuit cleanly; the `EffectLog` accumulates the entire trajectory for replay / audit.
-
-### 4.1 The lift point
-
-The boundary between non-Markovian and Markovian regimes is structural, not arbitrary:
-
-- **Above the lift** (non-Markovian `PropagatingEffect`): stages that produce instantaneous features. Hodge decomposition at one timestep, topological-signature extraction. These are pure spatial operations; parallelizable across timesteps; do not benefit from temporal state.
-- **At the lift**: `PropagatingProcess::with_state(effect, RollingHistory::<N>::default(), FluidContext::new())`. One constructor call. The value channel is preserved; state and context channels go from `()` to typed.
-- **Below the lift** (Markovian `PropagatingProcess`): stages that need cross-time accumulation. SURD's joint-distribution estimate over `(current_signature, rolling_history)`, vortex worldtube tracking, helicity history, causal-graph integration over time.
-
-The type system announces the regime at the call site. Pipelines that don't need temporal state never pay for it.
-
-### 4.2 The `RollingHistory<N>` state design
+`FluidSignature<R>` is the *combined* per-timestep carrier:
 
 ```rust
-pub struct RollingHistory<const N: usize> {
-    signatures: ArrayDeque<TopologicalSignature, N>,
-    integrated_helicity: f64,
-    integrated_enstrophy: f64,
-    cumulative_dissipation: f64,
-    timestamp: TimeStep,
+pub struct FluidSignature<R: RealField> {
+    topology: TopologicalInvariants<R>,    // from deep_causality_topology (B1a, shipped)
+    physics:  FluidPhysicsInvariants<R>,   // from deep_causality_physics  (B1b, this note)
 }
 ```
 
-The depth `N` is the temporal window. For wall-bounded turbulence with VLSM lifetimes of `2.5h/u_τ` to `4h/u_τ` at typical DNS time resolution `Δt_s ≈ 0.5ν/u_τ²`, a window of `N ≈ 10–20` frames covers most of the relevant temporal coherence without dominating the `S` budget.
+The two halves come from two different crates because they describe two different things:
 
-Each bind step calls `history.push(current_signature)`; the oldest signature is dropped automatically when the window is full. Integrated quantities (helicity, enstrophy) accumulate continuously and are reset only at well-defined epoch boundaries.
+- **`TopologicalInvariants<R>`** lives in `deep_causality_topology` because Betti numbers and Hodge-component L2 norms are properties of the discretisation, not of the velocity field. Pure topology.
+- **`FluidPhysicsInvariants<R>`** lives in `deep_causality_physics` because vortex centroids, helicity sign, and turbulence length scales are properties of the velocity field viewed as a physical state, not properties of the discretisation. Pure physics.
 
-### 4.3 The `FluidContext` design
+The original B1 design conflated these into a single `TopologicalSignature` in the topology crate, which was a crate-boundary violation. This rewrite restores the boundary.
 
-Carries runtime-fixed invariants that are not type-level structural:
+### Novel composition under one type system
 
-```rust
-pub struct FluidContext {
-    lattice_geometry: Arc<CubicalReggeGeometry<3>>,
-    reynolds_number: Reynolds,
-    sound_speed: Option<Speed>,
-    wall_normal_axis: Axis,
-    periodic_axes: [bool; 3],
-    forcing_term: Option<ForcingProfile>,
-}
-```
+None of these elements is individually new. The combination under one type system with `R: RealField` precision, with explicit responsibility boundaries between crates, is:
 
-Stages that depend on these (e.g., a sound-cone constraint for compressible flow) read them via `&FluidContext`. Stages that don't, ignore the channel.
-
-This is the architecturally clean way to encode the runtime-frame-dependent invariants noted in the prior design discussion — not as Effect Ethos rules (DDIC is the wrong calculus for physics invariants), and not as inline closure checks (no composition).
-
-### 4.4 Type-encoded structural invariants
-
-Construction-time validity for invariants that are *not* runtime-dependent. Following the existing convention in [`deep_causality_physics/src/units/`](../../deep_causality_physics/src/units/):
-
-| Newtype | Invariant | Smart constructor |
-|---|---|---|
-| `SolenoidalField<F>` | `∇·u = 0` | Projects via Hodge co-exact part; constructor is the only way to obtain the type. |
-| `Circulation<F>` | Kelvin's theorem (constant along material loops in inviscid flow) | From a closed loop integral of velocity 1-form. |
-| `Vorticity<F>` | `ω = d(velocity)` is a closed 2-form (`dω = 0`) | From exterior derivative of velocity 1-form via `Manifold::exterior_derivative(1)`. |
-| `Helicity<F>` | `H = ∫ u · ω dV`; topological invariant in ideal flow | From a `SolenoidalField` and a `Vorticity` over a domain. |
-
-Code receiving a `SolenoidalField<f64>` knows by construction that the field is divergence-free. No runtime check needed at consumer sites. The compiler refuses misuse.
+1. **Lossless decomposition-based feature extraction**, replacing autoencoder + k-means with `(β₀..β₃, ‖α‖, ‖β‖, ‖h‖, vortex_count, vortex_centroids, helicity_sign, length_scales)` derived from `HodgeDecomposition<R>`.
+2. **`PropagatingProcess` as temporal-accumulation primitive.** Mori–Zwanzig / Takens state augmentation expressed natively in the type system.
+3. **SURD on the augmented joint distribution.** Existing `surd_states_cdl` consumed unchanged; only the boundary cast from `R` to `f64` (SURD's required type) happens at the `JointDistribution` build step inside `fluid_surd_decompose`.
+4. **Type-encoded fluid invariants** parameterised over `R`, matching the existing `Speed<R>` / `Mass<R>` / `FourMomentum<R>` convention in `deep_causality_physics/src/units/`.
 
 ---
 
-## 5. Implementation phases
+## 2. Precision parameterisation
 
-Each phase has a verifiable target and is independently shippable. The phases assume `CubicalReggeCalculus.md` phases R1–R4 + H1–H3 have shipped (cubical Hodge ⋆ generic over `ChainComplex`, `HodgeDecomposition<F>` data structure, per-backend property tests).
+Hard rule across all blocks: **no `f64` in any new public signature except at the documented SURD boundary in B3.** Every new type, trait, method, kernel, and newtype is parameterised over `R: RealField` (with `+ FromPrimitive` where literal construction is needed), mirroring the convention already established in `CubicalReggeGeometry<const D, R>`, `ReggeGeometry<R>`, `Manifold<K, R>`, `HodgeDecomposition<R>`, and `TopologicalInvariants<R>`.
 
-### Phase F1 — Topological-signature feature extractor
+The single permitted lossy boundary: `FluidSignature<R>` → `JointDistribution<f64>` at the SURD input. SURD-states uses information-theoretic quantities whose precision saturates well within `f64`; the conversion is one-way and documented at the call site in `fluid_surd_decompose`.
 
-**Goal:** given a `HodgeDecomposition<F>` produced by Phase H of the Hodge-decomposition work, emit a fixed-size feature vector summarizing the field's topology and component energy.
+---
+
+## 3. Block structure
+
+Six independently-shippable blocks. Each block is gated by three sequential checkpoints:
+
+1. **Compilation gate.** All affected crates compile clean (`cargo build -p <crate>`) under release and debug profiles, with no new clippy warnings (`cargo clippy -p <crate> --all-targets -- -D warnings`). Fix lints at root cause; never suppress them with `#[allow(clippy::...)]` (per `feedback_clippy_lints`).
+2. **Coverage gate.** 100% test coverage on every new or modified source file in the block, verified by the project's coverage tooling. Property tests, not just point tests, where the math admits them. Unreachable code is explicitly annotated and justified per AGENTS.md §"Code testing".
+3. **Review gate.** The block is committed by the user (per AGENTS.md golden rule: agents never `git commit`). The user reviews the diff, runs `make format && make fix && make build && make test` if more than one crate changed, and explicitly signs off.
+
+**No block opens until the prior block's three gates are closed.** Skipping ahead is forbidden; a gate failure rolls the block back to the in-progress state until the failure is addressed at root cause (no `#[allow(dead_code)]` workarounds for coverage gaps, no `#[allow(clippy::...)]` for lint failures — fix the code).
+
+Total in-scope work after prerequisites: ~1000 LOC of library code, ~78 tests, ~22 hours of focused work.
+
+---
+
+## Block B1a — Topological invariants extractor (SHIPPED)
+
+**Status:** ✅ Shipped 2026-05-22 in `deep_causality_topology` as part of this note's prerequisite chain. Documented here for completeness; no work remains.
+
+`TopologicalInvariants<R>` carries the four Betti numbers `[β_0, β_1, β_2, β_3]` (zero-padded beyond `max_dim`) and the three component L2 norms `(‖α‖, ‖β‖, ‖h‖)` of a Hodge decomposition.
+
+```rust
+impl<R: RealField> HodgeDecomposition<R> {
+    pub fn topological_invariants<K>(
+        &self,
+        manifold: &Manifold<K, R>,
+    ) -> Result<TopologicalInvariants<R>, TopologyError>
+    where K: ChainComplex;
+}
+```
+
+33 tests cover the Hodge orthogonality identity, Betti-number consistency on both contractible and torus-topology lattices, reproducibility, sign-flip invariance, and the multi-precision compile-pass surface.
+
+---
+
+## Block B1b — Fluid physics invariants extractor
+
+**Goal.** Given a `HodgeDecomposition<R>` of a velocity 1-form on a manifold and a kinematic viscosity, emit a `FluidPhysicsInvariants<R>` carrying field-theoretic invariants of the velocity field: vortex count and centroids, helicity sign, integral length scale, Taylor microscale.
+
+**Crate affected:** `deep_causality_physics` only. First dependency edge to `deep_causality_topology` (consuming `HodgeDecomposition<R>` and `Manifold<K, R>` types). Document the new dep in `Cargo.toml` and `BUILD.bazel`.
 
 **Where it lives:**
-- New module: [`deep_causality_topology/src/types/topological_signature/mod.rs`](../../deep_causality_topology/src/types/topological_signature/mod.rs) (does not exist yet).
-- Struct `TopologicalSignature`:
+
+- New module: `deep_causality_physics/src/fluids/physics_invariants/mod.rs` plus per-trait files following the one-type-one-module convention.
+- Struct:
   ```rust
-  pub struct TopologicalSignature {
-      pub betti_numbers: [usize; 4],
-      pub exact_l2_norm: f64,
-      pub co_exact_l2_norm: f64,
-      pub harmonic_l2_norm: f64,
-      pub vortex_count: usize,
-      pub vortex_centroids: Vec<[f64; 3]>,
-      pub dominant_helicity_sign: i8,
-      pub integral_length_scale: f64,
-      pub taylor_microscale: f64,
+  pub struct FluidPhysicsInvariants<R: RealField> {
+      vortex_count: usize,
+      vortex_centroids: Vec<[R; 3]>,
+      dominant_helicity_sign: i8,
+      integral_length_scale: R,
+      taylor_microscale: R,
   }
   ```
-- Method on `HodgeDecomposition<F>`: `pub fn topological_signature(&self) -> TopologicalSignature`.
-
-**Property tests:**
-- Translation invariance: shifting the field by an integer lattice vector preserves the signature (modulo centroid positions, which translate correspondingly).
-- Reflection invariance for unsigned components (Betti numbers, norms).
-- Reproducibility: same input always produces the same signature.
-- Energy conservation: `‖exact‖² + ‖co-exact‖² + ‖harmonic‖² = ‖field‖²` (Hodge orthogonality).
-
-**Effort:** ~250 LOC, ~12 tests. 4 hours.
-
-### Phase F2 — `RollingHistory<N>` state design + `PropagatingProcess` integration
-
-**Goal:** typed rolling-window state carrier with O(1) push and O(N) snapshot; integrated quantities accumulate via the existing kernel API.
-
-**Where it lives:**
-- New module: [`deep_causality_physics/src/fluids/rolling_history/mod.rs`](../../deep_causality_physics/src/fluids/rolling_history/mod.rs) (does not exist yet).
-- Uses `ArrayDeque` from `deep_causality_data_structures` for the bounded window.
-- Methods:
-  - `push(&mut self, sig: TopologicalSignature)` — O(1), drops oldest when full.
-  - `latest(&self) -> Option<&TopologicalSignature>` — read-only access.
-  - `window(&self) -> &[TopologicalSignature]` — full window slice.
-  - `helicity_trajectory(&self) -> Vec<f64>` — extract one scalar over the window.
-
-**Property tests:**
-- FIFO invariant: after `2N` pushes, only the last `N` signatures remain.
-- Integrated quantities are non-negative for enstrophy and `|H|` for helicity-magnitude.
-- Lifting round-trip: `PropagatingEffect::pure(sig).lift_to_process(history, ctx).bind(|s,h,c| ...)` is type-equivalent to a `PropagatingProcess` chain initialized with the same data.
-
-**Effort:** ~180 LOC, ~8 tests. 3 hours.
-
-### Phase F3 — SURD wiring over augmented state
-
-**Goal:** consume the `(current_signature, rolling_history)` joint as input to `surd_states_cdl`; emit `SurdResult<f64>` carrying the redundant / unique / synergistic decomposition.
-
-**Where it lives:**
-- New module: [`deep_causality_discovery/src/types/fluid_surd/mod.rs`](../../deep_causality_discovery/src/types/fluid_surd/mod.rs) (does not exist yet).
-- Method:
+- Constructor (free function for ergonomic crate-boundary):
   ```rust
-  pub fn fluid_surd_decompose(
-      sig: &TopologicalSignature,
-      history: &RollingHistory<N>,
-      ctx: &FluidContext,
-  ) -> Result<SurdResult<f64>, CdlError>
+  pub fn fluid_physics_invariants<K, R>(
+      velocity_decomposition: &HodgeDecomposition<R>,
+      manifold: &Manifold<K, R>,
+      kinematic_viscosity: R,
+  ) -> Result<FluidPhysicsInvariants<R>, FluidExtractionError>
+  where
+      K: ChainComplex,
+      K::Metric: HasHodgeStar<R, Complex = K>,
+      R: RealField + FromPrimitive + Display;
   ```
-- Internally constructs a `CausalTensor<Option<f64>>` joint distribution from the signature and history, then calls existing `surd_states_cdl(tensor, MaxOrder::Max)`.
+- Fields are private; getters per field follow the project convention.
+
+**Computation (all formulas land as private helpers inside B1b; B5 later promotes them to public kernels):**
+
+- `vortex_count`, `vortex_centroids` — Q-criterion `Q = 0.5·(‖Ω‖² − ‖S‖²)` evaluated at every cell from the velocity gradient `∇u` (recovered from the decomposition's solenoidal part `β + h`). Connected-component labelling on cells where `Q > threshold` yields count + centroids.
+- `dominant_helicity_sign` — sign of integrated helicity `∫ u · ω dV` where `ω = ∇ × u` is the vorticity 2-form computed by `Manifold::exterior_derivative` on `β + h`.
+- `integral_length_scale` — `L = k_energy^(3/2) / ε` where `k_energy = 0.5·‖u‖²` and `ε = ν·‖∇u‖²`.
+- `taylor_microscale` — `λ = sqrt(15·ν·k_energy / ε)`.
+
+The 3D-only `vortex_centroids: Vec<[R; 3]>` field is checked at construction time; non-3D manifolds return `FluidExtractionError::Non3DManifold`.
 
 **Property tests:**
-- Information leak is bounded: `0 ≤ info_leak ≤ H(target)`.
-- Redundant + unique + synergistic + leak = total mutual information (sum constraint from SURD theorem).
-- Synergy is non-negative.
 
-**Effort:** ~220 LOC, ~10 tests. 5 hours.
+- **Galilean invariance of vortex detection.** Adding a constant velocity to the field preserves the Q-criterion field; vortex_count and vortex_centroids are unchanged.
+- **Helicity sign flips under spatial reflection.** Reflecting the velocity field along one axis flips `dominant_helicity_sign`.
+- **Length-scale relation.** `taylor_microscale² = 15 · ν² / (ε / k_energy)` holds to numerical tolerance, exercised on prescribed input pairs.
+- **Construction-time dimension check.** Non-3D manifolds produce `FluidExtractionError::Non3DManifold`.
+- **Reproducibility.** Same input always produces a bit-identical result.
 
-### Phase F4 — `CausaloidGraph` emission
+**Effort:** ~300 LOC + ~15 tests. ~5 hours.
 
-**Goal:** the existing SURD → graph bridge documented in [`deep_causality_discovery/README.md`](../../deep_causality_discovery/README.md) section "Connecting CDL to DeepCausality", specialized to fluid features.
+**Block gates:**
+
+- [ ] B1b-G1 Compilation: `cargo build -p deep_causality_physics` clean (release + debug). New dep edge to `deep_causality_topology` documented in `Cargo.toml` + `BUILD.bazel`. Clippy clean.
+- [ ] B1b-G2 Coverage: 100% on every new file under `src/fluids/physics_invariants/`.
+- [ ] B1b-G3 Review: user signs off on the new dep edge at this gate.
+
+---
+
+## Block B1c — FluidSignature composition
+
+**Goal.** Combine `TopologicalInvariants<R>` and `FluidPhysicsInvariants<R>` into a single `FluidSignature<R>` carrier that flows through the `PropagatingEffect` / `PropagatingProcess` pipeline.
+
+**Crate affected:** `deep_causality_physics` only.
 
 **Where it lives:**
-- Extends the existing `SurdResultAnalyzer` in [`deep_causality_discovery/src/types/analyzer/mod.rs`](../../deep_causality_discovery/src/types/analyzer/mod.rs) with a fluid-specific variant.
-- The mapping is already specified in the README:
-  - Strong unique influence → direct edge.
-  - Strong synergistic influence → many-to-one via `AggregateLogic::All`.
-  - Strong redundancy → many-to-one via `AggregateLogic::Any`.
-  - High causality leak → annotate the target Causaloid with a stochasticity term or unobserved-context dependency.
+
+- `deep_causality_physics/src/fluids/signature/mod.rs`:
+  ```rust
+  pub struct FluidSignature<R: RealField> {
+      topology: TopologicalInvariants<R>,
+      physics:  FluidPhysicsInvariants<R>,
+  }
+  ```
+  With getters per field, Debug, Display, PartialEq following the project convention.
+
+- Constructor that fans into both extractors:
+  ```rust
+  pub fn compose_fluid_signature<K, R>(
+      velocity_decomposition: &HodgeDecomposition<R>,
+      manifold: &Manifold<K, R>,
+      kinematic_viscosity: R,
+  ) -> Result<FluidSignature<R>, FluidExtractionError>
+  where K: ChainComplex, K::Metric: HasHodgeStar<R, Complex = K>, R: RealField + FromPrimitive + Display;
+  ```
+  Internally:
+  ```rust
+  let topology = velocity_decomposition.topological_invariants(manifold)?;
+  let physics  = fluid_physics_invariants(velocity_decomposition, manifold, kinematic_viscosity)?;
+  Ok(FluidSignature { topology, physics })
+  ```
 
 **Property tests:**
-- Graph emitted is acyclic when temporal ordering is respected.
-- Node count equals the number of TopologicalSignature components above an importance threshold.
-- Round-trip: serialize → deserialize the graph; behavior is preserved.
 
-**Effort:** ~150 LOC, ~6 tests. 3 hours.
+- **Composition orthogonality.** `compose_fluid_signature(...)` produces a signature whose `.topology()` exactly equals the standalone `topological_invariants(...)` and whose `.physics()` exactly equals the standalone `fluid_physics_invariants(...)`.
+- **Error propagation.** If either sub-extractor returns an error, `compose_fluid_signature` returns the same error wrapped in `FluidExtractionError`.
 
-### Phase F5 — Type-encoded fluid invariants
+**Effort:** ~80 LOC + ~6 tests. ~1.5 hours.
 
-**Goal:** ship the newtype wrappers and smart constructors that make construction-time invariants the rule, not the exception.
+**Block gates:**
 
-**Where it lives:**
-- New module: [`deep_causality_physics/src/fluids/quantities/mod.rs`](../../deep_causality_physics/src/fluids/quantities/mod.rs) (extends existing `fluids` module).
-- Newtypes and constructors:
-  - `SolenoidalField<F>::from_hodge_projection(field, hodge)` — only constructor; returns the co-exact part.
-  - `Circulation<F>::from_loop_integral(velocity, loop_cells)` — integrates the velocity 1-form around a closed loop.
-  - `Vorticity<F>::from_velocity(velocity_field, manifold)` — exterior derivative of velocity 1-form.
-  - `Helicity<F>::from_field_pair(u, omega)` — only accepts `SolenoidalField<F>` and `Vorticity<F>`.
+- [ ] B1c-G1 Compilation clean.
+- [ ] B1c-G2 Coverage: 100% on every new file.
+- [ ] B1c-G3 Review.
+
+---
+
+## Block B2 — `RollingHistory<N, R>` state + `PropagatingProcess` lift
+
+**Goal.** Typed rolling-window state carrier with O(1) amortised push, O(N) snapshot, and a documented FIFO cap. Plus the lift-to-Markovian boundary that turns the per-timestep `FluidSignature<R>` stream into a `PropagatingProcess`.
+
+**Crate affected:** `deep_causality_physics` (state carrier) + integration shim against `deep_causality_core` (no changes to core).
+
+**Where it lives:** `deep_causality_physics/src/fluids/rolling_history/`. The new dep edge to `deep_causality_topology` was established by B1b; no further dep changes.
+
+**Storage choice:** wrap `std::collections::VecDeque<FluidSignature<R>>` with FIFO-cap semantics. This matches the project's existing idiomatic pattern of extending standard collections via traits (see `deep_causality/src/extensions/causable/mod.rs` where `MonadicCausableCollection` is implemented for `[T]`, `VecDeque<T>`, `HashMap<K, V>`, `BTreeMap<K, V>`).
+
+Why not `deep_causality_data_structures::SlidingWindow<S, T>`: the existing `WindowStorage<T>` trait requires `T: PartialEq + Copy + Default`. `FluidSignature<R>` contains `FluidPhysicsInvariants<R>::vortex_centroids: Vec<[R; 3]>`, which owns heap storage and therefore cannot be `Copy`. A `Copy`-free sliding-window primitive in `deep_causality_data_structures` would be a useful general infrastructure addition, but it is out of scope for B2 — wrapping `VecDeque` is ~30 LOC and lands the carrier without crate-boundary infrastructure work.
+
+Why not roll a new `ArrayDeque<T, N>`: nothing under that name exists in `deep_causality_data_structures` today, and `VecDeque` plus a cap check is mathematically equivalent for the bounded-window semantics this block needs.
+
+```rust
+use std::collections::VecDeque;
+
+pub struct RollingHistory<const N: usize, R: RealField> {
+    signatures: VecDeque<FluidSignature<R>>,   // capacity N maintained by push()
+    integrated_helicity: R,
+    integrated_enstrophy: R,
+    cumulative_dissipation: R,
+    timestamp: TimeStep,
+}
+
+impl<const N: usize, R: RealField + FromPrimitive> RollingHistory<N, R> {
+    pub fn new() -> Self;
+
+    /// Push a new signature. If the window is at capacity, drop the oldest first.
+    pub fn push(&mut self, sig: FluidSignature<R>) {
+        if self.signatures.len() == N {
+            self.signatures.pop_front();
+        }
+        self.signatures.push_back(sig);
+    }
+
+    pub fn latest(&self) -> Option<&FluidSignature<R>>;
+    pub fn window(&self) -> impl Iterator<Item = &FluidSignature<R>>;
+    pub fn helicity_trajectory(&self) -> Vec<R>;
+    pub fn enstrophy_trajectory(&self) -> Vec<R>;
+}
+```
+
+`window()` returns an iterator (not a `&[...]`) because `VecDeque`'s storage is two slices, not one contiguous slice. Callers needing a contiguous view can collect into a `Vec`; downstream consumers that just iterate (every consumer in this pipeline) take the iterator unchanged.
+
+The `PropagatingProcess` integration is one associated-function call against existing `deep_causality_core` API. Note the signature: `with_state` is an associated function on the target process type, not a fluent method on the source effect, and `initial_context` is wrapped in `Option<Context>`:
+
+```rust
+let process = PropagatingProcess::<FluidSignature<R>, RollingHistory<N, R>, FluidContext<R>>::with_state(
+    effect,
+    RollingHistory::<N, R>::new(),
+    Some(FluidContext::<R>::new(geometry, reynolds, ...)),
+);
+```
+
+No changes to `deep_causality_core`. `PropagatingEffect<T>` and `PropagatingProcess<T, S, C>` are confirmed type aliases of the same `CausalEffectPropagationProcess<...>` carrier; the iso tests in [`deep_causality_core/tests/iso/effect_process_consistency_tests.rs`](../../../deep_causality_core/tests/iso/effect_process_consistency_tests.rs) pin that consistency.
 
 **Property tests:**
-- Construction-time invariant: `SolenoidalField` from Hodge projection has divergence below floating-point epsilon when re-checked via the discrete `∇·`.
-- Stokes' theorem at the discrete level: `Circulation` around a closed loop equals the surface integral of `Vorticity` over any spanning surface (to discretization tolerance).
-- Helicity conservation in ideal flow: an inviscid forward Euler step preserves total helicity to second order.
 
-**Effort:** ~300 LOC, ~15 tests. 6 hours.
+- **FIFO invariant.** After `2N` pushes, only the last `N` signatures remain.
+- **Integrated quantities non-negativity.** Enstrophy is always ≥ 0; `|helicity|` is bounded by the Cauchy-Schwarz product of `‖u‖` and `‖ω‖`.
+- **Lift round-trip.** `PropagatingProcess::with_state(PropagatingEffect::pure(sig), history, Some(ctx))` followed by `.bind(...)` is type-equivalent to a `PropagatingProcess` chain initialised with the same data. The associated-function lift is the only public path from `PropagatingEffect<T>` (state = `()`, context = `()`) to `PropagatingProcess<T, S, C>` with non-trivial state/context.
+- **Window slice stability.** `window()` returns a slice consistent with insertion order across N pushes.
 
-### Phase F6 — Reusable fluid kernels in `deep_causality_physics`
+**Effort:** ~200 LOC + ~10 tests. ~3 hours.
 
-**Goal:** ship the pointwise Navier-Stokes kernels that fit the existing kernel pattern (stateless, side-effect-free, pure algebra given pre-discretized inputs).
+**Block gates:**
+
+- [ ] B2-G1 Compilation: every affected crate clean.
+- [ ] B2-G2 Coverage: 100% on every new file.
+- [ ] B2-G3 Review.
+
+---
+
+## Block B3 — `FluidContext<R>` + SURD wiring
+
+**Goal.** Stand up the runtime-invariant context and wire the augmented `(signature, history)` joint into `surd_states_cdl`. The output is a `SurdResult<f64>` — the same type the existing `SurdResultAnalyzer` already knows how to interpret. This is the block where the methodology becomes end-to-end testable on synthetic ground truth.
+
+**Crates affected:** `deep_causality_physics` (`FluidContext`) + `deep_causality_discovery` (SURD wiring). No changes to `SurdResultAnalyzer` or to any graph-emission code; the existing report-style analysis is the consumer.
 
 **Where it lives:**
-- Extends [`deep_causality_physics/src/fluids/`](../../deep_causality_physics/src/fluids/).
-- Kernels (each is a pure function over `RealField`):
-  - `convective_acceleration_kernel(u, grad_u)` — `(u·∇)u` at a point.
-  - `viscous_diffusion_term_kernel(nu, laplacian_u)` — `ν∇²u` at a point.
-  - `pressure_gradient_force_kernel(rho, grad_p)` — `-∇p/ρ` at a point.
-  - `vorticity_transport_kernel(omega, u, grad_omega, laplacian_omega, nu)` — `∂ω/∂t = -(u·∇)ω + (ω·∇)u + ν∇²ω`.
-  - `q_criterion_kernel(velocity_gradient)` — Q-criterion for vortex identification.
-  - `lambda2_kernel(velocity_gradient)` — Jeong-Hussain criterion.
-  - `kolmogorov_scale_kernel(epsilon, nu)`, `taylor_microscale_kernel`, `integral_length_scale_kernel`.
+
+- `deep_causality_physics/src/fluids/fluid_context/mod.rs`:
+  ```rust
+  pub struct FluidContext<R: RealField> {
+      lattice_geometry: Arc<CubicalReggeGeometry<3, R, Euclidean>>,
+      reynolds_number: Reynolds<R>,
+      sound_speed: Option<Speed<R>>,
+      wall_normal_axis: Axis,
+      periodic_axes: [bool; 3],
+      forcing_term: Option<ForcingProfile<R>>,
+  }
+  ```
+  `Reynolds<R>`, `ForcingProfile<R>`, `Axis` are introduced here following the existing `Speed<R>` newtype convention from `deep_causality_physics/src/units/`.
+
+- `deep_causality_discovery/src/types/fluid_surd/mod.rs`:
+  ```rust
+  pub fn fluid_surd_decompose<const N: usize, R: RealField + FromPrimitive>(
+      sig: &FluidSignature<R>,
+      history: &RollingHistory<N, R>,
+      ctx: &FluidContext<R>,
+  ) -> Result<SurdResult<f64>, CdlError>;
+  ```
+  Internally builds a `CausalTensor<Option<f64>>` joint distribution by casting `R → f64` once at the tensor-build step (the documented lossy boundary). Calls existing `surd_states_cdl(tensor, MaxOrder::Max)` unchanged.
+
+The `SurdResult<f64>` returned by `fluid_surd_decompose` is consumed by the existing `SurdResultAnalyzer` ([`deep_causality_discovery/src/types/analysis/surd_result_analyzer.rs`](../../../deep_causality_discovery/src/types/analysis/surd_result_analyzer.rs)) via `analyzer.analyze(&surd, &AnalyzeConfig::default())`, which produces a `ProcessAnalysis(Vec<String>)` of human-readable categorisations against the configured synergy / unique / redundancy / info-leak thresholds. No new analyzer is built in this note.
+
+The joint-distribution feature selection — *which* fields of `FluidSignature<R>` and `RollingHistory<N, R>` are projected into the `CausalTensor<Option<f64>>` and with what discretisation buckets — is the load-bearing design decision of B3 and is documented in this block's preflight notes when it opens. The shape of the joint is not fixed by the surrounding pipeline; it is the feature engineering that B3 commits to and that B3's synthetic ground-truth test validates.
+
+**Synthetic ground-truth test (the critical correctness check):**
+
+Adapt the Martínez-Sánchez & Lozano-Durán (2026) §3 three-variable benchmark — explicitly prescribed synergistic / unique / redundant dependencies — into a 3D version on `LatticeComplex<3>`. Apply the full B1a + B1b + B1c + B2 + B3 pipeline. The returned `SurdResult<f64>` must report the prescribed synergy, unique, and redundancy components within the test tolerance, and the `SurdResultAnalyzer.analyze(...)` output must categorise the strong relationships above their respective thresholds. **This test is the single most important correctness gate in the entire roadmap.** If it fails, the methodology is broken regardless of how the deferred JHU reproduction lands.
 
 **Property tests:**
-- Galilean invariance of `convective_acceleration_kernel` (boost by constant velocity does not change the result).
-- Dimensional consistency via `units::*` newtypes — every kernel has typed inputs and outputs.
-- Limiting cases: Reynolds → ∞ recovers Euler equations; Reynolds → 0 recovers Stokes flow.
 
-**Effort:** ~400 LOC, ~25 tests. 8 hours.
+- **Information-leak bound.** `0 ≤ info_leak ≤ H(target)` for every emitted `SurdResult`.
+- **Sum constraint.** Redundant + unique + synergistic + leak = total mutual information to numerical tolerance (the SURD theorem).
+- **Synergy non-negativity.** Synergistic component is always ≥ 0.
+- **Analyzer threshold consistency.** Every relationship that `SurdResultAnalyzer.analyze(...)` flags as "strong" has its component value at or above the configured threshold; relationships below threshold are not flagged.
+- **Synthetic ground-truth recovery.** Per above; full end-to-end test on the 3D-adapted §3 benchmark.
 
-### Phase F7 — Validation on JHU Turbulence Database
+**Effort:** ~300 LOC + ~16 tests. ~7 hours. The drop from the prior estimate (~400 LOC) reflects removing the planned `FluidSurdResultAnalyzer` → `CausaloidGraph` bridge; the synthetic ground-truth test budget remains the dominant cost.
 
-**Goal:** reproduce Martínez-Sánchez & Lozano-Durán (2026) section 4.1 — VLSM causal analysis at `Re_τ ≈ 950` — using the topological-signature pipeline. Compare leak directly.
+**Block gates:**
 
-**Where it lives:**
-- New example: [`examples/causal_fluid_examples/vlsm_causal_inference/`](../../examples/causal_fluid_examples/vlsm_causal_inference/) (directory does not exist yet).
-- HDF5 / NetCDF data loader for JHU channel-flow snapshots.
-- Two pipelines side-by-side:
-  - Branch A: replicate paper's autoencoder + k-means at `d_ℓ=8, K=100`.
-  - Branch B: this proposal — Hodge-signature + `RollingHistory<10>` + SURD.
-- Numerical comparison of causality leak, redundant / unique / synergistic decomposition, and identified causal structure between branches.
-
-**Success criterion:** branch B's causality leak is below 25% on the same data class. If it lands in the 12–20% range projected, the methodological contribution is established. If it lands above 30%, the analysis went somewhere unexpected and the writeup explains why honestly.
-
-**Effort:** ~600 LOC + data wrangling. 25 hours.
-
-### Phase F8 — Avionics integration: wake vortex causal inference
-
-**Goal:** demonstrate the pipeline in the avionics-examples neighborhood where it lands naturally. Wake vortex breakdown — counter-rotating vortex pair behind a transport aircraft — is a 3D problem with well-known coherent structures (counter-rotating pair, Crow instability, helical instability, ambient-turbulence decay), conservation laws (helicity, circulation per Kelvin's theorem), and a sharp scientific question ("what drives wake breakdown?") that maps directly onto SURD's redundant / unique / synergistic decomposition.
-
-**Where it lives:**
-- New example: [`examples/avionics_examples/wake_vortex_causal_inference/`](../../examples/avionics_examples/wake_vortex_causal_inference/) (directory does not exist yet).
-- Sits naturally beside `flight_envelope_monitor`, `geometric_tcas`, `hypersonic_2t`, `magnav`.
-
-**Pipeline:**
-1. Ingest DNS or LES snapshot of a wake vortex pair on a `Manifold<LatticeComplex<3>, f64>` with `PerAxis` geometry capturing the anisotropic resolution typical of wake simulations.
-2. Hodge-decompose into exact (pressure-gradient flow) / co-exact (vortical flow, where the pair lives) / harmonic (large-scale circulation set by domain topology) components.
-3. Type-level invariants: velocity as `SolenoidalField<f64>`; circulation as `Circulation<f64>` with Kelvin-theorem invariance; helicity via `Helicity::from_field_pair`.
-4. Topological-signature extraction.
-5. `PropagatingProcess<TopologicalSignature, RollingHistory<15>, WakeContext>` for trajectory tracking.
-6. SURD decomposition: what drives breakdown — atmospheric turbulence, Crow instability mode, ambient stratification?
-7. `CausaloidGraph` emission: the inferred causal structure of wake breakdown.
-8. **Avionics action layer**: the wake-encounter-risk `Causaloid` reads the causal graph and proposes avoidance maneuvers. **This is where the Effect Ethos correctly sits** — between an inferred risk and a proposed action. Conservation laws stay at the physics layer (type-encoded); operational rules ("don't fly through severe wake turbulence", "respect ATC clearance") sit at the Ethos layer.
-
-The composition demonstrates the architectural separation cleanly: physics invariants in types, runtime constraints in context, operational ethics in the Ethos.
-
-**Effort:** ~800 LOC. 30 hours.
-
-### Phase F9 — Methods note / writeup
-
-**Goal:** document the typed pipeline. Discuss what's novel (typed causal-graph reasoning over discrete-form decompositions with state-augmented `PropagatingProcess`), what isn't (SURD itself; Hodge decomposition itself; information-theoretic causality measures generally), and what the leak-reduction measurement actually establishes.
-
-**Effort:** ~15 hours.
-
-**Total Phase F1–F9 effort:** ~99 hours focused work, ~3 weeks at sustained pace. Roughly half the original §8 budget in [`CubicalReggeCalculus.md`](./CubicalReggeCalculus.md), because the existing SURD / CDL / topology / physics infrastructure is now credited correctly.
+- [ ] B3-G1 Compilation: both crates clean.
+- [ ] B3-G2 Coverage: 100% on every new file. The synthetic-ground-truth test counts as a regression test, not as coverage of the analyzer itself; the analyzer needs its own unit tests in addition.
+- [ ] B3-G3 Review: user signs off, with explicit acknowledgement that the synthetic-ground-truth test passed. If that test fails, B3 does not close and the methodology is reopened for design review before B4 starts.
 
 ---
 
-## 6. Validation strategy
+## Block B4 — Type-encoded fluid invariants
 
-Three nested validations, ordered from cheapest to costliest:
+**Goal.** Ship the newtype wrappers and smart constructors that make conservation laws structural rather than runtime-checked.
 
-### 6.1 Per-component mathematical correctness
+**Crate affected:** `deep_causality_physics` only.
 
-Phase-level property tests as listed above. Each phase passes or fails on its own merits. No cross-coupling needed.
+**Where it lives:** `deep_causality_physics/src/fluids/quantities/` with one file per newtype following the one-type-one-module rule:
 
-### 6.2 Synthetic ground-truth on a manufactured benchmark
+```rust
+pub struct SolenoidalField<R: RealField> { /* private */ }
+pub struct Circulation<R: RealField> { /* private */ }
+pub struct Vorticity<R: RealField> { /* private */ }
+pub struct Helicity<R: RealField> { /* private */ }
+```
 
-Manufactured 3D flow where the causal structure is known by construction. Adapt the Martínez-Sánchez & Lozano-Durán (2026) section 3 benchmark — three-variable system with explicitly prescribed synergistic / unique / redundant dependencies — into a 3D version on `LatticeComplex<3>`. Apply the full pipeline. Verify the output `CausaloidGraph` recovers the known structure.
+Smart constructors (the only way to construct each type):
 
-This is the cleanest test that the pipeline is doing what it claims, separate from the question of whether the leak reduction is real.
+| Newtype | Invariant | Constructor signature |
+|---|---|---|
+| `SolenoidalField<R>` | `∇·u = 0` | `from_hodge_projection(field: CausalTensor<R>, hodge: &HodgeDecomposition<R>) -> Self` (returns the co-exact + harmonic part) |
+| `Circulation<R>` | Kelvin's theorem | `from_loop_integral(velocity: &CausalTensor<R>, loop_cells: &[CellId]) -> Self` |
+| `Vorticity<R>` | `dω = 0` (closed 2-form) | `from_velocity<K>(velocity_1form: &CausalTensor<R>, manifold: &Manifold<K, R>) -> Self where K: ChainComplex, K::Metric: HasHodgeStar<R>` |
+| `Helicity<R>` | `H = ∫ u · ω dV` | `from_field_pair<K>(u: &SolenoidalField<R>, omega: &Vorticity<R>, domain: &Manifold<K, R>) -> Self` |
 
-### 6.3 Reproduce and improve the published result
+The compiler refuses constructions that bypass the invariants.
 
-Phase F7. Quantitative comparison against Martínez-Sánchez & Lozano-Durán (2026) on JHU Turbulence Database channel flow at `Re_τ ≈ 950`. Three numerical claims to test:
+**Property tests:**
 
-1. **Leak reduction:** does the topological-signature pipeline drop the leak below 25% on the same data class?
-2. **Causal-structure agreement on the components that *do* land:** for the unique / synergistic / redundant edges that both pipelines identify, do they agree on direction and approximate magnitude?
-3. **State-augmentation contribution:** ablation — run the pipeline once with `RollingHistory<1>` (no augmentation) and once with `RollingHistory<N>` for `N ∈ {5, 10, 20}`. Quantify the leak reduction attributable to state accumulation alone.
+- **Construction-time divergence.** `SolenoidalField` from Hodge projection has `‖∇·u‖ < ε_R` re-checked via the discrete divergence operator.
+- **Discrete Stokes' theorem.** `Circulation` around a closed loop equals the surface integral of `Vorticity` over any spanning surface to discretisation tolerance.
+- **Helicity in ideal flow.** Forward Euler step under inviscid evolution preserves total helicity to second order in the timestep.
+- **Type safety (compile-fail tests).** The wrong-type construction path does not exist.
 
-If (1) succeeds, the methodological contribution is established. If (2) succeeds, the pipeline is recovering the same physics. If (3) shows monotonic improvement with `N` up to a saturation, the Markovian-lift mechanism is justified empirically.
+**Effort:** ~300 LOC + ~15 tests. ~5 hours.
 
----
+**Block gates:**
 
-## 7. New capabilities this unlocks
-
-Beyond the headline leak reduction, four capabilities become available:
-
-### 7.1 Compositional causal-inference pipelines for fluid data
-
-A single `PropagatingProcess` bind chain expresses the full pipeline end-to-end, with the type system tracking invariants and the audit log accumulating regardless of error. This is qualitatively different from the ad-hoc Python pipelines that dominate the published literature. Pipelines compose; sub-pipelines refactor freely (monad laws); short-circuits on error are automatic.
-
-### 7.2 Hybrid simulation + causal-inference workflows
-
-The Navier-Stokes kernels added in Phase F6, combined with the existing `MHD` / `GRMHD` theories in `deep_causality_physics`, mean the same monorepo can run forward simulations *and* causal analysis on the resulting data. The hand-off is a `CausalTensor<f64>` field in both directions — no inter-language glue, no file-format gymnastics.
-
-### 7.3 Counterfactual flow analysis
-
-`PropagatingProcess::intervene` (the `do()` operator on the Causal Monad) rewrites the value mid-chain. In a fluid pipeline this means literally "what would the wake have looked like if this vortex had not formed?" — replace the offending TopologicalSignature in the history with a counterfactual; re-run the downstream SURD and graph emission; compare. This is computationally far cheaper than re-running the DNS.
-
-### 7.4 Verified physics pipelines for safety-critical applications
-
-The combination of (i) type-encoded conservation laws, (ii) context-threaded runtime invariants, (iii) Effect Ethos at the action boundary, and (iv) `EffectLog` audit trail covers the full chain from sensor data to actuator command with a structured correctness story at every layer. For wake-encounter avionics (Phase F8), atmospheric-sensor fusion, or computational hemodynamics, this is the architectural property that downstream regulators / certifiers care about.
+- [ ] B4-G1 Compilation: clean, including the compile-fail tests in `tests/`.
+- [ ] B4-G2 Coverage: 100% on every new file.
+- [ ] B4-G3 Review.
 
 ---
 
-## 8. Honest caveats
+## Block B5 — Reusable pointwise Navier–Stokes kernels
 
-Listed for the next contributor.
+**Goal.** Ship the pointwise Navier–Stokes kernels that fit the existing `deep_causality_physics` kernel pattern: stateless, side-effect-free, pure algebra given pre-discretised inputs, generic over `R: RealField`.
 
-### 8.1 The 12–20% leak estimate is a projection, not a measurement
+**Crate affected:** `deep_causality_physics` only.
 
-The decomposition in section 2 is based on the published reconstruction errors and standard information-theoretic compounding. The actual measured leak from Phase F7 will land somewhere; the projection is the basis for the work, not its conclusion. If the measured leak is meaningfully higher than projected, the writeup must explain why honestly — likely candidates: residual-field contributions are larger than estimated, or topological signatures themselves lose more than expected in the discretization.
+**Where it lives:** Extends `deep_causality_physics/src/fluids/`. Each kernel is a free `pub fn` following the existing `Fluids` kernel convention; no kernel takes `&self`.
 
-### 8.2 The methodological contribution is the composition, not any individual element
+**Kernel signatures (all generic over `R: RealField`, with `+ FromPrimitive` where literals are needed):**
 
-SURD is published (Martínez-Sánchez et al. 2024). Hodge decomposition is published (Hirani 2003, Hodge 1941). Takens-style state augmentation is published. Topological-signature features are folklore in TDA literature. **The novelty is putting them together under one type system with the lift-to-Markovian as the architectural primitive that connects spatial and temporal regimes.** Reviewers will know all the ingredients; the burden is to demonstrate that the composition itself is non-obvious and quantitatively useful.
+```rust
+// Full Navier-Stokes RHS terms
+pub fn convective_acceleration_kernel<R: RealField>(u: &[R; 3], grad_u: &[[R; 3]; 3]) -> [R; 3];
+pub fn viscous_diffusion_kernel<R: RealField>(nu: R, laplacian_u: &[R; 3]) -> [R; 3];
+pub fn pressure_gradient_force_kernel<R: RealField>(rho: R, grad_p: &[R; 3]) -> [R; 3];
+pub fn vorticity_transport_kernel<R: RealField>(omega: &[R; 3], u: &[R; 3], grad_omega: &[[R; 3]; 3], laplacian_omega: &[R; 3], nu: R) -> [R; 3];
 
-### 8.3 The state augmentation is heuristic, not a proven Markovianization
+// Coherent-structure detection (promoted from B1b's private helpers)
+pub fn q_criterion_kernel<R: RealField + FromPrimitive>(velocity_gradient: &[[R; 3]; 3]) -> R;
+pub fn lambda2_kernel<R: RealField + FromPrimitive>(velocity_gradient: &[[R; 3]; 3]) -> R;
 
-True Mori-Zwanzig requires solving an infinite hierarchy. `RollingHistory<N>` is a finite truncation. For large enough `N` relative to the system's effective memory, the truncation is benign; for `N` too small, there is residual non-Markovianity in the augmented state that contributes to leak. Phase F7's ablation study is what makes this defensible — if leak monotonically decreases with `N` and saturates, the truncation is justified empirically; if it does not saturate, the bound `N ≪ memory-time` is being violated.
+// Turbulence scales (promoted from B1b's private helpers)
+pub fn kolmogorov_scale_kernel<R: RealField + FromPrimitive>(epsilon: R, nu: R) -> R;
+pub fn taylor_microscale_kernel<R: RealField + FromPrimitive>(k_energy: R, epsilon: R, nu: R) -> R;
+pub fn integral_length_scale_kernel<R: RealField + FromPrimitive>(k_energy: R, epsilon: R) -> R;
+```
 
-### 8.4 Topological signatures discard scalar field amplitudes by design
+The `q_criterion`, `lambda2`, `taylor_microscale`, and `integral_length_scale` kernels are *extracted* from the private helpers that B1b will land inline. The B1b API does not change when this extraction happens; only the location of the formulas moves.
 
-A `TopologicalSignature` says "there are two vortex tubes here" but only weakly says "and their strengths are X and Y". The component norms partially recover amplitude information but are coarse. For some causal questions this is the right level (the *existence* of a vortex pair is what causes wake hazard, not its third decimal); for others it is the wrong level. Phase F1's signature design needs to balance dimensional parsimony (for SURD's curse-of-dimensionality problem) against amplitude fidelity (for physical content). This is a real design trade-off without a universal answer.
+No kernel takes a manifold, a context, or any non-algebraic input. Discretisation and assembly happen outside the kernel.
 
-### 8.5 Compressibility breaks the simplest invariant story
+**Property tests:**
 
-Strict incompressibility (Section 5 of this note) gives `SolenoidalField<F>` a clean meaning. Compressible flow has `∇·u ≠ 0` in general, and the type story must be different (`SolenoidalField` becomes inappropriate; the relevant invariant becomes the continuity equation `∂ρ/∂t + ∇·(ρu) = 0`). The Phase F5 invariants are scoped to incompressible flow as written. Compressible extension is a separate small change set, not a blocker.
+- **Galilean invariance.** `convective_acceleration_kernel(u + c, grad_u) == convective_acceleration_kernel(u, grad_u)` for any constant velocity `c`. Tested across `R ∈ {f32, f64, Float106}`.
+- **Dimensional consistency.** Every kernel is exercised with `units::*` newtypes wrapping `R`; the type system catches dimensional mismatches at compile time.
+- **Limiting cases.** As `Re → ∞`, viscous diffusion vanishes (recovers Euler). As `Re → 0`, convective acceleration is negligible relative to viscous diffusion (recovers Stokes flow).
+- **Precision robustness.** The Q-criterion algebraic identity `Q + 0.5 * ‖S‖² = 0.5 * ‖Ω‖²` holds for `f32`, `f64`, and `Float106` to each backend's expected tolerance.
+- **Extraction equivalence.** The B5 `q_criterion_kernel`, `taylor_microscale_kernel`, and `integral_length_scale_kernel` produce bit-identical output to the B1b private helpers they replace, on a battery of prescribed inputs.
 
-### 8.6 The Lozano-Durán group will read this
+**Effort:** ~400 LOC + ~25 tests. ~7 hours.
 
-If the work goes to publication, expect detailed scrutiny from the people whose methodology this proposal extends. The framing must be "extending SURD to a topologically-grounded state space with `PropagatingProcess` augmentation" — collaboration, not competition. Credit explicitly: SURD-states is theirs; the irreducible-error theorem is theirs (Yuan & Lozano-Durán 2025); the variational MI estimator infrastructure is theirs (MINE, etc.). The contribution is the structural pipeline that consumes their algorithm with a topologically-grounded feature extractor and state-augmented temporal accumulation.
+**Block gates:**
 
----
-
-## 9. Relationship to the broader roadmap
-
-This work depends on prior change sets and unblocks downstream ones.
-
-### Dependencies (prior change sets)
-
-1. **`add-cubical-complexes` (Stage A–C)** — already shipped. `LatticeComplex<D>`, `CubicalReggeGeometry<D>` scaffolding, `Manifold::from_cubical_with_metric` constructors. No further work needed here.
-
-2. **`add-cubical-regge-calculus` Phases R1–R4** from [`CubicalReggeCalculus.md`](./CubicalReggeCalculus.md) §3. Required: cubical Hodge ⋆ generic over `ChainComplex`. Without R4, the existing simplicial-only differential operators do not work on `LatticeComplex<3>` and the entire pipeline cannot start. **Phase R5 (Lorentzian) and R6 (Metropolis) are NOT required** by this proposal — they are needed only for compressible-flow causal-cone work and quantum-gravity dynamics, both of which are outside the scope of this note.
-
-3. **`add-hodge-decomposition` Phases H1–H3** from [`CubicalReggeCalculus.md`](./CubicalReggeCalculus.md) §7. Required: `HasHodgeStar` trait, `HodgeDecomposition<F>` data structure, two-backend property tests. **Phases H4–H7 are NOT strictly required** by Phase F1–F8 of this proposal — F1 needs the decomposition primitive, not the per-edge metric closed form (H4) or the writeup (H7). Land H4 if a methods paper is the explicit goal; defer otherwise.
-
-### What this unblocks
-
-After this work ships, downstream change sets become straightforward:
-
-- **`add-causal-flow-analysis-3d-compressible`** — extends to compressible flow. Adds Phase R5 (Lorentzian Hodge ⋆) and a `CompressibleFluidContext` that carries the sound speed. The causal-cone constraint becomes type-level. ~50h additional.
-- **`add-causal-flow-analysis-4d-topology`** — adds `LatticeComplex<4>` for spacetime-topological invariants (vortex worldtube linking numbers). Justified only when the scientific question is genuinely 4D-topological. ~80h additional.
-- **`add-causal-flow-counterfactuals`** — formalizes the `PropagatingProcess::intervene` workflow for systematic counterfactual flow analysis. Builds on the existing `intervene` operator. ~30h additional.
-- **`add-medical-imaging-causal-analysis`** — same pipeline applied to medical imaging (blood flow in MRI, aneurysm-risk analysis). Substrate change from DNS data to clinical data; pipeline is unchanged. The existing `medicine_examples/aneurysm_risk` example would become a test bed. ~60h additional.
-
-### Cumulative roadmap
-
-In sequence:
-
-1. **`add-cubical-regge-calculus` (R1–R4)** — ~12 hours (R5–R6 deferred per §9 above).
-2. **`add-hodge-decomposition` (H1–H3)** — ~40 hours (H4–H7 partially deferred per §9 above).
-3. **`add-3d-causal-fluid-dynamics`** (this proposal) — ~99 hours.
-
-Steps 1–3 cumulative: ~150 hours focused work. Doable as a sustained 3–4 month effort by one developer, or split across multiple change sets with explicit stage gates per the protocol used in `add-cubical-complexes`.
-
-The cumulative outcome: a Rust library that delivers structure-preserving discrete differential geometry on cubical complexes, uniform Hodge decomposition, **and** typed causal-graph reasoning over 3D fluid-flow data with state-augmented `PropagatingProcess` — a combination that doesn't exist elsewhere and lands DeepCausality in a small set of high-value applied research niches: turbulence analysis, wake-encounter avionics, medical-imaging flow analysis, and verifiable physics pipelines.
+- [ ] B5-G1 Compilation: clean across all three precision backends (`f32`, `f64`, `Float106`).
+- [ ] B5-G2 Coverage: 100% on every new file. Precision-backend coverage is enforced by parameterised tests.
+- [ ] B5-G3 Review. After B5-G3, the roadmap of this note is complete; validation becomes its own change set.
 
 ---
 
-## 10. Suggested change-set naming
+## 4. Deferred work (was F7–F9 in the original draft)
 
-When this work is opened as a follow-up, suggested OpenSpec change name: **`add-3d-causal-fluid-dynamics`**.
+The following is **explicitly out of scope** for this note and must be opened as a separate follow-up note `3DCausalFluidDynamicsValidation.md` only after B5-G3 closes:
 
-Phases F1–F4 could be one change set (pipeline core: signature, history, SURD wiring, graph emission). Phases F5–F6 could be a second (physics integration: type-encoded invariants and reusable kernels). Phases F7–F9 are validation + example + writeup, naturally one change set.
+- **Validation on JHU Turbulence Database.** Reproduce Martínez-Sánchez & Lozano-Durán (2026) §4.1 at `Re_τ ≈ 950`. Two-branch comparison against the published autoencoder + k-means pipeline. ~25 hours plus data wrangling. Success criterion: leak below 25% on the same data class.
+- **Avionics wake-vortex example.** Subsonic, incompressible wake only; compressible extension is a further downstream change set. ~30 hours. Lives under `examples/avionics_examples/wake_vortex_causal_inference/` as its own workspace crate depending on `deep_causality`, `deep_causality_physics`, `deep_causality_topology`, `deep_causality_discovery`, `deep_causality_ethos`.
+- **Methods writeup.** ~15 hours.
 
-The same stage-gate protocol used in `add-cubical-complexes` (per-stage sign-off + commit, no agent commits) is the recommended workflow.
+Rationale for deferral: validation reproduces a published measurement and is a publishability concern, not a correctness concern. The methodology stands or falls on the **synthetic ground-truth test in B3** (the 3D-adapted §3 benchmark of the same paper), which is fully self-contained and lands inside this note's scope. If B3-G3 passes, the methodology is established; if it fails, no amount of JHU reproduction would recover it.
 
 ---
 
-## 11. Bottom line
+## 5. Cumulative effort and ordering
 
-The Martínez-Sánchez & Lozano-Durán group has built the state of the art in scalar information-theoretic causality for turbulence. Their acknowledged limitations — feature engineering via Gaussian filter, autoencoder + k-means quantization losing 33–67% of the causal structure, 2D analyses only, no verification layer — map almost one-to-one onto what discrete differential geometry plus typed causal reasoning plus the `PropagatingEffect` ↔ `PropagatingProcess` lift mechanism provide natively in the DeepCausality monorepo.
+| Order | Block | Crate | Status | Effort | Gates |
+|---|---|---|---|---|---|
+| — | `add-cubical-regge-calculus-analytical` (R4 + R5 + R6) | topology | ✅ Shipped 2026-05-22 | — | Prerequisite |
+| — | `add-hodge-decomposition` (H1–H3) | topology | ✅ Shipped 2026-05-22 | — | Prerequisite |
+| 1 | B1a — TopologicalInvariants | topology | ✅ Shipped 2026-05-22 | — | Prerequisite |
+| 2 | B1b — FluidPhysicsInvariants | physics | This note | ~5h | B1b-G1, B1b-G2, B1b-G3 |
+| 3 | B1c — FluidSignature composition | physics | This note | ~1.5h | B1c-G1, B1c-G2, B1c-G3 |
+| 4 | B2 — RollingHistory + lift | physics | This note | ~3h | B2-G1, B2-G2, B2-G3 |
+| 5 | B3 — FluidContext + SURD wiring | physics + discovery | This note | ~7h | B3-G1, B3-G2, B3-G3 |
+| 6 | B4 — Type-encoded invariants | physics | This note | ~5h | B4-G1, B4-G2, B4-G3 |
+| 7 | B5 — Pointwise NS kernels | physics | This note | ~7h | B5-G1, B5-G2, B5-G3 |
+| — | `3DCausalFluidDynamicsValidation.md` (was F7–F9) | mixed | **Deferred** | ~70h | Outside this note |
 
-The pipeline proposed here:
+Total in-scope after prerequisites: **~28.5 hours focused work, ~1000 LOC, ~78 tests, 18 gates**. The B1 split into three small blocks (B1a + B1b + B1c) trades one block-G3 review for three, which is the right tradeoff because each block now has a sharp single-crate scope and reviewable diff size. B3's prior planned `FluidSurdResultAnalyzer` → `CausaloidGraph` bridge is no longer in scope; the existing `SurdResultAnalyzer.analyze(...)` consumes the `SurdResult<f64>` directly, and any downstream graph-emission work attaches in its own change set.
 
-- replaces lossy neural compression with lossless Hodge decomposition;
-- replaces autoencoder + k-means quantization with topologically-grounded signatures;
-- replaces ad-hoc time-pairing with a state-augmented Markovian process;
-- consumes their SURD algorithm unchanged via the existing Rust port;
-- emits an executable `CausaloidGraph` via the existing discovery → graph bridge;
-- expresses physics invariants in types where they are structural and in the context channel where they are runtime-dependent;
-- reserves the Effect Ethos for its proper role at the action boundary.
+The gating discipline is strict: no block opens with an unclosed gate from the prior block; no gate closes without compilation, full coverage, and explicit user review. Per AGENTS.md, agents never commit; every G3 sign-off is the user committing the block.
 
-The estimated leak reduction is from 67% (their published measurement on 2D channel flow) to 12–20% (this proposal on 3D channel flow with state augmentation). The implementation effort is ~99 hours of focused work after the geometric foundation from `CubicalReggeCalculus.md` Phases R1–R4 + H1–H3 lands. The avionics integration (Phase F8) drops the pipeline into a real engineering setting — wake-encounter inference for aircraft — where each architectural choice (type-encoded conservation laws, context-threaded constraints, Ethos at the action boundary) earns its keep.
+---
 
-This is a publishable methods contribution, a useful engineering tool, and a clean architectural demonstration of what the DeepCausality stack can do once the topology layer ships. The pieces are sequenced; the dependencies are explicit; the validation strategy is concrete; the honest caveats are listed.
+## 6. Crate-responsibility boundaries
+
+The architectural lesson from the original B1 conflation: every type and function in this pipeline belongs in exactly one crate, chosen by what its math describes, not by which downstream consumer reads it.
+
+| Crate | Owns |
+|---|---|
+| `deep_causality_topology` | `Manifold<K, R>`, `HodgeDecomposition<R>`, `ChainComplex`, Hodge ⋆, differential operators (d, δ, Δ), `TopologicalInvariants<R>`, Betti numbers. |
+| `deep_causality_physics` | Physical units (`Speed<R>`, `Mass<R>`, `Reynolds<R>`, `ForcingProfile<R>`), fluid newtypes (`SolenoidalField<R>`, `Vorticity<R>`, etc.), `FluidPhysicsInvariants<R>`, `FluidSignature<R>`, `RollingHistory<N, R>`, `FluidContext<R>`, pointwise NS kernels. |
+| `deep_causality_discovery` | SURD wiring (`fluid_surd_decompose`), `CausalTensor<Option<f64>>` joint-distribution assembly at the SURD input boundary, consumption of the resulting `SurdResult<f64>` via the existing `SurdResultAnalyzer`. No new analyzer; no graph-emission code in scope for this note. |
+| `deep_causality_core` | `CausalEffectPropagationProcess<V, S, C, E, L>` (the underlying carrier), `PropagatingEffect<T>` and `PropagatingProcess<T, S, C>` as type aliases, inherent `bind` (closure receives `(EffectValue<V>, S, Option<C>)`), associated `with_state` lift function, and the trait-based `deep_causality_haft::Monad`/`Functor`/`Pure` impls on `PropagatingEffectWitness` / `PropagatingProcessWitness`. **No changes from this work.** |
+
+Anything that consumes `HodgeDecomposition<R>` to produce a velocity-field invariant (helicity, vortex centroids, turbulence scales) is physics and lives in the physics crate. Anything that consumes `Manifold<K, R>` to produce a discretisation invariant (Betti numbers, component L2 norms) is topology and lives in the topology crate. The combined `FluidSignature<R>` lives in physics because physics is the domain crate; topology is the supporting numerical infrastructure.
+
+---
+
+## 7. Honest caveats
+
+- **The synthetic ground-truth test in B3 is the single load-bearing correctness gate.** If it fails, the methodology is broken and no later block recovers it. Allocate explicit design review time at B3-G3 if the result is borderline.
+- **`RollingHistory<N>` is a finite Mori–Zwanzig truncation, not a proven Markovianisation.** For large enough `N` relative to the system's effective memory the truncation is benign; the ablation study that would defend `N` empirically lives in the deferred validation note, not here.
+- **`FluidSignature` discards amplitude information by design.** It says "two vortex tubes exist with these L2 norms" but is coarse on per-vortex amplitude. For the causal questions this pipeline targets (existence and interaction of coherent structures), this is the right level. For other questions it is the wrong level.
+- **The SURD precision boundary is a one-way cliff.** Converting `R → f64` at the `JointDistribution` build step in B3 is the single permitted lossy cast. Information-theoretic quantities saturate `f64` well within sample-noise floors; the loss is real but does not affect SURD's outputs at any tested precision backend. Documented at the call site.
+- **Compressibility breaks `SolenoidalField<R>`.** B4's invariants are scoped to incompressible flow. Compressible extension (continuity equation as the relevant invariant) is a separate small change set.
+- **`Manifold::hodge_decompose` does not project out the harmonic kernel of `Δ_k` for `k > 0`.** On periodic-topology lattices where `β_k > 0` the β-step CG is singular. Documented as Risk 1 of the archived `add-hodge-decomposition`. B1b's vortex / helicity / turbulence-scale extraction works correctly on open lattices; periodic-domain support requires a separate CG upgrade, which has not been opened as a change set yet.
+
+---
+
+## 8. Bottom line
+
+Six gated blocks, three already shipped, five remaining. Each block is generic over `R: RealField` and lives in exactly one crate chosen by its mathematical responsibility. The full path from raw DNS snapshot to a SURD attribution consumable by the existing `SurdResultAnalyzer` lands in ~28.5 hours of focused work. The synthetic ground-truth test inside B3 is the correctness gate this work stands or falls on; the JHU reproduction is deferred to a separate validation note. Graph-emission work (turning the `SurdResult<f64>` into a `CausaloidGraph`) is out of scope for this note and lands in its own change set if and when a downstream consumer needs it.

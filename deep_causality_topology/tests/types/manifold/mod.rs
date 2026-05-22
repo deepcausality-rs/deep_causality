@@ -13,11 +13,19 @@ mod covariance_tests;
 #[cfg(test)]
 mod cow_borrow_tests;
 #[cfg(test)]
+mod cubical_differential_tests;
+#[cfg(test)]
 mod differential_tests;
 #[cfg(test)]
 mod display_tests;
 #[cfg(test)]
 mod geometry_tests;
+#[cfg(test)]
+mod hodge_decomposition_cross_backend_tests;
+#[cfg(test)]
+mod hodge_decomposition_property_tests;
+#[cfg(test)]
+mod hodge_decomposition_tests;
 #[cfg(test)]
 mod manifold_topology_tests;
 #[cfg(test)]

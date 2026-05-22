@@ -7,7 +7,7 @@ use deep_causality_physics::{
     AlfvenSpeed, Diffusivity, magnetic_reconnection_rate_kernel, resistive_diffusion_kernel,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
+use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
 
 fn create_dummy_manifold() -> SimplicialManifold<f64, f64> {
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 0.866], vec![3, 2]).unwrap();
@@ -15,9 +15,13 @@ fn create_dummy_manifold() -> SimplicialManifold<f64, f64> {
         PointCloud::new(points, CausalTensor::new(vec![0.0; 3], vec![3]).unwrap(), 0).unwrap();
     let complex = point_cloud.triangulate(1.1).unwrap();
     let num = complex.total_simplices();
-    Manifold::new(
+    let num_edges = complex.skeletons()[1].simplices().len();
+    let metric =
+        ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges]).unwrap());
+    Manifold::with_metric(
         complex,
         CausalTensor::new(vec![0.0; num], vec![num]).unwrap(),
+        Some(metric),
         0,
     )
     .unwrap()

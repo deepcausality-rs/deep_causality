@@ -148,3 +148,49 @@ fn test_topology_error_new() {
     let err2 = TopologyError::new(TopologyErrorEnum::GenericError("test".to_string()));
     assert_eq!(format!("{}", err2), "Topology error: test");
 }
+
+#[test]
+fn test_topology_error_hodge_decomposition_failed_display() {
+    let msg = "CG did not converge in 500 iterations (residual 1.23e-3)".to_string();
+    let err = TopologyError::HodgeDecompositionFailed(msg.clone());
+    assert_eq!(
+        format!("{}", err),
+        format!("Hodge decomposition failed: {}", msg)
+    );
+    assert_eq!(err, TopologyError::HodgeDecompositionFailed(msg));
+}
+
+#[test]
+fn test_topology_error_hodge_decomposition_failed_constructor_into_string() {
+    let err = TopologyError::HodgeDecompositionFailed("grade 5 exceeds max_dim 3");
+    match err.0 {
+        TopologyErrorEnum::HodgeDecompositionFailed(msg) => {
+            assert_eq!(msg, "grade 5 exceeds max_dim 3");
+        }
+        other => panic!("Expected HodgeDecompositionFailed, got {:?}", other),
+    }
+}
+
+#[test]
+fn test_topology_error_hodge_decomposition_failed_inequality_vs_other_variants() {
+    let hodge_err = TopologyError::HodgeDecompositionFailed("x");
+    let manifold_err = TopologyError::ManifoldError("x");
+    assert_ne!(hodge_err, manifold_err);
+
+    let same_msg_hodge = TopologyError::HodgeDecompositionFailed("x");
+    assert_eq!(hodge_err, same_msg_hodge);
+
+    let different_msg_hodge = TopologyError::HodgeDecompositionFailed("y");
+    assert_ne!(hodge_err, different_msg_hodge);
+}
+
+#[test]
+fn test_topology_error_hodge_decomposition_failed_via_new() {
+    let err = TopologyError::new(TopologyErrorEnum::HodgeDecompositionFailed(
+        "field length 7 does not match expected 12".to_string(),
+    ));
+    assert_eq!(
+        format!("{}", err),
+        "Hodge decomposition failed: field length 7 does not match expected 12"
+    );
+}

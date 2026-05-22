@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud};
+use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry};
 
 /// `f64` is the right precision for this diffusion demo — short stepping, small
 /// triangle. Bump to `Float106` to see higher-precision Laplacian conservation
@@ -45,9 +45,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut initial_data = vec![0.0; num_simplices];
     initial_data[0] = 100.0; // Heat at v0
 
-    let mut manifold = Manifold::new(
+    // `manifold.laplacian()` requires a metric. Attach a unit-edge
+    // ReggeGeometry; the simplicial impl reads the Hodge ⋆ from the complex's
+    // own cache and ignores the metric instance's data.
+    let num_edges = complex.skeletons()[1].simplices().len();
+    let metric = ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges])?);
+    let mut manifold = Manifold::with_metric(
         complex.clone(),
         CausalTensor::new(initial_data, vec![num_simplices])?,
+        Some(metric),
         0,
     )?;
 
@@ -79,9 +85,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             next[v] -= dt * delta[v];
         }
 
-        manifold = Manifold::new(
+        // Re-attach the same metric on each iteration; without it,
+        // `.laplacian()` on the next step would panic per R4.5.
+        let step_metric =
+            ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges])?);
+        manifold = Manifold::with_metric(
             complex.clone(),
             CausalTensor::new(next, vec![num_simplices])?,
+            Some(step_metric),
             0,
         )?;
 

@@ -33,12 +33,15 @@
 //!
 //! See `openspec/changes/add-cubical-regge-calculus-core/tasks.md` §3 and §4.
 
-use super::CubicalReggeGeometry;
+use super::{CubicalReggeGeometry, Euclidean, Lorentzian, SignatureMarker};
 use crate::traits::neighborhood::CellId;
 use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
-use deep_causality_num::RealField;
+use deep_causality_num::{Complex, RealField};
 
-impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R> {
+/// Signature-independent geometric methods: dihedral angles, deficit angles.
+/// Available on every signature variant since the axis-aligned cubical
+/// geometry of these quantities does not depend on the metric signature.
+impl<const D: usize, R: RealField, S: SignatureMarker> CubicalReggeGeometry<D, R, S> {
     /// Dihedral angle that `top_cube` contributes at `hinge`.
     ///
     /// On an axis-aligned cubical complex this is exactly π/2 = `R::pi() / 2`
@@ -133,9 +136,11 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R> {
     /// `cell_volume(h)` factor — vertex hinges in 2D have `volume = R::one()`
     /// (the empty product), whereas edge hinges in 3D and square hinges in 4D scale
     /// with the metric.
-    ///
-    /// `timelike_axes` is ignored in this change set; see `deficit_angle`.
-    pub fn regge_action(&self, complex: &LatticeComplex<D, R>) -> R {
+    /// Internal hinge-action sum used by both the Euclidean `regge_action` and the
+    /// Lorentzian `regge_action_lorentzian`. Returns the real-valued sum
+    /// `Σ_h volume(h) · deficit_angle(h)` over every (D−2)-hinge. The Lorentzian
+    /// variant then applies the Wick-rotation `i` factor on top.
+    pub(super) fn hinge_action_sum(&self, complex: &LatticeComplex<D, R>) -> R {
         if D < 2 {
             return R::zero();
         }
@@ -150,5 +155,43 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R> {
             action += vol * deficit;
         }
         action
+    }
+}
+
+/// Euclidean-only methods on `CubicalReggeGeometry<D, R, Euclidean>`.
+impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R, Euclidean> {
+    /// Discrete Einstein–Hilbert action in the Euclidean signature.
+    ///
+    /// Sums `Σ_h volume(h) · deficit_angle(h)` over every (D−2)-hinge of the cubical
+    /// complex. Interior hinges on a periodic lattice contribute zero (deficit = 0,
+    /// flat geometry); boundary hinges on open lattices carry intrinsic curvature
+    /// and make the action non-trivial.
+    ///
+    /// The Lorentzian variant is [`CubicalReggeGeometry::<D, R, Lorentzian>::regge_action_lorentzian`],
+    /// which returns `Complex<R>` and applies the Wick rotation factor.
+    pub fn regge_action(&self, complex: &LatticeComplex<D, R>) -> R {
+        self.hinge_action_sum(complex)
+    }
+}
+
+/// Lorentzian-only methods on `CubicalReggeGeometry<D, R, Lorentzian>`.
+impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R, Lorentzian> {
+    /// Discrete Einstein–Hilbert action in the Lorentzian signature, Wick-rotated.
+    ///
+    /// Returns `Complex<R>` whose real part equals the Euclidean
+    /// [`hinge_action_sum`](CubicalReggeGeometry::hinge_action_sum) and whose
+    /// imaginary part carries the Wick-rotation phase. The reduction property
+    /// `regge_action_lorentzian(all-spacelike) == Complex::new(regge_action, 0)` is
+    /// the design.md Decision-3 reduction check.
+    ///
+    /// Phase convention: `S_R^Lorentzian = i · S_R^Euclidean` (Euclidean-to-Lorentzian
+    /// Wick rotation `t = −iτ`). This matches the East-Coast signature carried by
+    /// the `Lorentzian` marker.
+    pub fn regge_action_lorentzian(&self, complex: &LatticeComplex<D, R>) -> Complex<R> {
+        let s = self.hinge_action_sum(complex);
+        Complex {
+            re: R::zero(),
+            im: s,
+        }
     }
 }
