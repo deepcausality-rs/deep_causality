@@ -142,8 +142,11 @@ where
         }
 
         // ΔS = (L_new − L_old) · gradient[e]. Exact for axis-aligned cubical.
-        let gradient = self.regge_gradient(complex);
-        let grad_e = gradient.get(edge_id).copied().unwrap_or_else(R::zero);
+        // Hot path: use the single-edge gradient component (O(D · 2^D))
+        // instead of the full per-edge gradient (O(num_hinges · 2^D)) — the
+        // speedup factor scales with `num_edges`, and is what makes long
+        // Metropolis runs (R6.5 detailed-balance test, downstream HMC) viable.
+        let grad_e = self.regge_gradient_at_edge(complex, edge_id);
         let delta_action = (proposed - current_length) * grad_e;
 
         // Metropolis criterion: accept if delta_action ≤ 0 (always favourable),

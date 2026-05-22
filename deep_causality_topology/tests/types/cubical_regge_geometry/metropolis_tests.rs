@@ -168,7 +168,11 @@ fn edge_lengths_stay_positive_across_long_run() {
 
     let mut accepted = 0usize;
     let mut rejected = 0usize;
-    let steps = 5_000;
+    // After the R6.6.1 single-edge-gradient optimisation, each Metropolis
+    // step is O(D · 2^D) instead of O(num_hinges · 2^D) — a ~50x speedup
+    // on this lattice. 20K steps now run in ~3s in debug mode (the prior
+    // 5K-step run took ~47s before the optimisation).
+    let steps = 20_000;
     for _ in 0..steps {
         match geom.metropolis_update(&lattice, &mut rng, 0.1, 1.0) {
             AcceptReject::Accepted { .. } => accepted += 1,

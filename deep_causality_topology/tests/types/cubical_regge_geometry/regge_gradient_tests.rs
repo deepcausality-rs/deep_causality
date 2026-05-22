@@ -168,6 +168,83 @@ fn lorentzian_gradient_is_pure_imaginary_with_im_equal_to_euclidean() {
     }
 }
 
+// -- Single-edge gradient equivalence (R6.6.1 optimisation) -----------------------
+
+#[test]
+fn single_edge_gradient_agrees_with_full_gradient_open_cube_3d() {
+    // R6.6.1 optimisation: `regge_gradient_at_edge(e)` must produce exactly
+    // the same value as `regge_gradient()[e]` for every edge `e`, on every
+    // geometry tier. This is the load-bearing correctness check that the
+    // O(D · 2^D) hot path doesn't drift from the O(num_hinges · 2^D) reference.
+    let lattice = open_cube_3();
+    let num_edges = lattice.num_cells(1);
+    let lens: Vec<f64> = (0..num_edges).map(|i| 1.0 + 0.05 * (i as f64)).collect();
+    let geom = build_per_edge_geom_3d_open(lens);
+    let full = geom.regge_gradient(&lattice);
+    for (e, &expected) in full.iter().enumerate() {
+        let single = geom.regge_gradient_at_edge(&lattice, e);
+        assert!(
+            (single - expected).abs() < TOL,
+            "edge {e}: regge_gradient_at_edge = {single}, regge_gradient[e] = {expected}"
+        );
+    }
+}
+
+#[test]
+fn single_edge_gradient_agrees_with_full_gradient_open_square_2d() {
+    // 2D: both must be identically zero everywhere.
+    let lattice = open_square_3();
+    let num_edges = lattice.num_cells(1);
+    let geom = unit_geometry::<2>();
+    let full = geom.regge_gradient(&lattice);
+    for (e, &expected) in full.iter().enumerate() {
+        let single = geom.regge_gradient_at_edge(&lattice, e);
+        assert!((single - expected).abs() < TOL);
+        assert_eq!(single, 0.0);
+    }
+    assert_eq!(num_edges, full.len());
+}
+
+#[test]
+fn single_edge_gradient_handles_out_of_range_id_gracefully() {
+    let lattice = open_cube_3();
+    let num_edges = lattice.num_cells(1);
+    let geom = unit_geometry::<3>();
+    let g = geom.regge_gradient_at_edge(&lattice, num_edges + 100);
+    assert_eq!(g, 0.0);
+}
+
+#[test]
+fn single_edge_gradient_agrees_with_full_gradient_periodic_cube_per_axis() {
+    // Periodic 3D with anisotropic per-axis lengths: both must be zero
+    // (every hinge is interior, deficit = 0).
+    let lattice = periodic_cube_3();
+    let num_edges = lattice.num_cells(1);
+    let geom = per_edge_uniform_per_axis::<3>(&lattice, [2.0, 3.0, 5.0]);
+    let full = geom.regge_gradient(&lattice);
+    for (e, &expected) in full.iter().enumerate() {
+        let single = geom.regge_gradient_at_edge(&lattice, e);
+        assert!((single - expected).abs() < TOL);
+    }
+    assert_eq!(num_edges, full.len());
+}
+
+#[test]
+fn lorentzian_single_edge_gradient_matches_full() {
+    let lattice = open_cube_3();
+    let num_edges = lattice.num_cells(1);
+    let lor = unit_geometry::<3>()
+        .with_timelike_axes([true, false, false])
+        .unwrap();
+    let full = lor.regge_gradient(&lattice);
+    for (e, expected) in full.iter().enumerate() {
+        let single = lor.regge_gradient_at_edge(&lattice, e);
+        assert!((single.re - expected.re).abs() < TOL);
+        assert!((single.im - expected.im).abs() < TOL);
+    }
+    assert_eq!(num_edges, full.len());
+}
+
 // -- Locality smoke check ---------------------------------------------------------
 
 #[test]
