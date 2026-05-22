@@ -241,6 +241,48 @@ fn hodge_decompose_grade_max_dim_handles_beta_branch_skip() {
 }
 
 #[test]
+fn hodge_decompose_rejects_zero_tolerance() {
+    let lattice: LatticeComplex<2, f64> = LatticeComplex::square_open(2);
+    let m = zero_manifold(lattice);
+    let n1 = m.complex().num_cells(1);
+    let field = CausalTensor::new(vec![0.0; n1], vec![n1]).unwrap();
+
+    let opts = HodgeDecomposeOptions {
+        tolerance: Some(0.0_f64),
+        max_iterations: Some(10),
+    };
+    let err = m
+        .hodge_decompose_opts(&field, 1, &opts)
+        .expect_err("zero tolerance must be rejected");
+    let msg = unwrap_hodge_msg(&err);
+    assert!(
+        msg.contains("tolerance must be strictly positive"),
+        "msg = {msg}"
+    );
+}
+
+#[test]
+fn hodge_decompose_rejects_negative_tolerance() {
+    let lattice: LatticeComplex<2, f64> = LatticeComplex::square_open(2);
+    let m = zero_manifold(lattice);
+    let n1 = m.complex().num_cells(1);
+    let field = CausalTensor::new(vec![0.0; n1], vec![n1]).unwrap();
+
+    let opts = HodgeDecomposeOptions {
+        tolerance: Some(-1e-6_f64),
+        max_iterations: Some(10),
+    };
+    let err = m
+        .hodge_decompose_opts(&field, 1, &opts)
+        .expect_err("negative tolerance must be rejected");
+    let msg = unwrap_hodge_msg(&err);
+    assert!(
+        msg.contains("tolerance must be strictly positive"),
+        "msg = {msg}"
+    );
+}
+
+#[test]
 fn hodge_decompose_options_default_yields_none_overrides() {
     let opts: HodgeDecomposeOptions<f64> = HodgeDecomposeOptions::default();
     assert!(opts.tolerance.is_none());

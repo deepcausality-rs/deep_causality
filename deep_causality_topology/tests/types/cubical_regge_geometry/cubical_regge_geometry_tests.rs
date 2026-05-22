@@ -69,6 +69,27 @@ fn uniform_length_is_none_for_per_edge() {
     assert!(g.uniform_length().is_none());
 }
 
+// -- Malformed PerEdge input surfaces as a panic, not a silent unit fallback ---
+
+#[test]
+#[should_panic(expected = "PerEdge edge_lengths.len()")]
+fn metric_tensor_at_panics_on_malformed_per_edge_lengths() {
+    // A 2x2 open lattice has 12 edges (4 horizontal interior + 4 horizontal boundary +
+    // 4 vertical) — well, the exact count is the lattice's, not the user's. The point
+    // is that passing a length-2 vector to `from_edge_lengths` is clearly malformed for
+    // any non-trivial lattice. Before the fix, this would silently fall back to
+    // `R::one()` for unindexed positions and produce wrong-but-plausible metric
+    // tensors; the fix turns it into a panic with a discriminating message.
+    use deep_causality_topology::LatticeComplex;
+    let lattice: LatticeComplex<2, f64> = LatticeComplex::square_open(2);
+    let geom = CubicalReggeGeometry::<2, f64>::from_edge_lengths(vec![1.0, 2.0]); // intentionally malformed
+    let first_cell = lattice
+        .iter_cells(2)
+        .next()
+        .expect("2-cell exists in a 2x2 open lattice");
+    let _ = geom.metric_tensor_at(&lattice, &first_cell);
+}
+
 // -- axis_lengths getter ---------------------------------------------------------
 
 #[test]
