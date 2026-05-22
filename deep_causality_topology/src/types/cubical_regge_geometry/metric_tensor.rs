@@ -41,19 +41,23 @@ where
         cell: &LatticeCell<D>,
     ) -> CausalTensor<R> {
         let position = *cell.position();
-        let timelike_axes = self.timelike_axes.as_ref();
+        // Per-axis sign comes from the `deep_causality_metric` `Metric` value
+        // synthesised by `self.signature()`. `Metric::sign_of_sq(axis)` returns
+        // `+1`, `-1`, or `0` per the East-Coast Lorentzian / Custom convention.
+        // This centralises signature truth in the metric crate instead of a
+        // hand-rolled `if is_timelike` check; future PGA / Custom signatures
+        // are supported by construction.
+        let metric = self.signature();
 
         let mut data = vec![R::zero(); D * D];
         for axis in 0..D {
-            // Resolve the edge length along this axis at the cell's position.
             let length = self.edge_length_along_axis_at(complex, position, axis);
             let l_sq = length * length;
-            // Apply the sign: negative iff this axis is flagged timelike on a
-            // Lorentzian signature. The runtime check on `timelike_axes` is
-            // sufficient because `Euclidean` constructors guarantee
-            // `timelike_axes = None`.
-            let is_timelike = timelike_axes.is_some_and(|axes| axes[axis]);
-            let entry = if is_timelike { -l_sq } else { l_sq };
+            let entry = match metric.sign_of_sq(axis) {
+                1 => l_sq,
+                -1 => -l_sq,
+                _ => R::zero(),
+            };
             data[axis * D + axis] = entry;
         }
         CausalTensor::new(data, vec![D, D]).expect("D × D metric tensor allocation")

@@ -130,7 +130,19 @@ Depends on R4 (specifically R4.3's per-cell volume machinery, which R5 reuses fo
 - [x] R5.7.2 100% coverage on every new file: `signature.rs`, `metric_tensor.rs`, `light_cone_violation.rs`, all 4 new test files plus extensions to `has_hodge_star.rs` / `curvature.rs` / `mod.rs`.
 - [x] R5.7.3 R5-G3 Review — user to commit.
 
-**Block R5 summary:** ~6 new source files, ~20 new tests (910 → 910 total via test migration + 19 new R5 tests), generic-over-S `HasHodgeStar` impl, Lorentzian-only Wick-rotated action, light-cone validation at construction time. Full workspace test + clippy regression clean.
+**Block R5 summary:** ~6 new source files, ~20 new tests (911 total topology tests), generic-over-S `HasHodgeStar` impl, Lorentzian-only Wick-rotated action, light-cone validation at construction time. Full workspace test + clippy regression clean.
+
+### R5.8 `deep_causality_metric` integration (post-R5.7 cleanup)
+
+Surgical refactor sourcing per-axis sign convention from `deep_causality_metric::Metric` instead of hand-rolled boolean checks. Closes the "metric crate is the single source of signature truth" architectural point.
+
+- [x] R5.8.1 `CubicalReggeGeometry::signature()` returns `Metric::Lorentzian(D)` only when axis 0 is the canonical East-Coast timelike axis; otherwise returns `Metric::Custom { dim: D, neg_mask, zero_mask: 0 }` with `neg_mask` bit `i` set iff axis `i` is timelike. Lossless per-axis recovery (previously emitted `Lorentzian(D)` regardless of which axis was timelike — the lossy compression).
+- [x] R5.8.2 [`metric_tensor.rs`](../../../deep_causality_topology/src/types/cubical_regge_geometry/metric_tensor.rs) diagonal-sign computation switched from `if is_timelike { -l_sq } else { l_sq }` to `metric.sign_of_sq(axis)`-driven match. Future PGA / Custom signatures supported by construction.
+- [x] R5.8.3 [`has_hodge_star.rs`](../../../deep_causality_topology/src/types/cubical_regge_geometry/has_hodge_star.rs) `timelike_axes_in_orientation` helper now consults `Metric::sign_of_sq(axis) == -1` against the synthesised `Metric` value. The `SignatureMarker::sign_factor` static-elision fast path for Euclidean is preserved via an `Option<Metric>` guard — Euclidean skips the metric construction entirely.
+- [x] R5.8.4 Test migration: the prior `signature_lorentzian_for_one_timelike_axis` test (asserting `Lorentzian(4)` for axis-3 timelike) split into two — `signature_axis_0_timelike_is_canonical_east_coast_lorentzian` (the genuine `Lorentzian(D)` case) and `signature_non_axis_0_timelike_is_custom_per_axis` (verifies the lossless `Custom { neg_mask }` shape). Per AGENTS.md §"Code testing": API change drives the test, not the reverse.
+- [x] R5.8.5 Full workspace test + clippy regression clean.
+
+**Net effect:** `deep_causality_metric` is now the single authoritative source of per-axis sign convention for cubical Regge geometry. The R5 type-level marker (`Euclidean` / `Lorentzian`) remains the typestate discriminator; the runtime sign values flow through `Metric` everywhere they're needed.
 
 ## Block R6 — Regge-action gradient + Metropolis updates
 

@@ -336,17 +336,39 @@ impl<const D: usize, R: RealField, S: SignatureMarker> CubicalReggeGeometry<D, R
 
     /// Local metric signature for the cubical complex.
     ///
-    /// On the [`Euclidean`] variant this is always `(D, 0, 0)`. On the [`Lorentzian`]
-    /// variant the signature is determined by the per-axis timelike pattern: each
-    /// `true` entry contributes a `−` signature, every `false` entry contributes a `+`.
+    /// On the [`Euclidean`] variant this is `Metric::Euclidean(D)`. On the
+    /// [`Lorentzian`] variant the *per-axis* timelike pattern is preserved:
+    /// if axis 0 is the only timelike axis, returns `Metric::Lorentzian(D)`
+    /// (East-Coast canonical); otherwise returns `Metric::Custom { dim: D,
+    /// neg_mask, zero_mask: 0 }` with `neg_mask` bit `i` set iff axis `i` is
+    /// timelike.
+    ///
+    /// Returning `Custom` instead of the lossy `Lorentzian(D)` for non-axis-0
+    /// timelike patterns is the R5.7 fix from the `deep_causality_metric`
+    /// integration: downstream callers can recover *which* axis is timelike
+    /// via `Metric::sign_of_sq(axis)` rather than just *how many*.
+    ///
+    /// Falls back to `Metric::Custom` for `D > 64` (bitmask capacity); current
+    /// supported `D ≤ 4` is well within range.
     pub fn signature(&self) -> Metric {
-        let p_plus_q = D;
-        let q = self
-            .timelike_axes
-            .as_ref()
-            .map(|axes| axes.iter().filter(|&&t| t).count())
-            .unwrap_or(0);
-        let p = p_plus_q.saturating_sub(q);
-        Metric::from_signature(p, q, 0)
+        let Some(pattern) = self.timelike_axes.as_ref() else {
+            return Metric::Euclidean(D);
+        };
+        // East-Coast canonical: axis 0 is the only timelike axis.
+        if D > 0 && pattern[0] && pattern.iter().skip(1).all(|&t| !t) {
+            return Metric::Lorentzian(D);
+        }
+        // Per-axis Custom for any other pattern (including axis-2-timelike etc.)
+        let mut neg_mask = 0u64;
+        for (i, &t) in pattern.iter().enumerate() {
+            if t && i < 64 {
+                neg_mask |= 1u64 << i;
+            }
+        }
+        Metric::Custom {
+            dim: D,
+            neg_mask,
+            zero_mask: 0,
+        }
     }
 }

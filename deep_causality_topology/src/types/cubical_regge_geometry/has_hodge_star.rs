@@ -64,22 +64,18 @@ use super::{CubicalReggeGeometry, EdgeLengths, SignatureMarker};
 use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::types::lattice_complex::LatticeComplex;
+use deep_causality_metric::Metric;
 use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_sparse::CsrMatrix;
 use std::borrow::Cow;
 
-/// Count how many of a primal k-cell's active axes are flagged as timelike,
-/// per the `timelike_axes` pattern carried on a `Lorentzian` geometry. Returns
-/// `0` when no pattern is attached (the `Euclidean` case).
-fn timelike_axes_in_orientation<const D: usize>(
-    orientation: u32,
-    timelike_axes: Option<&[bool; D]>,
-) -> usize {
-    let Some(pattern) = timelike_axes else {
-        return 0;
-    };
+/// Count how many of a primal k-cell's active axes are timelike according to
+/// the supplied `Metric` value. The `Metric` is the authoritative source of
+/// per-axis sign convention (East-Coast Lorentzian, Custom per-axis,
+/// Euclidean, etc.) — see `deep_causality_metric::Metric::sign_of_sq`.
+fn timelike_axes_in_orientation<const D: usize>(orientation: u32, metric: &Metric) -> usize {
     (0..D)
-        .filter(|&axis| (orientation & (1u32 << axis)) != 0 && pattern[axis])
+        .filter(|&axis| (orientation & (1u32 << axis)) != 0 && metric.sign_of_sq(axis) == -1)
         .count()
 }
 
@@ -103,26 +99,39 @@ where
 
         let n = complex.num_cells(k);
         let mut triplets: Vec<(usize, usize, R)> = Vec::with_capacity(n);
-        let timelike_axes = self.timelike_axes.as_ref();
 
-        // R5.4: per-cell sign factor `(−1)^t` where t = timelike axes in the
-        // primal cell's active dimensions. `Euclidean::sign_factor` always
-        // returns +1, so the simplicial sign-less behaviour is preserved when
-        // `S = Euclidean`.
+        // Per-cell sign factor `(−1)^t` where t = timelike axes in the
+        // primal cell's active dimensions. Sign convention is sourced from
+        // the `deep_causality_metric::Metric` value built by
+        // `self.signature()`: Euclidean ⇒ always `+1` (no metric construction
+        // needed in the fast path); Lorentzian / Custom ⇒ per-axis lookup
+        // via `Metric::sign_of_sq(axis)`. The `SignatureMarker::sign_factor`
+        // static dispatch lets the optimizer elide the metric work entirely
+        // on `S = Euclidean` since the result is unconditionally `+R::one()`.
+        let metric = if S::is_lorentzian() {
+            Some(self.signature())
+        } else {
+            None
+        };
+        let cell_sign = |orientation: u32| -> R {
+            match &metric {
+                None => R::one(),
+                Some(m) => S::sign_factor::<R>(timelike_axes_in_orientation::<D>(orientation, m)),
+            }
+        };
+
         match &self.edge_lengths {
             EdgeLengths::UnitEdge => {
                 // Identity matrix on Euclidean; Lorentzian applies sign per cell.
                 for (i, cell) in complex.cells(k).enumerate() {
-                    let t = timelike_axes_in_orientation::<D>(cell.orientation(), timelike_axes);
-                    triplets.push((i, i, S::sign_factor::<R>(t)));
+                    triplets.push((i, i, cell_sign(cell.orientation())));
                 }
             }
             EdgeLengths::Uniform { length } => {
-                // Diagonal magnitude = length^(D - 2k). Per-cell sign from S.
+                // Diagonal magnitude = length^(D - 2k). Per-cell sign from metric.
                 let magnitude = pow_signed(*length, (D as isize) - 2 * (k as isize));
                 for (i, cell) in complex.cells(k).enumerate() {
-                    let t = timelike_axes_in_orientation::<D>(cell.orientation(), timelike_axes);
-                    triplets.push((i, i, S::sign_factor::<R>(t) * magnitude));
+                    triplets.push((i, i, cell_sign(cell.orientation()) * magnitude));
                 }
             }
             EdgeLengths::PerAxis { lengths } => {
@@ -143,8 +152,7 @@ where
                             dual *= *length;
                         }
                     }
-                    let t = timelike_axes_in_orientation::<D>(orientation, timelike_axes);
-                    triplets.push((i, i, S::sign_factor::<R>(t) * (dual / primal)));
+                    triplets.push((i, i, cell_sign(orientation) * (dual / primal)));
                 }
             }
             EdgeLengths::PerEdge { lengths } => {
@@ -198,8 +206,7 @@ where
                     let divisor = <R as FromPrimitive>::from_usize(valid_count)
                         .expect("usize fits in every RealField");
                     let dual = dual_sum / divisor;
-                    let t = timelike_axes_in_orientation::<D>(orientation, timelike_axes);
-                    triplets.push((i, i, S::sign_factor::<R>(t) * (dual / primal)));
+                    triplets.push((i, i, cell_sign(orientation) * (dual / primal)));
                 }
             }
         }

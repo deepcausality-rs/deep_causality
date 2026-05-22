@@ -237,16 +237,42 @@ fn signature_euclidean_for_unflagged() {
 }
 
 #[test]
-fn signature_lorentzian_for_one_timelike_axis() {
+fn signature_axis_0_timelike_is_canonical_east_coast_lorentzian() {
+    // Per the `deep_causality_metric` integration (R5.7): when *axis 0* is
+    // the only timelike axis, signature returns `Metric::Lorentzian(D)` (the
+    // East-Coast canonical layout `(-, +, +, +)`).
     let g = CubicalReggeGeometry::<4, f64>::unit()
-        .with_timelike_axes([false, false, false, true])
+        .with_timelike_axes([true, false, false, false])
         .unwrap();
-    let m = g.signature();
-    // (3, 1, 0) — three spacelike + one timelike → Lorentzian 4D.
-    match m {
+    match g.signature() {
         Metric::Lorentzian(d) => assert_eq!(d, 4),
         other => panic!("expected Lorentzian(4), got {other:?}"),
     }
+}
+
+#[test]
+fn signature_non_axis_0_timelike_is_custom_per_axis() {
+    // When the timelike axis is *not* axis 0, the canonical Lorentzian(D)
+    // can't express the per-axis layout (East-Coast pins axis 0 as the time
+    // axis). Returns `Metric::Custom` with the timelike axis encoded in
+    // `neg_mask` instead — lossless per-axis information.
+    let g = CubicalReggeGeometry::<4, f64>::unit()
+        .with_timelike_axes([false, false, false, true])
+        .unwrap();
+    match g.signature() {
+        Metric::Custom {
+            dim,
+            neg_mask,
+            zero_mask,
+        } => {
+            assert_eq!(dim, 4);
+            assert_eq!(neg_mask, 0b1000); // axis 3
+            assert_eq!(zero_mask, 0);
+        }
+        other => panic!("expected Custom for axis-3 timelike, got {other:?}"),
+    }
+    // Signature counts (p, q, r) still aggregate to (3, 1, 0) regardless.
+    assert_eq!(g.signature().signature(), (3, 1, 0));
 }
 
 // -- Equality / Debug / Clone --------------------------------------------------
