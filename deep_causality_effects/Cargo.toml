@@ -7,7 +7,7 @@ license = { workspace = true }
 readme = "README.md"
 description = "DEPRECATED. Retired crate; the name is effectively free for reuse. See README."
 repository = "https://github.com/deepcausality/deep_causality.rs"
-keywords = ["causality", "deprecated"]
+keywords = ["deprecated"]
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 
 [dependencies]

@@ -21,14 +21,14 @@
 
 - [ ] 3.1 Implement `LatticeComplex<D, R>::hinge_top_cube_neighbors(&self, hinge_id) -> impl Iterator<Item = CellId>` by walking the cached `coboundary_matrix(D-2)` and `coboundary_matrix(D-1)`; deduplicate the result. Borrows the cached matrices directly (cache returns `Cow::Borrowed` after the §1.1 conversion).
 - [ ] 3.2 Add unit tests for hinge enumeration: 2D interior vertex → 4 squares; 3D interior edge → 4 cubes; 4D interior 2-cell → 4 4-cubes; periodic-boundary wrap-around; open-boundary corner / face hinges produce the correct reduced counts (1 / 2); determinism / no duplicates
-- [ ] 3.3 Implement `CubicalReggeGeometry<D, R>::dihedral_angle(&self, complex, top_cube_id, hinge_id) -> R` in `curvature.rs`, dispatching on the edge-length variant
-- [ ] 3.4 Short-circuit `UnitEdge` and `Uniform` to `R::pi() / (R::one() + R::one())` without touching the lattice
-- [ ] 3.5 Implement per-axis case using `R::atan2(lengths[j], lengths[i])` where `i, j` are the two axes inactive in the hinge but active in the top cube
-- [ ] 3.6 Implement per-edge case: read the two edge lengths of the top cube at the hinge along axes `i` and `j` (via `edge_index`) and apply the same `atan2` formula
-- [ ] 3.7 Document the contract for non-incident `(top_cube_id, hinge_id)` pairs in the doc comment (return `R::nan()`, `Err`, or panic — choose one and document it)
+- [ ] 3.3 Implement `CubicalReggeGeometry<D, R>::dihedral_angle(&self, complex, top_cube: &LatticeCell<D>, hinge: &LatticeCell<D>) -> R` in `curvature.rs`. Returns `R::pi() / (R::one() + R::one())` uniformly — the dihedral on an axis-aligned cubical complex is π/2 regardless of edge-length variant (see design.md Decision 4 correction).
+- [ ] 3.4 Add debug-assertions that `top_cube.cell_dim() == D` and `hinge.cell_dim() == D - 2`. The function does not validate incidence — callers are responsible for enumerating only incident pairs.
+- [ ] 3.5 *Superseded by 3.3.* The arctan2 per-axis formula in the original design note was geometrically incorrect; no per-axis-specific code path is needed.
+- [ ] 3.6 *Superseded by 3.3.* No per-edge-specific dihedral code path under the axis-aligned assumption.
+- [ ] 3.7 Document the non-incident-pair contract in the doc comment: misuse degrades to the geometric constant `π/2` rather than NaN or panic in release; debug builds catch grade mismatches via assertions.
 - [ ] 3.8 Write unit-edge property test: every dihedral angle equals `R::pi() / (R::one() + R::one())` to `R::epsilon()` tolerance
-- [ ] 3.9 Write per-axis property test: dihedral angles around any interior vertex on a 2D lattice sum to `R::pi() + R::pi()` (i.e. 2π) to a few `R::epsilon()`
-- [ ] 3.10 Write per-edge / per-axis agreement test: matching uniform-per-axis edge lengths produce identical dihedral angles to within a few `R::epsilon()`
+- [ ] 3.9 Write per-axis property test: dihedral angles around any interior vertex on a periodic 2D lattice sum to `R::pi() + R::pi()` (i.e. 2π) to a few `R::epsilon()`
+- [ ] 3.10 Write per-edge / per-axis agreement test: matching uniform-per-axis edge lengths produce identical dihedral angles to within a few `R::epsilon()` (trivially true now — both return π/2 — but kept as a regression guard against any future variant-specific code path)
 
 ## 4. Phase R3 — Deficit angles + Regge action
 

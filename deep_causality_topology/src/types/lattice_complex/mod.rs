@@ -11,6 +11,7 @@ pub use lattice_cell::LatticeCell;
 
 use crate::traits::cell::Cell;
 use crate::traits::chain_complex::ChainComplex;
+use crate::traits::neighborhood::CellId;
 use deep_causality_num::RealField;
 use deep_causality_sparse::CsrMatrix;
 use std::borrow::Cow;
@@ -201,6 +202,56 @@ impl<const D: usize, R: RealField> LatticeComplex<D, R> {
         } else {
             dim_len
         }
+    }
+
+    /// Top D-cubes incident to a (D−2)-hinge.
+    ///
+    /// Walks `boundary_matrix(D−1)` row `hinge_id` to enumerate the (D−1)-faces whose
+    /// boundary contains the hinge, then walks `boundary_matrix(D)` row by row to
+    /// collect every D-cube whose boundary contains one of those faces. The result is
+    /// deduplicated and returned as a `Vec<CellId>` (small — at most 4 entries on a
+    /// regular lattice).
+    ///
+    /// Returns an empty vector for `D < 2` (where (D−2)-hinges don't exist) or when
+    /// `hinge_id` is out of range.
+    ///
+    /// # Implementation note
+    ///
+    /// The design note proposes routing through `coboundary_matrix(D−2)` and
+    /// `coboundary_matrix(D−1)` instead. Both directions give the same incidence
+    /// information; we use `boundary_matrix` because CSR storage indexes naturally
+    /// by row (`O(degree)` per row slice), whereas extracting a column from the
+    /// coboundary form requires an `O(nnz)` scan. Functionally equivalent; cheaper
+    /// in this access pattern.
+    pub fn hinge_top_cube_neighbors(&self, hinge_id: CellId) -> Vec<CellId> {
+        if D < 2 {
+            return Vec::new();
+        }
+        let num_hinges = self.num_cells(D - 2);
+        if hinge_id >= num_hinges {
+            return Vec::new();
+        }
+
+        let b_dm1 = self.boundary_matrix(D - 1);
+        let b_d = self.boundary_matrix(D);
+
+        let dm1_rows = b_dm1.row_indices();
+        let dm1_cols = b_dm1.col_indices();
+        let d_rows = b_d.row_indices();
+        let d_cols = b_d.col_indices();
+
+        let face_slice = &dm1_cols[dm1_rows[hinge_id]..dm1_rows[hinge_id + 1]];
+
+        let mut out: Vec<CellId> = Vec::new();
+        for &face in face_slice {
+            let top_slice = &d_cols[d_rows[face]..d_rows[face + 1]];
+            for &top in top_slice {
+                if !out.contains(&top) {
+                    out.push(top);
+                }
+            }
+        }
+        out
     }
 }
 

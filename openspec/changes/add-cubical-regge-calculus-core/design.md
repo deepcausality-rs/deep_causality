@@ -89,11 +89,16 @@ The count is **always 4** on a regular periodic lattice: a (D−2)-hinge is the 
 
 A dihedral angle at a hinge `h` from a top cube `c` is the angle between the two faces of `c` that share `h`. The two faces correspond to the two axes of the dihedral's normal plane — the axes inactive in `h` but active in `c`. Call them `i` and `j`. All return values are `R: RealField`.
 
-- `UnitEdge` and `Uniform`: every dihedral angle is exactly π/2. The implementation returns `R::pi() / (R::one() + R::one())` without touching the lattice.
-- `PerAxis { lengths }`: `dihedral_angle(c, h) = R::atan2(lengths[j], lengths[i])` (the angle the face along axis `j` makes with the face along axis `i` at the shared hinge). For a unit cube `lengths[i] == lengths[j]` so the result is π/4 + π/4 = π/2 by symmetry — consistent with the unit case.
-- `PerEdge`: same shape as per-axis, but `lengths[i]` is read at the specific edge of `c` along axis `i` adjacent to `h` (via `edge_index`). Closed form is identical otherwise.
+**On an axis-aligned cubical complex the dihedral angle is exactly π/2 in every edge-length variant** (`UnitEdge`, `Uniform`, `PerAxis`, `PerEdge`). The two (D−1)-faces meeting at a (D−2)-hinge in such a cube are mutually perpendicular regardless of the lengths along axes `i` and `j` — stretching an axis changes the face's size but not its orientation. The implementation therefore returns `R::pi() / (R::one() + R::one())` uniformly and does not read the edge-length data.
 
-`RealField` exposes `pi()`, `atan2`, `one()`, `zero()`, `sqrt`, etc. — see [deep_causality_num/src/algebra/field_real.rs](../../../deep_causality_num/src/algebra/field_real.rs). No new `RealField` methods are required by this change set.
+**Correction note.** An earlier draft of `openspec/notes/CubicalReggeCalculus.md` §3.R2 proposed `R::atan2(lengths[j], lengths[i])` for the `PerAxis` case, reasoning that "for a unit cube `lengths[i] == lengths[j]` so the result is π/4 + π/4 = π/2 by symmetry." That reasoning conflates the dihedral angle (between two faces) with the half-angle of a stretched cube's diagonal — different quantities. Only the constant `π/2` is geometrically correct for an axis-aligned cubical dihedral. The unit-edge test `4 × π/2 = 2π` (interior 2D vertex) still pins the right value down to the right floating-point tolerance.
+
+Curvature on a cubical lattice therefore enters via:
+
+1. **Hinge incidence count.** Interior hinges in a regular periodic lattice have 4 incident top cubes (sum 2π, deficit 0 — flat). Boundary hinges on open lattices have fewer (a 2D corner sees 1 cube, sum π/2, deficit 3π/2 — intrinsic boundary curvature).
+2. **Sheared / non-axis-aligned cells**, not expressible in the current `EdgeLengths` representation. A future Gram-matrix-aware extension would rewrite this closed form.
+
+`RealField` exposes `pi()`, `one()`, `zero()`, `sqrt`, etc. — see [deep_causality_num/src/algebra/field_real.rs](../../../deep_causality_num/src/algebra/field_real.rs). No new `RealField` methods are required by this change set. The `atan2` originally cited is no longer needed.
 
 **Rationale:** the cubical-axis alignment turns dihedral angles into 2-argument arctangents — no Cayley-Menger, no eigenvalue solve, no nonlinear root-finding. This is the single biggest practical advantage of the cubical Regge approach over simplicial.
 
