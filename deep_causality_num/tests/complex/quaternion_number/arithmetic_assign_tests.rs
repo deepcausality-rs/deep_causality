@@ -51,3 +51,17 @@ fn test_div_assign() {
     let expected_k = Quaternion::new(0.0, 0.0, 0.0, 1.0);
     assert_eq!(q, expected_k);
 }
+
+#[test]
+fn test_mul_assign_scalar() {
+    let mut q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+    q *= 2.0_f64;
+    assert_eq!(q, Quaternion::new(2.0, 4.0, 6.0, 8.0));
+}
+
+#[test]
+fn test_div_scalar() {
+    let q = Quaternion::new(2.0, 4.0, 6.0, 8.0);
+    let r = q / 2.0_f64;
+    assert_eq!(r, Quaternion::new(1.0, 2.0, 3.0, 4.0));
+}

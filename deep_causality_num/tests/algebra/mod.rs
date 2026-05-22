@@ -5,6 +5,8 @@
 #[cfg(test)]
 mod algebra_tests;
 #[cfg(test)]
+mod domain_euclidean_tests;
+#[cfg(test)]
 mod field_real_f32_tests;
 #[cfg(test)]
 mod field_real_f64_tests;

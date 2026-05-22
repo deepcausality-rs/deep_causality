@@ -121,6 +121,16 @@ fn test_division_algebra_f64() {
 }
 
 #[test]
+fn test_is_nan_inf_finite_traits() {
+    assert!(<f64 as RealField>::is_nan(f64::NAN));
+    assert!(!<f64 as RealField>::is_nan(1.0));
+    assert!(<f64 as RealField>::is_infinite(f64::INFINITY));
+    assert!(!<f64 as RealField>::is_infinite(1.0));
+    assert!(<f64 as RealField>::is_finite(1.0));
+    assert!(!<f64 as RealField>::is_finite(f64::INFINITY));
+}
+
+#[test]
 fn test_constants() {
     let f: f64 = RealField::pi();
     assert_eq!(f, core::f64::consts::PI);
