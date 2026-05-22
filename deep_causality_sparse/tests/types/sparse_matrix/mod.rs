@@ -5,6 +5,8 @@
 #[cfg(test)]
 mod algebra_tests;
 #[cfg(test)]
+mod arithmetic_ops_tests;
+#[cfg(test)]
 mod default_tests;
 #[cfg(test)]
 mod display_tests;
