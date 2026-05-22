@@ -130,3 +130,19 @@ fn test_to_vec() {
     let map = get_test_causality_btree_map_deterministic();
     assert_eq!(3, map.to_vec().len());
 }
+
+#[test]
+fn test_get_item_by_id_none() {
+    let map = get_test_causality_btree_map_deterministic();
+    assert!(map.get_item_by_id(9999).is_none());
+}
+
+#[test]
+fn test_empty_btree_map_accessors() {
+    let map: TestBTreeMap = BTreeMap::new();
+    assert!(map.is_empty());
+    assert_eq!(0, map.len());
+    assert_eq!(0, map.to_vec().len());
+    assert_eq!(0, map.get_all_items().len());
+    assert!(map.get_item_by_id(0).is_none());
+}

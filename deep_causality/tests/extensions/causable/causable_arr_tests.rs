@@ -78,3 +78,25 @@ fn test_to_vec() {
     let col = get_test_causality_array_bool_out();
     assert_eq!(10, col.to_vec().len());
 }
+
+#[test]
+fn test_is_empty_false() {
+    let col = get_test_causality_array_bool_out();
+    assert!(!col.is_empty());
+}
+
+#[test]
+fn test_is_empty_true() {
+    let col: [BaseCausaloid<NumericalValue, bool>; 0] = [];
+    assert!(col.is_empty());
+    assert_eq!(0, col.len());
+    assert_eq!(0, col.to_vec().len());
+    assert!(col.get_item_by_id(0).is_none());
+    assert_eq!(0, col.get_all_items().len());
+}
+
+#[test]
+fn test_get_item_by_id_none() {
+    let col = get_test_causality_array_bool_out();
+    assert!(col.get_item_by_id(9999).is_none());
+}
