@@ -825,3 +825,48 @@ fn test_t2_energy_value() {
     assert!(t2e.is_ok());
     assert!(t2e.unwrap().abs() < 1e-10);
 }
+
+// =============================================================================
+// Coverage: source() / source_mut() / replace_source() / with_source()
+// =============================================================================
+
+#[test]
+fn test_lattice_gauge_field_source_accessors() {
+    use std::collections::HashMap;
+    let lattice = create_test_lattice();
+    let mut links: HashMap<_, LinkVariable<U1, Complex<f64>, f64>> = HashMap::new();
+    for cell in lattice.cells(1) {
+        links.insert(cell, LinkVariable::try_identity().unwrap());
+    }
+
+    // Construct with a non-trivial source value (an i32 counter).
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64, i32> =
+        LatticeGaugeField::from_links_unchecked(lattice, links, 2.0, 42);
+
+    assert_eq!(*field.source(), 42);
+
+    *field.source_mut() = 7;
+    assert_eq!(*field.source(), 7);
+
+    let old = field.replace_source(99);
+    assert_eq!(old, 7);
+    assert_eq!(*field.source(), 99);
+}
+
+#[test]
+fn test_lattice_gauge_field_with_source_transforms_type() {
+    use std::collections::HashMap;
+    let lattice = create_test_lattice();
+    let mut links: HashMap<_, LinkVariable<U1, Complex<f64>, f64>> = HashMap::new();
+    for cell in lattice.cells(1) {
+        links.insert(cell, LinkVariable::try_identity().unwrap());
+    }
+
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::from_links_unchecked(lattice, links, 2.0, ());
+
+    // Attach an i32 source — the type changes from () to i32.
+    let attached: LatticeGaugeField<U1, 2, Complex<f64>, f64, i32> = field.with_source(123);
+    assert_eq!(*attached.source(), 123);
+    assert!((*attached.beta() - 2.0_f64).abs() < 1e-12);
+}

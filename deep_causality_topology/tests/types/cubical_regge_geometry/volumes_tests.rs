@@ -169,3 +169,12 @@ fn uniform_top_cube_volume_is_length_to_power_d() {
     let got = geom.top_cell_volume(&lattice, &cell);
     assert!((expected - got).abs() <= f64::EPSILON * 4.0);
 }
+
+#[test]
+#[should_panic(expected = "top_cell_volume requires a D-cell")]
+fn top_cell_volume_panics_on_wrong_grade() {
+    let lattice = open_square_3();
+    let geom = unit_geometry::<2>();
+    let edge = LatticeCell::edge([0, 0], 0); // grade 1, not D=2
+    let _ = geom.top_cell_volume(&lattice, &edge);
+}

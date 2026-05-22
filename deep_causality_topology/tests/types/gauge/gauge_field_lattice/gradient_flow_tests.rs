@@ -226,3 +226,50 @@ fn test_try_t2_energy() {
     let r = field.try_t2_energy(1.0).unwrap();
     assert!(r.abs() < 1e-10);
 }
+
+#[test]
+fn test_try_energy_density_empty_lattice_returns_zero() {
+    // Drives the `if count == 0 { return Ok(R::zero()) }` early-return path.
+    use deep_causality_topology::LinkVariable;
+    use std::collections::HashMap;
+    let lattice = Arc::new(LatticeComplex::<2, f64>::new([0, 0], [false, false]));
+    let links: HashMap<_, LinkVariable<U1, Complex<f64>, f64>> = HashMap::new();
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::from_links_unchecked(lattice, links, 1.0, ());
+    let e = field.try_energy_density().unwrap();
+    assert_eq!(e, 0.0);
+}
+
+#[test]
+fn test_try_find_t0_never_reaches_target_errors() {
+    // Identity field never raises t²E(t) above 0 → won't cross 0.3 → final error path.
+    let shape = [2, 2];
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
+    let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::try_identity(lattice, 1.0).unwrap();
+
+    let params = FlowParams {
+        epsilon: 0.01,
+        t_max: 0.05,
+        method: FlowMethod::Euler,
+    };
+
+    let err = field.try_find_t0(&params).unwrap_err();
+    assert!(err.to_string().contains("did not reach 0.3"));
+}
+
+#[test]
+fn test_try_flow_zero_tmax_returns_unchanged() {
+    // t_max = 0 → while-loop body never executes → returns the input field.
+    let shape = [2, 2];
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
+    let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::try_identity(lattice, 1.0).unwrap();
+    let params = FlowParams {
+        epsilon: 0.05,
+        t_max: 0.0,
+        method: FlowMethod::Euler,
+    };
+    let flowed = field.try_flow(&params).expect("zero-tmax flow is OK");
+    // Field should be unchanged (same energy density = 0).
+    let e = flowed.try_energy_density().unwrap();
+    assert!(e.abs() < 1e-10);
+}

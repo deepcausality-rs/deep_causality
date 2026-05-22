@@ -268,12 +268,20 @@ pub struct LatticeCellIterator<'a, const D: usize, R: RealField> {
 
 impl<'a, const D: usize, R: RealField> LatticeCellIterator<'a, D, R> {
     fn new(lattice: &'a LatticeComplex<D, R>, k: usize) -> Self {
-        // Generate all k-bit patterns in D bits
+        // Generate all k-bit patterns in D bits, then drop orientations whose product of
+        // valid positions across all axes is zero. Without the filter, a lattice with
+        // `shape[d] == 0` along a non-periodic active axis would yield phantom cells (the
+        // first position `[0; D]` is always emitted before the advance loop checks the
+        // zero-extent axis), so `cells(k).count()` would not match `num_cells(k)`.
         let mut orientations = Vec::new();
         let limit: usize = 1 << D;
         for i in 0..limit {
             if i.count_ones() as usize == k {
-                orientations.push(i as u32);
+                let orient = i as u32;
+                let count: usize = (0..D).map(|d| lattice.valid_positions(d, orient)).product();
+                if count > 0 {
+                    orientations.push(orient);
+                }
             }
         }
 

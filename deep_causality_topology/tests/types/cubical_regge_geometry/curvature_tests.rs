@@ -379,3 +379,52 @@ fn open_3d_per_axis_action_equals_per_edge_action() {
     let tol = f64::EPSILON * 64.0 * a.abs().max(1.0);
     assert!((a - e).abs() <= tol, "per_axis={a} vs per_edge={e}");
 }
+
+// -- D < 2 degenerate cases (covers early-return paths) ---------------------------
+
+#[test]
+fn deficit_angle_returns_zero_for_d1_lattice() {
+    let lattice: LatticeComplex<1, f64> = LatticeComplex::new([3], [false]);
+    let geom: CubicalReggeGeometry<1, f64> = CubicalReggeGeometry::unit();
+    // D=1 has no (D-2) = (-1) hinges; the function returns R::zero() unconditionally.
+    assert_eq!(geom.deficit_angle(&lattice, 0), 0.0);
+    assert_eq!(geom.deficit_angle(&lattice, 999), 0.0);
+}
+
+#[test]
+fn regge_action_returns_zero_for_d1_lattice() {
+    let lattice: LatticeComplex<1, f64> = LatticeComplex::new([3], [true]);
+    let geom: CubicalReggeGeometry<1, f64> = CubicalReggeGeometry::unit();
+    assert_eq!(geom.regge_action(&lattice), 0.0);
+}
+
+#[test]
+fn deficit_angle_out_of_range_hinge_returns_zero() {
+    let lattice = open_square_3();
+    let geom = unit_geometry::<2>();
+    let n = lattice.num_cells(0);
+    assert_eq!(geom.deficit_angle(&lattice, n), 0.0);
+    assert_eq!(geom.deficit_angle(&lattice, n + 100), 0.0);
+}
+
+// -- Debug-assertion panic paths (covers format-argument lines) -------------------
+
+#[test]
+#[should_panic(expected = "top_cube must be a D-cell")]
+fn dihedral_angle_panics_when_top_cube_wrong_grade() {
+    let lattice = periodic_square_3();
+    let geom = unit_geometry::<2>();
+    let not_a_top_cube = LatticeCell::vertex([0, 0]); // grade 0, not D=2
+    let hinge = LatticeCell::vertex([1, 1]);
+    let _ = geom.dihedral_angle(&lattice, &not_a_top_cube, &hinge);
+}
+
+#[test]
+#[should_panic(expected = "hinge must be a (D-2)-cell")]
+fn dihedral_angle_panics_when_hinge_wrong_grade() {
+    let lattice = periodic_square_3();
+    let geom = unit_geometry::<2>();
+    let top = LatticeCell::new([0, 0], 0b11); // grade 2 ✓
+    let not_a_hinge = LatticeCell::edge([0, 0], 0); // grade 1, want grade 0
+    let _ = geom.dihedral_angle(&lattice, &top, &not_a_hinge);
+}

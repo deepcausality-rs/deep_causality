@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 #[cfg(test)]
+mod degenerate_tests;
+#[cfg(test)]
 mod dual_lattice_complex_tests;
 #[cfg(test)]
 mod hinge_neighbors_tests;

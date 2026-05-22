@@ -99,6 +99,93 @@ fn test_topology_cup_product_missing_data_other() {
     assert!(topo1_result.is_err());
 }
 
+#[test]
+fn test_topology_cup_product_rejects_complex_mismatch() {
+    // Two distinct Arc-allocated complexes — same shape but different identity.
+    let complex_a = Arc::new(create_triangle_complex());
+    let complex_b = Arc::new(create_triangle_complex());
+
+    let data_a = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
+    let data_b = CausalTensor::new(vec![0.5, 1.5, 2.5], vec![3]).unwrap();
+    let topo_a = Topology::new(complex_a, 0, data_a, 0).unwrap();
+    let topo_b = Topology::new(complex_b, 1, data_b, 0).unwrap();
+
+    let err = topo_a.cup_product(&topo_b).unwrap_err();
+    assert!(err.to_string().contains("Complex Mismatch"));
+}
+
+#[test]
+fn test_topology_cup_product_overflow_grade_returns_zero_field() {
+    // Triangle complex has max simplex dimension 2 (a single 2-simplex).
+    // A 2 ⌣ 1 cup product produces grade r = 3, which exceeds the max → zero-length
+    // result tensor (no 3-skeleton on a triangle).
+    let complex = Arc::new(create_triangle_complex());
+
+    let data2 = CausalTensor::new(vec![7.0], vec![1]).unwrap();
+    let topo2 = Topology::new(complex.clone(), 2, data2, 0).unwrap();
+
+    let data1 = CausalTensor::new(vec![0.5, 1.5, 2.5], vec![3]).unwrap();
+    let topo1 = Topology::new(complex.clone(), 1, data1, 0).unwrap();
+
+    let result = topo2.cup_product(&topo1).unwrap();
+    assert_eq!(result.grade(), 3);
+    // r=3 ≥ skeletons.len()=3 → zero_len = 0 (else branch).
+    assert_eq!(result.data().as_slice().len(), 0);
+}
+
+#[test]
+fn test_topology_cup_product_simplex_not_found_returns_error() {
+    use deep_causality_sparse::CsrMatrix;
+    use deep_causality_topology::{Simplex, SimplicialComplex, Skeleton};
+
+    // Build a complex with mismatched skeletons: the 1-skeleton lists an edge that is
+    // NOT a sub-simplex of the only 2-simplex. The cup-product front-face lookup will
+    // succeed for the 0-skeleton but the back-face Simplex([1,2]) is absent from the
+    // 1-skeleton → SimplexNotFound.
+    //
+    // Triangle simplex: (0, 1, 2). 1-skeleton intentionally only contains (0, 1) and
+    // (0, 2) — leaving (1, 2) missing.
+    let vertices = vec![
+        Simplex::new(vec![0]),
+        Simplex::new(vec![1]),
+        Simplex::new(vec![2]),
+    ];
+    let edges = vec![Simplex::new(vec![0, 1]), Simplex::new(vec![0, 2])];
+    let faces = vec![Simplex::new(vec![0, 1, 2])];
+    let skel = vec![
+        Skeleton::new(0, vertices),
+        Skeleton::new(1, edges),
+        Skeleton::new(2, faces),
+    ];
+
+    let d1 =
+        CsrMatrix::from_triplets(3, 2, &[(1, 0, 1i8), (0, 0, -1), (2, 1, 1), (0, 1, -1)]).unwrap();
+    let d2: CsrMatrix<i8> = CsrMatrix::with_capacity(2, 1, 0);
+
+    let complex: SimplicialComplex<f64> =
+        SimplicialComplex::new(skel, vec![d1, d2], vec![], Vec::new());
+    let complex = Arc::new(complex);
+
+    let data0 = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
+    let data2 = CausalTensor::new(vec![7.0], vec![1]).unwrap();
+    let topo0 = Topology::new(complex.clone(), 0, data0, 0).unwrap();
+    let topo2 = Topology::new(complex.clone(), 2, data2, 0).unwrap();
+
+    // 0 ⌣ 2: front face is [v0..v0]=[0] (in 0-skeleton, found), back face is [v0..v2]
+    // — but we want to trigger SimplexNotFound, so use 1 ⌣ 1 to hit a missing edge.
+    // 1 ⌣ 1 → r=2, sum over 2-simplices. For (0,1,2): front [0,1] (present), back [1,2]
+    // (MISSING from 1-skeleton). Triggers the `back` ok_or branch.
+    let data1 = CausalTensor::new(vec![0.5, 1.5], vec![2]).unwrap();
+    let topo1a = Topology::new(complex.clone(), 1, data1.clone(), 0).unwrap();
+    let topo1b = Topology::new(complex.clone(), 1, data1, 0).unwrap();
+    let err = topo1a.cup_product(&topo1b).unwrap_err();
+    // SimplexNotFound is a wrapper struct around an inner enum; check via Display.
+    assert!(err.to_string().contains("Simplex not found"));
+
+    drop(topo0);
+    drop(topo2);
+}
+
 // =============================================================================
 // Constructor and validation tests
 // =============================================================================

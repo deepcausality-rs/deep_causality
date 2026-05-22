@@ -102,7 +102,11 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R> {
         }
         let neighbors = complex.hinge_top_cube_neighbors(hinge_id);
         let n = neighbors.len();
-        if n == 4 {
+        // Interior hinges (n == 4) and out-of-range hinges (n == 0, neighbors is empty)
+        // both short-circuit to zero. The interior case is genuine flatness; the empty
+        // case matches the docstring's tolerant-degenerate contract and avoids returning
+        // a meaningless 2π for a hinge that doesn't exist.
+        if n == 4 || n == 0 {
             return R::zero();
         }
 
