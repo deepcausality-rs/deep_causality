@@ -236,6 +236,17 @@ Only when multiple crate (3 or more) have changed at once, you run:
 
 To rebuild and test the entire repo
 
+## Code testing
+
+You aim for one hundred percent test coverage of all added or edited code files.
+The only exception is if, for some reason, some code is impossible to reach. Then you skip testing that dead code.
+
+If tests find any bug, you fix the implementation so that the test pass. Because the testing exists to ensure that the API is correct, and if the API is not correct, you fix the API so that the test is passing.
+
+Never ever fix any test to make a broken or incorrect API pass a bogus test. Never.
+
+If you encounter a severe bug that requires refactoring beyond the first level implementation, and you suspect a large blast radius of breaking changes, ask the user how to proceed.
+
 ## Code structure
 
 Each crate adheres to the following base structure
