@@ -11,7 +11,10 @@
 mod codifferential;
 mod exterior;
 mod hodge;
+mod hodge_decomposition_impl;
 mod laplacian;
+
+pub use hodge_decomposition_impl::HodgeDecomposeOptions;
 
 // Shared utilities
 pub(super) mod utils_differential;

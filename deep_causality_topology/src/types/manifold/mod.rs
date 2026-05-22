@@ -37,6 +37,8 @@ mod utils;
 mod differential;
 mod topology;
 
+pub use differential::HodgeDecomposeOptions;
+
 /// A newtype wrapper around any `ChainComplex` that represents a Manifold.
 ///
 /// `K` is the underlying chain complex; `F` is the field-data type on cells. `F` is

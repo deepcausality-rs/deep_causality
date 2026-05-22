@@ -38,6 +38,7 @@ This change set provides the decomposition itself, scoped narrowly: the carrier 
 - **Dependencies:** `add-cubical-regge-calculus-analytical` (R4 + R5 + R6) must ship first, refined per its `tasks.md` Block 0 to use `R: RealField`. The `HasHodgeStar<R>` capability trait is the load-bearing input. Without it, `hodge_decompose` has nothing to call.
 - **Effort:** ~600 LOC, ~25 tests, ~12 hours of focused work after the prerequisite ships.
 - **Unblocks:** Block B1 of `add-3d-causal-fluid-dynamics` (`TopologicalSignature<R>` extractor consumes `HodgeDecomposition<R>`). All downstream fluid-pipeline blocks depend transitively.
+
 - **Out of scope:**
   - Topological signatures (downstream change set, B1).
   - Vector-field denoising applications (downstream consumers).

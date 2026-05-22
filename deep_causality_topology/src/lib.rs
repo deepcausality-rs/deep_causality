@@ -8,6 +8,7 @@ mod errors;
 mod extensions;
 mod traits;
 mod types;
+mod utils;
 
 pub mod alias;
 pub mod utils_tests;
@@ -71,6 +72,7 @@ pub use crate::types::cubical_regge_geometry::{
 pub use crate::types::graph::Graph;
 pub use crate::types::hodge_decomposition::HodgeDecomposition;
 pub use crate::types::hypergraph::Hypergraph;
+pub use crate::types::manifold::HodgeDecomposeOptions;
 pub use crate::types::manifold::{Manifold, SimplicialManifold};
 pub use crate::types::neighborhood::{
     CofaceAdjacent, CofaceAdjacentIter, FaceAdjacent, FaceAdjacentIter, KRing, KRingIter, Moore,
