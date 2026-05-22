@@ -32,16 +32,17 @@
 
 ## 4. Phase R3 — Deficit angles + Regge action
 
-- [ ] 4.1 Implement `CubicalReggeGeometry<D, R>::deficit_angle(&self, complex, hinge_id) -> R` in `curvature.rs` as `(R::pi() + R::pi()) − Σ dihedral_angle(c, h)` summed over `hinge_top_cube_neighbors(hinge_id)`
-- [ ] 4.2 Short-circuit `UnitEdge` (and `Uniform`, and `PerAxis` with all-equal lengths) at the entry of `deficit_angle` to return exact `R::zero()`, avoiding floating-point noise
-- [ ] 4.3 Implement `CubicalReggeGeometry<D, R>::regge_action(&self, complex) -> R` as `Σ_h cell_volume(h, D-2) · deficit_angle(h)` over every (D−2)-hinge, accumulated from `R::zero()`
-- [ ] 4.4 Apply the same flat-case short-circuit to `regge_action`, returning exact `R::zero()`
+- [ ] 4.1 Implement `CubicalReggeGeometry<D, R>::deficit_angle(&self, complex, hinge_id) -> R` in `curvature.rs` as `(R::pi() + R::pi()) − Σ dihedral_angle(c, h)` summed over `hinge_top_cube_neighbors(hinge_id)`. Per the R2 correction, dihedral is the constant `R::pi() / (R::one() + R::one())`, so this reduces to `(4 − n) · π/2` where `n` is the incident-top-cube count.
+- [ ] 4.2 Short-circuit `n == 4` (full incidence) at the entry of `deficit_angle` to return exact `R::zero()`, avoiding floating-point noise from `2π − 2π`. This replaces the original "variant-based" short-circuit, which the R2 correction makes redundant — deficit no longer depends on edge-length variant, only on hinge incidence count.
+- [ ] 4.3 Implement `CubicalReggeGeometry<D, R>::regge_action(&self, complex) -> R` as `Σ_h cell_volume(h) · deficit_angle(h)` over every (D−2)-hinge enumerated by `iter_cells(D − 2)`, accumulated from `R::zero()`. Returns `R::zero()` for `D < 2`.
+- [ ] 4.4 Skip the volume×deficit multiplication when `deficit_angle` returns `R::zero()` (saves a `cell_volume` call per interior hinge — a meaningful win on large periodic lattices where most hinges are interior).
 - [ ] 4.5 Document in the doc comment that `timelike_axes` is ignored in this change set; the Lorentzian variant is deferred to a follow-up change
-- [ ] 4.6 Write property test: unit-edge open lattice → every deficit angle is exactly `R::zero()`
+- [ ] 4.6 Write property test: unit-edge open lattice → interior hinges (with 4 incident cubes) have deficit exactly `R::zero()`; boundary hinges have deficit equal to `(4 − n) · π/2` where `n` is the incidence count (`1` at a 2D corner, `2` on a 2D edge, etc.). The original task expecting "every deficit is 0 on an open lattice" was based on the incorrect arctan2 dihedral formula; open boundaries carry real intrinsic curvature that the corrected geometry preserves.
 - [ ] 4.7 Write property test: unit-edge periodic lattice → every deficit angle is exactly `R::zero()`; total `regge_action` is exactly `R::zero()`
-- [ ] 4.8 Write property test: single-edge perturbation has bounded support — hinges not in any incident top cube of the perturbed edge still report `deficit_angle == R::zero()`
-- [ ] 4.9 Write property test: on a `PerAxis` metric with one axis stretched (so the flat-case short-circuit does not fire), the difference between the periodic and the open-boundary Regge action equals the explicit boundary-hinge contribution to within a few `R::epsilon()` (computed by summing `cell_volume(h, D-2) · deficit_angle(h)` over the boundary hinges that exist on the open lattice but wrap on the periodic one)
+- [ ] 4.8 Write property test: edge-length perturbation does NOT change any deficit angle (under the axis-aligned cubical assumption, deficit depends only on the lattice's topology, not on its metric). Verifies the R2 geometric simplification holds end-to-end.
+- [ ] 4.9 Write property test: on a 2D unit-edge open 3×3 lattice the regge_action equals the explicit closed-form sum `4 · 1 · 3π/2 + 4 · 1 · π + 1 · 1 · 0 = 10π` (4 corners with deficit 3π/2, 4 edge-vertices with deficit π, 1 interior vertex with deficit 0). On a 2D periodic 3×3 lattice it equals exactly 0. Difference = 10π = boundary-hinge contribution.
 - [ ] 4.10 Write property test: `regge_action` on a metric with `timelike_axes = Some(...)` equals the same metric with `timelike_axes = None` (Lorentzian path is deferred)
+- [ ] 4.11 Write property test: on a 3D `PerAxis` lattice with stretched axis lengths, regge_action picks up the per-axis edge volumes on boundary hinges — verifying the volume factor flows through to the action (the only edge-length sensitivity the axis-aligned R3 implementation has).
 
 ## 5. Public API export and documentation
 

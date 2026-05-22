@@ -34,6 +34,7 @@
 //! See `openspec/changes/add-cubical-regge-calculus-core/tasks.md` §3 and §4.
 
 use super::CubicalReggeGeometry;
+use crate::traits::neighborhood::CellId;
 use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
 use deep_causality_num::RealField;
 
@@ -77,5 +78,73 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R> {
 
         let two = R::one() + R::one();
         R::pi() / two
+    }
+
+    /// Deficit angle at a hinge: `2π − Σ dihedral_angle(c, h)` summed over incident top
+    /// cubes.
+    ///
+    /// Under the axis-aligned cubical assumption (see `dihedral_angle`), every dihedral
+    /// equals π/2, so deficit reduces to `(4 − n) · π/2` where `n` is the incident-top-cube
+    /// count. The implementation short-circuits the `n == 4` (interior / fully-surrounded)
+    /// case to return exact `R::zero()`, avoiding floating-point noise from `2π − 2π`.
+    /// For `n < 4` (boundary hinges on open lattices), the result is the intrinsic
+    /// boundary curvature: positive deficit at corners and edges where less material
+    /// surrounds the hinge.
+    ///
+    /// Returns `R::zero()` for `D < 2` (where (D−2)-hinges don't exist) and for
+    /// out-of-range `hinge_id` (a tolerant degenerate case rather than a panic).
+    ///
+    /// `timelike_axes` is ignored in this change set; the Lorentzian variant is deferred
+    /// to a follow-up.
+    pub fn deficit_angle(&self, complex: &LatticeComplex<D, R>, hinge_id: CellId) -> R {
+        if D < 2 {
+            return R::zero();
+        }
+        let neighbors = complex.hinge_top_cube_neighbors(hinge_id);
+        let n = neighbors.len();
+        if n == 4 {
+            return R::zero();
+        }
+
+        let two = R::one() + R::one();
+        let two_pi = R::pi() + R::pi();
+        let pi_over_two = R::pi() / two;
+        let mut deficit = two_pi;
+        for _ in 0..n {
+            deficit -= pi_over_two;
+        }
+        deficit
+    }
+
+    /// Discrete Einstein–Hilbert (Regge) action: `Σ_h cell_volume(h) · deficit_angle(h)`
+    /// summed over every (D−2)-hinge.
+    ///
+    /// For `D < 2` the sum is empty and the action is `R::zero()`.
+    ///
+    /// On a regular periodic lattice every interior hinge has deficit zero (4 incident
+    /// top cubes, sum of dihedrals = 2π), so the action is zero. On an open lattice,
+    /// boundary hinges carry intrinsic curvature and the action is non-trivial. Under
+    /// the axis-aligned cubical assumption the deficit factor depends only on hinge
+    /// incidence count, so all edge-length sensitivity of the action flows through the
+    /// `cell_volume(h)` factor — vertex hinges in 2D have `volume = R::one()`
+    /// (the empty product), whereas edge hinges in 3D and square hinges in 4D scale
+    /// with the metric.
+    ///
+    /// `timelike_axes` is ignored in this change set; see `deficit_angle`.
+    pub fn regge_action(&self, complex: &LatticeComplex<D, R>) -> R {
+        if D < 2 {
+            return R::zero();
+        }
+        let mut action = R::zero();
+        for (hinge_id, hinge) in complex.iter_cells(D - 2).enumerate() {
+            let deficit = self.deficit_angle(complex, hinge_id);
+            // Skip the volume × 0 multiplication for interior hinges.
+            if deficit == R::zero() {
+                continue;
+            }
+            let vol = self.cell_volume(complex, &hinge);
+            action += vol * deficit;
+        }
+        action
     }
 }

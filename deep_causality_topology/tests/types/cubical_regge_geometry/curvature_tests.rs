@@ -3,17 +3,16 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Tests for `CubicalReggeGeometry::dihedral_angle` — Phase R2 tasks 3.8–3.10.
-//!
-//! Deficit-angle and Regge-action tests land in Phase R3.
+//! Tests for `CubicalReggeGeometry::dihedral_angle`, `deficit_angle`, and `regge_action`
+//! — Phases R2 (tasks 3.8–3.10) and R3 (tasks 4.6–4.11).
 
 use deep_causality_topology::utils_tests::{
-    open_square_3, per_axis_geometry, per_edge_uniform_per_axis, periodic_cube_3,
+    open_cube_3, open_square_3, per_axis_geometry, per_edge_uniform_per_axis, periodic_cube_3,
     periodic_square_3, unit_geometry,
 };
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeCell, LatticeComplex};
 
-use std::f64::consts::FRAC_PI_2;
+use std::f64::consts::{FRAC_PI_2, PI};
 
 /// Locate the cell at (position, orientation) in the canonical iter order.
 fn find_cell<const D: usize, R>(
@@ -194,4 +193,189 @@ fn per_edge_uniform_matches_per_axis_dihedral_3d() {
             assert!((a - e).abs() <= f64::EPSILON * 4.0);
         }
     }
+}
+
+// ===== Phase R3 — Deficit angles + Regge action ==================================
+
+// -- Task 4.6: open lattice — interior deficit 0, boundary deficit by formula -----
+
+#[test]
+fn open_2d_interior_vertex_deficit_is_zero() {
+    let lattice = open_square_3();
+    let geom = unit_geometry::<2>();
+    let (hid, _) = find_cell(&lattice, 0, &LatticeCell::vertex([1, 1]));
+    assert_eq!(geom.deficit_angle(&lattice, hid), 0.0);
+}
+
+#[test]
+fn open_2d_corner_vertex_deficit_is_3pi_over_2() {
+    let lattice = open_square_3();
+    let geom = unit_geometry::<2>();
+    let (hid, _) = find_cell(&lattice, 0, &LatticeCell::vertex([0, 0]));
+    let want = 3.0 * FRAC_PI_2;
+    let got = geom.deficit_angle(&lattice, hid);
+    assert!((got - want).abs() <= f64::EPSILON * 4.0);
+}
+
+#[test]
+fn open_2d_edge_vertex_deficit_is_pi() {
+    let lattice = open_square_3();
+    let geom = unit_geometry::<2>();
+    let (hid, _) = find_cell(&lattice, 0, &LatticeCell::vertex([1, 0]));
+    let got = geom.deficit_angle(&lattice, hid);
+    assert!((got - PI).abs() <= f64::EPSILON * 4.0);
+}
+
+#[test]
+fn open_2d_deficit_matches_4_minus_n_times_pi_over_2_everywhere() {
+    let lattice = open_square_3();
+    let geom = unit_geometry::<2>();
+    for hid in 0..lattice.num_cells(0) {
+        let n = lattice.hinge_top_cube_neighbors(hid).len();
+        let want = (4 - n as i32) as f64 * FRAC_PI_2;
+        let got = geom.deficit_angle(&lattice, hid);
+        assert!(
+            (got - want).abs() <= f64::EPSILON * 4.0,
+            "hinge {hid} n={n}: got {got}, want {want}",
+        );
+    }
+}
+
+// -- Task 4.7: periodic unit-edge → every deficit 0, action 0 ----------------------
+
+#[test]
+fn periodic_2d_unit_edge_all_deficits_are_zero() {
+    let lattice = periodic_square_3();
+    let geom = unit_geometry::<2>();
+    for hid in 0..lattice.num_cells(0) {
+        assert_eq!(geom.deficit_angle(&lattice, hid), 0.0);
+    }
+}
+
+#[test]
+fn periodic_2d_unit_edge_action_is_zero() {
+    let lattice = periodic_square_3();
+    let geom = unit_geometry::<2>();
+    assert_eq!(geom.regge_action(&lattice), 0.0);
+}
+
+#[test]
+fn periodic_3d_unit_edge_action_is_zero() {
+    let lattice = periodic_cube_3();
+    let geom = unit_geometry::<3>();
+    assert_eq!(geom.regge_action(&lattice), 0.0);
+}
+
+#[test]
+fn periodic_4d_unit_edge_action_is_zero() {
+    let lattice: LatticeComplex<4, f64> = LatticeComplex::hypercubic_torus(2);
+    let geom: CubicalReggeGeometry<4, f64> = CubicalReggeGeometry::unit();
+    assert_eq!(geom.regge_action(&lattice), 0.0);
+}
+
+// -- Task 4.8: edge-length perturbation does not change any deficit ----------------
+
+#[test]
+fn deficit_is_invariant_under_per_axis_perturbation_2d() {
+    let lattice = open_square_3();
+    let unit = unit_geometry::<2>();
+    let stretched = per_axis_geometry::<2>([2.0, 5.0]);
+    for hid in 0..lattice.num_cells(0) {
+        let a = unit.deficit_angle(&lattice, hid);
+        let b = stretched.deficit_angle(&lattice, hid);
+        assert!((a - b).abs() <= f64::EPSILON * 4.0);
+    }
+}
+
+#[test]
+fn deficit_is_invariant_under_per_edge_perturbation_3d() {
+    let lattice = open_cube_3();
+    let unit = unit_geometry::<3>();
+    let per_edge = per_edge_uniform_per_axis(&lattice, [2.0, 3.0, 5.0]);
+    for hid in 0..lattice.num_cells(1) {
+        let a = unit.deficit_angle(&lattice, hid);
+        let b = per_edge.deficit_angle(&lattice, hid);
+        assert!((a - b).abs() <= f64::EPSILON * 4.0);
+    }
+}
+
+// -- Task 4.9: open vs periodic action difference = boundary contribution ----------
+
+#[test]
+fn open_2d_unit_edge_action_equals_closed_form_10pi() {
+    // 3×3 open lattice: 4 corners (deficit 3π/2), 4 edge-vertices (deficit π),
+    // 1 interior (deficit 0). Vertex volume = 1 in 2D.
+    // Action = 4·1·(3π/2) + 4·1·π + 1·1·0 = 6π + 4π = 10π.
+    let lattice = open_square_3();
+    let geom = unit_geometry::<2>();
+    let got = geom.regge_action(&lattice);
+    let want = 10.0 * PI;
+    assert!(
+        (got - want).abs() <= f64::EPSILON * 32.0,
+        "got {got}, want {want}",
+    );
+}
+
+#[test]
+fn open_2d_minus_periodic_2d_equals_boundary_contribution() {
+    let open = open_square_3();
+    let periodic = periodic_square_3();
+    let geom = unit_geometry::<2>();
+    let diff = geom.regge_action(&open) - geom.regge_action(&periodic);
+    let want = 10.0 * PI;
+    assert!((diff - want).abs() <= f64::EPSILON * 32.0);
+}
+
+// -- Task 4.10: timelike_axes ignored in this change set ---------------------------
+
+#[test]
+fn timelike_axes_does_not_affect_regge_action() {
+    let lattice = open_square_3();
+    let euclidean: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::unit();
+    let lorentzian = euclidean.clone().with_timelike_axes([true, false]);
+    assert_eq!(
+        euclidean.regge_action(&lattice),
+        lorentzian.regge_action(&lattice),
+    );
+}
+
+#[test]
+fn timelike_axes_does_not_affect_deficit_angle() {
+    let lattice = open_square_3();
+    let euclidean: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::unit();
+    let lorentzian = euclidean.clone().with_timelike_axes([true, false]);
+    for hid in 0..lattice.num_cells(0) {
+        assert_eq!(
+            euclidean.deficit_angle(&lattice, hid),
+            lorentzian.deficit_angle(&lattice, hid),
+        );
+    }
+}
+
+// -- Task 4.11: 3D PerAxis — volume factor flows through ----------------------------
+
+#[test]
+fn open_3d_per_axis_action_scales_with_edge_volumes() {
+    // 3D hinges are edges (1-cells); their volume IS the per-axis edge length.
+    // Differing per-axis lengths give a different (and larger) total action than
+    // the unit case.
+    let lattice = open_cube_3();
+    let unit = unit_geometry::<3>();
+    let scaled = per_axis_geometry::<3>([2.0, 3.0, 5.0]);
+    let action_unit = unit.regge_action(&lattice);
+    let action_scaled = scaled.regge_action(&lattice);
+    assert!(action_unit > 0.0);
+    assert!(action_scaled > action_unit);
+}
+
+#[test]
+fn open_3d_per_axis_action_equals_per_edge_action() {
+    let lattice = open_cube_3();
+    let axis_lengths = [2.0, 3.0, 5.0];
+    let per_axis = per_axis_geometry::<3>(axis_lengths);
+    let per_edge = per_edge_uniform_per_axis(&lattice, axis_lengths);
+    let a = per_axis.regge_action(&lattice);
+    let e = per_edge.regge_action(&lattice);
+    let tol = f64::EPSILON * 64.0 * a.abs().max(1.0);
+    assert!((a - e).abs() <= tol, "per_axis={a} vs per_edge={e}");
 }
