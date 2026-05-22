@@ -16,7 +16,7 @@ use deep_causality_sparse::CsrMatrix;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::marker::PhantomData;
-use std::sync::Mutex;
+use std::sync::OnceLock;
 
 /// A combinatorial cubical lattice in `D` dimensions, paired with a metric precision `R`.
 ///
@@ -33,10 +33,12 @@ pub struct LatticeComplex<const D: usize, R: RealField> {
     /// Periodic boundary conditions per dimension
     periodic: [bool; D],
     /// Lazy memo of coboundary matrices: δ_k = (∂_{k+1})ᵀ.
-    /// Populated on first call to `coboundary_matrix(k)`; ignored for equality.
-    /// `Mutex` (not `RefCell`) so `LatticeComplex<D, R>` stays `Send + Sync` for the existing
+    /// One `OnceLock` per grade in `0..=D`; populated on first call to `coboundary_matrix(k)`;
+    /// ignored for equality. `OnceLock` (not `Mutex<HashMap>`) keeps reads lock-free after first
+    /// init and lets `coboundary_matrix` return `Cow::Borrowed`, eliminating the per-call CSR
+    /// clone. `Box<[OnceLock<...>]>` is `Send + Sync` for the existing
     /// `Arc<LatticeComplex<D, R>>` consumers in `gauge_field_lattice`.
-    coboundary_cache: Mutex<HashMap<usize, CsrMatrix<i8>>>,
+    coboundary_cache: Box<[OnceLock<CsrMatrix<i8>>]>,
     /// Anchors the metric-precision parameter `R`. Zero-sized.
     _precision: PhantomData<R>,
 }
@@ -47,7 +49,7 @@ impl<const D: usize, R: RealField> Clone for LatticeComplex<D, R> {
             shape: self.shape,
             periodic: self.periodic,
             // Cache intentionally not cloned: cheaper to recompute lazily on the clone.
-            coboundary_cache: Mutex::new(HashMap::new()),
+            coboundary_cache: Self::fresh_cache(),
             _precision: PhantomData,
         }
     }
@@ -69,9 +71,17 @@ impl<const D: usize, R: RealField> LatticeComplex<D, R> {
         Self {
             shape,
             periodic,
-            coboundary_cache: Mutex::new(HashMap::new()),
+            coboundary_cache: Self::fresh_cache(),
             _precision: PhantomData,
         }
+    }
+
+    /// Build an empty per-grade coboundary cache with `D + 1` slots (one per grade `0..=D`).
+    fn fresh_cache() -> Box<[OnceLock<CsrMatrix<i8>>]> {
+        (0..=D)
+            .map(|_| OnceLock::new())
+            .collect::<Vec<_>>()
+            .into_boxed_slice()
     }
 
     /// Create a fully periodic (toroidal) lattice.
@@ -294,22 +304,10 @@ impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
     }
 
     fn coboundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>> {
-        // Lazy memo: δ_k = (∂_{k+1})ᵀ.
-        {
-            let cache = self
-                .coboundary_cache
-                .lock()
-                .expect("coboundary_cache poisoned");
-            if let Some(m) = cache.get(&k) {
-                return Cow::Owned(m.clone());
-            }
-        }
-        let computed = self.boundary_matrix(k + 1).into_owned().transpose();
-        self.coboundary_cache
-            .lock()
-            .expect("coboundary_cache poisoned")
-            .insert(k, computed.clone());
-        Cow::Owned(computed)
+        // Lazy memo: δ_k = (∂_{k+1})ᵀ. One OnceLock per grade in 0..=D.
+        let slot = &self.coboundary_cache[k];
+        let m = slot.get_or_init(|| self.boundary_matrix(k + 1).into_owned().transpose());
+        Cow::Borrowed(m)
     }
 
     fn betti_number(&self, k: usize) -> usize {
