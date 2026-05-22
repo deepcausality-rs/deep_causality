@@ -1,20 +1,21 @@
 ## 1. Scaffolding and shared helpers
 
-- [ ] 1.1 Convert `LatticeComplex<D, R>::coboundary_cache` from `Mutex<HashMap<usize, CsrMatrix<i8>>>` to `Box<[OnceLock<CsrMatrix<i8>>]>` of length `D + 1` (one slot per grade `0..=D`). Initialize in `new()` via `(0..=D).map(|_| OnceLock::new()).collect::<Vec<_>>().into_boxed_slice()`. Update `coboundary_matrix(k)` to use `self.coboundary_cache[k].get_or_init(...)` and return `Cow::Borrowed`. Update `Clone` impl to construct fresh empty `OnceLock`s. Drop the `HashMap` and `Mutex` imports.
+- [ ] 1.1 Convert `LatticeComplex<D, R>::coboundary_cache` from `Mutex<HashMap<usize, CsrMatrix<i8>>>` to `Box<[OnceLock<CsrMatrix<i8>>]>` of length `D + 1` (one slot per grade `0..=D`). Initialize in `new()` via `(0..=D).map(|_| OnceLock::new()).collect::<Vec<_>>().into_boxed_slice()`. Update `coboundary_matrix(k)` to use `self.coboundary_cache[k].get_or_init(...)` and return `Cow::Borrowed`. Update `Clone` impl to construct fresh empty `OnceLock`s. Drop the `Mutex` import.
 - [ ] 1.2 Add `src/types/cubical_regge_geometry/volumes.rs` and `curvature.rs` as new submodules; register both in `src/types/cubical_regge_geometry/mod.rs`
-- [ ] 1.3 Add private associated function `LatticeComplex<D, R>::edge_index(position: [usize; D], axis: usize) -> usize` mapping a `(position, axis)` pair to a flat `Vec<R>` index for `PerEdge` metrics; cover with unit tests for open and periodic boundaries
-- [ ] 1.4 Add `tests/types/cubical_regge_geometry/{mod.rs, volumes_tests.rs, curvature_tests.rs}` skeletons; register in `tests/types/cubical_regge_geometry/mod.rs` and `tests/types/mod.rs`
-- [ ] 1.5 Update `deep_causality_topology/tests/BUILD.bazel` to include the new test folder module
-- [ ] 1.6 Add any shared test fixtures (small lattices with known geometry) under `src/utils_tests/cubical_regge_fixtures.rs`
+- [ ] 1.3 Add `tests/types/cubical_regge_geometry/{volumes_tests.rs, curvature_tests.rs}` skeletons (SPDX-header only; populated in R1–R3); register in `tests/types/cubical_regge_geometry/mod.rs`
+- [ ] 1.4 Update `deep_causality_topology/tests/BUILD.bazel` to add a `types/cubical_regge_geometry` `rust_test_suite` entry
+- [ ] 1.5 *Deferred:* `LatticeComplex::edge_index` and `src/utils_tests/cubical_regge_fixtures.rs` are introduced in §2 (R1) where they have a real consumer (`cell_volume`'s `PerEdge` arm). Introducing them in §1 generates `dead_code` warnings on `edge_index`, `edges_along`, `valid_positions` until R1 lands, and the project policy forbids `#[allow(dead_code)]` suppression.
 
 ## 2. Phase R1 — Cell volumes
 
-- [ ] 2.1 Implement `CubicalReggeGeometry<D, R>::cell_volume(&self, complex: &LatticeComplex<D, R>, cell_id: CellId, grade: usize) -> R` in `volumes.rs`, dispatching on the edge-length variant (`UnitEdge`, `Uniform`, `PerAxis`, `PerEdge`)
-- [ ] 2.2 Implement `CubicalReggeGeometry<D, R>::top_cell_volume(&self, complex, cell_id) -> R` as the `grade = D` convenience
-- [ ] 2.3 Add `debug_assert!` in the `PerEdge` path documenting the axis-aligned-cell assumption (cross-terms vanish)
-- [ ] 2.4 Write unit-edge property tests: every k-cube has volume exactly `R::one()` for every grade (instantiate over `f64` and `f32`)
-- [ ] 2.5 Write per-axis property tests: top-cube volume equals the fold-product of `axis_lengths` over `R`; k-cell volume equals product of active-axis lengths
-- [ ] 2.6 Write per-edge property test: a `PerEdge` metric with uniform-per-axis lengths reproduces the per-axis result to within `R::epsilon() * <small constant>`
+- [ ] 2.1 Add `pub(crate) fn LatticeComplex<D, R>::edge_index(position: [usize; D], axis: usize) -> usize` mapping a `(position, axis)` pair to a flat `Vec<R>` index in the canonical `iter_cells(1)` ordering, with `pub(crate)` helpers `edges_along(axis)` and `valid_positions(d, orientation)`. Cover with an inline `#[cfg(test)] mod edge_index_tests` checking open/periodic/mixed-boundary lattices and end-to-end agreement with `iter_cells(1)` enumeration.
+- [ ] 2.2 Implement `CubicalReggeGeometry<D, R>::cell_volume(&self, complex: &LatticeComplex<D, R>, cell: &LatticeCell<D>, grade: usize) -> R` in `volumes.rs`, dispatching on the edge-length variant (`UnitEdge`, `Uniform`, `PerAxis`, `PerEdge`)
+- [ ] 2.3 Implement `CubicalReggeGeometry<D, R>::top_cell_volume(&self, complex, cell) -> R` as the `grade = D` convenience
+- [ ] 2.4 Add `debug_assert!` in the `PerEdge` path documenting the axis-aligned-cell assumption (cross-terms vanish)
+- [ ] 2.5 Write unit-edge property tests: every k-cube has volume exactly `R::one()` for every grade (instantiate over `f64` and `f32`)
+- [ ] 2.6 Write per-axis property tests: top-cube volume equals the fold-product of `axis_lengths` over `R`; k-cell volume equals product of active-axis lengths
+- [ ] 2.7 Write per-edge property test: a `PerEdge` metric with uniform-per-axis lengths reproduces the per-axis result to within `R::epsilon() * <small constant>`
+- [ ] 2.8 Add `src/utils_tests/cubical_regge_fixtures.rs` (and register in `src/utils_tests/mod.rs`) with shared fixtures for the R1–R3 tests (small open/periodic lattices with known geometry).
 
 ## 3. Phase R2 — Hinge enumeration + dihedral angles
 

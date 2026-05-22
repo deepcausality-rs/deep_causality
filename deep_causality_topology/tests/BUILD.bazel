@@ -167,6 +167,23 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "types/cubical_regge_geometry",
+    srcs = glob([
+        "types/cubical_regge_geometry/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_metric",
+    ],
+)
+
+rust_test_suite(
     name = "types/lattice_complex",
     srcs = glob([
         "types/lattice_complex/*_tests.rs",

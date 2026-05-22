@@ -62,6 +62,17 @@
 //! Each of these methods would land in its own submodule (`volumes.rs`, `curvature.rs`,
 //! `hodge.rs`, ...) mirroring the layout of `regge_geometry/`. The struct's current
 //! fields are sufficient inputs for all of them.
+//!
+//! ## R1–R3 roadmap (in progress)
+//!
+//! See [`openspec/notes/CubicalReggeCalculus.md`](../../../../openspec/notes/CubicalReggeCalculus.md)
+//! for the full design note. The R1–R3 geometric core lands across the following submodules:
+//!
+//! - `volumes` — R1: cell volumes (`cell_volume`, `top_cell_volume`).
+//! - `curvature` — R2 + R3: hinge dihedral angles, deficit angles, Regge action.
+
+pub mod curvature;
+pub mod volumes;
 
 use deep_causality_metric::Metric;
 use deep_causality_num::RealField;
