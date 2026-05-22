@@ -20,4 +20,5 @@ pub mod regge_geometry;
 pub mod simplex;
 pub mod simplicial_complex;
 pub mod skeleton;
+pub mod topological_invariants;
 pub mod topology;

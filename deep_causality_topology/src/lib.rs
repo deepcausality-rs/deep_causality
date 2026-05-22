@@ -83,6 +83,7 @@ pub use crate::types::regge_geometry::ReggeGeometry;
 pub use crate::types::simplex::Simplex;
 pub use crate::types::simplicial_complex::{SimplicialComplex, SimplicialComplexBuilder};
 pub use crate::types::skeleton::Skeleton;
+pub use crate::types::topological_invariants::TopologicalInvariants;
 pub use crate::types::topology::Topology;
 
 // Re-export gauge field types

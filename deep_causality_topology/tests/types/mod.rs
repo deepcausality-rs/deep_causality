@@ -21,4 +21,5 @@ mod regge_geometry;
 mod simplex;
 mod simplicial_complex;
 mod skeleton;
+mod topological_invariants;
 mod topology;
