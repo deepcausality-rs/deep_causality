@@ -375,6 +375,47 @@ fn test_proper_time_wrong_metric_rank() {
 }
 
 #[test]
+fn test_proper_time_non_square_metric_error() {
+    let path = vec![vec![0.0, 0.0], vec![1.0, 0.0]];
+    // Square check uses shape[1] != shape[0]. Build a [2, 3] rank-2 tensor.
+    let metric = CausalTensor::new(vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0], vec![2, 3]).unwrap();
+    let r = proper_time_kernel(&path, &metric);
+    assert!(r.is_err(), "Non-square metric must error");
+}
+
+#[test]
+fn test_proper_time_nan_segment_error() {
+    // A NaN coordinate yields a non-finite proper-time increment.
+    let path = vec![vec![0.0, 0.0], vec![f64::NAN, 0.0]];
+    let metric = CausalTensor::new(vec![-1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap();
+    let r = proper_time_kernel(&path, &metric);
+    assert!(r.is_err(), "NaN in path must propagate as instability");
+}
+
+#[test]
+fn test_parallel_transport_nan_christoffel_error() {
+    let initial_vector = vec![1.0, 0.0];
+    let path = vec![vec![0.0, 0.0], vec![1.0, 0.0]];
+    // Non-finite Christoffel produces non-finite transported vector.
+    let mut data = vec![0.0; 8];
+    data[0] = f64::NAN;
+    let christoffel = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
+    let r = parallel_transport_kernel(&initial_vector, &path, &christoffel);
+    assert!(r.is_err());
+}
+
+#[test]
+fn test_time_dilation_angle_gamma_clamp_near_one() {
+    // Identical vectors → gamma=1.0 exactly, exercises the clamp/sqrt(0) branch.
+    let mut data = vec![0.0; 16];
+    data[1] = 1.0;
+    let t = CausalMultiVector::new(data, Metric::Minkowski(4)).unwrap();
+    let eta = time_dilation_angle_kernel(&t, &t).unwrap();
+    let val: f64 = eta.value();
+    assert!(val.abs() < 1e-10, "Identical vectors give eta=0, got {}", val);
+}
+
+#[test]
 fn test_proper_time_dimension_mismatch() {
     let path = vec![vec![0.0, 0.0, 0.0], vec![1.0, 0.0, 0.0]]; // 3D
     let metric = CausalTensor::new(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap(); // 2D

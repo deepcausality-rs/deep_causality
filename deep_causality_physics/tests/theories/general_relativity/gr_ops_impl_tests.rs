@@ -623,6 +623,161 @@ fn test_solve_geodesic_interface() {
     }
 }
 
+// ============================================================================
+// Direct coverage: ricci_tensor / ricci_scalar / einstein_tensor
+// ============================================================================
+
+fn build_flat_gr() -> GR<f64> {
+    let mut builder = SimplicialComplexBuilder::new(0);
+    builder.add_simplex(Simplex::new(vec![0])).unwrap();
+    let complex = builder.build().unwrap();
+
+    let num_simplices = complex.total_simplices();
+    let data = CausalTensor::zeros(&[num_simplices]);
+    let base = Manifold::new(complex, data, 0).unwrap();
+
+    // Minkowski metric padded to [N, 4, 6] with stride 6
+    let mut conn_data = vec![0.0; num_simplices * 4 * 6];
+    conn_data[0] = -1.0;
+    conn_data[7] = 1.0;
+    conn_data[14] = 1.0;
+    conn_data[21] = 1.0;
+    let connection = CausalTensor::from_vec(conn_data, &[num_simplices, 4, 6]);
+
+    let riemann = CausalTensor::zeros(&[num_simplices, 4, 4, 6]);
+    let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
+    GaugeField::new(base, topo_metric, connection, riemann).unwrap()
+}
+
+#[test]
+fn test_ricci_tensor_flat() {
+    let gr = build_flat_gr();
+    let ricci = gr.ricci_tensor().unwrap();
+    assert_eq!(ricci.shape(), &[4, 4]);
+    for v in ricci.as_slice() {
+        assert!(v.abs() < 1e-12, "Ricci must be zero for flat: {}", v);
+    }
+}
+
+#[test]
+fn test_ricci_scalar_flat() {
+    let gr = build_flat_gr();
+    let r = gr.ricci_scalar().unwrap();
+    assert!(r.abs() < 1e-12, "Ricci scalar must be zero for flat: {}", r);
+}
+
+#[test]
+fn test_ricci_scalar_singular_metric_errors() {
+    // Zeroed connection ⇒ singular ⇒ invert_4x4 errors.
+    let mut builder = SimplicialComplexBuilder::new(0);
+    builder.add_simplex(Simplex::new(vec![0])).unwrap();
+    let complex = builder.build().unwrap();
+    let n = complex.total_simplices();
+    let data = CausalTensor::zeros(&[n]);
+    let base = Manifold::new(complex, data, 0).unwrap();
+    let connection = CausalTensor::from_vec(vec![0.0; n * 4 * 6], &[n, 4, 6]);
+    let riemann = CausalTensor::zeros(&[n, 4, 4, 6]);
+    let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
+    let gr: GR<f64> = GaugeField::new(base, topo_metric, connection, riemann).unwrap();
+    assert!(gr.ricci_scalar().is_err());
+}
+
+#[test]
+fn test_einstein_tensor_flat() {
+    let gr = build_flat_gr();
+    let g = gr.einstein_tensor().unwrap();
+    assert_eq!(g.shape(), &[4, 4]);
+    for v in g.as_slice() {
+        assert!(v.abs() < 1e-12, "Einstein tensor must be zero for flat");
+    }
+}
+
+#[test]
+fn test_metric_tensor_accessor() {
+    let gr = build_flat_gr();
+    let m = gr.metric_tensor();
+    assert_eq!(m.shape(), &[1, 4, 6]);
+}
+
+// ============================================================================
+// momentum_constraint with matter momentum + 3-point neighbor branches
+// ============================================================================
+
+#[test]
+fn test_momentum_constraint_with_matter_momentum() {
+    let mut builder = SimplicialComplexBuilder::new(0);
+    builder.add_simplex(Simplex::new(vec![0])).unwrap();
+    builder.add_simplex(Simplex::new(vec![1])).unwrap();
+    builder.add_simplex(Simplex::new(vec![2])).unwrap();
+    let complex = builder.build().unwrap();
+
+    let n = complex.total_simplices();
+    let data = CausalTensor::zeros(&[n]);
+    let base = Manifold::new(complex, data, 0).unwrap();
+
+    // Spatial extraction uses idx = base + (i+1)*4 + (j+1) i.e. inner stride 4.
+    let mut conn_data = vec![0.0; n * 4 * 6];
+    for p in 0..n {
+        let b = p * 24;
+        conn_data[b] = -1.0;
+        conn_data[b + 5] = 1.0;
+        conn_data[b + 10] = 1.0;
+        conn_data[b + 15] = 1.0;
+    }
+    let connection = CausalTensor::from_vec(conn_data, &[n, 4, 6]);
+    let riemann = CausalTensor::zeros(&[n, 4, 4, 6]);
+    let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
+    let gr: GR<f64> = GaugeField::new(base, topo_metric, connection, riemann).unwrap();
+
+    let k = CausalTensor::zeros(&[n, 3, 3]);
+    let j = CausalTensor::from_vec(
+        vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+        &[n * 3],
+    );
+
+    let m = gr.momentum_constraint_field(&k, Some(&j)).unwrap();
+    assert_eq!(m.shape(), &[n, 3]);
+
+    // With K=0, divergence and connection terms vanish; result reduces to -8π j.
+    let eight_pi = 8.0 * std::f64::consts::PI;
+    let expected = [
+        -eight_pi, 0.0, 0.0, 0.0, -eight_pi, 0.0, 0.0, 0.0, -eight_pi,
+    ];
+    for (got, want) in m.as_slice().iter().zip(expected.iter()) {
+        assert!(
+            (got - want).abs() < 1e-9,
+            "matter momentum branch: got {}, want {}",
+            got,
+            want
+        );
+    }
+}
+
+#[test]
+fn test_momentum_constraint_singular_spatial_metric() {
+    // Provide a connection whose spatial 3-block is singular (all zeros)
+    // so that invert_3x3 inside momentum_constraint errors.
+    let mut builder = SimplicialComplexBuilder::new(0);
+    builder.add_simplex(Simplex::new(vec![0])).unwrap();
+    let complex = builder.build().unwrap();
+    let n = complex.total_simplices();
+    let data = CausalTensor::zeros(&[n]);
+    let base = Manifold::new(complex, data, 0).unwrap();
+
+    // Avoid stride=16 path: keep [N,4,6] with zero spatial block.
+    let connection = CausalTensor::from_vec(vec![0.0; n * 4 * 6], &[n, 4, 6]);
+    let riemann = CausalTensor::zeros(&[n, 4, 4, 6]);
+    let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
+    let gr: GR<f64> = GaugeField::new(base, topo_metric, connection, riemann).unwrap();
+
+    let k = CausalTensor::zeros(&[3, 3]);
+    let result = gr.momentum_constraint_field(&k, None);
+    assert!(
+        result.is_err(),
+        "Singular spatial metric must propagate as error"
+    );
+}
+
 #[test]
 fn test_parallel_transport_interface() {
     let mut builder = SimplicialComplexBuilder::new(0);

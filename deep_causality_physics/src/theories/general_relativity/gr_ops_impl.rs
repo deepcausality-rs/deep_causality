@@ -27,14 +27,17 @@ where
     S: Field + Float + Clone + From<f64> + Into<f64> + Copy + deep_causality_num::RealField,
 {
     fn ricci_tensor(&self) -> Result<CausalTensor<S>, PhysicsError> {
-        let riemann = self.field_strength();
+        let lie_fs = self.field_strength();
         let dim = 4;
 
         // Use East Coast metric type info (structure only)
         let metric_sig = EastCoastMetric::minkowski_4d().into_metric();
 
+        // Expand Lie-algebra storage [points, 4, 4, 6] to geometric [4, 4, 4, 4]
+        let riemann = expand_lie_to_riemann(lie_fs)?;
+
         let ct = CurvatureTensor::<S, (), (), (), ()>::new(
-            riemann.clone(),
+            riemann,
             metric_sig,
             CurvatureSymmetry::Riemann,
             dim,
@@ -73,12 +76,15 @@ where
 
     fn einstein_tensor(&self) -> Result<CausalTensor<S>, PhysicsError> {
         // Use CurvatureTensor from topology for the Einstein tensor calculation
-        let riemann = self.field_strength();
+        let lie_fs = self.field_strength();
         let dim = 4;
         let metric_sig = EastCoastMetric::minkowski_4d().into_metric();
 
+        // Expand Lie-algebra storage [points, 4, 4, 6] to geometric [4, 4, 4, 4]
+        let riemann = expand_lie_to_riemann(lie_fs)?;
+
         let ct = CurvatureTensor::<S, (), (), (), ()>::new(
-            riemann.clone(),
+            riemann,
             metric_sig,
             CurvatureSymmetry::Riemann,
             dim,

@@ -134,6 +134,28 @@ fn test_covariant_derivative_pure_gauge() {
 }
 
 #[test]
+fn test_covariant_derivative_gauge_term_active() {
+    // Non-zero gluon field along λ_3 (diagonal: diag(1,-1,0)) acts on a real psi.
+    // Verifies the gauge correction branch is exercised and produces finite output.
+    let psi = vec![1.0, 0.0, 0.5, 0.0, 0.0, 0.0]; // real color triplet
+    let psi_gradient = vec![0.0; 24];
+    let mut gluon_field = vec![0.0; 32];
+    // A_0^3 = 1.0 (mu=0, a=2 → 0*8+2)
+    gluon_field[2] = 1.0;
+    let coupling = 1.0;
+
+    let r = covariant_derivative_kernel(&psi, &psi_gradient, &gluon_field, coupling).unwrap();
+
+    // T^3 = λ_3/2 = diag(0.5, -0.5, 0). i*g*A^3*T^3 * psi gives purely imaginary correction.
+    // mu=0, i=0 (color 0): Im += g*A*0.5*psi_re_0 = 0.5
+    assert!((r[1] - 0.5).abs() < 1e-12, "result[1]={}", r[1]);
+    // mu=0, i=1 (color 1): Im += g*A*(-0.5)*psi_re_1 = -0.25
+    assert!((r[3] + 0.25).abs() < 1e-12, "result[3]={}", r[3]);
+    // mu=0, i=2: λ_3[2,2]=0, no contribution
+    assert!(r[4].abs() < 1e-12 && r[5].abs() < 1e-12);
+}
+
+#[test]
 fn test_covariant_derivative_dimension_error_psi() {
     let psi = vec![1.0, 0.0]; // Wrong size
     let psi_gradient = vec![0.0; 24];
@@ -247,6 +269,18 @@ fn test_confinement_potential_with_coulomb() {
         expected,
         v
     );
+}
+
+#[test]
+fn test_confinement_potential_nan_string_tension_error() {
+    let r = confinement_potential_kernel(1.0, f64::NAN, None);
+    assert!(r.is_err());
+}
+
+#[test]
+fn test_confinement_potential_nan_coulomb_error() {
+    let r = confinement_potential_kernel(1.0, 0.18, Some(f64::NAN));
+    assert!(r.is_err());
 }
 
 #[test]
