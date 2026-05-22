@@ -21,7 +21,7 @@ The R1–R3 surface remains untouched. The R4–R6 additions are designed to be 
 **Goals:**
 
 - Make `manifold/differential/{hodge,laplacian,codifferential}.rs` generic over `K: ChainComplex` where `K::Metric: HasHodgeStar`, with both `ReggeGeometry<T>` (simplicial) and `CubicalReggeGeometry<D, S>` (cubical) implementing the capability.
-- Deliver a closed-form cubical Hodge ⋆ on `LatticeComplex<D>` for every grade `k`, with diagonal entries `volume(dual (D−k)-cell) / volume(primal k-cell)`, returned as a `CsrMatrix<f64>` from `deep_causality_sparse`.
+- Deliver a closed-form cubical Hodge ⋆ on `LatticeComplex<D>` for every grade `k`, with diagonal entries `volume(dual (D−k)-cell) / volume(primal k-cell)`, returned as a `CsrMatrix<R>` from `deep_causality_sparse` (generic over `R: RealField + FromPrimitive`).
 - Track Euclidean vs. Lorentzian signature at the type level via `CubicalReggeGeometry<D, S>` with `S ∈ {Euclidean, Lorentzian}`, defaulting to `Euclidean` so R1–R3 call sites continue to compile unchanged.
 - Compute per-cell metric tensors with the correct signature on demand.
 - Detect light-cone violations at construction time for the Lorentzian variant.
@@ -57,23 +57,25 @@ Within this change set, tasks land in strict R4 → R5 → R6 order. Each phase 
 The Hodge ⋆ is metric-dependent: it cannot live on `ChainComplex` itself because `CellComplex<C>` has no metric (`Metric = ()`). The natural shape is a separate capability trait:
 
 ```rust
-pub trait HasHodgeStar {
-    fn hodge_star_matrix(&self, k: usize) -> CsrMatrix<f64>;
+pub trait HasHodgeStar<R: RealField> {
+    fn hodge_star_matrix(&self, k: usize) -> CsrMatrix<R>;
 }
 
-impl<T: FloatType> HasHodgeStar for ReggeGeometry<T> { /* simplicial */ }
-impl<const D: usize, S: SignatureMarker> HasHodgeStar for CubicalReggeGeometry<D, S> { /* cubical */ }
+impl<R: RealField + FromPrimitive> HasHodgeStar<R> for ReggeGeometry<R> { /* simplicial */ }
+impl<const D: usize, R: RealField + FromPrimitive, S: SignatureMarker>
+    HasHodgeStar<R> for CubicalReggeGeometry<D, R, S> { /* cubical */ }
 ```
 
-The generic differential operators then take a `where K::Metric: HasHodgeStar` bound. Complexes whose metric is `()` (e.g. `CellComplex<C>`) silently lose access to `manifold.hodge_star(k)` and `manifold.laplacian(k)` — correct behavior, since those operators are not defined without a metric.
+The generic differential operators then take a `where K::Metric: HasHodgeStar<R>` bound. Complexes whose metric is `()` (e.g. `CellComplex<C>`) silently lose access to `manifold.hodge_star(k)` and `manifold.laplacian(k)` — correct behavior, since those operators are not defined without a metric.
 
 **Why a trait, not an associated method on `CubicalReggeGeometry`:**
-Both `ReggeGeometry<T>` (simplicial, already shipped) and `CubicalReggeGeometry<D, S>` (cubical, this change set) need to be usable through the same generic call. A trait is the only way to make `Manifold<K, F>::hodge_star(k)` resolve to either backend's implementation based on `K::Metric`.
+Both `ReggeGeometry<R>` (simplicial, already shipped) and `CubicalReggeGeometry<D, R, S>` (cubical, this change set) need to be usable through the same generic call. A trait is the only way to make `Manifold<K, R>::hodge_star(k)` resolve to either backend's implementation based on `K::Metric`.
 
 **Alternatives considered:**
-- Add `type HodgeStar` to `ChainComplex` directly. Rejected: forces `CellComplex<C>::HodgeStar = ()` with a `Never`-style impl, which is uglier than just bounding `K::Metric: HasHodgeStar` at the use site.
+- Add `type HodgeStar` to `ChainComplex` directly. Rejected: forces `CellComplex<C>::HodgeStar = ()` with a `Never`-style impl, which is uglier than just bounding `K::Metric: HasHodgeStar<R>` at the use site.
 - Use dynamic dispatch (`Box<dyn HodgeBackend>`). Rejected: violates the AGENTS.md "static dispatch, no `dyn`" rule. Static dispatch via trait bound is the project convention.
-- Make the trait method return `CausalTensor<f64>` instead of `CsrMatrix<f64>`. Rejected: the Hodge ⋆ on a lattice complex is diagonal but globally large (~num_cells(k) entries); `CsrMatrix` from `deep_causality_sparse` is the right representation, and the matrix integrates directly with the existing `coboundary_matrix` algebra used by the differential operators.
+- Make the trait method return `CausalTensor<R>` instead of `CsrMatrix<R>`. Rejected: the Hodge ⋆ on a lattice complex is diagonal but globally large (~num_cells(k) entries); `CsrMatrix` from `deep_causality_sparse` is the right representation, and the matrix integrates directly with the existing `coboundary_matrix` algebra used by the differential operators.
+- Make the trait non-generic and hard-code `f64`. Rejected: regresses the precision parameterisation that R1–R3 already shipped on `CubicalReggeGeometry<const D, R>`. The `R: RealField` generic is the load-bearing constraint of this change set.
 
 ### Decision 3: Type-level signature marker `S` on `CubicalReggeGeometry<D, S>`, defaulted to `Euclidean`
 
@@ -93,8 +95,8 @@ Source compatibility is preserved because `S` defaults to `Euclidean` — every 
 The `Lorentzian` variant is constructed via a distinct builder (`with_timelike_axes_lorentzian` or similar) that requires `timelike_axes` to be `Some(...)` with at least one `true` entry and validates the construction at run time (returning `Err(LightConeViolation)` if edge lengths violate the cone).
 
 **Some methods are only available on certain signatures:**
-- `regge_action(&self, complex) -> f64` — available on `Euclidean` only. The Lorentzian variant returns `Complex<f64>` and is a distinct method.
-- `regge_action_lorentzian(&self, complex) -> Complex<f64>` — available on `Lorentzian` only.
+- `regge_action(&self, complex) -> R` — available on `Euclidean` only. The Lorentzian variant returns `Complex<R>` and is a distinct method.
+- `regge_action_lorentzian(&self, complex) -> Complex<R>` — available on `Lorentzian` only.
 - `metric_tensor_at` — available on both, with signature determined by `S`.
 - `hodge_star_matrix` — available on both. The Lorentzian Hodge ⋆ carries sign factors per the signature convention.
 
@@ -163,7 +165,7 @@ Edge `e` contributes to `∂S_R/∂(length_e)` only through hinges whose dihedra
 
 The closed form for `∂(dihedral)/∂(length)` on the per-axis / per-edge case is the derivative of an `arctan2` — a standard exercise (`d/dx arctan(y/x) = -y/(x²+y²)` etc.). This is the entire numerical content of R6 aside from bookkeeping.
 
-The implementation produces `Vec<f64>` of length `num_edges()`, indexed by `edge_index` (the same private helper introduced in R1).
+The implementation produces `Vec<R>` of length `num_edges()`, indexed by `edge_index` (the same private helper introduced in R1).
 
 **Verification:** finite-difference check `(S(L + ε·δ_i) − S(L − ε·δ_i)) / (2ε)` ≈ analytical gradient to ~5 sig figs for ε ~ 1e-5. This is the strongest correctness test; ships as a property test.
 
@@ -173,7 +175,7 @@ The implementation produces `Vec<f64>` of length `num_edges()`, indexed by `edge
 
 ### Decision 7: Metropolis update — single-edge, locality-exploiting
 
-A Metropolis-Hastings update over `EdgeLengths { lengths: Vec<f64> }`:
+A Metropolis-Hastings update over `EdgeLengths<R> { lengths: Vec<R> }`:
 
 1. Pick an edge `e` uniformly at random from `rng`.
 2. Propose `length_e' = length_e + σ · normal(0, 1)` for a step size `σ` (passed in or held as a field).
@@ -190,16 +192,16 @@ A Metropolis-Hastings update over `EdgeLengths { lengths: Vec<f64> }`:
 - Multi-edge / cluster updates. Rejected: out of scope. The user can call `metropolis_update` in a loop or implement their own cluster algorithm against the `regge_gradient` primitive.
 - Hybrid Monte Carlo (HMC) with the gradient. Rejected: out of scope. The gradient primitive is provided; the caller can build HMC on top.
 
-### Decision 8: `Complex<f64>` source — internal shim or external crate?
+### Decision 8: `Complex<R>` source — generic shim in `deep_causality_num`
 
-The Lorentzian Regge action returns `Complex<f64>` (real part = Euclidean action; imaginary part = Lorentzian phase under Wick rotation). The project already constrains us to "avoid the introduction of external crates unless necessary for testing" (AGENTS.md). Two options:
+The Lorentzian Regge action returns `Complex<R>` (real part = Euclidean action; imaginary part = Lorentzian phase under Wick rotation), generic over `R: RealField` like every other arithmetic surface in this change set. The project already constrains us to "avoid the introduction of external crates unless necessary for testing" (AGENTS.md). Two options:
 
-- **Internal shim:** a tiny `Complex<f64> { re: f64, im: f64 }` with the four arithmetic ops, exposed from `deep_causality_num`. ~50 LOC.
-- **External `num-complex` crate:** mature, widely used. ~200 KB compile-time cost; adds one dep to the workspace.
+- **Generic in-house type:** `pub struct Complex<R: RealField> { re: R, im: R }` with the four arithmetic ops, exposed from `deep_causality_num`. ~80 LOC.
+- **External `num-complex` crate:** mature, widely used. Adds an external dependency to the workspace, violating the AGENTS.md rule. Rejected on that basis alone.
 
-**Recommendation:** internal shim under `deep_causality_num`, since complex numbers will be useful for several other future change sets (Hodge ⋆ in higher signatures, quantum-gravity observables, GR-spinor work in `deep_causality_physics`). Build it once, use it across the crate graph. This is a coordinated change to `deep_causality_num`, called out explicitly in the impact section.
+**Recommendation:** generic in-house type under `deep_causality_num`, since complex numbers will be useful for several other future change sets (Hodge ⋆ in higher signatures, quantum-gravity observables, GR-spinor work in `deep_causality_physics`). Build it once, use it across the crate graph. This is a coordinated change to `deep_causality_num`, called out explicitly in the impact section.
 
-**Open question:** if `deep_causality_num` already has a complex type, use it. If not, this change set lands the shim there. Verified in the open-questions section.
+**Open question:** if `deep_causality_num::complex_number` already exposes a `Complex` type, inspect whether it is already generic over `R: RealField`. If yes, reuse unchanged. If it is hard-coded to `f64`, generalising it is itself a small coordinated change against `deep_causality_num` and is a prerequisite to R5.6 of `tasks.md`. Verified at Block 0 of `tasks.md`.
 
 ### Decision 9: Light-cone-violation detection at construction, not at action evaluation
 
@@ -240,7 +242,7 @@ This change is structurally non-breaking but semantically extends R1–R3's surf
 
 - **Source compatibility (R1–R3 call sites):**
   - `CubicalReggeGeometry::<D>::unit_edge()` etc. continue to compile and produce `CubicalReggeGeometry<D, Euclidean>`.
-  - `regge_action(&self, complex) -> f64` is still available, now only on the `Euclidean` impl block. R1–R3 code that called `regge_action` on a Euclidean default continues to work.
+  - `regge_action(&self, complex) -> R` is still available, now only on the `Euclidean` impl block. R1–R3 code that called `regge_action` on a Euclidean default continues to work.
   - `with_timelike_axes` (the R1–R3 Lorentzian-flag builder, documented in Stage C of `add-cubical-complexes`) is repurposed as the entry point to the `Lorentzian` constructor. Existing call sites are extremely rare (the feature was scaffold-only in R1–R3) and any that exist would need to be reviewed manually. Audit the workspace before landing.
 - **API additions (the new surface):**
   - `HasHodgeStar` trait added to the crate root.
@@ -249,16 +251,16 @@ This change is structurally non-breaking but semantically extends R1–R3's surf
   - `AcceptReject` enum added.
   - New methods on `CubicalReggeGeometry<D, S>`: `hodge_star_matrix`, `metric_tensor_at`, `regge_action_lorentzian` (Lorentzian only), `regge_gradient`, `metropolis_update`.
   - `Manifold::hodge_star`, `Manifold::laplacian`, `Manifold::codifferential` widen their trait bounds — source-compatible for all known downstream code.
-  - `deep_causality_num` gains a `Complex<f64>` type (if not already present) — coordinated change to that crate.
+  - `deep_causality_num` gains (or is generalised to expose) a `Complex<R: RealField>` type — coordinated change to that crate.
 - **Rollback:** revert the change set. No persisted state. The R1–R3 surface is preserved exactly. Downstream code that started using the new Hodge / Lorentzian / Metropolis surfaces would need to be reverted as well, but no R1–R3 user is affected.
 - **Sequencing:** depends on `add-cubical-regge-calculus-core` having shipped. Unblocks `add-hodge-decomposition` (the uniform discrete Hodge–Helmholtz decomposition, §7 of the design note).
 
 ## Open Questions
 
-1. **Does `deep_causality_num` already expose a `Complex<f64>`?** If yes, use it. If no, this change set lands a minimal `Complex<f64>` shim there. Verify before opening the implementation pass.
+1. **Does `deep_causality_num::complex_number` already expose a `Complex<R: RealField>` generic type?** The directory exists; inspect whether the type is generic or hard-coded to `f64`. If generic, reuse unchanged. If `f64`-bound, generalising it is a coordinated micro-change against `deep_causality_num` and is a prerequisite to R5.6 of `tasks.md`. Verify at Block 0.
 2. **Should the `S` parameter be a marker type (`Euclidean`, `Lorentzian`) or a const generic (`const S: SignatureKind`)?** Recommendation in design.md: marker types, because const generics over enums are unstable on the project's MSRV (verify) and marker types are equally expressive.
 3. **Should `Manifold::laplacian(k)` return `CsrMatrix<F>` or `CausalTensor<F>`?** R4 ships it as `CsrMatrix<F>` because that's what the existing simplicial impl uses. If a future change set wants a tensor view, it can wrap.
 4. **Adaptive step-size tuning for `metropolis_update`?** Recommendation: out of scope here; callers tune their own.
-5. **Should `regge_gradient` return `Vec<f64>` or `CausalTensor<f64>`?** Recommendation: `Vec<f64>` indexed by `edge_index`. Conversion to a tensor is one line at the call site, and the gradient is intrinsically flat-indexed (not a multi-dimensional array).
+5. **Should `regge_gradient` return `Vec<R>` or `CausalTensor<R>`?** Recommendation: `Vec<R>` indexed by `edge_index`. Conversion to a tensor is one line at the call site, and the gradient is intrinsically flat-indexed (not a multi-dimensional array).
 6. **Cache invalidation for `hodge_star_matrix`?** If we cache the matrix per `(complex, grade)`, mutations to `CubicalReggeGeometry<D, S>` (which happen during `metropolis_update`) must invalidate the cache. Recommendation: don't cache in this change set. The matrix is cheap (sparse, diagonal) to construct. Revisit in a perf change.
-7. **`HasHodgeStar` method shape.** Returning `CsrMatrix<f64>` forces `f64` precision. Should the trait be generic over a `FloatType` parameter? Recommendation: yes — `trait HasHodgeStar<F: FloatType> { fn hodge_star_matrix(&self, k: usize) -> CsrMatrix<F> }`. Aligns with the existing `Manifold<K, F>` parameterization. Confirm during implementation.
+7. **`HasHodgeStar` method shape.** ~~Open in the original draft.~~ **Resolved (Decision 2):** the trait is `pub trait HasHodgeStar<R: RealField> { fn hodge_star_matrix(&self, k: usize) -> CsrMatrix<R>; }`. Generic over `R: RealField` to align with `CubicalReggeGeometry<const D, R>`, `ReggeGeometry<R>`, and `Manifold<K, R>`. No `f64` appears in the trait surface or in any new public signature added by this change set.
