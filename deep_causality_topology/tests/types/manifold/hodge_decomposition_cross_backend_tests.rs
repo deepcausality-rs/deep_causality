@@ -5,37 +5,33 @@
 
 //! Cross-backend tests for `Manifold::hodge_decompose` (Block H3, task 4.4).
 //!
-//! The same prescribed scalar field is used to construct ω = df on two
-//! backends, and the resulting decomposition is checked for shared algebraic
-//! invariants:
+//! The same prescribed scalar field f(x, y) = 2x + 3y is decomposed twice:
 //!
-//! 1. The Hodge orthogonality identity `‖α‖² + ‖β‖² + ‖h‖² = ‖ω‖²` holds in
-//!    both backends to relative tolerance `1e-3`.
-//! 2. Both backends produce non-degenerate decompositions (`α` non-zero) for
-//!    a pure-exact 1-form on a non-degenerate triangulation.
+//! 1. Simplicially: a `SimplicialComplex` built by `PointCloud::triangulate`
+//!    from a right triangle (0,0), (1,0), (0,1) at radius 1.5. Three vertices,
+//!    three edges, one 2-simplex.
+//! 2. Cubically: a `LatticeComplex<2, f64>` of 2x2 cells = 3x3 vertices, with
+//!    `CubicalReggeGeometry<2, f64, Euclidean>` at unit edge.
 //!
-//! ## Fixture choice
+//! ## Why a right triangle rather than the full unit square
 //!
-//! `spec.md` task 4.4 calls for a "unit square (two triangles) versus unit
-//! square (one 2-cube)" cross-check. That fixture cannot be built through the
-//! existing `PointCloud::triangulate` path: triangulating four coplanar
-//! corner points in 2D produces a degenerate 3-simplex (a flat tetrahedron
-//! spanning all four points) whose lumped-mass `M_0` collapses to zero,
-//! making the simplicial codifferential return identically zero. That is an
-//! upstream behaviour of `PointCloud::triangulate`, not an algorithmic
-//! property of `hodge_decompose`, and is out of scope for this change set.
+//! `spec.md` task 4.4 ideally calls for "unit square (two triangles) versus
+//! unit square (one 2-cube)". Building the two-triangle simplicial fixture
+//! requires a manifold-respecting triangulation algorithm:
+//! `PointCloud::triangulate` is Vietoris-Rips — it builds every clique of
+//! every grade — so on the four coplanar corners of the unit square at
+//! radius 1.5 it produces a complex with 6 edges (4 sides + 2 diagonals) and
+//! 4 overlapping triangles (every 3-clique), not the 5 edges + 2 triangles
+//! of a Delaunay triangulation. The 4-triangle Vietoris-Rips complex fails
+//! `Manifold::with_metric`'s manifold-property check because four triangles
+//! sharing pairwise interiors do not form a 2-manifold.
 //!
-//! We therefore use a single right triangle on the simplicial side (the
-//! `setup_triangle_manifold` pattern already exercised by the differential
-//! operator tests) and the `LatticeComplex<2>` unit square on the cubical
-//! side. The cross-backend check is qualitative — both backends produce a
-//! non-degenerate, orthogonality-respecting decomposition of ω = df — rather
-//! than exact numerical L2-norm agreement, since the two underlying domains
-//! differ in cell counts and boundary geometry.
-//!
-//! When `PointCloud::triangulate` gains a cap on top-grade dimension or a
-//! flat-fixture constructor lands, the test can be tightened to the full
-//! exact-numerical agreement specified in `spec.md` 4.4.
+//! The previous limitation (degenerate 3-simplex collapsing lumped-mass M_0)
+//! was already addressed by the ambient-dimension cap on `triangulate`. The
+//! remaining gap — Delaunay (or other manifold-respecting) triangulation —
+//! is a separate, larger upstream change in `PointCloud`. Until that lands,
+//! the cross-backend fixture stays at the right-triangle vs unit-square
+//! comparison, with the same algebraic invariants checked on both sides.
 
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
@@ -49,9 +45,7 @@ fn norm_sq(v: &[f64]) -> f64 {
 
 // ---------------------------------------------------------------------------
 // Simplicial fixture: a single right triangle with legs 1 and 1.
-// Vertices: v0=(0,0), v1=(1,0), v2=(0,1).
-// Edges: (0,1), (0,2), (1,2). Length 1, 1, √2.
-// One 2-simplex.
+// Vertices: v0=(0,0), v1=(1,0), v2=(0,1). Three edges, one 2-simplex.
 // ---------------------------------------------------------------------------
 
 fn simplicial_triangle_manifold() -> Manifold<SimplicialComplex<f64>, f64> {
@@ -62,19 +56,23 @@ fn simplicial_triangle_manifold() -> Manifold<SimplicialComplex<f64>, f64> {
         .triangulate(1.5)
         .expect("triangulate single triangle at radius 1.5");
 
-    let n_edges = complex.num_cells(1);
-    let edge_lengths = CausalTensor::new(vec![1.0_f64; n_edges], vec![n_edges]).unwrap();
+    let coords: [(f64, f64); 3] = [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0)];
+    let skeletons = complex.skeletons();
+    let n_edges = skeletons[1].simplices().len();
+    let mut edge_lengths_vec = Vec::with_capacity(n_edges);
+    for simplex in skeletons[1].simplices() {
+        let v = simplex.vertices();
+        let (xa, ya) = coords[v[0]];
+        let (xb, yb) = coords[v[1]];
+        let length = ((xb - xa).powi(2) + (yb - ya).powi(2)).sqrt();
+        edge_lengths_vec.push(length);
+    }
+    let edge_lengths = CausalTensor::new(edge_lengths_vec, vec![n_edges]).unwrap();
     let metric = ReggeGeometry::new(edge_lengths);
 
-    let total: usize = complex
-        .skeletons()
-        .iter()
-        .map(|s| s.simplices().len())
-        .sum();
-    let n0 = complex.skeletons()[0].simplices().len();
+    let total: usize = skeletons.iter().map(|s| s.simplices().len()).sum();
+    let n0 = skeletons[0].simplices().len();
     let mut data_vec = vec![0.0_f64; total];
-    // Linear field f(x, y) = 2x + 3y on the triangle vertices.
-    let coords: [(f64, f64); 3] = [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0)];
     for (i, slot) in data_vec.iter_mut().enumerate().take(n0) {
         let (x, y) = coords[i];
         *slot = 2.0 * x + 3.0 * y;
@@ -84,21 +82,14 @@ fn simplicial_triangle_manifold() -> Manifold<SimplicialComplex<f64>, f64> {
 }
 
 // ---------------------------------------------------------------------------
-// Cubical fixture: one 2-cube (the unit square).
+// Cubical fixture: a 2x2 lattice (the unit square at single-cell refinement).
 // ---------------------------------------------------------------------------
 
 fn cubical_unit_square_manifold() -> Manifold<LatticeComplex<2, f64>, f64> {
-    // `square_open(2)` builds a 2x2 grid of cells = 3x3 vertices. The fixture
-    // remains a discretised unit square; refining beyond a single 2-cube is
-    // necessary because `square_open(1)` collapses to a single vertex with
-    // no edges (the lattice extent is in cells per side, not vertices, so
-    // extent 1 leaves no interior structure for d to act on).
     let lattice: LatticeComplex<2, f64> = LatticeComplex::square_open(2);
     let n0 = lattice.num_cells(0);
     let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
     let mut data_vec = vec![0.0_f64; total];
-    // Linear field f(x, y) = 2x + 3y. Vertex coordinates on the lattice are
-    // (i % side, i / side) where side = 3 for a 2x2-cell open lattice.
     let side = 3usize;
     for (i, slot) in data_vec.iter_mut().enumerate().take(n0) {
         let x = (i % side) as f64;
@@ -127,7 +118,7 @@ fn simplicial_and_cubical_decompositions_both_satisfy_orthogonality_identity() {
         + norm_sq(s_result.harmonic().as_slice());
     let s_rel = (s_sum - s_omega_norm_sq).abs() / s_omega_norm_sq.max(1.0);
     assert!(
-        s_rel < 1e-3,
+        s_rel < 1e-6,
         "simplicial orthogonality violated: ‖α‖²+‖β‖²+‖h‖²={}, ‖ω‖²={}, rel={}",
         s_sum,
         s_omega_norm_sq,
@@ -145,11 +136,58 @@ fn simplicial_and_cubical_decompositions_both_satisfy_orthogonality_identity() {
         + norm_sq(c_result.harmonic().as_slice());
     let c_rel = (c_sum - c_omega_norm_sq).abs() / c_omega_norm_sq.max(1.0);
     assert!(
-        c_rel < 1e-3,
+        c_rel < 1e-6,
         "cubical orthogonality violated: ‖α‖²+‖β‖²+‖h‖²={}, ‖ω‖²={}, rel={}",
         c_sum,
         c_omega_norm_sq,
         c_rel
+    );
+}
+
+#[test]
+fn simplicial_and_cubical_decompositions_agree_on_vanishing_component_structure() {
+    let s_manifold = simplicial_triangle_manifold();
+    let s_omega = s_manifold.exterior_derivative(0);
+    let s_result = s_manifold
+        .hodge_decompose(&s_omega, 1)
+        .expect("simplicial decompose ω = df");
+    let s_omega_n = norm_sq(s_omega.as_slice());
+    let s_vanishing = (norm_sq(s_result.co_exact().as_slice())
+        + norm_sq(s_result.harmonic().as_slice()))
+        / s_omega_n;
+
+    let c_manifold = cubical_unit_square_manifold();
+    let c_omega = c_manifold.exterior_derivative(0);
+    let c_result = c_manifold
+        .hodge_decompose(&c_omega, 1)
+        .expect("cubical decompose ω = df");
+    let c_omega_n = norm_sq(c_omega.as_slice());
+    let c_vanishing = (norm_sq(c_result.co_exact().as_slice())
+        + norm_sq(c_result.harmonic().as_slice()))
+        / c_omega_n;
+
+    // For ω = df on a non-degenerate domain, both backends must report the
+    // co-exact and harmonic components as effectively zero relative to ω².
+    assert!(
+        s_vanishing < 1e-6,
+        "simplicial: (β² + h²) / ω² = {} should be < 1e-6",
+        s_vanishing
+    );
+    assert!(
+        c_vanishing < 1e-6,
+        "cubical: (β² + h²) / ω² = {} should be < 1e-6",
+        c_vanishing
+    );
+
+    // Cross-backend agreement on the vanishing ratio to spec.md 4.4 tolerance.
+    let agreement_diff = (s_vanishing - c_vanishing).abs();
+    assert!(
+        agreement_diff < 1e-6,
+        "cross-backend vanishing-ratio disagreement {} exceeds spec.md 4.4 tolerance 1e-6 \
+         (simplicial: {}, cubical: {})",
+        agreement_diff,
+        s_vanishing,
+        c_vanishing
     );
 }
 
@@ -173,11 +211,10 @@ fn cubical_decomposition_of_pure_exact_1form_is_non_degenerate() {
         c_beta_norm_sq,
         c_h_norm_sq
     );
-    // β and h must collectively account for at most 1% of ω's energy.
     let vanishing_ratio = (c_beta_norm_sq + c_h_norm_sq) / c_omega_norm_sq;
     assert!(
-        vanishing_ratio < 1e-2,
-        "cubical: (β² + h²) / ω² = {} should be near zero",
+        vanishing_ratio < 1e-6,
+        "cubical: (β² + h²) / ω² = {} should be < 1e-6",
         vanishing_ratio
     );
 }

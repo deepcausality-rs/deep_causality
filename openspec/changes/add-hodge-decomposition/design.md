@@ -125,6 +125,13 @@ A prescribed 1-form field on the unit square is decomposed twice: once with the 
 
 This is the property-test analog of "discretisation independence" for the Hodge decomposition. If the two backends disagree, either the simplicial Hodge ⋆ (R4.2 of the prerequisite) or the cubical Hodge ⋆ (R4.3 / R4.4) is wrong, and the decomposition itself cannot be the locus of the bug. This separation of concerns is the load-bearing reason for the two-backend test design.
 
+**Current coverage (post-H3).** The H3 cross-backend tests verify:
+
+1. Orthogonality identity `‖α‖² + ‖β‖² + ‖h‖² = ‖ω‖²` on both backends at `1e-6`.
+2. Vanishing-component agreement: for `ω = df` (pure exact), both backends report `(‖β‖² + ‖h‖²) / ‖ω‖² < 1e-6`, and the cross-backend disagreement on that ratio is itself `< 1e-6`.
+
+Full per-component L2 norm equality (the original scenario in `spec.md`) requires a manifold-respecting two-triangle simplicial unit square. `PointCloud::triangulate` is Vietoris-Rips — it builds every clique of every grade — so on the four coplanar corners of the unit square at radius 1.5 it produces 4 overlapping triangles (every 3-clique), not the 2 non-overlapping triangles of a Delaunay triangulation. `Manifold::with_metric` rejects the resulting complex because four interior-sharing triangles do not form a 2-manifold. The single-right-triangle simplicial fixture used in `hodge_decomposition_cross_backend_tests.rs` sidesteps this; tightening to the full unit-square fixture awaits a Delaunay (or other manifold-respecting) triangulation algorithm in `PointCloud`. See Risk 5 below.
+
 ### Decision 6: Convergence tolerance is `R`-derived, not hard-coded
 
 The CG convergence threshold is `R::from_f64(1e-10).unwrap_or_else(R::default_epsilon)`. For `f32` this falls back to `f32::EPSILON ≈ 1.19e-7`; for `f64` to `f64::EPSILON ≈ 2.22e-16`; for `DoubleFloat` to whatever that type defines. Tests assert convergence at each precision backend's natural tolerance, not at a single shared one.
@@ -144,6 +151,9 @@ The CG convergence threshold is `R::from_f64(1e-10).unwrap_or_else(R::default_ep
 
 - **[Risk] The Laplacian inverse on grade-0 forms is degenerate by exactly one dimension (constant functions are always harmonic).** This is the canonical "Neumann problem" non-uniqueness.
   → **Mitigation:** at grade 0, fix the gauge by subtracting the mean from φ_α before computing `α = d φ_α`. This is standard practice in DEC literature and adds three lines. Documented in H2.
+
+- **[Risk 5] `PointCloud::triangulate` is Vietoris-Rips, not Delaunay.** It builds every k+1-vertex clique whose pairwise edges all fit within the radius, regardless of whether the resulting complex is a manifold. For four coplanar corners of the unit square at radius ≥ √2 it produces 6 edges and 4 overlapping triangles (every 3-clique), which is not a 2-manifold and is rejected by `Manifold::with_metric`. The H3 ambient-dimension cap on `triangulate` removes one related bug (degenerate higher simplices collapsing lumped-mass M_0) but does not fix the Vietoris-Rips → non-manifold gap.
+  → **Mitigation:** the H3 cross-backend test fixture uses a single right triangle on the simplicial side rather than the full unit square. The orthogonality identity and vanishing-component agreement scenarios still hold at the spec.md `1e-6` tolerance; only the strict per-component L2 norm equality scenario from `spec.md` 4.4 remains future work. The clean fix is a Delaunay (or constrained-Delaunay) triangulation algorithm in `PointCloud`, scoped as a separate change set.
 
 - **[Trade-off] One configurable convergence tolerance, not a full preconditioner / step-size tuning surface.** Adequate for the lattice sizes the downstream fluid pipeline targets (≤ 256³). Larger or stiffer problems may need a preconditioned CG; that is a future perf change, not a blocker for H1–H3.
 

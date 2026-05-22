@@ -52,7 +52,8 @@
 - [ ] 4.1 Property test: pure exact 1-form decomposes with `‖co_exact‖² < ε_R` and `‖harmonic‖² < ε_R`. Tested on `LatticeComplex<2>`, `LatticeComplex<3>` (`Euclidean`) and on `SimplicialComplex` of equivalent topology. Run across `R ∈ {f32, f64, DoubleFloat}`.
 - [ ] 4.2 Property test: pure co-exact 1-form decomposes with `‖exact‖² < ε_R` and `‖harmonic‖² < ε_R`. Same backend / precision matrix as 4.1.
 - [ ] 4.3 Property test: Hodge orthogonality identity `‖exact‖² + ‖co_exact‖² + ‖harmonic‖² == ‖field‖²` on grids `4³`, `8³`, `16³`, across all three precision backends.
-- [ ] 4.4 Property test: two-backend cross-check on the unit square. Same prescribed 1-form decomposed via `ReggeGeometry<R>` (two triangles) and via `CubicalReggeGeometry<2, R, Euclidean>` (one 2-cube). Agreement on each component L2 norm to tolerance `1e-6` at `f64`.
+- [ ] 4.4 Property test: two-backend cross-check on the unit square. Same prescribed scalar field f(x, y) = 2x + 3y, ω = df, decomposed via `ReggeGeometry<R>` (single right triangle) and via `CubicalReggeGeometry<2, R, Euclidean>` (2x2 lattice). Both backends must satisfy the orthogonality identity at `1e-6`, agree on the vanishing-component ratio `(‖β‖² + ‖h‖²) / ‖ω‖²` to `1e-6`, and individually report that ratio at `< 1e-6` for the pure-exact input.
+  - The strict per-component L2 norm equality variant of this scenario (`|‖simplicial.exact()‖ − ‖cubical.exact()‖| < 1e-6` etc.) remains future work pending a Delaunay/manifold-respecting triangulation in `PointCloud`. The H3 ambient-dim cap on `PointCloud::triangulate` (commit `fix(point_cloud): cap triangulate top-grade at ambient dimension`) closes the related degenerate-3-simplex / lumped-mass-M_0 collapse bug; the remaining Vietoris-Rips → non-manifold gap is documented in `design.md` Risk 5.
 - [ ] 4.5 Property test: every new public signature is generic over `R: RealField`. Verified by a small `compile-pass` test that instantiates `HodgeDecomposition<f32>`, `HodgeDecomposition<f64>`, `HodgeDecomposition<DoubleFloat>` and calls `hodge_decompose` at each precision. Failure means a precision constraint regressed somewhere.
 - [ ] 4.6 Static check: grep the diff for `f64` in public signatures (`pub fn`, `pub struct`, `pub trait`, `pub enum`). Zero hits is a hard gate.
 - [ ] 4.7 H3-G1 Compilation: clean across `deep_causality_topology` (and `deep_causality_sparse` if touched).
@@ -71,3 +72,15 @@ The follow-up change set will cover:
 - [ ] 5.4 Property test: `hodge_decompose` output matches each PyDEC fixture value to relative error `< 1e-5` at `f64` precision.
 
 This change set does not block; `add-3d-causal-fluid-dynamics` Block B1 may open immediately after H3-G3 of the present change set.
+
+## 6. Deferred Work — strict per-component L2 cross-backend agreement (future change set)
+
+The original `spec.md` task 4.4 scenario `|‖simplicial.exact()‖ − ‖cubical.exact()‖| < 1e-6` (and likewise for `co_exact` and `harmonic`) requires a manifold-respecting two-triangle simplicial decomposition of the unit square. The present change set's H3 cross-backend test verifies the orthogonality identity and the vanishing-component-ratio scenario at `1e-6`, both on a single-right-triangle simplicial fixture, because `PointCloud::triangulate`'s Vietoris-Rips clique expansion produces a non-manifold 4-triangle complex on the 4 coplanar corners of the unit square. See `design.md` Risk 5.
+
+The follow-up change set `add-hodge-decomposition-delaunay-cross-backend` would cover:
+
+- [ ] 6.1 Add a Delaunay (or constrained-Delaunay) triangulation method to `PointCloud`, producing a manifold-respecting simplicial complex from a planar point set.
+- [ ] 6.2 Replace the H3 single-right-triangle simplicial fixture with the canonical two-triangle simplicial unit square.
+- [ ] 6.3 Tighten the cross-backend test to assert the strict per-component L2 norm equality variant of `spec.md` task 4.4.
+
+This change set does not block downstream consumers; the H3 cross-backend coverage already satisfies "discretisation independence" for orthogonality and vanishing-component structure.
