@@ -10,6 +10,7 @@ pub mod curvature_tensor;
 pub mod differential_form;
 pub mod gauge;
 pub mod graph;
+pub mod hodge_decomposition;
 pub mod hypergraph;
 pub mod lattice_complex;
 pub mod manifold;

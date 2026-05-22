@@ -159,7 +159,11 @@ fn lorentzian_gradient_is_pure_imaginary_with_im_equal_to_euclidean() {
     let g_l = lor.regge_gradient(&lattice);
     assert_eq!(g_e.len(), g_l.len());
     for (i, (e, l)) in g_e.iter().zip(g_l.iter()).enumerate() {
-        assert!(l.re.abs() < TOL, "edge {i}: Lorentzian re must be zero, got {}", l.re);
+        assert!(
+            l.re.abs() < TOL,
+            "edge {i}: Lorentzian re must be zero, got {}",
+            l.re
+        );
         assert!(
             (l.im - e).abs() < TOL,
             "edge {i}: Lorentzian im {} must equal Euclidean {e}",

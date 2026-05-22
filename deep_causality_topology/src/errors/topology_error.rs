@@ -40,6 +40,13 @@ pub enum TopologyErrorEnum {
     GaugeFieldError(String),
     /// Error specific to LatticeGaugeField operations.
     LatticeGaugeError(String),
+    /// Error from a Hodge–Helmholtz decomposition failure: non-convergence of the
+    /// iterative solve, grade out of range, field-dimension mismatch, or a missing
+    /// metric. The carried message names the discriminating cause and any relevant
+    /// numerical detail (iteration count, residual, grade, dimensions). The detail
+    /// is formatted at the error-construction site to keep the public error surface
+    /// free of the field-precision type parameter `R`.
+    HodgeDecompositionFailed(String),
     /// General catch-all error for other topological issues.
     GenericError(String),
 }
@@ -67,6 +74,9 @@ impl Display for TopologyError {
             TopologyErrorEnum::GaugeFieldError(msg) => write!(f, "GaugeField error: {}", msg),
             TopologyErrorEnum::LatticeGaugeError(msg) => {
                 write!(f, "LatticeGaugeField error: {}", msg)
+            }
+            TopologyErrorEnum::HodgeDecompositionFailed(msg) => {
+                write!(f, "Hodge decomposition failed: {}", msg)
             }
             TopologyErrorEnum::GenericError(msg) => write!(f, "Topology error: {}", msg),
         }
@@ -161,6 +171,11 @@ impl TopologyError {
     #[allow(non_snake_case)]
     pub fn LatticeGaugeError<S: Into<String>>(msg: S) -> Self {
         Self(TopologyErrorEnum::LatticeGaugeError(msg.into()))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn HodgeDecompositionFailed<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::HodgeDecompositionFailed(msg.into()))
     }
 
     #[allow(non_snake_case)]

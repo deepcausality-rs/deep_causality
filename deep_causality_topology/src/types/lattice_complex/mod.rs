@@ -190,10 +190,7 @@ impl<const D: usize, R: RealField> LatticeComplex<D, R> {
     /// Used by `CubicalReggeGeometry::regge_gradient_at_edge` to enumerate
     /// only the hinges containing a given edge, dropping the per-edge gradient
     /// cost from O(num_hinges · 2^D) to O(D · 2^D).
-    pub(crate) fn edge_id_to_position_axis(
-        &self,
-        edge_id: usize,
-    ) -> Option<([usize; D], usize)> {
+    pub(crate) fn edge_id_to_position_axis(&self, edge_id: usize) -> Option<([usize; D], usize)> {
         let mut count = 0usize;
         for axis in 0..D {
             let along_axis = self.edges_along(axis);

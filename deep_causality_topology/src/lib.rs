@@ -69,6 +69,7 @@ pub use crate::types::cubical_regge_geometry::{
     AcceptReject, CubicalReggeGeometry, Euclidean, Lorentzian, RejectReason, SignatureMarker,
 };
 pub use crate::types::graph::Graph;
+pub use crate::types::hodge_decomposition::HodgeDecomposition;
 pub use crate::types::hypergraph::Hypergraph;
 pub use crate::types::manifold::{Manifold, SimplicialManifold};
 pub use crate::types::neighborhood::{

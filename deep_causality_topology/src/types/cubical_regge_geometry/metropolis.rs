@@ -112,7 +112,10 @@ where
         beta: R,
     ) -> AcceptReject<R> {
         let num_edges = complex.num_cells(1);
-        assert!(num_edges > 0, "Metropolis update requires at least one edge");
+        assert!(
+            num_edges > 0,
+            "Metropolis update requires at least one edge"
+        );
 
         // Snapshot the per-edge length buffer pointer; panic if not PerEdge.
         let edge_id = (rng.next_u64() as usize) % num_edges;

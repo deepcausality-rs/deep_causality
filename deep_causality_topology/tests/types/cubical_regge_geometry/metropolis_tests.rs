@@ -15,9 +15,7 @@
 //!   the action-minimising configuration over moderate-length runs.
 
 use deep_causality_topology::utils_tests::open_cube_3;
-use deep_causality_topology::{
-    AcceptReject, ChainComplex, CubicalReggeGeometry, RejectReason,
-};
+use deep_causality_topology::{AcceptReject, ChainComplex, CubicalReggeGeometry, RejectReason};
 
 /// Build a 3D PerEdge geometry with all edges initialised to `length`.
 fn build_per_edge_3d(num_edges: usize, length: f64) -> CubicalReggeGeometry<3, f64> {
@@ -39,7 +37,13 @@ fn accept_reject_variants_pattern_match() {
         reason: RejectReason::NonPositiveLength,
     };
     assert!(matches!(a, AcceptReject::Accepted { .. }));
-    assert!(matches!(r, AcceptReject::Rejected { reason: RejectReason::NonPositiveLength, .. }));
+    assert!(matches!(
+        r,
+        AcceptReject::Rejected {
+            reason: RejectReason::NonPositiveLength,
+            ..
+        }
+    ));
 }
 
 #[test]
@@ -51,7 +55,11 @@ fn metropolis_step_returns_well_formed_outcome() {
 
     let outcome = geom.metropolis_update(&lattice, &mut rng, 0.1, 1.0);
     match outcome {
-        AcceptReject::Accepted { edge, proposed_length, .. } => {
+        AcceptReject::Accepted {
+            edge,
+            proposed_length,
+            ..
+        } => {
             assert!(edge < num_edges);
             assert!(proposed_length > 0.0);
         }
@@ -94,7 +102,10 @@ fn accepted_step_mutates_only_the_target_edge() {
 
     // Length count and edge accessibility are preserved.
     for i in 0..num_edges {
-        assert!(geom.edge_length_at(i).unwrap() > 0.0, "edge {i} non-positive after run");
+        assert!(
+            geom.edge_length_at(i).unwrap() > 0.0,
+            "edge {i} non-positive after run"
+        );
         let _ = before; // suppress unused warning if no asserts on it
     }
 }

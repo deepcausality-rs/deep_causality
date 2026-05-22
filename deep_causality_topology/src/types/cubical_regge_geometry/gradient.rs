@@ -130,11 +130,7 @@ impl<const D: usize, R: RealField + FromPrimitive, S: SignatureMarker>
     ///
     /// Returns `R::zero()` for `D < 2` (no hinges exist) or out-of-range
     /// `edge_id`.
-    pub fn hinge_gradient_at_edge(
-        &self,
-        complex: &LatticeComplex<D, R>,
-        edge_id: usize,
-    ) -> R {
+    pub fn hinge_gradient_at_edge(&self, complex: &LatticeComplex<D, R>, edge_id: usize) -> R {
         if D < 2 {
             return R::zero();
         }
@@ -222,8 +218,9 @@ impl<const D: usize, R: RealField + FromPrimitive, S: SignatureMarker>
                     position,
                     orientation_candidate,
                 );
-                let Some(hinge_id) =
-                    complex.cells(target_hinge_grade).position(|c| c == hinge_cell)
+                let Some(hinge_id) = complex
+                    .cells(target_hinge_grade)
+                    .position(|c| c == hinge_cell)
                 else {
                     continue;
                 };
@@ -239,7 +236,6 @@ impl<const D: usize, R: RealField + FromPrimitive, S: SignatureMarker>
         total
     }
 }
-
 
 /// Euclidean-only `regge_gradient` returning `Vec<R>`.
 impl<const D: usize, R: RealField + FromPrimitive> CubicalReggeGeometry<D, R, Euclidean> {
@@ -265,11 +261,7 @@ impl<const D: usize, R: RealField + FromPrimitive> CubicalReggeGeometry<D, R, Eu
     /// without the full-vector allocation or the walk over hinges that don't
     /// contain `edge_id`. Speedup factor on the order of `num_hinges` per
     /// single-component lookup.
-    pub fn regge_gradient_at_edge(
-        &self,
-        complex: &LatticeComplex<D, R>,
-        edge_id: usize,
-    ) -> R {
+    pub fn regge_gradient_at_edge(&self, complex: &LatticeComplex<D, R>, edge_id: usize) -> R {
         self.hinge_gradient_at_edge(complex, edge_id)
     }
 }

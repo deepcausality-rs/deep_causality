@@ -11,6 +11,7 @@ mod curvature_tensor;
 mod differential_form;
 mod gauge;
 mod graph;
+mod hodge_decomposition;
 mod hypergraph;
 mod lattice_complex;
 mod manifold;
