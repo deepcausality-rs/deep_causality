@@ -3,27 +3,32 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Manifold, SimplicialComplex};
+use crate::traits::chain_complex::ChainComplex;
+use crate::types::manifold::Manifold;
 use core::ops::Mul;
 use deep_causality_num::{Field, RealField};
 use deep_causality_tensor::CausalTensor;
 
-impl<C, D> Manifold<SimplicialComplex<C>, D>
+impl<K, D> Manifold<K, D>
 where
-    C: RealField + Default,
+    K: ChainComplex,
     D: RealField + Default + PartialEq,
 {
-    /// Helper to extract data for a specific k-form from the flat storage.
+    /// Extract the slice of data corresponding to grade-k forms from the flat
+    /// per-grade storage carried by `self.data`. Generic over the chain complex
+    /// backend via `ChainComplex::num_cells`.
     pub(super) fn get_k_form_data(&self, k: usize) -> Vec<D> {
-        let mut offset = 0;
+        let max_dim = self.complex.max_dim();
+
+        let mut offset = 0usize;
         for i in 0..k {
-            if i < self.complex.skeletons().len() {
-                offset += self.complex.skeletons()[i].simplices().len();
+            if i <= max_dim {
+                offset += self.complex.num_cells(i);
             }
         }
 
-        let size = if k < self.complex.skeletons().len() {
-            self.complex.skeletons()[k].simplices().len()
+        let size = if k <= max_dim {
+            self.complex.num_cells(k)
         } else {
             0
         };
@@ -31,23 +36,28 @@ where
         if offset + size <= self.data().len() {
             self.data().as_slice()[offset..offset + size].to_vec()
         } else {
-            // Return zeros if data is missing/mismatched (Graceful degradation)
+            // Graceful degradation: return zeros if data is missing/mismatched.
             vec![D::zero(); size]
         }
     }
+}
 
-    /// Helper to create a temporary manifold holding data for a specific k-form.
-    /// Used to chain operators.
-    pub(super) fn create_temp_manifold(&self, k: usize, k_data: CausalTensor<D>) -> Self
-    where
-        C: Clone,
-    {
+impl<K, D> Manifold<K, D>
+where
+    K: ChainComplex + Clone,
+    K::Metric: Clone,
+    D: RealField + Default + PartialEq,
+{
+    /// Create a temporary manifold holding data for grade `k` only, used to
+    /// chain differential operators (e.g. compute `d δ ω`). Generic over the
+    /// chain complex backend.
+    pub(super) fn create_temp_manifold(&self, k: usize, k_data: CausalTensor<D>) -> Self {
         let total_size = self.data().len();
         let mut full_data = vec![D::zero(); total_size];
 
-        let mut offset = 0;
+        let mut offset = 0usize;
         for i in 0..k {
-            offset += self.complex.skeletons()[i].simplices().len();
+            offset += self.complex.num_cells(i);
         }
 
         let slice = k_data.as_slice();
@@ -55,12 +65,12 @@ where
             full_data[offset..offset + slice.len()].copy_from_slice(slice);
         }
 
-        Manifold::new(
-            self.complex.clone(),
-            CausalTensor::new(full_data, self.data().shape().to_vec()).unwrap(),
-            0,
-        )
-        .unwrap()
+        Manifold {
+            complex: self.complex.clone(),
+            data: CausalTensor::new(full_data, self.data().shape().to_vec()).unwrap(),
+            metric: self.metric.clone(),
+            cursor: 0,
+        }
     }
 }
 

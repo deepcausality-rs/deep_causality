@@ -11,19 +11,25 @@ use deep_causality_physics::{
     haruna_t_gate_kernel, haruna_x_gate_kernel, haruna_z_gate_kernel, klein_gordon_kernel,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
+use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
 
-// Helper to create a simple manifold for Klein-Gordon test
+// Helper to create a simple manifold for Klein-Gordon test with a unit-edge
+// metric attached (required by R4.5: `klein_gordon_kernel` calls
+// `manifold.laplacian()` which now requires a metric).
 fn create_simple_manifold() -> SimplicialManifold<f64, f64> {
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 0.866], vec![3, 2]).unwrap();
     let point_cloud =
         PointCloud::new(points, CausalTensor::new(vec![0.0; 3], vec![3]).unwrap(), 0).unwrap();
     let complex = point_cloud.triangulate(1.1).unwrap();
     let num_simplices = complex.total_simplices();
+    let num_edges = complex.skeletons()[1].simplices().len();
     let initial_data = vec![1.0; num_simplices];
-    Manifold::new(
+    let metric =
+        ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges]).unwrap());
+    Manifold::with_metric(
         complex,
         CausalTensor::new(initial_data, vec![num_simplices]).unwrap(),
+        Some(metric),
         0,
     )
     .unwrap()

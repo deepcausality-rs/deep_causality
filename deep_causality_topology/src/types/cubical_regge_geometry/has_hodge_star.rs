@@ -61,9 +61,9 @@
 //! - ⋆_2 entry = `1 / (a · b)` (2-cube → vertex ratio).
 
 use super::{CubicalReggeGeometry, EdgeLengths};
+use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::types::lattice_complex::LatticeComplex;
-use crate::traits::chain_complex::ChainComplex;
 use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_sparse::CsrMatrix;
 use std::borrow::Cow;
@@ -145,8 +145,9 @@ where
                     // product of complement-axis edge lengths at the shifted
                     // positions. Skip masks that reference out-of-bounds edges
                     // on open lattices; periodic axes always validate.
-                    let complement_axes: Vec<usize> =
-                        (0..D).filter(|&a| (complement & (1u32 << a)) != 0).collect();
+                    let complement_axes: Vec<usize> = (0..D)
+                        .filter(|&a| (complement & (1u32 << a)) != 0)
+                        .collect();
                     let num_complement = complement_axes.len();
                     let num_masks = 1u32 << num_complement;
 
@@ -267,9 +268,5 @@ where
     for _ in 0..n {
         acc *= base;
     }
-    if exp < 0 {
-        R::one() / acc
-    } else {
-        acc
-    }
+    if exp < 0 { R::one() / acc } else { acc }
 }

@@ -66,29 +66,20 @@ fn trait_routed_matrix_equals_complex_cache_matrix() {
 }
 
 #[test]
-fn manifold_hodge_star_with_metric_matches_legacy_no_metric_path() {
-    // Same complex and field data: route once with no metric (legacy cache path)
-    // and once with a metric attached (trait path). The two outputs must agree
-    // bitwise because the trait impl borrows the same cache.
-    let no_metric = triangle_complex();
-    let with_metric = {
-        let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0], vec![3, 2]).unwrap();
-        let metadata = CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap();
-        let pc = PointCloud::new(points, metadata, 0).unwrap();
-        let complex = pc.triangulate(1.2).unwrap();
-        let data =
-            CausalTensor::new(vec![10.0, 20.0, 30.0, 1.0, 2.0, 3.0, 100.0], vec![7]).unwrap();
-        let geom = ReggeGeometry::new(CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap());
-        Manifold::with_metric(complex, data, Some(geom), 0).unwrap()
-    };
+fn manifold_hodge_star_with_metric_returns_expected_shape() {
+    // R4.5 removed the dual-path fallback. The manifold's `hodge_star` now
+    // panics without a metric, so this test verifies the *only* supported
+    // path: construct via `with_metric` and call.
+    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0], vec![3, 2]).unwrap();
+    let metadata = CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap();
+    let pc = PointCloud::new(points, metadata, 0).unwrap();
+    let complex = pc.triangulate(1.2).unwrap();
+    let data = CausalTensor::new(vec![10.0, 20.0, 30.0, 1.0, 2.0, 3.0, 100.0], vec![7]).unwrap();
+    let geom = ReggeGeometry::new(CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap());
+    let m = Manifold::with_metric(complex, data, Some(geom), 0).unwrap();
 
-    for k in 0..=no_metric.complex().max_simplex_dimension() {
-        let legacy = no_metric.hodge_star(k);
-        let routed = with_metric.hodge_star(k);
-        assert_eq!(
-            legacy.as_slice(),
-            routed.as_slice(),
-            "k = {k}: legacy and trait-routed paths must agree bitwise"
-        );
+    for k in 0..=m.complex().max_simplex_dimension() {
+        let star = m.hodge_star(k);
+        assert_eq!(star.len(), m.complex().hodge_star_operators()[k].shape().0);
     }
 }

@@ -3,9 +3,16 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
+use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
 
-// Setup function to create a manifold from a point cloud
+// Setup function to create a manifold from a point cloud.
+//
+// Attaches a `ReggeGeometry` metric with all-unit edge lengths. Required after
+// R4.5 widening: `hodge_star`, `codifferential`, and `laplacian` now route
+// through the `HasHodgeStar<R>` trait and panic if `self.metric.is_none()`.
+// The simplicial impl of `HasHodgeStar<R>` ignores the metric instance and
+// reads from `SimplicialComplex::hodge_star_operators`, so any
+// correctly-sized `ReggeGeometry` is valid — we use unit lengths.
 fn setup_triangle_manifold() -> SimplicialManifold<f64, f64> {
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0], vec![3, 2]).unwrap();
     let metadata = CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap();
@@ -14,8 +21,9 @@ fn setup_triangle_manifold() -> SimplicialManifold<f64, f64> {
     let complex = point_cloud.triangulate(1.2).unwrap();
     // Complex has 3 vertices, 3 edges, 1 face. Total 7 simplices.
     let data = CausalTensor::new(vec![10.0, 20.0, 30.0, 1.0, 2.0, 3.0, 100.0], vec![7]).unwrap();
+    let metric = ReggeGeometry::new(CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap());
 
-    Manifold::new(complex, data, 0).unwrap()
+    Manifold::with_metric(complex, data, Some(metric), 0).unwrap()
 }
 
 #[test]

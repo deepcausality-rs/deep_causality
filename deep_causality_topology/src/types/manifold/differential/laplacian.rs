@@ -3,23 +3,32 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Manifold, SimplicialComplex};
+use crate::traits::chain_complex::ChainComplex;
+use crate::traits::has_hodge_star::HasHodgeStar;
+use crate::types::manifold::Manifold;
 
 use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 
-impl<R> Manifold<SimplicialComplex<R>, R>
+impl<K, R> Manifold<K, R>
 where
+    K: ChainComplex + Clone,
+    K::Metric: HasHodgeStar<R, Complex = K> + Clone,
     R: RealField + FromPrimitive + Default + PartialEq + std::fmt::Debug,
 {
     /// Computes the Hodge-Laplacian operator `Δ` on a k-form.
     ///
-    /// The Laplacian is defined as: Δ = dδ + δd
+    /// The Laplacian is defined as: `Δ = dδ + δd`
     /// where `d` is the exterior derivative and `δ` is the codifferential.
     /// It maps k-forms to k-forms.
+    ///
+    /// # Panics
+    /// Panics if the manifold has no metric attached. Callers must construct
+    /// the manifold via `Manifold::with_metric(...)` (or the cubical
+    /// equivalent) before calling Hodge-dependent differential operators.
     pub fn laplacian(&self, k: usize) -> CausalTensor<R> {
-        let n = self.complex.max_simplex_dimension();
-        let current_dim_size = self.complex.skeletons()[k].simplices().len();
+        let n = self.complex.max_dim();
+        let current_dim_size = self.complex.num_cells(k);
 
         let term_a = if k > 0 {
             let delta = self.codifferential(k);

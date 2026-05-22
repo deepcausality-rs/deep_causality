@@ -9,9 +9,10 @@ use deep_causality_physics::{
     proca_equation,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
+use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
 
-// Helper to create a simple triangular manifold (Same as in fields_tests.rs)
+// Helper to create a simple triangular manifold with a unit-edge metric
+// attached. See fields_tests.rs for the rationale (R4.5 widening).
 fn create_simple_manifold() -> SimplicialManifold<f64, f64> {
     let points = CausalTensor::new(
         vec![
@@ -26,11 +27,14 @@ fn create_simple_manifold() -> SimplicialManifold<f64, f64> {
         PointCloud::new(points, CausalTensor::new(vec![0.0; 3], vec![3]).unwrap(), 0).unwrap();
     let complex = point_cloud.triangulate(1.1).unwrap();
     let num_simplices = complex.total_simplices();
-    // Initialize with dummy data
+    let num_edges = complex.skeletons()[1].simplices().len();
     let initial_data = vec![1.0; num_simplices];
-    Manifold::new(
+    let metric =
+        ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges]).unwrap());
+    Manifold::with_metric(
         complex,
         CausalTensor::new(initial_data, vec![num_simplices]).unwrap(),
+        Some(metric),
         0,
     )
     .unwrap()

@@ -8,9 +8,10 @@ use deep_causality_physics::{
     heat_capacity, heat_diffusion, ideal_gas_law, partition_function, shannon_entropy,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
+use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
 
-// Helper
+// Helper — manifold with a unit-edge metric attached (required by R4.5:
+// `heat_diffusion` wrapper calls `manifold.laplacian()`).
 fn create_temp_manifold() -> SimplicialManifold<f64, f64> {
     let points = CausalTensor::new(
         vec![
@@ -25,11 +26,14 @@ fn create_temp_manifold() -> SimplicialManifold<f64, f64> {
         PointCloud::new(points, CausalTensor::new(vec![0.0; 3], vec![3]).unwrap(), 0).unwrap();
     let complex = point_cloud.triangulate(1.1).unwrap();
     let num_simplices = complex.total_simplices();
-    // Initialize with dummy temp data
+    let num_edges = complex.skeletons()[1].simplices().len();
     let initial_data = vec![300.0; num_simplices];
-    Manifold::new(
+    let metric =
+        ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges]).unwrap());
+    Manifold::with_metric(
         complex,
         CausalTensor::new(initial_data, vec![num_simplices]).unwrap(),
+        Some(metric),
         0,
     )
     .unwrap()

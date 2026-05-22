@@ -13,6 +13,8 @@ mod covariance_tests;
 #[cfg(test)]
 mod cow_borrow_tests;
 #[cfg(test)]
+mod cubical_differential_tests;
+#[cfg(test)]
 mod differential_tests;
 #[cfg(test)]
 mod display_tests;

@@ -188,7 +188,7 @@ fn test_shannon_entropy_kernel_error() {
 // heat_diffusion_kernel Tests
 // =============================================================================
 use deep_causality_physics::heat_diffusion_kernel;
-use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
+use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
 
 // Helper to create a simple manifold for heat diffusion (Vertices only for 0-form)
 // Using same structure as creating a simple manifold in other tests
@@ -206,11 +206,15 @@ fn create_temp_manifold() -> SimplicialManifold<f64, f64> {
         PointCloud::new(points, CausalTensor::new(vec![0.0; 3], vec![3]).unwrap(), 0).unwrap();
     let complex = point_cloud.triangulate(1.1).unwrap();
     let num_simplices = complex.total_simplices();
+    let num_edges = complex.skeletons()[1].simplices().len();
     // Initialize with dummy temp data
     let initial_data = vec![300.0; num_simplices];
-    Manifold::new(
+    let metric =
+        ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges]).unwrap());
+    Manifold::with_metric(
         complex,
         CausalTensor::new(initial_data, vec![num_simplices]).unwrap(),
+        Some(metric),
         0,
     )
     .unwrap()
