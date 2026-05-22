@@ -65,6 +65,10 @@ structures; DeepCausality contributes **dynamic, adaptive, and emergent** causal
 programmable deontic layer for verifiable safety. DeepCausality is hosted as a sandbox project at
 the [Linux Foundation for Data & AI](https://landscape.lfai.foundation/).
 
+## Support
+
+Dynamic causality can be daunting at first, and if you need more support for a larger or commercial project, please feel free to reach out to the [Center of Dynamic Causality](https://www.causalcenter.com/contact/) that backs the Deep Causality project.
+
 ## Getting Started
 
 ```bash

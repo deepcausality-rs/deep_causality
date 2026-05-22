@@ -85,7 +85,7 @@ use deep_causality_num::RealField;
 /// stored edge lengths is a choice at construction time (`f32`, `f64`, `Float106`, etc.).
 #[derive(Debug, Clone, PartialEq)]
 pub struct CubicalReggeGeometry<const D: usize, R: RealField> {
-    edge_lengths: EdgeLengths<D, R>,
+    pub(super) edge_lengths: EdgeLengths<D, R>,
     /// Optional per-axis flag marking timelike axes for Lorentzian / Minkowski lattices.
     /// `None` ⇒ all axes spacelike (Euclidean metric). `Some([..])` ⇒ flagged axes are
     /// timelike. Forward-looking: drives the metric-signature methods listed in the
@@ -93,11 +93,12 @@ pub struct CubicalReggeGeometry<const D: usize, R: RealField> {
     timelike_axes: Option<[bool; D]>,
 }
 
-/// Private union of the four edge-length representations. Kept private so callers can't
-/// inadvertently depend on the variant layout; access is through the public constructors
-/// and the `axis_length` / `edge_length` getters.
+/// Module-private union of the four edge-length representations. `pub(super)` so sibling
+/// submodules (`volumes`, `curvature`) can match on the variant for closed-form fast paths;
+/// crate-level callers still go through the public constructors and the `axis_length` /
+/// `edge_length` getters.
 #[derive(Debug, Clone, PartialEq)]
-enum EdgeLengths<const D: usize, R: RealField> {
+pub(super) enum EdgeLengths<const D: usize, R: RealField> {
     /// Every edge has length `1.0`. The Stage C / voxel-grid fast path. Carries no `R`-typed
     /// storage; the `R: RealField` parameter exists only to satisfy the type-level binding.
     UnitEdge,

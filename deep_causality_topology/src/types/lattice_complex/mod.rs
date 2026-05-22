@@ -152,6 +152,56 @@ impl<const D: usize, R: RealField> LatticeComplex<D, R> {
     pub fn iter_cells(&self, k: usize) -> LatticeCellIterator<'_, D, R> {
         LatticeCellIterator::new(self, k)
     }
+
+    /// Flat index of the 1-cell (edge) at `(position, axis)` in the canonical
+    /// `iter_cells(1)` ordering. Used by `PerEdge` cubical Regge metrics to look up
+    /// the edge length at a specific lattice edge.
+    ///
+    /// Ordering matches `LatticeCellIterator`: orientations with one bit set are visited
+    /// in ascending numerical order (axis 0, then axis 1, …, then axis D−1); within each
+    /// orientation, positions advance with axis 0 varying fastest. A position component
+    /// equal to `shape[d] - 1` is only legal along the edge's own axis when that axis is
+    /// non-periodic (the last column of edges wraps around on periodic axes only).
+    pub(crate) fn edge_index(&self, position: [usize; D], axis: usize) -> usize {
+        let target = 1u32 << axis;
+        let mut idx = 0usize;
+
+        for prior_axis in 0..axis {
+            idx += self.edges_along(prior_axis);
+        }
+
+        let mut offset = 0usize;
+        let mut stride = 1usize;
+        for (d, &p) in position.iter().enumerate() {
+            offset += p * stride;
+            stride *= self.valid_positions(d, target);
+        }
+        idx + offset
+    }
+
+    /// Number of 1-cells along a given axis on this lattice. `pub(crate)` so the cubical
+    /// Regge volume / curvature modules can size `PerEdge` buffers and validate inputs.
+    pub(crate) fn edges_along(&self, axis: usize) -> usize {
+        let orientation = 1u32 << axis;
+        let mut count = 1usize;
+        for d in 0..D {
+            count *= self.valid_positions(d, orientation);
+        }
+        count
+    }
+
+    /// Number of valid `position[d]` values for a cell with the given `orientation`.
+    /// Active non-periodic dims lose the wrap-around slice; all others use the full extent.
+    pub(crate) fn valid_positions(&self, d: usize, orientation: u32) -> usize {
+        let dim_len = self.shape[d];
+        let is_active = (orientation & (1 << d)) != 0;
+        let is_periodic = self.periodic[d];
+        if is_active && !is_periodic {
+            if dim_len == 0 { 0 } else { dim_len - 1 }
+        } else {
+            dim_len
+        }
+    }
 }
 
 // --- Iterator ---
@@ -358,5 +408,74 @@ impl<R: RealField> LatticeComplex<3, R> {
 impl<R: RealField> LatticeComplex<4, R> {
     pub fn hypercubic_torus(l: usize) -> Self {
         Self::new([l, l, l, l], [true, true, true, true])
+    }
+}
+
+#[cfg(test)]
+mod edge_index_tests {
+    use super::*;
+
+    #[test]
+    fn open_2d_axis0_ordering() {
+        let l: LatticeComplex<2, f64> = LatticeComplex::square_open(3);
+        assert_eq!(l.edges_along(0), 6);
+        assert_eq!(l.edge_index([0, 0], 0), 0);
+        assert_eq!(l.edge_index([1, 0], 0), 1);
+        assert_eq!(l.edge_index([0, 1], 0), 2);
+        assert_eq!(l.edge_index([1, 1], 0), 3);
+        assert_eq!(l.edge_index([0, 2], 0), 4);
+        assert_eq!(l.edge_index([1, 2], 0), 5);
+    }
+
+    #[test]
+    fn open_2d_axis1_ordering_starts_after_axis0() {
+        let l: LatticeComplex<2, f64> = LatticeComplex::square_open(3);
+        assert_eq!(l.edge_index([0, 0], 1), 6);
+        assert_eq!(l.edge_index([1, 0], 1), 7);
+        assert_eq!(l.edge_index([2, 0], 1), 8);
+        assert_eq!(l.edge_index([0, 1], 1), 9);
+        assert_eq!(l.edge_index([2, 1], 1), 11);
+    }
+
+    #[test]
+    fn periodic_2d_includes_wraparound_edges() {
+        let l: LatticeComplex<2, f64> = LatticeComplex::square_torus(3);
+        assert_eq!(l.edges_along(0), 9);
+        assert_eq!(l.edges_along(1), 9);
+        assert_eq!(l.edge_index([0, 0], 1), 9);
+        assert_eq!(l.edge_index([2, 2], 1), 17);
+    }
+
+    #[test]
+    fn mixed_boundary_3d_counts() {
+        let l: LatticeComplex<3, f64> = LatticeComplex::new([2, 3, 4], [true, false, true]);
+        assert_eq!(l.edges_along(0), 24);
+        assert_eq!(l.edges_along(1), 16);
+        assert_eq!(l.edges_along(2), 24);
+        assert_eq!(l.edge_index([0, 0, 0], 1), 24);
+        assert_eq!(l.edge_index([0, 0, 0], 2), 40);
+    }
+
+    #[test]
+    fn edge_index_matches_iter_cells_ordering_open_2d() {
+        let l: LatticeComplex<2, f64> = LatticeComplex::square_open(4);
+        for (i, cell) in l.iter_cells(1).enumerate() {
+            let axis = cell.orientation().trailing_zeros() as usize;
+            assert_eq!(
+                l.edge_index(*cell.position(), axis),
+                i,
+                "mismatch at edge {i} (position {:?}, axis {axis})",
+                cell.position(),
+            );
+        }
+    }
+
+    #[test]
+    fn edge_index_matches_iter_cells_ordering_periodic_3d() {
+        let l: LatticeComplex<3, f64> = LatticeComplex::cubic_torus(3);
+        for (i, cell) in l.iter_cells(1).enumerate() {
+            let axis = cell.orientation().trailing_zeros() as usize;
+            assert_eq!(l.edge_index(*cell.position(), axis), i);
+        }
     }
 }

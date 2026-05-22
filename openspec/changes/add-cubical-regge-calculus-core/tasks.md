@@ -9,8 +9,8 @@
 ## 2. Phase R1 — Cell volumes
 
 - [ ] 2.1 Add `pub(crate) fn LatticeComplex<D, R>::edge_index(position: [usize; D], axis: usize) -> usize` mapping a `(position, axis)` pair to a flat `Vec<R>` index in the canonical `iter_cells(1)` ordering, with `pub(crate)` helpers `edges_along(axis)` and `valid_positions(d, orientation)`. Cover with an inline `#[cfg(test)] mod edge_index_tests` checking open/periodic/mixed-boundary lattices and end-to-end agreement with `iter_cells(1)` enumeration.
-- [ ] 2.2 Implement `CubicalReggeGeometry<D, R>::cell_volume(&self, complex: &LatticeComplex<D, R>, cell: &LatticeCell<D>, grade: usize) -> R` in `volumes.rs`, dispatching on the edge-length variant (`UnitEdge`, `Uniform`, `PerAxis`, `PerEdge`)
-- [ ] 2.3 Implement `CubicalReggeGeometry<D, R>::top_cell_volume(&self, complex, cell) -> R` as the `grade = D` convenience
+- [ ] 2.2 Implement `CubicalReggeGeometry<D, R>::cell_volume(&self, complex: &LatticeComplex<D, R>, cell: &LatticeCell<D>) -> R` in `volumes.rs`, dispatching on the edge-length variant (`UnitEdge`, `Uniform`, `PerAxis`, `PerEdge`). Grade is derived from `cell.cell_dim()` — dropping the redundant `grade: usize` argument from the original design-note signature.
+- [ ] 2.3 Implement `CubicalReggeGeometry<D, R>::top_cell_volume(&self, complex, cell) -> R` as the `cell.cell_dim() == D` convenience (debug-asserts the dimension)
 - [ ] 2.4 Add `debug_assert!` in the `PerEdge` path documenting the axis-aligned-cell assumption (cross-terms vanish)
 - [ ] 2.5 Write unit-edge property tests: every k-cube has volume exactly `R::one()` for every grade (instantiate over `f64` and `f32`)
 - [ ] 2.6 Write per-axis property tests: top-cube volume equals the fold-product of `axis_lengths` over `R`; k-cell volume equals product of active-axis lengths
