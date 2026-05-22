@@ -240,6 +240,37 @@ fn test_diffusivity_new_nan_error() {
 // Trait coverage: Debug / Clone / Copy / PartialEq / PartialOrd
 // =============================================================================
 
+// =============================================================================
+// From<X> for f64 conversion coverage
+// =============================================================================
+
+#[test]
+fn test_mhd_scalars_into_f64() {
+    let v: f64 = AlfvenSpeed::<f64>::new(100.0).unwrap().into();
+    assert_eq!(v, 100.0);
+
+    let v: f64 = PlasmaBeta::<f64>::new(0.5).unwrap().into();
+    assert_eq!(v, 0.5);
+
+    let v: f64 = MagneticPressure::<f64>::new(1000.0).unwrap().into();
+    assert_eq!(v, 1000.0);
+
+    let v: f64 = LarmorRadius::<f64>::new(1.0).unwrap().into();
+    assert_eq!(v, 1.0);
+
+    let v: f64 = DebyeLength::<f64>::new(1e-6).unwrap().into();
+    assert_eq!(v, 1e-6);
+
+    let v: f64 = PlasmaFrequency::<f64>::new(1e9).unwrap().into();
+    assert_eq!(v, 1e9);
+
+    let v: f64 = Conductivity::<f64>::new(1e7).unwrap().into();
+    assert_eq!(v, 1e7);
+
+    let v: f64 = Diffusivity::<f64>::new(1.0).unwrap().into();
+    assert_eq!(v, 1.0);
+}
+
 #[test]
 fn test_mhd_scalars_traits() {
     let a = AlfvenSpeed::<f64>::new(1.0).unwrap();

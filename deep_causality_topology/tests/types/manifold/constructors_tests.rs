@@ -300,3 +300,82 @@ fn test_from_cubical_with_metric_3d() {
     assert!(manifold.metric().is_some());
     assert_eq!(manifold.data().len(), 8);
 }
+
+// =============================================================================
+// Coverage: constructors_impl.rs remaining missed branches
+// =============================================================================
+
+#[test]
+fn test_with_metric_data_size_mismatch() {
+    // Lines 60-65: with_metric_impl data-size mismatch check.
+    let (complex, _) = setup_valid_manifold_parts();
+    let wrong_data = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap(); // 3 != 7
+    let edge_lengths = CausalTensor::new(vec![1.0, 1.1, 1.2], vec![3]).unwrap();
+    let metric = ReggeGeometry::new(edge_lengths);
+
+    let result = Manifold::with_metric(complex, wrong_data, Some(metric), 0);
+    assert!(result.is_err());
+    match result.unwrap_err().0 {
+        TopologyErrorEnum::InvalidInput(ref msg) => {
+            assert!(msg.contains("Data size"));
+        }
+        other => panic!("Expected InvalidInput, got {:?}", other),
+    }
+}
+
+#[test]
+fn test_with_metric_on_complex_without_1_simplices_with_non_empty_edge_lengths() {
+    // Lines 74-78: complex.skeletons.get(1) returns None but regge.edge_lengths is
+    // non-empty → InvalidInput error.
+    use deep_causality_sparse::CsrMatrix;
+    use deep_causality_topology::{Simplex, SimplicialComplex, Skeleton};
+
+    // Build a SimplicialComplex with only a 0-skeleton (vertices), no 1-simplices.
+    let vertices = vec![Simplex::new(vec![0])];
+    let skeletons = vec![Skeleton::new(0, vertices)];
+    let complex: SimplicialComplex<f64> =
+        SimplicialComplex::new(skeletons, vec![], vec![], Vec::new());
+
+    let data = CausalTensor::new(vec![1.0], vec![1]).unwrap();
+    let edge_lengths = CausalTensor::new(vec![1.0], vec![1]).unwrap(); // non-empty
+    let metric = ReggeGeometry::new(edge_lengths);
+
+    let _ = CsrMatrix::<i8>::with_capacity(0, 0, 0); // touch import
+    let result = Manifold::with_metric(complex, data, Some(metric), 0);
+    assert!(result.is_err());
+    match result.unwrap_err().0 {
+        TopologyErrorEnum::InvalidInput(ref msg) => {
+            assert!(msg.contains("no 1-simplices") || msg.contains("edge_lengths"));
+        }
+        other => panic!("Expected InvalidInput, got {:?}", other),
+    }
+}
+
+#[test]
+fn test_new_on_empty_complex_rejects_as_non_manifold() {
+    // Line 105: check_is_manifold_impl early-out on empty skeletons.
+    use deep_causality_topology::SimplicialComplex;
+    let complex: SimplicialComplex<f64> =
+        SimplicialComplex::new(vec![], vec![], vec![], Vec::new());
+    let data = CausalTensor::<f64>::new(vec![], vec![0]);
+    // CausalTensor::new may reject zero-length; if so, the empty-skeleton branch is
+    // unreachable in practice through the public API. Try regardless.
+    if let Ok(d) = data {
+        let result = Manifold::new(complex, d, 0);
+        assert!(result.is_err());
+    }
+}
+
+#[test]
+fn test_new_on_complex_with_empty_vertex_skeleton_rejects_as_non_manifold() {
+    // Line 115: zero-vertices branch in check_is_manifold_impl.
+    use deep_causality_topology::{SimplicialComplex, Skeleton};
+    let skeletons = vec![Skeleton::new(0, vec![])]; // empty vertex skeleton
+    let complex: SimplicialComplex<f64> =
+        SimplicialComplex::new(skeletons, vec![], vec![], Vec::new());
+    let data = CausalTensor::<f64>::new(vec![], vec![0]);
+    if let Ok(d) = data {
+        let result = Manifold::new(complex, d, 0);
+        assert!(result.is_err());
+    }
+}

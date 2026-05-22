@@ -93,6 +93,48 @@ fn test_energy_momentum_tensor() {
 }
 
 #[test]
+fn test_relativistic_current_kernel_low_dim_metric_error() {
+    // Build a valid 4D manifold but pass a metric with dimension < 4
+    let points_data = vec![
+        0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0,
+    ];
+    let point_tensor = CausalTensor::new(points_data, vec![5, 4]).unwrap();
+    let cloud = PointCloud::new(point_tensor, CausalTensor::<f64>::zeros(&[5]), 0).unwrap();
+    let complex = cloud.triangulate(1.5).unwrap();
+    let total = complex.total_simplices();
+    let manifold = Manifold::new(
+        complex,
+        CausalTensor::new(vec![0.0; total], vec![total]).unwrap(),
+        0,
+    )
+    .unwrap();
+
+    let metric_3d = EastCoastMetric::new_nd(3).unwrap();
+    let r = relativistic_current_kernel(&manifold, &metric_3d);
+    assert!(r.is_err());
+}
+
+#[test]
+fn test_relativistic_current_kernel_low_skeleton_error() {
+    // 1D point cloud → triangulation produces only 0- and 1-skeletons, no 2-simplices.
+    let points = CausalTensor::new(vec![0.0, 1.0, 2.0], vec![3, 1]).unwrap();
+    let cloud = PointCloud::new(points, CausalTensor::<f64>::zeros(&[3]), 0).unwrap();
+    let complex = cloud.triangulate(1.5).unwrap();
+    let total = complex.total_simplices();
+    let manifold = Manifold::new(
+        complex,
+        CausalTensor::new(vec![0.0; total], vec![total]).unwrap(),
+        0,
+    )
+    .unwrap();
+
+    let metric = EastCoastMetric::minkowski_4d();
+    let r = relativistic_current_kernel(&manifold, &metric);
+    assert!(r.is_err(), "1D complex must fail for relativistic current");
+}
+
+#[test]
 fn test_energy_momentum_tensor_dimension_error() {
     let em = CausalTensor::new(vec![0.0; 4], vec![4]).unwrap();
     let metric = CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap();

@@ -118,6 +118,21 @@ fn axis_length_is_none_for_per_edge() {
     assert!(g.axis_length(0).is_none());
 }
 
+#[test]
+fn axis_length_unit_edge_returns_one_in_range() {
+    let g = CubicalReggeGeometry::<3, f64>::unit();
+    assert_eq!(g.axis_length(0), Some(1.0));
+    assert_eq!(g.axis_length(1), Some(1.0));
+    assert_eq!(g.axis_length(2), Some(1.0));
+}
+
+#[test]
+fn axis_length_uniform_returns_length_in_range() {
+    let g = CubicalReggeGeometry::<3, f64>::uniform(0.75);
+    assert_eq!(g.axis_length(0), Some(0.75));
+    assert_eq!(g.axis_length(2), Some(0.75));
+}
+
 // -- edge_length_at single-edge getter -------------------------------------------
 
 #[test]

@@ -132,3 +132,20 @@ fn test_to_vec() {
         get_deterministic_test_causality_vec_deque();
     assert_eq!(3, col.to_vec().len());
 }
+
+#[test]
+fn test_get_item_by_id_none() {
+    let col: VecDeque<BaseCausaloid<NumericalValue, bool>> =
+        get_deterministic_test_causality_vec_deque();
+    assert!(col.get_item_by_id(9999).is_none());
+}
+
+#[test]
+fn test_empty_vec_deque() {
+    let col: VecDeque<BaseCausaloid<NumericalValue, bool>> = VecDeque::new();
+    assert!(col.is_empty());
+    assert_eq!(0, col.len());
+    assert_eq!(0, col.to_vec().len());
+    assert_eq!(0, col.get_all_items().len());
+    assert!(col.get_item_by_id(0).is_none());
+}

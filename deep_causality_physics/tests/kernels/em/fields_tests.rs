@@ -348,6 +348,51 @@ fn test_lagrangian_density_kernel_magnetic_dominated() {
 }
 
 #[test]
+fn test_poynting_vector_kernel_nan_b_error() {
+    let e = CausalMultiVector::<f64>::new(
+        vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, f64::NAN, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    assert!(poynting_vector_kernel(&e, &b).is_err());
+}
+
+#[test]
+fn test_energy_density_kernel_nan_b_error() {
+    let e = CausalMultiVector::<f64>::new(
+        vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, f64::NAN, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    assert!(energy_density_kernel(&e, &b).is_err());
+}
+
+#[test]
+fn test_lagrangian_density_kernel_nan_b_error() {
+    let e = CausalMultiVector::<f64>::new(
+        vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, f64::NAN, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    assert!(lagrangian_density_kernel(&e, &b).is_err());
+}
+
+#[test]
 fn test_lagrangian_density_kernel_dimension_mismatch() {
     let e = CausalMultiVector::<f64>::new(
         vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],

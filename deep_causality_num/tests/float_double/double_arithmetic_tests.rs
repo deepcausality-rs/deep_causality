@@ -253,3 +253,87 @@ fn test_add_owned_ref() {
     let result = a + &b;
     assert!((result.hi() - 5.0).abs() < EPSILON);
 }
+
+// =============================================================================
+// Additional Reference Ops Coverage
+// =============================================================================
+
+#[test]
+fn test_sub_ref_owned() {
+    let a = Float106::from_f64(5.0);
+    let b = Float106::from_f64(2.0);
+    let result = &a - b;
+    assert!((result.hi() - 3.0).abs() < EPSILON);
+}
+
+#[test]
+fn test_sub_owned_ref() {
+    let a = Float106::from_f64(5.0);
+    let b = Float106::from_f64(2.0);
+    let result = a - &b;
+    assert!((result.hi() - 3.0).abs() < EPSILON);
+}
+
+#[test]
+fn test_mul_ref_owned() {
+    let a = Float106::from_f64(3.0);
+    let b = Float106::from_f64(4.0);
+    let result = &a * b;
+    assert!((result.hi() - 12.0).abs() < EPSILON);
+}
+
+#[test]
+fn test_mul_owned_ref() {
+    let a = Float106::from_f64(3.0);
+    let b = Float106::from_f64(4.0);
+    let result = a * &b;
+    assert!((result.hi() - 12.0).abs() < EPSILON);
+}
+
+#[test]
+fn test_div_ref_owned() {
+    let a = Float106::from_f64(12.0);
+    let b = Float106::from_f64(4.0);
+    let result = &a / b;
+    assert!((result.hi() - 3.0).abs() < EPSILON);
+}
+
+#[test]
+fn test_div_owned_ref() {
+    let a = Float106::from_f64(12.0);
+    let b = Float106::from_f64(4.0);
+    let result = a / &b;
+    assert!((result.hi() - 3.0).abs() < EPSILON);
+}
+
+#[test]
+fn test_rem_ref_ref() {
+    let a = Float106::from_f64(7.0);
+    let b = Float106::from_f64(3.0);
+    let result = &a % &b;
+    assert!((result.hi() - 1.0).abs() < EPSILON);
+}
+
+#[test]
+fn test_rem_ref_owned() {
+    let a = Float106::from_f64(7.0);
+    let b = Float106::from_f64(3.0);
+    let result = &a % b;
+    assert!((result.hi() - 1.0).abs() < EPSILON);
+}
+
+#[test]
+fn test_rem_owned_ref() {
+    let a = Float106::from_f64(7.0);
+    let b = Float106::from_f64(3.0);
+    let result = a % &b;
+    assert!((result.hi() - 1.0).abs() < EPSILON);
+}
+
+#[test]
+fn test_rem_f64_lhs() {
+    let a = 7.0_f64;
+    let b = Float106::from_f64(3.0);
+    let result = a % b;
+    assert!((result.hi() - 1.0).abs() < EPSILON);
+}

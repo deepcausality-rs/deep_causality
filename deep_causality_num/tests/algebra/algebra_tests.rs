@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{AddSemigroup, EuclideanDomain, MulSemigroup};
+use deep_causality_num::{AddSemigroup, Algebra, EuclideanDomain, Module, MulSemigroup};
 
 /// Test that semigroup traits are implemented for integers.
 #[test]
@@ -69,6 +69,94 @@ fn test_euclidean_fn() {
     assert_eq!(EuclideanDomain::euclidean_fn(&0i32), 0u32);
 
     assert_eq!(EuclideanDomain::euclidean_fn(&42u64), 42u64);
+}
+
+/// Exercise EuclideanDomain trait methods on every signed integer type.
+#[test]
+fn test_euclidean_signed_all_types() {
+    // i8
+    assert_eq!(EuclideanDomain::euclidean_fn(&-5i8), 5u8);
+    assert_eq!(EuclideanDomain::div_euclid(&17i8, &5i8), 3);
+    assert_eq!(EuclideanDomain::rem_euclid(&17i8, &5i8), 2);
+    assert_eq!(EuclideanDomain::gcd(&12i8, &8i8), 4);
+    assert_eq!(EuclideanDomain::lcm(&4i8, &6i8), 12);
+
+    // i16
+    assert_eq!(EuclideanDomain::euclidean_fn(&-5i16), 5u16);
+    assert_eq!(EuclideanDomain::div_euclid(&17i16, &5i16), 3);
+    assert_eq!(EuclideanDomain::rem_euclid(&17i16, &5i16), 2);
+    assert_eq!(EuclideanDomain::gcd(&12i16, &8i16), 4);
+    assert_eq!(EuclideanDomain::lcm(&4i16, &6i16), 12);
+
+    // i64
+    assert_eq!(EuclideanDomain::euclidean_fn(&-5i64), 5u64);
+    assert_eq!(EuclideanDomain::div_euclid(&17i64, &5i64), 3);
+    assert_eq!(EuclideanDomain::rem_euclid(&17i64, &5i64), 2);
+    assert_eq!(EuclideanDomain::gcd(&12i64, &8i64), 4);
+    assert_eq!(EuclideanDomain::lcm(&4i64, &6i64), 12);
+
+    // i128
+    assert_eq!(EuclideanDomain::euclidean_fn(&-5i128), 5u128);
+    assert_eq!(EuclideanDomain::div_euclid(&17i128, &5i128), 3);
+    assert_eq!(EuclideanDomain::rem_euclid(&17i128, &5i128), 2);
+    assert_eq!(EuclideanDomain::gcd(&12i128, &8i128), 4);
+    assert_eq!(EuclideanDomain::lcm(&4i128, &6i128), 12);
+
+    // isize
+    assert_eq!(EuclideanDomain::euclidean_fn(&-5isize), 5usize);
+    assert_eq!(EuclideanDomain::div_euclid(&17isize, &5isize), 3);
+    assert_eq!(EuclideanDomain::rem_euclid(&17isize, &5isize), 2);
+    assert_eq!(EuclideanDomain::gcd(&12isize, &8isize), 4);
+    assert_eq!(EuclideanDomain::lcm(&4isize, &6isize), 12);
+}
+
+/// Exercise EuclideanDomain trait methods on every unsigned integer type.
+#[test]
+fn test_euclidean_unsigned_all_types() {
+    // u8
+    assert_eq!(EuclideanDomain::euclidean_fn(&5u8), 5u8);
+    assert_eq!(EuclideanDomain::div_euclid(&17u8, &5u8), 3);
+    assert_eq!(EuclideanDomain::rem_euclid(&17u8, &5u8), 2);
+    assert_eq!(EuclideanDomain::gcd(&12u8, &8u8), 4);
+    assert_eq!(EuclideanDomain::lcm(&4u8, &6u8), 12);
+
+    // u16
+    assert_eq!(EuclideanDomain::euclidean_fn(&5u16), 5u16);
+    assert_eq!(EuclideanDomain::div_euclid(&17u16, &5u16), 3);
+    assert_eq!(EuclideanDomain::rem_euclid(&17u16, &5u16), 2);
+    assert_eq!(EuclideanDomain::gcd(&12u16, &8u16), 4);
+    assert_eq!(EuclideanDomain::lcm(&4u16, &6u16), 12);
+
+    // u128
+    assert_eq!(EuclideanDomain::euclidean_fn(&5u128), 5u128);
+    assert_eq!(EuclideanDomain::div_euclid(&17u128, &5u128), 3);
+    assert_eq!(EuclideanDomain::rem_euclid(&17u128, &5u128), 2);
+    assert_eq!(EuclideanDomain::gcd(&12u128, &8u128), 4);
+    assert_eq!(EuclideanDomain::lcm(&4u128, &6u128), 12);
+
+    // usize
+    assert_eq!(EuclideanDomain::euclidean_fn(&5usize), 5usize);
+    assert_eq!(EuclideanDomain::div_euclid(&17usize, &5usize), 3);
+    assert_eq!(EuclideanDomain::rem_euclid(&17usize, &5usize), 2);
+    assert_eq!(EuclideanDomain::gcd(&12usize, &8usize), 4);
+    assert_eq!(EuclideanDomain::lcm(&4usize, &6usize), 12);
+}
+
+/// Cover the Module::scale and Module::scale_mut blanket-impl helpers.
+#[test]
+fn test_module_scale_helpers() {
+    let mut x: f64 = 3.0;
+    let scaled = <f64 as Module<f64>>::scale(&x, 4.0);
+    assert_eq!(scaled, 12.0);
+    <f64 as Module<f64>>::scale_mut(&mut x, 2.0);
+    assert_eq!(x, 6.0);
+}
+
+/// Cover the Algebra::sqr default helper.
+#[test]
+fn test_algebra_sqr() {
+    let x: f64 = 5.0;
+    assert_eq!(<f64 as Algebra<f64>>::sqr(&x), 25.0);
 }
 
 /// Test GCD properties.

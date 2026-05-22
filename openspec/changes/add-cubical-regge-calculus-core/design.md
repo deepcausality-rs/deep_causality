@@ -2,9 +2,9 @@
 
 `add-cubical-complexes` (Stages A–C) shipped a complete type scaffold for cubical geometry in `deep_causality_topology`:
 
-- `LatticeComplex<D>` implements `ChainComplex`, stores `shape: [usize; D]` and `periodic: [bool; D]`, and caches the coboundary operator behind a `Mutex` once it has been computed. Cells are enumerated lazily by `LatticeCellIterator` and encoded as `(position, orientation_bitmask)` pairs.
-- `CubicalReggeGeometry<D>` is the associated `ChainComplex::Metric` type. Edge lengths are represented at four uniformity levels — `UnitEdge`, `Uniform { length }`, `PerAxis { lengths: [f64; D] }`, `PerEdge { lengths: Vec<f64> }` — and an optional `timelike_axes: Option<[bool; D]>` is reserved for the (out-of-scope) Lorentzian variant.
-- `Manifold<LatticeComplex<D>, F>` wraps complex + field data + optional metric; constructors `from_cubical` / `from_cubical_with_metric` exist.
+- `LatticeComplex<D, R: RealField>` implements `ChainComplex`, stores `shape: [usize; D]` and `periodic: [bool; D]`, and currently caches the coboundary operator behind a `Mutex<HashMap<usize, CsrMatrix<i8>>>` populated on first call to `coboundary_matrix(k)`. This change set replaces that cache with `Box<[OnceLock<CsrMatrix<i8>>]>` of length `D + 1`, indexed by grade, so reads become lock-free after first init and `coboundary_matrix` can return `Cow::Borrowed` instead of `Cow::Owned(clone)`. Cells are enumerated lazily by `LatticeCellIterator` and encoded as `(position, orientation_bitmask)` pairs.
+- `CubicalReggeGeometry<D, R: RealField>` is the associated `ChainComplex::Metric` type. Edge lengths are represented at four uniformity levels — `UnitEdge`, `Uniform { length: R }`, `PerAxis { lengths: [R; D] }`, `PerEdge { lengths: Vec<R> }` — and an optional `timelike_axes: Option<[bool; D]>` is reserved for the (out-of-scope) Lorentzian variant. **All scalars are `R`, not `f64`.** Every method added in this change set returns `R` and uses `R::pi()`, `R::one()`, `R::zero()`, and `R::atan2` from the `RealField` trait.
+- `Manifold<LatticeComplex<D, R>, F>` wraps complex + field data + optional metric; constructors `from_cubical` / `from_cubical_with_metric` exist.
 
 What is missing is the *geometric derivation layer*: every quantity in the proposal (cell volume, dihedral angle, deficit angle, Regge action) is currently uncomputable on a `LatticeComplex<D>` even though all the inputs are present in `CubicalReggeGeometry<D>`. The forward-looking design note [openspec/notes/CubicalReggeCalculus.md](../../notes/CubicalReggeCalculus.md) lays out the full six-phase roadmap (R1–R6); this change set delivers R1–R3 — the geometric core — and stops at the boundary where the analytical core (Hodge ⋆, Lorentzian, dynamics) would begin.
 
@@ -47,12 +47,12 @@ Both files contain `impl<const D: usize> CubicalReggeGeometry<D> { … }` blocks
 
 ### Decision 2: Cell volume from edge lengths — closed form per uniformity level
 
-For a k-cube whose orientation bitmask has active dimensions `{i₁, …, iₖ}`, the k-volume in the cubical setting (where edges meeting at any vertex are mutually orthogonal under the lattice's per-axis metric) reduces to the product of edge lengths along the active dims. Concretely:
+For a k-cube whose orientation bitmask has active dimensions `{i₁, …, iₖ}`, the k-volume in the cubical setting (where edges meeting at any vertex are mutually orthogonal under the lattice's per-axis metric) reduces to the product of edge lengths along the active dims. All return values are `R: RealField`. Concretely:
 
-- `UnitEdge`: `cell_volume = 1.0` for every grade. No traversal needed.
-- `Uniform { length: L }`: `cell_volume = L.powi(grade as i32)`.
-- `PerAxis { lengths }`: `cell_volume = active_dims.iter().map(|i| lengths[*i]).product()`.
-- `PerEdge { lengths }`: walk the cube's k incident edges along the active dims (using `position` + axis to index into `lengths`) and take the product. The per-edge Gram-matrix determinant collapses to this product because cross-terms vanish under axis alignment — documented in the closed-form derivation in §3.R1 of the design note.
+- `UnitEdge`: `cell_volume = R::one()` for every grade. No traversal needed.
+- `Uniform { length: L }`: `cell_volume = (0..grade).fold(R::one(), |acc, _| acc * L)` — `RealField` has no `powi`, so the explicit fold is used.
+- `PerAxis { lengths }`: `cell_volume = active_dims.iter().fold(R::one(), |acc, i| acc * lengths[*i])`.
+- `PerEdge { lengths }`: walk the cube's k incident edges along the active dims (using `position` + axis to index into `lengths` via the `edge_index` helper) and take the product over `R`. The per-edge Gram-matrix determinant collapses to this product because cross-terms vanish under axis alignment — documented in the closed-form derivation in §3.R1 of the design note.
 
 **Rationale:** the cubical case admits these clean closed forms precisely because cubical cells are axis-aligned. We do *not* introduce a general Gram-determinant routine here. If a future change set ever needs sheared cubical cells (where the Gram matrix has off-diagonal entries), it can replace this implementation without touching the public method signature.
 
@@ -69,7 +69,17 @@ hinge_top_cube_neighbors(complex, hinge_id) =
     )
 ```
 
-returned as an iterator (no allocation in the steady state — the matrix rows are sparse, the iterator yields D-cube CellIds). The result is deduplicated; on a regular grid each (D−2)-hinge has exactly 2(D−1) = 4 incident D-cubes in 3D and 4 in 4D. (Note: 2(D−1) is the count of (D−1)-faces incident to a (D−2)-cell *inside one D-cube*. For the global incidence count of D-cubes per (D−2)-hinge, the value depends on the lattice — 2 in 2D, 4 in 3D, 4 in 4D — and the property tests pin it down.)
+returned as an iterator (no allocation in the steady state — the matrix rows are sparse, the iterator yields D-cube CellIds). The result is deduplicated.
+
+**Incidence count per (D−2)-hinge on a regular periodic D-lattice:**
+
+| `D` | Hinge dimension `D−2` | Cell name      | Number of incident D-cubes |
+|-----|-----------------------|----------------|-----------------------------|
+| 2   | 0 (vertex)            | vertex         | 4                           |
+| 3   | 1 (edge)              | edge           | 4                           |
+| 4   | 2 (square)            | 2-face         | 4                           |
+
+The count is **always 4** on a regular periodic lattice: a (D−2)-hinge is the intersection of two coordinate hyperplanes, and the 2D normal plane is tiled by exactly four D-cubes around the hinge. Open-boundary interior hinges also have 4 incident D-cubes; boundary hinges have fewer (2 on a flat boundary, 1 at a corner). The property tests pin down both the interior and boundary cases.
 
 **Rationale:** reuses infrastructure already shipped in Stage B. Zero new caching, zero new sparse-matrix code. The compute is one sparse matrix-vector product against the cached coboundary matrices.
 
@@ -77,11 +87,18 @@ returned as an iterator (no allocation in the steady state — the matrix rows a
 
 ### Decision 4: Dihedral angle closed form
 
-A dihedral angle at a hinge `h` from a top cube `c` is the angle between the two faces of `c` that share `h`. The two faces correspond to the two axes of the dihedral's normal plane — the axes inactive in `h` but active in `c`. Call them `i` and `j`.
+A dihedral angle at a hinge `h` from a top cube `c` is the angle between the two faces of `c` that share `h`. The two faces correspond to the two axes of the dihedral's normal plane — the axes inactive in `h` but active in `c`. Call them `i` and `j`. All return values are `R: RealField`.
 
-- `UnitEdge` and `Uniform`: every dihedral angle is exactly π/2. The implementation returns `std::f64::consts::FRAC_PI_2` without touching the lattice.
-- `PerAxis { lengths }`: `dihedral_angle(c, h) = arctan2(lengths[j], lengths[i])` (the angle the face along axis `j` makes with the face along axis `i` at the shared hinge). For a unit cube `lengths[i] == lengths[j]` so the result is π/4 + π/4 = π/2 by symmetry — which is consistent with the unit case.
-- `PerEdge`: same shape as per-axis, but `lengths[i]` is read at the specific edge of `c` along axis `i` adjacent to `h`. Closed form is identical otherwise.
+**On an axis-aligned cubical complex the dihedral angle is exactly π/2 in every edge-length variant** (`UnitEdge`, `Uniform`, `PerAxis`, `PerEdge`). The two (D−1)-faces meeting at a (D−2)-hinge in such a cube are mutually perpendicular regardless of the lengths along axes `i` and `j` — stretching an axis changes the face's size but not its orientation. The implementation therefore returns `R::pi() / (R::one() + R::one())` uniformly and does not read the edge-length data.
+
+**Correction note.** An earlier draft of `openspec/notes/CubicalReggeCalculus.md` §3.R2 proposed `R::atan2(lengths[j], lengths[i])` for the `PerAxis` case, reasoning that "for a unit cube `lengths[i] == lengths[j]` so the result is π/4 + π/4 = π/2 by symmetry." That reasoning conflates the dihedral angle (between two faces) with the half-angle of a stretched cube's diagonal — different quantities. Only the constant `π/2` is geometrically correct for an axis-aligned cubical dihedral. The unit-edge test `4 × π/2 = 2π` (interior 2D vertex) still pins the right value down to the right floating-point tolerance.
+
+Curvature on a cubical lattice therefore enters via:
+
+1. **Hinge incidence count.** Interior hinges in a regular periodic lattice have 4 incident top cubes (sum 2π, deficit 0 — flat). Boundary hinges on open lattices have fewer (a 2D corner sees 1 cube, sum π/2, deficit 3π/2 — intrinsic boundary curvature).
+2. **Sheared / non-axis-aligned cells**, not expressible in the current `EdgeLengths` representation. A future Gram-matrix-aware extension would rewrite this closed form.
+
+`RealField` exposes `pi()`, `one()`, `zero()`, `sqrt`, etc. — see [deep_causality_num/src/algebra/field_real.rs](../../../deep_causality_num/src/algebra/field_real.rs). No new `RealField` methods are required by this change set. The `atan2` originally cited is no longer needed.
 
 **Rationale:** the cubical-axis alignment turns dihedral angles into 2-argument arctangents — no Cayley-Menger, no eigenvalue solve, no nonlinear root-finding. This is the single biggest practical advantage of the cubical Regge approach over simplicial.
 
@@ -89,7 +106,7 @@ A dihedral angle at a hinge `h` from a top cube `c` is the angle between the two
 
 ### Decision 5: Deficit angle and Regge action on the Euclidean case only
 
-Deficit angle: `deficit_angle(h) = 2π − Σ_{c incident to h} dihedral_angle(c, h)`. The factor of 2π is the full angle in the 2D normal plane to a (D−2)-hinge. Regge action: `regge_action() = Σ_h cell_volume(h, D-2) · deficit_angle(h)`.
+Deficit angle: `deficit_angle(h) = (R::pi() + R::pi()) − Σ_{c incident to h} dihedral_angle(c, h)`. The `R::pi() + R::pi()` form expresses 2π without requiring a `frac_2_pi()` accessor on `RealField`. The factor of 2π is the full angle in the 2D normal plane to a (D−2)-hinge. Regge action: `regge_action() = Σ_h cell_volume(h, D-2) · deficit_angle(h)`, accumulated in `R` (starting from `R::zero()`).
 
 **Scope choice:** this change set computes the Euclidean Regge action only. The `timelike_axes` field on `CubicalReggeGeometry<D>` is read-only for now — if it is `Some(...)`, `regge_action` returns the Euclidean action computed by treating all axes as spacelike (the field is *not* validated). The Lorentzian variant (`regge_action_lorentzian` returning `Complex<f64>`) is deferred to R5, where the type system will be extended to track the signature choice (the `S = Euclidean | Lorentzian` marker in §3.R5 of the design note).
 
@@ -115,8 +132,7 @@ Each is registered in `tests/types/cubical_regge_geometry/mod.rs` / `tests/types
 
 ## Risks / Trade-offs
 
-- **[Risk] Coboundary-cache contention under multi-threaded use.** `LatticeComplex<D>` caches `coboundary_matrix(k)` behind a `Mutex`. Repeated hinge enumeration from many threads serializes on the cache mutex on first compute, then runs lock-free for reads.
-  → **Mitigation:** acceptable in this change set; the cache is already in place and the first-compute serialization is a one-time cost per `(complex, grade)` pair. If contention is observed downstream, swap the `Mutex` for `OnceLock` in a separate perf change.
+- **[Risk] Coboundary-cache contention under multi-threaded use.** Resolved in this change set: `LatticeComplex<D, R>::coboundary_cache` is converted from `Mutex<HashMap<usize, CsrMatrix<i8>>>` to `Box<[OnceLock<CsrMatrix<i8>>]>` of length `D + 1` (one slot per grade). Reads become lock-free after first init; the `Mutex` poisoning concern goes away; `coboundary_matrix` returns `Cow::Borrowed` instead of `Cow::Owned(clone)`, saving a CSR clone per call. The conversion is scoped to a single sub-task in §1 of the task list and lands before R1.
 
 - **[Risk] Per-edge volume / dihedral formulas assume axis-aligned cells.** The closed forms rely on cubical cells having mutually orthogonal edges at every vertex. If a future change set introduces sheared cubical cells (where the per-edge Gram matrix has off-diagonal entries), the closed-form routines silently produce wrong answers.
   → **Mitigation:** document the assumption prominently in doc comments. Add a `debug_assert!` in the per-edge path that the local Gram matrix has zero off-diagonal entries. (This is essentially free under the current `PerEdge { lengths: Vec<f64> }` representation, which has no way to express off-diagonal terms in the first place — but the assertion guards the assumption explicitly.)

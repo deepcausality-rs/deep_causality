@@ -8,6 +8,7 @@ use deep_causality_rand::types::Xoshiro256;
 use deep_causality_topology::GaugeGroup;
 use deep_causality_topology::LatticeComplex;
 use deep_causality_topology::LatticeGaugeField;
+use deep_causality_topology::LinkVariable;
 use std::sync::Arc;
 
 // Define a test gauge group (U1 is simplest for testing)
@@ -89,6 +90,48 @@ fn test_metropolis_sweep_f64_optimization() {
 #[test]
 fn test_metropolis_update_nan_handling() {
     // Basic test to ensure no panic
+}
+
+#[test]
+fn test_metropolis_update_rejects_non_positive_epsilon() {
+    use deep_causality_topology::TopologyErrorEnum;
+    let shape = [2, 2];
+    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
+    let mut field =
+        LatticeGaugeField::<U1, 2, Complex<f64>, f64>::try_identity(lattice, 1.0).unwrap();
+    let edge = field.links().keys().next().unwrap().clone();
+    let mut rng = Xoshiro256::new();
+
+    let err = field
+        .try_metropolis_update(&edge, 0.0, &mut rng)
+        .unwrap_err();
+    match err.0 {
+        TopologyErrorEnum::LatticeGaugeError(ref msg) => {
+            assert!(msg.contains("Metropolis epsilon"));
+        }
+        ref other => panic!("Expected LatticeGaugeError, got {:?}", other),
+    }
+
+    let err_neg = field
+        .try_metropolis_update(&edge, -0.1, &mut rng)
+        .unwrap_err();
+    match err_neg.0 {
+        TopologyErrorEnum::LatticeGaugeError(_) => {}
+        ref other => panic!("Expected LatticeGaugeError, got {:?}", other),
+    }
+}
+
+#[test]
+fn test_metropolis_sweep_empty_field_returns_zero_rate() {
+    // Edge-case path through `if total == 0 { return Ok(0.0) }` in try_metropolis_sweep.
+    use std::collections::HashMap;
+    let lattice = Arc::new(LatticeComplex::<2, f64>::new([2, 2], [true, true]));
+    let links: HashMap<_, LinkVariable<U1, Complex<f64>, f64>> = HashMap::new();
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::from_links_unchecked(lattice, links, 1.0, ());
+    let mut rng = Xoshiro256::new();
+    let rate = field.try_metropolis_sweep(0.1, &mut rng).unwrap();
+    assert_eq!(rate, 0.0);
 }
 
 #[test]

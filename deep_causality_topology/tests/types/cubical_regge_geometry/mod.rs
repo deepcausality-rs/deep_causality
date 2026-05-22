@@ -4,3 +4,9 @@
  */
 #[cfg(test)]
 mod cubical_regge_geometry_tests;
+
+#[cfg(test)]
+mod curvature_tests;
+
+#[cfg(test)]
+mod volumes_tests;

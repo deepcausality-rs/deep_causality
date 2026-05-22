@@ -34,34 +34,46 @@
 //! for each level so callers state intent at construction time and the type-level uniformity
 //! information is preserved for downstream optimization.
 //!
-//! ## Forward-looking scope (not yet implemented)
+//! ## Shipped (Phases R1–R3 of `add-cubical-regge-calculus-core`)
 //!
-//! The Stage C scope ships **edge-length storage and access only**. The full cubical Regge
-//! geometry includes the following derived quantities; the API is shaped to receive them:
+//! The geometric core of cubical Regge calculus is implemented across two sibling submodules:
 //!
-//! 1. **`cube_volume(cell_id)`** — the Euclidean volume of a top-dimensional cube as a
-//!    product of incident edge lengths (or the appropriate determinant in the per-edge
-//!    case). Straightforward once edge-to-axis lookup is added.
-//! 2. **`face_area(cell_id)`** — areas of (D−1)-cells, derived from edge lengths.
-//! 3. **`deficit_angle(bone_id)`** — the discrete curvature concentrated on codimension-2
-//!    cells ("bones"), summing the angles of the cubes incident to each bone. This is the
-//!    direct cubical analog of Regge's deficit-angle curvature. Requires a cubical
-//!    coordinate / dihedral-angle helper.
-//! 4. **`hodge_star_matrix(k)`** — the Hodge ⋆ operator on k-forms, derived from edge
-//!    lengths and the cubical duality between k-cells and (D−k)-cells. Cubical Hodge ⋆
-//!    is diagonal in the regular case (each primal cell has a unique dual cell of the
-//!    complementary grade), which makes it cheaper than the simplicial version.
-//! 5. **`metric_at(complex, grade, index)`** — the local metric signature at a specific
-//!    cell, derived from the surrounding edge lengths. Cubical complexes admit a fast path:
-//!    on a regular grid the signature is constant Euclidean (D, 0, 0) for spacelike
-//!    lattices and Lorentzian (D−1, 1, 0) when a time axis is distinguished.
-//! 6. **Causal / Lorentzian split** — a `is_timelike_axis: [bool; D]` field would let the
-//!    type carry both spacelike and timelike axes, mirroring the East-Coast / West-Coast
-//!    metric conventions already in `deep_causality_metric`.
+//! - `volumes` — R1: `cell_volume(complex, cell)` and `top_cell_volume(complex, cell)`,
+//!   dispatching on the four `EdgeLengths` variants under the axis-aligned cubical assumption.
+//! - `curvature` — R2 + R3: `dihedral_angle(complex, top_cube, hinge)` (returns π/2
+//!   uniformly under axis-alignment), `deficit_angle(complex, hinge_id)` (depends only on
+//!   hinge incidence count), and `regge_action(complex)` (sums `cell_volume(h) ·
+//!   deficit_angle(h)` over every (D−2)-hinge).
 //!
-//! Each of these methods would land in its own submodule (`volumes.rs`, `curvature.rs`,
-//! `hodge.rs`, ...) mirroring the layout of `regge_geometry/`. The struct's current
-//! fields are sufficient inputs for all of them.
+//! Curvature on an axis-aligned cubical lattice arises from two sources:
+//!
+//! 1. **Hinge incidence count.** Interior hinges on a periodic lattice have 4 incident
+//!    top cubes, sum dihedrals = 2π, deficit = 0 (flat). Boundary hinges on open
+//!    lattices have fewer incident cubes (e.g. 1 at a 2D corner, deficit 3π/2 —
+//!    intrinsic boundary curvature).
+//! 2. **Hinge volumes.** The action's edge-length sensitivity flows through the
+//!    `cell_volume(h)` factor — vertex hinges in 2D have volume 1 (empty product),
+//!    edge hinges in 3D and square hinges in 4D scale with the metric.
+//!
+//! ## Forward-looking scope (deferred to follow-up change sets)
+//!
+//! The following derived quantities are designed-for but not yet implemented; the struct's
+//! current fields and submodule layout are sufficient inputs for all of them:
+//!
+//! - **`hodge_star_matrix(k)`** — Hodge ⋆ on k-forms, diagonal under axis-alignment.
+//!   Deferred to `add-cubical-regge-calculus-analytical` (R4). The keystone that promotes
+//!   `manifold/differential/{hodge,laplacian}.rs` to be generic over `ChainComplex`.
+//! - **`metric_at(complex, cell)`** and a type-level Lorentzian marker — local metric
+//!   signature, light-cone enforcement. Deferred to R5. Reads the `timelike_axes` field
+//!   which is currently stored but ignored by `regge_action` and `deficit_angle`.
+//! - **`regge_gradient(complex)`** and `metropolis_update` — action gradient and Markov
+//!   chain dynamics. Deferred to R6.
+//!
+//! See [`openspec/notes/CubicalReggeCalculus.md`](../../../../openspec/notes/CubicalReggeCalculus.md)
+//! for the full R1–R6 design note.
+
+pub mod curvature;
+pub mod volumes;
 
 use deep_causality_metric::Metric;
 use deep_causality_num::RealField;
@@ -74,7 +86,7 @@ use deep_causality_num::RealField;
 /// stored edge lengths is a choice at construction time (`f32`, `f64`, `Float106`, etc.).
 #[derive(Debug, Clone, PartialEq)]
 pub struct CubicalReggeGeometry<const D: usize, R: RealField> {
-    edge_lengths: EdgeLengths<D, R>,
+    pub(super) edge_lengths: EdgeLengths<D, R>,
     /// Optional per-axis flag marking timelike axes for Lorentzian / Minkowski lattices.
     /// `None` ⇒ all axes spacelike (Euclidean metric). `Some([..])` ⇒ flagged axes are
     /// timelike. Forward-looking: drives the metric-signature methods listed in the
@@ -82,11 +94,12 @@ pub struct CubicalReggeGeometry<const D: usize, R: RealField> {
     timelike_axes: Option<[bool; D]>,
 }
 
-/// Private union of the four edge-length representations. Kept private so callers can't
-/// inadvertently depend on the variant layout; access is through the public constructors
-/// and the `axis_length` / `edge_length` getters.
+/// Module-private union of the four edge-length representations. `pub(super)` so sibling
+/// submodules (`volumes`, `curvature`) can match on the variant for closed-form fast paths;
+/// crate-level callers still go through the public constructors and the `axis_length` /
+/// `edge_length` getters.
 #[derive(Debug, Clone, PartialEq)]
-enum EdgeLengths<const D: usize, R: RealField> {
+pub(super) enum EdgeLengths<const D: usize, R: RealField> {
     /// Every edge has length `1.0`. The Stage C / voxel-grid fast path. Carries no `R`-typed
     /// storage; the `R: RealField` parameter exists only to satisfy the type-level binding.
     UnitEdge,

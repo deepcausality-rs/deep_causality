@@ -412,3 +412,37 @@ fn test_gauge_rotation_invalid_indices() {
     assert_eq!(rotated_conn.shape(), &[0]);
     assert_eq!(rotated_fs.shape(), &[0]);
 }
+
+fn create_2vertex_manifold() -> SimplicialManifold<f64, f64> {
+    let mut builder = SimplicialComplexBuilder::new(1);
+    builder.add_simplex(Simplex::new(vec![0, 1])).unwrap();
+    let complex = builder.build::<f64>().unwrap();
+    let data = CausalTensor::zeros(&[complex.total_simplices()]);
+    Manifold::new(complex, data, 0).unwrap()
+}
+
+#[test]
+fn test_compute_field_strength_abelian_multipoint_uses_forward_difference() {
+    // num_points = total_simplices = 3 (2 vertices + 1 edge) for a single 1-simplex
+    // complex. Drives the forward-difference branch in compute_field_strength_abelian.
+    let manifold = create_2vertex_manifold();
+    let conn = CausalTensor::from_vec((0..12).map(|i| i as f64).collect::<Vec<_>>(), &[3, 4, 1]);
+    let fs = CausalTensor::zeros(&[3, 4, 4, 1]);
+    let field: GaugeField<U1, f64, f64> =
+        GaugeField::with_default_metric(manifold, conn, fs).expect("create field");
+
+    let result = GaugeFieldWitness::compute_field_strength_abelian(&field).unwrap();
+    assert_eq!(result.shape(), &[3, 4, 4, 1]);
+}
+
+#[test]
+fn test_compute_field_strength_non_abelian_multipoint_and_nonzero_coupling() {
+    let manifold = create_2vertex_manifold();
+    let conn = CausalTensor::from_vec((0..36).map(|i| i as f64).collect::<Vec<_>>(), &[3, 4, 3]);
+    let fs = CausalTensor::zeros(&[3, 4, 4, 3]);
+    let field: GaugeField<SU2, f64, f64> =
+        GaugeField::with_default_metric(manifold, conn, fs).expect("create field");
+
+    let result = GaugeFieldWitness::compute_field_strength_non_abelian(&field, 0.5);
+    assert_eq!(result.shape(), &[3, 4, 4, 3]);
+}

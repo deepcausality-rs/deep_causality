@@ -143,6 +143,36 @@ fn test_dimension_mismatch_error() {
 }
 
 #[test]
+fn test_2d_triangle_inequality_violation_errors() {
+    // 2D pentagon around vertex 0 — set one rim edge to a huge length so the
+    // triangle inequality fails in the 2D angle calculation (line 136 branch).
+    let mut builder = SimplicialComplexBuilder::new(2);
+    let indices = [1, 2, 3, 4, 5];
+    for i in 0..5 {
+        let v1 = indices[i];
+        let v2 = indices[(i + 1) % 5];
+        builder.add_simplex(Simplex::new(vec![0, v1, v2])).unwrap();
+    }
+    let complex = builder.build::<f64>().unwrap();
+    let num_edges = complex.num_elements_at_grade(1).unwrap();
+    let mut lengths = vec![1.0; num_edges];
+
+    // Find rim edge (1, 2) and inflate it so 1 + 1 < 100 (violates inequality on
+    // triangle 0-1-2 with spokes 0-1=1, 0-2=1, rim 1-2=100).
+    if let Some(idx) = complex.skeletons()[1].get_index(&Simplex::new(vec![1, 2])) {
+        lengths[idx] = 100.0;
+    }
+    let tensor = CausalTensor::new(lengths, vec![num_edges]).unwrap();
+    let geometry = ReggeGeometry::new(tensor);
+
+    let err = geometry.calculate_ricci_curvature(&complex).unwrap_err();
+    assert!(matches!(
+        err.0,
+        deep_causality_topology::TopologyErrorEnum::ManifoldError(_)
+    ));
+}
+
+#[test]
 fn test_manifold_error_triangle_inequality() {
     // We need an INTERNAL bone for calculation to occur.
     // In 3D, create 3 tets around edge (0,1):

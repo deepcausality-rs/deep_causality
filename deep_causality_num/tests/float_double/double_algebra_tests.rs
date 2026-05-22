@@ -262,3 +262,31 @@ fn test_divisionalgebra_inverse_identity() {
     let product = x * inv;
     assert!((product.hi() - 1.0).abs() < EPSILON);
 }
+
+// =============================================================================
+// RealField classification traits
+// =============================================================================
+
+#[test]
+fn test_realfield_is_nan() {
+    assert!(<Float106 as RealField>::is_nan(
+        <Float106 as RealField>::nan()
+    ));
+    assert!(!<Float106 as RealField>::is_nan(Float106::from_f64(1.0)));
+}
+
+#[test]
+fn test_realfield_is_infinite() {
+    let inf: Float106 = <Float106 as deep_causality_num::Float>::infinity();
+    assert!(<Float106 as RealField>::is_infinite(inf));
+    assert!(!<Float106 as RealField>::is_infinite(Float106::from_f64(
+        1.0
+    )));
+}
+
+#[test]
+fn test_realfield_is_finite() {
+    assert!(<Float106 as RealField>::is_finite(Float106::from_f64(1.0)));
+    let inf: Float106 = <Float106 as deep_causality_num::Float>::infinity();
+    assert!(!<Float106 as RealField>::is_finite(inf));
+}
