@@ -66,7 +66,7 @@ pub type CubicalComplex<const D: usize, R> = LatticeComplex<D, R>;
 /// Textbook alias for `LatticeCell<D>`. See `CubicalComplex<D>`.
 pub type CubicalCell<const D: usize> = LatticeCell<D>;
 pub use crate::types::cubical_regge_geometry::{
-    CubicalReggeGeometry, Euclidean, Lorentzian, SignatureMarker,
+    AcceptReject, CubicalReggeGeometry, Euclidean, Lorentzian, RejectReason, SignatureMarker,
 };
 pub use crate::types::graph::Graph;
 pub use crate::types::hypergraph::Hypergraph;

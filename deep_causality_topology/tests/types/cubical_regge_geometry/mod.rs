@@ -21,7 +21,13 @@ mod lorentzian_hodge_tests;
 mod metric_tensor_tests;
 
 #[cfg(test)]
+mod metropolis_tests;
+
+#[cfg(test)]
 mod regge_action_lorentzian_tests;
+
+#[cfg(test)]
+mod regge_gradient_tests;
 
 #[cfg(test)]
 mod volumes_tests;

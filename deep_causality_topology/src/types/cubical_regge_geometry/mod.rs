@@ -73,11 +73,14 @@
 //! for the full R1–R6 design note.
 
 pub mod curvature;
+pub mod gradient;
 pub mod has_hodge_star;
 pub mod metric_tensor;
+pub mod metropolis;
 pub mod signature;
 pub mod volumes;
 
+pub use metropolis::{AcceptReject, RejectReason};
 pub use signature::{Euclidean, Lorentzian, SignatureMarker};
 
 use core::marker::PhantomData;
@@ -369,6 +372,45 @@ impl<const D: usize, R: RealField, S: SignatureMarker> CubicalReggeGeometry<D, R
             dim: D,
             neg_mask,
             zero_mask: 0,
+        }
+    }
+
+    /// Resolve the edge length along `axis` at the given vertex position,
+    /// dispatching on the geometry's edge-length representation. Mirrors the
+    /// dispatch in `cell_volume`. Shared by `metric_tensor_at` and the action
+    /// gradient (R6); `pub(super)` so sibling submodules can read it without
+    /// going through the public per-edge / per-axis accessors.
+    pub(super) fn axis_length_at_position(
+        &self,
+        complex: &crate::types::lattice_complex::LatticeComplex<D, R>,
+        position: [usize; D],
+        axis: usize,
+    ) -> R {
+        match &self.edge_lengths {
+            EdgeLengths::UnitEdge => R::one(),
+            EdgeLengths::Uniform { length } => *length,
+            EdgeLengths::PerAxis { lengths } => lengths[axis],
+            EdgeLengths::PerEdge { lengths } => {
+                let shape = complex.shape();
+                let is_periodic = complex.periodic()[axis];
+                let max_edge_pos = if is_periodic {
+                    shape[axis]
+                } else if shape[axis] == 0 {
+                    return R::one();
+                } else {
+                    shape[axis] - 1
+                };
+                let mut probe = position;
+                if position[axis] < max_edge_pos {
+                    probe[axis] = position[axis];
+                } else if position[axis] > 0 {
+                    probe[axis] = position[axis] - 1;
+                } else {
+                    return R::one();
+                }
+                let idx = complex.edge_index(probe, axis);
+                lengths.get(idx).copied().unwrap_or_else(R::one)
+            }
         }
     }
 }

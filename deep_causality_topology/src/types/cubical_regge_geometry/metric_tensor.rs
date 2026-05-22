@@ -51,7 +51,7 @@ where
 
         let mut data = vec![R::zero(); D * D];
         for axis in 0..D {
-            let length = self.edge_length_along_axis_at(complex, position, axis);
+            let length = self.axis_length_at_position(complex, position, axis);
             let l_sq = length * length;
             let entry = match metric.sign_of_sq(axis) {
                 1 => l_sq,
@@ -61,47 +61,5 @@ where
             data[axis * D + axis] = entry;
         }
         CausalTensor::new(data, vec![D, D]).expect("D × D metric tensor allocation")
-    }
-
-    /// Resolve the edge length along `axis` at the given vertex position,
-    /// dispatching on the geometry's edge-length representation. Mirrors the
-    /// dispatch used by `cell_volume`.
-    fn edge_length_along_axis_at(
-        &self,
-        complex: &LatticeComplex<D, R>,
-        position: [usize; D],
-        axis: usize,
-    ) -> R {
-        use super::EdgeLengths;
-        match &self.edge_lengths {
-            EdgeLengths::UnitEdge => R::one(),
-            EdgeLengths::Uniform { length } => *length,
-            EdgeLengths::PerAxis { lengths } => lengths[axis],
-            EdgeLengths::PerEdge { lengths } => {
-                // For `PerEdge`, look up the edge starting at `position` going
-                // positive along `axis`. If that position is past the lattice
-                // bound (open lattice), fall back to the edge ending at
-                // `position` from the negative direction.
-                let shape = complex.shape();
-                let is_periodic = complex.periodic()[axis];
-                let max_edge_pos = if is_periodic {
-                    shape[axis]
-                } else if shape[axis] == 0 {
-                    return R::one();
-                } else {
-                    shape[axis] - 1
-                };
-                let mut probe = position;
-                if position[axis] < max_edge_pos {
-                    probe[axis] = position[axis];
-                } else if position[axis] > 0 {
-                    probe[axis] = position[axis] - 1;
-                } else {
-                    return R::one();
-                }
-                let idx = complex.edge_index(probe, axis);
-                lengths.get(idx).copied().unwrap_or_else(R::one)
-            }
-        }
     }
 }
