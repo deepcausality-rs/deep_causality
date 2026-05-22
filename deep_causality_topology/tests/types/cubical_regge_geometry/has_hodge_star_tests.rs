@@ -28,7 +28,7 @@ use deep_causality_topology::utils_tests::{
     open_cube_3, open_square_3, per_axis_geometry, per_edge_uniform_per_axis, periodic_cube_3,
     periodic_square_3, unit_geometry,
 };
-use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, HasHodgeStar};
+use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, HasHodgeStar, LatticeComplex};
 
 const TOL: f64 = 1e-12;
 
@@ -273,17 +273,145 @@ fn hodge_star_for_k_greater_than_dimension_is_empty_matrix() {
     assert!(star.values().is_empty());
 }
 
-// -- PerEdge risk-gate marker (R4.4 lands the real impl) ---------------------------
+// -- PerEdge (R4.4) ----------------------------------------------------------------
 
 #[test]
-#[should_panic(expected = "deferred to R4.4")]
-fn per_edge_hodge_star_panics_until_r4_4_lands() {
-    // Per design.md Risk 1 + tasks.md R4.4.5: the PerEdge tier requires a
-    // half-edge-average dual-cell derivation which is the ~1-week risk item.
-    // R4.3 ships with an explicit panic gate to flag the deferred work;
-    // R4.4 replaces this panic with the real implementation.
+fn per_edge_with_uniform_lengths_matches_uniform_on_periodic_lattice() {
+    // R4.4 internal consistency: when every per-edge length is the same scalar L,
+    // the per-edge dual-cell formula must reduce to L^(D-2k) at every cell,
+    // exactly matching the Uniform tier's closed form. Tested on a periodic
+    // lattice so that every corner mask is valid and the formula reduces cleanly
+    // without boundary-handling complications.
+    let length = 1.0_f64;
+    let lattice = periodic_cube_3();
+    let per_edge = per_edge_uniform_per_axis::<3>(&lattice, [length; 3]);
+    let uniform: CubicalReggeGeometry<3, f64> = CubicalReggeGeometry::uniform(length);
+    for k in 0..=3 {
+        let a = per_edge.hodge_star_matrix(&lattice, k);
+        let b = uniform.hodge_star_matrix(&lattice, k);
+        assert_eq!(a.values().len(), b.values().len(), "k = {k}");
+        for (va, vb) in a.values().iter().zip(b.values().iter()) {
+            assert!(
+                (*va - *vb).abs() < TOL,
+                "k = {k}: per-edge {va} vs uniform {vb}"
+            );
+        }
+    }
+}
+
+#[test]
+fn per_edge_with_uniform_per_axis_lengths_matches_per_axis_on_periodic_lattice() {
+    // Stronger check: per-edge populated with axis-uniform but anisotropic
+    // lengths must match the PerAxis tier on a periodic lattice.
+    let lengths = [2.0_f64, 3.0, 5.0];
+    let lattice = periodic_cube_3();
+    let per_edge = per_edge_uniform_per_axis::<3>(&lattice, lengths);
+    let per_axis = per_axis_geometry::<3>(lengths);
+    for k in 0..=3 {
+        let a = per_edge.hodge_star_matrix(&lattice, k);
+        let b = per_axis.hodge_star_matrix(&lattice, k);
+        assert_eq!(a.values().len(), b.values().len(), "k = {k}");
+        for (va, vb) in a.values().iter().zip(b.values().iter()) {
+            assert!(
+                (*va - *vb).abs() < TOL,
+                "k = {k}: per-edge {va} vs per-axis {vb}"
+            );
+        }
+    }
+}
+
+#[test]
+fn per_edge_2d_uniform_matches_closed_form_on_periodic_lattice() {
+    // 2D periodic [a, b] direct closed-form check on the per-edge path.
+    let a = 3.0_f64;
+    let b = 5.0_f64;
+    let lattice = periodic_square_3();
+    let geom = per_edge_uniform_per_axis::<2>(&lattice, [a, b]);
+
+    let star0 = geom.hodge_star_matrix(&lattice, 0);
+    for v in star0.values() {
+        assert!(
+            (*v - a * b).abs() < TOL,
+            "PerEdge ⋆_0 entry {v} expected {}",
+            a * b
+        );
+    }
+
+    let star1 = geom.hodge_star_matrix(&lattice, 1);
+    for (i, cell) in lattice.cells(1).enumerate() {
+        let expected = match cell.orientation() {
+            0b01 => b / a,
+            0b10 => a / b,
+            other => panic!("unexpected 1-cell orientation {other:b}"),
+        };
+        assert!(
+            (star1.values()[i] - expected).abs() < TOL,
+            "PerEdge ⋆_1 edge {i} orientation={:b} got {} expected {expected}",
+            cell.orientation(),
+            star1.values()[i]
+        );
+    }
+
+    let star2 = geom.hodge_star_matrix(&lattice, 2);
+    for v in star2.values() {
+        assert!((*v - 1.0 / (a * b)).abs() < TOL);
+    }
+}
+
+#[test]
+fn per_edge_open_lattice_handles_boundary_without_panicking() {
+    // Smoke test: open lattice has boundary cells where some corner masks
+    // reference out-of-bounds edges. Verify the impl handles these gracefully
+    // (returns finite, non-NaN values for every interior diagonal entry).
     let lattice = open_cube_3();
-    let geom: CubicalReggeGeometry<3, f64> =
-        per_edge_uniform_per_axis::<3>(&lattice, [1.0, 1.0, 1.0]);
-    let _ = geom.hodge_star_matrix(&lattice, 1);
+    let geom = per_edge_uniform_per_axis::<3>(&lattice, [1.0, 1.0, 1.0]);
+    for k in 0..=3 {
+        let star = geom.hodge_star_matrix(&lattice, k);
+        for v in star.values() {
+            assert!(
+                v.is_finite() && !v.is_nan(),
+                "k = {k}: got non-finite entry {v}"
+            );
+            assert!(*v > 0.0, "k = {k}: got non-positive entry {v}");
+        }
+    }
+}
+
+#[test]
+fn per_edge_returns_owned_cow() {
+    let lattice = periodic_cube_3();
+    let geom = per_edge_uniform_per_axis::<3>(&lattice, [1.0, 1.0, 1.0]);
+    let star = geom.hodge_star_matrix(&lattice, 1);
+    assert!(matches!(star, Cow::Owned(_)));
+}
+
+#[test]
+fn per_edge_diagonal_entries_change_when_individual_edges_change() {
+    // Behavioural test: prove the per-edge path actually responds to per-edge
+    // data, not just to the aggregate axis statistics. Construct two per-edge
+    // geometries on the same lattice where exactly one edge has a different
+    // length; assert that at least one Hodge ⋆ diagonal entry differs.
+    let lattice = periodic_square_3();
+    let lens_a = vec![1.0_f64; per_edge_total_edges_2d(&lattice)];
+    let mut lens_b = lens_a.clone();
+    lens_b[0] = 2.0; // perturb a single edge
+
+    let geom_a: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::from_edge_lengths(lens_a);
+    let geom_b: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::from_edge_lengths(lens_b);
+
+    let star_a = geom_a.hodge_star_matrix(&lattice, 0);
+    let star_b = geom_b.hodge_star_matrix(&lattice, 0);
+    let differs = star_a
+        .values()
+        .iter()
+        .zip(star_b.values().iter())
+        .any(|(a, b)| (a - b).abs() > TOL);
+    assert!(
+        differs,
+        "Perturbing one edge length must change at least one Hodge ⋆_0 entry"
+    );
+}
+
+fn per_edge_total_edges_2d(lattice: &LatticeComplex<2, f64>) -> usize {
+    lattice.num_cells(1)
 }

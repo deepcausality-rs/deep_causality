@@ -27,10 +27,31 @@
 //!   the orientation bits, dual vol = product of `lengths[a]` for `a` in the
 //!   complementary bits, diagonal entry = dual / primal. Varies per cell only if
 //!   the lengths differ between axes.
-//! - **`PerEdge`** — the dual-cell volume requires half-edge averages of incident
-//!   top cubes, not a per-axis lookup. Deferred to R4.4 (the risk-mitigation gate
-//!   in `tasks.md` Block R4.4); this impl panics with a clear message if
-//!   invoked on a `PerEdge` geometry.
+//! - **`PerEdge`** — fully general per-edge metric. The dual (D−k)-cell of a
+//!   primal k-cell at position `p` with active axes `A` is constructed by joining
+//!   the centers of the 2^(D−k) "corner" top cubes incident to σ. Its volume is
+//!   the average over those corners of the product of complement-axis edge lengths
+//!   at the corresponding shifted positions:
+//!
+//!   ```text
+//!   |σ*| = (1 / |valid_masks|) · Σ_{m ∈ {0,1}^(D−k) valid}
+//!            ∏_{c ∈ A^c}  L(p − m_c · e_c, axis = c)
+//!   ```
+//!
+//!   where `m_c ∈ {0, 1}` selects whether the edge along axis `c` is the one
+//!   leaving `p` in the positive direction (`m_c = 0`, edge at position `p`) or
+//!   arriving at `p` from the negative direction (`m_c = 1`, edge at position
+//!   `p − e_c`). On open lattices, masks that reference out-of-bounds edges are
+//!   dropped from both the sum and the divisor; on periodic lattices every mask
+//!   is valid and the divisor is exactly `2^(D−k)`.
+//!
+//!   Verification: when all edge lengths are equal to a single value `L`, the
+//!   formula reduces to the `Uniform` closed form `L^(D−2k)` at every cell on a
+//!   periodic lattice — checked as a property test in
+//!   `tests/types/cubical_regge_geometry/has_hodge_star_tests.rs`. The
+//!   simplicial-vs-cubical cross-check on the unit square is the
+//!   `add-hodge-decomposition` H3 test (it requires the field-level Hodge
+//!   decomposition surface, not yet shipped).
 //!
 //! # Verified expectations (design.md Decision 4)
 //!
@@ -103,14 +124,58 @@ where
                     triplets.push((i, i, dual / primal));
                 }
             }
-            EdgeLengths::PerEdge { .. } => {
-                panic!(
-                    "CubicalReggeGeometry::hodge_star_matrix on PerEdge geometry is \
-                     deferred to R4.4 (per-edge dual-cell closed form requires \
-                     half-edge averages of incident top cubes — see design.md \
-                     Decision 4 and Risk 1). This panic is the explicit risk-gate \
-                     marker; R4.4 replaces it with the real implementation."
-                );
+            EdgeLengths::PerEdge { lengths } => {
+                // R4.4 per-edge implementation. Formula in module doc above.
+                let all_axes_mask: u32 = if D >= 32 { u32::MAX } else { (1u32 << D) - 1 };
+                for (i, cell) in complex.cells(k).enumerate() {
+                    let orientation = cell.orientation();
+                    let complement = (!orientation) & all_axes_mask;
+                    let position = *cell.position();
+
+                    // Primal volume = product over orientation-axis edge lengths.
+                    let mut primal = R::one();
+                    for axis in 0..D {
+                        if (orientation & (1u32 << axis)) != 0 {
+                            let idx = complex.edge_index(position, axis);
+                            primal *= lengths[idx];
+                        }
+                    }
+
+                    // Dual volume = average over 2^(D-k) corner masks of the
+                    // product of complement-axis edge lengths at the shifted
+                    // positions. Skip masks that reference out-of-bounds edges
+                    // on open lattices; periodic axes always validate.
+                    let complement_axes: Vec<usize> =
+                        (0..D).filter(|&a| (complement & (1u32 << a)) != 0).collect();
+                    let num_complement = complement_axes.len();
+                    let num_masks = 1u32 << num_complement;
+
+                    let mut dual_sum = R::zero();
+                    let mut valid_count: usize = 0;
+                    for mask_bits in 0..num_masks {
+                        if let Some(prod) = per_edge_corner_product(
+                            complex,
+                            lengths,
+                            &position,
+                            &complement_axes,
+                            mask_bits,
+                        ) {
+                            dual_sum += prod;
+                            valid_count += 1;
+                        }
+                    }
+
+                    // valid_count == 0 only happens for pathological lattices
+                    // (e.g. zero-extent axis with no edges); leave the entry
+                    // unset rather than emit a divide-by-zero.
+                    if valid_count == 0 {
+                        continue;
+                    }
+                    let divisor = <R as FromPrimitive>::from_usize(valid_count)
+                        .expect("usize fits in every RealField");
+                    let dual = dual_sum / divisor;
+                    triplets.push((i, i, dual / primal));
+                }
             }
         }
 
@@ -118,6 +183,73 @@ where
             .expect("Diagonal triplets always satisfy CSR validity for square shape.");
         Cow::Owned(matrix)
     }
+}
+
+/// For a primal k-cell at `position` with complement axes `complement_axes`, compute
+/// the product of edge lengths along those axes at the shifted "corner" position
+/// selected by `mask_bits`. Bit `i` of `mask_bits` selects between `m_c = 0` (edge
+/// starting at `position` going positive in axis `c`) and `m_c = 1` (edge ending at
+/// `position` arriving from negative).
+///
+/// Returns `None` if any required edge is out of bounds on an open lattice; periodic
+/// axes wrap around per the lattice convention so every mask is valid for them.
+fn per_edge_corner_product<const D: usize, R>(
+    complex: &LatticeComplex<D, R>,
+    lengths: &[R],
+    position: &[usize; D],
+    complement_axes: &[usize],
+    mask_bits: u32,
+) -> Option<R>
+where
+    R: RealField,
+{
+    let shape = complex.shape();
+    let periodic = complex.periodic();
+
+    let mut product = R::one();
+    for (bit_idx, &axis) in complement_axes.iter().enumerate() {
+        let m_c = (mask_bits >> bit_idx) & 1;
+        // Resolve the position of the edge along `axis`.
+        let dim_len = shape[axis];
+        let is_periodic = periodic[axis];
+
+        // Edge along axis exists at positions 0..valid_positions; here for an
+        // edge-along-axis-c cell, valid_positions = dim_len if periodic, else
+        // dim_len - 1 (the wraparound slice).
+        let max_edge_pos = if is_periodic {
+            dim_len
+        } else if dim_len == 0 {
+            return None;
+        } else {
+            dim_len - 1
+        };
+
+        let edge_pos_axis = if m_c == 0 {
+            // Edge starts at position[axis], goes to position[axis] + 1.
+            if position[axis] >= max_edge_pos {
+                return None;
+            }
+            position[axis]
+        } else if position[axis] == 0 {
+            if is_periodic {
+                // Wrap to the last edge slot, which goes from dim_len-1 back to 0.
+                dim_len - 1
+            } else {
+                return None;
+            }
+        } else {
+            position[axis] - 1
+        };
+
+        let mut edge_position = *position;
+        edge_position[axis] = edge_pos_axis;
+        let idx = complex.edge_index(edge_position, axis);
+        if idx >= lengths.len() {
+            return None;
+        }
+        product *= lengths[idx];
+    }
+    Some(product)
 }
 
 /// Raise `base` to a signed integer power. `base^0 = R::one()`; negative exponents
