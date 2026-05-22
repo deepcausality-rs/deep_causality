@@ -202,7 +202,7 @@ Depends on R5 (the gradient and Metropolis update must respect the signature; Lo
 The following are explicitly NOT part of this change set (per design.md "Non-Goals"):
 
 - The Hodge–Helmholtz decomposition (`hodge_decompose`) — separate change set `add-hodge-decomposition`.
-- The 3D causal-fluid pipeline (TopologicalSignature, RollingHistory, FluidContext, SURD wiring, NS kernels) — separate change set sequence per [`notes/3DCausalFluidDynamics.md`](notes/3DCausalFluidDynamics.md).
+- The 3D causal-fluid pipeline (TopologicalSignature, RollingHistory, FluidContext, SURD wiring, NS kernels) — separate change set sequence per [`notes/3DCausalFluidDynamics.md`](../../../notes/3DCausalFluidDynamics.md).
 - Causal-graph analysis of turbulent flows.
 - Sparse cubical complexes.
 - GPU paths.

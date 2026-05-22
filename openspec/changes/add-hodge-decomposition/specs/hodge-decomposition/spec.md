@@ -23,23 +23,42 @@ The type SHALL be parameterised over `R: RealField` with no other trait bounds a
 - **WHEN** any caller attempts to mutate a component field of `HodgeDecomposition<R>` from outside the carrier type's module
 - **THEN** the access fails at compile time due to private field visibility
 
-### Requirement: HodgeFailReason error variants
+### Requirement: HodgeDecompositionFailed error variant
 
-The crate `deep_causality_topology` SHALL extend `ManifoldError` with a new variant `HodgeDecompositionFailed { reason: HodgeFailReason }`. The enum `HodgeFailReason` SHALL enumerate the documented failure modes of the decomposition: `Nonconvergence { iterations: usize, residual: R }`, `GradeOutOfRange { k: usize, max_dim: usize }`, `DimensionMismatch { expected: usize, actual: usize }`, and `MissingMetric`. The `Nonconvergence` variant's `residual` field is generic over `R` via a boxed concrete-type erasure or a type-parameterised error variant; the exact shape is fixed in the H1 implementation.
+The crate `deep_causality_topology` SHALL extend the existing `TopologyErrorEnum` with a single new stringly-typed variant `HodgeDecompositionFailed(String)`, matching the convention already established by `ManifoldError(String)`, `LinkVariableError(String)`, and the other variants on the same enum. A constructor function `TopologyError::HodgeDecompositionFailed(msg)` SHALL be provided mirroring the existing `TopologyError::ManifoldError(msg)` constructor pattern.
 
-#### Scenario: Caller can pattern-match on the failure reason
+The four documented failure modes of the decomposition — non-convergence of the iterative solve, grade out of range, field-dimension mismatch, and missing metric — SHALL each produce a `HodgeDecompositionFailed(...)` error whose contained message contains a discriminating substring (e.g. `"did not converge"`, `"grade ... exceeds"`, `"field length ... does not match"`, `"no metric attached"`).
 
-- **WHEN** a `hodge_decompose` call returns `Err(ManifoldError::HodgeDecompositionFailed { reason })`
-- **THEN** the caller can pattern-match `reason` against any of the four documented `HodgeFailReason` variants without a catch-all
+Internal to the `hodge_decompose` implementation a private enum `HodgeFailReason<R: RealField>` MAY carry the typed `R`-precision detail for control flow within the function body. That enum MUST NOT escape the module boundary: it is converted to the stringly-typed `TopologyErrorEnum::HodgeDecompositionFailed(String)` at the `Err` construction site via R's `Display` impl. No public surface added by this change set SHALL contain `f64` or any other precision-bearing type other than `R`.
 
-#### Scenario: GradeOutOfRange carries the offending grade and the manifold's max dimension
+#### Scenario: Caller can pattern-match on the Hodge failure variant
+
+- **WHEN** a `hodge_decompose` call returns `Err(e)` where `e.0` is `TopologyErrorEnum::HodgeDecompositionFailed(msg)`
+- **THEN** the caller can distinguish a Hodge decomposition failure from other `TopologyErrorEnum` variants at the variant level, and the `msg` carries the human-readable cause
+
+#### Scenario: Grade-out-of-range failure carries the offending grade and the manifold's max dimension in the message
 
 - **WHEN** the caller invokes `hodge_decompose(field, k)` with `k > self.complex.max_dim()`
-- **THEN** the call returns `Err(ManifoldError::HodgeDecompositionFailed { reason: HodgeFailReason::GradeOutOfRange { k, max_dim } })` where `max_dim == self.complex.max_dim()`
+- **THEN** the call returns `Err(e)` where `e.0` is `TopologyErrorEnum::HodgeDecompositionFailed(msg)` and `msg` contains both the numeric value of `k` and the numeric value of `self.complex.max_dim()`
+
+#### Scenario: Dimension-mismatch failure carries the expected and actual field lengths in the message
+
+- **WHEN** the caller invokes `hodge_decompose(field, k)` with a `field` whose length does not match `self.complex.num_cells(k)`
+- **THEN** the call returns `Err(e)` where `e.0` is `TopologyErrorEnum::HodgeDecompositionFailed(msg)` and `msg` contains both the expected and actual numeric lengths
+
+#### Scenario: Non-convergence failure carries the iteration count and the final residual in the message
+
+- **WHEN** the iterative solve does not reach the convergence tolerance within `max_iterations`
+- **THEN** the call returns `Err(e)` where `e.0` is `TopologyErrorEnum::HodgeDecompositionFailed(msg)` and `msg` contains both the iteration count and a `Display`-formatted residual value
+
+#### Scenario: No precision-bearing type leaks into the public error surface
+
+- **WHEN** a reviewer searches the public surface of `TopologyError`, `TopologyErrorEnum`, and any new `pub` item added by this change set for `f64`
+- **THEN** zero occurrences are found
 
 ### Requirement: Manifold::hodge_decompose method
 
-The crate `deep_causality_topology` SHALL provide a method `Manifold::hodge_decompose(&self, field: &CausalTensor<R>, k: usize) -> Result<HodgeDecomposition<R>, ManifoldError>` available on every `Manifold<K, R>` whose `K::Metric: HasHodgeStar<R>` and whose `R: RealField + FromPrimitive`. The method MUST be generic over the chain-complex type `K` and the precision type `R`; it MUST NOT be specialised to `SimplicialComplex<R>` or to `f64`.
+The crate `deep_causality_topology` SHALL provide a method `Manifold::hodge_decompose(&self, field: &CausalTensor<R>, k: usize) -> Result<HodgeDecomposition<R>, TopologyError>` available on every `Manifold<K, R>` whose `K::Metric: HasHodgeStar<R>` and whose `R: RealField + FromPrimitive + Display`. The additional `Display` bound is required so that the residual carried inside a non-convergence failure can be formatted into the stringly-typed `TopologyErrorEnum::HodgeDecompositionFailed(String)` variant without leaking `R` (or `f64`) into the public error surface. `Display` is satisfied by `f32`, `f64`, and any other reasonable `RealField` implementation. The method MUST be generic over the chain-complex type `K` and the precision type `R`; it MUST NOT be specialised to `SimplicialComplex<R>` or to `f64`.
 
 The method SHALL implement the discrete Hodge–Helmholtz decomposition via the algorithm specified in `design.md` Decision 2: two sequential discrete Poisson solves of the form `Δ_k φ = (boundary operator)(ω)`, followed by a residual computation for the harmonic component.
 
@@ -63,17 +82,17 @@ Convergence of the iterative solve SHALL be controlled by a tolerance `ε_R` der
 #### Scenario: Reject decomposition request when grade exceeds the manifold's max dimension
 
 - **WHEN** the caller invokes `manifold.hodge_decompose(&field, k)` with `k > self.complex.max_dim()`
-- **THEN** the call returns `Err(ManifoldError::HodgeDecompositionFailed { reason: HodgeFailReason::GradeOutOfRange { .. } })` without attempting any solve
+- **THEN** the call returns `Err(e)` where `e.0` is `TopologyErrorEnum::HodgeDecompositionFailed(msg)` whose message indicates a grade-out-of-range cause, and no solve is attempted
 
 #### Scenario: Reject decomposition request when field has the wrong dimension
 
 - **WHEN** the caller invokes `manifold.hodge_decompose(&field, k)` with a `field` whose length does not match `self.complex.num_cells(k)`
-- **THEN** the call returns `Err(ManifoldError::HodgeDecompositionFailed { reason: HodgeFailReason::DimensionMismatch { .. } })` without attempting any solve
+- **THEN** the call returns `Err(e)` where `e.0` is `TopologyErrorEnum::HodgeDecompositionFailed(msg)` whose message indicates a dimension-mismatch cause, and no solve is attempted
 
-#### Scenario: Report non-convergence with iteration count and final residual
+#### Scenario: Report non-convergence with iteration count and final residual in the message
 
 - **WHEN** the iterative solve does not reach the convergence tolerance within `max_iterations` for some field
-- **THEN** the call returns `Err(ManifoldError::HodgeDecompositionFailed { reason: HodgeFailReason::Nonconvergence { iterations, residual } })` where `iterations == max_iterations` and `residual` is the final relative residual
+- **THEN** the call returns `Err(e)` where `e.0` is `TopologyErrorEnum::HodgeDecompositionFailed(msg)` and `msg` reports both the iteration count and the final relative residual via R's `Display` impl
 
 #### Scenario: Method available for both simplicial and cubical backends through the same generic impl
 
@@ -102,27 +121,6 @@ A prescribed 1-form field on the unit square SHALL produce orthogonally-equivale
 
 - **WHEN** the caller decomposes the same prescribed 1-form field once via the simplicial backend on the unit square (two triangles) and once via the cubical backend on the unit square (one 2-cube)
 - **THEN** `|‖simplicial.exact()‖ − ‖cubical.exact()‖| < 1e-6`, and likewise for `co_exact` and `harmonic`
-
-### Requirement: PyDEC parity benchmark on the unit square
-
-The change set SHALL ship static test fixtures under `tests/types/hodge_decomposition/pydec_fixtures.rs` capturing the PyDEC reference decomposition values for three prescribed 1-form configurations on the unit square: a pure-exact field, a field with non-trivial co-exact part, and the same fields on the cubical equivalent. The `hodge_decompose` output SHALL agree with the fixture values to ~5 significant figures (`< 1e-5` relative error in `f64`).
-
-The fixture file SHALL record the PyDEC source version and git SHA from which the values were derived. Fixture updates SHALL be manual and version-pinned; no automated regeneration is permitted.
-
-#### Scenario: Simplicial decomposition matches PyDEC fixture for a pure-exact field
-
-- **WHEN** the caller decomposes the fixture-defined pure-exact 1-form on the simplicial unit square
-- **THEN** every component L2 norm matches the fixture value to relative error `< 1e-5`
-
-#### Scenario: Simplicial decomposition matches PyDEC fixture for a mixed field
-
-- **WHEN** the caller decomposes the fixture-defined mixed 1-form (non-trivial co-exact part) on the simplicial unit square
-- **THEN** every component L2 norm matches the fixture value to relative error `< 1e-5`
-
-#### Scenario: Cubical decomposition matches simplicial decomposition (PyDEC-derived) on the same unit square
-
-- **WHEN** the caller decomposes the fixture-defined mixed 1-form on the cubical unit square (one 2-cube)
-- **THEN** every component L2 norm agrees with the simplicial PyDEC fixture value to relative error `< 1e-5`
 
 ### Requirement: R: RealField precision parameterisation end-to-end
 

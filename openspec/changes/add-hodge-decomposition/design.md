@@ -26,10 +26,11 @@ The R1–R3 + R4 + R5 + R6 surface stays untouched. This change set is purely ad
 - Use the existing CSR-matrix machinery in `deep_causality_sparse` for assembly and the existing iterative-solver primitives in `deep_causality_topology` (per the simplicial Laplacian-inverse code path that already exists for the `manifold/differential` operators).
 - Verify with two-backend property tests: a prescribed test field on a unit square, viewed once as a simplicial complex (two triangles) and once as a cubical complex (one 2-cube), must produce orthogonally-equivalent decompositions to numerical tolerance.
 - Verify the Hodge orthogonality identity `‖exact‖² + ‖co-exact‖² + ‖harmonic‖² = ‖field‖²` across at least three lattice sizes and both backends.
-- Verify against PyDEC on the canonical unit square to ~5 significant figures; the PyDEC reference values ship as static fixtures, no Python dependency is introduced.
+- (Deferred) PyDEC parity benchmark — moved to a dedicated follow-up change set `add-hodge-decomposition-pydec-parity`. Internal correctness in this change set is established via the two-backend cross-check + the Hodge orthogonality identity + analytic pure-exact / pure-co-exact tests, with no Python touchpoint.
 
 **Non-Goals:**
 
+- PyDEC parity benchmark on the unit square — moved to follow-up change set `add-hodge-decomposition-pydec-parity` per the goal-list note above.
 - Topological signatures (`TopologicalSignature<R>`) — downstream change set `add-3d-causal-fluid-dynamics` Block B1.
 - Vector-field denoising or any downstream application of the decomposition.
 - Sparse solvers beyond the CSR-backed iterative solve used internally.
@@ -100,22 +101,23 @@ Fields are private per the AGENTS.md visibility rule. Getters are one-per-file u
 - Return a tuple `(α, β, h)`. Rejected: loses type identity and the grade context. Once Block B1 lands, the `TopologicalSignature::from(decomposition)` constructor signature is far cleaner with a named carrier type.
 - Make the carrier generic over the manifold reference (`HodgeDecomposition<'a, K, R>`). Rejected: forces a lifetime through every downstream consumer; the gain (avoiding three tensor clones) is not worth the complexity for the lattice sizes targeted.
 
-### Decision 4: PyDEC parity benchmark — static fixtures, no Python dep
+### Decision 4: PyDEC parity benchmark — deferred to follow-up change set
 
-The PyDEC reference values are reproduced by hand from the [PyDEC](https://github.com/hirani/pydec) source against a known field on the unit square, captured as static test fixtures under `tests/types/hodge_decomposition/pydec_fixtures.rs`. No Python dependency, no `subprocess` call, no fixture generation script.
+PyDEC parity is moved out of this change set into a dedicated follow-up `add-hodge-decomposition-pydec-parity`. The benchmark requires a one-time off-line Python run to hand-derive reference values from the [PyDEC](https://github.com/hirani/pydec) source, which is orthogonal to the algorithm + property-test work in H1–H3 and would gate this change set on a Python-touching task. Splitting it out keeps H1–H3 Python-touchless and lets the algorithm land on internal consistency gates alone.
 
-The fixtures cover three configurations:
+Internal correctness in this change set is established via three independent checks:
 
-1. Unit square, simplicial (two triangles), 1-form `(dx)`, expected decomposition: pure exact.
-2. Unit square, simplicial, 1-form prescribed to have non-trivial co-exact part, expected decomposition values to 5 sig figs.
-3. Unit square, cubical (one 2-cube), same fields as above, expected agreement to 5 sig figs with the simplicial result.
+1. The Hodge orthogonality identity `‖α‖² + ‖β‖² + ‖h‖² = ‖ω‖²` across precision backends and lattice sizes (the algebraic invariant that any correct decomposition must satisfy).
+2. Analytic pure-exact and pure-co-exact field tests where the expected component norms are known in closed form.
+3. The two-backend cross-check on the unit square (simplicial vs cubical) at tolerance `1e-6` in `f64`.
 
-If PyDEC ships an updated version that changes its reference values for these specific inputs, the fixtures are updated by hand in a separate change set; no automation is introduced for this.
+The follow-up change set will add the external PyDEC check on top once H1–H3 land.
 
 **Alternatives considered:**
 
-- Generate fixtures via a Python script at test time. Rejected: introduces a Python dependency, violates AGENTS.md "avoid external crates / runtimes" rule.
-- Skip PyDEC parity and rely only on internal cross-backend consistency. Rejected: the simplicial and cubical paths could in principle agree with each other while both disagreeing with the canonical DEC reference. PyDEC parity is the external check that the entire decomposition is implemented correctly.
+- Keep PyDEC parity in-scope and ship the fixtures with H3. Rejected by user direction: the Python dependency is orthogonal to the algorithmic work and is cleaner to land separately.
+- Generate fixtures via a Python script at test time. Rejected: introduces a Python runtime dependency, violates AGENTS.md "avoid external crates / runtimes" rule.
+- Drop PyDEC parity entirely and never run the external check. Rejected: the simplicial and cubical paths could in principle agree with each other while both disagreeing with the canonical DEC reference. Hence the deferral to a follow-up rather than outright removal.
 
 ### Decision 5: Two-backend cross-check on the unit square
 
@@ -140,9 +142,6 @@ The CG convergence threshold is `R::from_f64(1e-10).unwrap_or_else(R::default_ep
 - **[Risk] The minimal in-house CG solver may need to land in `deep_causality_sparse` rather than `deep_causality_topology`.** The crate boundary question is open. CG is a sparse-linear-algebra primitive, not a topology primitive.
   → **Mitigation:** decide at H2 kickoff. If `deep_causality_sparse` is the natural home, the CG solver lands there as a small additive change to that crate, exposed as a public function. If it lands in `deep_causality_topology`, it stays private. Either path is fine; the decision is documented at H2-G3 review.
 
-- **[Risk] PyDEC reference values may not be obtainable for the cubical case.** PyDEC is simplicial-only; the cubical fixtures derive from the simplicial PyDEC values via the two-backend cross-check in Decision 5, not directly from PyDEC.
-  → **Mitigation:** documented in the H3 task list. The simplicial fixtures are the PyDEC parity gate; the cubical fixtures are the cross-backend consistency gate. Both gates together establish correctness.
-
 - **[Risk] The Laplacian inverse on grade-0 forms is degenerate by exactly one dimension (constant functions are always harmonic).** This is the canonical "Neumann problem" non-uniqueness.
   → **Mitigation:** at grade 0, fix the gauge by subtracting the mean from φ_α before computing `α = d φ_α`. This is standard practice in DEC literature and adds three lines. Documented in H2.
 
@@ -165,4 +164,4 @@ This change set is purely additive. There is no migration.
 1. **Does a CG solver already exist in `deep_causality_sparse` or elsewhere in the workspace?** Audit at H2 kickoff. If yes, reuse; if no, land the minimal ~80 LOC version per Decision 2.
 2. **Does `deep_causality_num::RealField` expose `default_epsilon()` or an equivalent?** Used in Decision 6 to derive the CG tolerance. If not, the fallback is `R::from_f64(1e-7)` or similar. Verify at H1 kickoff.
 3. **Should the change set live entirely in `deep_causality_topology` or split the CG solver into `deep_causality_sparse`?** See Risk 2; decision at H2 kickoff.
-4. **PyDEC version pinning.** The fixture values depend on which PyDEC version they were derived from. Recommendation: record the version + git SHA in the fixture file header, do not auto-update. Confirm at H3 kickoff.
+4. **PyDEC version pinning.** Deferred to the follow-up change set `add-hodge-decomposition-pydec-parity` per Decision 4. Not an open question for the present change set.
