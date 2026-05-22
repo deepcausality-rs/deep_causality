@@ -73,6 +73,7 @@
 //! for the full R1–R6 design note.
 
 pub mod curvature;
+pub mod has_hodge_star;
 pub mod volumes;
 
 use deep_causality_metric::Metric;

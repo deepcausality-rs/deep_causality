@@ -44,8 +44,16 @@ Depends on Block 0. Lands the new capability trait, the cubical implementation, 
 
 ### R4.3 Cubical `HasHodgeStar` impl — unit-edge and per-axis tiers
 
-- [ ] R4.3.1 Implement `hodge_star_matrix` for the `UnitEdge` and `PerAxis` tiers of `CubicalReggeGeometry<D, R, S>`. Diagonal entries are `volume(dual (D-k)-cell) / volume(primal k-cell)`, both available from the existing volume machinery in [`cubical_regge_geometry/volumes.rs`](../../../deep_causality_topology/src/types/cubical_regge_geometry/volumes.rs).
-- [ ] R4.3.2 Property tests for the two tiers, with the closed-form expectations given in design.md Decision 4 (unit grid ⇒ identity; 2D per-axis with axes `[a, b]` ⇒ ⋆_0 entry `a·b`, ⋆_1 entries `a/b` or `b/a`, ⋆_2 entry `1/(a·b)`).
+- [x] R4.3.1 Implement `hodge_star_matrix` for the `UnitEdge` and `PerAxis` tiers of `CubicalReggeGeometry<D, R>`. **Done** at [`src/types/cubical_regge_geometry/has_hodge_star.rs`](../../../deep_causality_topology/src/types/cubical_regge_geometry/has_hodge_star.rs). Covers all four uniformity tiers: `UnitEdge` (identity), `Uniform { length }` (`length^(D-2k)`), `PerAxis` (per-cell closed form using orientation complement), and `PerEdge` (explicit panic gate — R4.4 lands the real implementation). Returns `Cow::Owned(CsrMatrix<R>)` since cubical Hodge ⋆ is compute-on-demand. Follows the FEEC/DEC mass-matrix square-diagonal convention used by the existing simplicial path. **Type signature is `CubicalReggeGeometry<D, R>` for now**; R5.2 promotes to `CubicalReggeGeometry<D, R, S = Euclidean>` via the defaulted three-parameter promotion at which point this impl gains its `S: SignatureMarker` bound automatically.
+- [x] R4.3.2 Property tests at [`tests/types/cubical_regge_geometry/has_hodge_star_tests.rs`](../../../deep_causality_topology/tests/types/cubical_regge_geometry/has_hodge_star_tests.rs). **12 passing tests:**
+  - `UnitEdge`: identity matrix verified on 2D open + 2D periodic + 3D open + 3D periodic lattices for every grade `k ∈ [0, D]`.
+  - `Uniform`: closed-form `length^(D-2k)` verified at every grade in 2D and 3D with `length = 2.0`, covering positive and negative exponents.
+  - `PerAxis` 2D: ⋆_0 = `a·b`, ⋆_1 = `b/a` (axis-0) and `a/b` (axis-1), ⋆_2 = `1/(a·b)` per design.md Decision 4. `a = 3.0, b = 5.0`.
+  - `PerAxis` 3D: full 8-orientation matrix verified per cell against the closed form (`a·b·c`, `(b·c)/a`, etc.).
+  - `PerAxis` degenerates to `Uniform` when all axes are equal.
+  - Out-of-range `k > D` returns an empty 0×0 matrix.
+  - `Cow::Owned` confirmed (compute-on-demand).
+  - `PerEdge` panics with the documented R4.4-deferred message (`#[should_panic]`).
 
 ### R4.4 Cubical `HasHodgeStar` impl — `PerEdge` tier
 
