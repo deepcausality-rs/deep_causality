@@ -16,21 +16,72 @@ Without all three prerequisites in place, B1b cannot start.
 
 ## 1. The methodological contribution
 
-A typed pipeline of the following shape, with `R: RealField` flowing end-to-end and every `bind` producing one typed value:
+A typed pipeline of the following shape, with `R: RealField` flowing end-to-end and every `bind` producing one typed value. The pipeline splits cleanly along the API surface exposed by `deep_causality_core`: stage 1 uses the trait-based `deep_causality_haft::Monad::bind` (clean closure, raw value in, no `EffectValue` boilerplate); stage 2 uses the inherent `bind` on `CausalEffectPropagationProcess` (closure receives `(EffectValue<Value>, State, Option<Context>)` so it can read state and context).
 
 ```rust
-// Stage 1 — per-timestep decomposition + dual extraction (PropagatingEffect, non-Markovian, parallelisable)
-let signature: PropagatingEffect<FluidSignature<R>> = PropagatingEffect::pure(snapshot)
-    .bind(|raw_field, ctx, _|  hodge_decompose(raw_field, ctx))         // → HodgeDecomposition<R>
-    .bind(|hd,        ctx, _|  compose_fluid_signature(hd, ctx, nu));   // → FluidSignature<R>
+use deep_causality_haft::{Monad, Pure};
+use deep_causality_core::{
+    PropagatingEffect, PropagatingEffectWitness, PropagatingProcess,
+    EffectValue, CausalityError, EffectLog,
+};
 
-// Stage 2 — temporal accumulation (PropagatingProcess, Markovian, sequential)
-let surd_process = signature
-    .lift_to_process(RollingHistory::<N, R>::new(), FluidContext::<R>::new(...))
-    .bind(|sig, history, ctx| { history.push(sig.clone()); Ok(sig) })   // → FluidSignature<R>
-    .bind(|sig, history, ctx| fluid_surd_decompose(sig, history, ctx))  // → SurdResult<f64>
-    .bind(|surd, history, ctx| emit_causaloid_graph(surd, history, ctx)); // → CausaloidGraph<...>
+type EffectW = PropagatingEffectWitness<CausalityError, EffectLog>;
+
+// ── Stage 1 — per-timestep decomposition + dual extraction ──
+// PropagatingEffect, non-Markovian, parallelisable per snapshot.
+// External invariants (manifold, nu) captured by reference in the closure environment.
+
+let snapshot_eff: PropagatingEffect<CausalTensor<R>>      = EffectW::pure(snapshot);
+let hodge_eff:    PropagatingEffect<HodgeDecomposition<R>> = EffectW::bind(snapshot_eff,
+    |raw| EffectW::pure(hodge_decompose(raw, &manifold)));
+let signature_eff: PropagatingEffect<FluidSignature<R>>    = EffectW::bind(hodge_eff,
+    |hd|  EffectW::pure(compose_fluid_signature(&hd, &manifold, nu)?));
+
+// ── Lift Effect → Process at the spatial/temporal boundary ──
+// Associated function on PropagatingProcess; not a fluent method on Effect.
+
+let process = PropagatingProcess::<FluidSignature<R>, RollingHistory<N, R>, FluidContext<R>>::with_state(
+    signature_eff,
+    RollingHistory::new(),
+    Some(FluidContext::new(lattice_geometry, reynolds, ...)),
+);
+
+// ── Stage 2 — temporal accumulation + SURD attribution ──
+// PropagatingProcess, Markovian, sequential. Closure receives EffectValue + State + Option<Context>
+// so it can read history and context as the rolling state advances.
+
+let surd_proc = process.bind(|ev, history, ctx| {
+    let sig = match ev { EffectValue::Value(s) => s, _ => return PropagatingProcess::from_error(...) };
+    let mut new_history = history.clone();
+    new_history.push(sig.clone());
+    let surd = fluid_surd_decompose(&sig, &new_history, ctx.as_ref().unwrap())?;
+    PropagatingProcess { value: EffectValue::Value(surd), state: new_history, context: ctx,
+                         error: None, logs: EffectLog::new() }
+});
+
+// ── Consume ──
+// The SurdResult<f64> is consumed by the existing SurdResultAnalyzer in
+// deep_causality_discovery, which produces a ProcessAnalysis (Vec<String>) of
+// human-readable categorisations against caller-supplied thresholds. No new
+// SURD-output consumer is built in this note; downstream consumers (causal
+// graph emission, dashboarding, ablation studies) attach to the same SurdResult
+// via their own analyzers in their own change sets.
+
+use deep_causality_discovery::{SurdResultAnalyzer, ProcessResultAnalyzer, AnalyzeConfig};
+
+let analyzer = SurdResultAnalyzer;
+let report = match surd_proc.value {
+    EffectValue::Value(ref surd) => analyzer.analyze(surd, &AnalyzeConfig::default())?,
+    _ => return Err(/* propagate the process's error state */),
+};
 ```
+
+Why the two-API split:
+
+- The trait-based `Monad::bind` from `deep_causality_haft` is the idiomatic clean-closure API: `Func: FnOnce(A) -> Self::Type<B>`, the closure receives raw `A`, no `EffectValue` pattern matching, no `Default` bound on `B` (both witnesses set `Constraint = NoConstraint`). Stage 1 is context-free, so this is the natural fit.
+- The inherent `bind` on `CausalEffectPropagationProcess` is the API that gives the closure read access to `State` and `Option<Context>`. Stage 2 needs that — the rolling-history push and the SURD-context lookup both happen inside the closure body — so the heavier closure shape `(EffectValue<Value>, State, Option<Context>) -> CausalEffectPropagationProcess<NewValue, …>` is the correct ergonomic cost for what state accumulation actually does.
+
+The consistency tests at [`deep_causality_core/tests/iso/effect_process_consistency_tests.rs`](../../../deep_causality_core/tests/iso/effect_process_consistency_tests.rs) pin the iso between the two witnesses on the shared carrier `CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>`. The same operation produces bit-identical output through either dispatch path; this guarantees that the trait-based stage 1 and the inherent-bind stage 2 compose without semantic surprises.
 
 The lift from `PropagatingEffect` to `PropagatingProcess` happens at a scientifically meaningful boundary: spatial decomposition (non-Markovian, parallelisable per timestep) gives way to temporal accumulation (Markovian, sequential). The state channel carries the rolling history of signatures; the context channel carries the lattice geometry and runtime physical invariants.
 
@@ -58,7 +109,6 @@ None of these elements is individually new. The combination under one type syste
 2. **`PropagatingProcess` as temporal-accumulation primitive.** Mori–Zwanzig / Takens state augmentation expressed natively in the type system.
 3. **SURD on the augmented joint distribution.** Existing `surd_states_cdl` consumed unchanged; only the boundary cast from `R` to `f64` (SURD's required type) happens at the `JointDistribution` build step inside `fluid_surd_decompose`.
 4. **Type-encoded fluid invariants** parameterised over `R`, matching the existing `Speed<R>` / `Mass<R>` / `FourMomentum<R>` convention in `deep_causality_physics/src/units/`.
-5. **`CausaloidGraph` emission** via the existing SURD → graph bridge.
 
 ---
 
@@ -80,7 +130,7 @@ Six independently-shippable blocks. Each block is gated by three sequential chec
 
 **No block opens until the prior block's three gates are closed.** Skipping ahead is forbidden; a gate failure rolls the block back to the in-progress state until the failure is addressed at root cause (no `#[allow(dead_code)]` workarounds for coverage gaps, no `#[allow(clippy::...)]` for lint failures — fix the code).
 
-Total in-scope work after prerequisites: ~1100 LOC of library code, ~80 tests, ~22 hours of focused work.
+Total in-scope work after prerequisites: ~1000 LOC of library code, ~78 tests, ~22 hours of focused work.
 
 ---
 
@@ -214,15 +264,23 @@ The 3D-only `vortex_centroids: Vec<[R; 3]>` field is checked at construction tim
 
 ## Block B2 — `RollingHistory<N, R>` state + `PropagatingProcess` lift
 
-**Goal.** Typed rolling-window state carrier with O(1) push and O(N) snapshot, plus the lift-to-Markovian boundary that turns the per-timestep `FluidSignature<R>` stream into a `PropagatingProcess`.
+**Goal.** Typed rolling-window state carrier with O(1) amortised push, O(N) snapshot, and a documented FIFO cap. Plus the lift-to-Markovian boundary that turns the per-timestep `FluidSignature<R>` stream into a `PropagatingProcess`.
 
 **Crate affected:** `deep_causality_physics` (state carrier) + integration shim against `deep_causality_core` (no changes to core).
 
-**Where it lives:** `deep_causality_physics/src/fluids/rolling_history/`. Depends on `deep_causality_data_structures` for `ArrayDeque`. The new dep edge to `deep_causality_topology` was established by B1b; no further dep changes.
+**Where it lives:** `deep_causality_physics/src/fluids/rolling_history/`. The new dep edge to `deep_causality_topology` was established by B1b; no further dep changes.
+
+**Storage choice:** wrap `std::collections::VecDeque<FluidSignature<R>>` with FIFO-cap semantics. This matches the project's existing idiomatic pattern of extending standard collections via traits (see `deep_causality/src/extensions/causable/mod.rs` where `MonadicCausableCollection` is implemented for `[T]`, `VecDeque<T>`, `HashMap<K, V>`, `BTreeMap<K, V>`).
+
+Why not `deep_causality_data_structures::SlidingWindow<S, T>`: the existing `WindowStorage<T>` trait requires `T: PartialEq + Copy + Default`. `FluidSignature<R>` contains `FluidPhysicsInvariants<R>::vortex_centroids: Vec<[R; 3]>`, which owns heap storage and therefore cannot be `Copy`. A `Copy`-free sliding-window primitive in `deep_causality_data_structures` would be a useful general infrastructure addition, but it is out of scope for B2 — wrapping `VecDeque` is ~30 LOC and lands the carrier without crate-boundary infrastructure work.
+
+Why not roll a new `ArrayDeque<T, N>`: nothing under that name exists in `deep_causality_data_structures` today, and `VecDeque` plus a cap check is mathematically equivalent for the bounded-window semantics this block needs.
 
 ```rust
+use std::collections::VecDeque;
+
 pub struct RollingHistory<const N: usize, R: RealField> {
-    signatures: ArrayDeque<FluidSignature<R>, N>,
+    signatures: VecDeque<FluidSignature<R>>,   // capacity N maintained by push()
     integrated_helicity: R,
     integrated_enstrophy: R,
     cumulative_dissipation: R,
@@ -231,31 +289,41 @@ pub struct RollingHistory<const N: usize, R: RealField> {
 
 impl<const N: usize, R: RealField + FromPrimitive> RollingHistory<N, R> {
     pub fn new() -> Self;
-    pub fn push(&mut self, sig: FluidSignature<R>);
+
+    /// Push a new signature. If the window is at capacity, drop the oldest first.
+    pub fn push(&mut self, sig: FluidSignature<R>) {
+        if self.signatures.len() == N {
+            self.signatures.pop_front();
+        }
+        self.signatures.push_back(sig);
+    }
+
     pub fn latest(&self) -> Option<&FluidSignature<R>>;
-    pub fn window(&self) -> &[FluidSignature<R>];
+    pub fn window(&self) -> impl Iterator<Item = &FluidSignature<R>>;
     pub fn helicity_trajectory(&self) -> Vec<R>;
     pub fn enstrophy_trajectory(&self) -> Vec<R>;
 }
 ```
 
-The `PropagatingProcess` integration is one constructor call against existing `deep_causality_core` API:
+`window()` returns an iterator (not a `&[...]`) because `VecDeque`'s storage is two slices, not one contiguous slice. Callers needing a contiguous view can collect into a `Vec`; downstream consumers that just iterate (every consumer in this pipeline) take the iterator unchanged.
+
+The `PropagatingProcess` integration is one associated-function call against existing `deep_causality_core` API. Note the signature: `with_state` is an associated function on the target process type, not a fluent method on the source effect, and `initial_context` is wrapped in `Option<Context>`:
 
 ```rust
-PropagatingProcess::with_state(
+let process = PropagatingProcess::<FluidSignature<R>, RollingHistory<N, R>, FluidContext<R>>::with_state(
     effect,
     RollingHistory::<N, R>::new(),
-    FluidContext::<R>::new(geometry, reynolds, ...),
-)
+    Some(FluidContext::<R>::new(geometry, reynolds, ...)),
+);
 ```
 
-No changes to `deep_causality_core`.
+No changes to `deep_causality_core`. `PropagatingEffect<T>` and `PropagatingProcess<T, S, C>` are confirmed type aliases of the same `CausalEffectPropagationProcess<...>` carrier; the iso tests in [`deep_causality_core/tests/iso/effect_process_consistency_tests.rs`](../../../deep_causality_core/tests/iso/effect_process_consistency_tests.rs) pin that consistency.
 
 **Property tests:**
 
 - **FIFO invariant.** After `2N` pushes, only the last `N` signatures remain.
 - **Integrated quantities non-negativity.** Enstrophy is always ≥ 0; `|helicity|` is bounded by the Cauchy-Schwarz product of `‖u‖` and `‖ω‖`.
-- **Lift round-trip.** `PropagatingEffect::pure(sig).lift_to_process(history, ctx).bind(...)` is type-equivalent to a `PropagatingProcess` chain initialised with the same data.
+- **Lift round-trip.** `PropagatingProcess::with_state(PropagatingEffect::pure(sig), history, Some(ctx))` followed by `.bind(...)` is type-equivalent to a `PropagatingProcess` chain initialised with the same data. The associated-function lift is the only public path from `PropagatingEffect<T>` (state = `()`, context = `()`) to `PropagatingProcess<T, S, C>` with non-trivial state/context.
 - **Window slice stability.** `window()` returns a slice consistent with insertion order across N pushes.
 
 **Effort:** ~200 LOC + ~10 tests. ~3 hours.
@@ -268,11 +336,11 @@ No changes to `deep_causality_core`.
 
 ---
 
-## Block B3 — `FluidContext<R>`, SURD wiring, and `CausaloidGraph` emission
+## Block B3 — `FluidContext<R>` + SURD wiring
 
-**Goal.** Stand up the runtime-invariant context, wire the augmented `(signature, history)` joint into `surd_states_cdl`, and emit a `CausaloidGraph` via the existing discovery → graph bridge. This is the block where the methodology becomes end-to-end testable on synthetic ground truth.
+**Goal.** Stand up the runtime-invariant context and wire the augmented `(signature, history)` joint into `surd_states_cdl`. The output is a `SurdResult<f64>` — the same type the existing `SurdResultAnalyzer` already knows how to interpret. This is the block where the methodology becomes end-to-end testable on synthetic ground truth.
 
-**Crates affected:** `deep_causality_physics` (`FluidContext`) + `deep_causality_discovery` (SURD wiring + graph emission).
+**Crates affected:** `deep_causality_physics` (`FluidContext`) + `deep_causality_discovery` (SURD wiring). No changes to `SurdResultAnalyzer` or to any graph-emission code; the existing report-style analysis is the consumer.
 
 **Where it lives:**
 
@@ -299,25 +367,23 @@ No changes to `deep_causality_core`.
   ```
   Internally builds a `CausalTensor<Option<f64>>` joint distribution by casting `R → f64` once at the tensor-build step (the documented lossy boundary). Calls existing `surd_states_cdl(tensor, MaxOrder::Max)` unchanged.
 
-- `deep_causality_discovery/src/types/analyzer/` extended with `FluidSurdResultAnalyzer` that consumes a `SurdResult<f64>` and emits a `CausaloidGraph` per the existing mapping documented in `deep_causality_discovery/README.md`:
-  - Strong unique influence → direct edge.
-  - Strong synergy → many-to-one via `AggregateLogic::All`.
-  - Strong redundancy → many-to-one via `AggregateLogic::Any`.
-  - High causality leak → annotate target Causaloid with a stochasticity term.
+The `SurdResult<f64>` returned by `fluid_surd_decompose` is consumed by the existing `SurdResultAnalyzer` ([`deep_causality_discovery/src/types/analysis/surd_result_analyzer.rs`](../../../deep_causality_discovery/src/types/analysis/surd_result_analyzer.rs)) via `analyzer.analyze(&surd, &AnalyzeConfig::default())`, which produces a `ProcessAnalysis(Vec<String>)` of human-readable categorisations against the configured synergy / unique / redundancy / info-leak thresholds. No new analyzer is built in this note.
+
+The joint-distribution feature selection — *which* fields of `FluidSignature<R>` and `RollingHistory<N, R>` are projected into the `CausalTensor<Option<f64>>` and with what discretisation buckets — is the load-bearing design decision of B3 and is documented in this block's preflight notes when it opens. The shape of the joint is not fixed by the surrounding pipeline; it is the feature engineering that B3 commits to and that B3's synthetic ground-truth test validates.
 
 **Synthetic ground-truth test (the critical correctness check):**
 
-Adapt the Martínez-Sánchez & Lozano-Durán (2026) §3 three-variable benchmark — explicitly prescribed synergistic / unique / redundant dependencies — into a 3D version on `LatticeComplex<3>`. Apply the full B1a + B1b + B1c + B2 + B3 pipeline. The emitted `CausaloidGraph` must recover the prescribed structure to within the test tolerance. **This test is the single most important correctness gate in the entire roadmap.** If it fails, the methodology is broken regardless of how the deferred JHU reproduction lands.
+Adapt the Martínez-Sánchez & Lozano-Durán (2026) §3 three-variable benchmark — explicitly prescribed synergistic / unique / redundant dependencies — into a 3D version on `LatticeComplex<3>`. Apply the full B1a + B1b + B1c + B2 + B3 pipeline. The returned `SurdResult<f64>` must report the prescribed synergy, unique, and redundancy components within the test tolerance, and the `SurdResultAnalyzer.analyze(...)` output must categorise the strong relationships above their respective thresholds. **This test is the single most important correctness gate in the entire roadmap.** If it fails, the methodology is broken regardless of how the deferred JHU reproduction lands.
 
 **Property tests:**
 
-- **Information-leak bound.** `0 ≤ info_leak ≤ H(target)` for every emitted SURD result.
+- **Information-leak bound.** `0 ≤ info_leak ≤ H(target)` for every emitted `SurdResult`.
 - **Sum constraint.** Redundant + unique + synergistic + leak = total mutual information to numerical tolerance (the SURD theorem).
 - **Synergy non-negativity.** Synergistic component is always ≥ 0.
-- **Graph acyclicity.** When temporal ordering is respected, the emitted graph is a DAG.
+- **Analyzer threshold consistency.** Every relationship that `SurdResultAnalyzer.analyze(...)` flags as "strong" has its component value at or above the configured threshold; relationships below threshold are not flagged.
 - **Synthetic ground-truth recovery.** Per above; full end-to-end test on the 3D-adapted §3 benchmark.
 
-**Effort:** ~400 LOC + ~18 tests. ~7 hours.
+**Effort:** ~300 LOC + ~16 tests. ~7 hours. The drop from the prior estimate (~400 LOC) reflects removing the planned `FluidSurdResultAnalyzer` → `CausaloidGraph` bridge; the synthetic ground-truth test budget remains the dominant cost.
 
 **Block gates:**
 
@@ -441,12 +507,12 @@ Rationale for deferral: validation reproduces a published measurement and is a p
 | 2 | B1b — FluidPhysicsInvariants | physics | This note | ~5h | B1b-G1, B1b-G2, B1b-G3 |
 | 3 | B1c — FluidSignature composition | physics | This note | ~1.5h | B1c-G1, B1c-G2, B1c-G3 |
 | 4 | B2 — RollingHistory + lift | physics | This note | ~3h | B2-G1, B2-G2, B2-G3 |
-| 5 | B3 — FluidContext + SURD + graph | physics + discovery | This note | ~7h | B3-G1, B3-G2, B3-G3 |
+| 5 | B3 — FluidContext + SURD wiring | physics + discovery | This note | ~7h | B3-G1, B3-G2, B3-G3 |
 | 6 | B4 — Type-encoded invariants | physics | This note | ~5h | B4-G1, B4-G2, B4-G3 |
 | 7 | B5 — Pointwise NS kernels | physics | This note | ~7h | B5-G1, B5-G2, B5-G3 |
 | — | `3DCausalFluidDynamicsValidation.md` (was F7–F9) | mixed | **Deferred** | ~70h | Outside this note |
 
-Total in-scope after prerequisites: **~28.5 hours focused work, ~1100 LOC, ~80 tests, 18 gates**. The B1 split into three small blocks (B1a + B1b + B1c) trades one block-G3 review for three, which is the right tradeoff because each block now has a sharp single-crate scope and reviewable diff size.
+Total in-scope after prerequisites: **~28.5 hours focused work, ~1000 LOC, ~78 tests, 18 gates**. The B1 split into three small blocks (B1a + B1b + B1c) trades one block-G3 review for three, which is the right tradeoff because each block now has a sharp single-crate scope and reviewable diff size. B3's prior planned `FluidSurdResultAnalyzer` → `CausaloidGraph` bridge is no longer in scope; the existing `SurdResultAnalyzer.analyze(...)` consumes the `SurdResult<f64>` directly, and any downstream graph-emission work attaches in its own change set.
 
 The gating discipline is strict: no block opens with an unclosed gate from the prior block; no gate closes without compilation, full coverage, and explicit user review. Per AGENTS.md, agents never commit; every G3 sign-off is the user committing the block.
 
@@ -460,8 +526,8 @@ The architectural lesson from the original B1 conflation: every type and functio
 |---|---|
 | `deep_causality_topology` | `Manifold<K, R>`, `HodgeDecomposition<R>`, `ChainComplex`, Hodge ⋆, differential operators (d, δ, Δ), `TopologicalInvariants<R>`, Betti numbers. |
 | `deep_causality_physics` | Physical units (`Speed<R>`, `Mass<R>`, `Reynolds<R>`, `ForcingProfile<R>`), fluid newtypes (`SolenoidalField<R>`, `Vorticity<R>`, etc.), `FluidPhysicsInvariants<R>`, `FluidSignature<R>`, `RollingHistory<N, R>`, `FluidContext<R>`, pointwise NS kernels. |
-| `deep_causality_discovery` | SURD wiring (`fluid_surd_decompose`), `JointDistribution` assembly at the SURD input boundary, `FluidSurdResultAnalyzer`, `CausaloidGraph` emission. |
-| `deep_causality_core` | `PropagatingEffect`, `PropagatingProcess`, `bind`, `lift_to_process`. **No changes from this work.** |
+| `deep_causality_discovery` | SURD wiring (`fluid_surd_decompose`), `CausalTensor<Option<f64>>` joint-distribution assembly at the SURD input boundary, consumption of the resulting `SurdResult<f64>` via the existing `SurdResultAnalyzer`. No new analyzer; no graph-emission code in scope for this note. |
+| `deep_causality_core` | `CausalEffectPropagationProcess<V, S, C, E, L>` (the underlying carrier), `PropagatingEffect<T>` and `PropagatingProcess<T, S, C>` as type aliases, inherent `bind` (closure receives `(EffectValue<V>, S, Option<C>)`), associated `with_state` lift function, and the trait-based `deep_causality_haft::Monad`/`Functor`/`Pure` impls on `PropagatingEffectWitness` / `PropagatingProcessWitness`. **No changes from this work.** |
 
 Anything that consumes `HodgeDecomposition<R>` to produce a velocity-field invariant (helicity, vortex centroids, turbulence scales) is physics and lives in the physics crate. Anything that consumes `Manifold<K, R>` to produce a discretisation invariant (Betti numbers, component L2 norms) is topology and lives in the topology crate. The combined `FluidSignature<R>` lives in physics because physics is the domain crate; topology is the supporting numerical infrastructure.
 
@@ -480,4 +546,4 @@ Anything that consumes `HodgeDecomposition<R>` to produce a velocity-field invar
 
 ## 8. Bottom line
 
-Six gated blocks, three already shipped, five remaining. Each block is generic over `R: RealField` and lives in exactly one crate chosen by its mathematical responsibility. The full path from raw DNS snapshot to executable `CausaloidGraph` lands in ~28.5 hours of focused work. The synthetic ground-truth test inside B3 is the correctness gate this work stands or falls on; the JHU reproduction is deferred to a separate validation note.
+Six gated blocks, three already shipped, five remaining. Each block is generic over `R: RealField` and lives in exactly one crate chosen by its mathematical responsibility. The full path from raw DNS snapshot to a SURD attribution consumable by the existing `SurdResultAnalyzer` lands in ~28.5 hours of focused work. The synthetic ground-truth test inside B3 is the correctness gate this work stands or falls on; the JHU reproduction is deferred to a separate validation note. Graph-emission work (turning the `SurdResult<f64>` into a `CausaloidGraph`) is out of scope for this note and lands in its own change set if and when a downstream consumer needs it.
