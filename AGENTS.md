@@ -168,7 +168,7 @@ It uses three main components:
 
 ## Project Structure
 
-The project is a monorepo containing 20 library crates:
+The project is a monorepo containing 19 library crates:
 
 ### Core Crates
 * `deep_causality`: Computational causality library. Provides causality graph, collections, context and causal reasoning.
@@ -195,7 +195,6 @@ The project is a monorepo containing 20 library crates:
 
 ### Functional Programming Crates
 * `deep_causality_haft`: Higher-Order Abstract Functional Traits (HKT).
-* `deep_causality_effects`: Effect types for heterogeneous graphs and causal collections.
 * `deep_causality_ethos`: Programmable ethics for DeepCausality.
 
 ### Topology and Physics Crates

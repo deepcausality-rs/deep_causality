@@ -20,7 +20,6 @@ cargo machete deep_causality_ast/
 cargo machete deep_causality_core/
 cargo machete deep_causality_data_structures/
 cargo machete deep_causality_discovery/
-cargo machete deep_causality_effects/
 cargo machete deep_causality_ethos/
 cargo machete deep_causality_haft/
 cargo machete deep_causality_macros/

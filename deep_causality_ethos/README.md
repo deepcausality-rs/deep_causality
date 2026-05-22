@@ -132,7 +132,6 @@ A full worked example, including the `Context` setup and a CSM integration, live
 
 * `deep_causality` supplies `Context`, `ProposedAction`, `Uncertain`, and the seven generic parameters used here.
 * `ultragraph` backs the `TeloidGraph`; freeze and acyclicity checks come from it.
-* The ethos layer is independent of `deep_causality_effects`. Causal reasoning answers what will happen; the ethos answers what should happen.
 
 ## References
 
