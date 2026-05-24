@@ -1,5 +1,5 @@
 ---
-title: Uniform mathematical foundation
+title: Uniform Maths
 description: One Functor/Monad/CoMonad surface across tensors, multivectors, manifolds, sparse matrices, and effect propagation.
 section: concepts
 order: 11

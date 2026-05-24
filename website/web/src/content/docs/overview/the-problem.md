@@ -1,5 +1,5 @@
 ---
-title: The problem
+title: The Problem
 description: Why classical causality's assumptions break in dynamic systems, and what that means in practice.
 section: overview
 order: 2

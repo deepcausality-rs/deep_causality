@@ -5,7 +5,7 @@ section: overview
 order: 1
 ---
 
-Computational causality and deep learning solve different problems. Deep learning excels at pattern matching from large data: object detection, fraud detection, next-token prediction in large language models. These systems infer from statistical co-occurrence in the training distribution, and that is exactly the right tool for many problems. For other problems — the ones where [correlation is not causation](/blog/why-is-correlation-not-causation/) and the deployment regime can [shift away from training](/blog/why-is-distribution-shift-a-problem-in-ai/) — a different substrate is needed.
+Computational causality and deep learning solve different problems. Deep learning excels at pattern matching from large data: object detection, fraud detection, next-token prediction in large language models. These systems infer from statistical co-occurrence in the training distribution, and that is exactly the right tool for many problems. Other problems need a different substrate: the ones where [correlation is not causation](/blog/why-is-correlation-not-causation/) and the deployment regime can [shift away from training](/blog/why-is-distribution-shift-a-problem-in-ai/).
 
 Computational causality is that substrate. It gives you three things a purely correlational system cannot:
 
@@ -17,7 +17,7 @@ These properties matter in regulated and high-stakes domains: medicine, finance,
 
 Deep learning and DeepCausality are complementary methodologies with different strengths that compose well in a single system. Deep learning is a strong choice for perception: object recognition, anomaly detection in raw signals, embeddings of unstructured text. DeepCausality is a strong choice for dynamic reasoning with a verifiable audit trail.
 
-Consider a drone entering a tunnel. A deep-learning vision system handles perception: it recognizes the tunnel mouth from the camera feed. When GPS lock is lost a moment later, a classical finite state machine could switch to dead-reckoning — but only if that transition was anticipated at design time. Real flight encounters combinations the design-time state space does not enumerate: GPS loss *and* low battery *and* a passenger-corridor restriction *and* deteriorating wind, all at once. DeepCausality reasons over the propagating effect of those signals at runtime, asks the Effect Ethos whether the proposed fallback (e.g., immediate landing on a permitted surface) is permissible under the current operating rules, and emits an audit trail explaining the decision. A finite state machine cannot represent the permissibility check, cannot infer states that were not enumerated up front, and produces no audit trail beyond its transition log. Each method plays to its strengths, and either can feed the other depending on what the system requires.
+Consider a drone entering a tunnel. A deep-learning vision system handles perception: it recognizes the tunnel mouth from the camera feed. When GPS lock is lost a moment later, a classical finite state machine could switch to dead-reckoning, but only if that transition was anticipated at design time. Real flight encounters combinations the design-time state space does not enumerate: GPS loss *and* low battery *and* a passenger-corridor restriction *and* deteriorating wind, all at once. DeepCausality reasons over the propagating effect of those signals at runtime, asks the Effect Ethos whether the proposed fallback (e.g., immediate landing on a permitted surface) is permissible under the current operating rules, and emits an audit trail explaining the decision. A finite state machine cannot represent the permissibility check, cannot infer states that were not enumerated up front, and produces no audit trail beyond its transition log. Each method plays to its strengths, and either can feed the other depending on what the system requires.
 
 ## What makes DeepCausality unique
 
@@ -74,20 +74,20 @@ DeepCausality treats causality itself as a dynamic process. The [next page](/doc
 
 Conceptual deep-dives in this documentation:
 
-- [Causaloid](/docs/concepts/causaloid/) — structural reasoning primitive
-- [Causal Monad](/docs/concepts/causal-monad/) — sequential reasoning primitive
-- [Effect propagation process](/docs/concepts/effect-propagation-process/) — the `PropagatingEffect` carrier
-- [Causal State Machine](/docs/concepts/csm/) — runtime-inferred state with action proposal
-- [Effect Ethos](/docs/concepts/effect-ethos/) — programmable permissibility layer
-- [Dynamic causality](/docs/concepts/dynamic-causality/) — how the substrate handles regime change
+- [Causaloid](/docs/concepts/causaloid/): structural reasoning primitive
+- [Causal Monad](/docs/concepts/causal-monad/): sequential reasoning primitive
+- [Effect propagation process](/docs/concepts/effect-propagation-process/): the `PropagatingEffect` carrier
+- [Causal State Machine](/docs/concepts/csm/): runtime-inferred state with action proposal
+- [Effect Ethos](/docs/concepts/effect-ethos/): programmable permissibility layer
+- [Dynamic causality](/docs/concepts/dynamic-causality/): how the substrate handles regime change
 
 Background on why correlation-based systems break down in practice:
 
-- [Why is correlation not causation?](/blog/why-is-correlation-not-causation/) — the four mechanisms
-- [Why is distribution shift a problem in AI?](/blog/why-is-distribution-shift-a-problem-in-ai/) — silent failures on out-of-distribution inputs
-- [Why correlation breaks under regime change](/blog/why-correlation-breaks-under-regime-change/) — sign reversal, magnitude collapse, spurious appearance
-- [Why do LLMs struggle with causality?](/blog/why-llms-struggle-with-causality/) — Pearl's hierarchy and where token predictors sit
-- [Why LLMs can't do physics](/blog/why-llms-cant-do-physics/) — the structural inversion DeepCausality applies
+- [Why is correlation not causation?](/blog/why-is-correlation-not-causation/): the four mechanisms
+- [Why is distribution shift a problem in AI?](/blog/why-is-distribution-shift-a-problem-in-ai/): silent failures on out-of-distribution inputs
+- [Why correlation breaks under regime change](/blog/why-correlation-breaks-under-regime-change/): sign reversal, magnitude collapse, spurious appearance
+- [Why do LLMs struggle with causality?](/blog/why-llms-struggle-with-causality/): Pearl's hierarchy and where token predictors sit
+- [Why LLMs can't do physics](/blog/why-llms-cant-do-physics/): the structural inversion DeepCausality applies
 
 External references on the foundational frameworks DeepCausality unifies:
 
