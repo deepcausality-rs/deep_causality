@@ -8,6 +8,7 @@ This directory contains examples demonstrating various features and applications
 |----------|---------------------------------------------------------------------|
 | [Starter Example](#starter-example) | Basic introduction to DeepCausality                                 |
 | [Classical Causality](#classical-causality-examples) | Traditional causal inference methods (CATE, DBN, Granger, RCM, SCM) |
+| [Causal Discovery](#causal-discovery-examples) | SURD decomposition, mRMR feature selection, and the CDL pipeline    |
 | [CSM Examples](#csm-examples) | Causal State Machine patterns                                       |
 | [Core Examples](#core-examples) | PropagatingEffect and PropagatingProcess fundamentals               |
 | [Avionics Examples](#avionics-examples) | High-assurance GNC and Safety Critical Systems                      |
@@ -47,6 +48,26 @@ Traditional causal inference methods implemented using the DeepCausality framewo
 | SCM | Pearl's Ladder of Causation | `cargo run -p classical_causality_examples --example scm_example` |
 
 See [classical_causality_examples/README.md](classical_causality_examples/README.md) for detailed documentation.
+
+---
+
+## Causal Discovery Examples
+
+**Location:** `examples/causal_discovery_examples`
+
+Runnable examples for the `deep_causality_algorithms` and
+`deep_causality_discovery` crates: information-theoretic causal decomposition
+(SURD), feature selection (mRMR), and the full Causal Discovery Language (CDL)
+pipeline.
+
+| Example      | Method                                                | Command |
+|--------------|-------------------------------------------------------|---------|
+| SURD         | SURD-states causal decomposition                      | `cargo run -p causal_discovery_examples --example example_surd` |
+| mRMR         | Minimum-Redundancy Maximum-Relevance feature selection | `cargo run -p causal_discovery_examples --example example_mrmr` |
+| mRMR (CDL)   | mRMR with missing-value cleaning                      | `cargo run -p causal_discovery_examples --example example_mrmr_cdl` |
+| CDL Pipeline | Load -> clean -> mRMR -> SURD -> analyze              | `cargo run -p causal_discovery_examples --example example_discovery` |
+
+See [causal_discovery_examples/README.md](causal_discovery_examples/README.md) for detailed documentation.
 
 ---
 

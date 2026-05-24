@@ -1,0 +1,35 @@
+[package]
+name = "causal_discovery_examples"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "no_lib.rs"
+
+
+[dependencies]
+deep_causality =  { path = "../../deep_causality" }
+deep_causality_algorithms =  { path = "../../deep_causality_algorithms" }
+deep_causality_core =  { path = "../../deep_causality_core" }
+deep_causality_discovery =  { path = "../../deep_causality_discovery" }
+deep_causality_tensor =  { path = "../../deep_causality_tensor" }
+
+
+[[example]]
+name = "example_mrmr"
+path = "mrmr/main.rs"
+
+[[example]]
+name = "example_mrmr_cdl"
+path = "mrmr_cdl/main.rs"
+
+[[example]]
+name = "example_surd"
+path = "surd/main.rs"
+
+[[example]]
+name = "example_discovery"
+path = "discovery/main.rs"

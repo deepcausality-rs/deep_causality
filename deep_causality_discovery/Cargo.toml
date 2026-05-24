@@ -15,11 +15,6 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
 
-[[example]]
-name = "example_discovery"
-path = "examples/main.rs"
-
-
 # Internal dependencies
 
 [dependencies.deep_causality_algorithms]

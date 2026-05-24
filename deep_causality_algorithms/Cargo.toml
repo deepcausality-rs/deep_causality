@@ -16,21 +16,6 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
 
-[[example]]
-name = "example_mrmr"
-path = "examples/example_mrmr.rs"
-
-
-[[example]]
-name = "example_mrmr_cdl"
-path = "examples/example_mrmr_cdl.rs"
-
-
-[[example]]
-name = "example_surd"
-path = "examples/example_surd.rs"
-
-
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
 version = "0.4.2"

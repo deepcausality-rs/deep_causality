@@ -1,4 +1,24 @@
-# Example: Decomposing Causal Structure with SURD-States
+# Causal Discovery Examples
+
+This crate consolidates the runnable examples for the
+[`deep_causality_algorithms`](../../deep_causality_algorithms) and
+[`deep_causality_discovery`](../../deep_causality_discovery) crates. They cover
+the two main building blocks of causal discovery in DeepCausality: information-
+theoretic decomposition (SURD), feature selection (mRMR), and the end-to-end
+Causal Discovery Language (CDL) pipeline.
+
+## Examples
+
+| Example         | Topic                                                                 | Command                                                                  |
+|-----------------|-----------------------------------------------------------------------|--------------------------------------------------------------------------|
+| SURD            | Decomposing causal structure (Redundant/Unique/Synergistic + Leak)    | `cargo run -p causal_discovery_examples --example example_surd`          |
+| mRMR            | Minimum-Redundancy Maximum-Relevance feature selection                | `cargo run -p causal_discovery_examples --example example_mrmr`          |
+| mRMR (CDL)      | mRMR over data with missing values via the `Option<f64>` cleaner path | `cargo run -p causal_discovery_examples --example example_mrmr_cdl`      |
+| CDL Pipeline    | Full discovery pipeline: load -> clean -> mRMR -> SURD -> analyze     | `cargo run -p causal_discovery_examples --example example_discovery`     |
+
+---
+
+## Example: Decomposing Causal Structure with SURD-States
 
 This example demonstrates the `surd_states` algorithm to analyze and decompose the causal relationships from raw data of
 dynamic systems. It showcases how to use the algorithm and, more importantly, how to interpret its rich, detailed
@@ -21,7 +41,7 @@ view of causality by answering four critical questions:
 To run the analysis, run:
 
 ```bash
-cargo run --example example_surd
+cargo run -p causal_discovery_examples --example example_surd
 ```
 
 The example will run four different test cases, each with a different underlying causal structure, and print a detailed
@@ -140,7 +160,7 @@ This example demonstrates the `mrmr_features_selector` algorithm, which selects 
 To run the mRMR feature selection example, execute:
 
 ```bash
-cargo run --example example_mrmr
+cargo run -p causal_discovery_examples --example example_mrmr
 ```
 
 ## Understanding the Output

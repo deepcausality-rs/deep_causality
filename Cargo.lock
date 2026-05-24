@@ -118,6 +118,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
 
 [[package]]
+name = "causal_discovery_examples"
+version = "0.1.0"
+dependencies = [
+ "deep_causality",
+ "deep_causality_algorithms",
+ "deep_causality_core",
+ "deep_causality_discovery",
+ "deep_causality_tensor",
+]
+
+[[package]]
 name = "cc"
 version = "1.2.62"
 source = "registry+https://github.com/rust-lang/crates.io-index"
