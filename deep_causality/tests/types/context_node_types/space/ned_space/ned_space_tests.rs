@@ -39,6 +39,10 @@ fn test_display_trait() {
 }
 
 #[test]
+// Disabled under Miri: soft-float emulation produces last-bit differences
+// for `sqrt`, so the exact-equality assertion fails. Test is correct under
+// normal CI.
+#[cfg_attr(miri, ignore)]
 fn test_metric_trait() {
     let n1 = NedSpace::new(1, 0.0, 0.0, 0.0);
     let n2 = NedSpace::new(2, 100.0, 50.0, 10.0);

@@ -87,6 +87,11 @@ fn test_interval_squared_spacelike_is_positive() {
 }
 
 #[test]
+// Disabled under Miri: the null-like interval is `-(c·Δt)² + Δx²` with both
+// terms ~9e16, so the result is catastrophic cancellation around zero. The
+// 1e-6 tolerance holds on hardware FP but is exceeded by ~1 ULP of soft-float
+// drift under Miri. Test is correct under normal CI.
+#[cfg_attr(miri, ignore)]
 fn test_interval_squared_null_like() {
     let c = 299_792_458.0;
     let a = LorentzianSpacetime::new(1, c, 0.0, 0.0, 1.0, TimeScale::Second);
