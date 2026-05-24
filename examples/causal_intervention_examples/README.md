@@ -128,3 +128,15 @@ domains that were not built around intervention from the start: clinical
 trial design, avionics, hemodynamics, distribution-network reliability,
 surgical planning, vehicle control, closed-loop medical pumps,
 decompression theory, and enterprise networking.
+
+## Adding New Examples
+
+1. Create directory: `examples/<your_example>/`
+2. Add `main.rs` with doc comments (`//!` module docs)
+3. Add `README.md` following the [standard template](../physics_examples/README.md)
+4. Register in `Cargo.toml`:
+   ```toml
+   [[example]]
+   name = "your_example"
+   path = "examples/your_example/main.rs"
+   ```
