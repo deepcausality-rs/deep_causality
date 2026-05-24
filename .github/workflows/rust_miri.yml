@@ -77,4 +77,9 @@ jobs:
       - name: Run Miri
         env:
           MIRIFLAGS: -Zmiri-strict-provenance -Zmiri-symbolic-alignment-check ${{ matrix.extra_flags }}
-        run: cargo miri test -p ${{ matrix.crate }}
+        # `--lib --tests` excludes doctests: rustdoc-synthesized doctest
+        # binaries don't reliably honor the `cfg(miri)` flag cargo-miri sets,
+        # so doctest-level skip shims (e.g. `# if cfg!(miri) { return; }`) do
+        # not fire. Doctests verify documentation correctness, not UB —
+        # normal CI runs them, so coverage is preserved.
+        run: cargo miri test -p ${{ matrix.crate }} --lib --tests

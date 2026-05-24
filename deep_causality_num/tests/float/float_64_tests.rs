@@ -196,6 +196,7 @@ fn ln_val() {
     assert_eq!(Float::ln(std::f64::consts::E), 1.0);
 }
 #[test]
+#[cfg_attr(miri, ignore)] // Miri's soft-float emulation produces last-bit differences vs hardware; test is correct under normal CI.
 fn log_val() {
     assert_eq!(Float::log(10.0f64, 10.0), 1.0);
 }
