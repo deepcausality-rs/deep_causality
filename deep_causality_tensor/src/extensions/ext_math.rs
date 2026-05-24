@@ -22,6 +22,7 @@ pub trait CausalTensorMathExt<T> {
     /// ```
     /// use deep_causality_tensor::{CausalTensor, CausalTensorMathExt};
     ///
+    /// # if cfg!(miri) { return; } // Miri's soft-float emulation perturbs last bits.
     /// let tensor = CausalTensor::new(vec![1.0, std::f32::consts::E, 10.0], vec![3, 1]).unwrap();
     /// let result = tensor.log_nat().unwrap();
     ///
@@ -45,6 +46,7 @@ pub trait CausalTensorMathExt<T> {
     /// ```
     /// use deep_causality_tensor::{CausalTensor, CausalTensorMathExt};
     ///
+    /// # if cfg!(miri) { return; } // Miri's soft-float emulation perturbs last bits.
     /// let tensor = CausalTensor::new(vec![1.0, 2.0, 4.0, 8.0], vec![4, 1]).unwrap();
     /// let result = tensor.log2().unwrap();
     ///
@@ -68,6 +70,7 @@ pub trait CausalTensorMathExt<T> {
     /// ```
     /// use deep_causality_tensor::{CausalTensor, CausalTensorMathExt};
     ///
+    /// # if cfg!(miri) { return; } // Miri's soft-float emulation perturbs last bits.
     /// let tensor = CausalTensor::new(vec![1.0, 10.0, 100.0], vec![3, 1]).unwrap();
     /// let result = tensor.log10().unwrap();
     ///

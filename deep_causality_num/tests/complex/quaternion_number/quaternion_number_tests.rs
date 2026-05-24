@@ -20,6 +20,10 @@ fn test_norm_sqr() {
 }
 
 #[test]
+// Disabled under Miri: software-emulated floats produce different last-bit
+// results for transcendental ops (sqrt/powi here), so exact equality cannot
+// hold. The test itself is correct and runs under normal CI.
+#[cfg_attr(miri, ignore)]
 fn test_norm() {
     let q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
     assert_eq!(

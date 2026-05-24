@@ -43,6 +43,10 @@ fn test_to_axis_angle_y_180() {
 }
 
 #[test]
+// Disabled under Miri: software-emulated floats produce different last-bit
+// results for transcendental ops, so the tight EPSILON tolerance is exceeded.
+// The test itself is correct and runs under normal CI.
+#[cfg_attr(miri, ignore)]
 fn test_to_axis_angle_z_360() {
     // 360 degrees around Z axis (equivalent to 0 degrees)
     let q_z_360 = Quaternion::from_axis_angle([0.0, 0.0, 1.0], std::f64::consts::TAU);

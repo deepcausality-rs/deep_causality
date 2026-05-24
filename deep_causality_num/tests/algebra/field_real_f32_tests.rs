@@ -46,6 +46,10 @@ fn test_round() {
 }
 
 #[test]
+// Disabled under Miri: software-emulated floats produce different last-bit
+// results for transcendental ops, so exact equality cannot hold. The test
+// itself is correct and runs under normal CI.
+#[cfg_attr(miri, ignore)]
 fn test_exp() {
     let x = 1.0_f32;
     assert_eq!(RealField::exp(x), x.exp());
@@ -65,6 +69,10 @@ fn test_log() {
 }
 
 #[test]
+// Disabled under Miri: software-emulated floats produce different last-bit
+// results for transcendental ops, so exact equality cannot hold. The test
+// itself is correct and runs under normal CI.
+#[cfg_attr(miri, ignore)]
 fn test_powf() {
     let x = 2.0_f32;
     let n = 3.0_f32;

@@ -159,6 +159,7 @@ fn test_powi_negative() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)] // Miri's soft-float emulation produces last-bit differences vs hardware; test is correct under normal CI.
 fn test_powf() {
     let result = <Float106 as Float>::powf(d(2.0), d(3.0));
     assert!(approx_eq(result, d(8.0), 1e-14));
