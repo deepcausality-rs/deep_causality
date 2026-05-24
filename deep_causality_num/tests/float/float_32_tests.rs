@@ -160,6 +160,7 @@ fn recip_val() {
     assert_eq!(Float::recip(2.0f32), 0.5);
 }
 #[test]
+#[cfg_attr(miri, ignore)] // Miri's soft-float emulation produces last-bit differences vs hardware; test is correct under normal CI.
 fn powi_val() {
     assert_eq!(Float::powi(2.0f32, 3), 8.0);
 }
@@ -239,6 +240,7 @@ fn cbrt_val() {
     assert_eq!(Float::cbrt(8.0f32), 2.0);
 }
 #[test]
+#[cfg_attr(miri, ignore)] // Miri's soft-float emulation produces last-bit differences vs hardware; test is correct under normal CI.
 fn hypot_val() {
     assert_eq!(Float::hypot(3.0f32, 4.0), 5.0);
 }
