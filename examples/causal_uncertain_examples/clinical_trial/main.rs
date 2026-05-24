@@ -28,7 +28,7 @@ use deep_causality_core::{EffectValue, PropagatingEffect};
 use model::{aggregate_stage, cohort_stage, lift_stage, presence_stage, verdict_stage};
 
 fn main() {
-    println!("💊 Aspirin Headache Trial (PropagatingEffect chain over MaybeUncertain)");
+    println!("Aspirin Headache Trial (PropagatingEffect chain over MaybeUncertain)");
     println!("=======================================================================\n");
 
     let pipeline = PropagatingEffect::pure(())

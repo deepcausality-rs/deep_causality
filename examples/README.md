@@ -10,6 +10,7 @@ This directory contains examples demonstrating various features and applications
 | [Classical Causality](#classical-causality-examples) | Traditional causal inference methods (CATE, DBN, Granger, RCM, SCM) |
 | [Causal Discovery](#causal-discovery-examples) | SURD decomposition, mRMR feature selection, and the CDL pipeline    |
 | [Causal Uncertain](#causal-uncertain-examples) | Uncertain<T> / MaybeUncertain<T> as monadic propagation chains      |
+| [Causal Intervention](#causal-intervention-examples) | Counterfactual and corrective `intervene` examples (do-operator + closed-loop control) |
 | [CSM Examples](#csm-examples) | Causal State Machine patterns                                       |
 | [Core Examples](#core-examples) | PropagatingEffect and PropagatingProcess fundamentals               |
 | [Avionics Examples](#avionics-examples) | High-assurance GNC and Safety Critical Systems                      |
@@ -88,6 +89,43 @@ supplies the chain's plumbing and short-circuit on failure.
 | Clinical Trial    | PropagatingEffect over MaybeUncertain<f64>     | Five-stage aspirin trial: cohort → presence → lift → aggregate → verdict                       | `cargo run -p causal_uncertain_examples --example clinical_trial`    |
 
 See [causal_uncertain_examples/README.md](causal_uncertain_examples/README.md) for detailed documentation.
+
+---
+
+## Causal Intervention Examples
+
+**Location:** `examples/causal_intervention_examples`
+
+Nine worked examples showing what the causal monad gives you beyond `bind`.
+Two senses of intervention sit side by side. The counterfactual examples
+follow the Judea Pearl tradition (one-shot value substitution; the
+difference between worlds is the estimand). The corrective examples
+follow the control-theory tradition (monitor a trajectory; intervene
+when the value drifts outside the safe envelope; continue from the
+corrected state).
+
+### Counterfactual interventions
+
+| Example | Monad | Topic | Command |
+|---|---|---|---|
+| counterfactual_treatment_effect   | PropagatingEffect             | CATE as `do(T=1) − do(T=0)` on a single chain                                       | `cargo run -p causal_intervention_examples --example counterfactual_treatment_effect` |
+| counterfactual_envelope_fault     | PropagatingProcess (stateful) | Mid-chain stall-airspeed injection; same aircraft, same configuration, new value    | `cargo run -p causal_intervention_examples --example counterfactual_envelope_fault` |
+| counterfactual_treatment_options  | PropagatingEffect             | Two intervention sites on one chain: beta-blocker vs surgical clip                  | `cargo run -p causal_intervention_examples --example counterfactual_treatment_options` |
+| counterfactual_cascade_failure    | PropagatingProcess (stateful) | Network N-k contingency analysis as a chain of composing interventions              | `cargo run -p causal_intervention_examples --example counterfactual_cascade_failure` |
+| counterfactual_resection_intervention | PropagatingEffect         | Epilepsy surgery screening as `do(connectome = resected_at_R)` for each region      | `cargo run -p causal_intervention_examples --example counterfactual_resection_intervention` |
+
+### Corrective interventions
+
+Each runs the same chain twice: open loop (no monitor, catastrophic failure) and closed loop (monitor + `intervene`, failure averted).
+
+| Example | Monad | Topic | Command |
+|---|---|---|---|
+| corrective_lane_keeping           | PropagatingProcess (stateful) | Vehicle drifts under crosswind; P-controller fires every time offset crosses 0.30 m | `cargo run -p causal_intervention_examples --example corrective_lane_keeping` |
+| corrective_glucose_pump           | PropagatingProcess (stateful) | Glucose climbs across three meals; corrective bolus fires above 180 mg/dL          | `cargo run -p causal_intervention_examples --example corrective_glucose_pump` |
+| corrective_decompression_stops    | PropagatingProcess (stateful) | Diver ascends from 30 m; decompression stop inserted when N2 supersaturation rises | `cargo run -p causal_intervention_examples --example corrective_decompression_stops` |
+| corrective_network_failover       | PropagatingProcess (stateful) | Primary switch fails; monitor detects zero delivery; standby switch takes over     | `cargo run -p causal_intervention_examples --example corrective_network_failover` |
+
+See [causal_intervention_examples/README.md](causal_intervention_examples/README.md) for detailed documentation.
 
 ---
 

@@ -32,7 +32,7 @@ use model_config::{nominal_fleet_config, seed_readings};
 use model_types::{FleetProcess, FleetState, RawReadings};
 
 fn main() {
-    println!("🔧 Sensor Processing — Stateful Six-Stage `PropagatingProcess` Pipeline");
+    println!("Sensor Processing — Stateful Six-Stage `PropagatingProcess` Pipeline");
     println!("=======================================================================\n");
 
     let initial: FleetProcess<RawReadings> = PropagatingProcess {

@@ -28,7 +28,7 @@ use deep_causality_uncertain::Uncertain;
 use model::{Position, distance_stage, fuel_stage, route_stage, time_stage};
 
 fn main() {
-    println!("🚗 GPS Navigation with Uncertainty Analysis (PropagatingEffect chain)");
+    println!("GPS Navigation with Uncertainty Analysis (PropagatingEffect chain)");
     println!("=====================================================================\n");
 
     let start = Position {

@@ -129,6 +129,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "causal_intervention_examples"
+version = "0.1.0"
+dependencies = [
+ "deep_causality_core",
+ "deep_causality_haft",
+]
+
+[[package]]
 name = "causal_uncertain_examples"
 version = "0.1.0"
 dependencies = [
