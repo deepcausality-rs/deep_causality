@@ -80,7 +80,9 @@ A system that handles distribution shift gracefully has three properties.
 
 The DeepCausality framework implements this pattern. The propagating-effect monad carries a log, an error channel, and an intervention operator. The physics crate provides kernels for Newtonian mechanics, relativity, electromagnetism, thermodynamics, and quantum mechanics, each typed so that composition across regime boundaries is explicit. The architectural argument for putting correlational tools (including LLMs) inside this substrate as bounded oracles is laid out in [Why LLMs Can't Do Physics](/blog/why-llms-cant-do-physics/).
 
-Further reading: [Why Is Correlation Not Causation?](/blog/why-is-correlation-not-causation/) · [Why Do LLMs Struggle With Causality?](/blog/why-llms-struggle-with-causality/)
+Further reading: 
+* [Why Is Correlation Not Causation?](/blog/why-is-correlation-not-causation/) 
+* [Why Do LLMs Struggle With Causality?](/blog/why-llms-struggle-with-causality/)
 
 ## About DeepCausality
 

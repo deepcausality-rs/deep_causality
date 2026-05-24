@@ -1,5 +1,5 @@
 ---
-title: "Why LLMs Can't Do Physics (And What Replaces Physics-Informed Neural Networks)"
+title: "Why LLMs Can't Do Physics?"
 description: "Neural networks interpolate inside their training distribution. Physical laws hold outside it. Here is why PINNs fail, and the structural inversion that works."
 date: 2026-05-28
 author: Marvin Hansen
@@ -81,6 +81,23 @@ In the causal approach, correlation is a bounded oracle inside a structural subs
 
 In that sense, deep causality fundamentally inverts the PINN approach.
 
+```mermaid
+flowchart LR
+  subgraph PINN["PINN approach"]
+    direction TB
+    P_SUB["Substrate:<br/>Neural network<br/>(statistical)"]
+    P_CON["Constraint:<br/>Physics loss<br/>(statistical, soft)"]
+    P_CON -. soft constraint .-> P_SUB
+  end
+  subgraph DC["DeepCausality approach"]
+    direction TB
+    D_SUB["Substrate:<br/>Causal chain + physics kernels<br/>(structural)"]
+    D_CON["Bounded oracle:<br/>Neural network / LLM<br/>(statistical, contained)"]
+    D_SUB -- gatekeeps --> D_CON
+  end
+  PINN === MIRROR{{"mirror image"}} === DC
+```
+
 ## What does this architecture buy?
 
 Three things, concretely.
@@ -103,7 +120,10 @@ Given the observed clock-rate offset across different altitudes of the Galileo c
 
 Unmentioned above is that the propagating-process pattern is rooted in Whitehead's process philosophy, which establishes a metaphysics that allows for quantum-native and relativistic-native representation. The DeepCausality project fully inherits this property and can therefore represent relativistic and quantum problems in a straightforward way. DeepCausality also applies to a broad variety of dynamic-system challenges. The project has working code examples for avionics, medicine, mathematics, and several branches of physics. Whenever complex dynamic systems need to be built, DeepCausality provides a working foundation that natively represents complex dynamics.
 
-Further reading: [Why Is Correlation Not Causation?](/blog/why-is-correlation-not-causation/) · [Why Correlation Breaks Under Regime Change](/blog/why-correlation-breaks-under-regime-change/) · [Why Do LLMs Struggle With Causality?](/blog/why-llms-struggle-with-causality/)
+Further reading: 
+* [Why Is Correlation Not Causation?](/blog/why-is-correlation-not-causation/) 
+* [Why Correlation Breaks Under Regime Change](/blog/why-correlation-breaks-under-regime-change/) 
+* [Why Do LLMs Struggle With Causality?](/blog/why-llms-struggle-with-causality/)
 
 ## About DeepCausality
 

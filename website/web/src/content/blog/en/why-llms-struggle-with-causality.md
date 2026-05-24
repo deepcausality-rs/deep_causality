@@ -29,6 +29,16 @@ Judea Pearl's hierarchy is the cleanest way to frame this. Three rungs, in order
 2. **Intervention.** *What would happen if I did this?* P(Y | do(X)). This is what controlled experiments measure. It requires a model of the world, not a distribution over observations.
 3. **Counterfactual.** *What would have happened if things had been different, given that this is what actually happened?* P(Y_x | X', Y'). This is what humans use to assign blame, plan, and learn from individual experiences.
 
+```mermaid
+flowchart BT
+  R1["Rung 1 — Association<br/>P(Y &#124; X)<br/><i>What is?</i>"]
+  R2["Rung 2 — Intervention<br/>P(Y &#124; do(X))<br/><i>What if I act?</i>"]
+  R3["Rung 3 — Counterfactual<br/>P(Y_x &#124; X', Y')<br/><i>What if things had been different?</i>"]
+  R1 --> R2 --> R3
+  LLM[("LLM<br/>operates here")] -.-> R1
+  CAUSAL[("Causal substrate<br/>operates here")] -.-> R3
+```
+
 An LLM trained on next-token prediction operates at rung one. The training objective is association, optimized over a very large corpus. The model learns which tokens co-occur with which other tokens, and at scale, this looks like reasoning because the corpus contains a lot of human reasoning that the model can complete. But auto-completing a sentence that contains causal language is not the same as performing causal inference. The model is matching the surface form of an answer, not deriving the answer itself.
 
 ## Where does the limitation surface?
@@ -75,7 +85,10 @@ LLMs struggle with causality because causality is not a property of token distri
 
 The fix is a substrate that supports causal operations natively, with the LLM contained inside it as a useful but bounded component. The substrate refuses to propagate values that violate the chain's structure, and that refusal is what makes the system causal.
 
-Further reading: [Why Is Correlation Not Causation?](/blog/why-is-correlation-not-causation/) · [Why Is Distribution Shift a Problem in AI?](/blog/why-is-distribution-shift-a-problem-in-ai/) · [Why LLMs Can't Do Physics](/blog/why-llms-cant-do-physics/)
+Further reading:
+* [Why Is Correlation Not Causation?](/blog/why-is-correlation-not-causation/) 
+* [Why Is Distribution Shift a Problem in AI?](/blog/why-is-distribution-shift-a-problem-in-ai/) 
+* [Why LLMs Can't Do Physics](/blog/why-llms-cant-do-physics/)
 
 ## About DeepCausality
 

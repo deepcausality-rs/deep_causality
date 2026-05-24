@@ -30,6 +30,24 @@ The two questions can have different answers, and frequently do. A correlation c
 
 There are exactly four mechanisms by which two variables can be correlated. Only one of them is direct causation. The other three are the reasons the slogan exists.
 
+```mermaid
+flowchart LR
+  subgraph A["1. Direct causation"]
+    A1[X] --> A2[Y]
+  end
+  subgraph B["2. Reverse causation"]
+    B1[X] <-- causes --- B2[Y]
+  end
+  subgraph C["3. Common cause"]
+    C1[Z] --> C2[X]
+    C1 --> C3[Y]
+  end
+  subgraph D["4. Selection bias"]
+    D1[X] --> D2[(S)]
+    D3[Y] --> D2
+  end
+```
+
 ### 1. Direct causation (X causes Y)
 
 The cleanest case. Pressing the accelerator increases speed. Correlation exists because intervention on X changes Y.

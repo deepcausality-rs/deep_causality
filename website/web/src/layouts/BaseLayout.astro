@@ -1,20 +1,40 @@
 ---
 import '../styles/global.css';
+import { getCollection } from 'astro:content';
+
+interface ArticleMeta {
+  publishedTime?: string;
+  modifiedTime?: string;
+  author?: string;
+  tags?: string[];
+}
 
 interface Props {
   title?: string;
   description?: string;
   ogImage?: string;
+  ogType?: 'website' | 'article';
+  article?: ArticleMeta;
 }
 
 const {
   title = 'DeepCausality — dynamic causality for advanced systems',
   description = 'DeepCausality is a Rust framework for dynamic causality. Causal reasoning for advanced systems where time, context, and rules evolve.',
   ogImage = '/img/social-share.jpg',
+  ogType = 'website',
+  article,
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site).toString();
 const ogImageUrl = new URL(ogImage, Astro.site).toString();
+
+const featuredPosts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 4)
+  .map((e) => ({
+    title: e.data.title,
+    href: `/blog/${e.id.replace(/^en\//, '').replace(/\.md$/, '')}/`,
+  }));
 ---
 <!doctype html>
 <html lang="en" data-theme="dark">
@@ -33,7 +53,19 @@ const ogImageUrl = new URL(ogImage, Astro.site).toString();
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
+    {ogType === 'article' && article?.publishedTime && (
+      <meta property="article:published_time" content={article.publishedTime} />
+    )}
+    {ogType === 'article' && article?.modifiedTime && (
+      <meta property="article:modified_time" content={article.modifiedTime} />
+    )}
+    {ogType === 'article' && article?.author && (
+      <meta property="article:author" content={article.author} />
+    )}
+    {ogType === 'article' && article?.tags?.map((tag) => (
+      <meta property="article:tag" content={tag} />
+    ))}
     <meta property="og:image" content={ogImageUrl} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -103,6 +135,14 @@ const ogImageUrl = new URL(ogImage, Astro.site).toString();
           <a href="https://github.com/deepcausality-rs/deep_causality/discussions">Discussions</a>
           <a href="https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE">License</a>
         </div>
+        {featuredPosts.length > 0 && (
+          <div class="col">
+            <h4>Featured posts</h4>
+            {featuredPosts.map((p) => (
+              <a href={p.href}>{p.title}</a>
+            ))}
+          </div>
+        )}
         <div class="col">
           <h4>DeepCausality</h4>
           <p>An open-source Rust framework for dynamic causality. Hosted as a sandbox project at
@@ -121,7 +161,7 @@ const ogImageUrl = new URL(ogImage, Astro.site).toString();
         .site-footer-inner { padding: 0 var(--space-5); grid-template-columns: 1fr 1fr; gap: var(--space-6); }
       }
       @media (min-width: 1024px) {
-        .site-footer-inner { grid-template-columns: 1fr 1fr 1fr 2fr; gap: var(--space-7); }
+        .site-footer-inner { grid-template-columns: 1fr 1fr 1fr 1fr 2fr; gap: var(--space-7); }
       }
       .site-footer .col { display: flex; flex-direction: column; gap: var(--space-2); }
       .site-footer h4 { margin: 0 0 var(--space-2) 0; font-size: var(--t-body-sm); color: var(--fg-0); }

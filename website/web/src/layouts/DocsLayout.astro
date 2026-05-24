@@ -9,8 +9,27 @@ interface Props {
   sectionLabel?: string;
 }
 const { title, description, sectionLabel } = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+const siteUrl = new URL('/', Astro.site).toString();
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: title,
+  description: description ?? title,
+  inLanguage: 'en',
+  mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+  author: { '@type': 'Organization', name: 'DeepCausality', url: siteUrl },
+  publisher: {
+    '@type': 'Organization',
+    name: 'DeepCausality',
+    url: siteUrl,
+    logo: new URL('/img/logo-color.png', Astro.site).toString(),
+  },
+};
 ---
 <BaseLayout title={`${title} — DeepCausality`} description={description ?? title}>
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
   <SiteHeader />
   <div class="docs-shell">
     <DocsSidebar />

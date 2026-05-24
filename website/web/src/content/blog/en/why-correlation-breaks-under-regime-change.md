@@ -128,7 +128,10 @@ Modeling regime change remains a challenge in every domain. Large language model
 
 In practice, this is often acceptable. Taking financial markets as an example: there are only so many regimes a market can operate in, so the number of unknown market regimes is small. In other domains, such as virology, unknown outbreak regimes do occur. There, a hybrid model that combines a correlation-based detector for novel regime shifts with a dynamic causal substrate for handling them may be the right architecture for rapidly evolving and emerging situations.
 
-Further reading: [Why Is Correlation Not Causation?](/blog/why-is-correlation-not-causation/) · [Why Do LLMs Struggle With Causality?](/blog/why-llms-struggle-with-causality/) · [Why LLMs Can't Do Physics](/blog/why-llms-cant-do-physics/)
+Further reading: 
+* [Why Is Correlation Not Causation?](/blog/why-is-correlation-not-causation/) 
+* [Why Do LLMs Struggle With Causality?](/blog/why-llms-struggle-with-causality/) 
+* [Why LLMs Can't Do Physics](/blog/why-llms-cant-do-physics/)
 
 ## About DeepCausality
 

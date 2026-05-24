@@ -1,0 +1,76 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/nav/SiteHeader.astro';
+---
+<BaseLayout
+  title="Page not found — DeepCausality"
+  description="The page you were looking for doesn't exist. Browse the docs, examples, or blog to find what you need."
+>
+  <SiteHeader />
+  <section class="not-found">
+    <p class="eyebrow">404</p>
+    <h1>This page does not exist.</h1>
+    <p class="lede">
+      The link you followed may be broken, or the page may have been moved.
+    </p>
+
+    <div class="actions">
+      <a class="action" href="/">Home</a>
+      <a class="action" href="/docs/getting-started/install/">Documentation</a>
+      <a class="action" href="/examples/">Examples</a>
+      <a class="action" href="/blog/">Blog</a>
+    </div>
+
+    <p class="hint">
+      If you arrived here from an external link, please
+      <a href="https://github.com/deepcausality-rs/deep_causality/issues" rel="noopener noreferrer" target="_blank">open an issue</a>
+      so we can fix the reference.
+    </p>
+  </section>
+
+  <style>
+    .not-found {
+      max-width: var(--w-prose);
+      margin: 0 auto;
+      padding: var(--space-9) var(--space-4);
+      text-align: left;
+    }
+    @media (min-width: 720px) {
+      .not-found { padding: var(--space-9) var(--space-5); }
+    }
+    .eyebrow {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: var(--t-eyebrow);
+      letter-spacing: var(--ls-eyebrow);
+      text-transform: uppercase;
+      color: var(--fg-2);
+    }
+    h1 {
+      margin: var(--space-2) 0 var(--space-3) 0;
+      font-size: var(--t-h1);
+      line-height: var(--lh-h1);
+      letter-spacing: var(--ls-h1);
+    }
+    .lede { color: var(--fg-1); max-width: var(--measure); }
+    .actions {
+      margin: var(--space-6) 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+    }
+    .action {
+      display: inline-flex;
+      padding: var(--space-2) var(--space-4);
+      border: 1px solid var(--line-1);
+      border-radius: var(--radius-md);
+      color: var(--fg-0);
+      border-bottom: none;
+      font-size: var(--t-body-sm);
+      transition: border-color var(--dur-fast) var(--ease-out),
+                  color var(--dur-fast) var(--ease-out);
+    }
+    .action:hover { border-color: var(--line-2); color: var(--fg-0); }
+    .hint { color: var(--fg-2); font-size: var(--t-body-sm); margin-top: var(--space-5); }
+  </style>
+</BaseLayout>
