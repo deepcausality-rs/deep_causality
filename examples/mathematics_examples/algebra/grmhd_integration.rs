@@ -34,7 +34,7 @@ fn main() {
     let g_uv = calculate_spacetime_metric();
     let g_tensor = calculate_einstein_tensor(&g_uv);
 
-    // Extract a local metric property to feed into MHD.
+    // Extract a local metric property qto feed into MHD.
     // For example, the time component g_00 tells us about gravitational time dilation.
     // A "proper" coupling would map the full tensor to the Clifford metric.
     let time_dilation = g_tensor.data()[0].abs();

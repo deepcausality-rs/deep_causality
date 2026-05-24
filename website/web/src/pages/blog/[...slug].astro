@@ -15,8 +15,28 @@ const { entry } = Astro.props;
 const { Content } = await render(entry);
 const { title, description, author, date } = entry.data;
 const fmtDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+const ogImageUrl = new URL('/img/social-share.jpg', Astro.site).toString();
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: title,
+  description: description ?? title,
+  author: { '@type': 'Person', name: author },
+  datePublished: date.toISOString(),
+  dateModified: date.toISOString(),
+  image: ogImageUrl,
+  mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+  publisher: {
+    '@type': 'Organization',
+    name: 'DeepCausality',
+    url: new URL('/', Astro.site).toString(),
+  },
+};
 ---
 <BaseLayout title={`${title} — DeepCausality`} description={description ?? title}>
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
   <SiteHeader />
   <article class="post">
     <header>

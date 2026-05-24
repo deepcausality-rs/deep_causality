@@ -7,8 +7,43 @@ import WhyDeepCausality from '../components/home/WhyDeepCausality.astro';
 import PillarRow from '../components/home/PillarRow.astro';
 import JoinCommunity from '../components/home/JoinCommunity.astro';
 import SectionDivider from '../components/home/SectionDivider.astro';
+
+const siteUrl = new URL('/', Astro.site).toString();
+const logoUrl = new URL('/img/logo-color.png', Astro.site).toString();
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': `${siteUrl}#organization`,
+    name: 'DeepCausality',
+    alternateName: 'Deep Causality',
+    url: siteUrl,
+    logo: logoUrl,
+    description:
+      'Open-source Rust framework for dynamic causality. Causal reasoning for advanced systems where time, context, and rules evolve. Hosted at the Linux Foundation for AI & Data.',
+    foundingDate: '2023',
+    sameAs: [
+      'https://github.com/deepcausality-rs/deep_causality',
+      'https://lfaidata.foundation/projects/deepcausality/',
+      'https://discord.gg/Bxj9P7JXSj',
+      'https://lists.lfaidata.foundation/g/DeepCausality-announce',
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${siteUrl}#website`,
+    url: siteUrl,
+    name: 'DeepCausality',
+    description:
+      'DeepCausality is a Rust framework for dynamic causality. Causal reasoning for advanced systems where time, context, and rules evolve.',
+    publisher: { '@id': `${siteUrl}#organization` },
+    inLanguage: 'en',
+  },
+];
 ---
 <BaseLayout>
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
   <SiteHeader />
   <Hero />
   <SectionDivider />
