@@ -1,5 +1,5 @@
 ---
-title: The core idea
+title: The Idea
 description: One axiom in plain English — causality as a spacetime-agnostic monadic functional dependency.
 section: overview
 order: 3
