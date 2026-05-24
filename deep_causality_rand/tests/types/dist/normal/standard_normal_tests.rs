@@ -33,6 +33,10 @@ macro_rules! standard_normal_tests {
         }
 
         #[test]
+        // Disabled under Miri: soft-float emulation skews the statistical
+        // sampling enough to exceed the symmetry tolerance. Test is correct
+        // under normal CI.
+        #[cfg_attr(miri, ignore)]
         fn test_symmetry() {
             let mut rng = rng();
             let distr = StandardNormal;
