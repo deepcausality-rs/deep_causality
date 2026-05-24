@@ -9,6 +9,7 @@ This directory contains examples demonstrating various features and applications
 | [Starter Example](#starter-example) | Basic introduction to DeepCausality                                 |
 | [Classical Causality](#classical-causality-examples) | Traditional causal inference methods (CATE, DBN, Granger, RCM, SCM) |
 | [Causal Discovery](#causal-discovery-examples) | SURD decomposition, mRMR feature selection, and the CDL pipeline    |
+| [Causal Uncertain](#causal-uncertain-examples) | Uncertain<T> / MaybeUncertain<T> as monadic propagation chains      |
 | [CSM Examples](#csm-examples) | Causal State Machine patterns                                       |
 | [Core Examples](#core-examples) | PropagatingEffect and PropagatingProcess fundamentals               |
 | [Avionics Examples](#avionics-examples) | High-assurance GNC and Safety Critical Systems                      |
@@ -68,6 +69,25 @@ pipeline.
 | CDL Pipeline | Load -> clean -> mRMR -> SURD -> analyze              | `cargo run -p causal_discovery_examples --example example_discovery` |
 
 See [causal_discovery_examples/README.md](causal_discovery_examples/README.md) for detailed documentation.
+
+---
+
+## Causal Uncertain Examples
+
+**Location:** `examples/causal_uncertain_examples`
+
+Runnable examples for the `deep_causality_uncertain` crate, restructured so
+each example is a daisy-chained monadic pipeline. The `Uncertain<f64>` and
+`MaybeUncertain<f64>` API does the numerical work; the surrounding monad
+supplies the chain's plumbing and short-circuit on failure.
+
+| Example           | Monad                                          | Topic                                                                                          | Command                                                              |
+|-------------------|------------------------------------------------|------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| GPS Navigation    | PropagatingEffect (stateless)                  | Position noise → distance → travel time → route choice → fuel                                  | `cargo run -p causal_uncertain_examples --example gps_navigation`    |
+| Sensor Processing | PropagatingProcess<_, FleetState, FleetConfig> | Six-stage fleet pipeline: triage → validate → fuse → anomaly → fallback → reliability verdict  | `cargo run -p causal_uncertain_examples --example sensor_processing` |
+| Clinical Trial    | PropagatingEffect over MaybeUncertain<f64>     | Five-stage aspirin trial: cohort → presence → lift → aggregate → verdict                       | `cargo run -p causal_uncertain_examples --example clinical_trial`    |
+
+See [causal_uncertain_examples/README.md](causal_uncertain_examples/README.md) for detailed documentation.
 
 ---
 

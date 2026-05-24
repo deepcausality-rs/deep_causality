@@ -1,0 +1,28 @@
+[package]
+name = "causal_uncertain_examples"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "no_lib.rs"
+
+[dependencies]
+deep_causality_core = { path = "../../deep_causality_core" }
+deep_causality_haft = { path = "../../deep_causality_haft" }
+deep_causality_uncertain = { path = "../../deep_causality_uncertain" }
+
+
+[[example]]
+name = "gps_navigation"
+path = "gps_navigation/main.rs"
+
+[[example]]
+name = "sensor_processing"
+path = "sensor_processing/main.rs"
+
+[[example]]
+name = "clinical_trial"
+path = "clinical_trial/main.rs"
