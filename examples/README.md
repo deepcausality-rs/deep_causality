@@ -112,10 +112,10 @@ High-assurance examples for Aerospace, Defense, and Safety Critical systems.
 
 | Example | Domain | Description | Command |
 |---------|--------|-------------|---------|
-| [magnav](magnav/README.md) | Navigation | Magnetic Navigation using Causal Particle Filters (Bayesian estimation) | `cargo run -p avionics_examples --example magnav` |
-| [geometric_tcas](geometric_tcas/README.md) | Collision Avoidance | NextGen TCAS using Geometric Algebra collision detection and `Intervenable` safety interlocks | `cargo run -p avionics_examples --example geometric_tcas` |
-| [hypersonic_2t](hypersonic_2t/README.md) | Defense/Tracking | Tracking Hypersonic Glide Vehicles (HGV) using Dual-Time (2T) Physics in 6D phase space | `cargo run -p avionics_examples --example hypersonic_2t` |
-| [flight_envelope_monitor](flight_envelope_monitor/README.md) | Health Monitoring | Three-stage stateful pipeline (sensor collection → bind chain → envelope hypergraph) demonstrating uniform composition through `PropagatingProcess<_, FlightState, AircraftConfig>` | `cargo run -p avionics_examples --example flight_envelope_monitor` |
+| magnav | Navigation | Magnetic Navigation using Causal Particle Filters (Bayesian estimation) | `cargo run -p avionics_examples --example magnav` |
+| geometric_tcas | Collision Avoidance | NextGen TCAS using Geometric Algebra collision detection and `Intervenable` safety interlocks | `cargo run -p avionics_examples --example geometric_tcas` |
+| hypersonic_2t | Defense/Tracking | Tracking Hypersonic Glide Vehicles (HGV) using Dual-Time (2T) Physics in 6D phase space | `cargo run -p avionics_examples --example hypersonic_2t` |
+| flight_envelope_monitor | Health Monitoring | Three-stage stateful pipeline (sensor collection → bind chain → envelope hypergraph) demonstrating uniform composition through `PropagatingProcess<_, FlightState, AircraftConfig>` | `cargo run -p avionics_examples --example flight_envelope_monitor` |
 
 See [avionics_examples/README.md](avionics_examples/README.md) for detailed documentation.
 
@@ -129,7 +129,7 @@ Chronometric geodesy demonstrations using the J2-corrected weak-field 1PN kernel
 
 | Example | Domain | Description | Command |
 |---------|--------|-------------|---------|
-| [gm_recovery](chronometric_examples/README.md) | Geodesy | Recovers Earth's geocentric gravitational constant ($GM_\oplus$) and derived planetary mass ($M_\oplus = GM_\oplus / G$) from one full GPS week of Galileo broadcast clock and SP3 orbit data (satellite E14). Validates against published JGM-3 / IERS 2010 references at ~0.2 % relative error | `cargo run -p chronometric_examples --example gm_recovery` |
+| gm_recovery | Geodesy | Recovers Earth's geocentric gravitational constant ($GM_\oplus$) and derived planetary mass ($M_\oplus = GM_\oplus / G$) from one full GPS week of Galileo broadcast clock and SP3 orbit data (satellite E14). Validates against published JGM-3 / IERS 2010 references at ~0.2 % relative error | `cargo run -p chronometric_examples --example gm_recovery` |
 
 See [chronometric_examples/README.md](chronometric_examples/README.md) for detailed documentation.
 
@@ -160,22 +160,22 @@ effect monad.
 
 | Example | Crate | Description | Command |
 |---------|-------|-------------|---------|
-| [algebraic_scanner](mathematics_examples/algebra/algebraic_scanner/README.md) | multivector | Scans Clifford algebras `Cl(p, q, r)` for complex structure (`I² = -1`) | `cargo run -p mathematics_examples --example algebraic_scanner_examples` |
-| [maxwell_multivector](mathematics_examples/algebra/maxwell_multivector.rs) | multivector | Unifies electric and magnetic fields into a single electromagnetic-field bivector | `cargo run -p mathematics_examples --example maxwell_multivector_examples` |
-| [pga3d_multivector](mathematics_examples/algebra/pga3d_multivector.rs) | multivector | Projective Geometric Algebra (PGA) for rigid-body motions in graphics and robotics | `cargo run -p mathematics_examples --example pga3d_multivector_examples` |
-| [basic_csr_ops](mathematics_examples/sparse/basic_csr_ops.rs) | sparse | Constructing a `CsrMatrix` from triplets; row/column iteration | `cargo run -p mathematics_examples --example basic_csr_ops_examples` |
-| [ein_sum_causal_tensor](mathematics_examples/tensor/ein_sum_causal_tensor.rs) | tensor | Einstein-summation contractions via `EinSumOp` | `cargo run -p mathematics_examples --example ein_sum_causal_tensor_examples` |
-| [einstein_field_causal_tensor](mathematics_examples/tensor/einstein_field_causal_tensor.rs) | tensor | Index raising and lowering with the metric; Ricci-style contractions | `cargo run -p mathematics_examples --example einstein_field_causal_tensor_examples` |
-| [manifold_analysis](mathematics_examples/topology/manifold_analysis.rs) | topology | Constructing a `Manifold<SimplicialComplex<R>, F>`; Euler characteristic; orientation | `cargo run -p mathematics_examples --example manifold_analysis_examples` |
-| [cubical_heat_diffusion](mathematics_examples/topology/cubical_heat_diffusion.rs) | topology | Explicit-Euler heat diffusion on a cubical manifold with a Moore-neighborhood stencil | `cargo run -p mathematics_examples --example cubical_heat_diffusion_examples` |
-| [lattice_gauge_simulation](mathematics_examples/topology/lattice_gauge_simulation.rs) | topology | SU(3) lattice gauge theory: Metropolis thermalization, plaquette, Wilson loop, Polyakov loop, APE smearing, Wilson flow | `cargo run -p mathematics_examples --example lattice_gauge_simulation_examples` |
-| [tensor_x_topology_laplacian](mathematics_examples/composable_multi_math/tensor_x_topology_laplacian/README.md) | composition | Discrete Laplacian on a 1D simplicial manifold via `ManifoldWitness::extend` (CoMonad) | `cargo run -p mathematics_examples --example tensor_x_topology_laplacian_examples` |
-| [triple_hkt_stress_field](mathematics_examples/composable_multi_math/triple_hkt_stress_field/README.md) | composition | 3D linear-elastic stress on a tetrahedral mesh: strain, Hooke, normal, Cauchy traction, material rotor, von Mises in one `extend` call | `cargo run -p mathematics_examples --example triple_hkt_stress_field_examples` |
-| [effect_diffusion_on_manifold](mathematics_examples/composable_multi_math/effect_diffusion_on_manifold/README.md) | composition | Heat equation: spatial Laplacian via `extend`, time stepping via `bind`, stability short-circuit on CFL violation | `cargo run -p mathematics_examples --example effect_diffusion_on_manifold_examples` |
-| [capstone_spinor_minkowski](mathematics_examples/composable_multi_math/capstone_spinor_minkowski/README.md) | composition (capstone) | Parallel transport of a unit timelike spinor along a discretized Minkowski worldline in `Cl(3,1)`. Final drift versus closed-form `(cosh θ, sinh θ)` is ~1.7e-31 at `Float106`, fifteen orders of magnitude tighter than f64 | `cargo run -p mathematics_examples --example capstone_spinor_minkowski_examples` |
-| [tensor_sparse_memory_budget](mathematics_examples/isomorphism/README.md) | isomorphism | Dense `CausalTensor` <-> `CsrMatrix` via the `tensor-iso` feature: sparsify, run a sparse-only op, materialise back to dense | `cargo run -p mathematics_examples --example tensor_sparse_memory_budget` |
-| [effect_process_witness_duality](mathematics_examples/isomorphism/README.md) | isomorphism | Dual-witness pattern: `PropagatingEffect<T>` and `PropagatingProcess<T, (), ()>` share one carrier with two independent `Functor`/`Monad` witnesses producing byte-identical output | `cargo run -p mathematics_examples --example effect_process_witness_duality` |
-| [multifield_data_pipeline](mathematics_examples/isomorphism/README.md) | isomorphism | `CausalMultiField<T>` <-> `(CausalTensor<T>, Metric, dx, shape)` iso lets external code build/extract/transform a multifield without touching `pub(crate)` internals | `cargo run -p mathematics_examples --example multifield_data_pipeline` |
+| algebraic_scanner | multivector | Scans Clifford algebras `Cl(p, q, r)` for complex structure (`I² = -1`) | `cargo run -p mathematics_examples --example algebraic_scanner_examples` |
+| maxwell_multivector | multivector | Unifies electric and magnetic fields into a single electromagnetic-field bivector | `cargo run -p mathematics_examples --example maxwell_multivector_examples` |
+| pga3d_multivector | multivector | Projective Geometric Algebra (PGA) for rigid-body motions in graphics and robotics | `cargo run -p mathematics_examples --example pga3d_multivector_examples` |
+| basic_csr_ops | sparse | Constructing a `CsrMatrix` from triplets; row/column iteration | `cargo run -p mathematics_examples --example basic_csr_ops_examples` |
+| ein_sum_causal_tensor | tensor | Einstein-summation contractions via `EinSumOp` | `cargo run -p mathematics_examples --example ein_sum_causal_tensor_examples` |
+| einstein_field_causal_tensor | tensor | Index raising and lowering with the metric; Ricci-style contractions | `cargo run -p mathematics_examples --example einstein_field_causal_tensor_examples` |
+| manifold_analysis | topology | Constructing a `Manifold<SimplicialComplex<R>, F>`; Euler characteristic; orientation | `cargo run -p mathematics_examples --example manifold_analysis_examples` |
+| cubical_heat_diffusion | topology | Explicit-Euler heat diffusion on a cubical manifold with a Moore-neighborhood stencil | `cargo run -p mathematics_examples --example cubical_heat_diffusion_examples` |
+| lattice_gauge_simulation | topology | SU(3) lattice gauge theory: Metropolis thermalization, plaquette, Wilson loop, Polyakov loop, APE smearing, Wilson flow | `cargo run -p mathematics_examples --example lattice_gauge_simulation_examples` |
+| tensor_x_topology_laplacian | composition | Discrete Laplacian on a 1D simplicial manifold via `ManifoldWitness::extend` (CoMonad) | `cargo run -p mathematics_examples --example tensor_x_topology_laplacian_examples` |
+| triple_hkt_stress_field | composition | 3D linear-elastic stress on a tetrahedral mesh: strain, Hooke, normal, Cauchy traction, material rotor, von Mises in one `extend` call | `cargo run -p mathematics_examples --example triple_hkt_stress_field_examples` |
+| effect_diffusion_on_manifold | composition | Heat equation: spatial Laplacian via `extend`, time stepping via `bind`, stability short-circuit on CFL violation | `cargo run -p mathematics_examples --example effect_diffusion_on_manifold_examples` |
+| capstone_spinor_minkowski | composition (capstone) | Parallel transport of a unit timelike spinor along a discretized Minkowski worldline in `Cl(3,1)`. Final drift versus closed-form `(cosh θ, sinh θ)` is ~1.7e-31 at `Float106`, fifteen orders of magnitude tighter than f64 | `cargo run -p mathematics_examples --example capstone_spinor_minkowski_examples` |
+| tensor_sparse_memory_budget | isomorphism | Dense `CausalTensor` <-> `CsrMatrix` via the `tensor-iso` feature: sparsify, run a sparse-only op, materialise back to dense | `cargo run -p mathematics_examples --example tensor_sparse_memory_budget` |
+| effect_process_witness_duality | isomorphism | Dual-witness pattern: `PropagatingEffect<T>` and `PropagatingProcess<T, (), ()>` share one carrier with two independent `Functor`/`Monad` witnesses producing byte-identical output | `cargo run -p mathematics_examples --example effect_process_witness_duality` |
+| multifield_data_pipeline | isomorphism | `CausalMultiField<T>` <-> `(CausalTensor<T>, Metric, dx, shape)` iso lets external code build/extract/transform a multifield without touching `pub(crate)` internals | `cargo run -p mathematics_examples --example multifield_data_pipeline` |
 
 See [mathematics_examples/README.md](mathematics_examples/README.md) for the full
 table of all 32 registered examples and the precision-abstraction decision tree
