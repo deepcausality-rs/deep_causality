@@ -92,41 +92,80 @@ When the regime is unknown in advance, detection is reactive. The patterns worth
 
 All four are useful. None of them prevents the silent failure that occurs between the moment the regime changes and the moment the detector fires.
 
-### Structural handling (the causal answer)
+### Structural Regime Change (the causal answer)
 
-When the regime boundary is known from the mechanism, the boundary is part of the causal chain.
+When the regime boundary is known from the mechanism, the boundary becomes part of the causal chain itself.
 
-The DeepCausality project ships a worked example of this in [event_horizon_probe](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples/event_horizon_probe). The setup: a 1000 kg probe falling toward a supermassive black hole of roughly 4 million solar masses. The probe starts at 100 Schwarzschild radii out and falls inward. The simulation has to handle two different physical regimes:
+The DeepCausality project ships a worked example of this in [event_horizon_probe](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples/event_horizon_probe). A 1000 kg probe falls radially toward a supermassive black hole of roughly 4 million solar masses, starting from 100 Schwarzschild radii out. The probe traverses two physical regimes that obey fundamentally different mathematical structures, and eventually crosses the event horizon at which the surrounding mathematics ceases to apply at all.
 
-- **Far field** (`r ≫ Rs`): Newtonian mechanics. Gravity is a force, escape velocity is `sqrt(2GM/r)`, time is universal.
-- **Near field** (`r ≈ Rs`): General relativity dominates. Rapidity and time dilation have to be computed on Minkowski spacetime using geometric algebra.
+#### What makes this problem hard
 
-The dynamic causal system checks *which regime it is in*:
+The regime change is from Newtonian to relativistic physics. **Implied in that shift is a change of the underlying mathematical representation.** Newtonian mechanics operates on Euclidean R³ with a separate universal time parameter: flat, positive-definite, vector addition for velocities, signal speed unbounded in principle. Relativistic mechanics operates on Minkowski spacetime: four-dimensional, pseudo-Riemannian, indefinite metric signature (+, −, −, −), rapidity addition for boosts, a finite invariant signal speed. The regime change forces a change of the representation itself. Same probe, same fall, different physics(!).
 
-```rust
-if state.distance / r_s > 10.0 {
-    // Newtonian regime: freefall using v_esc = sqrt(2GM/r)
-    ...
-} else {
-    // Relativistic regime: compute rapidity and time dilation
-    // on a Minkowski multivector
-    ...
-}
+**Newtonian gravity in the far field** is a force between point masses on a flat three-dimensional space with a universal time parameter. Escape velocity follows directly from energy conservation, `v_esc = sqrt(2GM/r)`, by setting kinetic energy equal to gravitational potential energy. A probe in this regime obeys ordinary differential equations in Galilean coordinates; time ticks at the same rate everywhere. The math is calculus on R³.
+
+**General relativity in the near field** is geometry. Gravity is no longer a force; it is the curvature of a four-dimensional pseudo-Riemannian manifold whose metric is governed by the Einstein field equations. For a non-rotating mass the exterior solution is Schwarzschild's metric
+
+```
+ds² = (1 − Rs/r)·c²dt² − (1 − Rs/r)⁻¹·dr² − r²dΩ²
 ```
 
-The boundary at `r/Rs = 10` is encoded in the structure of the causal chain. The causal chain knows in advance that two different mechanisms govern two different regions of space, and it routes the propagating effect through the appropriate kernel. There is no model to retrain when the probe crosses the threshold. The transition is explicit, auditable, testable, and reproducible.
+with `Rs = 2GM/c²` the Schwarzschild radius. Two consequences immediately matter for the simulation. First, the rate at which the probe's proper time advances relative to a distant observer's coordinate time is `dτ/dt = sqrt(1 − Rs/r)`, which goes to zero as the probe approaches the event horizon. Second, velocity composition no longer follows the Galilean rule. The natural relativistic angle is the rapidity `φ = arctanh(v/c)`, which adds linearly under boosts where ordinary velocities do not. To compose boosts and rotations cleanly without coordinate gymnastics, the implementation works in Minkowski space with signature (+, −, −, −) and represents four-velocities as multivectors in the geometric algebra of that space. The relativistic step computes the rapidity between the probe's four-velocity and the static observer's four-velocity directly from the inner product of those multivectors, sidestepping the algebraic mess of explicit Lorentz matrices.
 
-The state is known because the propagating effect comes in two variations, one stateless and one stateful. In the example, the stateful variant was used to carry over state from the previous step in order to detect the regime change the moment it happens.
+**At the event horizon itself** the math changes character again. The escape velocity reaches `c`; for an external observer, the probe's coordinate time appears to diverge as it approaches the horizon, while the probe's own proper time elapses normally and crosses in finite time. Inside the horizon, the radial coordinate becomes timelike, all future-directed worldlines terminate at the singularity, and outward signal propagation is no longer possible. The horizon is not a steep gradient. It is the location where the surrounding mathematical structure ceases to apply.
 
-When the probe eventually crosses the event horizon (`r ≤ 1.1 Rs`), the chain transitions one last time to a terminal state. The propagating effect carries a status of `EVENT_HORIZON_CROSSED`, and the simulation halts cleanly because the probe ceases to exist past the event horizon.
+A correlation-based system trained on data from `r > 10·Rs` has no representation of any of this. It has weights that produce plausible Newtonian-looking numbers. Asked to extrapolate into the relativistic regime, it produces confident wrong answers; asked to handle the horizon crossing, it produces no signal that anything categorical has happened. This is exactly the regime-change failure described earlier, in its most extreme physical form.
 
-The causal design pattern generalizes. Anywhere the regime boundary can be derived from the mechanism (phase transitions in physics, circuit breakers in markets, yield surfaces in materials, herd-immunity thresholds in epidemiology), the boundary can be encoded structurally in the causal chain.
+#### How DeepCausality encodes the structure
+
+The simulation expresses the problem as a **Causal Effect propagating process**. The propagating effect carries the probe state through the chain. Because it is the Markovian variant (`with_state`), the carried state persists across every step: distance, velocity, mass, status, and the black-hole mass. Each iteration's outcome is determined entirely by the carried state plus the kernel chosen for that step.
+
+At each step the chain inspects the state, selects which mathematical machinery applies, and emits a new propagating effect carrying the next state:
+
+```rust
+CausalEffectPropagationProcess::with_state(
+    CausalEffectPropagationProcess::pure(()),
+    current_state.clone(),
+    Some(black_hole_mass),
+)
+.bind(|_, state, ctx| {
+    if state.distance / r_s > 10.0 {
+        // Far field: Newtonian kernel on Galilean R³
+        newtonian_step(state, ctx)
+    } else if state.distance <= r_s * 1.1 {
+        // Terminal effect: horizon crossed, chain halts here
+        CausalEffectPropagationProcess::pure(ProbeState {
+            status: "EVENT_HORIZON_CROSSED".into(),
+            ..state
+        })
+    } else {
+        // Near field: relativistic kernel on Minkowski multivectors
+        relativistic_step(state, ctx)
+    }
+})
+```
+
+Three structural properties matter, for several reasons:
+
+First, **regime selection is part of the chain itself**. The branch is the decision the chain makes about which mathematics applies given the current state. The handover at `r/Rs = 10` routes the propagating effect from `newtonian_step` into `relativistic_step`. Those two kernels operate on different mathematical objects, each valid only inside its regime, each refusing to run outside it.
+
+Second, **the event horizon is codified as a terminal propagating effect**. When the carried state shows `r ≤ 1.1·Rs`, the closure returns a propagating effect whose status is `EVENT_HORIZON_CROSSED`. That effect propagates exactly like any other value, but no successor kernel will compose against it; the outer driver inspects the status and stops the chain. This is the structural representation of "physics no longer continues outward from here." The simulation halts cleanly, with the audit trail carrying every prior step intact.
+
+Third, **the state carry is structural**. Each iteration's new state becomes the next iteration's input through the Markovian process; the chain knows the probe's trajectory through the propagated state, not through a hidden side channel.
+
+Notice what is **not** in the code. There is no converter between Euclidean R³ and Minkowski spacetime. No adapter marshalling state between representations. No library glue bridging Galilean arithmetic and geometric algebra. The Newtonian kernel and the relativistic kernel both emit the same `PropagatingEffect` type, so they compose directly. The change of mathematical representation that the physics forces is absorbed by the carrier `PropagatingEffect` because of the native monadic composition in DeepCausality.
+
+What the chain produces is an audit trail by construction: at each step, which regime was selected, which kernel ran, what the propagated state became, and finally the terminal transition. A regulator, an operator, or a reviewer can trace exactly why the system did what it did. 
+
+#### Generalization
+
+Anywhere a regime boundary can be derived from the carried state (phase transitions in physics, circuit breakers in markets, yield surfaces in materials, herd-immunity thresholds in epidemiology), the boundary can be encoded as a branch in the propagating process. Above the boundary, one mechanism applies; below, another; at the boundary, the chain reconfigures or terminates. The regime is part of the chain's structure.
 
 ## Closing thoughts
 
-Modeling regime change remains a challenge in every domain. Large language models are particularly ill-suited to it, because their structural properties require the deployment distribution to correspond to the training distribution. Dynamic causality, as DeepCausality implements it, handles *known* regime changes in a straightforward way. For *unknown* regime changes, the dynamic causal model will equally fail, because it has no rules to handle a regime that was never specified.
+Modeling regime change remains a challenge in every domain. Large language models are particularly ill-suited because their structural properties require the deployment distribution to correspond to the training distribution. Dynamic causality, as DeepCausality implements it, handles *known* regime changes in a straightforward way. For *unknown* regime changes, the dynamic causal model will equally fail, because it has no rules to handle a regime that was never specified.
 
-In practice, this is often acceptable. Taking financial markets as an example: there are only so many regimes a market can operate in, so the number of unknown market regimes is small. In other domains, such as virology, unknown outbreak regimes do occur. There, a hybrid model that combines a correlation-based detector for novel regime shifts with a dynamic causal substrate for handling them may be the right architecture for rapidly evolving and emerging situations.
+In practice, this is often acceptable. Taking financial markets as an example: there are only so many regimes a market can operate in, so the number of unknown market regimes is small. In other domains, such as virology, unknown outbreak regimes do occur. There, a hybrid model that combines a correlation-based detector for novel regime shifts with a dynamic causal model for handling them may be the right architecture for rapidly evolving and emerging situations.
 
 Further reading: 
 * [Why Is Correlation Not Causation?](/blog/why-is-correlation-not-causation/) 

@@ -31,9 +31,9 @@ Judea Pearl's hierarchy is the cleanest way to frame this. Three rungs, in order
 
 ```mermaid
 flowchart BT
-  R1["Rung 1 — Association<br/>P(Y &#124; X)<br/><i>What is?</i>"]
-  R2["Rung 2 — Intervention<br/>P(Y &#124; do(X))<br/><i>What if I act?</i>"]
-  R3["Rung 3 — Counterfactual<br/>P(Y_x &#124; X', Y')<br/><i>What if things had been different?</i>"]
+  R1["Rung 1: Association<br/>P(Y &#124; X)<br/><i>What is?</i>"]
+  R2["Rung 2: Intervention<br/>P(Y &#124; do(X))<br/><i>What if I act?</i>"]
+  R3["Rung 3: Counterfactual<br/>P(Y_x &#124; X', Y')<br/><i>What if things had been different?</i>"]
   R1 --> R2 --> R3
   LLM[("LLM<br/>operates here")] -.-> R1
   CAUSAL[("Causal substrate<br/>operates here")] -.-> R3
