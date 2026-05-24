@@ -10,6 +10,10 @@ const blog = defineCollection({
     author: z.string().default('DeepCausality'),
     tags: z.array(z.string()).default([]),
     description: z.string().optional(),
+    /** Per-post social share image. Path relative to site root, e.g. /img/og/foo.jpg. Falls back to the site default. */
+    image: z.string().optional(),
+    /** Optional ISO date for last meaningful update. Defaults to `date` for JSON-LD/article:modified_time. */
+    updated: z.coerce.date().optional(),
     draft: z.boolean().default(false),
   }),
 });

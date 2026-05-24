@@ -7,16 +7,69 @@ export async function getStaticPaths() {
   const entries = await getCollection('blog', ({ data }) => !data.draft);
   return entries.map((entry) => ({
     params: { slug: entry.id.replace(/^en\//, '').replace(/\.md$/, '') },
-    props: { entry },
+    props: { entry, entries },
   }));
 }
 
-const { entry } = Astro.props;
+const { entry, entries } = Astro.props;
 const { Content } = await render(entry);
-const { title, description, author, date } = entry.data;
+const { title, description, author, date, tags, image, updated } = entry.data;
 const fmtDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+const slugOf = (e: typeof entry) => e.id.replace(/^en\//, '').replace(/\.md$/, '');
+const currentSlug = slugOf(entry);
+
+// Related posts: rank other posts by shared-tag count, tie-break by recency. Take top 3.
+const related = entries
+  .filter((e) => !e.data.draft && slugOf(e) !== currentSlug)
+  .map((e) => {
+    const shared = (e.data.tags ?? []).filter((t) => (tags ?? []).includes(t)).length;
+    return { entry: e, shared };
+  })
+  .filter((r) => r.shared > 0)
+  .sort((a, b) => {
+    if (b.shared !== a.shared) return b.shared - a.shared;
+    return b.entry.data.date.valueOf() - a.entry.data.date.valueOf();
+  })
+  .slice(0, 3);
+
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+const ogImagePath = image ?? '/img/social-share.jpg';
+const ogImageUrl = new URL(ogImagePath, Astro.site).toString();
+const publishedISO = date.toISOString();
+const modifiedISO = (updated ?? date).toISOString();
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: title,
+  description: description ?? title,
+  author: { '@type': 'Person', name: author },
+  datePublished: publishedISO,
+  dateModified: modifiedISO,
+  image: ogImageUrl,
+  keywords: tags && tags.length > 0 ? tags.join(', ') : undefined,
+  mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+  publisher: {
+    '@type': 'Organization',
+    name: 'DeepCausality',
+    url: new URL('/', Astro.site).toString(),
+  },
+};
 ---
-<BaseLayout title={`${title} — DeepCausality`} description={description ?? title}>
+<BaseLayout
+  title={`${title} — DeepCausality`}
+  description={description ?? title}
+  ogImage={ogImagePath}
+  ogType="article"
+  article={{
+    publishedTime: publishedISO,
+    modifiedTime: modifiedISO,
+    author,
+    tags,
+  }}
+>
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
   <SiteHeader />
   <article class="post">
     <header>
@@ -27,6 +80,23 @@ const fmtDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long
     <div class="prose">
       <Content />
     </div>
+
+    {related.length > 0 && (
+      <aside class="related" aria-label="Related posts">
+        <h2>Related reading</h2>
+        <ul role="list">
+          {related.map((r) => (
+            <li>
+              <a href={`/blog/${slugOf(r.entry)}/`}>
+                <h3>{r.entry.data.title}</h3>
+                {r.entry.data.description && <p>{r.entry.data.description}</p>}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </aside>
+    )}
+
     <nav class="back" aria-label="Back to blog">
       <a href="/blog/">&larr; All posts</a>
     </nav>
@@ -99,6 +169,38 @@ const fmtDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long
     .post .prose th { color: var(--fg-0); font-weight: 600; }
     .post .prose tbody tr:last-child td { border-bottom: 0; }
     .post .prose tbody tr:hover { background: var(--bg-2); }
+
+    .post .related {
+      margin-top: var(--space-8);
+      padding-top: var(--space-6);
+      border-top: 1px solid var(--line-1);
+    }
+    .post .related h2 {
+      margin: 0 0 var(--space-4) 0;
+      font-size: var(--t-eyebrow);
+      letter-spacing: var(--ls-eyebrow);
+      text-transform: uppercase;
+      color: var(--fg-2);
+      font-family: var(--font-mono);
+    }
+    .post .related ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; }
+    .post .related li + li { border-top: 1px solid var(--line-1); }
+    .post .related a {
+      display: grid;
+      gap: var(--space-2);
+      padding: var(--space-4) 0;
+      color: var(--fg-0);
+      border-bottom: none;
+      transition: padding-left var(--dur-med) var(--ease-out);
+    }
+    .post .related a:hover { padding-left: var(--space-3); }
+    .post .related h3 {
+      margin: 0;
+      font-size: var(--t-h3);
+      line-height: var(--lh-h3);
+      letter-spacing: var(--ls-h3);
+    }
+    .post .related p { margin: 0; color: var(--fg-1); max-width: var(--measure); }
 
     .post .back { margin-top: var(--space-8); }
     .post .back a { color: var(--fg-1); border-bottom: none; }
