@@ -8,6 +8,9 @@ This directory contains examples demonstrating various features and applications
 |----------|---------------------------------------------------------------------|
 | [Starter Example](#starter-example) | Basic introduction to DeepCausality                                 |
 | [Classical Causality](#classical-causality-examples) | Traditional causal inference methods (CATE, DBN, Granger, RCM, SCM) |
+| [Causal Discovery](#causal-discovery-examples) | SURD decomposition, mRMR feature selection, and the CDL pipeline    |
+| [Causal Uncertain](#causal-uncertain-examples) | Uncertain<T> / MaybeUncertain<T> as monadic propagation chains      |
+| [Causal Intervention](#causal-intervention-examples) | Counterfactual and corrective `intervene` examples (do-operator + closed-loop control) |
 | [CSM Examples](#csm-examples) | Causal State Machine patterns                                       |
 | [Core Examples](#core-examples) | PropagatingEffect and PropagatingProcess fundamentals               |
 | [Avionics Examples](#avionics-examples) | High-assurance GNC and Safety Critical Systems                      |
@@ -47,6 +50,82 @@ Traditional causal inference methods implemented using the DeepCausality framewo
 | SCM | Pearl's Ladder of Causation | `cargo run -p classical_causality_examples --example scm_example` |
 
 See [classical_causality_examples/README.md](classical_causality_examples/README.md) for detailed documentation.
+
+---
+
+## Causal Discovery Examples
+
+**Location:** `examples/causal_discovery_examples`
+
+Runnable examples for the `deep_causality_algorithms` and
+`deep_causality_discovery` crates: information-theoretic causal decomposition
+(SURD), feature selection (mRMR), and the full Causal Discovery Language (CDL)
+pipeline.
+
+| Example      | Method                                                | Command |
+|--------------|-------------------------------------------------------|---------|
+| SURD         | SURD-states causal decomposition                      | `cargo run -p causal_discovery_examples --example example_surd` |
+| mRMR         | Minimum-Redundancy Maximum-Relevance feature selection | `cargo run -p causal_discovery_examples --example example_mrmr` |
+| mRMR (CDL)   | mRMR with missing-value cleaning                      | `cargo run -p causal_discovery_examples --example example_mrmr_cdl` |
+| CDL Pipeline | Load -> clean -> mRMR -> SURD -> analyze              | `cargo run -p causal_discovery_examples --example example_discovery` |
+
+See [causal_discovery_examples/README.md](causal_discovery_examples/README.md) for detailed documentation.
+
+---
+
+## Causal Uncertain Examples
+
+**Location:** `examples/causal_uncertain_examples`
+
+Runnable examples for the `deep_causality_uncertain` crate, restructured so
+each example is a daisy-chained monadic pipeline. The `Uncertain<f64>` and
+`MaybeUncertain<f64>` API does the numerical work; the surrounding monad
+supplies the chain's plumbing and short-circuit on failure.
+
+| Example           | Monad                                          | Topic                                                                                          | Command                                                              |
+|-------------------|------------------------------------------------|------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| GPS Navigation    | PropagatingEffect (stateless)                  | Position noise → distance → travel time → route choice → fuel                                  | `cargo run -p causal_uncertain_examples --example gps_navigation`    |
+| Sensor Processing | PropagatingProcess<_, FleetState, FleetConfig> | Six-stage fleet pipeline: triage → validate → fuse → anomaly → fallback → reliability verdict  | `cargo run -p causal_uncertain_examples --example sensor_processing` |
+| Clinical Trial    | PropagatingEffect over MaybeUncertain<f64>     | Five-stage aspirin trial: cohort → presence → lift → aggregate → verdict                       | `cargo run -p causal_uncertain_examples --example clinical_trial`    |
+
+See [causal_uncertain_examples/README.md](causal_uncertain_examples/README.md) for detailed documentation.
+
+---
+
+## Causal Intervention Examples
+
+**Location:** `examples/causal_intervention_examples`
+
+Nine worked examples showing what the causal monad gives you beyond `bind`.
+Two senses of intervention sit side by side. The counterfactual examples
+follow the Judea Pearl tradition (one-shot value substitution; the
+difference between worlds is the estimand). The corrective examples
+follow the control-theory tradition (monitor a trajectory; intervene
+when the value drifts outside the safe envelope; continue from the
+corrected state).
+
+### Counterfactual interventions
+
+| Example | Monad | Topic | Command |
+|---|---|---|---|
+| counterfactual_treatment_effect   | PropagatingEffect             | CATE as `do(T=1) − do(T=0)` on a single chain                                       | `cargo run -p causal_intervention_examples --example counterfactual_treatment_effect` |
+| counterfactual_envelope_fault     | PropagatingProcess (stateful) | Mid-chain stall-airspeed injection; same aircraft, same configuration, new value    | `cargo run -p causal_intervention_examples --example counterfactual_envelope_fault` |
+| counterfactual_treatment_options  | PropagatingEffect             | Two intervention sites on one chain: beta-blocker vs surgical clip                  | `cargo run -p causal_intervention_examples --example counterfactual_treatment_options` |
+| counterfactual_cascade_failure    | PropagatingProcess (stateful) | Network N-k contingency analysis as a chain of composing interventions              | `cargo run -p causal_intervention_examples --example counterfactual_cascade_failure` |
+| counterfactual_resection_intervention | PropagatingEffect         | Epilepsy surgery screening as `do(connectome = resected_at_R)` for each region      | `cargo run -p causal_intervention_examples --example counterfactual_resection_intervention` |
+
+### Corrective interventions
+
+Each runs the same chain twice: open loop (no monitor, catastrophic failure) and closed loop (monitor + `intervene`, failure averted).
+
+| Example | Monad | Topic | Command |
+|---|---|---|---|
+| corrective_lane_keeping           | PropagatingProcess (stateful) | Vehicle drifts under crosswind; P-controller fires every time offset crosses 0.30 m | `cargo run -p causal_intervention_examples --example corrective_lane_keeping` |
+| corrective_glucose_pump           | PropagatingProcess (stateful) | Glucose climbs across three meals; corrective bolus fires above 180 mg/dL          | `cargo run -p causal_intervention_examples --example corrective_glucose_pump` |
+| corrective_decompression_stops    | PropagatingProcess (stateful) | Diver ascends from 30 m; decompression stop inserted when N2 supersaturation rises | `cargo run -p causal_intervention_examples --example corrective_decompression_stops` |
+| corrective_network_failover       | PropagatingProcess (stateful) | Primary switch fails; monitor detects zero delivery; standby switch takes over     | `cargo run -p causal_intervention_examples --example corrective_network_failover` |
+
+See [causal_intervention_examples/README.md](causal_intervention_examples/README.md) for detailed documentation.
 
 ---
 
@@ -91,10 +170,10 @@ High-assurance examples for Aerospace, Defense, and Safety Critical systems.
 
 | Example | Domain | Description | Command |
 |---------|--------|-------------|---------|
-| [magnav](magnav/README.md) | Navigation | Magnetic Navigation using Causal Particle Filters (Bayesian estimation) | `cargo run -p avionics_examples --example magnav` |
-| [geometric_tcas](geometric_tcas/README.md) | Collision Avoidance | NextGen TCAS using Geometric Algebra collision detection and `Intervenable` safety interlocks | `cargo run -p avionics_examples --example geometric_tcas` |
-| [hypersonic_2t](hypersonic_2t/README.md) | Defense/Tracking | Tracking Hypersonic Glide Vehicles (HGV) using Dual-Time (2T) Physics in 6D phase space | `cargo run -p avionics_examples --example hypersonic_2t` |
-| [flight_envelope_monitor](flight_envelope_monitor/README.md) | Health Monitoring | Three-stage stateful pipeline (sensor collection → bind chain → envelope hypergraph) demonstrating uniform composition through `PropagatingProcess<_, FlightState, AircraftConfig>` | `cargo run -p avionics_examples --example flight_envelope_monitor` |
+| magnav | Navigation | Magnetic Navigation using Causal Particle Filters (Bayesian estimation) | `cargo run -p avionics_examples --example magnav` |
+| geometric_tcas | Collision Avoidance | NextGen TCAS using Geometric Algebra collision detection and `Intervenable` safety interlocks | `cargo run -p avionics_examples --example geometric_tcas` |
+| hypersonic_2t | Defense/Tracking | Tracking Hypersonic Glide Vehicles (HGV) using Dual-Time (2T) Physics in 6D phase space | `cargo run -p avionics_examples --example hypersonic_2t` |
+| flight_envelope_monitor | Health Monitoring | Three-stage stateful pipeline (sensor collection → bind chain → envelope hypergraph) demonstrating uniform composition through `PropagatingProcess<_, FlightState, AircraftConfig>` | `cargo run -p avionics_examples --example flight_envelope_monitor` |
 
 See [avionics_examples/README.md](avionics_examples/README.md) for detailed documentation.
 
@@ -108,7 +187,7 @@ Chronometric geodesy demonstrations using the J2-corrected weak-field 1PN kernel
 
 | Example | Domain | Description | Command |
 |---------|--------|-------------|---------|
-| [gm_recovery](chronometric_examples/README.md) | Geodesy | Recovers Earth's geocentric gravitational constant ($GM_\oplus$) and derived planetary mass ($M_\oplus = GM_\oplus / G$) from one full GPS week of Galileo broadcast clock and SP3 orbit data (satellite E14). Validates against published JGM-3 / IERS 2010 references at ~0.2 % relative error | `cargo run -p chronometric_examples --example gm_recovery` |
+| gm_recovery | Geodesy | Recovers Earth's geocentric gravitational constant ($GM_\oplus$) and derived planetary mass ($M_\oplus = GM_\oplus / G$) from one full GPS week of Galileo broadcast clock and SP3 orbit data (satellite E14). Validates against published JGM-3 / IERS 2010 references at ~0.2 % relative error | `cargo run -p chronometric_examples --example gm_recovery` |
 
 See [chronometric_examples/README.md](chronometric_examples/README.md) for detailed documentation.
 
@@ -133,24 +212,28 @@ effect monad.
 | [tensor](mathematics_examples/tensor/README.md) | `deep_causality_tensor` | `CausalTensor` construction, `EinSumOp`, Einstein-field index gymnastics, HKT (Functor, Applicative) |
 | [topology](mathematics_examples/topology/README.md) | `deep_causality_topology` | Graphs, simplicial and cubical complexes, manifolds, differential forms, lattice gauge fields |
 | [composable_multi_math](mathematics_examples/composable_multi_math/README.md) | cross-crate | HKT and causal-monad composition across two or three of the above crates |
+| [isomorphism](mathematics_examples/isomorphism/README.md) | cross-crate | `iso` bridges from `deep_causality_num::iso` / `deep_causality_haft::iso` (tensor <-> sparse, multifield <-> tuple carrier, dual-witness duality) |
 
 ### Highlights
 
 | Example | Crate | Description | Command |
 |---------|-------|-------------|---------|
-| [algebraic_scanner](mathematics_examples/algebra/algebraic_scanner/README.md) | multivector | Scans Clifford algebras `Cl(p, q, r)` for complex structure (`I² = -1`) | `cargo run -p mathematics_examples --example algebraic_scanner_examples` |
-| [maxwell_multivector](mathematics_examples/algebra/maxwell_multivector.rs) | multivector | Unifies electric and magnetic fields into a single electromagnetic-field bivector | `cargo run -p mathematics_examples --example maxwell_multivector_examples` |
-| [pga3d_multivector](mathematics_examples/algebra/pga3d_multivector.rs) | multivector | Projective Geometric Algebra (PGA) for rigid-body motions in graphics and robotics | `cargo run -p mathematics_examples --example pga3d_multivector_examples` |
-| [basic_csr_ops](mathematics_examples/sparse/basic_csr_ops.rs) | sparse | Constructing a `CsrMatrix` from triplets; row/column iteration | `cargo run -p mathematics_examples --example basic_csr_ops_examples` |
-| [ein_sum_causal_tensor](mathematics_examples/tensor/ein_sum_causal_tensor.rs) | tensor | Einstein-summation contractions via `EinSumOp` | `cargo run -p mathematics_examples --example ein_sum_causal_tensor_examples` |
-| [einstein_field_causal_tensor](mathematics_examples/tensor/einstein_field_causal_tensor.rs) | tensor | Index raising and lowering with the metric; Ricci-style contractions | `cargo run -p mathematics_examples --example einstein_field_causal_tensor_examples` |
-| [manifold_analysis](mathematics_examples/topology/manifold_analysis.rs) | topology | Constructing a `Manifold<SimplicialComplex<R>, F>`; Euler characteristic; orientation | `cargo run -p mathematics_examples --example manifold_analysis_examples` |
-| [cubical_heat_diffusion](mathematics_examples/topology/cubical_heat_diffusion.rs) | topology | Explicit-Euler heat diffusion on a cubical manifold with a Moore-neighborhood stencil | `cargo run -p mathematics_examples --example cubical_heat_diffusion_examples` |
-| [lattice_gauge_simulation](mathematics_examples/topology/lattice_gauge_simulation.rs) | topology | SU(3) lattice gauge theory: Metropolis thermalization, plaquette, Wilson loop, Polyakov loop, APE smearing, Wilson flow | `cargo run -p mathematics_examples --example lattice_gauge_simulation_examples` |
-| [tensor_x_topology_laplacian](mathematics_examples/composable_multi_math/tensor_x_topology_laplacian/README.md) | composition | Discrete Laplacian on a 1D simplicial manifold via `ManifoldWitness::extend` (CoMonad) | `cargo run -p mathematics_examples --example tensor_x_topology_laplacian_examples` |
-| [triple_hkt_stress_field](mathematics_examples/composable_multi_math/triple_hkt_stress_field/README.md) | composition | 3D linear-elastic stress on a tetrahedral mesh: strain, Hooke, normal, Cauchy traction, material rotor, von Mises in one `extend` call | `cargo run -p mathematics_examples --example triple_hkt_stress_field_examples` |
-| [effect_diffusion_on_manifold](mathematics_examples/composable_multi_math/effect_diffusion_on_manifold/README.md) | composition | Heat equation: spatial Laplacian via `extend`, time stepping via `bind`, stability short-circuit on CFL violation | `cargo run -p mathematics_examples --example effect_diffusion_on_manifold_examples` |
-| [capstone_spinor_minkowski](mathematics_examples/composable_multi_math/capstone_spinor_minkowski/README.md) | composition (capstone) | Parallel transport of a unit timelike spinor along a discretized Minkowski worldline in `Cl(3,1)`. Final drift versus closed-form `(cosh θ, sinh θ)` is ~1.7e-31 at `Float106`, fifteen orders of magnitude tighter than f64 | `cargo run -p mathematics_examples --example capstone_spinor_minkowski_examples` |
+| algebraic_scanner | multivector | Scans Clifford algebras `Cl(p, q, r)` for complex structure (`I² = -1`) | `cargo run -p mathematics_examples --example algebraic_scanner_examples` |
+| maxwell_multivector | multivector | Unifies electric and magnetic fields into a single electromagnetic-field bivector | `cargo run -p mathematics_examples --example maxwell_multivector_examples` |
+| pga3d_multivector | multivector | Projective Geometric Algebra (PGA) for rigid-body motions in graphics and robotics | `cargo run -p mathematics_examples --example pga3d_multivector_examples` |
+| basic_csr_ops | sparse | Constructing a `CsrMatrix` from triplets; row/column iteration | `cargo run -p mathematics_examples --example basic_csr_ops_examples` |
+| ein_sum_causal_tensor | tensor | Einstein-summation contractions via `EinSumOp` | `cargo run -p mathematics_examples --example ein_sum_causal_tensor_examples` |
+| einstein_field_causal_tensor | tensor | Index raising and lowering with the metric; Ricci-style contractions | `cargo run -p mathematics_examples --example einstein_field_causal_tensor_examples` |
+| manifold_analysis | topology | Constructing a `Manifold<SimplicialComplex<R>, F>`; Euler characteristic; orientation | `cargo run -p mathematics_examples --example manifold_analysis_examples` |
+| cubical_heat_diffusion | topology | Explicit-Euler heat diffusion on a cubical manifold with a Moore-neighborhood stencil | `cargo run -p mathematics_examples --example cubical_heat_diffusion_examples` |
+| lattice_gauge_simulation | topology | SU(3) lattice gauge theory: Metropolis thermalization, plaquette, Wilson loop, Polyakov loop, APE smearing, Wilson flow | `cargo run -p mathematics_examples --example lattice_gauge_simulation_examples` |
+| tensor_x_topology_laplacian | composition | Discrete Laplacian on a 1D simplicial manifold via `ManifoldWitness::extend` (CoMonad) | `cargo run -p mathematics_examples --example tensor_x_topology_laplacian_examples` |
+| triple_hkt_stress_field | composition | 3D linear-elastic stress on a tetrahedral mesh: strain, Hooke, normal, Cauchy traction, material rotor, von Mises in one `extend` call | `cargo run -p mathematics_examples --example triple_hkt_stress_field_examples` |
+| effect_diffusion_on_manifold | composition | Heat equation: spatial Laplacian via `extend`, time stepping via `bind`, stability short-circuit on CFL violation | `cargo run -p mathematics_examples --example effect_diffusion_on_manifold_examples` |
+| capstone_spinor_minkowski | composition (capstone) | Parallel transport of a unit timelike spinor along a discretized Minkowski worldline in `Cl(3,1)`. Final drift versus closed-form `(cosh θ, sinh θ)` is ~1.7e-31 at `Float106`, fifteen orders of magnitude tighter than f64 | `cargo run -p mathematics_examples --example capstone_spinor_minkowski_examples` |
+| tensor_sparse_memory_budget | isomorphism | Dense `CausalTensor` <-> `CsrMatrix` via the `tensor-iso` feature: sparsify, run a sparse-only op, materialise back to dense | `cargo run -p mathematics_examples --example tensor_sparse_memory_budget` |
+| effect_process_witness_duality | isomorphism | Dual-witness pattern: `PropagatingEffect<T>` and `PropagatingProcess<T, (), ()>` share one carrier with two independent `Functor`/`Monad` witnesses producing byte-identical output | `cargo run -p mathematics_examples --example effect_process_witness_duality` |
+| multifield_data_pipeline | isomorphism | `CausalMultiField<T>` <-> `(CausalTensor<T>, Metric, dx, shape)` iso lets external code build/extract/transform a multifield without touching `pub(crate)` internals | `cargo run -p mathematics_examples --example multifield_data_pipeline` |
 
 See [mathematics_examples/README.md](mathematics_examples/README.md) for the full
 table of all 32 registered examples and the precision-abstraction decision tree

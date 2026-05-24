@@ -1,0 +1,51 @@
+[package]
+name = "causal_intervention_examples"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+deep_causality_core = { path = "../../deep_causality_core" }
+deep_causality_haft = { path = "../../deep_causality_haft" }
+
+
+[[example]]
+name = "counterfactual_treatment_effect"
+path = "counterfactual_treatment_effect/main.rs"
+
+[[example]]
+name = "counterfactual_envelope_fault"
+path = "counterfactual_envelope_fault/main.rs"
+
+[[example]]
+name = "counterfactual_treatment_options"
+path = "counterfactual_treatment_options/main.rs"
+
+[[example]]
+name = "counterfactual_cascade_failure"
+path = "counterfactual_cascade_failure/main.rs"
+
+[[example]]
+name = "counterfactual_resection_intervention"
+path = "counterfactual_resection_intervention/main.rs"
+
+[[example]]
+name = "corrective_lane_keeping"
+path = "corrective_lane_keeping/main.rs"
+
+[[example]]
+name = "corrective_glucose_pump"
+path = "corrective_glucose_pump/main.rs"
+
+[[example]]
+name = "corrective_decompression_stops"
+path = "corrective_decompression_stops/main.rs"
+
+[[example]]
+name = "corrective_network_failover"
+path = "corrective_network_failover/main.rs"

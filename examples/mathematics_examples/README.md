@@ -13,9 +13,6 @@ Run any example from the repository root:
 cargo run -p mathematics_examples --example <example_name>
 ```
 
-Every example name ends with the `_examples` suffix (e.g. `basic_causal_tensor_examples`,
-`manifold_analysis_examples`, `tensor_x_topology_laplacian_examples`).
-
 ---
 
 ## Layout
@@ -23,10 +20,11 @@ Every example name ends with the `_examples` suffix (e.g. `basic_causal_tensor_e
 ```
 mathematics_examples/
 ├── algebra/                 — multivector / Clifford-algebra examples + algebraic_scanner
+├── composable_multi_math/   — cross-crate composition (HKT + causal monad)
+├── isomorphism/             — cross-crate bridges (tensor<->sparse, multifield, witness duality)
 ├── sparse/                  — CSR sparse-matrix examples
 ├── tensor/                  — CausalTensor examples
-├── topology/                — graphs, manifolds, lattice gauge fields
-└── composable_multi_math/   — cross-crate composition (HKT + causal monad)
+└── topology/                — graphs, manifolds, lattice gauge fields
 ```
 
 Each subfolder has its own README with the per-example table.
@@ -38,6 +36,7 @@ Each subfolder has its own README with the per-example table.
 | [tensor](tensor/README.md) | `CausalTensor` construction, `EinSumOp`, Einstein-field index gymnastics, HKT (Functor / Applicative) | [tensor/README.md](tensor/README.md) |
 | [topology](topology/README.md) | Graphs, simplicial / cubical complexes, manifolds, differential forms, lattice gauge fields | [topology/README.md](topology/README.md) |
 | [composable_multi_math](composable_multi_math/README.md) | Cross-crate composition through `Functor` / `Monad` / `CoMonad` and the causal effect monad. The "look at how these crates compose" gallery | [composable_multi_math/README.md](composable_multi_math/README.md) |
+| [isomorphism](isomorphism/README.md) | Cross-crate `iso` bridges from `deep_causality_num::iso` / `deep_causality_haft::iso`: tensor <-> sparse via the `tensor-iso` feature, `CausalMultiField` <-> tuple carrier, and the `PropagatingEffect` / `PropagatingProcess` dual-witness pattern | [isomorphism/README.md](isomorphism/README.md) |
 
 ---
 
@@ -121,8 +120,9 @@ rounding error.
 
 ## Adding New Examples
 
-1. Decide which subfolder fits: `algebra/`, `sparse/`, `tensor/`, `topology/`, or
-   `composable_multi_math/` (cross-crate composition).
+1. Decide which subfolder fits: `algebra/`, `sparse/`, `tensor/`, `topology/`,
+   `composable_multi_math/` (cross-crate composition), or `isomorphism/`
+   (cross-crate `iso` bridges).
 2. Create the source file (single-file examples) or directory (`<your_example>/main.rs`
    + `README.md`).
 3. Single-file examples: pick a descriptive snake_case name. Multi-file: same, but
@@ -133,7 +133,8 @@ rounding error.
    name = "your_example_examples"
    path = "<subfolder>/your_example.rs"   # or <subfolder>/your_example/main.rs
    ```
-5. Every example name **must** end with the `_examples` suffix.
+5. Every example name **must** end with the `_examples` suffix, except in
+   `isomorphism/` where examples are registered under their bare names.
 6. Add a row to the relevant subfolder's `README.md`.
 7. Top-of-file `main.rs` declares `pub type FloatType = f64;` (or `f32` / `Float106`)
    and threads it through every numerical site.
