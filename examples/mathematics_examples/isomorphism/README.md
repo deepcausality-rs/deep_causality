@@ -35,16 +35,16 @@ This example builds three external pipeline helpers — `load_multifield`, `map_
 ## Running
 
 ```bash
-cargo run --example tensor_sparse_memory_budget -p isomorphism_examples
-cargo run --example effect_process_witness_duality -p isomorphism_examples
-cargo run --example multifield_data_pipeline -p isomorphism_examples
+cargo run -p mathematics_examples --example tensor_sparse_memory_budget
+cargo run -p mathematics_examples --example effect_process_witness_duality
+cargo run -p mathematics_examples --example multifield_data_pipeline
 ```
 
 ---
 
 ## Adding New Examples
 
-1. Create directory: `examples/<your_example>/`
+1. Create directory: `isomorphism/<your_example>/`
 2. Add `main.rs` with doc comments (`//!` module docs)
 3. Add `README.md` with:
     - How to run
@@ -52,9 +52,9 @@ cargo run --example multifield_data_pipeline -p isomorphism_examples
     - Key concepts
     - APIs demonstrated
     - Adaptation suggestions
-4. Register in `Cargo.toml`:
+4. Register in `examples/mathematics_examples/Cargo.toml`:
    ```toml
    [[example]]
    name = "your_example"
-   path = "examples/your_example/main.rs"
+   path = "isomorphism/your_example/main.rs"
    ```

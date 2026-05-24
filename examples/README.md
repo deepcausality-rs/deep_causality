@@ -154,6 +154,7 @@ effect monad.
 | [tensor](mathematics_examples/tensor/README.md) | `deep_causality_tensor` | `CausalTensor` construction, `EinSumOp`, Einstein-field index gymnastics, HKT (Functor, Applicative) |
 | [topology](mathematics_examples/topology/README.md) | `deep_causality_topology` | Graphs, simplicial and cubical complexes, manifolds, differential forms, lattice gauge fields |
 | [composable_multi_math](mathematics_examples/composable_multi_math/README.md) | cross-crate | HKT and causal-monad composition across two or three of the above crates |
+| [isomorphism](mathematics_examples/isomorphism/README.md) | cross-crate | `iso` bridges from `deep_causality_num::iso` / `deep_causality_haft::iso` (tensor <-> sparse, multifield <-> tuple carrier, dual-witness duality) |
 
 ### Highlights
 
@@ -172,6 +173,9 @@ effect monad.
 | [triple_hkt_stress_field](mathematics_examples/composable_multi_math/triple_hkt_stress_field/README.md) | composition | 3D linear-elastic stress on a tetrahedral mesh: strain, Hooke, normal, Cauchy traction, material rotor, von Mises in one `extend` call | `cargo run -p mathematics_examples --example triple_hkt_stress_field_examples` |
 | [effect_diffusion_on_manifold](mathematics_examples/composable_multi_math/effect_diffusion_on_manifold/README.md) | composition | Heat equation: spatial Laplacian via `extend`, time stepping via `bind`, stability short-circuit on CFL violation | `cargo run -p mathematics_examples --example effect_diffusion_on_manifold_examples` |
 | [capstone_spinor_minkowski](mathematics_examples/composable_multi_math/capstone_spinor_minkowski/README.md) | composition (capstone) | Parallel transport of a unit timelike spinor along a discretized Minkowski worldline in `Cl(3,1)`. Final drift versus closed-form `(cosh θ, sinh θ)` is ~1.7e-31 at `Float106`, fifteen orders of magnitude tighter than f64 | `cargo run -p mathematics_examples --example capstone_spinor_minkowski_examples` |
+| [tensor_sparse_memory_budget](mathematics_examples/isomorphism/README.md) | isomorphism | Dense `CausalTensor` <-> `CsrMatrix` via the `tensor-iso` feature: sparsify, run a sparse-only op, materialise back to dense | `cargo run -p mathematics_examples --example tensor_sparse_memory_budget` |
+| [effect_process_witness_duality](mathematics_examples/isomorphism/README.md) | isomorphism | Dual-witness pattern: `PropagatingEffect<T>` and `PropagatingProcess<T, (), ()>` share one carrier with two independent `Functor`/`Monad` witnesses producing byte-identical output | `cargo run -p mathematics_examples --example effect_process_witness_duality` |
+| [multifield_data_pipeline](mathematics_examples/isomorphism/README.md) | isomorphism | `CausalMultiField<T>` <-> `(CausalTensor<T>, Metric, dx, shape)` iso lets external code build/extract/transform a multifield without touching `pub(crate)` internals | `cargo run -p mathematics_examples --example multifield_data_pipeline` |
 
 See [mathematics_examples/README.md](mathematics_examples/README.md) for the full
 table of all 32 registered examples and the precision-abstraction decision tree

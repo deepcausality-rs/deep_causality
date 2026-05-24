@@ -16,46 +16,10 @@ deep_causality_metric = { path = "../../deep_causality_metric" }
 deep_causality_multivector = { path = "../../deep_causality_multivector" }
 deep_causality_num = { path = "../../deep_causality_num" }
 deep_causality_rand = { path = "../../deep_causality_rand" }
-deep_causality_sparse = { path = "../../deep_causality_sparse" }
+deep_causality_sparse = { path = "../../deep_causality_sparse", features = ["tensor-iso"] }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
 deep_causality_topology = { path = "../../deep_causality_topology" }
 
-# ============================================================================
-# composable_multi_math — cross-crate composition examples (HKT, monads, effect
-# propagation across tensor + multivector + topology).
-# ============================================================================
-
-[[example]]
-name = "algebraic_scanner_examples"
-path = "algebra/algebraic_scanner/main.rs"
-
-[[example]]
-name = "tensor_x_algebra_rotation_field_examples"
-path = "composable_multi_math/tensor_x_algebra_rotation_field/main.rs"
-
-[[example]]
-name = "tensor_x_topology_laplacian_examples"
-path = "composable_multi_math/tensor_x_topology_laplacian/main.rs"
-
-[[example]]
-name = "triple_hkt_stress_field_examples"
-path = "composable_multi_math/triple_hkt_stress_field/main.rs"
-
-[[example]]
-name = "effect_kalman_predict_correct_examples"
-path = "composable_multi_math/effect_kalman_predict_correct/main.rs"
-
-[[example]]
-name = "effect_diffusion_on_manifold_examples"
-path = "composable_multi_math/effect_diffusion_on_manifold/main.rs"
-
-[[example]]
-name = "effect_tensor_algebra_roundtrip_examples"
-path = "composable_multi_math/effect_tensor_algebra_roundtrip/main.rs"
-
-[[example]]
-name = "capstone_spinor_minkowski_examples"
-path = "composable_multi_math/capstone_spinor_minkowski/main.rs"
 
 # ============================================================================
 # algebra — multivector / Clifford algebra examples (deep_causality_multivector).
@@ -96,6 +60,60 @@ path = "algebra/maxwell_multivector.rs"
 [[example]]
 name = "pga3d_multivector_examples"
 path = "algebra/pga3d_multivector.rs"
+
+# ============================================================================
+# composable_multi_math — cross-crate composition examples (HKT, monads, effect
+# propagation across tensor + multivector + topology).
+# ============================================================================
+
+[[example]]
+name = "algebraic_scanner_examples"
+path = "algebra/algebraic_scanner/main.rs"
+
+[[example]]
+name = "tensor_x_algebra_rotation_field_examples"
+path = "composable_multi_math/tensor_x_algebra_rotation_field/main.rs"
+
+[[example]]
+name = "tensor_x_topology_laplacian_examples"
+path = "composable_multi_math/tensor_x_topology_laplacian/main.rs"
+
+[[example]]
+name = "triple_hkt_stress_field_examples"
+path = "composable_multi_math/triple_hkt_stress_field/main.rs"
+
+[[example]]
+name = "effect_kalman_predict_correct_examples"
+path = "composable_multi_math/effect_kalman_predict_correct/main.rs"
+
+[[example]]
+name = "effect_diffusion_on_manifold_examples"
+path = "composable_multi_math/effect_diffusion_on_manifold/main.rs"
+
+[[example]]
+name = "effect_tensor_algebra_roundtrip_examples"
+path = "composable_multi_math/effect_tensor_algebra_roundtrip/main.rs"
+
+[[example]]
+name = "capstone_spinor_minkowski_examples"
+path = "composable_multi_math/capstone_spinor_minkowski/main.rs"
+
+# ============================================================================
+# isomorphism — cross-crate isomorphism.
+# ============================================================================
+
+[[example]]
+name = "tensor_sparse_memory_budget"
+path = "isomorphism/tensor_sparse_memory_budget/main.rs"
+
+[[example]]
+name = "effect_process_witness_duality"
+path = "isomorphism/effect_process_witness_duality/main.rs"
+
+[[example]]
+name = "multifield_data_pipeline"
+path = "isomorphism/multifield_data_pipeline/main.rs"
+
 
 # ============================================================================
 # sparse — sparse matrix examples (deep_causality_sparse).
