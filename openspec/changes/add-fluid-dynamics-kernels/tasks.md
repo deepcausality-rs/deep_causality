@@ -61,10 +61,10 @@ Spec corrections applied before implementation: (a) Galilean-invariance scenario
 
 ## 7. Coherent-structure detector kernels
 
-- [ ] 7.1 Implement `q_criterion_kernel`, `lambda2_kernel`, `delta_criterion_kernel`, `swirling_strength_kernel` in `kernels/fluids/coherent_structures.rs`. `lambda2` and `swirling_strength` use a `[[R; 3]; 3]` eigenvalue computation; reuse existing eigenvalue infrastructure if available in `deep_causality_num`, otherwise implement an internal 3×3 symmetric eigenvalue helper (private to this module) with full unit tests.
-- [ ] 7.2 Tests: Q-criterion identity `Q + 0.5·‖S‖² − 0.5·‖Ω‖² = 0` across precision backends; λ₂ < 0 inside a Burgers-vortex core; Δ-criterion sign matches the published flow-classification table on representative inputs; swirling strength = 0 in irrotational flow; precision-backend sweep.
-- [ ] 7.3 Causal wrappers + tests.
-- [ ] 7.4 Uncomment + re-export. Build/clippy/tests clean.
+- [x] 7.1 Implemented 4 detector kernels in `kernels/fluids/coherent_structures.rs`: `q_criterion_kernel` (direct `−0.5·tr(G²)` form), `delta_criterion_kernel` (generalized to the depressed-cubic discriminant per Chakraborty et al. 2005 — correct for both incompressible and compressible flow), `lambda2_kernel` (Jeong–Hussain middle eigenvalue of `S² + Ω²`), `swirling_strength_kernel` (Cardano on the depressed velocity-gradient characteristic polynomial). Private helpers: a closed-form Smith (1961) 3×3 symmetric eigenvalue routine and a sign-preserving real cube root — both allocation-free, no_std-friendly, generic over `R: RealField + FromPrimitive`.
+- [x] 7.2 Added 18 coherent_structures_tests covering: spec scenario `Q + 0.5·‖S‖² − 0.5·‖Ω‖² = 0` (f64 and f32 precision); Q sign behavior on rigid-body rotation (positive) vs pure strain (negative); Δ > 0 for rotational flow, Δ < 0 for three distinct real eigenvalues, Δ = 0 for repeated real eigenvalues (boundary case); spec scenario λ₂ < 0 for rigid-body rotation; λ₂ on pure isotropic extension equals 1; λ₂ on diagonal strain matches the middle eigenvalue exactly; spec scenario swirling strength = 0 in irrotational (symmetric-gradient) flow; swirling strength = ω for rigid-body rotation; cross-check that Δ sign and λ_ci sign are consistent across representative inputs. **Δ-criterion bug caught during testing** — the original `(Q/3)³ + (R/2)²` form is only correct for incompressible flow; fixed the kernel to use the depressed-cubic discriminant `(p̃/3)³ + (q̃/2)²` and documented the convention.
+- [x] 7.3 Added 4 causal wrappers + 4 wrapper smoke tests.
+- [x] 7.4 Uncommented `pub use coherent_structures::*`. `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo test` (1270 tests pass, +22 since Group 6), `cargo fmt --check` all clean. No `#[allow]` suppressions added.
 
 ## 8. Compressible-flow thermodynamic kernels
 

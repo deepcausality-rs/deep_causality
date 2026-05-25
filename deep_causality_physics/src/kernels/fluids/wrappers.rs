@@ -4,7 +4,7 @@
  */
 
 use crate::kernels::fluids::{
-    constitutive, dimensionless, governing, kinematics, mechanics, turbulence,
+    coherent_structures, constitutive, dimensionless, governing, kinematics, mechanics, turbulence,
 };
 use crate::{
     AccelerationVector, CauchyStress, Density, KinematicViscosity, Length, Pressure,
@@ -679,6 +679,54 @@ where
 {
     match turbulence::eddy_viscosity_boussinesq_kernel(reynolds_stress, strain_rate_mean, k_energy)
     {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+// =============================================================================
+// Coherent-structure detector wrappers
+// =============================================================================
+
+/// Causal wrapper for [`coherent_structures::q_criterion_kernel`].
+pub fn q_criterion<R>(grad_u: &VelocityGradient<R>) -> PropagatingEffect<R>
+where
+    R: RealField + FromPrimitive + Debug + Default + 'static,
+{
+    match coherent_structures::q_criterion_kernel(grad_u) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`coherent_structures::delta_criterion_kernel`].
+pub fn delta_criterion<R>(grad_u: &VelocityGradient<R>) -> PropagatingEffect<R>
+where
+    R: RealField + FromPrimitive + Debug + Default + 'static,
+{
+    match coherent_structures::delta_criterion_kernel(grad_u) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`coherent_structures::lambda2_kernel`].
+pub fn lambda2<R>(grad_u: &VelocityGradient<R>) -> PropagatingEffect<R>
+where
+    R: RealField + FromPrimitive + Debug + Default + 'static,
+{
+    match coherent_structures::lambda2_kernel(grad_u) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`coherent_structures::swirling_strength_kernel`].
+pub fn swirling_strength<R>(grad_u: &VelocityGradient<R>) -> PropagatingEffect<R>
+where
+    R: RealField + FromPrimitive + Debug + Default + 'static,
+{
+    match coherent_structures::swirling_strength_kernel(grad_u) {
         Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }

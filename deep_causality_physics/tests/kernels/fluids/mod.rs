@@ -4,6 +4,8 @@
  */
 
 #[cfg(test)]
+pub mod coherent_structures_tests;
+#[cfg(test)]
 pub mod constitutive_tests;
 #[cfg(test)]
 pub mod dimensionless_tests;

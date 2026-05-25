@@ -6,17 +6,17 @@
 use deep_causality_physics::{
     CauchyStress, Density, KinematicViscosity, Length, Pressure, Speed, StrainRateTensor,
     Velocity3, VelocityGradient, Viscosity, VorticityVector, bernoulli_pressure, bond_number,
-    capillary_number, continuity_rhs, convective_acceleration, dissipation_rate, eckert_number,
-    eddy_viscosity_boussinesq, enstrophy_density, froude_number, grashof_number, helicity_density,
-    hydrostatic_pressure, integral_length_scale, kinetic_energy_density, knudsen_number,
-    kolmogorov_length, kolmogorov_time, kolmogorov_velocity, lewis_number, mach_number,
-    newtonian_viscous_stress, newtonian_viscous_stress_with_bulk, nusselt_number,
+    capillary_number, continuity_rhs, convective_acceleration, delta_criterion, dissipation_rate,
+    eckert_number, eddy_viscosity_boussinesq, enstrophy_density, froude_number, grashof_number,
+    helicity_density, hydrostatic_pressure, integral_length_scale, kinetic_energy_density,
+    knudsen_number, kolmogorov_length, kolmogorov_time, kolmogorov_velocity, lambda2, lewis_number,
+    mach_number, newtonian_viscous_stress, newtonian_viscous_stress_with_bulk, nusselt_number,
     particle_stokes_number, peclet_number, power_law_apparent_viscosity, prandtl_number,
-    pressure_gradient_force, pressure_work, rayleigh_number, reynolds_number, reynolds_stress,
-    richardson_number, rotation_rate_tensor, scalar_advection_diffusion, schmidt_number,
-    strain_rate_tensor, strouhal_number, taylor_microscale, turbulent_kinetic_energy,
-    velocity_gradient_invariants, viscous_diffusion, viscous_dissipation_rate,
-    vorticity_from_gradient, vorticity_transport, weber_number,
+    pressure_gradient_force, pressure_work, q_criterion, rayleigh_number, reynolds_number,
+    reynolds_stress, richardson_number, rotation_rate_tensor, scalar_advection_diffusion,
+    schmidt_number, strain_rate_tensor, strouhal_number, swirling_strength, taylor_microscale,
+    turbulent_kinetic_energy, velocity_gradient_invariants, viscous_diffusion,
+    viscous_dissipation_rate, vorticity_from_gradient, vorticity_transport, weber_number,
 };
 
 // =============================================================================
@@ -485,4 +485,44 @@ fn test_eddy_viscosity_boussinesq_wrapper_error_path() {
     let r = CauchyStress::<f64>::default();
     let s = StrainRateTensor::<f64>::default();
     assert!(!eddy_viscosity_boussinesq(&r, &s, 0.5).is_ok());
+}
+
+// =============================================================================
+// Coherent-structure detector wrappers
+// =============================================================================
+
+#[test]
+fn test_q_criterion_wrapper() {
+    let g =
+        VelocityGradient::<f64>::new([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
+    let effect = q_criterion(&g);
+    assert!(effect.is_ok());
+    assert!((effect.value().clone().into_value().unwrap() - 1.0).abs() < 1e-12);
+}
+
+#[test]
+fn test_delta_criterion_wrapper() {
+    let g =
+        VelocityGradient::<f64>::new([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
+    assert!(delta_criterion(&g).is_ok());
+}
+
+#[test]
+fn test_lambda2_wrapper() {
+    let g =
+        VelocityGradient::<f64>::new([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
+    let effect = lambda2(&g);
+    assert!(effect.is_ok());
+    let v = effect.value().clone().into_value().unwrap();
+    assert!(v < 0.0);
+}
+
+#[test]
+fn test_swirling_strength_wrapper() {
+    let g =
+        VelocityGradient::<f64>::new([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
+    let effect = swirling_strength(&g);
+    assert!(effect.is_ok());
+    let v = effect.value().clone().into_value().unwrap();
+    assert!((v - 1.0).abs() < 1e-12);
 }
