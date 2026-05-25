@@ -103,10 +103,10 @@ Spec corrections applied before implementation: (a) Galilean-invariance scenario
 
 ## 13. Theory layer — Stokes
 
-- [ ] 13.1 Implement `stokes_momentum_rhs_kernel` in `theories/fluid_dynamics/stokes.rs`. Signature has no `u` / `grad_u` inputs.
-- [ ] 13.2 Tests: equal to `incompressible_ns_rhs_kernel` with `u = 0` and `grad_u = 0`; signature lacks convective inputs; precision-backend sweep.
-- [ ] 13.3 Causal wrapper + tests.
-- [ ] 13.4 Re-export. Build/clippy/tests clean.
+- [x] 13.1 Implemented `stokes_momentum_rhs_kernel` in `theories/fluid_dynamics/stokes.rs`. Form: `∂u/∂t = −(1/ρ)∇p + ν∇²u + g`. Signature drops both `u` and `grad_u` — the creeping-flow limit `Re → 0` is encoded in the type. Returns `Result<AccelerationVector<R>, PhysicsError>` with the `ρ = 0` error path propagated from `pressure_gradient_force_kernel`.
+- [x] 13.2 Added 5 tests in `tests/theories/fluid_dynamics/stokes_tests.rs`: known-value sanity; **spec scenario** Stokes ≡ `incompressible_ns_rhs_kernel` with `u = 0` and `grad_u = 0` (verified componentwise); `ρ = 0` error path; full-linearity property test (sum of inputs ≡ sum of outputs at fixed ρ, ν — the defining property of the Stokes regime); f32 precision sweep.
+- [x] 13.3 Added `stokes_momentum_rhs` causal wrapper + 2 wrapper tests (success and `ρ = 0` error path).
+- [x] 13.4 Uncommented `pub use stokes::*` in `theories/fluid_dynamics/mod.rs`. `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo test` (1373 tests pass, +7 since Group 12), `cargo fmt --check` all clean.
 
 ## 14. Theory layer — compressible NS
 

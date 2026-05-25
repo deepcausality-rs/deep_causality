@@ -7,3 +7,5 @@
 pub mod euler_tests;
 #[cfg(test)]
 pub mod incompressible_ns_tests;
+#[cfg(test)]
+pub mod stokes_tests;

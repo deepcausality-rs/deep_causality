@@ -20,4 +20,4 @@ pub(crate) mod stokes;
 // pub use compressible_ns::*;
 pub use euler::*;
 pub use incompressible_ns::*;
-// pub use stokes::*;
+pub use stokes::*;

@@ -18,12 +18,13 @@ use deep_causality_physics::{
     prandtl_number, pressure_gradient_force, pressure_work, q_criterion, rayleigh_number,
     reynolds_number, reynolds_stress, richardson_number, rotation_rate_tensor,
     scalar_advection_diffusion, schmidt_number, skin_friction_coefficient, specific_enthalpy,
-    speed_of_sound_ideal_gas, strain_rate_tensor, stream_function_2d, strouhal_number,
-    swirling_strength, taylor_microscale, total_enthalpy, total_pressure_isentropic,
-    total_temperature_isentropic, turbulent_kinetic_energy, velocity_gradient_invariants,
-    velocity_potential_2d, viscous_diffusion, viscous_dissipation_rate, viscous_length_scale,
-    viscous_sublayer_velocity, vorticity_from_gradient, vorticity_transport,
-    wall_shear_stress_newtonian, weber_number, y_plus,
+    speed_of_sound_ideal_gas, stokes_momentum_rhs, strain_rate_tensor, stream_function_2d,
+    strouhal_number, swirling_strength, taylor_microscale, total_enthalpy,
+    total_pressure_isentropic, total_temperature_isentropic, turbulent_kinetic_energy,
+    velocity_gradient_invariants, velocity_potential_2d, viscous_diffusion,
+    viscous_dissipation_rate, viscous_length_scale, viscous_sublayer_velocity,
+    vorticity_from_gradient, vorticity_transport, wall_shear_stress_newtonian, weber_number,
+    y_plus,
 };
 
 // =============================================================================
@@ -774,6 +775,31 @@ fn test_euler_momentum_rhs_wrapper_error_path() {
     let r = Density::<f64>::new(0.0).unwrap();
     let b = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
     let effect = euler_momentum_rhs(&u, &g, &gp, &r, &b);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_stokes_momentum_rhs_wrapper() {
+    let lap = [4.0_f64, 0.0, 0.0];
+    let gp = [10.0_f64, 0.0, 0.0];
+    let r = Density::<f64>::new(2.0).unwrap();
+    let n = KinematicViscosity::<f64>::new(0.5).unwrap();
+    let b = AccelerationVector::<f64>::new([0.0, -9.81, 0.0]).unwrap();
+    let effect = stokes_momentum_rhs(&lap, &gp, &r, &n, &b);
+    assert!(effect.is_ok());
+    let v = effect.value().clone().into_value().unwrap().into_inner();
+    assert!((v[0] - (-3.0)).abs() < 1e-12);
+    assert!((v[1] - (-9.81)).abs() < 1e-12);
+}
+
+#[test]
+fn test_stokes_momentum_rhs_wrapper_error_path() {
+    let lap = [0.0_f64; 3];
+    let gp = [1.0_f64, 0.0, 0.0];
+    let r = Density::<f64>::new(0.0).unwrap();
+    let n = KinematicViscosity::<f64>::new(0.0).unwrap();
+    let b = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
+    let effect = stokes_momentum_rhs(&lap, &gp, &r, &n, &b);
     assert!(!effect.is_ok());
 }
 
