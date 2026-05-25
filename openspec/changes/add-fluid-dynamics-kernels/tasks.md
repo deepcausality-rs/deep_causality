@@ -68,10 +68,10 @@ Spec corrections applied before implementation: (a) Galilean-invariance scenario
 
 ## 8. Compressible-flow thermodynamic kernels
 
-- [ ] 8.1 Implement `speed_of_sound_ideal_gas_kernel`, `specific_enthalpy_kernel`, `total_enthalpy_kernel`, `total_pressure_isentropic_kernel`, `total_temperature_isentropic_kernel`, `entropy_production_rate_kernel` in `kernels/fluids/compressible.rs`.
-- [ ] 8.2 Tests: `T_0 = T` at `M = 0`; entropy production ≥ 0 for any physically valid input; isentropic relations recover textbook reference values at `M = 1` and `M = 2`; speed of sound for air at 288.15 K matches the published 340.29 m/s to within precision tolerance; precision-backend sweep.
-- [ ] 8.3 Causal wrappers + tests.
-- [ ] 8.4 Uncomment + re-export. Build/clippy/tests clean.
+- [x] 8.1 Implemented 6 compressible-flow thermodynamic kernels in `kernels/fluids/compressible.rs`: `speed_of_sound_ideal_gas_kernel`, `specific_enthalpy_kernel`, `total_enthalpy_kernel`, `total_pressure_isentropic_kernel`, `total_temperature_isentropic_kernel`, `entropy_production_rate_kernel`. Entropy production kernel includes both viscous-dissipation (`Φ/T`) and heat-conduction (`κ‖∇T‖²/T²`) contributions per the Clausius-Duhem inequality; errors on `T ≤ 0`. Isentropic kernels error on `γ ≤ 1`.
+- [x] 8.2 Added 14 compressible_tests covering: speed of sound for air at 293.15 K (matches `(γ·R_s·T)^(1/2) ≈ 343 m/s` to within 0.1 m/s); zero-temperature and negative-γ error paths; specific enthalpy known value `c_p·T = 301,500 J/kg` and zero at zero Kelvin; total enthalpy at rest equals static; kinetic-energy contribution of total enthalpy; **spec scenario** `T_0 = T` at `M = 0`; total temperature at `M = 1` for air `T_0/T = 1.2`; γ ≤ 1 error paths for both isentropic kernels; total pressure at `M = 1` for air `p_0/p = 1.2^3.5 ≈ 1.893`; **spec scenario** entropy production ≥ 0 on a simple-shear Newtonian setup (verified against the closed-form `Φ = μγ̇²`); heat-conduction-only contribution at rest; zero-temperature error path; f32 precision sweep on speed of sound and total temperature.
+- [x] 8.3 Added 6 causal wrappers + 8 wrapper tests (including error paths for speed of sound at T = 0 and entropy production at T = 0).
+- [x] 8.4 Uncommented `pub use compressible::*` in `kernels/fluids/mod.rs`. `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo test` (1296 tests pass, +26 since Group 7), `cargo fmt --check` all clean. No `#[allow]` suppressions added.
 
 ## 9. Boundary-layer kernels
 

@@ -4,12 +4,13 @@
  */
 
 use crate::kernels::fluids::{
-    coherent_structures, constitutive, dimensionless, governing, kinematics, mechanics, turbulence,
+    coherent_structures, compressible, constitutive, dimensionless, governing, kinematics,
+    mechanics, turbulence,
 };
 use crate::{
     AccelerationVector, CauchyStress, Density, KinematicViscosity, Length, Pressure,
-    RotationRateTensor, Speed, StrainRateTensor, Velocity3, VelocityGradient, Viscosity,
-    VorticityVector,
+    RotationRateTensor, SpecificEnthalpy, Speed, StrainRateTensor, Temperature, Velocity3,
+    VelocityGradient, Viscosity, VorticityVector,
 };
 use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
@@ -727,6 +728,103 @@ where
     R: RealField + FromPrimitive + Debug + Default + 'static,
 {
     match coherent_structures::swirling_strength_kernel(grad_u) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+// =============================================================================
+// Compressible-flow thermodynamic wrappers
+// =============================================================================
+
+/// Causal wrapper for [`compressible::speed_of_sound_ideal_gas_kernel`].
+pub fn speed_of_sound_ideal_gas<R>(
+    gamma: R,
+    r_specific: R,
+    temperature: &Temperature<R>,
+) -> PropagatingEffect<Speed<R>>
+where
+    R: RealField + Debug + 'static,
+{
+    match compressible::speed_of_sound_ideal_gas_kernel(gamma, r_specific, temperature) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`compressible::specific_enthalpy_kernel`].
+pub fn specific_enthalpy<R>(
+    cp: R,
+    temperature: &Temperature<R>,
+) -> PropagatingEffect<SpecificEnthalpy<R>>
+where
+    R: RealField + Debug + 'static,
+{
+    PropagatingEffect::pure(compressible::specific_enthalpy_kernel(cp, temperature))
+}
+
+/// Causal wrapper for [`compressible::total_enthalpy_kernel`].
+pub fn total_enthalpy<R>(
+    h: &SpecificEnthalpy<R>,
+    u: &Velocity3<R>,
+) -> PropagatingEffect<SpecificEnthalpy<R>>
+where
+    R: RealField + FromPrimitive + Debug + 'static,
+{
+    match compressible::total_enthalpy_kernel(h, u) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`compressible::total_pressure_isentropic_kernel`].
+pub fn total_pressure_isentropic<R>(
+    p: &Pressure<R>,
+    mach: R,
+    gamma: R,
+) -> PropagatingEffect<Pressure<R>>
+where
+    R: RealField + FromPrimitive + Debug + 'static,
+{
+    match compressible::total_pressure_isentropic_kernel(p, mach, gamma) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`compressible::total_temperature_isentropic_kernel`].
+pub fn total_temperature_isentropic<R>(
+    t: &Temperature<R>,
+    mach: R,
+    gamma: R,
+) -> PropagatingEffect<Temperature<R>>
+where
+    R: RealField + FromPrimitive + Debug + 'static,
+{
+    match compressible::total_temperature_isentropic_kernel(t, mach, gamma) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`compressible::entropy_production_rate_kernel`].
+pub fn entropy_production_rate<R>(
+    temperature: &Temperature<R>,
+    tau: &CauchyStress<R>,
+    grad_u: &VelocityGradient<R>,
+    thermal_conductivity: R,
+    grad_temperature: &[R; 3],
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match compressible::entropy_production_rate_kernel(
+        temperature,
+        tau,
+        grad_u,
+        thermal_conductivity,
+        grad_temperature,
+    ) {
         Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }

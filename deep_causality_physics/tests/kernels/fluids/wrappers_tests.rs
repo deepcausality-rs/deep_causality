@@ -4,19 +4,22 @@
  */
 
 use deep_causality_physics::{
-    CauchyStress, Density, KinematicViscosity, Length, Pressure, Speed, StrainRateTensor,
-    Velocity3, VelocityGradient, Viscosity, VorticityVector, bernoulli_pressure, bond_number,
-    capillary_number, continuity_rhs, convective_acceleration, delta_criterion, dissipation_rate,
-    eckert_number, eddy_viscosity_boussinesq, enstrophy_density, froude_number, grashof_number,
-    helicity_density, hydrostatic_pressure, integral_length_scale, kinetic_energy_density,
-    knudsen_number, kolmogorov_length, kolmogorov_time, kolmogorov_velocity, lambda2, lewis_number,
-    mach_number, newtonian_viscous_stress, newtonian_viscous_stress_with_bulk, nusselt_number,
+    CauchyStress, Density, KinematicViscosity, Length, Pressure, SpecificEnthalpy, Speed,
+    StrainRateTensor, Temperature, Velocity3, VelocityGradient, Viscosity, VorticityVector,
+    bernoulli_pressure, bond_number, capillary_number, continuity_rhs, convective_acceleration,
+    delta_criterion, dissipation_rate, eckert_number, eddy_viscosity_boussinesq, enstrophy_density,
+    entropy_production_rate, froude_number, grashof_number, helicity_density, hydrostatic_pressure,
+    integral_length_scale, kinetic_energy_density, knudsen_number, kolmogorov_length,
+    kolmogorov_time, kolmogorov_velocity, lambda2, lewis_number, mach_number,
+    newtonian_viscous_stress, newtonian_viscous_stress_with_bulk, nusselt_number,
     particle_stokes_number, peclet_number, power_law_apparent_viscosity, prandtl_number,
     pressure_gradient_force, pressure_work, q_criterion, rayleigh_number, reynolds_number,
     reynolds_stress, richardson_number, rotation_rate_tensor, scalar_advection_diffusion,
-    schmidt_number, strain_rate_tensor, strouhal_number, swirling_strength, taylor_microscale,
-    turbulent_kinetic_energy, velocity_gradient_invariants, viscous_diffusion,
-    viscous_dissipation_rate, vorticity_from_gradient, vorticity_transport, weber_number,
+    schmidt_number, specific_enthalpy, speed_of_sound_ideal_gas, strain_rate_tensor,
+    strouhal_number, swirling_strength, taylor_microscale, total_enthalpy,
+    total_pressure_isentropic, total_temperature_isentropic, turbulent_kinetic_energy,
+    velocity_gradient_invariants, viscous_diffusion, viscous_dissipation_rate,
+    vorticity_from_gradient, vorticity_transport, weber_number,
 };
 
 // =============================================================================
@@ -525,4 +528,64 @@ fn test_swirling_strength_wrapper() {
     assert!(effect.is_ok());
     let v = effect.value().clone().into_value().unwrap();
     assert!((v - 1.0).abs() < 1e-12);
+}
+
+// =============================================================================
+// Compressible-flow wrapper tests
+// =============================================================================
+
+#[test]
+fn test_speed_of_sound_ideal_gas_wrapper() {
+    let t = Temperature::<f64>::new(293.15).unwrap();
+    assert!(speed_of_sound_ideal_gas(1.4_f64, 287.05, &t).is_ok());
+}
+
+#[test]
+fn test_speed_of_sound_ideal_gas_wrapper_error_path() {
+    let t = Temperature::<f64>::new(0.0).unwrap();
+    assert!(!speed_of_sound_ideal_gas(1.4_f64, 287.05, &t).is_ok());
+}
+
+#[test]
+fn test_specific_enthalpy_wrapper() {
+    let t = Temperature::<f64>::new(300.0).unwrap();
+    assert!(specific_enthalpy(1005.0_f64, &t).is_ok());
+}
+
+#[test]
+fn test_total_enthalpy_wrapper() {
+    let h = SpecificEnthalpy::<f64>::new(3.0e5).unwrap();
+    let u = Velocity3::<f64>::new([100.0, 0.0, 0.0]).unwrap();
+    assert!(total_enthalpy(&h, &u).is_ok());
+}
+
+#[test]
+fn test_total_pressure_isentropic_wrapper() {
+    let p = Pressure::<f64>::new(101_325.0).unwrap();
+    assert!(total_pressure_isentropic(&p, 0.5_f64, 1.4).is_ok());
+}
+
+#[test]
+fn test_total_temperature_isentropic_wrapper() {
+    let t = Temperature::<f64>::new(300.0).unwrap();
+    let effect = total_temperature_isentropic(&t, 1.0_f64, 1.4);
+    assert!(effect.is_ok());
+    let v = effect.value().clone().into_value().unwrap();
+    assert!((v.value() - 360.0).abs() < 1e-6);
+}
+
+#[test]
+fn test_entropy_production_rate_wrapper() {
+    let tau = CauchyStress::<f64>::default();
+    let grad_u = VelocityGradient::<f64>::default();
+    let t = Temperature::<f64>::new(300.0).unwrap();
+    assert!(entropy_production_rate(&t, &tau, &grad_u, 0.025_f64, &[10.0, 0.0, 0.0]).is_ok());
+}
+
+#[test]
+fn test_entropy_production_rate_wrapper_error_path() {
+    let tau = CauchyStress::<f64>::default();
+    let grad_u = VelocityGradient::<f64>::default();
+    let t = Temperature::<f64>::new(0.0).unwrap();
+    assert!(!entropy_production_rate(&t, &tau, &grad_u, 1.0_f64, &[0.0; 3]).is_ok());
 }
