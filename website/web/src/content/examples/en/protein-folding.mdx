@@ -4,7 +4,6 @@ domain: Biomedical
 summary: Simulate non-Markovian folding dynamics with memory kernels. The Markov operator handles instantaneous transitions; the kernels carry the part of the past that still matters.
 order: 7
 category: medicine
-source: examples/medicine_examples/protein_folding/main.rs
 crates:
   - deep_causality_core
   - deep_causality_physics
@@ -16,7 +15,7 @@ further:
     href: /docs/concepts/effect-propagation-process/
 ---
 
-The full crate lives at [`examples/medicine_examples/protein_folding/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/medicine_examples/protein_folding). It is one of seven biomedical examples in the medicine crate, and the one that pairs cleanly with the Causal Monad: the simulation is a series of states, and each state depends on its predecessors in a way that ordinary Markov dynamics cannot capture.
+The full crate lives at [`protein_folding`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/medicine_examples/protein_folding). It is one of seven biomedical examples in the medicine crate, and the one that pairs cleanly with the Causal Monad: the simulation is a series of states, and each state depends on its predecessors in a way that ordinary Markov dynamics cannot capture.
 
 ## What the model does
 

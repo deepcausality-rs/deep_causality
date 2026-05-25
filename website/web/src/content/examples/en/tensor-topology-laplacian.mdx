@@ -1,0 +1,81 @@
+---
+title: "Tensor x Topology: discrete Laplacian on a 1D manifold"
+domain: Mathematics
+summary: A scalar field on a simplicial manifold. One CoMonad::extend call walks every vertex; the closure reads neighbours from the comonadic cursor. Geometry is the context, numbers are the payload.
+order: 17
+category: mathematics
+crates:
+  - deep_causality_tensor
+  - deep_causality_topology
+  - deep_causality_haft
+further:
+  - label: HKT and witness traits
+    href: /docs/concepts/hkt/
+  - label: Uniform math
+    href: /docs/concepts/uniform-math/
+  - label: Tensor x Algebra rotation
+    href: /examples/tensor-algebra-rotation/
+---
+
+The example lives at [`tensor_x_topology_laplacian`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples/composable_multi_math/tensor_x_topology_laplacian). It is the comonadic dual of the [tensor x algebra example](/examples/tensor-algebra-rotation/). Where that one used `Functor::fmap` to push a value through the cells of a container, this one uses `CoMonad::extend` to compute a value at each cell from its neighbourhood.
+
+The setup: a scalar field lives on the vertices of a 1D simplicial manifold. The discrete Laplacian at vertex `i` is the textbook three-point stencil `phi(i-1) + phi(i+1) - 2 * phi(i)`. The geometry is held by the manifold (vertices, edges, the boundary operator). The values are held by the tensor inside the manifold. The stencil reads from both at every step.
+
+## Precision as a parameter
+
+```rust
+pub type FloatType = f64;
+```
+
+[`main.rs:29`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/mathematics_examples/composable_multi_math/tensor_x_topology_laplacian/main.rs#L29). One alias. Every vertex value is `FloatType::from(...)`; the stencil arithmetic is `FloatType` throughout. Swap the alias to `Float106` and the Laplacian is computed in high precision with no other code change. The Laplacian on this example's integer-valued input produces integer-valued output, so `f64` is correct here; the comment in the source notes that.
+
+## The composition
+
+```rust
+let laplacian = ManifoldWitness::extend(&manifold, |w| {
+    let i = w.cursor();
+    let data = w.data().as_slice();
+
+    if i >= N_VERTICES {
+        return zero;
+    }
+
+    let phi_i = data[i];
+    let phi_left = if i > 0 { data[i - 1] } else { phi_i };
+    let phi_right = if i + 1 < N_VERTICES { data[i + 1] } else { phi_i };
+
+    phi_left + phi_right - two * phi_i
+});
+```
+
+[`main.rs:50`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/mathematics_examples/composable_multi_math/tensor_x_topology_laplacian/main.rs#L50). The `extend` call walks every simplex of the manifold. At each cell, the closure receives a comonadic cursor `w`; `w.cursor()` is the simplex index, `w.data()` is the full tensor of values. The Laplacian stencil reads three values from the tensor, and returns one. The result is a new manifold of the same shape, whose vertex values are the Laplacian of the input.
+
+Two crates cooperate. `topology` supplies the simplicial complex, the boundary operator, and the per-vertex walk. `tensor` supplies the storage layout and the `as_slice` access used inside the closure. The walk and the storage are kept separate by design; the manifold's `extend` does not know what type the values are, and the tensor does not know that some indices are vertices and others are edges.
+
+## What `extend` adds over a plain loop
+
+A loop over vertex indices does the same numerical work. Three properties are lost.
+
+The first is the connection between geometry and data. The manifold's `extend` knows which simplices are vertices and which are edges; the loop has to be told. If the data layout changes, the loop has to be updated; `extend` does not.
+
+The second is composability with the monad. The next example, [effect_diffusion_on_manifold](/examples/diffusion-on-manifold/), stacks `extend` (spatial) and `bind` (temporal) on the same value. A plain loop is a leaf; `extend` is an HKT operation that composes with other HKT operations through the witness traits.
+
+The third is the precision invariance. The loop has to be written to whatever numeric type was chosen at the time. `extend` is parametric over the cell type. Changing `FloatType` from `f64` to `Float106` requires no change inside the closure.
+
+## What the output shows
+
+The vertex field is a triangular bump: `[0, 1, 2, 4, 2, 1, 0]`. The Laplacian is most negative at the peak (index 3, where the second difference is largest in magnitude) and small or zero on the flat tails. The boundary vertices use Neumann reflection, treating the value outside the boundary as equal to the boundary value itself.
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p mathematics_examples --example tensor_x_topology_laplacian_examples
+```
+
+The output prints the input field, the Laplacian at the vertex simplices, and zeros at the edge simplices (which the stencil deliberately skips).
+
+## Where this generalises
+
+Replace the 1D simplicial manifold with a 2D triangle mesh or a 3D tetrahedral mesh; the call site is the same `ManifoldWitness::extend`. Replace the three-point stencil with a finite-element shape function or a curl operator; only the closure body changes. Replace the scalar value type with a vector type from `multivector`; the tensor-of-multivectors composition shown in the [previous example](/examples/tensor-algebra-rotation/) stacks under the same `extend`. The composition is built on witness traits, not on hard-coded data layouts.

@@ -1,0 +1,86 @@
+---
+title: "Triple HKT composition: 3D stress analysis blueprint"
+domain: Mathematics
+summary: Tensor, multivector, and topology cooperate in one extend call. Six engineering steps per vertex of a tetrahedral mesh; each is a placeholder a real analyst swaps for the production model.
+order: 18
+category: mathematics
+crates:
+  - deep_causality_tensor
+  - deep_causality_multivector
+  - deep_causality_topology
+  - deep_causality_haft
+further:
+  - label: HKT and witness traits
+    href: /docs/concepts/hkt/
+  - label: Uniform math
+    href: /docs/concepts/uniform-math/
+  - label: Tensor x Topology Laplacian
+    href: /examples/tensor-topology-laplacian/
+---
+
+The example lives at [`triple_hkt_stress_field`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples/composable_multi_math/triple_hkt_stress_field). It is the first three-crate composition in the mathematics series. Tensor, multivector, and topology all show up inside one closure passed to one `ManifoldWitness::extend` call.
+
+The motivating problem is 3D linear-elastic stress analysis. The mesh is the minimum non-trivial 3D simplicial complex: two tetrahedra sharing a triangular face. Five vertices, nine edges, seven triangles, two tets. Per vertex, the pipeline computes strain, applies an isotropic Hooke constitutive law to get stress, derives a surface normal, contracts to a Cauchy traction, rotates into a material frame, and reports a von Mises scalar.
+
+## Precision as a parameter
+
+```rust
+pub type FloatType = f64;
+```
+
+[`main.rs:40`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/mathematics_examples/composable_multi_math/triple_hkt_stress_field/main.rs#L40). The same single alias controls every floating-point operation in the pipeline. Steel's Young's modulus, the Lame parameters, the strain components, the von Mises stress: all derived from `FloatType::from(...)` literals and operations. Stress magnitudes in this example span ten orders of magnitude (`1e9` Pa for steel modulus, `1e-3` for strain). Engineering accuracy lives at four to six digits, so `f64` is the right choice. The source comment notes when `Float106` would help: an ill-conditioned solve in the constitutive step.
+
+## The composition
+
+```rust
+let result = ManifoldWitness::extend(&manifold, |w| {
+    let i = w.cursor();
+    if i >= N_VERTICES { return 0.0; }
+
+    let strain = prescribed_strain(i);
+    let stress = hooke_isotropic(&strain, lambda, mu);
+    let normal = vertex_normal(i);
+    let traction = cauchy_traction(&stress, &normal);
+    let _traction_local = rotate_into_frame(&traction, &rotor, &rotor_rev);
+    von_mises(&stress)
+});
+```
+
+[`main.rs:124`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/mathematics_examples/composable_multi_math/triple_hkt_stress_field/main.rs#L124). One `extend` call. Six function calls inside the closure. Three crates cross the call boundary.
+
+`topology` supplies the manifold and the per-vertex walk; the cursor `w` knows which simplex it is at, and `extend` visits every one of them.
+
+`tensor` runs the constitutive law (`hooke_isotropic` is six lines of arithmetic, but the underlying contraction in `cauchy_traction` is an explicit `EinSumOp::contraction` over the rank-2 stress and the rank-1 normal).
+
+`multivector` builds the material-frame rotor in `Cl(3,0)` and applies it via the sandwich product in `rotate_into_frame`.
+
+The closure body looks like ordinary procedural code. The composition lives in the type signatures of the helpers and the `extend` call site that orchestrates them.
+
+## Placeholders that mark the engineering decisions
+
+The closure is split into six numbered steps. Each step has a corresponding helper function with a `REPLACE WITH:` comment naming the production-grade alternative.
+
+- **STEP 1 strain**: replace the analytical strain with a discrete gradient `epsilon = (grad u + grad u^T) / 2` driven by vertex displacements.
+- **STEP 2 constitutive law**: swap isotropic Hooke for whatever the material requires. J2 plasticity for metals past yield, Mooney-Rivlin for rubber, Drucker-Prager for soils, anisotropic `C_ijkl` for composites.
+- **STEP 3 surface normal**: replace the radial-from-centroid stand-in with a real boundary-normal calculation weighted by incident face areas.
+- **STEP 4 Cauchy traction**: this step is real, not a placeholder. The tensor contraction `t = sigma . n` is implemented as an `EinSumOp` so the kernel is the same whether `sigma` is a 3x3 isotropic stress or a 6x6x6x6 anisotropic stiffness response.
+- **STEP 5 material-frame rotor**: replace the fixed 10-degree rotor with one built from the local material orientation field. Grain-direction Euler angles for metals, fiber tangent for composites, the rotation from polar decomposition `F = R U` for finite-strain plasticity.
+- **STEP 6 von Mises**: swap the failure criterion as needed. Tresca, Mohr-Coulomb, max principal stress, Tsai-Hill, Hill48.
+
+The composition does not change when any of these placeholders are swapped. Only the closure body grows new lines; the `extend` call and the manifold construction stay the same.
+
+## Why the composition is the value
+
+The arithmetic in this example is undergraduate continuum mechanics. The interesting part is that the same `extend` call handles the per-vertex walk regardless of how many crates participate inside the closure. The [Laplacian example](/examples/tensor-topology-laplacian/) used two crates inside `extend`. This one uses three. The next one ([diffusion on manifold](/examples/diffusion-on-manifold/)) stacks a fourth abstraction on top: the causal monad, which sequences spatial steps in time and shorts on numerical instability.
+
+The shape stays uniform. A team writing a real stress solver swaps the placeholder bodies, keeps the call site, and inherits the precision-as-parameter property for free.
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p mathematics_examples --example triple_hkt_stress_field_examples
+```
+
+The output prints the per-vertex von Mises stress for the five-vertex mesh, with a header summarising the material parameters and the Lame coefficients derived from them.

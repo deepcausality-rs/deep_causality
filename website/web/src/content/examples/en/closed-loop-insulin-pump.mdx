@@ -4,7 +4,6 @@ domain: Medicine
 summary: A type-1 patient's glucose climbs across three meals. The monitor fires a corrective bolus whenever the post-tick reading crosses 180 mg/dL. Open loop crosses the ketoacidosis threshold; closed loop stays bounded.
 order: 14
 category: medicine
-source: examples/causal_intervention_examples/corrective_glucose_pump/main.rs
 crates:
   - deep_causality_core
 further:
@@ -16,7 +15,7 @@ further:
     href: /docs/concepts/csm/
 ---
 
-The example lives at [`examples/causal_intervention_examples/corrective_glucose_pump/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_intervention_examples/corrective_glucose_pump). It demonstrates the corrective sense of `intervene`: a closed-loop control action that runs tick by tick, monitors the value channel after each step, and substitutes a corrected value when the carried state drifts outside the safe envelope.
+The example lives at [`corrective_glucose_pump`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_intervention_examples/corrective_glucose_pump). It demonstrates the corrective sense of `intervene`: a closed-loop control action that runs tick by tick, monitors the value channel after each step, and substitutes a corrected value when the carried state drifts outside the safe envelope.
 
 This is a different operational pattern from the [counterfactual examples](/examples/cate-treatment-effect/). Counterfactuals run once, retrospectively, on a static history. Corrective interventions run continuously, prospectively, with each tick deciding whether the next one needs correction. The same `Intervenable::intervene` method serves both; the difference is the loop structure around it.
 

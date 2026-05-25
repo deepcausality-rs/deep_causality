@@ -4,7 +4,6 @@ domain: Medicine
 summary: Each candidate resection is one intervention on the same Kuramoto chain. The connectome value is swapped for a copy with one region disconnected; same dynamics evaluate the result.
 order: 13
 category: medicine
-source: examples/causal_intervention_examples/counterfactual_resection_intervention/main.rs
 crates:
   - deep_causality_core
 further:
@@ -16,7 +15,7 @@ further:
     href: /examples/biomedical-tumor-treatment/
 ---
 
-The example lives at [`examples/causal_intervention_examples/counterfactual_resection_intervention/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_intervention_examples/counterfactual_resection_intervention). It applies counterfactual intervention to a clinical question: in a patient with refractory focal epilepsy, which candidate region, if surgically removed, would suppress the seizure dynamics most effectively?
+The example lives at [`counterfactual_resection_intervention`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_intervention_examples/counterfactual_resection_intervention). It applies counterfactual intervention to a clinical question: in a patient with refractory focal epilepsy, which candidate region, if surgically removed, would suppress the seizure dynamics most effectively?
 
 The answer is computed by simulating Kuramoto-style synchronization on the patient's connectome. The factual run uses the intact connectome and shows synchronization climbing above the seizure threshold. Each candidate resection is one `.intervene(connectome_resected_at_R)` call on the same chain. The simulation then evaluates post-resection synchronization. The candidate with the largest drop is the model's recommendation.
 

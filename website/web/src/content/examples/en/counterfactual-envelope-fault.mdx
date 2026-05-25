@@ -4,7 +4,6 @@ domain: Aerospace
 summary: Mid-chain intervention on a stateful PropagatingProcess. Same aircraft, same configuration, a stall-region airspeed injected between sensor fusion and the envelope graph.
 order: 12
 category: aerospace
-source: examples/causal_intervention_examples/counterfactual_envelope_fault/main.rs
 crates:
   - deep_causality_core
 further:
@@ -16,7 +15,7 @@ further:
     href: /examples/aerospace-flight-envelope/
 ---
 
-The example lives at [`examples/causal_intervention_examples/counterfactual_envelope_fault/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_intervention_examples/counterfactual_envelope_fault). It is the aerospace companion to the [Pearl ladder example](/examples/pearl-counterfactual/), with one difference: the chain is a stateful `PropagatingProcess` rather than a stateless `PropagatingEffect`. The state carries the aircraft's running flight state; the context carries the immutable `AircraftConfig`. The intervention swaps only the value.
+The example lives at [`counterfactual_envelope_fault`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_intervention_examples/counterfactual_envelope_fault). It is the aerospace companion to the [Pearl ladder example](/examples/pearl-counterfactual/), with one difference: the chain is a stateful `PropagatingProcess` rather than a stateless `PropagatingEffect`. The state carries the aircraft's running flight state; the context carries the immutable `AircraftConfig`. The intervention swaps only the value.
 
 That distinction is what makes the example operationally interesting. An operator running a what-if analysis on a real flight does not want the intervention to retroactively alter the aircraft's history or its configuration. They want to ask: given the aircraft I have, and the sensor history I have, what would the envelope graph have concluded if the airspeed reading at step *k* had been in the stall region?
 

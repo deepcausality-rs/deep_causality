@@ -4,7 +4,6 @@ domain: Async / Tokio
 summary: An event handler runs a causal model on a Tokio task while the main loop stays free.
 order: 1
 category: foundations
-source: examples/tokio_example/src/main.rs
 crates:
   - deep_causality
 further:
@@ -16,7 +15,7 @@ further:
     href: /docs/concepts/context/
 ---
 
-The full crate lives at [`examples/tokio_example/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/tokio_example). The whole thing is four files plus a `Cargo.toml`; the `main` function is twelve lines on purpose. The point is to show how DeepCausality's synchronous inference plugs into an asynchronous runtime without ceremony.
+The full crate lives at [`tokio_example`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/tokio_example). The whole thing is four files plus a `Cargo.toml`; the `main` function is twelve lines on purpose. The point is to show how DeepCausality's synchronous inference plugs into an asynchronous runtime without ceremony.
 
 ## File map
 

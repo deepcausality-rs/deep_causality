@@ -4,7 +4,6 @@ domain: Foundations
 summary: Enterprise primary/standby switch pair. Primary fails mid-run; monitor detects zero delivery and reroutes via .intervene(STANDBY_SWITCH). One tick of loss instead of unbounded.
 order: 15
 category: foundations
-source: examples/causal_intervention_examples/corrective_network_failover/main.rs
 crates:
   - deep_causality_core
 further:
@@ -16,7 +15,7 @@ further:
     href: /examples/closed-loop-insulin-pump/
 ---
 
-The example lives at [`examples/causal_intervention_examples/corrective_network_failover/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_intervention_examples/corrective_network_failover). The scenario is the standard enterprise networking pattern: a primary switch carries production traffic, a standby switch sits idle ready to take over, and a monitor decides when the takeover should happen. Without a monitor, the failure is permanent. With a monitor that calls `.intervene(STANDBY_SWITCH)` on detection, the takeover happens within one tick.
+The example lives at [`corrective_network_failover`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_intervention_examples/corrective_network_failover). The scenario is the standard enterprise networking pattern: a primary switch carries production traffic, a standby switch sits idle ready to take over, and a monitor decides when the takeover should happen. Without a monitor, the failure is permanent. With a monitor that calls `.intervene(STANDBY_SWITCH)` on detection, the takeover happens within one tick.
 
 This is the foundational example for corrective interventions on infrastructure state. The shape generalizes to any active/passive pair where the value channel of the chain names which member is currently in service.
 

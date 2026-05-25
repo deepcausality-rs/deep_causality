@@ -38,9 +38,7 @@ const examples = defineCollection({
     crates: z.array(z.string()).default([]),
     order: z.number().default(0),
     /** Top-level grouping used by the Examples dropdown and the per-category pages. */
-    category: z.enum(['foundations', 'aerospace', 'physics', 'medicine']),
-    /** Repo-relative path to the canonical source file this example points at. */
-    source: z.string().optional(),
+    category: z.enum(['foundations', 'aerospace', 'physics', 'medicine', 'mathematics']),
     further: z
       .array(z.object({ label: z.string(), href: z.string() }))
       .default([]),

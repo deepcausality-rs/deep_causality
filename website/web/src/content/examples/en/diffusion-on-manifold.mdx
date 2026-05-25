@@ -1,0 +1,100 @@
+---
+title: "Diffusion on a manifold: comonad x monad"
+domain: Mathematics
+summary: Discrete heat equation on a 1D manifold. Spatial Laplacian via extend (comonad), time stepping via bind (monad). Two abstractions on the same value at different layers.
+order: 19
+category: mathematics
+crates:
+  - deep_causality_topology
+  - deep_causality_tensor
+  - deep_causality_core
+  - deep_causality_haft
+further:
+  - label: Causal Monad
+    href: /docs/concepts/causal-monad/
+  - label: HKT and witness traits
+    href: /docs/concepts/hkt/
+  - label: Triple HKT stress field
+    href: /examples/triple-hkt-stress-field/
+---
+
+The example lives at [`effect_diffusion_on_manifold`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples/composable_multi_math/effect_diffusion_on_manifold). It is the first example in the mathematics series that adds the causal monad to the HKT composition. Two abstractions act on the same value at different layers: the spatial Laplacian comes from a comonadic `extend`, the temporal step comes from a monadic `bind`, and the manifold itself is the value flowing through the chain.
+
+The model is the explicit Euler step of the heat equation: `phi_{t+1} = phi_t + alpha * Delta phi_t`. The spatial Laplacian uses the same three-point stencil as the [tensor x topology example](/examples/tensor-topology-laplacian/). The temporal step is one `bind` on the propagating-effect chain. The chain runs `N_STEPS` times and shorts on the first sign of numerical instability.
+
+## Precision as a parameter
+
+```rust
+pub type FloatType = f64;
+```
+
+[`main.rs:31`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/mathematics_examples/composable_multi_math/effect_diffusion_on_manifold/main.rs#L31). The same alias pattern. The diffusivity `alpha = 0.25`, the initial bump value `8.0`, and the stability tolerance are all `FloatType::from(...)`. The source comment notes that `f64` is sufficient here because `alpha = 0.25` and integer initial data produce exactly representable binary fractions at every step. Swap the alias to `Float106` if you push the scheme near its CFL boundary over many steps; the rest of the code does not change.
+
+## The composition
+
+```rust
+let mut process: Process<SimplicialManifold<f64, FloatType>> =
+    ProcessWitness::pure(manifold);
+
+for step in 1..=N_STEPS {
+    process = ProcessWitness::bind(process, diffuse_one_step);
+    if process.error.is_some() {
+        break;
+    }
+    // Peek at the current value without consuming the chain.
+}
+```
+
+[`main.rs:50`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/mathematics_examples/composable_multi_math/effect_diffusion_on_manifold/main.rs#L50). The chain starts with `pure(manifold)`, which lifts the initial manifold into the monad. Every iteration calls `bind(diffuse_one_step)`. The closure inside `diffuse_one_step` is where the spatial walk happens:
+
+```rust
+let updated = ManifoldWitness::extend(&m, |w| {
+    let i = w.cursor();
+    let data = w.data().as_slice();
+    if i >= N_VERTICES { return zero; }
+    let phi_i = data[i];
+    let phi_l = if i > 0 { data[i - 1] } else { phi_i };
+    let phi_r = if i + 1 < N_VERTICES { data[i + 1] } else { phi_i };
+    let laplacian = phi_l + phi_r - two * phi_i;
+    phi_i + a * laplacian
+});
+```
+
+[`main.rs:115`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/mathematics_examples/composable_multi_math/effect_diffusion_on_manifold/main.rs#L115). One `extend` call per time step. The closure computes `phi + alpha * Delta phi` at every vertex. The result is a new manifold whose vertex values are the explicit-Euler update.
+
+## Short-circuit on instability
+
+```rust
+let any_nan = updated.data().as_slice().iter().any(|v| !v.is_finite());
+if any_nan {
+    return fail("non-finite value detected in diffusion step");
+}
+```
+
+[`main.rs:132`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/mathematics_examples/composable_multi_math/effect_diffusion_on_manifold/main.rs#L132). After the spatial update, the step checks for non-finite values. If anything went non-finite (CFL violation, numerical blowup), the step returns `fail(...)`, which sets the chain's error channel. The next `bind` is a no-op once the error is set; the loop breaks on the next iteration. The chain ends carrying both the last good value and the error that stopped it.
+
+A naive loop has to add this check by hand at every iteration. The monad does it once, structurally, as part of the carrier.
+
+## Two abstractions on the same value
+
+The interesting move is that `extend` and `bind` are not nested data structures, they are two HKT operations acting on the same `SimplicialManifold`. The spatial operation walks vertices; the temporal operation walks time steps. The manifold flows through both layers without copying or wrapping; the witness traits make the operations composable.
+
+This is the property the [uniform math](/docs/concepts/uniform-math/) concept page argues for at a higher level. The diffusion example is the smallest case where the argument has teeth: a real PDE step, a real chain, a real failure mode handled by the carrier rather than by branching code.
+
+## Mass conservation as the sanity check
+
+The Neumann reflection at the boundaries makes the chain mass-conserving in the closed-form limit. The example prints the total sum of vertex values at the end of the run. The initial bump has mass 8.0 (one vertex at value 8.0, all others at 0). The final sum should still be 8.0 to within `FloatType` precision. The example confirms this for the six-step run; it would fail loudly if the boundary condition was implemented wrong or if the precision swap introduced rounding above the tolerance.
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p mathematics_examples --example effect_diffusion_on_manifold_examples
+```
+
+The output prints the vertex field at every time step, then the final total mass and the closing summary that names which abstraction did what.
+
+## Where the composition heads next
+
+The capstone example, [spinor transport on a Minkowski path](/examples/capstone-spinor-minkowski/), keeps the same `extend + bind` pattern and adds a third HKT layer: a multivector value that the chain transports through the geometry. Same call shape, four crates, demonstrably tighter precision when the alias is swapped to `Float106`.

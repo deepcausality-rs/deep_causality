@@ -4,7 +4,6 @@ domain: Sensor monitoring
 summary: Smoke, fire, and explosion sensors each get a Causaloid and an Action. The CSM routes per-tick readings and fires the matching alert when a predicate holds.
 order: 3
 category: foundations
-source: examples/csm_examples/csm_basic/main.rs
 crates:
   - deep_causality
 further:
@@ -16,7 +15,7 @@ further:
     href: /docs/concepts/context/
 ---
 
-The full crate lives at [`examples/csm_examples/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/csm_examples). The basic example covered on this page is one of three siblings:
+The full crate lives at [`csm_examples`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/csm_examples). The basic example covered on this page is one of three siblings:
 
 - `csm_basic`: a stateless CSM with three sensors. Covered below.
 - `csm_context`: a contextual CSM that shares mutable data across the causal graph via `Arc<RwLock<BaseContext>>`.
