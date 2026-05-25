@@ -54,10 +54,10 @@ Spec corrections applied before implementation: (a) Galilean-invariance scenario
 
 ## 6. Turbulence quantity kernels
 
-- [ ] 6.1 Implement `turbulent_kinetic_energy_kernel`, `dissipation_rate_kernel`, `kolmogorov_length_kernel`, `kolmogorov_time_kernel`, `kolmogorov_velocity_kernel`, `taylor_microscale_kernel`, `integral_length_scale_kernel`, `reynolds_stress_kernel`, `eddy_viscosity_boussinesq_kernel` in `kernels/fluids/turbulence.rs`.
-- [ ] 6.2 Tests: Kolmogorov-scale algebraic identities `η · u_η / ν = 1` and `η / (u_η τ_η) = 1`; B5 Taylor-microscale identity `λ² ε = 15 ν k`; dissipation rate ≥ 0; precision-backend sweep.
-- [ ] 6.3 Causal wrappers + tests.
-- [ ] 6.4 Uncomment + re-export. Build/clippy/tests clean.
+- [x] 6.1 Implemented 9 turbulence kernels in `kernels/fluids/turbulence.rs`: `turbulent_kinetic_energy_kernel`, `dissipation_rate_kernel`, `kolmogorov_length_kernel`, `kolmogorov_time_kernel`, `kolmogorov_velocity_kernel`, `taylor_microscale_kernel`, `integral_length_scale_kernel`, `reynolds_stress_kernel`, `eddy_viscosity_boussinesq_kernel`. Length / Speed return types where physically meaningful (Kolmogorov length/velocity, Taylor microscale, integral length scale); `Viscosity` for eddy viscosity; `CauchyStress` for Reynolds stress. Boussinesq closure uses the standard least-squares contraction `ν_t = −(R^dev : S) / (2 · S : S)`.
+- [x] 6.2 Added 23 turbulence_tests covering: TKE known value + non-negativity; dissipation rate known value, vanishing for rigid-body rotation, non-negativity; Kolmogorov identities `η · u_η / ν == 1` and `η / (u_η · τ_η) == 1`; Taylor microscale identity `λ² · ε == 15 · ν · k` (Block B5); integral length-scale known value; Reynolds-stress trace equals `2k`; Boussinesq eddy viscosity on a canonical simple-shear setup recovers a prescribed `ν_t = 0.05`; error paths for every kernel (zero ε, negative k, zero ν, zero strain, negative-ν_t result); f32 precision sweep on Kolmogorov and Taylor identities.
+- [x] 6.3 Added 9 causal wrappers + 11 wrapper smoke tests (including error paths for `kolmogorov_length` and `eddy_viscosity_boussinesq`).
+- [x] 6.4 Uncommented `pub use turbulence::*` in `kernels/fluids/mod.rs`. `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo test` (1248 tests pass, +36 since Group 5), `cargo fmt --check` all clean. No `#[allow]` suppressions added. `needless_range_loop` in the dissipation and eddy-viscosity tensor contractions fixed at root cause (unrolled the 3×3 sum-of-squares; replaced index loops with zipped row iterators).
 
 ## 7. Coherent-structure detector kernels
 

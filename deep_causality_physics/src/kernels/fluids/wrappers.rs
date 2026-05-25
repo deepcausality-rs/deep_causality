@@ -3,7 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::kernels::fluids::{constitutive, dimensionless, governing, kinematics, mechanics};
+use crate::kernels::fluids::{
+    constitutive, dimensionless, governing, kinematics, mechanics, turbulence,
+};
 use crate::{
     AccelerationVector, CauchyStress, Density, KinematicViscosity, Length, Pressure,
     RotationRateTensor, Speed, StrainRateTensor, Velocity3, VelocityGradient, Viscosity,
@@ -563,6 +565,120 @@ where
         length,
         thermal_conductivity,
     ) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+// =============================================================================
+// Turbulence wrappers
+// =============================================================================
+
+/// Causal wrapper for [`turbulence::turbulent_kinetic_energy_kernel`].
+pub fn turbulent_kinetic_energy<R>(u_prime: &Velocity3<R>) -> PropagatingEffect<R>
+where
+    R: RealField + FromPrimitive + Debug + Default + 'static,
+{
+    match turbulence::turbulent_kinetic_energy_kernel(u_prime) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`turbulence::dissipation_rate_kernel`].
+pub fn dissipation_rate<R>(
+    nu: &KinematicViscosity<R>,
+    grad_u_prime: &VelocityGradient<R>,
+) -> PropagatingEffect<R>
+where
+    R: RealField + FromPrimitive + Debug + Default + 'static,
+{
+    match turbulence::dissipation_rate_kernel(nu, grad_u_prime) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`turbulence::kolmogorov_length_kernel`].
+pub fn kolmogorov_length<R>(nu: &KinematicViscosity<R>, epsilon: R) -> PropagatingEffect<Length<R>>
+where
+    R: RealField + FromPrimitive + Debug + 'static,
+{
+    match turbulence::kolmogorov_length_kernel(nu, epsilon) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`turbulence::kolmogorov_time_kernel`].
+pub fn kolmogorov_time<R>(nu: &KinematicViscosity<R>, epsilon: R) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match turbulence::kolmogorov_time_kernel(nu, epsilon) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`turbulence::kolmogorov_velocity_kernel`].
+pub fn kolmogorov_velocity<R>(nu: &KinematicViscosity<R>, epsilon: R) -> PropagatingEffect<Speed<R>>
+where
+    R: RealField + FromPrimitive + Debug + 'static,
+{
+    match turbulence::kolmogorov_velocity_kernel(nu, epsilon) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`turbulence::taylor_microscale_kernel`].
+pub fn taylor_microscale<R>(
+    k_energy: R,
+    epsilon: R,
+    nu: &KinematicViscosity<R>,
+) -> PropagatingEffect<Length<R>>
+where
+    R: RealField + FromPrimitive + Debug + 'static,
+{
+    match turbulence::taylor_microscale_kernel(k_energy, epsilon, nu) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`turbulence::integral_length_scale_kernel`].
+pub fn integral_length_scale<R>(k_energy: R, epsilon: R) -> PropagatingEffect<Length<R>>
+where
+    R: RealField + FromPrimitive + Debug + 'static,
+{
+    match turbulence::integral_length_scale_kernel(k_energy, epsilon) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`turbulence::reynolds_stress_kernel`].
+pub fn reynolds_stress<R>(
+    u_prime_outer_u_prime: &StrainRateTensor<R>,
+) -> PropagatingEffect<CauchyStress<R>>
+where
+    R: RealField + Debug + 'static,
+{
+    PropagatingEffect::pure(turbulence::reynolds_stress_kernel(u_prime_outer_u_prime))
+}
+
+/// Causal wrapper for [`turbulence::eddy_viscosity_boussinesq_kernel`].
+pub fn eddy_viscosity_boussinesq<R>(
+    reynolds_stress: &CauchyStress<R>,
+    strain_rate_mean: &StrainRateTensor<R>,
+    k_energy: R,
+) -> PropagatingEffect<Viscosity<R>>
+where
+    R: RealField + FromPrimitive + Debug + 'static,
+{
+    match turbulence::eddy_viscosity_boussinesq_kernel(reynolds_stress, strain_rate_mean, k_energy)
+    {
         Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }

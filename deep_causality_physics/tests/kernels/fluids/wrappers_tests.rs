@@ -6,13 +6,15 @@
 use deep_causality_physics::{
     CauchyStress, Density, KinematicViscosity, Length, Pressure, Speed, StrainRateTensor,
     Velocity3, VelocityGradient, Viscosity, VorticityVector, bernoulli_pressure, bond_number,
-    capillary_number, continuity_rhs, convective_acceleration, eckert_number, enstrophy_density,
-    froude_number, grashof_number, helicity_density, hydrostatic_pressure, kinetic_energy_density,
-    knudsen_number, lewis_number, mach_number, newtonian_viscous_stress,
-    newtonian_viscous_stress_with_bulk, nusselt_number, particle_stokes_number, peclet_number,
-    power_law_apparent_viscosity, prandtl_number, pressure_gradient_force, pressure_work,
-    rayleigh_number, reynolds_number, richardson_number, rotation_rate_tensor,
-    scalar_advection_diffusion, schmidt_number, strain_rate_tensor, strouhal_number,
+    capillary_number, continuity_rhs, convective_acceleration, dissipation_rate, eckert_number,
+    eddy_viscosity_boussinesq, enstrophy_density, froude_number, grashof_number, helicity_density,
+    hydrostatic_pressure, integral_length_scale, kinetic_energy_density, knudsen_number,
+    kolmogorov_length, kolmogorov_time, kolmogorov_velocity, lewis_number, mach_number,
+    newtonian_viscous_stress, newtonian_viscous_stress_with_bulk, nusselt_number,
+    particle_stokes_number, peclet_number, power_law_apparent_viscosity, prandtl_number,
+    pressure_gradient_force, pressure_work, rayleigh_number, reynolds_number, reynolds_stress,
+    richardson_number, rotation_rate_tensor, scalar_advection_diffusion, schmidt_number,
+    strain_rate_tensor, strouhal_number, taylor_microscale, turbulent_kinetic_energy,
     velocity_gradient_invariants, viscous_diffusion, viscous_dissipation_rate,
     vorticity_from_gradient, vorticity_transport, weber_number,
 };
@@ -392,4 +394,95 @@ fn test_bond_number_wrapper() {
 fn test_nusselt_number_wrapper() {
     let l = Length::<f64>::new(0.1).unwrap();
     assert!(nusselt_number(100.0_f64, &l, 0.5).is_ok());
+}
+
+// =============================================================================
+// Turbulence wrapper tests
+// =============================================================================
+
+#[test]
+fn test_turbulent_kinetic_energy_wrapper() {
+    let u = Velocity3::<f64>::new([3.0, 4.0, 0.0]).unwrap();
+    let effect = turbulent_kinetic_energy(&u);
+    assert!(effect.is_ok());
+    assert!((effect.value().clone().into_value().unwrap() - 12.5).abs() < 1e-12);
+}
+
+#[test]
+fn test_dissipation_rate_wrapper() {
+    let nu = KinematicViscosity::<f64>::new(0.5).unwrap();
+    let g =
+        VelocityGradient::<f64>::new([[1.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
+    assert!(dissipation_rate(&nu, &g).is_ok());
+}
+
+#[test]
+fn test_kolmogorov_length_wrapper() {
+    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
+    assert!(kolmogorov_length(&nu, 1.0e-3_f64).is_ok());
+}
+
+#[test]
+fn test_kolmogorov_length_wrapper_error_path() {
+    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
+    assert!(!kolmogorov_length(&nu, 0.0_f64).is_ok());
+}
+
+#[test]
+fn test_kolmogorov_time_wrapper() {
+    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
+    assert!(kolmogorov_time(&nu, 1.0e-3_f64).is_ok());
+}
+
+#[test]
+fn test_kolmogorov_velocity_wrapper() {
+    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
+    assert!(kolmogorov_velocity(&nu, 1.0e-3_f64).is_ok());
+}
+
+#[test]
+fn test_taylor_microscale_wrapper() {
+    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
+    assert!(taylor_microscale(2.0_f64, 1.0e-2, &nu).is_ok());
+}
+
+#[test]
+fn test_integral_length_scale_wrapper() {
+    assert!(integral_length_scale(4.0_f64, 8.0).is_ok());
+}
+
+#[test]
+fn test_reynolds_stress_wrapper() {
+    let r_in = StrainRateTensor::<f64>::new([[1.0, 0.5, 0.2], [0.5, 2.0, -0.1], [0.2, -0.1, 0.8]])
+        .unwrap();
+    assert!(reynolds_stress(&r_in).is_ok());
+}
+
+#[test]
+fn test_eddy_viscosity_boussinesq_wrapper_success() {
+    let gamma = 2.0_f64;
+    let k = 1.0_f64;
+    let nu_t_target = 0.05;
+    let r_xy = -(2.0 * nu_t_target) * (0.5 * gamma);
+    let r = CauchyStress::<f64>::new([
+        [(2.0 / 3.0) * k, r_xy, 0.0],
+        [r_xy, (2.0 / 3.0) * k, 0.0],
+        [0.0, 0.0, (2.0 / 3.0) * k],
+    ])
+    .unwrap();
+    let s = StrainRateTensor::<f64>::new([
+        [0.0, 0.5 * gamma, 0.0],
+        [0.5 * gamma, 0.0, 0.0],
+        [0.0, 0.0, 0.0],
+    ])
+    .unwrap();
+    let effect = eddy_viscosity_boussinesq(&r, &s, k);
+    assert!(effect.is_ok());
+}
+
+#[test]
+fn test_eddy_viscosity_boussinesq_wrapper_error_path() {
+    let r = CauchyStress::<f64>::default();
+    let s = StrainRateTensor::<f64>::default();
+    assert!(!eddy_viscosity_boussinesq(&r, &s, 0.5).is_ok());
 }

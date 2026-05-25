@@ -29,4 +29,4 @@ pub use dimensionless::*;
 pub use governing::*;
 // pub use ideal_flow::*;
 pub use kinematics::*;
-// pub use turbulence::*;
+pub use turbulence::*;
