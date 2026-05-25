@@ -1,0 +1,72 @@
+---
+title: "Virtual resection for epilepsy surgery planning"
+domain: Medicine
+summary: Each candidate resection is one intervention on the same Kuramoto chain. The connectome value is swapped for a copy with one region disconnected; same dynamics evaluate the result.
+order: 13
+category: medicine
+source: examples/causal_intervention_examples/counterfactual_resection_intervention/main.rs
+crates:
+  - deep_causality_core
+further:
+  - label: Effect Propagation Process
+    href: /docs/concepts/effect-propagation-process/
+  - label: Causal Monad
+    href: /docs/concepts/causal-monad/
+  - label: Tumor treatment example
+    href: /examples/biomedical-tumor-treatment/
+---
+
+The example lives at [`examples/causal_intervention_examples/counterfactual_resection_intervention/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_intervention_examples/counterfactual_resection_intervention). It applies counterfactual intervention to a clinical question: in a patient with refractory focal epilepsy, which candidate region, if surgically removed, would suppress the seizure dynamics most effectively?
+
+The answer is computed by simulating Kuramoto-style synchronization on the patient's connectome. The factual run uses the intact connectome and shows synchronization climbing above the seizure threshold. Each candidate resection is one `.intervene(connectome_resected_at_R)` call on the same chain. The simulation then evaluates post-resection synchronization. The candidate with the largest drop is the model's recommendation.
+
+## The factual and counterfactual chains
+
+```rust
+fn run_factual(connectome: Connectome) -> PropagatingEffect<SeizureResult> {
+    build_chain(connectome).bind(simulate_seizure)
+}
+
+fn run_counterfactual(
+    factual: Connectome,
+    resected: Connectome,
+) -> PropagatingEffect<SeizureResult> {
+    build_chain(factual)
+        .intervene(resected)
+        .bind(simulate_seizure)
+}
+```
+
+[`main.rs:54`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_intervention_examples/counterfactual_resection_intervention/main.rs#L54). Two functions, identical except that the counterfactual replaces the connectome value with a modified copy before the seizure simulation runs. The intervention site is between `build_chain` (which lifts the connectome into the monad and threads it through any preprocessing) and `simulate_seizure` (the Kuramoto-style dynamics evaluator). The dynamics themselves are unchanged across candidates; only the network they run on differs.
+
+## Why this matters clinically
+
+A surgical-planning workflow does not need just a final synchronization number. It needs the audit trail that records which region was virtually resected and what the model predicted for that resection. The `EffectLog` provides this automatically. Every `.intervene` call appends a `!!Intervention!!` entry naming the substitution. When the screening loop runs through all candidate regions, the resulting log carries one entry per candidate, with the connectome modification and the resulting `SeizureResult` linked at the chain level.
+
+A re-run loop that does the same numerical work loses this link. Each candidate would run its own chain from scratch; the connection between "which region" and "which outcome" lives only in the calling code that orchestrates the runs. If the model is later audited, that orchestration has to be reconstructed. The monad preserves the link by design.
+
+## Patient-specific dynamics are held constant
+
+The intervention modifies the connectome value the chain carries. It does not modify the patient's intrinsic oscillator frequencies, initial phases, or coupling strength. Those live in the data-generating process the chain implements; they are the same across the factual run and every counterfactual candidate. The screening compares resections, not patient models.
+
+This is what makes the comparison interpretable. If two candidates produce different post-resection synchronization, the difference is attributable to the connectome modification and only the connectome modification, because the rest of the simulation is held constant by the chain's structure.
+
+## The hub-node finding
+
+The example builds a hub-and-spoke connectome by hand and screens every region as a resection candidate. The hub region, when removed, produces the largest synchronization drop. The spoke regions individually produce smaller drops. This is the expected result for a hub-and-spoke topology; it is also a useful sanity check that the screening picks out the structurally important node rather than averaging away the difference.
+
+Real connectomes are noisier and more interesting. The same screening loop applies to a connectome estimated from a patient's diffusion MRI scan; the only change is the data the loop iterates over.
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p causal_intervention_examples --example counterfactual_resection_intervention
+```
+
+The output prints the factual run first, then the per-candidate screening with synchronization scores, then the audit trail showing the connectome substitution for each candidate.
+
+## Where this generalizes
+
+The shape, `build_chain(factual).intervene(modified).bind(dynamics)`, is reusable across any problem where the dynamics are well-understood but the structural input is what the analyst is choosing. Tumor resection planning, control-system tuning where the actuator topology is the design variable, ecological intervention modeling where species removal is the question. The connectome here is a stand-in for any structured input the dynamics consume.

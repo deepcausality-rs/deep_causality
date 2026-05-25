@@ -1,0 +1,71 @@
+---
+title: "Conditional Average Treatment Effect as do(T=1) − do(T=0)"
+domain: Counterfactuals
+summary: The textbook definition of CATE written as one chain run twice. Same model, two interventions, the difference is the causal estimand.
+order: 11
+category: foundations
+source: examples/causal_intervention_examples/counterfactual_treatment_effect/main.rs
+crates:
+  - deep_causality_core
+further:
+  - label: Effect Propagation Process
+    href: /docs/concepts/effect-propagation-process/
+  - label: Causal Monad
+    href: /docs/concepts/causal-monad/
+  - label: Pearl's Ladder of Causation
+    href: /examples/pearl-counterfactual/
+---
+
+The example lives at [`examples/causal_intervention_examples/counterfactual_treatment_effect/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_intervention_examples/counterfactual_treatment_effect). The crate it sits in contains nine intervention examples; this one is the simplest, and it earns its place by being the literal definition of the Conditional Average Treatment Effect expressed as DeepCausality code.
+
+## The estimand
+
+For a subgroup `S`, the CATE is:
+
+```
+CATE(S) = E[ Y(do(T=1)) − Y(do(T=0)) | X ∈ S ]
+```
+
+Two potential outcomes per patient, one under each value of the treatment indicator, taken from the same data-generating process. The difference between them is the patient's individual treatment effect. Average over the subgroup, and you get the conditional average. That is the whole formula.
+
+Most code that estimates CATE buries it under propensity scoring, two-model architectures, or doubly-robust estimators. Those exist to handle observational data where the treatment is not randomly assigned. The example here strips all of that away. It runs a single causal chain twice, once with `intervene(1.0)` and once with `intervene(0.0)`, and reads the difference.
+
+## The chain run twice
+
+```rust
+let cohort = synthetic_cohort();
+let (all, over_65, under_65) = evaluate_and_print_cohort(&cohort);
+print_cate_summary(&all, &over_65, &under_65);
+```
+
+[`main.rs:43`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_intervention_examples/counterfactual_treatment_effect/main.rs#L43). The synthetic cohort holds patients with age, baseline blood pressure, and a covariate set. Inside `evaluate_and_print_cohort`, the same `PropagatingEffect` chain runs for every patient under both interventions. The age strata over and under 65 are computed once at the end from the per-patient deltas.
+
+The pattern matters because there is no second model. The intervention on `T=1` and the intervention on `T=0` go through identical bind steps. Any difference in the outcome can only be attributed to the value that was intervened, because everything else in the chain is held constant by construction. The factual data-generating process and the counterfactual one are the same function; the inputs differ by exactly one value.
+
+## What intervene adds over bind
+
+You could write two `bind` chains, one for each arm. Two things go wrong with that.
+
+The first is bookkeeping. Two chains means two implementations; a future change to the mechanism has to be applied to both, and a divergence is a silent bug. The `.intervene` call collapses this to one definition that runs twice.
+
+The second is the audit trail. Every `intervene` call appends an entry to the chain's `EffectLog`: which value was replaced, with what, at which step. The example's `print_audit_trail(&cohort[0])` call walks the log for the first patient and prints both worlds, with the intervention sites visible. A regulator reviewing the analysis can see the substitution that produced each counterfactual outcome.
+
+## Heterogeneity emerges from the same chain
+
+The synthetic cohort is engineered so the response to treatment varies by age. Patients over 65 respond more strongly. The example reports three CATEs: the cohort-wide average, the over-65 stratum, and the under-65 stratum. The heterogeneity falls out of the per-patient differences; no separate model is fit for the strata.
+
+The same shape generalizes. The strata are arbitrary functions of the patient covariates; the chain stays the same; the only thing that changes is which patients are pooled when the averages are computed.
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p causal_intervention_examples --example counterfactual_treatment_effect
+```
+
+The run prints each patient's two interventional outcomes, the per-patient ITE, the three CATEs, and the audit trail for patient 0.
+
+## Why this is the example to read first
+
+CATE is the simplest estimand for which `intervene` does real work. The Pearl ladder example demonstrates that the operation exists; this example demonstrates that it produces the estimand researchers already care about, with no extra machinery. Once this shape is clear, the four other counterfactual examples in the crate are variations on it: a stateful process instead of a stateless effect, a connectome instead of a treatment indicator, a cascade failure instead of a single intervention site. The calling convention does not change.

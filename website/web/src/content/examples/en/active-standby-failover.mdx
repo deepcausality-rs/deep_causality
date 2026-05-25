@@ -1,0 +1,85 @@
+---
+title: "Active/standby network failover as a corrective intervene loop"
+domain: Foundations
+summary: Enterprise primary/standby switch pair. Primary fails mid-run; monitor detects zero delivery and reroutes via .intervene(STANDBY_SWITCH). One tick of loss instead of unbounded.
+order: 15
+category: foundations
+source: examples/causal_intervention_examples/corrective_network_failover/main.rs
+crates:
+  - deep_causality_core
+further:
+  - label: Effect Propagation Process
+    href: /docs/concepts/effect-propagation-process/
+  - label: Causal Monad
+    href: /docs/concepts/causal-monad/
+  - label: Closed-loop insulin pump
+    href: /examples/closed-loop-insulin-pump/
+---
+
+The example lives at [`examples/causal_intervention_examples/corrective_network_failover/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_intervention_examples/corrective_network_failover). The scenario is the standard enterprise networking pattern: a primary switch carries production traffic, a standby switch sits idle ready to take over, and a monitor decides when the takeover should happen. Without a monitor, the failure is permanent. With a monitor that calls `.intervene(STANDBY_SWITCH)` on detection, the takeover happens within one tick.
+
+This is the foundational example for corrective interventions on infrastructure state. The shape generalizes to any active/passive pair where the value channel of the chain names which member is currently in service.
+
+## The model
+
+The chain forwards offered traffic through whichever switch the value channel names. The state tracks per-tick delivered packets, cumulative drops, and the failover event count. The context (immutable `NetworkPlan`) names the primary switch id, the standby switch id, the failure schedule, and the outage threshold above which the run is considered to have failed.
+
+The chain advances one tick at a time. Each `bind(forward_traffic)` call reads the current active switch from the value channel, looks up its health from the failure schedule in the context, and updates the state with the delivered count. When the primary's scheduled failure tick is reached, its delivered count drops to zero. The traffic continues to arrive; the switch fails to forward it.
+
+## The closed-loop tick
+
+```rust
+fn run_closed_loop() -> NetworkProcess<SwitchId> {
+    let mut process = initial_process();
+    for _ in 0..N_TICKS {
+        process = process.bind(forward_traffic);
+
+        let plan = process.context.clone().expect("NetworkPlan present");
+        let active = match &process.value {
+            EffectValue::Value(v) => *v,
+            _ => continue,
+        };
+        let last_delivered = process
+            .state
+            .delivered_per_tick
+            .last()
+            .copied()
+            .unwrap_or(0);
+
+        if last_delivered == 0 && active == plan.primary_id {
+            process.state.failover_count += 1;
+            if process.state.failover_at.is_none() {
+                process.state.failover_at = Some(process.state.tick);
+            }
+            process = process.intervene(STANDBY_SWITCH);
+        }
+    }
+    process
+}
+```
+
+[`main.rs:75`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_intervention_examples/corrective_network_failover/main.rs#L75). The monitor's decision rule reads three quantities. The current active switch (from the value channel), the last tick's delivered count (from the state), and the plan's primary id (from the context). The intervention fires under one condition: the last tick delivered zero and the active switch is still the primary. The intervention replaces the active switch id with the standby. The next `bind(forward_traffic)` call routes through the standby's health row in the failure schedule, and delivery resumes.
+
+The detection latency is exactly one tick. The tick on which the primary fails contributes a zero-delivery sample. The monitor sees that sample, fires the intervention, and the following tick is the first one served by the standby.
+
+## Why this is not just a state-machine transition
+
+A finite state machine could encode the same active/standby logic: a state for `primary_active`, a state for `standby_active`, a transition triggered by a failure detection event. That works for two switches. It does not separate the routing function from the failover policy; the transition logic lives inside the FSM by definition.
+
+The corrective-intervention shape keeps them separate. The routing function (`forward_traffic`) is the dynamics: given an active switch id and an offered load, what does the network deliver this tick? It knows nothing about failover. The monitor is the policy: under what condition, with what fallback, should the active switch id be changed? It runs outside the chain, reading from state and context, writing through `.intervene`.
+
+The separation matters because real fallback policies grow. The current example fails over to a single standby. A production policy might prefer the geographically nearest healthy peer, or might require a quorum check, or might escalate to a human approver above a certain delivery loss. Those policies all reshape the monitor; the chain's dynamics stay the same.
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p causal_intervention_examples --example corrective_network_failover
+```
+
+The output shows the open-loop run losing every packet from the failure tick onward, the closed-loop run losing only the detection tick before resuming via the standby, and the closed-loop `EffectLog` recording every per-tick forwarding plus the single failover event.
+
+## Where this pattern goes
+
+The corrective shape generalizes anywhere the value channel of a chain names the current active member of a redundancy pool. Database leader election with a manual override path. Service-mesh traffic shifting between regional endpoints. CI runners switching pools after a known-bad image rolls out. The pool member ids live in the value channel; the pool plan lives in the context; the monitor reads delivery health from the state and intervenes on the value when health drops. The audit trail produced is the same shape across all of these: per-tick delivery plus the substitution event that triggered each failover.
