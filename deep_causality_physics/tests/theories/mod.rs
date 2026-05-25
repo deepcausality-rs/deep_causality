@@ -4,5 +4,6 @@
  */
 mod electromagnetism;
 mod electroweak;
+mod fluid_dynamics;
 mod general_relativity;
 mod weak_force;

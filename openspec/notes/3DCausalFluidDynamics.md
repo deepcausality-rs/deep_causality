@@ -453,11 +453,11 @@ pub fn viscous_diffusion_kernel<R: RealField>(nu: R, laplacian_u: &[R; 3]) -> [R
 pub fn pressure_gradient_force_kernel<R: RealField>(rho: R, grad_p: &[R; 3]) -> [R; 3];
 pub fn vorticity_transport_kernel<R: RealField>(omega: &[R; 3], u: &[R; 3], grad_omega: &[[R; 3]; 3], laplacian_omega: &[R; 3], nu: R) -> [R; 3];
 
-// Coherent-structure detection (promoted from B1b's private helpers)
+// Coherent-structure detection
 pub fn q_criterion_kernel<R: RealField + FromPrimitive>(velocity_gradient: &[[R; 3]; 3]) -> R;
 pub fn lambda2_kernel<R: RealField + FromPrimitive>(velocity_gradient: &[[R; 3]; 3]) -> R;
 
-// Turbulence scales (promoted from B1b's private helpers)
+// Turbulence scales 
 pub fn kolmogorov_scale_kernel<R: RealField + FromPrimitive>(epsilon: R, nu: R) -> R;
 pub fn taylor_microscale_kernel<R: RealField + FromPrimitive>(k_energy: R, epsilon: R, nu: R) -> R;
 pub fn integral_length_scale_kernel<R: RealField + FromPrimitive>(k_energy: R, epsilon: R) -> R;

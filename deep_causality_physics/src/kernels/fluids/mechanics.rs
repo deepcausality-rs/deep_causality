@@ -7,6 +7,12 @@ use crate::{Density, G, Length, PhysicsError, Pressure, Speed};
 use deep_causality_num::{FromPrimitive, RealField};
 
 /// Calculates hydrostatic pressure: $P = P_0 + \rho g h$.
+///
+/// Returns an error when the computed total pressure is negative — the
+/// [`Pressure<R>`] newtype rejects sub-vacuum configurations (`P < 0`).
+/// This guards against physically unrealisable inputs (e.g. a numerical
+/// experiment with a negative reference pressure `P_0` and small `\rho g h`)
+/// rather than producing a silently invalid pressure value.
 pub fn hydrostatic_pressure_kernel<R>(
     p0: &Pressure<R>,
     density: &Density<R>,

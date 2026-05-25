@@ -3,8 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::Uncertain;
-use deep_causality::{BaseContext, CausalityError, ProposedAction, UncertainParameter};
+use deep_causality::{BaseContext, CausalityError, ProposedAction, Uncertain, UncertainParameter};
 use deep_causality_ethos::utils_test::test_utils_effect_ethos;
 use deep_causality_ethos::{DeonticError, TeloidModal};
 

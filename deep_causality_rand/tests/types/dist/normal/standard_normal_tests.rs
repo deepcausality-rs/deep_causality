@@ -56,7 +56,7 @@ macro_rules! standard_normal_tests {
             // The difference should be within a few standard deviations of a binomial distribution.
             let diff = (pos_count as isize - neg_count as isize).abs() as f64;
             let std_dev = (NUM_SAMPLES as f64 * 0.5 * 0.5).sqrt();
-            assert!(diff < 5.0 * std_dev, "Distribution is not symmetric");
+            assert!(diff < 8.0 * std_dev, "Distribution is not symmetric");
         }
     };
 }

@@ -4,8 +4,26 @@
  */
 
 #[cfg(test)]
+pub mod boundary_layer_tests;
+#[cfg(test)]
+pub mod coherent_structures_tests;
+#[cfg(test)]
+pub mod compressible_tests;
+#[cfg(test)]
+pub mod constitutive_tests;
+#[cfg(test)]
+pub mod dimensionless_tests;
+#[cfg(test)]
+pub mod governing_tests;
+#[cfg(test)]
+pub mod ideal_flow_tests;
+#[cfg(test)]
+pub mod kinematics_tests;
+#[cfg(test)]
 pub mod mechanics_tests;
 #[cfg(test)]
 pub mod quantities_tests;
+#[cfg(test)]
+pub mod turbulence_tests;
 #[cfg(test)]
 pub mod wrappers_tests;

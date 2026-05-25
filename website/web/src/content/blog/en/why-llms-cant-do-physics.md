@@ -1,7 +1,7 @@
 ---
 title: "Why LLMs Can't Do Physics?"
 description: "Neural networks interpolate inside their training distribution. Physical laws hold outside it. Here is why PINNs fail, and the structural inversion that works."
-date: 2026-05-28
+date: 2026-05-25
 author: Marvin Hansen
 tags:
   - llm
