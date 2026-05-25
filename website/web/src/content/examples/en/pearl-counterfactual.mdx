@@ -4,7 +4,6 @@ domain: Counterfactuals
 summary: Walk all three rungs of Pearl's ladder against the same Smoking → Tar → Cancer chain. The difference between the rungs is one method call.
 order: 2
 category: foundations
-source: examples/starter_example/src/main.rs
 crates:
   - deep_causality_core
 further:
@@ -16,7 +15,7 @@ further:
     href: /docs/concepts/dynamic-causality/
 ---
 
-The full crate lives at [`examples/starter_example/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/starter_example). It is a single file, around 230 lines, no dependencies beyond `deep_causality_core`. The crate is the canonical demonstration of Pearl's Ladder of Causation expressed as DeepCausality code, and it is the shortest path to understanding why monadic effect propagation matters for causal reasoning.
+The full crate lives at [`starter_example`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/starter_example). It is a single file, around 230 lines, no dependencies beyond `deep_causality_core`. The crate is the canonical demonstration of Pearl's Ladder of Causation expressed as DeepCausality code, and it is the shortest path to understanding why monadic effect propagation matters for causal reasoning.
 
 The causal model is the textbook one: *smoking causes tar accumulation; tar causes cancer*. The example runs the same chain three times (once observationally, once with intervention, once counterfactually) and prints the difference each rung makes.
 

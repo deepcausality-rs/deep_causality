@@ -4,7 +4,6 @@ domain: Biomedical
 summary: A Metropolis-style optimizer that proposes a new electrode angle, evaluates the disruption via a causal effect chain, and accepts or rejects.
 order: 5
 category: medicine
-source: examples/medicine_examples/tumor_treatment/main.rs
 crates:
   - deep_causality
   - deep_causality_core
@@ -15,7 +14,7 @@ further:
     href: /docs/concepts/causal-monad/
 ---
 
-This example lives at [`examples/medicine_examples/tumor_treatment/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/medicine_examples/tumor_treatment). It models the [Tumor Treating Fields](https://en.wikipedia.org/wiki/Tumor_Treating_Fields) (TTFields) optimization problem on a glioblastoma volume: given a 3D grid of tumor voxels with directional cell-division axes, find the electrode angle that maximizes disruption.
+This example lives at [`tumor_treatment`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/medicine_examples/tumor_treatment). It models the [Tumor Treating Fields](https://en.wikipedia.org/wiki/Tumor_Treating_Fields) (TTFields) optimization problem on a glioblastoma volume: given a 3D grid of tumor voxels with directional cell-division axes, find the electrode angle that maximizes disruption.
 
 The optimizer is Metropolis-style. Each iteration:
 

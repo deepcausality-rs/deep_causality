@@ -1,0 +1,98 @@
+---
+title: "Capstone: spinor transport in Minkowski Cl(3,1)"
+domain: Mathematics
+summary: Four crates plus the causal monad in one program. Parallel transport of a timelike spinor along a discrete worldline; final drift versus the closed-form is ~1.7e-31 at Float106. Fifteen orders tighter than f64.
+order: 20
+category: mathematics
+crates:
+  - deep_causality_topology
+  - deep_causality_tensor
+  - deep_causality_multivector
+  - deep_causality_core
+  - deep_causality_num
+further:
+  - label: Causal Monad
+    href: /docs/concepts/causal-monad/
+  - label: HKT and witness traits
+    href: /docs/concepts/hkt/
+  - label: Diffusion on a manifold
+    href: /examples/diffusion-on-manifold/
+---
+
+The example lives at [`capstone_spinor_minkowski`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples/composable_multi_math/capstone_spinor_minkowski). It is the capstone of the mathematics series. All three math crates plus the causal monad cooperate in one program, with the precision-as-parameter property cashed in for a concrete numerical claim: the final drift versus the closed-form hyperbolic angle-addition identity is roughly `1.7e-31` at `Float106`. That is fifteen orders of magnitude tighter than the `f64` result on the same chain.
+
+## The physics in one paragraph
+
+A unit timelike vector `psi = e0` is parallel-transported along a discretised Minkowski worldline. The worldline is four short edges with rapidities `[0.10, 0.15, 0.20, 0.25]`. At each edge, the local boost rotor is `B_i = cosh(theta_i / 2) - sinh(theta_i / 2) * e0^e1`, and the spinor updates as `psi -> B_i psi B_i~`. The composition of all four boosts is a single boost with rapidity `theta_total = sum(theta_i) = 0.70`, by the hyperbolic angle-addition identity. The example transports the spinor edge by edge and verifies that the final `(observed_e0, observed_e1)` equals `(cosh(theta_total), sinh(theta_total))` to within the precision of `FloatType`.
+
+## Precision as a parameter, finally exercised
+
+```rust
+pub type FloatType = Float106;
+```
+
+[`main.rs:56`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/mathematics_examples/composable_multi_math/capstone_spinor_minkowski/main.rs#L56). The capstone is the example that picks `Float106` rather than `f64`. The other mathematics examples can also be run at `Float106` by changing this single line; the gain is observable only when the arithmetic is sensitive enough to register the extra digits. Spinor transport is that case. The composition of four hyperbolic-trigonometric boosts is sensitive to rounding at the bit level. Running at `f64`, the final drift sits near `1e-16`. Running at `Float106`, it drops to `~1.7e-31`. The chain is the same chain; only the alias differs.
+
+The `Float106` type comes from `deep_causality_num`. It is a double-double: two `f64` values cooperating to give roughly 31 decimal digits of precision, with hardware-friendly arithmetic and no allocation. Every operation in the example, from the initial spinor construction through `cosh`, `sinh`, geometric products, norm checks, and the final comparison against the closed form, runs at this precision. None of the four math crates needs to know that `FloatType` is anything other than a `RealField`.
+
+## Four crates, one composition
+
+```rust
+let mut process: Process<CausalMultiVector<FloatType>> = ProcessWitness::pure(psi);
+for e in 0..N_EDGES {
+    process = ProcessWitness::bind(process, |p| transport_across_edge(p, &manifold, e));
+    if process.error.is_some() {
+        break;
+    }
+}
+```
+
+[`main.rs:101`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/mathematics_examples/composable_multi_math/capstone_spinor_minkowski/main.rs#L101). The chain carries a `CausalMultiVector` through the monad. Every `bind` runs one transport step; the manifold is captured by reference; the per-edge rapidity is read from the manifold by repositioning the comonadic cursor; the boost rotor is built in the multivector crate; the sandwich product updates the spinor.
+
+The role each crate plays:
+
+- **topology** (`deep_causality_topology`) supplies the simplicial complex for the path. Five vertices, four edges, a boundary operator `d1`. The cursor logic in `read_edge_rapidity` repositions the manifold so that `ManifoldWitness::extract` returns the value at a specified edge.
+- **tensor** (`deep_causality_tensor`) stores the per-edge rapidities inside the manifold's data tensor. Vertex entries hold zero; edge entries hold the rapidity values. The same `CausalTensor` carries both kinds of cell.
+- **multivector** (`deep_causality_multivector`) builds the spinor and the boost rotors in `Cl(3,1)` with Minkowski signature `(+, -, -, -)`. The basis is bit-string indexed: bit `i` is the `e_i` direction, the index `0b0011` is `e0^e1` (the boost generator).
+- **core** (`deep_causality_core`) provides the `CausalEffectPropagationProcess` that chains the per-edge transports, accumulates the log, and short-circuits on numerical instability.
+- **num** (`deep_causality_num`) provides `Float106` and the `RealField` trait that every operation is generic over. Without this crate, the precision swap would not be a one-line change.
+
+## The stability invariant as a structural check
+
+```rust
+let norm_sq = d[I_E0] * d[I_E0] - d[I_E1] * d[I_E1] - d[I_E2] * d[I_E2] - d[I_E3] * d[I_E3];
+if !norm_sq.is_finite() {
+    return fail(format!("edge {}: non-finite norm", e));
+}
+let one = FloatType::from(1.0);
+let tol = FloatType::from(1e-9);
+if (norm_sq - one).abs() > tol {
+    return fail(format!(
+        "edge {}: norm drift {} exceeds tolerance",
+        e,
+        (norm_sq - one).abs()
+    ));
+}
+```
+
+[`main.rs:188`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/mathematics_examples/composable_multi_math/capstone_spinor_minkowski/main.rs#L188). After every transport step, the chain checks that the spinor's Minkowski norm `|psi|^2 = (psi^0)^2 - sum_i (psi^i)^2` stays at +1. The norm is the invariant of a timelike unit vector under boosts; any drift means the rotor was built wrong, the precision is failing, or the algebra was misconfigured. The check runs after every bind; a violation sets the error channel; the chain stops. The drift the example actually observes at `Float106` is small enough that the tolerance never trips.
+
+## The numerical claim
+
+The example prints the per-edge log, the final spinor components, the closed-form expected values, and the total drift `|observed - expected|`. Running at `Float106`, the drift is approximately `1.7e-31`. Running the same chain at `f64`, the drift is approximately `1e-16`. The fifteen-order improvement comes from the precision alias, not from a rewritten algorithm.
+
+This is the concrete payoff of the precision-as-parameter property the earlier examples advertise. The argument is no longer "you could swap the precision"; it is "we swapped it, here is the measurable result."
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p mathematics_examples --example capstone_spinor_minkowski_examples
+```
+
+The output prints the per-edge log (rapidity, post-boost spinor components, running norm), the closing summary with the observed vs. expected values, and the drift. To see the `f64` baseline, edit the `FloatType` alias to `f64` and rerun; the drift jumps to the `1e-16` regime.
+
+## What this generalises
+
+The pattern, four HKT-aware crates participating inside a monadic chain, applies wherever a numerical scheme combines geometry, structured values, and time stepping. Spin-network evolution in lattice gauge theory. Parallel transport on a manifold with torsion. Boost sequences in special-relativistic ray tracing. The call shape is the one shown here: `pure(initial).bind(step1).bind(step2)...` with a comonadic walk inside each step. The capstone is the example that proves the shape holds at the precision frontier; the simpler mathematics examples show the same shape with fewer crates participating.

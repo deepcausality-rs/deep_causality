@@ -31,21 +31,33 @@ The two questions can have different answers, and frequently do. A correlation c
 There are exactly four mechanisms by which two variables can be correlated. Only one of them is direct causation. The other three are the reasons the slogan exists.
 
 ```mermaid
-flowchart LR
-  subgraph A["1. Direct causation"]
-    A1[X] --> A2[Y]
+flowchart TB
+  subgraph bottom[" "]
+    direction LR
+    subgraph D["4. Selection bias"]
+      direction TB
+      D1((X)) --> D2((S))
+      D3((Y)) --> D2
+    end
+    subgraph C["3. Common cause"]
+      direction TB
+      C1((Z)) --> C2((X))
+      C1 --> C3((Y))
+    end
   end
-  subgraph B["2. Reverse causation"]
-    B1[X] <-- causes --- B2[Y]
+  subgraph top[" "]
+    direction LR
+    subgraph B["2. Reverse causation"]
+      direction TB
+      B2((Y)) --> B1((X))
+    end
+    subgraph A["1. Direct causation"]
+      direction TB
+      A1((X)) --> A2((Y))
+    end
   end
-  subgraph C["3. Common cause"]
-    C1[Z] --> C2[X]
-    C1 --> C3[Y]
-  end
-  subgraph D["4. Selection bias"]
-    D1[X] --> D2[(S)]
-    D3[Y] --> D2
-  end
+  style top fill:transparent,stroke:transparent
+  style bottom fill:transparent,stroke:transparent
 ```
 
 ### 1. Direct causation (X causes Y)

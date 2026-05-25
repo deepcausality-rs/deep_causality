@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import CategoryList from '../../components/examples/CategoryList.astro';
+---
+<BaseLayout title="Mathematics — Examples — DeepCausality" description="Cross-crate composition examples: tensor, geometric algebra, topology, and the causal monad threaded through one uniform API. Precision is a type alias the entire chain inherits.">
+  <SiteHeader />
+  <CategoryList
+    category="mathematics"
+    eyebrow="Examples · Mathematics"
+    title="Mathematics"
+    description="Tensor, geometric algebra, topology, and the causal monad composed through one set of witness traits. Every example uses a single FloatType alias; swap it from f64 to Float106 and the whole chain runs at higher precision with no other code change."
+  />
+</BaseLayout>

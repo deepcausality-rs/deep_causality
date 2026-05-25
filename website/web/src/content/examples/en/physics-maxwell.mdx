@@ -4,7 +4,6 @@ domain: Physics
 summary: A plane-wave configuration becomes a vector potential, then an EM field, then a gauge check, then a Poynting flux. Four bind calls.
 order: 6
 category: physics
-source: examples/physics_examples/maxwell/main.rs
 crates:
   - deep_causality
   - deep_causality_core
@@ -16,7 +15,7 @@ further:
     href: /docs/concepts/effect-propagation-process/
 ---
 
-This example lives at [`examples/physics_examples/maxwell/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples/maxwell). It is the simplest demonstration of monadic composition over a physics chain: each step is a pure function from one physical state to the next, and `bind` glues them.
+This example lives at [`maxwell`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples/maxwell). It is the simplest demonstration of monadic composition over a physics chain: each step is a pure function from one physical state to the next, and `bind` glues them.
 
 The chain reads top-to-bottom as the textbook derivation:
 

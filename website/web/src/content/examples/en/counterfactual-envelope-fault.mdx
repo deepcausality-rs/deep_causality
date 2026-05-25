@@ -1,0 +1,66 @@
+---
+title: "Counterfactual flight-envelope fault analysis"
+domain: Aerospace
+summary: Mid-chain intervention on a stateful PropagatingProcess. Same aircraft, same configuration, a stall-region airspeed injected between sensor fusion and the envelope graph.
+order: 12
+category: aerospace
+crates:
+  - deep_causality_core
+further:
+  - label: Effect Propagation Process
+    href: /docs/concepts/effect-propagation-process/
+  - label: Causal Monad
+    href: /docs/concepts/causal-monad/
+  - label: Flight-envelope monitor
+    href: /examples/aerospace-flight-envelope/
+---
+
+The example lives at [`counterfactual_envelope_fault`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_intervention_examples/counterfactual_envelope_fault). It is the aerospace companion to the [Pearl ladder example](/examples/pearl-counterfactual/), with one difference: the chain is a stateful `PropagatingProcess` rather than a stateless `PropagatingEffect`. The state carries the aircraft's running flight state; the context carries the immutable `AircraftConfig`. The intervention swaps only the value.
+
+That distinction is what makes the example operationally interesting. An operator running a what-if analysis on a real flight does not want the intervention to retroactively alter the aircraft's history or its configuration. They want to ask: given the aircraft I have, and the sensor history I have, what would the envelope graph have concluded if the airspeed reading at step *k* had been in the stall region?
+
+## The factual and counterfactual chains
+
+```rust
+fn run_factual(reading: SensorReading, cfg: AircraftConfig) -> FlightProcess<Verdict> {
+    build_chain(reading, cfg)
+        .bind(airspeed_margin)
+        .bind(envelope_eval)
+}
+
+fn run_counterfactual(reading: SensorReading, cfg: AircraftConfig) -> FlightProcess<Verdict> {
+    let stall_kn = cfg.stall_kn;
+    build_chain(reading, cfg)
+        .intervene(stall_kn - 25.0)
+        .bind(airspeed_margin)
+        .bind(envelope_eval)
+}
+```
+
+[`main.rs:65`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_intervention_examples/counterfactual_envelope_fault/main.rs#L65). Two functions, identical except for the single `.intervene(stall_kn - 25.0)` call between Stage 1 (sensor collection inside `build_chain`) and Stage 2 (the margin calculation). The intervention replaces the value coming out of the sensor collection with an airspeed 25 knots below the aircraft's published stall speed. From there, the margin calculation and the envelope graph evaluate against this injected value as if it were the natural output of Stage 1.
+
+## What `intervene` preserves that input substitution does not
+
+A naive way to "inject a fault" is to feed a different `SensorReading` into the chain. That is the trap. A `PropagatingProcess` carries three things alongside the value: state, context, and an `EffectLog`. Restarting the chain with a different input produces a different history; the `FlightState` accumulated by Stage 1 reflects the alternate sensor world; the log records the alternate run as if it had always happened.
+
+`.intervene(value)` swaps only the value channel. The state Stage 1 produced from the nominal sensor reading is preserved. The context (the `AircraftConfig` describing the actual aircraft) is preserved. The log gains one new entry: `!!Intervention!!: <prior airspeed> replaced with <stall_kn - 25.0>`. The envelope graph then runs against the factual aircraft and its factual state with one counterfactual quantity, which is the question operational what-if analysis actually asks.
+
+## The verdict difference
+
+The factual run gets a nominal airspeed reading, the margin step computes a healthy distance to stall, and the envelope graph returns the verdict `Nominal`. The counterfactual run is identical up to Stage 1, then drops the airspeed to 25 knots below stall. The margin step now reports a negative margin; the envelope graph propagates that into the verdict `Stall`. Two verdicts on the same aircraft from one chain.
+
+The audit trail makes this auditable. The intervention site is logged; the prior and posterior values are logged; the verdict at the end is locked to those values. A reviewer comparing the two runs sees the substitution that produced each verdict.
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p causal_intervention_examples --example counterfactual_envelope_fault
+```
+
+The output prints both sections side by side: the factual verdict with its full log, and the counterfactual verdict with the intervention site highlighted in the log.
+
+## Why this is the example to read next after Pearl
+
+The [Pearl ladder example](/examples/pearl-counterfactual/) demonstrates `intervene` on a stateless chain with one numeric value flowing through. Real systems carry state. The five-field `PropagatingProcess` is what production aerospace code looks like, with state and context threaded through every step. This example shows that the intervention operation generalizes cleanly to that shape: same method, same semantics, applied to one channel of a five-field carrier. If you are reasoning about an existing avionics monitor and wondering whether `intervene` would let you do what-if analysis without rewriting the chain, the answer is yes, and this is the shape it takes.

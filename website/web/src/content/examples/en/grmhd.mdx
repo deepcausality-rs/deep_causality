@@ -4,7 +4,6 @@ domain: Astrophysics
 summary: Couple a GR solver, a coupling layer, and an MHD solver through monadic bind. Curvature picks the metric; the metric drives the plasma physics; stability falls out at the end.
 order: 9
 category: physics
-source: examples/physics_examples/grmhd/main.rs
 crates:
   - deep_causality
   - deep_causality_tensor
@@ -16,7 +15,7 @@ further:
     href: /docs/concepts/effect-propagation-process/
 ---
 
-The full crate lives at [`examples/physics_examples/grmhd/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples/grmhd). It is the "multi-physics monad": gravity (tensor calculus) couples to plasma (multivector geometric algebra) through a binding stage that picks the right metric based on the local curvature. Five stages, one chain, one final state.
+The full crate lives at [`grmhd`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples/grmhd). It is the "multi-physics monad": gravity (tensor calculus) couples to plasma (multivector geometric algebra) through a binding stage that picks the right metric based on the local curvature. Five stages, one chain, one final state.
 
 ## The chain
 

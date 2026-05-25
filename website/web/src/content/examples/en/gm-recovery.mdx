@@ -4,7 +4,6 @@ domain: Chronometric geodesy
 summary: One week of Galileo broadcast clock and orbit data, a five-stage CausalMonad pipeline, and Earth's mass falls out within 0.2% of the IERS reference.
 order: 10
 category: physics
-source: examples/chronometric_examples/gm_recovery/main.rs
 crates:
   - deep_causality_core
   - deep_causality_num
@@ -16,7 +15,7 @@ further:
     href: /docs/concepts/effect-propagation-process/
 ---
 
-The full crate lives at [`examples/chronometric_examples/`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/chronometric_examples). The example takes one full GPS week of broadcast clock data from Galileo satellite E14, runs a J2-corrected weak-field 1PN inversion (Bjerhammar 1975, Vermeer 1983), and recovers Earth's geocentric gravitational parameter $GM_\oplus$. Dividing by Newton's gravitational constant gives Earth's mass. The result lands within 0.2% of the IERS 2010 reference.
+The full crate lives at [`chronometric_examples`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/chronometric_examples). The example takes one full GPS week of broadcast clock data from Galileo satellite E14, runs a J2-corrected weak-field 1PN inversion (Bjerhammar 1975, Vermeer 1983), and recovers Earth's geocentric gravitational parameter $GM_\oplus$. Dividing by Newton's gravitational constant gives Earth's mass. The result lands within 0.2% of the IERS 2010 reference.
 
 The physics input is *time-dilation differences between satellites at different altitudes*. That's it.
 

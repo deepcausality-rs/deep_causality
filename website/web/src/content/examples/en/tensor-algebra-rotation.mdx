@@ -1,0 +1,66 @@
+---
+title: "Tensor x Algebra: rotating a discrete vector field"
+domain: Mathematics
+summary: A tensor of multivectors. One Functor::fmap call. Every cell rotates through the same Clifford rotor. Two HKT layers stacked, one uniform API.
+order: 16
+category: mathematics
+crates:
+  - deep_causality_tensor
+  - deep_causality_multivector
+  - deep_causality_haft
+further:
+  - label: HKT and witness traits
+    href: /docs/concepts/hkt/
+  - label: Uniform math
+    href: /docs/concepts/uniform-math/
+  - label: Effect Propagation Process
+    href: /docs/concepts/effect-propagation-process/
+---
+
+The example lives at [`tensor_x_algebra_rotation_field`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples/composable_multi_math/tensor_x_algebra_rotation_field). It is the first step of the mathematics series: two crates, one composition, no causal monad yet.
+
+A `CausalTensor` whose cells are `CausalMultiVector` values is a discrete vector field. Every cell holds a vector; the tensor holds the layout. Rotating the whole field by a single Clifford rotor would, in most numeric stacks, require a manual nested loop or a specialised library function. Here it is one `Functor::fmap` call.
+
+## Precision as a parameter
+
+```rust
+pub type FloatType = f64;
+```
+
+[`main.rs:28`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/mathematics_examples/composable_multi_math/tensor_x_algebra_rotation_field/main.rs#L28). One alias at the top of the file. Every number declared in the example is `FloatType::from(...)`; every operation runs at whatever precision the alias names. Switch the alias to `f32`, the whole pipeline runs at single precision. Switch it to `Float106` (the double-double type in `deep_causality_num`), the whole pipeline runs at roughly 31 decimal digits. Nothing else changes; no traits are re-implemented, no operations are duplicated for different precisions, no conditional compilation.
+
+This pattern is consistent across every mathematics example. The reason it works is that the operations are defined over `RealField` and the witness traits do not commit to a concrete numeric type. Precision becomes a configuration knob, not a structural decision.
+
+## The composition
+
+```rust
+let field: CausalTensor<CausalMultiVector<FloatType>> =
+    CausalTensor::from_shape_fn(&grid_shape, |_idx| unit_x(metric));
+
+let rotated: CausalTensor<CausalMultiVector<FloatType>> =
+    CausalTensorWitness::fmap(field, |v| {
+        rotor.geometric_product(&v).geometric_product(&rotor_rev)
+    });
+```
+
+[`main.rs:40`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/mathematics_examples/composable_multi_math/tensor_x_algebra_rotation_field/main.rs#L40). The field is a 3x3 grid; every cell starts as the unit vector along `e1`. The rotor pair `(R, R~)` encodes a 90-degree rotation in the `e1^e2` plane of `Cl(2,0)`. The `Functor::fmap` walks the tensor; the closure applies the sandwich `R v R~` at each cell. After the call, every cell holds the unit vector along `e2`.
+
+Two HKT layers are stacked here. `CausalTensor` is a functor; you can `fmap` over its cells without knowing what they contain. `CausalMultiVector` provides the `geometric_product` operation; the tensor never has to know what a Clifford rotor is. The composition lives at the call site, not inside either crate.
+
+## What this rules out
+
+A naive implementation would write an explicit double-loop over the tensor indices, fetch each cell, apply the rotation, store the result. That works for a 3x3 grid; it does not generalise to a 4D mesh or to a rank-5 tensor of bivectors. The HKT pattern does. The same `fmap` call rotates a rank-2 grid of grade-1 vectors, a rank-4 grid of grade-2 bivectors, or a tensor of grade-3 trivectors. The function signature does not change because the witness trait abstracts over the layout.
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p mathematics_examples --example tensor_x_algebra_rotation_field_examples
+```
+
+The output prints the cell at `[0, 0]` before and after the rotation, plus the cell at `[2, 2]` to confirm every cell was visited. The component report shows `e1 = 1, e2 = 0` before and `e1 = 0, e2 = 1` after, which is the 90-degree rotation acting on the unit vector.
+
+## Why this is the example to read first
+
+Two crates, one composition operator, one Functor instance. The other mathematics examples add crates and operators; the call shape stays the same. Read this one to recognise the pattern, then read [tensor_x_topology_laplacian](/examples/tensor-topology-laplacian/) to see the comonadic dual.

@@ -8,7 +8,7 @@ const entries = (await getCollection('examples')).sort(
   (a, b) => a.data.order - b.data.order,
 );
 ---
-<BaseLayout title="Examples — DeepCausality" description="All examples across foundations, aerospace, physics, and medicine.">
+<BaseLayout title="Examples — DeepCausality" description="All examples across foundations, aerospace, physics, medicine, and mathematics.">
   <SiteHeader />
   <section class="ex-index">
     <header>
@@ -20,6 +20,7 @@ const entries = (await getCollection('examples')).sort(
         <a href="/examples/aerospace/">Aerospace</a>
         <a href="/examples/physics/">Physics</a>
         <a href="/examples/medicine/">Medicine</a>
+        <a href="/examples/mathematics/">Mathematics</a>
       </nav>
     </header>
 
