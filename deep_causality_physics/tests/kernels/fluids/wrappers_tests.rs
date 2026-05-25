@@ -6,22 +6,24 @@
 use deep_causality_physics::{
     CauchyStress, Density, KinematicViscosity, Length, Pressure, SpecificEnthalpy, Speed,
     StrainRateTensor, Temperature, Velocity3, VelocityGradient, Viscosity, VorticityVector,
-    WallShearStress, bernoulli_pressure, bond_number, capillary_number, continuity_rhs,
-    convective_acceleration, delta_criterion, dissipation_rate, eckert_number,
-    eddy_viscosity_boussinesq, enstrophy_density, entropy_production_rate, friction_velocity,
-    froude_number, grashof_number, helicity_density, hydrostatic_pressure, integral_length_scale,
-    kinetic_energy_density, knudsen_number, kolmogorov_length, kolmogorov_time,
-    kolmogorov_velocity, lambda2, lewis_number, log_law_velocity, mach_number,
-    newtonian_viscous_stress, newtonian_viscous_stress_with_bulk, nusselt_number,
-    particle_stokes_number, peclet_number, power_law_apparent_viscosity, prandtl_number,
-    pressure_gradient_force, pressure_work, q_criterion, rayleigh_number, reynolds_number,
-    reynolds_stress, richardson_number, rotation_rate_tensor, scalar_advection_diffusion,
-    schmidt_number, skin_friction_coefficient, specific_enthalpy, speed_of_sound_ideal_gas,
-    strain_rate_tensor, strouhal_number, swirling_strength, taylor_microscale, total_enthalpy,
+    WallShearStress, bernoulli_pressure, bernoulli_total_head, bond_number, capillary_number,
+    circulation, continuity_rhs, convective_acceleration, delta_criterion, dissipation_rate,
+    dynamic_pressure, eckert_number, eddy_viscosity_boussinesq, enstrophy_density,
+    entropy_production_rate, friction_velocity, froude_number, grashof_number, helicity_density,
+    hydrostatic_pressure, integral_length_scale, kinetic_energy_density, knudsen_number,
+    kolmogorov_length, kolmogorov_time, kolmogorov_velocity, kutta_joukowski_lift, lambda2,
+    lewis_number, log_law_velocity, mach_number, newtonian_viscous_stress,
+    newtonian_viscous_stress_with_bulk, nusselt_number, particle_stokes_number, peclet_number,
+    power_law_apparent_viscosity, prandtl_number, pressure_gradient_force, pressure_work,
+    q_criterion, rayleigh_number, reynolds_number, reynolds_stress, richardson_number,
+    rotation_rate_tensor, scalar_advection_diffusion, schmidt_number, skin_friction_coefficient,
+    specific_enthalpy, speed_of_sound_ideal_gas, strain_rate_tensor, stream_function_2d,
+    strouhal_number, swirling_strength, taylor_microscale, total_enthalpy,
     total_pressure_isentropic, total_temperature_isentropic, turbulent_kinetic_energy,
-    velocity_gradient_invariants, viscous_diffusion, viscous_dissipation_rate,
-    viscous_length_scale, viscous_sublayer_velocity, vorticity_from_gradient, vorticity_transport,
-    wall_shear_stress_newtonian, weber_number, y_plus,
+    velocity_gradient_invariants, velocity_potential_2d, viscous_diffusion,
+    viscous_dissipation_rate, viscous_length_scale, viscous_sublayer_velocity,
+    vorticity_from_gradient, vorticity_transport, wall_shear_stress_newtonian, weber_number,
+    y_plus,
 };
 
 // =============================================================================
@@ -659,4 +661,72 @@ fn test_skin_friction_coefficient_wrapper() {
     let effect = skin_friction_coefficient(&tau, &rho, &u_inf);
     assert!(effect.is_ok());
     assert!((effect.value().clone().into_value().unwrap() - 0.01).abs() < 1e-12);
+}
+
+// =============================================================================
+// Ideal-flow wrapper tests
+// =============================================================================
+
+#[test]
+fn test_dynamic_pressure_wrapper() {
+    let rho = Density::<f64>::new(1.225).unwrap();
+    let u = Speed::<f64>::new(20.0).unwrap();
+    let effect = dynamic_pressure(&rho, &u);
+    assert!(effect.is_ok());
+    assert!((effect.value().clone().into_value().unwrap().value() - 245.0).abs() < 1e-12);
+}
+
+#[test]
+fn test_bernoulli_total_head_wrapper() {
+    let p = Pressure::<f64>::new(0.0).unwrap();
+    let rho = Density::<f64>::new(1000.0).unwrap();
+    let u = Speed::<f64>::new(0.0).unwrap();
+    let h = Length::<f64>::new(5.0).unwrap();
+    assert!(bernoulli_total_head(&p, &rho, &u, &h).is_ok());
+}
+
+#[test]
+fn test_bernoulli_total_head_wrapper_error_path() {
+    let p = Pressure::<f64>::new(101_325.0).unwrap();
+    let rho = Density::<f64>::new(0.0).unwrap();
+    let u = Speed::<f64>::new(1.0).unwrap();
+    let h = Length::<f64>::new(0.0).unwrap();
+    assert!(!bernoulli_total_head(&p, &rho, &u, &h).is_ok());
+}
+
+#[test]
+fn test_stream_function_2d_wrapper() {
+    let effect = stream_function_2d(1.0_f64, 0.0, 0.5, 0.3);
+    assert!(effect.is_ok());
+    assert_eq!(effect.value().clone().into_value().unwrap(), 0.3);
+}
+
+#[test]
+fn test_velocity_potential_2d_wrapper() {
+    let effect = velocity_potential_2d(2.0_f64, 3.0, 1.0, 1.0);
+    assert!(effect.is_ok());
+    assert_eq!(effect.value().clone().into_value().unwrap(), 5.0);
+}
+
+#[test]
+fn test_circulation_wrapper() {
+    let velocities = vec![Velocity3::<f64>::new([1.0, 0.0, 0.0]).unwrap(); 2];
+    let tangents: Vec<[f64; 3]> = vec![[1.0, 0.0, 0.0]; 2];
+    assert!(circulation(&velocities, &tangents).is_ok());
+}
+
+#[test]
+fn test_circulation_wrapper_error_path() {
+    let velocities = vec![Velocity3::<f64>::new([1.0, 0.0, 0.0]).unwrap(); 3];
+    let tangents: Vec<[f64; 3]> = vec![[1.0, 0.0, 0.0]; 2];
+    assert!(!circulation(&velocities, &tangents).is_ok());
+}
+
+#[test]
+fn test_kutta_joukowski_lift_wrapper() {
+    let rho = Density::<f64>::new(1.225).unwrap();
+    let u_inf = Speed::<f64>::new(50.0).unwrap();
+    let effect = kutta_joukowski_lift(&rho, &u_inf, 10.0_f64);
+    assert!(effect.is_ok());
+    assert!((effect.value().clone().into_value().unwrap() - 612.5).abs() < 1e-12);
 }

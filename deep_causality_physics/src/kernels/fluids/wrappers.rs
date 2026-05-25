@@ -5,7 +5,7 @@
 
 use crate::kernels::fluids::{
     boundary_layer, coherent_structures, compressible, constitutive, dimensionless, governing,
-    kinematics, mechanics, turbulence,
+    ideal_flow, kinematics, mechanics, turbulence,
 };
 use crate::{
     AccelerationVector, CauchyStress, Density, KinematicViscosity, Length, Pressure,
@@ -922,4 +922,81 @@ where
         Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
+}
+
+// =============================================================================
+// Ideal-flow primitive wrappers
+// =============================================================================
+
+/// Causal wrapper for [`ideal_flow::dynamic_pressure_kernel`].
+pub fn dynamic_pressure<R>(rho: &Density<R>, u: &Speed<R>) -> PropagatingEffect<Pressure<R>>
+where
+    R: RealField + FromPrimitive + Debug + 'static,
+{
+    match ideal_flow::dynamic_pressure_kernel(rho, u) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`ideal_flow::bernoulli_total_head_kernel`].
+pub fn bernoulli_total_head<R>(
+    p: &Pressure<R>,
+    rho: &Density<R>,
+    u: &Speed<R>,
+    h: &Length<R>,
+) -> PropagatingEffect<Length<R>>
+where
+    R: RealField + FromPrimitive + Debug + 'static,
+{
+    match ideal_flow::bernoulli_total_head_kernel(p, rho, u, h) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`ideal_flow::stream_function_2d_kernel`].
+pub fn stream_function_2d<R>(u: R, v: R, dx: R, dy: R) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    PropagatingEffect::pure(ideal_flow::stream_function_2d_kernel(u, v, dx, dy))
+}
+
+/// Causal wrapper for [`ideal_flow::velocity_potential_2d_kernel`].
+pub fn velocity_potential_2d<R>(u: R, v: R, dx: R, dy: R) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    PropagatingEffect::pure(ideal_flow::velocity_potential_2d_kernel(u, v, dx, dy))
+}
+
+/// Causal wrapper for [`ideal_flow::circulation_kernel`].
+pub fn circulation<R>(
+    velocity_at_loop_points: &[Velocity3<R>],
+    tangents: &[[R; 3]],
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match ideal_flow::circulation_kernel(velocity_at_loop_points, tangents) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`ideal_flow::kutta_joukowski_lift_kernel`].
+pub fn kutta_joukowski_lift<R>(
+    rho: &Density<R>,
+    u_inf: &Speed<R>,
+    circulation: R,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    PropagatingEffect::pure(ideal_flow::kutta_joukowski_lift_kernel(
+        rho,
+        u_inf,
+        circulation,
+    ))
 }

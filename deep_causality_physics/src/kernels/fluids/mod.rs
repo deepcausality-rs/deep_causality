@@ -27,6 +27,6 @@ pub use compressible::*;
 pub use constitutive::*;
 pub use dimensionless::*;
 pub use governing::*;
-// pub use ideal_flow::*;
+pub use ideal_flow::*;
 pub use kinematics::*;
 pub use turbulence::*;
