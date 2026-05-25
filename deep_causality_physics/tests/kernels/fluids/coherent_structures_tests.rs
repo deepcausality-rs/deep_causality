@@ -157,6 +157,41 @@ fn test_lambda2_diagonal_strain() {
     assert!((l2 - 9.0).abs() < TOL_F64);
 }
 
+#[test]
+fn test_lambda2_non_diagonal_exercises_smith_eigensolver() {
+    // Constructs a velocity gradient whose `M = S² + Ω²` has non-zero
+    // off-diagonal entries, forcing the closed-form Smith (1961) branch
+    // of `symmetric_3x3_eigenvalues` rather than the diagonal early-return.
+    //
+    // Take a symmetric ∇u (so Ω = 0 and S = ∇u) of the form
+    //   S = [[0, 1, 1], [1, 0, 0], [1, 0, 0]]
+    // Then S² = [[2, 0, 0], [0, 1, 1], [0, 1, 1]], which has the off-diagonal
+    // (1,2) = 1 ≠ 0, so the kernel routes through the Smith branch.
+    //
+    // Eigenvalues of S²: 2 (eigenvector [1,0,0]) and the 2x2 block
+    // [[1,1],[1,1]] gives 2 and 0. Sorted desc: [2, 2, 0] ⇒ λ₂ = 2.
+    let g =
+        VelocityGradient::<f64>::new([[0.0, 1.0, 1.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]]).unwrap();
+    let l2 = lambda2_kernel(&g).unwrap();
+    assert!((l2 - 2.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_lambda2_non_diagonal_general_case() {
+    // A second non-diagonal probe with both non-zero S and Ω. Pure shear
+    // ∇u = [[0, γ, 0], [0, 0, 0], [0, 0, 0]] gives
+    //   S = [[0, γ/2, 0], [γ/2, 0, 0], [0, 0, 0]]
+    //   Ω = [[0, γ/2, 0], [-γ/2, 0, 0], [0, 0, 0]]
+    //   S² = [[γ²/4, 0, 0], [0, γ²/4, 0], [0, 0, 0]]
+    //   Ω² = [[-γ²/4, 0, 0], [0, -γ²/4, 0], [0, 0, 0]]
+    //   M  = S² + Ω² = 0. Sorted desc eigenvalues: [0, 0, 0] ⇒ λ₂ = 0.
+    let gamma = 3.0_f64;
+    let g = VelocityGradient::<f64>::new([[0.0, gamma, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
+        .unwrap();
+    let l2 = lambda2_kernel(&g).unwrap();
+    assert!(l2.abs() < 1e-10);
+}
+
 // =============================================================================
 // swirling_strength_kernel
 // =============================================================================

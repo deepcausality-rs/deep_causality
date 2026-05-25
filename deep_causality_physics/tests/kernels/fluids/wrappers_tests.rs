@@ -859,3 +859,205 @@ fn test_incompressible_ns_rhs_wrapper_error_path() {
     let effect = incompressible_ns_rhs(&u, &g, &lap, &gp, &r, &n, &b);
     assert!(!effect.is_ok());
 }
+
+// =============================================================================
+// Additional wrapper error-path coverage
+// =============================================================================
+
+#[test]
+fn test_bernoulli_pressure_wrapper_error_path() {
+    // Large velocity-2 with tiny p1 ⇒ resulting pressure goes negative,
+    // which Pressure::new rejects.
+    let p1 = Pressure::<f64>::new(0.0).unwrap();
+    let v1 = Speed::<f64>::new(0.0).unwrap();
+    let h1 = Length::<f64>::new(0.0).unwrap();
+    let v2 = Speed::<f64>::new(100.0).unwrap();
+    let h2 = Length::<f64>::new(0.0).unwrap();
+    let rho = Density::<f64>::new(1000.0).unwrap();
+    let effect = bernoulli_pressure(&p1, &v1, &h1, &v2, &h2, &rho);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_mach_number_wrapper_error_path() {
+    let u = Speed::<f64>::new(100.0).unwrap();
+    let c = Speed::<f64>::new(0.0).unwrap();
+    let effect = mach_number(&u, &c);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_froude_number_wrapper_error_path() {
+    // gravity · length = 0 should error (would divide by zero in sqrt).
+    let u = Speed::<f64>::new(1.0).unwrap();
+    let length = Length::<f64>::new(1.0).unwrap();
+    let effect = froude_number(&u, 0.0_f64, &length);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_weber_number_wrapper_error_path() {
+    // surface_tension = 0 ⇒ division by zero.
+    let rho = Density::<f64>::new(1000.0).unwrap();
+    let u = Speed::<f64>::new(1.0).unwrap();
+    let length = Length::<f64>::new(0.01).unwrap();
+    let effect = weber_number(&rho, &u, &length, 0.0_f64);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_prandtl_number_wrapper_error_path() {
+    // thermal_diffusivity = 0 ⇒ division by zero.
+    let nu = KinematicViscosity::<f64>::new(1.0e-6).unwrap();
+    let effect = prandtl_number(&nu, 0.0_f64);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_peclet_number_wrapper_error_path() {
+    let u = Speed::<f64>::new(1.0).unwrap();
+    let length = Length::<f64>::new(0.1).unwrap();
+    let effect = peclet_number(&u, &length, 0.0_f64);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_strouhal_number_wrapper_error_path() {
+    // u = 0 ⇒ division by zero.
+    let length = Length::<f64>::new(0.1).unwrap();
+    let u = Speed::<f64>::new(0.0).unwrap();
+    let effect = strouhal_number(1.0_f64, &length, &u);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_knudsen_number_wrapper_error_path() {
+    // length = 0 ⇒ division by zero.
+    let length = Length::<f64>::new(0.0).unwrap();
+    let effect = knudsen_number(1.0e-7_f64, &length);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_richardson_number_wrapper_error_path() {
+    // u = 0 in denominator ⇒ division by zero.
+    let u = Speed::<f64>::new(0.0).unwrap();
+    let length = Length::<f64>::new(1.0).unwrap();
+    let effect = richardson_number(9.81_f64, 3.4e-3_f64, 10.0_f64, &length, &u);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_rayleigh_number_wrapper_error_path() {
+    // thermal_diffusivity = 0 ⇒ division by zero.
+    let nu = KinematicViscosity::<f64>::new(1.0e-6).unwrap();
+    let length = Length::<f64>::new(0.1).unwrap();
+    let effect = rayleigh_number(9.81_f64, 3.4e-3_f64, 10.0_f64, &length, &nu, 0.0_f64);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_grashof_number_wrapper_error_path() {
+    // nu = 0 ⇒ division by zero.
+    let nu = KinematicViscosity::<f64>::new(0.0).unwrap();
+    let length = Length::<f64>::new(0.1).unwrap();
+    let effect = grashof_number(9.81_f64, 3.4e-3_f64, 10.0_f64, &length, &nu);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_schmidt_number_wrapper_error_path() {
+    let nu = KinematicViscosity::<f64>::new(1.0e-6).unwrap();
+    let effect = schmidt_number(&nu, 0.0_f64);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_lewis_number_wrapper_error_path() {
+    // mass_diffusivity = 0 ⇒ division by zero.
+    let effect = lewis_number(1.0e-7_f64, 0.0_f64);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_capillary_number_wrapper_error_path() {
+    let mu = Viscosity::<f64>::new(1.0e-3).unwrap();
+    let u = Speed::<f64>::new(1.0).unwrap();
+    let effect = capillary_number(&mu, &u, 0.0_f64);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_bond_number_wrapper_error_path() {
+    let rho = Density::<f64>::new(1000.0).unwrap();
+    let length = Length::<f64>::new(0.01).unwrap();
+    let effect = bond_number(&rho, 9.81_f64, &length, 0.0_f64);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_nusselt_number_wrapper_error_path() {
+    // thermal_conductivity = 0 ⇒ division by zero.
+    let length = Length::<f64>::new(0.1).unwrap();
+    let effect = nusselt_number(10.0_f64, &length, 0.0_f64);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_particle_stokes_number_wrapper_error_path() {
+    // length = 0 ⇒ division by zero.
+    let u = Speed::<f64>::new(1.0).unwrap();
+    let length = Length::<f64>::new(0.0).unwrap();
+    let effect = particle_stokes_number(0.01_f64, &u, &length);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_eckert_number_wrapper_error_path() {
+    // c_p · ΔT = 0 ⇒ division by zero.
+    let u = Speed::<f64>::new(100.0).unwrap();
+    let effect = eckert_number(&u, 0.0_f64, 0.0_f64);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_total_pressure_isentropic_wrapper_error_path() {
+    // γ ≤ 1 errors.
+    let p = Pressure::<f64>::new(101325.0).unwrap();
+    let effect = total_pressure_isentropic(&p, 1.0_f64, 1.0_f64);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_total_temperature_isentropic_wrapper_error_path() {
+    // γ ≤ 1 errors.
+    let t = Temperature::<f64>::new(300.0).unwrap();
+    let effect = total_temperature_isentropic(&t, 1.0_f64, 1.0_f64);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_wall_shear_stress_newtonian_wrapper_error_path() {
+    // Non-finite gradient ⇒ WallShearStress::new rejects.
+    let mu = Viscosity::<f64>::new(1.0e-3).unwrap();
+    let effect = wall_shear_stress_newtonian(&mu, f64::NAN);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_newtonian_viscous_stress_wrapper_error_path() {
+    // Non-finite div_u ⇒ ViscousStress::new rejects.
+    let mu = Viscosity::<f64>::new(1.0).unwrap();
+    let s = StrainRateTensor::<f64>::default();
+    let effect = newtonian_viscous_stress(&mu, &s, f64::NAN);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_newtonian_viscous_stress_with_bulk_wrapper_error_path() {
+    let mu = Viscosity::<f64>::new(1.0).unwrap();
+    let zeta = Viscosity::<f64>::new(0.5).unwrap();
+    let s = StrainRateTensor::<f64>::default();
+    let effect = newtonian_viscous_stress_with_bulk(&mu, &zeta, &s, f64::INFINITY);
+    assert!(!effect.is_ok());
+}

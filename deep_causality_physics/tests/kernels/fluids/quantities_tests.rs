@@ -5,8 +5,9 @@
 
 use deep_causality_physics::{
     AccelerationVector, BodyForceDensity, CauchyStress, Density, KinematicViscosity,
-    PhysicsErrorEnum, Pressure, RotationRateTensor, SpecificEnthalpy, StrainRateTensor, Velocity3,
-    VelocityGradient, Viscosity, VorticityVector, WallShearStress,
+    PhysicsErrorEnum, Pressure, ReynoldsStress, RotationRateTensor, SpecificEnthalpy,
+    StrainRateTensor, Velocity3, VelocityGradient, Viscosity, ViscousStress, VorticityVector,
+    WallShearStress,
 };
 
 // =============================================================================
@@ -895,4 +896,86 @@ fn test_velocity_gradient_decomposes_into_strain_and_rotation() {
             assert!((s_raw[i][j] + o_raw[i][j] - g[i][j]).abs() < 1e-12);
         }
     }
+}
+
+// =============================================================================
+// `From<NewType> for raw` reverse conversions (uncovered before this block).
+// These exercise the `impl From<Velocity3<R>> for [R; 3]` style impls that
+// turn an invariant-bearing newtype back into its raw representation.
+// =============================================================================
+
+#[test]
+fn test_velocity3_into_raw_array() {
+    let v = Velocity3::<f64>::new([1.0, 2.0, 3.0]).unwrap();
+    let raw: [f64; 3] = v.into();
+    assert_eq!(raw, [1.0, 2.0, 3.0]);
+}
+
+#[test]
+fn test_vorticity_vector_into_raw_array() {
+    let w = VorticityVector::<f64>::new([4.0, 5.0, 6.0]).unwrap();
+    let raw: [f64; 3] = w.into();
+    assert_eq!(raw, [4.0, 5.0, 6.0]);
+}
+
+#[test]
+fn test_acceleration_vector_into_raw_array() {
+    let a = AccelerationVector::<f64>::new([7.0, 8.0, 9.0]).unwrap();
+    let raw: [f64; 3] = a.into();
+    assert_eq!(raw, [7.0, 8.0, 9.0]);
+}
+
+#[test]
+fn test_body_force_density_into_raw_array() {
+    let f = BodyForceDensity::<f64>::new([1.5, 2.5, 3.5]).unwrap();
+    let raw: [f64; 3] = f.into();
+    assert_eq!(raw, [1.5, 2.5, 3.5]);
+}
+
+#[test]
+fn test_velocity_gradient_into_raw_matrix() {
+    let m = [[1.0, 0.0, 0.0], [0.0, -2.0, 0.0], [0.0, 0.0, 0.5]];
+    let g = VelocityGradient::<f64>::new(m).unwrap();
+    let raw: [[f64; 3]; 3] = g.into();
+    assert_eq!(raw, m);
+}
+
+#[test]
+fn test_strain_rate_tensor_into_raw_matrix() {
+    let m = [[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
+    let s = StrainRateTensor::<f64>::new(m).unwrap();
+    let raw: [[f64; 3]; 3] = s.into();
+    assert_eq!(raw, m);
+}
+
+#[test]
+fn test_rotation_rate_tensor_into_raw_matrix() {
+    let m = [[0.0, 1.0, 2.0], [-1.0, 0.0, 3.0], [-2.0, -3.0, 0.0]];
+    let o = RotationRateTensor::<f64>::new(m).unwrap();
+    let raw: [[f64; 3]; 3] = o.into();
+    assert_eq!(raw, m);
+}
+
+#[test]
+fn test_cauchy_stress_into_raw_matrix() {
+    let m = [[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
+    let s = CauchyStress::<f64>::new(m).unwrap();
+    let raw: [[f64; 3]; 3] = s.into();
+    assert_eq!(raw, m);
+}
+
+#[test]
+fn test_viscous_stress_into_raw_matrix() {
+    let m = [[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
+    let s = ViscousStress::<f64>::new(m).unwrap();
+    let raw: [[f64; 3]; 3] = s.into();
+    assert_eq!(raw, m);
+}
+
+#[test]
+fn test_reynolds_stress_into_raw_matrix() {
+    let m = [[1.0, 0.5, 0.0], [0.5, 2.0, 0.0], [0.0, 0.0, 1.5]];
+    let r = ReynoldsStress::<f64>::new(m).unwrap();
+    let raw: [[f64; 3]; 3] = r.into();
+    assert_eq!(raw, m);
 }

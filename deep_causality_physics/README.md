@@ -29,7 +29,7 @@ The crate is organized along two complementary axes:
    specific equation in isolation. Every kernel is generic over `R: RealField` so the caller picks
    the precision (`f32`, `f64`, `DoubleFloat`, …).
 
-   📖 **See [README_KERNELS.md](./README_KERNELS.md)** for the full list of kernel domains,
+   **See [README_KERNELS.md](./README_KERNELS.md)** for the full list of kernel domains,
    architecture details, and worked examples (Relativistic Dynamics, Chronometric GM Recovery,
    Lund String Fragmentation).
 
@@ -38,7 +38,7 @@ The crate is organized along two complementary axes:
    Electroweak Theory are all implemented as `GaugeField<G>` over a manifold, so they compose
    cleanly when modelling cross-theory interactions.
 
-   📖 **See [README_GAUGE_THEORIES.md](./README_GAUGE_THEORIES.md)** for the architecture of the
+   **See [README_GAUGE_THEORIES.md](./README_GAUGE_THEORIES.md)** for the architecture of the
    theory layer, gauge-group taxonomy, and how to switch precision per theory.
 
 ## Precision
