@@ -12,35 +12,26 @@ For the project overview see [README.md](./README.md).
 ## Domains
 
 Kernels live under `src/kernels/<domain>/`. Each domain ships pure computation kernels, monadic
-wrappers, and domain-specific quantity wrappers.
+wrappers (`wrappers.rs`), and domain-specific quantity newtypes (`quantities.rs`). The table below
+lists the source files (excluding `mod.rs`, `quantities.rs`, and `wrappers.rs`) shipped under each
+domain and a short description of what each one covers.
 
-* **Astro**: Astrophysics kernels (Schwarzschild radius, orbital velocity, escape velocity, etc.).
-* **Chronometric**: Chronometric geodesy kernels — invert the J2-corrected weak-field 1PN clock
-  equation (Bjerhammar 1975, Vermeer 1983) to recover gravitational parameters such as $GM_\oplus$
-  and the derived planetary mass $M_\oplus = GM_\oplus / G$ from satellite clock time-dilation
-  measurements. Includes `CentralBody` (gravity-model parameters), `SpaceTimeCoordinate` (clock +
-  kinematic state), and the `solve_gm_analytical` kernel and wrapper.
-* **Condensed**: Condensed matter physics (Quantum Geometry, Twistronics, Phase Field Models, e.g.,
-  Quantum Geometric Tensor, Bistritzer-MacDonald Hamiltonian, Ginzburg-Landau equations).
-* **Dynamics**: Classical mechanics (Kinematics, Newton's laws), state estimation (Kalman filters),
-  and Euler integration.
-* **Electromagnetism (`em`)**: Maxwell's equations, Lorentz force, Poynting vectors, and gauge
-  fields using Geometric Algebra.
-* **Fluids**: Fluid dynamics (Bernoulli's principle, Reynolds number, viscosity, pressure).
-* **Materials**: Material science properties (Stress, Strain, Hooke's Law, Young's modulus, thermal
-  expansion).
-* **MHD**: Magnetohydrodynamics (Alfven waves, Magnetic Pressure, Ideal Induction on Manifolds,
-  General Relativistic MHD with Manifold-based current computation, Plasma parameters).
-* **Nuclear**: Nuclear physics (Binding energy, radioactive decay, PDG particle database,
-  **Lund String Fragmentation** for QCD hadronization).
-* **Photonics**: Ray Optics, Polarization Calculus, Gaussian Beam Optics, and Diffraction.
-* **Quantum**: Quantum mechanics primitives (Wavefunctions, operators, gates, expectation values,
-  Haruna's Gauge Field gates).
-* **Relativity**: Special and General Relativity (Spacetime intervals, time dilation, Einstein
-  tensor, geodesic deviation).
-* **Thermodynamics**: Statistical mechanics (Entropy, Carnot efficiency, Ideal Gas Law, heat
-  diffusion).
-* **Waves**: Wave mechanics (Doppler effect, wave speed, frequency/wavelength relations).
+| Domain | Source files | Coverage |
+|---|---|---|
+| **Astro** | `mechanics` | Schwarzschild radius, orbital velocity, escape velocity, gravitational redshift. |
+| **Chronometric** | `solve_gm`, `wrapper` | Inverts the J2-corrected weak-field 1PN clock equation (Bjerhammar 1975, Vermeer 1983) to recover $GM_\oplus$ and the derived planetary mass from satellite clock time-dilation measurements. `CentralBody` (gravity-model parameters), `SpaceTimeCoordinate` (clock + kinematic state), `solve_gm_analytical`. |
+| **Condensed** | `moire`, `phase`, `qgt` | Twistronics (Bistritzer–MacDonald moiré Hamiltonian), phase-field models (Ginzburg–Landau, Cahn–Hilliard), Quantum Geometric Tensor. |
+| **Dynamics** | `estimation`, `kinematics` | Classical mechanics (Newton's laws, kinematics), state estimation (Kalman filters), Euler integration. |
+| **Electromagnetism (`em`)** | `fields`, `forces`, `solver` | Maxwell's equations, Lorentz force, Poynting vectors, gauge fields via Geometric Algebra. |
+| **Fluids** | `boundary_layer`, `coherent_structures`, `compressible`, `constitutive`, `dimensionless`, `governing`, `ideal_flow`, `kinematics`, `mechanics`, `turbulence` | Full Navier–Stokes surface: continuity / momentum / energy RHS, Newtonian and power-law stress, kinematics (S, Ω, vorticity, CPC invariants), 18 dimensionless numbers, turbulence quantities (TKE, ε, Kolmogorov scales, Reynolds stress, Boussinesq), coherent-structure detectors (Q, Δ, λ₂, swirling strength), compressible thermodynamics (speed of sound, isentropic stagnation, entropy production), wall functions, ideal-flow primitives (Bernoulli, stream function, circulation, Kutta–Joukowski). |
+| **Materials** | `mechanics` | Stress, strain, Hooke's law, Young's modulus, thermal expansion. |
+| **MHD** | `grmhd`, `ideal`, `plasma`, `resistive` | Alfvén waves, magnetic pressure, ideal induction on manifolds, General Relativistic MHD with manifold-based current computation, plasma parameters. |
+| **Nuclear** | `lund`, `pdg`, `physics`, `qcd` | Binding energy, radioactive decay, PDG particle database, **Lund String Fragmentation** for QCD hadronization. |
+| **Photonics** | `beam`, `diffraction`, `polarization`, `ray` | Ray optics, polarization calculus, Gaussian beam optics, diffraction. |
+| **Quantum** | `gates`, `gates_haruna`, `mechanics` | Wavefunctions, operators, gates, expectation values; Haruna's Gauge Field gates. |
+| **Relativity** | `gravity`, `spacetime` | Special and General Relativity: spacetime intervals, time dilation, Einstein tensor, geodesic deviation. |
+| **Thermodynamics** | `stats` | Statistical mechanics: entropy, Carnot efficiency, ideal gas law, heat diffusion. |
+| **Waves** | `general` | Doppler effect, wave speed, frequency/wavelength relations. |
 
 ---
 
