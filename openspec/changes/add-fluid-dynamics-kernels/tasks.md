@@ -82,10 +82,10 @@ Spec corrections applied before implementation: (a) Galilean-invariance scenario
 
 ## 10. Ideal-flow primitive kernels
 
-- [ ] 10.1 Implement `dynamic_pressure_kernel`, `bernoulli_total_head_kernel`, `stream_function_2d_kernel`, `velocity_potential_2d_kernel`, `circulation_kernel`, `kutta_joukowski_lift_kernel` in `kernels/fluids/ideal_flow.rs`.
-- [ ] 10.2 Tests: dynamic pressure quadratic-scaling; Kutta–Joukowski lift = 0 at zero circulation; circulation around a closed loop of a known uniform-flow + point-vortex agrees with the analytical `Γ`; precision-backend sweep.
-- [ ] 10.3 Causal wrappers + tests.
-- [ ] 10.4 Uncomment + re-export. Build/clippy/tests clean.
+- [x] 10.1 Implemented 6 ideal-flow primitive kernels in `kernels/fluids/ideal_flow.rs`: `dynamic_pressure_kernel`, `bernoulli_total_head_kernel` (uses standard gravity `G = 9.80665 m/s²`; errors on `ρ = 0`), `stream_function_2d_kernel` and `velocity_potential_2d_kernel` (pure-scalar differential updates, infallible), `circulation_kernel` (line integral over a sampled loop; **spec-relaxed to `Result`** to surface length-mismatch errors explicitly), `kutta_joukowski_lift_kernel`.
+- [x] 10.2 Added 18 ideal_flow_tests: dynamic pressure known value at sea-level air (q = 245 Pa), **spec scenario** "quadratic scaling with speed" (verified at k ∈ {0.5, 1, 2, 5}), zero-velocity case; Bernoulli head known value (free-fall conversion u² → 2gH), zero-density error, static-term-only sanity (`H = p/(ρg) = 10 m` for `p = 98066.5 Pa`); stream function and velocity potential known values; circulation = 0 for uniform flow on a closed square loop (Stokes' theorem); circulation = 4·ω·R for rigid-body rotation on a 4-point unit-radius loop; circulation length-mismatch error; circulation = 0 on empty loop; **spec scenario** Kutta–Joukowski lift = 0 at zero circulation (exact); Kutta–Joukowski known value `L' = ρ·u_∞·Γ = 612.5 N/m`; sign-follows-circulation symmetry test; f32 precision sweep on dynamic-pressure quadratic scaling.
+- [x] 10.3 Added 6 causal wrappers + 8 wrapper tests (including error paths for Bernoulli head at ρ = 0 and circulation at length mismatch).
+- [x] 10.4 Uncommented `pub use ideal_flow::*` in `kernels/fluids/mod.rs`. `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo test` (1350 tests pass, +24 since Group 9), `cargo fmt --check` all clean. No `#[allow]` suppressions added.
 
 ## 11. Theory layer — incompressible Newtonian NS
 
