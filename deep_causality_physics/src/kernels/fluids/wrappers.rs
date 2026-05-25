@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::kernels::fluids::{constitutive, governing, kinematics, mechanics};
+use crate::kernels::fluids::{constitutive, dimensionless, governing, kinematics, mechanics};
 use crate::{
     AccelerationVector, CauchyStress, Density, KinematicViscosity, Length, Pressure,
     RotationRateTensor, Speed, StrainRateTensor, Velocity3, VelocityGradient, Viscosity,
@@ -285,6 +285,285 @@ where
 {
     match constitutive::power_law_apparent_viscosity_kernel(consistency, flow_index, shear_rate) {
         Ok(mu) => PropagatingEffect::pure(mu),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+// =============================================================================
+// Dimensionless number wrappers — each lifts the kernel's `Result<R, _>` into
+// a `PropagatingEffect<R>` via `pure` / `from_error`.
+// =============================================================================
+
+/// Causal wrapper for [`dimensionless::reynolds_number_kernel`].
+pub fn reynolds_number<R>(
+    u: &Speed<R>,
+    length: &Length<R>,
+    nu: &KinematicViscosity<R>,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::reynolds_number_kernel(u, length, nu) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::mach_number_kernel`].
+pub fn mach_number<R>(u: &Speed<R>, sound_speed: &Speed<R>) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::mach_number_kernel(u, sound_speed) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::froude_number_kernel`].
+pub fn froude_number<R>(u: &Speed<R>, gravity: R, length: &Length<R>) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::froude_number_kernel(u, gravity, length) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::weber_number_kernel`].
+pub fn weber_number<R>(
+    rho: &Density<R>,
+    u: &Speed<R>,
+    length: &Length<R>,
+    surface_tension: R,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::weber_number_kernel(rho, u, length, surface_tension) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::prandtl_number_kernel`].
+pub fn prandtl_number<R>(nu: &KinematicViscosity<R>, thermal_diffusivity: R) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::prandtl_number_kernel(nu, thermal_diffusivity) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::peclet_number_kernel`].
+pub fn peclet_number<R>(
+    u: &Speed<R>,
+    length: &Length<R>,
+    thermal_diffusivity: R,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::peclet_number_kernel(u, length, thermal_diffusivity) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::strouhal_number_kernel`].
+pub fn strouhal_number<R>(frequency: R, length: &Length<R>, u: &Speed<R>) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::strouhal_number_kernel(frequency, length, u) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::knudsen_number_kernel`].
+pub fn knudsen_number<R>(mean_free_path: R, length: &Length<R>) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::knudsen_number_kernel(mean_free_path, length) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::richardson_number_kernel`].
+pub fn richardson_number<R>(
+    gravity: R,
+    expansion_coefficient: R,
+    delta_temperature: R,
+    length: &Length<R>,
+    u: &Speed<R>,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::richardson_number_kernel(
+        gravity,
+        expansion_coefficient,
+        delta_temperature,
+        length,
+        u,
+    ) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::rayleigh_number_kernel`].
+pub fn rayleigh_number<R>(
+    gravity: R,
+    expansion_coefficient: R,
+    delta_temperature: R,
+    length: &Length<R>,
+    nu: &KinematicViscosity<R>,
+    thermal_diffusivity: R,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::rayleigh_number_kernel(
+        gravity,
+        expansion_coefficient,
+        delta_temperature,
+        length,
+        nu,
+        thermal_diffusivity,
+    ) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::grashof_number_kernel`].
+pub fn grashof_number<R>(
+    gravity: R,
+    expansion_coefficient: R,
+    delta_temperature: R,
+    length: &Length<R>,
+    nu: &KinematicViscosity<R>,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::grashof_number_kernel(
+        gravity,
+        expansion_coefficient,
+        delta_temperature,
+        length,
+        nu,
+    ) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::eckert_number_kernel`].
+pub fn eckert_number<R>(
+    u: &Speed<R>,
+    specific_heat: R,
+    delta_temperature: R,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::eckert_number_kernel(u, specific_heat, delta_temperature) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::schmidt_number_kernel`].
+pub fn schmidt_number<R>(nu: &KinematicViscosity<R>, mass_diffusivity: R) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::schmidt_number_kernel(nu, mass_diffusivity) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::lewis_number_kernel`].
+pub fn lewis_number<R>(thermal_diffusivity: R, mass_diffusivity: R) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::lewis_number_kernel(thermal_diffusivity, mass_diffusivity) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::particle_stokes_number_kernel`].
+pub fn particle_stokes_number<R>(
+    particle_relaxation_time: R,
+    u: &Speed<R>,
+    length: &Length<R>,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::particle_stokes_number_kernel(particle_relaxation_time, u, length) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::capillary_number_kernel`].
+pub fn capillary_number<R>(
+    mu: &Viscosity<R>,
+    u: &Speed<R>,
+    surface_tension: R,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::capillary_number_kernel(mu, u, surface_tension) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::bond_number_kernel`].
+pub fn bond_number<R>(
+    rho: &Density<R>,
+    gravity: R,
+    length: &Length<R>,
+    surface_tension: R,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::bond_number_kernel(rho, gravity, length, surface_tension) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`dimensionless::nusselt_number_kernel`].
+pub fn nusselt_number<R>(
+    heat_transfer_coefficient: R,
+    length: &Length<R>,
+    thermal_conductivity: R,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match dimensionless::nusselt_number_kernel(
+        heat_transfer_coefficient,
+        length,
+        thermal_conductivity,
+    ) {
+        Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }

@@ -6,6 +6,8 @@
 #[cfg(test)]
 pub mod constitutive_tests;
 #[cfg(test)]
+pub mod dimensionless_tests;
+#[cfg(test)]
 pub mod governing_tests;
 #[cfg(test)]
 pub mod kinematics_tests;

@@ -5,12 +5,16 @@
 
 use deep_causality_physics::{
     CauchyStress, Density, KinematicViscosity, Length, Pressure, Speed, StrainRateTensor,
-    Velocity3, VelocityGradient, Viscosity, VorticityVector, bernoulli_pressure, continuity_rhs,
-    convective_acceleration, enstrophy_density, helicity_density, hydrostatic_pressure,
-    kinetic_energy_density, newtonian_viscous_stress, newtonian_viscous_stress_with_bulk,
-    power_law_apparent_viscosity, pressure_gradient_force, pressure_work, rotation_rate_tensor,
-    scalar_advection_diffusion, strain_rate_tensor, velocity_gradient_invariants,
-    viscous_diffusion, viscous_dissipation_rate, vorticity_from_gradient, vorticity_transport,
+    Velocity3, VelocityGradient, Viscosity, VorticityVector, bernoulli_pressure, bond_number,
+    capillary_number, continuity_rhs, convective_acceleration, eckert_number, enstrophy_density,
+    froude_number, grashof_number, helicity_density, hydrostatic_pressure, kinetic_energy_density,
+    knudsen_number, lewis_number, mach_number, newtonian_viscous_stress,
+    newtonian_viscous_stress_with_bulk, nusselt_number, particle_stokes_number, peclet_number,
+    power_law_apparent_viscosity, prandtl_number, pressure_gradient_force, pressure_work,
+    rayleigh_number, reynolds_number, richardson_number, rotation_rate_tensor,
+    scalar_advection_diffusion, schmidt_number, strain_rate_tensor, strouhal_number,
+    velocity_gradient_invariants, viscous_diffusion, viscous_dissipation_rate,
+    vorticity_from_gradient, vorticity_transport, weber_number,
 };
 
 // =============================================================================
@@ -252,4 +256,140 @@ fn test_power_law_apparent_viscosity_wrapper_success() {
 fn test_power_law_apparent_viscosity_wrapper_error_path() {
     let effect = power_law_apparent_viscosity(1.0_f64, 0.5, -0.1);
     assert!(!effect.is_ok());
+}
+
+// =============================================================================
+// Dimensionless number wrapper smoke tests
+// =============================================================================
+
+#[test]
+fn test_reynolds_number_wrapper() {
+    let u = Speed::<f64>::new(2.0).unwrap();
+    let l = Length::<f64>::new(0.1).unwrap();
+    let nu = KinematicViscosity::<f64>::new(1.0e-3).unwrap();
+    let effect = reynolds_number(&u, &l, &nu);
+    assert!(effect.is_ok());
+    assert!((effect.value().clone().into_value().unwrap() - 200.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_reynolds_number_wrapper_error_path() {
+    let u = Speed::<f64>::new(1.0).unwrap();
+    let l = Length::<f64>::new(1.0).unwrap();
+    let nu = KinematicViscosity::<f64>::new(0.0).unwrap();
+    let effect = reynolds_number(&u, &l, &nu);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_mach_number_wrapper() {
+    let u = Speed::<f64>::new(170.0).unwrap();
+    let a = Speed::<f64>::new(340.0).unwrap();
+    assert!(mach_number(&u, &a).is_ok());
+}
+
+#[test]
+fn test_froude_number_wrapper() {
+    let u = Speed::<f64>::new(10.0).unwrap();
+    let l = Length::<f64>::new(2.5).unwrap();
+    assert!(froude_number(&u, 9.8_f64, &l).is_ok());
+}
+
+#[test]
+fn test_weber_number_wrapper() {
+    let rho = Density::<f64>::new(1000.0).unwrap();
+    let u = Speed::<f64>::new(2.0).unwrap();
+    let l = Length::<f64>::new(0.001).unwrap();
+    assert!(weber_number(&rho, &u, &l, 0.072_f64).is_ok());
+}
+
+#[test]
+fn test_prandtl_number_wrapper() {
+    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
+    assert!(prandtl_number(&nu, 2.1e-5_f64).is_ok());
+}
+
+#[test]
+fn test_peclet_number_wrapper() {
+    let u = Speed::<f64>::new(2.0).unwrap();
+    let l = Length::<f64>::new(0.1).unwrap();
+    assert!(peclet_number(&u, &l, 2.0e-5_f64).is_ok());
+}
+
+#[test]
+fn test_strouhal_number_wrapper() {
+    let u = Speed::<f64>::new(5.0).unwrap();
+    let l = Length::<f64>::new(0.1).unwrap();
+    assert!(strouhal_number(10.0_f64, &l, &u).is_ok());
+}
+
+#[test]
+fn test_knudsen_number_wrapper() {
+    let l = Length::<f64>::new(1.0e-6).unwrap();
+    assert!(knudsen_number(1.0e-7_f64, &l).is_ok());
+}
+
+#[test]
+fn test_richardson_number_wrapper() {
+    let u = Speed::<f64>::new(2.0).unwrap();
+    let l = Length::<f64>::new(1.0).unwrap();
+    assert!(richardson_number(9.8_f64, 3.0e-3, 10.0, &l, &u).is_ok());
+}
+
+#[test]
+fn test_rayleigh_number_wrapper() {
+    let l = Length::<f64>::new(0.1).unwrap();
+    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
+    assert!(rayleigh_number(9.8_f64, 3.0e-3, 10.0, &l, &nu, 2.1e-5).is_ok());
+}
+
+#[test]
+fn test_grashof_number_wrapper() {
+    let l = Length::<f64>::new(0.1).unwrap();
+    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
+    assert!(grashof_number(9.8_f64, 3.0e-3, 10.0, &l, &nu).is_ok());
+}
+
+#[test]
+fn test_eckert_number_wrapper() {
+    let u = Speed::<f64>::new(10.0).unwrap();
+    assert!(eckert_number(&u, 1000.0_f64, 5.0).is_ok());
+}
+
+#[test]
+fn test_schmidt_number_wrapper() {
+    let nu = KinematicViscosity::<f64>::new(1.0e-6).unwrap();
+    assert!(schmidt_number(&nu, 2.0e-9_f64).is_ok());
+}
+
+#[test]
+fn test_lewis_number_wrapper() {
+    assert!(lewis_number(2.0e-5_f64, 5.0e-9_f64).is_ok());
+}
+
+#[test]
+fn test_particle_stokes_number_wrapper() {
+    let u = Speed::<f64>::new(10.0).unwrap();
+    let l = Length::<f64>::new(0.01).unwrap();
+    assert!(particle_stokes_number(1.0e-3_f64, &u, &l).is_ok());
+}
+
+#[test]
+fn test_capillary_number_wrapper() {
+    let mu = Viscosity::<f64>::new(0.001).unwrap();
+    let u = Speed::<f64>::new(1.0).unwrap();
+    assert!(capillary_number(&mu, &u, 0.072_f64).is_ok());
+}
+
+#[test]
+fn test_bond_number_wrapper() {
+    let rho = Density::<f64>::new(1000.0).unwrap();
+    let l = Length::<f64>::new(0.01).unwrap();
+    assert!(bond_number(&rho, 9.8_f64, &l, 0.072).is_ok());
+}
+
+#[test]
+fn test_nusselt_number_wrapper() {
+    let l = Length::<f64>::new(0.1).unwrap();
+    assert!(nusselt_number(100.0_f64, &l, 0.5).is_ok());
 }

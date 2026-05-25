@@ -47,10 +47,10 @@ Spec corrections applied before implementation: (a) Galilean-invariance scenario
 
 ## 5. Dimensionless number kernels
 
-- [ ] 5.1 Implement the 18 dimensionless-number kernels in `kernels/fluids/dimensionless.rs`: Reynolds, Mach, Froude, Weber, Prandtl, Peclet, Strouhal, Knudsen, Richardson, Rayleigh, Grashof, Eckert, Schmidt, Lewis, Stokes, Capillary, Bond, Nusselt.
-- [ ] 5.2 Tests: Reynolds composition from `(u, L, ν)`; `Pe = Re · Pr`; `Le = Sc / Pr`; one direct prescribed-input test per number; precision-backend sweep on representative numbers.
-- [ ] 5.3 Causal wrappers + tests.
-- [ ] 5.4 Uncomment + re-export. Build/clippy/tests clean.
+- [x] 5.1 Implemented all 18 dimensionless-number kernels in `kernels/fluids/dimensionless.rs`: Reynolds, Mach, Froude, Weber, Prandtl, Peclet, Strouhal, Knudsen, Richardson, Rayleigh, Grashof, Eckert, Schmidt, Lewis, particle Stokes, Capillary, Bond, Nusselt. Each returns `Result<R, PhysicsError>` and errors cleanly on zero denominators or non-physical input (negative `g·L` for Froude). Typed inputs (`Speed`, `Length`, `Density`, `Viscosity`, `KinematicViscosity`) where the existing newtypes apply; raw `R` for non-newtyped physical quantities (thermal diffusivity, thermal conductivity, surface tension, specific heat, expansion coefficient, mass diffusivity, particle relaxation time, mean free path, heat transfer coefficient, gravity, frequency, ΔT).
+- [x] 5.2 Added 41 tests in `tests/kernels/fluids/dimensionless_tests.rs`: one known-value test per number; the three load-bearing algebraic identities `Pe = Re · Pr`, `Ra = Gr · Pr`, `Le = Sc / Pr` verified to numerical tolerance; error-path coverage for every kernel (zero denominator, non-physical input); f32 precision sweep on Reynolds and the `Pe = Re · Pr` identity.
+- [x] 5.3 Added 18 causal wrappers + 18 wrapper smoke tests + 1 error-path wrapper test in `wrappers_tests.rs`.
+- [x] 5.4 Uncommented `pub use dimensionless::*` in `kernels/fluids/mod.rs`. `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo test` (1212 tests pass, +59 since Group 4), `cargo fmt --check` all clean. No `#[allow]` suppressions added.
 
 ## 6. Turbulence quantity kernels
 
