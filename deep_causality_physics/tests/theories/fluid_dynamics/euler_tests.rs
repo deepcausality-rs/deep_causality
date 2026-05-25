@@ -93,8 +93,8 @@ fn test_euler_body_force_linearity() {
 #[test]
 fn test_euler_f32_sweep() {
     let u = Velocity3::<f32>::new([1.0, 2.0, 3.0]).unwrap();
-    let g = VelocityGradient::<f32>::new([[0.1, 0.0, 0.0], [0.0, 0.2, 0.0], [0.0, 0.0, 0.3]])
-        .unwrap();
+    let g =
+        VelocityGradient::<f32>::new([[0.1, 0.0, 0.0], [0.0, 0.2, 0.0], [0.0, 0.0, 0.3]]).unwrap();
     let gp = [1.0_f32, 1.0, 1.0];
     let rho = Density::<f32>::new(1.0).unwrap();
     let b = AccelerationVector::<f32>::new([0.0, -9.81, 0.0]).unwrap();

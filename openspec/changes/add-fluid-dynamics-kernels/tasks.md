@@ -96,10 +96,10 @@ Spec corrections applied before implementation: (a) Galilean-invariance scenario
 
 ## 12. Theory layer — Euler
 
-- [ ] 12.1 Implement `euler_momentum_rhs_kernel` in `theories/fluid_dynamics/euler.rs`. Signature has no viscosity input.
-- [ ] 12.2 Tests: equal to `incompressible_ns_rhs_kernel` at `ν = 0` and `laplacian_u = 0`; signature lacks viscosity (compile-time check via type tests); precision-backend sweep.
-- [ ] 12.3 Causal wrapper + tests.
-- [ ] 12.4 Re-export. Build/clippy/tests clean.
+- [x] 12.1 Implemented `euler_momentum_rhs_kernel` in `theories/fluid_dynamics/euler.rs`. Form: `∂u/∂t = −(u·∇)u − (1/ρ)∇p + g`. Signature omits both `ν` and `∇²u` (no viscous term in this regime; the type itself encodes the inviscid limit). Returns `Result<AccelerationVector<R>, PhysicsError>` with the `ρ = 0` error path propagated from `pressure_gradient_force_kernel`.
+- [x] 12.2 Added 5 tests in `tests/theories/fluid_dynamics/euler_tests.rs`: known-value sanity; **spec scenario** Euler ≡ `incompressible_ns_rhs_kernel` at `ν = 0` and `∇²u = 0` (verified componentwise on a non-trivial input); `ρ = 0` error path; body-force linearity; f32 precision sweep.
+- [x] 12.3 Added `euler_momentum_rhs` causal wrapper + 2 wrapper tests (success and `ρ = 0` error path).
+- [x] 12.4 Uncommented `pub use euler::*` in `theories/fluid_dynamics/mod.rs`. `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo test` (1366 tests pass, +7 since Group 11), `cargo fmt --check` all clean.
 
 ## 13. Theory layer — Stokes
 
