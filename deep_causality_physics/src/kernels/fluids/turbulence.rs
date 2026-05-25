@@ -166,6 +166,13 @@ where
 /// physical construction); the kernel is a typed pass-through that pins the
 /// symmetric-tensor invariant in the output. Diagonal entries are
 /// non-negative (variances).
+///
+/// **Type-label note.** Both the input ([`StrainRateTensor<R>`]) and the
+/// output ([`CauchyStress<R>`]) newtypes are reused here as generic
+/// symmetric rank-2 carriers — the names reflect their enforced invariants
+/// (symmetry), not a commitment to a particular physical interpretation.
+/// The output is the Reynolds stress, *not* viscous stress; do not feed it
+/// into `viscous_dissipation_rate_kernel` or `entropy_production_rate_kernel`.
 pub fn reynolds_stress_kernel<R>(u_prime_outer_u_prime: &StrainRateTensor<R>) -> CauchyStress<R>
 where
     R: RealField,

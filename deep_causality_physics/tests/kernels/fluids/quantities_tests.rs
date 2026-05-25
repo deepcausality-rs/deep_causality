@@ -479,13 +479,6 @@ fn test_velocity3_new_unchecked() {
 }
 
 #[test]
-fn test_velocity3_from_array_and_back() {
-    let u: Velocity3<f64> = [1.0, 2.0, 3.0].into();
-    let raw: [f64; 3] = u.into();
-    assert_eq!(raw, [1.0, 2.0, 3.0]);
-}
-
-#[test]
 fn test_velocity3_into_inner_consumes() {
     let u = Velocity3::<f64>::new([4.0, 5.0, 6.0]).unwrap();
     assert_eq!(u.into_inner(), [4.0, 5.0, 6.0]);
@@ -521,13 +514,6 @@ fn test_vorticity_vector_rejects_non_finite() {
 #[test]
 fn test_vorticity_vector_default() {
     assert_eq!(VorticityVector::<f64>::default().into_inner(), [0.0; 3]);
-}
-
-#[test]
-fn test_vorticity_vector_round_trip() {
-    let w: VorticityVector<f64> = [1.0, 2.0, 3.0].into();
-    let raw: [f64; 3] = w.into();
-    assert_eq!(raw, [1.0, 2.0, 3.0]);
 }
 
 #[test]
@@ -569,13 +555,6 @@ fn test_acceleration_vector_default() {
 }
 
 #[test]
-fn test_acceleration_vector_round_trip() {
-    let a: AccelerationVector<f64> = [1.0, 2.0, 3.0].into();
-    let raw: [f64; 3] = a.into();
-    assert_eq!(raw, [1.0, 2.0, 3.0]);
-}
-
-#[test]
 fn test_acceleration_vector_new_unchecked() {
     let a = AccelerationVector::<f64>::new_unchecked([1.0, 2.0, 3.0]);
     assert_eq!(a.into_inner(), [1.0, 2.0, 3.0]);
@@ -611,13 +590,6 @@ fn test_body_force_density_rejects_non_finite() {
 #[test]
 fn test_body_force_density_default() {
     assert_eq!(BodyForceDensity::<f64>::default().into_inner(), [0.0; 3]);
-}
-
-#[test]
-fn test_body_force_density_round_trip() {
-    let f: BodyForceDensity<f64> = [1.0, 2.0, 3.0].into();
-    let raw: [f64; 3] = f.into();
-    assert_eq!(raw, [1.0, 2.0, 3.0]);
 }
 
 #[test]
@@ -661,14 +633,6 @@ fn test_velocity_gradient_default_is_zero() {
         VelocityGradient::<f64>::default().into_inner(),
         [[0.0; 3]; 3]
     );
-}
-
-#[test]
-fn test_velocity_gradient_round_trip() {
-    let m = [[1.0, 0.0, 0.0], [0.0, -2.0, 0.0], [0.0, 0.0, 0.5]];
-    let g: VelocityGradient<f64> = m.into();
-    let raw: [[f64; 3]; 3] = g.into();
-    assert_eq!(raw, m);
 }
 
 #[test]

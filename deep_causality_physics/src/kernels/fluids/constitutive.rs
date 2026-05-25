@@ -10,6 +10,16 @@
 //! `τ_ij = 2μ S_ij`. For a compressible Newtonian fluid with Stokes hypothesis
 //! (bulk viscosity ζ = 0) it is `τ_ij = 2μ S_ij − (2/3)μ (∇·u) δ_ij`. With
 //! non-zero bulk viscosity it is `τ_ij = 2μ S_ij − (2/3)μ (∇·u) δ_ij + ζ (∇·u) δ_ij`.
+//!
+//! **Type-label note.** The returned tensor is the *viscous* stress `τ`, *not*
+//! the full Cauchy stress `σ = −p I + τ`. The [`CauchyStress<R>`] newtype is
+//! reused here as a generic symmetric rank-2 carrier — its name reflects the
+//! enforced invariant (symmetry), not a commitment to a particular physical
+//! interpretation. Downstream consumers of the output ([`viscous_dissipation_rate_kernel`](super::governing::viscous_dissipation_rate_kernel),
+//! [`entropy_production_rate_kernel`](super::compressible::entropy_production_rate_kernel))
+//! assume the input is viscous-stress-only; passing a full `σ` into them
+//! breaks the `Φ = τ:∇u ≥ 0` positivity guarantee from the Clausius–Duhem
+//! inequality.
 
 use crate::PhysicsError;
 use crate::kernels::fluids::quantities::{CauchyStress, StrainRateTensor, Viscosity};

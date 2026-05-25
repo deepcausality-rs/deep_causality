@@ -216,6 +216,13 @@ where
 /// Clausius–Duhem inequality. Returned as a raw scalar; sign-checking is the
 /// caller's responsibility when the input `tau` is not guaranteed Newtonian.
 ///
+/// **Contract.** The `tau` argument must be the *viscous* stress `τ`, not
+/// the full Cauchy stress `σ = −p I + τ`. The [`CauchyStress<R>`] newtype is
+/// a symmetric-tensor carrier (its name reflects the enforced symmetry
+/// invariant, not a commitment to physical interpretation). Passing a full
+/// Cauchy stress here breaks the `Φ ≥ 0` positivity guarantee — the pressure
+/// part contributes `−p·∇·u`, which can be either sign.
+///
 /// Tensor double-contraction:
 /// `τ : ∇u = Σ_i Σ_j τ_ij · grad_u[i][j]`.
 pub fn viscous_dissipation_rate_kernel<R>(tau: &CauchyStress<R>, grad_u: &VelocityGradient<R>) -> R

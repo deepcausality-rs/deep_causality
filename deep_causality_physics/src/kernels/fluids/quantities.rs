@@ -266,12 +266,6 @@ impl<R: deep_causality_num::RealField> Velocity3<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> From<[R; 3]> for Velocity3<R> {
-    fn from(raw: [R; 3]) -> Self {
-        Self(raw)
-    }
-}
-
 impl<R: deep_causality_num::RealField> From<Velocity3<R>> for [R; 3] {
     fn from(val: Velocity3<R>) -> Self {
         val.0
@@ -305,12 +299,6 @@ impl<R: deep_causality_num::RealField> VorticityVector<R> {
     }
     pub fn into_inner(self) -> [R; 3] {
         self.0
-    }
-}
-
-impl<R: deep_causality_num::RealField> From<[R; 3]> for VorticityVector<R> {
-    fn from(raw: [R; 3]) -> Self {
-        Self(raw)
     }
 }
 
@@ -350,12 +338,6 @@ impl<R: deep_causality_num::RealField> AccelerationVector<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> From<[R; 3]> for AccelerationVector<R> {
-    fn from(raw: [R; 3]) -> Self {
-        Self(raw)
-    }
-}
-
 impl<R: deep_causality_num::RealField> From<AccelerationVector<R>> for [R; 3] {
     fn from(val: AccelerationVector<R>) -> Self {
         val.0
@@ -389,12 +371,6 @@ impl<R: deep_causality_num::RealField> BodyForceDensity<R> {
     }
     pub fn into_inner(self) -> [R; 3] {
         self.0
-    }
-}
-
-impl<R: deep_causality_num::RealField> From<[R; 3]> for BodyForceDensity<R> {
-    fn from(raw: [R; 3]) -> Self {
-        Self(raw)
     }
 }
 
@@ -451,12 +427,6 @@ impl<R: deep_causality_num::RealField> VelocityGradient<R> {
     }
     pub fn into_inner(self) -> [[R; 3]; 3] {
         self.0
-    }
-}
-
-impl<R: deep_causality_num::RealField> From<[[R; 3]; 3]> for VelocityGradient<R> {
-    fn from(raw: [[R; 3]; 3]) -> Self {
-        Self(raw)
     }
 }
 

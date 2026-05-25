@@ -124,6 +124,11 @@ where
 /// For a Newtonian fluid both terms are non-negative (Clausius–Duhem
 /// inequality). Errors when `T ≤ 0` (division by zero or negative absolute
 /// temperature).
+///
+/// **Contract.** The `tau` argument must be the *viscous* stress `τ`, not the
+/// full Cauchy stress `σ = −p I + τ`. The [`CauchyStress<R>`] newtype is a
+/// symmetric-tensor carrier; passing a full Cauchy stress breaks the
+/// `σ ≥ 0` second-law guarantee.
 pub fn entropy_production_rate_kernel<R>(
     temperature: &Temperature<R>,
     tau: &CauchyStress<R>,

@@ -71,15 +71,12 @@ pub fn compressible_ns_momentum_rhs_kernel<R>(
 where
     R: RealField,
 {
-    let r = rho.value();
-    if r == R::zero() {
-        return Err(PhysicsError::PhysicalInvariantBroken(
-            "compressible_ns_momentum_rhs_kernel: density is zero".into(),
-        ));
-    }
-    let inv_rho = R::one() / r;
+    // ρ = 0 is rejected by pressure_gradient_force_kernel below; we propagate
+    // its error rather than re-checking here. The inv_rho factor on div_tau
+    // is only reached after that call succeeds, so ρ > 0 is guaranteed.
     let conv = convective_acceleration_kernel(u, grad_u).into_inner();
     let press = pressure_gradient_force_kernel(rho, grad_p)?.into_inner();
+    let inv_rho = R::one() / rho.value();
     let g = body_force_per_mass.value();
 
     Ok(AccelerationVector::new_unchecked([
