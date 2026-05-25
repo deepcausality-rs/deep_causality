@@ -7,7 +7,7 @@ use crate::kernels::fluids::{
     boundary_layer, coherent_structures, compressible, constitutive, dimensionless, governing,
     ideal_flow, kinematics, mechanics, turbulence,
 };
-use crate::theories::fluid_dynamics::incompressible_ns;
+use crate::theories::fluid_dynamics::{euler, incompressible_ns};
 use crate::{
     AccelerationVector, CauchyStress, Density, KinematicViscosity, Length, Pressure,
     RotationRateTensor, SpecificEnthalpy, Speed, StrainRateTensor, Temperature, Velocity3,
@@ -1028,6 +1028,27 @@ where
         nu,
         body_force_per_mass,
     ) {
+        Ok(a) => PropagatingEffect::pure(a),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+// =============================================================================
+// Theory layer — Euler regime (inviscid)
+// =============================================================================
+
+/// Causal wrapper for [`euler::euler_momentum_rhs_kernel`].
+pub fn euler_momentum_rhs<R>(
+    u: &Velocity3<R>,
+    grad_u: &VelocityGradient<R>,
+    grad_p: &[R; 3],
+    rho: &Density<R>,
+    body_force_per_mass: &AccelerationVector<R>,
+) -> PropagatingEffect<AccelerationVector<R>>
+where
+    R: RealField + Debug + 'static,
+{
+    match euler::euler_momentum_rhs_kernel(u, grad_u, grad_p, rho, body_force_per_mass) {
         Ok(a) => PropagatingEffect::pure(a),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }

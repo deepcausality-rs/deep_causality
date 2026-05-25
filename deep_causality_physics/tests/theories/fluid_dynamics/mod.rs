@@ -4,4 +4,6 @@
  */
 
 #[cfg(test)]
+pub mod euler_tests;
+#[cfg(test)]
 pub mod incompressible_ns_tests;

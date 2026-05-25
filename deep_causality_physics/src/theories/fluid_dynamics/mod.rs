@@ -18,6 +18,6 @@ pub(crate) mod stokes;
 
 // Group `pub use` re-exports are commented out until each regime ships.
 // pub use compressible_ns::*;
-// pub use euler::*;
+pub use euler::*;
 pub use incompressible_ns::*;
 // pub use stokes::*;
