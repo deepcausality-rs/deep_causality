@@ -40,10 +40,10 @@ Spec corrections applied before implementation: (a) Galilean-invariance scenario
 
 ## 4. Constitutive kernels
 
-- [ ] 4.1 Implement `newtonian_viscous_stress_kernel`, `newtonian_viscous_stress_with_bulk_kernel`, `power_law_apparent_viscosity_kernel` in `kernels/fluids/constitutive.rs`.
-- [ ] 4.2 Tests: Newtonian stress vanishes in rigid-body motion; Stokes-hypothesis form is the `ζ = 0` special case (bit-equality); power-law equals Newtonian at `n = 1`; sign convention (positive in tension) pinned by a prescribed-input test; precision-backend sweep.
-- [ ] 4.3 Causal wrappers + tests.
-- [ ] 4.4 Uncomment + re-export. Build/clippy/tests clean.
+- [x] 4.1 Implemented `newtonian_viscous_stress_kernel(mu, S, div_u) -> Result<CauchyStress, _>`, `newtonian_viscous_stress_with_bulk_kernel(mu, zeta, S, div_u) -> Result<CauchyStress, _>`, `power_law_apparent_viscosity_kernel(K, n, shear_rate) -> Result<Viscosity, _>` in `kernels/fluids/constitutive.rs`. Newtonian stress returns via `CauchyStress::new_unchecked` because the algebra (`2μS` symmetric + diagonal bulk term) guarantees symmetry.
+- [x] 4.2 Added 14 tests in `tests/kernels/fluids/constitutive_tests.rs`: stress vanishes for zero strain and zero divergence; stress is symmetric; incompressible reduces to `2μS` exactly; bulk correction lands only on the diagonal at isotropic dilatation (sanity: `2·1·1 − (2/3)·1·3 = 0`); bulk-with-`ζ=0` matches the Stokes-hypothesis kernel bit-for-bit; bulk-term-only contribution is diagonal; bulk kernel is symmetric; power-law reduces to Newtonian at `n=1` across multiple shear rates including 0; shear-thinning (`n<1`); shear-thickening (`n>1`); known-value sanity (`K=2, n=0.5, γ̇=4 ⇒ μ=1`); negative shear rate errors; zero shear rate with `n<1` produces infinity rejected by `Viscosity::new`; f32 precision sweep on Newtonian stress and power-law.
+- [x] 4.3 Added 4 causal wrappers in `kernels/fluids/wrappers.rs` (Newtonian, Newtonian-with-bulk, power-law success and error paths) plus 4 wrapper tests.
+- [x] 4.4 Uncommented `pub use constitutive::*` in `kernels/fluids/mod.rs`. `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo test` (1153 tests pass, +19 since Group 3), `cargo fmt --check` all clean. No `#[allow]` suppressions added.
 
 ## 5. Dimensionless number kernels
 

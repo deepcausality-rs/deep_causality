@@ -3,10 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::kernels::fluids::{governing, kinematics, mechanics};
+use crate::kernels::fluids::{constitutive, governing, kinematics, mechanics};
 use crate::{
     AccelerationVector, CauchyStress, Density, KinematicViscosity, Length, Pressure,
-    RotationRateTensor, Speed, StrainRateTensor, Velocity3, VelocityGradient, VorticityVector,
+    RotationRateTensor, Speed, StrainRateTensor, Velocity3, VelocityGradient, Viscosity,
+    VorticityVector,
 };
 use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
@@ -236,4 +237,54 @@ where
     R: RealField + Debug + Default + 'static,
 {
     PropagatingEffect::pure(governing::pressure_work_kernel(p, div_u))
+}
+
+// =============================================================================
+// Constitutive kernel wrappers
+// =============================================================================
+
+/// Causal wrapper for [`constitutive::newtonian_viscous_stress_kernel`].
+pub fn newtonian_viscous_stress<R>(
+    mu: &Viscosity<R>,
+    strain_rate: &StrainRateTensor<R>,
+    div_u: R,
+) -> PropagatingEffect<CauchyStress<R>>
+where
+    R: RealField + FromPrimitive + Debug + 'static,
+{
+    match constitutive::newtonian_viscous_stress_kernel(mu, strain_rate, div_u) {
+        Ok(tau) => PropagatingEffect::pure(tau),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`constitutive::newtonian_viscous_stress_with_bulk_kernel`].
+pub fn newtonian_viscous_stress_with_bulk<R>(
+    mu: &Viscosity<R>,
+    zeta: &Viscosity<R>,
+    strain_rate: &StrainRateTensor<R>,
+    div_u: R,
+) -> PropagatingEffect<CauchyStress<R>>
+where
+    R: RealField + FromPrimitive + Debug + 'static,
+{
+    match constitutive::newtonian_viscous_stress_with_bulk_kernel(mu, zeta, strain_rate, div_u) {
+        Ok(tau) => PropagatingEffect::pure(tau),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`constitutive::power_law_apparent_viscosity_kernel`].
+pub fn power_law_apparent_viscosity<R>(
+    consistency: R,
+    flow_index: R,
+    shear_rate: R,
+) -> PropagatingEffect<Viscosity<R>>
+where
+    R: RealField + Debug + 'static,
+{
+    match constitutive::power_law_apparent_viscosity_kernel(consistency, flow_index, shear_rate) {
+        Ok(mu) => PropagatingEffect::pure(mu),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
 }

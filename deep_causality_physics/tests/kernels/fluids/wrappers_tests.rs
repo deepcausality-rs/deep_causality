@@ -4,12 +4,13 @@
  */
 
 use deep_causality_physics::{
-    CauchyStress, Density, KinematicViscosity, Length, Pressure, Speed, Velocity3,
-    VelocityGradient, VorticityVector, bernoulli_pressure, continuity_rhs, convective_acceleration,
-    enstrophy_density, helicity_density, hydrostatic_pressure, kinetic_energy_density,
-    pressure_gradient_force, pressure_work, rotation_rate_tensor, scalar_advection_diffusion,
-    strain_rate_tensor, velocity_gradient_invariants, viscous_diffusion, viscous_dissipation_rate,
-    vorticity_from_gradient, vorticity_transport,
+    CauchyStress, Density, KinematicViscosity, Length, Pressure, Speed, StrainRateTensor,
+    Velocity3, VelocityGradient, Viscosity, VorticityVector, bernoulli_pressure, continuity_rhs,
+    convective_acceleration, enstrophy_density, helicity_density, hydrostatic_pressure,
+    kinetic_energy_density, newtonian_viscous_stress, newtonian_viscous_stress_with_bulk,
+    power_law_apparent_viscosity, pressure_gradient_force, pressure_work, rotation_rate_tensor,
+    scalar_advection_diffusion, strain_rate_tensor, velocity_gradient_invariants,
+    viscous_diffusion, viscous_dissipation_rate, vorticity_from_gradient, vorticity_transport,
 };
 
 // =============================================================================
@@ -209,4 +210,46 @@ fn test_pressure_work_wrapper_success() {
     let effect = pressure_work(&p, 3.0);
     assert!(effect.is_ok());
     assert_eq!(effect.value().clone().into_value().unwrap(), 6.0);
+}
+
+// =============================================================================
+// Constitutive kernel wrapper tests
+// =============================================================================
+
+#[test]
+fn test_newtonian_viscous_stress_wrapper_success() {
+    let mu = Viscosity::<f64>::new(0.5).unwrap();
+    let s =
+        StrainRateTensor::<f64>::new([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]).unwrap();
+    let effect = newtonian_viscous_stress(&mu, &s, 0.0);
+    assert!(effect.is_ok());
+    let tau = effect.value().clone().into_value().unwrap();
+    // τ_00 = 2 * 0.5 * 1 = 1
+    assert!((tau.value()[0][0] - 1.0).abs() < 1e-12);
+}
+
+#[test]
+fn test_newtonian_viscous_stress_with_bulk_wrapper_success() {
+    let mu = Viscosity::<f64>::new(0.0).unwrap();
+    let zeta = Viscosity::<f64>::new(1.0).unwrap();
+    let s = StrainRateTensor::<f64>::default();
+    let effect = newtonian_viscous_stress_with_bulk(&mu, &zeta, &s, 5.0);
+    assert!(effect.is_ok());
+    let tau = effect.value().clone().into_value().unwrap();
+    // Diagonal: (-0 + 1) * 5 = 5
+    assert!((tau.value()[0][0] - 5.0).abs() < 1e-12);
+}
+
+#[test]
+fn test_power_law_apparent_viscosity_wrapper_success() {
+    let effect = power_law_apparent_viscosity(2.0_f64, 0.5, 4.0);
+    assert!(effect.is_ok());
+    let mu_eff = effect.value().clone().into_value().unwrap();
+    assert!((mu_eff.value() - 1.0).abs() < 1e-12);
+}
+
+#[test]
+fn test_power_law_apparent_viscosity_wrapper_error_path() {
+    let effect = power_law_apparent_viscosity(1.0_f64, 0.5, -0.1);
+    assert!(!effect.is_ok());
 }
