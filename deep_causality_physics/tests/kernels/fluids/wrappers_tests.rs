@@ -6,20 +6,22 @@
 use deep_causality_physics::{
     CauchyStress, Density, KinematicViscosity, Length, Pressure, SpecificEnthalpy, Speed,
     StrainRateTensor, Temperature, Velocity3, VelocityGradient, Viscosity, VorticityVector,
-    bernoulli_pressure, bond_number, capillary_number, continuity_rhs, convective_acceleration,
-    delta_criterion, dissipation_rate, eckert_number, eddy_viscosity_boussinesq, enstrophy_density,
-    entropy_production_rate, froude_number, grashof_number, helicity_density, hydrostatic_pressure,
-    integral_length_scale, kinetic_energy_density, knudsen_number, kolmogorov_length,
-    kolmogorov_time, kolmogorov_velocity, lambda2, lewis_number, mach_number,
+    WallShearStress, bernoulli_pressure, bond_number, capillary_number, continuity_rhs,
+    convective_acceleration, delta_criterion, dissipation_rate, eckert_number,
+    eddy_viscosity_boussinesq, enstrophy_density, entropy_production_rate, friction_velocity,
+    froude_number, grashof_number, helicity_density, hydrostatic_pressure, integral_length_scale,
+    kinetic_energy_density, knudsen_number, kolmogorov_length, kolmogorov_time,
+    kolmogorov_velocity, lambda2, lewis_number, log_law_velocity, mach_number,
     newtonian_viscous_stress, newtonian_viscous_stress_with_bulk, nusselt_number,
     particle_stokes_number, peclet_number, power_law_apparent_viscosity, prandtl_number,
     pressure_gradient_force, pressure_work, q_criterion, rayleigh_number, reynolds_number,
     reynolds_stress, richardson_number, rotation_rate_tensor, scalar_advection_diffusion,
-    schmidt_number, specific_enthalpy, speed_of_sound_ideal_gas, strain_rate_tensor,
-    strouhal_number, swirling_strength, taylor_microscale, total_enthalpy,
+    schmidt_number, skin_friction_coefficient, specific_enthalpy, speed_of_sound_ideal_gas,
+    strain_rate_tensor, strouhal_number, swirling_strength, taylor_microscale, total_enthalpy,
     total_pressure_isentropic, total_temperature_isentropic, turbulent_kinetic_energy,
     velocity_gradient_invariants, viscous_diffusion, viscous_dissipation_rate,
-    vorticity_from_gradient, vorticity_transport, weber_number,
+    viscous_length_scale, viscous_sublayer_velocity, vorticity_from_gradient, vorticity_transport,
+    wall_shear_stress_newtonian, weber_number, y_plus,
 };
 
 // =============================================================================
@@ -588,4 +590,73 @@ fn test_entropy_production_rate_wrapper_error_path() {
     let grad_u = VelocityGradient::<f64>::default();
     let t = Temperature::<f64>::new(0.0).unwrap();
     assert!(!entropy_production_rate(&t, &tau, &grad_u, 1.0_f64, &[0.0; 3]).is_ok());
+}
+
+// =============================================================================
+// Boundary-layer wrapper tests
+// =============================================================================
+
+#[test]
+fn test_wall_shear_stress_newtonian_wrapper() {
+    let mu = Viscosity::<f64>::new(1.0e-3).unwrap();
+    let effect = wall_shear_stress_newtonian(&mu, 100.0_f64);
+    assert!(effect.is_ok());
+    let v = effect.value().clone().into_value().unwrap();
+    assert!((v.value() - 0.1).abs() < 1e-12);
+}
+
+#[test]
+fn test_friction_velocity_wrapper() {
+    let tau = WallShearStress::<f64>::new(0.1).unwrap();
+    let rho = Density::<f64>::new(1.0).unwrap();
+    assert!(friction_velocity(&tau, &rho).is_ok());
+}
+
+#[test]
+fn test_friction_velocity_wrapper_error_path() {
+    let tau = WallShearStress::<f64>::new(1.0).unwrap();
+    let rho = Density::<f64>::new(0.0).unwrap();
+    assert!(!friction_velocity(&tau, &rho).is_ok());
+}
+
+#[test]
+fn test_viscous_length_scale_wrapper() {
+    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
+    let u_tau = Speed::<f64>::new(0.5).unwrap();
+    assert!(viscous_length_scale(&nu, &u_tau).is_ok());
+}
+
+#[test]
+fn test_y_plus_wrapper() {
+    let y = Length::<f64>::new(1.0e-4).unwrap();
+    let u_tau = Speed::<f64>::new(0.5).unwrap();
+    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
+    assert!(y_plus(&y, &u_tau, &nu).is_ok());
+}
+
+#[test]
+fn test_viscous_sublayer_velocity_wrapper() {
+    let effect = viscous_sublayer_velocity(3.0_f64);
+    assert!(effect.is_ok());
+    assert_eq!(effect.value().clone().into_value().unwrap(), 3.0);
+}
+
+#[test]
+fn test_log_law_velocity_wrapper() {
+    assert!(log_law_velocity(100.0_f64, 0.41, 5.0).is_ok());
+}
+
+#[test]
+fn test_log_law_velocity_wrapper_error_path() {
+    assert!(!log_law_velocity(0.0_f64, 0.41, 5.0).is_ok());
+}
+
+#[test]
+fn test_skin_friction_coefficient_wrapper() {
+    let tau = WallShearStress::<f64>::new(0.5).unwrap();
+    let rho = Density::<f64>::new(1.0).unwrap();
+    let u_inf = Speed::<f64>::new(10.0).unwrap();
+    let effect = skin_friction_coefficient(&tau, &rho, &u_inf);
+    assert!(effect.is_ok());
+    assert!((effect.value().clone().into_value().unwrap() - 0.01).abs() < 1e-12);
 }

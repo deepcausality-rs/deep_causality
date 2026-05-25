@@ -4,13 +4,13 @@
  */
 
 use crate::kernels::fluids::{
-    coherent_structures, compressible, constitutive, dimensionless, governing, kinematics,
-    mechanics, turbulence,
+    boundary_layer, coherent_structures, compressible, constitutive, dimensionless, governing,
+    kinematics, mechanics, turbulence,
 };
 use crate::{
     AccelerationVector, CauchyStress, Density, KinematicViscosity, Length, Pressure,
     RotationRateTensor, SpecificEnthalpy, Speed, StrainRateTensor, Temperature, Velocity3,
-    VelocityGradient, Viscosity, VorticityVector,
+    VelocityGradient, Viscosity, VorticityVector, WallShearStress,
 };
 use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
@@ -825,6 +825,100 @@ where
         thermal_conductivity,
         grad_temperature,
     ) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+// =============================================================================
+// Boundary-layer wrappers
+// =============================================================================
+
+/// Causal wrapper for [`boundary_layer::wall_shear_stress_newtonian_kernel`].
+pub fn wall_shear_stress_newtonian<R>(
+    mu: &Viscosity<R>,
+    du_dy_wall: R,
+) -> PropagatingEffect<WallShearStress<R>>
+where
+    R: RealField + Debug + 'static,
+{
+    PropagatingEffect::pure(boundary_layer::wall_shear_stress_newtonian_kernel(
+        mu, du_dy_wall,
+    ))
+}
+
+/// Causal wrapper for [`boundary_layer::friction_velocity_kernel`].
+pub fn friction_velocity<R>(
+    tau_w: &WallShearStress<R>,
+    rho: &Density<R>,
+) -> PropagatingEffect<Speed<R>>
+where
+    R: RealField + Debug + 'static,
+{
+    match boundary_layer::friction_velocity_kernel(tau_w, rho) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`boundary_layer::viscous_length_scale_kernel`].
+pub fn viscous_length_scale<R>(
+    nu: &KinematicViscosity<R>,
+    u_tau: &Speed<R>,
+) -> PropagatingEffect<Length<R>>
+where
+    R: RealField + Debug + 'static,
+{
+    match boundary_layer::viscous_length_scale_kernel(nu, u_tau) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`boundary_layer::y_plus_kernel`].
+pub fn y_plus<R>(
+    y: &Length<R>,
+    u_tau: &Speed<R>,
+    nu: &KinematicViscosity<R>,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match boundary_layer::y_plus_kernel(y, u_tau, nu) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`boundary_layer::viscous_sublayer_velocity_kernel`].
+pub fn viscous_sublayer_velocity<R>(y_plus: R) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    PropagatingEffect::pure(boundary_layer::viscous_sublayer_velocity_kernel(y_plus))
+}
+
+/// Causal wrapper for [`boundary_layer::log_law_velocity_kernel`].
+pub fn log_law_velocity<R>(y_plus: R, kappa: R, b: R) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match boundary_layer::log_law_velocity_kernel(y_plus, kappa, b) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`boundary_layer::skin_friction_coefficient_kernel`].
+pub fn skin_friction_coefficient<R>(
+    tau_w: &WallShearStress<R>,
+    rho: &Density<R>,
+    u_inf: &Speed<R>,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    match boundary_layer::skin_friction_coefficient_kernel(tau_w, rho, u_inf) {
         Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }

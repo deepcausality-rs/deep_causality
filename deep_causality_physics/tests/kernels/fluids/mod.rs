@@ -4,6 +4,8 @@
  */
 
 #[cfg(test)]
+pub mod boundary_layer_tests;
+#[cfg(test)]
 pub mod coherent_structures_tests;
 #[cfg(test)]
 pub mod compressible_tests;

@@ -21,7 +21,7 @@ pub use quantities::*;
 pub use wrappers::*;
 
 // Group `pub use` re-exports are commented out until each group's gates close.
-// pub use boundary_layer::*;
+pub use boundary_layer::*;
 pub use coherent_structures::*;
 pub use compressible::*;
 pub use constitutive::*;

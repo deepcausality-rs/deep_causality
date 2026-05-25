@@ -75,10 +75,10 @@ Spec corrections applied before implementation: (a) Galilean-invariance scenario
 
 ## 9. Boundary-layer kernels
 
-- [ ] 9.1 Implement `wall_shear_stress_newtonian_kernel`, `friction_velocity_kernel`, `viscous_length_scale_kernel`, `y_plus_kernel`, `viscous_sublayer_velocity_kernel`, `log_law_velocity_kernel`, `skin_friction_coefficient_kernel` in `kernels/fluids/boundary_layer.rs`.
-- [ ] 9.2 Tests: `y⁺` scales linearly with wall distance; viscous sublayer law equals `y⁺` exactly; log-law parameters `κ = 0.41`, `B = 5.0` recover a published `u⁺` value at `y⁺ = 100` to within tolerance; precision-backend sweep.
-- [ ] 9.3 Causal wrappers + tests.
-- [ ] 9.4 Uncomment + re-export. Build/clippy/tests clean.
+- [x] 9.1 Implemented 7 boundary-layer kernels in `kernels/fluids/boundary_layer.rs`: `wall_shear_stress_newtonian_kernel` (returns magnitude via `WallShearStress::new_unchecked` after explicit abs), `friction_velocity_kernel`, `viscous_length_scale_kernel`, `y_plus_kernel`, `viscous_sublayer_velocity_kernel` (identity `u⁺ = y⁺`), `log_law_velocity_kernel` (κ and B as caller inputs so the reference values can be picked per dataset), `skin_friction_coefficient_kernel`. `κ ≈ 0.41`, `B ≈ 5.0` documented as standard.
+- [x] 9.2 Added 19 boundary_layer_tests covering: wall-shear known value, magnitude semantics, zero gradient; friction velocity known value and zero-density error; viscous length scale and its zero-u_τ error; **spec scenario** `y⁺` scales linearly with `y`; y⁺ known value; zero-ν error; **spec scenario** viscous sublayer law is identity; log law at `y⁺ = 100` with κ=0.41, B=5.0 recovers `≈16.231` to within `0.01`; log-law errors on `y⁺ ≤ 0` and `κ = 0`; **spec scenario** sublayer and log law differ in the buffer region (`y⁺ = 11.5`); skin friction known value and both error paths; f32 precision sweeps on y⁺ linearity and log-law value.
+- [x] 9.3 Added 7 causal wrappers + 9 wrapper tests (including error paths for friction velocity and log law).
+- [x] 9.4 Uncommented `pub use boundary_layer::*` in `kernels/fluids/mod.rs`. `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo test` (1326 tests pass, +30 since Group 8), `cargo fmt --check` all clean. No `#[allow]` suppressions added.
 
 ## 10. Ideal-flow primitive kernels
 
