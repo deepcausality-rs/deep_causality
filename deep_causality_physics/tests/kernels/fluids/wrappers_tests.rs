@@ -4,24 +4,24 @@
  */
 
 use deep_causality_physics::{
-    CauchyStress, Density, KinematicViscosity, Length, Pressure, SpecificEnthalpy, Speed,
-    StrainRateTensor, Temperature, Velocity3, VelocityGradient, Viscosity, VorticityVector,
-    WallShearStress, bernoulli_pressure, bernoulli_total_head, bond_number, capillary_number,
-    circulation, continuity_rhs, convective_acceleration, delta_criterion, dissipation_rate,
-    dynamic_pressure, eckert_number, eddy_viscosity_boussinesq, enstrophy_density,
-    entropy_production_rate, friction_velocity, froude_number, grashof_number, helicity_density,
-    hydrostatic_pressure, integral_length_scale, kinetic_energy_density, knudsen_number,
-    kolmogorov_length, kolmogorov_time, kolmogorov_velocity, kutta_joukowski_lift, lambda2,
-    lewis_number, log_law_velocity, mach_number, newtonian_viscous_stress,
-    newtonian_viscous_stress_with_bulk, nusselt_number, particle_stokes_number, peclet_number,
-    power_law_apparent_viscosity, prandtl_number, pressure_gradient_force, pressure_work,
-    q_criterion, rayleigh_number, reynolds_number, reynolds_stress, richardson_number,
-    rotation_rate_tensor, scalar_advection_diffusion, schmidt_number, skin_friction_coefficient,
-    specific_enthalpy, speed_of_sound_ideal_gas, strain_rate_tensor, stream_function_2d,
-    strouhal_number, swirling_strength, taylor_microscale, total_enthalpy,
-    total_pressure_isentropic, total_temperature_isentropic, turbulent_kinetic_energy,
-    velocity_gradient_invariants, velocity_potential_2d, viscous_diffusion,
-    viscous_dissipation_rate, viscous_length_scale, viscous_sublayer_velocity,
+    AccelerationVector, CauchyStress, Density, KinematicViscosity, Length, Pressure,
+    SpecificEnthalpy, Speed, StrainRateTensor, Temperature, Velocity3, VelocityGradient, Viscosity,
+    VorticityVector, WallShearStress, bernoulli_pressure, bernoulli_total_head, bond_number,
+    capillary_number, circulation, continuity_rhs, convective_acceleration, delta_criterion,
+    dissipation_rate, dynamic_pressure, eckert_number, eddy_viscosity_boussinesq,
+    enstrophy_density, entropy_production_rate, friction_velocity, froude_number, grashof_number,
+    helicity_density, hydrostatic_pressure, incompressible_ns_rhs, integral_length_scale,
+    kinetic_energy_density, knudsen_number, kolmogorov_length, kolmogorov_time,
+    kolmogorov_velocity, kutta_joukowski_lift, lambda2, lewis_number, log_law_velocity,
+    mach_number, newtonian_viscous_stress, newtonian_viscous_stress_with_bulk, nusselt_number,
+    particle_stokes_number, peclet_number, power_law_apparent_viscosity, prandtl_number,
+    pressure_gradient_force, pressure_work, q_criterion, rayleigh_number, reynolds_number,
+    reynolds_stress, richardson_number, rotation_rate_tensor, scalar_advection_diffusion,
+    schmidt_number, skin_friction_coefficient, specific_enthalpy, speed_of_sound_ideal_gas,
+    strain_rate_tensor, stream_function_2d, strouhal_number, swirling_strength, taylor_microscale,
+    total_enthalpy, total_pressure_isentropic, total_temperature_isentropic,
+    turbulent_kinetic_energy, velocity_gradient_invariants, velocity_potential_2d,
+    viscous_diffusion, viscous_dissipation_rate, viscous_length_scale, viscous_sublayer_velocity,
     vorticity_from_gradient, vorticity_transport, wall_shear_stress_newtonian, weber_number,
     y_plus,
 };
@@ -729,4 +729,38 @@ fn test_kutta_joukowski_lift_wrapper() {
     let effect = kutta_joukowski_lift(&rho, &u_inf, 10.0_f64);
     assert!(effect.is_ok());
     assert!((effect.value().clone().into_value().unwrap() - 612.5).abs() < 1e-12);
+}
+
+// =============================================================================
+// incompressible_ns_rhs Wrapper Tests
+// =============================================================================
+
+#[test]
+fn test_incompressible_ns_rhs_wrapper() {
+    let u = Velocity3::<f64>::new([1.0, 0.0, 0.0]).unwrap();
+    let g = VelocityGradient::<f64>::new([[0.0; 3]; 3]).unwrap();
+    let lap = [0.0_f64; 3];
+    let gp = [10.0_f64, 0.0, 0.0];
+    let r = Density::<f64>::new(2.0).unwrap();
+    let n = KinematicViscosity::<f64>::new(0.0).unwrap();
+    let b = AccelerationVector::<f64>::new([0.0, -9.81, 0.0]).unwrap();
+    let effect = incompressible_ns_rhs(&u, &g, &lap, &gp, &r, &n, &b);
+    assert!(effect.is_ok());
+    let v = effect.value().clone().into_value().unwrap().into_inner();
+    assert!((v[0] - (-5.0)).abs() < 1e-12);
+    assert!((v[1] - (-9.81)).abs() < 1e-12);
+    assert!(v[2].abs() < 1e-12);
+}
+
+#[test]
+fn test_incompressible_ns_rhs_wrapper_error_path() {
+    let u = Velocity3::<f64>::new([1.0, 0.0, 0.0]).unwrap();
+    let g = VelocityGradient::<f64>::new([[0.0; 3]; 3]).unwrap();
+    let lap = [0.0_f64; 3];
+    let gp = [1.0_f64, 0.0, 0.0];
+    let r = Density::<f64>::new(0.0).unwrap();
+    let n = KinematicViscosity::<f64>::new(0.0).unwrap();
+    let b = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
+    let effect = incompressible_ns_rhs(&u, &g, &lap, &gp, &r, &n, &b);
+    assert!(!effect.is_ok());
 }

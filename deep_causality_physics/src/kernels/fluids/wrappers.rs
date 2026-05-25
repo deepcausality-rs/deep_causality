@@ -7,6 +7,7 @@ use crate::kernels::fluids::{
     boundary_layer, coherent_structures, compressible, constitutive, dimensionless, governing,
     ideal_flow, kinematics, mechanics, turbulence,
 };
+use crate::theories::fluid_dynamics::incompressible_ns;
 use crate::{
     AccelerationVector, CauchyStress, Density, KinematicViscosity, Length, Pressure,
     RotationRateTensor, SpecificEnthalpy, Speed, StrainRateTensor, Temperature, Velocity3,
@@ -999,4 +1000,35 @@ where
         u_inf,
         circulation,
     ))
+}
+
+// =============================================================================
+// Theory layer — incompressible Newtonian NS regime
+// =============================================================================
+
+/// Causal wrapper for [`incompressible_ns::incompressible_ns_rhs_kernel`].
+pub fn incompressible_ns_rhs<R>(
+    u: &Velocity3<R>,
+    grad_u: &VelocityGradient<R>,
+    laplacian_u: &[R; 3],
+    grad_p: &[R; 3],
+    rho: &Density<R>,
+    nu: &KinematicViscosity<R>,
+    body_force_per_mass: &AccelerationVector<R>,
+) -> PropagatingEffect<AccelerationVector<R>>
+where
+    R: RealField + Debug + 'static,
+{
+    match incompressible_ns::incompressible_ns_rhs_kernel(
+        u,
+        grad_u,
+        laplacian_u,
+        grad_p,
+        rho,
+        nu,
+        body_force_per_mass,
+    ) {
+        Ok(a) => PropagatingEffect::pure(a),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
 }
