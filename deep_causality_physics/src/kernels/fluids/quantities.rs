@@ -118,3 +118,113 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<Viscosity<R>> for f64 {
         val.0.into()
     }
 }
+
+/// Kinematic Viscosity (m^2/s). Equals dynamic viscosity divided by density.
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct KinematicViscosity<R: deep_causality_num::RealField>(R);
+
+impl<R: deep_causality_num::RealField> Default for KinematicViscosity<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> KinematicViscosity<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "KinematicViscosity must be finite".into(),
+            ));
+        }
+        if val < R::zero() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Negative KinematicViscosity".into(),
+            ));
+        }
+        Ok(Self(val))
+    }
+    pub fn new_unchecked(val: R) -> Self {
+        Self(val)
+    }
+    pub fn value(&self) -> R {
+        self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<KinematicViscosity<R>> for f64 {
+    fn from(val: KinematicViscosity<R>) -> Self {
+        val.0.into()
+    }
+}
+
+/// Specific Enthalpy (J/kg). Reference-state dependent; may be negative.
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct SpecificEnthalpy<R: deep_causality_num::RealField>(R);
+
+impl<R: deep_causality_num::RealField> Default for SpecificEnthalpy<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> SpecificEnthalpy<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "SpecificEnthalpy must be finite".into(),
+            ));
+        }
+        Ok(Self(val))
+    }
+    pub fn new_unchecked(val: R) -> Self {
+        Self(val)
+    }
+    pub fn value(&self) -> R {
+        self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<SpecificEnthalpy<R>> for f64 {
+    fn from(val: SpecificEnthalpy<R>) -> Self {
+        val.0.into()
+    }
+}
+
+/// Wall Shear Stress magnitude (Pa). Stored as magnitude; sign convention is
+/// carried by the calling context, not by this type.
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct WallShearStress<R: deep_causality_num::RealField>(R);
+
+impl<R: deep_causality_num::RealField> Default for WallShearStress<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> WallShearStress<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "WallShearStress must be finite".into(),
+            ));
+        }
+        if val < R::zero() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Negative WallShearStress".into(),
+            ));
+        }
+        Ok(Self(val))
+    }
+    pub fn new_unchecked(val: R) -> Self {
+        Self(val)
+    }
+    pub fn value(&self) -> R {
+        self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<WallShearStress<R>> for f64 {
+    fn from(val: WallShearStress<R>) -> Self {
+        val.0.into()
+    }
+}

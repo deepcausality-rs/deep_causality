@@ -2,7 +2,7 @@
 
 ### Requirement: Pointwise kernel surface for governing equations
 
-The crate SHALL expose pointwise, stateless, side-effect-free free functions under `deep_causality_physics::kernels::fluids::governing` that evaluate the RHS contributions of the classical conservation laws of fluid mechanics. Every kernel SHALL be generic over `R: RealField` (with `+ FromPrimitive` where literals are required) and SHALL NOT accept any non-algebraic input (no manifold, no context, no state). All vector-valued and tensor-valued inputs SHALL be passed as `[R; 3]` / `[[R; 3]; 3]` arrays; scalar physical quantities with finite-positivity invariants SHALL use the existing `Density<R>`, `Pressure<R>`, `Speed<R>`, `Length<R>`, `Temperature<R>` newtypes or the new `KinematicViscosity<R>` / `DynamicViscosity<R>` / `SpecificEnthalpy<R>` newtypes introduced by this change.
+The crate SHALL expose pointwise, stateless, side-effect-free free functions under `deep_causality_physics::kernels::fluids::governing` that evaluate the RHS contributions of the classical conservation laws of fluid mechanics. Every kernel SHALL be generic over `R: RealField` (with `+ FromPrimitive` where literals are required) and SHALL NOT accept any non-algebraic input (no manifold, no context, no state). All vector-valued and tensor-valued inputs SHALL be passed as `[R; 3]` / `[[R; 3]; 3]` arrays; scalar physical quantities with finite-positivity invariants SHALL use the existing `Density<R>`, `Pressure<R>`, `Speed<R>`, `Length<R>`, `Temperature<R>`, `Viscosity<R>` (dynamic, Pa·s) newtypes or the new `KinematicViscosity<R>` (m²/s), `SpecificEnthalpy<R>` (J/kg), `WallShearStress<R>` (Pa) newtypes introduced by this change.
 
 The surface SHALL include at minimum:
 
@@ -38,7 +38,7 @@ The surface SHALL include at minimum:
 
 The crate SHALL expose kernels under `deep_causality_physics::kernels::fluids::constitutive` that evaluate the viscous stress tensor for Newtonian and power-law non-Newtonian fluids.
 
-- `newtonian_viscous_stress_kernel<R>(mu: &DynamicViscosity<R>, strain_rate: &[[R; 3]; 3], div_u: R) -> [[R; 3]; 3]` returning `τ = 2μS − (2/3)μ(∇·u)I` (Stokes hypothesis: bulk viscosity = 0).
+- `newtonian_viscous_stress_kernel<R>(mu: &Viscosity<R>, strain_rate: &[[R; 3]; 3], div_u: R) -> [[R; 3]; 3]` returning `τ = 2μS − (2/3)μ(∇·u)I` (Stokes hypothesis: bulk viscosity = 0).
 - `newtonian_viscous_stress_with_bulk_kernel<R>(mu, zeta, strain_rate, div_u) -> [[R; 3]; 3]` returning `τ = 2μS − (2/3)μ(∇·u)I + ζ(∇·u)I`.
 - `power_law_apparent_viscosity_kernel<R>(consistency: R, flow_index: R, shear_rate: R) -> Result<R, PhysicsError>` returning `μ_eff = K · γ̇^(n−1)`, erroring on `shear_rate < 0`.
 
@@ -186,7 +186,7 @@ The crate SHALL expose kernels under `deep_causality_physics::kernels::fluids::c
 
 The crate SHALL expose kernels under `deep_causality_physics::kernels::fluids::boundary_layer`:
 
-- `wall_shear_stress_newtonian_kernel<R>(mu: &DynamicViscosity<R>, du_dy_wall: R) -> WallShearStress<R>` returning `τ_w = μ · (∂u/∂y)|_wall`.
+- `wall_shear_stress_newtonian_kernel<R>(mu: &Viscosity<R>, du_dy_wall: R) -> WallShearStress<R>` returning `τ_w = μ · (∂u/∂y)|_wall`.
 - `friction_velocity_kernel<R>(tau_w: &WallShearStress<R>, rho: &Density<R>) -> Result<Speed<R>, PhysicsError>` returning `u_τ = √(τ_w / ρ)`.
 - `viscous_length_scale_kernel<R>(nu: &KinematicViscosity<R>, u_tau: &Speed<R>) -> Result<Length<R>, PhysicsError>` returning `δ_ν = ν / u_τ`.
 - `y_plus_kernel<R>(y: &Length<R>, u_tau: &Speed<R>, nu: &KinematicViscosity<R>) -> Result<R, PhysicsError>` returning `y⁺ = y · u_τ / ν`.

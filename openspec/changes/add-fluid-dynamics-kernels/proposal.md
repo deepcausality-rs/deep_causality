@@ -17,7 +17,7 @@ This change codifies textbook fluid dynamics — governing equations, constituti
   - **Boundary-layer relations**: wall shear stress, friction velocity `u_τ`, viscous length scale, dimensionless wall distance `y⁺`, viscous-sublayer + log-law profiles, skin-friction coefficient.
   - **Ideal-flow primitives**: 2D stream function `ψ`, velocity potential `φ`, circulation, Kutta–Joukowski lift per span, Bernoulli total head, dynamic pressure.
 - Promote the four kernels currently slated as private helpers inside Block B1b (`q_criterion`, `taylor_microscale`, `integral_length_scale`, `kolmogorov_scale`) into this public kernel surface, satisfying the Block B5 "extraction equivalence" property test up front rather than after B1b ships.
-- Add fluid-specific physical-quantity newtypes under `deep_causality_physics/src/units/` only where one is missing and structurally distinct from existing units: `DynamicViscosity<R>`, `KinematicViscosity<R>`, `Vorticity<R>`, `StrainRate<R>`, `MassFlux<R>`, `SpecificEnthalpy<R>`, `WallShearStress<R>`. Existing newtypes (`Density`, `Pressure`, `Speed`, `Length`, `Temperature`) are reused; no parallel hierarchy.
+- Add three fluid-specific physical-quantity newtypes appended to the existing `deep_causality_physics/src/kernels/fluids/quantities.rs` (matching the crate convention for domain-specific units — cross-domain units like `Temperature` live in `units/`, domain-specific units like `Pressure`, `Density`, `Viscosity` live alongside their kernels): `KinematicViscosity<R>` (m²/s), `SpecificEnthalpy<R>` (J/kg), `WallShearStress<R>` (Pa). Existing newtypes (`Density`, `Pressure`, `Speed`, `Length`, `Temperature`, `Viscosity` for dynamic viscosity μ) are reused; no parallel hierarchy and no rename. Vector/tensor quantities (vorticity, strain rate, mass flux) are passed as raw `[R; 3]` / `[[R; 3]; 3]` per D1 — no newtype wrappers, since they carry no positivity invariant a constructor could enforce.
 - Add a coherent `theories/fluid_dynamics/` module that assembles the kernels into the four classical regimes:
   - **incompressible Newtonian Navier–Stokes** (pointwise RHS assembly)
   - **compressible Navier–Stokes** (with energy equation)
@@ -44,12 +44,11 @@ This change is **non-breaking**: it adds modules, free functions, and newtypes. 
 - **Affected files (new):**
   - `deep_causality_physics/src/kernels/fluids/` — new submodules `governing.rs`, `constitutive.rs`, `kinematics.rs`, `dimensionless.rs`, `turbulence.rs`, `coherent_structures.rs`, `compressible.rs`, `boundary_layer.rs`, `ideal_flow.rs` (one file per kernel group, sub-split per AGENTS.md if any file exceeds reasonable size).
   - `deep_causality_physics/src/theories/fluid_dynamics/` — new module with `incompressible_ns.rs`, `compressible_ns.rs`, `euler.rs`, `stokes.rs`, `mod.rs`.
-  - `deep_causality_physics/src/units/` — new files for the missing fluid quantity newtypes.
-  - `deep_causality_physics/tests/kernels/fluids/`, `deep_causality_physics/tests/theories/fluid_dynamics/`, `deep_causality_physics/tests/units/` — tests mirroring the src tree per AGENTS.md §"Test structure".
+  - `deep_causality_physics/src/kernels/fluids/quantities.rs` — appended with three new newtypes (`KinematicViscosity`, `SpecificEnthalpy`, `WallShearStress`) following the existing concatenated-quantities convention in the same file.
+  - `deep_causality_physics/tests/kernels/fluids/` and `deep_causality_physics/tests/theories/fluid_dynamics/` — tests mirroring the src tree per AGENTS.md §"Test structure". New unit newtype tests append to the existing `tests/kernels/fluids/quantities_tests.rs`.
 - **Affected files (modified):**
   - `deep_causality_physics/src/kernels/fluids/mod.rs` — register new submodules.
   - `deep_causality_physics/src/theories/mod.rs` — register `fluid_dynamics` submodule.
-  - `deep_causality_physics/src/units/mod.rs` — register new unit files.
   - `deep_causality_physics/src/lib.rs` — re-export new public types and free functions per the project's "all public types exported from lib.rs" rule.
   - `deep_causality_physics/BUILD.bazel` and `deep_causality_physics/tests/BUILD.bazel` — register new modules per AGENTS.md §"Test structure".
 - **Downstream unlocks:**

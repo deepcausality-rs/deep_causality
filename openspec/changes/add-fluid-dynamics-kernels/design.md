@@ -42,9 +42,9 @@ The convective acceleration kernel signature is `fn(&[R; 3], &[[R; 3]; 3]) -> [R
 2. Velocity-gradient tensors `[[R; 3]; 3]` have no positivity / sign constraint either. The constitutive and kinematic kernels manipulate `S = 0.5·(∇u + ∇uᵀ)` and `Ω = 0.5·(∇u − ∇uᵀ)` as raw tensors; wrapping them in newtypes serves no checking purpose and breaks ergonomic composition.
 3. The Block B5 signatures in `3DCausalFluidDynamics.md` already use `[R; 3]` / `[[R; 3]; 3]`. Matching that surface lets B5 close as "verify equivalence" rather than as a second API redesign.
 
-Scalar physical quantities with finite-positivity invariants (kinematic viscosity, density, pressure, temperature, wall shear stress) **do** use newtypes — both because the invariants matter and because that's the existing convention for scalar fluid inputs.
+Scalar physical quantities with finite-positivity invariants (kinematic viscosity, dynamic viscosity, density, pressure, temperature, wall shear stress, specific enthalpy) **do** use newtypes — both because the invariants matter and because that's the existing convention for scalar fluid inputs. Existing `Viscosity<R>` (dynamic, Pa·s) is reused; new newtypes are `KinematicViscosity<R>` (m²/s), `SpecificEnthalpy<R>` (J/kg), `WallShearStress<R>` (Pa). They land in `kernels/fluids/quantities.rs` per the existing concatenated-quantities convention — not in `units/`, which the crate reserves for cross-domain units (Temperature, Time, Energy, Ratio, Probability, IndexOfRefraction).
 
-**Alternative considered:** wrap every input in a units newtype. Rejected for the above reasons; would force a parallel `Velocity3<R>` / `VelocityGradient<R>` / `StrainRateTensor<R>` hierarchy with no checking value.
+**Alternative considered:** wrap every input in a units newtype. Rejected for the above reasons; would force a parallel `Velocity3<R>` / `VelocityGradient<R>` / `StrainRateTensor<R>` hierarchy with no checking value, and would create dead-code newtypes (`Vorticity`, `StrainRate`, `MassFlux`) that no kernel signature in the spec actually consumes.
 
 ### D2. One file per kernel group, not one file per kernel.
 

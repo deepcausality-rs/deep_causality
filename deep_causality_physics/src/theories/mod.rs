@@ -96,11 +96,14 @@
 pub mod alias;
 pub mod electromagnetism;
 pub mod electroweak;
+pub mod fluid_dynamics;
 pub mod general_relativity;
 pub mod weak_force;
 
 pub use alias::*;
 pub use electromagnetism::*;
 pub use electroweak::*;
+// `pub use fluid_dynamics::*;` is added once the first regime evaluator ships
+// in a later task group of the add-fluid-dynamics-kernels change set.
 pub use general_relativity::*;
 pub use weak_force::*;

@@ -88,7 +88,7 @@ The Euler regime SHALL NOT accept or use any viscosity input.
 #### Scenario: Euler has no viscosity-related dependency
 
 - **WHEN** the signature of `euler_momentum_rhs_kernel` is inspected
-- **THEN** it SHALL contain no `KinematicViscosity<R>`, `DynamicViscosity<R>`, or `laplacian_u` parameter
+- **THEN** it SHALL contain no `KinematicViscosity<R>`, `Viscosity<R>`, or `laplacian_u` parameter
 
 ### Requirement: Stokes regime (creeping flow limit)
 
