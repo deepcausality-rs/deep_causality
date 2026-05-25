@@ -4,8 +4,9 @@
  */
 
 use deep_causality_physics::{
-    Density, KinematicViscosity, PhysicsErrorEnum, Pressure, SpecificEnthalpy, Viscosity,
-    WallShearStress,
+    AccelerationVector, BodyForceDensity, CauchyStress, Density, KinematicViscosity,
+    PhysicsErrorEnum, Pressure, RotationRateTensor, SpecificEnthalpy, StrainRateTensor, Velocity3,
+    VelocityGradient, Viscosity, VorticityVector, WallShearStress,
 };
 
 // =============================================================================
@@ -433,4 +434,501 @@ fn test_wall_shear_stress_traits() {
     assert_eq!(a, c);
     assert!(a < WallShearStress::<f64>::new(0.2).unwrap());
     let _ = format!("{:?}", a);
+}
+
+// =============================================================================
+// Velocity3 — finiteness-only invariant
+// =============================================================================
+
+#[test]
+fn test_velocity3_new_valid() {
+    let u = Velocity3::<f64>::new([1.0, -2.0, 3.5]).unwrap();
+    assert_eq!(u.value(), &[1.0, -2.0, 3.5]);
+}
+
+#[test]
+fn test_velocity3_new_rejects_nan() {
+    assert!(Velocity3::<f64>::new([f64::NAN, 0.0, 0.0]).is_err());
+    assert!(Velocity3::<f64>::new([0.0, f64::NAN, 0.0]).is_err());
+    assert!(Velocity3::<f64>::new([0.0, 0.0, f64::NAN]).is_err());
+}
+
+#[test]
+fn test_velocity3_new_rejects_infinity() {
+    assert!(Velocity3::<f64>::new([f64::INFINITY, 0.0, 0.0]).is_err());
+    assert!(Velocity3::<f64>::new([0.0, f64::NEG_INFINITY, 0.0]).is_err());
+}
+
+#[test]
+fn test_velocity3_new_error_message_mentions_finite() {
+    match &Velocity3::<f64>::new([f64::NAN, 0.0, 0.0]).unwrap_err().0 {
+        PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("finite")),
+        _ => panic!("Expected PhysicalInvariantBroken"),
+    }
+}
+
+#[test]
+fn test_velocity3_default() {
+    assert_eq!(Velocity3::<f64>::default().into_inner(), [0.0; 3]);
+}
+
+#[test]
+fn test_velocity3_new_unchecked() {
+    let u = Velocity3::<f64>::new_unchecked([1.0, 2.0, 3.0]);
+    assert_eq!(u.value(), &[1.0, 2.0, 3.0]);
+}
+
+#[test]
+fn test_velocity3_from_array_and_back() {
+    let u: Velocity3<f64> = [1.0, 2.0, 3.0].into();
+    let raw: [f64; 3] = u.into();
+    assert_eq!(raw, [1.0, 2.0, 3.0]);
+}
+
+#[test]
+fn test_velocity3_into_inner_consumes() {
+    let u = Velocity3::<f64>::new([4.0, 5.0, 6.0]).unwrap();
+    assert_eq!(u.into_inner(), [4.0, 5.0, 6.0]);
+}
+
+#[test]
+#[allow(clippy::clone_on_copy)] // exercising Clone impl for coverage
+fn test_velocity3_traits() {
+    let a = Velocity3::<f64>::new([1.0, 2.0, 3.0]).unwrap();
+    let b = a;
+    let c = a.clone();
+    assert_eq!(a, b);
+    assert_eq!(a, c);
+    let _ = format!("{:?}", a);
+}
+
+// =============================================================================
+// VorticityVector — finiteness only
+// =============================================================================
+
+#[test]
+fn test_vorticity_vector_new_valid() {
+    let w = VorticityVector::<f64>::new([0.5, -0.5, 1.0]).unwrap();
+    assert_eq!(w.value(), &[0.5, -0.5, 1.0]);
+}
+
+#[test]
+fn test_vorticity_vector_rejects_non_finite() {
+    assert!(VorticityVector::<f64>::new([f64::NAN, 0.0, 0.0]).is_err());
+    assert!(VorticityVector::<f64>::new([f64::INFINITY, 0.0, 0.0]).is_err());
+}
+
+#[test]
+fn test_vorticity_vector_default() {
+    assert_eq!(VorticityVector::<f64>::default().into_inner(), [0.0; 3]);
+}
+
+#[test]
+fn test_vorticity_vector_round_trip() {
+    let w: VorticityVector<f64> = [1.0, 2.0, 3.0].into();
+    let raw: [f64; 3] = w.into();
+    assert_eq!(raw, [1.0, 2.0, 3.0]);
+}
+
+#[test]
+fn test_vorticity_vector_new_unchecked() {
+    let w = VorticityVector::<f64>::new_unchecked([1.0, 2.0, 3.0]);
+    assert_eq!(w.into_inner(), [1.0, 2.0, 3.0]);
+}
+
+#[test]
+#[allow(clippy::clone_on_copy)]
+fn test_vorticity_vector_traits() {
+    let a = VorticityVector::<f64>::new([0.1, 0.2, 0.3]).unwrap();
+    let b = a;
+    let c = a.clone();
+    assert_eq!(a, b);
+    assert_eq!(a, c);
+    let _ = format!("{:?}", a);
+}
+
+// =============================================================================
+// AccelerationVector — finiteness only
+// =============================================================================
+
+#[test]
+fn test_acceleration_vector_new_valid() {
+    let a = AccelerationVector::<f64>::new([9.81, 0.0, 0.0]).unwrap();
+    assert_eq!(a.value(), &[9.81, 0.0, 0.0]);
+}
+
+#[test]
+fn test_acceleration_vector_rejects_non_finite() {
+    assert!(AccelerationVector::<f64>::new([f64::NAN, 0.0, 0.0]).is_err());
+    assert!(AccelerationVector::<f64>::new([0.0, 0.0, f64::INFINITY]).is_err());
+}
+
+#[test]
+fn test_acceleration_vector_default() {
+    assert_eq!(AccelerationVector::<f64>::default().into_inner(), [0.0; 3]);
+}
+
+#[test]
+fn test_acceleration_vector_round_trip() {
+    let a: AccelerationVector<f64> = [1.0, 2.0, 3.0].into();
+    let raw: [f64; 3] = a.into();
+    assert_eq!(raw, [1.0, 2.0, 3.0]);
+}
+
+#[test]
+fn test_acceleration_vector_new_unchecked() {
+    let a = AccelerationVector::<f64>::new_unchecked([1.0, 2.0, 3.0]);
+    assert_eq!(a.into_inner(), [1.0, 2.0, 3.0]);
+}
+
+#[test]
+#[allow(clippy::clone_on_copy)]
+fn test_acceleration_vector_traits() {
+    let a = AccelerationVector::<f64>::new([1.0, 2.0, 3.0]).unwrap();
+    let b = a;
+    let c = a.clone();
+    assert_eq!(a, b);
+    assert_eq!(a, c);
+    let _ = format!("{:?}", a);
+}
+
+// =============================================================================
+// BodyForceDensity — finiteness only
+// =============================================================================
+
+#[test]
+fn test_body_force_density_new_valid() {
+    let f = BodyForceDensity::<f64>::new([0.0, 0.0, -9810.0]).unwrap();
+    assert_eq!(f.value(), &[0.0, 0.0, -9810.0]);
+}
+
+#[test]
+fn test_body_force_density_rejects_non_finite() {
+    assert!(BodyForceDensity::<f64>::new([f64::NAN, 0.0, 0.0]).is_err());
+    assert!(BodyForceDensity::<f64>::new([0.0, f64::NEG_INFINITY, 0.0]).is_err());
+}
+
+#[test]
+fn test_body_force_density_default() {
+    assert_eq!(BodyForceDensity::<f64>::default().into_inner(), [0.0; 3]);
+}
+
+#[test]
+fn test_body_force_density_round_trip() {
+    let f: BodyForceDensity<f64> = [1.0, 2.0, 3.0].into();
+    let raw: [f64; 3] = f.into();
+    assert_eq!(raw, [1.0, 2.0, 3.0]);
+}
+
+#[test]
+fn test_body_force_density_new_unchecked() {
+    let f = BodyForceDensity::<f64>::new_unchecked([1.0, 2.0, 3.0]);
+    assert_eq!(f.into_inner(), [1.0, 2.0, 3.0]);
+}
+
+#[test]
+#[allow(clippy::clone_on_copy)]
+fn test_body_force_density_traits() {
+    let a = BodyForceDensity::<f64>::new([0.1, 0.2, 0.3]).unwrap();
+    let b = a;
+    let c = a.clone();
+    assert_eq!(a, b);
+    assert_eq!(a, c);
+    let _ = format!("{:?}", a);
+}
+
+// =============================================================================
+// VelocityGradient — Jacobian convention pinned at construction
+// =============================================================================
+
+#[test]
+fn test_velocity_gradient_new_valid() {
+    let m = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
+    let g = VelocityGradient::<f64>::new(m).unwrap();
+    assert_eq!(g.value(), &m);
+}
+
+#[test]
+fn test_velocity_gradient_rejects_non_finite() {
+    let mut m = [[0.0; 3]; 3];
+    m[1][2] = f64::NAN;
+    assert!(VelocityGradient::<f64>::new(m).is_err());
+}
+
+#[test]
+fn test_velocity_gradient_default_is_zero() {
+    assert_eq!(
+        VelocityGradient::<f64>::default().into_inner(),
+        [[0.0; 3]; 3]
+    );
+}
+
+#[test]
+fn test_velocity_gradient_round_trip() {
+    let m = [[1.0, 0.0, 0.0], [0.0, -2.0, 0.0], [0.0, 0.0, 0.5]];
+    let g: VelocityGradient<f64> = m.into();
+    let raw: [[f64; 3]; 3] = g.into();
+    assert_eq!(raw, m);
+}
+
+#[test]
+fn test_velocity_gradient_new_unchecked() {
+    let m = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
+    assert_eq!(VelocityGradient::<f64>::new_unchecked(m).into_inner(), m);
+}
+
+#[test]
+#[allow(clippy::clone_on_copy)]
+fn test_velocity_gradient_traits() {
+    let m = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
+    let a = VelocityGradient::<f64>::new(m).unwrap();
+    let b = a;
+    let c = a.clone();
+    assert_eq!(a, b);
+    assert_eq!(a, c);
+    let _ = format!("{:?}", a);
+}
+
+// =============================================================================
+// StrainRateTensor — symmetric (S_ij == S_ji)
+// =============================================================================
+
+#[test]
+fn test_strain_rate_tensor_new_valid_symmetric() {
+    let s = [[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
+    let t = StrainRateTensor::<f64>::new(s).unwrap();
+    assert_eq!(t.value(), &s);
+}
+
+#[test]
+fn test_strain_rate_tensor_rejects_asymmetric() {
+    // S_01 = 2.0 but S_10 = 9.0 — clearly asymmetric
+    let s = [[1.0, 2.0, 3.0], [9.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
+    let r = StrainRateTensor::<f64>::new(s);
+    assert!(r.is_err());
+    match &r.unwrap_err().0 {
+        PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("symmetric")),
+        _ => panic!("Expected PhysicalInvariantBroken"),
+    }
+}
+
+#[test]
+fn test_strain_rate_tensor_rejects_non_finite() {
+    let s = [[f64::NAN, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]];
+    assert!(StrainRateTensor::<f64>::new(s).is_err());
+}
+
+#[test]
+fn test_strain_rate_tensor_default_is_zero() {
+    assert_eq!(
+        StrainRateTensor::<f64>::default().into_inner(),
+        [[0.0; 3]; 3]
+    );
+}
+
+#[test]
+fn test_strain_rate_tensor_new_unchecked_bypasses_check() {
+    // Asymmetric matrix — accepted via new_unchecked, would be rejected by new.
+    let s = [[1.0, 2.0, 0.0], [9.0, 0.0, 0.0], [0.0, 0.0, 0.0]];
+    let t = StrainRateTensor::<f64>::new_unchecked(s);
+    assert_eq!(t.into_inner(), s);
+}
+
+#[test]
+fn test_strain_rate_tensor_from_self_to_raw_drops_invariant() {
+    let s = [[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
+    let t = StrainRateTensor::<f64>::new(s).unwrap();
+    let raw: [[f64; 3]; 3] = t.into();
+    assert_eq!(raw, s);
+}
+
+#[test]
+#[allow(clippy::clone_on_copy)]
+fn test_strain_rate_tensor_traits() {
+    let s = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
+    let a = StrainRateTensor::<f64>::new(s).unwrap();
+    let b = a;
+    let c = a.clone();
+    assert_eq!(a, b);
+    assert_eq!(a, c);
+    let _ = format!("{:?}", a);
+}
+
+// =============================================================================
+// RotationRateTensor — antisymmetric (Ω_ij == -Ω_ji, Ω_ii == 0)
+// =============================================================================
+
+#[test]
+fn test_rotation_rate_tensor_new_valid_antisymmetric() {
+    let omega = [[0.0, 1.0, 2.0], [-1.0, 0.0, 3.0], [-2.0, -3.0, 0.0]];
+    let t = RotationRateTensor::<f64>::new(omega).unwrap();
+    assert_eq!(t.value(), &omega);
+}
+
+#[test]
+fn test_rotation_rate_tensor_rejects_nonzero_diagonal() {
+    let omega = [[1.0, 1.0, 2.0], [-1.0, 0.0, 3.0], [-2.0, -3.0, 0.0]];
+    let r = RotationRateTensor::<f64>::new(omega);
+    assert!(r.is_err());
+    match &r.unwrap_err().0 {
+        PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
+            assert!(msg.contains("diagonal") || msg.contains("antisymmetric"))
+        }
+        _ => panic!("Expected PhysicalInvariantBroken"),
+    }
+}
+
+#[test]
+fn test_rotation_rate_tensor_rejects_non_antisymmetric_off_diagonal() {
+    // Ω_01 = 1.0 but Ω_10 = 1.0 (should be -1.0)
+    let omega = [[0.0, 1.0, 2.0], [1.0, 0.0, 3.0], [-2.0, -3.0, 0.0]];
+    let r = RotationRateTensor::<f64>::new(omega);
+    assert!(r.is_err());
+    match &r.unwrap_err().0 {
+        PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("antisymmetric")),
+        _ => panic!("Expected PhysicalInvariantBroken"),
+    }
+}
+
+#[test]
+fn test_rotation_rate_tensor_rejects_non_finite() {
+    let omega = [
+        [0.0, f64::INFINITY, 0.0],
+        [-f64::INFINITY, 0.0, 0.0],
+        [0.0, 0.0, 0.0],
+    ];
+    assert!(RotationRateTensor::<f64>::new(omega).is_err());
+}
+
+#[test]
+fn test_rotation_rate_tensor_default_is_zero() {
+    assert_eq!(
+        RotationRateTensor::<f64>::default().into_inner(),
+        [[0.0; 3]; 3]
+    );
+}
+
+#[test]
+fn test_rotation_rate_tensor_new_unchecked_bypasses_check() {
+    let omega = [[1.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]];
+    let t = RotationRateTensor::<f64>::new_unchecked(omega);
+    assert_eq!(t.into_inner(), omega);
+}
+
+#[test]
+fn test_rotation_rate_tensor_from_self_to_raw() {
+    let omega = [[0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 0.0]];
+    let t = RotationRateTensor::<f64>::new(omega).unwrap();
+    let raw: [[f64; 3]; 3] = t.into();
+    assert_eq!(raw, omega);
+}
+
+#[test]
+#[allow(clippy::clone_on_copy)]
+fn test_rotation_rate_tensor_traits() {
+    let omega = [[0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 0.0]];
+    let a = RotationRateTensor::<f64>::new(omega).unwrap();
+    let b = a;
+    let c = a.clone();
+    assert_eq!(a, b);
+    assert_eq!(a, c);
+    let _ = format!("{:?}", a);
+}
+
+// =============================================================================
+// CauchyStress — symmetric
+// =============================================================================
+
+#[test]
+fn test_cauchy_stress_new_valid_symmetric() {
+    let sigma = [[100.0, 5.0, 3.0], [5.0, 200.0, 7.0], [3.0, 7.0, 300.0]];
+    let t = CauchyStress::<f64>::new(sigma).unwrap();
+    assert_eq!(t.value(), &sigma);
+}
+
+#[test]
+fn test_cauchy_stress_rejects_asymmetric() {
+    let sigma = [[100.0, 5.0, 3.0], [99.0, 200.0, 7.0], [3.0, 7.0, 300.0]];
+    let r = CauchyStress::<f64>::new(sigma);
+    assert!(r.is_err());
+    match &r.unwrap_err().0 {
+        PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("symmetric")),
+        _ => panic!("Expected PhysicalInvariantBroken"),
+    }
+}
+
+#[test]
+fn test_cauchy_stress_rejects_non_finite() {
+    let sigma = [[0.0, 0.0, 0.0], [0.0, f64::NAN, 0.0], [0.0, 0.0, 0.0]];
+    assert!(CauchyStress::<f64>::new(sigma).is_err());
+}
+
+#[test]
+fn test_cauchy_stress_default_is_zero() {
+    assert_eq!(CauchyStress::<f64>::default().into_inner(), [[0.0; 3]; 3]);
+}
+
+#[test]
+fn test_cauchy_stress_new_unchecked_bypasses_check() {
+    let sigma = [[1.0, 2.0, 3.0], [9.0, 5.0, 6.0], [3.0, 6.0, 9.0]];
+    let t = CauchyStress::<f64>::new_unchecked(sigma);
+    assert_eq!(t.into_inner(), sigma);
+}
+
+#[test]
+fn test_cauchy_stress_from_self_to_raw() {
+    let sigma = [[1.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 3.0]];
+    let t = CauchyStress::<f64>::new(sigma).unwrap();
+    let raw: [[f64; 3]; 3] = t.into();
+    assert_eq!(raw, sigma);
+}
+
+#[test]
+#[allow(clippy::clone_on_copy)]
+fn test_cauchy_stress_traits() {
+    let sigma = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
+    let a = CauchyStress::<f64>::new(sigma).unwrap();
+    let b = a;
+    let c = a.clone();
+    assert_eq!(a, b);
+    assert_eq!(a, c);
+    let _ = format!("{:?}", a);
+}
+
+// =============================================================================
+// Property test: any VelocityGradient decomposes as S + Ω
+// =============================================================================
+
+#[test]
+fn test_velocity_gradient_decomposes_into_strain_and_rotation() {
+    // Arbitrary finite gradient
+    let g = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
+    let _grad = VelocityGradient::<f64>::new(g).unwrap();
+
+    // Symmetric part S = 0.5*(G + G^T)
+    let mut s = [[0.0; 3]; 3];
+    for i in 0..3 {
+        for j in 0..3 {
+            s[i][j] = 0.5 * (g[i][j] + g[j][i]);
+        }
+    }
+    // Antisymmetric part Omega = 0.5*(G - G^T)
+    let mut omega = [[0.0; 3]; 3];
+    for i in 0..3 {
+        for j in 0..3 {
+            omega[i][j] = 0.5 * (g[i][j] - g[j][i]);
+        }
+    }
+
+    let strain = StrainRateTensor::<f64>::new(s).unwrap();
+    let rotation = RotationRateTensor::<f64>::new(omega).unwrap();
+
+    // Verify S + Omega == G
+    let s_raw: [[f64; 3]; 3] = strain.into();
+    let o_raw: [[f64; 3]; 3] = rotation.into();
+    for i in 0..3 {
+        for j in 0..3 {
+            assert!((s_raw[i][j] + o_raw[i][j] - g[i][j]).abs() < 1e-12);
+        }
+    }
 }

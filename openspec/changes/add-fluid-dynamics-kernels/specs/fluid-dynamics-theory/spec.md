@@ -19,18 +19,18 @@ The `theories::fluid_dynamics::incompressible_ns` module SHALL expose a function
 
 ```rust
 pub fn incompressible_ns_rhs_kernel<R>(
-    u: &[R; 3],
-    grad_u: &[[R; 3]; 3],
+    u: &Velocity3<R>,
+    grad_u: &VelocityGradient<R>,
     laplacian_u: &[R; 3],
     grad_p: &[R; 3],
     rho: &Density<R>,
     nu: &KinematicViscosity<R>,
-    body_force: &[R; 3],
-) -> Result<[R; 3], PhysicsError>
+    body_force: &BodyForceDensity<R>,
+) -> Result<AccelerationVector<R>, PhysicsError>
 where R: RealField + FromPrimitive;
 ```
 
-It SHALL return the pointwise RHS of the incompressible momentum equation `∂u/∂t = −(u·∇)u − (1/ρ)∇p + ν∇²u + f`, composed from `convective_acceleration_kernel`, `pressure_gradient_force_kernel`, `viscous_diffusion_kernel`, and a body-force addition.
+It SHALL return the pointwise RHS of the incompressible momentum equation `∂u/∂t = −(u·∇)u − (1/ρ)∇p + ν∇²u + f` as an `AccelerationVector<R>`, composed from `convective_acceleration_kernel`, `pressure_gradient_force_kernel`, `viscous_diffusion_kernel`, and a body-force addition. The `BodyForceDensity<R>` input carries N/m³; combining with `1/ρ` produces an acceleration contribution.
 
 #### Scenario: Inviscid limit recovers Euler
 
@@ -39,7 +39,7 @@ It SHALL return the pointwise RHS of the incompressible momentum equation `∂u/
 
 #### Scenario: Creeping-flow limit recovers Stokes
 
-- **WHEN** `incompressible_ns_rhs_kernel` is invoked with `u = [0; 3]` and `grad_u = [[0; 3]; 3]` (zero convective contribution by construction)
+- **WHEN** `incompressible_ns_rhs_kernel` is invoked with `u = Velocity3::default()` (zero vector) and `grad_u = VelocityGradient::default()` (zero matrix) — zero convective contribution by construction
 - **THEN** the returned RHS SHALL equal the result of `stokes::stokes_momentum_rhs_kernel` invoked on the same `(laplacian_u, grad_p, rho, nu, body_force)` inputs, to within precision tolerance
 
 #### Scenario: Body-force injection is additive and linear
@@ -76,7 +76,7 @@ The energy equation SHALL use the total-energy form `E = e + 0.5·‖u‖²`. Th
 
 The `theories::fluid_dynamics::euler` module SHALL expose:
 
-- `euler_momentum_rhs_kernel<R>(u, grad_u, grad_p, rho, body_force) -> Result<[R; 3], PhysicsError>` returning `∂u/∂t = −(u·∇)u − (1/ρ)∇p + f`, composed from `convective_acceleration_kernel` and `pressure_gradient_force_kernel`.
+- `euler_momentum_rhs_kernel<R>(u: &Velocity3<R>, grad_u: &VelocityGradient<R>, grad_p: &[R; 3], rho: &Density<R>, body_force: &BodyForceDensity<R>) -> Result<AccelerationVector<R>, PhysicsError>` returning `∂u/∂t = −(u·∇)u − (1/ρ)∇p + f`, composed from `convective_acceleration_kernel` and `pressure_gradient_force_kernel`.
 
 The Euler regime SHALL NOT accept or use any viscosity input.
 
@@ -94,7 +94,7 @@ The Euler regime SHALL NOT accept or use any viscosity input.
 
 The `theories::fluid_dynamics::stokes` module SHALL expose:
 
-- `stokes_momentum_rhs_kernel<R>(laplacian_u, grad_p, rho, nu, body_force) -> Result<[R; 3], PhysicsError>` returning the RHS of `0 = −(1/ρ)∇p + ν∇²u + f` rearranged as a residual whose zero defines Stokes flow. Composed from `viscous_diffusion_kernel` and `pressure_gradient_force_kernel`.
+- `stokes_momentum_rhs_kernel<R>(laplacian_u: &[R; 3], grad_p: &[R; 3], rho: &Density<R>, nu: &KinematicViscosity<R>, body_force: &BodyForceDensity<R>) -> Result<AccelerationVector<R>, PhysicsError>` returning the RHS of `0 = −(1/ρ)∇p + ν∇²u + f` rearranged as a residual whose zero defines Stokes flow. Composed from `viscous_diffusion_kernel` and `pressure_gradient_force_kernel`.
 
 The Stokes regime SHALL NOT accept or use any convective-acceleration input.
 

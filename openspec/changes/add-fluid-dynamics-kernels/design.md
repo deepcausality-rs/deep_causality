@@ -34,17 +34,46 @@ Inputs to all kernels are *already discretised*: the caller supplies velocity ve
 
 ## Decisions
 
-### D1. Kernel signatures take arrays of `R`, not units, by default.
+### D1. Kernel signatures use typed vectors and tensors.
 
-The convective acceleration kernel signature is `fn(&[R; 3], &[[R; 3]; 3]) -> [R; 3]`, not `fn(&Velocity<R>, &VelocityGradient<R>) -> AccelerationVector<R>`. Three reasons:
+Kernel inputs and outputs are wrapped in semantic newtypes whose primary purpose is convention encoding and semantic distinction — not (only) positivity-invariant enforcement. This reverses the original D1, which limited newtypes to scalars with finite-positivity invariants. The reversal aligns the kernel surface with contemporary computational physics practice (OpenFOAM `vector`/`tensor`/`symmTensor`, deal.II `Tensor` / `SymmetricTensor`, FEniCS UFL typed-rank-and-symmetry, Eigen `SelfAdjointView`) and with the project's own precedent in `deep_causality_metric` (`EastCoastMetric` / `WestCoastMetric` / `LorentzianMetric`) and `kernels/dynamics/quantities.rs` (`Mass<R>` / `Length<R>` / `Speed<R>` are semantically distinct despite sharing a `R + finite + non-negative` internal representation).
 
-1. The existing fluids kernels (`hydrostatic_pressure_kernel`, `bernoulli_pressure_kernel`) take `Pressure<R>` / `Density<R>` / `Speed<R>` because their inputs are *scalar physical quantities with finite-positivity constraints*. A 3-component velocity vector has no such constraint — any real triple is a valid velocity. Wrapping `[R; 3]` in `Velocity3<R>` would add a newtype whose constructor only validates `is_finite()`, which is dead weight.
-2. Velocity-gradient tensors `[[R; 3]; 3]` have no positivity / sign constraint either. The constitutive and kinematic kernels manipulate `S = 0.5·(∇u + ∇uᵀ)` and `Ω = 0.5·(∇u − ∇uᵀ)` as raw tensors; wrapping them in newtypes serves no checking purpose and breaks ergonomic composition.
-3. The Block B5 signatures in `3DCausalFluidDynamics.md` already use `[R; 3]` / `[[R; 3]; 3]`. Matching that surface lets B5 close as "verify equivalence" rather than as a second API redesign.
+Types in scientific computing carry four kinds of information; the original D1 captured only one:
 
-Scalar physical quantities with finite-positivity invariants (kinematic viscosity, dynamic viscosity, density, pressure, temperature, wall shear stress, specific enthalpy) **do** use newtypes — both because the invariants matter and because that's the existing convention for scalar fluid inputs. Existing `Viscosity<R>` (dynamic, Pa·s) is reused; new newtypes are `KinematicViscosity<R>` (m²/s), `SpecificEnthalpy<R>` (J/kg), `WallShearStress<R>` (Pa). They land in `kernels/fluids/quantities.rs` per the existing concatenated-quantities convention — not in `units/`, which the crate reserves for cross-domain units (Temperature, Time, Energy, Ratio, Probability, IndexOfRefraction).
+1. **Invariant enforcement** (finiteness, positivity, symmetry, antisymmetry). Constructor returns `Result<Self, PhysicsError>`.
+2. **Convention encoding.** The Jacobian convention `(∇u)_{ij} = ∂u_i/∂x_j` is pinned at the type level via `VelocityGradient::from_jacobian(matrix)`. The alternate transposed convention requires an explicit conversion. Equivalent to how `EastCoastMetric` and `WestCoastMetric` pin the metric-signature convention.
+3. **Semantic distinction.** A `[R; 3]` can be velocity, position, acceleration, vorticity, force, momentum, electric field, magnetic field — all physically distinct, all interchangeable as raw arrays. Newtypes make mixups compile errors. Equivalent to how `Mass<R>` and `Length<R>` are distinct types despite identical internal representation.
+4. **Algebraic structure.** `StrainRateTensor<R>` carries `S = Sᵀ` as a construction-time guarantee. `RotationRateTensor<R>` carries `Ω = −Ωᵀ`. These identities are then load-bearing in downstream kernels (`Q-criterion`, `λ₂`) and can be relied on without re-checking.
 
-**Alternative considered:** wrap every input in a units newtype. Rejected for the above reasons; would force a parallel `Velocity3<R>` / `VelocityGradient<R>` / `StrainRateTensor<R>` hierarchy with no checking value, and would create dead-code newtypes (`Vorticity`, `StrainRate`, `MassFlux`) that no kernel signature in the spec actually consumes.
+The fluid kernel newtype family is:
+
+| Type | Internal | Invariant at construction | Convention |
+|---|---|---|---|
+| `Velocity3<R>` | `[R; 3]` | finite | — |
+| `VorticityVector<R>` | `[R; 3]` | finite | pseudovector (flips under spatial reflection) |
+| `AccelerationVector<R>` | `[R; 3]` | finite | — |
+| `BodyForceDensity<R>` | `[R; 3]` | finite | force per unit volume (N/m³) |
+| `VelocityGradient<R>` | `[[R; 3]; 3]` | finite | Jacobian: `[i][j] = ∂u_i/∂x_j` |
+| `StrainRateTensor<R>` | `[[R; 3]; 3]` | finite + symmetric | continuum-mechanics convention |
+| `RotationRateTensor<R>` | `[[R; 3]; 3]` | finite + antisymmetric | — |
+| `CauchyStress<R>` | `[[R; 3]; 3]` | finite + symmetric | positive in tension |
+
+Each newtype provides:
+
+- `new(raw) -> Result<Self, PhysicsError>` enforcing the invariant.
+- `new_unchecked(raw) -> Self` for hot-loop construction where the invariant is already known to hold by algebra.
+- `value(&self) -> &[…]` returning a borrow of the underlying raw array.
+- `into_inner(self) -> […]` consuming-conversion to the underlying raw array.
+- `impl From<Self> for […]` (always), routed through `into_inner`. This direction drops the type-level invariant intentionally and is safe.
+- `impl From<[…]> for Self` **only when the type's invariant is finiteness alone** (the four vector newtypes and `VelocityGradient`). For invariant-bearing tensors (`StrainRateTensor`, `RotationRateTensor`, `CauchyStress`), no `From<[[R; 3]; 3]>` is provided — a silent bypass of the symmetry / antisymmetry invariant would be a footgun. Callers with raw input use `new(raw)` (checked) or `new_unchecked(raw)` (explicitly opt-out at the call site).
+- `Default` (zero / identity element where it makes sense; the zero tensor satisfies both symmetry and antisymmetry trivially).
+- `Debug`, `Clone`, `Copy`, `PartialEq`.
+
+**Block B5 compatibility.** B5's published signatures (`q_criterion_kernel(velocity_gradient: &[[R; 3]; 3]) -> R`) interoperate via the `From` impls: a caller with a typed `VelocityGradient<R>` either converts at the call site (`&grad.into_inner()`) or B5 itself is updated to take the typed input when it lands. No B5 code has shipped yet, so the migration cost is zero.
+
+**Scalar newtypes unchanged from prior practice.** `Viscosity<R>` (dynamic, Pa·s), `KinematicViscosity<R>` (m²/s), `Density<R>`, `Pressure<R>`, `Speed<R>`, `Length<R>`, `Temperature<R>`, `SpecificEnthalpy<R>`, `WallShearStress<R>` — these stay as scalar newtypes in `kernels/fluids/quantities.rs` with the same constructor semantics they had before.
+
+**Alternative considered:** raw `[R; 3]` / `[[R; 3]; 3]` everywhere (the original D1). Rejected because (a) it forfeits convention encoding for the Jacobian-vs-gradient and stress-sign conventions, both of which are documented foot-guns in fluid mechanics; (b) it forfeits semantic distinction across the ~10 physically distinct quantities that all happen to be `[R; 3]` or `[[R; 3]; 3]`; (c) it forfeits the symmetry / antisymmetry algebraic guarantees that downstream kernels (Q-criterion, λ₂) consume; (d) it contradicts the crate's own precedent in `deep_causality_metric`; and (e) it diverges from contemporary CFD/FEM library practice (OpenFOAM, deal.II, FEniCS).
 
 ### D2. One file per kernel group, not one file per kernel.
 

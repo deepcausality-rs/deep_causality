@@ -7,14 +7,25 @@
 - [x] 1.5 Re-export the three new newtypes from `deep_causality_physics/src/lib.rs` — already covered by the existing `pub use crate::kernels::fluids::*;` glob; no edit needed.
 - [x] 1.6 `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo test`, `cargo fmt --check` all clean. 1016 tests pass; 22 new `quantities_tests` (KinematicViscosity, SpecificEnthalpy, WallShearStress) all green.
 
+## 1B. Typed vector and tensor newtype family (D1 reversal)
+
+Reverses the original D1 "raw arrays for vectors and tensors" decision; see `design.md` §D1 for the rationale. Lands before Group 2 because every later kernel group consumes these types.
+
+- [x] 1B.1 Appended four vector newtypes to `kernels/fluids/quantities.rs`: `Velocity3<R>`, `VorticityVector<R>`, `AccelerationVector<R>`, `BodyForceDensity<R>`. Each wraps `[R; 3]` with finiteness check, `new_unchecked`, `value`, `into_inner`, bidirectional `From` conversions, `Default` (zero vector), and the standard derived traits.
+- [x] 1B.2 Appended four rank-2 tensor newtypes: `VelocityGradient<R>` (finiteness only, Jacobian convention pinned by docstring), `StrainRateTensor<R>` (finiteness + symmetry via exact equality `S_ij == S_ji`), `RotationRateTensor<R>` (finiteness + zero diagonal + antisymmetry `Ω_ij == −Ω_ji`), `CauchyStress<R>` (finiteness + symmetry). Per the spec correction during implementation: `From<[[R; 3]; 3]> for Self` is provided only on `VelocityGradient` (finiteness-only); invariant-bearing tensors expose only `From<Self> for [[R; 3]; 3]` so the invariant bypass via `new_unchecked` is explicit at the call site rather than silent.
+- [x] 1B.3 Added 56 tests in `quantities_tests.rs` covering: `new` happy path for each newtype, finiteness rejection, symmetry / antisymmetry / zero-diagonal rejection, `new_unchecked` bypass, `value` borrow, `into_inner` consume, `From` round-trip for finiteness-only types, `Default` is zero, and trait coverage. Property test landed: a finite `VelocityGradient` decomposes as `S + Ω` and both halves pass the invariant-bearing constructors.
+- [x] 1B.4 `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo test` (1072 tests pass, 56 new), `cargo fmt --check` all clean.
+
 ## 2. Kinematic kernels (foundational — many downstream kernels depend on these)
 
-- [ ] 2.1 Implement `strain_rate_tensor_kernel`, `rotation_rate_tensor_kernel`, `vorticity_from_gradient_kernel` in `kernels/fluids/kinematics.rs`.
-- [ ] 2.2 Implement `velocity_gradient_invariants_kernel` returning `(P, Q, R)` for `∇u`.
-- [ ] 2.3 Implement `helicity_density_kernel` and `enstrophy_density_kernel`.
-- [ ] 2.4 Add tests under `tests/kernels/fluids/kinematics_tests.rs` covering: strain + rotation reconstruct gradient (property test); helicity sign-flips under reflection (property test); enstrophy ≥ 0 (algebraic); Galilean invariance of strain rate; precision-backend tests across `f32`, `f64`, `Float106`.
-- [ ] 2.5 Add causal wrappers in `kernels/fluids/wrappers.rs` for every kernel landed in 2.1–2.3; wrapper tests in `tests/kernels/fluids/wrappers_tests.rs`.
-- [ ] 2.6 Uncomment kinematics `pub use` line in `kernels/fluids/mod.rs`. Re-export from `lib.rs`. `cargo build` + `clippy` + tests clean.
+All kernels in this group consume `&VelocityGradient<R>` (Jacobian convention) and return typed outputs per `specs/fluid-dynamics-kernels/spec.md` "Kinematic kernels".
+
+- [x] 2.1 Implemented `strain_rate_tensor_kernel` and `rotation_rate_tensor_kernel` in `kernels/fluids/kinematics.rs`. Both return via `new_unchecked` because `0.5·(G ± Gᵀ)` guarantees symmetry / antisymmetry exactly in IEEE 754.
+- [x] 2.2 Implemented `vorticity_from_gradient_kernel(grad_u) -> VorticityVector<R>` (infallible) and `velocity_gradient_invariants_kernel(grad_u) -> Result<(R, R, R), PhysicsError>` using the Chong–Perry–Cantwell convention with `tr(A²)` unrolled to avoid clippy `needless_range_loop`.
+- [x] 2.3 Implemented `helicity_density_kernel(u, ω) -> R` (infallible dot product) and `enstrophy_density_kernel(ω) -> Result<R, PhysicsError>`.
+- [x] 2.4 Added 20 tests in `tests/kernels/fluids/kinematics_tests.rs`: strain rate symmetry, strain rate vanishes for rigid-body rotation, strain rate equals input for pure strain (Galilean invariance via signature), rotation rate antisymmetry, rotation rate vanishes for pure strain, decomposition `∇u = S + Ω` (property test), vorticity on a known field, vorticity zero for irrotational flow, invariants P = 0 for incompressible flow, invariants on a known diagonal matrix, invariants on zero gradient, helicity as dot product, helicity sign-flip under full-parity reflection, helicity zero for orthogonal vectors, enstrophy positivity and known value, enstrophy on zero vorticity, enstrophy non-negative on multiple cases, f32 precision sweep on strain rate and enstrophy.
+- [x] 2.5 Added causal wrappers in `kernels/fluids/wrappers.rs` for all six kinematic kernels and 6 corresponding wrapper tests in `tests/kernels/fluids/wrappers_tests.rs`.
+- [x] 2.6 Uncommented `pub use kinematics::*` in `kernels/fluids/mod.rs`. `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo test` (1098 tests pass: 1072 pre-existing + 20 kinematics + 6 wrapper), `cargo fmt --check` all clean. No `#[allow]` suppressions added.
 
 ## 3. Governing-equation kernels
 
