@@ -4,10 +4,12 @@
  */
 
 use deep_causality_physics::{
-    Density, Length, Pressure, Speed, Velocity3, VelocityGradient, VorticityVector,
-    bernoulli_pressure, enstrophy_density, helicity_density, hydrostatic_pressure,
-    rotation_rate_tensor, strain_rate_tensor, velocity_gradient_invariants,
-    vorticity_from_gradient,
+    CauchyStress, Density, KinematicViscosity, Length, Pressure, Speed, Velocity3,
+    VelocityGradient, VorticityVector, bernoulli_pressure, continuity_rhs, convective_acceleration,
+    enstrophy_density, helicity_density, hydrostatic_pressure, kinetic_energy_density,
+    pressure_gradient_force, pressure_work, rotation_rate_tensor, scalar_advection_diffusion,
+    strain_rate_tensor, velocity_gradient_invariants, viscous_diffusion, viscous_dissipation_rate,
+    vorticity_from_gradient, vorticity_transport,
 };
 
 // =============================================================================
@@ -108,4 +110,103 @@ fn test_enstrophy_density_wrapper_success() {
     assert!(effect.is_ok());
     let e = effect.value().clone().into_value().unwrap();
     assert!((e - 12.5).abs() < 1e-12);
+}
+
+// =============================================================================
+// Governing kernel wrapper tests
+// =============================================================================
+
+#[test]
+fn test_convective_acceleration_wrapper_success() {
+    let u = Velocity3::<f64>::new([1.0, 0.0, 0.0]).unwrap();
+    let g =
+        VelocityGradient::<f64>::new([[1.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
+    let effect = convective_acceleration(&u, &g);
+    assert!(effect.is_ok());
+    let a = effect.value().clone().into_value().unwrap();
+    assert!((a.value()[0] - 1.0).abs() < 1e-12);
+}
+
+#[test]
+fn test_viscous_diffusion_wrapper_success() {
+    let nu = KinematicViscosity::<f64>::new(0.5).unwrap();
+    let effect = viscous_diffusion(&nu, &[2.0, 0.0, 0.0]);
+    assert!(effect.is_ok());
+    let a = effect.value().clone().into_value().unwrap();
+    assert!((a.value()[0] - 1.0).abs() < 1e-12);
+}
+
+#[test]
+fn test_pressure_gradient_force_wrapper_success() {
+    let rho = Density::<f64>::new(1000.0).unwrap();
+    let effect = pressure_gradient_force(&rho, &[10.0, 0.0, 0.0]);
+    assert!(effect.is_ok());
+}
+
+#[test]
+fn test_pressure_gradient_force_wrapper_error_path() {
+    let rho = Density::<f64>::new(0.0).unwrap();
+    let effect = pressure_gradient_force(&rho, &[1.0, 0.0, 0.0]);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_continuity_rhs_wrapper_success() {
+    let rho = Density::<f64>::new(1.0).unwrap();
+    let u = Velocity3::<f64>::new([0.0; 3]).unwrap();
+    let effect = continuity_rhs(&rho, &u, &[0.0; 3], 0.0);
+    assert!(effect.is_ok());
+    assert_eq!(effect.value().clone().into_value().unwrap(), 0.0);
+}
+
+#[test]
+fn test_vorticity_transport_wrapper_success() {
+    let omega = VorticityVector::<f64>::new([1.0, 0.0, 0.0]).unwrap();
+    let u = Velocity3::<f64>::default();
+    let grad_u = VelocityGradient::<f64>::default();
+    let grad_omega = [[0.0; 3]; 3];
+    let lap_omega = [4.0, 0.0, 0.0];
+    let nu = KinematicViscosity::<f64>::new(0.5).unwrap();
+    let effect = vorticity_transport(&omega, &u, &grad_u, &grad_omega, &lap_omega, &nu);
+    assert!(effect.is_ok());
+    let a = effect.value().clone().into_value().unwrap();
+    assert!((a.value()[0] - 2.0).abs() < 1e-12);
+}
+
+#[test]
+fn test_scalar_advection_diffusion_wrapper_success() {
+    let u = Velocity3::<f64>::default();
+    let effect = scalar_advection_diffusion(&u, &[0.0; 3], 0.0, 0.0, 7.5);
+    assert!(effect.is_ok());
+    assert_eq!(effect.value().clone().into_value().unwrap(), 7.5);
+}
+
+#[test]
+fn test_kinetic_energy_density_wrapper_success() {
+    let rho = Density::<f64>::new(2.0).unwrap();
+    let u = Velocity3::<f64>::new([3.0, 4.0, 0.0]).unwrap();
+    let effect = kinetic_energy_density(&rho, &u);
+    assert!(effect.is_ok());
+    let e = effect.value().clone().into_value().unwrap();
+    assert!((e - 25.0).abs() < 1e-12);
+}
+
+#[test]
+fn test_viscous_dissipation_rate_wrapper_success() {
+    let tau =
+        CauchyStress::<f64>::new([[2.0, 0.0, 0.0], [0.0, 3.0, 0.0], [0.0, 0.0, 5.0]]).unwrap();
+    let g =
+        VelocityGradient::<f64>::new([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]).unwrap();
+    let effect = viscous_dissipation_rate(&tau, &g);
+    assert!(effect.is_ok());
+    let phi = effect.value().clone().into_value().unwrap();
+    assert!((phi - 10.0).abs() < 1e-12);
+}
+
+#[test]
+fn test_pressure_work_wrapper_success() {
+    let p = Pressure::<f64>::new(2.0).unwrap();
+    let effect = pressure_work(&p, 3.0);
+    assert!(effect.is_ok());
+    assert_eq!(effect.value().clone().into_value().unwrap(), 6.0);
 }

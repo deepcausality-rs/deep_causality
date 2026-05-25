@@ -29,11 +29,14 @@ All kernels in this group consume `&VelocityGradient<R>` (Jacobian convention) a
 
 ## 3. Governing-equation kernels
 
-- [ ] 3.1 Implement `convective_acceleration_kernel`, `viscous_diffusion_kernel`, `pressure_gradient_force_kernel` in `kernels/fluids/governing.rs`.
-- [ ] 3.2 Implement `continuity_rhs_kernel`, `vorticity_transport_kernel`, `scalar_advection_diffusion_kernel`, `energy_rhs_kernel` in the same file.
-- [ ] 3.3 Add tests under `tests/kernels/fluids/governing_tests.rs`: Galilean invariance of convective acceleration; pressure-gradient error on `ρ ≤ 0`; continuity reduces to 0 for incompressible divergence-free flow; vorticity transport reduces to inviscid case at `ν = 0`; precision-backend sweep.
-- [ ] 3.4 Add causal wrappers for every kernel in this group; wrapper tests.
-- [ ] 3.5 Uncomment governing `pub use` + re-export. Build/clippy/tests clean.
+Spec corrections applied before implementation: (a) Galilean-invariance scenario replaced with the correct linearity-in-velocity-offset scenario (the convective term `(u·∇)u` is not Galilean invariant alone — only the full material derivative is); (b) `vorticity_transport_kernel` signature gains `grad_u: &VelocityGradient<R>` for the vortex-stretching term; (c) the coarse `energy_rhs_kernel` is replaced with three pointwise building blocks (`kinetic_energy_density_kernel`, `viscous_dissipation_rate_kernel`, `pressure_work_kernel`) — the full energy RHS evaluator lands in Group 14 (compressible NS theory).
+
+- [x] 3.1 Implemented `convective_acceleration_kernel`, `viscous_diffusion_kernel`, `pressure_gradient_force_kernel` (errors on `ρ = 0`) in `kernels/fluids/governing.rs`.
+- [x] 3.2 Implemented `continuity_rhs_kernel`, `vorticity_transport_kernel` (with the `grad_u` parameter added per the spec correction), `scalar_advection_diffusion_kernel`.
+- [x] 3.3 Implemented the three energy building blocks: `kinetic_energy_density_kernel`, `viscous_dissipation_rate_kernel`, `pressure_work_kernel`.
+- [x] 3.4 Added 27 tests in `tests/kernels/fluids/governing_tests.rs` covering: convective acceleration on a known field, linearity-in-velocity-offset property test (replaces the wrong Galilean-invariance scenario), pressure-gradient force errors on `ρ = 0`, viscous diffusion linearity in ν, continuity reduces to 0 for incompressible divergence-free flow, continuity picks up `∇ρ` and `div u` terms, inviscid-Helmholtz limit of vorticity transport, vorticity diffusion is proportional to ν, vortex-stretching vanishes when `ω·grad_u_rows = 0`, scalar transport reduces to pure advection at `D = 0` and pure diffusion at `u = 0` and source-only at zero everything, kinetic energy density positivity and known values, viscous-dissipation double-contraction on a known tensor pair, pressure-work sign agreement, f32 precision sweep on convective and viscous kernels.
+- [x] 3.5 Added 10 causal wrappers in `kernels/fluids/wrappers.rs` for every governing kernel, plus 10 wrapper tests including the error-path scenario for `pressure_gradient_force`.
+- [x] 3.6 Uncommented `pub use governing::*` in `kernels/fluids/mod.rs`. `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo test` (1134 tests pass, +36 since Group 2), `cargo fmt --check` all clean. No `#[allow]` suppressions added.
 
 ## 4. Constitutive kernels
 

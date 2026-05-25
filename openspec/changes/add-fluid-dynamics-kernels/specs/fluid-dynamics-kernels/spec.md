@@ -52,14 +52,18 @@ The surface SHALL include at minimum:
 - `viscous_diffusion_kernel<R>(nu: &KinematicViscosity<R>, laplacian_u: &[R; 3]) -> AccelerationVector<R>` returning `ν ∇²u`.
 - `pressure_gradient_force_kernel<R>(rho: &Density<R>, grad_p: &[R; 3]) -> Result<AccelerationVector<R>, PhysicsError>` returning `−(1/ρ) ∇p` and erroring on `ρ ≤ 0`.
 - `continuity_rhs_kernel<R>(rho: &Density<R>, u: &Velocity3<R>, grad_rho: &[R; 3], div_u: R) -> R` returning the RHS of `∂ρ/∂t = −∇·(ρu) = −(u·∇ρ + ρ ∇·u)`.
-- `vorticity_transport_kernel<R>(omega: &VorticityVector<R>, u: &Velocity3<R>, grad_omega: &[[R; 3]; 3], laplacian_omega: &[R; 3], nu: &KinematicViscosity<R>) -> AccelerationVector<R>` returning `−(u·∇)ω + (ω·∇)u + ν∇²ω`. (Output type is `AccelerationVector` because it carries units of `(1/s)·(1/s) = 1/s²`, dimensionally identical to acceleration after vorticity scaling.)
+- `vorticity_transport_kernel<R>(omega: &VorticityVector<R>, u: &Velocity3<R>, grad_u: &VelocityGradient<R>, grad_omega: &[[R; 3]; 3], laplacian_omega: &[R; 3], nu: &KinematicViscosity<R>) -> AccelerationVector<R>` returning `−(u·∇)ω + (ω·∇)u + ν∇²ω`. The vortex-stretching term `(ω·∇)u` requires the velocity gradient `grad_u`, not the vorticity gradient. Output type is `AccelerationVector` because it carries units of `(1/s)·(1/s) = 1/s²`, dimensionally identical to acceleration after vorticity scaling.
 - `scalar_advection_diffusion_kernel<R>(u: &Velocity3<R>, grad_phi: &[R; 3], laplacian_phi: R, diffusivity: R, source: R) -> R` returning `−u·∇φ + D ∇²φ + S`.
-- `energy_rhs_kernel<R>(...)` for the compressible energy equation expressed in total-energy form.
+- `kinetic_energy_density_kernel<R>(rho: &Density<R>, u: &Velocity3<R>) -> R` returning `ρ · 0.5 · ‖u‖²` — local kinetic energy density per unit volume.
+- `viscous_dissipation_rate_kernel<R>(tau: &CauchyStress<R>, grad_u: &VelocityGradient<R>) -> R` returning `Φ = τ:∇u`, the local rate of kinetic energy converted to heat. Non-negative for Newtonian fluids by construction (when `τ` itself is constructed via the Newtonian constitutive kernel).
+- `pressure_work_kernel<R>(p: &Pressure<R>, div_u: R) -> R` returning `p · ∇·u`, the reversible compression-work contribution to the internal-energy equation.
 
-#### Scenario: Convective acceleration is Galilean invariant
+The full compressible-energy RHS evaluator (`compressible_ns_energy_rhs_kernel`) lives in the `theories::fluid_dynamics::compressible_ns` layer (Group 14) and composes these building blocks plus convective-flux and heat-flux contributions.
 
-- **WHEN** `convective_acceleration_kernel(u, grad_u)` is called with any `Velocity3<R>` and `VelocityGradient<R>`, then called again with `Velocity3::new(u.into_inner() + c)` for any constant velocity offset `c: [R; 3]` and the same `grad_u`
-- **THEN** both invocations SHALL return `AccelerationVector` values whose component-wise difference is at or below the precision backend's tolerance for `R ∈ {f32, f64, Float106}`
+#### Scenario: Convective acceleration shifts linearly in the velocity offset
+
+- **WHEN** `convective_acceleration_kernel(Velocity3::new(u_raw)?, grad_u)` and `convective_acceleration_kernel(Velocity3::new(u_raw + c)?, grad_u)` are evaluated for any constant offset `c: [R; 3]` and any `grad_u: VelocityGradient<R>`
+- **THEN** their component-wise difference SHALL equal `grad_u · c` (i.e., component `i` equals `Σ_j grad_u.value()[i][j] · c[j]`) to within precision tolerance for `R ∈ {f32, f64, Float106}`. This tests the kernel's linearity in `u` and verifies the indexing convention. (Note: the convective term `(u·∇)u` is not Galilean invariant in isolation — only the full material derivative `Du/Dt = ∂u/∂t + (u·∇)u` is, and the explicit time-derivative term is not visible at the kernel level.)
 
 #### Scenario: Pressure gradient force errors on non-positive density
 

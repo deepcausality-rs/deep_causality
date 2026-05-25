@@ -4,6 +4,8 @@
  */
 
 #[cfg(test)]
+pub mod governing_tests;
+#[cfg(test)]
 pub mod kinematics_tests;
 #[cfg(test)]
 pub mod mechanics_tests;

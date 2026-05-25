@@ -3,10 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::kernels::fluids::{kinematics, mechanics};
+use crate::kernels::fluids::{governing, kinematics, mechanics};
 use crate::{
-    Density, Length, Pressure, RotationRateTensor, Speed, StrainRateTensor, Velocity3,
-    VelocityGradient, VorticityVector,
+    AccelerationVector, CauchyStress, Density, KinematicViscosity, Length, Pressure,
+    RotationRateTensor, Speed, StrainRateTensor, Velocity3, VelocityGradient, VorticityVector,
 };
 use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
@@ -111,4 +111,129 @@ where
         Ok(e) => PropagatingEffect::pure(e),
         Err(err) => PropagatingEffect::from_error(CausalityError::from(err)),
     }
+}
+
+// =============================================================================
+// Governing-equation kernel wrappers
+// =============================================================================
+
+/// Causal wrapper for [`governing::convective_acceleration_kernel`].
+pub fn convective_acceleration<R>(
+    u: &Velocity3<R>,
+    grad_u: &VelocityGradient<R>,
+) -> PropagatingEffect<AccelerationVector<R>>
+where
+    R: RealField + Debug + 'static,
+{
+    PropagatingEffect::pure(governing::convective_acceleration_kernel(u, grad_u))
+}
+
+/// Causal wrapper for [`governing::viscous_diffusion_kernel`].
+pub fn viscous_diffusion<R>(
+    nu: &KinematicViscosity<R>,
+    laplacian_u: &[R; 3],
+) -> PropagatingEffect<AccelerationVector<R>>
+where
+    R: RealField + Debug + 'static,
+{
+    PropagatingEffect::pure(governing::viscous_diffusion_kernel(nu, laplacian_u))
+}
+
+/// Causal wrapper for [`governing::pressure_gradient_force_kernel`].
+pub fn pressure_gradient_force<R>(
+    rho: &Density<R>,
+    grad_p: &[R; 3],
+) -> PropagatingEffect<AccelerationVector<R>>
+where
+    R: RealField + Debug + 'static,
+{
+    match governing::pressure_gradient_force_kernel(rho, grad_p) {
+        Ok(a) => PropagatingEffect::pure(a),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`governing::continuity_rhs_kernel`].
+pub fn continuity_rhs<R>(
+    rho: &Density<R>,
+    u: &Velocity3<R>,
+    grad_rho: &[R; 3],
+    div_u: R,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    PropagatingEffect::pure(governing::continuity_rhs_kernel(rho, u, grad_rho, div_u))
+}
+
+/// Causal wrapper for [`governing::vorticity_transport_kernel`].
+pub fn vorticity_transport<R>(
+    omega: &VorticityVector<R>,
+    u: &Velocity3<R>,
+    grad_u: &VelocityGradient<R>,
+    grad_omega: &[[R; 3]; 3],
+    laplacian_omega: &[R; 3],
+    nu: &KinematicViscosity<R>,
+) -> PropagatingEffect<AccelerationVector<R>>
+where
+    R: RealField + Debug + 'static,
+{
+    PropagatingEffect::pure(governing::vorticity_transport_kernel(
+        omega,
+        u,
+        grad_u,
+        grad_omega,
+        laplacian_omega,
+        nu,
+    ))
+}
+
+/// Causal wrapper for [`governing::scalar_advection_diffusion_kernel`].
+pub fn scalar_advection_diffusion<R>(
+    u: &Velocity3<R>,
+    grad_phi: &[R; 3],
+    laplacian_phi: R,
+    diffusivity: R,
+    source: R,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    PropagatingEffect::pure(governing::scalar_advection_diffusion_kernel(
+        u,
+        grad_phi,
+        laplacian_phi,
+        diffusivity,
+        source,
+    ))
+}
+
+/// Causal wrapper for [`governing::kinetic_energy_density_kernel`].
+pub fn kinetic_energy_density<R>(rho: &Density<R>, u: &Velocity3<R>) -> PropagatingEffect<R>
+where
+    R: RealField + FromPrimitive + Debug + Default + 'static,
+{
+    match governing::kinetic_energy_density_kernel(rho, u) {
+        Ok(e) => PropagatingEffect::pure(e),
+        Err(err) => PropagatingEffect::from_error(CausalityError::from(err)),
+    }
+}
+
+/// Causal wrapper for [`governing::viscous_dissipation_rate_kernel`].
+pub fn viscous_dissipation_rate<R>(
+    tau: &CauchyStress<R>,
+    grad_u: &VelocityGradient<R>,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    PropagatingEffect::pure(governing::viscous_dissipation_rate_kernel(tau, grad_u))
+}
+
+/// Causal wrapper for [`governing::pressure_work_kernel`].
+pub fn pressure_work<R>(p: &Pressure<R>, div_u: R) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    PropagatingEffect::pure(governing::pressure_work_kernel(p, div_u))
 }
