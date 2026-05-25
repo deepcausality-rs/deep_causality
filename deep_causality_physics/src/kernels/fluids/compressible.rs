@@ -145,6 +145,15 @@ where
             "entropy_production_rate_kernel: temperature must be > 0".into(),
         ));
     }
+    // Fourier's law fixes the sign of κ ≥ 0 for any physically realisable
+    // material; a negative thermal conductivity would have heat flowing
+    // from cold to hot and would let the kernel return σ < 0, breaking
+    // the second-law (non-negativity) contract advertised above.
+    if thermal_conductivity < R::zero() {
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "entropy_production_rate_kernel: thermal_conductivity must be ≥ 0".into(),
+        ));
+    }
 
     // Φ = τ : ∇u
     let tv = tau.value();

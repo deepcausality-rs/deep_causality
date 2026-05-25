@@ -843,9 +843,10 @@ pub fn wall_shear_stress_newtonian<R>(
 where
     R: RealField + Debug + 'static,
 {
-    PropagatingEffect::pure(boundary_layer::wall_shear_stress_newtonian_kernel(
-        mu, du_dy_wall,
-    ))
+    match boundary_layer::wall_shear_stress_newtonian_kernel(mu, du_dy_wall) {
+        Ok(t) => PropagatingEffect::pure(t),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
 }
 
 /// Causal wrapper for [`boundary_layer::friction_velocity_kernel`].

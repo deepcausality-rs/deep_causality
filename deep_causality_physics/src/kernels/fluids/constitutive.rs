@@ -25,10 +25,10 @@ use deep_causality_num::{FromPrimitive, RealField};
 /// Newtonian viscous stress with Stokes hypothesis (bulk viscosity ζ = 0):
 /// `τ = 2μ S − (2/3) μ (∇·u) I`.
 ///
-/// Returns a [`ViscousStress<R>`] (symmetric by construction, since `S` is
-/// symmetric and the bulk term adds a scalar multiple of the identity).
-/// The returned tensor uses `new_unchecked` because symmetry is guaranteed
-/// by the algebra.
+/// Returns a [`ViscousStress<R>`]. Symmetry is guaranteed by the algebra
+/// (`S` is symmetric and the bulk term adds a scalar multiple of the
+/// identity), but the checked constructor is used so that a non-finite
+/// `div_u` is surfaced as `PhysicsError` rather than admitted silently.
 pub fn newtonian_viscous_stress_kernel<R>(
     mu: &Viscosity<R>,
     strain_rate: &StrainRateTensor<R>,
@@ -55,7 +55,10 @@ where
     tau[1][1] -= bulk_term;
     tau[2][2] -= bulk_term;
 
-    Ok(ViscousStress::new_unchecked(tau))
+    // Use the checked constructor: `div_u` is a raw R input, so a NaN/Inf
+    // value would otherwise propagate into the diagonal silently. Symmetry
+    // is guaranteed by the algebra (2μS symmetric + scalar·I).
+    ViscousStress::new(tau)
 }
 
 /// Newtonian viscous stress with bulk viscosity:
@@ -90,7 +93,10 @@ where
     tau[1][1] += bulk_term;
     tau[2][2] += bulk_term;
 
-    Ok(ViscousStress::new_unchecked(tau))
+    // Use the checked constructor: `div_u` is a raw R input, so a NaN/Inf
+    // value would otherwise propagate into the diagonal silently. Symmetry
+    // is guaranteed by the algebra (2μS symmetric + scalar·I).
+    ViscousStress::new(tau)
 }
 
 /// Power-law (Ostwald–de Waele) apparent viscosity: `μ_eff = K · γ̇^(n−1)`.

@@ -24,7 +24,15 @@ use deep_causality_num::RealField;
 ///
 /// `WallShearStress<R>` is a magnitude; this kernel always returns the
 /// absolute value. Sign of the underlying gradient is the caller's concern.
-pub fn wall_shear_stress_newtonian_kernel<R>(mu: &Viscosity<R>, du_dy_wall: R) -> WallShearStress<R>
+///
+/// Errors when the gradient input is non-finite (NaN/Inf) — `du_dy_wall`
+/// is a raw `R` scalar with no upstream invariant, so the checked
+/// constructor is used to reject `WallShearStress::NaN` rather than
+/// admit it silently.
+pub fn wall_shear_stress_newtonian_kernel<R>(
+    mu: &Viscosity<R>,
+    du_dy_wall: R,
+) -> Result<WallShearStress<R>, PhysicsError>
 where
     R: RealField,
 {
@@ -33,7 +41,7 @@ where
     } else {
         du_dy_wall
     };
-    WallShearStress::new_unchecked(mu.value() * abs_gradient)
+    WallShearStress::new(mu.value() * abs_gradient)
 }
 
 /// Friction velocity `u_τ = √(τ_w / ρ)` (m/s).

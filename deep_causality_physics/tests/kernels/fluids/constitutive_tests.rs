@@ -201,3 +201,22 @@ fn test_power_law_f32_precision() {
     let mu_eff = power_law_apparent_viscosity_kernel::<f32>(2.0, 0.5, 4.0).unwrap();
     assert!((mu_eff.value() - 1.0).abs() < TOL_F32);
 }
+
+#[test]
+fn test_newtonian_viscous_stress_errors_on_non_finite_div_u() {
+    // div_u is a raw R input with no upstream invariant; non-finite values
+    // must be surfaced rather than admitted silently into the stress tensor.
+    let mu = Viscosity::<f64>::new(1.0).unwrap();
+    let s = StrainRateTensor::<f64>::default();
+    assert!(newtonian_viscous_stress_kernel(&mu, &s, f64::NAN).is_err());
+    assert!(newtonian_viscous_stress_kernel(&mu, &s, f64::INFINITY).is_err());
+}
+
+#[test]
+fn test_newtonian_viscous_stress_with_bulk_errors_on_non_finite_div_u() {
+    let mu = Viscosity::<f64>::new(1.0).unwrap();
+    let zeta = Viscosity::<f64>::new(0.5).unwrap();
+    let s = StrainRateTensor::<f64>::default();
+    assert!(newtonian_viscous_stress_with_bulk_kernel(&mu, &zeta, &s, f64::NAN).is_err());
+    assert!(newtonian_viscous_stress_with_bulk_kernel(&mu, &zeta, &s, f64::INFINITY).is_err());
+}

@@ -186,6 +186,28 @@ fn test_entropy_production_errors_on_zero_temperature() {
     assert!(r.is_err());
 }
 
+#[test]
+fn test_entropy_production_errors_on_negative_thermal_conductivity() {
+    // κ < 0 would make σ < 0 (via the +κ‖∇T‖²/T² term) and break the
+    // non-negativity contract advertised in the docstring.
+    let tau = ViscousStress::<f64>::default();
+    let grad_u = VelocityGradient::<f64>::default();
+    let t = Temperature::<f64>::new(300.0).unwrap();
+    let r = entropy_production_rate_kernel(&t, &tau, &grad_u, -1.0_f64, &[1.0, 0.0, 0.0]);
+    assert!(r.is_err());
+}
+
+#[test]
+fn test_entropy_production_accepts_zero_thermal_conductivity() {
+    // κ = 0 is the adiabatic limit and is physically realisable.
+    let tau = ViscousStress::<f64>::default();
+    let grad_u = VelocityGradient::<f64>::default();
+    let t = Temperature::<f64>::new(300.0).unwrap();
+    let sigma =
+        entropy_production_rate_kernel(&t, &tau, &grad_u, 0.0_f64, &[1.0, 0.0, 0.0]).unwrap();
+    assert_eq!(sigma, 0.0);
+}
+
 // =============================================================================
 // f32 precision sweep
 // =============================================================================

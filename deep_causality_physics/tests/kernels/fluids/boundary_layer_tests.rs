@@ -19,7 +19,7 @@ const TOL: f64 = 1e-10;
 #[test]
 fn test_wall_shear_stress_known_value() {
     let mu = Viscosity::<f64>::new(1.0e-3).unwrap();
-    let tau_w = wall_shear_stress_newtonian_kernel(&mu, 100.0_f64);
+    let tau_w = wall_shear_stress_newtonian_kernel(&mu, 100.0_f64).unwrap();
     // τ_w = 1e-3 · 100 = 0.1
     assert!((tau_w.value() - 0.1).abs() < TOL);
 }
@@ -27,16 +27,24 @@ fn test_wall_shear_stress_known_value() {
 #[test]
 fn test_wall_shear_stress_uses_magnitude() {
     let mu = Viscosity::<f64>::new(0.5).unwrap();
-    let tau_positive = wall_shear_stress_newtonian_kernel(&mu, 2.0);
-    let tau_negative = wall_shear_stress_newtonian_kernel(&mu, -2.0);
+    let tau_positive = wall_shear_stress_newtonian_kernel(&mu, 2.0).unwrap();
+    let tau_negative = wall_shear_stress_newtonian_kernel(&mu, -2.0).unwrap();
     assert_eq!(tau_positive.value(), tau_negative.value());
 }
 
 #[test]
 fn test_wall_shear_stress_zero_for_zero_gradient() {
     let mu = Viscosity::<f64>::new(1.0).unwrap();
-    let tau_w = wall_shear_stress_newtonian_kernel(&mu, 0.0_f64);
+    let tau_w = wall_shear_stress_newtonian_kernel(&mu, 0.0_f64).unwrap();
     assert_eq!(tau_w.value(), 0.0);
+}
+
+#[test]
+fn test_wall_shear_stress_errors_on_non_finite_gradient() {
+    let mu = Viscosity::<f64>::new(1.0e-3).unwrap();
+    assert!(wall_shear_stress_newtonian_kernel(&mu, f64::NAN).is_err());
+    assert!(wall_shear_stress_newtonian_kernel(&mu, f64::INFINITY).is_err());
+    assert!(wall_shear_stress_newtonian_kernel(&mu, f64::NEG_INFINITY).is_err());
 }
 
 // =============================================================================
