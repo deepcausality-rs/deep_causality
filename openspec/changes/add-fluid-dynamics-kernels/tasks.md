@@ -110,10 +110,13 @@ Spec corrections applied before implementation: (a) Galilean-invariance scenario
 
 ## 14. Theory layer — compressible NS
 
-- [ ] 14.1 Implement `compressible_ns_continuity_rhs_kernel`, `compressible_ns_momentum_rhs_kernel`, `compressible_ns_energy_rhs_kernel` in `theories/fluid_dynamics/compressible_ns.rs`. Each docstring states conserved variable, sign convention, and equation form. Energy equation uses total-energy form `E = e + 0.5·‖u‖²`.
-- [ ] 14.2 Tests: continuity reduces to 0 for incompressible divergence-free flow; momentum reduces to incompressible NS at constant `ρ` and `∇·u = 0`; energy-dissipation term ≥ 0 for any Newtonian fluid; precision-backend sweep on representative inputs.
-- [ ] 14.3 Causal wrappers + tests.
-- [ ] 14.4 Re-export. Build/clippy/tests clean.
+- [x] 14.1 Implemented three compressible NS RHS kernels in `theories/fluid_dynamics/compressible_ns.rs`:
+  - `compressible_ns_continuity_rhs_kernel` — scalar `∂ρ/∂t = −u·∇ρ − ρ∇·u`; reduces to `0` for incompressible divergence-free flow. Composes the existing `continuity_rhs_kernel`.
+  - `compressible_ns_momentum_rhs_kernel` — primitive velocity form `∂u/∂t = −(u·∇)u − (1/ρ)∇p + (1/ρ)∇·τ + g`. Takes `div_tau: &[R; 3]` (caller-computed divergence of the viscous stress tensor) so the kernel works for arbitrary Newtonian / non-Newtonian τ without re-deriving the stress. Errors on `ρ = 0`.
+  - `compressible_ns_energy_rhs_kernel` — conservative form `∂(ρE)/∂t = −∇·(ρuE) − ∇·(pu) + ∇·(τ·u) − ∇·q + ρ(u·g)` with `E = e + 0.5‖u‖²`. All four spatial divergences are caller-supplied at the sample point. Sign convention: Fourier heat flux (`q = −κ∇T`) so the `−∇·q` term is a heat *source*.
+- [x] 14.2 Added 7 tests in `tests/theories/fluid_dynamics/compressible_ns_tests.rs`: continuity → 0 at `∇ρ = 0` and `∇·u = 0` (**spec scenario**); continuity known value; momentum **spec scenario** — at constant ρ and divergence-free flow, supplying `div_tau = ρ ν ∇²u` recovers `incompressible_ns_rhs_kernel` componentwise; momentum `ρ = 0` error path; energy known value (algebraic exact cancellation); **energy-dissipation spec scenario** — `Φ = τ:∇u ≥ 0` for arbitrary Newtonian stress via `newtonian_viscous_stress_kernel` + `viscous_dissipation_rate_kernel`, tested over three distinct incompressible velocity gradients; energy linearity in the four divergence inputs (superposition); f32 precision sweep on continuity and momentum.
+- [x] 14.3 Added 3 causal wrappers (`compressible_ns_continuity_rhs`, `compressible_ns_momentum_rhs`, `compressible_ns_energy_rhs`) + 4 wrapper tests (continuity, momentum success, momentum `ρ = 0` error, energy).
+- [x] 14.4 Uncommented `pub use compressible_ns::*` in `theories/fluid_dynamics/mod.rs`. Registered `tests/theories/fluid_dynamics/compressible_ns_tests` in the parent test mod. `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo test` (1385 tests pass, +12 since Group 13), `cargo fmt --check` all clean. No `#[allow]` suppressions added.
 
 ## 15. Final integration & gates
 

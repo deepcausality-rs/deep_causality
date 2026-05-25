@@ -7,7 +7,8 @@ use deep_causality_physics::{
     AccelerationVector, CauchyStress, Density, KinematicViscosity, Length, Pressure,
     SpecificEnthalpy, Speed, StrainRateTensor, Temperature, Velocity3, VelocityGradient, Viscosity,
     VorticityVector, WallShearStress, bernoulli_pressure, bernoulli_total_head, bond_number,
-    capillary_number, circulation, continuity_rhs, convective_acceleration, delta_criterion,
+    capillary_number, circulation, compressible_ns_continuity_rhs, compressible_ns_energy_rhs,
+    compressible_ns_momentum_rhs, continuity_rhs, convective_acceleration, delta_criterion,
     dissipation_rate, dynamic_pressure, eckert_number, eddy_viscosity_boussinesq,
     enstrophy_density, entropy_production_rate, euler_momentum_rhs, friction_velocity,
     froude_number, grashof_number, helicity_density, hydrostatic_pressure, incompressible_ns_rhs,
@@ -776,6 +777,49 @@ fn test_euler_momentum_rhs_wrapper_error_path() {
     let b = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
     let effect = euler_momentum_rhs(&u, &g, &gp, &r, &b);
     assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_compressible_ns_continuity_rhs_wrapper() {
+    let rho = Density::<f64>::new(2.0).unwrap();
+    let u = Velocity3::<f64>::new([1.0, 0.0, 0.0]).unwrap();
+    let effect = compressible_ns_continuity_rhs(&rho, &u, &[3.0, 0.0, 0.0], 0.5);
+    assert!(effect.is_ok());
+    assert!((effect.value().clone().into_value().unwrap() - (-4.0)).abs() < 1e-12);
+}
+
+#[test]
+fn test_compressible_ns_momentum_rhs_wrapper() {
+    let u = Velocity3::<f64>::new([1.0, 0.0, 0.0]).unwrap();
+    let g = VelocityGradient::<f64>::new([[0.0; 3]; 3]).unwrap();
+    let gp = [10.0_f64, 0.0, 0.0];
+    let div_tau = [0.0_f64; 3];
+    let r = Density::<f64>::new(2.0).unwrap();
+    let b = AccelerationVector::<f64>::new([0.0, -9.81, 0.0]).unwrap();
+    let effect = compressible_ns_momentum_rhs(&u, &g, &gp, &div_tau, &r, &b);
+    assert!(effect.is_ok());
+}
+
+#[test]
+fn test_compressible_ns_momentum_rhs_wrapper_error_path() {
+    let u = Velocity3::<f64>::new([1.0, 0.0, 0.0]).unwrap();
+    let g = VelocityGradient::<f64>::new([[0.0; 3]; 3]).unwrap();
+    let gp = [1.0_f64, 0.0, 0.0];
+    let div_tau = [0.0_f64; 3];
+    let r = Density::<f64>::new(0.0).unwrap();
+    let b = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
+    let effect = compressible_ns_momentum_rhs(&u, &g, &gp, &div_tau, &r, &b);
+    assert!(!effect.is_ok());
+}
+
+#[test]
+fn test_compressible_ns_energy_rhs_wrapper() {
+    let rho = Density::<f64>::new(1.0).unwrap();
+    let u = Velocity3::<f64>::new([1.0, 0.0, 0.0]).unwrap();
+    let b = AccelerationVector::<f64>::new([6.0, 0.0, 0.0]).unwrap();
+    let effect = compressible_ns_energy_rhs(&rho, &u, 2.0, 3.0, 4.0, 5.0, &b);
+    assert!(effect.is_ok());
+    assert!(effect.value().clone().into_value().unwrap().abs() < 1e-12);
 }
 
 #[test]

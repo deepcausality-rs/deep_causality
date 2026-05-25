@@ -7,7 +7,7 @@ use crate::kernels::fluids::{
     boundary_layer, coherent_structures, compressible, constitutive, dimensionless, governing,
     ideal_flow, kinematics, mechanics, turbulence,
 };
-use crate::theories::fluid_dynamics::{euler, incompressible_ns, stokes};
+use crate::theories::fluid_dynamics::{compressible_ns, euler, incompressible_ns, stokes};
 use crate::{
     AccelerationVector, CauchyStress, Density, KinematicViscosity, Length, Pressure,
     RotationRateTensor, SpecificEnthalpy, Speed, StrainRateTensor, Temperature, Velocity3,
@@ -1073,4 +1073,72 @@ where
         Ok(a) => PropagatingEffect::pure(a),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
+}
+
+// =============================================================================
+// Theory layer — compressible Newtonian NS regime
+// =============================================================================
+
+/// Causal wrapper for [`compressible_ns::compressible_ns_continuity_rhs_kernel`].
+pub fn compressible_ns_continuity_rhs<R>(
+    rho: &Density<R>,
+    u: &Velocity3<R>,
+    grad_rho: &[R; 3],
+    div_u: R,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    PropagatingEffect::pure(compressible_ns::compressible_ns_continuity_rhs_kernel(
+        rho, u, grad_rho, div_u,
+    ))
+}
+
+/// Causal wrapper for [`compressible_ns::compressible_ns_momentum_rhs_kernel`].
+pub fn compressible_ns_momentum_rhs<R>(
+    u: &Velocity3<R>,
+    grad_u: &VelocityGradient<R>,
+    grad_p: &[R; 3],
+    div_tau: &[R; 3],
+    rho: &Density<R>,
+    body_force_per_mass: &AccelerationVector<R>,
+) -> PropagatingEffect<AccelerationVector<R>>
+where
+    R: RealField + Debug + 'static,
+{
+    match compressible_ns::compressible_ns_momentum_rhs_kernel(
+        u,
+        grad_u,
+        grad_p,
+        div_tau,
+        rho,
+        body_force_per_mass,
+    ) {
+        Ok(a) => PropagatingEffect::pure(a),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`compressible_ns::compressible_ns_energy_rhs_kernel`].
+pub fn compressible_ns_energy_rhs<R>(
+    rho: &Density<R>,
+    u: &Velocity3<R>,
+    div_rho_u_e: R,
+    div_p_u: R,
+    div_tau_dot_u: R,
+    div_q: R,
+    body_force_per_mass: &AccelerationVector<R>,
+) -> PropagatingEffect<R>
+where
+    R: RealField + Debug + Default + 'static,
+{
+    PropagatingEffect::pure(compressible_ns::compressible_ns_energy_rhs_kernel(
+        rho,
+        u,
+        div_rho_u_e,
+        div_p_u,
+        div_tau_dot_u,
+        div_q,
+        body_force_per_mass,
+    ))
 }
