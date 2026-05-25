@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    AccelerationVector, CauchyStress, Density, KinematicViscosity, StrainRateTensor, Velocity3,
-    VelocityGradient, Viscosity, compressible_ns_continuity_rhs_kernel,
+    AccelerationVector, Density, KinematicViscosity, StrainRateTensor, Velocity3, VelocityGradient,
+    Viscosity, ViscousStress, compressible_ns_continuity_rhs_kernel,
     compressible_ns_energy_rhs_kernel, compressible_ns_momentum_rhs_kernel,
     incompressible_ns_rhs_kernel, newtonian_viscous_stress_kernel, strain_rate_tensor_kernel,
     viscous_dissipation_rate_kernel,
@@ -117,7 +117,7 @@ fn test_energy_dissipation_term_is_nonnegative_for_newtonian_fluid() {
         let g = VelocityGradient::<f64>::new(gmat).unwrap();
         let s: StrainRateTensor<f64> = strain_rate_tensor_kernel(&g).unwrap();
         let div_u = gmat[0][0] + gmat[1][1] + gmat[2][2];
-        let tau: CauchyStress<f64> = newtonian_viscous_stress_kernel(&mu, &s, div_u).unwrap();
+        let tau: ViscousStress<f64> = newtonian_viscous_stress_kernel(&mu, &s, div_u).unwrap();
         let phi = viscous_dissipation_rate_kernel(&tau, &g);
         assert!(phi >= 0.0, "Φ = {} should be ≥ 0", phi);
     }

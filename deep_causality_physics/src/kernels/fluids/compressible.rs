@@ -17,7 +17,7 @@ use crate::PhysicsError;
 use crate::Temperature;
 use crate::kernels::dynamics::quantities::Speed;
 use crate::kernels::fluids::quantities::{
-    CauchyStress, Pressure, SpecificEnthalpy, Velocity3, VelocityGradient,
+    Pressure, SpecificEnthalpy, Velocity3, VelocityGradient, ViscousStress,
 };
 use deep_causality_num::{FromPrimitive, RealField};
 
@@ -125,13 +125,13 @@ where
 /// inequality). Errors when `T ≤ 0` (division by zero or negative absolute
 /// temperature).
 ///
-/// **Contract.** The `tau` argument must be the *viscous* stress `τ`, not the
-/// full Cauchy stress `σ = −p I + τ`. The [`CauchyStress<R>`] newtype is a
-/// symmetric-tensor carrier; passing a full Cauchy stress breaks the
-/// `σ ≥ 0` second-law guarantee.
+/// The `tau` argument is typed as [`ViscousStress<R>`], so the `σ ≥ 0`
+/// second-law guarantee is preserved at the type level — the full Cauchy
+/// stress `σ = −p I + τ` cannot be passed here without an explicit
+/// conversion.
 pub fn entropy_production_rate_kernel<R>(
     temperature: &Temperature<R>,
-    tau: &CauchyStress<R>,
+    tau: &ViscousStress<R>,
     grad_u: &VelocityGradient<R>,
     thermal_conductivity: R,
     grad_temperature: &[R; 3],

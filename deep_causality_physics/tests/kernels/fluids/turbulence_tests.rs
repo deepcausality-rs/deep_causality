@@ -4,7 +4,7 @@
  */
 
 use deep_causality_physics::{
-    CauchyStress, KinematicViscosity, StrainRateTensor, Velocity3, VelocityGradient,
+    KinematicViscosity, ReynoldsStress, StrainRateTensor, Velocity3, VelocityGradient,
     dissipation_rate_kernel, eddy_viscosity_boussinesq_kernel, integral_length_scale_kernel,
     kolmogorov_length_kernel, kolmogorov_time_kernel, kolmogorov_velocity_kernel,
     reynolds_stress_kernel, taylor_microscale_kernel, turbulent_kinetic_energy_kernel,
@@ -215,7 +215,7 @@ fn test_eddy_viscosity_simple_shear() {
     let nu_t_expected = 0.05; // pick a target ν_t
     // R_xy = -(2 ν_t) · S_xy = -(2 * 0.05) * (0.5 * 2) = -0.1
     let r_xy = -(2.0 * nu_t_expected) * (0.5 * gamma);
-    let r = CauchyStress::<f64>::new([
+    let r = ReynoldsStress::<f64>::new([
         [(2.0 / 3.0) * k, r_xy, 0.0],
         [r_xy, (2.0 / 3.0) * k, 0.0],
         [0.0, 0.0, (2.0 / 3.0) * k],
@@ -233,7 +233,7 @@ fn test_eddy_viscosity_simple_shear() {
 
 #[test]
 fn test_eddy_viscosity_errors_on_zero_strain() {
-    let r = CauchyStress::<f64>::default();
+    let r = ReynoldsStress::<f64>::default();
     let s = StrainRateTensor::<f64>::default();
     assert!(eddy_viscosity_boussinesq_kernel(&r, &s, 0.5).is_err());
 }
@@ -241,7 +241,8 @@ fn test_eddy_viscosity_errors_on_zero_strain() {
 #[test]
 fn test_eddy_viscosity_errors_on_negative_result() {
     // Choose R^dev:S > 0 so that -R^dev:S < 0 => ν_t < 0 => Viscosity::new rejects.
-    let r = CauchyStress::<f64>::new([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 1.0]]).unwrap();
+    let r =
+        ReynoldsStress::<f64>::new([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 1.0]]).unwrap();
     let s =
         StrainRateTensor::<f64>::new([[0.0, 1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
     // R^dev = R - (2/3)·0 ·I = R. R^dev:S = 2·1·1 + 2·1·1 = 4 (off-diagonals doubled). S:S = 2.

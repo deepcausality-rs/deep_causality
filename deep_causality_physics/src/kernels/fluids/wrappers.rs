@@ -9,9 +9,9 @@ use crate::kernels::fluids::{
 };
 use crate::theories::fluid_dynamics::{compressible_ns, euler, incompressible_ns, stokes};
 use crate::{
-    AccelerationVector, CauchyStress, Density, KinematicViscosity, Length, Pressure,
+    AccelerationVector, Density, KinematicViscosity, Length, Pressure, ReynoldsStress,
     RotationRateTensor, SpecificEnthalpy, Speed, StrainRateTensor, Temperature, Velocity3,
-    VelocityGradient, Viscosity, VorticityVector, WallShearStress,
+    VelocityGradient, Viscosity, ViscousStress, VorticityVector, WallShearStress,
 };
 use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
@@ -226,7 +226,7 @@ where
 
 /// Causal wrapper for [`governing::viscous_dissipation_rate_kernel`].
 pub fn viscous_dissipation_rate<R>(
-    tau: &CauchyStress<R>,
+    tau: &ViscousStress<R>,
     grad_u: &VelocityGradient<R>,
 ) -> PropagatingEffect<R>
 where
@@ -252,7 +252,7 @@ pub fn newtonian_viscous_stress<R>(
     mu: &Viscosity<R>,
     strain_rate: &StrainRateTensor<R>,
     div_u: R,
-) -> PropagatingEffect<CauchyStress<R>>
+) -> PropagatingEffect<ViscousStress<R>>
 where
     R: RealField + FromPrimitive + Debug + 'static,
 {
@@ -268,7 +268,7 @@ pub fn newtonian_viscous_stress_with_bulk<R>(
     zeta: &Viscosity<R>,
     strain_rate: &StrainRateTensor<R>,
     div_u: R,
-) -> PropagatingEffect<CauchyStress<R>>
+) -> PropagatingEffect<ViscousStress<R>>
 where
     R: RealField + FromPrimitive + Debug + 'static,
 {
@@ -663,7 +663,7 @@ where
 /// Causal wrapper for [`turbulence::reynolds_stress_kernel`].
 pub fn reynolds_stress<R>(
     u_prime_outer_u_prime: &StrainRateTensor<R>,
-) -> PropagatingEffect<CauchyStress<R>>
+) -> PropagatingEffect<ReynoldsStress<R>>
 where
     R: RealField + Debug + 'static,
 {
@@ -672,7 +672,7 @@ where
 
 /// Causal wrapper for [`turbulence::eddy_viscosity_boussinesq_kernel`].
 pub fn eddy_viscosity_boussinesq<R>(
-    reynolds_stress: &CauchyStress<R>,
+    reynolds_stress: &ReynoldsStress<R>,
     strain_rate_mean: &StrainRateTensor<R>,
     k_energy: R,
 ) -> PropagatingEffect<Viscosity<R>>
@@ -811,7 +811,7 @@ where
 /// Causal wrapper for [`compressible::entropy_production_rate_kernel`].
 pub fn entropy_production_rate<R>(
     temperature: &Temperature<R>,
-    tau: &CauchyStress<R>,
+    tau: &ViscousStress<R>,
     grad_u: &VelocityGradient<R>,
     thermal_conductivity: R,
     grad_temperature: &[R; 3],

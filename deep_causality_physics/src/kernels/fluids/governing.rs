@@ -18,8 +18,8 @@
 
 use crate::PhysicsError;
 use crate::kernels::fluids::quantities::{
-    AccelerationVector, CauchyStress, Density, KinematicViscosity, Pressure, Velocity3,
-    VelocityGradient, VorticityVector,
+    AccelerationVector, Density, KinematicViscosity, Pressure, Velocity3, VelocityGradient,
+    ViscousStress, VorticityVector,
 };
 use deep_causality_num::{FromPrimitive, RealField};
 
@@ -216,16 +216,13 @@ where
 /// Clausius–Duhem inequality. Returned as a raw scalar; sign-checking is the
 /// caller's responsibility when the input `tau` is not guaranteed Newtonian.
 ///
-/// **Contract.** The `tau` argument must be the *viscous* stress `τ`, not
-/// the full Cauchy stress `σ = −p I + τ`. The [`CauchyStress<R>`] newtype is
-/// a symmetric-tensor carrier (its name reflects the enforced symmetry
-/// invariant, not a commitment to physical interpretation). Passing a full
-/// Cauchy stress here breaks the `Φ ≥ 0` positivity guarantee — the pressure
-/// part contributes `−p·∇·u`, which can be either sign.
+/// The `tau` argument is typed as [`ViscousStress<R>`] (not [`CauchyStress<R>`]),
+/// so the `Φ ≥ 0` Clausius–Duhem positivity guarantee is preserved at the
+/// type level rather than relying on docstring discipline.
 ///
 /// Tensor double-contraction:
 /// `τ : ∇u = Σ_i Σ_j τ_ij · grad_u[i][j]`.
-pub fn viscous_dissipation_rate_kernel<R>(tau: &CauchyStress<R>, grad_u: &VelocityGradient<R>) -> R
+pub fn viscous_dissipation_rate_kernel<R>(tau: &ViscousStress<R>, grad_u: &VelocityGradient<R>) -> R
 where
     R: RealField,
 {

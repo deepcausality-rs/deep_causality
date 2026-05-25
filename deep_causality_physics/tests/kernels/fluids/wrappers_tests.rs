@@ -4,23 +4,23 @@
  */
 
 use deep_causality_physics::{
-    AccelerationVector, CauchyStress, Density, KinematicViscosity, Length, Pressure,
+    AccelerationVector, Density, KinematicViscosity, Length, Pressure, ReynoldsStress,
     SpecificEnthalpy, Speed, StrainRateTensor, Temperature, Velocity3, VelocityGradient, Viscosity,
-    VorticityVector, WallShearStress, bernoulli_pressure, bernoulli_total_head, bond_number,
-    capillary_number, circulation, compressible_ns_continuity_rhs, compressible_ns_energy_rhs,
-    compressible_ns_momentum_rhs, continuity_rhs, convective_acceleration, delta_criterion,
-    dissipation_rate, dynamic_pressure, eckert_number, eddy_viscosity_boussinesq,
-    enstrophy_density, entropy_production_rate, euler_momentum_rhs, friction_velocity,
-    froude_number, grashof_number, helicity_density, hydrostatic_pressure, incompressible_ns_rhs,
-    integral_length_scale, kinetic_energy_density, knudsen_number, kolmogorov_length,
-    kolmogorov_time, kolmogorov_velocity, kutta_joukowski_lift, lambda2, lewis_number,
-    log_law_velocity, mach_number, newtonian_viscous_stress, newtonian_viscous_stress_with_bulk,
-    nusselt_number, particle_stokes_number, peclet_number, power_law_apparent_viscosity,
-    prandtl_number, pressure_gradient_force, pressure_work, q_criterion, rayleigh_number,
-    reynolds_number, reynolds_stress, richardson_number, rotation_rate_tensor,
-    scalar_advection_diffusion, schmidt_number, skin_friction_coefficient, specific_enthalpy,
-    speed_of_sound_ideal_gas, stokes_momentum_rhs, strain_rate_tensor, stream_function_2d,
-    strouhal_number, swirling_strength, taylor_microscale, total_enthalpy,
+    ViscousStress, VorticityVector, WallShearStress, bernoulli_pressure, bernoulli_total_head,
+    bond_number, capillary_number, circulation, compressible_ns_continuity_rhs,
+    compressible_ns_energy_rhs, compressible_ns_momentum_rhs, continuity_rhs,
+    convective_acceleration, delta_criterion, dissipation_rate, dynamic_pressure, eckert_number,
+    eddy_viscosity_boussinesq, enstrophy_density, entropy_production_rate, euler_momentum_rhs,
+    friction_velocity, froude_number, grashof_number, helicity_density, hydrostatic_pressure,
+    incompressible_ns_rhs, integral_length_scale, kinetic_energy_density, knudsen_number,
+    kolmogorov_length, kolmogorov_time, kolmogorov_velocity, kutta_joukowski_lift, lambda2,
+    lewis_number, log_law_velocity, mach_number, newtonian_viscous_stress,
+    newtonian_viscous_stress_with_bulk, nusselt_number, particle_stokes_number, peclet_number,
+    power_law_apparent_viscosity, prandtl_number, pressure_gradient_force, pressure_work,
+    q_criterion, rayleigh_number, reynolds_number, reynolds_stress, richardson_number,
+    rotation_rate_tensor, scalar_advection_diffusion, schmidt_number, skin_friction_coefficient,
+    specific_enthalpy, speed_of_sound_ideal_gas, stokes_momentum_rhs, strain_rate_tensor,
+    stream_function_2d, strouhal_number, swirling_strength, taylor_microscale, total_enthalpy,
     total_pressure_isentropic, total_temperature_isentropic, turbulent_kinetic_energy,
     velocity_gradient_invariants, velocity_potential_2d, viscous_diffusion,
     viscous_dissipation_rate, viscous_length_scale, viscous_sublayer_velocity,
@@ -210,7 +210,7 @@ fn test_kinetic_energy_density_wrapper_success() {
 #[test]
 fn test_viscous_dissipation_rate_wrapper_success() {
     let tau =
-        CauchyStress::<f64>::new([[2.0, 0.0, 0.0], [0.0, 3.0, 0.0], [0.0, 0.0, 5.0]]).unwrap();
+        ViscousStress::<f64>::new([[2.0, 0.0, 0.0], [0.0, 3.0, 0.0], [0.0, 0.0, 5.0]]).unwrap();
     let g =
         VelocityGradient::<f64>::new([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]).unwrap();
     let effect = viscous_dissipation_rate(&tau, &g);
@@ -473,7 +473,7 @@ fn test_eddy_viscosity_boussinesq_wrapper_success() {
     let k = 1.0_f64;
     let nu_t_target = 0.05;
     let r_xy = -(2.0 * nu_t_target) * (0.5 * gamma);
-    let r = CauchyStress::<f64>::new([
+    let r = ReynoldsStress::<f64>::new([
         [(2.0 / 3.0) * k, r_xy, 0.0],
         [r_xy, (2.0 / 3.0) * k, 0.0],
         [0.0, 0.0, (2.0 / 3.0) * k],
@@ -491,7 +491,7 @@ fn test_eddy_viscosity_boussinesq_wrapper_success() {
 
 #[test]
 fn test_eddy_viscosity_boussinesq_wrapper_error_path() {
-    let r = CauchyStress::<f64>::default();
+    let r = ReynoldsStress::<f64>::default();
     let s = StrainRateTensor::<f64>::default();
     assert!(!eddy_viscosity_boussinesq(&r, &s, 0.5).is_ok());
 }
@@ -582,7 +582,7 @@ fn test_total_temperature_isentropic_wrapper() {
 
 #[test]
 fn test_entropy_production_rate_wrapper() {
-    let tau = CauchyStress::<f64>::default();
+    let tau = ViscousStress::<f64>::default();
     let grad_u = VelocityGradient::<f64>::default();
     let t = Temperature::<f64>::new(300.0).unwrap();
     assert!(entropy_production_rate(&t, &tau, &grad_u, 0.025_f64, &[10.0, 0.0, 0.0]).is_ok());
@@ -590,7 +590,7 @@ fn test_entropy_production_rate_wrapper() {
 
 #[test]
 fn test_entropy_production_rate_wrapper_error_path() {
-    let tau = CauchyStress::<f64>::default();
+    let tau = ViscousStress::<f64>::default();
     let grad_u = VelocityGradient::<f64>::default();
     let t = Temperature::<f64>::new(0.0).unwrap();
     assert!(!entropy_production_rate(&t, &tau, &grad_u, 1.0_f64, &[0.0; 3]).is_ok());

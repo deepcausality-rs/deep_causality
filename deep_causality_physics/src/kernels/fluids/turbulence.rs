@@ -18,7 +18,7 @@
 use crate::PhysicsError;
 use crate::kernels::dynamics::quantities::{Length, Speed};
 use crate::kernels::fluids::quantities::{
-    CauchyStress, KinematicViscosity, StrainRateTensor, Velocity3, VelocityGradient, Viscosity,
+    KinematicViscosity, ReynoldsStress, StrainRateTensor, Velocity3, VelocityGradient, Viscosity,
 };
 use deep_causality_num::{FromPrimitive, RealField};
 
@@ -160,24 +160,22 @@ where
     Length::new(k_energy.powf(three_halves) / e)
 }
 
-/// Reynolds-stress tensor `R_ij = ⟨u'_i u'_j⟩` packaged as a [`CauchyStress<R>`].
+/// Reynolds-stress tensor `R_ij = ⟨u'_i u'_j⟩` packaged as a [`ReynoldsStress<R>`].
 ///
 /// The input is the already-averaged outer-product tensor (symmetric by
 /// physical construction); the kernel is a typed pass-through that pins the
 /// symmetric-tensor invariant in the output. Diagonal entries are
 /// non-negative (variances).
 ///
-/// **Type-label note.** Both the input ([`StrainRateTensor<R>`]) and the
-/// output ([`CauchyStress<R>`]) newtypes are reused here as generic
-/// symmetric rank-2 carriers — the names reflect their enforced invariants
-/// (symmetry), not a commitment to a particular physical interpretation.
-/// The output is the Reynolds stress, *not* viscous stress; do not feed it
-/// into `viscous_dissipation_rate_kernel` or `entropy_production_rate_kernel`.
-pub fn reynolds_stress_kernel<R>(u_prime_outer_u_prime: &StrainRateTensor<R>) -> CauchyStress<R>
+/// The dedicated [`ReynoldsStress<R>`] output type distinguishes this from
+/// viscous stress at the type level — it cannot be passed into
+/// `viscous_dissipation_rate_kernel` or `entropy_production_rate_kernel`
+/// without an explicit conversion.
+pub fn reynolds_stress_kernel<R>(u_prime_outer_u_prime: &StrainRateTensor<R>) -> ReynoldsStress<R>
 where
     R: RealField,
 {
-    CauchyStress::new_unchecked(*u_prime_outer_u_prime.value())
+    ReynoldsStress::new_unchecked(*u_prime_outer_u_prime.value())
 }
 
 /// Boussinesq-closure eddy viscosity `ν_t`.
@@ -191,7 +189,7 @@ where
 /// undefined when the closure equation has no signal) or when the resulting
 /// `ν_t` is negative or non-finite (in which case `Viscosity::new` rejects).
 pub fn eddy_viscosity_boussinesq_kernel<R>(
-    reynolds_stress: &CauchyStress<R>,
+    reynolds_stress: &ReynoldsStress<R>,
     strain_rate_mean: &StrainRateTensor<R>,
     k_energy: R,
 ) -> Result<Viscosity<R>, PhysicsError>

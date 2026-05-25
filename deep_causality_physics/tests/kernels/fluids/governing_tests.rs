@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    CauchyStress, Density, KinematicViscosity, PhysicsErrorEnum, Pressure, Velocity3,
-    VelocityGradient, VorticityVector, continuity_rhs_kernel, convective_acceleration_kernel,
+    Density, KinematicViscosity, PhysicsErrorEnum, Pressure, Velocity3, VelocityGradient,
+    ViscousStress, VorticityVector, continuity_rhs_kernel, convective_acceleration_kernel,
     kinetic_energy_density_kernel, pressure_gradient_force_kernel, pressure_work_kernel,
     scalar_advection_diffusion_kernel, viscous_diffusion_kernel, viscous_dissipation_rate_kernel,
     vorticity_transport_kernel,
@@ -324,7 +324,7 @@ fn test_viscous_dissipation_double_contraction() {
     // τ:∇u = Σ τ_ij * grad_u[i][j].
     // Diagonal stress, diagonal gradient => sum of products of diagonals.
     let tau =
-        CauchyStress::<f64>::new([[2.0, 0.0, 0.0], [0.0, 3.0, 0.0], [0.0, 0.0, 5.0]]).unwrap();
+        ViscousStress::<f64>::new([[2.0, 0.0, 0.0], [0.0, 3.0, 0.0], [0.0, 0.0, 5.0]]).unwrap();
     let g =
         VelocityGradient::<f64>::new([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]).unwrap();
     let phi = viscous_dissipation_rate_kernel(&tau, &g);
@@ -334,7 +334,7 @@ fn test_viscous_dissipation_double_contraction() {
 
 #[test]
 fn test_viscous_dissipation_zero_for_zero_stress() {
-    let tau = CauchyStress::<f64>::default();
+    let tau = ViscousStress::<f64>::default();
     let g =
         VelocityGradient::<f64>::new([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]).unwrap();
     let phi = viscous_dissipation_rate_kernel(&tau, &g);

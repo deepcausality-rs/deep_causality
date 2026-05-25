@@ -4,7 +4,7 @@
  */
 
 use deep_causality_physics::{
-    CauchyStress, Pressure, SpecificEnthalpy, Temperature, Velocity3, VelocityGradient,
+    Pressure, SpecificEnthalpy, Temperature, Velocity3, VelocityGradient, ViscousStress,
     entropy_production_rate_kernel, specific_enthalpy_kernel, speed_of_sound_ideal_gas_kernel,
     total_enthalpy_kernel, total_pressure_isentropic_kernel, total_temperature_isentropic_kernel,
 };
@@ -145,7 +145,7 @@ fn test_entropy_production_nonneg_for_newtonian_inputs() {
     let gamma_dot = 2.0;
     // S = [[0, γ̇/2, 0], [γ̇/2, 0, 0], [0, 0, 0]]
     // τ = 2μS = [[0, μγ̇, 0], [μγ̇, 0, 0], [0, 0, 0]]
-    let tau = CauchyStress::<f64>::new([
+    let tau = ViscousStress::<f64>::new([
         [0.0, mu * gamma_dot, 0.0],
         [mu * gamma_dot, 0.0, 0.0],
         [0.0, 0.0, 0.0],
@@ -165,7 +165,7 @@ fn test_entropy_production_nonneg_for_newtonian_inputs() {
 fn test_entropy_production_includes_heat_conduction_term() {
     // Quiescent fluid (no viscous dissipation), but with a temperature gradient
     // ⇒ entropy production via heat conduction only.
-    let tau = CauchyStress::<f64>::default();
+    let tau = ViscousStress::<f64>::default();
     let grad_u = VelocityGradient::<f64>::default();
     let t = Temperature::<f64>::new(300.0).unwrap();
     let kappa = 0.0257_f64; // air thermal conductivity
@@ -179,7 +179,7 @@ fn test_entropy_production_includes_heat_conduction_term() {
 
 #[test]
 fn test_entropy_production_errors_on_zero_temperature() {
-    let tau = CauchyStress::<f64>::default();
+    let tau = ViscousStress::<f64>::default();
     let grad_u = VelocityGradient::<f64>::default();
     let t = Temperature::<f64>::new(0.0).unwrap();
     let r = entropy_production_rate_kernel(&t, &tau, &grad_u, 1.0_f64, &[0.0; 3]);

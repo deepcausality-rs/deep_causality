@@ -11,24 +11,21 @@
 //! (bulk viscosity ζ = 0) it is `τ_ij = 2μ S_ij − (2/3)μ (∇·u) δ_ij`. With
 //! non-zero bulk viscosity it is `τ_ij = 2μ S_ij − (2/3)μ (∇·u) δ_ij + ζ (∇·u) δ_ij`.
 //!
-//! **Type-label note.** The returned tensor is the *viscous* stress `τ`, *not*
-//! the full Cauchy stress `σ = −p I + τ`. The [`CauchyStress<R>`] newtype is
-//! reused here as a generic symmetric rank-2 carrier — its name reflects the
-//! enforced invariant (symmetry), not a commitment to a particular physical
-//! interpretation. Downstream consumers of the output ([`viscous_dissipation_rate_kernel`](super::governing::viscous_dissipation_rate_kernel),
-//! [`entropy_production_rate_kernel`](super::compressible::entropy_production_rate_kernel))
-//! assume the input is viscous-stress-only; passing a full `σ` into them
-//! breaks the `Φ = τ:∇u ≥ 0` positivity guarantee from the Clausius–Duhem
-//! inequality.
+//! The returned tensor is the *viscous* stress `τ`, packaged as a dedicated
+//! [`ViscousStress<R>`] newtype to distinguish it from the full Cauchy
+//! stress `σ = −p I + τ` at the type level. Downstream dissipation /
+//! entropy-production kernels demand `ViscousStress`, so the `Φ = τ:∇u ≥ 0`
+//! Clausius–Duhem guarantee is preserved by type-checking, not by docstring
+//! discipline.
 
 use crate::PhysicsError;
-use crate::kernels::fluids::quantities::{CauchyStress, StrainRateTensor, Viscosity};
+use crate::kernels::fluids::quantities::{StrainRateTensor, Viscosity, ViscousStress};
 use deep_causality_num::{FromPrimitive, RealField};
 
 /// Newtonian viscous stress with Stokes hypothesis (bulk viscosity ζ = 0):
 /// `τ = 2μ S − (2/3) μ (∇·u) I`.
 ///
-/// Returns a [`CauchyStress<R>`] (symmetric by construction, since `S` is
+/// Returns a [`ViscousStress<R>`] (symmetric by construction, since `S` is
 /// symmetric and the bulk term adds a scalar multiple of the identity).
 /// The returned tensor uses `new_unchecked` because symmetry is guaranteed
 /// by the algebra.
@@ -36,7 +33,7 @@ pub fn newtonian_viscous_stress_kernel<R>(
     mu: &Viscosity<R>,
     strain_rate: &StrainRateTensor<R>,
     div_u: R,
-) -> Result<CauchyStress<R>, PhysicsError>
+) -> Result<ViscousStress<R>, PhysicsError>
 where
     R: RealField + FromPrimitive,
 {
@@ -58,7 +55,7 @@ where
     tau[1][1] -= bulk_term;
     tau[2][2] -= bulk_term;
 
-    Ok(CauchyStress::new_unchecked(tau))
+    Ok(ViscousStress::new_unchecked(tau))
 }
 
 /// Newtonian viscous stress with bulk viscosity:
@@ -70,7 +67,7 @@ pub fn newtonian_viscous_stress_with_bulk_kernel<R>(
     zeta: &Viscosity<R>,
     strain_rate: &StrainRateTensor<R>,
     div_u: R,
-) -> Result<CauchyStress<R>, PhysicsError>
+) -> Result<ViscousStress<R>, PhysicsError>
 where
     R: RealField + FromPrimitive,
 {
@@ -93,7 +90,7 @@ where
     tau[1][1] += bulk_term;
     tau[2][2] += bulk_term;
 
-    Ok(CauchyStress::new_unchecked(tau))
+    Ok(ViscousStress::new_unchecked(tau))
 }
 
 /// Power-law (Ostwald–de Waele) apparent viscosity: `μ_eff = K · γ̇^(n−1)`.

@@ -569,3 +569,92 @@ impl<R: deep_causality_num::RealField> From<CauchyStress<R>> for [[R; 3]; 3] {
         val.0
     }
 }
+
+/// Viscous (deviatoric) stress tensor `τ` (Pa). Symmetric. Distinct from the
+/// full Cauchy stress `σ = −p I + τ` — only the viscous part appears in the
+/// dissipation `Φ = τ:∇u ≥ 0` and entropy-production guarantees.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ViscousStress<R: deep_causality_num::RealField>([[R; 3]; 3]);
+
+impl<R: deep_causality_num::RealField> Default for ViscousStress<R> {
+    fn default() -> Self {
+        Self([[R::zero(); 3]; 3])
+    }
+}
+
+impl<R: deep_causality_num::RealField> ViscousStress<R> {
+    pub fn new(raw: [[R; 3]; 3]) -> Result<Self, PhysicsError> {
+        if !all_finite_3x3(&raw) {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "ViscousStress components must be finite".into(),
+            ));
+        }
+        if raw[0][1] != raw[1][0] || raw[0][2] != raw[2][0] || raw[1][2] != raw[2][1] {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "ViscousStress must be symmetric (τ_ij == τ_ji)".into(),
+            ));
+        }
+        Ok(Self(raw))
+    }
+    pub fn new_unchecked(raw: [[R; 3]; 3]) -> Self {
+        Self(raw)
+    }
+    pub fn value(&self) -> &[[R; 3]; 3] {
+        &self.0
+    }
+    pub fn into_inner(self) -> [[R; 3]; 3] {
+        self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField> From<ViscousStress<R>> for [[R; 3]; 3] {
+    fn from(val: ViscousStress<R>) -> Self {
+        val.0
+    }
+}
+
+/// Reynolds stress tensor `R_ij = ⟨u'_i u'_j⟩` (Pa, after multiplication by ρ
+/// in caller; here a kinematic Reynolds stress in m²/s² is also acceptable).
+/// Symmetric. Diagonal entries are non-negative (variances) — *not* enforced
+/// by the newtype to keep the constructor cheap; callers passing a tensor
+/// that violates the diagonal-positivity property are responsible for
+/// downstream interpretation.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ReynoldsStress<R: deep_causality_num::RealField>([[R; 3]; 3]);
+
+impl<R: deep_causality_num::RealField> Default for ReynoldsStress<R> {
+    fn default() -> Self {
+        Self([[R::zero(); 3]; 3])
+    }
+}
+
+impl<R: deep_causality_num::RealField> ReynoldsStress<R> {
+    pub fn new(raw: [[R; 3]; 3]) -> Result<Self, PhysicsError> {
+        if !all_finite_3x3(&raw) {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "ReynoldsStress components must be finite".into(),
+            ));
+        }
+        if raw[0][1] != raw[1][0] || raw[0][2] != raw[2][0] || raw[1][2] != raw[2][1] {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "ReynoldsStress must be symmetric (R_ij == R_ji)".into(),
+            ));
+        }
+        Ok(Self(raw))
+    }
+    pub fn new_unchecked(raw: [[R; 3]; 3]) -> Self {
+        Self(raw)
+    }
+    pub fn value(&self) -> &[[R; 3]; 3] {
+        &self.0
+    }
+    pub fn into_inner(self) -> [[R; 3]; 3] {
+        self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField> From<ReynoldsStress<R>> for [[R; 3]; 3] {
+    fn from(val: ReynoldsStress<R>) -> Self {
+        val.0
+    }
+}
