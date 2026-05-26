@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Behaviour change:** `PointCloud::triangulate` now rejects duplicate-input-point cases with a discriminating `TopologyError::PointCloudError` message containing the substring `"duplicate point"` and the two offending indices. Inputs that previously produced a silently-singular complex via the eager lumped-mass Hodge ⋆ now surface as `Err`.
+- **Behaviour change:** the top-volume degeneracy rejection (zero-volume top simplex below `T::epsilon() * 100`) moved from `PointCloud::triangulate` to the Hodge ⋆ access path. Topological (TDA) consumers that read only V/E/F counts succeed on any non-duplicate input; geometric (DEC) consumers see the unified `"top-dimensional simplex below tolerance"` error on first read of `SimplicialComplex::hodge_star_operators`.
+- **Public API:** `SimplicialComplex::hodge_star_operators(&self)` widened from `-> &Vec<CsrMatrix<T>>` to `-> Result<&Vec<CsrMatrix<T>>, TopologyError>`. The accessor lazy-populates on first call via the new geometric-data path.
+- **Public API:** `HasHodgeStar::hodge_star_matrix` trait method widened to `-> Result<Cow<'_, CsrMatrix<R>>, TopologyError>`. Both simplicial and cubical impls updated; the cubical impl never returns `Err`.
+- **Internal numerics:** hard-coded `1e-12` literals inside `gaussian_determinant` and the top-volume threshold were replaced with `T::epsilon() * 100` for `RealField` parametricity across `f32`, `f64`, and `Float106`.
+
+### Added
+
+- New constructor `SimplicialComplex::with_geometry(skeletons, boundary, coboundary, coords, ambient_dim)` for the lazy-construction path. The existing `SimplicialComplex::new(skeletons, boundary, coboundary, hodge_star_operators)` signature is unchanged.
+- `Manifold::with_metric` validates Hodge ⋆ availability at construction; degenerate input geometry surfaces as a discriminating `TopologyError` at the DEC entry point rather than as a downstream operator panic.
+
+### Migration
+
+Callers of `complex.hodge_star_operators()` and `metric.hodge_star_matrix(...)` now receive `Result`. Inside the workspace, physics kernels (`grmhd::relativistic_current_kernel`, `ideal::ideal_induction_kernel`) propagate via `?` through their existing `PhysicsError` return; the simplicial `HasHodgeStar` impl propagates `?`; the cubical impl wraps in `Ok(...)`. Test fixtures that previously built a `SimplicialComplex` via the legacy `new(...)` path with an empty Hodge ⋆ vector and no geometric data now receive a discriminating error on accessor read (message contains `"geometric data is not available"`).
+
 ## [0.5.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.5.0...deep_causality_topology-v0.5.1) - 2026-03-12
 
 ### Other

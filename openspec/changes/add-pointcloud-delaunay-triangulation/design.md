@@ -83,7 +83,7 @@ All three are checked at the top of the method; the Bowyer-Watson core runs only
 
 ### Decision 5: Hodge ⋆ operator computation
 
-The existing Vietoris-Rips `triangulate` builds lumped-mass Hodge ⋆ operators inline. Extract that logic into a private helper function `pub(super) fn build_lumped_mass_hodge_ops<T>(skeletons: &[Skeleton], ambient_dim: usize, coords: &[T]) -> Vec<CsrMatrix<T>>` and call it from both `triangulate` and `triangulate_delaunay`. This is a strictly additive refactor; no public behaviour changes.
+**Updated (post-`harden-simplicial-hodge-degeneracy-detection`):** the helper extraction is already done. `harden-simplicial-hodge-degeneracy-detection` task 5.1 created `deep_causality_topology/src/types/simplicial_complex/lazy_hodge_star.rs` containing `pub(crate) fn build_lumped_mass_hodge_star<T>(skeletons: &[Skeleton], coords: &[T], dim: usize) -> Result<Vec<CsrMatrix<T>>, TopologyError>` with `T: RealField + FromPrimitive`. The helper is fallible (zero-volume top simplex returns the unified `"top-dimensional simplex below tolerance"` error). The `triangulate_delaunay` constructor calls `SimplicialComplex::with_geometry(...)`, which stores coordinates and triggers the helper lazily on first read of `complex.hodge_star_operators()`. No further helper extraction is needed in this change set.
 
 Why extract:
 
