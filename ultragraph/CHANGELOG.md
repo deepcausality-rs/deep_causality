@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.8.16...ultragraph-v0.9.0) - 2026-05-26
+
+### Added
+
+- *(ultragraph)* add biconnectivity decomposition ([#581](https://github.com/deepcausality-rs/deep_causality/pull/581))
+
+### Fixed
+
+- *(ultragraph)* preserve multi-edge multiplicity in undirected biconnectivity view
+
+### Other
+
+- *(ultragraph)* biconnectivity decomposition ([#581](https://github.com/deepcausality-rs/deep_causality/pull/581))
+
 ## [0.8.16](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.8.15...ultragraph-v0.8.16) - 2026-05-03
 
 ### Other

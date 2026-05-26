@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.15](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.3.14...deep_causality_uncertain-v0.3.15) - 2026-05-26
+
+### Other
+
+- *(examples)* rewrite uncertain examples as monadic chains and move into causal_uncertain_examples
+- skip 4 more transcendental float tests under Miri
+- *(deep_causality_uncertain)* skip rusty-fork modules under Miri
+- Code formatting.
+- Added new benchmark to maybe uncertain type.
+
 ## [0.3.14](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.3.13...deep_causality_uncertain-v0.3.14) - 2026-03-12
 
 ### Other
