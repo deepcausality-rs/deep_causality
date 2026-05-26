@@ -219,6 +219,48 @@ where
             GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
         }
     }
+
+    /// Returns the articulation points of the undirected view.
+    ///
+    /// # Preconditions
+    /// Only available when the graph is `Static` (frozen).
+    ///
+    /// # Errors
+    /// Returns `GraphError::GraphNotFrozen` if the graph is in a `Dynamic` state.
+    fn articulation_points(&self) -> Result<Vec<usize>, GraphError> {
+        match &self.state {
+            GraphState::Static(g) => g.articulation_points(),
+            GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
+        }
+    }
+
+    /// Returns the bridges of the undirected view.
+    ///
+    /// # Preconditions
+    /// Only available when the graph is `Static` (frozen).
+    ///
+    /// # Errors
+    /// Returns `GraphError::GraphNotFrozen` if the graph is in a `Dynamic` state.
+    fn bridges(&self) -> Result<Vec<(usize, usize)>, GraphError> {
+        match &self.state {
+            GraphState::Static(g) => g.bridges(),
+            GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
+        }
+    }
+
+    /// Returns the biconnected components of the undirected view.
+    ///
+    /// # Preconditions
+    /// Only available when the graph is `Static` (frozen).
+    ///
+    /// # Errors
+    /// Returns `GraphError::GraphNotFrozen` if the graph is in a `Dynamic` state.
+    fn biconnected_components(&self) -> Result<Vec<Vec<usize>>, GraphError> {
+        match &self.state {
+            GraphState::Static(g) => g.biconnected_components(),
+            GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
+        }
+    }
 }
 
 impl<N, W> TopologicalGraphAlgorithms<N, W> for UltraGraphContainer<N, W>

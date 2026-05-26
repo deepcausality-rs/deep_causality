@@ -8,6 +8,14 @@ mod constructors_tests;
 #[cfg(test)]
 mod default_tests;
 #[cfg(test)]
+mod graph_algo_articulation_points_tests;
+#[cfg(test)]
+mod graph_algo_biconnected_components_tests;
+#[cfg(test)]
+mod graph_algo_biconnectivity_cross_consistency_tests;
+#[cfg(test)]
+mod graph_algo_bridges_tests;
+#[cfg(test)]
 mod graph_algo_centrality_tests;
 #[cfg(test)]
 mod graph_algo_pathfinder_tests;

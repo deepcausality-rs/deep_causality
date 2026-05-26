@@ -115,4 +115,16 @@ where
 
         Ok(sccs)
     }
+
+    fn articulation_points(&self) -> Result<Vec<usize>, GraphError> {
+        super::graph_csm_algo_articulation_points::articulation_points_impl(self)
+    }
+
+    fn bridges(&self) -> Result<Vec<(usize, usize)>, GraphError> {
+        super::graph_csm_algo_bridges::bridges_impl(self)
+    }
+
+    fn biconnected_components(&self) -> Result<Vec<Vec<usize>>, GraphError> {
+        super::graph_csm_algo_biconnected_components::biconnected_components_impl(self)
+    }
 }

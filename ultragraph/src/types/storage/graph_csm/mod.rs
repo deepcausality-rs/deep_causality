@@ -5,10 +5,14 @@
 
 mod default;
 mod graph_csm_algo;
+mod graph_csm_algo_articulation_points;
+mod graph_csm_algo_biconnected_components;
+mod graph_csm_algo_bridges;
 mod graph_csm_algo_centrality;
 mod graph_csm_algo_pathfinder;
 mod graph_csm_algo_structural;
 mod graph_csm_algo_topological;
+mod graph_csm_biconnectivity_common;
 mod graph_csm_unfreeze;
 mod graph_csm_view;
 mod graph_traversal;
