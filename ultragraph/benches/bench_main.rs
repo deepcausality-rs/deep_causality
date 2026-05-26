@@ -11,4 +11,5 @@ mod benchmarks;
 // just reduce sample size.
 criterion_main! {
     benchmarks::bench_linear::liner_graph_bench_collection,
+    benchmarks::bench_biconnectivity::biconnectivity_bench_collection,
 }
