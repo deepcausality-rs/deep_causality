@@ -32,6 +32,9 @@ coverage
 .DS_Store
 */.DS_Store
 
+# tmp files
+ctx/next
+
 # Astro site (website/web)
 website/web/node_modules
 website/web/dist
