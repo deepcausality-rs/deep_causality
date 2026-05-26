@@ -79,8 +79,8 @@ The original `spec.md` task 4.4 scenario `|‖simplicial.exact()‖ − ‖cubic
 
 The follow-up change set `add-hodge-decomposition-delaunay-cross-backend` would cover:
 
-- [ ] 6.1 Add a Delaunay (or constrained-Delaunay) triangulation method to `PointCloud`, producing a manifold-respecting simplicial complex from a planar point set.
-- [ ] 6.2 Replace the H3 single-right-triangle simplicial fixture with the canonical two-triangle simplicial unit square.
-- [ ] 6.3 Tighten the cross-backend test to assert the strict per-component L2 norm equality variant of `spec.md` task 4.4.
+- [x] 6.1 ~~Add a Delaunay (or constrained-Delaunay) triangulation method to `PointCloud`~~ **Done by `add-pointcloud-delaunay-triangulation` Block D1 (2026-05-26).** `PointCloud::triangulate_delaunay` produces the manifold-respecting two-triangle unit square via Bowyer-Watson.
+- [x] 6.2 ~~Replace the H3 single-right-triangle simplicial fixture with the canonical two-triangle simplicial unit square.~~ **Done by `add-pointcloud-delaunay-triangulation` Block D2.** `simplicial_unit_square_manifold` in `hodge_decomposition_cross_backend_tests.rs` now uses `PointCloud::triangulate_delaunay` on the four corners.
+- [x] 6.3 ~~Tighten the cross-backend test to assert the strict per-component L2 norm equality variant of `spec.md` task 4.4.~~ **Done by `add-pointcloud-delaunay-triangulation` Block D2 (2026-05-26), with the strict-equality framing revised.** The raw-norm equality `|‖simplicial.exact()‖ − ‖cubical.exact()‖| < 1e-6` was found unachievable on coarse discretizations with different edge counts on the two sides (simplicial Delaunay unit square: 5 edges; cubical 2×2 lattice: 12 edges) — for any non-trivial ω the raw `‖α‖` differs by O(1). The achievable strict tightening is **per-component fractional agreement**: `|frac_simplicial(c) − frac_cubical(c)| < 1e-6` for `c ∈ {exact, co_exact, harmonic}`, where `frac_backend(c) = ‖c‖² / ‖ω‖²`. The Delaunay change set's spec.md MODIFIED Requirement "Two-backend cross-check on the unit square" documents the framing and the reasoning.
 
-This change set does not block downstream consumers; the H3 cross-backend coverage already satisfies "discretisation independence" for orthogonality and vanishing-component structure.
+This change set's deferred-work paragraph is now historical; `add-pointcloud-delaunay-triangulation` Block D2 closes it.
