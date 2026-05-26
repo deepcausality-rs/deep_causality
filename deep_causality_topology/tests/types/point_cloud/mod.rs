@@ -7,6 +7,8 @@ mod base_topology_tests;
 #[cfg(test)]
 mod display_tests;
 #[cfg(test)]
+mod op_triangulate_degeneracy_tests;
+#[cfg(test)]
 mod op_triangulate_tests;
 #[cfg(test)]
 mod point_cloud_tests;
