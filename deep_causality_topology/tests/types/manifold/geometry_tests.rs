@@ -136,10 +136,15 @@ fn test_simplex_volume_squared_no_metric_errors() {
 
 #[test]
 fn test_simplex_volume_squared_degenerate_collinear_returns_zero() {
-    // Build a triangle whose edge lengths violate the triangle inequality (1, 1, 5).
-    // The Cayley-Menger determinant has the wrong sign → vol_sq < 0 → returns C::zero()
-    // via the line-94 clamp.
-    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 0.0], vec![3, 2]).unwrap();
+    // The unit (axis-aligned) triangle constructs a non-degenerate complex
+    // and passes the triangulate degeneracy checks. The test then injects an
+    // edge-length tensor that violates the triangle inequality (1, 1, 5), so
+    // the Cayley-Menger determinant inside `Manifold::simplex_volume_squared`
+    // has the wrong sign → vol_sq < 0 → returns C::zero() via the clamp.
+    // What is under test is the manifold's metric-driven clamp, not the
+    // triangulator's geometric rejection. Coordinates only need to satisfy
+    // triangulate; the synthetic ReggeGeometry below carries the degeneracy.
+    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![3, 2]).unwrap();
     let metadata = CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap();
     let pc = PointCloud::new(points, metadata, 0).unwrap();
     let complex = pc.triangulate(6.0).unwrap();
