@@ -13,7 +13,7 @@ Five themes stand out.
 
 ## 1. Precision is now a parameter
 
-The biggest cross-crate change. `deep_causality_physics`, `deep_causality_multivector`, and `deep_causality_topology` were generalized over `R: RealField`. Hard-coded `f64` is gone from kernels, unit types, and state carriers. That includes astro, fluids, MHD, photonics, EM fields, relativity spacetime, dynamics, thermodynamics, nuclear, materials, quantum gates, and `MaxwellSolver`. `HilbertState` and `HopfState` are now generic over `R` with no `f64` default.
+The biggest cross-crate change. `deep_causality_physics`, `deep_causality_sparse`,`deep_causality_multivector`, `deep_causality_tensor`, and `deep_causality_topology` were generalized over `R: RealField`. Hard-coded `f64` is gone from kernels, unit types, and state carriers. That includes astro, fluids, MHD, photonics, EM fields, relativity spacetime, dynamics, thermodynamics, nuclear, materials, quantum gates, and `MaxwellSolver`. `HilbertState` and `HopfState` are now generic over `R` with no `f64` default.
 
 In practice, you can run the same kernel with `f32` for throughput, `f64` for production, or extended-precision types such as `Float106` when stability matters, all by Changing just one type alias. Take a look at the [mathematics examples](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples) for how precision as a parameter is used in practice.
 
@@ -36,7 +36,7 @@ Raw-scalar inputs in three fluid kernels are now validated rather than trusted, 
 
 ## 3. Topology: Hodge decomposition and cubical Regge calculus
 
-`deep_causality_topology` added real differential geometry."
+`deep_causality_topology` added real differential geometry.
 
 **Hodge decomposition** lands as a first-class operation:
 
