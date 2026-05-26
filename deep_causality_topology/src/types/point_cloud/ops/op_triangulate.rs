@@ -90,9 +90,10 @@ where
     T: Float + From<f64>,
 {
     let mut det = T::one();
+    let pivot_threshold = T::epsilon() * <T as From<f64>>::from(100.0);
     for i in 0..n {
         let pivot = i * n + i;
-        if mat[pivot].abs() < <T as From<f64>>::from(1e-12) {
+        if mat[pivot].abs() < pivot_threshold {
             return T::zero();
         }
         det = det * mat[pivot];
@@ -108,10 +109,97 @@ where
     det
 }
 
+/// Returns the first duplicate-input-point pair, or `None` if every pair of
+/// distinct indices has Euclidean distance at least `T::epsilon() * max_extent`,
+/// where `max_extent` is the largest axis-aligned bounding-box extent of the
+/// input coordinates. When `max_extent` is itself zero (all input points
+/// coincide), the threshold falls back to `T::epsilon()` so that any zero-
+/// distance pair is still detected.
+fn find_duplicate_points<T>(coords: &[T], num_points: usize, dim: usize) -> Option<(usize, usize)>
+where
+    T: Float + Sum + From<f64> + PartialOrd + Copy,
+{
+    if num_points < 2 {
+        return None;
+    }
+
+    let mut max_extent = T::zero();
+    for axis in 0..dim {
+        let mut lo = coords[axis];
+        let mut hi = coords[axis];
+        for i in 1..num_points {
+            let v = coords[i * dim + axis];
+            if v < lo {
+                lo = v;
+            }
+            if v > hi {
+                hi = v;
+            }
+        }
+        let span = hi - lo;
+        if span > max_extent {
+            max_extent = span;
+        }
+    }
+
+    let threshold = if max_extent > T::zero() {
+        T::epsilon() * max_extent
+    } else {
+        T::epsilon()
+    };
+
+    for i in 0..num_points {
+        for j in (i + 1)..num_points {
+            let p1 = &coords[i * dim..(i + 1) * dim];
+            let p2 = &coords[j * dim..(j + 1) * dim];
+            if euclidean_distance(p1, p2) < threshold {
+                return Some((i, j));
+            }
+        }
+    }
+    None
+}
+
 impl<T, D> PointCloud<T, D>
 where
     T: Float + Sum + From<f64> + Zero + PartialOrd + Copy,
 {
+    /// Builds a Vietoris-Rips simplicial complex from the point cloud at the
+    /// given connectivity radius. Two vertices form an edge iff their Euclidean
+    /// distance is at most `radius`; higher simplices are built by clique
+    /// expansion, capped at the ambient dimension.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(TopologyError::PointCloudError(_))` in three cases:
+    ///
+    /// 1. **Empty input.** The point cloud contains no points.
+    /// 2. **Duplicate input points.** A pair of input points has Euclidean
+    ///    distance below `T::epsilon() * max_extent`, where `max_extent` is the
+    ///    largest axis-aligned bounding-box extent. The error message contains
+    ///    the substring `"duplicate point"` and references both offending
+    ///    indices. Callers must deduplicate input geometry upstream.
+    /// 3. **Degenerate top simplex.** A top-dimensional simplex in the
+    ///    constructed complex has computed volume below `T::epsilon() * 100`.
+    ///    This indicates geometrically-degenerate input (collinear vertices in
+    ///    2D ambient, coplanar vertices in 3D ambient, etc.). The error
+    ///    message contains the substrings `"top-dimensional simplex"` and
+    ///    `"below tolerance"`. Callers must either tighten the input geometry
+    ///    or pick a different triangulation strategy.
+    ///
+    /// All numerical tolerance comparisons scale with `T::epsilon()`. The
+    /// `T::epsilon() * 100` constant is the workspace-standard near-zero
+    /// scaling for generic float types and applies uniformly across the
+    /// `RealField` family (`f32`, `f64`, `Float106`). No hard-coded `f64`
+    /// literal appears in the rejection logic.
+    ///
+    /// # Precondition contract
+    ///
+    /// Callers should ensure input geometry is non-degenerate in the regime
+    /// `coordinates ~ O(1)` magnitude. Inputs far outside that regime are
+    /// accepted but the floating-point rejection thresholds become less
+    /// reliable; downstream consumers with strict-precision requirements
+    /// should pre-normalize coordinates.
     pub fn triangulate(&self, radius: T) -> Result<SimplicialComplex<T>, TopologyError> {
         if self.is_empty() {
             return Err(TopologyError::PointCloudError("Empty Cloud".to_string()));
@@ -120,6 +208,13 @@ where
         let num_points = self.len();
         let dim = self.points.shape()[1];
         let coords = self.points.as_slice();
+
+        if let Some((i, j)) = find_duplicate_points(coords, num_points, dim) {
+            return Err(TopologyError::PointCloudError(format!(
+                "triangulate: duplicate point at index {} matches index {} (distance below T::epsilon() * max_extent)",
+                i, j
+            )));
+        }
 
         // 1. Build 0-Skeleton
         let mut zero_simplices = Vec::with_capacity(num_points);
@@ -286,22 +381,30 @@ where
                     // Since top-forms are densities per volume, and we store integrated values,
                     // the metric term is 1/Volume.
                     // (Standard DEC derivation for diagonal star_n)
-                    if primal_vol > <T as From<f64>>::from(1e-12) {
+                    let top_threshold = T::epsilon() * <T as From<f64>>::from(100.0);
+                    if primal_vol > top_threshold {
                         <T as From<f64>>::from(1.0) / primal_vol
                     } else {
-                        T::zero()
+                        return Err(TopologyError::PointCloudError(format!(
+                            "triangulate: top-dimensional simplex at index {} has volume below tolerance (T::epsilon() * 100), indicating degenerate input geometry",
+                            i
+                        )));
                     }
                 } else {
                     // Intermediate dimensions (Edges in 2D/3D).
                     // Approximation: M_k = Vol(Primal) / Vol(Dual) is for hodge star *mapping*.
                     // But here we need the Mass Matrix M for the inner product.
                     // M_k [i,i] ~ Primal_Vol
-                    // Wait, for 1-forms (Edges): Energy = Sum (u_i - u_j)^2 * (Dual_Area / Length)
-                    // We need the "Constitutive Ratio".
-
-                    // Since we don't have the Dual Connectivity built, we use the
-                    // "Unit Weight" fallback for topology, scaled by Primal Volume for geometry.
-                    // This ensures at least scaling consistency.
+                    //
+                    // For non-degenerate top simplices (guaranteed by the top-mass branch),
+                    // every sub-simplex is non-degenerate by linear-algebra transitivity.
+                    // The duplicate-point check at the top of triangulate guarantees positive
+                    // edge lengths. The assertion is therefore unreachable in release builds;
+                    // it catches future regressions where the transitivity argument breaks.
+                    debug_assert!(
+                        primal_vol > T::zero(),
+                        "intermediate-grade simplex has non-positive primal volume; upstream duplicate-point and top-volume checks should have caught this"
+                    );
                     primal_vol
                 };
 
