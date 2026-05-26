@@ -78,11 +78,9 @@ Every new public signature added by this change set MUST be generic over `T: Rea
 - **WHEN** the caller invokes `PointCloud::<f32, 2>::triangulate_delaunay`, `PointCloud::<f64, 2>::triangulate_delaunay`, and `PointCloud::<Float106, 2>::triangulate_delaunay` on the same logical input
 - **THEN** all three calls compile and produce structurally identical complexes (same vertex count, same edge count, same triangle count)
 
-## MODIFIED Requirements
+### Requirement: Cross-backend Hodge-decomposition cross-check on the Delaunay unit square
 
-### Requirement: Two-backend cross-check on the unit square
-
-The cross-backend cross-check SHALL use the canonical two-triangle Delaunay unit square on the simplicial side and the 2×2 lattice on the cubical side. The simplicial fixture is constructed via `PointCloud::triangulate_delaunay` on the four unit-square corners.
+The cross-backend cross-check SHALL use the canonical two-triangle Delaunay unit square on the simplicial side and the 2×2 lattice on the cubical side. The simplicial fixture is constructed via `PointCloud::triangulate_delaunay` on the four unit-square corners. This requirement supersedes the relaxed cross-check that shipped with `add-hodge-decomposition` H3 (single-right-triangle simplicial fixture); the test file `hodge_decomposition_cross_backend_tests.rs` is rewritten to consume the Delaunay fixture instead.
 
 **Resolution of the deferred strict-equality scenario.** The `add-hodge-decomposition` change set deferred a `|‖simplicial.exact()‖ − ‖cubical.exact()‖| < 1e-6` raw-norm equality scenario to this change set. That scenario as stated is unachievable on any coarse discretization with different edge counts on the two sides: the simplicial Delaunay unit square has 5 edges while the cubical 2×2 lattice has 12, so for any non-trivial ω the raw `‖α‖` differs by O(1) between backends. The strict test in this change set is the per-component agreement of *normalized component fractions*, not raw L2 norms. Both backends use the same prescribed ω with the same logical content; the normalized fractions are dimensionless ratios that agree at 1e-6 on coarse discretizations.
 
