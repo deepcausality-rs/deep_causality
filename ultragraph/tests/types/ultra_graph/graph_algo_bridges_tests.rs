@@ -68,6 +68,22 @@ fn parallel_directed_edges_canonicalized_to_min_max() {
 }
 
 #[test]
+fn parallel_multi_edges_are_not_bridges() {
+    // Two parallel directed edges (0,1) stored twice in the same direction.
+    // In the undirected view this is a multigraph with multiplicity 2;
+    // removing one parallel edge leaves the other, so neither is a bridge.
+    let g = build(&[(0, 1), (0, 1)], 2);
+    assert!(g.bridges().unwrap().is_empty());
+}
+
+#[test]
+fn bridge_plus_parallel_multi_edge_isolates_correctly() {
+    // {0,1} is a 2-multi-edge (not a bridge); (1,2) is a single edge (bridge).
+    let g = build(&[(0, 1), (0, 1), (1, 2)], 3);
+    assert_eq!(g.bridges().unwrap(), vec![(1, 2)]);
+}
+
+#[test]
 fn self_loops_do_not_create_bridges() {
     // Triangle plus self-loops — still no bridges.
     let g = build(&[(0, 1), (1, 2), (2, 0), (0, 0), (1, 1)], 3);

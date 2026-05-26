@@ -13,10 +13,16 @@
 //! DFS distinguish "the edge we arrived on" from a real back edge — robust
 //! to multi-edges in the input.
 //!
-//! Self-loops and duplicate edge orientations are discarded.
+//! Self-loops are discarded. Reverse-orientation duplicates (one undirected
+//! edge stored as both `u -> v` and `v -> u`) coalesce into a single undirected
+//! edge. Genuine parallel multi-edges (the same direction stored more than
+//! once) are preserved with their multiplicity; collapsing them would turn a
+//! multigraph into a simple graph and yield wrong bridges/biconnected
+//! components (e.g., two parallel edges between `u` and `v` are not a bridge,
+//! but a collapsed single edge would be).
 
 use crate::{CsmGraph, GraphView};
-use std::collections::HashSet;
+use std::collections::HashMap;
 
 /// Symmetric CSR adjacency over the undirected view of a `CsmGraph`.
 ///
@@ -40,9 +46,14 @@ where
 {
     let n = g.number_nodes();
 
-    // Collect distinct canonical undirected edges (a, b) with a < b.
-    let mut seen: HashSet<(usize, usize)> = HashSet::new();
-    let mut canonical: Vec<(usize, usize)> = Vec::new();
+    // Count occurrences of each ordered direction for every canonical pair
+    // (a, b) with a < b. The undirected multiplicity is then max(forward,
+    // reverse): each reverse-orientation storage pairs with one forward to
+    // represent a single undirected edge; any unpaired forwards or reverses
+    // are genuine parallel multi-edges. This rule is consistent with
+    // `parallel_directed_edges_canonicalized_to_min_max` (anti-parallel pair
+    // -> one undirected edge) and preserves multigraph semantics.
+    let mut counts: HashMap<(usize, usize), (usize, usize)> = HashMap::new();
     for u in 0..n {
         let start = g.forward_edges.offsets[u];
         let end = g.forward_edges.offsets[u + 1];
@@ -50,10 +61,25 @@ where
             if u == v {
                 continue;
             }
-            let (a, b) = if u < v { (u, v) } else { (v, u) };
-            if seen.insert((a, b)) {
-                canonical.push((a, b));
+            let (a, b, is_forward) = if u < v { (u, v, true) } else { (v, u, false) };
+            let entry = counts.entry((a, b)).or_insert((0usize, 0usize));
+            if is_forward {
+                entry.0 += 1;
+            } else {
+                entry.1 += 1;
             }
+        }
+    }
+
+    // Expand each canonical pair into `max(forward, reverse)` distinct
+    // undirected edges. Each occurrence below receives its own `edge_id`,
+    // which is what lets the Tarjan DFS distinguish "the edge we arrived
+    // on" from a parallel sibling edge.
+    let mut canonical: Vec<(usize, usize)> = Vec::new();
+    for (&(a, b), &(f, r)) in counts.iter() {
+        let m = f.max(r);
+        for _ in 0..m {
+            canonical.push((a, b));
         }
     }
     // Sort to make edge_id assignment deterministic regardless of CSR layout.
