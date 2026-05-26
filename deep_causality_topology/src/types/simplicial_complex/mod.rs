@@ -7,6 +7,7 @@
 
 use crate::Skeleton;
 use deep_causality_sparse::CsrMatrix;
+use std::sync::OnceLock;
 
 // Submodule declarations (folder-based)
 mod api;
@@ -15,6 +16,7 @@ mod builder;
 mod constructors;
 mod display;
 mod getters;
+pub(crate) mod lazy_hodge_star;
 
 mod ops;
 mod topology;
@@ -22,11 +24,27 @@ mod topology;
 // Re-export public API
 pub use builder::SimplicialComplexBuilder;
 
+/// Geometric data attached to a simplicial complex for lazy Hodge ⋆ population.
+///
+/// Stored only when the complex is built via [`SimplicialComplex::with_geometry`].
+/// Complexes constructed via the legacy `SimplicialComplex::new(...)` path
+/// (which pre-supplies the Hodge ⋆ vector) carry `None` here.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct GeometricData<T> {
+    pub(crate) coords: Vec<T>,
+    pub(crate) ambient_dim: usize,
+}
+
 /// A simplicial complex representing a geometric structure.
 ///
 /// Contains skeletons (vertices, edges, faces, etc.) and the associated
-/// boundary, coboundary, and Hodge star operators.
-#[derive(Debug, Clone, PartialEq)]
+/// boundary, coboundary, and Hodge star operators. The Hodge ⋆ vector is
+/// populated lazily on first access via
+/// [`SimplicialComplex::hodge_star_operators`]; complexes built via
+/// [`SimplicialComplex::with_geometry`] carry the coordinates needed for that
+/// lazy build, while complexes built via the legacy
+/// [`SimplicialComplex::new`] pre-populate the Hodge ⋆ vector directly.
+#[derive(Debug)]
 pub struct SimplicialComplex<T> {
     /// Storage of geometric entities (Points, Lines, Triangles...)
     pub(crate) skeletons: Vec<Skeleton>,
@@ -34,51 +52,82 @@ pub struct SimplicialComplex<T> {
     pub(crate) boundary_operators: Vec<CsrMatrix<i8>>,
     /// The Coboundary / Adjacency Cache.
     pub(crate) coboundary_operators: Vec<CsrMatrix<i8>>,
-    /// The Hodge Star Operators (⋆).
-    pub(crate) hodge_star_operators: Vec<CsrMatrix<T>>,
+    /// The Hodge Star Operators (⋆). Populated lazily on first access when
+    /// `geometric_data` is `Some`; pre-populated at construction otherwise.
+    pub(crate) hodge_star_operators: OnceLock<Vec<CsrMatrix<T>>>,
+    /// Coordinates + ambient dimension for lazy Hodge ⋆ rebuild. `None` when
+    /// the complex was constructed via the legacy `new(...)` path with a
+    /// pre-supplied Hodge ⋆ vector.
+    pub(crate) geometric_data: Option<GeometricData<T>>,
 }
 
 impl<T> SimplicialComplex<T> {
     /// Maps the underlying scalar type of the SimplicialComplex to a new type U.
     ///
-    /// This transforms:
-    /// - `hodge_star_operators: Vec<CsrMatrix<T>>` -> `Vec<CsrMatrix<U>>`
-    ///
-    /// The structural components (skeletons, boundary operators) remain unchanged.
-    ///
-    /// # Arguments
-    /// * `f` - A function or closure that transforms `T` to `U`.
+    /// Transforms `hodge_star_operators: OnceLock<Vec<CsrMatrix<T>>>` to
+    /// `OnceLock<Vec<CsrMatrix<U>>>` (only when initialized) and the optional
+    /// `geometric_data` coordinates through the same closure. The structural
+    /// components (skeletons, boundary operators) remain unchanged.
     pub fn map<U, F>(self, mut f: F) -> SimplicialComplex<U>
     where
         F: FnMut(T) -> U,
     {
-        let new_hodge_ops = self
-            .hodge_star_operators
-            .into_iter()
-            .map(|op| {
-                // Deconstruct CsrMatrix, map values, reconstruct.
-                // Assuming CsrMatrix has methods to decompose or we can access fields if crate-local.
-                // Since we are in the same crate (types/simplicial_complex), but CsrMatrix is generic from another crate...
-                // We rely on public API: row_indices(), col_indices(), values().
-                // And from_parts (unsafe) or from_triplets.
-                // Using safe from_triplets is slower. Using unsafe from_parts is better if structure matches.
-                // Let's rely on mapping values directly if possible.
+        let new_hodge_cell: OnceLock<Vec<CsrMatrix<U>>> = OnceLock::new();
+        if let Some(hodge_ops) = self.hodge_star_operators.into_inner() {
+            let mapped: Vec<CsrMatrix<U>> = hodge_ops
+                .into_iter()
+                .map(|op| {
+                    let (cols, rows, values, shape) = op.into_parts();
+                    let new_values: Vec<U> = values.into_iter().map(&mut f).collect();
+                    // Safety: structure (indices, shape) preserved; only values are remapped.
+                    unsafe { CsrMatrix::from_parts(cols, rows, new_values, shape) }
+                })
+                .collect();
+            let _ = new_hodge_cell.set(mapped);
+        }
 
-                let (cols, rows, values, shape) = op.into_parts();
-                let new_values: Vec<U> = values.into_iter().map(&mut f).collect();
-
-                // Safety: We preserve the structure (indices and shape), only changing values.
-                // If T and U have same structural implication for 0, this is safe.
-                unsafe { CsrMatrix::from_parts(cols, rows, new_values, shape) }
-            })
-            .collect();
+        let new_geom = self.geometric_data.map(|gd| GeometricData {
+            coords: gd.coords.into_iter().map(&mut f).collect(),
+            ambient_dim: gd.ambient_dim,
+        });
 
         SimplicialComplex {
             skeletons: self.skeletons,
             boundary_operators: self.boundary_operators,
             coboundary_operators: self.coboundary_operators,
-            hodge_star_operators: new_hodge_ops,
+            hodge_star_operators: new_hodge_cell,
+            geometric_data: new_geom,
         }
+    }
+}
+
+impl<T: Clone> Clone for SimplicialComplex<T> {
+    fn clone(&self) -> Self {
+        let new_hodge_cell: OnceLock<Vec<CsrMatrix<T>>> = OnceLock::new();
+        if let Some(hodge_ops) = self.hodge_star_operators.get() {
+            let _ = new_hodge_cell.set(hodge_ops.clone());
+        }
+        Self {
+            skeletons: self.skeletons.clone(),
+            boundary_operators: self.boundary_operators.clone(),
+            coboundary_operators: self.coboundary_operators.clone(),
+            hodge_star_operators: new_hodge_cell,
+            geometric_data: self.geometric_data.clone(),
+        }
+    }
+}
+
+impl<T: PartialEq> PartialEq for SimplicialComplex<T> {
+    /// Equality is logical-structure equality across skeletons, boundary
+    /// operators, coboundary operators, and geometric data. The Hodge ⋆ cache
+    /// is ignored because lazy compute is deterministic; two complexes with
+    /// the same logical inputs produce the same Hodge ⋆ regardless of cache
+    /// population state.
+    fn eq(&self, other: &Self) -> bool {
+        self.skeletons == other.skeletons
+            && self.boundary_operators == other.boundary_operators
+            && self.coboundary_operators == other.coboundary_operators
+            && self.geometric_data == other.geometric_data
     }
 }
 
@@ -88,7 +137,8 @@ impl<T> Default for SimplicialComplex<T> {
             skeletons: Vec::new(),
             boundary_operators: Vec::new(),
             coboundary_operators: Vec::new(),
-            hodge_star_operators: Vec::new(),
+            hodge_star_operators: OnceLock::new(),
+            geometric_data: None,
         }
     }
 }

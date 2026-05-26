@@ -101,6 +101,34 @@ The 45 direct callers identified by `gitnexus_impact upstream` are audited one m
 
 The audit is paced one module per task in `tasks.md`, with a `cargo test -p <crate>` gate after each module's audit lands.
 
+### Decision 6: Lazy Hodge ⋆ population via OnceLock
+
+Added mid-implementation after H4-G1 surfaced a runtime panic in the medicine demo `examples/medicine_examples/tissue_classification`. The demo is a pure Vietoris-Rips / TDA consumer (computes Euler characteristic from V-E-F counts) and never accesses the Hodge ⋆ surface. Under the eager construction it nonetheless paid the degeneracy-rejection cost, blocking valid TDA workflows on geometrically-degenerate input.
+
+The architectural issue: `PointCloud::triangulate` eagerly computes the lumped-mass Hodge ⋆ operators inside `op_triangulate.rs` and stores them in the returned `SimplicialComplex<T>`. This conflates two consumer regimes — topological (TDA, persistent homology, Euler characteristic, clique complexes) and geometric (DEC, Hodge ⋆, codifferential, Laplacian) — on a single type, forcing every caller to satisfy the union of both regimes' preconditions even when only one is needed.
+
+**Resolution:** `SimplicialComplex<T>` gains an `OnceLock<Vec<CsrMatrix<T>>>` cell for the Hodge ⋆ operators and an `Option<(Vec<T>, usize)>` field for the geometric data (coordinates + ambient dimension) needed to compute them. The eager loop in `op_triangulate.rs` is removed; the same loop body moves to a private helper `build_lumped_mass_hodge_star<T>(skeletons, coords, dim) -> Result<Vec<CsrMatrix<T>>, TopologyError>` in `src/types/simplicial_complex/lazy_hodge_star.rs`. The new accessor `hodge_star_operators(&self) -> Result<&Vec<CsrMatrix<T>>, TopologyError>` calls `OnceLock::get_or_try_init` against that helper. The H1 top-volume rejection logic moves into the helper unchanged.
+
+**Why OnceLock over alternatives:**
+
+- **OnceLock vs. OnceCell.** `OnceLock` is `Send + Sync` whenever `T: Send + Sync`; `OnceCell` is single-threaded. The workspace wraps `SimplicialComplex` in `Arc<>` across multiple tests, which implies cross-thread sharing of borrows. Using `OnceLock` preserves that.
+- **OnceLock vs. RefCell + Option.** `RefCell` requires `&mut` semantics expressed through dynamic borrow checks; the public accessor returns `&Vec<CsrMatrix<T>>` as a shared borrow. OnceLock's `get_or_try_init` is the right shape — one-shot fallible init, shared-read thereafter.
+- **OnceLock vs. struct split into TDA / DEC variants.** A type split (`TdaSimplicialComplex` vs. `DecSimplicialComplex`) is more honest about the regime divide but doubles the public surface and forces every API consumer (Manifold, ReggeGeometry, HasHodgeStar) to bifurcate. Out of scope at this point in the change set. OnceLock keeps the public type surface unchanged.
+
+**No-panic invariant:** the accessor is fallible (`Result<&Vec<CsrMatrix<T>>, TopologyError>`). There is no infallible convenience accessor that would have to panic on degenerate input. The trade-off (preserve the old infallible signature via `.expect(...)` inside the accessor body) was rejected because it converts a recoverable degeneracy condition into a thread crash — library APIs should not do that. Every caller acknowledges the error path at compile time.
+
+**Caller migration (5 direct call sites per `gitnexus_impact upstream`):**
+
+| # | Caller | Migration |
+|---|--------|-----------|
+| 1 | `deep_causality_physics/src/kernels/mhd/grmhd.rs::relativistic_current_kernel` | Propagate `?` through existing `Result` return |
+| 2 | `deep_causality_physics/src/kernels/mhd/ideal.rs::ideal_induction_kernel` | Same pattern as (1) |
+| 3 | `deep_causality_topology/src/types/regge_geometry/has_hodge_star.rs::hodge_star_matrix` | Trait method `HasHodgeStar::hodge_star_matrix` widens to `Result`; both simplicial and cubical impls update in parallel |
+| 4 | `deep_causality_topology/tests/.../op_triangulate_tests.rs::test_point_cloud_triangulate_caps_top_grade_at_ambient_dim_for_coplanar_2d_corners` | `.unwrap()` migration; the 4-corner unit-square fixture produces non-degenerate triangles → lazy init succeeds |
+| 5 | `deep_causality_topology/tests/.../has_hodge_star_tests.rs::trait_routed_matrix_equals_complex_cache_matrix` | `.unwrap()` migration |
+
+**Trait derivation:** `OnceLock<T>` implements neither `Clone` nor `PartialEq` automatically. The existing `#[derive(Debug, Clone, PartialEq)]` on `SimplicialComplex<T>` is split: keep `derive(Debug)` (OnceLock implements Debug), implement `Clone` and `PartialEq` manually. The manual impls clone the cell's current state and compare logical identity (skeletons + boundary + coboundary + geometric_data); a populated vs. unpopulated cell with the same logical structure is considered equal because the lazy compute is deterministic.
+
 ### Decision 5: Tolerance constants are RealField-parametric
 
 The existing `1e-12` literals at [`op_triangulate.rs:95`](../../../deep_causality_topology/src/types/point_cloud/ops/op_triangulate.rs#L95) and [`op_triangulate.rs:289`](../../../deep_causality_topology/src/types/point_cloud/ops/op_triangulate.rs#L289) violate the workspace `RealField` convention from `add-hodge-decomposition`. They are replaced with `T::epsilon() * <T as From<f64>>::from(100.0)` (the workspace-standard 100×ε scaling for "near-zero" comparisons on generic float types).
@@ -115,8 +143,7 @@ This affects only the threshold comparison sites; the substituted-zero behaviour
 - **[Risk] The `T::epsilon() * 100` threshold rejects geometry that the old `1e-12` threshold accepted (or vice versa) on `T = f64`.** `f64::EPSILON ≈ 2.22e-16`; `100 × f64::EPSILON ≈ 2.22e-14`, two orders of magnitude tighter than `1e-12`. The new threshold is therefore *stricter*: inputs in the gap `[2.22e-14, 1e-12)` now error, where they previously silently zeroed.
   → **Assessment:** this is correct. The gap was exactly the silent-zero regime. Inputs producing volumes in that range were always numerically suspect; surfacing them as errors is the right behaviour. Documented in the precondition contract.
 
-- **[Risk] Two execution flows in `examples/medicine_examples` could break at runtime.** `tissue_classification` and `aneurysm_risk` build mock manifolds via `triangulate`. If either's fixture is degenerate, the demo errors at step 1.
-  → **Mitigation:** the demos are audited in their own task block (Block H4). The likely fix is fixture-tightening; both demos use illustrative geometry that can be adjusted without affecting the demo's pedagogical content.
+- ~~**[Risk] Two execution flows in `examples/medicine_examples` could break at runtime.**~~ **Resolved by Decision 6 (lazy Hodge ⋆).** Initially the H4 audit revealed `tissue_classification` panicking at the triangulation step on degenerate input. The demo is a pure TDA consumer (V-E-F → Euler characteristic) and never touches the Hodge ⋆ surface; surfacing the rejection inside `triangulate` was the wrong abstraction. Decision 6 moves the rejection to the lazy access path, so TDA-only callers (including the medicine demo) succeed on any non-duplicate input regardless of geometric degeneracy. `aneurysm_risk` was unaffected throughout; `tissue_classification` now runs to completion post-refactor.
 
 - **[Risk] Behaviour change is invisible to `cargo build` and only surfaces under `cargo test`.** A consumer crate outside the workspace that handles `triangulate`'s `Result` via `.unwrap()` on a degenerate input now panics in production. No workspace-internal caller does this — every internal `.unwrap()` is on a provably-non-degenerate fixture — but external consumers cannot be audited.
   → **Mitigation:** the change is documented in `deep_causality_topology/CHANGELOG.md` under a "Behaviour change" header. Per the workspace convention, this is a minor-version bump for the crate. External consumers reading the changelog will see the narrowed success domain.

@@ -23,8 +23,13 @@ fn test_simplicial_complex_getters() {
     // Coboundary operators (empty for now based on helper)
     assert!(complex.coboundary_operators().is_empty());
 
-    // Hodge Star operators (empty for now based on helper)
-    assert!(complex.hodge_star_operators().is_empty());
+    // Hodge ⋆ operators: the helper constructs the complex via `SimplicialComplex::new`
+    // with an empty Hodge ⋆ vector and no geometric data. Post-H4 lazy refactor, the
+    // accessor surfaces a discriminating error for this state because lazy build
+    // requires coords + ambient_dim that the helper does not supply.
+    let err = complex.hodge_star_operators().unwrap_err();
+    let msg = format!("{}", err);
+    assert!(msg.contains("geometric data is not available"));
 }
 
 #[test]

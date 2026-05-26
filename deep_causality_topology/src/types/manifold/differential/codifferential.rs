@@ -46,8 +46,17 @@ where
         );
 
         let k_form_data = self.get_k_form_data(k);
-        let mass_k_cow = metric.hodge_star_matrix(&self.complex, k);
-        let mass_k_minus_1_cow = metric.hodge_star_matrix(&self.complex, k - 1);
+        // Hodge ⋆ availability is validated at `Manifold::with_metric` construction,
+        // so the lazy build has already succeeded for any non-degenerate input by
+        // the time we reach the differential operators. The `.expect` is therefore
+        // an unreachable path in the API surface — only fires if the manifold was
+        // constructed by means that bypass the constructor's validation.
+        let mass_k_cow = metric
+            .hodge_star_matrix(&self.complex, k)
+            .expect("Hodge ⋆ availability is validated at Manifold::with_metric");
+        let mass_k_minus_1_cow = metric
+            .hodge_star_matrix(&self.complex, k - 1)
+            .expect("Hodge ⋆ availability is validated at Manifold::with_metric");
         let mass_k: &deep_causality_sparse::CsrMatrix<R> = mass_k_cow.as_ref();
         let mass_k_minus_1: &deep_causality_sparse::CsrMatrix<R> = mass_k_minus_1_cow.as_ref();
 

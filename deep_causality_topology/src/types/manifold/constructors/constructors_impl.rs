@@ -6,14 +6,14 @@
 //! CPU implementation of Manifold constructors.
 
 use crate::{ReggeGeometry, SimplicialComplex, TopologyError};
-use deep_causality_num::RealField;
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 
 use super::super::{Manifold, utils};
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
-    C: RealField,
+    C: RealField + FromPrimitive,
 {
     /// CPU implementation of Manifold constructor.
     pub(crate) fn new_impl(
@@ -90,6 +90,17 @@ where
             ));
         }
 
+        // Validate the Hodge ⋆ surface once at the DEC entry point. Attaching
+        // a metric is the contract point where the caller commits to DEC
+        // semantics; the lazy build is forced here so downstream differential
+        // operators (codifferential, hodge_star, laplacian, hodge_decompose)
+        // can rely on `OnceLock` being populated and never encounter a build
+        // failure at access time. Failures surface here as
+        // `TopologyError::PointCloudError` instead of as a panic downstream.
+        if metric.is_some() {
+            let _ = complex.hodge_star_operators()?;
+        }
+
         Ok(Self {
             complex,
             data,
@@ -131,7 +142,7 @@ where
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
-    C: RealField,
+    C: RealField + FromPrimitive,
     D: Clone,
 {
     /// CPU implementation of shallow clone.

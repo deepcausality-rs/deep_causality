@@ -130,7 +130,7 @@ fn test_point_cloud_triangulate_caps_top_grade_at_ambient_dim_for_coplanar_2d_co
     // = sum of incident 2-simplex areas / 3). Each vertex touches at least one
     // triangle, so the M_0 values vector must be non-empty and at least one
     // value must be strictly positive.
-    let star_0 = &complex.hodge_star_operators()[0];
+    let star_0 = &complex.hodge_star_operators().unwrap()[0];
     assert!(
         !star_0.values().is_empty(),
         "M_0 must have entries after the ambient-dim cap"

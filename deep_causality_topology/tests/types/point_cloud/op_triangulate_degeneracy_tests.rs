@@ -17,11 +17,8 @@ use deep_causality_topology::PointCloud;
 #[test]
 fn test_triangulate_rejects_duplicate_input_points() {
     // Four points in 2D where indices 1 and 2 are identical.
-    let points = CausalTensor::new(
-        vec![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0],
-        vec![4, 2],
-    )
-    .unwrap();
+    let points =
+        CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![4, 2]).unwrap();
     let metadata = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![4]).unwrap();
     let pc = PointCloud::new(points, metadata, 0).unwrap();
 
@@ -59,16 +56,20 @@ fn test_triangulate_rejects_two_identical_points() {
 // -----------------------------------------------------------------------------
 
 #[test]
-fn test_triangulate_rejects_three_collinear_points_in_2d() {
+fn test_hodge_star_rejects_three_collinear_points_in_2d() {
     // Three points on the x-axis. With radius 3.0 every pair connects, so
     // clique expansion builds the 2-simplex {0,1,2}. The triangle has zero
-    // area; the top-mass branch must surface this as an error rather than
-    // silently substituting T::zero().
+    // area. Post-H4 lazy refactor: `triangulate` succeeds (TDA consumers see
+    // a valid clique complex); the degeneracy surfaces on first read of
+    // `hodge_star_operators()`.
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 2.0, 0.0], vec![3, 2]).unwrap();
     let metadata = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
     let pc = PointCloud::new(points, metadata, 0).unwrap();
 
-    let err = pc.triangulate(3.0).unwrap_err();
+    let complex = pc
+        .triangulate(3.0)
+        .expect("triangulate accepts collinear input post-H4");
+    let err = complex.hodge_star_operators().unwrap_err();
     let msg = format!("{}", err);
 
     assert!(
@@ -84,11 +85,12 @@ fn test_triangulate_rejects_three_collinear_points_in_2d() {
 }
 
 #[test]
-fn test_triangulate_rejects_four_coplanar_points_in_3d() {
+fn test_hodge_star_rejects_four_coplanar_points_in_3d() {
     // Four points all at z = 0 in 3D ambient. Connectivity radius covers all
     // pairs, so clique expansion (capped at ambient_dim = 3) builds the
     // 3-simplex {0,1,2,3}, whose Cayley-Menger determinant is zero. The
-    // top-mass branch catches it via the unified volume-below-tolerance path.
+    // lazy Hodge ⋆ access catches it via the unified volume-below-tolerance
+    // path; `triangulate` itself succeeds.
     let points = CausalTensor::new(
         vec![
             0.0, 0.0, 0.0, // p0
@@ -102,7 +104,10 @@ fn test_triangulate_rejects_four_coplanar_points_in_3d() {
     let metadata = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![4]).unwrap();
     let pc = PointCloud::new(points, metadata, 0).unwrap();
 
-    let err = pc.triangulate(2.0).unwrap_err();
+    let complex = pc
+        .triangulate(2.0)
+        .expect("triangulate accepts coplanar input post-H4");
+    let err = complex.hodge_star_operators().unwrap_err();
     let msg = format!("{}", err);
 
     assert!(
@@ -153,15 +158,19 @@ fn test_triangulate_accepts_volume_above_threshold() {
 }
 
 #[test]
-fn test_triangulate_rejects_volume_below_threshold() {
+fn test_hodge_star_rejects_volume_below_threshold() {
     // Triangle (0,0), (1,0), (0, 4e-15). Area = 2e-15, below f64::EPSILON * 100
     // = 2.22e-14. The duplicate-point check passes (distances are all near
-    // unity), so the rejection lands at the top-mass branch.
+    // unity), so `triangulate` succeeds. The rejection lands at the lazy
+    // Hodge ⋆ access path post-H4.
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.0, 4e-15], vec![3, 2]).unwrap();
     let metadata = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
     let pc = PointCloud::new(points, metadata, 0).unwrap();
 
-    let err = pc.triangulate(1.5).unwrap_err();
+    let complex = pc
+        .triangulate(1.5)
+        .expect("triangulate accepts near-degenerate input post-H4");
+    let err = complex.hodge_star_operators().unwrap_err();
     let msg = format!("{}", err);
 
     assert!(msg.contains("top-dimensional simplex"));

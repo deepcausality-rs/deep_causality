@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::TopologyError;
 use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::{ReggeGeometry, SimplicialComplex};
 use deep_causality_num::{FromPrimitive, RealField};
@@ -33,7 +34,8 @@ where
         &'a self,
         complex: &'a Self::Complex,
         k: usize,
-    ) -> Cow<'a, CsrMatrix<R>> {
-        Cow::Borrowed(&complex.hodge_star_operators()[k])
+    ) -> Result<Cow<'a, CsrMatrix<R>>, TopologyError> {
+        let ops = complex.hodge_star_operators()?;
+        Ok(Cow::Borrowed(&ops[k]))
     }
 }

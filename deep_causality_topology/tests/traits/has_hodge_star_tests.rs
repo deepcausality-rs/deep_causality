@@ -14,7 +14,7 @@
 //! minimal dummy implementor. They guard against regressions to the trait's
 //! public surface independently of the two production impls.
 
-use deep_causality_topology::{CellComplex, ChainComplex, HasHodgeStar};
+use deep_causality_topology::{CellComplex, ChainComplex, HasHodgeStar, TopologyError};
 use std::borrow::Cow;
 
 use deep_causality_sparse::CsrMatrix;
@@ -31,8 +31,8 @@ impl HasHodgeStar<f64> for DummyMetric {
         &'a self,
         _complex: &'a Self::Complex,
         _k: usize,
-    ) -> Cow<'a, CsrMatrix<f64>> {
-        Cow::Owned(CsrMatrix::new())
+    ) -> Result<Cow<'a, CsrMatrix<f64>>, TopologyError> {
+        Ok(Cow::Owned(CsrMatrix::new()))
     }
 }
 
@@ -87,5 +87,5 @@ fn dummy_metric_returns_owned_cow_for_compute_on_demand_backends() {
     let complex: CellComplex<DummyCell> = CellComplex::from_cells(Vec::new());
     let metric = DummyMetric;
     let star = metric.hodge_star_matrix(&complex, 0);
-    assert!(matches!(star, Cow::Owned(_)));
+    assert!(matches!(star, Ok(Cow::Owned(_))));
 }

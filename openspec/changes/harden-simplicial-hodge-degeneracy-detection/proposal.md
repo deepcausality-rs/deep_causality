@@ -16,6 +16,7 @@ The motivating consequence: the strict per-component L2 norm cross-backend test 
 
 - **Decision point 1:** classify each of the three silent-zero branches as either (a) defined behaviour to keep silently or (b) genuine error to surface via `TopologyError::PointCloudError(String)`. The design doc justifies each classification individually.
 - **Decision point 2:** choose the contract style for the future shared helper — fallible-helper signature or witness-newtype precondition. The follow-up change set inherits this decision.
+- **Decision point 3 (added mid-implementation):** refactor `SimplicialComplex<T>` to populate Hodge ⋆ operators *lazily* on first access rather than eagerly during `PointCloud::triangulate`. The eager design conflated topological (TDA / clique-complex / Euler-characteristic) consumers with geometric (DEC / Hodge ⋆ / Laplacian) consumers, forcing TDA consumers to satisfy geometric preconditions they neither needed nor used. The lazy refactor moves the degeneracy rejection from `triangulate` to the lazy access path, so TDA consumers succeed on any non-duplicate input while DEC consumers see the same loud error from H1 the moment they touch the Hodge ⋆ surface.
 - Make `PointCloud::triangulate` surface every classified error through its existing `Result<SimplicialComplex<T>, TopologyError>` return type. Public signature unchanged; behaviour change is strictly narrowing — inputs that previously produced a silently-singular complex now return `Err`.
 - Audit all 45 direct callers identified by `gitnexus_impact upstream`. For each, decide:
   - Generic-position fixture: behaviour preserved, `.unwrap()` and `?` continue to work.
@@ -32,6 +33,7 @@ The motivating consequence: the strict per-component L2 norm cross-backend test 
 ### New Capabilities
 
 - `simplicial-hodge-degeneracy-detection`: rejection rules for the three geometric degeneracies that `PointCloud::triangulate` previously masked. Covers the discriminating `TopologyError::PointCloudError` messages, the documented precondition contract, and the regression test fixtures.
+- `lazy-hodge-star-population`: `SimplicialComplex<T>` no longer pre-computes Hodge ⋆ operators during construction. The new `SimplicialComplex::with_geometry(...)` constructor stores coordinates and ambient dimension; the new fallible accessor `SimplicialComplex::hodge_star_operators(&self) -> Result<&Vec<CsrMatrix<T>>, TopologyError>` builds and caches the operators on first invocation. TDA consumers that never touch the accessor are unaffected by the degeneracy rejection.
 
 ### Modified Capabilities
 
@@ -40,7 +42,14 @@ The motivating consequence: the strict per-component L2 norm cross-backend test 
 ## Impact
 
 - **Crate affected:** `deep_causality_topology` source (`op_triangulate.rs`). Caller-side ripple lands in `deep_causality_physics` tests and `examples/medicine_examples`.
-- **Public surface:** `PointCloud::triangulate` signature unchanged. Behaviour narrows; new `Err` paths added under the existing `TopologyError::PointCloudError(String)` variant. No new error variant.
+- **Public surface:**
+  - `PointCloud::triangulate` signature unchanged. Behaviour narrows; new `Err` paths added under the existing `TopologyError::PointCloudError(String)` variant. No new error variant.
+  - `SimplicialComplex::hodge_star_operators(&self)` signature widens from `-> &Vec<CsrMatrix<T>>` to `-> Result<&Vec<CsrMatrix<T>>, TopologyError>`. All 5 direct callers identified by `gitnexus_impact upstream` migrate (3 propagate `?` through existing `Result` returns; 2 are tests).
+  - `SimplicialComplex::new(skeletons, boundary, coboundary, hodge_star_operators)` signature unchanged for backwards compatibility with ~20 test-fixture call sites.
+  - New constructor `SimplicialComplex::with_geometry(skeletons, boundary, coboundary, coords, ambient_dim)` for the lazy-construction path.
+  - `HasHodgeStar::hodge_star_matrix` trait method widens to `-> Result<Cow<'_, CsrMatrix<R>>, TopologyError>`. Both simplicial and cubical impls update in parallel.
+  - No new error variant — every new `Err` path lands under `TopologyError::PointCloudError(String)`.
+  - No panics anywhere in the API surface. Every fallible path returns `Result`.
 - **Caller audit:** 45 direct call sites. Per the `gitnexus_impact upstream` distribution:
   - `Manifold` test setup helpers: 58 hits (direct)
   - `Em` (electromagnetic kernel tests): 9 hits (indirect)

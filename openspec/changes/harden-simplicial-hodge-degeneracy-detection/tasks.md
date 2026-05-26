@@ -37,27 +37,65 @@
 - [ ] 4.7 H3-G1 Compilation + own-crate tests: `cargo test -p deep_causality_topology` passes clean.
 - [ ] 4.8 H3-G2 Review: user reviews the per-fixture decisions before downstream crates are touched.
 
-## 5. Block H4 — Caller audit: `deep_causality_physics` and examples
+## 5. Block H4 — Lazy Hodge ⋆ population refactor
 
-- [ ] 5.1 Audit `tests/kernels/condensed/*` (`create_flat_manifold` used by `test_foppl_von_karman_strain_full` and `test_wrapper_strain_full`).
-- [ ] 5.2 Audit `tests/kernels/em/*` (`create_simple_manifold` used by 9 EM kernel tests).
-- [ ] 5.3 Audit `tests/kernels/quantum/*` (`create_simple_manifold` used by 5 Klein-Gordon kernel tests).
-- [ ] 5.4 Audit `tests/kernels/thermodynamics/*` (`create_temp_manifold` used by 4 heat-diffusion kernel tests).
-- [ ] 5.5 Audit `tests/kernels/mhd/*` (`create_dummy_manifold`, `create_test_manifold` used by ideal/resistive GRMHD tests, including the explicit error tests `test_relativistic_current_kernel_low_dim_metric_error` and `test_relativistic_current_kernel_low_skeleton_error`).
-- [ ] 5.6 Audit `examples/medicine_examples/tissue_classification/main.rs::analyze_with_monad`. If the demo fixture is degenerate, tighten it; if it is generic-position, no change.
-- [ ] 5.7 Audit `examples/medicine_examples/aneurysm_risk/main.rs::build_mock_aneurysm`. Same audit policy as 5.6.
-- [ ] 5.8 Audit `examples/mathematics_examples/topology/{complex_operators.rs, differential_field.rs}` (2 direct, both call `triangulate` in `main`).
-- [ ] 5.9 H4-G1 Compilation + workspace tests: `make build && make test` clean. The medicine examples must run to completion without runtime error.
-- [ ] 5.10 H4-G2 Review: user reviews the cross-crate audit diff and runtime-validates both medicine demos before sign-off.
+Added mid-implementation after the original Block H4 (caller audit) surfaced a runtime panic in `examples/medicine_examples/tissue_classification`. The demo is a pure Vietoris-Rips / TDA consumer (Euler characteristic from V-E-F counts) and never accesses the Hodge ⋆ surface, but was nonetheless blocked by the eager Hodge ⋆ degeneracy rejection inside `PointCloud::triangulate`. The architectural fix is to move Hodge ⋆ population from `triangulate` (eager) to a lazy access path on `SimplicialComplex<T>`, separating topological consumers from geometric consumers at the type level rather than forcing the union of their preconditions. See `design.md` Decision 6 for the full rationale.
 
-## 6. Block H5 — Release prep + archive sync
+- [ ] 5.1 Create `deep_causality_topology/src/types/simplicial_complex/lazy_hodge_star.rs`. Move `simplex_volume`, `gaussian_determinant`, and the lumped-mass construction loop from `op_triangulate.rs` into this file. Expose `pub(crate) fn build_lumped_mass_hodge_star<T>(skeletons: &[Skeleton], coords: &[T], dim: usize) -> Result<Vec<CsrMatrix<T>>, TopologyError>`. The top-volume rejection from H1 task 2.2 moves into this helper unchanged; the helper is the single source of truth for the unified `"top-dimensional simplex...below tolerance"` error.
+- [ ] 5.2 Update `SimplicialComplex<T>` in `src/types/simplicial_complex/mod.rs`:
+  - Change `hodge_star_operators: Vec<CsrMatrix<T>>` to `hodge_star_operators: OnceLock<Vec<CsrMatrix<T>>>`.
+  - Add `geometric_data: Option<(Vec<T>, usize)>` (coordinates + ambient dimension).
+  - Remove `#[derive(Clone, PartialEq)]` (OnceLock does not implement either). Keep `#[derive(Debug)]`.
+  - Implement `Clone` manually: clone the OnceLock's current state if initialized; leave uninitialized otherwise.
+  - Implement `PartialEq` manually: compare logical identity (skeletons + boundary + coboundary + geometric_data). Two complexes with the same logical structure but different cache populations are equal because the lazy compute is deterministic.
+  - Update `Default` to use `OnceLock::new()` and `geometric_data: None`.
+  - Update `map()` to use `OnceLock::into_inner()` for the existing-Hodge-⋆ case and remap coords inside `geometric_data` through the same closure.
+- [ ] 5.3 Add new constructor `SimplicialComplex::with_geometry(skeletons, boundary, coboundary, coords, ambient_dim) -> Self` in `src/types/simplicial_complex/api/constructors.rs`. Stores `coords + ambient_dim` in `geometric_data`; leaves `hodge_star_operators: OnceLock::new()` empty.
+- [ ] 5.4 Keep the existing `SimplicialComplex::new(skeletons, boundary, coboundary, hodge_star_operators)` constructor with its current signature. The OnceLock is pre-populated via `OnceLock::from(...)` (stable since Rust 1.78) or `let cell = OnceLock::new(); cell.set(...).expect(...); cell`. `geometric_data: None`. Backwards-compatible with ~20 existing test-fixture call sites that pre-supply Hodge ⋆.
+- [ ] 5.5 Update the accessor in `src/types/simplicial_complex/getters/mod.rs`. The signature widens to `pub fn hodge_star_operators(&self) -> Result<&Vec<CsrMatrix<T>>, TopologyError>`. Implementation: `self.hodge_star_operators.get_or_try_init(|| { ... lazy build via build_lumped_mass_hodge_star ... })`. For empty complexes (no skeletons), return `Ok(empty_vec)` without attempting to build. For complexes with `geometric_data: None` and an uninitialized cell, return `Err(TopologyError::PointCloudError("Hodge ⋆ operators not available: complex was constructed without geometric data"))`.
+- [ ] 5.6 Update `src/types/point_cloud/ops/op_triangulate.rs`:
+  - Drop the eager lumped-mass loop (lines populating `hodge_ops` in the current implementation).
+  - Drop the top-volume rejection here (it moves to `lazy_hodge_star.rs`).
+  - Remove `simplex_volume`, `gaussian_determinant`, intermediate-grade primal-volumes computation.
+  - Keep `find_duplicate_points` and the duplicate-point precondition check — duplicate points are a `triangulate` precondition unrelated to Hodge ⋆.
+  - Switch the construction call from `SimplicialComplex::new(skeletons, boundary, coboundary, hodge_ops)` to `SimplicialComplex::with_geometry(skeletons, boundary, coboundary, coords, dim)`.
+  - Update the doc-comment on `PointCloud::triangulate`: it now rejects only duplicate-point and empty-input cases; the top-volume rejection moves to the Hodge ⋆ access path and is documented there.
+- [ ] 5.7 Update `src/traits/has_hodge_star.rs`: change `HasHodgeStar::hodge_star_matrix` signature from `fn hodge_star_matrix(...) -> Cow<'_, CsrMatrix<R>>` to `fn hodge_star_matrix(...) -> Result<Cow<'_, CsrMatrix<R>>, TopologyError>`.
+- [ ] 5.8 Update both `HasHodgeStar` impls: `src/types/regge_geometry/has_hodge_star.rs` propagates `?` from the new fallible accessor; `src/types/cubical_regge_geometry/has_hodge_star.rs` wraps its existing infallible computation in `Ok(...)`. No behaviour change on the cubical side.
+- [ ] 5.9 Migrate the 5 direct callers identified by `gitnexus_impact upstream`:
+  - `deep_causality_physics/src/kernels/mhd/grmhd.rs::relativistic_current_kernel`: propagate `?`.
+  - `deep_causality_physics/src/kernels/mhd/ideal.rs::ideal_induction_kernel`: propagate `?`.
+  - `deep_causality_topology/src/types/regge_geometry/has_hodge_star.rs::hodge_star_matrix`: handled by 5.7+5.8.
+  - `deep_causality_topology/tests/.../op_triangulate_tests.rs::test_point_cloud_triangulate_caps_top_grade_at_ambient_dim_for_coplanar_2d_corners`: `.unwrap()` migration; 4 unit-square corners produce non-degenerate triangles, lazy init succeeds.
+  - `deep_causality_topology/tests/.../has_hodge_star_tests.rs::trait_routed_matrix_equals_complex_cache_matrix`: `.unwrap()` migration.
+- [ ] 5.10 Audit any other indirect accessor caller in the workspace (grep for `hodge_star_operators()` and `hodge_star_matrix(`). Migrate to fallible handling.
+- [ ] 5.11 Update H1's regression tests in `op_triangulate_degeneracy_tests.rs`. The `test_triangulate_rejects_three_collinear_points_in_2d`, `test_triangulate_rejects_four_coplanar_points_in_3d`, and `test_triangulate_rejects_volume_below_threshold` tests previously asserted `triangulate` returned `Err`. After the lazy refactor, `triangulate` returns `Ok` on these inputs and the error surfaces at `complex.hodge_star_operators()` access. Rewrite the tests to call the accessor and assert `Err` there. The unified error message is unchanged.
+- [ ] 5.12 H4-G1 Compilation + workspace tests: `cargo build -p deep_causality_topology` + `-p deep_causality_physics` clean. `cargo clippy -p deep_causality_topology --all-targets -- -D warnings` clean. `cargo test -p deep_causality_topology` + `-p deep_causality_physics` pass. The medicine demo `tissue_classification` runs to completion (verify by `cargo run --release --example tissue_classification` from the `examples/medicine_examples` directory).
+- [ ] 5.13 H4-G2 Review: user reviews the lazy refactor diff before the cross-crate audit closes.
 
-- [ ] 6.1 Update `deep_causality_topology/CHANGELOG.md` with an entry under the next minor version: "Behaviour change: `PointCloud::triangulate` now rejects three previously-masked degeneracy classes (duplicate input points, zero-volume top simplex, singular Gram matrix) with discriminating `TopologyError::PointCloudError` messages. Inputs that previously produced a silently-singular complex now return `Err`. Document the precondition contract in the method's doc-comment."
-- [ ] 6.2 Update the archived `openspec/changes/archive/2026-05-22-add-hodge-decomposition/design.md` Risk 5 entry: the Vietoris-Rips silent-zero risk is now closed. Cross-reference this change set.
-- [ ] 6.3 Update `openspec/changes/add-pointcloud-delaunay-triangulation/design.md` Decision 5 to reflect that the helper signature is `Result<Vec<CsrMatrix<T>>, TopologyError>` per this change set's Decision 2. Remove any lingering "infallible" language.
-- [ ] 6.4 Update `openspec/changes/add-pointcloud-delaunay-triangulation/tasks.md` task 2.1 helper signature to match Decision 2.
-- [ ] 6.5 H5-G1 Compilation + workspace tests: `make format && make fix && make build && make test` clean.
-- [ ] 6.6 H5-G2 Final review: user reviews the full H0–H5 diff, confirms the medicine demos run, signs off, commits. This is the change-set-closing commit; after H5-G2 the change set is ready to archive.
+## 6. Block H5 — Caller audit: `deep_causality_physics` and examples
+
+The original H4 caller audit. After the H4 lazy refactor, most physics fixtures pass without source change because they were already non-degenerate by construction. The audit still runs end-to-end to confirm no fixture relied on the now-removed eager Hodge ⋆ path in `triangulate`.
+
+- [ ] 6.1 Audit `tests/kernels/condensed/*` (`create_flat_manifold` used by `test_foppl_von_karman_strain_full` and `test_wrapper_strain_full`).
+- [ ] 6.2 Audit `tests/kernels/em/*` (`create_simple_manifold` used by 9 EM kernel tests).
+- [ ] 6.3 Audit `tests/kernels/quantum/*` (`create_simple_manifold` used by 5 Klein-Gordon kernel tests).
+- [ ] 6.4 Audit `tests/kernels/thermodynamics/*` (`create_temp_manifold` used by 4 heat-diffusion kernel tests).
+- [ ] 6.5 Audit `tests/kernels/mhd/*` (`create_dummy_manifold`, `create_test_manifold` used by ideal/resistive GRMHD tests, including the explicit error tests `test_relativistic_current_kernel_low_dim_metric_error` and `test_relativistic_current_kernel_low_skeleton_error`).
+- [ ] 6.6 Audit `examples/medicine_examples/tissue_classification/main.rs::analyze_with_monad`. Expected: runs to completion post-H4 lazy refactor with no source change.
+- [ ] 6.7 Audit `examples/medicine_examples/aneurysm_risk/main.rs::build_mock_aneurysm`. Expected: runs to completion (unchanged from pre-H4).
+- [ ] 6.8 Audit `examples/mathematics_examples/topology/{complex_operators.rs, differential_field.rs}` (2 direct, both call `triangulate` in `main`).
+- [ ] 6.9 H5-G1 Compilation + workspace tests: `make build && make test` clean. Both medicine demos run to completion.
+- [ ] 6.10 H5-G2 Review: user reviews the cross-crate audit diff and runtime-validates both medicine demos before sign-off.
+
+## 7. Block H6 — Release prep + archive sync
+
+- [ ] 7.1 Update `deep_causality_topology/CHANGELOG.md` with an entry under the next minor version: "Behaviour change: `PointCloud::triangulate` now rejects duplicate-input-point cases with a discriminating `TopologyError::PointCloudError` message. Top-volume degeneracy rejection moves to the Hodge ⋆ access path (`SimplicialComplex::hodge_star_operators`, now fallible). TDA-only consumers unaffected. DEC consumers see a loud `Err` where before they got a silently-singular complex. `HasHodgeStar::hodge_star_matrix` widened to `Result`. New constructor `SimplicialComplex::with_geometry` for the lazy-construction path; existing `SimplicialComplex::new` signature unchanged."
+- [ ] 7.2 Update the archived `openspec/changes/archive/2026-05-22-add-hodge-decomposition/design.md` Risk 5 entry: the Vietoris-Rips silent-zero risk is now closed. Cross-reference this change set.
+- [ ] 7.3 Update `openspec/changes/add-pointcloud-delaunay-triangulation/design.md` Decision 5 to reflect that the helper signature is `Result<Vec<CsrMatrix<T>>, TopologyError>` per this change set's Decision 2, and that `build_lumped_mass_hodge_star` is now provided by `simplicial_complex/lazy_hodge_star.rs` (not by `op_triangulate.rs` extraction). Remove any lingering "infallible" or "extract from triangulate" language.
+- [ ] 7.4 Update `openspec/changes/add-pointcloud-delaunay-triangulation/tasks.md` task 2.1: the helper extraction is already done by this change set's task 5.1; the Delaunay change set's task 2.1 reduces to "import and call the existing `build_lumped_mass_hodge_star` from the lazy-init module via the new `with_geometry` constructor."
+- [ ] 7.5 H6-G1 Compilation + workspace tests: `make format && make fix && make build && make test` clean.
+- [ ] 7.6 H6-G2 Final review: user reviews the full H0–H6 diff, confirms both medicine demos run, signs off, commits. This is the change-set-closing commit; after H6-G2 the change set is ready to archive.
 
 ## 7. Deferred Work (not in scope for this change set)
 

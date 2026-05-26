@@ -7,7 +7,7 @@ use crate::GaugeEmOps;
 use crate::error::PhysicsError;
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::RealField;
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     BaseTopology, GaugeField, GaugeFieldWitness, Manifold, Simplex, SimplicialComplexBuilder,
@@ -17,7 +17,7 @@ use deep_causality_topology::{
 /// Blanket implementation of GaugeEmOps for GaugeField<U1, S, S> where S: Field + Float + TensorData
 impl<S> GaugeEmOps<S> for GaugeField<U1, S, S>
 where
-    S: RealField + From<f64> + Into<f64> + std::default::Default,
+    S: RealField + FromPrimitive + From<f64> + Into<f64> + std::default::Default,
 {
     fn from_fields(
         base: SimplicialManifold<S, S>,

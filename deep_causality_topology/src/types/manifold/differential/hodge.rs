@@ -41,7 +41,10 @@ where
             .metric
             .as_ref()
             .expect("Manifold::hodge_star requires a metric; construct with `with_metric(...)`");
-        let star = metric.hodge_star_matrix(&self.complex, k);
+        // Hodge ⋆ availability is validated at `Manifold::with_metric` construction.
+        let star = metric
+            .hodge_star_matrix(&self.complex, k)
+            .expect("Hodge ⋆ availability is validated at Manifold::with_metric");
 
         let k_form_data = self.get_k_form_data(k);
         let result_data = utils_differential::apply_metric_operator(star.as_ref(), &k_form_data);

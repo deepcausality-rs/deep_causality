@@ -45,9 +45,12 @@ fn trait_impl_borrows_from_complex_cache_for_every_grade() {
     // for this trait method.
     let geom = ReggeGeometry::new(CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap());
     for k in 0..=m.complex().max_simplex_dimension() {
-        let star = geom.hodge_star_matrix(m.complex(), k);
+        let star = geom.hodge_star_matrix(m.complex(), k).unwrap();
         assert!(matches!(star, Cow::Borrowed(_)));
-        assert_eq!(star.shape(), m.complex().hodge_star_operators()[k].shape());
+        assert_eq!(
+            star.shape(),
+            m.complex().hodge_star_operators().unwrap()[k].shape()
+        );
     }
 }
 
@@ -56,8 +59,8 @@ fn trait_routed_matrix_equals_complex_cache_matrix() {
     let m = triangle_complex();
     let geom = ReggeGeometry::new(CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap());
     for k in 0..=m.complex().max_simplex_dimension() {
-        let via_trait = geom.hodge_star_matrix(m.complex(), k);
-        let via_cache = &m.complex().hodge_star_operators()[k];
+        let via_trait = geom.hodge_star_matrix(m.complex(), k).unwrap();
+        let via_cache = &m.complex().hodge_star_operators().unwrap()[k];
         assert_eq!(via_trait.row_indices(), via_cache.row_indices());
         assert_eq!(via_trait.col_indices(), via_cache.col_indices());
         assert_eq!(via_trait.values(), via_cache.values());
@@ -80,6 +83,9 @@ fn manifold_hodge_star_with_metric_returns_expected_shape() {
 
     for k in 0..=m.complex().max_simplex_dimension() {
         let star = m.hodge_star(k);
-        assert_eq!(star.len(), m.complex().hodge_star_operators()[k].shape().0);
+        assert_eq!(
+            star.len(),
+            m.complex().hodge_star_operators().unwrap()[k].shape().0
+        );
     }
 }

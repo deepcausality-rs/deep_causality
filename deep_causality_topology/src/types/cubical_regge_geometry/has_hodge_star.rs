@@ -61,6 +61,7 @@
 //! - ⋆_2 entry = `1 / (a · b)` (2-cube → vertex ratio).
 
 use super::{CubicalReggeGeometry, EdgeLengths, SignatureMarker};
+use crate::TopologyError;
 use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::types::lattice_complex::LatticeComplex;
@@ -90,11 +91,11 @@ where
         &'a self,
         complex: &'a Self::Complex,
         k: usize,
-    ) -> Cow<'a, CsrMatrix<R>> {
+    ) -> Result<Cow<'a, CsrMatrix<R>>, TopologyError> {
         // Out-of-range grade: return an empty 0x0 matrix. Mirrors the simplicial
         // `Manifold::hodge_star` behaviour for k > max_dim.
         if k > D {
-            return Cow::Owned(CsrMatrix::new());
+            return Ok(Cow::Owned(CsrMatrix::new()));
         }
 
         let n = complex.num_cells(k);
@@ -213,7 +214,7 @@ where
 
         let matrix = CsrMatrix::from_triplets(n, n, &triplets)
             .expect("Diagonal triplets always satisfy CSR validity for square shape.");
-        Cow::Owned(matrix)
+        Ok(Cow::Owned(matrix))
     }
 }
 
