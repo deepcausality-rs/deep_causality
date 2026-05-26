@@ -26,7 +26,11 @@ where
 /// input coordinates. When `max_extent` is itself zero (all input points
 /// coincide), the threshold falls back to `T::epsilon()` so that any zero-
 /// distance pair is still detected.
-fn find_duplicate_points<T>(coords: &[T], num_points: usize, dim: usize) -> Option<(usize, usize)>
+pub(super) fn find_duplicate_points<T>(
+    coords: &[T],
+    num_points: usize,
+    dim: usize,
+) -> Option<(usize, usize)>
 where
     T: Float + Sum + From<f64> + PartialOrd + Copy,
 {
