@@ -51,54 +51,56 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Runs the full TDA pipeline as a monadic chain
+/// Runs the full TDA pipeline as a monadic chain.
+///
+/// Triangulation and complex construction happen outside the monadic bind so
+/// failures propagate through the function's `Result` return via `?`. Only the
+/// V/E/F → χ → diagnosis steps run inside the monad, where the
+/// `PropagatingEffect` type-system pressure discourages mid-pipeline error
+/// propagation.
 fn analyze_with_monad(label: &str, points: Vec<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("--- Analyzing {} ---", label);
 
-    let label_owned = label.to_string();
+    println!("[Step 1] Ingesting {} points...", points.len() / 3);
 
-    // Step 1: Ingest data into PointCloud
-    let step1: PropagatingEffect<(String, Vec<f64>)> =
-        PropagatingEffect::pure((label_owned, points));
+    let num_points = points.len() / 3;
+    let points_tensor = CausalTensor::new(points, vec![num_points, 3])?;
+    let metadata = CausalTensor::new(vec![1.0; num_points], vec![num_points])?;
+    let pc = PointCloud::new(points_tensor, metadata, 0)?;
 
-    // Step 2: Create PointCloud and triangulate
-    let step2 = step1.bind(|effect_value, _, _| {
-        let (label, points) = effect_value.into_value().unwrap_or_default();
+    println!("[Step 2] Triangulating with radius=0.6...");
+    // Triangulate is a TDA-only call here; the returned complex's Hodge ⋆ is
+    // lazily populated and never accessed by this demo, so geometrically-
+    // degenerate top simplices in the dense cluster do not trigger an error.
+    // Only duplicate input points or empty input would fail at this point.
+    let complex = pc.triangulate(0.6)?;
 
-        println!("[Step 1] Ingesting {} points...", points.len() / 3);
+    let v = complex.num_elements_at_grade(0).unwrap_or(0);
+    let e = complex.num_elements_at_grade(1).unwrap_or(0);
+    let f = complex.num_elements_at_grade(2).unwrap_or(0);
 
-        let num_points = points.len() / 3;
-        let points_tensor = CausalTensor::new(points, vec![num_points, 3]).expect("Tensor failed");
-        let metadata = CausalTensor::new(vec![1.0; num_points], vec![num_points]).unwrap();
-        let pc = PointCloud::new(points_tensor, metadata, 0).expect("PointCloud failed");
+    println!("         Vertices: {}, Edges: {}, Faces: {}", v, e, f);
 
-        println!("[Step 2] Triangulating with radius=0.6...");
-        let complex = pc.triangulate(0.6).expect("Triangulation failed");
-
-        let v = complex.num_elements_at_grade(0).unwrap_or(0);
-        let e = complex.num_elements_at_grade(1).unwrap_or(0);
-        let f = complex.num_elements_at_grade(2).unwrap_or(0);
-
-        println!("         Vertices: {}, Edges: {}, Faces: {}", v, e, f);
-
-        // Compute Euler Characteristic: χ = V - E + F
-        println!("[Step 3] Computing Euler Characteristic...");
-
-        let mut chi: isize = 0;
-        let dim = complex.dimension();
-        for d in 0..=dim {
-            if let Some(count) = complex.num_elements_at_grade(d) {
-                chi += if d % 2 == 0 {
-                    count as isize
-                } else {
-                    -(count as isize)
-                };
-            }
+    println!("[Step 3] Computing Euler Characteristic...");
+    let mut chi: isize = 0;
+    let dim = complex.dimension();
+    for d in 0..=dim {
+        if let Some(count) = complex.num_elements_at_grade(d) {
+            chi += if d % 2 == 0 {
+                count as isize
+            } else {
+                -(count as isize)
+            };
         }
-        println!("         χ = {}", chi);
+    }
+    println!("         χ = {}", chi);
 
-        PropagatingEffect::pure((label, v, e, f, chi))
-    });
+    // Monadic stage: thread the topology summary through `PropagatingEffect`
+    // for the diagnosis step. This is the part of the pipeline that exists to
+    // illustrate the monadic style — keeping it small and downstream of the
+    // fallible operations keeps the example honest about what `bind` is for.
+    let step2: PropagatingEffect<(String, usize, usize, usize, isize)> =
+        PropagatingEffect::pure((label.to_string(), v, e, f, chi));
 
     // Step 3: Diagnose based on topology
     let result = step2.bind(|effect_value, _, _| {

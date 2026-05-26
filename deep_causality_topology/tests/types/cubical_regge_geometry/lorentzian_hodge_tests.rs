@@ -31,14 +31,14 @@ fn lorentzian_2d_with_axis_0_timelike_negates_axis_0_edges_and_positive_2cells()
         .with_timelike_axes([true, false])
         .unwrap();
 
-    let e_star_0 = euclidean.hodge_star_matrix(&lattice, 0);
-    let l_star_0 = lorentzian.hodge_star_matrix(&lattice, 0);
+    let e_star_0 = euclidean.hodge_star_matrix(&lattice, 0).unwrap();
+    let l_star_0 = lorentzian.hodge_star_matrix(&lattice, 0).unwrap();
     for (a, b) in e_star_0.values().iter().zip(l_star_0.values().iter()) {
         assert!((a - b).abs() < TOL, "⋆_0 must match (both +1): {a} vs {b}");
     }
 
-    let e_star_1 = euclidean.hodge_star_matrix(&lattice, 1);
-    let l_star_1 = lorentzian.hodge_star_matrix(&lattice, 1);
+    let e_star_1 = euclidean.hodge_star_matrix(&lattice, 1).unwrap();
+    let l_star_1 = lorentzian.hodge_star_matrix(&lattice, 1).unwrap();
     for (i, cell) in lattice.cells(1).enumerate() {
         let expected_sign = match cell.orientation() {
             0b01 => -1.0,
@@ -52,8 +52,8 @@ fn lorentzian_2d_with_axis_0_timelike_negates_axis_0_edges_and_positive_2cells()
         );
     }
 
-    let e_star_2 = euclidean.hodge_star_matrix(&lattice, 2);
-    let l_star_2 = lorentzian.hodge_star_matrix(&lattice, 2);
+    let e_star_2 = euclidean.hodge_star_matrix(&lattice, 2).unwrap();
+    let l_star_2 = lorentzian.hodge_star_matrix(&lattice, 2).unwrap();
     for (a, b) in e_star_2.values().iter().zip(l_star_2.values().iter()) {
         assert!(
             (b - (-a)).abs() < TOL,
@@ -84,8 +84,8 @@ fn lorentzian_with_axis_d_minus_1_timelike_matches_minkowski_convention_3d() {
         (3, |_| -1.0_f64),
     ];
     for (k, expected_fn) in cases {
-        let e = euclidean.hodge_star_matrix(&lattice, k);
-        let l = lorentzian.hodge_star_matrix(&lattice, k);
+        let e = euclidean.hodge_star_matrix(&lattice, k).unwrap();
+        let l = lorentzian.hodge_star_matrix(&lattice, k).unwrap();
         for (i, cell) in lattice.cells(k).enumerate() {
             let expected = expected_fn(cell.orientation()) * e.values()[i];
             assert!(
@@ -107,7 +107,7 @@ fn lorentzian_hodge_on_open_lattice_handles_boundary_without_panicking() {
         .with_timelike_axes([true, false])
         .unwrap();
     for k in 0..=2 {
-        let star = lor.hodge_star_matrix(&lattice, k);
+        let star = lor.hodge_star_matrix(&lattice, k).unwrap();
         for v in star.values() {
             assert!(v.is_finite() && !v.is_nan());
         }

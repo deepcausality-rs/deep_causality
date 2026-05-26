@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::TopologyError;
 use crate::traits::chain_complex::ChainComplex;
 use deep_causality_num::RealField;
 use deep_causality_sparse::CsrMatrix;
@@ -50,9 +51,16 @@ pub trait HasHodgeStar<R: RealField> {
     ///
     /// Cache-rich implementors return `Cow::Borrowed` (zero copy). Compute-on-demand
     /// implementors return `Cow::Owned`.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(TopologyError::PointCloudError(_))` when the underlying
+    /// complex has degenerate geometry (zero-volume top simplex on the
+    /// simplicial backend). The cubical backend's computation never fails for
+    /// well-formed cell volumes and always returns `Ok`.
     fn hodge_star_matrix<'a>(
         &'a self,
         complex: &'a Self::Complex,
         k: usize,
-    ) -> Cow<'a, CsrMatrix<R>>;
+    ) -> Result<Cow<'a, CsrMatrix<R>>, TopologyError>;
 }

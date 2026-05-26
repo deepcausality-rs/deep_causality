@@ -4,3 +4,4 @@
  */
 // Operations
 mod op_triangulate;
+mod op_triangulate_delaunay;

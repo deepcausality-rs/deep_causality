@@ -83,7 +83,7 @@ All three are checked at the top of the method; the Bowyer-Watson core runs only
 
 ### Decision 5: Hodge ⋆ operator computation
 
-The existing Vietoris-Rips `triangulate` builds lumped-mass Hodge ⋆ operators inline. Extract that logic into a private helper function `pub(super) fn build_lumped_mass_hodge_ops<T>(skeletons: &[Skeleton], ambient_dim: usize, coords: &[T]) -> Vec<CsrMatrix<T>>` and call it from both `triangulate` and `triangulate_delaunay`. This is a strictly additive refactor; no public behaviour changes.
+**Updated (post-`harden-simplicial-hodge-degeneracy-detection`):** the helper extraction is already done. `harden-simplicial-hodge-degeneracy-detection` task 5.1 created `deep_causality_topology/src/types/simplicial_complex/lazy_hodge_star.rs` containing `pub(crate) fn build_lumped_mass_hodge_star<T>(skeletons: &[Skeleton], coords: &[T], dim: usize) -> Result<Vec<CsrMatrix<T>>, TopologyError>` with `T: RealField + FromPrimitive`. The helper is fallible (zero-volume top simplex returns the unified `"top-dimensional simplex below tolerance"` error). The `triangulate_delaunay` constructor calls `SimplicialComplex::with_geometry(...)`, which stores coordinates and triggers the helper lazily on first read of `complex.hodge_star_operators()`. No further helper extraction is needed in this change set.
 
 Why extract:
 
@@ -134,6 +134,6 @@ This change set is purely additive on the public API:
 
 ## Open Questions
 
-1. **Should `triangulate_delaunay` accept a configurable cocircular-tolerance parameter, or is the `T::epsilon() * 100` hard-coded default adequate?** Probably the hard-coded default suffices for the test fixture; if a downstream consumer needs to tune it, an `_opts` variant lands then. Decide at implementation kickoff.
+1. ~~**Should `triangulate_delaunay` accept a configurable cocircular-tolerance parameter, or is the `T::epsilon() * 100` hard-coded default adequate?**~~ **Resolved at D0-1.3 (2026-05-26): hard-code `T::epsilon() * 100`.** Matches the workspace convention established by `harden-simplicial-hodge-degeneracy-detection` Decision 5 (every near-zero comparison uses the same scaling). The motivating use case (`spec.md` 4.4 unit square cocircular on the unit circle) has margin orders-of-magnitude greater than the threshold on `f64`. Adding `triangulate_delaunay_opts { cocircular_tol: T }` doubles the public API surface for a knob no current consumer needs; defer until one asks. If precision becomes a real concern, the followup is the adaptive-precision predicate (Shewchuk's exact arithmetic) which subsumes the tolerance knob entirely.
 2. **Should the new method also produce the dual Voronoi diagram?** Voronoi-Delaunay duality is one of the cleanest mathematical structures in computational geometry, and the dual is needed for some advanced DEC schemes (circumcentric duals). For this change set: no. Voronoi is an out-of-scope future change set.
 3. **Should we ship a `triangulate_delaunay_random_insertion` variant for `O(n log n)` average behaviour?** Probably not until a downstream consumer hits the quadratic worst case. Decide at H3 follow-up review.

@@ -130,7 +130,7 @@ fn test_point_cloud_triangulate_caps_top_grade_at_ambient_dim_for_coplanar_2d_co
     // = sum of incident 2-simplex areas / 3). Each vertex touches at least one
     // triangle, so the M_0 values vector must be non-empty and at least one
     // value must be strictly positive.
-    let star_0 = &complex.hodge_star_operators()[0];
+    let star_0 = &complex.hodge_star_operators().unwrap()[0];
     assert!(
         !star_0.values().is_empty(),
         "M_0 must have entries after the ambient-dim cap"
@@ -145,11 +145,16 @@ fn test_point_cloud_triangulate_caps_top_grade_at_ambient_dim_for_coplanar_2d_co
 
 #[test]
 fn test_point_cloud_triangulate_caps_top_grade_at_ambient_dim_for_5_coplanar_2d_points() {
-    // Five coplanar points in 2D ambient with sufficient radius to form
-    // many higher-clique cliques. Without the cap, clique expansion would
-    // push max_dim to 4 (a flat 4-simplex). With the cap, max_dim is 2.
+    // Five generic-position 2D points with sufficient radius to form many
+    // higher-arity cliques. Without the cap, clique expansion would push
+    // max_dim to 4 (a flat 4-simplex). With the cap, max_dim is 2.
+    //
+    // The interior point at (0.5, 0.4) is deliberately off the (0,0)-(1,1)
+    // diagonal, so no induced 3-clique forms a collinear triangle. Every
+    // 2-simplex the cap admits has strictly positive area, keeping the
+    // triangulator's top-volume rejection inactive on this fixture.
     let points = CausalTensor::new(
-        vec![0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.5, 0.5],
+        vec![0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.5, 0.4],
         vec![5, 2],
     )
     .unwrap();

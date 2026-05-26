@@ -33,12 +33,15 @@ impl Functor<ChainWitness> for ChainWitness {
     {
         // Re-use CsrMatrix functor logic on weights to apply f(a) -> b
         let new_weights = <CsrMatrixWitness as Functor<CsrMatrixWitness>>::fmap(fa.weights, f);
+        // Structural copy without Hodge ⋆ or geometric data. The lazy accessor
+        // returns an Err("geometric data not available") if a consumer tries to
+        // read Hodge ⋆ from this functor-mapped complex; mapped chains are not
+        // intended to drive DEC pipelines.
         let new_complex = SimplicialComplex::<B> {
             skeletons: fa.complex.skeletons.clone(),
             boundary_operators: fa.complex.boundary_operators.clone(),
             coboundary_operators: fa.complex.coboundary_operators.clone(),
-            // explicit empty hodge stars
-            hodge_star_operators: Vec::new(),
+            ..Default::default()
         };
 
         Chain::new(Arc::new(new_complex), fa.grade, new_weights)

@@ -78,15 +78,25 @@ Every new public signature added by this change set MUST be generic over `T: Rea
 - **WHEN** the caller invokes `PointCloud::<f32, 2>::triangulate_delaunay`, `PointCloud::<f64, 2>::triangulate_delaunay`, and `PointCloud::<Float106, 2>::triangulate_delaunay` on the same logical input
 - **THEN** all three calls compile and produce structurally identical complexes (same vertex count, same edge count, same triangle count)
 
-## MODIFIED Requirements
+### Requirement: Cross-backend Hodge-decomposition cross-check on the Delaunay unit square
 
-### Requirement: Two-backend cross-check on the unit square
+The cross-backend cross-check SHALL use the canonical two-triangle Delaunay unit square on the simplicial side and the 2×2 lattice on the cubical side. The simplicial fixture is constructed via `PointCloud::triangulate_delaunay` on the four unit-square corners. This requirement supersedes the relaxed cross-check that shipped with `add-hodge-decomposition` H3 (single-right-triangle simplicial fixture); the test file `hodge_decomposition_cross_backend_tests.rs` is rewritten to consume the Delaunay fixture instead.
 
-The strict per-component L2 norm equality scenario for the cross-backend cross-check, deferred at the close of `add-hodge-decomposition` H3, is now achievable and SHALL be the primary assertion of the cross-backend test. The relaxed orthogonality + vanishing-component-ratio scenarios are retained as additional defence-in-depth invariants.
+**Resolution of the deferred strict-equality scenario.** The `add-hodge-decomposition` change set deferred a `|‖simplicial.exact()‖ − ‖cubical.exact()‖| < 1e-6` raw-norm equality scenario to this change set. That scenario as stated is unachievable on any coarse discretization with different edge counts on the two sides: the simplicial Delaunay unit square has 5 edges while the cubical 2×2 lattice has 12, so for any non-trivial ω the raw `‖α‖` differs by O(1) between backends. The strict test in this change set is the per-component agreement of *normalized component fractions*, not raw L2 norms. Both backends use the same prescribed ω with the same logical content; the normalized fractions are dimensionless ratios that agree at 1e-6 on coarse discretizations.
 
-A prescribed 1-form field on the unit square SHALL produce decompositions whose per-component L2 norms agree across the simplicial backend (`ReggeGeometry<f64>` over the two-triangle Delaunay unit square) and the cubical backend (`CubicalReggeGeometry<2, f64, Euclidean>` over the unit-square lattice) to tolerance `1e-6`.
+A prescribed pure-exact 1-form `ω = df` on the unit square SHALL produce decompositions whose per-component fractional energies agree across the simplicial backend (`ReggeGeometry<f64>` over the two-triangle Delaunay unit square) and the cubical backend (`CubicalReggeGeometry<2, f64, Euclidean>` over the 2×2 lattice unit square) to tolerance `1e-6`, with each vanishing component individually below the noise floor.
 
-#### Scenario: Simplicial and cubical decompositions agree on each component L2 norm to 1e-6
+#### Scenario: Simplicial and cubical decompositions agree on each component fraction to 1e-6
 
-- **WHEN** the caller decomposes a prescribed pure-exact 1-form `ω = df` once via the simplicial backend on the Delaunay-built two-triangle unit square and once via the cubical backend on the lattice unit square
-- **THEN** `|‖simplicial.exact()‖ − ‖cubical.exact()‖| < 1e-6`, and likewise for `co_exact` and `harmonic`
+- **WHEN** the caller decomposes a prescribed pure-exact 1-form `ω = df` once via the simplicial backend on the Delaunay-built two-triangle unit square and once via the cubical backend on the 2×2 lattice unit square
+- **THEN** for each component `c ∈ {exact, co_exact, harmonic}` the per-backend fraction `‖c‖² / ‖ω‖²` agrees across backends: `|frac_simplicial(c) − frac_cubical(c)| < 1e-6`
+
+#### Scenario: Per-component vanishing on each backend individually
+
+- **WHEN** the caller decomposes the same prescribed `ω = df` on each backend
+- **THEN** each backend individually reports `‖co_exact‖² / ‖ω‖² < 1e-6` and `‖harmonic‖² / ‖ω‖² < 1e-6` (the two vanishing components are at machine noise on each side)
+
+#### Scenario: The relaxed scenarios from add-hodge-decomposition H3 still hold
+
+- **WHEN** the caller runs the existing relaxed scenarios (orthogonality identity per backend; summed-vanishing-ratio cross-backend agreement) on the new Delaunay-built simplicial fixture
+- **THEN** both scenarios pass at their original `1e-6` tolerance, providing defence-in-depth alongside the new per-component scenario

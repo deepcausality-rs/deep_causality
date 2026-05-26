@@ -68,7 +68,7 @@ fn unit_edge_hodge_star_is_identity_on_2d_open_lattice() {
     let lattice = open_square_3();
     let geom = unit_geometry::<2>();
     for k in 0..=2 {
-        let star = geom.hodge_star_matrix(&lattice, k);
+        let star = geom.hodge_star_matrix(&lattice, k).unwrap();
         let n = lattice.num_cells(k);
         assert_diagonal(star.as_ref(), n);
         for v in star.values() {
@@ -82,7 +82,7 @@ fn unit_edge_hodge_star_is_identity_on_2d_periodic_lattice() {
     let lattice = periodic_square_3();
     let geom = unit_geometry::<2>();
     for k in 0..=2 {
-        let star = geom.hodge_star_matrix(&lattice, k);
+        let star = geom.hodge_star_matrix(&lattice, k).unwrap();
         for v in star.values() {
             assert!((*v - 1.0).abs() < TOL);
         }
@@ -94,7 +94,7 @@ fn unit_edge_hodge_star_is_identity_on_3d_open_lattice() {
     let lattice = open_cube_3();
     let geom = unit_geometry::<3>();
     for k in 0..=3 {
-        let star = geom.hodge_star_matrix(&lattice, k);
+        let star = geom.hodge_star_matrix(&lattice, k).unwrap();
         for v in star.values() {
             assert!((*v - 1.0).abs() < TOL);
         }
@@ -106,7 +106,7 @@ fn unit_edge_hodge_star_is_identity_on_3d_periodic_lattice() {
     let lattice = periodic_cube_3();
     let geom = unit_geometry::<3>();
     for k in 0..=3 {
-        let star = geom.hodge_star_matrix(&lattice, k);
+        let star = geom.hodge_star_matrix(&lattice, k).unwrap();
         for v in star.values() {
             assert!((*v - 1.0).abs() < TOL);
         }
@@ -117,7 +117,7 @@ fn unit_edge_hodge_star_is_identity_on_3d_periodic_lattice() {
 fn unit_edge_hodge_star_returns_owned_cow() {
     let lattice = open_square_3();
     let geom = unit_geometry::<2>();
-    let star = geom.hodge_star_matrix(&lattice, 0);
+    let star = geom.hodge_star_matrix(&lattice, 0).unwrap();
     assert!(matches!(star, Cow::Owned(_)));
 }
 
@@ -129,7 +129,7 @@ fn uniform_hodge_star_is_length_to_the_d_minus_2k_at_every_cell_2d() {
     let geom: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::uniform(2.0);
     // D = 2: exponents are D - 2k for k = 0, 1, 2 → 2, 0, -2.
     for (k, expected) in [(0usize, 4.0), (1, 1.0), (2, 0.25)] {
-        let star = geom.hodge_star_matrix(&lattice, k);
+        let star = geom.hodge_star_matrix(&lattice, k).unwrap();
         for v in star.values() {
             assert!(
                 (*v - expected).abs() < TOL,
@@ -145,7 +145,7 @@ fn uniform_hodge_star_is_length_to_the_d_minus_2k_at_every_cell_3d() {
     let geom: CubicalReggeGeometry<3, f64> = CubicalReggeGeometry::uniform(2.0);
     // D = 3: exponents are 3, 1, -1, -3 → 8, 2, 0.5, 0.125.
     for (k, expected) in [(0usize, 8.0), (1, 2.0), (2, 0.5), (3, 0.125)] {
-        let star = geom.hodge_star_matrix(&lattice, k);
+        let star = geom.hodge_star_matrix(&lattice, k).unwrap();
         for v in star.values() {
             assert!(
                 (*v - expected).abs() < TOL,
@@ -169,13 +169,13 @@ fn per_axis_hodge_star_2d_matches_closed_form_a_b() {
     let geom = per_axis_geometry::<2>([a, b]);
 
     // ⋆_0
-    let star0 = geom.hodge_star_matrix(&lattice, 0);
+    let star0 = geom.hodge_star_matrix(&lattice, 0).unwrap();
     for v in star0.values() {
         assert!((*v - a * b).abs() < TOL);
     }
 
     // ⋆_1 — per-edge: axis-0 (orientation 0b01) gives b/a; axis-1 (0b10) gives a/b.
-    let star1 = geom.hodge_star_matrix(&lattice, 1);
+    let star1 = geom.hodge_star_matrix(&lattice, 1).unwrap();
     let values = star1.values();
     for (i, cell) in lattice.cells(1).enumerate() {
         let expected = match cell.orientation() {
@@ -192,7 +192,7 @@ fn per_axis_hodge_star_2d_matches_closed_form_a_b() {
     }
 
     // ⋆_2
-    let star2 = geom.hodge_star_matrix(&lattice, 2);
+    let star2 = geom.hodge_star_matrix(&lattice, 2).unwrap();
     for v in star2.values() {
         assert!((*v - 1.0 / (a * b)).abs() < TOL);
     }
@@ -207,8 +207,8 @@ fn per_axis_degenerates_to_uniform_when_all_axes_equal() {
     let per_axis = per_axis_geometry::<2>([length, length]);
     let uniform: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::uniform(length);
     for k in 0..=2 {
-        let a = per_axis.hodge_star_matrix(&lattice, k);
-        let b = uniform.hodge_star_matrix(&lattice, k);
+        let a = per_axis.hodge_star_matrix(&lattice, k).unwrap();
+        let b = uniform.hodge_star_matrix(&lattice, k).unwrap();
         assert_eq!(a.values().len(), b.values().len());
         for (va, vb) in a.values().iter().zip(b.values().iter()) {
             assert!((*va - *vb).abs() < TOL);
@@ -229,12 +229,12 @@ fn per_axis_3d_diagonal_entries_match_closed_form() {
     let lattice = open_cube_3();
     let geom = per_axis_geometry::<3>([a, b, c]);
 
-    let star0 = geom.hodge_star_matrix(&lattice, 0);
+    let star0 = geom.hodge_star_matrix(&lattice, 0).unwrap();
     for v in star0.values() {
         assert!((*v - a * b * c).abs() < TOL);
     }
 
-    let star1 = geom.hodge_star_matrix(&lattice, 1);
+    let star1 = geom.hodge_star_matrix(&lattice, 1).unwrap();
     for (i, cell) in lattice.cells(1).enumerate() {
         let expected = match cell.orientation() {
             0b001 => (b * c) / a,
@@ -245,7 +245,7 @@ fn per_axis_3d_diagonal_entries_match_closed_form() {
         assert!((star1.values()[i] - expected).abs() < TOL);
     }
 
-    let star2 = geom.hodge_star_matrix(&lattice, 2);
+    let star2 = geom.hodge_star_matrix(&lattice, 2).unwrap();
     for (i, cell) in lattice.cells(2).enumerate() {
         let expected = match cell.orientation() {
             0b011 => c / (a * b),
@@ -256,7 +256,7 @@ fn per_axis_3d_diagonal_entries_match_closed_form() {
         assert!((star2.values()[i] - expected).abs() < TOL);
     }
 
-    let star3 = geom.hodge_star_matrix(&lattice, 3);
+    let star3 = geom.hodge_star_matrix(&lattice, 3).unwrap();
     for v in star3.values() {
         assert!((*v - 1.0 / (a * b * c)).abs() < TOL);
     }
@@ -268,7 +268,7 @@ fn per_axis_3d_diagonal_entries_match_closed_form() {
 fn hodge_star_for_k_greater_than_dimension_is_empty_matrix() {
     let lattice = open_square_3();
     let geom = unit_geometry::<2>();
-    let star = geom.hodge_star_matrix(&lattice, 5);
+    let star = geom.hodge_star_matrix(&lattice, 5).unwrap();
     assert_eq!(star.shape(), (0, 0));
     assert!(star.values().is_empty());
 }
@@ -287,8 +287,8 @@ fn per_edge_with_uniform_lengths_matches_uniform_on_periodic_lattice() {
     let per_edge = per_edge_uniform_per_axis::<3>(&lattice, [length; 3]);
     let uniform: CubicalReggeGeometry<3, f64> = CubicalReggeGeometry::uniform(length);
     for k in 0..=3 {
-        let a = per_edge.hodge_star_matrix(&lattice, k);
-        let b = uniform.hodge_star_matrix(&lattice, k);
+        let a = per_edge.hodge_star_matrix(&lattice, k).unwrap();
+        let b = uniform.hodge_star_matrix(&lattice, k).unwrap();
         assert_eq!(a.values().len(), b.values().len(), "k = {k}");
         for (va, vb) in a.values().iter().zip(b.values().iter()) {
             assert!(
@@ -308,8 +308,8 @@ fn per_edge_with_uniform_per_axis_lengths_matches_per_axis_on_periodic_lattice()
     let per_edge = per_edge_uniform_per_axis::<3>(&lattice, lengths);
     let per_axis = per_axis_geometry::<3>(lengths);
     for k in 0..=3 {
-        let a = per_edge.hodge_star_matrix(&lattice, k);
-        let b = per_axis.hodge_star_matrix(&lattice, k);
+        let a = per_edge.hodge_star_matrix(&lattice, k).unwrap();
+        let b = per_axis.hodge_star_matrix(&lattice, k).unwrap();
         assert_eq!(a.values().len(), b.values().len(), "k = {k}");
         for (va, vb) in a.values().iter().zip(b.values().iter()) {
             assert!(
@@ -328,7 +328,7 @@ fn per_edge_2d_uniform_matches_closed_form_on_periodic_lattice() {
     let lattice = periodic_square_3();
     let geom = per_edge_uniform_per_axis::<2>(&lattice, [a, b]);
 
-    let star0 = geom.hodge_star_matrix(&lattice, 0);
+    let star0 = geom.hodge_star_matrix(&lattice, 0).unwrap();
     for v in star0.values() {
         assert!(
             (*v - a * b).abs() < TOL,
@@ -337,7 +337,7 @@ fn per_edge_2d_uniform_matches_closed_form_on_periodic_lattice() {
         );
     }
 
-    let star1 = geom.hodge_star_matrix(&lattice, 1);
+    let star1 = geom.hodge_star_matrix(&lattice, 1).unwrap();
     for (i, cell) in lattice.cells(1).enumerate() {
         let expected = match cell.orientation() {
             0b01 => b / a,
@@ -352,7 +352,7 @@ fn per_edge_2d_uniform_matches_closed_form_on_periodic_lattice() {
         );
     }
 
-    let star2 = geom.hodge_star_matrix(&lattice, 2);
+    let star2 = geom.hodge_star_matrix(&lattice, 2).unwrap();
     for v in star2.values() {
         assert!((*v - 1.0 / (a * b)).abs() < TOL);
     }
@@ -366,7 +366,7 @@ fn per_edge_open_lattice_handles_boundary_without_panicking() {
     let lattice = open_cube_3();
     let geom = per_edge_uniform_per_axis::<3>(&lattice, [1.0, 1.0, 1.0]);
     for k in 0..=3 {
-        let star = geom.hodge_star_matrix(&lattice, k);
+        let star = geom.hodge_star_matrix(&lattice, k).unwrap();
         for v in star.values() {
             assert!(
                 v.is_finite() && !v.is_nan(),
@@ -381,7 +381,7 @@ fn per_edge_open_lattice_handles_boundary_without_panicking() {
 fn per_edge_returns_owned_cow() {
     let lattice = periodic_cube_3();
     let geom = per_edge_uniform_per_axis::<3>(&lattice, [1.0, 1.0, 1.0]);
-    let star = geom.hodge_star_matrix(&lattice, 1);
+    let star = geom.hodge_star_matrix(&lattice, 1).unwrap();
     assert!(matches!(star, Cow::Owned(_)));
 }
 
@@ -399,8 +399,8 @@ fn per_edge_diagonal_entries_change_when_individual_edges_change() {
     let geom_a: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::from_edge_lengths(lens_a);
     let geom_b: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::from_edge_lengths(lens_b);
 
-    let star_a = geom_a.hodge_star_matrix(&lattice, 0);
-    let star_b = geom_b.hodge_star_matrix(&lattice, 0);
+    let star_a = geom_a.hodge_star_matrix(&lattice, 0).unwrap();
+    let star_b = geom_b.hodge_star_matrix(&lattice, 0).unwrap();
     let differs = star_a
         .values()
         .iter()

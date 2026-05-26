@@ -147,13 +147,17 @@ where
 
     // 3. Compute Hodge Star of B (star_b)
     // star_b: 2-form -> 1-form (in 3D)
-    // Using hodge_star_operators[2]
-    if complex.hodge_star_operators().len() <= 2 {
+    // Using hodge_star_operators[2]. The accessor is fallible.
+    // degenerate input geometry surfaces throgh the error type.
+    let hodge_ops = complex
+        .hodge_star_operators()
+        .map_err(|e| PhysicsError::CalculationError(format!("Hodge ⋆ unavailable: {}", e)))?;
+    if hodge_ops.len() <= 2 {
         return Err(PhysicsError::CalculationError(
             "Hodge star operator for 2-forms not available".into(),
         ));
     }
-    let h_star_2 = &complex.hodge_star_operators()[2];
+    let h_star_2 = &hodge_ops[2];
     let star_b_data = apply_csr_real(h_star_2, b_slice);
 
     // 4. Compute Wedge Product: v ^ star_b

@@ -9,7 +9,6 @@ use std::collections::BTreeSet;
 use deep_causality_num::{Float, Zero};
 use std::iter::Sum;
 
-// Helper function to calculate Euclidean distance between two points
 fn euclidean_distance<T>(p1: &[T], p2: &[T]) -> T
 where
     T: Float + Sum,
@@ -21,97 +20,108 @@ where
         .sqrt()
 }
 
-/// Computes the Volume (Hypervolume) of a simplex using the Cayley-Menger Determinant.
-/// This is coordinate-system invariant and works for any dimension.
-fn simplex_volume<T>(simplex: &Simplex, points: &[T], dim: usize) -> T
+/// Returns the first duplicate-input-point pair, or `None` if every pair of
+/// distinct indices has Euclidean distance at least `T::epsilon() * max_extent`,
+/// where `max_extent` is the largest axis-aligned bounding-box extent of the
+/// input coordinates. When `max_extent` is itself zero (all input points
+/// coincide), the threshold falls back to `T::epsilon()` so that any zero-
+/// distance pair is still detected.
+pub(super) fn find_duplicate_points<T>(
+    coords: &[T],
+    num_points: usize,
+    dim: usize,
+) -> Option<(usize, usize)>
 where
-    T: Float + Sum + From<f64>,
+    T: Float + Sum + From<f64> + PartialOrd + Copy,
 {
-    let k = simplex.vertices.len(); // k+1 vertices -> k-simplex
-    if k == 0 {
-        return T::zero();
-    } // Empty
-    if k == 1 {
-        return <T as From<f64>>::from(1.0);
-    } // 0-simplex (Point) has volume 1.0 by convention in DEC weights
-
-    // 1-simplex (Edge)
-    if k == 2 {
-        let p1 = &points[simplex.vertices[0] * dim..(simplex.vertices[0] + 1) * dim];
-        let p2 = &points[simplex.vertices[1] * dim..(simplex.vertices[1] + 1) * dim];
-        return euclidean_distance(p1, p2);
+    if num_points < 2 {
+        return None;
     }
 
-    // k-simplex (Triangle, Tet, etc.)
-    // V = sqrt(det(Gram)) / k!
-    let v0 = &points[simplex.vertices[0] * dim..(simplex.vertices[0] + 1) * dim];
-    // Construct vectors relative to v0
-    let mut vectors = Vec::new();
-    for i in 1..k {
-        let vi = &points[simplex.vertices[i] * dim..(simplex.vertices[i] + 1) * dim];
-        let vec_i: Vec<T> = vi.iter().zip(v0.iter()).map(|(&a, &b)| a - b).collect();
-        vectors.push(vec_i);
-    }
-
-    // Gram Matrix G_ij = v_i . v_j
-    // Flattened for simple determinant calc
-    let mut matrix_data = Vec::new();
-    let n_vecs = k - 1;
-
-    for i in 0..n_vecs {
-        for j in 0..n_vecs {
-            let dot: T = vectors[i]
-                .iter()
-                .zip(vectors[j].iter())
-                .map(|(&a, &b)| a * b)
-                .sum();
-            matrix_data.push(dot);
+    let mut max_extent = T::zero();
+    for axis in 0..dim {
+        let mut lo = coords[axis];
+        let mut hi = coords[axis];
+        for i in 1..num_points {
+            let v = coords[i * dim + axis];
+            if v < lo {
+                lo = v;
+            }
+            if v > hi {
+                hi = v;
+            }
+        }
+        let span = hi - lo;
+        if span > max_extent {
+            max_extent = span;
         }
     }
 
-    // Determinant (Simplified Gaussian Elimination for N dimensions)
-    let det = gaussian_determinant(&mut matrix_data, n_vecs);
+    let threshold = if max_extent > T::zero() {
+        T::epsilon() * max_extent
+    } else {
+        T::epsilon()
+    };
 
-    if det <= T::zero() {
-        return T::zero();
-    }
-
-    let mut factorial = 1.0;
-    for i in 1..=n_vecs {
-        factorial *= i as f64;
-    }
-
-    det.sqrt() / <T as From<f64>>::from(factorial)
-}
-
-// Simple in-place determinant for variable size
-fn gaussian_determinant<T>(mat: &mut [T], n: usize) -> T
-where
-    T: Float + From<f64>,
-{
-    let mut det = T::one();
-    for i in 0..n {
-        let pivot = i * n + i;
-        if mat[pivot].abs() < <T as From<f64>>::from(1e-12) {
-            return T::zero();
-        }
-        det = det * mat[pivot];
-
-        for j in (i + 1)..n {
-            let factor = mat[j * n + i] / mat[pivot];
-            for k in i..n {
-                let val = mat[i * n + k]; // Copy to avoid borrow issues if needed, T is Copy
-                mat[j * n + k] = mat[j * n + k] - factor * val;
+    for i in 0..num_points {
+        for j in (i + 1)..num_points {
+            let p1 = &coords[i * dim..(i + 1) * dim];
+            let p2 = &coords[j * dim..(j + 1) * dim];
+            if euclidean_distance(p1, p2) < threshold {
+                return Some((i, j));
             }
         }
     }
-    det
+    None
 }
 
 impl<T, D> PointCloud<T, D>
 where
     T: Float + Sum + From<f64> + Zero + PartialOrd + Copy,
 {
+    /// Builds a Vietoris-Rips simplicial complex from the point cloud at the
+    /// given connectivity radius. Two vertices form an edge iff their Euclidean
+    /// distance is at most `radius`; higher simplices are built by clique
+    /// expansion, capped at the ambient dimension.
+    ///
+    /// The returned `SimplicialComplex<T>` carries the input coordinates as
+    /// geometric data for lazy Hodge ⋆ population. The Hodge ⋆ vector is not
+    /// built here; the first call to
+    /// [`SimplicialComplex::hodge_star_operators`] performs the lumped-mass
+    /// build. Topological consumers (clique-complex, Euler characteristic,
+    /// persistent homology) that never access the Hodge ⋆ surface succeed on
+    /// any input geometry, including geometrically-degenerate clique complexes
+    /// where the top-dimensional simplices have zero volume. The H1 top-volume
+    /// degeneracy rejection surfaces only at the Hodge ⋆ access point.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(TopologyError::PointCloudError(_))` in two cases:
+    ///
+    /// 1. **Empty input.** The point cloud contains no points.
+    /// 2. **Duplicate input points.** A pair of input points has Euclidean
+    ///    distance below `T::epsilon() * max_extent`, where `max_extent` is the
+    ///    largest axis-aligned bounding-box extent. The error message contains
+    ///    the substring `"duplicate point"` and references both offending
+    ///    indices. Callers must deduplicate input geometry upstream.
+    ///
+    /// The previous H1 rejection for **degenerate top simplices** (zero-volume
+    /// k-cliques) was moved to
+    /// [`SimplicialComplex::hodge_star_operators`] in H4. Consumers that
+    /// require a non-degenerate Hodge ⋆ surface should call that accessor and
+    /// handle its `Result`; consumers that only need V/E/F-style topological
+    /// counts never trigger the rejection.
+    ///
+    /// All numerical tolerance comparisons scale with `T::epsilon()`. No hard-
+    /// coded `f64` literal appears in the rejection logic.
+    ///
+    /// # Precondition contract
+    ///
+    /// Callers should ensure input geometry is non-degenerate in the regime
+    /// `coordinates ~ O(1)` magnitude. Inputs far outside that regime are
+    /// accepted but the floating-point rejection thresholds become less
+    /// reliable; downstream DEC consumers with strict-precision requirements
+    /// should pre-normalize coordinates.
     pub fn triangulate(&self, radius: T) -> Result<SimplicialComplex<T>, TopologyError> {
         if self.is_empty() {
             return Err(TopologyError::PointCloudError("Empty Cloud".to_string()));
@@ -120,6 +130,13 @@ where
         let num_points = self.len();
         let dim = self.points.shape()[1];
         let coords = self.points.as_slice();
+
+        if let Some((i, j)) = find_duplicate_points(coords, num_points, dim) {
+            return Err(TopologyError::PointCloudError(format!(
+                "triangulate: duplicate point at index {} matches index {} (distance below T::epsilon() * max_extent)",
+                i, j
+            )));
+        }
 
         // 1. Build 0-Skeleton
         let mut zero_simplices = Vec::with_capacity(num_points);
@@ -147,23 +164,16 @@ where
 
         let mut skeletons = vec![zero_skeleton, one_skeleton];
 
-        // 3. Build Higher Skeletons (Clique Expansion)
+        // 3. Build Higher Skeletons (Clique Expansion) capped at ambient dim.
         //
-        // The clique-expansion loop is capped at the ambient dimension `dim`.
-        // A k-simplex with k > ambient_dim has at least k+1 vertices lying in
-        // an ambient_dim-dimensional space, so it is necessarily degenerate
-        // (zero signed volume). Building such a simplex produces a complex
-        // whose lumped-mass Hodge ⋆ at grade 0 collapses to zero, which in
-        // turn makes the simplicial codifferential return identically zero
-        // for any field on it. The cap is therefore both mathematically
-        // correct (degenerate simplices carry no geometric information) and
-        // necessary for downstream consumers such as `Manifold::laplacian`,
-        // `Manifold::codifferential`, and `Manifold::hodge_decompose` to
-        // produce non-trivial output.
-        //
-        // For non-degenerate point clouds where `num_points <= ambient_dim + 1`,
-        // the cap never fires because the clique expansion naturally
-        // terminates before reaching grade `dim + 1`.
+        // The cap at `k > dim` reflects that simplices of dimension exceeding
+        // the ambient embedding dimension are geometrically degenerate. With
+        // lazy Hodge ⋆ population (H4), this cap no longer prevents Hodge ⋆
+        // collapse at construction time — the lazy accessor enforces that
+        // contract at the right place. The cap is retained because clique
+        // expansion beyond `dim` produces simplices that contribute nothing
+        // meaningful to either TDA or DEC pipelines on a Vietoris-Rips
+        // complex.
         let mut k = 2;
         loop {
             if k > dim {
@@ -177,18 +187,15 @@ where
             let mut next_simplices = BTreeSet::new();
 
             for simplex in &prev_skel.simplices {
-                // Try extending with every vertex
                 #[allow(clippy::needless_range_loop)]
                 for v in 0..num_points {
                     if simplex.contains_vertex(&v) {
                         continue;
                     }
-
-                    // Check connectivity to all existing vertices in simplex
                     if simplex.vertices().iter().all(|&u| adj[u][v]) {
                         let mut new_verts = simplex.vertices().clone();
                         new_verts.push(v);
-                        new_verts.sort_unstable(); // Canonical
+                        new_verts.sort_unstable();
                         next_simplices.insert(Simplex::new(new_verts));
                     }
                 }
@@ -204,8 +211,6 @@ where
         let max_dim = skeletons.len() - 1;
 
         // 4. Build Boundary Operators
-        // Convention: boundary_operators[k] maps (k+1)-simplices to k-simplices
-        // boundary_operators[k] has shape (N_k x N_{k+1})
         let mut boundary_ops = Vec::new();
 
         for k in 0..max_dim {
@@ -215,7 +220,6 @@ where
 
             for (col, simplex) in skeletons[k + 1].simplices.iter().enumerate() {
                 for i in 0..=(k + 1) {
-                    // Create face by removing vertex i
                     let mut face_verts = simplex.vertices.clone();
                     face_verts.remove(i);
                     let face = Simplex::new(face_verts);
@@ -230,92 +234,16 @@ where
         }
 
         // 5. Build Coboundary Operators (Transpose)
-        // Convention: coboundary_operators[k] = boundary_operators[k].transpose()
         let coboundary_ops: Vec<_> = boundary_ops.iter().map(|b| b.transpose()).collect();
 
-        // 6. Build Mass Matrices (Diagonal Hodge Star) using Barycentric Dual Volumes
-        // This is the scientifically critical part for diffusion.
-        // Mass_k [i,i] = Vol(Dual_i) / Vol(Primal_i)
-
-        // First, compute Primal Volumes for EVERYTHING.
-        let mut primal_volumes: Vec<Vec<T>> = Vec::new();
-        for skel in &skeletons {
-            let vols = skel
-                .simplices
-                .iter()
-                .map(|s| simplex_volume(s, coords, dim))
-                .collect();
-            primal_volumes.push(vols);
-        }
-
-        // Compute Dual Volumes (Barycentric approximation)
-        // For a k-simplex sigma, V_dual(sigma) = Sum_{tau > sigma} coeff * Vol(tau)
-        // The rigorous Barycentric dual volume is complex.
-        // We use the "Lumped Mass" approximation which is standard for diagonal matrices.
-        // Mass_0 (Vertex): Sum of (Vol(incident n-simplices) / (n+1))
-        // Mass_n (Top): 1.0 / Vol(n-simplex)
-
-        let mut hodge_ops = Vec::new();
-
-        for k_dim in 0..=max_dim {
-            let count = skeletons[k_dim].simplices.len();
-            let mut triplets = Vec::new();
-
-            for i in 0..count {
-                let primal_vol = primal_volumes[k_dim][i];
-
-                let mass_val = if k_dim == 0 {
-                    // Vertex Mass: "Lumped" volume around the vertex.
-                    // V_dual = Sum(Vol(n-simplices containing v)) / (n+1)
-                    // This distributes the total volume equally to vertices.
-                    let mut dual_vol = T::zero();
-                    let n_skel = &skeletons[max_dim];
-                    let n_vols = &primal_volumes[max_dim];
-
-                    // Note: This loop is O(Vertices * Cells), optimization would use an incidence map.
-                    // For small-medium point clouds, this is acceptable.
-                    for (cell_idx, cell) in n_skel.simplices.iter().enumerate() {
-                        if cell.contains_vertex(&i) {
-                            dual_vol = dual_vol + n_vols[cell_idx];
-                        }
-                    }
-                    dual_vol / <T as From<f64>>::from((max_dim + 1) as f64)
-                } else if k_dim == max_dim {
-                    // Top-dimension form.
-                    // Inner product <a, b> = Integral (a * b) dV
-                    // Since top-forms are densities per volume, and we store integrated values,
-                    // the metric term is 1/Volume.
-                    // (Standard DEC derivation for diagonal star_n)
-                    if primal_vol > <T as From<f64>>::from(1e-12) {
-                        <T as From<f64>>::from(1.0) / primal_vol
-                    } else {
-                        T::zero()
-                    }
-                } else {
-                    // Intermediate dimensions (Edges in 2D/3D).
-                    // Approximation: M_k = Vol(Primal) / Vol(Dual) is for hodge star *mapping*.
-                    // But here we need the Mass Matrix M for the inner product.
-                    // M_k [i,i] ~ Primal_Vol
-                    // Wait, for 1-forms (Edges): Energy = Sum (u_i - u_j)^2 * (Dual_Area / Length)
-                    // We need the "Constitutive Ratio".
-
-                    // Since we don't have the Dual Connectivity built, we use the
-                    // "Unit Weight" fallback for topology, scaled by Primal Volume for geometry.
-                    // This ensures at least scaling consistency.
-                    primal_vol
-                };
-
-                triplets.push((i, i, mass_val));
-            }
-
-            hodge_ops.push(CsrMatrix::from_triplets(count, count, &triplets).unwrap());
-        }
-
-        Ok(SimplicialComplex::new(
+        // 6. Construct the complex with geometric data; Hodge ⋆ is populated
+        // lazily on first access via `SimplicialComplex::hodge_star_operators`.
+        Ok(SimplicialComplex::with_geometry(
             skeletons,
             boundary_ops,
             coboundary_ops,
-            hodge_ops,
+            coords.to_vec(),
+            dim,
         ))
     }
 }

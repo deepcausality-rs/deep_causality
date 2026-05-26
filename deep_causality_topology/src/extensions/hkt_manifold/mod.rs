@@ -36,7 +36,7 @@ pub type SimplicialManifoldWitness<C> = ManifoldWitness<C>;
 impl<C> HKT for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex,
-    C: Satisfies<NoConstraint> + deep_causality_num::RealField,
+    C: Satisfies<NoConstraint> + deep_causality_num::RealField + deep_causality_num::FromPrimitive,
 {
     type Constraint = NoConstraint;
     type Type<T>
@@ -49,7 +49,10 @@ impl<C> Functor<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex + Clone,
     <SimplicialComplex<C> as ChainComplex>::Metric: Clone,
-    C: Satisfies<NoConstraint> + Clone + deep_causality_num::RealField,
+    C: Satisfies<NoConstraint>
+        + Clone
+        + deep_causality_num::RealField
+        + deep_causality_num::FromPrimitive,
 {
     fn fmap<A, B, Func>(
         m_a: Manifold<SimplicialComplex<C>, A>,
@@ -75,7 +78,7 @@ where
 impl<C> Foldable<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex,
-    C: Satisfies<NoConstraint> + deep_causality_num::RealField,
+    C: Satisfies<NoConstraint> + deep_causality_num::RealField + deep_causality_num::FromPrimitive,
 {
     fn fold<A, B, Func>(fa: Manifold<SimplicialComplex<C>, A>, init: B, f: Func) -> B
     where
@@ -89,7 +92,10 @@ where
 impl<C> Pure<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex + Default,
-    C: Satisfies<NoConstraint> + Default + deep_causality_num::RealField,
+    C: Satisfies<NoConstraint>
+        + Default
+        + deep_causality_num::RealField
+        + deep_causality_num::FromPrimitive,
 {
     fn pure<T>(value: T) -> Manifold<SimplicialComplex<C>, T>
     where
@@ -109,7 +115,11 @@ impl<C> Monad<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex + Clone + Default,
     <SimplicialComplex<C> as ChainComplex>::Metric: Clone,
-    C: Satisfies<NoConstraint> + Clone + Default + deep_causality_num::RealField,
+    C: Satisfies<NoConstraint>
+        + Clone
+        + Default
+        + deep_causality_num::RealField
+        + deep_causality_num::FromPrimitive,
 {
     fn bind<A, B, Func>(
         m_a: Manifold<SimplicialComplex<C>, A>,
@@ -140,7 +150,11 @@ impl<C> Applicative<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex + Clone + Default,
     <SimplicialComplex<C> as ChainComplex>::Metric: Clone,
-    C: Satisfies<NoConstraint> + Clone + Default + deep_causality_num::RealField,
+    C: Satisfies<NoConstraint>
+        + Clone
+        + Default
+        + deep_causality_num::RealField
+        + deep_causality_num::FromPrimitive,
 {
     fn apply<A, B, Func>(
         f_ab: Manifold<SimplicialComplex<C>, Func>,
@@ -176,7 +190,10 @@ impl<C> CoMonad<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex + Clone,
     <SimplicialComplex<C> as ChainComplex>::Metric: Clone,
-    C: Satisfies<NoConstraint> + Clone + deep_causality_num::RealField,
+    C: Satisfies<NoConstraint>
+        + Clone
+        + deep_causality_num::RealField
+        + deep_causality_num::FromPrimitive,
 {
     fn extract<A>(fa: &Manifold<SimplicialComplex<C>, A>) -> A
     where

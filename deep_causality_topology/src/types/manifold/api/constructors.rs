@@ -6,14 +6,14 @@
 //! Constructors for Manifold type.
 
 use crate::{ReggeGeometry, SimplicialComplex, TopologyError};
-use deep_causality_num::RealField;
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 
 use super::super::Manifold;
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
-    C: RealField,
+    C: RealField + FromPrimitive,
 {
     /// Attempts to create a new `Manifold` from a `SimplicialComplex` and data.
     ///
@@ -64,7 +64,7 @@ where
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
-    C: RealField,
+    C: RealField + FromPrimitive,
     D: Clone,
 {
     /// Creates a shallow clone of the Manifold with cursor reset to 0.

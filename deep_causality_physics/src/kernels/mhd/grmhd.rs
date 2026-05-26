@@ -59,8 +59,11 @@ where
         )));
     }
 
-    // 2. Get operators from complex
-    let hodge_ops = complex.hodge_star_operators();
+    // 2. Get operators from complex. The Hodge ⋆ accessor is fallible;
+    // the  surface its degeneracy errors through the kernel's existing `Result` return.
+    let hodge_ops = complex
+        .hodge_star_operators()
+        .map_err(|e| PhysicsError::CalculationError(format!("Hodge ⋆ unavailable: {}", e)))?;
     let coboundary_ops = complex.coboundary_operators();
 
     if hodge_ops.len() < 4 {
