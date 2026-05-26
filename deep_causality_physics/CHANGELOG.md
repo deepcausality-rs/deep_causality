@@ -7,6 +7,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.5.2...deep_causality_physics-v0.6.0) - 2026-05-26
+
+### Added
+
+- *(physics)* add compressible Newtonian NS regime evaluators (Group 14)
+- *(physics)* add Stokes regime evaluator (Group 13)
+- *(physics)* add Euler regime evaluator (Group 12)
+- *(physics)* add Euler regime evaluator (Group 12)
+- *(physics)* add incompressible Newtonian NS regime evaluator (Group 11)
+- *(physics)* ideal-flow primitive kernels (group 10)
+- *(physics)* boundary-layer kernels (group 9)
+- *(physics)* compressible-flow thermodynamic kernels (group 8)
+- *(physics)* coherent-structure detector kernels (group 7)
+- *(physics)* turbulence quantity kernels (group 6)
+- *(physics)* dimensionless number kernels (group 5)
+- *(physics)* constitutive viscous-stress kernels (group 4)
+- *(physics)* typed vector/tensor surface for fluids + kinematics group
+- *(physics)* add-fluid-dynamics-kernels — spec + group 1 scaffolding
+- *(deep_causality_topology)* Manifold generic widening over ChainComplex (R4.5)
+- *(deep_causality_physics)* flattened unit type folder.
+- *(deep_causality_physics)* Generalize MHD grmhd/ideal_induction and Lund fragmentation cluster over R: RealField
+- *(deep_causality_physics)* Eliminate residual <f64> turbofish from kernels and wrappers across thermodynamics, waves, photonics, dynamics, nuclear, materials
+- *(deep_causality_physics)* Generalize astro / fluids / mhd kernels over R: RealField
+- *(deep_causality_physics)* Generalize dynamics hub quantities over R: RealField
+- *(deep_causality_physics)* Generalize MaxwellSolver over R: RealField
+- *(deep_causality_physics)* Generalize quantum kernels over R: RealField; FloatType alias for examples
+- *(deep_causality_multivector, deep_causality_physics)* Generalize HilbertState/HopfState over R: RealField, no f64 defaults
+- *(deep_causality_physics)* Generalize nuclear FourMomentum and Hadron over R: RealField
+- *(deep_causality_physics)* Generalize condensed scalar leaves over R: RealField
+- *(deep_causality_physics)* Generalize Ratio, Time, and Temperature unit types over R: RealField
+- *(deep_causality_physics)* Generalize Boltzmann factor and heat capacity kernels over R: RealField
+- *(deep_causality_physics)* Generalize Energy unit type over R: RealField
+- *(deep_causality_physics)* Generalize nuclear AmountOfSubstance/HalfLife and radioactive_decay over R: RealField
+- *(deep_causality_physics)* Generalize dynamics PhysicalVector and torque/angular_momentum kernels over R: RealField
+- *(deep_causality_physics)* Generalize fluids Pressure and hydrostatic/Bernoulli kernels over R: RealField
+- *(deep_causality_physics)* Generalize relativity spacetime kernels and PhaseAngle/SpacetimeVector over R: RealField
+- *(deep_causality_physics)* generalize em fields + PhysicalField over RealField
+- *(deep_causality_physics)* generalize mhd plasma and ideal kernels over RealField
+- *(deep_causality_physics)* generalize photonics beam + polarization over RealField
+- *(deep_causality_physics)* generalize photonics ray optics over RealField
+- *(deep_causality_physics)* generalize Probability and dynamics/estimation kernels over RealField
+- *(deep_causality_physics)* generalize 18 pure-leaf scalar wrappers over RealField
+- *(deep_causality_physics)* generalize materials kernels over RealField
+- *(deep_causality_topology)* Implemented specs for generalizing topology crate over RealField
+- *(topology)* genericize Manifold over ChainComplex (Stage B)
+
+### Fixed
+
+- *(deep_causality_physics)* validate raw-scalar inputs in 3 fluid kernels
+- *(deep_causality_physics, deep_causality_multivector)* Address review feedback on the precision-parametric refactor
+
+### Other
+
+- *(deep_causality_topology)* lazy Hodge ⋆ population via OnceLock
+- *(deep_causality_physics)* Updated README file.
+- *(deep_causality_physics)* increase coverage of fluid kernels and theory wrappers (+35 tests)
+- *(deep_causality_physics)* promote CauchyStress to dedicated ViscousStress / ReynoldsStress newtypes
+- *(physics)* act on fluid-dynamics verification-report items
+- *(physics)* add reference-solution verification tests for NS regimes
+- git commit -m "$(cat <<'EOF'
+- Updated example Readme.
+- code formatting and linting.
+- *(deep_causality_physics)* improve test coverage.
+- Minor fixes
+- *(deep_causality_physics)* Improve coverage for kernels/*/quantities.rs
+- *(deep_causality_physics)* Updated documentation of the physics crate.
+- *(deep_causality_physics)* Restructure tests tree to mirror src/kernels/ layout; update Bazel
+- Fix clippy lints, panics, and constants-mismatch bias in chronometric example
+- Applied minor fixes and lints.
+- Add chronometric package for J2-corrected weak-field GM inversion
+
 ## [0.5.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.5.1...deep_causality_physics-v0.5.2) - 2026-03-12
 
 ### Other

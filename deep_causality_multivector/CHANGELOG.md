@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.4.2...deep_causality_multivector-v0.5.0) - 2026-05-26
+
+### Added
+
+- *(deep_causality_multivector, deep_causality_physics)* Generalize HilbertState/HopfState over R: RealField, no f64 defaults
+- *(doc)* Consolidated all m examples in the dedicated example folder.
+- *(deep_causality_multivector)* add structural iso between CausalMultiField and its tuple carrier
+
+### Fixed
+
+- *(deep_causality_physics, deep_causality_multivector)* Address review feedback on the precision-parametric refactor
+
 ## [0.4.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.4.1...deep_causality_multivector-v0.4.2) - 2026-03-12
 
 ### Other
