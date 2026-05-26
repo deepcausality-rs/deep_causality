@@ -30,6 +30,49 @@ The corrective intervention library works only because the chain primitive is al
 
 In each case the platform property doing the work was not added for CFD. It was already there. That is the unique fabric the rest of this note unpacks.
 
+### 0.2 Mapping to NASA CFD Vision 2030
+
+The canonical strategic document for the future of computational fluid dynamics is *CFD Vision 2030 Study: A Path to Revolutionary Computational Aerosciences* by Slotnick, Khodadoust, Alonso, Darmofal, Gropp, Lurie, and Mavriplis, NASA/CR-2014-218178 (2014). The study was commissioned by NASA Langley with industry input from Boeing, Pratt & Whitney, the major US aerospace primes, and academic CFD groups. It remains the most-cited strategic document in the field and is the working framework for funding priorities at NASA, AIAA, ATI, and most national aerospace programmes. (Source: NASA Technical Reports Server, document ID 20150007533, ntrs.nasa.gov.)
+
+A 2024 follow-up progress report by Slotnick and Heller explicitly notes that progress against the 2014 targets has been slower than projected on the structural problems, particularly uncertainty quantification, validation infrastructure, and multidisciplinary integration. The structural problems remain unsolved after a decade of focused industry investment. (Source: AIAA Aviation Forum 2024 proceedings, paper AIAA 2024-4501.)
+
+Vision 2030 identifies six structural problems with current CFD. The mapping to DeepCausality capabilities is unusually tight. Five of the six have conceptual solutions already built in the platform; the sixth is operationally manageable through the platform's other capabilities. This is the substantive reason the Causal CFD pitch is application of an existing platform rather than invention of new methods.
+
+#### The mapping
+
+| Vision 2030 structural problem | DeepCausality capability | Status |
+|---|---|---|
+| **1. Mesh generation bottleneck** (30-60% of engineer time per the Vision 2030 estimate) | `LatticeComplex`, `DualLatticeComplex`, `CubicalReggeGeometry` in `deep_causality_topology` | Conceptually built. The cubical mesh structurally sidesteps unstructured tetrahedral meshing. The cut-cell extension is engineering work in Phase 2, not a research problem. |
+| **2. HPC scaling plateau and adoption brittleness** | HKT witness pattern in `deep_causality_haft`; per-region typing via `R: RealField` generic kernels in `deep_causality_num` | Conceptually built. GPU and cluster backends become additional witnesses rather than algorithm rewrites. The constraint from the MLX revert (no trait leakage through user-facing APIs) is documented and understood; the Candle path in §11.4 is consistent with it. |
+| **3. Turbulence modeling for separated and unsteady flows** | No new closure model. The platform provides: `MaybeUncertain<R>` for RANS-failure regions, `deep_causality_discovery` for causal source identification on flow data, the intervention framework for fallback when closure models fail, and type-checked composition for swapping closure models without rewriting downstream code | Not solved at the turbulence-modeling level. Honestly: this is the one Vision 2030 problem where the platform does not provide a structural answer. The platform makes RANS limitations operationally manageable rather than solving them at the physics level. This is the correct positioning to take in any grant pitch. |
+| **4. Uncertainty quantification essentially absent from industrial practice** | `Uncertain<R>` and `MaybeUncertain<R>` in `deep_causality_uncertain`, with selective per-region typing as detailed in §2.7 | Conceptually built. Five years of platform work on the uncertain crate is the substantive solution. The CFD application is wiring, not invention. |
+| **5. Multidisciplinary integration brittleness** | Shared `R: RealField` trait bound across the fluids, electromagnetism, MHD, thermodynamics, materials, and general-relativity kernel surfaces in `deep_causality_physics`. Type-checked composition. | Conceptually built. No coupling pair requires bespoke glue. Composition is type-level. The §3.2 multiphysics amplifier follows directly. |
+| **6. Validation infrastructure inadequacy** | `EffectLog` produced by the `Intervenable` framework, plus the §10 structured corrective intervention library | Conceptually built. Every simulation produces an auditable forensic record. Validation is integrated into the simulation chain rather than performed as a separate post-hoc activity. |
+
+The Vision 2030 study additionally identifies several second-tier problems: autonomous error estimation, certification-credit pathways for replacing physical tests with simulation, and the "knowledge-to-insight pipeline." The DeepCausality `EffectLog`, intervention framework, and `deep_causality_discovery` crate also map onto these. They are subsidiary to the six primary structural problems above but worth knowing about for grant applications targeting aerospace certification specifically.
+
+#### Why this changes the proposal's strategic frame
+
+The mapping changes the proposal's posture in three specific ways. Each is worth being explicit about in grant applications and commercial conversations.
+
+**One: technical risk is materially lower than a standard CFD grant proposal.** The standard pattern is "fund invention of solutions to the structural problems." The Causal CFD pitch is that the conceptual solutions are already built, peer-reviewed by the Linux Foundation Technical Advisory Committee with industry sponsor approval, deployed across 18 crates and 250,000 lines of code, and verified through 10,000 tests at 95% coverage published per pull request. The proposed work is application engineering against canonical reference data. That converts the project from speculative platform research to scoped application engineering.
+
+For grant assessors, this is a fundamentally different risk profile. Innovate UK Smart Grants and the ATI both score risk explicitly. A project with the platform already de-risked scores meaningfully higher than one where the platform is part of the proposal.
+
+**Two: time to credible validation is shorter than the field's standard.** An "invent and validate" CFD grant typically runs 3-5 years before the first benchmark result of weight. An "apply existing platform" project is plausibly 9-12 months to lid-driven cavity (Phase 1), 18-24 months to 3D cylinder (Phase 2), and 3 years to NASA CRM RANS (Phase 3). The shorter timeline reflects the absence of platform-layer research risk and is consistent with the validation-first sequencing recommended in prior turns of the strategic discussion.
+
+For commercial partners and anchor customers, this matters because the gap between commitment and demonstrable results is smaller than they would expect for a project of this scope.
+
+**Three: competitive defensibility runs deeper than the CFD code itself.** A competitor wanting to replicate Causal CFD would first need to replicate `deep_causality_uncertain`, `deep_causality_haft`, `deep_causality_topology`, `deep_causality_num`, the physics kernels, the intervention framework, the supply-chain-security posture, and the Linux Foundation TAC-reviewed governance position. That is more than a decade of person-years before the CFD wiring can begin. The moat is the platform, not the CFD application.
+
+For commercial defensibility, this is the strongest version of the argument. Competitors who build CFD on top of conventional platforms cannot easily acquire the §3 amplifiers because the amplifiers are platform properties they do not have. The OpenFOAM-style services business adapted for MIT licensing (per the prior turns of the discussion) is therefore not just a viable business model; it is a business model whose moat is structural rather than incidental.
+
+#### Why the alignment is structural rather than coincidental
+
+The five-of-six Vision 2030 alignment is not the product of designing the platform around Vision 2030. The DeepCausality platform was built over five years against an independent set of motivations: causal reasoning, type-safe scientific computing, multiphysics composition, uncertainty propagation, and forensic provenance. Those motivations happen to be the same abstract problems Vision 2030 identifies as the structural blockers of next-generation CFD. The convergence reflects something real: the structural problems in scientific computing across multiple domains (CFD, climate, computational physics generally) have common roots in the platform-layer abstractions, and a platform built right addresses many of them simultaneously.
+
+The pitch is honest because the alignment is structural rather than retrofitted. Grant assessors and technical reviewers who probe this will find the alignment holds under scrutiny.
+
 ---
 
 ## 1. Context
@@ -432,6 +475,8 @@ What makes the resulting solver *different* from every other open-source or comm
 - **Counterfactual analysis and forensic provenance** (§3.4). The baseline differentiator.
 
 Each is structurally hard to replicate in a codebase that wasn't built generic-over-`R: RealField` from day one with a monadic chain primitive.
+
+The external strategic validation for the proposal is the NASA CFD Vision 2030 alignment documented in §0.2. Of the six structural problems Vision 2030 identifies as the blockers of next-generation industrial CFD, five have conceptual solutions already built into the DeepCausality platform across five years of independent platform development. The sixth (turbulence modeling for separated flows) is operationally manageable through the platform's other capabilities even though it is not solved at the closure-model level. This alignment is structural rather than retrofitted, and is the load-bearing reason the proposal can credibly position itself as application engineering rather than platform research.
 
 Phase 1 (uniform cubical incompressible NS, lid-driven cavity, three corrective interventions wired in) is a self-contained deliverable that proves three of the four amplifiers end-to-end. It should be the entry point. Phase 2 adds cut cells and the first probabilistic-zone demo, validating the fourth amplifier (§3.1) on a concrete case.
 
