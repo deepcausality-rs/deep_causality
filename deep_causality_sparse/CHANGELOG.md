@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_sparse-v0.1.7...deep_causality_sparse-v0.1.8) - 2026-05-26
+
+### Added
+
+- *(doc)* Consolidated all m examples in the dedicated example folder.
+- *(deep_causality_sparse)* add feature-gated CausalTensor <-> CsrMatrix iso extension
+
+### Other
+
+- *(deep_causality_sparse)* improved test coverage.
+- *(examples)* refactor iso examples.
+
 ## [0.1.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_sparse-v0.1.6...deep_causality_sparse-v0.1.7) - 2026-03-12
 
 ### Other

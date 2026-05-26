@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.13.6...deep_causality-v0.13.7) - 2026-05-26
+
+### Added
+
+- *(deep_causality_topology)* cubical Regge core R1 — cell volumes
+- *(deep_causality_num)* add Tier 2 witness-typed Iso traits + StandardIso (iso-traits Stage B)
+
+### Other
+
+- Updated example Readme.
+- *(deep_causality)* skip 5 metric/spacetime tests under Miri
+- *(deep_causality)* improve test coverage.
+- *(README)* Fixed broken link in the project README.md
+- Removed FOSSA from Readme
+- Updated Astro to the latest version.
+- Updated the README file.
+- Updated project README.md
+- Updated example. Read me to add the latest example and add a more sensible ordering of all existing examples.
+- Edited. Readme again.
+- Added writing guides and updated the README.md
+
 ## [0.13.6](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.13.5...deep_causality-v0.13.6) - 2026-05-03
 
 ### Other

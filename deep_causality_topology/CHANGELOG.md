@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.5.1...deep_causality_topology-v0.6.0) - 2026-05-26
+
+### Added
+
+- *(deep_causality_topology)* add PointCloud::triangulate_delaunay
+- *(topology)* surface triangulate degeneracy via discriminating errors
+- *(deep_causality_topology)* TopologicalInvariants extractor (B1a)
+- *(deep_causality_topology)* hodge_decompose algorithm + matrix-free CG (H2)
+- *(deep_causality_topology)* HodgeDecomposition carrier type + error variant (H1)
+- *(deep_causality_topology)* Regge action gradient + Metropolis-Hastings (R6)
+- *(deep_causality_topology)* Lorentzian signature marker + Wick-rotated action (R5)
+- *(deep_causality_topology)* Manifold generic widening over ChainComplex (R4.5)
+- *(deep_causality_topology)* PerEdge cubical Hodge star (R4.4)
+- *(deep_causality_topology)* cubical HasHodgeStar impl, UnitEdge + Uniform + PerAxis tiers (R4.3)
+- *(deep_causality_topology)* simplicial HasHodgeStar impl + manifold trait routing (R4.2)
+- *(deep_causality_topology)* add HasHodgeStar<R> capability trait (R4.1)
+- *(deep_causality_topology)* cubical Regge core R3 — deficit + action
+- *(deep_causality_topology)* cubical Regge core R2 — hinges + dihedrals
+- *(deep_causality_topology)* cubical Regge core R1 — cell volumes
+- *(doc)* Consolidated all m examples in the dedicated example folder.
+- *(deep_causality_topology)* Implemented specs for generalizing topology crate over RealField
+- *(deep_causality_num)* add Tier 1 isomorphism marker subtraits (iso-traits Stage A)
+- *(topology)* Increased test coverage.
+- *(topology)* Completed #487.
+- *(topology)* LatticeComplex + cubical aliases + Neighborhood strategies (Stage C)
+- *(topology)* genericize Manifold over ChainComplex (Stage B)
+
+### Fixed
+
+- *(deep_causality_topology)* three Regge-geometry follow-ups
+- *(deep_causality_topology)* three Regge-geometry follow-ups
+- *(point_cloud)* cap triangulate top-grade at ambient dimension
+- *(deep_causality_topology)* tighten covariance domain; loosen Manifold constructor bounds
+
+### Other
+
+- *(deep_causality_topology)* tighten cross-backend Hodge test on Delaunay
+- *(openspec)* release prep for harden-simplicial-hodge-degeneracy-detection
+- *(deep_causality_topology)* lazy Hodge ⋆ population via OnceLock
+- *(deep_causality_topology)* tighten two fixtures to satisfy
+- *(deep_causality_topology)* regression suite for triangulate degeneracy rejection
+- Added a new specification for add-pointcloud-delaunay-triangulation
+- *(deep_causality_topology)* Hodge decomposition property tests (H3)
+- *(deep_causality_topology)* single-edge Regge gradient for Metropolis hot path
+- *(deep_causality_topology)* route Cubical Regge signature truth through deep_causality_metric (R5.8)
+- *(deep_causality_topology)* improved test coverage.
+- *(deep_causality_topology)* cubical Regge core §5 — API + module doc
+- *(deep_causality_topology)* cubical Regge core §1 scaffolding
+- *(deep_causality_topology)* convert LatticeComplex coboundary cache to OnceLock
+- *(topology)* R: RealField GAT skeleton (compile-broken)
+- Added new specification for generalizing various grades over real field to enable precision as a parameter.
+- *(topology)* introduce ChainComplex trait, drop _cpu suffix
+
 ### Changed
 
 - **Behaviour change:** `PointCloud::triangulate` now rejects duplicate-input-point cases with a discriminating `TopologyError::PointCloudError` message containing the substring `"duplicate point"` and the two offending indices. Inputs that previously produced a silently-singular complex via the eager lumped-mass Hodge ⋆ now surface as `Err`.

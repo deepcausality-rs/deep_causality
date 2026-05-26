@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.3.1...deep_causality_num-v0.3.2) - 2026-05-26
+
+### Added
+
+- *(deep_causality_num)* Updated design specs and documentation.
+- *(deep_causality_num)* add Tier 2 witness-typed Iso traits + StandardIso (iso-traits Stage B)
+- *(deep_causality_num)* Fixed six pre-existing bugs in unrelated code that were blocking no_std;
+- *(deep_causality_num)* add Tier 1 isomorphism marker subtraits (iso-traits Stage A)
+
+### Fixed
+
+- *(deep_causality_num)* added three-tier isomorphism trait family across num and haft
+- *(deep_causality_num)* check witness/From round-trip in both directions independently
+
+### Other
+
+- skip 4 more transcendental float tests under Miri
+- *(deep_causality_num)* skip transcendental float tests under Miri
+- code formatting and linting.
+- *(deep_causality_num)* improve test coverage.
+
 ## [0.3.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.3.0...deep_causality_num-v0.3.1) - 2026-03-12
 
 ### Other

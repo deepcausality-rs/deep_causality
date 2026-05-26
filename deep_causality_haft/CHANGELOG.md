@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.3.1...deep_causality_haft-v0.3.2) - 2026-05-26
+
+### Fixed
+
+- *(deep_causality_num)* added three-tier isomorphism trait family across num and haft
+
+### Other
+
+- *(deep_causality_physics)* Restructure tests tree to mirror src/kernels/ layout; update Bazel
+
 ## [0.3.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.3.0...deep_causality_haft-v0.3.1) - 2026-03-12
 
 ### Other

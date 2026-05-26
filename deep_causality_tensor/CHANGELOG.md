@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.4.2...deep_causality_tensor-v0.4.3) - 2026-05-26
+
+### Added
+
+- *(doc)* Consolidated all m examples in the dedicated example folder.
+
+### Other
+
+- *(miri)* exclude doctests from Miri runs
+- skip stat/float doctests under Miri
+
 ## [0.4.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.4.1...deep_causality_tensor-v0.4.2) - 2026-03-12
 
 ### Other
