@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.15](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.1.14...deep_causality_rand-v0.1.15) - 2026-05-26
+
+### Other
+
+- updated the following local packages: deep_causality_num
+
 ## [0.1.14](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.1.13...deep_causality_rand-v0.1.14) - 2026-03-12
 
 ### Other

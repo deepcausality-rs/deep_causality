@@ -3,7 +3,7 @@
 
 [package]
 name = "deep_causality"
-version = "0.13.6"
+version = "0.13.7"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -51,7 +51,7 @@ version = "0.1"
 
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
-version = "0.0.6"
+version = "0.0.7"
 default-features = true
 
 [dependencies.deep_causality_data_structures]
@@ -64,7 +64,7 @@ version = "0.3"
 
 [dependencies.ultragraph]
 path = "../ultragraph"
-version = "0.8"
+version = "0.9"
 
 [dev-dependencies]
 criterion = {  version = "0.8" }
