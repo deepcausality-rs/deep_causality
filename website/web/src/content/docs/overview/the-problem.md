@@ -1,8 +1,8 @@
 ---
-title: The Problem
-description: Why classical causality's assumptions break in dynamic systems, and what that means in practice.
+title: Problem
+description: What problems dynamic causality can solve that classical causality cannot.
 section: overview
-order: 2
+order: 3
 ---
 
 Classical computational causality, pioneered by Judea Pearl and others, is powerful, well-validated, and covers a large class of useful problems. However, classical computational causality is rooted in three assumptions that prevent its application to dynamic systems.
@@ -18,23 +18,23 @@ A classical model captures this because three things hold:
 
 1. **Time is a straight line.** The temperature drops *before* the furnace turns on. There is a clear "happens-before" relationship.
 2. **The causal rules are fixed.** "If temperature < 68, turn on the furnace" is the same rule tomorrow as it is today.
-3. **Context is implicit.** Whatever the thermostat does not measure is absorbed into the background. You do not need to model it explicitly.
+3. **Context is implicit.** Whatever the thermostat does not measure is absorbed into the background.
 
 Most of classical computational causality, from Pearl's Structural Causal Models to Granger's time-series analysis, lives inside them.
 
 ## Where the assumptions break
 
-Now imagine a financial trading system, or a fleet of autonomous wildfire-fighting drones. Reality stops cooperating:
+Now imagine a financial trading system, or a fleet of autonomous wildfire-fighting drones:
 
 1. **Time is not a straight line.** A trading system observes events on nanosecond scales, but its decisions depend on the hourly high, yesterday's close, and the day's volume. Time becomes multi-layered and multi-scaled.
 2. **The rules can change.** During a normal market day, "low interest rates push stock prices up" is a workable rule. During a crash, that rule breaks and "high fear pushes every asset down" takes over. The causal relationships in the system have changed mid-flight.
 3. **Context changes continuously.** An autonomous drone navigating by GPS works fine until it enters a tunnel and loses signal. The computer vision system saw the tunnel coming, but if context is implicit, there is nowhere to put that fact and nothing to do with it.
 
-The third point is the deepest one. When the context changes, the rules can change. When the rules can change, you need a framework that treats both as first-class moving parts.
+The third point is the critical one. When the context changes, the rules can change. When the rules can change, you need a framework that treats both as first-class moving parts.
 
-## What a dynamic causal process enables
+## What dynamic causality enables
 
-If causality is treated as a dynamic process rather than a static graph, the problems classical causality cannot reach come back into scope. DeepCausality is built around exactly this premise: an explicit Context that holds the world, a Causaloid that can be a singleton or a hypergraph for arbitrary structure, a Causal Monad for sequential composition with first-class intervention, an Effect Ethos that verifies actions when the reasoning itself can no longer be statically verified, and a deployment surface that runs on Tokio under load. The [next page](/docs/overview/core-idea/) sketches the underlying axiom in one equation.
+When causality is treated as a dynamic process rather than a static graph, the problems classical causality cannot reach come back into scope. DeepCausality is built around exactly this premise: an explicit Context that holds the world, a Causaloid that can be a singleton or a hypergraph for arbitrary structure, a Causal Monad for sequential composition with first-class intervention, an Effect Ethos that verifies actions when the reasoning itself can no longer be statically verified, and a deployment surface that runs on Tokio for production. 
 
 This page first walks through the problem categories that become tractable once the static assumption is dropped. Each category is a problem class where a real practitioner today either picks two or three separate libraries and writes glue forever, or ends up writing a custom solution because nothing else worked. DeepCausality was built from the ground up for the dynamic case, which enables a number of use cases that conventional tooling cannot reach. Where you find yourself on the list is roughly the answer to whether DeepCausality is the right tool for the work you are doing.
 
@@ -87,7 +87,7 @@ The same propagating effect carries a tensor verdict from a physics stage, a sta
 
 ### 7. Dynamic emergent causality (frontier)
 
-A class of problems sits beyond what production engineering currently handles. The causal structure of the system is itself co-evolving with a dynamic context that changes. Examples include long-running closed-loop control of self-modifying biological systems, multi-agent ecologies where the agents redesign each other, and certain frontier safety questions about AI systems whose internal causal graph rewires in response to inputs. The central problem is: "how do we even formalize it?"
+A class of problems sits beyond what production engineering currently handles. The causal structure of the system is itself co-evolving with a dynamic context. Examples include long-running closed-loop control of self-modifying biological systems, multi-agent ecologies where the agents redesign each other, and certain frontier safety questions about AI systems whose internal causal graph rewires in response to inputs. The central problem is: "how do we even formalize it?"
 
 Emergent causality is the experimental fourth modality in DeepCausality. New Causaloids and new edges can be introduced by a generative process at runtime. The Causaloid graph is allowed to take shapes no upfront proof can foresee. The Effect Ethos is what makes the experiment safe to run: reasoning evolves freely, but every action is checked against an immutable ethos of computable norms before it leaves the system. The mode is deliberately experimental, and the work is currently confined to research.
 

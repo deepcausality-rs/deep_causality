@@ -1,5 +1,5 @@
 ---
-title: Why DeepCausality
+title: Why?
 description: What computational causality is, what it earns you, and where DeepCausality fits in.
 section: overview
 order: 1
@@ -13,7 +13,7 @@ Computational causality is that substrate. It gives you three things a purely co
 - **Probabilistic reasoning**: explicit odds, explicit confidence. The system tells you not just *what* it concluded but *how sure* it is.
 - **Full explainability**: a logical line of reasoning. You can ask the system "why" and get a structured answer.
 
-These properties matter in regulated and high-stakes domains: medicine, finance, robotics, avionics, industrial control. In those domains, a regulator, an operator, or a courtroom is going to ask why a decision was made, and here, an audit trail of deterministic reasoning becomes critical.
+These properties matter in regulated and high-stakes domains: medicine, finance, robotics, avionics, industrial control. In those domains, a regulator, an operator, or a courtroom is going to ask why a decision was made, and an audit trail of deterministic reasoning becomes critical.
 
 Deep learning and DeepCausality are complementary methodologies with different strengths that compose well in a single system. Deep learning is a strong choice for perception: object recognition, anomaly detection in raw signals, embeddings of unstructured text. DeepCausality is a strong choice for dynamic reasoning with a verifiable audit trail.
 
@@ -27,7 +27,7 @@ DeepCausality collapses those paradigms into one carrier: the [propagating effec
 
 The library has two reasoning primitives that emit the same propagating-effect type:
 
-- The **[Causaloid](/docs/concepts/causaloid/)** handles structural reasoning and composes isomorphic-recursively. A Singleton Causaloid, a collection of Causaloids, and a graph of Causaloids all nest into each other. A collection of causaloids nests into a singleton causaloid, which then becomes a node in a causaloid graph. The graph itself might be a node into a larger causaloid graph.
+- The **[Causaloid](/docs/concepts/causaloid/)** handles structural reasoning and composes isomorphic-recursively. A Singleton Causaloid, a collection of Causaloids, and a graph of Causaloids all nest into each other. A collection of causaloids nests into a singleton causaloid, which then becomes a node in a causaloid graph. The graph itself might be a node in a larger causaloid graph.
 
 - The **[Causal Monad](/docs/concepts/causal-monad/)** handles sequential reasoning. `pure` lifts a value into a chain; `bind` chains the next step; `intervene` rewrites a value mid-chain for counterfactual analysis. The chain accumulates an audit log automatically and short-circuits cleanly on error.
 
@@ -45,15 +45,15 @@ The same carrier covers two reasoning regimes. The non-Markovian `PropagatingEff
 
 The avionics [flight envelope monitor](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/avionics_examples/flight_envelope_monitor) runs a Causaloid Collection over five sensor-health checks, a three-step Causal Monad bind-chain for state estimation, and a Causaloid hypergraph of six envelope protections, all threading through one `PropagatingProcess<T, FlightState, AircraftConfig>` with state and audit log carried across every stage. The same PropagatingEffect supports the physics, medicine, and distributed-systems examples in the repository.
 
-The Causaloid alone gives you structure. The Causal Monad alone gives you sequencing. Neither would deliver the multi-domain composition the examples show. The fact that both emit the same type, that both can be lifted between Markovian and non-Markovian forms, and that they nest freely, is the move that makes DeepCausality unique.
+The Causaloid alone gives you structure. The Causal Monad alone gives you sequencing. Neither would deliver the multi-domain composition the examples show. The fact that both emit the same type, that both can be lifted between Markovian and non-Markovian forms, and that they nest freely, is what makes DeepCausality unique.
 
 ### From reasoning to action
 
-Reasoning composition is only half of the story. DeepCausality enables reasoning based action with two further primitives:
+Reasoning composition is only half of the story. DeepCausality enables reasoning-based action with two further primitives:
 
 - The **[Causal State Machine (CSM)](/docs/concepts/csm/)** is the bridge from inference to the outside world. It reads the propagating effect produced by the reasoning layer, evaluates which of its registered causal states have become active, and proposes the action linked to each active state. The state space is inferred at runtime rather than enumerated at design time, which is how the CSM avoids the limitation of a classical finite state machine.
 
-- The **[Effect Ethos](/docs/concepts/effect-ethos/)** is a programmable safety guardrail above the CSM. Every action the CSM would otherwise fire is intercepted by the Ethos and evaluated against an immutable graph of computable norms. The Ethos returns a verdict: `Obligatory`, `Impermissible`, or `Optional` with an associated cost. Based on the verdict, the proposed CSM action may execute or get stopped out. When it gets stopped out, the reason from the Effect Ethos is locked together with the outcome, so that in a subsequent audit one sees why the action was stopped, what its line of reasoning was, what the last proposed action was, and why it was stopped.
+- The **[Effect Ethos](/docs/concepts/effect-ethos/)** is a programmable safety guardrail above the CSM. Every action the CSM would otherwise fire is intercepted by the Ethos and evaluated against an immutable graph of computable norms. The Ethos returns a verdict: `Obligatory`, `Impermissible`, or `Optional` with an associated cost. Based on the verdict, the proposed CSM action may execute or get stopped out. When it gets stopped out, the reason from the Effect Ethos is logged together with the outcome, so that in a subsequent audit you can see why the action was stopped, what its line of reasoning was, what the last proposed action was, and why it was stopped.
 
 ```mermaid
 flowchart LR

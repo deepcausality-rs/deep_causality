@@ -5,10 +5,11 @@ section: overview
 order: 0
 ---
 
-Three pages, read in order. They explain what computational causality is, why classical causality breaks in dynamic systems, and the one idea DeepCausality replaces it with.
+Four pages, read in order. They explain what computational causality is, the axiom DeepCausality is built on, the problem classes that become tractable once that axiom is in place, and the sixteen innovations the project ships to address them.
 
-- **[Why DeepCausality](/docs/overview/why/)** — what computational causality is, what it earns you, and where DeepCausality fits in.
-- **[The Problem](/docs/overview/the-problem/)** — why classical causality's assumptions break in dynamic systems, and what that means in practice.
-- **[The Idea](/docs/overview/core-idea/)** — one axiom in plain English: causality as a spacetime-agnostic monadic functional dependency.
+- **[Why?](/docs/overview/why/)** — what computational causality is, what it does, and where DeepCausality fits in.
+- **[Axiom](/docs/overview/core-idea/)** — one working definition: causality as a spacetime-agnostic monadic process.
+- **[Problem](/docs/overview/the-problem/)** — seven categories of problems where dynamic causality is the right tool and conventional tooling is not.
+- **[Innovations](/docs/overview/innovations/)** — the catalog of sixteen innovations that, taken together, set DeepCausality apart.
 
 Once those land, move to [Getting started](/docs/getting-started/) for runnable code or [Concepts](/docs/concepts/) for the type-level reference.
