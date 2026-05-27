@@ -119,6 +119,11 @@ fn test_deterministic_synergy_case() {
 }
 
 /// Test with a distribution where T=S1 to check unique states.
+// Skipped under Miri: asserts strict emptiness of the synergistic state map,
+// which depends on the tight (`< 1e-14`) info threshold. Miri's soft-float
+// emulation drifts intermediate results by ~1 ULP, pushing a should-be-zero
+// term past the threshold and into the map. Correct and passes under normal CI.
+#[cfg(not(miri))]
 #[test]
 fn test_unique_information_case() {
     // T = S1, S2 is independent noise.
