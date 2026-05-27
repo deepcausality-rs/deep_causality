@@ -70,7 +70,6 @@ where
             State,
             Option<Context>,
         ) -> CausalEffectPropagationProcess<NewValue, State, Context, Error, Log>,
-        NewValue: Default,
     {
         if let Some(error) = self.error {
             return CausalEffectPropagationProcess {
@@ -230,7 +229,6 @@ where
             Option<Context>,
         )
             -> CausalEffectPropagationProcess<NewValue, State, Context, CausalityError, Log>,
-        NewValue: Default,
     {
         if let Some(error) = self.error {
             return CausalEffectPropagationProcess {

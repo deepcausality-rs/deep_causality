@@ -26,7 +26,7 @@
 //! - Bit-string basis indexing in `CausalMultiVector` (`Cl(3,1)`)
 //! - Composition of rotors via repeated `bind`
 
-use deep_causality_haft::{CoMonad, Monad, Pure};
+use deep_causality_haft::{CoMonad, Pure};
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::{Float106, RealField};
@@ -100,7 +100,9 @@ fn main() {
     // each closure; the rapidity is read out by `read_edge_rapidity`.
     let mut process: Process<CausalMultiVector<FloatType>> = ProcessWitness::pure(psi);
     for e in 0..N_EDGES {
-        process = ProcessWitness::bind(process, |p| transport_across_edge(p, &manifold, e));
+        process = process.bind(|p, _, _| {
+            transport_across_edge(p.into_value().expect("spinor"), &manifold, e)
+        });
         if process.error.is_some() {
             break;
         }

@@ -14,11 +14,11 @@
 //! and the step log are handled by the monad, not by manual plumbing.
 //!
 //! ## APIs Demonstrated
-//! - `CausalEffectPropagationProcessWitness::pure` and `bind`
+//! - `CausalEffectPropagationProcessWitness::pure` and fluent `.bind()`
 //! - `CausalTensor::ein_sum` with `EinSumOp::mat_mul`
 //! - `CausalMultiVector::geometric_product`
 
-use deep_causality_haft::{Monad, Pure};
+use deep_causality_haft::Pure;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::RealField;
@@ -39,18 +39,22 @@ fn main() {
         CausalTensor::new(vec![FloatType::from(1.0), FloatType::from(0.0)], vec![2]).unwrap();
     println!("Initial state x = {:?}\n", initial.as_slice());
 
-    let process: Process<CausalTensor<FloatType>> = ProcessWitness::pure(initial);
-    let after_predict = ProcessWitness::bind(process, predict);
-    let after_correct = ProcessWitness::bind(after_predict, correct);
-    let after_verify = ProcessWitness::bind(after_correct, verify);
+    // predict -> correct -> verify, threaded through one monadic chain. The
+    // value stays a `CausalTensor`, but predict uses a tensor matrix-multiply
+    // and correct uses a Clifford rotor; both co-exist in the same chain. A
+    // NaN in verify short-circuits the rest without manual error plumbing.
+    let result: Process<CausalTensor<FloatType>> = ProcessWitness::pure(initial)
+        .bind(|v, _, _| predict(v.into_value().expect("initial state")))
+        .bind(|v, _, _| correct(v.into_value().expect("predicted state")))
+        .bind(|v, _, _| verify(v.into_value().expect("corrected state")));
 
     println!("Chained log:");
-    print_log(&after_verify.logs);
+    print_log(&result.logs);
 
-    match after_verify.error {
+    match result.error {
         Some(e) => println!("\nPipeline errored: {}", e),
         None => {
-            let final_state = expect_value(&after_verify.value);
+            let final_state = expect_value(&result.value);
             println!("\nFinal state: {:?}", final_state.as_slice());
         }
     }

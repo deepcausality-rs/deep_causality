@@ -16,7 +16,7 @@
 //! - `CausalEffectPropagationProcessWitness::pure` and `bind`
 //! - Monadic short-circuit on numerical instability
 
-use deep_causality_haft::{CoMonad, Monad, Pure};
+use deep_causality_haft::{CoMonad, Pure};
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
@@ -47,10 +47,10 @@ fn main() {
     let manifold = build_manifold(initial);
     println!("t=0 phi: {:?}", snapshot(&manifold));
 
-    let mut process: Process<SimplicialManifold<f64, FloatType>> = ProcessWitness::pure(manifold);
+    let mut process: Process<SimplicialManifold<FloatType, FloatType>> = ProcessWitness::pure(manifold);
 
     for step in 1..=N_STEPS {
-        process = ProcessWitness::bind(process, diffuse_one_step);
+        process = process.bind(|m, _, _| diffuse_one_step(m.into_value().expect("manifold")));
         if process.error.is_some() {
             break;
         }
