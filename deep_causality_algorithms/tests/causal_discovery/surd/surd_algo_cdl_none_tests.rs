@@ -74,6 +74,11 @@ fn test_single_target_state_some_nones_cdl() {
     assert!(!result.mutual_info().is_empty());
 }
 
+// Skipped under Miri: asserts strict emptiness of the unique state map, which
+// depends on the tight (`< 1e-14`) info threshold and float-keyed sort
+// tie-breaking on the CDL path. Miri's soft-float emulation drifts intermediate
+// results by ~1 ULP, crossing those edges. Correct and passes under normal CI.
+#[cfg(not(miri))]
 #[test]
 fn test_calculate_state_slice_some_nones_cdl() {
     let data = vec![
