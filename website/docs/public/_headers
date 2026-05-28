@@ -1,0 +1,64 @@
+# Cloudflare Workers Static Assets reads this file from the publish root
+# (dist/_headers). Astro copies everything under public/ to dist/ at build time.
+# Mirrors website/web/public/_headers so the docs cache like the marketing site.
+#
+# Rule order: more-specific paths first; the catch-all sits at the bottom.
+
+# --- Fingerprinted Astro output: bundles + per-component CSS ---
+# Filenames carry a content hash, so the URL itself is the cache key.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# --- Vendored fonts (woff2) ---
+# Subsetted Geist Variable + JetBrains Mono Variable. Filenames are stable;
+# replace the file or rename it when re-vendoring.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+# --- Static imagery (hero art, logos, OG card, diagrams) ---
+/img/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# --- Pagefind search index ---
+# Regenerated on every build; each fragment file is content-hashed internally.
+/pagefind/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# --- Favicons ---
+# Filenames are not hashed, so cap browser cache at 1 day to allow swaps.
+/favicon.ico
+  Cache-Control: public, max-age=86400
+/favicon.svg
+  Cache-Control: public, max-age=86400
+/favicon-32x32.png
+  Cache-Control: public, max-age=86400
+/apple-touch-icon.png
+  Cache-Control: public, max-age=86400
+
+# --- Single-PDF export (committed, regenerated occasionally; stable URL) ---
+/deepcausality-docs.pdf
+  Cache-Control: public, max-age=3600, must-revalidate
+
+# --- Graph data + sitemap (regenerated each build; stable URLs) ---
+/sitegraph/*
+  Cache-Control: public, max-age=3600, must-revalidate
+/sitemap-index.xml
+  Cache-Control: public, max-age=3600, must-revalidate
+/sitemap-*.xml
+  Cache-Control: public, max-age=3600, must-revalidate
+
+# --- Everything else: HTML pages and any unmatched asset ---
+# No `Cache-Control` here on purpose. Cloudflare's `_headers` merges header
+# values across every matching rule rather than letting the more specific rule
+# win, so a `Cache-Control` on `/*` would concatenate with the `/_astro/*`,
+# `/fonts/*`, etc. rules and corrupt the per-asset directives. Edge caching for
+# HTML is handled by Cloudflare (default for Workers Static Assets / a Cache
+# Rule); browser caching falls back to the edge default for unmarked responses.
+#
+# Baseline security headers ride along here so every response carries them.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()

@@ -1,7 +1,7 @@
 # DeepCausality documentation (Starlight)
 
 Standalone Starlight site served at **https://docs.deepcausality.com** by its own
-Cloudflare Worker (`deepcausality-docs`), independent of the marketing site in
+Cloudflare Worker (`deepcausality-docs`), independent of the main website in
 `../web`. See `../../openspec/changes/migrate-docs-to-starlight/` for the full plan.
 
 ## Commands
@@ -29,11 +29,6 @@ docs to one PDF via `npx starlight-to-pdf` (headless Chromium). It is intentiona
 **not** part of the Cloudflare build (no browser there). Regenerate and commit
 `public/deepcausality-docs.pdf` before pushing so the docs and PDF stay consistent.
 
-## Content migration
-
-`scripts/migrate-content.mjs` is the one-shot transform that brought the long-form
-docs over from `../web` (frontmatter remap + link rewrites). It skips
-`overview/why.md`, whose mermaid diagrams were hand-converted to static inline SVG.
 
 ## Fonts
 
