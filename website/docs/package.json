@@ -9,7 +9,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "check": "astro check"
+    "check": "astro check",
+    "pdf": "bash scripts/build-pdf.sh"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.2",

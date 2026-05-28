@@ -12,7 +12,8 @@
 
 - [x] 2.1 Configure Expressive Code with dual light/dark themes matching the current Shiki setup (`github-light` / `github-dark`)
 - [x] 2.2 Add and enable the backlinks graph view; confirm it renders
-  - Used `starlight-site-graph@^0.5.0` directly as a Starlight plugin instead of `starlight-theme-obsidian` (the theme@0.4.1 is broken: its `removeDefault().default({})` strips site-graph's nested `z.map()` defaults). Used directly, site-graph validates with its own defaults and builds clean, emitting `dist/sitegraph/sitemap.json`. Its base CSS is wired into `customCss` ahead of our `theme.css`.
+  - Used `starlight-site-graph@^0.5.0` directly as a Starlight plugin instead of `starlight-theme-obsidian` (the theme@0.4.1 is broken: its `removeDefault().default({})` strips site-graph's nested `z.map()` defaults). Used directly, site-graph validates with its own defaults, builds clean, and emits `dist/sitegraph/sitemap.json` (28 nodes). The plugin auto-injects its own CSS, so no manual CSS wiring is needed.
+  - Runtime fix: the graph stayed on its skeleton because site-graph's bundled glob matcher (picomatch, for `visibilityRules`) reads `process.platform`/`process.version` at init, throwing `process is not defined` in the browser. Added a Vite `define` in `astro.config.mjs` shimming both (`'browser'` / `'v20.0.0'`), so the client bundle no longer references `process`. Graph renders in build/preview (it is empty under `astro dev` by design; see `README.md`).
 - [x] 2.3 Apply the marketing site's visual identity (color tokens, fonts, logo) via Starlight theming; restyle the Obsidian theme to those tokens
   - Done: tokens mapped to Starlight vars in `src/styles/theme.css`; fonts vendored locally in `public/fonts/` with `@font-face` in `src/styles/fonts.css` (no CDN); logo wired. Obsidian-theme restyle deferred with 2.2.
 - [x] 2.4 Confirm Pagefind search works over the docs content
@@ -35,10 +36,14 @@
 
 ## 4. Single-PDF export
 
-- [ ] 4.1 Add `starlight-to-pdf` and a local build script that renders the whole docs tree to one PDF
-- [ ] 4.2 Run the script locally, verify the PDF, and commit it as a static asset
-- [ ] 4.3 Confirm the Cloudflare docs build serves the committed PDF and launches no headless browser
-- [ ] 4.4 Document the pre-push workflow for regenerating the PDF (and optionally a stale-PDF check)
+- [x] 4.1 Add `starlight-to-pdf` and a local build script that renders the whole docs tree to one PDF
+  - `scripts/build-pdf.sh` (npm script `pdf`): builds, starts `astro preview`, runs `npx --yes starlight-to-pdf` against it, outputs `public/deepcausality-docs.pdf`. Invoked via `npx` so it never enters the project deps or the Cloudflare deploy.
+- [x] 4.2 Run the script locally, verify the PDF, and commit it as a static asset
+  - Generated `public/deepcausality-docs.pdf` (~3.3 MB) via `npm run pdf` (correct flags: `--path`/`--filename`/`--print-bg`); valid PDF, served at `/deepcausality-docs.pdf` (200). Added a "Download PDF" sidebar link. The binary is committed with the change so docs and PDF stay consistent.
+- [x] 4.3 Confirm the Cloudflare docs build serves the committed PDF and launches no headless browser
+  - By design: the Cloudflare build runs `astro build` only; the PDF tooling is `npx`-invoked from a separate local script, never installed in deps. Once committed, `public/deepcausality-docs.pdf` is served as a static asset.
+- [x] 4.4 Document the pre-push workflow for regenerating the PDF (and optionally a stale-PDF check)
+  - Documented in `scripts/build-pdf.sh` header: run `npm run pdf`, commit the regenerated PDF, push.
 
 ## 5. Marketing-site handoff (`website/web`)
 
@@ -51,10 +56,14 @@
 
 ## 6. SEO
 
-- [ ] 6.1 Confirm the docs origin serves its own `sitemap-index.xml` (scoped to docs URLs) and `robots.txt`
-- [ ] 6.2 Confirm docs pages canonicalize to the `docs.deepcausality.com` origin
+- [x] 6.1 Confirm the docs origin serves its own `sitemap-index.xml` (scoped to docs URLs) and `robots.txt`
+  - `@astrojs/sitemap` emits `sitemap-index.xml` + `sitemap-0.xml`; added `public/robots.txt` referencing the docs sitemap.
+- [x] 6.2 Confirm docs pages canonicalize to the `docs.deepcausality.com` origin
+  - Verified: e.g. `<link rel="canonical" href="https://docs.deepcausality.com/concepts/causal-monad/">` (Starlight, from `site:`).
 - [ ] 6.3 Add 301 redirects from `www.deepcausality.com/docs/*` to `https://docs.deepcausality.com/*`
-- [ ] 6.4 Add a link from the docs site back to `www.deepcausality.com`
+  - DEFERRED TO CUTOVER (with group 5/7): adding the `www` `_redirects` before the docs subdomain is live would break the current `/docs/*` pages on `www`. Lands together with the page removal and the docs deploy.
+- [x] 6.4 Add a link from the docs site back to `www.deepcausality.com`
+  - Sidebar `deepcausality.com` link + links on the docs index/splash page.
 
 ## 7. Cloudflare and CI
 

@@ -3,9 +3,9 @@ title: DeepCausality Documentation
 description: Documentation for DeepCausality, a Rust framework for computational causality, dynamic causal reasoning, and the Effect Propagation Process.
 template: splash
 hero:
-  tagline: Dynamic causality for advanced systems where time, context, and rules evolve.
+  tagline: Dynamic causality for advanced systems.
   image:
-    file: ../../assets/logo-color.png
+    html: '<img src="/img/frontpage-art.webp" alt="DeepCausality" width="1200" height="630" />'
   actions:
     - text: Start with the overview
       link: /overview/
@@ -15,17 +15,15 @@ hero:
       link: https://docs.rs/deep_causality
       icon: external
       variant: minimal
-    - text: deepcausality.com
-      link: https://www.deepcausality.com
-      icon: external
-      variant: minimal
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-This is the reference documentation for [DeepCausality](https://www.deepcausality.com), an open-source Rust framework for computational causality hosted at the Linux Foundation for AI & Data.
+This is the documentation page for [DeepCausality](https://www.deepcausality.com), a Rust framework for computational causality hosted at the Linux Foundation for AI & Data.
 
-<CardGrid stagger>
+<hr class="sl-section-divider" />
+
+<CardGrid>
   <Card title="Overview" icon="open-book">
     Why DeepCausality exists, the single axiom it is built on, and the literature behind it. Start at the [Overview](/overview/).
   </Card>
@@ -35,7 +33,7 @@ This is the reference documentation for [DeepCausality](https://www.deepcausalit
   <Card title="Concepts" icon="puzzle">
     Reference pages for every primitive: the Causaloid, the Context, the Effect Propagation Process, the Causal Monad trait, and the type-level machinery underneath. See [Concepts](/concepts/).
   </Card>
-  <Card title="Rust API" icon="seti:rust">
-    The generated API reference lives on [docs.rs/deep_causality](https://docs.rs/deep_causality).
+  <Card title="Full docs as PDF" icon="cloud-download">
+    Prefer to read offline? [Download the documentation as a PDF](/deepcausality-docs.pdf).
   </Card>
 </CardGrid>

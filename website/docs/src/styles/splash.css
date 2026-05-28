@@ -1,0 +1,85 @@
+/*
+ * Front-page (splash) styling for the docs, echoing the marketing site:
+ * a cyan halo around the hero art, accented foundation cards, and section
+ * divider lines. Scoped to splash pages via :has(.hero) so the rest of the
+ * docs are untouched.
+ */
+
+/* Hero art: full-width, native 1200x630 proportions (we inject the unprocessed
+   public image via hero.image.html so Starlight does not crop it to a square),
+   framed with an ambient accent halo. */
+body:has(.hero) .hero img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 16px;
+  box-shadow:
+    0 0 80px -28px color-mix(in srgb, var(--sl-color-accent) 45%, transparent),
+    0 24px 48px -24px rgba(8, 16, 24, 0.6);
+}
+
+/* Give the hero art more width (it carries the wordmark), like the marketing
+   site's wide art column. Starlight caps the art wrapper at min(100%, 25rem)
+   (~400px); lift that cap so the art fills its (widened) column. */
+@media (min-width: 50rem) {
+  body:has(.hero) .hero {
+    align-items: center;
+    grid-template-columns: 4fr 6fr;
+  }
+  body:has(.hero) .hero > .hero-html {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* Foundation cards: a static, symmetric 2x2 grid. No stagger, no motion. */
+body:has(.hero) .card-grid {
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 50rem) {
+  body:has(.hero) .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+body:has(.hero) .card {
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--sl-color-accent) 4%, transparent);
+}
+body:has(.hero) .card .icon {
+  color: var(--sl-color-accent);
+}
+
+/* Section divider: a hairline that fades at both ends, with a centered dot. */
+.sl-section-divider {
+  position: relative;
+  height: 1px;
+  margin: 3rem 0;
+  border: 0;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--sl-color-gray-5) 18%,
+    var(--sl-color-gray-5) 82%,
+    transparent
+  );
+}
+.sl-section-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%;
+  background: var(--sl-color-accent);
+}
+
+/* Centered section heading on the splash, matching the marketing "foundation". */
+body:has(.hero) .sl-markdown-content h2 {
+  text-align: center;
+  margin-block: 1.5rem;
+}
