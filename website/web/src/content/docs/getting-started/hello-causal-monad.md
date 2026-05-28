@@ -14,7 +14,7 @@ A monad is two operations:
 - **`pure(v)`**: wrap a plain value in the monad.
 - **`bind(m, f)`**: given a wrapped value and a function that *also* produces a wrapped value, chain them. The function gets to see the unwrapped value, and its result becomes the next link in the chain.
 
-Everything else follows from those two operations satisfying three identities (the *monad laws*). The library encodes both operations on the [`CausalEffectPropagationProcess`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core) struct, which is what the Causal Monad threads through.
+Everything else follows from those two operations satisfying three identities (the *monad laws*). These operations are not a separate type; they are a trait, `CausalMonad`, implemented by the carrier effect [`CausalEffectPropagationProcess`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core). The carrier *is* the monad.
 
 ## The smallest possible program
 
@@ -39,7 +39,7 @@ fn main() {
 
 Three lines of substance. `pure(10)` lifts the integer into a `PropagatingEffect<i32>`. The first `bind` unwraps the value, increments it, and re-wraps. The second `bind` unwraps again, doubles, re-wraps. The final value is read off `result.value`.
 
-`PropagatingEffect<T>` is the everyday alias for the Causal Monad, exported from both [`deep_causality`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality) and [`deep_causality_core`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core). The full name is `CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>`: five type parameters, three of them pinned to defaults. The defaults are sane for almost every starting program, which is why the alias is what most code reaches for.
+`PropagatingEffect<T>` is the everyday alias for the carrier effect, exported from both [`deep_causality`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality) and [`deep_causality_core`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core). The full name is `CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>`: five type parameters, three of them pinned to defaults. The defaults are sane for almost every starting program, which is why the alias is what most code reaches for.
 
 Run this:
 
@@ -88,30 +88,28 @@ for entry in &result.logs {
 
 Every step's log entries accumulate in `result.logs`. The chain has an audit trail by construction; you did not write a logger. The trail survives errors. If a later bind fails, the log of every step that ran before the failure is still there.
 
-## The static form: `CausalMonad<S, C>`
+## Carrying state and context
 
-When the chain needs a real state or a real context type, the static form of the monad is the cleaner path:
+The example above ignored the second and third arguments because a `PropagatingEffect` pins both to `()`. When the chain needs real state or a real context, reach for `PropagatingProcess<T, S, C>`. It is the same carrier and the same `bind`; the only change is that `State` and `Context` now carry information, so the closure can read the running state and return an evolved one.
 
 ```rust
-use deep_causality_core::{CausalMonad, EffectValue};
+use deep_causality::{EffectLog, EffectValue, PropagatingProcess};
 
-let initial = CausalMonad::<i32, String>::pure(10);
-
-let next = CausalMonad::<i32, String>::bind(initial, |val| {
-    let mut p = CausalMonad::<i32, String>::pure(val + 1);
-    p.logs.add_entry("step1");
-    p
-});
-
-if let EffectValue::Value(v) = next.value {
-    println!("v = {}", v); // 11
-}
-println!("log entries: {}", next.logs.len()); // 1
+// value: i32, Markovian state: i32, context: String
+let process = PropagatingProcess::<i32, i32, String>::pure(10)
+    .bind(|value, state, context| {
+        let n = value.into_value().unwrap_or_default();
+        PropagatingProcess {
+            value: EffectValue::Value(n + 1),
+            state: state + 1, // the state evolves and carries forward
+            context,          // the context threads through
+            error: None,
+            logs: EffectLog::new(),
+        }
+    });
 ```
 
-The two type parameters are the state type (`i32` here) and the context type (`String`). The closure takes one argument, the unwrapped value, because state and context are threaded automatically by the monad's internals. The fluent `.bind(|v, s, c| ...)` form on `PropagatingEffect` exists because the stateless case is common enough to deserve a shortcut; the static form is more explicit when state or context carry real information.
-
-Both forms are the same monad. They differ only in how they spell the call site.
+`bind` keeps the state and context of the process the closure returns, so the chain is Markovian: each step sees the state the previous step left. The stateless `PropagatingEffect<T>` is exactly this with `State = Context = ()`. Same trait, same `bind`; the type parameters decide whether the chain carries memory.
 
 ## The three laws: a quick check
 

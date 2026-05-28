@@ -5,7 +5,7 @@ section: concepts
 order: 0
 ---
 
-Reference pages for every primitive the library exposes. Start with **Dynamic causality** for the framing, then **Causaloid** and **Context** for the two structural units, then the **Causal Monad** and **Effect Propagation Process** for how values flow through them. The rest can be read on demand.
+Reference pages for every primitive the library exposes. Start with **Dynamic causality** for the framing, then **Causaloid** and **Context** for the two structural units, then the **Effect Propagation Process** for what flows between them. The **Causal Monad** page covers the `pure`/`bind` algebra that carrier implements. The rest can be read on demand.
 
 ## Foundations
 
@@ -16,8 +16,8 @@ Reference pages for every primitive the library exposes. Start with **Dynamic ca
 
 ## Propagation
 
-- **[Effect Propagation Process](/docs/concepts/effect-propagation-process/)** — the struct that carries a value, a state, a context, an error, and a log through a chain of Causaloids.
-- **[Causal Monad](/docs/concepts/causal-monad/)** — the pure/bind algebra that makes effect propagation composable, auditable, and short-circuiting on error.
+- **[Effect Propagation Process](/docs/concepts/effect-propagation-process/)** — the carrier effect: the struct that carries a value, a state, a context, an error, and a log through a chain of Causaloids.
+- **[Causal Monad](/docs/concepts/causal-monad/)** — the pure/bind algebra the carrier implements, which makes effect propagation composable, auditable, and short-circuiting on error. A trait, not a separate type.
 - **[Higher-Kinded Types](/docs/concepts/hkt/)** — how DeepCausality encodes the type constructors that Rust does not natively support.
 
 ## Surfaces and tooling

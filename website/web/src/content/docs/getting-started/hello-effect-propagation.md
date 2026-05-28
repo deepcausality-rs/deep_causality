@@ -1,13 +1,13 @@
 ---
 title: Hello, Effect Propagation
-description: How the Causaloid, the Causal Monad, and the propagating-effect types compose into one chain.
+description: How a Causaloid's structural reasoning and the carrier's bind-chain compose into one pipeline over a single carrier effect.
 section: getting-started
 order: 5
 ---
 
-The earlier pages introduced three pieces of the library: the Causal Monad (with its `pure` and `bind`), the Causaloid (which wraps a causal function), and the Context (which holds the world a rule reads from). Each one has its own page because each one has its own surface. This page is about what happens when you put them together.
+The earlier pages introduced the carrier effect (with its `pure` and `bind`), the Causaloid (which wraps a causal function), and the Context (which holds the world a rule reads from). This page is about what happens when you put them together.
 
-The short version: a Causaloid's evaluation and a Causal Monad's `bind` both return the same type. That single shared return type is what lets one chain mix structural causal reasoning (Causaloids, Collections, Graphs) with sequential causal reasoning (monadic bind) without bridge code.
+The short version: a Causaloid's evaluation and a `bind` step both return the same carrier effect. That single shared return type is what lets one chain mix structural causal reasoning (Causaloids, Collections, Graphs) with sequential causal reasoning (monadic bind) without bridge code.
 
 ## The shared return type
 
@@ -66,20 +66,20 @@ let updated = stateful.bind(|val, mut state, _ctx| {
 
 The reverse direction is also fine: a stateful chain can ignore its state and context entirely when a step does not need them. The type-level distinction is real, but the boundary is one constructor call.
 
-## The Causal Monad stands on its own
+## A bind-chain stands on its own
 
-You can use the Causal Monad without Causaloids. The starter example does exactly that: [`examples/starter_example`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/starter_example) walks Pearl's Ladder of Causation as a pure `pure`/`bind`/`intervene` chain with no Causaloid in sight. The monad is enough on its own when the reasoning is sequential and the rules are small enough to live as closures.
+You can build a `pure`/`bind`/`intervene` chain on the carrier without Causaloids. The starter example does exactly that: [`examples/starter_example`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/starter_example) walks Pearl's Ladder of Causation as a pure `pure`/`bind`/`intervene` chain with no Causaloid in sight. The carrier's algebra is enough on its own when the reasoning is sequential and the rules are small enough to live as closures.
 
 You can also use Causaloids without explicit monadic chaining. A single `causaloid.evaluate(&PropagatingEffect::pure(input))` is a complete program for the cases where structural composition (Singleton, Collection, Graph) is what you want.
 
-## How the Causal Monad and Causaloid compose
+## How the bind-chain and Causaloid compose
 
-Real systems need both. Sequential transforms belong in a Causal Monad bind-chain. Parallel aggregation belongs in a Causaloid Collection. Cross-influencing dependencies belong in a Causaloid Graph. Because every shape returns the same propagating-effect carrier, a single pipeline can mix all three. A Causaloid Graph emits a `PropagatingEffect`, which a `.bind` step consumes, which feeds another Causaloid evaluation, which feeds a `.bind`, and so on. State and audit log accumulate across every stage.
+Real systems need both. Sequential transforms belong in a bind-chain. Parallel aggregation belongs in a Causaloid Collection. Cross-influencing dependencies belong in a Causaloid Graph. Because every shape returns the same propagating-effect carrier, a single pipeline can mix all three. A Causaloid Graph emits a `PropagatingEffect`, which a `.bind` step consumes, which feeds another Causaloid evaluation, which feeds a `.bind`, and so on. State and audit log accumulate across every stage.
 
 The [flight envelope monitor example](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/avionics_examples/flight_envelope_monitor) is the canonical demonstration. It runs a Causaloid Collection over five sensor-health checks, a three-step Causal Monad bind-chain for state estimation, and a Causaloid hypergraph of six envelope protections, all threading through one `PropagatingProcess<T, FlightState, AircraftConfig>` with state and audit log carried across every stage.
 
 ## What this enables
 
-Most of the advanced examples in the repository depend on this composition. The pattern is the same in each: a Causaloid (Singleton, Collection, or Graph) supplies the structural reasoning, and a Causal Monad bind-chain sequences the rest, both sharing the same propagating-effect carrier. The boundary between "structural" and "sequential" is fluid and you can move that boundary as the problem evolves. Start with a simple non-Markovian causal monad. Add structure later with a Causaloid. Add state later into the Markovian part of the chain, and then combine all parts fluently.
+Most of the advanced examples in the repository depend on this composition. The pattern is the same in each: a Causaloid (Singleton, Collection, or Graph) supplies the structural reasoning, and a Causal Monad bind-chain sequences the rest, both sharing the same propagating-effect carrier. The boundary between "structural" and "sequential" is fluid and you can move that boundary as the problem evolves. Start with a simple non-Markovian bind-chain. Add structure later with a Causaloid. Add state later into the Markovian part of the chain, and then combine all parts fluently.
 
 The concept pages on [Causaloid](/docs/concepts/causaloid/), [Causal Monad](/docs/concepts/causal-monad/), and [Effect Propagation Process](/docs/concepts/effect-propagation-process/) go deeper on the algebra. The [examples](/examples/) put the composition to work.

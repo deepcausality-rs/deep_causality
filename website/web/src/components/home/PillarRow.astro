@@ -3,11 +3,6 @@
 // Below 900px the row stacks vertically with a vertical connector.
 const pillars = [
   {
-    name: 'Causal Monad',
-    href: '/docs/concepts/causal-monad/',
-    body: 'The pure/bind algebra that composes causal effects. Carries value, state, context, error, and an audit log through every step.',
-  },
-  {
     name: 'Causaloid',
     href: '/docs/concepts/causaloid/',
     body: 'A self-contained unit of causality. Compose Causaloids into larger structures with the same algebra you would use for functions.',
@@ -16,6 +11,11 @@ const pillars = [
     name: 'Context',
     href: '/docs/concepts/context/',
     body: 'An explicit hypergraph encoding the environment. Spacetime nodes, relational edges, and dynamic update semantics.',
+  },
+  {
+    name: 'Effect Propagation',
+    href: '/docs/concepts/effect-propagation-process/',
+    body: 'The carrier effect every Causaloid produces and consumes. It threads value, state, context, error, and an audit log through every step, and implements the pure/bind algebra that composes them.',
   },
 ];
 ---

@@ -110,4 +110,4 @@ Errors short-circuit the chain. The `EffectLog` accumulates regardless, so a fai
 
 ## Where to look next
 
-[Context](/docs/concepts/context/) is the structure a contextual Causaloid reads from. [Effect Propagation Process](/docs/concepts/effect-propagation-process/) is the type that flows through a Causaloid chain. [Causal Monad](/docs/concepts/causal-monad/) is how the algebra is encoded so that chains compose without losing their properties.
+[Context](/docs/concepts/context/) is the structure a contextual Causaloid reads from. [Effect Propagation Process](/docs/concepts/effect-propagation-process/) is the carrier effect that flows through a Causaloid chain. [Causal Monad](/docs/concepts/causal-monad/) is the `pure`/`bind` algebra that carrier implements, so chains compose without losing their properties.
