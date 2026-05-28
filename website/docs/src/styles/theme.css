@@ -7,14 +7,11 @@
  * the same convention as the marketing site.
  */
 
+/* Type families (match the marketing site) + dark theme (default). */
 :root {
-  /* Type families (match the marketing site) */
   --sl-font: 'Geist Variable', 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --sl-font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-}
 
-/* Dark theme (default) */
-:root {
   --sl-color-accent-low: #0e3a40;
   --sl-color-accent: #5cd4e1;
   --sl-color-accent-high: #b3ecf2;
