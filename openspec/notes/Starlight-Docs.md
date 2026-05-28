@@ -6,7 +6,7 @@
 
 ## 1. Context and motivation
 
-The documentation is outgrowing the hand-built Astro site in `website/web`, and it is growing fast. Today the docs live inside the marketing site as content collections (`src/content/docs/{getting-started,overview,concepts}`, plus `examples` and `blog`), rendered through bespoke components (`src/components/docs/DocsSidebar.astro`, `src/pages/docs/[...slug].astro`). Every docs feature (sidebar, search, prev/next, table of contents) is maintained by hand.
+The documentation is outgrowing the hand-built Astro site in `website/web`, and it is growing fast. Today the docs live inside the main site as content collections (`src/content/docs/{getting-started,overview,concepts}`, plus `examples` and `blog`), rendered through bespoke components (`src/components/docs/DocsSidebar.astro`, `src/pages/docs/[...slug].astro`). Every docs feature (sidebar, search, prev/next, table of contents) is maintained by hand.
 
 Current inventory (`website/web/src/content`):
 

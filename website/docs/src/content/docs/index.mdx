@@ -1,0 +1,41 @@
+---
+title: DeepCausality Documentation
+description: Documentation for DeepCausality, a Rust framework for computational causality, dynamic causal reasoning, and the Effect Propagation Process.
+template: splash
+hero:
+  tagline: Dynamic causality for advanced systems where time, context, and rules evolve.
+  image:
+    file: ../../assets/logo-color.png
+  actions:
+    - text: Start with the overview
+      link: /overview/
+      icon: right-arrow
+      variant: primary
+    - text: Rust API on docs.rs
+      link: https://docs.rs/deep_causality
+      icon: external
+      variant: minimal
+    - text: deepcausality.com
+      link: https://www.deepcausality.com
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+This is the reference documentation for [DeepCausality](https://www.deepcausality.com), an open-source Rust framework for computational causality hosted at the Linux Foundation for AI & Data.
+
+<CardGrid stagger>
+  <Card title="Overview" icon="open-book">
+    Why DeepCausality exists, the single axiom it is built on, and the literature behind it. Start at the [Overview](/overview/).
+  </Card>
+  <Card title="Getting started" icon="rocket">
+    Install the crate and walk the smallest programs that exercise the carrier effect, the Causaloid, and the Context. See [Getting Started](/getting-started/).
+  </Card>
+  <Card title="Concepts" icon="puzzle">
+    Reference pages for every primitive: the Causaloid, the Context, the Effect Propagation Process, the Causal Monad trait, and the type-level machinery underneath. See [Concepts](/concepts/).
+  </Card>
+  <Card title="Rust API" icon="seti:rust">
+    The generated API reference lives on [docs.rs/deep_causality](https://docs.rs/deep_causality).
+  </Card>
+</CardGrid>
