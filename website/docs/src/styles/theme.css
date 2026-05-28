@@ -1,0 +1,54 @@
+/*
+ * DeepCausality docs theme: maps the marketing site's design tokens
+ * (website/web/src/styles/tokens.css) onto Starlight's CSS custom properties
+ * so docs.deepcausality.com and www.deepcausality.com read as one product.
+ *
+ * Starlight uses `data-theme` on <html> with 'dark' (default) / 'light',
+ * the same convention as the marketing site.
+ */
+
+/* Type families (match the marketing site) + dark theme (default). */
+:root {
+  --sl-font: 'Geist Variable', 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --sl-font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --sl-color-accent-low: #0e3a40;
+  --sl-color-accent: #5cd4e1;
+  --sl-color-accent-high: #b3ecf2;
+
+  --sl-color-white: #e6edf3; /* fg-0 */
+  --sl-color-gray-1: #e6edf3;
+  --sl-color-gray-2: #aab3bd; /* fg-1 */
+  --sl-color-gray-3: #6b7682; /* fg-2 */
+  --sl-color-gray-4: #2a3a4a; /* line-2 */
+  --sl-color-gray-5: #1f2a36; /* line-1 */
+  --sl-color-gray-6: #121a23; /* bg-2 */
+  --sl-color-black: #070b10; /* bg-0 */
+
+  --sl-color-bg: #070b10; /* bg-0 */
+  --sl-color-bg-nav: #0b1118; /* bg-1 */
+  --sl-color-bg-sidebar: #0b1118; /* bg-1 */
+  --sl-color-hairline-shade: #1f2a36;
+}
+
+/* Light theme */
+:root[data-theme='light'] {
+  --sl-color-accent-low: #d7f0f3;
+  --sl-color-accent: #0a8a98;
+  --sl-color-accent-high: #063e45;
+
+  --sl-color-white: #0b1118; /* darkest text in light mode */
+  --sl-color-gray-1: #0b1118; /* fg-0 light */
+  --sl-color-gray-2: #3b4754; /* fg-1 light */
+  --sl-color-gray-3: #5b6772; /* fg-2 light */
+  --sl-color-gray-4: #c0c8d1; /* line-2 light */
+  --sl-color-gray-5: #d8dee4; /* line-1 light */
+  --sl-color-gray-6: #eef2f6; /* bg-2 light */
+  --sl-color-gray-7: #f6f8fa; /* bg-1 light */
+  --sl-color-black: #ffffff;
+
+  --sl-color-bg: #ffffff;
+  --sl-color-bg-nav: #f6f8fa;
+  --sl-color-bg-sidebar: #f6f8fa;
+  --sl-color-hairline-shade: #d8dee4;
+}

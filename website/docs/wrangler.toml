@@ -1,0 +1,20 @@
+# Cloudflare Workers + Static Assets config for the DeepCausality documentation.
+#
+# Standalone from the marketing site (website/web → "deepcausality-prod").
+# This Worker serves the Starlight build at docs.deepcausality.com. A docs
+# change rebuilds and deploys only this Worker; the marketing site is untouched.
+#
+# The site is fully static — no SSR, no API routes, no `main` worker entry.
+# Wrangler uploads the contents of `dist/` as the Worker's static assets.
+# Bind the custom domain (docs.deepcausality.com) in the Cloudflare dashboard.
+
+name = "deepcausality-docs"
+compatibility_date = "2026-05-01"
+
+[assets]
+directory = "./dist"
+# Starlight emits a 404 page; let Cloudflare serve it.
+not_found_handling = "404-page"
+
+[observability]
+enabled = true
