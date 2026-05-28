@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{Intervenable, PropagatingEffectWitness};
-use deep_causality_haft::{LogAddEntry, Monad, Pure};
+use deep_causality_core::{Intervenable, PropagatingEffect};
+use deep_causality_haft::LogAddEntry;
 
 fn main() {
     println!("--- Counterfactual Observation (Stateless) ---");
@@ -33,25 +33,28 @@ fn main() {
     let a_factual = 10;
 
     // Start with pure value and Log initialization
-    let mut effect_a = PropagatingEffectWitness::pure(a_factual);
+    let mut effect_a: PropagatingEffect<i32> = PropagatingEffect::pure(a_factual);
     effect_a
         .logs
         .add_entry(&format!("Initialized A with value: {}", a_factual));
 
-    // Chain computations
-    let effect_c_factual = PropagatingEffectWitness::bind(effect_a, |val_a| {
+    // Chain computations with the fluent `bind`. The closure receives the wrapped value, the
+    // threaded state, and the context; for a stateless effect the latter two are `()`.
+    let effect_c_factual = effect_a.bind(|val_a, _state, _ctx| {
+        let val_a = val_a.into_value().unwrap_or_default();
         // Step B: A * 2
         let val_b = val_a * 2;
         // Create effect and add log
-        let mut effect_b = PropagatingEffectWitness::pure(val_b);
+        let mut effect_b = PropagatingEffect::pure(val_b);
         effect_b
             .logs
             .add_entry(&format!("Computed B (A*2): {} * 2 = {}", val_a, val_b));
 
         // Step C: B + 5
-        PropagatingEffectWitness::bind(effect_b, |val_b| {
+        effect_b.bind(|val_b, _state, _ctx| {
+            let val_b = val_b.into_value().unwrap_or_default();
             let val_c = val_b + 5;
-            let mut effect_c = PropagatingEffectWitness::pure(val_c);
+            let mut effect_c = PropagatingEffect::pure(val_c);
             effect_c
                 .logs
                 .add_entry(&format!("Computed C (B+5): {} + 5 = {}", val_b, val_c));
@@ -69,7 +72,7 @@ fn main() {
     println!("  Scenario: What if A had been 5?");
 
     // Start with the SAME initial setup
-    let mut effect_a = PropagatingEffectWitness::pure(a_factual); // Actually 10
+    let mut effect_a: PropagatingEffect<i32> = PropagatingEffect::pure(a_factual); // Actually 10
     effect_a
         .logs
         .add_entry(&format!("Initialized A with value: {}", a_factual));
@@ -79,19 +82,21 @@ fn main() {
     let effect_a_intervened = effect_a.intervene(5);
 
     // Run the SAME logic
-    let effect_c_counterfactual = PropagatingEffectWitness::bind(effect_a_intervened, |val_a| {
+    let effect_c_counterfactual = effect_a_intervened.bind(|val_a, _state, _ctx| {
+        let val_a = val_a.into_value().unwrap_or_default();
         // Step B: A * 2
         let val_b = val_a * 2;
 
-        let mut effect_b = PropagatingEffectWitness::pure(val_b);
+        let mut effect_b = PropagatingEffect::pure(val_b);
         effect_b
             .logs
             .add_entry(&format!("Computed B (A*2): {} * 2 = {}", val_a, val_b));
 
         // Step C: B + 5
-        PropagatingEffectWitness::bind(effect_b, |val_b| {
+        effect_b.bind(|val_b, _state, _ctx| {
+            let val_b = val_b.into_value().unwrap_or_default();
             let val_c = val_b + 5;
-            let mut effect_c = PropagatingEffectWitness::pure(val_c);
+            let mut effect_c = PropagatingEffect::pure(val_c);
             effect_c
                 .logs
                 .add_entry(&format!("Computed C (B+5): {} + 5 = {}", val_b, val_c));

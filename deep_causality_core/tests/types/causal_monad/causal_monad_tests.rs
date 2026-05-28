@@ -141,3 +141,71 @@ fn test_intervene() {
     assert!(matches!(intervened.value, EffectValue::Value(99)));
     assert_eq!(intervened.logs.len(), 1); // "Intervention occurred"
 }
+
+#[test]
+fn test_fmap_maps_value_and_preserves_state_context_logs() {
+    let mut initial: P<i32> = PropagatingProcess::pure(10);
+    initial.state = 7;
+    initial.context = Some("ctx".to_string());
+    initial.logs.add_entry("upstream");
+
+    let mapped = initial.fmap(|x| x * 2);
+
+    assert!(matches!(mapped.value, EffectValue::Value(20)));
+    assert_eq!(
+        mapped.state, 7,
+        "fmap preserves state, it does not thread it"
+    );
+    assert_eq!(mapped.context, Some("ctx".to_string()));
+    assert!(mapped.error.is_none());
+    assert_eq!(mapped.logs.len(), 1, "fmap preserves the upstream log");
+}
+
+#[test]
+fn test_fmap_is_type_changing() {
+    // fmap may change the value type; state and context types stay fixed.
+    let initial: P<i32> = PropagatingProcess::pure(42);
+
+    let mapped: P<String> = initial.fmap(|x| x.to_string());
+
+    assert!(matches!(mapped.value, EffectValue::Value(ref s) if s == "42"));
+}
+
+#[test]
+fn test_fmap_short_circuits_on_error_without_calling_f() {
+    let mut initial: P<i32> = PropagatingProcess::pure(10);
+    initial.state = 7;
+    initial.logs.add_entry("upstream");
+    initial.error = Some(CausalityError::new(CausalityErrorEnum::InternalLogicError));
+
+    let mut called = false;
+    let mapped = initial.fmap(|x| {
+        called = true;
+        x * 2
+    });
+
+    assert!(!called, "fmap must short-circuit on error and not call f");
+    assert!(mapped.error.is_some(), "the upstream error is preserved");
+    assert!(
+        matches!(mapped.value, EffectValue::None),
+        "an errored fmap yields EffectValue::None"
+    );
+    assert_eq!(mapped.state, 7, "state is carried across the short-circuit");
+    assert_eq!(mapped.logs.len(), 1, "upstream log is preserved on error");
+}
+
+#[test]
+fn test_fmap_passes_none_through() {
+    let mut initial: P<i32> = PropagatingProcess::pure(0);
+    initial.value = EffectValue::None;
+
+    let mut called = false;
+    let mapped = initial.fmap(|x| {
+        called = true;
+        x * 2
+    });
+
+    assert!(!called, "there is no value to map, so f must not run");
+    assert!(matches!(mapped.value, EffectValue::None));
+    assert!(mapped.error.is_none(), "a None carrier is not an error");
+}

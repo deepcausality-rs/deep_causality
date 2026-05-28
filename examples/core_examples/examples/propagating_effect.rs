@@ -4,8 +4,6 @@
  */
 
 use deep_causality_core::PropagatingEffect;
-use deep_causality_core::PropagatingEffectWitness;
-use deep_causality_haft::{Functor, Monad, Pure};
 
 fn main() {
     println!("--- PropagatingEffect Example ---");
@@ -23,21 +21,22 @@ fn main() {
 
     // 1. Create a pure effect (Success)
     // PropagatingEffect is a type alias for CausalEffectPropagationProcess with unit state/context.
-    let effect_a: PropagatingEffect<i32> = PropagatingEffectWitness::pure(10);
+    let effect_a: PropagatingEffect<i32> = PropagatingEffect::pure(10);
     println!("Effect A: {:?}", effect_a.value);
 
-    // 2. Use Functor to map over the value
-    let effect_b = PropagatingEffectWitness::fmap(effect_a, |x| x * 2);
+    // 2. Map over the value with the fluent `fmap` (the Functor operation).
+    let effect_b = effect_a.fmap(|x| x * 2);
     println!("Effect B (A * 2): {:?}", effect_b.value);
 
-    // 3. Use Monad to chain operations (bind)
-    // Note: PropagatingEffect is stateless, so we just transform values.
-    let effect_c = PropagatingEffectWitness::bind(effect_b, |x| {
+    // 3. Chain operations with the fluent `bind` (the Monad operation).
+    // The closure receives the wrapped value, the threaded state, and the context;
+    let effect_c = effect_b.bind(|x, _state, _ctx| {
+        let x = x.into_value().unwrap_or_default();
         if x > 15 {
             // Return a new effect
-            PropagatingEffectWitness::pure(x + 5)
+            PropagatingEffect::pure(x + 5)
         } else {
-            PropagatingEffectWitness::pure(x)
+            PropagatingEffect::pure(x)
         }
     });
     println!("Effect C (B + 5 if > 15): {:?}", effect_c.value);

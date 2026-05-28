@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{Intervenable, PropagatingEffectWitness, PropagatingProcess};
-use deep_causality_haft::{LogAddEntry, Pure};
+use deep_causality_core::{Intervenable, PropagatingEffect, PropagatingProcess};
+use deep_causality_haft::LogAddEntry;
 
 #[derive(Debug, Clone, Default)]
 struct SystemState {
@@ -33,7 +33,7 @@ fn main() {
     println!("\n1. Factual World (Low Battery: {})", initial_energy);
 
     // Initial Process
-    let initial_effect = PropagatingEffectWitness::pure(0);
+    let initial_effect = PropagatingEffect::pure(0);
     let mut process = PropagatingProcess::with_state(
         initial_effect,
         SystemState {
@@ -78,7 +78,7 @@ fn main() {
 
     // Sensor reading process
     let mut sensor_reading = PropagatingProcess::with_state(
-        PropagatingEffectWitness::pure(20), // Reading 20
+        PropagatingEffect::pure(20), // Reading 20
         SystemState::default(),
         None::<()>,
     );
