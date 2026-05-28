@@ -117,7 +117,7 @@ A monad earns its name by satisfying three identities. The Causal Monad satisfie
 
 - **Left identity.** `pure(a).bind(f)` is the same as `f(a)`.
 - **Right identity.** `m.bind(pure)` is the same as `m`.
-- **Associativity.** `(m.bind(f)).bind(g)` is the same as `m.bind(|x| f(x).bind(g))`.
+- **Associativity.** `(m.bind(f)).bind(g)` is the same as `m.bind(|v, s, c| f(v, s, c).bind(g))`.
 
 In practice this means you can freely refactor a chain. Pull a step out into a helper. Inline a step back in. Regroup three steps into two-then-one or one-then-two. The chain still computes the same answer. The library's test suite covers all three laws explicitly.
 

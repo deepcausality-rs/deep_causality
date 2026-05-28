@@ -119,7 +119,7 @@ A monad earns the name by satisfying three identities. The carrier satisfies the
 
 **Right identity.** `m.bind(pure)` is equal to `m`. Binding `pure` at the end is a no-op.
 
-**Associativity.** `m.bind(f).bind(g)` is equal to `m.bind(|x| f(x).bind(g))`. Grouping does not change the result.
+**Associativity.** `m.bind(f).bind(g)` is equal to `m.bind(|v, s, c| f(v, s, c).bind(g))`. Grouping does not change the result.
 
 The library's test suite covers these explicitly. The point of the laws in practice: you can refactor a chain freely, pull a step out, inline a step in, regroup, and the meaning does not change.
 
