@@ -49,6 +49,13 @@ export default defineConfig({
           content:
             "addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.social-icons a').forEach(function(a){a.target='_blank';a.rel='me noopener noreferrer';});});",
         },
+        // Default social-share (Open Graph + Twitter) image for every docs page.
+        { tag: 'meta', attrs: { property: 'og:image', content: 'https://docs.deepcausality.com/img/social-share.jpg' } },
+        { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
+        { tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
+        { tag: 'meta', attrs: { property: 'og:image:alt', content: 'DeepCausality' } },
+        { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
+        { tag: 'meta', attrs: { name: 'twitter:image', content: 'https://docs.deepcausality.com/img/social-share.jpg' } },
       ],
       social: [
         { icon: 'discord', label: 'Discord', href: 'https://discord.gg/Bxj9P7JXSj' },
