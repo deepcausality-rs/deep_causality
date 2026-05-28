@@ -49,13 +49,64 @@ fn test_bind_error() {
         deep_causality_core::CausalityErrorEnum::InternalLogicError,
     ));
 
+    // The closure must not run when the upstream process already carries an error.
+    let mut called = false;
+    let next = CausalMonad::<i32, String>::bind(initial, |val| {
+        called = true;
+        CausalMonad::<i32, String>::pure(val + 1)
+    });
+
+    assert!(!called, "bind must short-circuit on error and not call f");
+    assert!(next.error.is_some(), "the upstream error is preserved");
+    // An errored chain carries NO value. It must be EffectValue::None, never a
+    // fabricated Value(default).
+    assert!(
+        matches!(next.value, EffectValue::None),
+        "errored bind must yield EffectValue::None, not a fabricated default value"
+    );
+}
+
+#[test]
+fn test_bind_error_preserves_state_context_and_logs() {
+    let mut initial = CausalMonad::<i32, String>::pure(10);
+    initial.state = 7;
+    initial.context = Some("ctx".to_string());
+    initial.logs.add_entry("upstream");
+    initial.error = Some(deep_causality_core::CausalityError::new(
+        deep_causality_core::CausalityErrorEnum::InternalLogicError,
+    ));
+
     let next =
         CausalMonad::<i32, String>::bind(initial, |val| CausalMonad::<i32, String>::pure(val + 1));
 
-    assert!(next.error.is_some());
-    if let EffectValue::Value(v) = next.value {
-        assert_eq!(v, 0); // Default for i32
-    }
+    assert!(matches!(next.value, EffectValue::None));
+    assert_eq!(
+        next.state, 7,
+        "state is carried across the error short-circuit"
+    );
+    assert_eq!(next.context, Some("ctx".to_string()));
+    assert_eq!(next.logs.len(), 1, "upstream log is preserved on error");
+}
+
+#[test]
+fn test_bind_none_value_surfaces_error_and_keeps_none() {
+    // A process with no error but EffectValue::None is an internal-logic
+    // inconsistency; bind must surface an error and keep the value None.
+    let mut initial = CausalMonad::<i32, String>::pure(10);
+    initial.value = EffectValue::None;
+
+    let mut called = false;
+    let next = CausalMonad::<i32, String>::bind(initial, |val| {
+        called = true;
+        CausalMonad::<i32, String>::pure(val + 1)
+    });
+
+    assert!(
+        !called,
+        "bind must not call f when there is no value to pass"
+    );
+    assert!(next.error.is_some(), "a missing value surfaces an error");
+    assert!(matches!(next.value, EffectValue::None));
 }
 
 #[test]

@@ -100,9 +100,8 @@ fn main() {
     // each closure; the rapidity is read out by `read_edge_rapidity`.
     let mut process: Process<CausalMultiVector<FloatType>> = ProcessWitness::pure(psi);
     for e in 0..N_EDGES {
-        process = process.bind(|p, _, _| {
-            transport_across_edge(p.into_value().expect("spinor"), &manifold, e)
-        });
+        process = process
+            .bind(|p, _, _| transport_across_edge(p.into_value().expect("spinor"), &manifold, e));
         if process.error.is_some() {
             break;
         }

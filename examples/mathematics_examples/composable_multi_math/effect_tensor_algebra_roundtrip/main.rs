@@ -61,7 +61,6 @@ fn main() {
         .bind(|v, _, _| lower_to_tensor(v.into_value().expect("rotated multivector")))
         .bind(|v, _, _| norm_squared(v.into_value().expect("lowered tensor")));
 
-    println!("Chain log:");
     print_log(&result.logs);
 
     match result.error {

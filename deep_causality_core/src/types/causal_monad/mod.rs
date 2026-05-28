@@ -80,11 +80,10 @@ where
     ) -> CausalEffectPropagationProcess<U, S, C, CausalityError, EffectLog>
     where
         Func: FnMut(T) -> CausalEffectPropagationProcess<U, S, C, CausalityError, EffectLog>,
-        U: Default,
     {
         if let Some(error) = process.error {
             return CausalEffectPropagationProcess {
-                value: EffectValue::Value(U::default()),
+                value: EffectValue::None,
                 state: process.state,
                 context: process.context,
                 error: Some(error),
@@ -96,7 +95,7 @@ where
             Some(v) => v,
             None => {
                 return CausalEffectPropagationProcess {
-                    value: EffectValue::Value(U::default()),
+                    value: EffectValue::None,
                     state: process.state,
                     context: process.context,
                     error: Some(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
