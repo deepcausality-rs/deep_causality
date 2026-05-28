@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(export _ZO_DOCTOR=0)",
+      "Bash(cargo test *)"
+    ]
+  }
+}

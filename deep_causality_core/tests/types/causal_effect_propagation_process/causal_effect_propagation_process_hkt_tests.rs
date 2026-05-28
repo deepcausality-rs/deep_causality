@@ -7,7 +7,7 @@ use deep_causality_core::{
     CausalEffectPropagationProcess, CausalEffectPropagationProcessWitness, CausalityError,
     EffectValue,
 };
-use deep_causality_haft::{Applicative, Functor, LogAppend, Monad, Pure};
+use deep_causality_haft::{Applicative, Functor, LogAppend, Pure};
 
 #[derive(Debug, Clone, PartialEq, Default)]
 struct TestLog(Vec<String>);
@@ -90,31 +90,6 @@ fn test_applicative_apply() {
     );
 }
 
-#[test]
-fn test_monad_bind() {
-    let process: TestProcess<i32> = CausalEffectPropagationProcess {
-        value: EffectValue::Value(10),
-        state: 1,
-        context: Some("ctx".to_string()),
-        error: None,
-        logs: TestLog(vec!["start".to_string()]),
-    };
-
-    let bound: TestProcess<String> = TestWitness::bind(process, |x| {
-        CausalEffectPropagationProcess {
-            value: EffectValue::Value(x.to_string()),
-            state: 999, // Should be ignored/overwritten by bind implementation?
-            // Bind impl:
-            // state: m_a.state,     // State is passed through, not updated by f
-            // context: m_a.context, // Context is passed through
-            context: Some("ignored".to_string()),
-            error: None,
-            logs: TestLog(vec!["bound".to_string()]),
-        }
-    });
-
-    assert_eq!(unwrap_value(bound.value), "10");
-    assert_eq!(bound.state, 1); // From original process
-    assert_eq!(bound.context, Some("ctx".to_string())); // From original process
-    assert_eq!(bound.logs.0, vec!["start".to_string(), "bound".to_string()]);
-}
+// NOTE: the value-only `Monad::bind` on `CausalEffectPropagationProcessWitness` was removed because
+// it could not thread the Markovian `State` channel (it froze state). State-threading bind behavior
+// is covered by `types/causal_monad/causal_monad_tests.rs::test_bind_threads_and_updates_state`.

@@ -5,7 +5,7 @@ section: concepts
 order: 5
 ---
 
-The Effect Propagation Process (EPP) is the load-bearing abstraction of DeepCausality. Every other piece of the library, the Causaloid, the Causal Monad, the Context, the Causal State Machine, the Effect Ethos, exchanges work through one type:
+The Effect Propagation Process (EPP) is the load-bearing abstraction of DeepCausality. It is the carrier effect: the value that flows between every other piece of the library. The Causaloid, the Context, the Causal State Machine, and the Effect Ethos all exchange work through one type, and that type implements the [Causal Monad](/docs/concepts/causal-monad/) trait so it composes:
 
 ```rust
 pub struct CausalEffectPropagationProcess<Value, State, Context, Error, Log> {
@@ -72,7 +72,7 @@ type CausalProcess<T, S, C> =
     CausalEffectPropagationProcess<T, S, C, CausalityError, EffectLog>;
 ```
 
-`PropagatingEffect<T>` is what a `Causaloid::from_causal_fn` closure returns. `CausalProcess<T, S, C>` is what a Causaloid running under a [Causal Monad](/docs/concepts/causal-monad/) operates over.
+`PropagatingEffect<T>` is what a `Causaloid::from_causal_fn` closure returns. `CausalProcess<T, S, C>` is the stateful form a chain operates over when it threads state and context through [`bind`](/docs/concepts/causal-monad/).
 
 ## How the process moves
 

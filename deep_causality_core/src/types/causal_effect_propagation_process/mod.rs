@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalMonad, CausalityError, EffectLog, EffectValue};
+use crate::{CausalMonad, CausalityError, CausalityErrorEnum, EffectLog, EffectValue};
 use core::fmt::Debug;
-use deep_causality_haft::{LogAppend, MonadEffect5};
+use deep_causality_haft::LogAppend;
 
 mod display;
 mod explain;
@@ -70,7 +70,6 @@ where
             State,
             Option<Context>,
         ) -> CausalEffectPropagationProcess<NewValue, State, Context, Error, Log>,
-        NewValue: Default,
     {
         if let Some(error) = self.error {
             return CausalEffectPropagationProcess {
@@ -158,7 +157,55 @@ where
 
     /// Lifts a pure value into a process with a default state.
     pub fn pure(value: Value) -> Self {
-        CausalMonad::<State, Context>::pure(value)
+        <Self as CausalMonad>::pure(value)
+    }
+
+    /// Maps the carried value with `f`, preserving state, context, and logs.
+    ///
+    /// This is the fluent `Functor` operation on the carrier, the value-only counterpart to
+    /// [`bind`](Self::bind). It never panics. An error carrier short-circuits: the error and logs
+    /// are preserved and the value becomes `None`. A `None` or `ContextualLink` carrier passes
+    /// through unchanged. The dispatch variants `RelayTo` and `Map` embed a `PropagatingEffect`
+    /// whose value type cannot be retyped by a value-level map, so `fmap` over them surfaces a
+    /// `ValueNotAvailable` error rather than silently dropping the routing command; reach for
+    /// [`bind`](Self::bind) when you need to act on those variants.
+    pub fn fmap<NewValue, F>(
+        self,
+        f: F,
+    ) -> CausalEffectPropagationProcess<NewValue, State, Context, CausalityError, EffectLog>
+    where
+        F: FnOnce(Value) -> NewValue,
+    {
+        // Error short-circuits: preserve state, context, the error, and the accumulated log.
+        if self.error.is_some() {
+            return CausalEffectPropagationProcess {
+                value: EffectValue::None,
+                state: self.state,
+                context: self.context,
+                error: self.error,
+                logs: self.logs,
+            };
+        }
+
+        let (value, error) = match self.value {
+            EffectValue::Value(v) => (EffectValue::Value(f(v)), None),
+            EffectValue::None => (EffectValue::None, None),
+            EffectValue::ContextualLink(a, b) => (EffectValue::ContextualLink(a, b), None),
+            // RelayTo / Map carry a `PropagatingEffect<Value>` that a value-level `fmap` cannot
+            // retype to `NewValue`. Surface this instead of dropping the dispatch command.
+            _ => (
+                EffectValue::None,
+                Some(CausalityError::new(CausalityErrorEnum::ValueNotAvailable)),
+            ),
+        };
+
+        CausalEffectPropagationProcess {
+            value,
+            state: self.state,
+            context: self.context,
+            error,
+            logs: self.logs,
+        }
     }
 
     /// Creates a new process from a given `EffectValue`.
@@ -230,7 +277,6 @@ where
             Option<Context>,
         )
             -> CausalEffectPropagationProcess<NewValue, State, Context, CausalityError, Log>,
-        NewValue: Default,
     {
         if let Some(error) = self.error {
             return CausalEffectPropagationProcess {

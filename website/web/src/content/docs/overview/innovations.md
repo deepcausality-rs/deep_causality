@@ -41,7 +41,7 @@ With data on hand, four primitives carry the model. The first two share one prem
 
 **8. The Causaloid as an isomorphic-recursive unit.** A Singleton, a Collection, and a Hypergraph all implement the same `Causable` and `MonadicCausable` trait surface, so they nest into each other to arbitrary depth. Pick the structure the problem demands at every level and freely compose. *See [Causaloid](/docs/concepts/causaloid/).*
 
-**9. The Causal Monad with first-class intervention.** `pure`, `bind`, and `intervene` on the propagating-effect carrier. `intervene` implements Pearl's `do()` operator mid-chain, putting counterfactual reasoning in the same engine that runs factual reasoning. The three monad laws (left identity, right identity, associativity) are test-covered. *See [Causal Monad](/docs/concepts/causal-monad/).*
+**9. A state-threading monad with first-class intervention.** The carrier effect implements the `CausalMonad` trait: `pure`, `bind`, and `intervene`. `bind` threads Markovian state through the chain; `intervene` implements Pearl's `do()` operator mid-chain, putting counterfactual reasoning in the same engine that runs factual reasoning. The three monad laws (left identity, right identity, associativity) are test-covered. *See [Causal Monad](/docs/concepts/causal-monad/).*
 
 **10. The explicit Context as a typed hypergraph.** A typed weighted hypergraph of `Contextoid`s mutated in place across a run, carrying data, space, time, spacetime, and symbolic payloads. Counterfactual analysis comes through parallel `extra_contexts` evaluated against the same Causaloid without disturbing the primary one. *See [Context](/docs/concepts/context/).*
 
@@ -51,7 +51,7 @@ With data on hand, four primitives carry the model. The first two share one prem
 
 Two innovations cover how data actually flows through the model.
 
-**12. The Propagating Effect as a unified carrier.** `CausalEffectPropagationProcess<Value, State, Context, Error, Log>` is the load-bearing five-field record. Every primitive in the library (Causaloid, Causal Monad, Context, CSM, Effect Ethos) exchanges work through this one type, and the audit log accumulates automatically across every step. *See [Effect Propagation Process](/docs/concepts/effect-propagation-process/).*
+**12. The Propagating Effect as a unified carrier.** `CausalEffectPropagationProcess<Value, State, Context, Error, Log>` is the load-bearing five-field record, and it implements the Causal Monad trait directly. Every other primitive in the library (Causaloid, Context, CSM, Effect Ethos) exchanges work through this one type, and the audit log accumulates automatically across every step. *See [Effect Propagation Process](/docs/concepts/effect-propagation-process/).*
 
 **13. Non-Markovian and Markovian under one type.** `PropagatingEffect<T>` fixes state and context to `()`. `PropagatingProcess<T, S, C>` keeps them generic. Both are aliases of the same struct, so lifting from one form into the other is a single constructor call. Start non-Markovian and upgrade the carrier the moment state becomes necessary. *See [Effect Propagation Process](/docs/concepts/effect-propagation-process/).*
 

@@ -3,8 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{EffectValue, PropagatingEffectWitness, PropagatingProcess};
-use deep_causality_haft::Pure;
+use deep_causality_core::{EffectValue, PropagatingEffect, PropagatingProcess};
 
 // Define a custom state for our process
 #[derive(Debug, Clone, Default)]
@@ -37,7 +36,7 @@ fn main() {
     // --------------------------------------------------------------------------------------------
 
     // 1. Start with a stateless effect
-    let initial_effect = PropagatingEffectWitness::pure(10);
+    let initial_effect = PropagatingEffect::pure(10);
 
     // 2. Lift into a Stateful Process
     // We provide an initial state and context.

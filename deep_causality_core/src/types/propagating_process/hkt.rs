@@ -6,7 +6,7 @@
 use crate::{CausalityError, CausalityErrorEnum, EffectLog, EffectValue, PropagatingProcess};
 use core::marker::PhantomData;
 use deep_causality_haft::{
-    Applicative, Functor, HKT, LogAppend, Monad, NoConstraint, Placeholder, Pure, Satisfies,
+    Applicative, Functor, HKT, LogAppend, NoConstraint, Placeholder, Pure, Satisfies,
 };
 
 pub struct PropagatingProcessWitness<S, C>(Placeholder, PhantomData<S>, PhantomData<C>);
@@ -125,51 +125,7 @@ where
     }
 }
 
-impl<S, C> Monad<PropagatingProcessWitness<S, C>> for PropagatingProcessWitness<S, C>
-where
-    S: Clone + Default,
-    C: Clone,
-{
-    fn bind<A, B, Func>(m_a: <Self as HKT>::Type<A>, mut f: Func) -> <Self as HKT>::Type<B>
-    where
-        A: Satisfies<<Self as HKT>::Constraint>,
-        B: Satisfies<<Self as HKT>::Constraint>,
-        Func: FnMut(A) -> <Self as HKT>::Type<B>,
-    {
-        if let Some(error) = m_a.error {
-            return PropagatingProcess {
-                value: EffectValue::None, // No B can be produced
-                state: m_a.state,
-                context: m_a.context,
-                error: Some(error),
-                logs: m_a.logs,
-            };
-        }
-
-        let a = match m_a.value.into_value() {
-            Some(val) => val,
-            None => {
-                return PropagatingProcess {
-                    value: EffectValue::None,
-                    state: m_a.state,
-                    context: m_a.context,
-                    error: Some(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
-                    logs: m_a.logs,
-                };
-            }
-        };
-
-        let mut next_effect = f(a);
-
-        let mut combined_logs = m_a.logs;
-        combined_logs.append(&mut next_effect.logs);
-
-        PropagatingProcess {
-            value: next_effect.value,
-            state: m_a.state,     // State is passed through, not updated by f
-            context: m_a.context, // Context is passed through
-            error: next_effect.error,
-            logs: combined_logs,
-        }
-    }
-}
+// NOTE: `PropagatingProcessWitness` deliberately does NOT implement the value-only `Monad` trait.
+// Its `bind` continuation (`FnMut(A) -> M<B>`) cannot thread the Markovian `State` channel, so it
+// could only freeze state. The correct, state-threading bind is the `CausalMonad` trait (and the
+// inherent `bind` method on `CausalEffectPropagationProcess` / `PropagatingProcess`).

@@ -17,7 +17,7 @@ This page is the single source of truth for terminology. The other concept pages
 
 **Causal Function**: The pure function a Causaloid wraps. Two signatures: stateless (`CausalFn<I, O>`) takes the input alone; contextual (`ContextualCausalFn<I, O, STATE, CTX>`) also receives a Context.
 
-**Causal Monad**: The monadic algebra that composes Causal Effect Propagation Processes. Exposes `pure` and `bind`. The axiom `m₂ = m₁ >>= f` is its `bind` operation. See [Causal Monad](/docs/concepts/causal-monad/).
+**Causal Monad**: The `pure`/`bind` algebra that composes Causal Effect Propagation Processes. A trait (`CausalMonad`) implemented by the carrier effect, not a separate type. The axiom `m₂ = m₁ >>= f` is its state-threading `bind` operation. See [Causal Monad](/docs/concepts/causal-monad/).
 
 **Causal Reasoning**: The act of running one or more Causaloids against a Context and consuming the resulting propagating effect.
 
@@ -43,6 +43,6 @@ This page is the single source of truth for terminology. The other concept pages
 
 **Higher-Kinded Types (HKT)**: Type-level functions that take types as arguments and return types. The library encodes them via the witness pattern (`HKT3`, `HKT5`) defined in [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_haft). See [HKT](/docs/concepts/hkt/).
 
-**Propagating Effect**: The stateless alias `PropagatingEffect<T> = CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>`. The everyday return type of a Causaloid's function.
+**Propagating Effect**: The stateless carrier alias `PropagatingEffect<T> = CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>`. The everyday return type of a Causaloid's function; it implements the [Causal Monad](/docs/concepts/causal-monad/) trait. Its stateful sibling is `PropagatingProcess<T, S, C>`.
 
 **Teloid**: The atomic deontic rule inside an Effect Ethos. Encodes a modality (obligatory, impermissible, optional), a condition, and a Context query. Defined in the [Teleology preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/teleology_effect_propagation_process/epp_teleology.pdf).

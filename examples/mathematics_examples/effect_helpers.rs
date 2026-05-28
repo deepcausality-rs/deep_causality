@@ -77,6 +77,7 @@ pub fn expect_value<T: std::fmt::Debug + Clone>(v: &EffectValue<T>) -> T {
 
 /// Pretty-print the accumulated step log.
 pub fn print_log(log: &StepLog) {
+    println!("Chain log:");
     for (i, line) in log.0.iter().enumerate() {
         println!("  [{:>2}] {}", i, line);
     }

@@ -14,11 +14,11 @@
 //! `CausalTensor` -> `FloatType`. The monad threads them in one straight line.
 //!
 //! ## APIs Demonstrated
-//! - `ProcessWitness::bind` across heterogeneous value types
+//! - Fluent `.bind(|value, state, context| ...)` across heterogeneous value types
 //! - `CausalMultiVector::geometric_product`
 //! - `EinSumOp::dot_prod` for the norm check
 
-use deep_causality_haft::{Monad, Pure};
+use deep_causality_haft::Pure;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::{Float106, RealField};
@@ -51,19 +51,22 @@ fn main() {
     println!("Initial vector: {:?}", initial.as_slice());
     println!("Initial |v|^2 = {}\n", initial_norm_sq);
 
-    let p0: Process<CausalTensor<FloatType>> = ProcessWitness::pure(initial);
-    let p1 = ProcessWitness::bind(p0, lift_to_algebra);
-    let p2 = ProcessWitness::bind(p1, rotate_in_xy);
-    let p3 = ProcessWitness::bind(p2, lower_to_tensor);
-    let p4 = ProcessWitness::bind(p3, norm_squared);
+    // One straight-line monadic chain. The carried value type changes at every
+    // step (Tensor -> MultiVector -> Tensor -> scalar); `bind` threads the
+    // value, state, context, error, and log automatically. The closure receives
+    // the upstream `EffectValue`; an error in any step short-circuits the rest.
+    let result: Process<FloatType> = ProcessWitness::pure(initial)
+        .bind(|v, _, _| lift_to_algebra(v.into_value().expect("initial tensor")))
+        .bind(|v, _, _| rotate_in_xy(v.into_value().expect("lifted multivector")))
+        .bind(|v, _, _| lower_to_tensor(v.into_value().expect("rotated multivector")))
+        .bind(|v, _, _| norm_squared(v.into_value().expect("lowered tensor")));
 
-    println!("Chain log:");
-    print_log(&p4.logs);
+    print_log(&result.logs);
 
-    match p4.error {
+    match result.error {
         Some(e) => println!("\nChain errored: {}", e),
         None => {
-            let final_norm_sq = expect_value(&p4.value);
+            let final_norm_sq = expect_value(&result.value);
             let drift = (final_norm_sq - initial_norm_sq).abs();
             println!("\nFinal |v|^2 = {}", final_norm_sq);
             println!(
