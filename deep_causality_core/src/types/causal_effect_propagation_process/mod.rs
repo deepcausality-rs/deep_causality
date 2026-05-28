@@ -4,7 +4,7 @@
  */
 use crate::{CausalMonad, CausalityError, EffectLog, EffectValue};
 use core::fmt::Debug;
-use deep_causality_haft::{LogAppend, MonadEffect5};
+use deep_causality_haft::LogAppend;
 
 mod display;
 mod explain;
@@ -157,7 +157,7 @@ where
 
     /// Lifts a pure value into a process with a default state.
     pub fn pure(value: Value) -> Self {
-        CausalMonad::<State, Context>::pure(value)
+        <Self as CausalMonad>::pure(value)
     }
 
     /// Creates a new process from a given `EffectValue`.

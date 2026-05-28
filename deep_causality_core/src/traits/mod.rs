@@ -3,5 +3,6 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+pub mod causal_monad;
 pub mod control_flow_protocol;
 pub mod intervenable;

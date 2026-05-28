@@ -5,7 +5,6 @@
 
 use deep_causality::*;
 use deep_causality_core::CausalityErrorEnum;
-use deep_causality_haft::MonadEffect5;
 use std::sync::{Arc, RwLock};
 
 use deep_causality::utils_test::test_utils::get_base_context;
@@ -29,7 +28,7 @@ fn test_new() {
         let mut log = EffectLog::new();
         log.add_entry("Causal function executed successfully");
 
-        let mut effect = CausalMonad::pure(is_active);
+        let mut effect = PropagatingEffect::pure(is_active);
         effect.logs = log;
         effect
     }

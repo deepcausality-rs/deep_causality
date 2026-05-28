@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::*;
-use deep_causality_haft::{LogAddEntry, MonadEffect5};
+use deep_causality_haft::LogAddEntry;
 
 use deep_causality_uncertain::{Uncertain, UncertainBool, UncertainF64};
 use std::sync::{Arc, RwLock};
@@ -65,13 +65,13 @@ pub fn get_uncertain_float_test_causality_vec() -> BaseCausaloidVec<f64, Uncerta
 }
 
 pub fn get_test_single_data(val: NumericalValue) -> PropagatingEffect<NumericalValue> {
-    CausalMonad::pure(val)
+    PropagatingEffect::pure(val)
 }
 
 pub fn get_test_causaloid_deterministic_true() -> BaseCausaloid<bool, bool> {
     let description = "tests nothing; always returns true";
     fn causal_fn(_: bool) -> PropagatingEffect<bool> {
-        let mut effect = CausalMonad::pure(true);
+        let mut effect = PropagatingEffect::pure(true);
         effect.logs.add_entry("Just return true");
         effect
     }
@@ -81,7 +81,7 @@ pub fn get_test_causaloid_deterministic_true() -> BaseCausaloid<bool, bool> {
 pub fn get_test_causaloid_deterministic_false() -> BaseCausaloid<bool, bool> {
     let description = "tests nothing; always returns true";
     fn causal_fn(_: bool) -> PropagatingEffect<bool> {
-        CausalMonad::pure(false)
+        PropagatingEffect::pure(false)
     }
     Causaloid::new(3, causal_fn, description)
 }
@@ -93,7 +93,7 @@ pub fn get_test_causaloid_probabilistic() -> BaseCausaloid<NumericalValue, f64> 
     fn causal_fn(obs: NumericalValue) -> PropagatingEffect<NumericalValue> {
         let threshold: NumericalValue = 0.55;
         let output = if obs.ge(&threshold) { 1.0 } else { 0.0 };
-        CausalMonad::pure(output)
+        PropagatingEffect::pure(output)
     }
 
     Causaloid::new(id, causal_fn, description)
@@ -110,7 +110,7 @@ pub fn get_test_causaloid_uncertain_bool() -> BaseCausaloid<f64, UncertainBool> 
         } else {
             Uncertain::<bool>::point(false)
         };
-        CausalMonad::pure(output)
+        PropagatingEffect::pure(output)
     }
 
     Causaloid::new(3, causal_fn, description)
@@ -125,7 +125,7 @@ pub fn get_test_causaloid_uncertain_float() -> BaseCausaloid<f64, UncertainF64> 
         } else {
             Uncertain::<f64>::point(0.0f64)
         };
-        CausalMonad::pure(output)
+        PropagatingEffect::pure(output)
     }
 
     Causaloid::new(3, causal_fn, description)
@@ -138,7 +138,7 @@ pub fn get_test_causaloid_deterministic(
     fn causal_fn(obs: NumericalValue) -> PropagatingEffect<bool> {
         let threshold: NumericalValue = 0.55;
         let output = obs.ge(&threshold);
-        CausalMonad::pure(output)
+        PropagatingEffect::pure(output)
     }
 
     Causaloid::new(id, causal_fn, description)
@@ -152,7 +152,7 @@ pub fn get_test_causaloid_probabilistic_bool_output() -> BaseCausaloid<Numerical
     fn causal_fn(obs: NumericalValue) -> PropagatingEffect<f64> {
         let threshold: NumericalValue = 0.55;
         let output = if obs.ge(&threshold) { 1.0 } else { 0.0 };
-        CausalMonad::pure(output)
+        PropagatingEffect::pure(output)
     }
 
     Causaloid::new(id, causal_fn, description)
@@ -206,7 +206,7 @@ pub fn get_test_causaloid_deterministic_input_output() -> BaseCausaloid<bool, bo
     let id: IdentificationValue = 2;
     let description = "Inverts any input";
     fn causal_fn(obs: bool) -> PropagatingEffect<bool> {
-        CausalMonad::pure(!obs)
+        PropagatingEffect::pure(!obs)
     }
     Causaloid::new(id, causal_fn, description)
 }
@@ -347,7 +347,7 @@ pub fn get_test_causaloid(id: IdentificationValue) -> BaseCausaloid<f64, bool> {
             evidence, threshold, is_active
         ));
 
-        let mut effect = CausalMonad::pure(is_active);
+        let mut effect = PropagatingEffect::pure(is_active);
         effect.logs = log;
         effect
     }
@@ -378,7 +378,7 @@ pub fn get_test_causaloid_num_input_output(id: IdentificationValue) -> BaseCausa
             evidence, threshold, is_active
         ));
 
-        let mut effect = CausalMonad::pure(is_active);
+        let mut effect = PropagatingEffect::pure(is_active);
         effect.logs = log;
         effect
     }

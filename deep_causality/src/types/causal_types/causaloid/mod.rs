@@ -187,7 +187,7 @@ where
     /// # Type Bounds
     /// The child `Causaloid`s within the collection must implement `Send`, `Sync`, and `'static`
     /// to ensure thread safety and static lifetime requirements for shared ownership.
-    /// They must also implement `MonadicCausable<CausalMonad>` for evaluation.
+    /// They must also implement `MonadicCausable<I, O>` for evaluation.
     ///
     /// # Returns
     /// A new `Causaloid` instance of `CausaloidType::Collection`.
@@ -238,7 +238,7 @@ where
     /// # Type Bounds
     /// The child `Causaloid`s within the collection must implement `Send`, `Sync`, and `'static`
     /// to ensure thread safety and static lifetime requirements for shared ownership.
-    /// They must also implement `MonadicCausable<CausalMonad>` for evaluation.
+    /// They must also implement `MonadicCausable<I, O>` for evaluation.
     ///
     /// # Returns
     /// A new `Causaloid` instance of `CausaloidType::Collection` with an associated context.

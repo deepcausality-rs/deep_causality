@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{
-    AggregateLogic, Causable, CausableCollectionAccessor, CausalMonad, CausalityError,
-    MonadicCausable, NumericalValue, PropagatingEffect, monadic_collection_utils,
+    AggregateLogic, Causable, CausableCollectionAccessor, CausalityError, MonadicCausable,
+    NumericalValue, PropagatingEffect, monadic_collection_utils,
 };
 use deep_causality_core::{CausalityErrorEnum, EffectValue};
 use deep_causality_haft::*;
@@ -58,7 +58,8 @@ where
         }
         // 1. Monadic fold to collect all effects.
         // We start with a pure effect containing an empty vector of EffectValue<O>.
-        let initial_effect: PropagatingEffect<Vec<EffectValue<O>>> = CausalMonad::pure(Vec::new());
+        let initial_effect: PropagatingEffect<Vec<EffectValue<O>>> =
+            PropagatingEffect::pure(Vec::new());
 
         let final_effect = items.into_iter().fold(initial_effect, |acc_effect, item| {
             acc_effect.bind(|acc_values_effect_value, acc_state, acc_ctx| {
@@ -77,7 +78,7 @@ where
                 // If the item effect is an error, append its logs to the accumulator logs before returning.
                 if item_effect.is_err() {
                     let mut combined: PropagatingEffect<Vec<EffectValue<O>>> =
-                        CausalMonad::pure(Vec::new());
+                        PropagatingEffect::pure(Vec::new());
                     combined.state = acc_state;
                     combined.context = acc_ctx;
                     // Note: acc_effect.logs are already merged by bind, but we capture for explicit safety
@@ -93,7 +94,7 @@ where
 
                 item_effect.bind(|item_value, _, _| {
                     acc_values.push(item_value);
-                    CausalMonad::pure(acc_values)
+                    PropagatingEffect::pure(acc_values)
                 })
             })
         });
@@ -127,9 +128,9 @@ where
                 Ok(aggregated_value) => {
                     // Preserve logs from the aggregation pipeline
                     let mut out = match aggregated_value {
-                        EffectValue::Value(v) => CausalMonad::pure(v),
+                        EffectValue::Value(v) => PropagatingEffect::pure(v),
                         _ => {
-                            let mut eff = CausalMonad::pure(O::default());
+                            let mut eff = PropagatingEffect::pure(O::default());
                             eff.value = aggregated_value;
                             eff
                         }

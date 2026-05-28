@@ -13,7 +13,7 @@ use ultragraph::GraphTraversal;
 
 /// Provides default implementations for monadic reasoning over `CausableGraph` items.
 ///
-/// Any graph type that implements `CausableGraph<T>` where `T` is `MonadicCausable<CausalMonad>`
+/// Any graph type that implements `CausableGraph<T>` where `T` is `MonadicCausable<I, O>`
 /// will automatically gain a suite of useful default methods for monadic evaluation.
 /// Provides default implementations for monadic reasoning over `CausableGraph` items.
 ///

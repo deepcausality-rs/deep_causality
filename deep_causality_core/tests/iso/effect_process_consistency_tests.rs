@@ -31,7 +31,7 @@ use deep_causality_core::{
     CausalityError, EffectLog, PropagatingEffect, PropagatingEffectWitness, PropagatingProcess,
     PropagatingProcessWitness,
 };
-use deep_causality_haft::{Functor, Monad, Pure};
+use deep_causality_haft::{Functor, Pure};
 
 type EffectW = PropagatingEffectWitness<CausalityError, EffectLog>;
 type ProcessW = PropagatingProcessWitness<(), ()>;
@@ -70,28 +70,10 @@ fn fmap_type_changing_agrees_across_witnesses() {
     );
 }
 
-/// `Monad::bind` consistency. The two `bind` impls are also written
-/// independently; this test pins that they sequence operations identically
-/// on the shared carrier.
-#[test]
-fn bind_agrees_across_witnesses() {
-    let val: PropagatingEffect<i32> = EffectW::pure(10);
-    let proc: PropagatingProcess<i32, (), ()> = val.clone();
-
-    // The continuation must return the SAME concrete carrier type — which it
-    // does, because PropagatingEffect<T> and PropagatingProcess<T, (), ()>
-    // are type aliases for the same `CausalEffectPropagationProcess`.
-    let k = |x: i32| -> PropagatingEffect<i32> { EffectW::pure(x + 100) };
-
-    let via_effect = <EffectW as Monad<EffectW>>::bind(val, k);
-    let via_process = <ProcessW as Monad<ProcessW>>::bind(proc, k);
-
-    assert_eq!(
-        via_effect, via_process,
-        "bind diverges between PropagatingEffectWitness and PropagatingProcessWitness \
-         on the shared carrier"
-    );
-}
+// NOTE: a `Monad::bind` consistency test across the two witnesses was removed.
+// `PropagatingProcessWitness` no longer implements the value-only `Monad` trait, because that bind
+// cannot thread the Markovian `State` channel. The canonical state-threading bind is the
+// `CausalMonad` trait; see `types/causal_monad/causal_monad_tests.rs`.
 
 /// `Pure::pure` consistency. Lifting a value through either witness produces
 /// the same carrier.

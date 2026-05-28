@@ -4,7 +4,7 @@
  */
 use crate::utils_test::test_utils;
 use crate::*;
-use deep_causality_haft::{LogAddEntry, MonadEffect5};
+use deep_causality_haft::LogAddEntry;
 use std::sync::{Arc, Mutex};
 
 // EffectEthos type has been moved to deep_causality_ethos crate
@@ -29,7 +29,7 @@ pub fn get_test_error_action() -> CausalAction {
 pub fn get_test_probabilistic_causaloid() -> BaseCausaloid<f64, f64> {
     fn causal_fn(_: f64) -> PropagatingEffect<f64> {
         let log = EffectLog::new();
-        let mut effect = CausalMonad::pure(0.5);
+        let mut effect = PropagatingEffect::pure(0.5);
         effect.logs = log;
         effect
     }
@@ -55,7 +55,7 @@ pub fn get_test_causaloid(with_context: bool) -> BaseCausaloid<bool, bool> {
         fn causal_fn(_effect: bool) -> PropagatingEffect<bool> {
             let mut log = EffectLog::new();
             log.add_entry("Just return true");
-            let mut effect = CausalMonad::pure(true);
+            let mut effect = PropagatingEffect::pure(true);
             effect.logs = log;
             effect
         }

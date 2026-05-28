@@ -3,8 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::CausalMonad;
-use deep_causality_haft::MonadEffect5;
+use deep_causality_core::PropagatingEffect;
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector, MultiVectorL2Norm};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
@@ -99,9 +98,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // 3. Create Causal Process (Monad)
-    // We carry the state in the Value because CausalMonad's bind preserves the 'S' generic state from the input,
-    // effectively making 'S' an immutable context. To evolve state, we pass it in 'T'.
-    let process = CausalMonad::<(), ()>::pure((SensorData::default(), initial_state));
+    // This example threads its state inside the Value tuple (the process State `S` is `()`), so the
+    // whole `(SensorData, TiltState)` pair flows through the chain as the carried value.
+    let process = PropagatingEffect::pure((SensorData::default(), initial_state));
 
     // 4. Simulate Data Stream
     // Scenario: Robot is stationary, then tilts 45 degrees around X axis.
@@ -128,13 +127,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let final_process = sensor_stream
         .into_iter()
         .fold(process, |current_process, input| {
-            CausalMonad::bind(current_process, |prev_input| {
+            current_process.bind(|prev_value, _, _| {
                 // Propagate the causal chain:
-                // 1. `current_process` holds the previous state.
+                // 1. `current_process` holds the previous step's value.
                 // 2. `input` is the new sensor reading from the stream.
-                // 3. `prev_input` (ignored) is the data from the previous step.
+                // 3. `prev_value` carries the data from the previous step.
 
-                let (_prev_sensor_data, prev_state) = prev_input;
+                let (_prev_sensor_data, prev_state) =
+                    prev_value.into_value().expect("process carries a value");
 
                 // We use the `input` from the fold (current sensor reading)
                 // and `prev_state` (from the previous step's value).
@@ -342,7 +342,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 };
 
                 // Return new process
-                CausalMonad::pure((current_sensor_data, next_state))
+                PropagatingEffect::pure((current_sensor_data, next_state))
             })
         });
 

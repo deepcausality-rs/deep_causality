@@ -107,10 +107,6 @@ name = "tensor_sparse_memory_budget"
 path = "isomorphism/tensor_sparse_memory_budget/main.rs"
 
 [[example]]
-name = "effect_process_witness_duality"
-path = "isomorphism/effect_process_witness_duality/main.rs"
-
-[[example]]
 name = "multifield_data_pipeline"
 path = "isomorphism/multifield_data_pipeline/main.rs"
 
