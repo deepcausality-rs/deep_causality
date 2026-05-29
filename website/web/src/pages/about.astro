@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/nav/SiteHeader.astro';
+import { DOCS_URL, GITHUB_URL } from '../consts';
 ---
 <BaseLayout title="About — DeepCausality" description="About DeepCausality: what the project is, where it lives, and how it handles your privacy.">
   <SiteHeader />
@@ -23,7 +24,7 @@ import SiteHeader from '../components/nav/SiteHeader.astro';
         established categories also find the library a useful foundation.
       </p>
       <p>
-        See the <a href="/docs/concepts/dynamic-causality/">documentation</a> for the formal treatment, and
+        See the <a href={`${DOCS_URL}/concepts/dynamic-causality/`}>documentation</a> for the formal treatment, and
         check the <a href="/blog/">blog</a> for project updates.
       </p>
 
@@ -57,10 +58,10 @@ import SiteHeader from '../components/nav/SiteHeader.astro';
       </ul>
       <p>
         The site&rsquo;s full source code lives in the
-        <a href="https://github.com/deepcausality-rs/deep_causality/tree/main/website/web">website/web folder of the
+        <a href={`${GITHUB_URL}/tree/main/website/web`}>website/web folder of the
         DeepCausality monorepo on GitHub</a>. If
         you find anything that violates this policy, please
-        <a href="https://github.com/deepcausality-rs/deep_causality/issues">open an issue</a>.
+        <a href={`${GITHUB_URL}/issues`}>open an issue</a>.
       </p>
     </div>
   </article>

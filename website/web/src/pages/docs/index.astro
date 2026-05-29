@@ -1,12 +1,141 @@
 ---
-import DocsLayout from '../../layouts/DocsLayout.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import { DOCS_URL, DOCSRS_BASE } from '../../consts';
 ---
-<DocsLayout title="Documentation" description="DeepCausality documentation: getting started, overview, concepts, examples, monograph, API reference." sectionLabel="Overview">
-  <p>The documentation is organized into three entry points.</p>
-  <ul>
-    <li><a href="/docs/getting-started/install/">Getting started</a>: install the crates and run your first Causaloid.</li>
-    <li><a href="/docs/overview/why/">Overview</a>: what computational causality is, why classical methods break in dynamic systems, and the core idea behind DeepCausality.</li>
-    <li><a href="/docs/concepts/dynamic-causality/">Concepts</a>: the ideas the rest of the library rests on.</li>
-  </ul>
-  <p>The exhaustive per-crate API reference lives on <a href="https://docs.rs/deep_causality">docs.rs</a>. The pages here are operational documentation aimed at engineers using the library day to day.</p>
-</DocsLayout>
+<BaseLayout
+  title="Documentation — DeepCausality"
+  description="What DeepCausality is, what dynamic causality does differently from classical causal frameworks, and when to reach for it, with a link to the full documentation."
+>
+  <SiteHeader />
+  <article class="overview">
+    <header class="overview-head">
+      <p class="eyebrow">Documentation</p>
+      <h1>What is DeepCausality?</h1>
+    </header>
+    <div class="overview-prose">
+      <p>
+        DeepCausality is an open-source Rust framework for computational causality. It targets advanced
+        systems where time is not linear, causal rules can change, and the context evolves at runtime. It
+        is the reference implementation of the <em>Effect Propagation Process</em> (EPP), which rests on a single axiom: every effect is derived from a prior effect by a causal function
+        (<code>m₂ = m₁ &gt;&gt;= f</code>).
+      </p>
+      <p>
+        Classical computational causality assumes a fixed background spacetime and a static causal
+        structure. Pearl&rsquo;s structural causal models, Granger causality, dynamic Bayesian networks,
+        and the Rubin model all share that assumption. It holds for static systems, but it breaks for
+        dynamic systems such as a drone that loses GPS inside a tunnel, where the rules and the
+        context are themselves dynamic. Dynamic causality treats causality as a process that is independent of a fixed
+        spacetime. DeepCausality makes that idea first-class:
+      </p>
+      <ul>
+        <li>
+          <strong>One carrier.</strong> The <em>propagating effect</em> folds causal
+          input (evidence) and output (effect) into a single isomorphic type, so one step&rsquo;s output
+          is directly the next step&rsquo;s input. It reasons deterministically or probabilistically. It
+          is either stateless (<code>PropagatingEffect</code>) or stateful, carrying Markovian state and
+          context (<code>PropagatingProcess</code>). Monadic <code>bind</code> sequences it, Pearl&rsquo;s
+          <code>intervene</code>/<code>do()</code> rewrites a value mid-chain for counterfactuals, and a
+          deterministic audit log accrues by construction.
+        </li>
+        <li>
+          <strong>One causal unit.</strong> The <em>Causaloid</em> folds cause and effect into a single
+          isomorphic-recursive type. Without temporal order, there is no way to tell a cause from its
+          effect, so it drops the split and merges them into one entity: a causal function that takes a
+          propagating effect and returns one. In its base form, the Singleton, it wraps a single such
+          function. A Collection groups several Causaloids under an aggregate rule (all, any, none, or
+          k-of-n). A Graph wires them into a hypergraph. All three are the same type, so one node can
+          stand for a single mechanism or an entire sub-model.
+        </li>
+        <li>
+          <strong>Four reasoning modalities under one type:</strong> static, dynamic, adaptive, and
+          emergent. You pick the one that fits your problem.
+        </li>
+        <li>
+          <strong>From inference to action: the Causal State Machine.</strong> It turns a reasoning
+          verdict into an action. A finite state machine needs every state enumerated at design time; the
+          CSM instead treats a state as an inferred predicate, so it fires the right action for
+          situations no one enumerated up front.
+        </li>
+        <li>
+          <strong>A programmable safety layer, the <em>Effect Ethos</em>.</strong> It checks every
+          CSM-proposed action against an immutable set of computable norms before that action executes.
+          The trail stays auditable and deterministic even when the reasoning itself is dynamic.
+        </li>
+      </ul>
+      <p>
+        This matters most in high-stakes domains: medicine, finance, robotics, avionics, and
+        industrial control. A regulator, an operator, or a courtroom will ask why a decision was made,
+        and a deterministic audit trail answers that question. It also fits whenever classical tooling
+        forces you to stitch two or three libraries together. Dynamic control loops. Multi-physics
+        simulations that cross regimes mid-pipeline. Financial systems facing regime change. When a
+        system grows complex and dynamic, reach for DeepCausality.
+      </p>
+      <p class="overview-cta">
+        <a class="overview-btn" href={DOCS_URL}>Read the full documentation <span aria-hidden="true">→</span></a>
+      </p>
+      <p class="overview-note">
+        The exhaustive per-crate API reference lives on <a href={`${DOCSRS_BASE}/deep_causality`}>docs.rs</a>.
+      </p>
+    </div>
+  </article>
+
+  <style>
+    .overview {
+      max-width: var(--w-doc);
+      margin: 0 auto;
+      padding: var(--space-7) var(--space-4) var(--space-9);
+    }
+    @media (min-width: 900px) {
+      .overview { padding: var(--space-9) var(--space-5); }
+    }
+    .overview-head { margin-bottom: var(--space-6); }
+    .overview-head .eyebrow {
+      margin: 0 0 var(--space-2) 0;
+      font-size: var(--t-eyebrow);
+      letter-spacing: var(--ls-eyebrow);
+      text-transform: uppercase;
+      color: var(--fg-2);
+    }
+    .overview-head h1 { margin: 0; }
+    .overview-prose { max-width: var(--w-prose); }
+    .overview-prose p,
+    .overview-prose li { color: var(--fg-1); }
+    .overview-prose p { max-width: var(--measure); margin: 0 0 var(--space-4) 0; }
+    .overview-prose strong { color: var(--fg-0); }
+    .overview-prose ul { padding-left: var(--space-5); margin: 0 0 var(--space-4) 0; }
+    .overview-prose li { margin: var(--space-2) 0; max-width: var(--measure); }
+    .overview-prose a {
+      text-decoration: underline;
+      text-decoration-color: var(--line-2);
+      text-underline-offset: 2px;
+    }
+
+    .overview-cta { margin: var(--space-6) 0 var(--space-5); }
+    .overview-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      height: 44px;
+      padding: 0 var(--space-5);
+      border-radius: var(--radius-sm);
+      background: var(--accent);
+      color: var(--accent-ink);
+      border: 1px solid var(--accent);
+      font-weight: 540;
+      text-decoration: none;
+      box-shadow: 0 1px 0 0 color-mix(in srgb, var(--accent) 60%, black) inset,
+                  0 1px 2px 0 color-mix(in srgb, var(--accent) 50%, transparent);
+      transition: background-color var(--dur-fast) var(--ease-out),
+                  border-color var(--dur-fast) var(--ease-out),
+                  transform var(--dur-fast) var(--ease-out);
+    }
+    .overview-btn:hover {
+      background: color-mix(in srgb, var(--accent) 90%, white);
+      border-color: color-mix(in srgb, var(--accent) 90%, white);
+    }
+    .overview-btn:active { transform: translateY(1px); }
+
+    .overview-note { font-size: var(--t-body-sm); color: var(--fg-2); }
+  </style>
+</BaseLayout>

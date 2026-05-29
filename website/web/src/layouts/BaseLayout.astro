@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { getCollection } from 'astro:content';
+import { GITHUB_URL, DISCORD_URL } from '../consts';
 
 interface ArticleMeta {
   publishedTime?: string;
@@ -116,7 +117,7 @@ const featuredPosts = (await getCollection('blog', ({ data }) => !data.draft))
       <div class="site-footer-inner">
         <div class="col">
           <h4>Project</h4>
-          <a href="/docs/getting-started/install/">Docs</a>
+          <a href="/docs/">Docs</a>
           <a href="/examples/">Examples</a>
           <a href="/blog/">Blog</a>
           <a href="/about/">About</a>
@@ -124,16 +125,16 @@ const featuredPosts = (await getCollection('blog', ({ data }) => !data.draft))
         <div class="col">
           <h4>Community</h4>
           <a href="/community/">Community</a>
-          <a href="https://discord.gg/Bxj9P7JXSj" rel="noopener noreferrer" target="_blank">Discord</a>
+          <a href={DISCORD_URL} rel="noopener noreferrer" target="_blank">Discord</a>
           <a href="https://lists.lfaidata.foundation/g/DeepCausality-announce">Mailing list</a>
           <a href="/accessibility/">Accessibility</a>
         </div>
         <div class="col">
           <h4>GitHub</h4>
-          <a href="https://github.com/deepcausality-rs/deep_causality">Repository</a>
-          <a href="https://github.com/deepcausality-rs/deep_causality/issues">Issues</a>
-          <a href="https://github.com/deepcausality-rs/deep_causality/discussions">Discussions</a>
-          <a href="https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE">License</a>
+          <a href={GITHUB_URL}>Repository</a>
+          <a href={`${GITHUB_URL}/issues`}>Issues</a>
+          <a href={`${GITHUB_URL}/discussions`}>Discussions</a>
+          <a href={`${GITHUB_URL}/blob/main/LICENSE`}>License</a>
         </div>
         {featuredPosts.length > 0 && (
           <div class="col">

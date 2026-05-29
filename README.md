@@ -150,7 +150,7 @@ See [examples/README.md](examples/README.md) for the full catalogue of available
 
 ## Architecture
 
-The EPP rests on a single axiom: **`m₂ = m₁ >>= f`**. Causality becomes a monadic dependency, with no
+The EPP rests on a single axiom: **`m₂ = m₁ >>= f`**. Effect propagation becomes a monadic dependency, with no
 assumption of any background spacetime. Three computable primitives operationalize the axiom, and an optional fourth
 provides the safety layer for emergent behaviour.
 

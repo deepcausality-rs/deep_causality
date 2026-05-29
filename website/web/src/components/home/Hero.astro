@@ -1,6 +1,7 @@
 ---
 // Asymmetric split hero. Text left (7/12), hero art right (5/12).
 // Stacks below 900px; on stack, the raster moves above the text.
+import { DOCS_URL, GITHUB_URL } from '../../consts';
 ---
 <section class="hero">
   <div class="hero-inner">
@@ -12,8 +13,8 @@
         Built around the causaloid and the context, with one carrier effect propagating between them.
       </p>
       <div class="cta">
-        <a class="btn btn-primary" href="/docs/getting-started/install/">Get started</a>
-        <a class="btn btn-ghost" href="https://github.com/deepcausality-rs/deep_causality">View on GitHub <span aria-hidden="true">→</span></a>
+        <a class="btn btn-primary" href={`${DOCS_URL}/getting-started/install/`}>Read the Docs</a>
+        <a class="btn btn-ghost" href={GITHUB_URL}>View on GitHub <span aria-hidden="true">→</span></a>
       </div>
     </div>
     <div class="hero-art-frame reticle-host" aria-hidden="true">

@@ -7,6 +7,7 @@ import WhyDeepCausality from '../components/home/WhyDeepCausality.astro';
 import PillarRow from '../components/home/PillarRow.astro';
 import JoinCommunity from '../components/home/JoinCommunity.astro';
 import SectionDivider from '../components/home/SectionDivider.astro';
+import { GITHUB_URL, DISCORD_URL } from '../consts';
 
 const siteUrl = new URL('/', Astro.site).toString();
 const logoUrl = new URL('/img/logo-color.png', Astro.site).toString();
@@ -23,9 +24,9 @@ const jsonLd = [
       'Open-source Rust framework for dynamic causality. Causal reasoning for advanced systems where time, context, and rules evolve. Hosted at the Linux Foundation for AI & Data.',
     foundingDate: '2023',
     sameAs: [
-      'https://github.com/deepcausality-rs/deep_causality',
+      GITHUB_URL,
       'https://lfaidata.foundation/projects/deepcausality/',
-      'https://discord.gg/Bxj9P7JXSj',
+      DISCORD_URL,
       'https://lists.lfaidata.foundation/g/DeepCausality-announce',
     ],
   },

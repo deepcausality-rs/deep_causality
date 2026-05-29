@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/nav/SiteHeader.astro';
+import { GITHUB_URL } from '../consts';
 ---
 <BaseLayout title="Accessibility — DeepCausality" description="Accessibility statement for deepcausality.com.">
   <SiteHeader />
@@ -39,7 +40,7 @@ import SiteHeader from '../components/nav/SiteHeader.astro';
       <h2>Reporting a problem</h2>
       <p>
         If anything on the site is hard to use, please
-        <a href="https://github.com/deepcausality-rs/deep_causality/issues">open an issue on GitHub</a> with
+        <a href={`${GITHUB_URL}/issues`}>open an issue on GitHub</a> with
         the page URL, a short description, and the browser or assistive technology you were using. We treat
         accessibility regressions as bugs.
       </p>

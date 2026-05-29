@@ -13,7 +13,7 @@ The innovations are grouped into seven sections in logical order: foundation, ma
 
 Causality has to be defined before it can be computed. DeepCausality picks one definition, low enough in the stack that the classical methods drop out as special cases.
 
-**1. A spacetime-agnostic causal axiom.** Causality is a monadic functional dependency, captured by `m₂ = m₁ >>= f`. Pearl SCMs, dynamic Bayesian networks, Granger causality, the Rubin causal model, and conditional average treatment effects all drop out as parametric specializations of that same axiom; the [classical causality examples](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples) implement each one directly. *See [Axiom](/overview/core-idea/) for the working definition.*
+**1. A spacetime-agnostic causal axiom.** Causality is generalized as a monadic functional dependency, captured by `m₂ = m₁ >>= f`. Pearl SCMs, dynamic Bayesian networks, Granger causality, the Rubin causal model, and conditional average treatment effects all drop out as parametric specializations of that same axiom; the [classical causality examples](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples) implement each one directly. *See [Axiom](/overview/core-idea/) for the working definition.*
 
 ## II. The mathematical substrate
 

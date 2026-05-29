@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/nav/SiteHeader.astro';
 import ExamplesList from '../../components/examples/ExamplesList.astro';
+import { GITHUB_URL } from '../../consts';
 
 const entries = (await getCollection('examples')).sort(
   (a, b) => a.data.order - b.data.order,
@@ -14,7 +15,7 @@ const entries = (await getCollection('examples')).sort(
     <header>
       <p class="eyebrow">Examples</p>
       <h1>One framework, many fields</h1>
-      <p class="lede">Pick the field that looks closest to the problem you have in front of you. Each page carries a runnable snippet, a walkthrough, and pointers into the docs and the monograph.</p>
+      <p class="lede">Pick the field that looks closest to the problem you have in front of you. Each page carries a runnable snippet, a walkthrough, and pointers into the docs.</p>
       <nav class="cat-row" aria-label="Example categories">
         <a href="/examples/foundations/">Foundations</a>
         <a href="/examples/aerospace/">Aerospace</a>
@@ -36,7 +37,7 @@ const entries = (await getCollection('examples')).sort(
         counterfactuals).
       </p>
       <p>
-        <a href="https://github.com/deepcausality-rs/deep_causality/tree/main/examples">
+        <a href={`${GITHUB_URL}/tree/main/examples`}>
           Browse the full <code>examples/</code> tree on GitHub &rarr;
         </a>
       </p>
