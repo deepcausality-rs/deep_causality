@@ -345,7 +345,11 @@ Coding style:
 * Prefer functional style i.e. map, flatmap, filter when dealing with collections
 
 Safety and security style:
-* Avoid unsafe in all crates
+* No `unsafe`. This is enforced repo-wide via `[workspace.lints.rust] unsafe_code = "forbid"` in the root `Cargo.toml`. Every crate opts in with `[lints]\nworkspace = true` in its own `Cargo.toml` — new crates MUST include this.
+* Exemptions are rare and must be documented. A crate that genuinely needs `unsafe` opts out with a local `[lints.rust] unsafe_code = "allow"` carrying a comment that explains the irreducible reason. The only current exemptions are:
+  * `deep_causality_rand` — CPU cycle-counter entropy (RDTSC / cntvct_el0) mixed into the `aead-random` CSPRNG seed for hardware-RNG backdoor resistance; no safe stable API exists.
+  * `deep_causality_multivector` and `deep_causality_topology` — HKT `fmap` pointer-cast standing in for `A == T`, working around a rustc type-equality limitation. To be removed when the compiler limitation is resolved or the HKT `fmap` is redesigned.
+  Do not add a new exemption without a documented, irreducible justification; prefer a safe redesign (e.g. a structure-preserving map, `AtomicU64` over `static mut`).
 * Avoid macros in all lib code i.e. everything under /src. However, macros for testing are permissible when using sparingly i.e. for bulk testing many types implementing the same trait. 
 * Avoid the introduction of external crates unless it is necessary for testing.
 
