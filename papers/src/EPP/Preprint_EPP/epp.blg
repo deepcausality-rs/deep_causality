@@ -1,0 +1,51 @@
+This is BibTeX, Version 0.99d (TeX Live 2025)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: epp.aux
+The style file: unsrt.bst
+Database file #1: ../epp_bib/references.bib
+Warning--can't use both volume and number fields in bareinboim2012transportability
+Warning--empty booktitle in bornholt2014uncertain
+Warning--empty journal in falcon2006aristotlecausality
+Warning--can't use both author and editor fields in wittgenstein2009investigations
+You've used 127 entries,
+            1791 wiz_defined-function locations,
+            1183 strings with 26977 characters,
+and the built_in function-call counts, 29236 in all, are:
+= -- 2535
+> -- 1360
+< -- 39
++ -- 505
+- -- 378
+* -- 1789
+:= -- 4501
+add.period$ -- 391
+call.type$ -- 127
+change.case$ -- 112
+chr.to.int$ -- 0
+cite$ -- 131
+duplicate$ -- 1386
+empty$ -- 2930
+format.name$ -- 378
+if$ -- 6656
+int.to.chr$ -- 0
+int.to.str$ -- 127
+missing$ -- 126
+newline$ -- 636
+num.names$ -- 139
+pop$ -- 518
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 712
+stack$ -- 0
+substring$ -- 1558
+swap$ -- 398
+text.length$ -- 39
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 4
+while$ -- 266
+width$ -- 130
+write$ -- 1364
+(There were 4 warnings)

@@ -6,9 +6,10 @@
 %   §4.1.2 Decomposition into the Generalized Form
 %   §4.1.3 Generalized Definition of Causality
 %   §4.1.4 Axiom of Causality
-%   §4.1.5 Reconstruction of Classical Causality
-%   §4.1.6 Functional Conjecture
-%   §4.1.7 Higher-Order Implications
+%   §4.1.5 The Causal Invariant (Mechanism Autonomy)
+%   §4.1.6 Reconstruction of Classical Causality
+%   §4.1.7 Functional Conjecture
+%   §4.1.8 Higher-Order Implications
 %
 % =============================================================================
 
@@ -99,7 +100,7 @@ In this form, X is no longer designated as a cause. It is described in terms of 
  
  A pure mathematical function of the form $E_2 = f(E_1)$ would capture the effect determination, but it does capture the process. A pure function is timeless, stateless, and it only relates inputs to outputs without carrying any state or context. The first condition from the decomposition, that causality is a process, is therefore not satisfied by a pure function. What is needed is a form of functional dependency that carries the structure of a process. 
  
-The mathematical structure with this property is the monad. A monad consists of a type constructor that wraps values in a context, a unit operation that lifts a plain value into the context, and a bind operation that composes a value-in-context with a function that produces a new value-in-context. The bind operation is unidirectional by construction, supplying the directional flow that the third condition (propagation) requires. The context wrapped around the value can carry state, context, error and more, satisfying the first condition (process). The composition of bind operations preserves the determination relation, satisfying the second condition.
+A mathematical structure with this property is the monad. A monad consists of a type constructor that wraps values in a context, a unit operation that lifts a plain value into the context, and a bind operation that composes a value-in-context with a function that produces a new value-in-context. The bind operation is unidirectional by construction, supplying the directional flow that the third condition (propagation) requires. The context wrapped around the value can carry state, context, error and more, satisfying the first condition (process). The composition of bind operations preserves the determination relation, satisfying the second condition. The monad is not the only structure that carries context; comonads and applicative functors do so as well. It is adopted here for sufficiency, and because bind composes naturally with the intervention operator of \ref{sub:epp_reconstruction}, rather than because it is the unique such structure.
 
 The generalized form of causality is therefore derived from the classical definition through two reductions: the classical form is recovered from the pure-function form by restricting the function and adjoining temporal asymmetry, and the pure-function form is recovered from the monadic form by reducing the monadic context to its unit.
 
@@ -127,10 +128,39 @@ The generalized definition is captured by a single axiom:
     
 \noindent where $m_1$ and $m_2$ are propagating effects, $f$ is a causal function from a value to a propagating effect, and $\mathbin{>\!\!>\!\!=}$ (read ``bind'') is the monadic composition operator. The propagating effect is a structured object that carries, alongside its value, the state, and the context of the causal process up to that point. The bind operation carries them all through the composition.    
     
-The function $f$ inside the bind is unconstrained. It may be deterministic, probabilistic, symbolic, or of arbitrary structure. It may be a simple logical expression, a structural causal model, a dynamic Bayesian network, a differential equation, or a neural network. The propagating effects $m_1$ and $m_2$ are likewise unconstrained in the kind of value they carry. The only practical constraint is that the function must compute eventually.  
+The function $f$ inside the bind is unconstrained at the level of types. It may be deterministic, probabilistic, symbolic, or of arbitrary structure. The constraint that makes a function causal rather than arbitrary is mechanism autonomy (\ref{sub:epp_causal_invariant}), a constraint on interpretation rather than on type. It may be a simple logical expression, a structural causal model, a dynamic Bayesian network, a differential equation, or a neural network. The propagating effects $m_1$ and $m_2$ are likewise unconstrained in the kind of value they carry. The only practical constraint is that the function must compute eventually.  
    
 \newpage  
    
+\subsubsection{The Causal Invariant: Mechanism Autonomy}
+\label{sub:epp_causal_invariant}
+
+The axiom $m_2 = m_1 \mathbin{>\!\!>\!\!=} f$ fixes the \emph{form} of a causal process: a directional, context-carrying composition of functions. It does not by itself separate a causal dependency from an arbitrary monadic computation, because the bind operator and an unconstrained $f$ are available to any monadic program. Monadic composition is therefore necessary but not sufficient for causality. The content that distinguishes a causal composition from an arbitrary one is carried not by the composition but by a constraint on the function $f$, which this section states explicitly.
+
+\paragraph{Mechanism autonomy.}
+The monad admits any function $f$ at the level of types; a \emph{causal function} is the subset of such functions that denote an autonomous mechanism. Autonomy has two parts:
+
+\begin{enumerate}
+    \item \emph{Informational locality.} The function reads only the value, state, and context supplied to it through the bind. It has no access to the global history of the process or to any state that is not threaded to it.
+
+    \item \emph{Stability.} The mechanism holds invariant under perturbation of the other mechanisms in the model. Replacing or disrupting one mechanism leaves the others unchanged.
+\end{enumerate}
+
+The two parts differ in status. Informational locality is structural and is enforced by the framework: the signature of bind admits only the threaded value, state, and context as arguments, so a function cannot depend on anything else. Stability is an interpretive commitment on the model, not a property the framework can enforce. It is the same commitment that Pearl's structural causal models make when they assume each structural equation is autonomous rather than a curve fit\cite{pearl2000causality}, and it is the modularity assumption that licenses intervention. Stability cannot be derived; it is postulated of the model by the modeller.
+
+Mechanism autonomy is therefore a \emph{definitional postulate} rather than a second axiom. Its first part is discharged by the structure of bind; only its second part is assumed, and it is assumed by any causal framework whatsoever. The generalized definition of causality is, in full:
+
+\begin{quote}
+A causal relation is a monadic composition of autonomous causal functions, in which one propagating effect is obtained from another by bind in the monadic context of the causal process.
+\end{quote}
+
+The adjective \emph{autonomous} carries the causal content; the monadic composition carries the process form. Neither alone is causality.
+
+\paragraph{State externalization.}
+Informational locality is made enforceable by separating the mechanism from the state it operates on. A mechanism that carried hidden mutable state could depend covertly on history and would not be local. The framework removes this possibility by externalizing all state: the causal function is stateless, and state is carried either in the threaded state parameter of the propagating effect or in the Context (\ref{sec:epp_context}). A mechanism with non-trivial history dependence remains autonomous precisely because that dependence is made explicit in the threaded state rather than concealed inside the function. The stateless propagating effect, in which the state and context parameters are the unit type, is the degenerate case in which the state channel carries no information; the stateful process carries a non-trivial Markovian state. Both rest on the same autonomy postulate, and statefulness is a non-trivial state channel rather than a violation of locality. The autonomy-bearing unit that realizes this separation concretely is the Causaloid (\ref{sec:epp_causaloid}).
+
+\newpage
+
 \subsubsection{Reconstruction of Classical Causality}
 \label{sub:epp_reconstruction}
  
@@ -196,7 +226,27 @@ Apply Proposition 1 to obtain $E_2 = f(E_1)$ from the unit-context form of the m
 \paragraph{Discussion.}
 The recovery establishes that classical causality is a specific subset in the EPP's parameter space. The recovery of classical causality is reached by setting the context parameters to the unit type, restricting the values to a bivalent domain, restricting the function to the identity on that domain, and restriction the propagation direction to unidirection. 
 
-Each restriction is independent of the others. Relaxing any one yields a distinct generalization. Relaxing the bivalence restriction permits multi-valued or continuous effects. Relaxing the biconditional restriction permits arbitrary deterministic functions or, with appropriate further structure on the value type, probabilistic transitions. Relaxing the temporal-precedence restriction permits propagation in spacetimes without a global time coordinate, which is where the EPP's spacetime-agnostic character earns its keep. Relaxing the unit-context restriction restores whatever the context parameters of the specific monad instance carry,
+Each restriction is independent of the others. Relaxing any one yields a distinct generalization. Relaxing the bivalence restriction permits multi-valued or continuous effects. Relaxing the biconditional restriction permits arbitrary deterministic functions or, with appropriate further structure on the value type, probabilistic transitions. Relaxing the temporal-precedence restriction permits propagation in spacetimes without a global time coordinate, which is where the EPP's spacetime-agnostic character earns its keep. Relaxing the unit-context restriction restores whatever the context parameters of the specific monad instance carry.
+
+\paragraph{The intervention operator.}
+Let a propagating effect be written as the tuple $m = (v, s, c, e, \ell)$, where $v$ is the carried value, $s$ the state, $c$ the context, $e$ the error, and $\ell$ the log. This decomposition corresponds one to one to the five type parameters of the propagating effect in the reference implementation. Write $\mathsf{Val}(x)$ for a present value, $\varnothing$ for the absent value, $\bot$ for the absent error, and $\ell \cdot \iota$ for the log $\ell$ extended with an intervention entry $\iota$. The intervention operator is defined by
+\[
+\mathrm{intervene}(m, v') =
+\begin{cases}
+(\varnothing,\ s,\ c,\ e,\ \ell \cdot \iota) & \text{if } e \neq \bot, \\[4pt]
+(\mathsf{Val}(v'),\ s,\ c,\ \bot,\ \ell \cdot \iota) & \text{if } e = \bot.
+\end{cases}
+\]
+The first case preserves an existing error and leaves the value absent: an intervention cannot repair a chain that has already failed. The second case forces the value to $v'$, leaves the state and context untouched, and records the intervention in the log. In both cases the log is extended, so every intervention is auditable.
+
+\paragraph{Proposition 3 (Intervention recovers the do-operator).}
+\emph{Under the unit context with no error state, the intervention operator $\mathrm{intervene}(m, v')$ reduces on the value channel to Pearl's $\mathrm{do}(v')$.}
+
+\paragraph{Proof.}
+In the unit context the state and context channels are the unit type and carry no information (Proposition 1), and with no error state $e = \bot$, so the second case of the definition applies and yields $(\mathsf{Val}(v'),\ (),\ (),\ \bot,\ \ell \cdot \iota)$. The substituted value $v'$ replaces the value produced by the preceding step, and the subsequent binds re-evaluate the same functions $f_2, f_3, \ldots$ on $v'$. This is exactly the effect of $\mathrm{do}(v')$ in a structural causal model: the incoming determination of the intervened variable is removed, the variable is set to $v'$, and all descendants recompute under the unchanged remaining mechanisms\cite{pearl2000causality}. The log entry $\iota$ and the context channels are trivial in the classical specialization. $\square$
+
+\paragraph{Discussion of intervention.}
+Outside the unit context the intervention generalizes the do-operator in two ways. It preserves a prior error, so an intervention cannot repair a chain that has already failed, and it records the intervention in the audit log. The first makes intervention failure-respecting; the second makes counterfactual reasoning auditable, which is required wherever an action must be justified before execution. Intervention is therefore a \emph{derived} operation on the propagating effect, not a primitive of the axiom; it is the operational signature of mechanism autonomy (\ref{sub:epp_causal_invariant}). Because autonomy holds whether or not an intervention is performed, causal relations that cannot be manipulated, such as the dependence of the tides on the moon or of the cosmic microwave background on the early universe, remain causal under the present definition.
 
 \newpage
  
@@ -301,6 +351,15 @@ Each node in this hypergraph is a Contextoid, a unit of information that can rep
 
 The causal logic is kept distinct from the contextual data it operates on. It also directly enables the  agnosticism to the structure of space and time, accommodating Euclidean, non-Euclidean, and symbolic representations within the same architecture. Furthermore,  causal logic  may operate on one or more contexts and, equally important, a particular context might be shared between different causal logic, thus enabling efficient and scalable context representation in complex dynamic systems. 
 
+\subsubsection{The Dual Role of Context}
+\label{sub:epp_context_duality}
+
+A Context serves two roles. It captures the external world, such as sensor readings, and it stores state shared across causaloids. A model may declare any number of contexts. When the separation is useful, one context can hold shared internal state and another can hold external readings.
+
+The two roles are not always separable, and the framework does not force a separation. From the perspective of the causal model, an external reading is simply state that a mechanism reads. An internal health check of an external sensor is at once a fact about the external world and an item of internal state. The internal and external distinction is therefore a modelling convenience, not a structural boundary. This is the source of the duality: both roles reduce to the same operation, a mechanism reading a value from a context node.
+
+The duality preserves mechanism autonomy (\ref{sub:epp_causal_invariant}). When one causaloid writes a context node that another causaloid reads, that coupling is itself an edge in the hypergraph, so it is a declared propagation path and not a hidden side channel. Read-only external input is exogenous, like the exogenous variables of a structural causal model. Shared state that is written and then read is endogenous and appears as structure. In both cases the coupling is visible in the hypergraph, so autonomy holds without forcing the modeller to separate internal from external state.
+
 %
 % Causaloid
 %
@@ -325,6 +384,9 @@ In case of a probabilistic estimate or a Bayesian network, the causal function i
 
 
 It is important to note that the EPP framework adopts the conceptual role of the Causaloid as a spacetime-agnostic unit of causal interaction, inspired by Hardy’s work on Quantum Gravity, but it does not use Hardy's formal definition that requires a complex process matrix.  Instead, the EPP formulates the Causaloid as an abstract data structure that embeds a causal function, thereby decoupling it from any particular physical theory while preserving its core philosophical utility and making it practically implementable in software.
+
+\paragraph{Separation of mechanism from state.}
+The externalization of state marks a further separation beyond the structural causal model. In a structural causal model the structural equation and the variable it determines are entangled: the equation $X := f_X(\mathrm{pa}(X), U_X)$ is inseparable from the variable $X$ whose value it fixes. The EPP separates the two. The mechanism is the causal function carried by the Causaloid; the value and the state it operates on are carried by the propagating effect and the Context. One consequence is that the same mechanism graph can be evaluated against different states without modification. Counterfactual reasoning exploits this directly: an alternate context is obtained by cloning the factual context and altering the relevant value, and the unchanged Causaloid graph is re-evaluated against it (\ref{sec:epp_ladder_causation}). Because the alternate contexts are independent, their evaluations are mutually independent and can be run in parallel. The model surgery a structural causal model performs on its equations is, in the EPP, replaced by alternation of an externalized state, leaving the mechanisms intact.
 
 The term "propagation" refers to the fundamental process by which an effect is transferred within the structure from one Causaloid to another. This fundamental process is what gives rise to the appearance of propagation through spacetime in the classical view. Furthermore, while classical causality relies on a definite temporal order, the Effect Propagation Process treats temporal order as an emergent property, arising from the fundamental process itself.
 
