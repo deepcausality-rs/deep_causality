@@ -3,7 +3,7 @@
 # Project websites
 
 This folder holds **two independent Astro projects**, each built and deployed on
-its own. They are deliberately decoupled: the main projectt site changes rarely,
+its own. They are deliberately decoupled: the main project site changes rarely,
 while the documentation evolves with the project, so each ships on its own
 cadence to its own Cloudflare Worker and hostname.
 
