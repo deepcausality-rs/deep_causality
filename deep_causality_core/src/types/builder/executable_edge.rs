@@ -12,17 +12,17 @@ pub struct ExecutableEdge {
 }
 
 impl ExecutableEdge {
-    pub fn new(from: usize, to: usize) -> Self {
+    pub const fn new(from: usize, to: usize) -> Self {
         Self { from, to }
     }
 }
 
 impl ExecutableEdge {
-    pub fn from(&self) -> usize {
+    pub const fn from(&self) -> usize {
         self.from
     }
 
-    pub fn to(&self) -> usize {
+    pub const fn to(&self) -> usize {
         self.to
     }
 }

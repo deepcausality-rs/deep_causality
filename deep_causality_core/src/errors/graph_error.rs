@@ -15,14 +15,14 @@ pub enum GraphError {
 impl Display for GraphError {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
-            GraphError::StartNodeOutOfBounds(id) => {
+            Self::StartNodeOutOfBounds(id) => {
                 write!(f, "Start node index {} out of bounds", id)
             }
-            GraphError::MaxStepsExceeded(steps) => {
+            Self::MaxStepsExceeded(steps) => {
                 write!(f, "Execution exceeded max_steps limit of {}", steps)
             }
 
-            GraphError::GraphExecutionProducedNoResult => {
+            Self::GraphExecutionProducedNoResult => {
                 write!(f, "Graph execution produced no result")
             }
         }

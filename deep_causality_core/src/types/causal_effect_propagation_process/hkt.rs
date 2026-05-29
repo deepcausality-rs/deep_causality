@@ -28,18 +28,14 @@ impl<S, C, E, L> HKT for CausalEffectPropagationProcessWitness<S, C, E, L> {
     type Type<Value> = CausalEffectPropagationProcess<Value, S, C, E, L>;
 }
 
-impl<S, C, E, L> Functor<CausalEffectPropagationProcessWitness<S, C, E, L>>
-    for CausalEffectPropagationProcessWitness<S, C, E, L>
+impl<S, C, E, L> Functor<Self> for CausalEffectPropagationProcessWitness<S, C, E, L>
 where
     S: Clone,
     C: Clone,
     E: Clone,
     L: Clone,
 {
-    fn fmap<A, B, Func>(
-        m_a: <CausalEffectPropagationProcessWitness<S, C, E, L> as HKT>::Type<A>,
-        f: Func,
-    ) -> <CausalEffectPropagationProcessWitness<S, C, E, L> as HKT>::Type<B>
+    fn fmap<A, B, Func>(m_a: <Self as HKT>::Type<A>, f: Func) -> <Self as HKT>::Type<B>
     where
         A: Satisfies<<Self as HKT>::Constraint>,
         B: Satisfies<<Self as HKT>::Constraint>,
@@ -58,8 +54,7 @@ where
     }
 }
 
-impl<S, C, E, L> Pure<CausalEffectPropagationProcessWitness<S, C, E, L>>
-    for CausalEffectPropagationProcessWitness<S, C, E, L>
+impl<S, C, E, L> Pure<Self> for CausalEffectPropagationProcessWitness<S, C, E, L>
 where
     S: Clone + Default,
     C: Clone,
@@ -80,8 +75,7 @@ where
     }
 }
 
-impl<S, C, E, L> Applicative<CausalEffectPropagationProcessWitness<S, C, E, L>>
-    for CausalEffectPropagationProcessWitness<S, C, E, L>
+impl<S, C, E, L> Applicative<Self> for CausalEffectPropagationProcessWitness<S, C, E, L>
 where
     S: Clone + Default,
     C: Clone,

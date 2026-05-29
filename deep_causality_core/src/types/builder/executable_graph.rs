@@ -91,11 +91,11 @@ impl<P: ControlFlowProtocol> ExecutableGraph<P> {
 }
 
 impl<P: ControlFlowProtocol> ExecutableGraph<P> {
-    pub fn nodes(&self) -> &Vec<ExecutableNode<P>> {
+    pub const fn nodes(&self) -> &Vec<ExecutableNode<P>> {
         &self.nodes
     }
 
-    pub fn adjacency(&self) -> &Vec<Vec<usize>> {
+    pub const fn adjacency(&self) -> &Vec<Vec<usize>> {
         &self.adjacency
     }
 }

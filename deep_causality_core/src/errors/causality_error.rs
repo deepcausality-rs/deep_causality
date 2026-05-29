@@ -14,8 +14,8 @@ pub struct CausalityError(pub CausalityErrorEnum);
 
 impl CausalityError {
     /// Creates a new `CausalityError` from the specific error variant.
-    pub fn new(error_enum: CausalityErrorEnum) -> Self {
-        CausalityError(error_enum)
+    pub const fn new(error_enum: CausalityErrorEnum) -> Self {
+        Self(error_enum)
     }
 }
 

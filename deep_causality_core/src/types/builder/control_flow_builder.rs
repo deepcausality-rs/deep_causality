@@ -20,7 +20,7 @@ pub struct ControlFlowBuilder<P> {
 }
 
 impl<P: ControlFlowProtocol> ControlFlowBuilder<P> {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             nodes: Vec::new(),
             edges: Vec::new(),

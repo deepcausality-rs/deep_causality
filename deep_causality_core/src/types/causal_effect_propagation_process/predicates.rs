@@ -9,11 +9,11 @@ impl<Value, Error, Log> CausalEffectPropagationProcess<Value, (), (), Error, Log
 where
     Log: LogSize,
 {
-    pub fn is_ok(&self) -> bool {
+    pub const fn is_ok(&self) -> bool {
         self.error.is_none()
     }
 
-    pub fn is_err(&self) -> bool {
+    pub const fn is_err(&self) -> bool {
         self.error.is_some()
     }
 }

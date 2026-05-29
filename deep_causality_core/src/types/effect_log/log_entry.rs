@@ -16,7 +16,7 @@ pub(in crate::types) struct LogEntry {
 }
 
 impl LogEntry {
-    pub fn new(timestamp_ms: u128, message: String) -> Self {
+    pub const fn new(timestamp_ms: u128, message: String) -> Self {
         Self {
             timestamp_ms,
             message,
@@ -25,7 +25,7 @@ impl LogEntry {
 }
 
 impl LogEntry {
-    pub fn timestamp_ms(&self) -> u128 {
+    pub const fn timestamp_ms(&self) -> u128 {
         self.timestamp_ms
     }
 

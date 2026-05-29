@@ -16,15 +16,12 @@ impl<S, C> HKT for PropagatingProcessWitness<S, C> {
     type Type<T> = PropagatingProcess<T, S, C>;
 }
 
-impl<S, C> Functor<PropagatingProcessWitness<S, C>> for PropagatingProcessWitness<S, C>
+impl<S, C> Functor<Self> for PropagatingProcessWitness<S, C>
 where
     S: Clone,
     C: Clone,
 {
-    fn fmap<A, B, Func>(
-        m_a: <PropagatingProcessWitness<S, C> as HKT>::Type<A>,
-        f: Func,
-    ) -> <PropagatingProcessWitness<S, C> as HKT>::Type<B>
+    fn fmap<A, B, Func>(m_a: <Self as HKT>::Type<A>, f: Func) -> <Self as HKT>::Type<B>
     where
         A: Satisfies<<Self as HKT>::Constraint>,
         B: Satisfies<<Self as HKT>::Constraint>,
@@ -59,7 +56,7 @@ where
     }
 }
 
-impl<S, C> Pure<PropagatingProcessWitness<S, C>> for PropagatingProcessWitness<S, C>
+impl<S, C> Pure<Self> for PropagatingProcessWitness<S, C>
 where
     S: Clone + Default,
     C: Clone,
@@ -78,7 +75,7 @@ where
     }
 }
 
-impl<S, C> Applicative<PropagatingProcessWitness<S, C>> for PropagatingProcessWitness<S, C>
+impl<S, C> Applicative<Self> for PropagatingProcessWitness<S, C>
 where
     S: Clone + Default,
     C: Clone,

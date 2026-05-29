@@ -14,7 +14,7 @@ pub struct NodeType<In, Out> {
 }
 
 impl<In, Out> NodeType<In, Out> {
-    pub fn id(&self) -> usize {
+    pub const fn id(&self) -> usize {
         self.id
     }
 }
@@ -28,7 +28,7 @@ impl<In, Out> Clone for NodeType<In, Out> {
 impl<In, Out> Copy for NodeType<In, Out> {}
 
 impl<In, Out> NodeType<In, Out> {
-    pub fn new(id: usize) -> Self {
+    pub const fn new(id: usize) -> Self {
         Self {
             id,
             _marker: PhantomData,
