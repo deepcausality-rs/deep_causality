@@ -43,3 +43,25 @@ website/web/.pagefind
 website/web/.cache
 website/web/.env
 website/web/.env.production
+
+# LaTeX build artifacts (papers/). PDFs are tracked intentionally.
+papers/**/*.aux
+papers/**/*.bbl
+papers/**/*.blg
+papers/**/*.fdb_latexmk
+papers/**/*.fls
+papers/**/*.lof
+papers/**/*.log
+papers/**/*.lot
+papers/**/*.out
+papers/**/*.synctex.gz
+papers/**/*.toc
+papers/**/*.nav
+papers/**/*.snm
+papers/**/*.vrb
+papers/**/*.idx
+papers/**/*.ilg
+papers/**/*.ind
+papers/**/*.run.xml
+papers/**/*.bcf
+papers/**/.texpadtmp/
