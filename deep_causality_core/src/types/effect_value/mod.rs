@@ -7,7 +7,7 @@
 
 use crate::{ContextoidId, IdentificationValue, PropagatingEffect};
 
-#[cfg(all(feature = "alloc", not(feature = "strict-zst")))]
+#[cfg(feature = "alloc")]
 use alloc::boxed::Box;
 #[cfg(feature = "std")]
 use std::collections::HashMap;

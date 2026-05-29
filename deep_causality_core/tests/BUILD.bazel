@@ -154,24 +154,6 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "types_builder",
-    srcs = glob([
-        "types/builder/*_tests.rs",
-    ]),
-    crate_features = [
-        "std",
-        "alloc",
-    ],
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-    ],
-)
-
-rust_test_suite(
     name = "types_propagating_process",
     srcs = glob([
         "types/propagating_process/*_tests.rs",

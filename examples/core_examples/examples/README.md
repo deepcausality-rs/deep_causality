@@ -40,22 +40,6 @@ Demonstrates counterfactual reasoning using `PropagatingProcess`.
 cargo run -p core_examples --example propagating_process_counterfactual
 ```
 
-### 5. Control Flow Builder
-
-Shows the control flow builder pattern for monadic composition.
-
-```bash
-cargo run -p core_examples --example control_flow_builder
-```
-
-### 6. Control Flow with Strict ZST
-
-Advanced example using Zero-Sized Types for strict control flow.
-
-```bash
-cargo run -p core_examples --example control_flow_strict_zst --features strict-zst
-```
-
 ---
 
 ## Key Concepts

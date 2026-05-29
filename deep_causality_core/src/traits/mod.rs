@@ -4,5 +4,4 @@
  */
 
 pub mod causal_monad;
-pub mod control_flow_protocol;
 pub mod intervenable;
