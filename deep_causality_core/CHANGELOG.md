@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.0.7...deep_causality_core-v0.0.8) - 2026-05-29
+
+### Added
+
+- *(core)* add inherent error-safe fmap; sweep core examples to the fluent API
+
+### Fixed
+
+- *(deep_causality_core)* CausalMonad::bind returns None on error, not a fabricated default
+
+### Other
+
+- *(deep_causality_core)* replace value-only effect binds with one state-threading CausalMonad trait
+- *(deep_causality_core)* relax over-specified Default bound on bind
+- Merge branch 'deepcausality-rs:main' into main
+- *(deep_causality_core)* Removed some dead code.
+
 ## [0.0.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.0.6...deep_causality_core-v0.0.7) - 2026-05-26
 
 ### Other
