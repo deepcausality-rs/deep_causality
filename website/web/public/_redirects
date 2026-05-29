@@ -1,0 +1,9 @@
+# Cloudflare redirects for documentation that moved to docs.deepcausality.com.
+#
+# The /docs/ overview page still lives on this site, so only the old section
+# sub-paths are redirected. The splat (:splat) preserves the path tail,
+# including its trailing slash, e.g. /docs/concepts/causaloid/ maps to
+# https://docs.deepcausality.com/concepts/causaloid/. First match wins.
+/docs/concepts/*        https://docs.deepcausality.com/concepts/:splat        301
+/docs/getting-started/* https://docs.deepcausality.com/getting-started/:splat 301
+/docs/overview/*        https://docs.deepcausality.com/overview/:splat        301
