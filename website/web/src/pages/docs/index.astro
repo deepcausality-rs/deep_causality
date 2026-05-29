@@ -1,12 +1,119 @@
 ---
-import DocsLayout from '../../layouts/DocsLayout.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import { DOCS_URL, DOCSRS_BASE } from '../../consts';
 ---
-<DocsLayout title="Documentation" description="DeepCausality documentation: getting started, overview, concepts, examples, monograph, API reference." sectionLabel="Overview">
-  <p>The documentation is organized into three entry points.</p>
-  <ul>
-    <li><a href="/docs/getting-started/install/">Getting started</a>: install the crates and run your first Causaloid.</li>
-    <li><a href="/docs/overview/why/">Overview</a>: what computational causality is, why classical methods break in dynamic systems, and the core idea behind DeepCausality.</li>
-    <li><a href="/docs/concepts/dynamic-causality/">Concepts</a>: the ideas the rest of the library rests on.</li>
-  </ul>
-  <p>The exhaustive per-crate API reference lives on <a href="https://docs.rs/deep_causality">docs.rs</a>. The pages here are operational documentation aimed at engineers using the library day to day.</p>
-</DocsLayout>
+<BaseLayout
+  title="Documentation — DeepCausality"
+  description="An overview of computational causality and how it complements deep learning, with a link to the full DeepCausality documentation."
+>
+  <SiteHeader />
+  <article class="overview">
+    <header class="overview-head">
+      <p class="eyebrow">Documentation</p>
+      <h1>Computational causality and deep learning</h1>
+    </header>
+    <div class="overview-prose">
+      <p>
+        Computational causality and deep learning solve different problems. Deep learning excels at
+        pattern matching from large data: object detection, fraud detection, next-token prediction in
+        large language models. These systems infer from statistical co-occurrence in the training
+        distribution, and that is exactly the right tool for many problems. Other problems need a
+        different substrate: the ones where correlation is not causation and the deployment regime can
+        shift away from training.
+      </p>
+      <p>Computational causality gives you three things a purely correlational (AI) system cannot:</p>
+      <ul>
+        <li>
+          <strong>Deterministic reasoning:</strong> same input, same output. The system gives the same
+          answer on Tuesday that it gave on Monday.
+        </li>
+        <li>
+          <strong>Probabilistic reasoning:</strong> explicit odds, explicit confidence. The system tells
+          you not just what it concluded but how sure it is.
+        </li>
+        <li>
+          <strong>Full explainability:</strong> a logical line of reasoning. You can ask the system
+          &ldquo;why&rdquo; and get a structured answer.
+        </li>
+      </ul>
+      <p>
+        These properties matter in regulated and high-stakes domains: medicine, finance, robotics,
+        avionics, industrial control. In those domains, a regulator, an operator, or a courtroom is
+        going to ask why a decision was made, and an audit trail of deterministic reasoning becomes
+        critical.
+      </p>
+      <p>
+        Deep learning and DeepCausality are complementary methodologies with different strengths that
+        compose well in a single system. Deep learning is a strong choice for perception: object
+        recognition, anomaly detection in raw signals, embeddings of unstructured text. DeepCausality is
+        a strong choice for dynamic systems with dynamic reasoning that need a verifiable audit trail.
+      </p>
+      <p class="overview-cta">
+        <a class="overview-btn" href={DOCS_URL}>Read the full documentation <span aria-hidden="true">→</span></a>
+      </p>
+      <p class="overview-note">
+        The exhaustive per-crate API reference lives on <a href={`${DOCSRS_BASE}/deep_causality`}>docs.rs</a>.
+      </p>
+    </div>
+  </article>
+
+  <style>
+    .overview {
+      max-width: var(--w-doc);
+      margin: 0 auto;
+      padding: var(--space-7) var(--space-4) var(--space-9);
+    }
+    @media (min-width: 900px) {
+      .overview { padding: var(--space-9) var(--space-5); }
+    }
+    .overview-head { margin-bottom: var(--space-6); }
+    .overview-head .eyebrow {
+      margin: 0 0 var(--space-2) 0;
+      font-size: var(--t-eyebrow);
+      letter-spacing: var(--ls-eyebrow);
+      text-transform: uppercase;
+      color: var(--fg-2);
+    }
+    .overview-head h1 { margin: 0; }
+    .overview-prose { max-width: var(--w-prose); }
+    .overview-prose p,
+    .overview-prose li { color: var(--fg-1); }
+    .overview-prose p { max-width: var(--measure); margin: 0 0 var(--space-4) 0; }
+    .overview-prose strong { color: var(--fg-0); }
+    .overview-prose ul { padding-left: var(--space-5); margin: 0 0 var(--space-4) 0; }
+    .overview-prose li { margin: var(--space-2) 0; max-width: var(--measure); }
+    .overview-prose a {
+      text-decoration: underline;
+      text-decoration-color: var(--line-2);
+      text-underline-offset: 2px;
+    }
+
+    .overview-cta { margin: var(--space-6) 0 var(--space-5); }
+    .overview-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      height: 44px;
+      padding: 0 var(--space-5);
+      border-radius: var(--radius-sm);
+      background: var(--accent);
+      color: var(--accent-ink);
+      border: 1px solid var(--accent);
+      font-weight: 540;
+      text-decoration: none;
+      box-shadow: 0 1px 0 0 color-mix(in srgb, var(--accent) 60%, black) inset,
+                  0 1px 2px 0 color-mix(in srgb, var(--accent) 50%, transparent);
+      transition: background-color var(--dur-fast) var(--ease-out),
+                  border-color var(--dur-fast) var(--ease-out),
+                  transform var(--dur-fast) var(--ease-out);
+    }
+    .overview-btn:hover {
+      background: color-mix(in srgb, var(--accent) 90%, white);
+      border-color: color-mix(in srgb, var(--accent) 90%, white);
+    }
+    .overview-btn:active { transform: translateY(1px); }
+
+    .overview-note { font-size: var(--t-body-sm); color: var(--fg-2); }
+  </style>
+</BaseLayout>

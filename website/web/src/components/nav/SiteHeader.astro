@@ -1,5 +1,6 @@
 ---
 import ThemeToggle from './ThemeToggle.astro';
+import { GITHUB_URL, DISCORD_URL } from '../../consts';
 const path = Astro.url.pathname;
 const isActive = (href: string) => path === href || (href !== '/' && path.startsWith(href));
 ---
@@ -12,19 +13,7 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
     </a>
 
     <nav class="primary" aria-label="Primary">
-      <div class="nav-dropdown">
-        <a href="/docs/" class:list={["nav-link nav-link-trigger", isActive('/docs/') && 'is-active']} aria-haspopup="true">
-          Docs
-          <svg class="caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M2.5 4 L5 6.5 L7.5 4"/>
-          </svg>
-        </a>
-        <ul class="dropdown-menu" role="menu">
-          <li><a href="/docs/getting-started/install/" role="menuitem">Getting started</a></li>
-          <li><a href="/docs/overview/why/" role="menuitem">Overview</a></li>
-          <li><a href="/docs/concepts/dynamic-causality/" role="menuitem">Concepts</a></li>
-        </ul>
-      </div>
+      <a href="/docs/" class:list={["nav-link", isActive('/docs/') && 'is-active']}>Docs</a>
       <div class="nav-dropdown">
         <a href="/examples/" class:list={["nav-link nav-link-trigger", isActive('/examples/') && 'is-active']} aria-haspopup="true">
           Examples
@@ -49,12 +38,12 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
 
     <div class="utility">
       <ThemeToggle />
-      <a class="icon-link" href="https://discord.gg/Bxj9P7JXSj" aria-label="DeepCausality Discord server" rel="noopener noreferrer" target="_blank">
+      <a class="icon-link" href={DISCORD_URL} aria-label="DeepCausality Discord server" rel="noopener noreferrer" target="_blank">
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
           <path d="M20.317 4.369A19.79 19.79 0 0 0 16.558 3a14.07 14.07 0 0 0-.617 1.265 18.34 18.34 0 0 0-5.486 0A12.9 12.9 0 0 0 9.838 3 19.74 19.74 0 0 0 6.078 4.37C2.527 9.522 1.566 14.546 2.046 19.5a19.93 19.93 0 0 0 6.034 3.04 14.66 14.66 0 0 0 1.27-2.04 12.78 12.78 0 0 1-2.01-.96c.169-.123.334-.252.493-.385a14.13 14.13 0 0 0 12.327 0c.16.133.325.262.494.385a12.79 12.79 0 0 1-2.014.96 14.36 14.36 0 0 0 1.27 2.04 19.84 19.84 0 0 0 6.034-3.04c.508-5.731-.83-10.7-3.622-15.13ZM8.02 16.42c-1.183 0-2.156-1.085-2.156-2.42 0-1.334.952-2.42 2.156-2.42 1.203 0 2.176 1.086 2.156 2.42 0 1.335-.952 2.42-2.156 2.42Zm7.96 0c-1.183 0-2.156-1.085-2.156-2.42 0-1.334.952-2.42 2.156-2.42 1.203 0 2.176 1.086 2.156 2.42 0 1.335-.952 2.42-2.156 2.42Z"/>
         </svg>
       </a>
-      <a class="icon-link" href="https://github.com/deepcausality-rs/deep_causality" aria-label="GitHub repository">
+      <a class="icon-link" href={GITHUB_URL} aria-label="GitHub repository">
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
           <path d="M12 .5a11.5 11.5 0 0 0-3.63 22.42c.57.1.78-.25.78-.55v-2.06c-3.18.69-3.86-1.36-3.86-1.36-.52-1.34-1.27-1.7-1.27-1.7-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.76 2.68 1.25 3.34.96.1-.74.4-1.25.73-1.54-2.54-.29-5.21-1.27-5.21-5.66 0-1.25.45-2.27 1.18-3.07-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.15 1.17a10.94 10.94 0 0 1 5.74 0c2.19-1.48 3.15-1.17 3.15-1.17.62 1.58.23 2.75.11 3.04.74.8 1.18 1.82 1.18 3.07 0 4.4-2.68 5.37-5.23 5.65.41.36.78 1.06.78 2.13v3.16c0 .3.21.66.79.55A11.5 11.5 0 0 0 12 .5Z"/>
         </svg>
@@ -84,14 +73,7 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
       </button>
     </div>
     <ul class="mobile-menu-list">
-      <li>
-        <a href="/docs/">Docs</a>
-        <ul class="mobile-menu-sub">
-          <li><a href="/docs/getting-started/install/">Getting started</a></li>
-          <li><a href="/docs/overview/why/">Overview</a></li>
-          <li><a href="/docs/concepts/dynamic-causality/">Concepts</a></li>
-        </ul>
-      </li>
+      <li><a href="/docs/">Docs</a></li>
       <li>
         <a href="/examples/">Examples</a>
         <ul class="mobile-menu-sub">

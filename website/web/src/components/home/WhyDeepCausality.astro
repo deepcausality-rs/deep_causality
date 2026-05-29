@@ -1,6 +1,7 @@
 ---
 // "Why DeepCausality?" — capability rundown below the example grid.
 // Two-column feature list at desktop, single column on mobile.
+import { DOCS_URL } from '../../consts';
 type Item = {
   title: string;
   body: string;
@@ -13,27 +14,27 @@ const items: Item[] = [
     body:
       'Model causal structure that is fixed at design time, evolves over the lifetime of a system, adapts to feedback, ' +
         'or arises from interaction. The same primitives carry across all four modalities, so the choice is a modeling decision.',
-    links: [{ label: 'Concept: dynamic causality', href: '/docs/concepts/dynamic-causality/' }],
+    links: [{ label: 'Concept: dynamic causality', href: DOCS_URL + '/concepts/dynamic-causality/' }],
   },
   {
     title: 'Multi-shaped causality',
     body:
       'Express a single rule as a Causaloid, a flat collection of Causaloids, or a hypergraph of nested Causaloids. ' +
         'The shape follows the problem: an isolated guard, a battery of independent checks, or a deeply composed causal structure with subgraphs and shared subexpressions.',
-    links: [{ label: 'Concept: Causaloid', href: '/docs/concepts/causaloid/' }],
+    links: [{ label: 'Concept: Causaloid', href: DOCS_URL + '/concepts/causaloid/' }],
   },
   {
     title: 'Causal discovery via CDL',
     body:
       'The Causal Discovery Language is a typestate-driven DSL that walks raw observational data through configuration, loading, feature selection, discovery, and analysis. Each stage is enforced by the type system.',
-    links: [{ label: 'Concept: CDL', href: '/docs/concepts/cdl/' }],
+    links: [{ label: 'Concept: CDL', href: DOCS_URL + '/concepts/cdl/' }],
   },
   {
     title: 'Causal State Machines (CSM)',
     body:
       'Wire Causaloids to actions and let the framework drive the transitions. The CSM pattern is the right fit for sensor monitoring, alerting, and control loops where a state change has to follow a causal verdict.',
     links: [
-      { label: 'Concept: CSM', href: '/docs/concepts/csm/' },
+      { label: 'Concept: CSM', href: DOCS_URL + '/concepts/csm/' },
       { label: 'Example: sensor monitoring with CSM', href: '/examples/sensor-monitoring-csm/' },
     ],
   },
@@ -41,14 +42,14 @@ const items: Item[] = [
     title: 'Static and dynamic context',
     body:
       'Causaloids run inside a Context: a hypergraph of the data, time, and space they depend on. A static context is defined up front; a dynamic context grows, shrinks, or rewires at runtime as new information arrives.',
-    links: [{ label: 'Concept: Context', href: '/docs/concepts/context/' }],
+    links: [{ label: 'Concept: Context', href: DOCS_URL + '/concepts/context/' }],
   },
   {
     title: 'Multimodal reasoning',
     body:
       'A single graph can reason deterministically, probabilistically, counterfactually, or in any combination. The PropagatingEffect type carries the modality through the graph.',
     links: [
-      { label: 'Concept: Effect Propagation Process', href: '/docs/concepts/effect-propagation-process/' },
+      { label: 'Concept: Effect Propagation Process', href: DOCS_URL + '/concepts/effect-propagation-process/' },
       { label: 'Example: Pearl counterfactual', href: '/examples/pearl-counterfactual/' },
     ],
   },
@@ -56,28 +57,28 @@ const items: Item[] = [
     title: 'Markovian and non-Markovian modeling',
     body:
       'PropagatingEffect carries the immediate signal; PropagatingProcess carries the trajectory of effects over time. Together they let a model reason about systems whose next state depends on the current state, on full history, or on anything in between.',
-    links: [{ label: 'Concept: Effect Propagation Process', href: '/docs/concepts/effect-propagation-process/' }],
+    links: [{ label: 'Concept: Effect Propagation Process', href: DOCS_URL + '/concepts/effect-propagation-process/' }],
   },
   {
     title: 'First-class uncertainty',
     body:
       'Uncertain<T> wraps a value whose distribution is known but whose exact value is not. MaybeUncertain<T> goes further and represents probabilistic presence: a value that may or may not be there. Both compose with the rest of the framework without breaking type safety.',
-    links: [{ label: 'Concept: uncertainty', href: '/docs/concepts/uncertainty/' }],
+    links: [{ label: 'Concept: uncertainty', href: DOCS_URL + '/concepts/uncertainty/' }],
   },
   {
     title: 'Uniform mathematical composition',
     body:
       'Tensors, multivectors, manifolds, and sparse matrices expose the same Functor/Monad/CoMonad surface through HAFT and the algebraic trait hierarchy.',
     links: [
-      { label: 'Concept: uniform mathematical foundation', href: '/docs/concepts/uniform-math/' },
-      { label: 'Concept: Higher-Kinded Types', href: '/docs/concepts/hkt/' },
+      { label: 'Concept: uniform mathematical foundation', href: DOCS_URL + '/concepts/uniform-math/' },
+      { label: 'Concept: Higher-Kinded Types', href: DOCS_URL + '/concepts/hkt/' },
     ],
   },
   {
     title: 'Programmable safety with the Effect Ethos',
     body:
       'The Effect Ethos is a programmable policy layer that verifies operational rules over the effects a graph produces. It lets safety-critical and regulated systems encode "what is allowed to happen" alongside "what does happen," checked deterministically at runtime.',
-    links: [{ label: 'Concept: Effect Ethos', href: '/docs/concepts/effect-ethos/' }],
+    links: [{ label: 'Concept: Effect Ethos', href: DOCS_URL + '/concepts/effect-ethos/' }],
   },
 ];
 ---

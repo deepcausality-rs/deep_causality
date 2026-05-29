@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/nav/SiteHeader.astro';
+import { GITHUB_URL } from '../consts';
 ---
 <BaseLayout
   title="Page not found — DeepCausality"
@@ -16,14 +17,14 @@ import SiteHeader from '../components/nav/SiteHeader.astro';
 
     <div class="actions">
       <a class="action" href="/">Home</a>
-      <a class="action" href="/docs/getting-started/install/">Documentation</a>
+      <a class="action" href="/docs/">Documentation</a>
       <a class="action" href="/examples/">Examples</a>
       <a class="action" href="/blog/">Blog</a>
     </div>
 
     <p class="hint">
       If you arrived here from an external link, please
-      <a href="https://github.com/deepcausality-rs/deep_causality/issues" rel="noopener noreferrer" target="_blank">open an issue</a>
+      <a href={`${GITHUB_URL}/issues`} rel="noopener noreferrer" target="_blank">open an issue</a>
       so we can fix the reference.
     </p>
   </section>

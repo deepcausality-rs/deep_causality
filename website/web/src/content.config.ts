@@ -18,17 +18,6 @@ const blog = defineCollection({
   }),
 });
 
-const docs = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/docs' }),
-  schema: z.object({
-    title: z.string(),
-    description: z.string().optional(),
-    order: z.number().default(0),
-    section: z.enum(['getting-started', 'overview', 'concepts', 'guides', 'reference', 'monograph']),
-    sectionLabel: z.string().optional(),
-  }),
-});
-
 const examples = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/examples' }),
   schema: z.object({
@@ -45,14 +34,4 @@ const examples = defineCollection({
   }),
 });
 
-const monograph = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/monograph' }),
-  schema: z.object({
-    title: z.string(),
-    volume: z.enum(['epp', 'metaphysics', 'formalization', 'ontology', 'epistemology', 'teleology']),
-    pdf: z.string().optional(),
-    summary: z.string().optional(),
-  }),
-});
-
-export const collections = { blog, docs, examples, monograph };
+export const collections = { blog, examples };

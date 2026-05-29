@@ -1,20 +1,21 @@
 ---
 // Three pillars connected by a thin SVG path. Not a 3-equal-cards row.
 // Below 900px the row stacks vertically with a vertical connector.
+import { DOCS_URL } from '../../consts';
 const pillars = [
   {
     name: 'Causaloid',
-    href: '/docs/concepts/causaloid/',
+    href: `${DOCS_URL}/concepts/causaloid/`,
     body: 'A self-contained unit of causality. Compose Causaloids into larger structures with the same algebra you would use for functions.',
   },
   {
     name: 'Context',
-    href: '/docs/concepts/context/',
+    href: `${DOCS_URL}/concepts/context/`,
     body: 'An explicit hypergraph encoding the environment. Spacetime nodes, relational edges, and dynamic update semantics.',
   },
   {
     name: 'Effect Propagation',
-    href: '/docs/concepts/effect-propagation-process/',
+    href: `${DOCS_URL}/concepts/effect-propagation-process/`,
     body: 'The carrier effect every Causaloid produces and consumes. It threads value, state, context, error, and an audit log through every step, and implements the pure/bind algebra that composes them.',
   },
 ];

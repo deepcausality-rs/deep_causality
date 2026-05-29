@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/nav/SiteHeader.astro';
+import { DISCORD_URL } from '../consts';
 ---
 <BaseLayout title="Community — DeepCausality" description="Discord, GitHub discussions, and Linux Foundation mailing lists for the DeepCausality community.">
   <SiteHeader />
@@ -17,7 +18,7 @@ import SiteHeader from '../components/nav/SiteHeader.astro';
     <div class="prose">
       <h2>Discord</h2>
       <ul>
-        <li><a href="https://discord.gg/Bxj9P7JXSj">DeepCausality Discord server</a></li>
+        <li><a href={DISCORD_URL}>DeepCausality Discord server</a></li>
       </ul>
 
       <h2>GitHub Discussions</h2>

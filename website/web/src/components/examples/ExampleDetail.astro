@@ -1,4 +1,6 @@
 ---
+import { GITHUB_URL, DOCSRS_BASE, DOCS_URL } from '../../consts';
+
 interface Props {
   title: string;
   domain: string;
@@ -9,8 +11,14 @@ interface Props {
 }
 
 const { title, domain, summary, crates, source, further } = Astro.props;
-const repoBase = 'https://github.com/deepcausality-rs/deep_causality/blob/main';
+const repoBase = `${GITHUB_URL}/blob/main`;
 const sourceHref = source ? `${repoBase}/${source}` : undefined;
+
+// Concept docs moved to the standalone docs site. Rewrite legacy `/docs/...`
+// further-reading links to DOCS_URL, dropping the `/docs` prefix; other hrefs
+// pass through unchanged.
+const resolveFurther = (href: string) =>
+  href.startsWith('/docs/') ? `${DOCS_URL}${href.slice('/docs'.length)}` : href;
 ---
 <article class="ex-detail">
   <header class="ex-head">
@@ -19,7 +27,7 @@ const sourceHref = source ? `${repoBase}/${source}` : undefined;
     <p class="summary">{summary}</p>
     {crates.length > 0 && (
       <ul class="crate-row" aria-label="Related crates">
-        {crates.map((c) => <li><a href={`https://docs.rs/${c}`}><code>{c}</code></a></li>)}
+        {crates.map((c) => <li><a href={`${DOCSRS_BASE}/${c}`}><code>{c}</code></a></li>)}
       </ul>
     )}
     {sourceHref && (
@@ -37,7 +45,7 @@ const sourceHref = source ? `${repoBase}/${source}` : undefined;
     <aside class="ex-further">
       <h2>Further reading</h2>
       <ul>
-        {further.map((f) => <li><a href={f.href}>{f.label}</a></li>)}
+        {further.map((f) => <li><a href={resolveFurther(f.href)}>{f.label}</a></li>)}
       </ul>
     </aside>
   )}

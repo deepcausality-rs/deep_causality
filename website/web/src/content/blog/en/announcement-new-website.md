@@ -22,7 +22,7 @@ The previous site was a Hugo build that lived in a separate repository. It had b
 ## Where to look
 
 * The site is live at [www.deepcausality.com](https://www.deepcausality.com).
-* The Concepts section is at [/docs/overview/why/](https://www.deepcausality.com/docs/overview/why/), and the example detail pages are at [/examples/](https://www.deepcausality.com/examples/).
+* The Concepts section is at [the overview](https://docs.deepcausality.com/overview/why/), and the example detail pages are at [/examples/](https://www.deepcausality.com/examples/).
 * The full site source lives in the monorepo at [website/web](https://github.com/deepcausality-rs/deep_causality/tree/main/website/web). Issues and pull requests are welcome.
 
 ## About

@@ -79,7 +79,7 @@ A naive loop has to add this check by hand at every iteration. The monad does it
 
 The interesting move is that `extend` and `bind` are not nested data structures, they are two HKT operations acting on the same `SimplicialManifold`. The spatial operation walks vertices; the temporal operation walks time steps. The manifold flows through both layers without copying or wrapping; the witness traits make the operations composable.
 
-This is the property the [uniform math](/docs/concepts/uniform-math/) concept page argues for at a higher level. The diffusion example is the smallest case where the argument has teeth: a real PDE step, a real chain, a real failure mode handled by the carrier rather than by branching code.
+This is the property the [uniform math](https://docs.deepcausality.com/concepts/uniform-math/) concept page argues for at a higher level. The diffusion example is the smallest case where the argument has teeth: a real PDE step, a real chain, a real failure mode handled by the carrier rather than by branching code.
 
 ## Mass conservation as the sanity check
 
