@@ -14,3 +14,6 @@ keywords = ["data-structures", "ast"]
 # Exclude all bazel files as these conflict with Bazel workspace when vendored.
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
+
+[lints]
+workspace = true

@@ -34,3 +34,6 @@ path = "rcm/main.rs"
 [[example]]
 name = "scm_example"
 path = "scm/main.rs"
+
+[lints]
+workspace = true

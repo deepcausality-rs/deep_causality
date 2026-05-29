@@ -94,3 +94,6 @@ path = "quantum_counterfactual/main.rs"
 name = "quantum_geometric_tensor"
 path = "quantum_geometric_tensor/main.rs"
 
+
+[lints]
+workspace = true

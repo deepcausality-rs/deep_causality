@@ -33,3 +33,6 @@ path = "surd/main.rs"
 [[example]]
 name = "example_discovery"
 path = "discovery/main.rs"
+
+[lints]
+workspace = true

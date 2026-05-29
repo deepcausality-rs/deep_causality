@@ -68,3 +68,6 @@ version = "0.4"
 [dependencies.deep_causality_topology]
 path = "../deep_causality_topology"
 version = "0.6"
+
+[lints]
+workspace = true

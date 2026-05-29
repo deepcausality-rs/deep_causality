@@ -17,3 +17,6 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 [dependencies]
 
+
+[lints]
+workspace = true

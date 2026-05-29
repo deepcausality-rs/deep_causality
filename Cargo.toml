@@ -35,6 +35,12 @@ license = "MIT"
 [workspace.dependencies]
 # Empty
 
+# Repo-wide lint policy. Member crates opt in with `[lints] workspace = true`.
+# Crates that legitimately need `unsafe` opt out by declaring their own
+# `[lints.rust] unsafe_code = "allow"` with a documented reason.
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
 # Optimize all crates
 [profile.release]
 opt-level = 3

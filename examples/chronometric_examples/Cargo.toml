@@ -21,3 +21,6 @@ deep_causality_physics = { path = "../../deep_causality_physics", features = [
 [[example]]
 name = "gm_recovery"
 path = "gm_recovery/main.rs"
+
+[lints]
+workspace = true

@@ -94,24 +94,22 @@ impl<T> CsrMatrix<T> {
         (self.row_indices, self.col_indices, self.values, self.shape)
     }
 
-    /// Creates a `CsrMatrix` directly from its internal components.
+    /// Returns a new `CsrMatrix` with the same sparsity structure, applying `f`
+    /// to each stored value.
     ///
-    /// # Safety
-    ///
-    /// This function does not check if the provided indices are valid, sorted, or
-    /// if the values correspond to the CSR format requirements. Incorrect usage
-    /// may lead to panics or incorrect behavior in other methods.
-    pub unsafe fn from_parts(
-        row_indices: Vec<usize>,
-        col_indices: Vec<usize>,
-        values: Vec<T>,
-        shape: (usize, usize),
-    ) -> Self {
-        Self {
-            row_indices,
-            col_indices,
-            values,
-            shape,
+    /// The row indices, column indices, and shape are preserved exactly; only the
+    /// stored value type changes (`T` -> `U`). Because the structure is carried
+    /// over unchanged, this is a safe, allocation-free-structure remap and cannot
+    /// produce an invalid matrix.
+    pub fn map_values<U, F>(self, f: F) -> CsrMatrix<U>
+    where
+        F: FnMut(T) -> U,
+    {
+        CsrMatrix {
+            row_indices: self.row_indices,
+            col_indices: self.col_indices,
+            values: self.values.into_iter().map(f).collect(),
+            shape: self.shape,
         }
     }
 }

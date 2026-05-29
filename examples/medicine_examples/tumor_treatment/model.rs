@@ -31,12 +31,12 @@ pub(crate) fn build_mock_tumor(n: usize) -> TumorVolume {
 /// Simple pseudo-random (LCG) to avoid linking `rand` crate
 pub(crate) fn rand_f64() -> f64 {
     // Just a placeholder. In real app use `rand` crate.
-    // We use a static mutable seed hack for demo simplicity
-    static mut SEED: u64 = 12345;
-    unsafe {
-        SEED = (SEED.wrapping_mul(1664525).wrapping_add(1013904223)) % 4294967296;
-        (SEED as f64) / 4294967296.0
-    }
+    // Atomic seed keeps the demo dependency-free and free of `unsafe`.
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static SEED: AtomicU64 = AtomicU64::new(12345);
+    let next = (SEED.load(Ordering::Relaxed).wrapping_mul(1664525).wrapping_add(1013904223)) % 4294967296;
+    SEED.store(next, Ordering::Relaxed);
+    (next as f64) / 4294967296.0
 }
 
 /// Simulation Kernel: Geometric Algebra Alignment

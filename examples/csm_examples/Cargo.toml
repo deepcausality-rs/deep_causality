@@ -25,3 +25,6 @@ path = "csm_context/main.rs"
 [[example]]
 name = "csm_effect_ethos_example"
 path = "csm_effect_ethos/main.rs"
+
+[lints]
+workspace = true

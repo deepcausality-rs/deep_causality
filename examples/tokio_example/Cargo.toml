@@ -13,3 +13,6 @@ publish = false
 [dependencies]
 deep_causality = { path = "../../deep_causality" }
 tokio = {version = "1", features = ["full"]}
+
+[lints]
+workspace = true

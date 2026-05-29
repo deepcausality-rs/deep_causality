@@ -26,3 +26,6 @@ path = "sensor_processing/main.rs"
 [[example]]
 name = "clinical_trial"
 path = "clinical_trial/main.rs"
+
+[lints]
+workspace = true

@@ -77,3 +77,6 @@ path = "examples/effect_system.rs"
 [[example]]
 name = "haft_unbound_example"
 path = "examples/unbound_haft.rs"
+
+[lints]
+workspace = true

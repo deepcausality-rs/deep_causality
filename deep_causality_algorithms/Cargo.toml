@@ -46,3 +46,6 @@ criterion = {  version = "0.8" }
 [[bench]]
 name = "mrmr_benchmark"
 harness = false
+
+[lints]
+workspace = true

@@ -73,3 +73,6 @@ criterion = {  version = "0.8" }
 [[bench]]
 name = "bench_main"
 harness = false
+
+[lints]
+workspace = true

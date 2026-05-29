@@ -28,3 +28,6 @@ path = "examples/propagating_process.rs"
 [[example]]
 name = "propagating_process_counterfactual"
 path = "examples/propagating_process_counterfactual.rs"
+
+[lints]
+workspace = true

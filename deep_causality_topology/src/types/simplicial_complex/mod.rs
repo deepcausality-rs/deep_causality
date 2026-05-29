@@ -76,12 +76,8 @@ impl<T> SimplicialComplex<T> {
         if let Some(hodge_ops) = self.hodge_star_operators.into_inner() {
             let mapped: Vec<CsrMatrix<U>> = hodge_ops
                 .into_iter()
-                .map(|op| {
-                    let (cols, rows, values, shape) = op.into_parts();
-                    let new_values: Vec<U> = values.into_iter().map(&mut f).collect();
-                    // Safety: structure (indices, shape) preserved; only values are remapped.
-                    unsafe { CsrMatrix::from_parts(cols, rows, new_values, shape) }
-                })
+                // Structure (indices, shape) is preserved; only the stored values are remapped.
+                .map(|op| op.map_values(&mut f))
                 .collect();
             let _ = new_hodge_cell.set(mapped);
         }

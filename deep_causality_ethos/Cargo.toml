@@ -43,3 +43,6 @@ version = "0.13"
 path = "../ultragraph"
 version = "0.9"
 
+
+[lints]
+workspace = true
