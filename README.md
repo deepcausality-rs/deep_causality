@@ -10,6 +10,7 @@
 [![CodeFactor][codefactor-badge]][codefactor-url]
 ![Tests][test-url]
 [![OpenSSF Best Practices][ossf-badge]][ossf-url]
+[![Miri][miri-badge]][miri-url]
 [![codecov][codecov-badge]][codecov-url]
 
 [codefactor-badge]: https://www.codefactor.io/repository/github/deepcausality-rs/deep_causality/badge
@@ -38,6 +39,9 @@
 
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
+[miri-badge]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/rust_miri.yml/badge.svg
+
+[miri-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/rust_miri.yml
 
 ---
 
