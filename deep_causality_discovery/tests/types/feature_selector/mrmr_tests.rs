@@ -7,6 +7,15 @@ use deep_causality_discovery::{
 };
 use deep_causality_tensor::CausalTensor;
 
+// Skipped under Miri: this test asserts the exact column order [F2, F0] in
+// the selected tensor. The underlying mrmr_features_selector ranks features
+// by relevance score; here F0 and F2 are nearly tied, so Miri's soft-float
+// emulation drifts the comparison by ~1 ULP and flips the order to [F0, F2].
+// The selected set is correct in both cases; only the ordering is unstable.
+// Mirrors the gate on the algorithms-crate sibling test
+// (deep_causality_algorithms::mrmr::test_mrmr_select_features). Correct and
+// passes under normal CI.
+#[cfg_attr(miri, ignore)]
 #[test]
 fn test_mrmr_feature_selector_select() {
     let data = vec![
