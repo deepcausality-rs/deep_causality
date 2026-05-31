@@ -23,7 +23,7 @@ Both columns avoid Pearl's abduction step. They differ only in *where* the alter
 | **DBN** (Umbrella World) | [dbn](classical_via_causaloid/dbn/README.md) | _pending_ |
 | **Granger** (time-series predictive causality) | [granger](classical_via_causaloid/granger/README.md) | _pending_ |
 | **RCM** (Rubin potential outcomes) | [rcm](classical_via_causaloid/rcm/README.md) | [rcm](classical_via_causal_monad/rcm/README.md) |
-| **SCM** (Pearl's Ladder) | [scm](classical_via_causaloid/scm/README.md) | _pending_ |
+| **SCM** (Pearl's Ladder) | [scm](classical_via_causaloid/scm/README.md) | [scm](classical_via_causal_monad/scm/README.md) |
 
 ## Run commands
 
@@ -42,5 +42,6 @@ Both columns avoid Pearl's abduction step. They differ only in *where* the alter
 | Example | Command |
 |---|---|
 | RCM | `cargo run -p classical_causality_examples --example rcm_via_monad` |
+| SCM | `cargo run -p classical_causality_examples --example scm_via_monad` |
 
-(Remaining monadic ports are staged for upcoming rounds.)
+(Remaining monadic ports — CATE, DBN, Granger — are staged for upcoming rounds.)
