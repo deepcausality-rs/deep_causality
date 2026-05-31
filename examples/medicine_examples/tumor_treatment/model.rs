@@ -34,7 +34,11 @@ pub(crate) fn rand_f64() -> f64 {
     // Atomic seed keeps the demo dependency-free and free of `unsafe`.
     use std::sync::atomic::{AtomicU64, Ordering};
     static SEED: AtomicU64 = AtomicU64::new(12345);
-    let next = (SEED.load(Ordering::Relaxed).wrapping_mul(1664525).wrapping_add(1013904223)) % 4294967296;
+    let next = (SEED
+        .load(Ordering::Relaxed)
+        .wrapping_mul(1664525)
+        .wrapping_add(1013904223))
+        % 4294967296;
     SEED.store(next, Ordering::Relaxed);
     (next as f64) / 4294967296.0
 }

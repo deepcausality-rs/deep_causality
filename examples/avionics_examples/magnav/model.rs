@@ -223,7 +223,11 @@ fn rand_f64() -> f64 {
     // A simple, deterministic LCG for reproducible tests (atomic, no `unsafe`).
     use std::sync::atomic::{AtomicU64, Ordering};
     static SEED: AtomicU64 = AtomicU64::new(123456789);
-    let next = (SEED.load(Ordering::Relaxed).wrapping_mul(1664525).wrapping_add(1013904223)) % 4294967296;
+    let next = (SEED
+        .load(Ordering::Relaxed)
+        .wrapping_mul(1664525)
+        .wrapping_add(1013904223))
+        % 4294967296;
     SEED.store(next, Ordering::Relaxed);
     (next as f64) / 4294967296.0
 }
