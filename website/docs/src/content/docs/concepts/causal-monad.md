@@ -5,7 +5,7 @@ sidebar:
   order: 6
 ---
 
-The Causal Monad is not a separate type you reach for. It is the algebra the [carrier effect](/concepts/effect-propagation-process/) already carries. `PropagatingEffect<T>` and `PropagatingProcess<T, S, C>` implement the `CausalMonad` trait, and that trait is what lets a chain of [Causaloids](/concepts/causaloid/) compose without losing their properties. Each Causaloid is a step. The trait is the law for how the steps combine.
+The Causal Monad is the algebra the [carrier effect](/concepts/effect-propagation-process/) already carries encoded as a Rust trait. `PropagatingEffect<T>` and `PropagatingProcess<T, S, C>` implement the `CausalMonad` trait, and that trait is what lets a chain of [Causaloids](/concepts/causaloid/) compose without losing their properties. Each Causaloid is a step. The trait is the law for how the steps combine.
 
 The whole algebra is two operations: `pure` and `bind`. The rest follows.
 

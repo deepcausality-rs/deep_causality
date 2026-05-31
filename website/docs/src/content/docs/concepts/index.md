@@ -1,6 +1,6 @@
 ---
 title: Concepts
-description: Reference pages for every primitive in DeepCausality — Causaloid, Context, Causal Monad, Effect Propagation Process, Causal State Machine, Effect Ethos, and the type-level machinery underneath.
+description: Reference pages for every primitive in DeepCausality — Causaloid, Context, the Effect Propagation Process (the carrier that implements the CausalMonad trait), Causal State Machine, Effect Ethos, and the type-level machinery underneath.
 sidebar:
   order: 0
 ---
