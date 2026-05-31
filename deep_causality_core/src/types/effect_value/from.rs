@@ -7,6 +7,6 @@ use crate::EffectValue;
 
 impl<T> From<T> for EffectValue<T> {
     fn from(value: T) -> Self {
-        EffectValue::Value(value)
+        Self::Value(value)
     }
 }

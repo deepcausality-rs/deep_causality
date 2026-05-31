@@ -14,8 +14,8 @@ pub struct CausalityError(pub CausalityErrorEnum);
 
 impl CausalityError {
     /// Creates a new `CausalityError` from the specific error variant.
-    pub fn new(error_enum: CausalityErrorEnum) -> Self {
-        CausalityError(error_enum)
+    pub const fn new(error_enum: CausalityErrorEnum) -> Self {
+        Self(error_enum)
     }
 }
 
@@ -38,18 +38,14 @@ pub enum CausalityErrorEnum {
     Unspecified,
     /// An unreachable code path was executed; indicates a bug in the library or logic.
     InternalLogicError,
-    /// Failed to convert a protocol type to a concrete type (via `FromProtocol`).
+    /// Failed to convert a value to the expected concrete type.
     TypeConversionError,
     /// A required value was expected but `None` was found.
     ValueNotAvailable,
 
     // Graph Execution Errors
-    /// The specified start node index is invalid.
-    StartNodeOutOfBounds,
     /// The execution exceeded the maximum allowed steps (infinite loop protection).
     MaxStepsExceeded,
-    /// The graph executed but produced no final result (e.g., disconnected path).
-    GraphExecutionProducedNoResult,
 
     // Migration / Legacy Support Errors
     /// A user-defined custom error message.

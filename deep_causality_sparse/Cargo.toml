@@ -55,3 +55,6 @@ deep_causality_rand = { path = "../deep_causality_rand" }
 [[bench]]
 name = "csr_matrix_benchmarks"
 harness = false
+
+[lints]
+workspace = true

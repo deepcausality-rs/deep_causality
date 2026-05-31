@@ -31,3 +31,6 @@ deep_causality = { path = "../../deep_causality" }
 deep_causality_core = { path = "../../deep_causality_core" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
 deep_causality_multivector = { path = "../../deep_causality_multivector" }
+
+[lints]
+workspace = true

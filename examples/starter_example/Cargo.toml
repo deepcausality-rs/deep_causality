@@ -12,3 +12,6 @@ publish = false
 
 [dependencies]
 deep_causality_core =  { path = "../../deep_causality_core" }
+
+[lints]
+workspace = true

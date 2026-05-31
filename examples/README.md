@@ -157,9 +157,6 @@ Fundamental examples demonstrating the monadic API.
 | PropagatingEffect Counterfactual | Counterfactual reasoning | `cargo run -p core_examples --example propagating_effect_counterfactual_example` |
 | PropagatingProcess | Stateful composition | `cargo run -p core_examples --example propagating_process_example` |
 | PropagatingProcess Counterfactual | Stateful counterfactuals | `cargo run -p core_examples --example propagating_process_counterfactual` |
-| Control Flow Builder | Builder patterns | `cargo run -p core_examples --example control_flow_builder` |
-| Control Flow Strict ZST | Zero-sized type control | `cargo run -p core_examples --example control_flow_strict_zst` |
-
 ---
 
 ## Avionics Examples

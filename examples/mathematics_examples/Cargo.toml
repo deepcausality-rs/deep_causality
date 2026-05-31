@@ -186,3 +186,6 @@ path = "topology/lattice_gauge_simulation.rs"
 [[example]]
 name = "manifold_analysis_examples"
 path = "topology/manifold_analysis.rs"
+
+[lints]
+workspace = true

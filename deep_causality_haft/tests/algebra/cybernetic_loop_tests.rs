@@ -18,7 +18,7 @@ impl HKT5Unbound for SystemWitness {
 
 impl CyberneticLoop<SystemWitness> for SystemWitness {
     fn control_step<S, B, C, A, E, FObserve, FDecide>(
-        _agent: System<S, B, C, A, E>,
+        agent: System<S, B, C, A, E>,
         sensor_input: S,
         observe_fn: FObserve,
         decide_fn: FDecide,
@@ -29,17 +29,16 @@ impl CyberneticLoop<SystemWitness> for SystemWitness {
         C: Satisfies<NoConstraint>,
         A: Satisfies<NoConstraint>,
         E: Satisfies<NoConstraint>,
-        FObserve: Fn(S, C) -> B,
-        FDecide: Fn(B, C) -> A,
+        FObserve: Fn(S, &C) -> B,
+        FDecide: Fn(B, &C) -> A,
     {
-        // Simplified - use zero-sized type for context
-        unsafe {
-            let context: C = std::mem::zeroed();
-            let belief = observe_fn(sensor_input, context);
-            let context2: C = std::mem::zeroed();
-            let action = decide_fn(belief, context2);
-            Ok(action)
-        }
+        // The agent carries the single context (its 3rd component). Both the
+        // observe and decide steps borrow it, so no context value needs to be
+        // fabricated.
+        let System(_sensor, _belief, context, _action, _entropy) = agent;
+        let belief = observe_fn(sensor_input, &context);
+        let action = decide_fn(belief, &context);
+        Ok(action)
     }
 }
 

@@ -9,23 +9,23 @@ use crate::{CausalEffectPropagationProcess, EffectValue};
 impl<Value, State, Context, Error, Log>
     CausalEffectPropagationProcess<Value, State, Context, Error, Log>
 {
-    pub fn value(&self) -> &EffectValue<Value> {
+    pub const fn value(&self) -> &EffectValue<Value> {
         &self.value
     }
 
-    pub fn state(&self) -> &State {
+    pub const fn state(&self) -> &State {
         &self.state
     }
 
-    pub fn context(&self) -> &Option<Context> {
+    pub const fn context(&self) -> &Option<Context> {
         &self.context
     }
 
-    pub fn error(&self) -> &Option<Error> {
+    pub const fn error(&self) -> &Option<Error> {
         &self.error
     }
 
-    pub fn logs(&self) -> &Log {
+    pub const fn logs(&self) -> &Log {
         &self.logs
     }
 }

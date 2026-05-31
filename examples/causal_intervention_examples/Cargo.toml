@@ -49,3 +49,6 @@ path = "corrective_decompression_stops/main.rs"
 [[example]]
 name = "corrective_network_failover"
 path = "corrective_network_failover/main.rs"
+
+[lints]
+workspace = true

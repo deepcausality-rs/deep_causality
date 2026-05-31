@@ -14,7 +14,7 @@
 //! * Models complex tempo-spatial patterns through the Causal Monad and the Effect Propagation Process.
 //! * Ships with a Causal State Machine (CSM) for pairing inference with action.
 //!
-//! See <https://deepcausality.com/> for the documentation, the worked examples, and the EPP monograph.
+//! See <https://docs.deepcausality.com/> for the documentation.
 //!
 mod alias;
 mod errors;

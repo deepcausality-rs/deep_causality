@@ -13,7 +13,7 @@ This page is the single source of truth for terminology. The other concept pages
 
 **Causaloid Graph**: A directed graph whose nodes are Causaloids and whose edges express the order of evaluation. The result of evaluating the graph is the effect produced at its terminal node(s).
 
-**Causal Discovery Language (CDL)**: A typestate-builder pipeline that ingests observational data and produces a Causaloid graph. Lives in [`deep_causality_discovery`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_discovery). See [CDL](/concepts/cdl/).
+**Causal Discovery Language (CDL)**: A typestate-builder pipeline that ingests observational data and produces a discovery report whose recommendations inform the construction of a `CausaloidGraph`. Lives in [`deep_causality_discovery`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_discovery). See [CDL](/concepts/cdl/).
 
 **Causal Function**: The pure function a Causaloid wraps. Two signatures: stateless (`CausalFn<I, O>`) takes the input alone; contextual (`ContextualCausalFn<I, O, STATE, CTX>`) also receives a Context.
 

@@ -4,5 +4,3 @@
  */
 #[cfg(test)]
 mod causality_error_tests;
-#[cfg(test)]
-mod graph_error_tests;

@@ -126,6 +126,34 @@ with `Module<R>`, `Algebra<R>`, `AssociativeAlgebra<R>`, `DivisionAlgebra<R>`, a
 
 The library will not let an algorithm that requires associativity use a non-associative type. The type system rejects it before the program runs.
 
+## The math layers
+
+The witness table earlier in this page lists each math container in one row. This section gives each one a bit more shape: what is in the box, and when to reach for it.
+
+### Tensors: `deep_causality_tensor`
+
+N-dimensional arrays with stride-based memory layout, broadcasting for element-wise operations, and **Einstein summation** for matrix products and tensor contractions. The crate ships `Functor`, `Applicative`, `Monad`, and `CoMonad` instances, so a contraction or a per-cell map composes through the same `fmap`/`bind` surface the rest of the stack uses. Reach for tensors wherever the math is rectangular data: relativistic field tensors, Kalman state and covariance, linear algebra mid-pipeline.
+
+### Multivectors and Geometric Algebra: `deep_causality_multivector`
+
+Clifford algebras over the dynamic signature space, with pre-configured constructors for **Pauli (Cl(3,0))**, **Spacetime Algebra (STA)**, **Conformal Geometric Algebra (CGA)**, **Projective Geometric Algebra in 3D (PGA3D)**, the **Dixon algebra** used in Standard Model particle physics, and the **Grand Unified Algebra hosting the full Spin(10) gauge symmetry**. `Functor`, `Applicative`, and `Monad` instances are implemented; `bind` realizes the **tensor product of algebras**, so dimension-changing compositions are monadic rather than ad-hoc.
+
+The payoff is concrete. The [Maxwell example](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples/maxwell) expresses the electromagnetic field `F = ∇A` as a single multivector and recovers `E` and `B` as its bivector grades. Six scalar components collapse to four, a ~50% compute reduction, without giving up correctness. Where vector calculus needs separate cross products, exterior derivatives, and Hodge stars to express the same physics, the geometric product handles it as one operation on one object.
+
+### Topology and Differential Geometry: `deep_causality_topology`
+
+Graphs, hypergraphs, **simplicial complexes**, **manifolds**, and point clouds, with first-class **exterior calculus operators** (exterior derivative `d`, Hodge star `⋆`, codifferential `δ`, Hodge-Laplacian) and a **lattice gauge field framework** supporting **U(1), SU(2), SU(3), and Lorentz** gauge groups. The lattice gauge implementation is verified against **24 reference results from Creutz's *Quarks, Gluons and Lattices***, a stable bedrock for anyone composing physical simulations from this stack.
+
+`Manifold` is the layer's `CoMonad`; that is what makes `extend` (apply a function to every local neighborhood) and `extract` (read the value at the current point) first-class on geometric data. Graph convolutions and cellular automata become one comonadic walk over a typed neighborhood.
+
+### Sparse matrices: `deep_causality_sparse`
+
+CSR (Compressed Sparse Row) sparse matrices with `Functor`, `Applicative`, and `Monad` instances, used wherever the data is large and mostly zero: causal-graph adjacency, big covariance structures, transition matrices. The same `fmap`/`bind` surface applies.
+
+### Metric signatures: `deep_causality_metric`
+
+A single horizontal crate that defines metric signatures **once** and shares them across every layer above: the **East Coast convention** used in general relativity, the **West Coast convention** used in particle physics, and the broader Clifford signature space **Cl(p, q, r)** that the multivector and topology crates build on. A GR calculation in the tensor layer and a particle-physics calculation in the multivector layer can share sign conventions automatically; 
+
 ## Precision as a parameter
 
 The algebraic trait floor and the witness-based composition together produce a property that is hard to get any other way: numerical precision becomes a single line of the program. Every example in [`examples/mathematics_examples`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples) exposes one type alias near the top of `main.rs`:

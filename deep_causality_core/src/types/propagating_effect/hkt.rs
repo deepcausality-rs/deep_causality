@@ -30,13 +30,8 @@ impl<E, L> HKT3<E, L> for PropagatingEffectWitness<E, L> {
     type Type<T> = CausalEffectPropagationProcess<T, (), (), E, L>;
 }
 
-impl Functor<PropagatingEffectWitness<CausalityError, EffectLog>>
-    for PropagatingEffectWitness<CausalityError, EffectLog>
-{
-    fn fmap<A, B, Func>(
-        m_a: <PropagatingEffectWitness<CausalityError, EffectLog> as HKT>::Type<A>,
-        f: Func,
-    ) -> <PropagatingEffectWitness<CausalityError, EffectLog> as HKT>::Type<B>
+impl Functor<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
+    fn fmap<A, B, Func>(m_a: <Self as HKT>::Type<A>, f: Func) -> <Self as HKT>::Type<B>
     where
         A: Satisfies<<Self as HKT>::Constraint>,
         B: Satisfies<<Self as HKT>::Constraint>,
@@ -71,9 +66,7 @@ impl Functor<PropagatingEffectWitness<CausalityError, EffectLog>>
     }
 }
 
-impl Pure<PropagatingEffectWitness<CausalityError, EffectLog>>
-    for PropagatingEffectWitness<CausalityError, EffectLog>
-{
+impl Pure<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
     fn pure<T>(value: T) -> <Self as HKT>::Type<T>
     where
         T: Satisfies<<Self as HKT>::Constraint>,
@@ -88,9 +81,7 @@ impl Pure<PropagatingEffectWitness<CausalityError, EffectLog>>
     }
 }
 
-impl Applicative<PropagatingEffectWitness<CausalityError, EffectLog>>
-    for PropagatingEffectWitness<CausalityError, EffectLog>
-{
+impl Applicative<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
     fn apply<A, B, Func>(
         f_ab: <Self as HKT>::Type<Func>,
         mut f_a: <Self as HKT>::Type<A>,
@@ -132,9 +123,7 @@ impl Applicative<PropagatingEffectWitness<CausalityError, EffectLog>>
     }
 }
 
-impl Monad<PropagatingEffectWitness<CausalityError, EffectLog>>
-    for PropagatingEffectWitness<CausalityError, EffectLog>
-{
+impl Monad<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
     fn bind<A, B, Func>(m_a: <Self as HKT>::Type<A>, f: Func) -> <Self as HKT>::Type<B>
     where
         A: Satisfies<<Self as HKT>::Constraint>,

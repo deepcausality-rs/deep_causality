@@ -7,6 +7,13 @@ use deep_causality_algorithms::feature_selection::mrmr;
 use deep_causality_algorithms::mrmr::MrmrError;
 use deep_causality_tensor::CausalTensor;
 
+// Skipped under Miri: this test asserts the exact selection order [F2, F0].
+// MRMR picks the most-relevant feature first, then the least-redundant. When
+// two candidates have nearly equal scores (as here), Miri's soft-float
+// emulation drifts the comparison by ~1 ULP and flips the order to [F0, F2].
+// The selected set is correct in both cases; only the ordering is unstable
+// at the precision boundary. Test is correct and passes under normal CI.
+#[cfg_attr(miri, ignore)]
 #[test]
 fn test_mrmr_select_features() {
     let data = vec![

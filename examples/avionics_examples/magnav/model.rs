@@ -220,10 +220,14 @@ pub fn generate_gaussian_noise(std_dev: f64) -> f64 {
 }
 
 fn rand_f64() -> f64 {
-    // A simple, deterministic LCG for reproducible tests
-    static mut SEED: u64 = 123456789;
-    unsafe {
-        SEED = (SEED.wrapping_mul(1664525).wrapping_add(1013904223)) % 4294967296;
-        (SEED as f64) / 4294967296.0
-    }
+    // A simple, deterministic LCG for reproducible tests (atomic, no `unsafe`).
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static SEED: AtomicU64 = AtomicU64::new(123456789);
+    let next = (SEED
+        .load(Ordering::Relaxed)
+        .wrapping_mul(1664525)
+        .wrapping_add(1013904223))
+        % 4294967296;
+    SEED.store(next, Ordering::Relaxed);
+    (next as f64) / 4294967296.0
 }

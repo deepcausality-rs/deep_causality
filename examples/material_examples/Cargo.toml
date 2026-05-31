@@ -27,3 +27,6 @@ path = "examples/topological_insulator/main.rs"
 [[example]]
 name = "structural_health_monitor_example"
 path = "examples/structural_health_monitor/main.rs"
+
+[lints]
+workspace = true

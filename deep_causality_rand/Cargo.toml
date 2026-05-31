@@ -28,6 +28,15 @@ exclude = [
 path = "../deep_causality_num"
 version = "0.3.2"
 
+[lints.rust]
+# Exempt from the workspace `unsafe_code = "forbid"` policy.
+# The `aead-random` CSPRNG (chacha_rng) deliberately mixes the CPU cycle counter
+# (RDTSC on x86_64, cntvct_el0 on aarch64) into its seed as backdoor resistance
+# against a compromised OS/hardware RNG — it contributes ~20 of the ~70-80 bits
+# that survive a fully-backdoored hardware RNG (see the `aead-random` feature docs
+# below). Reading the cycle counter has no safe stable API, so this `unsafe` is intentional.
+unsafe_code = "allow"
+
 
 [features]
 # Enables a secure, fast, non-NIST software CSPRNG based on the chacha20poly1305 algorith.

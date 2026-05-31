@@ -47,3 +47,6 @@ harness = false
 [[bench]]
 name = "maybe_uncertain_benchmarks"
 harness = false
+
+[lints]
+workspace = true

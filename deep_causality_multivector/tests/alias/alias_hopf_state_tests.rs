@@ -113,10 +113,22 @@ fn test_fiber_shift() {
     assert!((shifted_hopf.as_inner().data()[3] - (-1.0)).abs() < F64_EPSILON);
     assert_eq!(shifted_hopf.as_inner().metric(), Metric::Euclidean(3));
 
-    // Verify projection is unchanged (from e3 to -e3 or similar, but the vector part should be e3)
+    // Verify projection is unchanged (from e3 to -e3 or similar, but the vector part should be e3).
+    // Per-element tolerance comparison: the shifted projection runs through trig + multiplies,
+    // so under soft-float emulation (Miri) it can drift by ~1 ULP from the original.
     let original_projection = hopf.project();
     let shifted_projection = shifted_hopf.project();
-    assert_eq!(original_projection.data(), shifted_projection.data());
+    let original_data = original_projection.data();
+    let shifted_data = shifted_projection.data();
+    assert_eq!(original_data.len(), shifted_data.len());
+    for (o, s) in original_data.iter().zip(shifted_data.iter()) {
+        assert!(
+            (o - s).abs() < F64_EPSILON,
+            "projection drift: original {} vs shifted {}",
+            o,
+            s
+        );
+    }
 }
 
 #[test]

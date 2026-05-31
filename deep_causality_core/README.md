@@ -21,34 +21,18 @@
 
 **Core types and abstractions for the [DeepCausality project](http://www.deepcausality.com).**
 
-This crate provides the foundational building blocks for causal reasoning, effect propagation, and mission-critical control flow construction. It is designed for high-assurance systems, supporting `no_std`, zero-allocation execution, and embedded requirements.
+This crate provides the foundational building blocks for causal reasoning and effect propagation. It is the monadic foundation of the wider DeepCausality ecosystem and supports `no_std` (with `alloc`) for embedded and high-assurance systems.
 
 ### Architecture
 
-`deep_causality_core` provides two distinct, powerful abstractions for structuring complex logic. They can be used
-independently.
-
-#### 1. The `ControlFlowBuilder`: For Correct-by-Construction Systems
-
-*   **What It Is**: A tool for defining a **static, compile-time verified** execution graph. Nodes are functions, and
-    edges are data flows between them.
-*   **Key Feature**: **Safety**. The Rust compiler ensures you can only connect an output of type `T` to an input of type
-    `T`. This eliminates an entire class of runtime integration errors.
-*   **Best For**:
-    *   **Safety-Critical & Embedded Systems**: With the `strict-zst` feature, it guarantees zero heap allocations and no
-        dynamic dispatch in the execution path, making it suitable for environments requiring formal verification and WCET
-        analysis (Worst-Case Execution Time).
-    *   **ETL Pipelines**: Defining fixed data transformation pipelines where the flow is static and reliability is
-        paramount.
-*   **Independence**: It has **no dependency** on the monadic effect system. It is a standalone tool for building robust,
-    static graphs.
-
-#### 2. The Monadic Effect System: For Dynamic Causal Reasoning
+`deep_causality_core` is built on a single, unified abstraction: a **monadic effect system** for dynamic causal
+reasoning.
 
 *   **What It Is**: A flexible, functional foundation for modeling processes using monadic types like
-    `PropagatingEffect` (stateless) and `PropagatingProcess` (stateful).
+    `PropagatingEffect` (stateless) and `PropagatingProcess` (stateful), all built on the unified
+    `CausalEffectPropagationProcess` container.
 *   **Key Feature**: **Flexibility & Composability**. It allows for dynamic chaining of operations (`bind`), state
-    propagation, context-awareness, and causal interventions.
+    propagation, context-awareness, and causal interventions (Pearl's do-calculus).
 *   **Best For**:
     *   The foundation of the main `deep_causality` library.
     *   Complex simulations where state and context evolve.
@@ -56,90 +40,24 @@ independently.
 *   **Relationship**: This system is the foundation that enables the advanced causal reasoning capabilities of the wider
     DeepCausality ecosystem.
 
-**How to Choose**:
-
-*   If you need to a **fixed, static, and ultra-reliable data-flow graph** and cannot tolerate runtime errors or allocations, use the **`ControlFlowBuilder`**.
-*   If you are building a system that requires **dynamic, stateful, and context-aware reasoning**, use the **Monadic
-    Effect System**. For more advanced reasoning capabilities refer to the main `deep_causality` crate.
-
 ## Core Capabilities
 
-### 1. Causal Effect Systems
+### Causal Effect Systems
 The crate defines the core types for modeling causal systems using **Monadic Effect Systems**.
-*   **`CausalEffectSystem`**: The central runtime for managing causal models.
 *   **`CausalMonad`**: A monadic interface for chaining causal effects, allowing for composable and testable logic.
 *   **`PropagatingEffect` / `PropagatingProcess`**: Types that model how effects ripple through a system, integrated with Higher-Kinded Types (HKT) via `deep_causality_haft`.
+*   **`Intervenable`**: Support for causal interventions (Pearl's do-calculus) over both effect and process types.
 
-### 2. Mission-Critical Control Flow Builder
-The **Control Flow Builder** is a specialized tool for constructing **Correct-by-Construction** execution graphs. It is designed for safety-critical applications where runtime wiring errors are unacceptable.
+## Feature Flags
 
-*   **Type-Safe Topology**: The builder uses Rust's type system to enforce that nodes can only be connected if their input/output protocols match. Invalid connections are rejected at **compile time**.
-*   **Zero-Fault Execution**: The execution engine is designed to be panic-free and allocation-free (in the hot loop). Errors are returned as static enums, not Strings.
-*   **Zero-Allocation Loop**: The `execute` method accepts a pre-allocated queue, ensuring deterministic execution timing suitable for real-time control loops.
+| Feature | Default | Description |
+| :--- | :--- | :--- |
+| **`std`** | Yes | Enables standard library support. Suitable for servers, desktops, and research. |
+| **`alloc`** | Yes | Enables heap allocation (`Vec`, `Box`). Required for `no_std` use on embedded Linux / RTOS. |
 
-## Feature Flags & Safety Implications
-
-This crate is designed to scale from research prototypes to certified flight control systems. The feature flags control the trade-off between flexibility and strict safety guarantees.
-
-| Feature | Default | Description | Safety & Regulatory Implication |
-| :--- | :--- | :--- | :--- |
-| **`std`** | Yes | Enables standard library support. | **General Purpose**. Suitable for servers, desktops, and research. Not for bare-metal embedded. |
-| **`alloc`** | Yes | Enables heap allocation (`Vec`, `Box`). | **Embedded Linux / RTOS**. Required for dynamic graph construction. Most embedded systems use this. |
-| **`strict-zst`** | **No** | **Certification Mode**. Enforces Zero-Sized Types. | **Safety-Critical / Hard Real-Time**. See below. |
-
-### The `strict-zst` Feature
-
-When `strict-zst` is enabled, the `ControlFlowBuilder` enforces that all user-provided logic must be **Zero-Sized Types (ZSTs)** (i.e., static function items).
-
-*   **Implication**: You cannot use closures that capture environment variables. You must use plain functions.
-*   **Benefit**:
-    *   **No Hidden State**: The logic is guaranteed to be pure and stateless (or explicitly state-passing).
-    *   **No Vtables**: Eliminates dynamic dispatch (`dyn Fn`), simplifying WCET (Worst-Case Execution Time) analysis.
-    *   **Formal Verification**: The resulting graph topology is static and easier to model in formal verification tools.
-    *   **Zero-Allocation Nodes**: Nodes are stored as function pointers, requiring no heap allocation for the logic itself.
-
-**Recommendation**:
-*   Use **default features** for prototyping and general applications.
-*   Enable **`strict-zst`** for final deployment in safety-critical environments where dynamic allocation and hidden state are impermissible.
+Use **default features** for general applications. For bare-metal `no_std`, disable defaults and enable only `alloc` (see [non-std Support](#non-std-support) below).
 
 ## Usage Examples
-
-
-### Control Flow Builder (Mission Critical)
-
-```rust
-use deep_causality_core::{ControlFlowBuilder, ControlFlowProtocol, FromProtocol, ToProtocol};
-use std::collections::VecDeque;
-
-// 1. Define your Domain Protocol
-#[derive(Clone, Debug)]
-enum MyProtocol {
-    Signal(bool),
-    Command(u8),
-}
-// ... impl ControlFlowProtocol, FromProtocol, ToProtocol ...
-
-fn sensor_read(input: bool) -> u8 {
-    if input { 100 } else { 0 }
-}
-
-fn main() {
-    let mut builder = ControlFlowBuilder::<MyProtocol>::default();
-
-    // 2. Add Nodes (Type-checked!)
-    let n_sensor = builder.add_node(sensor_read);
-    
-    // 3. Build Graph
-    let graph = builder.build();
-
-    // 4. Execute (Zero-Allocation Loop)
-    let mut queue = VecDeque::with_capacity(10); // Pre-allocate memory
-    let input = true.to_protocol();
-    
-    let result = graph.execute(input, 0, 10, &mut queue);
-    println!("Result: {:?}", result);
-}
-```
 
 ### PropagatingEffect (Stateless)
 
@@ -217,13 +135,6 @@ To use this crate in a bare-metal `no_std` environment:
 ```toml
 [dependencies]
 deep_causality_core = { version = "...", default-features = false, features = ["alloc"] }
-```
-
-If you need absolute strictness (no `Box<dyn Fn>`):
-
-```toml
-[dependencies]
-deep_causality_core = { version = "...", default-features = false, features = ["alloc", "strict-zst"] }
 ```
 
 ## License

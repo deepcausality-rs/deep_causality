@@ -30,3 +30,6 @@ harness = false
 [[example]]
 name = "ultragraph_example"
 path = "examples/ultraph_example.rs"
+
+[lints]
+workspace = true

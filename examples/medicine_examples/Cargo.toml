@@ -41,3 +41,6 @@ path = "tissue_classification/main.rs"
 [[example]]
 name = "tumor_treatment"
 path = "tumor_treatment/main.rs"
+
+[lints]
+workspace = true

@@ -45,3 +45,6 @@ tempfile = {version = "3", default-features = false}
 default = []
 # Enables parallel execution of the SURD algorithm by passing the feature to the algorithms crate.
 parallel = ["deep_causality_algorithms/parallel"]
+
+[lints]
+workspace = true

@@ -26,7 +26,9 @@ exclude = [
 default = ["std"]
 std = ["alloc", "deep_causality_haft/std"]
 alloc = []
-strict-zst = []
 
 [dependencies]
 deep_causality_haft = { path = "../deep_causality_haft", version = "0.3" }
+
+[lints]
+workspace = true

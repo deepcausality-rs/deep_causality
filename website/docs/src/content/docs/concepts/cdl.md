@@ -1,6 +1,6 @@
 ---
 title: Causal Discovery Language
-description: A typestate-builder DSL for going from raw observational data to an executable causal model.
+description: A typestate-builder DSL for going from raw observational data to a discovery report that informs the construction of an executable causal model.
 sidebar:
   order: 8
 ---
@@ -11,9 +11,9 @@ The library's other concepts assume you already have a Causaloid. The CDL is for
 
 ## The problem it solves
 
-Discovering causal structure from data is not one operation. It is a pipeline: load the data, clean it, select the features that carry signal, run a discovery algorithm, analyze the result, and finalize an executable model. Each stage has its own configuration, its own failure modes, and its own outputs that the next stage depends on. Doing this by hand in a notebook ends in fragile glue code; doing this with a generic pipeline framework loses the type safety that makes Rust worth using here.
+Discovering causal structure from data is not one operation. It is a pipeline: load the data, clean it, select the features that carry signal, run a discovery algorithm, analyze the result, and finalize a discovery report that informs how the causal model is constructed. Each stage has its own configuration, its own failure modes, and its own outputs that the next stage depends on. Doing this by hand in a notebook ends in fragile glue code; doing this with a generic pipeline framework loses the type safety that makes Rust worth using here.
 
-The CDL keeps the type safety. Each stage of the pipeline returns a new typestate. You cannot accidentally call the discovery operation before the feature-selection operation. You cannot finalize a model from an incomplete pipeline. The compiler refuses.
+The CDL keeps the type safety. Each stage of the pipeline returns a new typestate. You cannot accidentally call the discovery operation before the feature-selection operation. You cannot finalize the report from an incomplete pipeline. The compiler refuses.
 
 ## The pipeline
 
@@ -22,12 +22,12 @@ The pipeline has seven stages:
 1. **Configure**: [`CdlConfig`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_discovery/src/types/config) is the builder for the whole pipeline. Set the data source, the cleaning strategy, the feature-selection criterion, the discovery algorithm, the analysis pass.
 2. **Load**: read observations from CSV, Parquet, or an in-memory matrix.
 3. **Clean**: handle missing values, outliers, type coercions.
-4. **Select features**: pick the most informative subset of variables. The default is MRMR; SURD is available for information-theoretic decomposition.
-5. **Discover**: run the chosen causal-discovery algorithm against the selected features.
+4. **Select features**: pick the most informative subset of variables. The shipped implementation is [MRMR](/concepts/algorithms/).
+5. **Discover**: run the chosen causal-discovery algorithm against the selected features. The shipped implementation is [SURD](/concepts/algorithms/); a custom discovery function can be passed in instead.
 6. **Analyze**: produce stability, sparsity, and significance metrics on the discovered structure.
-7. **Finalize**: emit a `Causaloid` (or `CausaloidGraph`) that downstream code can consume directly.
+7. **Finalize**: emit a `CdlReport` text artifact (via `ConsoleFormatter`) summarizing the analysis with edge-construction recommendations (for example, "Strong unique influence: Recommended Direct edge in `CausaloidGraph`").
 
-The output of step 7 is the input to the rest of DeepCausality. The pipeline ends where the inference workflow begins.
+The output of step 7 is a discovery report that informs the construction of a `CausaloidGraph`; you read its recommendations and wire the graph using the rest of the DeepCausality types. The pipeline ends where the model-construction workflow begins.
 
 ## What the code looks like
 
@@ -86,13 +86,13 @@ You want to write Causaloids directly when one of these is true:
 - The rules need to do something a discovery algorithm cannot produce (custom conditionals, side-effecting actions, calls into other libraries).
 - Performance constraints rule out the discovery phase. You want the runtime form without the upfront search.
 
-Most production systems use both. The CDL produces an initial Causaloid graph from historical data; the operator hand-edits the graph and adds rules the data does not justify on its own. The result is a hybrid.
+Most production systems use both. The CDL produces an initial discovery report from historical data; the operator constructs the `CausaloidGraph` from those recommendations and adds rules the data does not justify on its own. The result is a hybrid.
 
 ## The relationship to other concepts
 
-The CDL is a *producer* of [Causaloid graphs](/concepts/causaloid/). It is not a separate inference engine; the model the `finalize` stage emits uses the same `Causaloid` and `Context` types as a hand-written model. Once the pipeline finishes, the discovered model is indistinguishable from a hand-built one and feeds the rest of the framework directly.
+The CDL is a *producer of recommendations* for [Causaloid graphs](/concepts/causaloid/); the `finalize` stage emits a `CdlReport` whose findings (for example, "Strong unique influence: Recommended Direct edge in `CausaloidGraph`") guide the engineer in constructing the actual `Causaloid` and `Context` instances. The constructed model uses the same types as a hand-written one and feeds the rest of the framework directly.
 
-The CDL does not invent a Context. A `Context` is the engineer's job: assemble the Contextoids the discovered Causaloids should evaluate against and hand them in. The pipeline produces the rules; you supply the world they read from.
+A `Context` is the engineer's job: assemble the Contextoids the discovered Causaloids should evaluate against and hand them in. The pipeline produces the recommendations; you supply the world they read from.
 
 ## Where to look next
 

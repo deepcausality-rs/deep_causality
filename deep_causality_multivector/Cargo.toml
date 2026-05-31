@@ -60,3 +60,8 @@ name = "multifield_bench"
 harness = false
 
 
+
+[lints.rust]
+# Exempt from the workspace `unsafe_code = "forbid"` policy.
+# HKT fmap pointer-cast (rustc type-equality limitation) in hkt_multifield. Remove when the compiler limitation is resolved.
+unsafe_code = "allow"
