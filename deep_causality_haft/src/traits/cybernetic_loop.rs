@@ -31,6 +31,10 @@ pub trait CyberneticLoop<P: HKT5Unbound> {
     /// * `observe_fn`: Function to update Belief based on Sensor and Context ($S \times C \to B$).
     /// * `decide_fn`: Function to determine Action based on Belief and Context ($B \times C \to A$).
     ///
+    /// The Context ($C$) represents the external configuration or laws of the system. It is
+    /// shared (borrowed) by both the observe and decide steps rather than consumed, since a
+    /// single control step is governed by one fixed context.
+    ///
     /// # Returns
     /// `Result<A, E>`: The Action to take, or an Error/Entropy value if the loop fails.
     fn control_step<S, B, C, A, E, FObserve, FDecide>(
@@ -45,6 +49,6 @@ pub trait CyberneticLoop<P: HKT5Unbound> {
         C: Satisfies<P::Constraint>,
         A: Satisfies<P::Constraint>,
         E: Satisfies<P::Constraint>,
-        FObserve: Fn(S, C) -> B,
-        FDecide: Fn(B, C) -> A;
+        FObserve: Fn(S, &C) -> B,
+        FDecide: Fn(B, &C) -> A;
 }

@@ -82,9 +82,9 @@ Most counterfactual frameworks require structural manipulation (mutilating the S
 
 It is not a substitute for structural intervention when the question genuinely changes the model (deleting an edge, removing a Causaloid). Those are graph-level edits, and the EPP can express them by composing a different Causaloid graph against the same Context. `intervene` is the value-level rung; structural surgery is its model-level counterpart.
 
-## What this earns you
+## What this means
 
-- **Counterfactuals as a one-line API.** No engine swap, no model rebuild.
+- **Counterfactuals as a one-line API.** 
 - **Replayable counterfactual analysis.** The intervention is recorded in the same log as the factual run, so a downstream consumer can reproduce both.
 - **Composable with the rest of the algebra.** A counterfactual chain returns a `PropagatingEffect`, so it composes with Causaloid evaluations, downstream `bind` steps, and the Effect Ethos check just like any factual chain would.
 
