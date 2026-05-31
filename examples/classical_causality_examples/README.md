@@ -1,45 +1,46 @@
 # Classical Causality Examples
 
-This directory contains examples demonstrating **Traditional Causal Inference** methods implemented using the `deep_causality` framework. These examples bridge the gap between standard econometrics/statistics and the Causal State Machine approach.
-
-## Quick Start
-
-Run any example from the repository root:
+Five classical causal-inference methods (CATE, DBN, Granger, RCM, SCM), each implemented **twice** in the DeepCausality framework so the two implementation styles can be read side by side.
 
 ```bash
 cargo run -p classical_causality_examples --example <example_name>
 ```
 
----
+## The two columns
 
-## Examples Overview
+| Folder | Mechanism | Where the alternation lives |
+|---|---|---|
+| [`classical_via_causaloid/`](classical_via_causaloid/) | `Causaloid` + `CausaloidGraph` + manual Context construction | Contextoid clones outside the carrier |
+| [`classical_via_causal_monad/`](classical_via_causal_monad/) | `PropagatingProcess` + `bind` chain + the [`Alternatable`](https://docs.rs/deep_causality_core/latest/deep_causality_core/trait.Alternatable.html) family | `alternate_value` / `alternate_context` / `alternate_state` on the carrier itself |
 
-| Example | Method | Description |
-|---------|--------|-------------|
-| [cate](cate/README.md) | **CATE** (Conditional Average Treatment Effect) | Models how treatment effects vary across different subgroups (heterogeneity). |
-| [dbn](dbn/README.md) | **DBN** (Dynamic Bayesian Network) | Models probabilistic dependencies across time steps (e.g., Umbrella World). |
-| [granger](granger/README.md) | **Granger Causality** | predictive causality test for time series data. |
-| [rcm](rcm/README.md) | **RCM** (Rubin Causal Model) | Potential Outcomes framework for estimating causal effects from observational data. |
-| [scm](scm/README.md) | **SCM** (Structural Causal Model) | Pearl's "Ladder of Causation": Association, Intervention, and Counterfactuals. |
+Both columns avoid Pearl's abduction step. They differ only in *where* the alternation happens: in the Context outside the carrier (causaloid column), or in the carrier's channels (monad column). Same estimand, same numbers, two faces of the same Causaloid/Context separation.
 
----
+## Example matrix
 
-## Common Patterns
+| Method | `via_causaloid` | `via_monad` |
+|---|---|---|
+| **CATE** (heterogeneity) | [cate](classical_via_causaloid/cate/README.md) | _pending_ |
+| **DBN** (Umbrella World) | [dbn](classical_via_causaloid/dbn/README.md) | _pending_ |
+| **Granger** (time-series predictive causality) | [granger](classical_via_causaloid/granger/README.md) | _pending_ |
+| **RCM** (Rubin potential outcomes) | [rcm](classical_via_causaloid/rcm/README.md) | [rcm](classical_via_causal_monad/rcm/README.md) |
+| **SCM** (Pearl's Ladder) | [scm](classical_via_causaloid/scm/README.md) | _pending_ |
 
-### 1. The Inverse Pattern
-Unlike deep causal chains which propagate *forward* (Result -> Effect), classical methods often look *backward* or infer hidden parameters from data. These examples show how to wrap such statistical inferences into `PropagatingEffect` containers to make them composable with the rest of the system.
+## Run commands
 
-### 2. Contextual Data
-Many of these examples (especially **CATE** and **RCM**) rely heavily on `Context` to store population data, covariats, or historical time series, demonstrating how `CausalEffectPropagationProcess` handles stateful context.
-
----
-
-## Run Commands
+### Causaloid column
 
 | Example | Command |
-|---------|---------|
-| CATE | `cargo run -p classical_causality_examples --example cate_example` |
-| DBN | `cargo run -p classical_causality_examples --example dbn_example` |
-| Granger | `cargo run -p classical_causality_examples --example granger_example` |
-| RCM | `cargo run -p classical_causality_examples --example rcm_example` |
-| SCM | `cargo run -p classical_causality_examples --example scm_example` |
+|---|---|
+| CATE | `cargo run -p classical_causality_examples --example cate_via_causaloid` |
+| DBN | `cargo run -p classical_causality_examples --example dbn_via_causaloid` |
+| Granger | `cargo run -p classical_causality_examples --example granger_via_causaloid` |
+| RCM | `cargo run -p classical_causality_examples --example rcm_via_causaloid` |
+| SCM | `cargo run -p classical_causality_examples --example scm_via_causaloid` |
+
+### Causal-Monad column
+
+| Example | Command |
+|---|---|
+| RCM | `cargo run -p classical_causality_examples --example rcm_via_monad` |
+
+(Remaining monadic ports are staged for upcoming rounds.)
