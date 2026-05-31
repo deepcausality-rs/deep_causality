@@ -6,7 +6,7 @@ sidebar:
   label: Discovery Algorithms
 ---
 
-The [`deep_causality_algorithms`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_algorithms) crate ships the two algorithms the [Causal Discovery Language](/concepts/cdl/) wires together to turn raw observational data into a Causaloid graph. They are independent and individually useful; they cover complementary halves of the discovery problem: **which variables matter (MRMR)** and **how they interact (SURD)**.
+The [`deep_causality_algorithms`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_algorithms) crate ships the two algorithms the [Causal Discovery Language](/concepts/cdl/) wires together to turn raw observational data into a discovery report that informs the construction of a causal model. They are independent and individually useful; they cover complementary halves of the discovery problem: **which variables matter (MRMR)** and **how they interact (SURD)**.
 
 ## MRMR: Maximum Relevance, Minimum Redundancy
 
@@ -37,7 +37,7 @@ Traditional methods (Convergent Cross Mapping, PCMCI, Granger causality, conditi
 
 ## How they compose in the CDL pipeline
 
-The [Causal Discovery Language](/concepts/cdl/) is the typestate-builder pipeline that orchestrates the two: data load → clean → **MRMR feature selection** → **SURD causal discovery** → analysis → finalize. Each stage advances the typestate so misuse is rejected at compile time. The output is a Causaloid graph ready to plug into the rest of the framework.
+The [Causal Discovery Language](/concepts/cdl/) is the typestate-builder pipeline that orchestrates the two: data load → clean → **MRMR feature selection** → **SURD causal discovery** → analysis → finalize. Each stage advances the typestate so misuse is rejected at compile time. The output is a `CdlReport` whose recommendations (for example, "Strong unique influence: Recommended Direct edge in `CausaloidGraph`") tell you which Causaloids to wire and how; you then construct the `CausaloidGraph` from those findings using the rest of the framework.
 
 Either algorithm is usable on its own. MRMR is independently useful as a general feature-selection primitive. SURD is independently useful wherever you want a state-conditional decomposition of causal interactions rather than a scalar score.
 
