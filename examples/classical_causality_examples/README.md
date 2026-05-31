@@ -23,9 +23,9 @@ Pearl's Structural Causal Model handles this with a three-step procedure: **abdu
 - **Action** applies the `do(X := x)` operator: replace the structural equation for `X` with a constant.
 - **Prediction** re-runs the modified SCM, with the abduced noise held fixed, to compute the counterfactual outcome.
 
-DeepCausality takes a different foundational move: it **separates the causal law (the `Causaloid` or the `bind` closures) from the world state (the `Context`).** Once the world state is an explicit data structure rather than implicit noise, the counterfactual question becomes: *clone the world, change a piece of it, re-evaluate the same law again*.
+DeepCausality takes a different foundational move: it **separates the causal law (the `Causaloid` or the `bind` closures) from the world state (the `Context`).** Once the world state is an explicit data structure rather than implicit noise, the counterfactual question becomes: *clone the world, change a piece of it, re-evaluate the same causal law again*.
 
-That "clone + modify + re-evaluate" pattern is **contextual alternation**, and it is the mechanism both columns use. The difference is only where it happens:
+That "clone + modify + re-evaluate" pattern is **contextual alternation**, and it is the mechanism both approaches use. The difference is only where it happens:
 
 - **`via_causaloid`**: alternation happens *outside* the carrier. You clone a `BaseContext`, modify a `Contextoid` (a `Datoid` value, a `Spaceoid` location, a `Tempoid` time slice, etc.), then evaluate a `Causaloid` against the new Context.
 - **`via_monad`**: alternation happens *on the carrier itself*. The `Context` is a Rust struct carried through the `PropagatingProcess`; `.alternate_context(other)`, `.intervene(value)`, or `.alternate_state(state)` swap one channel mid-chain and emit a distinctive audit-log entry recording the switch.
@@ -82,9 +82,9 @@ Pick **`via_monad`** when **all** of these are true:
 
 ### Hybrid is a real option
 
-The two columns share the carrier (`PropagatingEffect` / `PropagatingProcess`), so a single system can mix them per stage. A Causaloid graph emits a `PropagatingEffect` that a `bind` chain consumes; a `bind` chain produces input for a Causaloid evaluation. The [flight envelope monitor](../avionics_examples/flight_envelope_monitor/) demonstrates this: a Causaloid collection over five sensor checks, a three-step `bind` chain for state estimation, and a Causaloid hypergraph of six envelope protections, all running through one `PropagatingProcess<T, FlightState, AircraftConfig>` with state and audit log threaded across every stage.
+The two approaches share the carrier (`PropagatingEffect` / `PropagatingProcess`), so a single system can mix them per stage. A Causaloid graph emits a `PropagatingEffect` that a `bind` chain consumes; a `bind` chain produces input for a Causaloid evaluation. The [flight envelope monitor](../avionics_examples/flight_envelope_monitor/) demonstrates this: a Causaloid collection over five sensor checks, a three-step `bind` chain for state estimation, and a Causaloid hypergraph of six envelope protections, all running through one `PropagatingProcess<T, FlightState, AircraftConfig>` with state and audit log threaded across every stage.
 
-If a system's high-level structure is a graph but its individual nodes contain sequential reasoning, the hybrid is often the right shape: graph at the top, `bind` chains inside. Each column is at its best where it is structurally most natural.
+If a system's high-level structure is a graph but its individual nodes contain sequential reasoning, the hybrid is often the right shape: graph at the top, `bind` chains inside. Each approach is at its best where it is structurally most natural.
 
 ## Example matrix
 
@@ -98,7 +98,7 @@ If a system's high-level structure is a graph but its individual nodes contain s
 
 ## Run commands
 
-### Causaloid column
+### Causaloid approach
 
 | Example | Command |
 |---|---|
@@ -108,7 +108,7 @@ If a system's high-level structure is a graph but its individual nodes contain s
 | RCM | `cargo run -p classical_causality_examples --example rcm_via_causaloid` |
 | SCM | `cargo run -p classical_causality_examples --example scm_via_causaloid` |
 
-### Causal-Monad column
+### Causal-Monad approach
 
 | Example | Command |
 |---|---|
