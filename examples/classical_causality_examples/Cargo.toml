@@ -47,5 +47,9 @@ path = "classical_via_causal_monad/rcm/main.rs"
 name = "scm_via_monad"
 path = "classical_via_causal_monad/scm/main.rs"
 
+[[example]]
+name = "dbn_via_monad"
+path = "classical_via_causal_monad/dbn/main.rs"
+
 [lints]
 workspace = true
