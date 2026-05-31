@@ -156,20 +156,33 @@ Here is the canonical walkthrough using a stateless `PropagatingEffect`:
 ```rust
 use deep_causality_core::{Intervenable, PropagatingEffect};
 
-// Causal chain: Dose -> Absorption -> Metabolism -> Response (numeric outcome).
+// Causal chain: Dose -> Absorption -> Metabolism -> Response.
 
 // Rung 1: Association. Run the chain factually.
 let observed = PropagatingEffect::pure(10.0_f64)
-    .bind(|dose,  _, _| PropagatingEffect::pure(dose.into_value().unwrap_or_default() * 0.8))   // Absorption: 8.0
-    .bind(|level, _, _| PropagatingEffect::pure(level.into_value().unwrap_or_default() - 2.0))  // Metabolism: 6.0
-    .bind(|level, _, _| PropagatingEffect::pure(level.into_value().unwrap_or_default()));       // Response:   6.0
+    .bind(|dose,  _, _|
+    // Absorption: 8.0
+    PropagatingEffect::pure(dose.into_value().unwrap_or_default() * 0.8))
+    .bind(|level, _, _|
+    // Metabolism: 6.0
+    PropagatingEffect::pure(level.into_value().unwrap_or_default() - 2.0))
+    .bind(|level, _, _|
+    // Response:   6.0
+    PropagatingEffect::pure(level.into_value().unwrap_or_default()));
 
 // Rung 2: Intervention. do(BloodLevel := 3.0) mid-chain.
 let intervened = PropagatingEffect::pure(10.0_f64)
-    .bind(|dose, _, _| PropagatingEffect::pure(dose.into_value().unwrap_or_default() * 0.8))   // Absorption: 8.0
-    .intervene(3.0)                                                                              // do(BloodLevel := 3.0)
-    .bind(|level, _, _| PropagatingEffect::pure(level.into_value().unwrap_or_default() - 2.0)) // Metabolism: 1.0
-    .bind(|level, _, _| PropagatingEffect::pure(level.into_value().unwrap_or_default()));      // Response:   1.0
+    .bind(|dose, _, _|
+    // Absorption: 8.0
+    PropagatingEffect::pure(dose.into_value().unwrap_or_default() * 0.8))
+    // do(BloodLevel := 3.0)
+    .intervene(3.0)
+    .bind(|level, _, _|     PropagatingEffect::pure(level.into_value().unwrap_or_default() - 2.0))
+    
+    // Metabolism: 1.0
+    .bind(|level, _, _|
+    // Response:   1.0
+    PropagatingEffect::pure(level.into_value().unwrap_or_default()));
 
 // Rung 3: Counterfactual. The causal-effect estimate is the difference between
 // the intervened outcome and the observed outcome (individual treatment effect):
@@ -180,7 +193,8 @@ let causal_effect = y_int - y_obs;
 
 println!("Observed Y      = {y_obs:.2}");
 println!("Intervened Y    = {y_int:.2}");
-println!("Causal effect Δ = {causal_effect:+.2}"); // -5.00: the intervention lowered the response by five units.
+// -5.00: the intervention lowered the response by five units.
+println!("Causal effect Δ = {causal_effect:+.2}"); 
 ```
 
 The two runs share their structure and their composition law. The only difference is the `.intervene(3.0)` call. The causal-effect estimate is the *difference* `Y(do(X)) − Y(X_observed)`; here it is `1.00 − 6.00 = −5.00`, meaning the intervention lowered the response by five units. The log on `intervened` records the original level, the substituted value, and that an intervention occurred; the run stays replayable and auditable.
