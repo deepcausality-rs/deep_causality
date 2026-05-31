@@ -54,6 +54,8 @@ jobs:
         include:
           - crate: deep_causality
             extra_flags: -Zmiri-disable-isolation       # clock_gettime in test setup
+          - crate: deep_causality_core
+            extra_flags: -Zmiri-disable-isolation       # EffectLog::add_entry -> SystemTime::now (log_effect.rs:57)
           - crate: deep_causality_discovery
             extra_flags: -Zmiri-disable-isolation       # DSL opens files
           - crate: deep_causality_uncertain
