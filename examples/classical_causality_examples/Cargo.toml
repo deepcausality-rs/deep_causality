@@ -15,25 +15,49 @@ deep_causality_core =  { path = "../../deep_causality_core" }
 deep_causality_rand =  { path = "../../deep_causality_rand" }
 
 
-[[example]]
-name = "cate_example"
-path = "cate/main.rs"
+# --- Causaloid + Contextual-Alternation implementations ---
 
 [[example]]
-name = "dbn_example"
-path = "dbn/main.rs"
+name = "cate_via_causaloid"
+path = "classical_via_causaloid/cate/main.rs"
 
 [[example]]
-name = "granger_example"
-path = "granger/main.rs"
+name = "dbn_via_causaloid"
+path = "classical_via_causaloid/dbn/main.rs"
 
 [[example]]
-name = "rcm_example"
-path = "rcm/main.rs"
+name = "granger_via_causaloid"
+path = "classical_via_causaloid/granger/main.rs"
 
 [[example]]
-name = "scm_example"
-path = "scm/main.rs"
+name = "rcm_via_causaloid"
+path = "classical_via_causaloid/rcm/main.rs"
+
+[[example]]
+name = "scm_via_causaloid"
+path = "classical_via_causaloid/scm/main.rs"
+
+# --- CausalMonad (PropagatingEffect / PropagatingProcess) implementations ---
+
+[[example]]
+name = "rcm_via_monad"
+path = "classical_via_causal_monad/rcm/main.rs"
+
+[[example]]
+name = "scm_via_monad"
+path = "classical_via_causal_monad/scm/main.rs"
+
+[[example]]
+name = "dbn_via_monad"
+path = "classical_via_causal_monad/dbn/main.rs"
+
+[[example]]
+name = "cate_via_monad"
+path = "classical_via_causal_monad/cate/main.rs"
+
+[[example]]
+name = "granger_via_monad"
+path = "classical_via_causal_monad/granger/main.rs"
 
 [lints]
 workspace = true

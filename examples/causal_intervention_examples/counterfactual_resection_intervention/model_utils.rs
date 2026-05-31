@@ -57,7 +57,7 @@ where
 {
     println!(
         "\nAudit trail for the resection at region 0 (the seizure focus).\n\
-         Each !!Intervention!! entry below records which connectome was\n\
+         Each !!ValueAlternation!! entry below records which connectome was\n\
          substituted into the chain at the moment of intervention.\n"
     );
     let audit = runner(factual.clone(), factual.resected(0));

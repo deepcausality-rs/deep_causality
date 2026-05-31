@@ -3,32 +3,15 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use super::CausalEffectPropagationProcess;
-use crate::EffectValue;
-use crate::Intervenable;
-use alloc::format;
-use core::fmt::Debug;
-use deep_causality_haft::{LogAddEntry, LogAppend};
-
-impl<Value, State, Context, Error, Log> Intervenable<Value>
-    for CausalEffectPropagationProcess<Value, State, Context, Error, Log>
-where
-    Log: LogAppend + LogAddEntry + Default,
-    Value: Debug,
-{
-    fn intervene(mut self, new_value: Value) -> Self {
-        // If there is already an error, we propagate it and do nothing else.
-        if self.error.is_some() {
-            return self;
-        }
-
-        let new_value = EffectValue::from(new_value);
-
-        self.logs.add_entry(&format!(
-            "!!Intervention!!: {:?} replaced with {:?}",
-            self.value, new_value
-        ));
-        self.value = new_value;
-        self
-    }
-}
+// `Intervenable<Value>` is now a super-trait of `AlternatableValue<Value>`
+// with a default `intervene` method that delegates to `alternate_value`,
+// plus a blanket impl over `AlternatableValue<V>` (see
+// `crate::traits::intervenable`). The carrier therefore picks up
+// `Intervenable<Value>` automatically through its `AlternatableValue<Value>`
+// impl in `alternatable_value.rs`. No explicit `Intervenable for
+// CausalEffectPropagationProcess<...>` impl is required here, and adding
+// one would conflict with the blanket.
+//
+// This file is kept to preserve the existing module wiring and as a
+// signpost for future readers; the operation itself lives in
+// `alternatable_value.rs`.

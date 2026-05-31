@@ -19,7 +19,7 @@
 //! In a surgical-planning workflow the artefact that matters is not the
 //! simulator's final number; it is the audit trail recording which
 //! region was virtually resected and what the model predicted for that
-//! resection. `EffectLog` records every `!!Intervention!!` entry
+//! resection. `EffectLog` records every `!!ValueAlternation!!` entry
 //! automatically. A plain re-run loop computes the same numbers and
 //! loses the link between *which* resection produced *which* outcome.
 //! That link has to be reconstructed externally if the monad does not
