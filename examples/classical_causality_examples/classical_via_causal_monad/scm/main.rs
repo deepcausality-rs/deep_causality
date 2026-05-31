@@ -171,7 +171,9 @@ fn stage_cancer_risk(
     state: (),
     context: Option<SmokingContext>,
 ) -> PropagatingProcess<f64, (), SmokingContext> {
-    let tar_indicator = value.into_value().unwrap_or_default();
+    let tar_indicator = value
+        .into_value()
+        .expect("stage_has_tar must produce a numeric tar indicator");
     let cancer_risk = tar_indicator > 0.5;
     let next = PropagatingEffect::pure(if cancer_risk { 1.0 } else { 0.0 });
     PropagatingProcess::with_state(next, state, context)

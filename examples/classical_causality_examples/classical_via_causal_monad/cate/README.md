@@ -1,6 +1,6 @@
 # CATE via the Causal Monad
 
-Conditional Average Treatment Effect on `PropagatingProcess<f64, (), PatientContext>` using the [`Alternatable`](https://docs.rs/deep_causality_core/latest/deep_causality_core/trait.AlternatableContext.html) family.
+Conditional Average Treatment Effect on `PropagatingProcess<f64, (), PatientContext>` using the [`Alternatable`](../../../../deep_causality_core/src/traits/alternatable/mod.rs) family.
 
 ## How to run
 

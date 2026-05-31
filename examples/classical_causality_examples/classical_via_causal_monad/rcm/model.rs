@@ -48,7 +48,9 @@ pub fn compute_final_bp(
     state: (),
     context: Option<TreatmentContext>,
 ) -> PropagatingProcess<f64, (), TreatmentContext> {
-    let drug_effect = value.into_value().unwrap_or_default();
+    let drug_effect = value
+        .into_value()
+        .expect("apply_drug_effect must produce a numeric drug-effect Value");
     let final_bp = PATIENT_INITIAL_BP + drug_effect;
     let next = PropagatingEffect::pure(final_bp);
     PropagatingProcess::with_state(next, state, context)

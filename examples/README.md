@@ -39,17 +39,17 @@ Basic introduction to DeepCausality. **Start here if you are new.**
 
 **Location:** `examples/classical_causality_examples`
 
-Traditional causal inference methods implemented using the DeepCausality framework.
+Traditional causal inference methods implemented using the DeepCausality framework. Each method is implemented **twice**: once with `Causaloid` + Contextual Alternation, once with `PropagatingProcess` + the `Alternatable` family. 
 
-| Example | Method | Command |
-|---------|--------|---------|
-| CATE | Conditional Average Treatment Effect | `cargo run -p classical_causality_examples --example cate_example` |
-| DBN | Dynamic Bayesian Network | `cargo run -p classical_causality_examples --example dbn_example` |
-| Granger | Granger Causality Test | `cargo run -p classical_causality_examples --example granger_example` |
-| RCM | Rubin Causal Model | `cargo run -p classical_causality_examples --example rcm_example` |
-| SCM | Pearl's Ladder of Causation | `cargo run -p classical_causality_examples --example scm_example` |
+| Example | Method | `via_causaloid` command | `via_monad` command |
+|---------|--------|-------------------------|---------------------|
+| CATE | Conditional Average Treatment Effect | `cargo run -p classical_causality_examples --example cate_via_causaloid` | `cargo run -p classical_causality_examples --example cate_via_monad` |
+| DBN | Dynamic Bayesian Network | `cargo run -p classical_causality_examples --example dbn_via_causaloid` | `cargo run -p classical_causality_examples --example dbn_via_monad` |
+| Granger | Granger Causality Test | `cargo run -p classical_causality_examples --example granger_via_causaloid` | `cargo run -p classical_causality_examples --example granger_via_monad` |
+| RCM | Rubin Causal Model | `cargo run -p classical_causality_examples --example rcm_via_causaloid` | `cargo run -p classical_causality_examples --example rcm_via_monad` |
+| SCM | Pearl's Ladder of Causation | `cargo run -p classical_causality_examples --example scm_via_causaloid` | `cargo run -p classical_causality_examples --example scm_via_monad` |
 
-See [classical_causality_examples/README.md](classical_causality_examples/README.md) for detailed documentation.
+See [classical_causality_examples/README.md](classical_causality_examples/README.md) for the full side-by-side comparison.
 
 ---
 

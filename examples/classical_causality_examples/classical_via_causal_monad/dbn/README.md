@@ -1,6 +1,6 @@
 # DBN via the Causal Monad
 
-Umbrella World as a Dynamic Bayesian Network, implemented directly on `PropagatingProcess<f64, WeatherState, WeatherContext>`. The notable property: **all three carrier channels are exercised**, and the conditional probability tables are alternable via [`alternate_context`](https://docs.rs/deep_causality_core/latest/deep_causality_core/trait.AlternatableContext.html), so a climate-regime change becomes one method call instead of a graph rebuild.
+Umbrella World as a Dynamic Bayesian Network, implemented directly on `PropagatingProcess<f64, WeatherState, WeatherContext>`. The notable property: **all three carrier channels are exercised**, and the conditional probability tables are alternable via [`alternate_context`](../../../../deep_causality_core/src/traits/alternatable_context/mod.rs), so a climate-regime change becomes one method call instead of a graph rebuild.
 
 ## How to run
 

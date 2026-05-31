@@ -1,6 +1,6 @@
 # SCM via the Causal Monad
 
-Pearl's Ladder of Causation on the smoking-tar-cancer chain, implemented directly on `PropagatingProcess<f64, (), SmokingContext>` using the [`Alternatable`](https://docs.rs/deep_causality_core/latest/deep_causality_core/trait.Alternatable.html) family. Each rung uses one operator from the family.
+Pearl's Ladder of Causation on the smoking-tar-cancer chain, implemented directly on `PropagatingProcess<f64, (), SmokingContext>` using the [`Alternatable`](../../../../deep_causality_core/src/traits/alternatable/mod.rs) family. Each rung uses one operator from the family.
 
 ## How to run
 

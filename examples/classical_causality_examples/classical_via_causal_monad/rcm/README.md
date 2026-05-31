@@ -1,6 +1,6 @@
 # RCM via the Causal Monad
 
-This example mirrors the [`classical_via_causaloid/rcm`](../../classical_via_causaloid/rcm) example but is implemented directly on the carrier `PropagatingProcess<f64, (), TreatmentContext>` using the [`Alternatable`](https://docs.rs/deep_causality_core/latest/deep_causality_core/trait.Alternatable.html) family. Same estimand, same numbers, different mechanism.
+This example mirrors the [`classical_via_causaloid/rcm`](../../classical_via_causaloid/rcm) example but is implemented directly on the carrier `PropagatingProcess<f64, (), TreatmentContext>` using the [`Alternatable`](../../../../deep_causality_core/src/traits/alternatable/mod.rs) family. Same estimand, same numbers, different mechanism.
 
 ## How to run
 

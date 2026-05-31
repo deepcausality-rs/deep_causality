@@ -147,7 +147,9 @@ fn stage_final_bp(
     state: (),
     context: Option<PatientContext>,
 ) -> PropagatingProcess<f64, (), PatientContext> {
-    let drug_effect = value.into_value().unwrap_or_default();
+    let drug_effect = value
+        .into_value()
+        .expect("stage_drug_effect must produce a numeric drug-effect Value");
     let ctx = context.expect("PatientContext must be set before stage 2");
     let final_bp = ctx.initial_bp + drug_effect;
     let next = PropagatingEffect::pure(final_bp);
