@@ -21,7 +21,7 @@ Both columns avoid Pearl's abduction step. They differ only in *where* the alter
 |---|---|---|
 | **CATE** (heterogeneity) | [cate](classical_via_causaloid/cate/README.md) | [cate](classical_via_causal_monad/cate/README.md) |
 | **DBN** (Umbrella World) | [dbn](classical_via_causaloid/dbn/README.md) | [dbn](classical_via_causal_monad/dbn/README.md) |
-| **Granger** (time-series predictive causality) | [granger](classical_via_causaloid/granger/README.md) | _pending_ |
+| **Granger** (time-series predictive causality) | [granger](classical_via_causaloid/granger/README.md) | [granger](classical_via_causal_monad/granger/README.md) |
 | **RCM** (Rubin potential outcomes) | [rcm](classical_via_causaloid/rcm/README.md) | [rcm](classical_via_causal_monad/rcm/README.md) |
 | **SCM** (Pearl's Ladder) | [scm](classical_via_causaloid/scm/README.md) | [scm](classical_via_causal_monad/scm/README.md) |
 
@@ -45,5 +45,6 @@ Both columns avoid Pearl's abduction step. They differ only in *where* the alter
 | SCM | `cargo run -p classical_causality_examples --example scm_via_monad` |
 | DBN | `cargo run -p classical_causality_examples --example dbn_via_monad` |
 | CATE | `cargo run -p classical_causality_examples --example cate_via_monad` |
+| Granger | `cargo run -p classical_causality_examples --example granger_via_monad` |
 
-(Remaining monadic port — Granger — is staged for the next round.)
+All five classical methods are now implemented in both columns.
