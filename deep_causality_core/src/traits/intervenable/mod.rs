@@ -3,19 +3,37 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-/// Defines the `intervene` operation for a monadic effect system.
-/// This trait is intended for causal reasoning systems where counterfactuals
-/// are modeled by forcing a value at a specific point in a computation chain.
-pub trait Intervenable<T> {
-    /// Overrides the value within an effectful computation.
-    ///
-    /// This function takes an existing `effect` (self) and a `new_value`. It returns a new
-    /// effect where the original value is discarded and replaced by `new_value`.
-    ///
-    /// Crucially, it should preserve the context of the computation:
-    /// - **Error State**: If the incoming `effect` was already in an error state,
-    ///   that error is propagated. An intervention cannot fix a previously broken chain.
-    /// - **Log History**: The logs from the incoming `effect` are preserved, and a
-    ///   new entry is added to signify that an intervention occurred.
-    fn intervene(self, new_value: T) -> Self;
+use crate::AlternatableValue;
+
+/// Causal-inference vocabulary trait for value substitution on a monadic
+/// effect system.
+///
+/// `Intervenable<V>` is the surface that speaks Pearl's `do(...)` language:
+/// `effect.intervene(x)` reads as "force the value at this point of the
+/// chain to be `x`," which is exactly an interventional substitution on
+/// the value channel.
+///
+/// Mechanically, `intervene` is the same operation as
+/// [`AlternatableValue::alternate_value`]: replace the carried value,
+/// preserve state/context, short-circuit on error, append one audit-log
+/// entry. This trait is a thin vocabulary alias: it is a super-trait of
+/// [`AlternatableValue<V>`] whose only method delegates to
+/// `alternate_value`. The blanket impl below means every carrier that
+/// implements [`AlternatableValue<V>`] is automatically `Intervenable<V>`.
+///
+/// Audit-log note: because `intervene` delegates to `alternate_value`,
+/// the log marker recorded is `!!ValueAlternation!!`.
+/// The two API surfaces share one underlying operation and one underlying log entry.
+pub trait Intervenable<V>: AlternatableValue<V> {
+    /// Force-substitute the carried value with `new_value`, preserving
+    /// the rest of the chain. Delegates to
+    /// [`AlternatableValue::alternate_value`].
+    fn intervene(self, new_value: V) -> Self
+    where
+        Self: Sized,
+    {
+        self.alternate_value(new_value)
+    }
 }
+
+impl<T, V> Intervenable<V> for T where T: AlternatableValue<V> {}

@@ -20,6 +20,10 @@ pub use crate::alias::*;
 pub use crate::errors::causality_error::{CausalityError, CausalityErrorEnum};
 
 // Re-export traits
+pub use crate::traits::alternatable::Alternatable;
+pub use crate::traits::alternatable_context::AlternatableContext;
+pub use crate::traits::alternatable_state::AlternatableState;
+pub use crate::traits::alternatable_value::AlternatableValue;
 pub use crate::traits::causal_monad::CausalMonad;
 pub use crate::traits::intervenable::Intervenable;
 

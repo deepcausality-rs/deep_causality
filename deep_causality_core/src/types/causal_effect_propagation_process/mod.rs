@@ -6,6 +6,9 @@ use crate::{CausalMonad, CausalityError, CausalityErrorEnum, EffectLog, EffectVa
 use core::fmt::Debug;
 use deep_causality_haft::LogAppend;
 
+mod alternatable_context;
+mod alternatable_state;
+mod alternatable_value;
 mod display;
 mod explain;
 mod getters;
