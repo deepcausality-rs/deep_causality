@@ -38,7 +38,7 @@ fn test_surd_causal_discovery_success() {
 
 #[test]
 fn test_surd_causal_discovery_error_empty_tensor() {
-    let p_raw = CausalTensor::new(vec![], vec![0]).unwrap();
+    let p_raw: CausalTensor<Option<f64>> = CausalTensor::new(vec![], vec![0]).unwrap();
 
     let surd_config = SurdConfig::new(MaxOrder::Max, 0);
     let config = CausalDiscoveryConfig::Surd(surd_config);

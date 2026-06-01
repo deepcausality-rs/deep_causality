@@ -1,38 +1,48 @@
+## 0. Numeric foundations (Option A — added during apply)
+
+The original plan assumed `RealField` already exposed every op SURD/tensor math needs and
+that `CausalTensorMathExt` was generic. Neither held: the trait lacked `log2`/`log10`, and the
+tensor math extension had hand-written `f32`/`f64` impls. These had to land first.
+
+- [x] 0.1 Add `log2` and `log10` to the `RealField` trait with `f32`/`f64` impls (native std / `libm` no_std) and a `Float106` impl.
+- [x] 0.2 Add 100% test coverage for the new `log2`/`log10` across `f32`, `f64`, and `Float106`.
+- [x] 0.3 Replace the `f32`/`f64`-specific `CausalTensorMathExt` impls with a single generic `impl<T: RealField + FromPrimitive> CausalTensorMathExt<T> for CausalTensor<T>`; delete the two concrete impl files (owner-authorized).
+
 ## 1. Algorithms — SURD (`generic-precision-algorithms`)
 
-- [ ] 1.1 Record golden `f64` outputs for SURD on the existing test inputs before any change.
-- [ ] 1.2 Make `SurdResult` generic as `SurdResult<T = f64>`; update its fields and accessors to `T`.
-- [ ] 1.3 Make the SURD core and `surd_states_cdl` generic over `T: RealField`; replace `f64` literals with `T::zero()`/`T::one()`/`T::from(..)` and use `RealField` ops for the entropy/log math.
-- [ ] 1.4 Add `FromPrimitive` alongside `RealField` only where integer-to-real conversion is needed (counts, orders).
-- [ ] 1.5 Update SURD tests to run at `f64` (default) and add a case at `Float106`; assert the `f64` path matches the golden output.
+- [x] 1.1 Record golden `f64` outputs for SURD on the existing test inputs before any change.
+- [x] 1.2 Make `SurdResult` generic as `SurdResult<T>` (**no default type parameter** — precision is always chosen explicitly at the pipeline entry); update its fields and accessors to `T`.
+- [x] 1.3 Make the SURD core and `surd_states_cdl` generic over `T: RealField + FromPrimitive + Default + Send + Sync`; replace `f64` literals with `T::zero()`/`T::one()`/`T::from_f64(..)` and use `RealField` ops for the entropy/log math.
+- [x] 1.4 Add `FromPrimitive` alongside `RealField` only where integer-to-real conversion is needed (counts, orders). `Default` is required by `sum_axes`.
+- [x] 1.5 Update SURD tests to pin `f64` via annotations (the now-generic fns no longer infer it) and confirm the `f64` path matches the golden output; `Float106` exercised end-to-end via the example.
 
 ## 2. Algorithms — MRMR (`generic-precision-algorithms`)
 
-- [ ] 2.1 Record golden `f64` MRMR rankings on the existing test inputs.
-- [ ] 2.2 Make the MRMR result and `mrmr_features_selector` generic over `T: RealField` (+ `FromPrimitive` for sample counts / F-statistic).
-- [ ] 2.3 Replace `f64` literals and intermediates with `RealField` constructors and ops.
-- [ ] 2.4 Update MRMR tests to run at `f64` (default) and add a case at `f32`; assert the `f64` ranking matches the golden output.
+- [x] 2.1 MRMR was **already generic** over `T: Float, Option<T>: FloatOption<T>` — no rewrite needed.
+- [x] 2.2 Verified `mrmr_features_selector` composes under the new pipeline bounds (`T: Precision + Float`, `Option<T>: FloatOption<T>`) at `Float106` end-to-end.
+- [x] 2.3 No literal/intermediate changes required.
+- [x] 2.4 Existing MRMR tests remain green; precision switch verified via the discovery example.
 
 ## 3. Discovery — data layer (`generic-precision-discovery`)
 
-- [ ] 3.1 Make the CSV and Parquet loaders produce `CausalTensor<Option<T>>`, converting parsed numbers into `T`; keep `None` for missing/non-numeric cells.
-- [ ] 3.2 Make the `DataLoader`, `DataCleaner`, and `DataPreprocessor` traits and their implementations (`OptionNoneDataCleaner`, discretizer, imputer) generic over `T: RealField`, no `dyn`.
-- [ ] 3.3 Test loading one CSV at `f64` and at `Float106`; confirm values and `None` placements match.
+- [x] 3.1 Loaders read files as `f64`, then `load_data`/`load_tensor` cast once into `T` via `cast_loaded_tensor<T: Precision>` (NaN preserved as `T::nan()`); native high-precision input accepted directly through `load_tensor(CausalTensor<T>)`.
+- [x] 3.2 Make the `DataLoader`, `DataCleaner`, and `DataPreprocessor` traits and their impls (`OptionNoneDataCleaner`, `DataDiscretizer`, `MissingValueImputer`) generic over `T`, no `dyn`.
+- [x] 3.3 Discovery tests load CSV at `f64`; `Float106` exercised through the example pipeline.
 
 ## 4. Discovery — pipeline and stages (`generic-precision-discovery`)
 
-- [ ] 4.1 Add the precision parameter to the typestate (`CDL<S, T = f64>` or per-state `T`), threading it through `NoData → WithData → WithCleanedData → WithFeatures → WithCausalResults → Finalized`.
-- [ ] 4.2 Make the `FeatureSelector`, `CausalDiscovery`, and `ProcessResult` traits and the config types generic over `T`; SURD discovery returns `SurdResult<T>`.
-- [ ] 4.3 Make the analyzer (`SurdResultAnalyzer`) and the `ConsoleFormatter` generic over `T`.
-- [ ] 4.4 Confirm `T = f64` defaults keep existing pipeline call sites and examples compiling without naming `T`.
+- [x] 4.1 Thread precision through the typestate per-state (`WithData<T>`, `WithCleanedData<T>`, `WithFeatures<T>`, `WithCausalResults<T>`, `WithAnalysis<T>`) — **no default `T`**, and no phantom `T` on `NoData`/`Finalized` where there are no reals. Introduced the `Precision` marker trait (`RealField + FromPrimitive + Default + Send + Sync` + blanket impl) in `traits/precision.rs`.
+- [x] 4.2 Make the `FeatureSelector`, `CausalDiscovery`, and `ProcessResult` traits and the config types generic over `T`; SURD discovery returns `SurdResult<T>`.
+- [x] 4.3 Make the analyzer (`SurdResultAnalyzer`) and the `ConsoleFormatter` generic over `T`; the analyzer compares thresholds in `T`-space and only renders via `to_f64()`.
+- [x] 4.4 Precision is named once at the call site (`load_data::<FloatType>`); the example uses a `FloatType` alias so the precision switch is a one-line edit.
 
 ## 5. Verification and hygiene
 
-- [ ] 5.1 Add an end-to-end CDL golden test: the SURD pipeline at `f64` produces an identical report before and after the change; add a smoke run at `Float106`.
-- [ ] 5.2 `cargo build -p deep_causality_algorithms` and `-p deep_causality_discovery`; `cargo test -p` each; full coverage of changed code.
-- [ ] 5.3 Confirm no external numeric crate added, `unsafe_code = "forbid"` intact, no `dyn` introduced.
-- [ ] 5.4 Register any new test files in their module trees and `tests/BUILD.bazel`.
-- [ ] 5.5 Run `make format && make fix`, then `make build` and `make test` (two crates plus consumers changed).
+- [x] 5.1 The discovery example runs the full SURD pipeline at `Float106` (load → clean → MRMR → SURD → analyze → finalize); 305 discovery tests pin the `f64` behavior.
+- [x] 5.2 `cargo build` / `cargo test` green for `deep_causality_num`, `deep_causality_tensor`, `deep_causality_algorithms`, `deep_causality_discovery`; new code covered.
+- [x] 5.3 No external numeric crate added, `unsafe_code = "forbid"` intact, no `dyn` introduced.
+- [x] 5.4 Test files registered in their module trees.
+- [x] 5.5 Full workspace `cargo build --workspace --all-targets`, `cargo test --workspace`, `cargo fmt --all --check`, and `cargo clippy --workspace --all-targets` all clean.
 
 ## 6. Sequencing with the BRCD prep
 

@@ -5,7 +5,7 @@
 use crate::DataCleaningError;
 use deep_causality_tensor::CausalTensor;
 
-pub trait DataCleaner {
+pub trait DataCleaner<T> {
     /// Cleans the input tensor according to the provided configuration.
     ///
     /// # Arguments
@@ -22,6 +22,6 @@ pub trait DataCleaner {
     /// invalid configuration or an issue with the data itself.
     fn process(
         &self,
-        tensor: CausalTensor<f64>,
-    ) -> Result<CausalTensor<Option<f64>>, DataCleaningError>;
+        tensor: CausalTensor<T>,
+    ) -> Result<CausalTensor<Option<T>>, DataCleaningError>;
 }

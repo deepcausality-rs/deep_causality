@@ -3,7 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::Precision;
 use crate::errors::PreprocessError;
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 
 /// A pre-processor for handling missing numerical data in a `CausalTensor`.
@@ -23,7 +25,9 @@ impl MissingValueImputer {
     ///
     /// A `Result` containing a new `CausalTensor<f64>` with missing values imputed, or a `PreprocessError`.
     ///
-    pub fn impute_mean(tensor: CausalTensor<f64>) -> Result<CausalTensor<f64>, PreprocessError> {
+    pub fn impute_mean<T: Precision>(
+        tensor: CausalTensor<T>,
+    ) -> Result<CausalTensor<T>, PreprocessError> {
         let shape = tensor.shape().to_vec();
         if shape.len() != 2 {
             return Err(PreprocessError::ImputeError(
@@ -41,8 +45,8 @@ impl MissingValueImputer {
         let mut data = tensor.as_slice().to_vec();
 
         for c in 0..n_cols {
-            let mut sum = 0.0;
-            let mut count = 0;
+            let mut sum = T::zero();
+            let mut count = 0usize;
             let mut missing_indices = Vec::new();
 
             // First pass: find missing values and calculate sum of non-missing
@@ -59,10 +63,11 @@ impl MissingValueImputer {
             // If there are missing values in this column, impute them.
             if !missing_indices.is_empty() {
                 let mean = if count > 0 {
-                    sum / count as f64
+                    sum / <T as FromPrimitive>::from_usize(count)
+                        .expect("count is representable in RealField")
                 } else {
-                    // If a column consists entirely of NaN, default to 0.0.
-                    0.0
+                    // If a column consists entirely of NaN, default to zero.
+                    T::zero()
                 };
 
                 for index in missing_indices {

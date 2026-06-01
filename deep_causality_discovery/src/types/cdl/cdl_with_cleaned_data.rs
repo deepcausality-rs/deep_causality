@@ -4,15 +4,15 @@
  */
 
 use crate::types::cdl::{WithCleanedData, WithFeatures};
-use crate::{CDL, CdlBuilder, CdlEffect, CdlError, FeatureSelectError};
+use crate::{CDL, CdlBuilder, CdlEffect, CdlError, FeatureSelectError, Precision};
 use deep_causality_algorithms::feature_selection::mrmr::{MrmrError, MrmrResult};
 use deep_causality_tensor::CausalTensor;
 
-impl CDL<WithCleanedData> {
+impl<T: Precision> CDL<WithCleanedData<T>> {
     /// Selects features using a provided closure from cleaned data.
-    pub fn feature_select<F>(self, selector_fn: F) -> CdlEffect<CDL<WithFeatures>>
+    pub fn feature_select<F>(self, selector_fn: F) -> CdlEffect<CDL<WithFeatures<T>>>
     where
-        F: FnOnce(&CausalTensor<Option<f64>>) -> Result<MrmrResult, MrmrError>,
+        F: FnOnce(&CausalTensor<Option<T>>) -> Result<MrmrResult, MrmrError>,
     {
         // Data is already cleaned (Option<f64>)
         let tensor = &self.state.tensor;
@@ -29,7 +29,7 @@ impl CDL<WithCleanedData> {
                 // Helper to filter columns:
                 let rows = tensor.shape()[0];
                 let cols = selected_indices.len();
-                let mut data: Vec<Option<f64>> = Vec::with_capacity(rows * cols);
+                let mut data: Vec<Option<T>> = Vec::with_capacity(rows * cols);
 
                 for r in 0..rows {
                     for &c_idx in &selected_indices {

@@ -3,26 +3,26 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{DataCleaner, DataCleaningError};
+use crate::{DataCleaner, DataCleaningError, Precision};
 use deep_causality_tensor::CausalTensor;
 
 pub struct OptionNoneDataCleaner;
 
-impl DataCleaner for OptionNoneDataCleaner {
-    /// Processes a `CausalTensor<f64>` by replacing `NaN` values with `None` and
-    /// wrapping valid `f64` values in `Some`.
+impl<T: Precision> DataCleaner<T> for OptionNoneDataCleaner {
+    /// Processes a `CausalTensor<T>` by replacing `NaN` values with `None` and
+    /// wrapping valid values in `Some`.
     ///
     /// # Arguments
-    /// * `tensor` - The input `CausalTensor<f64>` to be cleaned.
+    /// * `tensor` - The input `CausalTensor<T>` to be cleaned.
     ///
     /// # Returns
-    /// A `Result` containing a `CausalTensor<Option<f64>>` on success, or a `DataCleaningError` on failure.
+    /// A `Result` containing a `CausalTensor<Option<T>>` on success, or a `DataCleaningError` on failure.
     fn process(
         &self,
-        tensor: CausalTensor<f64>,
-    ) -> Result<CausalTensor<Option<f64>>, DataCleaningError> {
+        tensor: CausalTensor<T>,
+    ) -> Result<CausalTensor<Option<T>>, DataCleaningError> {
         let shape = tensor.shape().to_vec();
-        let data: Vec<Option<f64>> = tensor
+        let data: Vec<Option<T>> = tensor
             .as_slice()
             .iter()
             .map(|&val| if val.is_nan() { None } else { Some(val) })

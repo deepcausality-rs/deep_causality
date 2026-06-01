@@ -6,16 +6,16 @@
 use crate::types::cdl::{WithData, WithFeatures};
 use crate::{
     CDL, CdlBuilder, CdlEffect, CdlError, DataCleaner, DataPreprocessor, FeatureSelectError,
-    OptionNoneDataCleaner,
+    OptionNoneDataCleaner, Precision,
 };
 use deep_causality_algorithms::feature_selection::mrmr::{MrmrError, MrmrResult};
 use deep_causality_tensor::CausalTensor;
 
 // After data is loaded
-impl CDL<WithData> {
-    pub fn preprocess<P>(self, preprocessor: P) -> CdlEffect<CDL<WithData>>
+impl<T: Precision> CDL<WithData<T>> {
+    pub fn preprocess<P>(self, preprocessor: P) -> CdlEffect<CDL<WithData<T>>>
     where
-        P: DataPreprocessor,
+        P: DataPreprocessor<T>,
     {
         let config_opt = self.config.preprocess_config();
 
@@ -43,9 +43,9 @@ impl CDL<WithData> {
     }
 
     /// Cleans the data using a provided DataCleaner.
-    pub fn clean_data<C>(self, cleaner: C) -> CdlEffect<CDL<crate::types::cdl::WithCleanedData>>
+    pub fn clean_data<C>(self, cleaner: C) -> CdlEffect<CDL<crate::types::cdl::WithCleanedData<T>>>
     where
-        C: DataCleaner,
+        C: DataCleaner<T>,
     {
         match cleaner.process(self.state.tensor) {
             Ok(t) => CdlBuilder::pure(CDL {
@@ -63,11 +63,11 @@ impl CDL<WithData> {
     }
 
     /// Selects features using a provided closure.
-    pub fn feature_select<F>(self, selector_fn: F) -> CdlEffect<CDL<WithFeatures>>
+    pub fn feature_select<F>(self, selector_fn: F) -> CdlEffect<CDL<WithFeatures<T>>>
     where
-        F: FnOnce(&CausalTensor<Option<f64>>) -> Result<MrmrResult, MrmrError>,
+        F: FnOnce(&CausalTensor<Option<T>>) -> Result<MrmrResult, MrmrError>,
     {
-        // 1. Clean data (f64 -> Option<f64>)
+        // 1. Clean data (T -> Option<T>)
         let cleaner = OptionNoneDataCleaner;
         let cleaned_tensor_res = cleaner.process(self.state.tensor);
 
@@ -97,7 +97,7 @@ impl CDL<WithData> {
                 // Helper to filter columns:
                 let rows = cleaned_tensor.shape()[0];
                 let cols = selected_indices.len();
-                let mut data: Vec<Option<f64>> = Vec::with_capacity(rows * cols);
+                let mut data: Vec<Option<T>> = Vec::with_capacity(rows * cols);
 
                 for r in 0..rows {
                     for &c_idx in &selected_indices {
@@ -153,9 +153,9 @@ impl CDL<WithData> {
     /// * `predicate` - A closure that takes a row slice `&[f64]` and returns `bool`.
     ///
     ///  Returns `true` to keep the row, `false` to discard it.
-    pub fn filter_cohort<P>(self, predicate: P) -> CdlEffect<CDL<WithData>>
+    pub fn filter_cohort<P>(self, predicate: P) -> CdlEffect<CDL<WithData<T>>>
     where
-        P: Fn(&[f64]) -> bool,
+        P: Fn(&[T]) -> bool,
     {
         let tensor = &self.state.tensor;
         let rows = tensor.shape()[0];

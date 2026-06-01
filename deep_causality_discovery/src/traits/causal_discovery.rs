@@ -12,7 +12,7 @@ use deep_causality_tensor::CausalTensor;
 /// This trait abstracts the core logic of a causal discovery method, which takes a data
 /// tensor and a configuration, and returns a structured result representing the
 /// discovered causal relationships.
-pub trait CausalDiscovery {
+pub trait CausalDiscovery<T> {
     /// Performs a causal discovery analysis on the provided data.
     ///
     /// # Arguments
@@ -33,7 +33,7 @@ pub trait CausalDiscovery {
     /// incompatible tensor shapes or other algorithm-specific issues.
     fn discover(
         &self,
-        tensor: CausalTensor<Option<f64>>,
+        tensor: CausalTensor<Option<T>>,
         config: &CausalDiscoveryConfig,
-    ) -> Result<SurdResult<f64>, CausalDiscoveryError>;
+    ) -> Result<SurdResult<T>, CausalDiscoveryError>;
 }

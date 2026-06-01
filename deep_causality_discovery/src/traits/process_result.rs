@@ -30,7 +30,7 @@ impl Display for ProcessFormattedResult {
 ///
 /// Implementors of this trait translate the numerical results (e.g., from `SurdResult`)
 /// into a structured, human-interpretable analysis based on a given configuration.
-pub trait ProcessResultAnalyzer {
+pub trait ProcessResultAnalyzer<T> {
     /// Analyzes the raw causal discovery results.
     ///
     /// # Arguments
@@ -50,7 +50,7 @@ pub trait ProcessResultAnalyzer {
     /// Returns an `AnalyzeError` if the analysis cannot be completed.
     fn analyze(
         &self,
-        surd_result: &SurdResult<f64>,
+        surd_result: &SurdResult<T>,
         config: &AnalyzeConfig,
     ) -> Result<ProcessAnalysis, AnalyzeError>;
 }

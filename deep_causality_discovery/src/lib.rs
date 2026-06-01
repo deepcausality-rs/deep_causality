@@ -24,6 +24,7 @@ pub use crate::traits::data_cleaner::DataCleaner;
 pub use crate::traits::data_loader::DataLoader;
 pub use crate::traits::data_preprocessor::DataPreprocessor;
 pub use crate::traits::feature_selector::FeatureSelector;
+pub use crate::traits::precision::Precision;
 pub use crate::traits::process_result::{
     ProcessAnalysis, ProcessFormattedResult, ProcessResultAnalyzer, ProcessResultFormatter,
 };
