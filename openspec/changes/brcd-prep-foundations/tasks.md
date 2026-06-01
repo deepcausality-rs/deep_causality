@@ -1,7 +1,7 @@
 ## 1. Tier A — numeric primitives (`linalg-numeric-primitives`)
 
-- [ ] 1.1 Choose the public home for the SPD solver (default `deep_causality_sparse`); move `cg_solve` and `CgFailure` there, make them public, add a doc-comment and `[lints] workspace = true`.
-- [ ] 1.2 Update `deep_causality_topology` to consume the public `cg_solve`; remove the local `pub(crate)` copy; confirm the Hodge/Laplacian tests still pass.
+- [x] 1.1 Moved `cg_solve` + `CgFailure` to `deep_causality_sparse::solver::cg`, made them public, re-exported from the crate root, with doc-comments; `[lints] workspace = true` was already present. CG unit tests relocated to `tests/solver/cg_tests.rs` and registered in `tests/mod.rs` + `tests/BUILD.bazel`.
+- [x] 1.2 `deep_causality_topology` now consumes `deep_causality_sparse::{cg_solve, CgFailure}`; the crate-local copy is removed (the gauge helper `subtract_mean_in_place` stays in `utils/cg_solver.rs`). All 1040+ topology tests still pass.
 - [ ] 1.3 Add sample mean and sample covariance (`ddof = 1`) over a 2-D `CausalTensor` in `deep_causality_tensor`; unit-test against the closed form; guard the single-observation case.
 - [ ] 1.4 Have topology's `Manifold` covariance delegate to the shared covariance (remove the duplicate); confirm topology tests pass with identical values.
 - [ ] 1.5 Add a numerically stable `logsumexp` to `deep_causality_num`, generic over `T: RealField`; test small-input agreement with the naive form and large-input no-overflow.

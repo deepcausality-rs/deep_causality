@@ -18,9 +18,10 @@
 //! 2. Solve `Δ_{k+1} ψ_β = d ω` for the (k+1)-form potential `ψ_β`; set `β = δ ψ_β`.
 //! 3. `h = ω − α − β`.
 //!
-//! The Poisson solves run through the matrix-free CG helper in
-//! [`crate::utils::cg_solver`], which composes against `Manifold::laplacian` rather
-//! than assembling `Δ_k` as a `CsrMatrix`. The gauge non-uniqueness at grade 0 (where
+//! The Poisson solves run through the matrix-free CG solver
+//! [`deep_causality_sparse::cg_solve`], which composes against `Manifold::laplacian`
+//! rather than assembling `Δ_k` as a `CsrMatrix`. The gauge-fixing mean subtraction
+//! lives in [`crate::utils::cg_solver`]. The gauge non-uniqueness at grade 0 (where
 //! the constant functions are always harmonic) is fixed by subtracting the mean from
 //! `φ_α` per the standard DEC convention.
 
@@ -34,7 +35,8 @@ use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::types::hodge_decomposition::HodgeDecomposition;
 use crate::types::manifold::Manifold;
-use crate::utils::cg_solver::{CgFailure, cg_solve, subtract_mean_in_place};
+use crate::utils::cg_solver::subtract_mean_in_place;
+use deep_causality_sparse::{CgFailure, cg_solve};
 
 /// Caller-tunable knobs for `Manifold::hodge_decompose_opts`.
 ///

@@ -5,7 +5,11 @@
 
 mod errors;
 mod extensions;
+mod solver;
 mod types;
+
+// Solvers
+pub use crate::solver::cg::{CgFailure, cg_solve};
 
 // Sparse type
 pub use crate::errors::SparseMatrixError;
