@@ -24,6 +24,7 @@ pub use crate::traits::data_cleaner::DataCleaner;
 pub use crate::traits::data_loader::DataLoader;
 pub use crate::traits::data_preprocessor::DataPreprocessor;
 pub use crate::traits::feature_selector::FeatureSelector;
+pub use crate::traits::precision::Precision;
 pub use crate::traits::process_result::{
     ProcessAnalysis, ProcessFormattedResult, ProcessResultAnalyzer, ProcessResultFormatter,
 };
@@ -41,6 +42,7 @@ pub use crate::types::data_preprocessor::missing_value_imputer::MissingValueImpu
 pub use crate::types::feature_selector::mrmr::MrmrFeatureSelector;
 pub use crate::types::formatter::console_formatter::ConsoleFormatter;
 
+pub use crate::types::cdl_builder::*;
 pub use crate::types::cdl_effect::*;
 pub use crate::types::cdl_report::*;
 pub use crate::types::cdl_warning::*;

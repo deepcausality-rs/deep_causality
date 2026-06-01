@@ -165,6 +165,16 @@ impl RealField for Float106 {
     }
 
     #[inline]
+    fn log2(self) -> Self {
+        <Self as Float>::log2(self)
+    }
+
+    #[inline]
+    fn log10(self) -> Self {
+        <Self as Float>::log10(self)
+    }
+
+    #[inline]
     fn powf(self, n: Self) -> Self {
         <Self as Float>::powf(self, n)
     }

@@ -9,7 +9,7 @@ use std::fmt::{self, Display, Formatter};
 
 /// Aggregates all significant findings from a CDL pipeline execution.
 #[derive(Debug)]
-pub struct CdlReport {
+pub struct CdlReport<T> {
     // 1. Data Metadata
     pub dataset_path: String,
     pub records_processed: usize,
@@ -17,11 +17,11 @@ pub struct CdlReport {
     // 2. Feature Selection Result
     pub feature_selection: MrmrResult,
 
-    // 3. Causal Discovery Result (assuming f64 precision for this example)
-    pub causal_analysis: SurdResult<f64>,
+    // 3. Causal Discovery Result, carried at the pipeline's precision `T`.
+    pub causal_analysis: SurdResult<T>,
 }
 
-impl Display for CdlReport {
+impl<T: std::fmt::Debug> Display for CdlReport<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         writeln!(
             f,

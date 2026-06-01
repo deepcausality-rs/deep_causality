@@ -4,16 +4,16 @@
  */
 
 use crate::types::cdl::{WithCausalResults, WithFeatures};
-use crate::{CDL, CausalDiscoveryError, CdlBuilder, CdlEffect, CdlError}; // Added CdlBuilder and Error type
+use crate::{CDL, CausalDiscoveryError, CdlBuilder, CdlEffect, CdlError, Precision}; // Added CdlBuilder and Error type
 use deep_causality_algorithms::causal_discovery::surd::SurdResult;
 use deep_causality_tensor::CausalTensor;
 
 // After features are selected
-impl CDL<WithFeatures> {
+impl<T: Precision> CDL<WithFeatures<T>> {
     /// Runs a causal discovery algorithm on the feature-selected data.
-    pub fn causal_discovery<F>(self, discovery_fn: F) -> CdlEffect<CDL<WithCausalResults>>
+    pub fn causal_discovery<F>(self, discovery_fn: F) -> CdlEffect<CDL<WithCausalResults<T>>>
     where
-        F: FnOnce(&CausalTensor<Option<f64>>) -> Result<SurdResult<f64>, CausalDiscoveryError>,
+        F: FnOnce(&CausalTensor<Option<T>>) -> Result<SurdResult<T>, CausalDiscoveryError>,
     {
         let discovery_res = discovery_fn(&self.state.tensor);
 

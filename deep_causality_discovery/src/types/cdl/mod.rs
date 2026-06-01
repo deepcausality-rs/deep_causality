@@ -21,35 +21,35 @@ mod cdl_with_no_data;
 pub struct NoData;
 /// State after data has been successfully loaded.
 #[derive(Debug, Clone)]
-pub struct WithData {
-    pub tensor: CausalTensor<f64>,
+pub struct WithData<T> {
+    pub tensor: CausalTensor<T>,
     pub records_count: usize,
 }
 /// State after data has been cleaned.
 #[derive(Debug)]
-pub struct WithCleanedData {
-    pub tensor: CausalTensor<Option<f64>>,
+pub struct WithCleanedData<T> {
+    pub tensor: CausalTensor<Option<T>>,
     pub records_count: usize,
 }
 /// State after feature selection has been applied.
 #[derive(Debug, Clone)]
-pub struct WithFeatures {
-    pub tensor: CausalTensor<Option<f64>>,
+pub struct WithFeatures<T> {
+    pub tensor: CausalTensor<Option<T>>,
     pub selection_result: MrmrResult,
     pub records_count: usize,
 }
 /// State after a causal discovery algorithm has been run.
 #[derive(Debug)]
-pub struct WithCausalResults {
-    pub surd_result: SurdResult<f64>,
+pub struct WithCausalResults<T> {
+    pub surd_result: SurdResult<T>,
     pub selection_result: MrmrResult,
     pub records_count: usize,
 }
 /// State after the raw causal results have been analyzed.
 #[derive(Debug)]
-pub struct WithAnalysis {
+pub struct WithAnalysis<T> {
     pub analysis: ProcessAnalysis,
-    pub surd_result: SurdResult<f64>,
+    pub surd_result: SurdResult<T>,
     pub selection_result: MrmrResult,
     pub records_count: usize,
 }

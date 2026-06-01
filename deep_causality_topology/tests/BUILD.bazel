@@ -54,6 +54,7 @@ rust_test_suite(
         "//deep_causality_topology",
         # Internal deps
         "//deep_causality_sparse",
+        "//deep_causality_num",
     ],
 )
 
@@ -181,6 +182,9 @@ rust_test_suite(
         # Internal deps
         "//deep_causality_metric",
         "//deep_causality_num",
+        "//deep_causality_tensor",
+        "//deep_causality_sparse",
+        "//deep_causality_rand",
     ],
 )
 
@@ -215,6 +219,7 @@ rust_test_suite(
         # Internal deps
         "//deep_causality_sparse",
         "//deep_causality_tensor",
+        "//deep_causality_num",
     ],
 )
 
@@ -334,5 +339,6 @@ rust_test_suite(
         "//deep_causality_topology",
         # Internal deps
         "//deep_causality_tensor",
+        "//deep_causality_sparse",
     ],
 )

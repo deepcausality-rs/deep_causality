@@ -4,13 +4,16 @@
  */
 
 use crate::types::cdl::{WithAnalysis, WithCausalResults};
-use crate::{AnalyzeConfig, CDL, CdlBuilder, CdlEffect, ProcessResultAnalyzer, SurdResultAnalyzer};
+use crate::{
+    AnalyzeConfig, CDL, CdlBuilder, CdlEffect, Precision, ProcessResultAnalyzer, SurdResultAnalyzer,
+};
+use deep_causality_num::ToPrimitive;
 
 // After causal discovery is performed
-impl CDL<WithCausalResults> {
+impl<T: Precision + ToPrimitive> CDL<WithCausalResults<T>> {
     /// Analyzes the raw results.
     /// Uses default configuration or internal config if present.
-    pub fn analyze(self) -> CdlEffect<CDL<WithAnalysis>> {
+    pub fn analyze(self) -> CdlEffect<CDL<WithAnalysis<T>>> {
         // Use existing Analyzer logic
         let analyzer = SurdResultAnalyzer;
 

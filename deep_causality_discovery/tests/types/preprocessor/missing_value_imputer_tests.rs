@@ -20,7 +20,7 @@ fn test_impute_mean_2d_tensor_check() {
 
 #[test]
 fn test_impute_mean_empty_tensor() {
-    let tensor = CausalTensor::new(vec![], vec![0, 0]).unwrap();
+    let tensor: CausalTensor<f64> = CausalTensor::new(vec![], vec![0, 0]).unwrap();
     let result = MissingValueImputer::impute_mean(tensor).unwrap();
     assert!(result.as_slice().is_empty());
     assert_eq!(result.shape(), &[0, 0]);

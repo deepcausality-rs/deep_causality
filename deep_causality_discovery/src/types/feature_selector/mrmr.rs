@@ -3,21 +3,26 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::FeatureSelector;
 use crate::{FeatureSelectError, FeatureSelectorConfig};
+use crate::{FeatureSelector, Precision};
 use deep_causality_algorithms::feature_selection::mrmr::{MrmrError, MrmrResult};
 use deep_causality_algorithms::mrmr::mrmr_features_selector;
+use deep_causality_num::{Float, FloatOption};
 use deep_causality_tensor::{CausalTensor, CausalTensorError};
 
 /// A concrete implementation of the `FeatureSelector` trait that uses the MRMR algorithm.
 pub struct MrmrFeatureSelector;
 
-impl FeatureSelector for MrmrFeatureSelector {
+impl<T> FeatureSelector<T> for MrmrFeatureSelector
+where
+    T: Precision + Float,
+    Option<T>: FloatOption<T>,
+{
     fn select(
         &self,
-        tensor: CausalTensor<Option<f64>>,
+        tensor: CausalTensor<Option<T>>,
         config: &FeatureSelectorConfig,
-    ) -> Result<CausalTensor<Option<f64>>, FeatureSelectError> {
+    ) -> Result<CausalTensor<Option<T>>, FeatureSelectError> {
         let FeatureSelectorConfig::Mrmr(mrmr_config) = config;
 
         // Pass reference to tensor
@@ -47,10 +52,14 @@ impl FeatureSelector for MrmrFeatureSelector {
 
 impl MrmrFeatureSelector {
     /// Returns the raw selected indices and scores, enabling manual filtering or inspection.
-    pub fn select_indices(
-        tensor: &CausalTensor<Option<f64>>,
+    pub fn select_indices<T>(
+        tensor: &CausalTensor<Option<T>>,
         config: &crate::MrmrConfig,
-    ) -> Result<MrmrResult, MrmrError> {
+    ) -> Result<MrmrResult, MrmrError>
+    where
+        T: Float,
+        Option<T>: FloatOption<T>,
+    {
         mrmr_features_selector(tensor, config.num_features(), config.target_col())
     }
 }

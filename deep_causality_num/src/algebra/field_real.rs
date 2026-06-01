@@ -153,6 +153,22 @@ pub trait RealField:
     /// ```
     fn log(self, base: Self) -> Self;
 
+    /// Returns the base-2 logarithm of the number.
+    /// # Example
+    /// ```
+    /// use deep_causality_num::RealField;
+    /// assert_eq!(8.0f64.log2(), 3.0);
+    /// ```
+    fn log2(self) -> Self;
+
+    /// Returns the base-10 logarithm of the number.
+    /// # Example
+    /// ```
+    /// use deep_causality_num::RealField;
+    /// assert_eq!(1000.0f64.log10(), 3.0);
+    /// ```
+    fn log10(self) -> Self;
+
     /// Raises a number to a floating point power.
     /// # Example
     /// ```
@@ -405,6 +421,24 @@ impl RealField for f32 {
     }
 
     #[inline]
+    fn log2(self) -> Self {
+        #[cfg(feature = "std")]
+        return self.log2();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::log2f(self);
+    }
+
+    #[inline]
+    fn log10(self) -> Self {
+        #[cfg(feature = "std")]
+        return self.log10();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::log10f(self);
+    }
+
+    #[inline]
     fn powf(self, n: Self) -> Self {
         #[cfg(feature = "std")]
         return self.powf(n);
@@ -598,6 +632,24 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::log(self) / libm::log(base);
+    }
+
+    #[inline]
+    fn log2(self) -> Self {
+        #[cfg(feature = "std")]
+        return self.log2();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::log2(self);
+    }
+
+    #[inline]
+    fn log10(self) -> Self {
+        #[cfg(feature = "std")]
+        return self.log10();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::log10(self);
     }
 
     #[inline]

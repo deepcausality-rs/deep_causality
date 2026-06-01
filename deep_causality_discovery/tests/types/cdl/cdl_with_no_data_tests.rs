@@ -21,7 +21,7 @@ fn test_load_data_csv_success() {
     let file = create_temp_file(content, ".csv");
     let path = file.path().to_str().unwrap();
 
-    let res = CdlBuilder::build().bind(|cdl| cdl.load_data(path, 1, vec![]));
+    let res = CdlBuilder::build().bind(|cdl| cdl.load_data::<f64>(path, 1, vec![]));
 
     assert!(res.inner.is_ok());
     assert_eq!(res.inner.unwrap().state.records_count, 1);
@@ -30,14 +30,14 @@ fn test_load_data_csv_success() {
 #[test]
 fn test_load_data_parquet_failure() {
     // Test dispatch to parquet loader with non-existent file
-    let res = CdlBuilder::build().bind(|cdl| cdl.load_data("missing.parquet", 0, vec![]));
+    let res = CdlBuilder::build().bind(|cdl| cdl.load_data::<f64>("missing.parquet", 0, vec![]));
 
     assert!(res.inner.is_err());
 }
 
 #[test]
 fn test_load_data_unsupported_extension() {
-    let res = CdlBuilder::build().bind(|cdl| cdl.load_data("data.txt", 0, vec![]));
+    let res = CdlBuilder::build().bind(|cdl| cdl.load_data::<f64>("data.txt", 0, vec![]));
 
     assert!(res.inner.is_err());
     match res.inner {
@@ -48,7 +48,7 @@ fn test_load_data_unsupported_extension() {
 
 #[test]
 fn test_load_data_no_extension() {
-    let res = CdlBuilder::build().bind(|cdl| cdl.load_data("data", 0, vec![]));
+    let res = CdlBuilder::build().bind(|cdl| cdl.load_data::<f64>("data", 0, vec![]));
 
     assert!(res.inner.is_err());
     match res.inner {
@@ -68,7 +68,7 @@ fn test_load_data_with_config_csv_success() {
     let csv_config = CsvConfig::new(true, b',', 0, None, Some(path), Some(1), vec![]);
     let config = DataLoaderConfig::Csv(csv_config);
 
-    let res = CdlBuilder::build().bind(|cdl| cdl.load_data_with_config(config.clone()));
+    let res = CdlBuilder::build().bind(|cdl| cdl.load_data_with_config::<f64>(config.clone()));
 
     assert!(res.inner.is_ok());
     assert_eq!(res.inner.unwrap().state.records_count, 1);
@@ -81,7 +81,7 @@ fn test_load_data_with_config_missing_path() {
     let csv_config = CsvConfig::default(); // default has no path
     let config = DataLoaderConfig::Csv(csv_config);
 
-    let res = CdlBuilder::build().bind(|cdl| cdl.load_data_with_config(config.clone()));
+    let res = CdlBuilder::build().bind(|cdl| cdl.load_data_with_config::<f64>(config.clone()));
 
     assert!(res.inner.is_err());
 }
@@ -93,7 +93,7 @@ fn test_load_data_with_config_parquet_missing_path() {
     let parquet_config = ParquetConfig::default(); // default has no path
     let config = DataLoaderConfig::Parquet(parquet_config);
 
-    let res = CdlBuilder::build().bind(|cdl| cdl.load_data_with_config(config.clone()));
+    let res = CdlBuilder::build().bind(|cdl| cdl.load_data_with_config::<f64>(config.clone()));
 
     assert!(res.inner.is_err());
 }
@@ -107,7 +107,7 @@ fn test_load_data_with_config_csv_error() {
     let csv_config = CsvConfig::new(true, b',', 0, None, Some(path), Some(1), vec![]);
     let config = DataLoaderConfig::Csv(csv_config);
 
-    let res = CdlBuilder::build().bind(|cdl| cdl.load_data_with_config(config.clone()));
+    let res = CdlBuilder::build().bind(|cdl| cdl.load_data_with_config::<f64>(config.clone()));
 
     assert!(res.inner.is_err());
 }

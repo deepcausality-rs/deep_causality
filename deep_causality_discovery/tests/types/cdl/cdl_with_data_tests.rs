@@ -12,7 +12,7 @@ use deep_causality_tensor::CausalTensor;
 
 // Mock Preprocessor
 struct MockPreprocessor;
-impl DataPreprocessor for MockPreprocessor {
+impl DataPreprocessor<f64> for MockPreprocessor {
     fn process(
         &self,
         tensor: CausalTensor<f64>,
@@ -23,8 +23,8 @@ impl DataPreprocessor for MockPreprocessor {
     }
 }
 
-// Helper to create a CDL<WithData> instance
-fn create_cdl_with_data() -> CDL<WithData> {
+// Helper to create a CDL<WithData<f64>> instance
+fn create_cdl_with_data() -> CDL<WithData<f64>> {
     let tensor = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]).unwrap();
     CDL {
         state: WithData {
@@ -74,7 +74,7 @@ fn test_preprocess_error() {
 
     // Create a mock preprocessor that fails
     struct ErrorPreprocessor;
-    impl DataPreprocessor for ErrorPreprocessor {
+    impl DataPreprocessor<f64> for ErrorPreprocessor {
         fn process(
             &self,
             _tensor: CausalTensor<f64>,
@@ -110,7 +110,7 @@ fn test_clean_data_error() {
 
     // Mock Cleaner that fails
     struct ErrorCleaner;
-    impl DataCleaner for ErrorCleaner {
+    impl DataCleaner<f64> for ErrorCleaner {
         fn process(
             &self,
             _tensor: CausalTensor<f64>,

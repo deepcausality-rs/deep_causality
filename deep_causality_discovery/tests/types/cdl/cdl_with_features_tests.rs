@@ -8,7 +8,7 @@ use deep_causality_algorithms::surd::SurdResult;
 use deep_causality_discovery::{CDL, CdlConfig, WithFeatures};
 use deep_causality_tensor::CausalTensor;
 
-fn create_cdl_with_features() -> CDL<WithFeatures> {
+fn create_cdl_with_features() -> CDL<WithFeatures<f64>> {
     let tensor = CausalTensor::new(vec![Some(1.0), Some(2.0)], vec![2, 1]).unwrap();
     CDL {
         state: WithFeatures {

@@ -7,7 +7,7 @@ use deep_causality_algorithms::feature_selection::mrmr::MrmrResult;
 use deep_causality_algorithms::surd::SurdResult;
 use deep_causality_discovery::{CDL, CdlConfig, ProcessAnalysis, WithAnalysis};
 
-fn create_cdl_with_analysis() -> CDL<WithAnalysis> {
+fn create_cdl_with_analysis() -> CDL<WithAnalysis<f64>> {
     CDL {
         state: WithAnalysis {
             analysis: ProcessAnalysis(vec![]),

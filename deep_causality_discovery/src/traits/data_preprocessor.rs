@@ -11,18 +11,18 @@ use deep_causality_tensor::CausalTensor;
 /// Implementors of this trait provide specific data transformation logic, such as
 /// discretization or missing value imputation, which can be applied as part of a
 /// CDL pipeline.
-pub trait DataPreprocessor {
+pub trait DataPreprocessor<T> {
     /// Processes the input tensor according to the provided configuration.
     ///
     /// # Arguments
     ///
-    /// * `tensor` - The input `CausalTensor<f64>` to be processed.
+    /// * `tensor` - The input `CausalTensor<T>` to be processed.
     /// * `config` - A `PreprocessConfig` containing the settings for this
     ///   processing step.
     ///
     /// # Returns
     ///
-    /// A `Result` containing a new, processed `CausalTensor<f64>` on success.
+    /// A `Result` containing a new, processed `CausalTensor<T>` on success.
     ///
     /// # Errors
     ///
@@ -30,7 +30,7 @@ pub trait DataPreprocessor {
     /// invalid configuration or an issue with the data itself.
     fn process(
         &self,
-        tensor: CausalTensor<f64>,
+        tensor: CausalTensor<T>,
         config: &PreprocessConfig,
-    ) -> Result<CausalTensor<f64>, PreprocessError>;
+    ) -> Result<CausalTensor<T>, PreprocessError>;
 }

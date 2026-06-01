@@ -8,7 +8,7 @@ use deep_causality_tensor::CausalTensor;
 use std::collections::HashMap;
 
 // Helper function to create a default SurdResult for testing
-fn create_test_surd_result() -> SurdResult<i32> {
+fn create_test_surd_result() -> SurdResult<f64> {
     let mut redundant_info = HashMap::new();
     redundant_info.insert(vec![1, 2], 0.5);
 
@@ -23,37 +23,37 @@ fn create_test_surd_result() -> SurdResult<i32> {
     let mut causal_redundant_states = HashMap::new();
     causal_redundant_states.insert(
         vec![1],
-        CausalTensor::new(vec![1], vec![1]).expect("Failed to create CausalTensor"),
+        CausalTensor::new(vec![1.0], vec![1]).expect("Failed to create CausalTensor"),
     );
 
     let mut causal_unique_states = HashMap::new();
     causal_unique_states.insert(
         vec![2],
-        CausalTensor::new(vec![2], vec![1]).expect("Failed to create CausalTensor"),
+        CausalTensor::new(vec![2.0], vec![1]).expect("Failed to create CausalTensor"),
     );
 
     let mut causal_synergistic_states = HashMap::new();
     causal_synergistic_states.insert(
         vec![3],
-        CausalTensor::new(vec![3], vec![1]).expect("Failed to create CausalTensor"),
+        CausalTensor::new(vec![3.0], vec![1]).expect("Failed to create CausalTensor"),
     );
 
     let mut non_causal_redundant_states = HashMap::new();
     non_causal_redundant_states.insert(
         vec![4],
-        CausalTensor::new(vec![4], vec![1]).expect("Failed to create CausalTensor"),
+        CausalTensor::new(vec![4.0], vec![1]).expect("Failed to create CausalTensor"),
     );
 
     let mut non_causal_unique_states = HashMap::new();
     non_causal_unique_states.insert(
         vec![5],
-        CausalTensor::new(vec![5], vec![1]).expect("Failed to create CausalTensor"),
+        CausalTensor::new(vec![5.0], vec![1]).expect("Failed to create CausalTensor"),
     );
 
     let mut non_causal_synergistic_states = HashMap::new();
     non_causal_synergistic_states.insert(
         vec![6],
-        CausalTensor::new(vec![6], vec![1]).expect("Failed to create CausalTensor"),
+        CausalTensor::new(vec![6.0], vec![1]).expect("Failed to create CausalTensor"),
     );
 
     SurdResult::new(
@@ -100,13 +100,13 @@ fn test_constructor_and_all_getters() {
             .get(&vec![1])
             .unwrap()
             .data(),
-        &[1]
+        &[1.0]
     );
 
     assert_eq!(result.causal_unique_states().len(), 1);
     assert_eq!(
         result.causal_unique_states().get(&vec![2]).unwrap().data(),
-        &[2]
+        &[2.0]
     );
 
     assert_eq!(result.causal_synergistic_states().len(), 1);
@@ -116,7 +116,7 @@ fn test_constructor_and_all_getters() {
             .get(&vec![3])
             .unwrap()
             .data(),
-        &[3]
+        &[3.0]
     );
 
     // Test non-causal states getters
@@ -127,7 +127,7 @@ fn test_constructor_and_all_getters() {
             .get(&vec![4])
             .unwrap()
             .data(),
-        &[4]
+        &[4.0]
     );
 
     assert_eq!(result.non_causal_unique_states().len(), 1);
@@ -137,7 +137,7 @@ fn test_constructor_and_all_getters() {
             .get(&vec![5])
             .unwrap()
             .data(),
-        &[5]
+        &[5.0]
     );
 
     assert_eq!(result.non_causal_synergistic_states().len(), 1);
@@ -147,7 +147,7 @@ fn test_constructor_and_all_getters() {
             .get(&vec![6])
             .unwrap()
             .data(),
-        &[6]
+        &[6.0]
     );
 }
 
@@ -185,22 +185,22 @@ fn test_debug_implementation() {
     // We check for key components.
     assert!(debug_str.contains("causal_redundant_states: {[1]: CausalTensor"));
     assert!(debug_str.contains("shape: [1]"));
-    assert!(debug_str.contains("data: [1]"));
+    assert!(debug_str.contains("data: [1.0]"));
 
     assert!(debug_str.contains("causal_unique_states: {[2]: CausalTensor"));
-    assert!(debug_str.contains("data: [2]"));
+    assert!(debug_str.contains("data: [2.0]"));
 
     assert!(debug_str.contains("causal_synergistic_states: {[3]: CausalTensor"));
-    assert!(debug_str.contains("data: [3]"));
+    assert!(debug_str.contains("data: [3.0]"));
 
     assert!(debug_str.contains("non_causal_redundant_states: {[4]: CausalTensor"));
-    assert!(debug_str.contains("data: [4]"));
+    assert!(debug_str.contains("data: [4.0]"));
 
     assert!(debug_str.contains("non_causal_unique_states: {[5]: CausalTensor"));
-    assert!(debug_str.contains("data: [5]"));
+    assert!(debug_str.contains("data: [5.0]"));
 
     assert!(debug_str.contains("non_causal_synergistic_states: {[6]: CausalTensor"));
-    assert!(debug_str.contains("data: [6]"));
+    assert!(debug_str.contains("data: [6.0]"));
 }
 
 #[test]
