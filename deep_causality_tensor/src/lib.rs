@@ -13,6 +13,7 @@ pub use crate::errors::causal_tensor_error::CausalTensorError;
 pub use crate::errors::ein_sum_validation_error::EinSumValidationError;
 pub use crate::extensions::ext_hkt::CausalTensorWitness;
 pub use crate::extensions::ext_math::CausalTensorMathExt;
+pub use crate::extensions::ext_stats::CausalTensorStatsExt;
 pub use crate::traits::tensor::Tensor;
 pub use crate::types::causal_tensor::{CausalTensor, EinSumAST, EinSumOp};
 pub use crate::utils::utils_tests;

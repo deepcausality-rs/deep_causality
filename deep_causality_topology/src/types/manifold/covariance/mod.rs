@@ -7,6 +7,7 @@
 
 use crate::{Manifold, SimplicialComplex, TopologyError};
 use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_tensor::{CausalTensor, CausalTensorStatsExt};
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
 where
@@ -15,7 +16,12 @@ where
 {
     /// CPU implementation of covariance matrix computation.
     ///
-    /// Computes the covariance matrix of the field data across simplices.
+    /// The field data is a single scalar variable sampled across simplices, so
+    /// this returns a `1 × 1` matrix holding the sample variance (`ddof = 1`).
+    /// The variance itself is delegated to the shared
+    /// [`CausalTensorStatsExt::sample_covariance`] primitive — the field is
+    /// reshaped into an `n × 1` observation matrix — so the numerical definition
+    /// is identical to the rest of the stack and not duplicated here.
     pub(crate) fn covariance_matrix_impl(&self) -> Result<Vec<Vec<D>>, TopologyError> {
         let data = self.data.as_slice();
         let n = data.len();
@@ -29,25 +35,14 @@ where
             )));
         }
 
-        let n_d = <D as FromPrimitive>::from_usize(n)
-            .ok_or_else(|| TopologyError::InvalidInput("n not representable in D".to_string()))?;
-        let one = D::one();
-        let n_minus_one = n_d - one;
-
-        // Mean
-        let mut sum = D::zero();
-        for &x in data.iter() {
-            sum += x;
-        }
-        let mean = sum / n_d;
-
-        // Variance (centered sum of squares / (n - 1))
-        let mut acc = D::zero();
-        for &x in data.iter() {
-            let d = x - mean;
-            acc += d * d;
-        }
-        let variance = acc / n_minus_one;
+        // Treat the field as `n` observations of a single variable.
+        let observations = CausalTensor::from_slice(data, &[n, 1]);
+        let cov = observations
+            .sample_covariance()
+            .map_err(|e| TopologyError::InvalidInput(format!("covariance failed: {e}")))?;
+        let variance = *cov.get(&[0, 0]).ok_or_else(|| {
+            TopologyError::InvalidInput("covariance matrix is missing its (0,0) entry".to_string())
+        })?;
 
         Ok(vec![vec![variance]])
     }
