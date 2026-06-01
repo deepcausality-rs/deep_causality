@@ -17,14 +17,14 @@ pub trait CausalDiscovery<T> {
     ///
     /// # Arguments
     ///
-    /// * `tensor` - A `CausalTensor<f64>` representing the dataset. It's expected that
+    /// * `tensor` - A `CausalTensor<Option<T>>` representing the dataset. It's expected that
     ///   the data is already pre-processed and in the correct format for the algorithm.
     /// * `config` - A `CausalDiscoveryConfig` enum containing the specific settings
     ///   for the discovery algorithm (e.g., `SurdConfig`).
     ///
     /// # Returns
     ///
-    /// A `Result` containing a `SurdResult<f64>` on success, which encapsulates the
+    /// A `Result` containing a `SurdResult<T>` on success, which encapsulates the
     /// synergistic, unique, and redundant causal influences.
     ///
     /// # Errors

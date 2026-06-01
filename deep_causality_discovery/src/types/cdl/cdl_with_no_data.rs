@@ -26,7 +26,10 @@ fn cast_loaded_tensor<T: Precision>(tensor: CausalTensor<f64>) -> CausalTensor<T
             if v.is_nan() {
                 T::nan()
             } else {
-                <T as FromPrimitive>::from_f64(v).unwrap_or_else(|| T::zero())
+                // Infallible for every `RealField` precision; failing loud beats silently
+                // corrupting a real measurement into `0`.
+                <T as FromPrimitive>::from_f64(v)
+                    .expect("every RealField precision converts a loaded f64 value")
             }
         })
         .collect();

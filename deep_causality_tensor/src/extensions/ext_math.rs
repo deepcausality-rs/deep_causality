@@ -4,7 +4,7 @@
  */
 use crate::CausalTensor;
 use crate::CausalTensorError;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::RealField;
 
 pub trait CausalTensorMathExt<T> {
     /// Computes the element-wise natural logarithm of the tensor.
@@ -105,7 +105,7 @@ pub trait CausalTensorMathExt<T> {
 /// (`f32`, `f64`, `Float106`, and future real types) without code change.
 impl<T> CausalTensorMathExt<T> for CausalTensor<T>
 where
-    T: RealField + FromPrimitive,
+    T: RealField,
 {
     fn log_nat(&self) -> Result<CausalTensor<T>, CausalTensorError> {
         if self.is_empty() {
@@ -145,8 +145,8 @@ where
     }
 
     fn safe_div(&self, rhs: &CausalTensor<T>) -> Result<CausalTensor<T>, CausalTensorError> {
-        let eps =
-            <T as FromPrimitive>::from_f64(1e-14).expect("1e-14 is representable in RealField");
+        // Type-scaled near-zero tolerance, infallible for any real field (matches `safe_div_cdl`).
+        let eps = T::epsilon();
         let zero = T::zero();
         self.broadcast_op(rhs, move |numerator: T, denominator: T| {
             if denominator.abs() < eps {

@@ -14,7 +14,7 @@ impl<T: Precision> CDL<WithCleanedData<T>> {
     where
         F: FnOnce(&CausalTensor<Option<T>>) -> Result<MrmrResult, MrmrError>,
     {
-        // Data is already cleaned (Option<f64>)
+        // Data is already cleaned (Option<T>)
         let tensor = &self.state.tensor;
 
         // 1. Invoke the selection closure

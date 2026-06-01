@@ -10,11 +10,11 @@ pub trait DataCleaner<T> {
     ///
     /// # Arguments
     ///
-    /// * `tensor` - The input `CausalTensor<f64>` to be processed.
+    /// * `tensor` - The input `CausalTensor<T>` to be processed.
     ///
     /// # Returns
     ///
-    /// A `Result` containing a new, processed `CausalTensor<Option<f64>` on success.
+    /// A `Result` containing a new, processed `CausalTensor<Option<T>>` on success.
     ///
     /// # Errors
     ///

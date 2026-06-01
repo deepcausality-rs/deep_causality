@@ -15,13 +15,13 @@ pub trait FeatureSelector<T> {
     ///
     /// # Arguments
     ///
-    /// * `tensor` - The input `CausalTensor<f64>` containing the full set of features.
+    /// * `tensor` - The input `CausalTensor<Option<T>>` containing the full set of features.
     /// * `config` - A `FeatureSelectorConfig` enum containing the specific settings
     ///   for the selection algorithm (e.g., `MrmrConfig`).
     ///
     /// # Returns
     ///
-    /// A `Result` containing a new `CausalTensor<f64>` with only the selected
+    /// A `Result` containing a new `CausalTensor<Option<T>>` with only the selected
     /// feature columns on success.
     ///
     /// # Errors

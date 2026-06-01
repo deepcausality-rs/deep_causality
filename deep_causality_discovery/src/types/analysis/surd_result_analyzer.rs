@@ -102,7 +102,9 @@ impl<T: Precision + ToPrimitive> ProcessResultAnalyzer<T> for SurdResultAnalyzer
 // above-threshold decisions are made at full precision; only the rendered numbers
 // are downcast to f64 for the report.
 fn threshold_in<T: Precision>(x: f64) -> T {
-    <T as FromPrimitive>::from_f64(x).unwrap_or_else(|| T::zero())
+    // Infallible for every `RealField` precision (`f32`, `f64`, `Float106`). Failing loud beats
+    // silently lifting a threshold to `0`, which would make every value clear the bar.
+    <T as FromPrimitive>::from_f64(x).expect("every RealField precision converts an f64 threshold")
 }
 
 // Helper function to format variable indices for display

@@ -35,7 +35,7 @@ pub trait ProcessResultAnalyzer<T> {
     ///
     /// # Arguments
     ///
-    /// * `surd_result` - A reference to the `SurdResult<f64>` output from the
+    /// * `surd_result` - A reference to the `SurdResult<T>` output from the
     ///   discovery phase.
     /// * `config` - An `AnalyzeConfig` containing thresholds and settings that guide
     ///   the interpretation of the results (e.g., what constitutes a "strong" influence).

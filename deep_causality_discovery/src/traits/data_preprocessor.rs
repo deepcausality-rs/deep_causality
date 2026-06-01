@@ -16,13 +16,13 @@ pub trait DataPreprocessor<T> {
     ///
     /// # Arguments
     ///
-    /// * `tensor` - The input `CausalTensor<f64>` to be processed.
+    /// * `tensor` - The input `CausalTensor<T>` to be processed.
     /// * `config` - A `PreprocessConfig` containing the settings for this
     ///   processing step.
     ///
     /// # Returns
     ///
-    /// A `Result` containing a new, processed `CausalTensor<f64>` on success.
+    /// A `Result` containing a new, processed `CausalTensor<T>` on success.
     ///
     /// # Errors
     ///
