@@ -1,0 +1,104 @@
+---
+title: "Causal discovery: MRMR feature selection, then SURD"
+domain: Causal discovery
+summary: The Causal Discovery Language walks a CSV through load, clean, feature selection, discovery, and analysis as one monadic pipeline. Each stage is a typestate the compiler enforces in order.
+order: 4
+category: foundations
+crates:
+  - deep_causality_discovery
+further:
+  - label: CDL concept page
+    href: /docs/concepts/cdl/
+  - label: Algorithms (SURD, MRMR)
+    href: /docs/concepts/algorithms/
+---
+
+The full example lives at [`causal_discovery_examples`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_discovery_examples).
+
+The Causal Discovery Language (CDL) is a typestate DSL wrapped in a monad that encodes an end-to-end pipeline:
+raw CSV in, causal analysis, and a ranked causal report out.
+
+The CDL enforces stage order at compile time; the monad sequences the stages and short-circuits on the first error.
+You cannot run discovery before selecting features, because the method that runs discovery
+only exists on the typestate that has features selected.
+
+## The pipeline
+
+```rust
+use deep_causality_discovery::*;
+
+fn main() {
+    // A CSV with columns: s1, s2, s3, target.
+    let file_path = "./test_data.csv";
+    let target_index = 3; // the target column
+
+    let result_effect = CdlBuilder::build()
+        // Load the data with an inline config.
+        .bind(|cdl| cdl.load_data(&file_path, target_index, vec![]))
+
+        // Clean it: drop rows with missing values.
+        .bind(|cdl| cdl.clean_data(OptionNoneDataCleaner))
+
+        // Select the top 3 features by MRMR, scored against the target.
+        .bind(|cdl| {
+        cdl.feature_select(|tensor| mrmr_features_selector(
+                tensor,
+                3,
+                target_index)
+           )
+        })
+
+        // Discover the causal structure with SURD.
+        .bind(|cdl| {
+            cdl.causal_discovery(|tensor| {
+                surd_states_cdl(tensor, MaxOrder::Max).map_err(Into::into)
+            })
+        })
+        // Analyze the result.
+        .bind(|cdl| cdl.analyze())
+        // Then format and finalize.
+        .bind(|cdl| cdl.finalize());
+
+    result_effect.print_results();
+}
+```
+
+[`discovery/main.rs:14`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_discovery_examples/discovery/main.rs#L14) onward.
+
+Each `bind` takes the pipeline in one typestate and returns it in the next. The closure body is the only place you supply a strategy;
+everything else is fixed by the type.
+
+## What each stage does
+
+`load_data` reads the CSV into a tensor and records which column is the target. The third argument is a column filter; an empty `vec![]` keeps every column. For a file that needs a header map or a custom delimiter, `load_data_with_config` takes an explicit configuration instead.
+
+`clean_data` takes a cleaning strategy. `OptionNoneDataCleaner` drops rows that carry a missing value. The strategy is a parameter, so a project that prefers imputation supplies its own cleaner here without touching the rest of the pipeline.
+
+`feature_select` runs MRMR (Minimum Redundancy, Maximum Relevance). `mrmr_features_selector(tensor, 3, target_index)` keeps the three features that carry the most information about the target while overlapping the least with each other. Feature selection before discovery keeps the combinatorics tractable; SURD over every raw column is expensive, SURD over three chosen features is cheap.
+
+`causal_discovery` runs SURD (Synergistic, Unique, Redundant Decomposition). `MaxOrder::Max` tells it to compute interactions up to the highest order the feature set allows, so synergies between features are not missed. The `map_err(Into::into)` lifts the algorithm's error type into the pipeline's error channel.
+
+`analyze` reads the SURD decomposition and ranks each causal contribution. `finalize` formats the ranked result for output. `print_results` writes the report to stdout.
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p causal_discovery_examples --example example_discovery
+```
+
+The example ships with a small synthetic CSV where `s2` tracks the target closely and `s1`, `s3` track it loosely.
+Expect MRMR to rank `s2` first and SURD to report it as the dominant causal contributor.
+
+## Where to take it next
+
+Point `load_data` at your own CSV and set `target_index` to your label column; the pipeline does not change.
+Raise or lower the feature count in `mrmr_features_selector` to trade breadth for speed.
+Swap `OptionNoneDataCleaner` for an imputing cleaner when dropping rows loses too much data.
+The output of this pipeline feeds the next layer of the stack: the discovered structure becomes the rules you encode as a causal model.
+
+## Why this is the first layer
+
+Every causal model starts with a structure. You either know it from domain knowledge or you discover it from data.
+CDL is the discovery path that delivers a report about the causal structure you can act on.

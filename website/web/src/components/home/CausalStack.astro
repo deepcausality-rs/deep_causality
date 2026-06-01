@@ -1,0 +1,249 @@
+---
+// The end-to-end story rendered as a layered platform diagram: one reticle-framed
+// module holding five stacked layer-bands, top (discovery) to bottom (deployment).
+// The stage verbs carry the lifecycle direction; no enumeration. Concept links
+// point to the docs; where a worked example exists, an Example chip sits beside it.
+// Single-column bands on phones. Entrance is the shared `data-anim-draw` idiom.
+import { DOCS_URL } from '../../consts';
+
+type Link = { href: string };
+type Layer = {
+  stage: string;
+  title: string;
+  body: string;
+  concept: Link;
+  example?: Link;
+};
+
+const layers: Layer[] = [
+  {
+    stage: 'Discover',
+    title: 'Causal Discovery Language',
+    body: 'Surface causal structure straight from raw observational data.',
+    concept: { href: `${DOCS_URL}/concepts/cdl/` },
+    example: { href: '/examples/causal-discovery/' },
+  },
+  {
+    stage: 'Model',
+    title: 'Causaloid & Context',
+    body: 'Encode that structure as composable causal logic with an explicit context.',
+    concept: { href: `${DOCS_URL}/concepts/causaloid/` },
+    example: { href: '/examples/pearl-counterfactual/' },
+  },
+  {
+    stage: 'Act',
+    title: 'Causal State Machine',
+    body: 'Turn a causal verdict into an action and interact with the outside world.',
+    concept: { href: `${DOCS_URL}/concepts/csm/` },
+    example: { href: '/examples/sensor-monitoring-csm/' },
+  },
+  {
+    stage: 'Govern',
+    title: 'Effect Ethos',
+    body: 'Verify deterministically what is allowed to happen.',
+    concept: { href: `${DOCS_URL}/concepts/effect-ethos/` },
+    example: { href: '/examples/effect-ethos/' },
+  },
+  {
+    stage: 'Run',
+    title: 'Async Runtime',
+    body: 'Run the model thread-safe and asynchronously at scale.',
+    concept: { href: `${DOCS_URL}/concepts/deployment/` },
+    example: { href: '/examples/async-event-inference/' },
+  },
+];
+---
+<section class="stack-section">
+  <div class="stack-inner">
+    <h2>One Causal Stack: From Discovery to Deployment</h2>
+    <p class="lede">
+      DeepCausality is one uniform stack for the whole causal lifecycle.
+    </p>
+
+    <div class="platform reticle-host" data-anim-draw>
+      <span class="reticle reticle-tl" aria-hidden="true"></span>
+      <span class="reticle reticle-tr" aria-hidden="true"></span>
+      <span class="reticle reticle-bl" aria-hidden="true"></span>
+      <span class="reticle reticle-br" aria-hidden="true"></span>
+
+      <ol class="layers">
+        {layers.map((layer, i) => (
+          <li class="layer" style={`--i:${i}`}>
+            <div class="head">
+              <span class="stage">{layer.stage}</span>
+              <h3 class="title">{layer.title}</h3>
+            </div>
+            <div class="body">
+              <p class="desc">{layer.body}</p>
+              <div class="links">
+                <a class="chip" href={layer.concept.href}>
+                  <span class="chip-kind">Concept</span>
+                  <span class="chip-arrow" aria-hidden="true">↗</span>
+                </a>
+                {layer.example && (
+                  <a class="chip chip-ex" href={layer.example.href}>
+                    <span class="chip-kind">Example</span>
+                    <span class="chip-arrow" aria-hidden="true">→</span>
+                  </a>
+                )}
+              </div>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </div>
+</section>
+
+<style>
+  .stack-section { padding: var(--space-8) 0; }
+  .stack-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 var(--space-4);
+  }
+  @media (min-width: 720px) {
+    .stack-section { padding: var(--space-9) 0; }
+    .stack-inner { padding: 0 var(--space-5); }
+  }
+
+  .stack-inner > h2 { margin: 0; text-align: center; }
+  .lede {
+    margin: var(--space-4) auto var(--space-7) auto;
+    color: var(--fg-1);
+    max-width: var(--measure);
+    text-align: center;
+  }
+
+  /* The platform: one framed module. The top-down gradient gives the stack
+     depth, so the bands read as layers receding rather than flat cards. */
+  .platform {
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--bg-1) 70%, transparent) 0%,
+      var(--bg-1) 100%);
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
+    overflow: hidden;
+  }
+
+  .layers { list-style: none; margin: 0; padding: 0; }
+
+  /* Each layer is a full-width band: a label head on the left, detail on the
+     right, divided from the next band by a hairline. */
+  .layer {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-2) var(--space-5);
+    padding: var(--space-5);
+    transition: background var(--dur-med) var(--ease-out);
+  }
+  .layer:not(:last-child) { border-bottom: 1px solid var(--line-1); }
+  /* A short accent tick on the left edge marks each layer of the stack. */
+  .layer::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: var(--space-5);
+    width: 3px;
+    height: 18px;
+    background: color-mix(in srgb, var(--accent) 55%, transparent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    transition: height var(--dur-med) var(--ease-out),
+                background var(--dur-med) var(--ease-out);
+  }
+  /* The bottom band is the runtime the whole platform sits on. */
+  .layer:last-child { background: color-mix(in srgb, var(--bg-2) 55%, transparent); }
+  .layer:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+  .layer:hover::before {
+    height: 28px;
+    background: var(--accent);
+  }
+  @media (min-width: 720px) {
+    .layer {
+      grid-template-columns: 184px 1fr;
+      align-items: start;
+      padding: var(--space-5) var(--space-6);
+    }
+    .layer::before { top: var(--space-5); }
+  }
+  .layer > * { min-width: 0; }
+
+  /* Head: stage verb + layer title. */
+  .head { display: flex; flex-direction: column; gap: 6px; }
+  .stage {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .title {
+    margin: 0;
+    font-size: var(--t-h4);
+    line-height: var(--lh-h4);
+    font-weight: 600;
+    color: var(--fg-0);
+  }
+
+  .body { display: flex; flex-direction: column; gap: var(--space-3); }
+  .desc { margin: 0; color: var(--fg-1); max-width: var(--measure); }
+
+  /* Concept / Example chips. */
+  .links { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 5px var(--space-3);
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-pill);
+    background: var(--bg-2);
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    line-height: 1.2;
+    text-decoration: none;
+    transition: border-color var(--dur-fast) var(--ease-out),
+                background var(--dur-fast) var(--ease-out),
+                color var(--dur-fast) var(--ease-out);
+  }
+  .chip-kind {
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+  }
+  .chip-arrow { color: var(--fg-2); transition: transform var(--dur-fast) var(--ease-out); }
+  .chip:hover { border-color: var(--line-2); background: var(--bg-3); color: var(--fg-0); }
+  .chip:hover .chip-arrow { transform: translate3d(2px, -1px, 0); }
+
+  /* The Example chip carries the single accent so it reads as the live artifact. */
+  .chip-ex { color: var(--accent); }
+  .chip-ex .chip-arrow { color: var(--accent); }
+  .chip-ex:hover {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line-2));
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    color: var(--accent);
+  }
+
+  /* Entrance: bands fade up top-to-bottom, reticles resolve in. `.in-view` is
+     flipped by the shared IntersectionObserver in BaseLayout. Motion is gated on
+     prefers-reduced-motion; the static state is fully visible. */
+  .platform .reticle { opacity: 0; }
+  .platform.in-view .reticle { opacity: 0.55; }
+  @media (prefers-reduced-motion: no-preference) {
+    .platform .layer {
+      transform: translate3d(0, 16px, 0);
+      opacity: 0;
+      transition: transform var(--dur-slow) var(--ease-out),
+                  opacity var(--dur-slow) var(--ease-out),
+                  background var(--dur-med) var(--ease-out);
+    }
+    .platform.in-view .layer { transform: translate3d(0, 0, 0); opacity: 1; }
+    .platform.in-view .layer { transition-delay: calc(var(--i) * 110ms); }
+    .platform .reticle { transition: opacity var(--dur-slow) var(--ease-out) 280ms; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .platform .reticle { opacity: 0.55; }
+  }
+</style>

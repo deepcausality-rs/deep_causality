@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/nav/SiteHeader.astro';
 import Hero from '../components/home/Hero.astro';
 import ExampleGrid from '../components/home/ExampleGrid.astro';
+import CausalStack from '../components/home/CausalStack.astro';
 import WhyDeepCausality from '../components/home/WhyDeepCausality.astro';
 import PillarRow from '../components/home/PillarRow.astro';
 import JoinCommunity from '../components/home/JoinCommunity.astro';
@@ -50,6 +51,8 @@ const jsonLd = [
   <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
   <SiteHeader />
   <Hero />
+  <SectionDivider />
+  <CausalStack />
   <SectionDivider />
   <PillarRow />
   <SectionDivider />
