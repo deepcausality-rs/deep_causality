@@ -70,6 +70,24 @@ fn test_log() {
 }
 
 #[test]
+fn test_log2() {
+    let x = 8.0_f64;
+    assert_eq!(RealField::log2(x), 3.0);
+    assert!((RealField::log2(x) - x.log2()).abs() < 1e-10);
+    // base-2 log of 1 is 0
+    assert_eq!(RealField::log2(1.0_f64), 0.0);
+}
+
+#[test]
+fn test_log10() {
+    let x = 1000.0_f64;
+    assert_eq!(RealField::log10(x), 3.0);
+    assert!((RealField::log10(x) - x.log10()).abs() < 1e-10);
+    // base-10 log of 1 is 0
+    assert_eq!(RealField::log10(1.0_f64), 0.0);
+}
+
+#[test]
 // Disabled under Miri: software-emulated floats produce different last-bit
 // results for transcendental ops, so exact equality cannot hold. The test
 // itself is correct and runs under normal CI.

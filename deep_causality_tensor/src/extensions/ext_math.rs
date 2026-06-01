@@ -4,6 +4,7 @@
  */
 use crate::CausalTensor;
 use crate::CausalTensorError;
+use deep_causality_num::{FromPrimitive, RealField};
 
 pub trait CausalTensorMathExt<T> {
     /// Computes the element-wise natural logarithm of the tensor.
@@ -95,4 +96,68 @@ pub trait CausalTensorMathExt<T> {
     /// event provides zero information. It will still panic on other divisions by zero
     /// (e.g., `x / 0` where `x > 0`), as this represents a malformed probability.
     fn safe_div(&self, rhs: &CausalTensor<T>) -> Result<CausalTensor<T>, CausalTensorError>;
+}
+
+/// Single generic implementation over any real field `T: RealField`.
+///
+/// This replaces the previous per-type `f32`/`f64` implementations, so the math
+/// extension now composes with every precision in the numerical stack
+/// (`f32`, `f64`, `Float106`, and future real types) without code change.
+impl<T> CausalTensorMathExt<T> for CausalTensor<T>
+where
+    T: RealField + FromPrimitive,
+{
+    fn log_nat(&self) -> Result<CausalTensor<T>, CausalTensorError> {
+        if self.is_empty() {
+            return Ok(CausalTensor::from_slice(&[], self.shape()));
+        }
+        let new_data: Vec<T> = self.as_slice().iter().map(|&val| val.ln()).collect();
+        Ok(CausalTensor::from_slice(&new_data, self.shape()))
+    }
+
+    fn log2(&self) -> Result<CausalTensor<T>, CausalTensorError> {
+        if self.is_empty() {
+            return Ok(CausalTensor::from_slice(&[], self.shape()));
+        }
+        let new_data: Vec<T> = self.as_slice().iter().map(|&val| val.log2()).collect();
+        Ok(CausalTensor::from_slice(&new_data, self.shape()))
+    }
+
+    fn log10(&self) -> Result<CausalTensor<T>, CausalTensorError> {
+        if self.is_empty() {
+            return Ok(CausalTensor::from_slice(&[], self.shape()));
+        }
+        let new_data: Vec<T> = self.as_slice().iter().map(|&val| val.log10()).collect();
+        Ok(CausalTensor::from_slice(&new_data, self.shape()))
+    }
+
+    fn surd_log2(&self) -> Result<CausalTensor<T>, CausalTensorError> {
+        if self.is_empty() {
+            return Ok(CausalTensor::from_slice(&[], self.shape()));
+        }
+        let zero = T::zero();
+        let new_data: Vec<T> = self
+            .as_slice()
+            .iter()
+            .map(|&val| if val == zero { zero } else { val.log2() })
+            .collect();
+        Ok(CausalTensor::from_slice(&new_data, self.shape()))
+    }
+
+    fn safe_div(&self, rhs: &CausalTensor<T>) -> Result<CausalTensor<T>, CausalTensorError> {
+        let eps =
+            <T as FromPrimitive>::from_f64(1e-14).expect("1e-14 is representable in RealField");
+        let zero = T::zero();
+        self.broadcast_op(rhs, move |numerator: T, denominator: T| {
+            if denominator.abs() < eps {
+                if numerator.abs() < eps {
+                    Ok(zero)
+                } else {
+                    Err(CausalTensorError::DivisionByZero)
+                }
+            } else {
+                Ok(numerator / denominator)
+            }
+        })
+    }
 }
