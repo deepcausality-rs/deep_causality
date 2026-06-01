@@ -11,7 +11,7 @@
 
 ## 2. Tier B — causal-graph layer (`causal-graph`, in `deep_causality_algorithms::causal_discovery`)
 
-- [ ] 2.1 Confirm or add a parents/predecessors accessor on `ultragraph`'s directed graph; unit-test it.
+- [x] 2.1 Confirmed: `ultragraph`'s `GraphTraversal::inbound_edges(node)` already returns the direct predecessors (parents) of a node on a frozen graph, and is already unit-tested — `test_inbound_edges_on_static_graph` asserts predecessor semantics (e.g. `inbound_edges(2) == [0, 1]`), plus `_on_dynamic_graph` (`GraphNotFrozen`) and `_invalid_node` error paths. No code change needed; the causal-graph layer will consume `inbound_edges` for parent sets.
 - [ ] 2.2 Scaffold `causal_discovery::{graph, mec}` beside `surd`; implement the PDAG/CPDAG type (directed arcs + undirected edges) with constructors and getters (parents, neighbors, arcs, undirected edges); test construction and arc-vs-edge adjacency.
 - [ ] 2.3 Implement topological order and acyclicity over the arc projection by reusing `ultragraph`; test the acyclic and cyclic cases.
 - [ ] 2.4 Implement the Meek orientation rules (PDAG→CPDAG completion, DAG→CPDAG); test a known completion, the arcs-only unchanged case, and idempotence.

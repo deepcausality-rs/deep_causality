@@ -9,7 +9,7 @@ Constraints carried from the repo: no external numeric crates, `unsafe_code = "f
 ## Goals / Non-Goals
 
 **Goals:**
-- Public, tested numeric primitives reusable repo-wide (SPD CG solve, mean/covariance, `logsumexp`, Gaussian log-density, conditional variance), each generic over `T: RealField`.
+- Public, tested numeric primitives reusable repo-wide, each generic over `T: RealField`: the SPD CG solve in `deep_causality_sparse`, and mean/covariance, `logsumexp`, Gaussian log-density, and conditional variance on `deep_causality_tensor`'s `CausalTensorStatsExt`. (These are statistics over data, so they live with the tensor type — not in `deep_causality_num`, which defines number systems and the algebra tower.)
 - A shared causal-graph layer (PDAG/CPDAG, Meek, validity, MEC size) sized so a second algorithm starts above it.
 - A discovery pipeline that carries two aligned datasets and returns an algorithm-specific result, with SURD behavior unchanged.
 - Each layer compiles and is unit-testable on its own, in dependency order (note §12: L0, L1, L2, L3-primitive, L4-trivial, L6).
@@ -52,6 +52,6 @@ Every numeric component this change adds (the SPD solver, mean/covariance, `logs
 
 ## Open Questions
 
-- `cg_solve` final home: `deep_causality_sparse` (per its own doc) versus `deep_causality_num`. Default to `deep_causality_sparse` unless the owner prefers numerics centralized in `num`.
+- ~~`cg_solve` final home~~ **Resolved:** lives in `deep_causality_sparse` (per its own doc). The stats primitives (`logsumexp`, Gaussian log-density, conditional variance) live on `deep_causality_tensor`'s `CausalTensorStatsExt`, not `deep_causality_num` — `num` is the number-systems/algebra crate and stays unmodified by this change.
 - Exact carrier for the second dataset (a small struct versus an enum on the discovery input); settled in specs/tasks.
 - Whether `ultragraph` already exposes a parents/predecessors accessor or one must be added (verify at implementation time).
