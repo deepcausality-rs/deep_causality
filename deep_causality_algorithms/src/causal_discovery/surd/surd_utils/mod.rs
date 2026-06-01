@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use deep_causality_num::RealField;
 use deep_causality_tensor::{CausalTensor, CausalTensorError, Tensor};
 use std::cmp::Ordering;
 
@@ -15,7 +16,7 @@ mod surd_utils_tests;
 /// elements, the output vector will have `N-1` elements. Returns an empty
 /// vector if the input has fewer than 2 elements.
 ///
-pub(crate) fn diff(slice: &[f64]) -> Vec<f64> {
+pub(crate) fn diff<T: RealField>(slice: &[T]) -> Vec<T> {
     let mut result = Vec::new();
     if slice.is_empty() {
         return result;
@@ -23,7 +24,7 @@ pub(crate) fn diff(slice: &[f64]) -> Vec<f64> {
 
     // Python's np.diff(arr, prepend=0) effectively calculates diff on [0] + arr
     // So the first element is slice[0] - 0
-    result.push(slice[0] - 0f64); // This is effectively slice[0]
+    result.push(slice[0] - T::zero()); // This is effectively slice[0]
 
     for i in 1..slice.len() {
         result.push(slice[i] - slice[i - 1]);
@@ -31,7 +32,7 @@ pub(crate) fn diff(slice: &[f64]) -> Vec<f64> {
     result
 }
 
-pub(crate) fn arg_sort(slice: &[f64]) -> Vec<usize> {
+pub(crate) fn arg_sort<T: RealField>(slice: &[T]) -> Vec<usize> {
     // 1. Create a vector of the original indices: [0, 1, 2, ..., n-1]
     let mut indices: Vec<usize> = (0..slice.len()).collect();
 
@@ -43,9 +44,9 @@ pub(crate) fn arg_sort(slice: &[f64]) -> Vec<usize> {
         let a_value = slice[a_index];
         let b_value = slice[b_index];
 
-        // 4. Use `partial_cmp` because f64 does not have a total ordering (due to NaN).
-        //    `.unwrap_or(Ordering::Equal)` is the key to robustly handling NaN.
-        //    It treats any non-comparable values (NaNs) as equal, preventing a panic.
+        // 4. Use `partial_cmp` because floating-point types do not have a total
+        //    ordering (due to NaN). `.unwrap_or(Ordering::Equal)` robustly treats
+        //    any non-comparable values (NaNs) as equal, preventing a panic.
         a_value.partial_cmp(&b_value).unwrap_or(Ordering::Equal)
     });
 
@@ -101,7 +102,10 @@ pub(crate) fn combinations<T: Copy>(pool: &[T], r: usize) -> Vec<Vec<T>> {
 ///
 /// The input tensor `p` is assumed to be a joint probability distribution.
 /// This function computes the entropy of the marginal distribution over the specified `axes`.
-pub fn entropy_nvars(p: &CausalTensor<f64>, axes: &[usize]) -> Result<f64, CausalTensorError> {
+pub fn entropy_nvars<T: RealField + Default>(
+    p: &CausalTensor<T>,
+    axes: &[usize],
+) -> Result<T, CausalTensorError> {
     // Determine the axes to sum out to get the marginal distribution.
     let all_axes: Vec<_> = (0..p.num_dim()).collect();
     let axes_to_sum_out: Vec<_> = all_axes
@@ -109,11 +113,13 @@ pub fn entropy_nvars(p: &CausalTensor<f64>, axes: &[usize]) -> Result<f64, Causa
         .filter(|ax| !axes.contains(ax))
         .collect();
 
+    let zero = T::zero();
+
     if axes_to_sum_out.is_empty() {
         // Optimization: If not summing over any axes, calculate entropy directly on the slice
         // to avoid cloning the entire tensor.
-        let entropy = p.as_slice().iter().fold(0.0, |acc, &prob| {
-            if prob > 0.0 {
+        let entropy = p.as_slice().iter().fold(zero, |acc, &prob| {
+            if prob > zero {
                 acc - prob * prob.log2()
             } else {
                 acc
@@ -123,8 +129,8 @@ pub fn entropy_nvars(p: &CausalTensor<f64>, axes: &[usize]) -> Result<f64, Causa
     } else {
         // Calculate the marginal distribution by summing out the specified axes.
         let marginal = p.sum_axes(&axes_to_sum_out)?;
-        let entropy = marginal.as_slice().iter().fold(0.0, |acc, &prob| {
-            if prob > 0.0 {
+        let entropy = marginal.as_slice().iter().fold(zero, |acc, &prob| {
+            if prob > zero {
                 acc - prob * prob.log2()
             } else {
                 acc
@@ -137,13 +143,11 @@ pub fn entropy_nvars(p: &CausalTensor<f64>, axes: &[usize]) -> Result<f64, Causa
 /// Calculates the conditional Shannon entropy H(X | Y).
 ///
 /// Uses the formula: H(X | Y) = H(X, Y) - H(Y).
-pub fn cond_entropy(
-    p: &CausalTensor<f64>,
+pub fn cond_entropy<T: RealField + Default>(
+    p: &CausalTensor<T>,
     target_axes: &[usize],
     cond_axes: &[usize],
-) -> Result<f64, CausalTensorError>
-where
-{
+) -> Result<T, CausalTensorError> {
     let mut joint_axes = target_axes.to_vec();
     joint_axes.extend_from_slice(cond_axes);
     joint_axes.sort();

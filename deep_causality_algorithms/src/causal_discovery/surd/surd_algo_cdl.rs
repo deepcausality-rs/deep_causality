@@ -5,6 +5,7 @@
 use crate::causal_discovery::surd::surd_utils;
 use crate::causal_discovery::surd::surd_utils::surd_utils_cdl;
 use crate::causal_discovery::surd::{MaxOrder, SurdResult};
+use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::{CausalTensor, CausalTensorError, Tensor};
 use std::collections::HashMap;
 
@@ -13,12 +14,12 @@ use rayon::prelude::*;
 
 /// Decomposes mutual information into its Synergistic, Unique, and Redundant components
 /// for each state of the target variable, based on the SURD-states algorithm,
-/// specifically designed to handle input tensors with `Option<f64>` values.
+/// specifically designed to handle input tensors with `Option<T>` values.
 ///
 /// This function adapts the core SURD-states algorithm to gracefully manage missing or
-/// undefined probability values, represented by `None` in the input `CausalTensor<Option<f64>>`.
-/// The handling of `None` values is crucial for robust causal discovery in real-world datasets
-/// where data incompleteness is common.
+/// undefined probability values, represented by `None` in the input `CausalTensor<Option<T>>`.
+/// It is generic over the precision type `T: RealField`, so it runs at any supported precision
+/// (`f32`, `f64`, `Float106`, …) without code change.
 ///
 /// The algorithm follows these main steps:
 /// 1.  **Pre-processing**: The input probability distribution is validated and normalized.
@@ -36,62 +37,15 @@ use rayon::prelude::*;
 ///     calculated by summing the increments over all target states.
 ///
 /// # None Value Handling
-/// The presence of `Option<f64>` in the input `CausalTensor` necessitates a specific strategy
+/// The presence of `Option<T>` in the input `CausalTensor` necessitates a specific strategy
 /// for handling `None` values. The chosen approach aims for "no impact" or "ignore for this
-/// specific calculation" for `None` values, aligning with a pairwise deletion strategy. This is
-/// crucial for datasets where `None` signifies "not measured" or "unobserved" as in medical
-/// data with irregular or on-demand readings.
-///
-/// -   **Normalization**: When calculating the `total_sum` for normalizing the raw probabilities,
-///     `None` values in the input `p_raw` are **filtered out**. This ensures that the sum of
-///     observed probabilities is used for normalization, and `None`s do not artificially inflate
-///     the total sum.
-///
-/// -   **Marginalization (`sum_axes_option_f64`)**: This utility function is central to handling `None`s.
-///     When summing over axes to compute marginal distributions, `None` values encountered in the
-///     `CausalTensor<Option<f64>>` are **ignored** (not treated as `0.0`). The function returns a
-///     `CausalTensor<Option<f64>>`. If all values contributing to a particular output element are `None`,
-///     then that output element will also be `None`.
-///     *   **Rationale**: This approach ensures that `None` values do not artificially influence
-///         marginal probabilities by being treated as `0.0`. It allows the algorithm to focus
-///         on observed data, which is crucial for datasets where `None` means "not measured"
-///         rather than "zero probability." This aligns with a pairwise deletion strategy.
-///
-/// -   **Information-Theoretic Operations (`entropy_nvars_cdl`, `cond_entropy_cdl`)**: These functions
-///     now operate on `CausalTensor<Option<f64>>` inputs. They calculate entropy and conditional
-///     entropy by considering only the `Some` values in the marginal distributions, effectively
-///     ignoring `None`s in their calculations.
-///
-/// -   **Arithmetic Operations (`safe_div_cdl`, `surd_log2_cdl`, `sub_cdl`, `mul_cdl`)**: These
-///     utility functions operate on `CausalTensor<Option<f64>>` and strictly propagate `None` values.
-///     If any operand for an element-wise operation is `None`, the result for that specific element
-///     will also be `None`.
-///     *   **Rationale**: This strict propagation ensures that any uncertainty or lack of data
-///         is carried forward through the calculations, preventing spurious information from being
-///         generated from missing values.
-///
-/// -   **Final Aggregation and Output**: The intermediate state-dependent slices (`causal_slice`,
-///     `non_causal_slice`) are computed as `CausalTensor<Option<f64>>`. Only at the very last step,
-///     before being stored in the `SurdResult` (which expects `f64` values), are these `Option<f64>`
-///     tensors converted to `CausalTensor<f64>`. During this final conversion, any remaining `None`
-///     values are explicitly **treated as `0.0`**.
-///     *   **Rationale**: This ensures that the final output format is consistent with `SurdResult`
-///         while maintaining the "no impact" propagation of `None` throughout the core calculations.
-///         The `0.0` at the end signifies that no information could be derived from those missing values.
-///
-/// # Performance Improvements
-/// To make the algorithm practical for high-dimensional data, several performance improvements have been implemented:
-/// 1.  **Algorithmic Capping**: The `max_order` parameter allows limiting the analysis to a tractable number
-///     of interactions (e.g., pairwise, `k=2`), changing the complexity from exponential `O(2^N)` to polynomial `O(N^k)`.
-///     This is the most most significant optimization for datasets with many variables.
-/// 2.  **Parallel Execution**: When compiled with the `parallel` feature flag, the main decomposition loop runs in parallel
-///     across all available CPU cores using the `rayon` crate. This provides a near-linear speedup for datasets
-///     with a large number of target states.
-/// 3.  **Memory Optimization**: Unnecessary cloning of large data tensors within the hot loop has been eliminated
-///     by using references, reducing memory pressure and improving cache performance.
+/// specific calculation" for `None` values, aligning with a pairwise deletion strategy. The
+/// intermediate state-dependent slices are computed as `CausalTensor<Option<T>>`; only at the
+/// very last step, before being stored in the `SurdResult`, are remaining `None` values treated
+/// as `0` so that the output is consistent with `SurdResult<T>`.
 ///
 /// # Arguments
-/// * `p_raw` - A `CausalTensor<Option<f64>>` representing the joint probability distribution.
+/// * `p_raw` - A `CausalTensor<Option<T>>` representing the joint probability distribution.
 ///   **Crucially, this must be a joint probability distribution of discrete, binned data.**
 ///   The first dimension (axis 0) must correspond to the target variable.
 /// * `max_order` - An enum specifying the maximum order of interactions to compute.
@@ -127,22 +81,33 @@ use rayon::prelude::*;
 /// let partial_result = surd_states_cdl(&p_raw, MaxOrder::Min).unwrap();
 /// assert!(partial_result.synergistic_info().get(&vec![1, 2]).is_some());
 /// ```
-pub fn surd_states_cdl(
-    p_raw: &CausalTensor<Option<f64>>,
+pub fn surd_states_cdl<T>(
+    p_raw: &CausalTensor<Option<T>>,
     max_order: MaxOrder,
-) -> Result<SurdResult<f64>, CausalTensorError> {
+) -> Result<SurdResult<T>, CausalTensorError>
+where
+    T: RealField + FromPrimitive + Default + Send + Sync,
+{
     if p_raw.is_empty() {
         return Err(CausalTensorError::EmptyTensor);
     }
 
+    let zero = T::zero();
+    let one = T::one();
+    let eps = <T as FromPrimitive>::from_f64(1e-14).expect("1e-14 is representable in RealField");
+
     // --- 1. Pre-processing: Normalize the probability distribution ---
     // Sum only Some values for normalization
-    let total_sum: f64 = p_raw.as_slice().iter().filter_map(|&x| x).sum();
-    if total_sum.abs() < 1e-14 {
+    let total_sum: T = p_raw
+        .as_slice()
+        .iter()
+        .filter_map(|&x| x)
+        .fold(zero, |acc, v| acc + v);
+    if total_sum.abs() < eps {
         return Err(CausalTensorError::InvalidOperation);
     }
 
-    let p_data: Vec<Option<f64>> = p_raw
+    let p_data: Vec<Option<T>> = p_raw
         .as_slice()
         .iter()
         .map(|&x| x.map(|val| val / total_sum))
@@ -159,10 +124,10 @@ pub fn surd_states_cdl(
     let h = surd_utils_cdl::entropy_nvars_cdl(&p, &[0])?;
     let hc = surd_utils_cdl::cond_entropy_cdl(&p, &[0], &agent_indices)?;
 
-    let info_leak = if h > 1e-14 {
-        (hc / h).clamp(0.0, 1.0)
+    let info_leak = if h > eps {
+        (hc / h).clamp(zero, one)
     } else {
-        0.0
+        zero
     };
 
     // --- 3. Compute Specific and Mutual Information ---
@@ -172,9 +137,9 @@ pub fn surd_states_cdl(
         combs.extend(combinations_for_i);
     }
 
-    // p_s is CausalTensor<Option<f64>> now
+    // p_s is CausalTensor<Option<T>> now
     let p_s = surd_utils_cdl::sum_axes_option_f64(&p, &agent_indices)?;
-    let mut is_map: HashMap<Vec<usize>, CausalTensor<Option<f64>>> = HashMap::new();
+    let mut is_map: HashMap<Vec<usize>, CausalTensor<Option<T>>> = HashMap::new();
     for j_comb in &combs {
         let noj: Vec<usize> = agent_indices
             .iter()
@@ -222,14 +187,16 @@ pub fn surd_states_cdl(
         is_map.insert(j_comb.clone(), ravel);
     }
 
-    let mi: HashMap<Vec<usize>, f64> = is_map
+    let mi: HashMap<Vec<usize>, T> = is_map
         .iter()
-        .map(|(k, v)| {
+        .map(|(key, v)| {
             let multiplied = surd_utils_cdl::mul_cdl(v, &p_s)?;
-            Ok((
-                k.clone(),
-                multiplied.as_slice().iter().filter_map(|&x| x).sum(),
-            ))
+            let sum = multiplied
+                .as_slice()
+                .iter()
+                .filter_map(|&x| x)
+                .fold(zero, |acc, x| acc + x);
+            Ok((key.clone(), sum))
         })
         .collect::<Result<_, CausalTensorError>>()?;
 
@@ -241,8 +208,7 @@ pub fn surd_states_cdl(
                 .into_par_iter()
                 .map(|t| {
                     analyze_single_target_state_cdl(
-                        t, n_vars, &combs, &is_map, &p_s,
-                        &p, // Pass CausalTensor<Option<f64>>
+                        t, n_vars, &combs, &is_map, &p_s, &p, // Pass CausalTensor<Option<T>>
                         k,
                     )
                 })
@@ -253,8 +219,7 @@ pub fn surd_states_cdl(
             (0..n_target_states)
                 .map(|t| {
                     analyze_single_target_state_cdl(
-                        t, n_vars, &combs, &is_map, &p_s,
-                        &p, // Pass CausalTensor<Option<f64>>
+                        t, n_vars, &combs, &is_map, &p_s, &p, // Pass CausalTensor<Option<T>>
                         k,
                     )
                 })
@@ -265,64 +230,64 @@ pub fn surd_states_cdl(
     // --- 5. Merge results from all target states ---
     let mut i_r = HashMap::new();
     let mut i_s = HashMap::new();
-    let mut temp_causal_rd_states: HashMap<Vec<usize>, Vec<CausalTensor<f64>>> = HashMap::new();
-    let mut temp_causal_un_states: HashMap<Vec<usize>, Vec<CausalTensor<f64>>> = HashMap::new();
-    let mut temp_causal_sy_states: HashMap<Vec<usize>, Vec<CausalTensor<f64>>> = HashMap::new();
-    let mut temp_non_causal_rd_states: HashMap<Vec<usize>, Vec<CausalTensor<f64>>> = HashMap::new();
-    let mut temp_non_causal_un_states: HashMap<Vec<usize>, Vec<CausalTensor<f64>>> = HashMap::new();
-    let mut temp_non_causal_sy_states: HashMap<Vec<usize>, Vec<CausalTensor<f64>>> = HashMap::new();
+    let mut temp_causal_rd_states: HashMap<Vec<usize>, Vec<CausalTensor<T>>> = HashMap::new();
+    let mut temp_causal_un_states: HashMap<Vec<usize>, Vec<CausalTensor<T>>> = HashMap::new();
+    let mut temp_causal_sy_states: HashMap<Vec<usize>, Vec<CausalTensor<T>>> = HashMap::new();
+    let mut temp_non_causal_rd_states: HashMap<Vec<usize>, Vec<CausalTensor<T>>> = HashMap::new();
+    let mut temp_non_causal_un_states: HashMap<Vec<usize>, Vec<CausalTensor<T>>> = HashMap::new();
+    let mut temp_non_causal_sy_states: HashMap<Vec<usize>, Vec<CausalTensor<T>>> = HashMap::new();
 
     for result in results_per_target {
-        for (k, v) in result.i_r {
-            *i_r.entry(k).or_insert(0.0) += v;
+        for (key, v) in result.i_r {
+            *i_r.entry(key).or_insert(zero) += v;
         }
-        for (k, v) in result.i_s {
-            *i_s.entry(k).or_insert(0.0) += v;
+        for (key, v) in result.i_s {
+            *i_s.entry(key).or_insert(zero) += v;
         }
-        for (k, v) in result.causal_rd_states {
-            temp_causal_rd_states.entry(k).or_default().push(v);
+        for (key, v) in result.causal_rd_states {
+            temp_causal_rd_states.entry(key).or_default().push(v);
         }
-        for (k, v) in result.causal_un_states {
-            temp_causal_un_states.entry(k).or_default().push(v);
+        for (key, v) in result.causal_un_states {
+            temp_causal_un_states.entry(key).or_default().push(v);
         }
-        for (k, v) in result.causal_sy_states {
-            temp_causal_sy_states.entry(k).or_default().push(v);
+        for (key, v) in result.causal_sy_states {
+            temp_causal_sy_states.entry(key).or_default().push(v);
         }
-        for (k, v) in result.non_causal_rd_states {
-            temp_non_causal_rd_states.entry(k).or_default().push(v);
+        for (key, v) in result.non_causal_rd_states {
+            temp_non_causal_rd_states.entry(key).or_default().push(v);
         }
-        for (k, v) in result.non_causal_un_states {
-            temp_non_causal_un_states.entry(k).or_default().push(v);
+        for (key, v) in result.non_causal_un_states {
+            temp_non_causal_un_states.entry(key).or_default().push(v);
         }
-        for (k, v) in result.non_causal_sy_states {
-            temp_non_causal_sy_states.entry(k).or_default().push(v);
+        for (key, v) in result.non_causal_sy_states {
+            temp_non_causal_sy_states.entry(key).or_default().push(v);
         }
     }
 
     // --- 6. Finalize State-Dependent Maps by Stacking ---
     let causal_redundant_states = temp_causal_rd_states
         .into_iter()
-        .map(|(k, slices)| Ok((k, CausalTensor::stack(&slices, 0)?)))
+        .map(|(key, slices)| Ok((key, CausalTensor::stack(&slices, 0)?)))
         .collect::<Result<_, _>>()?;
     let causal_unique_states = temp_causal_un_states
         .into_iter()
-        .map(|(k, slices)| Ok((k, CausalTensor::stack(&slices, 0)?)))
+        .map(|(key, slices)| Ok((key, CausalTensor::stack(&slices, 0)?)))
         .collect::<Result<_, _>>()?;
     let causal_synergistic_states = temp_causal_sy_states
         .into_iter()
-        .map(|(k, slices)| Ok((k, CausalTensor::stack(&slices, 0)?)))
+        .map(|(key, slices)| Ok((key, CausalTensor::stack(&slices, 0)?)))
         .collect::<Result<_, _>>()?;
     let non_causal_redundant_states = temp_non_causal_rd_states
         .into_iter()
-        .map(|(k, slices)| Ok((k, CausalTensor::stack(&slices, 0)?)))
+        .map(|(key, slices)| Ok((key, CausalTensor::stack(&slices, 0)?)))
         .collect::<Result<_, _>>()?;
     let non_causal_unique_states = temp_non_causal_un_states
         .into_iter()
-        .map(|(k, slices)| Ok((k, CausalTensor::stack(&slices, 0)?)))
+        .map(|(key, slices)| Ok((key, CausalTensor::stack(&slices, 0)?)))
         .collect::<Result<_, _>>()?;
     let non_causal_synergistic_states = temp_non_causal_sy_states
         .into_iter()
-        .map(|(k, slices)| Ok((k, CausalTensor::stack(&slices, 0)?)))
+        .map(|(key, slices)| Ok((key, CausalTensor::stack(&slices, 0)?)))
         .collect::<Result<_, _>>()?;
 
     Ok(SurdResult::new(
@@ -340,26 +305,33 @@ pub fn surd_states_cdl(
 }
 
 /// A private struct to hold the results of analyzing a single target state.
-struct PerTargetStateResults {
-    i_r: HashMap<Vec<usize>, f64>,
-    i_s: HashMap<Vec<usize>, f64>,
-    causal_rd_states: HashMap<Vec<usize>, CausalTensor<f64>>,
-    causal_un_states: HashMap<Vec<usize>, CausalTensor<f64>>,
-    causal_sy_states: HashMap<Vec<usize>, CausalTensor<f64>>,
-    non_causal_rd_states: HashMap<Vec<usize>, CausalTensor<f64>>,
-    non_causal_un_states: HashMap<Vec<usize>, CausalTensor<f64>>,
-    non_causal_sy_states: HashMap<Vec<usize>, CausalTensor<f64>>,
+struct PerTargetStateResults<T> {
+    i_r: HashMap<Vec<usize>, T>,
+    i_s: HashMap<Vec<usize>, T>,
+    causal_rd_states: HashMap<Vec<usize>, CausalTensor<T>>,
+    causal_un_states: HashMap<Vec<usize>, CausalTensor<T>>,
+    causal_sy_states: HashMap<Vec<usize>, CausalTensor<T>>,
+    non_causal_rd_states: HashMap<Vec<usize>, CausalTensor<T>>,
+    non_causal_un_states: HashMap<Vec<usize>, CausalTensor<T>>,
+    non_causal_sy_states: HashMap<Vec<usize>, CausalTensor<T>>,
 }
 
-fn analyze_single_target_state_cdl(
+#[allow(clippy::too_many_arguments)]
+fn analyze_single_target_state_cdl<T>(
     t: usize,
     n_vars: usize,
     combs: &[Vec<usize>],
-    is_map: &HashMap<Vec<usize>, CausalTensor<Option<f64>>>,
-    p_s: &CausalTensor<Option<f64>>,
-    p: &CausalTensor<Option<f64>>,
+    is_map: &HashMap<Vec<usize>, CausalTensor<Option<T>>>,
+    p_s: &CausalTensor<Option<T>>,
+    p: &CausalTensor<Option<T>>,
     _k: usize,
-) -> Result<PerTargetStateResults, CausalTensorError> {
+) -> Result<PerTargetStateResults<T>, CausalTensorError>
+where
+    T: RealField + FromPrimitive + Default + Send + Sync,
+{
+    let zero = T::zero();
+    let eps = T::epsilon();
+
     let mut i_r = HashMap::new();
     let mut i_s = HashMap::new();
     let mut causal_rd_states = HashMap::new();
@@ -370,7 +342,7 @@ fn analyze_single_target_state_cdl(
     let mut non_causal_sy_states = HashMap::new();
 
     // Extract i1_values, filtering out None for sorting, but keeping track of original indices
-    let mut i1_values_with_indices: Vec<(f64, usize)> = Vec::new();
+    let mut i1_values_with_indices: Vec<(T, usize)> = Vec::new();
     for (idx, c) in combs.iter().enumerate() {
         if let Some(val) = is_map[c].as_slice()[t] {
             i1_values_with_indices.push((val, idx));
@@ -383,24 +355,28 @@ fn analyze_single_target_state_cdl(
 
     let i1_sorted_indices: Vec<usize> =
         i1_values_with_indices.iter().map(|&(_, idx)| idx).collect();
-    let i1_sorted_values: Vec<f64> = i1_values_with_indices.iter().map(|&(val, _)| val).collect();
+    let i1_sorted_values: Vec<T> = i1_values_with_indices.iter().map(|&(val, _)| val).collect();
 
     let lab: Vec<Vec<usize>> = i1_sorted_indices
         .iter()
         .map(|&i| combs[i].clone())
         .collect();
-    let mut i1_sorted: Vec<f64> = i1_sorted_values.clone();
+    let mut i1_sorted: Vec<T> = i1_sorted_values.clone();
     let lens: Vec<usize> = lab.iter().map(|l| l.len()).collect();
 
     if let Some(&max_len) = lens.iter().max() {
         for l in 1..max_len {
+            // Largest value among the entries whose label length is exactly `l`.
             let max_prev_level = i1_sorted
                 .iter()
                 .zip(&lens)
                 .filter(|&(_, &len)| len == l)
                 .map(|(&val, _)| val)
-                .fold(f64::NEG_INFINITY, f64::max);
-            if max_prev_level.is_finite() {
+                .fold(None, |acc: Option<T>, v| match acc {
+                    None => Some(v),
+                    Some(a) => Some(if v > a { v } else { a }),
+                });
+            if let Some(max_prev_level) = max_prev_level {
                 i1_sorted
                     .iter_mut()
                     .zip(&lens)
@@ -415,7 +391,7 @@ fn analyze_single_target_state_cdl(
     }
 
     let new_sorted_indices = surd_utils::arg_sort(&i1_sorted);
-    let final_i1: Vec<f64> = new_sorted_indices.iter().map(|&i| i1_sorted[i]).collect();
+    let final_i1: Vec<T> = new_sorted_indices.iter().map(|&i| i1_sorted[i]).collect();
     let final_lab: Vec<Vec<usize>> = new_sorted_indices.iter().map(|&i| lab[i].clone()).collect();
     let di_values = surd_utils::diff(&final_i1);
 
@@ -428,14 +404,14 @@ fn analyze_single_target_state_cdl(
     let mut red_vars: Vec<usize> = (1..=n_vars).collect();
 
     for (i, ll) in final_lab.iter().enumerate() {
-        // info calculation needs to handle Option<f64>
+        // info calculation needs to handle Option<T>
         let info = if let Some(p_s_val) = p_s.as_slice()[t] {
             di_values[i] * p_s_val
         } else {
-            0.0 // If p_s is None, info contribution is 0
+            zero // If p_s is None, info contribution is 0
         };
 
-        if info.abs() < f64::EPSILON {
+        if info.abs() < eps {
             continue;
         }
 
@@ -448,7 +424,7 @@ fn analyze_single_target_state_cdl(
         {
             causal_sy_states.insert(ll.clone(), causal_slice);
             non_causal_sy_states.insert(ll.clone(), non_causal_slice);
-            *i_s.entry(ll.clone()).or_insert(0.0) += info;
+            *i_s.entry(ll.clone()).or_insert(zero) += info;
         } else if ll.len() == 1 {
             // Unique vs Redundant states
             if i == last_single_var_idx
@@ -465,7 +441,7 @@ fn analyze_single_target_state_cdl(
                 non_causal_rd_states.insert(red_vars.clone(), non_causal_slice);
             }
             // Aggregate calculation for I_R
-            *i_r.entry(red_vars.clone()).or_insert(0.0) += info;
+            *i_r.entry(red_vars.clone()).or_insert(zero) += info;
             red_vars.retain(|&v| v != ll[0]);
         }
     }
@@ -494,17 +470,21 @@ fn analyze_single_target_state_cdl(
 /// * `current_vars` - The set of source variables for the current information term (e.g., `{i}`).
 /// * `prev_vars` - The set of source variables from the previous step in the sorted hierarchy (e.g., `{j}`).
 /// * `target_state_index` - The index `t` of the target variable's state.
-/// * `agent_indices` - A slice containing the indices of all source variables.
 ///
 /// # Returns
 /// A tuple `(causal_slice, non_causal_slice)` containing the two resulting tensors.
-fn calculate_state_slice_cdl(
-    p: &CausalTensor<Option<f64>>,
+fn calculate_state_slice_cdl<T>(
+    p: &CausalTensor<Option<T>>,
     current_vars: &[usize],
     prev_vars: &[usize],
     target_state_index: usize,
     n_vars: usize,
-) -> Result<(CausalTensor<f64>, CausalTensor<f64>), CausalTensorError> {
+) -> Result<(CausalTensor<T>, CausalTensor<T>), CausalTensorError>
+where
+    T: RealField + FromPrimitive + Default + Send + Sync,
+{
+    let zero = T::zero();
+
     // 1. Get the slice corresponding to the current target state.
     let p_slice_option = p.slice(0, target_state_index)?;
 
@@ -587,16 +567,16 @@ fn calculate_state_slice_cdl(
     )?;
 
     // Separate into causal (>0) and non-causal (<0) components
-    let causal_log_ratio_option_data: Vec<Option<f64>> = log_ratio_option
+    let causal_log_ratio_option_data: Vec<Option<T>> = log_ratio_option
         .as_slice()
         .iter()
-        .map(|&v_opt| v_opt.map(|v| v.max(0.0)))
+        .map(|&v_opt| v_opt.map(|v| if v > zero { v } else { zero }))
         .collect();
 
-    let non_causal_log_ratio_option_data: Vec<Option<f64>> = log_ratio_option
+    let non_causal_log_ratio_option_data: Vec<Option<T>> = log_ratio_option
         .as_slice()
         .iter()
-        .map(|&v_opt| v_opt.map(|v| v.min(0.0)))
+        .map(|&v_opt| v_opt.map(|v| if v < zero { v } else { zero }))
         .collect();
 
     let causal_log_ratio_tensor = CausalTensor::new(
@@ -612,17 +592,17 @@ fn calculate_state_slice_cdl(
     let non_causal_slice_option =
         surd_utils_cdl::mul_cdl(&p_tij_option, &non_causal_log_ratio_tensor)?;
 
-    // Convert final Option<f64> slices to f64, treating None as 0.0 for the output
-    let causal_slice_data: Vec<f64> = causal_slice_option
+    // Convert final Option<T> slices to T, treating None as 0 for the output
+    let causal_slice_data: Vec<T> = causal_slice_option
         .as_slice()
         .iter()
-        .map(|&x| x.unwrap_or(0.0))
+        .map(|&x| x.unwrap_or(zero))
         .collect();
 
-    let non_causal_slice_data: Vec<f64> = non_causal_slice_option
+    let non_causal_slice_data: Vec<T> = non_causal_slice_option
         .as_slice()
         .iter()
-        .map(|&x| x.unwrap_or(0.0))
+        .map(|&x| x.unwrap_or(zero))
         .collect();
 
     let causal_slice = CausalTensor::new(causal_slice_data, causal_slice_option.shape().to_vec())?;

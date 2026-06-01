@@ -14,10 +14,10 @@ use std::fmt::Debug;
 #[derive(Debug)]
 pub struct SurdResult<T> {
     // Aggregate information (total increments)
-    redundant_info: HashMap<Vec<usize>, f64>,
-    synergistic_info: HashMap<Vec<usize>, f64>,
-    mutual_info: HashMap<Vec<usize>, f64>,
-    info_leak: f64,
+    redundant_info: HashMap<Vec<usize>, T>,
+    synergistic_info: HashMap<Vec<usize>, T>,
+    mutual_info: HashMap<Vec<usize>, T>,
+    info_leak: T,
 
     // State-dependent causal maps (positive increments)
     causal_redundant_states: HashMap<Vec<usize>, CausalTensor<T>>,
@@ -33,10 +33,10 @@ pub struct SurdResult<T> {
 impl<T> SurdResult<T> {
     #[allow(clippy::too_many_arguments)] // Internal constructor with many fields is acceptable here
     pub fn new(
-        redundant_info: HashMap<Vec<usize>, f64>,
-        synergistic_info: HashMap<Vec<usize>, f64>,
-        mutual_info: HashMap<Vec<usize>, f64>,
-        info_leak: f64,
+        redundant_info: HashMap<Vec<usize>, T>,
+        synergistic_info: HashMap<Vec<usize>, T>,
+        mutual_info: HashMap<Vec<usize>, T>,
+        info_leak: T,
         causal_redundant_states: HashMap<Vec<usize>, CausalTensor<T>>,
         causal_unique_states: HashMap<Vec<usize>, CausalTensor<T>>,
         causal_synergistic_states: HashMap<Vec<usize>, CausalTensor<T>>,
@@ -61,19 +61,22 @@ impl<T> SurdResult<T> {
 
 // --- Getters for aggregate information ---
 impl<T> SurdResult<T> {
-    pub fn redundant_info(&self) -> &HashMap<Vec<usize>, f64> {
+    pub fn redundant_info(&self) -> &HashMap<Vec<usize>, T> {
         &self.redundant_info
     }
 
-    pub fn synergistic_info(&self) -> &HashMap<Vec<usize>, f64> {
+    pub fn synergistic_info(&self) -> &HashMap<Vec<usize>, T> {
         &self.synergistic_info
     }
 
-    pub fn mutual_info(&self) -> &HashMap<Vec<usize>, f64> {
+    pub fn mutual_info(&self) -> &HashMap<Vec<usize>, T> {
         &self.mutual_info
     }
 
-    pub fn info_leak(&self) -> f64 {
+    pub fn info_leak(&self) -> T
+    where
+        T: Copy,
+    {
         self.info_leak
     }
 }
@@ -117,7 +120,7 @@ where
         writeln!(f, "Aggregate Redundant Info: {:?}", self.redundant_info)?;
         writeln!(f, "Aggregate Synergistic Info: {:?}", self.synergistic_info)?;
         writeln!(f, "Aggregate Mutual Info: {:?}", self.mutual_info)?;
-        writeln!(f, "Information Leak: {}", self.info_leak)?;
+        writeln!(f, "Information Leak: {:?}", self.info_leak)?;
         writeln!(f, "--- State-Dependent Maps ---")?;
         writeln!(
             f,
