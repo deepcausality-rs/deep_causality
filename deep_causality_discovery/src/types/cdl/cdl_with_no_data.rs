@@ -4,7 +4,7 @@
  */
 
 use crate::types::cdl::WithData;
-use crate::types::cdl_effect::CdlBuilder;
+use crate::types::cdl_builder::CdlBuilder;
 use crate::{
     CDL, CdlEffect, CdlError, CsvConfig, CsvDataLoader, DataLoader, DataLoaderConfig,
     DataLoadingError, NoData, ParquetConfig, ParquetDataLoader, Precision,

@@ -12,6 +12,7 @@ pub mod data_preprocessor;
 pub mod feature_selector;
 pub mod formatter;
 
+pub mod cdl_builder;
 pub mod cdl_effect;
 pub mod cdl_report;
 pub mod cdl_warning;

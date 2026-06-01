@@ -42,6 +42,7 @@ pub use crate::types::data_preprocessor::missing_value_imputer::MissingValueImpu
 pub use crate::types::feature_selector::mrmr::MrmrFeatureSelector;
 pub use crate::types::formatter::console_formatter::ConsoleFormatter;
 
+pub use crate::types::cdl_builder::*;
 pub use crate::types::cdl_effect::*;
 pub use crate::types::cdl_report::*;
 pub use crate::types::cdl_warning::*;
