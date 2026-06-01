@@ -2,6 +2,8 @@
 
 **Issue:** [#598 "Investigate BRCD for addition to CDL"](https://github.com/deepcausality-rs/deep_causality/issues/598)
 **Status:** Pre-design investigation. No code written. Scope decided (§1). Provenance + per-system CPDAG source pending author call (§9).
+**Prerequisite changes (must land first, in order):** `real-field-discovery` (generify `deep_causality_algorithms` + `deep_causality_discovery` over `RealField`) → `brcd-prep-foundations` (shared numerics + causal-graph layer + `DiscoveryOutcome<T>` + two-dataset carriage). The BRCD estimator change composes both.
+**Genericity requirement:** the BRCD estimator MUST itself be fully generic over `T: RealField`. Its numeric parts (per-regime/pooled Gaussian scoring, conditional-variance, log-likelihood, posterior, ranking) are generic over `T`, returning `BrcdResult<T>` carried as `DiscoveryOutcome<T>`. The augmented-DAG construction reuses the precision-agnostic causal-graph layer (no scalar, no `T`). So BRCD composes seamlessly with the math stack at `f32`/`f64`/`Float106`/`f16`/`f128` — genericity follows the data: real where there are reals, absent where there are none.
 **Mandate (from owner):** Full capability port of the chosen target — no MVP, no algorithmic reduction *of the target*. "Reproduce the computational results"; bit-exact floats are negotiable, *decision/semantic equivalence* (same root-cause rankings) is the bar.
 
 ---
