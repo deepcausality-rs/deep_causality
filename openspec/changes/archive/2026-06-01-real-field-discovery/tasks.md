@@ -46,5 +46,5 @@ tensor math extension had hand-written `f32`/`f64` impls. These had to land firs
 
 ## 6. Sequencing with the BRCD prep
 
-- [ ] 6.1 Update `brcd-prep-foundations` to declare this change as a prerequisite; restate its discovery-pipeline result as `DiscoveryOutcome<T>` (algorithm-specific enum over the now-generic precision) rather than `SurdResult<f64> → DiscoveryOutcome`.
-- [ ] 6.2 Prepare a commit message and request the owner commit.
+- [x] 6.1 Verified `brcd-prep-foundations` already declares this change as a prerequisite (proposal, design, discovery-pipeline spec) and expresses its result as `DiscoveryOutcome<T>` over the now-generic precision (proposal, design, tasks, spec) — no `SurdResult<f64>` remains. It was authored after the generification decision, so no edit was needed.
+- [x] 6.2 Commit messages prepared; the owner committed the generification (`refactor(num,tensor,algorithms)…` + `refactor(discovery)…`).
