@@ -10,7 +10,7 @@ use deep_causality_tensor::CausalTensor;
 ///
 /// This trait abstracts the process of selecting a subset of relevant features (columns)
 /// from a larger dataset, which is a common step in preparing data for causal discovery.
-pub trait FeatureSelector {
+pub trait FeatureSelector<T> {
     /// Selects a subset of features from the input tensor.
     ///
     /// # Arguments
@@ -30,7 +30,7 @@ pub trait FeatureSelector {
     /// the number of requested features is invalid.
     fn select(
         &self,
-        tensor: CausalTensor<Option<f64>>,
+        tensor: CausalTensor<Option<T>>,
         config: &FeatureSelectorConfig,
-    ) -> Result<CausalTensor<Option<f64>>, FeatureSelectError>;
+    ) -> Result<CausalTensor<Option<T>>, FeatureSelectError>;
 }

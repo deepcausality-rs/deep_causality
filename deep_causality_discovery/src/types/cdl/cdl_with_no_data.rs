@@ -4,13 +4,34 @@
  */
 
 use crate::types::cdl::WithData;
-use crate::types::cdl_effect::CdlBuilder;
+use crate::types::cdl_builder::CdlBuilder;
 use crate::{
     CDL, CdlEffect, CdlError, CsvConfig, CsvDataLoader, DataLoader, DataLoaderConfig,
-    DataLoadingError, NoData, ParquetConfig, ParquetDataLoader,
+    DataLoadingError, NoData, ParquetConfig, ParquetDataLoader, Precision,
 };
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 use std::path::Path;
+
+/// Casts a freshly-loaded `CausalTensor<f64>` (the precision the file loaders produce) into the
+/// pipeline precision `T`. `NaN` is preserved as `T::nan()` so the cleaning stage can map it to
+/// `None`; all other values are converted via `from_f64`. The shape is preserved, so construction
+/// cannot fail.
+fn cast_loaded_tensor<T: Precision>(tensor: CausalTensor<f64>) -> CausalTensor<T> {
+    let shape = tensor.shape().to_vec();
+    let data: Vec<T> = tensor
+        .as_slice()
+        .iter()
+        .map(|&v| {
+            if v.is_nan() {
+                T::nan()
+            } else {
+                <T as FromPrimitive>::from_f64(v).unwrap_or_else(|| T::zero())
+            }
+        })
+        .collect();
+    CausalTensor::new(data, shape).expect("cast preserves shape; construction cannot fail")
+}
 
 // Initial state
 impl Default for CDL<NoData> {
@@ -29,12 +50,12 @@ impl CDL<NoData> {
     }
 
     /// Starts the pipeline by loading data from the given path.
-    pub fn load_data(
+    pub fn load_data<T: Precision>(
         self,
         path: &str,
         target_index: usize,
         exclude_indices: Vec<usize>,
-    ) -> CdlEffect<CDL<WithData>> {
+    ) -> CdlEffect<CDL<WithData<T>>> {
         // Simple dispatch based on extension
         let p = Path::new(path);
         let extension = p.extension().and_then(|s| s.to_str()).unwrap_or("");
@@ -93,7 +114,7 @@ impl CDL<NoData> {
                 let records_count = tensor.shape()[0];
                 CdlBuilder::pure(CDL {
                     state: WithData {
-                        tensor,
+                        tensor: cast_loaded_tensor::<T>(tensor),
                         records_count,
                     },
                     config: loaded_config, // Use updated config
@@ -107,7 +128,10 @@ impl CDL<NoData> {
     }
 
     /// Starts the pipeline by loading data using a specific `DataLoaderConfig`.
-    pub fn load_data_with_config(self, config: DataLoaderConfig) -> CdlEffect<CDL<WithData>> {
+    pub fn load_data_with_config<T: Precision>(
+        self,
+        config: DataLoaderConfig,
+    ) -> CdlEffect<CDL<WithData<T>>> {
         let mut loaded_config = self.config;
         loaded_config = loaded_config.with_data_loader(config.clone());
 
@@ -147,7 +171,7 @@ impl CDL<NoData> {
                 let records_count = tensor.shape()[0];
                 CdlBuilder::pure(CDL {
                     state: WithData {
-                        tensor,
+                        tensor: cast_loaded_tensor::<T>(tensor),
                         records_count,
                     },
                     config: loaded_config,
@@ -162,7 +186,7 @@ impl CDL<NoData> {
 
     /// Starts the pipeline with an already loaded `CausalTensor`.
     /// This is useful when data requires custom loading logic not supported by standard loaders.
-    pub fn load_tensor(self, tensor: CausalTensor<f64>) -> CdlEffect<CDL<WithData>> {
+    pub fn load_tensor<T: Precision>(self, tensor: CausalTensor<T>) -> CdlEffect<CDL<WithData<T>>> {
         let records_count = tensor.shape()[0];
         CdlBuilder::pure(CDL {
             state: WithData {

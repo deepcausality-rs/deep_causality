@@ -9,7 +9,7 @@ const TOLERANCE: f64 = 1e-10;
 #[test]
 fn test_info_leak_zero_cdl() {
     // T is fully determined by S1 and S2, no Nones
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.25),
         Some(0.0),
         Some(0.0),
@@ -27,7 +27,7 @@ fn test_info_leak_zero_cdl() {
 #[test]
 fn test_info_leak_with_nones_cdl() {
     // T is independent of S1, but S1 has some Nones
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.25),
         Some(0.25), // T=0, S1=0, S2=0
         None,
@@ -45,7 +45,7 @@ fn test_info_leak_with_nones_cdl() {
 }
 #[test]
 fn test_info_leak_all_nones_cdl() {
-    let data = vec![None; 8];
+    let data: Vec<Option<f64>> = vec![None; 8];
     let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
     let result = surd_states_cdl(&p_raw, MaxOrder::Max);
     assert!(matches!(result, Err(CausalTensorError::InvalidOperation)));
@@ -54,7 +54,7 @@ fn test_info_leak_all_nones_cdl() {
 #[test]
 fn test_info_leak_partial_cdl() {
     // T is partially determined, some Nones
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.1),
         Some(0.1),
         None,
@@ -73,7 +73,7 @@ fn test_info_leak_partial_cdl() {
 #[test]
 fn test_info_leak_zero_some_nones_cdl() {
     // T is fully determined by S1 and S2, with some Nones
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.25),
         None,
         None,
@@ -91,7 +91,7 @@ fn test_info_leak_zero_some_nones_cdl() {
 #[test]
 fn test_info_leak_partial_some_nones_cdl() {
     // T is partially determined, some Nones
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.1),
         Some(0.1),
         None,

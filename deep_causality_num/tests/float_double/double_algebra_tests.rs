@@ -130,6 +130,24 @@ fn test_realfield_log() {
 }
 
 #[test]
+fn test_realfield_log2() {
+    let x = Float106::from_f64(8.0);
+    let result = RealField::log2(x);
+    assert!((result.hi() - 3.0).abs() < 1e-10);
+    let one = RealField::log2(Float106::from_f64(1.0));
+    assert!(one.hi().abs() < 1e-10);
+}
+
+#[test]
+fn test_realfield_log10() {
+    let x = Float106::from_f64(1000.0);
+    let result = RealField::log10(x);
+    assert!((result.hi() - 3.0).abs() < 1e-10);
+    let one = RealField::log10(Float106::from_f64(1.0));
+    assert!(one.hi().abs() < 1e-10);
+}
+
+#[test]
 fn test_realfield_powf() {
     let x = Float106::from_f64(2.0);
     let n = Float106::from_f64(3.0);

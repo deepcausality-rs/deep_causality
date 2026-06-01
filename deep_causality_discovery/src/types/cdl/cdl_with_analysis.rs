@@ -4,12 +4,12 @@
  */
 
 use crate::types::cdl::WithAnalysis;
-use crate::{CDL, CdlBuilder, CdlEffect, CdlReport};
+use crate::{CDL, CdlBuilder, CdlEffect, CdlReport, Precision};
 
 // After results are analyzed
-impl CDL<WithAnalysis> {
+impl<T: Precision> CDL<WithAnalysis<T>> {
     /// Finalizes the pipeline and produces a CdlReport.
-    pub fn finalize(self) -> CdlEffect<CdlReport> {
+    pub fn finalize(self) -> CdlEffect<CdlReport<T>> {
         // Retrieve path from config
         let path = match self.config.data_loader_config().as_ref() {
             Some(crate::DataLoaderConfig::Csv(c)) => {

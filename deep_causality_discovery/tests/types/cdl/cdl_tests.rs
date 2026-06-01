@@ -35,7 +35,7 @@ fn test_cdl_pipeline_success() {
 
     let effect = CdlBuilder::build()
         // Load, target=2
-        .bind(|cdl| cdl.load_data(&path, 2, vec![]))
+        .bind(|cdl| cdl.load_data::<f64>(&path, 2, vec![]))
         // Feature select (mock closure)
         .bind(|cdl| {
             cdl.feature_select(|_tensor| {
@@ -85,7 +85,8 @@ fn test_cdl_pipeline_success() {
 
 #[test]
 fn test_cdl_load_data_error() {
-    let effect = CdlBuilder::build().bind(|cdl| cdl.load_data("non_existent_file.csv", 0, vec![]));
+    let effect =
+        CdlBuilder::build().bind(|cdl| cdl.load_data::<f64>("non_existent_file.csv", 0, vec![]));
 
     assert!(effect.inner.is_err());
     // match specific error type if needed
@@ -97,7 +98,7 @@ fn test_cdl_records_count_propagation() {
     let file = create_test_csv_file(content);
     let path = file.path().to_str().unwrap();
 
-    let pipe = CdlBuilder::build().bind(|cdl| cdl.load_data(path, 1, vec![]));
+    let pipe = CdlBuilder::build().bind(|cdl| cdl.load_data::<f64>(path, 1, vec![]));
 
     // Check intermediate state if possible.
     // CDL struct fields are public now?
@@ -105,7 +106,7 @@ fn test_cdl_records_count_propagation() {
 
     match pipe.inner {
         Ok(cdl) => {
-            // cdl is CDL<WithData>
+            // cdl is CDL<WithData<f64>>
             assert_eq!(cdl.state.records_count, 3);
         }
         Err(e) => panic!("Failed to load: {:?}", e),

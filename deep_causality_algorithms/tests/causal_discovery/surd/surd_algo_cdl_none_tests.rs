@@ -7,7 +7,7 @@ use deep_causality_tensor::{CausalTensor, CausalTensorError};
 
 #[test]
 fn test_mi_calculation_with_all_nones_cdl() {
-    let data = vec![None; 8];
+    let data: Vec<Option<f64>> = vec![None; 8];
     let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
     let result = surd_states_cdl(&p_raw, MaxOrder::Max);
     assert!(matches!(result, Err(CausalTensorError::InvalidOperation)));
@@ -15,7 +15,7 @@ fn test_mi_calculation_with_all_nones_cdl() {
 
 #[test]
 fn test_causal_state_maps_with_all_nones_cdl() {
-    let data = vec![None; 8];
+    let data: Vec<Option<f64>> = vec![None; 8];
     let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
     let result = surd_states_cdl(&p_raw, MaxOrder::Max);
     assert!(matches!(result, Err(CausalTensorError::InvalidOperation)));
@@ -23,7 +23,7 @@ fn test_causal_state_maps_with_all_nones_cdl() {
 
 #[test]
 fn test_single_target_state_all_nones_cdl() {
-    let data = vec![None; 8];
+    let data: Vec<Option<f64>> = vec![None; 8];
     let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
     let result = surd_states_cdl(&p_raw, MaxOrder::Max);
     assert!(matches!(result, Err(CausalTensorError::InvalidOperation)));
@@ -31,7 +31,7 @@ fn test_single_target_state_all_nones_cdl() {
 
 #[test]
 fn test_calculate_state_slice_all_nones_cdl() {
-    let data = vec![None; 8];
+    let data: Vec<Option<f64>> = vec![None; 8];
     let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
     let result = surd_states_cdl(&p_raw, MaxOrder::Max);
     assert!(matches!(result, Err(CausalTensorError::InvalidOperation)));
@@ -39,7 +39,7 @@ fn test_calculate_state_slice_all_nones_cdl() {
 
 #[test]
 fn test_mi_calculation_all_nones_cdl() {
-    let data = vec![None; 8];
+    let data: Vec<Option<f64>> = vec![None; 8];
     let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
     let result = surd_states_cdl(&p_raw, MaxOrder::Max);
     assert!(matches!(result, Err(CausalTensorError::InvalidOperation)));
@@ -47,7 +47,7 @@ fn test_mi_calculation_all_nones_cdl() {
 
 #[test]
 fn test_causal_state_maps_all_nones_cdl() {
-    let data = vec![None; 8];
+    let data: Vec<Option<f64>> = vec![None; 8];
     let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
     let result = surd_states_cdl(&p_raw, MaxOrder::Max);
     assert!(matches!(result, Err(CausalTensorError::InvalidOperation)));
@@ -55,7 +55,7 @@ fn test_causal_state_maps_all_nones_cdl() {
 
 #[test]
 fn test_single_target_state_some_nones_cdl() {
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.1),
         Some(0.1), // T=0, S1=0, S2=0
         None,
@@ -81,7 +81,7 @@ fn test_single_target_state_some_nones_cdl() {
 #[cfg(not(miri))]
 #[test]
 fn test_calculate_state_slice_some_nones_cdl() {
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.1),
         Some(0.1), // T=0, S1=0, S2=0
         None,

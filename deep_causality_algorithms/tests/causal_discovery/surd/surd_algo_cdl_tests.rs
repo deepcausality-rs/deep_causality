@@ -11,7 +11,7 @@ const TOLERANCE: f64 = 1e-10;
 #[test]
 fn test_empty_tensor_cdl() {
     // A tensor with a 0 in its shape has zero elements.
-    let p_raw = CausalTensor::new(vec![], vec![0]).unwrap();
+    let p_raw: CausalTensor<Option<f64>> = CausalTensor::new(vec![], vec![0]).unwrap();
     let result = surd_states_cdl(&p_raw, MaxOrder::Max);
     // The surd_states_cdl function should identify this as an empty tensor.
     assert!(matches!(result, Err(CausalTensorError::EmptyTensor)));
@@ -25,7 +25,8 @@ fn test_zero_probability_tensor_cdl() {
     assert!(matches!(result, Err(CausalTensorError::InvalidOperation)));
 
     // All values are None
-    let p_raw_none = CausalTensor::new(vec![None; 8], vec![2, 2, 2]).unwrap();
+    let p_raw_none: CausalTensor<Option<f64>> =
+        CausalTensor::new(vec![None; 8], vec![2, 2, 2]).unwrap();
     let result_none = surd_states_cdl(&p_raw_none, MaxOrder::Max);
     assert!(matches!(
         result_none,
@@ -57,7 +58,7 @@ fn test_zero_probability_tensor_cdl() {
 /// Tests the example from the `surd_states_cdl` doc comment with None values.
 #[test]
 fn test_doc_comment_example_full_decomposition_cdl() {
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.1),
         Some(0.2), // P(T=0, S1=0, S2=0), P(T=0, S1=0, S2=1)
         None,
@@ -92,7 +93,7 @@ fn test_doc_comment_example_full_decomposition_cdl() {
 #[test]
 fn test_partial_decomposition_cdl() {
     // System with 3 source variables, with some None values
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.0625),
         Some(0.0625),
         Some(0.0625),
@@ -132,7 +133,7 @@ fn test_partial_decomposition_cdl() {
 /// Test with a deterministic XOR-like distribution with None values to check synergistic states.
 #[test]
 fn test_deterministic_synergy_case_cdl() {
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.25),
         None, // T=0, S1=0
         None,
@@ -173,7 +174,7 @@ fn test_unique_information_case_cdl() {
     // P(T=0, S1=0, S2=0) = 0.25, P(T=0, S1=0, S2=1) = 0.25 -> P(T=0,S1=0)=0.5
     // P(T=1, S1=1, S2=0) = 0.25, P(T=1, S1=1, S2=1) = 0.25 -> P(T=1,S1=1)=0.5
     // All other joint probabilities are 0.
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.25),
         Some(0.25), // T=0, S1=0
         None,
@@ -209,7 +210,7 @@ fn test_unique_information_case_cdl() {
 fn test_redundant_information_case_cdl() {
     // T = S1, and S2 is a noisy copy of S1.
     // This creates redundancy between S1 and S2.
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.45),
         Some(0.05),
         None,
@@ -230,7 +231,7 @@ fn test_redundant_information_case_cdl() {
 
 #[test]
 fn test_all_none_input_cdl() {
-    let p_raw = CausalTensor::new(vec![None; 8], vec![2, 2, 2]).unwrap();
+    let p_raw: CausalTensor<Option<f64>> = CausalTensor::new(vec![None; 8], vec![2, 2, 2]).unwrap();
     let result = surd_states_cdl(&p_raw, MaxOrder::Max);
     assert!(matches!(result, Err(CausalTensorError::InvalidOperation)));
 }
@@ -238,7 +239,7 @@ fn test_all_none_input_cdl() {
 #[test]
 fn test_some_none_marginalization_cdl() {
     // Test case where marginalization results in None
-    let data = vec![Some(0.1), None, None, Some(0.1)]; // Shape [2,2]
+    let data: Vec<Option<f64>> = vec![Some(0.1), None, None, Some(0.1)]; // Shape [2,2]
     let p_raw = CausalTensor::new(data, vec![2, 2]).unwrap(); // T, S1
 
     // This will cause p_s (marginal of S1) to have Some and None
@@ -258,7 +259,7 @@ fn test_some_none_marginalization_cdl() {
 fn test_analyze_single_target_state_none_handling_cdl() {
     // Test case to ensure analyze_single_target_state_cdl handles Nones correctly
     // Specifically, the sorting and info calculation.
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.1),
         Some(0.0), // T=0, S1=0, S2=0
         None,
@@ -278,7 +279,7 @@ fn test_analyze_single_target_state_none_handling_cdl() {
 #[test]
 fn test_calculate_state_slice_none_handling_cdl() {
     // Test various None combinations in calculate_state_slice_cdl
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.1),
         Some(0.1), // T=0, S1=0, S2=0
         None,

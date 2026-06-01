@@ -7,7 +7,7 @@ use deep_causality_tensor::{CausalTensor, CausalTensorError};
 
 #[test]
 fn test_max_order_some_cdl() {
-    let data = vec![Some(0.125); 8];
+    let data: Vec<Option<f64>> = vec![Some(0.125); 8];
     let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
     let result = surd_states_cdl(&p_raw, MaxOrder::Some(2)).unwrap(); // Only pairwise
 
@@ -22,7 +22,7 @@ fn test_max_order_some_cdl() {
 
 #[test]
 fn test_max_order_max_cdl() {
-    let data = vec![Some(0.125); 8];
+    let data: Vec<Option<f64>> = vec![Some(0.125); 8];
     let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
     let result = surd_states_cdl(&p_raw, MaxOrder::Max).unwrap(); // Full decomposition
 
@@ -33,7 +33,7 @@ fn test_max_order_max_cdl() {
 
 #[test]
 fn test_max_order_min_cdl() {
-    let data = vec![Some(0.125); 8];
+    let data: Vec<Option<f64>> = vec![Some(0.125); 8];
     let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
     let result = surd_states_cdl(&p_raw, MaxOrder::Min).unwrap(); // Pairwise decomposition
 
@@ -44,7 +44,7 @@ fn test_max_order_min_cdl() {
 
 #[test]
 fn test_max_order_some_all_nones_cdl() {
-    let data = vec![None; 8];
+    let data: Vec<Option<f64>> = vec![None; 8];
     let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
     let result = surd_states_cdl(&p_raw, MaxOrder::Some(1));
     assert!(matches!(result, Err(CausalTensorError::InvalidOperation)));
@@ -52,7 +52,7 @@ fn test_max_order_some_all_nones_cdl() {
 
 #[test]
 fn test_max_order_max_all_nones_cdl() {
-    let data = vec![None; 8];
+    let data: Vec<Option<f64>> = vec![None; 8];
     let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
     let result = surd_states_cdl(&p_raw, MaxOrder::Max);
     assert!(matches!(result, Err(CausalTensorError::InvalidOperation)));
@@ -60,7 +60,7 @@ fn test_max_order_max_all_nones_cdl() {
 
 #[test]
 fn test_max_order_min_all_nones_cdl() {
-    let data = vec![None; 8];
+    let data: Vec<Option<f64>> = vec![None; 8];
     let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
     let result = surd_states_cdl(&p_raw, MaxOrder::Min);
     assert!(matches!(result, Err(CausalTensorError::InvalidOperation)));
@@ -78,7 +78,7 @@ fn test_invalid_max_order_cdl() {
 
 #[test]
 fn test_max_order_some_some_nones_cdl() {
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.1),
         Some(0.1),
         Some(0.1),
@@ -109,7 +109,7 @@ fn test_max_order_some_some_nones_cdl() {
 
 #[test]
 fn test_max_order_max_some_nones_cdl() {
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.1),
         Some(0.1),
         Some(0.1),
@@ -136,7 +136,7 @@ fn test_max_order_max_some_nones_cdl() {
 
 #[test]
 fn test_max_order_min_some_nones_cdl() {
-    let data = vec![
+    let data: Vec<Option<f64>> = vec![
         Some(0.1),
         Some(0.1),
         Some(0.1),

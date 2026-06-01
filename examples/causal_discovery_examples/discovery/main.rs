@@ -3,7 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_discovery::*;
+use deep_causality_num::Float106;
 use std::{fs::File, io::Write};
+
+/// Switch this alias to `f32` for low precision, `f64` for standard precision,
+/// or `Float106` for high precision. The entire CDL pipeline runs at this precision.
+pub type FloatType = Float106;
 
 fn main() {
     // 1. Get (random test) data
@@ -12,8 +17,9 @@ fn main() {
 
     // 2. Run the CDL pipeline (Monadic Flow)
     let result_effect = CdlBuilder::build()
-        // Load Data with Inline Config. For a more detailed file config, use the load_data_with_config() constructor
-        .bind(|cdl| cdl.load_data(&file_path, target_index, vec![]))
+        // Load Data with Inline Config. For a more detailed file config, use the load_data_with_config() constructor.
+        // The whole pipeline runs at `FloatType` precision, chosen once here via the turbofish.
+        .bind(|cdl| cdl.load_data::<FloatType>(&file_path, target_index, vec![]))
         // Clean Data using the OptionNoneDataCleaner
         .bind(|cdl| cdl.clean_data(OptionNoneDataCleaner))
         // Feature Selection using MRMR

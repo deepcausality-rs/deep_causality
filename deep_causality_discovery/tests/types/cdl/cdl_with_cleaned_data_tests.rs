@@ -7,7 +7,7 @@ use deep_causality_algorithms::feature_selection::mrmr::{MrmrError, MrmrResult};
 use deep_causality_discovery::{CDL, CdlConfig, WithCleanedData};
 use deep_causality_tensor::CausalTensor;
 
-fn create_cdl_with_cleaned_data() -> CDL<WithCleanedData> {
+fn create_cdl_with_cleaned_data() -> CDL<WithCleanedData<f64>> {
     // 2 rows, 2 cols (0 and 1)
     // Row 0: [1.0, None]
     // Row 1: [3.0, 4.0]

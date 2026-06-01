@@ -4,7 +4,7 @@
  */
 
 use crate::CausalDiscovery;
-use crate::{CausalDiscoveryConfig, CausalDiscoveryError};
+use crate::{CausalDiscoveryConfig, CausalDiscoveryError, Precision};
 use deep_causality_algorithms::surd::{SurdResult, surd_states_cdl};
 use deep_causality_tensor::{CausalTensor, Tensor};
 
@@ -14,22 +14,22 @@ use deep_causality_tensor::{CausalTensor, Tensor};
 /// algorithms from the `deep_causality_algorithms` crate.
 pub struct SurdCausalDiscovery;
 
-impl CausalDiscovery for SurdCausalDiscovery {
+impl<T: Precision> CausalDiscovery<T> for SurdCausalDiscovery {
     fn discover(
         &self,
-        tensor: CausalTensor<Option<f64>>,
+        tensor: CausalTensor<Option<T>>,
         config: &CausalDiscoveryConfig,
-    ) -> Result<SurdResult<f64>, CausalDiscoveryError> {
+    ) -> Result<SurdResult<T>, CausalDiscoveryError> {
         let CausalDiscoveryConfig::Surd(surd_config) = config;
         Self::discover_res(&tensor, surd_config)
     }
 }
 
 impl SurdCausalDiscovery {
-    pub fn discover_res(
-        tensor: &CausalTensor<Option<f64>>,
+    pub fn discover_res<T: Precision>(
+        tensor: &CausalTensor<Option<T>>,
         config: &crate::SurdConfig,
-    ) -> Result<SurdResult<f64>, CausalDiscoveryError> {
+    ) -> Result<SurdResult<T>, CausalDiscoveryError> {
         let target_col = config.target_col();
         let num_dims = tensor.num_dim();
 

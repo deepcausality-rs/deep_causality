@@ -7,7 +7,7 @@ use deep_causality_algorithms::feature_selection::mrmr::MrmrResult;
 use deep_causality_algorithms::surd::SurdResult;
 use deep_causality_discovery::{AnalyzeConfig, CDL, CdlConfig, WithCausalResults};
 
-fn create_cdl_with_results() -> CDL<WithCausalResults> {
+fn create_cdl_with_results() -> CDL<WithCausalResults<f64>> {
     CDL {
         state: WithCausalResults {
             surd_result: SurdResult::new(

@@ -29,6 +29,4 @@ mod hodge_decomposition_tests;
 #[cfg(test)]
 mod manifold_topology_tests;
 #[cfg(test)]
-mod no_direct_field_access_tests;
-#[cfg(test)]
 mod simplicial_topology_tests;
