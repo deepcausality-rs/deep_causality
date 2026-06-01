@@ -4,6 +4,7 @@
  */
 
 use deep_causality_tensor::{CausalTensor, CausalTensorError, CausalTensorStatsExt};
+use std::f64::consts::PI;
 
 const EPS: f64 = 1e-12;
 
@@ -107,4 +108,182 @@ fn sample_covariance_rejects_zero_column_tensor() {
         .sample_covariance()
         .expect_err("zero-column tensor must be rejected");
     assert!(matches!(err, CausalTensorError::EmptyTensor));
+}
+
+// --- logsumexp ---
+
+#[test]
+fn logsumexp_matches_naive_for_small_inputs() {
+    let t = CausalTensor::<f64>::new(vec![0.1, 0.2, 0.3, 0.4], vec![4, 1]).unwrap();
+    let naive = t.as_slice().iter().map(|x| x.exp()).sum::<f64>().ln();
+    assert!((t.logsumexp() - naive).abs() < EPS);
+}
+
+#[test]
+fn logsumexp_equals_ln_n_for_zeros() {
+    let t = CausalTensor::<f64>::new(vec![0.0, 0.0, 0.0], vec![3, 1]).unwrap();
+    assert!((t.logsumexp() - 3.0_f64.ln()).abs() < EPS);
+}
+
+#[test]
+fn logsumexp_does_not_overflow_for_large_inputs() {
+    // exp(1000) overflows f64; the max-shift form must stay finite.
+    let t = CausalTensor::<f64>::new(vec![1000.0, 1001.0], vec![2, 1]).unwrap();
+    let lse = t.logsumexp();
+    assert!(lse.is_finite());
+    // log(e^1000 + e^1001) = 1001 + log(1 + e^-1)
+    let expected = 1001.0 + (1.0 + (-1.0_f64).exp()).ln();
+    assert!((lse - expected).abs() < 1e-9);
+}
+
+#[test]
+fn logsumexp_single_element_is_that_element() {
+    let t = CausalTensor::<f64>::new(vec![42.0], vec![1, 1]).unwrap();
+    assert!((t.logsumexp() - 42.0).abs() < EPS);
+}
+
+#[test]
+fn logsumexp_empty_is_negative_infinity() {
+    let t = CausalTensor::<f64>::new(vec![], vec![0, 1]).unwrap();
+    let lse = t.logsumexp();
+    assert!(lse.is_infinite() && lse < 0.0);
+}
+
+#[test]
+fn logsumexp_non_finite_max_returns_max() {
+    let t = CausalTensor::<f64>::new(vec![1.0, f64::INFINITY, 2.0], vec![3, 1]).unwrap();
+    assert!(t.logsumexp().is_infinite());
+}
+
+// --- gaussian_log_density ---
+
+#[test]
+fn gaussian_log_density_matches_closed_form() {
+    // Standard normal evaluated at x = 0: −½·log(2π).
+    let t = CausalTensor::<f64>::new(vec![0.0], vec![1, 1]).unwrap();
+    let dens = t.gaussian_log_density(0.0, 1.0).unwrap();
+    let expected = -0.5 * (2.0 * PI).ln();
+    assert!((dens.as_slice()[0] - expected).abs() < EPS);
+}
+
+#[test]
+fn gaussian_log_density_is_elementwise() {
+    let t = CausalTensor::<f64>::new(vec![0.0, 1.0, -1.0], vec![3, 1]).unwrap();
+    let dens = t.gaussian_log_density(0.0, 1.0).unwrap();
+    assert_eq!(dens.shape(), &[3, 1]);
+    for (x, lp) in t.as_slice().iter().zip(dens.as_slice().iter()) {
+        let expected = -0.5 * ((2.0 * PI).ln() + x * x);
+        assert!((lp - expected).abs() < EPS);
+    }
+}
+
+#[test]
+fn gaussian_log_density_floors_zero_variance() {
+    let t = CausalTensor::<f64>::new(vec![0.5], vec![1, 1]).unwrap();
+    let dens = t.gaussian_log_density(0.0, 0.0).unwrap();
+    assert!(dens.as_slice()[0].is_finite());
+}
+
+#[test]
+fn gaussian_log_density_floors_negative_variance() {
+    let t = CausalTensor::<f64>::new(vec![0.5], vec![1, 1]).unwrap();
+    let dens = t.gaussian_log_density(0.0, -3.0).unwrap();
+    assert!(dens.as_slice()[0].is_finite());
+}
+
+#[test]
+fn gaussian_log_density_empty_tensor_is_empty() {
+    let t = CausalTensor::<f64>::new(vec![], vec![0, 1]).unwrap();
+    let dens = t.gaussian_log_density(0.0, 1.0).unwrap();
+    assert!(dens.is_empty());
+}
+
+// --- conditional_variance ---
+
+#[test]
+fn conditional_variance_empty_parents_is_marginal() {
+    // Diagonal entry is the marginal variance.
+    let cov = CausalTensor::<f64>::new(vec![2.0, 0.5, 0.5, 3.0], vec![2, 2]).unwrap();
+    let cv = cov.conditional_variance(1, &[], 0.0).unwrap();
+    assert!((cv - 3.0).abs() < EPS);
+}
+
+#[test]
+fn conditional_variance_single_parent_closed_form() {
+    // Σ = [[2,1],[1,1]]; Var(y|p) = σ_yy − σ_yp²/σ_pp = 2 − 1 = 1.
+    let cov = CausalTensor::<f64>::new(vec![2.0, 1.0, 1.0, 1.0], vec![2, 2]).unwrap();
+    let cv = cov.conditional_variance(0, &[1], 0.0).unwrap();
+    assert!((cv - 1.0).abs() < EPS);
+}
+
+#[test]
+fn conditional_variance_two_parent_identity_block() {
+    // Σ_PP = I₂, Σ_yP = [a, b] → Var(y|P) = σ_yy − (a² + b²).
+    // Variables: y=0, p1=1, p2=2. σ_yy=5, σ_y1=1, σ_y2=2, parents uncorrelated unit variance.
+    let cov = CausalTensor::<f64>::new(
+        vec![
+            5.0, 1.0, 2.0, // y row
+            1.0, 1.0, 0.0, // p1 row
+            2.0, 0.0, 1.0, // p2 row
+        ],
+        vec![3, 3],
+    )
+    .unwrap();
+    let cv = cov.conditional_variance(0, &[1, 2], 0.0).unwrap();
+    // 5 − (1² + 2²) = 0
+    assert!((cv - 0.0).abs() < 1e-10);
+}
+
+#[test]
+fn conditional_variance_singular_block_stabilized_by_ridge() {
+    // Σ_PP = [[1,1],[1,1]] is singular; ridge keeps the solve finite.
+    let cov = CausalTensor::<f64>::new(
+        vec![
+            2.0, 1.0, 1.0, //
+            1.0, 1.0, 1.0, //
+            1.0, 1.0, 1.0, //
+        ],
+        vec![3, 3],
+    )
+    .unwrap();
+    let cv = cov.conditional_variance(0, &[1, 2], 1e-6).unwrap();
+    assert!(cv.is_finite());
+    // With ridge → 0, z ≈ [0.5, 0.5], reduction ≈ 1, cv ≈ 1.
+    assert!((cv - 1.0).abs() < 1e-3);
+}
+
+#[test]
+fn conditional_variance_rejects_non_square_matrix() {
+    let cov = CausalTensor::<f64>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
+    let err = cov
+        .conditional_variance(0, &[1], 0.0)
+        .expect_err("non-square covariance must be rejected");
+    assert!(matches!(err, CausalTensorError::DimensionMismatch));
+}
+
+#[test]
+fn conditional_variance_rejects_non_2d_matrix() {
+    let cov = CausalTensor::<f64>::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
+    let err = cov
+        .conditional_variance(0, &[1], 0.0)
+        .expect_err("1-D covariance must be rejected");
+    assert!(matches!(err, CausalTensorError::DimensionMismatch));
+}
+
+#[test]
+fn conditional_variance_rejects_out_of_range_target() {
+    let cov = CausalTensor::<f64>::new(vec![2.0, 1.0, 1.0, 1.0], vec![2, 2]).unwrap();
+    let err = cov
+        .conditional_variance(5, &[1], 0.0)
+        .expect_err("out-of-range target must be rejected");
+    assert!(matches!(err, CausalTensorError::IndexOutOfBounds));
+}
+
+#[test]
+fn conditional_variance_rejects_out_of_range_parent() {
+    let cov = CausalTensor::<f64>::new(vec![2.0, 1.0, 1.0, 1.0], vec![2, 2]).unwrap();
+    let err = cov
+        .conditional_variance(0, &[7], 0.0)
+        .expect_err("out-of-range parent must be rejected");
+    assert!(matches!(err, CausalTensorError::IndexOutOfBounds));
 }

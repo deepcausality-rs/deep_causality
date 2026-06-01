@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_num::Float106;
 use deep_causality_sparse::{CgFailure, cg_solve};
 
 /// Euclidean norm of a slice, used to check the reported residual without
@@ -97,6 +98,22 @@ fn cg_converges_at_f32_precision() {
     let x = cg_solve(apply, &b, 1e-5_f32, 100).expect("CG converges at f32");
     assert!((x[0] - 1.0 / 11.0).abs() < 1e-4);
     assert!((x[1] - 7.0 / 11.0).abs() < 1e-4);
+}
+
+#[test]
+fn cg_converges_at_float106_precision() {
+    // A = [[4, 1], [1, 3]], b = [1, 2], exact solution = [1/11, 7/11].
+    let f = Float106::from_f64;
+    let a = [[f(4.0), f(1.0)], [f(1.0), f(3.0)]];
+    let b = vec![f(1.0), f(2.0)];
+    let apply = |v: &[Float106]| -> Vec<Float106> {
+        (0..2)
+            .map(|i| (0..2).fold(f(0.0), |acc, j| acc + a[i][j] * v[j]))
+            .collect()
+    };
+    let x = cg_solve(apply, &b, f(1e-20), 100).expect("CG converges at Float106");
+    assert!((x[0].to_f64() - 1.0 / 11.0).abs() < 1e-12);
+    assert!((x[1].to_f64() - 7.0 / 11.0).abs() < 1e-12);
 }
 
 #[test]
