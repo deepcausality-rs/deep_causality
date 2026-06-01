@@ -1,53 +1,92 @@
 ---
-import { getCollection } from 'astro:content';
+import {getCollection} from 'astro:content';
 import ExamplesList from './ExamplesList.astro';
 
 type Category = 'foundations' | 'aerospace' | 'physics' | 'medicine' | 'mathematics';
 
 interface Props {
-  category: Category;
-  title: string;
-  description: string;
-  eyebrow: string;
+    category: Category;
+    title: string;
+    description: string;
+    eyebrow: string;
 }
 
-const { category, title, description, eyebrow } = Astro.props;
+const {category, title, description, eyebrow} = Astro.props;
 
 const entries = (await getCollection('examples'))
-  .filter((e) => e.data.category === category)
-  .sort((a, b) => a.data.order - b.data.order);
+    .filter((e) => e.data.category === category)
+    .sort((a, b) => a.data.order - b.data.order);
 ---
 <section class="cat-page">
-  <header>
-    <p class="eyebrow">{eyebrow}</p>
-    <h1>{title}</h1>
-    <p class="lede">{description}</p>
-  </header>
+    <header>
+        <p class="eyebrow">{eyebrow}</p>
+        <h1>{title}</h1>
+        <p class="lede">{description}</p>
+    </header>
 
-  {entries.length > 0
-    ? <ExamplesList entries={entries} />
-    : <p class="empty">No examples in this category yet.</p>}
+    {entries.length > 0
+        ?
+            <ExamplesList entries={entries}/>
+        : <p class="empty">No examples in this category yet.</p>}
 
-  <nav class="back" aria-label="Back to all examples">
-    <a href="/examples/">&larr; All examples</a>
-  </nav>
+    <nav class="back" aria-label="Back to all examples">
+        <a href="/examples/">&larr; All examples</a>
+    </nav>
 </section>
 
 <style>
-  .cat-page { max-width: var(--w-page); margin: 0 auto; padding: var(--space-7) var(--space-4); }
-  @media (min-width: 720px) { .cat-page { padding: var(--space-9) var(--space-5); } }
-  .cat-page header { max-width: 60ch; margin-bottom: var(--space-7); }
-  .eyebrow {
-    margin: 0;
-    font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
-    text-transform: uppercase; color: var(--fg-2);
-  }
-  h1 { margin: var(--space-2) 0 var(--space-3) 0; }
-  .lede { color: var(--fg-1); margin: 0; max-width: var(--measure); }
+    .cat-page {
+        max-width: var(--w-page);
+        margin: 0 auto;
+        padding: var(--space-7) var(--space-4);
+    }
 
-  .empty { color: var(--fg-1); padding: var(--space-6) 0; border-top: 1px solid var(--line-1); margin: 0; }
+    @media (min-width: 720px) {
+        .cat-page {
+            padding: var(--space-9) var(--space-5);
+        }
+    }
 
-  .back { margin-top: var(--space-8); }
-  .back a { color: var(--fg-1); border-bottom: none; }
-  .back a:hover { color: var(--fg-0); }
+    .cat-page header {
+        max-width: 60ch;
+        margin-bottom: var(--space-7);
+    }
+
+    .eyebrow {
+        margin: 0;
+        font-size: var(--t-eyebrow);
+        letter-spacing: var(--ls-eyebrow);
+        text-transform: uppercase;
+        color: var(--fg-2);
+    }
+
+    h1 {
+        margin: var(--space-2) 0 var(--space-3) 0;
+    }
+
+    .lede {
+        color: var(--fg-1);
+        margin: 0;
+        max-width: var(--measure);
+    }
+
+    .empty {
+        color: var(--fg-1);
+        padding: var(--space-6) 0;
+        border-top: 1px solid var(--line-1);
+        margin: 0;
+    }
+
+    .back {
+        margin-top: var(--space-8);
+    }
+
+    .back a {
+        color: var(--fg-1);
+        border-bottom: none;
+    }
+
+    .back a:hover {
+        color: var(--fg-0);
+    }
 </style>

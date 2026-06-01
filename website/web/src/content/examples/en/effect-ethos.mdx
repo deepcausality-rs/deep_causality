@@ -1,0 +1,126 @@
+---
+title: A Programmable Effect Ethos that vetoes impermissible actions
+domain: Governance
+summary: A causal verdict says an alert should fire. A separate deontic layer, the Effect Ethos, checks whether the alert is allowed to fire and forbids it. Two questions, two engines, one decision.
+order: 5
+category: foundations
+crates:
+  - deep_causality
+  - deep_causality_ethos
+further:
+  - label: Effect Ethos concept page
+    href: /docs/concepts/effect-ethos/
+  - label: Causal State Machine concept page
+    href: /docs/concepts/csm/
+---
+
+The full example lives at [`csm_examples`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/csm_examples);
+this page covers `Effect Ethos`. It is the *Governance* layer; the part that decides what is allowed to happen.
+
+Causal reasoning answers one question: given the inputs, does the alert condition hold?
+For strictly deterministic s, you have an implicit safeguard that nothing unexpected can happen outside the encoded model.Ethos
+For dynamic systems, however, that safeguard is not guaranteed any longer.
+
+Deontic reasoning answers a different one: given the rules we operate under,
+is executing a specific action permitted?
+
+The Effect Ethos encodes operational rules that are applied dynamically, depending on whether a triggered action needs
+ verification under the governing rules. If governance is mandatory, the effect ethos queries its rule sets and ultimately determines which rules are applied and what decision
+ will be inferred based on the applied rules and supplied context of the action.
+
+## The norm
+
+An Ethos is a set of norms. Each norm marks an action as permitted, required, or forbidden under a stated condition.
+This example defines one norm, and it forbids emitting an alert outright.
+
+```rust
+use deep_causality_ethos::{EffectEthos, TeloidModal};
+
+fn get_effect_ethos() -> CsmEthos {
+    let mut ethos = EffectEthos::new()
+        .add_deterministic_norm(
+            1,                          // norm id
+            "high_temp_alert",          // the action this norm governs
+            &["temperature"],           // the context tags it reads
+            |_context, _action| true,   // when the norm is active
+            TeloidModal::Impermissible, // the verdict when active
+            1, 1, 1,                    // priority, version, author
+        )
+        .unwrap();
+    ethos.verify_graph().unwrap();
+    ethos
+}
+```
+
+[`model.rs:26`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/csm_examples/csm_effect_ethos/model.rs#L26).
+
+`TeloidModal` has three values: `Impermissible` (forbidden), `Obligatory` (required), and `Optional` (permitted).
+This norm always evaluates active and returns `Impermissible`, so the action `high_temp_alert`
+is forbidden whenever the Ethos is consulted. `verify_graph` checks the norm set for contradictions before the Ethos is used;
+
+
+## The verdict
+
+The action that would otherwise fire is wrapped as a `ProposedAction` and handed to the Ethos,
+along with the context and the tags the norms may read.
+
+```rust
+use deep_causality::ProposedAction;
+use std::collections::HashMap;
+
+let proposed_action = ProposedAction::new(1, "high_temp_alert".to_string(), HashMap::new());
+
+let context = context_arc.read().unwrap();
+let verdict = ethos.evaluate_action(&proposed_action, &context, &["temperature"])?;
+
+match verdict.outcome() {
+    TeloidModal::Impermissible => {
+        println!(">>> Action is FORBIDDEN by the ethos.");
+        // The alert does not fire; the Causaloid said it should, the Ethos says it does not.
+    }
+    TeloidModal::Obligatory => println!(">>> Action is REQUIRED by the ethos."),
+    TeloidModal::Optional(_) => println!(">>> Action is PERMITTED by the ethos."),
+}
+```
+
+[`main.rs:46`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/csm_examples/csm_effect_ethos/main.rs#L46).
+
+`evaluate_action` returns a verdict, and the verdict carries more than an outcome.
+Its `justification()` lists the norm ids that produced the result, so you can trace a forbidden action back
+to the exact rule that forbade it and print the rule in plain language.
+
+## Run it
+
+```bash
+git clone https://github.com/deepcausality-rs/deep_causality
+cd deep_causality
+cargo run --release -p csm_examples --example csm_effect_ethos_example
+```
+
+Expected output: the CSM evaluates the temperature reading and reports that the alert condition holds;
+the Ethos then returns `Impermissible` and the alert is suppressed, with the governing norm named in the justification.
+
+## Where to take it next
+
+The example norm here Only serves for illustration. A real norm reads the context:
+forbid the evacuation alarm while the building is occupied, require a second sign-off outside
+the operator's approval window, permit the notification otherwise.
+Add norms with `add_deterministic_norm` and let `verify_graph` catch the conflicts.
+Wire the verdict into a CSM so the action fires only when the Causaloid says it should and the Ethos says it may.
+
+## Why governance is its own layer
+
+The Effect Ethos keeps reasoning and the permissibility of actions apart.
+The Causaloid stays a pure statement about cause and effect;
+the Ethos holds the policy, and the CSM encodes the action.
+
+With all three layers separated, the reasoning can be verified and audited for internal consistency by the
+appropriate  causal reasoning experts. The applicable actions can be designed, for example, by integration engineers
+that determine how to wire s together via causal action based on reasoning insights.
+The effect ethos is a separate layer because that allows the applicable rules to be separated from the to ensure that
+governance and development are not conflated. For example, an external auditor can certify the effect ethos layer as
+compliant with applicable regulations without even looking at the underlying, because the effect ethos enforces what is permissible,
+regardless of how the underlying software architecture may work or evolve over time.Ethos
+
+
+

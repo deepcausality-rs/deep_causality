@@ -1,47 +1,77 @@
 ---
-import type { CollectionEntry } from 'astro:content';
+import type {CollectionEntry} from 'astro:content';
 
 interface Props {
-  entries: CollectionEntry<'examples'>[];
+    entries: CollectionEntry<'examples'>[];
 }
-const { entries } = Astro.props;
+const {entries} = Astro.props;
 ---
 <ul class="ex-list" role="list">
-  {entries.map((e) => (
-    <li>
-      <a href={`/examples/${e.id.replace(/^en\//, '')}/`}>
-        <div class="meta">
-          <span class="dom">{e.data.domain}</span>
-          <span class="open" aria-hidden="true">→</span>
-        </div>
-        <h2>{e.data.title}</h2>
-        <p>{e.data.summary}</p>
-      </a>
-    </li>
-  ))}
+    {entries.map((e) => (
+            <li>
+                <a href={`/examples/${e.id.replace(/^en\//, '')}/`}>
+                    <div class="meta">
+                        <span class="dom">{e.data.domain}</span>
+                        <span class="open" aria-hidden="true">→</span>
+                    </div>
+                    <h2>{e.data.title}</h2>
+                    <p>{e.data.summary}</p>
+                </a>
+            </li>
+    ))}
 </ul>
 
 <style>
-  .ex-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; }
-  .ex-list li + li { border-top: 1px solid var(--line-1); }
-  .ex-list a {
-    display: grid;
-    gap: var(--space-2);
-    padding: var(--space-6) 0;
-    color: var(--fg-0);
-    border-bottom: none;
-    transition: padding-left var(--dur-med) var(--ease-out);
-  }
-  .ex-list a:hover { padding-left: var(--space-3); }
-  .meta {
-    display: flex; justify-content: space-between; align-items: baseline;
-    color: var(--fg-2);
-  }
-  .dom {
-    font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
-    text-transform: uppercase;
-  }
-  .open { color: var(--accent); }
-  .ex-list h2 { margin: 0; font-size: var(--t-h3); }
-  .ex-list p { margin: 0; color: var(--fg-1); max-width: var(--measure); }
+    .ex-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 0;
+    }
+
+    .ex-list li + li {
+        border-top: 1px solid var(--line-1);
+    }
+
+    .ex-list a {
+        display: grid;
+        gap: var(--space-2);
+        padding: var(--space-6) 0;
+        color: var(--fg-0);
+        border-bottom: none;
+        transition: padding-left var(--dur-med) var(--ease-out);
+    }
+
+    .ex-list a:hover {
+        padding-left: var(--space-3);
+    }
+
+    .meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        color: var(--fg-2);
+    }
+
+    .dom {
+        font-size: var(--t-eyebrow);
+        letter-spacing: var(--ls-eyebrow);
+        text-transform: uppercase;
+    }
+
+    .open {
+        color: var(--accent);
+    }
+
+    .ex-list h2 {
+        margin: 0;
+        font-size: var(--t-h3);
+    }
+
+    .ex-list p {
+        margin: 0;
+        color: var(--fg-1);
+        max-width: var(--measure);
+    }
 </style>
