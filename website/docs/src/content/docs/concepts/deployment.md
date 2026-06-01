@@ -13,7 +13,7 @@ This page works through the deployment story using the [`tokio_example`](https:/
 
 A [Causaloid](/concepts/causaloid/) is evaluated through `evaluate(&self, ...)`. The call borrows the Causaloid; it does not consume or mutate it. The rule itself is a function pointer, so evaluation allocates nothing on the heap and dispatches nothing through a vtable. One value goes in, one `PropagatingEffect` comes out.
 
-Two consequences follow. A single Causaloid can be evaluated any number of times. And because evaluation is a shared read, it can be evaluated from many places at once and is therefore the thread-safe.
+Two consequences follow. A single Causaloid can be evaluated any number of times. And because evaluation is a shared read, it can be evaluated from many places at once, which makes it thread-safe.
 
 ## Asynchronous serving with Tokio
 
@@ -36,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-The model is built once, the handler takes ownership, and inference runs on a spawned task while the main task stays free. In a real service the task is long-lived: it reads events off a channel and the `.await` becomes a graceful-shutdown handle.
+The model is built once, the handler takes ownership, and inference runs on a spawned task. Here the main task awaits that task, so the program runs to completion and exits cleanly. In a real service the task is long-lived: it reads events off a channel, the main task is free to do other work, and the `.await` becomes a graceful-shutdown handle.
 
 The inference inside the task is synchronous. There is no `.await` in the evaluation path, no async Causaloid, no futures threaded through the causal logic. The asynchrony sits at the runtime boundary. This keeps the causal code simple and keeps the hot path free of executor overhead.
 

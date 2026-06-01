@@ -18,8 +18,8 @@ The full example lives at [`csm_examples`](https://github.com/deepcausality-rs/d
 this page covers `Effect Ethos`. It is the *Governance* layer; the part that decides what is allowed to happen.
 
 Causal reasoning answers one question: given the inputs, does the alert condition hold?
-For strictly deterministic s, you have an implicit safeguard that nothing unexpected can happen outside the encoded model.Ethos
-For dynamic systems, however, that safeguard is not guaranteed any longer.
+For a strictly deterministic system, the encoded model is its own safeguard; nothing unexpected can happen outside it.
+For a dynamic system, that safeguard no longer holds.
 
 Deontic reasoning answers a different one: given the rules we operate under,
 is executing a specific action permitted?
@@ -114,13 +114,11 @@ The Effect Ethos keeps reasoning and the permissibility of actions apart.
 The Causaloid stays a pure statement about cause and effect;
 the Ethos holds the policy, and the CSM encodes the action.
 
-With all three layers separated, the reasoning can be verified and audited for internal consistency by the
-appropriate  causal reasoning experts. The applicable actions can be designed, for example, by integration engineers
-that determine how to wire s together via causal action based on reasoning insights.
-The effect ethos is a separate layer because that allows the applicable rules to be separated from the to ensure that
-governance and development are not conflated. For example, an external auditor can certify the effect ethos layer as
-compliant with applicable regulations without even looking at the underlying, because the effect ethos enforces what is permissible,
-regardless of how the underlying software architecture may work or evolve over time.Ethos
+With the three layers separated, causal reasoning experts can verify and audit the reasoning for internal consistency,
+while integration engineers design the actions and decide how to wire them to the reasoning. The Effect Ethos is a
+separate layer so that governance and development stay distinct. An external auditor can certify the Ethos layer as
+compliant with the applicable regulations without reading the rest of the system, because the Ethos enforces what is
+permissible regardless of how the underlying architecture works or evolves over time.
 
 
 
