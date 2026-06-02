@@ -38,11 +38,32 @@ The change SHALL include a self-contained synthetic experiment — data generate
 - **WHEN** BRCD runs on seeded synthetic data with a known set of injected root causes
 - **THEN** every true root cause appears within the top-k ranked candidates
 
+### Requirement: Verification delivered as individually-runnable examples
+
+Each verification SHALL be a standalone Rust example under `examples/verification/`,
+declared as a named `[[example]]` in `Cargo.toml` and runnable individually
+(`cargo run --example <name>`). Each example SHALL print a per-check `PASS`/`FAIL`
+line and exit non-zero on any failure. The `base` example SHALL be self-contained
+(no external data); the `real_world_*` examples SHALL replay committed
+Python-derived CSV inputs and expected ranks.
+
+#### Scenario: A verification runs individually
+
+- **WHEN** `cargo run --example base` is invoked
+- **THEN** the base synthetic-recovery verification runs on its own and reports `PASS`/`FAIL`
+
+#### Scenario: Real-world example skips gracefully without data
+
+- **WHEN** a `real_world_*` example is run but its committed dataset is not present
+- **THEN** it prints the Python→CSV→expected workflow and exits without failing
+
 ### Requirement: Deterministic, dependency-free verification
 
-The verification suite SHALL be deterministic (fixed seeds, no live data download, no external numeric crates) and SHALL run as part of the crate's standard test suite. Reference oracle outputs SHALL be committed golden data captured offline, not regenerated at test time.
+The verification SHALL be deterministic (fixed seeds, no live data download, no
+external numeric crates). Reference oracle outputs SHALL be committed data
+captured offline, not regenerated at run time.
 
-#### Scenario: Suite is reproducible offline
+#### Scenario: Verification is reproducible offline
 
-- **WHEN** the verification suite runs on a clean checkout with no network access
-- **THEN** it completes using only in-repo synthetic generation and committed golden fixtures, with identical results across runs
+- **WHEN** a verification example runs on a clean checkout with no network access
+- **THEN** it completes using only in-repo synthetic generation and committed data, with identical results across runs

@@ -24,7 +24,7 @@
 //! the reference's behaviour and its empirical-prior fallback).
 
 use crate::causal_discovery::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
-use crate::causal_discovery::brcd::brcd_linalg::solve_spd;
+use crate::causal_discovery::brcd::brcd_linalg::solve_linear;
 use deep_causality_num::{FromPrimitive, RealField};
 
 /// Configuration for the logistic-gate fit.
@@ -143,7 +143,7 @@ pub fn fit_logistic_gate<T: RealField + FromPrimitive>(
         }
 
         // Newton step: solve H·step = grad, then θ ← θ − step.
-        solve_spd(&mut hess, &mut grad, dim);
+        solve_linear(&mut hess, &mut grad, dim);
         let mut max_step = T::zero();
         for a in 0..dim {
             theta[a] -= grad[a];

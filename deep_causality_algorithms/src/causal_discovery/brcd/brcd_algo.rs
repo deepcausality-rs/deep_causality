@@ -346,8 +346,14 @@ fn logsumexp_slice<T: RealField>(vals: &[T]) -> T {
     max + sum.ln()
 }
 
-/// Normalizes the per-candidate log-posteriors (max-shifted `exp`) and returns
-/// the candidates ranked by descending posterior.
+/// Ranks the candidates by descending log-posterior and reports the max-shifted
+/// `exp` posterior alongside.
+///
+/// Ranking is done on the **log**-posterior, not on `exp(lp − max)`: when one
+/// candidate dominates by more than ~`ln(f64::MAX)` (easily reached summing over
+/// many rows), every other `exp(...)` underflows to `0.0` and ties, collapsing the
+/// tail to index order. The log-posterior preserves the full ordering; the `exp`
+/// value is kept only as an interpretable weight.
 fn rank<T: RealField>(combos: Vec<Vec<usize>>, log_posterior: Vec<T>) -> BrcdResult<T> {
     let max = log_posterior
         .iter()
@@ -357,8 +363,8 @@ fn rank<T: RealField>(combos: Vec<Vec<usize>>, log_posterior: Vec<T>) -> BrcdRes
 
     let mut order: Vec<usize> = (0..combos.len()).collect();
     order.sort_by(|&a, &b| {
-        posterior[b]
-            .partial_cmp(&posterior[a])
+        log_posterior[b]
+            .partial_cmp(&log_posterior[a])
             .unwrap_or(std::cmp::Ordering::Equal)
     });
 

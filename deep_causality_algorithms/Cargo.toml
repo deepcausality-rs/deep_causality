@@ -54,5 +54,25 @@ criterion = {  version = "0.8" }
 name = "mrmr_benchmark"
 harness = false
 
+# --- BRCD verification examples (run individually) ---
+# Base verification: self-contained synthetic recovery (no Python needed).
+#   cargo run -p deep_causality_algorithms --example verification_base
+[[example]]
+name = "verification_base"
+path = "examples/verification/brcd/verification_base.rs"
+
+# Real-world verification (Online Boutique): replays committed Python-derived
+# cases + expected ranks. See examples/verification/README.md for the workflow.
+#   cargo run -p deep_causality_algorithms --example verification_online_boutique
+[[example]]
+name = "verification_online_boutique"
+path = "examples/verification/brcd/verification_online_boutique.rs"
+
+# Real-world verification (Sock Shop).
+#   cargo run -p deep_causality_algorithms --example verification_sockshop
+[[example]]
+name = "verification_sockshop"
+path = "examples/verification/brcd/verification_sockshop.rs"
+
 [lints]
 workspace = true

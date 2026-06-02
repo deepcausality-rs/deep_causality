@@ -15,7 +15,7 @@
 //! This module ports that single-expert scorer and its pieces:
 //! * [`fit_ridge`] — `β = solve(XᵀX + λI, Xᵀy)`, `σ² = ‖resid‖² / max(n−p, 1)`
 //!   floored to `1e-12`, via the shared dense SPD solver
-//!   [`crate::causal_discovery::brcd::brcd_linalg::solve_spd`].
+//!   [`crate::causal_discovery::brcd::brcd_linalg::solve_linear`].
 //! * [`transform_and_jacobian`] and [`effective_transform`] — the
 //!   none/log/log1p transform ladder with its `log → log1p → yeojohnson`
 //!   auto-downgrade (Yeo-Johnson is deferred; see design D7).
@@ -29,7 +29,7 @@
 
 use crate::causal_discovery::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use crate::causal_discovery::brcd::brcd_gate::{GateConfig, fit_logistic_gate};
-use crate::causal_discovery::brcd::brcd_linalg::solve_spd;
+use crate::causal_discovery::brcd::brcd_linalg::solve_linear;
 use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::{CausalTensor, CausalTensorStatsExt};
 
@@ -116,7 +116,7 @@ pub fn fit_ridge<T: RealField + FromPrimitive>(
     }
 
     // Solve in place; xty becomes β.
-    solve_spd(&mut xtx, &mut xty, p);
+    solve_linear(&mut xtx, &mut xty, p);
     let beta = xty;
 
     // Residual variance with dof = max(n − p, 1), floored.
