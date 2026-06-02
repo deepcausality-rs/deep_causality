@@ -48,3 +48,32 @@ fn test_point_cloud_extend() {
     // Index 2: val 3 + 2 = 5
     assert_eq!(extended_pc.metadata().as_slice(), &[1.0, 3.0, 5.0]);
 }
+
+#[test]
+fn comonad_right_identity_holds_for_nonzero_focus() {
+    // extract(extend(w, f)) == f(w) must hold when the focus is not index 0.
+    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0], vec![3, 2]).unwrap();
+    let metadata = CausalTensor::new(vec![3.0, 4.0, 5.0], vec![3]).unwrap();
+    let pc = PointCloud::new(points, metadata, 2).unwrap();
+    let f = |w: &PointCloud<f64, f64>| w.metadata().as_slice()[w.cursor()] + 100.0;
+    let extended = PointCloudWitness::<f64>::extend(&pc, f);
+    assert_eq!(extended.cursor(), 2);
+    assert_eq!(PointCloudWitness::<f64>::extract(&extended), 105.0);
+}
+
+#[test]
+fn comonad_associativity_law() {
+    // extend(extend(w, g), f) == extend(w, |w'| f(&extend(w', g)))
+    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0], vec![3, 2]).unwrap();
+    let metadata = CausalTensor::new(vec![5.0, 7.0, 11.0], vec![3]).unwrap();
+    let w = PointCloud::new(points, metadata, 1).unwrap();
+    let g = |w: &PointCloud<f64, f64>| w.metadata().as_slice()[w.cursor()] + 1.0;
+    let f = |w: &PointCloud<f64, f64>| w.metadata().as_slice()[w.cursor()] * 10.0;
+
+    let lhs = PointCloudWitness::<f64>::extend(&PointCloudWitness::<f64>::extend(&w, g), f);
+    let rhs = PointCloudWitness::<f64>::extend(&w, |wp: &PointCloud<f64, f64>| {
+        f(&PointCloudWitness::<f64>::extend(wp, g))
+    });
+
+    assert_eq!(lhs.metadata().as_slice(), rhs.metadata().as_slice());
+}

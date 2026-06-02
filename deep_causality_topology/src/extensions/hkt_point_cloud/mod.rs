@@ -84,7 +84,10 @@ where
         PointCloud {
             points: new_points,
             metadata: new_metadata,
-            cursor: 0,
+            // Preserve the focus so `extend` satisfies the comonad laws (right
+            // identity and associativity); resetting to `0` breaks them for a
+            // non-zero focus.
+            cursor: fa.cursor,
         }
     }
 }

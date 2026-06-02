@@ -72,7 +72,10 @@ impl CoMonad<HypergraphWitness> for HypergraphWitness {
             num_hyperedges: fa.num_hyperedges,
             incidence: fa.incidence.clone(),
             data: new_data,
-            cursor: 0,
+            // Preserve the focus so `extend` satisfies the comonad laws (right
+            // identity and associativity); resetting to `0` breaks them for a
+            // non-zero focus.
+            cursor: fa.cursor,
         }
     }
 }

@@ -49,3 +49,32 @@ fn test_hypergraph_extend() {
     // All nodes belong to 1 hyperedge
     assert_eq!(extended.data().as_slice(), &[1, 1, 1]);
 }
+
+#[test]
+fn comonad_right_identity_holds_for_nonzero_focus() {
+    // extract(extend(w, f)) == f(w) must hold when the focus is not node 0.
+    let incidence = CsrMatrix::from_triplets(3, 1, &[(0, 0, 1), (1, 0, 1), (2, 0, 1)]).unwrap();
+    let data = CausalTensor::new(vec![3, 4, 5], vec![3]).unwrap();
+    let h = Hypergraph::new(incidence, data, 2).unwrap();
+    let f = |w: &Hypergraph<i32>| w.data().as_slice()[w.cursor()] + 100;
+    let extended = HypergraphWitness::extend(&h, f);
+    assert_eq!(extended.cursor(), 2);
+    assert_eq!(HypergraphWitness::extract(&extended), 105);
+}
+
+#[test]
+fn comonad_associativity_law() {
+    // extend(extend(w, g), f) == extend(w, |w'| f(&extend(w', g)))
+    let incidence = CsrMatrix::from_triplets(3, 1, &[(0, 0, 1), (1, 0, 1), (2, 0, 1)]).unwrap();
+    let data = CausalTensor::new(vec![5, 7, 11], vec![3]).unwrap();
+    let w = Hypergraph::new(incidence, data, 1).unwrap();
+    let g = |w: &Hypergraph<i32>| w.data().as_slice()[w.cursor()] + 1;
+    let f = |w: &Hypergraph<i32>| w.data().as_slice()[w.cursor()] * 10;
+
+    let lhs = HypergraphWitness::extend(&HypergraphWitness::extend(&w, g), f);
+    let rhs = HypergraphWitness::extend(&w, |wp: &Hypergraph<i32>| {
+        f(&HypergraphWitness::extend(wp, g))
+    });
+
+    assert_eq!(lhs.data().as_slice(), rhs.data().as_slice());
+}

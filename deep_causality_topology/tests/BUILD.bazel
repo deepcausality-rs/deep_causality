@@ -150,6 +150,24 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "types/mixed_graph",
+    srcs = glob([
+        "types/mixed_graph/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_sparse",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
     name = "types/hypergraph",
     srcs = glob([
         "types/hypergraph/*_tests.rs",

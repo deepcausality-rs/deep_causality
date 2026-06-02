@@ -26,6 +26,7 @@ pub use crate::extensions::hkt_lattice_complex::LatticeComplexWitness;
 pub use crate::extensions::hkt_manifold::{
     GenericManifoldWitness, ManifoldWitness, SimplicialManifoldWitness,
 };
+pub use crate::extensions::hkt_mixed_graph::MixedGraphWitness;
 pub use crate::extensions::hkt_point_cloud::PointCloudWitness;
 pub use crate::extensions::hkt_simplicial_complex::ChainWitness;
 pub use crate::extensions::hkt_topology::TopologyWitness;
@@ -43,6 +44,7 @@ pub use crate::traits::graph_topology::GraphTopology;
 pub use crate::traits::has_hodge_star::HasHodgeStar;
 pub use crate::traits::hypergraph_topology::HypergraphTopology;
 pub use crate::traits::manifold_topology::ManifoldTopology;
+pub use crate::traits::mixed_graph_topology::MixedGraphTopology;
 pub use crate::traits::neighborhood::{CellId, Neighborhood};
 pub use crate::traits::simplicial_topology::SimplicialTopology;
 pub use extensions::hkt_gauge::hkt_adjunction_stokes::{
@@ -74,6 +76,7 @@ pub use crate::types::hodge_decomposition::HodgeDecomposition;
 pub use crate::types::hypergraph::Hypergraph;
 pub use crate::types::manifold::HodgeDecomposeOptions;
 pub use crate::types::manifold::{Manifold, SimplicialManifold};
+pub use crate::types::mixed_graph::{Edge, EdgeKind, Mark, MixedGraph};
 pub use crate::types::neighborhood::{
     CofaceAdjacent, CofaceAdjacentIter, FaceAdjacent, FaceAdjacentIter, KRing, KRingIter, Moore,
     MooreIter, VonNeumann, VonNeumannIter,

@@ -15,6 +15,7 @@ mod hodge_decomposition;
 mod hypergraph;
 mod lattice_complex;
 mod manifold;
+mod mixed_graph;
 mod neighborhood;
 mod point_cloud;
 mod regge_geometry;
