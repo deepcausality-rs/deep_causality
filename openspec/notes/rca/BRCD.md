@@ -399,7 +399,7 @@ So the Tier B causal-graph layer (Meek + DFS acyclicity + unshielded-collider va
 
 The setting assumes **no latent variables** (paper §3), so BRCD lives entirely in CPDAG-space — directed + undirected edges only. The `MixedGraph` two-mark `{Tail, Arrow}` set is sufficient; the reserved `Circle` mark is forward-looking (PAGs) and never exercised by BRCD.
 
-### 15.4 Appendix F — the estimator is a *Bayesian conjugate* linear-Gaussian (refines BRCD-change scope)
+### 15.4 Appendix F — the *paper's* conjugate linear-Gaussian *(SUPERSEDED by §16.1: the authoritative code uses a plug-in ridge-Gaussian, not NIG/Student-t)*
 
 The real-world (continuous) path does **not** score with a plug-in Gaussian log-density. §14.4's "joint Gaussian log-likelihood … per-regime vs pooled" is the point-estimate sketch; the paper's *default* scoring rule is the **integrated (prequential) marginal likelihood** of a Bayesian linear-Gaussian family, chosen for finite-sample robustness with very few anomalous samples. Per family `p(X | Pa(X))`:
 
@@ -416,3 +416,62 @@ The real-world (continuous) path does **not** score with a plug-in Gaussian log-
 - The **family marginal likelihood** is the product of per-row predictives (order-independent). The root-cause node `r`'s family is fit **per regime** (`F=0` and `F=1` separately); all other nodes' families are fit **pooled**. (Discrete data uses the analogous Dirichlet/BDeu prequential score — Appendix F — but the OB/Sock Shop target is continuous.)
 
 **Implication for scope:** prep's Tier A primitives (`conditional_variance` = covariance Schur complement → residual variance; `gaussian_log_density`; `cg_solve`; sample mean/covariance) are the *necessary numeric building blocks* but are **not** the BRCD scoring layer. The BRCD change must add the NIG → Student-t conjugate machinery (`Λ`/`m`/`α`/`β` posterior updates with ridge-stabilized SPD solves, the Student-t log-density, the optional transform + Jacobian, and the per-regime/pooled assembly) on top of them. The theoretical guarantees (Theorems 4.3/4.4) are estimator-agnostic — they need only an `ε`-accurate plug-in — so the conjugate model is a robustness/finite-sample choice, not a correctness requirement; a simpler plug-in Gaussian would still satisfy the consistency results but underperform at the 5-anomalous-sample regime the paper targets.
+
+## 16. Authoritative source reconciliation (`ctx/next/brcd/`) — supersedes earlier reconstructions
+
+The algorithm's author provided the **authoritative** BRCD under `ctx/next/brcd/`; the versions in the experiment repos (RCAEval / the reference bundle studied in §§3–4 and §14) were **modified for each experiment's specifics and are NOT authoritative**. This section records what the authoritative code pins down and corrects. Where it conflicts with §§0–15, **§16 wins**.
+
+### 16.0 Authoritative files — this is the source of truth
+
+Port against these files only. Anything under the experiment repos is reference/illustrative, not normative.
+
+| Authoritative file | Role |
+| --- | --- |
+| **`ctx/next/brcd/brcd.py`** | The BRCD algorithm itself: the linear-Gaussian / Dirichlet / Forest-KDE estimators, the F-node augmentation, cut-configuration enumeration + validity (`getConfigurations_multi`, `has_new_unshielded_collider_at`), augmented-DAG sampling (`sampleAugmentedGraphs`), the posterior assembly (`brcd_update`), the bootstrap-CPDAG path, and the driver (`brcd_helper`). **This is the primary spec.** |
+| **`ctx/next/brcd/BRCD/boss.py`** | BOSS observational structure learning (BIC-scored, with optional background-knowledge required edges) — the upstream step that produces the input CPDAG when one is not supplied. |
+| **`ctx/next/brcd/BRCD/LocalScoreFunction.py`**, **`LocalScoreFunctionClass.py`** | The local score functions (BIC etc.) BOSS optimizes. |
+| **`ctx/next/brcd/BRCD/mcs_num.py`** | A local MEC enumerator (`enumerate_amos`, `enumerate_dags`) — the AMO/clique-tree route, an in-tree alternative to the external `cliquepicking` package used in `brcd.py`. |
+| **`ctx/next/brcd/BRCD/utils.py`** | PDAG ↔ `causal-learn` graph conversion and CPT / Bayesian-network helpers. |
+
+**Non-authoritative (do not port from):** the experiment-repo `brcd.py` and harness studied in §§3–4 (`experiments/real-world/RCAEval/e2e/…`) and the verified-spec pass in §14 — useful as cross-checks, but the per-experiment edits there diverge from the canonical algorithm above. Treat §§3–4 and §14 as *historical reconstruction*; trust §16 + `ctx/next/brcd/` for the port.
+
+### 16.1 Estimator — plug-in ridge-Gaussian, NOT NIG/Student-t *(corrects §15.4)*
+
+§15.4 described the paper's Appendix F (Normal-Inverse-Gamma → Student-t conjugate). The **authoritative code does not do that.** The continuous family `continuous_likelihood_fn_gaussian` → `gaussian_conditional_postpred_rowwise` is a **plug-in linear-Gaussian**:
+
+- **Ridge least squares** `_fit_ridge`: `β = solve(XᵀX + λI, Xᵀy)`, `σ² = (resid·resid)/max(n−p,1)`, floored to `1e-12`; ridge `λ = 1e-4`. (A plain SPD solve — our `cg_solve` fits, or a direct solve — **not** the covariance Schur complement; `conditional_variance` computes the same population quantity but is not the path the code takes.)
+- **Plug-in Gaussian log-density** `_normal_logpdf_1d(x, μ, var) = −½(log(2π·var) + (x−μ)²/var)` with `var` floored to `1e-12` — **byte-for-byte our Tier A `gaussian_log_density`.** Confirmed primitive.
+- **F integration, three modes:** F ∈ parents → fit a separate ridge-Gaussian **per regime** (F=0/F=1); F present but ∉ parents → **mixture of two experts** with a **logistic-regression gate** `π(F=1|X)` (fallback: empirical prior); F absent → a single expert.
+- **Optional monotone transform** none/log/log1p/yeojohnson with the Jacobian on the original scale, auto-downgrading `log → log1p → yeojohnson` when the data make a transform invalid.
+- **Discrete family** `discrete_likelihood_fn_dirichlet`: **Dirichlet posterior-predictive (prequential)**, `α* = 5.0` — this *does* match the paper. A Forest-KDE family exists as the nonparametric option.
+
+**Scope impact (future BRCD change):** the continuous estimator is simpler on the variance side than §15.4 implied (plug-in ridge, not conjugate), but adds three components our prep does not cover: a **mixture-of-experts** assembly, a **logistic-regression gate**, and **optional transforms + Jacobian**. The logistic gate is the one genuinely new numeric primitive (everything else composes from `gaussian_log_density` + an SPD/ridge solve + `logsumexp`).
+
+### 16.2 MEC — the FULL clique-picking sampler is on the main path *(refines §15.3 / brcd-prep D6)*
+
+The authoritative code calls `cliquepicking` (`cp.mec_size(edges)`, `cp.MecSampler(edges).sample_dag()` — Wienöbst 2023) for **every** root configuration in `sampleAugmentedGraphs` **and** every bootstrap CPDAG in `get_top_k_cpdags_with_ratio`. There is also a local enumerator `BRCD/mcs_num.py` (`enumerate_amos`, `enumerate_dags`). Either way, **the full uniform MEC sampler is used on the OB/Sock Shop path, not only Petshop.** The trivial arcs-only MEC case scoped in `brcd-prep-foundations` (D6) is therefore a **placeholder**: a faithful BRCD port must port the full clique-picking sampler (`mec_size` + uniform `sample_dag`) or the `mcs_num` AMO-enumeration. This is a substantial new component for the BRCD change, not a deferred Petshop concern.
+
+### 16.3 Graph layer — validates Tier B and `MixedGraph`
+
+The code operates on `graphical_models.PDAG`: `to_complete_pdag()` (Meek), `parents_of`, `replace_edge_with_arc`, `_undirected_neighbors`, `arcs`/`edges`, adjacency via `has_edge`/`has_arc`. `getConfigurations_multi` enumerates the `2^E` orientations of the undirected edges **incident on the root-candidate set**, validating each by Meek completion + acyclicity (`networkx.is_directed_acyclic_graph`) + the **no-new-unshielded-collider** check (`has_new_unshielded_collider_at`). This maps 1:1 onto `topology::MixedGraph` (arcs/undirected/parents/`set_endpoint`/`topological_sort`) and the `brcd-prep` Meek + validity tasks (2.4, 2.5). No change needed to those.
+
+### 16.4 Driver structure (for the future BRCD change)
+
+- `brcd_helper(normal_df, anomalous_df, cpdag=None, …)`: concatenate normal+anomalous, add an `FNODE` indicator column (0 on normal rows, 1 on anomalous), enumerate root-cause candidate combos, uniform prior. If no CPDAG is supplied → bootstrap CPDAGs via **BOSS** (`BRCD/boss.py`, BIC-scored, with optional background-knowledge edges) + weight per `get_top_k_cpdags_with_ratio` + `parallel_weighted_posterior`; else call `brcd_update` directly.
+- `brcd_update`: `sampleAugmentedGraphs` → cache each unique `(node, parents)` family's per-row log-likelihood once → per root, sum cached log-factors into a per-DAG `log P(D|G)`, add `log(mec_size/Σ)`, `logsumexp` over the root's DAGs, sum over rows, add `log(prior)`, normalize → posterior over roots → rank.
+
+### 16.5 External-dependency → in-repo replacement map (BRCD change)
+
+| Reference (authoritative) | In-repo replacement | Status |
+| --- | --- | --- |
+| `graphical_models.PDAG` | `deep_causality_topology::MixedGraph` | ✅ built (archived `mixed-graph`) |
+| `to_complete_pdag` (Meek) | `brcd-prep` `causal_discovery::meek` over `MixedGraph` | scoped (task 2.4) |
+| `networkx` acyclicity | `MixedGraph::topological_sort`/`has_cycle` | ✅ built |
+| `has_new_unshielded_collider` | `brcd-prep` `causal_discovery::validity` | scoped (task 2.5) |
+| `cliquepicking` `mec_size`/`MecSampler` | **port the Wienöbst clique-picking sampler** (or `mcs_num` AMO enumeration) | **NEW — substantial; brcd-prep ships only the trivial case** |
+| `scipy.special.logsumexp` | `deep_causality_tensor::logsumexp` | ✅ built |
+| `_normal_logpdf_1d` | `deep_causality_tensor::gaussian_log_density` | ✅ built (exact match) |
+| `_fit_ridge` (`solve(XᵀX+λI)`) | `deep_causality_sparse::cg_solve` or a direct SPD solve | ✅ primitive available |
+| `sklearn.LogisticRegression` (F-gate) | **logistic regression** | **NEW — needed for mixture gating** |
+| `PowerTransformer`/`KernelDensity` | yeojohnson transform / Forest-KDE | optional, defer (Gaussian path is the target) |
+| `BRCD/boss.py` (structure learning) | upstream CPDAG discovery (CDL produces the CPDAG) | separate concern |
