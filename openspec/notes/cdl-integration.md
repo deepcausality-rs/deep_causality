@@ -84,7 +84,9 @@ signatures.
 
 ## Status
 
-Held as a note. Becomes change `cdl-discovery-pipeline` after the BRCD estimator
-lands and is verified, and is implemented with the real `BrcdResult<T>` wired in
-as the second `DiscoveryOutcome` variant. See `openspec/notes/rca/BRCD.md` for
-the algorithm and `brcd-prep-foundations` for the foundations it builds on.
+Drafted as change `cdl-discovery-pipeline` (proposal + design + spec + tasks,
+validated). **Gated on `brcd-estimator`** landing and being verified — it wires
+the real `BrcdResult<T>` in as the second `DiscoveryOutcome` variant, so it is
+implemented last. This note remains the rationale of record. See
+`openspec/notes/rca/BRCD.md` for the algorithm and the archived
+`brcd-prep-foundations` for the foundations it builds on.
