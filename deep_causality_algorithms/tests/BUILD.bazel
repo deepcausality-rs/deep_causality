@@ -31,3 +31,21 @@ rust_test_suite(
         "//deep_causality_tensor",
     ],
 )
+
+rust_test_suite(
+    name = "brcd",
+    srcs = glob([
+        "causal_discovery/brcd/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_algorithms",
+        # Deps
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)

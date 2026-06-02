@@ -18,12 +18,16 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
-version = "0.4.3"
+version = "0.4"
 
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.3.2"
+version = "0.3"
+
+[dependencies.deep_causality_topology]
+path = "../deep_causality_topology"
+version = "0.6"
 
 [dependencies.rayon]
 version = "1.12"

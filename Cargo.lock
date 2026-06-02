@@ -450,6 +450,7 @@ dependencies = [
  "criterion",
  "deep_causality_num",
  "deep_causality_tensor",
+ "deep_causality_topology",
  "rayon",
 ]
 
