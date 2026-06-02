@@ -21,6 +21,12 @@ Constraints carried from the repo: no external numeric crates, `unsafe_code = "f
 
 ## Decisions
 
+> **Scope note.** Decisions D4 and D5 below concern the CDL discovery-pipeline
+> generalization, which has been **moved out** of this change into
+> `cdl-discovery-pipeline` (see `openspec/notes/cdl-integration.md`). They are
+> retained here only as the rationale of record for that extraction; they are
+> **not implemented by this change.** This change implements D1–D3, D6, D7.
+
 **D1. Lift the existing `cg_solve` to a public home rather than reimplement.**
 The conjugate-gradient solver in `deep_causality_topology` is already tested and matrix-free; its own doc-comment proposes lifting it into `deep_causality_sparse`. Move it to `deep_causality_sparse`, expose it publicly, and have `deep_causality_topology` consume the public version. *Alternative considered:* reimplement (~50 LOC) in the algorithms crate. Rejected: duplicates tested code and would drift from the topology consumer.
 

@@ -19,20 +19,26 @@
 - [x] 2.6 Implement MEC size + representative DAG with the trivial arcs-only case (size 1 = input) over `MixedGraph`; document the extension point for a future uniform sampler; test the arcs-only case.
 - [x] 2.7 Confirm the causal-graph operations carry no floating-point scalar and expose no `RealField` parameter (they operate on `MixedGraph`, which is structural); a downstream consumer at any precision reuses them unchanged.
 
-## 3. CDL pipeline generalization (`discovery-pipeline`, in `deep_causality_discovery`)
+## 3. CDL pipeline generalization — MOVED OUT
 
-- [ ] 3.0 Confirm `real-field-discovery` has landed (the discovery crate is generic over `T: RealField`, `SurdResult<T>`); this section builds on it.
-- [ ] 3.1 Introduce a `DiscoveryOutcome<T>` enum with a `Surd(SurdResult<T>)` variant; change the `CausalDiscovery` trait return type from `SurdResult<T>` to `DiscoveryOutcome<T>` (no `dyn`).
-- [ ] 3.2 Generalize the `WithCausalResults` state to carry `DiscoveryOutcome<T>`; update the `causal_discovery` typestate method accordingly.
-- [ ] 3.3 Extend the discovery-stage input to carry a primary dataset and an optional second aligned dataset; SURD reads only the primary.
-- [ ] 3.4 Add an optional user-supplied domain-graph input to the discovery stage.
-- [ ] 3.5 Update the analyzer and the formatter to match `DiscoveryOutcome<T>` exhaustively; the `Surd` arm reproduces the current report verbatim.
-- [ ] 3.6 Add a SURD regression test: rankings, decomposition, and rendered report are identical before and after the change on the same input.
+The CDL discovery-pipeline generalization (`DiscoveryOutcome<T>`, two-dataset
+carriage, user-supplied domain graph, SURD preservation) is **no longer part of
+this change.** It is a breaking change to `deep_causality_discovery`'s public API
+whose shape is dictated by what BRCD needs at the seam, so it is sequenced
+*after* the BRCD estimator is built and verified — not ahead of it.
+
+- It is preserved as a design note at `openspec/notes/cdl-integration.md`
+  (rationale + the four requirements + decisions D4/D5).
+- It becomes its own change `cdl-discovery-pipeline`, landed last with the real
+  `BrcdResult<T>` wired in as the second `DiscoveryOutcome` variant.
+
+This change is therefore the two pure foundation layers only: Tier A
+(`linalg-numeric-primitives`) and Tier B (`causal-graph`).
 
 ## 4. Verification and hygiene
 
-- [ ] 4.1 `cargo build -p` and `cargo test -p` for each touched crate (`deep_causality_num`, `deep_causality_tensor`, `deep_causality_sparse`, `deep_causality_topology`, `ultragraph`, `deep_causality_algorithms`, `deep_causality_discovery`); aim for full coverage of new code.
-- [ ] 4.2 Register every new test file in its module tree and in the crate's `tests/BUILD.bazel`, per repo test conventions.
-- [ ] 4.3 Confirm no external numeric crate was added, `unsafe_code = "forbid"` is intact in every touched crate, and no `dyn`/trait-object was introduced.
-- [ ] 4.4 Run `make format && make fix`, then `make build` and `make test` (more than three crates changed).
-- [ ] 4.5 Run `openspec validate brcd-prep-foundations` and confirm the change is apply-complete; prepare a commit message and request the owner commit.
+- [x] 4.1 `cargo build -p` and `cargo test -p` for each touched crate (`deep_causality_tensor`, `deep_causality_sparse`, `deep_causality_topology`, `deep_causality_algorithms`); full coverage of new code (Tier A stats sweep + Tier B brcd suite).
+- [x] 4.2 Register every new test file in its module tree and in the crate's `tests/BUILD.bazel`, per repo test conventions (sparse `cg_tests`, tensor `ext_stats`/sweep, algorithms `brcd` suite).
+- [x] 4.3 Confirm no external numeric crate was added, `unsafe_code = "forbid"` is intact in every touched crate, and no `dyn`/trait-object was introduced.
+- [x] 4.4 Run `make format && make fix`, then `make build` and `make test` (more than three crates changed).
+- [x] 4.5 Run `openspec validate brcd-prep-foundations` and confirm the change is apply-complete; prepare a commit message and request the owner commit.
