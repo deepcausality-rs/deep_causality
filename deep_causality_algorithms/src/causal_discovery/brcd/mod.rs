@@ -22,6 +22,8 @@
 //! The remaining estimator pieces (F-node augmentation, posterior ranking)
 //! compose these and land in later stages.
 
+pub mod brcd_augment;
+pub mod brcd_cache;
 pub mod brcd_dirichlet;
 pub mod brcd_error;
 pub mod brcd_gate;

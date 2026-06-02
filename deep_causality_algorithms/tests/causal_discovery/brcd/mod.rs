@@ -3,6 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 #[cfg(test)]
+mod augment_tests;
+#[cfg(test)]
+mod cache_tests;
+#[cfg(test)]
 mod dirichlet_tests;
 #[cfg(test)]
 mod family_tests;

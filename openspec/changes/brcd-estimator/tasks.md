@@ -28,10 +28,10 @@ Each stage below ends green: the crate builds, all new tests pass, `cargo clippy
 
 ## 5. F-node augmentation + cut-configuration enumeration
 
-- [ ] 5.1 Join: concatenate normal+anomalous into a joint frame with an `FNODE` indicator (0/1) column.
-- [ ] 5.2 `getConfigurations_multi` (L1213): enumerate the `2^E` orientations of undirected edges incident on the root-candidate set; validate each via the landed `meek_complete` + acyclicity + `is_valid_configuration` (no-new-unshielded-collider).
-- [ ] 5.3 Family log-likelihood cache keyed on `(node, sorted parents)` (D5).
-- [ ] 5.4 Tests: enumeration count on a known CPDAG; invalid orientations excluded; cache hit reuse; arcs-only → single configuration.
+- [x] 5.1 `brcd_augment::f_node_indicator(n_normal, n_anomalous)` builds the `0/1` FNODE column for the concatenated frame; `augmented_graph(config, roots)` adds the `FNODE` vertex + `FNODE → root` arcs to a completed config, yielding the structural `MixedGraph<()>` the MEC stage sizes/samples.
+- [x] 5.2 `brcd_augment::get_configurations_multi` ports `getConfigurations_multi` (L1213): collects undirected edges incident on the candidate set, enumerates all `2^E` orientations, validates each via the landed `is_valid_configuration` (Meek-complete + acyclicity + no-new-unshielded-collider) — returns the **Meek-completed** valid configs (folds in `sampleAugmentedGraphs`'s `to_complete_pdag`). Bounded at `MAX_CONFIG_EDGES = 16` → `BrcdErrorEnum::ConfigSpaceTooLarge`; out-of-range target → `NodeOutOfBounds`.
+- [x] 5.3 `brcd_cache::FamilyCache<T>` + `family_key(node, parents)` (sorts/dedups parents) — `get_or_try_insert_with` computes each unique family once and reuses it (D5).
+- [x] 5.4 Tests (11 augment + 5 cache): arcs-only → 1 config; single incident edge → 2; new-unshielded-collider excluded (3 of 4); shielded-collider-allowed-but-cycle-pruned (3 of 4); determinism; both error paths; FNODE augmentation (single/multi root, bounds); cache compute-once / order-independent key / error-caches-nothing.
 
 ## 6. Posterior assembly + ranking (driver) + public API
 

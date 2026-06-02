@@ -51,6 +51,14 @@ pub enum BrcdErrorEnum {
     ZeroCardinality,
     /// A discrete node value is `≥ K` (outside `0..K`).
     StateOutOfRange,
+    /// A node index is outside the graph's vertex range.
+    NodeOutOfBounds,
+    /// The set of undirected edges incident on the candidate set is too large to
+    /// enumerate (`2^edges` configurations exceeds the bound).
+    ConfigSpaceTooLarge {
+        /// The number of incident undirected edges that exceeded the bound.
+        edges: usize,
+    },
 }
 
 impl fmt::Display for BrcdError {
@@ -84,6 +92,11 @@ impl fmt::Display for BrcdErrorEnum {
             }
             BrcdErrorEnum::ZeroCardinality => write!(f, "discrete node cardinality K is zero"),
             BrcdErrorEnum::StateOutOfRange => write!(f, "a discrete node value is outside 0..K"),
+            BrcdErrorEnum::NodeOutOfBounds => write!(f, "a node index is outside the graph"),
+            BrcdErrorEnum::ConfigSpaceTooLarge { edges } => write!(
+                f,
+                "too many incident undirected edges to enumerate ({edges} edges)"
+            ),
         }
     }
 }
