@@ -35,10 +35,10 @@ Each stage below ends green: the crate builds, all new tests pass, `cargo clippy
 
 ## 6. Posterior assembly + ranking (driver) + public API
 
-- [ ] 6.1 `BrcdConfig` (seed, family kind = continuous/discrete, `node_transform`, `transform_parents`, `num_root_causes_candidates` = k, prior, enumeration bound, optional weighted-CPDAG list for the future bootstrap path) and `BrcdResult<T>` exposing `ranks` (the ranked candidate ordering, best first — mirrors the reference `result["ranks"]`) over the posterior; no `dyn`.
-- [ ] 6.2 `brcd_update` (L1756): per root, sum cached log-factors into `log P(D|G)`, add `log(mec_size/Σ)`, `logsumexp` over the root's DAGs, sum over rows, add `log(prior)`, normalize → posterior over roots.
-- [ ] 6.3 `brcd_helper` (L1863) supplied-CPDAG branch only: validate aligned columns + required CPDAG, run `brcd_update`, rank. Errors for missing CPDAG / misaligned datasets. Public entry point exported from `brcd::mod` and the crate root.
-- [ ] 6.4 Tests: end-to-end single-root continuous; determinism under fixed seed; missing-CPDAG and misaligned-datasets error paths.
+- [x] 6.1 `brcd_config::BrcdConfig<T>` (seed, `FamilyKind` continuous/discrete, `node_transform`, `transform_parents`, `num_root_causes` = k, `ridge`, `alpha_star`, `gate`; `continuous(seed)`/`discrete(seed)` ctors) and `brcd_result::BrcdResult<T>` (own file, modelled on `SurdResult`: private fields, `new`, getters `ranks()`/`posterior()`/`top()`, `Display`) exposing `ranks` (best-first candidate sets); no `dyn`.
+- [x] 6.2 `brcd_update::brcd_run` ports `brcd_update` (L1756): per candidate, caches each unique family's per-row log-likelihood once (per-regime when FNODE∈parents, single expert otherwise; Dirichlet for discrete), sums into `log P(D|G)`, adds `log(mec_size/Σ)`, `logsumexp` over the candidate's DAGs, sums over rows, adds `log(prior)`, normalizes (max-shift). Returns log-densities directly (no exp→log roundtrip). FNODE is scored as a node too (constant family).
+- [x] 6.3 `brcd_run` = `brcd_helper` (L1863) supplied-CPDAG branch: concatenates frames + FNODE column, enumerates all `k`-subsets, runs the update, ranks descending → `BrcdResult.ranks`. CPDAG is a required argument (missing-CPDAG unrepresentable by type); misaligned datasets / k-out-of-range → `DimensionMismatch`. Entry point + `BrcdConfig`/`BrcdResult` re-exported from `brcd::mod`.
+- [x] 6.4 Tests (6): **`recovers_the_perturbed_mechanism`** — seeded `X→Y→Z` chain, anomaly perturbs `p(Y|X)` → top == `[Y]` (the real BRCD principle, end-to-end); normalized ranking over all candidates (descending, permutation); determinism under a fixed seed; `Display` rendering; misaligned-datasets and k-too-large error paths.
 
 ## 7. Verification tier 1 — golden fixtures vs the reference posterior
 

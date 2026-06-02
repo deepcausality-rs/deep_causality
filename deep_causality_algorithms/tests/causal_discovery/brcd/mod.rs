@@ -19,4 +19,6 @@ mod mec_tests;
 #[cfg(test)]
 mod meek_tests;
 #[cfg(test)]
+mod update_tests;
+#[cfg(test)]
 mod validity_tests;

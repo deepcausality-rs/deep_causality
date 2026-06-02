@@ -19,17 +19,28 @@
 //!   ([`brcd_dirichlet`]), and the small dense SPD solver they share
 //!   ([`brcd_linalg`]).
 //!
-//! The remaining estimator pieces (F-node augmentation, posterior ranking)
-//! compose these and land in later stages.
+//! The **algorithm** itself — F-node augmentation ([`brcd_augment`]), the family
+//! cache ([`brcd_cache`]), and the driver that assembles the posterior and ranks
+//! the candidates ([`brcd_algo::brcd_run`]) — composes those layers. [`brcd_run`]
+//! is the recommended entry point.
 
+pub mod brcd_algo;
 pub mod brcd_augment;
 pub mod brcd_cache;
+pub mod brcd_config;
 pub mod brcd_dirichlet;
 pub mod brcd_error;
 pub mod brcd_gate;
 pub mod brcd_gaussian;
 pub mod brcd_mec;
 pub mod brcd_meek;
+pub mod brcd_result;
 pub mod brcd_validity;
 
 pub(crate) mod brcd_linalg;
+
+// Driver entry point and its public types (the recommended access path).
+pub use brcd_algo::brcd_run;
+pub use brcd_config::{BrcdConfig, FamilyKind};
+pub use brcd_error::{BrcdError, BrcdErrorEnum};
+pub use brcd_result::BrcdResult;
