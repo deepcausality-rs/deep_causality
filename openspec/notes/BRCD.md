@@ -125,9 +125,12 @@ BOSS is **not** dead code. Which systems run it:
 > If only the top three are answered, those three unblock design.
 
 1. **Is `RCAEval/e2e/brcd.py` (+ `main-*.py`) the actual code behind the real-world paper results, and at which commit?** Internal coherence ≠ provenance (the synthetic harness proved that). Ideally: manuscript + that commit. — *Highest leverage; defines the spec.*
-2. **Can we get the RCAEval datasets + per-system service-call graphs + run protocol for OB / Sock Shop / Petshop?** The call graph *is* the CPDAG input for OB/SS; without it there is nothing to port against. — *Decides whether a validatable target exists.*
-3. **Per-system CPDAG source / BOSS scope:** confirm OB + Sock Shop use the supplied call graph (no BOSS) and Petshop learns it via BOSS. ⇒ decides whether BOSS is in scope at all. — *Largest swing in port size (§1 sub-decision).*
-4. **What does `preprocess(data, dataset, dk_select_useful=...)` do, and is `dk_select_useful` (domain-knowledge feature selection) on the critical path for the reported numbers?** — *Hidden input-shaping dependency.*
+
+3. **Can we get the RCAEval datasets + per-system service-call graphs + run protocol for OB / Sock Shop / Petshop?** The call graph *is* the CPDAG input for OB/SS; without it there is nothing to port against. — *Decides whether a validatable target exists.*
+
+4. **Per-system CPDAG source / BOSS scope:** confirm OB + Sock Shop use the supplied call graph (no BOSS) and Petshop learns it via BOSS. ⇒ decides whether BOSS is in scope at all. — *Largest swing in port size (§1 sub-decision).*
+
+5. **What does `preprocess(data, dataset, dk_select_useful=...)` do, and is `dk_select_useful` (domain-knowledge feature selection) on the critical path for the reported numbers?** — *Hidden input-shaping dependency.*
 5. **Does the OB/SS granularized call graph ever yield undirected edges / nontrivial I-MECs, or always arcs-only (`mec_size=1`)?** Decides whether the full Wienöbst sampler is needed or only the trivial single-DAG case. — *Decides MEC machinery scope.*
 6. **Confirm the real-world config:** Gaussian likelihood, `node_transform="none"`, `transform_parents=True`, `k=1`, ridge λ (`1e-4`?), per-regime split for the root family. — *Pins the estimator.*
 7. **Confirm the F-node detection mechanism:** per-regime scoring for the root vs single-expert for non-roots is the intended signal. — *Confirms the theoretical core.*

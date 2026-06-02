@@ -7,31 +7,43 @@ Repo constraints carried in: no external numeric crates, `unsafe_code = "forbid"
 ## Goals / Non-Goals
 
 **Goals:**
-- A `MixedGraph` type whose edges carry a **mark at each endpoint**, expressing undirected, directed, and partially-directed edges under one type — hence DAG, PDAG, CPDAG.
+- A `MixedGraph` type whose edges carry a **mark at each endpoint** (`Tail`/`Arrow`/`Circle`), expressing undirected, directed, bidirected, and partially-directed edges under one type — hence DAG, PDAG, CPDAG, MAG, and PAG.
 - A single source of truth that makes the **endpoint invariant** (one state per node pair, symmetric consistent marks) a local, checkable property.
 - Structural queries the causal algorithms need: adjacency, parents/children (arc projection), undirected neighbors, edge enumeration by kind, and arc-projection acyclicity / topological order.
 - Integration with the crate's HKT family (`MixedGraphWitness`, `MixedGraphTopology`).
 - A reusable primitive: future PC/GES/FCI work builds on it, not just BRCD.
 
 **Non-Goals:**
-- The `Circle` endpoint mark's *semantics* and any MAG/PAG-specific behavior — the variant is reserved but not exercised.
 - Causal operations (Meek orientation, unshielded-collider validity, MEC sizing) — those live in `deep_causality_algorithms` and consume this type, in a later change.
-- A full comonad instance (see D4).
+- The FCI/PAG *learning algorithm* — this change delivers the PAG-capable graph *structure* and its endpoint calculus, not the algorithm that learns a PAG.
 - Large-graph performance engineering (`ultragraph` remains the tool for that).
 
 ## Decisions
 
-**D1. Typed-endpoint model, three marks declared, two implemented.**
-Each edge has two endpoints, each marked `Tail`, `Arrow`, or `Circle`. An edge is the pair `(mark at u, mark at v)`: `(Tail, Arrow)` = `u → v`; `(Tail, Tail)` = `u — v`; `(Empty, Empty)` = no edge. This is the Tetrad/causal-learn `Endpoint` model and subsumes DAG/CPDAG/MAG/PAG. We implement and test the `Tail`/`Arrow` combinations (sufficient for DAG/CPDAG today) and **reserve `Circle`** so adding PAGs later needs no breaking change. *Alternative:* a two-mark enum sufficient for CPDAGs only — rejected because the reserved third mark is one enum variant and avoids a future migration.
+**D1. Full three-mark typed-endpoint model, all marks implemented (CPDAG + PAG).**
+Each edge has two endpoints, each marked `Tail`, `Arrow`, or `Circle`. An edge is the pair `(mark at u, mark at v)`, and absence of an entry means no edge. The mark pairs name every edge kind in the literature:
+
+| Endpoint pair | Edge | Used by |
+| --- | --- | --- |
+| `(Tail, Arrow)` | directed `u → v` | DAG, CPDAG, PAG |
+| `(Tail, Tail)` | undirected `u — v` | CPDAG |
+| `(Arrow, Arrow)` | bidirected `u ↔ v` | MAG, PAG (latent confounding) |
+| `(Circle, Arrow)` | partially directed `u ∘→ v` | PAG |
+| `(Circle, Circle)` | nondirected `u ∘—∘ v` | PAG |
+| `(Circle, Tail)` | partially undirected `u ∘— v` | PAG |
+
+This is the Tetrad/causal-learn `Endpoint` model and subsumes DAG/CPDAG/MAG/PAG. **All three marks and all combinations are implemented and tested in this change** — the owner's call: PAG support is built now rather than retrofitted, since "add later" tends to arrive sooner than planned and the marginal cost over a two-mark model is small (the storage and accessors are mark-agnostic; only the orientation/query helpers gain Circle-aware arms). *Alternative:* a two-mark `{Tail, Arrow}` model sufficient for CPDAGs today — rejected per the owner; building the full calculus once avoids a later breaking migration.
 
 **D2. Structural by default, optional node payload.**
 `MixedGraph<T = ()>`: scalar-free over `usize` indices by default (a CPDAG holds no scalars), with an optional node payload `T` to match the `Graph<T>`/`Hypergraph<T>` family. Edges carry no weight. *Alternative:* mandatory payload like the existing family — rejected; it would force a meaningless `T` on the common structural use, the same category error avoided when placing the stats primitives.
 
-**D3. Dense `n × n` endpoint-mark matrix as the single source of truth.**
-Store marks in an `n × n` structure; the edge between `u` and `v` is read from the two symmetric cells. Mutation updates both cells together, so the invariant is a one-line symmetry check and cannot drift. *Alternative:* sparse per-node adjacency sets (`parents`/`children`/`undirected`) — more idiomatic and O(log), but spreads the invariant across three structures that must be kept consistent. For causal graphs (tens–hundreds of nodes) the dense matrix is simplest and safest; revisit only if a large-graph consumer appears.
+**D3. Canonical-pair edge map as the single source of truth.**
+Store edges in one `BTreeMap<(usize, usize), Edge>` keyed by the canonical unordered pair `(min(u, v), max(u, v))`, where `Edge` records the endpoint marks at the lower- and higher-indexed node. There is exactly **one entry per unordered pair**, so the invariant — at most one edge per pair, with consistent endpoint marks — is enforced structurally by the map key and cannot be represented otherwise. Memory is `O(m)` in the number of edges. An order-agnostic accessor hides the canonicalization (`u < v` reads the marks directly, otherwise swaps). Orientation and mark changes rewrite a single `Edge`.
 
-**D4. HKT witness and topology trait in v1; comonad deferred.**
-Add `MixedGraphWitness` (HKT) and a `MixedGraphTopology` trait mirroring `GraphTopology`/`HypergraphTopology`, so the type joins the crate's higher-kinded-type unification. A comonadic cursor + `Comonad` instance is deferred to a follow-up unless it falls out trivially — it is not needed by any planned consumer and would widen v1. *Alternative:* full comonad parity with `Graph`/`Hypergraph` now — deferred to keep v1 focused on the structure and its invariant.
+*Alternatives considered:* (a) a dense `n × n` mark matrix — `O(n²)`, and it stores two cells per pair that must be kept in agreement; the edge map is leaner (≈1500 entries vs ≈500K cells at the paper's largest `n ≈ 1000`, `m ≈ 1.5n`) and has a *stronger* invariant (one cell vs two). (b) Sparse per-node adjacency sets (`parents`/`children`/`undirected`) — spreads the invariant across three structures that must be kept consistent; rejected for that reason. If neighbor iteration ever profiles hot, a per-node adjacency index can be added as a **derived cache** rebuilt on mutation — never a second source of truth; for v1 at causal-graph sizes the `O(m)` scan suffices.
+
+**D4. Full HKT + comonad parity with `Graph`/`Hypergraph` in v1.**
+Add `MixedGraphWitness` (HKT), a `MixedGraphTopology` trait, **and** a comonadic cursor with a full `Comonad` instance (`extract`/`extend`/`duplicate`), mirroring `Graph`/`Hypergraph` exactly. The graph carries node payload data (`CausalTensor<T>`) and a `cursor: usize` focus; `extract` returns the focused node's payload, `extend`/`duplicate` map a neighborhood-aware function over every focus. This keeps `MixedGraph` a first-class member of the crate's higher-kinded-type unification rather than a partial citizen. *Alternative:* witness + topology trait only, comonad later — rejected per the owner; parity now avoids a second pass over the type and matches the established pattern.
 
 **D5. Self-contained arc-projection acyclicity (Kahn), no `ultragraph` dependency.**
 Topological sort and cycle detection over the arc projection use Kahn's algorithm implemented in the type (~20 lines). *Alternative:* materialize an `ultragraph` on demand and delegate — rejected; it reintroduces a freeze/thaw round-trip and a cross-crate dependency to save a trivial, exhaustively-testable algorithm. `ultragraph` stays the right tool for large directed graphs elsewhere.
@@ -55,6 +67,7 @@ This is additive — no existing type changes, nothing to roll back. Sequencing 
 
 ## Open Questions
 
-- Confirm the v1 HKT scope (D4): witness + topology trait now, comonad later — or full comonad parity now.
-- Confirm dense storage (D3) is acceptable, or prefer sparse adjacency from the start.
-- Confirm `Circle` is reserved-only in v1 (D1).
+All three v1 design questions are **resolved** (owner decisions):
+- **HKT scope (D4):** full comonad parity now — witness + topology trait + `Comonad` instance.
+- **Storage (D3):** canonical-pair edge map (`O(m)`, single source of truth), not dense or 3-Vec sparse.
+- **Endpoint vocabulary (D1):** full three-mark `{Tail, Arrow, Circle}` implemented now for CPDAG **and** PAG support, not Circle-reserved.

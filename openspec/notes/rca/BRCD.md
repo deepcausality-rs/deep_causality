@@ -343,3 +343,76 @@ For each candidate metric `r`: build DAG = (reversed call graph) + `FNODE→r`; 
 - `df_to_prefix_graph` uses crude `startswith` prefix matching — fine for these service names, but a faithful port should replicate the exact matching (not a "smarter" version).
 
 **Conclusion:** the OB/Sock Shop target is now an **implementation-grade, fully-deterministic spec** with no external sampler, no causal-learn, no sklearn, no transforms, and reproducible public data + hard-coded graphs. The roadmap (§12) for OB/SS is confirmed sound; the only open item that matters is provenance confirmation with the author.
+
+## 15. Full-paper algorithm & estimator detail (supersedes the source-level reconstruction where they differ)
+
+The complete BRCD paper draft is now available (unpublished — **no citation until publication**). It confirms the architecture in §§12–14 and pins down three things our source-level study left approximate: the two driver algorithms, the exact per-configuration operation list (which validates the Tier B causal-graph layer), and the Bayesian linear-Gaussian estimator the real-world path actually uses (which refines the BRCD-change scope beyond a plug-in Gaussian).
+
+### 15.1 Algorithm 1 — Augmented Graphs Sampling
+
+```
+input : CPDAG C(G*) over V = (V, E); number of root causes k
+output: set of augmented DAGs S_Gaug, and T = Σ_i Q_i
+S_Gaug = ∅ ; T = 0
+for each R ⊆ V with |R| = k:
+    G_p ← add F → R to C(G*)                      # F-node augmentation
+    for each cut configuration of the neighborhood of R:
+        C_R(G*) ← apply Meek rules (Meek 1995) to G_p     # → I-CPDAG
+        (G_aug, Q_i) ← sample one DAG from C_R(G*) AND
+                       compute |C_R(G*)| via clique-picking (Wienöbst 2023)
+        add (G_aug, Q_i) to S_Gaug
+return S_Gaug, T = Σ_i Q_i
+```
+
+The "cut configuration of the neighborhood of R" enumerates the orientations of the **edge cut** `E[R, V∖R]` (edges with one end in R, one in V∖R); Meek closure turns each valid orientation into an I-CPDAG. Corollary 4.2 (paper): this enumerates *all and only* the I-CPDAGs compatible with `(C(G*), R)`.
+
+### 15.2 Algorithm 2 — BRCD
+
+```
+input : data D = D_obs ∪ D_int ; root-cause prior p(R) ; CPDAG C(G*)
+output: posterior p(R | D)
+S_Gaug, T ← Algorithm 1 on C(G*)
+for each candidate R' ⊆ V:
+    for each (G_aug, Q_i) ∈ S_Gaug with F → R' in G_aug:
+        p(D | G, R') ← Π_{X ∈ V ∪ {F}} p(X | Pa(X))   # factorize per G_aug
+        M_i = p(D | G, R') · p(G | R'),  with p(G | R') = Q_i / T
+    p(D | R') ← Σ_i M_i
+p(R | D) ← p(D | R) p(R) / Σ_{R'} p(D | R') p(R')
+return p(R | D)
+```
+
+Key efficiency identity (paper §4, Lemma 4.5): all DAGs in one I-MEC share the same interventional likelihood, so scoring one I-CPDAG (one sampled DAG, weighted by MEC size `Q_i/T`) stands in for super-exponentially many DAGs. Ranking the `(G, R)` posteriors under a uniform prior is equivalent to ranking I-CPDAGs.
+
+### 15.3 Appendix E — per-configuration operation list (validates Tier B)
+
+For a CPDAG with `n` nodes, `m` edges, `u` undirected edges, `d_max = max_V` undirected-degree, the algorithm enumerates `Σ_V 2^{d_u(V)} ≤ n·2^{d_max}` configurations; **per configuration** it runs exactly:
+
+| Operation | Cost | Our prep mapping |
+| --- | --- | --- |
+| Apply **Meek rules** | `O(n · d_max²)` | `brcd-prep` task 2.4 |
+| **Acyclicity check via DFS** | `O(n + m)` | task 2.3 (our self-contained cycle/topo check — DFS/Kahn, **no** `ultragraph` round-trip; confirms decision to keep it in-type) |
+| **New-unshielded-collider check** | `O(n · d_max²)` | task 2.5 (validity check) |
+| **DAG sample + MEC size** via clique-picking | `O(n⁴)` | deferred — the Wienöbst uniform sampler (Petshop-gated); prep ships only the trivial arcs-only MEC (task 2.6) |
+| Likelihood eval (per family) | `O(Σ_i r_i q_i)` discrete / Gaussian solve continuous | the BRCD-change scoring layer, built on Tier A |
+
+So the Tier B causal-graph layer (Meek + DFS acyclicity + unshielded-collider validity + MEC sizing) is exactly the per-configuration machinery the paper specifies. The only Tier B piece the paper runs that prep defers is the **full clique-picking MEC sampler**; prep's trivial arcs-only case (size 1, representative = input) is sufficient for the OB/Sock Shop target.
+
+The setting assumes **no latent variables** (paper §3), so BRCD lives entirely in CPDAG-space — directed + undirected edges only. The `MixedGraph` two-mark `{Tail, Arrow}` set is sufficient; the reserved `Circle` mark is forward-looking (PAGs) and never exercised by BRCD.
+
+### 15.4 Appendix F — the estimator is a *Bayesian conjugate* linear-Gaussian (refines BRCD-change scope)
+
+The real-world (continuous) path does **not** score with a plug-in Gaussian log-density. §14.4's "joint Gaussian log-likelihood … per-regime vs pooled" is the point-estimate sketch; the paper's *default* scoring rule is the **integrated (prequential) marginal likelihood** of a Bayesian linear-Gaussian family, chosen for finite-sample robustness with very few anomalous samples. Per family `p(X | Pa(X))`:
+
+- **Optional monotone transform** `z = T(X)` (e.g. `log`, `log1p`) on child (and optionally parents) for linearity; the density on the original scale carries the **Jacobian** `|dT(x)/dx|`.
+- **Per-regime linear-Gaussian model**, `F = f ∈ {0,1}`:  `z = β_{f,0} + β_fᵀ U + ε_f`, `ε_f ~ N(0, σ_f²)`, where `U` are the continuous parents other than `F`.
+- **Normal-Inverse-Gamma conjugate prior** on `(β_f, σ_f²)` with hyperparameters `(m_0, Λ_0, α_0, β_0)`; posterior updates:
+  - `Λ_f = Λ_0 + X_fᵀ X_f`
+  - `m_f = Λ_f⁻¹ (Λ_0 m_0 + X_fᵀ y_f)`
+  - `α_f = α_0 + n_f / 2`
+  - `β_f^post = β_0 + ½ (y_fᵀ y_f + m_0ᵀ Λ_0 m_0 − m_fᵀ Λ_f m_f)`
+- **Student-t posterior predictive** per new row `x*` (covariates incl. intercept):
+  - `z* | D_f ~ Student-t( ν_f = 2α_f,  μ_f = x*ᵀ m_f,  s_f² = (β_f^post / α_f)(1 + x*ᵀ Λ_f⁻¹ x*) )`
+  - per-row density on the untransformed scale: `t_{ν_f}(T(x*); μ_f, s_f²) · |dT(x*)/dx|`
+- The **family marginal likelihood** is the product of per-row predictives (order-independent). The root-cause node `r`'s family is fit **per regime** (`F=0` and `F=1` separately); all other nodes' families are fit **pooled**. (Discrete data uses the analogous Dirichlet/BDeu prequential score — Appendix F — but the OB/Sock Shop target is continuous.)
+
+**Implication for scope:** prep's Tier A primitives (`conditional_variance` = covariance Schur complement → residual variance; `gaussian_log_density`; `cg_solve`; sample mean/covariance) are the *necessary numeric building blocks* but are **not** the BRCD scoring layer. The BRCD change must add the NIG → Student-t conjugate machinery (`Λ`/`m`/`α`/`β` posterior updates with ridge-stabilized SPD solves, the Student-t log-density, the optional transform + Jacobian, and the per-regime/pooled assembly) on top of them. The theoretical guarantees (Theorems 4.3/4.4) are estimator-agnostic — they need only an `ε`-accurate plug-in — so the conjugate model is a robustness/finite-sample choice, not a correctness requirement; a simpler plug-in Gaussian would still satisfy the consistency results but underperform at the 5-anomalous-sample regime the paper targets.

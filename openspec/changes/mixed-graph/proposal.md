@@ -4,17 +4,16 @@ Constraint-based causal discovery (PC, GES, the Meek orientation rules) and the 
 
 ## What Changes
 
-- Add a **`MixedGraph`** structure to `deep_causality_topology`: a graph whose edges carry a **mark at each endpoint** (`Tail`, `Arrow`, and a reserved `Circle`), so a single type expresses undirected, directed, and partially-directed edges — and therefore DAGs, PDAGs, and CPDAGs.
-- Provide constructors, getters, edge mutation, and structural queries: adjacency, parents/children (arc projection), undirected neighbors, edge enumeration by kind, and arc-projection acyclicity / topological order.
-- Enforce the **endpoint invariant**: each node pair is in exactly one state (no edge / directed either way / undirected), with symmetric, consistent endpoint marks.
-- Integrate with the crate's existing higher-kinded-type scaffolding by adding a `MixedGraphWitness` (HKT) and a `MixedGraphTopology` trait, mirroring `Graph`/`Hypergraph`.
-- Keep the structure **scalar-free by default** (structural over `usize` indices), with optional node payload to match the `Graph<T>`/`Hypergraph<T>` family.
-- The `Circle` endpoint mark and any PAG/MAG-specific behavior are **declared but not implemented** in this change — reserved so the type does not need a breaking signature change when latent-variable graphs are added later.
+- Add a **`MixedGraph`** structure to `deep_causality_topology`: a graph whose edges carry a **mark at each endpoint** (`Tail`, `Arrow`, `Circle`), so a single type expresses directed, undirected, bidirected, and partially-directed edges — and therefore DAGs, PDAGs, CPDAGs, MAGs, and PAGs. The **full three-mark calculus is implemented** (not Circle-reserved): building the PAG-capable type once avoids a later breaking migration.
+- Store edges in a **canonical-pair edge map** (`BTreeMap<(min, max), Edge>`) — one entry per unordered pair — so the **endpoint invariant** (at most one edge per pair, consistent marks) is enforced structurally by the key and uses `O(m)` memory.
+- Provide constructors, getters, edge mutation (per-endpoint orientation across all marks), and structural queries: adjacency, parents/children (directed-arc projection), undirected neighbors, per-kind edge enumeration, and arc-projection acyclicity / topological order.
+- Integrate to **full parity** with the crate's higher-kinded-type family: a `MixedGraphWitness` (HKT), a `MixedGraphTopology` trait, **and** a comonadic interface (`extract`/`extend`/`duplicate`) over a node-payload cursor — mirroring `Graph`/`Hypergraph`.
+- Carry a node payload `T` like `Graph<T>`/`Hypergraph<T>`; usable structurally (over `usize` indices) when the payload holds no scalar.
 
 ## Capabilities
 
 ### New Capabilities
-- `mixed-graph`: a typed-endpoint mixed graph in `deep_causality_topology` modeling directed, undirected, and partially-directed edges under one type, with the endpoint invariant, structural queries (parents, neighbors, arcs, undirected edges), arc-projection acyclicity / topological sort, and HKT integration.
+- `mixed-graph`: a full three-mark typed-endpoint mixed graph in `deep_causality_topology` modeling directed, undirected, bidirected, and partially-directed edges (DAG/CPDAG/MAG/PAG) under one type, with the structurally-enforced endpoint invariant, per-endpoint orientation, structural queries (parents, neighbors, per-kind enumeration), arc-projection acyclicity / topological sort, and full HKT + comonad integration.
 
 ### Modified Capabilities
 <!-- None. No existing spec in openspec/specs/ changes its requirements. The downstream

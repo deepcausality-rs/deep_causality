@@ -2,15 +2,15 @@
 
 ### Requirement: Typed-endpoint mixed-graph type
 
-The system SHALL provide a `MixedGraph` type in `deep_causality_topology` whose every edge carries a mark at each of its two endpoints, drawn from `Tail`, `Arrow`, and a reserved `Circle`. The pair of endpoint marks SHALL name the edge: `(Tail, Arrow)` is a directed arc `u → v`, `(Tail, Tail)` is an undirected edge `u — v`, and the absence of an edge is the empty state. The type SHALL be generic over an optional node payload defaulting to the unit type, so it is scalar-free (structural over `usize` node indices) unless a payload is requested. Edges SHALL carry no weight.
+The system SHALL provide a `MixedGraph` type in `deep_causality_topology` whose every edge carries a mark at each of its two endpoints, drawn from `Tail`, `Arrow`, and `Circle`. The pair of endpoint marks SHALL name the edge, covering every edge kind used by DAGs, CPDAGs, MAGs, and PAGs: `(Tail, Arrow)` directed `u → v`, `(Tail, Tail)` undirected `u — v`, `(Arrow, Arrow)` bidirected `u ↔ v`, `(Circle, Arrow)` partially directed `u ∘→ v`, `(Circle, Circle)` nondirected `u ∘—∘ v`, and `(Circle, Tail)` partially undirected `u ∘— v`; the absence of an edge is the empty state. The type SHALL be generic over a node payload and SHALL be usable structurally (over `usize` node indices) when the payload carries no scalar. Edges SHALL carry no weight.
 
-#### Scenario: An arc and an undirected edge are distinguishable
-- **WHEN** an arc `u → v` and an undirected edge `x — y` are added to a graph
-- **THEN** the arc reports endpoint marks `(Tail at u, Arrow at v)` and the undirected edge reports `(Tail, Tail)`, and the two edges are reported as different kinds
+#### Scenario: Every endpoint-mark combination is representable
+- **WHEN** edges with endpoint marks `(Tail, Arrow)`, `(Tail, Tail)`, `(Arrow, Arrow)`, `(Circle, Arrow)`, `(Circle, Circle)`, and `(Circle, Tail)` are added
+- **THEN** each edge reports its exact endpoint marks and is classified as the corresponding kind (directed, undirected, bidirected, partially directed, nondirected, partially undirected)
 
-#### Scenario: Default instantiation is scalar-free
-- **WHEN** a `MixedGraph` is created without a node payload
-- **THEN** it is usable as a structure over node indices with no floating-point or scalar parameter
+#### Scenario: Marks are readable in either node order
+- **WHEN** an edge between `u` and `v` is queried as `(u, v)` and as `(v, u)`
+- **THEN** the endpoint marks reported are consistent with a single edge, swapped to match the query order
 
 ### Requirement: Endpoint invariant
 
@@ -76,18 +76,30 @@ The system SHALL compute a topological order over the directed-arc projection of
 - **WHEN** undirected edges are added to an otherwise acyclic arc projection
 - **THEN** the projection is still reported acyclic and a topological order is still returned
 
-### Requirement: Higher-kinded-type integration
+### Requirement: Higher-kinded-type and comonad integration
 
-The system SHALL integrate `MixedGraph` with the crate's higher-kinded-type scaffolding by providing an HKT witness and a `MixedGraphTopology` trait analogous to the existing `Graph`/`Hypergraph` witnesses and topology traits.
+The system SHALL integrate `MixedGraph` with the crate's higher-kinded-type scaffolding to full parity with `Graph`/`Hypergraph`: an HKT witness, a `MixedGraphTopology` trait, and a comonadic interface (`extract`, `extend`, `duplicate`) over a node-payload focus (cursor). `extract` SHALL return the focused node's payload; `extend` SHALL produce a new graph whose payload at each node is a neighborhood-aware function evaluated with that node as the focus.
 
 #### Scenario: Witness and topology trait are available
 - **WHEN** a consumer uses `MixedGraph` through the crate's HKT witness and topology trait
 - **THEN** the type composes with the same higher-kinded-type machinery used by `Graph` and `Hypergraph`
 
-### Requirement: Reserved Circle endpoint
+#### Scenario: Comonadic extract returns the focused payload
+- **WHEN** the cursor is set to a node and `extract` is called
+- **THEN** the focused node's payload is returned
 
-The `Circle` endpoint mark SHALL be defined for forward compatibility with partial ancestral graphs but SHALL NOT be exercised by this capability. Operations that would require interpreting a `Circle` mark SHALL return a documented error rather than producing an undefined result.
+#### Scenario: Comonadic extend respects the comonad laws
+- **WHEN** `extend`/`duplicate` is applied
+- **THEN** the result satisfies the comonad laws (left identity, right identity, associativity) as exercised by the test suite
 
-#### Scenario: Circle is not silently mishandled
-- **WHEN** an operation encounters a `Circle` endpoint mark
-- **THEN** it returns a documented "unsupported" error rather than treating the mark as a tail or arrow
+### Requirement: PAG endpoint orientation
+
+The system SHALL support orienting and reorienting any endpoint of an existing edge to any mark (`Tail`, `Arrow`, `Circle`), so that the full DAG/CPDAG/MAG/PAG edge calculus is expressible and mutable. Every such operation SHALL preserve the endpoint invariant. Setting an endpoint of a non-existent edge SHALL return an error.
+
+#### Scenario: A circle endpoint can be oriented to an arrowhead
+- **WHEN** a partially directed edge `u ∘→ v` has its `u` endpoint set from `Circle` to `Tail`
+- **THEN** the edge becomes the directed arc `u → v`
+
+#### Scenario: An edge can be made bidirected
+- **WHEN** both endpoints of an edge are set to `Arrow`
+- **THEN** the edge is reported as bidirected `u ↔ v`
