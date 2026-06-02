@@ -475,3 +475,14 @@ The code operates on `graphical_models.PDAG`: `to_complete_pdag()` (Meek), `pare
 | `sklearn.LogisticRegression` (F-gate) | **logistic regression** | **NEW — needed for mixture gating** |
 | `PowerTransformer`/`KernelDensity` | yeojohnson transform / Forest-KDE | optional, defer (Gaussian path is the target) |
 | `BRCD/boss.py` (structure learning) | upstream CPDAG discovery (CDL produces the CPDAG) | separate concern |
+
+### 16.6 Author update (small) — driver contract, local scores, and a golden toy *(2026-06-02 repo refresh)*
+
+The author refreshed `ctx/next/brcd/`: added `BRCD/LocalScoreFunction.py`, updated the README, and committed a toy run in `ctx/next/example.txt`. None of it changes the estimator; it pins the public contract and gives a reproducible end-to-end reference.
+
+- **Driver contract (README).** `from brcd.brcd import brcd_helper as brcd`, called as
+  `brcd(df_obs, df_a, cpdag=…, isdiscrete=False, node_transform="none", transform_parents=…, num_root_causes_candidates=k, bootstrap_samples=…) -> {"ranks": [...]}`.
+  The output is `result["ranks"]` — a **ranked list of root-cause candidates** (best first). `num_root_causes_candidates = k` controls how many simultaneous root causes are scored. `cpdag=None` triggers the BOSS bootstrap path (out of scope here). This refines §16.4: the in-repo `BrcdResult<T>` exposes a `ranks` ordering.
+- **`LocalScoreFunction.py` (BOSS only).** The local scores BOSS optimizes: `local_score_BIC` / `local_score_BIC_from_cov` (linear-Gaussian BIC, `n·log(σ²_resid) + log(n)·|PA|·λ`, with ridge `eps=1e-6` on `XX` and a `lambda_value` penalty discount), `local_score_BDeu` (discrete), and CV / marginal RKHS scores. **All of this belongs to the deferred BOSS / no-CPDAG bootstrap change, not `brcd-estimator`** (which requires a supplied CPDAG, D6). No effect on stages 1–9.
+- **Golden toy (`example.txt`) — the primary acceptance fixture.** Linear-Gaussian chain `X → Y → Z` (`X=εx`, `Y=1.5X+εy`, `Z=2Y+εz`); normal `df_obs` (seed 1), anomalous `df_a` (seed 2) **perturbs `p(Y|X)`** via `y_intercept=2.0`. CPDAG = nodes `[X,Y,Z]`, **`arcs=[]`, `edges=[(X,Y),(Y,Z)]`** (a fully *undirected* chain — one chain component, the path-of-3 → 3 AMOs, exactly our stage-1 MEC). `node_transform="none"`, `num_root_causes_candidates=1`. **Expected `ranks: ['Y','X','Z']`** (Y is the root cause; its mechanism changed). `transform_parents=True` is passed but is a **no-op** here because `node_transform="none"` (`transform_parents` only acts when a transform is active), so the fixture needs no transform work — it is reproducible by stages 1–6 alone.
+  - *Data capture:* the data uses numpy `default_rng` (PCG64), **not bit-reproducible from the seed in Rust**, so the verification commits the generated `df_obs`/`df_a` as CSV golden inputs and asserts Rust BRCD returns `['Y','X','Z']` on them (verification tiers 1/3; `transform_parents` only acts when a transform is active).

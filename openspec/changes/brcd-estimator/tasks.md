@@ -22,7 +22,7 @@ Each stage below ends green: the crate builds, all new tests pass, `cargo clippy
 
 ## 4. F-integration (mixture of experts) + discrete Dirichlet
 
-- [ ] 4.1 Three-mode integration (L324–L585): F∈parents → per-regime ridge-Gaussian; F∉parents → two-expert mixture through the gate, combined via `logsumexp`; F absent → single expert.
+- [ ] 4.1 Three-mode integration (L324–L585): F∈parents → per-regime ridge-Gaussian; F∉parents → two-expert mixture through the gate, combined via `logsumexp`; F absent → single expert. Include `transform_parents` (apply the node's effective transform to continuous parents, **no Jacobian**, L409–421) — note it is a no-op when `node_transform="none"` (so the golden toy does not exercise it).
 - [ ] 4.2 Discrete Dirichlet posterior-predictive (prequential), α* = 5.0 (L596/L659).
 - [ ] 4.3 Tests: each mode's log-likelihood on a fixture; mixture vs per-regime equivalence in the degenerate gate limit; discrete prequential closed form.
 
@@ -35,16 +35,16 @@ Each stage below ends green: the crate builds, all new tests pass, `cargo clippy
 
 ## 6. Posterior assembly + ranking (driver) + public API
 
-- [ ] 6.1 `BrcdConfig` (seed, family kind, transform, prior, enumeration bound, optional weighted-CPDAG list for the future bootstrap path) and `BrcdResult<T>` (ranked posterior over candidates); no `dyn`.
+- [ ] 6.1 `BrcdConfig` (seed, family kind = continuous/discrete, `node_transform`, `transform_parents`, `num_root_causes_candidates` = k, prior, enumeration bound, optional weighted-CPDAG list for the future bootstrap path) and `BrcdResult<T>` exposing `ranks` (the ranked candidate ordering, best first — mirrors the reference `result["ranks"]`) over the posterior; no `dyn`.
 - [ ] 6.2 `brcd_update` (L1756): per root, sum cached log-factors into `log P(D|G)`, add `log(mec_size/Σ)`, `logsumexp` over the root's DAGs, sum over rows, add `log(prior)`, normalize → posterior over roots.
 - [ ] 6.3 `brcd_helper` (L1863) supplied-CPDAG branch only: validate aligned columns + required CPDAG, run `brcd_update`, rank. Errors for missing CPDAG / misaligned datasets. Public entry point exported from `brcd::mod` and the crate root.
 - [ ] 6.4 Tests: end-to-end single-root continuous; determinism under fixed seed; missing-CPDAG and misaligned-datasets error paths.
 
 ## 7. Verification tier 1 — golden fixtures vs the reference posterior
 
-- [ ] 7.1 Capture reference posteriors from `ctx/next/brcd/brcd.py` on fixed seeds for small fixtures covering every mode (F∈parents, F∉parents mixture, F absent, discrete, undirected-edge CPDAG); commit as golden data with provenance.
-- [ ] 7.2 Pin the tolerance `ε` and seed set in the verification fixtures.
-- [ ] 7.3 Tests: ranking identical to the reference; per-root log-posterior within `ε`; one case per mode.
+- [ ] 7.1 **Primary fixture: the `X → Y → Z` toy** (`ctx/next/brcd/README.md` / `ctx/next/example.txt`). Undirected CPDAG `arcs=[], edges=[(X,Y),(Y,Z)]`; anomaly perturbs `p(Y|X)`; `node_transform="none"`; expected `ranks == ['Y','X','Z']`. Commit the Python-generated `df_obs`/`df_a` as CSV golden inputs (numpy PCG64 is not bit-reproducible in Rust, so the *data* is the fixture, not the seed) with provenance. Assert Rust BRCD returns `['Y','X','Z']`.
+- [ ] 7.2 Capture reference posteriors from `ctx/next/brcd/brcd.py` on fixed inputs for small fixtures covering every estimator mode (F∈parents, F∉parents mixture, F absent, discrete); commit as golden data with provenance. Pin the tolerance `ε`.
+- [ ] 7.3 Tests: the toy ranking is exact; per-root log-posteriors within `ε`; one case per mode.
 
 ## 8. Verification tier 2 — synthetic ground-truth recovery
 
