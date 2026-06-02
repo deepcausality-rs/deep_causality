@@ -48,4 +48,4 @@
 
 - [x] 9.1 `cargo build -p deep_causality_topology`, `cargo test -p deep_causality_topology`, `cargo clippy -p deep_causality_topology --all-targets`, `cargo fmt -p deep_causality_topology --check` all clean; then the full-workspace `make build` / `make test`.
 - [x] 9.2 Run `openspec validate mixed-graph` and confirm apply-complete; prepare a commit message and request the owner commit (do not commit).
-- [ ] 9.3 After this lands, revise `brcd-prep-foundations` (decision D2 and tasks 2.2–2.7) so its causal-graph operations consume this `MixedGraph` instead of defining a graph type in `deep_causality_algorithms`.
+- [x] 9.3 After this lands, revise `brcd-prep-foundations` (decision D2 and tasks 2.2–2.7) so its causal-graph operations consume this `MixedGraph` instead of defining a graph type in `deep_causality_algorithms`.

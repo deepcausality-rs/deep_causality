@@ -12,12 +12,12 @@
 ## 2. Tier B — causal-graph layer (`causal-graph`, in `deep_causality_algorithms::causal_discovery`)
 
 - [x] 2.1 Confirmed: `ultragraph`'s `GraphTraversal::inbound_edges(node)` already returns the direct predecessors (parents) of a node on a frozen graph, and is already unit-tested — `test_inbound_edges_on_static_graph` asserts predecessor semantics (e.g. `inbound_edges(2) == [0, 1]`), plus `_on_dynamic_graph` (`GraphNotFrozen`) and `_invalid_node` error paths. No code change needed; the causal-graph layer will consume `inbound_edges` for parent sets.
-- [ ] 2.2 Scaffold `causal_discovery::{graph, mec}` beside `surd`; implement the PDAG/CPDAG type (directed arcs + undirected edges) with constructors and getters (parents, neighbors, arcs, undirected edges); test construction and arc-vs-edge adjacency.
-- [ ] 2.3 Implement topological order and acyclicity over the arc projection by reusing `ultragraph`; test the acyclic and cyclic cases.
-- [ ] 2.4 Implement the Meek orientation rules (PDAG→CPDAG completion, DAG→CPDAG); test a known completion, the arcs-only unchanged case, and idempotence.
-- [ ] 2.5 Implement the unshielded-collider validity check against a baseline parent set; test new-collider flagging and pre-existing-collider non-flagging.
-- [ ] 2.6 Implement MEC size + representative DAG with the trivial arcs-only case (size 1 = input); document the extension point for a future uniform sampler; test the arcs-only case.
-- [ ] 2.7 Confirm the causal-graph layer carries no floating-point scalar and exposes no `RealField` parameter (structural only); a downstream consumer at any precision reuses it unchanged.
+- [ ] 2.2 Add `deep_causality_topology` as a dependency of `deep_causality_algorithms` (pending the D2 open-question decision); scaffold `causal_discovery::{meek, validity, mec}` beside `surd`. The CPDAG/PDAG type is `topology::MixedGraph` — no graph type is defined here. *(The `mixed-graph` change is landed and archived: `MixedGraph` already provides directed arcs + undirected/bidirected/circle edges, constructors, getters — parents, neighbors, per-kind enumeration — and the endpoint invariant.)*
+- [ ] 2.3 ~~Implement topological order/acyclicity~~ **Provided by `MixedGraph`**: `topological_sort`, `has_cycle`, and `find_cycle` over the directed-arc projection ship with the type and are already tested. Confirm the Meek/validity operations consume them; no new implementation needed.
+- [ ] 2.4 Implement the Meek orientation rules over `MixedGraph` (PDAG→CPDAG completion, DAG→CPDAG), using its per-endpoint `set_endpoint`/`orient` and `parents`/`undirected_neighbors`; test a known completion, the arcs-only unchanged case, and idempotence.
+- [ ] 2.5 Implement the unshielded-collider validity check over `MixedGraph` against a baseline parent set; test new-collider flagging and pre-existing-collider non-flagging.
+- [ ] 2.6 Implement MEC size + representative DAG with the trivial arcs-only case (size 1 = input) over `MixedGraph`; document the extension point for a future uniform sampler; test the arcs-only case.
+- [ ] 2.7 Confirm the causal-graph operations carry no floating-point scalar and expose no `RealField` parameter (they operate on `MixedGraph`, which is structural); a downstream consumer at any precision reuses them unchanged.
 
 ## 3. CDL pipeline generalization (`discovery-pipeline`, in `deep_causality_discovery`)
 

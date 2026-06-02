@@ -2,43 +2,31 @@
 
 ### Requirement: Structural layer is precision-agnostic
 
-The causal-graph layer SHALL carry no floating-point scalars; it represents structure over node indices and edges only. It SHALL therefore take no precision type parameter and SHALL compose with any precision `T` used elsewhere in the pipeline.
+The causal-graph operations SHALL carry no floating-point scalars; they operate over structure (node indices and typed edges) only. They SHALL therefore take no precision type parameter and SHALL compose with any precision `T` used elsewhere in the pipeline.
 
 #### Scenario: Graph operations require no precision parameter
-- **WHEN** the PDAG/CPDAG type, Meek completion, the validity check, and MEC sizing are used
+- **WHEN** Meek completion, the validity check, and MEC sizing are used
 - **THEN** they operate on graph structure alone and expose no `RealField` type parameter
 
 #### Scenario: Composes with any downstream precision
 - **WHEN** a downstream algorithm runs at `f32`, `f64`, or `Float106`
-- **THEN** it reuses the same graph layer unchanged
+- **THEN** it reuses the same graph operations unchanged
 
-### Requirement: PDAG/CPDAG representation
+### Requirement: Operations consume the shared mixed-graph type
 
-The system SHALL provide a partially directed acyclic graph type over a fixed node set that holds both directed arcs and undirected edges, and SHALL expose the parents of a node, the neighbors of a node, the set of arcs, and the set of undirected edges. The type SHALL distinguish a directed arc from an undirected edge in adjacency queries.
+The causal-graph operations SHALL be implemented over `deep_causality_topology::MixedGraph` — the typed-endpoint graph delivered by the `mixed-graph` capability — rather than defining a separate graph type. They SHALL use its directed-arc projection (`parents`/`children`), undirected neighbors, per-kind edge enumeration, and built-in topological sort / acyclicity checks.
 
-#### Scenario: Construct from arcs and undirected edges
-- **WHEN** a PDAG is built from a node set, a list of arcs, and a list of undirected edges
-- **THEN** the arcs, undirected edges, and per-node parents are reported consistently with the construction
+#### Scenario: A CPDAG is represented as a MixedGraph
+- **WHEN** a CPDAG is built as a `MixedGraph` from directed arcs and undirected edges
+- **THEN** the causal-graph operations read its arcs, undirected edges, and per-node parents directly, with no separate PDAG type
 
-#### Scenario: Adjacency distinguishes arc from undirected edge
-- **WHEN** two nodes are connected by a directed arc
-- **THEN** the query reports them adjacent and reports the edge as directed, not undirected
-
-### Requirement: Directed-graph operations via ultragraph
-
-The system SHALL provide topological order and acyclicity checks over the directed-arc projection of a PDAG, reusing `ultragraph` for storage and traversal. A parents/predecessors accessor SHALL be available on the directed projection.
-
-#### Scenario: Acyclic arc set yields a topological order
-- **WHEN** the arc projection is acyclic
-- **THEN** a valid topological order over the nodes is returned
-
-#### Scenario: Cyclic arc set is reported as cyclic
-- **WHEN** the arc projection contains a cycle
-- **THEN** the acyclicity check reports a cycle and no topological order is produced
+#### Scenario: Acyclicity uses the graph's own projection
+- **WHEN** an operation needs the arc-projection topological order or a cycle check
+- **THEN** it uses `MixedGraph`'s `topological_sort` / `has_cycle`, not a separate directed-graph store
 
 ### Requirement: Meek orientation rules
 
-The system SHALL apply the Meek orientation rules to complete a PDAG into its CPDAG, and equivalently to convert a fully directed DAG into its CPDAG. Completion SHALL be idempotent.
+The system SHALL apply the Meek orientation rules to complete a `MixedGraph` PDAG into its CPDAG, and equivalently to convert a fully directed DAG into its CPDAG. Completion SHALL be idempotent.
 
 #### Scenario: Known PDAG completes to the expected CPDAG
 - **WHEN** a PDAG with a known completion is supplied
