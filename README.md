@@ -323,9 +323,9 @@ bazel test  //...
 
 Contributions are welcome! Please read:
 
+* [AI Coding Assistants](Ai-Coding-Assistants.md)
 * [Contributing Guide](CONTRIBUTING.md)
 * [Code of Conduct](CODE_OF_CONDUCT.md)
-* [Project Charter](DeepCausalityProjectCharter.pdf)
 
 ```bash
 # Before submitting a PR
@@ -335,7 +335,7 @@ make check
 
 ---
 
-## Credits
+## Acknowledgement
 
 Inspired by research from:
 
