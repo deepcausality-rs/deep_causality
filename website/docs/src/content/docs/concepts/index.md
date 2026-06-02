@@ -25,7 +25,7 @@ Reference pages for every primitive the library exposes. Start with **Dynamic ca
 - **[Causal Discovery Language](/concepts/cdl/)** — a typestate-builder DSL for going from raw observational data to an executable causal model.
 - **[Causal State Machine](/concepts/csm/)** — a registry of state-action pairs whose transitions are driven by causal evaluation rather than fixed thresholds.
 - **[Uncertainty](/concepts/uncertainty/)** — a first-order type for uncertain values, plus a companion type for probabilistic presence.
-- **[Uniform Maths](/concepts/uniform-math/)** — one Functor/Monad/CoMonad surface across tensors, multivectors, manifolds, sparse matrices, and effect propagation.
+- **[Uniform Math](/concepts/uniform-math/)** — one Functor/Monad/CoMonad surface across tensors, multivectors, manifolds, sparse matrices, and effect propagation.
 
 ## Reference
 

@@ -1,5 +1,5 @@
 ---
-title: Uniform Maths
+title: Uniform Math
 description: One Functor/Monad/CoMonad surface across tensors, multivectors, manifolds, sparse matrices, and effect propagation.
 sidebar:
   order: 11

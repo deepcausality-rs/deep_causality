@@ -19,19 +19,19 @@ Causality has to be defined before it can be computed. DeepCausality picks one d
 
 Once the axiom is set, it needs a numerical floor that the rest of the library stands on. Four innovations cover that floor end to end.
 
-**2. A uniform mathematical surface.** Tensors, multivectors, manifolds, sparse matrices, and propagating effects all implement the same `Functor`, `Monad`, and `CoMonad` surface. `fmap`, `bind`, `extend`, and `extract` mean the same thing on every container, which is how cross-domain pipelines stay readable and how bridge code disappears. *See [Uniform Maths](/concepts/uniform-math/).*
+**2. A uniform mathematical surface.** Tensors, multivectors, manifolds, sparse matrices, and propagating effects all implement the same `Functor`, `Monad`, and `CoMonad` surface. `fmap`, `bind`, `extend`, and `extract` mean the same thing on every container, which is how cross-domain pipelines stay readable and how bridge code disappears. *See [Uniform Math](/concepts/uniform-math/).*
 
-**3. An explicit algebraic trait hierarchy.** `Magma → Semigroup → Monoid → Group → AbelianGroup`; then `Ring → CommutativeRing → Field → RealField → ComplexField<R>`; plus `Module<R>`, `Algebra<R>`, `AssociativeAlgebra<R>`, `DivisionAlgebra<R>`, and `EuclideanDomain`. Marker traits move algebraic laws into the type system, so an algorithm that requires associativity cannot accept a type that violates it. *See [Uniform Maths](/concepts/uniform-math/).*
+**3. An explicit algebraic trait hierarchy.** `Magma → Semigroup → Monoid → Group → AbelianGroup`; then `Ring → CommutativeRing → Field → RealField → ComplexField<R>`; plus `Module<R>`, `Algebra<R>`, `AssociativeAlgebra<R>`, `DivisionAlgebra<R>`, and `EuclideanDomain`. Marker traits move algebraic laws into the type system, so an algorithm that requires associativity cannot accept a type that violates it. *See [Uniform Math](/concepts/uniform-math/).*
 
 **4. Higher-Kinded Types via the witness pattern.** Rust does not have native HKTs. `deep_causality_haft` fills the gap with zero-sized witness structs that stand in for type constructors, so the Causal Monad's `bind` is written once generically and specialized per concrete instantiation through monomorphization. No boxed type erasure, no virtual calls. *See [Higher-Kinded Types](/concepts/hkt/).*
 
-**5. Precision as a parameter.** Because every math container stands on the generic algebraic floor, numerical precision becomes one type alias for the whole pipeline. `pub type FloatType = Float106;` flows through every tensor contraction, multivector rotation, manifold extension, and monadic step. The [Multi-physics and multi-regime simulation](/overview/the-problem/#2-multi-physics-and-multi-regime-simulation) section on the Problem page walks through what this earns in practice. *See [Uniform Maths](/concepts/uniform-math/).*
+**5. Precision as a parameter.** Because every math container stands on the generic algebraic floor, numerical precision becomes one type alias for the whole pipeline. `pub type FloatType = Float106;` flows through every tensor contraction, multivector rotation, manifold extension, and monadic step. The [Multi-physics and multi-regime simulation](/overview/the-problem/#2-multi-physics-and-multi-regime-simulation) section on the Problem page walks through what this earns in practice. *See [Uniform Math](/concepts/uniform-math/).*
 
 ## III. Discovery: from raw data to a model
 
 A project rarely starts with a finished causal model. It starts with data, and the first job is to find the structure worth running inference against. Two innovations cover the path from observations to an executable model.
 
-**6. The Causal Discovery Language.** CDL is a typestate-builder DSL that walks data through configure, load, clean, select features, discover, analyze, and finalize. The typestate enforces stage order at compile time. SURD and MRMR ship as discovery primitives. The output of the final stage is a `Causaloid` indistinguishable from a hand-written one, so discovery and inference run on the same substrate. *See [Causal Discovery Language](/concepts/cdl/).*
+**6. The Causal Discovery Language.** CDL is a typestate-builder DSL that walks data through configure, load, clean, select features, discover, analyze, and finalize. The typestate enforces stage order at compile time. SURD and MRMR ship as discovery primitives. The output of the final stage is a report that describes which variables are uniquely or synergistically causal and, importantly, flags redundant variables. *See [Causal Discovery Language](/concepts/cdl/).*
 
 **7. Uncertainty as a first-order type.** `Uncertain<T>` wraps a value with the distribution that produced it and uses the Sequential Probability Ratio Test for confidence-bounded decisions. `MaybeUncertain<T>` separates presence from distribution, so missing readings propagate explicitly rather than silently. *See [Uncertainty](/concepts/uncertainty/).*
 
@@ -67,7 +67,7 @@ A causal verdict on its own does nothing. Two innovations bridge inference to th
 
 Once the model is approved for production, it has to serve traffic.
 
-**16. Native async serving on Tokio.** DeepCausality is a Rust library. The CSM is thread-safe by construction (`Arc<RwLock<...>>`) and the library ships no scheduler of its own, so it embeds cleanly inside a [Tokio](https://tokio.rs/) async runtime. The model that came out of discovery is the same model serving production traffic; no format conversion, no separate serving framework on top, and the audit trail flows out alongside the response.
+**16. Native async serving on Tokio.** DeepCausality is a Rust library. The CSM is thread-safe by construction (`Arc<RwLock<...>>`) so it embeds natively inside any async runtime. A production deployment with Tokio comes down to embedding the causal model into a regular request handler.
 
 ## Where to go from here
 
