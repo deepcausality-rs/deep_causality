@@ -15,10 +15,10 @@ Each stage below ends green: the crate builds, all new tests pass, `cargo clippy
 
 ## 3. Ridge-Gaussian family estimator
 
-- [ ] 3.1 `_fit_ridge` (L312): `β = solve(XᵀX + λI, Xᵀy)`, λ = 1e-4, `σ² = resid·resid / max(n−p,1)` floored 1e-12, via the in-place Cholesky on the `p×p` normal equations.
-- [ ] 3.2 Per-row family log-density composing `deep_causality_tensor::gaussian_log_density` (exact `_normal_logpdf_1d`).
-- [ ] 3.3 Transform ladder none/log/log1p with Jacobian on the original scale + auto-downgrade (L279/L752); `yeojohnson` stubbed behind the same `Transform` enum (D7), recorded as the selected transform.
-- [ ] 3.4 Tests: closed-form agreement on a tiny system; variance floor; transform Jacobian correctness; auto-downgrade on non-positive data.
+- [x] 3.1 `fit_ridge` (port of `_fit_ridge` L312) in `brcd::gaussian`: `β = solve(XᵀX + λI, Xᵀy)` via the shared `linalg::solve_spd` (ridge on every column incl. intercept, matching the reference), `σ² = ‖resid‖²/max(n−p,1)` floored 1e-12; `RidgeFit<T>{beta, sigma2}` + `predict`. `RIDGE_DEFAULT = 1e-4`.
+- [x] 3.2 `gaussian_single_expert_logdensity` composes `deep_causality_tensor::gaussian_log_density` (exact `_normal_logpdf_1d`) via the per-row residual `rᵢ = zᵢ − μᵢ` → `gaussian_log_density(0, σ²)`; ports the finite-row masking + sample-mean fallback + parentless branch (L455–480).
+- [x] 3.3 Transform ladder `none/log/log1p` with original-scale Jacobian (`transform_and_jacobian`, L279) + the `log → log1p → yeojohnson` auto-downgrade (`effective_transform`, L357–381); `Yeojohnson` is selected but returns `GaussianError::YeojohnsonUnsupported` (deferred, D7) so the deferral is surfaced, not silent.
+- [x] 3.4 Tests (15): parentless density vs the closed form `−½(ln2π + (z−μ)²)`; sharp-line recovery with parents; `fit_ridge` line recovery + variance floor (λ=0 exact-fit) + shape errors; log/log1p Jacobian values; the downgrade ladder; auto-downgrade-keeps-finite; yeojohnson-surfaces-unsupported; f32/f64 sweep.
 
 ## 4. F-integration (mixture of experts) + discrete Dirichlet
 

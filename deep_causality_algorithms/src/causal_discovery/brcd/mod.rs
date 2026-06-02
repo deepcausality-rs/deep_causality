@@ -21,6 +21,7 @@
 //! scoring, posterior ranking) compose these and land in later stages.
 
 pub mod gate;
+pub mod gaussian;
 pub mod mec;
 pub mod meek;
 pub mod validity;
