@@ -9,9 +9,9 @@ Each stage below ends green: the crate builds, all new tests pass, `cargo clippy
 
 ## 2. Logistic-regression gate primitive (the new numeric component)
 
-- [ ] 2.1 Implement ridge-penalized logistic regression by Newton/IRLS in `brcd::gate`, generic over `T: RealField`, reusing the in-place Cholesky SPD solve; deterministic, fixed iteration cap + convergence tol.
-- [ ] 2.2 Empirical-prior fallback for a singular/degenerate design (mirrors brcd.py L534–L554).
-- [ ] 2.3 Tests: separable and noisy 2-class fits vs a hand/Python-computed coefficient (within tol); the fallback path; precision sweep f32/f64.
+- [x] 2.1 Implemented ridge-penalized logistic regression by Newton/IRLS in `brcd::gate` (`fit_logistic_gate` → `LogisticGate<T>`/`predict_proba`), generic over `T: RealField + FromPrimitive`, deterministic (fixed `max_iter` + step-tol). The Newton step solves `(ZᵀWZ + Λ)·step = grad` via a new shared dense Cholesky SPD solver `brcd::linalg::solve_spd` (mirrors the proven tensor routine; reused by the stage-3 ridge fit). Objective matches `sklearn` defaults: λ=1.0 on weights, intercept unpenalized.
+- [x] 2.2 Single-class label → constant base-rate gate (bias = `logit_clamped(rate)`, weights 0), matching the reference's empirical-prior behaviour; `GateError::{EmptyData, DimensionMismatch, SingularSystem}` signal the caller to fall back (stage 4 wires the empirical prior).
+- [x] 2.3 Tests (11 gate + 2 linalg): symmetric 2-point fit vs the **closed form** `w = 2(1−σ(w)) ≈ 0.6749`, separable ordering, 2-feature calibration, both single-class constant gates, determinism, all three error paths, and an f32/f64 precision sweep; `solve_spd` unit-tested on a known 2×2 + identity.
 
 ## 3. Ridge-Gaussian family estimator
 
