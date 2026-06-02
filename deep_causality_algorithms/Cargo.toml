@@ -29,6 +29,10 @@ version = "0.3"
 path = "../deep_causality_topology"
 version = "0.6"
 
+[dependencies.deep_causality_rand]
+path = "../deep_causality_rand"
+version = "0.1"
+
 [dependencies.rayon]
 version = "1.12"
 optional = true

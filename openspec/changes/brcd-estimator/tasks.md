@@ -2,10 +2,10 @@ Each stage below ends green: the crate builds, all new tests pass, `cargo clippy
 
 ## 1. MEC engine — exact AMO enumeration (replaces the trivial placeholder)
 
-- [ ] 1.1 Port `BRCD/mcs_num.py` `enumerate_amos` / `enumerate_dags` to `brcd::mec` over `MixedGraph`: enumerate the acyclic moral orientations of the undirected component, exact `mec_size = |dags|`.
-- [ ] 1.2 Add `mec_sample_dag(&MixedGraph, &mut Rng) -> MixedGraph` drawing one enumerated DAG uniformly with a seeded `deep_causality_rand` RNG; extend the existing `mec_size`/`representative_dag` API without changing its shape.
-- [ ] 1.3 Bound the enumeration; on exceeding the bound return an explicit `MecError` (no silent truncation). Replace the `RequiresUniformSampler` placeholder path.
-- [ ] 1.4 Tests: known small CPDAGs with hand-computed MEC sizes; uniform-sample determinism under a fixed seed; arcs-only → size 1; bound-exceeded → error. Update `mec_tests.rs`.
+- [x] 1.1 Ported `BRCD/mcs_num.py` `enumerate_amos` (the MCS recursion + `creates_invalid_collider`) to `brcd::mec` over `MixedGraph`. `mec_size = ∏ |AMO(chain component)|` (the AMP/Wienöbst independence result — no full materialization needed for the size). Chain components = connected components of the undirected subgraph; arcs-only → size 1.
+- [x] 1.2 Added `mec_sample_dag<N, R: Rng>(&MixedGraph<N>, &mut R) -> Result<MixedGraph<N>, MecError>` drawing a uniform member (independent uniform AMO per component) via a seeded `deep_causality_rand` RNG; `representative_dag` shares the builder (first AMO per component). Enabler: added `Xoshiro256::from_seed(u64)` + crate-root export in `deep_causality_rand` (BRCD needs a reproducible seed, design D8). `deep_causality_algorithms` gains a `deep_causality_rand` dependency.
+- [x] 1.3 Bounded both the per-component AMO count and the cross-component product at `MEC_ENUM_BOUND` (100_000) → explicit `MecError::ClassTooLarge { bound }`; no silent truncation. Replaced the `RequiresUniformSampler` placeholder: undirected edges now enumerate; bidirected/circle → `MecError::NotACpdag`; cyclic arcs → `NotAcyclic`.
+- [x] 1.4 Rewrote `mec_tests.rs` (14 tests): hand-computed sizes (single edge → 2, path-of-3 → 3, triangle → 6, arc×component, disjoint product), representative is a valid moral member, sample determinism under a fixed seed, every-sample-valid, whole-class coverage, and the three error paths incl. the bound. Plus 2 `from_seed` reproducibility tests in `deep_causality_rand`.
 
 ## 2. Logistic-regression gate primitive (the new numeric component)
 

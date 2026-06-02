@@ -45,6 +45,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_algorithms",
         # Deps
+        "//deep_causality_rand",
         "//deep_causality_tensor",
         "//deep_causality_topology",
     ],

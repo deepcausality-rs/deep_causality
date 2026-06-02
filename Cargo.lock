@@ -449,6 +449,7 @@ version = "0.2.14"
 dependencies = [
  "criterion",
  "deep_causality_num",
+ "deep_causality_rand",
  "deep_causality_tensor",
  "deep_causality_topology",
  "rayon",
