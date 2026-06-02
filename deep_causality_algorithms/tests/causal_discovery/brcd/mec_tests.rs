@@ -3,8 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_algorithms::brcd::mec::{
-    MEC_ENUM_BOUND, MecError, mec_sample_dag, mec_size, representative_dag,
+use deep_causality_algorithms::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
+use deep_causality_algorithms::brcd::brcd_mec::{
+    MEC_ENUM_BOUND, mec_sample_dag, mec_size, representative_dag,
 };
 use deep_causality_rand::Xoshiro256;
 use deep_causality_tensor::CausalTensor;
@@ -170,8 +171,11 @@ fn sampling_covers_the_whole_class() {
 fn bidirected_edge_is_not_a_cpdag() {
     let mut g = graph(2);
     g.add_bidirected(0, 1).unwrap();
-    assert_eq!(mec_size(&g), Err(MecError::NotACpdag));
-    assert_eq!(representative_dag(&g).err(), Some(MecError::NotACpdag));
+    assert_eq!(mec_size(&g), Err(BrcdError(BrcdErrorEnum::NotACpdag)));
+    assert_eq!(
+        representative_dag(&g).err(),
+        Some(BrcdError(BrcdErrorEnum::NotACpdag))
+    );
 }
 
 #[test]
@@ -180,7 +184,7 @@ fn cyclic_arc_projection_is_not_a_dag() {
     g.add_arc(0, 1).unwrap();
     g.add_arc(1, 2).unwrap();
     g.add_arc(2, 0).unwrap();
-    assert_eq!(mec_size(&g), Err(MecError::NotAcyclic));
+    assert_eq!(mec_size(&g), Err(BrcdError(BrcdErrorEnum::NotAcyclic)));
 }
 
 #[test]
@@ -191,7 +195,10 @@ fn representative_of_cyclic_graph_errors_not_acyclic() {
     g.add_arc(0, 1).unwrap();
     g.add_arc(1, 2).unwrap();
     g.add_arc(2, 0).unwrap();
-    assert_eq!(representative_dag(&g).err(), Some(MecError::NotAcyclic));
+    assert_eq!(
+        representative_dag(&g).err(),
+        Some(BrcdError(BrcdErrorEnum::NotAcyclic))
+    );
 }
 
 #[test]
@@ -205,8 +212,8 @@ fn class_larger_than_the_bound_is_refused() {
     }
     assert_eq!(
         mec_size(&g),
-        Err(MecError::ClassTooLarge {
+        Err(BrcdError(BrcdErrorEnum::ClassTooLarge {
             bound: MEC_ENUM_BOUND
-        })
+        }))
     );
 }

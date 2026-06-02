@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_algorithms::brcd::validity::{
+use deep_causality_algorithms::brcd::brcd_validity::{
     baseline_parents, has_new_unshielded_collider_any, has_new_unshielded_collider_at,
     is_valid_configuration,
 };

@@ -22,9 +22,9 @@ Each stage below ends green: the crate builds, all new tests pass, `cargo clippy
 
 ## 4. F-integration (mixture of experts) + discrete Dirichlet
 
-- [ ] 4.1 Three-mode integration (L324–L585): F∈parents → per-regime ridge-Gaussian; F∉parents → two-expert mixture through the gate, combined via `logsumexp`; F absent → single expert. Include `transform_parents` (apply the node's effective transform to continuous parents, **no Jacobian**, L409–421) — note it is a no-op when `node_transform="none"` (so the golden toy does not exercise it).
-- [ ] 4.2 Discrete Dirichlet posterior-predictive (prequential), α* = 5.0 (L596/L659).
-- [ ] 4.3 Tests: each mode's log-likelihood on a fixture; mixture vs per-regime equivalence in the degenerate gate limit; discrete prequential closed form.
+- [x] 4.1 `gaussian::gaussian_family_logdensity` ports the 3-branch `gaussian_conditional_postpred_rowwise` (L324–L552): F∈parents → per-regime ridge-Gaussian (with the `n≤p` small-sample guard, L433); F∉parents → two-expert mixture through the stage-2 gate, combined via a stable `logaddexp` (`_logsumexp2`); F absent → single expert. `transform_parents` applies the node's effective transform to continuous parents (no Jacobian, L409–421); `GaussianFamilyConfig<T>` carries it + the gate config. Empirical-prior gate fallback on gate-fit failure.
+- [x] 4.2 `dirichlet::dirichlet_logdensity` — discrete Dirichlet posterior-predictive, prequential per parent-configuration stream, `α₀ = α*/K`, `α* = 5.0` default (L596/L659); returns per-row log-probabilities. `DirichletError::{EmptyData, DimensionMismatch, ZeroCardinality, StateOutOfRange}`.
+- [x] 4.3 Tests (7 family + 5 dirichlet): F-absent ≡ single expert; per-regime closed form (`logpdf(·;μ,2) = −½(ln4π+½)`); per-regime linear fit (n>p); mixture-all-anomalous collapses to the present expert; mixture finite + deterministic; `transform_parents` changes the fit; dirichlet parentless + grouped closed forms, marginal-likelihood ≤ 0, error paths, f32/f64.
 
 ## 5. F-node augmentation + cut-configuration enumeration
 

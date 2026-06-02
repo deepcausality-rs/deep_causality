@@ -37,7 +37,7 @@
 //! Enumeration is exponential in the worst case (a large clique has factorially
 //! many AMOs). Both the per-component AMO count and the product across
 //! components are capped at [`MEC_ENUM_BOUND`]; exceeding it returns
-//! [`MecError::ClassTooLarge`] rather than silently scoring a truncated class. A
+//! [`BrcdErrorEnum::ClassTooLarge`] rather than silently scoring a truncated class. A
 //! future change can swap in a true clique-picking sampler behind this same API
 //! if scale demands it.
 //!
@@ -46,36 +46,18 @@
 //! The input is expected to be a valid CPDAG: every edge is either a directed
 //! arc or an undirected edge (no bidirected/circle endpoints), the arc
 //! projection is acyclic, and each chain component is chordal. Bidirected or
-//! partially-oriented edges yield [`MecError::NotACpdag`]; a cyclic arc
-//! projection yields [`MecError::NotAcyclic`].
+//! partially-oriented edges yield [`BrcdErrorEnum::NotACpdag`]; a cyclic arc
+//! projection yields [`BrcdErrorEnum::NotAcyclic`].
 
+use crate::causal_discovery::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use deep_causality_rand::Rng;
 use deep_causality_topology::{EdgeKind, MixedGraph};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 /// Upper bound on the per-component AMO count and on the equivalence-class size
 /// (the product across components). Beyond this the engine returns
-/// [`MecError::ClassTooLarge`] instead of enumerating an intractable class.
+/// [`BrcdErrorEnum::ClassTooLarge`] instead of enumerating an intractable class.
 pub const MEC_ENUM_BOUND: usize = 100_000;
-
-/// Reasons MEC sizing or sampling cannot proceed.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum MecError {
-    /// The graph carries an edge that is neither a directed arc nor an undirected
-    /// edge (a bidirected or partially-oriented endpoint). AMO enumeration is
-    /// defined only for CPDAGs.
-    NotACpdag,
-    /// The directed-arc projection contains a cycle, so the input is not a valid
-    /// CPDAG.
-    NotAcyclic,
-    /// The equivalence class (a per-component AMO count, or the product across
-    /// components) exceeds [`MEC_ENUM_BOUND`]; enumeration is refused rather than
-    /// truncated.
-    ClassTooLarge {
-        /// The bound that was exceeded.
-        bound: usize,
-    },
-}
 
 /// Returns the size of the Markov equivalence class of `graph`.
 ///
@@ -83,10 +65,10 @@ pub enum MecError {
 /// orientation count; an arcs-only (fully directed) acyclic graph has size `1`.
 ///
 /// # Errors
-/// * [`MecError::NotACpdag`] if any edge is bidirected or partially oriented.
-/// * [`MecError::NotAcyclic`] if the arc projection contains a cycle.
-/// * [`MecError::ClassTooLarge`] if the class exceeds [`MEC_ENUM_BOUND`].
-pub fn mec_size<N>(graph: &MixedGraph<N>) -> Result<usize, MecError> {
+/// * [`BrcdErrorEnum::NotACpdag`] if any edge is bidirected or partially oriented.
+/// * [`BrcdErrorEnum::NotAcyclic`] if the arc projection contains a cycle.
+/// * [`BrcdErrorEnum::ClassTooLarge`] if the class exceeds [`MEC_ENUM_BOUND`].
+pub fn mec_size<N>(graph: &MixedGraph<N>) -> Result<usize, BrcdError> {
     validate_cpdag(graph)?;
     let mut size: usize = 1;
     for component in chain_components(graph) {
@@ -102,7 +84,7 @@ pub fn mec_size<N>(graph: &MixedGraph<N>) -> Result<usize, MecError> {
 ///
 /// # Errors
 /// As [`mec_size`].
-pub fn representative_dag<N: Clone>(graph: &MixedGraph<N>) -> Result<MixedGraph<N>, MecError> {
+pub fn representative_dag<N: Clone>(graph: &MixedGraph<N>) -> Result<MixedGraph<N>, BrcdError> {
     build_member(graph, |amo_count| {
         debug_assert!(amo_count > 0);
         0
@@ -119,7 +101,7 @@ pub fn representative_dag<N: Clone>(graph: &MixedGraph<N>) -> Result<MixedGraph<
 pub fn mec_sample_dag<N: Clone, R: Rng>(
     graph: &MixedGraph<N>,
     rng: &mut R,
-) -> Result<MixedGraph<N>, MecError> {
+) -> Result<MixedGraph<N>, BrcdError> {
     build_member(graph, |amo_count| rng.random_range(0..amo_count))
 }
 
@@ -127,27 +109,27 @@ pub fn mec_sample_dag<N: Clone, R: Rng>(
 
 /// Validates that every edge is a directed arc or an undirected edge and that
 /// the arc projection is acyclic.
-fn validate_cpdag<N>(graph: &MixedGraph<N>) -> Result<(), MecError> {
+fn validate_cpdag<N>(graph: &MixedGraph<N>) -> Result<(), BrcdError> {
     for edge in graph.edges().values() {
         match edge.kind() {
             EdgeKind::Directed | EdgeKind::Undirected => {}
-            _ => return Err(MecError::NotACpdag),
+            _ => return Err(BrcdError(BrcdErrorEnum::NotACpdag)),
         }
     }
     if graph.has_cycle() {
-        return Err(MecError::NotAcyclic);
+        return Err(BrcdError(BrcdErrorEnum::NotAcyclic));
     }
     Ok(())
 }
 
 /// Multiplies the running class size by a component's AMO count, capping at
 /// [`MEC_ENUM_BOUND`].
-fn checked_class_product(acc: usize, factor: usize) -> Result<usize, MecError> {
+fn checked_class_product(acc: usize, factor: usize) -> Result<usize, BrcdError> {
     match acc.checked_mul(factor) {
         Some(p) if p <= MEC_ENUM_BOUND => Ok(p),
-        _ => Err(MecError::ClassTooLarge {
+        _ => Err(BrcdError(BrcdErrorEnum::ClassTooLarge {
             bound: MEC_ENUM_BOUND,
-        }),
+        })),
     }
 }
 
@@ -205,8 +187,8 @@ fn chain_components<N>(graph: &MixedGraph<N>) -> Vec<Component> {
 /// the component exactly once. Ported from `mcs_num.py::enumerate_amos`.
 ///
 /// # Errors
-/// [`MecError::ClassTooLarge`] if the AMO count exceeds [`MEC_ENUM_BOUND`].
-fn enumerate_amos(component: &Component) -> Result<Vec<Vec<(usize, usize)>>, MecError> {
+/// [`BrcdErrorEnum::ClassTooLarge`] if the AMO count exceeds [`MEC_ENUM_BOUND`].
+fn enumerate_amos(component: &Component) -> Result<Vec<Vec<(usize, usize)>>, BrcdError> {
     let adj = &component.adj;
     let total_edges: usize = adj.values().map(Vec::len).sum::<usize>() / 2;
 
@@ -240,7 +222,7 @@ fn mcs_enum(
     oriented: &[(usize, usize)],
     unique: &mut BTreeSet<Vec<(usize, usize)>>,
     out: &mut Vec<Vec<(usize, usize)>>,
-) -> Result<(), MecError> {
+) -> Result<(), BrcdError> {
     // Base case: every vertex visited.
     if visited.len() == adj.len() {
         if oriented.len() == total_edges {
@@ -248,9 +230,9 @@ fn mcs_enum(
             key.sort_unstable();
             if unique.insert(key.clone()) {
                 if out.len() >= MEC_ENUM_BOUND {
-                    return Err(MecError::ClassTooLarge {
+                    return Err(BrcdError(BrcdErrorEnum::ClassTooLarge {
                         bound: MEC_ENUM_BOUND,
-                    });
+                    }));
                 }
                 out.push(key);
             }
@@ -331,7 +313,7 @@ fn creates_invalid_collider(
 fn build_member<N: Clone>(
     graph: &MixedGraph<N>,
     mut choose: impl FnMut(usize) -> usize,
-) -> Result<MixedGraph<N>, MecError> {
+) -> Result<MixedGraph<N>, BrcdError> {
     validate_cpdag(graph)?;
     let mut dag = graph.clone();
     let mut running: usize = 1;
@@ -342,7 +324,7 @@ fn build_member<N: Clone>(
             // A chordal chain component always has at least one AMO; an empty
             // result means the component is not chordal, so the input is not a
             // valid CPDAG.
-            return Err(MecError::NotACpdag);
+            return Err(BrcdError(BrcdErrorEnum::NotACpdag));
         }
         running = checked_class_product(running, amos.len())?;
         let pick = choose(amos.len());
@@ -356,7 +338,7 @@ fn build_member<N: Clone>(
     // A valid CPDAG always yields an acyclic member; guard against a malformed
     // input that slipped past validation rather than returning a cyclic "DAG".
     if dag.has_cycle() {
-        return Err(MecError::NotAcyclic);
+        return Err(BrcdError(BrcdErrorEnum::NotAcyclic));
     }
     Ok(dag)
 }

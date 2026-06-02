@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_algorithms::brcd::meek::meek_complete;
+use deep_causality_algorithms::brcd::brcd_meek::meek_complete;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{EdgeKind, MixedGraph};
 

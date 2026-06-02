@@ -23,21 +23,9 @@
 //! has a single class the gate degenerates to the constant base rate (matching
 //! the reference's behaviour and its empirical-prior fallback).
 
-use crate::causal_discovery::brcd::linalg::solve_spd;
+use crate::causal_discovery::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
+use crate::causal_discovery::brcd::brcd_linalg::solve_spd;
 use deep_causality_num::{FromPrimitive, RealField};
-
-/// Reasons a gate could not be fit. The caller falls back to the empirical F
-/// prior on any of these (mirroring the reference's `except` path).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum GateError {
-    /// No rows were supplied.
-    EmptyData,
-    /// The label count does not match the row count, or the rows are ragged.
-    DimensionMismatch,
-    /// The Newton iteration produced a non-finite parameter (e.g. a degenerate
-    /// design that ridge did not regularize).
-    SingularSystem,
-}
 
 /// Configuration for the logistic-gate fit.
 #[derive(Debug, Clone, Copy)]
@@ -94,26 +82,26 @@ impl<T: RealField + FromPrimitive> LogisticGate<T> {
 /// intercept column) against binary labels `y`.
 ///
 /// # Errors
-/// * [`GateError::EmptyData`] if `rows` is empty.
-/// * [`GateError::DimensionMismatch`] if `y.len() != rows.len()` or the rows are
+/// * [`BrcdErrorEnum::EmptyData`] if `rows` is empty.
+/// * [`BrcdErrorEnum::DimensionMismatch`] if `y.len() != rows.len()` or the rows are
 ///   ragged.
-/// * [`GateError::SingularSystem`] if the Newton iteration diverges to a
+/// * [`BrcdErrorEnum::SingularSystem`] if the Newton iteration diverges to a
 ///   non-finite parameter.
 pub fn fit_logistic_gate<T: RealField + FromPrimitive>(
     rows: &[Vec<T>],
     y: &[bool],
     config: &GateConfig<T>,
-) -> Result<LogisticGate<T>, GateError> {
+) -> Result<LogisticGate<T>, BrcdError> {
     let n = rows.len();
     if n == 0 {
-        return Err(GateError::EmptyData);
+        return Err(BrcdError(BrcdErrorEnum::EmptyData));
     }
     if y.len() != n {
-        return Err(GateError::DimensionMismatch);
+        return Err(BrcdError(BrcdErrorEnum::DimensionMismatch));
     }
     let p = rows[0].len();
     if rows.iter().any(|r| r.len() != p) {
-        return Err(GateError::DimensionMismatch);
+        return Err(BrcdError(BrcdErrorEnum::DimensionMismatch));
     }
 
     // Single-class label → the gate is the constant base rate (0 or 1), matching
@@ -165,7 +153,7 @@ pub fn fit_logistic_gate<T: RealField + FromPrimitive>(
             }
         }
         if theta.iter().any(|t| !t.is_finite()) {
-            return Err(GateError::SingularSystem);
+            return Err(BrcdError(BrcdErrorEnum::SingularSystem));
         }
         if max_step < config.tol {
             break;

@@ -13,7 +13,7 @@
 //! baseline CPDAG (and stays acyclic). This mirrors the reference BRCD checks
 //! `has_new_unshielded_collider_at` / `_is_valid_configuration_multi`.
 
-use crate::brcd::meek::meek_complete;
+use crate::brcd::brcd_meek::meek_complete;
 use deep_causality_topology::MixedGraph;
 use std::collections::{BTreeMap, BTreeSet};
 

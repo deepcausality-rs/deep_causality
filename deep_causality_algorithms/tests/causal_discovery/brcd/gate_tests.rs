@@ -3,9 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_algorithms::brcd::gate::{
-    GateConfig, GateError, LogisticGate, fit_logistic_gate,
-};
+use deep_causality_algorithms::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
+use deep_causality_algorithms::brcd::brcd_gate::{GateConfig, LogisticGate, fit_logistic_gate};
 
 fn fit(rows: &[Vec<f64>], y: &[bool]) -> LogisticGate<f64> {
     fit_logistic_gate(rows, y, &GateConfig::default()).unwrap()
@@ -115,7 +114,7 @@ fn empty_data_is_rejected() {
     let y: [bool; 0] = [];
     assert_eq!(
         fit_logistic_gate(&rows, &y, &GateConfig::default()).err(),
-        Some(GateError::EmptyData)
+        Some(BrcdError(BrcdErrorEnum::EmptyData))
     );
 }
 
@@ -125,7 +124,7 @@ fn mismatched_label_count_is_rejected() {
     let y = [true]; // one short
     assert_eq!(
         fit_logistic_gate(&rows, &y, &GateConfig::default()).err(),
-        Some(GateError::DimensionMismatch)
+        Some(BrcdError(BrcdErrorEnum::DimensionMismatch))
     );
 }
 
@@ -135,7 +134,7 @@ fn ragged_rows_are_rejected() {
     let y = [true, false];
     assert_eq!(
         fit_logistic_gate(&rows, &y, &GateConfig::default()).err(),
-        Some(GateError::DimensionMismatch)
+        Some(BrcdError(BrcdErrorEnum::DimensionMismatch))
     );
 }
 

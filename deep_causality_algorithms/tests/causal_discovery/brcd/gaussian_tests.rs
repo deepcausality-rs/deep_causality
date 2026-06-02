@@ -3,9 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_algorithms::brcd::gaussian::{
-    GaussianError, RIDGE_DEFAULT, Transform, effective_transform, fit_ridge,
-    gaussian_single_expert_logdensity, transform_and_jacobian,
+use deep_causality_algorithms::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
+use deep_causality_algorithms::brcd::brcd_gaussian::{
+    RIDGE_DEFAULT, Transform, effective_transform, fit_ridge, gaussian_single_expert_logdensity,
+    transform_and_jacobian,
 };
 
 const LN_2PI: f64 = 1.837_877_066_409_345_6;
@@ -53,15 +54,15 @@ fn fit_ridge_variance_is_floored_on_a_perfect_fit() {
 fn fit_ridge_rejects_bad_shapes() {
     assert_eq!(
         fit_ridge::<f64>(&[], &[], ridge()).err(),
-        Some(GaussianError::EmptyData)
+        Some(BrcdError(BrcdErrorEnum::EmptyData))
     );
     assert_eq!(
         fit_ridge(&[vec![1.0, 0.0]], &[1.0, 2.0], ridge()).err(),
-        Some(GaussianError::DimensionMismatch)
+        Some(BrcdError(BrcdErrorEnum::DimensionMismatch))
     );
     assert_eq!(
         fit_ridge(&[vec![1.0, 0.0], vec![1.0]], &[1.0, 2.0], ridge()).err(),
-        Some(GaussianError::DimensionMismatch)
+        Some(BrcdError(BrcdErrorEnum::DimensionMismatch))
     );
 }
 
@@ -89,15 +90,15 @@ fn transform_log_and_log1p_jacobians() {
 fn transform_domain_and_unsupported_errors() {
     assert_eq!(
         transform_and_jacobian(0.0_f64, Transform::Log).err(),
-        Some(GaussianError::InvalidTransformDomain)
+        Some(BrcdError(BrcdErrorEnum::InvalidTransformDomain))
     );
     assert_eq!(
         transform_and_jacobian(-2.0_f64, Transform::Log1p).err(),
-        Some(GaussianError::InvalidTransformDomain)
+        Some(BrcdError(BrcdErrorEnum::InvalidTransformDomain))
     );
     assert_eq!(
         transform_and_jacobian(1.0_f64, Transform::Yeojohnson).err(),
-        Some(GaussianError::YeojohnsonUnsupported)
+        Some(BrcdError(BrcdErrorEnum::YeojohnsonUnsupported))
     );
 }
 
@@ -199,7 +200,7 @@ fn yeojohnson_selection_surfaces_unsupported() {
     let y = vec![-2.0, 1.0, 3.0];
     assert_eq!(
         gaussian_single_expert_logdensity(&y, &[], Transform::Log, ridge()).err(),
-        Some(GaussianError::YeojohnsonUnsupported)
+        Some(BrcdError(BrcdErrorEnum::YeojohnsonUnsupported))
     );
 }
 
@@ -207,13 +208,13 @@ fn yeojohnson_selection_surfaces_unsupported() {
 fn single_expert_rejects_bad_shapes() {
     assert_eq!(
         gaussian_single_expert_logdensity::<f64>(&[], &[], Transform::None, ridge()).err(),
-        Some(GaussianError::EmptyData)
+        Some(BrcdError(BrcdErrorEnum::EmptyData))
     );
     // Parents present but count mismatched.
     assert_eq!(
         gaussian_single_expert_logdensity(&[1.0, 2.0], &[vec![0.0]], Transform::None, ridge())
             .err(),
-        Some(GaussianError::DimensionMismatch)
+        Some(BrcdError(BrcdErrorEnum::DimensionMismatch))
     );
 }
 
