@@ -5,17 +5,17 @@ TBD - created by archiving change brcd-estimator. Update Purpose after archive.
 ## Requirements
 ### Requirement: BRCD root-cause ranking from two datasets and a CPDAG
 
-The system SHALL provide a BRCD entry point in `deep_causality_algorithms::causal_discovery::brcd` that takes a normal dataset, an anomalous dataset (both `CausalTensor<T>`, `T: RealField`, aligned columns), and a CPDAG (`MixedGraph`), and returns a posterior distribution over root-cause candidates ranked by probability. The entry point SHALL require a supplied CPDAG and SHALL NOT perform structure learning.
+The BRCD entry point `brcd_run` SHALL take the CPDAG as an **optional** argument (`Option<&MixedGraph<N>>`): a normal dataset, an anomalous dataset (both `CausalTensor<T>`, `T: RealField`, aligned columns), an optional CPDAG, and a `BrcdConfig`. When `Some(cpdag)` is supplied it SHALL be used directly. When `None` is supplied, `brcd_run` SHALL first learn a CPDAG from the observational (normal) data via BOSS (capability `brcd-bootstrap`) as a preprocessing step, then proceed with the identical ranking. **BREAKING:** the `cpdag` parameter changes from `&MixedGraph<N>` to `Option<&MixedGraph<N>>`; existing call sites pass `Some(&cpdag)`.
 
-#### Scenario: Single-root continuous case is ranked
+#### Scenario: Supplied CPDAG is used directly
 
-- **WHEN** BRCD runs on aligned normal/anomalous tensors and a supplied CPDAG with one true injected root cause
-- **THEN** it returns a normalized posterior over the candidate variables and the true root cause is ranked first
+- **WHEN** `brcd_run` is called with `Some(cpdag)` and one true injected root cause
+- **THEN** it returns a normalized posterior over the candidate variables and the true root cause is ranked first, without invoking structure learning
 
-#### Scenario: A CPDAG is required
+#### Scenario: Absent CPDAG triggers structure learning
 
-- **WHEN** BRCD is called without a CPDAG
-- **THEN** it returns an error indicating a CPDAG is required (no structure learning is performed)
+- **WHEN** `brcd_run` is called with `None` for the CPDAG
+- **THEN** it learns a CPDAG from the observational data via BOSS and returns a ranking, rather than returning an error
 
 #### Scenario: Misaligned datasets are rejected
 
