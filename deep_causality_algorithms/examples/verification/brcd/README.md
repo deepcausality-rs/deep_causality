@@ -1,121 +1,113 @@
 # BRCD verification examples
 
-Each verification is a standalone Rust example, runnable individually:
+These examples check the Rust BRCD port against the reference algorithm and against
+captured outputs of the reference implementation.
+
+The algorithm, the likelihood estimators, the BOSS structure learner, and the
+data-preprocessing pipeline all come from:
+
+> Kenneth Lee, Zihan Zhou, and Murat Kocaoglu. "Root Cause Analysis of Failures in
+> Microservices via Bayesian Root Cause Discovery." International Conference on Machine
+> Learning (ICML), 2026. <https://icml.cc/virtual/2026/poster/65359>
+
+The datasets under `data/` are **derived, not raw**. The reference Python pipeline cleans
+and windows the benchmark traces, and this repository stores the cleaned matrices together
+with the reference ranking. The Rust port reads those matrices directly; it does not re-run
+the Python preprocessing.
+
+Each example is a standalone binary. It prints one `PASS`/`FAIL` line per check and exits
+non-zero on any failure, so it runs in CI.
+
+## Running
 
 ```bash
 cargo run -p deep_causality_algorithms --example verification_base
 cargo run -p deep_causality_algorithms --example verification_boss
+cargo run --release -p deep_causality_algorithms --example verification_boss_sockshop
 cargo run -p deep_causality_algorithms --example verification_online_boutique
+cargo run -p deep_causality_algorithms --example verification_sockshop
 ```
 
-Each example prints a `PASS`/`FAIL` line per check and exits non-zero if any check
-fails, so it runs directly in CI.
+`brcd_run` scores node families in parallel under the `parallel` feature. The result is
+identical to the sequential path, so every example reproduces the same ranking either way.
+Add `--features parallel` to any command to exercise that path.
 
-> **Parallel build.** `brcd_run` parallelizes its per-family likelihood scoring
-> across CPU cores with `rayon` under the `parallel` feature. Family scoring is
-> independent, so the parallel and sequential results are identical; these
-> verifications reproduce the reference ranking exactly under both. To check the
-> parallel path, add `--features parallel` to any command above.
+## What gets checked, and against what
 
-## `verification_base` — synthetic recovery (self-contained)
+The examples test two separate things against two different references.
 
-Generates a linear-Gaussian chain `X → Y → Z`, then an anomalous dataset that
-perturbs `p(Y | X)`. Because only Y's conditional mechanism changes, BRCD must
-rank **Y** as the top root cause. No Python or external data is required; this is
-the base smoke verification that gates the real-world examples.
+1. **The estimator, given a CPDAG.** The reference is the captured Python ranking
+   (`expected.txt`), reproduced position for position.
+2. **The structure learner (BOSS), which produces a CPDAG from data.** The reference is a
+   known true graph on synthetic data. A learned CPDAG is a heuristic estimate, so an exact
+   target does not exist on real data.
 
-## `verification_boss` — BOSS structure learning (self-contained + learned-CPDAG)
+### `verification_base`: synthetic estimator smoke test
 
-BRCD needs a CPDAG. When none is supplied, it learns one from the pre-failure
-observational data with **BOSS** (`brcd_run` with `cpdag = None`). This example
-verifies that path in two parts:
+Generates a linear-Gaussian chain `X → Y → Z`, then an anomalous set that perturbs
+`p(Y | X)`. Only Y's mechanism changes, so BRCD must rank Y first. The example is
+self-contained and gates the heavier ones.
 
-1. **Structural recovery (self-contained).** BOSS learns from deterministically
-   generated linear-Gaussian data (fixed seed): a chain `X → Y → Z` must yield the
-   undirected path `X — Y — Z` (no v-structure), and a collider `X → Z ← Y` must
-   yield the compelled v-structure (both edges directed into `Z`, no `X — Y`
-   edge). No Python or external data is required.
-2. **Learned-CPDAG end-to-end (real data).** On the committed Online Boutique
-   `adservice_cpu_1` case, BRCD runs with `cpdag = None`, so BOSS learns the
-   structure from `normal.csv` and BRCD ranks against it. The learned-CPDAG run
-   recovers the true fault within the top 5 (it lands at **#1** here). This is the
-   path that serves systems without a service map — Petshop in the paper; since
-   the Petshop dataset is not committed, Online Boutique stands in.
+### `verification_boss`: BOSS structure learning
 
-Reproduction for BOSS is **structural + downstream-ranking, not byte-exact**: BOSS
-is a heuristic order search whose exact CPDAG is sensitive to tie-breaking, and
-the downstream ranking is robust to a Markov-equivalent learned CPDAG by the
-estimator's I-MEC invariance. The learned-CPDAG ranking is therefore **not**
-expected to match the supplied-CPDAG `expected.txt` position-for-position.
+Runs BRCD with `cpdag = None`, so BOSS learns the CPDAG from the pre-failure data. It makes
+two checks.
 
-> **Reference-correctness caveat (read before comparing to the Python reference).**
-> This port uses the **correct, higher-is-better** BIC sign for BOSS — the
-> convention of causal-learn and of the BOSS the paper runs ("default setting of
-> BOSS from causal-learn", Appendix D). The **vendored** Python BOSS
-> (`ctx/next/brcd/BRCD/`) is **sign-inverted**: it learns the empty graph on a
-> clean chain and a single spurious edge between the *independent* pair on a
-> collider (see `openspec/notes/brcd/brcd_boss_sign_bug.md`), and it is layered on
-> the posterior-ranking underflow bug (`brcd_python_ranking_bug.md`). So the
-> Python *learned-CPDAG* outputs may themselves be wrong. If the correctly-signed
-> port does **not** reproduce a Python learned-CPDAG result, treat that as evidence
-> the reference is wrong, not the port. To confirm for a bug report, temporarily
-> re-introduce the reference bug(s) behind a clearly-marked **test-only** switch
-> (inverted-sign BOSS and/or `exp`-then-`argsort` ranking) and check whether the
-> port then matches — never ship the wrong sign.
+1. **Structural, on synthetic data with a known graph.** A chain `X → Y → Z` must yield the
+   undirected path `X — Y — Z`; a collider `X → Z ← Y` must yield the directed v-structure.
+   This is where BOSS has a true target.
+2. **End to end, on real data.** On Online Boutique `adservice_cpu_1`, BOSS learns the
+   structure and BRCD ranks against it. The injected fault lands at rank 1.
 
-## `verification_*` — real-world replication (acceptance bar)
+A learned CPDAG is not identical to the service-map CPDAG, and it need not be. BOSS is a
+heuristic search, and the downstream ranking is robust to a Markov-equivalent graph. The
+check is structural recovery plus fault recall, not an exact match to `expected.txt`.
 
-These replay the real-world experiments (Online Boutique, Sock Shop, …) and assert
-the Rust ranking reproduces the authoritative Python BRCD. The data layout is one
-subdirectory per case:
+### `verification_boss_sockshop`, `verification_boss_online_boutique`: supplied vs learned CPDAG
 
-```
-data/<dataset>/<case>/{normal.csv, anomalous.csv, cpdag.txt, expected.txt, notes.txt}
-```
+These run each case twice, once with the supplied CPDAG and once with `cpdag = None`, and
+print both rankings side by side: the top five each, how deep they agree, the Spearman
+correlation, and the fault rank under each.
 
-### Data provenance — what these files are
+The supplied CPDAG is the application's service map (the call graph), reversed: a metric of
+service A points to a metric of service B whenever A calls B (paper, Appendix D). The map is
+curated and fully directed; the paper calls this variant BRCD-C. BOSS instead learns a CPDAG
+from statistical dependence in the metrics, and that graph carries undirected edges where the
+data alone cannot orient them. The two are different objects. A call graph records who calls
+whom; a learned CPDAG records what is conditionally dependent on what.
 
-The committed files are the **processed reference**, not the raw download:
+Sock Shop, both cases:
 
-```
-raw download                         data/<dataset>/<case>/         Rust example
-data/online-boutique/                  (committed reference)
-  adservice_cpu/1/data.csv   ──►       normal.csv      ◄─┐
-  (51 cols, full length,               anomalous.csv     ├─ INPUTS the Rust BRCD runs on
-   raw units)                          cpdag.txt       ◄─┘
-        │                              expected.txt    ◄── OUTPUT the Rust must reproduce
-  [main-*.py pipeline +                notes.txt           (provenance: names + config)
-   preprocess + brcd_helper()]
-```
+| case | supplied top-5 | learned top-5 | agree depth | Spearman | fault rank (supplied / learned) |
+|---|---|---|---|---|---|
+| carts_cpu_1 | `[42, 36, 26, 37, 17]` | `[42, 26, 36, 39, 37]` | 1 | 0.82 | 1 / 1 |
+| carts_cpu_2 | `[37, 43, 22, 0, 24]` | `[39, 0, 43, 37, 22]` | 0 | 0.78 | 1 / 4 |
 
-* `normal.csv` / `anomalous.csv` — the **exact** `df_obs` / `df_a` fed into
-  `brcd_helper`, already cleaned on the Python side (time + constant columns
-  dropped, mem → MB, windowed to ~600 rows, columns intersected). That is why OB
-  shows 45 vars / 600 rows, not the raw `data.csv`'s 51 cols × full length.
-* `cpdag.txt` — the exact CPDAG passed in (from the reversed service map).
-* `expected.txt` — the ranking Python BRCD produced; the target the Rust port
-  must match. `notes.txt` holds the same ranking as metric names plus the config.
+The two rankings agree at the top and diverge below. They agree where the mechanism shift is
+large enough that any reasonable structure ranks the same variable: the fault and a few
+strongly shifted metrics. They diverge below, because the order of moderate-importance
+variables depends on the edges, and the learned edges are not the service map's. Spearman
+stays near 0.8, so the rankings are broadly similar, but the leading agreement is shallow; on
+`carts_cpu_2` the learned CPDAG pushes the fault from rank 1 to rank 4.
 
-**Implication:** preprocessing (windowing, constant-column dropping, unit
-conversion) happens on the Python side and is baked into `normal.csv` /
-`anomalous.csv`, so the Rust port does **not** reimplement it to pass verification
-— it starts from the already-clean matrices. Having the Rust side own preprocessing
-too is a separate, larger decision.
+This gap is expected, not a BOSS defect. The paper offers BRCD-C (use the map) and the
+bootstrap variants BRCD-B10/B100 (average over learned CPDAGs) for exactly this reason. To
+judge BOSS itself, compare it to a known true graph on synthetic data, which
+`verification_boss` does.
 
-### Success criterion
+Only Sock Shop has a table because the learned run does not always finish. A fully directed
+CPDAG needs no cut-configuration enumeration (`mec_size = 1`), so the supplied run is instant.
+A learned CPDAG has undirected edges, and BRCD enumerates `2^(undirected edges incident on the
+candidate)` configurations; the cost is exponential in the local undirected degree (paper,
+Appendix E). Online Boutique's larger cases (about 50 variables, 2100 rows) learn a CPDAG with
+a high-degree undirected hub, and the learned run does not complete in reasonable time. That
+intractability is itself an argument for a directed service map. The Online Boutique comparison
+example is kept but flagged, and the table above is from Sock Shop, which completes.
 
-The check is **the Rust ranking reproduces Python's `expected.txt` exactly**,
-position-for-position, for every case.
+### `verification_online_boutique`, `verification_sockshop`: real-world acceptance
 
-> **Reference note.** The first OB capture was produced by a BRCD build whose
-> ranking step exponentiated the log-posterior (`np.exp(lp − max)`) before
-> `argsort`; on a dominant fault that underflows every non-top candidate to `0.0`,
-> so the secondary ranks collapsed to index order. The Rust port ranks on the
-> log-posterior directly (the paper's `p(R|D)`, Eq. 3), which is underflow-free.
-> Once the reference was re-captured **with that ranking fix**, Python and Rust
-> agree on the **entire** ranking. See `openspec/notes/brcd_python_ranking_bug.md`.
-
-#### Verified results (vs the ranking-fixed reference)
+These replay the captured Python results on the supplied CPDAG. Each reproduces the reference
+ranking position for position.
 
 | dataset / case | positions | exact match |
 |---|---|---|
@@ -124,48 +116,68 @@ position-for-position, for every case.
 | sock-shop-2/carts_cpu_1 | 44/44 | ✓ |
 | sock-shop-2/carts_cpu_2 | 45/45 | ✓ |
 
-### Workflow (per dataset)
+## Data layout and provenance
 
-1. **Run the Python reference.** In `ctx/next/brcd/`, set up the conda env from its
-   README and run BRCD on the dataset, capturing both the inputs and the output:
+One subdirectory per case:
+
+```
+data/<dataset>/<case>/{normal.csv, anomalous.csv, cpdag.txt, expected.txt, notes.txt}
+```
+
+The committed files are the processed reference. The reference Python pipeline drops time and
+constant columns, converts memory to MB, windows to about 600 rows, and intersects columns;
+this repository stores the result. That is why Online Boutique shows 45 variables and 600 rows
+rather than the raw 51 columns at full length.
+
+| file | contents |
+|---|---|
+| `normal.csv` | `df_obs`, the cleaned pre-failure data fed to `brcd_helper` |
+| `anomalous.csv` | `df_a`, the cleaned failure data, same columns |
+| `cpdag.txt` | line 1 `num_vars`, then one edge per line: `U i j` undirected, `D i j` directed, 0-based |
+| `expected.txt` | the reference ranking, one 0-based index per line, best first |
+| `notes.txt` | the raw Python console output, for provenance |
+
+The Rust port reads `normal.csv` and `anomalous.csv` as they are; it does not reimplement the
+Python preprocessing.
+
+## Adding a dataset
+
+1. Run the reference in `ctx/next/brcd/` (set up its conda env from that README):
 
    ```python
    from brcd.brcd import brcd_helper as brcd
    result = brcd(df_obs, df_a, cpdag=cpdag, isdiscrete=False,
                  node_transform="none", transform_parents=True,
                  num_root_causes_candidates=1)
-   print(result["ranks"])           # the expected ranking
+   print(result["ranks"])
    df_obs.to_csv("normal.csv", index=False)
    df_a.to_csv("anomalous.csv", index=False)
    ```
 
-2. **Extract the output to a text file.** Save the printed `ranks` (and any console
-   output) so the expected result is auditable, then **derive the expected ranking**
-   as 0-based variable indices.
+2. Derive `expected.txt` from `result["ranks"]` as 0-based indices.
+3. Commit `normal.csv`, `anomalous.csv`, `cpdag.txt`, `expected.txt`, and optional `notes.txt`
+   under `data/<dataset>/<case>/`.
+4. Match the example's `BrcdConfig` to the Python run.
+5. Run the example and confirm the ranking matches.
 
-3. **Commit the artifacts** under `examples/verification/brcd/data/<dataset>/<case>/`:
+## Notes on the reference
 
-   | File | Contents |
-   |---|---|
-   | `normal.csv` | `df_obs` — numeric columns, optional header row |
-   | `anomalous.csv` | `df_a` — same columns as `normal.csv` |
-   | `cpdag.txt` | line 1: `num_vars`; then one edge per line, `U i j` (undirected `i — j`) or `D i j` (directed `i → j`), 0-based |
-   | `expected.txt` | expected ranking, one 0-based variable index per line, best first |
-   | `notes.txt` *(optional)* | the raw Python console output for provenance |
+**Exactness.** The bar is the reproduced ranking, not bit-identical posteriors; numpy's PCG64
+sampling and the Python numeric stack are not reproducible in Rust. `verification_base` checks
+the recovery principle on Rust-generated data; the real-world examples check the ranking against
+the captured reference on identical inputs.
 
-4. **Replicate the config.** Edit the `BrcdConfig` in the example to match the
-   Python run (`num_root_causes`, `node_transform`, `transform_parents`, seed).
+**Ranking underflow, fixed in the capture.** The first Online Boutique capture exponentiated the
+log-posterior before sorting (`np.exp(lp − max)`). When one fault dominates, that step underflows
+every other candidate to zero and collapses the lower ranks to index order. The Rust port sorts on
+the log-posterior, which the paper's `p(R | D)` (Eq. 3) implies and which does not underflow.
+Re-captured with that fix, Python and Rust agree on the full ranking. See
+`openspec/notes/brcd/brcd_python_ranking_bug.md`.
 
-5. **Run the Rust example** and confirm it matches the expected ranking:
-
-   ```bash
-   cargo run -p deep_causality_algorithms --example verification_online_boutique
-   ```
-
-## Note on exactness
-
-The success criterion is the **reproduced ranking**, not bit-exact
-posteriors (numpy PCG64 sampling and the Python numeric stack are not reproducible
-in Rust). The `verification_base` example verifies the recovery *principle* on
-Rust-generated data; the `verification_*` real-world examples verify the *ranking*
-against the committed Python reference on identical input data.
+**BOSS score sign.** The port uses the higher-is-better BIC sign, the convention of causal-learn
+and of the BOSS the paper runs ("default setting of BOSS from causal-learn", Appendix D). The
+vendored Python BOSS is sign-inverted: it learns the empty graph on a clean chain and one
+spurious edge on a collider, so its learned-CPDAG outputs can be wrong. A divergence from the
+Python learned-CPDAG result is evidence against the reference, not the port; confirm it by
+temporarily restoring the bug behind a test-only switch, never by shipping the wrong sign. See
+`openspec/notes/brcd/brcd_boss_sign_bug.md`.

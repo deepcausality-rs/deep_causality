@@ -76,6 +76,19 @@ path = "examples/verification/brcd/verification_base.rs"
 name = "verification_boss"
 path = "examples/verification/brcd/verification_boss.rs"
 
+# Supplied-CPDAG vs BOSS-learned comparison (illustrates the learned-vs-map gap).
+# Sock Shop completes; Online Boutique's ~50-var / 2100-row cases can be intractable
+# for a learned CPDAG (exponential in local undirected degree) — see the OB example docs.
+#   cargo run --release -p deep_causality_algorithms --example verification_boss_sockshop
+#   cargo run --release -p deep_causality_algorithms --example verification_boss_online_boutique
+[[example]]
+name = "verification_boss_sockshop"
+path = "examples/verification/brcd/verification_boss_sockshop.rs"
+
+[[example]]
+name = "verification_boss_online_boutique"
+path = "examples/verification/brcd/verification_boss_online_boutique.rs"
+
 # Real-world verification (Online Boutique): replays committed Python-derived
 #   cargo run -p deep_causality_algorithms --example verification_online_boutique
 [[example]]
