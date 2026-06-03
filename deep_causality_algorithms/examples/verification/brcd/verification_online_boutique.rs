@@ -27,7 +27,7 @@ fn main() {
             dir.display()
         );
         eprintln!(
-            "The committed reference dataset is missing. See examples/verification/README.md."
+            "The committed reference dataset is missing. See examples/verification/brcd/README.md."
         );
         std::process::exit(1);
     }
