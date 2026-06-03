@@ -1,4 +1,4 @@
-# 🔬 deep_causality_algorithms 🔬
+# deep_causality_algorithms
 
 [![Crates.io][crates-badge]][crates-url]
 [![Docs.rs][docs-badge]][docs-url]
@@ -24,18 +24,20 @@ the [DeepCausality](https://github.com/deepcausality-rs/deep_causality) project.
 and decomposing causal relationships in complex systems.
 
 The cornerstone of this crate is `surd_states`, a high-performance Rust implementation of the **SURD-states algorithm**.
-Based on the paper "Observational causality by states and interaction type for scientific discovery" (
-martínezsánchez2025), this algorithm decomposes the mutual information between a set of source variables and a target
-variable into its fundamental components: **S**ynergistic, **U**nique, and **R**edundant (**SURD**).
+Based on the paper "Observational causality by states and interaction type for scientific discovery"
+(Martínez-Sánchez and Lozano-Durán, 2025), this algorithm decomposes the mutual information between a set of source
+variables and a target variable into its fundamental components: **S**ynergistic, **U**nique, and **R**edundant
+(**SURD**).
 
 This decomposition allows for a deep, nuanced understanding of causal structures, moving beyond simple correlations to
 reveal the nature of multi-variable interactions.
 
-Alongside SURD, the crate provides `brcd_run`, a Rust implementation of **Bayesian Root Cause Discovery (BRCD)**. SURD
-decomposes how a set of sources jointly influence a target; BRCD answers a different question. Given a normal dataset,
-an anomalous dataset, and a causal graph over the same variables, it identifies which variables most likely caused the
-anomaly. BRCD scores every candidate root-cause set with a Bayesian posterior and returns the candidates ranked from
-most to least probable.
+Alongside SURD, the crate provides `brcd`, a Rust implementation of **Bayesian Root Cause Discovery (BRCD)** based on
+the paper "Root Cause Analysis of Failures in Microservices via Bayesian Root Cause Discovery" (Lee, Zhou, and Kocaoglu,
+2026). SURD decomposes how a set of sources jointly influence a target; BRCD answers a different question. Given a normal
+dataset, an anomalous dataset, and a causal graph over the same variables, it identifies which variables most likely
+caused the anomaly. BRCD scores every candidate root-cause set with a Bayesian posterior and returns the candidates
+ranked from most to least probable.
 
 ## Key Features
 
@@ -135,7 +137,8 @@ println!("CDL Information Leak: {:.3}", full_result_cdl.info_leak());
 
 The mRMR algorithm is a powerful tool for selecting a subset of features that are maximally relevant to a target
 variable and minimally redundant among themselves. This helps in reducing dimensionality and focusing causal analysis on
-the most informative variables. The implementation now returns a ranked list of features along with their normalized importance scores (between 0.0 and 1.0).
+the most informative variables. This implementation follows the mRMR formulation of Zhao, Anand, and Wang (2019). It
+returns a ranked list of features along with their normalized importance scores (between 0.0 and 1.0).
 
 ```rust
 use deep_causality_algorithms::mrmr::mrmr_features_selector;
@@ -209,9 +212,7 @@ println!("Top root cause: {:?}", result.top()); // Some([1]) = Y
 
 `BrcdConfig::continuous(seed)` selects the ridge-Gaussian family for continuous data; `BrcdConfig::discrete(seed)`
 selects the Dirichlet family for categorical data. The `num_root_causes` field sets how many simultaneous root causes a
-candidate set holds (`k`). The runnable, verified examples live under
-[`examples/verification/brcd`](examples/verification/brcd); they replay the reference Python BRCD and reproduce its
-ranking exactly.
+candidate set holds (`k`). 
 
 ## From Discovery to Model: Connecting SURD to DeepCausality
 
@@ -259,6 +260,19 @@ cargo run --example example_surd
 ```
 
 For a detailed walkthrough of the output, see the [example's README](examples/README.md).
+
+## References
+
+The algorithms in this crate are Rust implementations of the following published work. Credit for the methods belongs to
+their original authors.
+
+* **SURD** — Álvaro Martínez-Sánchez and Adrián Lozano-Durán. "Observational causality by states and interaction type for
+  scientific discovery." arXiv:2505.10878 (2025). <https://arxiv.org/abs/2505.10878>
+* **mRMR** — Zhenyu Zhao, Radhika Anand, and Mallory Wang. "Maximum Relevance and Minimum Redundancy Feature Selection
+  Methods for a Marketing Machine Learning Platform." arXiv:1908.05376 (2019). <https://arxiv.org/abs/1908.05376>
+* **BRCD** — Kenneth Lee, Zihan Zhou, and Murat Kocaoglu. "Root Cause Analysis of Failures in Microservices via Bayesian
+  Root Cause Discovery." International Conference on Machine Learning (ICML), 2026.
+  <https://icml.cc/virtual/2026/poster/65359>
 
 ## 👨‍💻👩‍💻 Contribution
 
