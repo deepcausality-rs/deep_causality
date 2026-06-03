@@ -5,6 +5,8 @@
 #[cfg(test)]
 mod augment_tests;
 #[cfg(test)]
+mod boss_bootstrap_tests;
+#[cfg(test)]
 mod boss_config_tests;
 #[cfg(test)]
 mod boss_cpdag_tests;

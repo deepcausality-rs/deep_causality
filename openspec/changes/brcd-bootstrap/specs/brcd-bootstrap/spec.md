@@ -59,7 +59,7 @@ The learner SHALL convert the DAG implied by the final order into a CPDAG by ori
 
 ### Requirement: Optional bootstrap CPDAG-uncertainty outer loop
 
-The system SHALL provide, as a separable stage behind the same driver entry point, a bootstrap variant that resamples the observational data, learns a CPDAG per resample, weights the distinct CPDAGs by their frequency-corrected posterior, and combines the per-CPDAG root-cause posteriors (paper Equations 8–10; the `BRCD-B10` / `BRCD-B100` variants). When the bootstrap is not requested, the driver SHALL use a single learned CPDAG.
+The system SHALL provide, as a separable stage, a dedicated `brcd_run_bootstrap` entry point (a sibling of `brcd_run`, not a flag on it) that resamples the observational data, learns a CPDAG per resample, weights the distinct CPDAGs by their frequency-corrected posterior, and combines the per-CPDAG root-cause posteriors (paper Equations 8–10; the `BRCD-B10` / `BRCD-B100` variants). When the bootstrap is not requested, callers use `brcd_run` directly — a single learned (or supplied) CPDAG with no resampling — which is left unchanged.
 
 #### Scenario: Bootstrap combines weighted CPDAGs
 

@@ -62,6 +62,6 @@ where
         .map_err(|_| BrcdError(BrcdErrorEnum::DimensionMismatch))?;
     let scorer = BicScorer::new(&cov, n, config)?;
     let result = best_order_search(&scorer, config.seed)?;
-    
+
     dag_to_cpdag(&result.parents)
 }

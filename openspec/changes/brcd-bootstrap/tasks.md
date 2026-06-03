@@ -45,11 +45,11 @@ Each stage is independently testable and must leave the workspace green
 
 ## 8. Bootstrap CPDAG-uncertainty (separable, last)
 
-- [ ] 8.1 Add a `bootstrap` flag/count to the config; resample the observational data `B` times, learn a CPDAG per resample, and dedupe distinct CPDAGs with frequency-corrected weights.
-- [ ] 8.2 Marginalize the per-CPDAG root-cause posteriors (paper Eq. 8–10); the non-bootstrap path uses a single learned CPDAG.
-- [ ] 8.3 Test the weighting and marginalization on a tiny case; confirm the default (no bootstrap) is unaffected.
+- [x] 8.1 Add a `bootstrap` flag/count to the config; resample the observational data `B` times, learn a CPDAG per resample, and dedupe distinct CPDAGs with frequency-corrected weights.
+- [x] 8.2 Marginalize the per-CPDAG root-cause posteriors (paper Eq. 8–10); the non-bootstrap path uses a single learned CPDAG.
+- [x] 8.3 Test the weighting and marginalization on a tiny case; confirm the default (no bootstrap) is unaffected.
 
 ## 9. Hygiene and gates
 
-- [ ] 9.1 Workspace builds and tests pass with default features and with `--features parallel`; clippy and fmt clean; no `unsafe`, no `dyn`, no new third-party crate.
-- [ ] 9.2 `openspec validate brcd-bootstrap` passes; draft a commit message summarizing the change for the owner to commit.
+- [x] 9.1 Workspace builds and tests pass with default features and with `--features parallel`; clippy and fmt clean; no `unsafe`, no `dyn`, no new third-party crate.
+- [x] 9.2 `openspec validate brcd-bootstrap` passes; draft a commit message summarizing the change for the owner to commit.

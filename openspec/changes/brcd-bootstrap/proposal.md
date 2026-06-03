@@ -9,7 +9,7 @@ BRCD requires a CPDAG as its structural prerequisite — the partial causal stru
 - Port the grow-shrink tree (GST) and the order search (`better_mutation`, the fixpoint) as pure combinatorics over `Vec<usize>` orders/parents.
 - Convert the learned DAG to a CPDAG by orienting v-structures and **reusing** `brcd_meek::meek_complete` and the `brcd_validity` unshielded-collider checks; only a small v-structure-orientation pass is new.
 - **BREAKING:** change `brcd_run`'s `cpdag` parameter from `&MixedGraph<N>` to `Option<&MixedGraph<N>>`. `Some(cpdag)` is used directly; `None` makes `brcd_run` learn the CPDAG from the observational data via BOSS as a preprocessing step, then rank as usual. Existing call sites pass `Some(&cpdag)`.
-- Add the bootstrap CPDAG-uncertainty outer loop (paper Eq. 8–10; the `BRCD-B10`/`B100` variants) as a **separable, later stage** behind the same entry point.
+- Add the bootstrap CPDAG-uncertainty outer loop (paper Eq. 8–10; the `BRCD-B10`/`B100` variants) as a **separable, later stage** via a dedicated `brcd_run_bootstrap` entry point (a sibling of `brcd_run`), leaving `brcd_run`/`BrcdConfig` unchanged.
 - **Out of scope:** RKHS/BDeu scores, Forest-KDE, and any change to SURD or the existing BRCD estimator numerics.
 - **No new external or numeric dependency** — the port uses only `deep_causality_tensor`, `deep_causality_topology`, and the existing `brcd_meek`/`brcd_validity`, staying inside `unsafe_code = "forbid"` and the no-external-numerics policy.
 
