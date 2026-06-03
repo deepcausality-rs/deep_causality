@@ -135,6 +135,55 @@ negation (preserving `__name__ = "local_score_BIC_from_cov"` so the covariance b
 still fires); the **same** `boss.py` algorithm then recovers the chain and the
 collider (at identifiable noise), confirming the sign is the sole defect.
 
+## Empirical impact of the fix — and the limit of what the sign can explain
+
+Measured on the committed Online Boutique `adservice_cpu_1` case (45 variables,
+≈600 rows) by running BRCD with `cpdag = None` (so BOSS learns the structure),
+once with the **correct** sign and once with the **inverted** sign re-introduced,
+both compared against the **supplied-CPDAG** ranking (`expected.txt`). Importance is
+gauged by the between-regime mechanism shift `σ = |mean_a − mean_n| / within-std`.
+
+| run | rank-4 var (σ) | rank-5 var (σ) | Spearman vs supplied (45 vars) | top-5 shift mass |
+|---|---|---|---|---|
+| supplied CPDAG (service map, reference) | 44 (3.46) | 18 (2.96) | — | 0.653 |
+| **correct sign**, learned CPDAG | 39 (0.66) | 41 (0.69) | **0.739** | 0.522 |
+| inverted sign, learned CPDAG | 41 (0.69) | 42 (0.43) | 0.660 | 0.516 |
+
+Two findings:
+
+1. **The sign fix corrects the *structure* decisively, and improves the overall
+   ranking, but does not fix the OB rank-4/5 slots.** On synthetic data the correct
+   sign recovers the chain `X — Y — Z` and the collider `X → Z ← Y`, while the
+   inverted sign learns the empty graph / a spurious independent-pair edge (the
+   `verification_boss` example asserts the 7 structural checks; they all fail under
+   the inverted sign). On the OB ranking, the correct sign is globally **less wrong**
+   (Spearman 0.739 vs 0.660). **But at slots 4–5 both signs are wrong**: both promote
+   low-shift variables (σ ≈ 0.4–0.7) and neither recovers the high-shift 44 (σ 3.46)
+   / 18 (σ 2.96). So the rank-4/5 divergence is **not** a sign artifact.
+
+2. **The OB rank-4/5 divergence is the expected learned-vs-service-map gap, not a
+   BOSS defect.** The "supplied" reference here is the **reversed Online Boutique
+   service map** (Appendix D), i.e. the `BRCD-C` variant — a human-curated
+   engineering call graph, **not** a discovered causal structure. BOSS targets the
+   *observational* CPDAG, a different object that need not coincide with the call
+   graph; the paper itself reports `BRCD-C` (map) outperforming `BRCD` (learned) on
+   OB and attributes the gap to "CPDAG quality under limited observational samples,"
+   not the estimator. So the supplied ranking is the wrong yardstick for "is BOSS
+   correct"; matching it would just mean supplying the map (`BRCD-C`). The top-3
+   agree precisely where map and statistics agree (and `var 36`, σ 0.29, sits at #3
+   in **both** rankings on structure alone, confirming the ranking is not pure
+   shift).
+
+**Conclusion.** Fix the sign — it is an unambiguous defect that breaks structure
+learning. The residual OB tail divergence is **out of scope for this bug**: it is the
+expected gap between a learned statistical CPDAG and a curated service map under
+limited samples. The right way to *validate* BOSS is a synthetic benchmark against a
+**known true DAG** (skeleton F1 / SHD), where the corrected BOSS already recovers
+structure; the right way to *close the real-data tail gap* is the paper's own
+remedies — the bootstrap CPDAG-uncertainty variants (`BRCD-B10/B100`) to average out
+spurious moderate edges, or `BRCD-M` to fold the service map into BOSS as ancestral
+background knowledge. Neither is a change to the score sign.
+
 ## Note — a second, independent issue surfaced while reproducing
 
 The vendored `BRCD/LocalScoreFunctionClass.score_nocache` passes the **raw data**
