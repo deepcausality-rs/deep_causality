@@ -100,6 +100,7 @@ pub fn load_expected(path: &Path) -> std::io::Result<Vec<usize>> {
 pub struct Report {
     label: String,
     failed: usize,
+    total: usize,
 }
 
 impl Report {
@@ -108,19 +109,31 @@ impl Report {
         Self {
             label: label.to_string(),
             failed: 0,
+            total: 0,
         }
     }
 
     pub fn check(&mut self, name: &str, ok: bool) {
         println!("  [{}] {name}", if ok { "PASS" } else { "FAIL" });
+        self.total += 1;
         if !ok {
             self.failed += 1;
         }
     }
 
     pub fn finish(self) {
+        // Zero checks means the example did no real work (missing or empty data).
+        // Treat that as a failure so CI cannot go green without running the
+        // verification.
+        if self.total == 0 {
+            println!(
+                "=== {} : NO CHECKS RAN (missing or empty dataset) ===",
+                self.label
+            );
+            std::process::exit(1);
+        }
         if self.failed == 0 {
-            println!("=== {} : ALL PASS ===", self.label);
+            println!("=== {} : ALL PASS ({} checks) ===", self.label, self.total);
         } else {
             println!("=== {} : {} FAILURE(S) ===", self.label, self.failed);
             std::process::exit(1);
@@ -139,7 +152,15 @@ pub fn verify_dataset(report: &mut Report, dataset_dir: &Path, transform_parents
         .collect();
     cases.sort();
     if cases.is_empty() {
-        println!("  (no cases found under {})", dataset_dir.display());
+        // Register an explicit failing check so an empty dataset directory fails
+        // the run instead of passing with zero checks.
+        report.check(
+            &format!(
+                "dataset {} contains at least one case",
+                dataset_dir.display()
+            ),
+            false,
+        );
     }
     for case in &cases {
         verify_case(report, case, transform_parents, k);

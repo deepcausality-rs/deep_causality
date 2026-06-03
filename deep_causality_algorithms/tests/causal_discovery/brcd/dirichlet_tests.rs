@@ -60,6 +60,15 @@ fn rejects_bad_inputs() {
         dirichlet_logdensity::<f64>(&[0, 1], &[vec![0]], 2, ALPHA_STAR_DEFAULT).err(),
         Some(BrcdError(BrcdErrorEnum::DimensionMismatch))
     );
+    // A non-positive concentration is rejected rather than producing NaN/inf logs.
+    assert_eq!(
+        dirichlet_logdensity::<f64>(&[0, 1], &[], 2, 0.0).err(),
+        Some(BrcdError(BrcdErrorEnum::NonPositiveConcentration))
+    );
+    assert_eq!(
+        dirichlet_logdensity::<f64>(&[0, 1], &[], 2, -1.0).err(),
+        Some(BrcdError(BrcdErrorEnum::NonPositiveConcentration))
+    );
 }
 
 #[test]

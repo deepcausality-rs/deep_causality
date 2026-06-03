@@ -49,6 +49,9 @@ pub enum BrcdErrorEnum {
     YeojohnsonUnsupported,
     /// The discrete node cardinality `K` is zero.
     ZeroCardinality,
+    /// The Dirichlet concentration `α*` is not strictly positive; a non-positive
+    /// concentration yields a degenerate prior and non-finite log-likelihoods.
+    NonPositiveConcentration,
     /// A discrete node value is `≥ K` (outside `0..K`).
     StateOutOfRange,
     /// A node index is outside the graph's vertex range.
@@ -91,6 +94,9 @@ impl fmt::Display for BrcdErrorEnum {
                 write!(f, "the Yeo-Johnson transform is not yet implemented")
             }
             BrcdErrorEnum::ZeroCardinality => write!(f, "discrete node cardinality K is zero"),
+            BrcdErrorEnum::NonPositiveConcentration => {
+                write!(f, "Dirichlet concentration α* must be strictly positive")
+            }
             BrcdErrorEnum::StateOutOfRange => write!(f, "a discrete node value is outside 0..K"),
             BrcdErrorEnum::NodeOutOfBounds => write!(f, "a node index is outside the graph"),
             BrcdErrorEnum::ConfigSpaceTooLarge { edges } => write!(

@@ -35,7 +35,7 @@ mod part_eq;
 /// Pure-topology invariants of a Hodge–Helmholtz decomposition.
 ///
 /// Constructed via `HodgeDecomposition::topological_invariants(&manifold)`.
-/// Fields are private; read access is through the getters in [`getters`].
+/// Fields are private; read access is through the getters in `getters`.
 #[derive(Debug, Clone)]
 pub struct TopologicalInvariants<R: RealField> {
     betti_numbers: [usize; 4],

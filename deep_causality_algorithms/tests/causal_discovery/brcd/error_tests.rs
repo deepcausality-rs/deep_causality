@@ -19,6 +19,7 @@ fn all_variants() -> Vec<BrcdErrorEnum> {
         InvalidTransformDomain,
         YeojohnsonUnsupported,
         ZeroCardinality,
+        NonPositiveConcentration,
         StateOutOfRange,
         NodeOutOfBounds,
         ConfigSpaceTooLarge { edges: 30 },

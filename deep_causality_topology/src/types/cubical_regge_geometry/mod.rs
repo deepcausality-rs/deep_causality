@@ -199,9 +199,9 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R, Euclidean> {
     /// eigenvalue, `D−1` positive eigenvalues — the East-Coast convention).
     /// Other configurations are rejected at construction:
     ///
-    /// - **0 timelike axes** ⇒ [`LightConeViolation::AllSpacelike`]. Degenerate
+    /// - **0 timelike axes** ⇒ [`crate::LightConeViolation::AllSpacelike`]. Degenerate
     ///   Lorentzian metric with no timelike axis.
-    /// - **≥ 2 timelike axes** ⇒ [`LightConeViolation::CellSignature`] with the
+    /// - **≥ 2 timelike axes** ⇒ [`crate::LightConeViolation::CellSignature`] with the
     ///   synthesized per-axis diagonal sign pattern as `eigenvalues`. The
     ///   `Lorentzian` marker is reserved for genuine `(D−1, 1)` signatures per
     ///   `design.md` Decision 9; split-signature `(p, q)` with `q ≥ 2` lives in

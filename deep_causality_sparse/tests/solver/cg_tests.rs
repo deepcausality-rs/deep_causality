@@ -58,6 +58,19 @@ fn cg_returns_zero_for_zero_rhs() {
 }
 
 #[test]
+fn cg_returns_zero_for_zero_rhs_at_zero_tolerance() {
+    // b = 0 with tolerance = 0: the initial residual (0) equals the absolute
+    // tolerance (0). The convergence test must accept this exact solution rather
+    // than entering the loop, where `pᵀ A p = 0` would otherwise report a false
+    // breakdown.
+    let a = [[2.0_f64, 0.0, 0.0], [0.0, 3.0, 0.0], [0.0, 0.0, 5.0]];
+    let b = vec![0.0_f64; 3];
+    let apply = |v: &[f64]| dense_apply(&a, v);
+    let x = cg_solve(apply, &b, 0.0_f64, 100).expect("exact zero solution converges");
+    assert!(x.iter().all(|&xi| xi == 0.0));
+}
+
+#[test]
 fn cg_reports_nonconvergence_at_iteration_cap() {
     // 100x100 well-conditioned diagonal system; cap to 1 iteration → cannot converge.
     let n = 100;

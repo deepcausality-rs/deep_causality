@@ -15,7 +15,7 @@
 //! This module ports that single-expert scorer and its pieces:
 //! * [`fit_ridge`] — `β = solve(XᵀX + λI, Xᵀy)`, `σ² = ‖resid‖² / max(n−p, 1)`
 //!   floored to `1e-12`, via the shared dense SPD solver
-//!   [`crate::causal_discovery::brcd::brcd_linalg::solve_linear`].
+//!   `brcd_linalg::solve_linear`.
 //! * [`transform_and_jacobian`] and [`effective_transform`] — the
 //!   none/log/log1p transform ladder with its `log → log1p → yeojohnson`
 //!   auto-downgrade (Yeo-Johnson is deferred; see design D7).

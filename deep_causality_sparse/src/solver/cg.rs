@@ -43,7 +43,7 @@ pub struct CgFailure<R: RealField> {
 /// * `max_iterations` — iteration budget.
 ///
 /// # Returns
-/// `Ok(x)` if the residual fell below `tolerance · ‖b‖`, `Err(CgFailure)`
+/// `Ok(x)` if the residual fell to or below `tolerance · ‖b‖`, `Err(CgFailure)`
 /// if the iteration budget was exhausted or a numerical breakdown (`pᵀ A p = 0`
 /// with a non-zero search direction) occurred.
 pub fn cg_solve<R, Apply>(
@@ -53,7 +53,7 @@ pub fn cg_solve<R, Apply>(
     max_iterations: usize,
 ) -> Result<Vec<R>, CgFailure<R>>
 where
-    R: RealField + FromPrimitive + PartialEq,
+    R: RealField + FromPrimitive,
     Apply: Fn(&[R]) -> Vec<R>,
 {
     let n = b.len();
@@ -71,7 +71,10 @@ where
         tolerance * b_norm
     };
 
-    if rsold.sqrt() < abs_tol {
+    // `<=` so an exact solution (residual exactly at the tolerance, including the
+    // `b = 0`, `tolerance = 0` case where both are zero) converges immediately
+    // rather than entering the loop and tripping the `pᵀ A p = 0` breakdown.
+    if rsold.sqrt() <= abs_tol {
         return Ok(x);
     }
 
@@ -102,7 +105,7 @@ where
             r[i] -= alpha * ap[i];
         }
         let rsnew = dot(&r, &r);
-        if rsnew.sqrt() < abs_tol {
+        if rsnew.sqrt() <= abs_tol {
             return Ok(x);
         }
         let beta = rsnew / rsold;

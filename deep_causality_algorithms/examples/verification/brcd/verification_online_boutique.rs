@@ -22,12 +22,14 @@ fn main() {
         .join("examples/verification/data/online-boutique");
 
     if !dir.exists() {
-        println!(
-            "=== verification_online_boutique — SKIPPED (no data at {}) ===",
+        eprintln!(
+            "=== verification_online_boutique — FAILED (no data at {}) ===",
             dir.display()
         );
-        println!("See examples/verification/README.md to capture and commit the dataset.");
-        return;
+        eprintln!(
+            "The committed reference dataset is missing. See examples/verification/README.md."
+        );
+        std::process::exit(1);
     }
 
     let mut report = Report::new("Online Boutique");

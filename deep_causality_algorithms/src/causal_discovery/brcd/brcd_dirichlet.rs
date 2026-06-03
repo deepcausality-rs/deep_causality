@@ -37,7 +37,8 @@ pub const ALPHA_STAR_DEFAULT: f64 = 5.0;
 ///
 /// # Errors
 /// [`BrcdErrorEnum::EmptyData`], [`BrcdErrorEnum::DimensionMismatch`],
-/// [`BrcdErrorEnum::ZeroCardinality`], or [`BrcdErrorEnum::StateOutOfRange`].
+/// [`BrcdErrorEnum::ZeroCardinality`], [`BrcdErrorEnum::NonPositiveConcentration`],
+/// or [`BrcdErrorEnum::StateOutOfRange`].
 pub fn dirichlet_logdensity<T: RealField + FromPrimitive>(
     node: &[usize],
     parents: &[Vec<usize>],
@@ -50,6 +51,12 @@ pub fn dirichlet_logdensity<T: RealField + FromPrimitive>(
     }
     if cardinality == 0 {
         return Err(BrcdError(BrcdErrorEnum::ZeroCardinality));
+    }
+    // A non-positive concentration makes α₀ = α*/K ≤ 0, so the first row of each
+    // parent group scores 0/0 (NaN) or ln of a negative ratio; reject it up front
+    // rather than emitting non-finite log-likelihoods.
+    if alpha_star <= T::zero() {
+        return Err(BrcdError(BrcdErrorEnum::NonPositiveConcentration));
     }
     let p = parents.first().map_or(0, Vec::len);
     if !parents.is_empty() && (parents.len() != n || parents.iter().any(|r| r.len() != p)) {

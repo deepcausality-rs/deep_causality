@@ -17,7 +17,7 @@
 //!   logistic-regression gate ([`brcd_gate`]), the ridge-Gaussian / mixture
 //!   continuous family ([`brcd_gaussian`]), the discrete Dirichlet family
 //!   ([`brcd_dirichlet`]), and the small dense SPD solver they share
-//!   ([`brcd_linalg`]).
+//!   (`brcd_linalg`).
 //!
 //! The **algorithm** itself — F-node augmentation ([`brcd_augment`]), the family
 //! cache ([`brcd_cache`]), and the driver that assembles the posterior and ranks

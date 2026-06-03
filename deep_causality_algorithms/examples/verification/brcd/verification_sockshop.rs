@@ -22,12 +22,14 @@ fn main() {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/verification/data/sock-shop-2");
 
     if !dir.exists() {
-        println!(
-            "=== verification_sockshop — SKIPPED (no data at {}) ===",
+        eprintln!(
+            "=== verification_sockshop — FAILED (no data at {}) ===",
             dir.display()
         );
-        println!("See examples/verification/README.md to capture and commit the dataset.");
-        return;
+        eprintln!(
+            "The committed reference dataset is missing. See examples/verification/README.md."
+        );
+        std::process::exit(1);
     }
 
     let mut report = Report::new("Sock Shop");

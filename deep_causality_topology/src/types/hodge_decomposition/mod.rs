@@ -42,7 +42,7 @@ mod part_eq;
 /// The three orthogonal components of a discrete Hodge–Helmholtz decomposition.
 ///
 /// Constructed by `Manifold::hodge_decompose`. Fields are private; read access is
-/// through the getters in [`getters`].
+/// through the getters in `getters`.
 #[derive(Debug, Clone)]
 pub struct HodgeDecomposition<R: RealField> {
     exact: CausalTensor<R>,

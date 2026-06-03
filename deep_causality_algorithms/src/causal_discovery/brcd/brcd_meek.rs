@@ -39,7 +39,7 @@ use std::collections::BTreeSet;
 /// (non-extendable) input where a rule compels *both* directions of an edge,
 /// completion picks one and proceeds rather than signalling — consistency is
 /// deferred to the caller's validity pass
-/// ([`crate::brcd::validity::is_valid_configuration`]), which rejects the result
+/// ([`crate::brcd::brcd_validity::is_valid_configuration`]), which rejects the result
 /// if completion produced a cycle or a new unshielded collider.
 pub fn meek_complete<N>(graph: &mut MixedGraph<N>) {
     loop {
