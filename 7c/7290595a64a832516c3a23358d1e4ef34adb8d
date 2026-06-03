@@ -1,0 +1,21 @@
+openspec/specs/brcd-bootstrap/spec.md
+  s_52e6d9817e5bf8::t_08f06b1f3c62a8 1-101
+openspec/specs/brcd-algorithm/spec.md
+  s_52e6d9817e5bf8::t_08f06b1f3c62a8 8,10,12-13,15,17-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "7c7290595a64a832516c3a23358d1e4ef34adb8d",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
