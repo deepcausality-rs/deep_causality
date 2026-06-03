@@ -97,7 +97,7 @@ position-for-position, for every case.
    output) so the expected result is auditable, then **derive the expected ranking**
    as 0-based variable indices.
 
-3. **Commit the artifacts** under `examples/verification/data/<dataset>/<case>/`:
+3. **Commit the artifacts** under `examples/verification/brcd/data/<dataset>/<case>/`:
 
    | File | Contents |
    |---|---|

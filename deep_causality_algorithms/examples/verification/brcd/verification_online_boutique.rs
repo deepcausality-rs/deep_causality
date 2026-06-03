@@ -19,7 +19,7 @@ use std::path::PathBuf;
 
 fn main() {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("examples/verification/data/online-boutique");
+        .join("examples/verification/brcd/data/online-boutique");
 
     if !dir.exists() {
         eprintln!(
