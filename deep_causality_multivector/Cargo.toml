@@ -38,11 +38,6 @@ version = "0.3.2"
 path = "../deep_causality_tensor"
 version = "0.4"
 
-
-[dependencies.deep_causality_core]
-path = "../deep_causality_core"
-version = "0.0.8"
-
 [dependencies.deep_causality_metric]
 path = "../deep_causality_metric"
 version = "0.2"

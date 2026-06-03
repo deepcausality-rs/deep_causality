@@ -121,9 +121,7 @@ checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
 name = "causal_discovery_examples"
 version = "0.1.0"
 dependencies = [
- "deep_causality",
  "deep_causality_algorithms",
- "deep_causality_core",
  "deep_causality_discovery",
  "deep_causality_num",
  "deep_causality_tensor",
@@ -512,7 +510,6 @@ name = "deep_causality_multivector"
 version = "0.5.1"
 dependencies = [
  "criterion",
- "deep_causality_core",
  "deep_causality_haft",
  "deep_causality_metric",
  "deep_causality_num",

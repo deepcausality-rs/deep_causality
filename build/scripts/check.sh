@@ -32,8 +32,9 @@ cargo machete deep_causality_sparse/
 cargo machete deep_causality_tensor/
 cargo machete deep_causality_topology/
 cargo machete deep_causality_uncertain/
-cargo machete examples/
 cargo machete ultragraph/
+# 
+cargo machete examples/
 
 
 # Scan again to report all unfixed vulnerabilities
