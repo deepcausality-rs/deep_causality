@@ -7,7 +7,11 @@ mod augment_tests;
 #[cfg(test)]
 mod cache_tests;
 #[cfg(test)]
+mod config_tests;
+#[cfg(test)]
 mod dirichlet_tests;
+#[cfg(test)]
+mod error_tests;
 #[cfg(test)]
 mod family_tests;
 #[cfg(test)]
