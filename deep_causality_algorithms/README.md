@@ -31,6 +31,12 @@ variable into its fundamental components: **S**ynergistic, **U**nique, and **R**
 This decomposition allows for a deep, nuanced understanding of causal structures, moving beyond simple correlations to
 reveal the nature of multi-variable interactions.
 
+Alongside SURD, the crate provides `brcd_run`, a Rust implementation of **Bayesian Root Cause Discovery (BRCD)**. SURD
+decomposes how a set of sources jointly influence a target; BRCD answers a different question. Given a normal dataset,
+an anomalous dataset, and a causal graph over the same variables, it identifies which variables most likely caused the
+anomaly. BRCD scores every candidate root-cause set with a Bayesian posterior and returns the candidates ranked from
+most to least probable.
+
 ## Key Features
 
 * **Faithful & Performant Implementation**: A high-performance, mathematically faithful Rust port of the SURD-states
@@ -49,6 +55,7 @@ reveal the nature of multi-variable interactions.
   for meaningful causal insights even with partial information by ignoring `None` values in calculations and propagating
   uncertainty.
 * **Minimum Redundancy Maximum Relevance (mRMR) Feature Selection**: Implements the mRMR algorithm to select features that are maximally relevant to a target variable and minimally redundant among themselves. The algorithm now returns a ranked list of features along with their normalized importance scores (between 0.0 and 1.0), providing a clear indication of each feature's contribution.
+* **Bayesian Root Cause Discovery (BRCD)**: The `brcd_run` function localizes the root cause of an anomaly. Given two aligned datasets (a normal regime and an anomalous regime) and a CPDAG over the shared variables, it augments the graph with a soft-intervention F-node, scores each candidate root-cause set with a plug-in ridge-Gaussian (continuous) or Dirichlet (discrete) likelihood, and ranks the candidates by their posterior probability `p(R | D)`. The ranking is computed on the log-posterior directly, so it stays stable when a single fault dominates.
 * **Performance Optimized**:
     * **Algorithmic Capping**: Use the `MaxOrder` enum to limit the analysis to a tractable number of interactions (
       e.g., pairwise), reducing complexity from exponential `O(2^N)` to polynomial `O(N^k)`.
@@ -154,6 +161,57 @@ indicates that the feature is not only highly relevant to the target but also
 provides new, non-redundant information compared to the features already
 chosen. It's a measure of a feature's unique and strong contribution to
 predicting the target within the context of the selected feature set.
+
+### Bayesian Root Cause Discovery (BRCD)
+
+Where SURD and mRMR describe how variables influence a target, BRCD answers a different question: which variable most
+likely caused an observed anomaly? The `brcd_run` function takes a normal dataset, an anomalous dataset, a CPDAG over
+the shared variables, and a `BrcdConfig`. It returns a `BrcdResult` whose `ranks()` list the candidate root-cause sets
+from most to least probable, and whose `top()` returns the single most probable set.
+
+```rust
+use deep_causality_algorithms::brcd::{brcd_run, BrcdConfig};
+use deep_causality_rand::{Distribution, Normal, Xoshiro256};
+use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::MixedGraph;
+
+// A linear-Gaussian chain X -> Y -> Z. `y_intercept` shifts Y's own mechanism.
+fn chain(n: usize, y_intercept: f64, seed: u64) -> CausalTensor<f64> {
+    let mut rng = Xoshiro256::from_seed(seed);
+    let noise = Normal::new(0.0_f64, 1.0).unwrap();
+    let mut data = Vec::with_capacity(n * 3);
+    for _ in 0..n {
+        let x = noise.sample(&mut rng);
+        let y = y_intercept + 1.5 * x + noise.sample(&mut rng);
+        let z = 2.0 * y + noise.sample(&mut rng);
+        data.extend_from_slice(&[x, y, z]);
+    }
+    CausalTensor::new(data, vec![n, 3]).unwrap()
+}
+
+// Two aligned regimes over the variables [X, Y, Z]. Only Y's mechanism changes
+// between them (its intercept jumps), so Y is the true root cause.
+let normal = chain(120, 0.0, 1);
+let anomalous = chain(120, 4.0, 2);
+
+// The CPDAG over the three variables: the undirected chain X — Y — Z.
+let unit = CausalTensor::new(vec![(); 3], vec![3]).unwrap();
+let mut cpdag = MixedGraph::new(3, unit, 0).unwrap();
+cpdag.add_undirected(0, 1).unwrap();
+cpdag.add_undirected(1, 2).unwrap();
+
+// Run BRCD with the continuous (ridge-Gaussian) family, seed 7, single cause.
+let result = brcd_run(&normal, &anomalous, &cpdag, &BrcdConfig::continuous(7)).unwrap();
+
+println!("{result}");
+println!("Top root cause: {:?}", result.top()); // Some([1]) = Y
+```
+
+`BrcdConfig::continuous(seed)` selects the ridge-Gaussian family for continuous data; `BrcdConfig::discrete(seed)`
+selects the Dirichlet family for categorical data. The `num_root_causes` field sets how many simultaneous root causes a
+candidate set holds (`k`). The runnable, verified examples live under
+[`examples/verification/brcd`](examples/verification/brcd); they replay the reference Python BRCD and reproduce its
+ranking exactly.
 
 ## From Discovery to Model: Connecting SURD to DeepCausality
 

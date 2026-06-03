@@ -7,8 +7,8 @@ cargo run -p deep_causality_algorithms --example verification_base
 cargo run -p deep_causality_algorithms --example verification_online_boutique
 ```
 
-An example prints a `PASS`/`FAIL` line per check and exits non-zero if any check
-fails, so it is usable directly in CI.
+Each example prints a `PASS`/`FAIL` line per check and exits non-zero if any check
+fails, so it runs directly in CI.
 
 ## `verification_base` — synthetic recovery (self-contained)
 
@@ -116,20 +116,9 @@ position-for-position, for every case.
    cargo run -p deep_causality_algorithms --example verification_online_boutique
    ```
 
-### Adding another dataset
-
-Copy `verification_online_boutique.rs` to `verification_<name>.rs`, point its
-dataset directory at `data/<name>/`, and add an `[[example]]` entry in `Cargo.toml`:
-
-```toml
-[[example]]
-name = "verification_<name>"
-path = "examples/verification/verification_<name>.rs"
-```
-
 ## Note on exactness
 
-The success criterion is **reproduced rankings / top-k**, not bit-exact
+The success criterion is the **reproduced ranking**, not bit-exact
 posteriors (numpy PCG64 sampling and the Python numeric stack are not reproducible
 in Rust). The `verification_base` example verifies the recovery *principle* on
 Rust-generated data; the `verification_*` real-world examples verify the *ranking*

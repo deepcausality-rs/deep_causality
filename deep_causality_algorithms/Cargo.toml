@@ -62,7 +62,6 @@ name = "verification_base"
 path = "examples/verification/brcd/verification_base.rs"
 
 # Real-world verification (Online Boutique): replays committed Python-derived
-# cases + expected ranks. See examples/verification/README.md for the workflow.
 #   cargo run -p deep_causality_algorithms --example verification_online_boutique
 [[example]]
 name = "verification_online_boutique"
