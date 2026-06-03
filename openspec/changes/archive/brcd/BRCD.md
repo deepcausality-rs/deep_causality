@@ -51,7 +51,7 @@ Shared framing (RCD lineage): a failure = a soft intervention; add a binary **F-
 
 ## 4. The real-world pipeline to port (verified spec)
 
-Entry → `brcd(data, inject_time, dataset, graph)` [[adapter](../../../ctx/next/brcd/experiments/real-world/RCAEval/e2e/brcd.py#L2324)]:
+Entry → `brcd(data, inject_time, dataset, graph)` [[adapter](../../../../ctx/next/brcd/experiments/real-world/RCAEval/e2e/brcd.py#L2324)]:
 1. **Data prep.** Split rows by `inject_time` into normal/anomalous; `preprocess(...)` (domain step, §9); intersect columns.
 2. **CPDAG** (per-system — see §4a). In the OB/Sock Shop adapter it is the **domain service-call graph**, arcs-only: `df_to_prefix_graph(normal_df, graph)` maps the service-level graph onto metric columns by name-prefix; `PDAG(nodes, arcs=…, edges=[])`.
 3. → `brcd_helper(normal, anomal, cpdag, isdiscrete=False, node_transform="none", transform_parents=True, num_root_causes_candidates=1)`. CPDAG supplied ⇒ single `brcd_update` (no bootstrap).
@@ -59,8 +59,8 @@ Entry → `brcd(data, inject_time, dataset, graph)` [[adapter](../../../ctx/next
    - Concatenate + add `FNODE` (0/1). Candidates = each single column (k=1). Prior = uniform.
    - `sampleAugmentedGraphs`: per candidate root `r`, orient F-incident undirected edges (**none** for arcs-only input), add `FNODE→r`, Meek-complete, validate (acyclic, no new unshielded collider at `r`); `cliquepicking` `mec_size` + `sample_dag`. **Arcs-only ⇒ already a DAG ⇒ `mec_size=1`, single DAG = the graph itself.**
    - Score each unique `(node, parents)` family via `continuous_likelihood_fn_gaussian`:
-     - **root (`FNODE ∈ parents`):** `F='FNODE'` → **per-regime ridge** (separate fit on normal vs anomalous rows) [[L2142](../../../ctx/next/brcd/experiments/real-world/RCAEval/e2e/brcd.py#L2142)].
-     - **others (`FNODE ∉ parents`):** no `F` ⇒ `F=None` → **single ridge** [[L2152](../../../ctx/next/brcd/experiments/real-world/RCAEval/e2e/brcd.py#L2152)].
+     - **root (`FNODE ∈ parents`):** `F='FNODE'` → **per-regime ridge** (separate fit on normal vs anomalous rows) [[L2142](../../../../ctx/next/brcd/experiments/real-world/RCAEval/e2e/brcd.py#L2142)].
+     - **others (`FNODE ∉ parents`):** no `F` ⇒ `F=None` → **single ridge** [[L2152](../../../../ctx/next/brcd/experiments/real-world/RCAEval/e2e/brcd.py#L2152)].
      - `node_transform="none"` ⇒ identity, zero Jacobian; `transform_parents` no-op under "none".
    - Per root: `logsumexp` over sampled DAGs weighted by `log(mec_size/Σ)` (trivial — one DAG). Sum row log-likelihoods + log-prior, normalize → posterior over candidates → ranked list.
 
@@ -69,9 +69,9 @@ Entry → `brcd(data, inject_time, dataset, graph)` [[adapter](../../../ctx/next
 ### 4a. BOSS is used — but per-system (corrects an earlier claim)
 
 BOSS is **not** dead code. Which systems run it:
-- **OB / Sock Shop** (`main-ss.py`/`main-ob.py` via the adapter): CPDAG = supplied call graph; BOSS is **commented out** in the adapter ([L2349](../../../ctx/next/brcd/experiments/real-world/RCAEval/e2e/brcd.py#L2349)). **BOSS not used.**
-- **Petshop** (`main-petshop.py`): does **not** use the adapter; it imports BOSS directly (`from RCAEval.e2e.BRCD.boss import boss`, [L49](../../../ctx/next/brcd/experiments/real-world/main-petshop.py#L49)) and calls `boss(normal_metrics_new.to_numpy())` ([L582](../../../ctx/next/brcd/experiments/real-world/main-petshop.py#L582)) to **learn** the CPDAG (no reliable call graph for Petshop). **BOSS used.**
-- **Bootstrap path** (`brcd_helper` with `cpdag=None`): also calls BOSS ([L1886](../../../ctx/next/brcd/experiments/real-world/RCAEval/e2e/brcd.py#L1886)) — not triggered by the OB/SS adapter (which supplies a CPDAG).
+- **OB / Sock Shop** (`main-ss.py`/`main-ob.py` via the adapter): CPDAG = supplied call graph; BOSS is **commented out** in the adapter ([L2349](../../../../ctx/next/brcd/experiments/real-world/RCAEval/e2e/brcd.py#L2349)). **BOSS not used.**
+- **Petshop** (`main-petshop.py`): does **not** use the adapter; it imports BOSS directly (`from RCAEval.e2e.BRCD.boss import boss`, [L49](../../../../ctx/next/brcd/experiments/real-world/main-petshop.py#L49)) and calls `boss(normal_metrics_new.to_numpy())` ([L582](../../../../ctx/next/brcd/experiments/real-world/main-petshop.py#L582)) to **learn** the CPDAG (no reliable call graph for Petshop). **BOSS used.**
+- **Bootstrap path** (`brcd_helper` with `cpdag=None`): also calls BOSS ([L1886](../../../../ctx/next/brcd/experiments/real-world/RCAEval/e2e/brcd.py#L1886)) — not triggered by the OB/SS adapter (which supplies a CPDAG).
 
 ⇒ The "BOSS looks present but unused" impression comes from reading only the OB/SS adapter. Replicating **Petshop** requires porting BOSS (permutation search + BIC-from-cov + Meek `dag2cpdag`). Replicating **OB + Sock Shop** does not.
 
@@ -95,8 +95,8 @@ BOSS is **not** dead code. Which systems run it:
 
 | Need | In-repo primitive | Verdict |
 |---|---|---|
-| Ridge / conditional-Gaussian (`XᵀX+λI`, SPD) | `cg_solve` ([cg_solver.rs:48](../../../deep_causality_topology/src/utils/cg_solver.rs#L48)) + `CausalTensor::{matmul, inverse}` | **Covered.** CG is `pub(crate)` → lift to `deep_causality_sparse` or reimplement (~50 lines). |
-| Sample mean / covariance | `Manifold::covariance_matrix` ([covariance.rs:20](../../../deep_causality_topology/src/types/manifold/api/covariance.rs#L20)) or a free function | Covered. |
+| Ridge / conditional-Gaussian (`XᵀX+λI`, SPD) | `cg_solve` ([cg_solver.rs:48](../../../../deep_causality_topology/src/utils/cg_solver.rs#L48)) + `CausalTensor::{matmul, inverse}` | **Covered.** CG is `pub(crate)` → lift to `deep_causality_sparse` or reimplement (~50 lines). |
+| Sample mean / covariance | `Manifold::covariance_matrix` ([covariance.rs:20](../../../../deep_causality_topology/src/types/manifold/api/covariance.rs#L20)) or a free function | Covered. |
 | DAG: parents, topo-order, acyclicity, Meek, no-new-collider | topology `Graph` (sparse CSR) + small standard algorithms | **Build** (small). |
 | BOSS (only if Petshop in scope) | permutation search + BIC-from-cov (covariance + CG) + Meek | **Build** — substantial; gate on the §1 sub-decision. |
 | RNG | `deep_causality_rand` | Needed only if MEC sampling turns nontrivial (Petshop) or BOSS shuffle. |
@@ -107,8 +107,8 @@ BOSS is **not** dead code. Which systems run it:
 
 ## 7. CDL integration constraints (deep_causality_discovery)
 
-- **Two datasets.** The typestate flow carries one `CausalTensor`; BRCD needs **normal + anomalous**. ([cdl_with_features.rs](../../../deep_causality_discovery/src/types/cdl/cdl_with_features.rs))
-- **Output type hardcoded to `SurdResult<f64>`** in the trait, the typestate method, and `WithCausalResults`. BRCD returns a ranked posterior → generalize the trait, `CausalDiscoveryConfig`, the state, the analyzer, the formatter. ([causal_discovery.rs:34-38](../../../deep_causality_discovery/src/traits/causal_discovery.rs#L34-L38), [causal_discovery_config.rs:14-16](../../../deep_causality_discovery/src/types/config/causal_discovery_config.rs#L14-L16))
+- **Two datasets.** The typestate flow carries one `CausalTensor`; BRCD needs **normal + anomalous**. ([cdl_with_features.rs](../../../../deep_causality_discovery/src/types/cdl/cdl_with_features.rs))
+- **Output type hardcoded to `SurdResult<f64>`** in the trait, the typestate method, and `WithCausalResults`. BRCD returns a ranked posterior → generalize the trait, `CausalDiscoveryConfig`, the state, the analyzer, the formatter. ([causal_discovery.rs:34-38](../../../../deep_causality_discovery/src/traits/causal_discovery.rs#L34-L38), [causal_discovery_config.rs:14-16](../../../../deep_causality_discovery/src/types/config/causal_discovery_config.rs#L14-L16))
 - BRCD needs a **user-supplied domain graph** as the CPDAG input (OB/SS) — CDL has no such notion today.
 
 ---
