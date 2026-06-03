@@ -22,20 +22,20 @@ Each stage is independently testable and must leave the workspace green
 
 ## 4. DAG → CPDAG
 
-- [ ] 4.1 Build the DAG from the final order (each node's parents from its GST trace) as a `MixedGraph<()>`.
-- [ ] 4.2 Implement the v-structure orientation pass (orient `X → Z ← Y` for non-adjacent `X`,`Y`), then call `brcd_meek::meek_complete`; reuse `brcd_validity` collider helpers.
-- [ ] 4.3 Test that conversion keeps compelled edges directed and leaves reversible edges undirected, matching `dag2cpdag` on small DAGs (chain, fork, collider, two-parent).
+- [x] 4.1 Build the DAG from the final order (each node's parents from its GST trace) as a `MixedGraph<()>`.
+- [x] 4.2 Implement the v-structure orientation pass (orient `X → Z ← Y` for non-adjacent `X`,`Y`), then call `brcd_meek::meek_complete`; reuse `brcd_validity` collider helpers.
+- [x] 4.3 Test that conversion keeps compelled edges directed and leaves reversible edges undirected, matching `dag2cpdag` on small DAGs (chain, fork, collider, two-parent).
 
 ## 5. `boss_learn` entry point
 
-- [ ] 5.1 Implement `boss_learn(data: &CausalTensor<T>, cfg: &BossConfig<T>) -> Result<MixedGraph<()>, BrcdError>` composing stages 1–4 (covariance once → GSTs → order search → DAG → CPDAG).
-- [ ] 5.2 Test end to end: BOSS on samples from `X → Y → Z` returns the chain's CPDAG; the result is a valid CPDAG accepted by `get_configurations_multi`.
+- [x] 5.1 Implement `boss_learn(data: &CausalTensor<T>, cfg: &BossConfig<T>) -> Result<MixedGraph<()>, BrcdError>` composing stages 1–4 (covariance once → GSTs → order search → DAG → CPDAG).
+- [x] 5.2 Test end to end: BOSS on samples from `X → Y → Z` returns the chain's CPDAG; the result is a valid CPDAG accepted by `get_configurations_multi`.
 
 ## 6. Driver integration
 
-- [ ] 6.1 Change `brcd_run`'s `cpdag` parameter to `Option<&MixedGraph<N>>`; `Some` → unchanged path; `None` → `boss_learn` on the normal dataset, then the existing phases.
-- [ ] 6.2 Update all internal call sites (verification examples, tests, benches) to pass `Some(&cpdag)`.
-- [ ] 6.3 Test that `Some(cpdag)` reproduces the prior result exactly, and that `None` learns a CPDAG and returns a ranking.
+- [x] 6.1 Change `brcd_run`'s `cpdag` parameter to `Option<&MixedGraph<N>>`; `Some` → unchanged path; `None` → `boss_learn` on the normal dataset, then the existing phases.
+- [x] 6.2 Update all internal call sites (verification examples, tests, benches) to pass `Some(&cpdag)`.
+- [x] 6.3 Test that `Some(cpdag)` reproduces the prior result exactly, and that `None` learns a CPDAG and returns a ranking.
 
 ## 7. Verification (structural + end-to-end)
 

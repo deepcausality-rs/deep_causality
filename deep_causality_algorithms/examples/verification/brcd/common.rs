@@ -188,8 +188,13 @@ pub fn verify_case(report: &mut Report, case_dir: &Path, transform_parents: bool
     config.transform_parents = transform_parents;
     config.num_root_causes = k;
 
-    let result = brcd_run(&tensor(nd, nr, nc), &tensor(ad, ar, ac), &cpdag, &config)
-        .expect("brcd_run on real-world case");
+    let result = brcd_run(
+        &tensor(nd, nr, nc),
+        &tensor(ad, ar, ac),
+        Some(&cpdag),
+        &config,
+    )
+    .expect("brcd_run on real-world case");
     let got: Vec<usize> = result
         .ranks()
         .iter()

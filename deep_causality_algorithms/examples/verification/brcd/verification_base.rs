@@ -44,8 +44,13 @@ fn main() {
     // The undirected chain CPDAG X — Y — Z (the path-of-3 chain component).
     let graph = cpdag(3, &[(0, 1), (1, 2)], &[]);
 
-    let result = brcd_run(&normal, &anomalous, &graph, &BrcdConfig::continuous(7))
-        .expect("brcd_run on the synthetic chain");
+    let result = brcd_run(
+        &normal,
+        &anomalous,
+        Some(&graph),
+        &BrcdConfig::continuous(7),
+    )
+    .expect("brcd_run on the synthetic chain");
 
     println!("{result}");
     // X = 0, Y = 1, Z = 2. The perturbed mechanism is Y's.

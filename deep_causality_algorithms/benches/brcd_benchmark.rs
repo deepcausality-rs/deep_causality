@@ -77,7 +77,7 @@ fn brcd_benchmark(c: &mut Criterion) {
         let normal = chain_data(n, 0.0, 1);
         let anomalous = chain_data(n, 4.0, 2);
         group.bench_with_input(BenchmarkId::new("continuous", n), &n, |b, _| {
-            b.iter(|| black_box(brcd_run(&normal, &anomalous, &graph, &config).unwrap()));
+            b.iter(|| black_box(brcd_run(&normal, &anomalous, Some(&graph), &config).unwrap()));
         });
     }
 
@@ -87,7 +87,9 @@ fn brcd_benchmark(c: &mut Criterion) {
     let normal = discrete_chain(n, 0.0, 3);
     let anomalous = discrete_chain(n, 1.5, 4);
     group.bench_with_input(BenchmarkId::new("discrete", n), &n, |b, _| {
-        b.iter(|| black_box(brcd_run(&normal, &anomalous, &graph, &discrete_config).unwrap()));
+        b.iter(|| {
+            black_box(brcd_run(&normal, &anomalous, Some(&graph), &discrete_config).unwrap())
+        });
     });
 
     group.finish();

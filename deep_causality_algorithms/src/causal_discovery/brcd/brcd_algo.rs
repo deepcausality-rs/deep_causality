@@ -22,9 +22,13 @@
 //!    the log-prior, then normalizes and ranks the candidates by descending
 //!    posterior.
 //!
-//! The no-CPDAG bootstrap path (BOSS) is out of scope (design D6).
+//! The CPDAG is **optional**: when [`brcd_run`] is called with `None`, it learns
+//! the CPDAG from the observational (normal) data via BOSS
+//! ([`crate::brcd::boss_learn`]) before running the steps above.
 
 use crate::brcd::brcd_augment::{augmented_graph, f_node_indicator, get_configurations_multi};
+use crate::brcd::brcd_boss_config::BossConfig;
+use crate::brcd::brcd_boss_learn::boss_learn;
 use crate::brcd::brcd_cache::{FamilyKey, family_key};
 use crate::brcd::brcd_config::{BrcdConfig, FamilyKind};
 use crate::brcd::brcd_dirichlet::dirichlet_logdensity;
@@ -41,18 +45,45 @@ use std::collections::BTreeMap;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
-/// Runs BRCD on the normal/anomalous datasets against a supplied CPDAG and
-/// returns the candidate root-cause sets ranked by descending posterior.
+/// Runs BRCD on the normal/anomalous datasets and returns the candidate
+/// root-cause sets ranked by descending posterior.
 ///
 /// `normal` and `anomalous` are `n × num_vars` row-major matrices over the same
-/// variables; `cpdag` is the causal graph over those `num_vars` variables.
+/// variables. The CPDAG is **optional**:
+/// * `Some(cpdag)` — use the supplied causal graph over those `num_vars`
+///   variables directly;
+/// * `None` — learn the CPDAG from the observational (`normal`) data via BOSS
+///   ([`crate::brcd::boss_learn`]) as a preprocessing step, then rank.
 ///
 /// # Errors
 /// * [`BrcdErrorEnum::DimensionMismatch`] if the datasets/graph disagree on
 ///   `num_vars`, the tensors are not 2-D, or `k` is not in `1..=num_vars`.
 /// * [`BrcdErrorEnum::EmptyData`] if there are no rows.
-/// * any error from configuration enumeration, MEC sizing, or family scoring.
+/// * any error from CPDAG learning, configuration enumeration, MEC sizing, or
+///   family scoring.
 pub fn brcd_run<T, N>(
+    normal: &CausalTensor<T>,
+    anomalous: &CausalTensor<T>,
+    cpdag: Option<&MixedGraph<N>>,
+    config: &BrcdConfig<T>,
+) -> Result<BrcdResult<T>, BrcdError>
+where
+    T: RealField + FromPrimitive + ToPrimitive + Send + Sync,
+    N: Clone,
+{
+    match cpdag {
+        Some(graph) => run_with_cpdag(normal, anomalous, graph, config),
+        None => {
+            // Learn the CPDAG from the pre-failure observational data, then rank.
+            let boss_cfg = BossConfig::<T>::with_seed(config.seed);
+            let learned = boss_learn(normal, &boss_cfg)?;
+            run_with_cpdag(normal, anomalous, &learned, config)
+        }
+    }
+}
+
+/// Ranks candidates against a known CPDAG (the supplied-graph core path).
+fn run_with_cpdag<T, N>(
     normal: &CausalTensor<T>,
     anomalous: &CausalTensor<T>,
     cpdag: &MixedGraph<N>,

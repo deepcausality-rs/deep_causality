@@ -71,7 +71,7 @@ fn recovers_the_perturbed_mechanism() {
     let cpdag = chain_cpdag();
     let config = BrcdConfig::continuous(7);
 
-    let result = brcd_run(&normal, &anomalous, &cpdag, &config).unwrap();
+    let result = brcd_run(&normal, &anomalous, Some(&cpdag), &config).unwrap();
     assert_eq!(result.top(), Some(&[1][..]), "ranks: {:?}", result.ranks());
 }
 
@@ -80,7 +80,13 @@ fn produces_a_normalized_ranking_over_all_candidates() {
     let normal = chain_data(80, 0.0, 11);
     let anomalous = chain_data(80, 3.0, 12);
     let cpdag = chain_cpdag();
-    let result = brcd_run(&normal, &anomalous, &cpdag, &BrcdConfig::continuous(3)).unwrap();
+    let result = brcd_run(
+        &normal,
+        &anomalous,
+        Some(&cpdag),
+        &BrcdConfig::continuous(3),
+    )
+    .unwrap();
 
     // k = 1 over 3 variables → 3 single-element candidate sets.
     assert_eq!(result.ranks().len(), 3);
@@ -100,8 +106,20 @@ fn is_deterministic_under_a_fixed_seed() {
     let normal = chain_data(60, 0.0, 21);
     let anomalous = chain_data(60, 3.0, 22);
     let cpdag = chain_cpdag();
-    let a = brcd_run(&normal, &anomalous, &cpdag, &BrcdConfig::continuous(9)).unwrap();
-    let b = brcd_run(&normal, &anomalous, &cpdag, &BrcdConfig::continuous(9)).unwrap();
+    let a = brcd_run(
+        &normal,
+        &anomalous,
+        Some(&cpdag),
+        &BrcdConfig::continuous(9),
+    )
+    .unwrap();
+    let b = brcd_run(
+        &normal,
+        &anomalous,
+        Some(&cpdag),
+        &BrcdConfig::continuous(9),
+    )
+    .unwrap();
     assert_eq!(a, b);
 }
 
@@ -110,7 +128,13 @@ fn display_renders_the_ranking() {
     let normal = chain_data(40, 0.0, 31);
     let anomalous = chain_data(40, 3.0, 32);
     let cpdag = chain_cpdag();
-    let result = brcd_run(&normal, &anomalous, &cpdag, &BrcdConfig::continuous(1)).unwrap();
+    let result = brcd_run(
+        &normal,
+        &anomalous,
+        Some(&cpdag),
+        &BrcdConfig::continuous(1),
+    )
+    .unwrap();
     let text = format!("{result}");
     assert!(text.contains("BRCD Root-Cause Ranking"));
     assert!(text.contains("posterior="));
@@ -123,7 +147,13 @@ fn misaligned_datasets_are_rejected() {
     let anomalous = CausalTensor::new(vec![0.0_f64; 20 * 2], vec![20, 2]).unwrap();
     let cpdag = chain_cpdag();
     assert_eq!(
-        brcd_run(&normal, &anomalous, &cpdag, &BrcdConfig::continuous(0)).err(),
+        brcd_run(
+            &normal,
+            &anomalous,
+            Some(&cpdag),
+            &BrcdConfig::continuous(0)
+        )
+        .err(),
         Some(BrcdError(BrcdErrorEnum::DimensionMismatch))
     );
 }
@@ -136,7 +166,7 @@ fn too_many_root_causes_is_rejected() {
     let mut config = BrcdConfig::continuous(0);
     config.num_root_causes = 4; // > 3 variables
     assert_eq!(
-        brcd_run(&normal, &anomalous, &cpdag, &config).err(),
+        brcd_run(&normal, &anomalous, Some(&cpdag), &config).err(),
         Some(BrcdError(BrcdErrorEnum::DimensionMismatch))
     );
 }
@@ -149,7 +179,7 @@ fn zero_root_causes_is_rejected() {
     let mut config = BrcdConfig::continuous(0);
     config.num_root_causes = 0; // k must be >= 1
     assert_eq!(
-        brcd_run(&normal, &anomalous, &cpdag, &config).err(),
+        brcd_run(&normal, &anomalous, Some(&cpdag), &config).err(),
         Some(BrcdError(BrcdErrorEnum::DimensionMismatch))
     );
 }
@@ -160,7 +190,13 @@ fn empty_datasets_are_rejected() {
     let anomalous = CausalTensor::new(Vec::<f64>::new(), vec![0, 3]).unwrap();
     let cpdag = chain_cpdag();
     assert_eq!(
-        brcd_run(&normal, &anomalous, &cpdag, &BrcdConfig::continuous(0)).err(),
+        brcd_run(
+            &normal,
+            &anomalous,
+            Some(&cpdag),
+            &BrcdConfig::continuous(0)
+        )
+        .err(),
         Some(BrcdError(BrcdErrorEnum::EmptyData))
     );
 }
@@ -173,7 +209,7 @@ fn scores_the_discrete_family() {
     let anomalous = discrete_chain(120, 1.5, 72);
     let cpdag = chain_cpdag();
 
-    let result = brcd_run(&normal, &anomalous, &cpdag, &BrcdConfig::discrete(7)).unwrap();
+    let result = brcd_run(&normal, &anomalous, Some(&cpdag), &BrcdConfig::discrete(7)).unwrap();
 
     // k = 1 over 3 variables → 3 single-element candidate sets, each variable once.
     assert_eq!(result.ranks().len(), 3);
@@ -193,9 +229,55 @@ fn discrete_family_is_deterministic_under_a_fixed_seed() {
     let normal = discrete_chain(60, 0.0, 81);
     let anomalous = discrete_chain(60, 1.5, 82);
     let cpdag = chain_cpdag();
-    let a = brcd_run(&normal, &anomalous, &cpdag, &BrcdConfig::discrete(9)).unwrap();
-    let b = brcd_run(&normal, &anomalous, &cpdag, &BrcdConfig::discrete(9)).unwrap();
+    let a = brcd_run(&normal, &anomalous, Some(&cpdag), &BrcdConfig::discrete(9)).unwrap();
+    let b = brcd_run(&normal, &anomalous, Some(&cpdag), &BrcdConfig::discrete(9)).unwrap();
     assert_eq!(a, b);
+}
+
+#[test]
+fn absent_cpdag_triggers_boss_and_returns_a_ranking() {
+    // `None` makes brcd_run learn the CPDAG from the normal data via BOSS, then
+    // rank. The anomaly perturbs p(Y | X), so Y (index 1) should rank first.
+    let normal = chain_data(400, 0.0, 91);
+    let anomalous = chain_data(400, 4.0, 92);
+    let config = BrcdConfig::continuous(7);
+
+    // `None` needs an explicit node type, since there is no graph to infer it.
+    let result = brcd_run::<f64, ()>(&normal, &anomalous, None, &config).unwrap();
+
+    assert_eq!(result.ranks().len(), 3, "k=1 over 3 vars");
+    let mut seen: Vec<usize> = result.ranks().iter().map(|c| c[0]).collect();
+    seen.sort_unstable();
+    assert_eq!(seen, vec![0, 1, 2]);
+    assert!(result.posterior().iter().all(|p| p.is_finite()));
+    assert_eq!(result.top(), Some(&[1][..]), "ranks: {:?}", result.ranks());
+}
+
+#[test]
+fn supplied_cpdag_is_used_directly_without_structure_learning() {
+    // With `Some(cpdag)` the supplied graph is used verbatim — the result is
+    // identical to the pre-Option behaviour and independent of any BOSS run.
+    let normal = chain_data(120, 0.0, 1);
+    let anomalous = chain_data(120, 4.0, 2);
+    let cpdag = chain_cpdag();
+    let config = BrcdConfig::continuous(7);
+
+    let a = brcd_run(&normal, &anomalous, Some(&cpdag), &config).unwrap();
+    let b = brcd_run(&normal, &anomalous, Some(&cpdag), &config).unwrap();
+    assert_eq!(a, b);
+    assert_eq!(a.top(), Some(&[1][..]));
+}
+
+#[test]
+fn absent_cpdag_still_rejects_empty_data() {
+    // The `None` path validates the data too: no rows → EmptyData (BOSS cannot
+    // learn from an empty sample).
+    let normal = CausalTensor::new(Vec::<f64>::new(), vec![0, 3]).unwrap();
+    let anomalous = CausalTensor::new(Vec::<f64>::new(), vec![0, 3]).unwrap();
+    assert_eq!(
+        brcd_run::<f64, ()>(&normal, &anomalous, None, &BrcdConfig::continuous(0)).err(),
+        Some(BrcdError(BrcdErrorEnum::EmptyData))
+    );
 }
 
 #[test]
@@ -206,7 +288,7 @@ fn discrete_family_rejects_negative_states() {
     let anomalous = CausalTensor::new(vec![0.0_f64, 1.0, 2.0, 1.0, 2.0, 0.0], vec![2, 3]).unwrap();
     let cpdag = chain_cpdag();
     assert_eq!(
-        brcd_run(&normal, &anomalous, &cpdag, &BrcdConfig::discrete(0)).err(),
+        brcd_run(&normal, &anomalous, Some(&cpdag), &BrcdConfig::discrete(0)).err(),
         Some(BrcdError(BrcdErrorEnum::StateOutOfRange))
     );
 }

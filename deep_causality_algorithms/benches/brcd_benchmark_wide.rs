@@ -80,7 +80,7 @@ fn brcd_wide_benchmark(c: &mut Criterion) {
         let anomalous = wide_chain_data(d, n_rows, anomaly, 4.0, 2);
         let graph = wide_cpdag(d);
         group.bench_with_input(BenchmarkId::new("continuous_vars", d), &d, |b, _| {
-            b.iter(|| black_box(brcd_run(&normal, &anomalous, &graph, &config).unwrap()));
+            b.iter(|| black_box(brcd_run(&normal, &anomalous, Some(&graph), &config).unwrap()));
         });
     }
 
