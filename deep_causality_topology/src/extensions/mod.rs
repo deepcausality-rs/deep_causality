@@ -9,6 +9,7 @@ pub mod hkt_graph;
 pub mod hkt_hypergraph;
 pub mod hkt_lattice_complex;
 pub mod hkt_manifold;
+pub mod hkt_mixed_graph;
 pub mod hkt_point_cloud;
 pub mod hkt_simplicial_complex;
 pub mod hkt_topology;

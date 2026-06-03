@@ -92,7 +92,10 @@ impl CoMonad<TopologyWitness> for TopologyWitness {
             complex: Arc::new(new_complex),
             grade: fa.grade,
             data: CausalTensor::from_vec(result_vec, &shape),
-            cursor: 0,
+            // Preserve the focus so `extend` satisfies the comonad laws (right
+            // identity and associativity); resetting to `0` breaks them for a
+            // non-zero focus.
+            cursor: fa.cursor,
         }
     }
 }

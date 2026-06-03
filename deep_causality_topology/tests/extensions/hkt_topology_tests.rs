@@ -44,3 +44,30 @@ fn test_topology_extend() {
 
     assert_eq!(extended.data().as_slice(), &[1.0, 2.0, 3.0]);
 }
+
+#[test]
+fn comonad_right_identity_holds_for_nonzero_focus() {
+    // extract(extend(w, f)) == f(w) must hold when the focus is not vertex 0.
+    let complex = Arc::new(create_triangle_complex());
+    let data = CausalTensor::new(vec![3.0, 4.0, 5.0], vec![3]).unwrap();
+    let topology = Topology::new(complex, 0, data, 2).unwrap();
+    let f = |w: &Topology<f64>| w.data().as_slice()[w.cursor()] + 100.0;
+    let extended = TopologyWitness::extend(&topology, f);
+    assert_eq!(extended.cursor(), 2);
+    assert_eq!(TopologyWitness::extract(&extended), 105.0);
+}
+
+#[test]
+fn comonad_associativity_law() {
+    // extend(extend(w, g), f) == extend(w, |w'| f(&extend(w', g)))
+    let complex = Arc::new(create_triangle_complex());
+    let data = CausalTensor::new(vec![5.0, 7.0, 11.0], vec![3]).unwrap();
+    let w = Topology::new(complex, 0, data, 1).unwrap();
+    let g = |w: &Topology<f64>| w.data().as_slice()[w.cursor()] + 1.0;
+    let f = |w: &Topology<f64>| w.data().as_slice()[w.cursor()] * 10.0;
+
+    let lhs = TopologyWitness::extend(&TopologyWitness::extend(&w, g), f);
+    let rhs = TopologyWitness::extend(&w, |wp: &Topology<f64>| f(&TopologyWitness::extend(wp, g)));
+
+    assert_eq!(lhs.data().as_slice(), rhs.data().as_slice());
+}

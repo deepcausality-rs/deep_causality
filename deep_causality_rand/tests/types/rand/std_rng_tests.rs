@@ -13,6 +13,24 @@ fn test_xoshiro256_default() {
 }
 
 #[test]
+fn test_xoshiro256_from_seed_is_reproducible() {
+    // Two generators built from the same seed must produce identical streams.
+    let mut a = Xoshiro256::from_seed(0xDEAD_BEEF);
+    let mut b = Xoshiro256::from_seed(0xDEAD_BEEF);
+    for _ in 0..16 {
+        assert_eq!(a.next_u64(), b.next_u64());
+    }
+}
+
+#[test]
+fn test_xoshiro256_from_seed_differs_by_seed() {
+    // Different seeds produce different streams (first draw suffices in practice).
+    let mut a = Xoshiro256::from_seed(1);
+    let mut b = Xoshiro256::from_seed(2);
+    assert_ne!(a.next_u64(), b.next_u64());
+}
+
+#[test]
 fn test_xoshiro256_next_u32() {
     let mut rng = Xoshiro256::new();
     let val = rng.next_u32();

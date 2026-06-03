@@ -179,7 +179,7 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R, Lorentzian> {
     /// Discrete Einstein–Hilbert action in the Lorentzian signature, Wick-rotated.
     ///
     /// Returns `Complex<R>` whose real part equals the Euclidean
-    /// [`hinge_action_sum`](CubicalReggeGeometry::hinge_action_sum) and whose
+    /// `hinge_action_sum` and whose
     /// imaginary part carries the Wick-rotation phase. The reduction property
     /// `regge_action_lorentzian(all-spacelike) == Complex::new(regge_action, 0)` is
     /// the design.md Decision-3 reduction check.

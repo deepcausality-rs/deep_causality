@@ -7,3 +7,4 @@ pub(crate) mod ext_hkt_strict;
 #[cfg(test)]
 mod ext_hkt_strict_tests;
 pub(crate) mod ext_math;
+pub(crate) mod ext_stats;

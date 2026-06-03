@@ -49,13 +49,14 @@ helps track the evolving role of AI in the development process.
 
 Contributions should include an Assisted-by tag in the following format:
 
-Assisted-by: AGENT_NAME:MODEL_VERSION 
+Co-Authored-By: AGENT_NAME MODEL VERSION 
 
 Where:
 
 * ``AGENT_NAME`` is the name of the AI tool or framework
-* ``MODEL_VERSION`` is the specific model version used
+* ``MODELN`` is the specific model 
+* ``VERSION`` is the specific version used
 
 Example:
 
-Assisted-by: Claude:claude-4.8
+Co-Authored-By: Claude Opus 4.8

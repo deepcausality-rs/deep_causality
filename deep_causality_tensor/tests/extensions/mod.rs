@@ -8,3 +8,9 @@ mod causal_tensor_ext_hkt_tests;
 mod causal_tensor_ext_math_f32_tests;
 #[cfg(test)]
 mod causal_tensor_ext_math_f64_tests;
+#[cfg(test)]
+mod causal_tensor_ext_stats_f32_tests;
+#[cfg(test)]
+mod causal_tensor_ext_stats_f64_tests;
+#[cfg(test)]
+mod causal_tensor_ext_stats_sweep_tests;

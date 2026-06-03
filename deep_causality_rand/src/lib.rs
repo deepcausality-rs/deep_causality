@@ -25,6 +25,7 @@ pub use crate::traits::sample_borrow::SampleBorrow;
 pub use crate::traits::sample_range::SampleRange;
 pub use crate::traits::sample_uniform::{SampleUniform, UniformSampler};
 // Types
+pub use crate::types::Xoshiro256;
 pub use crate::types::distr::bernoulli::Bernoulli;
 pub use crate::types::distr::normal::Normal;
 pub use crate::types::distr::normal::standard_normal::StandardNormal;
@@ -34,8 +35,6 @@ pub use crate::types::misc::iter::Iter;
 pub use crate::types::misc::map::Map;
 pub use crate::types::range::{Open01, OpenClosed01};
 
-#[cfg(not(feature = "os-random"))]
-use crate::types::Xoshiro256;
 #[cfg(not(feature = "os-random"))]
 use std::cell::RefCell;
 

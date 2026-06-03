@@ -4,4 +4,5 @@
  */
 mod errors;
 mod extensions;
+mod solver;
 mod types;

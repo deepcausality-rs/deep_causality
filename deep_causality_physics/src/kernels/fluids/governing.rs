@@ -216,7 +216,7 @@ where
 /// Clausius–Duhem inequality. Returned as a raw scalar; sign-checking is the
 /// caller's responsibility when the input `tau` is not guaranteed Newtonian.
 ///
-/// The `tau` argument is typed as [`ViscousStress<R>`] (not [`CauchyStress<R>`]),
+/// The `tau` argument is typed as [`ViscousStress<R>`] (not [`CauchyStress<R>`](crate::CauchyStress)),
 /// so the `Φ ≥ 0` Clausius–Duhem positivity guarantee is preserved at the
 /// type level rather than relying on docstring discipline.
 ///

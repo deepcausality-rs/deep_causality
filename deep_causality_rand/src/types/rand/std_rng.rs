@@ -30,7 +30,16 @@ impl Xoshiro256 {
         let hash_builder = RandomState::new();
         let thread_component = hash_builder.hash_one(thread::current().id());
 
-        let seed = base_seed.wrapping_add(thread_component);
+        Self::from_seed(base_seed.wrapping_add(thread_component))
+    }
+
+    /// Creates a generator from an explicit 64-bit seed.
+    ///
+    /// The seed is expanded into the four-word state with SplitMix64 (the same
+    /// expansion [`Xoshiro256::new`] applies to its thread-derived seed). Two
+    /// generators built from the same seed produce identical streams, so this is
+    /// the constructor to use when a run must be reproducible.
+    pub fn from_seed(seed: u64) -> Self {
         let mut sm_state = seed;
 
         let mut s = [0; 4];
