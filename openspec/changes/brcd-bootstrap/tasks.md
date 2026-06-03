@@ -5,20 +5,20 @@ Each stage is independently testable and must leave the workspace green
 
 ## 1. BIC-from-covariance score
 
-- [ ] 1.1 Add a `boss` module under `deep_causality_algorithms::causal_discovery` with a `boss_score` submodule; wire it into the crate.
-- [ ] 1.2 Add a `BossConfig<T>` carrying `ridge_eps` (default `1e-6`), `bic_lambda` (default `2`), and `seed`.
-- [ ] 1.3 Implement `family_bic(cov: &CausalTensor<T>, n: usize, node: usize, parents: &[usize], cfg) -> T`: no-parent case `n·ln(cov[i,i])`; with-parents case `n·ln(conditional_variance(node, parents, ridge_eps)) + ln(n)·|parents|·bic_lambda`, using `CausalTensorStatsExt::{sample_covariance, conditional_variance}`.
-- [ ] 1.4 Test against hand-computed BIC values and against `local_score_BIC_from_cov` on a small fixed covariance (within tolerance); cover the no-parent and parented branches and a near-singular parent block (ridge keeps it finite).
+- [x] 1.1 Add the BOSS preprocessor files **inside** the `brcd` module (prefixed `brcd_boss_`, e.g. `brcd_boss_score`), starting with `brcd_boss_score`; wire them into the crate. (BOSS is a BRCD preprocessor, not a sibling discovery algorithm.)
+- [x] 1.2 Add a `BossConfig<T>` (`brcd_boss_config`) carrying `ridge_eps` (default `1e-6`), `bic_lambda` (default `2`), and `seed`.
+- [x] 1.3 Implement `family_bic(cov: &CausalTensor<T>, n: usize, node: usize, parents: &[usize], cfg) -> T` at the **higher-is-better** sign: no-parent case `−½·n·ln(cov[i,i]) − ½·ln(n)·bic_lambda`; with-parents case `−½·n·ln(conditional_variance(node, parents, ridge_eps)) − ½·ln(n)·(|parents|+1)·bic_lambda`, using `CausalTensorStatsExt::{sample_covariance, conditional_variance}`. Guard zero-variance columns (a constant metric must not produce `ln(0)`), per the paper's singular-matrix handling. (Sign corrects the vendored reference bug; see design D2.)
+- [x] 1.4 Test that the score is higher-is-better and orders parent sets correctly (a variance-reducing parent set scores strictly above the empty set), cover the no-parent and parented branches, a near-singular parent block (ridge keeps it finite), and a zero-variance column (guarded, finite).
 
 ## 2. Grow-shrink tree (GST)
 
-- [ ] 2.1 Implement `GstNode`/`Gst` over `Vec<usize>` parents with `grow` (add strictly-improving parents, keep improving branches, sort), `shrink` (remove strictly-improving parents to a fixpoint), and `trace(prefix)`, scoring through a borrow of the `boss_score` + covariance.
-- [ ] 2.2 Test that `trace` reproduces the reference grow-then-shrink parent set/score on a small graph, and that repeated traces reuse the cached tree (no extra score calls).
+- [x] 2.1 Implement `GstNode`/`Gst` over `Vec<usize>` parents with `grow` (add strictly-improving parents, keep improving branches, sort), `shrink` (remove strictly-improving parents to a fixpoint), and `trace(prefix)`, scoring through a borrow of the `boss_score` + covariance.
+- [x] 2.2 Test that `trace` reproduces the reference grow-then-shrink parent set/score on a small graph, and that repeated traces reuse the cached tree (no extra score calls).
 
 ## 3. Best-order search
 
-- [ ] 3.1 Implement the order optimization: per-variable `better_mutation` (move to the score-maximizing position), iterating sweeps until the total GST score stops improving; seed any tie-breaking/restart with `Xoshiro256::from_seed(cfg.seed)`.
-- [ ] 3.2 Test determinism (same seed + data → same final order) and that the search recovers the correct order on a known linear-Gaussian chain.
+- [x] 3.1 Implement the order optimization: per-variable `better_mutation` (move to the score-maximizing position), iterating sweeps until the total GST score stops improving; seed any tie-breaking/restart with `Xoshiro256::from_seed(cfg.seed)`.
+- [x] 3.2 Test determinism (same seed + data → same final order) and that the search recovers the correct order on a known linear-Gaussian chain.
 
 ## 4. DAG → CPDAG
 
@@ -41,7 +41,7 @@ Each stage is independently testable and must leave the workspace green
 
 - [ ] 7.1 Add a synthetic structural verification: BOSS on a committed dataset with a fixed seed; assert the learned skeleton + v-structures match a committed expected structure.
 - [ ] 7.2 Add an end-to-end verification: feed the learned CPDAG into `brcd_run` on a real-world case (e.g. Petshop) and assert it reproduces the published root-cause ranking; deliver both as individually-runnable examples under `examples/verification/brcd`.
-- [ ] 7.3 Document in the verification README that BOSS reproduction is structural + downstream-ranking, not byte-exact, and why (heuristic search; I-MEC invariance).
+- [ ] 7.3 Document in the verification README that BOSS reproduction is structural + downstream-ranking, not byte-exact, and why (heuristic search; I-MEC invariance). Add the **reference-correctness caveat**: the port uses the correct BIC sign while the Python reference is sign-inverted (empty CPDAG on a clean chain) and has the ranking-underflow bug, so the reference's own outputs may be wrong; if the correctly-signed port does not reproduce a reference ranking, that is evidence the reference is wrong. To confirm for a bug report, temporarily re-introduce the reference bug(s) behind a test-only switch (inverted-sign BOSS and/or `exp`-then-`argsort` ranking), check whether the port then matches the reference, and record the finding — never ship the wrong sign.
 
 ## 8. Bootstrap CPDAG-uncertainty (separable, last)
 

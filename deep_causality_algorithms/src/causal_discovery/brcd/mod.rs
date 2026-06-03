@@ -60,6 +60,10 @@
 
 pub mod brcd_algo;
 pub mod brcd_augment;
+pub mod brcd_boss_config;
+pub mod brcd_boss_gst;
+pub mod brcd_boss_score;
+pub mod brcd_boss_search;
 pub mod brcd_cache;
 pub mod brcd_config;
 pub mod brcd_dirichlet;
@@ -75,6 +79,10 @@ pub(crate) mod brcd_linalg;
 
 // Driver entry point and its public types (the recommended access path).
 pub use brcd_algo::brcd_run;
+pub use brcd_boss_config::{BOSS_LAMBDA_DEFAULT, BOSS_RIDGE_DEFAULT, BossConfig};
+pub use brcd_boss_gst::Gst;
+pub use brcd_boss_score::{BicScorer, FamilyScorer, family_bic};
+pub use brcd_boss_search::{OrderSearchResult, best_order_search};
 pub use brcd_config::{BrcdConfig, FamilyKind};
 pub use brcd_error::{BrcdError, BrcdErrorEnum};
 pub use brcd_result::BrcdResult;

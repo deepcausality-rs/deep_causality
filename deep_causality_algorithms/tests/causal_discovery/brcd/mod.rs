@@ -5,6 +5,14 @@
 #[cfg(test)]
 mod augment_tests;
 #[cfg(test)]
+mod boss_config_tests;
+#[cfg(test)]
+mod boss_gst_tests;
+#[cfg(test)]
+mod boss_score_tests;
+#[cfg(test)]
+mod boss_search_tests;
+#[cfg(test)]
 mod cache_tests;
 #[cfg(test)]
 mod config_tests;

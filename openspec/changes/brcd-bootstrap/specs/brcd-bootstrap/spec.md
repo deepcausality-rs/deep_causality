@@ -16,12 +16,14 @@ The system SHALL provide a structure-learning entry point in `deep_causality_alg
 
 ### Requirement: BIC-from-covariance score over existing tensor primitives
 
-The learner SHALL score node families with the linear-Gaussian BIC computed from the sample covariance only: `n·ln(σ²) + ln(n)·|PA|·λ`, where `σ²` is the node's marginal variance when it has no parents and the ridge Schur-complement conditional variance `Σ_yy − Σ_yP (Σ_PP + εI)⁻¹ Σ_Py` otherwise. The score SHALL be built on `deep_causality_tensor::CausalTensorStatsExt::sample_covariance` and `conditional_variance`. No other score (RKHS cross-validated, RKHS marginal, or BDeu) SHALL be implemented.
+The learner SHALL score node families with the linear-Gaussian SEM-BIC computed from the sample covariance only, at the **higher-is-better** sign the order search maximizes: `−½·n·ln(σ²) − ½·ln(n)·(|PA|+1)·λ`, where `σ²` is the node's marginal variance when it has no parents and the ridge Schur-complement conditional variance `Σ_yy − Σ_yP (Σ_PP + εI)⁻¹ Σ_Py` otherwise. The score SHALL be built on `deep_causality_tensor::CausalTensorStatsExt::sample_covariance` and `conditional_variance`. No other score (RKHS cross-validated, RKHS marginal, or BDeu) SHALL be implemented.
 
-#### Scenario: Score matches the reference BIC-from-cov
+The score SHALL use the **correct, higher-is-better** sign — the convention of causal-learn's `local_score_BIC_from_cov` and of the BOSS the ICML paper runs ("default setting of BOSS from causal-learn", Appendix D) — **not** the vendored reference `LocalScoreFunction.py`, whose negated `n·ln(σ²) + ln(n)·|PA|·λ` is inverted relative to BOSS's maximizing search (it learns the empty graph on a clean chain). A constant (zero-variance) column SHALL be guarded so it cannot produce `ln(0)`, consistent with the reference dropping zero-variance metrics.
+
+#### Scenario: Score is higher-is-better and orders parent sets correctly
 
 - **WHEN** a node family `(i, PA)` is scored on a fixed covariance matrix and sample count
-- **THEN** the value equals `n·ln(conditional_variance(i, PA, ε)) + ln(n)·|PA|·λ` to within floating-point tolerance of the reference `local_score_BIC_from_cov`
+- **THEN** the value equals `−½·n·ln(conditional_variance(i, PA, ε)) − ½·ln(n)·(|PA|+1)·λ` to within floating-point tolerance, and a parent set that strictly reduces the conditional variance enough to overcome its penalty scores strictly higher than the empty set (so grow/shrink and the order search add genuine parents)
 
 #### Scenario: The covariance is computed once
 
@@ -81,6 +83,8 @@ The BOSS port SHALL add no external or numeric crate dependency, relying only on
 ### Requirement: Verification by structure and downstream ranking
 
 Because BOSS is a heuristic search whose exact CPDAG depends on tie-breaking and search order, verification SHALL NOT require byte-exact reproduction of the reference CPDAG. Verification SHALL instead assert (a) the learned CPDAG's skeleton and v-structures on a fixed dataset and seed, and (b) that feeding the learned CPDAG into `brcd_run` reproduces the published root-cause ranking on a real-world case (e.g. Petshop), relying on the algorithm's I-MEC invariance to make the ranking robust to a Markov-equivalent learned CPDAG.
+
+The verification README and the end-to-end example SHALL carry a **caveat about the reference's own correctness**: this port deliberately uses the *correct* (higher-is-better) BIC sign, whereas the vendored Python reference uses the inverted sign (it learns the empty CPDAG on a clean chain) and additionally has the posterior-ranking underflow bug. The Python real-world outputs may therefore themselves be corrupted by these two bugs. If the correctly-signed port does **not** reproduce a given reference ranking, that divergence is evidence that the reference output is wrong, not the port. Confirming this for a bug report SHALL be done by **temporarily re-introducing the reference bug(s)** (running BOSS with the inverted sign, and/or the `exp`-then-`argsort` ranking) behind a clearly-marked test-only switch, checking whether the port then matches the reference, and documenting the result — never by changing the production score to the wrong sign.
 
 #### Scenario: Structural match on a fixed seed
 
