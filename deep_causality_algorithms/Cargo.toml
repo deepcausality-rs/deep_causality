@@ -69,6 +69,13 @@ harness = false
 name = "verification_base"
 path = "examples/verification/brcd/verification_base.rs"
 
+# BOSS structure-learning verification: self-contained structural recovery plus
+# a learned-CPDAG (cpdag=None) end-to-end run on committed Online Boutique data.
+#   cargo run -p deep_causality_algorithms --example verification_boss
+[[example]]
+name = "verification_boss"
+path = "examples/verification/brcd/verification_boss.rs"
+
 # Real-world verification (Online Boutique): replays committed Python-derived
 #   cargo run -p deep_causality_algorithms --example verification_online_boutique
 [[example]]

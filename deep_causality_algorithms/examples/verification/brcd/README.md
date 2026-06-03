@@ -4,6 +4,7 @@ Each verification is a standalone Rust example, runnable individually:
 
 ```bash
 cargo run -p deep_causality_algorithms --example verification_base
+cargo run -p deep_causality_algorithms --example verification_boss
 cargo run -p deep_causality_algorithms --example verification_online_boutique
 ```
 
@@ -22,6 +23,45 @@ Generates a linear-Gaussian chain `X → Y → Z`, then an anomalous dataset tha
 perturbs `p(Y | X)`. Because only Y's conditional mechanism changes, BRCD must
 rank **Y** as the top root cause. No Python or external data is required; this is
 the base smoke verification that gates the real-world examples.
+
+## `verification_boss` — BOSS structure learning (self-contained + learned-CPDAG)
+
+BRCD needs a CPDAG. When none is supplied, it learns one from the pre-failure
+observational data with **BOSS** (`brcd_run` with `cpdag = None`). This example
+verifies that path in two parts:
+
+1. **Structural recovery (self-contained).** BOSS learns from deterministically
+   generated linear-Gaussian data (fixed seed): a chain `X → Y → Z` must yield the
+   undirected path `X — Y — Z` (no v-structure), and a collider `X → Z ← Y` must
+   yield the compelled v-structure (both edges directed into `Z`, no `X — Y`
+   edge). No Python or external data is required.
+2. **Learned-CPDAG end-to-end (real data).** On the committed Online Boutique
+   `adservice_cpu_1` case, BRCD runs with `cpdag = None`, so BOSS learns the
+   structure from `normal.csv` and BRCD ranks against it. The learned-CPDAG run
+   recovers the true fault within the top 5 (it lands at **#1** here). This is the
+   path that serves systems without a service map — Petshop in the paper; since
+   the Petshop dataset is not committed, Online Boutique stands in.
+
+Reproduction for BOSS is **structural + downstream-ranking, not byte-exact**: BOSS
+is a heuristic order search whose exact CPDAG is sensitive to tie-breaking, and
+the downstream ranking is robust to a Markov-equivalent learned CPDAG by the
+estimator's I-MEC invariance. The learned-CPDAG ranking is therefore **not**
+expected to match the supplied-CPDAG `expected.txt` position-for-position.
+
+> **Reference-correctness caveat (read before comparing to the Python reference).**
+> This port uses the **correct, higher-is-better** BIC sign for BOSS — the
+> convention of causal-learn and of the BOSS the paper runs ("default setting of
+> BOSS from causal-learn", Appendix D). The **vendored** Python BOSS
+> (`ctx/next/brcd/BRCD/`) is **sign-inverted**: it learns the empty graph on a
+> clean chain and a single spurious edge between the *independent* pair on a
+> collider (see `openspec/notes/brcd/brcd_boss_sign_bug.md`), and it is layered on
+> the posterior-ranking underflow bug (`brcd_python_ranking_bug.md`). So the
+> Python *learned-CPDAG* outputs may themselves be wrong. If the correctly-signed
+> port does **not** reproduce a Python learned-CPDAG result, treat that as evidence
+> the reference is wrong, not the port. To confirm for a bug report, temporarily
+> re-introduce the reference bug(s) behind a clearly-marked **test-only** switch
+> (inverted-sign BOSS and/or `exp`-then-`argsort` ranking) and check whether the
+> port then matches — never ship the wrong sign.
 
 ## `verification_*` — real-world replication (acceptance bar)
 
