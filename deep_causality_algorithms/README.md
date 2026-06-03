@@ -61,7 +61,7 @@ ranked from most to least probable.
 * **Performance Optimized**:
     * **Algorithmic Capping**: Use the `MaxOrder` enum to limit the analysis to a tractable number of interactions (
       e.g., pairwise), reducing complexity from exponential `O(2^N)` to polynomial `O(N^k)`.
-    * **Parallel Execution**: When compiled with the `parallel` feature flag, the main decomposition loop of the SURD algorithm and the feature selection loops of the mRMR algorithm run in parallel across all available CPU cores using `rayon`.
+    * **Parallel Execution**: When compiled with the `parallel` feature flag, the main decomposition loop of the SURD algorithm, the feature selection loops of the mRMR algorithm, and the per-family likelihood scoring of the BRCD algorithm run in parallel across all available CPU cores using `rayon`. The BRCD family scoring is the dominant cost, and each family is independent, so the parallel and sequential results are identical.
 
 ## Installation
 

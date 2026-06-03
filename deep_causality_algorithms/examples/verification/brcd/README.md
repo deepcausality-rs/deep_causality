@@ -10,6 +10,12 @@ cargo run -p deep_causality_algorithms --example verification_online_boutique
 Each example prints a `PASS`/`FAIL` line per check and exits non-zero if any check
 fails, so it runs directly in CI.
 
+> **Parallel build.** `brcd_run` parallelizes its per-family likelihood scoring
+> across CPU cores with `rayon` under the `parallel` feature. Family scoring is
+> independent, so the parallel and sequential results are identical; these
+> verifications reproduce the reference ranking exactly under both. To check the
+> parallel path, add `--features parallel` to any command above.
+
 ## `verification_base` — synthetic recovery (self-contained)
 
 Generates a linear-Gaussian chain `X → Y → Z`, then an anomalous dataset that

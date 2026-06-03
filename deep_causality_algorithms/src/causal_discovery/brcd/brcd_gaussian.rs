@@ -20,9 +20,9 @@
 //!   none/log/log1p transform ladder with its `log → log1p → yeojohnson`
 //!   auto-downgrade (Yeo-Johnson is deferred; see design D7).
 //! * [`gaussian_single_expert_logdensity`] — the per-row log-density of the
-//!   single-expert family, composing [`deep_causality_tensor`]'s
-//!   `gaussian_log_density` (the exact `_normal_logpdf_1d`) on the per-row
-//!   residual, plus the transform Jacobian.
+//!   single-expert family, evaluating the normal log-density (the exact
+//!   `_normal_logpdf_1d`, matching `deep_causality_tensor`'s `gaussian_log_density`)
+//!   on the per-row residual, plus the transform Jacobian.
 //!
 //! The F-node integration (per-regime fits and the mixture-of-experts gate)
 //! builds on this in the next stage.
@@ -31,7 +31,7 @@ use crate::causal_discovery::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use crate::causal_discovery::brcd::brcd_gate::{GateConfig, fit_logistic_gate};
 use crate::causal_discovery::brcd::brcd_linalg::solve_linear;
 use deep_causality_num::{FromPrimitive, RealField};
-use deep_causality_tensor::{CausalTensor, CausalTensorStatsExt};
+use std::borrow::Cow;
 
 /// Default ridge `λ` for the conditional-mean fit (matches `brcd.py`'s `1e-4`).
 pub const RIDGE_DEFAULT: f64 = 1e-4;
@@ -198,8 +198,8 @@ pub fn transform_and_jacobian<T: RealField>(x: T, kind: Transform) -> Result<(T,
 /// the ridge fit's prediction (or the sample mean when no finite rows are
 /// available), and the variance is the fit's residual variance (or the sample
 /// variance). The returned vector holds the per-row log-densities
-/// `logpdf(z; μ_i, σ²) + log|dz/dx|_i`, composing
-/// `deep_causality_tensor::gaussian_log_density` on the residual.
+/// `logpdf(z; μ_i, σ²) + log|dz/dx|_i`, the normal log-density of the residual
+/// (matching `deep_causality_tensor::gaussian_log_density`).
 ///
 /// # Errors
 /// As [`fit_ridge`] and [`transform_and_jacobian`].
@@ -391,9 +391,21 @@ impl<T: RealField> ExpertMean<T> {
     fn predict(&self, features: &[T]) -> T {
         match self {
             ExpertMean::Const(m) => *m,
-            ExpertMean::Linear(beta) => dot(beta, &design_row(features)),
+            ExpertMean::Linear(beta) => predict_implicit(beta, features),
         }
     }
+}
+
+/// Predicts `β · [1, features]` without materializing the design row. The
+/// intercept term `β₀ · 1` is folded first (so `acc` starts at `β₀`, exactly the
+/// first step of `dot(β, [1, …])`), making this bit-identical to
+/// `dot(β, design_row(features))` while avoiding a per-prediction allocation.
+fn predict_implicit<T: RealField>(beta: &[T], features: &[T]) -> T {
+    let mut acc = beta[0];
+    for (b, f) in beta[1..].iter().zip(features.iter()) {
+        acc += *b * *f;
+    }
+    acc
 }
 
 /// Predicts the conditional mean for every row.
@@ -422,13 +434,14 @@ fn fit_expert<T: RealField + FromPrimitive>(
         let ys: Vec<T> = idxs.iter().map(|&i| z_all[i]).collect();
         return (ExpertMean::Const(mean(&ys)), variance_ddof1(&ys));
     }
-    let (x_fit, z_fit) = finite_design(idxs, z_all, parents_t);
-    if x_fit.is_empty() {
-        let ys: Vec<T> = idxs.iter().map(|&i| z_all[i]).collect();
-        return (ExpertMean::Const(mean(&ys)), variance_ddof1(&ys));
+    // `min_finite = 0`: fall back only when no rows are finite (`x_fit.is_empty()`).
+    match fit_ridge_streaming(idxs, z_all, parents_t, ridge, 0) {
+        Some(fit) => (ExpertMean::Linear(fit.beta), fit.sigma2),
+        None => {
+            let ys: Vec<T> = idxs.iter().map(|&i| z_all[i]).collect();
+            (ExpertMean::Const(mean(&ys)), variance_ddof1(&ys))
+        }
     }
-    let fit = fit_ridge(&x_fit, &z_fit, ridge).expect("validated finite design");
-    (ExpertMean::Linear(fit.beta), fit.sigma2)
 }
 
 /// As [`fit_expert`], but with the `n ≤ p` guard of the F-as-parent branch
@@ -445,30 +458,73 @@ fn fit_expert_guarded<T: RealField + FromPrimitive>(
         let ys: Vec<T> = idxs.iter().map(|&i| z_all[i]).collect();
         return (ExpertMean::Const(mean(&ys)), variance_ddof1(&ys));
     }
-    let (x_fit, z_fit) = finite_design(idxs, z_all, parents_t);
-    if x_fit.len() <= p + 1 {
-        let ys: Vec<T> = idxs.iter().map(|&i| z_all[i]).collect();
-        return (ExpertMean::Const(mean(&ys)), variance_ddof1(&ys));
+    // Guard `x_fit.len() <= p + 1` (p = feature count) → fall back.
+    match fit_ridge_streaming(idxs, z_all, parents_t, ridge, p + 1) {
+        Some(fit) => (ExpertMean::Linear(fit.beta), fit.sigma2),
+        None => {
+            let ys: Vec<T> = idxs.iter().map(|&i| z_all[i]).collect();
+            (ExpertMean::Const(mean(&ys)), variance_ddof1(&ys))
+        }
     }
-    let fit = fit_ridge(&x_fit, &z_fit, ridge).expect("validated finite design");
-    (ExpertMean::Linear(fit.beta), fit.sigma2)
 }
 
-/// Collects the finite-row design `[1, parents_i]` and targets `z_i` over `idxs`.
-fn finite_design<T: RealField>(
+/// Streaming ridge fit over the finite rows of `idxs`: accumulates `XᵀX + λI` and
+/// `Xᵀz` directly from each finite row's `[1, parents]` design using one reused
+/// buffer, solves in place, and returns the floored residual variance. Returns
+/// `None` when at most `min_finite` rows are finite (the caller's fallback).
+///
+/// Bit-identical to `fit_ridge` over `finite_design(...)`: same finite filter,
+/// accumulation order, ridge, solve, and residual pass — but it allocates only
+/// the `p×p` normal-equations buffers instead of one `Vec` per design row, which
+/// dominated the per-family cost.
+fn fit_ridge_streaming<T: RealField + FromPrimitive>(
     idxs: &[usize],
     z_all: &[T],
     parents_t: &[Vec<T>],
-) -> (Vec<Vec<T>>, Vec<T>) {
-    let mut x_fit = Vec::new();
-    let mut z_fit = Vec::new();
+    ridge: T,
+    min_finite: usize,
+) -> Option<RidgeFit<T>> {
+    let p = parents_t.first().map_or(0, Vec::len) + 1;
+    let mut xtx = vec![T::zero(); p * p];
+    let mut xty = vec![T::zero(); p];
+    let mut design = vec![T::zero(); p];
+    design[0] = T::one();
+
+    let mut count = 0usize;
     for &i in idxs {
         if z_all[i].is_finite() && parents_t[i].iter().all(|v| v.is_finite()) {
-            x_fit.push(design_row(&parents_t[i]));
-            z_fit.push(z_all[i]);
+            design[1..].copy_from_slice(&parents_t[i]);
+            let yi = z_all[i];
+            for a in 0..p {
+                xty[a] += design[a] * yi;
+                let ra = design[a];
+                for b in 0..p {
+                    xtx[a * p + b] += ra * design[b];
+                }
+            }
+            count += 1;
         }
     }
-    (x_fit, z_fit)
+    if count <= min_finite {
+        return None;
+    }
+    for a in 0..p {
+        xtx[a * p + a] += ridge;
+    }
+    solve_linear(&mut xtx, &mut xty, p);
+    let beta = xty;
+
+    let mut rss = T::zero();
+    for &i in idxs {
+        if z_all[i].is_finite() && parents_t[i].iter().all(|v| v.is_finite()) {
+            design[1..].copy_from_slice(&parents_t[i]);
+            let r = z_all[i] - dot(&beta, &design);
+            rss += r * r;
+        }
+    }
+    let dof = t_usize::<T>(count.saturating_sub(p).max(1));
+    let sigma2 = floor(rss / dof, from_f64::<T>(VARIANCE_FLOOR));
+    Some(RidgeFit { beta, sigma2 })
 }
 
 /// Per-row gate probability `π(F = 1 | parents)` via the logistic gate, with the
@@ -495,20 +551,47 @@ fn gate_probabilities<T: RealField + FromPrimitive>(
     }
 }
 
-/// Per-row normal log-density `logpdf(zᵢ; μᵢ, σ²)`, composing
-/// `gaussian_log_density(0, σ²)` on the residual `zᵢ − μᵢ`.
+/// Per-row normal log-density `logpdf(zᵢ; μᵢ, σ²)` on the residual `zᵢ − μᵢ`.
+///
+/// Computes the same value as `CausalTensorStatsExt::gaussian_log_density(0, σ²)`
+/// — identical variance floor (`1e-12`), constants, and operation order — but
+/// inline, so it allocates only the output vector instead of round-tripping the
+/// residuals through two `CausalTensor`s per call.
 fn logpdf_rows<T: RealField + FromPrimitive>(z: &[T], mu: &[T], sigma2: T) -> Vec<T> {
-    let residuals: Vec<T> = z.iter().zip(mu.iter()).map(|(&zi, &mi)| zi - mi).collect();
-    CausalTensor::from_slice(&residuals, &[residuals.len()])
-        .gaussian_log_density(T::zero(), sigma2)
-        .expect("residual tensor has a valid 1-D shape")
-        .as_slice()
-        .to_vec()
+    let var = density_variance(sigma2);
+    let half = from_f64::<T>(0.5);
+    let two = from_f64::<T>(2.0);
+    let log_two_pi_var = (two * T::pi() * var).ln();
+    z.iter()
+        .zip(mu.iter())
+        .map(|(&zi, &mi)| {
+            let diff = zi - mi;
+            -half * (log_two_pi_var + (diff * diff) / var)
+        })
+        .collect()
 }
 
-/// Single-row normal log-density `logpdf(z; μ, σ²)`.
+/// Single-row normal log-density `logpdf(z; μ, σ²)`, inline (no allocation).
+///
+/// Hot path: the F-as-parent branch calls this once per row, so building a
+/// one-element `CausalTensor` here would allocate `n` times per family.
 fn single_logpdf<T: RealField + FromPrimitive>(z: T, mu: T, sigma2: T) -> T {
-    logpdf_rows(&[z], &[mu], sigma2)[0]
+    let var = density_variance(sigma2);
+    let half = from_f64::<T>(0.5);
+    let two = from_f64::<T>(2.0);
+    let log_two_pi_var = (two * T::pi() * var).ln();
+    let diff = z - mu;
+    -half * (log_two_pi_var + (diff * diff) / var)
+}
+
+/// The variance used by the normal density: the fit's `σ²` when positive, else
+/// the shared `1e-12` floor. Matches `gaussian_log_density`'s `variance_floor`.
+fn density_variance<T: RealField + FromPrimitive>(sigma2: T) -> T {
+    if sigma2 > T::zero() {
+        sigma2
+    } else {
+        from_f64::<T>(VARIANCE_FLOOR)
+    }
 }
 
 /// Adds the per-row transform Jacobian to the log-densities.
@@ -526,18 +609,21 @@ fn apply_parent_transform<T: RealField + FromPrimitive>(
     parents: &[Vec<T>],
     eff: Transform,
     transform_parents: bool,
-) -> Result<Vec<Vec<T>>, BrcdError> {
+) -> Result<Cow<'_, [Vec<T>]>, BrcdError> {
+    // The common case (no transform, e.g. the verification config) borrows the
+    // parent rows instead of cloning the whole matrix per family.
     if !transform_parents || eff == Transform::None {
-        return Ok(parents.to_vec());
+        return Ok(Cow::Borrowed(parents));
     }
-    parents
+    let transformed = parents
         .iter()
         .map(|row| {
             row.iter()
                 .map(|&v| transform_and_jacobian(v, eff).map(|(z, _)| z))
                 .collect::<Result<Vec<T>, _>>()
         })
-        .collect()
+        .collect::<Result<Vec<Vec<T>>, _>>()?;
+    Ok(Cow::Owned(transformed))
 }
 
 /// Two-term `log(eᵃ + eᵇ)`, stable against overflow (brcd.py `_logsumexp2`).

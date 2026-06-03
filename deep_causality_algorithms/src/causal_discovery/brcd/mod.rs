@@ -20,9 +20,43 @@
 //!   (`brcd_linalg`).
 //!
 //! The **algorithm** itself — F-node augmentation ([`brcd_augment`]), the family
-//! cache ([`brcd_cache`]), and the driver that assembles the posterior and ranks
-//! the candidates ([`brcd_algo::brcd_run`]) — composes those layers. [`brcd_run`]
-//! is the recommended entry point.
+//! key canonicalization ([`brcd_cache`]), and the driver that assembles the
+//! posterior and ranks the candidates ([`brcd_algo::brcd_run`]) — composes those
+//! layers. [`brcd_run`] is the recommended entry point.
+//!
+//! # Performance
+//!
+//! [`brcd_run`] runs in three phases, and every optimization below is
+//! **outcome-preserving**: each is either bit-identical arithmetic or an
+//! order-independent reorganization, and the verification examples
+//! (`examples/verification/brcd`) confirm the candidate ranking is reproduced
+//! exactly against the reference.
+//!
+//! 1. **Structural enumeration (sequential).** Per candidate, enumerate valid cut
+//!    configurations, F-node-augment each, size its Markov-equivalence class, and
+//!    sample one representative DAG. This threads the RNG, so it stays sequential
+//!    and deterministic. On well-oriented (mostly-directed) CPDAGs it is a small
+//!    fraction of the total; the cost is exponential only in the size of the
+//!    undirected components (the cut-configuration count).
+//! 2. **Family scoring (the dominant cost).** Each unique `(node, parents)` family
+//!    is scored **once** to its per-row log-likelihood. Two optimizations apply
+//!    here:
+//!    * the normal log-density is evaluated inline rather than through a
+//!      `CausalTensor` round-trip ([`brcd_gaussian`]); and
+//!    * the ridge fit streams the normal equations `XᵀX + λI`, `Xᵀz` from each
+//!      row's `[1, parents]` design through a single reused buffer instead of
+//!      materializing the design matrix as a `Vec<Vec<_>>` — eliminating roughly
+//!      one heap allocation per row per fit, which was the dominant cost.
+//!
+//!    Because the families are independent, this phase runs in parallel across CPU
+//!    cores with `rayon` when the crate is built with the **`parallel`** feature
+//!    (mirroring the SURD decomposition loop); the result is identical to the
+//!    sequential pass.
+//! 3. **Posterior assembly (sequential, cheap).** A candidate with a single
+//!    sampled DAG has no DAG mixture, so its `Σ_row logsumexp` collapses to a plain
+//!    sum of the per-family scalar totals — skipping the length-`n_total` per-row
+//!    vector entirely. Candidates with multiple configurations take the full
+//!    per-row mixture path.
 
 pub mod brcd_algo;
 pub mod brcd_augment;

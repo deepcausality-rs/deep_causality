@@ -25,7 +25,7 @@
 //! The no-CPDAG bootstrap path (BOSS) is out of scope (design D6).
 
 use crate::brcd::brcd_augment::{augmented_graph, f_node_indicator, get_configurations_multi};
-use crate::brcd::brcd_cache::FamilyCache;
+use crate::brcd::brcd_cache::{FamilyKey, family_key};
 use crate::brcd::brcd_config::{BrcdConfig, FamilyKind};
 use crate::brcd::brcd_dirichlet::dirichlet_logdensity;
 use crate::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
@@ -36,6 +36,10 @@ use deep_causality_num::{FromPrimitive, RealField, ToPrimitive};
 use deep_causality_rand::Xoshiro256;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::MixedGraph;
+use std::collections::BTreeMap;
+
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
 
 /// Runs BRCD on the normal/anomalous datasets against a supplied CPDAG and
 /// returns the candidate root-cause sets ranked by descending posterior.
@@ -55,7 +59,7 @@ pub fn brcd_run<T, N>(
     config: &BrcdConfig<T>,
 ) -> Result<BrcdResult<T>, BrcdError>
 where
-    T: RealField + FromPrimitive + ToPrimitive,
+    T: RealField + FromPrimitive + ToPrimitive + Send + Sync,
     N: Clone,
 {
     let (n_normal, num_vars) = shape_2d(normal)?;
@@ -104,18 +108,19 @@ where
         n_total,
     };
 
+    // Phase 1 (sequential): structural enumeration. `mec_sample_dag` threads the
+    // RNG candidate-by-candidate, so this stays sequential to keep the run
+    // deterministic. Per candidate we retain its sampled DAGs and MEC log-weights;
+    // `None` marks a candidate with no valid configuration (scored as −∞).
     let mut rng = Xoshiro256::from_seed(config.seed);
-    let mut cache: FamilyCache<T> = FamilyCache::new();
-    let mut log_posterior = Vec::with_capacity(combos.len());
-
+    type Plan<T> = (Vec<MixedGraph<()>>, Vec<T>);
+    let mut plans: Vec<Option<Plan<T>>> = Vec::with_capacity(combos.len());
     for combo in &combos {
         let configs = get_configurations_multi(cpdag, combo)?;
         if configs.is_empty() {
-            log_posterior.push(neg_inf::<T>());
+            plans.push(None);
             continue;
         }
-
-        // One representative DAG per configuration, weighted by its MEC size.
         let mut dags: Vec<MixedGraph<()>> = Vec::with_capacity(configs.len());
         let mut sizes: Vec<usize> = Vec::with_capacity(configs.len());
         for cfg in &configs {
@@ -129,16 +134,52 @@ where
             .iter()
             .map(|&s| (from_usize::<T>(s) / total + tiny).ln())
             .collect();
+        plans.push(Some((dags, log_p_g)));
+    }
 
-        // Per-DAG joint log-likelihood vectors (each length n_total).
+    // Phase 2: collect every unique `(node, parents)` family across all sampled
+    // DAGs (first-seen parent order, matching the sequential traversal), then
+    // score each one. Scoring is the dominant cost and the families are
+    // independent, so it runs in parallel under the `parallel` feature.
+    let mut jobs: BTreeMap<FamilyKey, (usize, Vec<usize>)> = BTreeMap::new();
+    for (dags, _) in plans.iter().flatten() {
+        for dag in dags {
+            for node in 0..dag.num_vertices() {
+                let parents = dag.parents(node);
+                jobs.entry(family_key(node, &parents))
+                    .or_insert((node, parents));
+            }
+        }
+    }
+    let scored = score_families(&jobs, &ctx)?;
+
+    // Phase 3 (sequential, cheap): assemble each candidate's posterior from the
+    // scored families. Single configuration → sum per-family totals; multiple
+    // configurations → the per-row mixture (`logsumexp` over DAGs, summed rows).
+    let mut log_posterior = Vec::with_capacity(combos.len());
+    for plan in &plans {
+        let Some((dags, log_p_g)) = plan else {
+            log_posterior.push(neg_inf::<T>());
+            continue;
+        };
+
+        if dags.len() == 1 {
+            let dag = &dags[0];
+            let mut log_lik = from_usize::<T>(n_total) * log_p_g[0];
+            for node in 0..dag.num_vertices() {
+                let key = family_key(node, &dag.parents(node));
+                log_lik += scored[&key].1;
+            }
+            log_posterior.push(log_lik + log_prior);
+            continue;
+        }
+
         let mut dag_cols: Vec<Vec<T>> = Vec::with_capacity(dags.len());
         for (i, dag) in dags.iter().enumerate() {
             let mut log_joint = vec![T::zero(); n_total];
             for node in 0..dag.num_vertices() {
-                let parents = dag.parents(node);
-                let factor =
-                    cache.get_or_try_insert_with(node, &parents, || ctx.score(node, &parents))?;
-                for (acc, &f) in log_joint.iter_mut().zip(factor.iter()) {
+                let key = family_key(node, &dag.parents(node));
+                for (acc, &f) in log_joint.iter_mut().zip(scored[&key].0.iter()) {
                     *acc += f;
                 }
             }
@@ -149,7 +190,6 @@ where
             dag_cols.push(log_joint);
         }
 
-        // logsumexp over DAGs per row, summed over rows.
         let mut log_lik = T::zero();
         let mut row_vals = vec![T::zero(); dag_cols.len()];
         for r in 0..n_total {
@@ -162,6 +202,39 @@ where
     }
 
     Ok(rank(combos, log_posterior))
+}
+
+/// Scores every unique family `(node, parents)` to its per-row log-likelihood
+/// and the row-sum total. Each family is independent of the others, so under the
+/// `parallel` feature the map runs across CPU cores via `rayon` (mirroring the
+/// SURD decomposition loop); the result is identical to the sequential pass.
+fn score_families<T>(
+    jobs: &BTreeMap<FamilyKey, (usize, Vec<usize>)>,
+    ctx: &ScoreCtx<'_, T>,
+) -> Result<BTreeMap<FamilyKey, (Vec<T>, T)>, BrcdError>
+where
+    T: RealField + FromPrimitive + Send + Sync,
+{
+    #[cfg(feature = "parallel")]
+    {
+        jobs.par_iter()
+            .map(|(key, (node, parents))| {
+                let per_row = ctx.score(*node, parents)?;
+                let total = per_row.iter().fold(T::zero(), |a, &x| a + x);
+                Ok((key.clone(), (per_row, total)))
+            })
+            .collect()
+    }
+    #[cfg(not(feature = "parallel"))]
+    {
+        jobs.iter()
+            .map(|(key, (node, parents))| {
+                let per_row = ctx.score(*node, parents)?;
+                let total = per_row.iter().fold(T::zero(), |a, &x| a + x);
+                Ok((key.clone(), (per_row, total)))
+            })
+            .collect()
+    }
 }
 
 // --- scoring context --------------------------------------------------------
