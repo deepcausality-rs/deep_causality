@@ -1,0 +1,90 @@
+deep_causality_physics/tests/kernels/chronometric/solve_gm_tests.rs
+  s_52e6d9817e5bf8::t_8931d15fed2f76 495-507,515-521,527-587
+  s_52e6d9817e5bf8::t_cc5b603efcdd39 508-514,522-526
+  s_52e6d9817e5bf8::t_797ba001c0beab 13
+deep_causality_num/src/dual/dual_number/convert.rs
+  s_52e6d9817e5bf8::t_7dc0b11691a969 1-20
+deep_causality_num/tests/dual/dual_number/convert_tests.rs
+  s_52e6d9817e5bf8::t_47d9679bc1e6be 1-32
+openspec/changes/causal-arrow-autodiff/specs/forward-autodiff/spec.md
+  s_52e6d9817e5bf8::t_c052eb9b8fc3f9 48
+  s_52e6d9817e5bf8::t_4ff52155017ae7 59-63
+  s_52e6d9817e5bf8::t_8d3814c6b77ad3 29
+openspec/changes/causal-arrow-application/tasks.md
+  s_52e6d9817e5bf8::t_d68ccbbfe4392a 43
+deep_causality_physics/src/kernels/chronometric/chronometric_quantities.rs
+  s_52e6d9817e5bf8::t_7ea8a27eaba2d6 6-7
+  s_52e6d9817e5bf8::t_9945f89005358c 36
+  s_52e6d9817e5bf8::t_acca6d7f961334 18
+  s_52e6d9817e5bf8::t_28ef90f3baf142 55-56,58
+  s_52e6d9817e5bf8::t_1e6b1effcc9631 78
+deep_causality_num/src/lib.rs
+  s_52e6d9817e5bf8::t_680fcbdad728fa 70-74
+  s_52e6d9817e5bf8::t_4d85e27bd5a4d6 11
+deep_causality_num/tests/autodiff/derivative_tests.rs
+  s_52e6d9817e5bf8::t_d791be8726c7ab 1-5,7-79
+  s_52e6d9817e5bf8::t_9869fa5cc8f921 6
+deep_causality_num/tests/mod.rs
+  s_52e6d9817e5bf8::t_5cd89ae7a3f416 6
+openspec/changes/causal-arrow-autointegration/tasks.md
+  s_52e6d9817e5bf8::t_7c6940dda68d7b 3
+  s_52e6d9817e5bf8::t_3f824a32883e11 24-25
+openspec/changes/causal-arrow-application/proposal.md
+  s_52e6d9817e5bf8::t_4c61eb38b625d9 37
+openspec/changes/causal-arrow-autodiff/tasks.md
+  s_52e6d9817e5bf8::t_5a5b6f0d3b40b5 3-7
+  s_52e6d9817e5bf8::t_43c00afc1303cd 8,12-14,18-21,25-28
+deep_causality_num/tests/autodiff/jacobian_tests.rs
+  s_52e6d9817e5bf8::t_27d921fc2ca9d4 19
+  s_52e6d9817e5bf8::t_d31b72e0a6d28b 1-18,20-34
+deep_causality_num/src/autodiff/gradient.rs
+  s_52e6d9817e5bf8::t_5c11d2e48dd14e 1-59
+deep_causality_num/src/autodiff/mod.rs
+  s_52e6d9817e5bf8::t_9735b9ae927337 28
+  s_52e6d9817e5bf8::t_087f56c4b93f9c 1-27,30-34
+  s_52e6d9817e5bf8::t_4ab18602814fc7 29
+deep_causality_num/tests/autodiff/gradient_tests.rs
+  s_52e6d9817e5bf8::t_27d921fc2ca9d4 47
+  s_52e6d9817e5bf8::t_84819b8d79a3df 6
+  s_52e6d9817e5bf8::t_b12b000d4f6d5e 1-5,7-46,48-55
+deep_causality_physics/src/kernels/chronometric/solve_gm.rs
+  s_52e6d9817e5bf8::t_ca858b99c51a0d 6-7
+  s_52e6d9817e5bf8::t_21148a72ccbfd7 162,197
+openspec/changes/causal-arrow-autodiff/proposal.md
+  s_52e6d9817e5bf8::t_6d516daad36b7a 19-20
+  s_52e6d9817e5bf8::t_dad73c8498f3ea 33,37-39
+  s_52e6d9817e5bf8::t_d31759393d18e8 42
+deep_causality_num/src/autodiff/derivative.rs
+  s_52e6d9817e5bf8::t_7590d0b617ee10 1-68
+deep_causality_num/tests/autodiff/mod.rs
+  s_52e6d9817e5bf8::t_f50ec429214190 1-8
+deep_causality_num/tests/BUILD.bazel
+  s_52e6d9817e5bf8::t_91490c2c4f0d9a 4-17
+deep_causality_num/src/dual/dual_number/mod.rs
+  s_52e6d9817e5bf8::t_49a4263e2e1d5f 10
+deep_causality_num/tests/dual/dual_number/mod.rs
+  s_52e6d9817e5bf8::t_0a67f51b4d642a 7
+openspec/changes/causal-arrow-autointegration/proposal.md
+  s_52e6d9817e5bf8::t_c374fb31a8a50e 35
+  s_52e6d9817e5bf8::t_dd1563cc8bf5db 31
+deep_causality_num/src/autodiff/jacobian.rs
+  s_52e6d9817e5bf8::t_5d3378c57584c7 1-46
+openspec/changes/causal-arrow-autodiff/design.md
+  s_52e6d9817e5bf8::t_947b2dcfbf4ef5 57-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "995664706d1edf654463b2f47bfcf8959492152d",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
