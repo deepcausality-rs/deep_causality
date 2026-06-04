@@ -276,7 +276,7 @@ where
                 for (b, v_val) in v.iter().enumerate() {
                     for (c, w_val) in w.iter().enumerate() {
                         let r = self.get(d, a, b, c);
-                        sum = sum + r * *u_val * *v_val * *w_val;
+                        sum += r * *u_val * *v_val * *w_val;
                     }
                 }
             }
@@ -299,7 +299,7 @@ where
                 let mut sum = <T as From<f64>>::from(0.0);
                 for rho in 0..self.dim {
                     // R_μν = R^ρ_μρν
-                    sum = sum + self.get(rho, mu, rho, nu);
+                    sum += self.get(rho, mu, rho, nu);
                 }
                 ricci[mu * self.dim + nu] = sum;
             }
@@ -316,7 +316,7 @@ where
         for mu in 0..self.dim {
             // Get metric component g^μμ (inverse metric diagonal for Minkowski-like)
             let g_inv = <T as From<f64>>::from(self.metric.sign_of_sq(mu) as f64);
-            scalar = scalar + g_inv * ricci[mu * self.dim + mu];
+            scalar += g_inv * ricci[mu * self.dim + mu];
         }
 
         scalar
@@ -335,7 +335,7 @@ where
                         // For simplicity, use R^d_abc directly
                         // Full implementation would lower indices with metric
                         let r = self.get(d, a, b, c);
-                        k = k + r * r;
+                        k += r * r;
                     }
                 }
             }
@@ -414,7 +414,7 @@ where
                                 for p in 0..dim {
                                     // R^d_mnp from stored format
                                     let r_d_mnp = self.get(d, m, n, p);
-                                    sum = sum + g_inv(a, m) * g_inv(b, n) * g_inv(c, p) * r_d_mnp;
+                                    sum += g_inv(a, m) * g_inv(b, n) * g_inv(c, p) * r_d_mnp;
                                 }
                             }
                         }
@@ -440,7 +440,7 @@ where
                                 zero
                             };
                             let r_e_abc = self.get(e, a, b, c);
-                            sum = sum + g_de * r_e_abc;
+                            sum += g_de * r_e_abc;
                         }
                         r_down[idx4(a, b, c, d)] = sum;
                     }
@@ -451,7 +451,7 @@ where
         // Contract: K = R_abcd × R^abcd
         let mut k = zero;
         for i in 0..total {
-            k = k + r_down[i] * r_up[i];
+            k += r_down[i] * r_up[i];
         }
 
         k

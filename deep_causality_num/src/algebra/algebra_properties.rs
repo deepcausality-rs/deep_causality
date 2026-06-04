@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::Float;
+
 // ## Summary of the "Three Markers"
 //
 // | Type | `Distributive` | `Associative` | `Commutative` | Trait |
@@ -18,8 +20,7 @@
 /// IMPLEMENT THIS for f64, f32, Float, Complex, Quaternion.
 /// DO NOT IMPLEMENT for Octonion.
 pub trait Associative {}
-impl Associative for f32 {}
-impl Associative for f64 {}
+impl<T: Float> Associative for T {}
 impl Associative for i8 {}
 impl Associative for i16 {}
 impl Associative for i32 {}
@@ -38,8 +39,7 @@ impl Associative for usize {}
 /// DO NOT IMPLEMENT for Quaternion, Octonion.
 pub trait Commutative {}
 
-impl Commutative for f32 {}
-impl Commutative for f64 {}
+impl<T: Float> Commutative for T {}
 impl Commutative for i8 {}
 impl Commutative for i16 {}
 impl Commutative for i32 {}
@@ -55,8 +55,7 @@ impl Commutative for usize {}
 
 /// Marker trait: Promises that a * (b + c)  == (a * b) + (a * c).
 pub trait Distributive {}
-impl Distributive for f32 {}
-impl Distributive for f64 {}
+impl<T: Float> Distributive for T {}
 impl Distributive for i8 {}
 impl Distributive for i16 {}
 impl Distributive for i32 {}

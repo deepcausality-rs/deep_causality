@@ -57,6 +57,16 @@ impl Float for Float106 {
     }
 
     #[inline]
+    fn pi() -> Self {
+        Self::PI
+    }
+
+    #[inline]
+    fn e() -> Self {
+        Self::E
+    }
+
+    #[inline]
     fn max_value() -> Self {
         Self {
             hi: f64::MAX,

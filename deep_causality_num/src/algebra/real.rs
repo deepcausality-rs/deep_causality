@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::CommutativeRing;
+use crate::{CommutativeRing, Float};
 use core::cmp::PartialOrd;
 use core::ops::{AddAssign, MulAssign, Neg, SubAssign};
 
@@ -279,449 +279,126 @@ pub trait Real:
     fn epsilon() -> Self; // 1.19e-7 (f32) or 2.22e-16 (f64)
 }
 
-impl Real for f32 {
+// Blanket implementation over all Floats
+
+// Every `Float` is an analytic real scalar. The `Real` surface delegates to the
+// corresponding `Float` operation, so a new float type implements `Float` and gets
+// `Real` — and, via the other blanket impls, the whole algebra tower — for free.
+impl<T: Float> Real for T {
     #[inline]
     fn nan() -> Self {
-        f32::NAN
+        Float::nan()
     }
-
+    #[inline]
     fn is_nan(self) -> bool {
-        f32::is_nan(self)
+        Float::is_nan(self)
     }
-
+    #[inline]
     fn is_infinite(self) -> bool {
-        f32::is_infinite(self)
+        Float::is_infinite(self)
     }
-
+    #[inline]
     fn is_finite(self) -> bool {
-        f32::is_finite(self)
+        Float::is_finite(self)
     }
-
     #[inline]
     fn clamp(self, min: Self, max: Self) -> Self {
-        f32::clamp(self, min, max)
+        Float::clamp(self, min, max)
     }
-
     #[inline]
     fn sqrt(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.sqrt();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::sqrtf(self);
+        Float::sqrt(self)
     }
-
     #[inline]
     fn abs(self) -> Self {
-        self.abs()
+        Float::abs(self)
     }
-
     #[inline]
     fn floor(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.floor();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::floorf(self);
+        Float::floor(self)
     }
-
     #[inline]
     fn ceil(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.ceil();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::ceilf(self);
+        Float::ceil(self)
     }
-
     #[inline]
     fn round(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.round();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::roundf(self);
+        Float::round(self)
     }
-
     #[inline]
     fn exp(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.exp();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::expf(self);
+        Float::exp(self)
     }
-
     #[inline]
     fn ln(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.ln();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::logf(self);
+        Float::ln(self)
     }
-
     #[inline]
     fn log(self, base: Self) -> Self {
-        #[cfg(feature = "std")]
-        return self.log(base);
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::logf(self) / libm::logf(base);
+        Float::log(self, base)
     }
-
     #[inline]
     fn log2(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.log2();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::log2f(self);
+        Float::log2(self)
     }
-
     #[inline]
     fn log10(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.log10();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::log10f(self);
+        Float::log10(self)
     }
-
     #[inline]
     fn powf(self, n: Self) -> Self {
-        #[cfg(feature = "std")]
-        return self.powf(n);
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::powf(self, n);
+        Float::powf(self, n)
     }
-
     #[inline]
     fn sin(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.sin();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::sinf(self);
+        Float::sin(self)
     }
-
     #[inline]
     fn asin(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.asin();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::asinf(self);
+        Float::asin(self)
     }
-
     #[inline]
     fn cos(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.cos();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::cosf(self);
+        Float::cos(self)
     }
-
     #[inline]
     fn acos(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.acos();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::acosf(self);
+        Float::acos(self)
     }
-
     #[inline]
     fn tan(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.tan();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::tanf(self);
+        Float::tan(self)
     }
-
     #[inline]
     fn sinh(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.sinh();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::sinhf(self);
+        Float::sinh(self)
     }
-
     #[inline]
     fn cosh(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.cosh();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::coshf(self);
+        Float::cosh(self)
     }
-
     #[inline]
     fn tanh(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.tanh();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::tanhf(self);
+        Float::tanh(self)
     }
-
     #[inline]
     fn atan(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.atan();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::atanf(self);
+        Float::atan(self)
     }
-
     #[inline]
     fn atan2(self, other: Self) -> Self {
-        #[cfg(feature = "std")]
-        return self.atan2(other);
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::atan2f(self, other);
+        Float::atan2(self, other)
     }
-
     #[inline]
     fn pi() -> Self {
-        core::f32::consts::PI
+        Float::pi()
     }
-
     #[inline]
     fn e() -> Self {
-        core::f32::consts::E
+        Float::e()
     }
     #[inline]
     fn epsilon() -> Self {
-        f32::EPSILON
-    }
-}
-
-impl Real for f64 {
-    #[inline]
-    fn nan() -> Self {
-        f64::NAN
-    }
-
-    fn is_nan(self) -> bool {
-        f64::is_nan(self)
-    }
-
-    fn is_infinite(self) -> bool {
-        f64::is_infinite(self)
-    }
-
-    fn is_finite(self) -> bool {
-        f64::is_finite(self)
-    }
-
-    #[inline]
-    fn clamp(self, min: Self, max: Self) -> Self {
-        f64::clamp(self, min, max)
-    }
-
-    #[inline]
-    fn sqrt(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.sqrt();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::sqrt(self);
-    }
-
-    #[inline]
-    fn abs(self) -> Self {
-        self.abs()
-    }
-
-    #[inline]
-    fn floor(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.floor();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::floor(self);
-    }
-
-    #[inline]
-    fn ceil(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.ceil();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::ceil(self);
-    }
-
-    #[inline]
-    fn round(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.round();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::round(self);
-    }
-
-    #[inline]
-    fn exp(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.exp();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::exp(self);
-    }
-
-    #[inline]
-    fn ln(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.ln();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::log(self);
-    }
-
-    #[inline]
-    fn log(self, base: Self) -> Self {
-        #[cfg(feature = "std")]
-        return self.log(base);
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::log(self) / libm::log(base);
-    }
-
-    #[inline]
-    fn log2(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.log2();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::log2(self);
-    }
-
-    #[inline]
-    fn log10(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.log10();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::log10(self);
-    }
-
-    #[inline]
-    fn powf(self, n: Self) -> Self {
-        #[cfg(feature = "std")]
-        return self.powf(n);
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::pow(self, n);
-    }
-
-    #[inline]
-    fn sin(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.sin();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::sin(self);
-    }
-
-    #[inline]
-    fn asin(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.asin();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::asin(self);
-    }
-
-    #[inline]
-    fn cos(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.cos();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::cos(self);
-    }
-
-    #[inline]
-    fn acos(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.acos();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::acos(self);
-    }
-
-    #[inline]
-    fn tan(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.tan();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::tan(self);
-    }
-
-    #[inline]
-    fn sinh(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.sinh();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::sinh(self);
-    }
-
-    #[inline]
-    fn cosh(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.cosh();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::cosh(self);
-    }
-
-    #[inline]
-    fn tanh(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.tanh();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::tanh(self);
-    }
-
-    #[inline]
-    fn atan(self) -> Self {
-        #[cfg(feature = "std")]
-        return self.atan();
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::atan(self);
-    }
-
-    #[inline]
-    fn atan2(self, other: Self) -> Self {
-        #[cfg(feature = "std")]
-        return self.atan2(other);
-
-        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-        return libm::atan2(self, other);
-    }
-
-    #[inline]
-    fn pi() -> Self {
-        core::f64::consts::PI
-    }
-
-    #[inline]
-    fn e() -> Self {
-        core::f64::consts::E
-    }
-
-    #[inline]
-    fn epsilon() -> Self {
-        f64::EPSILON
+        Float::epsilon()
     }
 }

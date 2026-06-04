@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{AbelianGroup, Field, Real};
+use crate::{AbelianGroup, Field, Float, Real};
 
 /// An ordered `Field` that is also an analytic real scalar.
 ///
@@ -19,10 +19,9 @@ use crate::{AbelianGroup, Field, Real};
 /// This trait abstracts over concrete floating-point types like `f32` and `f64`.
 pub trait RealField: Real + Field {}
 
-impl AbelianGroup for f32 {}
-impl AbelianGroup for f64 {}
+// Every `Float` is an Abelian group under addition and a `RealField`. The rest of the
+// tower (`Ring`, `CommutativeRing`, `Field`, …) is derived automatically from these
+// plus the marker blankets, so a new float type needs only `impl Float`.
+impl<T> AbelianGroup for T where T: Float {}
 
-// CommutativeRing is derived automatically
-impl RealField for f32 {}
-
-impl RealField for f64 {}
+impl<T> RealField for T where T: Float {}

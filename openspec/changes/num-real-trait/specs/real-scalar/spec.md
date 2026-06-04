@@ -32,3 +32,22 @@
 
 - **WHEN** a type implements `Real` but not `Field` (it lacks a total inverse)
 - **THEN** it is accepted by `Real` bounds and rejected by `RealField` bounds at compile time
+
+### Requirement: A Float type inherits the algebra tower through blanket impls
+
+The crate SHALL provide the real-scalar algebra for floating-point types via **blanket implementations over the `Float` trait**, not per-type implementations. `Float` SHALL declare the constants `pi()` and `e()` and SHALL require the in-place arithmetic operators (`AddAssign`, `SubAssign`, `MulAssign`, `DivAssign`) in addition to the by-value ones. The crate SHALL provide `impl<T: Float>` for the markers (`Associative`, `Commutative`, `Distributive`), `AbelianGroup`, `DivisionAlgebra<T>`, `Real` (delegating each method to the corresponding `Float` operation), and `RealField`; the intermediate traits (`Ring`, `CommutativeRing`, `Field`, etc.) SHALL remain blanket-derived. Consequently, a type that implements `Float` SHALL automatically satisfy `Real`, `RealField`, `DivisionAlgebra`, and the full derived tower **without any per-type algebra implementation**. Only `Zero`, `One`, and `Num` (which sit below `Float`) SHALL be implemented per float type. These blankets SHALL NOT conflict with the existing non-`Float` impls for `Complex`, `Quaternion`, `Octonion`, or the integer types (guaranteed because `Float` is a crate-local trait).
+
+#### Scenario: f32, f64, and Float106 are real scalars via the Float blankets
+
+- **WHEN** `f32`, `f64`, or `Float106` is used where `Real`/`RealField`/`DivisionAlgebra` is required
+- **THEN** it satisfies the bound through the `impl<T: Float>` blankets, with no per-type `Real`/`RealField`/marker/`AbelianGroup`/`DivisionAlgebra` implementation present, and produces results identical to the prior per-type implementations
+
+#### Scenario: A new float type needs only `impl Float`
+
+- **WHEN** a new floating-point type implements `Float` (and the below-`Float` traits `Zero`/`One`/`Num`)
+- **THEN** it automatically gains `Real`, `RealField`, `DivisionAlgebra`, and the derived algebra tower with no further edits to the algebra trait files
+
+#### Scenario: The Float blankets do not collide with hypercomplex or integer types
+
+- **WHEN** the `impl<T: Float>` blankets coexist with the explicit impls for `Complex`/`Quaternion`/`Octonion` and the integer types
+- **THEN** the crate compiles with no conflicting-implementation (coherence) error, because none of those types implements the crate-local `Float` trait

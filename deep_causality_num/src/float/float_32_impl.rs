@@ -54,20 +54,25 @@ impl Float for f32 {
         f32::EPSILON
     }
     #[inline]
+    fn pi() -> Self {
+        core::f32::consts::PI
+    }
+    #[inline]
+    fn e() -> Self {
+        core::f32::consts::E
+    }
+    #[inline]
     fn max_value() -> Self {
         f32::MAX
     }
-
     #[inline]
     fn is_nan(self) -> bool {
         f32::is_nan(self)
     }
-
     #[inline]
     fn is_infinite(self) -> bool {
         f32::is_infinite(self)
     }
-
     #[inline]
     fn is_finite(self) -> bool {
         f32::is_finite(self)
@@ -84,7 +89,6 @@ impl Float for f32 {
     fn classify(self) -> FpCategory {
         f32::classify(self)
     }
-
     #[inline]
     fn floor(self) -> Self {
         #[cfg(feature = "std")]

@@ -21,4 +21,6 @@ impl<T> AddMagma for T where T: Add<Output = Self> + AddAssign + Clone + Partial
 // A Magma is just a set with multiplication (No laws guaranteed).
 // Octonions live here.
 pub trait MulMagma: Mul<Output = Self> + Clone {}
+
+// Blanket implementation
 impl<T> MulMagma for T where T: Mul<Output = Self> + Clone {}

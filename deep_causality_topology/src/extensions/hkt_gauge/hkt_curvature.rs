@@ -262,11 +262,11 @@ where
                     for b in 0..dim {
                         // tensor.get() returns T
                         let val = tensor.get(c, a, b, d);
-                        amplitude = amplitude + (val * in_1.data[a] * in_2.data[b]);
+                        amplitude += val * in_1.data[a] * in_2.data[b];
                     }
                 }
-                *out1_val = *out1_val + (amplitude * point_five);
-                *out2_val = *out2_val + (amplitude * point_five);
+                *out1_val += amplitude * point_five;
+                *out2_val += amplitude * point_five;
             }
         }
 

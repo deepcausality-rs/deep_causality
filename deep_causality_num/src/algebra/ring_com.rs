@@ -28,4 +28,5 @@ use crate::{Commutative, Ring};
 /// ring being commutative.
 pub trait CommutativeRing: Ring + Commutative {}
 
+// Blanket implementation
 impl<T> CommutativeRing for T where T: Ring + Commutative {}

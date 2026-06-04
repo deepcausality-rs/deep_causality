@@ -82,6 +82,21 @@ For `f32`, `f64`, `Float106`: the bodies of the analytic methods move from `impl
 
 `Dual<T>` must bind on `Real` (its component needs analytic ops, not a field) and `impl Real for Dual` (so duals are first-class real scalars: nestable as `Dual<Dual<f64>>` for second derivatives, and droppable into `Real`-generic code). Both require `Real` to exist first. Keeping the trait split as its own change makes it reviewable as the `num` algebra-tower refactor it is, independent of the AD type that motivates it.
 
+### D5 — Float-blanket cascade: `impl Float` ⇒ the whole algebra tower
+
+Motivation: Rust is gaining `f16`/`f128`. As built, a new float type would need explicit impls of the markers, `AbelianGroup`, `DivisionAlgebra`, `Real`, `RealField`, etc. scattered across the algebra files. Instead, consolidate them into **blanket impls over `Float`**:
+
+- Add `pi()`/`e()` to `Float`, and strengthen `Float`'s supertraits with `AddAssign + SubAssign + MulAssign + DivAssign` (a real float always has `+=`/`/=`). This makes `T: Float` a strong enough bound for the algebra blankets to derive.
+- `impl<T: Float> Associative/Commutative/Distributive for T {}` (markers), `impl<T: Float> AbelianGroup for T {}`, `impl<T: Float> DivisionAlgebra<T> for T { … }`, `impl<T: Float> Real for T { /* delegate to Float */ }`, `impl<T: Float> RealField for T {}`.
+- Everything between (`Ring`, `CommutativeRing`, `AssociativeRing`, `Field`, `MulMonoid`, `InvMonoid`, `AddMonoid`, `AddGroup`, `MulMagma`, …) is **already blanket-derived**, so `T: Float` ⇒ `Field` ⇒ `RealField` flows automatically.
+- Delete the explicit `f32`/`f64`/`Float106` algebra impls; keep only `Zero`/`One`/`Num` per-type (they sit *below* `Float`).
+
+**Why coherence is safe (verified, not assumed).** A blanket `impl<T: Float> Trait for T` could in principle conflict with the explicit impls for `Complex`/`Quaternion`/`Octonion`/`Dual` and the integers. It does not, because `Float` is a **local** trait: the orphan rule forbids any crate from implementing `Float` for those types, so the compiler proves the blanket and the per-type impls never overlap. Confirmed two ways: (1) a standalone `rustc` probe replicating the structure (blanket over a local marker + impls for local generic structs that don't implement it) compiles with no `E0119`; (2) the full `cargo build --workspace --all-targets` is clean.
+
+**Trade-off surfaced.** Strengthening `Float` with the assign operators makes `+=`/`/=` available wherever a `Float`/`RealField` bound is in play, which let clippy flag 21 pre-existing `x = x + y` patterns in topology/physics as `assign_op_pattern`. These were applied (`x += y`, behavior-identical), not suppressed.
+
+*Alternative considered:* a `macro_rules!` stamping the per-type impls. Rejected — blanket impls are the idiomatic tool and the crate policy avoids macros in `src/`.
+
 ## Risks / Trade-offs
 
 - **[Method-syntax callers need `Real` in scope — the real consumer cost.]** The "no consumer changes" goal holds for **generic** `T: RealField` code (supertrait methods remain callable through the bound) and for the two qualified `RealField::exp(...)` call sites (retargeted to `Real::exp`). But code that calls an analytic method via **method syntax on a concrete or type-inferred float** — e.g. `(a - b).abs()` in a test, `Float106::pi()` in an example — resolves the method through whatever trait is *in scope*; with the method now on `Real`, those sites need `use …Real`. This surfaced at apply time as ~18 mechanical `use` additions (mostly inline `#[cfg(test)]` modules and the 5 `mathematics_examples`/`physics_examples` binaries), plus one `multivector` projected-type `.sqrt()`. → Mitigation: it is a pure import addition, no behavior change; the full `cargo build --workspace --all-targets` enumerates every site, and the suite stays green. The proposal's "behavior-preserving" claim is accurate at the semantic level; this records the mechanical scope honestly.

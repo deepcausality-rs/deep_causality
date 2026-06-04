@@ -284,7 +284,7 @@ impl StokesAdjunction {
                     let sign_t = if sign > 0 { T::one() } else { -T::one() };
                     // Float usually implies Add, Mul. Summing requires explicit Add.
                     // But Float implies Num implies Add.
-                    sum = sum + (coeffs[col] * sign_t);
+                    sum += coeffs[col] * sign_t;
                 }
             }
             result_coeffs.push(sum);
@@ -353,7 +353,7 @@ impl StokesAdjunction {
 
                 if let Some(val) = chain_map.get(&col) {
                     let sign_t = if sign > 0 { T::one() } else { -T::one() };
-                    sum = sum + (*val * sign_t);
+                    sum += *val * sign_t;
                 }
             }
 
@@ -387,7 +387,7 @@ impl StokesAdjunction {
 
         for (idx, &col) in col_indices.iter().enumerate() {
             if col < coeffs.len() {
-                result = result + (values[idx] * coeffs[col]);
+                result += values[idx] * coeffs[col];
             }
         }
 

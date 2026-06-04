@@ -20,3 +20,13 @@
 - [x] 4.1 `cargo test -p deep_causality_num` — 4241 integration + 177 lib/doctests pass, 0 failed.
 - [x] 4.2 `cargo build --workspace --all-targets` — 0 errors. Every `T: RealField`-generic consumer compiles unchanged. **Consumer note (revealed during apply):** code that calls the analytic methods via **method syntax on a concrete/inferred float** (not via a `T: RealField` bound) needs `Real` in scope, since the methods moved to the supertrait. This is a mechanical `use …Real` addition — applied to ~18 sites (mostly tests + 5 examples; src: the two `RealField::exp(...)` qualified calls in topology metropolis, plus a `multivector` projected-type `.sqrt()`). No behavior changed. `cargo test --workspace` passes (0 failed).
 - [x] 4.3 `cargo fmt --all` clean; `cargo clippy --workspace --all-targets` — 0 warnings, 0 errors, no `#[allow(...)]`. Commit message prepared; not committed (owner commits).
+
+## 5. Float-blanket cascade (`impl Float` ⇒ whole tower)
+
+- [x] 5.1 Add `pi()` / `e()` to the `Float` trait and impl them for `f32`, `f64`, `Float106`.
+- [x] 5.2 Strengthen `Float`'s supertraits with `AddAssign + SubAssign + MulAssign + DivAssign` so `T: Float` symbolically reaches `Field`/`Real`.
+- [x] 5.3 Replace per-type marker impls with `impl<T: Float> Associative/Commutative/Distributive for T {}` (keep the integer impls); remove the `f32`/`f64`/`Float106` marker impls.
+- [x] 5.4 `impl<T: Float> AbelianGroup for T {}` and `impl<T: Float> RealField for T {}` (field_real.rs); remove the explicit `f32`/`f64` impls.
+- [x] 5.5 `impl<T: Float> DivisionAlgebra<T> for T { conjugate = self, norm_sqr = self*self, inverse = Float::recip(self) }` (algebra_div.rs); remove explicit `f32`/`f64`.
+- [x] 5.6 Replace the two per-type `impl Real for f32/f64` with one `impl<T: Float> Real for T` delegating to `Float`; remove `Float106`'s explicit `Real`/`RealField`/marker/`AbelianGroup`/`DivisionAlgebra` impls (keep `Zero`/`One`/`Num`).
+- [x] 5.7 Verify: `rustc` coherence probe (blanket + non-`Float` impls coexist, no `E0119`); `cargo build --workspace --all-targets` 0 errors; full `cargo test --workspace` 0 failures; `cargo clippy` 0 (applied 21 surfaced `assign_op_pattern` `+=` fixes in topology/physics, not suppressed); `cargo fmt` clean.

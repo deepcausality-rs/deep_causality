@@ -53,20 +53,25 @@ impl Float for f64 {
         f64::EPSILON
     }
     #[inline]
+    fn pi() -> Self {
+        core::f64::consts::PI
+    }
+    #[inline]
+    fn e() -> Self {
+        core::f64::consts::E
+    }
+    #[inline]
     fn max_value() -> Self {
         f64::MAX
     }
-
     #[inline]
     fn is_nan(self) -> bool {
         f64::is_nan(self)
     }
-
     #[inline]
     fn is_infinite(self) -> bool {
         f64::is_infinite(self)
     }
-
     #[inline]
     fn is_finite(self) -> bool {
         f64::is_finite(self)
@@ -83,7 +88,6 @@ impl Float for f64 {
     fn classify(self) -> FpCategory {
         f64::classify(self)
     }
-
     #[inline]
     fn floor(self) -> Self {
         #[cfg(feature = "std")]

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Algebra, Field};
+use crate::{Algebra, Field, Float};
 
 /// Represents a **Division Algebra** over a `Field`.
 ///
@@ -64,46 +64,27 @@ pub trait DivisionAlgebra<R: Field>: Algebra<R> {
     fn inverse(&self) -> Self;
 }
 
-/// Implements `DivisionAlgebra` for `f32`, where the base field is `f32` itself.
-impl DivisionAlgebra<f32> for f32 {
-    /// The conjugate of a real number is itself.
+// Blanket implementation
+
+/// Every `Float` is a division algebra over itself: the conjugate of a real number is
+/// itself, the squared norm of `x` is `x*x`, and the inverse is `1/x` (`inf` at zero).
+/// A new float type inherits this through `impl Float` — no per-type impl needed.
+impl<T> DivisionAlgebra<T> for T
+where
+    T: Float,
+{
     #[inline]
     fn conjugate(&self) -> Self {
         *self
     }
 
-    /// The squared norm of a real number `x` is `x*x`.
     #[inline]
-    fn norm_sqr(&self) -> f32 {
+    fn norm_sqr(&self) -> T {
         *self * *self
     }
 
-    /// The inverse of a real number `x` is `1/x`.
-    /// Returns `inf` if `x` is `0.0`.
     #[inline]
     fn inverse(&self) -> Self {
-        1.0 / *self
-    }
-}
-
-/// Implements `DivisionAlgebra` for `f64`, where the base field is `f64` itself.
-impl DivisionAlgebra<f64> for f64 {
-    /// The conjugate of a real number is itself.
-    #[inline]
-    fn conjugate(&self) -> Self {
-        *self
-    }
-
-    /// The squared norm of a real number `x` is `x*x`.
-    #[inline]
-    fn norm_sqr(&self) -> f64 {
-        *self * *self
-    }
-
-    /// The inverse of a real number `x` is `1/x`.
-    /// Returns `inf` if `x` is `0.0`.
-    #[inline]
-    fn inverse(&self) -> Self {
-        1.0 / *self
+        Float::recip(*self)
     }
 }
