@@ -1,0 +1,31 @@
+openspec/changes/causal-arrow-calculus/specs/forward-autodiff/spec.md
+  s_52e6d9817e5bf8::t_bb499d58f76157 1-9
+openspec/changes/causal-arrow-calculus/proposal.md
+  s_52e6d9817e5bf8::t_a55b485bc4b696 1-38
+openspec/notes/arrow/roadmap.md
+  s_52e6d9817e5bf8::t_80addb68e7be5a 119-153,156-163
+openspec/changes/causal-arrow-calculus/.openspec.yaml
+  s_52e6d9817e5bf8::t_26b0bc3776298c 1-2
+openspec/changes/causal-arrow-calculus/specs/arrow-calculus/spec.md
+  s_52e6d9817e5bf8::t_5f106ee9586fd4 1-76
+openspec/changes/causal-arrow-calculus/design.md
+  s_52e6d9817e5bf8::t_5667065423517b 1-114
+openspec/changes/causal-arrow-calculus/tasks.md
+  s_52e6d9817e5bf8::t_90fdb90fadebef 1-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "d07913e9c62ecbc7426eb436b106d3e694fcd929",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
