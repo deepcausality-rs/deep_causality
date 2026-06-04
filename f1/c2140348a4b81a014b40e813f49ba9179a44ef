@@ -1,0 +1,49 @@
+openspec/notes/arrow/roadmap.md
+  s_52e6d9817e5bf8::t_8ebd2629f45cdf 115-150
+openspec/changes/causal-arrow-autodiff/design.md
+  s_52e6d9817e5bf8::t_0bd62e5a93fd27 1-74
+openspec/changes/causal-arrow-autodiff/proposal.md
+  s_52e6d9817e5bf8::t_1a4f09f9431597 1-41
+openspec/changes/causal-arrow-autointegration/proposal.md
+  s_52e6d9817e5bf8::t_10498bcd19b7ee 1-35
+openspec/changes/causal-arrow-application/proposal.md
+  s_52e6d9817e5bf8::t_1b63b7823707d1 1-37
+openspec/changes/causal-arrow-application/tasks.md
+  s_52e6d9817e5bf8::t_43e9ed59722132 1-43
+openspec/changes/causal-arrow-autointegration/.openspec.yaml
+  s_52e6d9817e5bf8::t_89618cbd02d87a 1-2
+openspec/changes/causal-arrow-autointegration/tasks.md
+  s_52e6d9817e5bf8::t_d402c9fd078f5d 1-24
+openspec/changes/causal-arrow-application/.openspec.yaml
+  s_52e6d9817e5bf8::t_89618cbd02d87a 1-2
+openspec/changes/causal-arrow-autodiff/tasks.md
+  s_52e6d9817e5bf8::t_5173b45113fc46 1-27
+openspec/changes/causal-arrow-autointegration/design.md
+  s_52e6d9817e5bf8::t_f97b2428e6cd70 1-72
+openspec/changes/causal-arrow-application/specs/autodiff-integration-examples/spec.md
+  s_52e6d9817e5bf8::t_29952fd2a153e4 1-62
+openspec/changes/causal-arrow-autointegration/specs/numeric-integration/spec.md
+  s_52e6d9817e5bf8::t_fe17e5e8c81b7c 1-48
+openspec/changes/causal-arrow-autodiff/.openspec.yaml
+  s_52e6d9817e5bf8::t_89618cbd02d87a 1-2
+openspec/changes/causal-arrow-autodiff/specs/forward-autodiff/spec.md
+  s_52e6d9817e5bf8::t_48646cc497e88d 1-58
+openspec/changes/causal-arrow-application/design.md
+  s_52e6d9817e5bf8::t_ead8717d9cc6a7 1-69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "f1c2140348a4b81a014b40e813f49ba9179a44ef",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
