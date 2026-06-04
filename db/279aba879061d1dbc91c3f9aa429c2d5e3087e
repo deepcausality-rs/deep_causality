@@ -1,0 +1,136 @@
+openspec/changes/causal-arrow-calculus/design.md
+  s_52e6d9817e5bf8::t_ca497e88b2b3d9 118
+  s_52e6d9817e5bf8::t_b30dc75b6531c6 16
+  s_52e6d9817e5bf8::t_313bddb9d82180 113
+  s_52e6d9817e5bf8::t_b05034ad91639a 79,81-85
+deep_causality_calculus/tests/BUILD.bazel
+  s_52e6d9817e5bf8::t_1313eb9dda77f1 1-55
+openspec/changes/causal-arrow-calculus/specs/arrow-calculus/spec.md
+  s_52e6d9817e5bf8::t_a7239d74c7ad06 5
+  s_52e6d9817e5bf8::t_7d1a7c5e4d5bf4 47
+  s_52e6d9817e5bf8::t_8a6ec179496937 66
+deep_causality_calculus/tests/types/euler_tests.rs
+  s_52e6d9817e5bf8::t_6c64047f04a1c6 1-34
+Cargo.toml
+  s_52e6d9817e5bf8::t_236e5ca3a70da0 10
+deep_causality_calculus/tests/extensions/differentiate_ext_tests.rs
+  s_52e6d9817e5bf8::t_022b753f2b0c68 202-205
+  s_52e6d9817e5bf8::t_2ac245c117c80f 1-201,206-208
+openspec/changes/causal-arrow-calculus/proposal.md
+  s_52e6d9817e5bf8::t_ae723d40c9aa94 27
+  s_52e6d9817e5bf8::t_9b010bbbeac68f 13-15
+  s_52e6d9817e5bf8::t_654a251246b3a5 9
+  s_52e6d9817e5bf8::t_79b6004ec4b93d 36
+deep_causality_calculus/Cargo.toml
+  s_52e6d9817e5bf8::t_e05401849d9607 1-44
+deep_causality_calculus/tests/mod.rs
+  s_52e6d9817e5bf8::t_44bc918a1afaf6 1-5
+  s_52e6d9817e5bf8::t_24e2ad6dee3936 6-8
+deep_causality_calculus/src/extensions/differentiate_ext.rs
+  s_52e6d9817e5bf8::t_33f96f817f951a 1-66
+deep_causality_num/src/lib.rs
+  s_52e6d9817e5bf8::t_08f6f6de798913 66-67
+openspec/notes/arrow/roadmap.md
+  s_52e6d9817e5bf8::t_ee22f8dbc695c1 120-124,126
+deep_causality_num/BUILD.bazel
+  s_12dfe5b1b43b1d::t_b0c49c05c111e3 25-28,36-39
+deep_causality_calculus/tests/ops/quadrature_tests.rs
+  s_52e6d9817e5bf8::t_de9c9ac9c02651 1-49
+deep_causality_num/src/dual/dual_number/mod.rs
+  s_52e6d9817e5bf8::t_b85853c397264b 12
+deep_causality_num/tests/dual/dual_number/from_primitive_tests.rs
+  s_52e6d9817e5bf8::t_d47178d24c9ae2 35-38
+  s_52e6d9817e5bf8::t_78ad97c06a9472 1-34,39-49
+deep_causality_calculus/src/types/rk4.rs
+  s_52e6d9817e5bf8::t_4f6cd2d0069117 1-61
+build/scripts/check.sh
+  s_52e6d9817e5bf8::t_55f391183ffaab 20
+deep_causality_calculus/tests/types/mod.rs
+  s_52e6d9817e5bf8::t_a6f433fab32192 1-8
+deep_causality_calculus/tests/extensions/endo_arrow_ext_tests.rs
+  s_52e6d9817e5bf8::t_d385510dc2fecc 1-50
+deep_causality_calculus/src/traits/scalar.rs
+  s_52e6d9817e5bf8::t_e5cad474c8843b 1-27
+openspec/changes/causal-arrow-application/specs/autodiff-integration-examples/spec.md
+  s_52e6d9817e5bf8::t_81ef69fd1935a0 24
+  s_52e6d9817e5bf8::t_2a5aac2e8d33ae 47
+  s_52e6d9817e5bf8::t_06dee3125b3016 5
+  s_52e6d9817e5bf8::t_ba657f4047e1cc 3
+deep_causality_calculus/src/types/mod.rs
+  s_52e6d9817e5bf8::t_dd30548a4f13a8 1-8
+deep_causality_calculus/tests/types/diff_tests.rs
+  s_52e6d9817e5bf8::t_cfe42cf3e138cf 1-45
+build/scripts/format.sh
+  s_52e6d9817e5bf8::t_f614ae40049ff5 15
+deep_causality_num/src/dual/dual_number/from_primitive.rs
+  s_52e6d9817e5bf8::t_1a48d498842122 1-73
+deep_causality_calculus/src/types/euler.rs
+  s_52e6d9817e5bf8::t_f3d747f778daad 1-49
+deep_causality_physics/tests/BUILD.bazel
+  s_12dfe5b1b43b1d::t_740899ffd58aac 48
+deep_causality_calculus/src/types/diff.rs
+  s_52e6d9817e5bf8::t_11ff5486ae7bf6 1-40
+openspec/changes/causal-arrow-application/tasks.md
+  s_52e6d9817e5bf8::t_874a2955ca1a5c 3
+deep_causality_calculus/src/traits/mod.rs
+  s_52e6d9817e5bf8::t_b0135bb23b8f21 1-7
+deep_causality_calculus/src/extensions/endo_arrow_ext.rs
+  s_52e6d9817e5bf8::t_7a9826ebb673f0 1-69
+deep_causality_calculus/src/ops/mod.rs
+  s_52e6d9817e5bf8::t_d0bde4900b03c5 5
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_boss_score.rs
+  s_12dfe5b1b43b1d::t_fd2ef76d274623 139
+deep_causality_calculus/tests/types/rk4_tests.rs
+  s_52e6d9817e5bf8::t_74ad06806c98fd 1-38,42-47
+  s_52e6d9817e5bf8::t_022b753f2b0c68 39-41
+deep_causality_num/tests/dual/dual_number/mod.rs
+  s_52e6d9817e5bf8::t_022b753f2b0c68 10
+deep_causality_calculus/src/lib.rs
+  s_52e6d9817e5bf8::t_d0bde4900b03c5 34
+  s_52e6d9817e5bf8::t_d32b619570a4a1 19-20,22,25-26,33,35-52
+  s_52e6d9817e5bf8::t_dc829c37ea667d 1-18,21,23-24,27-32
+openspec/changes/causal-arrow-application/design.md
+  s_52e6d9817e5bf8::t_54b6c9f5a11b32 10
+deep_causality_calculus/tests/extensions/mod.rs
+  s_52e6d9817e5bf8::t_f62b8b9b5bc8d9 1-7
+deep_causality_calculus/tests/ops/mod.rs
+  s_52e6d9817e5bf8::t_95673b2678aee8 1-6
+deep_causality_calculus/src/extensions/mod.rs
+  s_52e6d9817e5bf8::t_815c1323524df0 1-7
+deep_causality_calculus/src/traits/differentiable_arrow.rs
+  s_52e6d9817e5bf8::t_d261e58908f051 1-29
+openspec/changes/causal-arrow-calculus/tasks.md
+  s_52e6d9817e5bf8::t_8ed3a3be342c4c 3-6,8,10-14,18-21,23,25-26,32-33
+  s_52e6d9817e5bf8::t_730cafdf6fadfa 34
+  s_52e6d9817e5bf8::t_d3db57a9ad834a 27-28
+openspec/changes/causal-arrow-application/proposal.md
+  s_52e6d9817e5bf8::t_46c571afd891ee 9-14,16
+  s_52e6d9817e5bf8::t_193b87ff6cb07a 33
+  s_52e6d9817e5bf8::t_cbe172a4a8700e 18
+  s_52e6d9817e5bf8::t_e1c526095042a2 29
+  s_52e6d9817e5bf8::t_381a68c90e495f 25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "db279aba879061d1dbc91c3f9aa429c2d5e3087e",
+  "prompts": {},
+  "sessions": {
+    "s_12dfe5b1b43b1d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9e0928dd-342c-4efc-ad15-dc045daa98b6",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
