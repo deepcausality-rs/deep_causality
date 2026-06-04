@@ -23,8 +23,9 @@
 
 use core::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 use deep_causality_num::iso::test_support::assert_ring_iso_from_laws;
-use deep_causality_num::iso::{GroupIso, RingIso};
-use deep_causality_num::{AbelianGroup, Associative, Commutative, Distributive, One, Zero};
+use deep_causality_num::{
+    AbelianGroup, Associative, Commutative, Distributive, GroupIso, One, RingIso, Zero,
+};
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 struct IdRingWrap(i32);

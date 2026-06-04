@@ -2,11 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::{
     AbelianGroup, Associative, Commutative, Complex, ComplexField, Distributive, DivisionAlgebra,
     RealField,
 };
-
 // | Type | `Distributive` | `Associative` | `Commutative` | Trait |
 // | :--- | :---: | :---: | :---: | :--- |
 // | **Complex** | ✅ | ✅ | ✅ | `Field`  `ComplexField` |
