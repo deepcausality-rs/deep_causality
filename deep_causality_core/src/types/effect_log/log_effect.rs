@@ -28,9 +28,29 @@ use alloc::vec::Vec;
 /// *   **Explainability**: Tracing back *why* a certain result was reached.
 /// *   **Auditability**: Providing a tamper-evident record of decisions suitable for compliance.
 /// *   **Debugging**: Understanding the flow of complex graphs.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Eq)]
 pub struct EffectLog {
     entries: Vec<LogEntry>,
+}
+
+/// Value equality of an `EffectLog` is its **message sequence**, ignoring entry timestamps.
+///
+/// Each entry is timestamped with `SystemTime::now()` at [`add_entry`](LogAddEntry::add_entry)
+/// time (or `0` under `no_std`). Those timestamps are wall-clock *metadata*: two logically
+/// identical logs built microseconds apart would otherwise never compare equal, which makes the
+/// derived structural `==` non-deterministic and breaks value comparison of any
+/// `CausalEffectPropagationProcess` carrying a non-empty log. Comparing by message content and
+/// order keeps `==` a meaningful, reproducible equivalence. When the timestamps themselves are
+/// the subject of comparison, use [`eq_with_timestamps`](Self::eq_with_timestamps).
+impl PartialEq for EffectLog {
+    fn eq(&self, other: &Self) -> bool {
+        self.entries.len() == other.entries.len()
+            && self
+                .entries
+                .iter()
+                .zip(other.entries.iter())
+                .all(|(a, b)| a.message() == b.message())
+    }
 }
 
 impl EffectLog {
@@ -44,6 +64,16 @@ impl EffectLog {
         Self {
             entries: Vec::with_capacity(capacity),
         }
+    }
+
+    /// Strict equality that also requires entry **timestamps** to match.
+    ///
+    /// The counterpart to the timestamp-agnostic [`PartialEq`] impl: returns `true` only when the
+    /// two logs have the same messages *and* the same timestamps, in the same order. Use this when
+    /// the temporal record is the subject of the comparison (e.g. auditing that two runs produced
+    /// identically-timed entries); use `==` for ordinary value equality.
+    pub fn eq_with_timestamps(&self, other: &Self) -> bool {
+        self.entries == other.entries
     }
 }
 
