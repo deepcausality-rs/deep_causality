@@ -112,10 +112,15 @@ without smuggling it into `M`'s type in a law-breaking way.
 2. **Resist the everything-bagel.** "Discovery + inference + action + governance are
    one thing" is one sentence from sounding like a theory-of-everything. The only
    defense is **precision + mechanization**: not "all is one," but "four named
-   arrows, explicit typed signatures, the composite type-checks, and the laws are
-   *enforced by the Rust type system*." Every claim is a checkable signature, never
-   a metaphor. That is the line, and the mechanized artifact keeps you on the right
-   side of it.
+   arrows, explicit typed signatures, the composite type-checks, the type system
+   *enforces the signatures and wiring and propagates the algebraic-law claims via
+   marker traits* (e.g. `Associative`), and *the laws themselves are property-tested*."
+   (Rust — like Haskell — cannot type-encode the monad/arrow *equations*; that needs
+   dependent types. Claiming the laws are "enforced by the type system" is false and a
+   CT-literate reviewer will catch it; the marker-plus-property-test framing is honest
+   and strictly stronger than a bare typeclass. See `arrow-assumption.md` §2/A4.)
+   Every claim is a checkable signature, never a metaphor. That is the line, and the
+   mechanized artifact keeps you on the right side of it.
 
 ## 5. Where the code already is (and the gap)
 
