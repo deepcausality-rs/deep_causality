@@ -1,0 +1,41 @@
+openspec/notes/arrow/arrow-assumption.md
+  s_52e6d9817e5bf8::t_a766fbfbde3412 322-329
+  s_52e6d9817e5bf8::t_ea90a3029aec5e 185-195
+  s_52e6d9817e5bf8::t_de182b34d9334b 159-181
+  s_52e6d9817e5bf8::t_026d4e24386ae4 253-258
+  s_52e6d9817e5bf8::t_076d42ba31e08b 115-134
+  s_52e6d9817e5bf8::t_a5c2bcf3548cd5 296-307
+  s_52e6d9817e5bf8::t_b6eb10d906d2e0 266-284
+  s_52e6d9817e5bf8::t_134d0844f464b0 31-113
+  s_52e6d9817e5bf8::t_5dd6c71759df7b 220-228
+  s_52e6d9817e5bf8::t_500b1138c1a037 1-5,13,17-18,26-27,30,114,135-136,138-140,308-309,314-315,332,343
+  s_52e6d9817e5bf8::t_9fb9c558e475d2 361-367
+  s_52e6d9817e5bf8::t_5b6873fc291d00 213
+  s_52e6d9817e5bf8::t_db0064c9c1010a 6-12,15
+  s_52e6d9817e5bf8::t_e7e611878a2aff 14,16,19-25,28-29,137,141-158,182-184,196-212,214-219,229-252,259-265,285-295,310-313,316-321,330-331,341-342,344-347,350-351,355-360,368-370
+  s_52e6d9817e5bf8::t_32f5b627fa81be 333-340,348-349,352-354
+openspec/notes/arrow/causal-arrow-generalization.md
+  s_52e6d9817e5bf8::t_e186a8dd5bab7e 115-123
+openspec/notes/arrow/CausalMonadProptest.md
+  s_52e6d9817e5bf8::t_36bdfe2aea512e 95-101
+  s_52e6d9817e5bf8::t_750279192db76f 191-194,196,199-200,211,218-219,227-228
+  s_52e6d9817e5bf8::t_4ca8fc36b3dd07 241-245
+  s_52e6d9817e5bf8::t_eb047240b9b3aa 1-94,102,119-120,127-128,132-190,195,197-198,201-210,212-217,220-226,229-240,246-248
+  s_52e6d9817e5bf8::t_53c97bd9f571ad 103-118,121-126,129-131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "367d80239556f2f983e169c65a1f371ae5f6308f",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
