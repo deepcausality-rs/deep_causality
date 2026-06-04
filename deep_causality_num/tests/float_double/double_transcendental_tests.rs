@@ -5,7 +5,7 @@
 
 //! Transcendental function tests for `DoubleFloat`.
 
-use deep_causality_num::{Float, Float106, RealField};
+use deep_causality_num::{Float, Float106, Real};
 
 // =============================================================================
 // Helper Functions
@@ -406,24 +406,24 @@ fn test_to_radians() {
 }
 
 // =============================================================================
-// RealField Trait Tests
+// Real Trait Tests
 // =============================================================================
 
 #[test]
 fn test_realfield_pi() {
-    let pi = <Float106 as RealField>::pi();
+    let pi = <Float106 as Real>::pi();
     assert_eq!(pi, Float106::PI);
 }
 
 #[test]
 fn test_realfield_e() {
-    let e = <Float106 as RealField>::e();
+    let e = <Float106 as Real>::e();
     assert_eq!(e, Float106::E);
 }
 
 #[test]
 fn test_realfield_epsilon() {
-    let eps = <Float106 as RealField>::epsilon();
+    let eps = <Float106 as Real>::epsilon();
     assert!(eps.hi() > 0.0);
     assert!(eps.hi() < 1e-30);
 }

@@ -10,3 +10,5 @@ mod domain_euclidean_tests;
 mod field_real_f32_tests;
 #[cfg(test)]
 mod field_real_f64_tests;
+#[cfg(test)]
+mod real_tests;

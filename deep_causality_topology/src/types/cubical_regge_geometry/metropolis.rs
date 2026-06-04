@@ -47,7 +47,7 @@
 use super::{CubicalReggeGeometry, EdgeLengths, Euclidean};
 use crate::traits::chain_complex::ChainComplex;
 use crate::types::lattice_complex::LatticeComplex;
-use deep_causality_num::{Float, FromPrimitive, RealField};
+use deep_causality_num::{Float, FromPrimitive, Real, RealField};
 use deep_causality_rand::{Distribution, Normal, Rng, StandardUniform};
 
 /// Outcome of a single Metropolis-Hastings step.
@@ -154,7 +154,7 @@ where
 
         // Metropolis criterion: accept if delta_action ≤ 0 (always favourable),
         // otherwise accept with probability exp(−β · ΔS).
-        let threshold = RealField::exp(-beta * delta_action);
+        let threshold = Real::exp(-beta * delta_action);
         let always_accept = delta_action <= R::zero();
         let u: R = rng.sample(StandardUniform);
         let accept = always_accept || u < threshold;

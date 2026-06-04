@@ -2,75 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
-//! Float trait implementation for `DoubleFloat`.
-//!
-//! Implements transcendental functions using high-precision Taylor series
-//! with range reduction techniques.
-
-use crate::Float;
-use crate::Float106;
-use core::num::FpCategory;
-
-// =============================================================================
-// High-Precision Constants
-// =============================================================================
-
-impl Float106 {
-    /// π to ~31 decimal digits
-    /// 3.14159265358979323846264338327950288...
-    pub const PI: Self = Self {
-        hi: core::f64::consts::PI,
-        lo: 1.2246467991473532e-16,
-    };
-
-    /// 2π to ~31 decimal digits
-    pub const TWO_PI: Self = Self {
-        hi: core::f64::consts::TAU,
-        lo: 2.4492935982947064e-16,
-    };
-
-    /// π/2 to ~31 decimal digits
-    pub const FRAC_PI_2: Self = Self {
-        hi: core::f64::consts::FRAC_PI_2,
-        lo: 6.123233995736766e-17,
-    };
-
-    /// π/4 to ~31 decimal digits
-    pub const FRAC_PI_4: Self = Self {
-        hi: core::f64::consts::FRAC_PI_4,
-        lo: 3.061616997868383e-17,
-    };
-
-    /// e (Euler's number) to ~31 decimal digits
-    /// 2.71828182845904523536028747135266249...
-    pub const E: Self = Self {
-        hi: core::f64::consts::E,
-        lo: 1.4456468917292502e-16,
-    };
-
-    /// ln(2) to ~31 decimal digits
-    pub const LN_2: Self = Self {
-        hi: core::f64::consts::LN_2,
-        lo: 2.3190468138462996e-17,
-    };
-
-    /// ln(10) to ~31 decimal digits
-    pub const LN_10: Self = Self {
-        hi: core::f64::consts::LN_10,
-        lo: -2.1707562233822494e-16,
-    };
-
-    /// Machine epsilon for DoubleFloat (~2^-106)
-    pub const EPSILON: Self = Self {
-        hi: 4.930380657631324e-32,
-        lo: 0.0,
-    };
-}
-
-// =============================================================================
-// Float Trait Implementation
-// =============================================================================
+use crate::{Float, Float106};
+use std::num::FpCategory;
 
 impl Float for Float106 {
     #[inline]
@@ -119,16 +52,16 @@ impl Float for Float106 {
     }
 
     #[inline]
+    fn epsilon() -> Self {
+        Self::EPSILON
+    }
+
+    #[inline]
     fn max_value() -> Self {
         Self {
             hi: f64::MAX,
             lo: 0.0,
         }
-    }
-
-    #[inline]
-    fn epsilon() -> Self {
-        Self::EPSILON
     }
 
     #[inline]
@@ -385,6 +318,14 @@ impl Float for Float106 {
 
     fn log10(self) -> Self {
         self.ln() / Self::LN_10
+    }
+
+    fn to_degrees(self) -> Self {
+        self * Self::from_f64(180.0) / Self::PI
+    }
+
+    fn to_radians(self) -> Self {
+        self * Self::PI / Self::from_f64(180.0)
     }
 
     fn max(self, other: Self) -> Self {
@@ -681,14 +622,6 @@ impl Float for Float106 {
 
     fn integer_decode(self) -> (u64, i16, i8) {
         self.hi.integer_decode()
-    }
-
-    fn to_degrees(self) -> Self {
-        self * Self::from_f64(180.0) / Self::PI
-    }
-
-    fn to_radians(self) -> Self {
-        self * Self::PI / Self::from_f64(180.0)
     }
 
     fn copysign(self, sign: Self) -> Self {

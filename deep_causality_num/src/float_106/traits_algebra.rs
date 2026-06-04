@@ -13,7 +13,7 @@
 
 use crate::Float106;
 use crate::{
-    AbelianGroup, Associative, Commutative, Distributive, DivisionAlgebra, Float, Num, One,
+    AbelianGroup, Associative, Commutative, Distributive, DivisionAlgebra, Float, Num, One, Real,
     RealField, Zero,
 };
 
@@ -92,10 +92,12 @@ impl DivisionAlgebra<Float106> for Float106 {
 // Note: Assignment operators (AddAssign, etc.) are implemented in ops_arithmetic.rs
 
 // =============================================================================
-// Real Field
+// Real (analytic scalar) + Real Field
 // =============================================================================
 
-impl RealField for Float106 {
+impl RealField for Float106 {}
+
+impl Real for Float106 {
     #[inline]
     fn nan() -> Self {
         <Self as Float>::nan()

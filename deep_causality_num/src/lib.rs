@@ -40,6 +40,7 @@ pub use crate::algebra::group_mul::MulGroup;
 pub use crate::algebra::magma::{AddMagma, MulMagma};
 pub use crate::algebra::module::Module;
 pub use crate::algebra::monoid::{AddMonoid, InvMonoid, MulMonoid};
+pub use crate::algebra::real::Real;
 pub use crate::algebra::ring::Ring;
 pub use crate::algebra::ring_associative::AssociativeRing;
 pub use crate::algebra::ring_com::CommutativeRing;

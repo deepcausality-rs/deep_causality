@@ -4,7 +4,7 @@
  */
 
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorError, Metric, MultiVector};
-use deep_causality_num::{Complex, RealField, Zero};
+use deep_causality_num::{Complex, Real, Zero};
 
 // Helper for approximate float comparison
 const EPSILON: f64 = 1e-9;

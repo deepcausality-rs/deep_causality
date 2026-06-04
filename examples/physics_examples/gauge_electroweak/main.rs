@@ -15,7 +15,7 @@
 //! 4. **Resonance**: Compute Z pole cross-section
 
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
-use deep_causality_num::{Float106, RealField};
+use deep_causality_num::{Float106, Real};
 use deep_causality_physics::ElectroweakParams;
 
 // =============================================================================

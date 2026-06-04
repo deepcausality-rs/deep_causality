@@ -63,3 +63,47 @@ pub trait DivisionAlgebra<R: Field>: Algebra<R> {
     /// typically by returning `NaN` or `Infinity` components, rather than panicking.
     fn inverse(&self) -> Self;
 }
+
+/// Implements `DivisionAlgebra` for `f32`, where the base field is `f32` itself.
+impl DivisionAlgebra<f32> for f32 {
+    /// The conjugate of a real number is itself.
+    #[inline]
+    fn conjugate(&self) -> Self {
+        *self
+    }
+
+    /// The squared norm of a real number `x` is `x*x`.
+    #[inline]
+    fn norm_sqr(&self) -> f32 {
+        *self * *self
+    }
+
+    /// The inverse of a real number `x` is `1/x`.
+    /// Returns `inf` if `x` is `0.0`.
+    #[inline]
+    fn inverse(&self) -> Self {
+        1.0 / *self
+    }
+}
+
+/// Implements `DivisionAlgebra` for `f64`, where the base field is `f64` itself.
+impl DivisionAlgebra<f64> for f64 {
+    /// The conjugate of a real number is itself.
+    #[inline]
+    fn conjugate(&self) -> Self {
+        *self
+    }
+
+    /// The squared norm of a real number `x` is `x*x`.
+    #[inline]
+    fn norm_sqr(&self) -> f64 {
+        *self * *self
+    }
+
+    /// The inverse of a real number `x` is `1/x`.
+    /// Returns `inf` if `x` is `0.0`.
+    #[inline]
+    fn inverse(&self) -> Self {
+        1.0 / *self
+    }
+}
