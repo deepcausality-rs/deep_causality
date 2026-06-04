@@ -1,0 +1,83 @@
+deep_causality_haft/tests/algebra/mod.rs
+  s_52e6d9817e5bf8::t_86ab08cd115a1d 11,15
+deep_causality_num/src/dual/dual_number/arithmetic.rs
+  s_52e6d9817e5bf8::t_0b9d3fb9b1e3ec 90
+  s_52e6d9817e5bf8::t_959653d4da4555 1-89,91-117
+deep_causality_num/tests/dual/mod.rs
+  s_52e6d9817e5bf8::t_bcc8ba20fbba3d 1-6
+deep_causality_num/tests/dual/dual_number/arithmetic_tests.rs
+  s_52e6d9817e5bf8::t_4afafc217585e6 1-96
+deep_causality_num/tests/dual/dual_number/dual_number_tests.rs
+  s_52e6d9817e5bf8::t_3b9425d214f665 14,23,30,48,53,71
+  s_52e6d9817e5bf8::t_68a539d8f64795 1-6,8-13,15-22,24-29,31-47,49-52,54-70,72-92
+  s_52e6d9817e5bf8::t_00398e9110c54a 7
+deep_causality_haft/tests/algebra/morphism_tests.rs
+  s_52e6d9817e5bf8::t_578d90d27a3d08 1-20,25-37,42
+  s_52e6d9817e5bf8::t_00398e9110c54a 21-24,38-41
+deep_causality_num/tests/dual/dual_number/mod.rs
+  s_52e6d9817e5bf8::t_daea3cf08f86b7 1-9
+deep_causality_num/src/dual/dual_number/mod.rs
+  s_52e6d9817e5bf8::t_00398e9110c54a 39,59,76
+  s_52e6d9817e5bf8::t_dfd1ba8085fb84 1-38,40-58,60-75,77-79
+deep_causality_num/src/dual/mod.rs
+  s_52e6d9817e5bf8::t_9a6b4449b7caa9 1-6
+openspec/specs/dual-numbers/spec.md
+  s_52e6d9817e5bf8::t_eb75c5a85d3c3c 1,3-5,11,13,18,27,32,46,66
+openspec/changes/archive/2026-06-04-causal-arrow-foundations/tasks.md
+  ai_agent 3-6,10-12,16,18-24,28-32,36-39
+deep_causality_num/tests/mod.rs
+  s_52e6d9817e5bf8::t_9d62a67c03b5ef 8
+deep_causality_num/src/dual/dual_number/identity.rs
+  s_52e6d9817e5bf8::t_74e7ee8bedab7c 1-29
+deep_causality_haft/src/traits/morphism.rs
+  s_52e6d9817e5bf8::t_becd7ac82af8cf 1-24,26-77
+  s_52e6d9817e5bf8::t_bffe6a729d7d2c 25
+deep_causality_num/src/lib.rs
+  s_52e6d9817e5bf8::t_4eac3d50d3faac 66
+  s_52e6d9817e5bf8::t_cd832eedb73ea4 78,80
+  s_52e6d9817e5bf8::t_b2b3f832f2f74c 17
+  s_52e6d9817e5bf8::t_e03b5816b9239c 13
+  s_52e6d9817e5bf8::t_00398e9110c54a 67
+deep_causality_num/src/dual/dual_number/display.rs
+  s_52e6d9817e5bf8::t_dd1a574c862f3b 1-12
+openspec/specs/morphism-algebra/spec.md
+  s_52e6d9817e5bf8::t_eb75c5a85d3c3c 1-51
+deep_causality_haft/src/traits/mod.rs
+  s_52e6d9817e5bf8::t_31c34d4fbec012 73
+  s_52e6d9817e5bf8::t_d28a9631b6d2c0 69
+deep_causality_num/tests/dual/dual_number/real_tests.rs
+  s_52e6d9817e5bf8::t_87cfadc39e55f4 1-140
+deep_causality_num/src/dual/dual_number/real.rs
+  s_52e6d9817e5bf8::t_6598ce8c8af964 1-5,7-15,17-205
+  s_52e6d9817e5bf8::t_7efe2668465ae7 16
+  s_52e6d9817e5bf8::t_fd1ea6aec984c4 6
+deep_causality_haft/src/traits/endomorphism.rs
+  s_52e6d9817e5bf8::t_f248c03b1d6a12 1-27,29,31-45,47-87,90-91
+deep_causality_haft/tests/algebra/endomorphism_tests.rs
+  s_52e6d9817e5bf8::t_00398e9110c54a 39-42
+  s_52e6d9817e5bf8::t_80bbe2caf9569d 1-38,43-79
+deep_causality_num/src/dual/dual_number/algebra.rs
+  s_52e6d9817e5bf8::t_4ce546bf7ca36e 18-21
+  s_52e6d9817e5bf8::t_ec31dfcfb52dd9 1-4,6-17,22-29
+  s_52e6d9817e5bf8::t_5dcb43efeac8b8 5
+deep_causality_num/tests/dual/dual_number/display_tests.rs
+  s_52e6d9817e5bf8::t_98c168445e2983 1-18
+deep_causality_haft/src/lib.rs
+  s_52e6d9817e5bf8::t_da276ccb939b61 79,83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "308549e1695920ab1c2e2ef384db095890c632a6",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
