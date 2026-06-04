@@ -1,0 +1,21 @@
+deep_causality_core/tests/types/effect_log/effect_log_tests.rs
+  s_52e6d9817e5bf8::t_4762d0bc83af8a 65-132
+deep_causality_core/src/types/effect_log/log_effect.rs
+  s_52e6d9817e5bf8::t_65e12b7e094986 31,36-55,68-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "c0985537e7688cec5af7543a3ff3c2b742dae4db",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
