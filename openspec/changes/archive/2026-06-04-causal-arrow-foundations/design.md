@@ -79,15 +79,15 @@ pub trait Endomorphism<P: HKT2Unbound>: Morphism<P> {
 
 ```rust
 pub struct Dual<T: Real> { re: T, du: T }   // a + b·ε,  ε² = 0
-pub type Dual32 = Dual<f32>;
-pub type Dual64 = Dual<f64>;
 ```
+
+No concrete precision aliases (`Dual32`/`Dual64`): they would defeat the precision-as-a-parameter design that `Float`/`Real`/`RealField` exist to express. `Dual` stays generic over `T`.
 
 The bound sits **on the struct**, mirroring `Complex<T: RealField>`'s style (verified in `complex_number/mod.rs`); the parameter stays named `T` and is bounded by `Real` (`Real` is the bound, not the parameter name). The bound is **`Real`, not `RealField`** (see "Bound choice" below): a dual's component needs the analytic operations (`exp`/`ln`/`sin`/…) but never a field inverse, so `Real` is the honest, minimal requirement. `f32`/`f64` satisfy `Real` (via `RealField: Real + Field`).
 
 Folder module `src/dual/dual_number/` mirroring `src/complex/complex_number/`: `mod.rs` (type + constructors + accessors), `arithmetic.rs`, `ops.rs`, `ops_shared.rs`, `algebra.rs`, `identity.rs`, `real.rs` (the `impl Real for Dual`), `cast.rs`, `display.rs`.
 
-- **Constructors / accessors:** `Dual::new(re, du)`; `Dual::constant(re)` (`du = 0`); `Dual::variable(re)` (`du = 1`, the AD seed); `value()` → `re`; `deriv()` → `du`.
+- **Constructors / accessors:** `Dual::new(re, du)`; `Dual::constant(re)` (`du = 0`); `Dual::variable(re)` (`du = 1`, the AD seed); `value()` → `re`; `derivative()` → `du`.
 - **Arithmetic (the AD rules fall out of the ops):**
   - `(a+bε) + (c+dε) = (a+c) + (b+d)ε`
   - `(a+bε) − (c+dε) = (a−c) + (b−d)ε`

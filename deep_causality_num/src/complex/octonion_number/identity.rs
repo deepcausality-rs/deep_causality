@@ -5,8 +5,8 @@
 
 use crate::RealField;
 use crate::complex::octonion_number::Octonion;
-use crate::identity::one::{ConstOne, One};
-use crate::identity::zero::{ConstZero, Zero};
+use crate::num::identity::one::{ConstOne, One};
+use crate::num::identity::zero::{ConstZero, Zero};
 
 /// Implements the `Zero` trait for `Octonion`.
 impl<F: RealField> Zero for Octonion<F> {

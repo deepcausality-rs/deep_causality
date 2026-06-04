@@ -1,19 +1,21 @@
-## ADDED Requirements
+# dual-numbers Specification
 
+## Purpose
+TBD - created by archiving change causal-arrow-foundations. Update Purpose after archive.
+## Requirements
 ### Requirement: Dual number type for forward-mode automatic differentiation
 
 `deep_causality_num` SHALL provide a `Dual<T>` type representing a dual number `a + b·ε` with `ε² = 0`, over `T: Real` (the analytic real-scalar trait from the `real-scalar` capability; this capability depends on `num-real-trait`), mirroring the module layout of `Complex<T>` (a folder module with the type and constructors in `mod.rs` and per-trait implementation files). The bound SHALL be `Real`, not `RealField`: a dual's component needs the analytic operations but never a field inverse. It SHALL expose:
 
 - constructors `Dual::new(re, du)`, `Dual::constant(re)` (with `du = 0`), and `Dual::variable(re)` (with `du = 1`, the differentiation seed);
-- accessors `value()` returning the real part `a` and `deriv()` returning the infinitesimal coefficient `b`;
-- type aliases `Dual32 = Dual<f32>` and `Dual64 = Dual<f64>`.
+- accessors `value()` returning the real part `a` and `derivative()` returning the infinitesimal coefficient `b`.
 
-The type SHALL be re-exported from the crate root.
+The type SHALL be generic over the precision parameter `T` and SHALL NOT provide concrete precision aliases (`Dual32`/`Dual64`): such aliases would defeat the precision-as-a-parameter design that `Float`/`Real`/`RealField` exist to express. It SHALL be re-exported from the crate root as `Dual`.
 
 #### Scenario: Seed and accessors
 
 - **WHEN** `Dual::variable(x0)` is constructed
-- **THEN** `value()` returns `x0` and `deriv()` returns `1`; and `Dual::constant(c)` has `value() == c` and `deriv() == 0`
+- **THEN** `value()` returns `x0` and `derivative()` returns `1`; and `Dual::constant(c)` has `value() == c` and `derivative() == 0`
 
 ### Requirement: Arithmetic carries the derivative in the epsilon channel
 
@@ -22,12 +24,12 @@ The type SHALL be re-exported from the crate root.
 #### Scenario: Polynomial derivative is exact
 
 - **WHEN** `f(x) = x·x·x + x + x` (i.e. `x³ + 2x`) is evaluated on `Dual::variable(x0)`
-- **THEN** the result's `value()` equals `x0³ + 2·x0` and its `deriv()` equals `3·x0² + 2`, to floating-point tolerance
+- **THEN** the result's `value()` equals `x0³ + 2·x0` and its `derivative()` equals `3·x0² + 2`, to floating-point tolerance
 
 #### Scenario: Product rule falls out of multiplication
 
 - **WHEN** `f(x) = u(x)·v(x)` is evaluated on `Dual::variable(x0)` for differentiable `u`, `v`
-- **THEN** the result's `deriv()` equals `u'(x0)·v(x0) + u(x0)·v'(x0)`
+- **THEN** the result's `derivative()` equals `u'(x0)·v(x0) + u(x0)·v'(x0)`
 
 ### Requirement: Dual implements the Real trait (analytic, not a field)
 
@@ -41,7 +43,7 @@ The type SHALL be re-exported from the crate root.
 #### Scenario: Chain rule through a transcendental composition
 
 - **WHEN** `f(x) = sin(x)·exp(x)` is evaluated on `Dual::variable(x0)`
-- **THEN** the result's `deriv()` equals `cos(x0)·exp(x0) + sin(x0)·exp(x0)`, to floating-point tolerance
+- **THEN** the result's `derivative()` equals `cos(x0)·exp(x0) + sin(x0)·exp(x0)`, to floating-point tolerance
 
 #### Scenario: Nested duals give second derivatives
 
@@ -61,3 +63,4 @@ The type SHALL be re-exported from the crate root.
 
 - **WHEN** the pure-infinitesimal `Dual::new(0, 1)` is squared
 - **THEN** the result equals `Dual::zero()` (`ε² = 0`), witnessing that `Dual<T>` is not a field
+

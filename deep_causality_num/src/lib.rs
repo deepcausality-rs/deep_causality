@@ -10,17 +10,14 @@ mod algebra;
 mod alias;
 mod cast;
 mod complex;
-pub mod float;
+mod dual;
+mod float;
 mod float_106;
 mod float_option;
-mod identity;
+mod integer;
 pub mod iso;
-pub mod num;
-mod ops;
+mod num;
 pub mod utils_tests;
-
-// Alias types
-pub use crate::alias::{Matrix3, Vector3};
 
 // Algebra types
 pub use crate::algebra::algebra_assoc::AssociativeAlgebra;
@@ -49,6 +46,9 @@ pub use crate::algebra::ring_com::CommutativeRing;
 pub use crate::algebra::rotation::Rotation;
 pub use crate::algebra::semigroup::{AddSemigroup, MulSemigroup};
 
+// Alias types
+pub use crate::alias::{Matrix3, Vector3};
+
 // Casts
 pub use crate::cast::as_primitive::AsPrimitive;
 pub use crate::cast::as_scalar::float_as_scalar_impl::FloatAsScalar;
@@ -63,20 +63,24 @@ pub use crate::complex::complex_number::{Complex, Complex32, Complex64};
 pub use crate::complex::octonion_number::{Octonion, Octonion32, Octonion64};
 pub use crate::complex::quaternion_number::{Quaternion, Quaternion32, Quaternion64};
 
-// Isomorphism trait markers (Tier 1)
-pub use crate::iso::{AlgebraIso, DivisionAlgebraIso, FieldIso, GroupIso, RingIso};
+// Dual number type (forward-mode automatic differentiation)
+pub use crate::dual::dual_number::Dual;
 
 // Float number types
 pub use crate::float::Float;
 pub use crate::float_106::Float106;
+
+// Float option number type
 pub use crate::float_option::FloatOption;
 
-//  General numeric traits
-pub use crate::identity::one::{ConstOne, One};
-pub use crate::identity::zero::{ConstZero, Zero};
-pub use crate::num::Num;
-pub use crate::ops::num_ops::*;
-
 // Integer types
-mod integer;
 pub use crate::integer::{Integer, SignedInt, UnsignedInt};
+
+// Isomorphism traits
+pub use crate::iso::{AlgebraIso, DivisionAlgebraIso, FieldIso, GroupIso, RingIso};
+
+// General numeric traits
+pub use crate::num::Num;
+pub use crate::num::identity::one::{ConstOne, One};
+pub use crate::num::identity::zero::{ConstZero, Zero};
+pub use crate::num::ops::num_ops::*;
