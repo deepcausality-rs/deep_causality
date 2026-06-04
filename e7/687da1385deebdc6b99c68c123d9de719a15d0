@@ -1,0 +1,54 @@
+deep_causality_haft/src/arrow/lift.rs
+  s_52e6d9817e5bf8::t_f69b46ec6cbf9f 1-43
+deep_causality_haft/src/arrow/fanout.rs
+  s_52e6d9817e5bf8::t_6cbce22286ca8c 1-33
+deep_causality_haft/src/arrow/first.rs
+  s_52e6d9817e5bf8::t_6b8a436c606ee5 1-32
+deep_causality_haft/src/arrow/mod.rs
+  s_52e6d9817e5bf8::t_f69b46ec6cbf9f 24,33
+  s_52e6d9817e5bf8::t_c8ab7029ae3d08 36-100,102-113
+  s_52e6d9817e5bf8::t_b14065eb9f85d4 6,8-11,14-23,25-32,34-35
+  s_52e6d9817e5bf8::t_3c0d839b848160 13
+deep_causality_haft/tests/algebra/arrow_tests.rs
+  s_52e6d9817e5bf8::t_396ac403e83fa9 1-125
+deep_causality_haft/src/arrow/split.rs
+  s_52e6d9817e5bf8::t_63d80d9f8bc5bf 1-36
+deep_causality_haft/src/arrow/second.rs
+  s_52e6d9817e5bf8::t_1b5060ae3a5101 1-32
+openspec/changes/causal-arrow-strength/design.md
+  s_52e6d9817e5bf8::t_055dd74f75ae98 121-124
+deep_causality_haft/tests/algebra/mod.rs
+  s_52e6d9817e5bf8::t_c1293b0a883009 8
+openspec/changes/causal-arrow-strength/tasks.md
+  s_52e6d9817e5bf8::t_38d1776fba6ebb 3-6,10-12,16-18,22-25,29-31
+deep_causality_haft/src/arrow/compose.rs
+  s_52e6d9817e5bf8::t_ed99365936f802 1-34
+deep_causality_haft/src/arrow/id.rs
+  s_52e6d9817e5bf8::t_3a8e13325799b7 1-35
+deep_causality_haft/src/lib.rs
+  s_52e6d9817e5bf8::t_f69b46ec6cbf9f 83
+  ai_agent 46,48,50-52,54,56-57,60-67,86,95-110
+  s_52e6d9817e5bf8::t_6d1d4d749dc61b 49
+  s_52e6d9817e5bf8::t_f29a4b3405915a 81-82,84-85
+deep_causality_haft/src/arrow/builder.rs
+  s_52e6d9817e5bf8::t_af82d0e12c3665 1-5,7,12-15,17-26,28-34,36-38,40-60,62,64-66,68-100
+  s_52e6d9817e5bf8::t_2e2767f4d5c38f 63
+  s_52e6d9817e5bf8::t_6ae3957851c9ea 8-11
+  s_52e6d9817e5bf8::t_f69b46ec6cbf9f 6,16,27,35,39,61,67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "e7687da1385deebdc6b99c68c123d9de719a15d0",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
