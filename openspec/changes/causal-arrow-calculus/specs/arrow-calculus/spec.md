@@ -2,7 +2,7 @@
 
 ### Requirement: Differentiation as the tangent functor over a scalar-generic arrow
 
-`deep_causality_haft` SHALL provide forward-mode differentiation as the tangent functor over the `Dual` number, not as free functions over `Dual`. It SHALL define a `DifferentiableArrow` trait whose evaluation is generic over the scalar (`fn run<S: Scalar>(&self, …) -> …`, where `Scalar = Real + Div + FromPrimitive`), a `Diff<A>` combinator that is itself a value-level `Arrow` from `Dual<…>` to `Dual<…>` (the derivative arrow), and the desugared entry points `derivative`, `value_and_derivative`, `second_derivative`, `gradient`, and `directional_derivative`. These SHALL instantiate the model at `Dual` (and `Dual<Dual<…>>` for second derivatives) internally, so a caller writes a model once over `Scalar` and never names `Dual`, `ε`, or a seed.
+A dedicated crate `deep_causality_calculus` (depending on `deep_causality_haft` for the `Arrow`/`Endomorphism` machinery and `deep_causality_num` for `Dual`, so both foundations stay self-contained) SHALL provide forward-mode differentiation as the tangent functor over the `Dual` number, not as free functions over `Dual`. It SHALL define a `DifferentiableArrow` trait whose evaluation is generic over the scalar (`fn run<S: Scalar>(&self, …) -> …`, where `Scalar = Real + Div + FromPrimitive`), a `Diff<A>` combinator that is itself a value-level `Arrow` from `Dual<…>` to `Dual<…>` (the derivative arrow), and — following the repo's `…Ext` type-extension convention — the blanket-implemented extension methods `DifferentiateExt::{derivative, value_and_derivative, second_derivative}` and `DifferentiateFieldExt::{gradient, directional_derivative}`, so differentiation reads `model.derivative(x)` / `field.gradient(&x)`. These SHALL instantiate the model at `Dual` (and `Dual<Dual<…>>` for second derivatives) internally, so a caller writes a model once over `Scalar` and never names `Dual`, `ε`, or a seed.
 
 #### Scenario: Differentiate a scalar-generic model
 
@@ -44,7 +44,7 @@ The differentiation and integration operators SHALL be generic over the base pre
 
 ### Requirement: Integration as endo-arrows driven by the Endomorphism combinators
 
-`deep_causality_haft` SHALL express ODE integration as iteration of an endo-arrow. `Euler` and `Rk4` SHALL each construct, from a step size and a rate field, a value-level **endo-arrow** — a concrete `Arrow<In = S, Out = S>` over a module-valued state `S` (`Clone + Add + scalar Mul`). Evolution SHALL be provided as the value-level realization of the `Endomorphism` monoid on endo-arrows: `iterate_n` (advance a fixed number of steps), `iterate_to_fixpoint` (advance to a steady state, `S: PartialEq + Clone`), and `iterate_until` (advance until a predicate holds). Substituting `Rk4` for `Euler` SHALL change accuracy with no change to the rate field.
+`deep_causality_calculus` SHALL express ODE integration as iteration of an endo-arrow. `Euler` and `Rk4` SHALL each construct, from a step size and a rate field, a value-level **endo-arrow** — a concrete `Arrow<In = S, Out = S>` over a module-valued state `S` (`Clone + Add + scalar Mul`). Evolution SHALL be provided by an `EndoArrow` extension trait (blanket-implemented for every `Arrow<In = S, Out = S>`) — the value-level realization of the `Endomorphism` monoid: `iterate_n` (advance a fixed number of steps), `iterate_to_fixpoint` (advance to a steady state, `S: PartialEq + Clone`), and `iterate_until` (advance until a predicate holds). Substituting `Rk4` for `Euler` SHALL change accuracy with no change to the rate field.
 
 #### Scenario: Fixed-horizon march
 
@@ -63,7 +63,7 @@ The differentiation and integration operators SHALL be generic over the base pre
 
 ### Requirement: Quadrature as a fold-arrow with Leibniz naturality
 
-`deep_causality_haft` SHALL provide definite integration as a fold over a closed-form integrand, generic over `Scalar`. Because `Dual` is a `Scalar`, evaluating the fold over `Dual` SHALL realize differentiation under the integral sign — the naturality of the tangent functor through the fold (`T(∫f) = ∫(Tf)`).
+`deep_causality_calculus` SHALL provide definite integration as a `quadrature` fold over a closed-form integrand, generic over `Scalar`. It is a free function (not a type extension), because its subject is a closure rather than a named model. Because `Dual` is a `Scalar`, evaluating the fold over `Dual` SHALL realize differentiation under the integral sign — the naturality of the tangent functor through the fold (`T(∫f) = ∫(Tf)`).
 
 #### Scenario: Exact on a cubic
 

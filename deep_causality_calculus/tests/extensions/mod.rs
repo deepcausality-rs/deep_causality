@@ -3,9 +3,5 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-mod arithmetic_tests;
-mod convert_tests;
-mod display_tests;
-mod dual_number_tests;
-mod from_primitive_tests;
-mod real_tests;
+mod differentiate_ext_tests;
+mod endo_arrow_ext_tests;

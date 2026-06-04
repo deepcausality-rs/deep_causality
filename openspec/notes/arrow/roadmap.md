@@ -117,11 +117,13 @@ The program evolves around a numbe of dedicated research projects build upon the
 The Causal Arrow generalizes over carrier dimension (§3): one operator runs whether a
 variable is a scalar series, a multivector field, or a manifold. Two analytic operators on
 those carriers, the derivative and the integral, are not bolted on as free functions — they
-**are** the categorical machinery already in place, and live with the Arrow in
-`deep_causality_haft`. `deep_causality_num` keeps only the *number* that makes
-differentiation possible (`Dual`); the *operators* are Arrow-native. Two stages:
+**are** the categorical machinery already in place: they `impl` the `Arrow` and reuse the
+`Endomorphism` monoid. They live in a dedicated crate `deep_causality_calculus` that depends on
+both `deep_causality_haft` (the Arrow/Endomorphism machinery) and `deep_causality_num` (the
+`Dual` number), so both foundations stay self-contained — `haft` keeps its zero-dependency
+status and `num` keeps only the *number* that makes differentiation possible. Two stages:
 
-1. **`causal-arrow-calculus`** (`deep_causality_haft`) — the analytic operators as one
+1. **`causal-arrow-calculus`** (`deep_causality_calculus`) — the analytic operators as one
    Arrow-native surface:
    - **Differentiation is the tangent functor `T`.** Its object map is exactly `Dual<A>`
      (kept in `num`); its morphism map is "run the arrow over duals". Because a concrete

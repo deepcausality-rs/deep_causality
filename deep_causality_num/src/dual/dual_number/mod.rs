@@ -9,6 +9,7 @@ mod algebra;
 mod arithmetic;
 mod convert;
 mod display;
+mod from_primitive;
 mod identity;
 mod real;
 

@@ -1,8 +1,8 @@
 ## ADDED Requirements
 
-### Requirement: Hand-coded derivatives are replaced by the autodiff surface, behavior-preserving
+### Requirement: Hand-coded derivatives are replaced by the arrow-calculus tangent functor, behavior-preserving
 
-Examples that compute a derivative of a closed-form field by hand SHALL be rewritten to use the `forward-autodiff` surface, producing the same numerical result. The rewrite SHALL define the underlying field as a single closure and obtain its derivative(s) via `derivative` / `gradient`, and a test SHALL assert the autodiff result equals the previously hand-coded value within floating-point tolerance. The downstream consumer of the derivative (e.g. `MaxwellSolver`) SHALL be unchanged.
+Examples that compute a derivative of a closed-form field by hand SHALL be rewritten to use the `arrow-calculus` tangent functor (`deep_causality_calculus`), producing the same numerical result. The rewrite SHALL define the underlying field as a scalar-generic `DifferentiableArrow` / `DifferentiableField` model and obtain its derivative(s) via the `DifferentiateExt` / `DifferentiateFieldExt` methods (`model.derivative(x)` / `field.gradient(&x)`), and a test SHALL assert the result equals the previously hand-coded value within floating-point tolerance. The downstream consumer of the derivative (e.g. `MaxwellSolver`) SHALL be unchanged.
 
 #### Scenario: Maxwell field derivative via autodiff equals the hand-coded value
 
@@ -21,7 +21,7 @@ Examples that compute a derivative of a closed-form field by hand SHALL be rewri
 
 ### Requirement: Hand-rolled integration is replaced by the integration operator
 
-Examples that hand-write an explicit time-stepping loop SHALL be rewritten to use the `numeric-integration` operator, reproducing the prior trajectory. The rate field SHALL be expressed once as `Fn(&S) -> S` and advanced with `Euler` (or `integrate`); substituting `Rk4` SHALL require no change to the rate field. Duplicated loops across examples SHALL share the same rate-field form. A hand-written Riemann-sum quadrature SHALL be replaced by `quadrature`.
+Examples that hand-write an explicit time-stepping loop SHALL be rewritten to use the `arrow-calculus` integration operators, reproducing the prior trajectory. The rate field SHALL be expressed once as `Fn(&S) -> S`, built into an `Euler` (or `Rk4`) endo-arrow, and advanced with `EndoArrow::iterate_n`; substituting `Rk4` for `Euler` SHALL require no change to the rate field. Duplicated loops across examples SHALL share the same rate-field form. A hand-written Riemann-sum quadrature SHALL be replaced by `quadrature`.
 
 #### Scenario: Kuramoto Euler loop reproduced by the operator
 
@@ -40,11 +40,11 @@ Examples that hand-write an explicit time-stepping loop SHALL be rewritten to us
 
 ### Requirement: A new avionics fluid-dynamics example demonstrates differentiate → kernel → integrate with MMS verification
 
-The change SHALL add at least one new fluid-dynamics example in the avionics domain that uses `forward-autodiff` to produce the spatial derivatives a fluid RHS kernel requires, the kernel to produce `∂u/∂t`, and the `numeric-integration` operator to march in time, verified by the Method of Manufactured Solutions against an exact analytic solution. The example SHALL be registered in Cargo and `BUILD.bazel` with a test.
+The change SHALL add at least one new fluid-dynamics example in the avionics domain that uses the `arrow-calculus` tangent functor to produce the spatial derivatives a fluid RHS kernel requires, the kernel to produce `∂u/∂t`, and the `arrow-calculus` endo-arrow iteration to march in time, verified by the Method of Manufactured Solutions against an exact analytic solution. The example SHALL be registered in Cargo and `BUILD.bazel` with a test.
 
 #### Scenario: Exact spatial derivatives feed the Navier–Stokes kernel
 
-- **WHEN** the example takes `∇u`, `∇²u`, and `∇p` of an analytic velocity field (a Taylor–Green vortex) with the autodiff surface and passes them to `incompressible_ns_rhs_kernel`
+- **WHEN** the example takes `∇u`, `∇²u`, and `∇p` of an analytic velocity field (a Taylor–Green vortex) with the arrow-calculus tangent functor and passes them to `incompressible_ns_rhs_kernel`
 - **THEN** the derivatives are exact (no finite differences) and the kernel returns the field's `∂u/∂t` at the sample point
 
 #### Scenario: The marched solution matches the manufactured solution

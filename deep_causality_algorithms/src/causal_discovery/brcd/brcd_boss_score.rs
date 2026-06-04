@@ -136,7 +136,7 @@ impl<T: RealField + FromPrimitive> FamilyScorer<T> for BicScorer<'_, T> {
 ///
 /// Returns `−½·n·ln(σ²) − ½·ln(n)·(|parents| + 1)·λ`, where `σ²` is the ridge
 /// conditional variance (the marginal variance when `parents` is empty), floored
-/// to [`VARIANCE_FLOOR`] so a constant column cannot produce `ln(0)`.
+/// to `VARIANCE_FLOOR` so a constant column cannot produce `ln(0)`.
 ///
 /// # Errors
 /// [`BrcdErrorEnum::NodeOutOfBounds`] if `node` or any parent index is outside

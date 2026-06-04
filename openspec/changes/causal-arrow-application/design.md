@@ -7,7 +7,7 @@ Constraints (`AGENTS.md`): example crates follow the same rules as library crate
 ## Goals / Non-Goals
 
 **Goals**
-- Prove each primitive against real code: replace hand-coded derivatives with `forward-autodiff` and hand-rolled stepping with `numeric-integration`, **behavior-preserving**, with tests asserting the numbers are unchanged.
+- Prove each operator against real code: replace hand-coded derivatives with the `arrow-calculus` tangent functor (`model.derivative`/`field.gradient`) and hand-rolled stepping with the `arrow-calculus` endo-arrows (`Euler`/`Rk4` + `iterate_n`), **behavior-preserving**, with tests asserting the numbers are unchanged.
 - Add the fluid-dynamics examples the kernels were waiting for, with at least one **avionics CFD** example verified by the Method of Manufactured Solutions.
 - Show the two primitives compose (the Leibniz bridge) in one small example.
 

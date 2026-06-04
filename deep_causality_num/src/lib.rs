@@ -8,8 +8,6 @@ extern crate core;
 
 mod algebra;
 mod alias;
-mod autodiff;
-mod autointegration;
 mod cast;
 mod complex;
 mod dual;
@@ -65,19 +63,9 @@ pub use crate::complex::complex_number::{Complex, Complex32, Complex64};
 pub use crate::complex::octonion_number::{Octonion, Octonion32, Octonion64};
 pub use crate::complex::quaternion_number::{Quaternion, Quaternion32, Quaternion64};
 
-// Dual number type (forward-mode automatic differentiation)
+// Dual number type (forward-mode automatic differentiation; the differentiating *number*).
+// The differentiation/integration *operators* live in `deep_causality_calculus`.
 pub use crate::dual::dual_number::Dual;
-
-// Forward-mode automatic differentiation surface over `Dual`
-pub use crate::autodiff::derivative::{derivative, second_derivative, value_and_derivative};
-pub use crate::autodiff::gradient::{directional_derivative, gradient};
-pub use crate::autodiff::jacobian::jacobian;
-
-// Numeric integration operator (Layer-2 complement of autodiff)
-pub use crate::autointegration::euler::Euler;
-pub use crate::autointegration::integrator::Integrator;
-pub use crate::autointegration::quadrature::quadrature;
-pub use crate::autointegration::rk4::Rk4;
 
 // Float number types
 pub use crate::float::Float;

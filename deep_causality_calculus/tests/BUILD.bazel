@@ -1,0 +1,55 @@
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
+rust_test_suite(
+    name = "types",
+    srcs = glob([
+        "types/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_calculus",
+        # Direct deps used by the tests
+        "//deep_causality_haft",
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "extensions",
+    srcs = glob([
+        "extensions/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_calculus",
+        # Direct deps used by the tests
+        "//deep_causality_haft",
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "ops",
+    srcs = glob([
+        "ops/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_calculus",
+        # Direct deps used by the tests
+        "//deep_causality_haft",
+        "//deep_causality_num",
+    ],
+)

@@ -1,30 +1,31 @@
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
 
 rust_library(
-    name = "deep_causality_num",
+    name = "deep_causality_calculus",
     srcs = glob([
         "src/**",
     ]),
     crate_features = [
         "std",
-        "libm_math",
-    ],  # List of features to enable
+        "alloc",
+    ],  #
     crate_root = "src/lib.rs",
     tags = [
-        "numerical_utils",
+        "deep_causality_calculus",
     ],
     visibility = ["//visibility:public"],
     deps = [
-        # No external dependencies needed for std build
+        "//deep_causality_haft",
+        "//deep_causality_num",
     ],
 )
 
 rust_doc(
     name = "doc",
-    crate = ":deep_causality_num",
+    crate = ":deep_causality_calculus",
     crate_features = [
         "std",
-        "libm_math",
+        "alloc",
     ],
     tags = ["doc"],
     visibility = ["//visibility:public"],
@@ -32,10 +33,10 @@ rust_doc(
 
 rust_doc_test(
     name = "doc_test",
-    crate = ":deep_causality_num",
+    crate = ":deep_causality_calculus",
     crate_features = [
         "std",
-        "libm_math",
+        "alloc",
     ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],

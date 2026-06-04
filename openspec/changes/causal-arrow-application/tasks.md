@@ -1,6 +1,6 @@
 ## 0. Preconditions
 
-- [ ] 0.1 Confirm `causal-arrow-autodiff` (`forward-autodiff`) and `causal-arrow-autointegration` (`numeric-integration`) are implemented and archived; their surfaces are available from `deep_causality_num`.
+- [ ] 0.1 Confirm `causal-arrow-calculus` (`arrow-calculus`) is implemented and archived; the operators are available from the `deep_causality_calculus` crate (`DifferentiateExt`/`DifferentiateFieldExt` methods, `Euler`/`Rk4` + `EndoArrow`, `quadrature`). Example crates that need them add a `deep_causality_calculus` dependency.
 
 ## 1. Autodiff rewrites — P0 (behavior-preserving)
 

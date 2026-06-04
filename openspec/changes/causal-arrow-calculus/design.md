@@ -13,7 +13,7 @@ Constraints (`AGENTS.md`): `unsafe_code = "forbid"`; static dispatch, no `dyn`; 
 ## Goals / Non-Goals
 
 **Goals**
-- One Arrow-native operator surface in `haft`: differentiation (tangent functor), integration (endo-arrows + the `Endomorphism` combinators), quadrature (fold), composing with `arrow-strength`.
+- One Arrow-native operator surface in a new `deep_causality_calculus` crate: differentiation (tangent functor), integration (endo-arrows + the `Endomorphism` combinators), quadrature (fold), composing with `arrow-strength`.
 - `num` retains only the `Dual` number, plus the precision-safe `FromPrimitive` constant lift.
 - The user writes a model once, generic over a `Scalar`, and applies operators — `Dual`, ε, seeding, stepper coefficients and loops never visible.
 - Precision is a free parameter (f32/f64/Float106), duals nest for higher derivatives.
@@ -76,9 +76,13 @@ The state `S` must be a module (`Add` + scalar `Mul`) for the stepper arithmetic
 
 `quadrature` is a fold over a sampled closed-form integrand, generic over `Scalar`. Because `Dual: Scalar`, running it over `Dual` returns the integral in the real part and its parameter derivative in the ε part — the naturality square `T(∫f) = ∫(Tf)`. This is a verified **law**, not a demo: `quadrature(Diff(integrand))` equals `Diff(quadrature(integrand))`.
 
-### D5 — Home is `haft`; `num` keeps the number
+### D5 — Home is a new crate `deep_causality_calculus`; both foundations stay self-contained
 
-The operators are categorical structure (a functor on the `Arrow` category; iteration of the `Endomorphism` monoid; a fold), so they live with the Arrow machinery in `haft`. `haft` gains a `deep_causality_num` dependency for `Dual` (acyclic: `num` has no `haft` dependency). `num` retains `Dual` + the `FromPrimitive`/`From<f64>` conversions and nothing else AD/integration-related. The `num` `autodiff` and `autointegration` modules are removed; their logic is relocated and re-expressed.
+The operators are categorical structure (a functor on the `Arrow` category; iteration of the `Endomorphism` monoid; a fold), so they must see *both* `haft` (Arrow/Endomorphism) and `num` (`Dual`/`Real`/`FromPrimitive`). An earlier draft put them in `haft` — wrong: `haft` is a zero-dependency foundation that **eight** crates build on (core, tensor, sparse, multivector, topology, physics, discovery, deep_causality), so a `haft → num` edge would fan `num` through the whole graph and end `haft`'s self-containment. The correct level is a crate *above both*: a new `deep_causality_calculus` that depends on `haft` and `num`. Both foundations are unchanged; the only new edge is `calculus → {haft, num}`, acyclic. The operators still `impl` `haft`'s `Arrow` and reuse `Endomorphism`, so they remain Arrow-native — only the physical crate changes. `num` retains `Dual` + the `FromPrimitive`/`From<f64>` conversions and nothing else AD/integration-related; the `num` `autodiff` and `autointegration` modules are removed and re-expressed in the new crate.
+
+### D6 — Surface follows the `…Ext` type-extension convention
+
+Per the repo convention (`CausalTensorMathExt`, the HKT `ext_hkt` impls), functionality reaches the user as methods via a blanket-implemented extension trait, not free functions. So the differentiation desugarings are `DifferentiateExt` / `DifferentiateFieldExt` (`model.derivative(x)`, `field.gradient(&x)`), and iteration is the `EndoArrow` extension (`endo.iterate_n(...)`) — both blanket-implemented. `Diff` / `Euler` / `Rk4` are *constructed* arrows (types, like the witness structs), not operations on an existing type, so they live in `types/`. `quadrature` stays a free function: its subject is a closure, and blanket-extending `Fn` is inference-fragile. The crate follows the `traits/` · `types/` · `extensions/` layout (plus `ops/` for the free fold), and the test tree mirrors it. Multivector's `ScalarEval` (a real-*modulus* abstraction over Real/Complex) is a different concept and does not transfer; `Scalar = Real + Div + FromPrimitive` is its own minimal marker.
 
 ### D6 — The user-facing shape (worked avionics example)
 
@@ -106,9 +110,9 @@ let d_impact_dcd = derivative(&ImpactSpeed, 0.9_f64); // T lifts the WHOLE solve
 ## Risks / Trade-offs
 
 - **Models must be named types, not closures.** `DifferentiableArrow::run<S>` is a generic method; closures cannot carry a generic call signature, so a differentiable model is a (usually zero-sized) struct. Acceptable — models are named — and it is the irreducible cost of the only encoding that compiles (D1).
-- **`haft` → `num` dependency** is new but acyclic; it is the correct direction (operators depend on the number).
+- **`calculus → {haft, num}`** is the only new dependency edge; both foundations stay zero-dependency on each other. It is the correct direction (operators depend on the machinery and the number).
 - **Through-solver AD** (state carried as `Dual`) needs the state's module ops to hold over `Dual` — they do (`State<Dual>` is still `Add` + scalar `Mul`).
 
 ## Migration / Rollout
 
-Additive in `haft`; relocating in `num`. `causal-arrow-application` retargets to `arrow-calculus`. `causal-arrow-autointegration` is closed (superseded); the archived `forward-autodiff` loses its free-function requirements (relocated) and keeps the kernels-accept-dual requirement. Owner commits.
+A new crate `deep_causality_calculus`; relocating out of `num`. `causal-arrow-application` retargets to `arrow-calculus`. `causal-arrow-autointegration` is closed (superseded); the archived `forward-autodiff` loses its free-function requirements (relocated) and keeps the kernels-accept-dual requirement. Owner commits.
