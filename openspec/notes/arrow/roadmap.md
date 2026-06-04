@@ -112,6 +112,42 @@ The program evolves around a numbe of dedicated research projects build upon the
    Causaloid model and closes the seam.
 5. **Unified discovery, model generation, and inference.**: This last step takes all of the views together.
 
+## Analytic operators: type-based differentiation and integration
+
+The Causal Arrow generalizes over carrier dimension (§3): one operator runs whether a
+variable is a scalar series, a multivector field, or a manifold. Two analytic operators on
+those carriers, the derivative and the integral, are realized directly in the type system,
+building on the `Dual` number from `causal-arrow-foundations`. They form a three-stage
+sub-program, proven first on the physics and example suites:
+
+1. **`causal-arrow-autodiff`** — a forward-mode automatic-differentiation surface over
+   `Dual` (`derivative`, `gradient`, `directional_derivative`, `jacobian`,
+   `second_derivative`) in `deep_causality_num`. Differentiation is a Layer-1 *scalar*
+   operation, because the chain rule is a ring homomorphism, so it lives in the number.
+   The stage also establishes the bound-relaxation principle (`RealField → Real + Div`)
+   that lets `Dual` flow through division-only kernels, worked on `solve_gm_analytical_kernel`.
+
+2. **`causal-arrow-autointegration`** — a numeric integration *operator* (an `Integrator`
+   trait with `Euler` / `Rk4` steppers, plus composite-Simpson `quadrature`), generic over
+   module-valued state. Integration is not the mirror of `Dual` and cannot be: it is a
+   non-local functional over an interval and is not algebraically closed in the elementary
+   functions (Liouville), so it has no "anti-dual" number form and is instead a Layer-2
+   operator over functions. The two operators meet through the Leibniz rule (differentiate
+   under the integral), not as dual types.
+
+3. **`causal-arrow-application`** — spends both operators across the example suite
+   (behavior-preserving rewrites of hand-coded derivatives and hand-rolled Euler loops) and
+   adds the fluid-dynamics examples the recent CFD kernels were waiting for, including an
+   avionics CFD example verified by the Method of Manufactured Solutions. The fluid RHS
+   kernels return `∂u/∂t` and demand `∇u` / `∇²u` / `∇p` as inputs: differentiation fills the
+   inputs, integration consumes the output, and the kernel set becomes a runnable, verifiable
+   solver.
+
+The non-continuous carriers (discrete fields on a mesh, with no closed form) stay served by
+the topology exterior-calculus surface; type-based differentiation targets closed-form
+fields, manufactured solutions, and parameter sensitivities. The three stages build on
+`causal-arrow-foundations` and run on the dedicated `causal-arrow` branch.
+
 ## Scope and boundaries
 
 Two further components live in the codebase and stay outside this phase. The [Causal State Machine](https://docs.deepcausality.com/concepts/csm/) turns an inferred effect into a proposed action. The [Effect Ethos](https://docs.deepcausality.com/concepts/effect-ethos/) evaluates every proposed action against a graph of deontic rules before it runs. Both are impplemented today, neither is yet expressed as a Monad and therefore do not compose under the propsed  **Causal Arrow**.  
