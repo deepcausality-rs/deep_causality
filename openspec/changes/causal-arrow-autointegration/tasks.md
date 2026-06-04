@@ -1,6 +1,6 @@
 ## 1. Integration operator in `deep_causality_num`
 
-- [ ] 1.1 Add an `integration` module under `src/` (one concern per file), re-exported from `lib.rs`. No new dependency, no `unsafe`, no macros.
+- [ ] 1.1 Add an `autointegration` module under `src/` (one concern per file), sitting beside the `autodiff` module, re-exported from `lib.rs`. No new dependency, no `unsafe`, no macros.
 - [ ] 1.2 `Integrator` trait: `step<S, R, F>(&self, &S, R, &F) -> S` with bounds `S: Clone + Add<Output = S> + Mul<R, Output = S>`, `R: RealField`, `F: Fn(&S) -> S`; provided `integrate(&self, S, R, usize, &F) -> S` folding `step`.
 - [ ] 1.3 `Euler` struct: `step` = `s + f(s)·dt`.
 - [ ] 1.4 `Rk4` struct: classical four-stage `step` = `s + (k1 + 2k2 + 2k3 + k4)·(dt/6)`, scalars via `R: RealField` / `From<f64>`. Confirm only `Add` + scalar `Mul` are used (no state-type-specific ops).
@@ -21,4 +21,5 @@
 
 - [ ] 4.1 `cargo test -p deep_causality_num` green.
 - [ ] 4.2 `cargo fmt` + `cargo clippy -p deep_causality_num --all-targets` — 0 warnings, no `#[allow(...)]`; no `dyn` / macros / external deps.
-- [ ] 4.3 Additive check: no existing `num` API changed; the three existing per-crate integrators left untouched. Commit message prepared; owner commits.
+- [ ] 4.3 All error paths covered: every `Err` / validation / panic branch in the new code is exercised by a test for maximum coverage (e.g. `quadrature` panel-count / interval validation, any integrator precondition).
+- [ ] 4.4 Additive check: no existing `num` API changed; the three existing per-crate integrators left untouched. Commit message prepared; owner commits.

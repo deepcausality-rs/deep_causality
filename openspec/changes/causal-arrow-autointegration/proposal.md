@@ -28,8 +28,8 @@ A conceptual point fixes the *shape* of the fix. Integration is not the mirror o
 
 ## Impact
 
-- **New code, `deep_causality_num`:** an `integration` module (the `Integrator` trait, `Euler`, `Rk4`, and `quadrature`, one concern per file), re-exported from `lib.rs`; mirrored tests under `tests/`.
+- **New code, `deep_causality_num`:** an `autointegration` module (the `Integrator` trait, `Euler`, `Rk4`, and `quadrature`, one concern per file), sitting beside the `autodiff` module and re-exported from `lib.rs`; mirrored tests under `tests/`.
 - **APIs:** additive trait + two structs + one free function. No existing signature changes.
 - **Dependencies:** none added.
 - **Consumers (later change):** `causal-arrow-application` replaces the ~10 hand-rolled Euler loops and the Chern-number Riemann sum, time-marches the fluid RHS kernels with `Rk4`, and uses the quadrature / Leibniz bridge to demonstrate autodiff × integration.
-- **Verification:** order-of-accuracy tests (Euler `O(dt)`, RK4 `O(dt⁴)` on `y' = y` → `exp`), Simpson exact on cubics and convergent on transcendentals, a harmonic-oscillator energy check, and a Leibniz test (quadrature over `Dual` equals the analytic parameter derivative); 100% coverage of new code.
+- **Verification:** order-of-accuracy tests (Euler `O(dt)`, RK4 `O(dt⁴)` on `y' = y` → `exp`), Simpson exact on cubics and convergent on transcendentals, a harmonic-oscillator energy check, and a Leibniz test (quadrature over `Dual` equals the analytic parameter derivative); 100% coverage of new code, **including every error path** (each `Err` / validation / panic branch) for maximum coverage.

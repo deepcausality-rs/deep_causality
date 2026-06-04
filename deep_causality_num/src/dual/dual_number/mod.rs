@@ -7,6 +7,7 @@ use crate::Real;
 
 mod algebra;
 mod arithmetic;
+mod convert;
 mod display;
 mod identity;
 mod real;

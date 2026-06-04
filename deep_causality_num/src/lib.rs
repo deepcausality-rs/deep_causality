@@ -8,6 +8,7 @@ extern crate core;
 
 mod algebra;
 mod alias;
+mod autodiff;
 mod cast;
 mod complex;
 mod dual;
@@ -65,6 +66,11 @@ pub use crate::complex::quaternion_number::{Quaternion, Quaternion32, Quaternion
 
 // Dual number type (forward-mode automatic differentiation)
 pub use crate::dual::dual_number::Dual;
+
+// Forward-mode automatic differentiation surface over `Dual`
+pub use crate::autodiff::derivative::{derivative, second_derivative, value_and_derivative};
+pub use crate::autodiff::gradient::{directional_derivative, gradient};
+pub use crate::autodiff::jacobian::jacobian;
 
 // Float number types
 pub use crate::float::Float;

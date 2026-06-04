@@ -10,6 +10,7 @@
 //! them back to that target. This is a round-trip identity test — the only way an
 //! analytical inversion can be verified without external truth data.
 
+use deep_causality_num::Dual;
 use deep_causality_physics::{
     CentralBody, EARTH_GM, PhysicsErrorEnum, SPEED_OF_LIGHT, SpaceTimeCoordinate,
     solve_gm_analytical_kernel,
@@ -490,4 +491,97 @@ fn test_recovered_gm_positive_and_correct_scale() {
     // Within an order of magnitude of EARTH_GM.
     assert!(gm > 1.0e14);
     assert!(gm < 1.0e15);
+}
+
+// =============================================================================
+// Forward-mode autodiff sensitivity — the kernel runs over `Dual<f64>`
+// =============================================================================
+//
+// Because `solve_gm_analytical_kernel` and its `CentralBody` / `SpaceTimeCoordinate`
+// inputs are bounded on `Real + Div` rather than `RealField`, the dual number flows
+// straight through and carries `∂GM/∂input` in its `ε` channel. We seed one input as
+// `Dual::variable`, run the kernel once, and check the derivative against a central
+// finite difference of the plain-`f64` kernel.
+
+/// Build a `SpaceTimeCoordinate<Dual<f64>>` whose real fields are constant duals,
+/// except `clock_drift_rate`, which becomes the differentiation seed when `seed_drift`.
+fn dual_coord(
+    r: f64,
+    v: f64,
+    z: f64,
+    drift: f64,
+    seed_drift: bool,
+) -> SpaceTimeCoordinate<Dual<f64>> {
+    SpaceTimeCoordinate {
+        timestamp: 0,
+        sat_id: 0,
+        r_m: Dual::constant(r),
+        v_ms: Dual::constant(v),
+        clock_bias_s: Dual::constant(0.0),
+        position: [Dual::constant(0.0), Dual::constant(0.0), Dual::constant(z)],
+        velocity: [
+            Dual::constant(0.0),
+            Dual::constant(0.0),
+            Dual::constant(0.0),
+        ],
+        clock_drift_rate: if seed_drift {
+            Dual::variable(drift)
+        } else {
+            Dual::constant(drift)
+        },
+    }
+}
+
+/// Plain-`f64` GM recovery for a fixed spherical scenario (J2 = 0), parameterised by
+/// `coord_b.clock_drift_rate` — the finite-difference oracle for the sensitivity test.
+fn gm_f64_vs_drift_b(drift_b: f64) -> f64 {
+    let body = CentralBody::<f64>::new(EARTH_GM, 6.378e6, 0.0);
+    let coord_a = SpaceTimeCoordinate::<f64> {
+        timestamp: 0,
+        sat_id: 0,
+        r_m: 7.0e6,
+        v_ms: 7500.0,
+        clock_bias_s: 0.0,
+        position: [0.0, 0.0, 0.0],
+        velocity: [0.0, 0.0, 0.0],
+        clock_drift_rate: -5.0e-10,
+    };
+    let coord_b = SpaceTimeCoordinate::<f64> {
+        timestamp: 0,
+        sat_id: 0,
+        r_m: 2.6e7,
+        v_ms: 3900.0,
+        clock_bias_s: 0.0,
+        position: [0.0, 0.0, 0.0],
+        velocity: [0.0, 0.0, 0.0],
+        clock_drift_rate: drift_b,
+    };
+    solve_gm_analytical_kernel(&coord_a, &coord_b, &body).unwrap()
+}
+
+#[test]
+fn test_dual_recovers_value_and_clock_drift_sensitivity() {
+    let drift_b = -1.5e-10;
+    let body = CentralBody::<Dual<f64>>::new(
+        Dual::constant(EARTH_GM),
+        Dual::constant(6.378e6),
+        Dual::constant(0.0),
+    );
+    let coord_a = dual_coord(7.0e6, 7500.0, 0.0, -5.0e-10, false);
+    let coord_b = dual_coord(2.6e7, 3900.0, 0.0, drift_b, true); // seed ∂/∂drift_b
+
+    let gm = solve_gm_analytical_kernel(&coord_a, &coord_b, &body).unwrap();
+
+    // Real part equals the plain-f64 recovery — behavior is preserved.
+    let expected = gm_f64_vs_drift_b(drift_b);
+    assert!((gm.value() - expected).abs() / expected.abs() < 1e-12);
+
+    // ε part equals ∂GM/∂drift_b, checked against a central finite difference.
+    let h = 1.0e-15;
+    let fd = (gm_f64_vs_drift_b(drift_b + h) - gm_f64_vs_drift_b(drift_b - h)) / (2.0 * h);
+    let ad = gm.derivative();
+    assert!(
+        (ad - fd).abs() / fd.abs() < 1e-6,
+        "autodiff sensitivity {ad} disagrees with finite difference {fd}"
+    );
 }

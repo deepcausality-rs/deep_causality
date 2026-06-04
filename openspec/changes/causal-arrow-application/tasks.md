@@ -40,4 +40,5 @@
 
 - [ ] 7.1 `cargo build` / `cargo test` for every touched example crate; new examples run and their assertion tests pass.
 - [ ] 7.2 `make format && make fix` (multiple example crates touched); 0 clippy warnings, no `#[allow(...)]`.
+- [ ] 7.2a All error paths covered: every `Err` / validation / panic branch in new and modified example code (and any new helper) is exercised by a test for maximum coverage.
 - [ ] 7.3 Bazel targets for new examples build (`BUILD.bazel` updated). No file deleted (owner-approval rule); superseded lines replaced in place. Commit message prepared; owner commits.
