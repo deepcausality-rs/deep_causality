@@ -9,6 +9,7 @@ extern crate core;
 mod algebra;
 mod alias;
 mod autodiff;
+mod autointegration;
 mod cast;
 mod complex;
 mod dual;
@@ -71,6 +72,12 @@ pub use crate::dual::dual_number::Dual;
 pub use crate::autodiff::derivative::{derivative, second_derivative, value_and_derivative};
 pub use crate::autodiff::gradient::{directional_derivative, gradient};
 pub use crate::autodiff::jacobian::jacobian;
+
+// Numeric integration operator (Layer-2 complement of autodiff)
+pub use crate::autointegration::euler::Euler;
+pub use crate::autointegration::integrator::Integrator;
+pub use crate::autointegration::quadrature::quadrature;
+pub use crate::autointegration::rk4::Rk4;
 
 // Float number types
 pub use crate::float::Float;

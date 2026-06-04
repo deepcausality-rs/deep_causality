@@ -16,6 +16,21 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "autointegration",
+    srcs = glob([
+        "autointegration/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
     name = "casts",
     srcs = glob([
         "casts/as_primitive/*_tests.rs",

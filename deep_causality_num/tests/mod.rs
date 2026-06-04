@@ -4,6 +4,7 @@
  */
 mod algebra;
 mod autodiff;
+mod autointegration;
 mod casts;
 mod complex;
 mod dual;
