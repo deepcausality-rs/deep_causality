@@ -1,0 +1,44 @@
+deep_causality_num/src/autointegration/rk4.rs
+  s_52e6d9817e5bf8::t_837e8267c1ff4d 1-47
+deep_causality_num/src/autointegration/quadrature.rs
+  s_52e6d9817e5bf8::t_f9fb358d88d9be 1-57,60-62
+  s_52e6d9817e5bf8::t_d2058879843727 58-59
+deep_causality_num/src/autointegration/euler.rs
+  s_52e6d9817e5bf8::t_5ef0d53657fe78 1-31
+deep_causality_num/tests/autointegration/integrator_tests.rs
+  s_52e6d9817e5bf8::t_673de16fd23ffc 1-18,21-67
+  s_52e6d9817e5bf8::t_15a2de612ada60 68-80,86
+  s_52e6d9817e5bf8::t_56cd08b25da6cc 81-85
+  s_52e6d9817e5bf8::t_93a9f961922448 19-20
+deep_causality_num/tests/BUILD.bazel
+  s_52e6d9817e5bf8::t_903d13b5245b23 19-29
+deep_causality_num/tests/autointegration/quadrature_tests.rs
+  s_52e6d9817e5bf8::t_cde674d39ddbdd 1-61
+deep_causality_num/src/autointegration/integrator.rs
+  s_52e6d9817e5bf8::t_3248ab75ce3c50 1-41
+deep_causality_num/src/lib.rs
+  s_52e6d9817e5bf8::t_fc476b6b973229 76-81
+  s_52e6d9817e5bf8::t_51cf791723808e 12
+deep_causality_num/src/autointegration/mod.rs
+  s_52e6d9817e5bf8::t_c3a28ca77bef29 1-29
+deep_causality_num/tests/autointegration/mod.rs
+  s_52e6d9817e5bf8::t_6193cb87a03e05 1-7
+deep_causality_num/tests/mod.rs
+  s_52e6d9817e5bf8::t_dcf8233686afa5 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "7c97f7073e296cbc5beb96ee1045adc20af94c6e",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
