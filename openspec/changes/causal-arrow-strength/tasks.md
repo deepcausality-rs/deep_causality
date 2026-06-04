@@ -1,31 +1,31 @@
 ## 1. `Arrow` trait + category combinators in `deep_causality_haft`
 
-- [ ] 1.1 Add an `arrow` module (folder `src/arrow/` with the trait + one struct per file, mirroring the type-per-module convention). Define `pub trait Arrow { type In; type Out; fn run(&self, input: Self::In) -> Self::Out; }` with `#[diagnostic::on_unimplemented]`, and the fluent provided methods `compose`/`first`/`second`/`split`/`fanout` returning the combinator structs.
-- [ ] 1.2 `Id<A>` (identity arrow) and `Pure<A, B, F>` (lift `F: Fn(A) -> B`, carrying `A`/`B` via `PhantomData` to avoid E0207); each `impl Arrow`. Document that `Pure` subsumes `FnMorphism::apply` and `Compose` supplies the composition `Morphism` deferred to this stage.
-- [ ] 1.3 `Compose<F, G>` with `impl<F: Arrow, G: Arrow<In = F::Out>> Arrow for Compose<F, G>` (`run` = `g.run(f.run(x))`).
-- [ ] 1.4 Register the modules in `src/arrow/mod.rs` (or `src/traits/`), re-export `Arrow`, `Id`, `Pure`, `Compose` (and the product structs) from `src/lib.rs`.
+- [x] 1.1 Added `src/arrow/` (one combinator struct per file). `pub trait Arrow { type In; type Out; fn run(&self, input: Self::In) -> Self::Out; }` with `#[diagnostic::on_unimplemented]` and the fluent provided methods `compose`/`first`/`second`/`split`/`fanout`. The trait lives in `arrow/mod.rs` (not `arrow/arrow.rs`, which would trip `clippy::module_inception`).
+- [x] 1.2 `Id<A>` (identity arrow, with `Default`) and `Lift<A, B, F>` (lift `F: Fn(A) -> B`, carrying `A`/`B` via `PhantomData` to avoid E0207 — **`Lift`, not `Pure`**, since `haft` already exports a `Pure` trait); each `impl Arrow`. `Lift` is the value-level counterpart of `FnMorphism::apply`; `Compose` supplies the composition `Morphism` deferred to this stage.
+- [x] 1.3 `Compose<F, G>` with `impl<F: Arrow, G: Arrow<In = F::Out>> Arrow for Compose<F, G>` (`run` = `g.run(f.run(x))`).
+- [x] 1.4 Re-exported `Arrow`, `Id`, `Lift`, `Compose`, `First`, `Second`, `Split`, `Fanout`, `ArrowBuilder`, `arrow` from `src/lib.rs` (`mod arrow;` kept private so the `arrow` fn and `arrow` module do not clash).
 
 ## 2. Strength / monoidal-product combinators
 
-- [ ] 2.1 `First<F, C>` and `Second<F, C>` (act on one component of a pair; the other passes through).
-- [ ] 2.2 `Split<F, G>` (`***`): `(F::In, G::In) → (F::Out, G::Out)`.
-- [ ] 2.3 `Fanout<F, G>` (`&&&`): `F::In → (F::Out, G::Out)` with `F::In = G::In` and `In: Clone` (bound only on the `fanout` method / this impl).
+- [x] 2.1 `First<F, C>` and `Second<F, C>` (act on one component of a pair; the other passes through).
+- [x] 2.2 `Split<F, G>` (`***`): `(F::In, G::In) → (F::Out, G::Out)`.
+- [x] 2.3 `Fanout<F, G>` (`&&&`): `F::In → (F::Out, G::Out)` with `F::In = G::In` and `In: Clone` (bound on the `fanout` method + the `Fanout` impl, not the trait).
 
 ## 3. Arrow builder (hides the machinery)
 
-- [ ] 3.1 Add `ArrowBuilder<S: Arrow>` plus the entry point `arrow(f)` lifting `F: Fn(A) -> B` into `ArrowBuilder<Pure<A, B, F>>`. Methods: `then`/`then_fn` (alias of `compose`), `par` (alias of `split`), `fanout`, terminal `build()` (yield the composed `Arrow`) and `run(input)` (apply). Threads the growing arrow type through `Self`.
-- [ ] 3.2 Add `#[diagnostic::on_unimplemented]` to `Arrow` (and seal where it improves errors) so a mis-typed chain is legible. Keep the categorical names on `Arrow`; the friendly aliases on the builder.
-- [ ] 3.3 Document that this is the carrier-free generic builder; the causal process builder over `PropagatingEffect`/`PropagatingProcess` is `causal-arrow-cdl-unification` (note `causal-process-builder.md`).
+- [x] 3.1 `ArrowBuilder<S: Arrow>` + entry point `arrow(f)` lifting `F: Fn(A) -> B` into `ArrowBuilder<Lift<A, B, F>>`, and `ArrowBuilder::new` to wrap an existing arrow. Methods: `then` (compose), `then_fn` (lift a raw closure then compose), `par` (split), `fanout`, terminals `build()` and `run(input)`. Threads the growing arrow type through `Self`. (`then_fn`'s return is a `type ThenFn<…>` alias to satisfy `clippy::type_complexity`.)
+- [x] 3.2 `#[diagnostic::on_unimplemented]` on `Arrow` for legible errors. Categorical names (`compose`/`split`/`fanout`) on `Arrow`; friendly aliases (`then`/`par`/`fanout`) on the builder. No sealing needed.
+- [x] 3.3 Documented (module + builder docs) that this is the carrier-free generic builder; the causal process builder over `PropagatingEffect`/`PropagatingProcess` is `causal-arrow-cdl-unification` (note `causal-process-builder.md`).
 
 ## 4. Tests (arrow laws + multi-input witness + builder)
 
-- [ ] 4.1 Category laws: `Pure`/`run` equals the underlying function; `compose` runs left-to-right; `Id` is the left and right unit; composition is associative (same result for `(f≫g)≫h` and `f≫(g≫h)`).
-- [ ] 4.2 Product laws: `first` passes the second component through; `split` runs both arrows on a pair; `fanout` feeds one input to two arrows; `*** = first >>> second` (decomposition law).
-- [ ] 4.3 Multi-input witness: build `(InA, InB) → Out` via `a.split(b).compose(combine)`; assert the structural parameter the arrows close over appears in neither `In` nor `Out` (it is captured, not flowing). Register tests; Bazel uses `glob`.
-- [ ] 4.4 Builder: `arrow(f).then(g).par(h).build()` (and `.run(input)`) produces the same result as the explicit `Pure`/`compose`/`split` construction, with no combinator-struct or `Morphism` name in the test's pipeline expression; `build()` yields a reusable, further-composable `Arrow`.
+- [x] 4.1 Category laws: `Lift`/`run` equals the function; `compose` runs left-to-right; `Id` is the left and right unit; composition is associative.
+- [x] 4.2 Product laws: `first`/`second` pass-through; `split` parallel on a pair; `fanout` feeds one input to two arrows; `*** = first >>> second` decomposition.
+- [x] 4.3 Multi-input witness: `normal.split(anomalous).compose(combine)` over two cohorts; the captured structural parameter (`bias`) appears in neither `In` nor `Out`. `tests/algebra/arrow_tests.rs` (Bazel `glob`).
+- [x] 4.4 Builder: `arrow(f).then_fn(g).par(h).build()`/`.run(x)` equals the explicit `Lift`/`compose`/`split` construction, with no combinator-struct or `Morphism` name in the pipeline expression; `build()` yields a reusable, further-composable `Arrow`.
 
 ## 5. Verification
 
-- [ ] 5.1 `cargo build -p deep_causality_haft && cargo test -p deep_causality_haft`.
-- [ ] 5.2 `cargo fmt` + `cargo clippy -p deep_causality_haft --all-targets` — 0 warnings/errors, no `#[allow(...)]`; confirm no `dyn`/macros/external deps introduced.
-- [ ] 5.3 Purely additive: `Morphism`/`Endomorphism` unchanged; existing-file diffs limited to `mod`/`pub use` lines. Prepare a commit message; do not commit (owner commits).
+- [x] 5.1 `cargo test -p deep_causality_haft` — 176 + doctests pass, 0 failed (13 new arrow tests).
+- [x] 5.2 `cargo fmt` + `cargo clippy -p deep_causality_haft --all-targets` — 0 warnings/errors, no `#[allow(...)]`; no `dyn`/macros/external deps introduced.
+- [x] 5.3 Purely additive: `Morphism`/`Endomorphism` unchanged; existing-file diffs limited to `lib.rs` `mod`/`pub use` + `tests/algebra/mod.rs` registration. Commit message prepared; not committed (owner commits).

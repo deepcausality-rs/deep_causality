@@ -51,7 +51,7 @@ Combinator structs (each a one-field/two-field generic struct implementing `Arro
 | struct | `In` | `Out` | `run` |
 |---|---|---|---|
 | `Id<A>` | `A` | `A` | `x` |
-| `Pure<A, B, F>` (lift `Fn(A)->B`) | `A` | `B` | `(f)(x)` |
+| `Lift<A, B, F>` (lift `Fn(A)->B`) | `A` | `B` | `(f)(x)` |
 | `Compose<F, G>` (`f >>> g`) | `F::In` | `G::Out` | `g.run(f.run(x))` |
 | `First<F, C>` | `(F::In, C)` | `(F::Out, C)` | `(f.run(a), c)` |
 | `Second<F, C>` | `(C, F::In)` | `(C, F::Out)` | `(c, f.run(a))` |
@@ -60,13 +60,13 @@ Combinator structs (each a one-field/two-field generic struct implementing `Arro
 
 This is **total** (`Compose<F,G>` always type-checks when `G::In = F::Out`), **zero-cost** (monomorphized, no allocation, no `dyn`), **macro-free**, and `run(&self, …)` so an arrow is reusable. It is the strong category: `Id`/`Compose` give the category, `First`/`Split` give strength, `Fanout` gives the diagonal.
 
-**Verified encoding (important).** `Pure` must be **`Pure<A, B, F>`** carrying the in/out types via `PhantomData<fn(A) -> B>`, **not** the bare `Pure<F>`: with `type In = A`/`type Out = B` associated and `A`/`B` appearing only in the `F: Fn(A) -> B` bound, Rust rejects the impl with `E0207` ("unconstrained type parameter"), because the type system does not treat `Fn`'s argument as uniquely determined by `F`. Carrying `A, B` in the `Self` type fixes it. The whole design — all combinators plus the builder — was compiled and its laws run as a `rustc` probe with this encoding; it builds clean and the laws pass. The other combinators (`Compose<F,G>`, `First<F,C>`, `Second<F,C>`, `Split<F,G>`, `Fanout<F,G>`) take their `In`/`Out` from `F`/`G`'s associated types and need no extra `PhantomData` beyond `First`/`Second`'s pass-through `C`.
+**Verified encoding (important).** `Lift` must be **`Lift<A, B, F>`** carrying the in/out types via `PhantomData<fn(A) -> B>`, **not** the bare `Lift<F>`: with `type In = A`/`type Out = B` associated and `A`/`B` appearing only in the `F: Fn(A) -> B` bound, Rust rejects the impl with `E0207` ("unconstrained type parameter"), because the type system does not treat `Fn`'s argument as uniquely determined by `F`. Carrying `A, B` in the `Self` type fixes it. The whole design — all combinators plus the builder — was compiled and its laws run as a `rustc` probe with this encoding; it builds clean and the laws pass. The other combinators (`Compose<F,G>`, `First<F,C>`, `Second<F,C>`, `Split<F,G>`, `Fanout<F,G>`) take their `In`/`Out` from `F`/`G`'s associated types and need no extra `PhantomData` beyond `First`/`Second`'s pass-through `C`.
 
 *Alternatives considered.* (a) Witness-based `compose` on `Morphism` — rejected: cannot be implemented (above). (b) A defunctionalized free-category enum — rejected: the existential intermediate type is inexpressible and would force boxing. (c) `Box<dyn Fn>` carriers — rejected: forbidden trait objects, and not zero-cost.
 
 ### D2 — Relationship to `Morphism` (witness) and to `Bifunctor`/`Profunctor`
 
-`Morphism` stays the **witness-level interface** (the typeclass a discovery operator instances); `Arrow` is the **value-level algebra** for actually wiring arrows. `Pure::new(f)` lifts a plain `Fn` (subsuming `FnMorphism::apply`), and `Compose` supplies the composition `Morphism` lacked — so `arrow-strength` *completes* foundations additively without altering it. The existing witness `Bifunctor` (the `⊗`) and `Profunctor` (`dimap`) are the categorical justification for `Split`/`Pure`-pre/post-processing; the value-level structs are their concrete, composable counterparts. We do **not** retrofit the witness traits; we add the value-level layer where composition is achievable.
+`Morphism` stays the **witness-level interface** (the typeclass a discovery operator instances); `Arrow` is the **value-level algebra** for actually wiring arrows. `Lift::new(f)` lifts a plain `Fn` (subsuming `FnMorphism::apply`), and `Compose` supplies the composition `Morphism` lacked — so `arrow-strength` *completes* foundations additively without altering it. The existing witness `Bifunctor` (the `⊗`) and `Profunctor` (`dimap`) are the categorical justification for `Split`/`Lift`-pre/post-processing; the value-level structs are their concrete, composable counterparts. We do **not** retrofit the witness traits; we add the value-level layer where composition is achievable.
 
 ### D3 — Fluent chain = wiring diagram (§8), and where it bites
 
@@ -83,11 +83,11 @@ Binding design direction (see `openspec/notes/arrow/causal-process-builder.md`, 
 Concretely, this change ships a thin **generic arrow builder** over the value-level `Arrow`:
 
 ```rust
-pub fn arrow<A, B, F: Fn(A) -> B>(f: F) -> ArrowBuilder<Pure<A, B, F>> { … } // entry point
+pub fn arrow<A, B, F: Fn(A) -> B>(f: F) -> ArrowBuilder<Lift<A, B, F>> { … } // entry point
 
 impl<S: Arrow> ArrowBuilder<S> {
     pub fn then<G>(self, g: G) -> ArrowBuilder<Compose<S, G>> where G: Arrow<In = S::Out> { … }
-    pub fn then_fn<C, G: Fn(S::Out) -> C>(self, g: G) -> ArrowBuilder<Compose<S, Pure<S::Out, C, G>>> { … }
+    pub fn then_fn<C, G: Fn(S::Out) -> C>(self, g: G) -> ArrowBuilder<Compose<S, Lift<S::Out, C, G>>> { … }
     pub fn par<G: Arrow>(self, g: G) -> ArrowBuilder<Split<S, G>> { … }   // ***
     pub fn fanout<G>(self, g: G) -> ArrowBuilder<Fanout<S, G>>
         where G: Arrow<In = S::In>, S::In: Clone { … }
@@ -96,7 +96,7 @@ impl<S: Arrow> ArrowBuilder<S> {
 }
 ```
 
-The builder threads the (growing) `Arrow` type through `Self` exactly like the CDL typestate builder threads its witness — the types are real but **camouflaged**. `#[diagnostic::on_unimplemented]` on `Arrow` and sealing keep a mis-typed chain legible. The friendly aliases (`.then`/`.par`/`.fanout`) live on the builder; the categorical names (`.compose`/`.split`/`.fanout`) stay on the `Arrow` trait — both are offered (Open Questions). `then` takes a pre-built `Arrow`; `then_fn` lifts a raw closure (so the user need not write `Pure::new`). This whole builder was part of the verified `rustc` probe — `arrow(|x: i32| x + 1).then_fn(|x| x * 2).build()` compiles and runs, naming no combinator struct.
+The builder threads the (growing) `Arrow` type through `Self` exactly like the CDL typestate builder threads its witness — the types are real but **camouflaged**. `#[diagnostic::on_unimplemented]` on `Arrow` and sealing keep a mis-typed chain legible. The friendly aliases (`.then`/`.par`/`.fanout`) live on the builder; the categorical names (`.compose`/`.split`/`.fanout`) stay on the `Arrow` trait — both are offered (Open Questions). `then` takes a pre-built `Arrow`; `then_fn` lifts a raw closure (so the user need not write `Lift::new`). This whole builder was part of the verified `rustc` probe — `arrow(|x: i32| x + 1).then_fn(|x| x * 2).build()` compiles and runs, naming no combinator struct.
 
 **Why this is in-scope here, and what is deferred.** The *generic* arrow builder is carrier-free and lands in `haft` now — it is the §8 mechanization evidence that the algebra is usable. The **causal process builder** that hides the monad + witness over the `PropagatingEffect`/`PropagatingProcess` carrier (extending today's CDL builder, per the note §2) is **deferred to `causal-arrow-cdl-unification`**, because it requires the §10 carrier rework that does not exist yet. The builder here is written so that stage instantiates the same pattern on `PropagatingEffect`.
 
@@ -104,13 +104,13 @@ The builder threads the (growing) `Arrow` type through `Self` exactly like the C
 
 ## Risks / Trade-offs
 
-- **[Two arrow notions — witness `Morphism` and value `Arrow`.]** Risk of confusion/duplication. → Mitigated by D2: distinct, complementary layers (interface vs. composable algebra), documented; `Pure`/`Compose` bridge them. No duplication of behavior — `Morphism` has no composition to duplicate.
+- **[Two arrow notions — witness `Morphism` and value `Arrow`.]** Risk of confusion/duplication. → Mitigated by D2: distinct, complementary layers (interface vs. composable algebra), documented; `Lift`/`Compose` bridge them. No duplication of behavior — `Morphism` has no composition to duplicate.
 - **[Type-inference / error ergonomics.]** Deeply nested `Compose<Split<…>, …>` types surface in errors. → `#[diagnostic::on_unimplemented]`, sealed where helpful, and the fluent methods keep call sites readable; accepted as the standard cost of static arrows.
 - **[`run(&self)` vs `run(self)`.]** `&self` makes arrows reusable and composation cheap but requires the lifted `Fn` (not `FnOnce`). → Correct default for pipelines; one-shot arrows are out of scope.
 - **[Scope creep toward `ArrowChoice`/`ArrowLoop`.]** → Explicitly deferred (Non-Goals); `CyberneticLoop` already covers feedback for now.
 - **[Law coverage, not just types.]** The combinators type-check but must satisfy the arrow laws. → Tests assert the category laws and the strength/exchange laws on concrete arrows, not only that they compile.
 - **[Entry-point closure annotation.]** The `rustc` probe confirmed the chain compiles, but the *first* lifted closure needs its input type annotated (`arrow(|x: i32| …)`); later `.then_fn` steps infer from `S::Out`. This is the standard inference limit at a generic entry point, not a design defect. → Document it; the entry closure annotation is a one-token cost and downstream steps are annotation-free.
-- **[`Pure<A, B, F>` verbosity / `PhantomData`.]** The carried in/out types make `Pure` a 3-parameter struct. → Hidden from users by the `arrow(f)`/`Pure::new(f)` constructors and the builder; only the type signature carries them. `clippy::new_without_default` on `Id::new`/`Pure::new` is handled by also deriving/implementing `Default` where it applies.
+- **[`Lift<A, B, F>` verbosity / `PhantomData`.]** The carried in/out types make `Lift` a 3-parameter struct. → Hidden from users by the `arrow(f)`/`Lift::new(f)` constructors and the builder; only the type signature carries them. `clippy::new_without_default` on `Id::new`/`Lift::new` is handled by also deriving/implementing `Default` where it applies.
 
 ## Migration Plan
 
@@ -118,6 +118,7 @@ Additive only; no migration. New trait + structs behind their own module and re-
 
 ## Open Questions
 
-- **Module placement.** `src/traits/arrow.rs` (next to `morphism.rs`) vs. a dedicated `src/arrow/` folder for the trait + one struct per file (per "one type per module"). Lean: a folder `src/arrow/` with `arrow.rs` (trait) + one file per combinator struct, mirroring the crate's type-per-module convention.
-- **`&&&` input bound.** `Fanout` needs `Self::In: Clone`. Keep it a bound on the method (only `fanout` pays it) rather than on the trait.
-- **Should `Arrow` supertrait or reference `Morphism`?** Likely no hard supertrait (different shapes: value vs. witness); relate them by providing `Pure` (lift) and documenting the correspondence. Revisit if a consumer needs to treat them uniformly.
+- **Module placement (resolved).** A dedicated `src/arrow/` folder, one combinator struct per file (`id`/`lift`/`compose`/`first`/`second`/`split`/`fanout`/`builder`). The `Arrow` trait itself lives in `arrow/mod.rs` (not `arrow/arrow.rs`, which would trip `clippy::module_inception`). All items re-exported from the crate root.
+- **Naming (resolved).** The lift combinator is `Lift`, not `Pure`: `haft` already exports a `Pure` trait (the monadic `pure`/`unit`), so `Pure` would collide. `Lift::new(f)` / `arrow(f)` both lift a function.
+- **`&&&` input bound.** `Fanout` needs `Self::In: Clone`. Kept a bound on the method/impl (only `fanout` pays it) rather than on the trait.
+- **Should `Arrow` supertrait or reference `Morphism`?** No hard supertrait (different shapes: value vs. witness); related by providing `Lift` and documenting the correspondence. Revisit if a consumer needs to treat them uniformly.

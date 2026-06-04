@@ -5,6 +5,7 @@
 
 mod adjunction_tests;
 mod applicative_tests;
+mod arrow_tests;
 mod bifunctor_tests;
 mod comonad_tests;
 mod cybernetic_loop_tests;

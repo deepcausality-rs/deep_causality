@@ -2,11 +2,11 @@
 
 ### Requirement: Value-level Arrow with total composition
 
-`deep_causality_haft` SHALL provide a value-level `Arrow` trait — `type In`, `type Out`, and `fn run(&self, input: Self::In) -> Self::Out` — together with concrete combinator types that make composition total under static dispatch (no `dyn`/trait objects, no macros). It SHALL provide `Id<A>` (the identity arrow), `Pure<A, B, F>` lifting any `Fn(A) -> B` into an arrow, and `Compose<F, G>` implementing `f >>> g` (run `g` on the output of `f`), available as a fluent method `Arrow::compose`. Each combinator SHALL itself implement `Arrow`, so composites compose. The trait and combinator types SHALL be re-exported from the crate root.
+`deep_causality_haft` SHALL provide a value-level `Arrow` trait — `type In`, `type Out`, and `fn run(&self, input: Self::In) -> Self::Out` — together with concrete combinator types that make composition total under static dispatch (no `dyn`/trait objects, no macros). It SHALL provide `Id<A>` (the identity arrow), `Lift<A, B, F>` lifting any `Fn(A) -> B` into an arrow, and `Compose<F, G>` implementing `f >>> g` (run `g` on the output of `f`), available as a fluent method `Arrow::compose`. Each combinator SHALL itself implement `Arrow`, so composites compose. The trait and combinator types SHALL be re-exported from the crate root.
 
 #### Scenario: Lift and run a function
 
-- **WHEN** a function `f: Fn(A) -> B` is lifted with `Pure` and `run` on input `a`
+- **WHEN** a function `f: Fn(A) -> B` is lifted with `Lift` and `run` on input `a`
 - **THEN** the result equals `f(a)`
 
 #### Scenario: Composition runs left-to-right and is total
@@ -66,7 +66,7 @@ This change provides the **carrier-free generic** arrow builder only. The causal
 #### Scenario: A fluent chain builds a composed arrow without naming combinator types
 
 - **WHEN** a user writes `arrow(f).then(g).par(h).build()` (or `.run(input)`)
-- **THEN** the result is the same arrow as the explicit `Pure::new(f).compose(g).split(h)` construction, and the user's code names no combinator struct (`Compose`/`Split`/`Pure`) nor the witness `Morphism`
+- **THEN** the result is the same arrow as the explicit `Lift::new(f).compose(g).split(h)` construction, and the user's code names no combinator struct (`Compose`/`Split`/`Lift`) nor the witness `Morphism`
 
 #### Scenario: The builder yields a reusable arrow
 
