@@ -116,37 +116,51 @@ The program evolves around a numbe of dedicated research projects build upon the
 
 The Causal Arrow generalizes over carrier dimension (§3): one operator runs whether a
 variable is a scalar series, a multivector field, or a manifold. Two analytic operators on
-those carriers, the derivative and the integral, are realized directly in the type system,
-building on the `Dual` number from `causal-arrow-foundations`. They form a three-stage
-sub-program, proven first on the physics and example suites:
+those carriers, the derivative and the integral, are not bolted on as free functions — they
+**are** the categorical machinery already in place, and live with the Arrow in
+`deep_causality_haft`. `deep_causality_num` keeps only the *number* that makes
+differentiation possible (`Dual`); the *operators* are Arrow-native. Two stages:
 
-1. **`causal-arrow-autodiff`** — a forward-mode automatic-differentiation surface over
-   `Dual` (`derivative`, `gradient`, `directional_derivative`, `jacobian`,
-   `second_derivative`) in `deep_causality_num`. Differentiation is a Layer-1 *scalar*
-   operation, because the chain rule is a ring homomorphism, so it lives in the number.
-   The stage also establishes the bound-relaxation principle (`RealField → Real + Div`)
-   that lets `Dual` flow through division-only kernels, worked on `solve_gm_analytical_kernel`.
+1. **`causal-arrow-calculus`** (`deep_causality_haft`) — the analytic operators as one
+   Arrow-native surface:
+   - **Differentiation is the tangent functor `T`.** Its object map is exactly `Dual<A>`
+     (kept in `num`); its morphism map is "run the arrow over duals". Because a concrete
+     value-level `Arrow<In = f64>` cannot be lifted over `Dual` (verified: `E0308`), the
+     scalar-polymorphism lives in a `DifferentiableArrow` whose `run` is generic over the
+     scalar; `Diff<A>` is the derivative-arrow view, and `derivative`/`gradient` are its
+     desugarings. A differentiable model is simultaneously a plain `Arrow`, so the functor
+     extends the strength algebra rather than replacing it.
+   - **Integration is endomorphism iteration.** `Euler`/`Rk4` build a value-level endo-arrow
+     `S → S` from a rate field; evolution is the `Endomorphism` monoid's
+     `iterate_n` / `iterate_to_fixpoint` / `iterate_until` — the three modes being fixed
+     horizon, steady state, and integrate-until-event. (Value-level, because a capturing
+     stepper is not a `fn`-pointer witness — the same reason strength realized composition at
+     the value level.)
+   - **Quadrature is a fold-arrow**, and the Leibniz rule (differentiate under the integral)
+     is the *naturality* of `T` through that fold — `T(∫f) = ∫(Tf)` — a verified law.
+   - Precision is a parameter (`Scalar = Real + Div + FromPrimitive`, with a nesting-safe
+     `FromPrimitive` blanket for `Dual`): f32 / f64 / Float106, duals nesting for higher
+     derivatives. `Dual`, `ε`, seeding, stepper coefficients and loops are never visible —
+     a user writes a model once over `Scalar` and applies operators.
 
-2. **`causal-arrow-autointegration`** — a numeric integration *operator* (an `Integrator`
-   trait with `Euler` / `Rk4` steppers, plus composite-Simpson `quadrature`), generic over
-   module-valued state. Integration is not the mirror of `Dual` and cannot be: it is a
-   non-local functional over an interval and is not algebraically closed in the elementary
-   functions (Liouville), so it has no "anti-dual" number form and is instead a Layer-2
-   operator over functions. The two operators meet through the Leibniz rule (differentiate
-   under the integral), not as dual types.
-
-3. **`causal-arrow-application`** — spends both operators across the example suite
-   (behavior-preserving rewrites of hand-coded derivatives and hand-rolled Euler loops) and
-   adds the fluid-dynamics examples the recent CFD kernels were waiting for, including an
-   avionics CFD example verified by the Method of Manufactured Solutions. The fluid RHS
-   kernels return `∂u/∂t` and demand `∇u` / `∇²u` / `∇p` as inputs: differentiation fills the
-   inputs, integration consumes the output, and the kernel set becomes a runnable, verifiable
-   solver.
+2. **`causal-arrow-application`** — applies the operators across the example suite
+   (replacing hand-coded derivatives and hand-rolled Euler loops with one applied operator
+   each) and adds the fluid-dynamics examples the recent CFD kernels were waiting for,
+   including an avionics example verified by the Method of Manufactured Solutions. The fluid
+   RHS kernels return `∂u/∂t` and demand `∇u` / `∇²u` / `∇p`: the tangent functor fills the
+   inputs, the endo-arrow iteration consumes the output, and the kernel set becomes a
+   runnable, verifiable solver — every piece an `Arrow` that drops into a `PropagatingProcess`
+   stage.
 
 The non-continuous carriers (discrete fields on a mesh, with no closed form) stay served by
-the topology exterior-calculus surface; type-based differentiation targets closed-form
-fields, manufactured solutions, and parameter sensitivities. The three stages build on
-`causal-arrow-foundations` and run on the dedicated `causal-arrow` branch.
+the topology exterior-calculus surface; the tangent functor targets closed-form fields,
+manufactured solutions, and parameter sensitivities. Both stages build on
+`causal-arrow-foundations` (the `Dual` number, `Morphism`, `Endomorphism`) and
+`causal-arrow-strength` (the value-level `Arrow`), and run on the dedicated `causal-arrow`
+branch. (The earlier `causal-arrow-autodiff` / `causal-arrow-autointegration` framing, which
+placed the operators as free functions in `num`, is superseded by this Arrow-native design;
+`causal-arrow-autodiff`'s retained contribution is the `Dual` number reaching the chronometric
+kernels via the `RealField → Real + Div` widening.)
 
 ## Scope and boundaries
 
