@@ -3,10 +3,51 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_calculus::{DifferentiableField, Scalar};
 use deep_causality_core::{EffectValue, PropagatingEffect};
 use deep_causality_tensor::CausalTensor;
 use std::error::Error;
 use std::f64::consts::PI;
+use std::ops::{Add, Mul};
+
+/// 2-D position `(x, y)` in metres — the integrator state. `Euler` needs a module-valued state
+/// (`Add` + scalar `Mul`), so the truth position rides in this newtype.
+#[derive(Clone, Copy)]
+pub struct Pos2(pub f64, pub f64);
+
+impl Add for Pos2 {
+    type Output = Pos2;
+    fn add(self, o: Pos2) -> Pos2 {
+        Pos2(self.0 + o.0, self.1 + o.1)
+    }
+}
+
+impl Mul<f64> for Pos2 {
+    type Output = Pos2;
+    fn mul(self, s: f64) -> Pos2 {
+        Pos2(self.0 * s, self.1 * s)
+    }
+}
+
+
+/// The closed-form synthetic crustal anomaly field `B(fx, fy)`, written once as a scalar-generic
+/// field. The grid is sampled from it (`run` at `f64`), and its spatial gradient `∇B` — the
+/// navigation observable a gradient-aided filter uses, previously never computed — falls out of
+/// the same definition via the tangent functor (`AnomalyField.gradient(&[fx, fy])`).
+pub struct AnomalyField;
+
+impl DifferentiableField<2> for AnomalyField {
+    fn run<S: Scalar>(&self, p: &[S; 2]) -> S {
+        let (fx, fy) = (p[0], p[1]);
+        let c50 = S::from_f64(50.0).expect("constant lifts into the working scalar");
+        let c20 = S::from_f64(20.0).expect("constant lifts into the working scalar");
+        let c15 = S::from_f64(15.0).expect("constant lifts into the working scalar");
+        let c03 = S::from_f64(0.3).expect("constant lifts into the working scalar");
+        let c07 = S::from_f64(0.7).expect("constant lifts into the working scalar");
+        // Base trend + high-frequency spatial variation (a realistic crustal anomaly).
+        fx.sin() * fy.cos() * c50 + (fx * c03).sin() * c20 + (fy * c07).cos() * c15
+    }
+}
 
 // --- Constants & Configuration ---
 pub const MAP_SIZE: usize = 120; // [km] Covers 120x120km area
@@ -27,12 +68,9 @@ impl MagneticMap {
             for x in 0..size {
                 let fx = x as f64 * 0.05;
                 let fy = y as f64 * 0.05;
-                // Synthetic Anomaly: Base Trend + High Freq spatial variation
-                // Simulates a realistic crustal anomaly field
-                let val = (fx.sin() * fy.cos() * 50.0)
-                    + ((fx * 0.3).sin() * 20.0)
-                    + ((fy * 0.7).cos() * 15.0);
-                data.push(val);
+                // Sample the closed-form anomaly field that `AnomalyField` differentiates,
+                // so the grid and the gradient `∇B` share one definition.
+                data.push(AnomalyField.run(&[fx, fy]));
             }
         }
         let grid = CausalTensor::new(data, vec![size, size])?;

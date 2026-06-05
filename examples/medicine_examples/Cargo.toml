@@ -13,6 +13,7 @@ path = "no_lib.rs"
 
 [dependencies]
 deep_causality_core = { path = "../../deep_causality_core" }
+deep_causality_calculus = { path = "../../deep_causality_calculus" }
 deep_causality_physics = { path = "../../deep_causality_physics" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
 deep_causality_topology = { path = "../../deep_causality_topology" }

@@ -90,7 +90,10 @@ fn test_eq_distinguishes_content_order_and_length() {
     let mut diff_content = EffectLog::new();
     diff_content.add_entry("one");
     diff_content.add_entry("THREE");
-    assert_ne!(a, diff_content, "different message content must not be equal");
+    assert_ne!(
+        a, diff_content,
+        "different message content must not be equal"
+    );
 
     let mut diff_order = EffectLog::new();
     diff_order.add_entry("two");

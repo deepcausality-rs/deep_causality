@@ -15,9 +15,9 @@
 
 mod model;
 
-use crate::model::{
-    CELL_SIZE, MAG_NOISE_STD, MAP_SIZE, MagneticMap, ParticleFilter, generate_gaussian_noise,
-};
+use crate::model::{AnomalyField, CELL_SIZE, MAG_NOISE_STD, MAP_SIZE, MagneticMap, ParticleFilter, generate_gaussian_noise, Pos2};
+use deep_causality_calculus::{DifferentiateFieldExt, Euler};
+use deep_causality_haft::Arrow;
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -32,10 +32,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         (MAP_SIZE as f64 * CELL_SIZE / 1000.0).powi(2)
     );
 
+    // The spatial gradient ∇B of the crustal anomaly field, the navigation observable a
+    // gradient-aided filter steers by, via the tangent functor over the same closed-form field
+    // the map is sampled from.
+    let [db_dx, db_dy] = AnomalyField.gradient(&[1.0_f64, 1.0]);
+    println!(
+        "[NAV] Field gradient ∇B at start: [∂B/∂x = {db_dx:.3}, ∂B/∂y = {db_dy:.3}] nT/grid-unit"
+    );
+
     // 2. Mission Setup
     // Start at [2000, 2000] meters
-    let mut true_pos_x = 2000.0;
-    let mut true_pos_y = 2000.0;
+    let mut true_pos = Pos2(2000.0, 2000.0);
 
     // Flying Northeast at 25 m/s (~50 kts)
     let vel_x: f64 = 15.0;
@@ -49,7 +56,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Init Uncertainty: 200m (sigma)
     // If we were completely lost, we'd use init_uniform()
     println!("[NAV] Initializing Particle Filter (N=1000)...");
-    let mut filter = ParticleFilter::init_gaussian(true_pos_x, true_pos_y, 200.0, 1000);
+    let mut filter = ParticleFilter::init_gaussian(true_pos.0, true_pos.1, 200.0, 1000);
 
     println!("\n=== Starting Navigation Loop (100 Hz / Display 1 Hz) ===");
     println!("Time [s] |  True Pos [m]   |  Est Pos [m]    | Err [m] |  Mag [nT]  | Status");
@@ -58,10 +65,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     let dt = 1.0; // Simulation step [s]
     let duration = 30; // Seconds
 
+    // Truth kinematics ẋ = v as an `Euler` endo-arrow: the hand-rolled `pos += vel·dt` becomes one
+    // integrator step per tick. The rate is the constant ground velocity.
+    let kinematics = Euler::new(dt, move |_: &Pos2| Pos2(vel_x, vel_y));
+
     for t in 1..=duration {
-        // --- A. Dynamics (Truth Simulation) ---
-        true_pos_x += vel_x * dt;
-        true_pos_y += vel_y * dt;
+        // --- A. Dynamics (Truth Simulation): one position-Euler step ---
+        true_pos = kinematics.run(true_pos);
+        let (true_pos_x, true_pos_y) = (true_pos.0, true_pos.1);
 
         // --- B. Sensors (Simulation) ---
         // 1. Magnetometer (Truth + Sensor Noise)
@@ -114,3 +125,4 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("\n[SYS] Mission Complete. Final Position Accuracy: High Integrity.");
     Ok(())
 }
+

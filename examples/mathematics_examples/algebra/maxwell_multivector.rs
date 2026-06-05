@@ -2,7 +2,23 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
 use deep_causality_multivector::{CausalMultiVector, Metric};
+
+/// The plane-wave vector-potential component `A_x(t, z) = cos(ω(t − z))`, written once as a
+/// scalar-generic field so the tangent functor differentiates it. The same definition runs at
+/// `f32` (value) and `Dual<f32>` (derivative), so `gradient` yields the exact `∂A_x/∂t`,
+/// `∂A_x/∂z` — no hand-coded `±ω·sin(phase)`.
+struct PlaneWavePotential {
+    omega: f32,
+}
+
+impl DifferentiableField<2> for PlaneWavePotential {
+    fn run<S: Scalar>(&self, tz: &[S; 2]) -> S {
+        let omega = S::from_f64(self.omega as f64).expect("ω lifts into the working scalar");
+        (omega * (tz[0] - tz[1])).cos()
+    }
+}
 
 // -----------------------------------------------------------------------------------------
 // ENGINEERING VALUE:
@@ -56,10 +72,9 @@ fn main() {
 
     // 3. Define the Spacetime Gradient Operator (Nabla)
     // D = e_t d_t - e_x d_x - e_y d_y - e_z d_z
-    // Analytically derived derivatives for A = cos(t-z) e_x
-
-    let da_dt = -omega * phase.sin(); // d/dt
-    let da_dz = omega * phase.sin(); // d/dz (Chain rule: -z -> --sin = +sin)
+    // ∂A_x/∂t and ∂A_x/∂z via the tangent functor over A_x(t, z) = cos(ω(t − z)).
+    // `gradient` seeds a Dual per coordinate and reads the ε channel — the exact partials,
+    let [da_dt, da_dz] = PlaneWavePotential { omega }.gradient(&[t, z]);
 
     // Construct the Gradient Vector D
     let mut d_data = vec![0.0; 16];

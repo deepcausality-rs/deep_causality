@@ -29,6 +29,9 @@ path = "flight_envelope_monitor/main.rs"
 [dependencies]
 deep_causality = { path = "../../deep_causality" }
 deep_causality_core = { path = "../../deep_causality_core" }
+deep_causality_calculus = { path = "../../deep_causality_calculus" }
+deep_causality_num = { path = "../../deep_causality_num" }
+deep_causality_haft = { path = "../../deep_causality_haft" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
 deep_causality_multivector = { path = "../../deep_causality_multivector" }
 

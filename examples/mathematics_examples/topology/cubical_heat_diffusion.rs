@@ -23,8 +23,11 @@
 //! any other `RealField` implementor to re-run at a different precision without
 //! touching the algorithm.
 
+use deep_causality_calculus::Euler;
+use deep_causality_haft::Arrow;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{CubicalComplex, Manifold, Moore};
+use std::ops::{Add, Mul};
 
 /// `f64` is the right precision here: the explicit-Euler loop is short and the
 /// neighborhood stencil is local. Higher precision yields no observable gain.
@@ -44,40 +47,61 @@ fn main() {
     let mut data = vec![0.0 as FloatType; cell_count];
     data[center] = 1.0;
 
-    let mut manifold: Manifold<CubicalComplex<2, FloatType>, FloatType> = Manifold::from_cubical(
-        complex,
-        CausalTensor::from_vec(data.clone(), &[cell_count]),
-        0,
-    );
+    let manifold: Manifold<CubicalComplex<2, FloatType>, FloatType> =
+        Manifold::from_cubical(complex, CausalTensor::from_vec(data, &[cell_count]), 0);
 
     println!("== Step 0 ==");
     print_heatmap(manifold.data().as_slice(), top_n);
 
-    for step in 1..=STEPS {
-        let current: &[FloatType] = manifold.data().as_slice();
-        let mut next: Vec<FloatType> = current.to_vec();
-        for c in 0..cell_count {
-            let mut acc: FloatType = 0.0;
-            let mut count = 0usize;
-            for n in manifold.neighbors(Moore, c) {
-                acc += current[n];
-                count += 1;
-            }
-            // Discrete Laplacian: Σ u[n] − k · u[c], where k = |Moore(c)|.
-            let laplacian = acc - (count as FloatType) * current[c];
-            next[c] = current[c] + ALPHA * laplacian;
-        }
-        manifold = Manifold::from_cubical(
-            manifold.complex().clone(),
-            CausalTensor::from_vec(next, &[cell_count]),
-            0,
-        );
+    // The Moore neighborhood depends only on the complex, not the field, so precompute it once and
+    // the rate field becomes a pure `Fn(&Field) -> Field` — the discrete Laplacian (spatial
+    // operator), unchanged.
+    let neighbors: Vec<Vec<usize>> = (0..cell_count)
+        .map(|c| manifold.neighbors(Moore, c).collect())
+        .collect();
 
-        println!("== Step {step} ==");
-        print_heatmap(manifold.data().as_slice(), top_n);
+    // The explicit-Euler *time* update `u' = u + α·Δu` becomes an `Euler` endo-arrow with dt = α.
+    // Only the time integration is encapsulated here; the stencil is untouched. Swapping `Euler`
+    // for `Rk4` raises the time order with no change to the rate field.
+    let step = Euler::new(ALPHA, move |f: &Field| {
+        Field(
+            (0..cell_count)
+                .map(|c| {
+                    // Discrete Laplacian: Σ u[n] − k · u[c], where k = |Moore(c)|.
+                    let acc: FloatType = neighbors[c].iter().map(|&nb| f.0[nb]).sum();
+                    acc - (neighbors[c].len() as FloatType) * f.0[c]
+                })
+                .collect(),
+        )
+    });
+
+    let mut field = Field(manifold.data().as_slice().to_vec());
+    for s in 1..=STEPS {
+        field = step.run(field);
+        println!("== Step {s} ==");
+        print_heatmap(&field.0, top_n);
     }
 
-    println!("\nDone. {STEPS} explicit-Euler steps on {top_n}×{top_n} top cubes with α = {ALPHA}.");
+    println!("\nDone. {STEPS} Euler steps on {top_n}×{top_n} top cubes with α = {ALPHA}.");
+}
+
+/// The scalar heat field — the integrator state. `Euler`/`Rk4` need a module-valued state
+/// (`Add` + scalar `Mul`), which `Vec<FloatType>` lacks, so the field rides in this newtype.
+#[derive(Clone)]
+struct Field(Vec<FloatType>);
+
+impl Add for Field {
+    type Output = Field;
+    fn add(self, rhs: Field) -> Field {
+        Field(self.0.iter().zip(rhs.0).map(|(a, b)| a + b).collect())
+    }
+}
+
+impl Mul<FloatType> for Field {
+    type Output = Field;
+    fn mul(self, s: FloatType) -> Field {
+        Field(self.0.iter().map(|x| x * s).collect())
+    }
 }
 
 fn print_heatmap(values: &[FloatType], side: usize) {

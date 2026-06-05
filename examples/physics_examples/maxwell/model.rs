@@ -4,8 +4,24 @@
  */
 
 use deep_causality::{CausalityError, CausalityErrorEnum, PropagatingEffect};
+use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
 use deep_causality_physics::MaxwellSolver;
+
+/// The plane-wave vector-potential component `A_x(t, z) = cos(ω(t − z))`, written once as a
+/// scalar-generic field. The same definition evaluates at `f64` (the value) and at `Dual` (the
+/// derivative), so the tangent functor produces `∂A_x/∂t` and `∂A_x/∂z` exactly — replacing the
+/// hand-coded `−ω·sin(phase)` / `+ω·sin(phase)`.
+struct PlaneWavePotential {
+    omega: f64,
+}
+
+impl DifferentiableField<2> for PlaneWavePotential {
+    fn run<S: Scalar>(&self, tz: &[S; 2]) -> S {
+        let omega = S::from_f64(self.omega).expect("ω lifts into the working scalar");
+        (omega * (tz[0] - tz[1])).cos()
+    }
+}
 
 /// Configuration for a plane wave in spacetime
 #[derive(Clone, Debug, Default)]
@@ -18,6 +34,9 @@ pub struct PlaneWaveConfig {
 /// State propagated through the causal chain
 #[derive(Clone, Debug, Default)]
 pub struct MaxwellState {
+    pub omega: f64,
+    pub t: f64,
+    pub z: f64,
     pub phase: f64,
     pub potential_ax: f64,
     pub e_field: f64,
@@ -31,6 +50,9 @@ impl MaxwellState {
     pub fn from_config(config: &PlaneWaveConfig) -> Self {
         let phase = config.omega * (config.t - config.z);
         Self {
+            omega: config.omega,
+            t: config.t,
+            z: config.z,
             phase,
             potential_ax: phase.cos(),
             ..Default::default()
@@ -59,8 +81,6 @@ pub fn compute_potential(input: MaxwellState) -> PropagatingEffect<MaxwellState>
 /// - Bivector components → E and B fields
 pub fn compute_em_field(input: MaxwellState) -> PropagatingEffect<MaxwellState> {
     let metric = Metric::Minkowski(4);
-    let omega = 1.0_f64;
-    let phase = input.phase;
     let potential_ax = input.potential_ax;
 
     // Construct A (the 4-Vector Potential) - Promoted to f64 for Solver
@@ -68,9 +88,10 @@ pub fn compute_em_field(input: MaxwellState) -> PropagatingEffect<MaxwellState> 
     a_data[2] = potential_ax; // e_x component
     let potential_a = CausalMultiVector::new(a_data, metric).unwrap();
 
-    // Analytically derived derivatives for A = cos(t-z) e_x
-    let da_dt = -omega * phase.sin();
-    let da_dz = omega * phase.sin();
+    // ∂A_x/∂t and ∂A_x/∂z by the tangent functor over A_x(t, z) = cos(ω(t − z)).
+    // The field is written once over `Scalar`; `gradient` seeds `Dual` per coordinate and reads
+    // the ε channel — the exact analytic partials, with no hand-coded `±ω·sin(phase)`.
+    let [da_dt, da_dz] = PlaneWavePotential { omega: input.omega }.gradient(&[input.t, input.z]);
 
     // Construct the Gradient Vector D
     let mut d_data = vec![0.0; 16];
