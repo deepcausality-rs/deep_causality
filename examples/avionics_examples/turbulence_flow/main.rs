@@ -30,7 +30,7 @@
 mod model;
 mod print_utils;
 
-use deep_causality_core::{CausalityError, CausalityErrorEnum, PropagatingEffect};
+use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum, PropagatingEffect};
 use deep_causality_num::Float106;
 use model::{ConvectionParams, Forecasts, Report, Row, Vec3};
 
@@ -48,17 +48,13 @@ fn main() {
 
     // The workflow is a causal-monad chain: forecast at three precisions, then (only if every
     // trajectory stayed finite) analyse the divergence. A blow-up short-circuits the error channel.
-    let pipeline = PropagatingEffect::pure(())
-        .bind(move |_, _, _| simulate(&params, dt, ic, samples, steps_per_sample))
-        .bind(move |sims, _, _| match sims.into_value() {
-            Some(s) => analyse(s, sample_dt),
-            None => fail("simulation produced no value"),
-        });
-
-    match pipeline.value.into_value() {
-        Some(report) => print_utils::print_report(&report),
-        None => eprintln!("Turbulence-forecast pipeline failed: {:?}", pipeline.error),
-    }
+    CausalFlow::effect()
+        .and_then(move |_| simulate(&params, dt, ic, samples, steps_per_sample).into())
+        .and_then(move |sims| analyse(sims, sample_dt).into())
+        .run(
+            |report| print_utils::print_report(&report),
+            |err| eprintln!("Turbulence-forecast pipeline failed: {err:?}"),
+        );
 }
 
 /// Stage 1: forecast the same flow at f32, f64, and Float106, then lift the two low-precision

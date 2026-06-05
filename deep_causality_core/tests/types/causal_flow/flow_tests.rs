@@ -63,7 +63,9 @@ fn try_step_chains_on_success() {
 
 #[test]
 fn try_step_err_short_circuits() {
-    let out: Result<i64, _> = CausalFlow::value(2i64).try_step(|_| Err(err("nope"))).finish();
+    let out: Result<i64, _> = CausalFlow::value(2i64)
+        .try_step(|_| Err(err("nope")))
+        .finish();
     assert!(out.is_err());
 }
 
@@ -166,7 +168,9 @@ fn bind_or_error_passthrough_runs_existing_stage() {
             logs: EffectLog::new(),
         }
     }
-    let out = CausalFlow::value(21i64).bind_or_error(stage, "fail").finish();
+    let out = CausalFlow::value(21i64)
+        .bind_or_error(stage, "fail")
+        .finish();
     assert_eq!(out, Ok(42));
 }
 
@@ -215,7 +219,9 @@ fn from_and_into_round_trip_losslessly() {
 
 #[test]
 fn flow_chain_matches_raw_bind_chain() {
-    let via_flow: PropagatingEffect<i64> = CausalFlow::value(2i64).try_step(|x| Ok(x + 3)).into_effect();
+    let via_flow: PropagatingEffect<i64> = CausalFlow::value(2i64)
+        .try_step(|x| Ok(x + 3))
+        .into_effect();
     let via_raw: PropagatingEffect<i64> = PropagatingEffect::from_value(2i64).bind_or_error(
         |x, s, c| CausalEffectPropagationProcess {
             value: EffectValue::Value(x + 3),
@@ -250,8 +256,7 @@ fn step_does_not_invoke_closure_on_a_failed_flow() {
 #[test]
 fn finish_on_none_value_yields_error() {
     // A flow whose value is None (not an error) still finishes as an error.
-    let none_flow: CausalFlow<i64> = CausalFlow::from(PropagatingEffect::from_effect_value(
-        EffectValue::None,
-    ));
+    let none_flow: CausalFlow<i64> =
+        CausalFlow::from(PropagatingEffect::from_effect_value(EffectValue::None));
     assert!(none_flow.finish().is_err());
 }

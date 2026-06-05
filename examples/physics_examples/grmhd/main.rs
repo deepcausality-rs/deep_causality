@@ -24,7 +24,7 @@
 
 mod model;
 
-use deep_causality::PropagatingEffect;
+use deep_causality_core::CausalFlow;
 use model::{GrmhdState, SimulationConfig};
 
 fn main() {
@@ -50,39 +50,36 @@ fn main() {
     // =========================================================================
     // Execute Causal Chain via Monadic Composition
     // =========================================================================
-    // The chain: GR Solver → Coupling → MHD Solver → Analysis
-    let result: PropagatingEffect<GrmhdState> = PropagatingEffect::pure(GrmhdState::new(&config))
-        .bind(|state, _, _| {
+    // The chain: GR Solver → Coupling → MHD Solver → Analysis, as a CausalFlow. Each model stage
+    // returns a `PropagatingEffect`, adapted with `.into()`; the flow hands the raw state to each
+    // step and short-circuits on error rather than swallowing it with `unwrap_or_default`.
+    CausalFlow::value(GrmhdState::new(&config))
+        .and_then(|s| {
             println!("\n[Step 1] GR Solver: Calculating Spacetime Curvature...");
-            model::calculate_curvature(state.into_value().unwrap_or_default())
+            model::calculate_curvature(s).into()
         })
-        .bind(|state, _, _| {
+        .and_then(|s| {
             println!("\n[Step 2] Causal Coupling: Configuring MHD Solver...");
-            model::select_metric(state.into_value().unwrap_or_default())
+            model::select_metric(s).into()
         })
-        .bind(|state, _, _| {
+        .and_then(|s| {
             println!("\n[Step 3] MHD Solver: Calculating Plasma Confinement...");
-            model::calculate_lorentz_force(state.into_value().unwrap_or_default())
+            model::calculate_lorentz_force(s).into()
         })
-        .bind(|state, _, _| {
+        .and_then(|s| {
             println!("\n[Step 4] GRMHD Coupling: Calculating EM Stress-Energy...");
-            model::calculate_energy_momentum(state.into_value().unwrap_or_default())
+            model::calculate_energy_momentum(s).into()
         })
-        .bind(|state, _, _| {
+        .and_then(|s| {
             println!("\n[Step 5] Stability Analysis...");
-            model::analyze_stability(state.into_value().unwrap_or_default())
+            model::analyze_stability(s).into()
+        })
+        .run(print_conclusion, |err| {
+            eprintln!("Simulation failed: {err:?}");
         });
+}
 
-    // =========================================================================
-    // Display Results
-    // =========================================================================
-    if result.is_err() {
-        eprintln!("Simulation failed: {:?}", result.error);
-        return;
-    }
-
-    let final_state = result.value.into_value().unwrap_or_default();
-
+fn print_conclusion(final_state: GrmhdState) {
     println!("\n============================================================");
     println!("CONCLUSION:");
     println!("============================================================");

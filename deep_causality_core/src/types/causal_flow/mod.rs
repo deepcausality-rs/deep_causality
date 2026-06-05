@@ -137,9 +137,10 @@ where
     where
         F: FnOnce(Value) -> CausalFlow<U, State, Context>,
     {
-        let inner = self
-            .inner
-            .bind_or_error(|v, _state, _context| f(v).inner, "and_then received no value");
+        let inner = self.inner.bind_or_error(
+            |v, _state, _context| f(v).inner,
+            "and_then received no value",
+        );
         CausalFlow { inner }
     }
 

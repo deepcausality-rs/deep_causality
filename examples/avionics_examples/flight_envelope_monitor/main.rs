@@ -25,6 +25,7 @@ mod model_types;
 
 use crate::model_types::SafetyVerdict;
 use deep_causality::*;
+use deep_causality_core::CausalFlow;
 use model::{estimate_step, health_fold, kalman_step, run_envelope_graph, run_sensor_collection};
 use model_config::{nominal_aircraft_config, nominal_sensor_reading, seed_estimate_for};
 use model_types::{AircraftConfig, FlightProcess, FlightState, FlightStateEstimate, SensorReading};
@@ -73,7 +74,10 @@ fn run_pipeline(
         logs: EffectLog::new(),
     };
 
-    initial
+    // Drive the stateful chain through CausalFlow. The existing
+    // `(value, state, ctx) -> FlightProcess<_>` stages drop in unchanged via the `bind`
+    // passthrough; `into_process()` hands the raw process back for `print_section`.
+    CausalFlow::from(initial)
         .bind(|value, state, ctx| {
             println!("\n[Step 1] Sensor health collection (5 sensors, AggregateLogic::All)");
             run_sensor_collection(value, state, ctx, failing_airspeed)
@@ -94,6 +98,7 @@ fn run_pipeline(
             println!("[Step 5] Envelope hypergraph (BFS over 6 risk nodes)");
             run_envelope_graph(value, state, ctx)
         })
+        .into_process()
 }
 
 /// Print a labelled summary of a final pipeline process.

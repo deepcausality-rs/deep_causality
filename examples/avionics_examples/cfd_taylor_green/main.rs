@@ -30,7 +30,7 @@ mod model;
 mod print_utils;
 
 use deep_causality_calculus::{EndoArrow, Rk4};
-use deep_causality_core::{CausalityError, CausalityErrorEnum, PropagatingEffect};
+use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum, PropagatingEffect};
 
 /// The working precision for the whole CFD computation. **This is the single alias to change**:
 /// the autodiff scalar, the Navier-Stokes kernel arithmetic, and the Rk4 march all run at this
@@ -52,17 +52,13 @@ fn main() {
 
     // The verification runs as a monadic chain: differentiate-then-kernel, then march. The second
     // stage binds onto the first, so a kernel error in stage 1 short-circuits before the march.
-    let pipeline = PropagatingEffect::pure(())
-        .bind(move |_, _, _| stage1(base, nu, rho, t0))
-        .bind(move |s1, _, _| match s1.into_value() {
-            Some(s) => stage2(s, nu, rho),
-            None => error_effect("stage 1 produced no value"),
-        });
-
-    match pipeline.value.into_value() {
-        Some(report) => print_utils::print_report(&report),
-        None => eprintln!("CFD pipeline failed: {:?}", pipeline.error),
-    }
+    CausalFlow::effect()
+        .and_then(move |_| stage1(base, nu, rho, t0).into())
+        .and_then(move |s1| stage2(s1, nu, rho).into())
+        .run(
+            |report| print_utils::print_report(&report),
+            |err| eprintln!("CFD pipeline failed: {err:?}"),
+        );
 }
 
 /// Stage 1: exact spatial derivatives feed the Navier-Stokes kernel; compare to the exact

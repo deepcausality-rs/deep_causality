@@ -6,7 +6,8 @@
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
-    Manifold, Simplex, SimplicialComplex, SimplicialComplexBuilder, SimplicialManifold,
+    Manifold, ReggeGeometry, Simplex, SimplicialComplex, SimplicialComplexBuilder,
+    SimplicialManifold,
 };
 
 pub(crate) fn make_1d_manifold(data: Vec<f64>) -> SimplicialManifold<f64, f64> {
@@ -68,5 +69,10 @@ pub(crate) fn make_1d_manifold(data: Vec<f64>) -> SimplicialManifold<f64, f64> {
     let len = full_data.len();
     let tensor = CausalTensor::new(full_data, vec![len]).unwrap();
 
-    Manifold::new(complex_with_hodge, tensor, 0).expect("Failed to create valid manifold")
+    // Attach a unit-edge Regge metric so `codifferential` (and the Laplacian used by
+    // `klein_gordon` / `heat_diffusion`) has a metric. The simplicial impl reads the Hodge ⋆ from
+    // the complex's cache and ignores the metric instance's data.
+    let metric = ReggeGeometry::new(CausalTensor::new(vec![1.0; n1], vec![n1]).unwrap());
+    Manifold::with_metric(complex_with_hodge, tensor, Some(metric), 0)
+        .expect("Failed to create valid manifold")
 }

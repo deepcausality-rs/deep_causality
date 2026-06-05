@@ -17,11 +17,9 @@
 //! collision.
 mod model;
 
-use crate::model::{
-    AdvisoryLevel, AircraftState, GeometricTCAS, Resolution, add_vec, scale_vec, vec3,
-};
-use deep_causality_core::Intervenable;
-use deep_causality_core::{EffectValue, PropagatingEffect};
+use crate::model::{AdvisoryLevel, AircraftState, GeometricTCAS, Resolution, vec3};
+use deep_causality_calculus::{EndoArrow, Euler};
+use deep_causality_core::CausalFlow;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -60,15 +58,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // A. Run Safety Logic
         let report = tcas.assess_threat(&ownship, &intruder);
 
-        // B. Intervention Logic (Auto-Pilot) with Causal Intervention Trait
-        // This demonstrates "Computational Intervention" to model the override.
-        let mut sys_status = "";
-
-        // 1. Wrap current state in Causal Effect (Option wrapper to satisfy Default)
-        let vel_effect: PropagatingEffect<Option<CausalMultiVector<f64>>> =
-            PropagatingEffect::pure(Some(ownship.vel.clone()));
-
-        // 2. Determine if Intervention is needed
+        // B. Intervention Logic (Auto-Pilot) via the CausalFlow closed-loop interlock.
+        // Determine whether a Resolution Advisory has persisted long enough to force a descent.
         let triggered = if report.advisory == AdvisoryLevel::RA {
             ra_duration += dt;
             ra_duration > 2.5 && report.resolution == Resolution::Descend
@@ -77,39 +68,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             false
         };
 
-        // 3. Apply Intervention (if triggered)
-        let final_effect = if triggered {
-            // Calculate target velocity (Descent)
-            let mut d = ownship.vel.data().clone();
-            if d[4] > -20.0 {
-                d[4] -= 5.0;
-                if d[4] < -20.0 {
-                    d[4] = -20.0;
-                }
-
-                // Construct the "Intervention Value"
-                let target_vel = CausalMultiVector::unchecked(d, Metric::Euclidean(3));
-
-                sys_status = " [\x1b[31mAUTO INTERVENE\x1b[0m]";
-
-                // USE TRAIT: intervene()
-                vel_effect.intervene(Some(target_vel))
-            } else {
-                sys_status = " [\x1b[32mAVOIDING\x1b[0m]";
-                vel_effect // Already avoiding
-            }
+        // The auto-pilot only takes over while there is still descent authority left.
+        let will_intervene = triggered && ownship.vel.data()[4] > -20.0;
+        let sys_status = if will_intervene {
+            " [\x1b[31mAUTO INTERVENE\x1b[0m]"
+        } else if triggered {
+            " [\x1b[32mAVOIDING\x1b[0m]"
         } else {
-            vel_effect
+            ""
         };
 
-        // 4. Unwrap & Log
-        if triggered && sys_status.contains("INTERVENE") {
-            // Print a custom message citing the log happened
-            println!("      > [BLACKBOX AUDIT]: Automatic Intervention Recorded.");
-        }
+        // `intervene_if` substitutes the velocity with the descent vector only when the interlock
+        // fires (Pearl Layer 2), recording the override in the flow's audit log.
+        ownship.vel = CausalFlow::value(ownship.vel.clone())
+            .intervene_if(
+                |_| will_intervene,
+                |vel| {
+                    let mut d = vel.data().clone();
+                    d[4] = (d[4] - 5.0).max(-20.0);
+                    CausalMultiVector::unchecked(d, Metric::Euclidean(3))
+                },
+            )
+            .finish()
+            .expect("velocity flow always carries a value");
 
-        if let EffectValue::Value(Some(v)) = final_effect.value() {
-            ownship.vel = v.clone();
+        if will_intervene {
+            println!("      > [BLACKBOX AUDIT]: Automatic Intervention Recorded.");
         }
 
         // C. Output
@@ -135,9 +119,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             sys_status
         );
 
-        // D. Update Dynamics (Full Vector Integration)
-        ownship.pos = add_vec(&ownship.pos, &scale_vec(&ownship.vel, dt));
-        intruder.pos = add_vec(&intruder.pos, &scale_vec(&intruder.vel, dt));
+        // D. Update Dynamics: one Euler step of the constant-velocity kinematics (the Arrow
+        // calculus integration operator; exact for constant velocity, so identical to pos += v·dt).
+        let own_vel = ownship.vel.clone();
+        ownship.pos = Euler::new(dt, move |_: &CausalMultiVector<f64>| own_vel.clone())
+            .iterate_n(ownship.pos.clone(), 1);
+        let intr_vel = intruder.vel.clone();
+        intruder.pos = Euler::new(dt, move |_: &CausalMultiVector<f64>| intr_vel.clone())
+            .iterate_n(intruder.pos.clone(), 1);
     }
     // Optional: mimic real-time pace
     // thread::sleep(Duration::from_millis(50));

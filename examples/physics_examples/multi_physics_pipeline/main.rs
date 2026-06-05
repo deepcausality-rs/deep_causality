@@ -26,7 +26,9 @@
 //!
 //! This is the power of the Causal Monad: **decoupled physics modules**
 //! that compose seamlessly with automatic error propagation.
-use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
+use deep_causality_core::{
+    CausalEffectPropagationProcess, CausalFlow, CausalityError, EffectValue, PropagatingEffect,
+};
 use deep_causality_multivector::{HilbertState, Metric};
 use deep_causality_num::Complex;
 use deep_causality_physics::{
@@ -58,14 +60,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // =========================================================================
     // The Causal Monad Pipeline: Each stage is a decoupled function
     // =========================================================================
-    let result = klein_gordon(&phi_manifold, mass)
+    // The same decoupled stages, now driven by `CausalFlow`. The existing
+    // `(value, (), Option<()>) -> PropagatingEffect` stages drop in unchanged
+    // through the `bind_or_error` passthrough; only the seed (`From`) and the
+    // terminal (`run`) change.
+    CausalFlow::from(klein_gordon(&phi_manifold, mass))
         .bind_or_error(stage_field_to_partons, "Field → Partons failed")
         .bind_or_error(stage_lund_fragmentation, "Lund fragmentation failed")
         .bind_or_error(stage_thermalization, "Thermalization failed")
-        .bind_or_error(stage_quantum_detection, "Detection failed");
-
-    // Extract final result
-    print_summary(&result);
+        .bind_or_error(stage_quantum_detection, "Detection failed")
+        .run(print_summary_ok, |err| print_summary_err(&err));
 
     Ok(())
 }
@@ -288,24 +292,27 @@ fn print_hadron_sample(hadrons: &[&Hadron<FloatType>]) {
     }
 }
 
-/// Prints the final pipeline summary.
-fn print_summary(result: &PropagatingEffect<(usize, f64, f64)>) {
+/// Prints the summary banner shared by the success and failure paths.
+fn print_summary_header() {
     println!("\n═══════════════════════════════════════════════════════════════");
     println!("  Pipeline Summary");
     println!("═══════════════════════════════════════════════════════════════");
+}
 
-    match result.value() {
-        EffectValue::Value((hadron_count, avg_temp, prob)) => {
-            println!("  Hadron multiplicity:    {} particles", hadron_count);
-            println!("  Thermal equilibrium:    {:.2} MeV", avg_temp);
-            println!("  Detection probability:  {:.4}", prob);
-            println!("\n[SUCCESS] Modular Pipeline Completed.\n");
-        }
-        _ => {
-            println!("  Pipeline returned unexpected result");
-            println!("\n[WARN] Check individual stage outputs.\n");
-        }
-    }
+/// Prints the final pipeline summary on success.
+fn print_summary_ok((hadron_count, avg_temp, prob): (usize, f64, f64)) {
+    print_summary_header();
+    println!("  Hadron multiplicity:    {} particles", hadron_count);
+    println!("  Thermal equilibrium:    {:.2} MeV", avg_temp);
+    println!("  Detection probability:  {:.4}", prob);
+    println!("\n[SUCCESS] Modular Pipeline Completed.\n");
+}
+
+/// Prints the final pipeline summary when a stage short-circuits the chain.
+fn print_summary_err(err: &CausalityError) {
+    print_summary_header();
+    println!("  Pipeline failed: {err:?}");
+    println!("\n[WARN] Check individual stage outputs.\n");
 }
 
 /// Gets particle name from PDG ID.

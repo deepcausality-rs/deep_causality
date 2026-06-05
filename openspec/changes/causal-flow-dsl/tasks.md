@@ -37,16 +37,16 @@
 ## 6. Demonstration on examples (the stress-test set)
 
 - [x] 6.1 `chronometric_examples/gm_recovery`: seed `value(inputs)`, `.try_step(stage_*)`, `.run(print_gm_report, …)`; adapt the `pipeline` stage signatures from the raw bind shape to `Value -> Result<U, CausalityError>`. Output unchanged. (Headline before/after.)
-- [ ] 6.2 `physics_examples/event_horizon_probe`: replace `with_state(pure(()), state, Some(ctx))` + `bind` + `EffectValue` match with `process(state).context(mass).try_step_with(…).finish()` inside the loop. Output unchanged.
-- [ ] 6.3 `physics_examples/grmhd`: replace the `into_value().unwrap_or_default()` stages with `value(seed).and_then(|s| model::fn(s).into())` and the `is_err()` terminal with `.run(…)`; make the prior default-on-error explicit with `.recover` where intended. Output unchanged.
-- [ ] 6.4 `physics_examples/multi_physics_pipeline`: drop-in migration via `CausalFlow::from(klein_gordon(…))` + the `bind_or_error` passthrough (no stage changes) + `.run(…)`. Output unchanged.
-- [ ] 6.5 `avionics_examples/flight_envelope_monitor`: migrate the 5-stage `PropagatingProcess<_, FlightState, AircraftConfig>` chain to `process(state).context(cfg)` + `.step_mut(…)` (state updates derived from the value) + a `.finish()`/`.run()` terminal. Exercises the stateful path. Output unchanged.
-- [ ] 6.6 `avionics_examples/geometric_tcas` (flagship): make it precision-generic and lean on `deep_causality_calculus` — replace `pos += vel·dt` with an `Euler`/`Rk4` trajectory step, and express each time step as `CausalFlow::value(engagement).try_step(assess_cpa).intervene_if(ra_fired, evade).and_then(propagate_rk4)`. Combines the causal monad, the Arrow calculus, the `Intervenable` interlock, and precision-as-a-parameter. Output behaviour preserved.
+- [x] 6.2 `physics_examples/event_horizon_probe`: replace `with_state(pure(()), state, Some(ctx))` + `bind` + `EffectValue` match with `process(state).context(mass).try_step_with(…).finish()` inside the loop. Output unchanged.
+- [x] 6.3 `physics_examples/grmhd`: replace the `into_value().unwrap_or_default()` stages with `value(seed).and_then(|s| model::fn(s).into())` and the `is_err()` terminal with `.run(…)`; make the prior default-on-error explicit with `.recover` where intended. Output unchanged.
+- [x] 6.4 `physics_examples/multi_physics_pipeline`: drop-in migration via `CausalFlow::from(klein_gordon(…))` + the `bind_or_error` passthrough (no stage changes) + `.run(…)`. Output unchanged.
+- [x] 6.5 `avionics_examples/flight_envelope_monitor`: migrate the 5-stage `PropagatingProcess<_, FlightState, AircraftConfig>` chain to `process(state).context(cfg)` + `.step_mut(…)` (state updates derived from the value) + a `.finish()`/`.run()` terminal. Exercises the stateful path. Output unchanged.
+- [x] 6.6 `avionics_examples/geometric_tcas` (flagship): make it precision-generic and lean on `deep_causality_calculus` — replace `pos += vel·dt` with an `Euler`/`Rk4` trajectory step, and express each time step as `CausalFlow::value(engagement).try_step(assess_cpa).intervene_if(ra_fired, evade).and_then(propagate_rk4)`. Combines the causal monad, the Arrow calculus, the `Intervenable` interlock, and precision-as-a-parameter. Output behaviour preserved.
 
 Note: `hypersonic_2t` (imperative tracker loop) and `magnav` (particle-filter loop) are intentionally **not** migrated; their structure is iterative, not a monadic chain, so `CausalFlow` does not apply.
 
 ## 7. Verification
 
-- [ ] 7.1 `cargo build` / `cargo test` for `deep_causality_core` and every touched example; `make format && make fix` (0 clippy warnings, no `#[allow(...)]`).
-- [ ] 7.2 Doc comments on `CausalFlow` and its methods, each noting the `CausalEffectPropagationProcess` operation it lowers to; a module-level example mirroring the `gm_recovery` before/after.
+- [x] 7.1 `cargo build` / `cargo test` for `deep_causality_core` and every touched example; `make format && make fix` (0 clippy warnings, no `#[allow(...)]`).
+- [x] 7.2 Doc comments on `CausalFlow` and its methods, each noting the `CausalEffectPropagationProcess` operation it lowers to; a module-level example mirroring the `gm_recovery` before/after.
 - [ ] 7.3 Commit message prepared; owner commits. (Edition 2024; `unsafe_code = "forbid"`; additive, non-breaking.)

@@ -18,7 +18,7 @@
 //!   hole mass through each regime-switching step.
 
 use deep_causality_calculus::{DifferentiableArrow, DifferentiateExt, Scalar};
-use deep_causality_core::{CausalEffectPropagationProcess, EffectValue};
+use deep_causality_core::CausalFlow;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_num::FromPrimitive;
 use deep_causality_physics::{Length, Mass, NEWTONIAN_CONSTANT_OF_GRAVITATION, PhysicsError};
@@ -85,90 +85,91 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         println!("Physics Regime: {}", regime_check);
 
-        // Run Causal Logic
-        let next_state_effect = CausalEffectPropagationProcess::with_state(
-            CausalEffectPropagationProcess::pure(()),
-            current_state.clone(),
-            Some(black_hole_mass),
-        )
-        .bind(|_, state, ctx: Option<Mass<FloatType>>| {
-            let bh_mass = ctx.unwrap(); // Context has BH mass
-            let r = Length::<FloatType>::new(state.distance).unwrap();
+        // Run the regime-switching step as a stateful CausalFlow: the probe state is the flow's
+        // state and the black-hole mass its context; the step returns the next probe state.
+        let next = CausalFlow::process(current_state.clone())
+            .context(black_hole_mass)
+            .try_step_with(
+                |_unit: (), state: &ProbeState, ctx: Option<&Mass<FloatType>>| {
+                    let bh_mass = *ctx.expect("context holds the BH mass");
+                    let r = Length::<FloatType>::new(state.distance).unwrap();
 
-            // A. Calculate expected orbital/escape velocities (Context assessment)
-            let v_esc_effect = escape_velocity(&bh_mass, &r);
-            let v_esc = v_esc_effect.value().clone().into_value().unwrap().value();
+                    // A. Calculate expected orbital/escape velocities (Context assessment)
+                    let v_esc_effect = escape_velocity(&bh_mass, &r);
+                    let v_esc = v_esc_effect.value().clone().into_value().unwrap().value();
 
-            println!("  Escape Velocity required: {:.2e} m/s", v_esc);
+                    println!("  Escape Velocity required: {:.2e} m/s", v_esc);
 
-            // Cross-check: the autodiff gravity equals v_esc²/(2r) (both are GM/r²).
-            let g_from_vesc = v_esc * v_esc / (ft(2.0) * state.distance);
-            println!("  [check] v_esc²/(2r)         = {:.3e} m/s²", g_from_vesc);
+                    // Cross-check: the autodiff gravity equals v_esc²/(2r) (both are GM/r²).
+                    let g_from_vesc = v_esc * v_esc / (ft(2.0) * state.distance);
+                    println!("  [check] v_esc²/(2r)         = {:.3e} m/s²", g_from_vesc);
 
-            // B. Regime-Specific Logic
-            if state.distance / r_s > ft(10.0) {
-                // --- Newtonian Regime ---
-                // Simple freefall approximation v = sqrt(2GM/r) (which is v_esc)
-                let new_vel = v_esc;
-                let new_dist = state.distance * ft(0.5); // Simulate falling
+                    // B. Regime-Specific Logic
+                    if state.distance / r_s > ft(10.0) {
+                        // --- Newtonian Regime ---
+                        // Simple freefall approximation v = sqrt(2GM/r) (which is v_esc)
+                        let new_vel = v_esc;
+                        let new_dist = state.distance * ft(0.5); // Simulate falling
 
-                CausalEffectPropagationProcess::pure(ProbeState {
-                    distance: new_dist,
-                    velocity: new_vel,
-                    status: "Freefall (Newtonian)".to_string(),
-                    mass: state.mass,
-                })
-            } else {
-                // --- Relativistic Regime ---
-                // Calculate Time Dilation effects, metric (+---)
-                let metric = Metric::Minkowski(4);
+                        Ok(ProbeState {
+                            distance: new_dist,
+                            velocity: new_vel,
+                            status: "Freefall (Newtonian)".to_string(),
+                            mass: state.mass,
+                        })
+                    } else {
+                        // --- Relativistic Regime ---
+                        // Calculate Time Dilation effects, metric (+---)
+                        let metric = Metric::Minkowski(4);
 
-                // Probe 4-velocity (approx): a static observer e_t
-                let mut static_vec = vec![ft(0.0); 16];
-                static_vec[1] = ft(1.0);
-                let t_static = CausalMultiVector::new(static_vec, metric).unwrap();
+                        // Probe 4-velocity (approx): a static observer e_t
+                        let mut static_vec = vec![ft(0.0); 16];
+                        static_vec[1] = ft(1.0);
+                        let t_static = CausalMultiVector::new(static_vec, metric).unwrap();
 
-                // Falling probe vector (gamma, gamma*v, 0, 0)
-                let v_rel = ft(0.9);
-                let gamma = ft(1.0) / fsqrt(ft(1.0) - v_rel * v_rel);
-                let mut probe_vec = vec![ft(0.0); 16];
-                probe_vec[1] = gamma;
-                probe_vec[2] = gamma * v_rel;
-                let t_probe = CausalMultiVector::new(probe_vec, metric).unwrap();
+                        // Falling probe vector (gamma, gamma*v, 0, 0)
+                        let v_rel = ft(0.9);
+                        let gamma = ft(1.0) / fsqrt(ft(1.0) - v_rel * v_rel);
+                        let mut probe_vec = vec![ft(0.0); 16];
+                        probe_vec[1] = gamma;
+                        probe_vec[2] = gamma * v_rel;
+                        let t_probe = CausalMultiVector::new(probe_vec, metric).unwrap();
 
-                let dilation_effect = time_dilation_angle(&t_static, &t_probe);
-                let rapidity = dilation_effect
-                    .value()
-                    .clone()
-                    .into_value()
-                    .unwrap()
-                    .value();
+                        let dilation_effect = time_dilation_angle(&t_static, &t_probe);
+                        let rapidity = dilation_effect
+                            .value()
+                            .clone()
+                            .into_value()
+                            .unwrap()
+                            .value();
 
-                println!("  [GR] Relativistic Rapidity: {:.4}", rapidity);
-                println!("  [GR] Time Dilation Factor: {:.2}", fcosh(rapidity));
+                        println!("  [GR] Relativistic Rapidity: {:.4}", rapidity);
+                        println!("  [GR] Time Dilation Factor: {:.2}", fcosh(rapidity));
 
-                // Check Horizon crossing
-                if state.distance <= r_s * ft(1.1) {
-                    CausalEffectPropagationProcess::pure(ProbeState {
-                        distance: state.distance * ft(0.1),
-                        velocity: ft(2.99e8), // c
-                        status: "EVENT HORIZON CROSSED".to_string(),
-                        mass: state.mass,
-                    })
-                } else {
-                    CausalEffectPropagationProcess::pure(ProbeState {
-                        distance: state.distance * ft(0.5),
-                        velocity: v_esc,
-                        status: "Relativistic Plunge".to_string(),
-                        mass: state.mass,
-                    })
-                }
-            }
-        });
+                        // Check Horizon crossing
+                        if state.distance <= r_s * ft(1.1) {
+                            Ok(ProbeState {
+                                distance: state.distance * ft(0.1),
+                                velocity: ft(2.99e8), // c
+                                status: "EVENT HORIZON CROSSED".to_string(),
+                                mass: state.mass,
+                            })
+                        } else {
+                            Ok(ProbeState {
+                                distance: state.distance * ft(0.5),
+                                velocity: v_esc,
+                                status: "Relativistic Plunge".to_string(),
+                                mass: state.mass,
+                            })
+                        }
+                    }
+                },
+            )
+            .finish();
 
         // Update State
-        if let EffectValue::Value(s) = next_state_effect.value() {
-            current_state = s.clone();
+        if let Ok(s) = next {
+            current_state = s;
             println!("  -> New Status: {}", current_state.status);
             println!("  -> Current Velocity: {:.2e} m/s", current_state.velocity);
 
