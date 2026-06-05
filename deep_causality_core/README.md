@@ -128,6 +128,68 @@ let effect = PropagatingEffectWitness::pure(10);
 let counterfactual = effect.intervene(42);
 ```
 
+### CausalFlow (Fluent DSL)
+
+`CausalFlow` is a thin, fluent facade over the causal monad. It hides the HKT witness types, the verbose `pure` / `with_state` constructors, the `EffectValue` wrapping, and the manual error short-circuit, so a pipeline reads top to bottom. Every method lowers to an existing monad operation, so the facade adds sugar, not new semantics.
+
+```rust
+use deep_causality_core::CausalFlow;
+
+// `try_step` runs a fallible stage (`Ok` lifts a value, `Err` short-circuits),
+// `map` is an infallible transform, and `finish` extracts the final value or the
+// error the flow stopped on. The witness types and `EffectValue` never appear.
+let outcome = CausalFlow::value(2_i64)
+    .try_step(|x| Ok(x + 3))
+    .map(|x| x * 10)
+    .finish();
+
+assert_eq!(outcome, Ok(50));
+```
+
+The same facade covers the whole monad surface, grouped by role:
+
+**Construction**
+
+| Operator | Description |
+| :--- | :--- |
+| `value(v)` | Start a stateless flow carrying `v`. |
+| `effect()` | Start a stateless flow seeded with the unit value. |
+| `fail(err)` | Start a flow already in the error channel. |
+| `process(state)` | Start a stateful flow with an initial state. |
+| `context(ctx)` | Attach a read-only context. |
+| `From<PropagatingProcess>` | Wrap an existing monad chain. |
+
+**Steps**
+
+| Operator | Description |
+| :--- | :--- |
+| `and_then(f)` | Full monadic step; effect-returning stages adapt with `.into()`. |
+| `try_step(f)` | Fallible step: `Ok` lifts a value, `Err` short-circuits. |
+| `map(f)` | Infallible value transform. |
+| `guard(f)` | Validate the value; `Err` short-circuits. |
+| `recover(f)` | Turn the error channel back into a value. |
+| `try_step_with(f)` | Stateful step with read-only state and context. |
+| `step_mut(f)` | Stateful step that mutates state while transforming the value. |
+| `update_state(f)` | Evolve the state; the value passes through unchanged. |
+
+**Intervention**
+
+| Operator | Description |
+| :--- | :--- |
+| `intervene(value)` | Apply Pearl's `do(value)` mid-flow, recording the override in the audit log. |
+| `intervene_if(cond, f)` | Intervene only when `cond` holds over the current value. |
+
+**Terminals**
+
+| Operator | Description |
+| :--- | :--- |
+| `finish()` | Extract the final value, or the error the flow stopped on, as a `Result`. |
+| `run(on_ok, on_err)` | Consume the flow, dispatching by outcome. |
+| `is_err()` | Whether the flow is in the error channel. |
+| `into_process()` / `into_effect()` | Drop back to the concrete monad type. |
+
+The stateless and stateful forms share one type: `CausalFlow<Value>` lowers to `PropagatingEffect`, while a non-unit `State` / `Context` lowers to `PropagatingProcess`. See the [`causal_intervention_examples`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_intervention_examples) and [`causal_uncertain_examples`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_uncertain_examples) crates for end-to-end pipelines built this way.
+
 ## non-std Support
 
 To use this crate in a bare-metal `no_std` environment:
