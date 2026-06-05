@@ -1,0 +1,55 @@
+deep_causality_core/tests/types/causal_flow/flow_tests.rs
+  s_52e6d9817e5bf8::t_cd9b1a7b6346f8 66-68,171-173,222-224,259-260
+examples/avionics_examples/geometric_tcas/main.rs
+  s_52e6d9817e5bf8::t_f3e9888db0fc62 20-22
+  s_52e6d9817e5bf8::t_b6efa34767d877 61-62,71-76,78,81-95
+  s_52e6d9817e5bf8::t_d66db775b677f5 122-129
+openspec/changes/causal-flow-dsl/tasks.md
+  s_52e6d9817e5bf8::t_8ca382e6d68234 43-44
+  s_52e6d9817e5bf8::t_26ca9c25b6db80 50-51
+  s_52e6d9817e5bf8::t_d0fa722cd4b0b0 40
+examples/avionics_examples/cfd_taylor_green/main.rs
+  s_52e6d9817e5bf8::t_9e6788cbd1e685 33
+  s_52e6d9817e5bf8::t_7ae5f0f18c8317 55-61
+deep_causality_core/src/types/causal_flow/mod.rs
+  s_52e6d9817e5bf8::t_cd9b1a7b6346f8 140-143
+examples/physics_examples/event_horizon_probe/main.rs
+  s_52e6d9817e5bf8::t_0e281169b48414 168,171-172
+  s_52e6d9817e5bf8::t_89d3839bff2457 88-91
+  s_52e6d9817e5bf8::t_cd9b1a7b6346f8 92-167
+  s_52e6d9817e5bf8::t_e95d208f508ae3 21
+examples/avionics_examples/flight_envelope_monitor/main.rs
+  s_52e6d9817e5bf8::t_d4d40ed6ef5aca 77-80,101
+  s_52e6d9817e5bf8::t_f83fd9364e7010 28
+examples/physics_examples/grmhd/main.rs
+  s_52e6d9817e5bf8::t_00bbb6b88a2731 53-57,59,61,63,65,67,69,71,73,75-78,80,82
+  s_52e6d9817e5bf8::t_4bcca601f89850 27
+examples/physics_examples/multi_physics_pipeline/model.rs
+  s_52e6d9817e5bf8::t_eba15544fd9288 9-10
+  s_52e6d9817e5bf8::t_cd213ed687db60 72-77
+examples/physics_examples/multi_physics_pipeline/main.rs
+  s_52e6d9817e5bf8::t_fafeb8b330555a 29-31
+  s_52e6d9817e5bf8::t_3a0e656b593ae3 295-296,300,302-315
+  s_52e6d9817e5bf8::t_1cd65bd84604e3 63-67,71-72
+examples/avionics_examples/turbulence_flow/main.rs
+  s_52e6d9817e5bf8::t_10d0d53b7b41be 33
+  s_52e6d9817e5bf8::t_b71dda4cf5b930 51-57
+deep_causality_core/tests/types/mod.rs
+  s_52e6d9817e5bf8::t_cd9b1a7b6346f8 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "86b8be519dc7f0c9ff05e0cf825a2bee6bfbf0cb",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
