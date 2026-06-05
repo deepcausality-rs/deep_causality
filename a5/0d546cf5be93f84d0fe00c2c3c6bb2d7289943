@@ -1,0 +1,26 @@
+deep_causality_haft/tests/algebra/arrow_tests.rs
+  s_52e6d9817e5bf8::t_a098e954b76877 126-154
+  s_52e6d9817e5bf8::t_e505f81276b606 6
+deep_causality_core/tests/types/causal_flow/flow_tests.rs
+  s_52e6d9817e5bf8::t_1cd077e67335cd 251-259
+deep_causality_num/tests/dual/dual_number/from_primitive_tests.rs
+  s_52e6d9817e5bf8::t_edcaa2c90741a3 50-75
+deep_causality_num/tests/dual/dual_number/real_tests.rs
+  s_52e6d9817e5bf8::t_626e12e1f2f8f0 126-150
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "a50d546cf5be93f84d0fe00c2c3c6bb2d7289943",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
