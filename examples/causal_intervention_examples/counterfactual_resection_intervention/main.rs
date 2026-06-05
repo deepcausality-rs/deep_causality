@@ -34,8 +34,8 @@ mod model;
 pub mod model_types;
 mod model_utils;
 
-use deep_causality_core::{Intervenable, PropagatingEffect};
-use model::{build_chain, simulate_seizure};
+use deep_causality_core::{CausalFlow, PropagatingEffect};
+use model::simulate_seizure;
 use model_types::{Connectome, N_REGIONS, SeizureResult};
 
 fn main() {
@@ -52,14 +52,17 @@ fn main() {
 }
 
 fn run_factual(connectome: Connectome) -> PropagatingEffect<SeizureResult> {
-    build_chain(connectome).bind(simulate_seizure)
+    CausalFlow::value(connectome)
+        .map(simulate_seizure)
+        .into_effect()
 }
 
 fn run_counterfactual(
     factual: Connectome,
     resected: Connectome,
 ) -> PropagatingEffect<SeizureResult> {
-    build_chain(factual)
+    CausalFlow::value(factual)
         .intervene(resected)
-        .bind(simulate_seizure)
+        .map(simulate_seizure)
+        .into_effect()
 }

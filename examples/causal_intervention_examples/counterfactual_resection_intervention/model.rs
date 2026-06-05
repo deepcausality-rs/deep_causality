@@ -9,7 +9,6 @@ use crate::model_types::{
     COUPLING_STRENGTH, Connectome, DT, FloatType, SEIZURE_THRESHOLD, SeizureResult, TIME_STEPS,
 };
 use deep_causality_calculus::{EndoArrow, Euler};
-use deep_causality_core::{EffectValue, PropagatingEffect};
 use std::f64::consts::PI;
 use std::ops::{Add, Mul};
 
@@ -66,17 +65,10 @@ impl Connectome {
     }
 }
 
-/// Run the Kuramoto simulation against the connectome carried in the
-/// value channel and produce the post-simulation synchronisation level.
-pub fn simulate_seizure(
-    value: EffectValue<Connectome>,
-    _: (),
-    _: Option<()>,
-) -> PropagatingEffect<SeizureResult> {
-    let connectome = match value.into_value() {
-        Some(c) => c,
-        None => return PropagatingEffect::pure(SeizureResult::default()),
-    };
+/// Run the Kuramoto simulation against the connectome carried by the flow
+/// and produce the post-simulation synchronisation level. `CausalFlow::map`
+/// supplies the connectome, so the stage reads as a plain transform.
+pub fn simulate_seizure(connectome: Connectome) -> SeizureResult {
     let n = connectome.adj.len();
     let phases = Phases(connectome.initial_phase.clone());
     let adj = connectome.adj;
@@ -102,10 +94,10 @@ pub fn simulate_seizure(
     let sum_sin: FloatType = final_phases.0.iter().map(|p| p.sin()).sum();
     let final_sync = (sum_cos.powi(2) + sum_sin.powi(2)).sqrt() / n as FloatType;
 
-    PropagatingEffect::pure(SeizureResult {
+    SeizureResult {
         final_sync,
         seizing: final_sync > SEIZURE_THRESHOLD,
-    })
+    }
 }
 
 /// Kuramoto phase vector, the integrator state. `Euler` and `Rk4` need a module-valued state
@@ -125,10 +117,4 @@ impl Mul<FloatType> for Phases {
     fn mul(self, s: FloatType) -> Phases {
         Phases(self.0.iter().map(|x| x * s).collect())
     }
-}
-
-/// Build the chain once with the factual (full) connectome as the entry
-/// value. Counterfactuals intervene on this entry before the simulate stage.
-pub fn build_chain(factual: Connectome) -> PropagatingEffect<Connectome> {
-    PropagatingEffect::pure(factual)
 }

@@ -5,7 +5,7 @@
 
 //! # Counterfactual Flight-Envelope Fault Analysis
 //!
-//! A mid-chain intervention on a `PropagatingProcess`. The factual chain
+//! A mid-chain intervention on a stateful `CausalFlow`. The factual chain
 //! runs against a nominal sensor reading. The counterfactual takes that
 //! same reading through Stage 1 (sensor collection) and then, between
 //! Stage 1 and Stage 2, replaces the value channel with a stall-region
@@ -33,7 +33,7 @@ pub mod model_types;
 mod model_utils;
 
 use crate::model_types::{AircraftConfig, FlightProcess, SensorReading, Verdict};
-use deep_causality_core::Intervenable;
+use deep_causality_core::CausalFlow;
 use model::{airspeed_margin, build_chain, envelope_eval};
 use model_config::{nominal_aircraft_config, nominal_sensor_reading};
 
@@ -63,15 +63,17 @@ fn main() {
 }
 
 fn run_factual(reading: SensorReading, cfg: AircraftConfig) -> FlightProcess<Verdict> {
-    build_chain(reading, cfg)
+    CausalFlow::from(build_chain(reading, cfg))
         .bind(airspeed_margin)
         .bind(envelope_eval)
+        .into_process()
 }
 
 fn run_counterfactual(reading: SensorReading, cfg: AircraftConfig) -> FlightProcess<Verdict> {
     let stall_kn = cfg.stall_kn;
-    build_chain(reading, cfg)
+    CausalFlow::from(build_chain(reading, cfg))
         .intervene(stall_kn - 25.0)
         .bind(airspeed_margin)
         .bind(envelope_eval)
+        .into_process()
 }

@@ -3,15 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Stage functions for the GPS-navigation `PropagatingEffect` chain.
+//! Stage functions for the GPS-navigation `CausalFlow` chain.
 //!
-//! Each stage takes the previous stage's value out of `EffectValue::Value`,
-//! propagates uncertainty through one physical transformation, prints the
-//! resulting statistics, and re-lifts the new `Uncertain<f64>` into a fresh
-//! `PropagatingEffect`. The chain short-circuits if any stage receives a
-//! non-`Value` variant.
+//! Each stage takes the previous stage's `Uncertain<f64>` directly, propagates uncertainty through
+//! one physical transformation, prints the resulting statistics, and returns the next
+//! `Uncertain<f64>`. `CausalFlow` supplies the chain's plumbing, so no stage touches `EffectValue`
+//! or re-lifts with `PropagatingEffect::pure`; the stages read as plain transforms.
 
-use deep_causality_core::{EffectValue, PropagatingEffect};
 use deep_causality_uncertain::Uncertain;
 
 const SAMPLES: usize = 1000;
@@ -24,14 +22,7 @@ pub struct Position {
 }
 
 /// Stage 1 — propagate position noise into distance (miles).
-pub fn distance_stage(
-    value: EffectValue<Position>,
-    destination: Position,
-) -> PropagatingEffect<Uncertain<f64>> {
-    let Some(start) = value.into_value() else {
-        return PropagatingEffect::none();
-    };
-
+pub fn distance_stage(start: Position, destination: Position) -> Uncertain<f64> {
     let lat_diff = destination.lat + (-start.lat);
     let lon_diff = destination.lon + (-start.lon);
     let distance_sq = lat_diff.clone() * lat_diff + lon_diff.clone() * lon_diff;
@@ -48,15 +39,11 @@ pub fn distance_stage(
         mean + 1.96 * std
     );
 
-    PropagatingEffect::pure(distance)
+    distance
 }
 
 /// Stage 2 — propagate distance and speed noise into a travel-time estimate (minutes).
-pub fn time_stage(value: EffectValue<Uncertain<f64>>) -> PropagatingEffect<Uncertain<f64>> {
-    let Some(distance) = value.into_value() else {
-        return PropagatingEffect::none();
-    };
-
+pub fn time_stage(distance: Uncertain<f64>) -> Uncertain<f64> {
     let base_speed = Uncertain::normal(35.0, 8.0); // mph with driver/traffic noise
     let traffic_factor = Uncertain::uniform(0.6, 1.0); // congestion drag
     let actual_speed = base_speed * traffic_factor;
@@ -74,21 +61,11 @@ pub fn time_stage(value: EffectValue<Uncertain<f64>>) -> PropagatingEffect<Uncer
     println!("   P(>10 min): {p_late:.1}%");
 
     // Carry travel time downstream — the route stage compares against it.
-    PropagatingEffect::pure(travel_minutes)
+    travel_minutes
 }
 
 /// Stage 3 — compare main-route time against a longer-but-steadier alternative.
-///
-/// Carries the main-route travel time forward unchanged so the fuel stage still
-/// sees the original `Uncertain<f64>` distance via re-derivation is not needed
-/// — fuel only depends on distance, which we re-lift here in a known shape by
-/// recomputing nothing: we instead carry travel-time forward and the fuel stage
-/// uses a distance-equivalent it samples from the same chain context.
-pub fn route_stage(value: EffectValue<Uncertain<f64>>) -> PropagatingEffect<Uncertain<f64>> {
-    let Some(main_time) = value.into_value() else {
-        return PropagatingEffect::none();
-    };
-
+pub fn route_stage(main_time: Uncertain<f64>) -> Uncertain<f64> {
     let alt_distance = Uncertain::<f64>::point(2.2); // slightly longer (mi)
     let alt_speed = Uncertain::normal(45.0, 3.0); // highway, less variance
     let alt_time = alt_distance / alt_speed * Uncertain::<f64>::point(60.0);
@@ -112,22 +89,13 @@ pub fn route_stage(value: EffectValue<Uncertain<f64>>) -> PropagatingEffect<Unce
         Err(_) => println!("   ⚠️  Recommendation undecided"),
     }
 
-    PropagatingEffect::pure(chosen)
+    chosen
 }
 
-/// Stage 4 — propagate distance into a fuel consumption estimate (gallons).
-///
-/// Note: the chain carries travel time forward, so the fuel stage models distance
-/// from an independent `Uncertain` (matching the original example, where fuel
-/// consumption used a fresh `distance` lift). This makes the chain a sequence of
-/// stage-local computations rather than a strict data-flow DAG — same pattern as
-/// the avionics flight-envelope monitor, where stage 2's `health_fold` projects
-/// the value channel from `f64` to a separate `FlightStateEstimate`.
-pub fn fuel_stage(value: EffectValue<Uncertain<f64>>) -> PropagatingEffect<Uncertain<f64>> {
-    if value.into_value().is_none() {
-        return PropagatingEffect::none();
-    }
-
+/// Stage 4 — propagate distance into a fuel consumption estimate (gallons). The carried value is the
+/// chosen route time, which fuel does not use; it models a fresh planned-trip distance, matching the
+/// original example's stage-local computation.
+pub fn fuel_stage(_carried: Uncertain<f64>) -> Uncertain<f64> {
     let distance = Uncertain::<f64>::point(2.0); // ~2 mi planned trip
     let efficiency = Uncertain::normal(28.0, 4.0); // mpg
     let fuel = distance.clone() / efficiency;
@@ -153,5 +121,5 @@ pub fn fuel_stage(value: EffectValue<Uncertain<f64>>) -> PropagatingEffect<Uncer
         Err(_) => println!("   ⚠️  Fuel-sufficiency check inconclusive"),
     }
 
-    PropagatingEffect::pure(fuel)
+    fuel
 }
