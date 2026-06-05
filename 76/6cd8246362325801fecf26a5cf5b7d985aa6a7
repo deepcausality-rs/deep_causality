@@ -1,0 +1,22 @@
+examples/avionics_examples/README.md
+  s_52e6d9817e5bf8::t_32b10598a2ee88 23-24
+  s_52e6d9817e5bf8::t_47b137a41d5725 59
+examples/README.md
+  s_52e6d9817e5bf8::t_29f73eb872b7e3 174-175
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "766cd8246362325801fecf26a5cf5b7d985aa6a7",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
