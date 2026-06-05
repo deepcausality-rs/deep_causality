@@ -30,6 +30,7 @@ pub use crate::traits::intervenable::Intervenable;
 // Re-export types
 pub use crate::types::causal_effect_propagation_process::CausalEffectPropagationProcess;
 pub use crate::types::causal_effect_propagation_process::hkt::CausalEffectPropagationProcessWitness;
+pub use crate::types::causal_flow::CausalFlow;
 pub use crate::types::effect_log::log_effect::EffectLog;
 pub use crate::types::effect_value::EffectValue;
 pub use crate::types::propagating_effect::PropagatingEffect;
