@@ -1,0 +1,61 @@
+examples/avionics_examples/hypersonic_2t/model.rs
+  s_52e6d9817e5bf8::t_344041eeb1a3e8 12
+  s_52e6d9817e5bf8::t_2a35b92892fa37 66-70,72-74
+examples/mathematics_examples/topology/differential_field.rs
+  s_52e6d9817e5bf8::t_8be950e314e5c9 97
+  s_52e6d9817e5bf8::t_e1a0ff37d65306 51,53-57,61-64,66-67,69-81,83-85,89
+  s_52e6d9817e5bf8::t_46a61b9996f137 5-6,112-128
+examples/material_examples/examples/topological_insulator/model.rs
+  s_52e6d9817e5bf8::t_602049c4af2d27 67-85,89-175
+  s_52e6d9817e5bf8::t_974fc84475f11b 86-88
+  s_52e6d9817e5bf8::t_61a5dd24371649 6,8
+examples/avionics_examples/turbulence_flow/print_utils.rs
+  s_52e6d9817e5bf8::t_974fc84475f11b 11-13,18-21,24-26,34-36
+examples/avionics_examples/cfd_taylor_green/main.rs
+  s_52e6d9817e5bf8::t_974fc84475f11b 136
+examples/physics_examples/event_horizon_probe/main.rs
+  s_52e6d9817e5bf8::t_6e820793f58f50 8-20,23-24,27-29,32,44-48,55-57,73-79,81,104-107,109,113,123,126-129,132-137,148,151,153-154,160,185-220
+  s_52e6d9817e5bf8::t_0b8c883b290106 33
+  s_52e6d9817e5bf8::t_974fc84475f11b 40
+examples/avionics_examples/magnav/main.rs
+  s_52e6d9817e5bf8::t_974fc84475f11b 18-21
+openspec/specs/autodiff-integration-examples/spec.md
+  s_52e6d9817e5bf8::t_55d3af106cfb69 1,3-5,8,18,46,66
+examples/physics_examples/gauge_gr/main.rs
+  s_52e6d9817e5bf8::t_fa8b857381d80e 154-164,173-176
+  s_52e6d9817e5bf8::t_974fc84475f11b 165-172
+  s_52e6d9817e5bf8::t_5555575573b4e1 17
+examples/medicine_examples/tumor_treatment/main.rs
+  s_52e6d9817e5bf8::t_ba549e4972ffb8 85-86
+  s_52e6d9817e5bf8::t_86e56f4bbf0b9d 8-9,11-20,25,27-29,31-32,34,37-62,64-66,68-84,87-91,94-122,124-131
+  s_52e6d9817e5bf8::t_974fc84475f11b 21
+examples/avionics_examples/turbulence_flow/main.rs
+  s_52e6d9817e5bf8::t_974fc84475f11b 38-40,112
+examples/material_examples/examples/topological_insulator/main.rs
+  s_52e6d9817e5bf8::t_5ecd0faa5abd03 6-22,27-34,38-48,50-62,64-68,71-75,77-84,86-87,89-97,101-102,104-105
+  s_52e6d9817e5bf8::t_cfeeeab0791c34 100
+examples/medicine_examples/tumor_treatment/model.rs
+  s_52e6d9817e5bf8::t_ab5aa7ff648fb4 7,48-58,60-66,68-72,74-75,77,79-82
+  s_52e6d9817e5bf8::t_7559f8c7b4bb2d 73
+  s_52e6d9817e5bf8::t_ab47653891fd66 21-22,25
+examples/avionics_examples/cfd_taylor_green/print_utils.rs
+  s_52e6d9817e5bf8::t_974fc84475f11b 13-15,33-36,40
+examples/material_examples/Cargo.toml
+  s_52e6d9817e5bf8::t_ee2d6d454da695 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "0c9094bc8bde14ba7deaa545f4e0b688d7c651b1",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
