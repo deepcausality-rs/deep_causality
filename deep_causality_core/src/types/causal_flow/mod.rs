@@ -244,7 +244,22 @@ where
         CausalFlow { inner }
     }
 
-    /// Evolve the Markovian state from the current value; the value passes through unchanged.
+    /// Update the carried value in place; state and context pass through unchanged. A same-typed
+    /// sibling of [`map`](Self::map) (which can also change the value's type), kept for symmetry with
+    /// the rest of the `update_*` family.
+    pub fn update_value<F>(self, f: F) -> Self
+    where
+        F: FnOnce(Value) -> Value,
+    {
+        let inner = self.inner.bind_or_error(
+            |v, state, context| ok_leaf(f(v), state, context),
+            "update_value received no value",
+        );
+        CausalFlow { inner }
+    }
+
+    /// Evolve the Markovian state from the current value; the value passes through unchanged. The
+    /// closure owns the state and borrows the value.
     pub fn update_state<F>(self, f: F) -> Self
     where
         F: FnOnce(State, &Value) -> State,
@@ -255,6 +270,39 @@ where
                 ok_leaf(v, state, context)
             },
             "update_state received no value",
+        );
+        CausalFlow { inner }
+    }
+
+    /// Evolve the read-only context from the current value; the value passes through unchanged. The
+    /// closure owns the context and borrows the value.
+    pub fn update_context<F>(self, f: F) -> Self
+    where
+        F: FnOnce(Option<Context>, &Value) -> Option<Context>,
+    {
+        let inner = self.inner.bind_or_error(
+            |v, state, context| {
+                let context = f(context, &v);
+                ok_leaf(v, state, context)
+            },
+            "update_context received no value",
+        );
+        CausalFlow { inner }
+    }
+
+    /// Rewrite all three channels at once: the closure owns the value, state, and context and returns
+    /// the next triple. This is the one operator that touches value, state, and context together; the
+    /// confined `update_value` / `update_state` / `update_context` each evolve a single channel.
+    pub fn update_value_state_context<F>(self, f: F) -> Self
+    where
+        F: FnOnce(Value, State, Option<Context>) -> (Value, State, Option<Context>),
+    {
+        let inner = self.inner.bind_or_error(
+            |v, state, context| {
+                let (value, state, context) = f(v, state, context);
+                ok_leaf(value, state, context)
+            },
+            "update_value_state_context received no value",
         );
         CausalFlow { inner }
     }

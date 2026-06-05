@@ -99,7 +99,11 @@ or absent value without running the closure. The full set (refined by the stress
 .guard(|v: &V| -> Result<(), CausalityError>)   // validate; Err short-circuits, Ok passes v through
 .recover(|err| -> U)                            // turn the error channel back into a value
 .try_step_with(|v, &state, ctx| -> Result<U,_>) // stateful step; threads State/Context automatically
-.update_state(|state, v: &V| -> S)              // evolve the Markovian state
+.step_mut(|v, &mut state, ctx| -> Result<U,_>)  // canonical stateful step; mutate state, transform value
+.update_value(|v| -> V)                         // evolve the value in place (same-type sibling of map)
+.update_state(|state, v: &V| -> S)              // evolve the Markovian state from the value
+.update_context(|ctx, v: &V| -> Option<C>)      // evolve the context from the value
+.update_value_state_context(|v, s, c| -> (V,S,Option<C>)) // rewrite all three channels at once
 .bind(f) / .bind_or_error(f, msg)               // drop-in passthroughs for existing monad-shaped stages
 ```
 
@@ -334,7 +338,10 @@ CausalFlow::value(engagement)
 | `recover(f)` | `CausalityError -> U` | turn the error channel back into a value (explicit fallback, S2) |
 | `try_step_with(f)` | `(Value, &State, Option<&Context>) -> Result<U, CausalityError>` | stateful step, read-only state (S1) |
 | `step_mut(f)` | `(Value, &mut State, Option<&Context>) -> Result<U, CausalityError>` | canonical stateful step; mutate state while transforming the value (S4) |
-| `update_state(f)` | `(State, &Value) -> State` | evolve the Markovian state |
+| `update_value(f)` | `Value -> Value` | evolve the value in place; same-type sibling of `map` |
+| `update_state(f)` | `(State, &Value) -> State` | evolve the Markovian state from the value |
+| `update_context(f)` | `(Option<Context>, &Value) -> Option<Context>` | evolve the context from the value |
+| `update_value_state_context(f)` | `(Value, State, Option<Context>) -> (Value, State, Option<Context>)` | rewrite all three channels at once |
 | `intervene(v)` / `intervene_if(c, f)` | `Value` / `(&Value) -> bool`, `(Value) -> U` | closed-loop value override (Pearl Layer 2); lowers to `Intervenable` (S5) |
 | `bind(f)` / `bind_or_error(f, msg)` | the existing monad signatures | drop-in passthroughs for un-migrated stage fns (S3) |
 

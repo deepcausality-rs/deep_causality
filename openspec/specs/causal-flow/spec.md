@@ -1,5 +1,8 @@
-## ADDED Requirements
+# causal-flow Specification
 
+## Purpose
+TBD - created by archiving change causal-flow-dsl. Update Purpose after archive.
+## Requirements
 ### Requirement: Uniform construction of effect and process flows without naming witnesses
 
 `CausalFlow` SHALL provide constructors that build a stateless flow (lowering to `PropagatingEffect`)
@@ -31,8 +34,12 @@ so they never appear in a user-facing signature.
 SHALL propagate an existing error or absent value without invoking the closure. The step methods SHALL
 cover: `and_then` (closure returns a `CausalFlow`), `try_step` (closure returns `Result<U, CausalityError>`),
 `map` (infallible value transform), `guard` (validation that short-circuits on `Err`), and for the
-stateful carrier `try_step_with` (read-only state and context), `step_mut` (mutable state alongside the
-value transform, for the common case where the state update derives from the value), and `update_state`.
+stateful carrier `try_step_with` (read-only state and context) and `step_mut` (mutable state alongside the
+value transform, for the common case where the state update derives from the value). The facade SHALL
+also provide a channel-update family: the confined `update_value` (value only), `update_state` (state
+evolved from the value), and `update_context` (context evolved from the value), each writing a single
+channel and reading the value as the driver, plus `update_value_state_context`, which rewrites the value,
+state, and context together in one closure.
 
 #### Scenario: Step receives the raw value on success
 
@@ -60,7 +67,7 @@ value transform, for the common case where the state update derives from the val
 - **WHEN** `try_step_with` is applied to a stateful flow
 - **THEN** the closure receives the unwrapped value, a reference to the current `State`, and an
   `Option<&Context>`, returns `Result<U, CausalityError>`, and the resulting flow carries the same
-  `State`/`Context`; `update_state` replaces the threaded `State` from the current value
+  `State`/`Context`
 
 #### Scenario: A step mutates state while transforming the value
 
@@ -68,6 +75,15 @@ value transform, for the common case where the state update derives from the val
 - **THEN** the closure receives the unwrapped value and a mutable reference to the `State` (plus the
   context), may update the state from the computed value, and returns the new value; the resulting flow
   carries the mutated `State` and the new value
+
+#### Scenario: Channel-update operators evolve one channel or all three
+
+- **WHEN** `update_value`, `update_state`, or `update_context` is applied to a flow carrying a value
+- **THEN** the named channel is replaced (the value in place, or the `State`/`Context` evolved from the
+  current value) while the other two channels pass through unchanged
+- **WHEN** `update_value_state_context` is applied to a flow carrying a value
+- **THEN** the closure owns the value, `State`, and `Option<Context>` and returns the next triple, which
+  becomes the new flow
 
 ### Requirement: Terminals extract the result and interoperate with the underlying monad
 
@@ -151,3 +167,4 @@ its own beyond lowering to existing constructors and combinators.
 - **WHEN** a step in the middle of a flow fails
 - **THEN** subsequent steps are skipped and the logs accumulated up to the failure match those of the
   equivalent `bind` chain
+

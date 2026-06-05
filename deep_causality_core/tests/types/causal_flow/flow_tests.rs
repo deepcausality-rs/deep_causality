@@ -131,11 +131,46 @@ fn step_mut_mutates_state_while_transforming_value() {
 }
 
 #[test]
+fn update_value_updates_value_in_place() {
+    let p = CausalFlow::value(5i64)
+        .update_value(|v| v * 2)
+        .into_effect();
+    assert_eq!(p.value, EffectValue::Value(10));
+}
+
+#[test]
 fn update_state_evolves_state() {
     let p = CausalFlow::process(1i64)
         .update_state(|s, _v| s + 100)
         .into_process();
     assert_eq!(p.state, 101);
+}
+
+#[test]
+fn update_context_evolves_context_from_value() {
+    let p = CausalFlow::process(0i64) // state = 0
+        .context(10i64) // context = 10
+        .map(|_unit| 5i64) // value = 5
+        .update_context(|c, v| Some(c.unwrap_or(0) + v))
+        .into_process();
+    assert_eq!(p.context, Some(15)); // 10 + 5
+    assert_eq!(p.value, EffectValue::Value(5)); // unchanged
+    assert_eq!(p.state, 0); // unchanged
+}
+
+#[test]
+fn update_value_state_context_rewrites_all_three() {
+    let p = CausalFlow::process(1i64) // state = 1
+        .context(2i64) // context = 2
+        .map(|_unit| 3i64) // value = 3
+        .update_value_state_context(|v, s, c| {
+            let ctx = c.unwrap_or(0);
+            (v + 10, s + ctx, Some(ctx + 100))
+        })
+        .into_process();
+    assert_eq!(p.value, EffectValue::Value(13)); // 3 + 10
+    assert_eq!(p.state, 3); // 1 + 2
+    assert_eq!(p.context, Some(102)); // 2 + 100
 }
 
 #[test]

@@ -170,7 +170,10 @@ The same facade covers the whole monad surface, grouped by role:
 | `recover(f)` | Turn the error channel back into a value. |
 | `try_step_with(f)` | Stateful step with read-only state and context. |
 | `step_mut(f)` | Stateful step that mutates state while transforming the value. |
-| `update_state(f)` | Evolve the state; the value passes through unchanged. |
+| `update_value(f)` | Update the value in place; a same-type sibling of `map`. |
+| `update_state(f)` | Evolve the state from the value; the value flows on. |
+| `update_context(f)` | Evolve the context from the value; the value flows on. |
+| `update_value_state_context(f)` | Rewrite value, state, and context together in one closure. |
 
 **Intervention**
 

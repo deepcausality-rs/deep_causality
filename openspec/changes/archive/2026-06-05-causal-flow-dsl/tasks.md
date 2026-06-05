@@ -50,3 +50,8 @@ Note: `hypersonic_2t` (imperative tracker loop) and `magnav` (particle-filter lo
 - [x] 7.1 `cargo build` / `cargo test` for `deep_causality_core` and every touched example; `make format && make fix` (0 clippy warnings, no `#[allow(...)]`).
 - [x] 7.2 Doc comments on `CausalFlow` and its methods, each noting the `CausalEffectPropagationProcess` operation it lowers to; a module-level example mirroring the `gm_recovery` before/after.
 - [ ] 7.3 Commit message prepared; owner commits. (Edition 2024; `unsafe_code = "forbid"`; additive, non-breaking.)
+
+## 8. Post-design extension: full channel-update family
+
+- [x] 8.1 Add the confined single-channel updaters and the full-triple operator to `CausalFlow`: `update_value(Value -> Value)` (same-type sibling of `map`), `update_state((State, &Value) -> State)`, `update_context((Option<Context>, &Value) -> Option<Context>)`, and `update_value_state_context((Value, State, Option<Context>) -> (Value, State, Option<Context>))`. Each lowers to `bind_or_error`; four tests added. Spec (D4 requirement + scenario) and design (combinator set) synced.
+- [x] 8.2 Further DSL adoption beyond the stress-test set: `causal_intervention_examples` (counterfactual_treatment_effect / _options, counterfactual_resection_intervention, counterfactual_envelope_fault) and `causal_uncertain_examples` (gps_navigation, clinical_trial, sensor_processing). Each verified output-preserving (modulo Monte-Carlo sampling, wall-clock log timestamps, and pre-existing HashMap iteration order).
