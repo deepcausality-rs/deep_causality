@@ -23,6 +23,14 @@ deep_causality_topology = { path = "../../deep_causality_topology" }
 
 
 # ============================================================================
+# calculus — arrow-calculus operators (deep_causality_calculus).
+# ============================================================================
+
+[[example]]
+name = "leibniz_dual_integration_examples"
+path = "calculus/leibniz_dual_integration.rs"
+
+# ============================================================================
 # algebra — multivector / Clifford algebra examples (deep_causality_multivector).
 # ============================================================================
 
