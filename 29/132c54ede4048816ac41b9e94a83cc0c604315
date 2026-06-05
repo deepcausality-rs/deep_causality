@@ -1,0 +1,72 @@
+examples/avionics_examples/turbulence_flow/README.md
+  s_52e6d9817e5bf8::t_0530da0edd825f 1-120
+examples/avionics_examples/cfd_taylor_green/main.rs
+  s_52e6d9817e5bf8::t_3f823691dc3f53 30,63,115-125,127-136
+  s_52e6d9817e5bf8::t_1aa5f5a08f6100 40
+  s_52e6d9817e5bf8::t_06ebee1ee43e17 45-47,51
+  s_52e6d9817e5bf8::t_9e698c36c013df 79
+  s_52e6d9817e5bf8::t_722cb613135e39 1-11,13,24-28,44,52,65-67,91-93,110,114,126
+  s_52e6d9817e5bf8::t_925b6711f29641 12,14-23,29,31-36,41-43,48-50,53-62,64,68-78,80-90,94-96,100-109,112-113
+  s_52e6d9817e5bf8::t_5afa882f391169 97-98
+  s_52e6d9817e5bf8::t_04a77dfe5b611a 99
+  s_52e6d9817e5bf8::t_f79785fd4f99c6 111
+  s_52e6d9817e5bf8::t_28f3f69a41f3e6 37-39
+examples/causal_intervention_examples/Cargo.toml
+  s_52e6d9817e5bf8::t_17c296eaf93ef6 14
+examples/avionics_examples/cfd_taylor_green/model.rs
+  s_52e6d9817e5bf8::t_ee1e0ffac3619a 1-8,10,16-20,30-33,41-42,44-45,56-57,59-67,74-98,102-106,109-111,113,127-129,131,134-137,139-148,153,156-157,161-168,173,179-180,182-197,202-203,208-209,233-235,237-238
+  s_52e6d9817e5bf8::t_d9d296c9b8768f 35-37,39
+  s_52e6d9817e5bf8::t_e28f2fd4fa2241 198,200,204-206
+  s_52e6d9817e5bf8::t_ca206b4e346ba3 53
+  s_52e6d9817e5bf8::t_bbe25545e1f236 207
+  s_52e6d9817e5bf8::t_ba11062401151a 9,11-15,21,34,38,40,43,99-101,107-108,112,130,138,149-152,154-155,158-160,169-172,174-178,181,199,201,232,236
+  s_52e6d9817e5bf8::t_47baa38976d7b4 22,114-126,132-133
+  s_52e6d9817e5bf8::t_fdb7e57c3456ab 23-29
+  s_52e6d9817e5bf8::t_40cdb67230f12d 46-52,54-55,58,68-73
+  s_52e6d9817e5bf8::t_761773d898f601 210-231
+examples/avionics_examples/cfd_taylor_green/README.md
+  s_52e6d9817e5bf8::t_f63cfeb5f4550f 1-67,69-81,110-112,158-165
+  s_52e6d9817e5bf8::t_944d332d37068f 82-89,91-109,113-130,132-156
+  s_52e6d9817e5bf8::t_805beaf3b04ceb 157
+examples/causal_intervention_examples/counterfactual_resection_intervention/model.rs
+  s_52e6d9817e5bf8::t_e0dfedea446914 11,14
+  s_52e6d9817e5bf8::t_8021f13f914f05 81-83,85-96,98-103,111-127
+examples/avionics_examples/turbulence_flow/print_utils.rs
+  s_52e6d9817e5bf8::t_251da22e3816dd 6
+  s_52e6d9817e5bf8::t_c0d0ceda05383a 1-5,7-58
+examples/mathematics_examples/Cargo.toml
+  s_52e6d9817e5bf8::t_ad07a76ba17775 26-32
+openspec/changes/causal-arrow-application/tasks.md
+  s_52e6d9817e5bf8::t_df930b8cfaa53d 1-10,18,21,25-28,32-34,38-40,44,49,55,59,61
+  s_52e6d9817e5bf8::t_641b96d40e2b6d 11-17
+examples/mathematics_examples/calculus/leibniz_dual_integration.rs
+  s_52e6d9817e5bf8::t_ab429be86dde0c 17
+  s_52e6d9817e5bf8::t_cd862b7d11e85b 1-5,7,12,15-16,18-23,25-32,34-36,38-42,58
+  s_52e6d9817e5bf8::t_930f3cca1148eb 6,8-11,13-14,24,33,37,43-57
+examples/avionics_examples/turbulence_flow/main.rs
+  s_52e6d9817e5bf8::t_93155b8e1b7da8 35
+examples/avionics_examples/turbulence_flow/model.rs
+  s_52e6d9817e5bf8::t_8b177892787bfb 163-202
+examples/avionics_examples/Cargo.toml
+  s_52e6d9817e5bf8::t_be1264d0331ebe 42
+  s_52e6d9817e5bf8::t_baac17354e2690 17-19
+examples/avionics_examples/cfd_taylor_green/print_utils.rs
+  s_52e6d9817e5bf8::t_008409c708f072 7
+  s_52e6d9817e5bf8::t_f8355afd54bd16 30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "29132c54ede4048816ac41b9e94a83cc0c604315",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
