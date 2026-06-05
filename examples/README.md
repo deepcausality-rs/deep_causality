@@ -171,6 +171,8 @@ High-assurance examples for Aerospace, Defense, and Safety Critical systems.
 | geometric_tcas | Collision Avoidance | NextGen TCAS using Geometric Algebra collision detection and `Intervenable` safety interlocks | `cargo run -p avionics_examples --example geometric_tcas` |
 | hypersonic_2t | Defense/Tracking | Tracking Hypersonic Glide Vehicles (HGV) using Dual-Time (2T) Physics in 6D phase space | `cargo run -p avionics_examples --example hypersonic_2t` |
 | flight_envelope_monitor | Health Monitoring | Three-stage stateful pipeline (sensor collection → bind chain → envelope hypergraph) demonstrating uniform composition through `PropagatingProcess<_, FlightState, AircraftConfig>` | `cargo run -p avionics_examples --example flight_envelope_monitor` |
+| cfd_taylor_green | CFD Verification | Incompressible Navier–Stokes RHS verified by the Method of Manufactured Solutions (Taylor–Green vortex): tangent functor for `∇u`/`∇²u`/`∇p`, `Rk4` march, causal-monad pipeline; precision a `FloatType` parameter (f32/f64/Float106) | `cargo run -p avionics_examples --example cfd_taylor_green` |
+| turbulence_flow | Turbulence / Chaos | Forecast horizon of a chaotic convective flow (Lorenz / Rayleigh–Bénard truncation); the same `Rk4` march at f32/f64/Float106 shows precision setting how far ahead a turbulent flow can be trusted | `cargo run -p avionics_examples --example turbulence_flow` |
 
 See [avionics_examples/README.md](avionics_examples/README.md) for detailed documentation.
 
