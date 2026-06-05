@@ -248,6 +248,15 @@ fn from_and_into_round_trip_losslessly() {
     assert_eq!(flow.into_effect().value, EffectValue::Value(42));
 }
 
+#[test]
+fn finish_on_absent_value_without_error_is_value_not_available() {
+    // A flow carrying neither a value nor an error short-circuits `finish` to ValueNotAvailable.
+    let flow: CausalFlow<i64> = CausalFlow::from(PropagatingEffect::none());
+    let out = flow.finish();
+    assert!(out.is_err());
+    assert!(format!("{:?}", out.unwrap_err()).contains("ValueNotAvailable"));
+}
+
 // -----------------------------------------------------------------------------
 // 5.4 Behavior-preserving parity with the raw monad
 // -----------------------------------------------------------------------------

@@ -47,3 +47,29 @@ fn test_from_integer_primitives() {
     let c: Dual<f64> = Dual::from_usize(3).unwrap();
     assert_eq!(c.value(), 3.0);
 }
+
+#[test]
+fn test_all_from_primitive_methods_lift_constants() {
+    // Every `FromPrimitive` method lifts to a constant dual: value = n, derivative = 0.
+    macro_rules! assert_constant {
+        ($call:expr) => {{
+            let d: Dual<f64> = $call.unwrap();
+            assert_eq!(d.value(), 5.0);
+            assert_eq!(d.derivative(), 0.0);
+        }};
+    }
+    assert_constant!(Dual::from_isize(5));
+    assert_constant!(Dual::from_i8(5));
+    assert_constant!(Dual::from_i16(5));
+    assert_constant!(Dual::from_i32(5));
+    assert_constant!(Dual::from_i64(5));
+    assert_constant!(Dual::from_i128(5));
+    assert_constant!(Dual::from_usize(5));
+    assert_constant!(Dual::from_u8(5));
+    assert_constant!(Dual::from_u16(5));
+    assert_constant!(Dual::from_u32(5));
+    assert_constant!(Dual::from_u64(5));
+    assert_constant!(Dual::from_u128(5));
+    assert_constant!(Dual::from_f32(5.0));
+    assert_constant!(Dual::from_f64(5.0));
+}

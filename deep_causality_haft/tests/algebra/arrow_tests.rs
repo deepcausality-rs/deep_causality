@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Arrow, Id, Lift, arrow};
+use deep_causality_haft::{Arrow, ArrowBuilder, Id, Lift, arrow};
 
 fn inc() -> Lift<i32, i32, fn(i32) -> i32> {
     Lift::new((|x: i32| x + 1) as fn(i32) -> i32)
@@ -122,4 +122,33 @@ fn test_builder_par_and_build_yields_reusable_arrow() {
         .build();
     assert_eq!(pipe.run((2, 3)), 16); // (2+1) + (3+10)
     assert_eq!(pipe.run((0, 0)), 11); // reusable
+}
+
+#[test]
+fn test_builder_new_wraps_an_existing_arrow() {
+    // ArrowBuilder::new wraps a pre-built arrow; the chain continues from there.
+    let pipe = ArrowBuilder::new(inc()).then(dbl()).build();
+    assert_eq!(pipe.run(3), 8); // (3+1)*2
+}
+
+#[test]
+fn test_builder_then_composes_with_an_arrow() {
+    // `.then(arrow)` is the arrow-typed sibling of `.then_fn(closure)`.
+    let pipe = arrow(|x: i32| x + 1).then(dbl()).build();
+    assert_eq!(pipe.run(3), 8);
+}
+
+#[test]
+fn test_builder_fanout_feeds_one_input_to_two_arrows() {
+    let pipe = arrow(|x: i32| x + 1)
+        .fanout(add10())
+        .then_fn(|(a, b)| a + b)
+        .build();
+    assert_eq!(pipe.run(5), 21); // (5+1) + (5+10)
+}
+
+#[test]
+fn test_id_default_is_the_identity_arrow() {
+    let id: Id<i32> = Id::default();
+    assert_eq!(id.run(7), 7);
 }

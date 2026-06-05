@@ -123,6 +123,32 @@ fn test_clamp() {
 }
 
 #[test]
+fn test_clamp_to_lower_bound() {
+    let lo = Dual::constant(0.0_f64);
+    let hi = Dual::constant(1.0_f64);
+    // A value below the lower bound clamps to `min`, carrying the bound's (zero) derivative.
+    let r = Dual::variable(-1.0_f64).clamp(lo, hi);
+    assert_eq!(r.value(), 0.0);
+    assert_eq!(r.derivative(), 0.0);
+}
+
+#[test]
+fn test_atan2_derivative() {
+    // atan2(y, x) with y the variable and x constant: d/dy = x / (x² + y²).
+    let y = 1.0_f64;
+    let x = 2.0_f64;
+    let r = Dual::variable(y).atan2(Dual::constant(x));
+    assert!((r.value() - y.atan2(x)).abs() < TOL);
+    assert!((r.derivative() - x / (x * x + y * y)).abs() < TOL);
+}
+
+#[test]
+fn test_epsilon_is_a_constant() {
+    assert_eq!(<Dual<f64> as Real>::epsilon().value(), f64::EPSILON);
+    assert_eq!(<Dual<f64> as Real>::epsilon().derivative(), 0.0);
+}
+
+#[test]
 fn test_dual_is_a_real_scalar_and_nests() {
     fn assert_real<T: Real>() {}
     assert_real::<Dual<f64>>();
