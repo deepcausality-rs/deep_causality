@@ -1,0 +1,21 @@
+deep_causality_core/README.md
+  s_52e6d9817e5bf8::t_70d5e37bbad6b3 131-148,190,192
+  s_52e6d9817e5bf8::t_4bc855911cc676 149-189
+  s_52e6d9817e5bf8::t_37669ca2bc9ffa 191
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "6e27472ea1f9fa8be150c381427bfb51c45894e7",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
