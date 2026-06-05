@@ -1,0 +1,44 @@
+openspec/changes/causal-flow-dsl/specs/causal-flow/spec.md
+  s_52e6d9817e5bf8::t_1955c828e4be73 32
+  s_52e6d9817e5bf8::t_4dc2a45fa60a8a 34-35
+  s_52e6d9817e5bf8::t_8bf193b0cea094 58,60,62-63
+  s_52e6d9817e5bf8::t_7e97f92d7604c9 65-71
+  s_52e6d9817e5bf8::t_5dd1daa094d074 1-31,33,36-57,59,61,64,72-93,137-153
+  s_52e6d9817e5bf8::t_92f7820fee87ce 118-136
+  s_52e6d9817e5bf8::t_a1e4191d74478b 94-117
+openspec/changes/causal-flow-dsl/tasks.md
+  s_52e6d9817e5bf8::t_65fdf133bab725 32
+  s_52e6d9817e5bf8::t_aeb806e962c010 43-46
+  s_52e6d9817e5bf8::t_c060de3613664b 37,39-42
+  s_52e6d9817e5bf8::t_cbd0e08233cf84 19-21
+  s_52e6d9817e5bf8::t_930813253bd103 1-13,15-17,22-31,33-36,38,47-52
+  s_52e6d9817e5bf8::t_0ebdfa58d1f7ca 14,18
+openspec/changes/causal-flow-dsl/proposal.md
+  s_52e6d9817e5bf8::t_b398c4a7d13832 28
+  s_52e6d9817e5bf8::t_02cee418bf4f05 1-27,29
+openspec/changes/causal-flow-dsl/.openspec.yaml
+  s_52e6d9817e5bf8::t_76ed55847dcb37 1-2
+openspec/changes/causal-flow-dsl/design.md
+  s_52e6d9817e5bf8::t_75cd6c32e8deee 126,128-155,157-166,168-171
+  s_52e6d9817e5bf8::t_bc618b13413647 1-92,94-95,104-105,112-125,127,156,167,172,341-353
+  s_52e6d9817e5bf8::t_ed751d69e1c5b8 173-279,326-334,337,339-340
+  s_52e6d9817e5bf8::t_294734b35cae3f 280-325
+  s_52e6d9817e5bf8::t_67390c23c3969d 93,96-103,106-111
+  s_52e6d9817e5bf8::t_7f4938e3cd65d7 335-336,338
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "0dbd0e6890811a8c1cf0d152b2ac167accb825a0",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
