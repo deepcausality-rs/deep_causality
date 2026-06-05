@@ -1,0 +1,28 @@
+openspec/specs/causal-flow/spec.md
+  s_52e6d9817e5bf8::t_8d7810d1ce390a 1,3-5,37-42,70,79-87,170
+deep_causality_core/tests/types/causal_flow/flow_tests.rs
+  s_52e6d9817e5bf8::t_5b1a4e61882519 135-137
+  s_52e6d9817e5bf8::t_4235cd8f79c48e 149,155,159-161,163,170
+  s_52e6d9817e5bf8::t_9b65e8965c4990 134,138-140,150-154,156-158,162,164-169,171-173
+deep_causality_core/README.md
+  s_52e6d9817e5bf8::t_db98dc8c11489e 173-176
+deep_causality_core/src/types/causal_flow/mod.rs
+  s_52e6d9817e5bf8::t_98f624abdb7785 250-251,253-254,256-260,279-280,282-284,286-288
+  s_52e6d9817e5bf8::t_e29ce559e07ee4 247-249,252,255,261-262,277-278,281,285,289-305
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "24f75dcbcca9331c5e9a23d586e9fd4fd35cd8e7",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
