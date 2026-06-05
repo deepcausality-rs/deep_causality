@@ -1,0 +1,57 @@
+examples/medicine_examples/diving_decompression/model.rs
+  s_52e6d9817e5bf8::t_17ac6fd8b35c70 6-10,20-148,151-158,160-236
+  s_52e6d9817e5bf8::t_b32cf72c646975 12
+  s_52e6d9817e5bf8::t_50adfa497b7f1c 149-150
+examples/mathematics_examples/algebra/maxwell_multivector.rs
+  s_52e6d9817e5bf8::t_22033f5e8cdaae 5,8-21
+  s_52e6d9817e5bf8::t_590b0167193d2e 75-77
+examples/avionics_examples/magnav/main.rs
+  s_52e6d9817e5bf8::t_289af4d596e26c 45
+  s_52e6d9817e5bf8::t_aaa90fd5527f18 59
+  s_52e6d9817e5bf8::t_51542da1c8717f 68-71,73-75
+  s_52e6d9817e5bf8::t_dd7e59fdd15c63 19-20
+  s_52e6d9817e5bf8::t_ebc33744b36817 128
+  s_52e6d9817e5bf8::t_f285b1cad4201e 37-42
+examples/avionics_examples/magnav/model.rs
+  s_52e6d9817e5bf8::t_ce10a7dde47a39 71-73
+  s_52e6d9817e5bf8::t_15ec52972707a3 6,11-50
+examples/avionics_examples/Cargo.toml
+  s_52e6d9817e5bf8::t_31845d553c53a2 32-33
+examples/mathematics_examples/Cargo.toml
+  s_52e6d9817e5bf8::t_ec867c5547690d 14
+examples/medicine_examples/Cargo.toml
+  s_52e6d9817e5bf8::t_ae9f9252c1b776 16
+examples/physics_examples/maxwell/model.rs
+  s_52e6d9817e5bf8::t_7661161fbd02e8 91-94
+  s_52e6d9817e5bf8::t_d48687f4873ca0 7,11-24
+  s_52e6d9817e5bf8::t_d1b3629321e6d6 37-39,53-55
+examples/medicine_examples/diving_decompression/main.rs
+  s_52e6d9817e5bf8::t_ad570c1cc9d45a 11-15,17-18,61,70,89-90,96,99-103,148,199
+  s_52e6d9817e5bf8::t_ebb49417229777 27-28,31-32
+  s_52e6d9817e5bf8::t_6f049a3a672841 23,26,29,84,87
+  s_52e6d9817e5bf8::t_297f8d07182784 168
+  s_52e6d9817e5bf8::t_38c27ff0dca249 86,88
+examples/mathematics_examples/topology/cubical_heat_diffusion.rs
+  s_52e6d9817e5bf8::t_a69c277e92354a 26-27,30
+  s_52e6d9817e5bf8::t_5b28815752b567 50-51,56-96,98,100-104
+examples/medicine_examples/epilepsy/main.rs
+  s_52e6d9817e5bf8::t_66a002e5a30093 14,18
+  s_52e6d9817e5bf8::t_63d9f0e85becc5 103
+  s_52e6d9817e5bf8::t_83e6c4de7a07ea 92,99-102,104-106,108-123,125-126,128-131,133-136,138,140-144
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "63b55e4106ebf2b6cd1af6c5457bab31de02bd4d",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
