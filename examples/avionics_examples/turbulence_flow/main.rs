@@ -35,7 +35,9 @@ use deep_causality_num::Float106;
 use model::{ConvectionParams, Forecasts, Report, Row, Vec3};
 
 fn main() {
-    println!("=== Turbulence predictability: the forecast horizon of a chaotic convective flow ===\n");
+    println!(
+        "=== Turbulence predictability: the forecast horizon of a chaotic convective flow ===\n"
+    );
 
     let params = ConvectionParams::default();
     let dt = 0.005_f64; // Rk4 step
@@ -107,11 +109,7 @@ fn analyse(s: Forecasts, sample_dt: f64) -> PropagatingEffect<Report> {
         t += 5.0;
     }
 
-    PropagatingEffect::pure(Report {
-        h_f32,
-        h_f64,
-        rows,
-    })
+    PropagatingEffect::pure(Report { h_f32, h_f64, rows })
 }
 
 fn fail<T: Default + Clone + std::fmt::Debug>(msg: &str) -> PropagatingEffect<T> {

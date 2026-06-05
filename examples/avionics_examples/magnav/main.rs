@@ -15,7 +15,10 @@
 
 mod model;
 
-use crate::model::{AnomalyField, CELL_SIZE, MAG_NOISE_STD, MAP_SIZE, MagneticMap, ParticleFilter, generate_gaussian_noise, Pos2};
+use crate::model::{
+    AnomalyField, CELL_SIZE, MAG_NOISE_STD, MAP_SIZE, MagneticMap, ParticleFilter, Pos2,
+    generate_gaussian_noise,
+};
 use deep_causality_calculus::{DifferentiateFieldExt, Euler};
 use deep_causality_haft::Arrow;
 use std::error::Error;
@@ -125,4 +128,3 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("\n[SYS] Mission Complete. Final Position Accuracy: High Integrity.");
     Ok(())
 }
-

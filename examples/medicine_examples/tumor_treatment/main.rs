@@ -5,19 +5,113 @@
 
 //! # Glioblastoma TTFields Treatment Optimization
 //!
-//! Demonstrates using Electromagnetism and Geometric Algebra (GA) to optimize
-//! Tumor Treating Fields (TTFields) electrode placement.
+//! Optimizing Tumor Treating Fields (TTFields) electrode orientation, with the three DeepCausality
+//! pillars on one problem:
 //!
-//! ## Key Concepts
-//! - **Geometric Algebra**: Calculating alignment between Field vectors and Cell Axis bivectors.
-//! - **Causal Optimization**: Iterative process to maximize "Disruption Efficacy".
-//! - **Simulated Annealing**: Simple optimizer finding best field orientation.
-use deep_causality_core::{CausalityError, CausalityErrorEnum, EffectValue, PropagatingEffect};
+//! - **The tangent functor.** The treatment objective `⟨|E(θ,φ)·axis|⟩` is a `DifferentiableField`,
+//!   so its gradient comes from autodiff. The optimizer ascends the *exact* gradient rather than
+//!   sampling random perturbations the way the previous simulated-annealing version did.
+//! - **Precision as a parameter.** One `FloatType` alias re-runs the objective and its gradient at
+//!   `f32`, `f64`, or `Float106`.
+//! - **The causal monad.** `PropagatingEffect` sequences the ascent and short-circuits through the
+//!   error channel if the gradient ever leaves the finite range.
+
+use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt};
+use deep_causality_core::{CausalityError, CausalityErrorEnum, PropagatingEffect};
+use deep_causality_num::FromPrimitive;
 
 mod model;
 
+use model::Efficacy;
+
+/// Switch this alias to `f32`, `f64`, or `Float106` (the latter also needs
+/// `use deep_causality_num::Float106;`). The objective and its autodiff gradient re-run at it.
+pub type FloatType = f64;
+
+fn main() {
+    println!("=== Glioblastoma TTFields Optimization (autodiff gradient ascent) ===\n");
+
+    // 1. Clinical Data Ingestion (Mock): a tumour with non-uniform cell-division directions.
+    let tumor = model::build_mock_tumor(100);
+    println!("Loaded Tumor Volume: {} voxels", tumor.voxels.len());
+    let efficacy = Efficacy {
+        cell_axes: tumor.cell_axes,
+    };
+
+    // Start just off the degenerate θ = 0 pole, then ascend the exact gradient.
+    let start = [ft(0.1), ft(0.1)];
+    let learning_rate = ft(0.6);
+
+    // The workflow is a causal-monad chain: from a starting orientation, ascend; a non-finite
+    // gradient short-circuits the error channel.
+    let pipeline = PropagatingEffect::pure(start).bind(move |p, _, _| match p.into_value() {
+        Some(s) => ascend(&efficacy, s, learning_rate, ASCENT_STEPS),
+        None => fail("no starting orientation"),
+    });
+
+    match pipeline.value.into_value() {
+        Some(r) => {
+            println!("\n=== Optimization Complete ===");
+            println!(
+                "Optimal Transducer Orientation: Theta={:.3}, Phi={:.3}",
+                r.theta, r.phi
+            );
+            println!(
+                "Disruption Index: {:.4} -> {:.4} over {} gradient steps",
+                r.initial, r.final_score, r.steps
+            );
+        }
+        None => eprintln!("Optimization failed: {:?}", pipeline.error),
+    }
+}
+
+/// Gradient ascent on the efficacy field: each step moves the orientation along `∇efficacy`, the
+/// gradient supplied by the tangent functor (`field.gradient`).
+fn ascend(
+    efficacy: &Efficacy,
+    start: [FloatType; 2],
+    learning_rate: FloatType,
+    steps: usize,
+) -> PropagatingEffect<Report> {
+    let initial = efficacy.run(&start);
+    let mut params = start;
+    let mut score = initial;
+
+    for step in 1..=steps {
+        let grad = efficacy.gradient(&params);
+        if !model::finite(grad[0]) || !model::finite(grad[1]) {
+            return fail("gradient left the finite range");
+        }
+        params[0] += learning_rate * grad[0];
+        params[1] += learning_rate * grad[1];
+        score = efficacy.run(&params);
+        println!(
+            "[Step {:>2}] efficacy {:.4}   (θ={:.3}, φ={:.3})   ∇=({:+.3}, {:+.3})",
+            step, score, params[0], params[1], grad[0], grad[1]
+        );
+    }
+
+    PropagatingEffect::pure(Report {
+        initial,
+        final_score: score,
+        theta: params[0],
+        phi: params[1],
+        steps,
+    })
+}
+
+fn fail<T: Default + Clone + std::fmt::Debug>(msg: &str) -> PropagatingEffect<T> {
+    PropagatingEffect::from_error(CausalityError::new(CausalityErrorEnum::Custom(msg.into())))
+}
+
 const TUMOR_RADIUS: f64 = 2.0; // cm
-const OPTIMIZATION_STEPS: usize = 20;
+const ASCENT_STEPS: usize = 12;
+
+/// Lift an exact `f64` constant into the working precision (fully qualified to dodge the inherent
+/// `from_f64` some scalars carry).
+fn ft(x: f64) -> FloatType {
+    <FloatType as FromPrimitive>::from_f64(x).expect("constant lifts into FloatType")
+}
 
 // Represents the 3D grid of the tumor
 struct TumorVolume {
@@ -27,88 +121,12 @@ struct TumorVolume {
     cell_axes: Vec<[f64; 3]>,
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("=== Glioblastoma TTFields Optimization ===\n");
-
-    // 1. Clinical Data Ingestion (Mock)
-    // Create a tumor volume with non-uniform cell division directions
-    let tumor = model::build_mock_tumor(100);
-    println!("Loaded Tumor Volume: {} voxels", tumor.voxels.len());
-
-    // 2. Optimization Loop
-    // We want to find the best electrode angle (theta, phi) to maximize disruption.
-    // Disruption ~ |E . Axis|^2
-
-    // Initial guess: Transducer at (0, 0)
-    let initial_params = (0.0, 0.0); // (Theta, Phi)
-    let initial_score = model::evaluate_efficacy(&tumor, initial_params)?;
-
-    println!("Initial Configuration Efficacy: {:.4}", initial_score);
-    println!("Starting Causal Optimization Loop...\n");
-
-    let mut current_params = initial_params;
-    let mut current_score = initial_score;
-    let mut temperature = 1.0;
-
-    for step in 1..=OPTIMIZATION_STEPS {
-        // A. Propose new parameters (random perturbation)
-        let (theta, phi) = current_params;
-        let d_theta = (model::rand_f64() - 0.5) * temperature;
-        let d_phi = (model::rand_f64() - 0.5) * temperature;
-
-        let new_params = (theta + d_theta, phi + d_phi);
-
-        // B. Causal Impact Analysis using PropagatingEffect
-        // We evaluate "What if we change to new_params?"
-        let effect = PropagatingEffect::pure(new_params).bind(|params, _, _| {
-            let p = match params {
-                EffectValue::Value(v) => v,
-                _ => (0.0, 0.0),
-            };
-
-            // Simulate Physics
-            let score = match model::evaluate_efficacy(&tumor, p) {
-                Ok(s) => s,
-                Err(e) => {
-                    return PropagatingEffect::from_error(CausalityError::new(
-                        CausalityErrorEnum::Custom(e.to_string()),
-                    ));
-                }
-            };
-
-            PropagatingEffect::pure(score)
-        });
-
-        // C. Decision Logic (Metropolis-like accept/reject)
-        if let EffectValue::Value(new_score) = effect.value() {
-            let delta = *new_score - current_score;
-            if delta > 0.0 {
-                // Improvement: Accept
-                current_params = new_params;
-                current_score = *new_score;
-                println!(
-                    "[Step {:>2}] IMPROVED: Score {:.4} (Angle: {:.2}, {:.2})",
-                    step, current_score, current_params.0, current_params.1
-                );
-            } else {
-                // Worse: Accept with probability related to temperature
-                let prob = (delta / (0.1 * temperature)).exp();
-                if model::rand_f64() < prob {
-                    current_params = new_params;
-                    current_score = *new_score;
-                }
-            }
-        }
-
-        temperature *= 0.9; // Cool down
-    }
-
-    println!("\n=== Optimization Complete ===");
-    println!(
-        "Optimal Transducer Orientation: Theta={:.2}, Phi={:.2}",
-        current_params.0, current_params.1
-    );
-    println!("Final Disruption Index: {:.4}", current_score);
-
-    Ok(())
+/// The optimization outcome carried out of the monadic ascent.
+#[derive(Default, Clone, Debug)]
+struct Report {
+    initial: FloatType,
+    final_score: FloatType,
+    theta: FloatType,
+    phi: FloatType,
+    steps: usize,
 }

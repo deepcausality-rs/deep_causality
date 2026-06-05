@@ -29,7 +29,6 @@ impl Mul<f64> for Pos2 {
     }
 }
 
-
 /// The closed-form synthetic crustal anomaly field `B(fx, fy)`, written once as a scalar-generic
 /// field. The grid is sampled from it (`run` at `f64`), and its spatial gradient `∇B` — the
 /// navigation observable a gradient-aided filter uses, previously never computed — falls out of

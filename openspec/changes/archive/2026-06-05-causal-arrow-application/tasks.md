@@ -45,17 +45,17 @@
 
 ## 5. Extended coverage — P1 (recommended)
 
-- [ ] 5.1 Remaining heat-diffusion (2) and position-Euler loops onto the integrator.
-- [ ] 5.2 Topological-insulator Chern number → `quadrature`; demonstrate vs prior accumulation.
-- [ ] 5.3 GR gravity-family enhancements: `event_horizon_probe` (gravitational acceleration / tidal force as `−dΦ/dr`, `−d²Φ/dr²`) and `gauge_gr` (redshift / curvature gradient `d/dr`).
+- [x] 5.1 Remaining heat-diffusion (`differential_field`) and position-Euler (`hypersonic_2t::predict`) loops moved onto `Euler` + `iterate_n`; behaviour preserved.
+- [x] 5.2 Topological-insulator Chern number via nested `quadrature` of the tangent-functor Berry curvature; cross-checked against the prior Wilson-loop (Fukui–Hatsugai–Suzuki) accumulation (both give C = 0, +1, −1).
+- [x] 5.3 GR gravity-family enhancements: `event_horizon_probe` (gravitational acceleration / tidal force as `−dΦ/dr`, `−d²Φ/dr²` via the tangent functor; precision-switchable) and `gauge_gr` (lapse derivative `f'(r) = r_s/r²` via a `Dual` seed at Float106; also fixed a pre-existing connection-shape bug so the example runs end-to-end).
 
 ## 6. Optional showcases — P2
 
-- [ ] 6.1 tumor-treatment: AD gradient ascent replacing simulated annealing (behavior-changing; documented as an improvement, not a behavior-preserving rewrite).
-- [ ] 6.2 Second fluid example aimed at chaotic convection / turbulence, where higher precision buys something f64 cannot: a Clean-Numerical-Simulation-style integration of the Lorenz system (Saltzman/Lorenz 3-mode truncation of Rayleigh–Bénard convection) at f32/f64/Float106, showing the predictability horizon grow with precision. `Rk4` march; precision-generic rate field; printed divergence/horizon comparison.
+- [x] 6.1 tumor-treatment: AD gradient ascent (tangent functor) replacing simulated annealing; converges to the optimum with the gradient vanishing. Objective is a scalar-generic `DifferentiableField<2>`.
+- [x] 6.2 Second fluid example aimed at chaotic convection / turbulence (`avionics_examples/turbulence_flow`): Lorenz / Rayleigh–Bénard truncation marched at f32/f64/Float106, showing the forecast horizon grow with precision (f64 ≈ t44, Float106 ≈ t81). `Rk4` march; precision-generic rate field; causal-monad pipeline; turbulence-first framing.
 
 ## 7. Verification
 
 - [x] 7.1 `cargo build` / `cargo run` for every touched example crate; new examples run and print their comparisons.
-- [ ] 7.2 `make format && make fix` (multiple example crates touched); 0 clippy warnings, no `#[allow(...)]`.
+- [x] 7.2 `cargo fmt --all` applied; clippy clean across all touched example crates (physics/avionics/medicine/mathematics/material), no `#[allow(...)]`.
 - [ ] 7.3 Commit message prepared; owner commits. (No Bazel; no file deleted — superseded lines replaced in place.)

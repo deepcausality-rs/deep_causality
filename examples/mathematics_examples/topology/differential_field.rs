@@ -2,6 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use core::ops::{Add, Mul};
+use deep_causality_calculus::{EndoArrow, Euler};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry};
 
@@ -45,62 +47,46 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut initial_data = vec![0.0; num_simplices];
     initial_data[0] = 100.0; // Heat at v0
 
-    // `manifold.laplacian()` requires a metric. Attach a unit-edge
-    // ReggeGeometry; the simplicial impl reads the Hodge ⋆ from the complex's
-    // own cache and ignores the metric instance's data.
     let num_edges = complex.skeletons()[1].simplices().len();
-    let metric = ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges])?);
-    let mut manifold = Manifold::with_metric(
-        complex.clone(),
-        CausalTensor::new(initial_data, vec![num_simplices])?,
-        Some(metric),
-        0,
-    )?;
+    let n_verts = complex.skeletons()[0].simplices().len();
 
-    // 3. Simulation
-    // Using a smaller timestep for stability with the new metric
+    // 3. Simulation via the Euler integration operator.
+    // Heat equation du/dt = −L u. The rate field rebuilds the manifold from the current 0-form,
+    // takes its Laplacian (with a unit-edge Regge metric — the impl reads the Hodge ⋆ from the
+    // complex's cache and ignores the metric data), and returns −L u on the vertices. The
+    // hand-rolled `next[v] -= dt·Δ[v]` loop is now one `Euler` endo-arrow stepped with `iterate_n`.
     let dt = 0.005;
     let steps = 50;
 
+    let rate = move |f: &Field| -> Field {
+        let metric =
+            ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges]).unwrap());
+        let manifold = Manifold::with_metric(
+            complex.clone(),
+            CausalTensor::new(f.0.clone(), vec![num_simplices]).unwrap(),
+            Some(metric),
+            0,
+        )
+        .unwrap();
+        let delta = manifold.laplacian(0);
+        let delta = delta.as_slice();
+        let mut out = vec![0.0; num_simplices];
+        for (v, slot) in out.iter_mut().enumerate().take(n_verts) {
+            *slot = -delta[v];
+        }
+        Field(out)
+    };
+    let stepper = Euler::new(dt, rate);
+
     println!("Starting Diffusion...");
 
+    let mut field = Field(initial_data);
     for i in 0..=steps {
-        // L = d* delta
-        let laplacian = manifold.laplacian(0);
-
-        let current = manifold.data().as_slice();
-        let delta = laplacian.as_slice();
-        let mut next = current.to_vec();
-
-        // Update Vertices (0-forms)
-        // Heat Eq: du/dt = - L u
-        let n_verts = complex.skeletons()[0].simplices().len();
-        for v in 0..n_verts {
-            // Mass Matrix Integration:
-            // The Laplacian operator we computed includes the metric weights.
-            // Standard update: u_new = u_old - dt * (L * u)
-            // Note: If L is the weighted Laplacian, we might need to divide by Mass_0
-            // if we haven't already.
-            // In this implementation, codifferential includes M^{-1}, so result is pointwise derivative.
-            next[v] -= dt * delta[v];
-        }
-
-        // Re-attach the same metric on each iteration; without it,
-        // `.laplacian()` on the next step would panic per R4.5.
-        let step_metric =
-            ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges])?);
-        manifold = Manifold::with_metric(
-            complex.clone(),
-            CausalTensor::new(next, vec![num_simplices])?,
-            Some(step_metric),
-            0,
-        )?;
-
+        field = stepper.iterate_n(field, 1);
         if i % 10 == 0 {
-            let v_data = &manifold.data().as_slice()[0..3];
             println!(
                 "Step {:2}: [{:.2}, {:.2}, {:.2}]",
-                i, v_data[0], v_data[1], v_data[2]
+                i, field.0[0], field.0[1], field.0[2]
             );
         }
     }
@@ -108,7 +94,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Verification: Total Energy Conservation?
     // In a closed system, heat spreads but sum(u_i * Mass_i) should be constant.
     // Or simply, temperature equilibrates.
-    let final_v: &[FloatType] = &manifold.data().as_slice()[0..3];
+    let final_v: &[FloatType] = &field.0[0..3];
     println!(
         "Final:   [{:.2}, {:.2}, {:.2}]",
         final_v[0], final_v[1], final_v[2]
@@ -121,4 +107,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+/// The discrete field (one value per simplex), wrapped so it can be the state of an `Euler`
+/// endo-arrow: vector addition and scaling by the time step are all the integrator needs.
+#[derive(Clone)]
+struct Field(Vec<FloatType>);
+
+impl Add for Field {
+    type Output = Field;
+    fn add(self, o: Field) -> Field {
+        Field(self.0.iter().zip(&o.0).map(|(a, b)| a + b).collect())
+    }
+}
+
+impl Mul<FloatType> for Field {
+    type Output = Field;
+    fn mul(self, s: FloatType) -> Field {
+        Field(self.0.iter().map(|a| a * s).collect())
+    }
 }

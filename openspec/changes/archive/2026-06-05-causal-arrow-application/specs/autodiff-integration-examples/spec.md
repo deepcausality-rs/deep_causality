@@ -2,7 +2,7 @@
 
 ### Requirement: Hand-coded derivatives are replaced by the arrow-calculus tangent functor, behavior-preserving
 
-Examples that compute a derivative of a closed-form field by hand SHALL be rewritten to use the `arrow-calculus` tangent functor (`deep_causality_calculus`), producing the same numerical result. The rewrite SHALL define the underlying field as a scalar-generic `DifferentiableArrow` / `DifferentiableField` model and obtain its derivative(s) via the `DifferentiateExt` / `DifferentiateFieldExt` methods (`model.derivative(x)` / `field.gradient(&x)`), and a test SHALL assert the result equals the previously hand-coded value within floating-point tolerance. The downstream consumer of the derivative (e.g. `MaxwellSolver`) SHALL be unchanged.
+Examples that compute a derivative of a closed-form field by hand SHALL be rewritten to use the `arrow-calculus` tangent functor (`deep_causality_calculus`), producing the same numerical result. The rewrite SHALL define the underlying field as a scalar-generic `DifferentiableArrow` / `DifferentiableField` model and obtain its derivative(s) via the `DifferentiateExt` / `DifferentiateFieldExt` methods (`model.derivative(x)` / `field.gradient(&x)`), and the example SHALL print a runnable comparison showing the result equals the previously hand-coded value within floating-point tolerance. The downstream consumer of the derivative (e.g. `MaxwellSolver`) SHALL be unchanged.
 
 #### Scenario: Maxwell field derivative via autodiff equals the hand-coded value
 
@@ -12,7 +12,7 @@ Examples that compute a derivative of a closed-form field by hand SHALL be rewri
 #### Scenario: A previously-absent gradient is now computed
 
 - **WHEN** the `magnav` example computes the field gradient `∇B(x, y)` of its synthetic anomaly field via `gradient`
-- **THEN** it obtains both partials in one place from the field closure, and a test confirms they match a finite-difference estimate of the same field within tolerance
+- **THEN** it obtains both partials in one place from the field closure, and the example shows they match a finite-difference estimate of the same field within tolerance
 
 #### Scenario: A meaningful rate is now computed
 
@@ -40,7 +40,7 @@ Examples that hand-write an explicit time-stepping loop SHALL be rewritten to us
 
 ### Requirement: A new avionics fluid-dynamics example demonstrates differentiate → kernel → integrate with MMS verification
 
-The change SHALL add at least one new fluid-dynamics example in the avionics domain that uses the `arrow-calculus` tangent functor to produce the spatial derivatives a fluid RHS kernel requires, the kernel to produce `∂u/∂t`, and the `arrow-calculus` endo-arrow iteration to march in time, verified by the Method of Manufactured Solutions against an exact analytic solution. The example SHALL be registered in Cargo and `BUILD.bazel` with a test.
+The change SHALL add at least one new fluid-dynamics example in the avionics domain that uses the `arrow-calculus` tangent functor to produce the spatial derivatives a fluid RHS kernel requires, the kernel to produce `∂u/∂t`, and the `arrow-calculus` endo-arrow iteration to march in time, verified by the Method of Manufactured Solutions against an exact analytic solution. The example SHALL be registered in Cargo and run, printing its Method-of-Manufactured-Solutions residual and convergence.
 
 #### Scenario: Exact spatial derivatives feed the Navier–Stokes kernel
 

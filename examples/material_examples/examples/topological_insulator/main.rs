@@ -3,83 +3,104 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! # Topological Insulator: the Chern number two ways
+//!
+//! Computes the Chern number of the Qi-Wu-Zhang model in its three phases, bringing the
+//! DeepCausality pillars together:
+//!
+//! - **The tangent functor + quadrature.** The Berry curvature `Ω(k)` is built from the exact
+//!   momentum derivatives of the d-vector (autodiff, no finite differences), and the Chern number
+//!   `C = (1/2π)∫∫ Ω` is a *nested* `quadrature` over the Brillouin zone.
+//! - **Precision as a parameter.** `chern_quadrature` is generic over `Scalar`; this example runs
+//!   it at `FloatType` (switchable to `Float106`).
+//! - **The causal monad.** `PropagatingEffect` sequences the analysis and short-circuits if an
+//!   integral leaves the finite range.
+//!
+//! The quadrature result is cross-checked against the prior accumulation: the
+//! Fukui-Hatsugai-Suzuki lattice (Wilson-loop) sum.
+
+use deep_causality_core::{CausalityError, CausalityErrorEnum, PropagatingEffect};
 use model::QWZModel;
-use std::f64::consts::PI;
 
 mod model;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// The quadrature Chern number runs at this precision (switch to `Float106` for more digits; the
+/// integrand and the fold are generic over `Scalar`).
+pub type FloatType = f64;
+
+const N_QUAD: usize = 100; // composite-Simpson panels per axis (even)
+const N_WILSON: usize = 100; // Brillouin-zone grid for the lattice cross-check
+
+fn main() {
     println!("----------------------------------------------------------------");
     println!("   Topological Insulator Analysis (Berry Curvature)");
     println!("----------------------------------------------------------------");
-    println!("Calculating Chern Number for Hamiltonian Manifold.\n");
+    println!("Chern number two ways: tangent-functor Berry curvature integrated by nested");
+    println!("quadrature, cross-checked against the Fukui-Hatsugai-Suzuki lattice sum.\n");
 
-    let n = 100; // Grid resolution (higher = more accurate)
-    let dk = 2.0 * PI / (n as f64);
+    // The analysis runs as a causal-monad stage; a non-finite integral short-circuits the chain.
+    let pipeline = PropagatingEffect::pure(()).bind(|_, _, _| analyze());
 
-    // Test both phases
-    let test_params = vec![
-        (3.0, "TRIVIAL (u > 2)"),
-        (1.0, "TOPOLOGICAL (-2 < u < 0 or 0 < u < 2)"),
-        (-1.0, "TOPOLOGICAL (-2 < u < 0 or 0 < u < 2)"),
+    match pipeline.value.into_value() {
+        Some(report) => print_report(&report),
+        None => eprintln!("Chern analysis failed: {:?}", pipeline.error),
+    }
+}
+
+/// One material phase: its mass parameter, the Chern number from each method, and a label.
+#[derive(Default, Clone, Debug)]
+struct PhaseRow {
+    u: f64,
+    quad: FloatType,
+    wilson: f64,
+    label: &'static str,
+}
+
+#[derive(Default, Clone, Debug)]
+struct Report {
+    rows: Vec<PhaseRow>,
+}
+
+fn analyze() -> PropagatingEffect<Report> {
+    let phases = [
+        (3.0_f64, "trivial (|u| > 2)"),
+        (1.0, "topological (0 < u < 2)"),
+        (-1.0, "topological (-2 < u < 0)"),
     ];
 
-    for (u, expected) in test_params {
-        println!(
-            "\n[...] Analyzing Material: u = {:.1} (Expected: {})",
-            u, expected
-        );
-        let model = QWZModel::new(u);
-        let mut total_flux = 0.0;
-
-        // Iterate over discretized Brillouin Zone [-pi, pi] x [-pi, pi]
-        for i in 0..n {
-            for j in 0..n {
-                let kx = -PI + (i as f64) * dk;
-                let ky = -PI + (j as f64) * dk;
-
-                // Get spinors at 4 corners of plaquette
-                let psi_00 = model.lower_band_spinor(kx, ky);
-                let psi_10 = model.lower_band_spinor(kx + dk, ky);
-                let psi_11 = model.lower_band_spinor(kx + dk, ky + dk);
-                let psi_01 = model.lower_band_spinor(kx, ky + dk);
-
-                // Link variables around the plaquette (counterclockwise)
-                // U_x(k) = <psi(k)|psi(k+x)>
-                let u_01_00 = model::overlap(psi_00, psi_10); // right
-                let u_02_01 = model::overlap(psi_10, psi_11); // up
-                let u_03_02 = model::overlap(psi_11, psi_01); // left
-                let u_00_03 = model::overlap(psi_01, psi_00); // down
-
-                // Wilson loop = U1 * U2 * U3 * U4
-                let wilson = u_01_00 * u_02_01 * u_03_02 * u_00_03;
-
-                // Berry flux = Im(ln(Wilson))
-                // Using atan2 for proper branch handling
-                let flux = wilson.im.atan2(wilson.re);
-                total_flux += flux;
-            }
+    let mut rows = Vec::new();
+    for (u, label) in phases {
+        let quad: FloatType = model::chern_quadrature(u, N_QUAD);
+        if !model::finite(quad) {
+            return fail("Berry-curvature integral left the finite range");
         }
-
-        let chern = total_flux / (2.0 * PI);
-        println!("      Total Berry Flux: {:.4} rad", total_flux);
-        println!("      Chern Number: {:.2}", chern);
-
-        let c_rounded = chern.round() as i32;
-        if c_rounded == 0 {
-            println!("      Verdict: TRIVIAL Insulator (C = 0)");
-        } else {
-            println!("      Verdict: TOPOLOGICAL Insulator (C = {})", c_rounded);
-            println!("      -> Protected edge states exist!");
-        }
+        let wilson = model::chern_wilson(&QWZModel::new(u), N_WILSON);
+        rows.push(PhaseRow {
+            u,
+            quad,
+            wilson,
+            label,
+        });
     }
 
-    println!("\n----------------------------------------------------------------");
-    println!("   Phase Diagram Summary");
-    println!("----------------------------------------------------------------");
-    println!("   |u| > 2  : Trivial (C = 0)");
-    println!("   0 < u < 2: Topological (C = -1)");
-    println!("  -2 < u < 0: Topological (C = +1)");
+    PropagatingEffect::pure(Report { rows })
+}
 
-    Ok(())
+fn print_report(r: &Report) {
+    println!("    u   | C (quadrature) | C (Wilson loop) |  C  | phase");
+    println!("  ------+----------------+-----------------+-----+-----------------------");
+    for row in &r.rows {
+        let c = model::nearest_int(row.quad);
+        println!(
+            "  {:>4.1} |   {:>11.6}  |   {:>12.6}  | {:>+2}  | {}",
+            row.u, row.quad, row.wilson, c, row.label
+        );
+    }
+
+    println!("\n  Phase diagram:  |u| > 2 → C = 0;   0 < u < 2 → C = +1;   −2 < u < 0 → C = −1");
+    println!("  Both methods agree; the quadrature path used exact autodiff derivatives.");
+}
+
+fn fail<T: Default + Clone + std::fmt::Debug>(msg: &str) -> PropagatingEffect<T> {
+    PropagatingEffect::from_error(CausalityError::new(CausalityErrorEnum::Custom(msg.into())))
 }

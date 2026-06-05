@@ -9,6 +9,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_calculus::{EndoArrow, Euler};
 use deep_causality_multivector::{CausalMultiVector, Metric};
 
 /// 2T Physics Metric: (4, 2)
@@ -62,24 +63,15 @@ impl ConformalTracker {
     }
 
     /// Propagate state forward by dt.
-    /// Uses linear evolution: X(t) = X(0) + G * t (First order approx)
+    /// Uses linear evolution: X(t) = X(0) + G * t (First order approx).
+    ///
+    /// The constant-generator update `X += G·dt` is exactly one `Euler` step of `dX/dt = G`, so the
+    /// hand-rolled component loop becomes a single integration-operator arrow. `CausalMultiVector`
+    /// already supplies the vector `Add` and scalar `Mul` the endo-arrow needs.
     pub fn predict(&mut self, dt: f64) {
-        // Manual linear update: State += Generator * dt
-        // (Assuming Generator is roughly constant for short intervals)
-
-        // 1. Calculate Delta
-        let gen_d = self.generator.data();
-        let delta: Vec<f64> = gen_d.iter().map(|g| g * dt).collect();
-
-        // 2. Add to State
-        let state_d = self.state_6d.data();
-        let new_state: Vec<f64> = state_d
-            .iter()
-            .zip(delta.iter())
-            .map(|(s, d)| s + d)
-            .collect();
-
-        self.state_6d = CausalMultiVector::unchecked(new_state, self.metric);
+        let generator = self.generator.clone();
+        let stepper = Euler::new(dt, move |_: &CausalMultiVector<f64>| generator.clone());
+        self.state_6d = stepper.iterate_n(self.state_6d.clone(), 1);
     }
 
     /// Measurement Update (Mock).
