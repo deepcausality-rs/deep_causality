@@ -1,0 +1,29 @@
+examples/causal_intervention_examples/corrective_network_failover/main.rs
+  s_52e6d9817e5bf8::t_5a3ee7b78f2501 67,69-71,74-76,78-98
+  s_52e6d9817e5bf8::t_57e9249213c2a0 38
+examples/causal_intervention_examples/corrective_glucose_pump/main.rs
+  s_52e6d9817e5bf8::t_bccd67b00435fd 35,37
+  s_52e6d9817e5bf8::t_6d213b7f78194b 64,66-68,71-73,75-94
+examples/causal_intervention_examples/corrective_lane_keeping/main.rs
+  s_52e6d9817e5bf8::t_f924d6eb38f7a7 34,36
+  s_52e6d9817e5bf8::t_74305e83edb354 63,65-67,70-72,74-91
+examples/causal_intervention_examples/corrective_decompression_stops/main.rs
+  s_52e6d9817e5bf8::t_ca8413c4409870 38
+  s_52e6d9817e5bf8::t_5f2e0be9ec26d9 65,67-69,72-74,76-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "f8b94963b92a7078f7d14ec1a1fa2bc4b1088433",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
