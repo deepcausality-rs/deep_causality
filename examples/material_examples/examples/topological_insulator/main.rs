@@ -19,7 +19,7 @@
 //! The quadrature result is cross-checked against the prior accumulation: the
 //! Fukui-Hatsugai-Suzuki lattice (Wilson-loop) sum.
 
-use deep_causality_core::{CausalityError, CausalityErrorEnum, PropagatingEffect};
+use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum, PropagatingEffect};
 use model::QWZModel;
 
 mod model;
@@ -38,8 +38,8 @@ fn main() {
     println!("Chern number two ways: tangent-functor Berry curvature integrated by nested");
     println!("quadrature, cross-checked against the Fukui-Hatsugai-Suzuki lattice sum.\n");
 
-    // The analysis runs as a causal-monad stage; a non-finite integral short-circuits the chain.
-    let pipeline = PropagatingEffect::pure(()).bind(|_, _, _| analyze());
+    // The analysis runs as a CausalFlow stage; a non-finite integral short-circuits the chain.
+    let pipeline = CausalFlow::effect().bind(|_, _, _| analyze()).into_effect();
 
     match pipeline.value.into_value() {
         Some(report) => print_report(&report),
