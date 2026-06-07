@@ -355,3 +355,32 @@ fn finish_on_none_value_yields_error() {
         CausalFlow::from(PropagatingEffect::from_effect_value(EffectValue::None));
     assert!(none_flow.finish().is_err());
 }
+
+#[test]
+fn next_composes_whole_pipelines() {
+    // Each pipeline is a Value -> CausalFlow function; `next` wires them like stages.
+    fn add_one(x: i64) -> CausalFlow<i64> {
+        CausalFlow::value(x).map(|v| v + 1)
+    }
+    fn double(x: i64) -> CausalFlow<i64> {
+        CausalFlow::value(x).map(|v| v * 2)
+    }
+    fn minus_three(x: i64) -> CausalFlow<i64> {
+        CausalFlow::value(x).map(|v| v - 3)
+    }
+    let out = CausalFlow::value(3_i64)
+        .next(add_one)
+        .next(double)
+        .next(minus_three)
+        .finish();
+    // ((3 + 1) * 2) - 3
+    assert_eq!(out, Ok(5));
+}
+
+#[test]
+fn next_short_circuits_on_errored_flow() {
+    let out = CausalFlow::<i64>::fail(err("boom"))
+        .next(|_v: i64| -> CausalFlow<i64> { panic!("pipeline ran on an errored flow") })
+        .finish();
+    assert!(out.is_err());
+}

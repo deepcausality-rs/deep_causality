@@ -20,9 +20,24 @@
 //!     .finish();
 //! assert_eq!(outcome, Ok(50));
 //! ```
+//!
+//! Control flow — a bounded loop whose body branches on the carried value:
+//!
+//! ```
+//! use deep_causality_core::CausalFlow;
+//!
+//! let total = CausalFlow::value(0_i64)
+//!     .iterate_n(5, |tick| {
+//!         tick.branch(|n| n % 2 == 0, |even| even.map(|n| n + 10), |odd| odd.map(|n| n + 1))
+//!     })
+//!     .finish();
+//! assert_eq!(total, Ok(50)); // every value stays even, so +10 five times
+//! ```
 
+mod branch;
 mod construction;
 mod intervene;
+mod iterate;
 mod steps;
 mod terminals;
 

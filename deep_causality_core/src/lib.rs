@@ -28,12 +28,17 @@ pub use crate::traits::causal_monad::CausalMonad;
 pub use crate::traits::intervenable::Intervenable;
 
 // Re-export types
+pub use crate::types::causal_arrow::{
+    CausalArrow, CausalArrowBuilder, CausalFlowOut, CausalLift, KleisliCompose, causal_arrow,
+};
 pub use crate::types::causal_effect_propagation_process::CausalEffectPropagationProcess;
 pub use crate::types::causal_effect_propagation_process::hkt::CausalEffectPropagationProcessWitness;
 pub use crate::types::causal_flow::CausalFlow;
 pub use crate::types::effect_log::log_effect::EffectLog;
+// The choice sum used by `CausalFlow::either`, re-exported from `deep_causality_haft`.
 pub use crate::types::effect_value::EffectValue;
 pub use crate::types::propagating_effect::PropagatingEffect;
 pub use crate::types::propagating_effect::hkt::PropagatingEffectWitness;
 pub use crate::types::propagating_process::PropagatingProcess;
 pub use crate::types::propagating_process::hkt::PropagatingProcessWitness;
+pub use deep_causality_haft::Either;

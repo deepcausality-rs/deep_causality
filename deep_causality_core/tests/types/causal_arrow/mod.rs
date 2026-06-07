@@ -3,6 +3,4 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-pub mod branch_tests;
-pub mod flow_tests;
-pub mod iterate_tests;
+pub mod causal_arrow_tests;

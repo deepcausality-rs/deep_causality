@@ -116,6 +116,44 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "types_causal_arrow",
+    srcs = glob([
+        "types/causal_arrow/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
+    name = "types_causal_flow",
+    srcs = glob([
+        "types/causal_flow/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
     name = "types_causal_monad",
     srcs = glob([
         "types/causal_monad/*_tests.rs",

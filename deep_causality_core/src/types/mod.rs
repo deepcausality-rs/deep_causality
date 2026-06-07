@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+pub mod causal_arrow;
 pub mod causal_effect_propagation_process;
 pub mod causal_flow;
 pub mod effect_log;

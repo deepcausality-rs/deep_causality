@@ -31,6 +31,17 @@ where
         CausalFlow { inner }
     }
 
+    /// Compose the next sub-process (a whole pipeline) onto the flow. A pipeline is a function
+    /// `Value -> CausalFlow<U>`; `next` is the pipeline-composition verb, lowering to `bind` exactly
+    /// as [`and_then`](Self::and_then) does. A reified `CausalArrow` engine value is applied the same
+    /// way, with `and_then(|v| arrow.run(v))`.
+    pub fn next<U, F>(self, pipeline: F) -> CausalFlow<U, State, Context>
+    where
+        F: FnOnce(Value) -> CausalFlow<U, State, Context>,
+    {
+        self.and_then(pipeline)
+    }
+
     /// Common stateless step: `Ok` lifts to a value, `Err` to the error channel.
     pub fn try_step<U, F>(self, f: F) -> CausalFlow<U, State, Context>
     where
