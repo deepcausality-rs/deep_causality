@@ -1,0 +1,23 @@
+deep_causality_haft/src/arrow/arrow_endo.rs
+  s_52e6d9817e5bf8::t_336e61a74dcea2 1-69
+deep_causality_haft/src/lib.rs
+  s_52e6d9817e5bf8::t_ac6ce2476c2b80 83
+deep_causality_haft/src/arrow/mod.rs
+  s_52e6d9817e5bf8::t_68aaf7cc85ec58 65,75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "f2655a720f3c006566ea3515f8c7131fccce60b2",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
