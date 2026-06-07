@@ -50,4 +50,25 @@ impl<L, R> Either<L, R> {
             Either::Right(r) => Some(r),
         }
     }
+
+    /// Borrows the inner value, returning an `Either<&L, &R>` without consuming `self`. This is the
+    /// non-consuming counterpart to [`left`](Self::left) / [`right`](Self::right), letting a caller
+    /// holding `&Either<L, R>` reach the inner value of a non-`Copy` type by reference.
+    #[inline]
+    pub const fn as_ref(&self) -> Either<&L, &R> {
+        match self {
+            Either::Left(l) => Either::Left(l),
+            Either::Right(r) => Either::Right(r),
+        }
+    }
+
+    /// Mutably borrows the inner value, returning an `Either<&mut L, &mut R>` without consuming
+    /// `self`, so a caller holding `&mut Either<L, R>` can edit the inner value in place.
+    #[inline]
+    pub fn as_mut(&mut self) -> Either<&mut L, &mut R> {
+        match self {
+            Either::Left(l) => Either::Left(l),
+            Either::Right(r) => Either::Right(r),
+        }
+    }
 }

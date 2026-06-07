@@ -172,3 +172,70 @@ fn either_passes_through_value_less_flow() {
     );
     assert!(out.finish().is_err());
 }
+
+#[test]
+fn either_preserves_contextual_link() {
+    // A `ContextualLink` carries routing metadata (contextoid ids), not an `Either`, so `either`
+    // threads it through unchanged rather than collapsing it to `None`.
+    let link: CausalFlow<Either<i64, String>> = CausalFlow::from(CausalEffectPropagationProcess {
+        value: EffectValue::ContextualLink(7, 9),
+        state: (),
+        context: None,
+        error: None,
+        logs: EffectLog::new(),
+    });
+    let out: CausalFlow<i64> = link.either(
+        |_l| panic!("left arm ran on a contextual link"),
+        |_r| panic!("right arm ran on a contextual link"),
+    );
+    let proc = out.into_process();
+    assert!(proc.error.is_none());
+    assert_eq!(proc.value, EffectValue::ContextualLink(7, 9));
+}
+
+#[test]
+fn either_errors_on_dispatch_carrier() {
+    // A `RelayTo` dispatch carrier wraps a `PropagatingEffect<Either<L, R>>` a value-level route
+    // cannot retype; `either` surfaces a `ValueNotAvailable` error instead of dropping it to `None`.
+    let relay: CausalFlow<Either<i64, String>> = CausalFlow::from(CausalEffectPropagationProcess {
+        value: EffectValue::RelayTo(
+            0,
+            Box::new(CausalEffectPropagationProcess {
+                value: EffectValue::None,
+                state: (),
+                context: None,
+                error: None,
+                logs: EffectLog::new(),
+            }),
+        ),
+        state: (),
+        context: None,
+        error: None,
+        logs: EffectLog::new(),
+    });
+    let out: CausalFlow<i64> = relay.either(
+        |_l| panic!("left arm ran on a dispatch carrier"),
+        |_r| panic!("right arm ran on a dispatch carrier"),
+    );
+    assert!(out.is_err());
+}
+
+// A State that is deliberately not `Clone`. This test compiles only if `iterate_n` and `branch`
+// carry no `State: Clone` bound (the fluent steps still require it; the loop and branch combinators
+// do not), so it locks in that the bound is not re-added.
+struct NoCloneState(i64);
+
+#[test]
+fn iterate_and_branch_accept_non_clone_state() {
+    let flow: CausalFlow<i64, NoCloneState, ()> = CausalFlow::from(CausalEffectPropagationProcess {
+        value: EffectValue::Value(0_i64),
+        state: NoCloneState(7),
+        context: None,
+        error: None,
+        logs: EffectLog::new(),
+    });
+    let out = flow.iterate_n(3, |tick| tick.branch(|v| *v >= 0, |hot| hot, |cold| cold));
+    let proc = out.into_process();
+    assert_eq!(proc.value, EffectValue::Value(0));
+    assert_eq!(proc.state.0, 7); // state threaded through untouched, never cloned
+}

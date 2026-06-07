@@ -60,3 +60,35 @@ fn test_debug_and_hash() {
     let set: HashSet<Either<i32, i32>> = [l, r].into_iter().collect();
     assert_eq!(set.len(), 2);
 }
+
+#[test]
+fn test_as_ref() {
+    // Non-`Copy` payloads, so the consuming `left` / `right` would move out of the original;
+    // `as_ref` reaches the inner value by reference and leaves the original owned.
+    let l: Either<String, i32> = Either::Left("hi".to_string());
+    let r: Either<String, i32> = Either::Right(7);
+
+    assert_eq!(l.as_ref().left(), Some(&"hi".to_string()));
+    assert_eq!(l.as_ref().right(), None);
+    assert_eq!(r.as_ref().right(), Some(&7));
+    assert_eq!(r.as_ref().left(), None);
+
+    // Still owned and usable afterwards (as_ref did not consume them).
+    assert!(l.is_left());
+    assert!(r.is_right());
+}
+
+#[test]
+fn test_as_mut() {
+    let mut l: Either<String, i32> = Either::Left("hi".to_string());
+    if let Either::Left(s) = l.as_mut() {
+        s.push_str(" there");
+    }
+    assert_eq!(l, Either::Left("hi there".to_string()));
+
+    let mut r: Either<String, i32> = Either::Right(7);
+    if let Either::Right(n) = r.as_mut() {
+        *n += 1;
+    }
+    assert_eq!(r, Either::Right(8));
+}

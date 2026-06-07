@@ -12,13 +12,12 @@
 // and an arm can itself be a composable sub-pipeline. An errored flow short-circuits without running
 // either arm.
 
-use crate::{CausalEffectPropagationProcess, CausalFlow, EffectValue, Either};
+use crate::{
+    CausalEffectPropagationProcess, CausalFlow, CausalityError, CausalityErrorEnum, EffectValue,
+    Either,
+};
 
-impl<Value, State, Context> CausalFlow<Value, State, Context>
-where
-    State: Clone,
-    Context: Clone,
-{
+impl<Value, State, Context> CausalFlow<Value, State, Context> {
     /// Route the flow by a predicate over the carried value: `on_true` runs when `cond` holds,
     /// `on_false` otherwise. An errored or value-less flow passes through unchanged.
     pub fn branch<P, T, F>(self, cond: P, on_true: T, on_false: F) -> Self
@@ -64,14 +63,12 @@ where
     }
 }
 
-impl<L, R, State, Context> CausalFlow<Either<L, R>, State, Context>
-where
-    State: Clone,
-    Context: Clone,
-{
+impl<L, R, State, Context> CausalFlow<Either<L, R>, State, Context> {
     /// Route a flow whose value is `Either<L, R>` to its arm: `left` on `Left`, `right` on `Right`.
-    /// An errored flow short-circuits without running either arm; a value-less flow passes through
-    /// as a value-less `CausalFlow<U>`.
+    /// An errored flow short-circuits without running either arm. A `None` carrier passes through as
+    /// a value-less `CausalFlow<U>`; a `ContextualLink` carries its routing metadata through
+    /// unchanged; a `RelayTo` / `Map` dispatch carrier, which a value-level route cannot retype to
+    /// `U`, surfaces a `ValueNotAvailable` error rather than being silently dropped.
     pub fn either<U, FL, FR>(self, left: FL, right: FR) -> CausalFlow<U, State, Context>
     where
         FL: FnOnce(CausalFlow<L, State, Context>) -> CausalFlow<U, State, Context>,
@@ -117,12 +114,36 @@ where
                     logs,
                 },
             }),
-            _ => CausalFlow {
+            // No value to route: thread the empty carrier through as a value-less `CausalFlow<U>`.
+            EffectValue::None => CausalFlow {
                 inner: CausalEffectPropagationProcess {
                     value: EffectValue::None,
                     state,
                     context,
                     error: None,
+                    logs,
+                },
+            },
+            // A structured-result link carries no `Either` to route; preserve its routing metadata
+            // (the contextoid ids) rather than discarding it.
+            EffectValue::ContextualLink(a, b) => CausalFlow {
+                inner: CausalEffectPropagationProcess {
+                    value: EffectValue::ContextualLink(a, b),
+                    state,
+                    context,
+                    error: None,
+                    logs,
+                },
+            },
+            // `RelayTo` / `Map` carry a `PropagatingEffect<Either<L, R>>` a value-level route cannot
+            // retype to `U`; surface the dropped dispatch command as an error instead of silently
+            // collapsing it to `None`.
+            _ => CausalFlow {
+                inner: CausalEffectPropagationProcess {
+                    value: EffectValue::None,
+                    state,
+                    context,
+                    error: Some(CausalityError::new(CausalityErrorEnum::ValueNotAvailable)),
                     logs,
                 },
             },

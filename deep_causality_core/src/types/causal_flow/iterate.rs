@@ -18,11 +18,7 @@ use crate::{
     CausalEffectPropagationProcess, CausalFlow, CausalityError, CausalityErrorEnum, EffectValue,
 };
 
-impl<Value, State, Context> CausalFlow<Value, State, Context>
-where
-    State: Clone,
-    Context: Clone,
-{
+impl<Value, State, Context> CausalFlow<Value, State, Context> {
     /// Apply the flow endomorphism `step` exactly `n` times. An error mid-way short-circuits and
     /// skips the remaining iterations.
     pub fn iterate_n<F>(self, n: usize, step: F) -> Self

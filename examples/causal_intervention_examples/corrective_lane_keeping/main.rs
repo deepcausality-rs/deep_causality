@@ -70,14 +70,15 @@ fn run_open_loop() -> LaneProcess<FloatType> {
 /// Closed loop: the same tick, but each one `branch`es on the monitor — when the offset crosses the
 /// anomaly threshold the corrective arm records the override and `intervene`s the corrected offset.
 /// The only difference from the open loop is the `branch`.
+///
+/// Both the trigger and the correction read the same `cfg`, so the threshold the monitor fires on
+/// and the gain the correction applies can never desynchronize.
 fn run_closed_loop() -> LaneProcess<FloatType> {
     let cfg = nominal_lane_config();
     CausalFlow::from(model::initial_process())
         .iterate_n(N_TICKS as usize, |tick| {
-            tick.bind(model::simulate_step).branch_with(
-                |offset, _state, ctx| {
-                    offset.abs() > ctx.expect("LaneConfig present").anomaly_threshold
-                },
+            tick.bind(model::simulate_step).branch(
+                |offset| offset.abs() > cfg.anomaly_threshold,
                 |hot| {
                     hot.update_state(|mut state, _offset| {
                         state.correction_count += 1;

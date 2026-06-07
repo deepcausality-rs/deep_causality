@@ -98,7 +98,7 @@ impl ConformalTracker {
 pub struct Track {
     pub tracker: ConformalTracker,
     pub prev_pos: [f64; 3],
-    pub prev_vel: f64,
+    pub prev_vel_vec: [f64; 3],
     pub pos: [f64; 3],
     pub ms: f64,
 }
@@ -110,7 +110,7 @@ pub fn build_initial_track() -> Track {
     Track {
         tracker: ConformalTracker::new(init_x, init_y, init_z, vel_x, vel_y),
         prev_pos: [init_x, init_y, init_z],
-        prev_vel: (vel_x.powi(2) + vel_y.powi(2)).sqrt(),
+        prev_vel_vec: [vel_x, vel_y, 0.0],
         pos: [init_x, init_y, init_z],
         ms: 0.0,
     }
@@ -129,14 +129,26 @@ pub fn observe(mut t: Track) -> CausalFlow<Track> {
     CausalFlow::value(t)
 }
 
-/// C. Derived metrics — finite-difference velocity and G-load, log the track, roll the history.
+/// C. Derived metrics — finite-difference the full velocity vector for speed and G-load, then log
+/// the track and roll the history. Differencing the vector (not just its magnitude) keeps the
+/// lateral acceleration of a turn in the G-load, not only the change in speed.
 pub fn derive(mut t: Track) -> CausalFlow<Track> {
-    let dist = ((t.pos[0] - t.prev_pos[0]).powi(2)
-        + (t.pos[1] - t.prev_pos[1]).powi(2)
-        + (t.pos[2] - t.prev_pos[2]).powi(2))
-    .sqrt();
-    let vel = dist / DT;
-    let g_load = (vel - t.prev_vel).abs() / DT / 9.81;
+    // Velocity vector from the position delta; speed is its magnitude.
+    let vel_vec = [
+        (t.pos[0] - t.prev_pos[0]) / DT,
+        (t.pos[1] - t.prev_pos[1]) / DT,
+        (t.pos[2] - t.prev_pos[2]) / DT,
+    ];
+    let vel = (vel_vec[0].powi(2) + vel_vec[1].powi(2) + vel_vec[2].powi(2)).sqrt();
+
+    // Acceleration is the change in the velocity vector, so a turn contributes lateral
+    // acceleration even at constant speed. G-load is its magnitude over g.
+    let accel = [
+        (vel_vec[0] - t.prev_vel_vec[0]) / DT,
+        (vel_vec[1] - t.prev_vel_vec[1]) / DT,
+        (vel_vec[2] - t.prev_vel_vec[2]) / DT,
+    ];
+    let g_load = (accel[0].powi(2) + accel[1].powi(2) + accel[2].powi(2)).sqrt() / 9.81;
 
     println!(
         "{:>6.0}   | {:>9.1} | {:>10.1} | {:>9.1} | {:>9.1} | {:>5.1}G",
@@ -144,6 +156,6 @@ pub fn derive(mut t: Track) -> CausalFlow<Track> {
     );
 
     t.prev_pos = t.pos;
-    t.prev_vel = vel;
+    t.prev_vel_vec = vel_vec;
     CausalFlow::value(t)
 }

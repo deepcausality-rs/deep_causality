@@ -13,6 +13,9 @@ use crate::{
     EffectValue, PropagatingProcess,
 };
 
+// The fluent steps lower to the monad's `bind` / `bind_or_error`, which require `State: Clone` and
+// `Context: Clone` (they thread cloned state and context through the carrier). The loop and branch
+// combinators do not call `bind`, so they keep no such bound.
 impl<Value, State, Context> CausalFlow<Value, State, Context>
 where
     State: Clone,
