@@ -37,14 +37,20 @@ mod types;
 
 // Extensions
 pub use crate::extensions::differentiate_ext::{DifferentiateExt, DifferentiateFieldExt};
-pub use crate::extensions::endo_arrow_ext::EndoArrow;
+
+// `EndoArrow` lives in the Arrow algebra in `deep_causality_haft`; re-exported here so the
+// integration operators (`Euler` / `Rk4`) and existing imports keep resolving `crate::EndoArrow`.
+pub use deep_causality_haft::EndoArrow;
 
 // The one free fold-operator.
 pub use ops::quadrature::quadrature;
 
 // Traits the user implements.
 pub use crate::traits::differentiable_arrow::{DifferentiableArrow, DifferentiableField};
-pub use crate::traits::scalar::Scalar;
+
+// `Scalar` is a numeric trait (Real + Div + FromPrimitive) and lives in the algebra tower in
+// `deep_causality_num`; re-exported here so the operators and `crate::Scalar` imports keep resolving.
+pub use deep_causality_num::Scalar;
 
 // Constructed arrows.
 pub use crate::types::diff::Diff;

@@ -4,5 +4,8 @@
  */
 
 pub mod diff;
+mod diff_arrow;
 pub mod euler;
+mod euler_arrow;
 pub mod rk4;
+mod rk4_arrow;

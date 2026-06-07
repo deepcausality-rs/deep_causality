@@ -4,4 +4,3 @@
  */
 
 pub mod differentiate_ext;
-pub mod endo_arrow_ext;
