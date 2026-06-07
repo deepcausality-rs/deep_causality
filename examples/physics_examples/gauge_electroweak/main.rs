@@ -14,7 +14,9 @@
 //! 3. **Gauge Mixing**: Confirm W/Z mass ratio and ρ parameter
 //! 4. **Resonance**: Compute Z pole cross-section
 
-use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
+use deep_causality_core::{
+    CausalEffectPropagationProcess, CausalFlow, EffectValue, PropagatingEffect,
+};
 use deep_causality_num::{Float106, Real};
 use deep_causality_physics::ElectroweakParams;
 
@@ -41,10 +43,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  (Float Type: {})", std::any::type_name::<FloatType>());
     println!("═══════════════════════════════════════════════════════════════\n");
 
-    let result = stage_unification()
+    let result = CausalFlow::from(stage_unification())
         .bind_or_error(stage_symmetry_breaking, "Symmetry breaking failed")
         .bind_or_error(stage_gauge_mixing, "Gauge mixing failed")
-        .bind_or_error(stage_z_resonance, "Resonance calc failed");
+        .bind_or_error(stage_z_resonance, "Resonance calc failed")
+        .into_effect();
 
     print_summary(&result);
 

@@ -13,7 +13,9 @@
 //! This example supports `f32`, `f64`, and `DoubleFloat` by changing the `FloatType`
 //! type alias. All numeric literals are converted using the `flt!` macro.
 //!
-use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
+use deep_causality_core::{
+    CausalEffectPropagationProcess, CausalFlow, EffectValue, PropagatingEffect,
+};
 use deep_causality_num::{Dual, Float, Float106};
 use deep_causality_physics::{AdmOps, GrOps, LorentzianMetric};
 use deep_causality_physics::{AdmState, EastCoastMetric, GR, SPEED_OF_LIGHT};
@@ -47,11 +49,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("═══════════════════════════════════════════════════════════════\n");
 
     // Composed pipeline using bind_or_error
-    let result = initial_stage_create_schwarzschild()
+    let result = CausalFlow::from(initial_stage_create_schwarzschild())
         .bind_or_error(stage_curvature_invariants, "Curvature computation failed")
         .bind_or_error(stage_geodesic_analysis, "Geodesic analysis failed")
         .bind_or_error(stage_adm_formalism, "ADM formalism failed")
-        .bind_or_error(stage_event_horizon_detection, "Horizon detection failed");
+        .bind_or_error(stage_event_horizon_detection, "Horizon detection failed")
+        .into_effect();
 
     // Extract and display final result
     print_summary(&result);

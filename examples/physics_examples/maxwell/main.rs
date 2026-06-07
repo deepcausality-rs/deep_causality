@@ -27,6 +27,7 @@
 mod model;
 
 use deep_causality::PropagatingEffect;
+use deep_causality_core::CausalFlow;
 use model::{MaxwellState, PlaneWaveConfig};
 
 fn main() {
@@ -55,15 +56,14 @@ fn main() {
     let initial_state = MaxwellState::from_config(&config);
     println!("Phase: {:.4}", initial_state.phase);
 
-    // Execute the causal chain using monadic bind
-    let result: PropagatingEffect<MaxwellState> =
-        PropagatingEffect::pure(initial_state).bind(|state, _, _| {
-            // Run causal chain
-            model::compute_potential(state.into_value().unwrap_or_default())
-                .bind(|s, _, _| model::compute_em_field(s.into_value().unwrap_or_default()))
-                .bind(|s, _, _| model::check_lorenz_gauge(s.into_value().unwrap_or_default()))
-                .bind(|s, _, _| model::compute_poynting_flux(s.into_value().unwrap_or_default()))
-        });
+    // Execute the causal chain as one CausalFlow pipeline: Config -> Potential -> EM Field ->
+    // Gauge Check -> Poynting Flux. Each model stage is a pure function bound in turn.
+    let result: PropagatingEffect<MaxwellState> = CausalFlow::value(initial_state)
+        .bind(|s, _, _| model::compute_potential(s.into_value().unwrap_or_default()))
+        .bind(|s, _, _| model::compute_em_field(s.into_value().unwrap_or_default()))
+        .bind(|s, _, _| model::check_lorenz_gauge(s.into_value().unwrap_or_default()))
+        .bind(|s, _, _| model::compute_poynting_flux(s.into_value().unwrap_or_default()))
+        .into_effect();
 
     // =========================================================================
     // Part 3: Extract and Display Results

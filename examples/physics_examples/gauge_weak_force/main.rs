@@ -14,7 +14,9 @@
 //! 3. **Neutral Current**: Compute Z-mediated scattering (Neutrino scattering)
 //! 4. **Analysis**: Lifetime and width calculations
 
-use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
+use deep_causality_core::{
+    CausalEffectPropagationProcess, CausalFlow, EffectValue, PropagatingEffect,
+};
 use deep_causality_num::Float106;
 use deep_causality_physics::{WeakField, WeakFieldOps, WeakIsospin};
 
@@ -46,11 +48,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Stage 1: Initialize
     let initial = stage_initialize();
 
-    // Pipeline
-    let result = initial
+    // Pipeline via the CausalFlow DSL.
+    let result = CausalFlow::from(initial)
         .bind_or_error(stage_charged_current, "Charged current failed")
         .bind_or_error(stage_neutral_current, "Neutral current failed")
-        .bind_or_error(stage_decay_properties, "Decay calculation failed");
+        .bind_or_error(stage_decay_properties, "Decay calculation failed")
+        .into_effect();
 
     print_summary(&result);
 

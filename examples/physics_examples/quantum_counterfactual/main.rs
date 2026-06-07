@@ -12,18 +12,19 @@
 //! - **State Rewind**: Pop corrupted states from history to "time travel"
 //! - **Error Correction**: Apply corrective gate after rewind
 //!
-//! ## APIs Demonstrated
-//! - `CausalEffectPropagationProcess::with_state()` - Stateful monadic composition
-//! - `HilbertState` - Quantum state vectors with complex amplitudes
-//! - `.bind()` - Chain quantum operations monadically
+//! The episode is one `CausalFlow` pipeline: the quantum history rides the state channel,
+//! each step is a named stage, and the value channel carries the "error detected" flag.
 
-use deep_causality_core::CausalEffectPropagationProcess;
+use deep_causality_core::{
+    CausalEffectPropagationProcess, CausalFlow, EffectValue, PropagatingProcess,
+};
 use deep_causality_multivector::{HilbertState, Metric};
 use deep_causality_num::{Complex, DivisionAlgebra};
 
 /// Switch this alias to `f32` for low precision, `f64` for standard precision,
 /// or `Float106` for high precision.
 pub type FloatType = f64;
+
 /// Holds the history of quantum states for counterfactual debugging.
 /// Each state represents a snapshot at a different point in time.
 #[derive(Debug, Clone, Default)]
@@ -44,75 +45,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         states: vec![initial_state],
     };
 
-    // Monadic Chain: Simulating Evolution with Error
-    let initial_effect = CausalEffectPropagationProcess::pure(false); // "Is Error Detected?" flag
+    // The error-correction episode as one CausalFlow pipeline. The quantum history is the
+    // state channel; each step binds the next "error detected" flag and may rewrite history.
+    let result = CausalFlow::process(history)
+        .bind(stage_apply_gate)
+        .bind(stage_measure_syndrome)
+        .bind(stage_correct)
+        .into_process();
 
-    // Wrap with state
-    let result = CausalEffectPropagationProcess::with_state(initial_effect, history, None::<()>)
-        .bind(|_, mut hist, ctx| {
-            // Step 1: Apply Gate (Simulate Bit Flip Error)
-            println!("[t=1] Applying Quantum Gate...");
-
-            // Here we simulate a "drift" to an error state.
-            // Error State: |1> (flipped from desired |0>)
-            let bad_psi = vec![Complex::new(0.01, 0.0), Complex::new(0.99, 0.0)];
-            let bad_state = HilbertState::<FloatType>::new(bad_psi, Metric::Euclidean(1)).unwrap();
-
-            hist.states.push(bad_state);
-
-            // Return "No Error Detected Yet". Wrap in pure and restore state.
-            let next = CausalEffectPropagationProcess::pure(false);
-            CausalEffectPropagationProcess::with_state(next, hist, ctx)
-        })
-        .bind(|prev_val_effect, hist, ctx| {
-            // Step 2: Measure / Check Syndrome
-            println!("[t=2] Measuring Syndrome...");
-            let prev_val = prev_val_effect.into_value().unwrap_or(false);
-
-            let current_state = hist.states.last().unwrap();
-            // Check probability of |1> using as_inner() to access the underlying MultiVector
-            let prob_1 = current_state.as_inner().data()[1].norm_sqr();
-
-            if prob_1 > 0.9 {
-                println!("[ALARM] Bit Flip Error Detected! P(|1>) = {:.4}", prob_1);
-                let next = CausalEffectPropagationProcess::pure(true); // Error Detected = true
-                return CausalEffectPropagationProcess::with_state(next, hist, ctx);
-            }
-
-            let next = CausalEffectPropagationProcess::pure(prev_val);
-            CausalEffectPropagationProcess::with_state(next, hist, ctx)
-        })
-        .bind(|error_detected_effect, mut hist, ctx| {
-            // Step 3: Counterfactual Correction (Time Travel)
-            let error_detected = error_detected_effect.into_value().unwrap_or(false);
-
-            if error_detected {
-                println!("[t=3] Initiating Post-Selection / Rewind...");
-
-                // "Rewind" to t=0 (pop the bad state)
-                hist.states.pop(); // Removes t=1 (Bad State)
-
-                println!("[t=3] History Rewound. State restored to t=0.");
-
-                // Apply Correction: X Gate (In this metaphor, we re-apply correct evolution or fix)
-                // Let's say we force it back to |0>
-                let corrected_psi = vec![Complex::new(0.99, 0.0), Complex::new(0.01, 0.0)];
-                let corrected_state =
-                    HilbertState::<FloatType>::new(corrected_psi, Metric::Euclidean(1)).unwrap();
-
-                hist.states.push(corrected_state);
-                println!("[t=4] Applied Correction (X Gate).");
-
-                let next = CausalEffectPropagationProcess::pure(false); // Error cleared
-                return CausalEffectPropagationProcess::with_state(next, hist, ctx);
-            }
-
-            let next = CausalEffectPropagationProcess::pure(error_detected);
-            CausalEffectPropagationProcess::with_state(next, hist, ctx)
-        });
-
-    // Verification
-    // Access final state from the process struct
+    // Verification: access final state from the process struct.
     let final_state_struct = &result.state;
     let final_quantum_state = final_state_struct.states.last().unwrap();
     let prob_0 = final_quantum_state.as_inner().data()[0].norm_sqr();
@@ -128,4 +69,75 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+/// Step 1: apply a gate that drifts the qubit into a bit-flip error state |1>.
+fn stage_apply_gate(
+    _value: EffectValue<()>,
+    mut hist: QuantumHistory,
+    ctx: Option<()>,
+) -> PropagatingProcess<bool, QuantumHistory, ()> {
+    println!("[t=1] Applying Quantum Gate...");
+
+    // Simulate a drift to an error state |1> (flipped from the desired |0>).
+    let bad_psi = vec![Complex::new(0.01, 0.0), Complex::new(0.99, 0.0)];
+    let bad_state = HilbertState::<FloatType>::new(bad_psi, Metric::Euclidean(1)).unwrap();
+    hist.states.push(bad_state);
+
+    // No error detected yet.
+    let next = CausalEffectPropagationProcess::pure(false);
+    CausalEffectPropagationProcess::with_state(next, hist, ctx)
+}
+
+/// Step 2: measure the syndrome. Raise the error flag if P(|1>) is dominant.
+fn stage_measure_syndrome(
+    prev_val_effect: EffectValue<bool>,
+    hist: QuantumHistory,
+    ctx: Option<()>,
+) -> PropagatingProcess<bool, QuantumHistory, ()> {
+    println!("[t=2] Measuring Syndrome...");
+    let prev_val = prev_val_effect.into_value().unwrap_or(false);
+
+    let current_state = hist.states.last().unwrap();
+    let prob_1 = current_state.as_inner().data()[1].norm_sqr();
+
+    if prob_1 > 0.9 {
+        println!("[ALARM] Bit Flip Error Detected! P(|1>) = {:.4}", prob_1);
+        let next = CausalEffectPropagationProcess::pure(true);
+        return CausalEffectPropagationProcess::with_state(next, hist, ctx);
+    }
+
+    let next = CausalEffectPropagationProcess::pure(prev_val);
+    CausalEffectPropagationProcess::with_state(next, hist, ctx)
+}
+
+/// Step 3: counterfactual correction. On a detected error, rewind history to t=0 and
+/// re-apply the correct |0> state (an X gate in this metaphor).
+fn stage_correct(
+    error_detected_effect: EffectValue<bool>,
+    mut hist: QuantumHistory,
+    ctx: Option<()>,
+) -> PropagatingProcess<bool, QuantumHistory, ()> {
+    let error_detected = error_detected_effect.into_value().unwrap_or(false);
+
+    if error_detected {
+        println!("[t=3] Initiating Post-Selection / Rewind...");
+
+        // "Rewind" to t=0 (pop the bad state).
+        hist.states.pop();
+        println!("[t=3] History Rewound. State restored to t=0.");
+
+        // Force the qubit back to |0>.
+        let corrected_psi = vec![Complex::new(0.99, 0.0), Complex::new(0.01, 0.0)];
+        let corrected_state =
+            HilbertState::<FloatType>::new(corrected_psi, Metric::Euclidean(1)).unwrap();
+        hist.states.push(corrected_state);
+        println!("[t=4] Applied Correction (X Gate).");
+
+        let next = CausalEffectPropagationProcess::pure(false); // Error cleared
+        return CausalEffectPropagationProcess::with_state(next, hist, ctx);
+    }
+
+    let next = CausalEffectPropagationProcess::pure(error_detected);
+    CausalEffectPropagationProcess::with_state(next, hist, ctx)
 }
