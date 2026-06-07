@@ -1,0 +1,42 @@
+examples/physics_examples/maxwell/main.rs
+  s_52e6d9817e5bf8::t_cbbbf7e1871530 30
+  s_52e6d9817e5bf8::t_eb6b5bc4c9853d 59-66
+examples/physics_examples/gauge_gr/main.rs
+  s_52e6d9817e5bf8::t_3a6c3fa7ee71f1 16-18
+  s_52e6d9817e5bf8::t_d9aa244a8a91f3 52,56-57
+examples/physics_examples/gauge_weak_force/main.rs
+  s_52e6d9817e5bf8::t_3a6c3fa7ee71f1 17-19
+  s_52e6d9817e5bf8::t_6577bdeb5c14a2 51-52,55-56
+examples/physics_examples/carnot_cycle_engine/main.rs
+  s_52e6d9817e5bf8::t_3a6c3fa7ee71f1 110-111
+  s_52e6d9817e5bf8::t_98367fd263dcc9 9-10,12,21-39,61,69-76,84,93-109,112-216
+examples/physics_examples/gauge_em/main.rs
+  s_52e6d9817e5bf8::t_7a70ec5fb11ecb 59-60,64-65
+  s_52e6d9817e5bf8::t_3a6c3fa7ee71f1 28-30
+examples/physics_examples/gauge_electroweak/main.rs
+  s_52e6d9817e5bf8::t_3a6c3fa7ee71f1 17-19
+  s_52e6d9817e5bf8::t_c05aa87efd519b 46,49-50
+examples/physics_examples/quantum_counterfactual/main.rs
+  s_52e6d9817e5bf8::t_3a6c3fa7ee71f1 18-20
+  s_52e6d9817e5bf8::t_3a4d5a966fceb8 15-16,27,48-56,73-142
+examples/physics_examples/bernoulli_flow_network/main.rs
+  s_52e6d9817e5bf8::t_e19e8d8f96fa7a 9-10,12,18-21,30-34,39,57-63,79-166
+examples/physics_examples/laser_resonator_stability/main.rs
+  s_52e6d9817e5bf8::t_927f7ad2b524d3 8-11,13,24-38,42,46,53-60,72-157
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "a23de155a328ce4493b2e46001e33d59ba208f4b",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
