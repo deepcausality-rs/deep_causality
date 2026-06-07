@@ -1,0 +1,26 @@
+deep_causality_calculus/src/lib.rs
+  s_52e6d9817e5bf8::t_07804f1838e5b4 40-43
+  s_52e6d9817e5bf8::t_ef8eabd78e4ee9 50-53
+deep_causality_calculus/src/types/euler.rs
+  s_52e6d9817e5bf8::t_892313c366b4b4 10-11,15-16
+deep_causality_calculus/src/types/diff.rs
+  s_52e6d9817e5bf8::t_ffbb4f79d90947 8,11-16
+deep_causality_calculus/src/types/rk4.rs
+  s_52e6d9817e5bf8::t_4c11b5ff314f2f 12-13,15-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "b72c1495111c49323d687d52f78a8aa8fbc7db17",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
