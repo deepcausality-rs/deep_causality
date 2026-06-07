@@ -1,0 +1,28 @@
+examples/physics_examples/geometric_tilt/main.rs
+  s_52e6d9817e5bf8::t_86877d87216b40 35
+  s_52e6d9817e5bf8::t_b225e268f9c994 91-92,108-109
+examples/mathematics_examples/algebra/geometric_tilt_estimator.rs
+  s_52e6d9817e5bf8::t_bd8e0206f56383 347-348
+  s_52e6d9817e5bf8::t_f066c3aac4785e 103
+  s_52e6d9817e5bf8::t_1af57b9a48f3a4 6
+examples/material_examples/examples/structural_health_monitor/main.rs
+  s_52e6d9817e5bf8::t_624aad4a635508 6
+  s_52e6d9817e5bf8::t_519f6144856747 108-110
+  s_52e6d9817e5bf8::t_751562265a0fbf 88-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "0f3d92d429ae74f0fd2ae3905cd4846b279187fb",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
