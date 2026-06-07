@@ -1,0 +1,43 @@
+examples/avionics_examples/hypersonic_2t/main.rs
+  s_52e6d9817e5bf8::t_4f4cdbd4e3b028 12-15,19
+  s_52e6d9817e5bf8::t_6aea7b1e05d7c0 29-31
+  s_52e6d9817e5bf8::t_8e4f0514e49f1c 18
+examples/avionics_examples/hypersonic_2t/model.rs
+  s_52e6d9817e5bf8::t_d252d116fa05e9 118-149
+  s_52e6d9817e5bf8::t_78907d16aa3c93 13,16-17
+  s_52e6d9817e5bf8::t_553d0dfbceb092 105-117
+  s_52e6d9817e5bf8::t_7196f94de0a7cf 95-104
+examples/avionics_examples/geometric_tcas/model.rs
+  s_52e6d9817e5bf8::t_650f2e2007f982 197-306
+  s_52e6d9817e5bf8::t_5a2a291aa58a16 12-13
+examples/avionics_examples/magnav/model.rs
+  s_52e6d9817e5bf8::t_bf90125cf138be 274,279-281,286-290,299-301,306-309,364
+  s_52e6d9817e5bf8::t_f0f7973fe42439 6-10,310-363
+  s_52e6d9817e5bf8::t_c549289a60dc2b 275-278,282-285,291-298,302-305
+examples/avionics_examples/magnav/main.rs
+  s_52e6d9817e5bf8::t_a20fe958a03e19 74,79-82
+  s_52e6d9817e5bf8::t_799a100a50e80d 68
+  s_52e6d9817e5bf8::t_dc0ce0f7613881 22
+  s_52e6d9817e5bf8::t_7004141312bbc9 21
+  s_52e6d9817e5bf8::t_66f8422bb01fb2 19
+  s_52e6d9817e5bf8::t_89e5ec4190119a 47,61
+  s_52e6d9817e5bf8::t_2944e1ff556b78 70-73
+examples/avionics_examples/geometric_tcas/main.rs
+  s_52e6d9817e5bf8::t_af255dbd099fa5 15-17,20,27,30,35-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "23d917c91bffc21036f4c7c846e6f3a0a96530bb",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
