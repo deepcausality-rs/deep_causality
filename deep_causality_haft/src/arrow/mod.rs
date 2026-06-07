@@ -62,6 +62,7 @@
 //! `openspec/notes/arrow/causal-arrow-generalization.md` §8 and
 //! `openspec/notes/arrow/causal-process-builder.md`.
 
+mod arrow_endo;
 mod builder;
 mod compose;
 mod fanout;
@@ -71,6 +72,7 @@ mod lift;
 mod second;
 mod split;
 
+pub use arrow_endo::EndoArrow;
 pub use builder::{ArrowBuilder, arrow};
 pub use compose::Compose;
 pub use fanout::Fanout;

@@ -80,7 +80,7 @@ pub use alias::alias_profunctor::AliasProfunctor;
 
 // Arrow algebra (value-level strong category: composition + the monoidal product, + builder)
 pub use crate::arrow::{
-    Arrow, ArrowBuilder, Compose, Fanout, First, Id, Lift, Second, Split, arrow,
+    Arrow, ArrowBuilder, Compose, EndoArrow, Fanout, First, Id, Lift, Second, Split, arrow,
 };
 
 // Isomorphism
