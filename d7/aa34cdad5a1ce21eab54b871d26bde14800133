@@ -1,0 +1,33 @@
+deep_causality_rand/src/extensions/mod.rs
+  s_52e6d9817e5bf8::t_12ccc89fd7b3a2 5-7
+deep_causality_rand/src/extensions/dist_float_106.rs
+  s_52e6d9817e5bf8::t_8b86c4d2d5ec1c 1-49
+deep_causality_rand/src/extensions/dist_float_32.rs
+  s_52e6d9817e5bf8::t_c2bd922dda4765 5-6,8-9,12-13,19-20,26
+deep_causality_rand/tests/extensions/mod.rs
+  s_52e6d9817e5bf8::t_48113af4784c2d 6-7
+deep_causality_rand/tests/extensions/dist_float_106_tests.rs
+  s_52e6d9817e5bf8::t_8829e94a527de4 18-21,33-36
+  s_52e6d9817e5bf8::t_805ffff65c1508 1-17,22-32,37-52,54-66
+  s_52e6d9817e5bf8::t_0e55bb10137afa 53
+deep_causality_rand/src/extensions/dist_float_common.rs
+  s_52e6d9817e5bf8::t_9fdf84df52e110 1-60
+deep_causality_rand/src/extensions/dist_float_64.rs
+  s_52e6d9817e5bf8::t_5d86473e6d94e7 5-6,8-9,12-13,19-20,26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "d7aa34cdad5a1ce21eab54b871d26bde14800133",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
