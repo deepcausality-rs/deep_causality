@@ -32,9 +32,9 @@ mod model;
 pub mod model_types;
 mod model_utils;
 
-use crate::model_types::{FloatType, N_TICKS, PumpProcess};
+use crate::model_types::{FloatType, N_TICKS, PumpProcess, nominal_pump_config};
 use causal_intervention_examples::print_utils;
-use deep_causality_core::{EffectValue, Intervenable};
+use deep_causality_core::CausalFlow;
 
 fn main() {
     println!("=== Closed-Loop Insulin Pump as a Corrective `intervene` Loop ===\n");
@@ -61,30 +61,35 @@ fn main() {
     print_utils::print_effect_log(&closed.logs);
 }
 
+/// Open loop: each tick is just `simulate_step`, run `N_TICKS` times. No monitor, no bolus.
 fn run_open_loop() -> PumpProcess<FloatType> {
-    let mut process = model::initial_process();
-    for _ in 0..N_TICKS {
-        process = process.bind(model::simulate_step);
-    }
-    process
+    CausalFlow::from(model::initial_process())
+        .iterate_n(N_TICKS as usize, |tick| tick.bind(model::simulate_step))
+        .into_process()
 }
 
+/// Closed loop: the same tick, but each one `branch`es on the monitor — a hyperglycemic excursion
+/// records the bolus, accumulates the delivered units, and `intervene`s the corrected glucose. The
+/// only difference from the open loop is the `branch`.
 fn run_closed_loop() -> PumpProcess<FloatType> {
-    let mut process = model::initial_process();
-    for _ in 0..N_TICKS {
-        process = process.bind(model::simulate_step);
-
-        let current = match &process.value {
-            EffectValue::Value(v) => *v,
-            _ => continue,
-        };
-        let cfg = process.context.clone().expect("PumpConfig present");
-        if current > cfg.hyperglycemic_threshold {
-            let (corrected, units) = model::corrective_bolus(current, &cfg);
-            process.state.bolus_count += 1;
-            process.state.total_insulin_units += units;
-            process = process.intervene(corrected);
-        }
-    }
-    process
+    let cfg = nominal_pump_config();
+    CausalFlow::from(model::initial_process())
+        .iterate_n(N_TICKS as usize, |tick| {
+            tick.bind(model::simulate_step).branch_with(
+                |glucose, _state, ctx| {
+                    *glucose > ctx.expect("PumpConfig present").hyperglycemic_threshold
+                },
+                |hot| {
+                    hot.update_state(|mut state, &glucose| {
+                        let (_, units) = model::corrective_bolus(glucose, &cfg);
+                        state.bolus_count += 1;
+                        state.total_insulin_units += units;
+                        state
+                    })
+                    .intervene_if(|_| true, |glucose| model::corrective_bolus(glucose, &cfg).0)
+                },
+                |cold| cold,
+            )
+        })
+        .into_process()
 }

@@ -35,7 +35,7 @@ mod model_utils;
 use crate::model::{forward_traffic, initial_process};
 use crate::model_types::{N_TICKS, NetworkProcess, STANDBY_SWITCH, SwitchId};
 use causal_intervention_examples::print_utils;
-use deep_causality_core::{EffectValue, Intervenable};
+use deep_causality_core::CausalFlow;
 
 fn main() {
     println!("=== Active/Standby Network Failover as a Corrective `intervene` Loop ===\n");
@@ -64,38 +64,36 @@ fn main() {
     print_utils::print_effect_log(&closed.logs);
 }
 
+/// Open loop: each tick is just `forward_traffic`, run `N_TICKS` times. No monitor, no failover.
 fn run_open_loop() -> NetworkProcess<SwitchId> {
-    let mut process = initial_process();
-    for _ in 0..N_TICKS {
-        process = process.bind(forward_traffic);
-    }
-    process
+    CausalFlow::from(initial_process())
+        .iterate_n(N_TICKS as usize, |tick| tick.bind(forward_traffic))
+        .into_process()
 }
 
+/// Closed loop: the same tick, but each one `branch`es on the monitor — a zero-delivery tick on the
+/// active primary records the failover and `intervene`s the standby switch into the value channel.
+/// The only difference from the open loop is the `branch`.
 fn run_closed_loop() -> NetworkProcess<SwitchId> {
-    let mut process = initial_process();
-    for _ in 0..N_TICKS {
-        process = process.bind(forward_traffic);
-
-        let plan = process.context.clone().expect("NetworkPlan present");
-        let active = match &process.value {
-            EffectValue::Value(v) => *v,
-            _ => continue,
-        };
-        let last_delivered = process
-            .state
-            .delivered_per_tick
-            .last()
-            .copied()
-            .unwrap_or(0);
-
-        if last_delivered == 0 && active == plan.primary_id {
-            process.state.failover_count += 1;
-            if process.state.failover_at.is_none() {
-                process.state.failover_at = Some(process.state.tick);
-            }
-            process = process.intervene(STANDBY_SWITCH);
-        }
-    }
-    process
+    CausalFlow::from(initial_process())
+        .iterate_n(N_TICKS as usize, |tick| {
+            tick.bind(forward_traffic).branch_with(
+                |active, state, ctx| {
+                    let last_delivered = state.delivered_per_tick.last().copied().unwrap_or(0);
+                    last_delivered == 0 && *active == ctx.expect("NetworkPlan present").primary_id
+                },
+                |hot| {
+                    hot.update_state(|mut state, _active| {
+                        state.failover_count += 1;
+                        if state.failover_at.is_none() {
+                            state.failover_at = Some(state.tick);
+                        }
+                        state
+                    })
+                    .intervene(STANDBY_SWITCH)
+                },
+                |cold| cold,
+            )
+        })
+        .into_process()
 }
