@@ -2,7 +2,7 @@
 title: Counterfactuals
 description: Pearl's Ladder of Causation in the Effect Propagation Process. The Alternatable trait family substitutes value, context, or state mid-chain, preserves the audit trail, and dissolves Pearl's abduction step.
 sidebar:
-  order: 12
+  order: 13
 ---
 
 Counterfactual reasoning is first-class in DeepCausality. The same machinery that runs factual evaluation runs counterfactual evaluation. The mechanism is the [`Alternatable`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core/src/traits) family of traits: one trait per substitutable channel on the carrier, plus a marker super-trait that bundles all three. The classic causal-inference operator `intervene` survives as a thin vocabulary alias atop value alternation.

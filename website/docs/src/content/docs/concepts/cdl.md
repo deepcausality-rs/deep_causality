@@ -2,7 +2,7 @@
 title: Causal Discovery Language
 description: A typestate-builder DSL for going from raw observational data to a discovery report that informs the construction of an executable causal model.
 sidebar:
-  order: 8
+  order: 9
 ---
 
 The Causal Discovery Language (CDL) is the DSL that bridges raw observational data and an executable causal model. It lives in the [`deep_causality_discovery`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_discovery) crate and uses Rust's typestate pattern to encode the pipeline stages in the type system.

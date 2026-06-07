@@ -2,7 +2,7 @@
 title: Hello, Causaloid
 description: Build, evaluate, and compose Causaloids in the smallest possible program.
 sidebar:
-  order: 3
+  order: 4
 ---
 
 This page walks through the smallest program that exercises [`Causaloid`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality): a single Causaloid that wraps a predicate, then a two-node graph that composes two Causaloids, then evaluation.

@@ -26,8 +26,8 @@ pub mod utils_test;
 
 // Re-Export Core Types
 pub use deep_causality_core::{
-    CausalEffectPropagationProcess, CausalMonad, CausalityError, CausalityErrorEnum, EffectLog,
-    EffectValue, PropagatingEffect, PropagatingProcess,
+    CausalEffectPropagationProcess, CausalFlow, CausalMonad, CausalityError, CausalityErrorEnum,
+    EffectLog, EffectValue, PropagatingEffect, PropagatingProcess,
 };
 
 pub use deep_causality_haft::{LogAddEntry, LogAppend, LogEffect, LogSize};

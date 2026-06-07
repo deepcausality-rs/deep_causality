@@ -1,11 +1,11 @@
 ---
 title: Innovations
-description: Sixteen innovations that, taken together, set DeepCausality apart from existing causality tooling.
+description: Seventeen innovations that, taken together, set DeepCausality apart from existing causality tooling.
 sidebar:
   order: 4
 ---
 
-DeepCausality is built on a single [axiomatic foundation](/overview/core-idea/) introduced earlier in this section and addresses the [problem classes](/overview/the-problem/) discussed on the previous page. This page covers sixteen distinct innovations that, taken together, form a coherent substrate for dynamic causality.
+DeepCausality is built on a single [axiomatic foundation](/overview/core-idea/) introduced earlier in this section and addresses the [problem classes](/overview/the-problem/) discussed on the previous page. This page covers seventeen distinct innovations that, taken together, form a coherent substrate for dynamic causality.
 
 The innovations are grouped into seven sections in logical order: foundation, mathematical substrate, causal discovery from data, causal modeling, causal inference, action, and production deployment. Each entry is brief by design; the [Concepts section](/concepts/) elaborates every primitive in full.
 
@@ -49,26 +49,28 @@ With data on hand, four primitives carry the model. The first two share one prem
 
 ## V. Inference: the carrier and how it grows
 
-Two innovations cover how data actually flows through the model.
+Three innovations cover how data actually flows through the model, and how you write the pipelines that drive it.
 
 **12. The Propagating Effect as a unified carrier.** `CausalEffectPropagationProcess<Value, State, Context, Error, Log>` is the load-bearing five-field record, and it implements the Causal Monad trait directly. Every other primitive in the library (Causaloid, Context, CSM, Effect Ethos) exchanges work through this one type, and the audit log accumulates automatically across every step. *See [Effect Propagation Process](/concepts/effect-propagation-process/).*
 
 **13. Non-Markovian and Markovian under one type.** `PropagatingEffect<T>` fixes state and context to `()`. `PropagatingProcess<T, S, C>` keeps them generic. Both are aliases of the same struct, so lifting from one form into the other is a single constructor call. Start non-Markovian and upgrade the carrier the moment state becomes necessary. *See [Effect Propagation Process](/concepts/effect-propagation-process/).*
 
+**14. The Causal Flow DSL.** `CausalFlow` is a fluent facade over the Causal Monad that reads a pipeline as a sequence of verbs: `value` and `process` to seed, `map` and `try_step` and `next` to step, `branch` to route, `iterate_n` / `iterate_until` / `iterate_to_fixpoint` to loop, and `intervene` for a mid-pipeline `do()`. Every verb lowers to `pure` or `bind`, so the DSL adds reading clarity rather than new semantics, and the monad laws still hold. It hides the `EffectValue` wrapping and the manual error short-circuit, and it is the surface the library's own examples are written on. *See [Causal Flow](/concepts/causal-flow/).*
+
 ## VI. From inference to safe action
 
 A causal verdict on its own does nothing. Two innovations bridge inference to the outside world while keeping the system safe to deploy.
 
-**14. The Causal State Machine.** A thread-safe registry of `(CausalState, CausalAction)` pairs where the active state space is inferred at runtime from the propagating effect rather than enumerated at design time. *See [Causal State Machine](/concepts/csm/).*
+**15. The Causal State Machine.** A thread-safe registry of `(CausalState, CausalAction)` pairs where the active state space is inferred at runtime from the propagating effect rather than enumerated at design time. *See [Causal State Machine](/concepts/csm/).*
 
-**15. The Effect Ethos.** Every action the CSM proposes is intercepted and evaluated against a graph of `Teloid`s under DDIC (Defeasible Deontic Inheritance Calculus from Olson, Salas-Damian, and Forbus). Conflict resolves through Lex Posterior, Lex Specialis, Lex Superior. Reasoning is free to be emergent; actions are not. *See [Effect Ethos](/concepts/effect-ethos/).*
+**16. The Effect Ethos.** Every action the CSM proposes is intercepted and evaluated against a graph of `Teloid`s under DDIC (Defeasible Deontic Inheritance Calculus from Olson, Salas-Damian, and Forbus). Conflict resolves through Lex Posterior, Lex Specialis, Lex Superior. Reasoning is free to be emergent; actions are not. *See [Effect Ethos](/concepts/effect-ethos/).*
 
 ## VII. Production deployment
 
 Once the model is approved for production, it has to serve traffic.
 
-**16. Native async serving on Tokio.** DeepCausality is a Rust library. The CSM is thread-safe by construction (`Arc<RwLock<...>>`) so it embeds natively inside any async runtime. A production deployment with Tokio comes down to embedding the causal model into a regular request handler.
+**17. Native async serving on Tokio.** DeepCausality is a Rust library. The CSM is thread-safe by construction (`Arc<RwLock<...>>`) so it embeds natively inside any async runtime. A production deployment with Tokio comes down to embedding the causal model into a regular request handler.
 
 ## Where to go from here
 
-The [Concepts section](/concepts/) elaborates each primitive in detail. For a worked example of how the sixteen innovations compose in one pipeline, the [Why DeepCausality](/overview/why/) page walks through the [avionics flight envelope monitor](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/avionics_examples/flight_envelope_monitor) end to end. For physics, see the [Multi-physics section](/overview/the-problem/#2-multi-physics-and-multi-regime-simulation) on the Problem page, which walks through the GRMHD example as a five-step `bind` chain.
+The [Concepts section](/concepts/) elaborates each primitive in detail. For a worked example of how the seventeen innovations compose in one pipeline, the [Why DeepCausality](/overview/why/) page walks through the [avionics flight envelope monitor](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/avionics_examples/flight_envelope_monitor) end to end. For physics, see the [Multi-physics section](/overview/the-problem/#2-multi-physics-and-multi-regime-simulation) on the Problem page, which walks through the GRMHD example as a five-step `bind` chain.

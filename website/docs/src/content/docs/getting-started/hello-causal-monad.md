@@ -2,10 +2,10 @@
 title: Hello, Causal Monad
 description: The smallest program that exercises pure and bind. Walk a value through a three-step chain, then look at what flowed.
 sidebar:
-  order: 2
+  order: 3
 ---
 
-This page introduces the monad on its own, before any Causaloid appears, because everything else in the library composes on top of `pure` and `bind`. Understanding those two operations is important to read every other example.
+The [previous page](/getting-started/hello-causal-flow/) drove a pipeline with the high-level [Causal Flow](/concepts/causal-flow/) DSL. This page opens the engine underneath it. It introduces the monad on its own, before any Causaloid appears, because everything else in the library, the flow DSL included, composes on top of `pure` and `bind`. Understanding those two operations is important to read every other example.
 
 ## What a monad is
 

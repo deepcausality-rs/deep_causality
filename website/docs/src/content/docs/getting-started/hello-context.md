@@ -2,7 +2,7 @@
 title: Hello, Context
 description: Build a Context hypergraph and let a Causaloid read from it.
 sidebar:
-  order: 4
+  order: 5
 ---
 
 The Causaloid in the [previous page](/getting-started/hello-causaloid/) took an input and returned an effect. That covers a surprising amount of practical work. However, it stops the moment a rule needs to know something about the world beyond its input. The [`Context`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality) is the explicit place that world lives.

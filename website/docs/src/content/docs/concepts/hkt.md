@@ -2,7 +2,7 @@
 title: Higher-Kinded Types
 description: How DeepCausality encodes the type constructors that Rust does not natively support.
 sidebar:
-  order: 7
+  order: 8
 ---
 
 A higher-kinded type is a type that takes another type as a parameter and produces a type. For historical reasons, the Rust team decided against including higher-kinded types into the Rust programming language. However, with the introduction of the causal discovery language, monadic composition becomes a viable alternative, and that also enabled the causal monad and effect propagation process. Therefore, the Deep Causality Project decided to include a higher-kinded type implementation in a dedicated crate that uses the witness pattern and a trait hierarchy to establish arity-five higher-kinded types and the corresponding effect.

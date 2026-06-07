@@ -57,7 +57,7 @@ fn main() {
 cargo run
 ```
 
-If you see `ok: Value(42.0)`, the install is good. The [next page](/getting-started/hello-causal-monad/) walks through what `pure` and `bind` actually do.
+If you see `ok: Value(42.0)`, the install is good. The [next page](/getting-started/hello-causal-flow/) writes your first causal pipeline with the high-level Flow DSL.
 
 ## A note on the docs.rs reference
 
