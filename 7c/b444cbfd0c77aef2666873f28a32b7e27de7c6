@@ -1,0 +1,62 @@
+website/docs/src/content/docs/getting-started/hello-causal-monad.md
+  s_52e6d9817e5bf8::t_6f0576568c891b 5
+  s_52e6d9817e5bf8::t_6648cfe80c81e8 8
+website/docs/src/content/docs/getting-started/index.md
+  s_52e6d9817e5bf8::t_e02d85e90b22d5 3,8,11-12
+website/docs/src/content/docs/getting-started/hello-causaloid.md
+  s_52e6d9817e5bf8::t_6f0576568c891b 5
+website/docs/src/content/docs/getting-started/hello-effect-propagation.md
+  s_52e6d9817e5bf8::t_6f0576568c891b 5
+website/docs/src/content/docs/getting-started/hello-causal-flow.md
+  s_52e6d9817e5bf8::t_db59a46bc2ca3e 1-134
+website/docs/src/content/docs/concepts/csm.md
+  s_52e6d9817e5bf8::t_2ba2272b0cdc3d 5
+website/docs/src/content/docs/concepts/hkt.md
+  s_52e6d9817e5bf8::t_2ba2272b0cdc3d 5
+website/docs/src/content/docs/concepts/algorithms.md
+  s_52e6d9817e5bf8::t_2ba2272b0cdc3d 5
+website/docs/src/content/docs/concepts/index.md
+  s_52e6d9817e5bf8::t_974b68d0bb37e2 21
+website/docs/src/content/docs/concepts/deployment.md
+  s_52e6d9817e5bf8::t_2ba2272b0cdc3d 5
+website/docs/src/content/docs/concepts/causal-flow.md
+  s_52e6d9817e5bf8::t_2299d1b6de5b6a 1-149
+website/docs/src/content/docs/concepts/uncertainty.md
+  s_52e6d9817e5bf8::t_2ba2272b0cdc3d 5
+website/docs/src/content/docs/getting-started/install.md
+  s_52e6d9817e5bf8::t_5bcbaf82520ea6 60
+website/docs/src/content/docs/concepts/uniform-math.md
+  s_52e6d9817e5bf8::t_2ba2272b0cdc3d 5
+website/docs/src/content/docs/getting-started/hello-context.md
+  s_52e6d9817e5bf8::t_6f0576568c891b 5
+website/docs/src/content/docs/concepts/cdl.md
+  s_52e6d9817e5bf8::t_2ba2272b0cdc3d 5
+website/docs/src/content/docs/overview/innovations.md
+  s_52e6d9817e5bf8::t_e6503881275804 64,66
+  s_52e6d9817e5bf8::t_46b83274c93085 8
+  s_52e6d9817e5bf8::t_345c2af3b6c04b 52
+  s_52e6d9817e5bf8::t_d4cbb0a15266d3 3
+  s_52e6d9817e5bf8::t_76fb661558cd28 58-59
+  s_52e6d9817e5bf8::t_e51970da0d9543 72
+  s_52e6d9817e5bf8::t_ec7e0885bb1ccc 76
+website/docs/src/content/docs/concepts/counterfactuals.md
+  s_52e6d9817e5bf8::t_2ba2272b0cdc3d 5
+deep_causality/src/lib.rs
+  s_52e6d9817e5bf8::t_bcd47b482f163a 29-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "7cb444cbfd0c77aef2666873f28a32b7e27de7c6",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
