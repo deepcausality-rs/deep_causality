@@ -1,0 +1,19 @@
+deep_causality_core/tests/types/causal_flow/branch_tests.rs
+  s_52e6d9817e5bf8::t_cf12870cf5643d 230-237
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "5ccb718ee688cd424684ee6c9510bd0537255638",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
