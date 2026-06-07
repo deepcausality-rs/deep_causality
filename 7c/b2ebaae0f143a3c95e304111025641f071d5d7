@@ -1,0 +1,28 @@
+examples/medicine_examples/tissue_classification/main.rs
+  s_52e6d9817e5bf8::t_e48a8137818602 98-101
+  s_52e6d9817e5bf8::t_30c39364b02696 21
+  s_52e6d9817e5bf8::t_ef1e0875e73aa0 104-130
+examples/medicine_examples/diving_decompression/main.rs
+  s_52e6d9817e5bf8::t_aa5ff26d87fa94 177-254
+  s_52e6d9817e5bf8::t_87871438c66900 24
+  s_52e6d9817e5bf8::t_76fbdfa17734c8 107-118,120-125,127-128
+examples/medicine_examples/tumor_treatment/main.rs
+  s_52e6d9817e5bf8::t_627afdc8fe281f 45,47-52
+  s_52e6d9817e5bf8::t_400ac17cdb532d 20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "7cb2ebaae0f143a3c95e304111025641f071d5d7",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
