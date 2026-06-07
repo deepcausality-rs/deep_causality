@@ -1,0 +1,24 @@
+deep_causality_core/src/types/causal_flow/intervene.rs
+  s_52e6d9817e5bf8::t_ca9a2d9b415926 37-43
+deep_causality_core/tests/types/causal_flow/flow_tests.rs
+  s_52e6d9817e5bf8::t_c44d57c394f0ec 196-245
+deep_causality_core/src/types/causal_flow/steps.rs
+  s_52e6d9817e5bf8::t_fa766443557876 49-55,61-70,76
+  s_52e6d9817e5bf8::t_600b853cbce853 12-13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "d639fbef10e756a1125d1a4e480698b6ac1ec02e",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
