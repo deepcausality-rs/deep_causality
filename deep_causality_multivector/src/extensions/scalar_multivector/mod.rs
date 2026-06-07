@@ -13,7 +13,10 @@
 use crate::{CausalMultiVectorError, MultiVector};
 use deep_causality_num::RealField;
 
-impl<T> MultiVector<T> for T where T: RealField {
+impl<T> MultiVector<T> for T
+where
+    T: RealField,
+{
     fn grade_projection(&self, k: u32) -> Self {
         // The scalar lives entirely at grade 0; every other grade projects to zero.
         if k == 0 { *self } else { T::zero() }
