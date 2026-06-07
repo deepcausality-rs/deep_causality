@@ -3,8 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_calculus::{DifferentiableField, Scalar};
-use deep_causality_core::{EffectValue, PropagatingEffect};
+use deep_causality_calculus::{DifferentiableField, Euler, Scalar};
+use deep_causality_core::{
+    CausalFlow, CausalityError, CausalityErrorEnum, EffectValue, PropagatingEffect,
+};
+use deep_causality_haft::Arrow;
 use deep_causality_tensor::CausalTensor;
 use std::error::Error;
 use std::f64::consts::PI;
@@ -267,4 +270,95 @@ fn rand_f64() -> f64 {
         % 4294967296;
     SEED.store(next, Ordering::Relaxed);
     (next as f64) / 4294967296.0
+}
+
+/// The navigation state threaded through the `CausalFlow` pipeline in `main`
+/// (`dynamics -> sensors -> filter -> output`). It carries the mutable per-tick state and the fixed
+/// context (the magnetic map, the INS velocity, the step) so each stage can be a free-standing
+/// sub-process `fn(NavState) -> CausalFlow<NavState>`.
+pub struct NavState {
+    pub true_pos: Pos2,
+    pub filter: ParticleFilter,
+    pub map: MagneticMap,
+    pub vel_x: f64,
+    pub vel_y: f64,
+    pub dt: f64,
+    pub obs_mag: f64,
+    pub tick: u32,
+}
+
+impl NavState {
+    pub fn new(
+        true_pos: Pos2,
+        filter: ParticleFilter,
+        map: MagneticMap,
+        vel_x: f64,
+        vel_y: f64,
+        dt: f64,
+    ) -> Self {
+        Self {
+            true_pos,
+            filter,
+            map,
+            vel_x,
+            vel_y,
+            dt,
+            obs_mag: 0.0,
+            tick: 0,
+        }
+    }
+}
+
+/// A. Dynamics (truth simulation): truth kinematics ẋ = v as one `Euler` endo-arrow step.
+pub(crate) fn dynamics(mut s: NavState) -> CausalFlow<NavState> {
+    let (vel_x, vel_y) = (s.vel_x, s.vel_y);
+    let kinematics = Euler::new(s.dt, move |_: &Pos2| Pos2(vel_x, vel_y));
+    s.true_pos = kinematics.run(s.true_pos);
+    CausalFlow::value(s)
+}
+
+/// B. Sensors: magnetometer reading = field truth + sensor noise.
+pub(crate) fn sensors(mut s: NavState) -> CausalFlow<NavState> {
+    s.obs_mag = s.map.sample(s.true_pos.0, s.true_pos.1) + generate_gaussian_noise(MAG_NOISE_STD);
+    CausalFlow::value(s)
+}
+
+/// C. Navigation filter: predict (INS) -> causal measurement update -> resample. A failed causal
+/// update short-circuits the flow's error channel.
+pub(crate) fn filter_update(mut s: NavState) -> CausalFlow<NavState> {
+    s.filter.predict(s.vel_x, s.vel_y, s.dt);
+    if let Err(e) = s.filter.update(s.obs_mag, &s.map) {
+        return CausalFlow::fail(CausalityError::new(CausalityErrorEnum::Custom(
+            e.to_string(),
+        )));
+    }
+    s.filter.resample();
+    CausalFlow::value(s)
+}
+
+/// D. Output / logging: weighted-mean estimate, NAV error, integrity status.
+pub(crate) fn output(mut s: NavState) -> CausalFlow<NavState> {
+    s.tick += 1;
+    let (est_x, est_y) = s.filter.estimate();
+    let (true_pos_x, true_pos_y) = (s.true_pos.0, s.true_pos.1);
+    let total_err = ((true_pos_x - est_x).powi(2) + (true_pos_y - est_y).powi(2)).sqrt();
+    let status = if total_err < 50.0 {
+        "RNP 0.03 (GOOD)"
+    } else if total_err < 150.0 {
+        "DEGRADED"
+    } else {
+        "UNCERTAIN"
+    };
+    println!(
+        "{:>6.1}   | [{:>6.0}, {:>6.0}] | [{:>6.0}, {:>6.0}] | {:>6.1}  | {:>6.1}   | {}",
+        s.tick as f64 * s.dt,
+        true_pos_x,
+        true_pos_y,
+        est_x,
+        est_y,
+        total_err,
+        s.obs_mag,
+        status
+    );
+    CausalFlow::value(s)
 }

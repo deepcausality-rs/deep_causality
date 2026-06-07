@@ -31,6 +31,7 @@ mod print_utils;
 
 use deep_causality_calculus::{EndoArrow, Rk4};
 use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum, PropagatingEffect};
+use model::{Report, Stage1};
 
 /// The working precision for the whole CFD computation. **This is the single alias to change**:
 /// the autodiff scalar, the Navier-Stokes kernel arithmetic, and the Rk4 march all run at this
@@ -106,27 +107,4 @@ fn stage2(s1: Stage1, nu: f64, rho: f64) -> PropagatingEffect<Report> {
 
 fn error_effect<T: Default + Clone + std::fmt::Debug>(msg: &str) -> PropagatingEffect<T> {
     PropagatingEffect::from_error(CausalityError::new(CausalityErrorEnum::Custom(msg.into())))
-}
-
-/// Output of stage 1: the field at the sample point, its exact spatial derivatives, the kernel
-/// time derivative, and the residual against the manufactured solution.
-#[derive(Default, Clone, Debug)]
-struct Stage1 {
-    u: [FloatType; 3],
-    grad_u: [[FloatType; 3]; 3],
-    lap_u: [FloatType; 3],
-    grad_p: [FloatType; 3],
-    dudt: [FloatType; 3],
-    exact_dudt: [FloatType; 3],
-    kernel_err: FloatType,
-}
-
-/// Output of stage 2: the marched amplitude against the exact decay.
-#[derive(Default, Clone, Debug)]
-struct Report {
-    s1: Stage1,
-    a_final: FloatType,
-    a_exact: FloatType,
-    t_final: FloatType,
-    steps: usize,
 }

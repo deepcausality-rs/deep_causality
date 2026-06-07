@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::Report;
 use crate::model;
+use crate::model::Report;
 
 pub fn print_report(r: &Report) {
     let s = &r.s1;

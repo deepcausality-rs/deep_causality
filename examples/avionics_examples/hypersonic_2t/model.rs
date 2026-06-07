@@ -10,7 +10,11 @@
  */
 
 use deep_causality_calculus::{EndoArrow, Euler};
+use deep_causality_core::CausalFlow;
 use deep_causality_multivector::{CausalMultiVector, Metric};
+
+/// Tracking step: 100 Hz -> 10 ms.
+pub const DT: f64 = 0.01;
 
 /// 2T Physics Metric: (4, 2)
 /// e1..e4 (Space), e_t1, e_t2 (Time)
@@ -87,4 +91,59 @@ impl ConformalTracker {
         // Extract shadow (e1, e2, e3)
         [d[1], d[2], d[4]]
     }
+}
+
+/// The per-tick tracking state threaded through the `CausalFlow` pipeline in `main`
+/// (`predict -> observe -> derive`).
+pub struct Track {
+    pub tracker: ConformalTracker,
+    pub prev_pos: [f64; 3],
+    pub prev_vel: f64,
+    pub pos: [f64; 3],
+    pub ms: f64,
+}
+
+/// Acquire the initial track: target detected at ~100 km range, closing at Mach 10.
+pub fn build_initial_track() -> Track {
+    let (init_x, init_y, init_z) = (0.0, 100_000.0, 20_000.0);
+    let (vel_x, vel_y) = (500.0, -3400.0); // drift / closing-fast
+    Track {
+        tracker: ConformalTracker::new(init_x, init_y, init_z, vel_x, vel_y),
+        prev_pos: [init_x, init_y, init_z],
+        prev_vel: (vel_x.powi(2) + vel_y.powi(2)).sqrt(),
+        pos: [init_x, init_y, init_z],
+        ms: 0.0,
+    }
+}
+
+/// A. Prediction — one Euler step of the linear 6D conformal dynamics, advancing the clock.
+pub fn predict(mut t: Track) -> CausalFlow<Track> {
+    t.tracker.predict(DT);
+    t.ms += DT * 1000.0;
+    CausalFlow::value(t)
+}
+
+/// B. Observation — project the 6D belief state back to 3D world coordinates.
+pub fn observe(mut t: Track) -> CausalFlow<Track> {
+    t.pos = t.tracker.get_3d_state();
+    CausalFlow::value(t)
+}
+
+/// C. Derived metrics — finite-difference velocity and G-load, log the track, roll the history.
+pub fn derive(mut t: Track) -> CausalFlow<Track> {
+    let dist = ((t.pos[0] - t.prev_pos[0]).powi(2)
+        + (t.pos[1] - t.prev_pos[1]).powi(2)
+        + (t.pos[2] - t.prev_pos[2]).powi(2))
+    .sqrt();
+    let vel = dist / DT;
+    let g_load = (vel - t.prev_vel).abs() / DT / 9.81;
+
+    println!(
+        "{:>6.0}   | {:>9.1} | {:>10.1} | {:>9.1} | {:>9.1} | {:>5.1}G",
+        t.ms, t.pos[0], t.pos[1], t.pos[2], vel, g_load
+    );
+
+    t.prev_pos = t.pos;
+    t.prev_vel = vel;
+    CausalFlow::value(t)
 }

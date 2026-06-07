@@ -236,3 +236,26 @@ fn scale_3(v: [FloatType; 3], s: FloatType) -> [FloatType; 3] {
 fn scale_3x3(m: [[FloatType; 3]; 3], s: FloatType) -> [[FloatType; 3]; 3] {
     core::array::from_fn(|i| core::array::from_fn(|j| m[i][j] * s))
 }
+
+/// Output of stage 1: the field at the sample point, its exact spatial derivatives, the kernel
+/// time derivative, and the residual against the manufactured solution.
+#[derive(Default, Clone, Debug)]
+pub struct Stage1 {
+    pub(crate) u: [FloatType; 3],
+    pub(crate) grad_u: [[FloatType; 3]; 3],
+    pub(crate) lap_u: [FloatType; 3],
+    pub(crate) grad_p: [FloatType; 3],
+    pub(crate) dudt: [FloatType; 3],
+    pub(crate) exact_dudt: [FloatType; 3],
+    pub(crate) kernel_err: FloatType,
+}
+
+/// Output of stage 2: the marched amplitude against the exact decay.
+#[derive(Default, Clone, Debug)]
+pub struct Report {
+    pub(crate) s1: Stage1,
+    pub(crate) a_final: FloatType,
+    pub(crate) a_exact: FloatType,
+    pub(crate) t_final: FloatType,
+    pub(crate) steps: usize,
+}
