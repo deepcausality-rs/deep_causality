@@ -84,6 +84,7 @@ pub mod monoid;
 pub mod real;
 pub mod ring;
 pub mod ring_associative;
-pub mod ring_com;
+pub mod ring_commutative;
 pub(crate) mod rotation;
+pub mod scalar;
 pub mod semigroup;

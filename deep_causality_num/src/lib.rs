@@ -42,8 +42,9 @@ pub use crate::algebra::monoid::{AddMonoid, InvMonoid, MulMonoid};
 pub use crate::algebra::real::Real;
 pub use crate::algebra::ring::Ring;
 pub use crate::algebra::ring_associative::AssociativeRing;
-pub use crate::algebra::ring_com::CommutativeRing;
+pub use crate::algebra::ring_commutative::CommutativeRing;
 pub use crate::algebra::rotation::Rotation;
+pub use crate::algebra::scalar::Scalar;
 pub use crate::algebra::semigroup::{AddSemigroup, MulSemigroup};
 
 // Alias types
