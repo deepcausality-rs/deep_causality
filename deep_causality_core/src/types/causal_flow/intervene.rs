@@ -34,6 +34,13 @@ where
         P: FnOnce(&Value) -> bool,
         F: FnOnce(Value) -> Value,
     {
+        // Let the error channel take precedence over the value: an errored flow short-circuits
+        // without running `cond` or `f`, consistent with `intervene` (a no-op on a failed flow)
+        // and the rest of the facade. Otherwise a carrier holding both a value and an error would
+        // execute the user closures before `intervene` discards them.
+        if self.inner.error.is_some() {
+            return self;
+        }
         match self.inner.value.clone().into_value() {
             Some(v) if cond(&v) => self.intervene(f(v)),
             _ => self,

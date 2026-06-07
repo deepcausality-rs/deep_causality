@@ -9,8 +9,8 @@
 
 use crate::types::causal_flow::{err_leaf, ok_leaf};
 use crate::{
-    CausalEffectPropagationProcess, CausalFlow, CausalityError, EffectLog, EffectValue,
-    PropagatingProcess,
+    CausalEffectPropagationProcess, CausalFlow, CausalityError, CausalityErrorEnum, EffectLog,
+    EffectValue, PropagatingProcess,
 };
 
 impl<Value, State, Context> CausalFlow<Value, State, Context>
@@ -46,21 +46,34 @@ where
         CausalFlow { inner }
     }
 
-    /// Infallible value transform. `None` passes through, an error short-circuits.
+    /// Value transform that mirrors the monad's [`fmap`] contract: apply `f` to a `Value`, pass
+    /// `None` and `ContextualLink` carriers through unchanged, and surface a `ValueNotAvailable`
+    /// error for the `RelayTo` / `Map` dispatch variants — whose embedded `PropagatingEffect`
+    /// cannot be retyped by a value-level map — rather than silently dropping the routing command.
+    /// An errored carrier short-circuits (handled by `bind`).
+    ///
+    /// [`fmap`]: crate::CausalEffectPropagationProcess::fmap
     pub fn map<U, F>(self, f: F) -> CausalFlow<U, State, Context>
     where
         F: FnOnce(Value) -> U,
     {
         let inner = self.inner.bind(|ev, state, context| {
-            let value = match ev.into_value() {
-                Some(v) => EffectValue::Value(f(v)),
-                None => EffectValue::None,
+            let (value, error) = match ev {
+                EffectValue::Value(v) => (EffectValue::Value(f(v)), None),
+                EffectValue::None => (EffectValue::None, None),
+                EffectValue::ContextualLink(a, b) => (EffectValue::ContextualLink(a, b), None),
+                // RelayTo / Map carry a `PropagatingEffect<Value>` a value-level map cannot
+                // retype; surface the dropped dispatch command instead of collapsing to `None`.
+                _ => (
+                    EffectValue::None,
+                    Some(CausalityError::new(CausalityErrorEnum::ValueNotAvailable)),
+                ),
             };
             CausalEffectPropagationProcess {
                 value,
                 state,
                 context,
-                error: None,
+                error,
                 logs: EffectLog::new(),
             }
         });

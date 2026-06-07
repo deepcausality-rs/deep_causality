@@ -193,6 +193,57 @@ fn intervene_if_fires_only_on_condition() {
 }
 
 #[test]
+fn intervene_if_skips_errored_flow() {
+    // A carrier holding BOTH a value and an error (reachable via `from`): the error must take
+    // precedence so neither closure runs (they panic if invoked).
+    let errored: PropagatingEffect<i64> = CausalEffectPropagationProcess {
+        value: EffectValue::Value(10),
+        state: (),
+        context: None,
+        error: Some(err("boom")),
+        logs: EffectLog::new(),
+    };
+    let out = CausalFlow::from(errored)
+        .intervene_if(
+            |_| panic!("cond ran on an errored flow"),
+            |_| panic!("f ran on an errored flow"),
+        )
+        .finish();
+    assert!(out.is_err());
+}
+
+#[test]
+fn map_preserves_contextual_link_carrier() {
+    // `ContextualLink` is not a plain value; `map` must pass it through, not drop it to `None`.
+    let linked: PropagatingEffect<i64> = CausalEffectPropagationProcess {
+        value: EffectValue::ContextualLink(7, 9),
+        state: (),
+        context: None,
+        error: None,
+        logs: EffectLog::new(),
+    };
+    let out = CausalFlow::from(linked).map(|x: i64| x + 1).into_effect();
+    assert!(matches!(out.value, EffectValue::ContextualLink(7, 9)));
+    assert!(out.error.is_none());
+}
+
+#[test]
+fn map_surfaces_error_on_dispatch_variant() {
+    // `RelayTo` embeds a `PropagatingEffect` a value-level map cannot retype; `map` must surface
+    // `ValueNotAvailable` rather than silently dropping the dispatch command.
+    let dispatch: PropagatingEffect<i64> = CausalEffectPropagationProcess {
+        value: EffectValue::RelayTo(3, Box::new(PropagatingEffect::from_value(42))),
+        state: (),
+        context: None,
+        error: None,
+        logs: EffectLog::new(),
+    };
+    let out = CausalFlow::from(dispatch).map(|x: i64| x + 1).finish();
+    assert!(out.is_err());
+    assert!(format!("{:?}", out.unwrap_err()).contains("ValueNotAvailable"));
+}
+
+#[test]
 fn bind_or_error_passthrough_runs_existing_stage() {
     fn stage(x: i64, s: (), c: Option<()>) -> PropagatingProcess<i64, (), ()> {
         CausalEffectPropagationProcess {
