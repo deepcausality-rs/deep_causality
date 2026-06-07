@@ -2,41 +2,27 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Distribution, Rng};
-use crate::{Open01, OpenClosed01, StandardUniform};
-use deep_causality_num::{FloatAsScalar, FloatFromInt, IntAsScalar, IntoFloat};
-use std::mem;
+use crate::extensions::dist_float_common::{open_closed_unit, open_unit, standard_unit};
+use crate::{Distribution, Open01, OpenClosed01, Rng, StandardUniform};
 
+// f64 carries 52 mantissa bits; the multiply-based kernels use 53 bits of precision (52 + 1)
+// drawn from a u64, the transmute-based Open01 kernel uses 52.
 impl Distribution<f64> for StandardUniform {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let float_size = mem::size_of::<f64>() as u64 * 8;
-        let precision = 52 + 1;
-        let scale = 1.0 / ((1_u64 << precision) as f64);
-
-        let value: u64 = (*rng).random::<u64>();
-        let value = value >> u64::splat(float_size - precision);
-        f64::splat(scale) * f64::cast_from_int(value)
+        let scale = 1.0 / ((1_u64 << 53) as f64);
+        standard_unit::<f64, R>(rng, scale, 64 - 53)
     }
 }
 
 impl Distribution<f64> for OpenClosed01 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let float_size = mem::size_of::<f64>() as u64 * 8;
-        let precision = 52 + 1;
-        let scale = 1.0 / ((1_u64 << precision) as f64);
-
-        let value: u64 = (*rng).random::<u64>();
-        let value = value >> u64::splat(float_size - precision);
-        f64::splat(scale) * f64::cast_from_int(value + u64::splat(1))
+        let scale = 1.0 / ((1_u64 << 53) as f64);
+        open_closed_unit::<f64, R>(rng, scale, 64 - 53)
     }
 }
 
 impl Distribution<f64> for Open01 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let float_size = mem::size_of::<f64>() as u64 * 8;
-
-        let value: u64 = (*rng).random::<u64>();
-        let fraction = value >> u64::splat(float_size - 52);
-        fraction.into_float_with_exponent(0) - f64::splat(1.0 - f64::EPSILON / 2.0)
+        open_unit::<f64, R>(rng, 64 - 52, 1.0 - f64::EPSILON / 2.0)
     }
 }
