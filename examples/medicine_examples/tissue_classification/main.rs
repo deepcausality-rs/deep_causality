@@ -18,7 +18,7 @@
 //! - `PointCloud::triangulate()` - Build simplicial complex
 //! - `BaseTopology` trait - Compute topological invariants
 
-use deep_causality_core::PropagatingEffect;
+use deep_causality_core::{CausalFlow, PropagatingEffect};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{BaseTopology, PointCloud};
 use std::f64::consts::PI;
@@ -95,39 +95,39 @@ fn analyze_with_monad(label: &str, points: Vec<f64>) -> Result<(), Box<dyn std::
     }
     println!("         χ = {}", chi);
 
-    // Monadic stage: thread the topology summary through `PropagatingEffect`
-    // for the diagnosis step. This is the part of the pipeline that exists to
-    // illustrate the monadic style — keeping it small and downstream of the
-    // fallible operations keeps the example honest about what `bind` is for.
-    let step2: PropagatingEffect<(String, usize, usize, usize, isize)> =
-        PropagatingEffect::pure((label.to_string(), v, e, f, chi));
+    // CausalFlow stage: thread the topology summary through the DSL for the diagnosis
+    // step. It stays small and downstream of the fallible operations, which keeps the
+    // example honest about what `bind` is for.
+    let step2 = CausalFlow::value((label.to_string(), v, e, f, chi));
 
     // Step 3: Diagnose based on topology
-    let result = step2.bind(|effect_value, _, _| {
-        let (label, v, e, f, chi): (String, usize, usize, usize, isize) =
-            effect_value.into_value().unwrap_or_default();
+    let result = step2
+        .bind(|effect_value, _, _| {
+            let (label, v, e, f, chi): (String, usize, usize, usize, isize) =
+                effect_value.into_value().unwrap_or_default();
 
-        println!("[Step 4] Generating diagnosis...");
+            println!("[Step 4] Generating diagnosis...");
 
-        let diagnosis = if chi <= 0 {
-            "PATHOLOGICAL - Detected topological hole/void (Necrotic Core)".to_string()
-        } else if chi == 1 {
-            "HEALTHY - Tissue is topologically contractible (Dense Mass)".to_string()
-        } else {
-            "INCONCLUSIVE - Tissue is disconnected/sparse".to_string()
-        };
+            let diagnosis = if chi <= 0 {
+                "PATHOLOGICAL - Detected topological hole/void (Necrotic Core)".to_string()
+            } else if chi == 1 {
+                "HEALTHY - Tissue is topologically contractible (Dense Mass)".to_string()
+            } else {
+                "INCONCLUSIVE - Tissue is disconnected/sparse".to_string()
+            };
 
-        let analysis = TissueAnalysis {
-            label,
-            num_vertices: v,
-            num_edges: e,
-            num_faces: f,
-            euler_characteristic: chi,
-            diagnosis,
-        };
+            let analysis = TissueAnalysis {
+                label,
+                num_vertices: v,
+                num_edges: e,
+                num_faces: f,
+                euler_characteristic: chi,
+                diagnosis,
+            };
 
-        PropagatingEffect::pure(analysis)
-    });
+            PropagatingEffect::pure(analysis)
+        })
+        .into_effect();
 
     // Extract and display the final result
     if let Some(analysis) = result.value.into_value() {

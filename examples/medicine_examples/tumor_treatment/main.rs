@@ -17,7 +17,7 @@
 //!   error channel if the gradient ever leaves the finite range.
 
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt};
-use deep_causality_core::{CausalityError, CausalityErrorEnum, PropagatingEffect};
+use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum, PropagatingEffect};
 use deep_causality_num::FromPrimitive;
 
 mod model;
@@ -42,12 +42,14 @@ fn main() {
     let start = [ft(0.1), ft(0.1)];
     let learning_rate = ft(0.6);
 
-    // The workflow is a causal-monad chain: from a starting orientation, ascend; a non-finite
+    // The workflow is a CausalFlow chain: from a starting orientation, ascend; a non-finite
     // gradient short-circuits the error channel.
-    let pipeline = PropagatingEffect::pure(start).bind(move |p, _, _| match p.into_value() {
-        Some(s) => ascend(&efficacy, s, learning_rate, ASCENT_STEPS),
-        None => fail("no starting orientation"),
-    });
+    let pipeline = CausalFlow::value(start)
+        .bind(move |p, _, _| match p.into_value() {
+            Some(s) => ascend(&efficacy, s, learning_rate, ASCENT_STEPS),
+            None => fail("no starting orientation"),
+        })
+        .into_effect();
 
     match pipeline.value.into_value() {
         Some(r) => {
