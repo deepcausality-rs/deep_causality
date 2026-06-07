@@ -5,7 +5,7 @@ sidebar:
   order: 7
 ---
 
-`CausalFlow` is the fluent facade over the [Causal Monad](/concepts/causal-monad/). The monad is the algebra: `pure` and `bind` over the [carrier effect](/concepts/effect-propagation-process/). Written out by hand, a monadic pipeline carries real ceremony. You wrap values in `EffectValue`, call `pure` and `with_state`, unwrap with `into_value().unwrap_or_default()`, and check the error channel between steps. `CausalFlow` hides all of that behind a verb per line, so the pipeline reads the way it runs.
+`CausalFlow` is the fluent API over the [Causal Monad](/concepts/causal-monad/). The monad is the algebra: `pure` and `bind` over the [carrier effect](/concepts/effect-propagation-process/). Written out by hand, a monadic pipeline exhibits real complexity. You wrap values in `EffectValue`, call `pure` and `with_state`, unwrap with `into_value().unwrap_or_default()`, and check the error channel between steps. `CausalFlow` hides all of that behind a much simplified fluent API.
 
 ```rust
 use deep_causality::CausalFlow;
@@ -18,15 +18,15 @@ let outcome = CausalFlow::value(2_i64)
 assert_eq!(outcome, Ok(50));
 ```
 
-That is the same chain you would write with `PropagatingEffect::pure(2).bind(...).bind(...)`, with the wrapping removed.
+That is the same chain you would write with `PropagatingEffect::pure(2).bind(...).bind(...)`, with all the wrapping removed.
 
-## Sugar, not new semantics
+## Causal Monad, Simplified
 
-This is the load-bearing claim: every `CausalFlow` verb lowers to an existing monad operation. `value` lowers to `pure`. `map` lowers to `fmap`. `try_step`, `branch`, `iterate_n`, and the rest lower to `bind`. The facade adds no behavior the monad does not already have. It cannot, because it holds a `PropagatingProcess` and calls the same methods you would call yourself.
+Every `CausalFlow` verb lowers to an existing monad operation. `value` lowers to `pure`. `map` lowers to `fmap`. `try_step`, `branch`, `iterate_n`, and the rest lower to `bind`. Under the hood, everything is still the causal monad with all its expressiveness. It is just the interface that has been simplified.
 
 Two consequences follow. First, the [monad laws](/concepts/causal-monad/#the-monad-laws) still hold, so a flow refactors as freely as the chain underneath it. Second, you can drop in and out of the DSL at any point: `from(process)` lifts an existing process into a flow, and `into_process()` / `into_effect()` drop back to the concrete carrier for code that expects it.
 
-## The verbs
+## The Fluent API
 
 The surface groups into six families.
 
@@ -64,9 +64,8 @@ assert_eq!(total, Ok(50));
 
 This is the shape the avionics and corrective-control examples take: one `iterate_n` for the loop, `next` to wire per-tick stages, and a `branch` for the conditional intervention.
 
-## Factual and counterfactual on one engine
+## Factual and counterfactual
 
-Because `intervene` is just another verb, a counterfactual run is the factual pipeline with one line changed. Both run on the same engine, and the override is logged.
 
 ```rust
 use deep_causality::CausalFlow;
@@ -135,14 +134,6 @@ assert_eq!(final_process.state, 1);
 ```
 
 The verbs are identical across both forms. The type parameters decide whether the chain carries memory, exactly as they do for the monad underneath.
-
-## Why this matters
-
-**It is the surface most code should write.** The monad is the axiom and the contract. The flow is what you reach for to express a pipeline, the way you reach for an iterator adaptor chain rather than hand-rolling a loop. The library's own examples were migrated onto it for this reason.
-
-**Control flow is first-class.** Loops, branches, and interventions are verbs, not hand-written scaffolding around the carrier. A bounded loop with a conditional `do()` reads in three lines, and it short-circuits and logs without extra code.
-
-**It is a facade, not a wall.** Because it holds the concrete carrier and lowers every verb to a monad call, you never trade away access to the engine. Drop to `into_process()` for an operation the DSL does not name, then lift back with `from`.
 
 ## Where to look next
 
