@@ -81,6 +81,7 @@ pub mod group_mul;
 pub mod magma;
 pub mod module;
 pub mod monoid;
+pub mod normed;
 pub mod real;
 pub mod ring;
 pub mod ring_associative;

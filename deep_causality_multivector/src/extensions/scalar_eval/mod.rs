@@ -3,65 +3,26 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::ScalarEval;
-use deep_causality_num::{Complex, Float106, RealField};
+use deep_causality_num::Normed;
 use std::iter::Sum;
 
-impl ScalarEval for f32 {
-    type Real = f32;
-
-    #[inline]
-    fn modulus_squared(&self) -> Self::Real {
-        *self * *self
-    }
-
-    #[inline]
-    fn scale_by_real(&self, s: Self::Real) -> Self {
-        *self * s
-    }
-}
-
-impl ScalarEval for f64 {
-    type Real = f64;
-
-    #[inline]
-    fn modulus_squared(&self) -> Self::Real {
-        *self * *self
-    }
-
-    #[inline]
-    fn scale_by_real(&self, s: Self::Real) -> Self {
-        *self * s
-    }
-}
-
-impl ScalarEval for Float106 {
-    type Real = Float106;
-
-    #[inline]
-    fn modulus_squared(&self) -> Self::Real {
-        *self * *self
-    }
-
-    #[inline]
-    fn scale_by_real(&self, s: Self::Real) -> Self {
-        *self * s
-    }
-}
-impl<T> ScalarEval for Complex<T>
+// `ScalarEval` is the multivector-side facade over `deep_causality_num::Normed`. Every scalar with
+// a real modulus, every real float and `Complex<T>`, satisfies `Normed`, so this single blanket
+// covers them all.
+impl<T> ScalarEval for T
 where
-    T: RealField + Copy + Sum,
+    T: Normed,
+    T::Real: Sum,
 {
-    type Real = T;
+    type Real = T::Real;
 
     #[inline]
-    fn modulus_squared(&self) -> T {
-        // |z|^2 = re^2 + im^2
-        (self.re * self.re) + (self.im * self.im)
+    fn modulus_squared(&self) -> Self::Real {
+        Normed::modulus_squared(self)
     }
 
     #[inline]
-    fn scale_by_real(&self, s: T) -> Self {
-        // Scalar multiplication: (re * s, im * s)
-        Complex::new(self.re * s, self.im * s)
+    fn scale_by_real(&self, s: Self::Real) -> Self {
+        Normed::scale_by_real(self, s)
     }
 }

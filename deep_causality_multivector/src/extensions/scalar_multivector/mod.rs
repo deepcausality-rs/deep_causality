@@ -3,40 +3,40 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-/// The MultiVector implementation for f64 and f32 (scalars) exists to allow
-/// these numerical types to conform to the MultiVector trait. This
-/// enables generic code that operates on any type implementing MultiVector
-/// to also handle scalars seamlessly, treating them as multivectors of grade 0.
-/// These type extensions are crucial for maintaining type consistency and
-///   enabling polymorphic operations across different multivector types,
-///   including the fundamental scalar elements.
+//! Grade-0 scalars as multivectors.
+//!
+//! A scalar `s` is a multivector whose only non-zero part is grade 0, so every `MultiVector`
+//! operation reduces to plain field arithmetic. Bounding on `RealField` covers every real field —
+//! `f32`, `f64`, `Float106`, and any future one — in a single blanket, so generic code that
+//! operates on any `MultiVector` handles scalars seamlessly with no per-type implementations.
+
 use crate::{CausalMultiVectorError, MultiVector};
+use deep_causality_num::RealField;
 
-// =========================================================
-// MultiVector Implementation for f64 (Scalar)
-// =========================================================
-
-impl MultiVector<f64> for f64 {
+impl<T> MultiVector<T> for T where T: RealField {
     fn grade_projection(&self, k: u32) -> Self {
-        if k == 0 { *self } else { 0.0 }
+        // The scalar lives entirely at grade 0; every other grade projects to zero.
+        if k == 0 { *self } else { T::zero() }
     }
 
     fn reversion(&self) -> Self {
+        // Reversion multiplies each grade-k part by (-1)^{k(k-1)/2}; for a grade-0 scalar that
+        // exponent is 0, so the sign is +1 and the scalar reverses to itself.
         *self
     }
 
-    fn squared_magnitude(&self) -> Self {
-        self * self
+    fn squared_magnitude(&self) -> T {
+        *self * *self
     }
 
     fn inverse(&self) -> Result<Self, CausalMultiVectorError>
     where
         Self: Sized,
     {
-        if *self == 0.0 {
+        if *self == T::zero() {
             Err(CausalMultiVectorError::zero_magnitude())
         } else {
-            Ok(1.0 / *self)
+            Ok(T::one() / *self)
         }
     }
 
@@ -44,93 +44,30 @@ impl MultiVector<f64> for f64 {
     where
         Self: Sized,
     {
-        // For a scalar, the dual depends on the algebra's pseudoscalar.
-        // For simplicity and since it's not directly needed by cup_product,
-        // we'll return the scalar itself or a placeholder for now.
-        // A more robust implementation might require a pseudoscalar context.
+        // For a scalar the dual carries no pseudoscalar context; it returns the scalar itself,
+        // matching the original grade-0 behaviour.
         Ok(*self)
     }
 
     fn geometric_product(&self, rhs: &Self) -> Self {
-        self * rhs
+        *self * *rhs
     }
 
     fn outer_product(&self, rhs: &Self) -> Self {
-        self * rhs
+        *self * *rhs
     }
 
     fn inner_product(&self, rhs: &Self) -> Self {
-        self * rhs
+        *self * *rhs
     }
 
     fn commutator_lie(&self, _rhs: &Self) -> Self {
-        // Scalars commute
-        0.0
+        // Scalars commute, so [a, b] = ab - ba = 0.
+        T::zero()
     }
 
     fn commutator_geometric(&self, _rhs: &Self) -> Self {
-        // Scalars commute
-        0.0
-    }
-
-    fn basis_shift(&self, _index: usize) -> Self {
-        *self
-    }
-}
-
-// =========================================================
-// MultiVector Implementation for f32 (Scalar)
-// =========================================================
-
-impl MultiVector<f32> for f32 {
-    fn grade_projection(&self, k: u32) -> Self {
-        if k == 0 { *self } else { 0.0 }
-    }
-
-    fn reversion(&self) -> Self {
-        *self
-    }
-
-    fn squared_magnitude(&self) -> Self {
-        self * self
-    }
-
-    fn inverse(&self) -> Result<Self, CausalMultiVectorError>
-    where
-        Self: Sized,
-    {
-        if *self == 0.0 {
-            Err(CausalMultiVectorError::zero_magnitude())
-        } else {
-            Ok(1.0 / *self)
-        }
-    }
-
-    fn dual(&self) -> Result<Self, CausalMultiVectorError>
-    where
-        Self: Sized,
-    {
-        Ok(*self)
-    }
-
-    fn geometric_product(&self, rhs: &Self) -> Self {
-        self * rhs
-    }
-
-    fn outer_product(&self, rhs: &Self) -> Self {
-        self * rhs
-    }
-
-    fn inner_product(&self, rhs: &Self) -> Self {
-        self * rhs
-    }
-
-    fn commutator_lie(&self, _rhs: &Self) -> Self {
-        0.0
-    }
-
-    fn commutator_geometric(&self, _rhs: &Self) -> Self {
-        0.0
+        T::zero()
     }
 
     fn basis_shift(&self, _index: usize) -> Self {
