@@ -227,13 +227,14 @@ struct NoCloneState(i64);
 
 #[test]
 fn iterate_and_branch_accept_non_clone_state() {
-    let flow: CausalFlow<i64, NoCloneState, ()> = CausalFlow::from(CausalEffectPropagationProcess {
-        value: EffectValue::Value(0_i64),
-        state: NoCloneState(7),
-        context: None,
-        error: None,
-        logs: EffectLog::new(),
-    });
+    let flow: CausalFlow<i64, NoCloneState, ()> =
+        CausalFlow::from(CausalEffectPropagationProcess {
+            value: EffectValue::Value(0_i64),
+            state: NoCloneState(7),
+            context: None,
+            error: None,
+            logs: EffectLog::new(),
+        });
     let out = flow.iterate_n(3, |tick| tick.branch(|v| *v >= 0, |hot| hot, |cold| cold));
     let proc = out.into_process();
     assert_eq!(proc.value, EffectValue::Value(0));
