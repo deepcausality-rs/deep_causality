@@ -6,6 +6,7 @@
 mod algebra;
 mod alias;
 mod effect_system;
+mod either;
 mod extensions;
 mod hkt;
 mod iso;
