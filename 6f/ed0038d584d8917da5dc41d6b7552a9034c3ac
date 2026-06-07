@@ -1,0 +1,21 @@
+openspec/specs/causal-flow/spec.md
+  s_52e6d9817e5bf8::t_c47e0a33e085d2 171-273
+openspec/specs/causal-arrow/spec.md
+  s_52e6d9817e5bf8::t_c47e0a33e085d2 1-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "6fed0038d584d8917da5dc41d6b7552a9034c3ac",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
