@@ -1,0 +1,32 @@
+deep_causality_multivector/src/extensions/scalar_eval/mod.rs
+  s_52e6d9817e5bf8::t_6c75c8564c0776 6,9,12,14-15,17,20-21,25-26
+deep_causality_multivector/src/extensions/scalar_multivector/mod.rs
+  s_52e6d9817e5bf8::t_78fc5f16febcb0 6-11,13,18-19,23-24,28-29,36,39,47-48,53,57,61,65-66,70
+  s_52e6d9817e5bf8::t_3d070535d9188d 14
+deep_causality_num/src/algebra/normed.rs
+  s_52e6d9817e5bf8::t_b11c24385f15bd 34,37,42
+  s_52e6d9817e5bf8::t_c3e4e2a8cedaf3 35-36,38-41,43-45
+  s_52e6d9817e5bf8::t_caa2ed9aa6ae5b 1-5,7-26,46-60
+  s_52e6d9817e5bf8::t_9c0da48889e124 6
+  s_52e6d9817e5bf8::t_98c44adb844de3 27,29-33
+deep_causality_num/src/algebra/mod.rs
+  s_52e6d9817e5bf8::t_4276449795f4a6 84
+deep_causality_num/src/lib.rs
+  s_52e6d9817e5bf8::t_af57ebe0f1b06d 42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "9c40881ba71b0e5f0b110920ffc2e3a0d48723f0",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
