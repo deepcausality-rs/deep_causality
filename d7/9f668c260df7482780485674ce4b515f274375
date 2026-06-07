@@ -1,0 +1,42 @@
+deep_causality_core/tests/types/causal_flow/branch_tests.rs
+  s_52e6d9817e5bf8::t_15c932f1ef8f62 201-210
+  s_52e6d9817e5bf8::t_ca931fe646da58 175-200,211-221
+  s_52e6d9817e5bf8::t_bd183685c65e2b 222-229,238-241
+  s_52e6d9817e5bf8::t_cf12870cf5643d 230-237
+examples/avionics_examples/hypersonic_2t/model.rs
+  s_52e6d9817e5bf8::t_e8ad81c28904cd 132-134,136-151,159
+  s_52e6d9817e5bf8::t_8db0901ca1ee07 113
+  s_52e6d9817e5bf8::t_1af00eda90ae97 101
+deep_causality_haft/src/either/mod.rs
+  s_52e6d9817e5bf8::t_7f38a26ae87ec2 53-73
+deep_causality_haft/tests/either/either_tests.rs
+  s_52e6d9817e5bf8::t_690e8755a4c299 63-94
+examples/causal_intervention_examples/corrective_lane_keeping/main.rs
+  s_52e6d9817e5bf8::t_04a95c27580386 73-75,80-81
+deep_causality_core/src/types/causal_flow/iterate.rs
+  s_52e6d9817e5bf8::t_ce08533e3f7a70 21
+deep_causality_core/src/types/causal_flow/branch.rs
+  s_52e6d9817e5bf8::t_54380847a1306e 20
+  s_52e6d9817e5bf8::t_d4806c6e015f47 68-71
+  s_52e6d9817e5bf8::t_a32205d5ffce5b 15-18
+  s_52e6d9817e5bf8::t_6f34924fd25f75 66
+  s_52e6d9817e5bf8::t_dda19eb786b23a 117-118,127-146
+deep_causality_core/src/types/causal_flow/steps.rs
+  s_52e6d9817e5bf8::t_f6278ca800d0f4 16-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "d79f668c260df7482780485674ce4b515f274375",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
