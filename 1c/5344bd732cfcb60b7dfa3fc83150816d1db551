@@ -1,0 +1,20 @@
+website/web/src/pages/docs/index.astro
+  s_41a4678cc55d5f::t_760552b02cc998 355
+  s_41a4678cc55d5f::t_9d734609e57008 417
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "1c5344bd732cfcb60b7dfa3fc83150816d1db551",
+  "prompts": {},
+  "sessions": {
+    "s_41a4678cc55d5f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "870f636b-6549-43a1-829b-e42adc657129",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
