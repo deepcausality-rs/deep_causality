@@ -352,7 +352,7 @@ let result = CausalFlow::process(history)
           </p>
           <p>
             The two added channels change the category of question that can be asked. A <em>context</em>
-            intervention substitutes the world the chain reasons against, so a counterfactual can vary the
+            intervention substitutes the world the chain reasons against, so a <a href={`${DOCS_URL}/concepts/counterfactuals/`}>counterfactual</a> can vary the
             entire environment rather than a single variable: what the model would have concluded under a
             different regime, or the outcome under treatment placed beside the outcome under control, with no
             model rebuilt. A <em>state</em> intervention forces the running memory of the process, so a
@@ -414,7 +414,7 @@ let result = CausalFlow::process(history)
             the bias runs the wrong way.
           </p>
           <p>
-            DeepCausality makes uncertainty a first-class type, after Bornholt and colleagues.
+            DeepCausality makes uncertainty a <a href={`${DOCS_URL}/concepts/uncertainty/`}>first-class type</a>, after Bornholt and colleagues.
             <code>Uncertain&lt;T&gt;</code> carries a value together with the distribution that produced it;
             arithmetic and comparison build a computation graph rather than collapsing to a number, and
             evaluation samples lazily to a requested confidence.
