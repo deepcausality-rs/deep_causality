@@ -4,4 +4,6 @@
  */
 
 #[cfg(test)]
+mod brcd_result_analyzer_tests;
+#[cfg(test)]
 mod surd_result_analyzer_tests;

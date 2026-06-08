@@ -5,9 +5,13 @@
 #[cfg(test)]
 pub mod analyze_error_tests;
 #[cfg(test)]
+pub mod brcd_load_error_tests;
+#[cfg(test)]
 pub mod causal_discovery_error_tests;
 #[cfg(test)]
 pub mod cdl_error_tests;
+#[cfg(test)]
+pub mod cpdag_error_tests;
 #[cfg(test)]
 mod data_cleaning_error_tests;
 #[cfg(test)]

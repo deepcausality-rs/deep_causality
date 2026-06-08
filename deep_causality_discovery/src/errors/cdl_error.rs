@@ -4,19 +4,21 @@
  */
 
 use crate::{
-    AnalyzeError, CausalDiscoveryError, DataCleaningError, DataLoadingError, FeatureSelectError,
-    FinalizeError, PreprocessError,
+    AnalyzeError, BrcdLoadError, CausalDiscoveryError, CpdagError, DataCleaningError,
+    DataLoadingError, FeatureSelectError, FinalizeError, PreprocessError,
 };
 
 use std::fmt;
 
-#[derive(Debug, Clone, PartialOrd, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum CdlError {
     ReadDataError(DataLoadingError),
     CleanDataError(DataCleaningError),
     PreprocessError(PreprocessError),
     FeatSelectError(FeatureSelectError),
     CausalDiscoveryError(CausalDiscoveryError),
+    CpdagError(CpdagError),
+    BrcdLoadError(BrcdLoadError),
     AnalyzeError(AnalyzeError),
     FinalizeError(FinalizeError),
     MissingDataLoaderConfig,
@@ -33,6 +35,8 @@ impl fmt::Display for CdlError {
             CdlError::ReadDataError(e) => write!(f, "Step [Data Loading] failed: {}", e),
             CdlError::FeatSelectError(e) => write!(f, "Step [Feature Selection] failed: {}", e),
             CdlError::CausalDiscoveryError(e) => write!(f, "Step [Causal Discovery] failed: {}", e),
+            CdlError::CpdagError(e) => write!(f, "Step [CPDAG Loading] failed: {}", e),
+            CdlError::BrcdLoadError(e) => write!(f, "Step [BRCD Input Loading] failed: {}", e),
             CdlError::AnalyzeError(e) => write!(f, "Step [Analysis] failed: {}", e),
             CdlError::FinalizeError(e) => write!(f, "Step [Finalization] failed: {}", e),
             CdlError::MissingDataLoaderConfig => write!(
@@ -69,6 +73,8 @@ impl std::error::Error for CdlError {
             CdlError::ReadDataError(e) => Some(e),
             CdlError::FeatSelectError(e) => Some(e),
             CdlError::CausalDiscoveryError(e) => Some(e),
+            CdlError::CpdagError(e) => Some(e),
+            CdlError::BrcdLoadError(e) => Some(e),
             CdlError::AnalyzeError(e) => Some(e),
             CdlError::FinalizeError(e) => Some(e),
             CdlError::MissingDataLoaderConfig => None,
@@ -99,6 +105,16 @@ impl From<FeatureSelectError> for CdlError {
 impl From<CausalDiscoveryError> for CdlError {
     fn from(err: CausalDiscoveryError) -> CdlError {
         CdlError::CausalDiscoveryError(err)
+    }
+}
+impl From<CpdagError> for CdlError {
+    fn from(err: CpdagError) -> CdlError {
+        CdlError::CpdagError(err)
+    }
+}
+impl From<BrcdLoadError> for CdlError {
+    fn from(err: BrcdLoadError) -> CdlError {
+        CdlError::BrcdLoadError(err)
     }
 }
 impl From<AnalyzeError> for CdlError {

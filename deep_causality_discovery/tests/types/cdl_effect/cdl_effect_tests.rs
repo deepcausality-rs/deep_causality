@@ -111,6 +111,31 @@ fn test_print_warnings() {
 }
 
 #[test]
+fn test_and_then_success_threads_warnings() {
+    use deep_causality_haft::{LogAddEntry, LogSize};
+    let mut eff = CdlBuilder::pure(10);
+    eff.warnings.add_entry("first");
+    let res = eff.and_then(|x| {
+        let mut next = CdlBuilder::pure(x + 5);
+        next.warnings.add_entry("second");
+        next
+    });
+    assert_eq!(res.inner.unwrap(), 15);
+    assert_eq!(res.warnings.len(), 2);
+}
+
+#[test]
+fn test_and_then_short_circuits_on_error() {
+    let eff: CdlEffect<i32> = CdlEffect {
+        inner: Err(CdlError::MissingDataLoaderConfig),
+        warnings: Default::default(),
+    };
+    // The continuation must not run; the prior error is preserved.
+    let res = eff.and_then(|x| CdlBuilder::pure(x * 2));
+    assert!(matches!(res.inner, Err(CdlError::MissingDataLoaderConfig)));
+}
+
+#[test]
 fn test_clone_debug() {
     let eff = CdlBuilder::pure(42);
     let cloned = eff.clone();

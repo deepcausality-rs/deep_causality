@@ -3,16 +3,17 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::types::cdl::{BrcdConfigured, SurdConfigured};
 use crate::types::cdl_effect::CdlEffectWitness;
-use crate::{CDL, CdlConfig, CdlEffect, CdlError, CdlWarningLog, NoData};
+use crate::{BrcdLoaderConfig, CDL, CdlEffect, CdlError, CdlWarningLog, SurdLoaderConfig};
 use deep_causality_haft::{Effect3, Pure};
 
 /// Entry point for constructing and running a CDL pipeline.
 ///
 /// `CdlBuilder` connects the effect system to the [`CdlEffectWitness`] by fixing the
-/// error and warning-log types via [`Effect3`]. It also provides the two surface
-/// constructors used by callers: [`CdlBuilder::pure`] to lift a value into the effect
-/// context, and [`CdlBuilder::build`] to seed a fresh pipeline in the [`NoData`] state.
+/// error and warning-log types via [`Effect3`]. It seeds a lineage from a run config
+/// built by [`crate::CdlConfigBuilder`]: [`CdlBuilder::build_surd`] for the SURD
+/// lineage, [`CdlBuilder::build_brcd`] for the BRCD lineage.
 pub struct CdlBuilder;
 
 // Effect3: fix the Error and Warning types for the system.
@@ -28,11 +29,23 @@ impl CdlBuilder {
         CdlEffectWitness::<CdlError, CdlWarningLog>::pure(value)
     }
 
-    /// Seeds a fresh pipeline in the `NoData` state with the default configuration.
-    pub fn build() -> CdlEffect<CDL<NoData>> {
+    /// Seeds the SURD lineage from a SURD run config. The whole pipeline runs at
+    /// the config's precision `T`, so no turbofish is needed downstream.
+    pub fn build_surd<T: Clone>(config: &SurdLoaderConfig<T>) -> CdlEffect<CDL<SurdConfigured<T>>> {
         Self::pure(CDL {
-            state: NoData,
-            config: CdlConfig::default(),
+            state: SurdConfigured {
+                config: config.clone(),
+            },
+        })
+    }
+
+    /// Seeds the BRCD lineage from a BRCD run config. The whole pipeline runs at
+    /// the config's precision `T`, so no turbofish is needed downstream.
+    pub fn build_brcd<T: Clone>(config: &BrcdLoaderConfig<T>) -> CdlEffect<CDL<BrcdConfigured<T>>> {
+        Self::pure(CDL {
+            state: BrcdConfigured {
+                config: config.clone(),
+            },
         })
     }
 }

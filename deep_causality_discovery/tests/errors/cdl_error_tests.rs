@@ -38,7 +38,7 @@ fn test_display() {
     let err = CdlError::CausalDiscoveryError(causal_discovery_err);
     assert_eq!(
         err.to_string(),
-        "Step [Causal Discovery] failed: Tensor error during SURD: CausalTensorError: Shape mismatch error"
+        "Step [Causal Discovery] failed: Tensor error during discovery: CausalTensorError: Shape mismatch error"
     );
 
     let analyze_err = AnalyzeError::EmptyResult;
@@ -126,7 +126,7 @@ fn test_source() {
     assert!(err.source().is_some());
     assert_eq!(
         err.source().unwrap().to_string(),
-        "Tensor error during SURD: CausalTensorError: Shape mismatch error"
+        "Tensor error during discovery: CausalTensorError: Shape mismatch error"
     );
 
     let analyze_err = AnalyzeError::EmptyResult;
@@ -233,4 +233,24 @@ fn test_from_impls() {
     } else {
         panic!("Incorrect error variant for DataCleaningError");
     }
+}
+
+#[test]
+fn test_cpdag_and_brcd_arms() {
+    use deep_causality_discovery::{BrcdLoadError, CpdagError};
+
+    // CpdagError: Display, source (None), From.
+    let cpdag = CdlError::from(CpdagError::MissingHeader);
+    assert!(matches!(cpdag, CdlError::CpdagError(_)));
+    assert!(cpdag.to_string().contains("Step [CPDAG Loading] failed"));
+    assert!(cpdag.source().is_some());
+
+    // BrcdLoadError: Display, source, From.
+    let brcd = CdlError::from(BrcdLoadError::DimensionMismatch("vars".into()));
+    assert!(matches!(brcd, CdlError::BrcdLoadError(_)));
+    assert!(
+        brcd.to_string()
+            .contains("Step [BRCD Input Loading] failed")
+    );
+    assert!(brcd.source().is_some());
 }

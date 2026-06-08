@@ -2,8 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{AnalyzeConfig, AnalyzeError, FinalizeError};
-use deep_causality_algorithms::surd::SurdResult;
+use crate::{AnalyzeError, FinalizeError};
 use std::fmt::Display;
 
 /// A wrapper struct holding the results of an analysis as a vector of strings.
@@ -28,17 +27,23 @@ impl Display for ProcessFormattedResult {
 
 /// Defines the contract for analyzing the raw results of a causal discovery algorithm.
 ///
-/// Implementors of this trait translate the numerical results (e.g., from `SurdResult`)
-/// into a structured, human-interpretable analysis based on a given configuration.
+/// Each algorithm has its own analyzer, typed to its own result and configuration
+/// via the associated [`Input`](ProcessResultAnalyzer::Input) and
+/// [`Config`](ProcessResultAnalyzer::Config) types. This keeps the SURD and BRCD
+/// analyzers statically distinct while both produce a common [`ProcessAnalysis`]
+/// the formatter can render uniformly.
 pub trait ProcessResultAnalyzer<T> {
-    /// Analyzes the raw causal discovery results.
+    /// The concrete discovery result this analyzer interprets (e.g. `SurdResult<T>`).
+    type Input;
+    /// The configuration that guides the interpretation (e.g. `SurdAnalyzeConfig`).
+    type Config;
+
+    /// Analyzes the raw causal discovery result into a human-readable analysis.
     ///
     /// # Arguments
     ///
-    /// * `surd_result` - A reference to the `SurdResult<T>` output from the
-    ///   discovery phase.
-    /// * `config` - An `AnalyzeConfig` containing thresholds and settings that guide
-    ///   the interpretation of the results (e.g., what constitutes a "strong" influence).
+    /// * `input` - A reference to the algorithm's result.
+    /// * `config` - The configuration guiding the interpretation.
     ///
     /// # Returns
     ///
@@ -50,8 +55,8 @@ pub trait ProcessResultAnalyzer<T> {
     /// Returns an `AnalyzeError` if the analysis cannot be completed.
     fn analyze(
         &self,
-        surd_result: &SurdResult<T>,
-        config: &AnalyzeConfig,
+        input: &Self::Input,
+        config: &Self::Config,
     ) -> Result<ProcessAnalysis, AnalyzeError>;
 }
 

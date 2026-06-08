@@ -14,7 +14,9 @@ Causal Discovery Language (CDL) pipeline.
 | SURD            | Decomposing causal structure (Redundant/Unique/Synergistic + Leak)    | `cargo run -p causal_discovery_examples --example example_surd`          |
 | mRMR            | Minimum-Redundancy Maximum-Relevance feature selection                | `cargo run -p causal_discovery_examples --example example_mrmr`          |
 | mRMR (CDL)      | mRMR over data with missing values via the `Option<f64>` cleaner path | `cargo run -p causal_discovery_examples --example example_mrmr_cdl`      |
-| CDL Pipeline    | Full discovery pipeline: load -> clean -> mRMR -> SURD -> analyze     | `cargo run -p causal_discovery_examples --example example_discovery`     |
+| CDL (SURD)      | Full SURD pipeline: load -> clean -> mRMR -> SURD -> analyze          | `cargo run -p causal_discovery_examples --example example_surd_discovery`     |
+| CDL (BRCD)      | BRCD root-cause ranking with a supplied CPDAG (real Sock Shop data)  | `cargo run -p causal_discovery_examples --example example_brcd_discovery`     |
+| CDL (BRCD/BOSS) | BRCD root-cause ranking, CPDAG learned from data via BOSS            | `cargo run -p causal_discovery_examples --example example_brcd_boss_discovery` |
 
 ---
 

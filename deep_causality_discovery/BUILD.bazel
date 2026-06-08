@@ -16,6 +16,7 @@ rust_library(
         "//deep_causality_num",
         "//deep_causality_algorithms",
         "//deep_causality_haft",
+        "//deep_causality_topology",
         # External dependencies
         "//thirdparty/crates:csv",
         "//thirdparty/crates:parquet",

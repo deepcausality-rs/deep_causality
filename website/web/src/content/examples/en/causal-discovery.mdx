@@ -1,7 +1,7 @@
 ---
-title: "Causal discovery: MRMR feature selection, then SURD"
+title: "Causal discovery: SURD decomposition and BRCD root-cause ranking"
 domain: Causal discovery
-summary: The Causal Discovery Language walks a CSV through load, clean, feature selection, discovery, and analysis as one monadic pipeline. Each stage is a typestate the compiler enforces in order.
+summary: The Causal Discovery Language hosts two algorithms as compile-time-isolated pipelines. A config built by CdlConfigBuilder is the single source of truth; each stage is a typestate the compiler enforces in order, reading its parameters from the config.
 order: 4
 category: foundations
 crates:
@@ -13,92 +13,116 @@ further:
     href: /docs/concepts/algorithms/
 ---
 
-The full example lives at [`causal_discovery_examples`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_discovery_examples).
+The full examples live at [`causal_discovery_examples`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_discovery_examples).
 
-The Causal Discovery Language (CDL) is a typestate DSL wrapped in a monad that encodes an end-to-end pipeline:
-raw CSV in, causal analysis, and a ranked causal report out.
+The Causal Discovery Language (CDL) is a typestate DSL wrapped in a monad. It hosts two discovery algorithms as
+**compile-time-isolated lineages** that converge on a shared analyze/finalize tail:
 
-The CDL enforces stage order at compile time; the monad sequences the stages and short-circuits on the first error.
-You cannot run discovery before selecting features, because the method that runs discovery
-only exists on the typestate that has features selected.
+- **SURD** decomposes how a set of source variables drive a target (synergistic / unique / redundant), from one dataset.
+- **BRCD** ranks which variable's mechanism changed between a *normal* and an *anomalous* regime, given a causal graph.
 
-## The pipeline
+A config built by `CdlConfigBuilder` is the single source of truth: it enforces required fields at compile time and
+checks the data files exist at build time. The pipeline stages then read everything from the config, so the chain is
+parameterless and reads top to bottom. The monad sequences the stages and short-circuits on the first error.
+
+## The SURD pipeline
 
 ```rust
 use deep_causality_discovery::*;
 
 fn main() {
-    // A CSV with columns: s1, s2, s3, target.
-    let file_path = "./test_data.csv";
-    let target_index = 3; // the target column
+    // 1. Build the run config (the single source of truth).
+    //    A CSV with columns s1, s2, s3, target; target is column 3.
+    let config = CdlConfigBuilder::build_surd_config::<f64>()
+        .with_path("./test_data.csv")
+        .with_target_index(3)
+        .with_num_features(3)                                   // MRMR keeps 3 features
+        .with_max_order(MaxOrder::Max)                          // SURD interaction order
+        .with_analyze(SurdAnalyzeConfig::new(0.01, 0.01, 0.01)) // strength thresholds
+        .build()
+        .expect("valid SURD config (file exists)");
 
-    let result_effect = CdlBuilder::build()
-        // Load the data with an inline config.
-        .bind(|cdl| cdl.load_data(&file_path, target_index, vec![]))
-
-        // Clean it: drop rows with missing values.
-        .bind(|cdl| cdl.clean_data(OptionNoneDataCleaner))
-
-        // Select the top 3 features by MRMR, scored against the target.
-        .bind(|cdl| {
-        cdl.feature_select(|tensor| mrmr_features_selector(
-                tensor,
-                3,
-                target_index)
-           )
-        })
-
-        // Discover the causal structure with SURD.
-        .bind(|cdl| {
-            cdl.causal_discovery(|tensor| {
-                surd_states_cdl(tensor, MaxOrder::Max).map_err(Into::into)
-            })
-        })
-        // Analyze the result.
-        .bind(|cdl| cdl.analyze())
-        // Then format and finalize.
-        .bind(|cdl| cdl.finalize());
+    // 2. Run the SURD lineage. Every stage reads its parameters from the config.
+    let result_effect = CdlBuilder::build_surd(&config)
+        .surd_load_input()                  // load the CSV into a tensor
+        .clean_data(OptionNoneDataCleaner)  // drop rows with missing values
+        .feature_select()                   // MRMR(num_features, target) from config
+        .surd_discover()                    // surd_states_cdl(max_order) from config
+        .surd_analyze()                     // rank contributions against the thresholds
+        .finalize();
 
     result_effect.print_results();
 }
 ```
 
-[`discovery/main.rs:14`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_discovery_examples/discovery/main.rs#L14) onward.
+[`cdl/surd_discovery/main.rs`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_discovery_examples/cdl/surd_discovery/main.rs).
 
-Each `bind` takes the pipeline in one typestate and returns it in the next. The closure body is the only place you supply a strategy;
-everything else is fixed by the type.
+`build_surd_config::<f64>()` starts a staged builder; `build()` only compiles once every required field is set, then
+verifies the file exists. `build_surd(&config)` seeds the pipeline, and each `.stage()` advances the typestate. The
+method that runs discovery only exists on the typestate that has features selected, so calling it early is a compile
+error, not a runtime one.
 
-## What each stage does
+## What each SURD stage does
 
-`load_data` reads the CSV into a tensor and records which column is the target. The third argument is a column filter; an empty `vec![]` keeps every column. For a file that needs a header map or a custom delimiter, `load_data_with_config` takes an explicit configuration instead.
+`surd_load_input` reads the CSV (path, target index, and column filter all come from the config) into a tensor.
+`clean_data` takes a cleaning strategy; `OptionNoneDataCleaner` drops rows with a missing value, and a project that
+prefers imputation supplies its own cleaner here. `feature_select` runs MRMR (Minimum Redundancy, Maximum Relevance)
+with the config's feature count and target, keeping the chosen subset so SURD stays cheap. `surd_discover` runs SURD with
+the config's `MaxOrder`. `surd_analyze` ranks each contribution against the thresholds; `finalize` packages the report;
+`print_results` writes it to stdout.
 
-`clean_data` takes a cleaning strategy. `OptionNoneDataCleaner` drops rows that carry a missing value. The strategy is a parameter, so a project that prefers imputation supplies its own cleaner here without touching the rest of the pipeline.
+## The BRCD pipeline
 
-`feature_select` runs MRMR (Minimum Redundancy, Maximum Relevance). `mrmr_features_selector(tensor, 3, target_index)` keeps the three features that carry the most information about the target while overlapping the least with each other. Feature selection before discovery keeps the combinatorics tractable; SURD over every raw column is expensive, SURD over three chosen features is cheap.
+BRCD needs two aligned datasets (a normal and an anomalous window) and a causal graph over the variables. The graph is
+supplied as a CPDAG, or learned from the normal data via BOSS when none is given.
 
-`causal_discovery` runs SURD (Synergistic, Unique, Redundant Decomposition). `MaxOrder::Max` tells it to compute interactions up to the highest order the feature set allows, so synergies between features are not missed. The `map_err(Into::into)` lifts the algorithm's error type into the pipeline's error channel.
+```rust
+use deep_causality_discovery::*;
 
-`analyze` reads the SURD decomposition and ranks each causal contribution. `finalize` formats the ranked result for output. `print_results` writes the report to stdout.
+let config = CdlConfigBuilder::build_brcd_config()
+    .with_normal_path("./normal.csv")
+    .with_anomalous_path("./anomalous.csv")
+    .with_brcd_config(BrcdConfig::<f64>::continuous(0))
+    .with_cpdag_path("./cpdag.csv")  // optional; omit to learn the graph via BOSS
+    .build()
+    .expect("data files exist");
+
+CdlBuilder::build_brcd(&config)
+    .brcd_load_input()  // loads both datasets (+ CPDAG) inside the pipeline
+    .brcd_discover()
+    .brcd_analyze()
+    .finalize()
+    .print_results();
+```
+
+The two BRCD examples run on a committed real-world case from the RCAEval Sock Shop benchmark
+([`cdl/brcd_discovery`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_discovery_examples/cdl/brcd_discovery/main.rs)
+with a supplied CPDAG, and `cdl/brcd_boss_discovery` with a BOSS-learned graph). Both rank `shipping_latency` as the top
+root cause, and the supplied-CPDAG run reproduces the reference ranking exactly.
 
 ## Run it
 
 ```bash
 git clone https://github.com/deepcausality-rs/deep_causality
 cd deep_causality
-cargo run --release -p causal_discovery_examples --example example_discovery
+cargo run --release -p causal_discovery_examples --example example_surd_discovery
+cargo run --release -p causal_discovery_examples --example example_brcd_discovery
+cargo run --release -p causal_discovery_examples --example example_brcd_boss_discovery
 ```
 
-The example ships with a small synthetic CSV where `s2` tracks the target closely and `s1`, `s3` track it loosely.
-Expect MRMR to rank `s2` first and SURD to report it as the dominant causal contributor.
+The SURD example ships a small synthetic CSV where `s2` tracks the target closely and `s1`, `s3` track it loosely; expect
+MRMR to favor `s2` and SURD to report it as the dominant contributor. The BRCD examples load the real Sock Shop data from
+the crate's `data/` folder (resolved via `CARGO_MANIFEST_DIR`, so they run from any machine).
 
 ## Where to take it next
 
-Point `load_data` at your own CSV and set `target_index` to your label column; the pipeline does not change.
-Raise or lower the feature count in `mrmr_features_selector` to trade breadth for speed.
-Swap `OptionNoneDataCleaner` for an imputing cleaner when dropping rows loses too much data.
-The output of this pipeline feeds the next layer of the stack: the discovered structure becomes the rules you encode as a causal model.
+Point the SURD config at your own CSV and set `with_target_index` to your label column; the pipeline does not change.
+Raise or lower `with_num_features` to trade breadth for speed. For BRCD, point the config at your two regimes and either
+supply a domain graph as a CPDAG or let BOSS learn it. The output of either pipeline feeds the next layer of the stack:
+the discovered structure becomes the rules you encode as a causal model.
 
 ## Why this is the first layer
 
-Every causal model starts with a structure. You either know it from domain knowledge or you discover it from data.
-CDL is the discovery path that delivers a report about the causal structure you can act on.
+Every causal model starts with a structure. You either know it from domain knowledge or you discover it from data. CDL is
+the discovery path: SURD tells you how variables drive a target, and BRCD tells you which variable broke, both as a
+report you can act on.

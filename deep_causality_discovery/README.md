@@ -22,69 +22,49 @@
 ## Introduction
 
 `deep_causality_discovery` is a Rust crate that provides a Causal Discovery Language (CDL) for the DeepCausality
-project. It offers a powerful, modular, and type-safe pipeline to move from raw observational data to actionable causal
-insights. By abstracting complex statistical and algorithmic steps, it enables users to define and execute causal
-discovery workflows with ease, ultimately informing the construction of causal models.
+project. It offers a modular, type-safe pipeline to move from raw observational data to actionable causal insights. By
+abstracting the statistical and algorithmic steps, it lets you define and run causal discovery workflows that ultimately
+inform the construction of causal models.
 
-## Workflow 
+## Algorithms
 
-The core of the CDL is a builder pattern that uses Rust's typestate pattern.
-This means the pipeline's state is encoded in the type system, which guarantees
-at compile-time that the steps are executed in a valid sequence.
+CDL hosts two discovery algorithms as peer pipelines:
 
-The workflow consists of the following sequential stages:
+* **SURD** (Synergistic, Unique, Redundant Decomposition): an information-theoretic decomposition of how a set of source
+  variables drive a target, computed from a single dataset.
+* **BRCD** (Bayesian Root-Cause Discovery): ranks the variables whose conditional mechanism changed between a *normal*
+  and an *anomalous* regime, given a causal graph over the variables. The graph can be supplied as a CPDAG, or learned
+  from the normal data via BOSS when none is given.
 
-1. Configuration (`CdlConfig`):
-  * The entire pipeline is configured using the CdlConfig struct.
-  * This struct uses a builder pattern (with_* methods) to set up
-    configurations for each stage, such as data loading, feature selection,
-    the discovery algorithm, and analysis thresholds.
+## Workflow
 
-2. Initialization (`CDL<NoData>`):
-  * The pipeline starts in the NoData state, created via CDL::new() or
-    CDL::with_config(config).
+The CDL is a builder over Rust's typestate pattern: the pipeline's state is encoded in the type system, so the compiler
+guarantees the stages run in a valid order. The two algorithms are **compile-time-isolated lineages** that converge on a
+shared analyze/finalize tail. Calling a BRCD stage on a SURD pipeline (or the reverse) does not compile.
 
-3. Data Loading (`load_data`):
-  * Transition: NoData -> WithData
-  * Action: Loads data from a source (e.g., CSV, Parquet) into a
-    CausalTensor<f64>.
-  * Implementations: CsvDataLoader, ParquetDataLoader.
+### 1. Build the run config (the single source of truth)
 
-4. Data Cleaning (`clean_data`, Optional):
-  * Transition: WithData -> WithCleanedData
-  * Action: Explicitly cleans data.
-  * Implementation: `OptionNoneDataCleaner` (converts `NaN` to `None`).
+`CdlConfigBuilder` is a staged typestate builder. Required fields are enforced at compile time (`build()` only exists
+once they are all set), and `build()` additionally verifies that the referenced files exist:
 
-5. Feature Selection (`feature_select`):
-  * Transition: WithData or WithCleanedData -> WithFeatures
-  * Action: Selects relevant features.
-  * Implementation: MRMR Feature Selector.
+* `CdlConfigBuilder::build_surd_config::<T>()` → `SurdLoaderConfig<T>`: the dataset path, target index, MRMR feature
+  count, max interaction order, and analysis thresholds (optional: exclude indices, CSV options).
+* `CdlConfigBuilder::build_brcd_config()` → `BrcdLoaderConfig<T>`: the normal-dataset path, anomalous-dataset path, and
+  the reused algorithm `BrcdConfig<T>` (optional: CPDAG path, CSV options). No CPDAG path means the structure is learned
+  via BOSS.
 
-6. Causal Discovery (`causal_discovery`):
-  * Transition: WithFeatures -> WithCausalResults
-  * Action: Executes the core causal discovery algorithm on the selected
-    features.
-  * Implementation: SurdCausalDiscovery, which uses the surd_states_cdl
-    algorithm to decompose causal influences into Synergistic, Unique, and
-    Redundant (SURD) components. The output is a SurdResult<f64>.
+### 2. Run a lineage
 
-7. Analysis (`analyze`):
-  * Transition: WithCausalResults -> WithAnalysis
-  * Action: Interprets the raw numerical output from the discovery algorithm
-    into a human-readable analysis. It uses thresholds from AnalyzeConfig to
-    classify the strength of causal influences.
-  * Implementation: SurdResultAnalyzer, which generates a report with
-    recommendations (e.g., "Strong unique influence... Recommended: Direct
-    edge in CausaloidGraph").
+`CdlBuilder::build_surd(&cfg)` / `CdlBuilder::build_brcd(&cfg)` seed the pipeline with the config. Every stage reads its
+parameters from the config, so the chain itself is parameterless:
 
-8. Finalization (`finalize`):
-  * Transition: WithAnalysis -> Finalized
-  * Action: Formats the analysis report into a final output string.
-  * Implementation: ConsoleFormatter, which prepares the text for printing.
+* **SURD**: `surd_load_input → clean_data → feature_select → surd_discover → surd_analyze → finalize`
+* **BRCD**: `brcd_load_input → brcd_discover → brcd_analyze → finalize`
 
-9. Report (`print_results`):
-  * The `print_results()` method is called on the final `CdlEffect` to display
-    errors, warnings, or the successful analysis to the console.
+Each stage is a method on the pipeline effect, so the chain reads top to bottom with no per-line wrapper. The `CdlEffect`
+monad short-circuits on the first error and threads warnings through; `print_results()` renders the final `CdlReport`
+(or the error). The discovery result is carried as a `CdlDiscoveryOutcome` (`Surd` or `Brcd`) and the report's `Display`
+renders the matching section.
 
 ## Installation
 
@@ -96,73 +76,80 @@ cargo add deep_causality_discovery
 
 ## Usage
 
-Here's a basic example demonstrating how to use the CDL pipeline to discover causal relationships from a CSV file:
+### SURD: information-theoretic decomposition
 
 ```rust
 use deep_causality_discovery::*;
-use std::{fs::File, io::Write};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // 1. Prepare test data
-    let csv_data = "s1,s2,s3,target\n1.0,2.0,3.0,1.5\n2.0,4.1,6.0,3.6\n3.0,6.2,9.0,5.4\n4.0,8.1,12.0,7.6";
-    let file_path = "./test_data.csv";
-    let mut file = File::create(file_path)?;
-    file.write_all(csv_data.as_bytes())?;
-    
-    let target_index = 3;
+    // A CSV with columns: s1, s2, s3, target.
+    let config = CdlConfigBuilder::build_surd_config::<f64>()
+        .with_path("./data.csv")
+        .with_target_index(3)
+        .with_num_features(3)
+        .with_max_order(MaxOrder::Max)
+        .with_analyze(SurdAnalyzeConfig::new(0.01, 0.01, 0.01))
+        .build()?; // compile-checked fields + file-exists check
 
-    // 2. Run the CDL pipeline (Monadic Flow)
-    let result_effect = CdlBuilder::build()
-        // Load Data (implicitly creates Config)
-        .bind(|cdl| cdl.load_data(file_path, target_index, vec![]))
-        // Explicitly Clean Data (Optional but recommended)
-        .bind(|cdl| cdl.clean_data(OptionNoneDataCleaner))
-        // Feature Selection
-        .bind(|cdl| {
-            cdl.feature_select(|tensor| {
-                 mrmr_features_selector(tensor, 3, target_index)
-            })
-        })
-        // Causal Discovery
-        .bind(|cdl| {
-            cdl.causal_discovery(|tensor| {
-                surd_states_cdl(tensor, MaxOrder::Max).map_err(Into::into)
-            })
-        })
-        // Analyze & Finalize
-        .bind(|cdl| cdl.analyze())
-        .bind(|cdl| cdl.finalize());
+    CdlBuilder::build_surd(&config)
+        .surd_load_input()
+        .clean_data(OptionNoneDataCleaner)
+        .feature_select() // MRMR, using the config's feature count + target
+        .surd_discover()  // SURD-states, using the config's max order
+        .surd_analyze()   // using the config's thresholds
+        .finalize()
+        .print_results();
 
-    // 3. Output results
-    result_effect.print_results();
-
-    // 4. Cleanup
-    std::fs::remove_file(file_path)?;
     Ok(())
 }
 ```
 
+### BRCD: root-cause ranking from two regimes
+
+```rust
+use deep_causality_discovery::*;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = CdlConfigBuilder::build_brcd_config()
+        .with_normal_path("./normal.csv")
+        .with_anomalous_path("./anomalous.csv")
+        .with_brcd_config(BrcdConfig::<f64>::continuous(0))
+        .with_cpdag_path("./cpdag.csv") // optional; omit to learn the graph via BOSS
+        .build()?;
+
+    CdlBuilder::build_brcd(&config)
+        .brcd_load_input() // loads both datasets (+ CPDAG) inside the pipeline
+        .brcd_discover()
+        .brcd_analyze()
+        .finalize()
+        .print_results();
+
+    Ok(())
+}
+```
+
+The CPDAG file is the typed-endpoint CSV format `load_cpdag_csv` / `save_cpdag_csv` read and write: a `# … vertices=N`
+header followed by `src,dst,mark_src,mark_dst` rows, where each mark is `Tail`, `Arrow`, or `Circle` (`Tail,Arrow` is a
+directed arc, `Tail,Tail` an undirected edge).
+
 ## Error Handling
 
-The crate employs a comprehensive error handling strategy, defining specific error types for each stage of the CDL
-pipeline (e.g., `DataError`, `FeatureSelectError`, `CausalDiscoveryError`). This allows for precise identification and
-handling of issues, ensuring robust and reliable causal discovery workflows.
+The crate defines a specific error type for each stage of the pipeline (for example `DataLoadingError`,
+`FeatureSelectError`, `CausalDiscoveryError`, `CpdagError`, `BrcdLoadError`), all funneled into `CdlError`. This allows
+precise identification and handling of issues, and the `CdlEffect` monad short-circuits on the first error.
 
 ## From Discovery to Model: Connecting CDL to DeepCausality
 
-The `deep_causality_discovery` crate acts as a crucial bridge, transforming observational data into the foundational
-elements for building executable causal models with the DeepCausality library. The insights gained from the SURD-states
-algorithm directly inform the design of your `CausaloidGraph` and the internal logic of individual `Causaloid`s:
+The `deep_causality_discovery` crate acts as a bridge, transforming observational data into the foundational elements for
+building executable causal models with the DeepCausality library.
 
-* **Structuring the `CausaloidGraph`**: Strong **unique** influences suggest direct causal links (
-  `Causaloid(Source) -> Causaloid(Target)`). Significant **synergistic** influences indicate that multiple sources are
-  jointly required to cause an effect, guiding the creation of many-to-one connections.
-* **Defining `Causaloid` Logic**: State-dependent maps from the SURD analysis provide precise conditional logic for a
-  `Causaloid`'s `causal_fn`, allowing you to programmatically capture how causal influences vary with system states.
-* **Modeling Multi-Causal Interactions**: The detection of synergistic, unique, and redundant influences directly
-  informs the choice of `AggregateLogic` within `CausaloidCollection`s. For instance, strong synergy might map to
-  `AggregateLogic::All` (conjunction), while unique or redundant influences could suggest `AggregateLogic::Any` (
-  disjunction).
+* **SURD → `CausaloidGraph` structure and logic.** Strong **unique** influences suggest direct causal links
+  (`Causaloid(Source) -> Causaloid(Target)`). **Synergistic** influences indicate that multiple sources are jointly
+  required to cause an effect, guiding many-to-one connections and the choice of `AggregateLogic` within a
+  `CausaloidCollection` (strong synergy → `AggregateLogic::All`; unique/redundant → `AggregateLogic::Any`).
+  State-dependent maps from the SURD analysis provide conditional logic for a `Causaloid`'s `causal_fn`.
+* **BRCD → fault localization.** Given a normal and an anomalous window over a known service/dependency graph, BRCD ranks
+  which node's mechanism changed, pointing the operator at the root cause of an incident rather than the collateral.
 
 ## 👨‍💻👩‍💻 Contribution
 

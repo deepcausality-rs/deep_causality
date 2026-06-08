@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{AnalyzeConfig, AnalyzeError, Precision, ProcessAnalysis, ProcessResultAnalyzer};
+use crate::{AnalyzeError, Precision, ProcessAnalysis, ProcessResultAnalyzer, SurdAnalyzeConfig};
 use deep_causality_algorithms::surd::SurdResult;
 use deep_causality_num::{FromPrimitive, ToPrimitive};
 
@@ -15,10 +15,13 @@ use deep_causality_num::{FromPrimitive, ToPrimitive};
 pub struct SurdResultAnalyzer;
 
 impl<T: Precision + ToPrimitive> ProcessResultAnalyzer<T> for SurdResultAnalyzer {
+    type Input = SurdResult<T>;
+    type Config = SurdAnalyzeConfig;
+
     fn analyze(
         &self,
         surd_result: &SurdResult<T>,
-        config: &AnalyzeConfig,
+        config: &SurdAnalyzeConfig,
     ) -> Result<ProcessAnalysis, AnalyzeError> {
         let mut messages = Vec::new();
 

@@ -31,7 +31,7 @@ Once the axiom is set, it needs a numerical floor that the rest of the library s
 
 A project rarely starts with a finished causal model. It starts with data, and the first job is to find the structure worth running inference against. Two innovations cover the path from observations to an executable model.
 
-**6. The Causal Discovery Language.** CDL is a typestate-builder DSL that walks data through configure, load, clean, select features, discover, analyze, and finalize. The typestate enforces stage order at compile time. SURD and MRMR ship as discovery primitives. The output of the final stage is a report that describes which variables are uniquely or synergistically causal and, importantly, flags redundant variables. *See [Causal Discovery Language](/concepts/cdl/).*
+**6. The Causal Discovery Language.** CDL is a typestate-builder DSL that hosts two discovery algorithms as compile-time-isolated pipelines, driven by one explicit config. The typestate enforces stage order and algorithm isolation at compile time. SURD, MRMR, and BRCD ship as discovery primitives: SURD reports which variables are uniquely or synergistically causal (and flags redundant ones), while BRCD ranks the root cause of a regime shift across a normal and an anomalous dataset. *See [Causal Discovery Language](/concepts/cdl/).*
 
 **7. Uncertainty as a first-order type.** `Uncertain<T>` wraps a value with the distribution that produced it and uses the Sequential Probability Ratio Test for confidence-bounded decisions. `MaybeUncertain<T>` separates presence from distribution, so missing readings propagate explicitly rather than silently. *See [Uncertainty](/concepts/uncertainty/).*
 

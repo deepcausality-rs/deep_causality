@@ -6,29 +6,27 @@
 use crate::types::cdl::WithAnalysis;
 use crate::{CDL, CdlBuilder, CdlEffect, CdlReport, Precision};
 
-// After results are analyzed
+// After results are analyzed. Both lineages converge here, so `finalize` is
+// implemented once and is algorithm-neutral: it packages whatever
+// `DiscoveryOutcome` the analyze step produced into a `CdlReport`.
 impl<T: Precision> CDL<WithAnalysis<T>> {
-    /// Finalizes the pipeline and produces a CdlReport.
+    /// Finalizes the pipeline and produces a `CdlReport`.
     pub fn finalize(self) -> CdlEffect<CdlReport<T>> {
-        // Retrieve path from config
-        let path = match self.config.data_loader_config().as_ref() {
-            Some(crate::DataLoaderConfig::Csv(c)) => {
-                c.file_path().cloned().unwrap_or("Unknown CSV".to_string())
-            }
-            Some(crate::DataLoaderConfig::Parquet(c)) => c
-                .file_path()
-                .cloned()
-                .unwrap_or("Unknown Parquet".to_string()),
-            None => "Unknown Data Source".to_string(),
-        };
-
         let report = CdlReport {
-            dataset_path: path,
+            dataset_path: self.state.dataset_path,
             records_processed: self.state.records_count,
-            feature_selection: self.state.selection_result,
-            causal_analysis: self.state.surd_result,
+            feature_selection: self.state.feature_selection,
+            causal_analysis: self.state.outcome,
         };
 
         CdlBuilder::pure(report)
+    }
+}
+
+// Fluent terminal method on the effect.
+impl<T: Precision> CdlEffect<CDL<WithAnalysis<T>>> {
+    /// See [`CDL::<WithAnalysis<T>>::finalize`].
+    pub fn finalize(self) -> CdlEffect<CdlReport<T>> {
+        self.and_then(|cdl| cdl.finalize())
     }
 }
