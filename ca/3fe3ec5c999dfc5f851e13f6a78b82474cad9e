@@ -1,0 +1,19 @@
+AGENTS.md
+  s_03d2bca7be36e7::t_7f754edd432898 213-290
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "ca3fe3ec5c999dfc5f851e13f6a78b82474cad9e",
+  "prompts": {},
+  "sessions": {
+    "s_03d2bca7be36e7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d0b527db-2691-41bf-93d2-561649a80f8f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
