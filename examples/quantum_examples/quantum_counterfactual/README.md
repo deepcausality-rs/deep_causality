@@ -5,7 +5,7 @@ This example demonstrates quantum error correction via "time-travel debugging" -
 ## How to Run
 
 ```bash
-cargo run -p physics_examples --example quantum_counterfactual
+cargo run -p quantum_examples --example quantum_counterfactual
 ```
 
 ---

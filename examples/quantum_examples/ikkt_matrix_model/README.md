@@ -5,7 +5,7 @@ This example demonstrates the IKKT matrix model - a candidate for non-perturbati
 ## How to Run
 
 ```bash
-cargo run -p physics_examples --example ikkt_matrix_model
+cargo run -p quantum_examples --example ikkt_matrix_model
 ```
 
 ---

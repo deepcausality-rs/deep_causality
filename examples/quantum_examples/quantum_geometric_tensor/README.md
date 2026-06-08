@@ -5,7 +5,7 @@ Demonstrates the **Quantum Geometric Tensor (QGT)** and its connection to observ
 ## How to Run
 
 ```bash
-cargo run -p physics_examples --example quantum_geometric_tensor
+cargo run -p quantum_examples --example quantum_geometric_tensor
 ```
 
 ---

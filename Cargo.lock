@@ -1142,6 +1142,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "quantum_examples"
+version = "0.1.0"
+dependencies = [
+ "deep_causality_calculus",
+ "deep_causality_core",
+ "deep_causality_multivector",
+ "deep_causality_num",
+ "deep_causality_physics",
+ "deep_causality_tensor",
+]
+
+[[package]]
 name = "quick-error"
 version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -79,7 +79,7 @@ The codebase already has small demonstrations of `intervene` in:
   stateless and stateful demos.
 * [`avionics_examples/geometric_tcas`](../avionics_examples/geometric_tcas),
   where pilot override is modelled as intervention.
-* [`material_examples/structural_health_monitor`](../material_examples/examples/structural_health_monitor),
+* [`material_examples/structural_health_monitor`](../material_examples/structural_health_monitor),
   which asks what would have happened without the observed crack.
 
 Those are the *what is `intervene`* examples. The four here are the

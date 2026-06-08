@@ -59,10 +59,6 @@ name = "hkt_multivector_examples"
 path = "algebra/hkt_multivector.rs"
 
 [[example]]
-name = "hopf_multivector_examples"
-path = "algebra/hopf_fibration_multivector.rs"
-
-[[example]]
 name = "maxwell_multivector_examples"
 path = "algebra/maxwell_multivector.rs"
 

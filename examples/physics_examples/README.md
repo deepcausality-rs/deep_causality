@@ -23,9 +23,6 @@ cargo run -p physics_examples --example <example_name>
 | [grmhd_example](grmhd/README.md) | Relativity | General Relativistic Magnetohydrodynamics |
 | [geometric_tilt_example](geometric_tilt/README.md) | Robotics/IMU | Sensor fusion with Geometric Algebra |
 | [multi_physics_pipeline](multi_physics_pipeline/README.md) | Particle Physics | QFT → Hadronization → Hydro → Detection |
-| [quantum_counterfactual](quantum_counterfactual/README.md) | Quantum | Error correction via state rewind |
-| [quantum_geometric_tensor](quantum_geometric_tensor/README.md) | Condensed Matter | QGT, quantum metric, and flat-band transport (TBG) |
-| [ikkt_matrix_model](ikkt_matrix_model/README.md) | Quantum Gravity | Emergent spacetime from matrix dynamics |
 | [gravitational_wave](gravitational_wave/README.md) | Relativity | Regge Calculus on simplicial mesh |
 
 > **See also:** [medicine_examples](../medicine_examples/README.md) for biophysics examples (protein folding, etc.)

@@ -40,10 +40,6 @@ name = "event_horizon_probe"
 path = "event_horizon_probe/main.rs"
 
 [[example]]
-name = "gauge_electroweak"
-path = "gauge_electroweak/main.rs"
-
-[[example]]
 name = "gauge_gr"
 path = "gauge_gr/main.rs"
 
@@ -72,10 +68,6 @@ name = "grmhd_example"
 path = "grmhd/main.rs"
 
 [[example]]
-name = "ikkt_matrix_model"
-path = "ikkt_matrix_model/main.rs"
-
-[[example]]
 name = "laser_resonator_stability"
 path = "laser_resonator_stability/main.rs"
 
@@ -86,14 +78,6 @@ path = "maxwell/main.rs"
 [[example]]
 name = "multi_physics_pipeline"
 path = "multi_physics_pipeline/main.rs"
-
-[[example]]
-name = "quantum_counterfactual"
-path = "quantum_counterfactual/main.rs"
-
-[[example]]
-name = "quantum_geometric_tensor"
-path = "quantum_geometric_tensor/main.rs"
 
 
 [lints]

@@ -17,7 +17,7 @@ This accounts for:
 ## Running
 
 ```bash
-RUSTFLAGS='-C target-cpu=native' cargo run --example gauge_electroweak -p physics_examples --release
+RUSTFLAGS='-C target-cpu=native' cargo run --example gauge_electroweak -p quantum_examples --release
 ```
 
 ## The Four Stages Explained

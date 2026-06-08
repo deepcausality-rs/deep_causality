@@ -11,23 +11,17 @@ path = "no_lib.rs"
 
 [dependencies]
 deep_causality_core = { path = "../../deep_causality_core" }
-deep_causality_calculus = { path = "../../deep_causality_calculus" }
 deep_causality_multivector = { path = "../../deep_causality_multivector" }
 deep_causality_topology = { path = "../../deep_causality_topology" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
-deep_causality_num = { path = "../../deep_causality_num" }
 
 [[example]]
 name = "hyperlens_example"
-path = "examples/hyperlens/main.rs"
-
-[[example]]
-name = "topological_insulator_example"
-path = "examples/topological_insulator/main.rs"
+path = "hyperlens/main.rs"
 
 [[example]]
 name = "structural_health_monitor_example"
-path = "examples/structural_health_monitor/main.rs"
+path = "structural_health_monitor/main.rs"
 
 [lints]
 workspace = true

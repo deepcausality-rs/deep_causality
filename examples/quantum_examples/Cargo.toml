@@ -1,0 +1,45 @@
+[package]
+name = "quantum_examples"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "no_lib.rs"
+
+[dependencies]
+deep_causality_core = { path = "../../deep_causality_core" }
+deep_causality_calculus = { path = "../../deep_causality_calculus" }
+deep_causality_multivector = { path = "../../deep_causality_multivector" }
+deep_causality_num = { path = "../../deep_causality_num" }
+deep_causality_physics = { path = "../../deep_causality_physics" }
+deep_causality_tensor = { path = "../../deep_causality_tensor" }
+
+[[example]]
+name = "quantum_counterfactual"
+path = "quantum_counterfactual/main.rs"
+
+[[example]]
+name = "quantum_geometric_tensor"
+path = "quantum_geometric_tensor/main.rs"
+
+[[example]]
+name = "gauge_electroweak"
+path = "gauge_electroweak/main.rs"
+
+[[example]]
+name = "topological_insulator"
+path = "topological_insulator/main.rs"
+
+[[example]]
+name = "hopf_fibration_multivector"
+path = "hopf_fibration_multivector/main.rs"
+
+[[example]]
+name = "ikkt_matrix_model"
+path = "ikkt_matrix_model/main.rs"
+
+[lints]
+workspace = true

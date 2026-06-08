@@ -29,7 +29,7 @@ $$ H(k) = \sin(k_x)\sigma_x + \sin(k_y)\sigma_y + (u + \cos(k_x) + \cos(k_y))\si
 ## Run Command
 
 ```bash
-cargo run -p material_examples --example topological_insulator_example
+cargo run -p quantum_examples --example topological_insulator
 ```
 
 ## Expected Output
