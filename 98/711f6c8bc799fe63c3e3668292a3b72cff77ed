@@ -1,0 +1,25 @@
+deep_causality_num/Cargo.toml
+  s_52e6d9817e5bf8::t_e451ce4efd34fd 3
+deep_causality_haft/Cargo.toml
+  s_52e6d9817e5bf8::t_23ccc41cf9cb28 3
+Cargo.lock
+  ai_agent 511,534
+deep_causality_calculus/Cargo.toml
+  s_52e6d9817e5bf8::t_b9f5380eacdbbb 36,41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "98711f6c8bc799fe63c3e3668292a3b72cff77ed",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
