@@ -29,35 +29,31 @@ The chain advances one tick at a time. Each `bind(forward_traffic)` call reads t
 
 ```rust
 fn run_closed_loop() -> NetworkProcess<SwitchId> {
-    let mut process = initial_process();
-    for _ in 0..N_TICKS {
-        process = process.bind(forward_traffic);
-
-        let plan = process.context.clone().expect("NetworkPlan present");
-        let active = match &process.value {
-            EffectValue::Value(v) => *v,
-            _ => continue,
-        };
-        let last_delivered = process
-            .state
-            .delivered_per_tick
-            .last()
-            .copied()
-            .unwrap_or(0);
-
-        if last_delivered == 0 && active == plan.primary_id {
-            process.state.failover_count += 1;
-            if process.state.failover_at.is_none() {
-                process.state.failover_at = Some(process.state.tick);
-            }
-            process = process.intervene(STANDBY_SWITCH);
-        }
-    }
-    process
+    CausalFlow::from(initial_process())
+        .iterate_n(N_TICKS as usize, |tick| {
+            tick.bind(forward_traffic).branch_with(
+                |active, state, ctx| {
+                    let last_delivered = state.delivered_per_tick.last().copied().unwrap_or(0);
+                    last_delivered == 0 && *active == ctx.expect("NetworkPlan present").primary_id
+                },
+                |hot| {
+                    hot.update_state(|mut state, _active| {
+                        state.failover_count += 1;
+                        if state.failover_at.is_none() {
+                            state.failover_at = Some(state.tick);
+                        }
+                        state
+                    })
+                    .intervene(STANDBY_SWITCH)
+                },
+                |cold| cold,
+            )
+        })
+        .into_process()
 }
 ```
 
-[`main.rs:75`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_intervention_examples/corrective_network_failover/main.rs#L75). The monitor's decision rule reads three quantities. The current active switch (from the value channel), the last tick's delivered count (from the state), and the plan's primary id (from the context). The intervention fires under one condition: the last tick delivered zero and the active switch is still the primary. The intervention replaces the active switch id with the standby. The next `bind(forward_traffic)` call routes through the standby's health row in the failure schedule, and delivery resumes.
+[`main.rs:77`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_intervention_examples/corrective_network_failover/main.rs#L77). `iterate_n` runs the tick `N_TICKS` times; each one advances with `bind(forward_traffic)` and then `branch_with` makes the failover decision. The predicate reads three quantities: the current active switch (from the value channel), the last tick's delivered count (from the state), and the plan's primary id (from the context). The hot arm fires under one condition: the last tick delivered zero and the active switch is still the primary. It records the failover in the state and `.intervene(STANDBY_SWITCH)` replaces the active switch id with the standby. The cold arm passes the tick through unchanged. The next tick's `bind(forward_traffic)` routes through the standby's health row in the failure schedule, and delivery resumes.
 
 The detection latency is exactly one tick. The tick on which the primary fails contributes a zero-delivery sample. The monitor sees that sample, fires the intervention, and the following tick is the first one served by the standby.
 

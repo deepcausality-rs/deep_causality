@@ -15,16 +15,16 @@ further:
     href: /docs/concepts/effect-propagation-process/
 ---
 
-The full crate lives at [`event_horizon_probe`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples/event_horizon_probe). A 1000 kg probe approaches a supermassive black hole modeled on Sagittarius A* (4 million solar masses). The chain runs the same monadic shape at every distance; what changes is the kernel the bind closure dispatches to.
+The full crate lives at [`event_horizon_probe`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples/event_horizon_probe). A 1000 kg probe approaches a supermassive black hole modeled on Sagittarius A* (4 million solar masses). The chain runs the same `CausalFlow` shape at every distance; what changes is the kernel the step closure dispatches to.
 
-This is the canonical demonstration of *regime switching* on top of monadic effect propagation.
+This is the canonical demonstration of *regime switching* on top of a stateful `CausalFlow`.
 
 ## The setup
 
 A `ProbeState` carries the probe's distance, radial velocity, mass, and a status string. The black hole's mass goes into the chain as the context value.
 
 ```rust
-use deep_causality_core::{CausalEffectPropagationProcess, EffectValue};
+use deep_causality_core::CausalFlow;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{Length, Mass, escape_velocity, schwarzschild_radius};
 
@@ -40,48 +40,46 @@ let initial_state = ProbeState {
 };
 ```
 
-[`main.rs:24`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/physics_examples/event_horizon_probe/main.rs#L24). `schwarzschild_radius` returns a `PropagatingEffect`; the `.value().into_value()` pattern unwraps it. The probe starts at 100 Schwarzschild radii out.
+[`main.rs:41`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/physics_examples/event_horizon_probe/main.rs#L41). `schwarzschild_radius` returns a `PropagatingEffect`; the `.value().into_value()` pattern unwraps it. The probe starts at 100 Schwarzschild radii out.
 
 ## The regime gate
 
 For each simulation step the chain checks the distance ratio and dispatches.
 
 ```rust
-let next_state_effect = CausalEffectPropagationProcess::with_state(
-    CausalEffectPropagationProcess::pure(()),
-    current_state.clone(),
-    Some(black_hole_mass),
-)
-.bind(|_, state, ctx: Option<Mass>| {
-    let bh_mass = ctx.unwrap();
-    let r = Length::new(state.distance).unwrap();
+let next = CausalFlow::process(current_state.clone())
+    .context(black_hole_mass)
+    .try_step_with(|_unit, state: &ProbeState, ctx: Option<&Mass<FloatType>>| {
+        let bh_mass = *ctx.expect("context holds the BH mass");
+        let r = Length::new(state.distance).unwrap();
 
-    let v_esc_effect = escape_velocity(&bh_mass, &r);
-    let v_esc = v_esc_effect.value().clone().into_value().unwrap().value();
+        let v_esc_effect = escape_velocity(&bh_mass, &r);
+        let v_esc = v_esc_effect.value().clone().into_value().unwrap().value();
 
-    if state.distance / r_s > 10.0 {
-        // Newtonian regime: v = sqrt(2GM/r), falling
-        CausalEffectPropagationProcess::pure(ProbeState {
-            distance: state.distance * 0.5,
-            velocity: v_esc,
-            status: "Freefall (Newtonian)".to_string(),
-            mass: state.mass,
-        })
-    } else {
-        // Relativistic regime: Minkowski metric, rapidity, time dilation
-        let metric = Metric::Minkowski(4);
-        /* ... compute relativistic update ... */
-    }
-});
+        if state.distance / r_s > 10.0 {
+            // Newtonian regime: v = sqrt(2GM/r), falling
+            Ok(ProbeState {
+                distance: state.distance * 0.5,
+                velocity: v_esc,
+                status: "Freefall (Newtonian)".to_string(),
+                mass: state.mass,
+            })
+        } else {
+            // Relativistic regime: Minkowski metric, rapidity, time dilation
+            let metric = Metric::Minkowski(4);
+            /* ... compute relativistic update, return Ok(ProbeState { .. }) ... */
+        }
+    })
+    .finish();
 ```
 
-[`main.rs:65`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/physics_examples/event_horizon_probe/main.rs#L65).
+[`main.rs:90`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/physics_examples/event_horizon_probe/main.rs#L90).
 
-Two things are worth pausing on. The closure receives the value, the threaded `state` (the current `ProbeState`), and the threaded `context` (the black-hole mass). All three are propagated automatically by the monad. The branch picks the kernel; the outer chain shape never changes.
+Two things are worth pausing on. `CausalFlow::process` seeds the probe state into the flow's state channel and `.context` attaches the black-hole mass read-only; the `try_step_with` closure then receives the flow's value (unit here), the threaded `state` (the current `ProbeState`), and the threaded `context` (the black-hole mass). All three are propagated automatically by the flow. The branch picks the kernel and returns the next `ProbeState`; the outer chain shape never changes.
 
 ## Why regime switching belongs in the monad
 
-A naïve implementation would write a state machine: explicit transitions, explicit guards, explicit storage of "which regime am I in right now". The monadic version writes the regime check inline, dispatches in one expression, and lets the surrounding chain stay agnostic. If a third regime lands later (a horizon-crossing model, a Hawking-radiation correction), it is a new branch in the bind closure, not a new piece of infrastructure.
+A naïve implementation would write a state machine: explicit transitions, explicit guards, explicit storage of "which regime am I in right now". The `CausalFlow` version writes the regime check inline, dispatches in one expression, and lets the surrounding chain stay agnostic. If a third regime lands later (a horizon-crossing model, a Hawking-radiation correction), it is a new branch in the step closure, not a new piece of infrastructure.
 
 The relativistic branch reaches for `CausalMultiVector` from [`deep_causality_multivector`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_multivector). Geometric algebra lets the rapidity calculation stay coordinate-free; the Minkowski metric is selected via the `Metric::Minkowski(4)` constructor.
 
@@ -97,4 +95,4 @@ Expected output: five steps, the dispatch line printed for each, the distance ra
 
 ## Why this is a good fit
 
-Regime-dependent physics is one of those cases where the architecture matters as much as the equations. Branching inside a bind closure is type-safe, audit-logged through `EffectLog`, and short-circuits cleanly on error through the propagation chain. The library treats "switch model based on state" as the same kind of operation as "apply the next step", which is exactly what physical reasoning at extreme regimes needs.
+Regime-dependent physics is one of those cases where the architecture matters as much as the equations. Branching inside a step closure is type-safe, audit-logged through `EffectLog`, and short-circuits cleanly on error through the propagation chain. The library treats "switch model based on state" as the same kind of operation as "apply the next step", which is exactly what physical reasoning at extreme regimes needs.

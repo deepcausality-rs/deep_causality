@@ -23,20 +23,23 @@ The answer is computed by simulating Kuramoto-style synchronization on the patie
 
 ```rust
 fn run_factual(connectome: Connectome) -> PropagatingEffect<SeizureResult> {
-    build_chain(connectome).bind(simulate_seizure)
+    CausalFlow::value(connectome)
+        .map(simulate_seizure)
+        .into_effect()
 }
 
 fn run_counterfactual(
     factual: Connectome,
     resected: Connectome,
 ) -> PropagatingEffect<SeizureResult> {
-    build_chain(factual)
+    CausalFlow::value(factual)
         .intervene(resected)
-        .bind(simulate_seizure)
+        .map(simulate_seizure)
+        .into_effect()
 }
 ```
 
-[`main.rs:54`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_intervention_examples/counterfactual_resection_intervention/main.rs#L54). Two functions, identical except that the counterfactual replaces the connectome value with a modified copy before the seizure simulation runs. The intervention site is between `build_chain` (which lifts the connectome into the monad and threads it through any preprocessing) and `simulate_seizure` (the Kuramoto-style dynamics evaluator). The dynamics themselves are unchanged across candidates; only the network they run on differs.
+[`main.rs:54`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_intervention_examples/counterfactual_resection_intervention/main.rs#L54). Two functions, identical except that the counterfactual replaces the connectome value with a modified copy before the seizure simulation runs. The intervention site is between `CausalFlow::value` (which lifts the connectome into the flow) and `simulate_seizure` (the Kuramoto-style dynamics evaluator) reached via `map`. The dynamics themselves are unchanged across candidates; only the network they run on differs.
 
 ## Why this matters clinically
 
@@ -68,4 +71,4 @@ The output prints the factual run first, then the per-candidate screening with s
 
 ## Where this generalizes
 
-The shape, `build_chain(factual).intervene(modified).bind(dynamics)`, is reusable across any problem where the dynamics are well-understood but the structural input is what the analyst is choosing. Tumor resection planning, control-system tuning where the actuator topology is the design variable, ecological intervention modeling where species removal is the question. The connectome here is a stand-in for any structured input the dynamics consume.
+The shape, `CausalFlow::value(factual).intervene(modified).map(dynamics)`, is reusable across any problem where the dynamics are well-understood but the structural input is what the analyst is choosing. Tumor resection planning, control-system tuning where the actuator topology is the design variable, ecological intervention modeling where species removal is the question. The connectome here is a stand-in for any structured input the dynamics consume.

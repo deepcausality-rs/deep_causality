@@ -74,58 +74,58 @@ let initial: FlightProcess<SensorReading> = PropagatingProcess {
     logs: EffectLog::new(),
 };
 
-// Five bind steps thread the state and context through the entire monitor.
-initial
+// CausalFlow threads state and context through all five stages;
+// into_process() hands the raw process back.
+CausalFlow::from(initial)
     .bind(|v, s, c| run_sensor_collection(v, s, c, failing_airspeed))
     .bind(|v, s, c| health_fold(v, s, c, seed_estimate.clone()))
     .bind(|v, s, c| kalman_step(v, s, c))
     .bind(|v, s, c| estimate_step(v, s, c))
-    .bind(|v, s, c| run_envelope_graph(v, s, c))`,
+    .bind(|v, s, c| run_envelope_graph(v, s, c))
+    .into_process()`,
   },
   {
     slug: 'biomedical-tumor-treatment',
     domain: 'Medicine',
     headline: 'Optimize the Tumor Treating Field.',
     source: 'examples/medicine_examples/tumor_treatment/main.rs',
-    snippet: `use deep_causality_core::{CausalityError, EffectValue, PropagatingEffect};
+    snippet: `use deep_causality_core::{CausalFlow, PropagatingEffect};
 
-let effect = PropagatingEffect::pure(new_params).bind(|params, _, _| {
-    let p = match params {
-        EffectValue::Value(v) => v,
-        _ => (0.0, 0.0),
-    };
-    let score = match model::evaluate_efficacy(&tumor, p) {
-        Ok(s) => s,
-        Err(e) => return PropagatingEffect::from_error(
-            CausalityError::new(/* ... */)
-        ),
-    };
-    PropagatingEffect::pure(score)
-});
+// Start just off the degenerate θ = 0 pole, then ascend the exact
+// autodiff gradient. A non-finite gradient short-circuits the error channel.
+let start = [ft(0.1), ft(0.1)];
 
-if let EffectValue::Value(new_score) = effect.value() {
-    if *new_score > current_score { /* accept */ }
+let pipeline = CausalFlow::value(start)
+    .bind(move |p, _, _| match p.into_value() {
+        Some(s) => ascend(&efficacy, s, learning_rate, ASCENT_STEPS),
+        None => fail("no starting orientation"),
+    })
+    .into_effect();
+
+// Read the optimised orientation off the pipeline's value channel.
+if let Some(r) = pipeline.value.into_value() {
+    println!("θ={:.3}, φ={:.3} after {} steps", r.theta, r.phi, r.steps);
 }`,
   },
   {
     slug: 'physics-maxwell',
     domain: 'Physics',
-    headline: 'Maxwell field derivation as a four-step monadic chain.',
+    headline: 'Maxwell field derivation as a four-step CausalFlow chain.',
     source: 'examples/physics_examples/maxwell/main.rs',
     snippet: `use deep_causality::PropagatingEffect;
+use deep_causality_core::CausalFlow;
 use model::{MaxwellState, PlaneWaveConfig};
 
 // The initial state encodes the plane-wave configuration.
 let initial_state = MaxwellState::from_config(&config);
 
-// Four-step bind chain: potential → field → gauge check → Poynting flux.
-let result: PropagatingEffect<MaxwellState> =
-    PropagatingEffect::pure(initial_state).bind(|state, _, _| {
-        model::compute_potential(state.into_value().unwrap_or_default())
-            .bind(|s, _, _| model::compute_em_field(s.into_value().unwrap_or_default()))
-            .bind(|s, _, _| model::check_lorenz_gauge(s.into_value().unwrap_or_default()))
-            .bind(|s, _, _| model::compute_poynting_flux(s.into_value().unwrap_or_default()))
-    });
+// One CausalFlow pipeline: potential → field → gauge check → Poynting flux.
+let result: PropagatingEffect<MaxwellState> = CausalFlow::value(initial_state)
+    .bind(|s, _, _| model::compute_potential(s.into_value().unwrap_or_default()))
+    .bind(|s, _, _| model::compute_em_field(s.into_value().unwrap_or_default()))
+    .bind(|s, _, _| model::check_lorenz_gauge(s.into_value().unwrap_or_default()))
+    .bind(|s, _, _| model::compute_poynting_flux(s.into_value().unwrap_or_default()))
+    .into_effect();
 
 // Extract the final state from the propagating effect.
 let final_state = result.value.into_value().unwrap_or_default();`,
