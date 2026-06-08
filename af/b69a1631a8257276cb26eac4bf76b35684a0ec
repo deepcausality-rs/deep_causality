@@ -1,0 +1,27 @@
+deep_causality_discovery/README.md
+  s_6b39a4b06c99c9::t_2e772fa9d9aaf8 25-67,79,85-102,107-134,137-139,143-152
+website/web/src/content/examples/en/causal-discovery.mdx
+  s_6b39a4b06c99c9::t_933a1ad0ce84f8 2,4,16,18-19,21-22,24-28,34-52,58,60-63,65,67-72,74,76-77,79-96,98-101,108-110,113-115,119-122,126-128
+website/docs/src/content/docs/overview/the-problem.md
+  s_6b39a4b06c99c9::t_e36400155ad800 73
+website/docs/src/content/docs/concepts/cdl.md
+  s_6b39a4b06c99c9::t_0d6e54af915c82 12-20,23,25,29-50,52-53,55,59,62-78,92,94,100,102,108,110,114,120
+website/docs/src/content/docs/overview/innovations.md
+  s_6b39a4b06c99c9::t_15d231c5a55b60 34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "afb69a1631a8257276cb26eac4bf76b35684a0ec",
+  "prompts": {},
+  "sessions": {
+    "s_6b39a4b06c99c9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3b26866a-16f5-4d21-b0fa-8d1b21077019",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
