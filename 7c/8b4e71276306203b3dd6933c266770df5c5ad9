@@ -1,0 +1,65 @@
+examples/quantum_examples/ikkt_matrix_model/README.md
+  s_b924aec64f5f82::t_1a8442173fad0e 1-7,9-89
+  s_b924aec64f5f82::t_3db93a841f2e10 8
+examples/quantum_examples/README.md
+  s_b924aec64f5f82::t_b3351b1f73ad3c 27
+  s_b924aec64f5f82::t_fbb51d6f6bba7f 1-26,28-39
+examples/quantum_examples/gauge_electroweak/main.rs
+  s_b924aec64f5f82::t_7b34f12e517e1a 1-235
+examples/quantum_examples/no_lib.rs
+  s_b924aec64f5f82::t_7b34f12e517e1a 1-4
+examples/quantum_examples/quantum_counterfactual/README.md
+  s_b924aec64f5f82::t_c2fee0b8914abf 8
+  s_b924aec64f5f82::t_7b34f12e517e1a 1-7,9-85
+examples/quantum_examples/topological_insulator/README.md
+  s_b924aec64f5f82::t_c2fee0b8914abf 32
+  s_b924aec64f5f82::t_7b34f12e517e1a 1-31,33-54
+examples/quantum_examples/gauge_electroweak/README.md
+  s_b924aec64f5f82::t_7b34f12e517e1a 1-19,21-87
+  s_b924aec64f5f82::t_c2fee0b8914abf 20
+examples/quantum_examples/topological_insulator/model.rs
+  s_b924aec64f5f82::t_7b34f12e517e1a 1-175
+examples/README.md
+  s_b924aec64f5f82::t_ada67a65508e13 13-14
+  s_b924aec64f5f82::t_c25f9fe8eeb5b6 245
+  s_b924aec64f5f82::t_2109c553eedc6a 21
+  s_b924aec64f5f82::t_3e8a6bb1f1ad4b 277-299
+  s_b924aec64f5f82::t_e814d33e2851a0 217
+  s_b924aec64f5f82::t_942860f1a95a3f 222
+  s_b924aec64f5f82::t_d9f8dc13eed9c1 99,101,103-105,109-117,119,121-127,131-134,136
+examples/quantum_examples/topological_insulator/main.rs
+  s_b924aec64f5f82::t_7b34f12e517e1a 1-106
+examples/quantum_examples/quantum_geometric_tensor/README.md
+  s_b924aec64f5f82::t_c2fee0b8914abf 8
+  s_b924aec64f5f82::t_7b34f12e517e1a 1-7,9-91
+examples/quantum_examples/quantum_counterfactual/main.rs
+  s_b924aec64f5f82::t_7b34f12e517e1a 1-143
+examples/quantum_examples/hopf_fibration_multivector/main.rs
+  s_b924aec64f5f82::t_7b34f12e517e1a 1-53
+examples/quantum_examples/ikkt_matrix_model/main.rs
+  s_b924aec64f5f82::t_1a8442173fad0e 1-113
+examples/mathematics_examples/isomorphism/README.md
+  s_b924aec64f5f82::t_f75193113bd1cd 7
+  s_b924aec64f5f82::t_bb27eb9ea1e13f 17
+examples/quantum_examples/quantum_geometric_tensor/main.rs
+  s_b924aec64f5f82::t_7b34f12e517e1a 1-174
+examples/quantum_examples/Cargo.toml
+  s_b924aec64f5f82::t_24de88e6e9d1be 40-43
+  s_b924aec64f5f82::t_c24ccf21905335 1-39,44-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "7c8b4e71276306203b3dd6933c266770df5c5ad9",
+  "prompts": {},
+  "sessions": {
+    "s_b924aec64f5f82": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e9fb4748-c711-41df-be0a-35ed24a60064",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
