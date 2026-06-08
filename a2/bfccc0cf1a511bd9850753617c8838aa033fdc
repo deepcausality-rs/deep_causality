@@ -1,0 +1,29 @@
+openspec/changes/cdl-next/specs/brcd-data-loading/spec.md
+  s_6b39a4b06c99c9::t_c70ff421508b07 1-106
+openspec/changes/cdl-next/tasks.md
+  s_6b39a4b06c99c9::t_bb98d2c4ed3a1b 1-69
+openspec/changes/cdl-next/proposal.md
+  s_6b39a4b06c99c9::t_98e31260c2a229 1-68
+openspec/changes/cdl-next/design.md
+  s_6b39a4b06c99c9::t_9704dd78cba478 1-221
+openspec/changes/cdl-next/.openspec.yaml
+  s_6b39a4b06c99c9::t_3d69ede4741aca 1-2
+openspec/changes/cdl-next/specs/cdl-pipeline/spec.md
+  s_6b39a4b06c99c9::t_7a9bcaef6d3459 1-152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "a2bfccc0cf1a511bd9850753617c8838aa033fdc",
+  "prompts": {},
+  "sessions": {
+    "s_6b39a4b06c99c9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3b26866a-16f5-4d21-b0fa-8d1b21077019",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
