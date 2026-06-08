@@ -33,7 +33,7 @@ pub mod model_types;
 mod model_utils;
 
 use crate::model_types::{FloatType, N_TICKS, PumpProcess, nominal_pump_config};
-use causal_intervention_examples::print_utils;
+use causal_correction_examples::print_utils;
 use deep_causality_core::CausalFlow;
 
 fn main() {

@@ -4,10 +4,10 @@
  */
 
 //! Cascade-failure-specific display helpers. Shared printing and
-//! collection plumbing come from `causal_intervention_examples::{print_utils, math_utils}`.
+//! collection plumbing come from `causal_counterfactual_examples::{print_utils, math_utils}`.
 
 use crate::model_types::{FlowSolution, NetworkConfig, NetworkProcess};
-use causal_intervention_examples::{math_utils, print_utils};
+use causal_counterfactual_examples::{math_utils, print_utils};
 use deep_causality_core::EffectValue;
 
 pub fn print_network_topology(cfg: &NetworkConfig) {

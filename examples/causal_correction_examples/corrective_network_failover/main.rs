@@ -34,7 +34,7 @@ mod model_utils;
 
 use crate::model::{forward_traffic, initial_process};
 use crate::model_types::{N_TICKS, NetworkProcess, STANDBY_SWITCH, SwitchId};
-use causal_intervention_examples::print_utils;
+use causal_correction_examples::print_utils;
 use deep_causality_core::CausalFlow;
 
 fn main() {

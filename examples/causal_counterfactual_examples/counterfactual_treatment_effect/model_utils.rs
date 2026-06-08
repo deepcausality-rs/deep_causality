@@ -4,10 +4,10 @@
  */
 
 //! CATE-specific helpers. Shared printing and arithmetic plumbing
-//! come from `causal_intervention_examples::{print_utils, math_utils}`.
+//! come from `causal_counterfactual_examples::{print_utils, math_utils}`.
 
 use crate::model::{FloatType, Patient, evaluate_under, potential_outcomes};
-use causal_intervention_examples::{math_utils, print_utils};
+use causal_counterfactual_examples::{math_utils, print_utils};
 
 /// Iterate the cohort, compute potential outcomes per patient, print
 /// the per-patient row, and return the ITE vectors split by age stratum.

@@ -4,10 +4,10 @@
  */
 
 //! Aneurysm-specific display helpers. Shared printing plumbing comes
-//! from `causal_intervention_examples::print_utils`.
+//! from `causal_counterfactual_examples::print_utils`.
 
 use crate::model_types::CycleSummary;
-use causal_intervention_examples::print_utils;
+use causal_counterfactual_examples::print_utils;
 use deep_causality_core::{EffectValue, PropagatingEffect};
 
 pub fn print_process(label: &str, effect: &PropagatingEffect<CycleSummary>) {

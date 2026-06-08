@@ -4,10 +4,10 @@
  */
 
 //! Envelope-fault-specific display helpers. Shared printing plumbing
-//! comes from `causal_intervention_examples::print_utils`.
+//! comes from `causal_counterfactual_examples::print_utils`.
 
 use crate::model_types::{FlightProcess, Verdict};
-use causal_intervention_examples::print_utils;
+use causal_counterfactual_examples::print_utils;
 use deep_causality_core::EffectValue;
 
 pub fn print_section(label: &str, process: &FlightProcess<Verdict>) {

@@ -9,7 +9,7 @@ use crate::model_types::{
     CASCADE_MAX_ITERATIONS, Edge, FloatType, FlowSolution, NetworkConfig, NetworkProcess,
     NetworkState,
 };
-use causal_intervention_examples::math_utils;
+use causal_counterfactual_examples::math_utils;
 use deep_causality_core::{EffectLog, EffectValue, Intervenable};
 use deep_causality_haft::LogAddEntry;
 use std::collections::HashSet;

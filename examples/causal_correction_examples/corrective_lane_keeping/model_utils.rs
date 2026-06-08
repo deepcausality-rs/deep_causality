@@ -4,10 +4,10 @@
  */
 
 //! Lane-keeping-specific display helpers. Shared printing plumbing
-//! comes from `causal_intervention_examples::print_utils`.
+//! comes from `causal_correction_examples::print_utils`.
 
 use crate::model_types::{FloatType, LaneProcess};
-use causal_intervention_examples::print_utils;
+use causal_correction_examples::print_utils;
 use deep_causality_core::EffectValue;
 
 pub fn summary_line(label: &str, process: &LaneProcess<FloatType>) {
