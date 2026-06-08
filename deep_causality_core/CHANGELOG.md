@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.9](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.0.8...deep_causality_core-v0.0.9) - 2026-06-08
+
+### Added
+
+- *(deep_causality_core)* add the Causal Arrow + flow-DSL loops, branches, composition
+- *(deep_causality_core)* add the CausalFlow fluent monad facade
+- *(deep_causality_core)* add Alternatable trait family + refactor Intervenable to delegate
+
+### Fixed
+
+- resolve five P2 issues from the CI code review
+- *(deep_causality_core)* align CausalFlow map/intervene_if with the monad's error-and-variant semantics
+- *(deep_causality_core)* EffectLog equality compares messages, not timestamps
+
+### Other
+
+- Merge remote-tracking branch 'origin/main'
+- *(deep_causality_core)* split the CausalFlow facade into submodules
+- *(deep_causality_core)* split the CausalFlow facade into submodules
+- *(num,haft,core)* close coverage gaps on Dual, Arrow builder, and CausalFlow
+- *(deep_causality_core)* complete the CausalFlow channel-update family
+- *(deep_causality_core)* Updated. Readme.
+- - avionics_examples/cfd_taylor_green and turbulence_flow: the
+- Migrated set of example to the arrow calculus type extension.
+- cover map_values, EffectValue Display/PartialEq branches
+- enforce repo-wide `unsafe_code = "forbid"`; remove avoidable unsafe
+- *(deep_causality_core)* remove unused ControlFlowBuilder subsystem
+- *(core)* apply use_self and const fn clippy lints
+
 ## [0.0.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.0.7...deep_causality_core-v0.0.8) - 2026-05-29
 
 ### Added

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.4.3...deep_causality_tensor-v0.4.4) - 2026-06-08
+
+### Added
+
+- *(deep_causality_tensor)* add logsumexp, gaussian log-density, conditional variance
+- *(tensor)* add sample mean/covariance; topology covariance delegates to it
+
+### Fixed
+
+- *(deep_causality_discovery,deep_causality_tensor)* make f64→T casts honest; sync docs to generic T
+
+### Other
+
+- *(num,tensor)* make CausalTensorMathExt generic over RealField
+- enforce repo-wide `unsafe_code = "forbid"`; remove avoidable unsafe
+
 ## [0.4.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.4.2...deep_causality_tensor-v0.4.3) - 2026-05-26
 
 ### Added

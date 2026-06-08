@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_sparse-v0.1.8...deep_causality_sparse-v0.2.0) - 2026-06-08
+
+### Added
+
+- *(deep_causality_tensor)* add logsumexp, gaussian log-density, conditional variance
+
+### Other
+
+- *(deep_causality)* fix rustdoc intra-doc link warnings
+- *(sparse,topology)* lift cg_solve into deep_causality_sparse as public API
+- cover map_values, EffectValue Display/PartialEq branches
+- enforce repo-wide `unsafe_code = "forbid"`; remove avoidable unsafe
+
 ## [0.1.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_sparse-v0.1.7...deep_causality_sparse-v0.1.8) - 2026-05-26
 
 ### Added

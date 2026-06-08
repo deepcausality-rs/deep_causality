@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.6.0...deep_causality_topology-v0.6.1) - 2026-06-08
+
+### Added
+
+- *(deep_causality_num)* split Real from RealField; blanket the float tower
+- *(deep_causality_num)* split Real out of RealField
+- *(deep_causality_topology)* add MixedGraph — typed-endpoint mixed graph (CPDAG/MAG/PAG)
+- *(tensor)* add sample mean/covariance; topology covariance delegates to it
+
+### Other
+
+- *(deep_causality)* fix rustdoc intra-doc link warnings
+- *(sparse,topology)* lift cg_solve into deep_causality_sparse as public API
+- *(topology)* remove source-scanning grep-tests
+- enforce repo-wide `unsafe_code = "forbid"`; remove avoidable unsafe
+
 ## [0.6.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.5.1...deep_causality_topology-v0.6.0) - 2026-05-26
 
 ### Added

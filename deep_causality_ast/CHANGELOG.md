@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ast-v0.1.6...deep_causality_ast-v0.1.7) - 2026-06-08
+
+### Other
+
+- enforce repo-wide `unsafe_code = "forbid"`; remove avoidable unsafe
+
 ## [0.1.6](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ast-v0.1.5...deep_causality_ast-v0.1.6) - 2026-03-12
 
 ### Other
