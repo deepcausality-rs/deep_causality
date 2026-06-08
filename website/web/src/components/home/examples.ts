@@ -18,22 +18,20 @@ export const examples: Example[] = [
     source: 'examples/starter_example/src/main.rs',
     snippet: `use deep_causality_core::{Intervenable, PropagatingEffect};
 
-// Natural chain: nicotine → tar → cancer.
-let before = PropagatingEffect::pure(0.8_f64)
-    .bind(|nic, _, _| PropagatingEffect::pure(nicotine_to_tar(
-        nic.into_value().unwrap_or_default())))
-    .bind(|tar, _, _| PropagatingEffect::pure(tar_to_cancer(
-        tar.into_value().unwrap_or_default())));
+// Factual chain: nicotine → tar → cancer.
+let factual = PropagatingEffect::pure(0.8_f64)
+    .bind(|nic, _, _| PropagatingEffect::pure(nicotine_to_tar(nic.into_value().unwrap_or_default())))
+    .bind(|tar, _, _| PropagatingEffect::pure(tar_to_cancer(tar.into_value().unwrap_or_default())));
 
 // Counterfactual: same start, but intervene on tar mid-chain.
-let after = PropagatingEffect::pure(0.8_f64)
-    .bind(|nic, _, _| PropagatingEffect::pure(nicotine_to_tar(
-        nic.into_value().unwrap_or_default())))
+let counterfactual = PropagatingEffect::pure(0.8_f64)
+    .bind(|nic, _, _| PropagatingEffect::pure(nicotine_to_tar(nic.into_value().unwrap_or_default())))
     .intervene(0.1)
-    .bind(|tar, _, _| PropagatingEffect::pure(tar_to_cancer(
-        tar.into_value().unwrap_or_default())));
+    .bind(|tar, _, _| PropagatingEffect::pure(tar_to_cancer(tar.into_value().unwrap_or_default())));
 
-// Compare before.value vs after.value: that is the Pearl Rung-3 effect.`,
+// factual − counterfactual = total causal impact (Rung-3).
+let risk = |e| e.value.into_value().unwrap();
+println!("Impact: {:.3}", risk(factual) - risk(counterfactual));`,
   },
   {
     slug: 'sensor-monitoring-csm',
@@ -75,7 +73,6 @@ let initial: FlightProcess<SensorReading> = PropagatingProcess {
 };
 
 // CausalFlow threads state and context through all five stages;
-// into_process() hands the raw process back.
 CausalFlow::from(initial)
     .bind(|v, s, c| run_sensor_collection(v, s, c, failing_airspeed))
     .bind(|v, s, c| health_fold(v, s, c, seed_estimate.clone()))
@@ -151,7 +148,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     })
     .await
     .expect("Failed to spawn async background task");
-
     Ok(())
 }`,
   },
