@@ -1,0 +1,87 @@
+examples/causal_counterfactual_examples/counterfactual_envelope_fault/main.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-79
+examples/causal_counterfactual_examples/counterfactual_envelope_fault/model_types.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-62
+examples/causal_correction_examples/src/print_utils.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-48
+examples/causal_counterfactual_examples/src/print_utils.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-48
+examples/causal_counterfactual_examples/counterfactual_envelope_fault/model_config.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-24
+examples/causal_counterfactual_examples/counterfactual_treatment_effect/main.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-49
+examples/causal_counterfactual_examples/Cargo.toml
+  s_b924aec64f5f82::t_a9247b2084601f 2
+examples/classical_causality_examples/classical_via_causal_monad/scm/main.rs
+  ai_agent 103
+examples/causal_counterfactual_examples/counterfactual_treatment_options/model.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-53
+examples/causal_correction_examples/corrective_decompression_stops/model.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-86
+examples/causal_correction_examples/corrective_glucose_pump/model.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-80
+examples/causal_correction_examples/corrective_glucose_pump/model_types.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-72
+examples/causal_correction_examples/corrective_decompression_stops/model_types.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-88
+examples/causal_counterfactual_examples/counterfactual_resection_intervention/model_types.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-31
+examples/causal_counterfactual_examples/counterfactual_cascade_failure/model_types.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-61
+examples/causal_counterfactual_examples/counterfactual_cascade_failure/main.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-76
+examples/causal_correction_examples/src/lib.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-6
+examples/causal_counterfactual_examples/counterfactual_resection_intervention/model.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-120
+examples/causal_correction_examples/corrective_network_failover/model_types.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-68
+examples/causal_counterfactual_examples/README.md
+  s_b924aec64f5f82::t_c5a13946da5e15 1,3-4,6-9,12,26-27,29,32,34,42-46,67-69,87,91,95,102
+Cargo.lock
+  ai_agent 125,128-130,134,142-149
+examples/causal_counterfactual_examples/counterfactual_cascade_failure/model_config.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-74
+examples/causal_counterfactual_examples/src/lib.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-6
+examples/causal_correction_examples/corrective_lane_keeping/model.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-74
+examples/causal_counterfactual_examples/counterfactual_envelope_fault/model.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-113
+examples/causal_correction_examples/src/math_utils.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-29
+examples/causal_counterfactual_examples/counterfactual_resection_intervention/main.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-68
+examples/causal_counterfactual_examples/counterfactual_treatment_effect/model.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-109
+examples/causal_correction_examples/corrective_lane_keeping/model_types.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-62
+examples/causal_counterfactual_examples/counterfactual_treatment_options/model_types.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-23
+examples/causal_correction_examples/Cargo.toml
+  s_b924aec64f5f82::t_586d4148a38cd3 1-35
+examples/causal_counterfactual_examples/src/math_utils.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-29
+examples/causal_counterfactual_examples/counterfactual_treatment_options/main.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-93
+examples/causal_correction_examples/corrective_network_failover/model.rs
+  s_b924aec64f5f82::t_29f7b82d0c6ae4 1-86
+examples/causal_correction_examples/README.md
+  s_b924aec64f5f82::t_416a545131966b 1-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "f716f949b1b87bfdf62d8c780e7c4eec50505249",
+  "prompts": {},
+  "sessions": {
+    "s_b924aec64f5f82": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e9fb4748-c711-41df-be0a-35ed24a60064",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
