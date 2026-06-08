@@ -1,0 +1,100 @@
+website/web/src/components/home/examples.ts
+  s_469d0d2bb2bdfd::t_975f48d970a777 32
+  s_469d0d2bb2bdfd::t_20b510c799cd2f 33-34
+  s_469d0d2bb2bdfd::t_836722ece97f14 21-22
+  s_469d0d2bb2bdfd::t_f870c6c26e8d58 27
+website/web/src/pages/docs/index.astro
+  s_41a4678cc55d5f::t_555a518b7234c0 4,6
+  s_41a4678cc55d5f::t_9bc53a1173c50c 83-100
+  s_41a4678cc55d5f::t_b247e3cce5ee73 269-270,274-275,281,289,291,297-298,305-309
+  s_41a4678cc55d5f::t_a719ba42301501 290,292-295
+  s_41a4678cc55d5f::t_40a1c233c3692f 238-255
+  s_41a4678cc55d5f::t_5c09a224f99301 168
+  s_41a4678cc55d5f::t_f7a5fa9d60509f 82
+  s_41a4678cc55d5f::t_ce43396792e184 489-498
+  s_41a4678cc55d5f::t_fea776cdd47a37 565,570-572,580,583-590,594-595,598,621,635,642,685-686
+  s_41a4678cc55d5f::t_56168c39658ef8 102-103,105-107,109-115
+  s_41a4678cc55d5f::t_b8c8d9e4f98feb 472-474
+  s_41a4678cc55d5f::t_df86e9cd70dd34 468,475,480
+  s_41a4678cc55d5f::t_0b66c8a42836f9 167
+  s_41a4678cc55d5f::t_5fd6b72f615e3f 300,303
+  s_41a4678cc55d5f::t_81f5bb6b5c6dcc 373
+  s_41a4678cc55d5f::t_8ffef5ffe38328 500
+  s_41a4678cc55d5f::t_d87ae0afceec5e 409,416,418,421,431,433,438-439,448
+  s_41a4678cc55d5f::t_94a745f6ed8563 30-48
+  s_41a4678cc55d5f::t_0fc388883920c5 198-204,208
+  s_41a4678cc55d5f::t_2cc706aa4b955b 452
+  s_41a4678cc55d5f::t_d3de2e1bc1ed08 49-80
+  ai_agent 180,193,435-437
+  s_41a4678cc55d5f::t_278a520bfef327 176
+  s_41a4678cc55d5f::t_6946cd4483f4c2 393,396-400
+  s_41a4678cc55d5f::t_4d02d56c48d545 454
+  s_41a4678cc55d5f::t_d17790ef902e86 314,316
+  s_41a4678cc55d5f::t_fda2a8b7414227 182-185
+  s_41a4678cc55d5f::t_799863ad95663c 276-280,299,301-302
+  s_41a4678cc55d5f::t_d3fb4ffef9304d 485
+  s_41a4678cc55d5f::t_7c94df4259738a 368-372,374-392,394-395,401-404
+  s_b924aec64f5f82::t_187efb661e5e5e 24
+  s_41a4678cc55d5f::t_582709a219e64e 174-175
+  s_41a4678cc55d5f::t_68781d04a96ee0 271-273
+  s_41a4678cc55d5f::t_c18f8d10d1a923 367
+  s_41a4678cc55d5f::t_ea68e48c86833b 311-313,315,318-325,329,341-363
+  s_41a4678cc55d5f::t_0b6ee55ae99aad 230-235
+  s_41a4678cc55d5f::t_4472d9cad13162 461-462
+  s_41a4678cc55d5f::t_98a6ed3cf17261 479
+  s_41a4678cc55d5f::t_1598d0a250c0bf 256-264
+  s_41a4678cc55d5f::t_4b8b4550cb8e31 282-288
+  s_41a4678cc55d5f::t_4186136adce9ee 296
+  s_41a4678cc55d5f::t_d1e7f4b2e33698 304
+  s_41a4678cc55d5f::t_9ee950b4ca4c5f 331-340
+  s_41a4678cc55d5f::t_fea46747dd895f 224
+  s_41a4678cc55d5f::t_4430db67af69e7 407-408,410-414,417,419-420,422-429,434,440-447
+  s_41a4678cc55d5f::t_16748c0608d7b9 171-173,177-179,181,186-192,194,210-223,225-228,237,265-268,310,317,326-328,364-366,406,415,430,432,449-451,453,456-460,463-464,470,504
+  s_41a4678cc55d5f::t_bfd4c42c3b38a6 101
+  s_41a4678cc55d5f::t_468bf445bc7116 163-164
+  s_41a4678cc55d5f::t_2cceb96875a684 132
+  s_41a4678cc55d5f::t_d5a7ab26607887 170,503
+  s_41a4678cc55d5f::t_c42a3a7c9d1f84 405
+  s_41a4678cc55d5f::t_4feb39fc3e56db 573-574,576-578,596-597
+  s_41a4678cc55d5f::t_8676c106f955bb 7-23,25-29,81,104,108,116,118-131,133-145
+  s_41a4678cc55d5f::t_15c39a52e2c6be 117
+  s_41a4678cc55d5f::t_0f72bd09952f4b 195-196,206-207
+  s_41a4678cc55d5f::t_3ba99dffaba964 467
+  s_41a4678cc55d5f::t_45525eeb2c6240 545-564,566-569,575,579,581-582,591-593,599-620,622-634,636-641,643-684
+  s_41a4678cc55d5f::t_fc7f8472b3a57a 330
+website/web/src/components/home/ExampleGrid.astro
+  s_41a4678cc55d5f::t_ce2bc6147051a1 104-129
+  s_41a4678cc55d5f::t_243dd0630b7e74 324-328
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "6d27b0fbdb30179d0c03354ffeec23bc75cdb79a",
+  "prompts": {},
+  "sessions": {
+    "s_41a4678cc55d5f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "870f636b-6549-43a1-829b-e42adc657129",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_469d0d2bb2bdfd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96bc15fe-06ee-4bc4-8f6a-e6d94735e581",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_b924aec64f5f82": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e9fb4748-c711-41df-be0a-35ed24a60064",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
