@@ -4,7 +4,7 @@
  */
 
 use crate::{CdlError, CdlWarningLog};
-use deep_causality_haft::{HKT, HKT3, NoConstraint};
+use deep_causality_haft::{HKT, HKT3, LogAppend, NoConstraint};
 
 use std::marker::PhantomData;
 
@@ -44,6 +44,35 @@ impl<T> CdlEffect<T> {
         // Delegate to the Monad Witness implementation
         use deep_causality_haft::Monad;
         CdlEffectWitness::<CdlError, CdlWarningLog>::bind(self, f)
+    }
+
+    /// `FnOnce` Kleisli composition: like [`bind`](Self::bind), but the continuation
+    /// runs at most once, so it may move owned values in (e.g. a loaded `BrcdInput`).
+    ///
+    /// Short-circuits on a prior error and threads (merges) the warning log, exactly
+    /// like `bind`. This is the engine behind the fluent stage methods on
+    /// `CdlEffect<CDL<State>>`, which let the pipeline read
+    /// `.clean_data(..).feature_select(..)` without a `.bind(|cdl| cdl. …)` wrapper
+    /// on every line.
+    pub fn and_then<B, F>(self, f: F) -> CdlEffect<B>
+    where
+        F: FnOnce(T) -> CdlEffect<B>,
+    {
+        match self.inner {
+            Err(e) => CdlEffect {
+                inner: Err(e),
+                warnings: self.warnings,
+            },
+            Ok(val) => {
+                let mut next = f(val);
+                let mut combined_warnings = self.warnings;
+                combined_warnings.append(&mut next.warnings);
+                CdlEffect {
+                    inner: next.inner,
+                    warnings: combined_warnings,
+                }
+            }
+        }
     }
 }
 

@@ -2,122 +2,115 @@
 
 ### Requirement: Per-algorithm pipeline entry points
 
-The CDL pipeline SHALL provide two distinct entry methods on `CDL<NoData>`, one
-per discovery algorithm: `load_surd_input` for SURD and `load_brcd_input` for
-BRCD. Each entry SHALL produce an algorithm-specific typestate that begins that
-algorithm's lineage.
+The CDL pipeline SHALL provide two entry points on `CdlBuilder`, one per discovery
+algorithm: `build_surd(&SurdLoaderConfig<T>)` for SURD and
+`build_brcd(&BrcdLoaderConfig<T>)` for BRCD. Each SHALL seed an algorithm-specific
+configured state carrying its run config, and SHALL fix the pipeline precision `T`
+from the config so no downstream turbofish is needed.
 
-#### Scenario: SURD entry produces a SURD state
+#### Scenario: SURD entry produces a configured SURD state
 
-- **WHEN** a caller invokes `load_surd_input::<T>(path, target_index, exclude_indices)` on `CDL<NoData>`
-- **THEN** the pipeline transitions to `CDL<SurdData<T>>` with the loaded dataset and recorded record count
+- **WHEN** a caller invokes `CdlBuilder::build_surd(&config)` with a `SurdLoaderConfig<T>`
+- **THEN** the pipeline begins in a `CDL<SurdConfigured<T>>` carrying that config
 
-#### Scenario: BRCD entry produces a BRCD state
+#### Scenario: BRCD entry produces a configured BRCD state
 
-- **WHEN** a caller invokes `load_brcd_input(input)` on `CDL<NoData>` with a `BrcdInput<T>` bundle
-- **THEN** the pipeline transitions to `CDL<BrcdLoaded<T>>` carrying the two datasets, the optional CPDAG, and the `BrcdConfig<T>`
+- **WHEN** a caller invokes `CdlBuilder::build_brcd(&config)` with a `BrcdLoaderConfig<T>`
+- **THEN** the pipeline begins in a `CDL<BrcdConfigured<T>>` carrying that config
 
 ### Requirement: Compile-time isolation of the two lineages
 
-The SURD and BRCD lineages SHALL share no typestate before the converged
-analysis state. Each algorithm's `*_discover` and `*_analyze` methods SHALL be
-implemented only on that algorithm's states, so that applying a method from one
-lineage to a state of the other fails to compile.
+The SURD and BRCD lineages SHALL share no typestate before the converged analysis
+state. Each algorithm's stage methods SHALL be implemented only on that algorithm's
+states, so applying a method from one lineage to a state of the other fails to
+compile.
 
 #### Scenario: BRCD discover is unavailable on a SURD state
 
-- **WHEN** code attempts to call `brcd_discover` on any SURD-lineage state (`SurdData`, `SurdCleaned`, `SurdFeatures`, or `SurdResults`)
+- **WHEN** code attempts to call `brcd_discover` on a SURD-lineage state
 - **THEN** compilation fails with a no-such-method error
 
 #### Scenario: SURD analyze is unavailable on a BRCD state
 
-- **WHEN** code attempts to call `surd_analyze` on a `BrcdResults<T>` state
+- **WHEN** code attempts to call `surd_analyze` on a BRCD-lineage state
 - **THEN** compilation fails with a no-such-method error
 
 #### Scenario: Feature selection is unavailable to BRCD
 
-- **WHEN** code attempts to call `feature_select` or `clean_data` on a BRCD-lineage state
+- **WHEN** code attempts to call `feature_select` on a BRCD-lineage state
 - **THEN** compilation fails with a no-such-method error
 
-### Requirement: SURD lineage stages
+### Requirement: Config-driven, parameterless stages
 
-The SURD lineage SHALL run `load_surd_input → clean_data → feature_select →
-surd_discover → surd_analyze → finalize`, preserving the existing cleaning, MRMR
-feature selection, and `surd_states_cdl` discovery behavior. The intermediate
-SURD states SHALL be named `SurdData<T>`, `SurdCleaned<T>`, `SurdFeatures<T>`,
-and `SurdResults<T>`. `preprocess` and `filter_cohort` SHALL remain available on
-`SurdData<T>`.
+The pipeline stages SHALL take no algorithm parameters; each SHALL read what it
+needs from the carried run config. The SURD lineage SHALL run
+`surd_load_input → clean_data → feature_select → surd_discover → surd_analyze →
+finalize`, where `feature_select` uses the config's feature count and target index,
+`surd_discover` uses the config's max order, and `surd_analyze` uses the config's
+thresholds. The BRCD lineage SHALL run `brcd_load_input → brcd_discover →
+brcd_analyze → finalize`.
 
-#### Scenario: SURD chain runs end to end
+#### Scenario: SURD stages read from config
 
-- **WHEN** a caller runs `load_surd_input` then `clean_data`, `feature_select`, `surd_discover`, `surd_analyze`, and `finalize`
-- **THEN** a `CdlReport<T>` is produced containing the SURD decomposition and the MRMR feature-selection result
+- **WHEN** a SURD pipeline runs `surd_load_input().clean_data(..).feature_select().surd_discover().surd_analyze()`
+- **THEN** the dataset path, MRMR feature count, target index, max order, and thresholds all come from the `SurdLoaderConfig`, with no inline parameters
 
-### Requirement: BRCD lineage stages
+#### Scenario: BRCD stages read from the bundle
 
-The BRCD lineage SHALL run `load_brcd_input → brcd_discover → brcd_analyze →
-finalize`, with no cleaning or feature-selection stage. `brcd_discover` SHALL
-invoke `brcd_run` with the bundle's `normal`, `anomalous`, `cpdag`, and
-`brcd_config`, and SHALL surface a BRCD failure as a pipeline error.
+- **WHEN** a BRCD pipeline runs `brcd_load_input().brcd_discover()`
+- **THEN** the two datasets, optional CPDAG, and `BrcdConfig` all come from the loaded bundle
 
-#### Scenario: BRCD chain runs end to end with a supplied CPDAG
+### Requirement: Fluent effect surface
 
-- **WHEN** a caller runs `load_brcd_input` with a bundle whose `cpdag` is `Some(graph)`, then `brcd_discover`, `brcd_analyze`, and `finalize`
-- **THEN** a `CdlReport<T>` is produced containing the BRCD ranked candidate root-cause sets
+Each stage SHALL be invocable directly on the pipeline effect, so a pipeline reads
+as a single method chain without a per-line monadic-bind wrapper, while still
+short-circuiting on error and threading the warning log.
 
-#### Scenario: BRCD chain runs with BOSS-learned CPDAG
+#### Scenario: Chain without bind wrappers
 
-- **WHEN** a caller runs the BRCD chain with a bundle whose `cpdag` is `None`
-- **THEN** `brcd_discover` passes `None` to `brcd_run`, which learns the CPDAG via BOSS, and the chain produces a ranked report
+- **WHEN** a caller writes `CdlBuilder::build_surd(&cfg).surd_load_input().clean_data(..)..`
+- **THEN** it compiles and runs without any `.bind(|cdl| cdl. …)` wrapper, short-circuiting if any stage errors
 
 ### Requirement: Closed discovery-outcome carrier
 
 The pipeline SHALL carry the discovery result through a closed enum
-`DiscoveryOutcome<T>` with variants `Surd(SurdResult<T>)` and
+`CdlDiscoveryOutcome<T>` with variants `Surd(Box<SurdResult<T>>)` and
 `Brcd(BrcdResult<T>)`, using no dynamic dispatch. Each `*_analyze` method SHALL
-wrap its concrete result into the matching variant when transitioning to the
-shared `WithAnalysis<T>` state.
+wrap its concrete result into the matching variant when transitioning to the shared
+`WithAnalysis<T>` state.
 
 #### Scenario: SURD result is carried as the Surd variant
 
 - **WHEN** `surd_analyze` completes
-- **THEN** the resulting `WithAnalysis<T>` carries `DiscoveryOutcome::Surd(..)` and `Some(MrmrResult)`
+- **THEN** the resulting state carries `CdlDiscoveryOutcome::Surd(..)` and `Some(MrmrResult)`
 
 #### Scenario: BRCD result is carried as the Brcd variant
 
 - **WHEN** `brcd_analyze` completes
-- **THEN** the resulting `WithAnalysis<T>` carries `DiscoveryOutcome::Brcd(..)` and `None` for feature selection
+- **THEN** the resulting state carries `CdlDiscoveryOutcome::Brcd(..)` and `None` for feature selection
 
-### Requirement: Per-algorithm analyzers with typed configs
+### Requirement: Per-algorithm analyzers
 
-Each algorithm SHALL have its own analyzer and its own analyze configuration.
-`surd_analyze` SHALL use the SURD analyzer with a `SurdAnalyzeConfig`;
-`brcd_analyze` SHALL use a BRCD analyzer with a `BrcdAnalyzeConfig`. Both SHALL
-produce a `ProcessAnalysis` consumed unchanged by the existing formatter. When an
-algorithm's analyze config is absent from `CdlConfig`, the method SHALL apply a
-sensible default.
+Each algorithm SHALL have its own analyzer typed to its own result via the
+`ProcessResultAnalyzer` contract's associated input/config types, both producing a
+common `ProcessAnalysis` rendered by the existing formatter.
 
 #### Scenario: SURD analyze uses SURD thresholds
 
-- **WHEN** `surd_analyze` runs with a `SurdAnalyzeConfig` of synergy/unique/redundancy thresholds
-- **THEN** the produced `ProcessAnalysis` reflects those thresholds
+- **WHEN** `surd_analyze` runs
+- **THEN** the produced `ProcessAnalysis` reflects the config's synergy/unique/redundancy thresholds
 
 #### Scenario: BRCD analyze reports ranked candidates
 
-- **WHEN** `brcd_analyze` runs with a `BrcdAnalyzeConfig` specifying a top-k
-- **THEN** the produced `ProcessAnalysis` lists the top-k ranked candidate root-cause sets with their posterior weights
-
-#### Scenario: Default analyze config when none supplied
-
-- **WHEN** `surd_analyze` or `brcd_analyze` runs and no matching analyze config is present in `CdlConfig`
-- **THEN** the method applies its default configuration rather than failing
+- **WHEN** `brcd_analyze` runs
+- **THEN** the produced `ProcessAnalysis` lists the top-ranked candidate root-cause sets with their posterior weights
 
 ### Requirement: Shared finalize and generalized report
 
 `finalize` SHALL be implemented once on `WithAnalysis<T>` and SHALL produce a
-`CdlReport<T>` that carries `DiscoveryOutcome<T>` and `Option<MrmrResult>`. The
+`CdlReport<T>` carrying `CdlDiscoveryOutcome<T>` and `Option<MrmrResult>`. The
 report's `Display` SHALL render the correct algorithm section by matching the
-`DiscoveryOutcome` variant.
+variant, omitting the feature-selection section for BRCD.
 
 #### Scenario: Report renders the SURD section
 
@@ -131,22 +124,21 @@ report's `Display` SHALL render the correct algorithm section by matching the
 
 ### Requirement: SURD behavior is preserved
 
-Re-designing the pipeline SHALL NOT change SURD's numeric output or rendered
-report on the same input. The rankings, the SURD decomposition, and the report
-text SHALL be identical before and after the change.
+Re-designing the pipeline SHALL NOT change SURD's discovery behavior: the full SURD
+chain SHALL still load, clean, MRMR-select, run SURD-states, analyze, and produce a
+SURD-variant report on the same input.
 
 #### Scenario: SURD regression holds
 
-- **WHEN** the SURD chain runs on a fixed reference dataset after the re-design
-- **THEN** the rankings, decomposition, and rendered report match the pre-change output exactly
+- **WHEN** the SURD chain runs end to end on a fixed dataset after the re-design
+- **THEN** it produces a `CdlReport` whose outcome is the SURD variant, carrying the feature-selection result, and renders the SURD section
 
 ### Requirement: Generalized discovery error
 
 `CausalDiscoveryError` SHALL gain a `Brcd(BrcdError)` variant so a BRCD failure
-propagates through the pipeline as a `CdlError`, alongside the existing tensor
-error variant.
+propagates through the pipeline as a `CdlError`.
 
 #### Scenario: BRCD failure surfaces as a pipeline error
 
-- **WHEN** `brcd_run` returns a `BrcdError` (for example, a dimension mismatch)
+- **WHEN** `brcd_run` returns a `BrcdError`
 - **THEN** `brcd_discover` yields a `CdlError` wrapping `CausalDiscoveryError::Brcd(..)`

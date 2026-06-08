@@ -38,7 +38,7 @@ fn test_display() {
     let err = CdlError::CausalDiscoveryError(causal_discovery_err);
     assert_eq!(
         err.to_string(),
-        "Step [Causal Discovery] failed: Tensor error during SURD: CausalTensorError: Shape mismatch error"
+        "Step [Causal Discovery] failed: Tensor error during discovery: CausalTensorError: Shape mismatch error"
     );
 
     let analyze_err = AnalyzeError::EmptyResult;
@@ -126,7 +126,7 @@ fn test_source() {
     assert!(err.source().is_some());
     assert_eq!(
         err.source().unwrap().to_string(),
-        "Tensor error during SURD: CausalTensorError: Shape mismatch error"
+        "Tensor error during discovery: CausalTensorError: Shape mismatch error"
     );
 
     let analyze_err = AnalyzeError::EmptyResult;

@@ -3,79 +3,128 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CdlConfig, ProcessAnalysis};
+use crate::types::brcd_input::BrcdInput;
+use crate::types::cdl_discovery_outcome::CdlDiscoveryOutcome;
+use crate::{BrcdLoaderConfig, ProcessAnalysis, SurdLoaderConfig};
 use deep_causality_algorithms::feature_selection::mrmr::MrmrResult;
 use deep_causality_algorithms::surd::SurdResult;
 use deep_causality_tensor::CausalTensor;
 
+mod brcd_configured;
+mod brcd_loaded;
+mod brcd_results;
 mod cdl_with_analysis;
-mod cdl_with_causal_results;
-mod cdl_with_cleaned_data;
-mod cdl_with_data;
-mod cdl_with_features;
-mod cdl_with_no_data;
+mod surd_cleaned;
+mod surd_configured;
+mod surd_data;
+mod surd_features;
+mod surd_results;
 
 // Typestate structs representing the pipeline's state.
-/// Initial state of the CDL pipeline, with no data loaded.
+//
+// The pipeline has two compile-time-isolated lineages that share no state until
+// the converged `WithAnalysis<T>`. Each lineage is seeded by a dedicated
+// `CdlBuilder` entry that carries the run config built by `CdlConfigBuilder`:
+//
+//   SURD: SurdConfigured → SurdData → SurdCleaned → SurdFeatures → SurdResults → WithAnalysis
+//   BRCD: BrcdConfigured → BrcdLoaded → BrcdResults → WithAnalysis
+//
+// Each lineage threads its own run config (`SurdLoaderConfig` / `BrcdLoaderConfig`)
+// through its states; there is no separate master config object. Each algorithm's
+// `*_discover` / `*_analyze` methods are implemented only on its own states, so
+// crossing the lineages is a compile error.
+
+// --- SURD lineage -----------------------------------------------------------
+
+/// SURD entry state, carrying the run config from `CdlBuilder::build_surd`.
 #[derive(Debug, Clone)]
-pub struct NoData;
-/// State after data has been successfully loaded.
+pub struct SurdConfigured<T> {
+    pub config: SurdLoaderConfig<T>,
+}
+
+/// SURD state after data has been loaded.
 #[derive(Debug, Clone)]
-pub struct WithData<T> {
+pub struct SurdData<T> {
     pub tensor: CausalTensor<T>,
     pub records_count: usize,
+    pub config: SurdLoaderConfig<T>,
 }
-/// State after data has been cleaned.
+
+/// SURD state after data has been cleaned (masked to `Option<T>`).
 #[derive(Debug)]
-pub struct WithCleanedData<T> {
+pub struct SurdCleaned<T> {
     pub tensor: CausalTensor<Option<T>>,
     pub records_count: usize,
+    pub config: SurdLoaderConfig<T>,
 }
-/// State after feature selection has been applied.
+
+/// SURD state after feature selection has been applied.
 #[derive(Debug, Clone)]
-pub struct WithFeatures<T> {
+pub struct SurdFeatures<T> {
     pub tensor: CausalTensor<Option<T>>,
     pub selection_result: MrmrResult,
     pub records_count: usize,
+    pub config: SurdLoaderConfig<T>,
 }
-/// State after a causal discovery algorithm has been run.
+
+/// SURD state after the SURD algorithm has run.
 #[derive(Debug)]
-pub struct WithCausalResults<T> {
+pub struct SurdResults<T> {
     pub surd_result: SurdResult<T>,
     pub selection_result: MrmrResult,
     pub records_count: usize,
+    pub config: SurdLoaderConfig<T>,
 }
-/// State after the raw causal results have been analyzed.
+
+// --- BRCD lineage -----------------------------------------------------------
+
+/// BRCD entry state, carrying the run config from `CdlBuilder::build_brcd`.
+#[derive(Debug, Clone)]
+pub struct BrcdConfigured<T> {
+    pub config: BrcdLoaderConfig<T>,
+}
+
+/// BRCD state after the input bundle has been loaded.
+#[derive(Debug)]
+pub struct BrcdLoaded<T> {
+    pub input: BrcdInput<T>,
+}
+
+/// BRCD state after the BRCD algorithm has run.
+#[derive(Debug)]
+pub struct BrcdResults<T> {
+    pub brcd_result: deep_causality_algorithms::brcd::BrcdResult<T>,
+    pub records_count: usize,
+}
+
+// --- Converged tail ---------------------------------------------------------
+
+/// State after the raw discovery result has been analyzed. Both lineages
+/// converge here, carrying the polymorphic [`CdlDiscoveryOutcome`].
 #[derive(Debug)]
 pub struct WithAnalysis<T> {
     pub analysis: ProcessAnalysis,
-    pub surd_result: SurdResult<T>,
-    pub selection_result: MrmrResult,
+    pub outcome: CdlDiscoveryOutcome<T>,
+    pub feature_selection: Option<MrmrResult>,
     pub records_count: usize,
+    pub dataset_path: String,
 }
-/// Final state (marker).
-#[derive(Debug)]
-pub struct Finalized; // Finalize now returns CdlReport, so this might be unused or just a marker.
 
 /// The core builder for the Causal Discovery Language (CDL) pipeline.
 ///
-/// `CDL` uses a typestate pattern to ensure that pipeline steps are called in a valid
-/// order at compile time. Each method consumes the `CDL` instance and returns a new
-/// one with an updated state.
+/// `CDL` uses a typestate pattern to ensure that pipeline steps are called in a
+/// valid order at compile time. Each method consumes the `CDL` instance and
+/// returns a new one with an updated state. The run config travels inside the
+/// state, so `CDL` carries no separate config object.
 #[derive(Debug, Clone)]
 pub struct CDL<State> {
     pub state: State,
-    pub config: CdlConfig,
 }
 
 impl<State> CDL<State> {
     pub fn state(&self) -> &State {
         &self.state
     }
-
-    pub fn config(&self) -> &CdlConfig {
-        &self.config
-    }
 }
 
-// See the various cdl_with files for all the type state implementations
+// See the various per-lineage files for all the typestate implementations.

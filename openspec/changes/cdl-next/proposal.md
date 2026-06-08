@@ -13,41 +13,56 @@ peers without compromising SURD.
 
 - **BREAKING**: Replace the single linear pipeline with two compile-time-isolated
   typestate lineages that converge only at `finalize`:
-  - SURD: `load_surd_input → clean_data → feature_select → surd_discover → surd_analyze → finalize`
-  - BRCD: `load_brcd_input → brcd_discover → brcd_analyze → finalize`
-- **BREAKING**: Rename the SURD entry/discover/analyze methods (`load_data` →
-  `load_surd_input`, `causal_discovery` → `surd_discover`, the analyze step →
-  `surd_analyze`) and brand the SURD intermediate states (`SurdData`,
-  `SurdCleaned`, `SurdFeatures`, `SurdResults`). SURD numeric output is preserved
-  exactly, guarded by a regression test.
-- Add a `BrcdDataLoader` that reads a `BrcdLoaderConfig<T>` (two dataset paths, an
-  optional CPDAG path, shared CSV options, and the reused algorithm
-  `BrcdConfig<T>`) and produces a single `BrcdInput<T>` bundle. When no CPDAG path
-  is given, `cpdag` is left `None`, which is what makes `brcd_run` learn the CPDAG
-  via BOSS. No bootstrap variant.
-- Add CPDAG CSV serialization in `deep_causality_discovery` (`load_cpdag_csv` /
-  `save_cpdag_csv`) faithful to the `MixedGraph` typed-endpoint model
-  (`Mark` ∈ Tail/Arrow/Circle per endpoint), reusing the existing `csv`
-  dependency. `deep_causality_topology` is untouched.
+  - SURD: `build_surd → surd_load_input → clean_data → feature_select → surd_discover → surd_analyze → finalize`
+  - BRCD: `build_brcd → brcd_load_input → brcd_discover → brcd_analyze → finalize`
+- **BREAKING**: A config is the single source of truth. `CdlConfigBuilder` is a
+  **staged typestate builder** that constructs the run config:
+  - `CdlConfigBuilder::build_surd_config::<T>()` → `SurdLoaderConfig<T>` (path,
+    target index, MRMR feature count, max order, analyze thresholds; optional
+    exclude indices / CSV options).
+  - `CdlConfigBuilder::build_brcd_config()` → `BrcdLoaderConfig<T>` (normal path,
+    anomalous path, the reused algorithm `BrcdConfig<T>`; optional CPDAG path /
+    CSV options).
+  - Required fields are enforced at compile time (`build()` only exists once they
+    are set); `build()` additionally verifies the referenced files exist and
+    returns a `CdlError` if not. The product config types have no public
+    constructor, so the builder is the only way to make one.
+- **BREAKING**: `CdlBuilder::build()` is replaced by `CdlBuilder::build_surd(&cfg)`
+  and `CdlBuilder::build_brcd(&cfg)`, which carry the run config into the pipeline.
+  The DSL stages are then **parameterless and config-driven** (e.g.
+  `feature_select()` reads the MRMR feature count and target from the config;
+  `surd_discover()` reads the max order; `surd_analyze()` reads the thresholds).
+- **Fluent surface**: each stage is a method on the effect, so the pipeline reads
+  `build_surd(&cfg).surd_load_input().clean_data(..)..` with no `.bind(|c| c. …)`
+  wrapper. An `FnOnce` `and_then` underlies the wrappers; `bind` remains public.
+- BRCD data loading is an **in-pipeline stage** (`brcd_load_input`), not a separate
+  user call. The loader (`BrcdDataLoader`) is `pub(crate)`. When no CPDAG path is
+  given, the bundle's CPDAG is left `None`, which makes `brcd_run` learn it via BOSS.
+  No bootstrap variant.
+- Add CPDAG CSV serialization (`load_cpdag_csv` / `save_cpdag_csv`) faithful to the
+  `MixedGraph` typed-endpoint model (`Mark` ∈ Tail/Arrow/Circle per endpoint),
+  reusing the existing `csv` dependency. `deep_causality_topology` is untouched.
 - **BREAKING**: Generalize the discovery result carrier to a closed
-  `DiscoveryOutcome<T>` enum (`Surd(SurdResult<T>)`, `Brcd(BrcdResult<T>)`), and
-  generalize `CdlReport<T>`, the `ProcessResultAnalyzer` contract, and
-  `CausalDiscoveryError` (add a `Brcd(BrcdError)` variant) accordingly.
-- Replace the single `AnalyzeConfig` with two typed configs
-  (`SurdAnalyzeConfig`, `BrcdAnalyzeConfig`), each read by its own `*_analyze`
-  method; the per-algorithm typestate removes the need for a runtime-dispatched
-  enum config.
+  `CdlDiscoveryOutcome<T>` enum (`Surd(Box<SurdResult<T>>)`, `Brcd(BrcdResult<T>)`),
+  and generalize `CdlReport<T>`, the `ProcessResultAnalyzer` contract (associated
+  `Input`/`Config`), and `CausalDiscoveryError` (add a `Brcd(BrcdError)` variant).
+- **BREAKING (removals)**: the old master `CdlConfig` object and the `NoData`
+  entry state are removed; `CDL<State>` carries only its state, and each lineage
+  threads its own run config through its states.
 
 ## Capabilities
 
 ### New Capabilities
-- `cdl-pipeline`: the dual-algorithm CDL typestate — two isolated SURD/BRCD
-  lineages, the compile-time isolation guarantees, the shared
-  `DiscoveryOutcome → analyze → finalize` tail, the generalized report, and the
+- `cdl-pipeline`: the dual-algorithm CDL typestate — the `build_surd`/`build_brcd`
+  entries, the two isolated SURD/BRCD lineages with their config-driven stages,
+  the compile-time isolation guarantees, the shared
+  `CdlDiscoveryOutcome → analyze → finalize` tail, the generalized report, and the
   preserved SURD behavior.
-- `brcd-data-loading`: BRCD input ingestion — `BrcdDataLoader`,
-  `BrcdLoaderConfig<T>`, the `BrcdInput<T>` bundle, the BOSS-fallback contract,
-  and the CPDAG CSV save/load format.
+- `brcd-data-loading`: BRCD input ingestion — the `CdlConfigBuilder` staged
+  builders (single source of truth, compile-time required fields + file-exists
+  check), the `SurdLoaderConfig` / `BrcdLoaderConfig` product types, the
+  in-pipeline `BrcdDataLoader`, the BOSS-fallback contract, and the CPDAG CSV
+  save/load format.
 
 ### Modified Capabilities
 <!-- None: no existing spec covers the CDL pipeline; the only specs in
@@ -65,4 +80,5 @@ peers without compromising SURD.
   and tests consume the chain; no external consumers depend on the old
   signatures.
 - **Out of scope**: the composite differential-SURD-on-a-localized-node
-  diagnostic stack; seams are left compatible but nothing is built.
+  diagnostic stack (the Arrow combinators in `deep_causality_haft` are the future
+  fit for that parallel fan-out); seams are left compatible but nothing is built.

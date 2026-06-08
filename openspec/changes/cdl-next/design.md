@@ -1,221 +1,160 @@
 ## Context
 
-CDL (`deep_causality_discovery`) is a typestate pipeline that loads one dataset,
-cleans it, selects features with MRMR, runs SURD, analyzes the result, and emits
-a report. Every state and method is specialized to SURD and to `SurdResult<T>`:
+CDL (`deep_causality_discovery`) was a typestate pipeline specialized to SURD and
+to `SurdResult<T>`: one dataset, one result type, a master `CdlConfig` object, and
+a `NoData` entry. BRCD now exists and is verified in `deep_causality_algorithms`.
+Its driver `brcd_run<T, N>(normal, anomalous, cpdag: Option<&MixedGraph<N>>,
+&BrcdConfig<T>)` consumes two aligned `n × num_vars` matrices and an optional
+CPDAG; when the CPDAG is `None` it learns one from the normal data via `boss_learn`
+(BOSS) before ranking.
 
-- `CDL<NoData> → WithData<T> → WithCleanedData<T> → WithFeatures<T> → WithCausalResults<T> → WithAnalysis<T> → CdlReport<T>`
-- `CausalDiscovery::discover` returns `SurdResult<T>`; `WithCausalResults`,
-  `CdlReport`, and `ProcessResultAnalyzer` all name `SurdResult<T>` directly.
+Three facts about BRCD shape this design: it needs two datasets, not one; MRMR
+feature selection (and the `Option<T>` cleaning that feeds it) would drop and
+reorder columns, desyncing the variable indices both the CPDAG and the BRCD ranks
+refer to, so BRCD must not pass through those stages; and the CPDAG-`None` → BOSS
+fallback is internal to `brcd_run`, so wiring it requires nothing beyond leaving
+`cpdag = None`.
 
-BRCD now exists and is verified in `deep_causality_algorithms`. Its driver
-`brcd_run<T, N>(normal, anomalous, cpdag: Option<&MixedGraph<N>>, &BrcdConfig<T>)`
-consumes two aligned `n × num_vars` matrices and an optional CPDAG; when the
-CPDAG is `None` it learns one from the normal data via `boss_learn` (BOSS) before
-ranking. BRCD output is a `BrcdResult<T>` (ranked candidate root-cause sets with
-posterior weights), indexed by raw column position.
-
-Three facts about BRCD shape this design:
-
-1. It needs two datasets, not one.
-2. MRMR feature selection (and the `Option<T>` cleaning that feeds it) would drop
-   and reorder columns, desyncing the variable indices that both the CPDAG and
-   the BRCD ranks refer to. BRCD must not pass through those stages.
-3. The CPDAG-`None` → BOSS fallback is internal to `brcd_run`. Wiring it requires
-   nothing beyond leaving `cpdag = None`.
-
-Constraints from the repo: static dispatch only (no `dyn`); one type per module;
-no external crates beyond what is already present (`csv` is a direct dependency,
-`tempfile` is a dev-dependency); `deep_causality_algorithms`'s `BrcdConfig`,
+Constraints: static dispatch only; one type per module; no external crates beyond
+those present (`csv` direct, `tempfile` dev); the algorithm crate's `BrcdConfig`,
 `FamilyKind`, `BrcdResult`, `BrcdError`, and `boss_learn` are reused as-is.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Host SURD and BRCD as peer algorithms in CDL with parallel, explicit method
-  names (`load_<algo>_input`, `<algo>_discover`, `<algo>_analyze`).
+- Host SURD and BRCD as peer algorithms with parallel, explicit, config-driven
+  stage names (`<algo>_load_input`, `<algo>_discover`, `<algo>_analyze`).
 - Make crossing the two lineages a compile error, not a convention.
-- Preserve SURD's numeric output and rendered report exactly.
-- Provide a `BrcdDataLoader` that turns a config (two paths + optional CPDAG path
-  + CSV options + reused `BrcdConfig<T>`) into one `BrcdInput<T>` bundle.
-- Serialize/deserialize a CPDAG to a CSV file faithful to the `MixedGraph`
-  typed-endpoint model, housed in `deep_causality_discovery`.
+- Make a single, explicit, compile-checked config the source of truth for a run.
+- Preserve SURD's numeric output and rendered report.
+- Read CPDAGs from a file faithful to the `MixedGraph` typed-endpoint model.
 
 **Non-Goals:**
 
-- The bootstrap CPDAG-uncertainty variant (`brcd_run_bootstrap`). Single learned
-  or supplied CPDAG only.
-- The composite differential-SURD-on-a-localized-node diagnostic stack. The
-  pipeline becomes able to host both algorithms; it does not chain them.
+- The bootstrap CPDAG-uncertainty variant (`brcd_run_bootstrap`).
+- The composite differential-SURD-on-a-localized-node stack. The pipeline becomes
+  able to host both algorithms; it does not chain them. The `deep_causality_haft`
+  Arrow combinators (`first`/`split`/`fanout`) are the future fit for that
+  parallel fan-out, ideally via an effectful/Kleisli arrow added later.
 - Any change to `deep_causality_algorithms` or `deep_causality_topology`.
-- A `SurdInput` bundle mirroring `BrcdInput`. SURD's feature-selection step takes
-  a user closure mid-pipeline, so its inputs are not fully determined up front.
 
 ## Decisions
 
 ### D1. Two isolated typestate lineages, converging at `finalize`
 
 ```
-NoData
-  ├ load_surd_input ► SurdData<T> ─clean_data► SurdCleaned<T> ─feature_select► SurdFeatures<T> ─surd_discover► SurdResults<T> ─surd_analyze─┐
-  │                    (preprocess / filter_cohort on SurdData)                                                                            ├► WithAnalysis<T> ─finalize► CdlReport<T>
-  └ load_brcd_input ► BrcdLoaded<T> ──────────────────────────────────────────────────────────────────brcd_discover► BrcdResults<T> ─brcd_analyze─┘
+build_surd(&cfg) ► SurdConfigured ─load─► SurdData ─clean─► SurdCleaned ─select─► SurdFeatures ─discover─► SurdResults ─analyze─┐
+                                                                                                                               ├► WithAnalysis ─finalize► CdlReport
+build_brcd(&cfg) ► BrcdConfigured ───────────────────────────────────────────────load─► BrcdLoaded ─discover─► BrcdResults ─analyze─┘
 ```
 
-Isolation is achieved purely by which state each method is implemented on. A
-method named `brcd_discover` exists only in `impl<T> CDL<BrcdLoaded<T>>`, and
-`surd_discover` only in `impl<T> CDL<SurdFeatures<T>>`; likewise `surd_analyze`
-is only on `SurdResults<T>` and `brcd_analyze` only on `BrcdResults<T>`. Calling
-the wrong one on the wrong lineage is `error[E0599]: no method named …`. The
-lineages share no state until `WithAnalysis<T>`, and that state exposes only
-`finalize`, so discovery cannot be re-run or crossed.
+Isolation is achieved by which state each method is implemented on:
+`surd_*` methods exist only on SURD states, `brcd_*` only on BRCD states, and
+`feature_select`/`clean_data` only on SURD states. Crossing is `error[E0599]`,
+guarded by `compile_fail` doctests. The lineages share no state until
+`WithAnalysis<T>`, which exposes only `finalize`. `CDL<State>` carries no separate
+config object; each lineage threads its own run config through its states.
 
-`finalize` stays shared (one impl on `WithAnalysis<T>`) because it is pure report
-packaging with nothing algorithm-specific left to decide.
+### D2. `CdlConfigBuilder` is the single source of truth (staged typestate builder)
 
-**Alternatives considered.** (a) Thread an optional second dataset and optional
-graph through the existing single chain (the older `cdl-integration` note's D5).
-Rejected: it routes BRCD through MRMR/cleaning, which corrupts it, and the
-single `load_data` only reads one file. (b) A single shared `causal_discovery`
-plus a single `analyze` that match a `DiscoveryOutcome` at runtime. Rejected:
-the user can then call the wrong analyze and fail at runtime; the typestate makes
-it a compile error instead. (c) A fully separate `BrcdCdl` type sharing nothing.
-Rejected: duplicates the report/format/print tail for no isolation gain over (D1).
+The product configs (`SurdLoaderConfig<T>`, `BrcdLoaderConfig<T>`) have only
+`pub(crate)` constructors. `CdlConfigBuilder::build_surd_config::<T>()` /
+`build_brcd_config()` start staged builders where each required field is its own
+stage, so `build()` is reachable only once every required field is set — omitting
+one is a compile error (make-invalid-states-unrepresentable). `build()` then
+verifies the referenced files exist, returning `CdlError::ReadDataError` if not.
+SURD requires `path`, `target_index`, `num_features`, `max_order`, `analyze`;
+BRCD requires `normal_path`, `anomalous_path`, `brcd_config` (the reused
+`BrcdConfig<T>`, mandatory — no hidden algorithm default). The precision `T` is
+pinned at config-build time (`build_surd_config::<T>()`; `BrcdConfig::<T>` for
+BRCD), so the pipeline needs no turbofish.
 
-### D2. `DiscoveryOutcome<T>` closed enum as the convergence carrier
+**Alternatives considered.** A loose `Config::new(..).with_*()` builder
+(rejected: a second construction path undermines "single source of truth", and
+a non-typestate builder can't enforce required fields at compile time). Embedding
+the run config in a master `CdlConfig` (rejected: `CdlConfig` was non-generic and
+the run configs are generic over `T`; carrying the run config in the states keeps
+one source of truth and let `CdlConfig`/`NoData` be removed).
 
-```rust
-pub enum DiscoveryOutcome<T> { Surd(SurdResult<T>), Brcd(BrcdResult<T>) }
-```
+### D3. `build_surd`/`build_brcd` entries; config-driven, parameterless DSL
 
-Each `*_analyze` wraps its concrete result into this enum as it transitions to
-the shared `WithAnalysis<T>`. `CdlReport<T>` carries `DiscoveryOutcome<T>` plus
-`Option<MrmrResult>` (`None` for BRCD), and its `Display` matches the variant.
-This is the single point of polymorphism, it mirrors the existing
-`CausalDiscoveryConfig` enum pattern, and it uses no `dyn`. Adding a third
-algorithm later is a compile-checked exhaustive-match change.
+`CdlBuilder::build_surd(&SurdLoaderConfig<T>)` / `build_brcd(&BrcdLoaderConfig<T>)`
+seed the `*Configured` state, carrying the config into the pipeline. The stages
+then take no algorithm parameters and read them from the carried config:
+`feature_select()` runs MRMR with the config's `num_features`/`target_index`;
+`surd_discover()` runs `surd_states_cdl` with the config's `max_order`;
+`surd_analyze()` uses the config's thresholds; BRCD's loading/discovery use the
+bundle. This trades the previous mid-pipeline closures (custom selector / custom
+discovery) for an explicit, config-driven pipeline — CDL's SURD lineage *is*
+MRMR + SURD-states, so the loss is acceptable and a power-user closure variant
+can be added later.
 
-**Alternatives considered.** A second generic result parameter threaded through
-every state (rejected for the type churn it spreads); a boxed trait object
-(rejected: violates the static-dispatch rule).
+### D4. Fluent effect surface
 
-### D3. Per-algorithm analyzers and typed analyze configs
+Each stage is a method on `CdlEffect<CDL<State>>` that delegates to the
+`CDL<State>` method through an `FnOnce` `and_then` (the `FnOnce` form lets owned
+values move in and threads/merges the warning log like `bind`). The pipeline reads
+`build_surd(&cfg).surd_load_input().clean_data(..)..` with no `.bind(|c| c. …)`
+plumbing. `bind` stays public.
 
-`surd_analyze` runs the existing `SurdResultAnalyzer` with a `SurdAnalyzeConfig`
-(today's three thresholds). `brcd_analyze` runs a new `BrcdResultAnalyzer` with a
-`BrcdAnalyzeConfig` (e.g. top-k candidates to report). Both produce the existing
-`ProcessAnalysis(Vec<String>)`, so the formatter is unchanged. The
-`ProcessResultAnalyzer` contract is generalized (an associated input/config type)
-so each analyzer stays typed to its own result.
+### D5. BRCD loading is an in-pipeline stage
 
-Because analyze is split at the type level, the single `AnalyzeConfig` is
-replaced by two typed configs stored as separate `Option<..>` fields in
-`CdlConfig`. This supersedes an earlier plan to make `AnalyzeConfig` an enum: an
-enum would let a `Surd` config reach a BRCD pipeline and fail at runtime, exactly
-the coupling the typestate removes.
+`brcd_load_input` is a stage on `CDL<BrcdConfigured<T>>` that invokes the
+`pub(crate)` `BrcdDataLoader` to read the two CSVs (+ optional CPDAG) into a
+`BrcdInput<T>` bundle, inside the monad. Loading is no longer a separate
+user-facing call. `cpdag = None` (no CPDAG path) is the entire BOSS-fallback
+wiring, by `brcd_run`'s own contract.
 
-### D4. `BrcdDataLoader` produces one `BrcdInput<T>` bundle; reuses `BrcdConfig`
+### D6. `CdlDiscoveryOutcome<T>` closed enum carries the convergence
 
-```rust
-pub struct BrcdLoaderConfig<T> {
-    normal_path: String, anomalous_path: String,
-    cpdag_path: Option<String>,   // None → brcd_run learns the CPDAG via BOSS
-    csv: CsvConfig,               // defaults to CsvConfig::default()
-    brcd_config: BrcdConfig<T>,   // the reused algorithm config; defaults to BrcdConfig::default()
-}
-pub struct BrcdInput<T> {
-    normal: CausalTensor<T>, anomalous: CausalTensor<T>,
-    cpdag: Option<MixedGraph<()>>, brcd_config: BrcdConfig<T>,
-}
-```
+`CdlDiscoveryOutcome<T> { Surd(Box<SurdResult<T>>), Brcd(BrcdResult<T>) }` — the
+single point of polymorphism, no `dyn`. `Box` on `Surd` keeps the variants
+size-balanced (`SurdResult` is far larger than `BrcdResult`). `CdlReport<T>`
+carries it plus `Option<MrmrResult>` (`None` for BRCD); `Display` matches the
+variant. `CausalDiscoveryError` gains `Brcd(BrcdError)`. Each `*_analyze` runs its
+own analyzer (`SurdResultAnalyzer` / `BrcdResultAnalyzer`) via a
+`ProcessResultAnalyzer` trait generalized with associated `Input`/`Config` types.
 
-`BrcdDataLoader::load(&BrcdLoaderConfig<T>) -> Result<BrcdInput<T>, BrcdLoadError>`:
-loads both CSVs through the existing `CsvDataLoader` (each → `CausalTensor<f64>`),
-casts `f64 → T` with the same logic as `cast_loaded_tensor`, validates equal
-2-D `num_vars`, parses the CPDAG file when `cpdag_path` is `Some` (validating
-`num_vertices == num_vars`), and bundles the result. `brcd_config` is the
-algorithm's own `BrcdConfig<T>`, embedded whole and passed straight into
-`brcd_run`; there is no parallel config struct. `load_brcd_input(input)` seeds the
-`BrcdLoaded<T>` state from the bundle.
+### D7. CPDAG CSV faithful to the typed-endpoint model
 
-BOSS is never invoked by the loader. Leaving `cpdag = None` and handing that to
-`brcd_run` is the entire BOSS-fallback wiring, by the algorithm's own contract.
+`MixedGraph` stores edges as a canonical-pair map `BTreeMap<(lo,hi), Edge { lo:
+Mark, hi: Mark }>`, `Mark ∈ {Tail, Arrow, Circle}`. The file is a 1:1 dump
+(`vertices=N` comment header + `src,dst,mark_src,mark_dst` rows), so it round-trips
+any DAG/CPDAG/MAG/PAG and preserves isolated vertices. `load_cpdag_csv` /
+`save_cpdag_csv` live in the discovery crate (which has `csv`), keeping topology
+free of filesystem code.
 
-### D5. CPDAG CSV format faithful to the `MixedGraph` typed-endpoint model
+### D8. SURD preservation; `Precision` left clean
 
-`MixedGraph` stores edges as a canonical-pair map
-`BTreeMap<(lo, hi), Edge { lo: Mark, hi: Mark }>`, with `Mark ∈ {Tail, Arrow,
-Circle}`. The file is a 1:1 dump of that map, so it round-trips any mixed graph
-(DAG/CPDAG/MAG/PAG), not only arc/undirected CPDAGs:
-
-```
-# deep_causality MixedGraph v1; vertices=5
-src,dst,mark_src,mark_dst
-0,1,Tail,Arrow      # arc 0 -> 1
-1,2,Tail,Tail       # undirected 1 -- 2
-```
-
-`load_cpdag_csv(path) -> Result<MixedGraph<()>, CpdagError>` reads `vertices=N`
-from the comment header, builds `MixedGraph::<()>::new(N, N units, 0)`, and
-applies each row with `add_edge(src, dst, mark_src, mark_dst)`. `save_cpdag_csv`
-writes the header then `lo,hi,edge.lo,edge.hi` for each entry in `edges()`. The
-`csv` reader is configured with `.comment(Some(b'#'))` so the metadata/comment
-lines are skipped during the edge pass; a cheap first-line scan extracts `N`.
-Marks are spelled as full words (`Tail`/`Arrow`/`Circle`) for hand-editability,
-mapped to `Mark` by a small match in the discovery serializer, so topology needs
-no change. Storing `N` preserves isolated vertices that max-index inference would
-drop.
-
-**Alternatives considered.** A 0/1 adjacency matrix (rejected: lossy — cannot
-express `Circle` marks, and the arc direction is a guessed convention not present
-in the model); housing the IO in `deep_causality_topology` (rejected: keeps the
-data-structure crate free of filesystem code, and discovery already has `csv`).
-
-### D6. SURD preservation
-
-The SURD front half keeps its cleaning, MRMR feature selection, and
-`surd_states_cdl` call unchanged in behavior; only method/state names change and
-the result is wrapped into `DiscoveryOutcome::Surd` at `surd_analyze`. A
-regression test runs the SURD chain on a fixed dataset and asserts the rankings,
-the SURD decomposition, and the rendered report are identical to the pre-change
-output.
+The SURD chain keeps its cleaning, MRMR, and `surd_states_cdl` behavior; only the
+surface (config-driven, renamed) changes. A regression test runs the full SURD
+chain and asserts it produces a SURD-variant report. `feature_select` adds a local
+`T: Float + Debug + 'static` bound (MRMR's `F: Float`, which `RealField` does not
+imply — the blanket runs `Float ⇒ RealField`); putting `Float` on `Precision`
+itself was rejected because `Real` and `Float` share method names (`nan`/`is_nan`)
+and would make every existing call ambiguous.
 
 ## Risks / Trade-offs
 
-- **Wide breaking diff across the discovery crate.** → Confined to one crate;
-  only in-repo examples/tests consume the chain. A regression test pins SURD
-  output so the rename cannot silently alter behavior.
-- **CPDAG file desync (vertex count ≠ dataset `num_vars`, or stale indices).** →
-  The loader validates `cpdag.num_vertices() == num_vars` and fails loud with a
-  `CpdagError` / `BrcdLoadError`, rather than letting `brcd_run` mismatch.
-- **BRCD needs dense matrices; missing values would propagate as NaN.** → BRCD
-  bypasses the `Option<T>` cleaning path by design; the loader produces dense
-  `CausalTensor<T>` and documents that the two inputs must be numeric/complete.
-  Imputation, if needed, is a pre-load concern, not part of the BRCD lineage.
-- **New `deep_causality_topology` dependency on `deep_causality_discovery`.** →
-  Single internal path dependency; topology is already a transitive dependency
-  via `deep_causality_algorithms`, so no new external surface.
-- **Marks as words make slightly larger files than single letters.** → Files are
-  small (one line per edge) and hand-edited; readability wins.
+- **Wide breaking diff.** → Confined to one crate; only in-repo examples/tests
+  consume the chain. A SURD regression test pins behavior.
+- **Compile-time covers fields, not files.** → `build()` adds a runtime
+  file-exists check (fail-fast); parse/dimension errors surface through the effect
+  at the load stage.
+- **Config-driven DSL drops the stage closures.** → CDL's SURD lineage is fixed to
+  MRMR + SURD-states by design; a closure variant can return if needed.
+- **BRCD needs dense matrices.** → BRCD bypasses `Option<T>` cleaning; the loader
+  produces dense `CausalTensor<T>` and validates 2-D + equal `num_vars`.
 
 ## Migration Plan
 
-1. Land the generalized tail (`DiscoveryOutcome`, `CdlReport<T>`, analyzer
-   contract, `CausalDiscoveryError::Brcd`) and the branded SURD states/methods in
-   one pass; update SURD examples/tests; confirm the SURD regression test passes.
-2. Add `deep_causality_topology` to `deep_causality_discovery`'s dependencies.
-3. Add CPDAG CSV serialization (`load_cpdag_csv` / `save_cpdag_csv`) with
-   round-trip tests.
-4. Add `BrcdLoaderConfig`, `BrcdInput`, `BrcdDataLoader`, the `BrcdLoaded`/
-   `BrcdResults` states, and `load_brcd_input` / `brcd_discover` / `brcd_analyze`.
-5. Add a BRCD example (supplied CPDAG and BOSS-fallback paths) and tests.
-6. Re-export the new and reused public types from `lib.rs`.
-
-Rollback is `git revert` of the branch; no data migration is involved.
+Landed in one branch: generalized tail + `CdlDiscoveryOutcome` + analyzer contract
++ `CausalDiscoveryError::Brcd`; the staged `CdlConfigBuilder` + product configs;
+`build_surd`/`build_brcd` + `*Configured` states + config-driven stages + fluent
+wrappers; in-pipeline `BrcdDataLoader`; CPDAG CSV IO; removal of `CdlConfig` /
+`NoData`; examples rewritten; full test migration. Rollback is `git revert`.
 
 ## Open Questions
 
-None outstanding. All design decisions were resolved during proposal review
-(no bootstrap; CPDAG IO in discovery; full-word marks; per-algorithm analyze
-with typed configs; `finalize` shared).
+None outstanding. All decisions were resolved during implementation review.

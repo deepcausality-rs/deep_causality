@@ -5,7 +5,7 @@
 
 use deep_causality_algorithms::surd::SurdResult;
 use deep_causality_discovery::ProcessResultAnalyzer;
-use deep_causality_discovery::{AnalyzeConfig, SurdResultAnalyzer};
+use deep_causality_discovery::{SurdAnalyzeConfig, SurdResultAnalyzer};
 use std::collections::HashMap;
 
 // Helper function to create a default SurdResult for testing
@@ -64,7 +64,7 @@ fn test_analyze_high_info_leak_no_influences() {
         HashMap::new(),
         HashMap::new(),
     );
-    let config = AnalyzeConfig::new(0.5, 0.5, 0.5);
+    let config = SurdAnalyzeConfig::new(0.5, 0.5, 0.5);
     let analyzer = SurdResultAnalyzer;
 
     let analysis = analyzer.analyze(&surd_result, &config).unwrap();
@@ -89,7 +89,7 @@ fn test_analyze_low_info_leak_no_influences() {
         HashMap::new(),
         HashMap::new(),
     );
-    let config = AnalyzeConfig::new(0.5, 0.5, 0.5);
+    let config = SurdAnalyzeConfig::new(0.5, 0.5, 0.5);
     let analyzer = SurdResultAnalyzer;
 
     let analysis = analyzer.analyze(&surd_result, &config).unwrap();
@@ -121,7 +121,7 @@ fn test_analyze_with_all_strong_influences() {
         mutual_data,
         redundant_data,
     );
-    let config = AnalyzeConfig::new(0.5, 0.5, 0.5);
+    let config = SurdAnalyzeConfig::new(0.5, 0.5, 0.5);
     let analyzer = SurdResultAnalyzer;
 
     let analysis = analyzer.analyze(&surd_result, &config).unwrap();
@@ -164,7 +164,7 @@ fn test_analyze_with_mixed_influences_and_thresholds() {
         mutual_data,
         redundant_data,
     );
-    let config = AnalyzeConfig::new(0.75, 0.85, 0.75); // Higher thresholds
+    let config = SurdAnalyzeConfig::new(0.75, 0.85, 0.75); // Higher thresholds
     let analyzer = SurdResultAnalyzer;
 
     let analysis = analyzer.analyze(&surd_result, &config).unwrap();
