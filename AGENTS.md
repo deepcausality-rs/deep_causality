@@ -112,6 +112,14 @@ Understand the surrounding code before editing it.
 - Do not infer architecture from one file when other relevant files are available.
 - If context is missing, say so.
 
+Understand the existing layers of abstraction:
+
+- Identify the various levels of abstraction in the affected codebase.
+- Expand the search of the codebase to understand the various levels of abstraction already in place.
+- Ensure that new code lands at the right level of abstraction in the existing code base.
+- If you find inconsistencies of abstraction, flag them. Stop and say so.
+- If you cannot determine where to put new code in the abstraction hierarchy, flag, stop and say so.
+
 Do not patch blindly.
 
 ### 7. Preserve Intent

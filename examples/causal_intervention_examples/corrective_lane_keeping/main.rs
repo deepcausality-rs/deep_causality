@@ -31,9 +31,9 @@ mod model;
 pub mod model_types;
 mod model_utils;
 
-use crate::model_types::{FloatType, LaneProcess, N_TICKS};
+use crate::model_types::{FloatType, LaneProcess, N_TICKS, nominal_lane_config};
 use causal_intervention_examples::print_utils;
-use deep_causality_core::{EffectValue, Intervenable};
+use deep_causality_core::CausalFlow;
 
 fn main() {
     println!("=== Lane-Keeping as a Corrective `intervene` Loop ===\n");
@@ -60,29 +60,34 @@ fn main() {
     print_utils::print_effect_log(&closed.logs);
 }
 
+/// Open loop: each tick is just `simulate_step`, run `N_TICKS` times. No monitor, no correction.
 fn run_open_loop() -> LaneProcess<FloatType> {
-    let mut process = model::initial_process();
-    for _ in 0..N_TICKS {
-        process = process.bind(model::simulate_step);
-    }
-    process
+    CausalFlow::from(model::initial_process())
+        .iterate_n(N_TICKS as usize, |tick| tick.bind(model::simulate_step))
+        .into_process()
 }
 
+/// Closed loop: the same tick, but each one `branch`es on the monitor — when the offset crosses the
+/// anomaly threshold the corrective arm records the override and `intervene`s the corrected offset.
+/// The only difference from the open loop is the `branch`.
+///
+/// Both the trigger and the correction read the same `cfg`, so the threshold the monitor fires on
+/// and the gain the correction applies can never desynchronize.
 fn run_closed_loop() -> LaneProcess<FloatType> {
-    let mut process = model::initial_process();
-    for _ in 0..N_TICKS {
-        process = process.bind(model::simulate_step);
-
-        let current = match &process.value {
-            EffectValue::Value(v) => *v,
-            _ => continue,
-        };
-        let cfg = process.context.clone().expect("LaneConfig present");
-        if current.abs() > cfg.anomaly_threshold {
-            let corrected = model::correction(current, &cfg);
-            process.state.correction_count += 1;
-            process = process.intervene(corrected);
-        }
-    }
-    process
+    let cfg = nominal_lane_config();
+    CausalFlow::from(model::initial_process())
+        .iterate_n(N_TICKS as usize, |tick| {
+            tick.bind(model::simulate_step).branch(
+                |offset| offset.abs() > cfg.anomaly_threshold,
+                |hot| {
+                    hot.update_state(|mut state, _offset| {
+                        state.correction_count += 1;
+                        state
+                    })
+                    .intervene_if(|_| true, |offset| model::correction(offset, &cfg))
+                },
+                |cold| cold,
+            )
+        })
+        .into_process()
 }

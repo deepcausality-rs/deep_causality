@@ -39,8 +39,8 @@ mod model;
 pub mod model_types;
 mod model_utils;
 
-use deep_causality_core::{Intervenable, PropagatingEffect};
-use model::{build_chain, fatigue_stage, shear_stress_stage};
+use deep_causality_core::{CausalFlow, PropagatingEffect};
+use model::{fatigue_stage, shear_stress_stage};
 use model_types::{CRITICAL_WSS, CycleSummary, FloatType};
 
 fn main() {
@@ -64,27 +64,30 @@ fn main() {
 }
 
 fn run_factual(baseline_bp: FloatType) -> PropagatingEffect<CycleSummary> {
-    build_chain(baseline_bp)
-        .bind(shear_stress_stage)
-        .bind(fatigue_stage)
+    CausalFlow::value(baseline_bp)
+        .map(shear_stress_stage)
+        .map(fatigue_stage)
+        .into_effect()
 }
 
 fn run_medication_counterfactual(
     baseline_bp: FloatType,
     controlled_bp: FloatType,
 ) -> PropagatingEffect<CycleSummary> {
-    build_chain(baseline_bp)
+    CausalFlow::value(baseline_bp)
         .intervene(controlled_bp)
-        .bind(shear_stress_stage)
-        .bind(fatigue_stage)
+        .map(shear_stress_stage)
+        .map(fatigue_stage)
+        .into_effect()
 }
 
 fn run_surgical_counterfactual(
     baseline_bp: FloatType,
     clipped_wss: FloatType,
 ) -> PropagatingEffect<CycleSummary> {
-    build_chain(baseline_bp)
-        .bind(shear_stress_stage)
+    CausalFlow::value(baseline_bp)
+        .map(shear_stress_stage)
         .intervene(clipped_wss)
-        .bind(fatigue_stage)
+        .map(fatigue_stage)
+        .into_effect()
 }

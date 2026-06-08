@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{EffectValue, Intervenable, PropagatingEffect};
+use deep_causality_core::{CausalFlow, EffectValue};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::Graph;
 
@@ -85,9 +85,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Simulate stress on plate 2
     let current_stress = impact_stress;
 
-    // Wrap current state in Causal Effect (monadic container)
-    let stress_effect: PropagatingEffect<Option<f64>> =
-        PropagatingEffect::pure(Some(current_stress));
+    // Wrap the current reading in a CausalFlow (the DSL over the causal monad).
+    let stress_effect = CausalFlow::value(Some(current_stress));
 
     println!("    Plate 2 Sensor Reading: {:.1} MPa", current_stress);
 
@@ -106,7 +105,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // This creates a counterfactual branch: "What if we override the stress?"
         // The intervention is recorded in the effect's causal log.
 
-        let healed_effect = stress_effect.intervene(Some(SAFE_STRESS_LIMIT));
+        let healed_effect = stress_effect
+            .intervene(Some(SAFE_STRESS_LIMIT))
+            .into_effect();
 
         println!("    > [BLACKBOX AUDIT]: Autonomous Intervention Recorded.");
         println!("    > Intervention Type: ACTIVE_DAMPENING");

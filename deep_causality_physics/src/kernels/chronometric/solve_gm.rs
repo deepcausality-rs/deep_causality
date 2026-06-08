@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use core::fmt::Debug;
-use deep_causality_num::RealField;
+use core::ops::Div;
+use deep_causality_num::Real;
 
 use crate::{CentralBody, PhysicsError, SPEED_OF_LIGHT, SpaceTimeCoordinate};
 
@@ -158,7 +159,7 @@ pub fn solve_gm_analytical_kernel<R>(
     body: &CentralBody<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: RealField + From<f64> + Debug,
+    R: Real + Div<Output = R> + From<f64> + Debug,
 {
     let c: R = R::from(SPEED_OF_LIGHT);
     let c_sq = c * c;
@@ -193,7 +194,7 @@ fn inv_r_effective<R>(
     body: &CentralBody<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: RealField + From<f64> + Debug,
+    R: Real + Div<Output = R> + From<f64> + Debug,
 {
     let r = coord.r_m;
     if r <= R::zero() {

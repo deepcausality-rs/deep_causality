@@ -44,7 +44,9 @@ graph TD
     end
 
     subgraph Field Structures
+        Real["Real"]
         Field["Field"]
+        Scalar["Scalar"]
         RealFld["RealField"]
         CmplxFld["ComplexField&lt;R&gt;"]
     end
@@ -91,9 +93,12 @@ graph TD
     CommRing --> EucDom
 
     %% Field path
+    CommRing --> Real
     CommRing --> Field
     InvMon --> Field
+    Real --> RealFld
     Field --> RealFld
+    Real --> Scalar
     Field --> CmplxFld
 
     %% Module/Algebra path
@@ -346,29 +351,68 @@ pub trait Field: CommutativeRing + InvMonoid + Div<Output = Self> + DivAssign {}
 
 ---
 
-#### RealField
-An ordered field with transcendental functions for calculus and analysis.
+#### Real
+The analytic real interface: a commutative ring with ordering, negation, and the elementary
+functions — but **without** requiring field division. Splitting `Real` out of `RealField` lets
+non-field reals carry the same analytic API; the load-bearing case is `Dual<T>`, whose `ε` is a
+zero divisor (it is **not** a field, yet it is `Real`).
 
 ```rust
-pub trait RealField: Field + PartialOrd + Neg<Output = Self> + Copy {
+pub trait Real:
+    CommutativeRing + PartialOrd + Neg<Output = Self> + Copy + Clone + AddAssign + SubAssign + MulAssign
+{
     fn sqrt(self) -> Self;
     fn exp(self) -> Self;
     fn ln(self) -> Self;
     fn sin(self) -> Self;
     fn cos(self) -> Self;
-    fn tan(self) -> Self;
-    fn powf(self, n: Self) -> Self;
     fn pi() -> Self;
     fn e() -> Self;
     fn epsilon() -> Self;
-    // ... and more
+    // ... and the rest of the elementary functions
 }
 ```
 
-**Extensions beyond `Field`:**
-- **Ordering:** `PartialOrd`
-- **Transcendentals:** `sin`, `cos`, `exp`, `ln`, `sqrt`, etc.
-- **Constants:** `pi()`, `e()`, `epsilon()`
+---
+
+#### Scalar
+The differentiation/integration scalar: a `Real` with division that need **not** be a field.
+
+```rust
+pub trait Scalar: Real + Div<Output = Self> + FromPrimitive {}
+```
+
+**Position in the tower:** between `Real` and `RealField`. It adds `Div` to `Real`, but unlike a
+`Field`/`RealField` it does **not** require a total inverse — so `Dual<T>` qualifies (`ε` is a zero
+divisor: division exists, yet it is not a field).
+
+**Why each bound:**
+- `Real` — ring arithmetic and the elementary functions (the analytic axis), without field division.
+- `Div` — lets `Dual` itself be `Real`, so the tangent functor **nests** (`Dual<Dual<…>>` gives
+  higher derivatives).
+- `FromPrimitive` — the precision-safe constant lift: a model raises its literal constants into the
+  working scalar at any precision (`f32` / `f64` / `Float106`, and `Dual` over each). `From<f64>` is
+  deliberately *not* used, because `f32` does not implement it.
+
+Blanket-implemented, so every qualifying number is a `Scalar` automatically.
+`deep_causality_calculus` writes its differentiation and integration operators against `Scalar`, so
+a single model evaluates at `f64` (the value) and at `Dual` (the derivative).
+
+**Examples:** `f32`, `f64`, `Float106`, and `Dual<T>` for any `Scalar` `T`.
+
+---
+
+#### RealField
+A real that is also a field: the analytic real (`Real`) intersected with field division.
+
+```rust
+pub trait RealField: Real + Field {}
+```
+
+`RealField` adds nothing of its own — it is exactly the reals that are fields. The ordering,
+transcendentals (`sin`, `cos`, `exp`, `ln`, `sqrt`, …), and constants (`pi()`, `e()`, `epsilon()`)
+come from `Real`; total division comes from `Field`. `f32` / `f64` are `RealField`; `Dual<T>` is
+`Real` / `Scalar` but **not** `RealField` (no total inverse).
 
 ---
 
@@ -585,7 +629,8 @@ pub trait UnsignedInt: Integer {
 
 | Type | Primary Traits |
 |------|----------------|
-| `f32`, `f64` | `RealField`, `Field`, `DivisionAlgebra<Self>` |
+| `f32`, `f64` | `RealField`, `Real`, `Scalar`, `Field`, `DivisionAlgebra<Self>` |
+| `Dual<T>` | `Real`, `Scalar` (a non-field: `ε` is a zero divisor) |
 | `Complex<T>` | `Field`, `DivisionAlgebra<T>`, `Rotation<T>` |
 | `Quaternion<T>` | `AssociativeRing`, `DivisionAlgebra<T>`, `Rotation<T>` |
 | `Octonion<T>` | `DivisionAlgebra<T>` (non-associative) |

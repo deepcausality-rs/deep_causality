@@ -5,12 +5,15 @@
 
 mod adjunction_tests;
 mod applicative_tests;
+mod arrow_tests;
 mod bifunctor_tests;
 mod comonad_tests;
 mod cybernetic_loop_tests;
+mod endomorphism_tests;
 mod foldable_tests;
 mod functor_tests;
 mod monad_tests;
+mod morphism_tests;
 mod parametric_monad_tests;
 mod profunctor_tests;
 mod promonad_tests;

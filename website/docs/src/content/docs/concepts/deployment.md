@@ -2,7 +2,7 @@
 title: Deployment
 description: A DeepCausality model carries no runtime of its own. It runs synchronously, asynchronously on Tokio, and concurrently across threads behind a shared lock that does not become a bottleneck.
 sidebar:
-  order: 14
+  order: 15
 ---
 
 A DeepCausality model may run in a normal binary, on a background thread, or across a pool of Tokio worker threads.

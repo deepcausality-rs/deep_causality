@@ -4,12 +4,28 @@
  */
 use crate::{Num, NumCast};
 use core::num::FpCategory;
-use core::ops::Neg;
+use core::ops::{AddAssign, DivAssign, MulAssign, Neg, SubAssign};
 
+mod float_106_impl;
 mod float_32_impl;
 mod float_64_impl;
 
-pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
+/// `Float` requires the in-place arithmetic operators (`+=`, `-=`, `*=`, `/=`) in
+/// addition to the by-value ones from `Num`. Every real floating-point type supports
+/// them, and they let the algebra tower derive `AddMonoid`/`Field`/`Real`/… for any
+/// `T: Float` — so a new float type implements `Float` and inherits the whole tower
+/// through the blanket impls (`impl<T: Float> Real for T`, etc.).
+pub trait Float:
+    Num
+    + Copy
+    + NumCast
+    + PartialOrd
+    + Neg<Output = Self>
+    + AddAssign
+    + SubAssign
+    + MulAssign
+    + DivAssign
+{
     /// Returns the `NaN` value.
     ///
     /// ```
@@ -101,6 +117,24 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     /// The default implementation will panic if `f32::EPSILON` cannot
     /// be cast to `Self`.
     fn epsilon() -> Self;
+
+    /// Returns the constant π.
+    ///
+    /// ```
+    /// use deep_causality_num::Float;
+    /// let x: f64 = Float::pi();
+    /// assert_eq!(x, core::f64::consts::PI);
+    /// ```
+    fn pi() -> Self;
+
+    /// Returns the Euler number e, the base of the natural logarithm.
+    ///
+    /// ```
+    /// use deep_causality_num::Float;
+    /// let x: f64 = Float::e();
+    /// assert_eq!(x, core::f64::consts::E);
+    /// ```
+    fn e() -> Self;
 
     /// Returns the largest finite value that this type can represent.
     ///

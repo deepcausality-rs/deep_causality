@@ -5,7 +5,9 @@
 use crate::{NumOps, One, Zero};
 use core::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
 
+pub mod identity;
 mod num_impl;
+pub mod ops;
 
 /// The base trait for numeric types, covering `0` and `1` values,
 /// comparisons, basic numeric operations, and string conversion.

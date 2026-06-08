@@ -32,6 +32,7 @@
 mod model;
 
 use deep_causality::PropagatingEffect;
+use deep_causality_core::CausalFlow;
 use model::{SensorData, TiltState};
 
 /// Process Noise Q - Models uncertainty in gravity estimate (e.g., sensor drift)
@@ -87,7 +88,8 @@ fn main() {
             .enumerate()
             .fold(initial_state, |state, (i, sensor_data)| {
                 // Execute the causal chain for each sensor reading
-                let result: PropagatingEffect<TiltState> = PropagatingEffect::pure(state)
+                // Per-frame estimator pipeline as one CausalFlow: gyro -> motion -> Kalman -> tilt.
+                let result: PropagatingEffect<TiltState> = CausalFlow::value(state)
                     .bind(|s, _, _| {
                         // Step 1: Gyro Integration (Orientation Prediction)
                         model::integrate_gyro(s.into_value().unwrap_or_default(), &sensor_data)
@@ -103,7 +105,8 @@ fn main() {
                     .bind(|s, _, _| {
                         // Step 4: Tilt Correction
                         model::apply_tilt_correction(s.into_value().unwrap_or_default())
-                    });
+                    })
+                    .into_effect();
 
                 // Print progress at key frames
                 if i == 0 || i == 15 || i == 35 || i == 49 {

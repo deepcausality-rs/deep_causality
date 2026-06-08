@@ -3,10 +3,53 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{EffectValue, PropagatingEffect};
+use deep_causality_calculus::{DifferentiableField, Euler, Scalar};
+use deep_causality_core::{
+    CausalFlow, CausalityError, CausalityErrorEnum, EffectValue, PropagatingEffect,
+};
+use deep_causality_haft::Arrow;
 use deep_causality_tensor::CausalTensor;
 use std::error::Error;
 use std::f64::consts::PI;
+use std::ops::{Add, Mul};
+
+/// 2-D position `(x, y)` in metres — the integrator state. `Euler` needs a module-valued state
+/// (`Add` + scalar `Mul`), so the truth position rides in this newtype.
+#[derive(Clone, Copy)]
+pub struct Pos2(pub f64, pub f64);
+
+impl Add for Pos2 {
+    type Output = Pos2;
+    fn add(self, o: Pos2) -> Pos2 {
+        Pos2(self.0 + o.0, self.1 + o.1)
+    }
+}
+
+impl Mul<f64> for Pos2 {
+    type Output = Pos2;
+    fn mul(self, s: f64) -> Pos2 {
+        Pos2(self.0 * s, self.1 * s)
+    }
+}
+
+/// The closed-form synthetic crustal anomaly field `B(fx, fy)`, written once as a scalar-generic
+/// field. The grid is sampled from it (`run` at `f64`), and its spatial gradient `∇B` — the
+/// navigation observable a gradient-aided filter uses, previously never computed — falls out of
+/// the same definition via the tangent functor (`AnomalyField.gradient(&[fx, fy])`).
+pub struct AnomalyField;
+
+impl DifferentiableField<2> for AnomalyField {
+    fn run<S: Scalar>(&self, p: &[S; 2]) -> S {
+        let (fx, fy) = (p[0], p[1]);
+        let c50 = S::from_f64(50.0).expect("constant lifts into the working scalar");
+        let c20 = S::from_f64(20.0).expect("constant lifts into the working scalar");
+        let c15 = S::from_f64(15.0).expect("constant lifts into the working scalar");
+        let c03 = S::from_f64(0.3).expect("constant lifts into the working scalar");
+        let c07 = S::from_f64(0.7).expect("constant lifts into the working scalar");
+        // Base trend + high-frequency spatial variation (a realistic crustal anomaly).
+        fx.sin() * fy.cos() * c50 + (fx * c03).sin() * c20 + (fy * c07).cos() * c15
+    }
+}
 
 // --- Constants & Configuration ---
 pub const MAP_SIZE: usize = 120; // [km] Covers 120x120km area
@@ -27,12 +70,9 @@ impl MagneticMap {
             for x in 0..size {
                 let fx = x as f64 * 0.05;
                 let fy = y as f64 * 0.05;
-                // Synthetic Anomaly: Base Trend + High Freq spatial variation
-                // Simulates a realistic crustal anomaly field
-                let val = (fx.sin() * fy.cos() * 50.0)
-                    + ((fx * 0.3).sin() * 20.0)
-                    + ((fy * 0.7).cos() * 15.0);
-                data.push(val);
+                // Sample the closed-form anomaly field that `AnomalyField` differentiates,
+                // so the grid and the gradient `∇B` share one definition.
+                data.push(AnomalyField.run(&[fx, fy]));
             }
         }
         let grid = CausalTensor::new(data, vec![size, size])?;
@@ -230,4 +270,95 @@ fn rand_f64() -> f64 {
         % 4294967296;
     SEED.store(next, Ordering::Relaxed);
     (next as f64) / 4294967296.0
+}
+
+/// The navigation state threaded through the `CausalFlow` pipeline in `main`
+/// (`dynamics -> sensors -> filter -> output`). It carries the mutable per-tick state and the fixed
+/// context (the magnetic map, the INS velocity, the step) so each stage can be a free-standing
+/// sub-process `fn(NavState) -> CausalFlow<NavState>`.
+pub struct NavState {
+    pub true_pos: Pos2,
+    pub filter: ParticleFilter,
+    pub map: MagneticMap,
+    pub vel_x: f64,
+    pub vel_y: f64,
+    pub dt: f64,
+    pub obs_mag: f64,
+    pub tick: u32,
+}
+
+impl NavState {
+    pub fn new(
+        true_pos: Pos2,
+        filter: ParticleFilter,
+        map: MagneticMap,
+        vel_x: f64,
+        vel_y: f64,
+        dt: f64,
+    ) -> Self {
+        Self {
+            true_pos,
+            filter,
+            map,
+            vel_x,
+            vel_y,
+            dt,
+            obs_mag: 0.0,
+            tick: 0,
+        }
+    }
+}
+
+/// A. Dynamics (truth simulation): truth kinematics ẋ = v as one `Euler` endo-arrow step.
+pub(crate) fn dynamics(mut s: NavState) -> CausalFlow<NavState> {
+    let (vel_x, vel_y) = (s.vel_x, s.vel_y);
+    let kinematics = Euler::new(s.dt, move |_: &Pos2| Pos2(vel_x, vel_y));
+    s.true_pos = kinematics.run(s.true_pos);
+    CausalFlow::value(s)
+}
+
+/// B. Sensors: magnetometer reading = field truth + sensor noise.
+pub(crate) fn sensors(mut s: NavState) -> CausalFlow<NavState> {
+    s.obs_mag = s.map.sample(s.true_pos.0, s.true_pos.1) + generate_gaussian_noise(MAG_NOISE_STD);
+    CausalFlow::value(s)
+}
+
+/// C. Navigation filter: predict (INS) -> causal measurement update -> resample. A failed causal
+/// update short-circuits the flow's error channel.
+pub(crate) fn filter_update(mut s: NavState) -> CausalFlow<NavState> {
+    s.filter.predict(s.vel_x, s.vel_y, s.dt);
+    if let Err(e) = s.filter.update(s.obs_mag, &s.map) {
+        return CausalFlow::fail(CausalityError::new(CausalityErrorEnum::Custom(
+            e.to_string(),
+        )));
+    }
+    s.filter.resample();
+    CausalFlow::value(s)
+}
+
+/// D. Output / logging: weighted-mean estimate, NAV error, integrity status.
+pub(crate) fn output(mut s: NavState) -> CausalFlow<NavState> {
+    s.tick += 1;
+    let (est_x, est_y) = s.filter.estimate();
+    let (true_pos_x, true_pos_y) = (s.true_pos.0, s.true_pos.1);
+    let total_err = ((true_pos_x - est_x).powi(2) + (true_pos_y - est_y).powi(2)).sqrt();
+    let status = if total_err < 50.0 {
+        "RNP 0.03 (GOOD)"
+    } else if total_err < 150.0 {
+        "DEGRADED"
+    } else {
+        "UNCERTAIN"
+    };
+    println!(
+        "{:>6.1}   | [{:>6.0}, {:>6.0}] | [{:>6.0}, {:>6.0}] | {:>6.1}  | {:>6.1}   | {}",
+        s.tick as f64 * s.dt,
+        true_pos_x,
+        true_pos_y,
+        est_x,
+        est_y,
+        total_err,
+        s.obs_mag,
+        status
+    );
+    CausalFlow::value(s)
 }

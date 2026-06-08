@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{EARTH_GM, EARTH_J2, EARTH_RADIUS_EQUATORIAL, SPEED_OF_LIGHT};
-use deep_causality_num::{FromPrimitive, RealField};
+use core::ops::Div;
+use deep_causality_num::{FromPrimitive, Real};
 
 /// Parameters describing a central gravitating body for weak-field GM recovery.
 ///
@@ -14,7 +15,7 @@ use deep_causality_num::{FromPrimitive, RealField};
 /// `gm` is included for forward modeling and reference, even though
 /// `solve_gm_analytical_kernel` is what solves for this value.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct CentralBody<R: RealField> {
+pub struct CentralBody<R: Real + Div<Output = R>> {
     /// Body-centric gravitational parameter (m³/s²).
     pub gm: R,
     /// Equatorial reference radius (m) — the radius J2 is referenced to.
@@ -32,7 +33,7 @@ impl CentralBody<f64> {
     };
 }
 
-impl<R: RealField> CentralBody<R> {
+impl<R: Real + Div<Output = R>> CentralBody<R> {
     #[inline]
     pub fn new(gm: R, equatorial_radius_m: R, j2: R) -> Self {
         Self {
@@ -51,9 +52,10 @@ impl<R: RealField> CentralBody<R> {
 ///
 /// # Type Parameter
 ///
-/// - `R`: Real field type (e.g., `f64`, `DoubleFloat`)
+/// - `R`: real analytic scalar (e.g., `f64`, `Float106`, or `Dual` for forward-mode
+///   automatic differentiation) — `Real + Div`, not the stronger `RealField`.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct SpaceTimeCoordinate<R: RealField> {
+pub struct SpaceTimeCoordinate<R: Real + Div<Output = R>> {
     /// The UTC timestamp in seconds (Unix Epoch).
     pub timestamp: u64,
     /// Satellite ID (e.g., E14)
@@ -73,7 +75,7 @@ pub struct SpaceTimeCoordinate<R: RealField> {
     pub clock_drift_rate: R,
 }
 
-impl<R: RealField + FromPrimitive> SpaceTimeCoordinate<R> {
+impl<R: Real + Div<Output = R> + FromPrimitive> SpaceTimeCoordinate<R> {
     /// Helper to restore relativistic effects removed by IGS.
     /// Calculates $\Delta t_{periodic} = -2(\vec{r} \cdot \vec{v}) / c^2$
     pub fn get_total_bias(&self) -> R {

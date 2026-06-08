@@ -82,8 +82,12 @@ name = "avionics_examples"
 version = "0.1.0"
 dependencies = [
  "deep_causality",
+ "deep_causality_calculus",
  "deep_causality_core",
+ "deep_causality_haft",
  "deep_causality_multivector",
+ "deep_causality_num",
+ "deep_causality_physics",
  "deep_causality_tensor",
 ]
 
@@ -131,6 +135,7 @@ dependencies = [
 name = "causal_intervention_examples"
 version = "0.1.0"
 dependencies = [
+ "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_haft",
 ]
@@ -456,6 +461,14 @@ dependencies = [
 [[package]]
 name = "deep_causality_ast"
 version = "0.1.6"
+
+[[package]]
+name = "deep_causality_calculus"
+version = "0.1.0"
+dependencies = [
+ "deep_causality_haft",
+ "deep_causality_num",
+]
 
 [[package]]
 name = "deep_causality_core"
@@ -870,6 +883,7 @@ checksum = "616ec5685824bcc94416c6d4a7a446eea774a31efd7062c8480ba6fd06d7a6e5"
 name = "material_examples"
 version = "0.1.0"
 dependencies = [
+ "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_multivector",
  "deep_causality_num",
@@ -881,6 +895,7 @@ dependencies = [
 name = "mathematics_examples"
 version = "0.1.0"
 dependencies = [
+ "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_haft",
  "deep_causality_metric",
@@ -896,6 +911,7 @@ dependencies = [
 name = "medicine_examples"
 version = "0.1.0"
 dependencies = [
+ "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_num",
  "deep_causality_physics",
@@ -1040,6 +1056,7 @@ name = "physics_examples"
 version = "0.1.0"
 dependencies = [
  "deep_causality",
+ "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_multivector",
  "deep_causality_num",

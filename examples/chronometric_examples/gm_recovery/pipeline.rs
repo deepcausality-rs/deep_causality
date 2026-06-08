@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! GM recovery pipeline expressed as a `CausalMonad` bind chain.
+//! GM recovery pipeline expressed as a `CausalFlow` chain.
 //!
-//! Five stages, each returning a [`PropagatingEffect`], composed with `.bind`:
+//! Five stages, each a plain `Value -> Result<U, CausalityError>`, composed with `.try_step`:
 //!
 //! ```text
 //! load ──► align ──► pair ──► invert ──► aggregate
@@ -21,11 +21,13 @@
 //!    and compare to the JGM-3 reference value.
 //!
 //! Generic over the precision type `R` (`f64`, `Float106`, …) so the same
-//! pipeline composes at any precision the framework supports.
+//! pipeline composes at any precision the framework supports. Because each
+//! stage returns a `Result`, `CausalFlow::try_step` unwraps the value and
+//! short-circuits the error channel; no stage touches `EffectValue`.
 
 use chronometric_examples::{ClockData, OrbitData};
 use core::fmt::Debug;
-use deep_causality_core::{CausalityError, CausalityErrorEnum, EffectValue, PropagatingEffect};
+use deep_causality_core::{CausalityError, CausalityErrorEnum, EffectValue};
 use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_physics::{
     CentralBody, EARTH_GM, EARTH_J2, EARTH_MASS_KG, EARTH_RADIUS_EQUATORIAL,
@@ -109,24 +111,15 @@ pub struct GmReport<R: RealField> {
 }
 
 // ---------------------------------------------------------------------------
-// Stages
+// Stages — each `Value -> Result<U, CausalityError>`
 // ---------------------------------------------------------------------------
 
-pub fn stage_load<R>(
-    value: EffectValue<DatasetInputs>,
-    _state: (),
-    _ctx: Option<()>,
-) -> PropagatingEffect<LoadedDataset<R>>
+pub fn stage_load<R>(inputs: DatasetInputs) -> Result<LoadedDataset<R>, CausalityError>
 where
     R: RealField + From<f64> + Default + Debug,
 {
-    let inputs = match value {
-        EffectValue::Value(v) => v,
-        _ => return error("stage_load: upstream produced no value"),
-    };
-
     if inputs.datasets.is_empty() {
-        return error("stage_load: no datasets specified");
+        return Err(err("stage_load: no datasets specified"));
     }
 
     let dm = DataManager::default();
@@ -142,20 +135,20 @@ where
                 all_orbits.extend(orbits);
             }
             Err(e) => {
-                return error(&format!(
+                return Err(err(&format!(
                     "stage_load: failed to load dataset '{}' for {}: {}",
                     dataset, inputs.sat_id, e
-                ));
+                )));
             }
         }
     }
 
     if all_clocks.is_empty() || all_orbits.is_empty() {
-        return error(&format!(
+        return Err(err(&format!(
             "stage_load: empty data for satellite {} across {} dataset(s)",
             inputs.sat_id,
             inputs.datasets.len()
-        ));
+        )));
     }
 
     // Defensive sort by timestamp — the Lagrange interpolation in stage_align
@@ -164,55 +157,37 @@ where
     all_clocks.sort_by_key(|c| c.timestamp());
     all_orbits.sort_by_key(|o| o.timestamp());
 
-    PropagatingEffect::pure(LoadedDataset {
+    Ok(LoadedDataset {
         clocks: all_clocks,
         orbits: all_orbits,
     })
 }
 
-pub fn stage_align<R>(
-    value: EffectValue<LoadedDataset<R>>,
-    _state: (),
-    _ctx: Option<()>,
-) -> PropagatingEffect<CoordinateSet<R>>
+pub fn stage_align<R>(dataset: LoadedDataset<R>) -> Result<CoordinateSet<R>, CausalityError>
 where
     R: RealField + From<f64> + Into<f64> + FromPrimitive + Default + Debug,
 {
-    let dataset = match value {
-        EffectValue::Value(v) => v,
-        _ => return error("stage_align: upstream produced no value"),
-    };
-
     let coords = interpolate_space_time(&dataset.clocks, &dataset.orbits);
     if coords.len() < 2 {
-        return error(&format!(
+        return Err(err(&format!(
             "stage_align: only {} aligned coordinate(s); need at least 2",
             coords.len()
-        ));
+        )));
     }
-    PropagatingEffect::pure(CoordinateSet { coords })
+    Ok(CoordinateSet { coords })
 }
 
-pub fn stage_pair<R>(
-    value: EffectValue<CoordinateSet<R>>,
-    _state: (),
-    _ctx: Option<()>,
-) -> PropagatingEffect<PairSet<R>>
+pub fn stage_pair<R>(set: CoordinateSet<R>) -> Result<PairSet<R>, CausalityError>
 where
     R: RealField + From<f64> + Default + Debug,
 {
-    let set = match value {
-        EffectValue::Value(v) => v,
-        _ => return error("stage_pair: upstream produced no value"),
-    };
-
     let coords = &set.coords;
     if coords.len() <= PAIR_WINDOW_SIZE {
-        return error(&format!(
+        return Err(err(&format!(
             "stage_pair: only {} coordinate(s); need more than the window size {}",
             coords.len(),
             PAIR_WINDOW_SIZE
-        ));
+        )));
     }
 
     // Sliding-window pairing: pair coord[i] with coord[i + WINDOW] sliding by
@@ -233,24 +208,17 @@ where
     }
 
     if pairs.is_empty() {
-        return error("stage_pair: no coordinate pairs with sufficient radial separation");
+        return Err(err(
+            "stage_pair: no coordinate pairs with sufficient radial separation",
+        ));
     }
-    PropagatingEffect::pure(PairSet { pairs })
+    Ok(PairSet { pairs })
 }
 
-pub fn stage_solve_gm<R>(
-    value: EffectValue<PairSet<R>>,
-    _state: (),
-    _ctx: Option<()>,
-) -> PropagatingEffect<GmEstimates<R>>
+pub fn stage_solve_gm<R>(set: PairSet<R>) -> Result<GmEstimates<R>, CausalityError>
 where
     R: RealField + From<f64> + Default + Debug,
 {
-    let set = match value {
-        EffectValue::Value(v) => v,
-        _ => return error("stage_invert: upstream produced no value"),
-    };
-
     let body = CentralBody::<R>::new(
         R::from(EARTH_GM),
         R::from(EARTH_RADIUS_EQUATORIAL),
@@ -273,29 +241,20 @@ where
     }
 
     if estimates.is_empty() {
-        return error("stage_invert: no successful inversions");
+        return Err(err("stage_invert: no successful inversions"));
     }
-    PropagatingEffect::pure(GmEstimates { estimates })
+    Ok(GmEstimates { estimates })
 }
 
-pub fn stage_aggregate<R>(
-    value: EffectValue<GmEstimates<R>>,
-    _state: (),
-    _ctx: Option<()>,
-) -> PropagatingEffect<GmReport<R>>
+pub fn stage_aggregate<R>(est: GmEstimates<R>) -> Result<GmReport<R>, CausalityError>
 where
     R: RealField + From<f64> + Default + Debug,
 {
-    let est = match value {
-        EffectValue::Value(v) => v,
-        _ => return error("stage_aggregate: upstream produced no value"),
-    };
-
     let outlier_sigma = R::from(MAD_OUTLIER_SIGMA);
     let filtered = apply_mad_filter(&est.estimates, outlier_sigma);
     let n = filtered.len();
     if n == 0 {
-        return error("stage_aggregate: MAD filter rejected all estimates");
+        return Err(err("stage_aggregate: MAD filter rejected all estimates"));
     }
 
     let n_r = R::from(n as f64);
@@ -332,7 +291,7 @@ where
     let reference_mass = R::from(EARTH_MASS_KG);
     let mass_rel_err = ((recovered_mass - reference_mass) / reference_mass).abs();
 
-    PropagatingEffect::pure(GmReport {
+    Ok(GmReport {
         n_pairs: est.estimates.len(),
         n_after_mad: n,
         mean_gm: mean,
@@ -350,9 +309,6 @@ where
 // Helpers
 // ---------------------------------------------------------------------------
 
-fn error<T>(msg: &str) -> PropagatingEffect<T>
-where
-    T: Default + Clone + Debug,
-{
-    PropagatingEffect::from_error(CausalityError::new(CausalityErrorEnum::Custom(msg.into())))
+fn err(msg: &str) -> CausalityError {
+    CausalityError::new(CausalityErrorEnum::Custom(msg.into()))
 }

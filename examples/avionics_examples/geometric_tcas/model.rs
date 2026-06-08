@@ -9,7 +9,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{EffectValue, PropagatingEffect};
+use deep_causality_calculus::{EndoArrow, Euler};
+use deep_causality_core::{CausalFlow, EffectValue, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_multivector::Metric;
 use deep_causality_multivector::MultiVector;
@@ -192,4 +193,114 @@ pub fn scale_vec(v: &CausalMultiVector<f64>, s: f64) -> CausalMultiVector<f64> {
     let d = v.data();
     let scaled: Vec<f64> = d.iter().map(|x| x * s).collect();
     CausalMultiVector::unchecked(scaled, Metric::Euclidean(3))
+}
+
+// --- Encounter pipeline ---
+
+/// The per-tick encounter state threaded through the TCAS `CausalFlow` pipeline in `main`
+/// (`assess -> intervene? -> output -> integrate`). It carries the mutable state plus the fixed
+/// monitor and step, so each stage is a free-standing sub-process `fn(Engagement) -> CausalFlow`.
+pub struct Engagement {
+    pub ownship: AircraftState,
+    pub intruder: AircraftState,
+    pub tcas: GeometricTCAS,
+    pub dt: f64,
+    pub ra_duration: f64,
+    pub tick: u32,
+    pub report: Option<ConflictReport>,
+    pub triggered: bool,
+    pub will_intervene: bool,
+}
+
+/// Set up the converging head-on encounter (slightly offset in altitude).
+pub fn build_initial_engagement() -> Engagement {
+    Engagement {
+        ownship: AircraftState {
+            callsign: "AIRBUS_01".into(),
+            pos: vec3(0.0, 0.0, 10000.0),
+            vel: vec3(0.0, 200.0, 0.0),
+        },
+        intruder: AircraftState {
+            callsign: "UNK_TRAFFIC".into(),
+            pos: vec3(0.0, 8000.0, 10050.0),
+            vel: vec3(0.0, -200.0, 0.0),
+        },
+        tcas: GeometricTCAS::new(),
+        dt: 0.5,
+        ra_duration: 0.0,
+        tick: 0,
+        report: None,
+        triggered: false,
+        will_intervene: false,
+    }
+}
+
+/// A. Assess the threat, accumulate RA persistence, and decide whether to auto-intervene.
+pub fn assess(mut e: Engagement) -> CausalFlow<Engagement> {
+    let report = e.tcas.assess_threat(&e.ownship, &e.intruder);
+    e.triggered = if report.advisory == AdvisoryLevel::RA {
+        e.ra_duration += e.dt;
+        e.ra_duration > 2.5 && report.resolution == Resolution::Descend
+    } else {
+        e.ra_duration = 0.0;
+        false
+    };
+    e.will_intervene = e.triggered && e.ownship.vel.data()[4] > -20.0;
+    e.report = Some(report);
+    CausalFlow::value(e)
+}
+
+/// B. Auto-pilot takeover (the conditional branch arm): force a descent on the ownship velocity
+/// and record the override.
+pub fn intervene(mut e: Engagement) -> CausalFlow<Engagement> {
+    let mut d = e.ownship.vel.data().clone();
+    d[4] = (d[4] - 5.0).max(-20.0);
+    e.ownship.vel = CausalMultiVector::unchecked(d, Metric::Euclidean(3));
+    println!("      > [BLACKBOX AUDIT]: Automatic Intervention Recorded.");
+    CausalFlow::value(e)
+}
+
+/// C. Output the advisory row.
+pub fn output(mut e: Engagement) -> CausalFlow<Engagement> {
+    let report = e.report.as_ref().expect("assessed this tick");
+    let time = e.tick as f64 * e.dt;
+    let sys_status = if e.will_intervene {
+        " [\x1b[31mAUTO INTERVENE\x1b[0m]"
+    } else if e.triggered {
+        " [\x1b[32mAVOIDING\x1b[0m]"
+    } else {
+        ""
+    };
+    let alert_str = match report.advisory {
+        AdvisoryLevel::None => "CLEAR",
+        AdvisoryLevel::TA => "\x1b[33mTRAFFIC ADVISORY\x1b[0m",
+        AdvisoryLevel::RA => "\x1b[31mRES ADVISORY\x1b[0m",
+    };
+    let res_str = match report.resolution {
+        Resolution::Maintain => "-".to_string(),
+        _ => format!("{:?}", report.resolution).to_uppercase(),
+    };
+    println!(
+        "{:>6.1}  | {:>8.0} | {:>7.1}  | {:>7.1}  | {:<16} | {}{}",
+        time,
+        report.t_cpa * 400.0,
+        report.t_cpa,
+        report.cpa_dist,
+        alert_str,
+        res_str,
+        sys_status
+    );
+    e.tick += 1;
+    CausalFlow::value(e)
+}
+
+/// D. Update dynamics: one Euler step of each aircraft's constant-velocity kinematics.
+pub fn integrate(mut e: Engagement) -> CausalFlow<Engagement> {
+    let own_vel = e.ownship.vel.clone();
+    e.ownship.pos = Euler::new(e.dt, move |_: &CausalMultiVector<f64>| own_vel.clone())
+        .iterate_n(e.ownship.pos.clone(), 1);
+    let intr_vel = e.intruder.vel.clone();
+    e.intruder.pos = Euler::new(e.dt, move |_: &CausalMultiVector<f64>| intr_vel.clone())
+        .iterate_n(e.intruder.pos.clone(), 1);
+    CausalFlow::value(e)
 }

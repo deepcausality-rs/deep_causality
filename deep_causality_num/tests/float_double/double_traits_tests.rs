@@ -7,7 +7,7 @@
 
 use deep_causality_num::{
     AbelianGroup, Associative, Commutative, Distributive, DivisionAlgebra, Field, Float, Float106,
-    Num, NumCast, One, RealField, ToPrimitive, Zero,
+    Num, NumCast, One, Real, RealField, ToPrimitive, Zero,
 };
 
 // =============================================================================
@@ -280,33 +280,33 @@ fn test_trig() {
     let angle = Float106::from_f64(angle_val);
 
     // sin
-    let s = RealField::sin(angle);
+    let s = Real::sin(angle);
     assert!((s.to_f64() - angle_val.sin()).abs() < 1e-12, "sin failed");
 
     // cos
-    let c = RealField::cos(angle);
+    let c = Real::cos(angle);
     assert!((c.to_f64() - angle_val.cos()).abs() < 1e-12, "cos failed");
 
     // tan
-    let t = RealField::tan(angle);
+    let t = Real::tan(angle);
     assert!((t.to_f64() - angle_val.tan()).abs() < 1e-12, "tan failed");
 
     // asin
-    let as_val = RealField::asin(angle);
+    let as_val = Real::asin(angle);
     assert!(
         (as_val.to_f64() - angle_val.asin()).abs() < 1e-12,
         "asin failed"
     );
 
     // acos
-    let ac_val = RealField::acos(angle);
+    let ac_val = Real::acos(angle);
     assert!(
         (ac_val.to_f64() - angle_val.acos()).abs() < 1e-12,
         "acos failed"
     );
 
     // atan
-    let at_val = RealField::atan(angle);
+    let at_val = Real::atan(angle);
     assert!(
         (at_val.to_f64() - angle_val.atan()).abs() < 1e-12,
         "atan failed"

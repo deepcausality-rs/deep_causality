@@ -4,7 +4,7 @@
  */
 
 use deep_causality_num::{DivisionAlgebra, Quaternion};
-use deep_causality_num::{One, RealField, Zero};
+use deep_causality_num::{One, Real, Zero};
 
 const EPSILON: f64 = 1e-9;
 

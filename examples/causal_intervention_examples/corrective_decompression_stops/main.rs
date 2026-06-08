@@ -35,7 +35,7 @@ mod model_utils;
 
 use crate::model_types::{DiveProcess, FloatType, N_TICKS};
 use causal_intervention_examples::print_utils;
-use deep_causality_core::Intervenable;
+use deep_causality_core::CausalFlow;
 
 fn main() {
     println!("=== Decompression Stops as a Corrective `intervene` Loop ===\n");
@@ -62,24 +62,33 @@ fn main() {
     print_utils::print_effect_log(&closed.logs);
 }
 
+/// Open loop: each tick is just `simulate_step`, run `N_TICKS` times. Continuous ascent, no stops.
 fn run_open_loop() -> DiveProcess<FloatType> {
-    let mut process = model::initial_process();
-    for _ in 0..N_TICKS {
-        process = process.bind(model::simulate_step);
-    }
-    process
+    CausalFlow::from(model::initial_process())
+        .iterate_n(N_TICKS as usize, |tick| tick.bind(model::simulate_step))
+        .into_process()
 }
 
+/// Closed loop: the same tick, but each one `branch`es on the monitor — a supersaturation alarm
+/// while still submerged records a stop and `intervene`s a zero ascent command (a decompression
+/// stop). The only difference from the open loop is the `branch`.
 fn run_closed_loop() -> DiveProcess<FloatType> {
-    let mut process = model::initial_process();
-    for _ in 0..N_TICKS {
-        process = process.bind(model::simulate_step);
-
-        let cfg = process.context.clone().expect("DiveConfig present");
-        if process.state.last_ratio > cfg.safety_ratio_threshold && process.state.depth_m > 0.0 {
-            process.state.stop_count += 1;
-            process = process.intervene(0.0);
-        }
-    }
-    process
+    CausalFlow::from(model::initial_process())
+        .iterate_n(N_TICKS as usize, |tick| {
+            tick.bind(model::simulate_step).branch_with(
+                |_command, state, ctx| {
+                    state.last_ratio > ctx.expect("DiveConfig present").safety_ratio_threshold
+                        && state.depth_m > 0.0
+                },
+                |hot| {
+                    hot.update_state(|mut state, _command| {
+                        state.stop_count += 1;
+                        state
+                    })
+                    .intervene(0.0)
+                },
+                |cold| cold,
+            )
+        })
+        .into_process()
 }

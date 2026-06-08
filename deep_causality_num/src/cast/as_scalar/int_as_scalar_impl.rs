@@ -10,5 +10,8 @@ pub trait IntAsScalar: Sized {
     }
 }
 
+impl IntAsScalar for u8 {}
+impl IntAsScalar for u16 {}
 impl IntAsScalar for u32 {}
 impl IntAsScalar for u64 {}
+impl IntAsScalar for u128 {}

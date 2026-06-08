@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Distributive, Module, One, Ring};
+use crate::Distributive;
+use crate::{Module, One, Ring};
 use core::ops::{Mul, MulAssign};
 
 /// Represents a Unital Algebra over a `Ring`.

@@ -5,7 +5,7 @@
 
 //! Domain types and stage logic for the CATE chain.
 
-use deep_causality_core::{EffectValue, Intervenable, PropagatingEffect};
+use deep_causality_core::{CausalFlow, PropagatingEffect};
 
 /// Switch this alias to `f32` for low precision, `f64` for standard precision,
 /// or `Float106` for high precision. Literals in this file would need wrapping
@@ -22,22 +22,18 @@ pub struct Patient {
 
 /// Post-treatment blood pressure under `do(T = treatment)`.
 ///
-/// The chain begins with a NaN treatment value; `.intervene(treatment)`
-/// fires before the bind that consumes it. Inside the bind closure, `t`
-/// holds the intervened value, and the body computes the resulting
-/// post-treatment blood pressure.
+/// The flow begins with a NaN treatment value; `.intervene(treatment)` fires
+/// before the `map` that consumes it. Inside the `map` closure, `t` holds the
+/// intervened value, and the body computes the resulting post-treatment blood
+/// pressure. `into_effect` hands the underlying effect back so the caller can
+/// read both its value and its audit log.
 pub fn evaluate_under(patient: &Patient, treatment: FloatType) -> PropagatingEffect<FloatType> {
     let baseline = patient.baseline_bp;
     let age = patient.age;
 
-    PropagatingEffect::pure(FloatType::NAN)
+    CausalFlow::value(FloatType::NAN)
         .intervene(treatment)
-        .bind(move |value, _, _| {
-            let t = match value {
-                EffectValue::Value(t) => t,
-                _ => FloatType::NAN,
-            };
-
+        .map(move |t| {
             // Stronger reduction for older patients. That heterogeneity is
             // what makes the CATE non-trivial. Pharmacology is deliberately
             // shallow; the example is about the causal structure.
@@ -50,9 +46,9 @@ pub fn evaluate_under(patient: &Patient, treatment: FloatType) -> PropagatingEff
             // Natural variation independent of treatment.
             let natural_drift = 0.5;
 
-            let post_bp = baseline - drug_reduction + natural_drift;
-            PropagatingEffect::pure(post_bp)
+            baseline - drug_reduction + natural_drift
         })
+        .into_effect()
 }
 
 pub fn potential_outcomes(patient: &Patient) -> (FloatType, FloatType) {

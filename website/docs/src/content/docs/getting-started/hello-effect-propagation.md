@@ -2,7 +2,7 @@
 title: Hello, Effect Propagation
 description: How a Causaloid's structural reasoning and the carrier's bind-chain compose into one pipeline over a single carrier effect.
 sidebar:
-  order: 5
+  order: 6
 ---
 
 The earlier pages introduced the carrier effect (with its `pure` and `bind`), the Causaloid (which wraps a causal function), and the Context (which holds the world a rule reads from). This page is about what happens when you put them together.

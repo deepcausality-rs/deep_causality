@@ -2,7 +2,7 @@
 title: Causal State Machine
 description: A registry of state-action pairs whose transitions are driven by causal evaluation rather than fixed thresholds.
 sidebar:
-  order: 9
+  order: 10
 ---
 
 The Causal State Machine (CSM) is the connector between a Causaloid's verdict and an effect on the outside world. It lives in [`deep_causality/src/types/csm_types`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality/src/types/csm_types) and is built around two ideas: a state is "active" when its Causaloid evaluates to an active effect; an action is a function that runs when its paired state is active.

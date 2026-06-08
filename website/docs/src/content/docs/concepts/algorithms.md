@@ -2,7 +2,7 @@
 title: Causal Discovery Algorithms
 description: SURD and MRMR, the two algorithms in deep_causality_algorithms that the Causal Discovery Language uses to go from raw observational data to an executable causal model.
 sidebar:
-  order: 13
+  order: 14
   label: Discovery Algorithms
 ---
 

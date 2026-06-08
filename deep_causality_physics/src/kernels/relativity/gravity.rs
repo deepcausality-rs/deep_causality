@@ -111,7 +111,7 @@ where
                     // R^mu_vrs at index [mu, v, r, s]
                     let idx = mu * dim * dim * dim + v * dim * dim + r * dim + s;
                     let r_component = r_data[idx];
-                    acc = acc + r_component * u[v] * *n_r * u[s];
+                    acc += r_component * u[v] * *n_r * u[s];
                 }
             }
         }
@@ -188,7 +188,7 @@ where
                 for rho in 0..dim {
                     // Index: Gamma[mu, nu, rho] = christoffel_data[mu * dim * dim + nu * dim + rho]
                     let gamma = christoffel_data[mu * dim * dim + nu * dim + rho];
-                    acc = acc - (gamma * u[nu] * u[rho]);
+                    acc -= gamma * u[nu] * u[rho];
                 }
             }
             a[mu] = acc;
@@ -239,18 +239,16 @@ where
 
         // Update
         for i in 0..dim {
-            x[i] = x[i]
-                + (k1_x[i]
-                    + <T as From<f64>>::from(2.0) * k2_x[i]
-                    + <T as From<f64>>::from(2.0) * k3_x[i]
-                    + k4_x[i])
-                    / <T as From<f64>>::from(6.0);
-            u[i] = u[i]
-                + (k1_u[i]
-                    + <T as From<f64>>::from(2.0) * k2_u[i]
-                    + <T as From<f64>>::from(2.0) * k3_u[i]
-                    + k4_u[i])
-                    / <T as From<f64>>::from(6.0);
+            x[i] += (k1_x[i]
+                + <T as From<f64>>::from(2.0) * k2_x[i]
+                + <T as From<f64>>::from(2.0) * k3_x[i]
+                + k4_x[i])
+                / <T as From<f64>>::from(6.0);
+            u[i] += (k1_u[i]
+                + <T as From<f64>>::from(2.0) * k2_u[i]
+                + <T as From<f64>>::from(2.0) * k3_u[i]
+                + k4_u[i])
+                / <T as From<f64>>::from(6.0);
         }
 
         // Check for numerical instability

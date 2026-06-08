@@ -25,7 +25,9 @@
 //! - **Decoupled physics modules** that compose seamlessly
 //! - **Classical EM via gauge field formalism** using deep_causality_physics
 
-use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
+use deep_causality_core::{
+    CausalEffectPropagationProcess, CausalFlow, EffectValue, PropagatingEffect,
+};
 use deep_causality_num::{Float, Float106, Zero};
 use deep_causality_physics::{EM, GaugeEmOps};
 
@@ -54,12 +56,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  (Float Type: {})", std::any::type_name::<FloatType>());
     println!("═══════════════════════════════════════════════════════════════\n");
 
-    // Composed pipeline: Each stage is a decoupled function
-    let result = stage_create_plane_wave()
+    // Composed pipeline via the CausalFlow DSL: each stage is a decoupled function.
+    let result = CausalFlow::from(stage_create_plane_wave())
         .bind_or_error(stage_compute_invariants, "Invariant computation failed")
         .bind_or_error(stage_energy_analysis, "Energy analysis failed")
         .bind_or_error(stage_poynting_radiation, "Radiation analysis failed")
-        .bind_or_error(stage_field_classification, "Field classification failed");
+        .bind_or_error(stage_field_classification, "Field classification failed")
+        .into_effect();
 
     // Extract and display final result
     print_summary(&result);

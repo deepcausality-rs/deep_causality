@@ -284,6 +284,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use deep_causality_num::Real;
 
     #[test]
     fn test_compute_signature_equilateral_triangle() {

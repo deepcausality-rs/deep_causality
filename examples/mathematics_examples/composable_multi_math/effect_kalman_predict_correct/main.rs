@@ -21,7 +21,7 @@
 use deep_causality_haft::Pure;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::RealField;
+use deep_causality_num::Real;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 use mathematics_examples::effect_helpers::{
     Process, ProcessWitness, expect_value, fail, ok, print_log,

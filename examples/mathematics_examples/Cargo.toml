@@ -11,6 +11,7 @@ path = "no_lib.rs"
 
 [dependencies]
 deep_causality_core = { path = "../../deep_causality_core" }
+deep_causality_calculus = { path = "../../deep_causality_calculus" }
 deep_causality_haft = { path = "../../deep_causality_haft" }
 deep_causality_metric = { path = "../../deep_causality_metric" }
 deep_causality_multivector = { path = "../../deep_causality_multivector" }
@@ -20,6 +21,14 @@ deep_causality_sparse = { path = "../../deep_causality_sparse", features = ["ten
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
 deep_causality_topology = { path = "../../deep_causality_topology" }
 
+
+# ============================================================================
+# calculus — arrow-calculus operators (deep_causality_calculus).
+# ============================================================================
+
+[[example]]
+name = "leibniz_dual_integration_examples"
+path = "calculus/leibniz_dual_integration.rs"
 
 # ============================================================================
 # algebra — multivector / Clifford algebra examples (deep_causality_multivector).

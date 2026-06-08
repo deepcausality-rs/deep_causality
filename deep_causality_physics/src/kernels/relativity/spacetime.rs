@@ -299,14 +299,14 @@ where
             for nu in 0..dim {
                 for rho in 0..dim {
                     let gamma = christoffel_data[mu * dim * dim + nu * dim + rho];
-                    dv[mu] = dv[mu] - (gamma * dx[nu] * v[rho]);
+                    dv[mu] -= gamma * dx[nu] * v[rho];
                 }
             }
         }
 
         // Euler step: v_new = v + dv
         for mu in 0..dim {
-            v[mu] = v[mu] + dv[mu];
+            v[mu] += dv[mu];
         }
 
         // Check for numerical instability
@@ -388,7 +388,7 @@ where
         for mu in 0..dim {
             for nu in 0..dim {
                 let g_munu = metric_data[mu * dim + nu];
-                ds_squared = ds_squared + (g_munu * dx[mu] * dx[nu]);
+                ds_squared += g_munu * dx[mu] * dx[nu];
             }
         }
 
@@ -404,7 +404,7 @@ where
             )));
         }
 
-        total_tau = total_tau + dtau;
+        total_tau += dtau;
     }
 
     Ok(total_tau)

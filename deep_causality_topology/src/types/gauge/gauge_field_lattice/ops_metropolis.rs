@@ -11,7 +11,7 @@
 use crate::types::gauge::link_variable::random::RandomField;
 use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
 use deep_causality_num::{
-    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
+    ComplexField, DivisionAlgebra, Field, FromPrimitive, Real, RealField, ToPrimitive,
 };
 use std::fmt::Debug;
 
@@ -105,7 +105,7 @@ impl<
             if !delta_s.is_finite() {
                 false // Reject NaN/Inf actions
             } else {
-                r < RealField::exp(-delta_s)
+                r < Real::exp(-delta_s)
             }
         };
 

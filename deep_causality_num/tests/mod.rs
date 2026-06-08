@@ -5,6 +5,7 @@
 mod algebra;
 mod casts;
 mod complex;
+mod dual;
 mod float;
 mod float_double;
 mod float_option;

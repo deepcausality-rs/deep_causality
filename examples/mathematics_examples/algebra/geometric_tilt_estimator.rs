@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::PropagatingEffect;
+use deep_causality_core::{CausalFlow, PropagatingEffect};
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector, MultiVectorL2Norm};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
@@ -100,7 +100,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 3. Create Causal Process (Monad)
     // This example threads its state inside the Value tuple (the process State `S` is `()`), so the
     // whole `(SensorData, TiltState)` pair flows through the chain as the carried value.
-    let process = PropagatingEffect::pure((SensorData::default(), initial_state));
+    let process = CausalFlow::value((SensorData::default(), initial_state));
 
     // 4. Simulate Data Stream
     // Scenario: Robot is stationary, then tilts 45 degrees around X axis.
@@ -344,7 +344,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 // Return new process
                 PropagatingEffect::pure((current_sensor_data, next_state))
             })
-        });
+        })
+        .into_effect();
 
     // 6. Output Results
     let final_value = final_process.value.into_value().unwrap();

@@ -11,6 +11,7 @@ path = "src/lib.rs"
 
 [dependencies]
 deep_causality_core = { path = "../../deep_causality_core" }
+deep_causality_calculus = { path = "../../deep_causality_calculus" }
 deep_causality_haft = { path = "../../deep_causality_haft" }
 
 

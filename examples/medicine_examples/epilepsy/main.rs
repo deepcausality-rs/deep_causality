@@ -11,10 +11,11 @@
 //! - **Connectome Topology**: Brain regions modeled as a Graph.
 //! - **Seizure Dynamics**: Kuramoto oscillators simulating synchronization.
 //! - **Virtual Resection**: Causal intervention `do(remove_node)` to find curative surgeries.
+use deep_causality_calculus::{EndoArrow, Euler};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::Graph;
 use std::f64::consts::PI;
-use std::ops::Add;
+use std::ops::{Add, Mul};
 
 // Constants
 const SEIZURE_THRESHOLD: f64 = 0.8; // Synchronization > 0.8 = Seizure
@@ -88,43 +89,59 @@ fn run_seizure_simulation(graph: &Graph<RegionState>) -> Result<bool, Box<dyn st
     let dt = 0.1;
 
     // Use getter for data (Graph -> CausalTensor), then getter for Vec (CausalTensor -> Vec)
-    let mut current_phases: Vec<f64> = graph.data().data().iter().map(|d| d.phase).collect();
+    let phases = Phases(graph.data().data().iter().map(|d| d.phase).collect());
     let freqs: Vec<f64> = graph
         .data()
         .data()
         .iter()
         .map(|d| d.intrinsic_freq)
         .collect();
-    let n = current_phases.len();
+    let n = phases.0.len();
 
-    let mut final_sync = 0.0;
+    // Precompute the adjacency so the rate field below is a pure `Fn(&Phases) -> Phases`.
+    let adj: Vec<Vec<usize>> = (0..n)
+        .map(|i| graph.neighbors(i).map(|ns| ns.to_vec()))
+        .collect::<Result<_, _>>()?;
 
-    for _t in 0..TIME_STEPS {
-        let mut next_phases = current_phases.clone();
+    // The Kuramoto rate field `dθ_i/dt = ω_i + (K/N)·Σ_j sin(θ_j − θ_i)` as an `Euler` endo-arrow.
+    // Swapping `Euler` for `Rk4` would raise the integration order with no change to this rate field.
+    let step = Euler::new(dt, move |p: &Phases| {
+        let d = (0..n)
+            .map(|i| {
+                let coupling: f64 = adj[i].iter().map(|&j| (p.0[j] - p.0[i]).sin()).sum();
+                freqs[i] + (COUPLING_STRENGTH / n as f64) * coupling
+            })
+            .collect();
+        Phases(d)
+    });
 
-        for i in 0..n {
-            let neighbors = graph.neighbors(i)?;
+    // March `TIME_STEPS` steps; the seizure verdict reads the synchronization of the final state.
+    let final_phases = step.iterate_n(phases, TIME_STEPS);
 
-            let mut coupling_sum = 0.0;
-            for &j in neighbors {
-                coupling_sum += (current_phases[j] - current_phases[i]).sin();
-            }
-
-            let d_theta = freqs[i] + (COUPLING_STRENGTH / n as f64) * coupling_sum;
-            next_phases[i] += d_theta * dt;
-        }
-        current_phases = next_phases;
-
-        // Measure Order Parameter R
-        // Add type hints to closures to help inference
-        let sum_cos: f64 = current_phases.iter().map(|p: &f64| p.cos()).sum();
-        let sum_sin: f64 = current_phases.iter().map(|p: &f64| p.sin()).sum();
-        let r = ((sum_cos.powi(2) + sum_sin.powi(2)).sqrt()) / n as f64;
-
-        final_sync = r;
-    }
+    let sum_cos: f64 = final_phases.0.iter().map(|p| p.cos()).sum();
+    let sum_sin: f64 = final_phases.0.iter().map(|p| p.sin()).sum();
+    let final_sync = (sum_cos.powi(2) + sum_sin.powi(2)).sqrt() / n as f64;
 
     Ok(final_sync > SEIZURE_THRESHOLD)
+}
+
+/// Kuramoto phase vector — the integrator state. `Euler`/`Rk4` need a module-valued state
+/// (`Add` + scalar `Mul`), which `Vec<f64>` lacks, so the phases ride in this newtype.
+#[derive(Clone)]
+struct Phases(Vec<f64>);
+
+impl Add for Phases {
+    type Output = Phases;
+    fn add(self, rhs: Phases) -> Phases {
+        Phases(self.0.iter().zip(rhs.0).map(|(a, b)| a + b).collect())
+    }
+}
+
+impl Mul<f64> for Phases {
+    type Output = Phases;
+    fn mul(self, s: f64) -> Phases {
+        Phases(self.0.iter().map(|x| x * s).collect())
+    }
 }
 
 fn build_brain_graph(

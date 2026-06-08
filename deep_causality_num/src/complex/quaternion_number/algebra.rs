@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{AbelianGroup, Associative, Distributive, DivisionAlgebra, Quaternion, RealField};
 
+use crate::{AbelianGroup, Associative, Distributive, DivisionAlgebra, Quaternion, RealField};
 // | Type | `Distributive` | `Associative` | `Commutative` | Trait |
 // | :--- | :---: | :---: | :---: | :--- |
 // | **Quaternion** | ✅ | ✅ | ❌ | `AssociativeRing` |

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Algebra, Field};
+use crate::{Algebra, Field, Float};
 
 /// Represents a **Division Algebra** over a `Field`.
 ///
@@ -62,4 +62,29 @@ pub trait DivisionAlgebra<R: Field>: Algebra<R> {
     /// A correct implementation of this method should handle this case gracefully,
     /// typically by returning `NaN` or `Infinity` components, rather than panicking.
     fn inverse(&self) -> Self;
+}
+
+// Blanket implementation
+
+/// Every `Float` is a division algebra over itself: the conjugate of a real number is
+/// itself, the squared norm of `x` is `x*x`, and the inverse is `1/x` (`inf` at zero).
+/// A new float type inherits this through `impl Float` — no per-type impl needed.
+impl<T> DivisionAlgebra<T> for T
+where
+    T: Float,
+{
+    #[inline]
+    fn conjugate(&self) -> Self {
+        *self
+    }
+
+    #[inline]
+    fn norm_sqr(&self) -> T {
+        *self * *self
+    }
+
+    #[inline]
+    fn inverse(&self) -> Self {
+        Float::recip(*self)
+    }
 }

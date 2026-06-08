@@ -24,7 +24,6 @@ use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAss
 use deep_causality_num::{
     AbelianGroup, Associative, Commutative, Distributive, DivisionAlgebra, One, Zero,
 };
-
 // ---------- FloatWrap: well-behaved identity iso to/from f64 ----------
 
 #[derive(Clone, Copy, PartialEq, Debug)]

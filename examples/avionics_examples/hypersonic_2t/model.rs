@@ -9,7 +9,12 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_calculus::{EndoArrow, Euler};
+use deep_causality_core::CausalFlow;
 use deep_causality_multivector::{CausalMultiVector, Metric};
+
+/// Tracking step: 100 Hz -> 10 ms.
+pub const DT: f64 = 0.01;
 
 /// 2T Physics Metric: (4, 2)
 /// e1..e4 (Space), e_t1, e_t2 (Time)
@@ -62,24 +67,15 @@ impl ConformalTracker {
     }
 
     /// Propagate state forward by dt.
-    /// Uses linear evolution: X(t) = X(0) + G * t (First order approx)
+    /// Uses linear evolution: X(t) = X(0) + G * t (First order approx).
+    ///
+    /// The constant-generator update `X += G·dt` is exactly one `Euler` step of `dX/dt = G`, so the
+    /// hand-rolled component loop becomes a single integration-operator arrow. `CausalMultiVector`
+    /// already supplies the vector `Add` and scalar `Mul` the endo-arrow needs.
     pub fn predict(&mut self, dt: f64) {
-        // Manual linear update: State += Generator * dt
-        // (Assuming Generator is roughly constant for short intervals)
-
-        // 1. Calculate Delta
-        let gen_d = self.generator.data();
-        let delta: Vec<f64> = gen_d.iter().map(|g| g * dt).collect();
-
-        // 2. Add to State
-        let state_d = self.state_6d.data();
-        let new_state: Vec<f64> = state_d
-            .iter()
-            .zip(delta.iter())
-            .map(|(s, d)| s + d)
-            .collect();
-
-        self.state_6d = CausalMultiVector::unchecked(new_state, self.metric);
+        let generator = self.generator.clone();
+        let stepper = Euler::new(dt, move |_: &CausalMultiVector<f64>| generator.clone());
+        self.state_6d = stepper.iterate_n(self.state_6d.clone(), 1);
     }
 
     /// Measurement Update (Mock).
@@ -95,4 +91,71 @@ impl ConformalTracker {
         // Extract shadow (e1, e2, e3)
         [d[1], d[2], d[4]]
     }
+}
+
+/// The per-tick tracking state threaded through the `CausalFlow` pipeline in `main`
+/// (`predict -> observe -> derive`).
+pub struct Track {
+    pub tracker: ConformalTracker,
+    pub prev_pos: [f64; 3],
+    pub prev_vel_vec: [f64; 3],
+    pub pos: [f64; 3],
+    pub ms: f64,
+}
+
+/// Acquire the initial track: target detected at ~100 km range, closing at Mach 10.
+pub fn build_initial_track() -> Track {
+    let (init_x, init_y, init_z) = (0.0, 100_000.0, 20_000.0);
+    let (vel_x, vel_y) = (500.0, -3400.0); // drift / closing-fast
+    Track {
+        tracker: ConformalTracker::new(init_x, init_y, init_z, vel_x, vel_y),
+        prev_pos: [init_x, init_y, init_z],
+        prev_vel_vec: [vel_x, vel_y, 0.0],
+        pos: [init_x, init_y, init_z],
+        ms: 0.0,
+    }
+}
+
+/// A. Prediction — one Euler step of the linear 6D conformal dynamics, advancing the clock.
+pub fn predict(mut t: Track) -> CausalFlow<Track> {
+    t.tracker.predict(DT);
+    t.ms += DT * 1000.0;
+    CausalFlow::value(t)
+}
+
+/// B. Observation — project the 6D belief state back to 3D world coordinates.
+pub fn observe(mut t: Track) -> CausalFlow<Track> {
+    t.pos = t.tracker.get_3d_state();
+    CausalFlow::value(t)
+}
+
+/// C. Derived metrics — finite-difference the full velocity vector for speed and G-load, then log
+/// the track and roll the history. Differencing the vector (not just its magnitude) keeps the
+/// lateral acceleration of a turn in the G-load, not only the change in speed.
+pub fn derive(mut t: Track) -> CausalFlow<Track> {
+    // Velocity vector from the position delta; speed is its magnitude.
+    let vel_vec = [
+        (t.pos[0] - t.prev_pos[0]) / DT,
+        (t.pos[1] - t.prev_pos[1]) / DT,
+        (t.pos[2] - t.prev_pos[2]) / DT,
+    ];
+    let vel = (vel_vec[0].powi(2) + vel_vec[1].powi(2) + vel_vec[2].powi(2)).sqrt();
+
+    // Acceleration is the change in the velocity vector, so a turn contributes lateral
+    // acceleration even at constant speed. G-load is its magnitude over g.
+    let accel = [
+        (vel_vec[0] - t.prev_vel_vec[0]) / DT,
+        (vel_vec[1] - t.prev_vel_vec[1]) / DT,
+        (vel_vec[2] - t.prev_vel_vec[2]) / DT,
+    ];
+    let g_load = (accel[0].powi(2) + accel[1].powi(2) + accel[2].powi(2)).sqrt() / 9.81;
+
+    println!(
+        "{:>6.0}   | {:>9.1} | {:>10.1} | {:>9.1} | {:>9.1} | {:>5.1}G",
+        t.ms, t.pos[0], t.pos[1], t.pos[2], vel, g_load
+    );
+
+    t.prev_pos = t.pos;
+    t.prev_vel_vec = vel_vec;
+    CausalFlow::value(t)
 }

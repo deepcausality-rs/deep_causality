@@ -20,6 +20,8 @@ cargo run -p avionics_examples --example <example_name>
 | [geometric_tcas](geometric_tcas/README.md) | Collision Avoidance | NextGen TCAS using Geometric Algebra collision detection and `Intervenable` safety interlocks |
 | [hypersonic_2t](hypersonic_2t/README.md) | Defense/Tracking | Tracking Hypersonic Glide Vehicles (HGV) using Dual-Time (2T) Physics in 6D phase space |
 | [flight_envelope_monitor](flight_envelope_monitor/README.md) | Health Monitoring | Three-stage stateful pipeline (sensor collection → bind chain → envelope hypergraph) demonstrating uniform composition through `PropagatingProcess<_, FlightState, AircraftConfig>` |
+| [cfd_taylor_green](cfd_taylor_green/README.md) | CFD Verification | Incompressible Navier–Stokes RHS verified by the Method of Manufactured Solutions (Taylor–Green vortex): the tangent functor supplies exact `∇u`/`∇²u`/`∇p`, `Rk4` marches the amplitude, and a causal-monad pipeline sequences the stages; precision is a `FloatType` parameter (f32/f64/Float106) |
+| [turbulence_flow](turbulence_flow/README.md) | Turbulence / Chaos | Forecast horizon of a chaotic convective flow (Lorenz, the Rayleigh–Bénard 3-mode truncation): the same `Rk4` march at f32/f64/Float106 isolates roundoff growth and shows precision setting how far ahead a turbulent flow can be trusted |
 
 > **See also:** [physics_examples](../physics_examples/README.md) for more Geometric Algebra applications.
 
@@ -54,6 +56,7 @@ Both `geometric_tcas` and `hypersonic_2t` leverage **Geometric Algebra (`deep_ca
 | `deep_causality_core` | Causal Monads (`PropagatingEffect`, `Intervenable`) for safety logic |
 | `deep_causality_multivector` | Geometric Algebra for kinematics and relativistic physics |
 | `deep_causality_tensor` | Tensor operations for map-based navigation |
+| `deep_causality_calculus` | Arrow calculus: tangent-functor derivatives (`gradient`/`derivative`) and the `Euler`/`Rk4`/`quadrature` integration operators |
 
 ---
 

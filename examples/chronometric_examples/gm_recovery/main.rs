@@ -21,12 +21,12 @@
 //! ```
 
 use chronometric_examples::data_manager::get_gnss_data_input_path;
-use deep_causality_core::{EffectValue, PropagatingEffect};
+use deep_causality_core::CausalFlow;
 use deep_causality_num::Float106;
 
 use crate::display::print_gm_report;
 use crate::pipeline::{
-    DatasetInputs, GmReport, stage_aggregate, stage_align, stage_load, stage_pair, stage_solve_gm,
+    DatasetInputs, stage_aggregate, stage_align, stage_load, stage_pair, stage_solve_gm,
 };
 
 pub mod display;
@@ -62,24 +62,22 @@ fn main() {
         sat_id: SAT_ID.to_string(),
     };
 
-    // ── The CausalMonad bind chain ────────────────────────────────────────
+    // ── The CausalFlow chain ──────────────────────────────────────────────
     //   load   ─►   align   ─►   pair   ─►   solve_gm   ─►   aggregate
+    // Each stage is a plain `Value -> Result<U, CausalityError>`; the flow
+    // unwraps the value and short-circuits the error channel for us.
     // ──────────────────────────────────────────────────────────────────────
-    let result: PropagatingEffect<GmReport<FloatType>> = PropagatingEffect::pure(inputs)
-        .bind(stage_load::<FloatType>)
-        .bind(stage_align)
-        .bind(stage_pair)
-        .bind(stage_solve_gm)
-        .bind(stage_aggregate);
-
-    match result.value {
-        EffectValue::Value(report) => print_gm_report(&report),
-        _ => {
-            eprintln!("Pipeline failed:");
-            if let Some(err) = result.error {
-                eprintln!("  {:?}", err.0);
-            }
-            std::process::exit(1);
-        }
-    }
+    CausalFlow::value(inputs)
+        .try_step(stage_load::<FloatType>)
+        .try_step(stage_align)
+        .try_step(stage_pair)
+        .try_step(stage_solve_gm)
+        .try_step(stage_aggregate)
+        .run(
+            |report| print_gm_report(&report),
+            |err| {
+                eprintln!("Pipeline failed:\n  {err:?}");
+                std::process::exit(1);
+            },
+        );
 }

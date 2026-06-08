@@ -2,7 +2,7 @@
 title: Uncertainty
 description: A first-order type for uncertain values, plus a companion type for probabilistic presence.
 sidebar:
-  order: 10
+  order: 11
 ---
 
 DeepCausality treats uncertainty as a first-class type. Two related types ship in the [`deep_causality_uncertain`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_uncertain) crate. Both follow the design in Bornholt, Mytkowicz, and McKinley, "Uncertain⟨T⟩: A First-Order Type for Uncertain Data" (ASPLOS '14).

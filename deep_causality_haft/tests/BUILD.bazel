@@ -76,6 +76,21 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "either",
+    srcs = glob([
+        "either/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
     name = "utils",
     srcs = glob([
         "*_tests.rs",

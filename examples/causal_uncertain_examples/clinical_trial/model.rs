@@ -3,9 +3,14 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Stage functions for the clinical-trial `PropagatingEffect` chain.
+//! Stage functions for the clinical-trial `CausalFlow` chain.
+//!
+//! The infallible stages (`cohort`, `presence`, `aggregate`, `verdict`) are plain transforms driven
+//! by `CausalFlow::map`. The lift stage is the one place the analysis can short-circuit: if no
+//! patient clears the data-presence gate in either arm it returns `Err`, which `try_step` propagates
+//! to the flow's error channel exactly as the original chain returned `EffectValue::None`.
 
-use deep_causality_core::{EffectValue, PropagatingEffect};
+use deep_causality_core::{CausalityError, CausalityErrorEnum};
 use deep_causality_uncertain::{MaybeUncertain, Uncertain};
 
 const SAMPLES: usize = 1000;
@@ -41,7 +46,7 @@ pub struct ArmAverages {
 }
 
 /// Stage 1 — assemble per-patient `MaybeUncertain` values.
-pub fn cohort_stage() -> PropagatingEffect<TrialCohort> {
+pub fn cohort_stage() -> TrialCohort {
     let cohort = TrialCohort {
         aspirin: vec![
             Patient {
@@ -85,15 +90,11 @@ pub fn cohort_stage() -> PropagatingEffect<TrialCohort> {
         cohort.aspirin.len(),
         cohort.control.len()
     );
-    PropagatingEffect::pure(cohort)
+    cohort
 }
 
 /// Stage 2 — print per-patient data-presence probabilities (`is_some` over `MaybeUncertain`).
-pub fn presence_stage(value: EffectValue<TrialCohort>) -> PropagatingEffect<TrialCohort> {
-    let Some(cohort) = value.into_value() else {
-        return PropagatingEffect::none();
-    };
-
+pub fn presence_stage(cohort: TrialCohort) -> TrialCohort {
     println!("\n[Stage 2] Data-presence probabilities");
     for arm_name in ["Aspirin", "Control"] {
         let arm = if arm_name == "Aspirin" {
@@ -115,15 +116,12 @@ pub fn presence_stage(value: EffectValue<TrialCohort>) -> PropagatingEffect<Tria
         }
     }
 
-    PropagatingEffect::pure(cohort)
+    cohort
 }
 
-/// Stage 3 — apply `lift_to_uncertain` per patient; drop those that fail the presence gate.
-pub fn lift_stage(value: EffectValue<TrialCohort>) -> PropagatingEffect<LiftedCohort> {
-    let Some(cohort) = value.into_value() else {
-        return PropagatingEffect::none();
-    };
-
+/// Stage 3 — apply `lift_to_uncertain` per patient; drop those that fail the presence gate. If both
+/// arms come up empty the analysis cannot proceed, so the stage short-circuits with an error.
+pub fn lift_stage(cohort: TrialCohort) -> Result<LiftedCohort, CausalityError> {
     fn lift_arm(arm: &[Patient], label: &str) -> Vec<Uncertain<f64>> {
         let mut lifted: Vec<Uncertain<f64>> = Vec::new();
         for p in arm {
@@ -150,21 +148,19 @@ pub fn lift_stage(value: EffectValue<TrialCohort>) -> PropagatingEffect<LiftedCo
     let control_arm = lift_arm(&cohort.control, "Control");
 
     if aspirin_arm.is_empty() && control_arm.is_empty() {
-        return PropagatingEffect::none();
+        return Err(CausalityError::new(CausalityErrorEnum::Custom(
+            "no patient cleared the data-presence gate in either arm".into(),
+        )));
     }
 
-    PropagatingEffect::pure(LiftedCohort {
+    Ok(LiftedCohort {
         aspirin_arm,
         control_arm,
     })
 }
 
 /// Stage 4 — average within each arm.
-pub fn aggregate_stage(value: EffectValue<LiftedCohort>) -> PropagatingEffect<ArmAverages> {
-    let Some(lifted) = value.into_value() else {
-        return PropagatingEffect::none();
-    };
-
+pub fn aggregate_stage(lifted: LiftedCohort) -> ArmAverages {
     let aspirin_aggregate = average_arm(&lifted.aspirin_arm);
     let control_aggregate = average_arm(&lifted.control_arm);
 
@@ -189,10 +185,10 @@ pub fn aggregate_stage(value: EffectValue<LiftedCohort>) -> PropagatingEffect<Ar
             .unwrap_or_else(|| "n/a".into())
     );
 
-    PropagatingEffect::pure(ArmAverages {
+    ArmAverages {
         aspirin_aggregate,
         control_mean,
-    })
+    }
 }
 
 fn average_arm(arm: &[Uncertain<f64>]) -> Option<Uncertain<f64>> {
@@ -205,15 +201,11 @@ fn average_arm(arm: &[Uncertain<f64>]) -> Option<Uncertain<f64>> {
 }
 
 /// Stage 5 — compare aspirin against control with `greater_than` + `probability_exceeds`.
-pub fn verdict_stage(value: EffectValue<ArmAverages>) -> PropagatingEffect<ArmAverages> {
-    let Some(avgs) = value.into_value() else {
-        return PropagatingEffect::none();
-    };
-
+pub fn verdict_stage(avgs: ArmAverages) -> ArmAverages {
     println!("\n[Stage 5] Verdict");
     let (Some(aspirin), Some(control_mean)) = (&avgs.aspirin_aggregate, avgs.control_mean) else {
         println!("   ⚠️  Insufficient reliable data in one or both arms.");
-        return PropagatingEffect::pure(avgs);
+        return avgs;
     };
 
     let aspirin_better = aspirin.greater_than(control_mean);
@@ -233,5 +225,5 @@ pub fn verdict_stage(value: EffectValue<ArmAverages>) -> PropagatingEffect<ArmAv
         Err(e) => println!("   ⚠️  Probability-exceeds check failed: {e}"),
     }
 
-    PropagatingEffect::pure(avgs)
+    avgs
 }

@@ -13,8 +13,10 @@
 //! This example supports `f32`, `f64`, and `DoubleFloat` by changing the `FloatType`
 //! type alias. All numeric literals are converted using the `flt!` macro.
 //!
-use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
-use deep_causality_num::{Float, Float106};
+use deep_causality_core::{
+    CausalEffectPropagationProcess, CausalFlow, EffectValue, PropagatingEffect,
+};
+use deep_causality_num::{Dual, Float, Float106};
 use deep_causality_physics::{AdmOps, GrOps, LorentzianMetric};
 use deep_causality_physics::{AdmState, EastCoastMetric, GR, SPEED_OF_LIGHT};
 use deep_causality_tensor::CausalTensor;
@@ -47,11 +49,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("═══════════════════════════════════════════════════════════════\n");
 
     // Composed pipeline using bind_or_error
-    let result = initial_stage_create_schwarzschild()
+    let result = CausalFlow::from(initial_stage_create_schwarzschild())
         .bind_or_error(stage_curvature_invariants, "Curvature computation failed")
         .bind_or_error(stage_geodesic_analysis, "Geodesic analysis failed")
         .bind_or_error(stage_adm_formalism, "ADM formalism failed")
-        .bind_or_error(stage_event_horizon_detection, "Horizon detection failed");
+        .bind_or_error(stage_event_horizon_detection, "Horizon detection failed")
+        .into_effect();
 
     // Extract and display final result
     print_summary(&result);
@@ -151,14 +154,29 @@ fn initial_stage_create_schwarzschild() -> SpaceTimeEffect {
     // Construct Schwarzschild metric tensor at radius r
     // g_μν = diag(-(1-r_s/r), (1-r_s/r)^{-1}, r², r²sin²θ)
     let one = float_from_f64!(1.0);
-    let f = one - r_s / r; // Metric function
-    let mut metric_data: Vec<FloatType> = vec![float_from_f64!(0.0); 16];
-    metric_data[0] = float_from_f64!(0.0) - f; // g_tt = -f
-    metric_data[5] = one / f; // g_rr
-    metric_data[10] = r * r; // g_θθ
-    metric_data[15] = r * r; // g_φφ (assuming θ = π/2)
+    let f = one - r_s / r; // Metric function (the lapse) f(r) = 1 − r_s/r
 
-    let connection = CausalTensor::from_vec(metric_data, &[1, 4, 4]);
+    // The lapse f(r) = 1 − r_s/r; its radial derivative f'(r) = r_s/r² is the gravitational
+    // redshift gradient (and fixes the surface gravity). Read it straight off the tangent functor:
+    // seed r as a Dual variable and the ε-channel returns f'(r), exact (no finite differences) and
+    // at the working Float106 precision, since r_s never leaves the scalar.
+    let f_prime = (Dual::<FloatType>::constant(one)
+        - Dual::<FloatType>::constant(r_s) / Dual::<FloatType>::variable(r))
+    .derivative();
+    println!("  Metric function:     f(r) = 1 - r_s/r = {:.6}", f);
+    println!("  Time dilation:       √f = {}", f.sqrt());
+    println!(
+        "  Lapse gradient:      f'(r) = r_s/r²  (AD)       {}",
+        f_prime
+    );
+    println!(
+        "                                       (analytic) {}",
+        r_s / (r * r)
+    );
+    println!();
+
+    // Connection 1-form valued in the so(3,1) Lie algebra: shape [points=1, spacetime=4, lie=6].
+    let connection = CausalTensor::from_vec(vec![float_from_f64!(0.0); 4 * 6], &[1, 4, 6]);
 
     // Precompute curvature in Lie-algebra form [points, 4, 4, 6]
     let mut fs_data: Vec<FloatType> = vec![float_from_f64!(0.0); 4 * 4 * 6];
@@ -170,10 +188,6 @@ fn initial_stage_create_schwarzschild() -> SpaceTimeEffect {
 
     match GaugeField::new(base, topo_metric, connection, field_strength) {
         Ok(gr) => {
-            println!("  Metric function:     f(r) = 1 - r_s/r = {:.6}", (f));
-            println!("  Time dilation:       √f = {}", (f.sqrt()));
-            println!();
-
             let data = SpaceTimeData {
                 gr: Some(gr),
                 r,

@@ -43,12 +43,29 @@
 extern crate alloc;
 
 // Module Declarations
+pub(crate) mod adjunction;
 mod alias;
+pub(crate) mod applicative;
+mod arrow;
+pub(crate) mod bifunctor;
+pub(crate) mod comonad;
+pub(crate) mod cybernetic_loop;
 pub(crate) mod effect_system;
+pub(crate) mod either;
 pub(crate) mod extensions;
+pub(crate) mod foldable;
+pub(crate) mod functor;
 pub(crate) mod hkt;
 pub mod iso;
-pub(crate) mod traits;
+pub(crate) mod monad;
+pub(crate) mod morphism;
+pub(crate) mod morphism_endo;
+pub(crate) mod parametric_monad;
+pub(crate) mod profunctor;
+pub(crate) mod promonad;
+pub(crate) mod pure;
+pub(crate) mod riemann_map;
+pub(crate) mod traversable;
 pub mod utils_tests;
 // ============================================================================
 // Re-exports
@@ -62,7 +79,15 @@ pub use alias::alias_functor::AliasFunctor;
 pub use alias::alias_monad::AliasMonad;
 pub use alias::alias_profunctor::AliasProfunctor;
 
-// Tier 3 Iso
+// Arrow algebra (value-level strong category: composition + the monoidal product, + builder)
+pub use crate::arrow::{
+    Arrow, ArrowBuilder, Compose, EndoArrow, Fanout, First, Id, Lift, Second, Split, arrow,
+};
+
+// Either (the choice sum)
+pub use crate::either::Either;
+
+// Isomorphism
 pub use crate::iso::{NaturalIso, NaturalIso2, NaturalIso3, NaturalIso4, NaturalIso5};
 
 // HKT
@@ -71,20 +96,22 @@ pub use crate::hkt::{HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound, HKT6Unb
 pub use crate::hkt::{NoConstraint, Placeholder};
 
 // Traits
-pub use crate::traits::adjunction::Adjunction;
-pub use crate::traits::applicative::Applicative;
-pub use crate::traits::bifunctor::Bifunctor;
-pub use crate::traits::comonad::CoMonad;
-pub use crate::traits::cybernetic_loop::CyberneticLoop;
-pub use crate::traits::foldable::Foldable;
-pub use crate::traits::functor::Functor;
-pub use crate::traits::monad::Monad;
-pub use crate::traits::parametric_monad::ParametricMonad;
-pub use crate::traits::profunctor::Profunctor;
-pub use crate::traits::promonad::Promonad;
-pub use crate::traits::pure::Pure;
-pub use crate::traits::riemann_map::RiemannMap;
-pub use crate::traits::traversable::Traversable;
+pub use crate::adjunction::Adjunction;
+pub use crate::applicative::Applicative;
+pub use crate::bifunctor::Bifunctor;
+pub use crate::comonad::CoMonad;
+pub use crate::cybernetic_loop::CyberneticLoop;
+pub use crate::foldable::Foldable;
+pub use crate::functor::Functor;
+pub use crate::monad::Monad;
+pub use crate::morphism::{FnMorphism, Morphism};
+pub use crate::morphism_endo::Endomorphism;
+pub use crate::parametric_monad::ParametricMonad;
+pub use crate::profunctor::Profunctor;
+pub use crate::promonad::Promonad;
+pub use crate::pure::Pure;
+pub use crate::riemann_map::RiemannMap;
+pub use crate::traversable::Traversable;
 
 // Effect System Traits
 pub use crate::effect_system::effect::{Effect3, Effect4, Effect5};

@@ -22,6 +22,10 @@ rust_library(
 rust_doc(
     name = "doc",
     crate = ":deep_causality_num",
+    crate_features = [
+        "std",
+        "libm_math",
+    ],
     tags = ["doc"],
     visibility = ["//visibility:public"],
 )
@@ -29,6 +33,10 @@ rust_doc(
 rust_doc_test(
     name = "doc_test",
     crate = ":deep_causality_num",
+    crate_features = [
+        "std",
+        "libm_math",
+    ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
 )
