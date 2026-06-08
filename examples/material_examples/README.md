@@ -16,9 +16,8 @@ cargo run -p material_examples --example <example_name>
 
 | Example | Domain | Description |
 |---------|--------|-------------|
-| [hyperlens](examples/hyperlens/README.md) | Metamaterials | Super-resolution imaging using hyperbolic dispersion |
-| [topological_insulator](examples/topological_insulator/README.md) | Quantum Materials | Chern number calculation for topological phase classification |
-| [structural_health_monitor](examples/structural_health_monitor/README.md) | Smart Materials | Decentralized monitoring with autonomous causal interventions |
+| [hyperlens](hyperlens/README.md) | Metamaterials | Super-resolution imaging using hyperbolic dispersion |
+| [structural_health_monitor](structural_health_monitor/README.md) | Smart Materials | Decentralized monitoring with autonomous causal interventions |
 
 ---
 

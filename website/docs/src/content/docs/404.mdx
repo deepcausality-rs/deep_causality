@@ -1,0 +1,48 @@
+---
+# Custom 404 for the docs site. Starlight renders this content file for any
+# unmatched route and builds it to dist/404.html, which the Cloudflare Worker
+# serves via not_found_handling = "404-page" in wrangler.toml. The splash
+# template (no sidebar/TOC) mirrors the marketing site's 404 in
+# website/web/src/pages/404.astro.
+title: Page not found
+description: The page you were looking for doesn't exist. Browse the documentation to find what you need.
+template: splash
+hero:
+  tagline: The link you followed may be broken, or the page may have been moved. Pick a starting point below.
+  actions:
+    - text: Documentation home
+      link: /
+      icon: right-arrow
+      variant: primary
+    - text: deepcausality.com
+      link: https://www.deepcausality.com
+      icon: external
+      variant: minimal
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+<CardGrid>
+  <LinkCard
+    title="Overview"
+    href="/overview/"
+    description="Why DeepCausality exists, the single axiom it is built on, and the literature behind it."
+  />
+  <LinkCard
+    title="Getting started"
+    href="/getting-started/"
+    description="Install the crate and walk the smallest programs that exercise the carrier effect, the Causaloid, and the Context."
+  />
+  <LinkCard
+    title="Concepts"
+    href="/concepts/"
+    description="Reference pages for every primitive: the Causaloid, the Context, the Effect Propagation Process, and the type-level machinery."
+  />
+  <LinkCard
+    title="Full docs as PDF"
+    href="/deepcausality-docs.pdf"
+    description="Prefer to read offline? Download the documentation as a PDF."
+  />
+</CardGrid>
+
+If you arrived here from an external link, please [open an issue](https://github.com/deepcausality-rs/deep_causality/issues) so we can fix the reference.

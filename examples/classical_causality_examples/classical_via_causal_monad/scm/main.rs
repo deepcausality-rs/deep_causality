@@ -100,6 +100,7 @@ fn run_rung3_counterfactual() {
     let factual_final = start(factual.clone())
         .bind(stage_has_tar)
         .bind(stage_cancer_risk);
+
     let counterfactual_final = start(factual)
         .alternate_context(counterfactual)
         .bind(stage_has_tar)

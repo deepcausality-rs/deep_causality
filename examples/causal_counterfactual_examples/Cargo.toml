@@ -1,0 +1,39 @@
+[package]
+name = "causal_counterfactual_examples"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+deep_causality_core = { path = "../../deep_causality_core" }
+deep_causality_calculus = { path = "../../deep_causality_calculus" }
+deep_causality_haft = { path = "../../deep_causality_haft" }
+
+
+[[example]]
+name = "counterfactual_treatment_effect"
+path = "counterfactual_treatment_effect/main.rs"
+
+[[example]]
+name = "counterfactual_envelope_fault"
+path = "counterfactual_envelope_fault/main.rs"
+
+[[example]]
+name = "counterfactual_treatment_options"
+path = "counterfactual_treatment_options/main.rs"
+
+[[example]]
+name = "counterfactual_cascade_failure"
+path = "counterfactual_cascade_failure/main.rs"
+
+[[example]]
+name = "counterfactual_resection_intervention"
+path = "counterfactual_resection_intervention/main.rs"
+
+[lints]
+workspace = true

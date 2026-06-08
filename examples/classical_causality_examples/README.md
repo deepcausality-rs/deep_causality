@@ -8,10 +8,10 @@ cargo run -p classical_causality_examples --example <example_name>
 
 ## The two approaches
 
-| Folder | Mechanism | Where the alternation lives |
-|---|---|---|
-| [`classical_via_causaloid/`](classical_via_causaloid/) | `Causaloid` + `CausaloidGraph` + manual Context construction | Contextoid clones outside the carrier |
-| [`classical_via_causal_monad/`](classical_via_causal_monad/) | `PropagatingProcess` + `bind` chain + the [`Alternatable`](../../deep_causality_core/src/traits/alternatable/mod.rs) family | `alternate_value` / `alternate_context` / `alternate_state` on the carrier itself |
+| Folder | Mechanism                                                                                                                   | Where the alternation lives |
+|---|-----------------------------------------------------------------------------------------------------------------------------|---|
+| [`classical_via_causaloid/`](classical_via_causaloid/) | `Causaloid` + `CausaloidGraph` + manual Context construction                                                                | Contextoid clones outside the carrier |
+| [`classical_via_causal_monad/`](classical_via_causal_monad/) | `PropagatingProcess` + `bind` chain + the [`Alternatable`](../../deep_causality_core/src/traits/alternatable/mod.rs) traits | `alternate_value` / `alternate_context` / `alternate_state` on the carrier itself |
 
 ### A short detour: what "Pearl's abduction" is and why both approaches work without it
 

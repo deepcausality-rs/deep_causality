@@ -1,7 +1,7 @@
 ---
-title: General-relativistic magnetohydrodynamics as a five-stage monadic pipeline
+title: General-relativistic magnetohydrodynamics as a five-stage CausalFlow pipeline
 domain: Astrophysics
-summary: Couple a GR solver, a coupling layer, and an MHD solver through monadic bind. Curvature picks the metric; the metric drives the plasma physics; stability falls out at the end.
+summary: Couple a GR solver, a coupling layer, and an MHD solver through a CausalFlow chain. Curvature picks the metric; the metric drives the plasma physics; stability falls out at the end.
 order: 9
 category: physics
 crates:
@@ -29,21 +29,22 @@ Spacetime Metric (g_uv) → Einstein Tensor (G_uv) → Metric Selection
                                                 Stability Analysis
 ```
 
-Five `bind` calls. Each one is a pure function from a `GrmhdState` to a `PropagatingEffect<GrmhdState>`.
+Five `and_then` stages. Each model stage is a pure function that maps a `GrmhdState` to the next; it returns a `PropagatingEffect<GrmhdState>`, adapted into the flow with `.into()`.
 
 ```rust
-use deep_causality::PropagatingEffect;
+use deep_causality_core::CausalFlow;
 use model::{GrmhdState, SimulationConfig};
 
-let result: PropagatingEffect<GrmhdState> = PropagatingEffect::pure(GrmhdState::new(&config))
-    .bind(|state, _, _| model::calculate_curvature(state.into_value().unwrap_or_default()))
-    .bind(|state, _, _| model::select_metric(state.into_value().unwrap_or_default()))
-    .bind(|state, _, _| model::calculate_lorentz_force(state.into_value().unwrap_or_default()))
-    .bind(|state, _, _| model::calculate_energy_momentum(state.into_value().unwrap_or_default()))
-    .bind(|state, _, _| model::analyze_stability(state.into_value().unwrap_or_default()));
+CausalFlow::value(GrmhdState::new(&config))
+    .and_then(|s| model::calculate_curvature(s).into())
+    .and_then(|s| model::select_metric(s).into())
+    .and_then(|s| model::calculate_lorentz_force(s).into())
+    .and_then(|s| model::calculate_energy_momentum(s).into())
+    .and_then(|s| model::analyze_stability(s).into())
+    .run(print_conclusion, |err| eprintln!("Simulation failed: {err:?}"));
 ```
 
-[`main.rs:54`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/physics_examples/grmhd/main.rs#L54).
+[`main.rs:56`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/physics_examples/grmhd/main.rs#L56).
 
 ## The five stages
 
@@ -75,7 +76,7 @@ Three knobs. Increasing the current density raises the Lorentz force. Increasing
 
 Multi-physics simulation usually runs into a structural problem: two solvers, each with its own state model, need to exchange information at every tick. The naïve coupling is a tangle of mutable references; the careful coupling is a custom interface that takes weeks to design.
 
-The monadic version: the state is a value. Each stage is a pure function. The bind operator threads the state through. Adding a third solver is one more `.bind(...)` call. Removing one is the inverse. The chain is testable end-to-end without a harness because the input is a value and the output is a value.
+The monadic version: the state is a value. Each stage is a pure function. The flow threads the state through. Adding a third solver is one more `.and_then(...)` stage. Removing one is the inverse. The chain is testable end-to-end without a harness because the input is a value and the output is a value.
 
 If any stage fails, the chain short-circuits: the `error` field becomes `Some(...)`, every downstream `bind` becomes a no-op, and the `EffectLog` preserves the trace of every stage that ran before the failure.
 

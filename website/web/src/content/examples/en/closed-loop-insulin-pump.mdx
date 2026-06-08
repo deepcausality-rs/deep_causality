@@ -29,27 +29,30 @@ The state carries the running glucose, the cumulative bolus count, and the total
 
 ```rust
 fn run_closed_loop() -> PumpProcess<FloatType> {
-    let mut process = model::initial_process();
-    for _ in 0..N_TICKS {
-        process = process.bind(model::simulate_step);
-
-        let current = match &process.value {
-            EffectValue::Value(v) => *v,
-            _ => continue,
-        };
-        let cfg = process.context.clone().expect("PumpConfig present");
-        if current > cfg.hyperglycemic_threshold {
-            let (corrected, units) = model::corrective_bolus(current, &cfg);
-            process.state.bolus_count += 1;
-            process.state.total_insulin_units += units;
-            process = process.intervene(corrected);
-        }
-    }
-    process
+    let cfg = nominal_pump_config();
+    CausalFlow::from(model::initial_process())
+        .iterate_n(N_TICKS as usize, |tick| {
+            tick.bind(model::simulate_step).branch_with(
+                |glucose, _state, ctx| {
+                    *glucose > ctx.expect("PumpConfig present").hyperglycemic_threshold
+                },
+                |hot| {
+                    hot.update_state(|mut state, &glucose| {
+                        let (_, units) = model::corrective_bolus(glucose, &cfg);
+                        state.bolus_count += 1;
+                        state.total_insulin_units += units;
+                        state
+                    })
+                    .intervene_if(|_| true, |glucose| model::corrective_bolus(glucose, &cfg).0)
+                },
+                |cold| cold,
+            )
+        })
+        .into_process()
 }
 ```
 
-[`main.rs:72`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_intervention_examples/corrective_glucose_pump/main.rs#L72). The loop body is four steps. First, the chain advances one tick via `bind(simulate_step)`; the glucose value updates according to baseline production and any meal event scheduled for that tick. Second, the monitor reads the post-tick glucose from the value channel. Third, the monitor compares it against the threshold in the context. Fourth, if the threshold is crossed, the pump computes the bolus units needed to reach target, updates the state to record the bolus, and calls `.intervene(corrected)` on the chain. The next iteration's `bind` advances from the corrected glucose level rather than the natural one.
+[`main.rs:74`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_intervention_examples/corrective_glucose_pump/main.rs#L74). `iterate_n` runs the tick `N_TICKS` times. Each tick advances the chain one step with `bind(simulate_step)`, then `branch_with` reads the post-tick glucose, the state, and the context together. The predicate compares the glucose against the hyperglycemic threshold carried in the context. When it is exceeded, the hot arm runs: `update_state` records the bolus and accumulates the delivered units, and `intervene_if` substitutes the corrected glucose into the value channel. When it is not, the cold arm passes the tick through unchanged. The next iteration advances from whichever value the branch produced.
 
 ## What `intervene` adds over a branch in `simulate_step`
 
@@ -59,7 +62,7 @@ First, the separation of concerns. The dynamics (baseline production plus meal a
 
 Second, the audit trail. The closed-loop run's `EffectLog` contains one entry per tick recording the glucose reading, plus one entry per bolus event recording the substitution: `!!Intervention!!: <pre-bolus glucose> replaced with <target>`. A reviewing physician can see exactly which readings triggered which boluses, without instrumenting the dynamics function.
 
-Third, the comparability. The example runs the same chain twice: once with no monitor (open loop) and once with the monitor present (closed loop). The chain itself is identical between runs. The only difference is whether the monitor fires `.intervene`. The open-loop trajectory is the failure the corrective interventions prevent; without the dynamics and control being separated at the chain level, that comparison would require two different functions.
+Third, the comparability. The example runs the same chain twice: once with no monitor (open loop) and once with the monitor present (closed loop). The `iterate_n` tick is identical between runs. The only difference is the `branch_with` arm that fires `.intervene`. The open-loop trajectory is the failure the corrective interventions prevent; without the dynamics and control being separated at the chain level, that comparison would require two different functions.
 
 ## The trajectories diverge
 
@@ -75,4 +78,4 @@ cargo run --release -p causal_intervention_examples --example corrective_glucose
 
 ## Where this pattern goes
 
-The shape, `loop { process.bind(step); if threshold_crossed { process.intervene(corrected) } }`, is the corrective-intervention pattern for any monitored system. Lane-keeping under crosswind, decompression stops during a dive ascent, active/standby network failover. The example crate contains three siblings that apply this pattern to those domains; the [network failover example](/examples/active-standby-failover/) is the most directly comparable. The shape stays the same; only the threshold predicate and the corrective value differ.
+The shape, `iterate_n(n, |tick| tick.bind(step).branch_with(crossed, |hot| hot.intervene_if(..), |cold| cold))`, is the corrective-intervention pattern for any monitored system. Lane-keeping under crosswind, decompression stops during a dive ascent, active/standby network failover. The example crate contains three siblings that apply this pattern to those domains; the [network failover example](/examples/active-standby-failover/) is the most directly comparable. The shape stays the same; only the threshold predicate and the corrective value differ.

@@ -122,6 +122,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
 
 [[package]]
+name = "causal_correction_examples"
+version = "0.1.0"
+dependencies = [
+ "deep_causality_calculus",
+ "deep_causality_core",
+ "deep_causality_haft",
+]
+
+[[package]]
+name = "causal_counterfactual_examples"
+version = "0.1.0"
+dependencies = [
+ "deep_causality_calculus",
+ "deep_causality_core",
+ "deep_causality_haft",
+]
+
+[[package]]
 name = "causal_discovery_examples"
 version = "0.1.0"
 dependencies = [
@@ -129,15 +147,6 @@ dependencies = [
  "deep_causality_discovery",
  "deep_causality_num",
  "deep_causality_tensor",
-]
-
-[[package]]
-name = "causal_intervention_examples"
-version = "0.1.0"
-dependencies = [
- "deep_causality_calculus",
- "deep_causality_core",
- "deep_causality_haft",
 ]
 
 [[package]]
@@ -884,10 +893,8 @@ checksum = "616ec5685824bcc94416c6d4a7a446eea774a31efd7062c8480ba6fd06d7a6e5"
 name = "material_examples"
 version = "0.1.0"
 dependencies = [
- "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_multivector",
- "deep_causality_num",
  "deep_causality_tensor",
  "deep_causality_topology",
 ]
@@ -1130,6 +1137,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "quantum_examples"
+version = "0.1.0"
+dependencies = [
+ "deep_causality_calculus",
+ "deep_causality_core",
+ "deep_causality_multivector",
+ "deep_causality_num",
+ "deep_causality_physics",
+ "deep_causality_tensor",
 ]
 
 [[package]]

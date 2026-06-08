@@ -10,13 +10,15 @@ This directory contains examples demonstrating various features and applications
 | [Classical Causality](#classical-causality-examples) | Traditional causal inference methods (CATE, DBN, Granger, RCM, SCM) |
 | [Causal Discovery](#causal-discovery-examples) | SURD decomposition, mRMR feature selection, and the CDL pipeline    |
 | [Causal Uncertain](#causal-uncertain-examples) | Uncertain<T> / MaybeUncertain<T> as monadic propagation chains      |
-| [Causal Intervention](#causal-intervention-examples) | Counterfactual and corrective `intervene` examples (do-operator + closed-loop control) |
+| [Causal Counterfactual](#causal-counterfactual-examples) | Pearl-style one-shot `do`-operator interventions (estimand = difference between worlds) |
+| [Causal Correction](#causal-correction-examples) | Closed-loop corrective `intervene` (monitor a trajectory; snap it back inside the safe envelope) |
 | [CSM Examples](#csm-examples) | Causal State Machine patterns                                       |
 | [Core Examples](#core-examples) | PropagatingEffect and PropagatingProcess fundamentals               |
 | [Avionics Examples](#avionics-examples) | High-assurance GNC and Safety Critical Systems                      |
 | [Chronometric Examples](#chronometric-examples) | Chronometric geodesy from satellite clock data                      |
 | [Mathematics Examples](#mathematics-examples) | Multi-mathematics composition (HKT, Causal Monad)                   |
 | [Physics Examples](#physics-examples) | Multi-physics simulations with Geometric Algebra                    |
+| [Quantum Examples](#quantum-examples) | Quantum computing, quantum geometry, topological matter, electroweak loops, quantum gravity |
 | [Medicine Examples](#medicine-examples) | Biomedical and life sciences applications                           |
 | [Material Examples](#material-examples) | Material Science and Metamaterials                                  |
 | [Tokio Example](#tokio-example) | Async integration with tokio runtime                                |
@@ -94,40 +96,44 @@ See [causal_uncertain_examples/README.md](causal_uncertain_examples/README.md) f
 
 ---
 
-## Causal Intervention Examples
+## Causal Counterfactual Examples
 
-**Location:** `examples/causal_intervention_examples`
+**Location:** `examples/causal_counterfactual_examples`
 
-Nine worked examples showing what the causal monad gives you beyond `bind`.
-Two senses of intervention sit side by side. The counterfactual examples
-follow the Judea Pearl tradition (one-shot value substitution; the
-difference between worlds is the estimand). The corrective examples
-follow the control-theory tradition (monitor a trajectory; intervene
-when the value drifts outside the safe envelope; continue from the
-corrected state).
-
-### Counterfactual interventions
+Five worked examples in the Judea Pearl tradition: a one-shot value
+substitution evaluates the chain on the factual world and one or more
+counterfactual worlds; the difference between worlds is the estimand.
 
 | Example | Monad | Topic | Command |
 |---|---|---|---|
-| counterfactual_treatment_effect   | PropagatingEffect             | CATE as `do(T=1) − do(T=0)` on a single chain                                       | `cargo run -p causal_intervention_examples --example counterfactual_treatment_effect` |
-| counterfactual_envelope_fault     | PropagatingProcess (stateful) | Mid-chain stall-airspeed injection; same aircraft, same configuration, new value    | `cargo run -p causal_intervention_examples --example counterfactual_envelope_fault` |
-| counterfactual_treatment_options  | PropagatingEffect             | Two intervention sites on one chain: beta-blocker vs surgical clip                  | `cargo run -p causal_intervention_examples --example counterfactual_treatment_options` |
-| counterfactual_cascade_failure    | PropagatingProcess (stateful) | Network N-k contingency analysis as a chain of composing interventions              | `cargo run -p causal_intervention_examples --example counterfactual_cascade_failure` |
-| counterfactual_resection_intervention | PropagatingEffect         | Epilepsy surgery screening as `do(connectome = resected_at_R)` for each region      | `cargo run -p causal_intervention_examples --example counterfactual_resection_intervention` |
+| counterfactual_treatment_effect   | PropagatingEffect             | CATE as `do(T=1) − do(T=0)` on a single chain                                       | `cargo run -p causal_counterfactual_examples --example counterfactual_treatment_effect` |
+| counterfactual_envelope_fault     | PropagatingProcess (stateful) | Mid-chain stall-airspeed injection; same aircraft, same configuration, new value    | `cargo run -p causal_counterfactual_examples --example counterfactual_envelope_fault` |
+| counterfactual_treatment_options  | PropagatingEffect             | Two intervention sites on one chain: beta-blocker vs surgical clip                  | `cargo run -p causal_counterfactual_examples --example counterfactual_treatment_options` |
+| counterfactual_cascade_failure    | PropagatingProcess (stateful) | Network N-k contingency analysis as a chain of composing interventions              | `cargo run -p causal_counterfactual_examples --example counterfactual_cascade_failure` |
+| counterfactual_resection_intervention | PropagatingEffect         | Epilepsy surgery screening as `do(connectome = resected_at_R)` for each region      | `cargo run -p causal_counterfactual_examples --example counterfactual_resection_intervention` |
 
-### Corrective interventions
+See [causal_counterfactual_examples/README.md](causal_counterfactual_examples/README.md) for detailed documentation.
 
-Each runs the same chain twice: open loop (no monitor, catastrophic failure) and closed loop (monitor + `intervene`, failure averted).
+---
+
+## Causal Correction Examples
+
+**Location:** `examples/causal_correction_examples`
+
+Four worked examples in the control-theory tradition: monitor a trajectory
+tick by tick; when the value drifts outside the safe envelope, `intervene`
+snaps it back and the chain continues from the corrected state. Each runs
+the same chain twice: open loop (no monitor, catastrophic failure) and
+closed loop (monitor + `intervene`, failure averted).
 
 | Example | Monad | Topic | Command |
 |---|---|---|---|
-| corrective_lane_keeping           | PropagatingProcess (stateful) | Vehicle drifts under crosswind; P-controller fires every time offset crosses 0.30 m | `cargo run -p causal_intervention_examples --example corrective_lane_keeping` |
-| corrective_glucose_pump           | PropagatingProcess (stateful) | Glucose climbs across three meals; corrective bolus fires above 180 mg/dL          | `cargo run -p causal_intervention_examples --example corrective_glucose_pump` |
-| corrective_decompression_stops    | PropagatingProcess (stateful) | Diver ascends from 30 m; decompression stop inserted when N2 supersaturation rises | `cargo run -p causal_intervention_examples --example corrective_decompression_stops` |
-| corrective_network_failover       | PropagatingProcess (stateful) | Primary switch fails; monitor detects zero delivery; standby switch takes over     | `cargo run -p causal_intervention_examples --example corrective_network_failover` |
+| corrective_lane_keeping           | PropagatingProcess (stateful) | Vehicle drifts under crosswind; P-controller fires every time offset crosses 0.30 m | `cargo run -p causal_correction_examples --example corrective_lane_keeping` |
+| corrective_glucose_pump           | PropagatingProcess (stateful) | Glucose climbs across three meals; corrective bolus fires above 180 mg/dL          | `cargo run -p causal_correction_examples --example corrective_glucose_pump` |
+| corrective_decompression_stops    | PropagatingProcess (stateful) | Diver ascends from 30 m; decompression stop inserted when N2 supersaturation rises | `cargo run -p causal_correction_examples --example corrective_decompression_stops` |
+| corrective_network_failover       | PropagatingProcess (stateful) | Primary switch fails; monitor detects zero delivery; standby switch takes over     | `cargo run -p causal_correction_examples --example corrective_network_failover` |
 
-See [causal_intervention_examples/README.md](causal_intervention_examples/README.md) for detailed documentation.
+See [causal_correction_examples/README.md](causal_correction_examples/README.md) for detailed documentation.
 
 ---
 
@@ -208,12 +214,12 @@ effect monad.
 
 | Subfolder | Crate | Description |
 |-----------|-------|-------------|
-| [algebra](mathematics_examples/algebra/README.md) | `deep_causality_multivector` | Clifford and geometric-algebra examples (basic, PGA3D, Dixon, Maxwell, Hopf, GRMHD, plus the `algebraic_scanner` study of complex structure) |
+| [algebra](mathematics_examples/algebra/README.md) | `deep_causality_multivector` | Clifford and geometric-algebra examples (basic, PGA3D, Dixon, Maxwell, GRMHD, plus the `algebraic_scanner` study of complex structure) |
 | [sparse](mathematics_examples/sparse/README.md) | `deep_causality_sparse` | CSR-format sparse matrix ops and the HKT functor view |
 | [tensor](mathematics_examples/tensor/README.md) | `deep_causality_tensor` | `CausalTensor` construction, `EinSumOp`, Einstein-field index gymnastics, HKT (Functor, Applicative) |
 | [topology](mathematics_examples/topology/README.md) | `deep_causality_topology` | Graphs, simplicial and cubical complexes, manifolds, differential forms, lattice gauge fields |
 | [composable_multi_math](mathematics_examples/composable_multi_math/README.md) | cross-crate | HKT and causal-monad composition across two or three of the above crates |
-| [isomorphism](mathematics_examples/isomorphism/README.md) | cross-crate | `iso` bridges from `deep_causality_num::iso` / `deep_causality_haft::iso` (tensor <-> sparse, multifield <-> tuple carrier, dual-witness duality) |
+| [isomorphism](mathematics_examples/isomorphism/README.md) | cross-crate | `iso` bridges from `deep_causality_num::iso` / `deep_causality_haft::iso` (tensor <-> sparse, multifield <-> tuple carrier) |
 
 ### Highlights
 
@@ -233,11 +239,10 @@ effect monad.
 | effect_diffusion_on_manifold | composition | Heat equation: spatial Laplacian via `extend`, time stepping via `bind`, stability short-circuit on CFL violation | `cargo run -p mathematics_examples --example effect_diffusion_on_manifold_examples` |
 | capstone_spinor_minkowski | composition (capstone) | Parallel transport of a unit timelike spinor along a discretized Minkowski worldline in `Cl(3,1)`. Final drift versus closed-form `(cosh θ, sinh θ)` is ~1.7e-31 at `Float106`, fifteen orders of magnitude tighter than f64 | `cargo run -p mathematics_examples --example capstone_spinor_minkowski_examples` |
 | tensor_sparse_memory_budget | isomorphism | Dense `CausalTensor` <-> `CsrMatrix` via the `tensor-iso` feature: sparsify, run a sparse-only op, materialise back to dense | `cargo run -p mathematics_examples --example tensor_sparse_memory_budget` |
-| effect_process_witness_duality | isomorphism | Dual-witness pattern: `PropagatingEffect<T>` and `PropagatingProcess<T, (), ()>` share one carrier with two independent `Functor`/`Monad` witnesses producing byte-identical output | `cargo run -p mathematics_examples --example effect_process_witness_duality` |
 | multifield_data_pipeline | isomorphism | `CausalMultiField<T>` <-> `(CausalTensor<T>, Metric, dx, shape)` iso lets external code build/extract/transform a multifield without touching `pub(crate)` internals | `cargo run -p mathematics_examples --example multifield_data_pipeline` |
 
 See [mathematics_examples/README.md](mathematics_examples/README.md) for the full
-table of all 32 registered examples and the precision-abstraction decision tree
+table of all 35 registered examples and the precision-abstraction decision tree
 (`f32` vs `f64` vs `Float106`).
 
 ---
@@ -258,18 +263,37 @@ Multi-physics simulations using Geometric Algebra, Tensor operations, and Topolo
 | Geometric Tilt | Robotics/IMU | `cargo run -p physics_examples --example geometric_tilt` |
 | Algebraic Scanner | Abstract Algebra | `cargo run -p physics_examples --example algebraic_scanner` |
 | Multi-Physics Pipeline | Particle Physics | `cargo run -p physics_examples --example multi_physics_pipeline` |
-| Quantum Counterfactual | Quantum | `cargo run -p physics_examples --example quantum_counterfactual` |
-| Quantum Geometric Tensor | Condensed Matter | `cargo run -p physics_examples --example quantum_geometric_tensor` |
-| IKKT Matrix Model | Quantum Gravity | `cargo run -p physics_examples --example ikkt_matrix_model` |
 | Gravitational Wave | Relativity | `cargo run -p physics_examples --example gravitational_wave` |
 | Event Horizon Probe | Relativity | `cargo run -p physics_examples --example event_horizon_probe` |
 | Gauge EM | Electromagnetism | `cargo run -p physics_examples --example gauge_em` |
 | Gauge GR | General Relativity | `cargo run -p physics_examples --example gauge_gr` |
-| Gauge Electroweak | Electroweak | `cargo run -p physics_examples --example gauge_electroweak` |
 | Gauge Weak Force | Weak Force | `cargo run -p physics_examples --example gauge_weak_force` |
 | Gauge Lattice U(1) 2D | Lattice Gauge | `cargo run -p physics_examples --example gauge_lattice_u1_2d` |
 
 See [physics_examples/README.md](physics_examples/README.md) for detailed documentation.
+
+---
+
+## Quantum Examples
+
+**Location:** `examples/quantum_examples`
+
+Examples whose subject matter is directly quantum, consolidated here from
+the physics, material, and mathematics example crates: quantum computing,
+quantum geometry of electronic bands, topological quantum matter,
+electroweak loop corrections, the Hopf/Bloch-sphere structure of a qubit
+state, and a quantum-gravity matrix model.
+
+| Example | Field | Command |
+|---------|-------|---------|
+| Quantum Counterfactual | Quantum Computing | `cargo run -p quantum_examples --example quantum_counterfactual` |
+| Quantum Geometric Tensor | Condensed Matter | `cargo run -p quantum_examples --example quantum_geometric_tensor` |
+| Gauge Electroweak | Quantum Field Theory | `cargo run -p quantum_examples --example gauge_electroweak` |
+| Topological Insulator | Quantum Materials | `cargo run -p quantum_examples --example topological_insulator` |
+| Hopf Fibration Multivector | Quantum State Geometry | `cargo run -p quantum_examples --example hopf_fibration_multivector` |
+| IKKT Matrix Model | Quantum Gravity | `cargo run -p quantum_examples --example ikkt_matrix_model` |
+
+See [quantum_examples/README.md](quantum_examples/README.md) for detailed documentation.
 
 ---
 
@@ -301,7 +325,6 @@ Material Science and Metamaterial simulations using topology, multivectors, and 
 | Example | Domain | Command |
 |---------|--------|---------|
 | Hyperlens | Metamaterials | `cargo run -p material_examples --example hyperlens_example` |
-| Topological Insulator | Quantum Materials | `cargo run -p material_examples --example topological_insulator_example` |
 | Structural Health Monitor | Smart Materials | `cargo run -p material_examples --example structural_health_monitor_example` |
 
 See [material_examples/README.md](material_examples/README.md) for detailed documentation.

@@ -1,7 +1,7 @@
 ---
 title: TTFields electrode optimization for a glioblastoma volume
 domain: Biomedical
-summary: A Metropolis-style optimizer that proposes a new electrode angle, evaluates the disruption via a causal effect chain, and accepts or rejects.
+summary: An autodiff gradient-ascent optimizer ascends the exact efficacy gradient through a CausalFlow chain; a non-finite gradient short-circuits the error channel.
 order: 5
 category: medicine
 crates:
@@ -16,45 +16,37 @@ further:
 
 This example lives at [`tumor_treatment`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/medicine_examples/tumor_treatment). It models the [Tumor Treating Fields](https://en.wikipedia.org/wiki/Tumor_Treating_Fields) (TTFields) optimization problem on a glioblastoma volume: given a 3D grid of tumor voxels with directional cell-division axes, find the electrode angle that maximizes disruption.
 
-The optimizer is Metropolis-style. Each iteration:
+The optimizer ascends the exact gradient. Each electrode orientation `(theta, phi)` has an efficacy `⟨|E(θ,φ)·axis|⟩`, and because that objective is a `DifferentiableField`, its gradient comes straight from autodiff rather than from random perturbations. The loop starts just off the degenerate `θ = 0` pole and steps along `∇efficacy` for a fixed number of iterations.
 
-1. Proposes a new `(theta, phi)`.
-2. Evaluates the proposed configuration's efficacy as a causal effect chain.
-3. Accepts the proposal if the score improves, rejects otherwise.
-
-The interesting move is step 2: the physics simulation is wrapped in `PropagatingEffect::pure(new_params).bind(...)` so the optimizer composes against the same effect-propagation machinery the rest of the library uses.
+The interesting move is the wrapper: the whole ascent runs inside a `CausalFlow`. A single `bind` runs the gradient-ascent step function, and a non-finite gradient drops the flow into its error channel instead of returning a bad orientation.
 
 ## The chain
 
 ```rust
-use deep_causality_core::{CausalityError, EffectValue, PropagatingEffect};
+use deep_causality_core::{CausalFlow, PropagatingEffect};
 
-let effect = PropagatingEffect::pure(new_params).bind(|params, _, _| {
-    let p = match params {
-        EffectValue::Value(v) => v,
-        _ => (0.0, 0.0),
-    };
-    let score = match model::evaluate_efficacy(&tumor, p) {
-        Ok(s) => s,
-        Err(e) => return PropagatingEffect::from_error(/* ... */),
-    };
-    PropagatingEffect::pure(score)
-});
+// Start just off the degenerate θ = 0 pole, then ascend the exact gradient.
+let start = [ft(0.1), ft(0.1)];
 
-if let EffectValue::Value(new_score) = effect.value() {
-    if *new_score > current_score {
-        current_params = new_params;
-        current_score = *new_score;
-    }
+let pipeline = CausalFlow::value(start)
+    .bind(move |p, _, _| match p.into_value() {
+        Some(s) => ascend(&efficacy, s, learning_rate, ASCENT_STEPS),
+        None => fail("no starting orientation"),
+    })
+    .into_effect();
+
+match pipeline.value.into_value() {
+    Some(r) => println!("θ={:.3}, φ={:.3} over {} steps", r.theta, r.phi, r.steps),
+    None => eprintln!("Optimization failed: {:?}", pipeline.error),
 }
 ```
 
-The `bind` is a pure function: it takes the proposed `(theta, phi)`, runs the physics simulation, and returns a new `PropagatingEffect` carrying the score. The optimizer reads the score off the effect's value.
+The `bind` runs `ascend`, which walks the gradient for `ASCENT_STEPS` iterations and returns a `PropagatingEffect<Report>` carrying the final orientation. `into_effect()` drops back to the concrete carrier so the result block can read the report off the value channel, or print the error if the gradient ever left the finite range.
 
 ## What to look at in the source
 
-- `model.rs`: `evaluate_efficacy`, `build_mock_tumor`, the physics that turns an electrode angle into a disruption score.
-- `main.rs`: the optimization loop, the Metropolis accept/reject, and the temperature schedule.
+- `model.rs`: `Efficacy`, its `DifferentiableField` gradient, `build_mock_tumor`, and the physics that turns an electrode angle into a disruption score.
+- `main.rs`: the `ascend` gradient-ascent loop and the `CausalFlow` chain that wraps it.
 
 The crate ships sibling examples for protein folding, tissue classification, aneurysm hemodynamics, decompression, and epilepsy. They live next to this one under `examples/medicine_examples/`.
 
@@ -66,8 +58,8 @@ cd deep_causality
 cargo run --release -p medicine_examples --example tumor_treatment
 ```
 
-The output prints one line per optimization step with the current score and the proposed angle.
+The output prints one line per ascent step with the current efficacy, the orientation, and the gradient.
 
 ## Why this is a good fit
 
-The optimization loop is glue; the physics is heavy. Wrapping the physics in a `PropagatingEffect` keeps the loop indifferent to the implementation. Swap `evaluate_efficacy` for a different model, the loop does not change. Add an audit log of every proposal, the `EffectLog` is already collecting it.
+The ascent is glue; the physics is heavy. Wrapping it in a `CausalFlow` keeps the result handling indifferent to the implementation. Swap the efficacy field for a different model, the chain does not change. A non-finite gradient short-circuits cleanly through the error channel instead of propagating a bad orientation.

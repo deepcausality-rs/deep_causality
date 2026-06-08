@@ -34,21 +34,27 @@ Earth's mass, weighed by satellite clocks accurate to 0.2%.
 
 ## The pipeline
 
-`main.rs` keeps the structural showcase up front. Five stages, each returning a `PropagatingEffect`, composed through `.bind`:
+`main.rs` keeps the structural showcase up front. Five stages, each a plain `Value -> Result<U, CausalityError>`, composed through `.try_step`. The flow unwraps each stage's value and short-circuits the error channel, and `.run` dispatches the final report to a success or failure handler:
 
 ```rust
-use deep_causality_core::{EffectValue, PropagatingEffect};
-use deep_causality_num::Float106;
+use deep_causality_core::CausalFlow;
 
-let result: PropagatingEffect<GmReport<FloatType>> = PropagatingEffect::pure(inputs)
-    .bind(stage_load::<FloatType>)
-    .bind(stage_align)
-    .bind(stage_pair)
-    .bind(stage_solve_gm)
-    .bind(stage_aggregate);
+CausalFlow::value(inputs)
+    .try_step(stage_load::<FloatType>)
+    .try_step(stage_align)
+    .try_step(stage_pair)
+    .try_step(stage_solve_gm)
+    .try_step(stage_aggregate)
+    .run(
+        |report| print_gm_report(&report),
+        |err| {
+            eprintln!("Pipeline failed:\n  {err:?}");
+            std::process::exit(1);
+        },
+    );
 ```
 
-[`main.rs:68`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/chronometric_examples/gm_recovery/main.rs#L68). Each stage is generic over the floating-point type. The default `FloatType` alias is `Float106`, a double-double providing roughly 32 decimal digits. Switching to `f64` is a one-line change to the alias.
+[`main.rs:70`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/chronometric_examples/gm_recovery/main.rs#L70). Each stage is generic over the floating-point type. The default `FloatType` alias is `Float106`, a double-double providing roughly 32 decimal digits. Switching to `f64` is a one-line change to the alias.
 
 ## What each stage does
 
@@ -74,9 +80,9 @@ const DATASETS: &[&str] = &[
 
 [`main.rs:37`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/chronometric_examples/gm_recovery/main.rs#L37). E14 is the Galileo IOV satellite with the most eccentric orbit, providing the radial range required to invert GM. The datasets are bundled with the crate; no external download is needed at run time.
 
-## What the bind chain earns
+## What the try_step chain earns
 
-A single-satellite inversion is a small problem. The structural lesson is what happens when the pipeline grows: a second satellite, a different kernel, a Monte-Carlo wrapper around the aggregate step. Each addition is a `bind` call against the same `PropagatingEffect` shape, with the typed stages staying intact.
+A single-satellite inversion is a small problem. The structural lesson is what happens when the pipeline grows: a second satellite, a different kernel, a Monte-Carlo wrapper around the aggregate step. Each addition is a `try_step` call against the same `CausalFlow`, with the typed stages staying intact.
 
 The `EffectLog` accumulates across the chain. A run that errors out in stage 4 still carries the records of stages 1 through 3. The audit trail is the log; you do not write a logger.
 

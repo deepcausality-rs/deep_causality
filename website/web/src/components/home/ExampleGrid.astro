@@ -101,6 +101,32 @@ import { examples } from './examples';
         }
       });
     });
+
+    // Size every code box to the tallest snippet's *rendered* height, so no
+    // panel carries dead space beyond the longest one while all six stay equal.
+    // Measured (not computed from font metrics) so it is exact regardless of the
+    // shiki line-height. Hidden panels are briefly revealed to be measured.
+    const codeBoxes = Array.from(root.querySelectorAll<HTMLElement>('.panel-code'));
+    function equalizeCodeBoxes() {
+      if (!codeBoxes.length) return;
+      let max = 0;
+      codeBoxes.forEach((box) => {
+        const panel = box.closest<HTMLElement>('[role="tabpanel"]');
+        const wasHidden = panel?.hasAttribute('hidden') ?? false;
+        if (panel && wasHidden) panel.removeAttribute('hidden');
+        box.style.height = 'auto';
+        if (box.offsetHeight > max) max = box.offsetHeight;
+        if (panel && wasHidden) panel.setAttribute('hidden', '');
+      });
+      codeBoxes.forEach((box) => { box.style.height = `${max}px`; });
+    }
+    equalizeCodeBoxes();
+    if (document.fonts?.ready) document.fonts.ready.then(equalizeCodeBoxes);
+    let resizeTimer: number | undefined;
+    window.addEventListener('resize', () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(equalizeCodeBoxes, 150);
+    });
   }
 </script>
 
@@ -295,9 +321,12 @@ import { examples } from './examples';
     font-size: 14px;
     line-height: 1.55;
     overflow: hidden;
-    height: 360px;
+    /* Height is set by the equalizeCodeBoxes() script to the tallest snippet's
+       rendered height, so every tab is identical with no dead space beyond the
+       longest one. Default `auto` hugs the content before the script runs (and
+       for the no-JS case, where only the first panel is ever shown). */
+    height: auto;
   }
-  @media (min-width: 720px) { .panel-code { height: 460px; } }
   .panel-code::before,
   .panel-code::after {
     content: '';
