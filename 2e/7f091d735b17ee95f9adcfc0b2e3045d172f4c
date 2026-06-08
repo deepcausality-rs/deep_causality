@@ -1,0 +1,72 @@
+website/docs/wrangler.toml
+  s_469d0d2bb2bdfd::t_5d4ff7fdaa5085 20-21
+  s_469d0d2bb2bdfd::t_fe4d932a388f14 12-15
+website/web/wrangler.toml
+  s_469d0d2bb2bdfd::t_e40bdc14e29a84 9-12
+  s_469d0d2bb2bdfd::t_1c81032ef1f220 17-19
+website/web/src/content/examples/en/biomedical-tumor-treatment.mdx
+  s_41a4678cc55d5f::t_03f556403b0c6e 61,65
+  s_41a4678cc55d5f::t_75b8b175a6d315 48-49
+  s_41a4678cc55d5f::t_07b58afd7edd4a 4
+  s_41a4678cc55d5f::t_224d79e88202be 19,21,26-40,44
+website/web/src/content/examples/en/aerospace-flight-envelope.mdx
+  s_41a4678cc55d5f::t_f4768ddcf5b60d 29,32-33,42,48
+website/web/src/content/examples/en/virtual-resection.mdx
+  s_41a4678cc55d5f::t_4e00228ec7d33a 26-28,35,37-38,42
+  s_41a4678cc55d5f::t_58961f09efa428 74
+website/web/src/components/home/examples.ts
+  s_41a4678cc55d5f::t_52306b9caf3fdd 92-107
+  s_41a4678cc55d5f::t_19a09c4fdded57 77-79,84-85
+  s_41a4678cc55d5f::t_32f5159db74090 113,116,122-128
+website/web/src/content/examples/en/counterfactual-envelope-fault.mdx
+  s_41a4678cc55d5f::t_c3a1f203f825bf 26,29,34,38
+website/web/src/content/examples/en/physics-maxwell.mdx
+  s_41a4678cc55d5f::t_e4e0f23d1173f9 2,4
+  s_41a4678cc55d5f::t_48c8d7b86e3e5f 30,35-40
+  s_41a4678cc55d5f::t_091eeefe348697 18
+website/web/src/content/examples/en/event-horizon-probe.mdx
+  s_41a4678cc55d5f::t_84c7b54bdc535d 50-73,76,78
+  s_41a4678cc55d5f::t_96798a805773a2 27,43
+  s_41a4678cc55d5f::t_7d2cb51013996f 18,20
+  s_41a4678cc55d5f::t_0b4f0b1d891066 98
+  s_41a4678cc55d5f::t_1a2c9f4ee35732 82
+website/docs/src/content/docs/404.mdx
+  s_469d0d2bb2bdfd::t_7cded0f9b457dc 1-48
+website/web/src/content/examples/en/gm-recovery.mdx
+  s_41a4678cc55d5f::t_e74c6e6630035e 83,85
+  s_41a4678cc55d5f::t_5143795bbf88ef 37,40-54,57
+website/web/src/content/examples/en/active-standby-failover.mdx
+  s_41a4678cc55d5f::t_9154ee967e14cc 32-52,56
+website/web/src/content/examples/en/closed-loop-insulin-pump.mdx
+  s_41a4678cc55d5f::t_53b4d179e5d87e 65
+  s_41a4678cc55d5f::t_8cd1225fd5ecc9 81
+  s_41a4678cc55d5f::t_3566d67e970062 32-51,55
+website/web/src/content/examples/en/grmhd.mdx
+  s_41a4678cc55d5f::t_8467c278ef444b 2,4
+  s_41a4678cc55d5f::t_1d59d63289d8b0 32,35,38-44,47
+  s_41a4678cc55d5f::t_cfa36694cc6a89 79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "2e7f091d735b17ee95f9adcfc0b2e3045d172f4c",
+  "prompts": {},
+  "sessions": {
+    "s_41a4678cc55d5f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "870f636b-6549-43a1-829b-e42adc657129",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_469d0d2bb2bdfd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96bc15fe-06ee-4bc4-8f6a-e6d94735e581",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
