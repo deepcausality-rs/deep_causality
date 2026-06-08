@@ -508,7 +508,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_haft"
-version = "0.3.2"
+version = "0.3.3"
 
 [[package]]
 name = "deep_causality_macros"
@@ -531,7 +531,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_num"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "libm",
 ]
