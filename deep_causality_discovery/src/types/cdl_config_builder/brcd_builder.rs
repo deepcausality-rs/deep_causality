@@ -14,12 +14,6 @@ use deep_causality_algorithms::brcd::BrcdConfig;
 /// Stage 0: needs the normal-dataset path.
 pub struct BrcdConfigNeedsNormal;
 
-impl Default for BrcdConfigNeedsNormal {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl BrcdConfigNeedsNormal {
     pub(crate) fn new() -> Self {
         Self

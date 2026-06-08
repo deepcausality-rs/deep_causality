@@ -234,3 +234,23 @@ fn test_from_impls() {
         panic!("Incorrect error variant for DataCleaningError");
     }
 }
+
+#[test]
+fn test_cpdag_and_brcd_arms() {
+    use deep_causality_discovery::{BrcdLoadError, CpdagError};
+
+    // CpdagError: Display, source (None), From.
+    let cpdag = CdlError::from(CpdagError::MissingHeader);
+    assert!(matches!(cpdag, CdlError::CpdagError(_)));
+    assert!(cpdag.to_string().contains("Step [CPDAG Loading] failed"));
+    assert!(cpdag.source().is_some());
+
+    // BrcdLoadError: Display, source, From.
+    let brcd = CdlError::from(BrcdLoadError::DimensionMismatch("vars".into()));
+    assert!(matches!(brcd, CdlError::BrcdLoadError(_)));
+    assert!(
+        brcd.to_string()
+            .contains("Step [BRCD Input Loading] failed")
+    );
+    assert!(brcd.source().is_some());
+}

@@ -83,3 +83,22 @@ fn test_file_not_found_is_error() {
         Err(CpdagError::FileNotFound(_))
     ));
 }
+
+#[test]
+fn test_wrong_field_count_is_parse_error() {
+    let file = write("# vertices=2\nsrc,dst,mark_src,mark_dst\n0,1,Tail\n"); // 3 fields
+    assert!(matches!(
+        load_cpdag_csv(file.path().to_str().unwrap()),
+        Err(CpdagError::Parse(_))
+    ));
+}
+
+#[test]
+fn test_self_loop_is_graph_error() {
+    // A self-loop (u == v) is rejected by the graph, surfacing as CpdagError::Graph.
+    let file = write("# vertices=2\nsrc,dst,mark_src,mark_dst\n0,0,Tail,Arrow\n");
+    assert!(matches!(
+        load_cpdag_csv(file.path().to_str().unwrap()),
+        Err(CpdagError::Graph(_))
+    ));
+}

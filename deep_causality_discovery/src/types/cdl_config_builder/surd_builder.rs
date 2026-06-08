@@ -18,12 +18,6 @@ pub struct SurdConfigNeedsPath<T> {
     _precision: PhantomData<T>,
 }
 
-impl<T> Default for SurdConfigNeedsPath<T> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl<T> SurdConfigNeedsPath<T> {
     pub(crate) fn new() -> Self {
         Self {

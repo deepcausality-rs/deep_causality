@@ -105,3 +105,22 @@ fn test_brcd_dimension_mismatch_is_error() {
     let effect = CdlBuilder::build_brcd(&config).brcd_load_input();
     assert!(matches!(effect.inner, Err(CdlError::BrcdLoadError(_))));
 }
+
+#[test]
+fn test_brcd_cpdag_vertex_count_mismatch_is_error() {
+    // CPDAG declares 2 vertices but the datasets have 3 variables.
+    let normal = write_chain(0.0, 0x1234);
+    let anomalous = write_chain(4.0, 0x9abc);
+    let bad_cpdag = write_csv("# vertices=2\nsrc,dst,mark_src,mark_dst\n0,1,Tail,Tail\n");
+
+    let config = CdlConfigBuilder::build_brcd_config()
+        .with_normal_path(normal.path().to_str().unwrap())
+        .with_anomalous_path(anomalous.path().to_str().unwrap())
+        .with_brcd_config(BrcdConfig::<f64>::continuous(0))
+        .with_cpdag_path(bad_cpdag.path().to_str().unwrap())
+        .build()
+        .expect("files exist");
+
+    let effect = CdlBuilder::build_brcd(&config).brcd_load_input();
+    assert!(matches!(effect.inner, Err(CdlError::BrcdLoadError(_))));
+}

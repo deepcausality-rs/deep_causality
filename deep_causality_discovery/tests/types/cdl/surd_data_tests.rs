@@ -4,8 +4,8 @@
  */
 
 use deep_causality_discovery::{
-    BinningStrategy, CdlBuilder, CdlConfigBuilder, ColumnSelector, DataDiscretizer, MaxOrder,
-    OptionNoneDataCleaner, PreprocessConfig, SurdAnalyzeConfig,
+    BinningStrategy, CdlBuilder, CdlConfigBuilder, CdlError, ColumnSelector, DataDiscretizer,
+    MaxOrder, OptionNoneDataCleaner, PreprocessConfig, SurdAnalyzeConfig,
 };
 use std::io::Write;
 use tempfile::NamedTempFile;
@@ -66,4 +66,21 @@ fn test_preprocess_discretizes() {
     assert!(effect.inner.is_ok());
     let cdl = effect.inner.unwrap();
     assert_eq!(cdl.state.tensor.shape(), &[4, 4]);
+}
+
+#[test]
+fn test_preprocess_invalid_column_errors() {
+    // A column index that does not exist surfaces as a CdlError::PreprocessError
+    // (covers the preprocess error branch).
+    let file = write_csv(DATA);
+    let cfg = config(file.path().to_str().unwrap());
+    let pp = PreprocessConfig::new(
+        BinningStrategy::EqualWidth,
+        2,
+        ColumnSelector::ByIndex(vec![99]),
+    );
+    let effect = CdlBuilder::build_surd(&cfg)
+        .surd_load_input()
+        .preprocess(DataDiscretizer, &pp);
+    assert!(matches!(effect.inner, Err(CdlError::PreprocessError(_))));
 }

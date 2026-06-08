@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_discovery::{BrcdConfig, CdlBuilder, CdlConfigBuilder};
+use deep_causality_discovery::{BrcdConfig, CdlBuilder, CdlConfigBuilder, CdlError};
 use std::io::Write;
 use tempfile::NamedTempFile;
 
@@ -57,4 +57,33 @@ fn test_brcd_discover_ranks_injected_root_cause() {
     let cdl = effect.inner.unwrap();
     assert_eq!(cdl.state.records_count, 240);
     assert_eq!(cdl.state.brcd_result.top(), Some([1usize].as_slice()));
+}
+
+#[test]
+fn test_brcd_discover_algorithm_error_surfaces() {
+    // k larger than the number of variables makes brcd_run fail; the error must
+    // surface as a CdlError (covers the brcd_discover error branch).
+    let normal = write_chain(0.0, 0x1234);
+    let anomalous = write_chain(4.0, 0x9abc);
+    let cpdag = write_cpdag();
+
+    let mut bc = BrcdConfig::<f64>::continuous(7);
+    bc.num_root_causes = 99; // > 3 variables
+
+    let config = CdlConfigBuilder::build_brcd_config()
+        .with_normal_path(normal.path().to_str().unwrap())
+        .with_anomalous_path(anomalous.path().to_str().unwrap())
+        .with_brcd_config(bc)
+        .with_cpdag_path(cpdag.path().to_str().unwrap())
+        .build()
+        .expect("files exist");
+
+    let effect = CdlBuilder::build_brcd(&config)
+        .brcd_load_input()
+        .brcd_discover();
+
+    assert!(matches!(
+        effect.inner,
+        Err(CdlError::CausalDiscoveryError(_))
+    ));
 }
