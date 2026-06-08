@@ -17,6 +17,7 @@ impl<T: Precision + ToPrimitive> CDL<BrcdLoaded<T>> {
     /// BRCD failure surfaces as a `CdlError` wrapping
     /// [`CausalDiscoveryError::Brcd`].
     pub fn brcd_discover(self) -> CdlEffect<CDL<BrcdResults<T>>> {
+        let dataset_path = self.state.dataset_path;
         let input = &self.state.input;
         let records_count = input.normal().shape()[0] + input.anomalous().shape()[0];
 
@@ -32,6 +33,7 @@ impl<T: Precision + ToPrimitive> CDL<BrcdLoaded<T>> {
                 state: BrcdResults {
                     brcd_result,
                     records_count,
+                    dataset_path,
                 },
             }),
             Err(e) => CdlEffect {

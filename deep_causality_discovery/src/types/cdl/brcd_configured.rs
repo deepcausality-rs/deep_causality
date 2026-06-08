@@ -13,9 +13,17 @@ impl<T: Precision> CDL<BrcdConfigured<T>> {
     /// `BrcdInput` bundle, inside the pipeline. A loading failure surfaces as a
     /// `CdlError`.
     pub fn brcd_load_input(self) -> CdlEffect<CDL<BrcdLoaded<T>>> {
+        let dataset_path = format!(
+            "normal: {} | anomalous: {}",
+            self.state.config.normal_path(),
+            self.state.config.anomalous_path()
+        );
         match BrcdDataLoader::load(&self.state.config) {
             Ok(input) => CdlBuilder::pure(CDL {
-                state: BrcdLoaded { input },
+                state: BrcdLoaded {
+                    input,
+                    dataset_path,
+                },
             }),
             Err(e) => CdlEffect {
                 inner: Err(CdlError::from(e)),

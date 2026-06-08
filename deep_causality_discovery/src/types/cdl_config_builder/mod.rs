@@ -40,9 +40,10 @@ impl CdlConfigBuilder {
     }
 }
 
-/// Fails fast if a referenced file does not exist on disk.
+/// Fails fast if a referenced path is not an existing regular file. A directory
+/// (or a missing path) is rejected, since the loaders open it as a data file.
 pub(crate) fn check_file_exists(path: &str) -> Result<(), CdlError> {
-    if std::path::Path::new(path).exists() {
+    if std::path::Path::new(path).is_file() {
         Ok(())
     } else {
         Err(CdlError::ReadDataError(DataLoadingError::FileNotFound(

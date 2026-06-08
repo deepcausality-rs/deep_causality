@@ -65,6 +65,18 @@ impl<T: Precision> CDL<SurdData<T>> {
         P: Fn(&[T]) -> bool,
     {
         let tensor = &self.state.tensor;
+        // Row filtering is only defined for a 2-D matrix; guard the rank before
+        // indexing shape[1] so a non-2-D tensor errors instead of panicking.
+        if tensor.shape().len() != 2 {
+            return CdlEffect {
+                inner: Err(CdlError::CausalDiscoveryError(
+                    CausalDiscoveryError::TensorError(
+                        deep_causality_tensor::CausalTensorError::DimensionMismatch,
+                    ),
+                )),
+                warnings: Default::default(),
+            };
+        }
         let rows = tensor.shape()[0];
         let cols = tensor.shape()[1];
         let data_slice = tensor.as_slice();

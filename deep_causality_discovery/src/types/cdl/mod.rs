@@ -88,6 +88,8 @@ pub struct BrcdConfigured<T> {
 #[derive(Debug)]
 pub struct BrcdLoaded<T> {
     pub input: BrcdInput<T>,
+    /// Human-readable source label for the report (the normal/anomalous paths).
+    pub dataset_path: String,
 }
 
 /// BRCD state after the BRCD algorithm has run.
@@ -95,6 +97,7 @@ pub struct BrcdLoaded<T> {
 pub struct BrcdResults<T> {
     pub brcd_result: deep_causality_algorithms::brcd::BrcdResult<T>,
     pub records_count: usize,
+    pub dataset_path: String,
 }
 
 // --- Converged tail ---------------------------------------------------------

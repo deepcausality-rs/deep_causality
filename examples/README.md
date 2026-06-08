@@ -67,7 +67,9 @@ pipeline.
 | SURD         | SURD-states causal decomposition                      | `cargo run -p causal_discovery_examples --example example_surd` |
 | mRMR         | Minimum-Redundancy Maximum-Relevance feature selection | `cargo run -p causal_discovery_examples --example example_mrmr` |
 | mRMR (CDL)   | mRMR with missing-value cleaning                      | `cargo run -p causal_discovery_examples --example example_mrmr_cdl` |
-| CDL Pipeline | Load -> clean -> mRMR -> SURD -> analyze              | `cargo run -p causal_discovery_examples --example example_discovery` |
+| CDL (SURD)   | Load -> clean -> mRMR -> SURD -> analyze              | `cargo run -p causal_discovery_examples --example example_surd_discovery` |
+| CDL (BRCD)   | Root-cause ranking with a supplied CPDAG (real Sock Shop data) | `cargo run -p causal_discovery_examples --example example_brcd_discovery` |
+| CDL (BRCD/BOSS) | Root-cause ranking, CPDAG learned via BOSS         | `cargo run -p causal_discovery_examples --example example_brcd_boss_discovery` |
 
 See [causal_discovery_examples/README.md](causal_discovery_examples/README.md) for detailed documentation.
 

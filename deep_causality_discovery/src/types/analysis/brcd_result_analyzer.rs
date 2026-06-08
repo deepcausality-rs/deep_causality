@@ -33,7 +33,10 @@ impl<T: Precision + ToPrimitive> ProcessResultAnalyzer<T> for BrcdResultAnalyzer
             return Ok(ProcessAnalysis(messages));
         }
 
-        let top_k = config.top_k().min(ranks.len());
+        // Bound by both lengths: a ranks/posterior length mismatch must not make
+        // the rendered count disagree with the reported `Top {k}` header.
+        let available = ranks.len().min(posterior.len());
+        let top_k = config.top_k().min(available);
         messages.push(format!(
             "\nTop {} candidate root-cause set(s) by descending posterior:",
             top_k

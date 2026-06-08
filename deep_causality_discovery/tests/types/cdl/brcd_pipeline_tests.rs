@@ -63,8 +63,18 @@ fn test_brcd_full_pipeline_supplied_cpdag() {
     assert!(report_effect.inner.is_ok());
     let report = report_effect.inner.unwrap();
     assert!(report.feature_selection.is_none());
+    // The report carries the real dataset paths, not a hard-coded label.
+    assert_eq!(
+        report.dataset_path,
+        format!(
+            "normal: {} | anomalous: {}",
+            normal.path().to_str().unwrap(),
+            anomalous.path().to_str().unwrap()
+        )
+    );
     let rendered = format!("{}", report);
     assert!(rendered.contains("ROOT-CAUSE DISCOVERY (BRCD)"));
+    assert!(rendered.contains(normal.path().to_str().unwrap()));
     assert!(!rendered.contains("FEATURE SELECTION"));
 }
 

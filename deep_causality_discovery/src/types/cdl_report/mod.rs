@@ -10,7 +10,7 @@ use std::fmt::{self, Debug, Display, Formatter};
 /// Aggregates all significant findings from a CDL pipeline execution.
 ///
 /// The report is algorithm-neutral: `causal_analysis` carries the polymorphic
-/// [`DiscoveryOutcome`], and `feature_selection` is present only for the SURD
+/// [`CdlDiscoveryOutcome`], and `feature_selection` is present only for the SURD
 /// lineage (BRCD performs no MRMR step).
 #[derive(Debug)]
 pub struct CdlReport<T> {

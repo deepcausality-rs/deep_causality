@@ -25,7 +25,7 @@ impl<T: Precision + ToPrimitive> CDL<BrcdResults<T>> {
                     outcome: CdlDiscoveryOutcome::Brcd(self.state.brcd_result),
                     feature_selection: None,
                     records_count: self.state.records_count,
-                    dataset_path: "BRCD (normal + anomalous datasets)".to_string(),
+                    dataset_path: self.state.dataset_path,
                 },
             }),
             Err(e) => CdlEffect {
