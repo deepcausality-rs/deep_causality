@@ -1,0 +1,45 @@
+README.md
+  ai_agent 326
+website/web/src/content/blog/en/introducing-causal-flow.md
+  s_0ccc2dd3745d2a::t_d0e2c9ff5132a3 99
+  s_0ccc2dd3745d2a::t_90c2ec751e5e27 56-57
+  s_0ccc2dd3745d2a::t_097a46999c2114 37
+  s_0ccc2dd3745d2a::t_23658ae6479e92 86
+  s_0ccc2dd3745d2a::t_c9a522479d76e6 39
+  s_0ccc2dd3745d2a::t_4b40218f7b25a3 3
+  s_0ccc2dd3745d2a::t_e5114d53ca3cd8 98
+  s_0ccc2dd3745d2a::t_22179049f05c8b 138
+  s_0ccc2dd3745d2a::t_b8b00b89da8973 12
+  s_0ccc2dd3745d2a::t_673413ac370797 49
+  s_0ccc2dd3745d2a::t_0f53823bf928eb 152
+  s_0ccc2dd3745d2a::t_5f050fb5df2692 167
+  s_0ccc2dd3745d2a::t_0b440b238a2331 1,4-9,11,13,16,18,20,22-23,36,38,47-48,51,53,55,59-61,65,67,69,71-72,78-79,81,85,87-88,96-97,101,103,105-106,120,122,124,132-133,135,137,139-140,150-151,153-154,159-160,162,166,169-174,176,180-186
+  s_0ccc2dd3745d2a::t_bcedc6d9aae0c9 63
+  ai_agent 66,110-115
+  s_0ccc2dd3745d2a::t_a4334897460a02 70
+  s_0ccc2dd3745d2a::t_6f35e65eea52cf 50
+  s_0ccc2dd3745d2a::t_2ce5c6f742dcad 15
+  s_0ccc2dd3745d2a::t_9387225ae0bbf6 123
+  s_0ccc2dd3745d2a::t_2b28a0c991840e 84
+  s_0ccc2dd3745d2a::t_fb509e1c8fa5d3 168
+  s_0ccc2dd3745d2a::t_f6c2652b018a17 14
+  s_0ccc2dd3745d2a::t_6247bd85ab96b3 2,19,24-35,40-46,52,68,73-77,80,89-95,107-109,116-119,121,125-131,134,136,141-145,149,155-158,161,175,177-179
+  s_0ccc2dd3745d2a::t_11e8f8f0a98259 64
+  s_0ccc2dd3745d2a::t_a3dcc6205df4cf 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "4eba2ef78dd0932762db99cc49296e8a76d97416",
+  "prompts": {},
+  "sessions": {
+    "s_0ccc2dd3745d2a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "545cdcab-b12d-4b74-84cf-1bffcdaeb1e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
