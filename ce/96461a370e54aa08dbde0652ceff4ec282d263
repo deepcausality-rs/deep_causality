@@ -1,0 +1,37 @@
+website/web/src/content/blog/en/causal-discovery-language-rebuilt.md
+  s_0ccc2dd3745d2a::t_42771d802d8826 3
+  s_0ccc2dd3745d2a::t_1816a28e983928 1-2,4-11,13,15,17,19-35,37-39,41-46,48-50,52,54-57,59-65,68,70-89,91-96,98-107,109,111,113-115,117,119,121,125-140
+  s_0ccc2dd3745d2a::t_9cf0437acf879a 124
+  s_0ccc2dd3745d2a::t_464279c8e86cae 69
+  s_0ccc2dd3745d2a::t_615c2d87c12093 18
+  s_0ccc2dd3745d2a::t_9144cfdb7cacba 36
+  s_0ccc2dd3745d2a::t_b1185cb6a30944 90
+  s_0ccc2dd3745d2a::t_79a14032046727 97
+  s_0ccc2dd3745d2a::t_19acc1d8772c06 110
+  ai_agent 16
+  s_0ccc2dd3745d2a::t_c82284013e4038 67
+  s_0ccc2dd3745d2a::t_8085e0bc793bbf 108
+  s_0ccc2dd3745d2a::t_9225ce07c8c4dd 58
+  s_0ccc2dd3745d2a::t_fb5197985c8160 51
+  s_0ccc2dd3745d2a::t_6fea424911fa98 112
+  s_0ccc2dd3745d2a::t_f976a7a65fe125 12
+  s_0ccc2dd3745d2a::t_8ec6af3238dc10 66
+  s_0ccc2dd3745d2a::t_0f48e4db799f97 120
+  s_0ccc2dd3745d2a::t_578745581b6a1c 122
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "ce96461a370e54aa08dbde0652ceff4ec282d263",
+  "prompts": {},
+  "sessions": {
+    "s_0ccc2dd3745d2a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "545cdcab-b12d-4b74-84cf-1bffcdaeb1e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
