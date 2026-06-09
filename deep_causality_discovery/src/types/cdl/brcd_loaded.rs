@@ -8,7 +8,7 @@ use crate::{CDL, CausalDiscoveryError, CdlBuilder, CdlEffect, CdlError, Precisio
 use deep_causality_algorithms::brcd::brcd_run;
 use deep_causality_num::ToPrimitive;
 
-// After the BRCD input bundle is loaded (BRCD lineage)
+// After the BRCD input bundle is loaded (BRCD sub-pipeline)
 impl<T: Precision + ToPrimitive> CDL<BrcdLoaded<T>> {
     /// Runs BRCD using the configuration carried in the loaded bundle.
     ///

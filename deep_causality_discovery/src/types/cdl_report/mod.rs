@@ -11,7 +11,7 @@ use std::fmt::{self, Debug, Display, Formatter};
 ///
 /// The report is algorithm-neutral: `causal_analysis` carries the polymorphic
 /// [`CdlDiscoveryOutcome`], and `feature_selection` is present only for the SURD
-/// lineage (BRCD performs no MRMR step).
+/// sub-pipeline (BRCD performs no MRMR step).
 #[derive(Debug)]
 pub struct CdlReport<T> {
     // 1. Data Metadata

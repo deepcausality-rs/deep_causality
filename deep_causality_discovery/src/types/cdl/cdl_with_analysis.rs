@@ -6,7 +6,7 @@
 use crate::types::cdl::WithAnalysis;
 use crate::{CDL, CdlBuilder, CdlEffect, CdlReport, Precision};
 
-// After results are analyzed. Both lineages converge here, so `finalize` is
+// After results are analyzed. Both sub-pipelines converge here, so `finalize` is
 // implemented once and is algorithm-neutral: it packages whatever
 // `DiscoveryOutcome` the analyze step produced into a `CdlReport`.
 impl<T: Precision> CDL<WithAnalysis<T>> {

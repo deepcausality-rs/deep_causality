@@ -6,14 +6,14 @@
 //! # Causal Discovery Language (CDL)
 //!
 //! CDL hosts two discovery algorithms — SURD and BRCD — as two compile-time-isolated
-//! typestate lineages that converge on a shared analyze/finalize tail. A lineage is
+//! typestate sub-pipelines that converge on a shared analyze/finalize tail. A sub-pipeline is
 //! seeded by [`CdlBuilder::build_surd`] / [`CdlBuilder::build_brcd`] from a run config
 //! built by [`CdlConfigBuilder`].
 //!
-//! ## Compile-time lineage isolation
+//! ## Compile-time sub-pipeline isolation
 //!
 //! Each algorithm's stage methods exist only on its own states, so crossing the
-//! lineages does not compile. Calling a BRCD stage on a SURD state:
+//! sub-pipelines does not compile. Calling a BRCD stage on a SURD state:
 //!
 //! ```compile_fail
 //! use deep_causality_discovery::{CDL, SurdData};
@@ -31,7 +31,7 @@
 //! }
 //! ```
 //!
-//! Feature selection is unavailable to the BRCD lineage:
+//! Feature selection is unavailable to the BRCD sub-pipeline:
 //!
 //! ```compile_fail
 //! use deep_causality_discovery::{CDL, BrcdConfigured};
