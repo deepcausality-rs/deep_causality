@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.6.1...deep_causality_physics-v0.6.2) - 2026-06-09
+
+### Added
+
+- *(deep_causality_num)* forward-mode autodiff surface over Dual
+- *(deep_causality_num)* split Real from RealField; blanket the float tower
+- *(deep_causality_num)* split Real out of RealField
+
+### Other
+
+- *(openspec)* retarget the calculus change to deep_causality_calculus
+- *(deep_causality)* fix rustdoc intra-doc link warnings
+- enforce repo-wide `unsafe_code = "forbid"`; remove avoidable unsafe
+
 ## [0.6.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.6.0...deep_causality_physics-v0.6.1) - 2026-05-29
 
 ### Other

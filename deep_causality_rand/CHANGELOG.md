@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.16](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.1.15...deep_causality_rand-v0.1.16) - 2026-06-09
+
+### Added
+
+- *(deep_causality_rand)* hoist float sampling into generic kernels; add Float106 distributions
+- *(deep_causality_algorithms)* BRCD MEC engine — exact AMO enumeration over MixedGraph
+
+### Other
+
+- enforce repo-wide `unsafe_code = "forbid"`; remove avoidable unsafe
+
 ## [0.1.15](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.1.14...deep_causality_rand-v0.1.15) - 2026-05-26
 
 ### Other
