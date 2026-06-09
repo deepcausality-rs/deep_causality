@@ -323,7 +323,7 @@ bazel test  //...
 
 Contributions are welcome! Please read:
 
-* [AI Coding Assistants](Ai-Coding-Assistants.md)
+* [AI Coding Assistants](AiCodingAssistants.md)
 * [Contributing Guide](CONTRIBUTING.md)
 * [Code of Conduct](CODE_OF_CONDUCT.md)
 
