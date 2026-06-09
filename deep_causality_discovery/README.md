@@ -39,7 +39,7 @@ CDL hosts two discovery algorithms as peer pipelines:
 ## Workflow
 
 The CDL is a builder over Rust's typestate pattern: the pipeline's state is encoded in the type system, so the compiler
-guarantees the stages run in a valid order. The two algorithms are **compile-time-isolated lineages** that converge on a
+guarantees the stages run in a valid order. The two algorithms are **compile-time-isolated sub-pipelines** that converge on a
 shared analyze/finalize tail. Calling a BRCD stage on a SURD pipeline (or the reverse) does not compile.
 
 ### 1. Build the run config (the single source of truth)
@@ -53,7 +53,7 @@ once they are all set), and `build()` additionally verifies that the referenced 
   the reused algorithm `BrcdConfig<T>` (optional: CPDAG path, CSV options). No CPDAG path means the structure is learned
   via BOSS.
 
-### 2. Run a lineage
+### 2. Run a sub-pipeline
 
 `CdlBuilder::build_surd(&cfg)` / `CdlBuilder::build_brcd(&cfg)` seed the pipeline with the config. Every stage reads its
 parameters from the config, so the chain itself is parameterless:

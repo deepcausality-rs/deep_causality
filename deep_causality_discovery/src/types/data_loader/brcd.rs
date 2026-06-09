@@ -5,7 +5,7 @@
 
 //! Internal loader that turns a [`BrcdLoaderConfig`] into a [`BrcdInput`] bundle.
 //!
-//! This is `pub(crate)`: it is not a user-facing entry. The BRCD lineage's
+//! This is `pub(crate)`: it is not a user-facing entry. The BRCD sub-pipeline's
 //! `load_brcd_input` stage invokes it, so loading happens *inside* the CDL
 //! pipeline (mirroring SURD's in-pipeline load), not as a separate call.
 

@@ -5,7 +5,7 @@
 
 //! The single source of truth for constructing CDL run configurations.
 //!
-//! [`CdlConfigBuilder`] starts a **staged** typestate builder for either lineage.
+//! [`CdlConfigBuilder`] starts a **staged** typestate builder for either sub-pipeline.
 //! Each required field is its own stage, so `build()` is only reachable once every
 //! required field is set — omitting one is a compile error, not a runtime check.
 //! `build()` additionally verifies that the referenced files exist, failing fast
