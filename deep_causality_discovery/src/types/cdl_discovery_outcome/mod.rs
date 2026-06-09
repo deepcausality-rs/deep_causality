@@ -8,7 +8,7 @@ use deep_causality_algorithms::surd::SurdResult;
 
 /// The algorithm-specific result of a CDL discovery run.
 ///
-/// A closed enum (no dynamic dispatch) that lets the SURD and BRCD lineages
+/// A closed enum (no dynamic dispatch) that lets the SURD and BRCD sub-pipelines
 /// converge on one analysis/finalize tail. Each `*_analyze` step wraps its
 /// concrete result into the matching variant; the report and any future
 /// consumer dispatch by exhaustive match, so adding an algorithm is a

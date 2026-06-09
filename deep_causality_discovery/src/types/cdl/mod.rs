@@ -22,19 +22,19 @@ mod surd_results;
 
 // Typestate structs representing the pipeline's state.
 //
-// The pipeline has two compile-time-isolated lineages that share no state until
-// the converged `WithAnalysis<T>`. Each lineage is seeded by a dedicated
+// The pipeline has two compile-time-isolated sub-pipelines that share no state until
+// the converged `WithAnalysis<T>`. Each sub-pipeline is seeded by a dedicated
 // `CdlBuilder` entry that carries the run config built by `CdlConfigBuilder`:
 //
 //   SURD: SurdConfigured → SurdData → SurdCleaned → SurdFeatures → SurdResults → WithAnalysis
 //   BRCD: BrcdConfigured → BrcdLoaded → BrcdResults → WithAnalysis
 //
-// Each lineage threads its own run config (`SurdLoaderConfig` / `BrcdLoaderConfig`)
+// Each sub-pipeline threads its own run config (`SurdLoaderConfig` / `BrcdLoaderConfig`)
 // through its states; there is no separate master config object. Each algorithm's
 // `*_discover` / `*_analyze` methods are implemented only on its own states, so
-// crossing the lineages is a compile error.
+// crossing the sub-pipelines is a compile error.
 
-// --- SURD lineage -----------------------------------------------------------
+// --- SURD sub-pipeline -----------------------------------------------------------
 
 /// SURD entry state, carrying the run config from `CdlBuilder::build_surd`.
 #[derive(Debug, Clone)]
@@ -76,7 +76,7 @@ pub struct SurdResults<T> {
     pub config: SurdLoaderConfig<T>,
 }
 
-// --- BRCD lineage -----------------------------------------------------------
+// --- BRCD sub-pipeline -----------------------------------------------------------
 
 /// BRCD entry state, carrying the run config from `CdlBuilder::build_brcd`.
 #[derive(Debug, Clone)]
@@ -102,7 +102,7 @@ pub struct BrcdResults<T> {
 
 // --- Converged tail ---------------------------------------------------------
 
-/// State after the raw discovery result has been analyzed. Both lineages
+/// State after the raw discovery result has been analyzed. Both sub-pipelines
 /// converge here, carrying the polymorphic [`CdlDiscoveryOutcome`].
 #[derive(Debug)]
 pub struct WithAnalysis<T> {
@@ -130,4 +130,4 @@ impl<State> CDL<State> {
     }
 }
 
-// See the various per-lineage files for all the typestate implementations.
+// See the various per-sub-pipeline files for all the typestate implementations.

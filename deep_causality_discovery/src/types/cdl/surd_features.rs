@@ -7,7 +7,7 @@ use crate::types::cdl::{SurdFeatures, SurdResults};
 use crate::{CDL, CdlBuilder, CdlEffect, CdlError, Precision};
 use deep_causality_algorithms::surd::surd_states_cdl;
 
-// After features are selected (SURD lineage)
+// After features are selected (SURD sub-pipeline)
 impl<T: Precision> CDL<SurdFeatures<T>> {
     /// Runs SURD-states discovery using the max interaction order from the run
     /// config (no inline parameters).

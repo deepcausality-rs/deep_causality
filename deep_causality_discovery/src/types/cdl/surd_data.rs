@@ -10,7 +10,7 @@ use crate::{
 };
 use deep_causality_tensor::CausalTensor;
 
-// After data is loaded (SURD lineage)
+// After data is loaded (SURD sub-pipeline)
 impl<T: Precision> CDL<SurdData<T>> {
     /// Optional preprocessing step. The binning/imputation config is passed
     /// explicitly because it is off the canonical chain.
