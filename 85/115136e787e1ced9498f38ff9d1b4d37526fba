@@ -1,0 +1,61 @@
+website/web/src/components/nav/SiteHeader.astro
+  s_d7d80b2f66f20a::t_81760a3b8f740f 16
+  s_d7d80b2f66f20a::t_8a4fe7048352fa 76
+website/web/src/pages/404.astro
+  s_d7d80b2f66f20a::t_f2719f66a8d392 20
+website/web/public/_redirects
+  s_d7d80b2f66f20a::t_b3bc15a53a2609 1,3-13
+website/web/src/pages/overview/index.astro
+  s_d7d80b2f66f20a::t_8fc31fbcc2e2ad 37,39
+  s_d7d80b2f66f20a::t_c3076c34fa3e23 58
+  s_d7d80b2f66f20a::t_6a9f870b68ef73 351-357,359-362,364-384
+  s_d7d80b2f66f20a::t_7ec41f88a5c9c1 57,59-62,64-67,71-73,75-80,83-86,90
+  s_d7d80b2f66f20a::t_2e10e587d7eba4 42-43
+  s_d7d80b2f66f20a::t_ed96f2dc505925 68
+  s_d7d80b2f66f20a::t_9383d8d12f64af 186-187
+  s_d7d80b2f66f20a::t_bcf167d4e14f5b 340,342-350
+  s_d7d80b2f66f20a::t_1835861b019c6c 244-252
+  s_d7d80b2f66f20a::t_22c796570515af 111-114
+  s_d7d80b2f66f20a::t_26f28f562d7fad 341,385
+  s_d7d80b2f66f20a::t_73d25232cd6b70 162-163
+  s_d7d80b2f66f20a::t_7f3a4187d2fc49 4,6,13-14,17,22,24-25,38,55,92-110,115-124,126-127,132-139,145-148,160,164,181-182,199,202,216,220,224-225,227,230-233,268-269,271-276,284,307,309-310,314,318-330,338-339,386,391-394
+  s_d7d80b2f66f20a::t_94627e8deefe71 48-54
+  s_d7d80b2f66f20a::t_67df8c118cc608 87
+  s_d7d80b2f66f20a::t_f9afb01350d535 149-153,158-159
+  s_d7d80b2f66f20a::t_dc0c7fe4baef74 167
+  s_d7d80b2f66f20a::t_fcec9320fd62b7 285-291,293-301,303,305
+  s_d7d80b2f66f20a::t_8c974a9a0dda79 18-21
+  s_d7d80b2f66f20a::t_f2f8828cc32d35 302
+  s_d7d80b2f66f20a::t_d3dff79e39c4db 10,26,40,46-47,128-131,140-144,277-283,315-317,331-335
+  s_d7d80b2f66f20a::t_895bafa5791ffa 154-157
+  s_d7d80b2f66f20a::t_1ed26a0b71decb 183-185,188-198
+  s_d7d80b2f66f20a::t_3047aef711194d 161
+  s_d7d80b2f66f20a::t_bef589bc2b07d3 30-32
+  s_d7d80b2f66f20a::t_eb2fbb2995fc8c 234-243
+  s_d7d80b2f66f20a::t_d2ea2e4983b10d 166,168-176,178-179
+  s_d7d80b2f66f20a::t_ec225b46e89a78 270
+  s_d7d80b2f66f20a::t_7fa4e1a9f153ff 396-397,405,419,425-435,437-442,444-445,454,456,459-466,468-476
+  s_d7d80b2f66f20a::t_60780a2f08fb8b 311-312
+  s_d7d80b2f66f20a::t_8f760218df0e13 203-206,208-214
+  s_d7d80b2f66f20a::t_9e0841a394e122 254-266
+website/web/astro.config.mjs
+  s_d7d80b2f66f20a::t_5cd98ace2830d9 28
+website/web/src/layouts/BaseLayout.astro
+  s_d7d80b2f66f20a::t_b35dd92704de07 120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "85115136e787e1ced9498f38ff9d1b4d37526fba",
+  "prompts": {},
+  "sessions": {
+    "s_d7d80b2f66f20a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d3078fb0-5c19-45d6-82b4-ae1a08735e3e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
