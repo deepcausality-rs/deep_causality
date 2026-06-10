@@ -1,0 +1,53 @@
+ctx/paper-thesis.md
+  s_52e6d9817e5bf8::t_6d2fc536a03ef9 203-209
+  s_52e6d9817e5bf8::t_3ca40f95eb7580 275-280
+  s_52e6d9817e5bf8::t_bec58124546710 291
+  s_52e6d9817e5bf8::t_133e5965e52df3 158-172,191-197
+  s_52e6d9817e5bf8::t_120154e53d7224 199,201,212-214,219,224
+  s_52e6d9817e5bf8::t_76758a7d921676 173-190
+  s_52e6d9817e5bf8::t_0ed9b3df669f46 91-106
+  s_52e6d9817e5bf8::t_5eb99109ef4aca 26,31-38,40-41,43-44,46-48,55-57,62-64,67,70-78,80,82-83,86-90,114,116-131,133-141,143-152,154-157,202,210-211,215-218,220-223,225,281-288
+  s_52e6d9817e5bf8::t_130391974a7954 229-244,246-273
+  s_52e6d9817e5bf8::t_fca4efa109ec65 54,58-59,61,68,79,81
+  s_52e6d9817e5bf8::t_8a8a7df62e17f8 20-22
+  s_52e6d9817e5bf8::t_06ab1a9d66aa6d 1-2,6-9,23-25,29-30,39,42,45,49-51,53,60,66,69,84-85,107-113,115,132,142,153,198,200,226,274,289-290,292
+deep_causality_algorithms/examples/verification/brcd/brcd_factorization_probe.rs
+  s_52e6d9817e5bf8::t_d7bb71fd53b472 38
+  s_52e6d9817e5bf8::t_ed7d89c0620b6c 55,64
+  s_52e6d9817e5bf8::t_23c8ee5e0d64a2 166-181,183,185,189-196,198-204,207-217,224-229,233-234,236-255,260-264
+  s_52e6d9817e5bf8::t_078faeffaf8823 1-37,39-54,56-63,65-165,182,184,186-188,197,205-206,218-223,230-232,235,256-259,265-266
+deep_causality_algorithms/examples/verification/brcd/brcd_heuristic_mapconfig.rs
+  s_52e6d9817e5bf8::t_3ae69ee104c526 391
+  s_52e6d9817e5bf8::t_ef829e4b9f670c 107-146
+  s_52e6d9817e5bf8::t_605b5790364d21 463,465,473-474,477-484
+  s_52e6d9817e5bf8::t_cd4cbbaa4eb050 332
+  s_52e6d9817e5bf8::t_fe025361371bdb 488-554
+  s_52e6d9817e5bf8::t_121e34d13607d1 1-106,147-331,333-390,392-462,464,466-472,475-476,485-487,555-561
+deep_causality_algorithms/examples/verification/brcd/brcd_config_census.rs
+  s_52e6d9817e5bf8::t_cd3d260f2acfce 1-287
+deep_causality_algorithms/examples/verification/brcd/brcd_topk_pruning.rs
+  s_52e6d9817e5bf8::t_076c34843d3423 1-232
+deep_causality_algorithms/Cargo.toml
+  s_52e6d9817e5bf8::t_811febca3a50f4 111-117
+  s_52e6d9817e5bf8::t_d22297d4968682 120-125
+  s_52e6d9817e5bf8::t_9e6d55f261af2e 104-110
+  s_52e6d9817e5bf8::t_bd0c5a990a58f6 126-132
+openspec/notes/cdl-cpdag-cache.md
+  s_52e6d9817e5bf8::t_5399cb8a743111 1-102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "0019b48260fde2bae06308797cbc544a474bd68f",
+  "prompts": {},
+  "sessions": {
+    "s_52e6d9817e5bf8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6aa31fc-1296-45fc-8083-effb9595e16b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
