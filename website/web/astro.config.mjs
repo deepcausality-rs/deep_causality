@@ -25,7 +25,7 @@ export default defineConfig({
         } else if (path.startsWith('/blog/') && path !== '/blog/') {
           item.priority = 0.8;
           item.changefreq = 'monthly';
-        } else if (path.startsWith('/docs/')) {
+        } else if (path.startsWith('/overview/')) {
           item.priority = 0.7;
           item.changefreq = 'monthly';
         } else if (path.startsWith('/examples/')) {

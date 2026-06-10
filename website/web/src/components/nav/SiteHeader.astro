@@ -13,7 +13,7 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
     </a>
 
     <nav class="primary" aria-label="Primary">
-      <a href="/docs/" class:list={["nav-link", isActive('/docs/') && 'is-active']}>Overview</a>
+      <a href="/overview/" class:list={["nav-link", isActive('/overview/') && 'is-active']}>Overview</a>
       <div class="nav-dropdown">
         <a href="/examples/" class:list={["nav-link nav-link-trigger", isActive('/examples/') && 'is-active']} aria-haspopup="true">
           Examples
@@ -73,7 +73,7 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
       </button>
     </div>
     <ul class="mobile-menu-list">
-      <li><a href="/docs/">Overview</a></li>
+      <li><a href="/overview/">Overview</a></li>
       <li>
         <a href="/examples/">Examples</a>
         <ul class="mobile-menu-sub">
