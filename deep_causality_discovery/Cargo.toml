@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_discovery"
-version = "0.3.7"
+version = "0.4.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
@@ -19,7 +19,7 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 [dependencies.deep_causality_algorithms]
 path = "../deep_causality_algorithms"
-version = "0.2"
+version = "0.3"
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"

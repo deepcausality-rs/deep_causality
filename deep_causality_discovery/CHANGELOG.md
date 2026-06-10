@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.3.7...deep_causality_discovery-v0.4.0) - 2026-06-09
+
+### Fixed
+
+- fix(deep_causality_discovery):
+- *(deep_causality_discovery,deep_causality_tensor)* make f64→T casts honest; sync docs to generic T
+
+### Other
+
+- *(website)* Added a new blog post that introduces the new CDL;
+- *(deep_causality_discovery)* Improved test coverage.
+- *(deep_causality_discovery)* Updated README and reference documentation
+- *(deep_causality_discovery)* dual-algorithm CDL (SURD + BRCD) with config-builder surface
+- *(deep_causality)* fix rustdoc intra-doc link warnings
+- *(deep_causality_discovery)* split cdl_effect into focused modules; extract CdlBuilder
+- *(discovery)* generify the CDL pipeline over RealField precision
+- disable Miri isolation for deep_causality_core; gate discovery MRMR test
+- enforce repo-wide `unsafe_code = "forbid"`; remove avoidable unsafe
+
 ## [0.3.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.3.6...deep_causality_discovery-v0.3.7) - 2026-05-26
 
 ### Other

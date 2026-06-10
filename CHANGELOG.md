@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.9](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.13.8...deep_causality-v0.13.9) - 2026-06-09
+
+### Other
+
+- *(website)* Added a new blog post that introduces the CosaFlow DSL.
+- *(website)* document the Causal Flow DSL across getting-started, concepts, and innovations
+- Added an official statement on the usage of AI coding assistance and added it to the README under the contributing section.
+- Added Miri badge to README.md
+- enforce repo-wide `unsafe_code = "forbid"`; remove avoidable unsafe
+- *(deep_causality_core)* remove unused ControlFlowBuilder subsystem
+
 ## [0.13.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.13.7...deep_causality-v0.13.8) - 2026-05-29
 
 ### Other

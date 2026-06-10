@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.2.6...deep_causality_ethos-v0.2.7) - 2026-06-09
+
+### Other
+
+- *(website)* Added a new blog post that introduces the CosaFlow DSL.
+- Added an official statement on the usage of AI coding assistance and added it to the README under the contributing section.
+- Added Miri badge to README.md
+- enforce repo-wide `unsafe_code = "forbid"`; remove avoidable unsafe
+
 ## [0.2.6](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.2.5...deep_causality_ethos-v0.2.6) - 2026-05-29
 
 ### Other

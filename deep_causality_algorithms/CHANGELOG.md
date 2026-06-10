@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.2.14...deep_causality_algorithms-v0.3.0) - 2026-06-09
+
+### Added
+
+- *(deep_causality_algorithms)* BOSS bootstrap CPDAG-uncertainty variant for BRCD
+- *(deep_causality_algorithms)* wire BOSS into brcd_run via an optional CPDAG (BREAKING)
+- *(deep_causality_algorithms)* BOSS structure-learning core for BRCD (score, GST, order search)
+- *(deep_causality_algorithms)* Updated SBOM
+- *(deep_causality_algorithms)* BRCD posterior assembly + driver (runs end-to-end)
+- *(deep_causality_algorithms)* BRCD F-node augmentation + cut-config enumeration + cache
+- *(deep_causality_algorithms)* BRCD F-integration (mixture of experts) + Dirichlet
+- *(deep_causality_algorithms)* BRCD ridge-Gaussian family estimator + transform ladder
+- *(deep_causality_algorithms)* BRCD logistic-regression gate (IRLS) + shared SPD solve
+- *(deep_causality_algorithms)* BRCD MEC engine — exact AMO enumeration over MixedGraph
+- *(deep_causality_algorithms)* BRCD causal-graph ops — Meek, validity, MEC over MixedGraph
+
+### Fixed
+
+- *(deep_causality_algorithms)* Fixed path to data in verification examples.
+
+### Other
+
+- *(openspec)* retarget the calculus change to deep_causality_calculus
+- *(deep_causality_algorithms)* supplied-vs-BOSS CPDAG comparison examples
+- *(deep_causality_algorithms)* BOSS structure-learning verification example
+- Merge remote-tracking branch 'origin/main'
+- *(deep_causality_algorithms)* Added benchmark for the BRCD algorithm. Implemented multiple performance improvements while keeping the verification results identical. Added parallel version for larger graphs.
+- *(deep_causality_algorithms)* Added benchmark for the BRCD algorithm.
+- *(deep_causality)* fix rustdoc intra-doc link warnings
+- *(deep_causality_algorithms)* improve test coverage.
+- *(deep_causality_algorithms)* Updated README.md
+- *(deep_causality_algorithms)* Updated README.md
+- *(algorithms)* Verify the BRCD algorithm against the authoritative Python reference on
+- *(num,tensor,algorithms)* generify the numeric + SURD stack over RealField
+- stabilize two more tests against Miri soft-float drift
+- enforce repo-wide `unsafe_code = "forbid"`; remove avoidable unsafe
+
 ## [0.2.14](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.2.13...deep_causality_algorithms-v0.2.14) - 2026-05-26
 
 ### Other

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.5.1...deep_causality_multivector-v0.5.2) - 2026-06-09
+
+### Added
+
+- *(num,multivector)* add Normed scalar trait; collapse per-scalar impls to blankets
+- *(deep_causality_num)* split Real out of RealField
+
+### Other
+
+- Code formatting.
+- Fixed unused dependencies across a number of crates.
+- stabilize two more tests against Miri soft-float drift
+- enforce repo-wide `unsafe_code = "forbid"`; remove avoidable unsafe
+
 ## [0.5.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.5.0...deep_causality_multivector-v0.5.1) - 2026-05-29
 
 ### Other
