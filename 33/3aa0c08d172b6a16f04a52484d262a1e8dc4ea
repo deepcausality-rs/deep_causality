@@ -1,0 +1,25 @@
+website/docs/src/content/docs/overview/premise.md
+  s_d7d80b2f66f20a::t_6c8a98c3ef65d3 36-37
+website/docs/src/content/docs/concepts/index.md
+  s_d7d80b2f66f20a::t_05e6836f8f5ce2 12
+website/docs/src/content/docs/concepts/axiom.md
+  s_d7d80b2f66f20a::t_3a56a4d08d5c55 1,3-4,6-226
+website/docs/src/content/docs/overview/index.md
+  s_d7d80b2f66f20a::t_ccf06817832f9b 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "333aa0c08d172b6a16f04a52484d262a1e8dc4ea",
+  "prompts": {},
+  "sessions": {
+    "s_d7d80b2f66f20a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d3078fb0-5c19-45d6-82b4-ae1a08735e3e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
