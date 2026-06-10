@@ -2,7 +2,7 @@
 title: Dynamic causality
 description: The umbrella idea the rest of the library sits inside, and the philosophical commitment behind it.
 sidebar:
-  order: 1
+  order: 2
 ---
 
 DeepCausality is a framework for **dynamic causality**. This page explains what the phrase commits to, where the commitment came from, and what it earns you in exchange.

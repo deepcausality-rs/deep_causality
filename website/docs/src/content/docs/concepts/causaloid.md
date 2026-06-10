@@ -2,7 +2,7 @@
 title: Causaloid
 description: A self-contained unit of causality that composes into larger units of itself.
 sidebar:
-  order: 2
+  order: 2.5
 ---
 
 A `Causaloid` is the fundamental unit of causality in DeepCausality. Three properties define it.

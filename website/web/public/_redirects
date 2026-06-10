@@ -1,9 +1,16 @@
-# Cloudflare redirects for documentation that moved to docs.deepcausality.com.
+# Cloudflare redirects. First match wins.
 #
-# The /docs/ overview page still lives on this site, so only the old section
-# sub-paths are redirected. The splat (:splat) preserves the path tail,
-# including its trailing slash, e.g. /docs/concepts/causaloid/ maps to
-# https://docs.deepcausality.com/concepts/causaloid/. First match wins.
+# 1) The overview page on this site moved from /docs/ to /overview/. A lot of
+#    incoming links still point at the old path, so redirect it permanently.
+#    These are exact-path rules, so they do not capture the /docs/<section>/*
+#    sub-paths in (2), which go to the external docs site instead.
+/docs   /overview/   301
+/docs/  /overview/   301
+#
+# 2) The concept, getting-started, and overview reference docs moved to
+#    docs.deepcausality.com. The splat (:splat) preserves the path tail,
+#    including its trailing slash, e.g. /docs/concepts/causaloid/ maps to
+#    https://docs.deepcausality.com/concepts/causaloid/.
 /docs/concepts/*        https://docs.deepcausality.com/concepts/:splat        301
 /docs/getting-started/* https://docs.deepcausality.com/getting-started/:splat 301
 /docs/overview/*        https://docs.deepcausality.com/overview/:splat        301

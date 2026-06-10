@@ -1,0 +1,479 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import { DOCS_URL, GITHUB_URL } from '../../consts';
+
+const examplesRepo = `${GITHUB_URL}/tree/main/examples`;
+---
+<BaseLayout
+  title="Overview — DeepCausality"
+  description="DeepCausality is an open-source Rust framework for dynamic causality, built on the Effect Propagation Process. It ships as a layered Rust stack with a causal-discovery language, first-class uncertainty, and a computable ethics framework for verifiable safety."
+>
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">Overview</p>
+      <h1>Overview of DeepCausality</h1>
+      <p class="lede">
+        DeepCausality is an open-source Rust framework for
+        <a href={`${DOCS_URL}/concepts/dynamic-causality/`}>dynamic causality</a>. It implements the
+        <a href={`${DOCS_URL}/concepts/effect-propagation-process/`}>Effect Propagation Process</a> (EPP)
+        and it ships as a layered Rust stack of independently usable crates.
+      </p>
+    </header>
+
+    <div class="prose">
+      <h2>Built on a Single Axiomatic Foundation</h2>
+      <p>
+        DeepCausality is an <a href={GITHUB_URL}>open-source project</a> hosted at the Linux Foundation for
+        Data &amp; AI, and it is the reference implementation of the EPP. The EPP rests on a single
+        <a href={`${DOCS_URL}/concepts/axiom/`}>axiom</a>: every effect is derived from a prior effect by a
+        causal function embedded into a monadic composition, written <code>m₂ = m₁ &gt;&gt;= f</code>. This
+        generalizes causality so that the classical definition becomes a special case of it. The framework
+        can therefore express five established methods of classical causality, as demonstrated in the
+        <a href={examplesRepo}>classical causality code examples</a>.
+      </p>
+      <p>
+        This reframing makes the explicit
+        <a href={`${DOCS_URL}/concepts/context/`}>Context</a> and the
+        <a href={`${DOCS_URL}/concepts/causaloid/`}>Causaloid</a> first-class structures in the
+        library. One important conjecture that follows is that the field of function theory becomes
+        applicable to causality. For the user, the payoff is a single, coherent way to model dynamic
+        causality in physics, finance, and any other science or engineering domain that involves complex
+        dynamic processes.
+      </p>
+
+      <h2>A Layered Rust Stack</h2>
+      <p>
+        The DeepCausality project comprises a set of crates that together realize dynamic causality, each
+        also usable on its own within the Rust ecosystem. The project is organized as a layered
+        scientific-computing stack with the causal layer on top, and the layers compose through the
+        <a href={`${DOCS_URL}/concepts/hkt/`}>higher-kinded type</a> machinery established in the foundation
+        layer. The stack consists of a foundation layer, the mathematical layers, a physics layer, the causal
+        layer that defines dynamic causality, and a causal-discovery layer, with a horizontal metric crate
+        providing a single source of truth for sign conventions across all of them.
+      </p>
+
+      <div class="dc-diagram dc-stack" role="img"
+           aria-label="The DeepCausality stack, top to bottom. Causal discovery layer: deep_causality_discovery. Causal layer: deep_causality_core, deep_causality, deep_causality_uncertain. Physics layer: deep_causality_physics. Mathematical layers: deep_causality_tensor, deep_causality_sparse, deep_causality_multivector, deep_causality_topology, deep_causality_calculus. Foundation layer: deep_causality_num, deep_causality_haft, deep_causality_metric, ultragraph. Each layer builds on the ones below it.">
+        <p class="dc-cap">The stack, top to bottom</p>
+        <div class="dc-band">
+          <span class="dc-band-name">Causal discovery</span>
+          <div class="dc-chips"><span class="dc-chip">deep_causality_discovery</span></div>
+        </div>
+        <div class="dc-band">
+          <span class="dc-band-name">Causal</span>
+          <div class="dc-chips">
+            <span class="dc-chip">deep_causality_core</span><span class="dc-chip">deep_causality</span>
+            <span class="dc-chip">deep_causality_uncertain</span>
+          </div>
+        </div>
+        <div class="dc-band">
+          <span class="dc-band-name">Physics</span>
+          <div class="dc-chips"><span class="dc-chip">deep_causality_physics</span></div>
+        </div>
+        <div class="dc-band">
+          <span class="dc-band-name">Mathematical</span>
+          <div class="dc-chips">
+            <span class="dc-chip">deep_causality_tensor</span><span class="dc-chip">deep_causality_sparse</span>
+            <span class="dc-chip">deep_causality_multivector</span><span class="dc-chip">deep_causality_topology</span>
+            <span class="dc-chip">deep_causality_calculus</span>
+          </div>
+        </div>
+        <div class="dc-band">
+          <span class="dc-band-name">Foundation</span>
+          <div class="dc-chips">
+            <span class="dc-chip">deep_causality_num</span><span class="dc-chip">deep_causality_haft</span>
+            <span class="dc-chip">deep_causality_metric</span><span class="dc-chip">ultragraph</span>
+          </div>
+        </div>
+      </div>
+
+      <h3>Foundation layer</h3>
+      <p>
+        Three crates establish the foundation the DeepCausality project is built upon. The numerical
+        foundation library (<code>deep_causality_num</code>) provides a complete trait hierarchy for abstract
+        algebra, encoding the categorical structure of mathematical objects in the Rust type system. The
+        hierarchy ranges from foundational structures (Magma, Semigroup, Monoid) through groups (Group,
+        AbelianGroup) and rings (Ring, AssociativeRing, CommutativeRing, EuclideanDomain) to fields (Field,
+        RealField, ComplexField) and module-and-algebra structures (Module, Algebra, AssociativeAlgebra,
+        DivisionAlgebra), wired so that types implementing each level satisfy the corresponding mathematical
+        laws as compile-time assertions. The crate also provides <code>Float106</code>, a 106-bit
+        high-precision floating-point type with approximately thirty-two decimal digits of precision,
+        comparable to IEEE binary128 but available now on stable Rust and several times faster on most
+        hardware. Full implementations of <code>Complex</code>, <code>Quaternion</code>, and
+        <code>Octonion</code> as division algebras are included. The library is macro-free, unsafe-free, and
+        dependency-free, and supports no-std environments.
+      </p>
+      <p>
+        The higher-kinded type crate (<code>deep_causality_haft</code>) provides a working implementation of
+        arity-5 higher-kinded types in Rust through type-level encoding and the witness pattern. It supplies
+        the Effect, Functor, Applicative, Monad, CoMonad, and Arrow trait families that all higher layers
+        build on. Rust does not provide higher-kinded types natively, and the haft crate is what allows the
+        mathematical and causal crates to compose monadically; its value-level Arrow algebra is the
+        foundation for the control flow in the Causal Flow Language described below.
+      </p>
+      <p>
+        The metric crate (<code>deep_causality_metric</code>) provides a single source of truth for metric
+        signatures across the stack. It defines the East Coast convention (used in general relativity), the
+        West Coast convention (used in particle physics), and the broader Clifford signature space
+        <code>Cl(p, q, r)</code> that the multivector and topology crates build on. Its horizontal placement
+        is what allows a particle-physics calculation in one layer and a general-relativity calculation in
+        another to share compatible sign conventions without manual coordination, eliminating an entire
+        class of consistency bugs.
+      </p>
+
+      <h3>Causal layer</h3>
+      <p>
+        The core crate (<code>deep_causality_core</code>) provides DeepCausality's foundational types:
+        <code>PropagatingEffect</code> for stateless causal effects, <code>PropagatingProcess</code> for
+        stateful effects with state and configuration channels, the
+        <a href={`${DOCS_URL}/concepts/causal-monad/`}>CausalMonad</a> with its bind operation, and the
+        Causal Effect System runtime that coordinates causal models.
+      </p>
+      <p>
+        The main crate (<code>deep_causality</code>) builds on the core and on the wider stack to provide the
+        <a href={`${DOCS_URL}/concepts/causaloid/`}>Causaloid</a> in its three isomorphic forms (Singleton,
+        Collection, Graph), the <a href={`${DOCS_URL}/concepts/context/`}>Context</a> with its Euclidean and
+        non-Euclidean representations, the <a href={`${DOCS_URL}/concepts/csm/`}>Causal State Machine</a>, the
+        Teloid and <a href={`${DOCS_URL}/concepts/effect-ethos/`}>Effect Ethos</a> for deontic governance,
+        and the integration of all of these into one working framework. UltraGraph
+        (<code>ultragraph</code>) is a high-performance two-phase hypergraph data structure that supports the
+        CausaloidGraph and the Context Hypergraph and is independently usable wherever
+        performance-constrained hypergraph composition is needed. The
+        <a href={`${DOCS_URL}/concepts/uncertainty/`}>Uncertain</a> type
+        (<code>deep_causality_uncertain</code>) is a Rust implementation of Bornholt's
+        <code>Uncertain&lt;T&gt;</code> as a first-order type for uncertain data.
+      </p>
+      <p>
+        The developer-facing surface is the <a href={`${DOCS_URL}/concepts/causal-flow/`}>Causal Flow
+        Language</a> (CFL), a fluent DSL exposed as <code>CausalFlow</code> in the <code>deep_causality</code>
+        crate. It reaches the full expressiveness of the causal monad without its complexity:
+        <code>value</code> seeds a chain, <code>try_step</code> and <code>map</code> transform it,
+        <code>branch</code> chooses, and <code>iterate_n</code>, <code>iterate_until</code>, and
+        <code>iterate_to_fixpoint</code> loop. Each verb lowers to the monad's <code>bind</code> and threads
+        the value, state, context, error, and log channels automatically. Underneath, the Causal Arrow
+        realizes the value-level Arrow algebra over the causal monad as its Kleisli arrow, so a pipeline is
+        itself a reusable value that can be built once and run over many inputs.
+      </p>
+      <p>
+        Composition through higher-kinded types means that a tensor of multivectors over a topology defined as
+        a lattice gauge field, with each layer respecting the algebraic laws of the underlying types and all
+        sharing the metric crate's sign conventions, is expressible as a single type and operates monadically
+        across the stack.
+      </p>
+
+      <div class="dc-diagram" role="img"
+           aria-label="The causal layer, top to bottom. The Causal Flow Language, exposed as CausalFlow, is the fluent developer surface. It lowers to the causal monad's pure and bind. The causal monad is implemented by deep_causality_core and deep_causality.">
+        <p class="dc-cap">The causal layer, top to bottom</p>
+        <div class="dc-flow">
+          <div class="dc-wide">Causal Flow Language · CausalFlow (fluent DSL)</div>
+          <div class="dc-arrow" aria-hidden="true">▼ lowers to</div>
+          <div class="dc-wide">causal monad · pure / bind</div>
+          <div class="dc-arrow" aria-hidden="true">▼ implemented by</div>
+          <div class="dc-chips">
+            <span class="dc-chip dc-chip-strong">deep_causality_core</span>
+            <span class="dc-chip dc-chip-strong">deep_causality</span>
+          </div>
+        </div>
+      </div>
+
+      <h3>Causal discovery layer</h3>
+      <p>
+        The <a href={`${DOCS_URL}/concepts/cdl/`}>Causal Discovery Language</a> (CDL,
+        <code>deep_causality_discovery</code>) is a domain-specific language that bridges from raw
+        observational data to executable causal models. It hosts two discovery algorithms as type-encoded
+        peers: <a href={`${DOCS_URL}/concepts/algorithms/`}>SURD</a>, an information-theoretic decomposition
+        that separates what a variable explains uniquely
+        from what it shares redundantly and what emerges only from synergy; and BRCD (Bayesian Root-Cause
+        Discovery), which ranks the variables whose conditional mechanism changed between a healthy and a
+        failing regime to point an operator at the root cause of an incident. A configuration object is the
+        single source of truth for a run: a staged typestate builder makes every required field a
+        compile-time obligation and checks referenced files before the pipeline starts, after which the
+        parameterless stages read only from that configuration. The chosen configuration selects one of two
+        compile-time-isolated sub-pipelines that share no state until they converge at finalization, so
+        asking a BRCD pipeline to select features, or crossing the two pipelines, does not compile. BRCD
+        accepts an optional CPDAG over the variables when the causal structure is already known, and learns
+        one from the normal data via the BOSS algorithm when none is supplied. The discovery language closes
+        the loop from observational data to causal model that is left open in most causal frameworks.
+      </p>
+
+      <h3>Mathematical layers</h3>
+      <p>
+        Five crates provide the mathematical structures and operators over the foundation, most carrying
+        higher-kinded type instances that allow composition with the others and with the causal layer. The
+        tensor crate (<code>deep_causality_tensor</code>) provides multi-dimensional arrays with stride-based
+        memory layout, broadcasting for element-wise operations, Einstein summation for matrix products and
+        contractions, and Functor, Applicative, Monad, and CoMonad instances for functional composition.
+      </p>
+      <p>
+        The sparse crate (<code>deep_causality_sparse</code>) provides a compressed-sparse-row (CSR) matrix,
+        the right representation when a system is large but mostly zeros, as causal graphs, discretized
+        operators, and lattice problems usually are. It ships a conjugate-gradient solver for symmetric
+        positive-definite systems, a higher-kinded type instance so a sparse matrix composes like the other
+        structures, and optional zero-copy interop with the tensor crate.
+      </p>
+      <p>
+        The multivector crate (<code>deep_causality_multivector</code>) provides Clifford algebras over the
+        dynamic signature space, with pre-configured constructors for Pauli algebra, spacetime algebra,
+        conformal geometric algebra, projective geometric algebra in three dimensions, the Dixon algebra
+        used in Standard Model particle physics, and the Grand Unified Algebra hosting the full
+        <code>spin(10)</code> gauge symmetry. It implements Functor, Applicative, and Monad instances where
+        the bind operation realizes the tensor product of algebras, allowing dimension-changing compositions
+        to be expressed monadically.
+      </p>
+      <p>
+        The topology crate (<code>deep_causality_topology</code>) provides graphs, hypergraphs, simplicial
+        complexes, manifolds, and point clouds, together with differential geometry operators (exterior
+        derivative, Hodge star, codifferential, Hodge-Laplacian) and a lattice gauge field framework
+        supporting U(1), SU(2), SU(3), and Lorentz gauge groups. The lattice gauge implementation is
+        verified against twenty-four reference results from Creutz's <em>Quarks, Gluons and Lattices</em>. It
+        implements Functor and BoundedComonad instances, which makes graph convolutions and cellular
+        automata expressible through the comonadic extend operation.
+      </p>
+      <p>
+        The calculus crate (<code>deep_causality_calculus</code>) provides Arrow-native differentiation and
+        integration operators. Differentiation is the tangent functor over dual numbers, exposed fluently as
+        <code>model.derivative(x)</code> and <code>field.gradient(&amp;x)</code>. Integration is endomorphism
+        iteration, with Euler and RK4 steppers driven by <code>iterate_n</code>,
+        <code>iterate_to_fixpoint</code>, and <code>iterate_until</code> for fixed-horizon, steady-state, and
+        integrate-until-event runs, while a quadrature fold integrates a closed-form integrand. Every
+        operator is generic over the scalar type, so precision is a free parameter and dual numbers nest for
+        higher derivatives, while the dual machinery, step coefficients, and loops stay invisible to the user.
+      </p>
+      <p>
+        These crates share the same higher-kinded type instances, which makes them freely combinable through
+        one uniform mathematical surface. A single Functor, Monad, and CoMonad interface spans tensor algebra,
+        multivectors, and topology; the sparse matrices plug into the same interface; and the calculus
+        operators compose over all of them through the shared Arrow algebra. Tensor algebra combines with
+        topology, with sparse representations, and now with calculus, each respecting the algebraic laws of
+        the others, so a single computation can move across them without leaving the abstraction. The
+        <a href={`${DOCS_URL}/concepts/uniform-math/`}>Uniform Math</a> concept page covers the full surface.
+      </p>
+
+      <div class="dc-diagram" role="img"
+           aria-label="The five mathematical crates (tensor, sparse, multivector, topology, and calculus) converge into one shared Functor, Monad, and CoMonad surface, which is what lets them compose freely.">
+        <p class="dc-cap">One surface over five crates</p>
+        <div class="dc-flow">
+          <div class="dc-chips">
+            <span class="dc-chip">tensor</span><span class="dc-chip">sparse</span>
+            <span class="dc-chip">multivector</span><span class="dc-chip">topology</span>
+            <span class="dc-chip">calculus</span>
+          </div>
+          <div class="dc-arrow" aria-hidden="true">▼ compose under</div>
+          <div class="dc-wide">one Functor · Monad · CoMonad surface</div>
+        </div>
+      </div>
+
+      <h3>Physics layer</h3>
+      <p>
+        The physics library (<code>deep_causality_physics</code>) builds on the layers below it, with
+        kernels organized into thematic domains spanning astrophysics, condensed matter, classical dynamics,
+        electromagnetism, fluid dynamics, materials science, magnetohydrodynamics, nuclear physics,
+        photonics, quantum mechanics, relativity, thermodynamics, and wave mechanics, all using type-safe
+        units. The library separates two levels of usage. Physics kernels are pure stateless functions for
+        isolated equations such as the Schwarzschild radius, the Lorentz force, the Klein-Gordon equation, or
+        the Lund string fragmentation; each kernel has a corresponding wrapper that lifts the return type
+        into a propagating effect for composition in a causal pipeline. Theories are full physical frameworks
+        (general relativity, electromagnetism, weak force, electroweak unification) implemented as gauge
+        theories over the topology crate's gauge field abstraction, so different physical theories share the
+        same field-strength computation, parallel transport, and Bianchi-identity machinery, with the gauge
+        group as the only differentiator. The physics library is also generic over the floating-point type,
+        so a simulation can run at single, double, or <code>Float106</code> precision by changing a single
+        type alias.
+      </p>
+      <p>
+        Because every physics kernel and theory ships a wrapper that lifts its result into a propagating
+        effect or propagating process, physics plugs straight into the causal monad and the Causaloid. That
+        cross-domain composition, physics together with any of the mathematical crates and with causal
+        reasoning, rests on two shared foundations: the higher-kinded type machinery in
+        <code>deep_causality_haft</code> and the common numeric tower in <code>deep_causality_num</code>.
+      </p>
+
+      <div class="dc-diagram" role="img"
+           aria-label="Mathematics (tensor, sparse, multivector, topology, calculus), physics (kernels and theories), and causal reasoning (Causaloid and causal monad) all compose through the higher-kinded type machinery in deep_causality_haft and deep_causality_num into one propagating effect or propagating process.">
+        <p class="dc-cap">One ecosystem, one effect</p>
+        <div class="dc-flow">
+          <div class="dc-chips">
+            <span class="dc-chip">mathematics · tensor · sparse · multivector · topology · calculus</span>
+            <span class="dc-chip">physics · kernels · theories</span>
+            <span class="dc-chip">causal · Causaloid · causal monad</span>
+          </div>
+          <div class="dc-arrow" aria-hidden="true">▼ compose through HKT (haft · num)</div>
+          <div class="dc-wide">propagating effect / propagating process</div>
+        </div>
+      </div>
+
+      <h2>A Computable Ethics Framework</h2>
+      <p>
+        Traditional causal models are overwhelmingly focused on passive inference and prediction. They
+        provide a powerful way to answer "what if" questions but lack a formal, verifiable, and safe bridge
+        from that knowledge to taking action. Safety, ethics, and alignment are treated as post hoc problems
+        to be solved with testing and ad hoc rules.
+      </p>
+      <p>
+        DeepCausality treats verifiable safety as a first-class concern, built directly into the framework
+        rather than bolted on afterward. The goal is to safeguard causal emergence, and the library provides
+        two mechanisms:
+      </p>
+      <ul>
+        <li>
+          The <a href={`${DOCS_URL}/concepts/csm/`}>Causal State Machine</a> (CSM): links a causal inference
+          to a deterministic action.
+        </li>
+        <li>
+          The <a href={`${DOCS_URL}/concepts/effect-ethos/`}>Effect Ethos</a>: allows a system to formally
+          verify that a proposed action is compliant with its mission and safety objectives before it is
+          executed.
+        </li>
+      </ul>
+      <p>
+        With the Effect Ethos, DeepCausality offers a feasible roadmap for building trustworthy, high-stakes
+        autonomous systems that adhere to contextual rules of engagement encoded in an immutable ethos. The
+        Effect Ethos inverts the verification and validation model by shifting safety objectives into the
+        pre-design stage, converting existing rules of engagement into a testable ethos, which enables
+        design-time safety and provable alignment.
+      </p>
+
+      <h2>Code Examples</h2>
+      <p>
+        Dynamic causal processes are deeply embedded in every major science and engineering domain, and the
+        project reflects that. DeepCausality ships <a href=`${GITHUB_URL}/tree/main/examples/`>more than one hundred code
+        examples</a> spanning aerospace, astrophysics, medicine, materials science, geodesy, quantum
+        computing, and classical causal inference.
+      </p>
+      <p>
+        The <a href={`${DOCS_URL}/concepts/uniform-math/`}>uniform math</a> makes all of these advanced
+        examples possible, because tensors, multivectors, topology, sparse matrices, and calculus compose
+        uniformly. That means a single dynamic causal process can be multidisciplinary, multi-stage, and
+        multi-physics at once. A handful of examples illustrate the range of applications DeepCausality
+        enables.
+      </p>
+      <ul>
+        <li>
+          <strong><a href="/examples/gm-recovery/">Recovering a planet's mass from clock data</a></strong>
+          (geodesy): a multi-stage pipeline recovers Earth's geocentric gravitational constant, and from it
+          the planetary mass, out of one GPS week of Galileo satellite-clock time-dilation data, validated
+          against published references at about 0.2 percent. It effectively inverts general relativity in a
+          few lines of code.
+        </li>
+        <li>
+          <strong><a href="/examples/grmhd/">General-relativistic magnetohydrodynamics</a></strong>
+          (astrophysics): magnetized plasma flow is modeled under general relativity, composing several
+          physical theories in one dynamic causal pipeline.
+        </li>
+        <li>
+          <strong><a href="/examples/virtual-resection/">Epilepsy surgery screening</a></strong> (medicine):
+          each candidate brain region is evaluated as a counterfactual, do(connectome = resected), ranking
+          resections by their predicted effect before anyone operates.
+        </li>
+        <li>
+          <strong><a href="/examples/aerospace-flight-envelope/">Flight-envelope health monitoring</a></strong>
+          (aerospace): one stateful pipeline collects sensor data, threads it through a bind chain, and checks
+          it against an envelope hypergraph, with state and an audit log accumulating across every stage.
+        </li>
+        <li>
+          <strong><a href="/examples/triple-hkt-stress-field/">Elastic stress on a tetrahedral mesh</a></strong>
+          (materials engineering): strain, Hooke's law, Cauchy traction, a material rotor, and von Mises
+          stress are computed across a 3D mesh in one comonadic <code>extend</code>, combining the tensor,
+          multivector, and topology crates in a single expression.
+        </li>
+      </ul>
+      <p>
+        These examples only scratch the surface. The full catalog reaches into thermodynamics, optics, fluid
+        dynamics, electromagnetism, quantum field theory, oncology, cardiovascular medicine, metamaterials,
+        and root-cause analysis, among others. Browse all examples in the <a href=`${GITHUB_URL}/tree/main/examples/`>project repository</a>.
+      </p>
+    </div>
+  </article>
+
+  <style>
+    /* `.static-page .prose` styles h2 spacing only; the reference-implementation
+       layers use h3 sub-headings, so give them and any h4 matching rhythm. */
+    .static-page .prose h3 { margin: var(--space-6) 0 var(--space-2) 0; }
+    .static-page .prose h4 { margin: var(--space-5) 0 var(--space-2) 0; }
+
+    /* Stack and sub-stack diagrams: HUD frame with accent corner brackets and
+       monospaced crate chips, matching the site's panel look. */
+    .dc-diagram {
+      position: relative;
+      background: var(--bg-2);
+      border: 1px solid var(--line-1);
+      border-radius: var(--radius-sm);
+      padding: var(--space-5);
+      margin: var(--space-5) 0;
+      max-width: var(--measure);
+    }
+    .dc-diagram::before,
+    .dc-diagram::after {
+      content: '';
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-color: color-mix(in srgb, var(--accent) 60%, var(--line-2));
+      border-style: solid;
+      pointer-events: none;
+    }
+    .dc-diagram::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+    .dc-diagram::after { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+    .dc-cap {
+      font-family: var(--font-mono);
+      font-size: var(--t-eyebrow);
+      letter-spacing: var(--ls-eyebrow);
+      text-transform: uppercase;
+      color: var(--fg-2);
+      margin: 0 0 var(--space-3);
+    }
+
+    /* Stack: vertical layer bands, top to bottom */
+    .dc-stack { display: flex; flex-direction: column; gap: var(--space-2); }
+    .dc-band {
+      padding: var(--space-3);
+      border: 1px solid var(--line-1);
+      border-left: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--accent) 5%, transparent);
+    }
+    .dc-band-name {
+      display: block;
+      font-family: var(--font-mono);
+      color: var(--fg-0);
+      font-size: var(--t-body-sm);
+      margin-bottom: var(--space-2);
+    }
+    /* Chips */
+    .dc-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+    .dc-chip {
+      font-family: var(--font-mono);
+      font-size: var(--t-body-sm);
+      color: var(--fg-1);
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius-pill);
+      padding: 2px var(--space-3);
+    }
+    .dc-chip-strong {
+      color: var(--fg-0);
+      border-color: color-mix(in srgb, var(--accent) 50%, var(--line-2));
+    }
+
+    /* Convergence / surface layout */
+    .dc-flow { display: flex; flex-direction: column; gap: var(--space-2); }
+    .dc-arrow {
+      color: var(--accent);
+      text-align: center;
+      font-size: var(--t-body-sm);
+      letter-spacing: var(--ls-eyebrow);
+      text-transform: uppercase;
+    }
+    .dc-wide {
+      font-family: var(--font-mono);
+      font-size: var(--t-body-sm);
+      color: var(--fg-0);
+      text-align: center;
+      padding: var(--space-2) var(--space-3);
+      border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line-2));
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+    }
+  </style>
+</BaseLayout>

@@ -8,7 +8,7 @@ sidebar:
 Four pages, read in order. They explain what computational causality is, the axiom DeepCausality is built on, the problem classes that become tractable once that axiom is in place, and the sixteen innovations the project ships to address them.
 
 - **[Why?](/overview/why/)** — what computational causality is, what it does, and where DeepCausality fits in.
-- **[Axiom](/overview/core-idea/)** — one working definition: causality as a spacetime-agnostic monadic process.
+- **[Premise](/overview/premise/)** — one working definition: causality as a spacetime-agnostic monadic process.
 - **[Problem](/overview/the-problem/)** — seven categories of problems where dynamic causality is the right tool and conventional tooling is not.
 - **[Innovations](/overview/innovations/)** — the catalog of sixteen innovations that, taken together, set DeepCausality apart.
 

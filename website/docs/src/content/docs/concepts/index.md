@@ -9,6 +9,7 @@ Reference pages for every primitive the library exposes. Start with **Dynamic ca
 
 ## Foundations
 
+- **[The Axiom](/concepts/axiom/)** — the single axiom the framework rests on, `m₂ = m₁ >>= f`, and the properties it unlocks.
 - **[Dynamic causality](/concepts/dynamic-causality/)** — the umbrella idea the rest of the library sits inside, and the philosophical commitment behind it.
 - **[Causaloid](/concepts/causaloid/)** — a self-contained unit of causality that composes into larger units of itself.
 - **[Context](/concepts/context/)** — the explicit hypergraph that a dynamic causal rule reasons against.
