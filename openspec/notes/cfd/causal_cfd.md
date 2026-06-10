@@ -2,6 +2,8 @@
 
 **Status.** Exploratory. This is not a proposal. It is a starting point for *deriving* a proper proposal once the scope, dependencies, and implications are better understood.
 
+**Revision 2026-06-10.** Brought in line with `cfd-gap.md`, which is the ground-truth foundation note for the solver core. This note now *assumes the cfd-gap program (G1–G6) is closed and its APIs are available*: the DEC wedge and interior product, the de Rham/♯ isos, the typed-form carriers (including the shared `SolenoidalField<R>` type-state), pinned conventions, the one-solve `leray_project` entry point, and harmonic-kernel deflation for full `hodge_decompose` on periodic lattices. Sections §4.1, §4.3–§4.5, §7, and §10 were updated accordingly; the sequencing across all three CFD notes lives in `cfd-roadmap.md`.
+
 **Working title.** *Causal CFD*. A structure-preserving, cut-cell-capable, incompressible and compressible Navier–Stokes solver built on the existing `deep_causality_topology` cubical-Regge stack and the `deep_causality_physics` fluids surface. Integrated end-to-end with the `PropagatingEffect` / `Intervenable` framework, so that probabilistic data fusion, multiphysics composition, structured corrective control, and forensic logging are first-class capabilities rather than bolt-ons.
 
 ---
@@ -284,15 +286,18 @@ This category is the most mature of the four (the intervention framework is alre
 
 What is *not* in the existing crates and would need to be built:
 
-### 4.1 Assembly layer (the single biggest gap)
-Translate `(LatticeComplex, DualLatticeComplex, CubicalReggeGeometry, field arrays)` into kernel inputs at every cell.
+### 4.1 Assembly layer (CLOSED for the incompressible path by `cfd-gap.md` G1–G3)
+The incompressible assembly layer is delivered by the cfd-gap program, in a stronger
+(DEC-native) form than this section originally sketched. Velocity is an edge 1-form
+throughout; the operators are `d`, `δ`, `⋆`, `Δ`, the wedge, and the interior product
+(G1); transfer to and from pointwise representations goes through the de Rham/♯ isos
+(G2); and the field carrier is the typed-form layer (G3: `VelocityOneForm<R>`,
+`VorticityTwoForm<R>`, `SolenoidalField<R>`, …), which **supersedes the
+`FluidField<D, R>` container proposed here** — do not build a duplicate container.
 
-- `grad u` per cell from face-staggered velocity values
-- `∇²u` via discrete Laplacian `δd + dδ` (mathematically already available, needs to be wired)
-- `∇p`, `∇ρ`, `∇·u`, `∇·τ` likewise
-- A `FluidField<D, R>` container that owns the primal / dual storage layout and exposes kernel-shaped views
-
-The `cubical_heat_diffusion` example is the template. Without this layer, nothing else can run.
+What remains of 4.1 for later phases: assembly of the compressible terms (`∇·τ`,
+`∇·q`, `∇·(ρuE)` from lattice data) and the cut-cell variants of the operators
+(Phase 2+).
 
 ### 4.2 Cut-cell geometry (the industrial moat)
 The cubical lattice is uniform. Real geometry intersects it. Required:
@@ -305,37 +310,53 @@ The cubical lattice is uniform. Real geometry intersects it. Required:
 
 The hardest single component of the project. It is what differentiates a research toy from something that can mesh a turbine blade.
 
-### 4.3 Pressure-velocity coupling
-For ∇·u = 0 in incompressible NS you need a pressure-projection step. The math:
+### 4.3 Pressure-velocity coupling (CLOSED by `cfd-gap.md` §2 — Leray, not Chorin-with-pressure)
+Superseded. The original sketch here (predictor step, explicit pressure-Poisson solve,
+correction) is replaced by the Leray formulation in `cfd-gap.md` §2: the projector
+needs only the gradient half of the Hodge decomposition,
 
 ```
-u*       = u_n + Δt · RHS_explicit(u_n)        ← kernels give us this
-∇²p      = (ρ/Δt) · ∇·u*                       ← Poisson solve (missing)
-u_{n+1}  = u* − (Δt/ρ) · ∇p                    ← Helmholtz projection
+P(u*) = u* − d(Δ₀⁻¹ δ u*)
 ```
 
-Step 3 is `hodge_decomposition` applied to `u*`. Step 2 needs a Poisson solver.
+one gauge-fixed grade-0 CG solve per evaluation (`leray_project`), no pressure
+variable in the time loop at all. Pressure is recovered **on demand** as an opt-in
+diagnostic from the same decomposition (Bernoulli vs. static convention documented at
+the call site). The β-step singularity on periodic lattices never arises in the
+solver core; full `hodge_decompose` (with G6 harmonic deflation) is needed only by
+the causal-analysis tap (§4.11 of `cfd-roadmap.md` sequencing).
 
-### 4.4 Linear solver stack
-Currently the boundary operator uses CSR matrices but no actual solver ships. Required for the Poisson solve in 4.3 and for any implicit or semi-implicit time stepping:
+### 4.4 Linear solver stack (audit RESOLVED; preconditioning remains future work)
+The audit question is answered: a matrix-free CG (`deep_causality_sparse::cg_solve`)
+ships, is generic over `RealField` with per-precision tolerance clamping, and is
+already wired into `hodge_decompose` / `leray_project`. Phase 1 needs nothing more.
 
-- Krylov method (CG with preconditioner): minimal viable
-- Geometric multigrid on the cubical complex: order-of-magnitude better, but more complex to implement
+Remaining for later phases (performance, not correctness):
+
+- Preconditioning (diagonal first, then geometric multigrid on the cubical complex)
 - AMG fallback for cut-cell regions where geometric MG breaks down
 
-This may already exist partially in `deep_causality_algorithms` or `deep_causality_sparse`. Needs an audit.
+### 4.5 Time integration (explicit path CLOSED; implicit paths remain)
+Stale as originally written: `Rk4` and `Euler` ship in `deep_causality_calculus` as
+Arrow endomorphisms over any state with `Clone + Add + Mul<R>` — the whole typed-form
+field rides them directly — and `EndoArrow` supplies `iterate_n` /
+`iterate_to_fixpoint` / `iterate_until` (the run loop with event stop). The march is
+the arrow; the fallible projection and CFL check are `bind` steps in the causal monad
+(`cfd-gap.md` §5.4). Pure numerics in the arrow, fallible plumbing in the monad.
 
-### 4.5 Time integration
-Currently only Euler integration in `kernels::dynamics`. Needed:
+Still needed for later phases:
 
-- Explicit RK4: low-Reynolds, DNS-like cases
 - Semi-implicit IMEX: viscous diffusion implicit, convection explicit. The workhorse for moderate-Re incompressible.
 - Implicit BDF2: high-Re, RANS, stiff regimes
 
-Each time step is a `bind` in the intervention chain.
-
 ### 4.6 Boundary conditions
-Periodic is in `LatticeComplex` already. Inflow (Dirichlet), outflow (Neumann or convective), wall (no-slip / slip / wall function), and symmetry all need a BC layer that modifies the assembly stencils near boundary cells. `MaybeUncertain`-typed BCs (§3.1 item 1) require a dropout-handling extension on top of the basic BC layer.
+Periodic is in `LatticeComplex` already, and the periodic solver core ships before any
+wall work starts. Inflow (Dirichlet), outflow (Neumann or convective), wall (no-slip / slip / wall function), and symmetry all need a BC layer that modifies the assembly stencils near boundary cells. `MaybeUncertain`-typed BCs (§3.1 item 1) require a dropout-handling extension on top of the basic BC layer.
+
+Wall staging follows `cfd-gap.md` G5: boundary-corrected Hodge star duals, a
+Neumann–Poisson projection path, and no-slip Laplacian rows — validated analytic-first
+on **laminar Poiseuille channel flow** (periodic x, walls y; constructible today,
+exact parabolic steady state) before the lid-driven cavity's Ghia-table comparison.
 
 ### 4.7 Turbulence model closure
 The fluid kernels include TKE, dissipation rate, Boussinesq eddy viscosity, Reynolds stress. Missing is the *composition* into a closed RANS model (k-ε, k-ω SST):
@@ -358,14 +379,16 @@ The hybrid storage layout from §2.7. Specifically: a `FluidField` that admits p
 
 ## 5. Proposed three-phase roadmap
 
-### Phase 1: assembly + projection + minimum corrective library
+### Phase 1: walls + corrective library on top of the shipped periodic core
 Smallest deliverable that exercises the whole chain end-to-end on a real problem.
+The DEC-native periodic solver (assembly, Leray projection, Rk4 arrow march,
+Taylor–Green validation ladder) ships *before* Phase 1, per `cfd-gap.md` and
+`cfd-roadmap.md` Stages 0–1; Phase 1 adds walls and the corrective-pattern
+infrastructure.
 
-- Build the assembly layer (4.1)
-- Implement RK4 time stepping (4.5, simplest variant)
-- Wire the Poisson solver (4.4, minimal CG) into the Helmholtz-projection step using existing `hodge_decomposition` (4.3)
-- BC layer for Dirichlet / Neumann (4.6, partial)
-- **Ship at least three corrective interventions from §10**: CFL-adaptive timestepping (10.1), divergence rescue (10.2), checkpoint-restart on error (10.10). These establish the corrective-pattern infrastructure early.
+- Wall BC layer per `cfd-gap.md` G5 (4.6): boundary star, Neumann projection path, no-slip rows
+- Validate analytic-first on **laminar Poiseuille channel flow** (periodic x, walls y)
+- **Ship at least three corrective interventions from §10**: CFL-adaptive timestepping (10.1), divergence rescue (10.2), checkpoint-restart on error (10.10). These establish the corrective-pattern infrastructure early. (10.1 and 10.2 are upgrades of the `cfl_check` bind and the `CgFailure` short-circuit already present in the periodic chain.)
 - Validate against **lid-driven cavity** at Re = 1000 and Re = 10000. Reference: Ghia, Ghia & Shin 1982. *No cut cells required.*
 
 Phase 1 alone is a meaningful research deliverable. A structure-preserving DEC incompressible NS solver on a cubical mesh, with a clean intervention chain and three named corrective patterns wired in. Publishable as such; useful as a teaching tool; demonstrates three of the four amplifiers from §3 (corrective library, counterfactual, forensic logging).
@@ -420,13 +443,13 @@ Each maps to an intervention pattern already shown in the existing examples.
 
 ## 7. Open questions to resolve before a proper proposal
 
-1. **Staggered vs. co-located storage.** Primal cells for pressure plus dual faces for velocity (the classical MAC scheme, mimetic by construction with the Hodge star), versus everything co-located at primal vertices. Both are natural on a cubical complex; the choice determines the assembly layout. MAC is more conservative. Co-located is simpler and more popular in modern cut-cell codes (Cadence Fidelity is co-located). **Decision required before Phase 1.**
+1. **~~Staggered vs. co-located storage.~~ Resolved** by `cfd-gap.md` decision 2: velocity as an edge 1-form *is* the staggered/mimetic (MAC-like) choice, by construction of the lattice complex. No co-located stage exists.
 
-2. **Sparse linear-solver provenance.** Does `deep_causality_algorithms` or `deep_causality_sparse` already provide a CG, multigrid, or preconditioner stack we can reuse? Or does this need to be built from scratch, or pulled in via dependency? **Audit required.**
+2. **~~Sparse linear-solver provenance.~~ Resolved.** Matrix-free `cg_solve` ships in `deep_causality_sparse`, precision-generic, already wired into `hodge_decompose` / `leray_project`. Preconditioning is future performance work (§4.4).
 
 3. **Geometry input format.** STL is universal but lossy (no curved surfaces). STEP is high-fidelity but parser-heavy. Recommend STL first, defer STEP.
 
-4. **Scope of `Intervenable` integration.** Does every fluid time step become a `bind`, or only "interesting" stages? Wrapping every cell update in `PropagatingEffect` is allocation-heavy. Coarse-grained stages (whole-field RHS evaluation as a single `bind`) is the pragmatic choice. **Decision required during Phase 1 design.**
+4. **~~Scope of `Intervenable` integration.~~ Resolved** by `cfd-gap.md` §5.4: coarse-grained binds — the whole-field march step is the arrow, and projection plus CFL check are the `bind` stages. Pure numerics never enter the monad; per-cell wrapping never happens.
 
 5. **Cut-cell algorithm provenance.** Berger–Helzel cell-merging is the textbook approach, but adds complexity. Flux-redistribution (Colella, Graves, Modiano) is simpler but less accurate near small cuts. **Decision required during Phase 2 design.** Prototype both on the cylinder case if time allows.
 
@@ -459,7 +482,7 @@ Each maps to an intervention pattern already shown in the existing examples.
 - True adjoint optimisation. Covered indirectly by intervention-based surrogate gradients (§3.4 item 5).
 - GPU acceleration and cluster support. Both are deferred and treated in §11. The HAFT "new container = a new witness" claim does *not* automatically save GPU integration from trait leakage; the previously reverted MLX backend is the cautionary tale (see `openspec/changes/reverted/revert_mlx_backend.md`). Phase 1-3 explicitly targets workstation deployment. Cluster is a separate change-set entirely.
 - Real-time and coupled control hardware loops.
-- Causal discovery on flow data. The `deep_causality_discovery` crate exists, and applying it to solver output (e.g., identifying causal pressure-vorticity coupling in aeroacoustics) is a genuinely novel research direction. Out of scope for the initial proposal because it is research-flagship territory rather than infrastructure.
+- ~~Causal discovery on flow data~~ — **no longer distant research territory.** The Leray projection step computes (half of) the Hodge decomposition of the velocity field at every time step; `3DCausalFluidDynamics.md`'s `FluidSignature` → `RollingHistory` → SURD pipeline consumes exactly a `HodgeDecomposition<R>` on the same `Manifold`, the same `R`. Causal attribution of simulated flow is therefore a *tap on the solve chain* (one β-step solve per sampled snapshot, enabled by G6), not a separate pipeline. It remains out of scope for *this* note's proposal, but it is scheduled — see `cfd-roadmap.md` Stage 2. No other CFD code can offer this, because no other code's projection step is a Hodge decomposition.
 
 ---
 
@@ -491,7 +514,7 @@ A candidate library of named, logged, compositional corrective patterns. Each on
 | 10.1 | **CFL-adaptive timestepping** | `.intervene` | Phase 1 (MVP) | `max(\|u\|) · Δt / Δx` exceeds threshold |
 | 10.2 | **Solver divergence rescue** | `.intervene` + checkpoint restore | Phase 1 (MVP) | residual norm exceeds previous-step value by N× |
 | 10.3 | **BC fallback on dropped sensor data** | `.intervene` (composes with `MaybeUncertain`) | Phase 2 | `MaybeUncertain::is_present` returns false |
-| 10.4 | **Mass conservation enforcement** | `.intervene` on velocity field | Phase 1 | `∮ u·n` over closed surface exceeds ε |
+| 10.4 | **~~Mass conservation enforcement~~ Obsoleted upward** | type-state, not `.intervene`: `SolenoidalField<R>` is divergence-free by construction (`cfd-gap.md` G3); drift is unrepresentable, not monitored | — | n/a |
 | 10.5 | **Turbulence-model bounds protection** | `.intervene` (clip k, ω, ε) | Phase 3 | `k < 0`, `ω < 0`, or `ε < 0` |
 | 10.6 | **Shock-capturing scheme fallback** | `.intervene` per cell, per step | Phase 3 | local Mach gradient or limiter activation |
 | 10.7 | **Cut-cell geometric robustness** | `.intervene` (cell merge or flux redistribute) | Phase 2 | cell aperture below threshold |
