@@ -1,0 +1,43 @@
+openspec/notes/cfd/3DCausalFluidDynamics.md
+  s_86ac044a95d19d::t_e48baf5410c783 5-6
+  s_86ac044a95d19d::t_c1c63b61ffb936 14,16
+  s_86ac044a95d19d::t_3d070fb1d2e7ee 429-438
+  s_86ac044a95d19d::t_196e6ad6ab3d45 116-138
+  s_86ac044a95d19d::t_28bae053ff71bd 478-490,492
+  s_86ac044a95d19d::t_f2054e6ea43e19 594
+  s_86ac044a95d19d::t_6f31cfd4a83e14 216-219
+openspec/notes/cfd/cfd-roadmap.md
+  s_86ac044a95d19d::t_325e5fc013f01b 1-136
+openspec/notes/cfd/cfd-gap.md
+  s_86ac044a95d19d::t_9de075643d7be8 362-423
+  s_86ac044a95d19d::t_02a5dfa3540f77 234-247
+  s_86ac044a95d19d::t_f1258712db462e 65-76
+openspec/notes/cfd/causal_cfd.md
+  s_86ac044a95d19d::t_cc51519e99672d 452
+  s_86ac044a95d19d::t_b976531bcb0669 329-332,334,336
+  s_86ac044a95d19d::t_8ce6f8e94969a0 382,384-391
+  s_86ac044a95d19d::t_8bb0b7800a3689 446,448
+  s_86ac044a95d19d::t_7ebadfea8588e2 485
+  s_86ac044a95d19d::t_36613a4b5a30d6 517
+  s_86ac044a95d19d::t_a8b9c1f74a42f7 5-6
+  s_86ac044a95d19d::t_e5f6af11e84276 289-296,298-300
+  s_86ac044a95d19d::t_16ac9c4f0ca265 313-316,319,322-327
+  s_86ac044a95d19d::t_9b761b9e2b0e97 339-345,347
+  s_86ac044a95d19d::t_6227bc23fba8f1 353-359
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "934f625c70c8a3c07f3a04525adbe2153774da86",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
