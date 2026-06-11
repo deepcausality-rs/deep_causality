@@ -4,7 +4,7 @@
  */
 
 use crate::PhysicsError;
-use deep_causality_num::Complex;
+use deep_causality_num::{Complex, RealField};
 use deep_causality_tensor::CausalTensor;
 
 /// Focal Length ($f$).
@@ -288,5 +288,37 @@ impl<R: deep_causality_num::RealField> ComplexBeamParameter<R> {
     }
     pub fn value(&self) -> Complex<R> {
         self.0
+    }
+}
+
+/// Index of refraction for a medium (ratio of c to phase velocity in the medium).
+/// Typically > 1; negative values are physically possible in metamaterials but
+/// zero is rejected to prevent division errors in downstream calculations.
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct IndexOfRefraction<R: RealField>(R);
+
+impl<R: RealField> Default for IndexOfRefraction<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: RealField> IndexOfRefraction<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if val == R::zero() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Index of Refraction cannot be zero".into(),
+            ));
+        }
+        Ok(Self(val))
+    }
+    pub fn value(&self) -> R {
+        self.0
+    }
+}
+
+impl<R: RealField + Into<f64>> From<IndexOfRefraction<R>> for f64 {
+    fn from(val: IndexOfRefraction<R>) -> Self {
+        val.0.into()
     }
 }

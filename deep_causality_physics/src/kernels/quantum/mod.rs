@@ -11,5 +11,4 @@ pub(crate) mod wrappers;
 pub use gates::*;
 pub use gates_haruna::*;
 pub use mechanics::*;
-pub use crate::quantities::quantum::*;
 pub use wrappers::*;
