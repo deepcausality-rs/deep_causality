@@ -12,9 +12,9 @@
 //! returned per call; integrating along a path is the caller's concern.
 
 use crate::PhysicsError;
+use crate::{Density, G};
 use crate::{Length, Speed};
 use crate::{Pressure, Velocity3};
-use crate::{Density, G};
 use deep_causality_num::{FromPrimitive, RealField};
 
 /// Dynamic pressure `q = 0.5 · ρ · u²` (Pa).

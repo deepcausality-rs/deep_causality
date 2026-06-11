@@ -31,9 +31,7 @@ use crate::PhysicsError;
 use crate::kernels::fluids::governing::{
     continuity_rhs_kernel, convective_acceleration_kernel, pressure_gradient_force_kernel,
 };
-use crate::{
-    AccelerationVector, Density, Velocity3, VelocityGradient,
-};
+use crate::{AccelerationVector, Density, Velocity3, VelocityGradient};
 use deep_causality_num::RealField;
 
 /// Continuity equation RHS: `∂ρ/∂t = − u·∇ρ − ρ ∇·u`.

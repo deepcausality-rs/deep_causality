@@ -4,8 +4,8 @@
  */
 
 use crate::PhaseAngle;
-use crate::kernels::relativity::gravity;
 use crate::SpacetimeVector;
+use crate::kernels::relativity::gravity;
 use crate::kernels::relativity::spacetime;
 use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};

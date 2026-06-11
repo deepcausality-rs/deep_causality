@@ -9,9 +9,9 @@ pub mod plasma;
 pub mod resistive;
 pub mod wrappers;
 
+pub use crate::quantities::mhd::*;
 pub use grmhd::*;
 pub use ideal::*;
 pub use plasma::*;
-pub use crate::quantities::mhd::*;
 pub use resistive::*;
 pub use wrappers::*;

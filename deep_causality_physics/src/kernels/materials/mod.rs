@@ -6,6 +6,6 @@
 pub(crate) mod mechanics;
 pub(crate) mod wrappers;
 
-pub use mechanics::*;
 pub use crate::quantities::materials::*;
+pub use mechanics::*;
 pub use wrappers::*;

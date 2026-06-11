@@ -16,10 +16,10 @@
 //! `R_ij − (2/3) k δ_ij = −2 ν_t S_ij`, solved by least-squares.
 
 use crate::PhysicsError;
-use crate::{Length, Speed};
 use crate::{
     KinematicViscosity, ReynoldsStress, StrainRateTensor, Velocity3, VelocityGradient, Viscosity,
 };
+use crate::{Length, Speed};
 use deep_causality_num::{FromPrimitive, RealField};
 
 /// Turbulent kinetic energy `k = 0.5 · ⟨u' · u'⟩`.

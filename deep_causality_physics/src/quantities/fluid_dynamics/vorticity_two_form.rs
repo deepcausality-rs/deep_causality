@@ -9,8 +9,8 @@ use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{LatticeComplex, Manifold};
 
-use crate::error::physics_error::PhysicsError;
 use super::validate_graded_field;
+use crate::error::physics_error::PhysicsError;
 
 /// A vorticity field as a face 2-form on a cubical lattice. Closedness
 /// (`dω = 0`) is automatic for any `ω = d u♭` by `d² = 0` and therefore not a

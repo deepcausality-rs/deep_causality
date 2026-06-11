@@ -5,15 +5,13 @@
 
 //! Velocity as an edge 1-form: the DEC solver's marching state.
 
-
-
-use std::ops::{Add, Mul};
 use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{LatticeComplex, Manifold};
+use std::ops::{Add, Mul};
 
-use crate::error::physics_error::PhysicsError;
 use super::validate_graded_field;
+use crate::error::physics_error::PhysicsError;
 
 /// A velocity field as an edge 1-form (grade-1 cochain) on a cubical lattice.
 ///
@@ -57,7 +55,6 @@ impl<R: RealField> VelocityOneForm<R> {
         self.field.len() == 0
     }
 }
-
 
 /// `Add` and `Mul<R>` for [`VelocityOneForm`] — exactly the bounds the
 /// `Rk4`/`Euler` arrows require of a marching state, and nothing more.

@@ -15,8 +15,8 @@ pub(crate) mod mechanics;
 pub(crate) mod turbulence;
 pub(crate) mod wrappers;
 
-pub use mechanics::*;
 pub use crate::quantities::fluids::*;
+pub use mechanics::*;
 pub use wrappers::*;
 
 // Group `pub use` re-exports are commented out until each group's gates close.

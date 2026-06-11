@@ -3,10 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{
-    AlfvenSpeed, DebyeLength, Diffusivity, LarmorRadius, MagneticPressure,
-};
 use crate::kernels::mhd::{grmhd, ideal, plasma, resistive};
+use crate::{AlfvenSpeed, DebyeLength, Diffusivity, LarmorRadius, MagneticPressure};
 use crate::{Density, Mass, PhysicalField, Speed, Temperature};
 use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};

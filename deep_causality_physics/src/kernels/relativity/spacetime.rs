@@ -5,8 +5,8 @@
 
 use crate::SpacetimeVector;
 
-use crate::error::PhysicsError;
 use crate::PhaseAngle;
+use crate::error::PhysicsError;
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
 use deep_causality_num::{Field, Float, RealField};
 

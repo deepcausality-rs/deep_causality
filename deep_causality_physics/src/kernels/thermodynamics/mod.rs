@@ -6,6 +6,6 @@
 pub(crate) mod stats;
 pub(crate) mod wrappers;
 
-pub use stats::*;
 pub use crate::quantities::thermodynamics::*;
+pub use stats::*;
 pub use wrappers::*;

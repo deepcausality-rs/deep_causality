@@ -24,9 +24,7 @@ use crate::PhysicsError;
 use crate::kernels::fluids::governing::{
     convective_acceleration_kernel, pressure_gradient_force_kernel, viscous_diffusion_kernel,
 };
-use crate::{
-    AccelerationVector, Density, KinematicViscosity, Velocity3, VelocityGradient,
-};
+use crate::{AccelerationVector, Density, KinematicViscosity, Velocity3, VelocityGradient};
 use deep_causality_num::RealField;
 
 /// Pointwise RHS of the incompressible Newtonian momentum equation.

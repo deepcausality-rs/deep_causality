@@ -9,10 +9,10 @@
 //! — imports remain stable regardless of where within `quantities/` a type lives.
 
 // ── Cross-domain primitives ───────────────────────────────────────────────
-/// SI base and derived scalar quantities used across multiple domains.
-pub mod si_primitives;
 /// Dimensionless scalars: Ratio, PhaseAngle, Probability.
 pub mod dimensionless;
+/// SI base and derived scalar quantities used across multiple domains.
+pub mod si_primitives;
 
 // ── Domain-specific quantities ────────────────────────────────────────────
 pub mod chronometric;
@@ -33,8 +33,8 @@ pub(crate) mod fluid_dynamics;
 // ── Flat re-exports ───────────────────────────────────────────────────────
 // Everything below is accessible as `crate::TypeName` via lib.rs::quantities::*.
 
-pub use si_primitives::*;
 pub use dimensionless::*;
+pub use si_primitives::*;
 
 pub use chronometric::*;
 pub use condensed::*;

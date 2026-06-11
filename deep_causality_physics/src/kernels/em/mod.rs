@@ -8,8 +8,8 @@ pub(crate) mod forces;
 pub(crate) mod solver;
 pub(crate) mod wrappers;
 
+pub use crate::quantities::em::*;
 pub use fields::*;
 pub use forces::*;
-pub use crate::quantities::em::*;
 pub use solver::MaxwellSolver;
 pub use wrappers::*;

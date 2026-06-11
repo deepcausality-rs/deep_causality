@@ -9,9 +9,9 @@ pub mod polarization;
 pub mod ray;
 pub mod wrappers;
 
+pub use crate::quantities::photonics::*;
 pub use beam::*;
 pub use diffraction::*;
 pub use polarization::*;
-pub use crate::quantities::photonics::*;
 pub use ray::*;
 pub use wrappers::*;

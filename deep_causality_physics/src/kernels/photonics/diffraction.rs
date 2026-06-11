@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::PhysicsError;
 use crate::Length;
+use crate::PhysicsError;
 use crate::{RayAngle, Wavelength};
 use deep_causality_num::{FromPrimitive, RealField};
 

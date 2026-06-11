@@ -14,11 +14,9 @@
 //! `c_p` is the specific heat at constant pressure (J/(kg·K)).
 
 use crate::PhysicsError;
-use crate::Temperature;
 use crate::Speed;
-use crate::{
-    Pressure, SpecificEnthalpy, Velocity3, VelocityGradient, ViscousStress,
-};
+use crate::Temperature;
+use crate::{Pressure, SpecificEnthalpy, Velocity3, VelocityGradient, ViscousStress};
 use deep_causality_num::{FromPrimitive, RealField};
 
 /// Ideal-gas speed of sound `a = √(γ · R_s · T)`.

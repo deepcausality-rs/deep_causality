@@ -9,8 +9,8 @@ use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{LatticeComplex, Manifold};
 
-use crate::error::physics_error::PhysicsError;
 use super::validate_graded_field;
+use crate::error::physics_error::PhysicsError;
 
 /// A body-force-per-unit-mass field as an edge 1-form on a cubical lattice.
 /// A forcing input, not a marching state: no arithmetic is provided.
