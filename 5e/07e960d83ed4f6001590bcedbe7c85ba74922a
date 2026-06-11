@@ -1,0 +1,23 @@
+Cargo.lock
+  s_86ac044a95d19d::t_467e600aeefb97 547
+openspec/notes/cfd/cfd-gap.md
+  s_86ac044a95d19d::t_bc4d9a26c48c07 151-152,168-169,182-183,202-203,244
+openspec/notes/cfd/cfd-roadmap.md
+  s_86ac044a95d19d::t_bc4d9a26c48c07 48-53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "5e07e960d83ed4f6001590bcedbe7c85ba74922a",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
