@@ -1,0 +1,26 @@
+deep_causality_physics/tests/theories/fluid_dynamics/dec/shear_layer_tests.rs
+  s_86ac044a95d19d::t_7e9137e752d73e 32-38
+deep_causality_topology/src/types/lattice_complex/mod.rs
+  s_86ac044a95d19d::t_7745be736b68bd 58-65
+  s_86ac044a95d19d::t_3c5fbadb058864 43-48,66,89,438-451,453,455-460,464-466
+deep_causality_physics/tests/theories/fluid_dynamics/dec/taylor_green_3d_tests.rs
+  s_86ac044a95d19d::t_7e9137e752d73e 18-21
+deep_causality_topology/src/types/manifold/differential/hodge_decomposition_impl.rs
+  s_86ac044a95d19d::t_b4487b24ce3e69 246-264
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "6bb5c520a8191fd3e4f1ef4ae00dba50e1e34a6f",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
