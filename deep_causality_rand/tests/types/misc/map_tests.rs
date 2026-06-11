@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use core::marker::PhantomData;
-use deep_causality_rand::types::misc::map::Map;
+use deep_causality_rand::types::map::Map;
 
 // Dummy types for testing
 #[derive(Debug, Clone)]
