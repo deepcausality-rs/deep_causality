@@ -1,0 +1,31 @@
+deep_causality_rand/src/types/rand/mod.rs
+  s_86ac044a95d19d::t_7f1f72735488b8 5
+deep_causality_rand/src/lib.rs
+  s_86ac044a95d19d::t_7f1f72735488b8 34-35,74,81
+deep_causality_rand/tests/types/misc/iter_tests.rs
+  s_86ac044a95d19d::t_7f1f72735488b8 6
+deep_causality_rand/tests/types/misc/map_tests.rs
+  s_86ac044a95d19d::t_7f1f72735488b8 6
+deep_causality_rand/tests/types/rand/mod.rs
+  s_86ac044a95d19d::t_7f1f72735488b8 5
+deep_causality_rand/Cargo.toml
+  s_86ac044a95d19d::t_7f1f72735488b8 46-49
+deep_causality_rand/src/types/mod.rs
+  s_86ac044a95d19d::t_7f1f72735488b8 7-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "009715ff613b58741c2f669bf8db937db06a3e6a",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
