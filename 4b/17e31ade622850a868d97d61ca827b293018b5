@@ -1,0 +1,158 @@
+deep_causality_physics/tests/theories/fluid_dynamics/dec/wrappers_tests.rs
+  s_86ac044a95d19d::t_da5349b1640c18 27-30
+  s_86ac044a95d19d::t_e646495092dbc5 1-26,31-74
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/pressure.rs
+  s_86ac044a95d19d::t_c047ca96321cec 8-9,42,45-47
+  s_86ac044a95d19d::t_6a4098ee92886f 1-7,15-24,27-41,44,48-51,54-89
+  s_86ac044a95d19d::t_7063885cfdd336 10-14,43,52-53
+  s_86ac044a95d19d::t_50524c28ce3324 25-26
+deep_causality_physics/tests/theories/fluid_dynamics/mod.rs
+  s_86ac044a95d19d::t_107b59086bce77 11-12
+openspec/changes/add-dec-periodic-ns-solver/tasks.md
+  s_86ac044a95d19d::t_49dab55ace4634 111,113
+  s_86ac044a95d19d::t_5ef15295ffa9b9 92,98
+  s_86ac044a95d19d::t_9349fd523e78fb 93-97
+  s_86ac044a95d19d::t_490928dfe57419 22,25,49,53,67,77,81,83,86
+  s_86ac044a95d19d::t_243ae7ff925a2a 13,17,31,33,37,41,43,47,61,64
+  s_86ac044a95d19d::t_a52d5ee4f9f778 10
+  s_86ac044a95d19d::t_eee53134a020c6 105,108
+deep_causality_physics/tests/theories/fluid_dynamics/dec/dec_ns_solver/dec_ns_solver_tests.rs
+  s_86ac044a95d19d::t_26c393b4548ff0 1-83
+  s_86ac044a95d19d::t_047e1794f2381e 84-96
+AGENTS.md
+  s_86ac044a95d19d::t_6dff972e73267f 258-259
+openspec/changes/add-dec-periodic-ns-solver/specs/dec-ns-march/spec.md
+  s_86ac044a95d19d::t_5d1183827818c0 17-24
+examples/avionics_examples/dec_taylor_green_re1600/main.rs
+  s_86ac044a95d19d::t_9349fd523e78fb 8
+  s_86ac044a95d19d::t_54431747aefd30 12,14-22,28,37-38,43-44,46,66-71,89,92,98
+  s_86ac044a95d19d::t_ab9cff1b3a8d5d 1-7,9-11,13,29-36,39-42,45,54-65,99
+  s_86ac044a95d19d::t_7fc95b50a95b7e 23-27,47-52,72-73,75-88,90-91,93-97
+  s_86ac044a95d19d::t_347c7625f24368 53
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/run.rs
+  s_86ac044a95d19d::t_211f93a0d652a0 1-15,18-73
+  s_86ac044a95d19d::t_50524c28ce3324 16-17
+deep_causality_physics/src/theories/fluid_dynamics/dec/wrappers.rs
+  s_86ac044a95d19d::t_e356d333741eab 1-20,23-37
+  s_86ac044a95d19d::t_50524c28ce3324 21-22
+deep_causality_physics/tests/theories/fluid_dynamics/dec/dec_ns_solver/run_tests.rs
+  s_86ac044a95d19d::t_1cc372a37ef50b 1-116
+deep_causality_physics/tests/theories/fluid_dynamics/dec/taylor_green_2d_tests.rs
+  s_86ac044a95d19d::t_421639c2c0ff87 102-104,121
+  s_86ac044a95d19d::t_da5349b1640c18 80-82,134-137
+  s_86ac044a95d19d::t_0ab1a34835db30 1-79,83-101,105-120,122-133,138-144
+openspec/changes/add-dec-periodic-ns-solver/specs/dec-ns-diagnostics/spec.md
+  s_86ac044a95d19d::t_5d1183827818c0 52,54-57,65,67-68,74
+deep_causality_physics/src/theories/fluid_dynamics/dec/diagnostics.rs
+  s_86ac044a95d19d::t_da5349b1640c18 42,168-171
+  s_86ac044a95d19d::t_a4fac2ba91c4b5 1-21,23-25,27-41,43-67,69-88,90-115,117-138,140-161,163-167,172
+  s_86ac044a95d19d::t_50524c28ce3324 22,26,68,89,116,139,162
+openspec/changes/add-dec-periodic-ns-solver/specs/dec-ns-validation/spec.md
+  s_86ac044a95d19d::t_9349fd523e78fb 109
+deep_causality_physics/src/theories/fluid_dynamics/dec/step_output.rs
+  s_86ac044a95d19d::t_a97024702c857a 1-92
+deep_causality_physics/tests/theories/fluid_dynamics/dec/dec_ns_rate_tests.rs
+  s_86ac044a95d19d::t_eb8b8cbb61dd77 1-52,54-146,148-186,188-211,213-260,263,265,270-329,377
+  s_86ac044a95d19d::t_8cdf2138038297 264,267-268
+  s_86ac044a95d19d::t_da5349b1640c18 53,187
+  s_86ac044a95d19d::t_421639c2c0ff87 147,212,261-262,266,269,330-376
+deep_causality_physics/tests/BUILD.bazel
+  s_86ac044a95d19d::t_5ef15295ffa9b9 370-371
+deep_causality_physics/tests/theories/fluid_dynamics/dec/diagnostics_tests.rs
+  s_86ac044a95d19d::t_da5349b1640c18 77,163-166
+  s_86ac044a95d19d::t_e5a17c2fcc6b36 1-76,78-162,167-198
+deep_causality_physics/src/theories/fluid_dynamics/dec/mod.rs
+  s_86ac044a95d19d::t_50524c28ce3324 41-50
+  s_86ac044a95d19d::t_b7f7aae222a7e4 1-40,51-63
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/seed.rs
+  s_86ac044a95d19d::t_d6b3d64b1a6d2e 1-18,21-64,70-72
+  s_86ac044a95d19d::t_50524c28ce3324 19-20
+  s_86ac044a95d19d::t_da5349b1640c18 65-69
+deep_causality_physics/BUILD.bazel
+  s_86ac044a95d19d::t_6dff972e73267f 18
+deep_causality_physics/tests/theories/fluid_dynamics/dec/dec_ns_solver/mod.rs
+  s_86ac044a95d19d::t_c505932bafb2a5 1-15
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/mod.rs
+  s_86ac044a95d19d::t_50524c28ce3324 17,22
+  s_86ac044a95d19d::t_7a0e1d134b40eb 18
+  s_86ac044a95d19d::t_51c5d00bddad3c 1-16,19-21,23-147
+openspec/changes/add-dec-periodic-ns-solver/specs/dec-ns-rate/spec.md
+  s_86ac044a95d19d::t_5d1183827818c0 4-6,8-9,16-25,29-30,45-46,48-55
+deep_causality_physics/tests/theories/fluid_dynamics/dec/dec_ns_solver/step_tests.rs
+  s_86ac044a95d19d::t_da5349b1640c18 47
+  s_86ac044a95d19d::t_519d228105fa18 1-46,48-170
+deep_causality_physics/Cargo.toml
+  s_86ac044a95d19d::t_d9e968d0ee6a0a 35-38
+deep_causality_physics/tests/theories/fluid_dynamics/dec/step_output_tests.rs
+  s_86ac044a95d19d::t_da5349b1640c18 25-28
+  s_86ac044a95d19d::t_9f1eaf49e4b1d2 1-24,29-83
+deep_causality_physics/src/quantities/fluid_dynamics/velocity_one_form.rs
+  s_86ac044a95d19d::t_4982d63353944a 43-50
+deep_causality_physics/tests/theories/fluid_dynamics/dec/dec_ns_solver/seed_tests.rs
+  s_86ac044a95d19d::t_522200559b0cde 1-25,30-111
+  s_86ac044a95d19d::t_047e1794f2381e 112-128
+  s_86ac044a95d19d::t_da5349b1640c18 26-29
+deep_causality_physics/tests/theories/fluid_dynamics/dec/dec_ns_solver/pressure_tests.rs
+  s_86ac044a95d19d::t_da5349b1640c18 95,118-122,163-164
+  s_86ac044a95d19d::t_16378e51cc9ce8 1-46,53-71,73-90,94,96-117,127-131,133-136,138-141,143-162,165-167
+  s_86ac044a95d19d::t_ed9fcdbf08f225 47-52
+  s_86ac044a95d19d::t_58e41fbdb8cb64 72
+  s_86ac044a95d19d::t_421639c2c0ff87 91-93,123-126,132,137,142
+deep_causality_physics/tests/theories/fluid_dynamics/dec/mod.rs
+  s_86ac044a95d19d::t_65a32d88c1c108 1-23
+openspec/changes/add-dec-periodic-ns-solver/design.md
+  s_86ac044a95d19d::t_47f4022c408c5a 39-41,83-111,115-117,120-128,156,158-167,222-228,230-232
+deep_causality_physics/tests/theories/fluid_dynamics/dec/shear_layer_tests.rs
+  s_86ac044a95d19d::t_da5349b1640c18 92
+  s_86ac044a95d19d::t_615020641ca544 1-91,93-177
+examples/avionics_examples/dec_taylor_green_re1600/model.rs
+  s_86ac044a95d19d::t_7fd811b96dffbf 10-23,27,31,45-46,48-51,54-55,57-58,61-63,65-66,70-71,75-80,82,86,89-95,97-98,100,103,108-110,114-117,122-127,130-132,136,141-147,151-152,154,156,160-162,164-165,167,169-170,175,178-179
+  s_86ac044a95d19d::t_0e476c7d3a3b9b 34-42,72-74,83-85,104-107,133-135
+  s_86ac044a95d19d::t_2d2ac28565785e 139-140
+  s_86ac044a95d19d::t_47a0215c81bef0 1-9,24-26,28-30,32-33,43-44,47,52-53,56,59-60,64,67-69,81,87-88,96,99,101-102,111-113,118-121,128-129,137-138,148-150,153,155,157-159,163,166,168,171-174,176-177,180
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_rate.rs
+  s_86ac044a95d19d::t_9c5d428bfdbed5 1-6,15-21,25-28,30-64,66-136,139,181,186-205,208-241
+  s_86ac044a95d19d::t_da5349b1640c18 29,206-207
+  s_86ac044a95d19d::t_f349ce93638b81 7-14,22-24,137-138,140-180,182-185
+  s_86ac044a95d19d::t_50524c28ce3324 65
+examples/avionics_examples/dec_taylor_green_re1600/print_utils.rs
+  s_86ac044a95d19d::t_d5be12c9d01cbc 6-9,13-21,26-28,41-42,45-46
+  s_86ac044a95d19d::t_2d2ac28565785e 33-40
+  s_86ac044a95d19d::t_60c39a10471351 1-5,10-12,22-25,29-32,43-44,47-54
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/step.rs
+  s_86ac044a95d19d::t_da5349b1640c18 24,94-98,105
+  s_86ac044a95d19d::t_3cf1d6c6b9ae72 1-5,14-15,17-23,25-26,29-36,39-41,48-49,54-57,62,82,86,99-104,106-146
+  s_86ac044a95d19d::t_7f53fc1a5f6e4f 89-93
+  s_86ac044a95d19d::t_c047ca96321cec 6-13,16,37-38,42-47,50-53,58-61,63-81,83-85,87-88
+  s_86ac044a95d19d::t_50524c28ce3324 27-28
+examples/avionics_examples/Cargo.toml
+  s_86ac044a95d19d::t_8d13ec9969367d 48
+  s_86ac044a95d19d::t_89d872d6db52aa 17-19
+deep_causality_physics/src/quantities/fluid_dynamics/solenoidal_field.rs
+  s_86ac044a95d19d::t_b12fbba108be0e 74-89,92
+deep_causality_physics/src/theories/fluid_dynamics/mod.rs
+  s_86ac044a95d19d::t_09c5f3b73b35af 15,22
+deep_causality_physics/tests/theories/fluid_dynamics/dec/taylor_green_3d_tests.rs
+  s_86ac044a95d19d::t_1ba3c0bed0ccab 1-81
+deep_causality_physics/tests/theories/fluid_dynamics/dec/inviscid_invariants_tests.rs
+  s_86ac044a95d19d::t_edbd7626b83f2d 1-64,73-100,105
+  s_86ac044a95d19d::t_da5349b1640c18 65-72,101-104
+openspec/notes/cfd/cfd-roadmap.md
+  s_86ac044a95d19d::t_eee53134a020c6 67-81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "4b17e31ade622850a868d97d61ca827b293018b5",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
