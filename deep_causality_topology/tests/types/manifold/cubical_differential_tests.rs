@@ -8,7 +8,7 @@
 //!
 //! R4.5 generalised the four differential operators from `impl<R>
 //! Manifold<SimplicialComplex<R>, R>` to `impl<K, R> Manifold<K, R> where K:
-//! ChainComplex, K::Metric: HasHodgeStar<R, Complex = K>, R: RealField +
+//! ChainComplex, K::Metric: HasHodgeStar<R, Complex = K>, R: RealField + deep_causality_topology::MaybeParallel +
 //! FromPrimitive`. These tests verify the cubical backend (`LatticeComplex<D,
 //! R>` + `CubicalReggeGeometry<D, R>`) compiles and produces correct
 //! numerical output through the same generic call sites.

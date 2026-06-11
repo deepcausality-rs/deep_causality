@@ -49,6 +49,7 @@ pub mod graph_topology;
 pub mod has_hodge_star;
 pub mod hypergraph_topology;
 pub mod manifold_topology;
+pub mod maybe_parallel;
 pub mod mixed_graph_topology;
 pub mod neighborhood;
 pub mod simplicial_topology;

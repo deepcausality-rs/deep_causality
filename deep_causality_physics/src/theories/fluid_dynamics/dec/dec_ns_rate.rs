@@ -44,22 +44,17 @@ use crate::theories::fluid_dynamics::dec::DecNsScalar;
 /// Hodge–de Rham Laplacian satisfies `Δ_dR = −∇²`, so the physical
 /// diffusion `+ν∇²u` enters as `−ν Δ_dR u♭`.
 ///
-/// Each evaluation assembles a scratch manifold carrying the state in its
-/// grade-1 slice (the topology operators read the manifold's own data).
-/// The lattice clone resets its lazy coboundary cache, so the operators
-/// rebuild their sparse matrices per evaluation — a constant-factor cost
-/// the projection CG dominates, accepted for the prototype and logged as
-/// performance follow-up territory.
+/// Each evaluation applies the operators directly on the marching field
+/// through the topology crate's `_of` variants — no scratch manifold and
+/// no data-slab copy per stage; the memoized sparse matrices are shared
+/// through the borrowed manifold.
 #[derive(Debug)]
 pub struct DecNsRate<'m, const D: usize, R: RealField> {
     manifold: &'m Manifold<LatticeComplex<D, R>, R>,
     nu: R,
     body_force: Option<CausalTensor<R>>,
-    /// Cell counts cached at construction: vertex count, edge count, and
-    /// the total cell count of the full graded slab.
-    n0: usize,
+    /// Edge count cached at construction (the marching state's length).
     n1: usize,
-    total: usize,
 }
 
 impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
@@ -101,9 +96,7 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         }
 
         let complex = manifold.complex();
-        let n0 = complex.num_cells(0);
         let n1 = complex.num_cells(1);
-        let total: usize = (0..=D).map(|g| complex.num_cells(g)).sum();
 
         let body_force = match body_force {
             Some(g) => {
@@ -123,9 +116,7 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             manifold,
             nu,
             body_force,
-            n0,
             n1,
-            total,
         })
     }
 
@@ -189,25 +180,12 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             "marching state length is invariant under Add/Mul and validated at seeding"
         );
 
-        // Scratch manifold carrying u in its grade-1 slice: the topology
-        // operators (d, Δ) read the manifold's own data.
-        let mut slab = vec![R::zero(); self.total];
-        slab[self.n0..self.n0 + self.n1].copy_from_slice(u.as_tensor().as_slice());
-        let data = CausalTensor::new(slab, vec![self.total])
-            // Coverage exemption: a 1-D tensor of the validated slab length
-            // cannot fail to allocate.
-            .expect("1-D tensor allocation cannot fail");
-        let metric = self
-            .manifold
-            .metric()
-            // Coverage exemption: metric presence is validated at construction.
-            .expect("metric presence validated at construction")
-            .clone();
-        let m_u =
-            Manifold::from_cubical_with_metric(self.manifold.complex().clone(), data, metric, 0);
+        // The operators evaluate directly on the marching field through
+        // the `_of` variants — no scratch manifold, no data-slab copy.
+        let u_slice = u.as_tensor().as_slice();
 
         // ω = d u♭ (grade-2), then the convective contraction i_u ω.
-        let du = m_u.exterior_derivative(1);
+        let du = self.manifold.exterior_derivative_of(u_slice, 1);
         let conv = self
             .manifold
             .interior_product(u.as_tensor(), &du, 2)
@@ -216,7 +194,7 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             .expect("interior_product preconditions validated at construction");
 
         // Δ_dR u♭ (grade-1), with the pinned sign: −ν Δ_dR realizes +ν∇².
-        let lap = m_u.laplacian(1);
+        let lap = self.manifold.laplacian_of(u_slice, 1);
 
         let conv_s = conv.as_slice();
         let lap_s = lap.as_slice();

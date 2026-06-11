@@ -31,6 +31,10 @@ alloc = []
 # Disabled by default to use native Rust prng instead.
 # Also enables Lund string fragmentation for QCD hadronization.
 os-random = ["deep_causality_rand/os-random"] # required for lund hadronization
+# Enables parallel execution of the DEC operator loops underneath the
+# Navier-Stokes solver (wedge, interior product, de Rham, sharp) by
+# forwarding to the topology crate's Rayon feature. Disabled by default.
+parallel = ["deep_causality_topology/parallel"]
 
 [dependencies.deep_causality_calculus]
 path = "../deep_causality_calculus"
@@ -72,6 +76,13 @@ version = "0.4"
 [dependencies.deep_causality_topology]
 path = "../deep_causality_topology"
 version = "0.6"
+
+[dev-dependencies]
+criterion = { version = "0.8" }
+
+[[bench]]
+name = "dec_solver_benchmark"
+harness = false
 
 [lints]
 workspace = true

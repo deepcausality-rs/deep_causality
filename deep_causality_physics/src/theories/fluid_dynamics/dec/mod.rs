@@ -40,13 +40,23 @@
 
 use core::fmt::{Debug, Display};
 use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_topology::MaybeParallel;
 
 /// The composed bound set of the DEC solver stack: the topology operators
 /// require `RealField + Default + PartialEq + Debug (+ FromPrimitive)`,
-/// the typed-form constructors add `Display`, and `Rk4`'s `Scalar` is
-/// satisfied by `RealField + FromPrimitive` through the blanket impl.
-pub trait DecNsScalar: RealField + FromPrimitive + Default + PartialEq + Debug + Display {}
-impl<R: RealField + FromPrimitive + Default + PartialEq + Debug + Display> DecNsScalar for R {}
+/// the typed-form constructors add `Display`, `Rk4`'s `Scalar` is
+/// satisfied by `RealField + FromPrimitive` through the blanket impl, and
+/// `MaybeParallel` carries the topology crate's `parallel`-feature
+/// thread-safety requirement (vacuous on serial builds; `Send + Sync`
+/// under `--features parallel` — every workspace scalar qualifies).
+pub trait DecNsScalar:
+    RealField + FromPrimitive + Default + PartialEq + Debug + Display + MaybeParallel
+{
+}
+impl<R: RealField + FromPrimitive + Default + PartialEq + Debug + Display + MaybeParallel>
+    DecNsScalar for R
+{
+}
 
 pub(crate) mod dec_ns_rate;
 pub(crate) mod dec_ns_solver;

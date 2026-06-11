@@ -9,6 +9,13 @@ publish = false
 [lib]
 path = "no_lib.rs"
 
+[features]
+# Enables Rayon-parallel execution of the DEC operator loops underneath
+# the Navier-Stokes solver (dec_taylor_green_re1600). Disabled by default:
+#   cargo run --release -p avionics_examples --features parallel \
+#       --example dec_taylor_green_re1600
+parallel = ["deep_causality_physics/parallel"]
+
 [[example]]
 name = "cfd_taylor_green"
 path = "cfd_taylor_green/main.rs"

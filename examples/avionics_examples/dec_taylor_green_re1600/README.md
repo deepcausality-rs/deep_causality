@@ -1,7 +1,6 @@
 # DEC-Native 3D Taylor–Green at Re 1600
 
-The flagship benchmark of the higher-order CFD workshops, run on the DeepCausality DEC solver: the
-smooth 3D Taylor–Green vortex transitions toward turbulence, and the kinetic-energy
+The smooth 3D Taylor–Green vortex transitions toward turbulence, and the kinetic-energy
 dissipation-rate curve `−dE*/dt*` against the published DNS reference data is the standard
 structure-preservation test a new solver is judged by.
 
@@ -58,6 +57,11 @@ step, all at the working precision.
 
 ```sh
 cargo run --release -p avionics_examples --example dec_taylor_green_re1600 [grid] [t_star_max]
+
+# Multi-core: enable the Rayon feature (forwarded through physics to the
+# topology crate's DEC operator loops and CG matvecs):
+cargo run --release -p avionics_examples --features parallel \
+    --example dec_taylor_green_re1600 [grid] [t_star_max]
 ```
 
 `grid` defaults to 16 — a smoke-scale run that completes in seconds. The reporting resolutions
@@ -101,6 +105,48 @@ Exact `f64` specifications (`Re`, the CFL step, π) lift once into `R` through t
 through `FromPrimitive` rather than `From<f64>` so the same call sites serve `f32`, `f64`, and
 `Float106` alike (std has no `f32: From<f64>`).
 
+## Performance
+
+The solver is tracked by the criterion benchmark in `deep_causality_physics`
+(`benches/dec_solver_benchmark.rs`), measuring the rate assembly, one Leray
+projection, and the full projected step on this example's workload at f64:
+
+```sh
+cargo bench -p deep_causality_physics --bench dec_solver_benchmark
+cargo bench -p deep_causality_physics --bench dec_solver_benchmark --features parallel
+```
+
+Final numbers (Apple Silicon, release):
+
+| Grid | Component | Sequential | Parallel | Speedup |
+| --- | --- | ---: | ---: | ---: |
+| 16³ | rate assembly (`−i_u ω − νΔu♭`) | 3.7 ms | 2.3 ms | 1.6× |
+| 16³ | Leray projection (one CG solve) | 0.76 ms | 0.81 ms | ≈1× |
+| 16³ | full step (4 projected stages + CFL) | 36 ms | 32 ms | 1.1× |
+| 32³ | rate assembly | 29.4 ms | 11.7 ms | 2.5× |
+| 32³ | Leray projection | 5.9 ms | 6.4 ms | ≈1× |
+| 32³ | full step | 429 ms | 388 ms | 1.1× |
+
+How to read the table:
+
+- **The per-cell operator loops parallelize well.** Wedge, interior product,
+  de Rham, and sharp fan out over Rayon and carry the rate assembly to 2.5×
+  at 32³, growing with the grid.
+- **The CG solves are the step's floor and are memory-bound.** A CSR matvec
+  row is a handful of multiply-adds, so parallel dispatch per CG iteration
+  only pays at large systems; the library thresholds it to engage at
+  64³-scale grids and above. At the 64–128³ reporting resolutions — where
+  the runtime actually hurts — both the operator loops and the matvecs run
+  parallel. Below the thresholds the parallel build falls back to serial
+  loops, so small runs pay no fork-join overhead.
+- These numbers already include the serial-side optimizations the benchmark
+  drove (memoized boundary/coboundary matrices, cache-preserving lattice
+  clones, arithmetic cell indexing in place of per-call hash maps, and
+  `_of` operator variants that eliminated every per-evaluation scratch
+  manifold): the 32³ step measured 850 ms when first benchmarked, 388 ms
+  now. The remaining cost is genuine unpreconditioned CG arithmetic — a
+  preconditioner is the designated next performance follow-up.
+
 ## Notes for the curious
 
 - The projector sits *inside* the `Rk4` stages, not after them. The post-step (Chorin) placement
@@ -113,3 +159,7 @@ through `FromPrimitive` rather than `From<f64>` so the same call sites serve `f3
 - The opt-in pressure diagnostic (`solver.pressure_diagnostic`) recovers both the Bernoulli and
   static pressure 0-forms from one extra CG solve — not used here, but one call away for a
   pressure-field visualization.
+- The solver's performance is tracked by `deep_causality_physics`'s
+  `dec_solver_benchmark` (criterion): `cargo bench -p deep_causality_physics
+  --bench dec_solver_benchmark [--features parallel]` measures the rate
+  assembly, one Leray projection, and the full step at 16³ and 32³.

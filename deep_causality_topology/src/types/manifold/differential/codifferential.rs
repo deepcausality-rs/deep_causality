@@ -4,6 +4,7 @@
  */
 use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
+use crate::traits::maybe_parallel::MaybeParallel;
 use crate::types::manifold::Manifold;
 use crate::types::manifold::differential::utils_differential;
 use deep_causality_num::{FromPrimitive, RealField};
@@ -13,7 +14,7 @@ impl<K, R> Manifold<K, R>
 where
     K: ChainComplex,
     K::Metric: HasHodgeStar<R, Complex = K>,
-    R: RealField + FromPrimitive + Default + PartialEq,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq,
 {
     /// Computes the codifferential `δ` (delta) of a k-form.
     ///
@@ -37,6 +38,16 @@ where
     /// the manifold via `Manifold::with_metric(...)` (or the cubical
     /// equivalent) before calling Hodge-dependent differential operators.
     pub fn codifferential(&self, k: usize) -> CausalTensor<R> {
+        self.codifferential_of(&self.get_k_form_data(k), k)
+    }
+
+    /// [`Self::codifferential`] evaluated on a caller-supplied k-form
+    /// instead of the manifold's stored data — the allocation-free path
+    /// for hot loops (no temporary manifold, no data-slab copy).
+    ///
+    /// # Panics
+    /// As [`Self::codifferential`].
+    pub fn codifferential_of(&self, field: &[R], k: usize) -> CausalTensor<R> {
         if k == 0 {
             return CausalTensor::new(vec![], vec![0]).unwrap();
         }
@@ -44,8 +55,6 @@ where
         let metric = self.metric.as_ref().expect(
             "Manifold::codifferential requires a metric; construct with `with_metric(...)`",
         );
-
-        let k_form_data = self.get_k_form_data(k);
         // Hodge ⋆ availability is validated at `Manifold::with_metric` construction,
         // so the lazy build has already succeeded for any non-degenerate input by
         // the time we reach the differential operators. The `.expect` is therefore
@@ -63,7 +72,7 @@ where
         let boundary_k_cow = self.complex.boundary_matrix(k);
         let boundary_k: &deep_causality_sparse::CsrMatrix<i8> = &boundary_k_cow;
 
-        let weighted_form = utils_differential::apply_metric_operator(mass_k, &k_form_data);
+        let weighted_form = utils_differential::apply_metric_operator(mass_k, field);
         let integrated_form = utils_differential::apply_operator(boundary_k, &weighted_form);
 
         let prev_dim_size = self.complex.num_cells(k - 1);

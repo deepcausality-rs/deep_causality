@@ -26,7 +26,13 @@ fn unit_manifold<const D: usize, R>(
     lattice: LatticeComplex<D, R>,
 ) -> Manifold<LatticeComplex<D, R>, R>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let total: usize = (0..=D).map(|k| lattice.num_cells(k)).sum();
     let data = CausalTensor::new(vec![R::zero(); total], vec![total]).unwrap();
@@ -108,6 +114,7 @@ fn de_rham_of_linear_gradient_equals_d_of_sampled_potential() {
 fn assert_constant_round_trip<R>(tol: R)
 where
     R: RealField
+        + deep_causality_topology::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq

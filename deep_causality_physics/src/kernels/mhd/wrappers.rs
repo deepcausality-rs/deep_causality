@@ -10,6 +10,7 @@ use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::MaybeParallel;
 use deep_causality_topology::SimplicialManifold;
 
 // ============================================================================
@@ -22,7 +23,7 @@ pub fn alfven_speed<R>(
     mu0: R,
 ) -> PropagatingEffect<AlfvenSpeed<R>>
 where
-    R: RealField + Debug,
+    R: RealField + MaybeParallel + Debug,
 {
     match ideal::alfven_speed_kernel(b, rho, mu0) {
         Ok(v) => PropagatingEffect::pure(v),
@@ -32,7 +33,7 @@ where
 
 pub fn magnetic_pressure<R>(b: &PhysicalField<R>, mu0: R) -> PropagatingEffect<MagneticPressure<R>>
 where
-    R: RealField + FromPrimitive + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
 {
     match ideal::magnetic_pressure_kernel(b, mu0) {
         Ok(p) => PropagatingEffect::pure(p),
@@ -45,7 +46,7 @@ pub fn ideal_induction<R>(
     b: &SimplicialManifold<R, R>,
 ) -> PropagatingEffect<CausalTensor<R>>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug,
 {
     match ideal::ideal_induction_kernel(v, b) {
         Ok(t) => PropagatingEffect::pure(t),
@@ -62,7 +63,7 @@ pub fn resistive_diffusion<R>(
     eta: Diffusivity<R>,
 ) -> PropagatingEffect<CausalTensor<R>>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug,
 {
     match resistive::resistive_diffusion_kernel(b, eta) {
         Ok(t) => PropagatingEffect::pure(t),
@@ -72,7 +73,7 @@ where
 
 pub fn magnetic_reconnection_rate<R>(va: AlfvenSpeed<R>, s: R) -> PropagatingEffect<Speed<R>>
 where
-    R: RealField + Debug,
+    R: RealField + MaybeParallel + Debug,
 {
     match resistive::magnetic_reconnection_rate_kernel(va, s) {
         Ok(v) => PropagatingEffect::pure(v),
@@ -94,7 +95,7 @@ pub fn relativistic_current<R, M>(
     spacetime_metric: &M,
 ) -> PropagatingEffect<CausalTensor<R>>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug,
     M: LorentzianMetric,
 {
     match grmhd::relativistic_current_kernel(em_manifold, spacetime_metric) {
@@ -108,7 +109,7 @@ pub fn energy_momentum_tensor_em<R>(
     metric: &CausalTensor<R>,
 ) -> PropagatingEffect<CausalTensor<R>>
 where
-    R: RealField + FromPrimitive + core::iter::Sum + Default + PartialOrd + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + core::iter::Sum + Default + PartialOrd + Debug,
 {
     match grmhd::energy_momentum_tensor_em_kernel(em, metric) {
         Ok(t) => PropagatingEffect::pure(t),
@@ -122,7 +123,7 @@ where
 
 pub fn debye_length<R>(t: Temperature<R>, n: R, eps0: R, e: R) -> PropagatingEffect<DebyeLength<R>>
 where
-    R: RealField + FromPrimitive + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
 {
     match plasma::debye_length_kernel(t, n, eps0, e) {
         Ok(l) => PropagatingEffect::pure(l),
@@ -137,7 +138,7 @@ pub fn larmor_radius<R>(
     b: &PhysicalField<R>,
 ) -> PropagatingEffect<LarmorRadius<R>>
 where
-    R: RealField + Debug,
+    R: RealField + MaybeParallel + Debug,
 {
     match plasma::larmor_radius_kernel(m, v, q, b) {
         Ok(r) => PropagatingEffect::pure(r),

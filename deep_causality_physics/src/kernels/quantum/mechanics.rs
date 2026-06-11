@@ -13,6 +13,7 @@ use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, Hi
 use deep_causality_num::DivisionAlgebra;
 use deep_causality_num::{Complex, FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::MaybeParallel;
 use deep_causality_topology::SimplicialManifold;
 
 pub type Operator<R> = HilbertState<R>;
@@ -24,7 +25,7 @@ pub fn klein_gordon_kernel<R>(
     mass: R,
 ) -> Result<CausalTensor<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug,
 {
     let laplacian = psi_manifold.laplacian(0);
 
@@ -84,7 +85,7 @@ pub fn born_probability_kernel<R>(
     basis: &HilbertState<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: RealField + FromPrimitive + core::iter::Sum,
+    R: RealField + MaybeParallel + FromPrimitive + core::iter::Sum,
 {
     if state.mv().metric() != basis.mv().metric() {
         return Err(PhysicsError::DimensionMismatch(format!(
@@ -122,7 +123,7 @@ pub fn expectation_value_kernel<R>(
     operator: &Operator<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: RealField + core::iter::Sum,
+    R: RealField + MaybeParallel + core::iter::Sum,
 {
     if state.mv().metric() != operator.mv().metric() {
         return Err(PhysicsError::DimensionMismatch(format!(
@@ -142,7 +143,7 @@ pub fn apply_gate_kernel<R>(
     gate: &Gate<R>,
 ) -> Result<HilbertState<R>, PhysicsError>
 where
-    R: RealField,
+    R: RealField + MaybeParallel,
 {
     if state.mv().metric() != gate.mv().metric() {
         return Err(PhysicsError::DimensionMismatch(format!(
@@ -173,7 +174,7 @@ pub fn commutator_kernel<R>(
     b: &Operator<R>,
 ) -> Result<HilbertState<R>, PhysicsError>
 where
-    R: RealField,
+    R: RealField + MaybeParallel,
 {
     let a_mv = a.mv();
     let b_mv = b.mv();
@@ -200,7 +201,7 @@ pub fn fidelity_kernel<R>(
     actual: &HilbertState<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: RealField + FromPrimitive + core::iter::Sum,
+    R: RealField + MaybeParallel + FromPrimitive + core::iter::Sum,
 {
     born_probability_kernel(actual, ideal)
 }
@@ -208,7 +209,7 @@ where
 /// Implements Haruna's Logical S-Gate.
 pub fn haruna_s_gate_kernel<R>(field: &CausalMultiVector<R>) -> Result<Operator<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive,
+    R: RealField + MaybeParallel + FromPrimitive,
 {
     let field_complex =
         CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, R::zero()));
@@ -219,7 +220,7 @@ where
 /// Implements Haruna's Logical Z-Gate.
 pub fn haruna_z_gate_kernel<R>(field: &CausalMultiVector<R>) -> Result<Operator<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive,
+    R: RealField + MaybeParallel + FromPrimitive,
 {
     let field_complex =
         CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, R::zero()));
@@ -230,7 +231,7 @@ where
 /// Implements Haruna's Logical X-Gate.
 pub fn haruna_x_gate_kernel<R>(field: &CausalMultiVector<R>) -> Result<Operator<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive,
+    R: RealField + MaybeParallel + FromPrimitive,
 {
     let field_complex =
         CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, R::zero()));
@@ -244,7 +245,7 @@ pub fn haruna_hadamard_gate_kernel<R>(
     field_b: &CausalMultiVector<R>,
 ) -> Result<Operator<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive,
+    R: RealField + MaybeParallel + FromPrimitive,
 {
     let a_complex = CausalMultiVectorWitness::fmap(field_a.clone(), |x| Complex::new(x, R::zero()));
     let b_complex = CausalMultiVectorWitness::fmap(field_b.clone(), |x| Complex::new(x, R::zero()));
@@ -267,7 +268,7 @@ pub fn haruna_cz_gate_kernel<R>(
     field_a2: &CausalMultiVector<R>,
 ) -> Result<Operator<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive,
+    R: RealField + MaybeParallel + FromPrimitive,
 {
     let a1_complex =
         CausalMultiVectorWitness::fmap(field_a1.clone(), |x| Complex::new(x, R::zero()));
@@ -289,7 +290,7 @@ where
 /// Implements Haruna's Logical T-Gate.
 pub fn haruna_t_gate_kernel<R>(field: &CausalMultiVector<R>) -> Result<Operator<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive,
+    R: RealField + MaybeParallel + FromPrimitive,
 {
     let field_complex =
         CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, R::zero()));

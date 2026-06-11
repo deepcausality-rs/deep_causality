@@ -44,7 +44,13 @@ where
 /// the precision's projection tolerance.
 fn assert_step_divergence_free<R>(tol: R)
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let n = 6usize;
     let manifold = unit_manifold::<R>(n);

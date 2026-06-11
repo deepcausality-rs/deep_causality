@@ -5,6 +5,7 @@
 
 use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
+use crate::traits::maybe_parallel::MaybeParallel;
 use crate::types::manifold::Manifold;
 
 use deep_causality_num::{FromPrimitive, RealField};
@@ -14,7 +15,7 @@ impl<K, R> Manifold<K, R>
 where
     K: ChainComplex + Clone,
     K::Metric: HasHodgeStar<R, Complex = K> + Clone,
-    R: RealField + FromPrimitive + Default + PartialEq + std::fmt::Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + std::fmt::Debug,
 {
     /// Computes the Hodge-Laplacian operator `Δ` on a k-form.
     ///
@@ -27,21 +28,32 @@ where
     /// the manifold via `Manifold::with_metric(...)` (or the cubical
     /// equivalent) before calling Hodge-dependent differential operators.
     pub fn laplacian(&self, k: usize) -> CausalTensor<R> {
+        self.laplacian_of(&self.get_k_form_data(k), k)
+    }
+
+    /// [`Self::laplacian`] evaluated on a caller-supplied k-form instead
+    /// of the manifold's stored data. Composes the `_of` variants of `d`
+    /// and `δ` directly, so — unlike the stored-data path used to — it
+    /// builds **no** temporary manifolds: this is the operator the CG
+    /// solves apply once per iteration and the DEC solver's rate evaluates
+    /// once per RK4 stage.
+    ///
+    /// # Panics
+    /// As [`Self::laplacian`].
+    pub fn laplacian_of(&self, field: &[R], k: usize) -> CausalTensor<R> {
         let n = self.complex.max_dim();
         let current_dim_size = self.complex.num_cells(k);
 
         let term_a = if k > 0 {
-            let delta = self.codifferential(k);
-            let temp_manifold = self.create_temp_manifold(k - 1, delta);
-            temp_manifold.exterior_derivative(k - 1)
+            let delta = self.codifferential_of(field, k);
+            self.exterior_derivative_of(delta.as_slice(), k - 1)
         } else {
             CausalTensor::new(vec![R::zero(); current_dim_size], vec![current_dim_size]).unwrap()
         };
 
         let term_b = if k < n {
-            let d = self.exterior_derivative(k);
-            let temp_manifold = self.create_temp_manifold(k + 1, d);
-            temp_manifold.codifferential(k + 1)
+            let d = self.exterior_derivative_of(field, k);
+            self.codifferential_of(d.as_slice(), k + 1)
         } else {
             CausalTensor::new(vec![R::zero(); current_dim_size], vec![current_dim_size]).unwrap()
         };

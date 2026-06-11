@@ -92,7 +92,13 @@ fn tg_static_pressure_converges_to_analytic_field() {
 /// is `b − k`, so `b − (b − k)` re-rounds), per precision.
 fn assert_convention_identity<R>(tol: R)
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let n = 6usize;
     let manifold = unit_manifold::<R>(n);

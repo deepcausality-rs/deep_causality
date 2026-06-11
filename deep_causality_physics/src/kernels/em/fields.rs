@@ -11,6 +11,7 @@ use crate::PhysicsError;
 use core::fmt::Debug;
 use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::MaybeParallel;
 use deep_causality_topology::SimplicialManifold;
 
 /// Calculates the Maxwell gradient (Electromagnetic Field Tensor).
@@ -27,7 +28,7 @@ pub fn maxwell_gradient_kernel<R>(
     potential_manifold: &SimplicialManifold<R, R>,
 ) -> Result<CausalTensor<R>, PhysicsError>
 where
-    R: RealField + Default + PartialEq + Debug,
+    R: RealField + MaybeParallel + Default + PartialEq + Debug,
 {
     let f_tensor = potential_manifold.exterior_derivative(1);
     if f_tensor.is_empty() || f_tensor.shape().is_empty() {
@@ -51,7 +52,7 @@ pub fn lorenz_gauge_kernel<R>(
     potential_manifold: &SimplicialManifold<R, R>,
 ) -> Result<CausalTensor<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive + Default + PartialEq,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq,
 {
     let divergence = potential_manifold.codifferential(1);
     Ok(divergence)
@@ -73,7 +74,7 @@ pub fn poynting_vector_kernel<R>(
     b: &CausalMultiVector<R>,
 ) -> Result<CausalMultiVector<R>, PhysicsError>
 where
-    R: RealField,
+    R: RealField + MaybeParallel,
 {
     if e.metric() != b.metric() {
         return Err(PhysicsError::DimensionMismatch(format!(
@@ -112,7 +113,7 @@ pub fn magnetic_helicity_density_kernel<R>(
     field: &CausalMultiVector<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: RealField,
+    R: RealField + MaybeParallel,
 {
     if potential.metric() != field.metric() {
         return Err(PhysicsError::DimensionMismatch(format!(
@@ -145,7 +146,7 @@ pub fn proca_equation_kernel<R>(
     mass: R,
 ) -> Result<CausalTensor<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug,
 {
     // 1. Compute delta F (codifferential of 2-form)
     let delta_f = field_manifold.codifferential(2);
@@ -230,7 +231,7 @@ pub fn energy_density_kernel<R>(
     b: &CausalMultiVector<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: RealField + FromPrimitive,
+    R: RealField + MaybeParallel + FromPrimitive,
 {
     if e.metric() != b.metric() {
         return Err(PhysicsError::DimensionMismatch(format!(
@@ -283,7 +284,7 @@ pub fn lagrangian_density_kernel<R>(
     b: &CausalMultiVector<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: RealField + FromPrimitive,
+    R: RealField + MaybeParallel + FromPrimitive,
 {
     if e.metric() != b.metric() {
         return Err(PhysicsError::DimensionMismatch(format!(

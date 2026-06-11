@@ -13,7 +13,6 @@
 //! `enstrophy_density_kernel`, …) at the crate root.
 
 use alloc::format;
-use alloc::vec;
 
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, LatticeComplex, Manifold};
@@ -21,42 +20,27 @@ use deep_causality_topology::{ChainComplex, LatticeComplex, Manifold};
 use crate::error::physics_error::PhysicsError;
 use crate::theories::fluid_dynamics::dec::DecNsScalar;
 
-/// Builds a scratch manifold carrying `field` in its grade-`k` slice, so
-/// the data-reading topology operators (`d`, `δ`, `⋆`) can evaluate it.
-fn scratch_manifold<const D: usize, R: DecNsScalar>(
+/// Validates a grade-`k` field against the manifold (length and metric
+/// presence) before the `_of` operators evaluate it directly — no scratch
+/// manifold and no data-slab copy.
+fn validate_field<const D: usize, R: DecNsScalar>(
     manifold: &Manifold<LatticeComplex<D, R>, R>,
     field: &[R],
     k: usize,
-) -> Result<Manifold<LatticeComplex<D, R>, R>, PhysicsError> {
-    let complex = manifold.complex();
-    let nk = complex.num_cells(k);
+) -> Result<(), PhysicsError> {
+    let nk = manifold.complex().num_cells(k);
     if field.len() != nk {
         return Err(PhysicsError::DimensionMismatch(format!(
             "dec diagnostics: expected {nk} grade-{k} coefficients, got {}",
             field.len()
         )));
     }
-    let metric = manifold
-        .metric()
-        .ok_or_else(|| {
-            PhysicsError::TopologyError("dec diagnostics require a metric-bearing manifold".into())
-        })?
-        .clone();
-
-    let offset: usize = (0..k).map(|g| complex.num_cells(g)).sum();
-    let total: usize = (0..=D).map(|g| complex.num_cells(g)).sum();
-    let mut slab = vec![R::zero(); total];
-    slab[offset..offset + nk].copy_from_slice(field);
-    let data = CausalTensor::new(slab, vec![total])
-        // Coverage exemption: a 1-D tensor of the computed slab length
-        // cannot fail to allocate.
-        .expect("1-D tensor allocation cannot fail");
-    Ok(Manifold::from_cubical_with_metric(
-        complex.clone(),
-        data,
-        metric,
-        0,
-    ))
+    if manifold.metric().is_none() {
+        return Err(PhysicsError::TopologyError(
+            "dec diagnostics require a metric-bearing manifold".into(),
+        ));
+    }
+    Ok(())
 }
 
 /// Kinetic energy `E = ½ Σ_e u_e (⋆u)_e` — the discrete `½ ∫ u♭ ∧ ⋆u♭`
@@ -69,8 +53,8 @@ pub fn dec_kinetic_energy<const D: usize, R: DecNsScalar>(
     manifold: &Manifold<LatticeComplex<D, R>, R>,
     edge_form: &CausalTensor<R>,
 ) -> Result<R, PhysicsError> {
-    let m_u = scratch_manifold(manifold, edge_form.as_slice(), 1)?;
-    let star_u = m_u.hodge_star(1);
+    validate_field(manifold, edge_form.as_slice(), 1)?;
+    let star_u = manifold.hodge_star_of(edge_form.as_slice(), 1);
     let half = R::from_f64(0.5)
         // Coverage exemption: 0.5 lifts into every real field.
         .expect("0.5 lifts into R");
@@ -90,10 +74,9 @@ pub fn dec_enstrophy<const D: usize, R: DecNsScalar>(
     manifold: &Manifold<LatticeComplex<D, R>, R>,
     edge_form: &CausalTensor<R>,
 ) -> Result<R, PhysicsError> {
-    let m_u = scratch_manifold(manifold, edge_form.as_slice(), 1)?;
-    let du = m_u.exterior_derivative(1);
-    let m_w = scratch_manifold(manifold, du.as_slice(), 2)?;
-    let star_w = m_w.hodge_star(2);
+    validate_field(manifold, edge_form.as_slice(), 1)?;
+    let du = manifold.exterior_derivative_of(edge_form.as_slice(), 1);
+    let star_w = manifold.hodge_star_of(du.as_slice(), 2);
     let half = R::from_f64(0.5)
         // Coverage exemption: 0.5 lifts into every real field.
         .expect("0.5 lifts into R");
@@ -122,8 +105,8 @@ pub fn dec_helicity<const D: usize, R: DecNsScalar>(
             "helicity is a 3D invariant (u♭ ∧ du♭ is a 3-form); got D = {D}"
         )));
     }
-    let m_u = scratch_manifold(manifold, edge_form.as_slice(), 1)?;
-    let du = m_u.exterior_derivative(1);
+    validate_field(manifold, edge_form.as_slice(), 1)?;
+    let du = manifold.exterior_derivative_of(edge_form.as_slice(), 1);
     let h = manifold
         .wedge(edge_form, 1, &du, 2)
         .map_err(|e| PhysicsError::TopologyError(format!("helicity wedge failed: {e}")))?;
@@ -163,8 +146,8 @@ pub fn dec_divergence_residual<const D: usize, R: DecNsScalar>(
     manifold: &Manifold<LatticeComplex<D, R>, R>,
     edge_form: &CausalTensor<R>,
 ) -> Result<R, PhysicsError> {
-    let m_u = scratch_manifold(manifold, edge_form.as_slice(), 1)?;
-    let div = m_u.codifferential(1);
+    validate_field(manifold, edge_form.as_slice(), 1)?;
+    let div = manifold.codifferential_of(edge_form.as_slice(), 1);
     Ok(div.as_slice().iter().fold(
         R::zero(),
         |acc, x| if x.abs() > acc { x.abs() } else { acc },

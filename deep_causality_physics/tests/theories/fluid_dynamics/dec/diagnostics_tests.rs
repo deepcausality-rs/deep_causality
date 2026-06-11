@@ -37,7 +37,13 @@ fn unit_manifold3(n: usize) -> Manifold<LatticeComplex<3, f64>, f64> {
 /// The sampled 2D Taylor–Green edge form at precision `R`.
 fn tg_edge_form<R>(manifold: &Manifold<LatticeComplex<2, R>, R>, n: usize) -> CausalTensor<R>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let k = 2.0 * std::f64::consts::PI / (n as f64);
     let n0 = manifold.complex().num_cells(0);
@@ -74,7 +80,13 @@ fn tg_energy_converges_to_analytic_value() {
 fn energy_at_three_precisions() {
     fn check<R>()
     where
-        R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+        R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
     {
         let manifold = unit_manifold2::<R>(8);
         let u = tg_edge_form(&manifold, 8);

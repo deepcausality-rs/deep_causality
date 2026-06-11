@@ -35,7 +35,10 @@
 //! Reference: Hirani, *Discrete Exterior Calculus*, Caltech 2003 (primal–primal
 //! wedge); the cubical cup product is the axis-aligned specialization.
 
-use std::collections::HashMap;
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
+
+use crate::traits::maybe_parallel::MaybeParallel;
 
 use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
@@ -47,7 +50,7 @@ use crate::types::manifold::Manifold;
 
 impl<const D: usize, R> Manifold<LatticeComplex<D, R>, R>
 where
-    R: RealField + Default + PartialEq + core::fmt::Debug,
+    R: RealField + MaybeParallel + Default + PartialEq + core::fmt::Debug,
 {
     /// Computes the discrete wedge product `α ∧ β` of a k-form and an l-form,
     /// producing a (k+l)-form on this manifold's lattice complex.
@@ -100,27 +103,8 @@ where
             )));
         }
 
-        let idx_k = cell_index_map(complex, k);
-        let idx_l = cell_index_map(complex, l);
-
-        let ab = cup(
-            complex,
-            alpha.as_slice(),
-            k,
-            beta.as_slice(),
-            l,
-            &idx_k,
-            &idx_l,
-        );
-        let ba = cup(
-            complex,
-            beta.as_slice(),
-            l,
-            alpha.as_slice(),
-            k,
-            &idx_l,
-            &idx_k,
-        );
+        let ab = cup(complex, alpha.as_slice(), k, beta.as_slice(), l);
+        let ba = cup(complex, beta.as_slice(), l, alpha.as_slice(), k);
 
         // α ∧ β = ½ (α ∪ β + (−1)^{kl} β ∪ α)
         let two = R::one() + R::one();
@@ -140,20 +124,6 @@ where
     }
 }
 
-/// Canonical cell → flat-index map for grade `k`, matching the
-/// `iter_cells(k)` ordering used by every cochain in the crate (the same
-/// ordering `boundary_matrix` builds its row map from).
-fn cell_index_map<const D: usize, R: RealField>(
-    complex: &LatticeComplex<D, R>,
-    k: usize,
-) -> HashMap<LatticeCell<D>, usize> {
-    complex
-        .iter_cells(k)
-        .enumerate()
-        .map(|(i, c)| (c, i))
-        .collect()
-}
-
 /// The raw cubical cup product `(α ∪ β)` of a k-form and an l-form, as a
 /// (k+l)-cochain in canonical ordering. See the module-level doc for the
 /// formula and conventions.
@@ -163,85 +133,92 @@ fn cup<const D: usize, R>(
     k: usize,
     beta: &[R],
     _l: usize,
-    idx_k: &HashMap<LatticeCell<D>, usize>,
-    idx_l: &HashMap<LatticeCell<D>, usize>,
 ) -> Vec<R>
 where
-    R: RealField,
+    R: RealField + MaybeParallel,
 {
     let kl = k + _l;
     let shape = *complex.shape();
     let periodic = *complex.periodic();
 
-    complex
-        .iter_cells(kl)
-        .map(|q| {
-            // Active axes of Q in ascending order.
-            let axes: Vec<usize> = (0..D).filter(|i| q.orientation() & (1 << i) != 0).collect();
+    // The per-cell cup evaluation: read-only over the operand slices and
+    // index maps, so the output cells are independent — the loop fans out
+    // over Rayon under the `parallel` feature.
+    let per_cell = |q: LatticeCell<D>| {
+        // Active axes of Q in ascending order.
+        let axes: Vec<usize> = (0..D).filter(|i| q.orientation() & (1 << i) != 0).collect();
 
-            let mut acc = R::zero();
+        let mut acc = R::zero();
 
-            // Every |H| = k subset of the k+l active axes.
-            for subset in 0..(1u32 << kl) {
-                if subset.count_ones() as usize != k {
-                    continue;
-                }
-
-                // Shuffle sign ρ(H, T): inversions between H and T bit
-                // positions. Axes are ascending, so axis order == bit order.
-                let mut inversions = 0usize;
-                for i in 0..kl {
-                    if subset & (1 << i) != 0 {
-                        for j in 0..i {
-                            if subset & (1 << j) == 0 {
-                                inversions += 1;
-                            }
-                        }
-                    }
-                }
-
-                let mut h_mask = 0u32;
-                for (i, &axis) in axes.iter().enumerate() {
-                    if subset & (1 << i) != 0 {
-                        h_mask |= 1 << axis;
-                    }
-                }
-                let t_mask = q.orientation() & !h_mask;
-
-                // Front face: spanned by H at the base corner.
-                let front = LatticeCell::new(*q.position(), h_mask);
-
-                // Back face: spanned by T at the corner shifted by one along
-                // every H axis, wrapped on periodic axes. On open lattices the
-                // shifted position is always in range because Q itself exists.
-                let mut back_pos = *q.position();
-                for (i, &axis) in axes.iter().enumerate() {
-                    if subset & (1 << i) != 0 {
-                        back_pos[axis] += 1;
-                        if periodic[axis] && back_pos[axis] >= shape[axis] {
-                            back_pos[axis] -= shape[axis];
-                        }
-                    }
-                }
-                let back = LatticeCell::new(back_pos, t_mask);
-
-                let a = alpha[*idx_k
-                    .get(&front)
-                    .expect("front face of an existing cell is always a valid lattice cell")];
-
-                let b = beta[*idx_l
-                    .get(&back)
-                    .expect("back face of an existing cell is always a valid lattice cell")];
-
-                let term = a * b;
-                acc = if inversions % 2 == 1 {
-                    acc - term
-                } else {
-                    acc + term
-                };
+        // Every |H| = k subset of the k+l active axes.
+        for subset in 0..(1u32 << kl) {
+            if subset.count_ones() as usize != k {
+                continue;
             }
 
-            acc
-        })
-        .collect()
+            // Shuffle sign ρ(H, T): inversions between H and T bit
+            // positions. Axes are ascending, so axis order == bit order.
+            let mut inversions = 0usize;
+            for i in 0..kl {
+                if subset & (1 << i) != 0 {
+                    for j in 0..i {
+                        if subset & (1 << j) == 0 {
+                            inversions += 1;
+                        }
+                    }
+                }
+            }
+
+            let mut h_mask = 0u32;
+            for (i, &axis) in axes.iter().enumerate() {
+                if subset & (1 << i) != 0 {
+                    h_mask |= 1 << axis;
+                }
+            }
+            let t_mask = q.orientation() & !h_mask;
+
+            // Front face: spanned by H at the base corner.
+            let front = LatticeCell::new(*q.position(), h_mask);
+
+            // Back face: spanned by T at the corner shifted by one along
+            // every H axis, wrapped on periodic axes. On open lattices the
+            // shifted position is always in range because Q itself exists.
+            let mut back_pos = *q.position();
+            for (i, &axis) in axes.iter().enumerate() {
+                if subset & (1 << i) != 0 {
+                    back_pos[axis] += 1;
+                    if periodic[axis] && back_pos[axis] >= shape[axis] {
+                        back_pos[axis] -= shape[axis];
+                    }
+                }
+            }
+            let back = LatticeCell::new(back_pos, t_mask);
+
+            let a = alpha[complex
+                .cell_index(&front)
+                .expect("front face of an existing cell is always a valid lattice cell")];
+
+            let b = beta[complex
+                .cell_index(&back)
+                .expect("back face of an existing cell is always a valid lattice cell")];
+
+            let term = a * b;
+            acc = if inversions % 2 == 1 {
+                acc - term
+            } else {
+                acc + term
+            };
+        }
+
+        acc
+    };
+
+    // Per-cell work is a subset enumeration (2^(k+l) terms), so the
+    // profitable cutoff sits well below the matvec one.
+    #[cfg(feature = "parallel")]
+    if complex.num_cells(kl) >= 1 << 12 {
+        let cells: Vec<LatticeCell<D>> = complex.iter_cells(kl).collect();
+        return cells.into_par_iter().map(per_cell).collect();
+    }
+    complex.iter_cells(kl).map(per_cell).collect()
 }

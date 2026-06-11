@@ -34,12 +34,16 @@ use deep_causality_tensor::CausalTensor;
 
 use crate::errors::topology_error::TopologyError;
 use crate::traits::chain_complex::ChainComplex;
+use crate::traits::maybe_parallel::MaybeParallel;
+
 use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
 use crate::types::manifold::Manifold;
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
 
 impl<const D: usize, R> Manifold<LatticeComplex<D, R>, R>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + core::fmt::Debug,
 {
     /// De Rham map (♭): vertex-sampled vector field → edge 1-form, by the
     /// trapezoid-rule line integral along each edge. See the module doc for
@@ -72,29 +76,44 @@ where
             )
         })?;
 
-        let vertex_index = vertex_index_map(complex);
         let shape = *complex.shape();
         let periodic = *complex.periodic();
         let vals = vertex_vectors.as_slice();
         let two = R::one() + R::one();
 
-        let out: Vec<R> = complex
-            .iter_cells(1)
-            .map(|edge| {
-                let axis = edge.orientation().trailing_zeros() as usize;
-                let low = *edge.position();
-                let mut high = low;
-                high[axis] += 1;
-                if periodic[axis] && high[axis] >= shape[axis] {
-                    high[axis] -= shape[axis];
-                }
+        // Per-edge trapezoid integral: read-only over the samples and the
+        // vertex map, so the edges are independent — the loop fans out over
+        // Rayon under the `parallel` feature.
+        let per_edge = |edge: LatticeCell<D>| {
+            let axis = edge.orientation().trailing_zeros() as usize;
+            let low = *edge.position();
+            let mut high = low;
+            high[axis] += 1;
+            if periodic[axis] && high[axis] >= shape[axis] {
+                high[axis] -= shape[axis];
+            }
 
-                let i_low = vertex_index[&low];
-                let i_high = vertex_index[&high];
-                let avg = (vals[i_low * D + axis] + vals[i_high * D + axis]) / two;
-                avg * metric.cell_volume(complex, &edge)
-            })
-            .collect();
+            let i_low = complex
+                .cell_index(&LatticeCell::new(low, 0))
+                .expect("edge endpoints are valid vertices");
+            let i_high = complex
+                .cell_index(&LatticeCell::new(high, 0))
+                .expect("edge endpoints are valid vertices");
+            let avg = (vals[i_low * D + axis] + vals[i_high * D + axis]) / two;
+            avg * metric.cell_volume(complex, &edge)
+        };
+
+        // Thresholded: tiny lattices lose more to fork-join overhead than
+        // the trapezoid arithmetic gains.
+        #[cfg(feature = "parallel")]
+        let out: Vec<R> = if complex.num_cells(1) >= 1 << 14 {
+            let edges: Vec<LatticeCell<D>> = complex.iter_cells(1).collect();
+            edges.into_par_iter().map(per_edge).collect()
+        } else {
+            complex.iter_cells(1).map(per_edge).collect()
+        };
+        #[cfg(not(feature = "parallel"))]
+        let out: Vec<R> = complex.iter_cells(1).map(per_edge).collect();
 
         let len = out.len();
         Ok(CausalTensor::new(out, vec![len])
@@ -154,23 +173,24 @@ where
             )
         })?;
 
-        let edge_index = edge_index_map(complex);
         let shape = *complex.shape();
         let periodic = *complex.periodic();
         let vals = edge_cochain.as_slice();
 
-        let mut out = vec![R::zero(); D * n0];
-
-        for (vi, vertex) in complex.iter_cells(0).enumerate() {
+        // Per-vertex averaging: read-only over the cochain and the edge
+        // map, so the vertices are independent — the loop fans out over
+        // Rayon under the `parallel` feature. Each vertex yields its D
+        // axis components in canonical `vertex * D + axis` order.
+        let per_vertex = |vertex: LatticeCell<D>| -> [R; D] {
             let v_pos = *vertex.position();
-            for axis in 0..D {
+            core::array::from_fn(|axis| {
                 let mut acc = R::zero();
                 let mut count = 0usize;
 
                 // Outgoing edge (v, axis): exists unless v sits on the high
                 // open boundary of that axis.
                 let outgoing = LatticeCell::new(v_pos, 1 << axis);
-                if let Some(&ei) = edge_index.get(&outgoing) {
+                if let Some(ei) = complex.cell_index(&outgoing) {
                     acc += vals[ei] / metric.cell_volume(complex, &outgoing);
                     count += 1;
                 }
@@ -191,7 +211,7 @@ where
                 };
                 if incoming_exists {
                     let incoming = LatticeCell::new(in_pos, 1 << axis);
-                    if let Some(&ei) = edge_index.get(&incoming) {
+                    if let Some(ei) = complex.cell_index(&incoming) {
                         acc += vals[ei] / metric.cell_volume(complex, &incoming);
                         count += 1;
                     }
@@ -200,33 +220,26 @@ where
                 if count > 0 {
                     let count_r = <R as FromPrimitive>::from_usize(count)
                         .expect("incident edge count lifts into RealField");
-                    out[vi * D + axis] = acc / count_r;
+                    acc / count_r
+                } else {
+                    R::zero()
                 }
-            }
-        }
+            })
+        };
 
+        #[cfg(feature = "parallel")]
+        let out: Vec<R> = {
+            let vertices: Vec<LatticeCell<D>> = complex.iter_cells(0).collect();
+            vertices.into_par_iter().flat_map_iter(per_vertex).collect()
+        };
+        #[cfg(not(feature = "parallel"))]
+        let out: Vec<R> = complex.iter_cells(0).flat_map(per_vertex).collect();
+
+        let _ = n0;
         let len = out.len();
         Ok(CausalTensor::new(out, vec![len])
             .expect("sharp output tensor allocation cannot fail for a 1-D shape"))
     }
 }
 
-fn vertex_index_map<const D: usize, R: RealField>(
-    complex: &LatticeComplex<D, R>,
-) -> std::collections::HashMap<[usize; D], usize> {
-    complex
-        .iter_cells(0)
-        .enumerate()
-        .map(|(i, c)| (*c.position(), i))
-        .collect()
-}
 
-fn edge_index_map<const D: usize, R: RealField>(
-    complex: &LatticeComplex<D, R>,
-) -> std::collections::HashMap<LatticeCell<D>, usize> {
-    complex
-        .iter_cells(1)
-        .enumerate()
-        .map(|(i, c)| (c, i))
-        .collect()
-}

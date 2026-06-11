@@ -21,6 +21,16 @@ path = "src/lib.rs"
 # Enabling os-random adds an indirect depdency on getrandom and libc.
 # Disabled by default to use native Rust prng instead.
 os-random = ["deep_causality_rand/os-random"]
+# Enables parallel execution of the per-cell DEC operator loops (wedge,
+# interior product, de Rham, sharp) by adding a dependency on Rayon.
+# Disabled by default. Under this feature the lattice DEC operators bound
+# their scalar by Send + Sync (via the MaybeParallel alias trait); every
+# scalar in the workspace satisfies it.
+parallel = ["dep:rayon"]
+
+[dependencies.rayon]
+version = "1.12"
+optional = true
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"

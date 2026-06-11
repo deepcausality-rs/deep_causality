@@ -481,6 +481,7 @@ dependencies = [
 name = "deep_causality_physics"
 version = "0.6.2"
 dependencies = [
+ "criterion",
  "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_haft",
@@ -534,6 +535,7 @@ dependencies = [
  "deep_causality_rand",
  "deep_causality_sparse",
  "deep_causality_tensor",
+ "rayon",
 ]
 
 [[package]]

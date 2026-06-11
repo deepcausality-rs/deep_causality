@@ -9,6 +9,7 @@ use core::fmt::Debug;
 use core::iter::Sum;
 use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::MaybeParallel;
 use deep_causality_topology::SimplicialManifold;
 
 /// Calculates the Heat Equation step: $\frac{\partial u}{\partial t} = \alpha \Delta u$.
@@ -27,7 +28,7 @@ pub fn heat_diffusion_kernel<R>(
     diffusivity: R,
 ) -> Result<CausalTensor<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug,
 {
     if diffusivity < R::zero() {
         return Err(PhysicsError::PhysicalInvariantBroken(
@@ -59,7 +60,7 @@ pub fn ideal_gas_law_kernel<R>(
     temp: Temperature<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: RealField,
+    R: RealField + MaybeParallel,
 {
     let p = pressure.value();
     let v = volume.value();
@@ -89,7 +90,7 @@ pub fn carnot_efficiency_kernel<R>(
     temp_cold: Temperature<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: RealField,
+    R: RealField + MaybeParallel,
 {
     let th = temp_hot.value();
     let tc = temp_cold.value();
@@ -124,7 +125,7 @@ pub fn boltzmann_factor_kernel<R>(
     temp: Temperature<R>,
 ) -> Result<Probability<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive,
+    R: RealField + MaybeParallel + FromPrimitive,
 {
     if temp.value() == R::zero() {
         return Err(PhysicsError::ZeroKelvinViolation());
@@ -151,7 +152,7 @@ where
 /// * `Result<f64, PhysicsError>` - Entropy in nats.
 pub fn shannon_entropy_kernel<R>(probs: &CausalTensor<R>) -> Result<R, PhysicsError>
 where
-    R: RealField + Sum,
+    R: RealField + MaybeParallel + Sum,
 {
     let data = probs.as_slice();
 
@@ -189,7 +190,7 @@ pub fn heat_capacity_kernel<R>(
     diff_temp: Temperature<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: RealField,
+    R: RealField + MaybeParallel,
 {
     if diff_temp.value() == R::zero() {
         return Err(PhysicsError::PhysicalInvariantBroken(
@@ -216,7 +217,7 @@ pub fn partition_function_kernel<R>(
     temp: Temperature<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: RealField + FromPrimitive + Sum,
+    R: RealField + MaybeParallel + FromPrimitive + Sum,
 {
     let t = temp.value();
     let k = R::from_f64(BOLTZMANN_CONSTANT).ok_or_else(|| {

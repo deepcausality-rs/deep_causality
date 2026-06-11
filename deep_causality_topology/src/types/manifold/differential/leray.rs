@@ -24,6 +24,7 @@ use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 
 use crate::errors::topology_error::TopologyError;
+use crate::traits::maybe_parallel::MaybeParallel;
 use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::types::hodge_decomposition::HodgeDecomposition;
@@ -39,7 +40,7 @@ impl<K, R> Manifold<K, R>
 where
     K: ChainComplex + Clone,
     K::Metric: HasHodgeStar<R, Complex = K> + Clone,
-    R: RealField + FromPrimitive + Default + PartialEq + Debug + Display,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug + Display,
 {
     /// Leray projection of a 1-form with default tolerance and iteration
     /// budget: removes the gradient component, returning the divergence-free
@@ -85,12 +86,10 @@ where
         let max_iter = opts.max_iterations.unwrap_or(1000);
         let n0 = self.complex.num_cells(0);
 
-        // δω — the divergence source for the grade-0 Poisson solve.
-        let omega_tensor = CausalTensor::new(field.as_slice().to_vec(), vec![n1])
-            .expect("1-D tensor allocation cannot fail");
-        let temp_omega = self.create_temp_manifold(1, omega_tensor);
-        let delta_omega = temp_omega.codifferential(1);
-        let mut rhs = delta_omega.as_slice().to_vec();
+        // δω — the divergence source for the grade-0 Poisson solve,
+        // evaluated directly on the field (no temporary manifold).
+        let delta_omega = self.codifferential_of(field.as_slice(), 1);
+        let mut rhs = delta_omega.into_vec();
         pad_or_truncate(&mut rhs, n0);
         // Grade-0 gauge: constants are always harmonic (β₀ = 1); fix the
         // gauge by mean subtraction on both the RHS and the solution.
@@ -99,12 +98,9 @@ where
         let mut phi = solve_laplacian(self, 0, &rhs, tolerance, max_iter)?;
         subtract_mean_in_place(&mut phi);
 
-        // P(ω) = ω − dφ.
-        let phi_tensor =
-            CausalTensor::new(phi.clone(), vec![n0]).expect("1-D tensor allocation cannot fail");
-        let temp_phi = self.create_temp_manifold(0, phi_tensor);
-        let d_phi = temp_phi.exterior_derivative(0);
-        let mut grad = d_phi.as_slice().to_vec();
+        // P(ω) = ω − dφ, with dφ evaluated directly on the potential.
+        let d_phi = self.exterior_derivative_of(&phi, 0);
+        let mut grad = d_phi.into_vec();
         pad_or_truncate(&mut grad, n1);
 
         let projected: Vec<R> = field

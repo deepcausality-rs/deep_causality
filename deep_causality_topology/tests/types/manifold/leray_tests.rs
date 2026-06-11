@@ -28,7 +28,13 @@ fn unit_manifold<const D: usize, R>(
     lattice: LatticeComplex<D, R>,
 ) -> Manifold<LatticeComplex<D, R>, R>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let total: usize = (0..=D).map(|k| lattice.num_cells(k)).sum();
     let data = CausalTensor::new(vec![R::zero(); total], vec![total]).unwrap();
@@ -42,7 +48,13 @@ fn manifold_with_k_form<const D: usize, R>(
     form: &[R],
 ) -> Manifold<LatticeComplex<D, R>, R>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let total: usize = (0..=D).map(|g| lattice.num_cells(g)).sum();
     let offset: usize = (0..k).map(|g| lattice.num_cells(g)).sum();
@@ -53,7 +65,10 @@ where
     Manifold::from_cubical_with_metric(lattice, tensor, metric, 0)
 }
 
-fn random_cochain<R: RealField + FromPrimitive>(len: usize, seed: u64) -> Vec<R> {
+fn random_cochain<R: RealField + deep_causality_topology::MaybeParallel + FromPrimitive>(
+    len: usize,
+    seed: u64,
+) -> Vec<R> {
     let mut state = seed
         .wrapping_mul(6364136223846793005)
         .wrapping_add(1442695040888963407);
@@ -80,7 +95,13 @@ fn divergence_of<const D: usize, R>(
     one_form: &[R],
 ) -> Vec<R>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let m = manifold_with_k_form(lattice_fn(), 1, one_form);
     m.codifferential(1).as_slice().to_vec()
@@ -114,7 +135,13 @@ fn projection_annihilates_exact_gradients() {
 
 fn assert_projection_divergence_free<R>(rel_tol: R)
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let n = 6usize;
     let lattice_fn = || LatticeComplex::<2, R>::square_torus(n);

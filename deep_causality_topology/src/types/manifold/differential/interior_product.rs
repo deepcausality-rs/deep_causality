@@ -40,11 +40,16 @@ use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
 use crate::types::manifold::Manifold;
+
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
+
+use crate::traits::maybe_parallel::MaybeParallel;
 use crate::types::manifold::differential::utils_differential;
 
 impl<const D: usize, R> Manifold<LatticeComplex<D, R>, R>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + core::fmt::Debug,
 {
     /// Computes the discrete interior product `i_X ω` of a 1-form `x_flat`
     /// (the contraction direction `X♭`) with a k-form `omega`, producing a
@@ -143,105 +148,107 @@ fn dual_to_primal_complement<const D: usize, R>(
     k_src: usize,
 ) -> Vec<R>
 where
-    R: RealField + FromPrimitive,
+    R: RealField + FromPrimitive + MaybeParallel,
 {
     let shape = *complex.shape();
     let periodic = *complex.periodic();
     let full_mask: u32 = if D == 32 { u32::MAX } else { (1u32 << D) - 1 };
 
-    // Source-cell index map in canonical ordering.
-    let src_index: std::collections::HashMap<LatticeCell<D>, usize> = complex
-        .iter_cells(k_src)
-        .enumerate()
-        .map(|(i, c)| (c, i))
-        .collect();
+    // The per-target transport: read-only over the source map and values,
+    // so the targets are independent — the loop fans out over Rayon under
+    // the `parallel` feature.
+    let per_target = |target: LatticeCell<D>| {
+        let b_mask = target.orientation();
+        let a_mask = full_mask & !b_mask;
 
-    complex
-        .iter_cells(D - k_src)
-        .map(|target| {
-            let b_mask = target.orientation();
-            let a_mask = full_mask & !b_mask;
-
-            // ε(A, Aᶜ): inversions between source axes A and target axes B.
-            let mut inversions = 0usize;
-            for a in 0..D {
-                if a_mask & (1 << a) != 0 {
-                    for b in 0..a {
-                        if b_mask & (1 << b) != 0 {
-                            inversions += 1;
-                        }
+        // ε(A, Aᶜ): inversions between source axes A and target axes B.
+        let mut inversions = 0usize;
+        for a in 0..D {
+            if a_mask & (1 << a) != 0 {
+                for b in 0..a {
+                    if b_mask & (1 << b) != 0 {
+                        inversions += 1;
                     }
                 }
             }
-            let negate = inversions % 2 == 1;
+        }
+        let negate = inversions % 2 == 1;
 
-            let mut acc = R::zero();
-            let mut count = 0usize;
+        let mut acc = R::zero();
+        let mut count = 0usize;
 
-            // 2^D offset combinations: bit d set means "shift along axis d"
-            // (−1 for source axes, +1 for target axes).
-            for combo in 0..(1u32 << D) {
-                let mut pos = *target.position();
-                let mut in_range = true;
+        // 2^D offset combinations: bit d set means "shift along axis d"
+        // (−1 for source axes, +1 for target axes).
+        for combo in 0..(1u32 << D) {
+            let mut pos = *target.position();
+            let mut in_range = true;
 
-                for (d, p) in pos.iter_mut().enumerate() {
-                    if combo & (1 << d) == 0 {
-                        continue;
-                    }
-                    if a_mask & (1 << d) != 0 {
-                        // Source axis: shift −1.
-                        if *p == 0 {
-                            if periodic[d] {
-                                *p = shape[d] - 1;
-                            } else {
-                                in_range = false;
-                                break;
-                            }
-                        } else {
-                            *p -= 1;
-                        }
-                    } else {
-                        // Target axis: shift +1.
-                        *p += 1;
-                        if *p >= shape[d] {
-                            if periodic[d] {
-                                *p -= shape[d];
-                            } else {
-                                // Defensive: unreachable — a target cell's
-                                // active axis position is at most shape−2 on
-                                // an open lattice, so the +1 shift stays in
-                                // range (documented coverage exemption per
-                                // AGENTS.md; kept for symmetry with the −1
-                                // branch).
-                                in_range = false;
-                                break;
-                            }
-                        }
-                    }
-                }
-                if !in_range {
+            for (d, p) in pos.iter_mut().enumerate() {
+                if combo & (1 << d) == 0 {
                     continue;
                 }
-
-                let src = LatticeCell::new(pos, a_mask);
-                if let Some(&i) = src_index.get(&src) {
-                    acc += dual_vals[i];
-                    count += 1;
+                if a_mask & (1 << d) != 0 {
+                    // Source axis: shift −1.
+                    if *p == 0 {
+                        if periodic[d] {
+                            *p = shape[d] - 1;
+                        } else {
+                            in_range = false;
+                            break;
+                        }
+                    } else {
+                        *p -= 1;
+                    }
+                } else {
+                    // Target axis: shift +1.
+                    *p += 1;
+                    if *p >= shape[d] {
+                        if periodic[d] {
+                            *p -= shape[d];
+                        } else {
+                            // Defensive: unreachable — a target cell's
+                            // active axis position is at most shape−2 on
+                            // an open lattice, so the +1 shift stays in
+                            // range (documented coverage exemption per
+                            // AGENTS.md; kept for symmetry with the −1
+                            // branch).
+                            in_range = false;
+                            break;
+                        }
+                    }
                 }
             }
-
-            if count == 0 {
-                // Defensive: unreachable for any lattice with extent >= 2 on
-                // every axis — the all-shifted offset combination always lands
-                // on an existing source cell (documented coverage exemption
-                // per AGENTS.md; degenerate extent-1 lattices have no 1-cells
-                // and therefore no interior-product inputs).
-                return R::zero();
+            if !in_range {
+                continue;
             }
-            let count_r =
-                <R as FromPrimitive>::from_usize(count).expect("cell count lifts into RealField");
-            let avg = acc / count_r;
-            if negate { R::zero() - avg } else { avg }
-        })
-        .collect()
+
+            let src = LatticeCell::new(pos, a_mask);
+            if let Some(i) = complex.cell_index(&src) {
+                acc += dual_vals[i];
+                count += 1;
+            }
+        }
+
+        if count == 0 {
+            // Defensive: unreachable for any lattice with extent >= 2 on
+            // every axis — the all-shifted offset combination always lands
+            // on an existing source cell (documented coverage exemption
+            // per AGENTS.md; degenerate extent-1 lattices have no 1-cells
+            // and therefore no interior-product inputs).
+            return R::zero();
+        }
+        let count_r =
+            <R as FromPrimitive>::from_usize(count).expect("cell count lifts into RealField");
+        let avg = acc / count_r;
+        if negate { R::zero() - avg } else { avg }
+    };
+
+    // Per-target work is a 2^D offset enumeration; the cutoff matches the
+    // wedge's per-cell threshold.
+    #[cfg(feature = "parallel")]
+    if complex.num_cells(D - k_src) >= 1 << 12 {
+        let targets: Vec<LatticeCell<D>> = complex.iter_cells(D - k_src).collect();
+        return targets.into_par_iter().map(per_target).collect();
+    }
+    complex.iter_cells(D - k_src).map(per_target).collect()
 }

@@ -184,7 +184,13 @@ fn rate_matches_pointwise_oracle_at_second_order() {
 /// `−ν Δ_dR = +ν∇²`.
 fn assert_viscous_decay<R>()
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let n = 8usize;
     let manifold = unit_manifold::<R>(n);

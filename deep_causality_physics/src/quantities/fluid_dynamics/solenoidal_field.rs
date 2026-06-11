@@ -26,6 +26,7 @@ use core::fmt::{Debug, Display};
 
 use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::MaybeParallel;
 use deep_causality_topology::{HodgeDecomposition, LatticeComplex, Manifold};
 
 use crate::error::physics_error::PhysicsError;
@@ -58,7 +59,7 @@ pub struct SolenoidalField<R: RealField> {
 
 impl<R> SolenoidalField<R>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + Debug + Display,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug + Display,
 {
     /// Per-step solver path: Leray-project an (unprojected) velocity 1-form.
     /// Returns the projected field together with the grade-0 potential (the

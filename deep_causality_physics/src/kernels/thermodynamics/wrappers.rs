@@ -11,6 +11,7 @@ use deep_causality_tensor::CausalTensor;
 use crate::Probability;
 use core::fmt::Debug;
 use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_topology::MaybeParallel;
 use deep_causality_topology::SimplicialManifold;
 
 /// Causal wrapper for [`stats::heat_diffusion_kernel`].
@@ -19,7 +20,7 @@ pub fn heat_diffusion<R>(
     diffusivity: R,
 ) -> PropagatingEffect<CausalTensor<R>>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug,
 {
     match stats::heat_diffusion_kernel(temp_manifold, diffusivity) {
         Ok(t) => PropagatingEffect::pure(t),
@@ -35,7 +36,7 @@ pub fn ideal_gas_law<R>(
     temp: Temperature<R>,
 ) -> PropagatingEffect<Ratio<R>>
 where
-    R: RealField + Debug,
+    R: RealField + MaybeParallel + Debug,
 {
     match stats::ideal_gas_law_kernel(pressure, volume, moles, temp) {
         Ok(val) => match Ratio::<R>::new(val) {
@@ -52,7 +53,7 @@ pub fn carnot_efficiency<R>(
     temp_cold: Temperature<R>,
 ) -> PropagatingEffect<Efficiency<R>>
 where
-    R: RealField + Debug,
+    R: RealField + MaybeParallel + Debug,
 {
     match stats::carnot_efficiency_kernel(temp_hot, temp_cold) {
         Ok(val) => match Efficiency::<R>::new(val) {
@@ -69,7 +70,7 @@ pub fn boltzmann_factor<R>(
     temp: Temperature<R>,
 ) -> PropagatingEffect<Probability<R>>
 where
-    R: RealField + FromPrimitive + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
 {
     match stats::boltzmann_factor_kernel(energy, temp) {
         Ok(p) => PropagatingEffect::pure(p),
@@ -80,7 +81,7 @@ where
 /// Causal wrapper for [`stats::shannon_entropy_kernel`].
 pub fn shannon_entropy<R>(probs: &CausalTensor<R>) -> PropagatingEffect<R>
 where
-    R: RealField + core::iter::Sum + Default + Debug,
+    R: RealField + MaybeParallel + core::iter::Sum + Default + Debug,
 {
     match stats::shannon_entropy_kernel(probs) {
         Ok(val) => PropagatingEffect::pure(val),
@@ -91,7 +92,7 @@ where
 /// Causal wrapper for [`stats::heat_capacity_kernel`].
 pub fn heat_capacity<R>(diff_energy: Energy<R>, diff_temp: Temperature<R>) -> PropagatingEffect<R>
 where
-    R: RealField + Default + Debug,
+    R: RealField + MaybeParallel + Default + Debug,
 {
     match stats::heat_capacity_kernel(diff_energy, diff_temp) {
         Ok(val) => PropagatingEffect::pure(val),
@@ -105,7 +106,7 @@ pub fn partition_function<R>(
     temp: Temperature<R>,
 ) -> PropagatingEffect<R>
 where
-    R: RealField + FromPrimitive + core::iter::Sum + Default + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + core::iter::Sum + Default + Debug,
 {
     match stats::partition_function_kernel(energies, temp) {
         Ok(val) => PropagatingEffect::pure(val),

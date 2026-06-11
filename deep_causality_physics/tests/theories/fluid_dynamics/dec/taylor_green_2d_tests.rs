@@ -58,6 +58,7 @@ where
 fn envelope_error<R>(n: usize) -> f64
 where
     R: RealField
+        + deep_causality_topology::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq

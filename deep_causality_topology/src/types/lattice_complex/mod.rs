@@ -238,6 +238,51 @@ impl<const D: usize, R: RealField> LatticeComplex<D, R> {
         count
     }
 
+    /// Flat index of `cell` in the canonical `iter_cells(grade)` ordering —
+    /// the arithmetic inverse of `LatticeCellIterator` for arbitrary grades,
+    /// O(2^D + D) with no allocation. Returns `None` when the cell's
+    /// position is out of range for its orientation (the open-boundary
+    /// trim), mirroring exactly which cells the iterator visits.
+    ///
+    /// This replaces the per-call `HashMap<LatticeCell, usize>` index maps
+    /// the DEC operators (wedge, interior-product transport, de Rham,
+    /// sharp) previously built on every evaluation: the map construction
+    /// was O(n) allocation and hashing per operator call, where the lookup
+    /// itself is pure stride arithmetic on a regular lattice.
+    pub(crate) fn cell_index(&self, cell: &LatticeCell<D>) -> Option<usize> {
+        let o = cell.orientation();
+
+        // Bounds check against the iterator's valid-position ranges.
+        for (d, &p) in cell.position().iter().enumerate() {
+            if p >= self.valid_positions(d, o) {
+                return None;
+            }
+        }
+
+        // Cells of the same grade with numerically smaller orientations
+        // come first (orientation-major, ascending bit patterns).
+        let grade = o.count_ones();
+        let mut idx = 0usize;
+        for prior in 0..o {
+            if prior.count_ones() == grade {
+                let mut count = 1usize;
+                for d in 0..D {
+                    count *= self.valid_positions(d, prior);
+                }
+                idx += count;
+            }
+        }
+
+        // Within the orientation block, axis 0 varies fastest.
+        let mut offset = 0usize;
+        let mut stride = 1usize;
+        for (d, &p) in cell.position().iter().enumerate() {
+            offset += p * stride;
+            stride *= self.valid_positions(d, o);
+        }
+        Some(idx + offset)
+    }
+
     /// Number of valid `position[d]` values for a cell with the given `orientation`.
     /// Active non-periodic dims lose the wrap-around slice; all others use the full extent.
     pub(crate) fn valid_positions(&self, d: usize, orientation: u32) -> usize {

@@ -41,6 +41,7 @@ use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 
 use crate::errors::topology_error::TopologyError;
+use crate::traits::maybe_parallel::MaybeParallel;
 use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::types::hodge_decomposition::HodgeDecomposition;
@@ -113,7 +114,7 @@ impl<K, R> Manifold<K, R>
 where
     K: ChainComplex + Clone,
     K::Metric: HasHodgeStar<R, Complex = K> + Clone,
-    R: RealField + FromPrimitive + Default + PartialEq + Debug + Display,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug + Display,
 {
     /// Discrete Hodge–Helmholtz decomposition of a k-form `field` on this manifold,
     /// using default tolerance and iteration budget.
@@ -175,9 +176,7 @@ where
             vec![R::zero(); n_k]
         } else {
             let n_km1 = self.complex.num_cells(k - 1);
-            let omega_tensor = CausalTensor::new(omega.clone(), vec![n_k]).unwrap();
-            let temp_omega = self.create_temp_manifold(k, omega_tensor);
-            let delta_omega = temp_omega.codifferential(k);
+            let delta_omega = self.codifferential_of(&omega, k);
             let mut rhs = delta_omega.as_slice().to_vec();
             pad_or_truncate(&mut rhs, n_km1);
             if k - 1 == 0 {
@@ -189,9 +188,7 @@ where
                 subtract_mean_in_place(&mut phi_alpha);
             }
 
-            let phi_tensor = CausalTensor::new(phi_alpha, vec![n_km1]).unwrap();
-            let temp_phi = self.create_temp_manifold(k - 1, phi_tensor);
-            let alpha_tensor = temp_phi.exterior_derivative(k - 1);
+            let alpha_tensor = self.exterior_derivative_of(&phi_alpha, k - 1);
             let mut alpha = alpha_tensor.as_slice().to_vec();
             pad_or_truncate(&mut alpha, n_k);
             alpha
@@ -202,17 +199,13 @@ where
             vec![R::zero(); n_k]
         } else {
             let n_kp1 = self.complex.num_cells(k + 1);
-            let omega_tensor = CausalTensor::new(omega.clone(), vec![n_k]).unwrap();
-            let temp_omega = self.create_temp_manifold(k, omega_tensor);
-            let d_omega = temp_omega.exterior_derivative(k);
+            let d_omega = self.exterior_derivative_of(&omega, k);
             let mut rhs = d_omega.as_slice().to_vec();
             pad_or_truncate(&mut rhs, n_kp1);
 
             let psi_beta = solve_laplacian(self, k + 1, &rhs, tolerance, max_iter)?;
 
-            let psi_tensor = CausalTensor::new(psi_beta, vec![n_kp1]).unwrap();
-            let temp_psi = self.create_temp_manifold(k + 1, psi_tensor);
-            let beta_tensor = temp_psi.codifferential(k + 1);
+            let beta_tensor = self.codifferential_of(&psi_beta, k + 1);
             let mut beta = beta_tensor.as_slice().to_vec();
             pad_or_truncate(&mut beta, n_k);
             beta
@@ -240,7 +233,7 @@ pub(super) fn solve_laplacian<K, R>(
 where
     K: ChainComplex + Clone,
     K::Metric: HasHodgeStar<R, Complex = K> + Clone,
-    R: RealField + FromPrimitive + Default + PartialEq + Debug + Display,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug + Display,
 {
     let n = rhs.len();
 
@@ -262,11 +255,11 @@ where
         }
     }
 
+    // Apply Δ directly on the iterate: no temporary manifold, no data-slab
+    // copy — one sparse-operator composition per CG iteration.
     let apply = |v: &[R]| -> Vec<R> {
-        let tensor = CausalTensor::new(v.to_vec(), vec![v.len()]).unwrap();
-        let temp = manifold.create_temp_manifold(grade, tensor);
-        let result = temp.laplacian(grade);
-        let mut out = result.as_slice().to_vec();
+        let result = manifold.laplacian_of(v, grade);
+        let mut out = result.into_vec();
         pad_or_truncate(&mut out, n);
         out
     };
@@ -296,7 +289,7 @@ pub(super) fn pad_or_truncate<R: RealField>(v: &mut Vec<R>, target_len: usize) {
 /// `hodge_decompose_opts` and `leray_project_opts`.
 pub(super) fn resolve_cg_tolerance<R>(requested: Option<R>) -> Result<R, TopologyError>
 where
-    R: RealField + FromPrimitive + Display,
+    R: RealField + MaybeParallel + FromPrimitive + Display,
 {
     let tolerance = requested.unwrap_or_else(|| {
         // Default convergence threshold: tight relative residual (1e-10),

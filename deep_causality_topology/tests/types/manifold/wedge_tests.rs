@@ -33,7 +33,13 @@ fn unit_manifold<const D: usize, R>(
     lattice: LatticeComplex<D, R>,
 ) -> Manifold<LatticeComplex<D, R>, R>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let total: usize = (0..=D).map(|k| lattice.num_cells(k)).sum();
     let data = CausalTensor::new(vec![R::zero(); total], vec![total]).unwrap();
@@ -49,7 +55,13 @@ fn manifold_with_k_form<const D: usize, R>(
     form: &[R],
 ) -> Manifold<LatticeComplex<D, R>, R>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let total: usize = (0..=D).map(|g| lattice.num_cells(g)).sum();
     let offset: usize = (0..k).map(|g| lattice.num_cells(g)).sum();
@@ -61,7 +73,10 @@ where
 }
 
 /// Deterministic pseudo-random cochain in [−1, 1] (LCG; no external crates).
-fn random_cochain<R: RealField + FromPrimitive>(len: usize, seed: u64) -> Vec<R> {
+fn random_cochain<R: RealField + deep_causality_topology::MaybeParallel + FromPrimitive>(
+    len: usize,
+    seed: u64,
+) -> Vec<R> {
     let mut state = seed
         .wrapping_mul(6364136223846793005)
         .wrapping_add(1442695040888963407);
@@ -143,7 +158,13 @@ fn laplacian_eigenvalue_converges_to_continuum_at_second_order() {
 /// mismatch shows up as an O(1) violation, not a small one.
 fn assert_wedge_laws_on<const D: usize, R>(lattice_fn: impl Fn() -> LatticeComplex<D, R>, tol: R)
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     // --- Graded anticommutativity: all k + l ≤ D ---
     for k in 0..=D {

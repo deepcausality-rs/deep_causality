@@ -44,6 +44,7 @@ pub use crate::traits::graph_topology::GraphTopology;
 pub use crate::traits::has_hodge_star::HasHodgeStar;
 pub use crate::traits::hypergraph_topology::HypergraphTopology;
 pub use crate::traits::manifold_topology::ManifoldTopology;
+pub use crate::traits::maybe_parallel::MaybeParallel;
 pub use crate::traits::mixed_graph_topology::MixedGraphTopology;
 pub use crate::traits::neighborhood::{CellId, Neighborhood};
 pub use crate::traits::simplicial_topology::SimplicialTopology;

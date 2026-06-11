@@ -31,7 +31,13 @@ fn unit_manifold<const D: usize, R>(
     lattice: LatticeComplex<D, R>,
 ) -> Manifold<LatticeComplex<D, R>, R>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let total: usize = (0..=D).map(|k| lattice.num_cells(k)).sum();
     let data = CausalTensor::new(vec![R::zero(); total], vec![total]).unwrap();
@@ -59,7 +65,7 @@ fn manifold_with_k_form<const D: usize>(
 /// Per-axis constant 1-form on the lattice: edges along axis `a` get `vals[a]`.
 fn constant_one_form<const D: usize, R>(lattice: &LatticeComplex<D, R>, vals: [R; D]) -> Vec<R>
 where
-    R: RealField,
+    R: RealField + deep_causality_topology::MaybeParallel,
 {
     lattice
         .iter_cells(1)
@@ -74,7 +80,13 @@ where
 /// 2D, k = 2 (even k(D−k) branch): i_X (c dx∧dy) = c·X¹ dy − c·X² dx.
 fn assert_2d_two_form_contraction<R>(tol: R)
 where
-    R: RealField + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let lattice: LatticeComplex<2, R> = LatticeComplex::square_torus(4);
     let manifold = unit_manifold(lattice);
