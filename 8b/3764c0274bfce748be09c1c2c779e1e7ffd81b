@@ -1,0 +1,64 @@
+deep_causality_physics/tests/theories/fluid_dynamics/mod.rs
+  s_86ac044a95d19d::t_39dae8116a95af 11
+deep_causality_physics/src/lib.rs
+  s_86ac044a95d19d::t_f5606cd77954c8 38-42
+deep_causality_physics/src/units/fluid_dynamics/mod.rs
+  s_86ac044a95d19d::t_f5606cd77954c8 1-63
+deep_causality_physics/tests/units/fluid_dynamics/velocity_one_form_tests.rs
+  s_86ac044a95d19d::t_492a62e3a88e9f 1-106,109-172
+  s_86ac044a95d19d::t_39dae8116a95af 107-108
+deep_causality_physics/tests/BUILD.bazel
+  s_86ac044a95d19d::t_932075cd822872 393-411
+  s_86ac044a95d19d::t_0e4dbc95612a6d 383,386
+deep_causality_physics/tests/units/fluid_dynamics/body_force_one_form_tests.rs
+  s_86ac044a95d19d::t_208d534862007c 1-89
+deep_causality_physics/tests/units/fluid_dynamics/solenoidal_field_tests.rs
+  s_86ac044a95d19d::t_c70e6aceafd1eb 1-147,150-212
+  s_86ac044a95d19d::t_39dae8116a95af 148-149
+deep_causality_physics/src/units/fluid_dynamics/vorticity_two_form.rs
+  s_86ac044a95d19d::t_f5606cd77954c8 1-52
+deep_causality_physics/src/units/fluid_dynamics/velocity_one_form/velocity_one_form_ops.rs
+  s_86ac044a95d19d::t_f5606cd77954c8 1-58
+deep_causality_physics/src/units/fluid_dynamics/solenoidal_field/mod.rs
+  s_86ac044a95d19d::t_f5606cd77954c8 1-73,77-116,119-137
+  s_86ac044a95d19d::t_39dae8116a95af 74-76,117-118
+deep_causality_physics/tests/units/fluid_dynamics/mod.rs
+  s_86ac044a95d19d::t_350c8d72bd175a 1-14
+deep_causality_physics/tests/units/fluid_dynamics/vorticity_two_form_tests.rs
+  s_86ac044a95d19d::t_9bc05644c619d6 1-90
+deep_causality_physics/src/units/mod.rs
+  s_86ac044a95d19d::t_f5606cd77954c8 7
+deep_causality_physics/tests/units/fluid_dynamics/pressure_zero_form_tests.rs
+  s_86ac044a95d19d::t_c9521bd3b67319 1-90
+deep_causality_physics/tests/units/mod.rs
+  s_86ac044a95d19d::t_932075cd822872 9-10
+deep_causality_physics/src/units/fluid_dynamics/velocity_one_form/mod.rs
+  s_86ac044a95d19d::t_f5606cd77954c8 1-58
+deep_causality_physics/Cargo.toml
+  s_86ac044a95d19d::t_932075cd822872 72-75
+deep_causality_physics/src/units/fluid_dynamics/pressure_zero_form.rs
+  s_86ac044a95d19d::t_f5606cd77954c8 1-51
+deep_causality_physics/src/quantities/mod.rs
+  s_86ac044a95d19d::t_39dae8116a95af 1-4
+deep_causality_physics/tests/theories/fluid_dynamics/dec_cross_validation_tests.rs
+  s_86ac044a95d19d::t_39dae8116a95af 68-71
+  s_86ac044a95d19d::t_94764b0ed60cac 1-67,72-191
+deep_causality_physics/src/units/fluid_dynamics/body_force_one_form.rs
+  s_86ac044a95d19d::t_f5606cd77954c8 1-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "8b3764c0274bfce748be09c1c2c779e1e7ffd81b",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
