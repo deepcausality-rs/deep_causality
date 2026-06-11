@@ -40,6 +40,12 @@ pub struct LatticeComplex<const D: usize, R: RealField> {
     /// clone. `Box<[OnceLock<...>]>` is `Send + Sync` for the existing
     /// `Arc<LatticeComplex<D, R>>` consumers in `gauge_field_lattice`.
     coboundary_cache: Box<[OnceLock<CsrMatrix<i8>>]>,
+    /// Lazy memo of boundary matrices ∂_k, same shape and rationale as
+    /// `coboundary_cache`. `codifferential` (hence every Laplacian
+    /// application, hence every CG iteration) reads ∂_k; without the memo
+    /// each read rebuilt the matrix from a cell-indexed `HashMap`. Slot 0
+    /// is unused (∂_0 does not exist; `boundary_matrix` requires k ≥ 1).
+    boundary_cache: Box<[OnceLock<CsrMatrix<i8>>]>,
     /// Anchors the metric-precision parameter `R`. Zero-sized.
     _precision: PhantomData<R>,
 }
@@ -49,8 +55,15 @@ impl<const D: usize, R: RealField> Clone for LatticeComplex<D, R> {
         Self {
             shape: self.shape,
             periodic: self.periodic,
-            // Cache intentionally not cloned: cheaper to recompute lazily on the clone.
-            coboundary_cache: Self::fresh_cache(),
+            // Filled cache slots are cloned: copying a CSR is a flat
+            // memcpy of its arrays, while recomputing one rebuilds the
+            // grade's boundary matrix and transposes it. Callers that
+            // clone a complex per operator evaluation (the DEC solver's
+            // scratch manifolds, several per RK4 step) hit this path on
+            // every step; the earlier reset-on-clone turned each of those
+            // into a full rebuild. Unfilled slots stay lazy.
+            coboundary_cache: self.coboundary_cache.clone(),
+            boundary_cache: self.boundary_cache.clone(),
             _precision: PhantomData,
         }
     }
@@ -73,6 +86,7 @@ impl<const D: usize, R: RealField> LatticeComplex<D, R> {
             shape,
             periodic,
             coboundary_cache: Self::fresh_cache(),
+            boundary_cache: Self::fresh_cache(),
             _precision: PhantomData,
         }
     }
@@ -421,28 +435,35 @@ impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
     }
 
     fn boundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>> {
-        let rows = self.num_cells(k - 1);
-        let cols = self.num_cells(k);
+        // Lazy memo, mirroring `coboundary_matrix`: ∂_k is read by
+        // `codifferential` on every Laplacian application — once per CG
+        // iteration in the Hodge/Leray solves — and the cell-indexed
+        // HashMap construction below is far more expensive than the
+        // sparse matvec it feeds.
+        let slot = &self.boundary_cache[k];
+        let m = slot.get_or_init(|| {
+            let rows = self.num_cells(k - 1);
+            let cols = self.num_cells(k);
 
-        let mut row_map = HashMap::new();
-        for (i, cell) in self.cells(k - 1).enumerate() {
-            row_map.insert(cell, i);
-        }
+            let mut row_map = HashMap::new();
+            for (i, cell) in self.cells(k - 1).enumerate() {
+                row_map.insert(cell, i);
+            }
 
-        let mut triplets = Vec::new();
+            let mut triplets = Vec::new();
 
-        for (j, cell) in self.cells(k).enumerate() {
-            let boundary = self.boundary(&cell);
-            for (term_cell, coeff) in boundary {
-                if let Some(&i) = row_map.get(&term_cell) {
-                    triplets.push((i, j, coeff));
+            for (j, cell) in self.cells(k).enumerate() {
+                let boundary = self.boundary(&cell);
+                for (term_cell, coeff) in boundary {
+                    if let Some(&i) = row_map.get(&term_cell) {
+                        triplets.push((i, j, coeff));
+                    }
                 }
             }
-        }
 
-        Cow::Owned(
-            CsrMatrix::from_triplets(rows, cols, &triplets).unwrap_or_else(|_| CsrMatrix::new()),
-        )
+            CsrMatrix::from_triplets(rows, cols, &triplets).unwrap_or_else(|_| CsrMatrix::new())
+        });
+        Cow::Borrowed(m)
     }
 
     fn coboundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>> {

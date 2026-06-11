@@ -243,6 +243,25 @@ where
     R: RealField + FromPrimitive + Default + PartialEq + Debug + Display,
 {
     let n = rhs.len();
+
+    // Warm the parent complex's boundary/coboundary memos once: every CG
+    // iteration clones the complex into a temp manifold, and a warm parent
+    // makes each clone a flat copy of the cached CSRs instead of a rebuild
+    // per iteration. These are exactly the matrices `laplacian(grade)`
+    // reads (dδ needs ∂_grade and δ_{grade−1}; δd needs δ_grade and
+    // ∂_{grade+1}).
+    {
+        let complex = manifold.complex();
+        if grade > 0 {
+            let _ = complex.boundary_matrix(grade);
+            let _ = complex.coboundary_matrix(grade - 1);
+        }
+        if grade < complex.max_dim() {
+            let _ = complex.coboundary_matrix(grade);
+            let _ = complex.boundary_matrix(grade + 1);
+        }
+    }
+
     let apply = |v: &[R]| -> Vec<R> {
         let tensor = CausalTensor::new(v.to_vec(), vec![v.len()]).unwrap();
         let temp = manifold.create_temp_manifold(grade, tensor);

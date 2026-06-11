@@ -15,7 +15,10 @@ use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex
 
 const NU: f64 = 0.05;
 const DT: f64 = 0.2;
-const STEPS: usize = 25;
+/// 12 steps (T = 2.4) keep the CI cost bounded; the analytic envelope
+/// ratio is ≈ 0.929 there — ample signal against the 2% gate and the
+/// ≈ 0.1% discrete-Laplacian truncation.
+const STEPS: usize = 12;
 const N: usize = 16;
 
 fn unit_manifold3(n: usize) -> Manifold<LatticeComplex<3, f64>, f64> {
