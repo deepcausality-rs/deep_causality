@@ -1,0 +1,19 @@
+deep_causality_physics/src/quantities/mod.rs
+  s_86ac044a95d19d::t_59c49567fea158 8-9,11-12,14-15,17,30,32-35,37-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "89564de2b93eb4c1ce3c9138ce7fb83c65127941",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
