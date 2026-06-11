@@ -19,7 +19,7 @@ use crate::PhysicsError;
 use crate::kernels::fluids::governing::{
     convective_acceleration_kernel, pressure_gradient_force_kernel,
 };
-use crate::kernels::fluids::quantities::{
+use crate::{
     AccelerationVector, Density, Velocity3, VelocityGradient,
 };
 use deep_causality_num::RealField;

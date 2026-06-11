@@ -17,7 +17,7 @@
 //! term is the caller's concern.
 
 use crate::PhysicsError;
-use crate::kernels::fluids::quantities::{
+use crate::{
     AccelerationVector, Density, KinematicViscosity, Pressure, Velocity3, VelocityGradient,
     ViscousStress, VorticityVector,
 };

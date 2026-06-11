@@ -15,8 +15,8 @@
 
 use crate::PhysicsError;
 use crate::Temperature;
-use crate::kernels::dynamics::quantities::Speed;
-use crate::kernels::fluids::quantities::{
+use crate::Speed;
+use crate::{
     Pressure, SpecificEnthalpy, Velocity3, VelocityGradient, ViscousStress,
 };
 use deep_causality_num::{FromPrimitive, RealField};

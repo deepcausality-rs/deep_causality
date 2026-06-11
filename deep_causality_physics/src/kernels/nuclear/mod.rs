@@ -8,7 +8,6 @@ pub(crate) mod lund;
 pub(crate) mod pdg;
 pub(crate) mod physics;
 pub(crate) mod qcd;
-pub(crate) mod quantities;
 pub(crate) mod wrappers;
 
 #[cfg(feature = "os-random")]
@@ -16,5 +15,5 @@ pub use lund::lund_string_fragmentation_kernel;
 pub use pdg::*;
 pub use physics::*;
 pub use qcd::*;
-pub use quantities::*;
+pub use crate::quantities::nuclear::*;
 pub use wrappers::*;

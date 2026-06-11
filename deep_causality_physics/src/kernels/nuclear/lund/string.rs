@@ -10,7 +10,7 @@
 //! see the precision-boundary note in `flavor.rs` / `kinematics.rs` for how
 //! the f64-bound RNG sampling is bridged into `R`.
 
-use crate::kernels::nuclear::quantities::FourMomentum;
+use crate::FourMomentum;
 use deep_causality_num::{FromPrimitive, RealField};
 
 use super::kinematics::{LightconeEndpoint, StringSegment};

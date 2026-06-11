@@ -3,24 +3,25 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Body force (e.g. gravity) as an edge 1-form (grade-1 cochain).
+//! Pressure as a vertex 0-form (grade-0 cochain).
 
 use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{LatticeComplex, Manifold};
 
 use crate::error::physics_error::PhysicsError;
-use crate::units::fluid_dynamics::validate_graded_field;
+use super::validate_graded_field;
 
-/// A body-force-per-unit-mass field as an edge 1-form on a cubical lattice.
-/// A forcing input, not a marching state: no arithmetic is provided.
+/// A pressure field as a vertex 0-form on a cubical lattice. Diagnostic
+/// carrier (the Leray-form solver removes pressure from the time loop); no
+/// arithmetic is provided.
 #[derive(Debug, Clone, PartialEq)]
-pub struct BodyForceOneForm<R: RealField> {
+pub struct PressureZeroForm<R: RealField> {
     field: CausalTensor<R>,
 }
 
-impl<R: RealField> BodyForceOneForm<R> {
-    /// Construct from a grade-1 cochain, validating length and finiteness.
+impl<R: RealField> PressureZeroForm<R> {
+    /// Construct from a grade-0 cochain, validating length and finiteness.
     ///
     /// # Errors
     /// * `PhysicsError::DimensionMismatch` on a length/grade mismatch.
@@ -29,16 +30,16 @@ impl<R: RealField> BodyForceOneForm<R> {
         field: CausalTensor<R>,
         manifold: &Manifold<LatticeComplex<D, R>, R>,
     ) -> Result<Self, PhysicsError> {
-        validate_graded_field(&field, 1, "BodyForceOneForm", manifold)?;
+        validate_graded_field(&field, 0, "PressureZeroForm", manifold)?;
         Ok(Self { field })
     }
 
-    /// The underlying edge cochain.
+    /// The underlying vertex cochain.
     pub fn as_tensor(&self) -> &CausalTensor<R> {
         &self.field
     }
 
-    /// Number of edge coefficients.
+    /// Number of vertex coefficients.
     pub fn len(&self) -> usize {
         self.field.len()
     }

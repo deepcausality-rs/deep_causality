@@ -12,12 +12,11 @@ pub(crate) mod governing;
 pub(crate) mod ideal_flow;
 pub(crate) mod kinematics;
 pub(crate) mod mechanics;
-pub(crate) mod quantities;
 pub(crate) mod turbulence;
 pub(crate) mod wrappers;
 
 pub use mechanics::*;
-pub use quantities::*;
+pub use crate::quantities::fluids::*;
 pub use wrappers::*;
 
 // Group `pub use` re-exports are commented out until each group's gates close.

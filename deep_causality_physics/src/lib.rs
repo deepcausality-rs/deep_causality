@@ -11,9 +11,8 @@ extern crate core;
 pub(crate) mod constants;
 pub(crate) mod error;
 pub(crate) mod kernels;
-pub(crate) mod quantities;
+pub mod quantities;
 pub mod theories;
-pub(crate) mod units;
 
 pub use crate::constants::*;
 
@@ -34,17 +33,10 @@ pub use crate::kernels::relativity::*;
 pub use crate::kernels::thermodynamics::*;
 pub use crate::kernels::waves::*;
 
-pub use crate::units::energy::Energy;
-pub use crate::units::fluid_dynamics::body_force_one_form::BodyForceOneForm;
-pub use crate::units::fluid_dynamics::pressure_zero_form::PressureZeroForm;
-pub use crate::units::fluid_dynamics::solenoidal_field::SolenoidalField;
-pub use crate::units::fluid_dynamics::velocity_one_form::VelocityOneForm;
-pub use crate::units::fluid_dynamics::vorticity_two_form::VorticityTwoForm;
-pub use crate::units::index_of_refraction::IndexOfRefraction;
-pub use crate::units::probability::Probability;
-pub use crate::units::ratio::Ratio;
-pub use crate::units::temperature::Temperature;
-pub use crate::units::time::Time;
+// All physics quantities and physical-unit types — exported flat at the
+// crate root so `deep_causality_physics::TypeName` always resolves
+// regardless of where the type lives within `quantities/`.
+pub use crate::quantities::*;
 
 pub use crate::theories::*;
 

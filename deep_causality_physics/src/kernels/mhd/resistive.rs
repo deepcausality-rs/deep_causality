@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::kernels::mhd::quantities::{AlfvenSpeed, Diffusivity};
+use crate::{AlfvenSpeed, Diffusivity};
 use crate::{PhysicsError, Speed};
 use core::fmt::Debug;
 use deep_causality_num::{FromPrimitive, RealField};

@@ -4,8 +4,8 @@
  */
 
 use crate::PhysicsError;
-use crate::kernels::dynamics::quantities::Length;
-use crate::kernels::photonics::quantities::{AbcdMatrix, ComplexBeamParameter, Wavelength};
+use crate::Length;
+use crate::{AbcdMatrix, ComplexBeamParameter, Wavelength};
 use deep_causality_num::{Complex, DivisionAlgebra, RealField};
 
 /// Propagates a Gaussian beam's complex $q$-parameter through an ABCD optical system.

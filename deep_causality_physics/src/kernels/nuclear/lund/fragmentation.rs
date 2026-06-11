@@ -8,7 +8,7 @@
 //! Implements iterative fragmentation of QCD strings into hadrons.
 
 use crate::PhysicsError;
-use crate::kernels::nuclear::quantities::{FourMomentum, Hadron, LundParameters};
+use crate::{FourMomentum, Hadron, LundParameters};
 
 use super::flavor::{
     MesonState, QuarkFlavor, generate_transverse_momentum, select_meson_spin, select_quark_flavor,

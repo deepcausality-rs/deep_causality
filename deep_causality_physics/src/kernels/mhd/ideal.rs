@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::kernels::mhd::quantities::{AlfvenSpeed, MagneticPressure};
+use crate::{AlfvenSpeed, MagneticPressure};
 use crate::{Density, PhysicalField, PhysicsError};
 use core::fmt::Debug;
 use deep_causality_multivector::MultiVector;

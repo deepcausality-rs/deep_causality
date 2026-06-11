@@ -12,8 +12,8 @@
 //! returned per call; integrating along a path is the caller's concern.
 
 use crate::PhysicsError;
-use crate::kernels::dynamics::quantities::{Length, Speed};
-use crate::kernels::fluids::quantities::{Pressure, Velocity3};
+use crate::{Length, Speed};
+use crate::{Pressure, Velocity3};
 use crate::{Density, G};
 use deep_causality_num::{FromPrimitive, RealField};
 

@@ -26,7 +26,7 @@
 
 use crate::PhysicsError;
 use crate::kernels::fluids::kinematics::velocity_gradient_invariants_kernel;
-use crate::kernels::fluids::quantities::VelocityGradient;
+use crate::VelocityGradient;
 use deep_causality_num::{FromPrimitive, RealField};
 
 /// Q-criterion: `Q = 0.5 · (‖Ω‖² − ‖S‖²) = −0.5 · tr(∇u · ∇u)`.

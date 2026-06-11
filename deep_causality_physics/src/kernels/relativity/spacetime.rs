@@ -3,10 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::kernels::relativity::quantities::SpacetimeVector;
+use crate::SpacetimeVector;
 
 use crate::error::PhysicsError;
-use crate::kernels::quantum::quantities::PhaseAngle;
+use crate::PhaseAngle;
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
 use deep_causality_num::{Field, Float, RealField};
 

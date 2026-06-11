@@ -29,7 +29,7 @@ use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{HodgeDecomposition, LatticeComplex, Manifold};
 
 use crate::error::physics_error::PhysicsError;
-use crate::units::fluid_dynamics::velocity_one_form::VelocityOneForm;
+use crate::quantities::fluid_dynamics::velocity_one_form::VelocityOneForm;
 
 /// A divergence-free velocity 1-form: constructible only by projection.
 ///

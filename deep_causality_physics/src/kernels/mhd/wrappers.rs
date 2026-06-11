@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::kernels::mhd::quantities::{
+use crate::{
     AlfvenSpeed, DebyeLength, Diffusivity, LarmorRadius, MagneticPressure,
 };
 use crate::kernels::mhd::{grmhd, ideal, plasma, resistive};

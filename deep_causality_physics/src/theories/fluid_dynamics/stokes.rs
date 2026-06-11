@@ -18,7 +18,7 @@
 
 use crate::PhysicsError;
 use crate::kernels::fluids::governing::{pressure_gradient_force_kernel, viscous_diffusion_kernel};
-use crate::kernels::fluids::quantities::{AccelerationVector, Density, KinematicViscosity};
+use crate::{AccelerationVector, Density, KinematicViscosity};
 use deep_causality_num::RealField;
 
 /// Pointwise RHS of the Stokes momentum equation (creeping flow).

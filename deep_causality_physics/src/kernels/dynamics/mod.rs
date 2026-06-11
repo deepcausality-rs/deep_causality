@@ -5,10 +5,9 @@
 
 pub(crate) mod estimation;
 pub(crate) mod kinematics;
-pub(crate) mod quantities;
 pub(crate) mod wrappers;
 
 pub use estimation::*;
 pub use kinematics::*;
-pub use quantities::*;
+pub use crate::quantities::dynamics::*;
 pub use wrappers::*;

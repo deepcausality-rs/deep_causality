@@ -13,7 +13,7 @@
 //! for the type definition.
 
 use crate::PhysicsError;
-use crate::kernels::fluids::quantities::{
+use crate::{
     RotationRateTensor, StrainRateTensor, Velocity3, VelocityGradient, VorticityVector,
 };
 use deep_causality_num::{FromPrimitive, RealField};
