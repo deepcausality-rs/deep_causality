@@ -1,0 +1,39 @@
+openspec/notes/cfd/references.md
+  s_86ac044a95d19d::t_4543aaab9581fd 1-162
+openspec/notes/cfd-challange/entry-plan.md
+  s_86ac044a95d19d::t_3466154682ce22 115-117,146-150,153
+  s_86ac044a95d19d::t_4e1bf25b7771f7 1-114,118-126,142-145,151-152,154-166
+  s_86ac044a95d19d::t_e6cc3c70916dc2 127-141
+openspec/notes/cfd/cfd-roadmap.md
+  s_86ac044a95d19d::t_1b717c5b6b4253 13
+  s_86ac044a95d19d::t_d9bdc7d2bad795 12
+openspec/notes/cfd/causal_cfd.md
+  s_86ac044a95d19d::t_55697970844af0 41-60,62-82
+  s_86ac044a95d19d::t_6c141f828d843f 104
+  s_86ac044a95d19d::t_a31b74ee6a954b 90
+  s_86ac044a95d19d::t_b417c7cfce71bf 472-487
+  s_86ac044a95d19d::t_f381f150c18b71 301
+  s_86ac044a95d19d::t_524d5684c75a82 256
+openspec/notes/cfd/3DCausalFluidDynamics.md
+  s_86ac044a95d19d::t_b673b28efc4008 228-243
+openspec/notes/cfd/variable-grid-geometry.md
+  s_86ac044a95d19d::t_df3f9cdbcab00f 17-28
+  s_86ac044a95d19d::t_56ff9d824ffdb7 202-209
+  s_86ac044a95d19d::t_100ae75be2f08c 1-16,29-201
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "025445a22c4970384ad24415cc780e111d7e4900",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
