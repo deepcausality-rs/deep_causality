@@ -87,14 +87,17 @@ two) and well-posedness on tori (β-step singularity sidestepped) both follow.
 Alternative — always calling full `hodge_decompose` and discarding components —
 rejected: doubles per-step cost and couples the solver to G6.
 
-**D6 — G6 deflation via explicit harmonic-basis projection.** On a torus the
-harmonic k-form basis is constructive (constant cochains per axis combination);
-deflation projects the RHS and CG iterates onto the orthogonal complement, leaving
-`cg_solve` itself untouched (it already handles semi-definite operators given a
-deflated RHS; the wrapper maintains the invariant). Rationale: smallest blast
-radius — no signature change to `cg_solve`, no new solver. Alternative — augmented
-(bordered) system — rejected: changes the operator shape and costs more per
-iteration for the same answer on a torus.
+**D6 — G6 closed by empirical pinning, not deflation (revised during apply,
+2026-06-11).** Tests-first implementation falsified the premise: the β-step's RHS
+`dω` is M-orthogonal to the harmonic kernel (⟨dω, h⟩_M = ⟨ω, δh⟩_M = 0), so CG's
+Krylov space remains in `range(Δ)` and the consistent singular system converges on
+tori — verified at 2D/3D, mixed periodicity, and 16×16 at default tolerance.
+Building deflation would have been speculative machinery (AGENTS.md §2). What
+ships instead: the behavior pinned by tests (the 16×16 case as the drift canary)
+and the constructive-basis deflation documented as the fallback with a named
+trigger. The original mechanism (M-normalized indicator cochains per
+periodic-axis subset, S = ∅ excluded to keep grade-0 mean subtraction
+bit-identical, projector-wrapped `apply`) is preserved here for that eventuality.
 
 **D7 — Capability boundaries follow crate boundaries.** `dec-exterior-algebra`,
 `de-rham-transfer`, `leray-projection` specify topology-crate behavior;

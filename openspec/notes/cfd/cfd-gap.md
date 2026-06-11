@@ -148,6 +148,8 @@ exposed one new operator gap. Four gaps remain, in dependency order.
 
 ### G1 — Wedge product and interior product on lattice cochains
 
+*Status: **closed 2026-06-11** by `openspec/changes/add-dec-solver-foundations` — antisymmetrized cubical cup-product wedge (Leibniz exact at machine precision on arbitrary cochains; graded anticommutativity exact) and the star-derived interior product (all 2D/3D sign pins exact on constants; Cartan and convective cross-validation at second order).*
+
 The convective term needs the contraction `i_u ω` of the vorticity 2-form with the
 velocity. The topology crate has `d`, `δ`, `⋆`, `Δ`, and the Hodge decomposition — but
 **no wedge product (`∧`) and no interior product (`i_X`)**; a code search confirms
@@ -163,6 +165,8 @@ explicitly.
 
 ### G2 — Musical isomorphisms (♭/♯), repositioned to the boundary of the computation
 
+*Status: **closed 2026-06-11** — `Manifold::{de_rham, de_rham_from_integrals, sharp}` with the FTC orientation pin, exact constant round-trips, second-order smooth round-trips, and the `DeRhamSharpIso` Tier-2 witness in `extensions::iso_de_rham`.*
+
 DEC-native removes ♭/♯ from the solve loop entirely. They remain necessary at the
 edges of the computation:
 
@@ -174,6 +178,8 @@ edges of the computation:
   requires moving between representations lawfully.
 
 ### G3 — Typed-form carriers in the physics crate
+
+*Status: **closed 2026-06-11** — `units::fluid_dynamics::{VelocityOneForm, VorticityTwoForm, PressureZeroForm, BodyForceOneForm, SolenoidalField}`; the type-state's unconstructibility (no public constructor, no arithmetic) is enforced by `compile_fail` doctests; the velocity carrier rides `Rk4` at f32/f64/Float106.*
 
 Per decision 3, the algebraic operations the `Rk4` arrow requires (`Clone + Add +
 Mul<R>`) live on domain-specific unit types, not on raw tensors. The spec should
@@ -192,6 +198,8 @@ violate — this is the strongest single demonstration of the units-as-invariant
 the solver can offer, and it belongs in the challenge entry's narrative.
 
 ### G4 — Sign and orientation conventions, pinned and tested
+
+*Status: **closed 2026-06-11** — `Δ_dR = −∇²` pinned by the exact-eigenvector sine test; cup ordering pinned by machine-precision Leibniz; de Rham orientation pinned by the FTC test.*
 
 Three conventions must be fixed once, in the spec, with tests:
 
@@ -232,6 +240,8 @@ then the lid-driven cavity against the Ghia et al. (1982) centerline tables, wit
 lid-corner singularity acknowledged as the standard nuisance.
 
 ### G6 — Harmonic-kernel handling in full `hodge_decompose` on periodic lattices
+
+*Status: **closed 2026-06-11**, with a finding that supersedes this section's mechanism: the β-step's RHS `dω` is M-orthogonal to the harmonic kernel, so the consistent singular CG converges on tori without deflation — pinned by tests (2D/3D tori, mixed periodicity, 16×16 drift canary). `leray_project` ships as the one-solve half-decomposition entry point. Deflation remains the documented fallback (see the change's design D6).*
 
 Surfaced by cross-reading `3DCausalFluidDynamics.md` §7: the β-step CG inside
 `hodge_decompose` is singular on periodic-topology lattices where `β_k > 0` (Risk 1 of

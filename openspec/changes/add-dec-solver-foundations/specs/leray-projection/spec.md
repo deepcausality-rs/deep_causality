@@ -29,13 +29,20 @@ pressure).
 - **WHEN** `leray_project` runs on a periodic lattice where the full decomposition's β-step would be singular
 - **THEN** it succeeds, demonstrating the half-decomposition's well-posedness on tori
 
-### Requirement: Harmonic-kernel deflation makes full hodge_decompose well-posed on periodic lattices
-`hodge_decompose` SHALL deflate the harmonic kernel from the β-step solve on
-periodic lattices with `β_k > 0`, by projecting the right-hand side and the CG
-iterates onto the orthogonal complement of the constructively-known torus harmonic
-basis (constant cochains per axis combination). The public signature SHALL remain
-unchanged; behavior on contractible (open) lattices SHALL be bit-compatible with
-the current implementation.
+### Requirement: Full hodge_decompose is well-posed on periodic lattices
+`hodge_decompose` SHALL converge on periodic lattices with `β_k > 0` and produce
+pairwise-orthogonal components, with its public signature and its contractible
+(open) lattice behavior unchanged.
+
+*Implementation finding (2026-06-11, supersedes the design's deflation mechanism):*
+the β-step's right-hand side `dω` is M-orthogonal to the harmonic kernel in exact
+arithmetic, so CG's Krylov space stays in `range(Δ)` and the consistent singular
+system converges without deflation — verified by tests on 2D/3D tori up to 16×16
+at the default (1e-10 relative) tolerance, plus mixed-periodicity lattices. No
+deflation machinery ships; the constructive torus harmonic basis (constant
+cochains per periodic-axis combination, M-normalized) remains the documented
+fallback if larger-scale use ever exhibits kernel-drift stagnation, with the
+16×16 stress test as the canary.
 
 #### Scenario: Decomposition converges on the torus
 - **WHEN** `hodge_decompose` is applied to a smooth 1-form on `square_torus` and `cubic_torus` (where `β₁ = D > 0`)

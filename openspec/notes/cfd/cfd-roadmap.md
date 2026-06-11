@@ -45,6 +45,12 @@ Status: sequencing note across the three CFD documents. 2026-06-10.
 **Why first:** every later stage consumes these APIs; nothing here depends on
 anything later. **Exit:** operator law tests green at f32/f64/Float106.
 
+*Status: **complete 2026-06-11*** — implemented as
+`openspec/changes/add-dec-solver-foundations`; exit criterion met (operator law
+tests green at all three precisions), plus the §6-style DEC-vs-pointwise
+cross-validation already wired in CI. G6 closed by empirical pinning rather
+than deflation (see the change's design D6).
+
 ### Stage 1 — The periodic DEC-native solver
 **Source:** `cfd-gap.md` §5.4, §7 (validation ladder). **Depends on:** Stage 0 (G1–G4).
 

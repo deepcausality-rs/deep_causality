@@ -545,6 +545,7 @@ dependencies = [
 name = "deep_causality_physics"
 version = "0.6.2"
 dependencies = [
+ "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_haft",
  "deep_causality_metric",
