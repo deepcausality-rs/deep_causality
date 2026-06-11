@@ -1,0 +1,32 @@
+examples/README.md
+  s_86ac044a95d19d::t_205830b88cb160 183
+openspec/specs/dec-ns-diagnostics/spec.md
+  s_86ac044a95d19d::t_8517b100718300 1-79
+openspec/specs/dec-ns-march/spec.md
+  s_86ac044a95d19d::t_8517b100718300 1-118
+openspec/specs/dec-ns-validation/spec.md
+  s_86ac044a95d19d::t_8517b100718300 1-125
+openspec/specs/dec-ns-rate/spec.md
+  s_86ac044a95d19d::t_8517b100718300 1-88
+examples/avionics_examples/dec_taylor_green_re1600/README.md
+  s_86ac044a95d19d::t_7247ac59e15a49 1-115
+examples/avionics_examples/README.md
+  s_86ac044a95d19d::t_3d253634b2b4e2 24
+  s_86ac044a95d19d::t_f21b8bd2cfea94 61-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "966e1f74c1c189ce43626fbe37b7d8a836cf788e",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
