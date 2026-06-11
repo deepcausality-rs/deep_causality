@@ -11,6 +11,7 @@ extern crate core;
 pub(crate) mod constants;
 pub(crate) mod error;
 pub(crate) mod kernels;
+pub(crate) mod quantities;
 pub mod theories;
 pub(crate) mod units;
 
@@ -34,6 +35,11 @@ pub use crate::kernels::thermodynamics::*;
 pub use crate::kernels::waves::*;
 
 pub use crate::units::energy::Energy;
+pub use crate::units::fluid_dynamics::body_force_one_form::BodyForceOneForm;
+pub use crate::units::fluid_dynamics::pressure_zero_form::PressureZeroForm;
+pub use crate::units::fluid_dynamics::solenoidal_field::SolenoidalField;
+pub use crate::units::fluid_dynamics::velocity_one_form::VelocityOneForm;
+pub use crate::units::fluid_dynamics::vorticity_two_form::VorticityTwoForm;
 pub use crate::units::index_of_refraction::IndexOfRefraction;
 pub use crate::units::probability::Probability;
 pub use crate::units::ratio::Ratio;

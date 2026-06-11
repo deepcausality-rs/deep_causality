@@ -4,6 +4,7 @@
  */
 
 pub(crate) mod energy;
+pub(crate) mod fluid_dynamics;
 pub(crate) mod index_of_refraction;
 pub(crate) mod probability;
 pub(crate) mod ratio;

@@ -8,6 +8,8 @@ pub mod compressible_ns_tests;
 #[cfg(test)]
 pub mod compressible_ns_verification_tests;
 #[cfg(test)]
+pub mod dec_cross_validation_tests;
+#[cfg(test)]
 pub mod euler_tests;
 #[cfg(test)]
 pub mod euler_verification_tests;

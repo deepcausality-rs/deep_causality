@@ -380,8 +380,35 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
+        "//deep_causality_calculus",
         "//deep_causality_metric",
         "//deep_causality_multivector",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_test_suite(
+    name = "units/fluid_dynamics",
+    srcs = glob([
+        "units/fluid_dynamics/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_physics",
+        # Internal dependencies
+        "//deep_causality_calculus",
+        "//deep_causality_haft",
+        "//deep_causality_num",
         "//deep_causality_tensor",
         "//deep_causality_topology",
     ],
