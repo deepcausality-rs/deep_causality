@@ -24,6 +24,16 @@
 //! lives in [`crate::utils::cg_solver`]. The gauge non-uniqueness at grade 0 (where
 //! the constant functions are always harmonic) is fixed by subtracting the mean from
 //! `φ_α` per the standard DEC convention.
+//!
+//! **Periodic lattices** (supersedes Risk 1 of the archived
+//! `add-hodge-decomposition` change): on tori the α/β-step operators have
+//! nontrivial harmonic kernels (`β_k > 0`), but their right-hand sides (`δω`,
+//! `dω`) are M-orthogonal to those kernels in exact arithmetic, so the CG Krylov
+//! space stays in `range(Δ)` and the consistent singular solves converge. This is
+//! pinned by the periodic-lattice test suite (2D/3D tori, mixed periodicity, and
+//! a 16×16 drift canary in `tests/types/manifold/leray_tests.rs`); constructive
+//! harmonic-basis deflation remains the documented fallback if larger scales ever
+//! stagnate. See the `add-dec-solver-foundations` change, design D6.
 
 use core::fmt::{Debug, Display};
 
@@ -151,29 +161,10 @@ where
             return Err(HodgeFailReason::<R>::MissingMetric.into_topology_error());
         }
 
-        let tolerance = opts.tolerance.unwrap_or_else(|| {
-            // Default convergence threshold: tight relative residual (1e-10),
-            // but clamped to `R::epsilon() * 100` from below so the threshold
-            // stays representable at low-precision backends. At f64 this stays
-            // at 1e-10; at f32 (epsilon ≈ 1.19e-7) it floors to ~1.19e-5;
-            // at Float106 it floors to ~1e-30. Without this clamp, the f32
-            // path tries to converge below its own representable noise.
-            let candidate = <R as FromPrimitive>::from_f64(1e-10).unwrap_or_else(R::epsilon);
-            let floor = R::epsilon() * <R as FromPrimitive>::from_f64(100.0).unwrap_or(R::one());
-            if candidate > floor { candidate } else { floor }
-        });
-        // Reject non-positive tolerances explicitly. A zero or negative
-        // threshold makes the relative-residual convergence check
-        // (`rsold.sqrt() < abs_tol`) unreachable: `sqrt()` is non-negative
-        // and `tolerance * b_norm` is non-positive, so CG would run to the
-        // iteration cap and surface a misleading `Nonconvergence` error
-        // whose actual cause is a caller-supplied invalid threshold.
-        if tolerance <= R::zero() {
-            return Err(TopologyError::HodgeDecompositionFailed(format!(
-                "tolerance must be strictly positive, got {}",
-                tolerance
-            )));
-        }
+        // Tolerance defaulting (per-backend epsilon floor) and the
+        // non-positive-tolerance rejection live in `resolve_cg_tolerance`,
+        // shared with `leray_project_opts`.
+        let tolerance = resolve_cg_tolerance(opts.tolerance)?;
         let max_iter = opts.max_iterations.unwrap_or(1000);
 
         let omega: Vec<R> = field.as_slice().to_vec();
@@ -239,7 +230,7 @@ where
 }
 
 /// Solve `Δ_grade x = rhs` matrix-free via CG on this manifold.
-fn solve_laplacian<K, R>(
+pub(super) fn solve_laplacian<K, R>(
     manifold: &Manifold<K, R>,
     grade: usize,
     rhs: &[R],
@@ -273,10 +264,34 @@ where
     }
 }
 
-fn pad_or_truncate<R: RealField>(v: &mut Vec<R>, target_len: usize) {
+pub(super) fn pad_or_truncate<R: RealField>(v: &mut Vec<R>, target_len: usize) {
     if v.len() < target_len {
         v.resize(target_len, R::zero());
     } else if v.len() > target_len {
         v.truncate(target_len);
     }
+}
+
+/// Resolve the CG tolerance from caller options, applying the per-backend
+/// epsilon floor, and reject non-positive values. Shared by
+/// `hodge_decompose_opts` and `leray_project_opts`.
+pub(super) fn resolve_cg_tolerance<R>(requested: Option<R>) -> Result<R, TopologyError>
+where
+    R: RealField + FromPrimitive + Display,
+{
+    let tolerance = requested.unwrap_or_else(|| {
+        // Default convergence threshold: tight relative residual (1e-10),
+        // clamped from below to `R::epsilon() * 100` so the threshold stays
+        // representable at low-precision backends.
+        let candidate = <R as FromPrimitive>::from_f64(1e-10).unwrap_or_else(R::epsilon);
+        let floor = R::epsilon() * <R as FromPrimitive>::from_f64(100.0).unwrap_or(R::one());
+        if candidate > floor { candidate } else { floor }
+    });
+    if tolerance <= R::zero() {
+        return Err(TopologyError::HodgeDecompositionFailed(format!(
+            "tolerance must be strictly positive, got {}",
+            tolerance
+        )));
+    }
+    Ok(tolerance)
 }

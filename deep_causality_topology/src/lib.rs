@@ -68,12 +68,14 @@ pub use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
 pub type CubicalComplex<const D: usize, R> = LatticeComplex<D, R>;
 /// Textbook alias for `LatticeCell<D>`. See `CubicalComplex<D>`.
 pub type CubicalCell<const D: usize> = LatticeCell<D>;
+pub use crate::extensions::iso_de_rham::{DeRhamSharpIso, FieldCarrier};
 pub use crate::types::cubical_regge_geometry::{
     AcceptReject, CubicalReggeGeometry, Euclidean, Lorentzian, RejectReason, SignatureMarker,
 };
 pub use crate::types::graph::Graph;
 pub use crate::types::hodge_decomposition::HodgeDecomposition;
 pub use crate::types::hypergraph::Hypergraph;
+pub use crate::types::leray_projection::LerayProjection;
 pub use crate::types::manifold::HodgeDecomposeOptions;
 pub use crate::types::manifold::{Manifold, SimplicialManifold};
 pub use crate::types::mixed_graph::{Edge, EdgeKind, Mark, MixedGraph};

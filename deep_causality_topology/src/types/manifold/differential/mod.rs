@@ -9,10 +9,14 @@
 //! and Hodge star operators. These are sparse matrix operations.
 
 mod codifferential;
+mod de_rham;
 mod exterior;
 mod hodge;
-mod hodge_decomposition_impl;
+pub(super) mod hodge_decomposition_impl;
+mod interior_product;
 mod laplacian;
+mod leray;
+mod wedge;
 
 pub use hodge_decomposition_impl::HodgeDecomposeOptions;
 

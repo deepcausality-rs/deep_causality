@@ -15,6 +15,8 @@ mod cow_borrow_tests;
 #[cfg(test)]
 mod cubical_differential_tests;
 #[cfg(test)]
+mod de_rham_tests;
+#[cfg(test)]
 mod differential_tests;
 #[cfg(test)]
 mod display_tests;
@@ -27,6 +29,12 @@ mod hodge_decomposition_property_tests;
 #[cfg(test)]
 mod hodge_decomposition_tests;
 #[cfg(test)]
+mod interior_product_tests;
+#[cfg(test)]
+mod leray_tests;
+#[cfg(test)]
 mod manifold_topology_tests;
 #[cfg(test)]
 mod simplicial_topology_tests;
+#[cfg(test)]
+mod wedge_tests;
