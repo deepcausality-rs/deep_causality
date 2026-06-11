@@ -225,6 +225,22 @@ only the extraction/labelling logic around the shipped kernels. See the revised 
 
 The 3D-only `vortex_centroids: Vec<[R; 3]>` field is checked at construction time; non-3D manifolds return `FluidExtractionError::Non3DManifold`.
 
+**Robustness caveat and comparison target (references.md: Abolholl-2024).**
+Teschner's group documents that Q, Δ, and swirling-strength criteria all detect
+spurious vortices (false positives *and* negatives) — "vortex core detection
+remains an unsolved problem" — and validates a hybrid CNN+DNN detector on the
+Taylor–Green vortex, the same benchmark this deck uses everywhere. Two
+consequences for B1b: (a) the Q-threshold + connected-components extractor must
+treat its threshold as a declared, tested parameter, not a constant — the property
+tests should include a threshold-sensitivity sweep on the TG case; (b) this
+pipeline holds a structural alternative no pointwise criterion has: the vortex
+information enters through the *Hodge decomposition* (global, topological — the
+solenoidal component and the Betti numbers), so "topological vortex detection vs.
+local criteria, on the shared TG benchmark, against the Abolholl hybrid-ML
+baseline" is a publishable comparison that lands precisely on a problem the field
+itself calls unsolved. Flag it as a candidate section of the deferred validation
+note.
+
 **Property tests:**
 
 - **Galilean invariance of vortex detection.** Adding a constant velocity to the field preserves the Q-criterion field; vortex_count and vortex_centroids are unchanged.

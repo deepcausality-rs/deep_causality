@@ -9,6 +9,8 @@ Status: sequencing note across the three CFD documents. 2026-06-10.
 | `cfd-gap.md` | Mathematical core | **Ground truth.** Gaps G1–G6 and their closure inside the uniform math; the periodic DEC-native solver; the validation ladder. |
 | `causal_cfd.md` | Platform vision | Cut-cell industrial solver, the four amplifiers, NASA Vision 2030 frame, Phases 1–4. Revised 2026-06-10 against cfd-gap. |
 | `3DCausalFluidDynamics.md` | Analysis pipeline | `HodgeDecomposition` → `FluidSignature` → `RollingHistory` → SURD attribution. Revised 2026-06-10 against cfd-gap. |
+| `variable-grid-geometry.md` | Mesh program | Variable/graded/adaptive meshes via the topology–geometry separation. R1 (graded metrics) lands with Stage 3; R2 (metric adaptation, causal indicator) with Stage 4; R3 (topological AMR) at Stage 5. |
+| `references.md` | Bibliography | Exact citations for the whole deck: Teschner-group practitioner evidence, NASA Vision 2030, DEC foundations (Hirani, MHS, Elcott), metric adaptation (Loseille–Alauzet), validation reference data (Ghia, Driver–Seegmiller, Lehmkuhl, Re-1600 TGV), causal methodology (Martínez-Sánchez & Lozano-Durán). |
 | `cfd-roadmap.md` | This file | Which note ships when, and why. |
 
 ## The three synergies that fix the ordering
