@@ -14,9 +14,14 @@ The crate SHALL provide a solver type
 `Result<StepOutput<R>, PhysicsError>` where the output state is again a
 `SolenoidalField<R>`. Internally the step SHALL be the chain: extract the
 1-form, advance it with `deep_causality_calculus::Rk4` (the only
-integrator), re-project through `SolenoidalField::from_leray_projection`,
-then apply the CFL guard. There SHALL be no public path that marches an
-unprojected `VelocityOneForm<R>`.
+integrator) over the **projected rate** — each stage evaluates
+`P(rhs)`, so the marched ODE is exactly the projected dynamics, with no
+splitting error — re-enter the type-state through
+`SolenoidalField::from_leray_projection` (near-free on the
+already-solenoidal combination of stage increments), then apply the CFL
+guard. A CG failure inside a stage SHALL be deferred to the step boundary
+and surfaced as the step's error, never as a panic. There SHALL be no
+public path that marches an unprojected `VelocityOneForm<R>`.
 
 #### Scenario: Step output is divergence-free at CG tolerance
 

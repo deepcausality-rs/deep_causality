@@ -40,6 +40,14 @@ impl<R: RealField> VelocityOneForm<R> {
         Ok(Self { field })
     }
 
+    /// Crate-internal: wraps a tensor that is already a valid grade-1
+    /// cochain by construction (operator output on a validated lattice, or
+    /// the cochain of a [`crate::SolenoidalField`]). Skips the `new`
+    /// validation pass; callers guarantee length and provenance.
+    pub(crate) fn from_raw(field: CausalTensor<R>) -> Self {
+        Self { field }
+    }
+
     /// The underlying edge cochain.
     pub fn as_tensor(&self) -> &CausalTensor<R> {
         &self.field

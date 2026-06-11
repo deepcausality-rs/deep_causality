@@ -36,9 +36,9 @@ chain of library calls.
 
 - Incompressible NS on periodic lattices, 2D and 3D, velocity as an edge
   1-form throughout, precision-generic over `R: RealField`.
-- Rotational-form RHS `−i_u(du♭) − ν Δ_dR u♭ + g♭`; Leray projection between
-  steps (Chorin placement, first-order splitting at the projection, stated
-  honestly); CFL guard each step.
+- Rotational-form RHS under projection: the marched rate is
+  `P(−i_u(du♭) − ν Δ_dR u♭ + g♭)` — the projector inside the rate, exactly
+  the governing equation of `cfd-gap.md` §2; CFL guard each step.
 - The type-state contract enforced end to end: the public step maps
   `SolenoidalField → SolenoidalField`; an unprojected field cannot be
   marched.
@@ -80,33 +80,52 @@ Tier 4 — the edge is acyclic. AGENTS.md's dependency table gains
 RK4 inside physics — was rejected: it duplicates a published operator and
 destroys the composition story the stage exists to prove.
 
-### D3 — Infallible rate closure, validated at construction
+### D3 — Rate surfaces: infallible unprojected assembly, fallible projected rate
 
-`Rk4<S, R, F>` requires an infallible `rate: Fn(&S) -> S`. The DEC
-operators return `Result`, but their only failure modes for a fixed
-manifold are dimension mismatch and missing metric — both excluded once at
-solver construction (metric present; field length = `num_cells(1)`;
-`0 < grade ≤ D` paths exercised by the operators in use). The rate closure
-therefore unwraps operator results with `expect`, each carrying the
-construction-time invariant in its message. Precedent: `VelocityOneForm::add`
-panics on mismatched edge counts with the same validated-construction
-justification. The alternative — a fallible hand-rolled RK4 — was rejected
-per D2.
+`Rk4<S, R, F>` requires an infallible `rate: Fn(&S) -> S`. The rate
+therefore has two surfaces. The **unprojected assembly**
+(`eval_unprojected`) is infallible: the DEC operators' only failure modes
+for a fixed manifold are dimension mismatch and missing metric, both
+excluded once at construction, so its internal `Result`s unwrap with
+`expect` against construction-time invariants (precedent:
+`VelocityOneForm::add`). The **projected rate** (`eval_projected`) adds
+one CG solve and returns `Result` — CG convergence is data-dependent and
+must not panic. Inside the `Rk4` closure a stage's CG failure is parked in
+a `Cell<Option<PhysicsError>>` and the stage yields a zero rate; the step
+checks the slot immediately after the arrow run and short-circuits with
+the recorded error. This keeps the literal `Rk4` composition and the
+fallible plumbing in `Result`.
 
-### D4 — The step is `SolenoidalField → Result<SolenoidalField>`
+### D4 — The projector lives inside the rate (revised during implementation)
+
+**Implementation finding.** The first build placed one projection *after*
+the RK4 step (Chorin splitting). The validation ladder falsified it: at
+`ν = 0` the march lost 5–20% of its energy over `T = 10`, and the loss
+halved with `dt` — the textbook first-order splitting dissipation (the
+unprojected stages grow an O(1) gradient component whose energy the
+post-step projection discards). The fix is the formulation the gap note's
+§2 equation states: march `∂u♭/∂t = P(rhs(u♭))`, the exact ODE on the
+divergence-free subspace, with **no splitting error at all** — each RK4
+stage evaluates the projected rate (one CG per stage, four per step).
+After the fix the inviscid energy drift collapsed to the spatial-residue
+level and the Taylor–Green envelope error became cleanly second order.
 
 ```text
 SolenoidalField ──as_one_form──► VelocityOneForm
-    ──Rk4::run──► VelocityOneForm            (pure numerics, the arrow)
-    ──leray_project──► SolenoidalField + φ   (fallible bind: CG failure short-circuits)
-    ──cfl_check──► SolenoidalField           (fallible bind: violation short-circuits)
+    ──Rk4::run over P∘rhs──► VelocityOneForm  (projected stages; CG error deferred)
+    ──leray_project──► SolenoidalField + φ    (type-state re-entry; near-free)
+    ──cfl_check──► SolenoidalField            (fallible bind: violation short-circuits)
 ```
 
-The public API accepts and returns only the projected type-state, making
-"you cannot time-step an unprojected field" structural. Initial conditions
-enter once through `de_rham`/`de_rham_from_integrals` into
-`VelocityOneForm`, then through one `t = 0` projection (the sampled
-analytic field is divergence-free analytically, not discretely).
+The RK4 combination of divergence-free increments is divergence-free, so
+the re-entry projection — kept because projection is `SolenoidalField`'s
+only construction path — receives an already-solenoidal field and its CG
+terminates almost immediately. Cost: ~4 full CG solves per step instead
+of 1; the structure-preservation is what the stage exists to demonstrate,
+so the cost is taken. Initial conditions enter once through
+`de_rham`/`de_rham_from_integrals` into `VelocityOneForm`, then through
+one `t = 0` projection (the sampled analytic field is divergence-free
+analytically, not discretely).
 
 ### D5 — Solver type and configuration
 
@@ -134,17 +153,18 @@ Violation returns a dedicated error carrying both the limit and the actual
 `dt`. This is the embryonic 10.1 corrective bind of `causal_cfd.md` §10;
 adaptive `dt` is a follow-up, not this change.
 
-### D7 — Pressure recovery costs one opt-in solve, stated honestly
+### D7 — Pressure recovery costs one opt-in solve
 
-The gap note's "no extra solve" claim holds only when the march projects
-the RHS; with the Chorin placement of D4 the per-step potential φ is the
-potential of the *state* projection, which is not the Bernoulli pressure.
-`pressure_diagnostic(&SolenoidalField)` therefore evaluates the unprojected
-RHS at the current state, Leray-projects it (one extra CG solve, only when
-called), and returns both conventions as `PressureZeroForm`s: Bernoulli
-(`p + ½|u|²`, the grade-0 potential, ρ = 1) and static (Bernoulli minus the
-kinetic 0-form assembled from `sharp` magnitudes). Resolves gap-note open
-question 3 by emitting the pair.
+`pressure_diagnostic(&SolenoidalField)` evaluates the unprojected RHS at
+the current state and Leray-projects it (one CG solve, only when called),
+returning both conventions as `PressureZeroForm`s: Bernoulli
+(`p + ½|u|²` **is** the grade-0 potential at ρ = 1 — the true dynamics is
+`∂u/∂t = rhs_unproj − ∇B`, so `(I − P)rhs = +∇B`) and static (Bernoulli
+minus the kinetic 0-form assembled from `sharp` magnitudes). Resolves
+gap-note open question 3 by emitting the pair. The per-step stage
+projections discard exactly this gradient, but their potentials belong to
+intermediate stage states; the diagnostic evaluates at the *current*
+state, which is why it remains a separate opt-in solve.
 
 ### D8 — Diagnostic definitions (DEC-native, no new operators)
 
@@ -199,14 +219,17 @@ CSV on stdout; CI never runs it.
 - **CG cost without preconditioning** dominates large-grid steps; accepted
   for the prototype (gap note §8), logged as the first performance
   follow-up. CI grids are chosen small enough that the suite stays fast.
-- **First-order splitting at the projection** bounds the march's temporal
-  order regardless of RK4's fourth-order interior; the validation gates
-  therefore assert the *spatial* order on the TG decay envelope and treat
-  temporal refinement qualitatively. Stated in the example and test docs.
-- **`expect` in the rate closure** (D3) trades a theoretical panic for
-  composition with the published `Rk4`. The invariants are
+- **Four CG solves per step** (projected stages, D4) instead of the
+  Chorin placement's one: the price of marching the exact projected
+  dynamics. Accepted — the splitting alternative measurably destroys the
+  inviscid invariants the stage exists to demonstrate; preconditioning
+  remains the first performance follow-up.
+- **`expect` in the unprojected assembly** (D3) trades a theoretical panic
+  for composition with the published `Rk4`. The invariants are
   construction-checked and the panic paths are documented coverage
-  exemptions, consistent with the crate's existing precedent.
+  exemptions, consistent with the crate's existing precedent. The
+  data-dependent failure (CG) is `Result`-carried via the deferred slot,
+  never a panic.
 - **Helicity conservation is measured, not assumed**: the
   rotational-form/DEC combination is the structure-preserving choice in the
   literature (MHS 2016), but the inviscid test asserts bounded drift rather

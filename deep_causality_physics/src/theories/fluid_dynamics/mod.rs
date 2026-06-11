@@ -12,12 +12,14 @@
 //! and return the pointwise RHS of `∂u/∂t = ...` in Eulerian acceleration form.
 
 pub(crate) mod compressible_ns;
+pub(crate) mod dec;
 pub(crate) mod euler;
 pub(crate) mod incompressible_ns;
 pub(crate) mod stokes;
 
 // Group `pub use` re-exports are commented out until each regime ships.
 pub use compressible_ns::*;
+pub use dec::*;
 pub use euler::*;
 pub use incompressible_ns::*;
 pub use stokes::*;

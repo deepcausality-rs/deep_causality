@@ -1,27 +1,33 @@
 # dec-ns-rate
 
 The DEC right-hand side of incompressible Navier–Stokes in rotational
-(Lamb) form: `−i_u(du♭) − ν Δ_dR u♭ + g♭`, assembled from the Stage 0
+(Lamb) form under Leray projection: the marched rate is
+`P(−i_u(du♭) − ν Δ_dR u♭ + g♭)` (the projector inside the rate, per the
+governing equation of `cfd-gap.md` §2), assembled from the Stage 0
 operators on a metric-bearing periodic `Manifold<LatticeComplex<D, R>, R>`.
+The unprojected assembly is exposed separately for cross-validation and
+the pressure diagnostic.
 
 ## ADDED Requirements
 
 ### Requirement: Rotational-form rate assembly
 
 The crate SHALL provide a rate evaluator in
-`deep_causality_physics::theories::fluid_dynamics::dec` that, given a
-velocity edge 1-form on a metric-bearing periodic lattice manifold, a
-kinematic viscosity `ν ≥ 0`, and an optional body-force 1-form, returns the
-1-form `−i_u(du♭) − ν Δ_dR u♭ + g♭`. The convective term SHALL be composed
-from `exterior_derivative` and `interior_product`; the viscous term SHALL
-use `laplacian(1)` with the Stage 0 sign pin (`Δ_dR = −∇²`, hence the minus
-sign realizes `+ν∇²u`). The evaluator SHALL be generic over
-`R: RealField` with no concrete float named in its signature.
+`deep_causality_physics::theories::fluid_dynamics::dec` with two surfaces:
+an **unprojected assembly** returning `−i_u(du♭) − ν Δ_dR u♭ + g♭` and the
+**projected rate** returning its Leray projection (one gauge-fixed CG
+solve, fallible). The convective term SHALL be composed from
+`exterior_derivative` and `interior_product`; the viscous term SHALL use
+`laplacian(1)` with the Stage 0 sign pin (`Δ_dR = −∇²`, hence the minus
+sign realizes `+ν∇²u`). The projected rate SHALL return a divergence-free
+1-form (at CG tolerance) and surface CG non-convergence as an error. The
+evaluator SHALL be generic over `R: RealField` with no concrete float
+named in its signature.
 
 #### Scenario: Convective term matches the Stage 0 cross-validation oracle
 
-- **WHEN** the rate is evaluated on the sampled 2D Taylor–Green field with
-  `ν = 0` and no body force, over the refinement ladder `[8, 16, 32]`
+- **WHEN** the unprojected assembly is evaluated on the sampled 2D
+  Taylor–Green field over the refinement ladder `[8, 16, 32]`
 - **THEN** the result agrees with the pointwise oracle
   (`incompressible_ns_rhs_kernel` fed by tangent-functor derivatives, via
   the Lamb identity) at second observed order, reusing the Stage 0
@@ -36,9 +42,17 @@ sign realizes `+ν∇²u`). The evaluator SHALL be generic over
 
 #### Scenario: Body force enters additively
 
-- **WHEN** the same state is evaluated with and without a body-force 1-form
+- **WHEN** the same state is evaluated through the unprojected assembly
+  with and without a body-force 1-form
 - **THEN** the difference of the two results equals the body-force
-  coefficients exactly
+  coefficients to machine rounding
+
+#### Scenario: The projected rate is divergence-free and surfaces CG failure
+
+- **WHEN** the projected rate is evaluated on the sampled Taylor–Green
+  field with a healthy CG budget, and again with a one-iteration budget
+- **THEN** the first returns a 1-form whose divergence residual is at CG
+  tolerance, and the second returns the wrapped projection error
 
 ### Requirement: Construction-time validation makes the rate infallible
 

@@ -14,6 +14,10 @@ name = "cfd_taylor_green"
 path = "cfd_taylor_green/main.rs"
 
 [[example]]
+name = "dec_taylor_green_re1600"
+path = "dec_taylor_green_re1600/main.rs"
+
+[[example]]
 name = "turbulence_flow"
 path = "turbulence_flow/main.rs"
 
@@ -41,6 +45,7 @@ deep_causality_num = { path = "../../deep_causality_num" }
 deep_causality_haft = { path = "../../deep_causality_haft" }
 deep_causality_physics = { path = "../../deep_causality_physics" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
+deep_causality_topology = { path = "../../deep_causality_topology" }
 deep_causality_multivector = { path = "../../deep_causality_multivector" }
 
 [lints]

@@ -367,6 +367,8 @@ rust_test_suite(
     name = "theories",
     srcs = glob([
         "theories/*/*_tests.rs",
+        "theories/*/*/*_tests.rs",
+        "theories/*/*/*/*_tests.rs",
     ]),
     crate_features = [
         "std",

@@ -71,8 +71,25 @@ where
         velocity: &VelocityOneForm<R>,
         manifold: &Manifold<LatticeComplex<D, R>, R>,
     ) -> Result<(Self, CausalTensor<R>), PhysicsError> {
+        Self::from_leray_projection_opts(
+            velocity,
+            manifold,
+            &deep_causality_topology::HodgeDecomposeOptions::default(),
+        )
+    }
+
+    /// [`Self::from_leray_projection`] with a caller-supplied CG tolerance
+    /// and iteration budget — the same construction path, parameterized.
+    ///
+    /// # Errors
+    /// As [`Self::from_leray_projection`].
+    pub fn from_leray_projection_opts<const D: usize>(
+        velocity: &VelocityOneForm<R>,
+        manifold: &Manifold<LatticeComplex<D, R>, R>,
+        opts: &deep_causality_topology::HodgeDecomposeOptions<R>,
+    ) -> Result<(Self, CausalTensor<R>), PhysicsError> {
         let projection = manifold
-            .leray_project(velocity.as_tensor())
+            .leray_project_opts(velocity.as_tensor(), opts)
             .map_err(|e| PhysicsError::TopologyError(format!("Leray projection failed: {e}")))?;
         let (projected, potential) = projection.into_parts();
         Ok((Self { field: projected }, potential))

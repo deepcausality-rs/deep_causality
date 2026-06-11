@@ -255,7 +255,8 @@ Tier 3
 Tier 4
   deep_causality_algorithms  → deep_causality_num, deep_causality_rand,
                                deep_causality_tensor, deep_causality_topology
-  deep_causality_physics     → deep_causality_core, deep_causality_haft, deep_causality_metric,
+  deep_causality_physics     → deep_causality_calculus, deep_causality_core,
+                               deep_causality_haft, deep_causality_metric,
                                deep_causality_multivector, deep_causality_num,
                                deep_causality_sparse, deep_causality_tensor,
                                deep_causality_topology, deep_causality_rand (opt)

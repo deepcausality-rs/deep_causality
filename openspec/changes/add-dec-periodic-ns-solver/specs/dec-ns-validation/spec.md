@@ -106,7 +106,7 @@ correctness, the example produces the recognizable artifact.
 
 #### Scenario: Example produces the dissipation time series
 
-- **WHEN** the example runs at its small default resolution
+- **WHEN** the example binary is run at a small resolution during review
 - **THEN** it completes without error and emits monotone time, energy, and
   dissipation columns covering the configured horizon
 

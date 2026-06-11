@@ -64,6 +64,21 @@ end-to-end, and it is the data source for Stage 2. **Exit:** convergence tables 
 CI; Re-1600 dissipation curve at 64³–128³. **Strategic output:** the CFD community
 challenge entry and the seed of the CPC/AIAA software paper.
 
+*Status: **complete 2026-06-11*** — implemented as
+`openspec/changes/add-dec-periodic-ns-solver`. The solver lives in
+`deep_causality_physics::theories::fluid_dynamics::dec`
+(`DecNsSolver`/`DecNsRate`, the `SolenoidalField` type-state step, run
+loops, seeding, diagnostics, two-convention pressure recovery); CI carries
+the 2D Taylor–Green convergence table (observed spatial order ≥ 1.9 at
+f64/Float106), the 2D-in-3D rung, the inviscid energy/helicity drift gates,
+and the double shear layer with the Q-criterion tap; the Re-1600 case ships
+as `examples/avionics_examples/dec_taylor_green_re1600` (precision a
+parameter, causal-flow staged). One finding recorded in the change's design
+D4: the validation ladder falsified the Chorin post-step projection (it
+bleeds energy at first order in `dt`), so the projector moved **inside**
+the `Rk4` stages — exactly the `∂u♭/∂t = P(…)` equation of `cfd-gap.md` §2
+— at ~4 CG solves per step.
+
 ### Stage 2 — The causal-analysis tap
 **Source:** `3DCausalFluidDynamics.md` B1b → B1c → B2 → B3 (B4 ships in Stage 0's G3;
 B5 is an audit, not construction). **Depends on:** Stage 0 (G6 for torus data);

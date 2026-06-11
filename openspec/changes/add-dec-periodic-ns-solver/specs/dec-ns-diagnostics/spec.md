@@ -49,10 +49,12 @@ SHALL also be available as standalone functions on a state.
 ### Requirement: Opt-in pressure recovery emits both conventions
 
 The module SHALL provide `pressure_diagnostic` on a solver and a state,
-performing one additional Leray projection of the unprojected RHS at that
+performing one Leray projection of the unprojected RHS at that
 state, and returning **both** the Bernoulli pressure 0-form (the grade-0
-potential, `p + ½|u|²` at `ρ = 1`) and the static pressure 0-form
-(Bernoulli minus the kinetic 0-form assembled from `sharp` magnitudes), as
+potential — the true dynamics is `∂u/∂t = rhs_unproj − ∇B`, so
+`(I − P)rhs = +∇B` and `B = p + ½|u|²` at `ρ = 1`) and the static pressure
+0-form (Bernoulli minus the kinetic 0-form assembled from `sharp`
+magnitudes), as
 `PressureZeroForm<R>` values. Documentation SHALL state the extra-solve
 cost and the `ρ = 1` convention. The diagnostic SHALL NOT run inside the
 step.
@@ -60,15 +62,16 @@ step.
 #### Scenario: Taylor–Green pressure field is recovered
 
 - **WHEN** the diagnostic runs on the seeded 2D Taylor–Green state
+  (`u = (sin kx cos ky, −cos kx sin ky)`)
 - **THEN** the static pressure agrees with the analytic
-  `p = −¼(cos 2x + cos 2y)` up to its mean (the gauge) at the
-  discretization order, over the refinement ladder
+  `p = +¼(cos 2kx + cos 2ky)` of that phase convention, up to its mean
+  (the gauge), at the discretization order over the refinement ladder
 
 #### Scenario: The two conventions differ by the kinetic 0-form
 
 - **WHEN** both pressures are returned for any state
 - **THEN** their pointwise difference equals `½|u|²` from the same `sharp`
-  evaluation, exactly
+  evaluation, to machine rounding
 
 #### Scenario: Projection failure surfaces, not panics
 
