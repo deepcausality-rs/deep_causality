@@ -1,0 +1,110 @@
+deep_causality_physics/src/kernels/dynamics/wrappers.rs
+  s_86ac044a95d19d::t_5db89896e0d861 9
+deep_causality_physics/src/quantities/fluid_dynamics/pressure_zero_form.rs
+  s_86ac044a95d19d::t_5db89896e0d861 1-51
+deep_causality_physics/src/kernels/fluids/coherent_structures.rs
+  s_86ac044a95d19d::t_5db89896e0d861 29
+deep_causality_physics/src/lib.rs
+  s_86ac044a95d19d::t_150a4c7cdf8fb9 14,36-39
+deep_causality_physics/src/kernels/fluids/compressible.rs
+  s_86ac044a95d19d::t_5db89896e0d861 18-19
+deep_causality_physics/src/kernels/relativity/mod.rs
+  s_86ac044a95d19d::t_90e93dcc456abb 11
+deep_causality_physics/src/kernels/fluids/dimensionless.rs
+  s_86ac044a95d19d::t_5db89896e0d861 19-20
+deep_causality_physics/src/quantities/fluid_dynamics/body_force_one_form.rs
+  s_86ac044a95d19d::t_5db89896e0d861 1-50
+deep_causality_physics/src/kernels/photonics/ray.rs
+  s_86ac044a95d19d::t_5db89896e0d861 6
+deep_causality_physics/src/kernels/mhd/plasma.rs
+  s_86ac044a95d19d::t_5db89896e0d861 6
+deep_causality_physics/src/kernels/nuclear/mod.rs
+  s_86ac044a95d19d::t_90e93dcc456abb 18
+deep_causality_physics/src/kernels/photonics/beam.rs
+  s_86ac044a95d19d::t_5db89896e0d861 7-8
+deep_causality_physics/src/quantities/fluid_dynamics/vorticity_two_form.rs
+  s_86ac044a95d19d::t_5db89896e0d861 1-52
+deep_causality_physics/src/kernels/mhd/mod.rs
+  s_86ac044a95d19d::t_90e93dcc456abb 15
+deep_causality_physics/src/kernels/fluids/turbulence.rs
+  s_86ac044a95d19d::t_5db89896e0d861 19-20
+deep_causality_physics/src/quantities/dynamics.rs
+  s_86ac044a95d19d::t_ea5f296dc522db 8-110
+deep_causality_physics/src/kernels/photonics/wrappers.rs
+  s_86ac044a95d19d::t_5db89896e0d861 6
+deep_causality_physics/src/kernels/photonics/mod.rs
+  s_86ac044a95d19d::t_90e93dcc456abb 15
+deep_causality_physics/src/kernels/em/mod.rs
+  s_86ac044a95d19d::t_90e93dcc456abb 13
+deep_causality_physics/src/kernels/fluids/governing.rs
+  s_86ac044a95d19d::t_5db89896e0d861 20
+deep_causality_physics/src/kernels/mhd/resistive.rs
+  s_86ac044a95d19d::t_5db89896e0d861 6
+deep_causality_physics/src/kernels/fluids/mod.rs
+  s_86ac044a95d19d::t_90e93dcc456abb 19
+deep_causality_physics/src/kernels/materials/mod.rs
+  s_86ac044a95d19d::t_90e93dcc456abb 10
+deep_causality_physics/src/kernels/fluids/boundary_layer.rs
+  s_86ac044a95d19d::t_5db89896e0d861 19-20
+deep_causality_physics/src/kernels/relativity/spacetime.rs
+  s_86ac044a95d19d::t_5db89896e0d861 6,9
+deep_causality_physics/src/kernels/condensed/mod.rs
+  s_86ac044a95d19d::t_90e93dcc456abb 14
+deep_causality_physics/src/quantities/mod.rs
+  s_86ac044a95d19d::t_15e7bbbef3cca7 10-12
+  s_86ac044a95d19d::t_96247e557baec4 38
+  s_86ac044a95d19d::t_a0f355a060c717 29
+  s_86ac044a95d19d::t_5d721f8468a99e 5-9,13-28,30-37,39-63
+deep_causality_physics/src/kernels/fluids/ideal_flow.rs
+  s_86ac044a95d19d::t_5db89896e0d861 15-16
+deep_causality_physics/src/kernels/nuclear/lund/kinematics.rs
+  s_86ac044a95d19d::t_5db89896e0d861 21
+deep_causality_physics/src/kernels/nuclear/lund/fragmentation.rs
+  s_86ac044a95d19d::t_5db89896e0d861 11
+deep_causality_physics/src/kernels/nuclear/lund/string.rs
+  s_86ac044a95d19d::t_5db89896e0d861 13
+deep_causality_physics/src/kernels/dynamics/mod.rs
+  s_86ac044a95d19d::t_90e93dcc456abb 12
+deep_causality_physics/src/theories/fluid_dynamics/euler.rs
+  s_86ac044a95d19d::t_71aa82b760b484 22
+deep_causality_physics/src/theories/fluid_dynamics/stokes.rs
+  s_86ac044a95d19d::t_71aa82b760b484 21
+deep_causality_physics/src/kernels/fluids/constitutive.rs
+  s_86ac044a95d19d::t_5db89896e0d861 22
+deep_causality_physics/src/kernels/fluids/kinematics.rs
+  s_86ac044a95d19d::t_5db89896e0d861 16
+deep_causality_physics/src/kernels/mhd/wrappers.rs
+  s_86ac044a95d19d::t_5db89896e0d861 6
+deep_causality_physics/src/theories/fluid_dynamics/incompressible_ns.rs
+  s_86ac044a95d19d::t_71aa82b760b484 27
+deep_causality_physics/src/quantities/si_primitives.rs
+  s_86ac044a95d19d::t_a9873a78249e7e 1-238
+deep_causality_physics/src/kernels/relativity/wrappers.rs
+  s_86ac044a95d19d::t_5db89896e0d861 6,8
+deep_causality_physics/src/theories/fluid_dynamics/compressible_ns.rs
+  s_86ac044a95d19d::t_71aa82b760b484 34
+deep_causality_physics/src/kernels/photonics/diffraction.rs
+  s_86ac044a95d19d::t_5db89896e0d861 7-8
+deep_causality_physics/src/kernels/mhd/ideal.rs
+  s_86ac044a95d19d::t_5db89896e0d861 5
+deep_causality_physics/src/kernels/quantum/mod.rs
+  s_86ac044a95d19d::t_90e93dcc456abb 14
+deep_causality_physics/src/kernels/thermodynamics/mod.rs
+  s_86ac044a95d19d::t_90e93dcc456abb 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "e876f7e224845d8024373974fcbd1f5aaf8b4fdb",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
