@@ -81,12 +81,12 @@ fn energy_at_three_precisions() {
     fn check<R>()
     where
         R: RealField
-        + deep_causality_topology::MaybeParallel
-        + FromPrimitive
-        + Default
-        + PartialEq
-        + core::fmt::Debug
-        + core::fmt::Display,
+            + deep_causality_topology::MaybeParallel
+            + FromPrimitive
+            + Default
+            + PartialEq
+            + core::fmt::Debug
+            + core::fmt::Display,
     {
         let manifold = unit_manifold2::<R>(8);
         let u = tg_edge_form(&manifold, 8);

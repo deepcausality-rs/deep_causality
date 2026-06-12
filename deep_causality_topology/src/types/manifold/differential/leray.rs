@@ -24,9 +24,9 @@ use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 
 use crate::errors::topology_error::TopologyError;
-use crate::traits::maybe_parallel::MaybeParallel;
 use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
+use crate::traits::maybe_parallel::MaybeParallel;
 use crate::types::hodge_decomposition::HodgeDecomposition;
 use crate::types::leray_projection::LerayProjection;
 use crate::types::manifold::Manifold;

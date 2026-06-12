@@ -241,5 +241,3 @@ where
             .expect("sharp output tensor allocation cannot fail for a 1-D shape"))
     }
 }
-
-

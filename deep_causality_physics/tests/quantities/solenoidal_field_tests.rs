@@ -18,7 +18,13 @@ use deep_causality_topology::{
 
 fn unit_manifold<R>(n: usize) -> Manifold<LatticeComplex<2, R>, R>
 where
-    R: RealField + deep_causality_topology::MaybeParallel + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let lattice: LatticeComplex<2, R> = LatticeComplex::square_torus(n);
     let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
@@ -45,7 +51,13 @@ fn random_cochain<R: RealField + FromPrimitive>(len: usize, seed: u64) -> Vec<R>
 /// Discrete divergence of an edge cochain: place at grade 1, apply δ.
 fn divergence<R>(manifold: &Manifold<LatticeComplex<2, R>, R>, one_form: &[R]) -> Vec<R>
 where
-    R: RealField + deep_causality_topology::MaybeParallel + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let lattice = LatticeComplex::<2, R>::square_torus(
         // shape is square by fixture construction
@@ -70,7 +82,13 @@ fn sup_norm<R: RealField>(v: &[R]) -> R {
 /// Both construction paths produce divergence-free fields, per precision.
 fn assert_both_paths_divergence_free<R>(rel_tol: R)
 where
-    R: RealField + deep_causality_topology::MaybeParallel + FromPrimitive + Default + PartialEq + core::fmt::Debug + core::fmt::Display,
+    R: RealField
+        + deep_causality_topology::MaybeParallel
+        + FromPrimitive
+        + Default
+        + PartialEq
+        + core::fmt::Debug
+        + core::fmt::Display,
 {
     let manifold = unit_manifold::<R>(5);
     let n1 = manifold.complex().num_cells(1);
