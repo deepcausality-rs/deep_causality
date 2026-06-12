@@ -78,6 +78,7 @@ pub mod has_hodge_star;
 pub mod metric_tensor;
 pub mod metropolis;
 pub mod signature;
+mod star_cache;
 pub mod volumes;
 
 pub use metropolis::{AcceptReject, RejectReason};
@@ -112,6 +113,10 @@ pub struct CubicalReggeGeometry<const D: usize, R: RealField, S: SignatureMarker
     /// is guaranteed `true` by the Lorentzian constructor's validation.
     pub(super) timelike_axes: Option<[bool; D]>,
     pub(super) _signature: PhantomData<S>,
+    /// Lazy per-grade memo of the diagonal Hodge ⋆ matrices (see
+    /// [`star_cache`]). Ignored for equality; cloned warm; invalidated on
+    /// geometry mutation.
+    pub(in crate::types::cubical_regge_geometry) star_cache: star_cache::StarCache<D, R>,
 }
 
 /// Module-private union of the four edge-length representations. `pub(super)` so sibling
@@ -144,6 +149,7 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R, Euclidean> {
             edge_lengths: EdgeLengths::UnitEdge,
             timelike_axes: None,
             _signature: PhantomData,
+            star_cache: star_cache::StarCache::new(),
         }
     }
 
@@ -155,6 +161,7 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R, Euclidean> {
             edge_lengths: EdgeLengths::Uniform { length },
             timelike_axes: None,
             _signature: PhantomData,
+            star_cache: star_cache::StarCache::new(),
         }
     }
 
@@ -167,6 +174,7 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R, Euclidean> {
             edge_lengths: EdgeLengths::PerAxis { lengths },
             timelike_axes: None,
             _signature: PhantomData,
+            star_cache: star_cache::StarCache::new(),
         }
     }
 
@@ -180,6 +188,7 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R, Euclidean> {
             edge_lengths: EdgeLengths::PerEdge { lengths },
             timelike_axes: None,
             _signature: PhantomData,
+            star_cache: star_cache::StarCache::new(),
         }
     }
 
@@ -232,6 +241,7 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R, Euclidean> {
             edge_lengths: self.edge_lengths,
             timelike_axes: Some(timelike),
             _signature: PhantomData,
+            star_cache: star_cache::StarCache::new(),
         })
     }
 }

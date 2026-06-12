@@ -19,8 +19,10 @@
 //!   by `#[should_panic]`). Replaced by the real implementation in R4.4.
 //!
 //! Sparsity / shape invariants verified throughout: matrix is square
-//! `num_cells(k) × num_cells(k)`, exactly `num_cells(k)` non-zero entries (diagonal),
-//! and `Cow::Owned` (cubical Hodge ⋆ is compute-on-demand).
+//! `num_cells(k) × num_cells(k)`, exactly `num_cells(k)` non-zero entries
+//! (diagonal). The diagonal ⋆ is immutable for a fixed (geometry, lattice),
+//! so it is memoized and served `Cow::Borrowed` after a build-once; a metric
+//! reused on a differently-shaped lattice falls back to `Cow::Owned`.
 
 use std::borrow::Cow;
 
@@ -148,11 +150,36 @@ fn unit_edge_hodge_star_is_identity_on_3d_periodic_lattice() {
 }
 
 #[test]
-fn unit_edge_hodge_star_returns_owned_cow() {
+fn unit_edge_hodge_star_is_served_borrowed_from_the_memo() {
     let lattice = open_square_3();
     let geom = unit_geometry::<2>();
-    let star = geom.hodge_star_matrix(&lattice, 0).unwrap();
-    assert!(matches!(star, Cow::Owned(_)));
+    // The diagonal ⋆ is immutable for this (geometry, lattice): the first
+    // request builds and memoizes it, returning a borrow of the memo (no
+    // per-call rebuild — the change that took the projection's δω off the
+    // critical path).
+    let first = geom.hodge_star_matrix(&lattice, 0).unwrap();
+    assert!(matches!(first, Cow::Borrowed(_)));
+    // A second request hits the memo: same backing matrix, still borrowed.
+    let second = geom.hodge_star_matrix(&lattice, 0).unwrap();
+    assert!(matches!(second, Cow::Borrowed(_)));
+    assert!(core::ptr::eq(first.as_ref(), second.as_ref()));
+}
+
+#[test]
+fn star_memo_falls_back_to_owned_on_a_different_lattice() {
+    // The metric is complex-agnostic by its trait signature, so the memo
+    // pins to the first lattice's fingerprint. The same metric applied to a
+    // differently-shaped lattice rebuilds uncached rather than handing back a
+    // wrongly-sized memo.
+    let geom = unit_geometry::<2>();
+    let lattice_a = LatticeComplex::<2, f64>::open([3, 3]);
+    let lattice_b = LatticeComplex::<2, f64>::open([4, 4]);
+    let a = geom.hodge_star_matrix(&lattice_a, 0).unwrap();
+    assert!(matches!(a, Cow::Borrowed(_)));
+    let b = geom.hodge_star_matrix(&lattice_b, 0).unwrap();
+    assert!(matches!(b, Cow::Owned(_)));
+    // The owned fallback is correctly sized for lattice_b (4×4 vertices).
+    assert_eq!(b.as_ref().shape().0, 16);
 }
 
 // -- Uniform -----------------------------------------------------------------------
@@ -425,11 +452,17 @@ fn per_edge_open_lattice_handles_boundary_without_panicking() {
 }
 
 #[test]
-fn per_edge_returns_owned_cow() {
+fn per_edge_hodge_star_is_served_borrowed_from_the_memo() {
     let lattice = periodic_cube_3();
     let geom = per_edge_uniform_per_axis::<3>(&lattice, [1.0, 1.0, 1.0]);
-    let star = geom.hodge_star_matrix(&lattice, 1).unwrap();
-    assert!(matches!(star, Cow::Owned(_)));
+    // The PerEdge tier is the most expensive to build (per-cell dual-volume
+    // averaging), so the memo matters most here; still served borrowed after
+    // the first build.
+    let first = geom.hodge_star_matrix(&lattice, 1).unwrap();
+    assert!(matches!(first, Cow::Borrowed(_)));
+    let second = geom.hodge_star_matrix(&lattice, 1).unwrap();
+    assert!(matches!(second, Cow::Borrowed(_)));
+    assert!(core::ptr::eq(first.as_ref(), second.as_ref()));
 }
 
 #[test]

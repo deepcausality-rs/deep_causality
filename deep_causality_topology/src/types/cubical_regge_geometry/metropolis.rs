@@ -164,6 +164,9 @@ where
             if let EdgeLengths::PerEdge { lengths } = &mut self.edge_lengths {
                 lengths[edge_id] = proposed;
             }
+            // A changed edge length invalidates every memoized Hodge ⋆
+            // diagonal; drop the cache so the next solve rebuilds.
+            self.star_cache.invalidate();
             AcceptReject::Accepted {
                 edge: edge_id,
                 proposed_length: proposed,
