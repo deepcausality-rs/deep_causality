@@ -34,7 +34,7 @@ os-random = ["deep_causality_rand/os-random"] # required for lund hadronization
 
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
-version = "0.0.9"
+version = "0.10.0"
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"

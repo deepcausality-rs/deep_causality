@@ -46,3 +46,17 @@ pub fn print_effect_log_indented(logs: &EffectLog, indent: &str) {
 pub fn print_effect_log(logs: &EffectLog) {
     print_effect_log_indented(logs, "  ");
 }
+
+pub fn print_explenation() {
+    println!(
+        "\nThe sliding window holds a steady baseline while traffic is\n\
+         nominal. When the volumetric surge begins, the new samples score\n\
+         far above the baseline and the consecutive-anomaly counter climbs.\n\
+         On the configured number of consecutive anomalous seconds, the loop\n\
+         intervenes the throttle command into the value channel. The virtual\n\
+         NIC clamps throughput to the ceiling from the next tick, the surge is\n\
+         contained, and the measured throughput settles back inside the\n\
+         baseline band — bounding the overload to the detection window instead\n\
+         of letting it run unchecked."
+    );
+}

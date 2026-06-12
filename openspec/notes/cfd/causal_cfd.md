@@ -2,6 +2,8 @@
 
 **Status.** Exploratory. This is not a proposal. It is a starting point for *deriving* a proper proposal once the scope, dependencies, and implications are better understood.
 
+**Revision 2026-06-10.** Brought in line with `cfd-gap.md`, which is the ground-truth foundation note for the solver core. This note now *assumes the cfd-gap program (G1–G6) is closed and its APIs are available*: the DEC wedge and interior product, the de Rham/♯ isos, the typed-form carriers (including the shared `SolenoidalField<R>` type-state), pinned conventions, the one-solve `leray_project` entry point, and harmonic-kernel deflation for full `hodge_decompose` on periodic lattices. Sections §4.1, §4.3–§4.5, §7, and §10 were updated accordingly; the sequencing across all three CFD notes lives in `cfd-roadmap.md`.
+
 **Working title.** *Causal CFD*. A structure-preserving, cut-cell-capable, incompressible and compressible Navier–Stokes solver built on the existing `deep_causality_topology` cubical-Regge stack and the `deep_causality_physics` fluids surface. Integrated end-to-end with the `PropagatingEffect` / `Intervenable` framework, so that probabilistic data fusion, multiphysics composition, structured corrective control, and forensic logging are first-class capabilities rather than bolt-ons.
 
 ---
@@ -36,18 +38,48 @@ The canonical strategic document for the future of computational fluid dynamics 
 
 A 2024 follow-up progress report by Slotnick and Heller explicitly notes that progress against the 2014 targets has been slower than projected on the structural problems, particularly uncertainty quantification, validation infrastructure, and multidisciplinary integration. The structural problems remain unsolved after a decade of focused industry investment. (Source: AIAA Aviation Forum 2024 proceedings, paper AIAA 2024-4501.)
 
-Vision 2030 identifies six structural problems with current CFD. The mapping to DeepCausality capabilities is unusually tight. Five of the six have conceptual solutions already built in the platform; the sixth is operationally manageable through the platform's other capabilities. This is the substantive reason the Causal CFD pitch is application of an existing platform rather than invention of new methods.
+Vision 2030 organizes its findings into six technology investment areas (HPC,
+physical modeling, numerical algorithms, geometry/grid generation, knowledge
+extraction, MDAO) plus four grand-challenge problems. An earlier draft of this
+section claimed "five of the six have conceptual solutions already built." **That was
+an overclaim** (corrected 2026-06-10 against the source document): the platform is a
+*foundations* answer to Vision 2030's diagnoses, not a capability answer to its 2030
+milestones. The defensible claim, which holds when an assessor pulls the source:
+strong structural answers in three areas (algorithms, geometry-direction,
+MDAO-coupling), a unique reframing of a fourth (knowledge extraction),
+managed-not-solved turbulence, deliberate non-participation in exascale HPC — plus
+certification-grade forensic provenance and causal attribution, which the report
+lists only as second-tier asks and which no incumbent has.
 
-#### The mapping
+Source: Slotnick et al., *CFD Vision 2030 Study*, NASA/CR-2014-218178 —
+https://ntrs.nasa.gov/citations/20140003093 (journal version:
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4095895/).
 
-| Vision 2030 structural problem | DeepCausality capability | Status |
+#### The corrected mapping
+
+| Vision 2030 investment area | Verdict (roadmap-complete platform) | Supporting evidence |
 |---|---|---|
-| **1. Mesh generation bottleneck** (30-60% of engineer time per the Vision 2030 estimate) | `LatticeComplex`, `DualLatticeComplex`, `CubicalReggeGeometry` in `deep_causality_topology` | Conceptually built. The cubical mesh structurally sidesteps unstructured tetrahedral meshing. The cut-cell extension is engineering work in Phase 2, not a research problem. |
-| **2. HPC scaling plateau and adoption brittleness** | HKT witness pattern in `deep_causality_haft`; per-region typing via `R: RealField` generic kernels in `deep_causality_num` | Conceptually built. GPU and cluster backends become additional witnesses rather than algorithm rewrites. The constraint from the MLX revert (no trait leakage through user-facing APIs) is documented and understood; the Candle path in §11.4 is consistent with it. |
-| **3. Turbulence modeling for separated and unsteady flows** | No new closure model. The platform provides: `MaybeUncertain<R>` for RANS-failure regions, `deep_causality_discovery` for causal source identification on flow data, the intervention framework for fallback when closure models fail, and type-checked composition for swapping closure models without rewriting downstream code | Not solved at the turbulence-modeling level. Honestly: this is the one Vision 2030 problem where the platform does not provide a structural answer. The platform makes RANS limitations operationally manageable rather than solving them at the physics level. This is the correct positioning to take in any grant pitch. |
-| **4. Uncertainty quantification essentially absent from industrial practice** | `Uncertain<R>` and `MaybeUncertain<R>` in `deep_causality_uncertain`, with selective per-region typing as detailed in §2.7 | Conceptually built. Five years of platform work on the uncertain crate is the substantive solution. The CFD application is wiring, not invention. |
-| **5. Multidisciplinary integration brittleness** | Shared `R: RealField` trait bound across the fluids, electromagnetism, MHD, thermodynamics, materials, and general-relativity kernel surfaces in `deep_causality_physics`. Type-checked composition. | Conceptually built. No coupling pair requires bespoke glue. Composition is type-level. The §3.2 multiphysics amplifier follows directly. |
-| **6. Validation infrastructure inadequacy** | `EffectLog` produced by the `Intervenable` framework, plus the §10 structured corrective intervention library | Conceptually built. Every simulation produces an auditable forensic record. Validation is integrated into the simulation chain rather than performed as a separate post-hoc activity. |
+| **1. HPC** (exascale, billion-way parallelism, ~30 exaFLOPS by 2030) | **Deliberate non-participation.** Not "conceptually built" — the witness pattern lowers future port cost but is not parallelism progress, and unpreconditioned CG is the opposite of the report's "highly parallel multigrid." Strategic rationale: this is the wrong problem to solve at this stage; it becomes the right problem only once working models outgrow the workstation, which is far off. §11's workstation positioning covers ~80% of industrial jobs. |
+| **2. Physical modeling** (hybrid RANS/LES, wall-modeled LES, automatic transition, combustion) | **Substrate aligned; closures absent.** k-ω SST is a 1990s closure; no hybrid RANS/LES, transition, or combustion. But the report explicitly asks for "more effective discretizations and solvers designed specifically for LES-type problems" — a structure-preserving, energy-consistent DEC core is precisely that substrate (numerical dissipation is what poisons subgrid models). The causal-attribution tap (`3DCausalFluidDynamics.md`) sits in the report's "novel approaches" bucket: a speculative-but-real route toward causal closure discovery. `MaybeUncertain<R>` makes RANS-failure regions operationally manageable. Managed, not solved — the honest grant positioning. |
+| **3. Numerical algorithms** (higher-order, scalable solvers, adaptivity, entropy-stable schemes, UQ) | **Strongest area.** Mimetic/structure-preserving DEC lands in the report's "monotone or entropy stable schemes" long-term bucket; divergence-free by construction; the f32→Float106 verification ladder answers error management; selective `Uncertain`/`MaybeUncertain` typing is a structural answer to "UQ essentially absent from industrial practice." Gaps, stated plainly: no adjoints (the report's preferred sensitivity/UQ machinery), no higher-order elements, error-driven adaptivity only with provisional AMR, no preconditioner/multigrid yet. |
+| **4. Geometry and grid generation** (goal verbatim: meshing "less burdensome and, ultimately, invisible") | **Architecturally on-target; delivered late; the deepest open opportunity.** Cut-cell cartesian + AMR is the trajectory the report blesses; CAD interfacing is STL-first; AMR is provisional Phase 4. The topology/geometry separation (combinatorial `LatticeComplex` vs. per-edge-length `CubicalReggeGeometry`) gives the platform an unfair structural advantage on variable-resolution meshes — expanded in `variable-grid-geometry.md`. |
+| **5. Knowledge extraction** (real-time visualization of massive data, database integration, variable-fidelity fusion) | **Misses the letter, hits the spirit uniquely.** No visualization or database story. But the underlying complaint is data-without-insight, and `simulate → decompose (free) → attribute` plus `EffectLog` provenance is automated in-situ insight extraction no other code has; `MaybeUncertain` multi-fidelity overlap zones map directly onto the report's high-/low-fidelity/experimental fusion ask. |
+| **6. MDAO** (coupling standards, stability-guaranteed coupling, gradients in industrial solvers) | **Coupling strong; optimization half missing.** Type-checked composition answers both the "coupling techniques that guarantee accuracy and stability" and the "standards/APIs" asks — one trait set instead of a standards committee; Phase 4 CHT/FSI are the two-way coupled MDA demos. Missing: adjoint gradients and any optimization loop; §3.4's surrogate-gradient interventions are a stopgap, not a substitute. |
+
+**Grand challenges:** none of the four (full-aircraft LES, transient full engine,
+aeroelastic MDAO, probabilistic space-access vehicle) is reachable by this roadmap,
+and the proposal should say so plainly — they are exascale-class, closure-dependent,
+national-program targets. The nearest in *spirit* is GC4: probabilistic analysis
+with quantified uncertainty and reliability statements is the `MaybeUncertain` +
+counterfactual + `EffectLog` story, minus hypersonics, combustion, and overset
+meshing.
+
+**The recommended frame for grant and commercial conversations:** "the Vision 2030
+foundations layer for the workstation 80%, plus capabilities the report didn't dare
+ask for" — not "solving Vision 2030." If the distance to the report's letter is ever
+worth closing, the four items in order of credibility-per-effort: multigrid/
+preconditioning, error-driven AMR promoted from provisional, adjoints, and a hybrid
+RANS/LES mode on the structure-preserving core.
 
 The Vision 2030 study additionally identifies several second-tier problems: autonomous error estimation, certification-credit pathways for replacing physical tests with simulation, and the "knowledge-to-insight pipeline." The DeepCausality `EffectLog`, intervention framework, and `deep_causality_discovery` crate also map onto these. They are subsidiary to the six primary structural problems above but worth knowing about for grant applications targeting aerospace certification specifically.
 
@@ -55,7 +87,7 @@ The Vision 2030 study additionally identifies several second-tier problems: auto
 
 The mapping changes the proposal's posture in three specific ways. Each is worth being explicit about in grant applications and commercial conversations.
 
-**One: technical risk is materially lower than a standard CFD grant proposal.** The standard pattern is "fund invention of solutions to the structural problems." The Causal CFD pitch is that the conceptual solutions are already built, peer-reviewed by the Linux Foundation Technical Advisory Committee with industry sponsor approval, deployed across 18 crates and 250,000 lines of code, and verified through 10,000 tests at 95% coverage published per pull request. The proposed work is application engineering against canonical reference data. That converts the project from speculative platform research to scoped application engineering.
+**One: technical risk is materially lower than a standard CFD grant proposal.** The standard pattern is "fund invention of solutions to the structural problems." The Causal CFD pitch is that the platform foundations are already built, peer-reviewed by the Linux Foundation Technical Advisory Committee with industry sponsor approval, deployed across 18 crates and 250,000 lines of code, and verified through 10,000 tests at 95% coverage published per pull request. The proposed work is application engineering against canonical reference data — in the three areas the corrected table marks strong; the table is equally explicit about what is *not* built (closures, adjoints, exascale). That converts the project from speculative platform research to scoped application engineering with named exclusions.
 
 For grant assessors, this is a fundamentally different risk profile. Innovate UK Smart Grants and the ATI both score risk explicitly. A project with the platform already de-risked scores meaningfully higher than one where the platform is part of the proposal.
 
@@ -69,7 +101,7 @@ For commercial defensibility, this is the strongest version of the argument. Com
 
 #### Why the alignment is structural rather than coincidental
 
-The five-of-six Vision 2030 alignment is not the product of designing the platform around Vision 2030. The DeepCausality platform was built over five years against an independent set of motivations: causal reasoning, type-safe scientific computing, multiphysics composition, uncertainty propagation, and forensic provenance. Those motivations happen to be the same abstract problems Vision 2030 identifies as the structural blockers of next-generation CFD. The convergence reflects something real: the structural problems in scientific computing across multiple domains (CFD, climate, computational physics generally) have common roots in the platform-layer abstractions, and a platform built right addresses many of them simultaneously.
+The Vision 2030 alignment — at the foundations level the corrected table above describes — is not the product of designing the platform around Vision 2030. The DeepCausality platform was built over five years against an independent set of motivations: causal reasoning, type-safe scientific computing, multiphysics composition, uncertainty propagation, and forensic provenance. Those motivations happen to be the same abstract problems Vision 2030 identifies as the structural blockers of next-generation CFD. The convergence reflects something real: the structural problems in scientific computing across multiple domains (CFD, climate, computational physics generally) have common roots in the platform-layer abstractions, and a platform built right addresses many of them simultaneously.
 
 The pitch is honest because the alignment is structural rather than retrofitted. Grant assessors and technical reviewers who probe this will find the alignment holds under scrutiny.
 
@@ -221,7 +253,7 @@ The capabilities that follow from §2.7 selective probabilistic typing.
 
 2. **Data assimilation from sparse measurements.** PIV (particle image velocimetry) only covers part of the domain. The velocity at unmeasured cells is `MaybeUncertain`. Industrial 4D-Var explicitly models the covariance; here it is a type.
 
-3. **Multi-fidelity coupling.** A high-fidelity DNS patch embedded in a low-fidelity RANS field. In the overlap region each cell has *maybe* a DNS sample. The conventional treatment is co-Kriging; this is its type-level expression.
+3. **Multi-fidelity coupling.** A high-fidelity DNS patch embedded in a low-fidelity RANS field. In the overlap region each cell has *maybe* a DNS sample. The conventional treatment is co-Kriging; this is its type-level expression. The practitioner reality this formalizes is documented in Teschner's group's integrated workflow (references.md: Rijns-2024-workflow): four RANS models reconciled against wind-tunnel measurements *and* DDES data, with a bespoke blockage-correction layer — three fidelities fused by craftsmanship that per-region `MaybeUncertain` typing expresses as one frame.
 
 4. **Multiphase interface tracking.** A cell near a water/air interface is "maybe water, maybe air". VOF and level-set are the conventional tricks. `MaybeUncertain<MaterialProperties>` is the direct expression.
 
@@ -266,7 +298,7 @@ The full list and phase tags are in §10. Each one is currently implemented in i
 
 The capabilities that hang off the existing intervention framework.
 
-1. **Counterfactual geometry exploration.** "What if this turbine blade has this fillet instead?" Run the factual chain to the geometry-dependent stage, `.intervene` on the geometry channel, continue.
+1. **Counterfactual geometry exploration.** "What if this turbine blade has this fillet instead?" Run the factual chain to the geometry-dependent stage, `.intervene` on the geometry channel, continue. Current practice runs each variant as a separate campaign: Teschner's group's trapped-vortex-cavity studies (references.md: Ng-2025-TVC, Ng-2026-TVC) compare passive vs. active cavities across three diffuser geometries — each variant a full simulation set up by hand. Those are `do(geometry = …)` interventions practiced manually; the chain primitive makes the shared upstream state exact instead of re-converged.
 
 2. **Fault and degradation analysis.** "What if the wing develops ice accretion at minute 12?" Factual: clean wing. Counterfactual: `.intervene` at minute 12 to substitute degraded surface roughness. The two trajectories share the pre-fault state exactly.
 
@@ -284,15 +316,18 @@ This category is the most mature of the four (the intervention framework is alre
 
 What is *not* in the existing crates and would need to be built:
 
-### 4.1 Assembly layer (the single biggest gap)
-Translate `(LatticeComplex, DualLatticeComplex, CubicalReggeGeometry, field arrays)` into kernel inputs at every cell.
+### 4.1 Assembly layer (CLOSED for the incompressible path by `cfd-gap.md` G1–G3)
+The incompressible assembly layer is delivered by the cfd-gap program, in a stronger
+(DEC-native) form than this section originally sketched. Velocity is an edge 1-form
+throughout; the operators are `d`, `δ`, `⋆`, `Δ`, the wedge, and the interior product
+(G1); transfer to and from pointwise representations goes through the de Rham/♯ isos
+(G2); and the field carrier is the typed-form layer (G3: `VelocityOneForm<R>`,
+`VorticityTwoForm<R>`, `SolenoidalField<R>`, …), which **supersedes the
+`FluidField<D, R>` container proposed here** — do not build a duplicate container.
 
-- `grad u` per cell from face-staggered velocity values
-- `∇²u` via discrete Laplacian `δd + dδ` (mathematically already available, needs to be wired)
-- `∇p`, `∇ρ`, `∇·u`, `∇·τ` likewise
-- A `FluidField<D, R>` container that owns the primal / dual storage layout and exposes kernel-shaped views
-
-The `cubical_heat_diffusion` example is the template. Without this layer, nothing else can run.
+What remains of 4.1 for later phases: assembly of the compressible terms (`∇·τ`,
+`∇·q`, `∇·(ρuE)` from lattice data) and the cut-cell variants of the operators
+(Phase 2+).
 
 ### 4.2 Cut-cell geometry (the industrial moat)
 The cubical lattice is uniform. Real geometry intersects it. Required:
@@ -305,37 +340,53 @@ The cubical lattice is uniform. Real geometry intersects it. Required:
 
 The hardest single component of the project. It is what differentiates a research toy from something that can mesh a turbine blade.
 
-### 4.3 Pressure-velocity coupling
-For ∇·u = 0 in incompressible NS you need a pressure-projection step. The math:
+### 4.3 Pressure-velocity coupling (CLOSED by `cfd-gap.md` §2 — Leray, not Chorin-with-pressure)
+Superseded. The original sketch here (predictor step, explicit pressure-Poisson solve,
+correction) is replaced by the Leray formulation in `cfd-gap.md` §2: the projector
+needs only the gradient half of the Hodge decomposition,
 
 ```
-u*       = u_n + Δt · RHS_explicit(u_n)        ← kernels give us this
-∇²p      = (ρ/Δt) · ∇·u*                       ← Poisson solve (missing)
-u_{n+1}  = u* − (Δt/ρ) · ∇p                    ← Helmholtz projection
+P(u*) = u* − d(Δ₀⁻¹ δ u*)
 ```
 
-Step 3 is `hodge_decomposition` applied to `u*`. Step 2 needs a Poisson solver.
+one gauge-fixed grade-0 CG solve per evaluation (`leray_project`), no pressure
+variable in the time loop at all. Pressure is recovered **on demand** as an opt-in
+diagnostic from the same decomposition (Bernoulli vs. static convention documented at
+the call site). The β-step singularity on periodic lattices never arises in the
+solver core; full `hodge_decompose` (with G6 harmonic deflation) is needed only by
+the causal-analysis tap (§4.11 of `cfd-roadmap.md` sequencing).
 
-### 4.4 Linear solver stack
-Currently the boundary operator uses CSR matrices but no actual solver ships. Required for the Poisson solve in 4.3 and for any implicit or semi-implicit time stepping:
+### 4.4 Linear solver stack (audit RESOLVED; preconditioning remains future work)
+The audit question is answered: a matrix-free CG (`deep_causality_sparse::cg_solve`)
+ships, is generic over `RealField` with per-precision tolerance clamping, and is
+already wired into `hodge_decompose` / `leray_project`. Phase 1 needs nothing more.
 
-- Krylov method (CG with preconditioner): minimal viable
-- Geometric multigrid on the cubical complex: order-of-magnitude better, but more complex to implement
+Remaining for later phases (performance, not correctness):
+
+- Preconditioning (diagonal first, then geometric multigrid on the cubical complex)
 - AMG fallback for cut-cell regions where geometric MG breaks down
 
-This may already exist partially in `deep_causality_algorithms` or `deep_causality_sparse`. Needs an audit.
+### 4.5 Time integration (explicit path CLOSED; implicit paths remain)
+Stale as originally written: `Rk4` and `Euler` ship in `deep_causality_calculus` as
+Arrow endomorphisms over any state with `Clone + Add + Mul<R>` — the whole typed-form
+field rides them directly — and `EndoArrow` supplies `iterate_n` /
+`iterate_to_fixpoint` / `iterate_until` (the run loop with event stop). The march is
+the arrow; the fallible projection and CFL check are `bind` steps in the causal monad
+(`cfd-gap.md` §5.4). Pure numerics in the arrow, fallible plumbing in the monad.
 
-### 4.5 Time integration
-Currently only Euler integration in `kernels::dynamics`. Needed:
+Still needed for later phases:
 
-- Explicit RK4: low-Reynolds, DNS-like cases
 - Semi-implicit IMEX: viscous diffusion implicit, convection explicit. The workhorse for moderate-Re incompressible.
 - Implicit BDF2: high-Re, RANS, stiff regimes
 
-Each time step is a `bind` in the intervention chain.
-
 ### 4.6 Boundary conditions
-Periodic is in `LatticeComplex` already. Inflow (Dirichlet), outflow (Neumann or convective), wall (no-slip / slip / wall function), and symmetry all need a BC layer that modifies the assembly stencils near boundary cells. `MaybeUncertain`-typed BCs (§3.1 item 1) require a dropout-handling extension on top of the basic BC layer.
+Periodic is in `LatticeComplex` already, and the periodic solver core ships before any
+wall work starts. Inflow (Dirichlet), outflow (Neumann or convective), wall (no-slip / slip / wall function), and symmetry all need a BC layer that modifies the assembly stencils near boundary cells. `MaybeUncertain`-typed BCs (§3.1 item 1) require a dropout-handling extension on top of the basic BC layer.
+
+Wall staging follows `cfd-gap.md` G5: boundary-corrected Hodge star duals, a
+Neumann–Poisson projection path, and no-slip Laplacian rows — validated analytic-first
+on **laminar Poiseuille channel flow** (periodic x, walls y; constructible today,
+exact parabolic steady state) before the lid-driven cavity's Ghia-table comparison.
 
 ### 4.7 Turbulence model closure
 The fluid kernels include TKE, dissipation rate, Boussinesq eddy viscosity, Reynolds stress. Missing is the *composition* into a closed RANS model (k-ε, k-ω SST):
@@ -358,14 +409,16 @@ The hybrid storage layout from §2.7. Specifically: a `FluidField` that admits p
 
 ## 5. Proposed three-phase roadmap
 
-### Phase 1: assembly + projection + minimum corrective library
+### Phase 1: walls + corrective library on top of the shipped periodic core
 Smallest deliverable that exercises the whole chain end-to-end on a real problem.
+The DEC-native periodic solver (assembly, Leray projection, Rk4 arrow march,
+Taylor–Green validation ladder) ships *before* Phase 1, per `cfd-gap.md` and
+`cfd-roadmap.md` Stages 0–1; Phase 1 adds walls and the corrective-pattern
+infrastructure.
 
-- Build the assembly layer (4.1)
-- Implement RK4 time stepping (4.5, simplest variant)
-- Wire the Poisson solver (4.4, minimal CG) into the Helmholtz-projection step using existing `hodge_decomposition` (4.3)
-- BC layer for Dirichlet / Neumann (4.6, partial)
-- **Ship at least three corrective interventions from §10**: CFL-adaptive timestepping (10.1), divergence rescue (10.2), checkpoint-restart on error (10.10). These establish the corrective-pattern infrastructure early.
+- Wall BC layer per `cfd-gap.md` G5 (4.6): boundary star, Neumann projection path, no-slip rows
+- Validate analytic-first on **laminar Poiseuille channel flow** (periodic x, walls y)
+- **Ship at least three corrective interventions from §10**: CFL-adaptive timestepping (10.1), divergence rescue (10.2), checkpoint-restart on error (10.10). These establish the corrective-pattern infrastructure early. (10.1 and 10.2 are upgrades of the `cfl_check` bind and the `CgFailure` short-circuit already present in the periodic chain.)
 - Validate against **lid-driven cavity** at Re = 1000 and Re = 10000. Reference: Ghia, Ghia & Shin 1982. *No cut cells required.*
 
 Phase 1 alone is a meaningful research deliverable. A structure-preserving DEC incompressible NS solver on a cubical mesh, with a clean intervention chain and three named corrective patterns wired in. Publishable as such; useful as a teaching tool; demonstrates three of the four amplifiers from §3 (corrective library, counterfactual, forensic logging).
@@ -416,17 +469,33 @@ Each maps to an intervention pattern already shown in the existing examples.
 
 4. **Sensor-driven inflow with dropout** (new, exercises §3.1). Atmospheric boundary-layer simulation. Inflow BC consumes a `MaybeUncertain` weather-station stream. Dropouts in the stream trigger the corrective intervention from §10.3. The `EffectLog` records every dropout and every fallback. Compare to a deterministic-inflow control run.
 
+5. **Active vehicle aerodynamics under regime change** (automotive variant of demo 1;
+   exercises `CyberneticLoop` + the Context-carried regime). The live industrial
+   research program is documented by Teschner's group: active and asymmetrically
+   actuated aero optimized over transient vehicle dynamics (references.md:
+   Rijns-2025-VSD), active load balancing in cornering (Rijns-2024-balance), and
+   the regime evidence itself — 20% downforce loss and 35% drag increase at a
+   2.9-car-length corner radius vs. straight-line, with further deltas under yaw
+   (Rijns-2024-corner, Rijns-2024-yaw). The demo: a wing/diffuser model whose
+   operating regime (corner radius, yaw) lives in the Context; a `CyberneticLoop`
+   reads surface-pressure sensors, estimates the load split, and actuates the
+   balance; the counterfactual branch replays the same corner with static aero.
+   Strategically: the high-performance automotive sector runs exactly this problem
+   *without* certification gatekeeping (Teschner's clients include McLaren and
+   Aston Martin), making it a faster adoption surface for the §3.3/§3.4 amplifiers
+   than DO-178C aerospace.
+
 ---
 
 ## 7. Open questions to resolve before a proper proposal
 
-1. **Staggered vs. co-located storage.** Primal cells for pressure plus dual faces for velocity (the classical MAC scheme, mimetic by construction with the Hodge star), versus everything co-located at primal vertices. Both are natural on a cubical complex; the choice determines the assembly layout. MAC is more conservative. Co-located is simpler and more popular in modern cut-cell codes (Cadence Fidelity is co-located). **Decision required before Phase 1.**
+1. **~~Staggered vs. co-located storage.~~ Resolved** by `cfd-gap.md` decision 2: velocity as an edge 1-form *is* the staggered/mimetic (MAC-like) choice, by construction of the lattice complex. No co-located stage exists.
 
-2. **Sparse linear-solver provenance.** Does `deep_causality_algorithms` or `deep_causality_sparse` already provide a CG, multigrid, or preconditioner stack we can reuse? Or does this need to be built from scratch, or pulled in via dependency? **Audit required.**
+2. **~~Sparse linear-solver provenance.~~ Resolved.** Matrix-free `cg_solve` ships in `deep_causality_sparse`, precision-generic, already wired into `hodge_decompose` / `leray_project`. Preconditioning is future performance work (§4.4).
 
 3. **Geometry input format.** STL is universal but lossy (no curved surfaces). STEP is high-fidelity but parser-heavy. Recommend STL first, defer STEP.
 
-4. **Scope of `Intervenable` integration.** Does every fluid time step become a `bind`, or only "interesting" stages? Wrapping every cell update in `PropagatingEffect` is allocation-heavy. Coarse-grained stages (whole-field RHS evaluation as a single `bind`) is the pragmatic choice. **Decision required during Phase 1 design.**
+4. **~~Scope of `Intervenable` integration.~~ Resolved** by `cfd-gap.md` §5.4: coarse-grained binds — the whole-field march step is the arrow, and projection plus CFL check are the `bind` stages. Pure numerics never enter the monad; per-cell wrapping never happens.
 
 5. **Cut-cell algorithm provenance.** Berger–Helzel cell-merging is the textbook approach, but adds complexity. Flux-redistribution (Colella, Graves, Modiano) is simpler but less accurate near small cuts. **Decision required during Phase 2 design.** Prototype both on the cylinder case if time allows.
 
@@ -459,7 +528,7 @@ Each maps to an intervention pattern already shown in the existing examples.
 - True adjoint optimisation. Covered indirectly by intervention-based surrogate gradients (§3.4 item 5).
 - GPU acceleration and cluster support. Both are deferred and treated in §11. The HAFT "new container = a new witness" claim does *not* automatically save GPU integration from trait leakage; the previously reverted MLX backend is the cautionary tale (see `openspec/changes/reverted/revert_mlx_backend.md`). Phase 1-3 explicitly targets workstation deployment. Cluster is a separate change-set entirely.
 - Real-time and coupled control hardware loops.
-- Causal discovery on flow data. The `deep_causality_discovery` crate exists, and applying it to solver output (e.g., identifying causal pressure-vorticity coupling in aeroacoustics) is a genuinely novel research direction. Out of scope for the initial proposal because it is research-flagship territory rather than infrastructure.
+- ~~Causal discovery on flow data~~ — **no longer distant research territory.** The Leray projection step computes (half of) the Hodge decomposition of the velocity field at every time step; `3DCausalFluidDynamics.md`'s `FluidSignature` → `RollingHistory` → SURD pipeline consumes exactly a `HodgeDecomposition<R>` on the same `Manifold`, the same `R`. Causal attribution of simulated flow is therefore a *tap on the solve chain* (one β-step solve per sampled snapshot, enabled by G6), not a separate pipeline. It remains out of scope for *this* note's proposal, but it is scheduled — see `cfd-roadmap.md` Stage 2. No other CFD code can offer this, because no other code's projection step is a Hodge decomposition.
 
 ---
 
@@ -491,7 +560,7 @@ A candidate library of named, logged, compositional corrective patterns. Each on
 | 10.1 | **CFL-adaptive timestepping** | `.intervene` | Phase 1 (MVP) | `max(\|u\|) · Δt / Δx` exceeds threshold |
 | 10.2 | **Solver divergence rescue** | `.intervene` + checkpoint restore | Phase 1 (MVP) | residual norm exceeds previous-step value by N× |
 | 10.3 | **BC fallback on dropped sensor data** | `.intervene` (composes with `MaybeUncertain`) | Phase 2 | `MaybeUncertain::is_present` returns false |
-| 10.4 | **Mass conservation enforcement** | `.intervene` on velocity field | Phase 1 | `∮ u·n` over closed surface exceeds ε |
+| 10.4 | **~~Mass conservation enforcement~~ Obsoleted upward** | type-state, not `.intervene`: `SolenoidalField<R>` is divergence-free by construction (`cfd-gap.md` G3); drift is unrepresentable, not monitored | — | n/a |
 | 10.5 | **Turbulence-model bounds protection** | `.intervene` (clip k, ω, ε) | Phase 3 | `k < 0`, `ω < 0`, or `ε < 0` |
 | 10.6 | **Shock-capturing scheme fallback** | `.intervene` per cell, per step | Phase 3 | local Mach gradient or limiter activation |
 | 10.7 | **Cut-cell geometric robustness** | `.intervene` (cell merge or flux redistribute) | Phase 2 | cell aperture below threshold |

@@ -13,14 +13,10 @@ use crate::{
     EffectValue, PropagatingProcess,
 };
 
-// The fluent steps lower to the monad's `bind` / `bind_or_error`, which require `State: Clone` and
-// `Context: Clone` (they thread cloned state and context through the carrier). The loop and branch
-// combinators do not call `bind`, so they keep no such bound.
-impl<Value, State, Context> CausalFlow<Value, State, Context>
-where
-    State: Clone,
-    Context: Clone,
-{
+// The fluent steps lower to the monad's `bind` / `bind_or_error`, which *move* state and context
+// through the carrier — they never clone them — so they impose no `Clone` bound on either. The loop
+// and branch combinators do not call `bind` and likewise carry no such bound.
+impl<Value, State, Context> CausalFlow<Value, State, Context> {
     /// Full monadic step: the closure receives the unwrapped value and returns the next flow.
     /// Effect-returning stages adapt with [`From`] / `.into()`. Short-circuits on error / no value.
     pub fn and_then<U, F>(self, f: F) -> CausalFlow<U, State, Context>

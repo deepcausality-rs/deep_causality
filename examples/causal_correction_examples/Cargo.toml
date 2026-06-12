@@ -12,6 +12,7 @@ path = "src/lib.rs"
 [dependencies]
 deep_causality_core = { path = "../../deep_causality_core" }
 deep_causality_calculus = { path = "../../deep_causality_calculus" }
+deep_causality_data_structures = { path = "../../deep_causality_data_structures" }
 deep_causality_haft = { path = "../../deep_causality_haft" }
 
 
@@ -30,6 +31,10 @@ path = "corrective_decompression_stops/main.rs"
 [[example]]
 name = "corrective_network_failover"
 path = "corrective_network_failover/main.rs"
+
+[[example]]
+name = "corrective_ddos_detector"
+path = "corrective_ddos_detector/main.rs"
 
 [lints]
 workspace = true
