@@ -1,0 +1,44 @@
+openspec/changes/fix-dec-convective-instability/design.md
+  s_4adc6099bc84ff::t_617c21f81d1617 1-91
+deep_causality_physics/tests/theories/fluid_dynamics/dec/cavity_tests.rs
+  s_4adc6099bc84ff::t_935ff61bbfc94f 154
+  s_4adc6099bc84ff::t_6645ce7d79a8ae 10-13
+  s_4adc6099bc84ff::t_c16c6c473a5c14 147-151
+openspec/notes/cfd/error-per-cost-vs-spectral.md
+  s_4adc6099bc84ff::t_48965dc5e262cc 1-109
+examples/avionics_examples/dec_lid_cavity_re1000/main.rs
+  s_4adc6099bc84ff::t_687f9b6181176c 197-198
+  s_4adc6099bc84ff::t_211c5ec52b537b 262,269
+  s_4adc6099bc84ff::t_2894f01e573cc5 108,162-196,199-240,243
+  s_4adc6099bc84ff::t_ba2719cf7cf34e 109-110
+  s_4adc6099bc84ff::t_6de34fa399f202 30,34-38
+  s_4adc6099bc84ff::t_94679f3fe36411 241-242
+  s_4adc6099bc84ff::t_1542d792c4abb1 146-151
+openspec/changes/fix-dec-convective-instability/proposal.md
+  s_4adc6099bc84ff::t_8a8ab1cd659181 1-44
+examples/avionics_examples/dec_lid_cavity_re1000/README.md
+  s_4adc6099bc84ff::t_c49519e3fa4ca8 33,42-46
+  s_4adc6099bc84ff::t_39c02a690c7dfb 73-75
+openspec/specs/dec-ns-validation/spec.md
+  s_4adc6099bc84ff::t_c5a31b60c1e977 143-150,154-159
+openspec/changes/fix-dec-convective-instability/tasks.md
+  s_4adc6099bc84ff::t_5ffcaab2368791 1-42
+openspec/changes/fix-dec-convective-instability/specs/dec-ns-stability/spec.md
+  s_4adc6099bc84ff::t_cbafc082b0d670 1-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "0e90bfdf2da061f315953a0952c8381717b7d74f",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
