@@ -1,0 +1,34 @@
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
+
+rust_library(
+    name = "deep_causality_fft",
+    srcs = glob([
+        "src/**",
+    ]),
+    crate_features = [
+        "std",
+    ],
+    crate_root = "src/lib.rs",
+    tags = [
+        "fft",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Internal crates
+        "//deep_causality_num",
+    ],
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":deep_causality_fft",
+    tags = ["doc"],
+    visibility = ["//visibility:public"],
+)
+
+rust_doc_test(
+    name = "doc_test",
+    crate = ":deep_causality_fft",
+    tags = ["doc-test"],
+    visibility = ["//visibility:public"],
+)

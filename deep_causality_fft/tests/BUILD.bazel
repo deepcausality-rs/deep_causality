@@ -1,0 +1,96 @@
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
+rust_test_suite(
+    name = "errors",
+    srcs = glob([
+        "errors/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_fft",
+    ],
+)
+
+rust_test_suite(
+    name = "utils",
+    srcs = glob([
+        "utils/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_fft",
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "types_fft_plan",
+    srcs = glob([
+        "types/fft_plan/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_fft",
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "types_fft_plan_nd",
+    srcs = glob([
+        "types/fft_plan_nd/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_fft",
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "types_rfft_plan",
+    srcs = glob([
+        "types/rfft_plan/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_fft",
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "types_rfft_plan_nd",
+    srcs = glob([
+        "types/rfft_plan_nd/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_fft",
+        "//deep_causality_num",
+    ],
+)
