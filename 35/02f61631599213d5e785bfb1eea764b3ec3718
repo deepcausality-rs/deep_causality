@@ -1,0 +1,31 @@
+examples/causal_correction_examples/corrective_ddos_detector/README.md
+  s_9f0604cfafbe3b::t_11c8b655de9d97 20,23-24
+  s_9f0604cfafbe3b::t_c4a2b27d97e393 1-19,21-22,25-42,49-93,95-101,104-107
+  s_9f0604cfafbe3b::t_2a9662d5e7a849 43-48
+  s_9f0604cfafbe3b::t_47c78052c12267 94
+  s_9f0604cfafbe3b::t_61e4c831e00877 102-103
+examples/causal_correction_examples/corrective_ddos_detector/main.rs
+  s_9f0604cfafbe3b::t_18e766be9ba23d 85
+examples/causal_correction_examples/README.md
+  s_9f0604cfafbe3b::t_fd732e46e16840 95,98-99
+  s_9f0604cfafbe3b::t_d5814ef79269e5 26-27,29-30
+examples/README.md
+  s_9f0604cfafbe3b::t_58701186d3cd04 123,125-127,129,137
+  s_9f0604cfafbe3b::t_4f0bccb5c6a7e8 128
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "3502f61631599213d5e785bfb1eea764b3ec3718",
+  "prompts": {},
+  "sessions": {
+    "s_9f0604cfafbe3b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f95e42d-780a-4042-9005-6dd1ac001617",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
