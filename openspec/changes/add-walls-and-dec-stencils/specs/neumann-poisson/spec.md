@@ -19,9 +19,9 @@ or convergence-failure mode.
 - **WHEN** the same Neumann problem is solved directly and by the preconditioned CG fallback on multiple shapes including anisotropic spacings
 - **THEN** the gauge-fixed solutions agree within the CG tolerance
 
-#### Scenario: No flux through walls
-- **WHEN** the pressure-projection gradient `dφ` is computed from the direct solution
-- **THEN** wall-normal components at the boundary vanish to rounding (the Neumann condition realized discretely)
+#### Scenario: No flux through walls (DEC form)
+- **WHEN** the projected field `ω − dφ` is computed from the direct solution
+- **THEN** its divergence vanishes to rounding at every vertex including wall and corner vertices, whose clipped dual volumes realize the no-flux wall condition discretely (amended at implementation: the variational Neumann condition is encoded in the boundary control volumes, not as pointwise vanishing of boundary-normal gradient components)
 
 ### Requirement: Jacobi-preconditioned CG fallback
 `deep_causality_sparse` SHALL provide a preconditioned variant of the

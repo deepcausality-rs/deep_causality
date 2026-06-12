@@ -91,9 +91,11 @@ where
         let delta_omega = self.codifferential_of(field.as_slice(), 1);
         let mut rhs = delta_omega.into_vec();
         pad_or_truncate(&mut rhs, n0);
-        // Grade-0 gauge: constants are always harmonic (β₀ = 1); fix the
-        // gauge by mean subtraction on both the RHS and the solution.
-        subtract_mean_in_place(&mut rhs);
+        // Grade-0 gauge: constants are always harmonic (β₀ = 1). The RHS
+        // kernel projection happens inside `solve_laplacian` on the
+        // mass-weighted system (Euclidean subtraction here would break
+        // M-consistency on boundary-clipped lattices); the solution's
+        // gauge is fixed below.
 
         let mut phi = solve_laplacian(self, 0, &rhs, tolerance, max_iter)?;
         subtract_mean_in_place(&mut phi);

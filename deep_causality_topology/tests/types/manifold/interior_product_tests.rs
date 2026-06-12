@@ -202,12 +202,16 @@ fn two_form_contraction_signs_3d() {
 
 /// Open-lattice contraction: exercises the boundary-trimming transport
 /// branches (offset combinations that fall off the open boundary are skipped
-/// and the average renormalized). For constant fields the renormalized
-/// average of constants is still the constant, so the analytic expectation
-/// holds on every edge, boundary included.
+/// and the average renormalized). With the boundary-corrected Hodge star
+/// (wall-hodge-star, add-walls-and-dec-stencils) the dual volumes clip at
+/// walls, so the constant-field expectation is exact only where the
+/// transport gathers unclipped interior star entries: the analytic value is
+/// asserted on interior edges (margin one from every wall), the orientation
+/// sign everywhere.
 #[test]
 fn two_form_contraction_signs_2d_open_lattice() {
-    let lattice: LatticeComplex<2, f64> = LatticeComplex::square_open(4);
+    let n = 4usize;
+    let lattice: LatticeComplex<2, f64> = LatticeComplex::square_open(n);
     let manifold = unit_manifold(lattice);
     let complex = manifold.complex();
 
@@ -223,10 +227,21 @@ fn two_form_contraction_signs_2d_open_lattice() {
         let axis = cell.orientation().trailing_zeros() as usize;
         let expected = if axis == 0 { -x2 * c } else { x1 * c };
         let got = result.as_slice()[i];
-        assert!(
-            (got - expected).abs() < 1e-13,
-            "edge {i} (axis {axis}): got {got}, expected {expected}"
-        );
+
+        let pos = cell.position();
+        let active_extent = |a: usize| if a == axis { n - 1 } else { n };
+        let interior = (0..2).all(|a| pos[a] >= 1 && pos[a] + 2 <= active_extent(a));
+        if interior {
+            assert!(
+                (got - expected).abs() < 1e-13,
+                "interior edge {i} (axis {axis}): got {got}, expected {expected}"
+            );
+        } else {
+            assert!(
+                got * expected > 0.0,
+                "boundary edge {i} (axis {axis}): got {got}, expected sign of {expected}"
+            );
+        }
     }
 }
 

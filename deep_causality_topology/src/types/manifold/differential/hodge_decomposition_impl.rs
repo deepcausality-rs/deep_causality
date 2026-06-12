@@ -47,7 +47,7 @@ use crate::types::hodge_decomposition::HodgeDecomposition;
 use crate::types::manifold::Manifold;
 use crate::utils::cg_solver::subtract_mean_in_place;
 use deep_causality_par::MaybeParallel;
-use deep_causality_sparse::{CgFailure, cg_solve};
+use deep_causality_sparse::{CgFailure, cg_solve, cg_solve_preconditioned};
 
 /// Caller-tunable knobs for `Manifold::hodge_decompose_opts`.
 ///
@@ -179,9 +179,10 @@ where
             let delta_omega = self.codifferential_of(&omega, k);
             let mut rhs = delta_omega.as_slice().to_vec();
             pad_or_truncate(&mut rhs, n_km1);
-            if k - 1 == 0 {
-                subtract_mean_in_place(&mut rhs);
-            }
+            // Gauge note: the grade-0 kernel projection happens inside
+            // `solve_laplacian` on the *mass-weighted* RHS — subtracting
+            // the Euclidean mean here would break M-consistency on
+            // boundary-clipped lattices (the wall-hodge-star change).
 
             let mut phi_alpha = solve_laplacian(self, k - 1, &rhs, tolerance, max_iter)?;
             if k - 1 == 0 {
@@ -242,13 +243,25 @@ where
 {
     if grade == 0
         && let Some((shape, periodic)) = manifold.complex().uniform_lattice_layout()
-        && periodic.iter().all(|&p| p)
         && let Some(spacings) = manifold
             .metric
             .as_ref()
             .and_then(|m| m.uniform_axis_spacings())
     {
-        return super::spectral_poisson::spectral_poisson_solve(&shape, &spacings, rhs);
+        if periodic.iter().all(|&p| p) {
+            return super::spectral_poisson::spectral_poisson_solve(&shape, &spacings, rhs);
+        }
+        // Wall-bounded box: the boundary-corrected Δ₀ diagonalizes in the
+        // DCT-I basis along wall axes (extent ≥ 2 required per axis).
+        if periodic
+            .iter()
+            .zip(shape.iter())
+            .all(|(&p, &n)| p || n >= 2)
+        {
+            return super::neumann_poisson::neumann_poisson_solve(
+                &shape, &periodic, &spacings, rhs,
+            );
+        }
     }
 
     let n = rhs.len();
@@ -271,15 +284,80 @@ where
         }
     }
 
-    // Apply Δ directly on the iterate: no temporary manifold, no data-slab
-    // copy — one sparse-operator composition per CG iteration.
+    // CG runs in the Euclidean inner product, but Δ_k = M_k⁻¹∂M… is only
+    // Euclidean-symmetric when the grade's mass diagonal is constant —
+    // true on unit/uniform interiors, false once the boundary-corrected
+    // star clips dual volumes at walls. Solve the mass-weighted normal
+    // form instead: M_k·Δ_k is symmetric positive (semi)definite for any
+    // positive diagonal masses, with the same solution for the weighted
+    // RHS M_k·rhs. On constant-mass lattices this is a pure rescaling of
+    // the old system.
+    let mass_k: Vec<R> = {
+        let metric = manifold.metric.as_ref().ok_or_else(|| {
+            TopologyError::InvalidInput(
+                "solve_laplacian requires a metric; construct the manifold with a metric attached"
+                    .to_string(),
+            )
+        })?;
+        let star = metric
+            .hodge_star_matrix(manifold.complex(), grade)
+            .map_err(|e| TopologyError::InvalidInput(format!("hodge star (grade {grade}): {e}")))?;
+        super::stencil::build::star_diag(star.as_ref(), n)
+    };
+
+    // Apply M_k·Δ directly on the iterate: no temporary manifold, no
+    // data-slab copy — one sparse-operator composition per CG iteration.
     let apply = |v: &[R]| -> Vec<R> {
         let result = manifold.laplacian_of(v, grade);
         let mut out = result.into_vec();
         pad_or_truncate(&mut out, n);
+        for (o, m) in out.iter_mut().zip(mass_k.iter()) {
+            *o *= *m;
+        }
         out
     };
-    match cg_solve(apply, rhs, tolerance, max_iter) {
+    let mut weighted_rhs: Vec<R> = rhs
+        .iter()
+        .zip(mass_k.iter())
+        .map(|(r, m)| *r * *m)
+        .collect();
+    // Grade 0: the constants are always in `ker(M₀Δ₀)`; project the
+    // weighted RHS against them (the consistent-gauge condition is
+    // `Σ M₀·rhs = 0`, exact in theory — this removes rounding drift).
+    // Grade 0 also gets the Jacobi preconditioner: the weighted diagonal
+    // is `diag(M₀Δ₀)_i = Σ_{e∋i} M₁[e]` (incidence entries are ±1), read
+    // straight off the boundary CSR — the boundary-corrected diagonal of
+    // the neumann-poisson capability.
+    let solve_result = if grade == 0 {
+        subtract_mean_in_place(&mut weighted_rhs);
+        let mass_1: Vec<R> = {
+            let metric = manifold
+                .metric
+                .as_ref()
+                .expect("metric presence verified above");
+            let star = metric
+                .hodge_star_matrix(manifold.complex(), 1)
+                .map_err(|e| TopologyError::InvalidInput(format!("hodge star (grade 1): {e}")))?;
+            super::stencil::build::star_diag(star.as_ref(), manifold.complex().num_cells(1))
+        };
+        let boundary = manifold.complex().boundary_matrix(1);
+        let ptr = boundary.row_indices();
+        let cols = boundary.col_indices();
+        let mut diag = vec![R::zero(); n];
+        for (i, dslot) in diag
+            .iter_mut()
+            .enumerate()
+            .take(ptr.len().saturating_sub(1))
+        {
+            for e in ptr[i]..ptr[i + 1] {
+                *dslot += mass_1[cols[e]];
+            }
+        }
+        cg_solve_preconditioned(apply, &diag, &weighted_rhs, tolerance, max_iter)
+    } else {
+        cg_solve(apply, &weighted_rhs, tolerance, max_iter)
+    };
+    match solve_result {
         Ok(x) => Ok(x),
         Err(CgFailure {
             iterations,

@@ -267,9 +267,11 @@ fn spectral_path_ignores_iteration_budget() {
 }
 
 #[test]
-fn mixed_periodicity_stays_on_cg() {
-    // Same starved budget on a mixed-periodicity lattice: CG runs and
-    // its non-convergence surfaces, proving the dispatch boundary.
+fn mixed_periodicity_takes_direct_neumann_path() {
+    // Since add-walls-and-dec-stencils, mixed-periodicity uniform boxes
+    // take the direct DCT/DFT Neumann solve: a starved CG budget must
+    // not fail (the iteration options are unused on direct paths). CG
+    // error propagation is pinned by the per-edge-metric test below.
     let manifold = manifold_with_metric(
         LatticeComplex::<2, f64>::new([8, 8], [true, false]),
         CubicalReggeGeometry::unit(),
@@ -280,8 +282,7 @@ fn mixed_periodicity_stays_on_cg() {
         tolerance: Some(1e-12),
         max_iterations: Some(1),
     };
-    let err = manifold.leray_project_opts(&omega, &opts).unwrap_err();
-    assert!(format!("{err}").contains("did not converge"));
+    assert!(manifold.leray_project_opts(&omega, &opts).is_ok());
 }
 
 #[test]

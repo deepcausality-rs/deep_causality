@@ -35,10 +35,14 @@ mod leray_tests;
 #[cfg(test)]
 mod manifold_topology_tests;
 #[cfg(test)]
+mod neumann_poisson_tests;
+#[cfg(test)]
 mod simplicial_topology_tests;
 #[cfg(test)]
 mod spectral_poisson_tests;
 #[cfg(test)]
 mod stencil_tests;
+#[cfg(test)]
+mod wall_hodge_star_tests;
 #[cfg(test)]
 mod wedge_tests;

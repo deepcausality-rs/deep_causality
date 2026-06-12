@@ -15,8 +15,14 @@ but the transforms are general-purpose.
 | `FftPlanNd<R>` | N-dimensional complex FFT by row-column decomposition |
 | `RfftPlanNd<R>` | N-dimensional real FFT: rFFT along the last axis, complex along the rest |
 
-`naive_dft` / `naive_idft` are the O(n²) correctness references used by the
-test suite; the planner never selects them.
+`DctPlan<R>` adds plan-based discrete cosine transforms (types I, II, III,
+unnormalized with `execute_inverse` applying the exact scaled inverse),
+built on the rFFT core via the Makhoul (DCT-II/III) and even-extension
+(DCT-I) embeddings — the building block for direct Neumann-Poisson solves
+on wall-bounded uniform boxes.
+
+`naive_dft` / `naive_idft` / `naive_dct_*` are the O(n²) correctness
+references used by the test suite; the planner never selects them.
 
 ## Algorithm layering
 

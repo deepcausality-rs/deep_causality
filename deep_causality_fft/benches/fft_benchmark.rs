@@ -11,7 +11,7 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
 
-use deep_causality_fft::{FftPlan, FftPlanNd, RfftPlanNd};
+use deep_causality_fft::{DctPlan, DctType, FftPlan, FftPlanNd, RfftPlanNd};
 use deep_causality_num::Complex;
 
 fn cbuf_f64(n: usize) -> Vec<Complex<f64>> {
@@ -108,5 +108,25 @@ fn bench_3d(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_1d, bench_3d);
+fn bench_dct(c: &mut Criterion) {
+    let mut group = c.benchmark_group("dct_1d_f64");
+    for (n, label) in [(64usize, "64"), (129, "129_bluestein"), (4096, "4096")] {
+        for ty in [DctType::I, DctType::II] {
+            let plan = DctPlan::<f64>::new(n, ty).unwrap();
+            let input = rbuf_f64(n);
+            let mut out = vec![0.0f64; n];
+            let mut rs = vec![0.0f64; plan.scratch_real_len()];
+            let mut cs = vec![Complex::new(0.0, 0.0); plan.scratch_complex_len()];
+            group.bench_function(format!("type_{ty:?}_{label}"), |b| {
+                b.iter(|| {
+                    plan.execute(black_box(&input), &mut out, &mut rs, &mut cs)
+                        .unwrap();
+                })
+            });
+        }
+    }
+    group.finish();
+}
+
+criterion_group!(benches, bench_1d, bench_3d, bench_dct);
 criterion_main!(benches);

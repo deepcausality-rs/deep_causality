@@ -46,8 +46,10 @@ pub mod utils;
 
 pub use crate::errors::fft_error::FftError;
 pub use crate::traits::fft_scalar::FftScalar;
+pub use crate::types::dct_plan::{DctPlan, DctType};
 pub use crate::types::fft_plan::FftPlan;
 pub use crate::types::fft_plan_nd::FftPlanNd;
 pub use crate::types::rfft_plan::RfftPlan;
 pub use crate::types::rfft_plan_nd::RfftPlanNd;
+pub use crate::utils::dct::{naive_dct_i, naive_dct_ii, naive_dct_iii};
 pub use crate::utils::dft::{naive_dft, naive_idft};

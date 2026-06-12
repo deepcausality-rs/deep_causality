@@ -20,7 +20,10 @@ use crate::types::manifold::differential::stencil::bilinear_op::BilinearOp;
 use crate::types::manifold::differential::stencil::stencil_op::StencilOp;
 
 /// Extract the diagonal of a (diagonal) Hodge star matrix.
-pub(super) fn star_diag<R>(star: &CsrMatrix<R>, n: usize) -> Vec<R>
+pub(in crate::types::manifold::differential) fn star_diag<R>(
+    star: &CsrMatrix<R>,
+    n: usize,
+) -> Vec<R>
 where
     R: RealField,
 {

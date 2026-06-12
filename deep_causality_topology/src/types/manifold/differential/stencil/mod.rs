@@ -23,7 +23,7 @@
 //! conclusion as the FFT plan-cache decision in `add-fft` design D8).
 
 mod bilinear_op;
-mod build;
+pub(in crate::types::manifold::differential) mod build;
 mod stencil_op;
 
 use core::fmt::Debug;

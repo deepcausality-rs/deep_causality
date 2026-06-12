@@ -117,11 +117,7 @@ cargo bench -p deep_causality_physics --bench dec_solver_benchmark --features pa
 ```
 
 Final numbers (Apple Silicon, release). The Leray projection runs the
-spectral (FFT) grade-0 Poisson solve from `deep_causality_fft` (the
-`add-fft` change), and the rate assembly streams through the compiled
-DEC stencil tables (`DecStencilTables`, the `add-walls-and-dec-stencils`
-change) — flat folded-coefficient gathers instead of CSR traversal and
-per-cell index arithmetic:
+spectral (FFT) grade-0 Poisson solve from `deep_causality_fft`, and the rate assembly streams through the compiled  DEC stencil tables; flat folded-coefficient gathers instead of CSR traversal and per-cell index arithmetic:
 
 | Grid | Component | Sequential | Parallel |
 | --- | --- | ---: | ---: |

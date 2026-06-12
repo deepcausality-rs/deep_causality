@@ -64,6 +64,7 @@ use super::{CubicalReggeGeometry, EdgeLengths, SignatureMarker};
 use crate::TopologyError;
 use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
+use crate::types::lattice_complex::LatticeCell;
 use crate::types::lattice_complex::LatticeComplex;
 use deep_causality_metric::Metric;
 use deep_causality_num::{FromPrimitive, RealField};
@@ -121,18 +122,46 @@ where
             }
         };
 
+        // Boundary clip factor 2^{-b}: the dual cell extends ±h/2 along
+        // every complement (inactive) axis from the cell's center, so at
+        // each open-axis boundary incidence the dual volume is halved —
+        // wall faces halve, wall edges quarter, 3D wall corners eighth
+        // (the wall-hodge-star capability of add-walls-and-dec-stencils).
+        // Periodic axes never clip; fully periodic lattices are unchanged.
+        let lattice_shape = *complex.shape();
+        let lattice_periodic = *complex.periodic();
+        let two = R::one() + R::one();
+        let boundary_clip = |cell: &LatticeCell<D>| -> R {
+            let mut factor = R::one();
+            for a in 0..D {
+                let active = cell.orientation() & (1u32 << a) != 0;
+                if active || lattice_periodic[a] {
+                    continue;
+                }
+                let pos = cell.position()[a];
+                if pos == 0 || pos + 1 == lattice_shape[a] {
+                    factor /= two;
+                }
+            }
+            factor
+        };
+
         match &self.edge_lengths {
             EdgeLengths::UnitEdge => {
-                // Identity matrix on Euclidean; Lorentzian applies sign per cell.
+                // Identity on the interior; boundary duals clip.
                 for (i, cell) in complex.cells(k).enumerate() {
-                    triplets.push((i, i, cell_sign(cell.orientation())));
+                    triplets.push((i, i, cell_sign(cell.orientation()) * boundary_clip(&cell)));
                 }
             }
             EdgeLengths::Uniform { length } => {
                 // Diagonal magnitude = length^(D - 2k). Per-cell sign from metric.
                 let magnitude = pow_signed(*length, (D as isize) - 2 * (k as isize));
                 for (i, cell) in complex.cells(k).enumerate() {
-                    triplets.push((i, i, cell_sign(cell.orientation()) * magnitude));
+                    triplets.push((
+                        i,
+                        i,
+                        cell_sign(cell.orientation()) * magnitude * boundary_clip(&cell),
+                    ));
                 }
             }
             EdgeLengths::PerAxis { lengths } => {
@@ -153,7 +182,11 @@ where
                             dual *= *length;
                         }
                     }
-                    triplets.push((i, i, cell_sign(orientation) * (dual / primal)));
+                    triplets.push((
+                        i,
+                        i,
+                        cell_sign(orientation) * (dual / primal) * boundary_clip(&cell),
+                    ));
                 }
             }
             EdgeLengths::PerEdge { lengths } => {
@@ -207,7 +240,11 @@ where
                     let divisor = <R as FromPrimitive>::from_usize(valid_count)
                         .expect("usize fits in every RealField");
                     let dual = dual_sum / divisor;
-                    triplets.push((i, i, cell_sign(orientation) * (dual / primal)));
+                    triplets.push((
+                        i,
+                        i,
+                        cell_sign(orientation) * (dual / primal) * boundary_clip(&cell),
+                    ));
                 }
             }
         }

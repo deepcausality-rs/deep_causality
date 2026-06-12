@@ -402,17 +402,28 @@ fn leray_rejects_missing_metric() {
 fn leray_surfaces_cg_nonconvergence() {
     // A one-iteration budget cannot converge the Poisson solve for a strong
     // gradient field: the CgFailure must surface as HodgeDecompositionFailed.
-    // Mixed periodicity keeps the grade-0 solve on the CG path - a fully
-    // periodic lattice would dispatch to the spectral solve, which has no
-    // convergence-failure mode.
+    // A per-edge metric keeps the grade-0 solve on the CG path - uniform
+    // lattices (periodic or walled) dispatch to the direct spectral
+    // solves, which have no convergence-failure mode.
     let n = 8usize;
     let lattice_fn = || LatticeComplex::<2, f64>::new([n, n], [true, false]);
     let n0 = lattice_fn().num_cells(0);
+    let n1 = lattice_fn().num_cells(1);
     let phi = random_cochain::<f64>(n0, 53);
     let m_phi = manifold_with_k_form(lattice_fn(), 0, &phi);
     let d_phi = m_phi.exterior_derivative(0);
 
-    let manifold = unit_manifold(lattice_fn());
+    // Per-edge metric (uniform lengths): semantically the unit metric,
+    // but the per-edge tier reports no per-axis spacings, so the grade-0
+    // solve stays on CG.
+    let manifold = {
+        let lattice = lattice_fn();
+        let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+        let data = CausalTensor::new(vec![0.0f64; total], vec![total]).unwrap();
+        let metric: CubicalReggeGeometry<2, f64> =
+            CubicalReggeGeometry::from_edge_lengths(vec![1.0; n1]);
+        Manifold::from_cubical_with_metric(lattice, data, metric, 0)
+    };
     let opts = HodgeDecomposeOptions {
         tolerance: Some(1e-12),
         max_iterations: Some(1),

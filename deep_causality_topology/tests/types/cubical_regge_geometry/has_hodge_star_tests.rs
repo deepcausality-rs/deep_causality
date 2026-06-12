@@ -32,6 +32,29 @@ use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, HasHodgeStar, 
 
 const TOL: f64 = 1e-12;
 
+/// Boundary clip factor `2^{-b}` of the corrected star (the
+/// wall-hodge-star capability): one halving per open-axis boundary
+/// incidence along the cell's inactive axes.
+fn clip_factor<const D: usize>(
+    lattice: &LatticeComplex<D, f64>,
+    cell: &deep_causality_topology::LatticeCell<D>,
+) -> f64 {
+    let shape = lattice.shape();
+    let periodic = lattice.periodic();
+    let mut f = 1.0;
+    for a in 0..D {
+        let active = cell.orientation() & (1u32 << a) != 0;
+        if active || periodic[a] {
+            continue;
+        }
+        let p = cell.position()[a];
+        if p == 0 || p + 1 == shape[a] {
+            f *= 0.5;
+        }
+    }
+    f
+}
+
 fn assert_diagonal<R>(matrix: &deep_causality_sparse::CsrMatrix<R>, n: usize)
 where
     R: deep_causality_num::RealField + std::fmt::Debug,
@@ -65,14 +88,22 @@ where
 
 #[test]
 fn unit_edge_hodge_star_is_identity_on_2d_open_lattice() {
+    // Boundary-corrected star: identity on the interior, dual volumes
+    // clipped by 2^{-b} at open-axis boundary incidences.
     let lattice = open_square_3();
     let geom = unit_geometry::<2>();
     for k in 0..=2 {
         let star = geom.hodge_star_matrix(&lattice, k).unwrap();
         let n = lattice.num_cells(k);
         assert_diagonal(star.as_ref(), n);
-        for v in star.values() {
-            assert!((*v - 1.0).abs() < TOL, "k={k} entry {v} expected 1.0");
+        let values = star.values();
+        for (i, cell) in lattice.cells(k).enumerate() {
+            let expected = clip_factor(&lattice, &cell);
+            assert!(
+                (values[i] - expected).abs() < TOL,
+                "k={k} cell {i}: {} expected {expected}",
+                values[i]
+            );
         }
     }
 }
@@ -91,12 +122,15 @@ fn unit_edge_hodge_star_is_identity_on_2d_periodic_lattice() {
 
 #[test]
 fn unit_edge_hodge_star_is_identity_on_3d_open_lattice() {
+    // Boundary-corrected star: identity on the interior, clipped at walls.
     let lattice = open_cube_3();
     let geom = unit_geometry::<3>();
     for k in 0..=3 {
         let star = geom.hodge_star_matrix(&lattice, k).unwrap();
-        for v in star.values() {
-            assert!((*v - 1.0).abs() < TOL);
+        let values = star.values();
+        for (i, cell) in lattice.cells(k).enumerate() {
+            let expected = clip_factor(&lattice, &cell);
+            assert!((values[i] - expected).abs() < TOL);
         }
     }
 }
@@ -128,12 +162,15 @@ fn uniform_hodge_star_is_length_to_the_d_minus_2k_at_every_cell_2d() {
     let lattice = open_square_3();
     let geom: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::uniform(2.0);
     // D = 2: exponents are D - 2k for k = 0, 1, 2 → 2, 0, -2.
-    for (k, expected) in [(0usize, 4.0), (1, 1.0), (2, 0.25)] {
+    for (k, closed_form) in [(0usize, 4.0), (1, 1.0), (2, 0.25)] {
         let star = geom.hodge_star_matrix(&lattice, k).unwrap();
-        for v in star.values() {
+        let values = star.values();
+        for (i, cell) in lattice.cells(k).enumerate() {
+            let expected = closed_form * clip_factor(&lattice, &cell);
             assert!(
-                (*v - expected).abs() < TOL,
-                "k={k} entry {v} expected {expected}"
+                (values[i] - expected).abs() < TOL,
+                "k={k} cell {i}: {} expected {expected}",
+                values[i]
             );
         }
     }
@@ -144,12 +181,15 @@ fn uniform_hodge_star_is_length_to_the_d_minus_2k_at_every_cell_3d() {
     let lattice = open_cube_3();
     let geom: CubicalReggeGeometry<3, f64> = CubicalReggeGeometry::uniform(2.0);
     // D = 3: exponents are 3, 1, -1, -3 → 8, 2, 0.5, 0.125.
-    for (k, expected) in [(0usize, 8.0), (1, 2.0), (2, 0.5), (3, 0.125)] {
+    for (k, closed_form) in [(0usize, 8.0), (1, 2.0), (2, 0.5), (3, 0.125)] {
         let star = geom.hodge_star_matrix(&lattice, k).unwrap();
-        for v in star.values() {
+        let values = star.values();
+        for (i, cell) in lattice.cells(k).enumerate() {
+            let expected = closed_form * clip_factor(&lattice, &cell);
             assert!(
-                (*v - expected).abs() < TOL,
-                "k={k} entry {v} expected {expected}"
+                (values[i] - expected).abs() < TOL,
+                "k={k} cell {i}: {} expected {expected}",
+                values[i]
             );
         }
     }
@@ -168,21 +208,24 @@ fn per_axis_hodge_star_2d_matches_closed_form_a_b() {
     let lattice = open_square_3();
     let geom = per_axis_geometry::<2>([a, b]);
 
-    // ⋆_0
+    // ⋆_0 (clipped at walls)
     let star0 = geom.hodge_star_matrix(&lattice, 0).unwrap();
-    for v in star0.values() {
-        assert!((*v - a * b).abs() < TOL);
+    let values0 = star0.values();
+    for (i, cell) in lattice.cells(0).enumerate() {
+        let expected = a * b * clip_factor(&lattice, &cell);
+        assert!((values0[i] - expected).abs() < TOL);
     }
 
     // ⋆_1 — per-edge: axis-0 (orientation 0b01) gives b/a; axis-1 (0b10) gives a/b.
     let star1 = geom.hodge_star_matrix(&lattice, 1).unwrap();
     let values = star1.values();
     for (i, cell) in lattice.cells(1).enumerate() {
-        let expected = match cell.orientation() {
+        let closed_form = match cell.orientation() {
             0b01 => b / a, // edge along axis 0
             0b10 => a / b, // edge along axis 1
             other => panic!("unexpected 1-cell orientation {other:b}"),
         };
+        let expected = closed_form * clip_factor(&lattice, &cell);
         assert!(
             (values[i] - expected).abs() < TOL,
             "edge {i} (orientation={:b}): got {}, expected {expected}",
@@ -191,7 +234,7 @@ fn per_axis_hodge_star_2d_matches_closed_form_a_b() {
         );
     }
 
-    // ⋆_2
+    // ⋆_2 (2-cells have no inactive axes in 2D: never clipped)
     let star2 = geom.hodge_star_matrix(&lattice, 2).unwrap();
     for v in star2.values() {
         assert!((*v - 1.0 / (a * b)).abs() < TOL);
@@ -230,29 +273,33 @@ fn per_axis_3d_diagonal_entries_match_closed_form() {
     let geom = per_axis_geometry::<3>([a, b, c]);
 
     let star0 = geom.hodge_star_matrix(&lattice, 0).unwrap();
-    for v in star0.values() {
-        assert!((*v - a * b * c).abs() < TOL);
+    let values0 = star0.values();
+    for (i, cell) in lattice.cells(0).enumerate() {
+        let expected = a * b * c * clip_factor(&lattice, &cell);
+        assert!((values0[i] - expected).abs() < TOL);
     }
 
     let star1 = geom.hodge_star_matrix(&lattice, 1).unwrap();
     for (i, cell) in lattice.cells(1).enumerate() {
-        let expected = match cell.orientation() {
+        let closed_form = match cell.orientation() {
             0b001 => (b * c) / a,
             0b010 => (a * c) / b,
             0b100 => (a * b) / c,
             other => panic!("unexpected 1-cell orientation {other:b}"),
         };
+        let expected = closed_form * clip_factor(&lattice, &cell);
         assert!((star1.values()[i] - expected).abs() < TOL);
     }
 
     let star2 = geom.hodge_star_matrix(&lattice, 2).unwrap();
     for (i, cell) in lattice.cells(2).enumerate() {
-        let expected = match cell.orientation() {
+        let closed_form = match cell.orientation() {
             0b011 => c / (a * b),
             0b101 => b / (a * c),
             0b110 => a / (b * c),
             other => panic!("unexpected 2-cell orientation {other:b}"),
         };
+        let expected = closed_form * clip_factor(&lattice, &cell);
         assert!((star2.values()[i] - expected).abs() < TOL);
     }
 

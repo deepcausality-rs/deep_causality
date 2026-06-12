@@ -32,30 +32,30 @@ wiring and validation.
 
 ### B1. Cosine transforms (fft-dct)
 
-- [ ] B1.1 Implement naïve O(n²) DCT-I/II/III references (test-only)
-- [ ] B1.2 Implement `DctPlan<R>` types II and III on the power-of-two core via the even-symmetric embedding + twiddle post-pass, Bluestein-backed for awkward lengths; II↔III round-trip tests under the documented normalization
-- [ ] B1.3 Implement DCT-I via the length-2(N−1) embedding; self-inverse round-trip test
-- [ ] B1.4 Precision-generic accuracy tests (f32/f64/Float106) vs the naïve references; extend the FFT benchmark with DCT sizes; update the fft README
+- [x] B1.1 Implement naïve O(n²) DCT-I/II/III references (test-only)
+- [x] B1.2 Implement `DctPlan<R>` types II and III on the power-of-two core via the even-symmetric embedding + twiddle post-pass, Bluestein-backed for awkward lengths; II↔III round-trip tests under the documented normalization
+- [x] B1.3 Implement DCT-I via the length-2(N−1) embedding; self-inverse round-trip test
+- [x] B1.4 Precision-generic accuracy tests (f32/f64/Float106) vs the naïve references; extend the FFT benchmark with DCT sizes; update the fft README
 
 ### B2. Boundary-corrected Hodge star (wall-hodge-star)
 
-- [ ] B2.1 Add the clip-exponent pass (`2^{-b}` per open-axis boundary incidence) to the cubical star across unit/uniform/per-axis tiers; per-edge tier corner products gain the same factors
-- [ ] B2.2 Tests: interior entries unchanged; face/edge/corner exponents on open 2D/3D lattices; periodic axes unclipped on mixed lattices; fully periodic bit-unchanged
-- [ ] B2.3 M-symmetry test for `Δ₀`/`Δ₁` assembled with the corrected star on walled lattices
-- [ ] B2.4 Audit and re-derive existing open-lattice tests whose expected values assumed the interior-only star (correct the expectations, never loosen tolerances)
+- [x] B2.1 Add the clip-exponent pass (`2^{-b}` per open-axis boundary incidence) to the cubical star across unit/uniform/per-axis tiers; per-edge tier corner products gain the same factors
+- [x] B2.2 Tests: interior entries unchanged; face/edge/corner exponents on open 2D/3D lattices; periodic axes unclipped on mixed lattices; fully periodic bit-unchanged
+- [x] B2.3 M-symmetry test for `Δ₀`/`Δ₁` assembled with the corrected star on walled lattices
+- [x] B2.4 Audit and re-derive existing open-lattice tests whose expected values assumed the interior-only star (correct the expectations, never loosen tolerances)
 
 ### B3. Neumann projection (neumann-poisson)
 
-- [ ] B3.1 Add `cg_solve_preconditioned` (Jacobi) to `deep_causality_sparse` (additive API + tests; existing `cg_solve` untouched)
-- [ ] B3.2 Determine the DCT type that diagonalizes the implemented boundary-corrected `Δ₀` (residual probe test decides I vs II); implement the per-axis eigenvalue tables for wall axes
-- [ ] B3.3 Implement the direct Neumann solve: pure-DCT path for all-walls boxes; complex-carrier mixed path (DFT periodic axes × DCT wall axes) for mixtures; gauge-mode zeroing
-- [ ] B3.4 Extend the `solve_laplacian` dispatch: uniform Euclidean + every axis periodic-or-walled → direct solve; otherwise preconditioned CG (boundary-corrected diagonal) where available, plain CG else
-- [ ] B3.5 Tests: residual at rounding vs the implemented `Δ₀` (all-walls + mixed); agreement with preconditioned CG on multiple shapes incl. anisotropic; no wall-normal flux in `dφ`; preconditioned-vs-plain iteration-count benchmark case
-- [ ] B3.6 Leray dispatch tests across the three domain classes (periodic DFT / walled DFT-DCT / per-edge CG) incl. the no-flux boundary-trace scenario
+- [x] B3.1 Add `cg_solve_preconditioned` (Jacobi) to `deep_causality_sparse` (additive API + tests; existing `cg_solve` untouched)
+- [x] B3.2 Determine the DCT type that diagonalizes the implemented boundary-corrected `Δ₀` (residual probe test decides I vs II); implement the per-axis eigenvalue tables for wall axes
+- [x] B3.3 Implement the direct Neumann solve: pure-DCT path for all-walls boxes; complex-carrier mixed path (DFT periodic axes × DCT wall axes) for mixtures; gauge-mode zeroing
+- [x] B3.4 Extend the `solve_laplacian` dispatch: uniform Euclidean + every axis periodic-or-walled → direct solve; otherwise preconditioned CG (boundary-corrected diagonal) where available, plain CG else
+- [x] B3.5 Tests: residual at rounding vs the implemented `Δ₀` (all-walls + mixed); agreement with preconditioned CG on multiple shapes incl. anisotropic; no wall-normal flux in `dφ`; preconditioned-vs-plain iteration-count benchmark case
+- [x] B3.6 Leray dispatch tests across the three domain classes (periodic DFT / walled DFT-DCT / per-edge CG) incl. the no-flux boundary-trace scenario
 
 ### B4. Gate and close Group B
 
-- [ ] B4.1 Group gate: `make format`, `make fix`, full tests on touched crates in both feature configurations; prepare the Group B commit message and ask the user to commit
+- [x] B4.1 Group gate: `make format`, `make fix`, full tests on touched crates in both feature configurations; prepare the Group B commit message and ask the user to commit
 
 ## C. Wall-bounded solver — no-slip, wiring, validation
 
