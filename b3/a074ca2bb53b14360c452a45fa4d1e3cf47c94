@@ -1,0 +1,47 @@
+openspec/changes/add-walls-and-dec-stencils/specs/leray-projection/spec.md
+  s_4adc6099bc84ff::t_a5feb2c7cda6d8 1-55
+openspec/changes/add-walls-and-dec-stencils/specs/wall-bounded-ns/spec.md
+  s_4adc6099bc84ff::t_67b9aa43533d8d 7-10,14,20-22
+  s_4adc6099bc84ff::t_42a769eeb6fc13 1-6,11-13,15-19
+openspec/changes/add-walls-and-dec-stencils/proposal.md
+  s_4adc6099bc84ff::t_cc920f867377a1 1-114
+openspec/changes/add-walls-and-dec-stencils/.openspec.yaml
+  s_4adc6099bc84ff::t_29c3b5dc28486b 1-2
+openspec/changes/add-walls-and-dec-stencils/specs/no-slip-viscous/spec.md
+  s_4adc6099bc84ff::t_771d559bf91d32 1-32
+openspec/changes/add-walls-and-dec-stencils/specs/neumann-poisson/spec.md
+  s_4adc6099bc84ff::t_95a61995bc2040 1-39
+openspec/changes/add-walls-and-dec-stencils/tasks.md
+  s_4adc6099bc84ff::t_bbeeaf8166e29e 2,8,10,12,18,20,24,26,30,32,34,39,41,46,48
+  s_4adc6099bc84ff::t_3f84d912744187 1,3-7,9,11,13-17,19,21-23,25,27-29,31,33,35-38,40,42-45,47,49-80
+openspec/changes/add-walls-and-dec-stencils/design.md
+  s_4adc6099bc84ff::t_08f4b999b14cb5 1-269
+openspec/changes/add-walls-and-dec-stencils/specs/spectral-diffusion/spec.md
+  s_4adc6099bc84ff::t_bfdd40b71e7bf5 1-23
+openspec/changes/add-walls-and-dec-stencils/specs/fft-dct/spec.md
+  s_4adc6099bc84ff::t_d3cf369600c708 1-26
+openspec/changes/add-walls-and-dec-stencils/specs/dec-ns-rate/spec.md
+  s_4adc6099bc84ff::t_0f545370338e8b 1-58
+openspec/changes/add-walls-and-dec-stencils/specs/dec-stencil-operators/spec.md
+  s_4adc6099bc84ff::t_b06d45c66a1da3 1-48
+openspec/changes/add-walls-and-dec-stencils/specs/dec-ns-validation/spec.md
+  s_4adc6099bc84ff::t_12e02df19d5038 1-41
+openspec/changes/add-walls-and-dec-stencils/specs/wall-hodge-star/spec.md
+  s_4adc6099bc84ff::t_3a5585397b1cd8 1-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "b3a074ca2bb53b14360c452a45fa4d1e3cf47c94",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
