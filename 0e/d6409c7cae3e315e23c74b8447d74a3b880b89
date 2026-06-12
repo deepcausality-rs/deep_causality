@@ -1,0 +1,25 @@
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_rate.rs
+  s_2ee70d36fc7990::t_f1d1507e6c326f 40
+deep_causality_discovery/src/types/brcd_input/mod.rs
+  s_2ee70d36fc7990::t_d75cd6c35c2353 12
+deep_causality_core/src/types/causal_flow/mod.rs
+  s_2ee70d36fc7990::t_e08a2ce7980e02 50
+deep_causality_discovery/src/errors/brcd_load_error.rs
+  s_2ee70d36fc7990::t_4a4139c05e0eec 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "0ed6409c7cae3e315e23c74b8447d74a3b880b89",
+  "prompts": {},
+  "sessions": {
+    "s_2ee70d36fc7990": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c2c53431-f4ce-4eeb-af1e-db6a8c53cd48",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
