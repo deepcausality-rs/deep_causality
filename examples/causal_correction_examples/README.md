@@ -23,11 +23,11 @@ program.
 
 | Property | Demonstrated by |
 |---|---|
-| Same chain, different worlds. Replay the same `bind` pipeline under several interventions without branching code. | All four examples |
-| Audit trail in `EffectLog`. Every `intervene` appends `!!Intervention!!: <old> replaced with <new>`. The intervention history becomes inspectable. | All four examples |
+| Same chain, different worlds. Replay the same `bind` pipeline under several interventions without branching code. | All five examples |
+| Audit trail in `EffectLog`. Every `intervene` appends `!!Intervention!!: <old> replaced with <new>`. The intervention history becomes inspectable. | All five examples |
 | Error-state preservation. If the chain is already in error, `intervene` is a no-op. Intervention cannot paper over an upstream bug. | (Property of the trait; not the punchline of a dedicated example.) |
-| State and Context preservation. On `PropagatingProcess`, only the value swaps. Accumulated `State` and read-only `Context` are untouched. | All four examples |
-| Interventions compose into chains. A cascade is a chain of interventions, each applied to the result of the previous one. | All four examples |
+| State and Context preservation. On `PropagatingProcess`, only the value swaps. Accumulated `State` and read-only `Context` are untouched. | All five examples |
+| Interventions compose into chains. A cascade is a chain of interventions, each applied to the result of the previous one. | All five examples |
 | Closed-loop correction. The monitor decides each tick whether to intervene; the chain advances from the corrected value. Failure averted instead of measured. | `corrective_lane_keeping`, `corrective_glucose_pump`, `corrective_decompression_stops`, `corrective_network_failover`, `corrective_ddos_detector` |
 
 ## Examples
@@ -92,11 +92,11 @@ The codebase already has small demonstrations of `intervene` in:
 * [`material_examples/structural_health_monitor`](../material_examples/structural_health_monitor),
   which asks what would have happened without the observed crack.
 
-Those are the *what is `intervene`* examples. The four here are the
+Those are the *what is `intervene`* examples. The five here are the
 *what does `intervene` give you that `bind` cannot* examples, drawn from
 domains that were not built around intervention from the start: vehicle
-control, closed-loop medical pumps, decompression theory, and enterprise
-networking.
+control, closed-loop medical pumps, decompression theory, enterprise
+networking, and network-security anomaly detection.
 
 ## Adding New Examples
 
