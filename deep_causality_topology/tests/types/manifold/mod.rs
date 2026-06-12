@@ -31,6 +31,8 @@ mod hodge_decomposition_tests;
 #[cfg(test)]
 mod interior_product_tests;
 #[cfg(test)]
+mod leray_constrained_tests;
+#[cfg(test)]
 mod leray_tests;
 #[cfg(test)]
 mod manifold_topology_tests;

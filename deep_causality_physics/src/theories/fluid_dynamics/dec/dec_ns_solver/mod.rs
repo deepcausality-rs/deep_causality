@@ -8,6 +8,7 @@
 //! step, the run loops, initial-condition seeding, and the opt-in
 //! pressure diagnostic. See the parent module doc for the formulation.
 
+pub(in crate::theories::fluid_dynamics::dec) mod no_slip;
 mod pressure;
 mod run;
 mod seed;
@@ -37,6 +38,13 @@ pub struct DecNsSolver<'m, const D: usize, R: DecNsScalar> {
     pub(super) cfl_advective: R,
     pub(super) cfl_diffusive: R,
     pub(super) dx_min: R,
+    /// Prescribed tangential wall values (edge index → edge integral): the
+    /// inhomogeneous no-slip lift of a moving wall (Couette, the cavity
+    /// lid). Empty by default; populated by [`Self::with_moving_wall`].
+    /// Re-applied after every projection — the constrained projector
+    /// ignores constrained-edge input values, so `P(u) = P(u − lift)`
+    /// exactly and no subtraction is needed.
+    pub(super) lift: alloc::vec::Vec<(usize, R)>,
 }
 
 impl<'m, const D: usize, R: DecNsScalar> DecNsSolver<'m, D, R> {
@@ -94,7 +102,73 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsSolver<'m, D, R> {
             cfl_advective: default_safety,
             cfl_diffusive: default_safety,
             dx_min,
+            lift: alloc::vec::Vec::new(),
         })
+    }
+
+    /// Prescribes a moving wall: the wall perpendicular to `wall_axis` (the
+    /// `max_side` face when true, the zero face otherwise) carries the
+    /// tangential `velocity` — the inhomogeneous no-slip condition of
+    /// Couette flow and the lid-driven cavity. The lift values are edge
+    /// integrals (`velocity[a] · edge length`) on that wall's tangential
+    /// edges; they are held exactly at every step boundary while the
+    /// remaining wall edges stay pinned to zero.
+    ///
+    /// # Errors
+    /// * `PhysicsError::DimensionMismatch` when `wall_axis ≥ D`.
+    /// * `PhysicsError::PhysicalInvariantBroken` when `wall_axis` is
+    ///   periodic (no wall to move), when the velocity has a non-zero
+    ///   wall-normal component, or when it is not finite.
+    pub fn with_moving_wall(
+        mut self,
+        wall_axis: usize,
+        max_side: bool,
+        velocity: [R; D],
+    ) -> Result<Self, PhysicsError> {
+        if wall_axis >= D {
+            return Err(PhysicsError::DimensionMismatch(format!(
+                "with_moving_wall: wall axis {wall_axis} out of range for D = {D}"
+            )));
+        }
+        let complex = self.manifold.complex();
+        if complex.periodic()[wall_axis] {
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "with_moving_wall: axis {wall_axis} is periodic — there is no wall to move"
+            )));
+        }
+        if velocity.iter().any(|v| !v.is_finite()) {
+            return Err(PhysicsError::NumericalInstability(
+                "with_moving_wall: velocity must be finite".into(),
+            ));
+        }
+        if velocity[wall_axis] != R::zero() {
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "with_moving_wall: the wall-normal velocity component (axis {wall_axis}) \
+                 must be zero — wall-normal flux is the projection's Neumann condition"
+            )));
+        }
+
+        let metric = self
+            .manifold
+            .metric()
+            // Coverage exemption: metric presence validated by DecNsRate::new.
+            .expect("metric presence validated by DecNsRate::new");
+        let shape = complex.shape();
+        let wall_pos = if max_side { shape[wall_axis] - 1 } else { 0 };
+        let mut lift = alloc::vec::Vec::new();
+        for (idx, cell) in complex.iter_cells(1).enumerate() {
+            let axis = cell.orientation().trailing_zeros() as usize;
+            if axis == wall_axis
+                || velocity[axis] == R::zero()
+                || cell.position()[wall_axis] != wall_pos
+            {
+                continue;
+            }
+            let length = metric.cell_volume(complex, &cell);
+            lift.push((idx, velocity[axis] * length));
+        }
+        self.lift = lift;
+        Ok(self)
     }
 
     /// Replaces the projection CG options (tolerance, iteration budget).

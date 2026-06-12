@@ -41,6 +41,24 @@ The crate is organized along two complementary axes:
    **See [README_GAUGE_THEORIES.md](./README_GAUGE_THEORIES.md)** for the architecture of the
    theory layer, gauge-group taxonomy, and how to switch precision per theory.
 
+3. **DEC Navier–Stokes** — an incompressible fluid solver native to discrete exterior calculus:
+   velocity is an edge 1-form, each `Rk4` stage marches the Leray-projected rate
+   `P(−i_u ω − ν Δ_dR u♭ + g♭)` (the projector *is* the incompressibility equation — no
+   splitting error), and the `SolenoidalField` type-state makes "you cannot time-step an
+   unprojected field" a compile-time fact. The hot loop streams through compiled DEC stencil
+   tables (equivalence-gated against the generic operators); the grade-0 pressure solves
+   dispatch to direct spectral solves (rFFT on tori, DCT-I/DFT on uniform wall-bounded boxes)
+   or Jacobi-preconditioned CG.
+
+   The solver covers **periodic and wall-bounded domains**: no-slip walls constrain
+   wall-tangential edges through the constrained Leray projector (divergence-free **and**
+   no-slip, exactly, at every step boundary), and `with_moving_wall` prescribes a tangential
+   lid velocity (Couette, lid-driven cavity). The validation ladder gates Taylor–Green
+   convergence tables, inviscid invariants, the double shear layer, exact Couette/Poiseuille
+   steady states, and the Re-1000 lid-driven cavity against the Ghia et al. (1982) tables;
+   `examples/avionics_examples/{dec_taylor_green_re1600, dec_lid_cavity_re1000}` produce the
+   recognizable artifacts.
+
 ## Precision
 
 All kernels, quantity wrappers, and theories are generic over `R: RealField`. The same source code

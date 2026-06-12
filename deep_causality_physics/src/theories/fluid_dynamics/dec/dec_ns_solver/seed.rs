@@ -62,11 +62,20 @@ impl<const D: usize, R: DecNsScalar> DecNsSolver<'_, D, R> {
     /// The shared `t = 0` projection of a seeded edge cochain.
     fn project_seed(&self, edge_form: CausalTensor<R>) -> Result<SolenoidalField<R>, PhysicsError> {
         let velocity = VelocityOneForm::new(edge_form, self.manifold)?;
-        let (state, _potential) = SolenoidalField::from_leray_projection_opts(
+        // Wall-bounded lattices seed through the constrained projection
+        // (no-slip ∩ divergence-free), so the march starts with exact zeros
+        // on the wall-tangential set; the explicit constraint stage then
+        // re-asserts them and applies the prescribed moving-wall lift. All
+        // are no-ops on periodic lattices.
+        let (state, _potential) = SolenoidalField::from_constrained_leray_projection_opts(
             &velocity,
             self.manifold,
+            self.rate.no_slip_edges(),
             &self.cg_options,
         )?;
+        let state = state
+            .constrain_edges(self.rate.no_slip_edges())
+            .with_lift(&self.lift);
         Ok(state)
     }
 }

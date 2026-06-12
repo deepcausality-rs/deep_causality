@@ -68,6 +68,12 @@ pub struct DecNsRate<'m, const D: usize, R: DecNsScalar> {
     /// Opt-in spectral viscous evaluation (fully periodic lattices only;
     /// the `spectral-diffusion` capability). `None` by default.
     spectral: Option<SpectralDiffusion<R>>,
+    /// Wall-tangential edges the no-slip condition pins to zero (the
+    /// no-slip-viscous capability). Empty on fully periodic lattices, where
+    /// every projection runs the unconstrained (spectral-dispatch) path
+    /// bit-unchanged; on wall-bounded lattices `project_raw` routes through
+    /// the constrained Leray projector instead.
+    no_slip: super::dec_ns_solver::no_slip::NoSlipConstraint,
 }
 
 /// The compiled tables plus the per-evaluation scratch. `RefCell`: the
@@ -132,6 +138,52 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         let complex = manifold.complex();
         let n1 = complex.num_cells(1);
 
+        // Wall-bounded acceptance (the wall-bounded-ns capability): every
+        // wall axis must carry at least two vertex layers (an extent-1 wall
+        // axis has no 2-cells and no interior to march), and the metric's
+        // grade-1 star must vend strictly positive, finite masses — the
+        // operational form of "carries the boundary-corrected star" that
+        // the constrained projection's masked CG normal form requires.
+        let any_wall = complex.periodic().iter().any(|&p| !p);
+        if any_wall {
+            for (axis, (&periodic, &extent)) in complex
+                .periodic()
+                .iter()
+                .zip(complex.shape().iter())
+                .enumerate()
+            {
+                if !periodic && extent < 2 {
+                    return Err(PhysicsError::DimensionMismatch(format!(
+                        "DecNsRate: wall axis {axis} has extent {extent}; wall-bounded \
+                         lattices need at least 2 vertex layers per wall axis"
+                    )));
+                }
+            }
+            use deep_causality_topology::HasHodgeStar;
+            let metric = manifold
+                .metric()
+                // Coverage exemption: metric presence checked above.
+                .expect("metric presence checked above");
+            let star = metric
+                .hodge_star_matrix(complex, 1)
+                .map_err(|e| PhysicsError::TopologyError(format!("hodge star (grade 1): {e}")))?;
+            for i in 0..n1 {
+                let mut diag = R::zero();
+                for e in star.row_indices()[i]..star.row_indices()[i + 1] {
+                    if star.col_indices()[e] == i {
+                        diag = star.values()[e];
+                    }
+                }
+                if !diag.is_finite() || diag <= R::zero() {
+                    return Err(PhysicsError::TopologyError(format!(
+                        "DecNsRate: wall-bounded lattices require the boundary-corrected \
+                         Hodge star with strictly positive edge masses; edge {i} has \
+                         mass {diag}"
+                    )));
+                }
+            }
+        }
+
         let body_force = match body_force {
             Some(g) => {
                 if g.len() != n1 {
@@ -165,6 +217,8 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             ws: RefCell::new(ws),
         });
 
+        let no_slip = super::dec_ns_solver::no_slip::NoSlipConstraint::new(complex);
+
         Ok(Self {
             manifold,
             nu,
@@ -172,7 +226,15 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             n1,
             engine,
             spectral: None,
+            no_slip,
         })
+    }
+
+    /// The wall-tangential edge set the no-slip condition constrains
+    /// (empty on fully periodic lattices). Shared with the solver's seeding
+    /// and re-entry projections.
+    pub(in crate::theories::fluid_dynamics::dec) fn no_slip_edges(&self) -> &[usize] {
+        self.no_slip.edges()
     }
 
     /// Opt into the spectral evaluation of the viscous term (fully
@@ -231,14 +293,17 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         Ok((VelocityOneForm::from_raw(projected), potential))
     }
 
-    /// The shared projection of a raw RHS evaluation.
+    /// The shared projection of a raw RHS evaluation: constrained on
+    /// wall-bounded lattices (the M-orthogonal projection onto no-slip ∩
+    /// divergence-free), plain on periodic ones (the empty edge set
+    /// delegates inside the topology call).
     fn project_raw(
         &self,
         raw: &VelocityOneForm<R>,
         opts: &HodgeDecomposeOptions<R>,
     ) -> Result<LerayProjection<R>, PhysicsError> {
         self.manifold
-            .leray_project_opts(raw.as_tensor(), opts)
+            .leray_project_constrained_opts(raw.as_tensor(), self.no_slip.edges(), opts)
             .map_err(|e| PhysicsError::TopologyError(format!("Leray projection failed: {e}")))
     }
 

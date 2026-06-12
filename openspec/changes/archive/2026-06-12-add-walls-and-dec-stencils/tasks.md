@@ -61,20 +61,20 @@ wiring and validation.
 
 ### C1. No-slip viscous operator (no-slip-viscous)
 
-- [ ] C1.1 Implement the no-slip constraint stage (zero wall-tangential edges) as a typed chain stage + seeding constraint
-- [ ] C1.2 Implement mirror-consistent viscous boundary rows (reflection folded into stencil coefficients, no ghost storage); M-symmetry test on walled 2D/3D lattices
-- [ ] C1.3 Couette pure-diffusion sanity test (linear profile at discretization order)
-- [ ] C1.4 Wire the constrained rows into both the generic operator path and the compiled stencil tables (the tables compile from the corrected star + constrained rows)
+- [x] C1.1 Implement the no-slip constraint stage (zero wall-tangential edges) as a typed chain stage + seeding constraint
+- [x] C1.2 Implement mirror-consistent viscous boundary rows (reflection folded into stencil coefficients, no ghost storage); M-symmetry test on walled 2D/3D lattices
+- [x] C1.3 Couette pure-diffusion sanity test (linear profile at discretization order)
+- [x] C1.4 Wire the constrained rows into both the generic operator path and the compiled stencil tables (the tables compile from the corrected star + constrained rows)
 
 ### C2. Solver wiring and validation (wall-bounded-ns, dec-ns-validation)
 
-- [ ] C2.1 `DecNsSolver` acceptance of mixed/all-walls manifolds: construction validation (corrected star required), no-slip stage in the march chain, wall-aware CFL, constrained seeding; periodic suite bit-unchanged regression gate
-- [ ] C2.2 Poiseuille CI rung: body-force-driven channel to steady state; profile convergence ≥ 1.9 observed order; wall-consistency assertions
-- [ ] C2.3 Coarse lid-driven-cavity CI rung (≤ 64²) vs Ghia centerline tables: pinned RMSE gate + refinement trend
-- [ ] C2.4 Full-resolution cavity example program emitting centerline CSVs and the vortex-center table vs Ghia (reuses the Q-criterion kernels; harness shared with the challenge-entry tooling)
+- [x] C2.1 `DecNsSolver` acceptance of mixed/all-walls manifolds: construction validation (corrected star required), no-slip stage in the march chain, wall-aware CFL, constrained seeding; periodic suite bit-unchanged regression gate
+- [x] C2.2 Poiseuille CI rung: body-force-driven channel to steady state; profile convergence ≥ 1.9 observed order; wall-consistency assertions
+- [x] C2.3 Coarse lid-driven-cavity CI rung (≤ 64²) vs Ghia centerline tables: pinned RMSE gate + refinement trend
+- [x] C2.4 Full-resolution cavity example program emitting centerline CSVs and the vortex-center table vs Ghia (reuses the Q-criterion kernels; harness shared with the challenge-entry tooling)
 
 ### C3. Closeout and close Group C
 
-- [ ] C3.1 Re-1600 example: adopt the stencil (+ spectral diffusion, if gated in) configuration; record the 64³ step time and update the example README performance table
-- [ ] C3.2 Update READMEs (topology operator docs, physics solver docs) for the new dispatch classes and the stencil pipeline
-- [ ] C3.3 Group gate: `make format`, `make fix`, `make build`, `make test` workspace-wide; both feature configurations on touched crates; prepare the Group C commit message and ask the user to commit
+- [x] C3.1 Re-1600 example: adopt the stencil (+ spectral diffusion, if gated in) configuration; record the 64³ step time and update the example README performance table
+- [x] C3.2 Update READMEs (topology operator docs, physics solver docs) for the new dispatch classes and the stencil pipeline
+- [x] C3.3 Group gate: `make format`, `make fix`, `make build`, `make test` workspace-wide; both feature configurations on touched crates; prepare the Group C commit message and ask the user to commit

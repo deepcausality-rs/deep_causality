@@ -96,6 +96,30 @@ where
         Ok((Self { field: projected }, potential))
     }
 
+    /// Crate-internal wall-bounded path: the **constrained** Leray
+    /// projection (`Manifold::leray_project_constrained_opts`) — the
+    /// M-orthogonal projection onto no-slip ∩ divergence-free, so the result
+    /// is divergence-free at the solve's exactness *and* exactly zero on the
+    /// wall-tangential edge set. An empty `constrained_edges` is the plain
+    /// projection (bit-identical periodic path).
+    ///
+    /// # Errors
+    /// As [`Self::from_leray_projection`].
+    pub(crate) fn from_constrained_leray_projection_opts<const D: usize>(
+        velocity: &VelocityOneForm<R>,
+        manifold: &Manifold<LatticeComplex<D, R>, R>,
+        constrained_edges: &[usize],
+        opts: &deep_causality_topology::HodgeDecomposeOptions<R>,
+    ) -> Result<(Self, CausalTensor<R>), PhysicsError> {
+        let projection = manifold
+            .leray_project_constrained_opts(velocity.as_tensor(), constrained_edges, opts)
+            .map_err(|e| {
+                PhysicsError::TopologyError(format!("constrained Leray projection failed: {e}"))
+            })?;
+        let (projected, potential) = projection.into_parts();
+        Ok((Self { field: projected }, potential))
+    }
+
     /// Per-snapshot analysis path: the divergence-free part (`δβ + h`) of a
     /// grade-1 Hodge decomposition.
     ///
@@ -135,6 +159,51 @@ where
         let field =
             CausalTensor::new(data, alloc::vec![len]).expect("1-D tensor allocation cannot fail");
         Ok(Self { field })
+    }
+
+    /// Crate-internal wall-bounded path: zero the given (wall-tangential)
+    /// edge coefficients — the homogeneous no-slip constraint `P_S` applied
+    /// as the step's final operation (design D8). The field stays
+    /// divergence-free at the solve's exactness: this last coordinate
+    /// projection perturbs the divergence only by the residual no-slip
+    /// violation the projection left behind, which the wall-bounded-ns spec
+    /// sanctions (no-slip exact, divergence at the solve's exactness). A
+    /// bit-exact no-op when `edges` is empty (fully periodic), so the
+    /// periodic construction path is preserved.
+    pub(crate) fn constrain_edges(self, edges: &[usize]) -> Self {
+        if edges.is_empty() {
+            return self;
+        }
+        let mut data = self.field.into_vec();
+        for &e in edges {
+            data[e] = R::zero();
+        }
+        let len = data.len();
+        Self {
+            field: CausalTensor::new(data, alloc::vec![len])
+                .expect("1-D tensor allocation cannot fail"),
+        }
+    }
+
+    /// Crate-internal wall-bounded path: set the prescribed tangential wall
+    /// values (the moving-wall lift — edge index → edge integral). Applied
+    /// after the constrained projection, whose output is exactly zero on
+    /// every constrained edge, so this is assignment onto zeros: the lift
+    /// edges carry their prescribed values exactly while the projection's
+    /// free-edge values are untouched. A no-op when `lift` is empty.
+    pub(crate) fn with_lift(self, lift: &[(usize, R)]) -> Self {
+        if lift.is_empty() {
+            return self;
+        }
+        let mut data = self.field.into_vec();
+        for &(e, value) in lift {
+            data[e] = value;
+        }
+        let len = data.len();
+        Self {
+            field: CausalTensor::new(data, alloc::vec![len])
+                .expect("1-D tensor allocation cannot fail"),
+        }
     }
 
     /// Read-only access to the underlying divergence-free edge cochain.

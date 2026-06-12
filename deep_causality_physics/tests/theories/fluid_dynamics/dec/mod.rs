@@ -4,6 +4,8 @@
  */
 
 #[cfg(test)]
+pub mod cavity_tests;
+#[cfg(test)]
 pub mod dec_ns_rate_tests;
 #[cfg(test)]
 pub mod dec_ns_solver;
@@ -11,6 +13,8 @@ pub mod dec_ns_solver;
 pub mod diagnostics_tests;
 #[cfg(test)]
 pub mod inviscid_invariants_tests;
+#[cfg(test)]
+pub mod poiseuille_tests;
 #[cfg(test)]
 pub mod shear_layer_tests;
 pub mod spectral_diffusion_tests;

@@ -63,6 +63,9 @@ impl<const D: usize, R: DecNsScalar> DecNsSolver<'_, D, R> {
         let deferred: Cell<Option<PhysicsError>> = Cell::new(None);
         let n1 = state.as_one_form().len();
         let rk4 = Rk4::new(self.dt, |s: &VelocityOneForm<R>| {
+            // On wall-bounded lattices the rate's projector is the
+            // constrained (no-slip ∩ divergence-free) projection, so each
+            // stage rate is already exactly in the no-slip subspace.
             match self.rate.eval_projected(s, &self.cg_options) {
                 Ok(rate) => rate,
                 Err(e) => {
@@ -91,11 +94,22 @@ impl<const D: usize, R: DecNsScalar> DecNsSolver<'_, D, R> {
         // near-no-op solve starves the full stage solves above first,
         // which fail through the deferred slot. Kept as `?` for defense
         // in depth.
-        let (projected, _potential) = SolenoidalField::from_leray_projection_opts(
+        let (projected, _potential) = SolenoidalField::from_constrained_leray_projection_opts(
             &advanced,
             self.manifold,
+            self.rate.no_slip_edges(),
             &self.cg_options,
         )?;
+        // No-slip chain stage: re-assert the exact zeros on the
+        // wall-tangential set, then the prescribed moving-wall values (the
+        // inhomogeneous lift) as the step's final operations. The
+        // constrained projection already produced the zeros and ignores
+        // constrained-edge input values (`P(u) = P(u − lift)` exactly), so
+        // the lift is simply re-applied. Both are no-ops on periodic
+        // lattices, keeping that path bit-unchanged.
+        let projected = projected
+            .constrain_edges(self.rate.no_slip_edges())
+            .with_lift(&self.lift);
 
         // Bind 2: the CFL guard on the projected state; violation
         // short-circuits.

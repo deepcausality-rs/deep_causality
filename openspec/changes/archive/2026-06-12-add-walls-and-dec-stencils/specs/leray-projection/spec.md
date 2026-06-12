@@ -53,3 +53,36 @@ consumes it).
 #### Scenario: No flux through walls
 - **WHEN** `leray_project` runs on a walled lattice
 - **THEN** the removed gradient component has vanishing wall-normal boundary trace to rounding
+
+## ADDED Requirements
+
+### Requirement: Constrained Leray projection
+`Manifold<K, R>` SHALL provide `leray_project_constrained_opts(field,
+constrained_edges, opts)`: the M-orthogonal projection onto the
+intersection of the divergence-free subspace with the essential
+constraint subspace `S = {u : u|_E = 0}` for a caller-supplied edge set
+`E`. The projection SHALL satisfy both invariants simultaneously —
+`u|_E = 0` exactly and the full (unmasked) discrete divergence at the
+solve's exactness — realized as `u = P_S(field) − P_F dφ` with
+`(∂ M₁|_F d) φ = ∂ M₁ P_S(field)` (the grade-0 operator assembled with
+the constrained edges' masses removed, the gradient correction masked to
+free edges). The masked operator loses per-axis separability, so the
+solve SHALL run Jacobi-preconditioned CG; vertices whose every incident
+edge is constrained yield structurally null rows whose right-hand-side
+entries are zeroed, with the consistency gauge taken over the connected
+block. An empty edge set SHALL delegate to the plain projection
+bit-identically; invalid edge indices, field-length mismatches, the
+fully-constrained degenerate case, and CG non-convergence SHALL return
+typed errors.
+
+#### Scenario: Both invariants hold simultaneously
+- **WHEN** the constrained projection runs on mixed-periodicity and all-walls lattices (including null corner rows)
+- **THEN** every constrained edge is exactly zero and the full divergence is at the solve's exactness
+
+#### Scenario: The projection is M-orthogonal and idempotent
+- **WHEN** the removed component is tested against members of the intersection subspace, and the projection is applied twice
+- **THEN** the M-inner products vanish at rounding and the second application changes nothing beyond solve tolerance
+
+#### Scenario: Empty constraint set delegates
+- **WHEN** the constrained projection runs with no constrained edges
+- **THEN** the result is bit-identical to `leray_project_opts`

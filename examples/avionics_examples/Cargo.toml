@@ -25,6 +25,10 @@ name = "dec_taylor_green_re1600"
 path = "dec_taylor_green_re1600/main.rs"
 
 [[example]]
+name = "dec_lid_cavity_re1000"
+path = "dec_lid_cavity_re1000/main.rs"
+
+[[example]]
 name = "turbulence_flow"
 path = "turbulence_flow/main.rs"
 

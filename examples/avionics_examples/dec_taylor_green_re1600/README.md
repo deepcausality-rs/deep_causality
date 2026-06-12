@@ -121,17 +121,17 @@ spectral (FFT) grade-0 Poisson solve from `deep_causality_fft`, and the rate ass
 
 | Grid | Component | Sequential | Parallel |
 | --- | --- | ---: | ---: |
-| 16³ | rate assembly (`−i_u ω − νΔu♭`, stencils) | 0.42 ms | — |
-| 16³ | Leray projection (spectral) | 0.31 ms | — |
-| 16³ | full step (4 projected stages + CFL) | 3.8 ms | — |
-| 32³ | rate assembly (stencils) | 3.4 ms | 2.2 ms |
+| 16³ | rate assembly (`−i_u ω − νΔu♭`, stencils) | 0.29 ms | — |
+| 16³ | Leray projection (spectral) | 0.11 ms | — |
+| 16³ | full step (4 projected stages + CFL) | 2.0 ms | — |
+| 32³ | rate assembly (stencils) | 2.4 ms | 1.9 ms |
 | 32³ | rate assembly (generic operators, baseline) | 41.6 ms | — |
-| 32³ | Leray projection (spectral) | 2.6 ms | — |
-| 32³ | full step | 30.3 ms | 26.7 ms |
-| 64³ | rate assembly (stencils) | 28.3 ms | 6.6 ms |
+| 32³ | Leray projection (spectral) | 0.93 ms | 1.1 ms |
+| 32³ | full step | 16.7 ms | 14.5 ms |
+| 64³ | rate assembly (stencils) | 20.2 ms | 8.3 ms |
 | 64³ | rate assembly (generic operators, baseline) | 354 ms | — |
-| 64³ | Leray projection (spectral) | 26 ms | 21 ms |
-| 64³ | full step | 283 ms | 159 ms |
+| 64³ | Leray projection (spectral) | 9.3 ms | 6.8 ms |
+| 64³ | full step | 144 ms | 72 ms |
 
 How to read the table:
 
@@ -140,24 +140,31 @@ How to read the table:
   spec gate for the default switch); every gather index and folded
   coefficient (incidence signs × Hodge factors × transport weights ×
   cup signs) is precompiled once per manifold.
-- **The step history**: 850 ms when first benchmarked → 388 ms after the
-  allocation/memoization pass → 137 ms with the spectral projection →
-  **30.3 ms** with the stencil pipeline (12.8× cumulative at 32³,
-  serial). Equivalence to the generic operators is pinned at ≤ 100·ε by
-  CI on every lattice/metric/precision combination.
+- **The step history** (32³, serial): 850 ms when first benchmarked →
+  388 ms after the allocation/memoization pass → 137 ms with the spectral
+  projection → 30.3 ms with the stencil pipeline → **16.7 ms** after
+  memoizing the diagonal Hodge star (the projection's `δω`/`dφ` were
+  rebuilding the star matrices on every call) — 51× cumulative.
+  Equivalence to the generic operators is pinned at ≤ 100·ε by CI on
+  every lattice/metric/precision combination.
 - **Spectral diffusion is available but opt-in**
   (`with_spectral_diffusion()`): at 32³ it measures 4.1 ms — slightly
   slower than the stencil viscous passes, so the stencil path stays the
   default; the option matters at larger grids and lower Re.
 - The remaining step cost is the four projections plus integrator
   plumbing; parallel gains at 32³ are modest because most passes sit
-  under the fan-out thresholds — 64³ engages them (rate 28.3 → 6.6 ms).
-  At 64³ the projection is the new dominant cost: its internal `δω`/`dφ`
-  evaluations still run the generic operators — routing them through the
-  stencil tables is the recorded next follow-up.
-- CG remains the solver on non-periodic, mixed-periodicity, and
-  per-edge-metric lattices, where a preconditioner is still the
-  designated follow-up (the walls change set).
+  under the fan-out thresholds — 64³ engages them (rate 20.2 → 8.3 ms,
+  step 144 → 72 ms). The projection is now genuinely FFT-bound (the
+  N log N work), with `δω`/`dφ` reduced to plain sparse matvecs against
+  memoized matrices. The 64³ full step at 72 ms parallel puts the
+  Re-1600 dissipation curve (Stage 1's exit artifact) in overnight
+  reach at 128³.
+- Wall-bounded and mixed-periodicity uniform boxes now solve their
+  grade-0 Poisson problems **directly via DCT-I/DFT** (the
+  `neumann-poisson` capability); no-slip flows run the constrained
+  projector through Jacobi-preconditioned CG (see the
+  `dec_lid_cavity_re1000` example). Plain CG remains only for per-edge
+  metrics and degenerate extents.
 
 ## Notes for the curious
 
