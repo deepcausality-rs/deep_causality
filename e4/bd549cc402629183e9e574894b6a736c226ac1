@@ -1,0 +1,23 @@
+deep_causality_core/Cargo.toml
+  s_9f0604cfafbe3b::t_8269dfa4b8abae 3
+deep_causality_physics/Cargo.toml
+  s_9f0604cfafbe3b::t_47f87ca93fb0c6 37
+deep_causality/Cargo.toml
+  s_9f0604cfafbe3b::t_e14ce927955874 54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "e4bd549cc402629183e9e574894b6a736c226ac1",
+  "prompts": {},
+  "sessions": {
+    "s_9f0604cfafbe3b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f95e42d-780a-4042-9005-6dd1ac001617",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
