@@ -80,8 +80,8 @@ fn main() {
         })
         .into_process();
 
-    // Uncomment for verbose detailed.
-    // model_utils::print_section("Closed loop", &result, );
+    // Verbose detailed.
+    model_utils::print_section("Closed loop", &result);
 
     println!("=== Summary ===");
     model_utils::summary_line("Closed loop", &result);
