@@ -110,7 +110,9 @@ pub struct DetectorState {
     pub throttle_history: Vec<ThrottleState>,
     pub consecutive_anomalies: u32,
     pub mitigation_count: u32,
-    pub attack_detected_at: Option<u32>,
+    /// Onset: the first anomalous second observed. The *confirmed* detection
+    /// is `mitigated_at` (the trigger), which lands `trigger_slots` later.
+    pub first_anomaly_at: Option<u32>,
     pub mitigated_at: Option<u32>,
     pub peak_throughput_mbps: FloatType,
     pub overload_ticks: u32,
@@ -127,7 +129,7 @@ impl DetectorState {
             throttle_history: Vec::new(),
             consecutive_anomalies: 0,
             mitigation_count: 0,
-            attack_detected_at: None,
+            first_anomaly_at: None,
             mitigated_at: None,
             peak_throughput_mbps: 0.0,
             overload_ticks: 0,

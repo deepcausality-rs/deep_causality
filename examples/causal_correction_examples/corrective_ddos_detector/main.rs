@@ -37,7 +37,9 @@
 //! If you have a use case where disabling can be automated safely, you need to implement
 //! this based on the shown design pattern e.g. check that a mitigation is on, and simultaneously,
 //! that twice the detection duration traffic was back to normal and only then it's safe to disable the mitigation.
-//! In practice, you would add an extended observation phase before deciding whether disabling the mitigation is safe.
+//! Importantly, the detector must judge abatement on the raw inbound load, which a real scrubbing appliance still
+//! sees while it rate-limits what it forwards. Also, you would add an extended observation phase on the raw inbound
+//! before deciding whether disabling the mitigation is safe.
 //!
 
 mod model;

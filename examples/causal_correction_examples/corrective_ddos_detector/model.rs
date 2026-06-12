@@ -119,10 +119,10 @@ pub fn analyze_tick(
     mut state: DetectorState,
     ctx: Option<DetectorConfig>,
 ) -> DetectorProcess<ThrottleState> {
-    let cfg = ctx.clone().expect("DetectorConfig required");
+    let cfg = ctx.as_ref().expect("DetectorConfig required");
     let throttle = value.into_value().unwrap_or(THROTTLE_OFF);
 
-    let measured = regulate(offered_load(state.tick, &cfg), throttle, &cfg);
+    let measured = regulate(offered_load(state.tick, cfg), throttle, cfg);
     let tp = measured.throughput_mbps;
 
     let z = baseline_zscore(&state.window, tp);
@@ -143,8 +143,11 @@ pub fn analyze_tick(
 
     if anomalous {
         state.consecutive_anomalies += 1;
-        if state.attack_detected_at.is_none() {
-            state.attack_detected_at = Some(state.tick);
+        // First anomalous second of the surge — the onset, distinct from the
+        // confirmed detection, which is the trigger (`mitigated_at` in `main`,
+        // set once `consecutive_anomalies` reaches `trigger_slots`).
+        if state.first_anomaly_at.is_none() {
+            state.first_anomaly_at = Some(state.tick);
         }
     } else {
         state.consecutive_anomalies = 0;

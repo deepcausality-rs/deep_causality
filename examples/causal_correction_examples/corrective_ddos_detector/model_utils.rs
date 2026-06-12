@@ -12,12 +12,13 @@ use deep_causality_core::EffectValue;
 
 pub fn summary_line(label: &str, process: &DetectorProcess<ThrottleState>) {
     let st = &process.state;
-    let detected = match st.attack_detected_at {
-        Some(t) => format!("detected at tick {t}"),
+    let first_anomaly = match st.first_anomaly_at {
+        Some(t) => format!("first anomaly at tick {t}"),
         None => "no anomaly".to_string(),
     };
+    // Detection is the trigger, i.e. the tick mitigation engaged.
     let mitigated = match st.mitigated_at {
-        Some(t) => format!("mitigated at tick {t}"),
+        Some(t) => format!("detected/mitigated at tick {t}"),
         None => "no mitigation".to_string(),
     };
     let outcome = match st.overload_threshold_reached_at {
@@ -25,7 +26,7 @@ pub fn summary_line(label: &str, process: &DetectorProcess<ThrottleState>) {
         None => "within service objective".to_string(),
     };
     println!(
-        "  {label}: ticks={:>2}  peak={:>6.0} Mbps  overload_ticks={:>2}  {detected}  {mitigated}  outcome={outcome}",
+        "  {label}: ticks={:>2}  peak={:>6.0} Mbps  overload_ticks={:>2}  {first_anomaly}  {mitigated}  outcome={outcome}",
         st.tick, st.peak_throughput_mbps, st.overload_ticks
     );
 }
@@ -38,7 +39,7 @@ pub fn print_section(label: &str, process: &DetectorProcess<ThrottleState>) {
         "  ticks={}  window_size={}  sigma_threshold={}  trigger_slots={}  overload_budget={}",
         st.tick, WINDOW_SIZE, cfg.sigma_threshold, cfg.trigger_slots, cfg.overload_budget_ticks,
     );
-    if let Some(t) = st.attack_detected_at {
+    if let Some(t) = st.first_anomaly_at {
         println!("  first anomalous slot at tick {t}");
     }
     if let Some(t) = st.mitigated_at {
