@@ -1,0 +1,173 @@
+deep_causality_topology/tests/BUILD.bazel
+  s_4adc6099bc84ff::t_d8efac83128e4e 241
+deep_causality_par/src/lib.rs
+  s_4adc6099bc84ff::t_81554cad1ccf3c 1-23
+deep_causality_physics/tests/BUILD.bazel
+  s_4adc6099bc84ff::t_7151717bf426af 388,417
+deep_causality_topology/src/types/manifold/differential/laplacian.rs
+  s_4adc6099bc84ff::t_2d96feecef64f5 9
+deep_causality_topology/src/types/manifold/differential/wedge.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 41
+deep_causality_physics/src/kernels/mhd/resistive.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 10
+openspec/specs/fft-core/spec.md
+  s_4adc6099bc84ff::t_02e67398b06f41 1-84
+deep_causality_topology/Cargo.toml
+  s_4adc6099bc84ff::t_ad6116047e6d1d 27-35,46-52
+deep_causality_topology/tests/types/manifold/leray_tests.rs
+  s_4adc6099bc84ff::t_9be686537c6515 405-407,409
+  s_4adc6099bc84ff::t_7241143c9a038f 32,52,68,99,139
+deep_causality_topology/src/traits/chain_complex.rs
+  s_4adc6099bc84ff::t_9fa9e81a76bb19 65-75
+deep_causality_physics/tests/theories/fluid_dynamics/dec/dec_ns_solver/pressure_tests.rs
+  s_4adc6099bc84ff::t_6fb749227e2898 151-154,156,170-171
+  s_4adc6099bc84ff::t_7241143c9a038f 96
+deep_causality_physics/tests/theories/fluid_dynamics/dec/dec_ns_solver/step_tests.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 48
+  s_4adc6099bc84ff::t_b31478d339aa32 107-111,113,127-128
+deep_causality_physics/tests/theories/fluid_dynamics/dec/taylor_green_2d_tests.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 61
+deep_causality_physics/src/kernels/thermodynamics/wrappers.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 14
+openspec/specs/fft-multidim/spec.md
+  s_4adc6099bc84ff::t_02e67398b06f41 1-37
+deep_causality_topology/src/types/manifold/differential/spectral_poisson.rs
+  s_4adc6099bc84ff::t_636d1702acc0db 1-36,38-122
+  s_4adc6099bc84ff::t_bb9b5a88487a8a 37
+deep_causality_topology/src/types/manifold/differential/mod.rs
+  s_4adc6099bc84ff::t_81afb001cc4389 19
+deep_causality_par/README.md
+  s_4adc6099bc84ff::t_918f8a9dd8c6e1 27-47
+deep_causality_topology/BUILD.bazel
+  s_4adc6099bc84ff::t_df96d5411a0423 14,19
+deep_causality_physics/tests/theories/fluid_dynamics/dec/dec_ns_solver/run_tests.rs
+  s_4adc6099bc84ff::t_b31478d339aa32 84-86,92-93,99,105-106
+deep_causality_physics/src/theories/fluid_dynamics/dec/mod.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 43
+deep_causality_topology/src/types/manifold/differential/de_rham.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 37
+deep_causality_physics/src/quantities/fluid_dynamics/solenoidal_field.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 28
+deep_causality_physics/tests/theories/fluid_dynamics/dec/dec_ns_rate_tests.rs
+  s_4adc6099bc84ff::t_6fb749227e2898 362-366,368,377-384
+  s_4adc6099bc84ff::t_7241143c9a038f 188
+deep_causality_physics/BUILD.bazel
+  s_4adc6099bc84ff::t_c0966c67529c05 24
+deep_causality_topology/src/types/cubical_regge_geometry/has_hodge_star.rs
+  s_4adc6099bc84ff::t_3d33c76cf679e1 219-229
+openspec/specs/leray-projection/spec.md
+  s_4adc6099bc84ff::t_e5f4aecb05ce8a 6-15,19,23,27,37-43
+deep_causality_physics/tests/theories/fluid_dynamics/dec/wrappers_tests.rs
+  s_4adc6099bc84ff::t_b31478d339aa32 57-60
+deep_causality_par/src/traits/mod.rs
+  s_4adc6099bc84ff::t_6653c39a13cd92 6
+deep_causality_topology/tests/types/manifold/de_rham_tests.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 30,117
+openspec/specs/spectral-poisson/spec.md
+  s_4adc6099bc84ff::t_02e67398b06f41 27-47
+deep_causality_topology/tests/types/manifold/mod.rs
+  s_4adc6099bc84ff::t_b2b413753bda99 40-41
+deep_causality_physics/tests/theories/fluid_dynamics/dec/diagnostics_tests.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 41,84
+deep_causality_physics/src/kernels/thermodynamics/stats.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 11
+examples/avionics_examples/dec_taylor_green_re1600/README.md
+  s_4adc6099bc84ff::t_1bbd2eff57ee8e 119-122,126-131,135-153
+deep_causality_par/LICENSE
+  s_4adc6099bc84ff::t_551795b112b6f2 1-23
+deep_causality_topology/src/types/manifold/differential/hodge_decomposition_impl.rs
+  s_4adc6099bc84ff::t_12cc521153dc36 226-230,243-253
+deep_causality_topology/src/types/manifold/differential/utils_differential.rs
+  s_4adc6099bc84ff::t_2d96feecef64f5 10
+deep_causality_par/tests/traits/maybe_parallel_tests.rs
+  s_4adc6099bc84ff::t_2275324cbc0195 1-32
+deep_causality_physics/src/kernels/mhd/wrappers.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 12
+deep_causality_topology/tests/types/manifold/cubical_differential_tests.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 11
+deep_causality_topology/tests/types/manifold/spectral_poisson_tests.rs
+  s_4adc6099bc84ff::t_e1f8a8cabb7a93 228
+  s_4adc6099bc84ff::t_399e2e4c5c848d 1-227,229-303
+deep_causality_fft/src/traits/fft_scalar.rs
+  s_4adc6099bc84ff::t_2d96feecef64f5 7
+deep_causality_topology/src/types/manifold/differential/interior_product.rs
+  s_4adc6099bc84ff::t_2d96feecef64f5 48
+deep_causality_par/tests/BUILD.bazel
+  s_4adc6099bc84ff::t_3c3b4a2692fb66 1-16
+deep_causality_topology/tests/types/manifold/hodge_decomposition_property_tests.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 41,65,79,83,96,138,181
+deep_causality_physics/src/kernels/quantum/mechanics.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 15
+deep_causality_topology/tests/types/manifold/wedge_tests.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 37,59,76,162
+deep_causality_par/src/traits/maybe_parallel.rs
+  s_4adc6099bc84ff::t_42c10e24fd314a 6,8-12,21-25,27,35
+deep_causality_topology/tests/types/manifold/interior_product_tests.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 35,68,84
+deep_causality_par/Cargo.toml
+  s_4adc6099bc84ff::t_45f36c0467035d 1-39
+deep_causality_physics/src/kernels/em/fields.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 13
+deep_causality_par/tests/mod.rs
+  s_4adc6099bc84ff::t_f4f6e0a24ae9d0 1-5
+deep_causality_fft/BUILD.bazel
+  s_4adc6099bc84ff::t_4597fa3477aa59 19
+deep_causality_par/BUILD.bazel
+  s_4adc6099bc84ff::t_ebf4d0db5ce0e8 1-28
+Cargo.lock
+  s_4adc6099bc84ff::t_2d96feecef64f5 456,490-493,505,546,551
+openspec/specs/fft-real/spec.md
+  s_4adc6099bc84ff::t_02e67398b06f41 1-31
+deep_causality_topology/src/extensions/iso_de_rham/mod.rs
+  s_4adc6099bc84ff::t_2d96feecef64f5 25,41
+deep_causality_topology/src/types/manifold/differential/hodge.rs
+  s_4adc6099bc84ff::t_2d96feecef64f5 11
+deep_causality_topology/src/types/lattice_complex/mod.rs
+  s_4adc6099bc84ff::t_a42987437eee03 544-547
+deep_causality_physics/src/kernels/quantum/wrappers.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 15
+deep_causality_physics/Cargo.toml
+  s_4adc6099bc84ff::t_4e5231e2db62fd 37,80-82
+deep_causality_physics/tests/theories/fluid_dynamics/dec/dec_ns_solver/seed_tests.rs
+  s_4adc6099bc84ff::t_6fb749227e2898 113-116,118,128-129
+deep_causality_physics/src/kernels/em/wrappers.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 12
+deep_causality_topology/src/types/manifold/differential/leray.rs
+  s_4adc6099bc84ff::t_2d96feecef64f5 37
+deep_causality_topology/README.md
+  s_4adc6099bc84ff::t_2d96feecef64f5 275-283
+deep_causality_topology/src/traits/has_hodge_star.rs
+  s_4adc6099bc84ff::t_b0ea77d6dde225 66-78
+deep_causality_par/tests/traits/mod.rs
+  s_4adc6099bc84ff::t_152b02336e3417 1-6
+Cargo.toml
+  s_4adc6099bc84ff::t_e1ce405e796017 21
+deep_causality_fft/README.md
+  s_4adc6099bc84ff::t_ae9535b8cc6294 91-94,100-117
+deep_causality_physics/README.md
+  s_4adc6099bc84ff::t_2d96feecef64f5 71,73-86
+deep_causality_topology/src/types/manifold/differential/codifferential.rs
+  s_4adc6099bc84ff::t_2d96feecef64f5 10
+deep_causality_fft/Cargo.toml
+  s_4adc6099bc84ff::t_2c76d2575d08ad 32-34,41-43
+deep_causality_physics/tests/quantities/solenoidal_field_tests.rs
+  s_4adc6099bc84ff::t_7241143c9a038f 22,55,86
+deep_causality_topology/src/types/manifold/differential/exterior.rs
+  s_4adc6099bc84ff::t_2d96feecef64f5 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "327c055b2b747ea877f15aa748d4a95e746a3354",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
