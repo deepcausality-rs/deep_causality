@@ -439,7 +439,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality"
-version = "0.13.9"
+version = "0.13.10"
 dependencies = [
  "criterion",
  "deep_causality_ast",
@@ -491,7 +491,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_discovery"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "csv",
  "deep_causality_algorithms",
@@ -543,7 +543,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_physics"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "deep_causality_core",
  "deep_causality_haft",
