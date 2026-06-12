@@ -47,7 +47,7 @@ use crate::{
 use core::fmt::Debug;
 
 /// A fluent flow over the causal monad. `State` and `Context` default to `()`, so `CausalFlow<T>`
-/// is the stateless form (lowering to [`PropagatingEffect`]); a non-unit `State`/`Context` lowers
+/// is the stateless form (lowering to [`crate::PropagatingEffect`]); a non-unit `State`/`Context` lowers
 /// to [`PropagatingProcess`]. `Error` and `Log` are fixed to [`CausalityError`] / [`EffectLog`], so
 /// the witness types never appear in a signature a caller reads.
 #[derive(Debug, Clone, PartialEq)]

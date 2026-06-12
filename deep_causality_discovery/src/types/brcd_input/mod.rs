@@ -9,7 +9,7 @@ use deep_causality_topology::MixedGraph;
 
 /// The fully-prepared input for a BRCD discovery run.
 ///
-/// Produced by [`crate::BrcdDataLoader`] and consumed by the BRCD sub-pipeline's
+/// Produced by `BrcdDataLoader` and consumed by the BRCD sub-pipeline's
 /// `load_brcd_input`. It bundles the two aligned datasets, the optional CPDAG,
 /// and the reused algorithm config into one value so the discovery stage has
 /// everything it needs without further loading. When `cpdag` is `None`, BRCD

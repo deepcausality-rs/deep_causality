@@ -37,7 +37,7 @@ use crate::theories::fluid_dynamics::dec::spectral_diffusion::SpectralDiffusion;
 /// Construction validates every operator precondition — metric present,
 /// lattice dimension at least 2 (the convective term needs grade-2 cells),
 /// body-force edge count matching the lattice, `ν` finite and
-/// non-negative — so that [`eval`](Self::eval) is **infallible**
+/// non-negative — so that [`eval_projected`](Self::eval_projected) is **infallible**
 /// (`Fn(&S) -> S`) and composes directly with
 /// `deep_causality_calculus::Rk4`. Internal operator `Result`s are
 /// unwrapped against these construction-time invariants; each unwrap
