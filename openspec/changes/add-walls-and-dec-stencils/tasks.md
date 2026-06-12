@@ -10,23 +10,23 @@ wiring and validation.
 
 ### A1. Compiled stencil operators (dec-stencil-operators)
 
-- [ ] A1.1 Implement `DecStencilTables<R>`: per-manifold compilation of flat index/coefficient tables for `d`/`δ` (grades 0–2), diagonal Hodge factors, interior-product transport, and sharp, folding metric weights into coefficients; explicit construction API
-- [ ] A1.2 Streaming apply kernels over the tables (caller buffers, no allocation, `parallel`-feature fan-out with the established threshold pattern)
-- [ ] A1.3 Equivalence tests: every compiled operator vs the generic composition on randomized fields, 2D/3D, periodic and mixed-periodicity, unit/uniform/per-axis metrics, f64 + Float106, ≤ 100·ε
-- [ ] A1.4 Implement `RateWorkspace<R>` and the fused unprojected-assembly path in `DecNsRate`; keep the generic compositional path intact as the reference
-- [ ] A1.5 Fused-vs-generic rate equivalence test + Taylor–Green convergence-table reproduction through the fused path
+- [x] A1.1 Implement `DecStencilTables<R>`: per-manifold compilation of flat index/coefficient tables for `d`/`δ` (grades 0–2), diagonal Hodge factors, interior-product transport, and sharp, folding metric weights into coefficients; explicit construction API
+- [x] A1.2 Streaming apply kernels over the tables (caller buffers, no allocation, `parallel`-feature fan-out with the established threshold pattern)
+- [x] A1.3 Equivalence tests: every compiled operator vs the generic composition on randomized fields, 2D/3D, periodic and mixed-periodicity, unit/uniform/per-axis metrics, f64 + Float106, ≤ 100·ε
+- [x] A1.4 Implement `RateWorkspace<R>` and the fused unprojected-assembly path in `DecNsRate`; keep the generic compositional path intact as the reference
+- [x] A1.5 Fused-vs-generic rate equivalence test + Taylor–Green convergence-table reproduction through the fused path
 
 ### A2. Spectral diffusion (spectral-diffusion)
 
-- [ ] A2.1 Implement per-edge-family spectral evaluation of `νΔ₁u♭` on fully periodic lattices (three shifted-sub-lattice rFFT round trips; reuse the per-axis eigenvalue machinery)
-- [ ] A2.2 Rounding-level equivalence test vs `laplacian(1)` on 2D/3D tori incl. anisotropic spacings; typed construction error on non-periodic manifolds
-- [ ] A2.3 `with_spectral_diffusion()` opt-in on the solver; run the 2D Taylor–Green table with it enabled and record whether observed orders match (gates any future default-on)
+- [x] A2.1 Implement per-edge-family spectral evaluation of `νΔ₁u♭` on fully periodic lattices (three shifted-sub-lattice rFFT round trips; reuse the per-axis eigenvalue machinery)
+- [x] A2.2 Rounding-level equivalence test vs `laplacian(1)` on 2D/3D tori incl. anisotropic spacings; typed construction error on non-periodic manifolds
+- [x] A2.3 `with_spectral_diffusion()` opt-in on the solver; run the 2D Taylor–Green table with it enabled and record whether observed orders match (gates any future default-on)
 
 ### A3. Gate and close Group A
 
-- [ ] A3.1 Extend `dec_solver_benchmark` with stencil and spectral-diffusion configurations; record speedup vs the 30 ms / 11.2 ms (32³) baseline; switch the solver default to stencils only if serial ≥ 2×
-- [ ] A3.2 Run every existing CI ladder rung through the stencil pipeline (strategy-agnostic ladder requirement, dec-ns-validation delta)
-- [ ] A3.3 Group gate: `make format`, `make fix`, full tests on touched crates in both feature configurations; update the example README performance numbers; prepare the Group A commit message and ask the user to commit
+- [x] A3.1 Extend `dec_solver_benchmark` with stencil and spectral-diffusion configurations; record speedup vs the 30 ms / 11.2 ms (32³) baseline; switch the solver default to stencils only if serial ≥ 2×
+- [x] A3.2 Run every existing CI ladder rung through the stencil pipeline (strategy-agnostic ladder requirement, dec-ns-validation delta)
+- [x] A3.3 Group gate: `make format`, `make fix`, full tests on touched crates in both feature configurations; update the example README performance numbers; prepare the Group A commit message and ask the user to commit
 
 ## B. Wall substrate — DCT, corrected star, Neumann projection
 

@@ -498,6 +498,7 @@ dependencies = [
  "criterion",
  "deep_causality_calculus",
  "deep_causality_core",
+ "deep_causality_fft",
  "deep_causality_haft",
  "deep_causality_metric",
  "deep_causality_multivector",

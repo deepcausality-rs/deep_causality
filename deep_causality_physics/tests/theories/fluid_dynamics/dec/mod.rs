@@ -13,6 +13,7 @@ pub mod diagnostics_tests;
 pub mod inviscid_invariants_tests;
 #[cfg(test)]
 pub mod shear_layer_tests;
+pub mod spectral_diffusion_tests;
 #[cfg(test)]
 pub mod step_output_tests;
 #[cfg(test)]

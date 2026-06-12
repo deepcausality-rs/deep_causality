@@ -34,7 +34,11 @@ os-random = ["deep_causality_rand/os-random"] # required for lund hadronization
 # Enables parallel execution of the DEC operator loops underneath the
 # Navier-Stokes solver (wedge, interior product, de Rham, sharp) by
 # forwarding to the topology crate's Rayon feature. Disabled by default.
-parallel = ["deep_causality_topology/parallel", "deep_causality_par/parallel"]
+parallel = [
+    "deep_causality_topology/parallel",
+    "deep_causality_par/parallel",
+    "deep_causality_fft/parallel",
+]
 
 [dependencies.deep_causality_calculus]
 path = "../deep_causality_calculus"
@@ -80,6 +84,11 @@ version = "0.6"
 [dependencies.deep_causality_par]
 path = "../deep_causality_par"
 version = "0.1"
+
+[dependencies.deep_causality_fft]
+path = "../deep_causality_fft"
+version = "0.1"
+default-features = false
 
 [dev-dependencies]
 criterion = { version = "0.8" }

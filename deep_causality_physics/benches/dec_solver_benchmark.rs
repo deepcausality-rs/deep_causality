@@ -88,7 +88,7 @@ impl Fixture {
 }
 
 fn bench_dec_solver(c: &mut Criterion) {
-    for n in [16usize, 32] {
+    for n in [16usize, 32, 64] {
         let fixture = Fixture::new(n);
         let solver = fixture.solver();
         let state = fixture.state(&solver);
@@ -105,6 +105,24 @@ fn bench_dec_solver(c: &mut Criterion) {
 
         group.bench_function("rate_unprojected", |b| {
             b.iter(|| black_box(rate.eval_unprojected(black_box(&u))))
+        });
+
+        // The generic compositional baseline the compiled stencil pipeline
+        // is gated against (>= 2x serial required for the default switch).
+        let generic_rate = DecNsRate::new(&fixture.manifold, fixture.nu(), None)
+            .unwrap()
+            .with_generic_assembly();
+        group.bench_function("rate_unprojected_generic", |b| {
+            b.iter(|| black_box(generic_rate.eval_unprojected(black_box(&u))))
+        });
+
+        // Opt-in spectral viscous term on the same fully periodic fixture.
+        let spectral_rate = DecNsRate::new(&fixture.manifold, fixture.nu(), None)
+            .unwrap()
+            .with_spectral_diffusion()
+            .unwrap();
+        group.bench_function("rate_unprojected_spectral_diffusion", |b| {
+            b.iter(|| black_box(spectral_rate.eval_unprojected(black_box(&u))))
         });
 
         group.bench_function("leray_project", |b| {

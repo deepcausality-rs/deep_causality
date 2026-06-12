@@ -14,7 +14,6 @@ mod seed;
 mod step;
 
 use alloc::format;
-use deep_causality_num::RealField;
 use deep_causality_topology::{HodgeDecomposeOptions, LatticeComplex, Manifold};
 
 use crate::error::physics_error::PhysicsError;
@@ -30,7 +29,7 @@ use crate::theories::fluid_dynamics::dec::dec_ns_rate::DecNsRate;
 /// and rejects a non-finite or non-positive `dt`. Safety factors and CG
 /// options are adjusted through the builder methods.
 #[derive(Debug)]
-pub struct DecNsSolver<'m, const D: usize, R: RealField> {
+pub struct DecNsSolver<'m, const D: usize, R: DecNsScalar> {
     pub(super) rate: DecNsRate<'m, D, R>,
     pub(super) manifold: &'m Manifold<LatticeComplex<D, R>, R>,
     pub(super) dt: R,
@@ -102,6 +101,19 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsSolver<'m, D, R> {
     pub fn with_cg_options(mut self, opts: HodgeDecomposeOptions<R>) -> Self {
         self.cg_options = opts;
         self
+    }
+
+    /// Opt into the spectral evaluation of the viscous term (fully
+    /// periodic uniform lattices only; the `spectral-diffusion`
+    /// capability). Off by default — the validation ladder gates any
+    /// future default-on.
+    ///
+    /// # Errors
+    /// `PhysicsError::TopologyError` when the lattice is not fully
+    /// periodic or the metric carries no per-axis Euclidean spacings.
+    pub fn with_spectral_diffusion(mut self) -> Result<Self, PhysicsError> {
+        self.rate = self.rate.with_spectral_diffusion()?;
+        Ok(self)
     }
 
     /// Replaces the CFL safety factors (advective, diffusive).

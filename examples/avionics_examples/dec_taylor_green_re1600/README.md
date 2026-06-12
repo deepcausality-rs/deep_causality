@@ -117,40 +117,51 @@ cargo bench -p deep_causality_physics --bench dec_solver_benchmark --features pa
 ```
 
 Final numbers (Apple Silicon, release). The Leray projection runs the
-spectral (FFT) grade-0 Poisson solve from `deep_causality_fft` — on this
-fully periodic lattice the discrete Laplacian diagonalizes under the DFT,
-so the former CG iteration is gone entirely (the `add-fft` change):
+spectral (FFT) grade-0 Poisson solve from `deep_causality_fft` (the
+`add-fft` change), and the rate assembly streams through the compiled
+DEC stencil tables (`DecStencilTables`, the `add-walls-and-dec-stencils`
+change) — flat folded-coefficient gathers instead of CSR traversal and
+per-cell index arithmetic:
 
-| Grid | Component | Sequential | Parallel | Speedup |
-| --- | --- | ---: | ---: | ---: |
-| 16³ | rate assembly (`−i_u ω − νΔu♭`) | 3.8 ms | 2.2 ms | 1.7× |
-| 16³ | Leray projection (spectral) | 0.23 ms | 0.24 ms | ≈1× |
-| 16³ | full step (4 projected stages + CFL) | 17 ms | 10.4 ms | 1.6× |
-| 32³ | rate assembly | 30 ms | 11.2 ms | 2.7× |
-| 32³ | Leray projection (spectral) | 1.9 ms | 2.0 ms | ≈1× |
-| 32³ | full step | 137 ms | 57 ms | 2.4× |
+| Grid | Component | Sequential | Parallel |
+| --- | --- | ---: | ---: |
+| 16³ | rate assembly (`−i_u ω − νΔu♭`, stencils) | 0.42 ms | — |
+| 16³ | Leray projection (spectral) | 0.31 ms | — |
+| 16³ | full step (4 projected stages + CFL) | 3.8 ms | — |
+| 32³ | rate assembly (stencils) | 3.4 ms | 2.2 ms |
+| 32³ | rate assembly (generic operators, baseline) | 41.6 ms | — |
+| 32³ | Leray projection (spectral) | 2.6 ms | — |
+| 32³ | full step | 30.3 ms | 26.7 ms |
+| 64³ | rate assembly (stencils) | 28.3 ms | 6.6 ms |
+| 64³ | rate assembly (generic operators, baseline) | 354 ms | — |
+| 64³ | Leray projection (spectral) | 26 ms | 21 ms |
+| 64³ | full step | 283 ms | 159 ms |
 
 How to read the table:
 
-- **The spectral projection removed the step's old floor.** The CG-based
-  projection was 5.9 ms per solve at 32³ and dominated the 388 ms step;
-  the FFT solve is 1.9 ms, exact to rounding, with no iteration budget.
-  The full 32³ step went 388 ms → 137 ms serial (2.8×) and 57 ms with
-  `--features parallel` (6.8× against the old parallel baseline).
-- **The per-cell operator loops parallelize well.** Wedge, interior
-  product, de Rham, and sharp fan out over Rayon and carry the rate
-  assembly to 2.7× at 32³, growing with the grid. Rate assembly is now
-  the dominant remaining cost.
-- The FFT itself stays serial at these grids (the fan-out threshold sits
-  above 32³ passes — short transform lines lose to fork-join overhead)
-  and engages at 64³ and above.
-- These numbers include the earlier serial-side optimizations (memoized
-  boundary/coboundary matrices, cache-preserving lattice clones,
-  arithmetic cell indexing, `_of` operator variants): the 32³ step
-  measured 850 ms when first benchmarked, 388 ms after that pass, 137 ms
-  with the spectral projection. CG remains the solver on non-periodic,
-  mixed-periodicity, and per-edge-metric lattices, where a preconditioner
-  is still the designated follow-up.
+- **The compiled stencils removed the operator-loop cost.** The rate
+  assembly dropped 12× against the in-run generic baseline (the ≥ 2×
+  spec gate for the default switch); every gather index and folded
+  coefficient (incidence signs × Hodge factors × transport weights ×
+  cup signs) is precompiled once per manifold.
+- **The step history**: 850 ms when first benchmarked → 388 ms after the
+  allocation/memoization pass → 137 ms with the spectral projection →
+  **30.3 ms** with the stencil pipeline (12.8× cumulative at 32³,
+  serial). Equivalence to the generic operators is pinned at ≤ 100·ε by
+  CI on every lattice/metric/precision combination.
+- **Spectral diffusion is available but opt-in**
+  (`with_spectral_diffusion()`): at 32³ it measures 4.1 ms — slightly
+  slower than the stencil viscous passes, so the stencil path stays the
+  default; the option matters at larger grids and lower Re.
+- The remaining step cost is the four projections plus integrator
+  plumbing; parallel gains at 32³ are modest because most passes sit
+  under the fan-out thresholds — 64³ engages them (rate 28.3 → 6.6 ms).
+  At 64³ the projection is the new dominant cost: its internal `δω`/`dφ`
+  evaluations still run the generic operators — routing them through the
+  stencil tables is the recorded next follow-up.
+- CG remains the solver on non-periodic, mixed-periodicity, and
+  per-edge-metric lattices, where a preconditioner is still the
+  designated follow-up (the walls change set).
 
 ## Notes for the curious
 

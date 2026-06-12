@@ -383,3 +383,32 @@ fn projected_rate_spectral_path_ignores_cg_starvation() {
     );
     assert!(result.is_ok(), "{result:?}");
 }
+
+/// The fused stencil assembly (the default) and the generic compositional
+/// assembly must agree to rounding on the same state — the physics-level
+/// pin of the dec-stencil-operators equivalence requirement.
+#[test]
+fn fused_and_generic_assemblies_agree() {
+    let n = 8usize;
+    let manifold = unit_manifold::<f64>(n);
+    let u_flat = tg_edge_form(&manifold, n);
+    let u = VelocityOneForm::new(u_flat, &manifold).unwrap();
+
+    let fused = DecNsRate::new(&manifold, NU, None).unwrap();
+    let generic = DecNsRate::new(&manifold, NU, None)
+        .unwrap()
+        .with_generic_assembly();
+
+    let a = fused.eval_unprojected(&u);
+    let b = generic.eval_unprojected(&u);
+    let tol = 100.0 * f64::EPSILON;
+    for (i, (x, y)) in a
+        .as_tensor()
+        .as_slice()
+        .iter()
+        .zip(b.as_tensor().as_slice().iter())
+        .enumerate()
+    {
+        assert!((x - y).abs() <= tol, "edge {i}: fused {x} vs generic {y}");
+    }
+}

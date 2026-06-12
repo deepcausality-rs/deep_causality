@@ -37,6 +37,7 @@ mod utils;
 mod differential;
 mod topology;
 
+pub use differential::DecStencilTables;
 pub use differential::HodgeDecomposeOptions;
 
 /// A newtype wrapper around any `ChainComplex` that represents a Manifold.

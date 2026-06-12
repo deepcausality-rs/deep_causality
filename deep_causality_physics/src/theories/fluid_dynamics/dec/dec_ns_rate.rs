@@ -17,16 +17,19 @@ use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;
 
-use deep_causality_num::RealField;
+use core::cell::RefCell;
 use deep_causality_tensor::CausalTensor;
+
 use deep_causality_topology::{
-    ChainComplex, HodgeDecomposeOptions, LatticeComplex, LerayProjection, Manifold,
+    ChainComplex, DecStencilTables, HodgeDecomposeOptions, LatticeComplex, LerayProjection,
+    Manifold,
 };
 
 use crate::error::physics_error::PhysicsError;
 use crate::quantities::fluid_dynamics::body_force_one_form::BodyForceOneForm;
 use crate::quantities::fluid_dynamics::velocity_one_form::VelocityOneForm;
 use crate::theories::fluid_dynamics::dec::DecNsScalar;
+use crate::theories::fluid_dynamics::dec::spectral_diffusion::SpectralDiffusion;
 
 /// The rate field `u♭ ↦ −i_u(du♭) − ν Δ_dR u♭ + g♭` on a metric-bearing
 /// periodic lattice manifold.
@@ -49,12 +52,43 @@ use crate::theories::fluid_dynamics::dec::DecNsScalar;
 /// no data-slab copy per stage; the memoized sparse matrices are shared
 /// through the borrowed manifold.
 #[derive(Debug)]
-pub struct DecNsRate<'m, const D: usize, R: RealField> {
+pub struct DecNsRate<'m, const D: usize, R: DecNsScalar> {
     manifold: &'m Manifold<LatticeComplex<D, R>, R>,
     nu: R,
     body_force: Option<CausalTensor<R>>,
     /// Edge count cached at construction (the marching state's length).
     n1: usize,
+    /// Compiled stencil engine (tables + reusable workspace). `Some` by
+    /// default — the fused streaming path, equivalence-gated against the
+    /// generic composition; `None` evaluates through the generic
+    /// compositional operators (the oracle path, kept for
+    /// cross-validation and benchmarking via
+    /// [`Self::with_generic_assembly`]).
+    engine: Option<StencilEngine<R>>,
+    /// Opt-in spectral viscous evaluation (fully periodic lattices only;
+    /// the `spectral-diffusion` capability). `None` by default.
+    spectral: Option<SpectralDiffusion<R>>,
+}
+
+/// The compiled tables plus the per-evaluation scratch. `RefCell`: the
+/// rate is evaluated from a single orchestration thread (`Rk4` stages are
+/// sequential); the operator kernels parallelize *internally* under the
+/// `parallel` feature while the workspace borrow is exclusive.
+#[derive(Debug)]
+struct StencilEngine<R> {
+    tables: DecStencilTables<R>,
+    ws: RefCell<RateWorkspace<R>>,
+}
+
+#[derive(Debug)]
+struct RateWorkspace<R> {
+    omega: Vec<R>,
+    pre: Vec<R>,
+    wedge: Vec<R>,
+    conv: Vec<R>,
+    visc_a: Vec<R>,
+    visc_b: Vec<R>,
+    s0: Vec<R>,
 }
 
 impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
@@ -112,12 +146,53 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             None => None,
         };
 
+        let tables = DecStencilTables::compile(manifold)
+            .map_err(|e| PhysicsError::TopologyError(format!("stencil compilation failed: {e}")))?;
+        let n0 = complex.num_cells(0);
+        let n2 = complex.num_cells(2);
+        let (pre_len, wedge_len) = tables.convective_scratch_lens();
+        let ws = RateWorkspace {
+            omega: vec![R::zero(); n2],
+            pre: vec![R::zero(); pre_len],
+            wedge: vec![R::zero(); wedge_len],
+            conv: vec![R::zero(); n1],
+            visc_a: vec![R::zero(); n1],
+            visc_b: vec![R::zero(); n1],
+            s0: vec![R::zero(); n0],
+        };
+        let engine = Some(StencilEngine {
+            tables,
+            ws: RefCell::new(ws),
+        });
+
         Ok(Self {
             manifold,
             nu,
             body_force,
             n1,
+            engine,
+            spectral: None,
         })
+    }
+
+    /// Opt into the spectral evaluation of the viscous term (fully
+    /// periodic uniform lattices only). Off by default; the validation
+    /// ladder gates any future default-on.
+    ///
+    /// # Errors
+    /// `PhysicsError::TopologyError` when the lattice is not fully
+    /// periodic or the metric carries no per-axis Euclidean spacings.
+    pub fn with_spectral_diffusion(mut self) -> Result<Self, PhysicsError> {
+        self.spectral = Some(SpectralDiffusion::new(self.manifold)?);
+        Ok(self)
+    }
+
+    /// Switch this rate to the generic compositional operator path — the
+    /// equivalence oracle and the benchmark baseline. The default is the
+    /// compiled stencil pipeline.
+    pub fn with_generic_assembly(mut self) -> Self {
+        self.engine = None;
+        self
     }
 
     /// The kinematic viscosity this rate was built with.
@@ -180,6 +255,10 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             "marching state length is invariant under Add/Mul and validated at seeding"
         );
 
+        if let Some(engine) = &self.engine {
+            return self.eval_unprojected_fused(engine, u);
+        }
+
         // The operators evaluate directly on the marching field through
         // the `_of` variants — no scratch manifold, no data-slab copy.
         let u_slice = u.as_tensor().as_slice();
@@ -207,6 +286,63 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             }
             None => (0..self.n1)
                 .map(|i| R::zero() - conv_s[i] - self.nu * lap_s[i])
+                .collect(),
+        };
+
+        let tensor = CausalTensor::new(rhs, vec![self.n1])
+            // Coverage exemption: a 1-D tensor of the validated edge count
+            // cannot fail to allocate.
+            .expect("1-D tensor allocation cannot fail");
+        VelocityOneForm::from_raw(tensor)
+    }
+
+    /// The fused streaming assembly over the compiled stencil tables: six
+    /// gather passes through the reusable workspace, no intermediate
+    /// tensor, one output allocation. Equivalence to the generic path is
+    /// pinned by `stencil_tests.rs` (topology) and the rate tests here.
+    fn eval_unprojected_fused(
+        &self,
+        engine: &StencilEngine<R>,
+        u: &VelocityOneForm<R>,
+    ) -> VelocityOneForm<R> {
+        let u_slice = u.as_tensor().as_slice();
+        let t = &engine.tables;
+        let mut ws = engine.ws.borrow_mut();
+        let ws = &mut *ws;
+
+        // Coverage exemptions on the unwraps below: every buffer length is
+        // fixed at construction from the same tables, so the length
+        // validation cannot fail.
+        t.apply_d1(u_slice, &mut ws.omega)
+            .expect("workspace lengths fixed at construction");
+        t.apply_convective(&ws.omega, u_slice, &mut ws.pre, &mut ws.wedge, &mut ws.conv)
+            .expect("workspace lengths fixed at construction");
+        if let Some(spectral) = &self.spectral {
+            // Δ₁u in one spectral pass; visc_b is unused on this path.
+            spectral.apply_laplacian_1(u_slice, &mut ws.visc_a);
+            for v in ws.visc_b.iter_mut() {
+                *v = R::zero();
+            }
+        } else {
+            t.apply_delta2(&ws.omega, &mut ws.visc_a)
+                .expect("workspace lengths fixed at construction");
+            t.apply_delta1(u_slice, &mut ws.s0)
+                .expect("workspace lengths fixed at construction");
+            t.apply_d0(&ws.s0, &mut ws.visc_b)
+                .expect("workspace lengths fixed at construction");
+        }
+
+        let rhs: Vec<R> = match &self.body_force {
+            Some(g) => {
+                let g_s = g.as_slice();
+                (0..self.n1)
+                    .map(|i| {
+                        R::zero() - ws.conv[i] - self.nu * (ws.visc_a[i] + ws.visc_b[i]) + g_s[i]
+                    })
+                    .collect()
+            }
+            None => (0..self.n1)
+                .map(|i| R::zero() - ws.conv[i] - self.nu * (ws.visc_a[i] + ws.visc_b[i]))
                 .collect(),
         };
 

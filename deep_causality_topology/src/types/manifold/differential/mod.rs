@@ -17,9 +17,11 @@ mod interior_product;
 mod laplacian;
 mod leray;
 mod spectral_poisson;
+mod stencil;
 mod wedge;
 
 pub use hodge_decomposition_impl::HodgeDecomposeOptions;
+pub use stencil::DecStencilTables;
 
 // Shared utilities
 pub(super) mod utils_differential;

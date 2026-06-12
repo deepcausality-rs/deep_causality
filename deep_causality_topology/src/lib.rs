@@ -76,6 +76,7 @@ pub use crate::types::graph::Graph;
 pub use crate::types::hodge_decomposition::HodgeDecomposition;
 pub use crate::types::hypergraph::Hypergraph;
 pub use crate::types::leray_projection::LerayProjection;
+pub use crate::types::manifold::DecStencilTables;
 pub use crate::types::manifold::HodgeDecomposeOptions;
 pub use crate::types::manifold::{Manifold, SimplicialManifold};
 pub use crate::types::mixed_graph::{Edge, EdgeKind, Mark, MixedGraph};
