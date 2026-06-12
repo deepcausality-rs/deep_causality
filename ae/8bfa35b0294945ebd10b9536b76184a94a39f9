@@ -1,0 +1,42 @@
+openspec/changes/add-fft/proposal.md
+  s_4adc6099bc84ff::t_8047484faa1b4b 69-74
+  s_4adc6099bc84ff::t_12262f89e52a60 1-68,75-83
+openspec/changes/add-fft/specs/fft-multidim/spec.md
+  s_4adc6099bc84ff::t_4b04ec236e0df7 1-37
+openspec/changes/add-fft/specs/fft-core/spec.md
+  s_4adc6099bc84ff::t_f0bcdc9eb0c502 1-84
+openspec/changes/add-fft/tasks.md
+  s_4adc6099bc84ff::t_ea9388582213d4 7,9-16
+  s_4adc6099bc84ff::t_4043daf4f606b6 17-22,24,26-27,29,31-34,36,38-41,43,45-47,49,51-53
+  s_4adc6099bc84ff::t_ea1be69bdbc78f 1-6,8,23,25,28,30,35,37,42,44,48,50
+openspec/changes/add-fft/specs/spectral-poisson/spec.md
+  s_4adc6099bc84ff::t_592ac691aa91aa 1-50
+openspec/changes/add-fft/design.md
+  s_4adc6099bc84ff::t_c2e5607aaa038b 1-164,202-220,236-264
+  s_4adc6099bc84ff::t_a3e1a31f13097e 165-201
+  s_4adc6099bc84ff::t_0ad5fd96328706 221-235
+openspec/notes/fft/add-fft.md
+  s_4adc6099bc84ff::t_c5420888752af1 128-156
+openspec/changes/add-fft/.openspec.yaml
+  s_4adc6099bc84ff::t_53f513ca42c2ad 1-2
+openspec/changes/add-fft/specs/leray-projection/spec.md
+  s_4adc6099bc84ff::t_f518e8a433e37c 1-43
+openspec/changes/add-fft/specs/fft-real/spec.md
+  s_4adc6099bc84ff::t_4ea2733f36a4b4 1-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "ae8bfa35b0294945ebd10b9536b76184a94a39f9",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
