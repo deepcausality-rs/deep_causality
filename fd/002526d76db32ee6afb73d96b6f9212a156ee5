@@ -1,0 +1,142 @@
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_rate.rs
+  s_4adc6099bc84ff::t_3b5ee8f46be26a 296-299,306
+  s_4adc6099bc84ff::t_b8922a7c322481 141-161,163-166,170-186
+  s_4adc6099bc84ff::t_c9abc170c21f01 71-76
+  s_4adc6099bc84ff::t_53d2ce31c0b88e 162
+  s_4adc6099bc84ff::t_89068d2c9a83f1 167-169
+  s_4adc6099bc84ff::t_24d4300fdeed14 220-221,229,233-237
+openspec/specs/fft-dct/spec.md
+  s_4adc6099bc84ff::t_30539919458b72 1-26
+openspec/specs/leray-projection/spec.md
+  s_4adc6099bc84ff::t_30539919458b72 7-23,31,35,45-47,49-50,53-58,89-119
+openspec/changes/archive/specs/de-rham-transfer/spec.md
+  s_4adc6099bc84ff::t_0985416a7a02d3 1-40
+openspec/specs/spectral-diffusion/spec.md
+  s_4adc6099bc84ff::t_30539919458b72 1-23
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/mod.rs
+  s_4adc6099bc84ff::t_440326bbbffcaf 105,109-171
+  s_4adc6099bc84ff::t_404ba890c1ec15 11
+  s_4adc6099bc84ff::t_214141056a0d5c 41-47
+examples/avionics_examples/dec_taylor_green_re1600/README.md
+  s_4adc6099bc84ff::t_5c550fc712860f 143-149
+  s_4adc6099bc84ff::t_1946893e72f423 124-127,129-131,133-134
+  s_4adc6099bc84ff::t_08fcdd21b3cd7b 156-167
+openspec/specs/dec-ns-rate/spec.md
+  s_4adc6099bc84ff::t_30539919458b72 18-31,58-60,64-68
+openspec/changes/archive/specs/typed-fluid-forms/spec.md
+  s_4adc6099bc84ff::t_0985416a7a02d3 1-48
+deep_causality_physics/README.md
+  s_4adc6099bc84ff::t_478ea8c8ca152e 44-61
+openspec/specs/dec-stencil-operators/spec.md
+  s_4adc6099bc84ff::t_30539919458b72 1-48
+openspec/specs/neumann-poisson/spec.md
+  s_4adc6099bc84ff::t_30539919458b72 1-39
+openspec/specs/wall-bounded-ns/spec.md
+  s_4adc6099bc84ff::t_30539919458b72 5-16,22-23
+deep_causality_topology/README.md
+  s_4adc6099bc84ff::t_61d98343c37e3f 38-39
+  s_4adc6099bc84ff::t_3a8ae332d45cb4 42-60
+openspec/specs/no-slip-viscous/spec.md
+  s_4adc6099bc84ff::t_30539919458b72 5-18,22-26,30,32-39,46-47
+openspec/specs/wall-hodge-star/spec.md
+  s_4adc6099bc84ff::t_30539919458b72 1-27
+deep_causality_physics/tests/theories/fluid_dynamics/dec/mod.rs
+  s_4adc6099bc84ff::t_1d7b2c3b7a298b 7
+  s_4adc6099bc84ff::t_f8a2275b3212ad 17-18
+openspec/changes/archive/specs/dec-ns-validation/spec.md
+  s_4adc6099bc84ff::t_0985416a7a02d3 1,3-5,7,9,11-18,20,22-24,26,28-30,32,34-38,40,42-44,46,48-52,54,56-59,61,63-74,76,78-80,82,84-87,89,91-125
+openspec/changes/archive/specs/leray-projection/spec.md
+  s_4adc6099bc84ff::t_0985416a7a02d3 1,7-15,23,27,37-39,41-42,45-74
+deep_causality_physics/tests/theories/fluid_dynamics/dec/cavity_tests.rs
+  s_4adc6099bc84ff::t_72af10e1b8dc4e 161-163
+  s_4adc6099bc84ff::t_54400c7714cd31 150,169-176
+  s_4adc6099bc84ff::t_b15a38bd3a57e6 166-168
+  s_4adc6099bc84ff::t_e400f070ddf9e0 82-89,92
+  s_4adc6099bc84ff::t_2fffb210ae0185 1-81,90-91,93-144,149,177
+  s_4adc6099bc84ff::t_0d78e0c3361c67 145-148,151-160,164-165
+openspec/changes/archive/specs/dec-exterior-algebra/spec.md
+  s_4adc6099bc84ff::t_0985416a7a02d3 1-54
+openspec/specs/dec-ns-validation/spec.md
+  s_4adc6099bc84ff::t_30539919458b72 126-165
+openspec/changes/archive/specs/dec-ns-rate/spec.md
+  s_4adc6099bc84ff::t_0985416a7a02d3 1-88
+deep_causality_physics/src/quantities/fluid_dynamics/solenoidal_field.rs
+  s_4adc6099bc84ff::t_4f2a7cc2f53d37 99-122
+  s_4adc6099bc84ff::t_595a38f8063073 164-187
+  s_4adc6099bc84ff::t_1fcd879185270b 188-208
+deep_causality_physics/tests/theories/fluid_dynamics/dec/dec_ns_solver/no_slip_tests.rs
+  s_4adc6099bc84ff::t_491dc9390b9a02 134-140
+  s_4adc6099bc84ff::t_9fafa0d9404292 1-133,141-182,424-437
+  s_4adc6099bc84ff::t_404adda875dc06 183-193,195-256
+  s_4adc6099bc84ff::t_0bc5447056e193 194
+  s_4adc6099bc84ff::t_89068d2c9a83f1 413
+  s_4adc6099bc84ff::t_de06043227420f 378-412,414-423
+  s_4adc6099bc84ff::t_e3a8fb31450521 257-305,319-377
+  s_4adc6099bc84ff::t_499bc72be4c502 306-318
+examples/avionics_examples/dec_lid_cavity_re1000/README.md
+  s_4adc6099bc84ff::t_b0185e73f03fc6 1-70
+deep_causality_physics/tests/theories/fluid_dynamics/dec/dec_ns_solver/wall_bounded_tests.rs
+  s_4adc6099bc84ff::t_1a633749528c95 1-107
+deep_causality_topology/tests/types/manifold/mod.rs
+  s_4adc6099bc84ff::t_deca6b335d2eab 34-35
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/seed.rs
+  s_4adc6099bc84ff::t_1c43ecf24d2f15 65-67,70,73
+  s_4adc6099bc84ff::t_657ab79b9e02a0 68-69,76-78
+openspec/changes/archive/specs/spectral-poisson/spec.md
+  s_4adc6099bc84ff::t_0985416a7a02d3 1-56
+examples/avionics_examples/Cargo.toml
+  s_4adc6099bc84ff::t_7d32fcfd72a839 28-30
+deep_causality_physics/tests/theories/fluid_dynamics/dec/dec_ns_solver/mod.rs
+  s_4adc6099bc84ff::t_cc469186604402 18-19
+  s_4adc6099bc84ff::t_5373a6fe10f76c 9-10
+deep_causality_topology/src/types/manifold/differential/leray.rs
+  s_4adc6099bc84ff::t_8b95e8b90d3b19 123-297
+examples/avionics_examples/dec_lid_cavity_re1000/main.rs
+  s_4adc6099bc84ff::t_89068d2c9a83f1 135,137-141
+  s_4adc6099bc84ff::t_557d7f2a1ed31a 222-245
+  s_4adc6099bc84ff::t_a15beacf4fe407 1-134,136,142-221,246-304
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/step.rs
+  s_4adc6099bc84ff::t_c6f47400d24405 97,100,103
+  s_4adc6099bc84ff::t_ca39ce8233e8bc 104-112
+  s_4adc6099bc84ff::t_fc60043c8a417e 66-68
+deep_causality_physics/tests/theories/fluid_dynamics/dec/poiseuille_tests.rs
+  s_4adc6099bc84ff::t_be12b5e46ea72f 1-147
+deep_causality_topology/tests/types/manifold/leray_constrained_tests.rs
+  s_4adc6099bc84ff::t_89068d2c9a83f1 90,155-160
+  s_4adc6099bc84ff::t_189c261ed8934b 1-89,91-102,105-120,127,129-133,136-154,161-275
+  s_4adc6099bc84ff::t_35c72c99aa168c 134-135
+  s_4adc6099bc84ff::t_f90dc91f1b5520 121-126,128
+  s_4adc6099bc84ff::t_55aa19f0080664 103-104
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/no_slip.rs
+  s_4adc6099bc84ff::t_d4c9ff6112e1ce 76
+  s_4adc6099bc84ff::t_b4cc057af79cc4 77-80
+  s_4adc6099bc84ff::t_3f2ae612b4937d 18-31,43,50-52
+  s_4adc6099bc84ff::t_d33b4c9782da1a 37
+  s_4adc6099bc84ff::t_7311603090dbcb 1-17,32-36,38-42,44-49,53-75,81-83
+openspec/changes/archive/specs/dec-ns-diagnostics/spec.md
+  s_4adc6099bc84ff::t_0985416a7a02d3 1-79
+openspec/changes/archive/specs/dec-ns-march/spec.md
+  s_4adc6099bc84ff::t_0985416a7a02d3 1-118
+openspec/changes/archive/specs/fft-core/spec.md
+  s_4adc6099bc84ff::t_0985416a7a02d3 3-84
+openspec/changes/archive/specs/fft-multidim/spec.md
+  s_4adc6099bc84ff::t_0985416a7a02d3 1-37
+openspec/changes/archive/specs/fft-real/spec.md
+  s_4adc6099bc84ff::t_0985416a7a02d3 1-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "fd002526d76db32ee6afb73d96b6f9212a156ee5",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
