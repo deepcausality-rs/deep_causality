@@ -82,7 +82,7 @@ fn main() {
         })
         .into_process();
 
-    // Verbose detailed.
+    // Verbose details. Comment out to trim the output.
     model_utils::print_section("Closed loop", &result);
 
     println!("=== Summary ===");
