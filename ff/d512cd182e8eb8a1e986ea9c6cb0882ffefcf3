@@ -1,0 +1,42 @@
+examples/causal_correction_examples/corrective_ddos_detector/model_types.rs
+  s_9f0604cfafbe3b::t_13e3dded5638b8 1-17,21-23,25,30-89,91-100,104-145
+  s_9f0604cfafbe3b::t_884b7ce703dd30 18-20,24,26-29
+  s_9f0604cfafbe3b::t_c19c9ff7065f1e 90
+  s_9f0604cfafbe3b::t_2b2536d56dc004 101-103
+examples/causal_correction_examples/corrective_ddos_detector/model_utils.rs
+  s_9f0604cfafbe3b::t_b41d3fb32effab 1-70
+examples/causal_correction_examples/Cargo.toml
+  s_9f0604cfafbe3b::t_9f6eb406db478c 15
+  s_9f0604cfafbe3b::t_f1ade72b6a1781 35-38
+examples/causal_correction_examples/corrective_ddos_detector/main.rs
+  s_9f0604cfafbe3b::t_8c053e22aa18a3 34-41,77,83-84,88
+  s_9f0604cfafbe3b::t_0cf0af25530abb 1-33,42-76,78-82,85-87,89-92
+examples/causal_correction_examples/README.md
+  s_9f0604cfafbe3b::t_b372e54242c03b 67-73
+  s_9f0604cfafbe3b::t_d2e155d9596de1 40-42
+  s_9f0604cfafbe3b::t_b7da0cd559c039 3
+  s_9f0604cfafbe3b::t_8a29e5c1dcbbc3 50
+  s_9f0604cfafbe3b::t_bad68255fcb9ad 31
+examples/causal_correction_examples/src/print_utils.rs
+  s_9f0604cfafbe3b::t_8c053e22aa18a3 49-62
+Cargo.lock
+  s_9f0604cfafbe3b::t_8c053e22aa18a3 124,479
+examples/causal_correction_examples/corrective_ddos_detector/model.rs
+  s_9f0604cfafbe3b::t_78a8b9ffb45dcf 1-196
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "ffd512cd182e8eb8a1e986ea9c6cb0882ffefcf3",
+  "prompts": {},
+  "sessions": {
+    "s_9f0604cfafbe3b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f95e42d-780a-4042-9005-6dd1ac001617",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
