@@ -27,10 +27,15 @@
 //!
 //! ```text
 //! cargo run --release --example dec_lid_cavity_re1000 [grid] [t_end]
+//! cargo run --release --example dec_lid_cavity_re1000 trend
 //! ```
 //!
 //! `grid` defaults to 65 (minutes of runtime); the reporting resolution is
-//! 129 with `t_end ≥ 150` (hours — Ghia's own grid). Output:
+//! 129 with `t_end ≥ 150` (hours — Ghia's own grid). The `trend` mode is
+//! the refinement-trend verification (17² → 33² at time-converged
+//! horizons, gated, nonzero exit on violation) — it lives here rather
+//! than in the test suite because tests stay fast by design while
+//! verification runs as long as it needs. Output:
 //!
 //! - `cavity_centerline_u.csv` / `cavity_centerline_v.csv` — computed
 //!   centerline profiles at every grid station plus the Ghia stations with
@@ -100,17 +105,13 @@ const GHIA_VORTICES: [(&str, f64, f64); 3] = [
     ("bottom-right", 0.8594, 0.1094),
 ];
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
-    let n: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(65);
-    let t_end: f64 = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(100.0);
+/// March the Re-1000 cavity from rest on an `n × n` grid to `t_end`;
+/// returns the final edge cochain (velocity 1-form coefficients).
+fn march(n: usize, t_end: f64) -> Vec<f64> {
     let h = 1.0 / (n - 1) as f64;
     let nu = LID_SPEED / RE;
     let dt = 0.45 * h;
     let steps = (t_end / dt).ceil() as usize;
-
-    println!("# DEC lid-driven cavity, Re = {RE}");
-    println!("# grid {n}x{n} (h = {h:.5}), dt = {dt:.5}, t_end = {t_end}, steps = {steps}");
 
     // All-walls unit square; the lid is the y-max face.
     let lattice = LatticeComplex::<2, f64>::new([n, n], [false, false]);
@@ -142,8 +143,12 @@ fn main() {
         }
     }
 
-    // --- Centerline profiles -------------------------------------------
-    let u = state.as_one_form().as_slice();
+    state.as_one_form().as_slice().to_vec()
+}
+
+/// The centerline velocity profiles `(u(0.5, y_j), v(x_i, 0.5))` at the
+/// vertex stations, from the edge cochain.
+fn centerline_profiles(u: &[f64], n: usize, h: f64) -> (Vec<f64>, Vec<f64>) {
     let nx_edges = (n - 1) * n;
     let center = (n - 1) / 2;
     let x_edge = |i: usize, j: usize| u[j * (n - 1) + i] / h;
@@ -154,12 +159,88 @@ fn main() {
     let v_profile: Vec<f64> = (0..n)
         .map(|i| 0.5 * (y_edge(i, center - 1) + y_edge(i, center)))
         .collect();
-    let interp = |profile: &[f64], s: f64| -> f64 {
-        let pos = s / h;
-        let i0 = (pos.floor() as usize).min(n - 2);
-        let w = pos - i0 as f64;
-        profile[i0] * (1.0 - w) + profile[i0 + 1] * w
-    };
+    (u_profile, v_profile)
+}
+
+/// Linear interpolation of a vertex-station profile to coordinate `s`.
+fn interp_profile(profile: &[f64], h: f64, s: f64) -> f64 {
+    let n = profile.len();
+    let pos = s / h;
+    let i0 = (pos.floor() as usize).min(n - 2);
+    let w = pos - i0 as f64;
+    profile[i0] * (1.0 - w) + profile[i0 + 1] * w
+}
+
+/// Pooled centerline RMSE against the Ghia tables.
+fn centerline_rmse(u_profile: &[f64], v_profile: &[f64], h: f64) -> f64 {
+    let mut sq = 0.0;
+    for &(y, u_ref) in &GHIA_U {
+        let d = interp_profile(u_profile, h, y) - u_ref;
+        sq += d * d;
+    }
+    for &(x, v_ref) in &GHIA_V {
+        let d = interp_profile(v_profile, h, x) - v_ref;
+        sq += d * d;
+    }
+    (sq / (GHIA_U.len() + GHIA_V.len()) as f64).sqrt()
+}
+
+/// The refinement-trend verification (moved here from the test suite:
+/// tests stay fast, thorough verification runs as long as it needs).
+/// Time-converged horizons; exits nonzero on a violated gate.
+fn run_trend() {
+    println!("# DEC lid-driven cavity, Re = {RE}: refinement trend vs Ghia (1982)");
+    const T_END: f64 = 60.0; // time-converged for both grids
+    let mut results: Vec<(usize, f64)> = Vec::new();
+    for n in [17usize, 33] {
+        let h = 1.0 / (n - 1) as f64;
+        let u_form = march(n, T_END);
+        let (u_p, v_p) = centerline_profiles(&u_form, n, h);
+        let rmse = centerline_rmse(&u_p, &v_p, h);
+        println!("grid {n:>3}², t_end {T_END}: centerline RMSE = {rmse:.4}");
+        results.push((n, rmse));
+    }
+    // Gates from the pinning measurements (time-converged 0.252 / 0.133,
+    // ~25 % headroom) plus the strict refinement-trend margin.
+    let coarse = results[0].1;
+    let fine = results[1].1;
+    let mut failed = false;
+    if coarse >= 0.32 {
+        eprintln!("FAIL: 17² RMSE {coarse:.4} above the pinned gate 0.32");
+        failed = true;
+    }
+    if fine >= 0.20 {
+        eprintln!("FAIL: 33² RMSE {fine:.4} above the pinned gate 0.20");
+        failed = true;
+    }
+    if fine >= coarse - 0.04 {
+        eprintln!("FAIL: refinement trend broken: 33² {fine:.4} vs 17² {coarse:.4}");
+        failed = true;
+    }
+    if failed {
+        std::process::exit(1);
+    }
+    println!("# trend holds: RMSE decreases under refinement");
+}
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    if args.get(1).map(String::as_str) == Some("trend") {
+        run_trend();
+        return;
+    }
+    let n: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(65);
+    let t_end: f64 = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(100.0);
+    let h = 1.0 / (n - 1) as f64;
+    let dt = 0.45 * h;
+    let steps = (t_end / dt).ceil() as usize;
+
+    println!("# DEC lid-driven cavity, Re = {RE}");
+    println!("# grid {n}x{n} (h = {h:.5}), dt = {dt:.5}, t_end = {t_end}, steps = {steps}");
+
+    let u_form = march(n, t_end);
+    let (u_profile, v_profile) = centerline_profiles(&u_form, n, h);
+    let interp = |profile: &[f64], s: f64| -> f64 { interp_profile(profile, h, s) };
 
     write_centerline_csv(
         "cavity_centerline_u.csv",
@@ -178,22 +259,14 @@ fn main() {
         &interp,
     );
 
-    let mut sq = 0.0;
-    for &(y, u_ref) in &GHIA_U {
-        let d = interp(&u_profile, y) - u_ref;
-        sq += d * d;
-    }
-    for &(x, v_ref) in &GHIA_V {
-        let d = interp(&v_profile, x) - v_ref;
-        sq += d * d;
-    }
-    let rmse = (sq / (GHIA_U.len() + GHIA_V.len()) as f64).sqrt();
+    let rmse = centerline_rmse(&u_profile, &v_profile, h);
     println!("# centerline RMSE vs Ghia: {rmse:.4}");
 
     // --- Vortex centers (streamfunction extrema) ------------------------
     // ψ = 0 on the walls (they are streamlines); integrate up each column:
     // Δψ across the vertical edge (i, j)→(i, j+1) is ∫u_x dy ≈ the average
     // of the four flanking x-edge velocities times h.
+    let x_edge = |i: usize, j: usize| u_form[j * (n - 1) + i] / h;
     let mut psi = vec![0.0f64; n * n];
     for i in 0..n {
         for j in 0..(n - 1) {

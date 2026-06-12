@@ -140,15 +140,23 @@ rows) before any reference-data comparison.
 - **THEN** wall-tangential edges are exactly zero and the divergence residual is at the solve's exactness
 
 ### Requirement: Lid-driven cavity rung (coarse CI + example)
-The ladder SHALL include the Re-1000 lid-driven cavity: coarse rungs
-(≤ 64²) in CI compared against the Ghia et al. (1982) centerline tables
-with pinned RMSE gates and an asserted refinement trend, and a
-full-resolution example program that additionally emits the detected
+The ladder SHALL include the Re-1000 lid-driven cavity, split by cost
+per the tests-are-fast / examples-verify division: a single coarse rung
+in CI compared against the Ghia et al. (1982) centerline tables with a
+pinned RMSE gate at a short spin-up horizon (tests stay fast), and an
+example program carrying the thorough verification — the
+refinement-trend mode (coarse → finer RMSE strictly decreasing at
+time-converged horizons, gated, nonzero exit on violation) and the
+full-resolution run emitting centerline CSVs and the detected
 vortex-center table (primary and corner eddies) against Ghia's values.
 
 #### Scenario: Coarse cavity gates in CI
-- **WHEN** the coarse cavity rungs complete in CI
-- **THEN** centerline RMSE against the Ghia tables is within the pinned gates and decreases under refinement
+- **WHEN** the coarse cavity rung completes in CI
+- **THEN** centerline RMSE against the Ghia tables is within the pinned gate
+
+#### Scenario: Example verifies the refinement trend
+- **WHEN** the cavity example runs in its trend mode
+- **THEN** the finer grid's time-converged centerline RMSE is within its pinned gate and strictly below the coarse grid's, with a nonzero exit on violation
 
 #### Scenario: Example emits centerlines and the vortex table
 - **WHEN** the cavity example runs at full resolution

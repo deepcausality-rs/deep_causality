@@ -30,6 +30,7 @@ The wall substrate of the DEC Navier–Stokes solver, working together:
 
 ```text
 cargo run --release --example dec_lid_cavity_re1000 [grid] [t_end]
+cargo run --release --example dec_lid_cavity_re1000 trend
 ```
 
 - `grid` defaults to **65** (minutes of runtime, clear vortex structure).
@@ -38,6 +39,11 @@ cargo run --release --example dec_lid_cavity_re1000 [grid] [t_end]
   Jacobi-PCG time; the spectral preconditioning of the masked solve is
   the documented escalation if this becomes routine).
 - A 33²/`t_end = 20` smoke run takes ~15 s.
+- **`trend`** runs the refinement-trend verification: 17² → 33² at the
+  time-converged horizon (`t = 60`), gated (RMSE 0.32 / 0.20, strict
+  decrease), nonzero exit on violation (~1 min). It lives here rather
+  than in the test suite by design: tests stay fast; verification runs
+  as long as it needs.
 
 ## Output
 
@@ -64,7 +70,8 @@ resolution and longer horizons.)
 
 The CI gate for this case is the coarse rung in
 `deep_causality_physics/tests/theories/fluid_dynamics/dec/cavity_tests.rs`
-(17² → 33² centerline RMSE 0.252 → 0.133 at the time-converged horizon,
-pinned with headroom at the t = 20 spin-up); this example produces the
+(17² → 33² centerline RMSE 0.2523 → 0.2156, pinned with headroom at the
+fast t = 10 spin-up — tests stay quick by design; the time-converged
+values 0.252 → 0.133 belong here); this example produces the
 full-resolution artifacts — deliberately the same artifacts a
 CFD-challenge entry needs, so the comparison tooling exists once.
