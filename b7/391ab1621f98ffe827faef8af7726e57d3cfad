@@ -1,0 +1,50 @@
+examples/avionics_examples/dec_taylor_green_re1600/model.rs
+  s_4adc6099bc84ff::t_9b700fcd411fec 150-162,166,170-172,181,186-188
+deep_causality_physics/tests/theories/fluid_dynamics/dec/energy_budget_tests.rs
+  s_4adc6099bc84ff::t_4fd4b626e0996d 1-154
+deep_causality_physics/tests/theories/fluid_dynamics/dec/mod.rs
+  s_4adc6099bc84ff::t_0ddb6bc5709979 15-16
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_rate.rs
+  s_4adc6099bc84ff::t_b14107e4909b88 333,355,402-403,411-421,424-426,428-438,443-453,455-460,463-467,469,471,473-476,478-484,486-487,489-495,497-500,522-524,569
+  s_4adc6099bc84ff::t_0254c122ee986d 306-332,334-354,356-387
+  s_4adc6099bc84ff::t_4bbe1229957d58 21
+  s_4adc6099bc84ff::t_de0ae7a65ca30b 100,212,404-410,422-423,427,439-442,454,461-462,468,470,472,477,485,488,496
+  s_4adc6099bc84ff::t_22f5d9d17e7004 221-223
+  s_4adc6099bc84ff::t_4b786ca07e5a45 99,101-103
+deep_causality_topology/src/types/manifold/differential/stencil/bilinear_op.rs
+  s_4adc6099bc84ff::t_40cc82d9419113 81-88,91,94
+  s_4adc6099bc84ff::t_c3554d035d7568 89-90,92-93,95-96
+openspec/changes/fix-dec-convective-instability/design.md
+  s_4adc6099bc84ff::t_d37519dc7eece2 55-105
+deep_causality_topology/src/types/manifold/differential/stencil/mod.rs
+  s_4adc6099bc84ff::t_faf1583c1aa1b6 243,248-249,259,263,265-269,272,276-277,281,283,286-289,292-295
+  s_4adc6099bc84ff::t_63768ed2c60739 72,76
+  s_4adc6099bc84ff::t_2025ae3099373c 138-140,142-151,162-163
+  s_4adc6099bc84ff::t_10bab1bd5b01cb 64-71,73-75,77,135-137,141,161,164,244-247,250-258,260-262,264,270-271,273-275,278-280,282,284-285,290-291
+deep_causality_topology/tests/types/manifold/stencil_tests.rs
+  s_4adc6099bc84ff::t_742ce45e4d45fb 16
+  s_4adc6099bc84ff::t_84a029017096a7 286,292-299,302,304-311,314-315,317,319-320,322-323,330-331,333-338,340-341,343-346,348-351,353-356,358-360,362-365,367-369,371-374,376
+  s_4adc6099bc84ff::t_acdc506ab11206 287-291,300-301,303,312-313,316,318,321,324-329,332,339,342,347,352,357,361,366,370,375
+deep_causality_physics/src/theories/fluid_dynamics/dec/energy_budget.rs
+  s_4adc6099bc84ff::t_b70dca433de270 1-65
+deep_causality_physics/src/theories/fluid_dynamics/dec/mod.rs
+  s_4adc6099bc84ff::t_1efa63608aee91 64,74
+deep_causality_topology/src/types/manifold/differential/stencil/stencil_op.rs
+  s_4adc6099bc84ff::t_209eda5292fc4c 74-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "b7391ab1621f98ffe827faef8af7726e57d3cfad",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
