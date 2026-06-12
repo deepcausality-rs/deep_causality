@@ -26,7 +26,6 @@ use deep_causality_tensor::CausalTensor;
 use crate::errors::topology_error::TopologyError;
 use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
-use crate::traits::maybe_parallel::MaybeParallel;
 use crate::types::hodge_decomposition::HodgeDecomposition;
 use crate::types::leray_projection::LerayProjection;
 use crate::types::manifold::Manifold;
@@ -35,6 +34,7 @@ use crate::types::manifold::differential::hodge_decomposition_impl::{
     pad_or_truncate, resolve_cg_tolerance, solve_laplacian,
 };
 use crate::utils::cg_solver::subtract_mean_in_place;
+use deep_causality_par::MaybeParallel;
 
 impl<K, R> Manifold<K, R>
 where

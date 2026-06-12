@@ -24,21 +24,27 @@ iteration budget, or convergence-failure mode.
 - **WHEN** the spectral solve completes
 - **THEN** the returned potential has zero mean, matching the existing `subtract_mean_in_place` gauge convention
 
-### Requirement: Per-shape spectral plan reuse
-The FFT plans and eigenvalue table for a given lattice shape SHALL be
-computed once and reused across repeated solves on that shape (cached in the
-manifold beside the existing operator caches, or owned by the solver — the
-placement is settled by benchmark measurement during implementation). Repeated
-solves SHALL NOT rebuild plans or eigenvalue tables, and SHALL NOT allocate
-per solve beyond the cached state.
+### Requirement: Spectral solve setup stays negligible
+*(Amended at implementation, supersedes the original per-shape plan-cache
+requirement: measurement showed per-solve plan construction at the
+solver-relevant axis lengths (16–64) is ~1% of one projection, so no
+persistent cache ships. D8's manifold- or solver-side cache remains the
+designated follow-up if profiling at larger grids ever shows plan
+construction mattering.)*
 
-#### Scenario: Plans survive repeated solves
-- **WHEN** the spectral Poisson solve runs many times on the same lattice shape (as the NS solver's step loop does)
-- **THEN** plan and eigenvalue construction occurs only once and subsequent solves perform no per-solve heap allocation
+The spectral solve SHALL keep per-solve setup small relative to the
+transforms: eigenvalues SHALL be combined on the fly from per-axis weight
+tables (`Σ N_d` entries) and SHALL NOT be materialized as a full `O(N)`
+table; the solve SHALL be stateless at the API surface (no caller-visible
+plan management).
 
-#### Scenario: Cache survives Clone where manifold-cached
-- **WHEN** the cache lives in the manifold and the manifold is cloned
-- **THEN** the spectral plan state is preserved across the clone, consistent with the existing lattice cache behavior
+#### Scenario: Projection cost is dominated by the transforms
+- **WHEN** the 32³ Leray projection benchmark runs on the spectral path
+- **THEN** the full projection (including per-solve plan construction) completes in low single-digit milliseconds, against the 5.9 ms CG baseline it replaces
+
+#### Scenario: Repeated solves are stable
+- **WHEN** the spectral Poisson solve runs many times on the same manifold (as the NS solver's step loop does)
+- **THEN** every solve succeeds with identical results and no accumulated state
 
 ### Requirement: Solver-level benchmark coverage
 `deep_causality_physics/benches/dec_solver_benchmark.rs` SHALL be extended to

@@ -44,8 +44,8 @@ use crate::types::manifold::Manifold;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
-use crate::traits::maybe_parallel::MaybeParallel;
 use crate::types::manifold::differential::utils_differential;
+use deep_causality_par::MaybeParallel;
 
 impl<const D: usize, R> Manifold<LatticeComplex<D, R>, R>
 where

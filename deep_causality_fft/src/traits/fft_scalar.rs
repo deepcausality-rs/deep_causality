@@ -4,8 +4,7 @@
  */
 
 use deep_causality_num::{FromPrimitive, RealField};
-
-use crate::traits::maybe_parallel::MaybeParallel;
+use deep_causality_par::MaybeParallel;
 
 /// Scalar bound for every transform in this crate: a real field with
 /// primitive conversions (for twiddle generation and inverse scaling),

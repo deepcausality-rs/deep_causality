@@ -16,6 +16,7 @@ pub(super) mod hodge_decomposition_impl;
 mod interior_product;
 mod laplacian;
 mod leray;
+mod spectral_poisson;
 mod wedge;
 
 pub use hodge_decomposition_impl::HodgeDecomposeOptions;

@@ -12,8 +12,8 @@ use deep_causality_multivector::HilbertState;
 use deep_causality_num::{FromPrimitive, RealField};
 
 use crate::Probability;
+use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::MaybeParallel;
 use deep_causality_topology::SimplicialManifold;
 
 /// Causal wrapper for [`mechanics::klein_gordon_kernel`].

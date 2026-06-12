@@ -9,9 +9,7 @@
 use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_physics::{DecNsSolver, dec_ns_step};
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{
-    ChainComplex, CubicalReggeGeometry, HodgeDecomposeOptions, LatticeComplex, Manifold,
-};
+use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
 
 fn unit_manifold<R>(n: usize) -> Manifold<LatticeComplex<2, R>, R>
 where
@@ -56,14 +54,10 @@ fn wrapper_lifts_success_to_pure() {
 fn wrapper_converts_failure_to_causality_error() {
     let n = 6usize;
     let manifold = unit_manifold::<f64>(n);
-    let solver = DecNsSolver::new(&manifold, 0.01, 0.1, None)
-        .unwrap()
-        .with_cg_options(HodgeDecomposeOptions {
-            tolerance: None,
-            max_iterations: Some(1),
-        });
-    // Seeding would also fail under the starved CG, so seed with a
-    // generously-budgeted solver first.
+    // CFL violation as the failure injector: the spectral projection on
+    // this periodic lattice cannot fail, so an over-long dt against the
+    // unit-speed field trips the advective guard inside the step.
+    let solver = DecNsSolver::new(&manifold, 0.0, 2.0, None).unwrap();
     let seeder = DecNsSolver::new(&manifold, 0.01, 0.1, None).unwrap();
     let state = seeder
         .seed_from_vertex_vectors(&tg_vertex_tensor(&manifold, n))

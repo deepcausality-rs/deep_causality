@@ -9,9 +9,7 @@
 use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_physics::DecNsSolver;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{
-    ChainComplex, CubicalReggeGeometry, HodgeDecomposeOptions, LatticeComplex, Manifold,
-};
+use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
 
 fn unit_manifold<R>(n: usize) -> Manifold<LatticeComplex<2, R>, R>
 where
@@ -83,34 +81,28 @@ fn run_until_exhausts_bound() {
 
 #[test]
 fn run_n_error_names_the_failing_step() {
+    // CFL violation as the failure injector: the spectral projection on
+    // this periodic lattice cannot fail, so an over-long dt against the
+    // unit-speed field trips the advective guard at the first step.
     let n = 6usize;
     let manifold = unit_manifold::<f64>(n);
     let healthy = DecNsSolver::new(&manifold, 0.01, 0.1, None).unwrap();
     let state = tg_state(&healthy, &manifold, n);
 
-    let starved = DecNsSolver::new(&manifold, 0.01, 0.1, None)
-        .unwrap()
-        .with_cg_options(HodgeDecomposeOptions {
-            tolerance: None,
-            max_iterations: Some(1),
-        });
-    let err = starved.run_n(state, 3).unwrap_err();
+    let cfl_violating = DecNsSolver::new(&manifold, 0.0, 2.0, None).unwrap();
+    let err = cfl_violating.run_n(state, 3).unwrap_err();
     assert!(err.to_string().contains("at step 1"), "{err}");
 }
 
 #[test]
 fn run_until_error_names_the_failing_step() {
+    // Same CFL injector as `run_n_error_names_the_failing_step`.
     let n = 6usize;
     let manifold = unit_manifold::<f64>(n);
     let healthy = DecNsSolver::new(&manifold, 0.01, 0.1, None).unwrap();
     let state = tg_state(&healthy, &manifold, n);
 
-    let starved = DecNsSolver::new(&manifold, 0.01, 0.1, None)
-        .unwrap()
-        .with_cg_options(HodgeDecomposeOptions {
-            tolerance: None,
-            max_iterations: Some(1),
-        });
-    let err = starved.run_until(state, |_, _| false, 3).unwrap_err();
+    let cfl_violating = DecNsSolver::new(&manifold, 0.0, 2.0, None).unwrap();
+    let err = cfl_violating.run_until(state, |_, _| false, 3).unwrap_err();
     assert!(err.to_string().contains("at step 1"), "{err}");
 }

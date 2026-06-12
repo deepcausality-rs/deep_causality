@@ -216,6 +216,17 @@ where
             .expect("Diagonal triplets always satisfy CSR validity for square shape.");
         Ok(Cow::Owned(matrix))
     }
+
+    fn uniform_axis_spacings(&self) -> Option<Vec<R>> {
+        // The spectral Poisson eigenvalues assume a positive-definite
+        // diagonal Hodge ⋆; Lorentzian sign factors break that, so only
+        // the Euclidean signature qualifies. Per-edge geometries have no
+        // per-axis spacing and stay on CG.
+        if S::is_lorentzian() {
+            return None;
+        }
+        self.axis_lengths().map(|lengths| lengths.to_vec())
+    }
 }
 
 /// For a primal k-cell at `position` with complement axes `complement_axes`, compute

@@ -43,10 +43,10 @@ use deep_causality_tensor::CausalTensor;
 use crate::errors::topology_error::TopologyError;
 use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
-use crate::traits::maybe_parallel::MaybeParallel;
 use crate::types::hodge_decomposition::HodgeDecomposition;
 use crate::types::manifold::Manifold;
 use crate::utils::cg_solver::subtract_mean_in_place;
+use deep_causality_par::MaybeParallel;
 use deep_causality_sparse::{CgFailure, cg_solve};
 
 /// Caller-tunable knobs for `Manifold::hodge_decompose_opts`.
@@ -223,6 +223,11 @@ where
 }
 
 /// Solve `Δ_grade x = rhs` matrix-free via CG on this manifold.
+///
+/// Grade 0 on a fully periodic uniform lattice with Euclidean per-axis
+/// spacings dispatches to the spectral (FFT) solve instead — exact to
+/// rounding, no iteration, `tolerance`/`max_iter` unused on that path.
+/// See [`super::spectral_poisson`].
 pub(super) fn solve_laplacian<K, R>(
     manifold: &Manifold<K, R>,
     grade: usize,
@@ -235,6 +240,17 @@ where
     K::Metric: HasHodgeStar<R, Complex = K> + Clone,
     R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug + Display,
 {
+    if grade == 0
+        && let Some((shape, periodic)) = manifold.complex().uniform_lattice_layout()
+        && periodic.iter().all(|&p| p)
+        && let Some(spacings) = manifold
+            .metric
+            .as_ref()
+            .and_then(|m| m.uniform_axis_spacings())
+    {
+        return super::spectral_poisson::spectral_poisson_solve(&shape, &spacings, rhs);
+    }
+
     let n = rhs.len();
 
     // Warm the parent complex's boundary/coboundary memos once: every CG

@@ -38,7 +38,7 @@
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
-use crate::traits::maybe_parallel::MaybeParallel;
+use deep_causality_par::MaybeParallel;
 
 use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;

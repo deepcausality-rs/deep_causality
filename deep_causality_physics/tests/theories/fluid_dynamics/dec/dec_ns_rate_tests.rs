@@ -185,7 +185,7 @@ fn rate_matches_pointwise_oracle_at_second_order() {
 fn assert_viscous_decay<R>()
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -359,9 +359,13 @@ fn projected_rate_is_divergence_free() {
     assert!(residual < 1e-8, "projected rate residual {residual}");
 }
 
-/// A starved CG budget surfaces the projection failure as a `Result`.
+/// On the fully periodic Stage-1 lattice the grade-0 solve is spectral
+/// (no iteration, no convergence failure), so a starved CG budget no
+/// longer fails: the projected rate must succeed. The CG error
+/// propagation itself is pinned at the topology layer on
+/// mixed-periodicity lattices.
 #[test]
-fn projected_rate_cg_starvation_returns_error() {
+fn projected_rate_spectral_path_ignores_cg_starvation() {
     use deep_causality_topology::HodgeDecomposeOptions;
 
     let n = 8usize;
@@ -370,14 +374,12 @@ fn projected_rate_cg_starvation_returns_error() {
     let rate = DecNsRate::new(&manifold, NU, None).unwrap();
     let u = VelocityOneForm::new(u_flat, &manifold).unwrap();
 
-    let err = rate
-        .eval_projected(
-            &u,
-            &HodgeDecomposeOptions {
-                tolerance: None,
-                max_iterations: Some(1),
-            },
-        )
-        .unwrap_err();
-    assert!(err.to_string().contains("Leray projection failed"), "{err}");
+    let result = rate.eval_projected(
+        &u,
+        &HodgeDecomposeOptions {
+            tolerance: None,
+            max_iterations: Some(1),
+        },
+    );
+    assert!(result.is_ok(), "{result:?}");
 }

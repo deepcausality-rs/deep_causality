@@ -93,7 +93,7 @@ fn tg_static_pressure_converges_to_analytic_field() {
 fn assert_convention_identity<R>(tol: R)
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -148,9 +148,12 @@ fn convention_identity_float106() {
     assert_convention_identity::<Float106>(Float106::from_f64(1e-12));
 }
 
-/// The diagnostic's own CG solve surfaces failure instead of panicking.
+/// On the fully periodic Stage-1 lattice the diagnostic's grade-0 solve
+/// is spectral and cannot fail to converge: a starved CG budget must not
+/// error. CG error propagation is pinned at the topology layer on
+/// mixed-periodicity lattices.
 #[test]
-fn diagnostic_cg_starvation_returns_error() {
+fn diagnostic_spectral_path_ignores_cg_starvation() {
     let n = 6usize;
     let manifold = unit_manifold::<f64>(n);
     let healthy = DecNsSolver::new(&manifold, 0.01, 0.1, None).unwrap();
@@ -164,10 +167,6 @@ fn diagnostic_cg_starvation_returns_error() {
             tolerance: None,
             max_iterations: Some(1),
         });
-    let err = starved.pressure_diagnostic(&state).unwrap_err();
-    assert!(
-        err.to_string()
-            .contains("pressure diagnostic projection failed"),
-        "{err}"
-    );
+    let result = starved.pressure_diagnostic(&state);
+    assert!(result.is_ok(), "{result:?}");
 }

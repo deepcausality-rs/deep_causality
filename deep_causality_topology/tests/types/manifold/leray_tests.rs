@@ -29,7 +29,7 @@ fn unit_manifold<const D: usize, R>(
 ) -> Manifold<LatticeComplex<D, R>, R>
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -49,7 +49,7 @@ fn manifold_with_k_form<const D: usize, R>(
 ) -> Manifold<LatticeComplex<D, R>, R>
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -65,7 +65,7 @@ where
     Manifold::from_cubical_with_metric(lattice, tensor, metric, 0)
 }
 
-fn random_cochain<R: RealField + deep_causality_topology::MaybeParallel + FromPrimitive>(
+fn random_cochain<R: RealField + deep_causality_par::MaybeParallel + FromPrimitive>(
     len: usize,
     seed: u64,
 ) -> Vec<R> {
@@ -96,7 +96,7 @@ fn divergence_of<const D: usize, R>(
 ) -> Vec<R>
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -136,7 +136,7 @@ fn projection_annihilates_exact_gradients() {
 fn assert_projection_divergence_free<R>(rel_tol: R)
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -402,8 +402,11 @@ fn leray_rejects_missing_metric() {
 fn leray_surfaces_cg_nonconvergence() {
     // A one-iteration budget cannot converge the Poisson solve for a strong
     // gradient field: the CgFailure must surface as HodgeDecompositionFailed.
+    // Mixed periodicity keeps the grade-0 solve on the CG path - a fully
+    // periodic lattice would dispatch to the spectral solve, which has no
+    // convergence-failure mode.
     let n = 8usize;
-    let lattice_fn = || LatticeComplex::<2, f64>::square_torus(n);
+    let lattice_fn = || LatticeComplex::<2, f64>::new([n, n], [true, false]);
     let n0 = lattice_fn().num_cells(0);
     let phi = random_cochain::<f64>(n0, 53);
     let m_phi = manifold_with_k_form(lattice_fn(), 0, &phi);

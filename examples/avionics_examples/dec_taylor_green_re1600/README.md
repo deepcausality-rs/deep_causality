@@ -116,36 +116,41 @@ cargo bench -p deep_causality_physics --bench dec_solver_benchmark
 cargo bench -p deep_causality_physics --bench dec_solver_benchmark --features parallel
 ```
 
-Final numbers (Apple Silicon, release):
+Final numbers (Apple Silicon, release). The Leray projection runs the
+spectral (FFT) grade-0 Poisson solve from `deep_causality_fft` — on this
+fully periodic lattice the discrete Laplacian diagonalizes under the DFT,
+so the former CG iteration is gone entirely (the `add-fft` change):
 
 | Grid | Component | Sequential | Parallel | Speedup |
 | --- | --- | ---: | ---: | ---: |
-| 16³ | rate assembly (`−i_u ω − νΔu♭`) | 3.7 ms | 2.3 ms | 1.6× |
-| 16³ | Leray projection (one CG solve) | 0.76 ms | 0.81 ms | ≈1× |
-| 16³ | full step (4 projected stages + CFL) | 36 ms | 32 ms | 1.1× |
-| 32³ | rate assembly | 29.4 ms | 11.7 ms | 2.5× |
-| 32³ | Leray projection | 5.9 ms | 6.4 ms | ≈1× |
-| 32³ | full step | 429 ms | 388 ms | 1.1× |
+| 16³ | rate assembly (`−i_u ω − νΔu♭`) | 3.8 ms | 2.2 ms | 1.7× |
+| 16³ | Leray projection (spectral) | 0.23 ms | 0.24 ms | ≈1× |
+| 16³ | full step (4 projected stages + CFL) | 17 ms | 10.4 ms | 1.6× |
+| 32³ | rate assembly | 30 ms | 11.2 ms | 2.7× |
+| 32³ | Leray projection (spectral) | 1.9 ms | 2.0 ms | ≈1× |
+| 32³ | full step | 137 ms | 57 ms | 2.4× |
 
 How to read the table:
 
-- **The per-cell operator loops parallelize well.** Wedge, interior product,
-  de Rham, and sharp fan out over Rayon and carry the rate assembly to 2.5×
-  at 32³, growing with the grid.
-- **The CG solves are the step's floor and are memory-bound.** A CSR matvec
-  row is a handful of multiply-adds, so parallel dispatch per CG iteration
-  only pays at large systems; the library thresholds it to engage at
-  64³-scale grids and above. At the 64–128³ reporting resolutions — where
-  the runtime actually hurts — both the operator loops and the matvecs run
-  parallel. Below the thresholds the parallel build falls back to serial
-  loops, so small runs pay no fork-join overhead.
-- These numbers already include the serial-side optimizations the benchmark
-  drove (memoized boundary/coboundary matrices, cache-preserving lattice
-  clones, arithmetic cell indexing in place of per-call hash maps, and
-  `_of` operator variants that eliminated every per-evaluation scratch
-  manifold): the 32³ step measured 850 ms when first benchmarked, 388 ms
-  now. The remaining cost is genuine unpreconditioned CG arithmetic — a
-  preconditioner is the designated next performance follow-up.
+- **The spectral projection removed the step's old floor.** The CG-based
+  projection was 5.9 ms per solve at 32³ and dominated the 388 ms step;
+  the FFT solve is 1.9 ms, exact to rounding, with no iteration budget.
+  The full 32³ step went 388 ms → 137 ms serial (2.8×) and 57 ms with
+  `--features parallel` (6.8× against the old parallel baseline).
+- **The per-cell operator loops parallelize well.** Wedge, interior
+  product, de Rham, and sharp fan out over Rayon and carry the rate
+  assembly to 2.7× at 32³, growing with the grid. Rate assembly is now
+  the dominant remaining cost.
+- The FFT itself stays serial at these grids (the fan-out threshold sits
+  above 32³ passes — short transform lines lose to fork-join overhead)
+  and engages at 64³ and above.
+- These numbers include the earlier serial-side optimizations (memoized
+  boundary/coboundary matrices, cache-preserving lattice clones,
+  arithmetic cell indexing, `_of` operator variants): the 32³ step
+  measured 850 ms when first benchmarked, 388 ms after that pass, 137 ms
+  with the spectral projection. CG remains the solver on non-periodic,
+  mixed-periodicity, and per-edge-metric lattices, where a preconditioner
+  is still the designated follow-up.
 
 ## Notes for the curious
 

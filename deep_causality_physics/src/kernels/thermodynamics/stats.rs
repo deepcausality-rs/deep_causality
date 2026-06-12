@@ -8,8 +8,8 @@ use crate::{AmountOfSubstance, Energy, PhysicsError, Pressure, Probability, Temp
 use core::fmt::Debug;
 use core::iter::Sum;
 use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::MaybeParallel;
 use deep_causality_topology::SimplicialManifold;
 
 /// Calculates the Heat Equation step: $\frac{\partial u}{\partial t} = \alpha \Delta u$.

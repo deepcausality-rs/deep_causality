@@ -29,13 +29,18 @@ std = ["deep_causality_num/default"]
 # Opt-in Rayon parallelism for the batched 1-D transforms inside
 # N-dimensional plans (the SURD pattern used across the workspace).
 # Serial behavior and results are unchanged; small transforms stay
-# serial behind a measured granularity threshold.
-parallel = ["dep:rayon"]
+# serial behind a measured granularity threshold. Forwards to the
+# shared MaybeParallel definition in deep_causality_par.
+parallel = ["dep:rayon", "deep_causality_par/parallel"]
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
 version = "0.3"
 default-features = false
+
+[dependencies.deep_causality_par]
+path = "../deep_causality_par"
+version = "0.1"
 
 [dependencies.rayon]
 version = "1.11"

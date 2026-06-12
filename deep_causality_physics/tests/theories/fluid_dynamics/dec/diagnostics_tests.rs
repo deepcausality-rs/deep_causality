@@ -38,7 +38,7 @@ fn unit_manifold3(n: usize) -> Manifold<LatticeComplex<3, f64>, f64> {
 fn tg_edge_form<R>(manifold: &Manifold<LatticeComplex<2, R>, R>, n: usize) -> CausalTensor<R>
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -81,7 +81,7 @@ fn energy_at_three_precisions() {
     fn check<R>()
     where
         R: RealField
-            + deep_causality_topology::MaybeParallel
+            + deep_causality_par::MaybeParallel
             + FromPrimitive
             + Default
             + PartialEq

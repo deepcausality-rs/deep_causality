@@ -110,8 +110,12 @@ fn rejects_non_finite_samples() {
     assert!(err.to_string().contains("finite"), "{err}");
 }
 
+/// On the fully periodic Stage-1 lattice the seed projection runs the
+/// spectral grade-0 solve, which has no convergence-failure mode: a
+/// starved CG budget must not fail. CG error propagation is pinned at
+/// the topology layer on mixed-periodicity lattices.
 #[test]
-fn seed_projection_cg_starvation_returns_error() {
+fn seed_projection_spectral_path_ignores_cg_starvation() {
     use deep_causality_topology::HodgeDecomposeOptions;
     let n = 6usize;
     let manifold = unit_manifold::<f64>(n);
@@ -121,8 +125,6 @@ fn seed_projection_cg_starvation_returns_error() {
             tolerance: None,
             max_iterations: Some(1),
         });
-    let err = starved
-        .seed_from_vertex_vectors(&tg_vertex_tensor(&manifold, n))
-        .unwrap_err();
-    assert!(err.to_string().contains("Leray projection failed"), "{err}");
+    let result = starved.seed_from_vertex_vectors(&tg_vertex_tensor(&manifold, n));
+    assert!(result.is_ok(), "{result:?}");
 }

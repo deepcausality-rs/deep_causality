@@ -12,8 +12,8 @@ use deep_causality_multivector::MultiVector;
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, HilbertState};
 use deep_causality_num::DivisionAlgebra;
 use deep_causality_num::{Complex, FromPrimitive, RealField};
+use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::MaybeParallel;
 use deep_causality_topology::SimplicialManifold;
 
 pub type Operator<R> = HilbertState<R>;

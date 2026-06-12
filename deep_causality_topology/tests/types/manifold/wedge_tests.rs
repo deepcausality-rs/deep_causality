@@ -34,7 +34,7 @@ fn unit_manifold<const D: usize, R>(
 ) -> Manifold<LatticeComplex<D, R>, R>
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -56,7 +56,7 @@ fn manifold_with_k_form<const D: usize, R>(
 ) -> Manifold<LatticeComplex<D, R>, R>
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -73,7 +73,7 @@ where
 }
 
 /// Deterministic pseudo-random cochain in [−1, 1] (LCG; no external crates).
-fn random_cochain<R: RealField + deep_causality_topology::MaybeParallel + FromPrimitive>(
+fn random_cochain<R: RealField + deep_causality_par::MaybeParallel + FromPrimitive>(
     len: usize,
     seed: u64,
 ) -> Vec<R> {
@@ -159,7 +159,7 @@ fn laplacian_eigenvalue_converges_to_continuum_at_second_order() {
 fn assert_wedge_laws_on<const D: usize, R>(lattice_fn: impl Fn() -> LatticeComplex<D, R>, tol: R)
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq

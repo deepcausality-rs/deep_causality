@@ -38,7 +38,7 @@ fn manifold_with_data_pattern<const D: usize, R>(
     seed: R,
 ) -> Manifold<LatticeComplex<D, R>, R>
 where
-    R: RealField + deep_causality_topology::MaybeParallel + FromPrimitive + Default,
+    R: RealField + deep_causality_par::MaybeParallel + FromPrimitive + Default,
 {
     let total: usize = (0..=D).map(|k| lattice.num_cells(k)).sum();
     let mut data_vec = vec![R::zero(); total];
@@ -62,7 +62,7 @@ fn max_r<R: RealField>(a: R, b: R) -> R {
     if a > b { a } else { b }
 }
 
-fn relative_diff<R: RealField + deep_causality_topology::MaybeParallel + FromPrimitive>(
+fn relative_diff<R: RealField + deep_causality_par::MaybeParallel + FromPrimitive>(
     a: R,
     b: R,
 ) -> R {
@@ -76,11 +76,11 @@ fn relative_diff<R: RealField + deep_causality_topology::MaybeParallel + FromPri
 // which collapses to f32::EPSILON ≈ 1.19e-7 for f32. The orthogonality check
 // then accumulates roughly two CG-residual errors plus a residual term, so we
 // pad by roughly two orders of magnitude.
-fn ortho_tol<R: RealField + deep_causality_topology::MaybeParallel + FromPrimitive>() -> R {
+fn ortho_tol<R: RealField + deep_causality_par::MaybeParallel + FromPrimitive>() -> R {
     from_f64::<R>(1e-3)
 }
 
-fn pure_part_tol<R: RealField + deep_causality_topology::MaybeParallel + FromPrimitive>() -> R {
+fn pure_part_tol<R: RealField + deep_causality_par::MaybeParallel + FromPrimitive>() -> R {
     // For pure-exact / pure-co-exact tests the "vanishing" component norm² is
     // compared against the input norm². Allow 1% of input norm² for f32 noise.
     from_f64::<R>(1e-2)
@@ -93,7 +93,7 @@ fn pure_part_tol<R: RealField + deep_causality_topology::MaybeParallel + FromPri
 fn orthogonality_identity_holds<const D: usize, R>(lattice: LatticeComplex<D, R>, seed: R)
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -135,7 +135,7 @@ where
 fn pure_exact_decomposition_holds<const D: usize, R>(lattice: LatticeComplex<D, R>, seed: R)
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -178,7 +178,7 @@ where
 fn pure_co_exact_decomposition_holds<const D: usize, R>(lattice: LatticeComplex<D, R>, seed: R)
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq

@@ -19,7 +19,7 @@ use deep_causality_topology::{
 fn unit_manifold<R>(n: usize) -> Manifold<LatticeComplex<2, R>, R>
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -52,7 +52,7 @@ fn random_cochain<R: RealField + FromPrimitive>(len: usize, seed: u64) -> Vec<R>
 fn divergence<R>(manifold: &Manifold<LatticeComplex<2, R>, R>, one_form: &[R]) -> Vec<R>
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -83,7 +83,7 @@ fn sup_norm<R: RealField>(v: &[R]) -> R {
 fn assert_both_paths_divergence_free<R>(rel_tol: R)
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq

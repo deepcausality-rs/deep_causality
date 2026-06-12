@@ -32,7 +32,7 @@ fn unit_manifold<const D: usize, R>(
 ) -> Manifold<LatticeComplex<D, R>, R>
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -65,7 +65,7 @@ fn manifold_with_k_form<const D: usize>(
 /// Per-axis constant 1-form on the lattice: edges along axis `a` get `vals[a]`.
 fn constant_one_form<const D: usize, R>(lattice: &LatticeComplex<D, R>, vals: [R; D]) -> Vec<R>
 where
-    R: RealField + deep_causality_topology::MaybeParallel,
+    R: RealField + deep_causality_par::MaybeParallel,
 {
     lattice
         .iter_cells(1)
@@ -81,7 +81,7 @@ where
 fn assert_2d_two_form_contraction<R>(tol: R)
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq

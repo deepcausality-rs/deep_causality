@@ -45,7 +45,7 @@ where
 fn assert_step_divergence_free<R>(tol: R)
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -104,10 +104,13 @@ fn zero_state_inviscid_fixed_point() {
     assert_eq!(output.state(), &state);
 }
 
-/// A one-iteration CG budget cannot converge: the projection bind
-/// short-circuits the chain.
+/// On the fully periodic Stage-1 lattice the projection is spectral and
+/// has no convergence-failure mode: a starved CG budget must not fail
+/// the step. Step-level failure propagation is pinned by the CFL test
+/// below; CG error propagation by the topology-layer mixed-periodicity
+/// tests.
 #[test]
-fn cg_starvation_short_circuits() {
+fn spectral_path_ignores_cg_starvation_in_step() {
     let n = 6usize;
     let manifold = unit_manifold::<f64>(n);
     let seeder = DecNsSolver::new(&manifold, 0.01, 0.1, None).unwrap();
@@ -121,8 +124,8 @@ fn cg_starvation_short_circuits() {
             tolerance: None,
             max_iterations: Some(1),
         });
-    let err = starved.step(&state).unwrap_err();
-    assert!(err.to_string().contains("Leray projection failed"), "{err}");
+    let result = starved.step(&state);
+    assert!(result.is_ok(), "{result:?}");
 }
 
 /// An over-long `dt` against a unit-speed field trips the advective

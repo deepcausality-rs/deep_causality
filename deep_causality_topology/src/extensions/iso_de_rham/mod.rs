@@ -22,6 +22,7 @@
 
 use deep_causality_num::iso::witness::Iso;
 use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
 
 use crate::types::lattice_complex::LatticeComplex;
@@ -37,7 +38,7 @@ pub type FieldCarrier<const D: usize, R> = (Manifold<LatticeComplex<D, R>, R>, C
 
 impl<const D: usize, R> Iso<FieldCarrier<D, R>, FieldCarrier<D, R>> for DeRhamSharpIso<D, R>
 where
-    R: RealField + crate::MaybeParallel + FromPrimitive + Default + PartialEq + core::fmt::Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + core::fmt::Debug,
 {
     fn to_target(s: FieldCarrier<D, R>) -> FieldCarrier<D, R> {
         let (manifold, vertex_vectors) = s;

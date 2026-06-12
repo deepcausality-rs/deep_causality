@@ -25,8 +25,8 @@ use alloc::format;
 use core::fmt::{Debug, Display};
 
 use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::MaybeParallel;
 use deep_causality_topology::{HodgeDecomposition, LatticeComplex, Manifold};
 
 use crate::error::physics_error::PhysicsError;

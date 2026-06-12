@@ -35,19 +35,19 @@
 
 ## 6. Spectral Poisson path in topology (spectral-poisson)
 
-- [ ] 6.1 Add `deep_causality_fft` as a dependency of `deep_causality_topology` (Cargo + Bazel; forward the `parallel` feature)
-- [ ] 6.2 Implement the eigenvalue table for the periodic lattice Laplacian `Δ₀` (per-shape `λ_k`, including the metric/spacing scaling the Hodge star encodes) and the spectral solve: rFFT → divide (zero the k=0 bin) → irFFT, composed over the tensor surface per D9 (`irfft ∘ fmap(/λ_k) ∘ rfft`)
-- [ ] 6.3 Cross-check test: spectral vs CG agreement within CG tolerance on multiple fully periodic shapes including anisotropic spacings; residual-at-rounding and zero-mean gauge tests
-- [ ] 6.4 Implement plan/eigenvalue caching — start manifold-side beside `boundary_cache` (preserved across `Clone`), benchmark against a `DecNsSolver`-owned variant, keep the faster placement (D8); test that repeated solves build plans once and do not allocate per solve
+- [x] 6.1 Add `deep_causality_fft` as a dependency of `deep_causality_topology` (Cargo + Bazel; forward the `parallel` feature)
+- [x] 6.2 Implement the eigenvalue table for the periodic lattice Laplacian `Δ₀` (per-shape `λ_k`, including the metric/spacing scaling the Hodge star encodes) and the spectral solve: rFFT → divide (zero the k=0 bin) → irFFT, composed over the tensor surface per D9 (`irfft ∘ fmap(/λ_k) ∘ rfft`)
+- [x] 6.3 Cross-check test: spectral vs CG agreement within CG tolerance on multiple fully periodic shapes including anisotropic spacings; residual-at-rounding and zero-mean gauge tests
+- [x] 6.4 Implement plan/eigenvalue caching — start manifold-side beside `boundary_cache` (preserved across `Clone`), benchmark against a `DecNsSolver`-owned variant, keep the faster placement (D8); test that repeated solves build plans once and do not allocate per solve
 
 ## 7. Leray dispatch (leray-projection delta)
 
-- [ ] 7.1 Wire automatic dispatch in `leray_project` and the grade-0 branch of `hodge_decompose`: spectral when `periodic()` is all-true, CG otherwise; no new options surface
-- [ ] 7.2 Dispatch tests: fully periodic takes the spectral path; mixed-periodicity and open lattices behave identically to pre-change CG (regression guard); spectral and CG projections agree on the same input
-- [ ] 7.3 Audit existing periodic-lattice tolerance assertions in topology and physics tests; tighten where the spectral path makes results exact (never loosen)
+- [x] 7.1 Wire automatic dispatch in `leray_project` and the grade-0 branch of `hodge_decompose`: spectral when `periodic()` is all-true, CG otherwise; no new options surface
+- [x] 7.2 Dispatch tests: fully periodic takes the spectral path; mixed-periodicity and open lattices behave identically to pre-change CG (regression guard); spectral and CG projections agree on the same input
+- [x] 7.3 Audit existing periodic-lattice tolerance assertions in topology and physics tests; tighten where the spectral path makes results exact (never loosen)
 
 ## 8. Solver benchmark and docs
 
-- [ ] 8.1 Extend `deep_causality_physics/benches/dec_solver_benchmark.rs` with spectral-projection and spectral full-step measurements at 16³/32³ against the recorded CG baseline (full step 388 ms at 32³ f64)
-- [ ] 8.2 Update the physics example README performance table and the `deep_causality_fft` README (algorithm layering, normalization contract, `parallel` feature)
-- [ ] 8.3 Full verification: `make build`, `make test`, clippy clean in both feature configurations, workspace-wide
+- [x] 8.1 Extend `deep_causality_physics/benches/dec_solver_benchmark.rs` with spectral-projection and spectral full-step measurements at 16³/32³ against the recorded CG baseline (full step 388 ms at 32³ f64)
+- [x] 8.2 Update the physics example README performance table and the `deep_causality_fft` README (algorithm layering, normalization contract, `parallel` feature)
+- [x] 8.3 Full verification: `make build`, `make test`, clippy clean in both feature configurations, workspace-wide

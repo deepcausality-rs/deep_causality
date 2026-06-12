@@ -37,4 +37,6 @@ mod manifold_topology_tests;
 #[cfg(test)]
 mod simplicial_topology_tests;
 #[cfg(test)]
+mod spectral_poisson_tests;
+#[cfg(test)]
 mod wedge_tests;

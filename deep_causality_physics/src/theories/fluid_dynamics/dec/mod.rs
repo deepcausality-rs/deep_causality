@@ -40,7 +40,7 @@
 
 use core::fmt::{Debug, Display};
 use deep_causality_num::{FromPrimitive, RealField};
-use deep_causality_topology::MaybeParallel;
+use deep_causality_par::MaybeParallel;
 
 /// The composed bound set of the DEC solver stack: the topology operators
 /// require `RealField + Default + PartialEq + Debug (+ FromPrimitive)`,

@@ -46,7 +46,6 @@ pub mod utils;
 
 pub use crate::errors::fft_error::FftError;
 pub use crate::traits::fft_scalar::FftScalar;
-pub use crate::traits::maybe_parallel::MaybeParallel;
 pub use crate::types::fft_plan::FftPlan;
 pub use crate::types::fft_plan_nd::FftPlanNd;
 pub use crate::types::rfft_plan::RfftPlan;

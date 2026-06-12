@@ -88,10 +88,30 @@ Silicon, f64, serial):
 | 3-D real round-trip (rFFT + irFFT), 32³ | ~337 µs |
 | 3-D complex forward, 64³ | ~4.8 ms (serial) / ~2.8 ms (`parallel`) |
 
-For scale: the CG-based Leray projection this replaces on periodic lattices
-is the dominant cost of the 388 ms (32³) DEC solver step.
+For scale: the CG-based Leray projection this replaced on periodic lattices
+dominated the 388 ms (32³) DEC solver step; with the spectral path the
+projection is 1.9 ms and the full step is 137 ms serial / 57 ms parallel
+(see the Taylor-Green example README for the full table).
 
 ## Safety
 
 No `unsafe` — the crate opts into the workspace-wide
 `unsafe_code = "forbid"` lint policy.
+
+## Contribution
+
+Contributions are welcomed especially related to documentation, example code, and fixes.
+If unsure where to start, just open an issue and ask.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
+shall be licensed under the MIT licence, without any additional terms or conditions.
+
+## Licence
+
+This project is licensed under the [MIT license](LICENSE).
+
+## Security
+
+For details about security, please read
+the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).
+

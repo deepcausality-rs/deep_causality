@@ -541,6 +541,10 @@ impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
             res
         }
     }
+
+    fn uniform_lattice_layout(&self) -> Option<(Vec<usize>, Vec<bool>)> {
+        Some((self.shape.to_vec(), self.periodic.to_vec()))
+    }
 }
 
 // --- Specialized Constructors ---

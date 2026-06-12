@@ -27,7 +27,7 @@ fn unit_manifold<const D: usize, R>(
 ) -> Manifold<LatticeComplex<D, R>, R>
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq
@@ -114,7 +114,7 @@ fn de_rham_of_linear_gradient_equals_d_of_sampled_potential() {
 fn assert_constant_round_trip<R>(tol: R)
 where
     R: RealField
-        + deep_causality_topology::MaybeParallel
+        + deep_causality_par::MaybeParallel
         + FromPrimitive
         + Default
         + PartialEq

@@ -34,7 +34,7 @@ use deep_causality_tensor::CausalTensor;
 
 use crate::errors::topology_error::TopologyError;
 use crate::traits::chain_complex::ChainComplex;
-use crate::traits::maybe_parallel::MaybeParallel;
+use deep_causality_par::MaybeParallel;
 
 use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
 use crate::types::manifold::Manifold;

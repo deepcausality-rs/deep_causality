@@ -4,4 +4,3 @@
  */
 
 pub mod fft_scalar;
-pub mod maybe_parallel;

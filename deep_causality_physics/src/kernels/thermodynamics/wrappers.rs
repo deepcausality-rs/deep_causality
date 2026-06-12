@@ -11,7 +11,7 @@ use deep_causality_tensor::CausalTensor;
 use crate::Probability;
 use core::fmt::Debug;
 use deep_causality_num::{FromPrimitive, RealField};
-use deep_causality_topology::MaybeParallel;
+use deep_causality_par::MaybeParallel;
 use deep_causality_topology::SimplicialManifold;
 
 /// Causal wrapper for [`stats::heat_diffusion_kernel`].
