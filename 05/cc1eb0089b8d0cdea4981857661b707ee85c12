@@ -1,0 +1,25 @@
+deep_causality_topology/src/types/manifold/differential/hodge_decomposition_impl.rs
+  s_4adc6099bc84ff::t_c0f5c323322ca4 46
+deep_causality_physics/tests/quantities/solenoidal_field_tests.rs
+  s_4adc6099bc84ff::t_c0f5c323322ca4 21-27,54-60,85-91
+deep_causality_topology/src/types/manifold/differential/leray.rs
+  s_4adc6099bc84ff::t_c0f5c323322ca4 29
+deep_causality_physics/tests/theories/fluid_dynamics/dec/diagnostics_tests.rs
+  s_4adc6099bc84ff::t_c0f5c323322ca4 84-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "05cc1eb0089b8d0cdea4981857661b707ee85c12",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
