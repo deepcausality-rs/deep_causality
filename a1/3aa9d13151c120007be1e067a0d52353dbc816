@@ -1,0 +1,19 @@
+deep_causality_calculus/README.md
+  s_2e391cf0031957::t_10a88ed46e360e 8-162
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "a13aa9d13151c120007be1e067a0d52353dbc816",
+  "prompts": {},
+  "sessions": {
+    "s_2e391cf0031957": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b0e3134f-7619-469a-b7ae-3348fead1922",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
