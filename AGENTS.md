@@ -329,6 +329,8 @@ To rebuild and test the entire repo
 You aim for one hundred percent test coverage of all added or edited code files.
 The only exception is if, for some reason, some code is impossible to reach. Then you skip testing that dead code.
 
+Code examples under `examples/*` are exempt from the coverage requirement. They are runnable demonstrations, not library code, and are verified by running them (`cargo run -p <crate> --example <name>`) rather than by unit tests. Do not add test files or test modules for example binaries.
+
 If tests find any bug, you fix the implementation so that the test pass. Because the testing exists to ensure that the API is correct, and if the API is not correct, you fix the API so that the test is passing.
 
 Never ever fix any test to make a broken or incorrect API pass a bogus test. Never.

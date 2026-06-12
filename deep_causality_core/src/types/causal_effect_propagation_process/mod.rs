@@ -55,8 +55,6 @@ impl<Value, State, Context, Error, Log>
     CausalEffectPropagationProcess<Value, State, Context, Error, Log>
 where
     Log: LogAppend + Default,
-    State: Clone,
-    Context: Clone,
     Error: Clone,
 {
     /// Chains a stateful, context-aware computation.
@@ -260,8 +258,6 @@ impl<Value, State, Context, Log>
     CausalEffectPropagationProcess<Value, State, Context, CausalityError, Log>
 where
     Log: LogAppend + Default,
-    State: Clone,
-    Context: Clone,
 {
     /// Chains a computation while automatically unwrapping the inner `EffectValue`.
     ///
