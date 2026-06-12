@@ -70,8 +70,7 @@ pub trait CausalMonad: Sized {
 impl<Value, State, Context> CausalMonad
     for CausalEffectPropagationProcess<Value, State, Context, CausalityError, EffectLog>
 where
-    State: Clone + Default,
-    Context: Clone,
+    State: Default,
 {
     type Value = Value;
     type State = State;

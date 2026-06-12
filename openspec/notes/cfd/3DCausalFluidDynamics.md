@@ -2,6 +2,8 @@
 
 **Status:** Forward-looking design note. Replaces the prior conflated-`TopologicalSignature` sketch with a clean topology/physics split aligned to crate-responsibility boundaries, and an explicit typed pipeline through `CausalEffectPropagationProcess`.
 
+**Revision 2026-06-10.** Brought in line with `cfd-gap.md` (ground truth for the DEC/solver foundation, assumed closed) — see prerequisite 4, the B1b/B5 kernel-status corrections, the B4 type unification, the §1.1 solver synergy, and the §7 periodic-lattice caveat update. Sequencing across the three CFD notes lives in `cfd-roadmap.md`.
+
 **Scope of this note:** the *pipeline core*, *physics integration*, and *type-encoded invariants*. Reproduction of the published Martínez-Sánchez & Lozano-Durán (2026) measurement on JHU channel-flow DNS is **explicitly deferred** to a follow-up note `3DCausalFluidDynamicsValidation.md` to be opened after Blocks B1b–B5 ship. The methodology stands or falls on the synthetic ground-truth test in B3; the JHU reproduction is a publishability concern, not a correctness concern.
 
 **Prerequisites (must ship before B1b opens):**
@@ -9,8 +11,9 @@
 1. `add-cubical-regge-calculus-analytical` (R4 + R5 + R6) — `HasHodgeStar<R>` capability trait, generic differential operators on `Manifold<K, R> where K::Metric: HasHodgeStar<R>`, signature marker `S ∈ {Euclidean, Lorentzian}` on `CubicalReggeGeometry<const D, R, S>`. **Shipped 2026-05-22.**
 2. `add-hodge-decomposition` — `HodgeDecomposition<R>` carrier type and `Manifold::hodge_decompose(field, k) -> Result<HodgeDecomposition<R>, TopologyError>`. **Shipped 2026-05-22**, archived as `openspec/changes/archive/2026-05-22-add-hodge-decomposition/`.
 3. `B1a: TopologicalInvariants extractor` — pure-topology product of the Hodge decomposition (Betti numbers + per-component L2 norms). **Shipped 2026-05-22** as part of this note. `pub fn HodgeDecomposition::topological_invariants<K>(&self, &Manifold<K, R>) -> Result<TopologicalInvariants<R>, TopologyError>` is live in `deep_causality_topology`.
+4. **The `cfd-gap.md` foundation (G1–G6)** — *assumed closed as of the 2026-06-10 revision of this note.* Relevant APIs: the DEC wedge and interior product (G1), the de Rham/♯ isos (G2), the typed-form carriers in the physics crate (G3, including the shared `SolenoidalField<R>` — see B4), pinned sign/orientation conventions (G4), and **G6 harmonic-kernel deflation**, which lifts this note's original periodic-lattice restriction (see §7).
 
-Without all three prerequisites in place, B1b cannot start.
+Without all four prerequisites in place, B1b cannot start.
 
 ---
 
@@ -110,6 +113,29 @@ None of these elements is individually new. The combination under one type syste
 3. **SURD on the augmented joint distribution.** Existing `surd_states_cdl` consumed unchanged; only the boundary cast from `R` to `f64` (SURD's required type) happens at the `JointDistribution` build step inside `fluid_surd_decompose`.
 4. **Type-encoded fluid invariants** parameterised over `R`, matching the existing `Speed<R>` / `Mass<R>` / `FourMomentum<R>` convention in `deep_causality_physics/src/units/`.
 
+### 1.1 Solver synergy: the decomposition is a free byproduct of the solve
+
+With the `cfd-gap.md` solver in place, this pipeline gains an in-house data source.
+The solver's Leray projection evaluates the gradient half of the Hodge decomposition
+of the velocity 1-form at **every time step**, on the same `Manifold`, at the same
+`R`. Stage 1 of this pipeline consumes exactly a `HodgeDecomposition<R>` of a
+velocity 1-form. Tapping the solve chain therefore costs one β-step solve per
+*sampled* snapshot (G6 makes that solve well-posed on tori) rather than a full
+standalone decomposition pipeline — and the snapshot cadence is a free parameter of
+the tap, not of the solver.
+
+Consequences:
+
+- The synthetic ground-truth test in B3 can be driven by solver-generated flows with
+  *prescribed* causal structure (forced regimes on the torus), not only by the
+  adapted three-variable benchmark.
+- The deferred JHU validation note gains a second branch: external DNS (JHU) and
+  in-house DNS (the cfd-gap solver at Taylor–Green/Re-1600 scale) through one
+  pipeline.
+- `simulate → decompose (free) → attribute` is the program's flagship loop; no other
+  CFD code has a projection step that *is* a Hodge decomposition. Scheduling lives in
+  `cfd-roadmap.md` Stage 2.
+
 ---
 
 ## 2. Precision parameterisation
@@ -187,7 +213,10 @@ impl<R: RealField> HodgeDecomposition<R> {
   ```
 - Fields are private; getters per field follow the project convention.
 
-**Computation (all formulas land as private helpers inside B1b; B5 later promotes them to public kernels):**
+**Computation (consumes the public kernels already shipped in
+`deep_causality_physics/src/kernels/fluids/` — Q-criterion, λ₂, turbulence scales,
+vorticity transport all exist there with tests; B1b adds no private formula helpers,
+only the extraction/labelling logic around the shipped kernels. See the revised B5.)**
 
 - `vortex_count`, `vortex_centroids` — Q-criterion `Q = 0.5·(‖Ω‖² − ‖S‖²)` evaluated at every cell from the velocity gradient `∇u` (recovered from the decomposition's solenoidal part `β + h`). Connected-component labelling on cells where `Q > threshold` yields count + centroids.
 - `dominant_helicity_sign` — sign of integrated helicity `∫ u · ω dV` where `ω = ∇ × u` is the vorticity 2-form computed by `Manifold::exterior_derivative` on `β + h`.
@@ -195,6 +224,22 @@ impl<R: RealField> HodgeDecomposition<R> {
 - `taylor_microscale` — `λ = sqrt(15·ν·k_energy / ε)`.
 
 The 3D-only `vortex_centroids: Vec<[R; 3]>` field is checked at construction time; non-3D manifolds return `FluidExtractionError::Non3DManifold`.
+
+**Robustness caveat and comparison target (references.md: Abolholl-2024).**
+Teschner's group documents that Q, Δ, and swirling-strength criteria all detect
+spurious vortices (false positives *and* negatives) — "vortex core detection
+remains an unsolved problem" — and validates a hybrid CNN+DNN detector on the
+Taylor–Green vortex, the same benchmark this deck uses everywhere. Two
+consequences for B1b: (a) the Q-threshold + connected-components extractor must
+treat its threshold as a declared, tested parameter, not a constant — the property
+tests should include a threshold-sensitivity sweep on the TG case; (b) this
+pipeline holds a structural alternative no pointwise criterion has: the vortex
+information enters through the *Hodge decomposition* (global, topological — the
+solenoidal component and the Betti numbers), so "topological vortex detection vs.
+local criteria, on the shared TG benchmark, against the Abolholl hybrid-ML
+baseline" is a publishable comparison that lands precisely on a problem the field
+itself calls unsolved. Flag it as a candidate section of the deferred validation
+note.
 
 **Property tests:**
 
@@ -397,6 +442,16 @@ Adapt the Martínez-Sánchez & Lozano-Durán (2026) §3 three-variable benchmark
 
 **Goal.** Ship the newtype wrappers and smart constructors that make conservation laws structural rather than runtime-checked.
 
+**Type unification (2026-06-10).** `SolenoidalField<R>` is **the same invariant** as
+the solver's projected-velocity carrier in `cfd-gap.md` G3 (working name
+`ProjectedVelocityOneForm<R>`). One type ships, in this crate, under the
+`SolenoidalField<R>` name, with exactly two construction paths: the solver's
+`leray_project` (per-step, the type-state that makes "you cannot time-step an
+unprojected field" a compile-time fact) and `from_hodge_projection` (per-snapshot,
+this pipeline's entry). B4 must not define a duplicate; the solver spec must consume
+this type. Likewise `Vorticity<R>::from_velocity` is a thin wrapper over the G1
+`exterior_derivative` API, not a reimplementation.
+
 **Crate affected:** `deep_causality_physics` only.
 
 **Where it lives:** `deep_causality_physics/src/fluids/quantities/` with one file per newtype following the one-type-one-module rule:
@@ -436,9 +491,21 @@ The compiler refuses constructions that bypass the invariants.
 
 ---
 
-## Block B5 — Reusable pointwise Navier–Stokes kernels
+## Block B5 — Reusable pointwise Navier–Stokes kernels (STATUS CORRECTED: largely shipped)
 
-**Goal.** Ship the pointwise Navier–Stokes kernels that fit the existing `deep_causality_physics` kernel pattern: stateless, side-effect-free, pure algebra given pre-discretised inputs, generic over `R: RealField`.
+**Status correction (2026-06-10).** The kernel surface this block planned to build
+already ships in `deep_causality_physics/src/kernels/fluids/` (governing, kinematics,
+turbulence, coherent-structure modules — `convective_acceleration_kernel`,
+`viscous_diffusion_kernel`, `pressure_gradient_force_kernel`, Q-criterion, λ₂,
+Kolmogorov/Taylor/integral scales — with the four regime evaluators on top in
+`theories/fluid_dynamics/`). B5's remaining scope reduces to: an audit of the
+signature list below against the shipped surface, plus any missing property tests
+(notably the cross-precision Q-criterion identity and Galilean invariance, if not
+already present). Budget accordingly — hours, not the original ~7h of construction.
+B1b consumes the shipped kernels directly; the original "extract B1b private helpers
+into B5" plan is void.
+
+**Goal (original).** Ship the pointwise Navier–Stokes kernels that fit the existing `deep_causality_physics` kernel pattern: stateless, side-effect-free, pure algebra given pre-discretised inputs, generic over `R: RealField`.
 
 **Crate affected:** `deep_causality_physics` only.
 
@@ -540,7 +607,7 @@ Anything that consumes `HodgeDecomposition<R>` to produce a velocity-field invar
 - **`FluidSignature` discards amplitude information by design.** It says "two vortex tubes exist with these L2 norms" but is coarse on per-vortex amplitude. For the causal questions this pipeline targets (existence and interaction of coherent structures), this is the right level. For other questions it is the wrong level.
 - **The SURD precision boundary is a one-way cliff.** Converting `R → f64` at the `JointDistribution` build step in B3 is the single permitted lossy cast. Information-theoretic quantities saturate `f64` well within sample-noise floors; the loss is real but does not affect SURD's outputs at any tested precision backend. Documented at the call site.
 - **Compressibility breaks `SolenoidalField<R>`.** B4's invariants are scoped to incompressible flow. Compressible extension (continuity equation as the relevant invariant) is a separate small change set.
-- **`Manifold::hodge_decompose` does not project out the harmonic kernel of `Δ_k` for `k > 0`.** On periodic-topology lattices where `β_k > 0` the β-step CG is singular. Documented as Risk 1 of the archived `add-hodge-decomposition`. B1b's vortex / helicity / turbulence-scale extraction works correctly on open lattices; periodic-domain support requires a separate CG upgrade, which has not been opened as a change set yet.
+- **~~`Manifold::hodge_decompose` does not project out the harmonic kernel of `Δ_k` for `k > 0`.~~ Resolved by `cfd-gap.md` G6** (prerequisite 4): harmonic-kernel deflation makes the β-step well-posed on periodic lattices, so this pipeline runs on torus data — which is exactly where the solver tap (§1.1) produces it. Note the asymmetry for context: the *solver* never needed the fix, because `leray_project` uses only the gauge-fixed grade-0 half of the decomposition; G6 exists for *this* pipeline's full-decomposition consumption.
 
 ---
 
