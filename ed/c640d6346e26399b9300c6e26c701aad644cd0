@@ -1,0 +1,19 @@
+examples/causal_correction_examples/corrective_ddos_detector/main.rs
+  s_9f0604cfafbe3b::t_e95450b276aa66 83-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "edc640d6346e26399b9300c6e26c701aad644cd0",
+  "prompts": {},
+  "sessions": {
+    "s_9f0604cfafbe3b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f95e42d-780a-4042-9005-6dd1ac001617",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
