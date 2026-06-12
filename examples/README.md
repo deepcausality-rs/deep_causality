@@ -120,11 +120,13 @@ See [causal_counterfactual_examples/README.md](causal_counterfactual_examples/RE
 
 **Location:** `examples/causal_correction_examples`
 
-Four worked examples in the control-theory tradition: monitor a trajectory
+Five worked examples in the control-theory tradition: monitor a trajectory
 tick by tick; when the value drifts outside the safe envelope, `intervene`
-snaps it back and the chain continues from the corrected state. Each runs
-the same chain twice: open loop (no monitor, catastrophic failure) and
-closed loop (monitor + `intervene`, failure averted).
+snaps it back and the chain continues from the corrected state. The first
+four run the same chain twice: open loop (no monitor, catastrophic failure)
+and closed loop (monitor + `intervene`, failure averted). The fifth,
+`corrective_ddos_detector`, runs closed loop only. Its point is the stateful
+sliding-window detector that drives the intervention.
 
 | Example | Monad | Topic | Command |
 |---|---|---|---|
@@ -132,6 +134,7 @@ closed loop (monitor + `intervene`, failure averted).
 | corrective_glucose_pump           | PropagatingProcess (stateful) | Glucose climbs across three meals; corrective bolus fires above 180 mg/dL          | `cargo run -p causal_correction_examples --example corrective_glucose_pump` |
 | corrective_decompression_stops    | PropagatingProcess (stateful) | Diver ascends from 30 m; decompression stop inserted when N2 supersaturation rises | `cargo run -p causal_correction_examples --example corrective_decompression_stops` |
 | corrective_network_failover       | PropagatingProcess (stateful) | Primary switch fails; monitor detects zero delivery; standby switch takes over     | `cargo run -p causal_correction_examples --example corrective_network_failover` |
+| corrective_ddos_detector          | PropagatingProcess (stateful) | Volumetric DDoS; sliding-window z-score detector in `State`; 5 consecutive 3σ seconds engage the NIC throttle | `cargo run -p causal_correction_examples --example corrective_ddos_detector` |
 
 See [causal_correction_examples/README.md](causal_correction_examples/README.md) for detailed documentation.
 
