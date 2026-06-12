@@ -1,0 +1,23 @@
+deep_causality_core/src/traits/causal_monad/mod.rs
+  s_9f0604cfafbe3b::t_668770e0533094 73
+AGENTS.md
+  s_9f0604cfafbe3b::t_6fce3b18a91b8f 332-333
+deep_causality_core/src/types/causal_flow/steps.rs
+  s_9f0604cfafbe3b::t_3aec481c7cd843 16-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "6e00a78e3892c6146b286f74e9e3184f81ea6b55",
+  "prompts": {},
+  "sessions": {
+    "s_9f0604cfafbe3b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f95e42d-780a-4042-9005-6dd1ac001617",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
