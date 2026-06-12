@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.0.9...deep_causality_core-v0.10.0) - 2026-06-12
+
+### Other
+
+- *(release)* bump deep_causality_core to 0.10.0 and realign dependent pins
+- *(deep_causality_core)* Drop unused Clone bounds from the monadic bind and fluent DSL
+
 ## [0.0.9](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.0.8...deep_causality_core-v0.0.9) - 2026-06-09
 
 ### Added
