@@ -12,6 +12,8 @@ pub mod dec_ns_solver;
 #[cfg(test)]
 pub mod diagnostics_tests;
 #[cfg(test)]
+pub mod energy_budget_tests;
+#[cfg(test)]
 pub mod inviscid_invariants_tests;
 #[cfg(test)]
 pub mod poiseuille_tests;

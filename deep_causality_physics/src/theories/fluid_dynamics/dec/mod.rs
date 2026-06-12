@@ -61,6 +61,7 @@ impl<R: RealField + FromPrimitive + Default + PartialEq + Debug + Display + Mayb
 pub(crate) mod dec_ns_rate;
 pub(crate) mod dec_ns_solver;
 pub(crate) mod diagnostics;
+pub(crate) mod energy_budget;
 pub(crate) mod spectral_diffusion;
 pub(crate) mod step_output;
 pub(crate) mod wrappers;
@@ -70,5 +71,6 @@ pub use dec_ns_solver::DecNsSolver;
 pub use diagnostics::{
     dec_divergence_residual, dec_enstrophy, dec_helicity, dec_kinetic_energy, dec_max_speed,
 };
+pub use energy_budget::EnergyBudget;
 pub use step_output::{RunOutput, StepOutput};
 pub use wrappers::dec_ns_step;

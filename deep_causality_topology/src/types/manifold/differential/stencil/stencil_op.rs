@@ -71,6 +71,20 @@ where
         self.cols
     }
 
+    /// The transposed operator as a fresh gather table (`out[c] =
+    /// Σ coeff·input[r]` over the original entries): compiled once so the
+    /// adjoint chain streams with the same access pattern and parallel
+    /// safety as the forward chain (no scatter).
+    pub(crate) fn transpose(&self) -> Self {
+        let mut entries: Vec<Vec<(usize, R)>> = vec![Vec::new(); self.cols];
+        for r in 0..self.rows {
+            for e in self.ptr[r]..self.ptr[r + 1] {
+                entries[self.idx[e] as usize].push((r, self.coeff[e]));
+            }
+        }
+        Self::from_rows(entries, self.rows)
+    }
+
     /// `out[r] = Σ coeff·input[idx]` per row. Lengths are the caller's
     /// invariant (validated at the `DecStencilTables` surface).
     pub(crate) fn apply(&self, input: &[R], out: &mut [R]) {

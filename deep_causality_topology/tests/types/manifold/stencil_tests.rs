@@ -13,7 +13,7 @@
 use deep_causality_num::{Float106, FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
-    ChainComplex, CubicalReggeGeometry, DecStencilTables, LatticeComplex, Manifold,
+    ChainComplex, CubicalReggeGeometry, DecStencilTables, HasHodgeStar, LatticeComplex, Manifold,
 };
 
 // ---------------------------------------------------------------------------
@@ -282,4 +282,95 @@ fn tables_are_cloneable_and_debuggable() {
     let cloned = tables.clone();
     assert_eq!(cloned.num_cells(1), m.complex().num_cells(1));
     assert!(format!("{tables:?}").contains("DecStencilTables"));
+}
+
+/// The vector-slot convective M-adjoint identity (dec-ns-stability):
+/// for random `ω` (grade 2) and 1-forms `x`, `w`,
+/// `⟨G_ω x, w⟩_{M₁} = ⟨x, G*_ω w⟩_{M₁}` — the static transposed tables
+/// realize the exact M-adjoint of `G_ω : x ↦ i_x ω`.
+fn assert_convective_vector_adjoint_identity<const D: usize>(
+    m: &Manifold<LatticeComplex<D, f64>, f64>,
+    seed: u64,
+    tol: f64,
+) {
+    let tables = DecStencilTables::compile(m).unwrap();
+    let n1 = m.complex().num_cells(1);
+    let n2 = m.complex().num_cells(2);
+    let omega: Vec<f64> = random_cochain(n2, seed);
+    let x: Vec<f64> = random_cochain(n1, seed + 1);
+    let w: Vec<f64> = random_cochain(n1, seed + 2);
+
+    // Forward: G_ω x = i_x ω (fills the transport stage `pre`).
+    let (pre_len, wedge_len) = tables.convective_scratch_lens();
+    let mut pre = vec![0.0; pre_len];
+    let mut wb = vec![0.0; wedge_len];
+    let mut forward = vec![0.0; n1];
+    tables
+        .apply_convective(&omega, &x, &mut pre, &mut wb, &mut forward)
+        .unwrap();
+
+    // Adjoint: G*_ω w from the same transport image.
+    let (s1_len, sw_len) = tables.convective_vector_adjoint_scratch_lens();
+    let mut s1 = vec![0.0; s1_len];
+    let mut sw = vec![0.0; sw_len];
+    let mut adjoint = vec![0.0; n1];
+    tables
+        .apply_convective_vector_adjoint(&pre, &w, &mut s1, &mut sw, &mut adjoint)
+        .unwrap();
+
+    // Both pairings live in the grade-1 M-inner product.
+    let metric_binding = m.metric();
+    let metric = metric_binding.as_ref().unwrap();
+    let star = metric.hodge_star_matrix(m.complex(), 1).unwrap();
+    let mut m1 = vec![0.0; n1];
+    for (i, slot) in m1.iter_mut().enumerate() {
+        for e in star.row_indices()[i]..star.row_indices()[i + 1] {
+            if star.col_indices()[e] == i {
+                *slot = star.values()[e];
+            }
+        }
+    }
+    let lhs: f64 = forward
+        .iter()
+        .zip(w.iter())
+        .zip(m1.iter())
+        .map(|((a, b), mass)| a * b * mass)
+        .sum();
+    let rhs: f64 = x
+        .iter()
+        .zip(adjoint.iter())
+        .zip(m1.iter())
+        .map(|((a, b), mass)| a * b * mass)
+        .sum();
+    assert!(
+        (lhs - rhs).abs() <= tol * lhs.abs().max(rhs.abs()).max(1.0),
+        "vector adjoint identity: ⟨Gx, w⟩ = {lhs} vs ⟨x, G*w⟩ = {rhs}"
+    );
+}
+
+#[test]
+fn convective_vector_adjoint_identity_2d_torus() {
+    let m = manifold_with_metric(
+        LatticeComplex::<2, f64>::square_torus(6),
+        CubicalReggeGeometry::unit(),
+    );
+    assert_convective_vector_adjoint_identity(&m, 211, 1e-13);
+}
+
+#[test]
+fn convective_vector_adjoint_identity_3d_torus_anisotropic() {
+    let m = manifold_with_metric(
+        LatticeComplex::<3, f64>::cubic_torus(4),
+        CubicalReggeGeometry::per_axis([0.5, 1.0, 0.25]),
+    );
+    assert_convective_vector_adjoint_identity(&m, 223, 1e-13);
+}
+
+#[test]
+fn convective_vector_adjoint_identity_mixed_walls() {
+    let m = manifold_with_metric(
+        LatticeComplex::<2, f64>::new([6, 5], [true, false]),
+        CubicalReggeGeometry::uniform(0.5),
+    );
+    assert_convective_vector_adjoint_identity(&m, 227, 1e-13);
 }

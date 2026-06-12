@@ -61,6 +61,20 @@ pub struct DecStencilTables<R> {
     conv_pre: StencilOp<R>,
     conv_wedge: BilinearOp<R>,
     conv_post: StencilOp<R>,
+    /// Static transposes for the M-adjoint of the **vector-slot** map
+    /// `G_ω : x ↦ i_x ω` at fixed 2-form `ω` —
+    /// `G*_ω = M₁⁻¹ Wᵇᵀ Postᵀ M₁` — the skew-symmetrization of the
+    /// dec-ns-stability fix (the continuum antisymmetry lives in the
+    /// vector slot: `ω(x, w) = −ω(w, x)` pointwise, so this slot's skew
+    /// part is full-strength and exactly energy-neutral). Compiled once;
+    /// applied as plain gathers.
+    conv_wedge_bt: BilinearOp<R>,
+    conv_post_t: StencilOp<R>,
+    /// Grade-1 star diagonal and its guarded inverse (the M₁ weights of
+    /// the vector-slot adjoint; a sub-tolerance mass inverts to zero,
+    /// mirroring the generic codifferential's guard).
+    star1: Vec<R>,
+    inv_star1: Vec<R>,
 }
 
 impl<R> DecStencilTables<R>
@@ -118,6 +132,23 @@ where
         let conv_wedge = build_wedge_a_1(complex, D - 2);
         let conv_post = build_transport(complex, D - 1, &s_dm1, global_negative);
 
+        // Static transposes for the vector-slot convective M-adjoint
+        // (the dec-ns-stability skew fix).
+        let conv_wedge_bt = conv_wedge.transpose_b();
+        let conv_post_t = conv_post.transpose();
+        let zero_tol = <R as FromPrimitive>::from_f64(1e-12)
+            .expect("1e-12 is representable in every RealField");
+        let inv_star1: Vec<R> = s1
+            .iter()
+            .map(|&m| {
+                if m.abs() <= zero_tol {
+                    R::zero()
+                } else {
+                    R::one() / m
+                }
+            })
+            .collect();
+
         Ok(Self {
             num_cells,
             d0,
@@ -127,6 +158,10 @@ where
             conv_pre,
             conv_wedge,
             conv_post,
+            conv_wedge_bt,
+            conv_post_t,
+            star1: s1,
+            inv_star1,
         })
     }
 
@@ -203,6 +238,59 @@ where
         self.conv_pre.apply(omega, pre_buf);
         self.conv_wedge.apply(pre_buf, x_flat, wedge_buf);
         self.conv_post.apply(wedge_buf, out);
+        Ok(())
+    }
+
+    /// Scratch lengths for [`Self::apply_convective_vector_adjoint`]:
+    /// `(grade-1, wedge-rows)`.
+    pub fn convective_vector_adjoint_scratch_lens(&self) -> (usize, usize) {
+        (self.conv_post.rows(), self.conv_wedge.rows())
+    }
+
+    /// `out = G*_ω w = M₁⁻¹ Wᵇᵀ(p, Postᵀ(M₁ w))` — the M-adjoint of the
+    /// **vector-slot** convective map `G_ω : x ↦ i_x ω` at fixed 2-form
+    /// `ω`, where `p = Pre·ω` is the forward chain's transport stage
+    /// (pass the `pre_buf` filled by [`Self::apply_convective`]). This is
+    /// the adjoint half of the skew-symmetrized convective term
+    /// `conv'(u) = ½[G_ω u − G*_ω u]` with `ω = du`: exactly
+    /// energy-neutral (`⟨u, conv'⟩_M = 0` identically) and full-strength
+    /// consistent (the continuum antisymmetry `ω(x, w) = −ω(w, x)` lives
+    /// in this slot) — the dec-ns-stability fix.
+    ///
+    /// `scratch_n1`/`scratch_wedge` must have the lengths reported by
+    /// [`Self::convective_vector_adjoint_scratch_lens`].
+    pub fn apply_convective_vector_adjoint(
+        &self,
+        pre_buf: &[R],
+        w: &[R],
+        scratch_n1: &mut [R],
+        scratch_wedge: &mut [R],
+        out: &mut [R],
+    ) -> Result<(), TopologyError> {
+        check_len(pre_buf.len(), self.conv_pre.rows(), "vector-adjoint pre")?;
+        check_len(w.len(), self.conv_post.rows(), "vector-adjoint w")?;
+        check_len(
+            scratch_n1.len(),
+            self.conv_post.rows(),
+            "vector-adjoint n1 scratch",
+        )?;
+        check_len(
+            scratch_wedge.len(),
+            self.conv_wedge.rows(),
+            "vector-adjoint wedge scratch",
+        )?;
+        check_len(out.len(), self.conv_post.rows(), "vector-adjoint output")?;
+
+        // M₁ ⊙ w, the transposed post stage, the b-transposed wedge at
+        // fixed transport image `p`, then M₁⁻¹.
+        for ((s, a), m) in scratch_n1.iter_mut().zip(w.iter()).zip(self.star1.iter()) {
+            *s = *a * *m;
+        }
+        self.conv_post_t.apply(scratch_n1, scratch_wedge);
+        self.conv_wedge_bt.apply(pre_buf, scratch_wedge, out);
+        for (o, inv) in out.iter_mut().zip(self.inv_star1.iter()) {
+            *o *= *inv;
+        }
         Ok(())
     }
 }

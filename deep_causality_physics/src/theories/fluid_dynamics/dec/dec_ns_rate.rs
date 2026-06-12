@@ -18,6 +18,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use core::cell::RefCell;
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 
 use deep_causality_topology::{
@@ -95,6 +96,11 @@ struct RateWorkspace<R> {
     visc_a: Vec<R>,
     visc_b: Vec<R>,
     s0: Vec<R>,
+    /// Adjoint-chain scratch of the skew-symmetrized convective term
+    /// (dec-ns-stability): `G*_ω u` and the two transposed-stage buffers.
+    adj_corr: Vec<R>,
+    adj_s1: Vec<R>,
+    adj_sw: Vec<R>,
 }
 
 impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
@@ -203,6 +209,7 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         let n0 = complex.num_cells(0);
         let n2 = complex.num_cells(2);
         let (pre_len, wedge_len) = tables.convective_scratch_lens();
+        let (adj_s1_len, adj_sw_len) = tables.convective_vector_adjoint_scratch_lens();
         let ws = RateWorkspace {
             omega: vec![R::zero(); n2],
             pre: vec![R::zero(); pre_len],
@@ -211,6 +218,9 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             visc_a: vec![R::zero(); n1],
             visc_b: vec![R::zero(); n1],
             s0: vec![R::zero(); n0],
+            adj_corr: vec![R::zero(); n1],
+            adj_s1: vec![R::zero(); adj_s1_len],
+            adj_sw: vec![R::zero(); adj_sw_len],
         };
         let engine = Some(StencilEngine {
             tables,
@@ -293,6 +303,88 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         Ok((VelocityOneForm::from_raw(projected), potential))
     }
 
+    /// The per-term energy budget of this rate at state `u` (the
+    /// dec-ns-stability diagnostic): M-inner products of the state
+    /// against the convective, viscous, and body-force terms (with the
+    /// rate's signs) and against the projected rate. Evaluates through
+    /// whichever assembly this rate is configured with (fused stencils by
+    /// default, generic via [`Self::with_generic_assembly`]), so the
+    /// budget can discriminate between the two strategies.
+    ///
+    /// # Errors
+    /// `PhysicsError::TopologyError` when the projection solve does not
+    /// converge within the supplied budget.
+    pub fn energy_budget(
+        &self,
+        u: &VelocityOneForm<R>,
+        opts: &HodgeDecomposeOptions<R>,
+    ) -> Result<super::energy_budget::EnergyBudget<R>, PhysicsError> {
+        let u_slice = u.as_tensor().as_slice();
+
+        // Per-term vectors through the configured assembly. `conv` is
+        // `i_u(du♭)` and `lap` is `Δ_dR u♭`; the rate carries them as
+        // `−conv` and `−ν·lap`.
+        let (conv, lap): (Vec<R>, Vec<R>) = if let Some(engine) = &self.engine {
+            let t = &engine.tables;
+            let mut ws = engine.ws.borrow_mut();
+            let ws = &mut *ws;
+            t.apply_d1(u_slice, &mut ws.omega)
+                .expect("workspace lengths fixed at construction");
+            Self::fill_convective_skew_fused(t, ws, u_slice);
+            if let Some(spectral) = &self.spectral {
+                spectral.apply_laplacian_1(u_slice, &mut ws.visc_a);
+                for v in ws.visc_b.iter_mut() {
+                    *v = R::zero();
+                }
+            } else {
+                t.apply_delta2(&ws.omega, &mut ws.visc_a)
+                    .expect("workspace lengths fixed at construction");
+                t.apply_delta1(u_slice, &mut ws.s0)
+                    .expect("workspace lengths fixed at construction");
+                t.apply_d0(&ws.s0, &mut ws.visc_b)
+                    .expect("workspace lengths fixed at construction");
+            }
+            let lap = ws
+                .visc_a
+                .iter()
+                .zip(ws.visc_b.iter())
+                .map(|(a, b)| *a + *b)
+                .collect();
+            (ws.conv.clone(), lap)
+        } else {
+            let conv = self.convective_skew_generic(u);
+            let mut lap = self.manifold.laplacian_of(u_slice, 1).into_vec();
+            lap.resize(self.n1, R::zero());
+            (conv, lap)
+        };
+
+        // ⟨u, v⟩_M through the diagonal star (same form as the kinetic
+        // energy diagnostic).
+        let m_inner = |v: &[R]| -> R {
+            let star_v = self.manifold.hodge_star_of(v, 1);
+            u_slice
+                .iter()
+                .zip(star_v.as_slice().iter())
+                .fold(R::zero(), |acc, (a, b)| acc + *a * *b)
+        };
+
+        let convective = R::zero() - m_inner(&conv);
+        let viscous = R::zero() - self.nu * m_inner(&lap);
+        let body_force = match &self.body_force {
+            Some(g) => m_inner(g.as_slice()),
+            None => R::zero(),
+        };
+        let projected_rate = self.eval_projected(u, opts)?;
+        let projected = m_inner(projected_rate.as_tensor().as_slice());
+
+        Ok(super::energy_budget::EnergyBudget {
+            convective,
+            viscous,
+            body_force,
+            projected,
+        })
+    }
+
     /// The shared projection of a raw RHS evaluation: constrained on
     /// wall-bounded lattices (the M-orthogonal projection onto no-slip ∩
     /// divergence-free), plain on periodic ones (the empty edge set
@@ -305,6 +397,105 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         self.manifold
             .leray_project_constrained_opts(raw.as_tensor(), self.no_slip.edges(), opts)
             .map_err(|e| PhysicsError::TopologyError(format!("Leray projection failed: {e}")))
+    }
+
+    /// The skew-symmetrized convective term through the compiled tables
+    /// (the dec-ns-stability fix): leaves
+    /// `conv' = ½[G_ω u − G*_ω u]` in `ws.conv` (`ω = du` already in
+    /// `ws.omega`; `G_ω` is the vector-slot map `x ↦ i_x ω`).
+    /// `⟨u, conv'⟩_M = 0` identically, and the continuum antisymmetry
+    /// `ω(x, w) = −ω(w, x)` makes the skew part full-strength consistent
+    /// — the uncorrected gather alone injects energy in under-resolved
+    /// turbulent regimes (measured 2026-06-12; see the
+    /// fix-dec-convective-instability change).
+    fn fill_convective_skew_fused(
+        tables: &DecStencilTables<R>,
+        ws: &mut RateWorkspace<R>,
+        u_slice: &[R],
+    ) {
+        // Coverage exemptions on the unwraps: buffer lengths are fixed at
+        // construction from the same tables.
+        tables
+            .apply_convective(&ws.omega, u_slice, &mut ws.pre, &mut ws.wedge, &mut ws.conv)
+            .expect("workspace lengths fixed at construction");
+        tables
+            .apply_convective_vector_adjoint(
+                &ws.pre,
+                u_slice,
+                &mut ws.adj_s1,
+                &mut ws.adj_sw,
+                &mut ws.adj_corr,
+            )
+            .expect("workspace lengths fixed at construction");
+        let half = R::from_f64(0.5)
+            // Coverage exemption: 0.5 lifts into every real field.
+            .expect("0.5 lifts into R");
+        for (c, k) in ws.conv.iter_mut().zip(ws.adj_corr.iter()) {
+            *c = half * (*c - *k);
+        }
+    }
+
+    /// The skew-symmetrized convective term through the generic operators
+    /// — the equivalence oracle. The vector-slot adjoint `G*_ω` is
+    /// assembled column by column through the public interior product
+    /// (quadratic cost; test-scale lattices only, which is the generic
+    /// path's role).
+    fn convective_skew_generic(&self, u: &VelocityOneForm<R>) -> Vec<R> {
+        let u_slice = u.as_tensor().as_slice();
+        let du = self.manifold.exterior_derivative_of(u_slice, 1);
+        let conv_raw = self
+            .manifold
+            .interior_product(u.as_tensor(), &du, 2)
+            // Coverage exemption: grade (2 <= D) and operand lengths are
+            // fixed by construction; interior_product cannot reject them.
+            .expect("interior_product preconditions validated at construction")
+            .into_vec();
+
+        // Star diagonal through the public application on a unit cochain.
+        let m1 = self.manifold.hodge_star_of(&vec![R::one(); self.n1], 1);
+        let m1 = m1.as_slice();
+        let zero_tol = <R as FromPrimitive>::from_f64(1e-12)
+            // Coverage exemption: 1e-12 lifts into every real field.
+            .expect("1e-12 is representable in every RealField");
+
+        // G*_ω u: column j of G_ω is i_{e_j} ω;
+        // (G*u)[j] = ⟨G e_j, M₁u⟩ / M₁[j].
+        let w: Vec<R> = u_slice
+            .iter()
+            .zip(m1.iter())
+            .map(|(a, b)| *a * *b)
+            .collect();
+        let mut adj = vec![R::zero(); self.n1];
+        for (j, slot) in adj.iter_mut().enumerate() {
+            let mut e = vec![R::zero(); self.n1];
+            e[j] = R::one();
+            let e_t = CausalTensor::new(e, vec![self.n1])
+                // Coverage exemption: 1-D tensor allocation cannot fail.
+                .expect("1-D tensor allocation cannot fail");
+            let col = self
+                .manifold
+                .interior_product(&e_t, &du, 2)
+                // Coverage exemption: as above.
+                .expect("interior_product preconditions validated at construction");
+            let dot = col
+                .as_slice()
+                .iter()
+                .zip(w.iter())
+                .fold(R::zero(), |acc, (a, b)| acc + *a * *b);
+            *slot = if m1[j].abs() <= zero_tol {
+                R::zero()
+            } else {
+                dot / m1[j]
+            };
+        }
+        let half = R::from_f64(0.5)
+            // Coverage exemption: 0.5 lifts into every real field.
+            .expect("0.5 lifts into R");
+        conv_raw
+            .iter()
+            .zip(adj.iter())
+            .map(|(c, k)| half * (*c - *k))
+            .collect()
     }
 
     /// Evaluates the **unprojected** assembly `−i_u(du♭) − ν Δ_dR u♭ + g♭`.
@@ -328,14 +519,9 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         // the `_of` variants — no scratch manifold, no data-slab copy.
         let u_slice = u.as_tensor().as_slice();
 
-        // ω = d u♭ (grade-2), then the convective contraction i_u ω.
-        let du = self.manifold.exterior_derivative_of(u_slice, 1);
-        let conv = self
-            .manifold
-            .interior_product(u.as_tensor(), &du, 2)
-            // Coverage exemption: grade (2 <= D) and operand lengths are
-            // fixed by construction; interior_product cannot reject them.
-            .expect("interior_product preconditions validated at construction");
+        // The skew-symmetrized convective term (energy-neutral by
+        // construction; see `convective_skew_generic`).
+        let conv = self.convective_skew_generic(u);
 
         // Δ_dR u♭ (grade-1), with the pinned sign: −ν Δ_dR realizes +ν∇².
         let lap = self.manifold.laplacian_of(u_slice, 1);
@@ -380,8 +566,7 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         // validation cannot fail.
         t.apply_d1(u_slice, &mut ws.omega)
             .expect("workspace lengths fixed at construction");
-        t.apply_convective(&ws.omega, u_slice, &mut ws.pre, &mut ws.wedge, &mut ws.conv)
-            .expect("workspace lengths fixed at construction");
+        Self::fill_convective_skew_fused(t, ws, u_slice);
         if let Some(spectral) = &self.spectral {
             // Δ₁u in one spectral pass; visc_b is unused on this path.
             spectral.apply_laplacian_1(u_slice, &mut ws.visc_a);

@@ -147,14 +147,29 @@ pub fn stage_march<R: DecNsScalar>(
             .map_err(|e| err(&format!("energy: {e}")))
     };
 
+    // The CSV streams per step (dec-ns-stability evidence requirement:
+    // an aborted march keeps its partial curve); the summary in
+    // `print_csv` reads the collected series afterwards.
+    let emit = |s: &Sample<R>| {
+        println!(
+            "{:.4},{:.8},{:.8}",
+            Into::<f64>::into(s.t_star),
+            Into::<f64>::into(s.energy_per_vol),
+            Into::<f64>::into(s.dissipation)
+        );
+    };
+    println!("t_star,kinetic_energy_per_vol,dissipation_rate");
+
     let mut series = Vec::with_capacity(steps + 1);
     let mut e_prev = energy_per_vol(&state)?;
     let mut t_star = R::zero();
-    series.push(Sample {
+    let first = Sample {
         t_star,
         energy_per_vol: e_prev,
         dissipation: R::zero(),
-    });
+    };
+    emit(&first);
+    series.push(first);
 
     for step in 1..=steps {
         let output = solver
@@ -163,12 +178,14 @@ pub fn stage_march<R: DecNsScalar>(
         state = output.into_state();
         let e = energy_per_vol(&state)?;
         t_star += dt_star;
-        series.push(Sample {
+        let sample = Sample {
             t_star,
             energy_per_vol: e,
             // Dissipation in convective units: −dE*/dt*, at R.
             dissipation: (e_prev - e) / dt_star,
-        });
+        };
+        emit(&sample);
+        series.push(sample);
         e_prev = e;
     }
 
