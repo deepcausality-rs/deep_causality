@@ -1,0 +1,114 @@
+deep_causality_fft/src/errors/mod.rs
+  s_4adc6099bc84ff::t_f0d595535e79da 1-6
+deep_causality_fft/tests/types/fft_plan_nd/mod.rs
+  s_4adc6099bc84ff::t_329fdc9866d1cf 1-6
+deep_causality_fft/src/types/fft_plan/stockham.rs
+  s_4adc6099bc84ff::t_f43c9d077f98fb 110
+  s_4adc6099bc84ff::t_c40c6e3a1f45b6 45
+  s_4adc6099bc84ff::t_e45b4986f000bb 1-44,46-109,111-160
+deep_causality_fft/tests/utils/dft_tests.rs
+  s_4adc6099bc84ff::t_7f7295781005a4 21,33
+  s_4adc6099bc84ff::t_dce3251777f82c 1-20,22-32,34-79
+deep_causality_fft/src/lib.rs
+  s_4adc6099bc84ff::t_c573380f09796d 1-54
+deep_causality_fft/tests/types/rfft_plan/rfft_plan_tests.rs
+  s_4adc6099bc84ff::t_54f9b4c6e70e00 1-23,25-99,102-141
+  s_4adc6099bc84ff::t_9033f21ea1f419 24,100-101
+deep_causality_fft/src/traits/mod.rs
+  s_4adc6099bc84ff::t_7f66c1992ff222 1-7
+deep_causality_fft/tests/types/rfft_plan_nd/rfft_plan_nd_tests.rs
+  s_4adc6099bc84ff::t_53c395a8774199 1-130,133-169
+  s_4adc6099bc84ff::t_9033f21ea1f419 131-132
+deep_causality_fft/tests/BUILD.bazel
+  s_4adc6099bc84ff::t_50d3f72b5a3452 1-96
+deep_causality_fft/BUILD.bazel
+  s_4adc6099bc84ff::t_df1602c776a078 1-34
+deep_causality_fft/src/types/fft_plan_nd/axis.rs
+  s_4adc6099bc84ff::t_ac74becf96d3f5 1-31,39-114
+  s_4adc6099bc84ff::t_50c6e9c9cc3480 37
+  s_4adc6099bc84ff::t_388831adb8ebce 32-36,38
+deep_causality_fft/tests/utils/mod.rs
+  s_4adc6099bc84ff::t_1482bbed5f17a7 1-6
+deep_causality_fft/tests/types/fft_plan/fft_plan_tests.rs
+  s_4adc6099bc84ff::t_9033f21ea1f419 139-140
+  s_4adc6099bc84ff::t_9f1c3649cb15d0 1-6,8-128,132-138,141-215
+  s_4adc6099bc84ff::t_7f7295781005a4 129-131
+  s_4adc6099bc84ff::t_3a2aa6cb378243 7
+deep_causality_fft/src/types/fft_plan/mod.rs
+  s_4adc6099bc84ff::t_e1021319847f5c 1-181
+deep_causality_fft/tests/types/mod.rs
+  s_4adc6099bc84ff::t_42e566888db001 1-8
+deep_causality_fft/LICENSE
+  s_4adc6099bc84ff::t_b63605223c4ffe 1-23
+deep_causality_fft/src/traits/maybe_parallel.rs
+  s_4adc6099bc84ff::t_b0d360f8f2785e 1-24
+deep_causality_fft/src/types/fft_plan/bluestein.rs
+  s_4adc6099bc84ff::t_3abce0db960d06 1-86,88-99
+  s_4adc6099bc84ff::t_e5fd52e6e6b0ea 87
+deep_causality_fft/src/utils/twiddles.rs
+  s_4adc6099bc84ff::t_69c3a6eca3bb86 1-23,25-27
+  s_4adc6099bc84ff::t_9033f21ea1f419 24
+deep_causality_fft/src/utils/complex_ops.rs
+  s_4adc6099bc84ff::t_16cfc595bcfa9b 1-9,11-50
+  s_4adc6099bc84ff::t_00826a82a232c9 10
+deep_causality_fft/tests/types/rfft_plan_nd/mod.rs
+  s_4adc6099bc84ff::t_298ba6a5a0f631 1-6
+deep_causality_fft/src/traits/fft_scalar.rs
+  s_4adc6099bc84ff::t_4807e77c94eea2 1-17
+deep_causality_fft/src/utils/mod.rs
+  s_4adc6099bc84ff::t_15b060c457556e 1-8
+openspec/changes/add-fft/tasks.md
+  s_4adc6099bc84ff::t_f8aaac2add4d5e 3-5,9-11,15-22,26-27,31-34
+deep_causality_fft/src/types/fft_plan/small.rs
+  s_4adc6099bc84ff::t_117bb1b012747e 1-138
+deep_causality_fft/src/types/fft_plan_nd/mod.rs
+  s_4adc6099bc84ff::t_2b624a6603f9cf 1-176
+deep_causality_fft/src/types/rfft_plan_nd/mod.rs
+  s_4adc6099bc84ff::t_9033f21ea1f419 130
+  s_4adc6099bc84ff::t_46f9af85686c9c 1-129,131-210
+deep_causality_fft/tests/types/fft_plan_nd/fft_plan_nd_tests.rs
+  s_4adc6099bc84ff::t_c260d782813a78 1-28,31-161
+  s_4adc6099bc84ff::t_9033f21ea1f419 29-30
+deep_causality_fft/src/types/mod.rs
+  s_4adc6099bc84ff::t_a2b4c81bda85b7 1-9
+deep_causality_fft/tests/errors/fft_error_tests.rs
+  s_4adc6099bc84ff::t_692499e9e490a7 1-57
+deep_causality_fft/tests/types/fft_plan/mod.rs
+  s_4adc6099bc84ff::t_40ca39e010331d 1-6
+deep_causality_fft/tests/errors/mod.rs
+  s_4adc6099bc84ff::t_a58b11121a6e17 1-6
+deep_causality_fft/src/utils/dft.rs
+  s_4adc6099bc84ff::t_8f69cd5648ba19 1-52
+deep_causality_fft/src/types/rfft_plan/mod.rs
+  s_4adc6099bc84ff::t_5bba0e55bbab65 1-24,26-55,57-212
+  s_4adc6099bc84ff::t_857e02ddf953ae 25
+  s_4adc6099bc84ff::t_c9c18cc5a585ff 56
+deep_causality_fft/tests/mod.rs
+  s_4adc6099bc84ff::t_a78ab9469ce126 1-7
+deep_causality_fft/Cargo.toml
+  s_4adc6099bc84ff::t_e36912e57fb7fc 1-52
+deep_causality_fft/src/errors/fft_error.rs
+  s_4adc6099bc84ff::t_aac30adb5bd314 1-41
+deep_causality_fft/README.md
+  s_4adc6099bc84ff::t_e089984f685a3a 1-97
+deep_causality_fft/tests/types/rfft_plan/mod.rs
+  s_4adc6099bc84ff::t_88c4a1d635b250 1-6
+deep_causality_fft/benches/fft_benchmark.rs
+  s_4adc6099bc84ff::t_6f3f88816fc6c1 1-112
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "20bd2937d767d3d965a701df260e5ded94eee29b",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
