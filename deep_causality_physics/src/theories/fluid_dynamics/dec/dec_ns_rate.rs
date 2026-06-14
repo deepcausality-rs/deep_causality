@@ -144,12 +144,17 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         let complex = manifold.complex();
         let n1 = complex.num_cells(1);
 
-        // Wall-bounded acceptance (the wall-bounded-ns capability): every
-        // wall axis must carry at least two vertex layers (an extent-1 wall
-        // axis has no 2-cells and no interior to march), and the metric's
-        // grade-1 star must vend strictly positive, finite masses — the
-        // operational form of "carries the boundary-corrected star" that
-        // the constrained projection's masked CG normal form requires.
+        // The constrained-edge set: wall-tangential edges plus, when the geometry carries a
+        // cut-cell registry, the immersed body's no-slip / no-penetration edges (B4). Built
+        // here (ahead of the operator setup) because the star-positivity acceptance below
+        // exempts constrained edges — an edge buried in an immersed solid legitimately has
+        // zero dual mass and is removed from the dynamics by the constraint.
+        let cut_registry = manifold.metric().and_then(|m| m.cut_registry());
+        let no_slip = super::dec_ns_solver::no_slip::NoSlipConstraint::new(complex, cut_registry);
+
+        // Wall-bounded acceptance (the wall-bounded-ns capability): every wall axis must carry
+        // at least two vertex layers (an extent-1 wall axis has no 2-cells and no interior to
+        // march).
         let any_wall = complex.periodic().iter().any(|&p| !p);
         if any_wall {
             for (axis, (&periodic, &extent)) in complex
@@ -165,7 +170,20 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
                     )));
                 }
             }
+        }
+
+        // The grade-1 star must vend strictly positive, finite masses on every edge that is
+        // not buried in an immersed solid — the operational form of "carries the
+        // boundary-corrected star" the constrained projection's masked CG normal form
+        // requires. Wall-tangential edges keep their positivity contract (a degenerate metric
+        // is still rejected); only **immersed-solid** edges are exempt, because a dry
+        // interior-body edge legitimately has zero dual mass and the masked CG drops its row.
+        // Runs whenever there is a wall or an immersed body.
+        if any_wall || cut_registry.is_some() {
             use deep_causality_topology::HasHodgeStar;
+            let immersed: alloc::vec::Vec<usize> = cut_registry
+                .map(|r| r.solid_incident_edges(complex))
+                .unwrap_or_default();
             let metric = manifold
                 .metric()
                 // Coverage exemption: metric presence checked above.
@@ -174,6 +192,11 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
                 .hodge_star_matrix(complex, 1)
                 .map_err(|e| PhysicsError::TopologyError(format!("hodge star (grade 1): {e}")))?;
             for i in 0..n1 {
+                // Immersed-solid edges (sorted) are exempt — zero dual mass is expected and
+                // their masked-CG rows are dropped. Wall edges remain checked.
+                if immersed.binary_search(&i).is_ok() {
+                    continue;
+                }
                 let mut diag = R::zero();
                 for e in star.row_indices()[i]..star.row_indices()[i + 1] {
                     if star.col_indices()[e] == i {
@@ -182,9 +205,8 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
                 }
                 if !diag.is_finite() || diag <= R::zero() {
                     return Err(PhysicsError::TopologyError(format!(
-                        "DecNsRate: wall-bounded lattices require the boundary-corrected \
-                         Hodge star with strictly positive edge masses; edge {i} has \
-                         mass {diag}"
+                        "DecNsRate: free edges require the boundary-corrected Hodge star with \
+                         strictly positive masses; edge {i} has mass {diag}"
                     )));
                 }
             }
@@ -226,11 +248,6 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             tables,
             ws: RefCell::new(ws),
         });
-
-        // Include the immersed-body no-slip set (B4) when the geometry carries a cut-cell
-        // registry; the wall-tangential set is unchanged on uncut geometries.
-        let cut_registry = manifold.metric().and_then(|m| m.cut_registry());
-        let no_slip = super::dec_ns_solver::no_slip::NoSlipConstraint::new(complex, cut_registry);
 
         Ok(Self {
             manifold,

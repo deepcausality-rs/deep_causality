@@ -123,14 +123,22 @@ build` / `make test` are run by the user on review, not by the agent.
 
 ## D. Validation — 3D cylinder Re 100–3900 (cut-cell-validation)
 
-- [ ] D1 `examples/avionics_examples/dec_cylinder_wake`: cube ⋂ cylinder geometry,
-      immersed no-slip, stabilized march; streams CSV per step (failed runs keep
-      evidence, per the dec-ns-stability pattern).
-- [ ] D2 Re 100: steady/periodic shedding onset; Strouhal number vs. Williamson lineage.
-- [ ] D3 Re 300–3900: drag coefficient and Strouhal vs. Lehmkuhl et al. (2013); document
-      the agreement and the resolution at which it holds.
-- [ ] D4 Cheap CI regression rungs (no heavy march): geometric exactness, the
-      axis-aligned-cut consistency gate, and the small-cell stability smoke test.
-- [ ] D5 Group gate: format, clippy, full tests both feature configs; update the example
-      README with the validation numbers; prepare Group D commit message and ask the
-      user to commit. Stage 4 exit: cylinder agreement recorded.
+- [x] D1 `examples/avionics_examples/dec_cylinder_wake`: the cut-cell cylinder **harness** —
+      `from_primitive` disk geometry (A4) + cut star (B5) + immersed no-slip (B4), marched in a
+      periodic channel driven by a body force, streaming CSV per step (`step, t, KE, max_speed,
+      div_residual, v_probe`) and a shedding-Strouhal estimate. Drives the flow with a body
+      force because the solver has **no inflow/outflow BC yet** (that is Group C); includes a
+      documented volume-fraction small-cell merge guard (placeholder for B1–B3).
+- [~] D2/D3 Re-ladder vs Williamson / Lehmkuhl et al. (2013): **deferred** — the quantitative
+      isolated-cylinder Strouhal + drag comparison needs the inflow/outflow surface (Group C)
+      and the small-cell stabilizer selection (B1–B3); the harness prints a confined/periodic
+      Strouhal estimate as a qualitative shedding check only.
+- [x] D4 Cheap CI regression rungs (no heavy march): geometric exactness — disk cut volumes
+      sum to the exact `domain − π r²` (`cut_cell::consistency_tests`) + per-primitive f64 /
+      Float106 exactness (`cut_cell::intersection_tests`); axis-aligned-cut consistency — empty
+      cut star byte-equal to Stage-3 + empty-registry march bit-identical
+      (`cut_cell::cut_star_tests`, physics `cut_cell_wiring_tests`). The small-cell stability
+      smoke test lands with the B1–B3 stabilizer.
+- [~] D5 Group gate: format, clippy, both feature configs green for the shipped rungs; example
+      README written. Final validation numbers (D2/D3) and the Stage-4 exit record land after
+      the stabilizer + inflow/outflow surface.

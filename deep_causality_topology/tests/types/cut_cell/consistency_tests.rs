@@ -165,6 +165,45 @@ fn from_primitive_is_sparse() {
 }
 
 #[test]
+fn cylinder_cut_geometry_recovers_the_exact_disk_area() {
+    // D4 cheap CI regression: the clipped fluid volumes of a disk cut out of a uniform grid
+    // sum to the exact (domain − π r²) area, with no heavy march. This pins the cut-cylinder
+    // geometry the wake harness builds.
+    let n = 16;
+    let lattice = LatticeComplex::<2, f64>::square_torus(n);
+    let geom = CubicalReggeGeometry::<2, f64>::uniform(1.0);
+    let r = 3.5;
+    let disk = Primitive::<2, f64>::ball([8.0, 8.0], r);
+    let reg = CutCellRegistry::from_primitive(&lattice, &geom, &disk).unwrap();
+
+    // Total fluid area = Σ clipped cell volume over every top cell.
+    let fluid: f64 = lattice
+        .cells(2)
+        .map(|cell| reg.clipped_cell_volume(&geom, &lattice, &cell))
+        .sum();
+    let expected = (n * n) as f64 - std::f64::consts::PI * r * r;
+    assert!(
+        (fluid - expected).abs() < 1e-9,
+        "cut disk fluid area {fluid} != domain − π r² = {expected}"
+    );
+
+    // The body has a solid interior (fully-dry cells) and a cut ring.
+    let solids = reg
+        .iter()
+        .filter(|(_, c)| c.class() == CellClass::Solid)
+        .count();
+    let cuts = reg
+        .iter()
+        .filter(|(_, c)| c.class() == CellClass::Cut)
+        .count();
+    assert!(
+        solids > 0,
+        "a disk of radius {r} must have solid interior cells"
+    );
+    assert!(cuts > 0, "a disk must have a ring of partially-cut cells");
+}
+
+#[test]
 fn cut_cell_composes_with_graded_edge_lengths() {
     // Geometric grading along axis 0; a plane perpendicular to axis 1 cuts every column at a
     // graded x-width. Each recorded cut cell's FULL volume must be the closed-form measure
