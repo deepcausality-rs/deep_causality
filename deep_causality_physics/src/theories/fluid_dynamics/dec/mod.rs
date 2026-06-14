@@ -65,6 +65,7 @@ pub(crate) mod diagnostics;
 pub(crate) mod energy_budget;
 pub(crate) mod spectral_diffusion;
 pub(crate) mod step_output;
+pub(crate) mod surface_force;
 // The uncertain-inflow zone (Group C) consumes `deep_causality_uncertain` and its global sample
 // cache, which is std-only.
 #[cfg(feature = "std")]
@@ -79,6 +80,7 @@ pub use diagnostics::{
 };
 pub use energy_budget::EnergyBudget;
 pub use step_output::{RunOutput, StepOutput};
+pub use surface_force::{force_coefficient, fragment_area_vector, pressure_surface_force};
 #[cfg(feature = "std")]
 pub use uncertain_inflow::{
     DropoutVerbosity, InflowContext, InflowMarchState, InflowProcess, UncertainBoundarySource,

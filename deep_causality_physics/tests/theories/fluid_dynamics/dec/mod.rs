@@ -31,6 +31,8 @@ pub mod spectral_diffusion_tests;
 #[cfg(test)]
 pub mod step_output_tests;
 #[cfg(test)]
+pub mod surface_force_tests;
+#[cfg(test)]
 pub mod taylor_green_2d_tests;
 #[cfg(test)]
 pub mod taylor_green_3d_tests;
