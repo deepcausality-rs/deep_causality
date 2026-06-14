@@ -6,6 +6,8 @@
 #[cfg(test)]
 pub mod cavity_tests;
 #[cfg(test)]
+pub mod cut_cell_wiring_tests;
+#[cfg(test)]
 pub mod dec_ns_rate_tests;
 #[cfg(test)]
 pub mod dec_ns_solver;
