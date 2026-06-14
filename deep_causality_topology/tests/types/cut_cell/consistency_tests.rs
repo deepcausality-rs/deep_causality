@@ -99,6 +99,52 @@ fn plane_cut_coincident_with_a_cell_boundary_reproduces_the_wall_clip() {
     assert!((reg.dual_fluid_fraction(&lattice, &in_fluid) - 1.0).abs() < TOL);
 }
 
+// -- B4: immersed no-slip edge set -----------------------------------------------------
+
+#[test]
+fn solid_incident_edges_are_the_cube_boundary_edges() {
+    // One solid cell in a periodic 4×4 lattice: its no-slip set is exactly the four edges of
+    // that cube (B4 staircase immersed no-slip / no-penetration).
+    let lattice = LatticeComplex::<2, f64>::square_torus(4);
+    let mut reg = CutCellRegistry::<2, f64>::new();
+    let solid = deep_causality_topology::LatticeCell::<2>::new([1, 1], 0b11);
+    let idx = lattice.cells(2).position(|c| c == solid).unwrap();
+    reg.insert(idx, deep_causality_topology::CutCell::<2, f64>::solid(1.0));
+
+    let edge_idx = |axis: usize, pos: [usize; 2]| {
+        lattice
+            .cells(1)
+            .position(|c| c.orientation().trailing_zeros() as usize == axis && *c.position() == pos)
+            .unwrap()
+    };
+    // Cube [1,1] boundary: x-edges at [1,1] & [1,2]; y-edges at [1,1] & [2,1].
+    let mut expected = [
+        edge_idx(0, [1, 1]),
+        edge_idx(0, [1, 2]),
+        edge_idx(1, [1, 1]),
+        edge_idx(1, [2, 1]),
+    ];
+    expected.sort_unstable();
+
+    let got = reg.solid_incident_edges(&lattice);
+    assert_eq!(
+        got,
+        expected.to_vec(),
+        "solid no-slip set must be the cube's 4 edges"
+    );
+
+    // A distant edge is not constrained.
+    let far = edge_idx(0, [3, 3]);
+    assert!(!got.contains(&far));
+}
+
+#[test]
+fn empty_registry_has_no_immersed_edges() {
+    let lattice = LatticeComplex::<3, f64>::cubic_torus(4);
+    let reg = CutCellRegistry::<3, f64>::new();
+    assert!(reg.solid_incident_edges(&lattice).is_empty());
+}
+
 // -- A7: registry sparsity + graded composition ----------------------------------------
 
 #[test]

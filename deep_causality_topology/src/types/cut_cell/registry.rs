@@ -113,6 +113,81 @@ impl<const D: usize, R: RealField> CutCellRegistry<D, R> {
         }
     }
 
+    /// The edge indices (in `iter_cells(1)` order) that an **immersed no-slip / no-penetration**
+    /// wall constrains to zero: every edge incident to at least one `Solid` top cell (B4).
+    ///
+    /// This pins the body interior (no flow inside the solid) and the fluid↔solid interface
+    /// (zero tangential velocity = no-slip, and zero normal flux = no-penetration), the
+    /// staircase immersed boundary. `Cut` cells are left carrying flow — their partial blockage
+    /// is already represented by the cut Hodge star ([`Self::dual_fluid_fraction`]); resolving
+    /// no-slip on the sub-cell cut face itself (aperture-weighted) is a later refinement. With
+    /// the immersed surface modelled as solid cells coincident with a wall, this reproduces the
+    /// Stage-3 wall-tangential set, so it composes with the existing no-slip machinery. The
+    /// result is sorted and deduplicated.
+    pub fn solid_incident_edges(&self, complex: &LatticeComplex<D, R>) -> Vec<usize> {
+        let shape = complex.shape();
+        let periodic = complex.periodic();
+        let mut out: Vec<usize> = Vec::new();
+
+        for (idx, cell) in complex.iter_cells(1).enumerate() {
+            let a = cell.orientation().trailing_zeros() as usize;
+            let p = *cell.position();
+            // Perpendicular axes select the 2^{D-1} top cubes sharing this edge; the edge's own
+            // axis fixes base[a] = p[a] (the cube spans p[a]..p[a]+1 along a).
+            let perp: Vec<usize> = (0..D).filter(|&c| c != a).collect();
+            let num_masks = 1u32 << perp.len();
+
+            let mut pinned = false;
+            'masks: for mask_bits in 0..num_masks {
+                let mut base = p;
+                for (bit_idx, &c) in perp.iter().enumerate() {
+                    let dim_len = shape[c];
+                    if dim_len == 0 {
+                        continue 'masks;
+                    }
+                    let m_c = (mask_bits >> bit_idx) & 1;
+                    base[c] = if m_c == 0 {
+                        // Cube on the + side of the edge along axis c.
+                        if periodic[c] {
+                            p[c] % dim_len
+                        } else if p[c] >= dim_len - 1 {
+                            continue 'masks;
+                        } else {
+                            p[c]
+                        }
+                    } else if p[c] == 0 {
+                        // Cube on the − side.
+                        if periodic[c] {
+                            dim_len - 1
+                        } else {
+                            continue 'masks;
+                        }
+                    } else {
+                        p[c] - 1
+                    };
+                }
+                if self.top_cell_is_solid(complex, base) {
+                    pinned = true;
+                    break;
+                }
+            }
+            if pinned {
+                out.push(idx);
+            }
+        }
+        out
+    }
+
+    /// `true` iff the top cell with base `top_base` is recorded `Solid` in this registry.
+    fn top_cell_is_solid(&self, complex: &LatticeComplex<D, R>, top_base: [usize; D]) -> bool {
+        let all_axes_mask: u32 = if D >= 32 { u32::MAX } else { (1u32 << D) - 1 };
+        let cell = LatticeCell::new(top_base, all_axes_mask);
+        complex
+            .cell_index(&cell)
+            .and_then(|idx| self.cells.get(&idx))
+            .is_some_and(|cut| cut.class().is_solid())
+    }
+
     /// Cut-aware dual clip factor for a `k`-cell (A3, A6): the fraction of the cell's dual
     /// `(D−k)`-cell that lies in the fluid, in `[0, 1]`.
     ///
