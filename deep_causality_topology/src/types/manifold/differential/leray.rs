@@ -164,62 +164,110 @@ where
         constrained_edges: &[usize],
         opts: &HodgeDecomposeOptions<R>,
     ) -> Result<LerayProjection<R>, TopologyError> {
-        if constrained_edges.is_empty() {
+        // The constrained projection is the closed-domain special case of the open-boundary
+        // projection: constrained edges fixed to zero, no prescribed (inflow) edges, no outflow
+        // reference. Because the fixed edges carry value zero, the full-mass divergence RHS agrees
+        // with the masked-mass one, so this is bit-identical to the former standalone path.
+        self.leray_project_open_opts(field, constrained_edges, &[], &[], opts)
+    }
+
+    /// The **open-boundary** Leray projection: the constrained projection generalized to admit a
+    /// prescribed inflow (nonzero net boundary flux) under mixed boundary conditions.
+    ///
+    /// Three roles partition the edges/vertices:
+    /// * `zeroed_edges` — fixed to zero (no-slip / wall-tangential); excluded from the free solve.
+    /// * `prescribed_edges` — fixed to their current `field` value (a Dirichlet inflow); excluded
+    ///   from the free solve, but their flux **is counted** in the divergence right-hand side.
+    /// * `reference_vertices` — the outflow pressure reference (`φ = 0`): it fixes the Poisson
+    ///   nullspace and lets the complementary (free) outflow flux adjust so the net flux leaves
+    ///   there and mass is conserved (`∮ u·n = 0` over the divergence-free interior).
+    ///
+    /// Masking an inflow edge disconnects its outer (ghostless) inlet vertex from the interior in
+    /// the free-edge graph; the divergence is therefore enforced only on the component reachable
+    /// from the reference (a flood fill over the free edges). The disconnected inlet ring carries
+    /// the prescribed velocity but its divergence is not constrained — exactly the open-boundary
+    /// condition. A prescribed inflow with **no** reference is rejected (the net flux has nowhere
+    /// to leave under the all-Neumann gauge).
+    ///
+    /// With all three empty this is the plain projection; with only `zeroed_edges` it is the
+    /// constrained projection, bit-identically.
+    ///
+    /// # Errors
+    /// * `TopologyError::DimensionMismatch` on a field-length mismatch.
+    /// * `TopologyError::InvalidInput` for a missing metric, an out-of-range edge/vertex, a
+    ///   fully-constrained domain, or prescribed (inflow) edges without a reference.
+    /// * `TopologyError::HodgeDecompositionFailed` when the CG solve does not converge.
+    pub fn leray_project_open_opts(
+        &self,
+        field: &CausalTensor<R>,
+        zeroed_edges: &[usize],
+        prescribed_edges: &[usize],
+        reference_vertices: &[usize],
+        opts: &HodgeDecomposeOptions<R>,
+    ) -> Result<LerayProjection<R>, TopologyError> {
+        if zeroed_edges.is_empty() && prescribed_edges.is_empty() && reference_vertices.is_empty() {
             return self.leray_project_opts(field, opts);
         }
         let n1 = self.complex.num_cells(1);
         if field.len() != n1 {
             return Err(TopologyError::DimensionMismatch(format!(
-                "leray_project_constrained: expected {} grade-1 coefficients, got {}",
+                "leray_project_open: expected {} grade-1 coefficients, got {}",
                 n1,
                 field.len()
             )));
         }
         let metric = self.metric.as_ref().ok_or_else(|| {
             TopologyError::InvalidInput(
-                "leray_project_constrained requires a metric; construct the manifold \
+                "leray_project_open requires a metric; construct the manifold \
                  with a metric attached"
                     .to_string(),
             )
         })?;
+        if !prescribed_edges.is_empty() && reference_vertices.is_empty() {
+            return Err(TopologyError::InvalidInput(
+                "leray_project_open: a prescribed inflow requires a reference (outflow) face to \
+                 balance the net flux"
+                    .to_string(),
+            ));
+        }
         let tolerance = resolve_cg_tolerance(opts.tolerance)?;
         let max_iter = opts.max_iterations.unwrap_or(1000);
         let n0 = self.complex.num_cells(0);
 
-        // Masked grade-1 masses: constrained edges drop out of the operator.
+        // Full grade-1 masses (for the divergence RHS, so prescribed flux counts) and the free
+        // masses (the operator excludes every fixed edge — zeroed ∪ prescribed).
         let star1 = metric
             .hodge_star_matrix(self.complex(), 1)
             .map_err(|e| TopologyError::InvalidInput(format!("hodge star (grade 1): {e}")))?;
-        let mut mass1 = super::stencil::build::star_diag(star1.as_ref(), n1);
-        for &e in constrained_edges {
+        let mass_full = super::stencil::build::star_diag(star1.as_ref(), n1);
+        let mut mass_free = mass_full.clone();
+        for &e in zeroed_edges.iter().chain(prescribed_edges.iter()) {
             if e >= n1 {
                 return Err(TopologyError::InvalidInput(format!(
-                    "leray_project_constrained: edge index {e} out of range ({n1} edges)"
+                    "leray_project_open: edge index {e} out of range ({n1} edges)"
                 )));
             }
-            mass1[e] = R::zero();
+            mass_free[e] = R::zero();
         }
 
-        // v = P_S(field): the constraint applied to the input.
+        // v: zero the zeroed edges; keep the prescribed (inflow) edges at their field value.
         let mut v: Vec<R> = field.as_slice().to_vec();
-        for &e in constrained_edges {
+        for &e in zeroed_edges {
             v[e] = R::zero();
         }
 
-        // The masked weighted operator A = ∂₁ (M₁|_F ⊙ d₀ ·) and its
-        // Jacobi diagonal diag[i] = Σ_{e∋i} M₁|_F[e] (incidence signs are
-        // ±1), both off the boundary CSR.
+        // Weighted divergence ∂₁(mass ⊙ ·) off the boundary CSR (mass selects free vs full).
         let boundary = self.complex.boundary_matrix(1);
         let ptr = boundary.row_indices().to_vec();
         let cols = boundary.col_indices().to_vec();
         let vals = boundary.values().to_vec();
         drop(boundary);
-        let weighted_div = |w: &[R]| -> Vec<R> {
+        let div_with = |mass: &[R], w: &[R]| -> Vec<R> {
             let mut out = vec![R::zero(); n0];
             for (i, o) in out.iter_mut().enumerate() {
                 for e in ptr[i]..ptr[i + 1] {
                     let c = cols[e];
-                    let term = mass1[c] * w[c];
+                    let term = mass[c] * w[c];
                     if vals[e] >= 0 {
                         *o += term;
                     } else {
@@ -229,61 +277,141 @@ where
             }
             out
         };
+        // Jacobi diagonal from the free masses.
         let mut diag = vec![R::zero(); n0];
         for (i, d) in diag.iter_mut().enumerate() {
             for e in ptr[i]..ptr[i + 1] {
-                *d += mass1[cols[e]];
+                *d += mass_free[cols[e]];
             }
         }
 
-        // RHS = ∂ M₁|_F v, with null rows (every incident edge masked)
-        // zeroed and the consistency gauge taken over the connected block.
-        let mut wrhs = weighted_div(&v);
-        let mut block = 0usize;
-        let mut block_sum = R::zero();
-        for (r, d) in wrhs.iter_mut().zip(diag.iter()) {
-            if *d == R::zero() {
-                *r = R::zero();
-            } else {
-                block += 1;
-                block_sum += *r;
+        // Reference mask and the free-edge connectivity. With a reference, only the component
+        // reachable from it through free edges enforces the divergence; the disconnected inlet
+        // ring (its sole interior link is the masked inflow edge) is left unconstrained.
+        let mut is_ref = vec![false; n0];
+        for &r in reference_vertices {
+            if r >= n0 {
+                return Err(TopologyError::InvalidInput(format!(
+                    "leray_project_open: reference vertex {r} out of range ({n0} vertices)"
+                )));
             }
+            is_ref[r] = true;
         }
-        if block == 0 {
-            return Err(TopologyError::InvalidInput(
-                "leray_project_constrained: every edge is constrained".to_string(),
-            ));
-        }
-        let block_mean = block_sum / <R as FromPrimitive>::from_usize(block).expect("count lifts");
-        for (r, d) in wrhs.iter_mut().zip(diag.iter()) {
-            if *d != R::zero() {
-                *r -= block_mean;
+        let mut live = vec![reference_vertices.is_empty(); n0];
+        if !reference_vertices.is_empty() {
+            // Vertex adjacency over free edges, inverted from the vertex→edge CSR.
+            let mut incident: Vec<Vec<usize>> = vec![Vec::new(); n1];
+            for (i, inc) in ptr.windows(2).enumerate() {
+                for e in inc[0]..inc[1] {
+                    incident[cols[e]].push(i);
+                }
+            }
+            let mut adj: Vec<Vec<usize>> = vec![Vec::new(); n0];
+            for (e, ends) in incident.iter().enumerate() {
+                if mass_free[e] > R::zero() && ends.len() == 2 {
+                    adj[ends[0]].push(ends[1]);
+                    adj[ends[1]].push(ends[0]);
+                }
+            }
+            let mut stack: Vec<usize> = reference_vertices.to_vec();
+            for &r in reference_vertices {
+                live[r] = true;
+            }
+            while let Some(u) = stack.pop() {
+                for &w in &adj[u] {
+                    if !live[w] {
+                        live[w] = true;
+                        stack.push(w);
+                    }
+                }
             }
         }
 
+        // RHS = ∂ M₁ v (full masses ⇒ prescribed flux counts).
+        let mut wrhs = div_with(&mass_full, &v);
+        if reference_vertices.is_empty() {
+            // Closed/constrained gauge: zero null rows, subtract the mean over the connected block.
+            let mut block = 0usize;
+            let mut block_sum = R::zero();
+            for (r, d) in wrhs.iter_mut().zip(diag.iter()) {
+                if *d == R::zero() {
+                    *r = R::zero();
+                } else {
+                    block += 1;
+                    block_sum += *r;
+                }
+            }
+            if block == 0 {
+                return Err(TopologyError::InvalidInput(
+                    "leray_project_open: every edge is constrained".to_string(),
+                ));
+            }
+            let block_mean =
+                block_sum / <R as FromPrimitive>::from_usize(block).expect("count lifts");
+            for (r, d) in wrhs.iter_mut().zip(diag.iter()) {
+                if *d != R::zero() {
+                    *r -= block_mean;
+                }
+            }
+        } else {
+            // Open gauge: enforce divergence only on the live (reference-reachable) component; the
+            // reference itself is pinned (φ = 0), so no mean subtraction.
+            for (i, (r, d)) in wrhs.iter_mut().zip(diag.iter()).enumerate() {
+                if !live[i] || is_ref[i] || *d == R::zero() {
+                    *r = R::zero();
+                }
+            }
+        }
+
+        // A φ = ∂₁(M₁|_F ⊙ d₀ φ). With a reference, the pinned and non-live DOFs are symmetrically
+        // eliminated (input and output rows zeroed ⇒ they stay at φ = 0 and never couple in).
+        let eliminate = !reference_vertices.is_empty();
         let apply = |phi: &[R]| -> Vec<R> {
-            let d_phi = self.exterior_derivative_of(phi, 0);
+            let mut p = phi.to_vec();
+            if eliminate {
+                for (i, pv) in p.iter_mut().enumerate() {
+                    if is_ref[i] || !live[i] {
+                        *pv = R::zero();
+                    }
+                }
+            }
+            let d_phi = self.exterior_derivative_of(&p, 0);
             let mut grad = d_phi.into_vec();
             pad_or_truncate(&mut grad, n1);
-            weighted_div(&grad)
+            let mut out = div_with(&mass_free, &grad);
+            if eliminate {
+                for (i, o) in out.iter_mut().enumerate() {
+                    if is_ref[i] || !live[i] {
+                        *o = R::zero();
+                    }
+                }
+            }
+            out
         };
         let mut phi = deep_causality_sparse::cg_solve_preconditioned(
             apply, &diag, &wrhs, tolerance, max_iter,
         )
         .map_err(|f| {
             TopologyError::HodgeDecompositionFailed(format!(
-                "constrained projection solve did not converge in {} iterations \
-                 (final residual {})",
+                "open projection solve did not converge in {} iterations (final residual {})",
                 f.iterations, f.residual
             ))
         })?;
-        subtract_mean_in_place(&mut phi);
+        if reference_vertices.is_empty() {
+            subtract_mean_in_place(&mut phi);
+        } else {
+            for (i, pv) in phi.iter_mut().enumerate() {
+                if is_ref[i] || !live[i] {
+                    *pv = R::zero();
+                }
+            }
+        }
 
-        // u = v − P_F dφ: gradient correction masked to the free edges.
+        // u = v − P_F dφ: gradient correction masked off every fixed edge.
         let d_phi = self.exterior_derivative_of(&phi, 0);
         let mut grad = d_phi.into_vec();
         pad_or_truncate(&mut grad, n1);
-        for &e in constrained_edges {
+        for &e in zeroed_edges.iter().chain(prescribed_edges.iter()) {
             grad[e] = R::zero();
         }
         let projected: Vec<R> = v.iter().zip(grad.iter()).map(|(w, g)| *w - *g).collect();

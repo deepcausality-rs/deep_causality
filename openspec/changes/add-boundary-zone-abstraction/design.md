@@ -106,10 +106,19 @@ the cut-star metric, and the CG machinery are unchanged. **When no zone reports 
 flux role, the operator is bit-identical to the current projection** (the reference/source code
 paths are skipped) — the second numerical-equivalence gate.
 
-Compatibility/well-posedness: with ≥1 `Source` and exactly one `Reference`, the discrete system is
+Compatibility/well-posedness: with ≥1 `Source` and a `Reference`, the discrete system is
 non-singular and globally mass-conservative by construction (the reference face's flux equals the
 negative sum of all sources). With sources but no reference → an explicit error (an unbalanced
 closed domain). This is the standard fractional-step open-boundary treatment recast in DEC.
+
+**Implementation finding (the inlet disconnection).** Masking an inflow edge from the operator
+disconnects its *ghostless* inlet vertex from the interior in the free-edge graph (its only
+interior link is the masked edge), and the injected net flux cannot leave under an all-Neumann
+gauge. So the divergence is enforced only on the component reachable from the reference (a flood
+fill over the free edges); the disconnected inlet ring carries the prescribed velocity with its
+divergence left unconstrained — which is exactly the open-boundary condition. This is realized in
+`leray_project_open_opts` and is why a prescribed inflow genuinely requires a reference (confirming
+the original decision over a brief "no reference needed" detour).
 
 ### D3: Outflow is a boundary time-update, not a projection constraint (L5)
 
