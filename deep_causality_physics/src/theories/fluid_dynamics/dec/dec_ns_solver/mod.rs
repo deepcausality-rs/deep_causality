@@ -15,7 +15,7 @@ mod seed;
 mod step;
 
 use alloc::format;
-use deep_causality_topology::{HodgeDecomposeOptions, LatticeComplex, Manifold};
+use deep_causality_topology::{ChainComplex, HodgeDecomposeOptions, LatticeComplex, Manifold};
 
 use crate::error::physics_error::PhysicsError;
 use crate::quantities::fluid_dynamics::body_force_one_form::BodyForceOneForm;
@@ -104,6 +104,51 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsSolver<'m, D, R> {
             dx_min,
             lift: alloc::vec::Vec::new(),
         })
+    }
+
+    /// Builds a solver from a **composable boundary-zone set** (CFD Stage-4
+    /// `add-boundary-zone-abstraction`) — the canonical surface for the explicit boundary
+    /// actuators. The static zone composition is folded into the solver at construction: every
+    /// zone's [`BoundaryZone::collect_rate_source`] forms the body force, and every zone's
+    /// [`BoundaryZone::collect_lift`] (at step 0) forms the prescribed lift. Structural boundaries
+    /// — wall no-slip and immersed cut bodies — are still derived automatically from the lattice
+    /// and metric. A `()` zone set is the plain closed-domain solver.
+    ///
+    /// This is equivalent to (and bit-identical with) building the solver via [`Self::new`] with
+    /// the composed body force and applying the composed moving-wall lift.
+    ///
+    /// # Errors
+    /// As [`Self::new`], plus any failure validating the composed body force.
+    pub fn with_zones<Z>(
+        manifold: &'m Manifold<LatticeComplex<D, R>, R>,
+        nu: R,
+        dt: R,
+        zones: Z,
+    ) -> Result<Self, PhysicsError>
+    where
+        Z: crate::theories::fluid_dynamics::dec::boundary::BoundaryZone<D, R>,
+    {
+        let n1 = manifold.complex().num_cells(1);
+
+        // Fold the rate source (body force) over the zone set.
+        let mut source = alloc::vec![R::zero(); n1];
+        zones.collect_rate_source(manifold, &mut source);
+        let body_force = if source.iter().any(|v| *v != R::zero()) {
+            let tensor = deep_causality_tensor::CausalTensor::new(source, alloc::vec![n1])
+                .expect("1-D tensor allocation cannot fail");
+            Some(BodyForceOneForm::new(tensor, manifold)?)
+        } else {
+            None
+        };
+
+        let mut solver = Self::new(manifold, nu, dt, body_force.as_ref())?;
+
+        // Fold the prescribed lift (static zones evaluate at step 0).
+        let mut lift = alloc::vec::Vec::new();
+        zones.collect_lift(manifold, 0, &mut lift);
+        solver.lift = lift;
+
+        Ok(solver)
     }
 
     /// Prescribes a moving wall: the wall perpendicular to `wall_axis` (the

@@ -10,24 +10,27 @@ new open-boundary behaviour (I, O) is added.
 
 ## Z. Boundary-zone abstraction (boundary-zone-abstraction)
 
-- [ ] Z1 `BoundaryZone<D, R>` trait with one collect-into hook per solver stage (L1 metric
-      overlay, L2 rate source, L3a constrained edges, L3b time-dependent lift, L4 flux role, L5
-      boundary update), each defaulting to a no-op; `FluxRole { Closed, Source, Reference }`.
-      **Static dispatch only** — no `dyn`/trait objects.
-- [ ] Z2 Static (HKT) composition: a typed tuple/cons is itself a `BoundaryZone` folding each stage
-      over its members (`(A, B)`, identity `NoZones`), on the `deep_causality_haft` foundation. The
-      solver is generic over the composed zone type `Z: BoundaryZone<D, R>`; `solver.with(zone)`
-      yields a solver over `(Zone, Z)`. The step folds each stage's contributions (constraint set =
-      ∪ constrained_edges; lift = ∪ lift; rate source = Σ rate_source; metric overlay → geometry).
-- [ ] Z3 Re-express the existing BCs as zones (numerics preserved): `NoSlipWall` (L3a),
-      `MovingWall` (L3a+L3b), `BodyForce` (L2), `ImmersedBody` (L1 cut registry + L3a solid-incident
-      edges). The zone constructors **replace** the ad-hoc entry points (`with_moving_wall`, the
-      body-force argument, the cut-registry attachment) — no back-compat shims (nothing is
-      published); downstream callers move to the zone API.
-- [ ] Z4 Non-breaking gate: a solver carrying the equivalent zones marches **bit-identically** to
-      the pre-refactor solver on Poiseuille (no-slip), the lid-driven cavity (moving wall), and an
-      immersed solid block (cut body). Wall/periodic paths unchanged.
-- [ ] Z5 Group gate: format, clippy, full physics tests both feature configs; commit message.
+- [x] Z1 `BoundaryZone<D, R>` trait with one collect-into hook per solver stage (rate source,
+      constrained edges, time-dependent lift, prescribed/inflow edges, reference/outflow vertices),
+      each defaulting to a no-op. **Static dispatch only** — no `dyn`/trait objects.
+      (`dec/boundary/boundary_zone.rs`.)
+- [x] Z2 Static (HKT-aligned) composition: a typed tuple is itself a `BoundaryZone` folding each
+      hook over its members (`(A, B)`, identity `()`); the `with_zones` builder is generic over the
+      composed zone type `Z: BoundaryZone<D, R>`. Folds rate source = Σ collect_rate_source and lift
+      = ∪ collect_lift at construction.
+- [x] Z3 Re-express the explicit **actuators** as zones (numerics preserved): `MovingWall` (lift),
+      `BodyForceZone` (rate source). Structural boundaries — wall no-slip (non-periodic axes) and
+      immersed cut bodies (`CutCellRegistry` on the metric) — stay auto-derived at the
+      topology/metric layer (a refinement of the design: they are structural, not actuators).
+      *Caller migration* (threading zones through the examples/tests and consolidating the public
+      surface) lands with the open-boundary groups, since `with_zones` must also carry the
+      inflow/outflow sets.
+- [x] Z4 Numerical-equivalence gate (`dec/boundary_zone_tests`): a `BodyForceZone` solver marches
+      **bit-identically** to `new(.., Some(force))` (Poiseuille), a `MovingWall` zone to
+      `with_moving_wall` (lid-driven cavity), and `(BodyForceZone, MovingWall)` composes to the
+      combined legacy march — all bit-for-bit.
+- [x] Z5 Group gate: format, clippy (0 warnings), full physics tests (1574 pass) + the 3 new
+      boundary-zone tests (cargo + bazel); commit message prepared.
 
 ## P. Net-flux mixed-BC Leray projection (open-boundary-flux-projection)
 

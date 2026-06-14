@@ -58,6 +58,7 @@ impl<R: RealField + FromPrimitive + Default + PartialEq + Debug + Display + Mayb
 {
 }
 
+pub(crate) mod boundary;
 pub(crate) mod dec_ns_rate;
 pub(crate) mod dec_ns_solver;
 pub(crate) mod diagnostics;
@@ -70,6 +71,7 @@ pub(crate) mod step_output;
 pub(crate) mod uncertain_inflow;
 pub(crate) mod wrappers;
 
+pub use boundary::{BodyForceZone, BoundaryZone, MovingWall};
 pub use dec_ns_rate::DecNsRate;
 pub use dec_ns_solver::DecNsSolver;
 pub use diagnostics::{
