@@ -1,0 +1,21 @@
+deep_causality_physics/tests/theories/fluid_dynamics/dec/mod.rs
+  s_4adc6099bc84ff::t_31c4ade01c5895 9-10
+deep_causality_physics/tests/theories/fluid_dynamics/dec/cut_cell_wiring_tests.rs
+  s_4adc6099bc84ff::t_1c6ea2732940b2 1-134
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "cb6f6c1b8e47de93d7f74e662ab272abafa04ebe",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
