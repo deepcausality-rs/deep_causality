@@ -1,0 +1,50 @@
+deep_causality_topology/tests/types/cut_cell/consistency_tests.rs
+  s_4adc6099bc84ff::t_7e59c7ad54aa52 162-165,169-174,214-219
+  s_4adc6099bc84ff::t_6f0d8470387a71 148-161,166-168,175-213,220-228
+openspec/changes/add-cut-cells-and-immersed-boundaries/design.md
+  s_4adc6099bc84ff::t_0b1e9fbdaad162 239-243
+  s_4adc6099bc84ff::t_9c485862a6ba1a 88-122
+openspec/changes/add-cut-cells-and-immersed-boundaries/tasks.md
+  s_4adc6099bc84ff::t_61bc71e15804dd 56-71
+examples/avionics_examples/dec_cylinder_wake/main.rs
+  s_4adc6099bc84ff::t_6d17f6c1db877d 46
+  s_4adc6099bc84ff::t_cc9fdd1e246b51 29,31-37
+  s_4adc6099bc84ff::t_edba967067dee1 141
+  s_4adc6099bc84ff::t_7e59c7ad54aa52 87-90
+  s_4adc6099bc84ff::t_230faa771e3750 61-64
+  s_4adc6099bc84ff::t_8e4c8d9a76db86 79-82,85,91,93-94
+examples/avionics_examples/dec_cylinder_wake/README.md
+  s_4adc6099bc84ff::t_b46df55f245c89 35-48
+deep_causality_physics/tests/theories/fluid_dynamics/dec/cut_cell_wiring_tests.rs
+  s_4adc6099bc84ff::t_912ac1695bd63a 249-252,254,264-266,268,274-277
+  s_4adc6099bc84ff::t_b934468d9d4a28 158-174,178,180
+  s_4adc6099bc84ff::t_b33a6a84175b34 228-229,231,238,240-242,244,246,253,267,269
+  s_4adc6099bc84ff::t_38b4161fd4a87c 177,182-187,189-200
+  s_4adc6099bc84ff::t_7e59c7ad54aa52 255-262,270-273
+  s_4adc6099bc84ff::t_27996f9ce36bcf 201-202,207,216,218-220,223-226,239
+  s_4adc6099bc84ff::t_796aee20d9447a 210-215,221-222
+  s_4adc6099bc84ff::t_89dd337df0fc0d 175-176,179,181,188,203-206,208-209,217,227,230,232-237,243,245,247-248,263,278-279
+deep_causality_topology/src/types/cut_cell/registry.rs
+  s_4adc6099bc84ff::t_0d319da112851b 264-267
+  s_4adc6099bc84ff::t_b95144e5c1df4d 128-137
+  s_4adc6099bc84ff::t_13061c2060f898 319-320,325,327-332
+  s_4adc6099bc84ff::t_59c5ec90be2a89 321-324,326
+  s_4adc6099bc84ff::t_c87d68c0791a15 29-32,46,52-83
+  s_4adc6099bc84ff::t_f34ad6fe53b5dc 305-311
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "bfe6d71226717e62c48a8e6145f8ddcac62f80b5",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
