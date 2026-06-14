@@ -278,6 +278,84 @@ fn tiny_cut_cells_are_inherently_small_cell_stable() {
 }
 
 #[test]
+fn axis_aligned_solid_layer_reproduces_the_wall_poiseuille() {
+    // B6 — marched equivalence: an axis-aligned **solid layer reproduces the wall solver**. The
+    // channel keeps its real bottom wall (vertex y = 0) and its top cell row is marked immersed
+    // **solid**, so B4's staircase no-slip pins the x-edge at vertex row `ny-2` to zero — a
+    // Dirichlet wall sitting exactly on a vertex row, just like a real wall. The fluid below must
+    // therefore develop the **exact** Poiseuille parabola for the reduced height
+    // `H' = (ny-2)·h` — the same analytic profile the vertex-collocated wall solver is validated
+    // against (`poiseuille_tests`), to rounding. That the immersed solid layer and a real wall
+    // yield the identical exact steady state *is* the marched equivalence.
+    let ny = 9;
+    let h = HEIGHT / (ny - 1) as f64;
+    let h_fluid = (ny - 2) as f64 * h; // walls at vertex 0 (real) and vertex ny-2 (immersed solid).
+
+    let lattice = LatticeComplex::<2, f64>::new([4, ny], [true, false]);
+    let mut reg = CutCellRegistry::<2, f64>::new();
+    for i in 0..4 {
+        let cell = LatticeCell::<2>::new([i, ny - 2], 0b11);
+        let idx = lattice.cells(2).position(|c| c == cell).unwrap();
+        reg.insert(idx, deep_causality_topology::CutCell::<2, f64>::solid(1.0));
+    }
+    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
+    let metric = CubicalReggeGeometry::<2, f64>::uniform(h).with_cut_cells(reg);
+    let m = Manifold::from_cubical_with_metric(lattice, data, metric, 0);
+
+    let g = 8.0 * NU;
+    let n1 = m.complex().num_cells(1);
+    let mut force = vec![0.0; n1];
+    for (idx, cell) in m.complex().iter_cells(1).enumerate() {
+        if cell.orientation().trailing_zeros() as usize == 0 {
+            force[idx] = g * h;
+        }
+    }
+    let force = BodyForceOneForm::new(CausalTensor::new(force, vec![n1]).unwrap(), &m).unwrap();
+    let dt = 0.5 * h * h / (4.0 * NU);
+    let solver = DecNsSolver::new(&m, NU, dt, Some(&force)).unwrap();
+    let n0 = m.complex().num_cells(0);
+    let rest = CausalTensor::new(vec![0.0; 2 * n0], vec![2 * n0]).unwrap();
+    let mut state = solver.seed_from_vertex_vectors(&rest).unwrap();
+
+    // March to stationarity (early-exit on a settled field).
+    let mut previous = state.as_one_form().as_slice().to_vec();
+    for _ in 0..20_000 {
+        state = solver.step(&state).unwrap().into_state();
+        let now = state.as_one_form().as_slice();
+        let delta = now
+            .iter()
+            .zip(previous.iter())
+            .fold(0.0f64, |acc, (a, b)| acc.max((a - b).abs()));
+        if delta < 1e-13 {
+            break;
+        }
+        previous = now.to_vec();
+    }
+
+    // Every x-edge matches the exact parabola for the immersed-wall height; the immersed wall
+    // (vertex ny-2) and the solid rows above are zero.
+    let u = state.as_one_form().as_slice();
+    let mut err = 0.0f64;
+    for (idx, cell) in m.complex().iter_cells(1).enumerate() {
+        if cell.orientation().trailing_zeros() as usize != 0 {
+            continue;
+        }
+        let y = cell.position()[1] as f64 * h;
+        let exact = if y <= h_fluid {
+            (g / (2.0 * NU)) * y * (h_fluid - y) * h
+        } else {
+            0.0
+        };
+        err = err.max((u[idx] - exact).abs() / h);
+    }
+    assert!(
+        err < 1e-8,
+        "solid-layer Poiseuille profile error {err:e} — the immersed solid layer must act as a wall"
+    );
+}
+
+#[test]
 fn solid_cell_registry_keeps_a_convergent_divergence_free_march() {
     let ny = 9;
     let lattice = LatticeComplex::<2, f64>::new([4, ny], [true, false]);

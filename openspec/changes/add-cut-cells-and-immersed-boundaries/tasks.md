@@ -94,12 +94,14 @@ build` / `make test` are run by the user on review, not by the agent.
       seeding flows through the cut star automatically. Verified: an empty registry marches
       **bit-identically** to the plain geometry, and a solid-cell registry keeps a convergent
       divergence-free march (`cut_cell_wiring_tests.rs`).
-- [~] B6 Equivalence: the no-body case is **done** — empty registry is bit-identical to
-      Stage-3 at both the star level and the marched-solver level (Poiseuille unchanged). With
-      B4 the building blocks for the axis-aligned-solid-layer-reproduces-the-wall-solver case
-      are in place (solid set reproduces the wall-tangential set; cut star reproduces the
-      boundary clip); the full marched-equivalence assertion lands alongside the Group D
-      validation harness.
+- [x] B6 Equivalence — **done**. (1) The no-body case: an empty registry is bit-identical to
+      Stage-3 at both the star level and the marched-solver level (Poiseuille unchanged). (2) The
+      axis-aligned-solid-layer-reproduces-the-wall-solver case: an immersed solid cell layer pins
+      a vertex-collocated no-slip wall and the fluid below develops the **exact** Poiseuille
+      parabola for its reduced height — to rounding (< 1e-8), the same analytic profile the
+      vertex-collocated wall solver is validated against
+      (`cut_cell_wiring_tests::axis_aligned_solid_layer_reproduces_the_wall_poiseuille`). The
+      immersed layer and a real wall yield the identical exact steady state.
 - [ ] B7 Group gate: format, clippy, full physics + topology tests both feature configs;
       prepare Group B commit message and ask the user to commit.
 
