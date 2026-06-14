@@ -3,35 +3,59 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Uncertain, UncertainError};
+use crate::{ProbabilisticType, Uncertain, UncertainError};
+use deep_causality_num::{FromPrimitive, RealField};
 
-impl Uncertain<f64> {
-    /// Estimates the expected value (mean) of the uncertain f64 value by taking multiple samples.
-    pub fn expected_value(&self, num_samples: usize) -> Result<f64, UncertainError> {
+// Precision-generic Monte-Carlo statistics. Unlike the sampling surface (which needs only
+// `ProbabilisticType`), these reduce many samples into one scalar, so they require the value
+// type to be a real field with arithmetic and a square root — which also keeps them off
+// `Uncertain<bool>`, where a mean is meaningless. `FromPrimitive` supplies the sample-count
+// divisor at the value type's precision (no narrowing through `f64`).
+impl<T: ProbabilisticType + RealField + FromPrimitive> Uncertain<T> {
+    /// Estimates the expected value (mean) by averaging `num_samples` draws.
+    pub fn expected_value(&self, num_samples: usize) -> Result<T, UncertainError> {
         if num_samples == 0 {
-            return Ok(0.0); // Or return an error, depending on desired behavior for 0 samples
+            return Ok(T::zero());
         }
-        let mut sum = 0.0;
+        let mut sum = T::zero();
         for i in 0..num_samples {
             sum += self.sample_with_index(i as u64)?;
         }
-        Ok(sum / num_samples as f64)
+        let n = T::from_usize(num_samples).ok_or_else(|| {
+            UncertainError::SamplingError("sample count does not fit the value type".to_string())
+        })?;
+        Ok(sum / n)
     }
 
-    /// Estimates the standard deviation of the uncertain f64 value by taking multiple samples.
-    pub fn standard_deviation(&self, num_samples: usize) -> Result<f64, UncertainError> {
+    /// Estimates the (sample) standard deviation from `num_samples` draws, using the
+    /// `(n − 1)` Bessel-corrected denominator.
+    pub fn standard_deviation(&self, num_samples: usize) -> Result<T, UncertainError> {
         if num_samples <= 1 {
-            return Ok(0.0); // Standard deviation is 0 for 0 or 1 samples
+            return Ok(T::zero());
         }
 
-        let samples: Vec<f64> = (0..num_samples)
+        let samples: Vec<T> = (0..num_samples)
             .map(|i| self.sample_with_index(i as u64))
-            .collect::<Result<Vec<f64>, UncertainError>>()?;
+            .collect::<Result<Vec<T>, UncertainError>>()?;
 
-        let mean = samples.iter().sum::<f64>() / num_samples as f64;
+        let count_err = || {
+            UncertainError::SamplingError("sample count does not fit the value type".to_string())
+        };
+        let n = T::from_usize(num_samples).ok_or_else(count_err)?;
+        let n_minus_one = T::from_usize(num_samples - 1).ok_or_else(count_err)?;
 
-        let variance: f64 =
-            samples.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / (num_samples - 1) as f64; // Use (n-1) for sample standard deviation
+        let mut sum = T::zero();
+        for &x in &samples {
+            sum += x;
+        }
+        let mean = sum / n;
+
+        let mut variance = T::zero();
+        for &x in &samples {
+            let d = x - mean;
+            variance += d * d;
+        }
+        variance /= n_minus_one;
 
         Ok(variance.sqrt())
     }
