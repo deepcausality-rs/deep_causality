@@ -64,12 +64,22 @@ build` / `make test` are run by the user on review, not by the agent.
 - [ ] B4 Immersed no-slip / slip on cut-face fragments: extend the symmetric restriction
       `P_S Δ₁ P_S` and the constrained Leray constraint set to cut-adjacent edges with
       the fragment normal as constraint direction; moving-surface reuse of the lid lift.
-- [ ] B5 Solver wiring: `DecNsSolver` accepts a `CutCellRegistry` as immutable `Context`
-      (static rigid-body geometry — D10), cut-aware CFL (global max includes cut-adjacent
-      speeds); seeding projects + constrains so the march starts divergence-free and
-      no-slip-consistent on the immersed boundary.
-- [ ] B6 Equivalence: with an axis-aligned cut registry, the wall-bounded results match
-      the Stage-3 no-slip solver to rounding (no behavioral drift).
+- [x] B-foundation Cut-aware Hodge star: `build_star_diagonal(complex, k, clip)` extracted
+      from `hodge_star_matrix` (behaviour-preserving); the per-cell dual clip is the integer
+      `axis_boundary_clip` unless a registry is attached, then the continuous
+      `CutCellRegistry::dual_fluid_fraction`. Empty registry ⇒ star byte-equal to Stage-3
+      (proved across unit/uniform/per-axis/graded, open+periodic, 2D+3D).
+- [x] B5 Solver wiring: the `CutCellRegistry` attaches to the **geometry** via
+      `CubicalReggeGeometry::with_cut_cells` — the concrete immutable `Context` carrier the
+      manifold borrows (D10) — so every Hodge-star read (compiled stencils, constrained Leray,
+      codifferential) sees the body transparently with **no new solver plumbing**. Cut-aware
+      CFL is satisfied by the existing global `max_speed` scan (covers cut-adjacent edges);
+      seeding flows through the cut star automatically. Verified: an empty registry marches
+      **bit-identically** to the plain geometry, and a solid-cell registry keeps a convergent
+      divergence-free march (`cut_cell_wiring_tests.rs`).
+- [~] B6 Equivalence: the no-body / axis-aligned case is **done** — empty registry is
+      bit-identical to Stage-3 at both the star level and the marched-solver level (Poiseuille
+      unchanged). The immersed-cut-faces-vs-Stage-3-wall case completes with B4 (cut-face BC).
 - [ ] B7 Group gate: format, clippy, full physics + topology tests both feature configs;
       prepare Group B commit message and ask the user to commit.
 

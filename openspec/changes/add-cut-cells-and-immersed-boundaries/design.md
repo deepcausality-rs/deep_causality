@@ -181,6 +181,17 @@ Applying the standing rule — **immutable data belongs in `Context`, mutable da
 This split keeps the static geometry out of the per-step mutation path and confines mutable
 state to the genuinely dynamic boundary value.
 
+**Concrete carrier (B5, as built).** The immutable `Context` carrier is the **geometry**: the
+registry attaches via `CubicalReggeGeometry::with_cut_cells`, and `hodge_star_matrix` consults
+it (continuous wetted fraction when present, the integer `2^{-b}` wall clip when absent —
+factored through one shared `build_star_diagonal`). Because the compiled stencils, the
+constrained Leray projection and the codifferential all read the star through `hodge_star_matrix`,
+the immersed body flows through the **entire** operator stack transparently — the `DecNsSolver`
+needs no new field or plumbing, which is the cleanest realisation of the
+"routes through ⋆ transparently" promise (proposal Impact). An empty registry reduces the star
+to the Stage-3 wall clip bit-for-bit (powers of two are exact), so the marched solve is
+bit-identical and the no-body equivalence (D9 / B6) holds by construction.
+
 ## Risks / Trade-offs
 
 - **Small cells are the canonical cut-cell hazard.** Mitigated by D4 (two algorithms

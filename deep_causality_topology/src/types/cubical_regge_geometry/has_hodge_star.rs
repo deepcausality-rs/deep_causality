@@ -255,10 +255,16 @@ where
         // The diagonal ⋆ is immutable for this (geometry, lattice) pair, so build it at most
         // once per grade and serve it borrowed from the memo; on a fingerprint mismatch (a
         // metric reused across differently-shaped complexes) fall through to an uncached
-        // owned build. The clip is the integer axis-aligned wall clip; the continuous
-        // cut-cell variant lives in `cut_hodge_star_matrix`.
-        let build =
-            || self.build_star_diagonal(complex, k, &|cell| axis_boundary_clip(complex, cell));
+        // owned build. The per-cell clip is the integer axis-aligned wall clip unless a
+        // cut-cell registry is attached, in which case it is that registry's continuous wetted
+        // fraction — so an immersed body flows through every star consumer (stencils, Leray,
+        // codifferential) transparently. An empty registry reduces to the wall clip exactly.
+        let build = || match &self.cut_registry {
+            Some(registry) => self.build_star_diagonal(complex, k, &|cell| {
+                registry.dual_fluid_fraction(complex, cell)
+            }),
+            None => self.build_star_diagonal(complex, k, &|cell| axis_boundary_clip(complex, cell)),
+        };
 
         let shape = *complex.shape();
         let periodic = *complex.periodic();

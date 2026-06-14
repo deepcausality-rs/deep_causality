@@ -114,6 +114,16 @@ pub struct CubicalReggeGeometry<const D: usize, R: RealField, S: SignatureMarker
     /// is guaranteed `true` by the Lorentzian constructor's validation.
     pub(super) timelike_axes: Option<[bool; D]>,
     pub(super) _signature: PhantomData<S>,
+    /// Optional cut-cell overlay (CFD Stage 4). `None` is the ordinary
+    /// uncut geometry — every star read uses the integer `2^{-b}` wall clip
+    /// and the path is byte-identical to before cut cells existed. `Some`
+    /// makes every Hodge-star read (and therefore the compiled stencils, the
+    /// Leray projection, the codifferential — everything that routes through
+    /// ⋆) use the continuous wetted fraction instead, so an immersed body is
+    /// seen transparently by the whole operator stack. Attached via
+    /// [`CubicalReggeGeometry::with_cut_cells`] before the manifold is built;
+    /// immutable thereafter (Stage-4 Context).
+    pub(super) cut_registry: Option<crate::types::cut_cell::CutCellRegistry<D, R>>,
     /// Lazy per-grade memo of the diagonal Hodge ⋆ matrices (see
     /// [`star_cache`]). Ignored for equality; cloned warm; invalidated on
     /// geometry mutation.
@@ -150,6 +160,7 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R, Euclidean> {
             edge_lengths: EdgeLengths::UnitEdge,
             timelike_axes: None,
             _signature: PhantomData,
+            cut_registry: None,
             star_cache: star_cache::StarCache::new(),
         }
     }
@@ -162,6 +173,7 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R, Euclidean> {
             edge_lengths: EdgeLengths::Uniform { length },
             timelike_axes: None,
             _signature: PhantomData,
+            cut_registry: None,
             star_cache: star_cache::StarCache::new(),
         }
     }
@@ -175,6 +187,7 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R, Euclidean> {
             edge_lengths: EdgeLengths::PerAxis { lengths },
             timelike_axes: None,
             _signature: PhantomData,
+            cut_registry: None,
             star_cache: star_cache::StarCache::new(),
         }
     }
@@ -189,6 +202,7 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R, Euclidean> {
             edge_lengths: EdgeLengths::PerEdge { lengths },
             timelike_axes: None,
             _signature: PhantomData,
+            cut_registry: None,
             star_cache: star_cache::StarCache::new(),
         }
     }
@@ -242,12 +256,34 @@ impl<const D: usize, R: RealField> CubicalReggeGeometry<D, R, Euclidean> {
             edge_lengths: self.edge_lengths,
             timelike_axes: Some(timelike),
             _signature: PhantomData,
+            cut_registry: self.cut_registry,
             star_cache: star_cache::StarCache::new(),
         })
     }
 }
 
 impl<const D: usize, R: RealField, S: SignatureMarker> CubicalReggeGeometry<D, R, S> {
+    /// Attach a cut-cell overlay (CFD Stage 4). Every subsequent Hodge-star read uses the
+    /// registry's continuous wetted fraction in place of the integer `2^{-b}` wall clip, so
+    /// the compiled stencils, the Leray projection and the codifferential all see the immersed
+    /// body transparently. An **empty** registry leaves the star byte-identical to the uncut
+    /// geometry (the Stage-3 equivalence), so attaching one is safe by construction. Resets the
+    /// star memo so no pre-cut matrix is served. Attach before building the manifold; immutable
+    /// thereafter (Stage-4 Context).
+    pub fn with_cut_cells(
+        mut self,
+        registry: crate::types::cut_cell::CutCellRegistry<D, R>,
+    ) -> Self {
+        self.cut_registry = Some(registry);
+        self.star_cache = star_cache::StarCache::new();
+        self
+    }
+
+    /// The attached cut-cell registry, if any.
+    pub fn cut_registry(&self) -> Option<&crate::types::cut_cell::CutCellRegistry<D, R>> {
+        self.cut_registry.as_ref()
+    }
+
     // -- Getters (available on every signature) --------------------------------------
 
     /// `true` iff this geometry is the unit-edge case (every edge has length `1.0`).
