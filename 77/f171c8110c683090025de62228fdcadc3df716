@@ -1,0 +1,53 @@
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/no_slip.rs
+  s_4adc6099bc84ff::t_b9d61655d927f7 97-106
+deep_causality_physics/src/theories/fluid_dynamics/dec/boundary/mod.rs
+  s_4adc6099bc84ff::t_c80f447818c684 20,27
+openspec/changes/add-slip-boundaries-and-surface-forces/specs/surface-force-diagnostic/spec.md
+  s_4adc6099bc84ff::t_56bee3eba25a1f 1-22
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/mod.rs
+  s_4adc6099bc84ff::t_3ccf358e69f01d 151-156
+deep_causality_physics/src/theories/fluid_dynamics/dec/mod.rs
+  s_4adc6099bc84ff::t_6e4059f18b5a91 74
+openspec/changes/add-slip-boundaries-and-surface-forces/specs/slip-boundary/spec.md
+  s_4adc6099bc84ff::t_bb58416885cccb 1-18
+openspec/changes/add-slip-boundaries-and-surface-forces/proposal.md
+  s_4adc6099bc84ff::t_345ce45c45cc73 1-19,29-57
+  s_4adc6099bc84ff::t_d2996a3f014f4b 20-28
+  s_4adc6099bc84ff::t_88c716bc48dace 58-61
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_rate.rs
+  s_4adc6099bc84ff::t_f010d8ecd51f86 293-309,311
+openspec/changes/add-slip-boundaries-and-surface-forces/design.md
+  s_4adc6099bc84ff::t_2e3bc06d9f6b10 69-73
+  s_4adc6099bc84ff::t_7a22686a3400ba 1-12,17-68,74-90
+  s_4adc6099bc84ff::t_a2f1dbc10debdc 13-16
+deep_causality_physics/src/theories/fluid_dynamics/dec/boundary/slip_wall.rs
+  s_4adc6099bc84ff::t_a15382f090119b 1-69
+deep_causality_physics/src/theories/fluid_dynamics/dec/boundary/boundary_zone.rs
+  s_4adc6099bc84ff::t_ef97f5b5eb4a02 135-143
+  s_4adc6099bc84ff::t_03ac2bd08eb6fd 73-82
+deep_causality_physics/tests/theories/fluid_dynamics/dec/slip_wall_tests.rs
+  s_4adc6099bc84ff::t_faf8788968d2f2 1-162
+openspec/changes/add-slip-boundaries-and-surface-forces/tasks.md
+  s_4adc6099bc84ff::t_a86efa8f268aa2 1-11,25-32,36-42
+  s_4adc6099bc84ff::t_dcc3d4125439ec 43-47
+  s_4adc6099bc84ff::t_f690cc33892465 33-35
+  s_4adc6099bc84ff::t_241a27ab9698ce 12-24
+deep_causality_physics/tests/theories/fluid_dynamics/dec/mod.rs
+  s_4adc6099bc84ff::t_1e1b9bbd15ad47 28-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "77f171c8110c683090025de62228fdcadc3df716",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
