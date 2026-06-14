@@ -11,6 +11,11 @@ use crate::model::Report;
 
 /// CSV on stdout (machine-readable artifact), summary on stderr (human).
 ///
+/// Summary on stderr (human). The machine-readable CSV rows are streamed
+/// to stdout per step inside `stage_march` (so an aborted march keeps its
+/// partial curve — the dec-ns-stability evidence requirement); this reads
+/// the collected series only for the closing summary.
+///
 /// Generic over the precision type. The computation carries `R` end to
 /// end; the cast to `f64` here is presentation only — native `Float106`
 /// `Display` would render both double-double components as a composite,
@@ -19,16 +24,6 @@ pub fn print_csv<R>(report: &Report<R>)
 where
     R: RealField + Into<f64>,
 {
-    println!("t_star,kinetic_energy_per_vol,dissipation_rate");
-    for s in &report.series {
-        println!(
-            "{:.4},{:.8},{:.8}",
-            Into::<f64>::into(s.t_star),
-            Into::<f64>::into(s.energy_per_vol),
-            Into::<f64>::into(s.dissipation)
-        );
-    }
-
     if let (Some(first), Some(last)) = (report.series.first(), report.series.last()) {
         let peak = report.series.iter().fold((0.0_f64, 0.0_f64), |(t, d), s| {
             let sd: f64 = s.dissipation.into();

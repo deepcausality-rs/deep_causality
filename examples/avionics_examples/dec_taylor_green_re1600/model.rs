@@ -122,7 +122,7 @@ pub fn stage_seed<R: DecNsScalar>(
 /// energy/dissipation series in convective units, all at `R`. A CG
 /// failure or CFL violation short-circuits with the failing step in the
 /// message.
-pub fn stage_march<R: DecNsScalar>(
+pub fn stage_march<R: DecNsScalar + Into<f64>>(
     solver: &DecNsSolver<'_, 3, R>,
     manifold: &Manifold<LatticeComplex<3, R>, R>,
     n: usize,

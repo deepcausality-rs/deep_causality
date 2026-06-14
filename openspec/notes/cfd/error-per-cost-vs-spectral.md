@@ -1,8 +1,12 @@
 # Error-per-cost vs. pseudo-spectral — measured state and the instability that gates the claim
 
-Date: 2026-06-12. Status: measurement note (pre-spec). Follow-up to an
-external review of the DEC solver's positioning against pseudo-spectral
-codes.
+Date: 2026-06-12. Status: measurement note. The gating instability
+(Finding 1) was diagnosed and fixed under the
+`fix-dec-convective-instability` change — see the **Resolution** section
+at the end; the error-per-cost benchmark is now unblocked.
+
+Follow-up to an external review of the DEC solver's positioning against
+pseudo-spectral codes.
 
 ## The reviewer's framing (accepted)
 
@@ -107,3 +111,50 @@ Lead with the cavity (walls, Ghia-validated, exact no-slip ∩
 divergence-free projection — a domain where pseudo-spectral defaults
 don't exist), present TGV error-per-cost honestly *after* the
 stability fix, and state the smooth-regime spectral advantage up front.
+
+## Resolution (2026-06-12, `fix-dec-convective-instability`)
+
+**Diagnosis.** The energy-budget diagnostic (per-term `⟨u, ·⟩_M` of the
+marched rate) on the 32³ trajectory pinned the defect to the
+**convective term**: its power is zero on the smooth initial state
+(−9e-16) but turns positive as the spectrum fills (+0.59 at t* 3.1, +28
+at 7.9) and overwhelms the always-negative viscous sink at t* ≈ 8.5.
+The discrete `i_u(du)` was not energy-neutral — an aliasing-type
+residue, sign-indefinite, amplified by the under-resolved regime.
+
+**Fix.** Skew-symmetrize the convective term in the **vector slot**:
+`conv'(u) = ½[G_ω u − G*_ω u]` with `ω = du`, `G_ω : x ↦ i_x ω`, and
+`G*_ω` its exact M-adjoint (`M₁⁻¹ Wᵇᵀ Postᵀ M₁`, static transposed
+stencil tables compiled once). `⟨u, conv'⟩_M = 0` identically. The
+vector slot (not the form slot) is the correct one: the continuum
+antisymmetry `ω(x, w) = −ω(w, x)` lives there, so the skew part is
+full-strength consistent and **2nd order is preserved** (the form-slot
+variant, tried first, halved the convergence order — caught by the
+pointwise-oracle rung). The adjoint is pinned by the
+`⟨G_ω x, w⟩_M = ⟨x, G*_ω w⟩_M` identity tests; the generic path carries
+the same correction (assembled transpose) as the equivalence oracle.
+
+**Verified.** The stability ladder (Re-1600 TGV → t* = 14, f64), the
+exact configurations that failed above:
+
+| Grid | Before | After (peak −dE*/dt*) |
+| --- | --- | --- |
+| 32³ | growth from t* ≈ 8 | clean, 0.0065 @ t* 10.6 |
+| 48³ | CFL abort t* ≈ 8.7 | clean, 0.0086 @ t* 10.1 |
+| 64³ | CFL abort t* ≈ 13.8 | clean, 0.0094 @ t* 9.5 |
+
+Zero energy-growth steps at every resolution. The full validation
+ladder, wall/cavity suites, and stencil-vs-generic equivalence gates
+stay green in both feature configs (physics 1561, topology 1205); the
+Couette/Poiseuille exactness results were **not** disturbed (the
+correction is energy-neutral and the wall steady states held at their
+existing tolerances). Finding 2 (streaming CSV) is also fixed: the TGV
+example emits per step, so aborted runs keep their partial curves.
+
+**Bonus — the error-per-cost figure is now real.** The dissipation peak
+converges toward the van Rees reference (≈0.0122 at t* ≈ 9) in both
+magnitude (0.0065 → 0.0086 → 0.0094) and timing (t* 10.6 → 10.1 → 9.5
+→ 9.0) as resolution rises — the structure-preservation claim is
+defensible because the solver now marches *through* the peak. The
+remaining benchmark work (overlay vs DNS, the Chorin-splitting kill
+shot) is unblocked and belongs to the successor change.

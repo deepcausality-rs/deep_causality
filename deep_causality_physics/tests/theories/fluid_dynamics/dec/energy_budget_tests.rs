@@ -68,7 +68,11 @@ fn budget_identity_on_divergence_free_state() {
         b.projected(),
         b.unprojected_sum()
     );
-    assert!(b.viscous() < 0.0, "viscous power {} not dissipative", b.viscous());
+    assert!(
+        b.viscous() < 0.0,
+        "viscous power {} not dissipative",
+        b.viscous()
+    );
     assert_eq!(b.body_force(), 0.0);
 }
 
@@ -100,6 +104,52 @@ fn budget_agrees_between_fused_and_generic() {
         (fused.projected(), generic.projected(), "projected"),
     ] {
         assert!((a - b).abs() < 1e-11, "{name}: fused {a} vs generic {b}");
+    }
+}
+
+/// Fast CI regression of the dec-ns-stability fix (the closure gate's
+/// cheap proxy): a coarse 16³ Re-1600 TGV marched well past the former
+/// energy-growth onset (t* ≈ 8 at 32³, earlier on coarser grids) stays
+/// energy-non-increasing every step and the convective power stays at
+/// zero to rounding — the skew-symmetrized convective term cannot inject
+/// energy. The full 32³/48³/64³ → t* = 14 ladder is the example's job
+/// (`dec_taylor_green_re1600`), per the tests-fast / examples-verify
+/// split.
+#[test]
+fn skew_convection_keeps_energy_monotone() {
+    let n = 16usize;
+    let dt = 0.2;
+    let m = torus3(n);
+    let solver = DecNsSolver::new(&m, nu_for(n), dt, None).unwrap();
+    let rate = DecNsRate::new(&m, nu_for(n), None).unwrap();
+    let opts = HodgeDecomposeOptions::default();
+    let k = 2.0 * std::f64::consts::PI / (n as f64);
+
+    let mut state = solver
+        .seed_from_vertex_vectors(&tg_vertex_tensor(&m, n))
+        .unwrap();
+    let steps = (10.0 / (dt * k)).ceil() as usize;
+    let mut e_prev = dec_kinetic_energy(&m, state.as_one_form()).unwrap();
+    for step in 0..steps {
+        // The convective power is energy-neutral by construction at every
+        // visited state (not just the smooth initial one).
+        let u = VelocityOneForm::new(state.as_one_form().clone(), &m).unwrap();
+        let b = rate.energy_budget(&u, &opts).unwrap();
+        assert!(
+            b.convective().abs() < 1e-9,
+            "step {step}: convective power {} not energy-neutral",
+            b.convective()
+        );
+        state = solver
+            .step(&state)
+            .unwrap_or_else(|e| panic!("step {step} aborted (instability regressed): {e}"))
+            .into_state();
+        let e = dec_kinetic_energy(&m, state.as_one_form()).unwrap();
+        assert!(
+            e <= e_prev + 1e-9,
+            "step {step}: energy grew {e_prev} -> {e} (instability regressed)"
+        );
+        e_prev = e;
     }
 }
 
