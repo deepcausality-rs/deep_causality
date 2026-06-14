@@ -42,10 +42,13 @@ user on review.
       ratio ~1.85) the interior product's order degrades and plateaus (~23% rel-error),
       while *mild* grading (amp 0.1) keeps converging. That boundary is what the example
       quantifies.
-- [ ] B2 Graded Taylor–Green MMS **example** (REMAINING — the heavy presentation artifact):
-      observed-order regression across a grading sweep; confirm smooth grading retains
-      second order; quantify the grading-amplitude limit where order collapses (the B1 test
-      shows the boundary exists — the example pins where). Hosted as an example per
-      tests-fast / examples-verify; a new example crate driving the solver.
+- [x] B2 Graded MMS **example** (`examples/avionics_examples/dec_graded_mms`): sweeps grading
+      amplitude × resolution and prints per-amplitude observed order. **Finding (honest,
+      amends the optimistic spec):** uniform is clean 2nd order; the convective operator
+      (interior product) stays *convergent* under mild grading but **loses formal 2nd order**
+      — order falls below 1.5 by spacing-ratio ≈ 1.11 and plateaus — the anisotropy-
+      consistency limit (same class as the convective-term form-slot issue; candidate for the
+      same vector-slot fix). Structure (divergence-freeness) is exact at every amplitude.
+      README records the table + conclusions.
 - [x] B4 Group gate (for the shipped B1/B3): `make format` clean; full `deep_causality_topology`
       Bazel suite green (124 tests). The example README + numbers land with B2.

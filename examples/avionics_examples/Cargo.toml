@@ -29,6 +29,10 @@ name = "dec_lid_cavity_re1000"
 path = "dec_lid_cavity_re1000/main.rs"
 
 [[example]]
+name = "dec_graded_mms"
+path = "dec_graded_mms/main.rs"
+
+[[example]]
 name = "turbulence_flow"
 path = "turbulence_flow/main.rs"
 

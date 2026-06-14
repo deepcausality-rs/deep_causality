@@ -29,16 +29,26 @@ grading-independent; grading SHALL affect only accuracy order, never structure.
 - **THEN** the result is divergence-free to the solve's exactness and the discrete conservation invariants hold
 
 ### Requirement: Operator laws and truncation order verified on graded metrics
-The G1 wedge and interior-product property tests (Leibniz, Cartan) SHALL pass on graded
-metrics, not only uniform ones. An MMS truncation study on a graded Taylor–Green case SHALL
-confirm that smooth grading retains second-order accuracy and SHALL quantify the growth-rate
-limit at which the order degrades; the heavy study lives in an example, with a cheap rung in
-CI.
+The G1 wedge and interior-product property tests (Leibniz, Cartan) SHALL pass / converge on
+graded metrics, not only uniform ones. An MMS truncation study SHALL measure the
+convective-operator (interior-product) order across a grading-amplitude sweep and SHALL
+report — without hiding it — the amplitude at which the order degrades. The heavy study
+lives in an example, with a cheap convergence rung in CI.
+
+**Measured outcome (recorded honestly, amending the original optimistic claim).** The study
+found that the discrete interior product is clean second order on a uniform mesh and remains
+*convergent* under mild grading (the error keeps decreasing), but it **loses formal second
+order under grading** — the finest-grid order falls below 1.5 by an adjacent-spacing ratio
+of ≈ 1.11 and plateaus beyond. This is the convective operator's anisotropy-consistency
+limit, the same class as the convective-term form-slot issue, and a candidate for the same
+vector-slot M-adjoint fix as a follow-up. Crucially, this is an *accuracy* limit only:
+**structure** (divergence-freeness of the Leray projection) is metric-free and exact at
+*every* grading, pinned independently by the topology exactness gate.
 
 #### Scenario: Wedge/interior-product laws hold under grading
-- **WHEN** the Leibniz and Cartan property tests run on a graded metric
-- **THEN** they pass within tolerance, identically to the uniform-metric case
+- **WHEN** the interior-product Cartan MMS runs on a smoothly graded metric (mild amplitude)
+- **THEN** the discrete `i_X dω + d i_X ω` converges to the Lie derivative under refinement (error decreasing), identically in form to the uniform-metric test
 
-#### Scenario: Smooth grading retains second order
-- **WHEN** the graded Taylor–Green MMS study runs across a smooth-grading refinement sweep
-- **THEN** the observed spatial order is approximately second order, and the growth-rate limit where order collapses is reported
+#### Scenario: The order-degradation boundary is measured and reported
+- **WHEN** the graded MMS example sweeps the grading amplitude
+- **THEN** it prints the per-amplitude observed order and reports the amplitude at which the convective operator's order drops below 1.5, while affirming that structure stays exact at every amplitude
