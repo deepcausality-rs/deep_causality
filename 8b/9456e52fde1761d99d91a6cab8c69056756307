@@ -1,0 +1,37 @@
+openspec/changes/add-boundary-zone-abstraction/design.md
+  s_4adc6099bc84ff::t_e558fbf225fd12 109,114-121
+deep_causality_topology/tests/types/manifold/mod.rs
+  s_4adc6099bc84ff::t_72735bb807c8b5 36-37
+deep_causality_topology/tests/types/manifold/leray_open_tests.rs
+  s_4adc6099bc84ff::t_136ac816582528 13-17
+  s_4adc6099bc84ff::t_2443b67c561da0 10
+  s_4adc6099bc84ff::t_76416a7995c143 112
+  s_4adc6099bc84ff::t_7f55d7d177b9f7 1-9,11-12,18-79,81-97,99-105,109-110,113-118,120-126,132-139,141-153,155-170,182-190
+  s_4adc6099bc84ff::t_4bd51c110f019e 191-215
+  s_4adc6099bc84ff::t_59b784291feaba 98
+  s_4adc6099bc84ff::t_2901ffea235d01 171-181
+  s_4adc6099bc84ff::t_e4a7942c3e6f3c 106-108,111,119,127-131,140,154
+  s_4adc6099bc84ff::t_103a43f8990cb5 80
+deep_causality_topology/src/types/manifold/differential/leray.rs
+  s_4adc6099bc84ff::t_3392d21ef9b0a8 172-173,176,184,191,195-196,199-204,206-207,214,221,237-238,242-244,247,250,255,259,265,270,280,284,348,396,410,414
+  s_4adc6099bc84ff::t_8fa6b8162421dc 167-171,174-175,177-178,180-183,185-190,192,197-198,205,208,226-232,288-296,298,300-327,329-347,349-362,366-368,370-378,381-389,400-408
+  s_4adc6099bc84ff::t_acf579edc2c64f 179,193-194,253
+openspec/changes/add-boundary-zone-abstraction/tasks.md
+  s_4adc6099bc84ff::t_3d3fc05200e017 34-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "8b9456e52fde1761d99d91a6cab8c69056756307",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
