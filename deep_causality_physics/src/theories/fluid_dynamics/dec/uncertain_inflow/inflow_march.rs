@@ -27,15 +27,13 @@ use deep_causality_core::{
     CausalFlow, CausalityError, CausalityErrorEnum, EffectLog, EffectValue, Intervenable,
     PropagatingProcess,
 };
-use deep_causality_haft::LogAddEntry;
-use deep_causality_uncertain::{MaybeUncertain, ProbabilisticType, UncertainError};
+use deep_causality_uncertain::{MaybeUncertain, ProbabilisticType};
 
 use crate::error::physics_error::PhysicsError;
 use crate::quantities::fluid_dynamics::solenoidal_field::SolenoidalField;
 use crate::theories::fluid_dynamics::dec::DecNsScalar;
 use crate::theories::fluid_dynamics::dec::dec_ns_solver::DecNsSolver;
 
-use super::dropout_verbosity::DropoutVerbosity;
 use super::uncertain_inflow_zone::UncertainInflowZone;
 
 /// Mutable march state (design D10): the stateless solver, the current divergence-free field, the
@@ -188,44 +186,11 @@ where
     let zone = context.zone;
     let mut logs = EffectLog::new();
 
-    // 1. Presence-gated collapse of the sensor sample to a scalar inflow R.
-    let gate = context.stream[step].lift_to_uncertain(
-        zone.threshold(),
-        zone.confidence(),
-        zone.epsilon(),
-        zone.max_samples(),
-    );
-    let mut dropout = false;
-    let inflow = match gate {
-        Ok(present) => match present.expected_value(zone.collapse_samples()) {
-            Ok(mean) if mean.is_finite() => {
-                last_good = mean;
-                mean
-            }
-            // A present-but-degenerate (non-finite) mean is treated as a dropout.
-            Ok(_) => {
-                dropout = true;
-                last_good
-            }
-            Err(e) => {
-                let state = InflowMarchState {
-                    solver: Some(solver),
-                    field,
-                    last_good,
-                    step,
-                    in_dropout,
-                };
-                return error_process(
-                    state,
-                    Some(context),
-                    &format!("uncertain inflow: sample reduction failed: {e}"),
-                );
-            }
-        },
-        Err(UncertainError::PresenceError(_)) => {
-            dropout = true;
-            last_good
-        }
+    // 1. Presence-gated collapse of the sensor sample to a scalar inflow R, through the
+    //    cross-domain uncertain boundary source (which owns the gate, collapse, and fallback).
+    let source = zone.source();
+    let (inflow, dropout) = match source.resolve(&context.stream[step], &mut last_good) {
+        Ok(resolved) => resolved,
         Err(e) => {
             let state = InflowMarchState {
                 solver: Some(solver),
@@ -237,32 +202,13 @@ where
             return error_process(
                 state,
                 Some(context),
-                &format!("uncertain inflow: presence gate failed: {e}"),
+                &format!("uncertain inflow: sample resolution failed: {e}"),
             );
         }
     };
 
-    // 2. Verbosity-controlled dropout record (the BC-fallback log).
-    match zone.verbosity() {
-        DropoutVerbosity::EachDropout => {
-            if dropout {
-                logs.add_entry(&format!(
-                    "uncertain-inflow dropout at step {step}: fallback to last-good inflow {last_good:?}"
-                ));
-            }
-        }
-        DropoutVerbosity::Transitions => {
-            if dropout && !in_dropout {
-                logs.add_entry(&format!(
-                    "uncertain-inflow dropout ONSET at step {step}: fallback to last-good inflow {last_good:?}"
-                ));
-            } else if !dropout && in_dropout {
-                logs.add_entry(&format!(
-                    "uncertain-inflow RECOVERY at step {step}: sensor present again"
-                ));
-            }
-        }
-    }
+    // 2. Verbosity-controlled dropout record (the BC-fallback log), delegated to the source.
+    source.record(&mut logs, step, dropout, in_dropout, last_good);
     in_dropout = dropout;
 
     // 3. Reconfigure the prescribed wall BC to the resolved value, then march. The solver's

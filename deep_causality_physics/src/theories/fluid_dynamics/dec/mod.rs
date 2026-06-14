@@ -81,7 +81,7 @@ pub use energy_budget::EnergyBudget;
 pub use step_output::{RunOutput, StepOutput};
 #[cfg(feature = "std")]
 pub use uncertain_inflow::{
-    DropoutVerbosity, InflowContext, InflowMarchState, InflowProcess, UncertainInflowZone,
-    inflow_march_step, march_inflow,
+    DropoutVerbosity, InflowContext, InflowMarchState, InflowProcess, UncertainBoundarySource,
+    UncertainInflowZone, inflow_march_step, march_inflow,
 };
 pub use wrappers::dec_ns_step;

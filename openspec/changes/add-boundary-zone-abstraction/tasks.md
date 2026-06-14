@@ -85,15 +85,19 @@ new open-boundary behaviour (I, O) is added.
 
 ## U. Uncertain boundary source — cross-domain generalization (uncertain-boundary-source)
 
-- [ ] U1 `UncertainBoundarySource<R>` wrapping the L3b value channel of any Dirichlet zone:
-      per-step `lift_to_uncertain` → collapse → last-good in `State`; dropout → `.intervene` +
-      `EffectLog` at a configurable `DropoutVerbosity`. Depends only on `MaybeUncertain<R>` + the
-      monad (no fluid concepts) — reusable across domains.
-- [ ] U2 Re-express the cut-cells change's `UncertainInflowZone` as `UncertainBoundarySource` over
-      an `Inflow`/`MovingWall` zone; its Group-C tests pass **bit-for-bit** through the general
-      source.
-- [ ] U3 Group gate: format, clippy, full physics + uncertain tests both feature configs; commit
-      message.
+- [x] U1 `UncertainBoundarySource<R>` (`dec/uncertain_inflow/uncertain_boundary_source.rs`): owns
+      the presence gate, the collapse, the fallback, and the `DropoutVerbosity`. `resolve(sample,
+      &mut last_good) -> (R, dropout)` does `lift_to_uncertain` → `expected_value`, updating
+      last-good on a present sample; `record(...)` logs dropouts per verbosity. Bounded on the
+      **minimal** `RealField + FromPrimitive + ProbabilisticType` (not the fluid `DecNsScalar`) and
+      depends only on `MaybeUncertain<R>` + the `EffectLog` — reusable across domains.
+- [x] U2 Re-expressed `UncertainInflowZone` to **compose** an `UncertainBoundarySource` (builders
+      delegate; the march stage calls `source.resolve`/`source.record` then `.intervene`); its four
+      Group-C tests pass **bit-for-bit** through the general source.
+- [x] U3 Group gate: format, clippy (0 warnings), full physics tests (1578 pass) + 3 new
+      standalone `UncertainBoundarySource` tests + the Group-C suite (cargo + bazel; the theories
+      test target gained `//deep_causality_core`); uncertain crate unaffected (199 pass). Commit
+      message prepared.
 
 ## V. Validation + handoff (open-boundary-validation)
 

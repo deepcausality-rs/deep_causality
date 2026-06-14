@@ -383,6 +383,7 @@ rust_test_suite(
         "//deep_causality_physics",
         # Internal dependencies
         "//deep_causality_calculus",
+        "//deep_causality_core",
         "//deep_causality_haft",
         "//deep_causality_metric",
         "//deep_causality_multivector",

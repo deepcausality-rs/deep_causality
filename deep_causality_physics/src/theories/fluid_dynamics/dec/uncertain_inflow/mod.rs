@@ -12,10 +12,12 @@
 
 pub(crate) mod dropout_verbosity;
 pub(crate) mod inflow_march;
+pub(crate) mod uncertain_boundary_source;
 pub(crate) mod uncertain_inflow_zone;
 
 pub use dropout_verbosity::DropoutVerbosity;
 pub use inflow_march::{
     InflowContext, InflowMarchState, InflowProcess, inflow_march_step, march_inflow,
 };
+pub use uncertain_boundary_source::UncertainBoundarySource;
 pub use uncertain_inflow_zone::UncertainInflowZone;
