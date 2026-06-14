@@ -1,0 +1,97 @@
+deep_causality_uncertain/src/types/cache/sampled_value.rs
+  s_4adc6099bc84ff::t_bd74b829b5f28e 43
+  s_4adc6099bc84ff::t_f9d069e44eccad 8,11-17,19,21-23
+deep_causality_uncertain/src/types/sampler/sequential_sampler.rs
+  s_4adc6099bc84ff::t_0a34b6ed78e2d5 220-224,236,248
+  s_4adc6099bc84ff::t_f4a704efd0560b 163-167
+  s_4adc6099bc84ff::t_65c8d4456d276c 11
+  s_4adc6099bc84ff::t_6c7932cc58e9e4 100-101,104-105
+  s_4adc6099bc84ff::t_aa8b5cd2bfda0a 145-147,150
+  s_4adc6099bc84ff::t_203844acd71921 97-99,102-103,106-112
+deep_causality_uncertain/tests/integration_tests/float106_precision_tests.rs
+  s_4adc6099bc84ff::t_6c021f9a04b0b4 11
+  s_4adc6099bc84ff::t_27844bbf27ec4d 1-10,12-87
+deep_causality_uncertain/src/alias/mod.rs
+  s_4adc6099bc84ff::t_1da49970ee85a6 6,10,14
+deep_causality_uncertain/src/extensions/probabilistic_type/mod.rs
+  s_4adc6099bc84ff::t_463d7731ccc250 7
+deep_causality_uncertain/tests/types/distribution/distribution_tests.rs
+  s_4adc6099bc84ff::t_404879ae517daa 153-154,156-157,170-171
+deep_causality_uncertain/src/extensions/probabilistic_type/f106_probabilistic_type.rs
+  s_4adc6099bc84ff::t_dd7f52cd6caed8 1-5,10-37
+  s_4adc6099bc84ff::t_89b7bcefc016cf 6-9
+  s_4adc6099bc84ff::t_6c7932cc58e9e4 41-44
+  s_4adc6099bc84ff::t_3fde766065133b 38-40,45-52
+deep_causality_uncertain/src/lib.rs
+  s_4adc6099bc84ff::t_39dfefc3f2275b 27
+  s_4adc6099bc84ff::t_4afbe574483ebd 18-21
+deep_causality_uncertain/src/types/computation/operator/comparison_operator.rs
+  s_4adc6099bc84ff::t_6a935086f95006 6-8,17-20,31-32
+deep_causality_uncertain/src/types/uncertain/uncertain_op_arithmetic.rs
+  s_4adc6099bc84ff::t_5bd38a3fb73816 6-7,10-14,26,38,50,62
+deep_causality_uncertain/src/types/uncertain/uncertain_f106.rs
+  s_4adc6099bc84ff::t_6c7932cc58e9e4 12
+  s_4adc6099bc84ff::t_3c2f914d9e8b0d 17-19
+  s_4adc6099bc84ff::t_81592f71cc6740 1-11,13-16,20-58
+deep_causality_uncertain/src/types/computation/operator/arithmetic_operator.rs
+  s_4adc6099bc84ff::t_b7cf0b7a5eb4bd 8
+deep_causality_uncertain/src/types/distribution_parameters/uniform_distribution_params.rs
+  s_4adc6099bc84ff::t_da42531d7fdf83 6-9,11-13,16,27,32
+deep_causality_uncertain/src/traits/mod.rs
+  s_4adc6099bc84ff::t_94e3fc241f3598 7
+deep_causality_uncertain/src/types/distribution/mod.rs
+  s_4adc6099bc84ff::t_bb23e4bcb1ef2f 13-14
+  s_4adc6099bc84ff::t_793ad4f01f3659 6
+  s_4adc6099bc84ff::t_0c00be4f283c83 48-71
+openspec/specs/rand-realfield-sampling/spec.md
+  s_4adc6099bc84ff::t_df88f8f02661b1 1-3,13-26,49
+  s_4adc6099bc84ff::t_22f64a59c41ae9 4-12
+deep_causality_uncertain/src/types/uncertain_maybe/mod.rs
+  s_4adc6099bc84ff::t_8d6d15dddacacd 6
+deep_causality_uncertain/src/types/distribution_parameters/normal_distribution_params.rs
+  s_4adc6099bc84ff::t_851c13fad50aca 6-10,12-14,17,28,32
+deep_causality_uncertain/src/types/uncertain/uncertain_f64.rs
+  s_4adc6099bc84ff::t_40c931c23e9e59 5,8-10
+deep_causality_uncertain/src/extensions/probabilistic_type/f64_probabilistic_type.rs
+  s_4adc6099bc84ff::t_ecdd7885e74406 6-9
+  s_4adc6099bc84ff::t_6c7932cc58e9e4 38-41
+  s_4adc6099bc84ff::t_7eacfba6f4ff3b 35-37,42-49
+deep_causality_uncertain/tests/BUILD.bazel
+  s_4adc6099bc84ff::t_59920178aac05a 51-52
+deep_causality_uncertain/src/types/uncertain_maybe/uncertain_maybe_f106.rs
+  s_4adc6099bc84ff::t_e221a2b6c1c24e 1-91
+deep_causality_uncertain/src/types/computation/uncertain_node_content/mod.rs
+  s_4adc6099bc84ff::t_b86d73871fe569 47
+  s_4adc6099bc84ff::t_6b05608aa2ec80 14
+  s_4adc6099bc84ff::t_74ed50c651a8a8 167-169
+  s_4adc6099bc84ff::t_0ca5678f0ae667 105
+deep_causality_uncertain/src/types/uncertain/uncertain_real.rs
+  s_4adc6099bc84ff::t_6c021f9a04b0b4 13
+  s_4adc6099bc84ff::t_d05d4b28b77771 1-12,14-30
+deep_causality_uncertain/src/types/uncertain/mod.rs
+  s_4adc6099bc84ff::t_7de8f6fe29eb20 15
+  s_4adc6099bc84ff::t_e92b41aab521fe 22
+deep_causality_uncertain/src/traits/uncertain_real.rs
+  s_4adc6099bc84ff::t_eccaba4285088c 1-22
+deep_causality_uncertain/tests/types/computation/operator/arithmetic_operator_tests.rs
+  s_4adc6099bc84ff::t_03fdca52c94c9a 51-53
+openspec/specs/uncertain-realfield-generic/spec.md
+  s_4adc6099bc84ff::t_df88f8f02661b1 1-3,16-52
+  s_4adc6099bc84ff::t_1730c087861585 4-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "24ead0d5527ef9534a4f6dd1b096d77bd2af91e0",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
