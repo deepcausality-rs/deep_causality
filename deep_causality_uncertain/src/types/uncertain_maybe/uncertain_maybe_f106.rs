@@ -66,26 +66,5 @@ impl MaybeUncertain<Float106> {
         !self.is_present.clone()
     }
 
-    /// SPRT-gated collapse to a plain `Uncertain<Float106>`: returns the value channel only
-    /// if the statistical evidence for presence meets the threshold, else a presence error.
-    /// The presence parameters are dimensionless probabilities and stay `f64`.
-    pub fn lift_to_uncertain(
-        &self,
-        threshold_prob_some: f64,
-        confidence_level: f64,
-        epsilon: f64,
-        max_samples: usize,
-    ) -> Result<Uncertain<Float106>, UncertainError> {
-        let is_present =
-            self.is_present
-                .to_bool(threshold_prob_some, confidence_level, epsilon, max_samples)?;
-
-        if is_present {
-            Ok(self.value.clone())
-        } else {
-            Err(UncertainError::PresenceError(
-                "Insufficient evidence for presence".to_string(),
-            ))
-        }
-    }
+    // `lift_to_uncertain` is the precision-generic gate on `MaybeUncertain<T>` (see `mod.rs`).
 }
