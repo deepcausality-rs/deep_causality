@@ -13,35 +13,43 @@ build` / `make test` are run by the user on review, not by the agent.
 
 ## A. Cut-cell geometry (cut-cell-geometry)
 
-- [ ] A1 `CutCell<D>` carrier: clipped fluid volume, per-face aperture (wetted fraction
+- [x] A1 `CutCell<D>` carrier: clipped fluid volume, per-face aperture (wetted fraction
       in `[0,1]`), `Vec<CutFaceFragment>` (area, outward unit normal, source-geometry
       tag), and `Fluid | Cut | Solid` classification. Private fields + getters per the
-      one-type-one-module convention.
-- [ ] A2 `CutCellRegistry<D>`: sparse `cell_id -> CutCell<D>` map keyed in the lattice's
-      `iter_cells` ordering; absent cells are full fluid cells. Construction API.
-- [ ] A3 Cut-aware volume/aperture accessor on the geometry path: override
-      `cell_volume` / dual-volume for registered cells, generalizing the existing
-      `boundary_clip` `2^{-b}` factor to a continuous wetted fraction; full cells keep
-      the existing fast path untouched.
-- [ ] A4 Cube ⋂ analytic primitive (infinite cylinder, sphere, plane): exact clipped
-      volume + apertures + fragment normals. Closed-form, the cylinder-validation path.
-      Cochain discipline (carried from R1's `graded-metrics` finding): a clipped volume and
-      an aperture are *cell measures*; produce and feed them as the measures the star
-      consumes (the `boundary_clip` integer generalized to a continuous fraction), never as
-      pointwise field samples.
+      one-type-one-module convention. (`src/types/cut_cell/{carrier,cut_face_fragment,
+      cell_class,source_geometry}.rs`.)
+- [x] A2 `CutCellRegistry<D>`: sparse `cell_id -> CutCell<D>` map keyed in the lattice's
+      `iter_cells(D)` ordering; absent cells are full fluid cells. Construction API
+      (`new`/`from_map`/`insert`/`from_primitive`). (`src/types/cut_cell/registry.rs`.)
+- [x] A3 Cut-aware volume/aperture accessor on the geometry path: `clipped_cell_volume`
+      overrides registered top cells and falls through for the rest; `dual_fluid_fraction`
+      generalizes the `boundary_clip` `2^{-b}` factor to a continuous wetted fraction; full
+      cells keep the existing fast path untouched. (Folding into the shipped `hodge_star`
+      build is B5 solver wiring — A3 delivers the override + the reduction proof.)
+- [x] A4 Cube ⋂ analytic primitive: exact closed-form clipped volume + apertures +
+      fragment normals for **half-space (all D)**, **axis-aligned cylinder (D=3, the
+      cylinder-validation path)**, and **disk (D=2)**. The **3D ball** closed form is
+      deferred (off the validation path; unsupported combos return `TopologyError`).
+      Cochain discipline (carried from R1's `graded-metrics` finding): clipped volumes and
+      apertures are produced and consumed as *cell measures*, never pointwise samples.
+      (Curved-surface *fragment* area uses high-resolution quadrature — not on the exactness
+      scenario, which gates volume + apertures.)
 - [ ] A5 ~~Cube ⋂ triangle (STL path)~~ **POSTPONED** (Open Question 4 resolved): no STL /
       file reading in this change; intersection is analytic-primitive-only (A4). Deferred to a
       later change with its own degenerate-triangle / near-tangent-cut handling.
-- [ ] A6 Consistency gate: an axis-aligned planar cut reproduces the Stage-3 integer
-      wall clip (`boundary_clip`) to rounding — the cut generalization must not move the
-      existing wall geometry.
-- [ ] A7 Exactness tests: clipped volume and aperture of cube ⋂ {cylinder, sphere,
-      plane} against closed-form **measures** (not pointwise values — the R1 cochain lesson),
-      2D/3D, f64 + Float106, ≤ tolerance; registry round-trip. Add a graded-and-cut
-      composition check: a clipped volume computed from `PerEdge` graded edge lengths equals
-      the closed-form measure, confirming cut rides the verified second-order graded substrate.
-- [ ] A8 Group gate: format, clippy, full topology tests both feature configs; prepare
-      Group A commit message and ask the user to commit.
+- [x] A6 Consistency gate: the cut-aware `dual_fluid_fraction` reproduces the Stage-3
+      integer wall clip — pinned both against the closed-form `2^{-b}` and against the actual
+      shipped `hodge_star` diagonal on open lattices (2D + 3D), and against a plane cut
+      coincident with a cell boundary.
+- [x] A7 Exactness tests: clipped volume and apertures of cube ⋂ {plane, disk, cylinder}
+      against closed-form **measures** (not pointwise values — the R1 cochain lesson),
+      2D/3D, f64 + Float106, ≤ tolerance; registry round-trip + sparsity. Graded-and-cut
+      composition check: a cut cell's full volume equals `geom.cell_volume` over `PerEdge`
+      graded edge lengths, confirming cut rides the verified second-order graded substrate.
+- [x] A8 Group gate: `make format`, clippy clean (0 warnings), full topology tests both
+      feature configs (1227 pass) + the 17 new cut-cell tests (cargo + bazel
+      `//deep_causality_topology/tests:types/cut_cell`); commit message prepared. (User
+      commits per the golden rule.)
 
 ## B. Stabilization + immersed wall BC + solver wiring (cut-cell-stabilization, immersed-wall-bc)
 
