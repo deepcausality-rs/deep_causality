@@ -2,12 +2,13 @@
 
 ### Requirement: Sensor-fed uncertain inflow zone
 The solver SHALL support an `UncertainInflowZone` that tags a set of inflow boundary cells
-fed by a `MaybeUncertain<R>` stream, where `R` is the solver's precision (from the
-`generalize-uncertain-over-realfield` prerequisite). Each step the zone SHALL gate the
-stream with `lift_to_uncertain` and, on success, take a presence-confirmed `R` inflow value
-for assembly. The selective uncertain typing SHALL be confined to the tagged inflow patch;
-the solver rate and step SHALL remain `R: RealField` with no `MaybeUncertain` in their
-signatures.
+fed by a `MaybeUncertain<R>` stream, where `R` is the solver's precision (shipped by the
+`uncertain-realfield-generic` capability — `MaybeUncertain<R>` is precision-generic over
+`R: RealField`, so the patch is `R`-typed end to end with no `R → f64` cast island). Each step
+the zone SHALL gate the stream with `lift_to_uncertain` and, on success, take a
+presence-confirmed `R` inflow value for assembly. The selective uncertain typing SHALL be
+confined to the tagged inflow patch; the solver rate and step SHALL remain `R: RealField` with
+no `MaybeUncertain` in their signatures.
 
 #### Scenario: Present sensor value drives the inflow
 - **WHEN** the sensor stream reports a present value above the presence threshold for an inflow cell
@@ -21,8 +22,11 @@ signatures.
 The zone SHALL detect a sensor dropout (the presence gate `lift_to_uncertain` returning a
 presence error) and fire a BC-fallback corrective intervention that substitutes the
 last-good or a configured-default inflow via `.intervene`, recording the dropout and the
-fallback in the `EffectLog`. A run with no dropouts SHALL reproduce the deterministic-inflow
-control run to rounding.
+fallback in the `EffectLog`. The dropout log verbosity SHALL be configurable (default: record
+each dropout and its fallback; a lower setting records only dropout onset/recovery
+transitions). A run with no dropouts SHALL reproduce the deterministic-inflow control run to
+rounding — backed by the `uncertain-realfield-generic` bit-for-bit f64-preservation guarantee,
+so at `R = f64` the present-value path is numerically identical to a plain `f64` inflow.
 
 #### Scenario: Dropout falls back and is logged
 - **WHEN** the sensor stream drops below the presence threshold for an inflow cell

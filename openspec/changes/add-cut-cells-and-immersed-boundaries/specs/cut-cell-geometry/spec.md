@@ -16,19 +16,25 @@ registry SHALL be sized to the boundary, not the volume.
 The cut volume and apertures SHALL feed the cell-volume / dual-volume path consumed by the
 Hodge star, generalizing the existing axis-aligned boundary clip (the integer `2^{-b}`
 factor) to a continuous wetted fraction. An axis-aligned planar cut SHALL reproduce the
-Stage-3 wall clip to rounding, so existing wall-bounded results are unchanged.
+Stage-3 wall clip to rounding, so existing wall-bounded results are unchanged. The cut volume
+and apertures are **cell measures** (integrals over cells), fed as the measures the star
+consumes — the same cochain convention the `graded-metrics` capability established; they SHALL
+NOT be conflated with pointwise field values.
 
 #### Scenario: Axis-aligned cut equals the Stage-3 wall clip
 - **WHEN** a `CutCell` describes an axis-aligned planar cut coincident with a lattice wall
 - **THEN** the resulting clipped dual volumes equal the Stage-3 `boundary_clip` values to rounding
 
+#### Scenario: A cut cell composes with graded edge lengths
+- **WHEN** a cut cell is built over a `PerEdge`/`PerAxis` graded metric (wall-normal clustering near the immersed surface)
+- **THEN** its clipped volume is the closed-form measure computed from the graded edge lengths, riding the same `cell_volume` dispatch, so the graded second-order substrate (`graded-metrics`) is preserved through the cut
+
 ### Requirement: Surface intersection produces apertures and fragments
 The crate SHALL compute cube ⋂ analytic-primitive (infinite cylinder, sphere, plane)
-intersection in closed form, and cube ⋂ triangle intersection for STL inputs, each yielding
-the clipped volume, per-face apertures, and cut-face fragments with outward normals.
-Degenerate triangles and near-tangent cuts SHALL be handled explicitly rather than
-producing invalid apertures.
+intersection in closed form, yielding the clipped volume, per-face apertures, and cut-face
+fragments with outward normals. STL ingestion and cube ⋂ triangle intersection are out of
+scope for this change (no file reading); they are deferred to a later change.
 
 #### Scenario: Cube cut by an analytic cylinder matches closed form
 - **WHEN** a unit cube is intersected with an analytic cylinder of known radius and axis
-- **THEN** the clipped volume and face apertures equal the closed-form values within tolerance at f64 and Float106
+- **THEN** the clipped volume and face apertures equal the closed-form **measures** (volume and area, not pointwise samples) within tolerance at f64 and Float106

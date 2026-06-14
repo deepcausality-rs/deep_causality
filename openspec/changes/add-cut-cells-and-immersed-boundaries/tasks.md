@@ -25,13 +25,21 @@ build` / `make test` are run by the user on review, not by the agent.
       the existing fast path untouched.
 - [ ] A4 Cube ⋂ analytic primitive (infinite cylinder, sphere, plane): exact clipped
       volume + apertures + fragment normals. Closed-form, the cylinder-validation path.
-- [ ] A5 Cube ⋂ triangle (STL path): clipped volume + apertures + fragments; explicit
-      degenerate-triangle and near-tangent-cut handling.
+      Cochain discipline (carried from R1's `graded-metrics` finding): a clipped volume and
+      an aperture are *cell measures*; produce and feed them as the measures the star
+      consumes (the `boundary_clip` integer generalized to a continuous fraction), never as
+      pointwise field samples.
+- [ ] A5 ~~Cube ⋂ triangle (STL path)~~ **POSTPONED** (Open Question 4 resolved): no STL /
+      file reading in this change; intersection is analytic-primitive-only (A4). Deferred to a
+      later change with its own degenerate-triangle / near-tangent-cut handling.
 - [ ] A6 Consistency gate: an axis-aligned planar cut reproduces the Stage-3 integer
       wall clip (`boundary_clip`) to rounding — the cut generalization must not move the
       existing wall geometry.
 - [ ] A7 Exactness tests: clipped volume and aperture of cube ⋂ {cylinder, sphere,
-      plane} against closed form, 2D/3D, f64 + Float106, ≤ tolerance; registry round-trip.
+      plane} against closed-form **measures** (not pointwise values — the R1 cochain lesson),
+      2D/3D, f64 + Float106, ≤ tolerance; registry round-trip. Add a graded-and-cut
+      composition check: a clipped volume computed from `PerEdge` graded edge lengths equals
+      the closed-form measure, confirming cut rides the verified second-order graded substrate.
 - [ ] A8 Group gate: format, clippy, full topology tests both feature configs; prepare
       Group A commit message and ask the user to commit.
 
@@ -48,9 +56,10 @@ build` / `make test` are run by the user on review, not by the agent.
 - [ ] B4 Immersed no-slip / slip on cut-face fragments: extend the symmetric restriction
       `P_S Δ₁ P_S` and the constrained Leray constraint set to cut-adjacent edges with
       the fragment normal as constraint direction; moving-surface reuse of the lid lift.
-- [ ] B5 Solver wiring: `DecNsSolver` accepts a `CutCellRegistry`; cut-aware CFL (global
-      max includes cut-adjacent speeds); seeding projects + constrains so the march
-      starts divergence-free and no-slip-consistent on the immersed boundary.
+- [ ] B5 Solver wiring: `DecNsSolver` accepts a `CutCellRegistry` as immutable `Context`
+      (static rigid-body geometry — D10), cut-aware CFL (global max includes cut-adjacent
+      speeds); seeding projects + constrains so the march starts divergence-free and
+      no-slip-consistent on the immersed boundary.
 - [ ] B6 Equivalence: with an axis-aligned cut registry, the wall-bounded results match
       the Stage-3 no-slip solver to rounding (no behavioral drift).
 - [ ] B7 Group gate: format, clippy, full physics + topology tests both feature configs;
@@ -58,19 +67,22 @@ build` / `make test` are run by the user on review, not by the agent.
 
 ## C. First MaybeUncertain data zone (uncertain-inflow-zone)
 
-> **Prerequisite:** the `generalize-uncertain-over-realfield` change must land before
-> Group C opens — it makes `MaybeUncertain<R>` precision-generic so the inflow patch
-> composes with the solver's `R` without an `R → f64` cast. Groups A, B, D do not depend
-> on it and can proceed in parallel.
+> **Prerequisite (LANDED 2026-06-14):** `generalize-uncertain-over-realfield` is archived;
+> `MaybeUncertain<R>` over `R: RealField` is shipped (living specs `uncertain-realfield-generic`
+> + `rand-realfield-sampling`), so the inflow patch composes with the solver's `R` without an
+> `R → f64` cast. Group C consumes the shipped API directly. f64 behavior is preserved
+> bit-for-bit, so the f64 cylinder validation is unaffected.
 
-- [ ] C0 Confirm the `generalize-uncertain-over-realfield` prerequisite has landed
-      (`MaybeUncertain<R>` available at the solver's precision).
+- [ ] C0 Consume the shipped `MaybeUncertain<R>` API at the solver's precision (prerequisite
+      already landed — a build/use check, not a wait gate).
 - [ ] C1 `UncertainInflowZone`: tag a set of inflow boundary cells fed by a
       `MaybeUncertain<R>` stream; per-step `lift_to_uncertain(threshold, confidence,
-      epsilon, max_samples)` to a presence-confirmed `R` inflow value for assembly.
+      epsilon, max_samples)` to a presence-confirmed `R` inflow value for assembly. The
+      zone's last-good value lives in mutable `State` (D10).
 - [ ] C2 Dropout path: `Err(PresenceError)` fires the BC-fallback corrective intervention
       (§10.3) — substitute last-good / configured-default inflow via `.intervene`, record
-      the dropout in the `EffectLog`.
+      the dropout in the `EffectLog` at the configured verbosity (D6: default records each
+      dropout + fallback; a knob can throttle to onset/recovery transitions).
 - [ ] C3 The solver core stays `R: RealField`; the uncertain types never enter the march
       (compile-level: no `MaybeUncertain` in the rate/step signatures).
 - [ ] C4 Tests: dropout stream triggers the intervention and the logged fallback;
