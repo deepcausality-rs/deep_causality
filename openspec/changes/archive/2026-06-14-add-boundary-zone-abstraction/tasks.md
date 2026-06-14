@@ -111,8 +111,8 @@ new open-boundary behaviour (I, O) is added.
 - [x] V2 Handoff confirmed: the `Inflow`/`Outflow` zones express the isolated-cylinder external-flow
       domain; `add-cut-cells-and-immersed-boundaries` D2/D3 is updated to consume them (the Re-ladder
       is implemented and gated **in that change**, then it closes).
-- [~] V3 Change gate: `openspec validate --strict` ✓, format ✓, clippy 0 ✓, full topology (1245)
-      + physics (1578) + uncertain (199) tests + bazel ✓; final commit message prepared. **Caller
-      migration is deferred to `consolidate-causal-cfd-fluiddynamics`** (which rewrites all examples
-      in the DSL — migrating to `with_zones` now would be wasted churn). Archiving is left to the
-      user (a repo-wide spec mutation; per the golden rules the user commits/archives).
+- [x] V3 Change gate: `openspec validate --strict` ✓, format ✓, clippy 0 ✓, full topology (1245)
+      + physics (1578) + uncertain (199) tests + bazel ✓; the five implementation commits landed
+      (P/Z/I+O/U). **Caller migration is deferred to `consolidate-causal-cfd-fluiddynamics`** (which
+      rewrites all examples in the DSL — migrating to `with_zones` now would be wasted churn). The
+      change is synchronized into the living specs and archived.
