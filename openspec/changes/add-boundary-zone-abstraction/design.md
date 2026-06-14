@@ -178,9 +178,15 @@ vocabulary — it does not introduce a parallel dynamic one.
 ## No legacy preservation
 
 None of this CFD code is published (it was written over the last few days), so there is **no
-back-compat constraint**: the zone set is *the* boundary surface, and the ad-hoc entry points
-(`with_moving_wall`, the implicit no-slip-from-walls, the body-force argument, the cut-registry
-attachment) are **replaced** by zone constructors, not kept as shims. Downstream callers (the
-cut-cells change, the examples) are updated to the zone API wherever that yields a cleaner surface.
-The only thing preserved is **numerics**: the reduction gates (D1, D2) prove the new operator
-reproduces the validated physics, independent of the API change.
+back-compat constraint**: the `with_zones` zone set is *the* composable boundary surface. The
+`new`/`with_moving_wall`/body-force-argument constructors remain as the lower-level building blocks
+`with_zones` itself uses — not as shims for the abstraction (there is no parallel dynamic path; the
+design is static throughout). The only thing preserved is **numerics**: the equivalence gates (Z4,
+P3) prove the new operators reproduce the validated physics, independent of the API.
+
+**Caller migration is deferred to the third change** (`consolidate-causal-cfd-fluiddynamics`), not
+spread across this one. That change moves the theories/solver into `causal_cfd` and **rewrites
+every example and validation case in the `FluidDynamics` DSL** — so migrating the existing
+examples/tests to `with_zones` now, only to rewrite them again in the DSL there, would be wasted
+churn. The boundary-zone surface is complete and gated here; its adoption across the call sites is
+the consolidation's job.

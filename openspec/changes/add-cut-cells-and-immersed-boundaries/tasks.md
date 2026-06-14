@@ -155,16 +155,15 @@ build` / `make test` are run by the user on review, not by the agent.
       div_residual, v_probe`) and a shedding-Strouhal estimate. Drives the flow with a body
       force because the solver has **no inflow/outflow BC yet** (that is Group C); includes a
       documented volume-fraction small-cell merge guard (placeholder for B1–B3).
-- [~] D2/D3 Re-ladder vs Williamson / Lehmkuhl et al. (2013): **blocked on the prerequisite
-      change `add-boundary-zone-abstraction`** (the boundary-zone abstraction + the net-flux
-      mixed-BC Leray projection + the Inflow/Outflow zones). The earlier "Group C will add
-      inflow/outflow" assumption was wrong: Group C's sensor zone is a prescribed *tangential*
-      moving wall, not an open boundary — a true wall-normal inflow/outflow surface is a
-      projection-core feature that became its own change. Once that change lands, the
-      isolated-cylinder external-flow domain (west `Inflow`, east `Outflow`, far-field top/bottom,
-      immersed cut cylinder) is marched here at Re 100–3900 and compared to the references, then
-      this change is closed. Until then the harness prints a confined/periodic Strouhal estimate as
-      a qualitative shedding check only.
+- [~] D2/D3 Re-ladder vs Williamson / Lehmkuhl et al. (2013): the prerequisite is now **shipped**
+      — `add-boundary-zone-abstraction` delivered the net-flux mixed-BC Leray projection and the
+      `Inflow`/`Outflow` zones (a uniform inflow/outflow channel marches to exact uniform flow).
+      The earlier "Group C will add inflow/outflow" assumption was wrong (Group C's sensor zone is a
+      prescribed *tangential* moving wall, not an open boundary); the open boundary became its own
+      change. The remaining work here is to build the isolated-cylinder external-flow domain (west
+      `Inflow`, east `Outflow`, far-field top/bottom, immersed cut cylinder) on those zones and
+      march the Re 100–3900 ladder against the references, then close this change. Until then the
+      harness prints a confined/periodic Strouhal estimate as a qualitative shedding check only.
 - [x] D4 Cheap CI regression rungs (no heavy march): geometric exactness — disk cut volumes
       sum to the exact `domain − π r²` (`cut_cell::consistency_tests`) + per-primitive f64 /
       Float106 exactness (`cut_cell::intersection_tests`); axis-aligned-cut consistency — empty

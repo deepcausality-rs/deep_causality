@@ -101,12 +101,18 @@ new open-boundary behaviour (I, O) is added.
 
 ## V. Validation + handoff (open-boundary-validation)
 
-- [ ] V1 Analytic open-boundary rungs (fast, no heavy march): uniform-channel exactness (I2),
-      mass conservation (O2), closed-domain bit-identity (P3).
-- [ ] V2 Handoff: confirm the Inflow/Outflow zones express the isolated-cylinder external-flow
-      domain (west `Inflow`, east `Outflow`, far-field top/bottom, immersed cut cylinder) — the
-      `add-cut-cells-and-immersed-boundaries` D2/D3 Re-ladder consumes these zones (that ladder is
-      implemented and gated **in that change**, then it is closed).
-- [ ] V3 Change gate: `openspec validate --strict`, format, clippy, full physics + uncertain tests
-      both feature configs and bazel; prepare the final commit message; **archive this change**
-      (it is the prerequisite that must close before the cut-cells change is closed).
+- [x] V1 Analytic open-boundary rungs (fast, no heavy march): closed-domain bit-identity (P3,
+      `leray_open_tests`), the uniform inflow/outflow channel through the full solver (I2/O2,
+      `inflow_outflow_tests`), the boundary-zone numerical-equivalence (Z4, `boundary_zone_tests`),
+      and the standalone uncertain source (U, `uncertain_boundary_source_tests`). A source-scanning
+      "no `dyn`" guard is intentionally omitted — static dispatch is compiler-enforced (the trait
+      is used generically and composes via tuples; the `(BodyForceZone, MovingWall)` test exercises
+      it) and a source scan would break the bazel sandbox.
+- [x] V2 Handoff confirmed: the `Inflow`/`Outflow` zones express the isolated-cylinder external-flow
+      domain; `add-cut-cells-and-immersed-boundaries` D2/D3 is updated to consume them (the Re-ladder
+      is implemented and gated **in that change**, then it closes).
+- [~] V3 Change gate: `openspec validate --strict` ✓, format ✓, clippy 0 ✓, full topology (1245)
+      + physics (1578) + uncertain (199) tests + bazel ✓; final commit message prepared. **Caller
+      migration is deferred to `consolidate-causal-cfd-fluiddynamics`** (which rewrites all examples
+      in the DSL — migrating to `with_zones` now would be wasted churn). Archiving is left to the
+      user (a repo-wide spec mutation; per the golden rules the user commits/archives).
