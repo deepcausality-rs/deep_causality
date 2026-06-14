@@ -1,0 +1,27 @@
+openspec/specs/open-boundary-inflow/spec.md
+  s_4adc6099bc84ff::t_af073817c63481 1-21
+openspec/specs/uncertain-boundary-source/spec.md
+  s_4adc6099bc84ff::t_af073817c63481 1-28
+openspec/specs/boundary-zone-abstraction/spec.md
+  s_4adc6099bc84ff::t_af073817c63481 1-36
+openspec/specs/open-boundary-outflow/spec.md
+  s_4adc6099bc84ff::t_af073817c63481 1-20
+openspec/specs/open-boundary-flux-projection/spec.md
+  s_4adc6099bc84ff::t_af073817c63481 1-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "72e1f863e923b99295a346ca732d5ce86772b92d",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
