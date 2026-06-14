@@ -1,0 +1,73 @@
+deep_causality_topology/tests/BUILD.bazel
+  s_4adc6099bc84ff::t_9ee2288e1d4db5 210-225
+deep_causality_topology/src/types/cut_cell/cell_class.rs
+  s_4adc6099bc84ff::t_0449e6936b7bdb 1-43
+deep_causality_topology/src/types/cut_cell/registry.rs
+  s_4adc6099bc84ff::t_c04f4b0f609698 12
+  s_4adc6099bc84ff::t_4dde74102737ec 139-142,161-163,167,169-170,172-173,175-176,180-181,185-187
+  s_4adc6099bc84ff::t_579deee852266f 1-8,10-11,13-106,111-126,128-129,133-138,143-160,164-166,168,171,174,177-179,182-184,188-191
+  s_4adc6099bc84ff::t_acc3f891eabb90 107-110,127,130-132
+  s_4adc6099bc84ff::t_38ce0f31b10cde 9
+deep_causality_topology/src/types/cut_cell/mod.rs
+  s_4adc6099bc84ff::t_c883a274f6754c 1-40,42-49,51-55
+  s_4adc6099bc84ff::t_5f93a0251ed69a 41,50
+deep_causality_topology/src/types/cut_cell/cut_face_fragment.rs
+  s_4adc6099bc84ff::t_f4718ad2ee95e8 1-16,22-56
+  s_4adc6099bc84ff::t_aa27f953038b3c 17-21
+deep_causality_topology/src/types/cut_cell/primitive.rs
+  s_4adc6099bc84ff::t_9f22c603ffb011 1-79
+deep_causality_topology/src/types/mod.rs
+  s_4adc6099bc84ff::t_ca74f310b17e30 10
+deep_causality_topology/tests/types/mod.rs
+  s_4adc6099bc84ff::t_b65a0f4489e77d 11
+deep_causality_topology/src/types/cut_cell/source_geometry.rs
+  s_4adc6099bc84ff::t_46bbdb74a2b2f5 1-21
+deep_causality_topology/tests/types/cut_cell/carrier_tests.rs
+  s_4adc6099bc84ff::t_acc3f891eabb90 70-73,113-116
+  s_4adc6099bc84ff::t_f89ee9aa36d909 1-69,74-111,117-122
+  s_4adc6099bc84ff::t_25d7b06a18c841 112
+deep_causality_topology/src/types/cut_cell/geometry.rs
+  s_4adc6099bc84ff::t_02306ccc02f0c0 186
+  s_4adc6099bc84ff::t_507ab28352dc46 23-32
+  s_4adc6099bc84ff::t_a2580331fa0176 206
+  s_4adc6099bc84ff::t_45fc1a307e9f27 1-22,33-115,117-159,161-185,187-205,207-250,253-286
+  s_4adc6099bc84ff::t_acc3f891eabb90 251-252
+  s_4adc6099bc84ff::t_22476c4b9a9dcc 116,160
+deep_causality_topology/src/lib.rs
+  s_4adc6099bc84ff::t_42b33cbbe988d4 75-77
+openspec/changes/add-cut-cells-and-immersed-boundaries/tasks.md
+  s_4adc6099bc84ff::t_f5981eef538c78 16,19-36,40-52
+deep_causality_topology/src/types/cut_cell/intersection.rs
+  s_4adc6099bc84ff::t_acc3f891eabb90 12-13,76-78,91
+  s_4adc6099bc84ff::t_460795a2dfe75c 19
+  s_4adc6099bc84ff::t_9fcba367298b95 9
+  s_4adc6099bc84ff::t_b4c7ce2af3fbad 1-8,10-11,14-18,20-38,42-75,79-90,92-356
+  s_4adc6099bc84ff::t_47af414e11e7f4 39-41
+deep_causality_topology/tests/types/cut_cell/mod.rs
+  s_4adc6099bc84ff::t_d64c8231063e7f 1-13
+deep_causality_topology/tests/types/cut_cell/intersection_tests.rs
+  s_4adc6099bc84ff::t_c41a6fae6f5ad6 1-25,33,36,41-43,45,48-51,60,62-65,82-85,93-94,102-108,116,119,123-127,137-144,152,155,157-200
+  s_4adc6099bc84ff::t_88f51c1c4feade 26,34-35,37-40,44,46-47,52,59,61,66,73-75,81,86,95,109,117-118,120-122,128,135-136,145,153-154,156
+  s_4adc6099bc84ff::t_acc3f891eabb90 27-32,53-58,67-72,76-80,87-92,96-101,110-115,129-134,146-151
+deep_causality_topology/tests/types/cut_cell/consistency_tests.rs
+  s_4adc6099bc84ff::t_d57a13da3618b8 1-88,90-93,95-96,99-112,119-127,130-134,136-152,157
+  s_4adc6099bc84ff::t_acc3f891eabb90 114-118,128-129,153-156
+  s_4adc6099bc84ff::t_b56ad447ef3cae 89,113,135
+  s_4adc6099bc84ff::t_c2746c882aecf6 94,97-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "6c30d7374421d131fb1ff93ed8cba1bcca5d634c",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
