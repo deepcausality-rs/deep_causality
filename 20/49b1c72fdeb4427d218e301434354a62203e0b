@@ -1,0 +1,25 @@
+deep_causality_uncertain/src/types/uncertain_maybe/mod.rs
+  s_4adc6099bc84ff::t_bfa16b815968de 9,18-53
+deep_causality_uncertain/src/types/uncertain_maybe/uncertain_maybe_bool.rs
+  s_4adc6099bc84ff::t_1452d1e00371cb 61
+deep_causality_uncertain/src/types/uncertain_maybe/uncertain_maybe_f64.rs
+  s_4adc6099bc84ff::t_416712b24d7136 63
+deep_causality_uncertain/src/types/uncertain_maybe/uncertain_maybe_f106.rs
+  s_4adc6099bc84ff::t_39984685285d0e 69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "2049b1c72fdeb4427d218e301434354a62203e0b",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
