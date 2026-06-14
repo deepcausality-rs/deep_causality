@@ -1,0 +1,47 @@
+openspec/changes/add-cut-cells-and-immersed-boundaries/tasks.md
+  s_4adc6099bc84ff::t_85c62c10516e1b 28-31
+  s_4adc6099bc84ff::t_4433bbfdbed195 80-81,84-85
+  s_4adc6099bc84ff::t_9e8fc8f2ad53f9 59-62
+  s_4adc6099bc84ff::t_c2c5b6ea839c22 39-42
+  s_4adc6099bc84ff::t_11daef197576e3 32-34
+  s_4adc6099bc84ff::t_db3dfd762ec889 70-74,76-77
+openspec/changes/add-cut-cells-and-immersed-boundaries/specs/cut-cell-geometry/spec.md
+  s_4adc6099bc84ff::t_0d84ebdef51165 40
+  s_4adc6099bc84ff::t_016783c35be30c 19-22,28-30
+  s_4adc6099bc84ff::t_de46ffeb007936 34-36
+openspec/changes/add-cut-cells-and-immersed-boundaries/specs/uncertain-inflow-zone/spec.md
+  s_4adc6099bc84ff::t_513327b04153b8 5-11
+  s_4adc6099bc84ff::t_661f68c8ab5795 25-29
+openspec/changes/add-cut-cells-and-immersed-boundaries/design.md
+  s_4adc6099bc84ff::t_99615a47bf8c3e 190-192
+  s_4adc6099bc84ff::t_6ff7c5ab388b3c 54-55
+  s_4adc6099bc84ff::t_c03581424b50ba 201-217
+  s_4adc6099bc84ff::t_6416afdf0f68eb 171-183
+  s_4adc6099bc84ff::t_a9b4f173c1137c 132,137-155
+  s_4adc6099bc84ff::t_b49fec966ac819 80-86
+  s_4adc6099bc84ff::t_083e382828591d 41-42
+  s_4adc6099bc84ff::t_628483222c1078 24-33
+  s_4adc6099bc84ff::t_638a39a12bec78 57-59
+  s_4adc6099bc84ff::t_e646b814764a51 109-116
+  s_4adc6099bc84ff::t_66dc4e9c6a8684 124-127
+openspec/changes/add-cut-cells-and-immersed-boundaries/proposal.md
+  s_4adc6099bc84ff::t_1c7f018cf823a5 56-65
+  s_4adc6099bc84ff::t_95a520a455f5b8 86-101
+  s_4adc6099bc84ff::t_f66b2f727d7b6a 36-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "1e5f869dc3c873f0da0cabbced37b6f52c29d479",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
