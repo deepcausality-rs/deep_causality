@@ -71,7 +71,7 @@ pub(crate) mod step_output;
 pub(crate) mod uncertain_inflow;
 pub(crate) mod wrappers;
 
-pub use boundary::{BodyForceZone, BoundaryZone, Inflow, MovingWall, Outflow};
+pub use boundary::{BodyForceZone, BoundaryZone, Inflow, MovingWall, Outflow, SlipWall};
 pub use dec_ns_rate::DecNsRate;
 pub use dec_ns_solver::DecNsSolver;
 pub use diagnostics::{

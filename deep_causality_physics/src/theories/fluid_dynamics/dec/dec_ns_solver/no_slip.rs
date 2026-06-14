@@ -94,4 +94,14 @@ impl NoSlipConstraint {
     pub(in crate::theories::fluid_dynamics::dec) fn edges(&self) -> &[usize] {
         &self.edges
     }
+
+    /// Remove a set of edges from the constraint (the free-slip **un-pin** seam): a free-slip face
+    /// frees its wall-tangential edges, so they drop out of the no-slip set. A no-op when `slip` is
+    /// empty (no slip face declared), preserving the no-slip / periodic paths bit-for-bit.
+    pub(in crate::theories::fluid_dynamics::dec) fn remove_edges(&mut self, slip: &[usize]) {
+        if slip.is_empty() {
+            return;
+        }
+        self.edges.retain(|e| !slip.contains(e));
+    }
 }

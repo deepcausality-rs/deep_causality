@@ -70,6 +70,16 @@ pub trait BoundaryZone<const D: usize, R: DecNsScalar> {
         _out: &mut Vec<usize>,
     ) {
     }
+
+    /// Add this zone's **un-pinned** (free-slip) edges: edges the auto-derived no-slip set would
+    /// pin, but which this zone frees (a free-slip wall's tangential edges, zero shear). The solver
+    /// removes them from the no-slip set.
+    fn collect_slip_edges(
+        &self,
+        _manifold: &Manifold<LatticeComplex<D, R>, R>,
+        _out: &mut Vec<usize>,
+    ) {
+    }
 }
 
 /// The identity zone: no boundary contribution (the closed-domain default).
@@ -121,5 +131,14 @@ where
     ) {
         self.0.collect_reference_vertices(manifold, out);
         self.1.collect_reference_vertices(manifold, out);
+    }
+
+    fn collect_slip_edges(
+        &self,
+        manifold: &Manifold<LatticeComplex<D, R>, R>,
+        out: &mut Vec<usize>,
+    ) {
+        self.0.collect_slip_edges(manifold, out);
+        self.1.collect_slip_edges(manifold, out);
     }
 }

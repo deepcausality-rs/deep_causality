@@ -17,9 +17,11 @@ pub(crate) mod boundary_zone;
 pub(crate) mod inflow;
 pub(crate) mod moving_wall;
 pub(crate) mod outflow;
+pub(crate) mod slip_wall;
 
 pub use body_force_zone::BodyForceZone;
 pub use boundary_zone::BoundaryZone;
 pub use inflow::Inflow;
 pub use moving_wall::MovingWall;
 pub use outflow::Outflow;
+pub use slip_wall::SlipWall;

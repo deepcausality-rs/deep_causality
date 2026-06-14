@@ -290,13 +290,27 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         reference.sort_unstable();
         reference.dedup();
 
-        let mut rate_constrained = self.no_slip.edges().to_vec();
-        rate_constrained.extend_from_slice(&inflow);
-        rate_constrained.sort_unstable();
-        rate_constrained.dedup();
-
         self.inflow_edges = inflow;
         self.reference_vertices = reference;
+        self.recompute_rate_constrained();
+    }
+
+    /// Free-slip un-pin: remove `slip` edges from the no-slip set (a free-slip wall frees its
+    /// tangential edges) and recompute the per-stage rate constraint. A no-op when `slip` is empty.
+    pub(in crate::theories::fluid_dynamics::dec) fn apply_slip(&mut self, slip: &[usize]) {
+        if slip.is_empty() {
+            return;
+        }
+        self.no_slip.remove_edges(slip);
+        self.recompute_rate_constrained();
+    }
+
+    /// Recompute the per-stage rate constraint `no_slip ∪ inflow`.
+    fn recompute_rate_constrained(&mut self) {
+        let mut rate_constrained = self.no_slip.edges().to_vec();
+        rate_constrained.extend_from_slice(&self.inflow_edges);
+        rate_constrained.sort_unstable();
+        rate_constrained.dedup();
         self.rate_constrained = rate_constrained;
     }
 

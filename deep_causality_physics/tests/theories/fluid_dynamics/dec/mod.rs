@@ -25,6 +25,8 @@ pub mod inviscid_invariants_tests;
 pub mod poiseuille_tests;
 #[cfg(test)]
 pub mod shear_layer_tests;
+#[cfg(test)]
+pub mod slip_wall_tests;
 pub mod spectral_diffusion_tests;
 #[cfg(test)]
 pub mod step_output_tests;

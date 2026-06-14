@@ -148,7 +148,12 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsSolver<'m, D, R> {
         zones.collect_lift(manifold, 0, &mut lift);
         solver.lift = lift;
 
-        // Fold the open-boundary sets (inflow prescribed edges, outflow reference vertices).
+        // Fold the free-slip un-pin first (it shrinks the no-slip set), then the open-boundary
+        // sets (inflow prescribed edges, outflow reference vertices) recompute the rate constraint.
+        let mut slip = alloc::vec::Vec::new();
+        zones.collect_slip_edges(manifold, &mut slip);
+        solver.rate.apply_slip(&slip);
+
         let mut prescribed = alloc::vec::Vec::new();
         zones.collect_prescribed_edges(manifold, &mut prescribed);
         let mut reference = alloc::vec::Vec::new();
