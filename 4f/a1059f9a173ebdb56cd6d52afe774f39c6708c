@@ -1,0 +1,25 @@
+deep_causality_topology/src/types/cubical_regge_geometry/has_hodge_star.rs
+  s_4adc6099bc84ff::t_5f8f130cd25e17 85,90-97,99-102,104-117,119-123,125-134,136-142,144-152,157-164,166-171,173,175-181,183-194,196,198-199,201-203,207,209-261,283-306
+  s_4adc6099bc84ff::t_532bcbaeb0e2be 67,155,204
+deep_causality_topology/tests/types/cut_cell/cut_star_tests.rs
+  s_4adc6099bc84ff::t_9143ab93190218 1-47,52-68,71-94,99-106,111
+  s_4adc6099bc84ff::t_532bcbaeb0e2be 48-51,69-70,95-98,107-110
+deep_causality_topology/tests/types/cut_cell/mod.rs
+  s_4adc6099bc84ff::t_40ef9658a23eb1 13-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "4fa1059f9a173ebdb56cd6d52afe774f39c6708c",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
