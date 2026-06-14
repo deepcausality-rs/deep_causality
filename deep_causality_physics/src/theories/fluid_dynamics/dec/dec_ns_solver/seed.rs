@@ -67,10 +67,12 @@ impl<const D: usize, R: DecNsScalar> DecNsSolver<'_, D, R> {
         // on the wall-tangential set; the explicit constraint stage then
         // re-asserts them and applies the prescribed moving-wall lift. All
         // are no-ops on periodic lattices.
-        let (state, _potential) = SolenoidalField::from_constrained_leray_projection_opts(
+        let (state, _potential) = SolenoidalField::from_open_leray_projection_opts(
             &velocity,
             self.manifold,
             self.rate.no_slip_edges(),
+            self.rate.inflow_edges(),
+            self.rate.reference_vertices(),
             &self.cg_options,
         )?;
         let state = state

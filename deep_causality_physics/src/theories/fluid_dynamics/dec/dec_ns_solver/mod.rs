@@ -148,6 +148,15 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsSolver<'m, D, R> {
         zones.collect_lift(manifold, 0, &mut lift);
         solver.lift = lift;
 
+        // Fold the open-boundary sets (inflow prescribed edges, outflow reference vertices).
+        let mut prescribed = alloc::vec::Vec::new();
+        zones.collect_prescribed_edges(manifold, &mut prescribed);
+        let mut reference = alloc::vec::Vec::new();
+        zones.collect_reference_vertices(manifold, &mut reference);
+        if !prescribed.is_empty() || !reference.is_empty() {
+            solver.rate.set_open_boundary(prescribed, reference);
+        }
+
         Ok(solver)
     }
 

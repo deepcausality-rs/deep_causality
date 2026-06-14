@@ -75,6 +75,16 @@ pub struct DecNsRate<'m, const D: usize, R: DecNsScalar> {
     /// bit-unchanged; on wall-bounded lattices `project_raw` routes through
     /// the constrained Leray projector instead.
     no_slip: super::dec_ns_solver::no_slip::NoSlipConstraint,
+    /// Open-boundary inflow edges (a prescribed Dirichlet velocity): pinned to zero **rate** in
+    /// the per-stage projection (so the velocity holds its prescribed value), and flux-counted in
+    /// the velocity re-entry projection. Empty on closed domains.
+    inflow_edges: alloc::vec::Vec<usize>,
+    /// Open-boundary outflow pressure-reference vertices for the velocity re-entry projection.
+    /// Empty on closed domains.
+    reference_vertices: alloc::vec::Vec<usize>,
+    /// The per-stage rate constraint set `no_slip ∪ inflow` (the rate is pinned to zero on both).
+    /// Equals `no_slip.edges()` on closed domains, so `project_raw` is bit-identical there.
+    rate_constrained: alloc::vec::Vec<usize>,
 }
 
 /// The compiled tables plus the per-evaluation scratch. `RefCell`: the
@@ -249,6 +259,7 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             ws: RefCell::new(ws),
         });
 
+        let rate_constrained = no_slip.edges().to_vec();
         Ok(Self {
             manifold,
             nu,
@@ -257,7 +268,46 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             engine,
             spectral: None,
             no_slip,
+            inflow_edges: alloc::vec::Vec::new(),
+            reference_vertices: alloc::vec::Vec::new(),
+            rate_constrained,
         })
+    }
+
+    /// Attaches an open-boundary specification: `inflow` edges carry a prescribed Dirichlet
+    /// velocity (rate pinned to zero per stage; flux counted in the velocity re-entry), and
+    /// `reference` vertices are the outflow pressure reference. Idempotently recomputes the
+    /// per-stage rate constraint `no_slip ∪ inflow`.
+    pub(in crate::theories::fluid_dynamics::dec) fn set_open_boundary(
+        &mut self,
+        inflow: alloc::vec::Vec<usize>,
+        reference: alloc::vec::Vec<usize>,
+    ) {
+        let mut inflow = inflow;
+        inflow.sort_unstable();
+        inflow.dedup();
+        let mut reference = reference;
+        reference.sort_unstable();
+        reference.dedup();
+
+        let mut rate_constrained = self.no_slip.edges().to_vec();
+        rate_constrained.extend_from_slice(&inflow);
+        rate_constrained.sort_unstable();
+        rate_constrained.dedup();
+
+        self.inflow_edges = inflow;
+        self.reference_vertices = reference;
+        self.rate_constrained = rate_constrained;
+    }
+
+    /// The open-boundary inflow (prescribed) edges; empty on closed domains.
+    pub(in crate::theories::fluid_dynamics::dec) fn inflow_edges(&self) -> &[usize] {
+        &self.inflow_edges
+    }
+
+    /// The open-boundary outflow reference vertices; empty on closed domains.
+    pub(in crate::theories::fluid_dynamics::dec) fn reference_vertices(&self) -> &[usize] {
+        &self.reference_vertices
     }
 
     /// The wall-tangential edge set the no-slip condition constrains
@@ -414,8 +464,11 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         raw: &VelocityOneForm<R>,
         opts: &HodgeDecomposeOptions<R>,
     ) -> Result<LerayProjection<R>, PhysicsError> {
+        // Per-stage: the rate is pinned to zero on the no-slip walls **and** the inflow edges
+        // (a constant prescribed inflow has zero rate). `rate_constrained` equals `no_slip` on
+        // closed domains, so this is bit-identical there.
         self.manifold
-            .leray_project_constrained_opts(raw.as_tensor(), self.no_slip.edges(), opts)
+            .leray_project_constrained_opts(raw.as_tensor(), &self.rate_constrained, opts)
             .map_err(|e| PhysicsError::TopologyError(format!("Leray projection failed: {e}")))
     }
 

@@ -96,25 +96,27 @@ where
         Ok((Self { field: projected }, potential))
     }
 
-    /// Crate-internal wall-bounded path: the **constrained** Leray
-    /// projection (`Manifold::leray_project_constrained_opts`) — the
-    /// M-orthogonal projection onto no-slip ∩ divergence-free, so the result
-    /// is divergence-free at the solve's exactness *and* exactly zero on the
-    /// wall-tangential edge set. An empty `constrained_edges` is the plain
-    /// projection (bit-identical periodic path).
+    /// Crate-internal open-boundary path: the **open** Leray projection
+    /// (`Manifold::leray_project_open_opts`) admitting a prescribed inflow with a pressure
+    /// reference. `zeroed` edges are pinned to zero (no-slip), `prescribed` edges are fixed at
+    /// their field value with their flux counted, and `reference` vertices pin the outflow
+    /// pressure. Empty `prescribed`/`reference` reduce to the constrained projection
+    /// bit-identically (the closed path).
     ///
     /// # Errors
     /// As [`Self::from_leray_projection`].
-    pub(crate) fn from_constrained_leray_projection_opts<const D: usize>(
+    pub(crate) fn from_open_leray_projection_opts<const D: usize>(
         velocity: &VelocityOneForm<R>,
         manifold: &Manifold<LatticeComplex<D, R>, R>,
-        constrained_edges: &[usize],
+        zeroed: &[usize],
+        prescribed: &[usize],
+        reference: &[usize],
         opts: &deep_causality_topology::HodgeDecomposeOptions<R>,
     ) -> Result<(Self, CausalTensor<R>), PhysicsError> {
         let projection = manifold
-            .leray_project_constrained_opts(velocity.as_tensor(), constrained_edges, opts)
+            .leray_project_open_opts(velocity.as_tensor(), zeroed, prescribed, reference, opts)
             .map_err(|e| {
-                PhysicsError::TopologyError(format!("constrained Leray projection failed: {e}"))
+                PhysicsError::TopologyError(format!("open Leray projection failed: {e}"))
             })?;
         let (projected, potential) = projection.into_parts();
         Ok((Self { field: projected }, potential))

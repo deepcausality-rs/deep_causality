@@ -94,10 +94,16 @@ impl<const D: usize, R: DecNsScalar> DecNsSolver<'_, D, R> {
         // near-no-op solve starves the full stage solves above first,
         // which fail through the deferred slot. Kept as `?` for defense
         // in depth.
-        let (projected, _potential) = SolenoidalField::from_constrained_leray_projection_opts(
+        // The open-boundary projection: no-slip walls zeroed, the prescribed inflow edges held at
+        // their (lifted) value with their flux counted, and the outflow reference pressure-pinned.
+        // With empty inflow/reference (closed domains) this is bit-identical to the constrained
+        // projection.
+        let (projected, _potential) = SolenoidalField::from_open_leray_projection_opts(
             &advanced,
             self.manifold,
             self.rate.no_slip_edges(),
+            self.rate.inflow_edges(),
+            self.rate.reference_vertices(),
             &self.cg_options,
         )?;
         // No-slip chain stage: re-assert the exact zeros on the

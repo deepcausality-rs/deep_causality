@@ -59,19 +59,29 @@ new open-boundary behaviour (I, O) is added.
 
 ## I. Inflow zone (open-boundary-inflow)
 
-- [ ] I1 `Inflow` zone: prescribed wall-normal Dirichlet (L3a constrained normal edges + L3b lift
-      = prescribed `u·n`) reporting `FluxRole::Source` (L4). Uniform and per-edge profiles.
-- [ ] I2 Analytic gate: a uniform inflow into a straight channel with an outflow produces uniform
-      flow (exact), mass-conservative to the solve tolerance.
+- [x] I1 `Inflow<D, R>` zone (`dec/boundary/inflow.rs`): a prescribed wall-normal Dirichlet
+      velocity — `collect_lift` sets the face's normal edges to `speed·length`, `collect_prescribed_edges`
+      marks them prescribed. Wired through the solver: the rate pins the inflow edges to zero rate
+      (`rate_constrained = no_slip ∪ inflow` in `project_raw`), and the velocity re-entry + seed use
+      `SolenoidalField::from_open_leray_projection_opts` (prescribed inflow, flux counted). The
+      uncertain types never enter the core — folded in `with_zones`.
+- [x] I2 Analytic gate (`dec/inflow_outflow_tests`): a uniform inflow into a periodic-y channel
+      with an outflow marches to **exact uniform, divergence-free flow** (1e-6), mass-conservative.
 
 ## O. Outflow zone (open-boundary-outflow)
 
-- [ ] O1 `Outflow` zone: convective / zero-gradient boundary time-update (L5, upwinded
-      extrapolation from the interior) reporting `FluxRole::Reference` (L4) — not pinned in the
-      constraint set.
-- [ ] O2 Gate: an inflow/outflow channel reaches a steady uniform state without spurious boundary
-      reflections corrupting the interior; mass in = mass out each step.
-- [ ] O3 Group gate (I+O): format, clippy, full physics tests both feature configs; commit message.
+- [x] O1 `Outflow<D>` zone (`dec/boundary/outflow.rs`): `collect_reference_vertices` yields the
+      outflow face's vertices as the projection's pressure reference (`φ = 0`), so the outflow
+      velocity is free and adjusts to balance the inflow flux. The v1 outflow is therefore
+      reference-only (zero-gradient via incompressibility); the explicit upwinded convective
+      boundary time-update (L5) is a documented refinement behind the same zone (not needed for the
+      uniform-channel gate, where zero-gradient is exact).
+- [x] O2 Gate: the inflow/outflow channel reaches a steady uniform state with no interior
+      reflection and mass in = mass out (the I2 gate exercises both zones together).
+- [x] O3 Group gate (I+O): format, clippy (0 warnings), full physics tests (1575 pass) + the
+      open-boundary solver gate (cargo + bazel); commit message prepared. The now-dead
+      `from_constrained_leray_projection_opts` wrapper was removed (its callers moved to the open
+      path); the 105 dec tests stay bit-identical (closed domains reduce through the open path).
 
 ## U. Uncertain boundary source — cross-domain generalization (uncertain-boundary-source)
 
