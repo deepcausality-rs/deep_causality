@@ -254,6 +254,7 @@ fn sin_val() {
     assert_eq!(Float::sin(std::f64::consts::PI / 2.0), 1.0);
 }
 #[test]
+#[cfg_attr(miri, ignore)] // Miri's soft-float emulation produces last-bit differences vs hardware; test is correct under normal CI.
 fn cos_val() {
     assert_eq!(Float::cos(std::f64::consts::PI), -1.0);
 }
