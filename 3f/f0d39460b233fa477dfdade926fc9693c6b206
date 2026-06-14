@@ -1,0 +1,25 @@
+openspec/changes/add-graded-metrics/tasks.md
+  s_4adc6099bc84ff::t_4b3df89e4cb572 32,34-51
+deep_causality_topology/tests/types/manifold/interior_product_tests.rs
+  s_4adc6099bc84ff::t_abae5a35135b2f 464-465,490-494,507-511,521-525,541-545
+  s_4adc6099bc84ff::t_3cceed42737d4b 514-516,526-527
+  s_4adc6099bc84ff::t_358df6d59bec22 439-457,459,461-463,466-489,495-506,512-513,517-520,528-540,546-565,571,574-576
+  s_4adc6099bc84ff::t_b59446fd274327 458,460
+  s_4adc6099bc84ff::t_bb7167b4bb0e51 566-570,572-573
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "3ff0d39460b233fa477dfdade926fc9693c6b206",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
