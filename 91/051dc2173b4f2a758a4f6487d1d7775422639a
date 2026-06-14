@@ -1,0 +1,72 @@
+openspec/changes/add-graded-metrics/proposal.md
+  s_4adc6099bc84ff::t_494125ba30e383 1-70
+openspec/changes/add-cut-cells-and-immersed-boundaries/specs/cut-cell-geometry/spec.md
+  s_4adc6099bc84ff::t_c666aa37f3da96 1-34
+openspec/changes/generalize-uncertain-over-realfield/proposal.md
+  s_4adc6099bc84ff::t_5ff3e62ed5a24e 1-83
+openspec/changes/add-cut-cells-and-immersed-boundaries/tasks.md
+  s_4adc6099bc84ff::t_d9ef25fc3521de 66-67
+  s_4adc6099bc84ff::t_62131810b27577 61-65,69
+  s_4adc6099bc84ff::t_a1cb342beb0fdc 1-60,68,70-94
+openspec/changes/add-cut-cells-and-immersed-boundaries/proposal.md
+  s_4adc6099bc84ff::t_c45a838656273a 55-59
+  s_4adc6099bc84ff::t_6b2ba81cc1ccff 1-54,60-83
+openspec/changes/add-cut-cells-and-immersed-boundaries/specs/cut-cell-validation/spec.md
+  s_4adc6099bc84ff::t_7948c7811f0d11 1-27
+openspec/changes/generalize-uncertain-over-realfield/specs/uncertain-realfield-generic/spec.md
+  s_4adc6099bc84ff::t_f047062f2905d1 29-33
+  s_4adc6099bc84ff::t_f597ff4da5e9e9 1-28,34-37
+openspec/changes/generalize-uncertain-over-realfield/tasks.md
+  s_4adc6099bc84ff::t_8a68857f01b34c 36-37,39-42
+  s_4adc6099bc84ff::t_d2e18063026280 1-35,38,43-54
+openspec/changes/add-cut-cells-and-immersed-boundaries/design.md
+  s_4adc6099bc84ff::t_e0c1ff64526113 99,101-105
+  s_4adc6099bc84ff::t_ce255d3229b6cf 1-98,100,106-167
+openspec/changes/generalize-uncertain-over-realfield/specs/rand-realfield-sampling/spec.md
+  s_4adc6099bc84ff::t_dc24c42caa5da7 1-23
+openspec/changes/add-cut-cells-and-immersed-boundaries/specs/uncertain-inflow-zone/spec.md
+  s_4adc6099bc84ff::t_fba9a970e6ea6b 1-20,26-33
+  s_4adc6099bc84ff::t_acb975dab2a1d7 21-25
+openspec/changes/add-cut-cells-and-immersed-boundaries/.openspec.yaml
+  s_4adc6099bc84ff::t_787b244b4e1345 1-2
+openspec/notes/cfd/cfd-roadmap.md
+  s_4adc6099bc84ff::t_7e3101ec399a38 181-208
+  s_4adc6099bc84ff::t_2c0e63ff485ea8 144-155
+  s_4adc6099bc84ff::t_f75b57a513d747 115-124,129-132
+  s_4adc6099bc84ff::t_42092f09e29e8f 125-128
+openspec/changes/add-graded-metrics/design.md
+  s_4adc6099bc84ff::t_c030427708f282 1-85
+openspec/changes/add-cut-cells-and-immersed-boundaries/specs/immersed-wall-bc/spec.md
+  s_4adc6099bc84ff::t_8959a4196f251e 1-23
+openspec/changes/add-graded-metrics/.openspec.yaml
+  s_4adc6099bc84ff::t_a43ad0c0fffcf0 1-2
+openspec/changes/add-graded-metrics/tasks.md
+  s_4adc6099bc84ff::t_a7eebb608448b5 1-42
+openspec/changes/add-graded-metrics/specs/graded-metrics/spec.md
+  s_4adc6099bc84ff::t_b69cabcf708427 1-20,26-44
+  s_4adc6099bc84ff::t_f4c89f3675efe4 21-25
+openspec/changes/add-cut-cells-and-immersed-boundaries/specs/cut-cell-stabilization/spec.md
+  s_4adc6099bc84ff::t_3ae842db7f639f 1-22
+openspec/changes/generalize-uncertain-over-realfield/.openspec.yaml
+  s_4adc6099bc84ff::t_953ad2805b9d18 1-2
+openspec/changes/generalize-uncertain-over-realfield/design.md
+  s_4adc6099bc84ff::t_09c32fa0d92967 57,60-66
+  s_4adc6099bc84ff::t_8968b81378be09 1-56,58-59,67-109,111
+  s_4adc6099bc84ff::t_73b883951b634a 110,112-124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "91051dc2173b4f2a758a4f6487d1d7775422639a",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
