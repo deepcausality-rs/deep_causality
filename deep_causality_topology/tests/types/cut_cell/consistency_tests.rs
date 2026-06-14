@@ -145,6 +145,87 @@ fn empty_registry_has_no_immersed_edges() {
     assert!(reg.solid_incident_edges(&lattice).is_empty());
 }
 
+// -- B1/B2: cell-merging small-cell stabilization --------------------------------------
+
+#[test]
+fn cell_merging_floors_sliver_duals_but_leaves_fluid_and_walls() {
+    // An L of solids + a tiny cut cell give the shared vertex a sliver dual fraction.
+    let lattice = LatticeComplex::<2, f64>::square_torus(8);
+    let top_idx = |base: [usize; 2]| {
+        lattice
+            .cells(2)
+            .position(|c| *c.position() == base && c.cell_dim() == 2)
+            .unwrap()
+    };
+    let mut reg = CutCellRegistry::<2, f64>::new();
+    for b in [[3, 3], [3, 4], [4, 3]] {
+        reg.insert(
+            top_idx(b),
+            deep_causality_topology::CutCell::<2, f64>::solid(1.0),
+        );
+    }
+    reg.insert(
+        top_idx([4, 4]),
+        deep_causality_topology::CutCell::<2, f64>::cut(
+            1.0,
+            0.01,
+            [[1.0, 1.0], [1.0, 1.0]],
+            Vec::new(),
+        ),
+    );
+
+    let v = deep_causality_topology::LatticeCell::<2>::vertex([4, 4]);
+    // Unstabilized: vertex [4,4] dual = (0.01 + 0 + 0 + 0)/4 = 0.0025 (a destabilising sliver).
+    assert!((reg.dual_fluid_fraction(&lattice, &v) - 0.0025).abs() < TOL);
+
+    // Cell-merging floors the sliver to the merge fraction.
+    let stab = reg.clone().with_cell_merging(0.1);
+    assert!((stab.dual_fluid_fraction(&lattice, &v) - 0.1).abs() < TOL);
+    assert_eq!(stab.cell_merging_floor(), Some(0.1));
+
+    // A far fluid vertex (dual 1) is untouched — the floor only inflates slivers.
+    let far = deep_causality_topology::LatticeCell::<2>::vertex([0, 0]);
+    assert!((stab.dual_fluid_fraction(&lattice, &far) - 1.0).abs() < TOL);
+}
+
+#[test]
+fn cell_merging_does_not_floor_pure_wall_clips() {
+    // On a walled lattice with no immersed body, the 2^{-b} wall clip is geometry, not a
+    // sliver — the floor must leave it exactly, even when the floor exceeds it.
+    let lattice = LatticeComplex::<3, f64>::open([3, 3, 3]);
+    let reg = CutCellRegistry::<3, f64>::new().with_cell_merging(0.4);
+    let corner = deep_causality_topology::LatticeCell::<3>::vertex([0, 0, 0]);
+    // 3-fold wall corner: 1/8 = 0.125 < 0.4, but not body-adjacent ⇒ unchanged.
+    assert!((reg.dual_fluid_fraction(&lattice, &corner) - 0.125).abs() < TOL);
+}
+
+#[test]
+fn cell_merging_floors_clipped_cell_volume() {
+    // The primal volume override is floored too (a vanishing cut cell borrows volume).
+    let lattice = LatticeComplex::<2, f64>::square_torus(6);
+    let geom = CubicalReggeGeometry::<2, f64>::uniform(2.0); // full cell volume = 4.
+    let top_idx = lattice
+        .cells(2)
+        .position(|c| *c.position() == [2, 2] && c.cell_dim() == 2)
+        .unwrap();
+    let mut reg = CutCellRegistry::<2, f64>::new();
+    reg.insert(
+        top_idx,
+        deep_causality_topology::CutCell::<2, f64>::cut(
+            4.0,
+            0.02,
+            [[1.0, 1.0], [1.0, 1.0]],
+            Vec::new(),
+        ),
+    );
+    let cell = deep_causality_topology::LatticeCell::<2>::new([2, 2], 0b11);
+    // Unstabilized: the tiny clipped volume passes through.
+    assert!((reg.clipped_cell_volume(&geom, &lattice, &cell) - 0.02).abs() < TOL);
+    // Stabilized: floored to 0.25 · 4 = 1.0.
+    let stab = reg.with_cell_merging(0.25);
+    assert!((stab.clipped_cell_volume(&geom, &lattice, &cell) - 1.0).abs() < TOL);
+}
+
 // -- A7: registry sparsity + graded composition ----------------------------------------
 
 #[test]

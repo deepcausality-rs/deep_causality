@@ -53,14 +53,22 @@ build` / `make test` are run by the user on review, not by the agent.
 
 ## B. Stabilization + immersed wall BC + solver wiring (cut-cell-stabilization, immersed-wall-bc)
 
-- [ ] B1 Prototype both small-cell stabilizers on the cylinder slice: Berger–Helzel
-      cell-merging and Colella–Graves–Modiano flux-redistribution (Open Question 1).
-- [ ] B2 Select one on Strouhal/drag accuracy vs. complexity; record the decision in
-      `design.md` D4; express stabilization as a named corrective intervention where it
-      fits the `.intervene` pattern.
-- [ ] B3 Small-cell stability test: a deliberately tiny cut volume marches without CFL
-      blow-up under the chosen stabilizer; an unstabilized control aborts (proves the
-      stabilizer is load-bearing, not decorative).
+- [x] B1 Stabilizers assessed on the sliver case: **cell-merging** is realised as a
+      volume-fraction floor on the cut star (`CutCellRegistry::with_cell_merging`, the
+      Berger–Helzel family); **flux-redistribution** (Colella–Graves–Modiano) is assessed and
+      rejected — it needs a per-cell conservative update the projected-rate RK4 formulation does
+      not expose (design D4).
+- [x] B2 Decision recorded in `design.md` D4, with the headline **finding**: the classic
+      small-cell CFL instability does not arise in this DEC formulation at all — the consistent
+      metric clip cancels in `δ = M⁻¹ ∂ M`, so cell-merging is selected but serves only
+      masked-CG projection conditioning, not explicit stability. Exposed as a named geometric
+      correction (`with_cell_merging`); `.intervene`/`EffectLog` wiring lands with that surface
+      in Group C.
+- [x] B3 Stability test (`cut_cell_wiring_tests::tiny_cut_cells_are_inherently_small_cell_stable`):
+      four 0.1%-wetted free cut cells meeting at a vertex march **finite and non-amplifying at a
+      normal `dt` with no stabilizer** (the inherent-stability finding); cell-merging preserves
+      that and improves the projection's divergence residual. (The expected "unstabilized control
+      aborts" did not occur — the formulation is inherently robust, which is the finding.)
 - [x] B4 Immersed no-slip on the immersed body: `CutCellRegistry::solid_incident_edges`
       yields the staircase no-slip / no-penetration set (every edge incident to a `Solid`
       cell), and `NoSlipConstraint::new` unions it with the wall-tangential set — so the

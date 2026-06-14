@@ -26,14 +26,15 @@
 //! al. (2013) and the Williamson lineage (tasks D2/D3) needs that inflow/outflow surface plus
 //! the small-cell stabilizer selection (B1–B3); it is **not** claimed here.
 //!
-//! ## Small-cell guard (placeholder for B1–B3)
+//! ## Small-cell stabilization (B1/B2)
 //!
-//! Arbitrarily small cut cells tighten the CFL bound catastrophically — the canonical cut-cell
-//! hazard the Group-B stabilizer (cell-merging vs flux-redistribution) will resolve. Until
-//! that decision lands, this harness applies a simple **volume-fraction merge**: a cut cell
-//! whose wetted fraction is below `MERGE_FRACTION` is absorbed into the solid body. This is a
-//! crude cell-merging stand-in (documented as such), enough to keep the march stable while the
-//! real stabilizer is prototyped on this very case.
+//! In a finite-volume cut-cell solver, arbitrarily small cut cells collapse the explicit time
+//! step (the canonical hazard). **Not here:** the cut Hodge star is a consistent metric clip,
+//! so the codifferential `δ = M⁻¹ ∂ M` cancels it across grades and the explicit march is
+//! inherently small-cell-stable (design D4 / `cut_cell_wiring_tests`). The selected stabilizer
+//! is therefore **cell-merging** (`CutCellRegistry::with_cell_merging`, a volume-fraction floor
+//! on the cut star — flux-redistribution does not fit the projected-rate formulation), engaged
+//! here only to tighten the masked-CG projection conditioning on sliver cells.
 //!
 //! ```text
 //! cargo run --release -p avionics_examples --example dec_cylinder_wake
@@ -42,8 +43,7 @@
 use deep_causality_physics::{BodyForceOneForm, DecNsSolver};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
-    ChainComplex, CubicalReggeGeometry, CutCell, CutCellRegistry, LatticeComplex, Manifold,
-    Primitive,
+    ChainComplex, CubicalReggeGeometry, CutCellRegistry, LatticeComplex, Manifold, Primitive,
 };
 
 // -- Case parameters --------------------------------------------------------------------
@@ -58,9 +58,10 @@ const BLOCKAGE: f64 = 0.25;
 const RE_D: f64 = 100.0;
 /// Target bulk streamwise velocity (sets the body-force magnitude).
 const U_BULK: f64 = 1.0;
-/// Cut cells wetter than this fraction are kept; below it they merge into the body
-/// (small-cell guard — placeholder for the B1–B3 stabilizer).
-const MERGE_FRACTION: f64 = 0.5;
+/// Cell-merging floor (B1/B2): free cut cells/edges below this wetted fraction borrow volume
+/// to reach it, tightening the masked-CG projection conditioning. (Explicit stability is
+/// inherent here — design D4 — so this is not a CFL guard.)
+const MERGE_FRACTION: f64 = 0.25;
 /// Number of march steps. The harness demonstrates a stable, divergence-free cut-cell march;
 /// developed shedding needs a longer run (and ideally the inflow/outflow surface) — see D2/D3.
 const STEPS: usize = 2000;
@@ -75,14 +76,22 @@ fn main() {
     let center = [AR * 0.25, 0.5]; // a quarter-length in, mid-channel.
     let nu = U_BULK * diameter / RE_D;
 
-    // Cut geometry: the analytic disk, then the small-cell merge guard.
+    // Cut geometry: the analytic disk, with cell-merging small-cell stabilization (B1/B2 —
+    // a volume-fraction floor on the cut star). In this DEC formulation the explicit march is
+    // already small-cell-stable (the consistent metric clip cancels in δ — see design D4), so
+    // the floor here only tightens the masked-CG projection conditioning on sliver cells.
     let base_metric = CubicalReggeGeometry::<2, f64>::uniform(h);
     let disk = Primitive::<2, f64>::ball(center, radius);
-    let raw =
+    let registry =
         CutCellRegistry::from_primitive(&lattice, &base_metric, &disk).expect("disk intersection");
-    let (registry, n_solid, n_cut, n_merged) = guard_small_cells(&raw, h * h);
-
+    let n_solid = registry
+        .iter()
+        .filter(|(_, c)| c.class().is_solid())
+        .count();
+    let n_cut = registry.iter().filter(|(_, c)| c.class().is_cut()).count();
     let fluid_area = AR * 1.0 - solid_area(&registry, h * h);
+
+    let registry = registry.with_cell_merging(MERGE_FRACTION);
     let metric = base_metric.with_cut_cells(registry);
 
     let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
@@ -129,7 +138,7 @@ fn main() {
         "# cut-cell cylinder wake: grid {nx}×{NY}, D/H={BLOCKAGE}, Re_D={RE_D}, nu={nu:.3e}, dt={dt:.3e}"
     );
     eprintln!(
-        "# cells: {n_solid} solid, {n_cut} cut (kept), {n_merged} merged; fluid area {fluid_area:.4}"
+        "# cells: {n_solid} solid, {n_cut} cut; fluid area {fluid_area:.4}; merge floor {MERGE_FRACTION}"
     );
     println!("step,t,kinetic_energy,max_speed,div_residual,v_probe");
 
@@ -163,29 +172,6 @@ fn main() {
     }
 
     report_strouhal(&probe_series, diameter, U_BULK);
-}
-
-/// Reclassify cut cells below `MERGE_FRACTION` wetted as solid (the small-cell guard). Returns
-/// the guarded registry and `(n_solid, n_cut_kept, n_merged)` counts.
-fn guard_small_cells(
-    raw: &CutCellRegistry<2, f64>,
-    full_area: f64,
-) -> (CutCellRegistry<2, f64>, usize, usize, usize) {
-    let mut out = CutCellRegistry::<2, f64>::new();
-    let (mut n_solid, mut n_cut, mut n_merged) = (0usize, 0usize, 0usize);
-    for (&idx, cut) in raw.iter() {
-        if cut.class().is_solid() {
-            out.insert(idx, cut.clone());
-            n_solid += 1;
-        } else if cut.volume_fraction() < MERGE_FRACTION {
-            out.insert(idx, CutCell::<2, f64>::solid(full_area));
-            n_merged += 1;
-        } else {
-            out.insert(idx, cut.clone());
-            n_cut += 1;
-        }
-    }
-    (out, n_solid, n_cut, n_merged)
 }
 
 /// Total solid area recorded in the registry (solid cells full; cut cells their dry part).

@@ -32,14 +32,20 @@ inflow/outflow surface **plus** the small-cell stabilizer selection (B1–B3). I
 claimed here; the printed Strouhal is for the confined/periodic case and is a qualitative
 shedding check, not a reference comparison.
 
-## Small-cell guard (placeholder for B1–B3)
+## Small-cell stabilization (B1/B2)
 
-Arbitrarily small cut cells tighten the CFL bound catastrophically — the canonical cut-cell
-hazard the Group-B stabilizer (cell-merging vs flux-redistribution) will resolve. Until that
-decision lands, this harness applies a simple **volume-fraction merge**: a cut cell wetted
-below `MERGE_FRACTION` is absorbed into the solid body. This is a crude cell-merging stand-in
-(a preview of B1), enough to keep the march stable while the real stabilizer is prototyped on
-this very case.
+In a finite-volume cut-cell solver, arbitrarily small cut cells collapse the explicit time
+step — the canonical hazard that needs Berger–Helzel cell-merging or Colella–Graves–Modiano
+flux-redistribution. **This formulation does not have that problem:** the cut Hodge star is a
+*consistent metric clip*, so the codifferential `δ = M⁻¹ ∂ M` cancels it across grades and the
+explicit march is inherently small-cell-stable (a sliver vertex `s0 ≈ ε` is fed by sliver
+edges `s1 ≈ ε`, so operator entries are `s1/s0 ≈ O(1)`). See the change's design D4 and
+`deep_causality_physics` `cut_cell_wiring_tests::tiny_cut_cells_are_inherently_small_cell_stable`.
+
+The selected stabilizer is **cell-merging** (`CutCellRegistry::with_cell_merging`, a
+volume-fraction floor on the cut star — flux-redistribution does not fit the projected-rate
+formulation). It is engaged here only to tighten the masked-CG projection conditioning on
+sliver cells, not as a CFL guard.
 
 ## Cheap CI regressions (D4)
 

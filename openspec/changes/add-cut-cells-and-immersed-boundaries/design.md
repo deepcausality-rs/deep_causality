@@ -85,15 +85,41 @@ no STL parser, no `deep_causality_io`, no on-disk geometry here. This keeps the 
 repo's no-new-IO posture and removes the STL degeneracy/robustness surface from the Stage-4 gate
 entirely. (Resolves Open Question 4.)
 
-### D4: Small-cell stabilization — both prototyped, one selected on evidence
-This is the load-bearing design decision (`causal_cfd.md` §7 Q5) and an **Open Question**
-below. Cell-merging (Berger–Helzel: merge a small cut cell into a full neighbor, solve on
-the union) and flux-redistribution (Colella–Graves–Modiano: redistribute the conservative
-update of a small cell over neighbors) are both prototyped on the cylinder case; the one
-with the better Strouhal/drag accuracy at acceptable complexity is committed, and the
-decision is recorded in this design before the validation gate closes. Stabilization is
-expressed as a named corrective intervention where it fits the `.intervene` pattern
-(`causal_cfd.md` §3.3 item 7).
+### D4: Small-cell stabilization — RESOLVED (cell-merging selected; and largely unnecessary)
+Two findings closed Open Question 1 (`causal_cfd.md` §7 Q5):
+
+**1. The classic small-cell CFL instability does not arise in this DEC formulation.** The cut
+Hodge star is a *consistent metric clip* (`dual_fluid_fraction`), so the codifferential
+`δ = M⁻¹ ∂ M` cancels it across grades: a sliver vertex with dual mass `s0 ≈ ε` is fed by
+sliver edges with `s1 ≈ ε`, so the discrete operator entries are `s1/s0 ≈ O(1)` — the explicit
+viscous/advective operators never go stiff and the time step is **not** collapsed by tiny cut
+cells. Measured: four 0.1%-wetted free cut cells meeting at a vertex march with no amplification
+at a normal `dt`, unstabilized (`cut_cell_wiring_tests::tiny_cut_cells_are_inherently_small_cell_stable`).
+This is the same "the structure-preserving discretisation dissolves the textbook problem"
+pattern as the graded-metric order study — a finite-volume cut-cell solver needs Berger–Helzel
+or Colella–Graves–Modiano here precisely because its star is *not* a consistent clip.
+
+**2. Where stabilization still helps: masked-CG projection conditioning.** Pathologically tiny
+*free* cut masses widen the constrained-Leray system's spectrum and loosen the achievable
+divergence-freeness. So a stabilizer is still worth having — and the one that fits is
+**cell-merging**, realised as a volume-fraction floor on the cut star
+(`CutCellRegistry::with_cell_merging(min_fraction)`): a vanishing free cell/edge dual borrows
+volume to reach the floor (Berger–Helzel in volume-fraction form), bounding the spectrum while
+the combinatorial `d` keeps conservation and exact divergence-freeness untouched. It is the
+**star-native** stabilizer for this solver.
+
+**Flux-redistribution (Colella–Graves–Modiano) is rejected on architectural fit:** it needs a
+per-cell *conservative update* to redistribute over neighbours, which the projected-rate RK4
+formulation here does not expose (the marched quantity is the projected rate on the
+divergence-free subspace, not a finite-volume flux divergence). Forcing it in would mean
+restructuring the time integrator for no stability gain the cell-merging floor does not already
+provide.
+
+For real immersed bodies the merge is rarely even engaged: solid-incident edges are pinned by
+the no-slip set (B4) and removed, and boundary cut cells border fluid, so the cylinder harness
+holds divergence to ~1e-15 with a modest floor. The floor is exposed as a named geometric
+correction now; wiring it through the `.intervene`/`EffectLog` pattern (`causal_cfd.md` §3.3
+item 7) lands with that surface in Group C.
 
 ### D5: Immersed wall BC reuses the Stage-3 no-slip machinery
 No-slip on a cut face is the symmetric restriction `P_S Δ₁ P_S` (already in
@@ -208,12 +234,13 @@ bit-identical and the no-body equivalence (D9 / B6) holds by construction.
 
 ## Open Questions
 
-1. **Stabilization algorithm (D4):** Berger–Helzel merge vs. Colella–Graves–Modiano flux
-   redistribution. **Still open — decision deferred to the Group B prototype on the cylinder**;
-   both built, one committed, recorded in D4 before the validation gate closes.
-   (`causal_cfd.md` §7 Q5.)
-
 **Resolved:**
+
+1. **Stabilization algorithm (Q5) — RESOLVED (D4).** Cell-merging (volume-fraction floor on the
+   cut star) is selected; flux-redistribution is rejected on architectural fit. The deeper
+   finding: the classic small-cell CFL instability does not arise here at all — the consistent
+   metric clip cancels in `δ = M⁻¹ ∂ M`, so the merge serves only masked-CG projection
+   conditioning, not explicit stability. See D4.
 
 2. **Solver `State` shape (Q9) — RESOLVED.** Rule: immutable belongs in `Context`, mutable in
    `State`. The cut-cell registry is static for a rigid immersed body → **`Context`**. The

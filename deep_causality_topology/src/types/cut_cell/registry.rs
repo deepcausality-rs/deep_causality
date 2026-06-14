@@ -26,6 +26,10 @@ use std::collections::HashMap;
 #[derive(Debug, Clone, PartialEq)]
 pub struct CutCellRegistry<const D: usize, R: RealField> {
     cells: HashMap<CellId, CutCell<D, R>>,
+    /// Small-cut-cell stabilization floor (cell-merging): the minimum fluid fraction a free
+    /// cell or edge dual is allowed before it is inflated to this value. `None` = unstabilized.
+    /// See [`Self::with_cell_merging`].
+    min_fluid_fraction: Option<R>,
 }
 
 impl<const D: usize, R: RealField> Default for CutCellRegistry<D, R> {
@@ -39,12 +43,44 @@ impl<const D: usize, R: RealField> CutCellRegistry<D, R> {
     pub fn new() -> Self {
         Self {
             cells: HashMap::new(),
+            min_fluid_fraction: None,
         }
     }
 
     /// Build a registry from a precomputed `top-cell-index -> CutCell` map.
     pub fn from_map(cells: HashMap<CellId, CutCell<D, R>>) -> Self {
-        Self { cells }
+        Self {
+            cells,
+            min_fluid_fraction: None,
+        }
+    }
+
+    /// Enable **cell-merging small-cut-cell stabilization** with floor `min_fraction ∈ (0, 1]`
+    /// (the CFD Stage-4 B1/B2 stabilizer).
+    ///
+    /// Arbitrarily small cut cells give arbitrarily small Hodge-star masses, and the viscous
+    /// stencil's `1/mass` factor then makes the explicit operator stiff enough to violate the
+    /// CFL bound for any usable time step — the canonical cut-cell hazard. This floors every
+    /// *free* (non-zero) clipped volume and dual fraction at `min_fraction`, i.e. a vanishing
+    /// cut cell borrows enough volume from the body to reach the floor — the volume-fraction
+    /// realisation of Berger–Helzel cell-merging. It is the star-native stabilizer for this DEC
+    /// solver: the exterior derivative is combinatorial and untouched, so discrete conservation
+    /// and the Leray projection's exact divergence-freeness are preserved; only an `O(min_fraction)`
+    /// geometric error is introduced, localised to the floored cells (the accepted
+    /// accuracy-for-stability trade). Fully-dry (`0`) interior-solid cells are left at `0` —
+    /// they are pinned by the immersed no-slip set and dropped from the dynamics.
+    ///
+    /// Flux-redistribution (Colella–Graves–Modiano) is the other classic option but needs a
+    /// per-cell *conservative update* to redistribute, which this projected-rate RK4 formulation
+    /// does not expose; cell-merging is selected on that architectural fit (design D4).
+    pub fn with_cell_merging(mut self, min_fraction: R) -> Self {
+        self.min_fluid_fraction = Some(min_fraction);
+        self
+    }
+
+    /// The active cell-merging floor, if stabilization is enabled.
+    pub fn cell_merging_floor(&self) -> Option<R> {
+        self.min_fluid_fraction
     }
 
     /// Record `cut` for the top cell at index `cell_id` (in `iter_cells(D)` ordering),
@@ -89,7 +125,16 @@ impl<const D: usize, R: RealField> CutCellRegistry<D, R> {
             && let Some(idx) = complex.cell_index(cell)
             && let Some(cut) = self.cells.get(&idx)
         {
-            return cut.fluid_volume();
+            let v = cut.fluid_volume();
+            // Cell-merging floor: a free (non-zero) clipped volume is inflated to
+            // `min_fraction · full`, so a vanishing cut cell cannot collapse the time step.
+            if let Some(a) = self.min_fluid_fraction {
+                let floor = a * cut.full_volume();
+                if v > R::zero() && v < floor {
+                    return floor;
+                }
+            }
+            return v;
         }
         geom.cell_volume(complex, cell)
     }
@@ -216,6 +261,10 @@ impl<const D: usize, R: RealField> CutCellRegistry<D, R> {
         // by the full corner count — not the survivor count — is what reproduces the integer
         // 2^{-b} boundary clip: b walls drop 2^{D−k}·(1 − 2^{-b}) corners to zero.
         let mut sum = R::zero();
+        // Whether this edge's dual touches the immersed body (a registered cut/solid corner).
+        // The cell-merging floor applies only to body-adjacent edges, so the legitimate
+        // out-of-bounds wall clip (e.g. a 2^{-b} corner on a real wall) is never inflated.
+        let mut touches_body = false;
         for mask_bits in 0..num_masks {
             // Resolve the base position of the incident top cube for this corner.
             let mut base = position;
@@ -253,7 +302,13 @@ impl<const D: usize, R: RealField> CutCellRegistry<D, R> {
                 base[axis] = b;
             }
             if in_bounds {
-                sum += self.top_cell_fluid_fraction(complex, base);
+                let frac = self.top_cell_fluid_fraction(complex, base);
+                // An unregistered fluid corner reports exactly 1; anything less is a registered
+                // cut/solid corner, i.e. the body.
+                if frac < R::one() {
+                    touches_body = true;
+                }
+                sum += frac;
             }
         }
 
@@ -261,6 +316,19 @@ impl<const D: usize, R: RealField> CutCellRegistry<D, R> {
         for _ in 0..num_masks {
             divisor += R::one();
         }
-        sum / divisor
+        let fraction = sum / divisor;
+
+        // Cell-merging floor: a free (non-zero) body-adjacent dual fraction is inflated to
+        // `min_fraction`, so a sliver edge dual cannot collapse the time step. A fully-dry (`0`)
+        // edge stays `0` — it is interior-solid, pinned by the no-slip set and dropped from the
+        // dynamics. Pure wall edges (`touches_body == false`) keep their exact `2^{-b}` clip.
+        if let Some(a) = self.min_fluid_fraction
+            && touches_body
+            && fraction > R::zero()
+            && fraction < a
+        {
+            return a;
+        }
+        fraction
     }
 }

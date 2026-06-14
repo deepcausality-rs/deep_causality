@@ -155,6 +155,129 @@ fn immersed_solid_block_enforces_no_slip_and_no_penetration() {
 }
 
 #[test]
+fn tiny_cut_cells_are_inherently_small_cell_stable() {
+    // B1–B3 finding. Four deliberately tiny (0.1%-wetted) **free** cut cells meet at a shared
+    // vertex — the classic small-cell hazard: cut↔cut edges stay free (the no-slip set pins
+    // only solid-incident edges) and the shared vertex's dual mass s0 → 0. In a finite-volume
+    // cut-cell solver this collapses the explicit time step and needs a Berger–Helzel /
+    // Colella–Graves–Modiano stabilizer.
+    //
+    // It does NOT here: the cut Hodge star is a *consistent metric clip*, so the codifferential
+    // δ = M⁻¹ ∂ M cancels it across grades — a sliver vertex (s0 ≈ ε) is fed by sliver edges
+    // (s1 ≈ ε), so the δ entries are s1/s0 ≈ O(1) and the operator never goes stiff. A seeded
+    // field therefore decays viscously and stably even at a normal time step, with no
+    // stabilizer (the same "the structure-preserving discretisation dissolves the problem"
+    // pattern as the graded-metric order study).
+    //
+    // The cell-merging stabilizer is implemented and available (`with_cell_merging`, B1/B2 —
+    // flux-redistribution does not fit the projected-rate formulation), and this also checks it
+    // preserves the stable, divergence-free decay rather than perturbing it.
+    let n = 8;
+    let h = 1.0;
+    let nu = 0.1;
+    let dt = 0.3; // a normal time step; a finite-volume sliver would force dt ~ ε·dt here.
+
+    let run = |merge: Option<f64>, steps: usize| -> (bool, f64, f64) {
+        let lattice = LatticeComplex::<2, f64>::square_torus(n);
+        let top_idx = |base: [usize; 2]| {
+            lattice
+                .cells(2)
+                .position(|c| *c.position() == base && c.cell_dim() == 2)
+                .unwrap()
+        };
+        let mut reg = CutCellRegistry::<2, f64>::new();
+        // Four 0.1%-wetted cut cells around vertex [4,4]; cut↔cut edges stay free.
+        for b in [[3, 3], [3, 4], [4, 3], [4, 4]] {
+            reg.insert(
+                top_idx(b),
+                deep_causality_topology::CutCell::<2, f64>::cut(
+                    1.0,
+                    1.0e-3,
+                    [[1.0, 1.0], [1.0, 1.0]],
+                    Vec::new(),
+                ),
+            );
+        }
+        if let Some(a) = merge {
+            reg = reg.with_cell_merging(a);
+        }
+
+        let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+        let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
+        let metric = CubicalReggeGeometry::<2, f64>::uniform(h).with_cut_cells(reg);
+        let m = Manifold::from_cubical_with_metric(lattice, data, metric, 0);
+
+        // No body force: a seeded velocity field should simply decay viscously. On a clean grid
+        // that is unconditionally stable at this dt; the sliver duals make the explicit viscous
+        // operator stiff enough to diverge instead — which the cell-merging floor prevents.
+        // (A fully-periodic body force would accelerate the mean flow and abort on the advective
+        // CFL regardless of cut cells, masking the effect under test.)
+        let solver = DecNsSolver::new(&m, nu, dt, None).unwrap();
+
+        let n0 = m.complex().num_cells(0);
+        let mut seed = vec![0.0; 2 * n0];
+        for (v, cell) in m.complex().iter_cells(0).enumerate() {
+            let p = cell.position();
+            seed[2 * v] = ((p[0] + 2 * p[1]) as f64).sin();
+            seed[2 * v + 1] = ((2 * p[0] + p[1]) as f64).cos();
+        }
+        let mut state = solver
+            .seed_from_vertex_vectors(&CausalTensor::new(seed, vec![2 * n0]).unwrap())
+            .unwrap();
+
+        let speed = |s: &[f64]| s.iter().fold(0.0_f64, |m, v| m.max(v.abs()));
+        let seed_speed = speed(state.as_one_form().as_slice());
+        let mut worst_div = 0.0_f64;
+        let mut peak_ratio = 1.0_f64;
+        for _ in 0..steps {
+            match solver.step(&state) {
+                Ok(out) => {
+                    worst_div = worst_div.max(out.divergence_residual());
+                    state = out.into_state();
+                }
+                Err(_) => return (false, worst_div, peak_ratio), // CFL abort ⇒ not stable.
+            }
+            let s = state.as_one_form();
+            if !s.as_slice().iter().all(|v| v.is_finite()) {
+                return (false, worst_div, f64::INFINITY);
+            }
+            peak_ratio = peak_ratio.max(speed(s.as_slice()) / seed_speed);
+        }
+        (true, worst_div, peak_ratio)
+    };
+
+    // Unstabilized: the sliver does NOT destabilise the explicit march — it stays finite and
+    // the speed never amplifies (the clip cancels in δ, so no small-cell CFL collapse). The
+    // tiny masses do degrade the masked-CG projection's conditioning, so divergence-freeness is
+    // only loosely held.
+    let (finite, div, peak) = run(None, 300);
+    eprintln!("# unstabilized: finite={finite}, worst_div={div:.3e}, peak_ratio={peak:.3}");
+    assert!(
+        finite,
+        "the clip-based cut star must march a tiny cut cell stably with no stabilizer"
+    );
+    assert!(
+        peak < 2.0,
+        "a viscous decay must not amplify; peak speed ratio {peak}"
+    );
+
+    // Cell-merging restores the projection conditioning: finite, non-amplifying, AND tightly
+    // divergence-free. This is where the stabilizer earns its place in this formulation — not
+    // for explicit CFL (inherently fine) but for the masked-CG projection on sliver masses.
+    let (m_finite, m_div, m_peak) = run(Some(0.5), 300);
+    eprintln!("# cell-merging: finite={m_finite}, worst_div={m_div:.3e}, peak_ratio={m_peak:.3}");
+    assert!(m_finite, "cell-merging must keep the march finite");
+    assert!(
+        m_peak < 2.0,
+        "cell-merging must not amplify; peak speed ratio {m_peak}"
+    );
+    assert!(
+        m_div < div,
+        "cell-merging must improve the projection's divergence-freeness ({m_div:.3e} vs {div:.3e})"
+    );
+}
+
+#[test]
 fn solid_cell_registry_keeps_a_convergent_divergence_free_march() {
     let ny = 9;
     let lattice = LatticeComplex::<2, f64>::new([4, ny], [true, false]);
