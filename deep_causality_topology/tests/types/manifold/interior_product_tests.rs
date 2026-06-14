@@ -436,6 +436,144 @@ fn cartan_formula_converges_to_lie_derivative_at_second_order() {
     );
 }
 
+// Cartan's magic formula on a SMOOTHLY GRADED metric (CFD R1, task B1): the
+// operator law must survive grading. Axis-1 edge lengths are modulated by
+// `1 + a·cos(2π·pos/N)` — smooth, periodic, and summing to N, so the wavenumber is
+// unchanged. The manufactured solution is evaluated at *physical* (cumulative-length)
+// y-midpoints, and the interior product uses the graded ⋆. With smooth grading the
+// discrete `i_X dω + d i_X ω` still converges to the Lie derivative under refinement.
+// ---------------------------------------------------------------------------
+
+fn graded_manifold_2d(
+    lattice: LatticeComplex<2, f64>,
+    metric: CubicalReggeGeometry<2, f64>,
+) -> Manifold<LatticeComplex<2, f64>, f64> {
+    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
+    Manifold::from_cubical_with_metric(lattice, data, metric, 0)
+}
+
+#[test]
+fn cartan_formula_converges_under_smooth_grading() {
+    const AMP: f64 = 0.1;
+    let mut rel_errors = Vec::new();
+    for n in [8usize, 16, 32] {
+        let lattice: LatticeComplex<2, f64> = LatticeComplex::square_torus(n);
+
+        // Smooth periodic edge-length modulation on axis 1; axis 0 stays unit.
+        let len =
+            |pos: usize| 1.0 + AMP * (2.0 * std::f64::consts::PI * pos as f64 / n as f64).cos();
+        let edge_lengths: Vec<f64> = lattice
+            .iter_cells(1)
+            .map(|c| {
+                let axis = c.orientation().trailing_zeros() as usize;
+                if axis == 1 { len(c.position()[1]) } else { 1.0 }
+            })
+            .collect();
+        let metric = CubicalReggeGeometry::<2, f64>::from_edge_lengths(edge_lengths);
+        let manifold = graded_manifold_2d(LatticeComplex::square_torus(n), metric);
+        let complex = manifold.complex();
+
+        // Physical y-coordinate of vertex j (cumulative edge length); the modulation
+        // sums to N, so the total length is N and the wavenumber is the uniform k.
+        let mut y_node = vec![0.0_f64; n + 1];
+        for j in 0..n {
+            y_node[j + 1] = y_node[j] + len(j);
+        }
+        let k_wave = 2.0 * std::f64::consts::PI / (n as f64);
+
+        let n1 = complex.num_cells(1);
+        // (physical-x, physical-y, axis) of an edge midpoint.
+        let midpoint = |c: &deep_causality_topology::LatticeCell<2>| {
+            let axis = c.orientation().trailing_zeros() as usize;
+            let p = c.position();
+            let x = if axis == 0 {
+                p[0] as f64 + 0.5
+            } else {
+                p[0] as f64
+            };
+            let y = if axis == 1 {
+                0.5 * (y_node[p[1]] + y_node[p[1] + 1])
+            } else {
+                y_node[p[1]]
+            };
+            (x, y, axis)
+        };
+
+        let omega_vals: Vec<f64> = complex
+            .iter_cells(1)
+            .map(|c| {
+                let (mx, my, axis) = midpoint(&c);
+                if axis == 0 {
+                    (k_wave * my).sin()
+                } else {
+                    (k_wave * mx).sin()
+                }
+            })
+            .collect();
+        // `x_flat` is X♭, the flat 1-form: its edge value is `X^axis · length(edge)`.
+        // On the unit metric this equals the vector component; on a graded mesh it must
+        // carry the edge-length factor, else the contraction is inconsistent.
+        let x_vals: Vec<f64> = complex
+            .iter_cells(1)
+            .map(|c| {
+                let (mx, my, axis) = midpoint(&c);
+                let component = if axis == 0 {
+                    (k_wave * mx).cos()
+                } else {
+                    (k_wave * my).cos()
+                };
+                let length = if axis == 1 { len(c.position()[1]) } else { 1.0 };
+                component * length
+            })
+            .collect();
+        let omega = CausalTensor::new(omega_vals.clone(), vec![n1]).unwrap();
+        let x_flat = CausalTensor::new(x_vals, vec![n1]).unwrap();
+
+        // i_X dω (d is metric-free, so a unit-metric carrier suffices for it).
+        let m_omega =
+            manifold_with_k_form(LatticeComplex::<2, f64>::square_torus(n), 1, &omega_vals);
+        let d_omega = m_omega.exterior_derivative(1);
+        let term1 = manifold.interior_product(&x_flat, &d_omega, 2).unwrap();
+
+        // d i_X ω
+        let ix_omega = manifold.interior_product(&x_flat, &omega, 1).unwrap();
+        let m_ix = manifold_with_k_form(
+            LatticeComplex::<2, f64>::square_torus(n),
+            0,
+            ix_omega.as_slice(),
+        );
+        let term2 = m_ix.exterior_derivative(0);
+
+        let mut max_err = 0.0_f64;
+        let mut max_ref = 0.0_f64;
+        for (i, cell) in complex.iter_cells(1).enumerate() {
+            let (mx, my, axis) = midpoint(&cell);
+            let analytic = if axis == 0 {
+                k_wave * (k_wave * my).cos().powi(2)
+                    - k_wave * (k_wave * my).sin() * (k_wave * mx).sin()
+            } else {
+                k_wave * (k_wave * mx).cos().powi(2)
+                    - k_wave * (k_wave * mx).sin() * (k_wave * my).sin()
+            };
+            let discrete = term1.as_slice()[i] + term2.as_slice()[i];
+            max_err = max_err.max((discrete - analytic).abs());
+            max_ref = max_ref.max(analytic.abs());
+        }
+        rel_errors.push(max_err / max_ref);
+    }
+
+    // Smooth (mild) grading must not destroy convergence: the finest-grid error is well
+    // below the coarsest. A robust trend check — the strict order quantification and the
+    // grading-amplitude limit where order collapses live in the graded-MMS example, per
+    // the tests-fast / examples-verify split. (At strong grading the interior product's
+    // order degrades, as expected; that boundary is the example's job to quantify.)
+    assert!(
+        rel_errors[2] < 0.6 * rel_errors[0],
+        "smooth grading broke convergence: {rel_errors:?}"
+    );
+}
+
 // ---------------------------------------------------------------------------
 // Error paths
 // ---------------------------------------------------------------------------

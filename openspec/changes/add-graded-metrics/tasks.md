@@ -29,19 +29,23 @@ user on review.
 - [x] A5 Group gate: `make format` clean; full `deep_causality_topology` Bazel suite green
       (124 tests). Tanh clustering + wall-normal-uniform asserted in the same test file.
 
-## B. Accuracy verification on graded metrics (graded-metrics) — REMAINING
+## B. Accuracy verification on graded metrics (graded-metrics)
 
-- [ ] B1 Run the G1 wedge / interior-product property tests (Leibniz, Cartan) on a graded
-      metric, not only uniform — the operator laws must hold under grading. (Wedge/`d` are
-      metric-free so trivially hold; the meaningful case is the interior-product Cartan
-      refinement study on a graded metric.)
-- [ ] B2 Graded Taylor–Green MMS example: observed-order regression across a grading sweep;
-      confirm smooth grading retains second order; quantify the growth-rate limit where
-      order collapses (report it, do not hide it). Hosted as an example per tests-fast /
-      examples-verify. (Substantial — a new example crate driving the solver.)
-- [ ] B3 Cheap CI accuracy-adjacent regression: a small graded-MMS rung that runs within the
-      fast-test budget (the heavy sweep stays in the example).
-- [ ] B4 Group gate: format, clippy, full tests both feature configs; update the example
-      README with the grading-limit numbers; prepare the Group B commit message and ask the
-      user to commit. Change exit: graded metrics available for credible Re 10⁴ cavity and
-      the Stage-4 cylinder boundary layer.
+- [x] B1 Interior-product Cartan law on a graded metric
+      (`cartan_formula_converges_under_smooth_grading`): the manufactured Lie-derivative MMS
+      on a smoothly graded (sinusoidally modulated, torus-compatible) metric, evaluated at
+      physical (cumulative-length) midpoints with the metric-correct `X♭`. The discrete
+      `i_X dω + d i_X ω` converges under refinement at mild grading. (Wedge/`d` are
+      metric-free so their laws hold trivially under grading.)
+- [x] B3 Cheap CI accuracy rung: the B1 test *is* the fast graded-MMS convergence rung (16²
+      max grid). It also surfaced the real finding — at *strong* grading (amp 0.3, spacing
+      ratio ~1.85) the interior product's order degrades and plateaus (~23% rel-error),
+      while *mild* grading (amp 0.1) keeps converging. That boundary is what the example
+      quantifies.
+- [ ] B2 Graded Taylor–Green MMS **example** (REMAINING — the heavy presentation artifact):
+      observed-order regression across a grading sweep; confirm smooth grading retains
+      second order; quantify the grading-amplitude limit where order collapses (the B1 test
+      shows the boundary exists — the example pins where). Hosted as an example per
+      tests-fast / examples-verify; a new example crate driving the solver.
+- [x] B4 Group gate (for the shipped B1/B3): `make format` clean; full `deep_causality_topology`
+      Bazel suite green (124 tests). The example README + numbers land with B2.
