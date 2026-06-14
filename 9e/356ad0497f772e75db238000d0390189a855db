@@ -1,0 +1,36 @@
+deep_causality_physics/tests/theories/fluid_dynamics/dec/mod.rs
+  s_4adc6099bc84ff::t_0281f74777bd53 34
+deep_causality_physics/src/theories/fluid_dynamics/dec/surface_force.rs
+  s_4adc6099bc84ff::t_6c7d826b9be354 37
+  s_4adc6099bc84ff::t_0a36c9952b7c52 55
+  s_4adc6099bc84ff::t_72e237008ef41b 1-36,38-54,56-68
+openspec/changes/add-slip-boundaries-and-surface-forces/tasks.md
+  s_4adc6099bc84ff::t_be180513ae391a 28-40
+  s_4adc6099bc84ff::t_08218937dc5671 44-47
+deep_causality_physics/src/theories/fluid_dynamics/dec/mod.rs
+  s_4adc6099bc84ff::t_7e4e344c4467da 68
+  s_4adc6099bc84ff::t_0281f74777bd53 83
+openspec/changes/add-slip-boundaries-and-surface-forces/specs/surface-force-diagnostic/spec.md
+  s_4adc6099bc84ff::t_b9d0595815705b 17-19
+  s_4adc6099bc84ff::t_3b409145abddc8 4-11
+deep_causality_physics/tests/theories/fluid_dynamics/dec/surface_force_tests.rs
+  s_4adc6099bc84ff::t_4d83e3cc99d0e3 1-12,15-72,78-109
+  s_4adc6099bc84ff::t_a45bb49c836f15 14
+  s_4adc6099bc84ff::t_0281f74777bd53 13,73-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "9e356ad0497f772e75db238000d0390189a855db",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
