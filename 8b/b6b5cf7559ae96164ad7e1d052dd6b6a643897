@@ -1,0 +1,40 @@
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/mod.rs
+  s_4adc6099bc84ff::t_cf35486ae61169 109-153
+  s_4adc6099bc84ff::t_66068735e3d742 18
+deep_causality_physics/src/theories/fluid_dynamics/dec/boundary/boundary_zone.rs
+  s_4adc6099bc84ff::t_af848cc74cfd38 1-125
+deep_causality_physics/tests/theories/fluid_dynamics/dec/boundary_zone_tests.rs
+  s_4adc6099bc84ff::t_b4f948d420be55 29-32,48,72-75,99-102,134-137
+  s_4adc6099bc84ff::t_90651b37b11b0d 81
+  s_4adc6099bc84ff::t_e8f422ce08c5b3 1-28,33-47,49-71,76-80,82-98,103-133,138
+deep_causality_physics/tests/theories/fluid_dynamics/dec/mod.rs
+  s_4adc6099bc84ff::t_43e457c066bda3 7
+deep_causality_physics/src/theories/fluid_dynamics/dec/boundary/body_force_zone.rs
+  s_4adc6099bc84ff::t_45359bd96bc898 1-41
+deep_causality_physics/src/theories/fluid_dynamics/dec/boundary/moving_wall.rs
+  s_4adc6099bc84ff::t_7f782e3a4dc3c3 12
+  s_4adc6099bc84ff::t_fe2636709870ff 1-11,13-95
+deep_causality_physics/src/theories/fluid_dynamics/dec/boundary/mod.rs
+  s_4adc6099bc84ff::t_c0fa4b4ca963e2 1-21
+deep_causality_physics/src/theories/fluid_dynamics/dec/mod.rs
+  s_4adc6099bc84ff::t_5aa67e56316091 74
+  s_4adc6099bc84ff::t_1c89e4336f03a9 61
+openspec/changes/add-boundary-zone-abstraction/tasks.md
+  s_4adc6099bc84ff::t_af566aab3b673d 13-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "8bb6b5cf7559ae96164ad7e1d052dd6b6a643897",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
