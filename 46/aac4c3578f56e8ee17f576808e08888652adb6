@@ -1,0 +1,33 @@
+openspec/specs/slip-boundary/spec.md
+  s_4adc6099bc84ff::t_8934bef5116743 1-22
+openspec/specs/surface-force-diagnostic/spec.md
+  s_4adc6099bc84ff::t_8934bef5116743 1-27
+openspec/changes/add-cut-cells-and-immersed-boundaries/tasks.md
+  s_4adc6099bc84ff::t_43165afab1a065 158-170
+deep_causality_physics/src/theories/fluid_dynamics/dec/boundary/outflow.rs
+  s_4adc6099bc84ff::t_dcc3014045ccd8 65-86
+examples/avionics_examples/dec_cylinder_validation/main.rs
+  s_4adc6099bc84ff::t_9e1bd1b5854854 47-49,51-52,54-55,57
+  s_4adc6099bc84ff::t_92da479e36961f 75-78,149-150,191
+  s_4adc6099bc84ff::t_49a0fcfcb209ec 1-46,50,53,56,58-74,79-122,124-139,153-157,159-190,192
+  s_4adc6099bc84ff::t_15079cc4391c5d 140-148,151-152,158
+  s_4adc6099bc84ff::t_4f8709b1e18eda 123
+examples/avionics_examples/Cargo.toml
+  s_4adc6099bc84ff::t_0bcc70d40889bf 40-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "46aac4c3578f56e8ee17f576808e08888652adb6",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
