@@ -9,6 +9,9 @@ mod cubical_regge_geometry_tests;
 mod curvature_tests;
 
 #[cfg(test)]
+mod graded_tests;
+
+#[cfg(test)]
 mod has_hodge_star_tests;
 
 #[cfg(test)]

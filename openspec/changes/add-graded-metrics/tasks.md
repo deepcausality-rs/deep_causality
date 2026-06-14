@@ -12,28 +12,33 @@ user on review.
 
 ## A. Graded constructors + exact-structure guarantee (graded-metrics)
 
-- [ ] A1 Per-axis **geometric** graded constructor on `CubicalReggeGeometry`: builds a
-      `PerEdge` geometry over a given `LatticeComplex` by evaluating `Δ_{i+1} = r · Δ_i`
-      per edge in `iter_cells(1)` / `edge_index` order; ungraded axes stay uniform.
-- [ ] A2 Per-axis **tanh / hyperbolic** graded constructor (two-sided clustering); same
-      `PerEdge` construction path. A single-axis (wall-normal-first-class) convenience form.
-- [ ] A3 `PerEdge`-sizing round-trip test: the produced vector length equals
-      `sum over axes of edges_along(axis)` and `axis_length_at_position` returns the
-      law's value at every edge without hitting the malformed-length panic.
-- [ ] A4 Headline exactness test: on a strongly graded lattice (ratio well outside the
-      accuracy-good range), the Leray-projected / marched field is divergence-free to the
-      solve's exactness and the discrete conservation invariants hold.
-- [ ] A5 Group gate: format, clippy, full `deep_causality_topology` tests both feature
-      configs; prepare the Group A commit message and ask the user to commit.
+- [x] A1 Per-axis **geometric** graded constructor `from_graded_geometric` on
+      `CubicalReggeGeometry` (`base[a] · ratio[a]^pos` per edge, built in `iter_cells(1)`
+      order via `from_edge_lengths`; ungraded axes uniform). Bound `RealField +
+      FromPrimitive`, not `Float` (uses `powf`, not the `Float`-only `powi`).
+- [x] A2 Per-axis **tanh** graded constructor `from_graded_tanh` (two-sided Vinokur
+      clustering on a single wall-normal axis, others uniform) — the wall-normal-first-class
+      form. Degenerates to uniform as `β → 0`.
+- [x] A3 Sizing + law test: the `PerEdge` vector is sized to the edge count and every edge
+      carries the analytic law value (`geometric_grading_produces_correct_per_edge_lengths`),
+      plus `graded_cell_volume_equals_edge_length_product` pinning the volume dispatch.
+- [x] A4 Headline exactness test
+      (`leray_projection_stays_divergence_free_under_strong_grading`): on a strongly graded
+      torus (ratio 1.4) the Leray-projected random field has divergence < 1e-9 — structure
+      holds because `d` / Stokes are combinatorial and metric-free.
+- [x] A5 Group gate: `make format` clean; full `deep_causality_topology` Bazel suite green
+      (124 tests). Tanh clustering + wall-normal-uniform asserted in the same test file.
 
-## B. Accuracy verification on graded metrics (graded-metrics)
+## B. Accuracy verification on graded metrics (graded-metrics) — REMAINING
 
 - [ ] B1 Run the G1 wedge / interior-product property tests (Leibniz, Cartan) on a graded
-      metric, not only uniform — the operator laws must hold under grading.
+      metric, not only uniform — the operator laws must hold under grading. (Wedge/`d` are
+      metric-free so trivially hold; the meaningful case is the interior-product Cartan
+      refinement study on a graded metric.)
 - [ ] B2 Graded Taylor–Green MMS example: observed-order regression across a grading sweep;
       confirm smooth grading retains second order; quantify the growth-rate limit where
       order collapses (report it, do not hide it). Hosted as an example per tests-fast /
-      examples-verify.
+      examples-verify. (Substantial — a new example crate driving the solver.)
 - [ ] B3 Cheap CI accuracy-adjacent regression: a small graded-MMS rung that runs within the
       fast-test budget (the heavy sweep stays in the example).
 - [ ] B4 Group gate: format, clippy, full tests both feature configs; update the example

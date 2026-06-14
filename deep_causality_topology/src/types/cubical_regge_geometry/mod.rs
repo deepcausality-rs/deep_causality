@@ -73,6 +73,7 @@
 //! for the full R1–R6 design note.
 
 pub mod curvature;
+pub mod graded;
 pub mod gradient;
 pub mod has_hodge_star;
 pub mod metric_tensor;
