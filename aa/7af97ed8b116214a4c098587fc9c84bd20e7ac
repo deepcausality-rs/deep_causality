@@ -1,0 +1,34 @@
+examples/avionics_examples/Cargo.toml
+  s_4adc6099bc84ff::t_f81f4e867e1357 36-38
+examples/avionics_examples/dec_cylinder_wake/main.rs
+  s_4adc6099bc84ff::t_e3941d1a2cc050 1-51,53,55-63,67-80,83-242
+  s_4adc6099bc84ff::t_fce4c7a94916cf 64-66
+  s_4adc6099bc84ff::t_eed6996d94449c 81-82
+  s_4adc6099bc84ff::t_b9e2e5772f35f8 52,54
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_rate.rs
+  s_4adc6099bc84ff::t_b392c221a5faf5 175-181,184-186,195-197
+  s_4adc6099bc84ff::t_9d18f264507f0c 147-157,173-174,182,198-199,208-209
+deep_causality_topology/tests/types/cut_cell/consistency_tests.rs
+  s_4adc6099bc84ff::t_eed6996d94449c 191-202
+  s_4adc6099bc84ff::t_eb2f22bc604d12 168-190,203-205
+openspec/changes/add-cut-cells-and-immersed-boundaries/tasks.md
+  s_4adc6099bc84ff::t_611d5f4d05ab33 126-144
+examples/avionics_examples/dec_cylinder_wake/README.md
+  s_4adc6099bc84ff::t_9403f835ace4e5 1-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "aa7af97ed8b116214a4c098587fc9c84bd20e7ac",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
