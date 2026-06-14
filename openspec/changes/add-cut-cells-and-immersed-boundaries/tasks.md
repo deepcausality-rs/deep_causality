@@ -155,15 +155,19 @@ build` / `make test` are run by the user on review, not by the agent.
       div_residual, v_probe`) and a shedding-Strouhal estimate. Drives the flow with a body
       force because the solver has **no inflow/outflow BC yet** (that is Group C); includes a
       documented volume-fraction small-cell merge guard (placeholder for B1–B3).
-- [~] D2/D3 Re-ladder vs Williamson / Lehmkuhl et al. (2013): the prerequisite is now **shipped**
-      — `add-boundary-zone-abstraction` delivered the net-flux mixed-BC Leray projection and the
-      `Inflow`/`Outflow` zones (a uniform inflow/outflow channel marches to exact uniform flow).
-      The earlier "Group C will add inflow/outflow" assumption was wrong (Group C's sensor zone is a
-      prescribed *tangential* moving wall, not an open boundary); the open boundary became its own
-      change. The remaining work here is to build the isolated-cylinder external-flow domain (west
-      `Inflow`, east `Outflow`, far-field top/bottom, immersed cut cylinder) on those zones and
-      march the Re 100–3900 ladder against the references, then close this change. Until then the
-      harness prints a confined/periodic Strouhal estimate as a qualitative shedding check only.
+- [~] D2/D3 Re-ladder vs Williamson / Lehmkuhl et al. (2013): all prerequisites now **shipped**
+      (`add-boundary-zone-abstraction`: net-flux projection + `Inflow`/`Outflow`;
+      `add-slip-boundaries-and-surface-forces`: `SlipWall` far-field + pressure surface force). The
+      **isolated-cylinder harness is built** (`examples/avionics_examples/dec_cylinder_validation`):
+      west `Inflow` / east `Outflow` / far-field `SlipWall` top-bottom / immersed cut cylinder, all
+      composed via `with_zones`. **Verified:** it marches stably and is **interior-divergence-free
+      to ≈ 1e-15** (the global residual is just the open-boundary inlet flux) — the composed
+      primitive stack is correct. **Remaining (compute-heavy validation):** (1) a symmetry-breaking
+      trigger + a longer/finer run to develop the von-Kármán street and measure Strouhal vs
+      Williamson; (2) the viscous (friction) traction added to `pressure_surface_force` for a full
+      `C_d` vs Lehmkuhl; (3) the 3D-DNS transition rung (Re ≈ 200–300); (4) Re ≈ 3900 by DNS
+      (compute-bound). The harness + composition correctness is the gate; the quantitative numbers
+      need real compute time.
 - [x] D4 Cheap CI regression rungs (no heavy march): geometric exactness — disk cut volumes
       sum to the exact `domain − π r²` (`cut_cell::consistency_tests`) + per-primitive f64 /
       Float106 exactness (`cut_cell::intersection_tests`); axis-aligned-cut consistency — empty

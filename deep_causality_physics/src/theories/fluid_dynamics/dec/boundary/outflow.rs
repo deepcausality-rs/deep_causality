@@ -62,4 +62,26 @@ impl<const D: usize, R: DecNsScalar> BoundaryZone<D, R> for Outflow<D> {
             }
         }
     }
+
+    fn collect_slip_edges(
+        &self,
+        manifold: &Manifold<LatticeComplex<D, R>, R>,
+        out: &mut Vec<usize>,
+    ) {
+        // A zero-gradient outflow frees its face's wall-tangential edges (they are otherwise
+        // auto-pinned to zero by the no-slip derivation on the non-periodic outflow axis, which
+        // would reflect the wake). The outflow velocity is then determined by the projection.
+        let complex = manifold.complex();
+        let pos = if self.max_side {
+            complex.shape()[self.wall_axis] - 1
+        } else {
+            0
+        };
+        for (idx, cell) in complex.iter_cells(1).enumerate() {
+            let axis = cell.orientation().trailing_zeros() as usize;
+            if axis != self.wall_axis && cell.position()[self.wall_axis] == pos {
+                out.push(idx);
+            }
+        }
+    }
 }

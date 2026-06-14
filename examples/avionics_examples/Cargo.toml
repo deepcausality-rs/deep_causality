@@ -37,6 +37,10 @@ name = "dec_cylinder_wake"
 path = "dec_cylinder_wake/main.rs"
 
 [[example]]
+name = "dec_cylinder_validation"
+path = "dec_cylinder_validation/main.rs"
+
+[[example]]
 name = "turbulence_flow"
 path = "turbulence_flow/main.rs"
 
