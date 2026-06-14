@@ -1,0 +1,29 @@
+openspec/changes/add-cut-cells-and-immersed-boundaries/tasks.md
+  s_4adc6099bc84ff::t_2f6b9f1550dd39 64-75
+  s_4adc6099bc84ff::t_e216f341f68e98 89-94
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/no_slip.rs
+  s_4adc6099bc84ff::t_234e8a1015b0e9 48-53,56,59-74,77-86
+  s_4adc6099bc84ff::t_168c8761057808 37
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_rate.rs
+  s_4adc6099bc84ff::t_057afc77726411 233
+  s_4adc6099bc84ff::t_5e728c60fbcb9d 230-232
+deep_causality_physics/tests/theories/fluid_dynamics/dec/cut_cell_wiring_tests.rs
+  s_4adc6099bc84ff::t_7a3810b72037ed 93-150,155-156
+  s_4adc6099bc84ff::t_057afc77726411 151-154
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "16fac3c9890a818cd3dcc5195e85ec0001c9552c",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
