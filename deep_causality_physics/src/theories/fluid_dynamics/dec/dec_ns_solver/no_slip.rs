@@ -34,7 +34,7 @@
 //! entry point below is a bit-exact no-op, preserving the periodic path.
 
 use deep_causality_num::RealField;
-use deep_causality_topology::LatticeComplex;
+use deep_causality_topology::{CutCellRegistry, LatticeComplex};
 
 /// The set of wall-tangential edge indices (in `iter_cells(1)` /
 /// cochain-coefficient order) that no-slip pins to zero. Empty on fully
@@ -45,31 +45,45 @@ pub(in crate::theories::fluid_dynamics::dec) struct NoSlipConstraint {
 }
 
 impl NoSlipConstraint {
-    /// Enumerate the wall-tangential edges of `complex`. Returns an empty
-    /// constraint when no axis is walled.
+    /// Enumerate the constrained edges of `complex`: the axis-aligned
+    /// wall-tangential edges, plus — when a cut-cell registry is attached to
+    /// the geometry (CFD Stage 4 B4) — the edges of an immersed solid body
+    /// ([`CutCellRegistry::solid_incident_edges`], the staircase no-slip /
+    /// no-penetration set). Returns an empty constraint on a fully periodic
+    /// lattice with no immersed body (the bit-exact periodic path).
     pub(in crate::theories::fluid_dynamics::dec) fn new<const D: usize, R: RealField>(
         complex: &LatticeComplex<D, R>,
+        cut_registry: Option<&CutCellRegistry<D, R>>,
     ) -> Self {
         let periodic = complex.periodic();
-        if periodic.iter().all(|&p| p) {
-            return Self {
-                edges: alloc::vec::Vec::new(),
-            };
-        }
-        let shape = complex.shape();
-        let mut edges = alloc::vec::Vec::new();
-        for (idx, cell) in complex.iter_cells(1).enumerate() {
-            // A grade-1 cell has exactly one active orientation bit: its axis.
-            let axis = cell.orientation().trailing_zeros() as usize;
-            let pos = cell.position();
-            // Tangential to a wall ⟺ it sits on a boundary perpendicular to
-            // some *other* (non-periodic) axis.
-            let tangential = (0..D)
-                .any(|w| w != axis && !periodic[w] && (pos[w] == 0 || pos[w] + 1 == shape[w]));
-            if tangential {
-                edges.push(idx);
+        let mut edges: alloc::vec::Vec<usize> = alloc::vec::Vec::new();
+
+        // Axis-aligned wall-tangential edges (unchanged from Stage 3).
+        if !periodic.iter().all(|&p| p) {
+            let shape = complex.shape();
+            for (idx, cell) in complex.iter_cells(1).enumerate() {
+                // A grade-1 cell has exactly one active orientation bit: its axis.
+                let axis = cell.orientation().trailing_zeros() as usize;
+                let pos = cell.position();
+                // Tangential to a wall ⟺ it sits on a boundary perpendicular to
+                // some *other* (non-periodic) axis.
+                let tangential = (0..D)
+                    .any(|w| w != axis && !periodic[w] && (pos[w] == 0 || pos[w] + 1 == shape[w]));
+                if tangential {
+                    edges.push(idx);
+                }
             }
         }
+
+        // Immersed-body edges (B4): the cut-cell solid no-slip / no-penetration set.
+        if let Some(registry) = cut_registry {
+            edges.extend(registry.solid_incident_edges(complex));
+        }
+
+        // Sort + dedup so the union is canonical and the masked-CG constraint set is unique;
+        // a no-op on the wall-only path (already ascending, distinct) and the empty path.
+        edges.sort_unstable();
+        edges.dedup();
         Self { edges }
     }
 

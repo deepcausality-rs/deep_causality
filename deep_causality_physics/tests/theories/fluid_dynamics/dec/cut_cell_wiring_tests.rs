@@ -90,6 +90,71 @@ fn empty_registry_marches_bit_identically_to_plain_geometry() {
 }
 
 #[test]
+fn immersed_solid_block_enforces_no_slip_and_no_penetration() {
+    // A periodic box with a 2×2 immersed solid block, driven by a uniform x body force. B4's
+    // staircase no-slip pins every edge incident to the solid block to zero; the flow goes
+    // around it and stays divergence-free.
+    let n = 8;
+    let h = 1.0;
+    let nu = 0.1;
+    let lattice = LatticeComplex::<2, f64>::square_torus(n);
+
+    let mut reg = CutCellRegistry::<2, f64>::new();
+    for base in [[3, 3], [3, 4], [4, 3], [4, 4]] {
+        let cell = LatticeCell::<2>::new(base, 0b11);
+        let idx = lattice.cells(2).position(|c| c == cell).unwrap();
+        reg.insert(idx, deep_causality_topology::CutCell::<2, f64>::solid(1.0));
+    }
+    let pinned = reg.solid_incident_edges(&lattice);
+    assert!(!pinned.is_empty(), "the solid block must constrain edges");
+
+    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
+    let metric = CubicalReggeGeometry::<2, f64>::uniform(h).with_cut_cells(reg);
+    let m = Manifold::from_cubical_with_metric(lattice, data, metric, 0);
+
+    let n1 = m.complex().num_cells(1);
+    let mut force = vec![0.0; n1];
+    for (idx, cell) in m.complex().iter_cells(1).enumerate() {
+        if cell.orientation().trailing_zeros() as usize == 0 {
+            force[idx] = 0.2 * h;
+        }
+    }
+    let force = BodyForceOneForm::new(CausalTensor::new(force, vec![n1]).unwrap(), &m).unwrap();
+    let dt = 0.2;
+    let solver = DecNsSolver::new(&m, nu, dt, Some(&force)).unwrap();
+    let n0 = m.complex().num_cells(0);
+    let rest = CausalTensor::new(vec![0.0; 2 * n0], vec![2 * n0]).unwrap();
+    let mut state = solver.seed_from_vertex_vectors(&rest).unwrap();
+
+    for _ in 0..15 {
+        let out = solver.step(&state).expect("immersed march must converge");
+        assert!(
+            out.divergence_residual() < 1e-8,
+            "immersed projection lost divergence-freeness: {}",
+            out.divergence_residual()
+        );
+        state = out.into_state();
+    }
+
+    // Every solid-incident edge is held at zero by the no-slip / no-penetration constraint.
+    let field = state.as_one_form();
+    for &e in &pinned {
+        assert!(
+            field.as_slice()[e].abs() < 1e-10,
+            "edge {e} on the immersed body should be pinned to zero, got {}",
+            field.as_slice()[e]
+        );
+    }
+    // The flow is non-trivial somewhere away from the body (the force drives it).
+    let max = field.as_slice().iter().fold(0.0_f64, |m, v| m.max(v.abs()));
+    assert!(
+        max > 1e-3,
+        "the body force should drive a non-trivial flow, max {max}"
+    );
+}
+
+#[test]
 fn solid_cell_registry_keeps_a_convergent_divergence_free_march() {
     let ny = 9;
     let lattice = LatticeComplex::<2, f64>::new([4, ny], [true, false]);

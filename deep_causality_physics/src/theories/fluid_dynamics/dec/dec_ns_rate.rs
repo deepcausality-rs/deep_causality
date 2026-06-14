@@ -227,7 +227,10 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             ws: RefCell::new(ws),
         });
 
-        let no_slip = super::dec_ns_solver::no_slip::NoSlipConstraint::new(complex);
+        // Include the immersed-body no-slip set (B4) when the geometry carries a cut-cell
+        // registry; the wall-tangential set is unchanged on uncut geometries.
+        let cut_registry = manifold.metric().and_then(|m| m.cut_registry());
+        let no_slip = super::dec_ns_solver::no_slip::NoSlipConstraint::new(complex, cut_registry);
 
         Ok(Self {
             manifold,

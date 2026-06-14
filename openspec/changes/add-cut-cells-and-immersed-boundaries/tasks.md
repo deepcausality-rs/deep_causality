@@ -61,9 +61,18 @@ build` / `make test` are run by the user on review, not by the agent.
 - [ ] B3 Small-cell stability test: a deliberately tiny cut volume marches without CFL
       blow-up under the chosen stabilizer; an unstabilized control aborts (proves the
       stabilizer is load-bearing, not decorative).
-- [ ] B4 Immersed no-slip / slip on cut-face fragments: extend the symmetric restriction
-      `P_S Δ₁ P_S` and the constrained Leray constraint set to cut-adjacent edges with
-      the fragment normal as constraint direction; moving-surface reuse of the lid lift.
+- [x] B4 Immersed no-slip on the immersed body: `CutCellRegistry::solid_incident_edges`
+      yields the staircase no-slip / no-penetration set (every edge incident to a `Solid`
+      cell), and `NoSlipConstraint::new` unions it with the wall-tangential set — so the
+      existing constrained Leray projector and the symmetric `P_S Δ₁ P_S` restriction cover
+      the body with no new machinery (it reads the registry off the metric, like B5). Verified:
+      the solid set is exactly the cube's boundary edges; an immersed solid block pins its
+      edges to zero (no-slip + no-penetration) while the flow goes around it divergence-free.
+      The wall-only / periodic paths stay bit-identical (sort+dedup is a no-op there).
+      *Deferred refinements (documented):* slip (tangential-only via the fragment normal),
+      moving immersed surfaces (prescribed values through the existing lift), and
+      aperture-resolved no-slip on the sub-cell cut face (`Cut` cells currently carry flow,
+      with their blockage already in the cut star).
 - [x] B-foundation Cut-aware Hodge star: `build_star_diagonal(complex, k, clip)` extracted
       from `hodge_star_matrix` (behaviour-preserving); the per-cell dual clip is the integer
       `axis_boundary_clip` unless a registry is attached, then the continuous
@@ -77,9 +86,12 @@ build` / `make test` are run by the user on review, not by the agent.
       seeding flows through the cut star automatically. Verified: an empty registry marches
       **bit-identically** to the plain geometry, and a solid-cell registry keeps a convergent
       divergence-free march (`cut_cell_wiring_tests.rs`).
-- [~] B6 Equivalence: the no-body / axis-aligned case is **done** — empty registry is
-      bit-identical to Stage-3 at both the star level and the marched-solver level (Poiseuille
-      unchanged). The immersed-cut-faces-vs-Stage-3-wall case completes with B4 (cut-face BC).
+- [~] B6 Equivalence: the no-body case is **done** — empty registry is bit-identical to
+      Stage-3 at both the star level and the marched-solver level (Poiseuille unchanged). With
+      B4 the building blocks for the axis-aligned-solid-layer-reproduces-the-wall-solver case
+      are in place (solid set reproduces the wall-tangential set; cut star reproduces the
+      boundary clip); the full marched-equivalence assertion lands alongside the Group D
+      validation harness.
 - [ ] B7 Group gate: format, clippy, full physics + topology tests both feature configs;
       prepare Group B commit message and ask the user to commit.
 
