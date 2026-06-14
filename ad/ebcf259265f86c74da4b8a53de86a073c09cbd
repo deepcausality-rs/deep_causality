@@ -1,0 +1,58 @@
+openspec/changes/add-boundary-zone-abstraction/specs/open-boundary-inflow/spec.md
+  s_4adc6099bc84ff::t_43a55b551fa9a6 1-17
+openspec/changes/consolidate-causal-cfd-fluiddynamics/specs/fluiddynamics-dsl/spec.md
+  s_4adc6099bc84ff::t_a1289c67f3a463 1-34
+openspec/changes/consolidate-causal-cfd-fluiddynamics/specs/causal-cfd-consolidation/spec.md
+  s_4adc6099bc84ff::t_59b9e0ba5dd08e 1-17
+openspec/changes/add-boundary-zone-abstraction/tasks.md
+  s_4adc6099bc84ff::t_118dde41d17b08 1-12,27-84
+  s_4adc6099bc84ff::t_129f79651a5b74 13-26
+openspec/changes/add-cut-cells-and-immersed-boundaries/tasks.md
+  s_4adc6099bc84ff::t_6b52ad28cd2a1e 158-167
+openspec/changes/consolidate-causal-cfd-fluiddynamics/design.md
+  s_4adc6099bc84ff::t_0d1639d0b6754b 36-37
+  s_4adc6099bc84ff::t_9bf4bffee2e5de 1-35,38-68
+  s_4adc6099bc84ff::t_f275bd7b736fe5 69-72
+openspec/notes/cfd-crate.md
+  s_4adc6099bc84ff::t_3d46c0c71b4dfa 35-83
+  s_4adc6099bc84ff::t_cc2af3dce87df8 2-9,18-24
+  s_4adc6099bc84ff::t_68983018f09968 14,100-104
+openspec/changes/add-boundary-zone-abstraction/proposal.md
+  s_4adc6099bc84ff::t_f20a1b1fd83903 1-78
+openspec/changes/consolidate-causal-cfd-fluiddynamics/proposal.md
+  s_4adc6099bc84ff::t_24a49fefbac3f1 1-65
+openspec/changes/add-boundary-zone-abstraction/design.md
+  s_4adc6099bc84ff::t_e47e446575d1a2 1-44,48-50,72-74,80,85-106,108-146,148,156-168,170
+  s_4adc6099bc84ff::t_519e630fa85c66 147,149-155
+  s_4adc6099bc84ff::t_1afd9595fbff50 45-47,51-71,75-79
+  s_4adc6099bc84ff::t_03f13089603077 107
+  s_4adc6099bc84ff::t_b89e1bccbc7191 169,171-177
+  s_4adc6099bc84ff::t_4be572929b9a1b 81-84
+openspec/changes/add-boundary-zone-abstraction/specs/uncertain-boundary-source/spec.md
+  s_4adc6099bc84ff::t_864bd25e330897 1-24
+openspec/changes/add-boundary-zone-abstraction/specs/boundary-zone-abstraction/spec.md
+  s_4adc6099bc84ff::t_8097efe2fe12a5 1-11,16-32
+  s_4adc6099bc84ff::t_430fb070a08345 12-15
+openspec/changes/add-boundary-zone-abstraction/specs/open-boundary-outflow/spec.md
+  s_4adc6099bc84ff::t_0ce77cb53944d2 1-16
+openspec/changes/add-boundary-zone-abstraction/specs/open-boundary-flux-projection/spec.md
+  s_4adc6099bc84ff::t_328e1abb37ae06 1-26
+openspec/changes/consolidate-causal-cfd-fluiddynamics/tasks.md
+  s_4adc6099bc84ff::t_e14ec7e7387e3c 1-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "adebcf259265f86c74da4b8a53de86a073c09cbd",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
