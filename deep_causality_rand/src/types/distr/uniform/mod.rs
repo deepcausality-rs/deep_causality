@@ -4,16 +4,11 @@
  */
 
 pub mod standard_uniform;
-mod uniform_f32;
-mod uniform_f64;
-pub mod uniform_u32;
-mod uniform_u64;
-mod uniform_usize;
 
 use crate::{
     Distribution, Rng, SampleBorrow, SampleUniform, UniformDistributionError, UniformSampler,
 };
-use deep_causality_num::Float;
+use deep_causality_num::RealField;
 use std::fmt::Debug;
 
 #[derive(Debug, Copy, Clone)]
@@ -59,7 +54,7 @@ impl<X: SampleUniform> Distribution<X> for Uniform<X> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct UniformFloat<F: Float> {
+pub struct UniformFloat<F: RealField> {
     low: F,
     scale: F,
 }
@@ -71,7 +66,7 @@ pub(crate) trait RandFloat: Sized {
 
 impl<F> UniformSampler for UniformFloat<F>
 where
-    F: Float + RandFloat + Debug,
+    F: RealField + RandFloat + Debug,
 {
     type X = F;
 

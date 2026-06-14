@@ -6,12 +6,12 @@
 pub mod standard_normal;
 
 use crate::{Distribution, NormalDistributionError, Rng, StandardNormal};
-use deep_causality_num::Float;
+use deep_causality_num::Real;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Normal<F>
 where
-    F: Float,
+    F: Real,
     StandardNormal: Distribution<F>,
 {
     mean: F,
@@ -20,7 +20,7 @@ where
 
 impl<F> Normal<F>
 where
-    F: Float,
+    F: Real,
     StandardNormal: Distribution<F>,
 {
     /// Construct, from mean and standard deviation
@@ -71,7 +71,7 @@ where
 
 impl<F> Distribution<F> for Normal<F>
 where
-    F: Float,
+    F: Real,
     StandardNormal: Distribution<F>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {

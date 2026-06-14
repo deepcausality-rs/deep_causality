@@ -19,6 +19,7 @@ pub use crate::errors::uniform_error::UniformDistributionError;
 // Traits
 pub use crate::traits::distribution::Distribution;
 pub use crate::traits::fill::Fill;
+pub use crate::traits::real_rng::RealRng;
 pub use crate::traits::rng::Rng;
 pub use crate::traits::rng_core::RngCore;
 pub use crate::traits::sample_borrow::SampleBorrow;
