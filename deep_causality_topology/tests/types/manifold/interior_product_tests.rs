@@ -500,31 +500,39 @@ fn cartan_formula_converges_under_smooth_grading() {
             (x, y, axis)
         };
 
+        // DEC cochains are integrals over cells: a discrete 1-form on an edge is
+        // `∫ ω ≈ (tangential midpoint value) · ℓ_edge`. Both ω and X♭ carry this factor
+        // (=1 on axis 0, =ℓ(pos) on the graded axis 1); the 1-form output is normalised by
+        // ℓ below. Omitting it is invisible on a uniform mesh but O(ℓ)-wrong on a graded one.
+        let edge_len = |c: &deep_causality_topology::LatticeCell<2>| {
+            if c.orientation().trailing_zeros() as usize == 1 {
+                len(c.position()[1])
+            } else {
+                1.0
+            }
+        };
         let omega_vals: Vec<f64> = complex
             .iter_cells(1)
             .map(|c| {
                 let (mx, my, axis) = midpoint(&c);
-                if axis == 0 {
+                let comp = if axis == 0 {
                     (k_wave * my).sin()
                 } else {
                     (k_wave * mx).sin()
-                }
+                };
+                comp * edge_len(&c)
             })
             .collect();
-        // `x_flat` is X♭, the flat 1-form: its edge value is `X^axis · length(edge)`.
-        // On the unit metric this equals the vector component; on a graded mesh it must
-        // carry the edge-length factor, else the contraction is inconsistent.
         let x_vals: Vec<f64> = complex
             .iter_cells(1)
             .map(|c| {
                 let (mx, my, axis) = midpoint(&c);
-                let component = if axis == 0 {
+                let comp = if axis == 0 {
                     (k_wave * mx).cos()
                 } else {
                     (k_wave * my).cos()
                 };
-                let length = if axis == 1 { len(c.position()[1]) } else { 1.0 };
-                component * length
+                comp * edge_len(&c)
             })
             .collect();
         let omega = CausalTensor::new(omega_vals.clone(), vec![n1]).unwrap();
@@ -556,21 +564,26 @@ fn cartan_formula_converges_under_smooth_grading() {
                 k_wave * (k_wave * mx).cos().powi(2)
                     - k_wave * (k_wave * mx).sin() * (k_wave * my).sin()
             };
-            let discrete = term1.as_slice()[i] + term2.as_slice()[i];
+            // Normalise the 1-form output cochain (edge-integral) by ℓ_edge to recover the
+            // pointwise value, then compare to the pointwise analytic Lie derivative.
+            let discrete = (term1.as_slice()[i] + term2.as_slice()[i]) / edge_len(&cell);
             max_err = max_err.max((discrete - analytic).abs());
             max_ref = max_ref.max(analytic.abs());
         }
         rel_errors.push(max_err / max_ref);
     }
 
-    // Smooth (mild) grading must not destroy convergence: the finest-grid error is well
-    // below the coarsest. A robust trend check — the strict order quantification and the
-    // grading-amplitude limit where order collapses live in the graded-MMS example, per
-    // the tests-fast / examples-verify split. (At strong grading the interior product's
-    // order degrades, as expected; that boundary is the example's job to quantify.)
+    // With consistent cochains, the interior product retains genuine second order under
+    // smooth grading (≥ ~3.5× error drop per grid doubling, like the uniform-metric Cartan
+    // test). The graded-MMS example (`dec_graded_mms`) carries the full amplitude sweep,
+    // confirming this holds to a 3:1 spacing ratio.
     assert!(
-        rel_errors[2] < 0.6 * rel_errors[0],
-        "smooth grading broke convergence: {rel_errors:?}"
+        rel_errors[1] < rel_errors[0] / 3.0,
+        "graded Cartan first refinement not second order: {rel_errors:?}"
+    );
+    assert!(
+        rel_errors[2] < rel_errors[1] / 3.0,
+        "graded Cartan second refinement not second order: {rel_errors:?}"
     );
 }
 

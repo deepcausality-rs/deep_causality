@@ -7,11 +7,14 @@ layer). In the Regge topology/geometry separation a graded mesh is a `PerEdge` *
 state* on an unchanged lattice, so the combinatorial guarantees (`d∘d = 0`, discrete
 Stokes, divergence-free-by-construction) hold **exactly at any grading** — only accuracy
 order is at stake. This capability provides the per-axis graded constructors (geometric,
-tanh), pins the exact-structure-at-any-grading guarantee, and verifies the operator order
-under grading — recording the measured truth that the convective operator (interior
-product) loses formal second order under grading (an anisotropy-consistency limit, distinct
-from the already-fixed energy/skew defect, and a candidate for a Galerkin-star /
-Jacobian-weighted follow-up).
+tanh), pins the exact-structure-at-any-grading guarantee, and verifies — via a method-of-
+manufactured-solutions study — that **both march operators (convective `i_X ω` and viscous
+`Δ₀ = δd`) retain second order under smooth grading**, in both the max- and L2-norms, to a
+3:1 spacing ratio. Only the error constant grows mildly with grading; the order does not
+degrade. (An earlier revision of the study mis-measured a convective order-loss; the cause
+was a DEC cochain-convention bug in the *measurement* — feeding pointwise 1-form values
+instead of edge-integrals — not an operator defect. See
+`changes/reverted/fix-graded-convective-consistency.md`.)
 
 ## Requirements
 ### Requirement: Graded edge-length constructors
@@ -42,28 +45,28 @@ grading-independent; grading SHALL affect only accuracy order, never structure.
 - **WHEN** a field is Leray-projected (or marched) on a strongly graded lattice with a ratio well outside the accuracy-good range
 - **THEN** the result is divergence-free to the solve's exactness and the discrete conservation invariants hold
 
-### Requirement: Operator laws and truncation order verified on graded metrics
-The G1 wedge and interior-product property tests (Leibniz, Cartan) SHALL pass / converge on
-graded metrics, not only uniform ones. An MMS truncation study SHALL measure the
-convective-operator (interior-product) order across a grading-amplitude sweep and SHALL
-report — without hiding it — the amplitude at which the order degrades. The heavy study
-lives in an example, with a cheap convergence rung in CI.
+### Requirement: Operator order verified second order on graded metrics
+The G1 wedge and interior-product property tests (Leibniz, Cartan) SHALL converge at second
+order on graded metrics, not only uniform ones. An MMS truncation study SHALL measure both
+march operators' order across a grading-amplitude sweep, in the max- and L2-norms. The heavy
+study lives in an example, with a second-order convergence rung in CI.
 
-**Measured outcome (recorded honestly, amending the original optimistic claim).** The study
-found that the discrete interior product is clean second order on a uniform mesh and remains
-*convergent* under mild grading (the error keeps decreasing), but it **loses formal second
-order under grading** — the finest-grid order falls below 1.5 by an adjacent-spacing ratio
-of ≈ 1.11 and plateaus beyond. This is the convective operator's anisotropy-consistency
-limit, the same class as the convective-term form-slot issue, and a candidate for the same
-vector-slot M-adjoint fix as a follow-up. Crucially, this is an *accuracy* limit only:
-**structure** (divergence-freeness of the Leray projection) is metric-free and exact at
-*every* grading, pinned independently by the topology exactness gate.
+**Measured outcome.** With DEC cochains handled consistently (1-forms as edge-integrals,
+`×ℓ_edge`; the 1-form output normalised `÷ℓ`), **both** the convective interior product and
+the viscous Laplacian are **second order in both norms at every grading amplitude**, to a
+3:1 spacing ratio; only the error constant grows mildly with grading. So smooth grading
+retains second order. A `1.0`-`1.3` near-wall growth ratio (standard practice) is well
+inside the second-order regime. Structure (divergence-freeness of the Leray projection) is
+metric-free and exact at *every* grading, pinned independently by the topology exactness
+gate. **Correctness note:** omitting the `ℓ_edge` cochain factor mis-measures a false
+order-loss on graded meshes (invisible on uniform meshes where `ℓ = 1`); the CI test and the
+example both enforce the correct convention.
 
-#### Scenario: Wedge/interior-product laws hold under grading
-- **WHEN** the interior-product Cartan MMS runs on a smoothly graded metric (mild amplitude)
-- **THEN** the discrete `i_X dω + d i_X ω` converges to the Lie derivative under refinement (error decreasing), identically in form to the uniform-metric test
+#### Scenario: Convective and viscous operators are second order under smooth grading
+- **WHEN** the interior-product Cartan MMS and the Laplacian MMS run on a smoothly graded metric with consistent (edge-integral) cochains
+- **THEN** the discrete operators converge to their continuum references at approximately second order (≥ ~3.5× error drop per grid doubling), as on the uniform metric
 
-#### Scenario: The order-degradation boundary is measured and reported
+#### Scenario: Order is reported across the grading sweep
 - **WHEN** the graded MMS example sweeps the grading amplitude
-- **THEN** it prints the per-amplitude observed order and reports the amplitude at which the convective operator's order drops below 1.5, while affirming that structure stays exact at every amplitude
+- **THEN** it prints the per-amplitude observed order in both norms for both operators, showing the order holds at ≈ 2 (only the error constant grows) and that structure stays exact at every amplitude
 
