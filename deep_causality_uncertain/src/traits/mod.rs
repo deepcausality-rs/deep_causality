@@ -4,3 +4,4 @@
  */
 pub(crate) mod probabilistic;
 pub mod sampler;
+pub mod uncertain_real;

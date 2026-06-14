@@ -8,41 +8,44 @@ use crate::{
     ProbabilisticType, UncertainNodeContent, UncertainReal, UniformDistributionParams,
 };
 use crate::{SampledValue, UncertainError};
-use deep_causality_num::ToPrimitive;
+use deep_causality_num::Float106;
 
-impl IntoSampledValue for f64 {
+impl IntoSampledValue for Float106 {
     fn into_sampled_value(self) -> SampledValue {
-        SampledValue::Float(self.to_f64().unwrap_or(f64::NAN))
+        // Carry the full double-double value into its own variant — no narrowing to f64.
+        SampledValue::DoubleFloat(self)
     }
 }
 
-impl FromSampledValue for f64 {
+impl FromSampledValue for Float106 {
     fn from_sampled_value(value: SampledValue) -> Result<Self, UncertainError> {
         match value {
-            SampledValue::Float(f) => Ok(f),
+            SampledValue::DoubleFloat(d) => Ok(d),
+            // An f64 sample widens losslessly into a Float106 (low limb zero).
+            SampledValue::Float(f) => Ok(Float106::from_f64(f)),
             _ => Err(UncertainError::UnsupportedTypeError(
-                "Expected f64 SampledValue".to_string(),
+                "Expected Float106 SampledValue".to_string(),
             )),
         }
     }
 }
 
-impl ProbabilisticType for f64 {
+impl ProbabilisticType for Float106 {
     fn default_value() -> Self {
-        f64::default()
+        Float106::from_f64(0.0)
     }
 }
 
-impl UncertainReal for f64 {
+impl UncertainReal for Float106 {
     fn normal_node(mean: Self, std_dev: Self) -> UncertainNodeContent {
-        UncertainNodeContent::DistributionF64(DistributionEnum::Normal(NormalDistributionParams {
+        UncertainNodeContent::DistributionF106(DistributionEnum::Normal(NormalDistributionParams {
             mean,
             std_dev,
         }))
     }
 
     fn uniform_node(low: Self, high: Self) -> UncertainNodeContent {
-        UncertainNodeContent::DistributionF64(DistributionEnum::Uniform(
+        UncertainNodeContent::DistributionF106(DistributionEnum::Uniform(
             UniformDistributionParams { low, high },
         ))
     }

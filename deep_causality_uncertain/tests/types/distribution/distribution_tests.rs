@@ -150,9 +150,11 @@ fn test_sample_f64_unsupported_type_error() {
 #[test]
 fn test_sample_bool_unsupported_type_error() {
     let mut rng = rng();
+    // Degenerate Normal/Uniform on a bool enum (params carry the enum's `T`); sampling a
+    // bool distribution still rejects these variants with an UnsupportedTypeError.
     let normal_dist: DistributionEnum<bool> = DistributionEnum::Normal(NormalDistributionParams {
-        mean: 0.0,
-        std_dev: 1.0,
+        mean: false,
+        std_dev: false,
     });
     let result = normal_dist.sample(&mut rng);
 
@@ -165,8 +167,8 @@ fn test_sample_bool_unsupported_type_error() {
 
     let uniform_dist: DistributionEnum<bool> =
         DistributionEnum::Uniform(UniformDistributionParams {
-            low: 0.0,
-            high: 1.0,
+            low: false,
+            high: false,
         });
     let result = uniform_dist.sample(&mut rng);
     dbg!(&result);

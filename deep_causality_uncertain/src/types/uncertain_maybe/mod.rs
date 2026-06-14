@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 mod uncertain_maybe_bool;
+mod uncertain_maybe_f106;
 mod uncertain_maybe_f64;
 
 use crate::{ProbabilisticType, Uncertain};

@@ -15,12 +15,16 @@ mod types;
 // Algos
 pub use crate::algos::hypothesis::sprt_eval;
 // Alias
-pub use crate::alias::{MaybeUncertainBool, MaybeUncertainF64, UncertainBool, UncertainF64};
+pub use crate::alias::{
+    MaybeUncertainBool, MaybeUncertainF64, MaybeUncertainF106, UncertainBool, UncertainF64,
+    UncertainF106,
+};
 // Errors
 pub use crate::errors::UncertainError;
 // Traits
 pub use crate::traits::probabilistic::{FromSampledValue, IntoSampledValue, ProbabilisticType};
 pub use crate::traits::sampler::Sampler;
+pub use crate::traits::uncertain_real::UncertainReal;
 // Types
 pub use crate::types::cache::{GlobalSampleCache, SampledValue, with_global_cache};
 pub use crate::types::computation::operator::arithmetic_operator::ArithmeticOperator;

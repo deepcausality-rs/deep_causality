@@ -12,12 +12,14 @@ use deep_causality_ast::ConstTree;
 
 mod uncertain_bool;
 mod uncertain_bool_default;
+mod uncertain_f106;
 mod uncertain_f64;
 mod uncertain_f64_default;
 mod uncertain_op_arithmetic;
 mod uncertain_op_comparison;
 mod uncertain_op_logic;
 mod uncertain_part_eq;
+mod uncertain_real;
 mod uncertain_sampling;
 mod uncertain_statistics;
 

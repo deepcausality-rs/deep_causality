@@ -3,7 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-/// Defines binary arithmetic operations that take two f64 and return an f64.
+use deep_causality_num::RealField;
+
+/// Defines binary arithmetic operations on any real scalar.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ArithmeticOperator {
     Add,
@@ -13,7 +15,10 @@ pub enum ArithmeticOperator {
 }
 
 impl ArithmeticOperator {
-    pub fn apply(&self, a: f64, b: f64) -> f64 {
+    /// Apply the operation at the operands' precision. Generic over `R: RealField`
+    /// (`Add`/`Sub`/`Mul` from the ring, `Div` from the field), so the same code path
+    /// serves `f64` (bit-identically) and `Float106`.
+    pub fn apply<R: RealField>(&self, a: R, b: R) -> R {
         match self {
             ArithmeticOperator::Add => a + b,
             ArithmeticOperator::Sub => a - b,

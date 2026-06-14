@@ -4,4 +4,5 @@
  */
 
 mod bool_probabilistic_type;
+mod f106_probabilistic_type;
 mod f64_probabilistic_type;

@@ -34,11 +34,27 @@ instantiations working, add the precision targets. This change applies the same 
 
 ## Decisions
 
-### D1: Extend `deep_causality_rand` through its existing trait pattern
-Add `SampleUniform` + `UniformFloat` and `Distribution<R> for {StandardUniform,
-StandardNormal}` impls for the precision targets, plus `R`-typed `Bernoulli` thresholds.
-No change to `RngCore` / `Xoshiro256`. The f64 and f32 impls are left exactly as they are
-(bit-identical regression gate D7).
+### D1: Generalize `deep_causality_rand` from `Float` to `Real` (precision-as-a-parameter)
+`deep_causality_rand` predates the num crate's `Real` / `RealField` separation and is
+over-coupled to `Float` — `Normal<F: Float>`, `UniformFloat<F: Float>`. But the distribution
+*math* never needs `Float`: `Normal::new` / `sample_from_zscore` use only `is_finite` +
+arithmetic, and `UniformFloat` uses `is_finite` / `one` / `epsilon` / arithmetic — all
+declared on `Real` (`impl<T: Float> Real for T`). Re-bound the consumer-facing wrappers
+`Float → Real`: `Normal<F: Real>`, `UniformFloat<F: Real + RandFloat>`. The **only**
+genuinely `Float`-level seam is `RandFloat::rand_float_gen` (mantissa-bit assembly), which
+stays a per-type impl — the legitimate home for the "specific implementation detail" the
+num-crate paradigm keeps low. `Xoshiro256` / `RngCore` and the f32 / f64 paths are
+untouched (bit-identical regression gate D7). A small `RealRng` convenience bound
+(`Real + SampleUniform` with `StandardNormal: Distribution<Self>`, blanket-impl'd for every
+qualifying type) lets downstream thread a single bound instead of three.
+
+### D1a: Why this matters — the forward-compat mechanism
+Because `RealField` is `impl<T: Float> RealField for T` (Float ⇒ RealField, never the
+reverse), a `RealField` consumer cannot reach a `Float`-bounded API without illegally adding
+`R: Float`, which would re-couple every downstream crate to the bit-level trait. Generalizing
+rand over `Real` is what lets `deep_causality_uncertain` (and any future consumer) abstract
+over `RealField` only. A new float type then needs `impl Float` (num) + the rand per-type
+seam; uncertain and all other downstream code are untouched.
 
 ### D2: Double-double uniform `[0,1)` from two draws
 `Float106` uniform is assembled as `hi + lo · 2⁻⁵³` where `hi` is a standard 53-bit f64
@@ -47,23 +63,46 @@ of mantissa entropy. Normal draws use Box–Muller with `Float106` `sqrt`/`ln`/`
 `RealField`). This is a known construction; it is what makes the `Float106` draw *honest*
 (genuinely double-double bits) rather than an f64 value widened to double-double.
 
-### D3: `SampledValue<R>` carries the precision; the graph follows
-`SampledValue<R> = { Float(R), Bool(bool) }`. `UncertainNodeContent<R>`, the
-`SampledFmapFn<R>`/`SampledBindFn<R>` closure traits, `DistributionEnum<R>` and its three
-param structs, `SequentialSampler`, `sprt_eval`, and `GlobalSampleCache` all carry `R`.
-This is the large mechanical edit; it is bounded (the crate is ~40 files) and purely
-type-threading — no algorithm changes.
+### D3: A closed `SampledValue` enum is the precision dispatcher (revised 2026-06-14)
+The first plan threaded `R` through the whole engine (`SampledValue<R>`,
+`UncertainNodeContent<R>`, …). That foundered on the **global sample cache**: it lives in a
+`static` (`OnceLock`/`thread_local`), and Rust has no generic statics, so `SampledValue<R>`
+would force a `TypeId`-keyed `Any` registry.
+
+Revised, simpler design (chosen): make `SampledValue` a **closed enum carrying the
+precision as variants** — `{ Float(f64), DoubleFloat(Float106), Bool(bool) }` — so it is
+precision-complete without a type parameter. Then the engine internals stay **non-generic**:
+the cache stays a plain `static` (its role is only top-level `sample_with_index(i)`
+reproducibility, keyed by `(id, index)`; within-expression correlation is the sampler's
+local memo map), `UncertainNodeContent` and `SequentialSampler` keep their shapes, and the
+operators dispatch per variant (`ArithmeticOperator::apply` made generic over `RealField`,
+called on the matched variant's inner type). Only the boundary types — `Uncertain<R>`,
+`MaybeUncertain<R>`, `DistributionEnum<R>` and its params — carry `R`, converting `R ↔
+SampledValue` through the per-type `ProbabilisticType` impls.
+
+This delivers the two load-bearing precision paths: **certain values** (`Value`/`PureOp`
+carry `DoubleFloat(Float106)` directly) and **deterministic arithmetic** (`ArithmeticOp`
+dispatches per variant, applying at full precision). `ComparisonOp.threshold` is promoted
+from `f64` to `SampledValue` so comparisons keep precision; the user-supplied `.map()`
+closures (`FunctionOpF64: Fn(f64)->f64`) stay f64-typed — a narrow, documented boundary
+(mirroring the accepted SURD `R→f64` boundary), generalizable as a follow-up.
+
+Trade-off vs. the fully-generic plan: `SampledValue` is a closed set, so a new float type
+adds a variant + a `ProbabilisticType` impl (both in this crate). The **public** API
+(`Uncertain<R>`/`MaybeUncertain<R>`) stays generic over `RealField`; only the internal
+dispatcher enum is closed. No generic statics, no `Any`, far less churn than the 40-file
+thread.
 
 ### D4: `ProbabilisticType` stays the open boundary; ship three float impls
 `ProbabilisticType: IntoSampledValue<R> + FromSampledValue<R> + Clone + Send + Sync +
 'static` (the `Send + Sync + 'static` already present; `R: RealField` satisfies them).
 Ship concrete impls for `f64`, `f32`, `Float106` (and keep `bool` for the presence
-channel). The construction/sampling surface stays **generic over `R: RealField` via the
-trait** rather than a closed enum of the three floats, so a future flow/field value type
-can implement `ProbabilisticType` and ride the engine unchanged — the three floats are the
-shipped instantiations, not a ceiling (resolved decision 1). The `is_present` channel of
-`MaybeUncertain<R>` remains `Uncertain<bool>` — presence is a Bernoulli fact independent of
-value precision.
+channel). The **public** construction/sampling surface stays generic over `R: RealField`
+via the trait, so downstream code abstracts over `RealField`; internally each impl maps its
+type to/from the closed `SampledValue` dispatcher variant (D3). Adding a future value type
+is a `ProbabilisticType` impl plus a `SampledValue` variant, both local to this crate — the
+public API is untouched. The `is_present` channel of `MaybeUncertain<R>` remains
+`Uncertain<bool>` — presence is a Bernoulli fact independent of value precision.
 
 ### D5: SPRT and the sequential sampler are precision-agnostic in logic, `R` in thresholds
 The Wald sequential test compares running proportions / means against thresholds; the

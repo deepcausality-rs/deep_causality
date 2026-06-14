@@ -36,19 +36,24 @@ the genericity is designed once, here, rather than worked around there.
 
 ## What Changes
 
-- **`deep_causality_rand` — additive `R`-generic distribution sampling
-  (`rand-realfield-sampling`).** The crate already uses the `Distribution<T>` /
-  `SampleUniform` trait pattern (`StandardNormal` already impls `Distribution<f32>` and
-  `Distribution<f64>`; `Uniform<X: SampleUniform>` / `UniformFloat<F>` are generic), so
-  this is new trait impls, not an engine rewrite:
-  - `SampleUniform` + `UniformFloat` for the precision targets, including the
-    **double-double uniform `[0,1)` construction** for `Float106` (compose the high part
-    from a 53-bit draw and the low part from a second scaled draw — a known construction,
-    not research).
-  - `Distribution<R> for StandardNormal` / `StandardUniform` and `Bernoulli` thresholds
-    over `R`, using `R`'s `RealField` transcendentals (Box–Muller / inverse-CDF).
-  - The raw entropy source (`RngCore::next_u64`) is unchanged and type-agnostic; the
-    **f64 and f32 paths stay bit-identical** (regression-gated).
+- **`deep_causality_rand` — generalize the distribution surface from `Float` to `Real`
+  (`rand-realfield-sampling`).** The crate predates the num crate's `Real` / `RealField`
+  split and is over-coupled to `Float` (`Normal<F: Float>`, `UniformFloat<F: Float>`), even
+  though the distribution math needs only `Real` (`is_finite`, `one`, `epsilon`, arithmetic,
+  transcendentals — all on `Real` via `impl<T: Float> Real for T`). The change:
+  - Re-bound the consumer-facing wrappers `Float → Real`: `Normal<F: Real>`,
+    `UniformFloat<F: Real + RandFloat>`, so `RealField` consumers can use them without the
+    forward-compat-breaking `Float` coupling.
+  - Keep the per-type entropy seam (`RandFloat::rand_float_gen`, the mantissa-bit step) and
+    `StandardNormal: Distribution<F>` as per-type impls — the legitimate low home for
+    specific-type detail — and add `Float106` impls: the **double-double uniform `[0,1)`
+    construction** (high part from a 52-bit draw, low part from a second scaled draw) and a
+    **Box–Muller normal** via `Real` transcendentals.
+  - Add a `RealRng` convenience bound (`Real + SampleUniform`, `StandardNormal:
+    Distribution<Self>`, blanket-impl'd) so downstream threads one bound.
+  - `Xoshiro256` / `RngCore::next_u64` is unchanged and type-agnostic; the **f64 and f32
+    paths stay bit-identical** (regression-gated). `Bernoulli` stays f64-probability (its
+    output is `bool`; a probability is dimensionless).
 - **`deep_causality_uncertain` — parameterize the engine over `R: RealField`
   (`uncertain-realfield-generic`).**
   - `SampledValue<R> = { Float(R), Bool(bool) }`; `UncertainNodeContent<R>`,

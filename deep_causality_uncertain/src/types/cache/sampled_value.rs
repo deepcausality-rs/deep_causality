@@ -5,12 +5,22 @@
 use std::fmt::{Display, Formatter};
 
 use crate::{FromSampledValue, IntoSampledValue, ProbabilisticType, UncertainError};
+use deep_causality_num::Float106;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-/// Represents a sampled value that can be either a floating-point number or a boolean.
+/// A sampled value: the closed precision dispatcher for the uncertain engine.
+///
+/// `SampledValue` carries the value's precision as a variant rather than a type
+/// parameter, so the computation graph, the global sample cache (a `static`), and the
+/// sampler all stay non-generic while still propagating `Float106` precision end to end.
+/// The boundary types (`Uncertain<R>` / `MaybeUncertain<R>`) are generic over
+/// `R: RealField` and convert to/from the matching variant via `ProbabilisticType`.
 pub enum SampledValue {
-    /// A floating-point sampled value.
+    /// An `f64` sampled value.
     Float(f64),
+    /// A `Float106` (double-double, ~106-bit) sampled value, kept distinct from `Float`
+    /// so the high-precision path never narrows through `f64`.
+    DoubleFloat(Float106),
     /// A boolean sampled value.
     Bool(bool),
 }
@@ -30,6 +40,7 @@ impl Display for SampledValue {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             SampledValue::Float(value) => write!(f, "{}", value),
+            SampledValue::DoubleFloat(value) => write!(f, "{}", value),
             SampledValue::Bool(value) => write!(f, "{}", value),
         }
     }

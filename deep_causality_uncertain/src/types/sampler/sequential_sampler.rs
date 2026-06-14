@@ -8,6 +8,7 @@ use crate::{
     UncertainError, UncertainNodeContent,
 };
 use deep_causality_ast::ConstTree;
+use deep_causality_num::Float106;
 use deep_causality_rand::Rng;
 use std::collections::HashMap;
 
@@ -93,6 +94,22 @@ impl SequentialSampler {
                     ));
                 }
             },
+            UncertainNodeContent::DistributionF106(dist) => match dist {
+                DistributionEnum::Point(v) => (*v).into_sampled_value(),
+                DistributionEnum::Normal(params) => SampledValue::DoubleFloat(
+                    (DistributionEnum::Normal(*params) as DistributionEnum<Float106>)
+                        .sample(rng)?,
+                ),
+                DistributionEnum::Uniform(params) => SampledValue::DoubleFloat(
+                    (DistributionEnum::Uniform(*params) as DistributionEnum<Float106>)
+                        .sample(rng)?,
+                ),
+                _ => {
+                    return Err(UncertainError::UnsupportedTypeError(
+                        "Expected Float106 distribution".into(),
+                    ));
+                }
+            },
             UncertainNodeContent::DistributionBool(dist) => match dist {
                 DistributionEnum::Point(v) => (*v).into_sampled_value(),
                 DistributionEnum::Bernoulli(params) => SampledValue::Bool(
@@ -125,9 +142,12 @@ impl SequentialSampler {
                     (SampledValue::Float(l), SampledValue::Float(r)) => {
                         SampledValue::Float(op.apply(l, r))
                     }
+                    (SampledValue::DoubleFloat(l), SampledValue::DoubleFloat(r)) => {
+                        SampledValue::DoubleFloat(op.apply(l, r))
+                    }
                     _ => {
                         return Err(UncertainError::UnsupportedTypeError(
-                            "Arithmetic op requires float inputs".into(),
+                            "Arithmetic op requires matching float inputs".into(),
                         ));
                     }
                 }
@@ -140,6 +160,11 @@ impl SequentialSampler {
                 let operand_val = self.evaluate_node(operand, context, rng)?;
                 match operand_val {
                     SampledValue::Float(o) => SampledValue::Bool(op.apply(o, *threshold)),
+                    // The threshold is f64-sourced (a documented boundary); widen it to the
+                    // operand's precision so the *sample* keeps its double-double value.
+                    SampledValue::DoubleFloat(o) => {
+                        SampledValue::Bool(op.apply(o, Float106::from_f64(*threshold)))
+                    }
                     _ => {
                         return Err(UncertainError::UnsupportedTypeError(
                             "Comparison op requires float input".into(),
@@ -192,6 +217,11 @@ impl SequentialSampler {
                 let operand_val = self.evaluate_node(operand, context, rng)?;
                 match operand_val {
                     SampledValue::Float(o) => SampledValue::Float(func(o)),
+                    // User `.map` closures are f64-typed (a documented boundary): apply at
+                    // f64 then re-widen, preserving representation but not sub-f64 precision.
+                    SampledValue::DoubleFloat(o) => {
+                        SampledValue::DoubleFloat(Float106::from_f64(func(o.to_f64())))
+                    }
                     _ => {
                         return Err(UncertainError::UnsupportedTypeError(
                             "Function op requires float input".into(),
@@ -203,6 +233,7 @@ impl SequentialSampler {
                 let operand_val = self.evaluate_node(operand, context, rng)?;
                 match operand_val {
                     SampledValue::Float(o) => SampledValue::Float(-o),
+                    SampledValue::DoubleFloat(o) => SampledValue::DoubleFloat(-o),
                     _ => {
                         return Err(UncertainError::UnsupportedTypeError(
                             "Negation op requires float input".into(),
@@ -214,6 +245,7 @@ impl SequentialSampler {
                 let operand_val = self.evaluate_node(operand, context, rng)?;
                 match operand_val {
                     SampledValue::Float(o) => SampledValue::Bool(func(o)),
+                    SampledValue::DoubleFloat(o) => SampledValue::Bool(func(o.to_f64())),
                     _ => {
                         return Err(UncertainError::UnsupportedTypeError(
                             "FunctionOpBool requires float input".into(),

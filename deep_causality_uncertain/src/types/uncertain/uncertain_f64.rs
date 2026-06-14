@@ -2,31 +2,13 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{
-    DistributionEnum, IntoSampledValue, NormalDistributionParams, Uncertain, UncertainError,
-    UncertainNodeContent, UniformDistributionParams,
-};
+use crate::{Uncertain, UncertainError, UncertainNodeContent};
 use std::sync::Arc;
 
+// `point` / `normal` / `uniform` are the shared generic constructors in `uncertain_real`
+// (a single impl, so `Uncertain::normal(0.0, 1.0)` still infers `f64`). The methods below
+// are f64-specific.
 impl Uncertain<f64> {
-    pub fn point(value: f64) -> Self {
-        Self::from_root_node(UncertainNodeContent::Value(value.into_sampled_value()))
-    }
-
-    pub fn normal(mean: f64, std_dev: f64) -> Self {
-        let params = NormalDistributionParams { mean, std_dev };
-        Self::from_root_node(UncertainNodeContent::DistributionF64(
-            DistributionEnum::Normal(params),
-        ))
-    }
-
-    pub fn uniform(low: f64, high: f64) -> Self {
-        let params = UniformDistributionParams { low, high };
-        Self::from_root_node(UncertainNodeContent::DistributionF64(
-            DistributionEnum::Uniform(params),
-        ))
-    }
-
     pub fn from_samples(samples: &[f64]) -> Self {
         if samples.is_empty() {
             return Self::point(0.0);
