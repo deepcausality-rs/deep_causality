@@ -1,36 +1,51 @@
-# Cut-cell cylinder wake — CFD Stage 4 (Group D harness)
+# Cut-cell cylinder wake — CFD Stage 4 (Groups C + D)
 
-Flow past a circular cylinder built as an **immersed cut-cell body**, exercising the full
-Stage-4 cut-cell stack end to end:
+Flow past a circular cylinder built as an **immersed cut-cell body** (Group D), driven by a
+**sensor-fed uncertain inflow** through a **causal-monad march** (Group C). It exercises the
+full Stage-4 stack end to end:
 
 - the cylinder is a `CutCellRegistry` from the analytic disk primitive
   (`CutCellRegistry::from_primitive`, A4) — exact clipped volumes + apertures, not a staircase;
 - the cut **Hodge star** (B5) makes every operator (compiled stencils, constrained Leray
   projection, codifferential) see the partial cells transparently;
 - the immersed **no-slip / no-penetration** condition (B4) pins the body's edges through the
-  existing constrained projector.
+  existing constrained projector;
+- the channel is driven by a **moving top wall whose velocity is a `MaybeUncertain<f64>`
+  sensor stream** (Group C): each step the reading is presence-gated and collapsed to a scalar
+  inflow; a **dropout** falls back to the last-good value via a Pearl `do(...)` intervention,
+  recorded in the `EffectLog`.
 
 ```text
 cargo run --release -p avionics_examples --example dec_cylinder_wake
 ```
 
 It streams a CSV to stdout (`step, t, kinetic_energy, max_speed, div_residual, v_probe`) and
-prints the case setup and a shedding-Strouhal estimate to stderr.
+prints the case setup, the `EffectLog` dropout count, and a shedding-Strouhal estimate to stderr.
+
+## The causal-monad march (Group C)
+
+The solver is **stateless and portable** (`step(&self, field)`); the **state lives in the
+monad**. Each step is the `inflow_march_step` bind stage over a
+`PropagatingProcess<f64, InflowMarchState, InflowContext>`: it presence-gates the sensor sample
+(`MaybeUncertain::lift_to_uncertain`), collapses a present reading to a prescribed wall velocity
+(`expected_value`), reconfigures the boundary through the **existing** moving-wall lift, and
+marches — **the uncertain types never enter the solver core, and the solver is unchanged**. On a
+dropout the last-good value is substituted through `intervene` (a logged value alternation). The
+example drives the march one bind at a time so the wake probe can be streamed;
+`deep_causality_physics::march_inflow` packages the identical stage as a `CausalFlow::iterate_n`
+loop.
 
 ## What this harness is — and is not
 
-The DEC solver's boundary conditions today are no-slip / moving walls, body force, and
-periodicity — there is **no inflow / outflow boundary yet** (that arrives with the Stage-4
-uncertain-inflow zone, Group C). So the flow is driven by a streamwise body force in a
-**periodic channel** (periodic-x, wall-y) containing the cylinder: the confined /
-periodic-array cylinder, which sheds a von-Kármán street and is a faithful exercise of the
-cut-cell machinery.
+The DEC solver has **no inflow/outflow surface**; the sensor drives a **prescribed moving wall**
+(a Dirichlet boundary the solver already supports), confined in a **periodic-x channel**
+(periodic-x, wall-y) containing the cylinder. This sheds a von-Kármán street and is a faithful
+exercise of the cut-cell + uncertain-zone machinery.
 
 The quantitative **isolated-cylinder Reynolds ladder** against Lehmkuhl et al. (2013) and the
-Williamson lineage (tasks D2/D3 — Strouhal and drag over Re 100–3900) needs that
-inflow/outflow surface **plus** the small-cell stabilizer selection (B1–B3). It is **not**
-claimed here; the printed Strouhal is for the confined/periodic case and is a qualitative
-shedding check, not a reference comparison.
+Williamson lineage (tasks D2/D3 — Strouhal and drag over Re 100–3900) needs a true
+inflow/outflow surface. It is **not** claimed here; the printed Strouhal is for the
+confined/periodic case and is a qualitative shedding check, not a reference comparison.
 
 ## Small-cell stabilization (B1/B2)
 

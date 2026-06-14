@@ -64,6 +64,10 @@ pub(crate) mod diagnostics;
 pub(crate) mod energy_budget;
 pub(crate) mod spectral_diffusion;
 pub(crate) mod step_output;
+// The uncertain-inflow zone (Group C) consumes `deep_causality_uncertain` and its global sample
+// cache, which is std-only.
+#[cfg(feature = "std")]
+pub(crate) mod uncertain_inflow;
 pub(crate) mod wrappers;
 
 pub use dec_ns_rate::DecNsRate;
@@ -73,4 +77,9 @@ pub use diagnostics::{
 };
 pub use energy_budget::EnergyBudget;
 pub use step_output::{RunOutput, StepOutput};
+#[cfg(feature = "std")]
+pub use uncertain_inflow::{
+    DropoutVerbosity, InflowContext, InflowMarchState, InflowProcess, UncertainInflowZone,
+    inflow_march_step, march_inflow,
+};
 pub use wrappers::dec_ns_step;

@@ -3,48 +3,66 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # Cut-cell cylinder wake — CFD Stage 4, Group D harness
+//! # Cut-cell cylinder wake — CFD Stage 4, Groups C + D
 //!
-//! Flow past a circular cylinder built as an **immersed cut-cell body** on a uniform lattice,
-//! exercising the full Stage-4 stack end to end:
+//! Flow past a circular cylinder built as an **immersed cut-cell body** (Group D), driven by a
+//! **sensor-fed uncertain inflow** through a **causal-monad march** (Group C). It exercises the
+//! full Stage-4 stack end to end:
 //!
 //! - the cylinder geometry is a `CutCellRegistry` from the analytic disk primitive
 //!   (`CutCellRegistry::from_primitive`, A4) — clipped volumes + apertures, not a staircase;
 //! - the cut **Hodge star** (B5) makes every operator (compiled stencils, constrained Leray
 //!   projection, codifferential) see the partial cells transparently;
-//! - the immersed **no-slip / no-penetration** condition (B4) pins the body's edges through
-//!   the existing constrained projector.
+//! - the immersed **no-slip / no-penetration** condition (B4) pins the body's edges through the
+//!   existing constrained projector;
+//! - the channel is driven by a **moving top wall whose velocity is a `MaybeUncertain<f64>`
+//!   sensor stream** (Group C): each step the reading is presence-gated and collapsed to a scalar
+//!   inflow; a **dropout** falls back to the last-good value through a Pearl `do(...)`
+//!   intervention, recorded in the `EffectLog`.
+//!
+//! ## The causal-monad march (Group C)
+//!
+//! The solver is **stateless and portable** (`step(&self, field)`); the **state lives in the
+//! monad**. Each step is the `inflow_march_step` bind stage over a
+//! `PropagatingProcess<f64, InflowMarchState, InflowContext>`: it collapses the sensor sample to a
+//! prescribed wall velocity, reconfigures the boundary through the existing moving-wall lift, and
+//! marches — the uncertain types never enter the solver core. Here we drive the march one bind at
+//! a time so the per-step wake probe can be streamed; `deep_causality_physics::march_inflow` packages
+//! the same stage as a `CausalFlow::iterate_n` loop for the fire-and-report case.
 //!
 //! ## What this harness is (and is not)
 //!
-//! The DEC solver's boundary conditions today are no-slip / moving walls, body force, and
-//! periodicity — there is **no inflow / outflow boundary yet** (that arrives with the Stage-4
-//! uncertain-inflow zone, Group C). So this drives the flow with a streamwise body force in a
-//! **periodic channel** (periodic-x, wall-y) containing the cylinder: the confined /
-//! periodic-array cylinder, which sheds a von-Kármán street and is a faithful exercise of the
-//! cut-cell machinery. The quantitative isolated-cylinder Reynolds ladder against Lehmkuhl et
-//! al. (2013) and the Williamson lineage (tasks D2/D3) needs that inflow/outflow surface plus
-//! the small-cell stabilizer selection (B1–B3); it is **not** claimed here.
+//! The DEC solver has no inflow/outflow surface; the sensor drives a **prescribed moving wall** (a
+//! Dirichlet boundary the solver already supports), confined in a **periodic-x channel**. This
+//! sheds a von-Kármán street and is a faithful exercise of the cut-cell + uncertain-zone
+//! machinery. The quantitative isolated-cylinder Reynolds ladder against Lehmkuhl et al. (2013)
+//! and the Williamson lineage (tasks D2/D3) needs that inflow/outflow surface; it is **not**
+//! claimed here.
 //!
 //! ## Small-cell stabilization (B1/B2)
 //!
 //! In a finite-volume cut-cell solver, arbitrarily small cut cells collapse the explicit time
-//! step (the canonical hazard). **Not here:** the cut Hodge star is a consistent metric clip,
-//! so the codifferential `δ = M⁻¹ ∂ M` cancels it across grades and the explicit march is
-//! inherently small-cell-stable (design D4 / `cut_cell_wiring_tests`). The selected stabilizer
-//! is therefore **cell-merging** (`CutCellRegistry::with_cell_merging`, a volume-fraction floor
-//! on the cut star — flux-redistribution does not fit the projected-rate formulation), engaged
-//! here only to tighten the masked-CG projection conditioning on sliver cells.
+//! step (the canonical hazard). **Not here:** the cut Hodge star is a consistent metric clip, so
+//! the codifferential `δ = M⁻¹ ∂ M` cancels it across grades and the explicit march is inherently
+//! small-cell-stable (design D4 / `cut_cell_wiring_tests`). The selected stabilizer is therefore
+//! **cell-merging** (`CutCellRegistry::with_cell_merging`), engaged here only to tighten the
+//! masked-CG projection conditioning on sliver cells.
 //!
 //! ```text
 //! cargo run --release -p avionics_examples --example dec_cylinder_wake
 //! ```
 
-use deep_causality_physics::{BodyForceOneForm, DecNsSolver};
+use deep_causality_core::{EffectLog, EffectValue, PropagatingProcess};
+use deep_causality_haft::LogSize;
+use deep_causality_physics::{
+    DecNsSolver, DropoutVerbosity, InflowContext, InflowMarchState, UncertainInflowZone,
+    dec_divergence_residual, dec_max_speed, inflow_march_step,
+};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, CutCellRegistry, LatticeComplex, Manifold, Primitive,
 };
+use deep_causality_uncertain::{MaybeUncertain, Uncertain};
 
 // -- Case parameters --------------------------------------------------------------------
 
@@ -56,15 +74,25 @@ const AR: f64 = 3.0;
 const BLOCKAGE: f64 = 0.25;
 /// Reynolds number based on the cylinder diameter and the target bulk velocity.
 const RE_D: f64 = 100.0;
-/// Target bulk streamwise velocity (sets the body-force magnitude).
+/// Target bulk streamwise velocity — the sensor's nominal reading and the moving-wall lid speed.
 const U_BULK: f64 = 1.0;
-/// Cell-merging floor (B1/B2): free cut cells/edges below this wetted fraction borrow volume
-/// to reach it, tightening the masked-CG projection conditioning. (Explicit stability is
-/// inherent here — design D4 — so this is not a CFL guard.)
+/// Cell-merging floor (B1/B2): free cut cells/edges below this wetted fraction borrow volume to
+/// reach it, tightening the masked-CG projection conditioning. (Explicit stability is inherent
+/// here — design D4 — so this is not a CFL guard.)
 const MERGE_FRACTION: f64 = 0.25;
-/// Number of march steps. The harness demonstrates a stable, divergence-free cut-cell march;
-/// developed shedding needs a longer run (and ideally the inflow/outflow surface) — see D2/D3.
+/// Number of march steps.
 const STEPS: usize = 2000;
+
+// -- Sensor-stream parameters (Group C) -------------------------------------------------
+
+/// Relative 1σ noise on a *present* inflow reading.
+const SENSOR_SIGMA: f64 = 0.03;
+/// A sensor dropout (absent reading) every this many steps — exercises the BC-fallback
+/// intervention and its `EffectLog` record.
+const DROPOUT_EVERY: usize = 50;
+/// Monte-Carlo sample budgets for the presence gate and the mean collapse.
+const PRESENCE_SAMPLES: usize = 256;
+const COLLAPSE_SAMPLES: usize = 256;
 
 fn main() {
     let h = 1.0 / (NY - 1) as f64; // channel height H = 1.
@@ -76,10 +104,7 @@ fn main() {
     let center = [AR * 0.25, 0.5]; // a quarter-length in, mid-channel.
     let nu = U_BULK * diameter / RE_D;
 
-    // Cut geometry: the analytic disk, with cell-merging small-cell stabilization (B1/B2 —
-    // a volume-fraction floor on the cut star). In this DEC formulation the explicit march is
-    // already small-cell-stable (the consistent metric clip cancels in δ — see design D4), so
-    // the floor here only tightens the masked-CG projection conditioning on sliver cells.
+    // Cut geometry: the analytic disk, with cell-merging small-cell stabilization (B1/B2).
     let base_metric = CubicalReggeGeometry::<2, f64>::uniform(h);
     let disk = Primitive::<2, f64>::ball(center, radius);
     let registry =
@@ -98,30 +123,22 @@ fn main() {
     let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
     let manifold = Manifold::from_cubical_with_metric(lattice, data, metric, 0);
 
-    // Streamwise body force on x-edges (edge integral g·h) sized so the inviscid forcing
-    // balances a Poiseuille-like bulk speed; the cylinder then sheds in its wake.
-    let g = 8.0 * nu * U_BULK; // Poiseuille pressure gradient for u_max ≈ U_BULK.
-    let n1 = manifold.complex().num_cells(1);
-    let mut force = vec![0.0; n1];
-    for (idx, cell) in manifold.complex().iter_cells(1).enumerate() {
-        if cell.orientation().trailing_zeros() as usize == 0 {
-            force[idx] = g * h;
-        }
-    }
-    let force =
-        BodyForceOneForm::new(CausalTensor::new(force, vec![n1]).unwrap(), &manifold).unwrap();
-
-    // Conservative dt: the diffusive limit on the *merged* smallest cell, with an advective
-    // margin. (The proper small-cell CFL is the B3 stability rung.)
+    // Conservative dt: the diffusive limit, with an advective margin for the lid-driven bulk.
     let dt = 0.2 * h * h / (4.0 * nu);
-    let solver = DecNsSolver::new(&manifold, nu, dt, Some(&force)).expect("solver");
+
+    // The stateless cut-cell solver; the sensor drives the top wall (axis 1, far face) with a
+    // streamwise (axis 0) velocity. `with_moving_wall` here validates the prescribed-wall config
+    // and seeds the initial lid value; the march reconfigures it from the sensor each step.
+    let solver = DecNsSolver::new(&manifold, nu, dt, None)
+        .expect("solver")
+        .with_moving_wall(1, true, [U_BULK, 0.0])
+        .expect("prescribed top wall");
 
     let n0 = manifold.complex().num_cells(0);
     let rest = CausalTensor::new(vec![0.0; 2 * n0], vec![2 * n0]).unwrap();
-    let mut state = solver.seed_from_vertex_vectors(&rest).expect("seed");
+    let seed = solver.seed_from_vertex_vectors(&rest).expect("seed");
 
-    // A wake probe: the y-velocity (transverse) one diameter downstream of the cylinder,
-    // mid-channel. Its oscillation frequency is the shedding frequency.
+    // A wake probe: the y-velocity (transverse) one diameter downstream of the cylinder.
     let probe_x = ((center[0] + 1.5 * diameter) / h).round() as usize;
     let probe_y = (0.5 / h).round() as usize;
     let probe_edge = manifold
@@ -134,44 +151,88 @@ fn main() {
         })
         .expect("probe edge exists");
 
+    // Group C: the immutable zone + the per-step sensor stream (the only `MaybeUncertain` memory).
+    let zone = UncertainInflowZone::new(1, true, 0, U_BULK)
+        .with_presence_gate(0.5, 0.95, 0.05, PRESENCE_SAMPLES)
+        .with_collapse_samples(COLLAPSE_SAMPLES)
+        .with_verbosity(DropoutVerbosity::EachDropout);
+    let stream = sensor_stream(STEPS);
+    let n_dropouts = stream
+        .iter()
+        .filter(|s| matches!(s.sample(), Ok(None)))
+        .count();
+
     eprintln!(
         "# cut-cell cylinder wake: grid {nx}×{NY}, D/H={BLOCKAGE}, Re_D={RE_D}, nu={nu:.3e}, dt={dt:.3e}"
     );
     eprintln!(
         "# cells: {n_solid} solid, {n_cut} cut; fluid area {fluid_area:.4}; merge floor {MERGE_FRACTION}"
     );
+    eprintln!(
+        "# sensor-fed top wall: U≈{U_BULK} (1σ {SENSOR_SIGMA}), dropout every {DROPOUT_EVERY} steps ({n_dropouts} total)"
+    );
     println!("step,t,kinetic_energy,max_speed,div_residual,v_probe");
+
+    // The causal-monad march: state in the monad, the stateless solver untouched. We bind one
+    // step at a time so the wake probe can be streamed; `march_inflow` packages the identical
+    // stage as a `CausalFlow::iterate_n` loop.
+    let initial = InflowMarchState::new(solver, seed, U_BULK);
+    let context = InflowContext::new(zone, stream);
+    let mut process: PropagatingProcess<f64, InflowMarchState<2, f64>, InflowContext<f64>> =
+        PropagatingProcess {
+            value: EffectValue::Value(U_BULK),
+            state: initial,
+            context: Some(context),
+            error: None,
+            logs: EffectLog::new(),
+        };
 
     let mut probe_series: Vec<(f64, f64)> = Vec::with_capacity(STEPS);
     let report_every = (STEPS / 200).max(1);
     for step in 0..STEPS {
-        let out = match solver.step(&state) {
-            Ok(o) => o,
-            Err(e) => {
-                eprintln!("# march stopped at step {step}: {e}");
-                break;
-            }
-        };
+        process = process.bind(inflow_march_step);
+        if let Some(e) = process.error() {
+            eprintln!("# march stopped at step {step}: {e:?}");
+            break;
+        }
         let t = (step + 1) as f64 * dt;
-        let u = out.state().as_one_form();
+        let u = process.state().field().as_one_form();
         let v_probe = u.as_slice()[probe_edge] / h;
         probe_series.push((t, v_probe));
         if (step + 1) % report_every == 0 {
             let ke = kinetic_energy(u.as_slice(), h);
+            let max_speed = dec_max_speed(&manifold, u).unwrap_or(f64::NAN);
+            let div = dec_divergence_residual(&manifold, u).unwrap_or(f64::NAN);
             println!(
                 "{},{:.5},{:.6e},{:.6e},{:.3e},{:.6e}",
                 step + 1,
                 t,
                 ke,
-                out.max_speed(),
-                out.divergence_residual(),
+                max_speed,
+                div,
                 v_probe,
             );
         }
-        state = out.into_state();
     }
 
+    eprintln!(
+        "# EffectLog: {} entries recorded ({n_dropouts} dropouts × (fallback + intervention))",
+        process.logs().len()
+    );
     report_strouhal(&probe_series, diameter, U_BULK);
+}
+
+/// The per-step sensor stream: a noisy present reading at `U_BULK`, with a periodic dropout.
+fn sensor_stream(steps: usize) -> Vec<MaybeUncertain<f64>> {
+    (0..steps)
+        .map(|s| {
+            if (s + 1) % DROPOUT_EVERY == 0 {
+                MaybeUncertain::<f64>::always_none()
+            } else {
+                MaybeUncertain::<f64>::from_uncertain(Uncertain::normal(U_BULK, SENSOR_SIGMA))
+            }
+        })
+        .collect()
 }
 
 /// Total solid area recorded in the registry (solid cells full; cut cells their dry part).

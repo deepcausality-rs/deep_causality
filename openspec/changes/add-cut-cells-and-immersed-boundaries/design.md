@@ -155,6 +155,21 @@ The solver core and any downstream analysis tap stay `R: RealField`; the uncerta
 never enter the march. The 8–16× memory cost applies only to the tagged inflow patch
 (`causal_cfd.md` §2.7), so the hybrid-storage concern is bounded to the boundary.
 
+**Realization (the stateless-solver correction).** The DEC solver is stateless and portable —
+`step(&self, field)` — so the march **state lives in the monad**, not the solver (per
+`multi_physics_pipeline` / the `causal_uncertain_examples` precedent), and the solver is left
+**unchanged**. The zone is realized as a sensor-fed **prescribed moving wall** — the Dirichlet
+boundary the solver already supports — because the DEC formulation has no inflow/outflow surface
+yet (the wall-normal-flux Neumann condition of the projection rules out a wall-normal Dirichlet
+inflow without that surface, which stays deferred with D2/D3). Each step is the
+`inflow_march_step` bind over a `PropagatingProcess<R, InflowMarchState, InflowContext>`: it
+collapses the sample, reconfigures the wall value through the existing `with_moving_wall` builder,
+and calls the unchanged `step`. The collapse `MaybeUncertain<R> → Uncertain<R> → R` rides the
+foundation generalization (lift + sampling reduction hoisted to single generic impls), so the
+patch is `R`-typed with no cast island. `deep_causality_physics::march_inflow` packages the stage
+as a `CausalFlow::iterate_n` loop; the cylinder example drives it bind-by-bind to stream the wake
+probe.
+
 ### D7: R1 graded metrics have landed with verified second order; compose with cut cells
 The cut-cell volume/aperture override composes with `PerAxis`/`PerEdge` grading because
 both feed the same `cell_volume` dispatch — a graded *and* cut cell is a clipped volume

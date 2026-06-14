@@ -110,24 +110,40 @@ build` / `make test` are run by the user on review, not by the agent.
 > + `rand-realfield-sampling`), so the inflow patch composes with the solver's `R` without an
 > `R → f64` cast. Group C consumes the shipped API directly. f64 behavior is preserved
 > bit-for-bit, so the f64 cylinder validation is unaffected.
+>
+> **Foundation generalization (done this group):** the `MaybeUncertain<T>` *collapse* and the
+> `Uncertain<T>` *reduction* were still f64/Float106/bool-duplicated. They are now hoisted to
+> single generic impls (`deep_causality_uncertain`): `lift_to_uncertain` over
+> `T: ProbabilisticType`; `sample`/`sample_with_index`/`take_samples` over `T: ProbabilisticType`
+> (via the already-generic `Sampler<T>` + `T::from_sampled_value`); `expected_value`/
+> `standard_deviation` over `T: ProbabilisticType + RealField + FromPrimitive`. Behaviour is
+> bit-identical at f64 (existing tests pass through the generic methods); the zone collapses
+> `MaybeUncertain<R> → Uncertain<R> → R` with no cast island.
 
-- [ ] C0 Consume the shipped `MaybeUncertain<R>` API at the solver's precision (prerequisite
-      already landed — a build/use check, not a wait gate).
-- [ ] C1 `UncertainInflowZone`: tag a set of inflow boundary cells fed by a
-      `MaybeUncertain<R>` stream; per-step `lift_to_uncertain(threshold, confidence,
-      epsilon, max_samples)` to a presence-confirmed `R` inflow value for assembly. The
-      zone's last-good value lives in mutable `State` (D10).
-- [ ] C2 Dropout path: `Err(PresenceError)` fires the BC-fallback corrective intervention
-      (§10.3) — substitute last-good / configured-default inflow via `.intervene`, record
-      the dropout in the `EffectLog` at the configured verbosity (D6: default records each
-      dropout + fallback; a knob can throttle to onset/recovery transitions).
-- [ ] C3 The solver core stays `R: RealField`; the uncertain types never enter the march
-      (compile-level: no `MaybeUncertain` in the rate/step signatures).
-- [ ] C4 Tests: dropout stream triggers the intervention and the logged fallback;
-      no-dropout stream reproduces the deterministic-inflow control run to rounding;
-      memory cost is confined to the tagged patch.
-- [ ] C5 Group gate: format, clippy, full physics tests both feature configs; prepare
-      Group C commit message and ask the user to commit.
+- [x] C0 Consume the shipped `MaybeUncertain<R>` API at the solver's precision. `deep_causality_uncertain`
+      is a std-gated optional dependency of `deep_causality_physics` (`dep:` under the `std`
+      feature); the zone is precision-generic over `R: DecNsScalar + ProbabilisticType`.
+- [x] C1 `UncertainInflowZone` (`dec/uncertain_inflow/`): tags a prescribed inflow boundary (a
+      moving wall — the Dirichlet boundary the solver already supports) fed by a
+      `MaybeUncertain<R>` stream; per-step `lift_to_uncertain(threshold, confidence, epsilon,
+      max_samples)` then `expected_value(collapse_samples)` to a presence-confirmed `R`. The
+      zone's last-good value lives in mutable `State` (`InflowMarchState`, D10); the zone +
+      stream are immutable `Context` (`InflowContext`, D10).
+- [x] C2 Dropout path: `Err(PresenceError)` (or a non-finite mean) substitutes the last-good /
+      configured-default inflow via `.intervene` (a logged `!!ValueAlternation!!`) and records
+      the dropout in the `EffectLog` at the configured `DropoutVerbosity` (default `EachDropout`;
+      `Transitions` throttles to onset/recovery).
+- [x] C3 The solver core stays `R` and **unchanged** — the per-step value reconfigures the
+      boundary through the existing `with_moving_wall` builder; `step(&self, field)` is untouched
+      and stateless, the monad carries the state, and no `MaybeUncertain` enters the rate/step
+      signatures (the collapse happens in the `inflow_march_step` bind stage, above `step`).
+- [x] C4 Tests (`physics dec/uncertain_inflow_tests`, fast): no-dropout stream reproduces the
+      deterministic moving-wall control to rounding and logs nothing; dropout stream completes via
+      a logged `intervene`; `Transitions` verbosity logs only onset/recovery; memory cost is
+      confined to the patch (the marched field stays the plain edge cochain).
+- [x] C5 Group gate: format, clippy (0 warnings), full physics + uncertain tests both feature
+      configs, the cut-cell cylinder example rewritten as the causal-monad march; commit message
+      prepared. (User commits per the golden rule.)
 
 ## D. Validation — 3D cylinder Re 100–3900 (cut-cell-validation)
 

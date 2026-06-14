@@ -66,6 +66,7 @@ deep_causality_physics = { path = "../../deep_causality_physics" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
 deep_causality_topology = { path = "../../deep_causality_topology" }
 deep_causality_multivector = { path = "../../deep_causality_multivector" }
+deep_causality_uncertain = { path = "../../deep_causality_uncertain" }
 
 [lints]
 workspace = true

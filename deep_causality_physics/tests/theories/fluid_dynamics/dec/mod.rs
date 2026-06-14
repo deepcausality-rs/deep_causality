@@ -28,5 +28,7 @@ pub mod step_output_tests;
 pub mod taylor_green_2d_tests;
 #[cfg(test)]
 pub mod taylor_green_3d_tests;
+#[cfg(all(test, feature = "std"))]
+pub mod uncertain_inflow_tests;
 #[cfg(test)]
 pub mod wrappers_tests;
