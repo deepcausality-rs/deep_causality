@@ -10,4 +10,7 @@ mod carrier_tests;
 mod consistency_tests;
 
 #[cfg(test)]
+mod cut_star_tests;
+
+#[cfg(test)]
 mod intersection_tests;
