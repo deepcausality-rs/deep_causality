@@ -1,0 +1,29 @@
+openspec/specs/dec-ns-stability/spec.md
+  s_4adc6099bc84ff::t_f0665e8e9e2c87 1-53
+examples/avionics_examples/dec_taylor_green_re1600/model.rs
+  s_4adc6099bc84ff::t_7c0c634185dbed 125
+openspec/notes/cfd/error-per-cost-vs-spectral.md
+  s_4adc6099bc84ff::t_c39c8304e828ff 3-9
+  s_4adc6099bc84ff::t_d130f17df973bc 114-160
+examples/avionics_examples/dec_taylor_green_re1600/print_utils.rs
+  s_4adc6099bc84ff::t_b17b5e0f3c4824 14-18
+deep_causality_physics/tests/theories/fluid_dynamics/dec/energy_budget_tests.rs
+  s_4adc6099bc84ff::t_3ddda3dba0a8f6 71-75
+  s_4adc6099bc84ff::t_b8fe26e9b853e3 110-155
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "248a96d8dee31cd8addf5ec9f67ef0a4cb16eb40",
+  "prompts": {},
+  "sessions": {
+    "s_4adc6099bc84ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b774418-ac9f-499d-bd16-3cc99ea375cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
