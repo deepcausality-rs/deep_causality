@@ -8,35 +8,20 @@
 //! A graded mesh is a metric state on an unchanged lattice (`variable-grid-geometry.md`
 //! §2): `d`, the discrete Stokes theorem, and divergence-freeness are combinatorial, so
 //! they hold **exactly at any grading** — only *accuracy order* is at stake. This study
-//! quantifies that: how the order of accuracy of the discrete **interior product**
-//! `i_X ω` — the building block of the convective term `i_u(du)` — behaves as the grading
-//! strength rises.
+//! quantifies that for the two operators of the incompressible march on graded meshes:
 //!
-//! ## Method of manufactured solutions
+//! - the **convective** operator `i_X ω` (interior product), via the Cartan magic-formula
+//!   MMS `i_X dω + d i_X ω → L_X ω`;
+//! - the **viscous** operator `Δ₀ = δd` (Laplacian), via a `sin·sin` MMS.
 //!
-//! On an `N × N` torus we manufacture
-//!   ω = (sin(k y), sin(k x)),  X = (cos(k x), cos(k y)),  k = 2π/N,
-//! whose continuum Lie derivative `L_X ω = i_X dω + d i_X ω` is known in closed form. The
-//! metric is *graded* on axis 1 by a smooth, periodic edge-length modulation
-//!   ℓ(pos) = 1 + a·cos(2π·pos/N),
-//! which keeps the torus seam smooth and sums to `N` (so the wavenumber is unchanged). The
-//! manufactured solution is evaluated at the **physical** (cumulative-length) edge
-//! midpoints and `X` is supplied as the flat `X♭ = X^axis · ℓ(edge)`. The discrete
-//! `i_X dω + d i_X ω` is compared to the analytic Lie derivative; the relative sup-error
-//! over a refinement sweep gives the observed order `p = log₂(E_N / E_{2N})`.
-//!
-//! ## What it shows
-//!
-//! At amplitude `a = 0` (uniform) the operator is clean second order. Under grading it stays
-//! *convergent* (the error keeps decreasing) but **loses formal second order** — the
-//! finest-grid order falls below 1.5 by an adjacent-spacing ratio of ≈ 1.11 and plateaus
-//! beyond. That is the convective operator's anisotropy-consistency limit (the same class as
-//! the convective-term form-slot issue; a candidate for the same vector-slot fix). Structure
-//! — divergence-freeness of the Leray projection — is metric-free and exact at *every*
-//! grading, pinned independently by the topology exactness test. Run:
+//! Both are measured in **two norms** — max (pointwise truncation) *and* L2 (solution
+//! error) — because diagonal-DEC operators are often **supraconvergent**: pointwise first
+//! order but second order in the solution norm. The metric is graded on axis 1 by a smooth
+//! periodic edge-length modulation `ℓ(pos) = 1 + a·cos(2π·pos/N)` (smooth across the seam,
+//! sums to `N`, so the wavenumber is unchanged). Run:
 //!
 //! ```text
-//! cargo run --release --example dec_graded_mms
+//! cargo run --release -p avionics_examples --example dec_graded_mms
 //! ```
 
 use deep_causality_tensor::CausalTensor;
@@ -45,13 +30,26 @@ use deep_causality_topology::{
 };
 use std::f64::consts::PI;
 
-/// Relative sup-error of the discrete `i_X dω + d i_X ω` against the analytic Lie
-/// derivative, on an `N × N` torus graded on axis 1 by `ℓ(pos) = 1 + amp·cos(2π pos/N)`.
-fn cartan_mms_rel_error(n: usize, amp: f64) -> f64 {
-    let lattice: LatticeComplex<2, f64> = LatticeComplex::square_torus(n);
-    let len = |pos: usize| 1.0 + amp * (2.0 * PI * pos as f64 / n as f64).cos();
+/// Relative max- and L2-norm errors of a discrete field against an analytic reference.
+fn rel_errors(discrete: &[f64], analytic: &[f64]) -> (f64, f64) {
+    let mut max_err = 0.0_f64;
+    let mut max_ref = 0.0_f64;
+    let mut sse = 0.0_f64;
+    let mut ssr = 0.0_f64;
+    for (d, a) in discrete.iter().zip(analytic) {
+        max_err = max_err.max((d - a).abs());
+        max_ref = max_ref.max(a.abs());
+        sse += (d - a) * (d - a);
+        ssr += a * a;
+    }
+    (max_err / max_ref, (sse / ssr).sqrt())
+}
 
-    // Graded metric: axis 0 uniform, axis 1 modulated.
+/// A torus graded on axis 1 by `ℓ(pos) = 1 + amp·cos(2π·pos/N)`: the metric, the manifold,
+/// and the physical node coordinates along the graded axis.
+fn graded(n: usize, amp: f64) -> (Manifold<LatticeComplex<2, f64>, f64>, Vec<f64>, f64) {
+    let len = move |pos: usize| 1.0 + amp * (2.0 * PI * pos as f64 / n as f64).cos();
+    let lattice: LatticeComplex<2, f64> = LatticeComplex::square_torus(n);
     let edge_lengths: Vec<f64> = lattice
         .iter_cells(1)
         .map(|c| {
@@ -63,146 +61,146 @@ fn cartan_mms_rel_error(n: usize, amp: f64) -> f64 {
     let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
     let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
     let manifold = Manifold::from_cubical_with_metric(lattice, data, metric, 0);
-    let complex = manifold.complex();
 
-    // Physical y-coordinate of vertex j (cumulative edge length); the modulation sums to
-    // N, so the wavenumber is the uniform k.
     let mut y_node = vec![0.0_f64; n + 1];
     for j in 0..n {
         y_node[j + 1] = y_node[j] + len(j);
     }
     let k = 2.0 * PI / (n as f64);
+    (manifold, y_node, k)
+}
+
+/// A unit-metric carrier holding `form` at grade `k_grade` (for the metric-free `d`).
+fn unit_carrier(n: usize, total: usize, num_cells: &dyn Fn(usize) -> usize, k_grade: usize, form: &[f64]) -> Manifold<LatticeComplex<2, f64>, f64> {
+    let off: usize = (0..k_grade).map(num_cells).sum();
+    let mut d = vec![0.0; total];
+    d[off..off + form.len()].copy_from_slice(form);
+    let t = CausalTensor::new(d, vec![total]).unwrap();
+    let unit = CubicalReggeGeometry::<2, f64>::unit();
+    Manifold::from_cubical_with_metric(LatticeComplex::<2, f64>::square_torus(n), t, unit, 0)
+}
+
+/// Convective operator MMS (Cartan magic formula): relative (max, L2) errors of
+/// `i_X dω + d i_X ω` vs the analytic Lie derivative, evaluated at physical edge midpoints.
+fn convective_mms(n: usize, amp: f64) -> (f64, f64) {
+    let len = move |pos: usize| 1.0 + amp * (2.0 * PI * pos as f64 / n as f64).cos();
+    let (manifold, y_node, k) = graded(n, amp);
+    let complex = manifold.complex();
+    let total: usize = (0..=2).map(|g| complex.num_cells(g)).sum();
+    let nc = |g: usize| complex.num_cells(g);
 
     let midpoint = |c: &LatticeCell<2>| {
         let axis = c.orientation().trailing_zeros() as usize;
         let p = c.position();
-        let x = if axis == 0 {
-            p[0] as f64 + 0.5
-        } else {
-            p[0] as f64
-        };
-        let y = if axis == 1 {
-            0.5 * (y_node[p[1]] + y_node[p[1] + 1])
-        } else {
-            y_node[p[1]]
-        };
+        let x = if axis == 0 { p[0] as f64 + 0.5 } else { p[0] as f64 };
+        let y = if axis == 1 { 0.5 * (y_node[p[1]] + y_node[p[1] + 1]) } else { y_node[p[1]] };
         (x, y, axis)
     };
 
-    let n1 = complex.num_cells(1);
     let omega_vals: Vec<f64> = complex
         .iter_cells(1)
         .map(|c| {
             let (mx, my, axis) = midpoint(&c);
-            if axis == 0 {
-                (k * my).sin()
-            } else {
-                (k * mx).sin()
-            }
+            if axis == 0 { (k * my).sin() } else { (k * mx).sin() }
         })
         .collect();
-    // X♭: edge value is X^axis · ℓ(edge).
     let x_vals: Vec<f64> = complex
         .iter_cells(1)
         .map(|c| {
             let (mx, my, axis) = midpoint(&c);
-            let component = if axis == 0 {
-                (k * mx).cos()
-            } else {
-                (k * my).cos()
-            };
+            let comp = if axis == 0 { (k * mx).cos() } else { (k * my).cos() };
             let length = if axis == 1 { len(c.position()[1]) } else { 1.0 };
-            component * length
+            comp * length
         })
         .collect();
+    let n1 = nc(1);
     let omega = CausalTensor::new(omega_vals.clone(), vec![n1]).unwrap();
     let x_flat = CausalTensor::new(x_vals, vec![n1]).unwrap();
 
-    // i_X dω (d is metric-free; a unit carrier suffices for it).
-    let unit_carrier = |k_grade: usize, form: &[f64]| {
-        let off: usize = (0..k_grade).map(|g| complex.num_cells(g)).sum();
-        let mut d = vec![0.0; total];
-        d[off..off + form.len()].copy_from_slice(form);
-        let t = CausalTensor::new(d, vec![total]).unwrap();
-        let unit = CubicalReggeGeometry::<2, f64>::unit();
-        Manifold::from_cubical_with_metric(LatticeComplex::<2, f64>::square_torus(n), t, unit, 0)
-    };
-    let d_omega = unit_carrier(1, &omega_vals).exterior_derivative(1);
+    let d_omega = unit_carrier(n, total, &nc, 1, &omega_vals).exterior_derivative(1);
     let term1 = manifold.interior_product(&x_flat, &d_omega, 2).unwrap();
-
-    // d i_X ω
     let ix_omega = manifold.interior_product(&x_flat, &omega, 1).unwrap();
-    let term2 = unit_carrier(0, ix_omega.as_slice()).exterior_derivative(0);
+    let term2 = unit_carrier(n, total, &nc, 0, ix_omega.as_slice()).exterior_derivative(0);
 
-    let mut max_err = 0.0_f64;
-    let mut max_ref = 0.0_f64;
-    for (i, cell) in complex.iter_cells(1).enumerate() {
-        let (mx, my, axis) = midpoint(&cell);
-        let analytic = if axis == 0 {
-            k * (k * my).cos().powi(2) - k * (k * my).sin() * (k * mx).sin()
-        } else {
-            k * (k * mx).cos().powi(2) - k * (k * mx).sin() * (k * my).sin()
-        };
-        let discrete = term1.as_slice()[i] + term2.as_slice()[i];
-        max_err = max_err.max((discrete - analytic).abs());
-        max_ref = max_ref.max(analytic.abs());
-    }
-    max_err / max_ref
+    let discrete: Vec<f64> = (0..n1)
+        .map(|i| term1.as_slice()[i] + term2.as_slice()[i])
+        .collect();
+    let analytic: Vec<f64> = complex
+        .iter_cells(1)
+        .map(|c| {
+            let (mx, my, axis) = midpoint(&c);
+            if axis == 0 {
+                k * (k * my).cos().powi(2) - k * (k * my).sin() * (k * mx).sin()
+            } else {
+                k * (k * mx).cos().powi(2) - k * (k * mx).sin() * (k * my).sin()
+            }
+        })
+        .collect();
+    rel_errors(&discrete, &analytic)
+}
+
+/// Viscous operator MMS: relative (max, L2) errors of the discrete Laplacian `δd f` vs the
+/// analytic `2k²·f` for `f = sin(k x)·sin(k y)` evaluated at physical vertices.
+fn viscous_mms(n: usize, amp: f64) -> (f64, f64) {
+    let (manifold, y_node, k) = graded(n, amp);
+    let complex = manifold.complex();
+    let total: usize = (0..=2).map(|g| complex.num_cells(g)).sum();
+    let nc = |g: usize| complex.num_cells(g);
+
+    // f at vertices, evaluated at physical coordinates (axis 0 uniform, axis 1 graded).
+    let f_vals: Vec<f64> = complex
+        .iter_cells(0)
+        .map(|c| {
+            let p = c.position();
+            (k * p[0] as f64).sin() * (k * y_node[p[1]]).sin()
+        })
+        .collect();
+
+    let df = unit_carrier(n, total, &nc, 0, &f_vals).exterior_derivative(0);
+    let lap = manifold.codifferential_of(df.as_slice(), 1); // δd f (positive Laplacian)
+
+    // δd has eigenvalue +2k² for the sin·sin mode.
+    let analytic: Vec<f64> = f_vals.iter().map(|f| 2.0 * k * k * f).collect();
+    rel_errors(lap.as_slice(), &analytic)
+}
+
+fn observed_orders(errs: &[f64]) -> Vec<f64> {
+    errs.windows(2).map(|w| (w[0] / w[1]).log2()).collect()
+}
+
+fn fmt_orders(orders: &[f64]) -> String {
+    orders.iter().map(|p| format!("{p:.2}")).collect::<Vec<_>>().join(",")
 }
 
 fn main() {
     let resolutions = [8usize, 16, 32, 64];
-    let amplitudes = [0.0, 0.05, 0.1, 0.2, 0.3, 0.4];
+    let amplitudes = [0.0, 0.1, 0.2, 0.3];
 
-    println!(
-        "Graded-metric MMS — interior-product (convective-operator) order vs grading amplitude"
-    );
-    println!("torus N×N, axis-1 edge lengths modulated by 1 + a·cos(2π·pos/N)\n");
-    println!(
-        "{:>6}  {:>10} {:>10} {:>10} {:>10}   {:>18}",
-        "a", "E(8)", "E(16)", "E(32)", "E(64)", "observed order p"
-    );
-    println!("{}", "-".repeat(78));
-
-    let mut order_at_finest = Vec::new();
-    for &amp in &amplitudes {
-        let errs: Vec<f64> = resolutions
-            .iter()
-            .map(|&n| cartan_mms_rel_error(n, amp))
-            .collect();
-        let orders: Vec<f64> = errs.windows(2).map(|w| (w[0] / w[1]).log2()).collect();
-        let order_str = orders
-            .iter()
-            .map(|p| format!("{p:.2}"))
-            .collect::<Vec<_>>()
-            .join(", ");
+    for (name, kernel) in [
+        ("CONVECTIVE  i_X ω (interior product)", convective_mms as fn(usize, f64) -> (f64, f64)),
+        ("VISCOUS     Δ₀ = δd  (Laplacian)", viscous_mms as fn(usize, f64) -> (f64, f64)),
+    ] {
+        println!("\n=== {name} — order vs grading amplitude (max-norm | L2-norm) ===");
         println!(
-            "{amp:>6.2}  {:>10.3e} {:>10.3e} {:>10.3e} {:>10.3e}   {order_str:>18}",
-            errs[0], errs[1], errs[2], errs[3]
+            "{:>5}  {:>10} {:>10}   {:>14}   {:>14}",
+            "a", "max E(64)", "L2 E(64)", "max-norm p", "L2-norm p"
         );
-        order_at_finest.push((amp, *orders.last().unwrap()));
+        println!("{}", "-".repeat(70));
+        for &amp in &amplitudes {
+            let (maxs, l2s): (Vec<f64>, Vec<f64>) =
+                resolutions.iter().map(|&n| kernel(n, amp)).unzip();
+            println!(
+                "{amp:>5.2}  {:>10.2e} {:>10.2e}   {:>14}   {:>14}",
+                maxs.last().unwrap(),
+                l2s.last().unwrap(),
+                fmt_orders(&observed_orders(&maxs)),
+                fmt_orders(&observed_orders(&l2s)),
+            );
+        }
     }
 
-    println!("{}", "-".repeat(78));
-    // The finest-grid order is ~2 only at zero/near-zero grading; report where it drops
-    // below 1.5.
-    let collapse = order_at_finest
-        .iter()
-        .find(|(a, p)| *a > 0.0 && *p < 1.5)
-        .map(|(a, _)| *a);
-    println!("Findings:");
-    println!("  • Uniform (a = 0): clean second order (matches the unit-metric Cartan test).");
-    println!("  • Structure is metric-free: divergence-freeness of the Leray projection is exact");
-    println!("    at EVERY amplitude (pinned by the topology test), independent of this study.");
-    match collapse {
-        Some(a) => println!(
-            "  • Accuracy: the discrete interior product is convergent under grading (error keeps\n    \
-             decreasing) but loses formal second order — the finest-grid order falls below 1.5\n    \
-             by amplitude a ≈ {a:.2} (adjacent-spacing ratio ≈ {:.2}) and plateaus beyond. This is\n    \
-             the convective operator's anisotropy-consistency limit — the same class as the\n    \
-             convective-term form-slot issue, and a candidate for the same vector-slot fix.",
-            (1.0 + a) / (1.0 - a)
-        ),
-        None => println!("  • Accuracy: order stayed above 1.5 across the swept amplitudes."),
-    }
+    println!("\nReading: max-norm p is the pointwise truncation order; L2-norm p is the");
+    println!("solution-error order. If L2 stays ≈ 2 while max collapses, the operator is");
+    println!("supraconvergent — practically second order despite a first-order truncation.");
+    println!("Structure (divergence-freeness) is exact at every amplitude regardless.");
 }
