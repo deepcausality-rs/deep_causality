@@ -209,3 +209,201 @@ fn open_zone_cylinder_inflow_drives_flow() {
         "the west inflow drives a nonzero flow: {speed:?}"
     );
 }
+
+#[test]
+fn drag_lift_on_the_cylinder_are_finite_and_streamwise() {
+    // The open-zone cylinder, observed for drag/lift. The west inflow pushes the disk,
+    // so the streamwise drag coefficient must be finite and positive (higher pressure
+    // upstream), while the symmetric configuration keeps the lift small.
+    use deep_causality_cfd::{Inflow, Outflow, SlipWall};
+
+    let (nx, ny) = (24usize, 12usize);
+    let center = [6.0_f64, 6.0];
+    let radius = 2.0_f64;
+    let u_ref = 1.0_f64;
+
+    let zones = (
+        Inflow::<2, f64>::new(0, false, u_ref).expect("inflow west"),
+        (
+            Outflow::<2>::new(0, true).expect("outflow east"),
+            (
+                SlipWall::<2>::new(1, false).expect("slip bottom"),
+                SlipWall::<2>::new(1, true).expect("slip top"),
+            ),
+        ),
+    );
+
+    let report = Flow::march::<2, f64>("cyl-drag")
+        .mesh(Mesh::box_domain([nx, ny]).immersed(Body::disk(center, radius).merge_floor(0.25)))
+        .solver(
+            DecNs::config()
+                .viscosity(0.02)
+                .time_step(0.05)
+                .build()
+                .expect("valid config"),
+        )
+        .zones(zones)
+        .seed(Seed::Rest)
+        .march_for(8)
+        .observe(Observe::default().drag(u_ref))
+        .run()
+        .expect("drag-observed cylinder runs");
+
+    let drag = report.series("drag").expect("drag series");
+    let lift = report.series("lift").expect("lift series");
+    assert_eq!(drag.len(), 9, "seed + 8 steps");
+    assert_eq!(lift.len(), 9, "seed + 8 steps");
+    assert!(
+        drag.iter().chain(lift.iter()).all(|c| c.is_finite()),
+        "drag/lift coefficients stay finite: drag={drag:?} lift={lift:?}"
+    );
+    assert!(
+        *drag.last().unwrap() > 0.0,
+        "the inflow exerts a positive streamwise drag on the disk: {drag:?}"
+    );
+    assert!(
+        drag.last().unwrap().abs() > lift.last().unwrap().abs(),
+        "a streamwise-symmetric stream gives drag ≫ lift: drag={drag:?} lift={lift:?}"
+    );
+}
+
+#[test]
+fn uniform_x_seed_carries_the_free_stream() {
+    // A uniform streamwise seed on a periodic box is divergence-free and curl-free, so
+    // the projection preserves it: the max speed at the seed equals the prescribed speed.
+    let speed = 2.0_f64;
+    let report = Flow::march::<2, f64>("uniform-x")
+        .mesh(Mesh::periodic_cube(8))
+        .solver(
+            DecNs::config()
+                .viscosity(0.05)
+                .time_step(0.02)
+                .build()
+                .expect("valid config"),
+        )
+        .seed(Seed::UniformX { speed })
+        .march_for(2)
+        .observe(Observe::default().kinetic_energy().max_speed())
+        .run()
+        .expect("uniform-x march runs");
+
+    let energy = report.series("kinetic_energy").expect("energy series");
+    let max_speed = report.series("max_speed").expect("max_speed series");
+    assert!(
+        energy[0] > 0.0,
+        "the uniform stream carries energy: {energy:?}"
+    );
+    assert!(
+        (max_speed[0] - speed).abs() < 0.1,
+        "the seed carries the prescribed free-stream speed: {max_speed:?}"
+    );
+}
+
+#[test]
+fn wake_probe_records_a_finite_transverse_signal() {
+    // The open-zone cylinder seeded with a uniform stream, with a wake probe one body
+    // downstream on the centerline. The probe must record a finite transverse-velocity
+    // sample per step (the raw signal a Strouhal number is read from).
+    use deep_causality_cfd::{Inflow, Outflow, SlipWall};
+
+    let (nx, ny) = (24usize, 12usize);
+    let center = [6.0_f64, 6.0];
+    let radius = 2.0_f64;
+    let u_ref = 1.0_f64;
+
+    let zones = (
+        Inflow::<2, f64>::new(0, false, u_ref).expect("inflow west"),
+        (
+            Outflow::<2>::new(0, true).expect("outflow east"),
+            (
+                SlipWall::<2>::new(1, false).expect("slip bottom"),
+                SlipWall::<2>::new(1, true).expect("slip top"),
+            ),
+        ),
+    );
+
+    let report = Flow::march::<2, f64>("cyl-probe")
+        .mesh(Mesh::box_domain([nx, ny]).immersed(Body::disk(center, radius).merge_floor(0.25)))
+        .solver(
+            DecNs::config()
+                .viscosity(0.02)
+                .time_step(0.05)
+                .build()
+                .expect("valid config"),
+        )
+        .zones(zones)
+        .seed(Seed::UniformX { speed: u_ref })
+        .march_for(6)
+        // The probe sits one diameter downstream of the body, on the wake centerline.
+        .observe(Observe::default().probe([10.0, 6.0]))
+        .run()
+        .expect("probe cylinder runs");
+
+    let probe = report.series("probe").expect("probe series");
+    assert_eq!(probe.len(), 7, "seed + 6 steps");
+    assert!(
+        probe.iter().all(|v| v.is_finite()),
+        "the wake probe records a finite transverse signal: {probe:?}"
+    );
+}
+
+#[test]
+fn centerline_profile_follows_the_lid() {
+    // The lid-driven cavity: the vertical centerline velocity profile u_x(y) should rise
+    // toward the moving lid at the top and vanish at the no-slip floor.
+    let n = 17usize;
+    let h = 1.0 / (n as f64 - 1.0);
+
+    let report = Flow::march::<2, f64>("cavity-centerline")
+        .mesh(Mesh::box_domain([n, n]).spacing(h))
+        .solver(
+            DecNs::config()
+                .viscosity(1.0 / 1000.0)
+                .time_step(0.45 * h)
+                .build()
+                .expect("valid config"),
+        )
+        .lid([1.0, 0.0])
+        .seed(Seed::Rest)
+        .march_for(40)
+        .observe(Observe::default().centerline(1))
+        .run()
+        .expect("centerline cavity runs");
+
+    let profile = report.series("centerline").expect("centerline series");
+    assert_eq!(profile.len(), n, "one sample per lattice row along y");
+    assert!(
+        profile.iter().all(|v| v.is_finite()),
+        "the centerline profile is finite: {profile:?}"
+    );
+    // The lid (top, last sample) drives a positive streamwise velocity; the floor rests.
+    assert!(
+        *profile.last().unwrap() > 0.1,
+        "the lid drives a positive u_x at the top of the centerline: {profile:?}"
+    );
+    assert!(
+        *profile.last().unwrap() > *profile.first().unwrap(),
+        "u_x grows from the resting floor up to the moving lid: {profile:?}"
+    );
+}
+
+#[test]
+fn drag_without_an_immersed_body_is_rejected() {
+    let report = Flow::march::<2, f64>("no-body-drag")
+        .mesh(Mesh::box_domain([8, 8]))
+        .solver(
+            DecNs::config()
+                .viscosity(0.05)
+                .time_step(0.05)
+                .build()
+                .expect("valid config"),
+        )
+        .seed(Seed::Rest)
+        .march_for(1)
+        .observe(Observe::default().drag(1.0))
+        .run();
+    assert!(
+        report.is_err(),
+        "drag without an immersed body must be rejected"
+    );
+}

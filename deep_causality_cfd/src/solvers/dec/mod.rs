@@ -79,6 +79,7 @@ pub use dec_ns_rate::DecNsRate;
 pub use dec_ns_solver::DecNsSolver;
 pub use diagnostics::{
     dec_divergence_residual, dec_enstrophy, dec_helicity, dec_kinetic_energy, dec_max_speed,
+    dec_sample_velocity,
 };
 pub use energy_budget::EnergyBudget;
 pub use step_output::{RunOutput, StepOutput};

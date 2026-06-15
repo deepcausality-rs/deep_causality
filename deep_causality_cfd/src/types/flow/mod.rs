@@ -12,6 +12,7 @@
 //! operator-accuracy solvers (added next).
 
 mod body;
+mod frequency;
 mod march_builder;
 mod march_case;
 mod mesh;
@@ -21,6 +22,7 @@ mod seed;
 mod zones;
 
 pub use body::Body;
+pub use frequency::{dominant_frequency, strouhal_number};
 pub use march_builder::{Flow, MarchBuilder};
 pub use march_case::MarchCase;
 pub use mesh::Mesh;

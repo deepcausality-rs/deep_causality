@@ -12,6 +12,7 @@
 //! from the pointwise kernel vocabulary (`kinetic_energy`,
 //! `enstrophy_density_kernel`, …) at the crate root.
 
+use alloc::collections::BTreeMap;
 use alloc::format;
 
 use deep_causality_tensor::CausalTensor;
@@ -135,6 +136,75 @@ pub fn dec_max_speed<const D: usize, R: DecNsScalar>(
         }
     }
     Ok(max_sq.sqrt())
+}
+
+/// The velocity vector at the physical point `p` (in spacing units), by `sharp`-
+/// reconstructing the vertex vector field and multilinearly interpolating. Used by the
+/// Flow wake-probe (Strouhal signal) and centerline (Ghia profile) observations; a
+/// read-only point query, not on the step hot path. Corners outside the domain
+/// contribute zero (the wall / no-slip value at a boundary line).
+///
+/// # Errors
+/// `PhysicsError::TopologyError` wrapping a `sharp` failure, or when the manifold's
+/// geometry is not axis-aligned (no single per-axis spacing).
+pub fn dec_sample_velocity<const D: usize, R: DecNsScalar>(
+    manifold: &Manifold<LatticeComplex<D, R>, R>,
+    edge_form: &CausalTensor<R>,
+    p: &[R; D],
+) -> Result<[R; D], PhysicsError> {
+    let dx = manifold
+        .metric()
+        .and_then(|g| g.axis_lengths())
+        .ok_or_else(|| {
+            PhysicsError::TopologyError(
+                "dec_sample_velocity requires an axis-aligned geometry (per-axis spacing)".into(),
+            )
+        })?;
+    let vertex_vectors = manifold
+        .sharp(edge_form)
+        .map_err(|e| PhysicsError::TopologyError(format!("sharp failed: {e}")))?;
+    let velocity: BTreeMap<[usize; D], [R; D]> = manifold
+        .complex()
+        .iter_cells(0)
+        .zip(vertex_vectors.as_slice().chunks_exact(D))
+        .map(|(vertex, v)| {
+            let mut vec = [R::zero(); D];
+            vec.copy_from_slice(v);
+            (*vertex.position(), vec)
+        })
+        .collect();
+
+    let mut lo = [0usize; D];
+    let mut frac = [R::zero(); D];
+    for j in 0..D {
+        let g = p[j] / dx[j];
+        let mut k = 0usize;
+        while R::from_usize(k + 1).unwrap_or_else(R::one) <= g {
+            k += 1;
+        }
+        lo[j] = k;
+        frac[j] = g - R::from_usize(k).unwrap_or_else(R::zero);
+    }
+    let mut out = [R::zero(); D];
+    for corner in 0..(1usize << D) {
+        let mut pos = [0usize; D];
+        let mut weight = R::one();
+        for j in 0..D {
+            let bit = (corner >> j) & 1;
+            pos[j] = lo[j] + bit;
+            weight *= if bit == 1 {
+                frac[j]
+            } else {
+                R::one() - frac[j]
+            };
+        }
+        if let Some(v) = velocity.get(&pos) {
+            for (o, &vi) in out.iter_mut().zip(v.iter()) {
+                *o += weight * vi;
+            }
+        }
+    }
+    Ok(out)
 }
 
 /// Post-projection divergence residual `‖δu♭‖_∞` — the projection-

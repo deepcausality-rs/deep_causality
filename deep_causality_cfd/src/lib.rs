@@ -42,7 +42,10 @@ pub use crate::traits::{FluidTheory, Marcher};
 pub use crate::types::{Ambient, CfdScalar};
 
 // The Flow DSL facade (owned case descriptions materialized at run).
-pub use crate::types::flow::{Body, Flow, MarchBuilder, MarchCase, Mesh, Observe, Report, Seed};
+pub use crate::types::flow::{
+    Body, Flow, MarchBuilder, MarchCase, Mesh, Observe, Report, Seed, dominant_frequency,
+    strouhal_number,
+};
 
 // Fluid-dynamics theories: the DEC-native FluidTheory realization, the pointwise NS
 // regime evaluators (`*_rhs`), and their causal-effect wrappers (`*_rhs_effect`).

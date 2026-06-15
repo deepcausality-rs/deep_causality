@@ -4,4 +4,6 @@
  */
 
 #[cfg(test)]
+pub mod frequency_tests;
+#[cfg(test)]
 pub mod march_case_tests;

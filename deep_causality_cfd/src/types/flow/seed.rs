@@ -18,6 +18,11 @@ pub enum Seed {
     Rest,
     /// The classic 3D Taylor–Green vortex. Use with a fully periodic cube (`D == 3`).
     TaylorGreenVortex,
+    /// A uniform streamwise free-stream `u = (speed, 0, …)` — the cylinder-wake initial
+    /// condition. Combined with an immersed body and inflow/outflow zones it develops the
+    /// von Kármán street; the discrete cut pattern and round-off break the symmetry that
+    /// triggers shedding.
+    UniformX { speed: f64 },
 }
 
 impl Seed {
@@ -31,6 +36,14 @@ impl Seed {
         let vertex = match self {
             Seed::Rest => vec![R::zero(); D * n0],
             Seed::TaylorGreenVortex => taylor_green_vertex_field::<D, R>(manifold, n0),
+            Seed::UniformX { speed } => {
+                let s = R::from_f64(*speed).expect("the seed speed lifts into every real field");
+                let mut v = vec![R::zero(); D * n0];
+                for chunk in v.chunks_exact_mut(D) {
+                    chunk[0] = s;
+                }
+                v
+            }
         };
         let tensor = CausalTensor::new(vertex, vec![D * n0])
             .map_err(|e| PhysicsError::DimensionMismatch(format!("seed tensor: {e}")))?;

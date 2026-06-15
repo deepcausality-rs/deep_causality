@@ -11,6 +11,13 @@ use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, CutCellRegistry, LatticeComplex, Manifold, Primitive,
 };
 
+/// The product of [`Mesh::materialize`]: the metric-bearing manifold and, when an
+/// immersed body is present, its cut-cell registry for the surface-force diagnostics.
+type Materialized<const D: usize, R> = (
+    Manifold<LatticeComplex<D, R>, R>,
+    Option<CutCellRegistry<D, R>>,
+);
+
 /// An owned mesh specification — lattice shape, per-axis periodicity, and uniform
 /// spacing. It carries no borrow; `materialize` builds the manifold inside `run`.
 ///
@@ -70,22 +77,39 @@ impl<const D: usize, R: CfdScalar> Mesh<D, R> {
 
     /// Materialize the metric-bearing lattice manifold. Called inside `run`; the
     /// returned manifold is a local that the marcher borrows for the run's duration.
-    pub(crate) fn materialize(&self) -> Result<Manifold<LatticeComplex<D, R>, R>, PhysicsError> {
+    /// The cut-cell registry (when an immersed body is present) is returned alongside
+    /// for the surface-force diagnostics — a `None` for a body-free domain.
+    pub(crate) fn materialize(&self) -> Result<Materialized<D, R>, PhysicsError> {
         let lattice = LatticeComplex::<D, R>::new(self.shape, self.periodic);
         let total: usize = (0..=D).map(|k| lattice.num_cells(k)).sum();
         let data = CausalTensor::new(vec![R::zero(); total], vec![total])
             .map_err(|e| PhysicsError::DimensionMismatch(format!("mesh data tensor: {e}")))?;
         let base = CubicalReggeGeometry::<D, R>::uniform(self.spacing);
-        let metric = match &self.body {
+        let (metric, registry) = match &self.body {
             Some(body) => {
                 let primitive = Primitive::<D, R>::ball(body.center(), body.radius());
                 let registry = CutCellRegistry::from_primitive(&lattice, &base, &primitive)
                     .map_err(|e| PhysicsError::TopologyError(format!("cut-cell registry: {e}")))?
                     .with_cell_merging(body.merge_floor_value());
-                base.with_cut_cells(registry)
+                // The metric folds in its own copy; the registry copy stays for the
+                // read-only surface-force diagnostics (no per-step cost).
+                (base.with_cut_cells(registry.clone()), Some(registry))
             }
-            None => base,
+            None => (base, None),
         };
-        Ok(Manifold::from_cubical_with_metric(lattice, data, metric, 0))
+        Ok((
+            Manifold::from_cubical_with_metric(lattice, data, metric, 0),
+            registry,
+        ))
+    }
+
+    /// The immersed body's reference frontal length (the diameter `2r`), used to
+    /// nondimensionalize the surface force into a drag/lift coefficient. `None` for a
+    /// body-free domain.
+    pub(crate) fn frontal_length(&self) -> Option<R> {
+        self.body.as_ref().map(|b| {
+            let two = R::from_f64(2.0).expect("2.0 lifts into every real field");
+            two * b.radius()
+        })
     }
 }

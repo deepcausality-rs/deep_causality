@@ -32,7 +32,7 @@ pub struct MarchBuilder<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>> {
     moving_wall: Option<(usize, bool, [R; D])>,
     seed: Seed,
     stop: MarchStop<R>,
-    observe: Observe,
+    observe: Observe<D, R>,
     zones: Z,
 }
 
@@ -111,7 +111,7 @@ impl<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>> MarchBuilder<D, R, Z> 
     }
 
     /// The diagnostics to collect.
-    pub fn observe(mut self, observe: Observe) -> Self {
+    pub fn observe(mut self, observe: Observe<D, R>) -> Self {
         self.observe = observe;
         self
     }

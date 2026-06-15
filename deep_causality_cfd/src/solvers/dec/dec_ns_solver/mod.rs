@@ -44,7 +44,7 @@ pub struct DecNsSolver<'m, const D: usize, R: DecNsScalar> {
     /// Re-applied after every projection — the constrained projector
     /// ignores constrained-edge input values, so `P(u) = P(u − lift)`
     /// exactly and no subtraction is needed.
-    pub(super) lift: alloc::vec::Vec<(usize, R)>,
+    pub(super) lift: Vec<(usize, R)>,
 }
 
 impl<'m, const D: usize, R: DecNsScalar> DecNsSolver<'m, D, R> {
