@@ -221,6 +221,32 @@ and is slower**, and nesting coarse fan-out over fine fan-out double-oversubscri
 granularity per run — coarse (scenarios/ensemble) when fanning out cases, fine (per-cell) only for a
 single large-grid solve. The granularity is a config knob, never automatic.
 
+## Solver kinds: the facade spans three shapes, not one march
+
+Grounding the Flow facade against all six validation examples (worked sketches in
+`flow-examples.md`) shows it must span **three solver kinds**, all producing one `Report<R>` and
+sharing a static `Solver` seam (`fn solve(self) -> Result<Report<R>, PhysicsError>`); a new kind is a
+new impl, not a DSL-core change:
+
+1. **March solver** (DEC incompressible) — mesh + zones + seed + march + observe. Four examples
+   (`dec_taylor_green_re1600`, `dec_lid_cavity_re1000`, `dec_cylinder_wake`,
+   `dec_cylinder_validation`). Three march styles lower onto `CausalFlow`: `march_for`→`iterate_n`,
+   `march_until`→`iterate_until`, `march_uncertain`→`bind(inflow_march_step)`. The March solver also
+   carries `.couple` (between-step multiphysics, D4) and the Phase-2 counterfactual surface.
+2. **MMS verifier** — a manufactured solution + a pointwise `FluidTheory` regime kernel + autodiff;
+   checks the kernel RHS against the exact `∂u/∂t` and an Rk4 amplitude decay. No DEC mesh/march
+   (`cfd_taylor_green`). **Generic over the regime**, which is the all-regimes coverage: the
+   validation examples only march incompressible, so a regime-parameterized MMS showcase exercises
+   the migrated Euler / Stokes / Compressible regimes through the DSL.
+3. **Operator-accuracy study** — a (possibly graded) mesh + DEC operators (`d`, `i_X`, `δd`) vs an
+   analytic reference, swept over resolutions for convergence orders. No march, no regime kernel
+   (`dec_graded_mms`).
+
+The Mesh abstraction covers every geometry the examples use (periodic cube / box / channel / torus /
+graded `from_edge_lengths` via a `Grading` enum — no boxed closures / immersed cut-cell body); the
+Seed abstraction covers rest / Taylor–Green vortex / uniform-x-plus-blob. See `flow-examples.md` for
+the full coverage matrix and the worked Flow sketch of each example.
+
 ## Phasing
 
 - **Phase 1:** crate scaffold + theory/solver move-out + benches + the solver refactoring R1–R6

@@ -101,6 +101,30 @@ drive such a solver through the Flow DSL rather than re-implementing the orchest
 - **WHEN** a migrated validation example is inspected
 - **THEN** its seeding, marching loop, and diagnostics come from a reusable solver and the generic observe layer, not from inline `main` orchestration
 
+### Requirement: The DSL covers marching, MMS-verification, and operator-accuracy solvers
+The `Flow` DSL SHALL provide three solver kinds, all producing a common `Report` and sharing a static
+`Solver` seam so that adding a kind is a trait implementation, not a change to the DSL core: a
+**marching** solver (a DEC regime marched over a mesh with boundary zones, a seed, an observe set, and
+optional `.couple` multiphysics); an **MMS-verification** solver (a manufactured solution checked
+against a pointwise `FluidTheory` regime kernel, with no DEC march), generic over the regime so every
+regime (incompressible, Euler, Stokes, compressible) is reachable through the DSL; and an
+**operator-accuracy** solver (DEC operators on a possibly graded mesh, swept over resolutions for
+convergence orders, with no march). The marching solver SHALL support fixed-step, until-developed /
+steady, and uncertain causal-monad march styles. The mesh abstraction SHALL cover periodic / wall-
+bounded / open lattices, uniform and graded metrics, and immersed cut-cell bodies.
+
+#### Scenario: A marching case runs to a Report
+- **WHEN** a marching case (mesh + zones + seed + march + observe) is assembled and run
+- **THEN** it produces a `Report` with all composition resolved at compile time
+
+#### Scenario: Every regime is reachable through MMS verification
+- **WHEN** an MMS-verification solver is run for the incompressible, Euler, Stokes, and compressible regimes
+- **THEN** each regime's pointwise kernel is verified against its manufactured solution
+
+#### Scenario: An operator-accuracy study reports convergence orders
+- **WHEN** an operator-accuracy solver sweeps a graded mesh over a set of resolutions
+- **THEN** it reports the observed convergence orders without marching a field
+
 ### Requirement: The DSL wraps CausalFlow for the march, control flow, and counterfactuals
 The `Flow` DSL SHALL lower its march, control flow, and intervention onto the `CausalFlow` monad: a
 multi-step march via the flow's arrow-algebra iterator (`iterate_n` / `iterate_until`),
