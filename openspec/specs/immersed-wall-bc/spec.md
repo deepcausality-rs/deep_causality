@@ -1,4 +1,15 @@
-## ADDED Requirements
+# immersed-wall-bc Specification
+
+## Purpose
+
+Enforce the immersed-body no-slip / no-penetration boundary condition by unioning the body's
+solid-incident edge set (the staircase set, `CutCellRegistry::solid_incident_edges`) with the
+axis-aligned wall-tangential set in the constrained Leray projection, reusing the existing projector
+and symmetric restriction with no new solver machinery. Slip, moving surfaces, and the
+aperture-resolved sub-cell cut-face no-slip are deferred refinements (the latter shipped separately as
+`aperture-resolved-noslip`). Created by archiving change `add-cut-cells-and-immersed-boundaries`.
+
+## Requirements
 
 ### Requirement: Staircase no-slip / no-penetration on an immersed body
 The solver SHALL enforce immersed no-slip and no-penetration by extending the constrained Leray

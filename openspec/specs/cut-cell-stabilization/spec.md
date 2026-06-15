@@ -1,4 +1,15 @@
-## ADDED Requirements
+# cut-cell-stabilization Specification
+
+## Purpose
+
+Provide a small-cut-cell stabilization mechanism (`CutCellRegistry::with_cell_merging`, a
+volume-fraction floor on the cut star) and record the finding that the classic small-cell CFL
+instability does not arise in this DEC formulation (the consistent metric clip cancels in
+`δ = M⁻¹ ∂ M`). Cell-merging is selected to improve masked-CG projection conditioning, not for
+explicit CFL stability, and it preserves discrete conservation and divergence-freeness. Created by
+archiving change `add-cut-cells-and-immersed-boundaries`.
+
+## Requirements
 
 ### Requirement: Small-cut-cell stabilization
 The solver SHALL provide a small-cut-cell stabilization mechanism (a volume-fraction floor on the

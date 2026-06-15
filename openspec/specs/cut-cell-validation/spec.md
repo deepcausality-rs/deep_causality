@@ -1,4 +1,15 @@
-## ADDED Requirements
+# cut-cell-validation Specification
+
+## Purpose
+
+Validate the cut-cell immersed-boundary solver against the isolated-cylinder benchmark. The gate for
+the Stage-4 infrastructure is the harness (`dec_cylinder_validation`: Inflow/Outflow/SlipWall/immersed
+cut body via `with_zones`) plus composition correctness (stable, interior-divergence-free march), and
+the 2D `Re=100` shedding validation (Strouhal vs Williamson). The 3D high-Re Re-ladder
+(Re ≈ 200–300, Re ≈ 3900 DNS) vs Lehmkuhl et al. (2013) is compute-bound and deferred to a follow-up.
+Created by archiving change `add-cut-cells-and-immersed-boundaries`.
+
+## Requirements
 
 ### Requirement: Cylinder-wake validation harness and composition correctness
 The change SHALL provide a cut-cell cylinder validation harness as an example

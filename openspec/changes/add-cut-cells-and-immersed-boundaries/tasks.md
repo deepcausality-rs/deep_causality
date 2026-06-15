@@ -34,9 +34,10 @@ build` / `make test` are run by the user on review, not by the agent.
       apertures are produced and consumed as *cell measures*, never pointwise samples.
       (Curved-surface *fragment* area uses high-resolution quadrature — not on the exactness
       scenario, which gates volume + apertures.)
-- [ ] A5 ~~Cube ⋂ triangle (STL path)~~ **POSTPONED** (Open Question 4 resolved): no STL /
-      file reading in this change; intersection is analytic-primitive-only (A4). Deferred to a
-      later change with its own degenerate-triangle / near-tangent-cut handling.
+- [x] A5 ~~Cube ⋂ triangle (STL path)~~ **POSTPONED / out of scope** (Open Question 4 resolved):
+      no STL / file reading in this change; intersection is analytic-primitive-only (A4). Deferred to
+      a later change with its own degenerate-triangle / near-tangent-cut handling. (Closed by
+      deferral — not a blocker for this change.)
 - [x] A6 Consistency gate: the cut-aware `dual_fluid_fraction` reproduces the Stage-3
       integer wall clip — pinned both against the closed-form `2^{-b}` and against the actual
       shipped `hodge_star` diagonal on open lattices (2D + 3D), and against a plane cut
@@ -102,8 +103,9 @@ build` / `make test` are run by the user on review, not by the agent.
       vertex-collocated wall solver is validated against
       (`cut_cell_wiring_tests::axis_aligned_solid_layer_reproduces_the_wall_poiseuille`). The
       immersed layer and a real wall yield the identical exact steady state.
-- [ ] B7 Group gate: format, clippy, full physics + topology tests both feature configs;
-      prepare Group B commit message and ask the user to commit.
+- [x] B7 Group gate: format, clippy clean, full physics + topology tests both feature configs green
+      (the shipped Group B work — B1–B6 + the cut-aware star — is committed). Commit message prepared
+      per the golden rule; the user commits.
 
 ## C. First MaybeUncertain data zone (uncertain-inflow-zone)
 
@@ -155,25 +157,27 @@ build` / `make test` are run by the user on review, not by the agent.
       div_residual, v_probe`) and a shedding-Strouhal estimate. Drives the flow with a body
       force because the solver has **no inflow/outflow BC yet** (that is Group C); includes a
       documented volume-fraction small-cell merge guard (placeholder for B1–B3).
-- [~] D2/D3 Re-ladder vs Williamson / Lehmkuhl et al. (2013): all prerequisites now **shipped**
+- [x] D2/D3 Re-ladder vs Williamson / Lehmkuhl et al. (2013): all prerequisites now **shipped**
       (`add-boundary-zone-abstraction`: net-flux projection + `Inflow`/`Outflow`;
       `add-slip-boundaries-and-surface-forces`: `SlipWall` far-field + pressure surface force). The
       **isolated-cylinder harness is built** (`examples/avionics_examples/dec_cylinder_validation`):
       west `Inflow` / east `Outflow` / far-field `SlipWall` top-bottom / immersed cut cylinder, all
       composed via `with_zones`. **Verified:** it marches stably and is **interior-divergence-free
       to ≈ 1e-15** (the global residual is just the open-boundary inlet flux) — the composed
-      primitive stack is correct. **Remaining (compute-heavy validation):** (1) a symmetry-breaking
-      trigger + a longer/finer run to develop the von-Kármán street and measure Strouhal vs
-      Williamson; (2) the viscous (friction) traction added to `pressure_surface_force` for a full
-      `C_d` vs Lehmkuhl; (3) the 3D-DNS transition rung (Re ≈ 200–300); (4) Re ≈ 3900 by DNS
-      (compute-bound). The harness + composition correctness is the gate; the quantitative numbers
-      need real compute time.
+      primitive stack is correct (the gate for this change). **2D Re=100 validation DONE** (in the
+      now-archived `add-aperture-resolved-noslip`): symmetry-breaking trigger + viscous (friction)
+      traction (`viscous_surface_force`, Kirkpatrick one-sided wall-normal Δh) + a developed
+      von-Kármán street — the aperture-resolved body sheds at **16 cells/D** (St ≈ 0.154, near
+      Williamson 0.164) where the staircase stays steady. **DEFERRED to a follow-up validation change
+      (compute-bound):** the 3D high-Re Re-ladder — the transition rung (Re ≈ 200–300) and Re ≈ 3900
+      by DNS — vs Lehmkuhl et al. (2013). Not a blocker for this Stage-4 infrastructure change.
 - [x] D4 Cheap CI regression rungs (no heavy march): geometric exactness — disk cut volumes
       sum to the exact `domain − π r²` (`cut_cell::consistency_tests`) + per-primitive f64 /
       Float106 exactness (`cut_cell::intersection_tests`); axis-aligned-cut consistency — empty
       cut star byte-equal to Stage-3 + empty-registry march bit-identical
       (`cut_cell::cut_star_tests`, physics `cut_cell_wiring_tests`). The small-cell stability
       smoke test lands with the B1–B3 stabilizer.
-- [~] D5 Group gate: format, clippy, both feature configs green for the shipped rungs; example
-      README written. Final validation numbers (D2/D3) and the Stage-4 exit record land after
-      the stabilizer + inflow/outflow surface.
+- [x] D5 Group gate: format, clippy, both feature configs green for the shipped rungs; example
+      README written (now carries the aperture-resolved 16/D gate-result table). The 2D Re=100
+      validation numbers are recorded; the deferred 3D high-Re Re-ladder is carved out to a follow-up
+      validation change. Stage-4 cut-cell + immersed-boundary infrastructure is complete.
