@@ -12,7 +12,7 @@
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
 use deep_causality_cfd::{
     AccelerationVector, BodyForceOneForm, DecNsRate, Density, KinematicViscosity, Velocity3,
-    VelocityGradient, VelocityOneForm, dec_kinetic_energy, incompressible_ns_rhs_kernel,
+    VelocityGradient, VelocityOneForm, dec_kinetic_energy, incompressible_ns_rhs,
 };
 use deep_causality_num::{Float106, FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
@@ -112,7 +112,7 @@ fn oracle_rhs_component(k: f64, x: f64, y: f64, axis: usize) -> f64 {
 
     let lap = [-2.0 * k * k * u2[0], -2.0 * k * k * u2[1], 0.0];
 
-    let rhs = incompressible_ns_rhs_kernel(
+    let rhs = incompressible_ns_rhs(
         &u,
         &grad_u,
         &lap,

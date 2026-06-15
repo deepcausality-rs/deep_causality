@@ -4,9 +4,12 @@
  */
 
 use crate::types::CfdScalar;
+use crate::types::flow::Body;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
+use deep_causality_topology::{
+    ChainComplex, CubicalReggeGeometry, CutCellRegistry, LatticeComplex, Manifold, Primitive,
+};
 
 /// An owned mesh specification — lattice shape, per-axis periodicity, and uniform
 /// spacing. It carries no borrow; `materialize` builds the manifold inside `run`.
@@ -20,6 +23,7 @@ pub struct Mesh<const D: usize, R: CfdScalar> {
     shape: [usize; D],
     periodic: [bool; D],
     spacing: R,
+    body: Option<Body<D, R>>,
 }
 
 impl<const D: usize, R: CfdScalar> Mesh<D, R> {
@@ -29,6 +33,7 @@ impl<const D: usize, R: CfdScalar> Mesh<D, R> {
             shape,
             periodic,
             spacing: R::one(),
+            body: None,
         }
     }
 
@@ -42,9 +47,24 @@ impl<const D: usize, R: CfdScalar> Mesh<D, R> {
         Self::new(shape, [false; D])
     }
 
+    /// A channel: periodic on the streamwise axis (0), walls cross-stream.
+    pub fn channel(shape: [usize; D]) -> Self {
+        let mut periodic = [false; D];
+        if D > 0 {
+            periodic[0] = true;
+        }
+        Self::new(shape, periodic)
+    }
+
     /// Set the uniform edge spacing (default unit).
     pub fn spacing(mut self, h: R) -> Self {
         self.spacing = h;
+        self
+    }
+
+    /// Attach an immersed cut-cell body (e.g. a cylinder).
+    pub fn immersed(mut self, body: Body<D, R>) -> Self {
+        self.body = Some(body);
         self
     }
 
@@ -55,7 +75,17 @@ impl<const D: usize, R: CfdScalar> Mesh<D, R> {
         let total: usize = (0..=D).map(|k| lattice.num_cells(k)).sum();
         let data = CausalTensor::new(vec![R::zero(); total], vec![total])
             .map_err(|e| PhysicsError::DimensionMismatch(format!("mesh data tensor: {e}")))?;
-        let metric = CubicalReggeGeometry::<D, R>::uniform(self.spacing);
+        let base = CubicalReggeGeometry::<D, R>::uniform(self.spacing);
+        let metric = match &self.body {
+            Some(body) => {
+                let primitive = Primitive::<D, R>::ball(body.center(), body.radius());
+                let registry = CutCellRegistry::from_primitive(&lattice, &base, &primitive)
+                    .map_err(|e| PhysicsError::TopologyError(format!("cut-cell registry: {e}")))?
+                    .with_cell_merging(body.merge_floor_value());
+                base.with_cut_cells(registry)
+            }
+            None => base,
+        };
         Ok(Manifold::from_cubical_with_metric(lattice, data, metric, 0))
     }
 }

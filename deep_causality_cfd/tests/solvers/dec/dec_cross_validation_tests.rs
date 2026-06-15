@@ -6,7 +6,7 @@
 //! MMS cross-validation of the two independent Navier–Stokes RHS
 //! formulations (`add-dec-solver-foundations` note §6, task 5.1):
 //!
-//! * **Pointwise oracle**: `incompressible_ns_rhs_kernel` fed with
+//! * **Pointwise oracle**: `incompressible_ns_rhs` fed with
 //!   tangent-functor (dual-number) first derivatives of the analytic
 //!   Taylor–Green field, plus the closed-form TG Laplacian `∇²u = −2k²u`.
 //! * **DEC operator form**: `−i_u du♭ − ν Δ_dR u♭` assembled from the de Rham
@@ -23,7 +23,7 @@
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
 use deep_causality_cfd::{
     AccelerationVector, Density, KinematicViscosity, Velocity3, VelocityGradient,
-    incompressible_ns_rhs_kernel,
+    incompressible_ns_rhs,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
@@ -91,7 +91,7 @@ fn oracle_rhs_component(k: f64, x: f64, y: f64, axis: usize) -> f64 {
     // single-mode sines/cosines in x and y).
     let lap = [-2.0 * k * k * u2[0], -2.0 * k * k * u2[1], 0.0];
 
-    let rhs = incompressible_ns_rhs_kernel(
+    let rhs = incompressible_ns_rhs(
         &u,
         &grad_u,
         &lap,

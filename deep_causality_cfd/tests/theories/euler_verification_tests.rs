@@ -5,7 +5,7 @@
 
 //! Reference-solution verification for the Euler regime evaluator.
 //!
-//! These tests check `euler_momentum_rhs_kernel` against textbook analytical
+//! These tests check `euler_momentum_rhs` against textbook analytical
 //! solutions of the inviscid Euler equations. Each case has an *external*
 //! reference; the kernel is correct iff it reproduces the textbook RHS at
 //! the sample point.
@@ -17,7 +17,7 @@
 //!     "Equations of motion".
 //!   - Kundu, Cohen & Dowling, "Fluid Mechanics" (6th ed., 2016), Ch. 4.
 
-use deep_causality_cfd::euler_momentum_rhs_kernel;
+use deep_causality_cfd::euler_momentum_rhs;
 use deep_causality_physics::{AccelerationVector, Density, Velocity3, VelocityGradient};
 
 const TOL: f64 = 1e-12;
@@ -45,7 +45,7 @@ fn test_euler_hydrostatic_equilibrium() {
     let grad_p = [0.0_f64, 0.0, -rho.value() * g0];
     let body = AccelerationVector::<f64>::new([0.0, 0.0, -g0]).unwrap();
 
-    let rhs = euler_momentum_rhs_kernel(&u, &grad_u, &grad_p, &rho, &body)
+    let rhs = euler_momentum_rhs(&u, &grad_u, &grad_p, &rho, &body)
         .unwrap()
         .into_inner();
     assert!(
@@ -84,7 +84,7 @@ fn test_euler_uniform_flow_is_stationary() {
     let grad_p = [0.0_f64; 3];
     let body = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
 
-    let rhs = euler_momentum_rhs_kernel(&u, &grad_u, &grad_p, &rho, &body)
+    let rhs = euler_momentum_rhs(&u, &grad_u, &grad_p, &rho, &body)
         .unwrap()
         .into_inner();
     for &c in &rhs {
@@ -119,7 +119,7 @@ fn test_euler_steady_bernoulli_streamline_is_stationary() {
     let grad_p = [-rho.value() * u_speed * accel, 0.0, 0.0];
     let body = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
 
-    let rhs = euler_momentum_rhs_kernel(&u, &grad_u, &grad_p, &rho, &body)
+    let rhs = euler_momentum_rhs(&u, &grad_u, &grad_p, &rho, &body)
         .unwrap()
         .into_inner();
     for (i, &c) in rhs.iter().enumerate() {

@@ -16,7 +16,7 @@
 //!   - Landau & Lifshitz, "Fluid Mechanics" (2nd ed., 1987), §17 "Flow in a
 //!     pipe", Eq. (17.4) for Hagen–Poiseuille pipe flow.
 
-use deep_causality_cfd::stokes_momentum_rhs_kernel;
+use deep_causality_cfd::stokes_momentum_rhs;
 use deep_causality_physics::{AccelerationVector, Density, KinematicViscosity};
 
 const TOL: f64 = 1e-12;
@@ -57,7 +57,7 @@ fn test_stokes_plane_poiseuille_steady_state() {
     let nu = KinematicViscosity::<f64>::new(nu_val).unwrap();
     let body = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
 
-    let rhs = stokes_momentum_rhs_kernel(&lap, &grad_p, &rho, &nu, &body)
+    let rhs = stokes_momentum_rhs(&lap, &grad_p, &rho, &nu, &body)
         .unwrap()
         .into_inner();
     // Reference: ∂u/∂t = 0 (steady state). Tolerance is loosened to absorb
@@ -89,7 +89,7 @@ fn test_stokes_plane_couette_steady_state() {
     let grad_p = [0.0_f64; 3];
     let body = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
 
-    let rhs = stokes_momentum_rhs_kernel(&lap, &grad_p, &rho, &nu, &body)
+    let rhs = stokes_momentum_rhs(&lap, &grad_p, &rho, &nu, &body)
         .unwrap()
         .into_inner();
     for &c in &rhs {
@@ -123,7 +123,7 @@ fn test_stokes_hagen_poiseuille_pipe_centerline_steady_state() {
     let nu = KinematicViscosity::<f64>::new(nu_val).unwrap();
     let body = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
 
-    let rhs = stokes_momentum_rhs_kernel(&lap, &grad_p, &rho, &nu, &body)
+    let rhs = stokes_momentum_rhs(&lap, &grad_p, &rho, &nu, &body)
         .unwrap()
         .into_inner();
     for &c in &rhs {

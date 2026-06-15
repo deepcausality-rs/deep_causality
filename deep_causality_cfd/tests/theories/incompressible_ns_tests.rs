@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_cfd::incompressible_ns_rhs_kernel;
+use deep_causality_cfd::incompressible_ns_rhs;
 use deep_causality_physics::{
     AccelerationVector, Density, KinematicViscosity, Velocity3, VelocityGradient,
 };
@@ -48,7 +48,7 @@ fn test_incompressible_ns_known_value() {
     let r = rho(2.0);
     let n = nu(0.0);
     let b = acc([0.0, -9.81, 0.0]);
-    let out = incompressible_ns_rhs_kernel(&u, &g, &lap, &gp, &r, &n, &b)
+    let out = incompressible_ns_rhs(&u, &g, &lap, &gp, &r, &n, &b)
         .unwrap()
         .into_inner();
     assert!((out[0] - (-5.0)).abs() < TOL);
@@ -71,10 +71,10 @@ fn test_inviscid_limit_drops_viscous_term() {
     let n_big = nu(13.0);
     let b = acc([0.0, 0.0, 0.0]);
 
-    let inviscid = incompressible_ns_rhs_kernel(&u, &g, &lap, &gp, &r, &n_zero, &b)
+    let inviscid = incompressible_ns_rhs(&u, &g, &lap, &gp, &r, &n_zero, &b)
         .unwrap()
         .into_inner();
-    let viscous = incompressible_ns_rhs_kernel(&u, &g, &lap, &gp, &r, &n_big, &b)
+    let viscous = incompressible_ns_rhs(&u, &g, &lap, &gp, &r, &n_big, &b)
         .unwrap()
         .into_inner();
     // Difference equals ν · laplacian_u exactly.
@@ -98,12 +98,12 @@ fn test_creeping_flow_limit_drops_convective_term() {
     let n = nu(0.5);
     let b = acc([7.0, 8.0, 9.0]);
 
-    let stokes = incompressible_ns_rhs_kernel(&u_zero, &g_zero, &lap, &gp, &r, &n, &b)
+    let stokes = incompressible_ns_rhs(&u_zero, &g_zero, &lap, &gp, &r, &n, &b)
         .unwrap()
         .into_inner();
     // At u = 0 and grad_u = 0, swapping u to anything keeps stokes result
     // since conv = (u · grad_u) — but grad_u is zero so conv = 0 either way.
-    let stokes_alt = incompressible_ns_rhs_kernel(&u_nonzero, &g_zero, &lap, &gp, &r, &n, &b)
+    let stokes_alt = incompressible_ns_rhs(&u_nonzero, &g_zero, &lap, &gp, &r, &n, &b)
         .unwrap()
         .into_inner();
     for i in 0..3 {
@@ -134,12 +134,12 @@ fn test_body_force_linearity_property() {
     let n = nu(0.01);
 
     let b0 = acc([0.0, 0.0, 0.0]);
-    let rhs0 = incompressible_ns_rhs_kernel(&u, &g, &lap, &gp, &r, &n, &b0)
+    let rhs0 = incompressible_ns_rhs(&u, &g, &lap, &gp, &r, &n, &b0)
         .unwrap()
         .into_inner();
     for delta in [[1.0, 0.0, 0.0], [0.0, 5.0, 0.0], [-1.0, 2.0, -3.0]] {
         let b = acc(delta);
-        let rhs = incompressible_ns_rhs_kernel(&u, &g, &lap, &gp, &r, &n, &b)
+        let rhs = incompressible_ns_rhs(&u, &g, &lap, &gp, &r, &n, &b)
             .unwrap()
             .into_inner();
         for i in 0..3 {
@@ -164,7 +164,7 @@ fn test_velocity_offset_shifts_rhs_by_minus_grad_u_dot_c() {
     let n = nu(0.0);
     let b = acc([0.0, 0.0, 0.0]);
 
-    let rhs0 = incompressible_ns_rhs_kernel(&u, &g, &lap, &gp, &r, &n, &b)
+    let rhs0 = incompressible_ns_rhs(&u, &g, &lap, &gp, &r, &n, &b)
         .unwrap()
         .into_inner();
 
@@ -174,7 +174,7 @@ fn test_velocity_offset_shifts_rhs_by_minus_grad_u_dot_c() {
         u.value()[1] + c[1],
         u.value()[2] + c[2],
     ]);
-    let rhs_shift = incompressible_ns_rhs_kernel(&u_shift, &g, &lap, &gp, &r, &n, &b)
+    let rhs_shift = incompressible_ns_rhs(&u_shift, &g, &lap, &gp, &r, &n, &b)
         .unwrap()
         .into_inner();
 
@@ -202,7 +202,7 @@ fn test_zero_density_errors() {
     let r = rho(0.0);
     let n = nu(0.0);
     let b = acc([0.0; 3]);
-    assert!(incompressible_ns_rhs_kernel(&u, &g, &lap, &gp, &r, &n, &b).is_err());
+    assert!(incompressible_ns_rhs(&u, &g, &lap, &gp, &r, &n, &b).is_err());
 }
 
 // =============================================================================
@@ -219,7 +219,7 @@ fn test_incompressible_ns_f32_sweep() {
     let r = Density::<f32>::new(1.0).unwrap();
     let n = KinematicViscosity::<f32>::new(0.01).unwrap();
     let b = AccelerationVector::<f32>::new([0.0, -9.81, 0.0]).unwrap();
-    let out = incompressible_ns_rhs_kernel(&u, &g, &lap, &gp, &r, &n, &b)
+    let out = incompressible_ns_rhs(&u, &g, &lap, &gp, &r, &n, &b)
         .unwrap()
         .into_inner();
     // x: -(1·0.1) + (-1) + 0.005 + 0 = -1.095

@@ -4,7 +4,9 @@
  */
 
 use crate::solvers::DecNsConfig;
+use crate::solvers::dec::BoundaryZone;
 use crate::types::CfdScalar;
+use crate::types::flow::march_case::MarchStop;
 use crate::types::flow::{MarchCase, Mesh, Observe, Report, Seed};
 use deep_causality_physics::PhysicsError;
 
@@ -13,25 +15,28 @@ pub struct Flow;
 
 impl Flow {
     /// Begin a marching case (DEC incompressible). The mesh pins the dimension `D`
-    /// and precision `R`.
-    pub fn march<const D: usize, R: CfdScalar>(name: impl Into<String>) -> MarchBuilder<D, R> {
+    /// and precision `R`; boundary zones default to `()` (a closed/periodic domain)
+    /// until `.zones(...)` is called.
+    pub fn march<const D: usize, R: CfdScalar>(name: impl Into<String>) -> MarchBuilder<D, R, ()> {
         MarchBuilder::new(name)
     }
 }
 
 /// Fluent builder for a marching case. Accumulates owned specs; `run` assembles the
-/// [`MarchCase`] and executes it.
-pub struct MarchBuilder<const D: usize, R: CfdScalar> {
+/// [`MarchCase`] and executes it. The boundary-zone tuple `Z` (default `()`) is set
+/// via [`MarchBuilder::zones`], which transitions the builder type.
+pub struct MarchBuilder<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>> {
     name: String,
     mesh: Option<Mesh<D, R>>,
     solver: Option<DecNsConfig<R>>,
     moving_wall: Option<(usize, bool, [R; D])>,
     seed: Seed,
-    steps: usize,
+    stop: MarchStop<R>,
     observe: Observe,
+    zones: Z,
 }
 
-impl<const D: usize, R: CfdScalar> MarchBuilder<D, R> {
+impl<const D: usize, R: CfdScalar> MarchBuilder<D, R, ()> {
     fn new(name: impl Into<String>) -> Self {
         Self {
             name: name.into(),
@@ -39,8 +44,26 @@ impl<const D: usize, R: CfdScalar> MarchBuilder<D, R> {
             solver: None,
             moving_wall: None,
             seed: Seed::Rest,
-            steps: 0,
+            stop: MarchStop::Fixed(0),
             observe: Observe::default(),
+            zones: (),
+        }
+    }
+}
+
+impl<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>> MarchBuilder<D, R, Z> {
+    /// Set the composable boundary-zone tuple (e.g.
+    /// `(Inflow, (Outflow, (SlipWall, SlipWall)))`). Transitions the builder type.
+    pub fn zones<Z2: BoundaryZone<D, R>>(self, zones: Z2) -> MarchBuilder<D, R, Z2> {
+        MarchBuilder {
+            name: self.name,
+            mesh: self.mesh,
+            solver: self.solver,
+            moving_wall: self.moving_wall,
+            seed: self.seed,
+            stop: self.stop,
+            observe: self.observe,
+            zones,
         }
     }
 
@@ -76,7 +99,14 @@ impl<const D: usize, R: CfdScalar> MarchBuilder<D, R> {
 
     /// March a fixed number of steps.
     pub fn march_for(mut self, steps: usize) -> Self {
-        self.steps = steps;
+        self.stop = MarchStop::Fixed(steps);
+        self
+    }
+
+    /// March until the step-to-step kinetic-energy change drops below `tol` (steady
+    /// state), or `max_steps` is reached.
+    pub fn march_until_steady(mut self, tol: R, max_steps: usize) -> Self {
+        self.stop = MarchStop::Steady { tol, max_steps };
         self
     }
 
@@ -105,8 +135,9 @@ impl<const D: usize, R: CfdScalar> MarchBuilder<D, R> {
             solver,
             self.moving_wall,
             self.seed,
-            self.steps,
+            self.stop,
             self.observe,
+            self.zones,
         )
         .run()
     }

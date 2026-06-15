@@ -4,8 +4,8 @@
  */
 
 use deep_causality_cfd::{
-    compressible_ns_continuity_rhs_kernel, compressible_ns_energy_rhs_kernel,
-    compressible_ns_momentum_rhs_kernel, incompressible_ns_rhs_kernel,
+    compressible_ns_continuity_rhs, compressible_ns_energy_rhs, compressible_ns_momentum_rhs,
+    incompressible_ns_rhs,
 };
 use deep_causality_physics::{
     AccelerationVector, Density, KinematicViscosity, StrainRateTensor, Velocity3, VelocityGradient,
@@ -26,7 +26,7 @@ fn test_continuity_zero_for_incompressible_divergence_free() {
     let u = Velocity3::<f64>::new([1.0, 2.0, 3.0]).unwrap();
     let grad_rho = [0.0_f64; 3]; // incompressible
     let div_u = 0.0_f64; // divergence-free
-    let rhs = compressible_ns_continuity_rhs_kernel(&rho, &u, &grad_rho, div_u);
+    let rhs = compressible_ns_continuity_rhs(&rho, &u, &grad_rho, div_u);
     assert!(rhs.abs() < TOL);
 }
 
@@ -37,7 +37,7 @@ fn test_continuity_known_value() {
     let rho = Density::<f64>::new(2.0).unwrap();
     let u = Velocity3::<f64>::new([1.0, 0.0, 0.0]).unwrap();
     let grad_rho = [3.0_f64, 0.0, 0.0];
-    let rhs = compressible_ns_continuity_rhs_kernel(&rho, &u, &grad_rho, 0.5);
+    let rhs = compressible_ns_continuity_rhs(&rho, &u, &grad_rho, 0.5);
     assert!((rhs - (-4.0)).abs() < TOL);
 }
 
@@ -63,10 +63,10 @@ fn test_momentum_reduces_to_incompressible_ns_at_constant_rho_divergence_free() 
     let v = 0.02_f64;
     let div_tau = [r * v * lap[0], r * v * lap[1], r * v * lap[2]];
 
-    let compr = compressible_ns_momentum_rhs_kernel(&u, &g, &gp, &div_tau, &rho, &b)
+    let compr = compressible_ns_momentum_rhs(&u, &g, &gp, &div_tau, &rho, &b)
         .unwrap()
         .into_inner();
-    let incompr = incompressible_ns_rhs_kernel(&u, &g, &lap, &gp, &rho, &nu, &b)
+    let incompr = incompressible_ns_rhs(&u, &g, &lap, &gp, &rho, &nu, &b)
         .unwrap()
         .into_inner();
     for i in 0..3 {
@@ -82,7 +82,7 @@ fn test_momentum_zero_density_errors() {
     let div_tau = [0.0_f64; 3];
     let rho = Density::<f64>::new(0.0).unwrap();
     let b = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
-    assert!(compressible_ns_momentum_rhs_kernel(&u, &g, &gp, &div_tau, &rho, &b).is_err());
+    assert!(compressible_ns_momentum_rhs(&u, &g, &gp, &div_tau, &rho, &b).is_err());
 }
 
 // =============================================================================
@@ -97,7 +97,7 @@ fn test_energy_known_value() {
     let rho = Density::<f64>::new(1.0).unwrap();
     let u = Velocity3::<f64>::new([1.0, 0.0, 0.0]).unwrap();
     let b = AccelerationVector::<f64>::new([6.0, 0.0, 0.0]).unwrap();
-    let rhs = compressible_ns_energy_rhs_kernel(&rho, &u, 2.0, 3.0, 4.0, 5.0, &b);
+    let rhs = compressible_ns_energy_rhs(&rho, &u, 2.0, 3.0, 4.0, 5.0, &b);
     assert!(rhs.abs() < TOL);
 }
 
@@ -132,11 +132,11 @@ fn test_energy_linear_in_divergences() {
     let u = Velocity3::<f64>::new([0.0; 3]).unwrap();
     let b = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
     // u·g = 0 so the body-force term vanishes; check superposition of the divs.
-    let r1 = compressible_ns_energy_rhs_kernel(&rho, &u, 1.0, 0.0, 0.0, 0.0, &b);
-    let r2 = compressible_ns_energy_rhs_kernel(&rho, &u, 0.0, 2.0, 0.0, 0.0, &b);
-    let r3 = compressible_ns_energy_rhs_kernel(&rho, &u, 0.0, 0.0, 3.0, 0.0, &b);
-    let r4 = compressible_ns_energy_rhs_kernel(&rho, &u, 0.0, 0.0, 0.0, 4.0, &b);
-    let r_sum = compressible_ns_energy_rhs_kernel(&rho, &u, 1.0, 2.0, 3.0, 4.0, &b);
+    let r1 = compressible_ns_energy_rhs(&rho, &u, 1.0, 0.0, 0.0, 0.0, &b);
+    let r2 = compressible_ns_energy_rhs(&rho, &u, 0.0, 2.0, 0.0, 0.0, &b);
+    let r3 = compressible_ns_energy_rhs(&rho, &u, 0.0, 0.0, 3.0, 0.0, &b);
+    let r4 = compressible_ns_energy_rhs(&rho, &u, 0.0, 0.0, 0.0, 4.0, &b);
+    let r_sum = compressible_ns_energy_rhs(&rho, &u, 1.0, 2.0, 3.0, 4.0, &b);
     assert!((r1 + r2 + r3 + r4 - r_sum).abs() < TOL);
 }
 
@@ -149,7 +149,7 @@ fn test_compressible_ns_f32_sweep() {
     let rho = Density::<f32>::new(1.0).unwrap();
     let u = Velocity3::<f32>::new([1.0, 0.0, 0.0]).unwrap();
     let grad_rho = [0.1_f32, 0.0, 0.0];
-    let cont = compressible_ns_continuity_rhs_kernel(&rho, &u, &grad_rho, 0.0_f32);
+    let cont = compressible_ns_continuity_rhs(&rho, &u, &grad_rho, 0.0_f32);
     // -(1·0.1 + 1·0) = -0.1
     assert!((cont - (-0.1_f32)).abs() < 1e-5);
 
@@ -157,7 +157,7 @@ fn test_compressible_ns_f32_sweep() {
     let gp = [10.0_f32, 0.0, 0.0];
     let div_tau = [0.0_f32; 3];
     let b = AccelerationVector::<f32>::new([0.0, -9.81, 0.0]).unwrap();
-    let m = compressible_ns_momentum_rhs_kernel(&u, &g, &gp, &div_tau, &rho, &b)
+    let m = compressible_ns_momentum_rhs(&u, &g, &gp, &div_tau, &rho, &b)
         .unwrap()
         .into_inner();
     // x: 0 -10 +0 + 0 = -10

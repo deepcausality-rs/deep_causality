@@ -38,7 +38,7 @@ use deep_causality_physics::{
 ///
 /// Reduces to `0` for incompressible divergence-free flow. Returned as a
 /// scalar in kg/(m³·s).
-pub fn compressible_ns_continuity_rhs_kernel<R>(
+pub fn compressible_ns_continuity_rhs<R>(
     rho: &Density<R>,
     u: &Velocity3<R>,
     grad_rho: &[R; 3],
@@ -53,12 +53,12 @@ where
 /// Momentum equation RHS in primitive velocity form:
 /// `∂u/∂t = − (u·∇)u − (1/ρ) ∇p + (1/ρ) ∇·τ + g`.
 ///
-/// Reduces to `incompressible_ns_rhs_kernel` when the viscous-stress
+/// Reduces to `incompressible_ns_rhs` when the viscous-stress
 /// divergence equals `ρ ν ∇²u` (constant `μ`, divergence-free flow).
 ///
 /// - `div_tau`      — divergence of the viscous stress tensor (Pa/m)
 /// - errors when `ρ = 0` (inherited from `pressure_gradient_force_kernel`)
-pub fn compressible_ns_momentum_rhs_kernel<R>(
+pub fn compressible_ns_momentum_rhs<R>(
     u: &Velocity3<R>,
     grad_u: &VelocityGradient<R>,
     grad_p: &[R; 3],
@@ -92,7 +92,7 @@ where
 /// Sign of the heat-flux term follows the convention that `q` points along
 /// `−∇T` (Fourier), so `−∇·q > 0` corresponds to net heat *deposited* at
 /// the point.
-pub fn compressible_ns_energy_rhs_kernel<R>(
+pub fn compressible_ns_energy_rhs<R>(
     rho: &Density<R>,
     u: &Velocity3<R>,
     div_rho_u_e: R,

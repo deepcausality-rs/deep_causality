@@ -8,7 +8,7 @@
 //! `deep_causality_physics::kernels::fluids::wrappers`. Each lifts the regime
 //! kernel's `Result` (or value) into the causal monad.
 
-use super::{compressible_ns, euler, incompressible_ns, stokes};
+use crate::theories::{compressible_ns, euler, incompressible_ns, stokes};
 use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_num::RealField;
@@ -16,8 +16,8 @@ use deep_causality_physics::{
     AccelerationVector, Density, KinematicViscosity, Velocity3, VelocityGradient,
 };
 
-/// Causal wrapper for [`incompressible_ns::incompressible_ns_rhs_kernel`].
-pub fn incompressible_ns_rhs<R>(
+/// Causal wrapper for [`incompressible_ns::incompressible_ns_rhs`].
+pub fn incompressible_ns_rhs_effect<R>(
     u: &Velocity3<R>,
     grad_u: &VelocityGradient<R>,
     laplacian_u: &[R; 3],
@@ -29,7 +29,7 @@ pub fn incompressible_ns_rhs<R>(
 where
     R: RealField + Debug + 'static,
 {
-    match incompressible_ns::incompressible_ns_rhs_kernel(
+    match incompressible_ns::incompressible_ns_rhs(
         u,
         grad_u,
         laplacian_u,
@@ -43,8 +43,8 @@ where
     }
 }
 
-/// Causal wrapper for [`euler::euler_momentum_rhs_kernel`].
-pub fn euler_momentum_rhs<R>(
+/// Causal wrapper for [`euler::euler_momentum_rhs`].
+pub fn euler_momentum_rhs_effect<R>(
     u: &Velocity3<R>,
     grad_u: &VelocityGradient<R>,
     grad_p: &[R; 3],
@@ -54,14 +54,14 @@ pub fn euler_momentum_rhs<R>(
 where
     R: RealField + Debug + 'static,
 {
-    match euler::euler_momentum_rhs_kernel(u, grad_u, grad_p, rho, body_force_per_mass) {
+    match euler::euler_momentum_rhs(u, grad_u, grad_p, rho, body_force_per_mass) {
         Ok(a) => PropagatingEffect::pure(a),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }
 
-/// Causal wrapper for [`stokes::stokes_momentum_rhs_kernel`].
-pub fn stokes_momentum_rhs<R>(
+/// Causal wrapper for [`stokes::stokes_momentum_rhs`].
+pub fn stokes_momentum_rhs_effect<R>(
     laplacian_u: &[R; 3],
     grad_p: &[R; 3],
     rho: &Density<R>,
@@ -71,14 +71,14 @@ pub fn stokes_momentum_rhs<R>(
 where
     R: RealField + Debug + 'static,
 {
-    match stokes::stokes_momentum_rhs_kernel(laplacian_u, grad_p, rho, nu, body_force_per_mass) {
+    match stokes::stokes_momentum_rhs(laplacian_u, grad_p, rho, nu, body_force_per_mass) {
         Ok(a) => PropagatingEffect::pure(a),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }
 
-/// Causal wrapper for [`compressible_ns::compressible_ns_continuity_rhs_kernel`].
-pub fn compressible_ns_continuity_rhs<R>(
+/// Causal wrapper for [`compressible_ns::compressible_ns_continuity_rhs`].
+pub fn compressible_ns_continuity_rhs_effect<R>(
     rho: &Density<R>,
     u: &Velocity3<R>,
     grad_rho: &[R; 3],
@@ -87,13 +87,13 @@ pub fn compressible_ns_continuity_rhs<R>(
 where
     R: RealField + Debug + Default + 'static,
 {
-    PropagatingEffect::pure(compressible_ns::compressible_ns_continuity_rhs_kernel(
+    PropagatingEffect::pure(compressible_ns::compressible_ns_continuity_rhs(
         rho, u, grad_rho, div_u,
     ))
 }
 
-/// Causal wrapper for [`compressible_ns::compressible_ns_momentum_rhs_kernel`].
-pub fn compressible_ns_momentum_rhs<R>(
+/// Causal wrapper for [`compressible_ns::compressible_ns_momentum_rhs`].
+pub fn compressible_ns_momentum_rhs_effect<R>(
     u: &Velocity3<R>,
     grad_u: &VelocityGradient<R>,
     grad_p: &[R; 3],
@@ -104,7 +104,7 @@ pub fn compressible_ns_momentum_rhs<R>(
 where
     R: RealField + Debug + 'static,
 {
-    match compressible_ns::compressible_ns_momentum_rhs_kernel(
+    match compressible_ns::compressible_ns_momentum_rhs(
         u,
         grad_u,
         grad_p,
@@ -117,9 +117,9 @@ where
     }
 }
 
-/// Causal wrapper for [`compressible_ns::compressible_ns_energy_rhs_kernel`].
+/// Causal wrapper for [`compressible_ns::compressible_ns_energy_rhs`].
 #[allow(clippy::too_many_arguments)]
-pub fn compressible_ns_energy_rhs<R>(
+pub fn compressible_ns_energy_rhs_effect<R>(
     rho: &Density<R>,
     u: &Velocity3<R>,
     div_rho_u_e: R,
@@ -131,7 +131,7 @@ pub fn compressible_ns_energy_rhs<R>(
 where
     R: RealField + Debug + Default + 'static,
 {
-    PropagatingEffect::pure(compressible_ns::compressible_ns_energy_rhs_kernel(
+    PropagatingEffect::pure(compressible_ns::compressible_ns_energy_rhs(
         rho,
         u,
         div_rho_u_e,

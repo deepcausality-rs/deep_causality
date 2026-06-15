@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_cfd::{euler_momentum_rhs_kernel, incompressible_ns_rhs_kernel};
+use deep_causality_cfd::{euler_momentum_rhs, incompressible_ns_rhs};
 use deep_causality_physics::{
     AccelerationVector, Density, KinematicViscosity, Velocity3, VelocityGradient,
 };
@@ -22,7 +22,7 @@ fn test_euler_known_value() {
     let gp = [10.0_f64, 0.0, 0.0];
     let rho = Density::<f64>::new(2.0).unwrap();
     let b = AccelerationVector::<f64>::new([0.0, -9.81, 0.0]).unwrap();
-    let out = euler_momentum_rhs_kernel(&u, &g, &gp, &rho, &b)
+    let out = euler_momentum_rhs(&u, &g, &gp, &rho, &b)
         .unwrap()
         .into_inner();
     assert!((out[0] - (-7.0)).abs() < TOL);
@@ -40,10 +40,10 @@ fn test_euler_equals_incompressible_ns_at_zero_viscous_term() {
     let rho = Density::<f64>::new(1.5).unwrap();
     let b = AccelerationVector::<f64>::new([0.0, 0.0, -9.81]).unwrap();
 
-    let euler = euler_momentum_rhs_kernel(&u, &g, &gp, &rho, &b)
+    let euler = euler_momentum_rhs(&u, &g, &gp, &rho, &b)
         .unwrap()
         .into_inner();
-    let ns = incompressible_ns_rhs_kernel(
+    let ns = incompressible_ns_rhs(
         &u,
         &g,
         &[0.0; 3],
@@ -66,7 +66,7 @@ fn test_euler_zero_density_errors() {
     let gp = [1.0_f64, 0.0, 0.0];
     let rho = Density::<f64>::new(0.0).unwrap();
     let b = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
-    assert!(euler_momentum_rhs_kernel(&u, &g, &gp, &rho, &b).is_err());
+    assert!(euler_momentum_rhs(&u, &g, &gp, &rho, &b).is_err());
 }
 
 #[test]
@@ -77,12 +77,12 @@ fn test_euler_body_force_linearity() {
     let gp = [10.0_f64, 20.0, 30.0];
     let rho = Density::<f64>::new(1.0).unwrap();
     let b0 = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
-    let rhs0 = euler_momentum_rhs_kernel(&u, &g, &gp, &rho, &b0)
+    let rhs0 = euler_momentum_rhs(&u, &g, &gp, &rho, &b0)
         .unwrap()
         .into_inner();
     let delta = [1.0_f64, -2.0, 3.0];
     let b = AccelerationVector::<f64>::new(delta).unwrap();
-    let rhs = euler_momentum_rhs_kernel(&u, &g, &gp, &rho, &b)
+    let rhs = euler_momentum_rhs(&u, &g, &gp, &rho, &b)
         .unwrap()
         .into_inner();
     for i in 0..3 {
@@ -98,7 +98,7 @@ fn test_euler_f32_sweep() {
     let gp = [1.0_f32, 1.0, 1.0];
     let rho = Density::<f32>::new(1.0).unwrap();
     let b = AccelerationVector::<f32>::new([0.0, -9.81, 0.0]).unwrap();
-    let out = euler_momentum_rhs_kernel(&u, &g, &gp, &rho, &b)
+    let out = euler_momentum_rhs(&u, &g, &gp, &rho, &b)
         .unwrap()
         .into_inner();
     // x: -(1·0.1) + (-1) + 0 = -1.1

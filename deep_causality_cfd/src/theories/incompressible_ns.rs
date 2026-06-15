@@ -42,7 +42,7 @@ use deep_causality_physics::{
 /// - `body_force_per_mass` — body acceleration (m/s²), e.g. gravity
 ///
 /// Returns the Eulerian acceleration `∂u/∂t` at the sample point.
-pub fn incompressible_ns_rhs_kernel<R>(
+pub fn incompressible_ns_rhs<R>(
     u: &Velocity3<R>,
     grad_u: &VelocityGradient<R>,
     laplacian_u: &[R; 3],

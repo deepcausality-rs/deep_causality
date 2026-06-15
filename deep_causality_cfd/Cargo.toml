@@ -13,7 +13,6 @@ description = "Computational fluid dynamics solvers and the Flow DSL for DeepCau
 documentation = "https://docs.rs/deep_causality"
 categories = ["science", "simulation"]
 keywords = ["cfd", "fluid-dynamics", "causality", "simulation"]
-# Non-negotiable per cfd-crate.md: this crate is not published.
 publish = false
 exclude = [
     "*.bazel",
@@ -29,9 +28,7 @@ exclude = [
 
 [features]
 default = ["std"]
-# This crate is std-only: a DEC Navier–Stokes solver targets hosted environments
-# (CG solves, FFT diffusion, file output), and the physics dependency is itself
-# std-only. `std` enables the std paths of the dependency crates.
+# This crate is std-only
 std = [
     "deep_causality_core/std",
     "deep_causality_num/std",

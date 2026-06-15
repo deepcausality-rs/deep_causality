@@ -20,7 +20,7 @@
 //!     J. Fluid Mech. 130 (1983), pp. 411–452. [Standard reference for the
 //!     2D form of the velocity / pressure fields used below.]
 
-use deep_causality_cfd::incompressible_ns_rhs_kernel;
+use deep_causality_cfd::incompressible_ns_rhs;
 use deep_causality_physics::{
     AccelerationVector, Density, KinematicViscosity, Velocity3, VelocityGradient,
 };
@@ -85,7 +85,7 @@ fn test_incompressible_ns_taylor_green_vortex_decay() {
     let nu = KinematicViscosity::<f64>::new(nu_val).unwrap();
     let body = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
 
-    let rhs = incompressible_ns_rhs_kernel(&u, &grad_u, &laplacian_u, &grad_p, &rho, &nu, &body)
+    let rhs = incompressible_ns_rhs(&u, &grad_u, &laplacian_u, &grad_p, &rho, &nu, &body)
         .unwrap()
         .into_inner();
 
@@ -143,7 +143,7 @@ fn test_incompressible_ns_plane_poiseuille_steady_state() {
     let nu = KinematicViscosity::<f64>::new(nu_val).unwrap();
     let body = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
 
-    let rhs = incompressible_ns_rhs_kernel(&u, &grad_u, &lap, &grad_p, &rho, &nu, &body)
+    let rhs = incompressible_ns_rhs(&u, &grad_u, &lap, &grad_p, &rho, &nu, &body)
         .unwrap()
         .into_inner();
     // Reference: steady-state ⇒ RHS = 0. Loosened tolerance to absorb the

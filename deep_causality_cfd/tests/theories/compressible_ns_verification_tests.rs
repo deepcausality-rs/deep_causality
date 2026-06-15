@@ -18,9 +18,7 @@
 //!     sound", Eq. (3.18) for c² = γ p₀/ρ₀.
 //!   - Batchelor (1967), §1.6 for the linearised compressible equations.
 
-use deep_causality_cfd::{
-    compressible_ns_continuity_rhs_kernel, compressible_ns_momentum_rhs_kernel,
-};
+use deep_causality_cfd::{compressible_ns_continuity_rhs, compressible_ns_momentum_rhs};
 use deep_causality_physics::{AccelerationVector, Density, Velocity3, VelocityGradient};
 
 // =============================================================================
@@ -96,7 +94,7 @@ fn test_compressible_ns_acoustic_wave_continuity() {
     let grad_rho = [r.rho0 * r.u0 * r.k / r.c, 0.0, 0.0];
     let div_u = r.u0 * r.k;
 
-    let rhs = compressible_ns_continuity_rhs_kernel(&rho, &u, &grad_rho, div_u);
+    let rhs = compressible_ns_continuity_rhs(&rho, &u, &grad_rho, div_u);
     // Reference (Landau & Lifshitz §64 / Pierce §1.3): ∂ρ/∂t = −ρ₀ u₀ k.
     let expected = -r.rho0 * r.u0 * r.k;
     assert!(
@@ -119,7 +117,7 @@ fn test_compressible_ns_acoustic_wave_momentum() {
     let div_tau = [0.0_f64; 3]; // inviscid (Euler limit of compressible NS)
     let body = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
 
-    let rhs = compressible_ns_momentum_rhs_kernel(&u, &grad_u, &grad_p, &div_tau, &rho, &body)
+    let rhs = compressible_ns_momentum_rhs(&u, &grad_u, &grad_p, &div_tau, &rho, &body)
         .unwrap()
         .into_inner();
     // Reference (Anderson §3.4 Eq. 3.18; Landau & Lifshitz §64):
@@ -159,7 +157,7 @@ fn test_compressible_ns_acoustic_dispersion_recovers_sound_speed() {
     // Continuity at (0, 0).
     let grad_rho = [r.rho0 * r.u0 * r.k / r.c, 0.0, 0.0];
     let div_u = r.u0 * r.k;
-    let drho_dt = compressible_ns_continuity_rhs_kernel(&rho, &u, &grad_rho, div_u);
+    let drho_dt = compressible_ns_continuity_rhs(&rho, &u, &grad_rho, div_u);
 
     // Momentum at (0, 0).
     let grad_u =
@@ -168,7 +166,7 @@ fn test_compressible_ns_acoustic_dispersion_recovers_sound_speed() {
     let grad_p = [r.rho0 * r.c * r.u0 * r.k, 0.0, 0.0];
     let div_tau = [0.0_f64; 3];
     let body = AccelerationVector::<f64>::new([0.0; 3]).unwrap();
-    let du_dt = compressible_ns_momentum_rhs_kernel(&u, &grad_u, &grad_p, &div_tau, &rho, &body)
+    let du_dt = compressible_ns_momentum_rhs(&u, &grad_u, &grad_p, &div_tau, &rho, &body)
         .unwrap()
         .into_inner();
 

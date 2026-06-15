@@ -30,7 +30,7 @@ use deep_causality_physics::{pressure_gradient_force_kernel, viscous_diffusion_k
 /// - `rho`          — fluid density (kg/m³); errors when zero
 /// - `nu`           — kinematic viscosity (m²/s)
 /// - `body_force_per_mass` — body acceleration (m/s²)
-pub fn stokes_momentum_rhs_kernel<R>(
+pub fn stokes_momentum_rhs<R>(
     laplacian_u: &[R; 3],
     grad_p: &[R; 3],
     rho: &Density<R>,

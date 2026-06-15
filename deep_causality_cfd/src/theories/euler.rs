@@ -29,7 +29,7 @@ use deep_causality_physics::{convective_acceleration_kernel, pressure_gradient_f
 /// - `grad_p`       — pressure gradient (Pa/m)
 /// - `rho`          — fluid density (kg/m³); errors when zero
 /// - `body_force_per_mass` — body acceleration (m/s²)
-pub fn euler_momentum_rhs_kernel<R>(
+pub fn euler_momentum_rhs<R>(
     u: &Velocity3<R>,
     grad_u: &VelocityGradient<R>,
     grad_p: &[R; 3],
