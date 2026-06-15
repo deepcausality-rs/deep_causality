@@ -1,0 +1,19 @@
+website/web/public/robots.txt
+  s_53a9cae1da9327::t_d51525b8ea8187 1-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "744236025fda3f33220419e991340d57356ffd14",
+  "prompts": {},
+  "sessions": {
+    "s_53a9cae1da9327": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6189dada-16d3-43de-93ae-7f285757ddbf",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
