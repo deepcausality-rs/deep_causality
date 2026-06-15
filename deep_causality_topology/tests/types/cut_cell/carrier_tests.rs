@@ -39,7 +39,7 @@ fn solid_cell_is_empty_and_zero_apertures() {
 
 #[test]
 fn cut_cell_preserves_fields_and_fragments() {
-    let frag = CutFaceFragment::<2, f64>::new(0.5, [1.0, 0.0], SourceGeometry::Plane);
+    let frag = CutFaceFragment::<2, f64>::new(0.5, [1.0, 0.0], [0.5, 0.25], SourceGeometry::Plane);
     let c = CutCell::cut(1.0, 0.25, [[0.0, 1.0], [0.5, 0.5]], vec![frag.clone()]);
     assert_eq!(c.class(), CellClass::Cut);
     assert_eq!(c.fluid_volume(), 0.25);
@@ -54,9 +54,15 @@ fn cut_cell_preserves_fields_and_fragments() {
 
 #[test]
 fn fragment_getters() {
-    let f = CutFaceFragment::<3, f64>::new(2.0, [0.0, 1.0, 0.0], SourceGeometry::Cylinder);
+    let f = CutFaceFragment::<3, f64>::new(
+        2.0,
+        [0.0, 1.0, 0.0],
+        [1.0, 2.0, 3.0],
+        SourceGeometry::Cylinder,
+    );
     assert_eq!(f.area(), 2.0);
     assert_eq!(f.outward_normal(), &[0.0, 1.0, 0.0]);
+    assert_eq!(f.centroid(), &[1.0, 2.0, 3.0]);
     assert_eq!(f.source(), SourceGeometry::Cylinder);
 }
 

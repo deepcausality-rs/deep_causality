@@ -106,35 +106,37 @@ fn pressure_force_on_a_cylinder_is_consistent_3d() {
     );
 }
 
-/// A linear shear `u = (a·y, 0)` over a flat plate (half-space solid `y ≤ y0`, outward normal
-/// `(0, 1)`) has the exact wall traction `τ·n = (μ·a, 0)` per unit area, so the net viscous force
-/// is `F = (μ·a·A, 0)` with `A` the total cut-face area. `sharp` recovers the linear field exactly,
-/// so the finite-difference gradient is exactly `a` and the force matches the analytic traction to
-/// rounding. (`A` is read from the fragments rather than assumed, since the cut is the integrator's
-/// input — fragment-area exactness is gated in the cut-cell tests, not here.)
+/// A no-slip linear shear `u = (a·(y − y_wall), 0)` over a flat plate (half-space solid `y ≤ y_wall`,
+/// outward normal `(0, 1)`, the plate at rest so `u = 0` at the wall) has the exact wall traction
+/// `τ·n = (μ·a, 0)` per unit area, so the net viscous force is `F = (μ·a·A, 0)` with `A` the total
+/// cut-face area. The one-sided wall-normal gradient anchored at the fragment centroid (on the wall,
+/// where `u = 0`) recovers `∂u_x/∂n = a` exactly on this linear field — independent of the sample
+/// distance `Δh` — so the force matches the analytic traction to rounding. (`A` is read from the
+/// fragments rather than assumed; fragment-area exactness is gated in the cut-cell tests.)
 #[test]
 fn viscous_force_on_a_linear_shear_matches_analytic_2d() {
     let n = 20;
     let h = 0.05; // domain 1.0 × 1.0
     let a = 2.0; // shear rate dU/dy
     let mu = 0.1; // dynamic viscosity (ρ = 1 ⇒ μ = ν)
+    let y_wall = 0.525; // plate plane (matches the half-space offset)
 
     let lattice = LatticeComplex::<2, f64>::new([n, n], [false, false]);
     let base = CubicalReggeGeometry::<2, f64>::uniform(h);
     // Solid below, fluid above; the cut row sits mid-cell so the cells are genuinely partial.
-    let plate = Primitive::<2, f64>::halfspace([0.0, 1.0], 0.525);
+    let plate = Primitive::<2, f64>::halfspace([0.0, 1.0], y_wall);
     let registry = CutCellRegistry::from_primitive(&lattice, &base, &plate).unwrap();
 
     let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
     let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
     let manifold = Manifold::from_cubical_with_metric(lattice, data, base, 0);
 
-    // Seed the linear shear at the vertices, in the complex's vertex order.
+    // Seed the no-slip linear shear at the vertices (zero at the wall plane y_wall).
     let n0 = manifold.complex().num_cells(0);
     let mut vv = vec![0.0; 2 * n0];
     for (i, v) in manifold.complex().iter_cells(0).enumerate() {
         let y = v.position()[1] as f64 * h;
-        vv[2 * i] = a * y; // u_x
+        vv[2 * i] = a * (y - y_wall); // u_x, zero at the wall
         vv[2 * i + 1] = 0.0; // u_y
     }
     let vertex_vectors = CausalTensor::new(vv, vec![2 * n0]).unwrap();

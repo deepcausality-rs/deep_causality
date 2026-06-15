@@ -46,10 +46,12 @@ Group D is the cylinder-validation gate.
 
 ## 3. C — Physics wiring (no new solver plumbing)
 
-- [ ] 3.0 Lever C (independent, free accuracy win): switch `viscous_surface_force` from its central
-      difference to the **one-sided wall-normal gradient with the true distance Δh** (`S_ij·N_j`,
-      Kirkpatrick 2003) for the friction-`C_d`. Read-only diagnostic; the marched solver is untouched.
-      Re-pin the analytic linear-shear test. Can land before or in parallel with A/B.
+- [x] 3.0 Lever C (independent, free accuracy win): switched `viscous_surface_force` to the
+      **one-sided wall-normal gradient with the true distance Δh** (`S_ij·N_j`, Kirkpatrick 2003) for
+      the friction-`C_d`. Added a `centroid` to `CutFaceFragment` (wall anchor; computed in the
+      half-space/cylinder/disk intersection), and a multilinear `sample_velocity` one cell out along
+      the normal. Re-pinned the analytic test to a genuine no-slip Couette profile (`u_x = a·(y−y_w)`,
+      zero at the wall) — still `F = μ·a·A`. Read-only; the marched solver is untouched.
 - [ ] 3.1 `NoSlipConstraint` assembles the aperture-resolved rows from `cut_face_constraints` for
       `Cut` cells and the zero-interior pins for `Solid` cells, replacing the staircase set for
       immersed bodies while leaving axis-aligned wall-tangential edges unchanged.

@@ -56,7 +56,8 @@ fn sup(v: impl IntoIterator<Item = f64>) -> f64 {
 fn single_cut_cell(complex: &LatticeComplex<2, f64>, base: [usize; 2]) -> CutCellRegistry<2, f64> {
     let cell = LatticeCell::<2>::new(base, 0b11);
     let idx = complex.cells(2).position(|c| c == cell).unwrap();
-    let fragment = CutFaceFragment::<2, f64>::new(1.0, [0.0, 1.0], SourceGeometry::Plane);
+    let fragment =
+        CutFaceFragment::<2, f64>::new(1.0, [0.0, 1.0], [0.0, 0.0], SourceGeometry::Plane);
     let mut reg = CutCellRegistry::<2, f64>::new();
     reg.insert(
         idx,

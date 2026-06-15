@@ -130,9 +130,27 @@ impl<const D: usize, R: RealField + FromPrimitive> CutCell<D, R> {
         let area = box_halfspace_cross_area(l.as_slice(), normal.as_slice(), c_local);
         let mut fragments = Vec::new();
         if area > eps {
+            // Centroid: the cell centre projected onto the cut plane `n·x = offset`, so it lies on
+            // the wetted surface (the anchor for the wall-normal friction diagnostic).
+            let mut nn = R::zero();
+            let mut n_dot_xc = R::zero();
+            let mut centroid = [R::zero(); D];
+            for a in 0..D {
+                let xc = lo[a] + l[a] / (R::one() + R::one());
+                centroid[a] = xc;
+                nn += normal[a] * normal[a];
+                n_dot_xc += normal[a] * xc;
+            }
+            if nn > R::zero() {
+                let t = (n_dot_xc - offset) / nn;
+                for a in 0..D {
+                    centroid[a] -= t * normal[a];
+                }
+            }
             fragments.push(CutFaceFragment::new(
                 area,
                 *normal,
+                centroid,
                 super::source_geometry::SourceGeometry::Plane,
             ));
         }
@@ -205,13 +223,23 @@ impl<const D: usize, R: RealField + FromPrimitive> CutCell<D, R> {
             let rx = cell_cx - center[p];
             let ry = cell_cy - center[q];
             let rn = (rx * rx + ry * ry).sqrt();
+            // Centroid: the cell-centre projection pushed out to the cylinder surface (radius from
+            // the axis), at the cell centre along the cylinder axis.
+            let mut centroid = [R::zero(); D];
+            centroid[axis] = lo[axis] + l[axis] / (R::one() + R::one());
             if rn > R::zero() {
                 normal[p] = rx / rn;
                 normal[q] = ry / rn;
+                centroid[p] = center[p] + radius * rx / rn;
+                centroid[q] = center[q] + radius * ry / rn;
+            } else {
+                centroid[p] = center[p];
+                centroid[q] = center[q];
             }
             fragments.push(CutFaceFragment::new(
                 area,
                 normal,
+                centroid,
                 super::source_geometry::SourceGeometry::Cylinder,
             ));
         }
@@ -261,13 +289,20 @@ impl<const D: usize, R: RealField + FromPrimitive> CutCell<D, R> {
             let rx = cell_cx - center[0];
             let ry = cell_cy - center[1];
             let rn = (rx * rx + ry * ry).sqrt();
+            // Centroid: the cell-centre projection pushed out to the disk circumference.
+            let mut centroid = [R::zero(); D];
+            centroid[0] = center[0];
+            centroid[1] = center[1];
             if rn > R::zero() {
                 normal[0] = rx / rn;
                 normal[1] = ry / rn;
+                centroid[0] = center[0] + radius * rx / rn;
+                centroid[1] = center[1] + radius * ry / rn;
             }
             fragments.push(CutFaceFragment::new(
                 arc,
                 normal,
+                centroid,
                 super::source_geometry::SourceGeometry::Sphere,
             ));
         }

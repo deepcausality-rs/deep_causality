@@ -67,22 +67,25 @@ pub fn fragment_area_vector<const D: usize, R: DecNsScalar>(
 /// The **viscous (friction)** surface force on an immersed cut body:
 /// `F_μ = ∮_S μ(∇u + ∇uᵀ)·n dA`, summed over every cut cell's fragments.
 ///
-/// The velocity field is the edge 1-cochain `edge_form` (pass `state.as_one_form()`). It is
-/// `sharp`-reconstructed to vertex vectors, and the velocity gradient `∇u` at each cut cell is
-/// formed by central differences of that vertex field at the cell's base vertex (one-sided at a
-/// domain boundary). The symmetric viscous stress `τ = μ(∇u + ∇uᵀ)` is then contracted with each
-/// fragment's outward normal and integrated over its area. With `ρ = 1` the dynamic viscosity `mu`
-/// equals the kinematic `ν` the solver carries.
+/// The velocity field is the edge 1-cochain `edge_form` (pass `state.as_one_form()`), `sharp`-
+/// reconstructed to vertex vectors. The wall shear is evaluated with a **one-sided wall-normal
+/// gradient to the true surface distance `Δh`** (Kirkpatrick et al. 2003): for each fragment the
+/// velocity is zero at the wall (no-slip, anchored at the fragment centroid `c`) and sampled by
+/// multilinear interpolation at `c + Δh·n` one cell out along the outward normal `n`, so
+/// `∂u/∂n ≈ u_sample / Δh`. The Kirkpatrick wall traction `t = μ S·n` with the rank-one wall-normal
+/// gradient reduces to `tᵢ = μ (u_sample,i + nᵢ (u_sample·n)) / Δh`, integrated over the fragment
+/// area. With `ρ = 1` the dynamic viscosity `mu` equals the kinematic `ν` the solver carries.
 ///
-/// This is a finite-difference wall-shear estimate, second-order on a smooth field and exact on a
-/// linear one; on a cut cell it reads the actual no-slip shear (solid-side vertices sit at zero).
-/// Its accuracy at the body is resolution-bound — it is meaningfully checked against the reference
-/// drag, not a fast analytic gate.
+/// Unlike a central difference straddling the cut (which mixes fluid and solid-side nodes over a
+/// full cell), this reads the gradient from the wall to the first fluid sample over the actual
+/// perpendicular distance, so it is exact on a no-slip linear shear and far better at a curved wall.
+/// It remains a read-only diagnostic, resolution-bound at the body — meaningfully checked against
+/// the reference drag, not a fast analytic gate.
 ///
 /// # Errors
 /// * `PhysicsError::TopologyError` wrapping a `sharp` failure (wrong edge count or missing metric).
 /// * `PhysicsError::TopologyError` when the manifold's geometry is not axis-aligned (per-edge
-///   graded geometry has no single per-axis spacing for the difference stencil).
+///   graded geometry has no single per-axis spacing for the wall-normal step).
 pub fn viscous_surface_force<const D: usize, R: DecNsScalar>(
     manifold: &Manifold<LatticeComplex<D, R>, R>,
     registry: &CutCellRegistry<D, R>,
@@ -115,22 +118,54 @@ pub fn viscous_surface_force<const D: usize, R: DecNsScalar>(
         })
         .collect();
 
-    // The top cells (D-cells) in registry-key order, so a `CellId` resolves to its position.
+    // The top cells (D-cells) in registry-key order, so a `CellId` resolves to its base position
+    // (the start vertex for the multilinear sample's floor search).
     let cells: Vec<LatticeCell<D>> = complex.iter_cells(D).collect();
 
     let mut force = [R::zero(); D];
     for (&cell_id, cut) in registry.iter() {
         let base = *cells[cell_id].position();
-        let grad = velocity_gradient(&velocity, &base, &dx);
-        // Symmetric viscous stress τ = μ(∇u + ∇uᵀ): τ[i][j] = μ(∂u_i/∂x_j + ∂u_j/∂x_i).
         for fragment in cut.fragments() {
-            let normal = fragment.outward_normal();
             let area = fragment.area();
+            let centroid = fragment.centroid();
+            // Unit outward normal (defensively normalised; intersection normals are already unit).
+            let raw_n = fragment.outward_normal();
+            let mut nn = R::zero();
+            for &c in raw_n.iter() {
+                nn += c * c;
+            }
+            if nn <= R::zero() {
+                continue;
+            }
+            let inv = R::one() / nn.sqrt();
+            let mut n = [R::zero(); D];
+            for (i, ni) in n.iter_mut().enumerate() {
+                *ni = raw_n[i] * inv;
+            }
+
+            // True wall-normal step Δh ≈ one cell projected on the normal, and the sample point one
+            // step into the fluid from the wall anchor (the centroid).
+            let mut delta_h = R::zero();
+            let mut sample = [R::zero(); D];
+            for i in 0..D {
+                delta_h += n[i].abs() * dx[i];
+            }
+            if delta_h <= R::zero() {
+                continue;
+            }
+            for (i, s) in sample.iter_mut().enumerate() {
+                *s = centroid[i] + delta_h * n[i];
+            }
+            let u_sample = sample_velocity(&velocity, &base, &sample, &dx);
+
+            // u·n (the wall-normal component of the sampled velocity).
+            let mut u_dot_n = R::zero();
+            for i in 0..D {
+                u_dot_n += u_sample[i] * n[i];
+            }
+            // Kirkpatrick rank-one wall traction tᵢ = μ (u_sample,i + nᵢ (u·n)) / Δh.
             for (i, f) in force.iter_mut().enumerate() {
-                let mut traction_i = R::zero();
-                for (j, &n_j) in normal.iter().enumerate() {
-                    traction_i += mu * (grad[i][j] + grad[j][i]) * n_j;
-                }
+                let traction_i = mu * (u_sample[i] + n[i] * u_dot_n) / delta_h;
                 *f += traction_i * area;
             }
         }
@@ -138,39 +173,52 @@ pub fn viscous_surface_force<const D: usize, R: DecNsScalar>(
     Ok(force)
 }
 
-/// Velocity gradient `grad[i][j] = ∂u_i/∂x_j` at lattice vertex `base`: a central difference of
-/// the vertex velocity field, degrading to a one-sided difference where a neighbour falls outside
-/// the domain (the `or(center)` fallback with a halved step count). The base vertex of a cut cell
-/// always has at least one in-axis neighbour, so the difference is well defined.
-fn velocity_gradient<const D: usize, R: DecNsScalar>(
+/// Multilinear interpolation of the vertex velocity field at the physical point `p` (lattice
+/// coordinates `position · dx`). The floor of each grid coordinate is found by a short bounded
+/// search seeded at the cut cell's `base` vertex (the sample sits within ~one cell of it), so no
+/// real-to-integer cast is needed. Corners outside the domain contribute the no-slip zero.
+fn sample_velocity<const D: usize, R: DecNsScalar>(
     velocity: &BTreeMap<[usize; D], [R; D]>,
     base: &[usize; D],
+    p: &[R; D],
     dx: &[R; D],
-) -> [[R; D]; D] {
-    let zero = [R::zero(); D];
-    let center = velocity.get(base);
-    let mut grad = [[R::zero(); D]; D];
+) -> [R; D] {
+    let mut lo = [0usize; D];
+    let mut frac = [R::zero(); D];
     for j in 0..D {
-        let mut hi_pos = *base;
-        hi_pos[j] += 1;
-        let lo_pos = base[j].checked_sub(1).map(|v| {
-            let mut p = *base;
-            p[j] = v;
-            p
-        });
-        let hi = velocity.get(&hi_pos);
-        let lo = lo_pos.as_ref().and_then(|p| velocity.get(p));
-        // One in-axis step on each side that exists; missing sides fall back to the centre value
-        // (one-sided) and the step count drops to 1 so the denominator stays consistent.
-        let steps = hi.is_some() as usize + lo.is_some() as usize;
-        let plus = hi.or(center).unwrap_or(&zero);
-        let minus = lo.or(center).unwrap_or(&zero);
-        let denom = R::from_usize(steps).unwrap_or_else(R::one) * dx[j];
-        for i in 0..D {
-            grad[i][j] = (plus[i] - minus[i]) / denom;
+        let g = p[j] / dx[j];
+        // Floor of `g`, found by stepping from `base[j]` (clamped at 0).
+        let mut k = base[j];
+        while R::from_usize(k + 1).unwrap_or_else(R::one) <= g {
+            k += 1;
+        }
+        while k > 0 && R::from_usize(k).unwrap_or_else(R::zero) > g {
+            k -= 1;
+        }
+        lo[j] = k;
+        frac[j] = g - R::from_usize(k).unwrap_or_else(R::zero);
+    }
+
+    let mut out = [R::zero(); D];
+    for corner in 0..(1usize << D) {
+        let mut pos = [0usize; D];
+        let mut weight = R::one();
+        for j in 0..D {
+            let bit = (corner >> j) & 1;
+            pos[j] = lo[j] + bit;
+            weight *= if bit == 1 {
+                frac[j]
+            } else {
+                R::one() - frac[j]
+            };
+        }
+        if let Some(v) = velocity.get(&pos) {
+            for (o, &vi) in out.iter_mut().zip(v.iter()) {
+                *o += weight * vi;
+            }
         }
     }
-    grad
+    out
 }
 
 /// A nondimensional force coefficient `C = F / (½ ρ U² A)` at `ρ = 1` (drag with the streamwise

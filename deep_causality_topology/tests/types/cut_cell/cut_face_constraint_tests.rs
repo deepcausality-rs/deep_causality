@@ -71,7 +71,8 @@ fn axis_aligned_cut_emits_normal_and_tangential_rows<R: RealField + FromPrimitiv
     let idx = lattice.cells(2).position(|c| c == cell).unwrap();
 
     let normal = [R::zero(), R::one()];
-    let fragment = CutFaceFragment::<2, R>::new(R::one(), normal, SourceGeometry::Plane);
+    let centroid = [R::zero(), R::zero()];
+    let fragment = CutFaceFragment::<2, R>::new(R::one(), normal, centroid, SourceGeometry::Plane);
     let apertures = [
         [R::from_f64(0.5).unwrap(), R::from_f64(0.5).unwrap()],
         [R::zero(), R::one()],
@@ -155,7 +156,7 @@ fn fully_wetted_cut_gives_uniform_cell_centre_weights() {
 
     // A 45° normal so both axes carry a nonzero direction component.
     let s = 1.0 / 2.0_f64.sqrt();
-    let fragment = CutFaceFragment::<2, f64>::new(1.0, [s, s], SourceGeometry::Plane);
+    let fragment = CutFaceFragment::<2, f64>::new(1.0, [s, s], [0.0, 0.0], SourceGeometry::Plane);
     let mut reg = CutCellRegistry::<2, f64>::new();
     reg.insert(
         idx,
@@ -182,7 +183,12 @@ fn three_d_axis_aligned_cut_emits_one_normal_two_tangential() {
     let cell = LatticeCell::<3>::new([1, 1, 1], 0b111);
     let idx = lattice.cells(3).position(|c| c == cell).unwrap();
 
-    let fragment = CutFaceFragment::<3, f64>::new(1.0, [0.0, 0.0, 1.0], SourceGeometry::Plane);
+    let fragment = CutFaceFragment::<3, f64>::new(
+        1.0,
+        [0.0, 0.0, 1.0],
+        [0.0, 0.0, 0.0],
+        SourceGeometry::Plane,
+    );
     let mut reg = CutCellRegistry::<3, f64>::new();
     reg.insert(
         idx,
