@@ -1,0 +1,47 @@
+deep_causality_topology/tests/types/manifold/leray_weighted_tests.rs
+  s_86cf72b3950d7d::t_50db4d0ee83f11 187-269
+openspec/changes/add-aperture-resolved-noslip/tasks.md
+  s_86cf72b3950d7d::t_1680dfa3dacf68 55-72
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_rate.rs
+  s_86cf72b3950d7d::t_8acba2452377db 351-359
+  s_86cf72b3950d7d::t_47d065a51135c8 510-513,517-523,531,534
+  s_86cf72b3950d7d::t_d3c5da34bc9a4f 77
+deep_causality_topology/src/types/manifold/differential/leray.rs
+  s_86cf72b3950d7d::t_854579ecc36130 284-285,309-325,327-361,364-372,378,385,390-396,401-402,408,411,417,423-425,433,437,443,453-460,506,521-567,571-582,584-599,612-613,616-621,623,635,651,656,670,676-684,686
+  s_86cf72b3950d7d::t_c9ecfc7a380f05 300-308
+  s_86cf72b3950d7d::t_e17f72652ad62b 326
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/step.rs
+  s_86cf72b3950d7d::t_023e62c94f7405 101-104,110,112
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/no_slip.rs
+  s_86cf72b3950d7d::t_3afabc978e8105 38,40
+  s_86cf72b3950d7d::t_ba439ed902a6dd 89-90,94-102,106-111
+  s_86cf72b3950d7d::t_fb1349253143e5 36,42-44,46,48,51-62,86-87,91-93,103-105,112-118,125,136-139
+  s_86cf72b3950d7d::t_108164d022e447 39
+deep_causality_physics/src/quantities/fluid_dynamics/solenoidal_field.rs
+  s_86cf72b3950d7d::t_a072d5c8b7def7 108-115
+  s_86cf72b3950d7d::t_74929f8c43e0fb 116-120,126,128,131-139,141
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/seed.rs
+  s_86cf72b3950d7d::t_8b66d46b9b7ec4 70-72,78,80
+deep_causality_physics/tests/theories/fluid_dynamics/dec/cut_cell_wiring_tests.rs
+  s_86cf72b3950d7d::t_5a1666ff9bb2d8 256-259,267,278,281,283
+  s_86cf72b3950d7d::t_57439431d25563 203-240,245-255,260-266,272-277,279-280,282,284,289-290
+  s_86cf72b3950d7d::t_108164d022e447 268-271,285-288
+  s_86cf72b3950d7d::t_234485bd9c8393 244
+  s_86cf72b3950d7d::t_b028cd180a679f 241-243
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "66c86bc36e2a892ad2298c32224a7855ab320448",
+  "prompts": {},
+  "sessions": {
+    "s_86cf72b3950d7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "449a7105-1712-4ede-8466-427285c3e5e2",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
