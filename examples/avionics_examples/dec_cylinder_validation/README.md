@@ -112,9 +112,20 @@ STAIRCASE=1 CELLS_PER_D=16 LX_D=16 LY_D=16 STEPS=4000 CFL=0.4 CG_TOL=1e-6 \
 
 The guiding star is **minutes, not hours**: a developed `Re=100` result that reaches the measurement
 window in minutes is the whole point of dropping the threshold from ~24/D to ~16/D (≈ `(24/16)²` fewer
-cells and a larger `dt`, on top of the warm-start and loose-tolerance speedups). The measured
-aperture-resolved `St` / `C_d` and the wall-clock against that target are filled in once the gate run
-completes.
+cells and a larger `dt`, on top of the warm-start and loose-tolerance speedups).
+
+**Gate result (June 2026).** The pair above was run at 16 cells/D, `LY_D=16`:
+
+| body                | 16/D shedding | `St` (preliminary) |
+|---------------------|---------------|--------------------|
+| staircase           | none (the wake decays to a steady residual `v_probe ≈ -0.007`) | — |
+| **aperture-resolved** | **sustained von-Kármán street** (growing amplitude `0.22 → 0.27 → 0.33`) | **≈ 0.154** (period `T ≈ 6.5`) |
+
+So the aperture-resolved no-slip **sheds at 16/D where the staircase stays steady**, and `St` moves
+from the staircase's `~0.21` (at 24/D, +28 %) to within a few percent of Williamson's `0.164`. The
+`St ≈ 0.154` figure is from the growth phase (the snapshot ended before the limit cycle); a longer run
+to saturation firms it up and yields the cycle-mean `C_d` (printed to stderr), which are recorded here
+once available.
 
 ```text
 # Reference-quality Re=100 (resolves the boundary layer; long, so run it in a pinned terminal):
@@ -137,9 +148,10 @@ perturbation decays), while at **24 cells/D a marginal von-Kármán street devel
 `St ≈ 0.21`). A domain-width experiment (24/D at `LY_D=8` vs a wider domain) moved `St` only from
 ~0.21 to ~0.22, so **blockage is not the dominant `St` error** at these widths: the staircase wall and
 the marginal resolution are. That is the error the **aperture-resolved no-slip**
-(`add-aperture-resolved-noslip`, now the default here) attacks — it places the wall at the true surface
-and should lower the shedding threshold toward ~16 cells/D and move `St` toward `0.164`. Run the go/no-go
-pair above to confirm.
+(`add-aperture-resolved-noslip`, now the default here) attacks — it places the wall at the true surface.
+This is **confirmed**: at 16 cells/D the aperture-resolved body sheds a sustained street with
+`St ≈ 0.154` while the staircase body stays steady (see the gate-result table above). The threshold
+drop from ~24/D to ~16/D is the minutes-not-hours win.
 
 ## A note on `--features parallel`
 

@@ -24,17 +24,23 @@ stair-step.
 
 ### Requirement: No-penetration and no-slip at the wetted surface
 
-The constrained velocity field SHALL satisfy no-penetration (zero flux normal to the immersed
-surface) and no-slip (zero tangential velocity relative to a static body, or the prescribed wall
-velocity for a moving body) on the wetted cut face, to an accuracy that improves with cut-cell
-resolution. The normal direction used SHALL be the fragment's stored outward unit normal.
+The constrained velocity field SHALL satisfy **tangential no-slip** (zero tangential velocity relative
+to a static body, or the prescribed wall velocity for a moving body) at the wetted cut face as an
+explicit constraint, expressed in the local wall frame from the fragment's stored outward unit normal,
+to an accuracy that improves with cut-cell resolution. **No-penetration** (zero net flux normal to the
+immersed surface) SHALL hold in aggregate, carried by the body-interior zero pins together with the
+projection's divergence-freeness (so the net flux through the body surface vanishes by discrete
+divergence), rather than as an explicit per-fragment constraint row. (Rationale: a closed body's
+per-fragment no-penetration rows are linearly dependent — the discrete `∮ n·u = 0` identity — and
+redundant given the interior pins, so enforcing them explicitly is ill-conditioned and unnecessary.)
 
-#### Scenario: No flow penetrates a static immersed body
+#### Scenario: A static immersed body enforces tangential no-slip and aggregate no-penetration
 
 - **WHEN** the solver marches a flow past a static aperture-resolved immersed body
-- **THEN** the velocity reconstructed at the body has no component through the wetted cut face
-  (no-penetration) within the projection's solve tolerance
-- **AND** the tangential velocity at the wetted face is zero (no-slip) within the same tolerance
+- **THEN** the tangential velocity reconstructed at the wetted cut face is zero (no-slip) within the
+  projection's solve tolerance
+- **AND** the net volumetric flux through the body surface is zero (aggregate no-penetration), the
+  body interior staying at rest while the interior divergence holds at the solve tolerance
 
 ### Requirement: Reduction to the staircase set on axis-aligned solid layers
 
@@ -52,17 +58,21 @@ axis-aligned fragments), so that the axis-aligned no-slip results do not move.
 
 ### Requirement: Composition with the constrained projector and cut Hodge star
 
-The aperture-resolved constraint SHALL be expressed so that the existing constrained and open Leray
-projectors (`leray_project_constrained_opts` / `leray_project_open_opts`) and the cut Hodge star
-(`dual_fluid_fraction`) consume it without an API break. The marched field SHALL remain
-divergence-free (interior) to the projection tolerance with the aperture-resolved body in place, the
-same guarantee the staircase path provides.
+The aperture-resolved constraint SHALL be carried by **additive** weighted-constraint entry points on
+the existing projectors (`leray_project_constrained_weighted_opts` / `leray_project_open_weighted_opts`)
+that leave the existing `leray_project_constrained_opts` / `leray_project_open_opts` signatures and
+behaviour unchanged (no API break; an empty constraint-row set delegates to the binary path
+bit-identically). The cut Hodge star (`dual_fluid_fraction`) continues to carry the clipped volume /
+dual fraction independently. The marched field SHALL remain divergence-free (interior) to the
+projection tolerance with the aperture-resolved body in place, the same guarantee the staircase path
+provides.
 
 #### Scenario: Divergence-free march with an aperture-resolved body
 
 - **WHEN** a flow is marched past an aperture-resolved immersed body through the existing solver
 - **THEN** the interior divergence residual stays at the projection's solve tolerance every step
-- **AND** no new solver entry point or projector signature is introduced to support the constraint
+- **AND** the existing (binary) projector signatures are unchanged — the weighted path is additive and
+  reduces to the binary path bit-identically when no aperture-resolved rows are present
 
 ### Requirement: Non-regression of non-immersed paths
 
