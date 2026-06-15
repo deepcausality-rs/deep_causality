@@ -105,18 +105,40 @@ where
     ///
     /// # Errors
     /// As [`Self::from_leray_projection`].
-    pub(crate) fn from_open_leray_projection_opts<const D: usize>(
+    /// The **open-boundary** projection (`Manifold::leray_project_open_weighted_opts`) admitting a
+    /// prescribed inflow with a pressure reference, optionally extended with the weighted cut-face
+    /// no-slip rows of an immersed body so the body no-slip is enforced on the *state* (not only the
+    /// per-stage rate). `zeroed` edges are pinned to zero (no-slip walls + body interior),
+    /// `prescribed` edges are fixed at their field value with their flux counted, and `reference`
+    /// vertices pin the outflow pressure. With empty `rows` it is bit-identical to the binary open
+    /// path; with empty `prescribed`/`reference` it reduces to the constrained projection. `x0`
+    /// warm-starts the projection's grade-0 CG.
+    ///
+    /// # Errors
+    /// As [`Self::from_open_leray_projection_opts`].
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn from_open_leray_projection_weighted_opts<const D: usize>(
         velocity: &VelocityOneForm<R>,
         manifold: &Manifold<LatticeComplex<D, R>, R>,
         zeroed: &[usize],
         prescribed: &[usize],
         reference: &[usize],
+        rows: &[deep_causality_topology::CutFaceConstraint<R>],
         opts: &deep_causality_topology::HodgeDecomposeOptions<R>,
+        x0: Option<&[R]>,
     ) -> Result<(Self, CausalTensor<R>), PhysicsError> {
         let projection = manifold
-            .leray_project_open_opts(velocity.as_tensor(), zeroed, prescribed, reference, opts)
+            .leray_project_open_weighted_opts(
+                velocity.as_tensor(),
+                zeroed,
+                prescribed,
+                reference,
+                rows,
+                opts,
+                x0,
+            )
             .map_err(|e| {
-                PhysicsError::TopologyError(format!("open Leray projection failed: {e}"))
+                PhysicsError::TopologyError(format!("open weighted Leray projection failed: {e}"))
             })?;
         let (projected, potential) = projection.into_parts();
         Ok((Self { field: projected }, potential))

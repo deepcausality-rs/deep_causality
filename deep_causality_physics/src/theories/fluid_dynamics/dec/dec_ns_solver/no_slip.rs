@@ -33,25 +33,33 @@
 //! On a fully periodic lattice the constrained-edge set is empty and every
 //! entry point below is a bit-exact no-op, preserving the periodic path.
 
+use alloc::collections::BTreeSet;
 use deep_causality_num::RealField;
-use deep_causality_topology::{CutCellRegistry, LatticeComplex};
+use deep_causality_topology::{
+    CutCellRegistry, CutConstraintKind, CutFaceConstraint, LatticeComplex,
+};
 
-/// The set of wall-tangential edge indices (in `iter_cells(1)` /
-/// cochain-coefficient order) that no-slip pins to zero. Empty on fully
-/// periodic lattices.
+/// The no-slip constraint set: binary edge pins (in `iter_cells(1)` /
+/// cochain-coefficient order) plus, for an aperture-resolved immersed body,
+/// the weighted cut-face rows. Empty on fully periodic lattices with no body.
 #[derive(Debug, Clone)]
-pub(in crate::theories::fluid_dynamics::dec) struct NoSlipConstraint {
+pub(in crate::theories::fluid_dynamics::dec) struct NoSlipConstraint<R: RealField> {
     edges: alloc::vec::Vec<usize>,
+    rows: alloc::vec::Vec<CutFaceConstraint<R>>,
 }
 
-impl NoSlipConstraint {
-    /// Enumerate the constrained edges of `complex`: the axis-aligned
-    /// wall-tangential edges, plus — when a cut-cell registry is attached to
-    /// the geometry (CFD Stage 4 B4) — the edges of an immersed solid body
-    /// ([`CutCellRegistry::solid_incident_edges`], the staircase no-slip /
-    /// no-penetration set). Returns an empty constraint on a fully periodic
-    /// lattice with no immersed body (the bit-exact periodic path).
-    pub(in crate::theories::fluid_dynamics::dec) fn new<const D: usize, R: RealField>(
+impl<R: RealField> NoSlipConstraint<R> {
+    /// Enumerate the no-slip constraint of `complex`: the axis-aligned wall-tangential edges
+    /// (binary pins), plus the immersed body's no-slip when a cut-cell registry is attached.
+    ///
+    /// When the registry has `Cut` cells, the body is **aperture-resolved**: the wall condition
+    /// becomes the weighted cut-face rows ([`CutCellRegistry::cut_face_constraints`]), and the binary
+    /// pins keep only the body's *interior* solid edges (the `solid_incident` set minus every edge a
+    /// cut-face row already governs) so the body interior stays at rest without double-constraining
+    /// the wetted cut face. A registry with no `Cut` cells (an axis-aligned `Solid` layer) or no
+    /// registry falls back to the staircase set ([`CutCellRegistry::solid_incident_edges`]), so the
+    /// axis-aligned and periodic paths are bit-unchanged.
+    pub(in crate::theories::fluid_dynamics::dec) fn new<const D: usize>(
         complex: &LatticeComplex<D, R>,
         cut_registry: Option<&CutCellRegistry<D, R>>,
     ) -> Self {
@@ -75,16 +83,46 @@ impl NoSlipConstraint {
             }
         }
 
-        // Immersed-body edges (B4): the cut-cell solid no-slip / no-penetration set.
+        // Immersed-body no-slip.
+        let mut rows: alloc::vec::Vec<CutFaceConstraint<R>> = alloc::vec::Vec::new();
         if let Some(registry) = cut_registry {
-            edges.extend(registry.solid_incident_edges(complex));
+            let all_rows = registry.cut_face_constraints(complex);
+            if all_rows.is_empty() {
+                // No cut cells (axis-aligned solid layer / empty body): the staircase set, unchanged.
+                edges.extend(registry.solid_incident_edges(complex));
+            } else {
+                // Aperture-resolved body. Keep only the **tangential** no-slip rows: the
+                // no-penetration rows of a closed body are linearly dependent (the discrete
+                // divergence-theorem identity `∮ n·u dA = 0`), which gives the KKT system a tiny
+                // eigenvalue and floors the projection CG. They are also redundant — the body
+                // interior is pinned to zero (the solid edges below) and the projection is
+                // divergence-free, so the net flux through the body surface already vanishes. The
+                // tangential rows (independent, well-conditioned) carry the wall condition that
+                // sets separation (design open question 4.3: no-penetration row off).
+                let row_edges: BTreeSet<usize> = all_rows
+                    .iter()
+                    .flat_map(|r| r.entries().iter().map(|&(e, _)| e))
+                    .collect();
+                rows = all_rows
+                    .into_iter()
+                    .filter(|r| r.kind() == CutConstraintKind::Tangential)
+                    .collect();
+                // Keep the solid pins that no cut-face row governs (the body interior); the wetted
+                // cut face is carried by the tangential rows.
+                edges.extend(
+                    registry
+                        .solid_incident_edges(complex)
+                        .into_iter()
+                        .filter(|e| !row_edges.contains(e)),
+                );
+            }
         }
 
         // Sort + dedup so the union is canonical and the masked-CG constraint set is unique;
         // a no-op on the wall-only path (already ascending, distinct) and the empty path.
         edges.sort_unstable();
         edges.dedup();
-        Self { edges }
+        Self { edges, rows }
     }
 
     /// The constrained edge indices (cochain-coefficient order). Empty ⟺
@@ -93,6 +131,12 @@ impl NoSlipConstraint {
     /// path bit-unchanged.
     pub(in crate::theories::fluid_dynamics::dec) fn edges(&self) -> &[usize] {
         &self.edges
+    }
+
+    /// The aperture-resolved weighted cut-face rows. Empty unless the geometry carries a cut-cell
+    /// registry with `Cut` cells; every consumer is a no-op (the binary path) on an empty slice.
+    pub(in crate::theories::fluid_dynamics::dec) fn rows(&self) -> &[CutFaceConstraint<R>] {
+        &self.rows
     }
 
     /// Remove a set of edges from the constraint (the free-slip **un-pin** seam): a free-slip face

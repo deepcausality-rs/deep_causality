@@ -74,7 +74,7 @@ pub struct DecNsRate<'m, const D: usize, R: DecNsScalar> {
     /// every projection runs the unconstrained (spectral-dispatch) path
     /// bit-unchanged; on wall-bounded lattices `project_raw` routes through
     /// the constrained Leray projector instead.
-    no_slip: super::dec_ns_solver::no_slip::NoSlipConstraint,
+    no_slip: super::dec_ns_solver::no_slip::NoSlipConstraint<R>,
     /// Open-boundary inflow edges (a prescribed Dirichlet velocity): pinned to zero **rate** in
     /// the per-stage projection (so the velocity holds its prescribed value), and flux-counted in
     /// the velocity re-entry projection. Empty on closed domains.
@@ -348,6 +348,15 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         self.no_slip.edges()
     }
 
+    /// The aperture-resolved weighted cut-face rows the immersed no-slip constrains (empty unless an
+    /// immersed body with `Cut` cells is attached). Shared with the seed and re-entry projections so
+    /// the body no-slip holds on the *state*, not only on the per-stage rate.
+    pub(in crate::theories::fluid_dynamics::dec) fn no_slip_rows(
+        &self,
+    ) -> &[deep_causality_topology::CutFaceConstraint<R>] {
+        self.no_slip.rows()
+    }
+
     /// Opt into the spectral evaluation of the viscous term (fully
     /// periodic uniform lattices only). Off by default; the validation
     /// ladder gates any future default-on.
@@ -498,10 +507,20 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         // Per-stage: the rate is pinned to zero on the no-slip walls **and** the inflow edges
         // (a constant prescribed inflow has zero rate). `rate_constrained` equals `no_slip` on
         // closed domains, so this is bit-identical there.
+        // The aperture-resolved cut-face rows (empty unless an immersed body with Cut cells is
+        // attached, in which case the weighted projector delegates to the binary path bit-identically
+        // — so periodic / wall-only / staircase paths are unchanged).
+        let rows = self.no_slip.rows();
         if !self.warm_start {
             return self
                 .manifold
-                .leray_project_constrained_opts(raw.as_tensor(), &self.rate_constrained, opts)
+                .leray_project_constrained_weighted_opts(
+                    raw.as_tensor(),
+                    &self.rate_constrained,
+                    rows,
+                    opts,
+                    None,
+                )
                 .map_err(|e| PhysicsError::TopologyError(format!("Leray projection failed: {e}")));
         }
         // Warm path: seed the CG with the previous solve's potential, then cache the new one. The
@@ -509,9 +528,10 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         let projection = {
             let guess = self.proj_warm.borrow();
             self.manifold
-                .leray_project_constrained_warm_opts(
+                .leray_project_constrained_weighted_opts(
                     raw.as_tensor(),
                     &self.rate_constrained,
+                    rows,
                     opts,
                     guess.as_deref(),
                 )

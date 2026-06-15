@@ -184,6 +184,89 @@ fn empty_rows_are_bit_identical_to_the_constrained_path() {
     );
 }
 
+// -- open gauge (inflow/outflow reference) composed with weighted rows --------------------------
+
+/// Wall-tangential edges of a wall-bounded box (the binary no-slip set).
+fn wall_edges(complex: &LatticeComplex<2, f64>) -> Vec<usize> {
+    let periodic = complex.periodic();
+    let shape = complex.shape();
+    complex
+        .iter_cells(1)
+        .enumerate()
+        .filter_map(|(i, c)| {
+            let axis = c.orientation().trailing_zeros() as usize;
+            let pos = c.position();
+            (0..2)
+                .any(|w| w != axis && !periodic[w] && (pos[w] == 0 || pos[w] + 1 == shape[w]))
+                .then_some(i)
+        })
+        .collect()
+}
+
+#[test]
+fn open_empty_rows_are_bit_identical_to_the_open_path() {
+    // With a reference vertex (open gauge) and no weighted rows, the weighted entry point must
+    // reproduce the binary open projection bit-for-bit.
+    let m = manifold_2d([8, 6], [false, false], CubicalReggeGeometry::unit());
+    let n1 = m.complex().num_cells(1);
+    let zeroed = wall_edges(m.complex());
+    let reference = vec![0usize];
+    let field = random_field(n1, 61);
+    let opts = HodgeDecomposeOptions::default();
+
+    let binary = m
+        .leray_project_open_opts(&field, &zeroed, &[], &reference, &opts)
+        .unwrap();
+    let empty: &[CutFaceConstraint<f64>] = &[];
+    let weighted = m
+        .leray_project_open_weighted_opts(&field, &zeroed, &[], &reference, empty, &opts, None)
+        .unwrap();
+
+    assert_eq!(
+        binary.projected().as_slice(),
+        weighted.projected().as_slice(),
+        "empty rows must reproduce the binary open projection bit-for-bit"
+    );
+}
+
+#[test]
+fn open_gauge_weighted_rows_are_satisfied_on_the_state() {
+    // The state projection path: an immersed body in a wall-bounded box with an outflow reference.
+    // The weighted rows (the body no-slip) must hold on the projected state — the property the
+    // per-stage rate projection alone cannot guarantee through the re-entry's gradient correction.
+    let m = manifold_2d([8, 8], [false, false], CubicalReggeGeometry::unit());
+    let n1 = m.complex().num_cells(1);
+    let zeroed = wall_edges(m.complex());
+    let reference = vec![0usize];
+    let reg = single_cut_cell(m.complex(), [4, 4]);
+    let rows = reg.cut_face_constraints(m.complex());
+    let field = random_field(n1, 67);
+
+    let p = m
+        .leray_project_open_weighted_opts(
+            &field,
+            &zeroed,
+            &[],
+            &reference,
+            &rows,
+            &HodgeDecomposeOptions::default(),
+            None,
+        )
+        .unwrap();
+    let u = p.projected().as_slice();
+
+    for &e in &zeroed {
+        assert_eq!(u[e], 0.0, "wall edge {e} must stay zero");
+    }
+    for row in &rows {
+        assert!(
+            row_residual(row, u).abs() < 1e-9,
+            "aperture-resolved body row not satisfied on the open-gauge state (kind {:?})",
+            row.kind()
+        );
+    }
+}
+
 // -- warm-start agreement -----------------------------------------------------------------------
 
 #[test]

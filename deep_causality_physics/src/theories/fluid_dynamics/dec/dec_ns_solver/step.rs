@@ -98,13 +98,18 @@ impl<const D: usize, R: DecNsScalar> DecNsSolver<'_, D, R> {
         // their (lifted) value with their flux counted, and the outflow reference pressure-pinned.
         // With empty inflow/reference (closed domains) this is bit-identical to the constrained
         // projection.
-        let (projected, _potential) = SolenoidalField::from_open_leray_projection_opts(
+        // Aperture-resolved bodies carry weighted cut-face rows; the re-entry must enforce them on
+        // the state, since the plain Leray gradient correction `dφ` would otherwise reintroduce wall
+        // slip (`Cᵀ dφ ≠ 0`). With empty rows this is bit-identical to the binary open re-entry.
+        let (projected, _potential) = SolenoidalField::from_open_leray_projection_weighted_opts(
             &advanced,
             self.manifold,
             self.rate.no_slip_edges(),
             self.rate.inflow_edges(),
             self.rate.reference_vertices(),
+            self.rate.no_slip_rows(),
             &self.cg_options,
+            None,
         )?;
         // No-slip chain stage: re-assert the exact zeros on the
         // wall-tangential set, then the prescribed moving-wall values (the

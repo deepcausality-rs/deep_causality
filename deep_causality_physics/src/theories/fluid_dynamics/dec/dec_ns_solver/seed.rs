@@ -67,13 +67,17 @@ impl<const D: usize, R: DecNsScalar> DecNsSolver<'_, D, R> {
         // on the wall-tangential set; the explicit constraint stage then
         // re-asserts them and applies the prescribed moving-wall lift. All
         // are no-ops on periodic lattices.
-        let (state, _potential) = SolenoidalField::from_open_leray_projection_opts(
+        // Aperture-resolved bodies seed with the weighted cut-face rows so the body no-slip holds on
+        // the initial state; empty rows reduce to the binary open seed bit-identically.
+        let (state, _potential) = SolenoidalField::from_open_leray_projection_weighted_opts(
             &velocity,
             self.manifold,
             self.rate.no_slip_edges(),
             self.rate.inflow_edges(),
             self.rate.reference_vertices(),
+            self.rate.no_slip_rows(),
             &self.cg_options,
+            None,
         )?;
         let state = state
             .constrain_edges(self.rate.no_slip_edges())

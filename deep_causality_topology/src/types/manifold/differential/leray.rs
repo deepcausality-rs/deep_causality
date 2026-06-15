@@ -281,8 +281,8 @@ where
     /// conditioning, which leaves the solution `u` unchanged.
     ///
     /// This is the **constrained** gauge (no inflow/outflow reference); it is the per-stage
-    /// projection path an immersed-body march runs every RK stage. Combining weighted rows with a
-    /// prescribed-inflow reference is not yet supported (the seed projection keeps the binary path).
+    /// projection path an immersed-body march runs every RK stage. For the open-boundary
+    /// (inflow/outflow) state and seed projections, see [`Self::leray_project_open_weighted_opts`].
     ///
     /// # Errors
     /// * `TopologyError::DimensionMismatch` on a field-length mismatch.
@@ -297,55 +297,132 @@ where
         opts: &HodgeDecomposeOptions<R>,
         x0: Option<&[R]>,
     ) -> Result<LerayProjection<R>, TopologyError> {
+        self.leray_project_open_weighted_guess(
+            field,
+            zeroed_edges,
+            &[],
+            &[],
+            constraint_rows,
+            opts,
+            x0,
+        )
+    }
+
+    /// The **open-boundary generalized** Leray projection: [`Self::leray_project_open_opts`] extended
+    /// with aperture-weighted wall rows `{Cᵀu = b}`. This is the path the immersed-body state and
+    /// seed projections run — the no-slip body must be enforced on the *state* every step, not only
+    /// on the per-stage rate, because the Leray gradient correction `dφ` of a plain re-projection
+    /// reintroduces wall slip (`Cᵀ dφ ≠ 0`); only the coupled KKT solve keeps `δu = 0` **and**
+    /// `Cᵀu = b` simultaneously.
+    ///
+    /// The three binary roles (`zeroed_edges` / `prescribed_edges` inflow / `reference_vertices`
+    /// outflow) behave exactly as in [`Self::leray_project_open_opts`]; the weighted rows append a
+    /// Lagrange-multiplier block to the same SPD dual system. With no `constraint_rows` this delegates
+    /// to the binary open path, bit-identically. `x0` warm-starts the φ block (the previous
+    /// potential); the `λ` block is seeded at zero.
+    ///
+    /// # Errors
+    /// As [`Self::leray_project_open_opts`], plus an out-of-range weighted-row edge index.
+    #[allow(clippy::too_many_arguments)]
+    pub fn leray_project_open_weighted_opts(
+        &self,
+        field: &CausalTensor<R>,
+        zeroed_edges: &[usize],
+        prescribed_edges: &[usize],
+        reference_vertices: &[usize],
+        constraint_rows: &[CutFaceConstraint<R>],
+        opts: &HodgeDecomposeOptions<R>,
+        x0: Option<&[R]>,
+    ) -> Result<LerayProjection<R>, TopologyError> {
+        self.leray_project_open_weighted_guess(
+            field,
+            zeroed_edges,
+            prescribed_edges,
+            reference_vertices,
+            constraint_rows,
+            opts,
+            x0,
+        )
+    }
+
+    /// The unified augmented-KKT solve behind the weighted constrained/open projections. Merges the
+    /// open-gauge φ machinery (free-mass masking, reference flood-fill, symmetric elimination) of
+    /// [`Self::leray_project_open_guess`] with a Lagrange-multiplier block for the weighted rows,
+    /// solving the SPD dual system `G M⁻¹ Gᵀ y = G f − c`, `y = [φ; λ]`, `G = [∂₁M₁ ; Cᵀ]`.
+    #[allow(clippy::too_many_arguments)]
+    fn leray_project_open_weighted_guess(
+        &self,
+        field: &CausalTensor<R>,
+        zeroed_edges: &[usize],
+        prescribed_edges: &[usize],
+        reference_vertices: &[usize],
+        constraint_rows: &[CutFaceConstraint<R>],
+        opts: &HodgeDecomposeOptions<R>,
+        x0: Option<&[R]>,
+    ) -> Result<LerayProjection<R>, TopologyError> {
         if constraint_rows.is_empty() {
-            // No weighted rows: the binary masking path, bit-identical to the staircase projector.
-            return self.leray_project_constrained_warm_opts(field, zeroed_edges, opts, x0);
+            // No weighted rows: the existing binary open path, bit-identical to the staircase.
+            return self.leray_project_open_guess(
+                field,
+                zeroed_edges,
+                prescribed_edges,
+                reference_vertices,
+                opts,
+                x0,
+            );
         }
 
         let n1 = self.complex.num_cells(1);
         if field.len() != n1 {
             return Err(TopologyError::DimensionMismatch(format!(
-                "leray_project_constrained_weighted: expected {} grade-1 coefficients, got {}",
+                "leray_project_open_weighted: expected {} grade-1 coefficients, got {}",
                 n1,
                 field.len()
             )));
         }
         let metric = self.metric.as_ref().ok_or_else(|| {
             TopologyError::InvalidInput(
-                "leray_project_constrained_weighted requires a metric; construct the manifold \
+                "leray_project_open_weighted requires a metric; construct the manifold \
                  with a metric attached"
                     .to_string(),
             )
         })?;
+        if !prescribed_edges.is_empty() && reference_vertices.is_empty() {
+            return Err(TopologyError::InvalidInput(
+                "leray_project_open_weighted: a prescribed inflow requires a reference (outflow) \
+                 face to balance the net flux"
+                    .to_string(),
+            ));
+        }
         let tolerance = resolve_cg_tolerance(opts.tolerance)?;
         let max_iter = opts.max_iterations.unwrap_or(1000);
         let n0 = self.complex.num_cells(0);
 
-        // Grade-1 masses; free masses zero out the binary-pinned edges (the objective metric M on
-        // the free edges, and the divergence operator's edge weights).
+        // Full masses (divergence RHS, so prescribed flux counts) and free masses (operator excludes
+        // every fixed edge — zeroed ∪ prescribed).
         let star1 = metric
             .hodge_star_matrix(self.complex(), 1)
             .map_err(|e| TopologyError::InvalidInput(format!("hodge star (grade 1): {e}")))?;
         let mass_full = super::stencil::build::star_diag(star1.as_ref(), n1);
         let mut mass_free = mass_full.clone();
-        for &e in zeroed_edges {
+        for &e in zeroed_edges.iter().chain(prescribed_edges.iter()) {
             if e >= n1 {
                 return Err(TopologyError::InvalidInput(format!(
-                    "leray_project_constrained_weighted: edge index {e} out of range ({n1} edges)"
+                    "leray_project_open_weighted: edge index {e} out of range ({n1} edges)"
                 )));
             }
             mass_free[e] = R::zero();
         }
 
-        // v: zero the binary-pinned edges; the field elsewhere is the projection target.
+        // v: zero the zeroed edges; keep prescribed (inflow) edges at their field value.
         let mut v: Vec<R> = field.as_slice().to_vec();
         for &e in zeroed_edges {
             v[e] = R::zero();
         }
 
-        // Normalised weighted rows over the FREE edges only (a binary-pinned edge carries value 0,
-        // so it drops from the row). Rescaling each row to unit coefficient norm leaves the
-        // constraint set — and hence the projected `u` — unchanged, but conditions the dual block.
+        // Normalised weighted rows over the FREE edges only (a fixed edge carries value 0, so it
+        // drops from the row). Unit-norm rescaling leaves the projected `u` unchanged, conditioning
+        // the dual block.
         let mut rows: Vec<(Vec<(usize, R)>, R)> = Vec::with_capacity(constraint_rows.len());
         for row in constraint_rows {
             let mut entries: Vec<(usize, R)> = Vec::with_capacity(row.entries().len());
@@ -353,18 +430,17 @@ where
             for &(e, w) in row.entries() {
                 if e >= n1 {
                     return Err(TopologyError::InvalidInput(format!(
-                        "leray_project_constrained_weighted: row edge index {e} out of range \
-                         ({n1} edges)"
+                        "leray_project_open_weighted: row edge index {e} out of range ({n1} edges)"
                     )));
                 }
                 if mass_free[e] == R::zero() {
-                    continue; // pinned edge: value is 0, contributes nothing to the row.
+                    continue;
                 }
                 entries.push((e, w));
                 norm_sq += w * w;
             }
             if entries.is_empty() || norm_sq <= R::zero() {
-                continue; // a row referencing only pinned edges is already satisfied.
+                continue;
             }
             let inv = R::one() / norm_sq.sqrt();
             for (_, w) in entries.iter_mut() {
@@ -374,8 +450,14 @@ where
         }
         let m = rows.len();
         if m == 0 {
-            // Every row degenerated to a binary-satisfied pin: fall back to the masking path.
-            return self.leray_project_constrained_warm_opts(field, zeroed_edges, opts, x0);
+            return self.leray_project_open_guess(
+                field,
+                zeroed_edges,
+                prescribed_edges,
+                reference_vertices,
+                opts,
+                x0,
+            );
         }
 
         // Boundary CSR for ∂₁ and the weighted divergence ∂₁(mass ⊙ ·).
@@ -399,7 +481,6 @@ where
             }
             out
         };
-        // Scatter `C λ` to an edge vector; gather `Cᵀ x` to a row vector.
         let c_lambda = |lambda: &[R]| -> Vec<R> {
             let mut edge = vec![R::zero(); n1];
             for (r, (entries, _)) in rows.iter().enumerate() {
@@ -422,8 +503,7 @@ where
             out
         };
 
-        // Jacobi diagonal of the augmented operator: the φ block is the masked graph Laplacian
-        // diagonal `Σ mass_free`; the λ block is `diag(Cᵀ M⁻¹ C) = Σ wₑ² / massₑ`.
+        // Jacobi diagonal: φ block `Σ mass_free`; λ block `diag(Cᵀ M⁻¹ C) = Σ wₑ²/massₑ`.
         let mut diag = vec![R::zero(); n0 + m];
         for (i, d) in diag.iter_mut().take(n0).enumerate() {
             for e in ptr[i]..ptr[i + 1] {
@@ -438,34 +518,85 @@ where
             diag[n0 + r] = s;
         }
 
-        // RHS = G f − c. φ block: ∂₁ M_full v (full masses, the divergence of the target). λ block:
-        // Cᵀ v − b.
+        // Reference flood-fill (open gauge): only the reference-reachable component enforces the
+        // divergence; the disconnected inlet ring is left unconstrained.
+        let mut is_ref = vec![false; n0];
+        for &r in reference_vertices {
+            if r >= n0 {
+                return Err(TopologyError::InvalidInput(format!(
+                    "leray_project_open_weighted: reference vertex {r} out of range ({n0} vertices)"
+                )));
+            }
+            is_ref[r] = true;
+        }
+        let mut live = vec![reference_vertices.is_empty(); n0];
+        if !reference_vertices.is_empty() {
+            let mut incident: Vec<Vec<usize>> = vec![Vec::new(); n1];
+            for (i, inc) in ptr.windows(2).enumerate() {
+                for e in inc[0]..inc[1] {
+                    incident[cols[e]].push(i);
+                }
+            }
+            let mut adj: Vec<Vec<usize>> = vec![Vec::new(); n0];
+            for (e, ends) in incident.iter().enumerate() {
+                if mass_free[e] > R::zero() && ends.len() == 2 {
+                    adj[ends[0]].push(ends[1]);
+                    adj[ends[1]].push(ends[0]);
+                }
+            }
+            let mut stack: Vec<usize> = reference_vertices.to_vec();
+            for &r in reference_vertices {
+                live[r] = true;
+            }
+            while let Some(u) = stack.pop() {
+                for &w in &adj[u] {
+                    if !live[w] {
+                        live[w] = true;
+                        stack.push(w);
+                    }
+                }
+            }
+        }
+        let eliminate = !reference_vertices.is_empty();
+        // A φ row is inactive (eliminated / structurally null) when it has no free incidence, or
+        // (open gauge) it is the reference or unreachable.
+        let inactive: Vec<bool> = (0..n0)
+            .map(|i| diag[i] == R::zero() || (eliminate && (is_ref[i] || !live[i])))
+            .collect();
+
+        // RHS = G f − c. φ block: ∂₁ M_full v with the gauge fix; λ block: Cᵀ v − b.
         let mut rhs = vec![R::zero(); n0 + m];
         {
             let phi_rhs = div_with(&mass_full, &v);
-            // Gauge: zero structurally-null φ rows (every incident edge pinned), then subtract the
-            // block mean so the RHS is orthogonal to the constant nullspace [1_φ; 0_λ].
-            let mut block = 0usize;
-            let mut block_sum = R::zero();
-            for (i, &r) in phi_rhs.iter().enumerate() {
-                if diag[i] == R::zero() {
-                    rhs[i] = R::zero();
-                } else {
-                    rhs[i] = r;
-                    block += 1;
-                    block_sum += r;
+            if !eliminate {
+                // Constrained gauge: zero null rows, subtract the block mean (RHS ⟂ constants).
+                let mut block = 0usize;
+                let mut block_sum = R::zero();
+                for (i, &r) in phi_rhs.iter().enumerate() {
+                    if inactive[i] {
+                        rhs[i] = R::zero();
+                    } else {
+                        rhs[i] = r;
+                        block += 1;
+                        block_sum += r;
+                    }
                 }
-            }
-            if block == 0 {
-                return Err(TopologyError::InvalidInput(
-                    "leray_project_constrained_weighted: every edge is constrained".to_string(),
-                ));
-            }
-            let block_mean =
-                block_sum / <R as FromPrimitive>::from_usize(block).expect("count lifts");
-            for (i, d) in diag.iter().enumerate().take(n0) {
-                if *d != R::zero() {
-                    rhs[i] -= block_mean;
+                if block == 0 {
+                    return Err(TopologyError::InvalidInput(
+                        "leray_project_open_weighted: every edge is constrained".to_string(),
+                    ));
+                }
+                let block_mean =
+                    block_sum / <R as FromPrimitive>::from_usize(block).expect("count lifts");
+                for (i, r) in rhs.iter_mut().enumerate().take(n0) {
+                    if !inactive[i] {
+                        *r -= block_mean;
+                    }
+                }
+            } else {
+                // Open gauge: enforce divergence only on the live, non-reference component.
+                for (i, &r) in phi_rhs.iter().enumerate() {
+                    rhs[i] = if inactive[i] { R::zero() } else { r };
                 }
             }
             for (r, (entries, target)) in rows.iter().enumerate() {
@@ -478,18 +609,22 @@ where
         }
 
         // Augmented operator A y = G M⁻¹ Gᵀ y, y = [φ; λ]:
-        //   Gᵀ y = M₁ dφ + C λ   (edge);   M⁻¹(·) = dφ + M⁻¹ C λ
-        //   φ rows: ∂₁(M_free dφ + C λ);   λ rows: Cᵀ dφ + Cᵀ M⁻¹ C λ.
+        //   φ rows: ∂₁(M_free dφ + C λ);   λ rows: Cᵀ dφ + Cᵀ M⁻¹ C λ — with the φ DOFs symmetrically
+        //   eliminated on the inactive rows.
         let ones = vec![R::one(); n1];
         let apply = |y: &[R]| -> Vec<R> {
-            let phi = &y[..n0];
+            let mut phi = y[..n0].to_vec();
+            for (i, p) in phi.iter_mut().enumerate() {
+                if inactive[i] {
+                    *p = R::zero();
+                }
+            }
             let lambda = &y[n0..];
-            let d_phi = self.exterior_derivative_of(phi, 0);
+            let d_phi = self.exterior_derivative_of(&phi, 0);
             let mut grad = d_phi.into_vec();
             pad_or_truncate(&mut grad, n1);
 
             let c_lam = c_lambda(lambda);
-            // Edge vector M_free ⊙ dφ + Cλ for the φ-block divergence.
             let mut edge = vec![R::zero(); n1];
             for (e, x) in edge.iter_mut().enumerate() {
                 *x = mass_free[e] * grad[e] + c_lam[e];
@@ -497,13 +632,8 @@ where
             let mut out = vec![R::zero(); n0 + m];
             let phi_out = div_with(&ones, &edge);
             for (i, o) in out.iter_mut().take(n0).enumerate() {
-                *o = if diag[i] == R::zero() {
-                    R::zero()
-                } else {
-                    phi_out[i]
-                };
+                *o = if inactive[i] { R::zero() } else { phi_out[i] };
             }
-            // λ rows: Cᵀ dφ + Cᵀ (M⁻¹ Cλ).
             let mut minv_clam = vec![R::zero(); n1];
             for (e, x) in minv_clam.iter_mut().enumerate() {
                 if mass_free[e] != R::zero() {
@@ -518,12 +648,12 @@ where
             out
         };
 
-        // Warm start: seed φ with the previous potential, λ at zero.
+        // Warm start: seed φ with the previous potential (masked to active DOFs), λ at zero.
         let solve = match x0 {
             Some(guess) if guess.len() == n0 => {
                 let mut g = vec![R::zero(); n0 + m];
                 for (i, gi) in g.iter_mut().take(n0).enumerate() {
-                    if diag[i] != R::zero() {
+                    if !inactive[i] {
                         *gi = guess[i];
                     }
                 }
@@ -537,16 +667,23 @@ where
         };
         let y = solve.map_err(|f| {
             TopologyError::HodgeDecompositionFailed(format!(
-                "weighted constrained projection solve did not converge in {} iterations \
-                 (final residual {})",
+                "weighted projection solve did not converge in {} iterations (final residual {})",
                 f.iterations, f.residual
             ))
         })?;
         let (phi_slice, lambda) = y.split_at(n0);
         let mut phi = phi_slice.to_vec();
-        subtract_mean_in_place(&mut phi);
+        if !eliminate {
+            subtract_mean_in_place(&mut phi);
+        } else {
+            for (i, p) in phi.iter_mut().enumerate() {
+                if inactive[i] {
+                    *p = R::zero();
+                }
+            }
+        }
 
-        // u = v − dφ − M⁻¹ C λ, the gradient + multiplier correction masked off the pinned edges.
+        // u = v − P_F(dφ + M⁻¹ C λ): the correction masked off every fixed edge.
         let d_phi = self.exterior_derivative_of(&phi, 0);
         let mut grad = d_phi.into_vec();
         pad_or_truncate(&mut grad, n1);

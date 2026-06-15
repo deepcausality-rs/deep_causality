@@ -200,6 +200,95 @@ fn immersed_solid_block_enforces_no_slip_and_no_penetration() {
 }
 
 #[test]
+fn aperture_resolved_disk_marches_divergence_free_with_body_no_slip() {
+    use deep_causality_topology::Primitive;
+    // A periodic box with an immersed disk built from a primitive (genuine Cut cells, so the
+    // aperture-resolved path is active), driven by a uniform x body force. The weighted cut-face
+    // rows are enforced on the STATE every step via the weighted re-entry projection — the property
+    // the per-stage rate projection alone cannot guarantee (the re-entry's gradient correction would
+    // otherwise reintroduce wall slip). The march stays divergence-free throughout.
+    let n = 12;
+    let h = 1.0;
+    let nu = 0.1;
+    let lattice = LatticeComplex::<2, f64>::square_torus(n);
+    let metric_base = CubicalReggeGeometry::<2, f64>::uniform(h);
+    let disk = Primitive::<2, f64>::ball([6.0, 6.0], 2.5);
+    let reg = CutCellRegistry::from_primitive(&lattice, &metric_base, &disk).unwrap();
+    assert!(
+        !reg.cut_face_constraints(&lattice).is_empty(),
+        "the disk primitive must produce aperture-resolved cut-face rows"
+    );
+
+    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
+    let metric = CubicalReggeGeometry::<2, f64>::uniform(h).with_cut_cells(reg);
+    let m = Manifold::from_cubical_with_metric(lattice, data, metric, 0);
+
+    let n1 = m.complex().num_cells(1);
+    let mut force = vec![0.0; n1];
+    for (idx, cell) in m.complex().iter_cells(1).enumerate() {
+        if cell.orientation().trailing_zeros() as usize == 0 {
+            force[idx] = 0.2 * h;
+        }
+    }
+    let force = BodyForceOneForm::new(CausalTensor::new(force, vec![n1]).unwrap(), &m).unwrap();
+    let dt = 0.2;
+    let solver = DecNsSolver::new(&m, nu, dt, Some(&force)).unwrap();
+    let n0 = m.complex().num_cells(0);
+    let rest = CausalTensor::new(vec![0.0; 2 * n0], vec![2 * n0]).unwrap();
+    let mut state = solver.seed_from_vertex_vectors(&rest).unwrap();
+
+    // March well past the transient toward steady: the tangential-only constraint set stays
+    // well-conditioned (no closed-body no-penetration rank-deficiency), so the projection converges
+    // every step over a long run — the regime the thousands-of-steps cylinder validation needs.
+    for _ in 0..40 {
+        let out = solver
+            .step(&state)
+            .expect("aperture-resolved march must converge");
+        assert!(
+            out.divergence_residual() < 1e-8,
+            "aperture-resolved projection lost divergence-freeness: {}",
+            out.divergence_residual()
+        );
+        state = out.into_state();
+    }
+
+    // The aperture-resolved tangential no-slip holds on the STATE: every tangential cut-face row
+    // residual Σ wₑ uₑ − target ≈ 0 to the projection tolerance. (No-penetration is carried in
+    // aggregate by the solid-interior pins + divergence-freeness, not as an explicit row.)
+    use deep_causality_topology::CutConstraintKind;
+    let u = state.as_one_form().as_slice();
+    let rows = m
+        .metric()
+        .unwrap()
+        .cut_registry()
+        .unwrap()
+        .cut_face_constraints(m.complex());
+    let mut checked = 0;
+    for row in rows
+        .iter()
+        .filter(|r| r.kind() == CutConstraintKind::Tangential)
+    {
+        let mut s = 0.0;
+        for &(e, w) in row.entries() {
+            s += w * u[e];
+        }
+        assert!(
+            (s - row.target()).abs() < 1e-6,
+            "aperture-resolved tangential row not satisfied on the marched state: residual {}",
+            s - row.target()
+        );
+        checked += 1;
+    }
+    assert!(checked > 0, "the disk must produce tangential no-slip rows");
+    let max = u.iter().fold(0.0_f64, |mx, v| mx.max(v.abs()));
+    assert!(
+        max > 1e-3,
+        "the body force should drive a non-trivial flow, max {max}"
+    );
+}
+
+#[test]
 fn tiny_cut_cells_are_inherently_small_cell_stable() {
     // B1–B3 finding. Four deliberately tiny (0.1%-wetted) **free** cut cells meet at a shared
     // vertex — the classic small-cell hazard: cut↔cut edges stay free (the no-slip set pins

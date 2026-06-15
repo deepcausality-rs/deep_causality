@@ -52,18 +52,24 @@ Group D is the cylinder-validation gate.
       half-space/cylinder/disk intersection), and a multilinear `sample_velocity` one cell out along
       the normal. Re-pinned the analytic test to a genuine no-slip Couette profile (`u_x = a·(y−y_w)`,
       zero at the wall) — still `F = μ·a·A`. Read-only; the marched solver is untouched.
-- [ ] 3.1 `NoSlipConstraint` assembles the aperture-resolved rows from `cut_face_constraints` for
-      `Cut` cells and the zero-interior pins for `Solid` cells, replacing the staircase set for
-      immersed bodies while leaving axis-aligned wall-tangential edges unchanged.
-- [ ] 3.2 Route the per-stage projection, the seed projection, and the re-entry projection through the
-      weighted projector when aperture-resolved rows are present; binary path otherwise (so periodic /
-      wall-only / empty-registry stay on the exact existing path).
-- [ ] 3.3 Equivalence tests: empty registry bit-identical to Stage-3; axis-aligned solid layer
-      reproduces the analytic Poiseuille profile to rounding (the existing
-      `axis_aligned_solid_layer_reproduces_the_wall_poiseuille` gate, now through the resolved path);
-      an immersed body marches divergence-free.
-- [ ] 3.4 Group C gate: format, clippy (0 warnings), full physics + topology tests both feature
-      configs. Prepare commit message; ask the user to commit.
+- [x] 3.1 `NoSlipConstraint<R>` (now generic) assembles the aperture-resolved **tangential** rows
+      from `cut_face_constraints` for `Cut` cells plus the solid-interior binary pins
+      (`solid_incident` minus every edge a cut-face row governs), replacing the staircase for immersed
+      bodies while leaving axis-aligned wall edges unchanged. Auto-enabled when the registry has `Cut`
+      cells; no-Cut / empty / periodic fall back to the staircase, unchanged. **Open question 4.3
+      resolved:** the no-penetration rows are dropped — a closed body's are linearly dependent (the
+      `∮ n·u = 0` identity, which floors the projection CG) and redundant (interior-pin + div-free
+      already gives zero net surface flux); the tangential rows set separation.
+- [x] 3.2 Routed: per-stage rate → `leray_project_constrained_weighted_opts`; seed + re-entry state →
+      `leray_project_open_weighted_opts` (via a new `SolenoidalField::from_open_leray_projection_
+      weighted_opts`). Empty rows delegate to the binary path bit-identically, so periodic / wall-only
+      / empty-registry / axis-aligned-solid stay on the exact existing path.
+- [x] 3.3 Equivalence tests green: empty-registry bit-identical and axis-aligned-solid Poiseuille
+      (existing gates, now through the weighted entry point with empty rows); new
+      `aperture_resolved_disk_marches_divergence_free_with_body_no_slip` (a primitive disk with genuine
+      Cut cells marches divergence-free over a long run, tangential no-slip satisfied on the state).
+- [x] 3.4 Group C gate: format, clippy 0 warnings, full physics (1589) + topology (1256) tests both
+      feature configs. Prepare commit message; ask the user to commit.
 
 ## 4. D — Cylinder validation gate
 
