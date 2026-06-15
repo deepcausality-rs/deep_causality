@@ -93,7 +93,7 @@ STAIRCASE=1 CELLS_PER_D=24 LX_D=16 LY_D=12 STEPS=3500 CFL=0.4 CG_TOL=1e-6 \
   cargo run --release -p avionics_examples --example dec_cylinder_validation > re100_24_staircase.csv
 ```
 
-### Aperture-resolved go/no-go (the `add-aperture-resolved-noslip` gate)
+### Aperture-resolved 
 
 The aperture-resolved no-slip should shed at a **lower** resolution than the staircase by placing the
 wall at the true surface and sharpening separation. The gate is a sustained street at **16 cells/D**,
@@ -110,22 +110,30 @@ STAIRCASE=1 CELLS_PER_D=16 LX_D=16 LY_D=16 STEPS=4000 CFL=0.4 CG_TOL=1e-6 \
   cargo run --release -p avionics_examples --example dec_cylinder_validation > re100_16_staircase.csv
 ```
 
-The guiding star is **minutes, not hours**: a developed `Re=100` result that reaches the measurement
-window in minutes is the whole point of dropping the threshold from ~24/D to ~16/D (≈ `(24/16)²` fewer
-cells and a larger `dt`, on top of the warm-start and loose-tolerance speedups).
-
 **Gate result (June 2026).** The pair above was run at 16 cells/D, `LY_D=16`:
 
-| body                | 16/D shedding | `St` (preliminary) |
-|---------------------|---------------|--------------------|
-| staircase           | none (the wake decays to a steady residual `v_probe ≈ -0.007`) | — |
-| **aperture-resolved** | **sustained von-Kármán street** (growing amplitude `0.22 → 0.27 → 0.33`) | **≈ 0.154** (period `T ≈ 6.5`) |
+| body                | 16/D shedding | `St` |
+|---------------------|---------------|------|
+| staircase           | **none** — the wake decays to a steady residual `v_probe ≈ -0.0069` (flat from t≈20 to t=100; `C_l ≈ 0`, `C_d` swing `[1.356, 1.356]`) | n/a (the summary's `0.244` is the crossing-detector on 7th-decimal noise) |
+| **aperture-resolved** | **sustained von-Kármán street**, saturated limit cycle (amplitude ≈ 0.41) | **≈ 0.172** (period `T ≈ 5.83`, 7 cycles, t∈[38,79]) |
 
-So the aperture-resolved no-slip **sheds at 16/D where the staircase stays steady**, and `St` moves
-from the staircase's `~0.21` (at 24/D, +28 %) to within a few percent of Williamson's `0.164`. The
-`St ≈ 0.154` figure is from the growth phase (the snapshot ended before the limit cycle); a longer run
-to saturation firms it up and yields the cycle-mean `C_d` (printed to stderr), which are recorded here
-once available.
+So the aperture-resolved no-slip **sheds at 16/D where the staircase stays dead steady**, with a
+limit-cycle `St ≈ 0.172` — within a few percent of Williamson's `0.164`, the small excess consistent
+with the `LY_D=16` blockage (≈ 6.25 %). The staircase's printed `St`/`C_d` are **steady-flow
+artifacts** (zero `C_d` swing, `C_l = 0`, friction `0.652` ≈ 48 % of `C_d` versus the ~25 % reference —
+the staircase wall mis-estimates shear). The aperture-resolved cycle-mean `C_d` (stderr summary) is
+recorded once that run completes.
+
+**Performance.** The aperture-resolved run is much slower than the staircase one, but the 16/D-vs-16/D
+comparison is misleading: the staircase reaches a *steady* state and then coasts (its warm-started CG
+converges in ~1 iteration once the field stops changing), whereas the aperture-resolved is *actually
+shedding* and does a real projection solve every step. The fair speed comparison is against the
+staircase at 24/D (the only staircase that sheds). Practical levers: the flow is **developed by
+`t ≈ 30` (step ~1200)**, so `STEPS` can drop from 4000 to ~1600 (a few clean cycles) for a ~2.5× cut
+with no accuracy loss. The per-stage projection now **warm-starts both the φ potential and the λ
+(cut-face multiplier) block** from the previous step, so in a developed limit cycle (both vary slowly)
+the coupled CG converges in fewer iterations; the marched result is unchanged (warm tracks cold to
+`< 1e-8`).
 
 ```text
 # Reference-quality Re=100 (resolves the boundary layer; long, so run it in a pinned terminal):
@@ -149,9 +157,11 @@ perturbation decays), while at **24 cells/D a marginal von-Kármán street devel
 ~0.21 to ~0.22, so **blockage is not the dominant `St` error** at these widths: the staircase wall and
 the marginal resolution are. That is the error the **aperture-resolved no-slip**
 (`add-aperture-resolved-noslip`, now the default here) attacks — it places the wall at the true surface.
-This is **confirmed**: at 16 cells/D the aperture-resolved body sheds a sustained street with
-`St ≈ 0.154` while the staircase body stays steady (see the gate-result table above). The threshold
-drop from ~24/D to ~16/D is the minutes-not-hours win.
+This is **confirmed**: at 16 cells/D the aperture-resolved body sheds a sustained limit cycle with
+`St ≈ 0.172` (≈ Williamson 0.164, the small excess from `LY_D=16` blockage) while the staircase body
+stays dead steady (see the gate-result table above). The threshold drop from ~24/D to ~16/D is the
+accuracy win; the per-step cost of the weighted projection is mitigated by warm-starting both the φ and
+λ blocks, and the wall-clock win wants the `STEPS`-to-developed-window trim.
 
 ## A note on `--features parallel`
 

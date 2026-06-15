@@ -91,6 +91,9 @@ pub struct DecNsRate<'m, const D: usize, R: DecNsScalar> {
     warm_start: bool,
     /// The last projection potential, reused as the warm-start guess. `None` until the first solve.
     proj_warm: RefCell<Option<alloc::vec::Vec<R>>>,
+    /// The last aperture-resolved cut-face multipliers (`λ`), reused as the warm-start guess for the
+    /// weighted projector's dual block. Empty/`None` on the binary path. `None` until the first solve.
+    proj_warm_lambda: RefCell<Option<alloc::vec::Vec<R>>>,
 }
 
 /// The compiled tables plus the per-evaluation scratch. `RefCell`: the
@@ -282,6 +285,7 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             rate_constrained,
             warm_start: false,
             proj_warm: RefCell::new(None),
+            proj_warm_lambda: RefCell::new(None),
         })
     }
 
@@ -291,6 +295,7 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         self.warm_start = on;
         if !on {
             *self.proj_warm.borrow_mut() = None;
+            *self.proj_warm_lambda.borrow_mut() = None;
         }
     }
 
@@ -538,21 +543,26 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
                 )
                 .map_err(|e| PhysicsError::TopologyError(format!("Leray projection failed: {e}")));
         }
-        // Warm path: seed the CG with the previous solve's potential, then cache the new one. The
-        // result is the same to tolerance; only the iteration count changes.
-        let projection = {
-            let guess = self.proj_warm.borrow();
+        // Warm path: seed the CG with the previous solve's potential (φ) and multipliers (λ), then
+        // cache the new ones. The result is the same to tolerance; only the iteration count changes.
+        // In a developed limit cycle both the potential and the cut-face multipliers vary slowly, so
+        // warming both blocks cuts iterations further than warming φ alone.
+        let (projection, lambda) = {
+            let phi_guess = self.proj_warm.borrow();
+            let lambda_guess = self.proj_warm_lambda.borrow();
             self.manifold
-                .leray_project_constrained_weighted_opts(
+                .leray_project_constrained_weighted_warm(
                     raw.as_tensor(),
                     &self.rate_constrained,
                     rows,
                     opts,
-                    guess.as_deref(),
+                    phi_guess.as_deref(),
+                    lambda_guess.as_deref(),
                 )
                 .map_err(|e| PhysicsError::TopologyError(format!("Leray projection failed: {e}")))?
         };
         *self.proj_warm.borrow_mut() = Some(projection.potential().as_slice().to_vec());
+        *self.proj_warm_lambda.borrow_mut() = Some(lambda);
         Ok(projection)
     }
 

@@ -297,6 +297,40 @@ where
         opts: &HodgeDecomposeOptions<R>,
         x0: Option<&[R]>,
     ) -> Result<LerayProjection<R>, TopologyError> {
+        Ok(self
+            .leray_project_open_weighted_guess(
+                field,
+                zeroed_edges,
+                &[],
+                &[],
+                constraint_rows,
+                opts,
+                x0,
+                None,
+            )?
+            .0)
+    }
+
+    /// As [`Self::leray_project_constrained_weighted_opts`], additionally returning the converged
+    /// Lagrange multipliers (`λ`, one per emitted weighted row) and accepting a previous-step `λ`
+    /// guess. Warm-starting **both** the φ block (`x0`) and the `λ` block (`lambda0`) is the per-stage
+    /// hot path of an immersed-body march: in a developed (limit-cycle) flow both vary slowly, so the
+    /// coupled CG converges in far fewer iterations than seeding `λ` at zero. The returned `λ` is the
+    /// internal normalized-row multiplier vector; pass it straight back as `lambda0` next step (its
+    /// length and ordering are stable for a static body). It is ignored if its length does not match
+    /// the current emitted-row count (e.g. the body changed), falling back to a zero `λ` seed.
+    ///
+    /// # Errors
+    /// As [`Self::leray_project_constrained_weighted_opts`].
+    pub fn leray_project_constrained_weighted_warm(
+        &self,
+        field: &CausalTensor<R>,
+        zeroed_edges: &[usize],
+        constraint_rows: &[CutFaceConstraint<R>],
+        opts: &HodgeDecomposeOptions<R>,
+        x0: Option<&[R]>,
+        lambda0: Option<&[R]>,
+    ) -> Result<(LerayProjection<R>, Vec<R>), TopologyError> {
         self.leray_project_open_weighted_guess(
             field,
             zeroed_edges,
@@ -305,6 +339,7 @@ where
             constraint_rows,
             opts,
             x0,
+            lambda0,
         )
     }
 
@@ -334,21 +369,27 @@ where
         opts: &HodgeDecomposeOptions<R>,
         x0: Option<&[R]>,
     ) -> Result<LerayProjection<R>, TopologyError> {
-        self.leray_project_open_weighted_guess(
-            field,
-            zeroed_edges,
-            prescribed_edges,
-            reference_vertices,
-            constraint_rows,
-            opts,
-            x0,
-        )
+        Ok(self
+            .leray_project_open_weighted_guess(
+                field,
+                zeroed_edges,
+                prescribed_edges,
+                reference_vertices,
+                constraint_rows,
+                opts,
+                x0,
+                None,
+            )?
+            .0)
     }
 
     /// The unified augmented-KKT solve behind the weighted constrained/open projections. Merges the
     /// open-gauge φ machinery (free-mass masking, reference flood-fill, symmetric elimination) of
     /// [`Self::leray_project_open_guess`] with a Lagrange-multiplier block for the weighted rows,
     /// solving the SPD dual system `G M⁻¹ Gᵀ y = G f − c`, `y = [φ; λ]`, `G = [∂₁M₁ ; Cᵀ]`.
+    /// Returns the projection and the converged normalized-row multipliers `λ` (empty when the call
+    /// degenerates to the binary path); `lambda0` warm-starts the `λ` block when its length matches
+    /// the emitted-row count.
     #[allow(clippy::too_many_arguments)]
     fn leray_project_open_weighted_guess(
         &self,
@@ -359,17 +400,21 @@ where
         constraint_rows: &[CutFaceConstraint<R>],
         opts: &HodgeDecomposeOptions<R>,
         x0: Option<&[R]>,
-    ) -> Result<LerayProjection<R>, TopologyError> {
+        lambda0: Option<&[R]>,
+    ) -> Result<(LerayProjection<R>, Vec<R>), TopologyError> {
         if constraint_rows.is_empty() {
             // No weighted rows: the existing binary open path, bit-identical to the staircase.
-            return self.leray_project_open_guess(
-                field,
-                zeroed_edges,
-                prescribed_edges,
-                reference_vertices,
-                opts,
-                x0,
-            );
+            return Ok((
+                self.leray_project_open_guess(
+                    field,
+                    zeroed_edges,
+                    prescribed_edges,
+                    reference_vertices,
+                    opts,
+                    x0,
+                )?,
+                Vec::new(),
+            ));
         }
 
         let n1 = self.complex.num_cells(1);
@@ -450,14 +495,17 @@ where
         }
         let m = rows.len();
         if m == 0 {
-            return self.leray_project_open_guess(
-                field,
-                zeroed_edges,
-                prescribed_edges,
-                reference_vertices,
-                opts,
-                x0,
-            );
+            return Ok((
+                self.leray_project_open_guess(
+                    field,
+                    zeroed_edges,
+                    prescribed_edges,
+                    reference_vertices,
+                    opts,
+                    x0,
+                )?,
+                Vec::new(),
+            ));
         }
 
         // Boundary CSR for ∂₁ and the weighted divergence ∂₁(mass ⊙ ·).
@@ -648,22 +696,30 @@ where
             out
         };
 
-        // Warm start: seed φ with the previous potential (masked to active DOFs), λ at zero.
-        let solve = match x0 {
-            Some(guess) if guess.len() == n0 => {
-                let mut g = vec![R::zero(); n0 + m];
+        // Warm start: seed the augmented guess `[φ; λ]` from the previous solve — the φ block from the
+        // previous potential (masked to active DOFs), the λ block from the previous multipliers (used
+        // only when its length matches the emitted-row count, so a changed body falls back to zero).
+        // In a developed limit cycle both vary slowly, so the coupled CG converges in far fewer
+        // iterations.
+        let phi_warm = x0.is_some_and(|g| g.len() == n0);
+        let lambda_warm = lambda0.is_some_and(|l| l.len() == m);
+        let solve = if phi_warm || lambda_warm {
+            let mut g = vec![R::zero(); n0 + m];
+            if let Some(guess) = x0.filter(|g| g.len() == n0) {
                 for (i, gi) in g.iter_mut().take(n0).enumerate() {
                     if !inactive[i] {
                         *gi = guess[i];
                     }
                 }
-                deep_causality_sparse::cg_solve_preconditioned_from(
-                    apply, &diag, &rhs, &g, tolerance, max_iter,
-                )
             }
-            _ => deep_causality_sparse::cg_solve_preconditioned(
-                apply, &diag, &rhs, tolerance, max_iter,
-            ),
+            if let Some(guess) = lambda0.filter(|l| l.len() == m) {
+                g[n0..].copy_from_slice(guess);
+            }
+            deep_causality_sparse::cg_solve_preconditioned_from(
+                apply, &diag, &rhs, &g, tolerance, max_iter,
+            )
+        } else {
+            deep_causality_sparse::cg_solve_preconditioned(apply, &diag, &rhs, tolerance, max_iter)
         };
         let y = solve.map_err(|f| {
             TopologyError::HodgeDecompositionFailed(format!(
@@ -672,6 +728,7 @@ where
             ))
         })?;
         let (phi_slice, lambda) = y.split_at(n0);
+        let lambda_out = lambda.to_vec();
         let mut phi = phi_slice.to_vec();
         if !eliminate {
             subtract_mean_in_place(&mut phi);
@@ -702,7 +759,7 @@ where
             CausalTensor::new(projected, vec![n1]).expect("1-D tensor allocation cannot fail");
         let potential_t =
             CausalTensor::new(phi, vec![n0]).expect("1-D tensor allocation cannot fail");
-        Ok(LerayProjection::new(projected_t, potential_t))
+        Ok((LerayProjection::new(projected_t, potential_t), lambda_out))
     }
 
     fn leray_project_open_guess(

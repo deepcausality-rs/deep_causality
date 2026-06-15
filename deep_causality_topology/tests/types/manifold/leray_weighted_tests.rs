@@ -295,6 +295,76 @@ fn warm_start_matches_the_cold_weighted_solve() {
     assert!(gap < 1e-9, "warm and cold solves disagree by {gap:e}");
 }
 
+#[test]
+fn lambda_warm_start_matches_the_cold_weighted_solve() {
+    // Warming BOTH the φ block and the λ (multiplier) block must give the same projection as cold —
+    // the per-stage hot-path optimization changes only the CG iteration count, not the result.
+    let m = manifold_2d([6, 6], [true, true], CubicalReggeGeometry::unit());
+    let n1 = m.complex().num_cells(1);
+    let reg = single_cut_cell(m.complex(), [2, 2]);
+    let rows = reg.cut_face_constraints(m.complex());
+    let opts = HodgeDecomposeOptions::default();
+
+    // Step 1: a cold solve yields the φ potential and the λ multipliers.
+    let field1 = random_field(n1, 41);
+    let (p1, lambda1) = m
+        .leray_project_constrained_weighted_warm(&field1, &[], &rows, &opts, None, None)
+        .unwrap();
+    let phi1 = p1.potential().as_slice().to_vec();
+
+    // Step 2: a nearby field, solved cold and warm (φ + λ seeded from step 1). The two must agree.
+    let field2 = random_field(n1, 42);
+    let cold2 = m
+        .leray_project_constrained_weighted_opts(&field2, &[], &rows, &opts, None)
+        .unwrap();
+    let (warm2, lambda2) = m
+        .leray_project_constrained_weighted_warm(
+            &field2,
+            &[],
+            &rows,
+            &opts,
+            Some(&phi1),
+            Some(&lambda1),
+        )
+        .unwrap();
+
+    let gap = sup(cold2
+        .projected()
+        .as_slice()
+        .iter()
+        .zip(warm2.projected().as_slice())
+        .map(|(a, b)| a - b));
+    assert!(gap < 1e-9, "λ-warm and cold solves disagree by {gap:e}");
+    assert_eq!(lambda1.len(), rows.len(), "one multiplier per emitted row");
+    assert_eq!(
+        lambda2.len(),
+        rows.len(),
+        "multiplier vector is reusable across steps"
+    );
+
+    // A stale λ guess of the wrong length is ignored (falls back to a zero seed), still converging.
+    let (warm_badlen, _) = m
+        .leray_project_constrained_weighted_warm(
+            &field2,
+            &[],
+            &rows,
+            &opts,
+            Some(&phi1),
+            Some(&[1.0, 2.0, 3.0, 4.0, 5.0]),
+        )
+        .unwrap();
+    let gap2 = sup(cold2
+        .projected()
+        .as_slice()
+        .iter()
+        .zip(warm_badlen.projected().as_slice())
+        .map(|(a, b)| a - b));
+    assert!(
+        gap2 < 1e-9,
+        "wrong-length λ guess must be ignored, not corrupt the solve"
+    );
+}
+
 // -- no-penetration ablation (tasks.md 4.3, validated cheaply on one cell) -----------------------
 
 #[test]
