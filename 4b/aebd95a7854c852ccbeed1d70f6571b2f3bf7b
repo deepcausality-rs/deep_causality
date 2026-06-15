@@ -1,0 +1,85 @@
+deep_causality_sparse/src/solver/cg.rs
+  s_86cf72b3950d7d::t_5de4ff39f11f17 124-223
+deep_causality_sparse/src/lib.rs
+  s_86cf72b3950d7d::t_f1b42d7848ee49 12-14
+deep_causality_topology/tests/types/manifold/leray_open_tests.rs
+  s_86cf72b3950d7d::t_489409114bd5ad 216-296,305-316
+  s_86cf72b3950d7d::t_3758d71e7bc9b5 297-304
+deep_causality_physics/src/theories/fluid_dynamics/dec/mod.rs
+  s_86cf72b3950d7d::t_806c2874b2664a 83-85
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_rate.rs
+  s_86cf72b3950d7d::t_b93f0e2d13b8d5 501-521
+  s_86cf72b3950d7d::t_253a022ed82665 280-281,285-291
+  s_86cf72b3950d7d::t_db59cb489438f0 88-93
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/mod.rs
+  s_86cf72b3950d7d::t_787a467d48063e 239-247
+openspec/notes/cfd/cfd-crate.md
+  s_86cf72b3950d7d::t_5f22f986e6cf37 81
+deep_causality_topology/src/types/manifold/differential/leray.rs
+  s_86cf72b3950d7d::t_3758d71e7bc9b5 468-470
+  s_86cf72b3950d7d::t_6235916db10086 208-267
+  s_86cf72b3950d7d::t_7009742af2eb35 452-467,471-472
+deep_causality_sparse/tests/solver/cg_tests.rs
+  s_86cf72b3950d7d::t_cc9918114cc4e6 223-294
+deep_causality_physics/src/theories/fluid_dynamics/dec/surface_force.rs
+  s_86cf72b3950d7d::t_de9760d8edbc8c 12-14,16-17,19,22
+  s_86cf72b3950d7d::t_a1d64a196ad02f 132,134
+  s_86cf72b3950d7d::t_e8177fd0df5964 67-131,133,135-140,145-149,151,153,157-160,171-175
+  s_86cf72b3950d7d::t_657c1afe5f9ecb 20
+  s_86cf72b3950d7d::t_5f012fcd713677 141-144,150,152,154-156,161-170
+deep_causality_physics/tests/theories/fluid_dynamics/dec/surface_force_tests.rs
+  s_86cf72b3950d7d::t_a9e35eba43f41b 11-12,14-20
+  s_86cf72b3950d7d::t_eecbba43518020 109,115-142,150,152-205
+  s_86cf72b3950d7d::t_67b16ebb5e3798 110-114,143-149,151
+examples/avionics_examples/dec_cylinder_validation/main.rs
+  s_86cf72b3950d7d::t_03fc56e2ecd10f 59-61,68-82,85-91,102,105-108,112
+  s_86cf72b3950d7d::t_f6eee982c88b56 117
+  s_86cf72b3950d7d::t_be2ae99ace5a79 131-132
+  s_86cf72b3950d7d::t_485573fbf91460 355,364
+  s_86cf72b3950d7d::t_43a034805fee15 315,321-324,326,328-334,336-354,356-357,359-363
+  s_86cf72b3950d7d::t_67e2ab2fb64f52 92,95-98
+  s_86cf72b3950d7d::t_4820d3cae543d6 189,199-200,205
+  s_86cf72b3950d7d::t_3758d71e7bc9b5 243-249
+  s_86cf72b3950d7d::t_bf1e09f05df654 253,258-279
+  s_86cf72b3950d7d::t_e6c73e8eee8227 308-311,319-320,325
+  s_86cf72b3950d7d::t_01008a33e063b2 194-195,358
+  s_86cf72b3950d7d::t_06736f8583f37a 201-204
+  s_86cf72b3950d7d::t_cd8dd6bdb33434 93-94
+  s_86cf72b3950d7d::t_eb12802df5bf9b 240-242,250-252
+  s_86cf72b3950d7d::t_a7a61e7a49abe2 50-51
+  s_86cf72b3950d7d::t_438793a110e2db 17,19-24,26,28-29,40-41,47-49,52,63-66,123-124,158-159,161-173,307,312-314,316-318,327,335
+  s_86cf72b3950d7d::t_01d674c9915592 55-56
+  s_86cf72b3950d7d::t_2fc0c0cdff0b73 30-34
+  s_86cf72b3950d7d::t_2dd3a90904c76d 153-156
+  s_86cf72b3950d7d::t_c69719a012657f 99-101
+  s_86cf72b3950d7d::t_d151b4894f31e3 145-150,152
+  s_86cf72b3950d7d::t_b5a8743d16526e 151
+  s_86cf72b3950d7d::t_9091c4cae385f3 191-193
+examples/avionics_examples/dec_cylinder_validation/README.md
+  s_86cf72b3950d7d::t_e11c263881ba54 3-5,8-11,15-16,18-19,28-32,40-41,55-56,88,99-106,110-114
+  s_86cf72b3950d7d::t_94deac9e0e98bb 74-76
+  s_86cf72b3950d7d::t_30cf052b5492f7 83
+  s_86cf72b3950d7d::t_ac893bfd4e070f 50-52,58-64,69-73,77-82,84-85
+  s_86cf72b3950d7d::t_45c62d06e6bb4b 1-2,6-7,12-14,17,25-27,33-39,42-49,86-87,89-96,98,107-109
+  s_86cf72b3950d7d::t_5d3b6ead123eb3 20-24
+  s_86cf72b3950d7d::t_4e69eaad02c7b1 53-54,57
+  s_86cf72b3950d7d::t_e6349177c74555 65-68
+deep_causality_physics/tests/theories/fluid_dynamics/dec/cut_cell_wiring_tests.rs
+  s_86cf72b3950d7d::t_fc4b28d410af43 70-114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "4baebd95a7854c852ccbeed1d70f6571b2f3bf7b",
+  "prompts": {},
+  "sessions": {
+    "s_86cf72b3950d7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "449a7105-1712-4ede-8466-427285c3e5e2",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
