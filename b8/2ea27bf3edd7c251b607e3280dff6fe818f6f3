@@ -1,0 +1,22 @@
+openspec/specs/aperture-resolved-noslip/spec.md
+  s_86cf72b3950d7d::t_908d74e96d0a8a 1-12,38-46,48,51-54,72-79,85-86
+examples/avionics_examples/dec_cylinder_validation/README.md
+  s_86cf72b3950d7d::t_dbd73784db060e 151-154
+  s_86cf72b3950d7d::t_c93a0bec829b47 115-128
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "b82ea27bf3edd7c251b607e3280dff6fe818f6f3",
+  "prompts": {},
+  "sessions": {
+    "s_86cf72b3950d7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "449a7105-1712-4ede-8466-427285c3e5e2",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
