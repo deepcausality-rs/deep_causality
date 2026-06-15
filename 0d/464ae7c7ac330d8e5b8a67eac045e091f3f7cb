@@ -1,0 +1,41 @@
+deep_causality_topology/tests/types/manifold/leray_weighted_tests.rs
+  s_86cf72b3950d7d::t_42f1d1e25ac211 59-60
+deep_causality_topology/src/types/cut_cell/intersection.rs
+  s_86cf72b3950d7d::t_36c91dd52f63ad 293-295
+  s_86cf72b3950d7d::t_9be3111b6047c9 133-149,153
+  s_86cf72b3950d7d::t_996207d0352b17 226-229,233-237,242
+  s_86cf72b3950d7d::t_43e13b4aaa3379 292,299-300,305
+deep_causality_topology/src/types/cut_cell/cut_face_fragment.rs
+  s_86cf72b3950d7d::t_242369823a989a 16-18,21-24,29,34,37-39,44,59-62
+  s_86cf72b3950d7d::t_398ab3ef1e4f06 40
+deep_causality_topology/tests/types/cut_cell/carrier_tests.rs
+  s_86cf72b3950d7d::t_a66f29ffd5a4b8 65
+  s_86cf72b3950d7d::t_398ab3ef1e4f06 57-62
+  s_86cf72b3950d7d::t_3f6b3f804917c0 42
+deep_causality_physics/src/theories/fluid_dynamics/dec/surface_force.rs
+  s_86cf72b3950d7d::t_4bcbf9e5ca7e8a 70-77,79-83,88,121-122,130-166,168,176-180,183,185-187,189-218,221
+openspec/changes/add-aperture-resolved-noslip/tasks.md
+  s_86cf72b3950d7d::t_f87132b16c3f92 49-54
+deep_causality_topology/tests/types/cut_cell/cut_face_constraint_tests.rs
+  s_86cf72b3950d7d::t_28fe34fe2c7a45 74-75
+  s_86cf72b3950d7d::t_4ff07c764ed933 159
+  s_86cf72b3950d7d::t_398ab3ef1e4f06 186-191
+deep_causality_physics/tests/theories/fluid_dynamics/dec/surface_force_tests.rs
+  s_86cf72b3950d7d::t_92c54154bc51f8 109-115,122,127,134,139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "0d464ae7c7ac330d8e5b8a67eac045e091f3f7cb",
+  "prompts": {},
+  "sessions": {
+    "s_86cf72b3950d7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "449a7105-1712-4ede-8466-427285c3e5e2",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
