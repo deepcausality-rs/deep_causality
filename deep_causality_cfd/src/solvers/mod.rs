@@ -1,0 +1,20 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+//! CFD solvers: a solver uses a theory and/or physics kernels to solve one
+//! designated case (lid cavity, Taylor–Green, cylinder, MMS). Each owns a
+//! configuration struct + type-state builder and exposes the Flow interface.
+
+// The DEC-native incompressible Navier–Stokes solver, migrated from
+// `deep_causality_physics::theories::fluid_dynamics::dec`. The B-group refactor
+// splits the DEC-native rate (a `FluidTheory`) out of the solver machinery.
+pub(crate) mod dec;
+
+// Owned configuration + type-state builder for the DEC solver (design D2).
+mod dec_config;
+
+pub use dec_config::{
+    DecNs, DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity, DecNsConfigReady,
+};

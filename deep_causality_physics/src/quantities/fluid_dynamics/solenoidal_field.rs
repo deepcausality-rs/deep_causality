@@ -117,7 +117,7 @@ where
     /// # Errors
     /// As [`Self::from_open_leray_projection_opts`].
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn from_open_leray_projection_weighted_opts<const D: usize>(
+    pub fn from_open_leray_projection_weighted_opts<const D: usize>(
         velocity: &VelocityOneForm<R>,
         manifold: &Manifold<LatticeComplex<D, R>, R>,
         zeroed: &[usize],
@@ -194,7 +194,7 @@ where
     /// sanctions (no-slip exact, divergence at the solve's exactness). A
     /// bit-exact no-op when `edges` is empty (fully periodic), so the
     /// periodic construction path is preserved.
-    pub(crate) fn constrain_edges(self, edges: &[usize]) -> Self {
+    pub fn constrain_edges(self, edges: &[usize]) -> Self {
         if edges.is_empty() {
             return self;
         }
@@ -215,7 +215,7 @@ where
     /// every constrained edge, so this is assignment onto zeros: the lift
     /// edges carry their prescribed values exactly while the projection's
     /// free-edge values are untouched. A no-op when `lift` is empty.
-    pub(crate) fn with_lift(self, lift: &[(usize, R)]) -> Self {
+    pub fn with_lift(self, lift: &[(usize, R)]) -> Self {
         if lift.is_empty() {
             return self;
         }

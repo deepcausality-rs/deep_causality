@@ -412,6 +412,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "deep_causality_cfd"
+version = "0.1.0"
+dependencies = [
+ "criterion",
+ "deep_causality_calculus",
+ "deep_causality_core",
+ "deep_causality_fft",
+ "deep_causality_haft",
+ "deep_causality_metric",
+ "deep_causality_multivector",
+ "deep_causality_num",
+ "deep_causality_par",
+ "deep_causality_physics",
+ "deep_causality_rand",
+ "deep_causality_sparse",
+ "deep_causality_tensor",
+ "deep_causality_topology",
+ "deep_causality_uncertain",
+]
+
+[[package]]
 name = "deep_causality_core"
 version = "0.10.0"
 dependencies = [

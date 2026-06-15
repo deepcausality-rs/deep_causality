@@ -40,11 +40,12 @@ impl<R: RealField> VelocityOneForm<R> {
         Ok(Self { field })
     }
 
-    /// Crate-internal: wraps a tensor that is already a valid grade-1
-    /// cochain by construction (operator output on a validated lattice, or
-    /// the cochain of a [`crate::SolenoidalField`]). Skips the `new`
-    /// validation pass; callers guarantee length and provenance.
-    pub(crate) fn from_raw(field: CausalTensor<R>) -> Self {
+    /// Solver-facing low-level constructor: wraps a tensor that is already a
+    /// valid grade-1 cochain by construction (operator output on a validated
+    /// lattice, or the cochain of a [`crate::SolenoidalField`]). Skips the
+    /// `new` validation pass; callers guarantee length and provenance. Public
+    /// so the DEC solver in `deep_causality_cfd` can construct the form.
+    pub fn from_raw(field: CausalTensor<R>) -> Self {
         Self { field }
     }
 
