@@ -30,8 +30,9 @@
 //! - The **cycle-mean drag** `C_d = F_x / (½ U² D)`, averaged over the developed (second-half)
 //!   window and split into the **pressure** force (`pressure_surface_force` over the static pressure
 //!   from `pressure_diagnostic`) and the **viscous (friction)** force (`viscous_surface_force`),
-//!   with the lift `C_l` and the `C_d` swing. Reference: Lehmkuhl et al. (2013) / lineage
-//!   `C_d(Re=100) ≈ 1.33`, friction ~35 %.
+//!   with the lift `C_l` and the `C_d` swing. Reference: `C_d(Re=100) ≈ 1.24–1.33`
+//!   (Dröge–Verstappen 2005: 1.24 = 0.93 pressure + 0.31 friction; Lehmkuhl et al. 2013 lineage
+//!   ≈ 1.33), so friction is ≈ 25 % of `C_d`.
 //!
 //! ## Scope
 //!
@@ -85,9 +86,9 @@ fn main() {
     // Swept parameters (env-overridable). The cylinder sits at ¼ span downstream, mid-channel, so
     // changing the domain keeps it sensibly placed without extra knobs.
     let re_d = env_f64("RE_D", 100.0);
-    let cells_per_d = env_usize("CELLS_PER_D", 12);
+    let cells_per_d = env_usize("CELLS_PER_D", 8);
     let lx_d = env_f64("LX_D", 12.0);
-    let ly_d = env_f64("LY_D", 6.0);
+    let ly_d = env_f64("LY_D", 12.0);
     let steps = env_usize("STEPS", 1500);
     let merge_fraction = env_f64("MERGE", 0.25);
     // Advective CFL number `dt = CFL · h / U`. The flow accelerates to ~1.9 U around the cylinder,
@@ -274,7 +275,7 @@ fn report_drag_mean(samples: &[[f64; 4]]) {
         .fold(f64::NEG_INFINITY, f64::max);
     eprintln!(
         "# drag (cycle mean over {} samples): C_d ≈ {cd:.3} (pressure {cd_p:.3} + friction {cd_f:.3}), \
-         C_l ≈ {cl:.3}, C_d swing [{cd_min:.3}, {cd_max:.3}]  (Lehmkuhl Re=100 ≈ 1.33, friction ~35%)",
+         C_l ≈ {cl:.3}, C_d swing [{cd_min:.3}, {cd_max:.3}]  (ref C_d ≈ 1.24–1.33, friction ≈ 25%)",
         samples.len()
     );
 }

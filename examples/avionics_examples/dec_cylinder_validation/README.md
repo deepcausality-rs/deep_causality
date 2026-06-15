@@ -20,8 +20,9 @@ to stderr.
 - **Drag** `C_d = F_x / (½ U² D)`, the **cycle mean** over the developed (second-half) window, split
   into the **pressure** force (`pressure_surface_force` over the static pressure from
   `pressure_diagnostic`) and the **viscous (friction)** force (`viscous_surface_force`); the lift
-  `C_l` and the `C_d` swing are reported alongside. Lehmkuhl gives `C_d(Re=100) ≈ 1.33` with friction
-  near 35 %.
+  `C_l` and the `C_d` swing are reported alongside. Reference `C_d(Re=100) ≈ 1.24–1.33`
+  (Dröge–Verstappen 2005: 1.24 = 0.93 pressure + 0.31 friction; Lehmkuhl et al. 2013 lineage ≈ 1.33),
+  so friction is ≈ 25 % of `C_d`.
 
 ## Symmetry breaking
 
@@ -43,9 +44,9 @@ recompile. Defaults are shown in parentheses.
 | Variable      | Meaning                                  | Default |
 |---------------|------------------------------------------|---------|
 | `RE_D`        | Reynolds number `U·D/ν`                  | `100`   |
-| `CELLS_PER_D` | grid resolution (cells across one D)     | `12`    |
+| `CELLS_PER_D` | grid resolution (cells across one D)     | `8`     |
 | `LX_D`        | streamwise domain extent (diameters)     | `12`    |
-| `LY_D`        | cross-stream domain extent (diameters)   | `6`     |
+| `LY_D`        | cross-stream domain extent (diameters)   | `12`    |
 | `STEPS`       | number of time steps                     | `1500`  |
 | `MERGE`       | cut-cell volume-fraction merge floor     | `0.25`  |
 | `CFL`         | advective CFL number, `dt = CFL·h/U`     | `0.4`   |
@@ -74,14 +75,17 @@ with `CG_TOL` over a short run, more as the run lengthens). The remaining levers
 - **`CFL`** cuts the step count for the same physical time, but the flow accelerates to
   `max|u| ≈ 1.9 U` around the cylinder, so the advective limit binds near `CFL ≈ 0.45`. Keep
   `CFL ≤ 0.4`; a larger value aborts at step 0 with an advective CFL violation.
-- **smaller `LX_D` / `LY_D`** cuts the cell count directly (mild confinement shifts `St` a little).
+- **`LX_D` / `LY_D`** trade cells against confinement: shrinking them cuts cost, but too small a
+  `LY_D` raises `St` (≈12 % blockage at `LY_D=8` measurably lifts it). The default `LY_D=12` (≈8 %
+  blockage) is a compromise; widen toward 16–20 for a Williamson-comparable, near-unconfined `St`.
 - **`MERGE=0.5`** improves the cut-cell conditioning, so each CG solve converges in fewer iterations.
 
-A fast shedding probe (minutes, not hours) starts at the coarsest grid that might shed:
+The empirical shedding threshold is **~24 cells/D**: at `CELLS_PER_D` = 12 and 16 the wake stays
+steady (the perturbation decays), while 24/D develops a von-Kármán street. A first shedding run:
 
 ```text
-CELLS_PER_D=16 LX_D=16 LY_D=8 STEPS=1600 CFL=0.4 CG_TOL=1e-6 \
-  cargo run --release -p avionics_examples --example dec_cylinder_validation > re100_16.csv
+CELLS_PER_D=24 LX_D=16 LY_D=12 STEPS=3500 CFL=0.4 CG_TOL=1e-6 \
+  cargo run --release -p avionics_examples --example dec_cylinder_validation > re100_24.csv
 ```
 
 ```text
@@ -96,14 +100,16 @@ RE_D=200 CELLS_PER_D=32 LX_D=24 LY_D=12 STEPS=12000 \
 
 ## A note on Resolution
 
-The composed primitive stack is correct. The march is stable and **interior-divergence-free to
-≈ 1e-15** at every resolution; the global residual is just the open-boundary inlet flux. The shedding
-instability, though, is resolution-gated. At `CELLS_PER_D ≤ 12` the `Re=100` boundary layer (thickness
-`~D/√Re ≈ 0.1 D`, about one cell) is under-resolved, so the discrete scheme is effectively sub-critical
-and the flow settles to the steady symmetric solution as the trigger's perturbation decays. A developed
-von-Kármán street, and a reference-quality `St` or `C_d`, needs roughly 24 to 40 cells/D and a long run.
-That cost is real, the "real compute time" the change's `tasks.md` D2/D3 flags. The default config is an
-affordable smoke run that exercises the full path and reports the steady-flow drag.
+The composed primitive stack is correct: the march is stable and **interior-divergence-free to the
+projection tolerance** at every resolution (the global residual is just the open-boundary inlet flux).
+Shedding, though, is resolution-gated, and the threshold has been measured: at `CELLS_PER_D` = 12 and
+16 the `Re=100` wake stays **steady** (the boundary layer, thickness `~D/√Re ≈ 0.1 D`, is ~1–2 cells —
+under-resolved, so the discrete scheme is effectively sub-critical and the trigger's perturbation
+decays), while at **24 cells/D a von-Kármán street develops** (early transient `St ≈ 0.21`, above the
+unconfined `0.164` partly from blockage). A reference-quality `St`/`C_d` wants the developed window of
+a long run at ≥ 24 cells/D — the "real compute time" the change's `tasks.md` D2/D3 flags. The
+aperture-resolved no-slip change (`add-aperture-resolved-noslip`) is expected to sharpen the marginal
+24/D result and/or lower this threshold by replacing the staircase body with a smooth one.
 
 ## A note on `--features parallel`
 
