@@ -1,0 +1,59 @@
+deep_causality_topology/tests/types/cut_cell/cut_face_constraint_tests.rs
+  s_86cf72b3950d7d::t_ebb41e6d2ae285 74,158,185
+  s_86cf72b3950d7d::t_83e645b4ebedda 1-20,22-39,46-73,75-81,88-90,96-157,159-184,186-218
+  s_86cf72b3950d7d::t_e3aa8e9090518c 40-45,82-87,91-95
+  s_86cf72b3950d7d::t_077bd9c04eadf2 21
+deep_causality_topology/src/types/cut_cell/mod.rs
+  s_86cf72b3950d7d::t_1664c724929e70 43
+  s_86cf72b3950d7d::t_ac6351690004b3 53
+openspec/changes/add-aperture-resolved-noslip/specs/aperture-resolved-noslip/spec.md
+  s_86cf72b3950d7d::t_cb1d33890f28b2 82,84-91,93,95-96,99-114
+deep_causality_topology/tests/types/manifold/mod.rs
+  s_86cf72b3950d7d::t_72bc328821e0d4 40-41
+deep_causality_topology/src/types/cut_cell/cut_face_constraint.rs
+  s_86cf72b3950d7d::t_9f6338eb2f448c 1-81
+deep_causality_topology/tests/types/cut_cell/mod.rs
+  s_86cf72b3950d7d::t_395e518b223976 13-14
+openspec/changes/add-aperture-resolved-noslip/tasks.md
+  s_86cf72b3950d7d::t_1c1eb5ed1712f3 68-74
+  s_86cf72b3950d7d::t_c6f6b52e139c96 29-45
+  s_86cf72b3950d7d::t_00ea2fec73bf1c 49-52
+  s_86cf72b3950d7d::t_96520547022a7f 11,15,17-18,20-21,24-25
+deep_causality_topology/tests/types/manifold/leray_weighted_tests.rs
+  s_86cf72b3950d7d::t_e7724aa92a3206 1-55,57-84,90-113,118-122,128-148,153-154,159-247,252
+  s_86cf72b3950d7d::t_a233c3ccd52d5d 56,85-89,114-117,123-127,149-152,155-158,248-251
+deep_causality_topology/src/types/manifold/differential/leray.rs
+  s_86cf72b3950d7d::t_467d07b4937fff 498
+  s_86cf72b3950d7d::t_72a1dfd4909ae0 483
+  s_86cf72b3950d7d::t_a233c3ccd52d5d 29
+  s_86cf72b3950d7d::t_6539895c011f1c 261-482,484-497,499-570
+openspec/changes/add-aperture-resolved-noslip/design.md
+  s_86cf72b3950d7d::t_1082801868f8dd 169-178
+  s_86cf72b3950d7d::t_fc6857fb72eb3b 28-36,40-42,48-53
+  s_86cf72b3950d7d::t_1414b079d5ad71 75-114,117-119,121-125
+deep_causality_topology/src/types/cut_cell/registry.rs
+  s_86cf72b3950d7d::t_7fcea9fd6e976a 227-340,342,345-358
+  s_86cf72b3950d7d::t_06b4831247aa41 527
+  s_86cf72b3950d7d::t_50c5ff27193e1f 10
+  s_86cf72b3950d7d::t_252c1092af8951 343-344
+  s_86cf72b3950d7d::t_8085f3bab6d0ff 341
+  s_86cf72b3950d7d::t_18225315a6468e 468-526,528-533
+deep_causality_topology/src/lib.rs
+  s_86cf72b3950d7d::t_32571f6ec93a5b 76-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "dcbb5b1896136aa5fbdf661a8478d4412405f3b3",
+  "prompts": {},
+  "sessions": {
+    "s_86cf72b3950d7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "449a7105-1712-4ede-8466-427285c3e5e2",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
