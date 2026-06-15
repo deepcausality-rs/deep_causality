@@ -79,20 +79,36 @@ registry SHALL leave the march bit-identical to the Stage-3 result.
 - **WHEN** the lattice is fully periodic, or wall-bounded with no immersed body
 - **THEN** the constrained-edge set and the marched result are unchanged from before this change
 
-### Requirement: Aperture-resolved cylinder sheds at lower resolution
+### Requirement: Aperture-resolved cylinder sheds at lower resolution, fast
 
-With the aperture-resolved body, the isolated-cylinder validation SHALL develop a von-Kármán street
-and report a Strouhal number within a few percent of the reference (`St(Re=100) ≈ 0.164–0.165`,
-Williamson; Dröge–Verstappen) at a resolution at or below 24 cells per diameter, where the staircase
-body does not shed. The recovered drag `C_d` SHALL move toward the reference relative to the staircase
-result — the matched symmetry-preserving cut-cell reference (Dröge–Verstappen 2005) gives
-`C_d ≈ 1.24` with the pressure component ≈ 0.93 and the friction component ≈ 0.31 (friction ≈ 25 % of
-total), against an experimental `C_d ≈ 1.24–1.33` across the literature.
+With the aperture-resolved body, the isolated-cylinder validation SHALL develop a von-Kármán street at
+a **lower resolution than the staircase** (which sheds only at ~24 cells/D, marginally), the target
+being a sustained street at **~16 cells/D**, so a developed `Re=100` run reaches the measurement window
+in **minutes** rather than hours. The Strouhal number SHALL be within a few percent of the reference
+(`St(Re=100) ≈ 0.164–0.165`, Williamson; Dröge–Verstappen) and the recovered drag `C_d` SHALL move
+toward the reference relative to the staircase — the matched symmetry-preserving cut-cell reference
+(Dröge–Verstappen 2005) gives `C_d ≈ 1.24` (pressure ≈ 0.93 + friction ≈ 0.31; friction ≈ 25 %),
+against an experimental `C_d ≈ 1.24–1.33`.
 
-#### Scenario: Shedding at <= 24 cells/D
+#### Scenario: Sheds at a coarser grid than the staircase
 
-- **WHEN** the cylinder validation harness runs at `Re = 100` with the aperture-resolved body at
-  24 cells/D (or finer)
+- **WHEN** the cylinder validation harness runs at `Re = 100` with the aperture-resolved body at a
+  resolution where the staircase body does **not** shed (e.g. 16 cells/D)
 - **THEN** the wake probe shows a sustained (non-decaying) shedding oscillation
 - **AND** the estimated Strouhal number is within a few percent of `0.164`
-- **AND** the staircase body at the same resolution does not shed (a steady wake)
+- **AND** the same run with the staircase body at that resolution stays steady
+
+### Requirement: One-sided wall-normal friction diagnostic
+
+The `viscous_surface_force` friction-drag diagnostic SHALL evaluate the wall shear with a **one-sided
+wall-normal gradient to the true surface distance** (`S_ij · N_j` with the fragment normal and the
+perpendicular distance `Δh`), per Kirkpatrick et al. (2003), rather than the central difference it
+currently uses. This is an independent, read-only refinement of the friction-`C_d` component and SHALL
+NOT change the solver's no-slip mechanism.
+
+#### Scenario: Friction drag uses the true wall distance
+
+- **WHEN** the friction surface force is evaluated on a cut body
+- **THEN** the wall shear is computed from the one-sided wall-normal gradient and the true distance
+  `Δh`, not a central difference across the cell
+- **AND** the change is confined to the diagnostic; the marched solver result is unchanged

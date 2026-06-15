@@ -73,7 +73,8 @@ pub use crate::types::cubical_regge_geometry::{
     AcceptReject, CubicalReggeGeometry, Euclidean, Lorentzian, RejectReason, SignatureMarker,
 };
 pub use crate::types::cut_cell::{
-    CellClass, CutCell, CutCellRegistry, CutFaceFragment, Primitive, SourceGeometry,
+    CellClass, CutCell, CutCellRegistry, CutConstraintKind, CutFaceConstraint, CutFaceFragment,
+    Primitive, SourceGeometry,
 };
 pub use crate::types::graph::Graph;
 pub use crate::types::hodge_decomposition::HodgeDecomposition;

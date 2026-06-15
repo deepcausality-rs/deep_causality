@@ -25,15 +25,32 @@ stay so; the projector is the single chokepoint every stage and the re-entry pas
 
 ## Goals / Non-Goals
 
+**Guiding star (the success metric this design optimises for):** a **reference-quality Re=100 cylinder
+validation that runs in minutes, not hours** — St within a few percent of 0.164 and `C_d` near 1.24
+(0.93 pressure + 0.31 friction). The lever is *lowering the shedding-threshold resolution*: accuracy
+and speed are coupled here, because a fragment-accurate wall both sharpens St/`C_d` and lets the wake
+shed on a much coarser (hence far cheaper) grid. Concretely: dropping the threshold from ~24/D to
+~16/D is ≈ (24/16)² fewer cells × a larger `dt` ≈ ~3× less work to the developed state, on top of the
+already-shipped warm-start and loose-tolerance speedups. Every choice below is judged first by whether
+it moves that needle.
+
 **Goals:**
 - Impose no-slip / no-penetration at the wetted cut face of `Cut` cells, using the fragment normal
   and apertures, so the discrete body is smooth rather than staircased.
-- Lower the resolution at which the cylinder sheds at `Re = 100` to ≤ 24 cells/D and move `C_d`
-  toward Lehmkuhl.
+- **Lower the shedding threshold** at `Re = 100` toward ~16 cells/D (currently ~24/D with the
+  staircase) so a developed validation run completes in minutes; move St toward 0.164 and `C_d` toward
+  1.24 (pressure 0.93 + friction 0.31).
 - Keep existing consumers working: the constrained/open projector and the cut star compose with the
   new constraint, and existing call sites are unchanged (additive surface only).
 - Reduce exactly to the staircase set on axis-aligned `Solid` layers (consistency gate), and stay
   bit-identical on empty-registry / periodic / wall-only paths.
+
+**Locked plan (decided with the user):** primary mechanism is the **aperture-weighted fragment
+kinematic constraint** (Decision 2, Lever A2), built on the **existing cut Hodge star** (Lever B1, no
+new metric code), reached via an **A1 → A2 phasing** that shares the generalized projector so the only
+go/no-go cost is the cheap Group A slice. The **one-sided wall-normal friction diagnostic** (Lever C)
+is an independent, free accuracy win on the friction-`C_d` component. A metric refinement (Lever B2)
+is deferred unless the single-cut-cell gate shows the near-wall gradient is wrong.
 
 **Non-Goals:**
 - Moving / rotating immersed surfaces (prescribed time-dependent wall velocity). Deferred.
@@ -55,46 +72,57 @@ edge-cochain framework.
 cell and needs no projector change, but it is still a staircase and still axis-aligned, so it is kept
 only as a fallback/■stepping-stone, not the target.
 
-### Decision 2 — Express the wall condition as aperture-weighted linear constraints in a generalized KKT projector (additive)
+### Decision 2 — No-slip is a kinematic constraint at the fragment (KKT projector); the cut Hodge star carries the wall metric
 
-The existing constrained projector already solves a KKT system for `{δu = 0} ∩ {u|_E = 0}`. Generalize
-it to also accept a set of **weighted linear constraints** `Cᵀ u = b` (the fragment no-slip rows),
-solved in the same projection. The binary edge set is the special case where each constraint fixes one
-edge to zero with infinite weight. Each `Cut` cell contributes:
+*(Resolves the Decision-2-vs-Kirkpatrick tension raised at apply time. The two earlier threads —
+"projector constraint" and "viscous-operator one-sided gradient" — are not alternatives in DEC; one
+is the constraint, the other is the metric, and they compose.)*
 
-- a **no-penetration row**: the reconstructed velocity normal component at the fragment is zero
-  (`n · u_face = 0`), weighted by the fragment area;
-- a **no-slip (tangential) row**: the reconstructed tangential velocity at the fragment is zero,
-  weighted by the wetted measure.
+In this DEC solver no-slip is a **kinematic** condition (`u = 0` at the wall), already enforced by the
+**constrained Leray projector**, *not* by a finite-volume diffusive-flux stencil. The viscous term is
+`−ν Δ₁ u` with `Δ₁ = δd + dδ`, `δ = ⋆⁻¹ d ⋆`; the wall geometry enters the operator **only through the
+Hodge star**, and the cut star (`dual_fluid_fraction`) already clips dual volumes by the wetted
+fraction. So the aperture-resolved change has two complementary, DEC-native levers and **adds no
+viscous stencil**:
 
-The reconstruction `u_face` is the area/aperture-weighted interpolation of the cell's incident edges
-(the same `sharp`-style metric averaging the diagnostics use), so the constraint is a sparse linear
-combination of edge coefficients. The projector exposes this through a **new additive method**
-(e.g. `leray_project_constrained_weighted_opts`); the existing `*_constrained_opts` / `*_open_opts`
-signatures and behavior are unchanged, satisfying "no API break" and keeping a single projector
-family.
+- **Lever A — the constraint subspace (the new work).** Replace the binary staircase pins with
+  **aperture-weighted linear constraints** added to the same KKT projection (`Cᵀu = 0`): per cut cell,
+  a **no-penetration** row `n·u_face = 0` (fragment outward normal) and a **tangential no-slip** row,
+  where `u_face` is the cut cell's velocity reconstructed from its incident edges with the per-axis
+  apertures as weights — so the condition is enforced at the wetted fragment, not at the staircase
+  edges. The binary set is the special case (single-edge, unit-weight, zero-target rows), so the
+  existing path stays bit-identical. Exposed as a **new additive method**
+  (`leray_project_constrained_weighted_opts`); existing projector signatures/behaviour are unchanged.
+- **Lever B — the metric (already shipped, no new code).** The cut Hodge star is the DEC analogue of
+  Kirkpatrick's "true wall distance Δh in the wall-normal gradient": the clipped dual volumes make
+  `Δ₁` see the wetted geometry. Lever A composes on top of it.
 
-*Literature-grounded form (Kirkpatrick et al. 2003, §2.3.2–2.3.3).* Their staggered cut-cell method
-gives the concrete recipe this design mirrors: the no-slip enters the viscous operator as a
-**one-sided wall-normal gradient to the surface**, `∂u/∂n ≈ N·(u_e − u_b)/Δh` with `u_b = 0` and `Δh`
-the **true** perpendicular distance from the node to the immersed surface (not the staircase
-distance); and the wall shear / friction drag uses the **actual surface area inside the cell** with
-`u_i/Δh ≈ S_ij · N_j` (the strain-rate tensor contracted with the surface normal). Two consequences:
-(1) the cut-face rows should be built from the true `Δh` and the fragment normal, so the constraint
-"reaches" the real surface, and (2) the same `S_ij · N_j` form is what `viscous_surface_force`
-already computes for `C_d` — so the friction diagnostic should switch from its current central
-difference to this one-sided wall-normal gradient with true `Δh`. Symmetry preservation across the
-cut (skew-symmetric convection, SPD diffusion) follows Dröge & Verstappen (2005), the method most
-structurally identical to this DEC solver, validated on the Re=100 cylinder.
+**Where Kirkpatrick (2003) actually applies.** Their one-sided wall-normal gradient and `S_ij·N_j`
+wall shear are a *finite-volume* construction; in DEC the gradient distance lives in the Hodge star
+(Lever B), so there is **no separate viscous-flux stencil to modify**. The `S_ij·N_j` form with the
+true `Δh` *does* apply directly to the read-only **`viscous_surface_force` diagnostic** (the
+friction-`C_d` post-process), which should switch from its central difference to the one-sided
+wall-normal gradient — but that is a separate diagnostic refinement, not the solver's no-slip
+mechanism. Symmetry preservation across the cut (skew-symmetric convection, SPD diffusion) follows
+Dröge & Verstappen (2005), the method structurally identical to this solver.
+
+**Phasing (de-risks the formulation before the compute-heavy cylinder run).**
+- *Phase 1:* the aperture-weighted rows above, gated by a **single-cut-cell analytic test** — build one
+  cut cell of known geometry, project, and check the reconstructed fragment velocity is zero to
+  tolerance. This validates the formulation cheaply, closing the gap that the axis-aligned reduction
+  test (no cut cells) cannot.
+- *Phase 2 (only if Phase 1 underperforms on the cylinder):* tune the row weights / reconstruction.
 
 *Alternatives considered:*
-- **Direct-forcing IBM** (add a body force each step driving `u_face → 0`). Decouples from the
-  projector but introduces a tunable forcing strength and a non-divergence-free correction that the
-  next projection must clean up; rejected as less robust and harder to make consistent with the
-  energy-conserving formulation.
-- **Pure aperture-thresholded binary set** (Decision 1 alternative). Cheapest, but does not deliver
-  the smooth boundary the goal needs; retained only as a fallback if the weighted KKT proves
+- **Cell-centre (aperture-blind) constraint** — pin each cut cell's `sharp` centre velocity to zero
+  (`Σ axis-edges = 0`). Simplest and the degenerate case of Lever A, but places the wall at the cell
+  centre (a half-cell-shifted smoothed staircase); kept only as a fallback if the weighted rows are
   ill-conditioned.
+- **Direct-forcing IBM** — a body force driving `u_face → 0`. Decouples from the projector but needs a
+  tuned forcing strength and a non-divergence-free correction the next projection must clean up;
+  rejected as less robust and inconsistent with the energy-conserving formulation.
+- **Modifying a viscous-flux stencil (literal Kirkpatrick)** — rejected: DEC has no such stencil; the
+  metric (Lever B) is the correct home, and it already exists.
 
 ### Decision 3 — Reduction and consistency
 
@@ -138,14 +166,16 @@ geometry (topology) from wiring (physics).
 
 ## Open Questions
 
-- Exact weighting of the no-slip vs no-penetration rows relative to the area and aperture measures —
-  to be pinned by the consistency reduction and a small analytic cut-face test.
-- Whether the no-penetration row is redundant given the cut Hodge star already down-weights blocked
-  flux, or whether both are needed for the tangential condition to bite. Resolve with an ablation on
-  the cylinder (penetration row on/off).
-- Whether the generalized projector should subsume the binary `zeroed_edges` path internally
-  (single code path) or keep both (binary fast path + weighted path). Prefer subsuming if it stays
-  bit-identical on the binary case.
+- Exact weighting of the no-slip vs no-penetration rows relative to the area/aperture measures.
+  *Resolution path:* pinned by the **single-cut-cell analytic test** (Decision 2, Phase 1) — the
+  weights are whatever drives the reconstructed fragment velocity to zero on a known cut geometry —
+  plus the axis-aligned reduction. No longer gated on the compute-heavy cylinder run.
+- Whether the no-penetration row is redundant given the cut star (Lever B) already down-weights
+  blocked flux. *Resolution path:* a cheap on/off ablation on the single-cut-cell test, not the
+  cylinder.
+- Whether the weighted projector subsumes the binary `zeroed_edges` path (single code path) or keeps
+  both. *Leaning:* subsume — the binary set is the unit-weight special case (Decision 2) — provided
+  the binary-equivalence test stays bit-identical (Group B task 2.2).
 
 ## References
 

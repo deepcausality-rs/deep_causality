@@ -7,6 +7,7 @@
 //! accessors that ride the existing `CubicalReggeGeometry` dispatch.
 
 use super::carrier::CutCell;
+use super::cut_face_constraint::{CutConstraintKind, CutFaceConstraint};
 use crate::traits::neighborhood::CellId;
 use crate::types::cubical_regge_geometry::CubicalReggeGeometry;
 use crate::types::cubical_regge_geometry::SignatureMarker;
@@ -223,6 +224,138 @@ impl<const D: usize, R: RealField> CutCellRegistry<D, R> {
         out
     }
 
+    /// The **aperture-resolved** immersed no-slip / no-penetration constraint rows of every `Cut`
+    /// cell (the smooth replacement for the staircase [`Self::solid_incident_edges`]).
+    ///
+    /// For each `Cut` cell this derives the wall condition at the *wetted cut face* rather than at
+    /// the staircase edge ring: the cell's velocity is reconstructed per axis as an
+    /// **aperture-weighted average** of the cell's edges parallel to that axis, and the
+    /// reconstruction is contracted with the cell's local wall frame to produce
+    /// `[`CutConstraintKind::NoPenetration`]` (`n̂ · u_face = 0`, the area-weighted fragment outward
+    /// normal) and `D − 1` `[`CutConstraintKind::Tangential`]` (`t̂ · u_face = 0`) rows. The
+    /// orthonormal frame keeps the rows independent (full column rank), so the generalized
+    /// constrained projector's KKT system stays solvable; the binary single-edge pin is the
+    /// unit-weight, single-entry special case (design Decision 2, Lever A).
+    ///
+    /// Aperture weighting: a parallel edge sitting at a perpendicular face corner is weighted by
+    /// the product of that corner's per-axis face apertures, normalised so the row's weights sum to
+    /// one; an edge bounded only by dry faces drops out. On a fully-wetted cut (every aperture `1`)
+    /// the weights reduce to the uniform cell-centre average. Full `Fluid` and full `Solid` cells
+    /// (no fragments / not `Cut`) contribute nothing here — a `Solid` cell's zero-interior pin is
+    /// the staircase path's job (it has no wetted face). The `target` is `0` (static body); a
+    /// nonzero target is the documented hook for a prescribed (moving) wall velocity.
+    pub fn cut_face_constraints(
+        &self,
+        complex: &LatticeComplex<D, R>,
+    ) -> Vec<CutFaceConstraint<R>> {
+        let mut rows: Vec<CutFaceConstraint<R>> = Vec::new();
+        // Resolve a `CellId` to its base position once (the registry stores no position).
+        let cells: Vec<LatticeCell<D>> = complex.iter_cells(D).collect();
+
+        for (&cell_id, cut) in self.cells.iter() {
+            if !cut.class().is_cut() {
+                continue;
+            }
+            let fragments = cut.fragments();
+            if fragments.is_empty() {
+                continue;
+            }
+            // Area-weighted outward normal and total wetted area.
+            let mut area_total = R::zero();
+            let mut normal_acc = [R::zero(); D];
+            for f in fragments {
+                let a = f.area();
+                area_total += a;
+                let n = f.outward_normal();
+                for (d, acc) in normal_acc.iter_mut().enumerate() {
+                    *acc += a * n[d];
+                }
+            }
+            if area_total <= R::zero() {
+                continue;
+            }
+            let mut norm_sq = R::zero();
+            for &c in normal_acc.iter() {
+                norm_sq += c * c;
+            }
+            if norm_sq <= R::zero() {
+                continue;
+            }
+            let inv_norm = R::one() / norm_sq.sqrt();
+            let mut n_hat = [R::zero(); D];
+            for (d, nh) in n_hat.iter_mut().enumerate() {
+                *nh = normal_acc[d] * inv_norm;
+            }
+
+            let base = *cells[cell_id].position();
+            let recon = self.axis_reconstruction(complex, cut, &base);
+
+            rows.push(constraint_row(
+                &recon,
+                &n_hat,
+                area_total,
+                CutConstraintKind::NoPenetration,
+            ));
+            for t_hat in wall_tangents(&n_hat) {
+                rows.push(constraint_row(
+                    &recon,
+                    &t_hat,
+                    area_total,
+                    CutConstraintKind::Tangential,
+                ));
+            }
+        }
+        rows
+    }
+
+    /// Per-axis aperture-weighted reconstruction of a cut cell's velocity component: for each axis
+    /// `i`, the `2^{D−1}` edges of the cell parallel to `i`, each tagged with the product of its
+    /// perpendicular face apertures, normalised to sum to one (uniform fall-back if every weight is
+    /// zero). The row coefficients of the no-slip / no-penetration constraints.
+    fn axis_reconstruction(
+        &self,
+        complex: &LatticeComplex<D, R>,
+        cut: &CutCell<D, R>,
+        base: &[usize; D],
+    ) -> [Vec<(usize, R)>; D] {
+        let apertures = cut.apertures();
+        core::array::from_fn(|i| {
+            let perp: Vec<usize> = (0..D).filter(|&c| c != i).collect();
+            let num_corners = 1usize << perp.len();
+            let mut weighted: Vec<(usize, R)> = Vec::with_capacity(num_corners);
+            let mut weight_sum = R::zero();
+            for corner in 0..num_corners {
+                let mut q = *base;
+                let mut w = R::one();
+                for (bit, &c) in perp.iter().enumerate() {
+                    let side = (corner >> bit) & 1;
+                    q[c] = base[c] + side;
+                    w *= apertures[c][side];
+                }
+                let edge = complex.edge_index(q, i);
+                weighted.push((edge, w));
+                weight_sum += w;
+            }
+            if weight_sum > R::zero() {
+                for (_, w) in weighted.iter_mut() {
+                    *w /= weight_sum;
+                }
+                // An edge bounded only by dry faces carries zero weight; drop it from the row.
+                weighted.retain(|(_, w)| *w != R::zero());
+            } else {
+                let mut count = R::zero();
+                for _ in 0..num_corners {
+                    count += R::one();
+                }
+                let uniform = R::one() / count;
+                for (_, w) in weighted.iter_mut() {
+                    *w = uniform;
+                }
+            }
+            weighted
+        })
+    }
+
     /// `true` iff the top cell with base `top_base` is recorded `Solid` in this registry.
     fn top_cell_is_solid(&self, complex: &LatticeComplex<D, R>, top_base: [usize; D]) -> bool {
         let all_axes_mask: u32 = if D >= 32 { u32::MAX } else { (1u32 << D) - 1 };
@@ -331,4 +464,70 @@ impl<const D: usize, R: RealField> CutCellRegistry<D, R> {
         }
         fraction
     }
+}
+
+/// Contract a per-axis reconstruction with a wall-frame direction into one sparse constraint row
+/// `Σ dir_i · (aperture-weighted u_i) = 0`. Axes with a zero direction component drop out.
+fn constraint_row<const D: usize, R: RealField>(
+    recon: &[Vec<(usize, R)>; D],
+    dir: &[R; D],
+    row_weight: R,
+    kind: CutConstraintKind,
+) -> CutFaceConstraint<R> {
+    let mut entries: Vec<(usize, R)> = Vec::new();
+    for (i, &d_i) in dir.iter().enumerate() {
+        if d_i == R::zero() {
+            continue;
+        }
+        for &(edge, w) in recon[i].iter() {
+            entries.push((edge, d_i * w));
+        }
+    }
+    CutFaceConstraint::new(entries, R::zero(), row_weight, kind)
+}
+
+/// The `D − 1` orthonormal wall tangents complementing a unit normal `n̂`: Gram–Schmidt over the
+/// standard basis, skipping directions that collapse against the normal or earlier tangents. For
+/// `D = 2` this is the single in-plane perpendicular; for `D = 3`, two tangents spanning the wall.
+fn wall_tangents<const D: usize, R: RealField>(n_hat: &[R; D]) -> Vec<[R; D]> {
+    let mut tangents: Vec<[R; D]> = Vec::new();
+    for axis in 0..D {
+        if tangents.len() == D - 1 {
+            break;
+        }
+        let mut v = [R::zero(); D];
+        v[axis] = R::one();
+        // Remove the normal component.
+        let mut dot_n = R::zero();
+        for d in 0..D {
+            dot_n += v[d] * n_hat[d];
+        }
+        for d in 0..D {
+            v[d] -= dot_n * n_hat[d];
+        }
+        // Remove components along already-accepted tangents.
+        for t in tangents.iter() {
+            let mut dot_t = R::zero();
+            for d in 0..D {
+                dot_t += v[d] * t[d];
+            }
+            for d in 0..D {
+                v[d] -= dot_t * t[d];
+            }
+        }
+        let mut norm_sq = R::zero();
+        for &c in v.iter() {
+            norm_sq += c * c;
+        }
+        // Keep only well-conditioned tangents (cancellation leaves a near-zero residual for the
+        // basis axis most aligned with the normal / a prior tangent).
+        if norm_sq > R::epsilon() {
+            let inv = R::one() / norm_sq.sqrt();
+            for c in v.iter_mut() {
+                *c *= inv;
+            }
+            tangents.push(v);
+        }
+    }
+    tangents
 }

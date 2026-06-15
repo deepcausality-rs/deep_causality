@@ -8,39 +8,48 @@ Group D is the cylinder-validation gate.
 
 ## 1. A — Cut-face constraint geometry (topology)
 
-- [ ] 1.1 `CutCellRegistry::cut_face_constraints`: for each `Cut` cell, emit the sparse no-slip and
+- [x] 1.1 `CutCellRegistry::cut_face_constraints`: for each `Cut` cell, emit the sparse no-slip and
       no-penetration rows from its `CutFaceFragment`s (area, outward normal) and apertures — each row
       a list of `(edge_index, weight)` plus a target value (0 here) and a row weight. Geometry only;
       no solver coupling. (`deep_causality_topology`, beside `solid_incident_edges`.)
-- [ ] 1.2 Fragment-velocity reconstruction: define which incident edges interpolate a fragment's
+- [x] 1.2 Fragment-velocity reconstruction: define which incident edges interpolate a fragment's
       velocity and their weights (the `sharp`-style metric averaging), as the row coefficients.
-- [ ] 1.3 Reduction proof: on axis-aligned `Solid` layers (apertures 0/1, axis-aligned fragments) the
+      (Per-axis aperture-weighted average of the cell's parallel edges; `axis_reconstruction`.)
+- [x] 1.3 Reduction proof: on axis-aligned `Solid` layers (apertures 0/1, axis-aligned fragments) the
       emitted rows collapse to the binary `solid_incident_edges` pins. Unit test, 2D + 3D, f64 +
-      Float106.
-- [ ] 1.4 Exactness/consistency tests: rows are produced as measures (area/aperture weighted), pinned
+      Float106. (Fully-fluid/solid cells emit nothing; the dry-bounded edge drops — `f64`+`Float106`.)
+- [x] 1.4 Exactness/consistency tests: rows are produced as measures (area/aperture weighted), pinned
       against a flat half-space cut (analytic) and a disk/cylinder cut; full-`Fluid`/full-`Solid`
       cells emit no partial rows; registry round-trip.
-- [ ] 1.5 Group A gate: `make format`, clippy clean, full topology tests both feature configs +
-      the new cut-face-constraint tests (cargo + bazel). Prepare commit message; ask the user to commit.
+- [x] 1.5 Group A gate: `make format`, clippy clean, full topology tests both feature configs +
+      the new cut-face-constraint tests (cargo). Prepare commit message; ask the user to commit.
 
 ## 2. B — Generalized constrained projector (topology)
 
-- [ ] 2.1 Extend the constrained/open Leray projector with an **additive** weighted-constraint path
-      (`leray_project_constrained_weighted_opts` / open variant): solve `{δu = 0} ∩ {Cᵀu = b}` in the
-      same KKT projection, Jacobi-preconditioned CG. Existing `*_constrained_opts` / `*_open_opts`
-      signatures and behavior unchanged.
-- [ ] 2.2 Binary special case: a weighted set of single-edge, hard (zero-target) rows reproduces the
-      existing `zeroed_edges` result bit-for-bit (decide: subsume the binary path or keep both).
-- [ ] 2.3 Warm-start compatibility: the weighted path accepts the same φ initial guess as the
-      existing warm variants (`leray_project_*_warm_opts`).
-- [ ] 2.4 Tests: weighted projection is divergence-free to tolerance; binary-equivalence bit-identity;
-      a single analytic cut-face row drives the reconstructed face velocity to zero; CG converges
-      within budget with cell-merging on a sliver case.
-- [ ] 2.5 Group B gate: format, clippy, full topology tests both feature configs. Prepare commit
-      message; ask the user to commit.
+- [x] 2.1 Extend the constrained/open Leray projector with an **additive** weighted-constraint path
+      (`leray_project_constrained_weighted_opts`): solve `{δu = 0} ∩ {Cᵀu = b}` as the SPD augmented
+      dual system `G M⁻¹ Gᵀ y = G f − c` (`G` stacks `∂₁M₁` divergence rows + `Cᵀ` wall rows,
+      `y = [φ; λ]`), Jacobi-preconditioned CG. Existing `*_constrained_opts` / `*_open_opts`
+      signatures and behavior unchanged. (Constrained gauge = the per-stage hot path; weighted +
+      inflow-reference composition deferred — the seed projection keeps the binary path.)
+- [x] 2.2 Binary special case: kept both paths — binary pins stay on `zeroed_edges` (masking), and an
+      empty `constraint_rows` delegates to `leray_project_constrained_warm_opts`, so the binary
+      staircase result is bit-identical (`empty_rows_are_bit_identical_to_the_constrained_path`).
+- [x] 2.3 Warm-start compatibility: the weighted path accepts the same φ guess (λ block seeded at
+      zero); `warm_start_matches_the_cold_weighted_solve`.
+- [x] 2.4 Tests, incl. the **Phase-1 formulation gate** (design Decision 2): single cut cell, project,
+      assert reconstructed **fragment velocity zero to tolerance** (`single_cut_cell_drives_fragment_
+      velocity_to_zero`). Plus: divergence-free with a mixed binary pin; binary-equivalence bit-identity;
+      warm/cold agreement; no-penetration-row off ablation still enforces the tangential rows.
+- [x] 2.5 Group B gate: format, clippy clean, full topology tests both feature configs (1254 pass).
+      Prepare commit message; ask the user to commit.
 
 ## 3. C — Physics wiring (no new solver plumbing)
 
+- [ ] 3.0 Lever C (independent, free accuracy win): switch `viscous_surface_force` from its central
+      difference to the **one-sided wall-normal gradient with the true distance Δh** (`S_ij·N_j`,
+      Kirkpatrick 2003) for the friction-`C_d`. Read-only diagnostic; the marched solver is untouched.
+      Re-pin the analytic linear-shear test. Can land before or in parallel with A/B.
 - [ ] 3.1 `NoSlipConstraint` assembles the aperture-resolved rows from `cut_face_constraints` for
       `Cut` cells and the zero-interior pins for `Solid` cells, replacing the staircase set for
       immersed bodies while leaving axis-aligned wall-tangential edges unchanged.
@@ -56,11 +65,13 @@ Group D is the cylinder-validation gate.
 
 ## 4. D — Cylinder validation gate
 
-- [ ] 4.1 Run `dec_cylinder_validation` at `Re = 100` with the aperture-resolved body at 16 and
-      24 cells/D; record whether the wake sheds (sustained, non-decaying `v_probe`) versus the
-      staircase baseline (steady) at the same resolution.
-- [ ] 4.2 Report Strouhal vs Williamson (`≈ 0.164`) and cycle-mean `C_d` vs Lehmkuhl (`≈ 1.33`),
-      versus the staircase result, in the example README / a results note.
+- [ ] 4.1 Run `dec_cylinder_validation` at `Re = 100` with the aperture-resolved body at **16 cells/D**
+      (the target threshold, where the staircase stays steady) and confirm a sustained street; record
+      `v_probe` aperture-resolved vs staircase at the same resolution, and the **wall-clock to the
+      developed window** — the guiding star is **minutes, not hours**.
+- [ ] 4.2 Report Strouhal vs Williamson (`≈ 0.164`) and cycle-mean `C_d` vs the matched reference
+      (Dröge–Verstappen: `≈ 1.24` = 0.93 pressure + 0.31 friction), versus the staircase result, in the
+      example README / a results note. Note the run wall-clock against the minutes target.
 - [ ] 4.3 Ablation: no-penetration row on/off, to resolve the open question of whether it is needed
       beyond the cut Hodge star's flux down-weighting.
 - [ ] 4.4 Cheap CI rung (no heavy march): the consistency reduction (Group A 1.3) and binary-equivalence

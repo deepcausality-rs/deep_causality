@@ -40,6 +40,7 @@
 
 mod carrier;
 mod cell_class;
+mod cut_face_constraint;
 mod cut_face_fragment;
 mod geometry;
 mod intersection;
@@ -49,6 +50,7 @@ mod source_geometry;
 
 pub use carrier::CutCell;
 pub use cell_class::CellClass;
+pub use cut_face_constraint::{CutConstraintKind, CutFaceConstraint};
 pub use cut_face_fragment::CutFaceFragment;
 pub use primitive::Primitive;
 pub use registry::CutCellRegistry;

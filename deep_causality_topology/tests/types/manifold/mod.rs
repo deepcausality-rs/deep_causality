@@ -37,6 +37,8 @@ mod leray_open_tests;
 #[cfg(test)]
 mod leray_tests;
 #[cfg(test)]
+mod leray_weighted_tests;
+#[cfg(test)]
 mod manifold_topology_tests;
 #[cfg(test)]
 mod neumann_poisson_tests;
