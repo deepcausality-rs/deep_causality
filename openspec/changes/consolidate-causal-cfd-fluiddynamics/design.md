@@ -137,13 +137,98 @@ no-coupling path SHALL reproduce the construction-fixed numerics bit-for-bit, so
 (identical validation results) still holds. The `FluidTheory<R>` trait (R1) must span both the
 pointwise regime form (used by the MMS verification solver) and the DEC-native realization.
 
+### R1 pinned: the `FluidTheory<R>` trait surface
+
+The theory is a **field-level marching rate**, abstracted above both the DEC-native rate and the
+pointwise regime kernels (the kernels are a lower layer a field-level theory samples). The manifold
+borrow lives in the *implementor* (the theory is materialized bound to the manifold at run, R2/D2),
+not in the trait — so the trait stays clean and `'m`-free.
+
+```rust
+/// CFD scalar bound: precision as a parameter, plus the thread-safety marker that lets
+/// the inner topology operator loops fan out under `--features parallel` (see Parallelism).
+pub trait CfdScalar:
+    RealField + FromPrimitive + Default + PartialEq + Debug + Display + MaybeParallel {}
+impl<R: RealField + FromPrimitive + Default + PartialEq + Debug + Display + MaybeParallel>
+    CfdScalar for R {}
+
+/// The per-step ambient the marcher reads each step (R3). Coupling stages and dynamic-law
+/// counterfactuals write into it BETWEEN steps; the RK4 stages only read it.
+#[derive(Clone)]
+pub struct Ambient<R> {
+    pub nu: R,                              // kinematic viscosity (may be ν(T) from a coupling)
+    pub freestream: R,                     // inflow speed driving the inflow zone
+    pub body_force: Option<BodyForceOneForm<R>>,
+}
+
+/// A Navier–Stokes regime as a field-level rate. `DecNsRate` implements it directly; a
+/// pointwise-regime theory implements it by sampling the state and calling the classical
+/// kernels (`incompressible_ns_rhs_kernel`, …) for MMS / analytic verification.
+pub trait FluidTheory<R: CfdScalar>: MaybeParallel {
+    /// The marching state. Its algebra bounds are exactly what `deep_causality_calculus::Rk4`
+    /// needs, so any theory drops into the integrator unchanged.
+    type State: Clone + Add<Output = Self::State> + Mul<R, Output = Self::State> + MaybeParallel;
+
+    /// The ambient shape this regime reads. Incompressible uses `Ambient<R>`; compressible
+    /// extends it (temperature, density, EOS) WITHOUT changing the trait.
+    type Ambient;
+
+    /// `∂state/∂t` under the given ambient. Fallible: the projection CG / pressure solve can
+    /// fail. The solver adapts this to `Rk4`'s infallible `Fn(&S) -> S` via the deferred-error
+    /// cell the current DEC step already uses, so the rate stays pure across the four stages.
+    fn rate(&self, state: &Self::State, ambient: &Self::Ambient) -> Result<Self::State, CfdError>;
+}
+```
+
+The per-step advance (R4) is the value the Flow march drives, reading the ambient for that step:
+
+```rust
+/// One projected step: the theory's RK4 advance + Leray projection + CFL guard. This is the
+/// value `iterate_until` repeats, with coupling stages interleaved between calls.
+pub trait Marcher<R: CfdScalar> {
+    type State;
+    type Ambient;
+    fn advance(&self, state: &Self::State, ambient: &Self::Ambient)
+        -> Result<StepOutput<R, Self::State>, CfdError>;
+}
+```
+
+`Ambient` is an associated type (not a fixed struct) so compressible/thermal regimes extend it
+statically. `MaybeParallel` on the trait and on `State` is the seam that threads CPU parallelism down
+(below).
+
+## Parallelism: thread `MaybeParallel` down, fan out the independent work
+
+`deep_causality_par::MaybeParallel` is a Tier-0 marker — `Send + Sync` under `--features parallel`,
+vacuous otherwise. Actual execution is Rayon inside `deep_causality_topology` (per-cell DEC operator
+loops: codifferential, Hodge star, the projection) and `deep_causality_fft` (batched transforms).
+`deep_causality_physics` already forwards its `parallel` feature to `deep_causality_par/parallel`, and
+`DecNsScalar` already carries `MaybeParallel`. The CFD crate participates two ways:
+
+1. **Inherited fine-grained parallelism (a bound, not code).** `CfdScalar: … + MaybeParallel` and
+   `FluidTheory: MaybeParallel` carry the marker, so the topology operator loops the rate already
+   calls fan out when the crate's `parallel` feature forwards to `deep_causality_topology/parallel`
+   (+ `deep_causality_par/parallel`). No solver code changes — the capability rides the bounds.
+2. **Coarse-grained fan-out the CFD crate owns (pulls Rayon directly).** The embarrassingly-parallel
+   work is at the *case* level, not the step level (RK4 stages are sequentially dependent): the N
+   independent counterfactual branches of `continue_with`, ensemble / parameter sweeps, and the
+   independent per-sample pressure solves of the developed-window drag diagnostic. These fan out over
+   Rayon in the CFD crate.
+
+Caveat (carried from `memory/`): the fine-grained per-cell parallel **oversubscribes on small grids
+and is slower**, and nesting coarse fan-out over fine fan-out double-oversubscribes. Therefore:
+**serial is the default**; `parallel` is opt-in; and the crate parallelizes at exactly **one**
+granularity per run — coarse (scenarios/ensemble) when fanning out cases, fine (per-cell) only for a
+single large-grid solve. The granularity is a config knob, never automatic.
+
 ## Phasing
 
 - **Phase 1:** crate scaffold + theory/solver move-out + benches + the solver refactoring R1–R6
   (theory trait, owned config + materialization, per-step ambient channel, march-as-value,
   case-solvers, generic diagnostics) + the six validation examples lifted into those generic solvers +
   the minimal Flow surface (mesh / solver / zones / seed / march / observe), with the `config.rs` /
-  `main.rs` split.
+  `main.rs` split. Includes the opt-in `parallel` feature plumbing and the `MaybeParallel` bounds
+  (inherited fine-grained parallelism); coarse-grained fan-out over scenarios/ensembles is Phase 2.
 - **Phase 2:** the advanced Flow surface — `.couple` multi-physics, `.counterfactual` /
   `.continue_with` counterfactuals, control flow (either / loop / corrective), and the
   `CausalDiscovery` (SURD) tap, plus the showcase multi-physics examples.
@@ -159,5 +244,6 @@ pointwise regime form (used by the MMS verification solver) and the DEC-native r
 
 ## Open Questions
 
-1. The exact `PhysicsStage<R>` / `CoupledField<R>` trait surface and the `Solver`/`Theory` HKT seam
-   (refined during Phase 2 implementation).
+1. The `FluidTheory<R>` / `Ambient<R>` / `Marcher<R>` seam is **pinned** above (R1 resolved). The
+   `PhysicsStage<R>` / `CoupledField<R>::Ambient` coupling surface (which extends the ambient and
+   reads/writes the coupled field) is refined during Phase 2 implementation.

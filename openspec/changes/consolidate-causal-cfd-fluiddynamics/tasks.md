@@ -26,8 +26,10 @@ control flow, Discovery tap) and the showcase multi-physics examples.
 
 ### B. Solver refactoring + minimal Flow (fluiddynamics-dsl)
 
-- [ ] B1 (R1) `FluidTheory<R>` trait (NS regime) + `Solver`/`Theory` seam, static dispatch; implement
-      it for the DEC incompressible rate and wrap the pointwise regime kernels behind it.
+- [ ] B1 (R1) Pinned `FluidTheory<R: CfdScalar>` trait (assoc `State: Clone+Add+Mul<R>+MaybeParallel`,
+      assoc `Ambient`, fallible `rate`) + `Marcher<R>` per-step seam, static dispatch; implement for
+      the DEC incompressible rate and wrap the pointwise regime kernels behind it. Manifold borrow in
+      the implementor, not the trait.
 - [ ] B2 (R2) Split `DecNsSolver` into an owned `DecNsConfig<R>` (no manifold borrow) with a
       type-state builder (Discovery `CdlBuilder` style) + a manifold-bound marcher materialized from
       `(&manifold, zones, config)` at `run` (D2).
@@ -42,6 +44,9 @@ control flow, Discovery tap) and the showcase multi-physics examples.
       terms); `seed` / `observe` / `probe`.
 - [ ] B6 Rewrite the six validation examples in the minimal Flow DSL with the `config.rs` / `main.rs`
       split and a `FloatType` alias; re-run to identical reference results.
+- [ ] B7 Opt-in `parallel` feature: forward to `deep_causality_topology/parallel` +
+      `deep_causality_par/parallel`; carry `MaybeParallel` on `CfdScalar`/theory/solver bounds
+      (inherited fine-grained parallelism); serial default; feature-off reproduces results to tolerance.
 
 ## Phase 2
 
@@ -52,6 +57,8 @@ control flow, Discovery tap) and the showcase multi-physics examples.
       corrective `Guard` stage (the `corrective_ddos_detector` `branch_with` pattern).
 - [ ] C2 Counterfactuals: the `Intervene` vocabulary (static + dynamic laws); shared-seed
       `.counterfactual`; continuation `.continue_with().intervene` (compute-once / branch-many).
+      Coarse-grained Rayon fan-out over independent counterfactual branches / ensembles / sweeps under
+      `--features parallel` (single granularity; no nesting over the per-cell fine-grained path).
 - [ ] C3 Control flow (either / loop / corrective) and integration seams to `CausalFlow` (between-step
       / pre-processing physics) and `CausalDiscovery` (e.g. a SURD tap on solver output).
 - [ ] C4 Showcase multi-physics examples written in the Flow DSL (e.g. heated-cylinder thermo × fluid

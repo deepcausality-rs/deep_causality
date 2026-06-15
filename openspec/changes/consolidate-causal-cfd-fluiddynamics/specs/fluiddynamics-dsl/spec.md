@@ -30,14 +30,40 @@ case can seed a factual run and one or more counterfactual runs.
 
 ### Requirement: A theory is a first-class trait solvers are generic over
 A theory (a Navier–Stokes regime reused across solvers) SHALL be a first-class trait
-(`FluidTheory<R>`) that abstracts the marching rate, generic over `R: RealField`. The DEC-native
+(`FluidTheory<R>`) that abstracts the field-level marching rate, generic over `R: CfdScalar` (a bound
+of `RealField + FromPrimitive + … + MaybeParallel`). The trait SHALL expose an associated marching
+`State` carrying the algebra bounds the RK4 integrator requires (`Clone + Add + Mul<R>`), an
+associated `Ambient` type the rate reads each step (so compressible/thermal regimes extend the ambient
+without changing the trait), and a fallible `rate(&state, &ambient)` method. The DEC-native
 incompressible rate SHALL implement it, and the pointwise regime evaluators (incompressible,
-compressible, Euler, Stokes) SHALL be reachable through it for verification solvers. Adding a theory
-or a solver SHALL be a small trait implementation using static dispatch, not a change to the DSL core.
+compressible, Euler, Stokes) SHALL be reachable through it for verification solvers. The manifold
+borrow SHALL live in the implementor, not the trait. Adding a theory or a solver SHALL be a small
+trait implementation using static dispatch, not a change to the DSL core.
 
 #### Scenario: A solver is generic over its theory
 - **WHEN** a solver is constructed with a theory that implements `FluidTheory<R>`
 - **THEN** the solver marches using that theory with all dispatch resolved at compile time
+
+#### Scenario: A regime extends the ambient without changing the trait
+- **WHEN** a compressible or thermal regime needs additional ambient state (temperature, density, EOS)
+- **THEN** it supplies its own associated `Ambient` type and the `FluidTheory` trait is unchanged
+
+### Requirement: Parallelism is an opt-in parameter threaded through the solver bounds
+The crate SHALL carry an opt-in `parallel` feature that forwards to `deep_causality_topology/parallel`
+and `deep_causality_par/parallel` (and pulls Rayon directly only where the crate fans out itself). The
+`CfdScalar` bound and the theory/solver trait bounds SHALL include `MaybeParallel`, so the inner
+topology operator loops fan out under the feature with no solver code change. Serial execution SHALL
+be the default. The crate SHALL parallelize at a single granularity per run — coarse-grained over
+independent cases (counterfactual branches, ensembles, sweeps) or fine-grained per cell — and SHALL
+NOT nest the two, to avoid oversubscription.
+
+#### Scenario: The feature is off by default and results are unchanged
+- **WHEN** the crate is built without the `parallel` feature
+- **THEN** the solver runs serially and reproduces the same results as a parallel build to tolerance
+
+#### Scenario: Independent cases fan out under the feature
+- **WHEN** several independent counterfactual branches or ensemble members run under `--features parallel`
+- **THEN** they execute concurrently and each result matches its serial counterpart
 
 ### Requirement: Solvers separate owned configuration from the manifold-bound marcher
 Each solver SHALL expose an owned configuration struct that holds no borrow of the manifold, built via
