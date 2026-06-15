@@ -1,0 +1,20 @@
+examples/avionics_examples/dec_cylinder_validation/README.md
+  s_86cf72b3950d7d::t_0d2a2a2bd5be96 165-167
+  s_86cf72b3950d7d::t_71bba35b29d12d 113-129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "193b6697d8a1348d2478faa8988f542ac5048452",
+  "prompts": {},
+  "sessions": {
+    "s_86cf72b3950d7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "449a7105-1712-4ede-8466-427285c3e5e2",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
