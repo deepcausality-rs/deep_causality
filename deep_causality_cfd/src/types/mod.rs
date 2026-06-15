@@ -8,6 +8,7 @@
 
 mod ambient;
 mod cfd_scalar;
+pub mod flow;
 
 pub use ambient::Ambient;
 pub use cfd_scalar::CfdScalar;
