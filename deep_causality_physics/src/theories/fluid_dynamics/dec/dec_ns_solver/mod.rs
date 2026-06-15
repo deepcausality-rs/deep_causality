@@ -236,6 +236,15 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsSolver<'m, D, R> {
         self
     }
 
+    /// Enable projection **warm start**: each per-stage Leray solve seeds its CG with the previous
+    /// solve's potential, which converges in far fewer iterations as the flow develops and the
+    /// per-step right-hand side stops changing. Off by default; the marched result is identical to
+    /// the cold path within the CG tolerance.
+    pub fn with_warm_start(mut self) -> Self {
+        self.rate.set_warm_start(true);
+        self
+    }
+
     /// Opt into the spectral evaluation of the viscous term (fully
     /// periodic uniform lattices only; the `spectral-diffusion`
     /// capability). Off by default — the validation ladder gates any

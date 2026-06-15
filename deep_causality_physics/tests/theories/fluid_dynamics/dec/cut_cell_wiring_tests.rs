@@ -67,6 +67,51 @@ fn march(m: &Manifold<LatticeComplex<2, f64>, f64>, ny: usize, steps: usize) -> 
     state.as_one_form().as_slice().to_vec()
 }
 
+/// March as [`march`], but with projection warm start enabled on the solver.
+fn march_warm(m: &Manifold<LatticeComplex<2, f64>, f64>, ny: usize, steps: usize) -> Vec<f64> {
+    let h = HEIGHT / (ny - 1) as f64;
+    let g = 8.0 * NU;
+    let n1 = m.complex().num_cells(1);
+    let mut force = vec![0.0; n1];
+    for (idx, cell) in m.complex().iter_cells(1).enumerate() {
+        if cell.orientation().trailing_zeros() as usize == 0 {
+            force[idx] = g * h;
+        }
+    }
+    let force = BodyForceOneForm::new(CausalTensor::new(force, vec![n1]).unwrap(), m).unwrap();
+    let dt = 0.5 * h * h / (4.0 * NU);
+    let solver = DecNsSolver::new(m, NU, dt, Some(&force))
+        .unwrap()
+        .with_warm_start();
+    let n0 = m.complex().num_cells(0);
+    let rest = CausalTensor::new(vec![0.0; 2 * n0], vec![2 * n0]).unwrap();
+    let mut state = solver.seed_from_vertex_vectors(&rest).unwrap();
+    for _ in 0..steps {
+        state = solver.step(&state).unwrap().into_state();
+    }
+    state.as_one_form().as_slice().to_vec()
+}
+
+/// Warm start changes only the CG iteration count, so a warm-started march tracks the cold march to
+/// within the projection tolerance over a wall-bounded (no-slip) channel.
+#[test]
+fn warm_start_matches_the_cold_march() {
+    let ny = 9;
+    let steps = 40;
+    let m = channel_manifold(ny, None);
+    let cold = march(&m, ny, steps);
+    let warm = march_warm(&m, ny, steps);
+    assert_eq!(cold.len(), warm.len());
+    let max_diff = cold
+        .iter()
+        .zip(warm.iter())
+        .fold(0.0_f64, |acc, (a, b)| acc.max((a - b).abs()));
+    assert!(
+        max_diff < 1e-8,
+        "warm-started march diverged from cold by {max_diff:e}"
+    );
+}
+
 #[test]
 fn empty_registry_marches_bit_identically_to_plain_geometry() {
     let ny = 9;

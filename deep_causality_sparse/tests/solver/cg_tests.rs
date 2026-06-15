@@ -220,3 +220,75 @@ fn preconditioned_cg_surfaces_budget_exhaustion() {
     let err = cg_solve_preconditioned(apply, &diag, &b, 1e-15, 1).unwrap_err();
     assert_eq!(err.iterations, 1);
 }
+
+/// Tridiagonal SPD operator and its Jacobi diagonal, shared by the warm-start tests.
+fn tridiag(n: usize) -> (impl Fn(&[f64]) -> Vec<f64>, Vec<f64>) {
+    let apply = move |v: &[f64]| -> Vec<f64> {
+        (0..v.len())
+            .map(|i| {
+                let mut acc = 2.5 * v[i];
+                if i > 0 {
+                    acc -= v[i - 1];
+                }
+                if i + 1 < v.len() {
+                    acc -= v[i + 1];
+                }
+                acc
+            })
+            .collect()
+    };
+    (apply, vec![2.5_f64; n])
+}
+
+#[test]
+fn warm_started_cg_agrees_with_a_cold_solve() {
+    use deep_causality_sparse::{cg_solve_preconditioned, cg_solve_preconditioned_from};
+    let n = 8usize;
+    let (apply, diag) = tridiag(n);
+    let b: Vec<f64> = (0..n).map(|i| ((i as f64) * 0.7).sin()).collect();
+
+    let cold = cg_solve_preconditioned(&apply, &diag, &b, 1e-13, 200).unwrap();
+    // A guess near the solution: the cold answer nudged. The warm solve must land on the same
+    // solution to tolerance, independent of the guess.
+    let x0: Vec<f64> = cold.iter().map(|c| c + 0.3).collect();
+    let warm = cg_solve_preconditioned_from(&apply, &diag, &b, &x0, 1e-13, 200).unwrap();
+    for (c, w) in cold.iter().zip(warm.iter()) {
+        assert!((c - w).abs() < 1e-9, "warm {w} disagrees with cold {c}");
+    }
+}
+
+#[test]
+fn warm_started_cg_returns_immediately_from_the_exact_solution() {
+    use deep_causality_sparse::{cg_solve_preconditioned, cg_solve_preconditioned_from};
+    let n = 6usize;
+    let (apply, diag) = tridiag(n);
+    let b: Vec<f64> = (0..n).map(|i| (i as f64 + 1.0)).collect();
+    let exact = cg_solve_preconditioned(&apply, &diag, &b, 1e-14, 200).unwrap();
+    // Seeding with the exact solution: the initial residual is already below tolerance, so the
+    // solver returns the guess without iterating.
+    let warm = cg_solve_preconditioned_from(&apply, &diag, &b, &exact, 1e-10, 200).unwrap();
+    for (e, w) in exact.iter().zip(warm.iter()) {
+        assert!((e - w).abs() < 1e-12);
+    }
+}
+
+#[test]
+fn warm_started_cg_rejects_a_mismatched_initial_guess() {
+    use deep_causality_sparse::cg_solve_preconditioned_from;
+    let (apply, diag) = tridiag(4);
+    let b = vec![1.0_f64; 4];
+    let x0 = vec![0.0_f64; 3]; // wrong length
+    let err = cg_solve_preconditioned_from(&apply, &diag, &b, &x0, 1e-12, 50).unwrap_err();
+    assert_eq!(err.iterations, 0);
+}
+
+#[test]
+fn warm_started_cg_surfaces_budget_exhaustion() {
+    use deep_causality_sparse::cg_solve_preconditioned_from;
+    let n = 16usize;
+    let (apply, diag) = tridiag(n);
+    let b = vec![1.0_f64; n];
+    let x0 = vec![0.0_f64; n];
+    let err = cg_solve_preconditioned_from(&apply, &diag, &b, &x0, 1e-15, 1).unwrap_err();
+    assert_eq!(err.iterations, 1);
+}

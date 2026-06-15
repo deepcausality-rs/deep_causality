@@ -80,7 +80,9 @@ pub use diagnostics::{
 };
 pub use energy_budget::EnergyBudget;
 pub use step_output::{RunOutput, StepOutput};
-pub use surface_force::{force_coefficient, fragment_area_vector, pressure_surface_force};
+pub use surface_force::{
+    force_coefficient, fragment_area_vector, pressure_surface_force, viscous_surface_force,
+};
 #[cfg(feature = "std")]
 pub use uncertain_inflow::{
     DropoutVerbosity, InflowContext, InflowMarchState, InflowProcess, UncertainBoundarySource,

@@ -213,3 +213,104 @@ fn inflow_without_reference_is_rejected() {
     );
     assert!(err.is_err(), "inflow without reference must be rejected");
 }
+
+/// Warm start (constrained path, no reference): seeding CG with the cold solve's potential yields
+/// the same projection to tolerance. `None` and a mismatched-length guess both fall back to the
+/// cold start and give the same answer.
+#[test]
+fn constrained_warm_start_matches_the_cold_projection() {
+    let m = manifold_2d([6, 6], [false, false], CubicalReggeGeometry::unit());
+    let edges = wall_tangential_edges(m.complex());
+    let n1 = m.complex().num_cells(1);
+    let field = random_field(n1, 11);
+    let opts = HodgeDecomposeOptions {
+        tolerance: Some(1e-12),
+        max_iterations: Some(10_000),
+    };
+
+    let cold = m
+        .leray_project_constrained_opts(&field, &edges, &opts)
+        .unwrap();
+    let phi = cold.potential().as_slice().to_vec();
+
+    let warm = m
+        .leray_project_constrained_warm_opts(&field, &edges, &opts, Some(&phi))
+        .unwrap();
+    assert!(
+        sup(cold
+            .projected()
+            .as_slice()
+            .iter()
+            .zip(warm.projected().as_slice())
+            .map(|(a, b)| a - b))
+            < 1e-9,
+        "warm projection disagrees with cold"
+    );
+
+    let none = m
+        .leray_project_constrained_warm_opts(&field, &edges, &opts, None)
+        .unwrap();
+    assert_eq!(none.projected().as_slice(), cold.projected().as_slice());
+
+    let bad = vec![0.0_f64; 3]; // wrong length ⇒ ignored, falls back to a cold start.
+    let warm_bad = m
+        .leray_project_constrained_warm_opts(&field, &edges, &opts, Some(&bad))
+        .unwrap();
+    assert_eq!(warm_bad.projected().as_slice(), cold.projected().as_slice());
+}
+
+/// Warm start (open path with an outflow reference): seeding CG with the cold potential yields the
+/// same uniform inflow/outflow solution, exercising the pinned/non-live masking of the guess.
+#[test]
+fn open_reference_warm_start_matches_the_cold_projection() {
+    let shape = [5usize, 4usize];
+    let m = manifold_2d(shape, [false, true], CubicalReggeGeometry::unit());
+    let complex = m.complex();
+    let n1 = complex.num_cells(1);
+    let west_x_edges: Vec<usize> = complex
+        .iter_cells(1)
+        .enumerate()
+        .filter_map(|(i, c)| {
+            (c.orientation().trailing_zeros() == 0 && c.position()[0] == 0).then_some(i)
+        })
+        .collect();
+    let east_vertices: Vec<usize> = complex
+        .iter_cells(0)
+        .enumerate()
+        .filter_map(|(i, c)| (c.position()[0] == shape[0] - 1).then_some(i))
+        .collect();
+    let mut data = vec![0.0; n1];
+    for &e in &west_x_edges {
+        data[e] = 0.7;
+    }
+    let field = CausalTensor::new(data, vec![n1]).unwrap();
+    let opts = HodgeDecomposeOptions {
+        tolerance: Some(1e-12),
+        max_iterations: Some(10_000),
+    };
+
+    let cold = m
+        .leray_project_open_opts(&field, &[], &west_x_edges, &east_vertices, &opts)
+        .unwrap();
+    let phi = cold.potential().as_slice().to_vec();
+    let warm = m
+        .leray_project_open_warm_opts(
+            &field,
+            &[],
+            &west_x_edges,
+            &east_vertices,
+            &opts,
+            Some(&phi),
+        )
+        .unwrap();
+    assert!(
+        sup(cold
+            .projected()
+            .as_slice()
+            .iter()
+            .zip(warm.projected().as_slice())
+            .map(|(a, b)| a - b))
+            < 1e-9,
+        "open warm projection disagrees with cold"
+    );
+}

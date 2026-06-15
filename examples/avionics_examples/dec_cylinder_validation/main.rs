@@ -14,77 +14,122 @@
 //! - the **immersed cut cylinder** (`CutCellRegistry::from_primitive`, exact clipped volumes +
 //!   apertures; its no-slip is the auto-derived solid-incident set).
 //!
-//! This is the external-flow domain the confined/periodic harness could not express; it is the
-//! configuration the Williamson (Strouhal) and Lehmkuhl et al. 2013 (drag) references describe.
+//! ## Symmetry breaking — why a perturbation is needed
+//!
+//! The discretisation, the geometry, and the inflow are all top–bottom symmetric, so a symmetric
+//! march converges to the steady symmetric wake and **never sheds**, even though the wake is
+//! linearly unstable at `Re ≥ ~47`. The harness seeds a uniform stream plus a small, single-signed
+//! transverse-velocity blob just downstream of the cylinder; the seed projection makes it
+//! divergence-free, and it tips the flow off the symmetric branch so the von-Kármán instability can
+//! grow.
 //!
 //! ## What this rung reports
 //!
-//! The wake probe (transverse velocity ~1.5 D downstream) gives the shedding **Strouhal**
-//! `St = f·D/U`. Reference: Williamson `St(Re=100) ≈ 0.164`. The harness streams the probe and
-//! prints the Strouhal estimate over the developed signal.
-//!
-//! Drag `C_d` needs the **viscous (friction) traction** added to `pressure_surface_force` (~35% of
-//! `C_d` at Re=100) — a follow-on; the pressure-drag scaffold is in `surface_force`.
+//! - The wake probe (transverse velocity ~1.5 D downstream) gives the shedding **Strouhal**
+//!   `St = f·D/U`. Reference: Williamson `St(Re=100) ≈ 0.164`.
+//! - The **cycle-mean drag** `C_d = F_x / (½ U² D)`, averaged over the developed (second-half)
+//!   window and split into the **pressure** force (`pressure_surface_force` over the static pressure
+//!   from `pressure_diagnostic`) and the **viscous (friction)** force (`viscous_surface_force`),
+//!   with the lift `C_l` and the `C_d` swing. Reference: Lehmkuhl et al. (2013) / lineage
+//!   `C_d(Re=100) ≈ 1.33`, friction ~35 %.
 //!
 //! ## Scope
 //!
 //! 2D laminar (Re ≈ 100–200) is the validated regime. The 3D-transition rung (Re ≈ 200–300) and
 //! Re ≈ 3900 by DNS are `const D`-ready but compute-bound (run with a larger grid / longer time).
+//! Reference-quality numbers need a finer grid and a longer run than the affordable default; raise
+//! `CELLS_PER_D` and `STEPS` for a quantitative comparison.
 //!
 //! ```text
 //! cargo run --release -p avionics_examples --example dec_cylinder_validation
 //! ```
 
-use deep_causality_physics::{DecNsSolver, Inflow, Outflow, SlipWall};
+use std::collections::BTreeMap;
+
+use deep_causality_physics::{
+    DecNsSolver, Inflow, Outflow, SlipWall, SolenoidalField, force_coefficient,
+    pressure_surface_force, viscous_surface_force,
+};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
-    ChainComplex, CubicalReggeGeometry, CutCellRegistry, LatticeComplex, Manifold, Primitive,
+    ChainComplex, CubicalReggeGeometry, CutCellRegistry, HodgeDecomposeOptions, LatticeCell,
+    LatticeComplex, Manifold, Primitive,
 };
 
-// Case parameters (kept modest so the smoke run is affordable; raise for a reference comparison).
-const RE_D: f64 = 100.0;
+// Fixed case parameters. The swept parameters (Re, resolution, domain, steps) are read from the
+// environment so the Re-ladder (D2/D3: Re 100–3900) and grid-refinement runs need no recompile —
+// see `env_f64` / `env_usize` and the README. Defaults give an affordable laminar smoke run.
 const U: f64 = 1.0;
-/// Cells across one cylinder diameter (resolution). Coarse by default so the harness runs quickly;
-/// raise (with a larger domain and `STEPS`) for a reference-quality Strouhal.
-const CELLS_PER_D: usize = 8;
-/// Domain extent in diameters: streamwise (x) and cross-stream (y).
-const LX_D: f64 = 10.0;
-const LY_D: f64 = 6.0;
-/// Cylinder center, in diameters from the inlet / bottom.
-const CX_D: f64 = 3.0;
-const CY_D: f64 = 3.0;
-const MERGE_FRACTION: f64 = 0.25;
-const STEPS: usize = 1500;
+/// Transverse-velocity seed amplitude (fraction of `U`) and Gaussian half-width (diameters), placed
+/// one diameter behind the cylinder on the centerline — the symmetry-breaking trigger.
+const PERTURB_EPS: f64 = 0.3;
+const PERTURB_SIGMA: f64 = 0.75;
+
+/// Read an `f64` case parameter from the environment, falling back to `default`.
+fn env_f64(key: &str, default: f64) -> f64 {
+    std::env::var(key)
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(default)
+}
+
+/// Read a `usize` case parameter from the environment, falling back to `default`.
+fn env_usize(key: &str, default: usize) -> usize {
+    std::env::var(key)
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(default)
+}
 
 fn main() {
+    // Swept parameters (env-overridable). The cylinder sits at ¼ span downstream, mid-channel, so
+    // changing the domain keeps it sensibly placed without extra knobs.
+    let re_d = env_f64("RE_D", 100.0);
+    let cells_per_d = env_usize("CELLS_PER_D", 12);
+    let lx_d = env_f64("LX_D", 12.0);
+    let ly_d = env_f64("LY_D", 6.0);
+    let steps = env_usize("STEPS", 1500);
+    let merge_fraction = env_f64("MERGE", 0.25);
+    // Advective CFL number `dt = CFL · h / U`. The flow accelerates to ~1.9 U around the cylinder,
+    // so the advective limit binds near CFL ≈ 0.45; keep CFL ≤ 0.4 or the march aborts at step 0.
+    let cfl = env_f64("CFL", 0.4);
+    // Projection CG tolerance. Unset ⇒ the library machine-epsilon default (divergence ~1e-15, but
+    // many iterations on a large ill-conditioned cut-cell system); set e.g. `1e-6` to cut iterations
+    // dramatically on fine grids (the dominant speed lever) at the cost of a looser divergence floor.
+    let cg_tol = std::env::var("CG_TOL")
+        .ok()
+        .and_then(|s| s.parse::<f64>().ok());
+
     let diameter = 1.0_f64;
     let radius = 0.5 * diameter;
-    let h = diameter / CELLS_PER_D as f64;
-    let nx = (LX_D / h).round() as usize;
-    let ny = (LY_D / h).round() as usize;
-    let nu = U * diameter / RE_D;
+    let h = diameter / cells_per_d as f64;
+    let nx = (lx_d / h).round() as usize;
+    let ny = (ly_d / h).round() as usize;
+    let nu = U * diameter / re_d;
 
     // x: inflow (west) / outflow (east); y: far-field slip walls.
     let lattice = LatticeComplex::<2, f64>::new([nx, ny], [false, false]);
-    let center = [CX_D, CY_D];
+    let center = [lx_d * 0.25, ly_d * 0.5];
     let base = CubicalReggeGeometry::<2, f64>::uniform(h);
     let disk = Primitive::<2, f64>::ball(center, radius);
     let registry = CutCellRegistry::from_primitive(&lattice, &base, &disk)
         .expect("disk intersection")
-        .with_cell_merging(MERGE_FRACTION);
+        .with_cell_merging(merge_fraction);
     let n_solid = registry
         .iter()
         .filter(|(_, c)| c.class().is_solid())
         .count();
     let n_cut = registry.iter().filter(|(_, c)| c.class().is_cut()).count();
+    // The registry is moved into the geometry; keep a copy for the surface-force diagnostics.
+    let registry_force = registry.clone();
     let metric = base.with_cut_cells(registry);
 
     let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
     let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
     let manifold = Manifold::from_cubical_with_metric(lattice, data, metric, 0);
 
-    // Conservative dt: the advective limit at the inflow speed, with a margin.
-    let dt = 0.4 * h / U;
+    // Advective limit at the inflow speed, scaled by the CFL number.
+    let dt = cfl * h / U;
 
     // The full isolated-cylinder boundary-zone set (static tuple composition).
     let zones = (
@@ -97,11 +142,35 @@ fn main() {
             ),
         ),
     );
-    let solver = DecNsSolver::with_zones(&manifold, nu, dt, zones).expect("solver");
+    // The projection CG's iteration count grows with the grid, so the default 1000-iteration budget
+    // starves the seed/step solves on finer grids. Scale it with the grid (env-overridable).
+    let cg_max_iter = env_usize("CG_MAX_ITER", 30 * (nx + ny));
+    let solver = DecNsSolver::with_zones(&manifold, nu, dt, zones)
+        .expect("solver")
+        .with_cg_options(HodgeDecomposeOptions {
+            tolerance: cg_tol,
+            max_iterations: Some(cg_max_iter),
+        })
+        // Warm-start the per-stage projection CG from the previous solve's potential. As the flow
+        // develops the right-hand side changes little, so CG converges in a handful of iterations.
+        .with_warm_start();
 
+    // Symmetry-breaking initial condition: uniform stream `U` in x plus a single-signed transverse
+    // blob one diameter behind the cylinder. The seed projection makes it divergence-free.
     let n0 = manifold.complex().num_cells(0);
-    let rest = CausalTensor::new(vec![0.0; 2 * n0], vec![2 * n0]).unwrap();
-    let mut state = solver.seed_from_vertex_vectors(&rest).expect("seed");
+    let mut vv = vec![0.0_f64; 2 * n0];
+    let (xb, yb) = (center[0] + 1.0, center[1]);
+    let two_sigma_sq = 2.0 * PERTURB_SIGMA * PERTURB_SIGMA;
+    for (i, v) in manifold.complex().iter_cells(0).enumerate() {
+        let p = v.position();
+        let x_d = p[0] as f64 * h / diameter;
+        let y_d = p[1] as f64 * h / diameter;
+        let r2 = (x_d - xb).powi(2) + (y_d - yb).powi(2);
+        vv[2 * i] = U;
+        vv[2 * i + 1] = PERTURB_EPS * U * (-r2 / two_sigma_sq).exp();
+    }
+    let seed = CausalTensor::new(vv, vec![2 * n0]).unwrap();
+    let mut state = solver.seed_from_vertex_vectors(&seed).expect("seed");
 
     // Wake probe: transverse (y) velocity ~1.5 D downstream of the cylinder, mid-channel.
     let probe_x = ((center[0] + 1.5 * diameter) / h).round() as usize;
@@ -117,14 +186,23 @@ fn main() {
         .expect("probe edge exists");
 
     eprintln!(
-        "# isolated cylinder: grid {nx}×{ny} ({CELLS_PER_D}/D), domain {LX_D}×{LY_D} D, Re_D={RE_D}, nu={nu:.3e}, dt={dt:.3e}"
+        "# isolated cylinder: grid {nx}×{ny} ({cells_per_d}/D), domain {lx_d}×{ly_d} D, Re_D={re_d}, nu={nu:.3e}, dt={dt:.3e}"
     );
-    eprintln!("# cut cells: {n_solid} solid, {n_cut} cut; merge floor {MERGE_FRACTION}");
+    eprintln!(
+        "# cut cells: {n_solid} solid, {n_cut} cut; merge floor {merge_fraction}; CFL {cfl}; cg_tol {cg_tol:?}; cg_max_iter {cg_max_iter}"
+    );
+    eprintln!(
+        "# trigger: transverse seed eps={PERTURB_EPS} sigma={PERTURB_SIGMA} D at ({xb:.1},{yb:.1}) D"
+    );
     println!("step,t,max_speed,interior_div,v_probe");
 
-    let mut probe_series: Vec<(f64, f64)> = Vec::with_capacity(STEPS);
-    let report_every = (STEPS / 200).max(1);
-    for step in 0..STEPS {
+    let mut probe_series: Vec<(f64, f64)> = Vec::with_capacity(steps);
+    let report_every = (steps / 200).max(1);
+    // Cycle-mean drag: sample the force over the developed (second-half) window and average, since
+    // the reference C_d / C_l are cycle means, not a single instant.
+    let drag_every = (steps / 80).max(1);
+    let mut drag_samples: Vec<[f64; 4]> = Vec::new();
+    for step in 0..steps {
         let out = match solver.step(&state) {
             Ok(o) => o,
             Err(e) => {
@@ -159,10 +237,46 @@ fn main() {
                 v_probe,
             );
         }
+        if step + 1 > steps / 2
+            && (step + 1) % drag_every == 0
+            && let Some(s) = instantaneous_drag(
+                &solver,
+                &manifold,
+                &registry_force,
+                out.state(),
+                nu,
+                U,
+                diameter,
+            )
+        {
+            drag_samples.push(s);
+        }
         state = out.into_state();
     }
 
     report_strouhal(&probe_series, diameter, U);
+    report_drag_mean(&drag_samples);
+}
+
+/// Report the cycle-mean drag/lift over the developed-window samples, with the C_d swing.
+fn report_drag_mean(samples: &[[f64; 4]]) {
+    if samples.is_empty() {
+        eprintln!("# drag: no developed-window samples");
+        return;
+    }
+    let n = samples.len() as f64;
+    let mean = |k: usize| samples.iter().map(|s| s[k]).sum::<f64>() / n;
+    let (cd, cl, cd_p, cd_f) = (mean(0), mean(1), mean(2), mean(3));
+    let cd_min = samples.iter().map(|s| s[0]).fold(f64::INFINITY, f64::min);
+    let cd_max = samples
+        .iter()
+        .map(|s| s[0])
+        .fold(f64::NEG_INFINITY, f64::max);
+    eprintln!(
+        "# drag (cycle mean over {} samples): C_d ≈ {cd:.3} (pressure {cd_p:.3} + friction {cd_f:.3}), \
+         C_l ≈ {cl:.3}, C_d swing [{cd_min:.3}, {cd_max:.3}]  (Lehmkuhl Re=100 ≈ 1.33, friction ~35%)",
+        samples.len()
+    );
 }
 
 /// Estimate `St = f·D/U` from the wake probe's mean-crossing rate over the developed (second-half)
@@ -189,4 +303,63 @@ fn report_strouhal(series: &[(f64, f64)], diameter: f64, u_ref: f64) {
     let period = (crossings.last().unwrap() - crossings[0]) / (crossings.len() - 1) as f64;
     let st = (1.0 / period) * diameter / u_ref;
     eprintln!("# shedding: period {period:.4}, St = f·D/U ≈ {st:.4}  (Williamson Re=100 ≈ 0.164)");
+}
+
+/// Instantaneous drag/lift coefficients at one state: `[C_d, C_l, C_d_pressure, C_d_friction]`.
+/// The pressure force comes from the recovered static pressure, the friction from the viscous
+/// surface traction. Returns `None` if a diagnostic solve fails. One CG solve (pressure) per call.
+fn instantaneous_drag(
+    solver: &DecNsSolver<'_, 2, f64>,
+    manifold: &Manifold<LatticeComplex<2, f64>, f64>,
+    registry: &CutCellRegistry<2, f64>,
+    state: &SolenoidalField<f64>,
+    nu: f64,
+    u_ref: f64,
+    diameter: f64,
+) -> Option<[f64; 4]> {
+    // Static pressure 0-form at this state (one CG solve), keyed by vertex position.
+    let (_bernoulli, static_p) = match solver.pressure_diagnostic(state) {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("# drag: pressure diagnostic failed: {e}");
+            return None;
+        }
+    };
+    let p_vert = static_p.as_tensor().as_slice();
+    let vertex_index: BTreeMap<[usize; 2], usize> = manifold
+        .complex()
+        .iter_cells(0)
+        .enumerate()
+        .map(|(i, v)| (*v.position(), i))
+        .collect();
+
+    // Per-cell pressure = mean of the cell's corner vertices (the `iter_cells(2)` / CellId order).
+    let cell_pressure: Vec<f64> = manifold
+        .complex()
+        .iter_cells(2)
+        .map(|cell: LatticeCell<2>| {
+            let corners = cell.vertices();
+            let sum: f64 = corners
+                .iter()
+                .filter_map(|pos| vertex_index.get(pos).map(|&i| p_vert[i]))
+                .sum();
+            sum / corners.len() as f64
+        })
+        .collect();
+
+    let f_pressure = pressure_surface_force(registry, |id| cell_pressure[id]);
+    let f_viscous = match viscous_surface_force(manifold, registry, state.as_one_form(), nu) {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("# drag: viscous force failed: {e}");
+            return None;
+        }
+    };
+    let f_total = [f_pressure[0] + f_viscous[0], f_pressure[1] + f_viscous[1]];
+
+    let cd = force_coefficient(f_total[0], u_ref, diameter);
+    let cl = force_coefficient(f_total[1], u_ref, diameter);
+    let cd_p = force_coefficient(f_pressure[0], u_ref, diameter);
+    let cd_f = force_coefficient(f_viscous[0], u_ref, diameter);
+    Some([cd, cl, cd_p, cd_f])
 }

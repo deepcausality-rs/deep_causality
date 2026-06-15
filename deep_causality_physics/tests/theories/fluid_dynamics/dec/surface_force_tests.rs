@@ -8,10 +8,16 @@
 //! Pinned analytically (2D disk + 3D cylinder): the fragment normals close (`∮ n dA = 0`); a
 //! uniform pressure yields zero net force; a linear pressure gradient yields `−∇p · V_solid`
 //! (the buoyancy-like force); and the coefficient helper normalizes correctly. The viscous
-//! (friction) traction is validated with the cylinder drag in the D2/D3 example.
+//! (friction) traction is pinned against a linear shear over a flat plate (analytic wall shear)
+//! and exercised at the full cylinder drag in the D2/D3 example.
 
-use deep_causality_physics::{force_coefficient, fragment_area_vector, pressure_surface_force};
-use deep_causality_topology::{CubicalReggeGeometry, CutCellRegistry, LatticeComplex, Primitive};
+use deep_causality_physics::{
+    force_coefficient, fragment_area_vector, pressure_surface_force, viscous_surface_force,
+};
+use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::{
+    ChainComplex, CubicalReggeGeometry, CutCellRegistry, LatticeComplex, Manifold, Primitive,
+};
 
 /// Discrete solid volume in the registry (solid cells full; cut cells their dry part).
 fn solid_volume_2d(registry: &CutCellRegistry<2, f64>, full: f64) -> f64 {
@@ -98,6 +104,103 @@ fn pressure_force_on_a_cylinder_is_consistent_3d() {
         uniform.iter().all(|f| f.abs() < 1e-9),
         "3D uniform pressure gave a net force: {uniform:?}"
     );
+}
+
+/// A linear shear `u = (a·y, 0)` over a flat plate (half-space solid `y ≤ y0`, outward normal
+/// `(0, 1)`) has the exact wall traction `τ·n = (μ·a, 0)` per unit area, so the net viscous force
+/// is `F = (μ·a·A, 0)` with `A` the total cut-face area. `sharp` recovers the linear field exactly,
+/// so the finite-difference gradient is exactly `a` and the force matches the analytic traction to
+/// rounding. (`A` is read from the fragments rather than assumed, since the cut is the integrator's
+/// input — fragment-area exactness is gated in the cut-cell tests, not here.)
+#[test]
+fn viscous_force_on_a_linear_shear_matches_analytic_2d() {
+    let n = 20;
+    let h = 0.05; // domain 1.0 × 1.0
+    let a = 2.0; // shear rate dU/dy
+    let mu = 0.1; // dynamic viscosity (ρ = 1 ⇒ μ = ν)
+
+    let lattice = LatticeComplex::<2, f64>::new([n, n], [false, false]);
+    let base = CubicalReggeGeometry::<2, f64>::uniform(h);
+    // Solid below, fluid above; the cut row sits mid-cell so the cells are genuinely partial.
+    let plate = Primitive::<2, f64>::halfspace([0.0, 1.0], 0.525);
+    let registry = CutCellRegistry::from_primitive(&lattice, &base, &plate).unwrap();
+
+    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
+    let manifold = Manifold::from_cubical_with_metric(lattice, data, base, 0);
+
+    // Seed the linear shear at the vertices, in the complex's vertex order.
+    let n0 = manifold.complex().num_cells(0);
+    let mut vv = vec![0.0; 2 * n0];
+    for (i, v) in manifold.complex().iter_cells(0).enumerate() {
+        let y = v.position()[1] as f64 * h;
+        vv[2 * i] = a * y; // u_x
+        vv[2 * i + 1] = 0.0; // u_y
+    }
+    let vertex_vectors = CausalTensor::new(vv, vec![2 * n0]).unwrap();
+    let edge_form = manifold.de_rham(&vertex_vectors).unwrap();
+
+    // Total cut-face area (every fragment normal is +y for a horizontal plate).
+    let total_area: f64 = registry
+        .iter()
+        .flat_map(|(_, c)| c.fragments())
+        .map(|f| f.area())
+        .sum();
+
+    let force = viscous_surface_force(&manifold, &registry, &edge_form, mu).unwrap();
+    let expected_fx = mu * a * total_area;
+    assert!(
+        (force[0] - expected_fx).abs() < 1e-9,
+        "viscous drag {} far from analytic {expected_fx}",
+        force[0]
+    );
+    assert!(force[1].abs() < 1e-9, "spurious viscous lift {}", force[1]);
+}
+
+/// A quiescent field exerts no viscous force (zero gradient over every fragment).
+#[test]
+fn viscous_force_is_zero_for_a_quiescent_field_2d() {
+    let n = 16;
+    let h = 1.0 / (n - 1) as f64;
+    let lattice = LatticeComplex::<2, f64>::new([n, n], [false, false]);
+    let base = CubicalReggeGeometry::<2, f64>::uniform(h);
+    let disk = Primitive::<2, f64>::ball([0.5, 0.5], 0.2);
+    let registry = CutCellRegistry::from_primitive(&lattice, &base, &disk).unwrap();
+
+    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
+    let manifold = Manifold::from_cubical_with_metric(lattice, data, base, 0);
+
+    let n1 = manifold.complex().num_cells(1);
+    let edge_form = CausalTensor::new(vec![0.0; n1], vec![n1]).unwrap();
+    let force = viscous_surface_force(&manifold, &registry, &edge_form, 0.1).unwrap();
+    assert!(
+        force.iter().all(|f| f.abs() < 1e-12),
+        "quiescent field gave a viscous force: {force:?}"
+    );
+}
+
+/// A per-edge (graded) geometry has no single per-axis spacing for the difference stencil, so the
+/// viscous diagnostic rejects it rather than silently using a wrong `dx`.
+#[test]
+fn viscous_force_rejects_per_edge_geometry_2d() {
+    let n = 8;
+    let h = 1.0 / (n - 1) as f64;
+    let lattice = LatticeComplex::<2, f64>::new([n, n], [false, false]);
+    let uniform = CubicalReggeGeometry::<2, f64>::uniform(h);
+    let disk = Primitive::<2, f64>::ball([0.5, 0.5], 0.2);
+    let registry = CutCellRegistry::from_primitive(&lattice, &uniform, &disk).unwrap();
+
+    // A per-edge geometry with all lengths equal is still represented as `PerEdge`, so
+    // `axis_lengths()` returns `None`.
+    let n1 = lattice.num_cells(1);
+    let per_edge = CubicalReggeGeometry::<2, f64>::from_edge_lengths(vec![h; n1]);
+    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
+    let manifold = Manifold::from_cubical_with_metric(lattice, data, per_edge, 0);
+
+    let edge_form = CausalTensor::new(vec![0.0; n1], vec![n1]).unwrap();
+    assert!(viscous_surface_force(&manifold, &registry, &edge_form, 0.1).is_err());
 }
 
 #[test]

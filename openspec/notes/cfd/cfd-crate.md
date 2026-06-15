@@ -1,5 +1,5 @@
-Preparing for the recently announced CFD community challange requires to consolidate all CFD relevant code currently
-scatterered across te physics crate and the example folder into a dedicated CFD crate called deep_causality_cfd.
+Consolidate all CFD relevant code currently scatterered across te physics crate and the example 
+folder into a dedicated CFD crate called deep_causality_cfd.
 
 Plan new crate: deep_causality_cfd
 
@@ -58,6 +58,14 @@ path = "dec_lid_cavity_re1000/main.rs"
 name = "dec_graded_mms"
 path = "dec_graded_mms/main.rs"
 
+[[example]]
+name = "dec_cylinder_wake"
+path = "dec_cylinder_wake/main.rs"
+
+[[example]]
+name = "dec_cylinder_validation"
+path = "dec_cylinder_validation/main.rs"
+
 For the theories and solvers, migrate all fluid dynamics theories from the pjhyisc crate
 
 deep_causality_physics/src/theories/fluid_dynamics
@@ -69,6 +77,8 @@ solvers. A solver, however, uses a theory and or multiple physics kernels,
 but only solves a designated use case.
 
 The solvers may need some proper design work.
+That means you may have to refactor some of the avionics example codes into a standalone solver.
+Also, the solvers needs to be generic of a real field to fully implement precision as a parameter end to end.
 
 The goal is, eventually, to increase expressiveness and reduce code lines by
 building a highly powerful CFD Domain Specific Language (DSL) similar

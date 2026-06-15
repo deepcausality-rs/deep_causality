@@ -85,6 +85,12 @@ pub struct DecNsRate<'m, const D: usize, R: DecNsScalar> {
     /// The per-stage rate constraint set `no_slip ∪ inflow` (the rate is pinned to zero on both).
     /// Equals `no_slip.edges()` on closed domains, so `project_raw` is bit-identical there.
     rate_constrained: alloc::vec::Vec<usize>,
+    /// Opt-in projection warm start. Off by default, so `project_raw` is bit-identical to the
+    /// cold path; on, the previous solve's potential (cached in `proj_warm`) seeds the CG, which
+    /// converges in far fewer iterations for the slowly varying per-step right-hand side.
+    warm_start: bool,
+    /// The last projection potential, reused as the warm-start guess. `None` until the first solve.
+    proj_warm: RefCell<Option<alloc::vec::Vec<R>>>,
 }
 
 /// The compiled tables plus the per-evaluation scratch. `RefCell`: the
@@ -271,7 +277,18 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             inflow_edges: alloc::vec::Vec::new(),
             reference_vertices: alloc::vec::Vec::new(),
             rate_constrained,
+            warm_start: false,
+            proj_warm: RefCell::new(None),
         })
+    }
+
+    /// Enable or disable projection warm start (off by default). Disabling clears the cached guess
+    /// so a later re-enable starts cold.
+    pub(in crate::theories::fluid_dynamics::dec) fn set_warm_start(&mut self, on: bool) {
+        self.warm_start = on;
+        if !on {
+            *self.proj_warm.borrow_mut() = None;
+        }
     }
 
     /// Attaches an open-boundary specification: `inflow` edges carry a prescribed Dirichlet
@@ -481,9 +498,27 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         // Per-stage: the rate is pinned to zero on the no-slip walls **and** the inflow edges
         // (a constant prescribed inflow has zero rate). `rate_constrained` equals `no_slip` on
         // closed domains, so this is bit-identical there.
-        self.manifold
-            .leray_project_constrained_opts(raw.as_tensor(), &self.rate_constrained, opts)
-            .map_err(|e| PhysicsError::TopologyError(format!("Leray projection failed: {e}")))
+        if !self.warm_start {
+            return self
+                .manifold
+                .leray_project_constrained_opts(raw.as_tensor(), &self.rate_constrained, opts)
+                .map_err(|e| PhysicsError::TopologyError(format!("Leray projection failed: {e}")));
+        }
+        // Warm path: seed the CG with the previous solve's potential, then cache the new one. The
+        // result is the same to tolerance; only the iteration count changes.
+        let projection = {
+            let guess = self.proj_warm.borrow();
+            self.manifold
+                .leray_project_constrained_warm_opts(
+                    raw.as_tensor(),
+                    &self.rate_constrained,
+                    opts,
+                    guess.as_deref(),
+                )
+                .map_err(|e| PhysicsError::TopologyError(format!("Leray projection failed: {e}")))?
+        };
+        *self.proj_warm.borrow_mut() = Some(projection.potential().as_slice().to_vec());
+        Ok(projection)
     }
 
     /// The skew-symmetrized convective term through the compiled tables

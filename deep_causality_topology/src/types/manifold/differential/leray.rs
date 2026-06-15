@@ -205,6 +205,67 @@ where
         reference_vertices: &[usize],
         opts: &HodgeDecomposeOptions<R>,
     ) -> Result<LerayProjection<R>, TopologyError> {
+        self.leray_project_open_guess(
+            field,
+            zeroed_edges,
+            prescribed_edges,
+            reference_vertices,
+            opts,
+            None,
+        )
+    }
+
+    /// As [`Self::leray_project_open_opts`], with a **warm-start** initial guess `x0` for the
+    /// projection CG (the previous solve's grade-0 potential). The guess only accelerates
+    /// convergence; the returned projection is the same to tolerance regardless of `x0`. With an
+    /// all-empty edge/vertex partition the call delegates to the plain projection and `x0` is
+    /// ignored (that path's CG is not warm-startable here).
+    ///
+    /// # Errors
+    /// As [`Self::leray_project_open_opts`].
+    pub fn leray_project_open_warm_opts(
+        &self,
+        field: &CausalTensor<R>,
+        zeroed_edges: &[usize],
+        prescribed_edges: &[usize],
+        reference_vertices: &[usize],
+        opts: &HodgeDecomposeOptions<R>,
+        x0: Option<&[R]>,
+    ) -> Result<LerayProjection<R>, TopologyError> {
+        self.leray_project_open_guess(
+            field,
+            zeroed_edges,
+            prescribed_edges,
+            reference_vertices,
+            opts,
+            x0,
+        )
+    }
+
+    /// As [`Self::leray_project_constrained_opts`], with a warm-start initial guess `x0`. See
+    /// [`Self::leray_project_open_warm_opts`].
+    ///
+    /// # Errors
+    /// As [`Self::leray_project_constrained_opts`].
+    pub fn leray_project_constrained_warm_opts(
+        &self,
+        field: &CausalTensor<R>,
+        constrained_edges: &[usize],
+        opts: &HodgeDecomposeOptions<R>,
+        x0: Option<&[R]>,
+    ) -> Result<LerayProjection<R>, TopologyError> {
+        self.leray_project_open_guess(field, constrained_edges, &[], &[], opts, x0)
+    }
+
+    fn leray_project_open_guess(
+        &self,
+        field: &CausalTensor<R>,
+        zeroed_edges: &[usize],
+        prescribed_edges: &[usize],
+        reference_vertices: &[usize],
+        opts: &HodgeDecomposeOptions<R>,
+        x0: Option<&[R]>,
+    ) -> Result<LerayProjection<R>, TopologyError> {
         if zeroed_edges.is_empty() && prescribed_edges.is_empty() && reference_vertices.is_empty() {
             return self.leray_project_opts(field, opts);
         }
@@ -388,10 +449,27 @@ where
             }
             out
         };
-        let mut phi = deep_causality_sparse::cg_solve_preconditioned(
-            apply, &diag, &wrhs, tolerance, max_iter,
-        )
-        .map_err(|f| {
+        // Warm start: a caller-supplied initial guess (the previous solve's potential) seeds CG,
+        // which converges in far fewer iterations for a slowly varying right-hand side. The guess is
+        // masked to the active DOFs (pinned and non-live vertices stay at zero) so it cannot pollute
+        // the eliminated rows. The result is the same solution to tolerance, independent of `x0`.
+        let solve = match x0 {
+            Some(guess) if guess.len() == n0 => {
+                let mut g = guess.to_vec();
+                for (i, gi) in g.iter_mut().enumerate() {
+                    if diag[i] == R::zero() || (eliminate && (is_ref[i] || !live[i])) {
+                        *gi = R::zero();
+                    }
+                }
+                deep_causality_sparse::cg_solve_preconditioned_from(
+                    apply, &diag, &wrhs, &g, tolerance, max_iter,
+                )
+            }
+            _ => deep_causality_sparse::cg_solve_preconditioned(
+                apply, &diag, &wrhs, tolerance, max_iter,
+            ),
+        };
+        let mut phi = solve.map_err(|f| {
             TopologyError::HodgeDecompositionFailed(format!(
                 "open projection solve did not converge in {} iterations (final residual {})",
                 f.iterations, f.residual
