@@ -1,0 +1,39 @@
+openspec/specs/cut-cell-stabilization/spec.md
+  s_86cf72b3950d7d::t_272876ebe329a1 1-46
+openspec/changes/add-cut-cells-and-immersed-boundaries/tasks.md
+  s_86cf72b3950d7d::t_af6e28025fe43b 160
+  s_86cf72b3950d7d::t_ac6cbac7ff3526 106-108
+  s_86cf72b3950d7d::t_41703625cadbba 167-173
+  s_86cf72b3950d7d::t_9f50c8e451b0dc 37-40
+  s_86cf72b3950d7d::t_3a85c6d039b8d0 180-183
+openspec/specs/uncertain-inflow-zone/spec.md
+  s_86cf72b3950d7d::t_30910bbbe28315 1-48
+openspec/changes/add-cut-cells-and-immersed-boundaries/specs/immersed-wall-bc/spec.md
+  s_86cf72b3950d7d::t_1ecaa8a32a6f51 3-16,19-22,25-29,32-39
+openspec/specs/cut-cell-geometry/spec.md
+  s_86cf72b3950d7d::t_c397c0bf8b33c6 1-51
+openspec/specs/immersed-wall-bc/spec.md
+  s_86cf72b3950d7d::t_7058c931654cba 1-50
+openspec/specs/cut-cell-validation/spec.md
+  s_86cf72b3950d7d::t_9bb601872c327c 1-49
+openspec/changes/add-cut-cells-and-immersed-boundaries/specs/cut-cell-validation/spec.md
+  s_86cf72b3950d7d::t_39d65ae894dee8 3-9,11-21,23-27,37-38
+openspec/changes/add-cut-cells-and-immersed-boundaries/specs/cut-cell-stabilization/spec.md
+  s_86cf72b3950d7d::t_c49799be11a0ef 4-16,19-23,28-29,31-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "78e3dfe2678d554f57f4cc186c8ea170216d3c86",
+  "prompts": {},
+  "sessions": {
+    "s_86cf72b3950d7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "449a7105-1712-4ede-8466-427285c3e5e2",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
