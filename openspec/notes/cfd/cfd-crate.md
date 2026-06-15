@@ -127,8 +127,7 @@ to be added to the new crate after the code migration, implementation and Flow D
 
 Ensure that each example uses a float type alias "FloatType" for precision as a parameter.
 
-/// Switch this alias to `f32` for low precision, `f64` for standard precision,
-/// or `Float106` for high precision.
+/// Switch this alias to `f32` for low precision, `f64` for standard precision, or `Float106` for high precision.
 pub type FloatType = Float106;
 
 Then show me the code examples for review. This may result in some refinement and iteration

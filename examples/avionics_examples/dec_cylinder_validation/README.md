@@ -110,19 +110,23 @@ STAIRCASE=1 CELLS_PER_D=16 LX_D=16 LY_D=16 STEPS=4000 CFL=0.4 CG_TOL=1e-6 \
   cargo run --release -p avionics_examples --example dec_cylinder_validation > re100_16_staircase.csv
 ```
 
-**Gate result (June 2026).** The pair above was run at 16 cells/D, `LY_D=16`:
+**Gate result (June 2026).** The pair above was run at 16 cells/D, `LY_D=16`, to a developed state
+(`STEPS=4000`, t=100). Reference: Williamson `St(Re=100) ≈ 0.164`; Dröge–Verstappen / experimental
+`C_d ≈ 1.24–1.33`.
 
-| body                | 16/D shedding | `St` |
-|---------------------|---------------|------|
-| staircase           | **none** — the wake decays to a steady residual `v_probe ≈ -0.0069` (flat from t≈20 to t=100; `C_l ≈ 0`, `C_d` swing `[1.356, 1.356]`) | n/a (the summary's `0.244` is the crossing-detector on 7th-decimal noise) |
-| **aperture-resolved** | **sustained von-Kármán street**, saturated limit cycle (amplitude ≈ 0.41) | **≈ 0.172** (period `T ≈ 5.83`, 7 cycles, t∈[38,79]) |
+| body                | 16/D shedding | `St` | cycle-mean `C_d` |
+|---------------------|---------------|------|------------------|
+| staircase           | **none** — wake decays to a steady residual `v_probe ≈ -0.0069` (flat from t≈20 to t=100) | n/a (printed `0.244` is the crossing-detector on 7th-decimal noise) | `1.356` (p `0.704` + f `0.652`), swing `[1.356, 1.356]` — a **steady-flow** value, not the shedding mean |
+| **aperture-resolved** | **sustained von-Kármán street**, saturated limit cycle (amplitude ≈ 0.41) | **`0.171`** (period `T ≈ 5.835`) | **`1.246`** (p `1.078` + f `0.167`), `C_l ≈ 0.010`, swing `[1.238, 1.254]` |
 
-So the aperture-resolved no-slip **sheds at 16/D where the staircase stays dead steady**, with a
-limit-cycle `St ≈ 0.172` — within a few percent of Williamson's `0.164`, the small excess consistent
-with the `LY_D=16` blockage (≈ 6.25 %). The staircase's printed `St`/`C_d` are **steady-flow
-artifacts** (zero `C_d` swing, `C_l = 0`, friction `0.652` ≈ 48 % of `C_d` versus the ~25 % reference —
-the staircase wall mis-estimates shear). The aperture-resolved cycle-mean `C_d` (stderr summary) is
-recorded once that run completes.
+So the aperture-resolved no-slip **sheds at 16/D where the staircase stays dead steady**, and lands
+**inside both reference bands**: `St ≈ 0.171` (within ~4 % of Williamson `0.164`, the small excess
+consistent with the `LY_D=16` ≈ 6.25 % blockage) and cycle-mean `C_d ≈ 1.246` (in the `1.24–1.33`
+band, with a physically oscillating drag — `C_d` swing `±0.008`, `C_l ≈ 0.01`). The pressure/friction
+split is imperfect (friction ≈ 13 % here versus the ~25 % reference: pressure over, friction under),
+but the **integrated drag is accurate**. The staircase's `St`/`C_d` are by contrast **steady-flow
+artifacts** (zero `C_d` swing, `C_l = 0`, friction `0.652` ≈ 48 % — the staircase wall mis-estimates
+shear, and the body never sheds).
 
 **Performance.** The aperture-resolved run is much slower than the staircase one, but the 16/D-vs-16/D
 comparison is misleading: the staircase reaches a *steady* state and then coasts (its warm-started CG
@@ -158,8 +162,9 @@ perturbation decays), while at **24 cells/D a marginal von-Kármán street devel
 the marginal resolution are. That is the error the **aperture-resolved no-slip**
 (`add-aperture-resolved-noslip`, now the default here) attacks — it places the wall at the true surface.
 This is **confirmed**: at 16 cells/D the aperture-resolved body sheds a sustained limit cycle with
-`St ≈ 0.172` (≈ Williamson 0.164, the small excess from `LY_D=16` blockage) while the staircase body
-stays dead steady (see the gate-result table above). The threshold drop from ~24/D to ~16/D is the
+`St ≈ 0.171` and cycle-mean `C_d ≈ 1.246` (both inside the reference bands; the small `St` excess from
+`LY_D=16` blockage) while the staircase body stays dead steady (see the gate-result table above). The
+threshold drop from ~24/D to ~16/D is the
 accuracy win; the per-step cost of the weighted projection is mitigated by warm-starting both the φ and
 λ blocks, and the wall-clock win wants the `STEPS`-to-developed-window trim.
 

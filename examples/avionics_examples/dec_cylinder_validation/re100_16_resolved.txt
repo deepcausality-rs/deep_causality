@@ -1,0 +1,10 @@
+CELLS_PER_D=16 LX_D=16 LY_D=16 STEPS=4000 CFL=0.4 CG_TOL=1e-6 \
+>   cargo run --release -p avionics_examples --example dec_cylinder_validation > re100_16_resolved.csv
+    Finished `release` profile [optimized] target(s) in 0.04s
+     Running `target/release/examples/dec_cylinder_validation`
+# isolated cylinder: grid 256×256 (16/D), domain 16×16 D, Re_D=100, nu=1.000e-2, dt=2.500e-2
+# cut cells: 164 solid, 60 cut; no-slip aperture-resolved; merge floor 0.25; CFL 0.4; cg_tol Some(1e-6); cg_max_iter 15360
+# trigger: transverse seed eps=0.3 sigma=0.75 D at (5.0,8.0) D
+
+# shedding: period 5.8354, St = f·D/U ≈ 0.1714  (Williamson Re=100 ≈ 0.164)
+# drag (cycle mean over 40 samples): C_d ≈ 1.246 (pressure 1.078 + friction 0.167), C_l ≈ 0.010, C_d swing [1.238, 1.254]  (ref C_d ≈ 1.24–1.33, friction ≈ 25%)
