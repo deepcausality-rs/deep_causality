@@ -1,0 +1,42 @@
+openspec/changes/add-aperture-resolved-noslip/specs/aperture-resolved-noslip/spec.md
+  s_86cf72b3950d7d::t_d540bb827448cc 1-40,44-84,91-98
+  s_86cf72b3950d7d::t_e96d9aa2982268 41-43
+  s_86cf72b3950d7d::t_e6257504d04d43 85-90
+openspec/changes/add-aperture-resolved-noslip/tasks.md
+  s_86cf72b3950d7d::t_7d9afa992ca22e 1-70
+examples/avionics_examples/dec_cylinder_validation/README.md
+  s_86cf72b3950d7d::t_5a1124e3c4bfeb 49
+  s_86cf72b3950d7d::t_3f50663584b425 47
+  s_86cf72b3950d7d::t_aa4f85ac25ae6d 23-25
+  s_86cf72b3950d7d::t_0b9c4b3107a8f4 103-112
+openspec/changes/add-aperture-resolved-noslip/.openspec.yaml
+  s_86cf72b3950d7d::t_4229eac037a692 1-2
+openspec/changes/add-aperture-resolved-noslip/design.md
+  s_86cf72b3950d7d::t_4d90d3d4d9df07 123-131
+  s_86cf72b3950d7d::t_50980f0a091286 1-76,90-122,132-148
+  s_86cf72b3950d7d::t_07ee0ec09e913f 149-167
+  s_86cf72b3950d7d::t_e74bd6db9f63bf 77-89
+openspec/changes/add-aperture-resolved-noslip/proposal.md
+  s_86cf72b3950d7d::t_ab93b5735867ab 1-62
+examples/avionics_examples/dec_cylinder_validation/main.rs
+  s_86cf72b3950d7d::t_84d95a1969902a 91
+  s_86cf72b3950d7d::t_b508bb8c7f939d 33-35
+  s_86cf72b3950d7d::t_c946fc64f7467b 89
+  s_86cf72b3950d7d::t_a2c71b79f1ce61 278
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "436fc383343fa6c9026ec893c27ff0718999c0cb",
+  "prompts": {},
+  "sessions": {
+    "s_86cf72b3950d7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "449a7105-1712-4ede-8466-427285c3e5e2",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
