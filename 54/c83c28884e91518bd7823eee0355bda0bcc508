@@ -1,0 +1,60 @@
+deep_causality_cfd/src/types/flow/seed.rs
+  s_9bd896ecf5e8ba::t_1b0dbb50a2b11d 1-62
+deep_causality_cfd/src/types/flow/report.rs
+  s_9bd896ecf5e8ba::t_bc03c18cf30804 1-42
+deep_causality_cfd/src/types/flow/march_case.rs
+  s_9bd896ecf5e8ba::t_fc27102962e702 24-27,39
+  s_9bd896ecf5e8ba::t_0f78ca77db8211 9
+  s_9bd896ecf5e8ba::t_0f84d8db5fae41 34-35,48,64-65
+  s_9bd896ecf5e8ba::t_09d1b915cfbed6 6
+  s_9bd896ecf5e8ba::t_574e671795ab25 60-63
+  s_9bd896ecf5e8ba::t_626fe7f30c862d 1-5,7-8,10-23,28-33,36-38,40-47,49-59,66-86
+deep_causality_cfd/src/types/flow/zones.rs
+  s_9bd896ecf5e8ba::t_67759182861d06 1-5
+  s_9bd896ecf5e8ba::t_f13f8c402997c9 6-14
+deep_causality_cfd/src/types/flow/observe.rs
+  s_9bd896ecf5e8ba::t_0c1340fc8f7674 1-20
+deep_causality_cfd/src/lib.rs
+  s_9bd896ecf5e8ba::t_3cdd4d4bba5f0a 44-45
+  s_9bd896ecf5e8ba::t_0a7a13e2c8dfdc 46
+deep_causality_cfd/src/types/mod.rs
+  s_9bd896ecf5e8ba::t_03b8800d04f8a8 11
+deep_causality_cfd/src/types/flow/mesh.rs
+  s_9bd896ecf5e8ba::t_7781e10ceeac40 1-61
+deep_causality_cfd/tests/mod.rs
+  s_9bd896ecf5e8ba::t_516b962939f62e 8
+deep_causality_cfd/tests/types/flow/march_case_tests.rs
+  s_9bd896ecf5e8ba::t_864bb741401cb9 6-9,20-33,37,42,47-64,66-75,77,84,86
+  s_9bd896ecf5e8ba::t_d17d195437c77a 65
+  s_9bd896ecf5e8ba::t_12021e6727fa92 76,78-83,85
+  s_9bd896ecf5e8ba::t_31991c0b632d3f 1-5,10,12-19,34-36,38-41,43-46,87
+  s_9bd896ecf5e8ba::t_7706e4de97eaf5 11
+deep_causality_cfd/tests/types/mod.rs
+  s_9bd896ecf5e8ba::t_516b962939f62e 1-6
+deep_causality_cfd/src/types/flow/mod.rs
+  s_9bd896ecf5e8ba::t_e0c81147fcf7c7 1-13,15-19,21,23-27
+  s_9bd896ecf5e8ba::t_8b290c2c9cacfa 14,20,22
+deep_causality_cfd/tests/types/flow/mod.rs
+  s_9bd896ecf5e8ba::t_516b962939f62e 1-7
+deep_causality_cfd/src/types/flow/march_builder.rs
+  s_9bd896ecf5e8ba::t_06523126b95655 8
+  s_9bd896ecf5e8ba::t_44b1a06d4f8b3f 28
+  s_9bd896ecf5e8ba::t_78a505d36bf439 59-62,64-68
+  s_9bd896ecf5e8ba::t_ac35266c8f30d2 1-7,9-27,29-58,63,69-95,97,99-113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "54c83c28884e91518bd7823eee0355bda0bcc508",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
