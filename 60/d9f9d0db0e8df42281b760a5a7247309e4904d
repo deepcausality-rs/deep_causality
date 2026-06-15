@@ -1,0 +1,40 @@
+examples/avionics_examples/dec_cylinder_validation/README.md
+  s_86cf72b3950d7d::t_2b922b52cbe0b1 133-136
+  s_86cf72b3950d7d::t_7af8f0881fb311 163-164
+  s_86cf72b3950d7d::t_0c88952e5aa65d 115-132
+  s_86cf72b3950d7d::t_ea9d04deccec9c 160-162
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_rate.rs
+  s_86cf72b3950d7d::t_f962d92bc95f22 298
+  s_86cf72b3950d7d::t_c2cb115d471463 94-96
+  s_86cf72b3950d7d::t_f5dfdc348bdec0 546-552,554,559-560,565
+  s_86cf72b3950d7d::t_d3b5c28fc8e84c 288
+deep_causality_physics/tests/theories/fluid_dynamics/dec/cut_cell_wiring_tests.rs
+  s_86cf72b3950d7d::t_9fabf6a05b68c6 292-344
+deep_causality_topology/src/types/manifold/differential/leray.rs
+  s_86cf72b3950d7d::t_e242ab58ca5932 699-708,715-722
+  s_86cf72b3950d7d::t_a6d5ebd98d9b8f 300-333,342
+  s_86cf72b3950d7d::t_c2fbdc3862f2c2 410-417
+  s_86cf72b3950d7d::t_d77390593b0d8d 498-508
+  s_86cf72b3950d7d::t_0bf06c4f631881 372-383,390-392,403-404,407-409
+  s_86cf72b3950d7d::t_79ab79e721fd92 731
+  s_86cf72b3950d7d::t_719a363edefa5d 762
+deep_causality_topology/tests/types/manifold/leray_weighted_tests.rs
+  s_86cf72b3950d7d::t_2b221ac0750600 298-338,344-361,366-367
+  s_86cf72b3950d7d::t_8e730cfa98fa51 339-343,362-365
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "60d9f9d0db0e8df42281b760a5a7247309e4904d",
+  "prompts": {},
+  "sessions": {
+    "s_86cf72b3950d7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "449a7105-1712-4ede-8466-427285c3e5e2",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
