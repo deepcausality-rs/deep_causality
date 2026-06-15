@@ -1,0 +1,265 @@
+deep_causality_cfd/src/solvers/dec/dec_ns_solver/run.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-73
+deep_causality_cfd/src/solvers/dec/mod.rs
+  s_9bd896ecf5e8ba::t_3a12ffb4126f9a 65
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-64,66-93
+deep_causality_cfd/src/solvers/dec/uncertain_inflow/inflow_march.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-334
+deep_causality_cfd/tests/theories/regimes/mod.rs
+  s_9bd896ecf5e8ba::t_6bde78f83afcf3 1-21
+  s_9bd896ecf5e8ba::t_419eb974381edf 22-23
+deep_causality_cfd/tests/solvers/dec/dec_ns_solver/mod.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-19
+deep_causality_cfd/tests/solvers/dec/dec_ns_solver/no_slip_tests.rs
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 12,385
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-11,13-384,386-437
+deep_causality_cfd/tests/solvers/dec/dec_ns_solver/pressure_tests.rs
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 10
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-9,12-172
+deep_causality_cfd/src/solvers/dec/boundary/moving_wall.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-95
+deep_causality_cfd/src/types/mod.rs
+  s_9bd896ecf5e8ba::t_b1ae5ef4bacf10 8-13
+  s_9bd896ecf5e8ba::t_11d196fcb5bcf1 1-7
+deep_causality_cfd/tests/solvers/dec/energy_budget_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-12,14-161,163-204
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 13,162
+deep_causality_cfd/tests/solvers/dec/inflow_outflow_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-13,15-97
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 14
+deep_causality_cfd/src/solvers/mod.rs
+  s_9bd896ecf5e8ba::t_cb9e81f7a41fd5 9-13
+  s_9bd896ecf5e8ba::t_dbb175d6bcee8d 1-8
+  s_9bd896ecf5e8ba::t_dc9b4237907323 14-20
+deep_causality_cfd/src/traits/marcher.rs
+  s_9bd896ecf5e8ba::t_7126be807af2bd 1-33
+deep_causality_cfd/src/solvers/dec/uncertain_inflow/mod.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-23
+deep_causality_cfd/Cargo.toml
+  s_9bd896ecf5e8ba::t_8279a47045eec3 49-53
+  s_9bd896ecf5e8ba::t_7b3de779bda7aa 38
+  s_9bd896ecf5e8ba::t_1c2fdb3f823ecc 32-34
+  s_9bd896ecf5e8ba::t_e49b4401eb379d 1-31,35-37,39-48,54-115
+deep_causality_cfd/src/solvers/dec/uncertain_inflow/dropout_verbosity.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-21
+deep_causality_cfd/tests/solvers/dec/slip_wall_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-12,14-162
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 13
+deep_causality_cfd/tests/solvers/dec/uncertain_boundary_source_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-78
+deep_causality_cfd/src/solvers/dec/surface_force.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-230
+deep_causality_cfd/tests/solvers/dec/inviscid_invariants_tests.rs
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 12
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-11,13-105
+deep_causality_cfd/src/theories/regimes/stokes.rs
+  s_9bd896ecf5e8ba::t_288fc2f362854b 1-21,23-52
+deep_causality_cfd/tests/theories/regimes/incompressible_ns_verification_tests.rs
+  s_9bd896ecf5e8ba::t_47bb727f91fa28 1-22,24-154
+deep_causality_cfd/src/solvers/dec/boundary/inflow.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-106
+deep_causality_cfd/src/theories/regimes/mod.rs
+  s_9bd896ecf5e8ba::t_f60bc82c88635a 1-32
+deep_causality_cfd/src/theories/regimes/euler.rs
+  s_9bd896ecf5e8ba::t_288fc2f362854b 1-20,22-51
+deep_causality_cfd/tests/theories/regimes/incompressible_ns_tests.rs
+  s_9bd896ecf5e8ba::t_47bb727f91fa28 1-5,7-231
+deep_causality_cfd/tests/solvers/dec/boundary_zone_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-14,17-138
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 15-16
+deep_causality_cfd/tests/solvers/dec/poiseuille_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-21,23-147
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 22
+deep_causality_cfd/tests/mod.rs
+  s_9bd896ecf5e8ba::t_2cbcb74c73d6ae 6
+  s_9bd896ecf5e8ba::t_859daf09847e02 1-5,7
+deep_causality_cfd/src/solvers/dec/uncertain_inflow/uncertain_inflow_zone.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-105
+deep_causality_cfd/src/solvers/dec/wrappers.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-37
+deep_causality_cfd/src/traits/fluid_theory.rs
+  s_9bd896ecf5e8ba::t_fbbb1bc07a865f 1-16,23-24,26-38,40-41
+  s_9bd896ecf5e8ba::t_c973d5545aa730 17-22,25
+deep_causality_cfd/src/theories/mod.rs
+  s_9bd896ecf5e8ba::t_3a05a59ca7eca3 1-7
+  s_9bd896ecf5e8ba::t_217ea507fb1353 13
+  s_9bd896ecf5e8ba::t_9156f5289447ed 8-12,14-15
+deep_causality_cfd/src/theories/dec_incompressible.rs
+  s_9bd896ecf5e8ba::t_91a535d3ce25fc 1-52
+deep_causality_cfd/src/solvers/dec/marcher.rs
+  s_9bd896ecf5e8ba::t_e68b1e90694a3e 1-31
+deep_causality_cfd/tests/solvers/dec/dec_ns_solver/dec_ns_solver_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-8,11-96
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 9
+deep_causality_cfd/tests/solvers/dec/dec_ns_solver/seed_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-9,12-130
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 10
+deep_causality_cfd/tests/solvers/dec/spectral_diffusion_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-11,13-164
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 12
+deep_causality_cfd/tests/solvers/dec/taylor_green_3d_tests.rs
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 12
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-11,13-84
+deep_causality_cfd/src/solvers/dec/boundary/slip_wall.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-69
+deep_causality_cfd/src/types/cfd_scalar.rs
+  s_9bd896ecf5e8ba::t_f670694922414b 1-23
+deep_causality_cfd/src/theories/regimes/compressible_ns.rs
+  s_9bd896ecf5e8ba::t_288fc2f362854b 1-111
+deep_causality_cfd/tests/theories/regimes/euler_verification_tests.rs
+  s_9bd896ecf5e8ba::t_47bb727f91fa28 1-19,22-131
+deep_causality_cfd/tests/solvers/dec/shear_layer_tests.rs
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 23-24
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-22,26,28-182
+  s_9bd896ecf5e8ba::t_10ec4b1ced6c34 25,27
+deep_causality_cfd/tests/theories/regimes/stokes_tests.rs
+  s_9bd896ecf5e8ba::t_47bb727f91fa28 1-5,7-124
+  s_9bd896ecf5e8ba::t_953c5155cdfacd 6
+deep_causality_cfd/tests/solvers/dec/mod.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-46
+deep_causality_cfd/src/solvers/dec/dec_ns_solver/pressure.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-89
+deep_causality_cfd/tests/solvers/dec/dec_ns_rate_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-12,16-345,347-414
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 13-15,346
+deep_causality_cfd/src/solvers/dec/dec_ns_rate.rs
+  s_9bd896ecf5e8ba::t_e99ea3c88c8a14 515
+  s_9bd896ecf5e8ba::t_84a65d9b13b100 714,716,719-724
+  s_9bd896ecf5e8ba::t_6ff284f6b2a7fd 404-405,407-415
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-19,21-57,63-280,282-403,406,416-514,516-713,715,717-718,725-771,773,775-776,783-791
+  s_9bd896ecf5e8ba::t_063e9fe6c7574a 20
+  s_9bd896ecf5e8ba::t_e7258352484db9 58-62
+  s_9bd896ecf5e8ba::t_d1560cdb9334bb 281
+  s_9bd896ecf5e8ba::t_1fdf2c27afa2f3 772,774,777-782
+deep_causality_cfd/tests/solvers/dec/diagnostics_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-10,13-210
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 11-12
+deep_causality_cfd/src/solvers/dec/dec_ns_solver/seed.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-87
+deep_causality_cfd/tests/solvers/dec/uncertain_inflow_tests.rs
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 18
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-17,20-199
+deep_causality_cfd/tests/solvers/dec/cut_cell_wiring_tests.rs
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 19
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-18,20-588
+deep_causality_cfd/src/traits/mod.rs
+  s_9bd896ecf5e8ba::t_27b4807f0f36a9 1-7
+  s_9bd896ecf5e8ba::t_993706e14cf5c6 8-13
+Cargo.toml
+  s_9bd896ecf5e8ba::t_4c6a7b75209d08 11
+deep_causality_cfd/src/solvers/dec_config.rs
+  s_9bd896ecf5e8ba::t_425b1375e107e6 1-225
+deep_causality_cfd/src/solvers/dec/step_output.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-92
+deep_causality_physics/src/quantities/fluid_dynamics/velocity_one_form.rs
+  s_9bd896ecf5e8ba::t_7bcad84beafb19 43-48
+deep_causality_cfd/tests/solvers/dec/step_output_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-8,11-83
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 9
+deep_causality_cfd/tests/solvers/dec/dec_ns_solver/step_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-9,12-179
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 10
+deep_causality_cfd/src/solvers/dec/dec_ns_solver/no_slip.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-160
+deep_causality_cfd/src/solvers/dec/energy_budget.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-65
+deep_causality_cfd/tests/solvers/dec/dec_cross_validation_tests.rs
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 24,26
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-23,25,27-191
+deep_causality_cfd/src/errors/mod.rs
+  s_9bd896ecf5e8ba::t_151a61628b0b32 1-10
+deep_causality_cfd/tests/theories/regimes/stokes_verification_tests.rs
+  s_9bd896ecf5e8ba::t_47bb727f91fa28 1-18,21-132
+deep_causality_cfd/tests/theories/regimes/compressible_ns_verification_tests.rs
+  s_9bd896ecf5e8ba::t_953c5155cdfacd 21
+  s_9bd896ecf5e8ba::t_47bb727f91fa28 1-20,23-183
+deep_causality_cfd/src/solvers/dec/diagnostics.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-155
+deep_causality_cfd/src/theories/regimes/wrappers.rs
+  s_9bd896ecf5e8ba::t_16aa4c1d225293 1-143
+deep_causality_cfd/tests/solvers/dec/taylor_green_2d_tests.rs
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 21
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-20,23-145
+deep_causality_cfd/src/extensions/mod.rs
+  s_9bd896ecf5e8ba::t_e54608c20b8bfd 1-6
+deep_causality_cfd/tests/theories/regimes/euler_tests.rs
+  s_9bd896ecf5e8ba::t_953c5155cdfacd 6
+  s_9bd896ecf5e8ba::t_47bb727f91fa28 1-5,7-110
+deep_causality_cfd/tests/solvers/mod.rs
+  s_9bd896ecf5e8ba::t_2cbcb74c73d6ae 1-6
+deep_causality_cfd/src/solvers/dec/dec_ns_solver/mod.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-311
+deep_causality_cfd/src/solvers/dec/dec_ns_solver/step.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-171
+deep_causality_cfd/tests/theories/regimes/compressible_ns_tests.rs
+  s_9bd896ecf5e8ba::t_47bb727f91fa28 1-5,10-167
+  s_9bd896ecf5e8ba::t_953c5155cdfacd 6-7,9
+deep_causality_cfd/tests/theories/regimes/wrappers_tests.rs
+  s_9bd896ecf5e8ba::t_fe298faf1c84ad 1-136
+deep_causality_cfd/tests/solvers/dec/wrappers_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-8,11-68
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 9
+deep_causality_cfd/src/lib.rs
+  s_9bd896ecf5e8ba::t_2e058c1d3827ef 33-38
+  s_9bd896ecf5e8ba::t_bba3c25ae48994 48-52
+  s_9bd896ecf5e8ba::t_a23a267ce2908b 39-42,53-54
+  s_9bd896ecf5e8ba::t_b5fb53fdf9df4b 32,55
+  s_9bd896ecf5e8ba::t_9f17d5546357a5 43-44,46
+  s_9bd896ecf5e8ba::t_10dd7ddf86dba5 24-25
+  s_9bd896ecf5e8ba::t_6f75066468b554 1-23,26-31
+  s_9bd896ecf5e8ba::t_165ce8e03b78e4 45,47
+deep_causality_cfd/src/types/ambient.rs
+  s_9bd896ecf5e8ba::t_b18a68ef1111fe 1-5,7-15,17-21,23-62
+  s_9bd896ecf5e8ba::t_93ccbe7f85fcd2 6
+  s_9bd896ecf5e8ba::t_f8ed18b732f0f7 16,22
+deep_causality_cfd/src/theories/regimes/incompressible_ns.rs
+  s_9bd896ecf5e8ba::t_288fc2f362854b 1-7,9-67
+deep_causality_cfd/src/solvers/dec/boundary/mod.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-27
+deep_causality_cfd/src/solvers/dec/boundary/boundary_zone.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-144
+deep_causality_cfd/src/solvers/dec/boundary/body_force_zone.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-41
+deep_causality_cfd/src/solvers/dec/boundary/outflow.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-87
+deep_causality_cfd/tests/solvers/dec/dec_ns_solver/run_tests.rs
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 9,29
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-8,11-28,30-108
+deep_causality_cfd/tests/solvers/dec/surface_force_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-13,16-214
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 14-15
+deep_causality_cfd/BUILD.bazel
+  s_9bd896ecf5e8ba::t_e9542344fe26a5 1-51
+deep_causality_cfd/src/solvers/dec/uncertain_inflow/uncertain_boundary_source.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-161
+deep_causality_cfd/tests/solvers/dec/cavity_tests.rs
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-14,16-160
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 15
+deep_causality_physics/src/quantities/fluid_dynamics/solenoidal_field.rs
+  s_9bd896ecf5e8ba::t_de1439bba60925 197
+  s_9bd896ecf5e8ba::t_64b8df75f97913 120
+  s_9bd896ecf5e8ba::t_bea20998c68a25 218
+deep_causality_cfd/tests/solvers/dec/dec_ns_solver/wall_bounded_tests.rs
+  s_9bd896ecf5e8ba::t_a1ba40ed93366b 12
+  s_9bd896ecf5e8ba::t_2d4e0143b774fa 1-11,13-107
+deep_causality_cfd/tests/theories/mod.rs
+  s_9bd896ecf5e8ba::t_c6a555a26773a2 1-6
+deep_causality_cfd/src/solvers/dec/spectral_diffusion.rs
+  s_9bd896ecf5e8ba::t_05be02c2550daa 1-176
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "63d97ca2b0e9589bed34388c5d82e5947ba414fb",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
