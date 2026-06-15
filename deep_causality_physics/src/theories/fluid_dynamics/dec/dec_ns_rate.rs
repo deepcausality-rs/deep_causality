@@ -166,7 +166,10 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         // exempts constrained edges — an edge buried in an immersed solid legitimately has
         // zero dual mass and is removed from the dynamics by the constraint.
         let cut_registry = manifold.metric().and_then(|m| m.cut_registry());
-        let no_slip = super::dec_ns_solver::no_slip::NoSlipConstraint::new(complex, cut_registry);
+        // Aperture-resolved immersed no-slip by default (auto-on when the body has Cut cells);
+        // `set_staircase_noslip` flips to the staircase set for the validation comparison.
+        let no_slip =
+            super::dec_ns_solver::no_slip::NoSlipConstraint::new(complex, cut_registry, true);
 
         // Wall-bounded acceptance (the wall-bounded-ns capability): every wall axis must carry
         // at least two vertex layers (an extent-1 wall axis has no 2-cells and no interior to
@@ -319,6 +322,18 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             return;
         }
         self.no_slip.remove_edges(slip);
+        self.recompute_rate_constrained();
+    }
+
+    /// Switch the immersed body to the **staircase** no-slip (drop the aperture-resolved cut-face
+    /// rows, pin the full solid-incident edge ring) — the validation-comparison / fallback path. The
+    /// geometry (cut volumes, apertures, cut star) is unchanged; only the no-slip mechanism flips.
+    /// A no-op when there is no immersed body or no `Cut` cells.
+    pub(in crate::theories::fluid_dynamics::dec) fn set_staircase_noslip(&mut self) {
+        let complex = self.manifold.complex();
+        let cut_registry = self.manifold.metric().and_then(|m| m.cut_registry());
+        self.no_slip =
+            super::dec_ns_solver::no_slip::NoSlipConstraint::new(complex, cut_registry, false);
         self.recompute_rate_constrained();
     }
 

@@ -12,7 +12,8 @@
 //! - **far-field `SlipWall` top/bottom** (no penetration, zero shear — so the lateral boundaries do
 //!   not confine the wake), and
 //! - the **immersed cut cylinder** (`CutCellRegistry::from_primitive`, exact clipped volumes +
-//!   apertures; its no-slip is the auto-derived solid-incident set).
+//!   apertures; its no-slip is the **aperture-resolved** cut-face tangential constraint by default,
+//!   or the staircase solid-incident set with `STAIRCASE=1` for the side-by-side comparison).
 //!
 //! ## Symmetry breaking — why a perturbation is needed
 //!
@@ -94,6 +95,9 @@ fn main() {
     // Advective CFL number `dt = CFL · h / U`. The flow accelerates to ~1.9 U around the cylinder,
     // so the advective limit binds near CFL ≈ 0.45; keep CFL ≤ 0.4 or the march aborts at step 0.
     let cfl = env_f64("CFL", 0.4);
+    // Immersed no-slip mode: aperture-resolved (default) or the staircase baseline for the
+    // side-by-side validation comparison (`STAIRCASE=1`). Same geometry; only the wall mechanism.
+    let staircase = env_usize("STAIRCASE", 0) == 1;
     // Projection CG tolerance. Unset ⇒ the library machine-epsilon default (divergence ~1e-15, but
     // many iterations on a large ill-conditioned cut-cell system); set e.g. `1e-6` to cut iterations
     // dramatically on fine grids (the dominant speed lever) at the cost of a looser divergence floor.
@@ -155,6 +159,13 @@ fn main() {
         // Warm-start the per-stage projection CG from the previous solve's potential. As the flow
         // develops the right-hand side changes little, so CG converges in a handful of iterations.
         .with_warm_start();
+    // Default is the aperture-resolved cut-face no-slip (auto-on with Cut cells); `STAIRCASE=1`
+    // flips to the staircase baseline for the comparison.
+    let solver = if staircase {
+        solver.with_staircase_noslip()
+    } else {
+        solver
+    };
 
     // Symmetry-breaking initial condition: uniform stream `U` in x plus a single-signed transverse
     // blob one diameter behind the cylinder. The seed projection makes it divergence-free.
@@ -189,8 +200,13 @@ fn main() {
     eprintln!(
         "# isolated cylinder: grid {nx}×{ny} ({cells_per_d}/D), domain {lx_d}×{ly_d} D, Re_D={re_d}, nu={nu:.3e}, dt={dt:.3e}"
     );
+    let noslip_mode = if staircase {
+        "staircase"
+    } else {
+        "aperture-resolved"
+    };
     eprintln!(
-        "# cut cells: {n_solid} solid, {n_cut} cut; merge floor {merge_fraction}; CFL {cfl}; cg_tol {cg_tol:?}; cg_max_iter {cg_max_iter}"
+        "# cut cells: {n_solid} solid, {n_cut} cut; no-slip {noslip_mode}; merge floor {merge_fraction}; CFL {cfl}; cg_tol {cg_tol:?}; cg_max_iter {cg_max_iter}"
     );
     eprintln!(
         "# trigger: transverse seed eps={PERTURB_EPS} sigma={PERTURB_SIGMA} D at ({xb:.1},{yb:.1}) D"

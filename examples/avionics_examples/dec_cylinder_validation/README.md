@@ -7,8 +7,11 @@ and Lehmkuhl et al. (2013).
 The domain is external flow: **west `Inflow`** (uniform `U`), **east `Outflow`** (pressure-reference,
 zero-gradient), **far-field `SlipWall`** top and bottom (so the lateral boundaries do not confine the
 wake), and the **immersed cut cylinder**. The cylinder comes from `CutCellRegistry::from_primitive`,
-which gives exact clipped volumes and apertures and an auto-derived no-slip set on the solid-incident
-edges. All zones compose through `with_zones`.
+which gives exact clipped volumes and apertures. Its no-slip is **aperture-resolved** by default: the
+wall condition is the tangential cut-face constraint at the wetted surface inside each cut cell
+(`add-aperture-resolved-noslip`), enforced on the marched state through the weighted Leray projector,
+rather than the staircase set of solid-incident edges. Set `STAIRCASE=1` to fall back to the staircase
+body for a side-by-side comparison on the same geometry. All zones compose through `with_zones`.
 
 ## What it reports
 
@@ -52,6 +55,7 @@ recompile. Defaults are shown in parentheses.
 | `CFL`         | advective CFL number, `dt = CFL·h/U`     | `0.4`   |
 | `CG_TOL`      | projection CG tolerance (unset = machine-eps) | unset |
 | `CG_MAX_ITER` | projection CG iteration budget           | `30·(nx+ny)` |
+| `STAIRCASE`   | `1` ⇒ staircase no-slip (else aperture-resolved) | `0` |
 
 The projection CG's iteration count grows with the grid. The budget defaults to `30·(nx+ny)`, which
 covers the finer grids; the library default of 1000 starves the solve past about 16 cells/D. Raise
@@ -80,13 +84,37 @@ with `CG_TOL` over a short run, more as the run lengthens). The remaining levers
   blockage) is a compromise; widen toward 16–20 for a Williamson-comparable, near-unconfined `St`.
 - **`MERGE=0.5`** improves the cut-cell conditioning, so each CG solve converges in fewer iterations.
 
-The empirical shedding threshold is **~24 cells/D**: at `CELLS_PER_D` = 12 and 16 the wake stays
-steady (the perturbation decays), while 24/D develops a von-Kármán street. A first shedding run:
+The **staircase** shedding threshold is **~24 cells/D**: at `CELLS_PER_D` = 12 and 16 the staircase
+wake stays steady (the perturbation decays), while 24/D develops a marginal von-Kármán street. A first
+staircase shedding run:
 
 ```text
-CELLS_PER_D=24 LX_D=16 LY_D=12 STEPS=3500 CFL=0.4 CG_TOL=1e-6 \
-  cargo run --release -p avionics_examples --example dec_cylinder_validation > re100_24.csv
+STAIRCASE=1 CELLS_PER_D=24 LX_D=16 LY_D=12 STEPS=3500 CFL=0.4 CG_TOL=1e-6 \
+  cargo run --release -p avionics_examples --example dec_cylinder_validation > re100_24_staircase.csv
 ```
+
+### Aperture-resolved go/no-go (the `add-aperture-resolved-noslip` gate)
+
+The aperture-resolved no-slip should shed at a **lower** resolution than the staircase by placing the
+wall at the true surface and sharpening separation. The gate is a sustained street at **16 cells/D**,
+where the staircase stays steady, with `St` toward `0.164` and `C_d` toward the reference. Run the pair
+at the same grid and compare `v_probe` (the aperture-resolved one is the default; no flag):
+
+```text
+# Aperture-resolved (default) at the target threshold:
+CELLS_PER_D=16 LX_D=16 LY_D=16 STEPS=4000 CFL=0.4 CG_TOL=1e-6 \
+  cargo run --release -p avionics_examples --example dec_cylinder_validation > re100_16_resolved.csv
+
+# Staircase at the same grid (should stay steady):
+STAIRCASE=1 CELLS_PER_D=16 LX_D=16 LY_D=16 STEPS=4000 CFL=0.4 CG_TOL=1e-6 \
+  cargo run --release -p avionics_examples --example dec_cylinder_validation > re100_16_staircase.csv
+```
+
+The guiding star is **minutes, not hours**: a developed `Re=100` result that reaches the measurement
+window in minutes is the whole point of dropping the threshold from ~24/D to ~16/D (≈ `(24/16)²` fewer
+cells and a larger `dt`, on top of the warm-start and loose-tolerance speedups). The measured
+aperture-resolved `St` / `C_d` and the wall-clock against that target are filled in once the gate run
+completes.
 
 ```text
 # Reference-quality Re=100 (resolves the boundary layer; long, so run it in a pinned terminal):
@@ -103,13 +131,15 @@ RE_D=200 CELLS_PER_D=32 LX_D=24 LY_D=12 STEPS=12000 \
 The composed primitive stack is correct: the march is stable and **interior-divergence-free to the
 projection tolerance** at every resolution (the global residual is just the open-boundary inlet flux).
 Shedding, though, is resolution-gated, and the threshold has been measured: at `CELLS_PER_D` = 12 and
-16 the `Re=100` wake stays **steady** (the boundary layer, thickness `~D/√Re ≈ 0.1 D`, is ~1–2 cells —
-under-resolved, so the discrete scheme is effectively sub-critical and the trigger's perturbation
-decays), while at **24 cells/D a von-Kármán street develops** (early transient `St ≈ 0.21`, above the
-unconfined `0.164` partly from blockage). A reference-quality `St`/`C_d` wants the developed window of
-a long run at ≥ 24 cells/D — the "real compute time" the change's `tasks.md` D2/D3 flags. The
-aperture-resolved no-slip change (`add-aperture-resolved-noslip`) is expected to sharpen the marginal
-24/D result and/or lower this threshold by replacing the staircase body with a smooth one.
+16 the **staircase** `Re=100` wake stays **steady** (the boundary layer, thickness `~D/√Re ≈ 0.1 D`,
+is ~1–2 cells — under-resolved, so the discrete scheme is effectively sub-critical and the trigger's
+perturbation decays), while at **24 cells/D a marginal von-Kármán street develops** (early transient
+`St ≈ 0.21`). A domain-width experiment (24/D at `LY_D=8` vs a wider domain) moved `St` only from
+~0.21 to ~0.22, so **blockage is not the dominant `St` error** at these widths: the staircase wall and
+the marginal resolution are. That is the error the **aperture-resolved no-slip**
+(`add-aperture-resolved-noslip`, now the default here) attacks — it places the wall at the true surface
+and should lower the shedding threshold toward ~16 cells/D and move `St` toward `0.164`. Run the go/no-go
+pair above to confirm.
 
 ## A note on `--features parallel`
 

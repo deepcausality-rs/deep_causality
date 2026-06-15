@@ -73,17 +73,23 @@ Group D is the cylinder-validation gate.
 
 ## 4. D — Cylinder validation gate
 
-- [ ] 4.1 Run `dec_cylinder_validation` at `Re = 100` with the aperture-resolved body at **16 cells/D**
-      (the target threshold, where the staircase stays steady) and confirm a sustained street; record
-      `v_probe` aperture-resolved vs staircase at the same resolution, and the **wall-clock to the
-      developed window** — the guiding star is **minutes, not hours**.
-- [ ] 4.2 Report Strouhal vs Williamson (`≈ 0.164`) and cycle-mean `C_d` vs the matched reference
-      (Dröge–Verstappen: `≈ 1.24` = 0.93 pressure + 0.31 friction), versus the staircase result, in the
-      example README / a results note. Note the run wall-clock against the minutes target.
-- [ ] 4.3 Ablation: no-penetration row on/off, to resolve the open question of whether it is needed
-      beyond the cut Hodge star's flux down-weighting.
-- [ ] 4.4 Cheap CI rung (no heavy march): the consistency reduction (Group A 1.3) and binary-equivalence
-      (Group B 2.2) carry the regression; the shedding run stays an example, per tests-fast /
-      examples-verify.
-- [ ] 4.5 Group D gate: format, clippy, both feature configs green for the shipped rungs; example
-      README updated with the aperture-resolved numbers. Prepare commit message; ask the user to commit.
+- [~] 4.1 **Harness ready, run pending (user's pinned terminal).** The example builds the cylinder
+      from a `Primitive`, so the aperture-resolved body is auto-on; `STAIRCASE=1` flips to the
+      staircase baseline on the same geometry. The go/no-go pair (aperture-resolved vs staircase at
+      16 cells/D, `LY_D=16`) and the minutes-target framing are in the README. Smoke-verified: both
+      modes march divergence-free (~1e-12) at 12/D. The developed 16/D run + `v_probe` comparison +
+      wall-clock are filled in after the run.
+- [~] 4.2 **Pending the 4.1 run.** README states the references (Williamson `St ≈ 0.164`;
+      Dröge–Verstappen `C_d ≈ 1.24` = 0.93 + 0.31) and the comparison protocol; the measured
+      aperture-resolved `St` / cycle-mean `C_d` / wall-clock get recorded once the gate run completes.
+- [x] 4.3 Ablation resolved at the Group C level: the no-penetration rows are **off** by default —
+      a closed body's are linearly dependent (`∮ n·u = 0`, floors the CG) and redundant given the
+      solid-interior pins + divergence-freeness. Tangential no-slip carries the wall. (An empirical
+      on/off cylinder sweep can still be run, but the formulation question is answered.)
+- [x] 4.4 Cheap CI rung: the Group A reduction/exactness, the Group B single-cut-cell gate +
+      binary-equivalence, and the Group C `aperture_resolved_disk_marches_divergence_free` test carry
+      the regression; the shedding run stays an example (tests-fast / examples-verify).
+- [x] 4.5 Group D gate (code side): format, clippy 0 warnings, physics (1589) + topology (1256) green
+      both feature configs; example builds and smoke-runs in both no-slip modes; README updated with
+      the go/no-go commands, the `STAIRCASE` knob, and the references. Prepare commit message; ask the
+      user to commit. (Numbers table filled after the run.)

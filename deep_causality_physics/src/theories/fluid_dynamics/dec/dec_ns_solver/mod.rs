@@ -245,6 +245,16 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsSolver<'m, D, R> {
         self
     }
 
+    /// Use the **staircase** immersed no-slip instead of the (default) aperture-resolved cut-face
+    /// rows — the validation-comparison / fallback path. The body geometry (cut volumes, apertures,
+    /// cut star) is unchanged; only the no-slip mechanism flips, so a side-by-side run isolates the
+    /// effect of the aperture-resolved wall on shedding / Strouhal / drag. A no-op without an
+    /// immersed body or `Cut` cells.
+    pub fn with_staircase_noslip(mut self) -> Self {
+        self.rate.set_staircase_noslip();
+        self
+    }
+
     /// Opt into the spectral evaluation of the viscous term (fully
     /// periodic uniform lattices only; the `spectral-diffusion`
     /// capability). Off by default — the validation ladder gates any

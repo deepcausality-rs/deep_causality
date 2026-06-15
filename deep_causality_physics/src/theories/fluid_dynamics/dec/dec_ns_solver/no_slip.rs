@@ -52,16 +52,19 @@ impl<R: RealField> NoSlipConstraint<R> {
     /// Enumerate the no-slip constraint of `complex`: the axis-aligned wall-tangential edges
     /// (binary pins), plus the immersed body's no-slip when a cut-cell registry is attached.
     ///
-    /// When the registry has `Cut` cells, the body is **aperture-resolved**: the wall condition
-    /// becomes the weighted cut-face rows ([`CutCellRegistry::cut_face_constraints`]), and the binary
-    /// pins keep only the body's *interior* solid edges (the `solid_incident` set minus every edge a
-    /// cut-face row already governs) so the body interior stays at rest without double-constraining
-    /// the wetted cut face. A registry with no `Cut` cells (an axis-aligned `Solid` layer) or no
-    /// registry falls back to the staircase set ([`CutCellRegistry::solid_incident_edges`]), so the
-    /// axis-aligned and periodic paths are bit-unchanged.
+    /// When `aperture_resolved` and the registry has `Cut` cells, the body is aperture-resolved: the
+    /// wall condition becomes the weighted cut-face rows ([`CutCellRegistry::cut_face_constraints`]),
+    /// and the binary pins keep only the body's *interior* solid edges (the `solid_incident` set minus
+    /// every edge a cut-face row already governs) so the body interior stays at rest without
+    /// double-constraining the wetted cut face. With `aperture_resolved = false` (the validation
+    /// comparison / fallback), or a registry with no `Cut` cells (an axis-aligned `Solid` layer), or
+    /// no registry, the body falls back to the **staircase** set
+    /// ([`CutCellRegistry::solid_incident_edges`]), so the axis-aligned and periodic paths are
+    /// bit-unchanged.
     pub(in crate::theories::fluid_dynamics::dec) fn new<const D: usize>(
         complex: &LatticeComplex<D, R>,
         cut_registry: Option<&CutCellRegistry<D, R>>,
+        aperture_resolved: bool,
     ) -> Self {
         let periodic = complex.periodic();
         let mut edges: alloc::vec::Vec<usize> = alloc::vec::Vec::new();
@@ -86,7 +89,13 @@ impl<R: RealField> NoSlipConstraint<R> {
         // Immersed-body no-slip.
         let mut rows: alloc::vec::Vec<CutFaceConstraint<R>> = alloc::vec::Vec::new();
         if let Some(registry) = cut_registry {
-            let all_rows = registry.cut_face_constraints(complex);
+            let all_rows = if aperture_resolved {
+                registry.cut_face_constraints(complex)
+            } else {
+                // Staircase fallback / validation comparison: no weighted rows, pin the full
+                // solid-incident edge ring (the Stage-4 B4 set).
+                alloc::vec::Vec::new()
+            };
             if all_rows.is_empty() {
                 // No cut cells (axis-aligned solid layer / empty body): the staircase set, unchanged.
                 edges.extend(registry.solid_incident_edges(complex));

@@ -77,8 +77,14 @@ solvers. A solver, however, uses a theory and or multiple physics kernels,
 but only solves a designated use case.
 
 The solvers may need some proper design work.
+the solvers needs to be generic of a real field to fully implement precision as a parameter end to end.
 That means you may have to refactor some of the avionics example codes into a standalone solver.
-Also, the solvers needs to be generic of a real field to fully implement precision as a parameter end to end.
+Make sure that the solver configuration is encapsulated into a dedicated and solver specific configuration struct.
+
+Design a configuration builder that for each solver builds a correct configuration in a typical build up pattern.
+Take inspiration from the existing configuration builder in the Discovery DSL.
+deep_causality_discovery/src
+
 
 The goal is, eventually, to increase expressiveness and reduce code lines by
 building a highly powerful CFD Domain Specific Language (DSL) similar
