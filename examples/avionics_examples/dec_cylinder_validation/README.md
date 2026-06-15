@@ -111,22 +111,28 @@ STAIRCASE=1 CELLS_PER_D=16 LX_D=16 LY_D=16 STEPS=4000 CFL=0.4 CG_TOL=1e-6 \
 ```
 
 **Gate result (June 2026).** The pair above was run at 16 cells/D, `LY_D=16`, to a developed state
-(`STEPS=4000`, t=100). Reference: Williamson `St(Re=100) ≈ 0.164`; Dröge–Verstappen / experimental
-`C_d ≈ 1.24–1.33`.
+(`STEPS=4000`, t=100). Reference window (2-D laminar, unconfined; Qu et al. 2013, Posdziech &
+Grundmann 2007, Williamson, as compiled in arXiv:2303.09262): `St ≈ 0.164–0.165`, mean
+`C_d ≈ 1.32–1.36`, `C_L,rms ≈ 0.22–0.24`, `θ_sep ≈ 118°`, friction ≈ 25% of `C_d`.
 
 | body                | 16/D shedding | `St` | cycle-mean `C_d` |
 |---------------------|---------------|------|------------------|
 | staircase           | **none** — wake decays to a steady residual `v_probe ≈ -0.0069` (flat from t≈20 to t=100) | n/a (printed `0.244` is the crossing-detector on 7th-decimal noise) | `1.356` (p `0.704` + f `0.652`), swing `[1.356, 1.356]` — a **steady-flow** value, not the shedding mean |
 | **aperture-resolved** | **sustained von-Kármán street**, saturated limit cycle (amplitude ≈ 0.41) | **`0.171`** (period `T ≈ 5.835`) | **`1.246`** (p `1.078` + f `0.167`), `C_l ≈ 0.010`, swing `[1.238, 1.254]` |
 
-So the aperture-resolved no-slip **sheds at 16/D where the staircase stays dead steady**, and lands
-**inside both reference bands**: `St ≈ 0.171` (within ~4 % of Williamson `0.164`, the small excess
-consistent with the `LY_D=16` ≈ 6.25 % blockage) and cycle-mean `C_d ≈ 1.246` (in the `1.24–1.33`
-band, with a physically oscillating drag — `C_d` swing `±0.008`, `C_l ≈ 0.01`). The pressure/friction
-split is imperfect (friction ≈ 13 % here versus the ~25 % reference: pressure over, friction under),
-but the **integrated drag is accurate**. The staircase's `St`/`C_d` are by contrast **steady-flow
-artifacts** (zero `C_d` swing, `C_l = 0`, friction `0.652` ≈ 48 % — the staircase wall mis-estimates
-shear, and the body never sheds).
+So the aperture-resolved no-slip **sheds at 16/D where the staircase stays dead steady**. The Strouhal
+is competitive: `St ≈ 0.171` is ~4 % above `0.164`, but most of that is the `LY_D=16` (≈ 6.25 %)
+blockage, so the blockage-corrected method error is only ~1–2 %. The drag is **acceptable but not
+DNS-grade at this coarse grid**: cycle-mean `C_d ≈ 1.246` is **~6 % below** the `1.32–1.36` consensus
+(it matches only the low-side cut-cell value of Dröge–Verstappen 1.24). The integrated drag is close
+but for the wrong reason — the pressure/friction split is off (friction ≈ 13 % here versus the ~25 %
+reference: pressure over, friction under), which points at wall-shear under-resolution at 16/D. The
+drag does physically oscillate (`C_d` swing `±0.008`, `C_l ≈ 0.01`). The staircase's `St`/`C_d` are by
+contrast **steady-flow artifacts** (zero `C_d` swing, `C_l = 0`, friction `0.652` ≈ 48 % — the staircase
+wall mis-estimates shear, and the body never sheds).
+
+A defensible accuracy claim needs a **grid-convergence study** (16→24→32/D, Richardson-extrapolated)
+plus `C_L,rms` / `θ_sep` / `C_pb` — sketched in `openspec/notes/cfd/cfd-validation-plan.md`.
 
 **Performance.** The aperture-resolved run is much slower than the staircase one, but the 16/D-vs-16/D
 comparison is misleading: the staircase reaches a *steady* state and then coasts (its warm-started CG

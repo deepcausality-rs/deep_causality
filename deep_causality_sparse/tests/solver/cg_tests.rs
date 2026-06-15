@@ -262,7 +262,7 @@ fn warm_started_cg_returns_immediately_from_the_exact_solution() {
     use deep_causality_sparse::{cg_solve_preconditioned, cg_solve_preconditioned_from};
     let n = 6usize;
     let (apply, diag) = tridiag(n);
-    let b: Vec<f64> = (0..n).map(|i| (i as f64 + 1.0)).collect();
+    let b: Vec<f64> = (0..n).map(|i| i as f64 + 1.0).collect();
     let exact = cg_solve_preconditioned(&apply, &diag, &b, 1e-14, 200).unwrap();
     // Seeding with the exact solution: the initial residual is already below tolerance, so the
     // solver returns the guess without iterating.
