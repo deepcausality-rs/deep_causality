@@ -1,0 +1,37 @@
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_rate.rs
+  s_86cf72b3950d7d::t_a567b9d40a99df 328-339
+  s_86cf72b3950d7d::t_df904a12edee56 169-172
+examples/avionics_examples/dec_cylinder_validation/main.rs
+  s_86cf72b3950d7d::t_8769b7bfbc0eb8 98-100
+  s_86cf72b3950d7d::t_a55544c43efb2c 15-16
+  s_86cf72b3950d7d::t_cabcdf4b4478a8 162-168
+  s_86cf72b3950d7d::t_a1d5e58539dc95 203-207,209
+examples/avionics_examples/dec_cylinder_validation/README.md
+  s_86cf72b3950d7d::t_43c63826c1e015 134-142
+  s_86cf72b3950d7d::t_5823f6544ead71 87-89,92-93,96-117
+  s_86cf72b3950d7d::t_23c8f353f59fba 58
+  s_86cf72b3950d7d::t_ffa2412cc1c03b 10-14
+openspec/changes/add-aperture-resolved-noslip/tasks.md
+  s_86cf72b3950d7d::t_313fd2e8f80ae7 76-95
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/no_slip.rs
+  s_86cf72b3950d7d::t_ef4eb9e63e217d 55-63,67
+  s_86cf72b3950d7d::t_e115f62626edf9 92-98
+deep_causality_physics/src/theories/fluid_dynamics/dec/dec_ns_solver/mod.rs
+  s_86cf72b3950d7d::t_aefcc8847b0a82 248-257
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "04fffe4b9cf07ffa75297f114cbba288d2cbae6f",
+  "prompts": {},
+  "sessions": {
+    "s_86cf72b3950d7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "449a7105-1712-4ede-8466-427285c3e5e2",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
