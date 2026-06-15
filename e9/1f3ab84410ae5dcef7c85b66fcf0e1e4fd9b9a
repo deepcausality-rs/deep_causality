@@ -1,0 +1,56 @@
+deep_causality_cfd/src/types/flow/mesh.rs
+  s_9bd896ecf5e8ba::t_f97b644b07fd58 82
+  s_9bd896ecf5e8ba::t_3365a2f95c8659 80-81,88,94-96,98,100-113
+  s_9bd896ecf5e8ba::t_37d5bb52e00cb4 14-20
+deep_causality_cfd/tests/types/flow/march_case_tests.rs
+  s_9bd896ecf5e8ba::t_599dec60b9924e 271-291,296-336,338-390
+  s_9bd896ecf5e8ba::t_8f1e5ce002187c 212-270,391-409
+  s_9bd896ecf5e8ba::t_d43fd70c501d3e 337
+  s_9bd896ecf5e8ba::t_b405420e473b50 292-295
+deep_causality_cfd/tests/types/flow/frequency_tests.rs
+  s_9bd896ecf5e8ba::t_b405420e473b50 58
+  s_9bd896ecf5e8ba::t_bcf3bb181ed940 1-57,59-60
+deep_causality_cfd/tests/types/flow/mod.rs
+  s_9bd896ecf5e8ba::t_64e30edcdef613 7
+deep_causality_cfd/src/solvers/dec/diagnostics.rs
+  s_9bd896ecf5e8ba::t_94dcf14b963a10 141-194,200-209
+  s_9bd896ecf5e8ba::t_b405420e473b50 195-199
+  s_9bd896ecf5e8ba::t_0aa1e11c431ee8 15
+deep_causality_cfd/src/solvers/dec/mod.rs
+  s_9bd896ecf5e8ba::t_f3c2b0cb59b356 82
+deep_causality_cfd/src/types/flow/march_case.rs
+  s_9bd896ecf5e8ba::t_b405420e473b50 145-149
+  s_9bd896ecf5e8ba::t_0e766bfe6d77e0 8,10-13,18-19,45,59,75,77-83,93-102,106-107,113-114,125-134,136-142,144,150,152,155-157,160,162-181,185-235,237-238,240-295,297-321,323
+  s_9bd896ecf5e8ba::t_65eae40facdca3 135,143
+  s_9bd896ecf5e8ba::t_e1a9718d508e33 17
+deep_causality_cfd/src/types/flow/frequency.rs
+  s_9bd896ecf5e8ba::t_f1628eb168d14d 1-59
+deep_causality_cfd/src/types/flow/mod.rs
+  s_9bd896ecf5e8ba::t_b57f53a8c738ed 15,25
+deep_causality_cfd/src/types/flow/seed.rs
+  s_9bd896ecf5e8ba::t_334906f9ed3d5a 21-25
+  s_9bd896ecf5e8ba::t_37526fae2dd075 39-46
+deep_causality_cfd/src/types/flow/observe.rs
+  s_9bd896ecf5e8ba::t_613d66a8cd4c51 6-7,9-14,18-39,42,60-79
+deep_causality_cfd/src/lib.rs
+  s_9bd896ecf5e8ba::t_826d0f59a5cb9a 45-48
+deep_causality_cfd/src/types/flow/march_builder.rs
+  s_9bd896ecf5e8ba::t_bd4427fd3f6c59 114
+  s_9bd896ecf5e8ba::t_c68d19a69e7ffd 35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "e91f3ab84410ae5dcef7c85b66fcf0e1e4fd9b9a",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
