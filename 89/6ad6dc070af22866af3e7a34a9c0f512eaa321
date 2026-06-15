@@ -1,0 +1,27 @@
+openspec/changes/consolidate-causal-cfd-fluiddynamics/design.md
+  s_9bd896ecf5e8ba::t_5dddb04f85d566 230-231
+  s_9bd896ecf5e8ba::t_126e9fb66493ce 140-223
+  s_9bd896ecf5e8ba::t_15960828674198 247-249
+openspec/changes/consolidate-causal-cfd-fluiddynamics/tasks.md
+  s_9bd896ecf5e8ba::t_bbe858f7bbcaff 47-49
+  s_9bd896ecf5e8ba::t_654c9f5fd662c4 60-61
+  s_9bd896ecf5e8ba::t_96933eb2738207 29-32
+openspec/changes/consolidate-causal-cfd-fluiddynamics/specs/fluiddynamics-dsl/spec.md
+  s_9bd896ecf5e8ba::t_4b87b5bf666e5d 33-37,39-41,47-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "896ad6dc070af22866af3e7a34a9c0f512eaa321",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
