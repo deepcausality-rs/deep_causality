@@ -37,6 +37,10 @@ pub struct UncertainBoundarySource<R> {
     collapse_samples: usize,
     default_value: R,
     verbosity: DropoutVerbosity,
+    /// Opt-in: collapse the present sample with the Quasi-Monte-Carlo estimator
+    /// (`expected_value_qmc`) seeded from this base, instead of the default Monte-Carlo mean.
+    /// `None` = Monte-Carlo (unchanged). See [`Self::with_qmc_collapse`].
+    qmc_collapse_seed: Option<u64>,
 }
 
 impl<R> UncertainBoundarySource<R>
@@ -55,6 +59,7 @@ where
             collapse_samples: 1000,
             default_value,
             verbosity: DropoutVerbosity::EachDropout,
+            qmc_collapse_seed: None,
         }
     }
 
@@ -76,6 +81,21 @@ where
     /// Sets the sample count used to collapse a present `Uncertain<R>` to its mean.
     pub fn with_collapse_samples(mut self, collapse_samples: usize) -> Self {
         self.collapse_samples = collapse_samples;
+        self
+    }
+
+    /// Opt into a **Quasi-Monte-Carlo collapse**: a present sample's mean is estimated with
+    /// `Uncertain::expected_value_qmc` (low-discrepancy Sobol + inverse-CDF) instead of the default
+    /// Monte-Carlo `expected_value`, cutting the estimator variance at equal sample count. The
+    /// per-sample Sobol digital shift is `base_seed ⊕ present.id()`, so every step is an independent,
+    /// reproducible randomized-QMC realization. The presence gate is **unaffected** — it stays on the
+    /// SPRT/Monte-Carlo path (QMC is invalid for the sequential test; see the QMC follow-up note).
+    ///
+    /// The sensor's value channel must be QMC-eligible (a statically-structured `Uncertain` of at
+    /// most [`MAX_SOBOL_DIM`](deep_causality_uncertain) leaves); otherwise the collapse returns the
+    /// `UncertainError` from `expected_value_qmc`.
+    pub fn with_qmc_collapse(mut self, base_seed: u64) -> Self {
+        self.qmc_collapse_seed = Some(base_seed);
         self
     }
 
@@ -113,15 +133,26 @@ where
             self.epsilon,
             self.max_samples,
         ) {
-            Ok(present) => match present.expected_value(self.collapse_samples) {
-                Ok(mean) if mean.is_finite() => {
-                    *last_good = mean;
-                    Ok((mean, false))
+            Ok(present) => {
+                // Opt-in QMC collapse uses a per-sample reproducible Sobol shift (base ⊕ id), so
+                // each step is an independent randomized-QMC realization; default is the MC mean.
+                let collapsed = match self.qmc_collapse_seed {
+                    Some(base) => present.expected_value_qmc(
+                        self.collapse_samples,
+                        base.wrapping_add(present.id() as u64),
+                    ),
+                    None => present.expected_value(self.collapse_samples),
+                };
+                match collapsed {
+                    Ok(mean) if mean.is_finite() => {
+                        *last_good = mean;
+                        Ok((mean, false))
+                    }
+                    // A present-but-degenerate (non-finite) mean is treated as a dropout.
+                    Ok(_) => Ok((*last_good, true)),
+                    Err(e) => Err(e),
                 }
-                // A present-but-degenerate (non-finite) mean is treated as a dropout.
-                Ok(_) => Ok((*last_good, true)),
-                Err(e) => Err(e),
-            },
+            }
             Err(UncertainError::PresenceError(_)) => Ok((*last_good, true)),
             Err(e) => Err(e),
         }
