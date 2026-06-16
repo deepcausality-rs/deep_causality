@@ -31,6 +31,13 @@ pub struct CutCellRegistry<const D: usize, R: RealField> {
     /// cell or edge dual is allowed before it is inflated to this value. `None` = unstabilized.
     /// See [`Self::with_cell_merging`].
     min_fluid_fraction: Option<R>,
+    /// Opt-in: visit cut cells in ascending `CellId` order (rather than `HashMap` order) in
+    /// [`Self::iter`] and [`Self::cut_face_constraints`]. The default `HashMap` hasher
+    /// (`RandomState`/SipHash) reseeds per process, so its iteration — hence the cut-face
+    /// constraint row order, hence the constrained projection's floating-point summation order —
+    /// varies run to run (a ~1e-11 roundoff drift). Enabling this makes the cut-cell solver
+    /// bit-reproducible. `false` = unchanged `HashMap` order. See [`Self::with_deterministic_order`].
+    deterministic_order: bool,
 }
 
 impl<const D: usize, R: RealField> Default for CutCellRegistry<D, R> {
@@ -45,6 +52,7 @@ impl<const D: usize, R: RealField> CutCellRegistry<D, R> {
         Self {
             cells: HashMap::new(),
             min_fluid_fraction: None,
+            deterministic_order: false,
         }
     }
 
@@ -53,6 +61,7 @@ impl<const D: usize, R: RealField> CutCellRegistry<D, R> {
         Self {
             cells,
             min_fluid_fraction: None,
+            deterministic_order: false,
         }
     }
 
@@ -84,6 +93,27 @@ impl<const D: usize, R: RealField> CutCellRegistry<D, R> {
         self.min_fluid_fraction
     }
 
+    /// Opt into **deterministic iteration order**: cut cells are visited in ascending `CellId`
+    /// order by [`Self::iter`] and [`Self::cut_face_constraints`], rather than the per-process
+    /// randomised `HashMap` order. This makes the cut-cell constrained projection bit-reproducible
+    /// run to run; the difference it removes is otherwise pure floating-point reduction-order
+    /// roundoff (the divergence residual is unaffected). Default off, so existing behaviour is
+    /// unchanged unless explicitly enabled. The flag rides through `clone`/`with_cell_merging`.
+    pub fn with_deterministic_order(mut self) -> Self {
+        self.deterministic_order = true;
+        self
+    }
+
+    /// `(CellId, &CutCell)` pairs in iteration order: ascending `CellId` when
+    /// [`Self::with_deterministic_order`] is set, otherwise raw `HashMap` order (unchanged default).
+    fn ordered_pairs(&self) -> Vec<(&CellId, &CutCell<D, R>)> {
+        let mut pairs: Vec<(&CellId, &CutCell<D, R>)> = self.cells.iter().collect();
+        if self.deterministic_order {
+            pairs.sort_unstable_by_key(|(id, _)| **id);
+        }
+        pairs
+    }
+
     /// Record `cut` for the top cell at index `cell_id` (in `iter_cells(D)` ordering),
     /// returning any previous entry.
     pub fn insert(&mut self, cell_id: CellId, cut: CutCell<D, R>) -> Option<CutCell<D, R>> {
@@ -105,9 +135,10 @@ impl<const D: usize, R: RealField> CutCellRegistry<D, R> {
         self.cells.get(&cell_id)
     }
 
-    /// Iterate over `(top-cell-index, &CutCell)` pairs.
+    /// Iterate over `(top-cell-index, &CutCell)` pairs. Order is ascending `CellId` when
+    /// [`Self::with_deterministic_order`] is set, otherwise unspecified `HashMap` order.
     pub fn iter(&self) -> impl Iterator<Item = (&CellId, &CutCell<D, R>)> {
-        self.cells.iter()
+        self.ordered_pairs().into_iter()
     }
 }
 
@@ -252,7 +283,7 @@ impl<const D: usize, R: RealField> CutCellRegistry<D, R> {
         // Resolve a `CellId` to its base position once (the registry stores no position).
         let cells: Vec<LatticeCell<D>> = complex.iter_cells(D).collect();
 
-        for (&cell_id, cut) in self.cells.iter() {
+        for (&cell_id, cut) in self.ordered_pairs() {
             if !cut.class().is_cut() {
                 continue;
             }

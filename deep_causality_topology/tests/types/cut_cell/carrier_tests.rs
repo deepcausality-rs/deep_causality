@@ -126,3 +126,28 @@ fn clipped_cell_volume_falls_through_for_unregistered_cells() {
     let vertex = LatticeCell::<2>::vertex([0, 0]);
     assert_eq!(reg.clipped_cell_volume(&geom, &lattice, &vertex), 1.0);
 }
+
+// Opt-in deterministic iteration: `with_deterministic_order` visits cut cells in ascending
+// `CellId` order (vs unspecified `HashMap` order), and the flag rides through `with_cell_merging`
+// and `clone`. This is what makes the cut-cell constrained projection bit-reproducible run to run.
+#[test]
+fn deterministic_order_sorts_iteration_by_cell_id() {
+    let mut reg = CutCellRegistry::<2, f64>::new();
+    for &id in &[7usize, 2, 9, 0, 4] {
+        reg.insert(id, CutCell::<2, f64>::solid(1.0));
+    }
+
+    // Default: every cell is present; order is unspecified, so compare as a set.
+    use std::collections::BTreeSet;
+    let default_ids: BTreeSet<usize> = reg.iter().map(|(id, _)| *id).collect();
+    assert_eq!(default_ids, BTreeSet::from([0, 2, 4, 7, 9]));
+
+    // Opt-in: ascending `CellId` order, and the flag survives `with_cell_merging` + `clone`.
+    let reg = reg.with_deterministic_order().with_cell_merging(0.25);
+    let ordered: Vec<usize> = reg.iter().map(|(id, _)| *id).collect();
+    assert_eq!(ordered, vec![0, 2, 4, 7, 9]);
+
+    let cloned = reg.clone();
+    let ordered_clone: Vec<usize> = cloned.iter().map(|(id, _)| *id).collect();
+    assert_eq!(ordered_clone, vec![0, 2, 4, 7, 9]);
+}

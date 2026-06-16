@@ -48,6 +48,18 @@
 //! **cell-merging** (`CutCellRegistry::with_cell_merging`), engaged here only to tighten the
 //! masked-CG projection conditioning on sliver cells.
 //!
+//! ## Reproducibility
+//!
+//! The run is **bit-identical** across invocations. Two sources of run-to-run variation are pinned:
+//!
+//! - The sensor stream is Monte-Carlo (a noisy `MaybeUncertain` reading collapsed each step); the
+//!   run seeds the `Uncertain` sampler (`seed_sampler`) to fix that realization.
+//! - The cut-cell registry is built with `with_deterministic_order`, so its cells iterate in
+//!   ascending cell-id order rather than the per-process `HashMap` hasher order. Without it the
+//!   cut-face constraint rows — hence the constrained projection's floating-point summation order —
+//!   permute every run, a ~1e-11 roundoff drift (the divergence residual stays ~1e-15, so it is
+//!   physically irrelevant; the deterministic order simply makes it reproducible too).
+//!
 //! ```text
 //! cargo run --release -p avionics_examples --example dec_cylinder_wake
 //! ```
@@ -62,7 +74,7 @@ use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, CutCellRegistry, LatticeComplex, Manifold, Primitive,
 };
-use deep_causality_uncertain::{MaybeUncertain, Uncertain};
+use deep_causality_uncertain::{MaybeUncertain, Uncertain, seed_sampler};
 
 // -- Case parameters --------------------------------------------------------------------
 
@@ -93,8 +105,16 @@ const DROPOUT_EVERY: usize = 50;
 /// Monte-Carlo sample budgets for the presence gate and the mean collapse.
 const PRESENCE_SAMPLES: usize = 256;
 const COLLAPSE_SAMPLES: usize = 256;
+/// Seed for the `Uncertain` sampler. The sensor stream is Monte-Carlo (a noisy `MaybeUncertain`
+/// reading collapsed each step); seeding the thread-local sampler RNG makes the whole run
+/// reproducible byte-for-byte instead of drawing a fresh realization from OS entropy each time.
+const SAMPLER_SEED: u64 = 0x5EED_C0DE;
 
 fn main() {
+    // Pin the sensor realization so the wake CSV is reproducible across runs (the only randomness
+    // is the `Uncertain` sensor sampling; the DEC solver and geometry are deterministic).
+    seed_sampler(SAMPLER_SEED);
+
     let h = 1.0 / (NY - 1) as f64; // channel height H = 1.
     let nx = (AR / h).round() as usize;
     let lattice = LatticeComplex::<2, f64>::new([nx, NY], [true, false]); // periodic-x, wall-y.
@@ -107,8 +127,12 @@ fn main() {
     // Cut geometry: the analytic disk, with cell-merging small-cell stabilization (B1/B2).
     let base_metric = CubicalReggeGeometry::<2, f64>::uniform(h);
     let disk = Primitive::<2, f64>::ball(center, radius);
-    let registry =
-        CutCellRegistry::from_primitive(&lattice, &base_metric, &disk).expect("disk intersection");
+    // `with_deterministic_order` pins cut-cell iteration to ascending cell id, so the cut-face
+    // constraint rows — hence the constrained projection's summation order — are reproducible run
+    // to run (otherwise the per-process `HashMap` hasher permutes them, a ~1e-11 roundoff drift).
+    let registry = CutCellRegistry::from_primitive(&lattice, &base_metric, &disk)
+        .expect("disk intersection")
+        .with_deterministic_order();
     let n_solid = registry
         .iter()
         .filter(|(_, c)| c.class().is_solid())
