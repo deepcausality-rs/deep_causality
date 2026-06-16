@@ -4,6 +4,12 @@
  */
 
 #[cfg(test)]
+pub mod coupling_tests;
+#[cfg(test)]
 pub mod frequency_tests;
 #[cfg(test)]
 pub mod march_case_tests;
+#[cfg(test)]
+pub mod mms_tests;
+#[cfg(test)]
+pub mod operator_study_tests;

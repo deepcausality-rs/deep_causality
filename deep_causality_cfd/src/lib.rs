@@ -38,13 +38,14 @@ pub use deep_causality_physics::PhysicsError;
 pub use deep_causality_physics::quantities::*;
 
 // Core CFD trait seams and value types.
-pub use crate::traits::{FluidTheory, Marcher};
+pub use crate::traits::{FluidTheory, Marcher, Solver};
 pub use crate::types::{Ambient, CfdScalar};
 
 // The Flow DSL facade (owned case descriptions materialized at run).
 pub use crate::types::flow::{
-    Body, Flow, MarchBuilder, MarchCase, Mesh, Observe, Report, Seed, dominant_frequency,
-    strouhal_number,
+    Body, CoupledField, Coupling, Flow, MarchBuilder, MarchCase, Mesh, MmsBuilder, Observe,
+    Operator, OperatorStudyBuilder, PhysicsStage, Regime, Report, Seed, StepContext, ThermalRelax,
+    ViscosityArrhenius, dominant_frequency, strouhal_number,
 };
 
 // Fluid-dynamics theories: the DEC-native FluidTheory realization, the pointwise NS

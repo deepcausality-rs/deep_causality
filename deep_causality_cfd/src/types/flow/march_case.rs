@@ -11,10 +11,13 @@ use crate::solvers::dec::surface_force::{
     force_coefficient, pressure_surface_force, viscous_surface_force,
 };
 use crate::solvers::dec::{BoundaryZone, DecNsSolver};
-use crate::types::CfdScalar;
-use crate::types::flow::{Mesh, Observe, Report, Seed};
+use crate::traits::{Marcher, Solver};
+use crate::types::flow::{CoupledField, Mesh, Observe, PhysicsStage, Report, Seed, StepContext};
+use crate::types::{Ambient, CfdScalar};
 use deep_causality_physics::{PhysicsError, SolenoidalField};
-use deep_causality_topology::{CutCellRegistry, LatticeCell, LatticeComplex, Manifold};
+use deep_causality_topology::{
+    ChainComplex, CutCellRegistry, LatticeCell, LatticeComplex, Manifold,
+};
 
 use alloc::collections::BTreeMap;
 
@@ -32,7 +35,7 @@ pub(crate) enum MarchStop<R: CfdScalar> {
 /// owned specs (no manifold borrow); `run` materializes the manifold + solver as
 /// locals, marches, and returns an owned `Report` (design D2). The boundary-zone
 /// tuple `Z` composes statically (default `()` for a closed or periodic domain).
-pub struct MarchCase<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>> {
+pub struct MarchCase<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>, C: PhysicsStage<D, R>> {
     name: String,
     mesh: Mesh<D, R>,
     solver: DecNsConfig<R>,
@@ -44,9 +47,15 @@ pub struct MarchCase<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>> {
     stop: MarchStop<R>,
     observe: Observe<D, R>,
     zones: Z,
+    /// The between-step multi-physics coupling (`()` for single-physics).
+    coupling: C,
+    /// Uniform initial coupled scalar fields, sized to the cell count at materialization.
+    coupled_scalars: Vec<(String, R)>,
 }
 
-impl<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>> MarchCase<D, R, Z> {
+impl<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>, C: PhysicsStage<D, R>>
+    MarchCase<D, R, Z, C>
+{
     /// Assemble a marching case from its owned specs (constructed by `Flow::march`).
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
@@ -58,6 +67,8 @@ impl<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>> MarchCase<D, R, Z> {
         stop: MarchStop<R>,
         observe: Observe<D, R>,
         zones: Z,
+        coupling: C,
+        coupled_scalars: Vec<(String, R)>,
     ) -> Self {
         Self {
             name: name.into(),
@@ -68,12 +79,18 @@ impl<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>> MarchCase<D, R, Z> {
             stop,
             observe,
             zones,
+            coupling,
+            coupled_scalars,
         }
     }
+}
 
+impl<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>, C: PhysicsStage<D, R>> Solver<R>
+    for MarchCase<D, R, Z, C>
+{
     /// Materialize the domain (with its boundary zones), seed, march, and collect the
     /// observed series. Borrows (manifold, solver, registry) stay inside this call.
-    pub fn run(self) -> Result<Report<R>, PhysicsError> {
+    fn run(self) -> Result<Report<R>, PhysicsError> {
         let (manifold, registry) = self.mesh.materialize()?;
         let ref_len = self.mesh.frontal_length();
         if self.observe.drag.is_some() && registry.is_none() {
@@ -90,6 +107,16 @@ impl<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>> MarchCase<D, R, Z> {
         };
         let mut state = self.seed.apply(&solver, &manifold)?;
 
+        // The between-step coupling carrier: the per-step ambient (ν the marcher reads) plus any
+        // seeded coupled scalar fields. With the `()` coupling the ambient stays at the
+        // construction ν, so the march reproduces the single-physics path bit-for-bit.
+        let dt = solver.dt();
+        let ncells = manifold.complex().num_cells(D);
+        let mut field = CoupledField::new(Ambient::new(solver.nu(), R::zero(), None));
+        for (name, value) in &self.coupled_scalars {
+            field.set_scalar(name.clone(), vec![*value; ncells]);
+        }
+
         let mut series = Series::new();
         let ctx = Context {
             observe: &self.observe,
@@ -102,15 +129,31 @@ impl<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>> MarchCase<D, R, Z> {
         ctx.sample(&state, &mut series)?;
         match self.stop {
             MarchStop::Fixed(n) => {
-                for _ in 0..n {
-                    state = solver.step(&state)?.into_state();
+                for s in 0..n {
+                    state = advance_coupled(
+                        &solver,
+                        &manifold,
+                        &self.coupling,
+                        &mut field,
+                        &state,
+                        dt,
+                        s + 1,
+                    )?;
                     ctx.sample(&state, &mut series)?;
                 }
             }
             MarchStop::Steady { tol, max_steps } => {
                 let mut prev_e = dec_kinetic_energy(&manifold, state.as_one_form())?;
-                for _ in 0..max_steps {
-                    state = solver.step(&state)?.into_state();
+                for s in 0..max_steps {
+                    state = advance_coupled(
+                        &solver,
+                        &manifold,
+                        &self.coupling,
+                        &mut field,
+                        &state,
+                        dt,
+                        s + 1,
+                    )?;
                     ctx.sample(&state, &mut series)?;
                     let e = dec_kinetic_energy(&manifold, state.as_one_form())?;
                     if (e - prev_e).abs() < tol {
@@ -129,6 +172,24 @@ impl<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>> MarchCase<D, R, Z> {
         }
         Ok(report)
     }
+}
+
+/// Run the between-step coupling, then advance one projected step under the resulting ambient.
+/// The coupling reads the current state through a [`StepContext`] and mutates the [`CoupledField`]
+/// (scalars + the ambient `ν` the marcher then reads). An error in any stage short-circuits the
+/// step.
+fn advance_coupled<const D: usize, R: CfdScalar, C: PhysicsStage<D, R>>(
+    solver: &DecNsSolver<'_, D, R>,
+    manifold: &Manifold<LatticeComplex<D, R>, R>,
+    coupling: &C,
+    field: &mut CoupledField<R>,
+    state: &SolenoidalField<R>,
+    dt: R,
+    step: usize,
+) -> Result<SolenoidalField<R>, PhysicsError> {
+    let ctx = StepContext::new(manifold, state, dt, step);
+    coupling.apply(&ctx, field)?;
+    Ok(solver.advance(state, field.ambient())?.into_state())
 }
 
 /// The per-step observation context — the immutable run state the sampler reads.

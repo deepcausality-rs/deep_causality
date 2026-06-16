@@ -8,6 +8,8 @@
 
 mod fluid_theory;
 mod marcher;
+mod solver;
 
 pub use fluid_theory::FluidTheory;
 pub use marcher::Marcher;
+pub use solver::Solver;
