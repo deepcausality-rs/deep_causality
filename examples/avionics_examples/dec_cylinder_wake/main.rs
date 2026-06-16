@@ -27,7 +27,7 @@
 //! `PropagatingProcess<f64, InflowMarchState, InflowContext>`: it collapses the sensor sample to a
 //! prescribed wall velocity, reconfigures the boundary through the existing moving-wall lift, and
 //! marches — the uncertain types never enter the solver core. Here we drive the march one bind at
-//! a time so the per-step wake probe can be streamed; `deep_causality_physics::march_inflow` packages
+//! a time so the per-step wake probe can be streamed; `deep_causality_cfd::march_inflow` packages
 //! the same stage as a `CausalFlow::iterate_n` loop for the fire-and-report case.
 //!
 //! ## What this harness is (and is not)
@@ -70,12 +70,12 @@
 //! cargo run --release -p avionics_examples --example dec_cylinder_wake
 //! ```
 
-use deep_causality_core::{EffectLog, EffectValue, PropagatingProcess};
-use deep_causality_haft::LogSize;
-use deep_causality_physics::{
+use deep_causality_cfd::{
     DecNsSolver, DropoutVerbosity, InflowContext, InflowMarchState, UncertainInflowZone,
     dec_divergence_residual, dec_max_speed, inflow_march_step,
 };
+use deep_causality_core::{EffectLog, EffectValue, PropagatingProcess};
+use deep_causality_haft::LogSize;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, CutCellRegistry, LatticeComplex, Manifold, Primitive,

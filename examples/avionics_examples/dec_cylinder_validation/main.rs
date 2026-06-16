@@ -48,7 +48,7 @@
 
 use std::collections::BTreeMap;
 
-use deep_causality_physics::{
+use deep_causality_cfd::{
     DecNsSolver, Inflow, Outflow, SlipWall, SolenoidalField, force_coefficient,
     pressure_surface_force, viscous_surface_force,
 };
