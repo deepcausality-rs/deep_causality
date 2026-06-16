@@ -17,20 +17,23 @@ fn taylor_green_periodic_energy_decays() {
     let nu = 1.0 / (k * 100.0);
     let dt = 0.2 * k;
 
-    let report = super::run_march(CfdConfigBuilder::march::<3, f64>("tgv-flow")
-        .mesh(Mesh::periodic_cube(n))
-        .solver(
-            CfdConfigBuilder::dec_ns()
-                .viscosity(nu)
-                .time_step(dt)
-                .build()
-                .expect("valid config"),
-        )
-        .seed(Seed::TaylorGreenVortex)
-        .march_for(10)
-        .observe(Observe::default().kinetic_energy())
-        .build().expect("config build"))
-        .expect("march runs");
+    let report = super::run_march(
+        CfdConfigBuilder::march::<3, f64>("tgv-flow")
+            .mesh(Mesh::periodic_cube(n))
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(nu)
+                    .time_step(dt)
+                    .build()
+                    .expect("valid config"),
+            )
+            .seed(Seed::TaylorGreenVortex)
+            .march_for(10)
+            .observe(Observe::default().kinetic_energy())
+            .build()
+            .expect("config build"),
+    )
+    .expect("march runs");
 
     let energy = report
         .series("kinetic_energy")
@@ -53,21 +56,24 @@ fn lid_cavity_from_rest_gains_energy() {
     let nu = 1.0 / 1000.0; // lid speed 1, Re = 1000
     let dt = 0.45 * h;
 
-    let report = super::run_march(CfdConfigBuilder::march::<2, f64>("cavity-re1000")
-        .mesh(Mesh::box_domain([n, n]).spacing(h))
-        .solver(
-            CfdConfigBuilder::dec_ns()
-                .viscosity(nu)
-                .time_step(dt)
-                .build()
-                .expect("valid config"),
-        )
-        .lid([1.0, 0.0])
-        .seed(Seed::Rest)
-        .march_for(20)
-        .observe(Observe::default().kinetic_energy())
-        .build().expect("config build"))
-        .expect("cavity march runs");
+    let report = super::run_march(
+        CfdConfigBuilder::march::<2, f64>("cavity-re1000")
+            .mesh(Mesh::box_domain([n, n]).spacing(h))
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(nu)
+                    .time_step(dt)
+                    .build()
+                    .expect("valid config"),
+            )
+            .lid([1.0, 0.0])
+            .seed(Seed::Rest)
+            .march_for(20)
+            .observe(Observe::default().kinetic_energy())
+            .build()
+            .expect("config build"),
+    )
+    .expect("cavity march runs");
 
     let energy = report
         .series("kinetic_energy")
@@ -97,21 +103,24 @@ fn cut_cell_channel_stays_divergence_free() {
     let nu = 0.02;
     let dt = 0.05;
 
-    let report = super::run_march(CfdConfigBuilder::march::<2, f64>("cyl-channel")
-        .mesh(Mesh::channel([nx, ny]).immersed(Body::disk(center, radius).merge_floor(0.25)))
-        .solver(
-            CfdConfigBuilder::dec_ns()
-                .viscosity(nu)
-                .time_step(dt)
-                .build()
-                .expect("valid config"),
-        )
-        .moving_wall(1, true, [1.0, 0.0])
-        .seed(Seed::Rest)
-        .march_for(5)
-        .observe(Observe::default().divergence().max_speed())
-        .build().expect("config build"))
-        .expect("cut-cell channel runs");
+    let report = super::run_march(
+        CfdConfigBuilder::march::<2, f64>("cyl-channel")
+            .mesh(Mesh::channel([nx, ny]).immersed(Body::disk(center, radius).merge_floor(0.25)))
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(nu)
+                    .time_step(dt)
+                    .build()
+                    .expect("valid config"),
+            )
+            .moving_wall(1, true, [1.0, 0.0])
+            .seed(Seed::Rest)
+            .march_for(5)
+            .observe(Observe::default().divergence().max_speed())
+            .build()
+            .expect("config build"),
+    )
+    .expect("cut-cell channel runs");
 
     let div = report.series("divergence").expect("divergence series");
     let speed = report.series("max_speed").expect("max_speed series");
@@ -133,20 +142,23 @@ fn march_until_steady_stops_a_rest_field_early() {
     // A rest field with no forcing stays at rest, so the step-to-step energy change
     // is zero from the first step — `march_until_steady` must stop early, well
     // before max_steps.
-    let report = super::run_march(CfdConfigBuilder::march::<3, f64>("steady-rest")
-        .mesh(Mesh::periodic_cube(6))
-        .solver(
-            CfdConfigBuilder::dec_ns()
-                .viscosity(0.05)
-                .time_step(0.05)
-                .build()
-                .expect("valid config"),
-        )
-        .seed(Seed::Rest)
-        .march_until_steady(1e-9, 50)
-        .observe(Observe::default().kinetic_energy())
-        .build().expect("config build"))
-        .expect("steady march runs");
+    let report = super::run_march(
+        CfdConfigBuilder::march::<3, f64>("steady-rest")
+            .mesh(Mesh::periodic_cube(6))
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(0.05)
+                    .time_step(0.05)
+                    .build()
+                    .expect("valid config"),
+            )
+            .seed(Seed::Rest)
+            .march_until_steady(1e-9, 50)
+            .observe(Observe::default().kinetic_energy())
+            .build()
+            .expect("config build"),
+    )
+    .expect("steady march runs");
 
     let energy = report.series("kinetic_energy").expect("energy series");
     // Seed + at most a couple of steps before the steady predicate trips.
@@ -186,21 +198,24 @@ fn open_zone_cylinder_inflow_drives_flow() {
         ),
     );
 
-    let report = super::run_march(CfdConfigBuilder::march::<2, f64>("cyl-validation")
-        .mesh(Mesh::box_domain([nx, ny]).immersed(Body::disk(center, radius).merge_floor(0.25)))
-        .solver(
-            CfdConfigBuilder::dec_ns()
-                .viscosity(0.02)
-                .time_step(0.05)
-                .build()
-                .expect("valid config"),
-        )
-        .zones(zones)
-        .seed(Seed::Rest)
-        .march_for(3)
-        .observe(Observe::default().max_speed())
-        .build().expect("config build"))
-        .expect("open-zone cylinder runs");
+    let report = super::run_march(
+        CfdConfigBuilder::march::<2, f64>("cyl-validation")
+            .mesh(Mesh::box_domain([nx, ny]).immersed(Body::disk(center, radius).merge_floor(0.25)))
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(0.02)
+                    .time_step(0.05)
+                    .build()
+                    .expect("valid config"),
+            )
+            .zones(zones)
+            .seed(Seed::Rest)
+            .march_for(3)
+            .observe(Observe::default().max_speed())
+            .build()
+            .expect("config build"),
+    )
+    .expect("open-zone cylinder runs");
 
     let speed = report.series("max_speed").expect("max_speed series");
     assert_eq!(speed.len(), 4, "seed + 3 steps");
@@ -233,21 +248,24 @@ fn drag_lift_on_the_cylinder_are_finite_and_streamwise() {
         ),
     );
 
-    let report = super::run_march(CfdConfigBuilder::march::<2, f64>("cyl-drag")
-        .mesh(Mesh::box_domain([nx, ny]).immersed(Body::disk(center, radius).merge_floor(0.25)))
-        .solver(
-            CfdConfigBuilder::dec_ns()
-                .viscosity(0.02)
-                .time_step(0.05)
-                .build()
-                .expect("valid config"),
-        )
-        .zones(zones)
-        .seed(Seed::Rest)
-        .march_for(8)
-        .observe(Observe::default().drag(u_ref))
-        .build().expect("config build"))
-        .expect("drag-observed cylinder runs");
+    let report = super::run_march(
+        CfdConfigBuilder::march::<2, f64>("cyl-drag")
+            .mesh(Mesh::box_domain([nx, ny]).immersed(Body::disk(center, radius).merge_floor(0.25)))
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(0.02)
+                    .time_step(0.05)
+                    .build()
+                    .expect("valid config"),
+            )
+            .zones(zones)
+            .seed(Seed::Rest)
+            .march_for(8)
+            .observe(Observe::default().drag(u_ref))
+            .build()
+            .expect("config build"),
+    )
+    .expect("drag-observed cylinder runs");
 
     let drag = report.series("drag").expect("drag series");
     let lift = report.series("lift").expect("lift series");
@@ -272,20 +290,23 @@ fn uniform_x_seed_carries_the_free_stream() {
     // A uniform streamwise seed on a periodic box is divergence-free and curl-free, so
     // the projection preserves it: the max speed at the seed equals the prescribed speed.
     let speed = 2.0_f64;
-    let report = super::run_march(CfdConfigBuilder::march::<2, f64>("uniform-x")
-        .mesh(Mesh::periodic_cube(8))
-        .solver(
-            CfdConfigBuilder::dec_ns()
-                .viscosity(0.05)
-                .time_step(0.02)
-                .build()
-                .expect("valid config"),
-        )
-        .seed(Seed::UniformX { speed })
-        .march_for(2)
-        .observe(Observe::default().kinetic_energy().max_speed())
-        .build().expect("config build"))
-        .expect("uniform-x march runs");
+    let report = super::run_march(
+        CfdConfigBuilder::march::<2, f64>("uniform-x")
+            .mesh(Mesh::periodic_cube(8))
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(0.05)
+                    .time_step(0.02)
+                    .build()
+                    .expect("valid config"),
+            )
+            .seed(Seed::UniformX { speed })
+            .march_for(2)
+            .observe(Observe::default().kinetic_energy().max_speed())
+            .build()
+            .expect("config build"),
+    )
+    .expect("uniform-x march runs");
 
     let energy = report.series("kinetic_energy").expect("energy series");
     let max_speed = report.series("max_speed").expect("max_speed series");
@@ -322,22 +343,25 @@ fn wake_probe_records_a_finite_transverse_signal() {
         ),
     );
 
-    let report = super::run_march(CfdConfigBuilder::march::<2, f64>("cyl-probe")
-        .mesh(Mesh::box_domain([nx, ny]).immersed(Body::disk(center, radius).merge_floor(0.25)))
-        .solver(
-            CfdConfigBuilder::dec_ns()
-                .viscosity(0.02)
-                .time_step(0.05)
-                .build()
-                .expect("valid config"),
-        )
-        .zones(zones)
-        .seed(Seed::UniformX { speed: u_ref })
-        .march_for(6)
-        // The probe sits one diameter downstream of the body, on the wake centerline.
-        .observe(Observe::default().probe([10.0, 6.0]))
-        .build().expect("config build"))
-        .expect("probe cylinder runs");
+    let report = super::run_march(
+        CfdConfigBuilder::march::<2, f64>("cyl-probe")
+            .mesh(Mesh::box_domain([nx, ny]).immersed(Body::disk(center, radius).merge_floor(0.25)))
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(0.02)
+                    .time_step(0.05)
+                    .build()
+                    .expect("valid config"),
+            )
+            .zones(zones)
+            .seed(Seed::UniformX { speed: u_ref })
+            .march_for(6)
+            // The probe sits one diameter downstream of the body, on the wake centerline.
+            .observe(Observe::default().probe([10.0, 6.0]))
+            .build()
+            .expect("config build"),
+    )
+    .expect("probe cylinder runs");
 
     let probe = report.series("probe").expect("probe series");
     assert_eq!(probe.len(), 7, "seed + 6 steps");
@@ -354,21 +378,24 @@ fn centerline_profile_follows_the_lid() {
     let n = 17usize;
     let h = 1.0 / (n as f64 - 1.0);
 
-    let report = super::run_march(CfdConfigBuilder::march::<2, f64>("cavity-centerline")
-        .mesh(Mesh::box_domain([n, n]).spacing(h))
-        .solver(
-            CfdConfigBuilder::dec_ns()
-                .viscosity(1.0 / 1000.0)
-                .time_step(0.45 * h)
-                .build()
-                .expect("valid config"),
-        )
-        .lid([1.0, 0.0])
-        .seed(Seed::Rest)
-        .march_for(40)
-        .observe(Observe::default().centerline(1))
-        .build().expect("config build"))
-        .expect("centerline cavity runs");
+    let report = super::run_march(
+        CfdConfigBuilder::march::<2, f64>("cavity-centerline")
+            .mesh(Mesh::box_domain([n, n]).spacing(h))
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(1.0 / 1000.0)
+                    .time_step(0.45 * h)
+                    .build()
+                    .expect("valid config"),
+            )
+            .lid([1.0, 0.0])
+            .seed(Seed::Rest)
+            .march_for(40)
+            .observe(Observe::default().centerline(1))
+            .build()
+            .expect("config build"),
+    )
+    .expect("centerline cavity runs");
 
     let profile = report.series("centerline").expect("centerline series");
     assert_eq!(profile.len(), n, "one sample per lattice row along y");
@@ -389,19 +416,22 @@ fn centerline_profile_follows_the_lid() {
 
 #[test]
 fn drag_without_an_immersed_body_is_rejected() {
-    let report = super::run_march(CfdConfigBuilder::march::<2, f64>("no-body-drag")
-        .mesh(Mesh::box_domain([8, 8]))
-        .solver(
-            CfdConfigBuilder::dec_ns()
-                .viscosity(0.05)
-                .time_step(0.05)
-                .build()
-                .expect("valid config"),
-        )
-        .seed(Seed::Rest)
-        .march_for(1)
-        .observe(Observe::default().drag(1.0))
-        .build().expect("config build"));
+    let report = super::run_march(
+        CfdConfigBuilder::march::<2, f64>("no-body-drag")
+            .mesh(Mesh::box_domain([8, 8]))
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(0.05)
+                    .time_step(0.05)
+                    .build()
+                    .expect("valid config"),
+            )
+            .seed(Seed::Rest)
+            .march_for(1)
+            .observe(Observe::default().drag(1.0))
+            .build()
+            .expect("config build"),
+    );
     assert!(
         report.is_err(),
         "drag without an immersed body must be rejected"

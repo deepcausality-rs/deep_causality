@@ -19,14 +19,16 @@ mod march_run;
 mod mms;
 mod operator_study;
 mod report;
+mod verify;
 mod zones;
 
 pub use cfd_flow::{CfdFlow, fail};
 pub use coupling::{
-    Coupling, CoupledField, PhysicsStage, StepContext, ThermalRelax, ViscosityArrhenius,
+    CoupledField, Coupling, PhysicsStage, StepContext, ThermalRelax, ViscosityArrhenius,
 };
 pub use frequency::{dominant_frequency, strouhal_number};
 pub use march_run::{MarchPipeline, MarchRun, StepView};
 pub use mms::{MmsBuilder, Regime};
 pub use operator_study::{Operator, OperatorStudyBuilder};
 pub use report::Report;
+pub use verify::VerifyRun;

@@ -16,7 +16,9 @@ fn viscous_operator_converges_at_second_order() {
         .run()
         .expect("operator study runs");
 
-    let errors = report.series("operator_error").expect("operator_error series");
+    let errors = report
+        .series("operator_error")
+        .expect("operator_error series");
     let orders = report
         .series("convergence_order")
         .expect("convergence_order series");

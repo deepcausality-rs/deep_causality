@@ -7,8 +7,8 @@
 //! end-to-end `ν(T)` feedback through the march (coupled physics changes the flow dynamics).
 
 use deep_causality_cfd::{
-    Ambient, CfdConfigBuilder, CoupledField, Coupling, Mesh, Observe, PhysicsError, PhysicsStage, Seed,
-    StepContext, ThermalRelax, ViscosityArrhenius,
+    Ambient, CfdConfigBuilder, CoupledField, Coupling, Mesh, Observe, PhysicsError, PhysicsStage,
+    Seed, StepContext, ThermalRelax, ViscosityArrhenius,
 };
 use deep_causality_physics::{SolenoidalField, VelocityOneForm};
 use deep_causality_tensor::CausalTensor;
@@ -48,7 +48,11 @@ fn thermal_relax_then_arrhenius_drives_viscosity() {
 
     // Relaxation pulls T toward the 400 K wall, so the mean temperature rises above 300 K.
     let temp = field.scalar("temperature").expect("temperature field");
-    assert!(temp[0] > 300.0, "T relaxes toward the hot wall: {}", temp[0]);
+    assert!(
+        temp[0] > 300.0,
+        "T relaxes toward the hot wall: {}",
+        temp[0]
+    );
     // ν(T) = 0.01·exp(0.7·(300/T − 1)) < ν_ref once T > 300.
     let nu_after = *field.ambient().nu();
     assert!(
@@ -65,7 +69,11 @@ fn identity_coupling_is_a_no_op() {
     // The empty coupling (`Coupling::between_steps().build()` is `()`) is the identity stage.
     PhysicsStage::apply(&Coupling::between_steps().build(), &ctx, &mut field)
         .expect("identity applies");
-    assert_eq!(*field.ambient().nu(), 0.02, "the empty coupling changes nothing");
+    assert_eq!(
+        *field.ambient().nu(),
+        0.02,
+        "the empty coupling changes nothing"
+    );
 }
 
 /// A stage that always errors short-circuits the rest of the chain.
@@ -121,31 +129,49 @@ fn coupled_viscosity_feedback_changes_the_flow_dynamics() {
     let n = 8usize;
     let nu0 = 0.02_f64;
 
-    let baseline = super::run_march(CfdConfigBuilder::march::<3, f64>("tgv-baseline")
-        .mesh(Mesh::periodic_cube(n))
-        .solver(CfdConfigBuilder::dec_ns().viscosity(nu0).time_step(0.02).build().unwrap())
-        .seed(Seed::TaylorGreenVortex)
-        .march_for(10)
-        .observe(Observe::default().kinetic_energy())
-        .build().expect("config build"))
-        .expect("baseline runs");
+    let baseline = super::run_march(
+        CfdConfigBuilder::march::<3, f64>("tgv-baseline")
+            .mesh(Mesh::periodic_cube(n))
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(nu0)
+                    .time_step(0.02)
+                    .build()
+                    .unwrap(),
+            )
+            .seed(Seed::TaylorGreenVortex)
+            .march_for(10)
+            .observe(Observe::default().kinetic_energy())
+            .build()
+            .expect("config build"),
+    )
+    .expect("baseline runs");
 
-    let coupled = super::run_march(CfdConfigBuilder::march::<3, f64>("tgv-coupled")
-        .mesh(Mesh::periodic_cube(n))
-        .solver(CfdConfigBuilder::dec_ns().viscosity(nu0).time_step(0.02).build().unwrap())
-        .seed(Seed::TaylorGreenVortex)
-        // Heat the bulk toward a hot wall and raise ν strongly with temperature.
-        .couple(
-            Coupling::between_steps()
-                .then(ThermalRelax::new(2.0, 800.0))
-                .then(ViscosityArrhenius::new(nu0, 300.0, -1.5))
-                .build(),
-        )
-        .coupled_scalar("temperature", 300.0)
-        .march_for(10)
-        .observe(Observe::default().kinetic_energy())
-        .build().expect("config build"))
-        .expect("coupled runs");
+    let coupled = super::run_march(
+        CfdConfigBuilder::march::<3, f64>("tgv-coupled")
+            .mesh(Mesh::periodic_cube(n))
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(nu0)
+                    .time_step(0.02)
+                    .build()
+                    .unwrap(),
+            )
+            .seed(Seed::TaylorGreenVortex)
+            // Heat the bulk toward a hot wall and raise ν strongly with temperature.
+            .couple(
+                Coupling::between_steps()
+                    .then(ThermalRelax::new(2.0, 800.0))
+                    .then(ViscosityArrhenius::new(nu0, 300.0, -1.5))
+                    .build(),
+            )
+            .coupled_scalar("temperature", 300.0)
+            .march_for(10)
+            .observe(Observe::default().kinetic_energy())
+            .build()
+            .expect("config build"),
+    )
+    .expect("coupled runs");
 
     let e_base = baseline.series("kinetic_energy").unwrap();
     let e_coup = coupled.series("kinetic_energy").unwrap();

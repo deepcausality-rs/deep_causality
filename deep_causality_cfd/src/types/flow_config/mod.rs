@@ -12,6 +12,7 @@
 
 mod body;
 mod cfd_config_builder;
+pub(crate) mod manufactured;
 mod march_builder;
 pub(crate) mod march_config;
 mod mesh;
@@ -20,6 +21,9 @@ mod seed;
 
 pub use body::Body;
 pub use cfd_config_builder::CfdConfigBuilder;
+pub use manufactured::{
+    Manufactured, ManufacturedSample, TaylorGreen, VerifyConfig, VerifyConfigBuilder,
+};
 pub use march_builder::MarchConfigBuilder;
 pub use march_config::{MarchConfig, MarchStop};
 pub use mesh::{Grading, Mesh};

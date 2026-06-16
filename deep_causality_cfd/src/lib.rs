@@ -24,8 +24,6 @@
 
 extern crate alloc;
 
-mod errors;
-mod extensions;
 mod solvers;
 mod theories;
 mod traits;
@@ -46,12 +44,13 @@ pub use crate::types::{Ambient, CfdScalar};
 pub use crate::types::flow::{
     CfdFlow, CoupledField, Coupling, MarchPipeline, MarchRun, MmsBuilder, Operator,
     OperatorStudyBuilder, PhysicsStage, Regime, Report, StepContext, StepView, ThermalRelax,
-    ViscosityArrhenius, dominant_frequency, fail, strouhal_number,
+    VerifyRun, ViscosityArrhenius, dominant_frequency, fail, strouhal_number,
 };
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
 pub use crate::types::flow_config::{
-    Body, CfdConfigBuilder, Grading, MarchConfig, MarchConfigBuilder, MarchStop, Mesh, Observe,
-    Seed,
+    Body, CfdConfigBuilder, Grading, Manufactured, ManufacturedSample, MarchConfig,
+    MarchConfigBuilder, MarchStop, Mesh, Observe, Seed, TaylorGreen, VerifyConfig,
+    VerifyConfigBuilder,
 };
 
 // Fluid-dynamics theories: the DEC-native FluidTheory realization, the pointwise NS

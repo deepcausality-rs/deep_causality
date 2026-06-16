@@ -35,8 +35,13 @@ use alloc::collections::BTreeMap;
 
 /// The injected pipeline before a geometry is bound. `.on(&manifold)` lends the caller-owned
 /// geometry and yields the runnable [`MarchRun`].
-pub struct MarchPipeline<'c, const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>, C: PhysicsStage<D, R>>
-{
+pub struct MarchPipeline<
+    'c,
+    const D: usize,
+    R: CfdScalar,
+    Z: BoundaryZone<D, R>,
+    C: PhysicsStage<D, R>,
+> {
     config: &'c MarchConfig<D, R, Z, C>,
 }
 
@@ -176,7 +181,9 @@ impl<'c, 'm, const D: usize, R: CfdScalar, Z: BoundaryZone<D, R> + Clone, C: Phy
 
         let solver = solver_cfg.materialize_with_zones(manifold, config.zones.clone())?;
         let solver = match config.moving_wall {
-            Some((axis, max_side, velocity)) => solver.with_moving_wall(axis, max_side, velocity)?,
+            Some((axis, max_side, velocity)) => {
+                solver.with_moving_wall(axis, max_side, velocity)?
+            }
             None => solver,
         };
         let mut state = seed.apply(&solver, manifold)?;
@@ -204,8 +211,15 @@ impl<'c, 'm, const D: usize, R: CfdScalar, Z: BoundaryZone<D, R> + Clone, C: Phy
         match stop {
             MarchStop::Fixed(n) => {
                 for s in 0..n {
-                    state =
-                        advance_coupled(&solver, manifold, &config.coupling, &mut field, &state, dt, s + 1)?;
+                    state = advance_coupled(
+                        &solver,
+                        manifold,
+                        &config.coupling,
+                        &mut field,
+                        &state,
+                        dt,
+                        s + 1,
+                    )?;
                     ctx.sample(&state, &mut series)?;
                     call_hook(&mut hook, s + 1, dt, &state, manifold);
                 }
@@ -213,8 +227,15 @@ impl<'c, 'm, const D: usize, R: CfdScalar, Z: BoundaryZone<D, R> + Clone, C: Phy
             MarchStop::Steady { tol, max_steps } => {
                 let mut prev_e = dec_kinetic_energy(manifold, state.as_one_form())?;
                 for s in 0..max_steps {
-                    state =
-                        advance_coupled(&solver, manifold, &config.coupling, &mut field, &state, dt, s + 1)?;
+                    state = advance_coupled(
+                        &solver,
+                        manifold,
+                        &config.coupling,
+                        &mut field,
+                        &state,
+                        dt,
+                        s + 1,
+                    )?;
                     ctx.sample(&state, &mut series)?;
                     call_hook(&mut hook, s + 1, dt, &state, manifold);
                     let e = dec_kinetic_energy(manifold, state.as_one_form())?;
@@ -367,8 +388,14 @@ impl<'a, const D: usize, R: CfdScalar> Context<'a, D, R> {
         if let (Some(u_ref), Some(registry), Some(ref_len)) =
             (self.observe.drag, self.registry, self.ref_len)
         {
-            let (cd, cl) =
-                surface_force_coefficients(self.manifold, registry, self.solver, state, u_ref, ref_len)?;
+            let (cd, cl) = surface_force_coefficients(
+                self.manifold,
+                registry,
+                self.solver,
+                state,
+                u_ref,
+                ref_len,
+            )?;
             series.drag.push(cd);
             series.lift.push(cl);
         }

@@ -13,6 +13,7 @@
 use crate::solvers::{DecNs, DecNsConfigNeedsViscosity};
 use crate::types::CfdScalar;
 use crate::types::flow_config::MarchConfigBuilder;
+use crate::types::flow_config::manufactured::{Manufactured, VerifyConfigBuilder};
 
 /// The configuration entry point. Each method starts a dedicated, validated config builder for one
 /// solver (and, later, one parameterized coupling) or a marching-case container.
@@ -32,5 +33,15 @@ impl CfdConfigBuilder {
         name: impl Into<String>,
     ) -> MarchConfigBuilder<D, R, (), ()> {
         MarchConfigBuilder::new(name)
+    }
+
+    /// Start an **MMS-verification** configuration around a [`Manufactured`] solution (a corpus
+    /// solution like `TaylorGreen`, or a caller-supplied field). Then `sample_at` / optional
+    /// `amplitude_march`, then `build()` → `VerifyConfig`, run by [`CfdFlow::verify`](crate::CfdFlow).
+    pub fn verify<R: CfdScalar, M: Manufactured<R>>(
+        name: impl Into<String>,
+        manufactured: M,
+    ) -> VerifyConfigBuilder<R, M> {
+        VerifyConfigBuilder::new(name, manufactured)
     }
 }

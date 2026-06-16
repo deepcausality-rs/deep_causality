@@ -87,6 +87,8 @@ impl<const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>, C: PhysicsStage<D, R>>
     /// # Errors
     /// Any failure building the lattice, metric, or cut-cell geometry.
     pub fn materialize(&self) -> Result<Manifold<LatticeComplex<D, R>, R>, PhysicsError> {
-        self.mesh.materialize().map(|(manifold, _registry)| manifold)
+        self.mesh
+            .materialize()
+            .map(|(manifold, _registry)| manifold)
     }
 }

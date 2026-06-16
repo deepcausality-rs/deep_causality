@@ -148,11 +148,14 @@ impl<const D: usize, R: CfdScalar> Mesh<D, R> {
     /// is set. Built from the lattice so the graded edge lengths follow `iter_cells(1)` order.
     fn base_geometry(&self, lattice: &LatticeComplex<D, R>) -> CubicalReggeGeometry<D, R> {
         match &self.grading {
-            Some(Grading::Cosine { axis: graded_axis, amp }) => {
-                let two_pi =
-                    R::from_f64(2.0 * core::f64::consts::PI).expect("2π lifts into every real field");
-                let n = R::from_usize(self.shape[*graded_axis])
-                    .expect("a lattice extent lifts into R");
+            Some(Grading::Cosine {
+                axis: graded_axis,
+                amp,
+            }) => {
+                let two_pi = R::from_f64(2.0 * core::f64::consts::PI)
+                    .expect("2π lifts into every real field");
+                let n =
+                    R::from_usize(self.shape[*graded_axis]).expect("a lattice extent lifts into R");
                 let edge_lengths: Vec<R> = lattice
                     .iter_cells(1)
                     .map(|cell| {

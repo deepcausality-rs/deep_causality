@@ -145,7 +145,11 @@ fn operator_error<R: CfdScalar>(operator: Operator, n: usize) -> Result<R, Physi
             let du = manifold.exterior_derivative_of(edge.as_slice(), 1);
             let dde = manifold.codifferential_of(du.as_slice(), 2);
             let two = R::from_f64(2.0).expect("2.0 lifts into R");
-            Ok(relative_l2_against_scaled(dde.as_slice(), edge.as_slice(), two))
+            Ok(relative_l2_against_scaled(
+                dde.as_slice(),
+                edge.as_slice(),
+                two,
+            ))
         }
     }
 }
