@@ -72,6 +72,13 @@ where
         self
     }
 
+    /// Opt into a variance-reduced **Quasi-Monte-Carlo collapse** of the present sample (delegated;
+    /// the SPRT presence gate stays Monte-Carlo). See [`UncertainBoundarySource::with_qmc_collapse`].
+    pub fn with_qmc_collapse(mut self, base_seed: u64) -> Self {
+        self.source = self.source.with_qmc_collapse(base_seed);
+        self
+    }
+
     /// Sets the dropout-logging verbosity (delegated).
     pub fn with_verbosity(mut self, verbosity: DropoutVerbosity) -> Self {
         self.source = self.source.with_verbosity(verbosity);

@@ -76,3 +76,33 @@ fn transition_verbosity_records_only_onset_and_recovery() {
         "log: {log}"
     );
 }
+
+// Opt-in QMC collapse: a present sample resolves to its (variance-reduced) mean, and the collapse
+// is reproducible — the Sobol shift `base ⊕ present.id()` is fixed for a given sample.
+#[test]
+fn qmc_collapse_resolves_present_sample_reproducibly() {
+    let source = UncertainBoundarySource::new(0.0)
+        .with_presence_gate(0.5, 0.9, 0.1, 64)
+        .with_collapse_samples(64)
+        .with_qmc_collapse(0x1234_5678);
+    let sample = MaybeUncertain::<f64>::from_uncertain(Uncertain::normal(3.0, 0.05));
+
+    let mut lg1 = 0.0;
+    let (v1, d1) = source.resolve(&sample, &mut lg1).unwrap();
+    let mut lg2 = 0.0;
+    let (v2, d2) = source.resolve(&sample, &mut lg2).unwrap();
+
+    assert!(!d1 && !d2, "a present sample must not be a dropout");
+    assert!(
+        (v1 - 3.0).abs() < 0.1,
+        "QMC-collapsed value {v1} far from 3.0"
+    );
+    assert_eq!(
+        v1, v2,
+        "QMC collapse of the same sample must be reproducible"
+    );
+    assert!(
+        (lg1 - v1).abs() < 1e-12,
+        "last-good must update to the resolved value"
+    );
+}
