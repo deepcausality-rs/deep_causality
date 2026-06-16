@@ -1,0 +1,42 @@
+openspec/notes/cfd/quantum_fluid_dynamics_survey.md
+  s_ce32f2301cc433::t_33e803b382b84a 127-136
+  s_ce32f2301cc433::t_f42a83330387c7 501-508
+  s_ce32f2301cc433::t_45aaf5656ea1d5 509-516
+  s_ce32f2301cc433::t_c10943510e7173 139,141-153
+  s_ce32f2301cc433::t_f3b6b3b5b49efe 105
+openspec/notes/cfd/qmc-presence-gate-followup.md
+  s_9bd896ecf5e8ba::t_c8c9f2ac2857f2 1-64
+openspec/notes/cfd/tensor_network_cfd.md
+  s_ce32f2301cc433::t_fa7affe5c71ddb 255-274
+  s_ce32f2301cc433::t_463a646f14f6e7 288
+  s_ce32f2301cc433::t_5ea13bcf42b7ec 315-324
+  s_ce32f2301cc433::t_90ccbbe09fa9c5 310-314
+  s_ce32f2301cc433::t_558cb2f8ae50dd 244
+  s_ce32f2301cc433::t_53c55356b3365f 184-217,245-254,275
+  s_ce32f2301cc433::t_96027ddd26c15d 218-243
+  s_ce32f2301cc433::t_db8f518ee7f518 1-183,276-287,289-309,325
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "0bfdeee466e1e10dd449e43a9370ef0495acb171",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_ce32f2301cc433": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "896e188d-7c63-4849-a3c8-83f716dd398c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
