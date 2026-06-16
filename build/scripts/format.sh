@@ -13,6 +13,7 @@ buildifier -r deep_causality/
 buildifier -r deep_causality_algorithms/
 buildifier -r deep_causality_ast/
 buildifier -r deep_causality_calculus/
+buildifier -r deep_causality_cfd/
 buildifier -r deep_causality_core/
 buildifier -r deep_causality_data_structures/
 buildifier -r deep_causality_discovery/
