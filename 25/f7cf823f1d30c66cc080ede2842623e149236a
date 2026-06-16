@@ -1,0 +1,20 @@
+deep_causality_cfd/tests/BUILD.bazel
+  s_c99b1c1e7a1f61::t_e7ea782091a469 1,5-9,12,15,20,35,38,43,56,59,64
+  s_c99b1c1e7a1f61::t_8c7d1ce9329582 2-4,10-11,13-14,16-19,21-34,36-37,39-42,44-55,57-58,60-63,65-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "25f7cf823f1d30c66cc080ede2842623e149236a",
+  "prompts": {},
+  "sessions": {
+    "s_c99b1c1e7a1f61": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0d52018e-5ef1-479e-81a6-7b3313872f3b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
