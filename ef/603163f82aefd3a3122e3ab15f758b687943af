@@ -1,0 +1,35 @@
+openspec/notes/cfd/qmc-sampler-design.md
+  s_8a207c3125fcca::t_9f8c6cee6031df 1-159
+openspec/changes/add-qmc-sampler/specs/inverse-cdf-sampling/spec.md
+  s_8a207c3125fcca::t_93919749873e63 1-43
+openspec/changes/add-qmc-sampler/.openspec.yaml
+  s_8a207c3125fcca::t_5e225aaeaf9956 1-2
+openspec/changes/add-qmc-sampler/proposal.md
+  s_8a207c3125fcca::t_0e3cf5243b0dd8 1-63
+openspec/changes/add-qmc-sampler/specs/qmc-sampler/spec.md
+  s_8a207c3125fcca::t_88c41f39456982 1-86
+openspec/changes/add-qmc-sampler/design.md
+  s_8a207c3125fcca::t_d28b20294a5218 1-124
+openspec/changes/add-qmc-sampler/tasks.md
+  s_8a207c3125fcca::t_eac040dd75cd42 1-52
+openspec/changes/add-qmc-sampler/specs/double-double-erf/spec.md
+  s_8a207c3125fcca::t_80bf9b832d3d9e 1-23
+openspec/changes/add-qmc-sampler/specs/sobol-sequence/spec.md
+  s_8a207c3125fcca::t_e186415e9d9fa8 1-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "ef603163f82aefd3a3122e3ab15f758b687943af",
+  "prompts": {},
+  "sessions": {
+    "s_8a207c3125fcca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3f9dbbc4-a476-4b6b-9dda-07db14d08445",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
