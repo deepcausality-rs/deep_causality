@@ -1,0 +1,83 @@
+load("@rules_rust//rust:defs.bzl", "rust_test")
+
+# =============================================================================
+# tests mirror the src tree: tests/types/, tests/theories/, tests/solvers/.
+#
+# Each subtree is registered through its own mod.rs aggregator and shares
+# parent-module helpers (e.g. `super::run_march` in types/flow/mod.rs), so it
+# is compiled as a single test binary rooted at that mod.rs rather than as
+# standalone per-file tests.
+# =============================================================================
+
+rust_test(
+    name = "types",
+    srcs = glob([
+        "types/**/*.rs",
+    ]),
+    crate_features = [
+        "std",
+    ],
+    crate_root = "types/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_cfd",
+        # Internal dependencies
+        "//deep_causality_physics",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_test(
+    name = "theories",
+    srcs = glob([
+        "theories/**/*.rs",
+    ]),
+    crate_features = [
+        "std",
+    ],
+    crate_root = "theories/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_cfd",
+        # Internal dependencies
+        "//deep_causality_physics",
+    ],
+)
+
+rust_test(
+    name = "solvers",
+    srcs = glob([
+        "solvers/**/*.rs",
+    ]),
+    crate_features = [
+        "std",
+    ],
+    crate_root = "solvers/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_cfd",
+        # Internal dependencies
+        "//deep_causality_calculus",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+        "//deep_causality_num",
+        "//deep_causality_par",
+        "//deep_causality_physics",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+        "//deep_causality_uncertain",
+    ],
+)
