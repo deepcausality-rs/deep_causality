@@ -1,0 +1,35 @@
+deep_causality_uncertain/benches/uncertain_benchmarks.rs
+  s_9bd896ecf5e8ba::t_0cfb4307cd3b07 138-141
+deep_causality_uncertain/src/types/uncertain/uncertain_bool.rs
+  s_9bd896ecf5e8ba::t_5a665a85c9b49e 106
+deep_causality_uncertain/src/types/sampler/qmc_sampler.rs
+  s_9bd896ecf5e8ba::t_1fddd00b502500 40-43,48-58
+  s_9bd896ecf5e8ba::t_caa73ccf8b3a9a 473-499
+  s_9bd896ecf5e8ba::t_a7a54c81f7d5ba 21
+deep_causality_uncertain/src/types/uncertain/uncertain_statistics.rs
+  s_9bd896ecf5e8ba::t_5a665a85c9b49e 71,93
+deep_causality_uncertain/tests/types/sampler/qmc_sampler_tests.rs
+  s_9bd896ecf5e8ba::t_d4b68e9c977695 29
+  s_9bd896ecf5e8ba::t_110ea906c38173 8
+  s_9bd896ecf5e8ba::t_cd47960b1d5b81 28,36-38
+  s_9bd896ecf5e8ba::t_935b0f381e149c 18,25,35,53,63,124
+  s_9bd896ecf5e8ba::t_6a1ef8ffa88490 43-44
+deep_causality_uncertain/src/types/uncertain/mod.rs
+  s_9bd896ecf5e8ba::t_3026e70245a24a 61-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "2ccf241253d47a32fe5da94f6812e69b24d72f39",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
