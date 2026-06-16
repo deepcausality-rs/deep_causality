@@ -1,0 +1,22 @@
+
+=== CONVECTIVE  i_X ω (interior product) — order vs grading amplitude (max-norm | L2-norm) ===
+    a   max E(64)   L2 E(64)       max-norm p        L2-norm p
+----------------------------------------------------------------------
+ 0.00     5.13e-3    4.60e-3   1.87,1.96,1.99   1.86,1.96,1.99
+ 0.10     5.54e-3    4.65e-3   1.88,1.91,1.99   1.85,1.96,1.99
+ 0.20     6.59e-3    4.78e-3   1.76,1.85,1.98   1.83,1.96,1.99
+ 0.30     7.69e-3    5.00e-3   1.72,1.82,1.98   1.81,1.95,1.99
+
+=== VISCOUS     Δ₀ = δd  (Laplacian) — order vs grading amplitude (max-norm | L2-norm) ===
+    a   max E(64)   L2 E(64)       max-norm p        L2-norm p
+----------------------------------------------------------------------
+ 0.00     8.03e-4    8.03e-4   1.98,1.99,2.00   1.98,1.99,2.00
+ 0.10     8.44e-4    8.09e-4   1.90,2.00,2.01   1.98,1.99,2.00
+ 0.20     9.31e-4    8.29e-4   1.84,2.01,2.00   1.98,2.00,2.00
+ 0.30     1.04e-3    8.65e-4   1.95,1.95,2.00   1.99,2.00,2.00
+
+Reading: both operators hold ≈ second order (both norms) at every grading
+amplitude — smooth grading retains second order. The error constant grows mildly
+with grading; the order does not degrade. Structure (divergence-freeness) is exact
+at every amplitude regardless. (Cochains must be edge-integrals — see the module
+doc; omitting the ℓ factor mis-measures a false order-loss on graded meshes.)

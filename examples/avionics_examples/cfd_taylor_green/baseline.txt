@@ -1,0 +1,16 @@
+=== Avionics CFD verification: Taylor-Green via Manufactured Solutions ===
+
+Stage 1: differentiate -> kernel
+  u            = [0.29221, -0.68163, 0.00000]
+  du/dt kernel = [-0.02922, 0.06816, 0.00000]
+  du/dt exact  = [-0.02922, 0.06816, -0.00000]
+  max abs error: 1.11e-16   (exact derivatives, no finite differences)
+
+Stage 2: Rk4 march of the amplitude, kernel in the loop
+  steps = 200, t_final = 1
+  a(t) Rk4   = 0.90483742
+  a(t) exact = 0.90483742   (= exp(-2·nu·t))
+  abs error  = 6.66e-16
+
+Manufactured solution reproduced: exact AD derivatives drive the kernel, Rk4 tracks
+the analytic decay, and the causal monad sequenced the two stages.
