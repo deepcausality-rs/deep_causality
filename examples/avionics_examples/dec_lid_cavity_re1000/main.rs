@@ -48,9 +48,7 @@ use std::env;
 use std::fs::File;
 use std::io::Write as IoWrite;
 
-use deep_causality_physics::DecNsSolver;
-use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
+use deep_causality_cfd::{CfdConfigBuilder, CfdFlow, Mesh, Seed};
 
 const RE: f64 = 1000.0;
 const LID_SPEED: f64 = 1.0;
@@ -105,45 +103,54 @@ const GHIA_VORTICES: [(&str, f64, f64); 3] = [
     ("bottom-right", 0.8594, 0.1094),
 ];
 
-/// March the Re-1000 cavity from rest on an `n × n` grid to `t_end`;
-/// returns the final edge cochain (velocity 1-form coefficients).
+/// March the Re-1000 cavity from rest on an `n × n` grid to `t_end`; returns the final edge
+/// cochain (velocity 1-form coefficients). The compute runs through the `deep_causality_cfd`
+/// **CfdFlow** DSL — an all-walls box mesh, the DEC incompressible solver at `ν = U/Re`, the moving
+/// lid, and a rest seed — which lowers onto the same projected DEC step the hand-rolled loop used,
+/// so the marched field is reproduced exactly. The per-step progress line is a `run_with` hook; the
+/// final field is taken from the report. The centerline/vortex analysis and CSV stay here (the file
+/// writes await the IO monad).
 fn march(n: usize, t_end: f64) -> Vec<f64> {
     let h = 1.0 / (n - 1) as f64;
     let nu = LID_SPEED / RE;
     let dt = 0.45 * h;
     let steps = (t_end / dt).ceil() as usize;
 
-    // All-walls unit square; the lid is the y-max face.
-    let lattice = LatticeComplex::<2, f64>::new([n, n], [false, false]);
-    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
-    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
-    let metric: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::uniform(h);
-    let manifold = Manifold::from_cubical_with_metric(lattice, data, metric, 0);
+    // Configuration (the "what"): all-walls unit square at spacing `h`, the DEC solver, the y-max
+    // lid, marched `steps` steps from rest.
+    let config = CfdConfigBuilder::march::<2, f64>("cavity-re1000")
+        .mesh(Mesh::box_domain([n, n]).spacing(h))
+        .solver(
+            CfdConfigBuilder::dec_ns()
+                .viscosity(nu)
+                .time_step(dt)
+                .build()
+                .expect("cavity solver configuration"),
+        )
+        .lid([LID_SPEED, 0.0])
+        .seed(Seed::Rest)
+        .march_for(steps)
+        .build()
+        .expect("cavity march configuration");
 
-    let solver = DecNsSolver::new(&manifold, nu, dt, None)
-        .expect("cavity solver construction")
-        .with_moving_wall(1, true, [LID_SPEED, 0.0])
-        .expect("lid configuration");
-
-    let n0 = manifold.complex().num_cells(0);
-    let rest = CausalTensor::new(vec![0.0; 2 * n0], vec![2 * n0]).unwrap();
-    let mut state = solver
-        .seed_from_vertex_vectors(&rest)
-        .expect("seeding from rest");
+    // B1: the caller owns the geometry; `CfdFlow` borrows it for the run.
+    let manifold = config.materialize().expect("cavity geometry");
 
     let report_every = (steps / 20).max(1);
-    for step in 0..steps {
-        state = solver.step(&state).expect("march step").into_state();
-        if (step + 1) % report_every == 0 {
-            eprintln!(
-                "# t = {:8.2} ({}/{steps})",
-                (step + 1) as f64 * dt,
-                step + 1
-            );
-        }
-    }
+    let report = CfdFlow::march(&config)
+        .on(&manifold)
+        .run_with(|step: &deep_causality_cfd::StepView<'_, 2, f64>| {
+            let s = step.step();
+            if s % report_every == 0 {
+                eprintln!("# t = {:8.2} ({s}/{steps})", step.time());
+            }
+        })
+        .expect("cavity march");
 
-    state.as_one_form().as_slice().to_vec()
+    report
+        .final_field()
+        .expect("the marching report carries the final field")
+        .to_vec()
 }
 
 /// The centerline velocity profiles `(u(0.5, y_j), v(x_i, 0.5))` at the
