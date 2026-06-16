@@ -1,0 +1,49 @@
+deep_causality_rand/src/types/qmc/mod.rs
+  s_8a207c3125fcca::t_5adc06583c4872 1-8
+deep_causality_rand/src/lib.rs
+  s_8a207c3125fcca::t_aa9ff77e2d7d8a 42
+  s_8a207c3125fcca::t_fd79fd3f992b16 28-32
+deep_causality_rand/src/utils/mod.rs
+  s_8a207c3125fcca::t_eb174c3f1675f1 6
+deep_causality_rand/src/errors/rng_error.rs
+  s_8a207c3125fcca::t_d9b84a96bb49a4 13
+  s_8a207c3125fcca::t_95802ba1b155b8 23
+deep_causality_rand/tests/BUILD.bazel
+  s_8a207c3125fcca::t_b6f08e25a56fcc 64-80
+deep_causality_rand/src/utils/inverse_cdf.rs
+  s_8a207c3125fcca::t_73f4e302bda232 31
+  s_8a207c3125fcca::t_640d6c5acf0175 1-30,32-125
+deep_causality_rand/tests/utils/mod.rs
+  s_8a207c3125fcca::t_ac488aabc2c281 7-8
+  s_8a207c3125fcca::t_c18a9d7bc7213d 1-6
+deep_causality_rand/tests/utils/sobol_tests.rs
+  s_8a207c3125fcca::t_aa9ff77e2d7d8a 27-31,69-74,79-82
+  s_8a207c3125fcca::t_b3a67baf10689b 1-26,32-68,75-78,83-168
+deep_causality_rand/tests/mod.rs
+  s_8a207c3125fcca::t_2ec9c007973629 9
+deep_causality_rand/src/types/mod.rs
+  s_8a207c3125fcca::t_f3335764952068 9
+deep_causality_rand/tests/utils/inverse_cdf_tests.rs
+  s_8a207c3125fcca::t_e73744cd3daf6d 1-150
+deep_causality_rand/src/types/qmc/sobol.rs
+  s_8a207c3125fcca::t_aa9ff77e2d7d8a 17
+  s_8a207c3125fcca::t_3b35033bbba397 1-16,18-122
+deep_causality_rand/tests/errors/rng_error_tests.rs
+  s_8a207c3125fcca::t_fa81991f739587 24-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "c4577fc2c315d848fb8d2858df27217beb2438fe",
+  "prompts": {},
+  "sessions": {
+    "s_8a207c3125fcca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3f9dbbc4-a476-4b6b-9dda-07db14d08445",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
