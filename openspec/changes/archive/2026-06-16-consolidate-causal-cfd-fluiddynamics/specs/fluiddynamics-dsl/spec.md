@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
-### Requirement: The `Flow` DSL composes fluid simulations statically
-The `deep_causality_cfd` crate SHALL provide a `Flow` domain-specific language, peer to `CausalFlow`
+### Requirement: The `CfdFlow` DSL composes fluid simulations statically
+The `deep_causality_cfd` crate SHALL provide a `CfdFlow` domain-specific language, peer to `CausalFlow`
 and `CausalDiscovery`, that composes a simulation from a theory (a Navier–Stokes regime reused across
 solvers), a solver (a theory and/or physics kernels solving one designated case), and a set of
 boundary zones (the archived `BoundaryZone` terms). Composition SHALL use **static dispatch** built
@@ -11,15 +11,28 @@ change to the DSL core. Every solver and theory SHALL be generic over `R: RealFi
 downcasting to `f64`.
 
 #### Scenario: A case is composed and run
-- **WHEN** a `Flow` case is assembled from a theory, a solver, and boundary zones and is run
+- **WHEN** a `CfdFlow` case is assembled from a theory, a solver, and boundary zones and is run
 - **THEN** it produces the simulation result with all composition resolved at compile time (no dynamic dispatch)
 
 #### Scenario: Precision is a parameter
 - **WHEN** an example sets its `FloatType` alias to `f32`, `f64`, or `Float106`
 - **THEN** the same solver and theory run natively at that precision with no `f64` downcast in the solver
 
-### Requirement: A `Flow` case is an owned description materialized at run time
-A `Flow` case SHALL be a fully-owned declarative description holding no borrows of the mesh, geometry,
+### Requirement: Configuration is separated from workflow composition
+The crate SHALL separate **configuration** (the "what") from **workflow composition** (the "how"),
+mirroring the Discovery `CdlConfigBuilder` → `CdlBuilder` split. A single `CfdConfigBuilder` entry
+SHALL start each owned, validated configuration — a solver config (`dec_ns`), a marching-case
+container (`march`), or an MMS-verification config (`verify`) — and the `CfdFlow` facade SHALL compose
+those configs onto a caller-owned geometry and run them. Configuration objects SHALL hold no geometry
+borrow; the geometry SHALL be lent to the run via `.on(&manifold)` (the B1 borrow model) and SHALL NOT
+escape the run.
+
+#### Scenario: A marching case is configured, then composed and run
+- **WHEN** a marching case is built with `CfdConfigBuilder::march(...)` and run with `CfdFlow::march(&config).on(&manifold)`
+- **THEN** the configuration carries no manifold borrow, the geometry is lent for the run only, and a `Report` is returned
+
+### Requirement: A `CfdFlow` case is an owned description materialized at run time
+A `CfdFlow` case SHALL be a fully-owned declarative description holding no borrows of the mesh, geometry,
 manifold, or solver. The mesh, manifold, and solver SHALL be materialized at run time, the march
 executed, and only an owned result returned. A case SHALL be reusable (cheap to clone) so the same
 case can seed a factual run and one or more counterfactual runs.
@@ -90,19 +103,27 @@ of the migrated solver.
 - **WHEN** a solver runs with a constant ambient and no coupling
 - **THEN** it reproduces the pre-refactor construction-fixed validation result to the same tolerance
 
-### Requirement: Case orchestration is lifted into reusable generic solvers
-Per-case orchestration SHALL be lifted out of the avionics example `main`s into standalone solvers
-and a generic diagnostics/observe layer, generic over `R: RealField` with no `f64` downcast. This
-covers seeding, the marching loop, and case diagnostics such as the Strouhal number, drag and lift
-coefficients, Ghia comparison, vortex detection, and dissipation sampling. Each migrated example SHALL
-drive such a solver through the Flow DSL rather than re-implementing the orchestration inline.
+### Requirement: The DSL owns the march and bespoke analysis plugs in by typed seams
+The DSL SHALL own the generic march — seeding, the per-step projected DEC loop, the stop condition,
+and the common `Observe` diagnostics — through a single `MarchConfig` container and the `CfdFlow`
+marching run, generic over `R` with no `f64` downcast; it SHALL NOT be re-implemented per case nor
+specialized into per-case solver types. An example's bespoke analysis (e.g. the cavity
+centerline / Ghia compare / vortex detection, or a wake probe) SHALL plug in through **typed seams**
+rather than by forking the march: a per-step `run_with(hook)` receiving a read-only `StepView`, the
+final field via `Report::final_field`, and the `Observe` set for common series. A solution that recurs
+across cases (rule of three) SHALL be **promoted into the DSL corpus** rather than copied; a genuinely
+unique experiment SHALL stay in its example behind a seam.
 
-#### Scenario: A migrated example drives a reusable solver
-- **WHEN** a migrated validation example is inspected
-- **THEN** its seeding, marching loop, and diagnostics come from a reusable solver and the generic observe layer, not from inline `main` orchestration
+#### Scenario: An example streams a per-step probe without forking the march
+- **WHEN** an example needs a per-step diagnostic (a progress line, a wake probe)
+- **THEN** it supplies a `run_with` hook over the DSL's march and reads `StepView` / `Report::final_field`, rather than re-implementing the marching loop
+
+#### Scenario: A recurring solution is promoted to the corpus
+- **WHEN** a capability (e.g. a graded metric, a manufactured solution, autodiff derivatives) is needed by more than one case
+- **THEN** it is promoted into the `deep_causality_cfd` corpus and reused, not copied into each example
 
 ### Requirement: The DSL covers marching, MMS-verification, and operator-accuracy solvers
-The `Flow` DSL SHALL provide three solver kinds, all producing a common `Report` and sharing a static
+The `CfdFlow` DSL SHALL provide three solver kinds, all producing a common `Report` and sharing a static
 `Solver` seam so that adding a kind is a trait implementation, not a change to the DSL core: a
 **marching** solver (a DEC regime marched over a mesh with boundary zones, a seed, an observe set, and
 optional `.couple` multiphysics); an **MMS-verification** solver (a manufactured solution checked
@@ -126,7 +147,7 @@ bounded / open lattices, uniform and graded metrics, and immersed cut-cell bodie
 - **THEN** it reports the observed convergence orders without marching a field
 
 ### Requirement: The DSL wraps CausalFlow for the march, control flow, and counterfactuals
-The `Flow` DSL SHALL lower its march, control flow, and intervention onto the `CausalFlow` monad: a
+The `CfdFlow` DSL SHALL lower its march, control flow, and intervention onto the `CausalFlow` monad: a
 multi-step march via the flow's arrow-algebra iterator (`iterate_n` / `iterate_until`),
 branching/looping via its control-flow combinators (`branch_with` / `either`), and counterfactual
 interventions (e.g. on material, mesh, temperature, or a dynamic law) via `.intervene`. The DSL SHALL
@@ -138,11 +159,11 @@ integrate with `CausalFlow` for between-step / pre-processing physics and with `
 - **THEN** the march lowers onto the `CausalFlow` `iterate_n` / `iterate_until` combinators
 
 #### Scenario: Multi-physics composition
-- **WHEN** two physics stages are composed in a `Flow` coupling
+- **WHEN** two physics stages are composed in a `CfdFlow` coupling
 - **THEN** they compose through the `CausalFlow` bind passthrough, as in the multi-physics pipeline example
 
 ### Requirement: `.couple` wires modular physics stages into a between-step pipeline
-The `Flow` DSL SHALL provide a `.couple` seam that registers a between-step physics pipeline,
+The `CfdFlow` DSL SHALL provide a `.couple` seam that registers a between-step physics pipeline,
 evaluated once per timestep around the CFD step. A coupling SHALL be a statically-composed pipeline of
 physics stages over the error algebra (`PropagatingEffect`/`bind`), such that a stage, a sub-process,
 and a whole coupling are first-class values that can be built and tested independently, stored in
@@ -158,7 +179,7 @@ trait implementation. Errors SHALL propagate across the whole holistic coupling 
 - **THEN** the fluid dynamics evolve with the coupled context (dynamic causality), not with a fixed parameter
 
 ### Requirement: Counterfactuals intervene on dynamics and reuse the developed solve
-The `Flow` DSL SHALL support counterfactual interventions through a closed `Intervene` vocabulary
+The `CfdFlow` DSL SHALL support counterfactual interventions through a closed `Intervene` vocabulary
 spanning static terms (e.g. material, Reynolds number, mesh) and dynamic laws (e.g. a thrust
 schedule, heat gradient, wall temperature, Prandtl number). It SHALL provide two flavors: a
 shared-seed counterfactual that derives a sibling case sharing the background (mesh/zones/seed) with a
@@ -174,12 +195,40 @@ expensive solve runs once and multiple scenarios branch on top.
 - **THEN** the expensive solve is reused as the shared background and each scenario marches only its incremental relaxation
 
 ### Requirement: Examples are written in the DSL with a config/main split
-The crate's examples SHALL be written in the `Flow` DSL. Each example SHALL separate configuration
+The crate's examples SHALL be written in the `CfdFlow` DSL. Each example SHALL separate configuration
 from wiring: a `config.rs` SHALL own every solver/mesh/zone/seed configuration (built with type-state
 builders) and the `FloatType` alias, and a `main.rs` SHALL plug the imported configuration into the
-Flow pipeline. Larger multi-physics examples SHALL further decompose into per-physics sub-process
+CfdFlow pipeline. Larger multi-physics examples SHALL further decompose into per-physics sub-process
 modules wired into one holistic coupling.
 
 #### Scenario: Configuration is imported, not inlined
 - **WHEN** an example's `main.rs` is inspected
 - **THEN** it plugs in configuration imported from `config.rs` rather than constructing solver/mesh/zone/seed configuration inline
+
+### Requirement: The corpus supplies graded geometry and manufactured solutions
+The DSL corpus SHALL supply reusable building blocks beyond the uniform march. A `Mesh` SHALL cover
+periodic / wall-bounded / open lattices (`periodic_cube`/`torus`, `box_domain`, `channel`), uniform
+and graded metrics (`Grading::cosine` → a `PerEdge` Regge metric that keeps `d`, the discrete Stokes
+theorem, and divergence-freeness exact), an immersed cut-cell `Body`, and a geometry-only `manifold()`
+for operator studies. A `Manufactured<R>` seam SHALL admit any analytic solution for MMS verification,
+with `TaylorGreen` as the corpus solution whose exact spatial derivatives come from the tangent functor
+(`deep_causality_calculus` autodiff), not finite differences.
+
+#### Scenario: A graded operator study runs without a march
+- **WHEN** a graded mesh is built with `Mesh::torus(n).graded(Grading::cosine(axis, amp))` and materialized via `manifold()`
+- **THEN** the DEC operators are studied on the graded metric with no field marched
+
+#### Scenario: A manufactured solution verifies a kernel with exact derivatives
+- **WHEN** an MMS verification runs a `Manufactured` solution (e.g. `TaylorGreen`)
+- **THEN** the kernel residual uses exact autodiff derivatives, not finite differences
+
+### Requirement: A configured run is deterministically reproducible
+A `CfdFlow` run with a fixed configuration SHALL be bit-for-bit reproducible across invocations. Where a
+run draws Monte-Carlo samples (e.g. a sensor-fed uncertain inflow), it SHALL be made reproducible by
+seeding the sampler; where it iterates an immersed cut-cell registry, the iteration order SHALL be made
+deterministic (ascending cell id) so the constrained projection's floating-point reduction order does
+not vary per process.
+
+#### Scenario: A stochastic, cut-cell case reproduces byte-for-byte
+- **WHEN** a sensor-fed cut-cell case fixes its sampler seed and enables deterministic cut-cell order
+- **THEN** repeated runs produce byte-for-byte identical output
