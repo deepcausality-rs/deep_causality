@@ -1,0 +1,27 @@
+deep_causality_cfd/src/solvers/dec/uncertain_inflow/uncertain_boundary_source.rs
+  s_9bd896ecf5e8ba::t_f09ce371cb3512 62
+  s_9bd896ecf5e8ba::t_5db306a8c354f9 136-153,155
+  s_9bd896ecf5e8ba::t_f4783fa3e9130b 40-43
+  s_9bd896ecf5e8ba::t_a9637cff6d1bbf 87-101
+deep_causality_cfd/src/solvers/dec/uncertain_inflow/uncertain_inflow_zone.rs
+  s_9bd896ecf5e8ba::t_3cc45e9abe3e38 75-81
+deep_causality_cfd/tests/solvers/dec/uncertain_boundary_source_tests.rs
+  s_9bd896ecf5e8ba::t_6161749b227486 96-103
+  s_9bd896ecf5e8ba::t_18655fc28fe5b1 79-95,104-108
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "6e736fca0b610dd53ff619a727765b8a92cf289b",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
