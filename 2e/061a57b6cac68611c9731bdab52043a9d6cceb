@@ -1,0 +1,47 @@
+openspec/changes/add-dec-periodic-ns-solver/specs/dec-ns-diagnostics/spec.md
+  s_86ac044a95d19d::t_03d10365f53435 1-76
+openspec/changes/add-dec-periodic-ns-solver/tasks.md
+  s_86ac044a95d19d::t_3c1520812adbb0 1-85,94-96,98-112
+  s_86ac044a95d19d::t_24aaabf2729771 93
+  s_86ac044a95d19d::t_24d10042b88a1b 86-92,97
+  s_86ac044a95d19d::t_cd6b87ef06f84d 113-116
+openspec/changes/add-dec-periodic-ns-solver/proposal.md
+  s_86ac044a95d19d::t_16ca5d544ba226 99-101
+  s_86ac044a95d19d::t_97c6fd9ecc700f 1-57,60,66-80,83-98
+  s_86ac044a95d19d::t_10a4e9e498ba91 58-59,61-65
+  s_86ac044a95d19d::t_b5fa424745ad01 81-82
+  s_86ac044a95d19d::t_c1ec2c5fc9c126 102-106
+openspec/changes/add-dec-periodic-ns-solver/.openspec.yaml
+  s_86ac044a95d19d::t_1af55aa4da4aa5 1-2
+openspec/changes/add-dec-periodic-ns-solver/design.md
+  s_86ac044a95d19d::t_167475ae22216e 1-47,49-54,60-173,191,196-217
+  s_86ac044a95d19d::t_ccff630275c920 174-190
+  s_86ac044a95d19d::t_dfd7096b4e9219 192-195
+  s_86ac044a95d19d::t_25ebc578698b15 55-59
+  s_86ac044a95d19d::t_16b553a33a5b3b 48
+openspec/changes/add-dec-periodic-ns-solver/specs/dec-ns-rate/spec.md
+  s_86ac044a95d19d::t_4be9fcb5607cc9 1-74
+openspec/changes/add-dec-periodic-ns-solver/specs/dec-ns-march/spec.md
+  s_86ac044a95d19d::t_7ec1ac69e37a31 1-113
+openspec/changes/add-dec-periodic-ns-solver/specs/dec-ns-validation/spec.md
+  s_86ac044a95d19d::t_4b1c43060e9ad6 3-5
+  s_86ac044a95d19d::t_569f719b20f233 61-95
+  s_86ac044a95d19d::t_3c68480aef5be9 1-2,6-60,96-97,100-125
+  s_86ac044a95d19d::t_6d5a37ae6b4942 98-99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "2e061a57b6cac68611c9731bdab52043a9d6cceb",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
