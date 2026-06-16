@@ -79,12 +79,7 @@ The crate supports `no_std` environments via feature flags.
   Navier–Stokes solver (wedge, interior product, de Rham, sharp, and the CG matvecs), by
   forwarding to `deep_causality_topology/parallel`. Disabled by default; the parallel paths are
   granularity-thresholded, so small lattices run serial loops with no fork-join overhead either
-  way. Performance is tracked by the `dec_solver_benchmark` criterion bench:
-
-  ```sh
-  cargo bench -p deep_causality_physics --bench dec_solver_benchmark
-  cargo bench -p deep_causality_physics --bench dec_solver_benchmark --features parallel
-  ```
+  way.
 
 ## Contribution
 
