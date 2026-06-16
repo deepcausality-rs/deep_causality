@@ -1,0 +1,73 @@
+deep_causality_topology/src/types/manifold/differential/de_rham.rs
+  s_86ac044a95d19d::t_b60db897804532 1-25,29-41,43-52,57-74,76-80,91,98-123,128-156,158-161,165,167-172,174-193,195-202,204,208-213,223
+  s_86ac044a95d19d::t_6eb0776b216360 26-28
+  s_86ac044a95d19d::t_430d6368f78ba2 53-56,124-127
+deep_causality_topology/tests/extensions/mod.rs
+  s_86ac044a95d19d::t_430d6368f78ba2 28-29
+deep_causality_topology/src/types/manifold/differential/wedge.rs
+  s_86ac044a95d19d::t_05bd1ad560f3eb 1-37,40-49,51-102,124-140,155-165,168-169,171-175,189,199-202,208,224-225,242,247
+  s_86ac044a95d19d::t_7f3601076e79de 39
+  s_86ac044a95d19d::t_aabf2d89146663 243
+deep_causality_topology/src/types/manifold/differential/mod.rs
+  s_86ac044a95d19d::t_ba8ef483bf9236 12
+  s_86ac044a95d19d::t_3eacbf681cd41e 15,18
+  s_86ac044a95d19d::t_2c63abc4750e40 16
+  s_86ac044a95d19d::t_f9ebfa18816c12 19
+deep_causality_topology/tests/types/manifold/leray_tests.rs
+  s_86ac044a95d19d::t_954962a1dac213 1-30,32-44,46-55,57-77,82,84-116,118-249,253-257,261-273,295-343,346-418,423-440
+  s_86ac044a95d19d::t_430d6368f78ba2 78-81,250-252,258-260,288-289,344-345,419-422
+  s_86ac044a95d19d::t_eb5b4a2d4cb61a 274-287,290-294
+deep_causality_topology/src/types/manifold/differential/hodge_decomposition_impl.rs
+  s_86ac044a95d19d::t_73b2d209fb3a4c 27-36
+  s_86ac044a95d19d::t_5895985b018021 164-167
+  s_86ac044a95d19d::t_68ecc460d16157 233,267,274-277,279,281-296
+  s_86ac044a95d19d::t_430d6368f78ba2 278
+deep_causality_topology/src/lib.rs
+  s_86ac044a95d19d::t_430d6368f78ba2 71,78
+deep_causality_topology/src/types/leray_projection/mod.rs
+  s_86ac044a95d19d::t_2ed2a0ea0472f6 1-49
+deep_causality_topology/tests/types/manifold/interior_product_tests.rs
+  s_86ac044a95d19d::t_1793989e1feddb 1-33,35-61,63-76,78-190,221-252,256,258-480
+  s_86ac044a95d19d::t_5559ce5cd2ac2e 191-220
+  s_86ac044a95d19d::t_bd49315be9d74f 253-255,257
+deep_causality_topology/src/types/manifold/differential/leray.rs
+  s_86ac044a95d19d::t_451e08ff961f7e 1-41,43-87,94-101,108-116,119-147,149-151
+  s_86ac044a95d19d::t_430d6368f78ba2 117-118,148
+deep_causality_topology/tests/types/manifold/wedge_tests.rs
+  s_86ac044a95d19d::t_bf5a4307c01cb4 1-35,37-51,53-63,65-145,147-209,211-235,237-256,258-348
+  s_86ac044a95d19d::t_fefb97290a4ecc 257
+deep_causality_topology/tests/types/manifold/mod.rs
+  s_86ac044a95d19d::t_a669e83a0cf0ff 18-19
+  s_86ac044a95d19d::t_13cf2f5f1c7d89 34-35
+  s_86ac044a95d19d::t_5a71a824630a05 39-40
+deep_causality_topology/src/extensions/iso_de_rham/mod.rs
+  s_86ac044a95d19d::t_b89b4ba9664f1e 1-39,41-57
+deep_causality_topology/tests/types/manifold/de_rham_tests.rs
+  s_86ac044a95d19d::t_28d55a3db3813b 1-18,20-28,30-133,135-390,396-409
+  s_86ac044a95d19d::t_430d6368f78ba2 19,134,391-395
+deep_causality_topology/src/extensions/mod.rs
+  s_86ac044a95d19d::t_6eb0776b216360 16
+deep_causality_topology/src/types/manifold/differential/interior_product.rs
+  s_86ac044a95d19d::t_80243c7c0244fa 1-46,48-145,147-151,173-175,200,202-203,219-221,225,231,247
+  s_86ac044a95d19d::t_aabf2d89146663 232
+deep_causality_topology/src/types/mod.rs
+  s_86ac044a95d19d::t_3eacbf681cd41e 16
+deep_causality_topology/tests/extensions/iso_de_rham_tests.rs
+  s_86ac044a95d19d::t_5499183a09a0b4 1-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "a0da8f042cd3643a1e6011700a3d0ad166a630f4",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}

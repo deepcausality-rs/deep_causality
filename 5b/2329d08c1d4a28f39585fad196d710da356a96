@@ -1,0 +1,21 @@
+deep_causality_discovery/tests/BUILD.bazel
+  s_86ac044a95d19d::t_2116f532e055f5 95
+deep_causality_discovery/BUILD.bazel
+  s_86ac044a95d19d::t_2116f532e055f5 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "5b2329d08c1d4a28f39585fad196d710da356a96",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+deep_causality_physics/src/quantities/mod.rs
+  s_86ac044a95d19d::t_39dae8116a95af 1-4
+  s_86ac044a95d19d::t_5d721f8468a99e 5-7,10,16,18-29,39-55,32,35,38
+  s_86ac044a95d19d::t_124a48fc99d5c7 13,36,12
+  s_86ac044a95d19d::t_a0f355a060c717 31
+  s_86ac044a95d19d::t_59c49567fea158 8-9,11,14-15,17,30,33-34,37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "21ff690988a2c28aa44f20aa102e64b5ac24b01a",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+openspec/specs/dec-exterior-algebra/spec.md
+  s_86ac044a95d19d::t_a8a9c7d8a33af6 1-54
+openspec/specs/leray-projection/spec.md
+  s_86ac044a95d19d::t_a8a9c7d8a33af6 1-61
+openspec/specs/typed-fluid-forms/spec.md
+  s_86ac044a95d19d::t_a8a9c7d8a33af6 1-48
+openspec/specs/de-rham-transfer/spec.md
+  s_86ac044a95d19d::t_a8a9c7d8a33af6 1-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "9c804670f0d9d77028440f1de6f3bf843fab954f",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}

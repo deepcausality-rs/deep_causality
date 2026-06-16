@@ -1,0 +1,29 @@
+deep_causality_physics/tests/theories/fluid_dynamics/dec_cross_validation_tests.rs
+  s_86ac044a95d19d::t_94764b0ed60cac 1-67,72-191
+  s_86ac044a95d19d::t_39dae8116a95af 68-71
+deep_causality_physics/src/quantities/mod.rs
+  s_86ac044a95d19d::t_39dae8116a95af 1-4
+deep_causality_physics/tests/theories/fluid_dynamics/mod.rs
+  s_86ac044a95d19d::t_39dae8116a95af 11
+deep_causality_physics/tests/BUILD.bazel
+  s_86ac044a95d19d::t_0e4dbc95612a6d 383,386
+  s_86ac044a95d19d::t_932075cd822872 394,396-407,409-411
+deep_causality_physics/Cargo.toml
+  s_86ac044a95d19d::t_d9e968d0ee6a0a 34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "5dc5ab65268e882528c8990648a62d449d9d1e57",
+  "prompts": {},
+  "sessions": {
+    "s_86ac044a95d19d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "34039520-d6df-4543-bf0f-343ba8aec122",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
