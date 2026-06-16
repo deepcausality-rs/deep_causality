@@ -1,0 +1,27 @@
+deep_causality_physics/src/theories/fluid_dynamics/dec/uncertain_inflow/uncertain_inflow_zone.rs
+  s_9bd896ecf5e8ba::t_ff3093ae670571 75-81
+deep_causality_physics/src/theories/fluid_dynamics/dec/uncertain_inflow/uncertain_boundary_source.rs
+  s_9bd896ecf5e8ba::t_7db66f5f88ce0c 40-43
+  s_9bd896ecf5e8ba::t_1eb1d81bb7265b 87-101
+  s_9bd896ecf5e8ba::t_2ee1ebf800d0e6 62
+  s_9bd896ecf5e8ba::t_6aa1a19a171b36 136-153,155
+deep_causality_physics/tests/theories/fluid_dynamics/dec/uncertain_boundary_source_tests.rs
+  s_9bd896ecf5e8ba::t_b71072fd6ecd7c 79-95,104-108
+  s_9bd896ecf5e8ba::t_0cfb4307cd3b07 96-103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "73d6b182a0b319cf91a1ce992c469efb2055c876",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
