@@ -1,0 +1,64 @@
+deep_causality_cfd/src/types/flow/mms.rs
+  s_9bd896ecf5e8ba::t_e9b23f7168894a 29
+  s_9bd896ecf5e8ba::t_8fb56287f3c3bf 132,161
+  s_9bd896ecf5e8ba::t_887910da052ebb 142-144
+  s_9bd896ecf5e8ba::t_feb07201f6d80b 1-28,30-131,133-141,145-160,162-210
+deep_causality_cfd/src/lib.rs
+  s_9bd896ecf5e8ba::t_6afb99b720ca5e 41
+  s_9bd896ecf5e8ba::t_32089a2031c68e 46-48
+deep_causality_cfd/tests/types/flow/coupling_tests.rs
+  s_9bd896ecf5e8ba::t_35c6d9d0371f6b 1-9,11-12,14,16,19-21,23-25,30-64,68-117,121-123,125-126,128-132,134-135,137-160
+  s_9bd896ecf5e8ba::t_614a7a1806a63a 118-120,124,127,133,136
+  s_9bd896ecf5e8ba::t_e97e3f59cce14a 10,13,15,17-18,22,26-29
+  s_9bd896ecf5e8ba::t_f02b1d1b0a4c5f 65-67
+deep_causality_cfd/src/types/flow/march_case.rs
+  s_9bd896ecf5e8ba::t_086eb1ab719796 86,93
+  s_9bd896ecf5e8ba::t_8aba12a8ffb795 177-194
+  s_9bd896ecf5e8ba::t_ffc43a0cc3baf8 14-16
+  s_9bd896ecf5e8ba::t_3df05c3d9afade 18-20
+  s_9bd896ecf5e8ba::t_075de404d2f084 38,50-53,56-58,70-71,82-83,88-90
+  s_9bd896ecf5e8ba::t_cc9516036e1f0d 110-119,132-141,147-156
+deep_causality_cfd/src/traits/solver.rs
+  s_9bd896ecf5e8ba::t_99601696df88f7 1-22
+deep_causality_cfd/tests/types/flow/operator_study_tests.rs
+  s_9bd896ecf5e8ba::t_233ac03459ab8d 1-46
+deep_causality_cfd/tests/types/flow/mod.rs
+  s_9bd896ecf5e8ba::t_bf22cdf7a5038b 7
+  s_9bd896ecf5e8ba::t_01879078850248 12-13
+  s_9bd896ecf5e8ba::t_faf41f21655d01 14-15
+deep_causality_cfd/src/types/flow/march_builder.rs
+  s_9bd896ecf5e8ba::t_6ac78791d73953 8
+  s_9bd896ecf5e8ba::t_35c30e0d984c10 10,21-25,31-35,44-45,48,59-60,65-67,70,80-81,85-109,181-182
+deep_causality_cfd/tests/types/flow/mms_tests.rs
+  s_9bd896ecf5e8ba::t_4a3a92af720474 1-85
+deep_causality_cfd/src/types/flow/operator_study.rs
+  s_9bd896ecf5e8ba::t_bd722924643097 155
+  s_9bd896ecf5e8ba::t_a58d73923220a9 80,91
+  s_9bd896ecf5e8ba::t_f1abead131b5a1 1-79,81-90,92-154,156-186
+deep_causality_cfd/src/types/flow/coupling.rs
+  s_9bd896ecf5e8ba::t_f133e9a819c09c 1-301
+deep_causality_cfd/src/traits/mod.rs
+  s_9bd896ecf5e8ba::t_676447ccd1c24a 11,15
+deep_causality_cfd/src/types/flow/mod.rs
+  s_9bd896ecf5e8ba::t_bac8a0c2e95570 20,35
+  s_9bd896ecf5e8ba::t_7bb9f5a8695a14 28-30
+  s_9bd896ecf5e8ba::t_1195c3d026e16e 22
+  s_9bd896ecf5e8ba::t_0babcb7d8f3900 37
+  s_9bd896ecf5e8ba::t_82b95faa143a96 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "3c266c48af3e87fc243d63c30132e66b76f62700",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
