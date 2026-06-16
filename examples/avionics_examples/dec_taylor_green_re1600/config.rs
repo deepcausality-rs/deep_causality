@@ -66,7 +66,10 @@ pub fn build_steps(n: usize, t_star_max: f64) -> usize {
 ///
 /// # Errors
 /// Any solver-config or container validation failure.
-pub fn build_march_config(n: usize, steps: usize) -> Result<MarchConfig<3, FloatType, (), ()>, PhysicsError> {
+pub fn build_march_config(
+    n: usize,
+    steps: usize,
+) -> Result<MarchConfig<3, FloatType, (), ()>, PhysicsError> {
     CfdConfigBuilder::march::<3, FloatType>("tgv-re1600")
         .mesh(Mesh::periodic_cube(n))
         .solver(
