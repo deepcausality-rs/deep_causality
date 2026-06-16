@@ -40,6 +40,7 @@
 //! cargo run --release -p avionics_examples --example dec_graded_mms
 //! ```
 
+use deep_causality_cfd::{Grading, Mesh};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, LatticeCell, LatticeComplex, Manifold,
@@ -61,23 +62,18 @@ fn rel_errors(discrete: &[f64], analytic: &[f64]) -> (f64, f64) {
     (max_err / max_ref, (sse / ssr).sqrt())
 }
 
-/// A torus graded on axis 1 by `ℓ(pos) = 1 + amp·cos(2π·pos/N)`: the metric, the manifold,
-/// and the physical node coordinates along the graded axis.
+/// A torus graded on axis 1 by `ℓ(pos) = 1 + amp·cos(2π·pos/N)`: the manifold (from the **CfdFlow**
+/// DSL graded mesh — the DSL owns the geometry), plus the physical node coordinates along the graded
+/// axis that the bespoke operator MMS measurement needs.
 fn graded(n: usize, amp: f64) -> (Manifold<LatticeComplex<2, f64>, f64>, Vec<f64>, f64) {
-    let len = move |pos: usize| 1.0 + amp * (2.0 * PI * pos as f64 / n as f64).cos();
-    let lattice: LatticeComplex<2, f64> = LatticeComplex::square_torus(n);
-    let edge_lengths: Vec<f64> = lattice
-        .iter_cells(1)
-        .map(|c| {
-            let axis = c.orientation().trailing_zeros() as usize;
-            if axis == 1 { len(c.position()[1]) } else { 1.0 }
-        })
-        .collect();
-    let metric = CubicalReggeGeometry::<2, f64>::from_edge_lengths(edge_lengths);
-    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
-    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
-    let manifold = Manifold::from_cubical_with_metric(lattice, data, metric, 0);
+    // The DSL owns the geometry: a graded torus with a cosine metric modulation on axis 1.
+    let manifold = Mesh::<2, f64>::torus(n)
+        .graded(Grading::cosine(1, amp))
+        .manifold()
+        .expect("graded torus geometry");
 
+    // The MMS measurement (below) still needs the physical node coordinates along the graded axis.
+    let len = move |pos: usize| 1.0 + amp * (2.0 * PI * pos as f64 / n as f64).cos();
     let mut y_node = vec![0.0_f64; n + 1];
     for j in 0..n {
         y_node[j + 1] = y_node[j] + len(j);

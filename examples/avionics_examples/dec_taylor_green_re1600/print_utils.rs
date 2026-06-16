@@ -3,47 +3,65 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Display utilities for the Re-1600 Taylor–Green run.
+//! Display layer for the Re-1600 Taylor–Green run: renders the `CfdFlow` report's
+//! kinetic-energy series into the dissipation CSV (stdout) and the closing summary (stderr).
+//!
+//! All bookkeeping runs at the working precision [`FloatType`]; values are cast to `f64` only at
+//! the `println!`/`eprintln!` boundary — the single display-boundary downcast.
 
-use deep_causality_num::RealField;
+use crate::FloatType;
+use crate::config;
+use deep_causality_cfd::Report;
+use deep_causality_num::Zero;
 
-use crate::model::Report;
+/// Render the dissipation curve: the CSV header + per-step rows on stdout, then the closing
+/// summary (E\*/E0 and peak dissipation) on stderr. `n` pins the cell-volume normalization and the
+/// convective time step.
+pub fn render(report: &Report<FloatType>, n: usize) {
+    let energy = report
+        .series("kinetic_energy")
+        .expect("kinetic_energy series");
+    let volume = config::volume(n);
+    let dt_star = config::dt_star(n);
 
-/// CSV on stdout (machine-readable artifact), summary on stderr (human).
-///
-/// Summary on stderr (human). The machine-readable CSV rows are streamed
-/// to stdout per step inside `stage_march` (so an aborted march keeps its
-/// partial curve — the dec-ns-stability evidence requirement); this reads
-/// the collected series only for the closing summary.
-///
-/// Generic over the precision type. The computation carries `R` end to
-/// end; the cast to `f64` here is presentation only — native `Float106`
-/// `Display` would render both double-double components as a composite,
-/// which is accurate but not what a CSV consumer or plot script wants.
-pub fn print_csv<R>(report: &Report<R>)
-where
-    R: RealField + Into<f64>,
-{
-    if let (Some(first), Some(last)) = (report.series.first(), report.series.last()) {
-        let peak = report.series.iter().fold((0.0_f64, 0.0_f64), |(t, d), s| {
-            let sd: f64 = s.dissipation.into();
-            if sd > d {
-                (s.t_star.into(), sd)
-            } else {
-                (t, d)
-            }
-        });
-        let e0: f64 = first.energy_per_vol.into();
-        let e_t: f64 = last.energy_per_vol.into();
-        eprintln!(
-            "\nmarched to t* = {:.2}: E*/E0 = {:.4}, peak dissipation {:.6} at t* = {:.2}",
-            Into::<f64>::into(last.t_star),
-            e_t / e0,
-            peak.1,
-            peak.0
-        );
-        eprintln!(
-            "compare the dissipation column against the published Re-1600 DNS curve (references.md)."
-        );
+    println!("t_star,kinetic_energy_per_vol,dissipation_rate");
+    let mut t_star = FloatType::zero();
+    let mut e_prev = energy[0] / volume;
+    let mut peak = (FloatType::zero(), FloatType::zero()); // (t_star, dissipation)
+    let e0 = e_prev;
+    emit(t_star, e_prev, FloatType::zero());
+
+    for &e_raw in &energy[1..] {
+        let e = e_raw / volume;
+        t_star += dt_star;
+        let dissipation = (e_prev - e) / dt_star;
+        emit(t_star, e, dissipation);
+        if dissipation > peak.1 {
+            peak = (t_star, dissipation);
+        }
+        e_prev = e;
     }
+
+    let e_t = e_prev;
+    eprintln!(
+        "\nmarched to t* = {:.2}: E*/E0 = {:.4}, peak dissipation {:.6} at t* = {:.2}",
+        Into::<f64>::into(t_star),
+        Into::<f64>::into(e_t / e0),
+        Into::<f64>::into(peak.1),
+        Into::<f64>::into(peak.0)
+    );
+    eprintln!(
+        "compare the dissipation column against the published Re-1600 DNS curve (references.md)."
+    );
+}
+
+/// One CSV row: `t_star,kinetic_energy_per_vol,dissipation_rate`. The working-precision values are
+/// cast to `f64` here — the only display-boundary downcast.
+fn emit(t_star: FloatType, energy_per_vol: FloatType, dissipation: FloatType) {
+    println!(
+        "{:.4},{:.8},{:.8}",
+        Into::<f64>::into(t_star),
+        Into::<f64>::into(energy_per_vol),
+        Into::<f64>::into(dissipation)
+    );
 }

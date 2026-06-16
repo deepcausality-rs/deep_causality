@@ -17,13 +17,9 @@
 //! the whole computation at that precision; values are cast to `f64` only at the display
 //! boundary in `main`.
 
-use deep_causality_cfd::{DecNs, Flow, MarchBuilder, Mesh, Observe, Seed};
+use crate::FloatType;
+use deep_causality_cfd::{CfdConfigBuilder, MarchConfig, Mesh, Observe, PhysicsError, Seed};
 use deep_causality_num::{FromPrimitive, One};
-
-/// The working precision for the whole computation. **This is the single alias to change**:
-/// the manifold metric, the projection CG, the `Rk4` march, and the energy series all run at
-/// this precision (`f32`, `f64`, or `Float106` with `use deep_causality_num::Float106;`).
-pub type FloatType = f64;
 
 /// The benchmark Reynolds number of the workshop case (exact specification).
 pub const RE: f64 = 1600.0;
@@ -60,17 +56,21 @@ pub fn volume(n: usize) -> FloatType {
 
 /// The number of march steps to reach the convective horizon `t*_max`. A loop count derived
 /// from the `f64` CLI horizon and the `f64` step spec, so it is computed in `f64`.
-pub fn steps(n: usize, t_star_max: f64) -> usize {
+pub fn build_steps(n: usize, t_star_max: f64) -> usize {
     (t_star_max / (2.0 * std::f64::consts::PI / n as f64 * CFL_DT)).ceil() as usize
 }
 
-/// The `Flow::march` case for an `n³` periodic Taylor–Green vortex marched `steps` steps,
-/// observing the kinetic-energy series. Generic over the working precision.
-pub fn march_case(n: usize, steps: usize) -> MarchBuilder<3, FloatType, (), ()> {
-    Flow::march::<3, FloatType>("tgv-re1600")
+/// The `MarchConfig` container for an `n³` periodic Taylor–Green vortex marched `steps` steps,
+/// observing the kinetic-energy series — built through `CfdConfigBuilder` (configuration), to be
+/// composed and run by the `CfdFlow` DSL. Generic over the working precision.
+///
+/// # Errors
+/// Any solver-config or container validation failure.
+pub fn build_march_config(n: usize, steps: usize) -> Result<MarchConfig<3, FloatType, (), ()>, PhysicsError> {
+    CfdConfigBuilder::march::<3, FloatType>("tgv-re1600")
         .mesh(Mesh::periodic_cube(n))
         .solver(
-            DecNs::config()
+            CfdConfigBuilder::dec_ns()
                 .viscosity(viscosity(n))
                 .time_step(ft(CFL_DT))
                 .build()
@@ -79,4 +79,5 @@ pub fn march_case(n: usize, steps: usize) -> MarchBuilder<3, FloatType, (), ()> 
         .seed(Seed::TaylorGreenVortex)
         .march_for(steps)
         .observe(Observe::default().kinetic_energy())
+        .build()
 }

@@ -3,17 +3,17 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # 3D Taylor–Green vortex at Re 1600, DEC-native — via the Flow DSL
+//! # 3D Taylor–Green vortex at Re 1600, DEC-native — via the CfdFlow DSL
 //!
 //! The smooth 3D Taylor–Green vortex transitions toward turbulence, and the kinetic-energy
 //! dissipation-rate curve `−dE*/dt*` against the published DNS reference data is the standard
 //! structure-preservation benchmark.
 //!
-//! The case is declared through the `deep_causality_cfd` **Flow** DSL ([`config::march_case`]):
-//! a periodic cubic mesh, the DEC incompressible solver, the Taylor–Green seed, and the
-//! kinetic-energy observation. `Flow::march` lowers onto the same projected DEC step the
-//! hand-rolled solver used, so the marched energy series is reproduced exactly; `main` renders
-//! it into the dissipation CSV.
+//! The case is declared through the `deep_causality_cfd` configuration layer
+//! ([`config::build_march_config`]) and run through the **CfdFlow** DSL: a periodic cubic mesh, the DEC
+//! incompressible solver, the Taylor–Green seed, and the kinetic-energy observation. `CfdFlow`
+//! lowers onto the same projected DEC step the hand-rolled solver used, so the marched energy
+//! series is reproduced exactly; [`print_utils::render`] turns it into the dissipation CSV.
 //!
 //! Usage:
 //!
@@ -22,14 +22,19 @@
 //! ```
 //!
 //! `grid` defaults to 16 (a smoke-scale run). Output is CSV on stdout
-//! (`t_star,kinetic_energy_per_vol,dissipation_rate`), with time in convective units
-//! `t* = t·k·U` so the curve overlays the reference data directly; the closing summary is on
-//! stderr.
+//! (`t_star,kinetic_energy_per_vol,dissipation_rate`); the closing summary is on stderr.
 
 mod config;
+mod print_utils;
 
-use config::{FloatType, RE};
-use deep_causality_num::Zero;
+use config::RE;
+use deep_causality_cfd::{CfdFlow, fail};
+
+/// The working precision for the whole computation. **This is the single alias to change**: the
+/// manifold metric, the projection CG, the RK4 march, and the energy series all run at this
+/// precision (`f32`, `f64`, or `Float106` with `use deep_causality_num::Float106;`). The
+/// configuration and display layers import it from here.
+pub type FloatType = f64;
 
 fn main() {
     let mut args = std::env::args().skip(1);
@@ -48,66 +53,27 @@ fn main() {
         core::any::type_name::<FloatType>()
     );
 
-    // ── The Flow case ───────────────────────────────────────────────────
-    //   declare (mesh + solver + seed + observe) ──► run ──► render CSV
-    // The marched kinetic-energy series comes straight from the DSL Report.
+    // ── The CfdFlow case ────────────────────────────────────────────────
+    //   CfdConfigBuilder (config) ──► materialize geometry (B1) ──► CfdFlow run ──► render
+    // Configuration and workflow composition are separated: the container is built by
+    // `CfdConfigBuilder`, the caller owns the geometry, and `CfdFlow` composes + runs.
     // ────────────────────────────────────────────────────────────────────
-    let steps = config::steps(n, t_star_max);
-    let report = match config::march_case(n, steps).run() {
-        Ok(report) => report,
-        Err(e) => {
-            eprintln!("DEC Taylor-Green pipeline failed: {e:?}");
-            std::process::exit(1);
-        }
-    };
-    let energy = report
-        .series("kinetic_energy")
-        .expect("kinetic_energy series");
+    // Build configuration
+    let steps = config::build_steps(n, t_star_max);
+    let case = config::build_march_config(n, steps)
+        .unwrap_or_else(|e| fail("DEC Taylor-Green configuration", e));
 
-    // The dissipation curve in convective units, all at the working precision; values are
-    // cast to `f64` only at the display boundary inside `emit`.
-    let volume = config::volume(n);
-    let dt_star = config::dt_star(n);
+    //  Materialize geometry
+    let manifold = case
+        .materialize()
+        .unwrap_or_else(|e| fail("DEC Taylor-Green geometry", e));
 
-    println!("t_star,kinetic_energy_per_vol,dissipation_rate");
-    let mut t_star = FloatType::zero();
-    let mut e_prev = energy[0] / volume;
-    let mut peak = (FloatType::zero(), FloatType::zero()); // (t_star, dissipation)
-    let e0 = e_prev;
-    emit(t_star, e_prev, FloatType::zero());
+    // Solve
+    let results = CfdFlow::march(&case)
+        .on(&manifold)
+        .run()
+        .unwrap_or_else(|e| fail("DEC Taylor-Green pipeline", e));
 
-    for &e_raw in &energy[1..] {
-        let e = e_raw / volume;
-        t_star += dt_star;
-        let dissipation = (e_prev - e) / dt_star;
-        emit(t_star, e, dissipation);
-        if dissipation > peak.1 {
-            peak = (t_star, dissipation);
-        }
-        e_prev = e;
-    }
-
-    // Closing summary on stderr (human); the CSV above is the machine-readable artifact.
-    let e_t = e_prev;
-    eprintln!(
-        "\nmarched to t* = {:.2}: E*/E0 = {:.4}, peak dissipation {:.6} at t* = {:.2}",
-        Into::<f64>::into(t_star),
-        Into::<f64>::into(e_t / e0),
-        Into::<f64>::into(peak.1),
-        Into::<f64>::into(peak.0)
-    );
-    eprintln!(
-        "compare the dissipation column against the published Re-1600 DNS curve (references.md)."
-    );
-}
-
-/// One CSV row: `t_star,kinetic_energy_per_vol,dissipation_rate`. The working-precision values
-/// are cast to `f64` here — the only display-boundary downcast.
-fn emit(t_star: FloatType, energy_per_vol: FloatType, dissipation: FloatType) {
-    println!(
-        "{:.4},{:.8},{:.8}",
-        Into::<f64>::into(t_star),
-        Into::<f64>::into(energy_per_vol),
-        Into::<f64>::into(dissipation)
-    );
+    // Print results
+    print_utils::render(&results, n);
 }
