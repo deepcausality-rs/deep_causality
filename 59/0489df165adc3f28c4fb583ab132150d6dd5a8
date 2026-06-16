@@ -1,0 +1,19 @@
+examples/avionics_examples/Cargo.toml
+  s_c99b1c1e7a1f61::t_bb37b229878334 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "590489df165adc3f28c4fb583ab132150d6dd5a8",
+  "prompts": {},
+  "sessions": {
+    "s_c99b1c1e7a1f61": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0d52018e-5ef1-479e-81a6-7b3313872f3b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
