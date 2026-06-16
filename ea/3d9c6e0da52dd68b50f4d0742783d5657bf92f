@@ -1,0 +1,23 @@
+examples/avionics_examples/cfd_taylor_green/config.rs
+  s_9bd896ecf5e8ba::t_48c9e72175fb2b 1-40
+examples/avionics_examples/cfd_taylor_green/main.rs
+  s_9bd896ecf5e8ba::t_89dbbaa0adbd06 6,12-19,22,25-27,33-38,40
+examples/avionics_examples/cfd_taylor_green/print_utils.rs
+  s_9bd896ecf5e8ba::t_e41531a8866575 6-18,21,24,28,30-34,37-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "ea3d9c6e0da52dd68b50f4d0742783d5657bf92f",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
