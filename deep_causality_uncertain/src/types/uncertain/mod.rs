@@ -58,9 +58,10 @@ impl<T: ProbabilisticType + Copy> Uncertain<T> {
         self.id
     }
 
-    /// The root of this value's computation graph. Exposed so a [`QmcSampler`](crate::QmcSampler)
-    /// can be built for this `Uncertain` (the node content type is already public).
-    pub fn root_node(&self) -> &ConstTree<UncertainNodeContent> {
+    /// The root of this value's computation graph. Crate-internal: a [`QmcSampler`](crate::QmcSampler)
+    /// is built from an `&Uncertain<T>` via [`QmcSampler::new`](crate::QmcSampler::new), so callers
+    /// never need the raw root.
+    pub(crate) fn root_node(&self) -> &ConstTree<UncertainNodeContent> {
         &self.root_node
     }
 

@@ -18,7 +18,7 @@
 
 use crate::{
     DistributionEnum, IntoSampledValue, LogicalOperator, ProbabilisticType, SampledValue, Sampler,
-    UncertainError, UncertainNodeContent,
+    Uncertain, UncertainError, UncertainNodeContent,
 };
 use deep_causality_ast::ConstTree;
 use deep_causality_num::Float106;
@@ -37,14 +37,25 @@ pub struct QmcSampler {
 }
 
 impl QmcSampler {
-    /// Builds a `QmcSampler` for `root`, assigning each non-`Point` distribution leaf a stable
-    /// dimension. When `seed` is `Some`, the Sobol sequence carries a seeded digital shift
-    /// (reproducible randomized QMC); when `None`, it is the raw (deterministic) sequence.
+    /// Builds a `QmcSampler` for `uncertain`'s computation graph, assigning each non-`Point`
+    /// distribution leaf a stable dimension. When `seed` is `Some`, the Sobol sequence carries a
+    /// seeded digital shift (reproducible randomized QMC); when `None`, it is the raw
+    /// (deterministic) sequence.
     ///
     /// Returns `UncertainError::SamplingError` if the tree is not statically structured
     /// (`BindOp` or branch-divergent `ConditionalOp`), or needs more than [`MAX_SOBOL_DIM`]
     /// stochastic dimensions.
-    pub fn new(
+    pub fn new<T: ProbabilisticType + Copy>(
+        uncertain: &Uncertain<T>,
+        seed: Option<u64>,
+    ) -> Result<Self, UncertainError> {
+        Self::from_root_node(uncertain.root_node(), seed)
+    }
+
+    /// Core constructor over a raw computation-graph root. Crate-internal; [`Self::new`] is the
+    /// public, `Uncertain`-based entry point. Kept separate so the static-structure guard can be
+    /// unit-tested against node variants (e.g. `BindOp`) that no `Uncertain` builder produces.
+    pub(crate) fn from_root_node(
         root: &ConstTree<UncertainNodeContent>,
         seed: Option<u64>,
     ) -> Result<Self, UncertainError> {
@@ -457,5 +468,32 @@ fn collect_stochastic_leaves(node: &ConstTree<UncertainNodeContent>, set: &mut H
             collect_stochastic_leaves(if_true, set);
             collect_stochastic_leaves(if_false, set);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::NormalDistributionParams;
+    use crate::SampledBindFn;
+    use std::sync::Arc;
+
+    // `BindOp` is rejected by the static-structure guard. No `Uncertain` builder produces a
+    // `BindOp` node (the public `new(&Uncertain)` entry can therefore never receive one), so this
+    // defensive arm is exercised here against a hand-built tree via the crate-internal
+    // `from_root_node`. The publicly reachable rejection paths (branch-divergent conditionals,
+    // over-dimension trees) are covered by the integration tests.
+    #[test]
+    fn from_root_node_rejects_bind_op() {
+        let operand = ConstTree::new(UncertainNodeContent::DistributionF64(
+            DistributionEnum::Normal(NormalDistributionParams::new(0.0, 1.0)),
+        ));
+        let func: Arc<dyn SampledBindFn> = Arc::new(|_v: SampledValue| {
+            ConstTree::new(UncertainNodeContent::Value(SampledValue::Float(0.0)))
+        });
+        let root = ConstTree::new(UncertainNodeContent::BindOp { func, operand });
+
+        let err = QmcSampler::from_root_node(&root, None).unwrap_err();
+        assert!(matches!(err, UncertainError::SamplingError(_)));
     }
 }

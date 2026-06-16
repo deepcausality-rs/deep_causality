@@ -5,13 +5,8 @@
 
 //! Tests for the Quasi-Monte-Carlo sampler and its opt-in batch estimators.
 
-use deep_causality_ast::ConstTree;
-use deep_causality_uncertain::{
-    DistributionEnum, NormalDistributionParams, QmcSampler, SampledBindFn, SampledValue, Sampler,
-    Uncertain, UncertainError, UncertainNodeContent, seed_sampler,
-};
+use deep_causality_uncertain::{QmcSampler, Uncertain, UncertainError, seed_sampler};
 use rusty_fork::rusty_fork_test;
-use std::sync::Arc;
 
 // =============================================================================
 // Dimension assignment and static-structure validation (no global state)
@@ -20,45 +15,33 @@ use std::sync::Arc;
 #[test]
 fn test_dimension_equals_stochastic_leaf_count() {
     let u = Uncertain::normal(0.0, 1.0) + Uncertain::normal(0.0, 1.0) + Uncertain::normal(0.0, 1.0);
-    let sampler = QmcSampler::new(u.root_node(), None).unwrap();
+    let sampler = QmcSampler::new(&u, None).unwrap();
     assert_eq!(sampler.dimension(), 3);
 }
 
 #[test]
 fn test_point_only_tree_has_zero_dimensions() {
     let u = Uncertain::<f64>::point(5.0);
-    let sampler = QmcSampler::new(u.root_node(), None).unwrap();
+    let sampler = QmcSampler::new(&u, None).unwrap();
     assert_eq!(sampler.dimension(), 0);
     // A point tree samples to its constant regardless of index.
-    let v = Sampler::<f64>::sample(&sampler, u.root_node(), 0).unwrap();
-    assert_eq!(v, SampledValue::Float(5.0));
+    let v = u.sample_with_index_qmc(0, &sampler).unwrap();
+    assert_eq!(v, 5.0);
 }
 
 #[test]
 fn test_same_index_is_reproducible_distinct_index_differs() {
     let u = Uncertain::normal(0.0, 1.0) + Uncertain::uniform(0.0, 1.0);
-    let sampler = QmcSampler::new(u.root_node(), None).unwrap();
-    let a0 = Sampler::<f64>::sample(&sampler, u.root_node(), 4).unwrap();
-    let a0_again = Sampler::<f64>::sample(&sampler, u.root_node(), 4).unwrap();
-    let a1 = Sampler::<f64>::sample(&sampler, u.root_node(), 5).unwrap();
+    let sampler = QmcSampler::new(&u, None).unwrap();
+    let a0 = u.sample_with_index_qmc(4, &sampler).unwrap();
+    let a0_again = u.sample_with_index_qmc(4, &sampler).unwrap();
+    let a1 = u.sample_with_index_qmc(5, &sampler).unwrap();
     assert_eq!(a0, a0_again, "same index must reproduce the same sample");
     assert_ne!(a0, a1, "distinct indices must give distinct Sobol points");
 }
 
-#[test]
-fn test_reject_bind_op() {
-    // BindOp has no public constructor, so build the node directly.
-    let operand = ConstTree::new(UncertainNodeContent::DistributionF64(
-        DistributionEnum::Normal(NormalDistributionParams::new(0.0, 1.0)),
-    ));
-    let func: Arc<dyn SampledBindFn> = Arc::new(|_v: SampledValue| {
-        ConstTree::new(UncertainNodeContent::Value(SampledValue::Float(0.0)))
-    });
-    let root = ConstTree::new(UncertainNodeContent::BindOp { func, operand });
-
-    let err = QmcSampler::new(&root, None).unwrap_err();
-    assert!(matches!(err, UncertainError::SamplingError(_)));
-}
+// (BindOp rejection is unit-tested in-crate via `from_root_node`; no `Uncertain` builder produces
+// a `BindOp`, so it cannot be constructed through the public `QmcSampler::new(&Uncertain)` here.)
 
 #[test]
 fn test_reject_branch_divergent_conditional() {
@@ -67,7 +50,7 @@ fn test_reject_branch_divergent_conditional() {
     let if_false = Uncertain::normal(5.0, 1.0); // different leaf → divergent
     let u = Uncertain::conditional(cond, if_true, if_false);
 
-    let err = QmcSampler::new(u.root_node(), None).unwrap_err();
+    let err = QmcSampler::new(&u, None).unwrap_err();
     assert!(matches!(err, UncertainError::SamplingError(_)));
 }
 
@@ -77,7 +60,7 @@ fn test_accept_conditional_sharing_leaves() {
     let cond = Uncertain::<bool>::bernoulli(0.5);
     let shared = Uncertain::normal(0.0, 1.0);
     let u = Uncertain::conditional(cond, shared.clone(), shared);
-    assert!(QmcSampler::new(u.root_node(), None).is_ok());
+    assert!(QmcSampler::new(&u, None).is_ok());
 }
 
 // =============================================================================
@@ -138,7 +121,7 @@ fn test_estimate_probability_qmc() {
 fn test_mc_and_qmc_caches_do_not_collide() {
     seed_sampler(7);
     let u = Uncertain::normal(0.0, 10.0);
-    let sampler = QmcSampler::new(u.root_node(), Some(123)).unwrap();
+    let sampler = QmcSampler::new(&u, Some(123)).unwrap();
 
     let mc = u.sample_with_index(3).unwrap();
     let qmc = u.sample_with_index_qmc(3, &sampler).unwrap();

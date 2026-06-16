@@ -68,7 +68,7 @@ impl<T: ProbabilisticType + RealField + FromPrimitive> Uncertain<T> {
         if num_samples == 0 {
             return Ok(T::zero());
         }
-        let sampler = QmcSampler::new(self.root_node(), Some(seed))?;
+        let sampler = QmcSampler::new(self, Some(seed))?;
         let mut sum = T::zero();
         for i in 0..num_samples {
             sum += self.sample_with_index_qmc(i as u64, &sampler)?;
@@ -90,7 +90,7 @@ impl<T: ProbabilisticType + RealField + FromPrimitive> Uncertain<T> {
         if num_samples <= 1 {
             return Ok(T::zero());
         }
-        let sampler = QmcSampler::new(self.root_node(), Some(seed))?;
+        let sampler = QmcSampler::new(self, Some(seed))?;
         let samples: Vec<T> = (0..num_samples)
             .map(|i| self.sample_with_index_qmc(i as u64, &sampler))
             .collect::<Result<Vec<T>, UncertainError>>()?;

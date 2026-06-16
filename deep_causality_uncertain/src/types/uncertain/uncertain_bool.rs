@@ -103,7 +103,7 @@ impl Uncertain<bool> {
         if num_samples == 0 {
             return Ok(0.0);
         }
-        let sampler = crate::QmcSampler::new(self.root_node(), Some(seed))?;
+        let sampler = crate::QmcSampler::new(self, Some(seed))?;
         let mut count = 0usize;
         for i in 0..num_samples {
             if self.sample_with_index_qmc(i as u64, &sampler)? {
