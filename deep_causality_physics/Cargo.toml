@@ -28,7 +28,6 @@ std = [
     "alloc",
     "deep_causality_core/std",
     "deep_causality_num/std",
-    "dep:deep_causality_uncertain",
 ]
 alloc = []
 # Enables random number generator from the host OS for secure random numbers.
@@ -42,7 +41,6 @@ os-random = ["deep_causality_rand/os-random"] # required for lund hadronization
 parallel = [
     "deep_causality_topology/parallel",
     "deep_causality_par/parallel",
-    "deep_causality_fft/parallel",
 ]
 
 [dependencies.deep_causality_calculus]
@@ -82,13 +80,6 @@ version = "0.2"
 path = "../deep_causality_tensor"
 version = "0.4"
 
-# Std-only: the uncertain-inflow zone (Stage-4 Group C) consumes `MaybeUncertain<R>` and its
-# global sample cache. Gated behind `std` so the `alloc`-only build stays uncertain-free.
-[dependencies.deep_causality_uncertain]
-path = "../deep_causality_uncertain"
-version = "0.3"
-optional = true
-
 [dependencies.deep_causality_topology]
 path = "../deep_causality_topology"
 version = "0.6"
@@ -96,11 +87,6 @@ version = "0.6"
 [dependencies.deep_causality_par]
 path = "../deep_causality_par"
 version = "0.1"
-
-[dependencies.deep_causality_fft]
-path = "../deep_causality_fft"
-version = "0.1"
-default-features = false
 
 [lints]
 workspace = true
