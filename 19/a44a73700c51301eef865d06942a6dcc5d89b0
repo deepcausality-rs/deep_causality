@@ -1,0 +1,22 @@
+examples/avionics_examples/dec_cylinder_wake/main.rs
+  s_9bd896ecf5e8ba::t_384ccdfba776a4 114-116,118-123
+  s_9bd896ecf5e8ba::t_ca8a49d866c2b3 53-55,57-64
+  s_9bd896ecf5e8ba::t_af4a26785ee28d 194
+  s_9bd896ecf5e8ba::t_ec188ce1e5ec47 111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "19a44a73700c51301eef865d06942a6dcc5d89b0",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
