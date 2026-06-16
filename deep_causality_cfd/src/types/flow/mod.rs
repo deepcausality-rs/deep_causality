@@ -3,37 +3,30 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The **Flow** DSL facade: owned case descriptions materialized at run.
+//! The **CfdFlow** DSL (workflow composition — the "how").
 //!
-//! A case carries only owned specs (mesh, solver config, seed, observe set); `run`
-//! builds the manifold + solver as locals, executes, and returns an owned `Report`
-//! — borrows never escape (design D2). The facade spans three solver kinds sharing
-//! one `Report`: the marching solver (here), and the MMS-verification and
-//! operator-accuracy solvers (added next).
+//! `CfdFlow` composes a workflow from a [`MarchConfig`](crate::MarchConfig) container (built by the
+//! [`CfdConfigBuilder`](crate::CfdConfigBuilder) configuration layer in
+//! [`flow_config`](crate::types::flow_config)): it lends a caller-owned geometry (B1), couples
+//! physics, marches, and returns an owned [`Report`] — borrows never escape `run` (design D2). The
+//! facade spans three solver kinds sharing one `Report`: the marching solver (here), and the
+//! MMS-verification and operator-accuracy solvers.
 
-mod body;
+mod cfd_flow;
 mod coupling;
 mod frequency;
-mod march_builder;
-mod march_case;
-mod mesh;
+mod march_run;
 mod mms;
-mod observe;
 mod operator_study;
 mod report;
-mod seed;
 mod zones;
 
-pub use body::Body;
+pub use cfd_flow::{CfdFlow, fail};
 pub use coupling::{
     Coupling, CoupledField, PhysicsStage, StepContext, ThermalRelax, ViscosityArrhenius,
 };
 pub use frequency::{dominant_frequency, strouhal_number};
-pub use march_builder::{Flow, MarchBuilder};
-pub use march_case::MarchCase;
-pub use mesh::Mesh;
+pub use march_run::{MarchPipeline, MarchRun, StepView};
 pub use mms::{MmsBuilder, Regime};
-pub use observe::Observe;
 pub use operator_study::{Operator, OperatorStudyBuilder};
 pub use report::Report;
-pub use seed::Seed;

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Flow-DSL zone conveniences.
+//! CfdFlow-DSL zone conveniences.
 //!
 //! Boundary conditions reuse the migrated `BoundaryZone` terms (`Inflow`,
 //! `Outflow`, `SlipWall`, `MovingWall`, …) composed as static tuples. A prescribed

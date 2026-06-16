@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The **MMS-verification** Flow solver kind: a manufactured analytic solution checked
+//! The **MMS-verification** CfdFlow solver kind: a manufactured analytic solution checked
 //! against a pointwise `FluidTheory` regime evaluator — no DEC march.
 //!
 //! For each regime a closed-form solution supplies the pointwise inputs (`u`, `∇u`, `∇²u`,
@@ -26,7 +26,7 @@ use crate::theories::{
 };
 use crate::traits::Solver;
 use crate::types::CfdScalar;
-use crate::types::flow::{Flow, Report};
+use crate::types::flow::{CfdFlow, Report};
 use deep_causality_physics::{
     AccelerationVector, Density, KinematicViscosity, PhysicsError, Velocity3, VelocityGradient,
 };
@@ -44,7 +44,7 @@ pub enum Regime {
     Compressible,
 }
 
-impl Flow {
+impl CfdFlow {
     /// Begin an MMS-verification case for a single regime. The regime, viscosity, and density
     /// are set fluently; `run` evaluates the regime kernel against the manufactured reference and
     /// reports the `mms_error` (and `continuity_error` for the compressible regime).

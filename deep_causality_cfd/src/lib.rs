@@ -5,11 +5,11 @@
 
 //! # deep_causality_cfd
 //!
-//! Computational fluid dynamics solvers and the **Flow** DSL for DeepCausality.
+//! Computational fluid dynamics solvers and the **CfdFlow** DSL for DeepCausality.
 //!
 //! This crate consolidates the fluid-dynamics theories and the DEC-native
 //! Navier–Stokes solver behind a composable, precision-generic interface,
-//! and lifts them into the `Flow` domain-specific language
+//! and lifts them into the `CfdFlow` domain-specific language
 //!
 //! Physics errors (`PhysicsError`), physics quantities (the typed DEC forms and
 //! quantity newtypes), and the pointwise governing kernels stay consolidated in
@@ -41,11 +41,17 @@ pub use deep_causality_physics::quantities::*;
 pub use crate::traits::{FluidTheory, Marcher, Solver};
 pub use crate::types::{Ambient, CfdScalar};
 
-// The Flow DSL facade (owned case descriptions materialized at run).
+// The CfdFlow DSL facade (owned case descriptions materialized at run).
+// Workflow composition — the CfdFlow DSL (the "how").
 pub use crate::types::flow::{
-    Body, CoupledField, Coupling, Flow, MarchBuilder, MarchCase, Mesh, MmsBuilder, Observe,
-    Operator, OperatorStudyBuilder, PhysicsStage, Regime, Report, Seed, StepContext, ThermalRelax,
-    ViscosityArrhenius, dominant_frequency, strouhal_number,
+    CfdFlow, CoupledField, Coupling, MarchPipeline, MarchRun, MmsBuilder, Operator,
+    OperatorStudyBuilder, PhysicsStage, Regime, Report, StepContext, StepView, ThermalRelax,
+    ViscosityArrhenius, dominant_frequency, fail, strouhal_number,
+};
+// Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
+pub use crate::types::flow_config::{
+    Body, CfdConfigBuilder, Grading, MarchConfig, MarchConfigBuilder, MarchStop, Mesh, Observe,
+    Seed,
 };
 
 // Fluid-dynamics theories: the DEC-native FluidTheory realization, the pointwise NS

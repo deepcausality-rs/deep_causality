@@ -3,14 +3,14 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The operator-accuracy Flow solver kind: the viscous DEC operator `δd` swept over a resolution
+//! The operator-accuracy CfdFlow solver kind: the viscous DEC operator `δd` swept over a resolution
 //! ladder reports its (second-order) convergence without marching a field.
 
-use deep_causality_cfd::{Flow, Operator};
+use deep_causality_cfd::{CfdFlow, Operator};
 
 #[test]
 fn viscous_operator_converges_at_second_order() {
-    let report = Flow::operator_study::<f64>("viscous-order")
+    let report = CfdFlow::operator_study::<f64>("viscous-order")
         .operator(Operator::Viscous)
         .resolutions([16, 32, 64, 128])
         .run()
@@ -39,7 +39,7 @@ fn viscous_operator_converges_at_second_order() {
 
 #[test]
 fn operator_study_requires_at_least_two_resolutions() {
-    let result = Flow::operator_study::<f64>("too-few")
+    let result = CfdFlow::operator_study::<f64>("too-few")
         .resolutions([16])
         .run();
     assert!(result.is_err(), "a single resolution has no defined order");

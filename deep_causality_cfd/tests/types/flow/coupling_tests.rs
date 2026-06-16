@@ -7,7 +7,7 @@
 //! end-to-end `ν(T)` feedback through the march (coupled physics changes the flow dynamics).
 
 use deep_causality_cfd::{
-    Ambient, CoupledField, Coupling, DecNs, Flow, Mesh, Observe, PhysicsError, PhysicsStage, Seed,
+    Ambient, CfdConfigBuilder, CoupledField, Coupling, Mesh, Observe, PhysicsError, PhysicsStage, Seed,
     StepContext, ThermalRelax, ViscosityArrhenius,
 };
 use deep_causality_physics::{SolenoidalField, VelocityOneForm};
@@ -121,18 +121,18 @@ fn coupled_viscosity_feedback_changes_the_flow_dynamics() {
     let n = 8usize;
     let nu0 = 0.02_f64;
 
-    let baseline = Flow::march::<3, f64>("tgv-baseline")
+    let baseline = super::run_march(CfdConfigBuilder::march::<3, f64>("tgv-baseline")
         .mesh(Mesh::periodic_cube(n))
-        .solver(DecNs::config().viscosity(nu0).time_step(0.02).build().unwrap())
+        .solver(CfdConfigBuilder::dec_ns().viscosity(nu0).time_step(0.02).build().unwrap())
         .seed(Seed::TaylorGreenVortex)
         .march_for(10)
         .observe(Observe::default().kinetic_energy())
-        .run()
+        .build().expect("config build"))
         .expect("baseline runs");
 
-    let coupled = Flow::march::<3, f64>("tgv-coupled")
+    let coupled = super::run_march(CfdConfigBuilder::march::<3, f64>("tgv-coupled")
         .mesh(Mesh::periodic_cube(n))
-        .solver(DecNs::config().viscosity(nu0).time_step(0.02).build().unwrap())
+        .solver(CfdConfigBuilder::dec_ns().viscosity(nu0).time_step(0.02).build().unwrap())
         .seed(Seed::TaylorGreenVortex)
         // Heat the bulk toward a hot wall and raise ν strongly with temperature.
         .couple(
@@ -144,7 +144,7 @@ fn coupled_viscosity_feedback_changes_the_flow_dynamics() {
         .coupled_scalar("temperature", 300.0)
         .march_for(10)
         .observe(Observe::default().kinetic_energy())
-        .run()
+        .build().expect("config build"))
         .expect("coupled runs");
 
     let e_base = baseline.series("kinetic_energy").unwrap();

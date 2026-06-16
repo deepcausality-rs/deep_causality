@@ -4,7 +4,7 @@
  */
 
 //! Core CFD trait seams: `FluidTheory` (a Navier–Stokes regime), `Marcher`
-//! (a per-step advance), and the solver/coupling traits the Flow DSL composes.
+//! (a per-step advance), and the solver/coupling traits the CfdFlow DSL composes.
 
 mod fluid_theory;
 mod marcher;

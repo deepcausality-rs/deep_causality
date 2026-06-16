@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The **operator-accuracy** Flow solver kind: a DEC operator swept over a set of
+//! The **operator-accuracy** CfdFlow solver kind: a DEC operator swept over a set of
 //! resolutions for its convergence order — no field march.
 //!
 //! The study evaluates a DEC operator on the analytic 2D Taylor–Green field (a Laplacian
@@ -16,7 +16,8 @@
 
 use crate::traits::Solver;
 use crate::types::CfdScalar;
-use crate::types::flow::{Flow, Mesh, Report};
+use crate::types::flow::{CfdFlow, Report};
+use crate::types::flow_config::Mesh;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, LatticeComplex, Manifold};
@@ -28,7 +29,7 @@ pub enum Operator {
     Viscous,
 }
 
-impl Flow {
+impl CfdFlow {
     /// Begin an operator-accuracy study. The resolutions and operator are set fluently; `run`
     /// sweeps the operator over a periodic torus at each resolution and reports the per-resolution
     /// `operator_error` and the observed `convergence_order` between consecutive resolutions.

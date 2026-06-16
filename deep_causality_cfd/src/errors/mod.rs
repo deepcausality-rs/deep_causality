@@ -7,4 +7,4 @@
 //!
 //! Physics computation errors use `deep_causality_physics::PhysicsError` (imported,
 //! not duplicated). This module hosts any DSL-/config-level error types specific to
-//! the Flow DSL as they are introduced.
+//! the CfdFlow DSL as they are introduced.

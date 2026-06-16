@@ -3,14 +3,14 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The MMS-verification Flow solver kind, across every regime (the "all regimes" showcase):
+//! The MMS-verification CfdFlow solver kind, across every regime (the "all regimes" showcase):
 //! each regime's pointwise kernel is checked against an exact manufactured reference through the
-//! same `Flow::verify_mms` DSL surface.
+//! same `CfdFlow::verify_mms` DSL surface.
 
-use deep_causality_cfd::{Flow, Regime};
+use deep_causality_cfd::{CfdFlow, Regime};
 
 /// The regime showcase: incompressible, Euler, Stokes, and compressible are all reachable
-/// through `Flow::verify_mms`, and each kernel reproduces its manufactured reference to
+/// through `CfdFlow::verify_mms`, and each kernel reproduces its manufactured reference to
 /// machine precision.
 #[test]
 fn every_regime_verifies_against_its_manufactured_solution() {
@@ -23,7 +23,7 @@ fn every_regime_verifies_against_its_manufactured_solution() {
         Regime::Stokes,
         Regime::Compressible,
     ] {
-        let report = Flow::verify_mms::<f64>("regime-mms")
+        let report = CfdFlow::verify_mms::<f64>("regime-mms")
             .regime(regime)
             .viscosity(nu)
             .density(rho)
@@ -42,7 +42,7 @@ fn every_regime_verifies_against_its_manufactured_solution() {
 /// `∂u/∂t = −2ν u` is at machine zero.
 #[test]
 fn incompressible_taylor_green_decay_is_exact() {
-    let report = Flow::verify_mms::<f64>("tgv-mms")
+    let report = CfdFlow::verify_mms::<f64>("tgv-mms")
         .regime(Regime::Incompressible)
         .viscosity(0.1)
         .density(1.0)
@@ -55,7 +55,7 @@ fn incompressible_taylor_green_decay_is_exact() {
 /// manufactured state.
 #[test]
 fn compressible_regime_pins_continuity() {
-    let report = Flow::verify_mms::<f64>("compressible-mms")
+    let report = CfdFlow::verify_mms::<f64>("compressible-mms")
         .regime(Regime::Compressible)
         .viscosity(0.05)
         .density(1.2)
@@ -75,7 +75,7 @@ fn compressible_regime_pins_continuity() {
 /// still reproduces the reference within the f32 tolerance.
 #[test]
 fn verification_is_precision_generic() {
-    let report = Flow::verify_mms::<f32>("tgv-mms-f32")
+    let report = CfdFlow::verify_mms::<f32>("tgv-mms-f32")
         .regime(Regime::Incompressible)
         .viscosity(0.1_f32)
         .density(1.0_f32)

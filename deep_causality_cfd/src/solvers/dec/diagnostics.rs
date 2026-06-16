@@ -140,7 +140,7 @@ pub fn dec_max_speed<const D: usize, R: DecNsScalar>(
 
 /// The velocity vector at the physical point `p` (in spacing units), by `sharp`-
 /// reconstructing the vertex vector field and multilinearly interpolating. Used by the
-/// Flow wake-probe (Strouhal signal) and centerline (Ghia profile) observations; a
+/// CfdFlow wake-probe (Strouhal signal) and centerline (Ghia profile) observations; a
 /// read-only point query, not on the step hot path. Corners outside the domain
 /// contribute zero (the wall / no-slip value at a boundary line).
 ///

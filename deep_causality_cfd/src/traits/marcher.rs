@@ -10,7 +10,7 @@ use deep_causality_physics::PhysicsError;
 /// the Leray projection back into the divergence-free type-state and the CFL guard,
 /// reading the [`crate::Ambient`] for that step.
 ///
-/// This is the per-step advance value the Flow march drives via the arrow-algebra
+/// This is the per-step advance value the CfdFlow march drives via the arrow-algebra
 /// iterator (`iterate_until` / `iterate_n`), interleaving between-step coupling
 /// stages between calls.
 pub trait Marcher<R: CfdScalar> {

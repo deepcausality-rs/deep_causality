@@ -5,7 +5,7 @@
 
 //! CFD solvers: a solver uses a theory and/or physics kernels to solve one
 //! designated case (lid cavity, Taylor–Green, cylinder, MMS). Each owns a
-//! configuration struct + type-state builder and exposes the Flow interface.
+//! configuration struct + type-state builder and exposes the CfdFlow interface.
 
 // The DEC-native incompressible Navier–Stokes solver, migrated from
 // `deep_causality_physics::theories::fluid_dynamics::dec`. The B-group refactor

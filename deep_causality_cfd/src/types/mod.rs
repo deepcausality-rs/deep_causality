@@ -4,11 +4,12 @@
  */
 
 //! CFD value types: the `CfdScalar` bound, the per-step `Ambient`, the marching
-//! state, configuration structs, and the Flow DSL surface types.
+//! state, configuration structs, and the CfdFlow DSL surface types.
 
 mod ambient;
 mod cfd_scalar;
 pub mod flow;
+pub mod flow_config;
 
 pub use ambient::Ambient;
 pub use cfd_scalar::CfdScalar;
