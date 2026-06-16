@@ -1,0 +1,19 @@
+openspec/changes/consolidate-causal-cfd-fluiddynamics/b1-flow-redesign.md
+  s_9bd896ecf5e8ba::t_763be9a56635de 1-191
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "b214721cd7d85448600364d763af8c7c05125d30",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
