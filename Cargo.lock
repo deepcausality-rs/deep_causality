@@ -78,7 +78,6 @@ dependencies = [
  "deep_causality_haft",
  "deep_causality_multivector",
  "deep_causality_num",
- "deep_causality_physics",
  "deep_causality_tensor",
  "deep_causality_topology",
  "deep_causality_uncertain",
@@ -112,7 +111,6 @@ checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
 name = "causal_correction_examples"
 version = "0.1.0"
 dependencies = [
- "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_data_structures",
  "deep_causality_haft",

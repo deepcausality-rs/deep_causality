@@ -14,7 +14,7 @@ path = "no_lib.rs"
 # the Navier-Stokes solver (dec_taylor_green_re1600). Disabled by default:
 #   cargo run --release -p avionics_examples --features parallel \
 #       --example dec_taylor_green_re1600
-parallel = ["deep_causality_physics/parallel", "deep_causality_cfd/parallel"]
+parallel = ["deep_causality_cfd/parallel"]
 
 [[example]]
 name = "cfd_taylor_green"
@@ -67,7 +67,6 @@ deep_causality_calculus = { path = "../../deep_causality_calculus" }
 deep_causality_cfd = { path = "../../deep_causality_cfd" }
 deep_causality_num = { path = "../../deep_causality_num" }
 deep_causality_haft = { path = "../../deep_causality_haft" }
-deep_causality_physics = { path = "../../deep_causality_physics" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
 deep_causality_topology = { path = "../../deep_causality_topology" }
 deep_causality_multivector = { path = "../../deep_causality_multivector" }
