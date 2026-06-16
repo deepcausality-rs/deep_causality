@@ -1,0 +1,21 @@
+openspec/specs/fluiddynamics-dsl/spec.md
+  s_9bd896ecf5e8ba::t_e1bdc00139242e 1,3-7,17,24-38,109-126,129,153,165,169,185,201,204,210-238
+openspec/specs/causal-cfd-consolidation/spec.md
+  s_9bd896ecf5e8ba::t_e1bdc00139242e 1-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "04795786f4560ceb9d8c475429f98f77dedfd98a",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
