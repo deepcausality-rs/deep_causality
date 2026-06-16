@@ -50,12 +50,18 @@
 //!
 //! ## Reproducibility
 //!
-//! The run is **bit-identical** across invocations. Two sources of run-to-run variation are pinned:
+//! The run is **bit-identical** across invocations. The sensor resolution is split into a
+//! Monte-Carlo presence gate and a Quasi-Monte-Carlo collapse, and three variation sources are
+//! pinned:
 //!
-//! - The sensor stream is Monte-Carlo (a noisy `MaybeUncertain` reading collapsed each step); the
-//!   run seeds the `Uncertain` sampler (`seed_sampler`) to fix that realization.
-//! - The cut-cell registry is built with `with_deterministic_order`, so its cells iterate in
-//!   ascending cell-id order rather than the per-process `HashMap` hasher order. Without it the
+//! - **Presence gate (Monte-Carlo).** The SPRT `to_bool` test draws from the thread RNG; the run
+//!   seeds it (`seed_sampler`) to fix that realization. (QMC is invalid for the sequential test.)
+//! - **Collapse (Quasi-Monte-Carlo).** The present reading's mean is estimated with
+//!   `with_qmc_collapse` — Sobol + inverse-CDF — instead of plain Monte-Carlo, cutting the
+//!   estimator variance at the same sample count. It is deterministic by construction (the per-step
+//!   Sobol shift is `base ⊕ sample.id()`), so it needs no RNG seed.
+//! - **Cut-cell order.** The registry is built with `with_deterministic_order`, so its cells iterate
+//!   in ascending cell-id order rather than the per-process `HashMap` hasher order. Without it the
 //!   cut-face constraint rows — hence the constrained projection's floating-point summation order —
 //!   permute every run, a ~1e-11 roundoff drift (the divergence residual stays ~1e-15, so it is
 //!   physically irrelevant; the deterministic order simply makes it reproducible too).
@@ -102,13 +108,19 @@ const SENSOR_SIGMA: f64 = 0.03;
 /// A sensor dropout (absent reading) every this many steps — exercises the BC-fallback
 /// intervention and its `EffectLog` record.
 const DROPOUT_EVERY: usize = 50;
-/// Monte-Carlo sample budgets for the presence gate and the mean collapse.
+/// Sample budgets: the Monte-Carlo presence gate and the Quasi-Monte-Carlo mean collapse.
 const PRESENCE_SAMPLES: usize = 256;
 const COLLAPSE_SAMPLES: usize = 256;
-/// Seed for the `Uncertain` sampler. The sensor stream is Monte-Carlo (a noisy `MaybeUncertain`
-/// reading collapsed each step); seeding the thread-local sampler RNG makes the whole run
-/// reproducible byte-for-byte instead of drawing a fresh realization from OS entropy each time.
+/// Seed for the Monte-Carlo presence gate (SPRT `to_bool`). Seeding the thread-local sampler RNG
+/// fixes the gate's realization so the run is reproducible byte-for-byte instead of drawing fresh
+/// OS entropy each time.
 const SAMPLER_SEED: u64 = 0x5EED_C0DE;
+/// Base seed for the **Quasi-Monte-Carlo** collapse of the present sensor reading. QMC (Sobol +
+/// inverse-CDF) estimates the per-step mean with far lower variance than plain Monte-Carlo at the
+/// same `COLLAPSE_SAMPLES`; the per-step Sobol shift is `base ⊕ sample.id()`, so the collapse is
+/// reproducible and independent across steps. (The presence gate stays Monte-Carlo — QMC is invalid
+/// for the sequential SPRT.)
+const QMC_COLLAPSE_SEED: u64 = 0x0B0_5E11;
 
 fn main() {
     // Pin the sensor realization so the wake CSV is reproducible across runs (the only randomness
@@ -179,6 +191,7 @@ fn main() {
     let zone = UncertainInflowZone::new(1, true, 0, U_BULK)
         .with_presence_gate(0.5, 0.95, 0.05, PRESENCE_SAMPLES)
         .with_collapse_samples(COLLAPSE_SAMPLES)
+        .with_qmc_collapse(QMC_COLLAPSE_SEED)
         .with_verbosity(DropoutVerbosity::EachDropout);
     let stream = sensor_stream(STEPS);
     let n_dropouts = stream
