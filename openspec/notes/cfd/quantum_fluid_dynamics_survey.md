@@ -102,7 +102,7 @@ together, and they are the ones that matter for the joint objective:
 
 | Candidate | Can it reach 1–2%? (the accuracy floor) | Wall-clock once it can | Joint verdict |
 |---|---|---|---|
-| **A. Tensor networks (MPS/QTT)** | Yes. ε ≪ 0.01 affords fine `h`, provided compression error stays ≪ 1–2% | Strong: poly-log DOF; DMRG steady-state skips the transient | **Best joint candidate.** Affordability multiplier for a fine, accurate grid. Risk: χ-blowup eating the accuracy budget in 3D |
+| **A. Tensor networks (MPS/QTT)** | Yes. At laminar Re, χ is bounded by geometry not resolution, so a fine grid is affordable, provided compression error stays ≪ 1–2% | Per-step DOF win, but published wall-clock beats a standard solver only above Re≈10⁴; below that crossover it is slower | **Affordability multiplier, not a speedup at this Re.** Best value is on the uncertainty axis and operator/geometry compression, not single-field speed. Steady-state TT solve is speculative, unproven. See `tensor_network_cfd.md` |
 | **B. Schrödinger / ISF** | Doubtful at 1–2% on viscous flow. The `ℏ` artifact and imaginary-diffusion hack are vis-grade, never validated to C_d/St tolerance | Fast (big steps), but irrelevant if it misses the bar | **Demoted.** Fails the floor on the project's viscous reference; coarse-propagator only |
 | **C. DEC + GA** | Yes, if 2nd-order (structured/graded) plus conservation. 1st-order unstructured needs punishing DOF | Low `C_step`; explicit means many steps (fix via implicit) | The substrate that can land on reference. Cost is DOF-at-low-order. **Raising effective order is on the critical path** |
 | **D. Gauge / holonomy** | Possibly lowers the St floor: exact circulation gives correct shedding at coarser mesh. No help for C_d | ≈ C | **Accuracy lever for St specifically**, unproven. Not a speed play |
@@ -124,19 +124,33 @@ remaining wall-clock. A fast scheme that misses the bar (ISF on viscous flow) sc
   combinatorial-wedge advection recipe from arXiv:2508.12501 into the `cfd-gap.md` seam.)
 - Replace the explicit march with an unconditionally-stable implicit/symplectic integrator
   (arXiv:2402.02905), so the timestep is accuracy-limited, not CFL-limited.
-- Add a fast pressure-Poisson solve: FFT (`deep_causality_fft`) on periodic Taylor–Green,
-  geometric multigrid on the cylinder (cf. Decapodes' 97.8% RMSE reduction vs GMRES). Add
-  Anderson or Newton–Krylov acceleration to skip the transient on steady or periodic cases.
+- Add a fast pressure-Poisson solve. The current Leray projection is warm-started CG
+  (`leray_project_constrained_weighted_*` in `dec_ns_rate.rs`), and it is the dominant per-step
+  cost. On periodic Taylor–Green this becomes a direct, non-iterative, O(N log N) projection:
+  reuse the proven spectral pattern in `spectral_diffusion.rs`, which already block-diagonalizes
+  the grade-1 Laplacian Δ₁ with `RfftPlanNd`, but apply it to the grade-0 Laplacian Δ₀ of the
+  projection (FFT, divide by the lattice eigenvalues, inverse FFT). The FFT crate is sound and
+  needs no changes; what is missing is this thin grade-0 wrapper. On the cylinder the domain is
+  non-periodic with an immersed body, so neither FFT nor the crate's DCT applies; keep CG with a
+  geometric-multigrid preconditioner (cf. Decapodes' 97.8% RMSE reduction vs GMRES). Add Anderson
+  or Newton–Krylov acceleration to skip the transient on steady or periodic cases.
 - Success metric: wall-clock to cylinder St/C_d within 1–2%. Not residual, not per-step cost.
 
-**Phase 2. Make the accurate grid affordable, then skip the transient.**
+**Phase 2. Tensor networks, but for affordability and the uncertainty axis, not single-flow speed.**
 
-- Build the QTT/MPS field backend with truncation tolerance ε ≪ 1–2%, so compression never eats
-  the accuracy budget. MMS-gate on Taylor–Green, then cylinder St/C_d. The laminar-shedding Re is
-  the compression sweet spot. Escalate to a DMRG-style steady-state solve in compressed form,
-  where A stops being a per-step win and becomes an `N_steps` win. This is the A×C fusion: a
-  fine, conservative, high-order field made affordable by compression and solved straight to its
-  fixed point.
+The follow-up research (`tensor_network_cfd.md`) corrected the earlier speed framing. At the
+project's laminar Re the published wall-clock advantage does not exist (it appears only above
+Re≈10⁴), so a compressed field-march is not a speedup here. The real value is elsewhere:
+
+- Compress the cut-cell mask and the DEC operators (χ≤30 for masks, up to 1000× for operators),
+  decoupling geometric resolution from cost, and use a QTT/AMEn solve of the grade-0 Laplacian as
+  the geometric-multigrid Poisson preconditioner the cylinder needs (the QTT format is itself a
+  multigrid hierarchy).
+- Encode uncertain and counterfactual *ensembles* (`MaybeUncertain` inflow, `*_with_config`
+  marches) as a tensor train over the parameter dimensions, where the O(10³)–O(10⁶)
+  curse-of-dimensionality wins actually live. This serves the moat in `causal_cfd.md §0`.
+- A DMRG-style steady-state TT solve would be the only path to an `N_steps` win, but no
+  literature demonstrates it. It is speculative and stays off the roadmap until something does.
 
 **Defer or reclassify.**
 
@@ -484,14 +498,22 @@ what gets built first; read this table for how each strand ranks as a capability
    2nd-order on structured/graded meshes and machine-precision conservation. This sets the DOF
    needed to hit 1–2% and is the precondition for everything; a fast scheme that cannot reach the
    bar scores `T = ∞`. (b) Replace the explicit march with an unconditionally-stable
-   implicit/symplectic integrator (arXiv:2402.02905). (c) Drop in a fast Poisson solve, FFT on
-   periodic TG and geometric multigrid on the cylinder, and profile its `C_step` share. (d) Add
-   Anderson or Newton–Krylov acceleration on the steady or periodic benchmark. **Success metric:
-   wall-clock to cylinder St/C_d within 1–2% of reference.** Not residual, not per-step cost.
-1. **QTT field backend spike** (Strand 2, Phase 2): represent a 2^k periodic Taylor–Green
-   velocity field as a quantics tensor train. Measure bond-dimension growth and reconstruction
-   error vs the dense DEC field. Then escalate to a DMRG steady-state solve (the `N_steps` win)
-   and decide whether it earns a place under the marcher.
+   implicit/symplectic integrator (arXiv:2402.02905). (c) Replace the warm-started-CG Leray
+   projection with a direct spectral solve on periodic TG by reusing the `spectral_diffusion.rs`
+   pattern on the grade-0 Laplacian (FFT, divide by lattice eigenvalues, inverse FFT; the FFT
+   crate is verified-sound and needs only this grade-0 wrapper). Keep CG plus geometric multigrid
+   on the cylinder, where the immersed-body domain rules out FFT/DCT. Profile the projection's
+   `C_step` share before and after. (d) Add Anderson or Newton–Krylov acceleration on the steady
+   or periodic benchmark. **Success metric: wall-clock to cylinder St/C_d within 1–2% of
+   reference.** Not residual, not per-step cost.
+1. **Tensor-network spikes, in value order** (Strand 2, Phase 2; rationale in
+   `tensor_network_cfd.md`). Highest value first: (a) compress a cut-cell mask and the grade-0/1
+   DEC operators as MPS/MPO, measuring χ vs bit-count; (b) a QTT/AMEn grade-0 Poisson solve as the
+   cylinder's multigrid preconditioner; (c) encode an uncertain/counterfactual ensemble as a TT
+   over parameter dimensions. Only then, lowest value, (d) a QTT velocity-field representation on
+   periodic TG, measuring bond-dimension growth and reconstruction error. Do not bank on a
+   single-flow wall-clock win at laminar Re; the published crossover is at Re≈10⁴. The DMRG
+   steady-state solve is speculative and excluded until demonstrated somewhere.
 2. **ISF marcher spike** (Strand 3): wire `HopfState`/`HilbertState` plus `fft` split-step plus
    `leray_project` into a single incompressible step. Validate circulation conservation and MMS
    order on TG. A/B vortex shedding against the DEC marcher.
