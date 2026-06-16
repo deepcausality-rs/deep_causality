@@ -1,0 +1,34 @@
+examples/avionics_examples/dec_taylor_green_re1600/main.rs
+  s_9bd896ecf5e8ba::t_fd1b5094c1be86 31
+  s_9bd896ecf5e8ba::t_ab58280e2ce86d 30,32-36
+  s_9bd896ecf5e8ba::t_53fa9a47617ef7 56,58
+  s_9bd896ecf5e8ba::t_258401fad9835a 61,66,71,77
+  s_9bd896ecf5e8ba::t_8f73178940da58 6,12,14-16,25,28,57,59,73-74
+  s_9bd896ecf5e8ba::t_6bb3ad799689b5 64,67-69,75
+examples/avionics_examples/dec_graded_mms/main.rs
+  s_9bd896ecf5e8ba::t_fe594583d869f5 65-67,69-73,75-76
+  s_9bd896ecf5e8ba::t_6bba9770f21030 43
+examples/avionics_examples/dec_taylor_green_re1600/print_utils.rs
+  s_9bd896ecf5e8ba::t_0d4096a3446a8a 6-10,14-15,17-25,27-42,44-66
+  s_9bd896ecf5e8ba::t_44a8b18f1871c9 12-13
+examples/avionics_examples/dec_taylor_green_re1600/config.rs
+  s_9bd896ecf5e8ba::t_2427f945cbb8e7 63-68,70,73,82
+  s_9bd896ecf5e8ba::t_22c6c4d8167d7d 20
+  s_9bd896ecf5e8ba::t_ebe669acf18867 21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "d9b26b199a682e59c7d2ce094c8ed9ee46938687",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
