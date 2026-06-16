@@ -1,0 +1,20 @@
+deep_causality_physics/tests/kernels/fluids/wrappers_tests.rs
+  s_9bd896ecf5e8ba::t_e25702cc37905f 12-15,20-21
+  s_9bd896ecf5e8ba::t_20f97f05216812 7-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "d9dbd713b4a67b6d279cfaba75618c82ce3f0f73",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
