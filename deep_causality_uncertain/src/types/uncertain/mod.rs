@@ -58,6 +58,12 @@ impl<T: ProbabilisticType + Copy> Uncertain<T> {
         self.id
     }
 
+    /// The root of this value's computation graph. Exposed so a [`QmcSampler`](crate::QmcSampler)
+    /// can be built for this `Uncertain` (the node content type is already public).
+    pub fn root_node(&self) -> &ConstTree<UncertainNodeContent> {
+        &self.root_node
+    }
+
     pub fn value(&self) -> T {
         match self.root_node.value() {
             UncertainNodeContent::Value(v) => T::from_sampled_value(*v).unwrap(),

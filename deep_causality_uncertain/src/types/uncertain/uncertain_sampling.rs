@@ -5,7 +5,8 @@
 
 use crate::types::sampler::sampler_seed::next_sample_index;
 use crate::{
-    ProbabilisticType, Sampler, SequentialSampler, Uncertain, UncertainError, with_global_cache,
+    ProbabilisticType, QmcSampler, Sampler, SamplerKind, SequentialSampler, Uncertain,
+    UncertainError, with_global_cache,
 };
 
 // Precision-generic sampling surface for `Uncertain<T>`. The draw runs the shared
@@ -18,12 +19,33 @@ impl<T: ProbabilisticType> Uncertain<T> {
     /// Draw a sample for a specific sample index; the global cache makes the draw at a
     /// given `(id, index)` reproducible.
     pub fn sample_with_index(&self, sample_index: u64) -> Result<T, UncertainError> {
-        let key = (self.id, sample_index);
+        let key = (self.id, sample_index, SamplerKind::Mc);
 
         let computed_value = with_global_cache(|cache| {
             cache.get_or_compute(key, || {
                 let sampler = SequentialSampler;
-                Sampler::<T>::sample(&sampler, &self.root_node)
+                Sampler::<T>::sample(&sampler, &self.root_node, sample_index)
+            })
+        })?;
+
+        T::from_sampled_value(computed_value)
+    }
+
+    /// Draw a Quasi-Monte-Carlo sample at `sample_index` using a pre-built [`QmcSampler`].
+    ///
+    /// The Sobol point at `sample_index` makes the draw deterministic; the global cache stores
+    /// it under a QMC-discriminated key so it never collides with a Monte-Carlo draw at the same
+    /// index. The `sampler` must have been built from this `Uncertain`'s root node.
+    pub fn sample_with_index_qmc(
+        &self,
+        sample_index: u64,
+        sampler: &QmcSampler,
+    ) -> Result<T, UncertainError> {
+        let key = (self.id, sample_index, SamplerKind::Qmc);
+
+        let computed_value = with_global_cache(|cache| {
+            cache.get_or_compute(key, || {
+                Sampler::<T>::sample(sampler, &self.root_node, sample_index)
             })
         })?;
 

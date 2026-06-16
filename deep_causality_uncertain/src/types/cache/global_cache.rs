@@ -7,8 +7,19 @@ use crate::SampledValue;
 use std::collections::HashMap;
 use std::sync::{OnceLock, RwLock};
 
-/// Key for the global sample cache: (Uncertain ID, Sample Index)
-pub type SampleCacheKey = (usize, u64);
+/// Which sampler produced a cached value. Part of the cache key so Monte-Carlo and
+/// Quasi-Monte-Carlo draws for the same `(id, index)` are stored separately and never
+/// cross-served within one process.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SamplerKind {
+    /// Plain Monte Carlo (`SequentialSampler`).
+    Mc,
+    /// Quasi-Monte Carlo (`QmcSampler`).
+    Qmc,
+}
+
+/// Key for the global sample cache: (Uncertain ID, Sample Index, Sampler).
+pub type SampleCacheKey = (usize, u64, SamplerKind);
 
 /// Thread-safe, global cache for sampled values.
 #[derive(Debug)]
