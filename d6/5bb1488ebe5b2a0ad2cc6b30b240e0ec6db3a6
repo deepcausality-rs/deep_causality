@@ -1,0 +1,23 @@
+build/scripts/format.sh
+  s_c99b1c1e7a1f61::t_202aa4c5bd5165 16
+build/scripts/sbom.sh
+  s_c99b1c1e7a1f61::t_311560d96dd725 15
+build/scripts/check.sh
+  s_c99b1c1e7a1f61::t_408378a83e2005 21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "d65bb1488ebe5b2a0ad2cc6b30b240e0ec6db3a6",
+  "prompts": {},
+  "sessions": {
+    "s_c99b1c1e7a1f61": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0d52018e-5ef1-479e-81a6-7b3313872f3b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
