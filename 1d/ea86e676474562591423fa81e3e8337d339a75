@@ -1,0 +1,66 @@
+deep_causality_uncertain/tests/types/sampler/mod.rs
+  s_8a207c3125fcca::t_17062928376ab6 6-7
+deep_causality_uncertain/tests/types/uncertain/uncertain_sampling_tests.rs
+  s_8a207c3125fcca::t_766cd8ae5a67c8 5
+  s_8a207c3125fcca::t_daf1d6f44e8435 42,127
+deep_causality_uncertain/src/types/uncertain/uncertain_sampling.rs
+  s_8a207c3125fcca::t_f242c23c19b6da 8-9
+  s_8a207c3125fcca::t_775f1491766693 22,27-48
+deep_causality_uncertain/tests/types/uncertain/uncertain_tests.rs
+  s_8a207c3125fcca::t_daf1d6f44e8435 303-304,325-326
+  s_8a207c3125fcca::t_766cd8ae5a67c8 6
+deep_causality_uncertain/src/types/cache/global_cache.rs
+  s_8a207c3125fcca::t_d4155fe3e4b83c 10-22
+deep_causality_uncertain/src/types/sampler/mod.rs
+  s_8a207c3125fcca::t_e8d6649eb0d542 5
+deep_causality_uncertain/src/types/uncertain/uncertain_statistics.rs
+  s_8a207c3125fcca::t_aa9ff77e2d7d8a 67
+  s_8a207c3125fcca::t_8a8d1c2cd3cc48 6
+  s_8a207c3125fcca::t_692f2bd3bfd5a5 62-66,68-118
+deep_causality_uncertain/src/lib.rs
+  s_8a207c3125fcca::t_7eb84ad8835b67 40
+  s_8a207c3125fcca::t_ce9734e33acffa 29
+deep_causality_uncertain/tests/types/sampler/sequential_sampler_tests.rs
+  s_8a207c3125fcca::t_daf1d6f44e8435 33,38,51,60,68,81,90,101,117,132,152,169,180,191,202,214,231,242,253,265,282,292,302,312,322,339,349,359,376,388,400,408,421,433,453,464,476,498
+deep_causality_uncertain/src/types/uncertain/mod.rs
+  s_8a207c3125fcca::t_031d8eed9ef190 61-66
+deep_causality_uncertain/tests/types/sampler/qmc_sampler_tests.rs
+  s_8a207c3125fcca::t_aa9ff77e2d7d8a 51-56
+  s_8a207c3125fcca::t_80618a17ca7173 1-50,57-160
+deep_causality_uncertain/tests/types/uncertain/uncertain_statistics_tests.rs
+  s_8a207c3125fcca::t_f668a0e3bc6574 38,73
+  s_8a207c3125fcca::t_8a74b63bb303cd 6
+deep_causality_uncertain/benches/uncertain_benchmarks.rs
+  s_8a207c3125fcca::t_9c8a2d1287f86b 7,138
+deep_causality_uncertain/src/types/sampler/sequential_sampler.rs
+  s_8a207c3125fcca::t_b5f5143bd65db0 39,41-42
+deep_causality_uncertain/src/types/uncertain/uncertain_bool.rs
+  s_8a207c3125fcca::t_46749380cb842d 93-114
+deep_causality_uncertain/src/types/sampler/qmc_sampler.rs
+  s_8a207c3125fcca::t_2f9e6b7528cab7 1-31,33-325,332-334,341-343,350-461
+  s_8a207c3125fcca::t_dafd6d99a7d4dc 32
+  s_8a207c3125fcca::t_aa9ff77e2d7d8a 326-331,335-340,344-349
+deep_causality_uncertain/src/traits/sampler/mod.rs
+  s_8a207c3125fcca::t_de77f57ae0a03a 10-14,18
+deep_causality_uncertain/tests/types/cache/cache_tests.rs
+  s_8a207c3125fcca::t_daf1d6f44e8435 19,36,63,79,102,122
+  s_8a207c3125fcca::t_766cd8ae5a67c8 6-8
+deep_causality_uncertain/src/types/cache/mod.rs
+  s_8a207c3125fcca::t_13dbecadf94014 9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "1dea86e676474562591423fa81e3e8337d339a75",
+  "prompts": {},
+  "sessions": {
+    "s_8a207c3125fcca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3f9dbbc4-a476-4b6b-9dda-07db14d08445",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
