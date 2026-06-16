@@ -102,12 +102,5 @@ path = "../deep_causality_fft"
 version = "0.1"
 default-features = false
 
-[dev-dependencies]
-criterion = { version = "0.8" }
-
-[[bench]]
-name = "dec_solver_benchmark"
-harness = false
-
 [lints]
 workspace = true
