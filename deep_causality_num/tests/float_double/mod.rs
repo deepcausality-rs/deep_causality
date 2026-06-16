@@ -15,6 +15,8 @@ mod double_comparison_tests;
 #[cfg(test)]
 mod double_display_tests;
 #[cfg(test)]
+mod double_erf_tests;
+#[cfg(test)]
 mod double_float_tests;
 #[cfg(test)]
 mod double_from_tests;
