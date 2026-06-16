@@ -6,6 +6,7 @@
 pub mod distr;
 pub mod iter;
 pub mod map;
+pub mod qmc;
 pub(crate) mod rand;
 pub mod range;
 

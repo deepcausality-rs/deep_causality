@@ -10,6 +10,7 @@ use std::error::Error;
 pub enum RngError {
     OsRandomGenerator(String),
     InvalidRange(String),
+    UnsupportedDimension(String),
 }
 
 impl Error for RngError {}
@@ -19,6 +20,7 @@ impl std::fmt::Display for RngError {
         match self {
             RngError::OsRandomGenerator(e) => write!(f, "OS random generator error: {}", e),
             RngError::InvalidRange(e) => write!(f, "Invalid range: {}", e),
+            RngError::UnsupportedDimension(e) => write!(f, "Unsupported dimension: {}", e),
         }
     }
 }

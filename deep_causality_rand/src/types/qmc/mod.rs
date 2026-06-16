@@ -3,6 +3,6 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-pub(crate) mod inverse_cdf;
-pub(crate) mod ziggurat_sampler;
-pub(crate) mod ziggurat_tables;
+//! Quasi-Monte-Carlo sequence generators.
+
+pub mod sobol;

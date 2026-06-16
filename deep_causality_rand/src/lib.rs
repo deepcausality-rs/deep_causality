@@ -25,6 +25,11 @@ pub use crate::traits::rng_core::RngCore;
 pub use crate::traits::sample_borrow::SampleBorrow;
 pub use crate::traits::sample_range::SampleRange;
 pub use crate::traits::sample_uniform::{SampleUniform, UniformSampler};
+// Inverse-CDF transforms
+pub use crate::utils::inverse_cdf::{
+    bernoulli_inverse_cdf, standard_normal_inverse_cdf, standard_normal_inverse_cdf_f106,
+    uniform_inverse_cdf,
+};
 // Types
 pub use crate::types::Xoshiro256;
 pub use crate::types::distr::bernoulli::Bernoulli;
@@ -34,6 +39,7 @@ pub use crate::types::distr::uniform::standard_uniform::StandardUniform;
 pub use crate::types::distr::uniform::{Uniform, UniformFloat};
 pub use crate::types::iter::Iter;
 pub use crate::types::map::Map;
+pub use crate::types::qmc::sobol::{MAX_SOBOL_DIM, SobolSequence};
 pub use crate::types::range::{Open01, OpenClosed01};
 
 #[cfg(not(feature = "os-random"))]
