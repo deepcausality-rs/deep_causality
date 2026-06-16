@@ -1,0 +1,19 @@
+deep_causality_physics/README.md
+  s_9bd896ecf5e8ba::t_4240f5fce53455 82
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "719aa4aebdb4fa3401d10abc4f5a3187ca540055",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
