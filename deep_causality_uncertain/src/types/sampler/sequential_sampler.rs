@@ -38,7 +38,12 @@ impl<T: ProbabilisticType> Sampler<T> for SequentialSampler {
         root_node: &ConstTree<UncertainNodeContent>,
     ) -> Result<SampledValue, UncertainError> {
         let mut context: HashMap<usize, SampledValue> = HashMap::new();
-        self.evaluate_node(root_node, &mut context, &mut deep_causality_rand::rng())
+        // Draw from the seeded RNG when `seed_sampler` is in effect on this thread, else the
+        // OS-entropy thread RNG. Branching keeps each arm monomorphic over its concrete RNG.
+        crate::types::sampler::sampler_seed::with_seed_slot(|slot| match slot {
+            Some(rng) => self.evaluate_node(root_node, &mut context, rng),
+            None => self.evaluate_node(root_node, &mut context, &mut deep_causality_rand::rng()),
+        })
     }
 }
 

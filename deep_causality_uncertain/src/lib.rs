@@ -37,6 +37,7 @@ pub use crate::types::distribution::DistributionEnum;
 pub use crate::types::distribution_parameters::BernoulliParams;
 pub use crate::types::distribution_parameters::NormalDistributionParams;
 pub use crate::types::distribution_parameters::UniformDistributionParams;
+pub use crate::types::sampler::sampler_seed::{clear_sampler_seed, seed_sampler};
 pub use crate::types::sampler::sequential_sampler::SequentialSampler;
 pub use crate::types::uncertain::Uncertain;
 pub use crate::types::uncertain_maybe::MaybeUncertain;

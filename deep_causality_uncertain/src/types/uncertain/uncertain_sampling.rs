@@ -3,10 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::types::sampler::sampler_seed::next_sample_index;
 use crate::{
     ProbabilisticType, Sampler, SequentialSampler, Uncertain, UncertainError, with_global_cache,
 };
-use deep_causality_rand::Rng;
 
 // Precision-generic sampling surface for `Uncertain<T>`. The draw runs the shared
 // `SequentialSampler` (which already impls `Sampler<T>` for every `ProbabilisticType`)
@@ -30,17 +30,18 @@ impl<T: ProbabilisticType> Uncertain<T> {
         T::from_sampled_value(computed_value)
     }
 
-    /// Draw a single sample at a random index.
+    /// Draw a single sample at a random index (a reproducible index when `seed_sampler` is in
+    /// effect on this thread).
     pub fn sample(&self) -> Result<T, UncertainError> {
-        let sample_index = deep_causality_rand::rng().random::<u64>();
+        let sample_index = next_sample_index();
         self.sample_with_index(sample_index)
     }
 
-    /// Draw `n` independent samples.
+    /// Draw `n` independent samples (reproducible when `seed_sampler` is in effect on this thread).
     pub fn take_samples(&self, n: usize) -> Result<Vec<T>, UncertainError> {
         (0..n)
             .map(|_| {
-                let sample_index = deep_causality_rand::rng().random::<u64>();
+                let sample_index = next_sample_index();
                 self.sample_with_index(sample_index)
             })
             .collect()
