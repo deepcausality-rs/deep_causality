@@ -1,0 +1,19 @@
+openspec/specs/io-monad/spec.md
+  s_5c5a6bcbf82d1e::t_50ad1375bef2a3 1-156
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "a6f3c437a0a347310ec9586aec879567dd864926",
+  "prompts": {},
+  "sessions": {
+    "s_5c5a6bcbf82d1e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "480bfd3b-3e94-457e-bd6e-4612cfa4dfd8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
