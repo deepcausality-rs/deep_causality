@@ -3,14 +3,18 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-/// Struct to hold the parameters for a Normal (Gaussian) distribution.
+/// Struct to hold the parameters for a Normal (Gaussian) distribution, at precision `R`.
+///
+/// The struct itself is unbounded so `DistributionEnum<T>` instantiates cleanly for every
+/// `T` (including `bool`, where the Normal variant is unused); the analytic bound lives on
+/// the sampling path, not here.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct NormalDistributionParams {
-    pub mean: f64,
-    pub std_dev: f64,
+pub struct NormalDistributionParams<R> {
+    pub mean: R,
+    pub std_dev: R,
 }
 
-impl NormalDistributionParams {
+impl<R> NormalDistributionParams<R> {
     /// Creates a new `NormalDistributionParams` instance.
     ///
     /// # Arguments
@@ -21,11 +25,11 @@ impl NormalDistributionParams {
     /// # Returns
     ///
     /// A new `NormalDistributionParams` instance.
-    pub fn new(mean: f64, std_dev: f64) -> Self {
+    pub fn new(mean: R, std_dev: R) -> Self {
         Self { mean, std_dev }
     }
 }
-impl std::fmt::Display for NormalDistributionParams {
+impl<R: std::fmt::Display> std::fmt::Display for NormalDistributionParams<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

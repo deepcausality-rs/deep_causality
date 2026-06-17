@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::{SampledValue, Uncertain, with_global_cache};
+use deep_causality_uncertain::{SampledValue, SamplerKind, Uncertain, with_global_cache};
 
 // Helper for approximate equality for f64
 fn assert_approx_eq(a: f64, b: f64, epsilon: f64) {
@@ -300,8 +300,8 @@ fn test_uncertain_f64_sample_with_index() {
 
     with_global_cache(|cache| {
         cache.clear();
-        cache.insert((id, 0), SampledValue::Float(100.0));
-        cache.insert((id, 1), SampledValue::Float(200.0));
+        cache.insert((id, 0, SamplerKind::Mc), SampledValue::Float(100.0));
+        cache.insert((id, 1, SamplerKind::Mc), SampledValue::Float(200.0));
     });
 
     assert_eq!(uncertain.sample_with_index(0).unwrap(), 100.0);
@@ -322,8 +322,8 @@ fn test_uncertain_bool_sample_with_index() {
 
     with_global_cache(|cache| {
         cache.clear();
-        cache.insert((id, 0), SampledValue::Bool(true));
-        cache.insert((id, 1), SampledValue::Bool(false));
+        cache.insert((id, 0, SamplerKind::Mc), SampledValue::Bool(true));
+        cache.insert((id, 1, SamplerKind::Mc), SampledValue::Bool(false));
     });
 
     assert!(uncertain.sample_with_index(0).unwrap());

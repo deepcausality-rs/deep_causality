@@ -3,75 +3,67 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::types::sampler::sampler_seed::next_sample_index;
 use crate::{
-    SampledValue, Sampler, SequentialSampler, Uncertain, UncertainError, with_global_cache,
+    ProbabilisticType, QmcSampler, Sampler, SamplerKind, SequentialSampler, Uncertain,
+    UncertainError, with_global_cache,
 };
-use deep_causality_rand::Rng;
 
-// Sampling impl for Uncertain<f64>
-impl Uncertain<f64> {
-    pub fn sample_with_index(&self, sample_index: u64) -> Result<f64, UncertainError> {
-        let key = (self.id, sample_index);
-
-        let computed_value = with_global_cache(|cache| {
-            cache.get_or_compute(key, || {
-                let sampler = SequentialSampler;
-                Sampler::<f64>::sample(&sampler, &self.root_node)
-            })
-        })?;
-
-        match computed_value {
-            SampledValue::Float(f) => Ok(f),
-            _ => Err(UncertainError::UnsupportedTypeError(
-                "Computed value type mismatch: Expected f64".to_string(),
-            )),
-        }
-    }
-
-    pub fn sample(&self) -> Result<f64, UncertainError> {
-        let sample_index = deep_causality_rand::rng().random::<u64>();
-        self.sample_with_index(sample_index)
-    }
-
-    pub fn take_samples(&self, n: usize) -> Result<Vec<f64>, UncertainError> {
-        (0..n)
-            .map(|_| {
-                let sample_index = deep_causality_rand::rng().random::<u64>();
-                self.sample_with_index(sample_index)
-            })
-            .collect()
-    }
-}
-
-// Sampling impl for Uncertain<bool>
-impl Uncertain<bool> {
-    pub fn sample_with_index(&self, sample_index: u64) -> Result<bool, UncertainError> {
-        let key = (self.id, sample_index);
+// Precision-generic sampling surface for `Uncertain<T>`. The draw runs the shared
+// `SequentialSampler` (which already impls `Sampler<T>` for every `ProbabilisticType`)
+// and converts the cached `SampledValue` back to `T` through `T::from_sampled_value` — the
+// supertrait of `ProbabilisticType` built for exactly this. Every per-type extraction
+// (the `f64`/`bool` matches and the `Float106` f64→double-double widening) lives in that
+// conversion, so this one impl reproduces all of them with no narrowing.
+impl<T: ProbabilisticType> Uncertain<T> {
+    /// Draw a sample for a specific sample index; the global cache makes the draw at a
+    /// given `(id, index)` reproducible.
+    pub fn sample_with_index(&self, sample_index: u64) -> Result<T, UncertainError> {
+        let key = (self.id, sample_index, SamplerKind::Mc);
 
         let computed_value = with_global_cache(|cache| {
             cache.get_or_compute(key, || {
                 let sampler = SequentialSampler;
-                Sampler::<bool>::sample(&sampler, &self.root_node)
+                Sampler::<T>::sample(&sampler, &self.root_node, sample_index)
             })
         })?;
 
-        match computed_value {
-            SampledValue::Bool(b) => Ok(b),
-            _ => Err(UncertainError::UnsupportedTypeError(
-                "Computed value type mismatch: Expected bool".to_string(),
-            )),
-        }
+        T::from_sampled_value(computed_value)
     }
 
-    pub fn sample(&self) -> Result<bool, UncertainError> {
-        let sample_index = deep_causality_rand::rng().random::<u64>();
+    /// Draw a Quasi-Monte-Carlo sample at `sample_index` using a pre-built [`QmcSampler`].
+    ///
+    /// The Sobol point at `sample_index` makes the draw deterministic; the global cache stores
+    /// it under a QMC-discriminated key so it never collides with a Monte-Carlo draw at the same
+    /// index. The `sampler` must have been built from this `Uncertain`'s root node.
+    pub fn sample_with_index_qmc(
+        &self,
+        sample_index: u64,
+        sampler: &QmcSampler,
+    ) -> Result<T, UncertainError> {
+        let key = (self.id, sample_index, SamplerKind::Qmc);
+
+        let computed_value = with_global_cache(|cache| {
+            cache.get_or_compute(key, || {
+                Sampler::<T>::sample(sampler, &self.root_node, sample_index)
+            })
+        })?;
+
+        T::from_sampled_value(computed_value)
+    }
+
+    /// Draw a single sample at a random index (a reproducible index when `seed_sampler` is in
+    /// effect on this thread).
+    pub fn sample(&self) -> Result<T, UncertainError> {
+        let sample_index = next_sample_index();
         self.sample_with_index(sample_index)
     }
 
-    pub fn take_samples(&self, n: usize) -> Result<Vec<bool>, UncertainError> {
+    /// Draw `n` independent samples (reproducible when `seed_sampler` is in effect on this thread).
+    pub fn take_samples(&self, n: usize) -> Result<Vec<T>, UncertainError> {
         (0..n)
             .map(|_| {
-                let sample_index = deep_causality_rand::rng().random::<u64>();
+                let sample_index = next_sample_index();
                 self.sample_with_index(sample_index)
             })
             .collect()

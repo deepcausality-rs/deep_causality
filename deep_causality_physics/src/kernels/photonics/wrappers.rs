@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::kernels::photonics::quantities::{
+use crate::{
     AbcdMatrix, ComplexBeamParameter, JonesVector, OpticalPower, RayAngle, RayHeight, StokesVector,
     Wavelength,
 };

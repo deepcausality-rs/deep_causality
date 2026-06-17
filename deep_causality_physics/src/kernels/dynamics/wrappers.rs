@@ -3,10 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::Energy;
 use crate::kernels::dynamics::estimation;
 use crate::kernels::dynamics::kinematics;
 use crate::kernels::dynamics::kinematics::PhysicalVector;
-use crate::units::energy::Energy;
 use crate::{Frequency, Mass, MomentOfInertia, Probability};
 use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};

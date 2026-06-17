@@ -1,0 +1,34 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+//! The **CfdFlow** DSL (workflow composition — the "how").
+//!
+//! `CfdFlow` composes a workflow from a [`MarchConfig`](crate::MarchConfig) container (built by the
+//! [`CfdConfigBuilder`](crate::CfdConfigBuilder) configuration layer in
+//! [`flow_config`](crate::types::flow_config)): it lends a caller-owned geometry (B1), couples
+//! physics, marches, and returns an owned [`Report`] — borrows never escape `run` (design D2). The
+//! facade spans three solver kinds sharing one `Report`: the marching solver (here), and the
+//! MMS-verification and operator-accuracy solvers.
+
+mod cfd_flow;
+mod coupling;
+mod frequency;
+mod march_run;
+mod mms;
+mod operator_study;
+mod report;
+mod verify;
+mod zones;
+
+pub use cfd_flow::{CfdFlow, fail};
+pub use coupling::{
+    CoupledField, Coupling, PhysicsStage, StepContext, ThermalRelax, ViscosityArrhenius,
+};
+pub use frequency::{dominant_frequency, strouhal_number};
+pub use march_run::{MarchPipeline, MarchRun, StepView};
+pub use mms::{MmsBuilder, Regime};
+pub use operator_study::{Operator, OperatorStudyBuilder};
+pub use report::Report;
+pub use verify::VerifyRun;

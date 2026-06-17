@@ -4,9 +4,8 @@
  */
 
 pub(crate) mod mechanics;
-pub(crate) mod quantities;
 pub(crate) mod wrappers;
 
+pub use crate::quantities::materials::*;
 pub use mechanics::*;
-pub use quantities::*;
 pub use wrappers::*;

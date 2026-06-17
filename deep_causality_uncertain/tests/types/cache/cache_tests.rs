@@ -3,7 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::{GlobalSampleCache, SampledValue, Uncertain, with_global_cache};
+use deep_causality_uncertain::{
+    GlobalSampleCache, SampledValue, SamplerKind, Uncertain, with_global_cache,
+};
 use rusty_fork::rusty_fork_test;
 
 rusty_fork_test! {
@@ -14,7 +16,7 @@ rusty_fork_test! {
         // We do this by inserting a value and retrieving it within the same `with_global_cache` block,
         // which guarantees execution on the same thread.
         let uncertain_obj = Uncertain::<f64>::point(1.0);
-        let key = (uncertain_obj.id(), 100);
+        let key = (uncertain_obj.id(), 100, SamplerKind::Mc);
         let value = SampledValue::Float(42.0);
 
         with_global_cache(|cache| {
@@ -31,7 +33,7 @@ rusty_fork_test! {
     fn test_cache_clear() {
 
         let uncertain_obj = Uncertain::<f64>::point(1.0);
-        let key = (uncertain_obj.id(), 200);
+        let key = (uncertain_obj.id(), 200, SamplerKind::Mc);
         let value = SampledValue::Float(123.45);
 
         // Insert a value
@@ -58,7 +60,7 @@ rusty_fork_test! {
         #[test]
     fn test_cache_default() {
                 let uncertain_obj = Uncertain::<f64>::point(1.0);
-        let key = (uncertain_obj.id(), 200);
+        let key = (uncertain_obj.id(), 200, SamplerKind::Mc);
         let value = SampledValue::Float(123.45);
 
         let cache = GlobalSampleCache::default();
@@ -74,7 +76,7 @@ rusty_fork_test! {
     fn test_cache_get_and_insert() {
 
         let uncertain_obj = Uncertain::<f64>::point(1.0);
-        let key = (uncertain_obj.id(), 0);
+        let key = (uncertain_obj.id(), 0, SamplerKind::Mc);
         let value = SampledValue::Float(999.99);
 
         // Initially, the cache should be empty
@@ -97,7 +99,7 @@ rusty_fork_test! {
     fn test_cache_get_or_compute_not_in_cache() {
 
         let uncertain_obj = Uncertain::<f64>::point(1.0);
-        let key = (uncertain_obj.id(), 1);
+        let key = (uncertain_obj.id(), 1, SamplerKind::Mc);
         let expected_value = SampledValue::Float(50.0);
 
         // The value is not in the cache, so the compute function should be called
@@ -117,7 +119,7 @@ rusty_fork_test! {
     fn test_cache_get_or_compute_already_in_cache() {
 
         let uncertain_obj = Uncertain::<f64>::point(1.0);
-        let key = (uncertain_obj.id(), 2);
+        let key = (uncertain_obj.id(), 2, SamplerKind::Mc);
         let initial_value = SampledValue::Float(75.0);
 
         // Pre-populate the cache

@@ -490,7 +490,7 @@ and
    bazel test --@rules_rust//rust/settings:no_std=alloc //deep_causality_haft/...
 ```
 
-## 👨‍💻👩‍💻 Contribution
+## Contribution
 
 Contributions are welcomed especially related to documentation, example code, and fixes.
 If unsure where to start, just open an issue and ask.
@@ -498,11 +498,12 @@ If unsure where to start, just open an issue and ask.
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
 shall be licensed under the MIT licence, without any additional terms or conditions.
 
-## 📜 Licence
+## Licence
 
 This project is licensed under the [MIT license](LICENSE).
 
-## 👮️ Security
+## Security
 
 For details about security, please read
 the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).
+

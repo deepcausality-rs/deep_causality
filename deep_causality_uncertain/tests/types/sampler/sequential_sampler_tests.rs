@@ -30,12 +30,12 @@ fn test_sample_value() {
 
     // Test with f64 value
     let node_f64 = create_root(UncertainNodeContent::Value(SampledValue::Float(42.0f64)));
-    let result_f64 = Sampler::<f64>::sample(&sampler, &node_f64).unwrap();
+    let result_f64 = Sampler::<f64>::sample(&sampler, &node_f64, 0).unwrap();
     assert_eq!(result_f64, SampledValue::Float(42.0));
 
     // Test with bool value
     let node_bool = create_root(UncertainNodeContent::Value(SampledValue::Bool(true)));
-    let result_bool = Sampler::<bool>::sample(&sampler, &node_bool).unwrap();
+    let result_bool = Sampler::<bool>::sample(&sampler, &node_bool, 0).unwrap();
     assert_eq!(result_bool, SampledValue::Bool(true));
 }
 
@@ -48,7 +48,7 @@ fn test_distribution_f64() {
         DistributionEnum::Point(42.0),
     ));
     assert_eq!(
-        Sampler::<f64>::sample(&sampler, &node).unwrap(),
+        Sampler::<f64>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Float(42.0)
     );
 
@@ -57,7 +57,7 @@ fn test_distribution_f64() {
     let node = create_root(UncertainNodeContent::DistributionF64(
         DistributionEnum::Normal(data),
     ));
-    let result = Sampler::<f64>::sample(&sampler, &node).unwrap();
+    let result = Sampler::<f64>::sample(&sampler, &node, 0).unwrap();
     assert!(matches!(result, SampledValue::Float(_)));
 
     // Uniform
@@ -65,7 +65,7 @@ fn test_distribution_f64() {
     let node = create_root(UncertainNodeContent::DistributionF64(
         DistributionEnum::Uniform(data),
     ));
-    let result = Sampler::<f64>::sample(&sampler, &node).unwrap();
+    let result = Sampler::<f64>::sample(&sampler, &node, 0).unwrap();
     assert!(matches!(result, SampledValue::Float(_)));
 }
 
@@ -78,7 +78,7 @@ fn test_distribution_bool() {
         DistributionEnum::Point(true),
     ));
     assert_eq!(
-        Sampler::<bool>::sample(&sampler, &node).unwrap(),
+        Sampler::<bool>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Bool(true)
     );
 
@@ -87,7 +87,7 @@ fn test_distribution_bool() {
     let node = create_root(UncertainNodeContent::DistributionBool(
         DistributionEnum::Bernoulli(data),
     ));
-    let result = Sampler::<bool>::sample(&sampler, &node).unwrap();
+    let result = Sampler::<bool>::sample(&sampler, &node, 0).unwrap();
     assert!(matches!(result, SampledValue::Bool(_)));
 }
 
@@ -98,7 +98,7 @@ fn test_pure_op() {
         value: SampledValue::Float(42.0),
     });
     assert_eq!(
-        Sampler::<f64>::sample(&sampler, &node).unwrap(),
+        Sampler::<f64>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Float(42.0)
     );
 }
@@ -114,7 +114,7 @@ fn test_fmap_op() {
 
     let node = create_root(UncertainNodeContent::FmapOp { func, operand });
 
-    let result = Sampler::<f64>::sample(&sampler, &node).unwrap();
+    let result = Sampler::<f64>::sample(&sampler, &node, 0).unwrap();
     assert_eq!(result, SampledValue::Float(20.0));
 }
 
@@ -129,7 +129,7 @@ fn test_apply_op() {
 
     let node = create_root(UncertainNodeContent::ApplyOp { func, arg });
 
-    let result = Sampler::<f64>::sample(&sampler, &node).unwrap();
+    let result = Sampler::<f64>::sample(&sampler, &node, 0).unwrap();
     assert_eq!(result, SampledValue::Float(15.0));
 }
 
@@ -149,7 +149,7 @@ fn test_bind_op() {
 
     let node = create_root(UncertainNodeContent::BindOp { func, operand });
 
-    let result = Sampler::<f64>::sample(&sampler, &node).unwrap();
+    let result = Sampler::<f64>::sample(&sampler, &node, 0).unwrap();
     assert_eq!(result, SampledValue::Float(20.0));
 }
 
@@ -166,7 +166,7 @@ fn test_arithmetic_op() {
         rhs: rhs.clone(),
     });
     assert_eq!(
-        Sampler::<f64>::sample(&sampler, &node).unwrap(),
+        Sampler::<f64>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Float(15.0)
     );
 
@@ -177,7 +177,7 @@ fn test_arithmetic_op() {
         rhs: rhs.clone(),
     });
     assert_eq!(
-        Sampler::<f64>::sample(&sampler, &node).unwrap(),
+        Sampler::<f64>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Float(5.0)
     );
 
@@ -188,7 +188,7 @@ fn test_arithmetic_op() {
         rhs: rhs.clone(),
     });
     assert_eq!(
-        Sampler::<f64>::sample(&sampler, &node).unwrap(),
+        Sampler::<f64>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Float(50.0)
     );
 
@@ -199,7 +199,7 @@ fn test_arithmetic_op() {
         rhs: rhs.clone(),
     });
     assert_eq!(
-        Sampler::<f64>::sample(&sampler, &node).unwrap(),
+        Sampler::<f64>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Float(2.0)
     );
 
@@ -211,7 +211,7 @@ fn test_arithmetic_op() {
         rhs: bool_node,
     });
     assert!(matches!(
-        Sampler::<f64>::sample(&sampler, &node),
+        Sampler::<f64>::sample(&sampler, &node, 0),
         Err(UncertainError::UnsupportedTypeError(_))
     ));
 }
@@ -228,7 +228,7 @@ fn test_comparison_op() {
         operand: operand.clone(),
     });
     assert_eq!(
-        Sampler::<bool>::sample(&sampler, &node).unwrap(),
+        Sampler::<bool>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Bool(true)
     );
 
@@ -239,7 +239,7 @@ fn test_comparison_op() {
         operand: operand.clone(),
     });
     assert_eq!(
-        Sampler::<bool>::sample(&sampler, &node).unwrap(),
+        Sampler::<bool>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Bool(true)
     );
 
@@ -250,7 +250,7 @@ fn test_comparison_op() {
         operand: operand.clone(),
     });
     assert_eq!(
-        Sampler::<bool>::sample(&sampler, &node).unwrap(),
+        Sampler::<bool>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Bool(true)
     );
 
@@ -262,7 +262,7 @@ fn test_comparison_op() {
         operand: bool_node,
     });
     assert!(matches!(
-        Sampler::<bool>::sample(&sampler, &node),
+        Sampler::<bool>::sample(&sampler, &node, 0),
         Err(UncertainError::UnsupportedTypeError(_))
     ));
 }
@@ -279,7 +279,7 @@ fn test_logical_op() {
         operands: vec![true_node.clone()],
     });
     assert_eq!(
-        Sampler::<bool>::sample(&sampler, &node).unwrap(),
+        Sampler::<bool>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Bool(false)
     );
 
@@ -289,7 +289,7 @@ fn test_logical_op() {
         operands: vec![true_node.clone(), false_node.clone()],
     });
     assert_eq!(
-        Sampler::<bool>::sample(&sampler, &node).unwrap(),
+        Sampler::<bool>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Bool(false)
     );
 
@@ -299,7 +299,7 @@ fn test_logical_op() {
         operands: vec![true_node.clone(), false_node.clone()],
     });
     assert_eq!(
-        Sampler::<bool>::sample(&sampler, &node).unwrap(),
+        Sampler::<bool>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Bool(true)
     );
 
@@ -309,7 +309,7 @@ fn test_logical_op() {
         operands: vec![true_node.clone(), false_node.clone()],
     });
     assert_eq!(
-        Sampler::<bool>::sample(&sampler, &node).unwrap(),
+        Sampler::<bool>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Bool(true)
     );
 
@@ -319,7 +319,7 @@ fn test_logical_op() {
         operands: vec![true_node.clone(), false_node.clone()],
     });
     assert_eq!(
-        Sampler::<bool>::sample(&sampler, &node).unwrap(),
+        Sampler::<bool>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Bool(false)
     );
 }
@@ -336,7 +336,7 @@ fn test_logical_op_errors() {
         operands: vec![true_node.clone(), true_node.clone()],
     });
     assert!(matches!(
-        Sampler::<bool>::sample(&sampler, &node),
+        Sampler::<bool>::sample(&sampler, &node, 0),
         Err(UncertainError::UnsupportedTypeError(_))
     ));
 
@@ -346,7 +346,7 @@ fn test_logical_op_errors() {
         operands: vec![true_node.clone()],
     });
     assert!(matches!(
-        Sampler::<bool>::sample(&sampler, &node),
+        Sampler::<bool>::sample(&sampler, &node, 0),
         Err(UncertainError::UnsupportedTypeError(_))
     ));
 
@@ -356,7 +356,7 @@ fn test_logical_op_errors() {
         operands: vec![true_node.clone(), float_node],
     });
     assert!(matches!(
-        Sampler::<bool>::sample(&sampler, &node),
+        Sampler::<bool>::sample(&sampler, &node, 0),
         Err(UncertainError::UnsupportedTypeError(_))
     ));
 }
@@ -373,7 +373,7 @@ fn test_function_op_f64() {
 
     let node = create_root(UncertainNodeContent::FunctionOpF64 { func, operand });
     assert_eq!(
-        Sampler::<f64>::sample(&sampler, &node).unwrap(),
+        Sampler::<f64>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Float(100.0)
     );
 
@@ -385,7 +385,7 @@ fn test_function_op_f64() {
         operand: bool_node,
     });
     assert!(matches!(
-        Sampler::<f64>::sample(&sampler, &node),
+        Sampler::<f64>::sample(&sampler, &node, 0),
         Err(UncertainError::UnsupportedTypeError(_))
     ));
 }
@@ -397,7 +397,7 @@ fn test_negation_op() {
 
     let node = create_root(UncertainNodeContent::NegationOp { operand });
     assert_eq!(
-        Sampler::<f64>::sample(&sampler, &node).unwrap(),
+        Sampler::<f64>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Float(-10.0)
     );
 
@@ -405,7 +405,7 @@ fn test_negation_op() {
     let bool_node = create_node(UncertainNodeContent::Value(SampledValue::Bool(true)));
     let node = create_root(UncertainNodeContent::NegationOp { operand: bool_node });
     assert!(matches!(
-        Sampler::<f64>::sample(&sampler, &node),
+        Sampler::<f64>::sample(&sampler, &node, 0),
         Err(UncertainError::UnsupportedTypeError(_))
     ));
 }
@@ -418,7 +418,7 @@ fn test_function_op_bool() {
 
     let node = create_root(UncertainNodeContent::FunctionOpBool { func, operand });
     assert_eq!(
-        Sampler::<bool>::sample(&sampler, &node).unwrap(),
+        Sampler::<bool>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Bool(true)
     );
 
@@ -430,7 +430,7 @@ fn test_function_op_bool() {
         operand: bool_node,
     });
     assert!(matches!(
-        Sampler::<bool>::sample(&sampler, &node),
+        Sampler::<bool>::sample(&sampler, &node, 0),
         Err(UncertainError::UnsupportedTypeError(_))
     ));
 }
@@ -450,7 +450,7 @@ fn test_conditional_op() {
         if_false: if_false.clone(),
     });
     assert_eq!(
-        Sampler::<f64>::sample(&sampler, &node).unwrap(),
+        Sampler::<f64>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Float(1.0)
     );
 
@@ -461,7 +461,7 @@ fn test_conditional_op() {
         if_false: if_false.clone(),
     });
     assert_eq!(
-        Sampler::<f64>::sample(&sampler, &node).unwrap(),
+        Sampler::<f64>::sample(&sampler, &node, 0).unwrap(),
         SampledValue::Float(0.0)
     );
 
@@ -473,7 +473,7 @@ fn test_conditional_op() {
         if_false,
     });
     assert!(matches!(
-        Sampler::<f64>::sample(&sampler, &node),
+        Sampler::<f64>::sample(&sampler, &node, 0),
         Err(UncertainError::UnsupportedTypeError(_))
     ));
 }
@@ -495,6 +495,6 @@ fn test_memoization() {
         rhs: dist_node,
     });
 
-    let result = Sampler::<f64>::sample(&sampler, &node).unwrap();
+    let result = Sampler::<f64>::sample(&sampler, &node, 0).unwrap();
     assert_eq!(result, SampledValue::Float(0.0));
 }

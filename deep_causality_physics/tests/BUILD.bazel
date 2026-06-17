@@ -367,6 +367,8 @@ rust_test_suite(
     name = "theories",
     srcs = glob([
         "theories/*/*_tests.rs",
+        "theories/*/*/*_tests.rs",
+        "theories/*/*/*/*_tests.rs",
     ]),
     crate_features = [
         "std",
@@ -380,17 +382,23 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
+        "//deep_causality_calculus",
+        "//deep_causality_core",
+        "//deep_causality_haft",
         "//deep_causality_metric",
         "//deep_causality_multivector",
+        "//deep_causality_par",
+        "//deep_causality_num",
         "//deep_causality_tensor",
         "//deep_causality_topology",
+        "//deep_causality_uncertain",
     ],
 )
 
 rust_test_suite(
-    name = "units",
+    name = "quantities",
     srcs = glob([
-        "units/*_tests.rs",
+        "quantities/*_tests.rs",
     ]),
     crate_features = [
         "std",
@@ -403,6 +411,15 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality_physics",
-        # Internal dependencies
+        # Internal dependencies — union of all domain, unit, and fluid-form quantity deps
+        "//deep_causality_calculus",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
+        "//deep_causality_par",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
     ],
 )

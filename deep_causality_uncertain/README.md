@@ -277,16 +277,19 @@ The Uncertain⟨T⟩ type is based by the foundational research presented in:
 
 *   Bornholt, J., Mytkowicz, T., & McKinley, K. S. (2014). [**Uncertain<T>: A First-Order Type for Uncertain Data**.](https://www.microsoft.com/en-us/research/publication/uncertaint-a-first-order-type-for-uncertain-data-2) *Proceedings of the 19th International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS '14)*. ACM, New York, NY, USA, 123-136. ([Download Paper](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/asplos077-bornholtA.pdf))
 
-## Contributing
+## Contribution
 
-Contributions are welcome! Please refer to the [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
+Contributions are welcomed especially related to documentation, example code, and fixes.
+If unsure where to start, just open an issue and ask.
 
-## License
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
+shall be licensed under the MIT licence, without any additional terms or conditions.
 
-This project is licensed under the MIT License. See the [LICENSE](../LICENSE) file for details.
+## Licence
 
-## 💻 Author
+This project is licensed under the [MIT license](LICENSE).
 
-* [Marvin Hansen](https://github.com/marvin-hansen).
-* Github GPG key ID: 369D5A0B210D39BC
-* GPG Fingerprint: 4B18 F7B2 04B9 7A72 967E 663E 369D 5A0B 210D 39BC
+## Security
+
+For details about security, please read
+the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).

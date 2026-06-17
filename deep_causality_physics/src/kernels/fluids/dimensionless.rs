@@ -16,8 +16,8 @@
 //! - `Le = α / D = Sc / Pr`
 
 use crate::PhysicsError;
-use crate::kernels::dynamics::quantities::{Length, Speed};
-use crate::kernels::fluids::quantities::{Density, KinematicViscosity, Viscosity};
+use crate::{Density, KinematicViscosity, Viscosity};
+use crate::{Length, Speed};
 use deep_causality_num::RealField;
 
 #[inline]

@@ -8,13 +8,14 @@ use crate::types::manifold::Manifold;
 use crate::types::manifold::differential::utils_differential;
 use core::fmt::Debug;
 use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
 
 impl<K, R> Manifold<K, R>
 where
     K: ChainComplex,
     K::Metric: HasHodgeStar<R, Complex = K>,
-    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug,
 {
     /// Computes the Hodge star operator on a k-form.
     ///
@@ -31,6 +32,16 @@ where
     /// the manifold via `Manifold::with_metric(...)` (or the cubical
     /// equivalent) before calling Hodge-dependent differential operators.
     pub fn hodge_star(&self, k: usize) -> CausalTensor<R> {
+        self.hodge_star_of(&self.get_k_form_data(k), k)
+    }
+
+    /// [`Self::hodge_star`] evaluated on a caller-supplied k-form instead
+    /// of the manifold's stored data — the allocation-free path for hot
+    /// loops (no temporary manifold, no data-slab copy).
+    ///
+    /// # Panics
+    /// As [`Self::hodge_star`].
+    pub fn hodge_star_of(&self, field: &[R], k: usize) -> CausalTensor<R> {
         let n = self.complex.max_dim();
 
         if k > n {
@@ -46,8 +57,7 @@ where
             .hodge_star_matrix(&self.complex, k)
             .expect("Hodge ⋆ availability is validated at Manifold::with_metric");
 
-        let k_form_data = self.get_k_form_data(k);
-        let result_data = utils_differential::apply_metric_operator(star.as_ref(), &k_form_data);
+        let result_data = utils_differential::apply_metric_operator(star.as_ref(), field);
         let result_len = result_data.len();
 
         CausalTensor::new(result_data, vec![result_len]).expect("Failed to create dual form")

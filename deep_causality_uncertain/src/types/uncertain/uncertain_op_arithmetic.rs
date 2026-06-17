@@ -3,11 +3,15 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{ArithmeticOperator, Uncertain, UncertainNodeContent};
+use crate::{ArithmeticOperator, ProbabilisticType, Uncertain, UncertainNodeContent};
+use deep_causality_num::RealField;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-// Operator overloading is only implemented for f64 for now.
-impl Add for Uncertain<f64> {
+// Arithmetic operator overloading for the real-scalar instantiations (`f64`, `Float106`).
+// The nodes are precision-agnostic — they only thread `ConstTree`s — and the sampler
+// dispatches per `SampledValue` variant. The `RealField` bound keeps the impls off
+// `Uncertain<bool>`, where arithmetic is meaningless.
+impl<T: ProbabilisticType + RealField> Add for Uncertain<T> {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -19,7 +23,7 @@ impl Add for Uncertain<f64> {
     }
 }
 
-impl Sub for Uncertain<f64> {
+impl<T: ProbabilisticType + RealField> Sub for Uncertain<T> {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -31,7 +35,7 @@ impl Sub for Uncertain<f64> {
     }
 }
 
-impl Mul for Uncertain<f64> {
+impl<T: ProbabilisticType + RealField> Mul for Uncertain<T> {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -43,7 +47,7 @@ impl Mul for Uncertain<f64> {
     }
 }
 
-impl Div for Uncertain<f64> {
+impl<T: ProbabilisticType + RealField> Div for Uncertain<T> {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
@@ -55,7 +59,7 @@ impl Div for Uncertain<f64> {
     }
 }
 
-impl Neg for Uncertain<f64> {
+impl<T: ProbabilisticType + RealField> Neg for Uncertain<T> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {

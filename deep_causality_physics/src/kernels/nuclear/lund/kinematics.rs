@@ -18,7 +18,7 @@
 //! `Distribution` for `f32` and `f64`), with sampled uniforms lifted into `R`
 //! via `R::from_f64` at the RNG boundary.
 
-use crate::kernels::nuclear::quantities::FourMomentum;
+use crate::FourMomentum;
 use deep_causality_num::{FromPrimitive, RealField};
 
 /// A string endpoint in lightcone coordinates.

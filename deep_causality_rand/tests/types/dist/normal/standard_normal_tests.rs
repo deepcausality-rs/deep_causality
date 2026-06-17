@@ -82,3 +82,78 @@ fn test_derived_traits() {
     assert_eq!(format!("{:?}", sn2), "StandardNormal");
     assert_eq!(format!("{:?}", sn3), "StandardNormal");
 }
+
+// `Float106` cannot ride the `as $float_type` macro above (no primitive cast),
+// so its standard-normal draw is exercised by hand here.
+mod f106_tests {
+    use super::*;
+    use deep_causality_num::{Float106, Real};
+    use deep_causality_rand::rng;
+
+    #[test]
+    fn test_mean_and_std_dev() {
+        let mut rng = rng();
+        let distr = StandardNormal;
+        const NUM_SAMPLES: usize = 100_000;
+        let samples: Vec<Float106> = (0..NUM_SAMPLES).map(|_| distr.sample(&mut rng)).collect();
+
+        let n = Float106::from_f64(NUM_SAMPLES as f64);
+        let zero = Float106::from_f64(0.0);
+        let mean = samples.iter().copied().fold(zero, |a, b| a + b) / n;
+        let variance = samples
+            .iter()
+            .copied()
+            .fold(zero, |a, x| a + (x - mean) * (x - mean))
+            / n;
+        let std_dev = variance.sqrt();
+
+        let tol = Float106::from_f64(0.02);
+        assert!(
+            mean.abs() < tol,
+            "Float106 normal mean {mean:?} not close to 0"
+        );
+        assert!(
+            (std_dev - Float106::from_f64(1.0)).abs() < tol,
+            "Float106 normal std dev {std_dev:?} not close to 1"
+        );
+    }
+
+    #[test]
+    fn test_double_double_entropy() {
+        // Honesty check: a genuine double-double draw carries sub-f64 precision, so
+        // some samples have a nonzero low limb. An f64 draw widened to double-double
+        // would always have lo == 0.
+        let mut rng = rng();
+        let distr = StandardNormal;
+        let any_low = (0..2000).any(|_| {
+            let s: Float106 = distr.sample(&mut rng);
+            s.lo() != 0.0
+        });
+        assert!(any_low, "Float106 normal draws never populate the low limb");
+    }
+}
+
+// The `RealRng` capability bound: precision-generic code samples through a single
+// bound, without naming `Float`.
+mod real_rng_tests {
+    use deep_causality_num::Float106;
+    use deep_causality_rand::{RealRng, rng};
+
+    fn exercise<R: RealRng>() {
+        let mut g = rng();
+        for _ in 0..1000 {
+            let u = R::sample_uniform_01(&mut g);
+            assert!(u >= R::zero() && u < R::one(), "uniform_01 out of [0, 1)");
+        }
+        for _ in 0..1000 {
+            let z = R::sample_standard_normal(&mut g);
+            assert!(z.is_finite(), "standard normal draw not finite");
+        }
+    }
+
+    #[test]
+    fn real_rng_drives_f64_and_f106() {
+        exercise::<f64>();
+        exercise::<Float106>();
+    }
+}

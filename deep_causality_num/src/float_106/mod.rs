@@ -36,6 +36,7 @@ mod attributes;
 mod constants;
 mod debug;
 mod display;
+mod erf;
 mod from;
 mod getters;
 mod ops_arithmetic;

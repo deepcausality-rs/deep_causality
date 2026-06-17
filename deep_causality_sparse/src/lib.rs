@@ -9,7 +9,9 @@ mod solver;
 mod types;
 
 // Solvers
-pub use crate::solver::cg::{CgFailure, cg_solve};
+pub use crate::solver::cg::{
+    CgFailure, cg_solve, cg_solve_preconditioned, cg_solve_preconditioned_from,
+};
 
 // Sparse type
 pub use crate::errors::SparseMatrixError;

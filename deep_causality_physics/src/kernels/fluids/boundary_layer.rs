@@ -16,8 +16,8 @@
 
 use crate::Density;
 use crate::PhysicsError;
-use crate::kernels::dynamics::quantities::{Length, Speed};
-use crate::kernels::fluids::quantities::{KinematicViscosity, Viscosity, WallShearStress};
+use crate::{KinematicViscosity, Viscosity, WallShearStress};
+use crate::{Length, Speed};
 use deep_causality_num::RealField;
 
 /// Newtonian wall shear stress magnitude `τ_w = μ · |∂u/∂y|_wall` (Pa).

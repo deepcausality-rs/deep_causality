@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::kernels::photonics::quantities::{AbcdMatrix, OpticalPower, RayAngle, RayHeight};
+use crate::{AbcdMatrix, OpticalPower, RayAngle, RayHeight};
 
 use crate::{IndexOfRefraction, PhysicsError};
 use deep_causality_num::RealField;

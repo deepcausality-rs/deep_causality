@@ -3,10 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::kernels::mhd::quantities::{AlfvenSpeed, Diffusivity};
+use crate::{AlfvenSpeed, Diffusivity};
 use crate::{PhysicsError, Speed};
 use core::fmt::Debug;
 use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::SimplicialManifold;
 
@@ -17,7 +18,7 @@ pub fn resistive_diffusion_kernel<R>(
     diffusivity: Diffusivity<R>,
 ) -> Result<CausalTensor<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug,
 {
     let eta = diffusivity.value();
 
@@ -43,7 +44,7 @@ pub fn magnetic_reconnection_rate_kernel<R>(
     lundquist: R,
 ) -> Result<Speed<R>, PhysicsError>
 where
-    R: RealField,
+    R: RealField + MaybeParallel,
 {
     let va = alfven_speed.value();
 

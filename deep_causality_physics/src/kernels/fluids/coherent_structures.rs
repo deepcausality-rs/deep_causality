@@ -25,8 +25,8 @@
 //! by `0.5·(tr(∇u))²`. The Δ-criterion below uses the CPC convention.
 
 use crate::PhysicsError;
+use crate::VelocityGradient;
 use crate::kernels::fluids::kinematics::velocity_gradient_invariants_kernel;
-use crate::kernels::fluids::quantities::VelocityGradient;
 use deep_causality_num::{FromPrimitive, RealField};
 
 /// Q-criterion: `Q = 0.5 · (‖Ω‖² − ‖S‖²) = −0.5 · tr(∇u · ∇u)`.

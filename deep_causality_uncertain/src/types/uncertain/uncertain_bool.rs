@@ -90,4 +90,26 @@ impl Uncertain<bool> {
             Ok(samples.iter().filter(|&&x| x).count() as f64 / samples.len() as f64)
         }
     }
+
+    /// Quasi-Monte-Carlo estimate of `P(true)` over `num_samples` Sobol draws (digitally shifted
+    /// by `seed`). Converges faster than [`Self::estimate_probability`] on low-dimension static
+    /// trees and reproduces under the same `seed`. Returns `UncertainError::SamplingError` if the
+    /// tree is not statically structured (see [`QmcSampler`](crate::QmcSampler)).
+    pub fn estimate_probability_qmc(
+        &self,
+        num_samples: usize,
+        seed: u64,
+    ) -> Result<f64, UncertainError> {
+        if num_samples == 0 {
+            return Ok(0.0);
+        }
+        let sampler = crate::QmcSampler::new(self, Some(seed))?;
+        let mut count = 0usize;
+        for i in 0..num_samples {
+            if self.sample_with_index_qmc(i as u64, &sampler)? {
+                count += 1;
+            }
+        }
+        Ok(count as f64 / num_samples as f64)
+    }
 }

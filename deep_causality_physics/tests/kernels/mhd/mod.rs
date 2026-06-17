@@ -9,8 +9,6 @@ mod ideal_tests;
 #[cfg(test)]
 mod plasma_tests;
 #[cfg(test)]
-mod quantities_tests;
-#[cfg(test)]
 mod resistive_tests;
 #[cfg(test)]
 mod wrappers_tests;

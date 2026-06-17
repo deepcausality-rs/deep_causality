@@ -182,3 +182,48 @@ macro_rules! uniform_float_tests {
 
 uniform_float_tests!(f32, f32_tests, 0.05);
 uniform_float_tests!(f64, f64_tests, 0.05);
+
+// `Float106` ranged uniform via the relocated `extensions::uniform` sampler; the
+// float macro above relies on `as f64` and f64 literals, so it is exercised by hand.
+mod f106_tests {
+    use super::*;
+    use deep_causality_num::{Float106, Real};
+    use deep_causality_rand::rng;
+
+    #[test]
+    fn test_new_and_range() {
+        let low = Float106::from_f64(10.0);
+        let high = Float106::from_f64(20.0);
+        let uniform = Uniform::<Float106>::new(low, high).unwrap();
+        let mut rng = rng();
+        for _ in 0..1000 {
+            let sample = uniform.sample(&mut rng);
+            assert!(
+                sample >= low && sample < high,
+                "sample {sample:?} out of [10, 20)"
+            );
+        }
+
+        assert_eq!(
+            Uniform::<Float106>::new(high, low).unwrap_err(),
+            UniformDistributionError::EmptyRange
+        );
+    }
+
+    #[test]
+    fn test_sample_distribution_mean() {
+        let low = Float106::from_f64(10.0);
+        let high = Float106::from_f64(20.0);
+        let uniform = Uniform::<Float106>::new(low, high).unwrap();
+        let mut rng = rng();
+        const NUM_SAMPLES: usize = 100_000;
+        let zero = Float106::from_f64(0.0);
+        let sum = (0..NUM_SAMPLES).fold(zero, |acc, _| acc + uniform.sample(&mut rng));
+        let mean = sum / Float106::from_f64(NUM_SAMPLES as f64);
+        let expected = Float106::from_f64(15.0);
+        assert!(
+            (mean - expected).abs() < Float106::from_f64(0.05),
+            "Float106 uniform mean {mean:?} not close to 15"
+        );
+    }
+}

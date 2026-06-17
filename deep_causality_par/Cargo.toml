@@ -1,0 +1,39 @@
+[package]
+name = "deep_causality_par"
+version = "0.1.0"
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+repository = "https://github.com/deepcausality/deep_causality.rs"
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
+description = "Shared parallelism primitives (MaybeParallel marker) for the deep_causality crates."
+documentation = "https://docs.rs/deep_causality"
+categories = ["concurrency", "science"]
+keywords = ["parallel", "rayon", "marker-trait"]
+exclude = [
+    "*.bazel",
+    "*/*.bazel",
+    "*.bazel.*",
+    "BUILD",
+    "BUILD.bazel",
+    "MODULE.bazel",
+    ".bazelignore",
+    ".bazelrc",
+    "tests/**/*",
+]
+
+[features]
+default = []
+# Turns `MaybeParallel` into a `Send + Sync` alias. Downstream crates
+# forward their own `parallel` feature here so the single trait
+# definition unifies across the workspace.
+parallel = []
+
+[dependencies]
+# Intentionally empty. Long term this crate is the place for a minimal
+# in-house replacement of the Rayon surface the workspace actually uses;
+# for now it carries only the marker trait.
+
+[lints]
+workspace = true

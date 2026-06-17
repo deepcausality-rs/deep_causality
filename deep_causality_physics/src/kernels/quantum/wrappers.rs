@@ -12,6 +12,7 @@ use deep_causality_multivector::HilbertState;
 use deep_causality_num::{FromPrimitive, RealField};
 
 use crate::Probability;
+use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::SimplicialManifold;
 
@@ -21,7 +22,7 @@ pub fn klein_gordon<R>(
     mass: R,
 ) -> PropagatingEffect<CausalTensor<R>>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug,
 {
     match mechanics::klein_gordon_kernel(psi_manifold, mass) {
         Ok(res) => PropagatingEffect::pure(res),
@@ -35,7 +36,7 @@ pub fn born_probability<R>(
     basis: &HilbertState<R>,
 ) -> PropagatingEffect<Probability<R>>
 where
-    R: RealField + FromPrimitive + core::iter::Sum + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + core::iter::Sum + Debug,
 {
     match mechanics::born_probability_kernel(state, basis) {
         Ok(val) => match Probability::<R>::new(val) {
@@ -49,7 +50,7 @@ where
 /// Causal wrapper for [`mechanics::expectation_value_kernel`].
 pub fn expectation_value<R>(state: &HilbertState<R>, operator: &Operator<R>) -> PropagatingEffect<R>
 where
-    R: RealField + core::iter::Sum + Default + Debug,
+    R: RealField + MaybeParallel + core::iter::Sum + Default + Debug,
 {
     match mechanics::expectation_value_kernel(state, operator) {
         Ok(val) => PropagatingEffect::pure(val),
@@ -60,7 +61,7 @@ where
 /// Causal wrapper for [`mechanics::apply_gate_kernel`].
 pub fn apply_gate<R>(state: &HilbertState<R>, gate: &Gate<R>) -> PropagatingEffect<HilbertState<R>>
 where
-    R: RealField + Debug,
+    R: RealField + MaybeParallel + Debug,
 {
     match mechanics::apply_gate_kernel(state, gate) {
         Ok(val) => PropagatingEffect::pure(val),
@@ -71,7 +72,7 @@ where
 /// Causal wrapper for [`mechanics::commutator_kernel`].
 pub fn commutator<R>(a: &Operator<R>, b: &Operator<R>) -> PropagatingEffect<HilbertState<R>>
 where
-    R: RealField + Debug,
+    R: RealField + MaybeParallel + Debug,
 {
     match mechanics::commutator_kernel(a, b) {
         Ok(res) => PropagatingEffect::pure(res),
@@ -82,7 +83,7 @@ where
 /// Causal wrapper for [`mechanics::haruna_s_gate_kernel`].
 pub fn haruna_s_gate<R>(field: &CausalMultiVector<R>) -> PropagatingEffect<Operator<R>>
 where
-    R: RealField + FromPrimitive + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
 {
     match mechanics::haruna_s_gate_kernel(field) {
         Ok(val) => PropagatingEffect::pure(val),
@@ -93,7 +94,7 @@ where
 /// Causal wrapper for [`mechanics::haruna_z_gate_kernel`].
 pub fn haruna_z_gate<R>(field: &CausalMultiVector<R>) -> PropagatingEffect<Operator<R>>
 where
-    R: RealField + FromPrimitive + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
 {
     match mechanics::haruna_z_gate_kernel(field) {
         Ok(val) => PropagatingEffect::pure(val),
@@ -104,7 +105,7 @@ where
 /// Causal wrapper for [`mechanics::haruna_x_gate_kernel`].
 pub fn haruna_x_gate<R>(field: &CausalMultiVector<R>) -> PropagatingEffect<Operator<R>>
 where
-    R: RealField + FromPrimitive + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
 {
     match mechanics::haruna_x_gate_kernel(field) {
         Ok(val) => PropagatingEffect::pure(val),
@@ -118,7 +119,7 @@ pub fn haruna_hadamard_gate<R>(
     field_b: &CausalMultiVector<R>,
 ) -> PropagatingEffect<Operator<R>>
 where
-    R: RealField + FromPrimitive + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
 {
     match mechanics::haruna_hadamard_gate_kernel(field_a, field_b) {
         Ok(val) => PropagatingEffect::pure(val),
@@ -132,7 +133,7 @@ pub fn haruna_cz_gate<R>(
     field_a2: &CausalMultiVector<R>,
 ) -> PropagatingEffect<Operator<R>>
 where
-    R: RealField + FromPrimitive + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
 {
     match mechanics::haruna_cz_gate_kernel(field_a1, field_a2) {
         Ok(val) => PropagatingEffect::pure(val),
@@ -143,7 +144,7 @@ where
 /// Causal wrapper for [`mechanics::haruna_t_gate_kernel`].
 pub fn haruna_t_gate<R>(field: &CausalMultiVector<R>) -> PropagatingEffect<Operator<R>>
 where
-    R: RealField + FromPrimitive + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
 {
     match mechanics::haruna_t_gate_kernel(field) {
         Ok(val) => PropagatingEffect::pure(val),
@@ -157,7 +158,7 @@ pub fn fidelity<R>(
     actual: &HilbertState<R>,
 ) -> PropagatingEffect<Probability<R>>
 where
-    R: RealField + FromPrimitive + core::iter::Sum + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + core::iter::Sum + Debug,
 {
     match mechanics::fidelity_kernel(ideal, actual) {
         Ok(val) => match Probability::<R>::new(val) {

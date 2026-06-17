@@ -48,9 +48,9 @@ fn test_arithmetic_operator_div() {
     assert_eq!(op.apply(6.0, -3.0), -2.0);
     assert_eq!(op.apply(-6.0, -3.0), 2.0);
     assert_eq!(op.apply(0.0, 5.0), 0.0);
-    assert!(op.apply(5.0, 0.0).is_infinite()); // Division by zero is positive infinity
-    assert!(op.apply(-5.0, 0.0).is_infinite()); // Division by zero is negative infinity
-    assert!(op.apply(0.0, 0.0).is_nan()); // 0/0 is NaN
+    assert!(op.apply::<f64>(5.0, 0.0).is_infinite()); // Division by zero is positive infinity
+    assert!(op.apply::<f64>(-5.0, 0.0).is_infinite()); // Division by zero is negative infinity
+    assert!(op.apply::<f64>(0.0, 0.0).is_nan()); // 0/0 is NaN
 }
 
 #[test]

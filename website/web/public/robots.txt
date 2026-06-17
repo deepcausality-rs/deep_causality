@@ -1,0 +1,62 @@
+# robots.txt for www.deepcausality.com
+#
+# Policy: allow classic search engines and AI answer engines (real-time,
+# user-initiated retrieval), but disallow bulk crawlers that harvest content
+# for AI model training.
+#
+# Content Signals (https://contentsignals.org, draft-romm-aipref-contentsignals):
+#   search=yes    indexing for search results is permitted
+#   ai-input=yes  use as real-time input to an AI answer (RAG/grounding) is permitted
+#   ai-train=no   use for training/fine-tuning AI models is NOT permitted
+
+# ----- Default: open to all crawlers; declares content-usage preferences -----
+User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+Allow: /
+
+# ----- AI training crawlers: disallowed (ai-train=no) -----
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+# ----- AI search / answer engines (search=yes, ai-input=yes): allowed -----
+User-agent: OAI-SearchBot
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+Allow: /
+
+User-agent: ChatGPT-User
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+Allow: /
+
+User-agent: PerplexityBot
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+Allow: /
+
+User-agent: Claude-User
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+Allow: /
+
+Sitemap: https://www.deepcausality.com/sitemap-index.xml

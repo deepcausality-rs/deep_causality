@@ -207,6 +207,23 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "types/cut_cell",
+    srcs = glob([
+        "types/cut_cell/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
     name = "types/lattice_complex",
     srcs = glob([
         "types/lattice_complex/*_tests.rs",
@@ -238,6 +255,7 @@ rust_test_suite(
         "//deep_causality_sparse",
         "//deep_causality_tensor",
         "//deep_causality_num",
+        "//deep_causality_par",
     ],
 )
 

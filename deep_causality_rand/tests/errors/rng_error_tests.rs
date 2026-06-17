@@ -21,6 +21,13 @@ fn test_invalid_range_display() {
 }
 
 #[test]
+fn test_unsupported_dimension_display() {
+    let error = RngError::UnsupportedDimension("dimension 0 outside 1..=16".to_string());
+    let expected = "Unsupported dimension: dimension 0 outside 1..=16";
+    assert_eq!(format!("{}", error), expected);
+}
+
+#[test]
 fn test_rng_error_debug() {
     let error_os = RngError::OsRandomGenerator("debug error".to_string());
     assert_eq!(

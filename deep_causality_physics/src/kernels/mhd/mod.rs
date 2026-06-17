@@ -6,13 +6,12 @@
 pub mod grmhd;
 pub mod ideal;
 pub mod plasma;
-pub mod quantities;
 pub mod resistive;
 pub mod wrappers;
 
+pub use crate::quantities::mhd::*;
 pub use grmhd::*;
 pub use ideal::*;
 pub use plasma::*;
-pub use quantities::*;
 pub use resistive::*;
 pub use wrappers::*;

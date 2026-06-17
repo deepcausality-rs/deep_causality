@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::kernels::quantum::quantities::PhaseAngle;
+use crate::PhaseAngle;
+use crate::SpacetimeVector;
 use crate::kernels::relativity::gravity;
-use crate::kernels::relativity::quantities::SpacetimeVector;
 use crate::kernels::relativity::spacetime;
 use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_uncertain::{SampledValue, Uncertain, with_global_cache};
+use deep_causality_uncertain::{SampledValue, SamplerKind, Uncertain, with_global_cache};
 use rusty_fork::rusty_fork_test;
 
 rusty_fork_test! {
@@ -39,7 +39,7 @@ fn test_f64_sample_with_index_uses_cache() {
     let val1 = u.sample_with_index(123).unwrap();
 
     // Verify that the value is now in the cache.
-    let key = (u.id(), 123);
+    let key = (u.id(), 123, SamplerKind::Mc);
     let cached_val = with_global_cache(|cache| cache.get(&key)).unwrap();
     match cached_val {
         SampledValue::Float(f) => assert_eq!(f, val1),
@@ -124,7 +124,7 @@ fn test_bool_sample_with_index_uses_cache() {
     let val1 = u.sample_with_index(456).unwrap();
 
     // Verify cache.
-    let key = (u.id(), 456);
+    let key = (u.id(), 456, SamplerKind::Mc);
     let cached_val = with_global_cache(|cache| cache.get(&key)).unwrap();
     match cached_val {
         SampledValue::Bool(b) => assert_eq!(b, val1),
