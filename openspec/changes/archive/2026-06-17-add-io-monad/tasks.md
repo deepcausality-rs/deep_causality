@@ -48,8 +48,9 @@
 - [~] Bit-identical `write_csv_to` migration of the 6-column stdout stream — **superseded**: the
       example writes the full probe series via `write_xy_csv` instead (the prior output was stdout
       diagnostics, not a file; reproducing it verbatim was not meaningful). Spec updated to match.
-- [ ] Port `dec_lid_cavity_re1000`'s raw centerline writes onto `write_csv` — **not done** (the user
-      scoped this task to `dec_cylinder_wake`). The `cavity_centerline_*.csv` writers remain raw.
+- [x] Port `dec_lid_cavity_re1000`'s raw centerline writes onto `write_csv`: render fields with the
+      same specifiers, build a deferred `write_csv` action, run once at the edge (failure → `fail`).
+      **Byte-identical formatting preserved; verified by running.**
 - [x] CSV-helper tests in `tests/types/flow/io_tests.rs` (golden `write_xy_csv`, report-backed
       `write_series_csv`, ragged columns). **4 tests, green.** No `tempfile` dep (temp_dir as above).
 
@@ -61,4 +62,4 @@
       all three crates (haft, core, cfd) plus the example. `make build` / `make test` (full repo) not
       yet run.
 - [x] No prelude; no macros in `src`; static dispatch only; no `dyn`.
-- [ ] Prepare a commit message and ask the user to commit (do not commit).
+- [x] Per-crate commit messages prepared; the user committed haft/core/cfd/example (do not commit).
