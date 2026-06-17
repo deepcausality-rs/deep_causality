@@ -1,0 +1,61 @@
+examples/causal_discovery_examples/ml/ml_rca/model.rs
+  s_c99b1c1e7a1f61::t_f4a464b5c1b288 206-210,264-267
+  s_c99b1c1e7a1f61::t_2f58aac6c9946f 1-204,211-263,268-292
+  s_c99b1c1e7a1f61::t_6724afad809b96 205
+openspec/specs/ml-causal-rca-example/spec.md
+  s_c99b1c1e7a1f61::t_557efae43d0872 1-125
+examples/causal_discovery_examples/README.md
+  s_c99b1c1e7a1f61::t_92c72d8311d088 20
+examples/causal_discovery_examples/ml/ml_rca/README.md
+  s_c99b1c1e7a1f61::t_af162d97f94424 4,7,9,11,13,27-31,37,39,43,47,54-55,59-62,68-71,87,100,106-109,112-113
+  s_c99b1c1e7a1f61::t_b17f549be59671 1-2,44,64-65,67,72,75-83,85-86,88-99,101-104
+  s_c99b1c1e7a1f61::t_e8553fcbb56eaa 3,5-6,8,10,12,14-26,32-36,38,40-42,45-46,48-53,56-58,63,66,73-74,84,105,110-111
+openspec/changes/archive/2026-06-17-add-ml-rca-example/design.md
+  s_c99b1c1e7a1f61::t_0b3fa0a2904fd2 1-123
+openspec/changes/archive/2026-06-17-add-ml-rca-example/.openspec.yaml
+  s_c99b1c1e7a1f61::t_0b3fa0a2904fd2 1-2
+examples/README.md
+  s_c99b1c1e7a1f61::t_94501890dd2ab4 75
+deep_causality/Cargo.toml
+  s_c99b1c1e7a1f61::t_f4a464b5c1b288 54
+examples/causal_discovery_examples/Cargo.toml
+  s_c99b1c1e7a1f61::t_0b3fa0a2904fd2 21-22
+  s_c99b1c1e7a1f61::t_dc73aacbc43af3 16
+  s_c99b1c1e7a1f61::t_d5ab415be1f165 50-53
+  s_c99b1c1e7a1f61::t_22a0385120f05d 15,23
+examples/causal_discovery_examples/ml/ml_rca/utils.rs
+  s_c99b1c1e7a1f61::t_e15c463fe40572 1-118,120-156,158-164
+  s_c99b1c1e7a1f61::t_d675d6cabaa355 157
+  s_c99b1c1e7a1f61::t_bb5fb2c8e7f68e 119
+Cargo.lock
+  s_c99b1c1e7a1f61::t_0b3fa0a2904fd2 15,38-43,93-98,111-136,143-166,173-181,204,206,208,322-336,371-379,392,412,475-518,728-774,781-792,809-814,827-838,851-856,881-999,1042,1046-1047,1057-1070,1085-1090,1121-1126,1148-1156,1214-1229,1274-1289,1301-1332,1343-1352,1372-1381,1388-1409,1496-1501,1530-1538,1558-1580,1620-1667,1678-1688,1699-1704,1780-1790,1899-1916,1924-1935,1947-1971,1985-2024,2044-2076,2119-2124,2139-2153,2160-2165,2497-2519,2540-2570
+openspec/changes/archive/2026-06-17-add-ml-rca-example/proposal.md
+  s_c99b1c1e7a1f61::t_0b3fa0a2904fd2 1-29
+openspec/changes/archive/2026-06-17-add-ml-rca-example/tasks.md
+  s_c99b1c1e7a1f61::t_0b3fa0a2904fd2 1-45
+openspec/changes/archive/2026-06-17-add-ml-rca-example/specs/ml-causal-rca-example/spec.md
+  s_c99b1c1e7a1f61::t_0b3fa0a2904fd2 1-121
+examples/causal_discovery_examples/ml/ml_rca/main.rs
+  s_c99b1c1e7a1f61::t_9ef3dfd2f12c09 75,77,84
+  s_c99b1c1e7a1f61::t_34e4010fef6dde 1-5,29,32,59,97-98
+  s_c99b1c1e7a1f61::t_cad594716ae4f5 6
+  s_c99b1c1e7a1f61::t_05d161965a2f67 7-17,19-24,28,40-41,43-49,51-52,54,57,62-71,73,78-83,85-86,89-92,95-96
+  s_c99b1c1e7a1f61::t_8c8d15de664ab0 18
+  s_c99b1c1e7a1f61::t_32aaa293d87ce9 25-27,30-31,33-39,42,50,53,55-56,58,60-61,72,74,76,87-88,93-94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "029ffaea7284b35c71608efc93402fb2de298d7b",
+  "prompts": {},
+  "sessions": {
+    "s_c99b1c1e7a1f61": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0d52018e-5ef1-479e-81a6-7b3313872f3b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
