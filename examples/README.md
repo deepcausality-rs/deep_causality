@@ -72,6 +72,7 @@ pipeline.
 | CDL (SURD)   | Load -> clean -> mRMR -> SURD -> analyze              | `cargo run -p causal_discovery_examples --example example_surd_discovery` |
 | CDL (BRCD)   | Root-cause ranking with a supplied CPDAG (real Sock Shop data) | `cargo run -p causal_discovery_examples --example example_brcd_discovery` |
 | CDL (BRCD/BOSS) | Root-cause ranking, CPDAG learned via BOSS         | `cargo run -p causal_discovery_examples --example example_brcd_boss_discovery` |
+| ML × Causal RCA | Candle anomaly detector gates the BRCD root-cause explainer via a `PropagatingProcess` (ML detects, causality explains) | `cargo run -p causal_discovery_examples --example example_ml_rca` |
 
 See [causal_discovery_examples/README.md](causal_discovery_examples/README.md) for detailed documentation.
 
