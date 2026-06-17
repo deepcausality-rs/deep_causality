@@ -1,0 +1,34 @@
+openspec/changes/add-io-monad/tasks.md
+  s_5c5a6bcbf82d1e::t_9e4a187378bcf1 5,7,9,11-15,19-38,42-54,58-63
+deep_causality_cfd/tests/types/flow/io_tests.rs
+  s_5c5a6bcbf82d1e::t_9f1eb182d21bad 18-23,31-34,41-43,65-68
+  s_5c5a6bcbf82d1e::t_24c4e03b881b9e 1-17,24-30,35-40,44-64,69-95
+deep_causality_cfd/src/lib.rs
+  s_5c5a6bcbf82d1e::t_01751fa277ed1d 55-61
+deep_causality_cfd/tests/types/flow/mod.rs
+  s_5c5a6bcbf82d1e::t_492e13cfc7383a 28-29
+openspec/changes/add-io-monad/specs/io-monad/spec.md
+  s_5c5a6bcbf82d1e::t_3e64de0d82f3de 143-152
+deep_causality_cfd/src/types/flow/io.rs
+  s_5c5a6bcbf82d1e::t_9f1eb182d21bad 26-29,40-44
+  s_5c5a6bcbf82d1e::t_71c0185672fa47 1-25,30-39,45-51
+deep_causality_cfd/src/types/flow/mod.rs
+  s_5c5a6bcbf82d1e::t_74047d746dfdeb 34-35
+  s_5c5a6bcbf82d1e::t_fac7c7546efb43 18-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "6e37a2f9bdd85ed325753e18645c944343ca44f6",
+  "prompts": {},
+  "sessions": {
+    "s_5c5a6bcbf82d1e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "480bfd3b-3e94-457e-bd6e-4612cfa4dfd8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
