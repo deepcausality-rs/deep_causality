@@ -1,0 +1,20 @@
+examples/avionics_examples/dec_lid_cavity_re1000/main.rs
+  s_5c5a6bcbf82d1e::t_43eea1d58f8107 365-369,373-378,382-387,389-391
+  s_5c5a6bcbf82d1e::t_64d6e51e77fe77 49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "4d24a99b76c2a876e3e2bdcf60d6ad51243b1e8c",
+  "prompts": {},
+  "sessions": {
+    "s_5c5a6bcbf82d1e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "480bfd3b-3e94-457e-bd6e-4612cfa4dfd8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
