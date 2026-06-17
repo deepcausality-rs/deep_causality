@@ -37,6 +37,12 @@ pub use crate::types::causal_flow::CausalFlow;
 pub use crate::types::effect_log::log_effect::EffectLog;
 // The choice sum used by `CausalFlow::either`, re-exported from `deep_causality_haft`.
 pub use crate::types::effect_value::EffectValue;
+// IO file actions (std-only): concrete `IoAction`s reading/writing files, fixing
+// `Error = CausalityError`. The `IoAction` trait itself lives in `deep_causality_haft`.
+#[cfg(feature = "std")]
+pub use crate::types::io::{
+    ReadCsv, ReadText, WriteCsv, WriteText, read_csv, read_text, write_csv, write_text,
+};
 pub use crate::types::propagating_effect::PropagatingEffect;
 pub use crate::types::propagating_effect::hkt::PropagatingEffectWitness;
 pub use crate::types::propagating_process::PropagatingProcess;

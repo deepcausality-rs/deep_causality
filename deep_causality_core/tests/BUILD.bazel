@@ -154,6 +154,25 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "types_io",
+    srcs = glob([
+        "types/io/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
     name = "types_causal_monad",
     srcs = glob([
         "types/causal_monad/*_tests.rs",

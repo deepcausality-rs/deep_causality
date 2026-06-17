@@ -47,6 +47,11 @@ pub enum CausalityErrorEnum {
     /// The execution exceeded the maximum allowed steps (infinite loop protection).
     MaxStepsExceeded,
 
+    // IO Errors
+    /// A file input/output action failed (e.g. an unreadable or unwritable path). Carries the
+    /// underlying error message. Produced by the `Io` file actions in `crate::types::io`.
+    IoError(String),
+
     // Migration / Legacy Support Errors
     /// A user-defined custom error message.
     Custom(String),
