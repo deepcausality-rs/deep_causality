@@ -9,6 +9,7 @@ use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::SimplicialManifold;
 
@@ -18,7 +19,7 @@ pub fn lorentz_force<R>(
     b: &CausalMultiVector<R>,
 ) -> PropagatingEffect<PhysicalField<R>>
 where
-    R: RealField + Debug,
+    R: RealField + MaybeParallel + Debug,
 {
     match forces::lorentz_force_kernel(j, b) {
         Ok(f) => PropagatingEffect::pure(PhysicalField(f)),
@@ -31,7 +32,7 @@ pub fn maxwell_gradient<R>(
     potential_manifold: &SimplicialManifold<R, R>,
 ) -> PropagatingEffect<CausalTensor<R>>
 where
-    R: RealField + Default + PartialEq + Debug,
+    R: RealField + MaybeParallel + Default + PartialEq + Debug,
 {
     match fields::maxwell_gradient_kernel(potential_manifold) {
         Ok(f) => PropagatingEffect::pure(f),
@@ -44,7 +45,7 @@ pub fn lorenz_gauge<R>(
     potential_manifold: &SimplicialManifold<R, R>,
 ) -> PropagatingEffect<CausalTensor<R>>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug,
 {
     match fields::lorenz_gauge_kernel(potential_manifold) {
         Ok(val) => PropagatingEffect::pure(val),
@@ -58,7 +59,7 @@ pub fn poynting_vector<R>(
     b: &CausalMultiVector<R>,
 ) -> PropagatingEffect<PhysicalField<R>>
 where
-    R: RealField + Debug,
+    R: RealField + MaybeParallel + Debug,
 {
     match fields::poynting_vector_kernel(e, b) {
         Ok(val) => PropagatingEffect::pure(PhysicalField(val)),
@@ -72,7 +73,7 @@ pub fn magnetic_helicity_density<R>(
     field: &CausalMultiVector<R>,
 ) -> PropagatingEffect<MagneticFlux<R>>
 where
-    R: RealField + Debug,
+    R: RealField + MaybeParallel + Debug,
 {
     match fields::magnetic_helicity_density_kernel(potential, field) {
         Ok(val) => match MagneticFlux::<R>::new(val) {
@@ -90,7 +91,7 @@ pub fn proca_equation<R>(
     mass: R,
 ) -> PropagatingEffect<CausalTensor<R>>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug,
 {
     match fields::proca_equation_kernel(field_manifold, potential_manifold, mass) {
         Ok(j) => PropagatingEffect::pure(j),

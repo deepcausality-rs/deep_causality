@@ -121,6 +121,106 @@ where
     })
 }
 
+/// Jacobi-preconditioned CG with a caller-supplied initial guess `x0` (warm start).
+///
+/// Identical to [`cg_solve_preconditioned`] except the iteration starts from `x0` instead of the
+/// zero vector, so a good guess (the previous step's solution for a slowly varying right-hand side)
+/// converges in far fewer iterations. The result is the same solution to within `tolerance`,
+/// independent of `x0`. `x0` must have the same length as `b`; a wrong length is reported as a
+/// failure on the first operator application.
+///
+/// # Errors
+/// `Err(CgFailure)` if the iteration budget is exhausted or a numerical breakdown
+/// (`pᵀ A p = 0` with a non-zero search direction) occurs.
+pub fn cg_solve_preconditioned_from<R, Apply>(
+    apply: Apply,
+    diag_a: &[R],
+    b: &[R],
+    x0: &[R],
+    tolerance: R,
+    max_iterations: usize,
+) -> Result<Vec<R>, CgFailure<R>>
+where
+    R: RealField + FromPrimitive,
+    Apply: Fn(&[R]) -> Vec<R>,
+{
+    let n = b.len();
+    if x0.len() != n {
+        return Err(CgFailure {
+            iterations: 0,
+            residual: dot(b, b).sqrt(),
+        });
+    }
+    let mut x = x0.to_vec();
+
+    let precond = |r: &[R]| -> Vec<R> {
+        r.iter()
+            .zip(diag_a.iter())
+            .map(|(&ri, &di)| if di > R::zero() { ri / di } else { ri })
+            .collect()
+    };
+
+    // r₀ = b − A·x₀ (the one extra operator application warm start costs).
+    let ax0 = apply(&x);
+    if ax0.len() != n {
+        return Err(CgFailure {
+            iterations: 0,
+            residual: dot(b, b).sqrt(),
+        });
+    }
+    let mut r: Vec<R> = b.iter().zip(ax0.iter()).map(|(&bi, &ai)| bi - ai).collect();
+    let mut z = precond(&r);
+    let mut p = z.clone();
+    let mut rz_old = dot(&r, &z);
+
+    let b_norm = dot(b, b).sqrt();
+    let abs_tol = if b_norm == R::zero() {
+        tolerance
+    } else {
+        tolerance * b_norm
+    };
+    if dot(&r, &r).sqrt() <= abs_tol {
+        return Ok(x);
+    }
+
+    for iter in 0..max_iterations {
+        let ap = apply(&p);
+        if ap.len() != n {
+            return Err(CgFailure {
+                iterations: iter,
+                residual: dot(&r, &r).sqrt(),
+            });
+        }
+        let pap = dot(&p, &ap);
+        if pap == R::zero() {
+            return Err(CgFailure {
+                iterations: iter,
+                residual: dot(&r, &r).sqrt(),
+            });
+        }
+        let alpha = rz_old / pap;
+        for i in 0..n {
+            x[i] += alpha * p[i];
+            r[i] -= alpha * ap[i];
+        }
+        if dot(&r, &r).sqrt() <= abs_tol {
+            return Ok(x);
+        }
+        z = precond(&r);
+        let rz_new = dot(&r, &z);
+        let beta = rz_new / rz_old;
+        for i in 0..n {
+            p[i] = z[i] + beta * p[i];
+        }
+        rz_old = rz_new;
+    }
+
+    Err(CgFailure {
+        iterations: max_iterations,
+        residual: dot(&r, &r).sqrt(),
+    })
+}
+
 #[inline]
 fn dot<R>(a: &[R], b: &[R]) -> R
 where
@@ -130,4 +230,98 @@ where
         .zip(b.iter())
         .map(|(&x, &y)| x * y)
         .fold(R::zero(), |acc, t| acc + t)
+}
+
+/// Jacobi-preconditioned conjugate gradient: solves `A x = b` for symmetric
+/// positive (semi)definite `A` with the diagonal preconditioner
+/// `M⁻¹ = diag(1/diag_a)`. Entries of `diag_a` at or below zero are treated
+/// as `1` (no preconditioning on that row), which keeps the preconditioner
+/// SPD for clipped or partially-degenerate diagonals.
+///
+/// Convergence is reported against the same unpreconditioned relative
+/// residual as [`cg_solve`], so the two are directly comparable; the
+/// preconditioner only changes the search directions.
+///
+/// # Arguments
+/// * `apply` — closure computing `A · v` for arbitrary `v`.
+/// * `diag_a` — the diagonal of `A` (the Jacobi preconditioner).
+/// * `b` — right-hand side vector.
+/// * `tolerance` — relative residual threshold for convergence.
+/// * `max_iterations` — iteration budget.
+///
+/// # Errors
+/// `Err(CgFailure)` if the iteration budget is exhausted or a numerical
+/// breakdown (`pᵀ A p = 0` with a non-zero search direction) occurs.
+pub fn cg_solve_preconditioned<R, Apply>(
+    apply: Apply,
+    diag_a: &[R],
+    b: &[R],
+    tolerance: R,
+    max_iterations: usize,
+) -> Result<Vec<R>, CgFailure<R>>
+where
+    R: RealField + FromPrimitive,
+    Apply: Fn(&[R]) -> Vec<R>,
+{
+    let n = b.len();
+    let mut x = vec![R::zero(); n];
+
+    let precond = |r: &[R]| -> Vec<R> {
+        r.iter()
+            .zip(diag_a.iter())
+            .map(|(&ri, &di)| if di > R::zero() { ri / di } else { ri })
+            .collect()
+    };
+
+    let mut r = b.to_vec();
+    let mut z = precond(&r);
+    let mut p = z.clone();
+    let mut rz_old = dot(&r, &z);
+
+    let b_norm = dot(b, b).sqrt();
+    let abs_tol = if b_norm == R::zero() {
+        tolerance
+    } else {
+        tolerance * b_norm
+    };
+    if dot(&r, &r).sqrt() <= abs_tol {
+        return Ok(x);
+    }
+
+    for iter in 0..max_iterations {
+        let ap = apply(&p);
+        if ap.len() != n {
+            return Err(CgFailure {
+                iterations: iter,
+                residual: dot(&r, &r).sqrt(),
+            });
+        }
+        let pap = dot(&p, &ap);
+        if pap == R::zero() {
+            return Err(CgFailure {
+                iterations: iter,
+                residual: dot(&r, &r).sqrt(),
+            });
+        }
+        let alpha = rz_old / pap;
+        for i in 0..n {
+            x[i] += alpha * p[i];
+            r[i] -= alpha * ap[i];
+        }
+        if dot(&r, &r).sqrt() <= abs_tol {
+            return Ok(x);
+        }
+        z = precond(&r);
+        let rz_new = dot(&r, &z);
+        let beta = rz_new / rz_old;
+        for i in 0..n {
+            p[i] = z[i] + beta * p[i];
+        }
+        rz_old = rz_new;
+    }
+
+    Err(CgFailure {
+        iterations: max_iterations,
+        residual: dot(&r, &r).sqrt(),
+    })
 }

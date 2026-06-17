@@ -64,6 +64,8 @@ use super::{CubicalReggeGeometry, EdgeLengths, SignatureMarker};
 use crate::TopologyError;
 use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
+use crate::types::cut_cell::CutCellRegistry;
+use crate::types::lattice_complex::LatticeCell;
 use crate::types::lattice_complex::LatticeComplex;
 use deep_causality_metric::Metric;
 use deep_causality_num::{FromPrimitive, RealField};
@@ -80,35 +82,28 @@ fn timelike_axes_in_orientation<const D: usize>(orientation: u32, metric: &Metri
         .count()
 }
 
-impl<const D: usize, R, S> HasHodgeStar<R> for CubicalReggeGeometry<D, R, S>
+impl<const D: usize, R, S> CubicalReggeGeometry<D, R, S>
 where
     R: RealField + FromPrimitive,
     S: SignatureMarker,
 {
-    type Complex = LatticeComplex<D, R>;
-
-    fn hodge_star_matrix<'a>(
-        &'a self,
-        complex: &'a Self::Complex,
+    /// Build the diagonal Hodge ⋆ at grade `k`, with the per-cell dual clip supplied by
+    /// `clip`. The standard star ([`HasHodgeStar::hodge_star_matrix`]) passes the integer
+    /// axis-aligned wall clip ([`axis_boundary_clip`]); the cut-cell star
+    /// ([`Self::cut_hodge_star_matrix`]) passes the continuous wetted fraction. Both share
+    /// this one body so the cut star cannot drift from the standard star.
+    fn build_star_diagonal(
+        &self,
+        complex: &LatticeComplex<D, R>,
         k: usize,
-    ) -> Result<Cow<'a, CsrMatrix<R>>, TopologyError> {
-        // Out-of-range grade: return an empty 0x0 matrix. Mirrors the simplicial
-        // `Manifold::hodge_star` behaviour for k > max_dim.
-        if k > D {
-            return Ok(Cow::Owned(CsrMatrix::new()));
-        }
-
+        clip: &dyn Fn(&LatticeCell<D>) -> R,
+    ) -> CsrMatrix<R> {
         let n = complex.num_cells(k);
         let mut triplets: Vec<(usize, usize, R)> = Vec::with_capacity(n);
 
-        // Per-cell sign factor `(−1)^t` where t = timelike axes in the
-        // primal cell's active dimensions. Sign convention is sourced from
-        // the `deep_causality_metric::Metric` value built by
-        // `self.signature()`: Euclidean ⇒ always `+1` (no metric construction
-        // needed in the fast path); Lorentzian / Custom ⇒ per-axis lookup
-        // via `Metric::sign_of_sq(axis)`. The `SignatureMarker::sign_factor`
-        // static dispatch lets the optimizer elide the metric work entirely
-        // on `S = Euclidean` since the result is unconditionally `+R::one()`.
+        // Per-cell sign factor `(−1)^t` where t = timelike axes in the primal cell's active
+        // dimensions; Euclidean ⇒ always `+1` (the `SignatureMarker::sign_factor` static
+        // dispatch lets the optimizer elide the metric work entirely on `S = Euclidean`).
         let metric = if S::is_lorentzian() {
             Some(self.signature())
         } else {
@@ -123,16 +118,20 @@ where
 
         match &self.edge_lengths {
             EdgeLengths::UnitEdge => {
-                // Identity matrix on Euclidean; Lorentzian applies sign per cell.
+                // Identity on the interior; boundary duals clip.
                 for (i, cell) in complex.cells(k).enumerate() {
-                    triplets.push((i, i, cell_sign(cell.orientation())));
+                    triplets.push((i, i, cell_sign(cell.orientation()) * clip(&cell)));
                 }
             }
             EdgeLengths::Uniform { length } => {
                 // Diagonal magnitude = length^(D - 2k). Per-cell sign from metric.
                 let magnitude = pow_signed(*length, (D as isize) - 2 * (k as isize));
                 for (i, cell) in complex.cells(k).enumerate() {
-                    triplets.push((i, i, cell_sign(cell.orientation()) * magnitude));
+                    triplets.push((
+                        i,
+                        i,
+                        cell_sign(cell.orientation()) * magnitude * clip(&cell),
+                    ));
                 }
             }
             EdgeLengths::PerAxis { lengths } => {
@@ -153,7 +152,7 @@ where
                             dual *= *length;
                         }
                     }
-                    triplets.push((i, i, cell_sign(orientation) * (dual / primal)));
+                    triplets.push((i, i, cell_sign(orientation) * (dual / primal) * clip(&cell)));
                 }
             }
             EdgeLengths::PerEdge { lengths } => {
@@ -173,10 +172,8 @@ where
                         }
                     }
 
-                    // Dual volume = average over 2^(D-k) corner masks of the
-                    // product of complement-axis edge lengths at the shifted
-                    // positions. Skip masks that reference out-of-bounds edges
-                    // on open lattices; periodic axes always validate.
+                    // Dual volume = average over 2^(D-k) corner masks of the product of
+                    // complement-axis edge lengths at the shifted positions.
                     let complement_axes: Vec<usize> = (0..D)
                         .filter(|&a| (complement & (1u32 << a)) != 0)
                         .collect();
@@ -198,24 +195,121 @@ where
                         }
                     }
 
-                    // valid_count == 0 only happens for pathological lattices
-                    // (e.g. zero-extent axis with no edges); leave the entry
-                    // unset rather than emit a divide-by-zero.
                     if valid_count == 0 {
                         continue;
                     }
                     let divisor = <R as FromPrimitive>::from_usize(valid_count)
                         .expect("usize fits in every RealField");
                     let dual = dual_sum / divisor;
-                    triplets.push((i, i, cell_sign(orientation) * (dual / primal)));
+                    triplets.push((i, i, cell_sign(orientation) * (dual / primal) * clip(&cell)));
                 }
             }
         }
 
-        let matrix = CsrMatrix::from_triplets(n, n, &triplets)
-            .expect("Diagonal triplets always satisfy CSR validity for square shape.");
-        Ok(Cow::Owned(matrix))
+        CsrMatrix::from_triplets(n, n, &triplets)
+            .expect("Diagonal triplets always satisfy CSR validity for square shape.")
     }
+
+    /// Cut-cell-aware Hodge ⋆ at grade `k`: identical to
+    /// [`HasHodgeStar::hodge_star_matrix`] except the per-cell dual clip is the **continuous
+    /// wetted fraction** ([`CutCellRegistry::dual_fluid_fraction`]) instead of the integer
+    /// `2^{-b}` wall clip ([`axis_boundary_clip`]).
+    ///
+    /// With an **empty** registry on the same lattice this returns the standard star to
+    /// rounding — the cut clip reduces to the boundary clip — which is the Stage-3
+    /// equivalence the cut substrate must satisfy. Built uncached: the cut star is
+    /// registry-specific and is not memoised in the geometry's per-lattice star cache.
+    pub fn cut_hodge_star_matrix(
+        &self,
+        complex: &LatticeComplex<D, R>,
+        registry: &CutCellRegistry<D, R>,
+        k: usize,
+    ) -> Result<CsrMatrix<R>, TopologyError> {
+        if k > D {
+            return Ok(CsrMatrix::new());
+        }
+        Ok(self.build_star_diagonal(complex, k, &|cell| {
+            registry.dual_fluid_fraction(complex, cell)
+        }))
+    }
+}
+
+impl<const D: usize, R, S> HasHodgeStar<R> for CubicalReggeGeometry<D, R, S>
+where
+    R: RealField + FromPrimitive,
+    S: SignatureMarker,
+{
+    type Complex = LatticeComplex<D, R>;
+
+    fn hodge_star_matrix<'a>(
+        &'a self,
+        complex: &'a Self::Complex,
+        k: usize,
+    ) -> Result<Cow<'a, CsrMatrix<R>>, TopologyError> {
+        // Out-of-range grade: return an empty 0x0 matrix. Mirrors the simplicial
+        // `Manifold::hodge_star` behaviour for k > max_dim.
+        if k > D {
+            return Ok(Cow::Owned(CsrMatrix::new()));
+        }
+
+        // The diagonal ⋆ is immutable for this (geometry, lattice) pair, so build it at most
+        // once per grade and serve it borrowed from the memo; on a fingerprint mismatch (a
+        // metric reused across differently-shaped complexes) fall through to an uncached
+        // owned build. The per-cell clip is the integer axis-aligned wall clip unless a
+        // cut-cell registry is attached, in which case it is that registry's continuous wetted
+        // fraction — so an immersed body flows through every star consumer (stencils, Leray,
+        // codifferential) transparently. An empty registry reduces to the wall clip exactly.
+        let build = || match &self.cut_registry {
+            Some(registry) => self.build_star_diagonal(complex, k, &|cell| {
+                registry.dual_fluid_fraction(complex, cell)
+            }),
+            None => self.build_star_diagonal(complex, k, &|cell| axis_boundary_clip(complex, cell)),
+        };
+
+        let shape = *complex.shape();
+        let periodic = *complex.periodic();
+        if let Some(slots) = self.star_cache.slots(&shape, &periodic) {
+            return Ok(Cow::Borrowed(slots[k].get_or_init(build)));
+        }
+        Ok(Cow::Owned(build()))
+    }
+
+    fn uniform_axis_spacings(&self) -> Option<Vec<R>> {
+        // The spectral Poisson eigenvalues assume a positive-definite
+        // diagonal Hodge ⋆; Lorentzian sign factors break that, so only
+        // the Euclidean signature qualifies. Per-edge geometries have no
+        // per-axis spacing and stay on CG.
+        if S::is_lorentzian() {
+            return None;
+        }
+        self.axis_lengths().map(|lengths| lengths.to_vec())
+    }
+}
+
+/// The Stage-3 axis-aligned wall clip `2^{-b}`: a primal cell's dual halves at each open-axis
+/// boundary incidence (`b` = number of such incidences) — wall faces halve, wall edges
+/// quarter, 3D wall corners eighth. Periodic axes never clip. This is the integer special
+/// case the cut-cell [`CutCellRegistry::dual_fluid_fraction`] generalises to a continuous
+/// wetted fraction.
+pub(crate) fn axis_boundary_clip<const D: usize, R: RealField>(
+    complex: &LatticeComplex<D, R>,
+    cell: &LatticeCell<D>,
+) -> R {
+    let lattice_shape = *complex.shape();
+    let lattice_periodic = *complex.periodic();
+    let two = R::one() + R::one();
+    let mut factor = R::one();
+    for a in 0..D {
+        let active = cell.orientation() & (1u32 << a) != 0;
+        if active || lattice_periodic[a] {
+            continue;
+        }
+        let pos = cell.position()[a];
+        if pos == 0 || pos + 1 == lattice_shape[a] {
+            factor /= two;
+        }
+    }
+    factor
 }
 
 /// For a primal k-cell at `position` with complement axes `complement_axes`, compute

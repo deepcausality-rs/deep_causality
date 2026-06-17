@@ -11,6 +11,7 @@ use deep_causality_ast::ConstTree;
 use crate::{
     ArithmeticOperator, ComparisonOperator, DistributionEnum, LogicalOperator, SampledValue,
 };
+use deep_causality_num::Float106;
 
 pub trait SampledFmapFn: Send + Sync + 'static {
     fn call(&self, input: SampledValue) -> SampledValue;
@@ -43,6 +44,7 @@ pub enum UncertainNodeContent {
     // Leaf nodes
     Value(SampledValue),
     DistributionF64(DistributionEnum<f64>),
+    DistributionF106(DistributionEnum<Float106>),
     DistributionBool(DistributionEnum<bool>),
 
     // HKT Operations
@@ -100,6 +102,7 @@ impl Debug for UncertainNodeContent {
         match self {
             UncertainNodeContent::Value(v) => write!(f, "Value({:?})", v),
             UncertainNodeContent::DistributionF64(d) => write!(f, "DistributionF64({:?})", d),
+            UncertainNodeContent::DistributionF106(d) => write!(f, "DistributionF106({:?})", d),
             UncertainNodeContent::DistributionBool(d) => write!(f, "DistributionBool({:?})", d),
             UncertainNodeContent::PureOp { value } => write!(f, "PureOp {{ value: {:?} }}", value),
             UncertainNodeContent::FmapOp { func: _, operand } => {
@@ -159,6 +162,10 @@ impl PartialEq for UncertainNodeContent {
             (
                 UncertainNodeContent::DistributionF64(d1),
                 UncertainNodeContent::DistributionF64(d2),
+            ) => d1 == d2,
+            (
+                UncertainNodeContent::DistributionF106(d1),
+                UncertainNodeContent::DistributionF106(d2),
             ) => d1 == d2,
             (
                 UncertainNodeContent::DistributionBool(d1),

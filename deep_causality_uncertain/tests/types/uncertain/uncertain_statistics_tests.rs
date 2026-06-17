@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::{SampledValue, Uncertain, with_global_cache};
+use deep_causality_uncertain::{SampledValue, SamplerKind, Uncertain, with_global_cache};
 
 use rusty_fork::rusty_fork_test;
 
@@ -35,7 +35,7 @@ fn test_expected_value_multiple_samples_sequence() {
     with_global_cache(|cache| {
         cache.clear(); // Ensure a clean slate for this test
         for i in 0..5 { // Samples: 0, 1, 2, 3, 4
-            cache.insert((id, i as u64), SampledValue::Float(i as f64));
+            cache.insert((id, i as u64, SamplerKind::Mc), SampledValue::Float(i as f64));
         }
     });
 
@@ -70,7 +70,7 @@ fn test_standard_deviation_multiple_samples_sequence() {
     with_global_cache(|cache| {
         cache.clear(); // Ensure a clean slate for this test
         for i in 0..5 { // Samples: 0, 1, 2, 3, 4
-            cache.insert((id, i as u64), SampledValue::Float(i as f64));
+            cache.insert((id, i as u64, SamplerKind::Mc), SampledValue::Float(i as f64));
         }
     });
 

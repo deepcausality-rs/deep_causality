@@ -42,7 +42,7 @@ where C is the total capacity defined as NxM with N as the window size and M as 
 This crate has two implementations, one over vector and the second over a const generic array. The const generic
 implementation is significantly faster than the vector-based version.
 
-## 🤔 Why?
+## Why?
 
 1) Zero cost abstraction.
 2) Zero unsafe.
@@ -88,7 +88,7 @@ of the [ArrayGrid document](README_ArrayGrid.md).
 More details on performance can be found in the [Performance](README_SlidingWindow.md#performance) section
 of the [SlidingWindow document](README_SlidingWindow.md).
 
-## 🚀 Install
+## Install
 
 Just run:
 
@@ -96,14 +96,14 @@ Just run:
 cargo add deep_causality_data_structures
 ```
 
-## 📚 Docs
+## Docs
 
 * [API Docs](https://docs.rs/deep_causality_data_structures/latest/deep_causality_data_structures)
 * [ArrayGrid Summary](README_ArrayGrid.md)
 * [CausalTensor Summary](../deep_causality_tensor/README.md)
 * [SlidingWindow Summary](README_SlidingWindow)
 
-## ⭐ Usage
+## Usage
 
 **ArrayGrid:**
 * [Design & Details](README_ArrayGrid)
@@ -117,7 +117,7 @@ cargo add deep_causality_data_structures
 * [Examples](examples/window_type)
 * [Test](tests/window_type)
 
-## 🙏 Prior Art
+## Prior Art
 
 The project took inspiration from:
 
@@ -126,7 +126,7 @@ The project took inspiration from:
 * [sliding_window_alt](https://crates.io/crates/sliding_window_alt)
 * [sliding_windows](https://crates.io/crates/sliding_windows)
 
-## 👨‍💻👩‍💻 Contribution
+## Contribution
 
 Contributions are welcomed especially related to documentation, example code, and fixes.
 If unsure where to start, just open an issue and ask.
@@ -134,17 +134,12 @@ If unsure where to start, just open an issue and ask.
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
 shall be licensed under the MIT licence, without any additional terms or conditions.
 
-## 📜 Licence
+## Licence
 
 This project is licensed under the [MIT license](LICENSE).
 
-## 👮️ Security
+## Security
 
 For details about security, please read
 the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).
 
-## 💻 Author
-
-* [Marvin Hansen](https://github.com/marvin-hansen).
-* Github GPG key ID: 369D5A0B210D39BC
-* GPG Fingerprint: 4B18 F7B2 04B9 7A72 967E 663E 369D 5A0B 210D 39BC

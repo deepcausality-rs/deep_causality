@@ -12,12 +12,14 @@ use deep_causality_ast::ConstTree;
 
 mod uncertain_bool;
 mod uncertain_bool_default;
+mod uncertain_f106;
 mod uncertain_f64;
 mod uncertain_f64_default;
 mod uncertain_op_arithmetic;
 mod uncertain_op_comparison;
 mod uncertain_op_logic;
 mod uncertain_part_eq;
+mod uncertain_real;
 mod uncertain_sampling;
 mod uncertain_statistics;
 
@@ -54,6 +56,13 @@ impl<T: ProbabilisticType> Uncertain<T> {
 impl<T: ProbabilisticType + Copy> Uncertain<T> {
     pub fn id(&self) -> usize {
         self.id
+    }
+
+    /// The root of this value's computation graph. Crate-internal: a [`QmcSampler`](crate::QmcSampler)
+    /// is built from an `&Uncertain<T>` via [`QmcSampler::new`](crate::QmcSampler::new), so callers
+    /// never need the raw root.
+    pub(crate) fn root_node(&self) -> &ConstTree<UncertainNodeContent> {
+        &self.root_node
     }
 
     pub fn value(&self) -> T {

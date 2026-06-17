@@ -7,7 +7,7 @@ use crate::errors::cpdag_error::CpdagError;
 use crate::errors::data_loading_error::DataLoadingError;
 use std::fmt;
 
-/// Failure cases for [`crate::BrcdDataLoader`] building a [`crate::BrcdInput`].
+/// Failure cases for `BrcdDataLoader` building a [`crate::BrcdInput`].
 #[derive(Debug, Clone, PartialEq)]
 pub enum BrcdLoadError {
     /// Loading one of the two datasets failed.

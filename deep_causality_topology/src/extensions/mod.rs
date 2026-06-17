@@ -13,3 +13,4 @@ pub mod hkt_mixed_graph;
 pub mod hkt_point_cloud;
 pub mod hkt_simplicial_complex;
 pub mod hkt_topology;
+pub mod iso_de_rham;

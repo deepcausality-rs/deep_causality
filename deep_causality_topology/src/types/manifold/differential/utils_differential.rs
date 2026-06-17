@@ -7,12 +7,24 @@ use crate::traits::chain_complex::ChainComplex;
 use crate::types::manifold::Manifold;
 use core::ops::Mul;
 use deep_causality_num::{Field, RealField};
-use deep_causality_tensor::CausalTensor;
+use deep_causality_par::MaybeParallel;
+
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
+
+/// Minimum row count before a matvec fans out over Rayon. A CSR row here
+/// is a handful of multiply-adds (memory-bound), so the fork-join cost of
+/// a parallel dispatch per CG iteration only pays at large systems —
+/// measured on the DEC solver, matvecs through 32³ lattices (~100k rows)
+/// still run faster serially; the cutoff engages at 64³-scale grids and
+/// above.
+#[cfg(feature = "parallel")]
+pub(super) const PAR_MATVEC_THRESHOLD: usize = 1 << 18;
 
 impl<K, D> Manifold<K, D>
 where
     K: ChainComplex,
-    D: RealField + Default + PartialEq,
+    D: RealField + MaybeParallel + Default + PartialEq,
 {
     /// Extract the slice of data corresponding to grade-k forms from the flat
     /// per-grade storage carried by `self.data`. Generic over the chain complex
@@ -42,42 +54,12 @@ where
     }
 }
 
-impl<K, D> Manifold<K, D>
-where
-    K: ChainComplex + Clone,
-    K::Metric: Clone,
-    D: RealField + Default + PartialEq,
-{
-    /// Create a temporary manifold holding data for grade `k` only, used to
-    /// chain differential operators (e.g. compute `d δ ω`). Generic over the
-    /// chain complex backend.
-    pub(super) fn create_temp_manifold(&self, k: usize, k_data: CausalTensor<D>) -> Self {
-        let total_size = self.data().len();
-        let mut full_data = vec![D::zero(); total_size];
-
-        let mut offset = 0usize;
-        for i in 0..k {
-            offset += self.complex.num_cells(i);
-        }
-
-        let slice = k_data.as_slice();
-        if offset + slice.len() <= total_size {
-            full_data[offset..offset + slice.len()].copy_from_slice(slice);
-        }
-
-        Manifold {
-            complex: self.complex.clone(),
-            data: CausalTensor::new(full_data, self.data().shape().to_vec()).unwrap(),
-            metric: self.metric.clone(),
-            cursor: 0,
-        }
-    }
-}
-
-/// Helper to apply a sparse matrix operator to a vector
+/// Helper to apply a sparse matrix operator to a vector. Rows are
+/// independent, so under the `parallel` feature the matvec fans out over
+/// Rayon — this is the inner kernel of every CG iteration.
 pub(super) fn apply_operator<D>(matrix: &deep_causality_sparse::CsrMatrix<i8>, data: &[D]) -> Vec<D>
 where
-    D: Field + Copy + core::ops::Neg<Output = D>,
+    D: Field + Copy + core::ops::Neg<Output = D> + MaybeParallel,
 {
     let (rows, cols) = matrix.shape();
 
@@ -86,11 +68,10 @@ where
         return vec![D::zero(); rows];
     }
 
-    let mut result = vec![D::zero(); rows];
-
-    for (row, res_val) in result.iter_mut().enumerate() {
+    let per_row = |row: usize| {
         let row_start = matrix.row_indices()[row];
         let row_end = matrix.row_indices()[row + 1];
+        let mut acc = D::zero();
 
         for idx in row_start..row_end {
             let col = matrix.col_indices()[idx];
@@ -105,21 +86,27 @@ where
                 D::zero() - D::one() // -1
             };
 
-            *res_val = *res_val + (coeff * data[col]);
+            acc = acc + (coeff * data[col]);
         }
-    }
+        acc
+    };
 
-    result
+    #[cfg(feature = "parallel")]
+    if rows >= PAR_MATVEC_THRESHOLD {
+        return (0..rows).into_par_iter().map(per_row).collect();
+    }
+    (0..rows).map(per_row).collect()
 }
 
-/// Helper to apply a sparse matrix operator with C values to a vector of D
+/// Helper to apply a sparse matrix operator with C values to a vector of D.
+/// Row-parallel under the `parallel` feature, as [`apply_operator`].
 pub(super) fn apply_metric_operator<C, D>(
     matrix: &deep_causality_sparse::CsrMatrix<C>,
     data: &[D],
 ) -> Vec<D>
 where
-    C: Copy,
-    D: Field + Copy + Mul<C, Output = D>,
+    C: Copy + MaybeParallel,
+    D: Field + Copy + Mul<C, Output = D> + MaybeParallel,
 {
     let (rows, cols) = matrix.shape();
 
@@ -128,19 +115,23 @@ where
         return vec![D::zero(); rows];
     }
 
-    let mut result = vec![D::zero(); rows];
-
-    for (row, res_val) in result.iter_mut().enumerate() {
+    let per_row = |row: usize| {
         let row_start = matrix.row_indices()[row];
         let row_end = matrix.row_indices()[row + 1];
+        let mut acc = D::zero();
 
         for idx in row_start..row_end {
             let col = matrix.col_indices()[idx];
             let val = matrix.values()[idx];
 
-            *res_val = *res_val + (data[col] * val);
+            acc = acc + (data[col] * val);
         }
-    }
+        acc
+    };
 
-    result
+    #[cfg(feature = "parallel")]
+    if rows >= PAR_MATVEC_THRESHOLD {
+        return (0..rows).into_par_iter().map(per_row).collect();
+    }
+    (0..rows).map(per_row).collect()
 }

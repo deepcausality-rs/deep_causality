@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::constants::BOLTZMANN_CONSTANT;
-use crate::kernels::mhd::quantities::{DebyeLength, LarmorRadius};
+use crate::{DebyeLength, LarmorRadius};
 use crate::{Mass, PhysicalField, PhysicsError, Speed, Temperature};
 use deep_causality_multivector::MultiVector;
 use deep_causality_num::{FromPrimitive, RealField};

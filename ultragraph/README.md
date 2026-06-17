@@ -21,13 +21,13 @@
 
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
-## 📣 Goal
+## Goal
 
 ultragraph provides a high-performance, ergonomic, and directed graph data structure. It is designed around a
 state-machine architecture that offers both a flexible, mutable graph and a blazing-fast, immutable graph, allowing
 users to choose the right tool for the right phase of their application.
 
-## 🎁 Features
+## Features
 
 * **Dual-State Architecture:** A `DynamicGraph` for easy mutations and a `Static` (frozen) `CsmGraph` for extreme read
   performance.
@@ -37,7 +37,7 @@ users to choose the right tool for the right phase of their application.
 * **Efficient Traversals:** Cache-friendly neighbor iteration (`outbound_edges`) on the frozen graph.
 * **Full Lifecycle:** Seamlessly `freeze()` a graph for analysis and `unfreeze()` it to resume mutations.
 
-## ⚡️ Implementation
+##  Implementation
 
 `ultragraph`'s power comes from its state-machine design, which separates the concerns of graph *construction* from
 graph *analysis*.
@@ -73,7 +73,7 @@ This is the high-performance, read-only state.
 If you need to make further changes after a period of analysis, `g.unfreeze()` efficiently converts the `CsmGraph` back
 into a `DynamicGraph`, allowing the cycle of mutation and analysis to begin again.
 
-## ⚙️ Graph Algorithms
+##  Graph Algorithms
 
 The `UltraGraph` crate provides a suite of high-performance, read-only analytical algorithms for
 graph analysis. These algorithms are implemented on static, optimized graph structures for efficient
@@ -116,7 +116,7 @@ computation.
 * **`betweenness_centrality()`**: Measures a node's importance by counting how often it
   appears on the shortest paths between all other pairs of nodes using Brandes' algorithm.
 
-## 🚀 Benchmark Results
+## Benchmark Results
 
 ### Dynamic Graph
 
@@ -201,7 +201,7 @@ While the NWHypergraph paper provides an excellent blueprint for a high-performa
 modifications extend that foundation into a more flexible, cache-aware, and dynamically adaptable framework
 purpose-built for the lifecycle of evolving graph systems.
 
-## 🚀 Install
+## Install
 
 Just run:
 
@@ -215,7 +215,7 @@ Alternatively, add the following to your Cargo.toml
 ultragraph = "current_version"
 ```
 
-## ⭐ Usage
+## Usage
 
 See:
 
@@ -276,7 +276,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## 🙏 Credits
+## Credits
 
 The project took inspiration from:
 
@@ -284,7 +284,7 @@ The project took inspiration from:
 * [Dachshund](https://github.com/facebookresearch/dachshund)
 * [Hypergraph](https://github.com/yamafaktory/hypergraph)
 
-## 👨‍💻👩‍💻 Contribution
+## Contribution
 
 Contributions are welcomed especially related to documentation, example code, and fixes.
 If unsure where to start, just open an issue and ask.
@@ -292,12 +292,12 @@ If unsure where to start, just open an issue and ask.
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
 shall be licensed under the MIT licence, without any additional terms or conditions.
 
-## 📜 Licence
+## Licence
 
 This project is licensed under the [MIT license](LICENSE).
 
-## 💻 Author
+## Security
 
-* Marvin Hansen, [GitHub](https://github.com/marvin-hansen).
-* Github GPG key ID: 369D5A0B210D39BC
-* GPG Fingerprint: 4B18 F7B2 04B9 7A72 967E 663E 369D 5A0B 210D 39BC
+For details about security, please read
+the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).
+

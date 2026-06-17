@@ -136,12 +136,12 @@ This format is particularly efficient for operations that process data row by ro
 ### Efficient Operations
 Operations like matrix addition and subtraction iterate through the non-zero elements of both matrices simultaneously, merging them efficiently. Matrix-vector and matrix-matrix multiplications are optimized to leverage the sparse structure, avoiding multiplications by zero.
 
-## 📚 Docs
+## Docs
 
 *   [Examples](examples)
 *   [Test](tests)
 
-## 👨‍💻👩‍💻 Contribution
+## Contribution
 
 Contributions are welcomed especially related to documentation, example code, and fixes.
 If unsure where to start, just open an issue and ask.
@@ -149,17 +149,12 @@ If unsure where to start, just open an issue and ask.
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
 shall be licensed under the MIT licence, without any additional terms or conditions.
 
-## 📜 Licence
+## Licence
 
 This project is licensed under the [MIT license](LICENSE).
 
-## 👮️ Security
+## Security
 
 For details about security, please read
 the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).
 
-## 💻 Author
-
-*   [Marvin Hansen](https://github.com/marvin-hansen).
-*   Github GPG key ID: 369D5A0B210D39BC
-*   GPG Fingerprint: 4B18 F7B2 04B9 7A72 967E 663E 369D 5A0B 210D 39BC

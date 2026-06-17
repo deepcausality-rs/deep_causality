@@ -4,7 +4,7 @@
  */
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use deep_causality_uncertain::{SampledValue, Uncertain, with_global_cache};
+use deep_causality_uncertain::{SampledValue, SamplerKind, Uncertain, with_global_cache};
 
 // --- Sampling Performance Benchmarks ---
 
@@ -135,7 +135,10 @@ fn bench_sampling_with_cache_hits(c: &mut Criterion) {
     // Pre-populate the cache once before the benchmark loop
     with_global_cache(|cache| {
         cache.clear(); // Clear once to ensure a clean state
-        cache.insert((_id, sample_index_to_hit), SampledValue::Float(42.0));
+        cache.insert(
+            (_id, sample_index_to_hit, SamplerKind::Mc),
+            SampledValue::Float(42.0),
+        );
     });
 
     c.bench_function("sampling_with_cache_hits", |b| {

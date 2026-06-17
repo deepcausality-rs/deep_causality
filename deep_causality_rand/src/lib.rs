@@ -19,11 +19,17 @@ pub use crate::errors::uniform_error::UniformDistributionError;
 // Traits
 pub use crate::traits::distribution::Distribution;
 pub use crate::traits::fill::Fill;
+pub use crate::traits::real_rng::RealRng;
 pub use crate::traits::rng::Rng;
 pub use crate::traits::rng_core::RngCore;
 pub use crate::traits::sample_borrow::SampleBorrow;
 pub use crate::traits::sample_range::SampleRange;
 pub use crate::traits::sample_uniform::{SampleUniform, UniformSampler};
+// Inverse-CDF transforms
+pub use crate::utils::inverse_cdf::{
+    bernoulli_inverse_cdf, standard_normal_inverse_cdf, standard_normal_inverse_cdf_f106,
+    uniform_inverse_cdf,
+};
 // Types
 pub use crate::types::Xoshiro256;
 pub use crate::types::distr::bernoulli::Bernoulli;
@@ -31,15 +37,13 @@ pub use crate::types::distr::normal::Normal;
 pub use crate::types::distr::normal::standard_normal::StandardNormal;
 pub use crate::types::distr::uniform::standard_uniform::StandardUniform;
 pub use crate::types::distr::uniform::{Uniform, UniformFloat};
-pub use crate::types::misc::iter::Iter;
-pub use crate::types::misc::map::Map;
+pub use crate::types::iter::Iter;
+pub use crate::types::map::Map;
+pub use crate::types::qmc::sobol::{MAX_SOBOL_DIM, SobolSequence};
 pub use crate::types::range::{Open01, OpenClosed01};
 
 #[cfg(not(feature = "os-random"))]
 use std::cell::RefCell;
-
-#[cfg(feature = "aead-random")]
-use crate::types::ChaCha20Rng;
 
 #[cfg(not(feature = "os-random"))]
 thread_local! {
@@ -74,18 +78,14 @@ impl Rng for ThreadRng {}
 /// If the `aead-random` feature is enabled, it returns a `ChaCha20Rng` seeded from
 /// the OS CSPRNG. This is the preferred secure option.
 pub fn rng() -> impl Rng {
-    #[cfg(feature = "aead-random")]
-    {
-        ChaCha20Rng::new()
-    }
-    #[cfg(all(feature = "os-random", not(feature = "aead-random")))]
+    #[cfg(feature = "os-random")]
     {
         #[cfg(feature = "os-random")]
         use crate::types::OsRandomRng;
 
         OsRandomRng::new().expect("Failed to create OsRandomRng")
     }
-    #[cfg(all(not(feature = "os-random"), not(feature = "aead-random")))]
+    #[cfg(not(feature = "os-random"))]
     {
         ThreadRng
     }

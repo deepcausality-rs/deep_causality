@@ -3,14 +3,17 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-/// Struct to hold the parameters for a Uniform distribution.
+/// Struct to hold the parameters for a Uniform distribution, at precision `R`.
+///
+/// Unbounded for the same reason as [`super::NormalDistributionParams`]: the analytic
+/// bound lives on the sampling path, not on the parameter struct.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct UniformDistributionParams {
-    pub low: f64,
-    pub high: f64,
+pub struct UniformDistributionParams<R> {
+    pub low: R,
+    pub high: R,
 }
 
-impl UniformDistributionParams {
+impl<R> UniformDistributionParams<R> {
     /// Creates a new `UniformDistributionParams` instance.
     ///
     /// # Arguments
@@ -21,12 +24,12 @@ impl UniformDistributionParams {
     /// # Returns
     ///
     /// A new `UniformDistributionParams` instance.
-    pub fn new(low: f64, high: f64) -> Self {
+    pub fn new(low: R, high: R) -> Self {
         Self { low, high }
     }
 }
 
-impl std::fmt::Display for UniformDistributionParams {
+impl<R: std::fmt::Display> std::fmt::Display for UniformDistributionParams<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

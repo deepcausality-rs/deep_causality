@@ -397,59 +397,11 @@ impl Float for Float106 {
     }
 
     fn sin(self) -> Self {
-        // Range reduction to [-π, π]
-        let reduced = self % Self::TWO_PI;
-        let x = if reduced.hi > Self::PI.hi {
-            reduced - Self::TWO_PI
-        } else if reduced.hi < -Self::PI.hi {
-            reduced + Self::TWO_PI
-        } else {
-            reduced
-        };
-
-        // Taylor series: sin(x) = x - x^3/3! + x^5/5! - ...
-        let x2 = x * x;
-        let mut sum = x;
-        let mut term = x;
-
-        for i in 1..60 {
-            let n = 2 * i;
-            term = -term * x2 / Self::from_f64((n * (n + 1)) as f64);
-            sum += term;
-            if term.abs().hi < 1e-33 {
-                break;
-            }
-        }
-
-        sum
+        self.sin_cos().0
     }
 
     fn cos(self) -> Self {
-        // Range reduction to [-π, π]
-        let reduced = self % Self::TWO_PI;
-        let x = if reduced.hi > Self::PI.hi {
-            reduced - Self::TWO_PI
-        } else if reduced.hi < -Self::PI.hi {
-            reduced + Self::TWO_PI
-        } else {
-            reduced
-        };
-
-        // Taylor series: cos(x) = 1 - x^2/2! + x^4/4! - ...
-        let x2 = x * x;
-        let mut sum = Self::from_f64(1.0);
-        let mut term = Self::from_f64(1.0);
-
-        for i in 1..60 {
-            let n = 2 * i;
-            term = -term * x2 / Self::from_f64((n * (n - 1)) as f64);
-            sum += term;
-            if term.abs().hi < 1e-33 {
-                break;
-            }
-        }
-
-        sum
+        self.sin_cos().1
     }
 
     fn tan(self) -> Self {
@@ -543,7 +495,60 @@ impl Float for Float106 {
     }
 
     fn sin_cos(self) -> (Self, Self) {
-        (self.sin(), self.cos())
+        // Range reduction to [-π, π]
+        let reduced = self % Self::TWO_PI;
+        let x = if reduced.hi > Self::PI.hi {
+            reduced - Self::TWO_PI
+        } else if reduced.hi < -Self::PI.hi {
+            reduced + Self::TWO_PI
+        } else {
+            reduced
+        };
+
+        // Table-based reduction x = k·π/16 + s with |s| ≤ π/32, so the
+        // Taylor pair below converges in ~9 terms instead of the ~40+ a
+        // full-range argument needs.
+        let kf = (x.hi * (16.0 / core::f64::consts::PI)).round();
+        let s = x - Self::from_f64(kf) * Self::FRAC_PI_16;
+        let k = kf as i32;
+
+        // Taylor pair on the reduced argument, sharing s².
+        let s2 = s * s;
+
+        let mut sin_s = s;
+        let mut term = s;
+        for i in 1..10 {
+            let n = 2 * i;
+            term = -term * s2 / Self::from_f64((n * (n + 1)) as f64);
+            sin_s += term;
+            if term.abs().hi < 1e-33 {
+                break;
+            }
+        }
+
+        let mut cos_s = Self::from_f64(1.0);
+        let mut term = Self::from_f64(1.0);
+        for i in 1..10 {
+            let n = 2 * i;
+            term = -term * s2 / Self::from_f64((n * (n - 1)) as f64);
+            cos_s += term;
+            if term.abs().hi < 1e-33 {
+                break;
+            }
+        }
+
+        // Recombine via angle addition with the precomputed sin/cos(k·π/16);
+        // sin is odd and cos is even in k. NaN input casts k to 0 and
+        // propagates through s.
+        let idx = (k.unsigned_abs() as usize).min(16);
+        let sin_k = if k < 0 {
+            -Self::SIN_K_PI_16[idx]
+        } else {
+            Self::SIN_K_PI_16[idx]
+        };
+        let cos_k = Self::COS_K_PI_16[idx];
+
+        (sin_k * cos_s + cos_k * sin_s, cos_k * cos_s - sin_k * sin_s)
     }
 
     fn exp_m1(self) -> Self {

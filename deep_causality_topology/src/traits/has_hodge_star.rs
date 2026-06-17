@@ -63,4 +63,17 @@ pub trait HasHodgeStar<R: RealField> {
         complex: &'a Self::Complex,
         k: usize,
     ) -> Result<Cow<'a, CsrMatrix<R>>, TopologyError>;
+
+    /// Per-axis uniform edge lengths, when the metric is axis-uniform and
+    /// positive-definite (Euclidean signature); `None` otherwise.
+    ///
+    /// Defaults to `None`. The cubical geometry overrides it for its
+    /// unit/uniform/per-axis representations; the spectral grade-0 Poisson
+    /// fast path consumes it to build the lattice Laplacian eigenvalues
+    /// `λ_k = Σ_d (2 − 2·cos(2π·k_d/N_d)) / h_d²`. Per-edge geometries and
+    /// Lorentzian signatures return `None` (the Laplacian is not a
+    /// convolution there), which keeps those paths on CG.
+    fn uniform_axis_spacings(&self) -> Option<Vec<R>> {
+        None
+    }
 }

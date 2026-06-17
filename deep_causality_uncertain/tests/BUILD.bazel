@@ -48,6 +48,8 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality_uncertain",
+        # Float106 precision target
+        "//deep_causality_num",
         # External dependencies
         "//thirdparty/crates:rusty-fork",
     ],

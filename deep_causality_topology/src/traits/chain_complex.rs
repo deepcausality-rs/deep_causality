@@ -62,4 +62,15 @@ pub trait ChainComplex {
     /// Compute the k-th Betti number β_k = dim(H_k).
     /// H_k = ker(∂_k) / im(∂_{k+1})
     fn betti_number(&self, k: usize) -> usize;
+
+    /// Layout of a uniform axis-aligned lattice, if this complex is one:
+    /// `(shape, periodic)` per axis, in the complex's own axis order.
+    ///
+    /// Defaults to `None`. The cubical lattice overrides it; the spectral
+    /// grade-0 Poisson fast path consumes it to decide whether the
+    /// Laplacian diagonalizes under the DFT (it does exactly when every
+    /// axis is periodic).
+    fn uniform_lattice_layout(&self) -> Option<(Vec<usize>, Vec<bool>)> {
+        None
+    }
 }

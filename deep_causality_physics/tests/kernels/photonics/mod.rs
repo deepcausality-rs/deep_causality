@@ -9,8 +9,6 @@ mod diffraction_tests;
 #[cfg(test)]
 mod polarization_tests;
 #[cfg(test)]
-mod quantities_tests;
-#[cfg(test)]
 mod ray_tests;
 #[cfg(test)]
 mod wrappers_tests;

@@ -148,6 +148,20 @@ For `no_std` environments, disable default features:
 deep_causality_metric = { version = "0.1", default-features = false, features = ["alloc"] }
 ```
 
-## License
+## Contribution
 
-MIT License - see [LICENSE](LICENSE) for details.
+Contributions are welcomed especially related to documentation, example code, and fixes.
+If unsure where to start, just open an issue and ask.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
+shall be licensed under the MIT licence, without any additional terms or conditions.
+
+## Licence
+
+This project is licensed under the [MIT license](LICENSE).
+
+## Security
+
+For details about security, please read
+the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).
+

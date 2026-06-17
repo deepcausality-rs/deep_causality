@@ -25,3 +25,5 @@ mod hkt_point_cloud_tests;
 mod hkt_simplicial_complex_tests;
 #[cfg(test)]
 mod hkt_topology_tests;
+#[cfg(test)]
+mod iso_de_rham_tests;

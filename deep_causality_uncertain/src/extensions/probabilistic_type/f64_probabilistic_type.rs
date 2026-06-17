@@ -3,7 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{FromSampledValue, IntoSampledValue, ProbabilisticType};
+use crate::{
+    DistributionEnum, FromSampledValue, IntoSampledValue, NormalDistributionParams,
+    ProbabilisticType, UncertainNodeContent, UncertainReal, UniformDistributionParams,
+};
 use crate::{SampledValue, UncertainError};
 use deep_causality_num::ToPrimitive;
 
@@ -27,5 +30,20 @@ impl FromSampledValue for f64 {
 impl ProbabilisticType for f64 {
     fn default_value() -> Self {
         f64::default()
+    }
+}
+
+impl UncertainReal for f64 {
+    fn normal_node(mean: Self, std_dev: Self) -> UncertainNodeContent {
+        UncertainNodeContent::DistributionF64(DistributionEnum::Normal(NormalDistributionParams {
+            mean,
+            std_dev,
+        }))
+    }
+
+    fn uniform_node(low: Self, high: Self) -> UncertainNodeContent {
+        UncertainNodeContent::DistributionF64(DistributionEnum::Uniform(
+            UniformDistributionParams { low, high },
+        ))
     }
 }

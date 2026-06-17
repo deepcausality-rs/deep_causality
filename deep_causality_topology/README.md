@@ -35,10 +35,29 @@ simplicial complexes), enabling advanced reasoning about the "shape" and connect
     * **Chain Algebra**: Perform algebraic operations on chains (formal sums of simplices) and verify fundamental
       topological theorems like `∂∂=0`.
     * **Differential Operators**: Compute the exterior derivative (`d`), Hodge star (`⋆`), codifferential (`δ`), and
-      Hodge-Laplacian (`Δ`) on discrete differential forms. The simplicial path is the full implementation; the
-      cubical Hodge ⋆ on irregular metrics is a deferred follow-up.
+      Hodge-Laplacian (`Δ`) on discrete differential forms, on both the simplicial and cubical paths (the
+      cubical star covers unit/uniform/per-axis/per-edge metric tiers, with the diagonal memoized per grade).
     * **Hodge Theory**: Detect topological features like holes and voids by finding harmonic forms (solutions to
       `Δω = 0`).
+    * **Poisson Solves & Projections**: `Manifold::leray_project` (the divergence-free projection of a 1-form) and
+      `hodge_decompose` route their grade-0 Poisson solves through a dispatch over three domain classes —
+      fully periodic uniform boxes solve **directly via rFFT** (torus eigenbasis), wall-bounded/mixed uniform
+      boxes solve **directly via DCT-I/DFT** (the boundary-corrected Δ₀ diagonalizes exactly in the cosine
+      basis), and everything else (per-edge metrics, degenerate extents) falls back to **Jacobi-preconditioned
+      CG** on the mass-weighted normal form. The direct paths are exact to rounding with no iteration budget.
+    * **Constrained Leray Projection**: `Manifold::leray_project_constrained_opts` projects onto the
+      *intersection* of the divergence-free subspace with an essential edge constraint set (`u|_E = 0`) — the
+      M-orthogonal intersection projection that wall-bounded no-slip flows require (the plain projector and
+      the coordinate constraint do not commute). Runs the masked-mass Poisson solve through Jacobi-PCG.
+    * **Boundary-Corrected Hodge Star**: on open (wall) lattice axes, dual volumes clip by `2^{-b}` per
+      boundary incidence (wall faces halve, edges quarter, 3D corners eighth); fully periodic lattices are
+      bit-unchanged. The corrected star keeps `M_k·Δ_k` symmetric positive (semi)definite — the property the
+      CG solves and the energy arguments rely on.
+    * **Compiled DEC Stencils**: `DecStencilTables` compiles per-manifold flat gather tables for `d`, `δ`, and
+      the convective chain (interior-product transport + cup-product wedge), folding incidence signs, Hodge
+      diagonals, transport weights, and cup signs into the stored coefficients — the streaming evaluation
+      strategy behind the DEC Navier–Stokes solver's hot loop, equivalence-gated against the generic
+      operators in CI.
 * **Neighborhood Strategies** (static-dispatch zero-sized strategy types):
     * **Chain-complex-generic**: `FaceAdjacent`, `CofaceAdjacent` — defined via ∂ and δ, work on any `ChainComplex`.
     * **Grid-only**: `VonNeumann`, `Moore`, `KRing<const K: usize>` — implemented for `LatticeComplex<D>` only.
@@ -272,7 +291,15 @@ To run examples:
 cargo run -p deep_causality_topology --example point_cloud_triangulation
 ```
 
-## License
+## Contribution
+
+Contributions are welcomed especially related to documentation, example code, and fixes.
+If unsure where to start, just open an issue and ask.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
+shall be licensed under the MIT licence, without any additional terms or conditions.
+
+## Licence
 
 This project is licensed under the [MIT license](LICENSE).
 
@@ -280,9 +307,3 @@ This project is licensed under the [MIT license](LICENSE).
 
 For details about security, please read
 the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).
-
-## Author
-
-* [Marvin Hansen](https://github.com/marvin-hansen).
-* Github GPG key ID: 369D5A0B210D39BC
-* GPG Fingerprint: 4B18 F7B2 04B9 7A72 967E 663E 369D 5A0B 210D 39BC

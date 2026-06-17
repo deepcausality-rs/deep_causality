@@ -3,14 +3,15 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{BernoulliParams, NormalDistributionParams, UncertainError, UniformDistributionParams};
+use deep_causality_num::Float106;
 use deep_causality_rand::{Bernoulli, Distribution, Normal, Rng, Uniform}; // Import all necessary traits and structs
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DistributionEnum<T> {
     Point(T),
-    Normal(NormalDistributionParams),
-    Uniform(UniformDistributionParams),
+    Normal(NormalDistributionParams<T>),
+    Uniform(UniformDistributionParams<T>),
     Bernoulli(BernoulliParams),
 }
 
@@ -39,6 +40,30 @@ impl DistributionEnum<f64> {
             }
             _ => Err(UncertainError::UnsupportedTypeError(
                 "Distribution does not produce f64".to_string(),
+            )),
+        }
+    }
+}
+
+impl DistributionEnum<Float106> {
+    /// Samples a `Float106` value, drawing through the rand crate's `Real`-bounded
+    /// distribution surface (double-double entropy end to end — see the `add-fft`-era
+    /// `rand-realfield-sampling` work). Mirrors the `f64` path exactly.
+    pub fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<Float106, UncertainError> {
+        match self {
+            DistributionEnum::Point(v) => Ok(*v),
+            DistributionEnum::Normal(params) => {
+                let normal = Normal::new(params.mean, params.std_dev)
+                    .map_err(|e| UncertainError::NormalDistributionError(e.to_string()))?;
+                Ok(normal.sample(rng))
+            }
+            DistributionEnum::Uniform(params) => {
+                let uniform = Uniform::new(params.low, params.high)
+                    .map_err(|e| UncertainError::UniformDistributionError(e.to_string()))?;
+                Ok(uniform.sample(rng))
+            }
+            _ => Err(UncertainError::UnsupportedTypeError(
+                "Distribution does not produce Float106".to_string(),
             )),
         }
     }

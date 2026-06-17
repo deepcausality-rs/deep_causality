@@ -92,6 +92,7 @@ rust_test_suite(
         # Internal dependencies
         "//deep_causality_algorithms",
         "//deep_causality_tensor",
+        "//thirdparty/crates:tempfile",
     ],
 )
 

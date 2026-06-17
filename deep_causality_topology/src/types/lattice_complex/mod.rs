@@ -40,6 +40,12 @@ pub struct LatticeComplex<const D: usize, R: RealField> {
     /// clone. `Box<[OnceLock<...>]>` is `Send + Sync` for the existing
     /// `Arc<LatticeComplex<D, R>>` consumers in `gauge_field_lattice`.
     coboundary_cache: Box<[OnceLock<CsrMatrix<i8>>]>,
+    /// Lazy memo of boundary matrices ∂_k, same shape and rationale as
+    /// `coboundary_cache`. `codifferential` (hence every Laplacian
+    /// application, hence every CG iteration) reads ∂_k; without the memo
+    /// each read rebuilt the matrix from a cell-indexed `HashMap`. Slot 0
+    /// is unused (∂_0 does not exist; `boundary_matrix` requires k ≥ 1).
+    boundary_cache: Box<[OnceLock<CsrMatrix<i8>>]>,
     /// Anchors the metric-precision parameter `R`. Zero-sized.
     _precision: PhantomData<R>,
 }
@@ -49,8 +55,15 @@ impl<const D: usize, R: RealField> Clone for LatticeComplex<D, R> {
         Self {
             shape: self.shape,
             periodic: self.periodic,
-            // Cache intentionally not cloned: cheaper to recompute lazily on the clone.
-            coboundary_cache: Self::fresh_cache(),
+            // Filled cache slots are cloned: copying a CSR is a flat
+            // memcpy of its arrays, while recomputing one rebuilds the
+            // grade's boundary matrix and transposes it. Callers that
+            // clone a complex per operator evaluation (the DEC solver's
+            // scratch manifolds, several per RK4 step) hit this path on
+            // every step; the earlier reset-on-clone turned each of those
+            // into a full rebuild. Unfilled slots stay lazy.
+            coboundary_cache: self.coboundary_cache.clone(),
+            boundary_cache: self.boundary_cache.clone(),
             _precision: PhantomData,
         }
     }
@@ -73,6 +86,7 @@ impl<const D: usize, R: RealField> LatticeComplex<D, R> {
             shape,
             periodic,
             coboundary_cache: Self::fresh_cache(),
+            boundary_cache: Self::fresh_cache(),
             _precision: PhantomData,
         }
     }
@@ -222,6 +236,51 @@ impl<const D: usize, R: RealField> LatticeComplex<D, R> {
             count *= self.valid_positions(d, orientation);
         }
         count
+    }
+
+    /// Flat index of `cell` in the canonical `iter_cells(grade)` ordering —
+    /// the arithmetic inverse of `LatticeCellIterator` for arbitrary grades,
+    /// O(2^D + D) with no allocation. Returns `None` when the cell's
+    /// position is out of range for its orientation (the open-boundary
+    /// trim), mirroring exactly which cells the iterator visits.
+    ///
+    /// This replaces the per-call `HashMap<LatticeCell, usize>` index maps
+    /// the DEC operators (wedge, interior-product transport, de Rham,
+    /// sharp) previously built on every evaluation: the map construction
+    /// was O(n) allocation and hashing per operator call, where the lookup
+    /// itself is pure stride arithmetic on a regular lattice.
+    pub(crate) fn cell_index(&self, cell: &LatticeCell<D>) -> Option<usize> {
+        let o = cell.orientation();
+
+        // Bounds check against the iterator's valid-position ranges.
+        for (d, &p) in cell.position().iter().enumerate() {
+            if p >= self.valid_positions(d, o) {
+                return None;
+            }
+        }
+
+        // Cells of the same grade with numerically smaller orientations
+        // come first (orientation-major, ascending bit patterns).
+        let grade = o.count_ones();
+        let mut idx = 0usize;
+        for prior in 0..o {
+            if prior.count_ones() == grade {
+                let mut count = 1usize;
+                for d in 0..D {
+                    count *= self.valid_positions(d, prior);
+                }
+                idx += count;
+            }
+        }
+
+        // Within the orientation block, axis 0 varies fastest.
+        let mut offset = 0usize;
+        let mut stride = 1usize;
+        for (d, &p) in cell.position().iter().enumerate() {
+            offset += p * stride;
+            stride *= self.valid_positions(d, o);
+        }
+        Some(idx + offset)
     }
 
     /// Number of valid `position[d]` values for a cell with the given `orientation`.
@@ -421,28 +480,35 @@ impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
     }
 
     fn boundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>> {
-        let rows = self.num_cells(k - 1);
-        let cols = self.num_cells(k);
+        // Lazy memo, mirroring `coboundary_matrix`: ∂_k is read by
+        // `codifferential` on every Laplacian application — once per CG
+        // iteration in the Hodge/Leray solves — and the cell-indexed
+        // HashMap construction below is far more expensive than the
+        // sparse matvec it feeds.
+        let slot = &self.boundary_cache[k];
+        let m = slot.get_or_init(|| {
+            let rows = self.num_cells(k - 1);
+            let cols = self.num_cells(k);
 
-        let mut row_map = HashMap::new();
-        for (i, cell) in self.cells(k - 1).enumerate() {
-            row_map.insert(cell, i);
-        }
+            let mut row_map = HashMap::new();
+            for (i, cell) in self.cells(k - 1).enumerate() {
+                row_map.insert(cell, i);
+            }
 
-        let mut triplets = Vec::new();
+            let mut triplets = Vec::new();
 
-        for (j, cell) in self.cells(k).enumerate() {
-            let boundary = self.boundary(&cell);
-            for (term_cell, coeff) in boundary {
-                if let Some(&i) = row_map.get(&term_cell) {
-                    triplets.push((i, j, coeff));
+            for (j, cell) in self.cells(k).enumerate() {
+                let boundary = self.boundary(&cell);
+                for (term_cell, coeff) in boundary {
+                    if let Some(&i) = row_map.get(&term_cell) {
+                        triplets.push((i, j, coeff));
+                    }
                 }
             }
-        }
 
-        Cow::Owned(
-            CsrMatrix::from_triplets(rows, cols, &triplets).unwrap_or_else(|_| CsrMatrix::new()),
-        )
+            CsrMatrix::from_triplets(rows, cols, &triplets).unwrap_or_else(|_| CsrMatrix::new())
+        });
+        Cow::Borrowed(m)
     }
 
     fn coboundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>> {
@@ -474,6 +540,10 @@ impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
             }
             res
         }
+    }
+
+    fn uniform_lattice_layout(&self) -> Option<(Vec<usize>, Vec<bool>)> {
+        Some((self.shape.to_vec(), self.periodic.to_vec()))
     }
 }
 
