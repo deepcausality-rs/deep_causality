@@ -31,7 +31,7 @@ declarative surface.
 
 Recommendation: keep bespoke until a second uncertain-march case exists; revisit then.
 
-## 2. Undocumented outstanding issues
+## 2. Open issues
 
 Loose ends from the consolidation + DSL migrations, with pointers:
 
