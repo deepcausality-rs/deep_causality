@@ -12,9 +12,15 @@ path = "no_lib.rs"
 
 [dependencies]
 deep_causality_algorithms =  { path = "../../deep_causality_algorithms" }
+deep_causality_core =  { path = "../../deep_causality_core" }
+deep_causality_haft =  { path = "../../deep_causality_haft" }
 deep_causality_discovery =  { path = "../../deep_causality_discovery" }
 deep_causality_num =  { path = "../../deep_causality_num" }
 deep_causality_tensor =  { path = "../../deep_causality_tensor" }
+
+# Example-only ML dependency (the `example_ml_rca` Candle integration).
+# CPU-only, default features.
+candle-core = { git = "https://github.com/huggingface/candle.git" }
 
 
 [[example]]
@@ -40,6 +46,10 @@ path = "cdl/brcd_discovery/main.rs"
 [[example]]
 name = "example_brcd_boss_discovery"
 path = "cdl/brcd_boss_discovery/main.rs"
+
+[[example]]
+name = "example_ml_rca"
+path = "ml/ml_rca/main.rs"
 
 [lints]
 workspace = true

@@ -28,6 +28,7 @@ exclude = [
 
 [features]
 default = ["std"]
+
 # This crate is std-only
 std = [
     "deep_causality_core/std",
@@ -35,6 +36,7 @@ std = [
     "deep_causality_physics/std",
     "dep:deep_causality_uncertain",
 ]
+
 # Opt-in CPU parallelism. Forwards to the topology crate's Rayon-backed DEC
 # operator loops and the shared `MaybeParallel` marker. Serial by default;
 parallel = [
@@ -45,7 +47,7 @@ parallel = [
 
 [dependencies.deep_causality_physics]
 path = "../deep_causality_physics"
-version = "0.6.2"
+version = "0.6"
 default-features = false
 
 [dependencies.deep_causality_calculus]
@@ -54,7 +56,7 @@ version = "0.1"
 
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
-version = "0.10.0"
+version = "0.10"
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
