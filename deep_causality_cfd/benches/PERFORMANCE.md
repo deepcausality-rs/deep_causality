@@ -39,20 +39,20 @@ The `parallel` feature forwards to the Rayon-backed DEC operator loops in `deep_
 
 ### Grid sweep (20 steps, ν = 0.05, dt = 0.005)
 
-| Grid | Sequential | Parallel | Speedup |
-|-----:|-----------:|---------:|--------:|
-| 16²  | 1.680 ms   | 5.410 ms | 0.31× (3.2× slower) |
-| 24²  | 3.763 ms   | 8.577 ms | 0.44× (2.3× slower) |
-| 32²  | 7.060 ms   | 12.215 ms | 0.58× (1.7× slower) |
-| 48²  | 15.597 ms  | 21.724 ms | 0.72× (1.4× slower) |
+| Grid | Sequential |  Parallel |             Speedup |
+|-----:|-----------:|----------:|--------------------:|
+|  16² |   1.680 ms |  5.410 ms | 0.31× (3.2× slower) |
+|  24² |   3.763 ms |  8.577 ms | 0.44× (2.3× slower) |
+|  32² |   7.060 ms | 12.215 ms | 0.58× (1.7× slower) |
+|  48² |  15.597 ms | 21.724 ms | 0.72× (1.4× slower) |
 
 ### Step sweep (24² grid)
 
-| Steps | Sequential | Parallel | Speedup |
-|------:|-----------:|---------:|--------:|
-| 10    | 2.063 ms   | 4.473 ms | 0.46× (2.2× slower) |
-| 20    | 3.753 ms   | 8.714 ms | 0.43× (2.3× slower) |
-| 40    | 7.142 ms   | 16.799 ms | 0.43× (2.3× slower) |
+| Steps | Sequential |  Parallel |             Speedup |
+|------:|-----------:|----------:|--------------------:|
+|    10 |   2.063 ms |  4.473 ms | 0.46× (2.2× slower) |
+|    20 |   3.753 ms |  8.714 ms | 0.43× (2.3× slower) |
+|    40 |   7.142 ms | 16.799 ms | 0.43× (2.3× slower) |
 
 The parallel penalty **shrinks as the grid grows** (0.31× → 0.72× from 16² to 48²): larger grids give
 each Rayon task more work to amortize the dispatch, so the curves are converging. It is constant across
@@ -64,16 +64,16 @@ Where does `parallel` stop being a penalty and start winning? The default suite 
 the grid sweep was extended (20 steps, same ν / dt; `--measurement-time 3–4 --sample-size 10`; the
 bench grid array was temporarily widened, then reverted).
 
-| Grid | Cells  | Sequential | Parallel | Speedup |
-|-----:|-------:|-----------:|---------:|--------:|
-| 48²  | 2.3 k  | 16.10 ms   | 21.74 ms  | 0.74× |
-| 64²  | 4.1 k  | 28.06 ms   | 34.15 ms  | 0.82× |
-| 96²  | 9.2 k  | 61.63 ms   | 101.98 ms | 0.60× (noisy) |
-| 128² | 16 k   | 110.27 ms  | 146.56 ms | 0.75× |
-| 192² | 37 k   | 247.43 ms  | 310.09 ms | 0.80× |
-| 256² | 66 k   | 450.9 ms   | 434.5 ms  | **1.04× (break-even)** |
-| 384² | 147 k  | 995.5 ms   | 787.4 ms  | **1.26×** |
-| 512² | 262 k  | 1791.9 ms  | 1222.6 ms | **1.47×** |
+| Grid | Cells | Sequential |  Parallel |                Speedup |
+|-----:|------:|-----------:|----------:|-----------------------:|
+|  48² | 2.3 k |   16.10 ms |  21.74 ms |                  0.74× |
+|  64² | 4.1 k |   28.06 ms |  34.15 ms |                  0.82× |
+|  96² | 9.2 k |   61.63 ms | 101.98 ms |          0.60× (noisy) |
+| 128² |  16 k |  110.27 ms | 146.56 ms |                  0.75× |
+| 192² |  37 k |  247.43 ms | 310.09 ms |                  0.80× |
+| 256² |  66 k |   450.9 ms |  434.5 ms | **1.04× (break-even)** |
+| 384² | 147 k |   995.5 ms |  787.4 ms |              **1.26×** |
+| 512² | 262 k |  1791.9 ms | 1222.6 ms |              **1.47×** |
 
 **Crossover: ~256² (≈65 k cells) is break-even; parallel becomes *noticeably* faster at ~384²
 (≈1.25×) and keeps improving (1.47× at 512²).** Below 256² it is always a net loss. The win is modest
@@ -89,19 +89,19 @@ decaying-amplitude march check.
 
 ### Pointwise (viscosity sweep)
 
-| ν    | Sequential | Parallel | Speedup |
+|    ν | Sequential | Parallel | Speedup |
 |-----:|-----------:|---------:|--------:|
-| 0.01 | 246.2 ns   | 245.0 ns | 1.00× |
-| 0.10 | 242.5 ns   | 243.9 ns | 0.99× |
-| 1.00 | 243.3 ns   | 241.5 ns | 1.01× |
+| 0.01 |   246.2 ns | 245.0 ns |   1.00× |
+| 0.10 |   242.5 ns | 243.9 ns |   0.99× |
+| 1.00 |   243.3 ns | 241.5 ns |   1.01× |
 
 ### Amplitude march (step sweep)
 
 | Steps | Sequential | Parallel | Speedup |
 |------:|-----------:|---------:|--------:|
-| 10    | 1.048 µs   | 1.011 µs | 1.04× |
-| 50    | 3.418 µs   | 3.401 µs | 1.00× |
-| 100   | 6.228 µs   | 6.192 µs | 1.01× |
+|    10 |   1.048 µs | 1.011 µs |   1.04× |
+|    50 |   3.418 µs | 3.401 µs |   1.00× |
+|   100 |   6.228 µs | 6.192 µs |   1.01× |
 
 Verification is a closed-form pointwise evaluation; it never enters the parallelized DEC operator
 loops, so the feature has **no measurable effect** (all within noise of 1.00×).
@@ -112,9 +112,9 @@ loops, so the feature has **no measurable effect** (all within noise of 1.00×).
 
 | Ladder              | Sequential | Parallel | Speedup |
 |---------------------|-----------:|---------:|--------:|
-| `[16, 32]`          | 366.4 µs   | 370.5 µs | 0.99× |
-| `[16, 32, 64]`      | 1.556 ms   | 1.571 ms | 0.99× |
-| `[16, 32, 64, 128]` | 6.610 ms   | 7.355 ms | 0.90× |
+| `[16, 32]`          |   366.4 µs | 370.5 µs |   0.99× |
+| `[16, 32, 64]`      |   1.556 ms | 1.571 ms |   0.99× |
+| `[16, 32, 64, 128]` |   6.610 ms | 7.355 ms |   0.90× |
 
 Near-parity at the small rungs; the 128² rung is the only case with enough cells to enter the parallel
 path, and there the fan-out overhead still slightly outweighs the gain (0.90×).
