@@ -1,0 +1,54 @@
+deep_causality_core/tests/types/causal_flow/mod.rs
+  s_5c5a6bcbf82d1e::t_0723cf07afb941 8
+deep_causality_core/src/types/mod.rs
+  s_5c5a6bcbf82d1e::t_86c2b48a0de8c2 11-12
+deep_causality_core/src/types/io/write_text.rs
+  s_5c5a6bcbf82d1e::t_5561ce9a838cb0 1-36
+deep_causality_core/tests/types/causal_flow/io_tests.rs
+  s_5c5a6bcbf82d1e::t_9f1eb182d21bad 16-21,95-99
+  s_5c5a6bcbf82d1e::t_1d166560eb3293 1-6,8-15,22-42,44-51,53-73,75-94,100-126
+  s_5c5a6bcbf82d1e::t_48e5dda7513faa 7
+  s_5c5a6bcbf82d1e::t_3325c5e38eac21 43,52
+  s_5c5a6bcbf82d1e::t_3a5498cd515700 74
+deep_causality_core/src/lib.rs
+  s_5c5a6bcbf82d1e::t_9df887bcfbe8cf 40-45
+deep_causality_core/src/types/io/read_csv.rs
+  s_5c5a6bcbf82d1e::t_956170d296951d 1-41
+deep_causality_core/src/types/io/read_text.rs
+  s_5c5a6bcbf82d1e::t_e8c79ba5a014eb 1-31
+deep_causality_core/src/errors/causality_error.rs
+  s_5c5a6bcbf82d1e::t_abd315f771a708 50-54
+deep_causality_core/src/types/io/write_csv.rs
+  s_5c5a6bcbf82d1e::t_0c17ed643c4792 1-63
+deep_causality_core/src/types/causal_flow/mod.rs
+  s_5c5a6bcbf82d1e::t_3061188f3fc13b 40
+deep_causality_core/src/types/io/mod.rs
+  s_5c5a6bcbf82d1e::t_3228fef39eae08 1-33
+deep_causality_core/tests/types/mod.rs
+  s_5c5a6bcbf82d1e::t_df57556e8788e6 12
+deep_causality_core/tests/types/io/mod.rs
+  s_5c5a6bcbf82d1e::t_9eeefafdd62ae7 1-6
+deep_causality_core/tests/BUILD.bazel
+  s_5c5a6bcbf82d1e::t_3153b90c98e18b 157-174
+deep_causality_core/tests/types/io/io_tests.rs
+  s_5c5a6bcbf82d1e::t_a5dcd73e66c500 1-26,31-112,117-136
+  s_5c5a6bcbf82d1e::t_9f1eb182d21bad 27-30,113-116
+deep_causality_core/src/types/causal_flow/io.rs
+  s_5c5a6bcbf82d1e::t_24d83afb816000 1-116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "6aec58d6e15509a7bae937eb226c5a168030c8a4",
+  "prompts": {},
+  "sessions": {
+    "s_5c5a6bcbf82d1e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "480bfd3b-3e94-457e-bd6e-4612cfa4dfd8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
