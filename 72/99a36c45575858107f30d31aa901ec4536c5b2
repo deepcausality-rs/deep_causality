@@ -1,0 +1,27 @@
+openspec/changes/add-io-monad/proposal.md
+  s_9bd896ecf5e8ba::t_2a5028b07c80ca 1-44
+openspec/changes/add-io-monad/design.md
+  s_9bd896ecf5e8ba::t_759db5d72fc8fc 1-84
+openspec/changes/add-io-monad/specs/io-monad/spec.md
+  s_9bd896ecf5e8ba::t_64f9b32f528747 1-59
+openspec/changes/add-io-monad/tasks.md
+  s_9bd896ecf5e8ba::t_ca454eba149bce 1-24
+openspec/changes/add-io-monad/.openspec.yaml
+  s_9bd896ecf5e8ba::t_c19a049e4c7cd3 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "7299a36c45575858107f30d31aa901ec4536c5b2",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
