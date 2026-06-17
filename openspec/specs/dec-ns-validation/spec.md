@@ -1,10 +1,12 @@
 # dec-ns-validation
 
+## Purpose
+
 The validation ladder of `cfd-gap.md` §7 items 4–8: analytic Taylor–Green
 rungs, inviscid invariants, and the double shear layer in CI; the Re-1600
 flagship as an example program.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: 2D Taylor–Green decay with convergence table (CI)
 
@@ -95,9 +97,9 @@ positive-Q (vortex-core) cells in the rolled-up state that are absent at
 
 ### Requirement: Re-1600 Taylor–Green as an example program (not CI)
 
-An example binary in `examples/avionics_examples/` (beside the existing
-`cfd_taylor_green` harness it extends) SHALL run the standard 3D
-Taylor–Green vortex at `Re = 1600` with the grid size as a parameter
+An example binary in `examples/avionics_examples/` SHALL run the standard 3D
+Taylor–Green vortex at `Re = 1600` (beside the existing `cfd_taylor_green`
+harness it extends) with the grid size as a parameter
 (default small; 64³–128³ documented as the reporting resolutions), printing
 the time series of kinetic energy and dissipation rate `−dE/dt` as CSV on
 stdout for comparison against the published DNS reference curve
@@ -112,8 +114,8 @@ correctness, the example produces the recognizable artifact.
 
 ### Requirement: Solver-path coverage discipline
 
-Every public function, error path, and alternative branch introduced by
-this change SHALL be exercised by tests, with any genuinely unreachable
+Every public function, error path, and alternative branch SHALL be exercised
+by tests, with any genuinely unreachable
 arm (the D3 construction-validated unwraps) documented inline as a coverage
 exemption in the Stage 0 tradition. The cross-validation, march, guard,
 diagnostic, and seeding paths SHALL each have dedicated failure-path tests,

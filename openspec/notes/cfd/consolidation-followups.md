@@ -6,67 +6,79 @@ change is archived (the DEC solver, theories, boundary zones, and uncertain-infl
 two things that arc left open: (1) where the uncertain handling actually sits, and (2) the loose ends
 that are otherwise tracked nowhere durable.
 
-## 1. Uncertain handling: in the crate, not in the DSL facade
+Update 2026-06-17: the IO-monad follow-up and the `uncertain_march` DSL promotion have both landed —
+see §3 (Resolved). The open issues below are revised accordingly.
+
+## 1. Uncertain handling: consolidated in the crate and promoted to the DSL
 
 The uncertain-inflow machinery — `UncertainInflowZone`, `UncertainBoundarySource` (with the opt-in
-`with_qmc_collapse`), `inflow_march_step`, `march_inflow`, `DropoutVerbosity` — is now **owned by
-`deep_causality_cfd`** (`src/solvers/dec/uncertain_inflow/`). At the crate level the uncertain layer is
-consolidated.
+`with_qmc_collapse`), `inflow_march_step`, `march_inflow`, `DropoutVerbosity` — is **owned by
+`deep_causality_cfd`** (`src/solvers/dec/uncertain_inflow/`).
 
-It is **not lifted into the `CfdFlow` DSL facade.** There is no `CfdConfigBuilder::uncertain_march(...)`
-configuration nor a `CfdFlow` workflow for a sensor-fed march. `examples/avionics_examples/
-dec_cylinder_wake` still **hand-rolls** the causal-monad march — a `PropagatingProcess<f64,
-InflowMarchState, InflowContext>` driven one `inflow_march_step` bind at a time — rather than declaring
-it through the DSL. So the uncertain march is *available* in the crate but *not promoted* into the
-declarative surface.
-
-**Open decision (the `uncertain_march` promotion).** Two paths, unchanged from the seam-vs-corpus model:
-
-- **Promote to corpus** — add `CfdConfigBuilder::uncertain_march(...)` (sensor stream + zone + collapse
-  policy) and a `CfdFlow` run that lowers onto `march_inflow`'s `CausalFlow::iterate_n`, with a
-  `run_with`-style per-step probe seam for the wake diagnostic. Justified once a second sensor-driven
-  case appears (rule of three); the physics already packages the reusable `march_inflow` kernel.
-- **Keep bespoke behind the seam** — leave the hand-rolled march in the example. Defensible while
-  `dec_cylinder_wake` is the only consumer.
-
-Recommendation: keep bespoke until a second uncertain-march case exists; revisit then.
+It has also been **lifted into the `CfdFlow` DSL facade** (commits `cc8f69bef`, `e2aceee3e`):
+`CfdConfigBuilder::uncertain_march(...)` declares the sensor stream + zone + collapse policy, and
+`CfdFlow::uncertain_march(&config).on(&manifold).run` / `run_with` drives the sensor-fed march (the
+per-step `inflow_march_step` bind, packaged as `march_inflow`), surfacing an `UncertainStepView`
+per-step probe seam. `dec_cylinder_wake` now declares the march through the DSL rather than hand-rolling
+a `PropagatingProcess<f64, InflowMarchState, InflowContext>` bind loop. The earlier seam-vs-corpus "open
+decision" is therefore **closed** (promoted to corpus) — see §3.
 
 ## 2. Open issues
 
 Loose ends from the consolidation + DSL migrations, with pointers:
 
 1. **`dec_cylinder_validation` repointed but unverified.** Its imports were moved physics → cfd and it
-   *builds*, but it was never *run* this session (it writes CSV files → blocked on the IO monad). Output
-   equivalence to the pre-consolidation version is unconfirmed. → run + A/B once an IO path exists.
+   *builds*, but it was never *run* this session. The IO path it was blocked on now exists (the
+   `add-io-monad` change landed and is archived — see §3), so its CSV writes can be migrated onto
+   `write_csv` and A/B'd. → migrate the writes, run, and confirm output equivalence to the
+   pre-consolidation version.
 
-2. **IO-monad follow-up change is unwritten.** `dec_lid_cavity_re1000`, `dec_cylinder_wake`, and
-   `dec_cylinder_validation` all write files; the cavity computes through `CfdFlow` but keeps its CSV
-   writes inline pending an IO monad. No OpenSpec change captures this yet.
+2. **Examples import-repointed, not fully DSL-migrated.** They were pointed at cfd but not all rewritten
+   into the `config.rs` / `main.rs` + `FloatType` split the other examples use. The cavity and
+   `dec_cylinder_wake` compute via `CfdFlow` (the latter via `uncertain_march`); `dec_cylinder_validation`
+   does not yet.
 
-3. **`uncertain_march` DSL promotion** — see §1 (the open decision).
+## 3. Resolved
 
-4. **`deep_causality_physics` `parallel` feature may be vestigial.** It forwards to
-   `deep_causality_topology/parallel` "underneath the Navier–Stokes solver" — but that solver moved to
-   `deep_causality_cfd`. Audit whether physics still needs the feature; the physics `README.md` blurb is
-   stale on this point (the bench reference was already removed).
+- **IO monad (was open issue #2).** The `add-io-monad` change is written, implemented, and archived
+  (`openspec/changes/archive/2026-06-17-add-io-monad/`; canonical spec `openspec/specs/io-monad/`). A
+  lazy `IoAction` effect lives in `deep_causality_haft` (value-level combinators, no `dyn`), with
+  `std`-gated file actions (`read_text` / `write_text` / `write_csv` / `read_csv`) and a `CausalFlow`
+  read/write bridge (`source` / `commit`, `read_*_from` / `write_*_to`) in `deep_causality_core`, plus
+  CSV helpers (`Report::write_series_csv`, `write_xy_csv`) in `deep_causality_cfd`.
+  `dec_lid_cavity_re1000` now writes its centerline CSVs through it with **byte-identical** formatting;
+  `dec_cylinder_wake` writes its full wake-probe series via `write_xy_csv` (new file output, not a
+  byte reproduction of the prior stdout stream). `dec_cylinder_validation` remains to migrate (open
+  issue #1).
 
-5. **`dec-ns-validation` live spec fails `openspec validate --strict`** (pre-existing; surfaced while
-   archiving the consolidation). Unrelated to the consolidation but undocumented — needs a separate look.
+- **`uncertain_march` DSL promotion (was open issue #2 / §1's open decision).** The sensor-fed march is
+  lifted into the `CfdFlow` DSL — `CfdConfigBuilder::uncertain_march` + `CfdFlow::uncertain_march`
+  (`run` / `run_with`) over the `march_inflow` kernel — and `dec_cylinder_wake` declares it through the
+  DSL (commits `cc8f69bef`, `e2aceee3e`).
 
-6. **DEC-solver benchmark gap.** `deep_causality_physics/benches/dec_solver_benchmark.rs` was removed
-   with the solver; no cfd replacement yet. Tracked task: benchmarks for all cfd fluid solvers (DEC NS
-   marching, MMS-verification, operator-accuracy) — new `deep_causality_cfd/benches/` + `criterion`
-   dev-dep + `[[bench]]` + Bazel.
+- **`deep_causality_physics` `parallel`-feature audit (dropped).** Not vestigial after all — the feature
+  is used by other physics kernels, not only the moved Navier–Stokes solver. No action needed.
 
-7. **Cylinder/cavity examples are import-repointed, not DSL-migrated.** They were pointed at cfd but not
-   rewritten into the `config.rs` / `main.rs` + `FloatType` split the other examples use. The cavity
-   computes via `CfdFlow`; the two cylinder examples do not.
+- **DEC-solver benchmark gap (was open issue #3).** Replaced the removed
+  `deep_causality_physics/benches/dec_solver_benchmark.rs` with three dedicated, holistic Criterion
+  benches in `deep_causality_cfd/benches/` — one per solver kind: `bench_dec_ns_march` (grid + step
+  sweeps), `bench_mms_verify` (pointwise viscosity sweep + amplitude-march step sweep), and
+  `bench_operator_study` (viscous `δd` over growing resolution ladders). `criterion` was already a
+  dev-dep; three `[[bench]]` entries declared (`autobenches = false`). No Bazel rule — benches are
+  cargo-only across the whole repo.
+
+- **`dec-ns-validation` strict-validation failure (was open issue #2).** The canonical spec was still in
+  change-delta form; converted to `## Purpose` / `## Requirements` and moved `SHALL` onto the first
+  line of the two requirements whose statement spilled to line 2 (openspec reads only the first line as
+  the requirement statement). `openspec validate dec-ns-validation --strict` now passes. (Other live
+  specs still fail `--strict` for similar reasons — out of scope here.)
 
 ## Pointers
 
 - Consolidated home: `deep_causality_cfd/src/solvers/dec/uncertain_inflow/`,
   `deep_causality_cfd/src/{theories,solvers}/`.
-- Hand-rolled uncertain march: `examples/avionics_examples/dec_cylinder_wake/main.rs`.
+- Uncertain march via the DSL: `deep_causality_cfd/src/types/flow/uncertain_march_run.rs`
+  (`CfdFlow::uncertain_march`); example `examples/avionics_examples/dec_cylinder_wake/main.rs`.
 - Related open notes: [qmc-presence-gate-followup.md](qmc-presence-gate-followup.md),
   [cfd-validation-plan.md](cfd-validation-plan.md).
 - Archived (implemented) context: `archive/cfd-crate.md`, `archive/cfd-gap.md`.
