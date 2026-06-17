@@ -137,6 +137,11 @@ pub fn print_threshold(threshold: f64) {
 /// Print one window's verdict (healthy / root cause) and its `EffectLog`.
 pub fn print_window_result(label: &str, result: &RcaProcess) {
     println!("--- Window: {label} ---");
+    if let Some(err) = &result.error {
+        println!("  verdict: ERROR (causal stage failed): {err}");
+        println!("  {}", result.logs);
+        return;
+    }
     match &result.value {
         EffectValue::Value(RcaSignal::Healthy { score }) => {
             println!("  verdict: HEALTHY (score {score:.3}); causal stage not run.");

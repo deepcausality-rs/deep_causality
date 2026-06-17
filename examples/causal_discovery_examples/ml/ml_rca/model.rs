@@ -7,7 +7,9 @@
 //! causal **explainer**, and the `PropagatingProcess` **gate** that bridges them.
 
 use candle_core::{DType, Device, Tensor, Var};
-use deep_causality_core::{EffectLog, EffectValue, PropagatingProcess};
+use deep_causality_core::{
+    CausalityError, CausalityErrorEnum, EffectLog, EffectValue, PropagatingProcess,
+};
 use deep_causality_discovery::{BrcdConfig, CdlBuilder, CdlConfigBuilder};
 use deep_causality_haft::LogAddEntry;
 
@@ -261,6 +263,9 @@ fn gate_stage(
             }
         }
         Err(e) => {
+            // Propagate the causal-stage failure into the process error channel so the chain
+            // enters an error state. Logging alone would leave a failed run looking like a normal,
+            // empty result.
             logs.add_entry(&format!(
                 "[{}] causal stage failed: {e}",
                 state.window_label
@@ -269,7 +274,9 @@ fn gate_stage(
                 value: EffectValue::None,
                 state,
                 context: ctx,
-                error: None,
+                error: Some(CausalityError::new(CausalityErrorEnum::Custom(format!(
+                    "causal root-cause analysis failed: {e}"
+                )))),
                 logs,
             }
         }
