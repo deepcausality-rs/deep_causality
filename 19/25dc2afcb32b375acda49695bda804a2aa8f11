@@ -1,0 +1,22 @@
+examples/causal_discovery_examples/ml/ml_rca/model.rs
+  s_c99b1c1e7a1f61::t_4fb0b2dc060af1 266-268,277-279
+  s_c99b1c1e7a1f61::t_ed8a0bf7f3c228 10-12
+examples/causal_discovery_examples/ml/ml_rca/utils.rs
+  s_c99b1c1e7a1f61::t_6d3fd590878b30 140-144
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "1925dc2afcb32b375acda49695bda804a2aa8f11",
+  "prompts": {},
+  "sessions": {
+    "s_c99b1c1e7a1f61": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0d52018e-5ef1-479e-81a6-7b3313872f3b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
