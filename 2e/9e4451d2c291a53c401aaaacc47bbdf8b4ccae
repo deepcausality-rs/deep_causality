@@ -1,0 +1,19 @@
+deep_causality_cfd/src/lib.rs
+  s_5c5a6bcbf82d1e::t_c1f70e213b0678 55-56,60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "2e9e4451d2c291a53c401aaaacc47bbdf8b4ccae",
+  "prompts": {},
+  "sessions": {
+    "s_5c5a6bcbf82d1e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "480bfd3b-3e94-457e-bd6e-4612cfa4dfd8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
