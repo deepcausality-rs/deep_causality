@@ -54,6 +54,7 @@ pub(crate) mod extensions;
 pub(crate) mod foldable;
 pub(crate) mod functor;
 pub(crate) mod hkt;
+pub(crate) mod io;
 pub mod iso;
 pub(crate) mod monad;
 pub(crate) mod morphism;
@@ -76,17 +77,22 @@ pub use alias::alias_profunctor::AliasProfunctor;
 
 // Arrow algebra (value-level strong category: composition + the monoidal product, + builder)
 pub use crate::arrow::{
-    arrow, Arrow, ArrowBuilder, Compose, EndoArrow, Fanout, First, Id, Lift, Second, Split,
+    Arrow, ArrowBuilder, Compose, EndoArrow, Fanout, First, Id, Lift, Second, Split, arrow,
 };
 
 // Either (the choice sum)
 pub use crate::either::Either;
 
+// IO effect (the lazy IO monad — value-level, no dyn, the Arrow twin)
+pub use crate::io::{
+    IoAction, IoAndThen, IoFail, IoMap, IoMapErr, IoPure, fail as io_fail, pure as io_pure,
+};
+
 // Isomorphism
 pub use crate::iso::{NaturalIso, NaturalIso2, NaturalIso3, NaturalIso4, NaturalIso5};
 
 // HKT
-pub use crate::hkt::{Satisfies, HKT, HKT2, HKT3, HKT4, HKT5};
+pub use crate::hkt::{HKT, HKT2, HKT3, HKT4, HKT5, Satisfies};
 pub use crate::hkt::{HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound, HKT6Unbound};
 pub use crate::hkt::{NoConstraint, Placeholder};
 
@@ -95,15 +101,15 @@ pub use crate::adjunction::Adjunction;
 pub use crate::applicative::Applicative;
 pub use crate::cybernetic_loop::CyberneticLoop;
 pub use crate::foldable::Foldable;
-pub use crate::functor::functor_base::Functor;
 pub use crate::functor::bifunctor::Bifunctor;
+pub use crate::functor::functor_base::Functor;
 pub use crate::functor::profunctor::Profunctor;
 pub use crate::monad::Monad;
-pub use crate::morphism::{FnMorphism, Morphism};
-pub use crate::morphism_endo::Endomorphism;
 pub use crate::monad::comonad::CoMonad;
 pub use crate::monad::parametric_monad::ParametricMonad;
 pub use crate::monad::promonad::Promonad;
+pub use crate::morphism::{FnMorphism, Morphism};
+pub use crate::morphism_endo::Endomorphism;
 pub use crate::pure::Pure;
 pub use crate::riemann_map::RiemannMap;
 pub use crate::traversable::Traversable;
