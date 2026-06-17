@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.5.2...deep_causality_multivector-v0.5.3) - 2026-06-17
+
+### Added
+
+- *(examples)* add example_ml_rca
+
+### Other
+
+- Updated README file across multiple crates to meet project standard.
+
 ## [0.5.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.5.1...deep_causality_multivector-v0.5.2) - 2026-06-09
 
 ### Added

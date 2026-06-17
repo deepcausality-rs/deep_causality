@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.3.0...deep_causality_algorithms-v0.3.1) - 2026-06-17
+
+### Other
+
+- Updated README file across multiple crates to meet project standard.
+
 ## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.2.14...deep_causality_algorithms-v0.3.0) - 2026-06-09
 
 ### Added

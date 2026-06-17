@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.4.1...deep_causality_discovery-v0.4.2) - 2026-06-17
+
+### Fixed
+
+- fixed sone doctest warnings
+- *(deep_causality_discovery)* fixed bazel test config.
+
+### Other
+
+- Merge branch 'deepcausality-rs:main' into main
+- Updated README file across multiple crates to meet project standard.
+
 ## [0.4.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.4.0...deep_causality_discovery-v0.4.1) - 2026-06-12
 
 ### Other

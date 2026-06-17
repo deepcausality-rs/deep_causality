@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_tensor"
-version = "0.4.4"
+version = "0.4.5"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true

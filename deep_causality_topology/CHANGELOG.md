@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.6.1...deep_causality_topology-v0.6.2) - 2026-06-17
+
+### Added
+
+- *(deep_causality_topology)* opt-in deterministic cut-cell iteration order
+- *(deep_causality_physics)* wire aperture-resolved immersed no-slip into the DEC solver
+- *(deep_causality_physics)* one-sided wall-normal friction diagnostic (Kirkpatrick true Δh)
+- *(deep_causality_topology)* aperture-resolved cut-face no-slip — geometry + weighted KKT projector
+- *(deep_causality_topology)* net-flux open-boundary Leray projection
+- *(cfd)* Small-cut-cell stabilization — CFD Stage 4 B1–B3 (cell-merging; inherent stability finding)
+- *(cfd)* Cut-cell cylinder wake harness — CFD Stage 4 Group D
+- feat(deep_causality_topology):
+- *(cfd)* Cut cells flow through the DEC NS solver via a registry-aware Hodge star — Stage 4 B5
+- *(deep_causality_topology)* Cut-aware Hodge star — CFD Stage 4 Group B foundation
+- *(deep_causality_topology)* Cut-cell geometry substrate — CFD Stage 4 Group A (add-cut-cells-and-immersed-boundaries)
+- *(deep_causality_topology)* Add graded (variable-spacing) metric constructors — CFD R1
+- *(deep_causality_physics)* Add the wall-bounded DEC Navier-Stokes
+- *(deep_causality_topology)* Add wall substrate - DCT transforms,
+- *(deep_causality_fft)* Add FFT crate, deep_causality_par, and the spectral Poisson solve (closes add-fft)
+- *(deep_causality_topology)* Add DEC exterior algebra, de Rham transfer,
+
+### Fixed
+
+- *(deep_causality_topology)* Diagnosis (2026-06-12, task 1.3 — budget probe on the 32³ Re-1600 trajectory): hypothesis (1) confirmed. The convective power ⟨u, −i_u(du)⟩_M is exactly zero on the smooth single-mode initial state (−9e-16), turns positive as the spectrum fills (+0.59 at t* 3.1, +28 at 7.9), and overwhelms the viscous sink (always properly negative) at t* ≈ 8.5 — energy growth follows.
+
+### Other
+
+- *(dec-solver)* warm-start the λ (cut-face multiplier) block in the weighted projection
+- *(dec-solver)* projection CG warm-start + cycle-mean cylinder drag
+- *(openspec)* Drop fix-graded-convective-consistency — premise superseded by findings
+- *(deep_causality_topology)* Verify operator convergence on graded metrics — CFD R1 (B1)
+- *(deep_causality_topology)* Memoize the diagonal Hodge star to take
+- *(deep_causality_topology)* Add compiled DEC stencil tables and the
+- *(deep_causality_num)* Add table-based fast path for Float106::sin_cos
+- *(deep_causality_topology)* Add DEC solver benchmark, eliminate
+- *(deep_causality_topology)* Memoize boundary matrices and preserve
+
 ## [0.6.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.6.0...deep_causality_topology-v0.6.1) - 2026-06-09
 
 ### Added

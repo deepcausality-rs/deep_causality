@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.1.16...deep_causality_rand-v0.2.0) - 2026-06-17
+
+### Added
+
+- *(deep_causality_rand)* Sobol sequence + inverse-CDF transforms for QMC
+- *(deep_causality_rand)* Generalize the distribution surface from Float to Real
+- *(deep_causality_num)* removed chacha20 csprng to remove unsafe code.
+
+### Other
+
+- Updated README file across multiple crates to meet project standard.
+
 ## [0.1.16](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.1.15...deep_causality_rand-v0.1.16) - 2026-06-09
 
 ### Added
