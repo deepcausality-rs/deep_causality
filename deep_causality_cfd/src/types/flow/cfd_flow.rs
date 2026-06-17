@@ -27,6 +27,16 @@ impl CfdFlow {
     ) -> MarchPipeline<'_, D, R, Z, C> {
         MarchPipeline::new(config)
     }
+
+    /// Begin composing a **sensor-fed uncertain-inflow march** from an
+    /// [`UncertainMarchConfig`](crate::UncertainMarchConfig). Borrows the config; the geometry is
+    /// lent next via [`UncertainMarchPipeline::on`](crate::UncertainMarchPipeline::on).
+    #[cfg(feature = "std")]
+    pub fn uncertain_march<R: CfdScalar + deep_causality_uncertain::ProbabilisticType>(
+        config: &crate::types::flow_config::UncertainMarchConfig<R>,
+    ) -> crate::types::flow::UncertainMarchPipeline<'_, R> {
+        crate::types::flow::UncertainMarchPipeline::new(config)
+    }
 }
 
 /// Print a stage-failure `context` and its error on stderr, then exit the process non-zero — a

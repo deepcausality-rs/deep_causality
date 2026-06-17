@@ -52,6 +52,11 @@ pub use crate::types::flow_config::{
     MarchConfigBuilder, MarchStop, Mesh, Observe, Seed, TaylorGreen, VerifyConfig,
     VerifyConfigBuilder,
 };
+// The sensor-fed uncertain-inflow march (std-only: consumes `deep_causality_uncertain`).
+#[cfg(feature = "std")]
+pub use crate::types::flow::{UncertainMarchPipeline, UncertainMarchRun, UncertainStepView};
+#[cfg(feature = "std")]
+pub use crate::types::flow_config::{UncertainMarchConfig, UncertainMarchConfigBuilder};
 
 // Fluid-dynamics theories: the DEC-native FluidTheory realization, the pointwise NS
 // regime evaluators (`*_rhs`), and their causal-effect wrappers (`*_rhs_effect`).

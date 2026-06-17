@@ -19,6 +19,8 @@ mod march_run;
 mod mms;
 mod operator_study;
 mod report;
+#[cfg(feature = "std")]
+mod uncertain_march_run;
 mod verify;
 mod zones;
 
@@ -31,4 +33,6 @@ pub use march_run::{MarchPipeline, MarchRun, StepView};
 pub use mms::{MmsBuilder, Regime};
 pub use operator_study::{Operator, OperatorStudyBuilder};
 pub use report::Report;
+#[cfg(feature = "std")]
+pub use uncertain_march_run::{UncertainMarchPipeline, UncertainMarchRun, UncertainStepView};
 pub use verify::VerifyRun;
