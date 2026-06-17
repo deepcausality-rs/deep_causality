@@ -2,7 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Functor, HKT, Pure, Satisfies};
+use crate::{Functor, Pure, Satisfies, HKT};
+
+pub(crate) mod parametric_monad;
+pub(crate) mod promonad;
+pub(crate) mod comonad;
 
 /// The `Monad` trait extends `Functor` and `Pure` by providing the `bind` operation
 /// for sequencing computations that produce effectful values.
