@@ -1,84 +1,127 @@
+# Design — `Io`: a full IO abstraction (monad + effect)
+
 ## Context
 
-`deep_causality_core` already provides the causal-effect monads (`PropagatingEffect`,
-`PropagatingProcess`, `CausalFlow`) and the `CausalityError` algebra, but nothing models *side
-effects*. The CFD examples write CSV files imperatively (`File::create`/`writeln!`), which the
-consolidation flagged as the one part of an otherwise declarative pipeline that escapes the DSL. We
-want a lazy IO effect — a *description* of file work that runs only at the edge — that reuses the
-existing error algebra and composes with the causal monads. The crate is `no_std`-capable; file IO is
-inherently `std`.
+IO is the workspace's first genuinely side-effecting effect. This document records the design
+decisions, the one architectural fork that was resolved, and how IO relates to the existing effect
+system.
 
-## Goals / Non-Goals
+## Relationship to the existing effect system
 
-**Goals:**
-- A lazy `Io<T>`: constructing or composing it performs **no** side effect; effects happen only at an
-  explicit `run()` call.
-- A small, monadic surface (`pure`, `map`, `and_then`, `sequence`) so multi-file output composes into
-  one runnable program.
-- A minimal file-action set sufficient to retire the cavity CSV writes: `write_text`, `write_csv`,
-  `read_text`.
-- Failures surface as `CausalityError` so an `Io` pipeline short-circuits and interoperates with the
-  rest of the causal stack.
-- `no_std`-safe pure combinators; `std`-gated file actions and `run()`.
+`deep_causality_haft`'s effect system (`Effect3/4/5`, `MonadEffect*`) and the causal monad
+(`CausalEffectPropagationProcess`, itself an `Effect5`-shaped carrier of value + state + context +
+error + log) track effects **statically and purely**: each "effect" is a *fixed type parameter*
+threading **data** through a computation. Nothing there performs a real-world side effect.
 
-**Non-Goals:**
-- Async IO, sockets, process spawning, or a general effect system beyond files.
-- Capturing stdout/stderr (examples that `println!` are out of scope).
-- A typed CSV schema / serde layer — `write_csv` takes pre-rendered rows.
-- Parallel/concurrent IO.
+IO cannot be modeled that way. A filesystem read/write is a **real** effect whose *execution* must be
+deferred to the program edge. Therefore IO is **orthogonal** to `Effect3/4/5` — it neither extends nor
+replaces them. It is a value-level monad that **bridges into** the pure effect system at two seams:
 
-## Decisions
+- **Error seam:** an IO failure becomes a `CausalityError` (`CausalityErrorEnum::IoError`), so it
+  short-circuits a `CausalFlow` exactly like any other error.
+- **Audit seam:** running an IO action inside a `CausalFlow` appends an `EffectLog` entry, recording
+  the effect in the same audit trail as a Pearl `do(...)` intervention.
 
-### D1 — Placement: `deep_causality_core`
-`Io<T>` lives in `deep_causality_core` (`src/types/io/`), next to the other effect monads it mirrors
-and whose `CausalityError` it reuses. `deep_causality_haft` holds higher-order *trait* abstractions
-(HKT witnesses), not concrete effect runtimes, so it is the wrong home. Core already gates `std`
-features, so the file actions fit its existing feature story.
+Summary: *the effect system describes effects as data; the IO monad executes effects at the edge; they
+meet at `CausalityError` + `EffectLog`.*
 
-### D2 — Representation: an eager-built action tree, lazily run
-`Io<T>` is an owned value describing the computation, not a boxed `FnOnce`. A small internal enum
-captures the leaves (`Pure(T)`, `WriteText{path,contents}`, `WriteCsv{path,header,rows}`,
-`ReadText{path}`) and the combinators (`Map`, `AndThen`). `run(self) -> Result<T, CausalityError>`
-interprets the tree once, performing the side effects in order. This keeps `Io<T>` `Clone`/`Debug`
-where the payload allows, avoids boxed closures in the common path, and makes the "no effect before
-`run`" property structural rather than convention. (`AndThen` needs a stored continuation; it is the
-one boxed-closure case, `std`/`alloc`-gated.)
+## Decision: defunctionalized, `dyn`-free encoding (Encoding A)
 
-### D3 — Error channel: `CausalityError`
-Every fallible action maps its `std::io::Error` into `CausalityError` (the existing
-`CausalityErrorEnum::Custom`/IO variant), so `Io` short-circuits identically to `PropagatingEffect`
-and an `Io` result drops cleanly into a `CausalFlow` step. No new error type.
+### The fork
 
-### D4 — Action set (v1)
-- `Io::pure(value)` — lift a value, no effect.
-- `Io::write_text(path, contents)` — write a UTF-8 file, yielding `()`.
-- `Io::write_csv(path, header, rows)` — write `header` then each pre-rendered row line, yielding `()`.
-  Rows are `Vec<String>` (already formatted by the caller), so byte output is fully caller-controlled
-  (needed for bit-identical migration).
-- `Io::read_text(path)` — read a file to `String`.
-- `Io::sequence(actions)` — run a `Vec<Io<()>>` in order, yielding `()`.
+A lazy, **mono-parametric** `Io<A>` — the shape the witness `Monad` trait requires (`F::Type<A>` has
+exactly one hole) — cannot store data-dependent continuations without `Box<dyn FnOnce>`. This is
+structural: a free-monad/AST encoding still needs boxed `A -> Io<B>` continuations. Two consequences:
 
-### D5 — Integration with the Flow DSL / Report
-The CFD side stays thin: a corpus helper renders a `Report` (or example-computed profile) into CSV
-`header` + `rows`, and the example builds an `Io` program from those and calls `run()` at the end of
-`main`. No change to `CfdFlow::run` — the DSL still returns an owned `Report`; IO is a separate,
-explicit edge stage, preserving "borrows never escape run" (D2 of the Flow design).
+1. The witness `Monad`/`Functor` traits cannot host a lazy IO bind regardless of encoding: their
+   method signatures (`Func: FnMut(A) -> F::Type<B>`, no `'static`) cannot express the `'static`
+   capture a deferred thunk requires. This is the **same** structural reason `PropagatingProcessWitness`
+   and `CausalEffectPropagationProcessWitness` deliberately do not implement value-only `Monad` (see
+   the `NOTE` blocks in their `hkt.rs`).
+2. So the realistic choice gives up the generic witness `Monad` impl either way, and differs only in
+   whether it uses `dyn`.
 
-### D6 — Std boundary
-The `Io<T>` type, `pure`, `map`, `and_then`, and `sequence` are available without `std`. The file
-*actions* (`write_text`/`write_csv`/`read_text`) and `run()`'s file interpretation are
-`#[cfg(feature = "std")]`. Under `no_std` an `Io` can still be *described* over `pure`/`map` but not
-file-run.
+The workspace forbids `dyn` (test-enforced; zero `dyn` in haft/core `src`). The codebase already
+contains the precedent for "an abstraction that cannot be witnessed without `dyn`": the **`Arrow`
+algebra** — a value-level algebra of concrete combinator structs (`Lift`, `Compose`, `First`…), chosen
+precisely because composing closures yields unnameable types and `Box<dyn Fn>` is forbidden.
 
-## Risks / Trade-offs
+### Resolution
 
-- **Boxed continuation for `and_then`.** Monadic bind needs a stored closure (`Box<dyn FnOnce>`),
-  the one allocation/dynamic-dispatch point. Acceptable: IO is edge-only and not hot; the action
-  leaves stay closure-free. Documented; `alloc`-gated.
-- **Not a full effect system.** Files only. Mitigation: the action enum is extensible; new leaves add
-  without changing the combinator surface (open/closed).
-- **Bit-identical migration constraint.** `write_csv` must reproduce the example's exact bytes. Taking
-  pre-rendered `Vec<String>` rows (caller formats with the same `{:.6}`/`{:+.6}` specifiers) keeps the
-  output byte-for-byte; the migration is verified by diffing the cavity CSVs against the current ones.
-- **Laziness vs. ergonomics.** An action tree is slightly more machinery than a `FnOnce` thunk, but it
-  buys `Debug`/structural guarantees and avoids capturing the world in a closure.
+**IO belongs with `Arrow`, not with the witnessed containers.** An `Io<A>` is a nullary Kleisli arrow
+`() ⇝ A` over the `Result`/causal monad — the same Kleisli category `CausalArrow` inhabits. The IO
+monad is realized as an `IoAction` trait whose `map`/`and_then` return new concrete combinator structs:
+total composition, monomorphized, zero-cost, **no `dyn`**.
+
+It does **not** implement the witness `Monad` trait, and that is consistent with the codebase: haft has
+two idioms — the witness-pattern hierarchy for pure containers, and the value-level combinator algebra
+(`Arrow`) for the rest. IO joins the latter.
+
+### Why generic over `E`
+
+The abstract layer lives in `deep_causality_haft`, which must stay dependency-free and `no_std`-safe.
+`IoAction` carries `type Error`, so haft names no concrete error. `deep_causality_core` specializes the
+file actions to `Error = CausalityError`, mirroring how `PropagatingEffectWitness<E, L>` fixes its
+effect parameters at the core layer.
+
+## Laziness, the run seam, and `CausalFlow`
+
+`CausalFlow` is **eager** — each `bind` executes immediately. IO is **lazy** — nothing runs until
+`run`. The bridge reconciles these: the IO action is **composed lazily** and the flow verb is the
+single controlled `run` point, folding the `Result` into the flow and appending the audit entry.
+
+### Two directions, two value semantics
+
+A read and a write are not symmetric, and one method cannot honestly be both. The earlier
+`commit_io`/`from_io` pair conflated them (and would have replaced a write's flow value with the
+action's `()` output, collapsing `CausalFlow<V>` to `CausalFlow<()>` — wrong). They are split by the
+direction's effect on the carried value:
+
+- **Read = constructor, value-producing.** The read result *is* the value, so a read begins a flow.
+- **Write = step, value-preserving.** A write runs for its effect and the carried value flows on
+  unchanged; the `()` output is discarded and an `EffectLog` entry is appended. A write is the IO
+  cousin of `guard` (inspect-and-pass-through), not of `try_step` (transform).
+
+### Naming convention
+
+Name the **intent** (data in/out of the world via a *place*), not the *mechanism* (`io`), and let the
+preposition take a file path. The `IoAction` argument already carries read/write + format, so the flow
+verbs are format-qualified path verbs rather than re-stating "io":
+
+- **`CausalFlow::read_text_from(path)` / `read_csv_from(path)`** — read constructors (value in).
+- **`flow.write_text_to(path, |v| contents(v))` / `write_csv_to(path, header, |v| rows(v))`** —
+  value-preserving write steps (effect out, value through).
+
+These are thin wrappers over a generic, format-agnostic bridge kept for the power case where an
+`IoAction` is composed first and only then entered:
+
+- **`CausalFlow::source(io)`** — start a flow from any composed `IoAction` (its `Output` is the value).
+- **`flow.commit(|v| io)`** — run a value-preserving `IoAction<Output = ()>` step.
+
+Rejected alternatives for the verbs: `from_io`/`commit_io` (mechanism-named, and `commit_io` had the
+value-collapsing bug above); bare `read_from`/`write_to` taking an `IoAction` (doubles the verb —
+"write to a write_csv" — and the preposition would not name a place).
+
+## Bit-identical migration
+
+`write_csv` takes **pre-rendered row strings** (`Vec<Vec<String>>`) and emits `header.join(",")` then
+each `row.join(",")`, `'\n'`-terminated. The exact bytes are caller-determined, so a migrated example
+reproduces its prior `println!`/`writeln!` output byte-for-byte (verified against a captured baseline).
+
+## Alternatives considered
+
+- **Encoding B (boxed thunk `Io<A,E> = Box<dyn FnOnce()->Result<A,E>>` + `IoWitness` + an `IoMonad`
+  trait mirroring `CausalMonad`).** Literally witness-nameable, but introduces `dyn` against a
+  test-enforced ban, and *still* cannot implement the generic witness `Monad`. Rejected.
+- **Free monad / instruction-set AST.** Still requires boxed result-dependent continuations → `dyn`.
+  Rejected.
+- **Placing the abstraction in `core` (the old, rolled-back proposal).** Couples the generic IO monad
+  to `CausalityError` and keeps it out of the functional foundation where Functor/Monad/Arrow live.
+  Rejected; the abstraction goes in haft, the specialization in core.
+
+## Risks
+
+- `IoAction` chains build nested generic types; deep ad-hoc chains can produce long type names. Mitigated
+  by keeping the action set small and providing named helpers (`write_csv`, `write_series_csv`).
+- No type erasure means heterogeneous IO actions cannot be collected into a single `Vec` without a
+  future, separately-documented escape hatch. Out of scope; not needed by the CFD use case.
