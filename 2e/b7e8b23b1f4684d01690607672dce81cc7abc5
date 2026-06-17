@@ -1,0 +1,23 @@
+deep_causality_haft/src/functor/functor_base.rs
+  s_9bd896ecf5e8ba::t_e5ba96d62e461f 1-70
+deep_causality_haft/src/functor/mod.rs
+  s_9bd896ecf5e8ba::t_e5ba96d62e461f 5-9
+deep_causality_haft/src/lib.rs
+  s_9bd896ecf5e8ba::t_90a196cc345379 104
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "2eb7e8b23b1f4684d01690607672dce81cc7abc5",
+  "prompts": {},
+  "sessions": {
+    "s_9bd896ecf5e8ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1fd266d-b948-4629-b4a6-3d787aaeec4e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
