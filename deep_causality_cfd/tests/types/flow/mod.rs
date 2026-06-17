@@ -25,6 +25,8 @@ pub mod coupling_tests;
 #[cfg(test)]
 pub mod frequency_tests;
 #[cfg(test)]
+pub mod io_tests;
+#[cfg(test)]
 pub mod march_case_tests;
 #[cfg(test)]
 pub mod march_run_tests;

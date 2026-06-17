@@ -52,6 +52,13 @@ pub use crate::types::flow_config::{
     MarchConfigBuilder, MarchStop, Mesh, Observe, Seed, TaylorGreen, VerifyConfig,
     VerifyConfigBuilder,
 };
+// IO effect: the `IoAction` trait (from haft) and the CSV writer helper, so a `CfdFlow` example
+// can describe and run file output through one crate.
+#[cfg(feature = "std")]
+pub use crate::types::flow::write_xy_csv;
+#[cfg(feature = "std")]
+pub use deep_causality_haft::IoAction;
+
 // The sensor-fed uncertain-inflow march (std-only: consumes `deep_causality_uncertain`).
 #[cfg(feature = "std")]
 pub use crate::types::flow::{UncertainMarchPipeline, UncertainMarchRun, UncertainStepView};

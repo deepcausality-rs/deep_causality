@@ -140,11 +140,13 @@ filesystem effect of `run` SHALL be gated behind the `std` feature.
 
 ### Requirement: CFD CSV application
 
-`deep_causality_cfd` SHALL provide std-gated CSV helpers built on the core file actions
-(`Report::write_series_csv` and an `(x, y)` series writer), and `dec_cylinder_wake` SHALL write its wake
-CSV through a single value-preserving `write_csv_to` step (or the equivalent `commit`). The migrated
-output SHALL be byte-for-byte identical to the prior `println!` stream.
+`deep_causality_cfd` SHALL provide std-gated CSV helpers built on the core `write_csv` file action:
+`Report::write_series_csv(path, labels)` (named observation columns) and a free `write_xy_csv(path,
+header, series)` `(x, y)` writer. `dec_cylinder_wake` SHALL write its full wake-probe time series to a
+CSV file by constructing a deferred `write_xy_csv` action and executing it with a single `run` at the
+program edge (an IO failure surfacing as `CausalityError` through the example's `fail` path).
 
-#### Scenario: The ported example reproduces its output byte-for-byte
-- **WHEN** the migrated `dec_cylinder_wake` is run and its CSV captured
-- **THEN** the bytes equal the captured baseline of the pre-migration `println!` output
+#### Scenario: The ported example writes a well-formed wake CSV
+- **WHEN** the migrated `dec_cylinder_wake` is run
+- **THEN** it writes a CSV file with a `t,v_probe` header and one row per march step, and the file is
+  not created until the action's `run` executes
