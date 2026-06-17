@@ -4,7 +4,7 @@ The smooth 3D Taylor–Green vortex transitions toward turbulence, and the kinet
 dissipation-rate curve `−dE*/dt*` against the published DNS reference data is the standard
 structure-preservation test a new solver is judged by.
 
-Where the sibling [cfd_taylor_green](../cfd_taylor_green/README.md) example *verifies the
+Where the sibling [cfd_taylor_green](../mms_taylor_green/README.md) example *verifies the
 pointwise right-hand side* by manufactured solutions, this example *runs the actual solver*: the
 periodic DEC-native incompressible Navier–Stokes march from
 `deep_causality_physics::theories::fluid_dynamics::dec`. Three DeepCausality abstractions appear

@@ -43,7 +43,7 @@
 //! `CELLS_PER_D` and `STEPS` for a quantitative comparison.
 //!
 //! ```text
-//! cargo run --release -p avionics_examples --example dec_cylinder_validation
+//! cargo run --release -p deep_causality_cfd --example dec_cylinder_verification
 //! ```
 
 use std::collections::BTreeMap;

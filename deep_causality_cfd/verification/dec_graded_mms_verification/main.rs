@@ -37,7 +37,7 @@
 //! it was always measured consistently. Run:
 //!
 //! ```text
-//! cargo run --release -p avionics_examples --example dec_graded_mms
+//! cargo run --release -p deep_causality_cfd --example dec_graded_mms_verification
 //! ```
 
 use deep_causality_cfd::{Grading, Mesh};

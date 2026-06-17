@@ -18,7 +18,7 @@
 //! Usage:
 //!
 //! ```text
-//! cargo run --release --example dec_taylor_green_re1600 [grid] [t_star_max]
+//! cargo run --release -p deep_causality_cfd --example dec_taylor_green_re1600_verification [grid] [t_star_max]
 //! ```
 //!
 //! `grid` defaults to 16 (a smoke-scale run). Output is CSV on stdout

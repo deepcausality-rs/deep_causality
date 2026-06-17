@@ -9,37 +9,6 @@ publish = false
 [lib]
 path = "no_lib.rs"
 
-[features]
-# Enables Rayon-parallel execution of the DEC operator loops underneath
-# the Navier-Stokes solver (dec_taylor_green_re1600). Disabled by default:
-#   cargo run --release -p avionics_examples --features parallel \
-#       --example dec_taylor_green_re1600
-parallel = ["deep_causality_cfd/parallel"]
-
-[[example]]
-name = "cfd_taylor_green"
-path = "cfd_taylor_green/main.rs"
-
-[[example]]
-name = "dec_taylor_green_re1600"
-path = "dec_taylor_green_re1600/main.rs"
-
-[[example]]
-name = "dec_lid_cavity_re1000"
-path = "dec_lid_cavity_re1000/main.rs"
-
-[[example]]
-name = "dec_graded_mms"
-path = "dec_graded_mms/main.rs"
-
-[[example]]
-name = "dec_cylinder_wake"
-path = "dec_cylinder_wake/main.rs"
-
-[[example]]
-name = "dec_cylinder_validation"
-path = "dec_cylinder_validation/main.rs"
-
 [[example]]
 name = "turbulence_flow"
 path = "turbulence_flow/main.rs"
@@ -64,13 +33,10 @@ path = "flight_envelope_monitor/main.rs"
 deep_causality = { path = "../../deep_causality" }
 deep_causality_core = { path = "../../deep_causality_core" }
 deep_causality_calculus = { path = "../../deep_causality_calculus" }
-deep_causality_cfd = { path = "../../deep_causality_cfd" }
 deep_causality_num = { path = "../../deep_causality_num" }
 deep_causality_haft = { path = "../../deep_causality_haft" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
-deep_causality_topology = { path = "../../deep_causality_topology" }
 deep_causality_multivector = { path = "../../deep_causality_multivector" }
-deep_causality_uncertain = { path = "../../deep_causality_uncertain" }
 
 [lints]
 workspace = true

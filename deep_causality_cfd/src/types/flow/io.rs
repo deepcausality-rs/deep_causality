@@ -36,11 +36,13 @@ impl<R: CfdScalar> Report<R> {
 }
 
 /// Describe writing an `(x, y)` series as a two-column CSV under `header` (runs only at the edge).
-/// Convenient for a probe time-series such as `(t, v_probe)`.
-pub fn write_xy_csv(
+/// Convenient for a probe time-series such as `(t, v_probe)`. Generic over the scalar `R` so callers
+/// render at their working precision without downcasting; each value is formatted through its
+/// `Display`.
+pub fn write_xy_csv<R: CfdScalar>(
     path: impl Into<PathBuf>,
     header: [&str; 2],
-    series: &[(f64, f64)],
+    series: &[(R, R)],
 ) -> WriteCsv {
     let header = vec![header[0].to_string(), header[1].to_string()];
     let rows = series
