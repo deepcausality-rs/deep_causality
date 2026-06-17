@@ -45,10 +45,8 @@
 //!   streamfunction extrema) against Ghia's node-snapped values.
 
 use std::env;
-use std::fs::File;
-use std::io::Write as IoWrite;
 
-use deep_causality_cfd::{CfdConfigBuilder, CfdFlow, Mesh, Seed};
+use deep_causality_cfd::{CfdConfigBuilder, CfdFlow, IoAction, Mesh, Seed, fail, write_csv};
 
 const RE: f64 = 1000.0;
 const LID_SPEED: f64 = 1.0;
@@ -364,21 +362,32 @@ fn write_centerline_csv(
     ghia: &[(f64, f64); 17],
     interp: &impl Fn(&[f64], f64) -> f64,
 ) {
-    let mut file = File::create(path).expect("CSV file creation");
-    writeln!(file, "{header}").expect("CSV write");
+    // Render every field to a string with the exact same specifiers as before, so the bytes are
+    // identical; the IO effect only handles the write. `write_csv` builds a deferred action and
+    // `run` executes it once, at the edge — an IO failure surfaces as a `CausalityError`.
+    let header_fields: Vec<String> = header.split(',').map(|s| s.to_string()).collect();
+    let mut rows: Vec<Vec<String>> = Vec::with_capacity(ghia.len() + profile.len());
     // The Ghia stations with reference values and differences.
     for &(s, reference) in ghia {
         let computed = interp(profile, s);
-        writeln!(
-            file,
-            "{s:.4},{computed:.6},{reference:.5},{:+.6}",
-            computed - reference
-        )
-        .expect("CSV write");
+        rows.push(vec![
+            format!("{s:.4}"),
+            format!("{computed:.6}"),
+            format!("{reference:.5}"),
+            format!("{:+.6}", computed - reference),
+        ]);
     }
     // The full computed profile (reference column empty).
     for (j, value) in profile.iter().enumerate() {
-        writeln!(file, "{:.4},{value:.6},,", j as f64 * h).expect("CSV write");
+        rows.push(vec![
+            format!("{:.4}", j as f64 * h),
+            format!("{value:.6}"),
+            String::new(),
+            String::new(),
+        ]);
     }
+    write_csv(path, header_fields, rows)
+        .run()
+        .unwrap_or_else(|e| fail("centerline csv", e));
     println!("# wrote {path}");
 }
