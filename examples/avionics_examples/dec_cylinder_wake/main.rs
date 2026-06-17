@@ -70,7 +70,9 @@
 //! cargo run --release -p avionics_examples --example dec_cylinder_wake
 //! ```
 
-use deep_causality_cfd::{CfdConfigBuilder, CfdFlow, DropoutVerbosity, UncertainInflowZone};
+use deep_causality_cfd::{
+    CfdConfigBuilder, CfdFlow, DropoutVerbosity, IoAction, UncertainInflowZone, fail, write_xy_csv,
+};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, CutCellRegistry, LatticeComplex, Manifold, Primitive,
@@ -242,6 +244,19 @@ fn main() {
         report.log_entries().unwrap_or(0)
     );
     report_strouhal(&probe_series, diameter, U_BULK);
+
+    // Persist the full wake-probe time series to CSV through the IO effect (Group C output edge).
+    // `write_xy_csv` builds a *deferred* `IoAction` — nothing touches the filesystem until `run`,
+    // which executes the write once, here at the program edge. An IO failure surfaces as a
+    // `CausalityError` and is handled by the same `fail` path as the rest of the workflow.
+    let csv_path = "cylinder_wake.csv";
+    write_xy_csv(csv_path, ["t", "v_probe"], &probe_series)
+        .run()
+        .unwrap_or_else(|e| fail("wake-probe csv", e));
+    eprintln!(
+        "# wrote {} wake-probe samples to {csv_path}",
+        probe_series.len()
+    );
 }
 
 /// The per-step sensor stream: a noisy present reading at `U_BULK`, with a periodic dropout.
