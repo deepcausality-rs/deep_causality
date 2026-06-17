@@ -70,12 +70,7 @@
 //! cargo run --release -p avionics_examples --example dec_cylinder_wake
 //! ```
 
-use deep_causality_cfd::{
-    DecNsSolver, DropoutVerbosity, InflowContext, InflowMarchState, UncertainInflowZone,
-    dec_divergence_residual, dec_max_speed, inflow_march_step,
-};
-use deep_causality_core::{EffectLog, EffectValue, PropagatingProcess};
-use deep_causality_haft::LogSize;
+use deep_causality_cfd::{CfdConfigBuilder, CfdFlow, DropoutVerbosity, UncertainInflowZone};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, CutCellRegistry, LatticeComplex, Manifold, Primitive,
@@ -162,18 +157,6 @@ fn main() {
     // Conservative dt: the diffusive limit, with an advective margin for the lid-driven bulk.
     let dt = 0.2 * h * h / (4.0 * nu);
 
-    // The stateless cut-cell solver; the sensor drives the top wall (axis 1, far face) with a
-    // streamwise (axis 0) velocity. `with_moving_wall` here validates the prescribed-wall config
-    // and seeds the initial lid value; the march reconfigures it from the sensor each step.
-    let solver = DecNsSolver::new(&manifold, nu, dt, None)
-        .expect("solver")
-        .with_moving_wall(1, true, [U_BULK, 0.0])
-        .expect("prescribed top wall");
-
-    let n0 = manifold.complex().num_cells(0);
-    let rest = CausalTensor::new(vec![0.0; 2 * n0], vec![2 * n0]).unwrap();
-    let seed = solver.seed_from_vertex_vectors(&rest).expect("seed");
-
     // A wake probe: the y-velocity (transverse) one diameter downstream of the cylinder.
     let probe_x = ((center[0] + 1.5 * diameter) / h).round() as usize;
     let probe_y = (0.5 / h).round() as usize;
@@ -210,51 +193,53 @@ fn main() {
     );
     println!("step,t,kinetic_energy,max_speed,div_residual,v_probe");
 
-    // The causal-monad march: state in the monad, the stateless solver untouched. We bind one
-    // step at a time so the wake probe can be streamed; `march_inflow` packages the identical
-    // stage as a `CausalFlow::iterate_n` loop.
-    let initial = InflowMarchState::new(solver, seed, U_BULK);
-    let context = InflowContext::new(zone, stream);
-    let mut process: PropagatingProcess<f64, InflowMarchState<2, f64>, InflowContext<f64>> =
-        PropagatingProcess {
-            value: EffectValue::Value(U_BULK),
-            state: initial,
-            context: Some(context),
-            error: None,
-            logs: EffectLog::new(),
-        };
+    // The causal-monad march via the CfdFlow DSL: configuration (solver + sensor zone + stream +
+    // horizon) is declared, the caller-owned geometry is lent with `.on(&manifold)` (B1), and
+    // `run_with` streams an `UncertainStepView` per step so the wake probe can be sampled — the same
+    // `inflow_march_step` bind the hand-rolled loop used (and `march_inflow` packages).
+    let config = CfdConfigBuilder::uncertain_march::<f64>("cylinder-wake")
+        .solver(
+            CfdConfigBuilder::dec_ns()
+                .viscosity(nu)
+                .time_step(dt)
+                .build()
+                .expect("solver config"),
+        )
+        .inflow_zone(zone)
+        .sensor_stream(stream)
+        .march_for(STEPS)
+        .build()
+        .expect("uncertain-march config");
 
     let mut probe_series: Vec<(f64, f64)> = Vec::with_capacity(STEPS);
     let report_every = (STEPS / 200).max(1);
-    for step in 0..STEPS {
-        process = process.bind(inflow_march_step);
-        if let Some(e) = process.error() {
-            eprintln!("# march stopped at step {step}: {e:?}");
-            break;
-        }
-        let t = (step + 1) as f64 * dt;
-        let u = process.state().field().as_one_form();
-        let v_probe = u.as_slice()[probe_edge] / h;
-        probe_series.push((t, v_probe));
-        if (step + 1) % report_every == 0 {
-            let ke = kinetic_energy(u.as_slice(), h);
-            let max_speed = dec_max_speed(&manifold, u).unwrap_or(f64::NAN);
-            let div = dec_divergence_residual(&manifold, u).unwrap_or(f64::NAN);
-            println!(
-                "{},{:.5},{:.6e},{:.6e},{:.3e},{:.6e}",
-                step + 1,
-                t,
-                ke,
-                max_speed,
-                div,
-                v_probe,
-            );
-        }
-    }
+    let report = CfdFlow::uncertain_march(&config)
+        .on(&manifold)
+        .run_with(|sv| {
+            let t = sv.step() as f64 * dt;
+            let u = sv.one_form();
+            let v_probe = u.as_slice()[probe_edge] / h;
+            probe_series.push((t, v_probe));
+            if sv.step() % report_every == 0 {
+                let ke = kinetic_energy(u.as_slice(), h);
+                let max_speed = sv.max_speed().unwrap_or(f64::NAN);
+                let div = sv.divergence().unwrap_or(f64::NAN);
+                println!(
+                    "{},{:.5},{:.6e},{:.6e},{:.3e},{:.6e}",
+                    sv.step(),
+                    t,
+                    ke,
+                    max_speed,
+                    div,
+                    v_probe,
+                );
+            }
+        })
+        .expect("uncertain march");
 
     eprintln!(
         "# EffectLog: {} entries recorded ({n_dropouts} dropouts × (fallback + intervention))",
-        process.logs().len()
+        report.log_entries().unwrap_or(0)
     );
     report_strouhal(&probe_series, diameter, U_BULK);
 }
