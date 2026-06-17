@@ -143,7 +143,7 @@ checksum = "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
 [[package]]
 name = "candle-core"
 version = "0.10.2"
-source = "git+https://github.com/huggingface/candle.git#65ecb58c11d2244a7e60c71bdcdb19b15b0a4343"
+source = "git+https://github.com/huggingface/candle.git#e020e8a42766c497c795c29df25c2ba2ef0e1480"
 dependencies = [
  "byteorder",
  "float8",
