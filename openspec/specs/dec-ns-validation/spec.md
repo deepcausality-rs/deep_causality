@@ -97,9 +97,9 @@ positive-Q (vortex-core) cells in the rolled-up state that are absent at
 
 ### Requirement: Re-1600 Taylor–Green as an example program (not CI)
 
-An example binary in `examples/avionics_examples/` SHALL run the standard 3D
-Taylor–Green vortex at `Re = 1600` (beside the existing `cfd_taylor_green`
-harness it extends) with the grid size as a parameter
+An example binary in `deep_causality_cfd/verification/` SHALL run the standard 3D
+Taylor–Green vortex at `Re = 1600` (the `dec_taylor_green_re1600_verification` example, beside the
+`mms_taylor_green_verification` harness it extends) with the grid size as a parameter
 (default small; 64³–128³ documented as the reporting resolutions), printing
 the time series of kinetic energy and dissipation rate `−dE/dt` as CSV on
 stdout for comparison against the published DNS reference curve

@@ -74,6 +74,9 @@ fn main() {
         .run()
         .unwrap_or_else(|e| fail("DEC Taylor-Green pipeline", e));
 
-    // Print results
+    // Print results, then self-verify the structure-preservation invariant (exit nonzero on break).
     print_utils::render(&results, n);
+    if !print_utils::verify(&results, n) {
+        std::process::exit(1);
+    }
 }

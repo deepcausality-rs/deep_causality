@@ -66,6 +66,7 @@ fn main() {
     // per-step quantities are native `FloatType`; the row is downcast to `f64` only for formatting.
     let (dt, h, probe_edge) = (geom.dt, geom.h, geom.probe_edge);
     let mut probe_series: Vec<(FloatType, FloatType)> = Vec::with_capacity(STEPS);
+    let mut max_div = 0.0f64; // incompressibility residual, sampled at the report cadence
     let report = CfdFlow::uncertain_march(&case)
         .on(&geom.manifold)
         .run_with(|sv| {
@@ -85,6 +86,7 @@ fn main() {
                     Ok(v) => Into::<f64>::into(v),
                     Err(_) => f64::NAN,
                 };
+                max_div = max_div.max(div.abs());
                 println!(
                     "{},{:.5},{:.6e},{max_speed:.6e},{div:.3e},{:.6e}",
                     sv.step(),
@@ -102,4 +104,30 @@ fn main() {
     );
     print_utils::report_strouhal(&probe_series, geom.diameter, ft(U_BULK));
     print_utils::write_probe_csv("cylinder_wake.csv", &probe_series);
+
+    // Self-verification (internal consistency): the constrained Leray projector must keep the field
+    // divergence-free, and each sensor dropout must record exactly its fallback + intervention pair.
+    // Exit nonzero on break.
+    let mut failed = false;
+    const DIV_TOL: f64 = 1e-6;
+    if max_div.is_nan() || max_div >= DIV_TOL {
+        eprintln!(
+            "FAIL: max divergence residual {max_div:.3e} exceeds {DIV_TOL:.0e} — incompressibility broken"
+        );
+        failed = true;
+    }
+    let expected_log = 2 * n_dropouts;
+    let got_log = report.log_entries().unwrap_or(0);
+    if got_log != expected_log {
+        eprintln!(
+            "FAIL: EffectLog has {got_log} entries, expected {expected_log} (fallback + intervention per dropout)"
+        );
+        failed = true;
+    }
+    if failed {
+        std::process::exit(1);
+    }
+    eprintln!(
+        "verified: incompressibility held (max div {max_div:.3e}) and the dropout/intervention log accounting is exact"
+    );
 }

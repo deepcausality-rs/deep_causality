@@ -27,16 +27,12 @@ decision" is therefore **closed** (promoted to corpus) — see §3.
 
 Loose ends from the consolidation + DSL migrations, with pointers:
 
-1. **`dec_cylinder_validation` repointed but unverified.** Its imports were moved physics → cfd and it
-   *builds*, but it was never *run* this session. The IO path it was blocked on now exists (the
-   `add-io-monad` change landed and is archived — see §3), so its CSV writes can be migrated onto
-   `write_csv` and A/B'd. → migrate the writes, run, and confirm output equivalence to the
-   pre-consolidation version.
-
-2. **Examples import-repointed, not fully DSL-migrated.** They were pointed at cfd but not all rewritten
-   into the `config.rs` / `main.rs` + `FloatType` split the other examples use. The cavity and
-   `dec_cylinder_wake` compute via `CfdFlow` (the latter via `uncertain_march`); `dec_cylinder_validation`
-   does not yet.
+1. **Tier-2 verification examples compute *below* the CfdFlow DSL.** `dec_graded_mms_verification`
+   (operator-level MMS: `exterior_derivative` / `interior_product` / `codifferential_of`, DSL only owns
+   the geometry) and `dec_cylinder_verification` (hand-rolled `DecNsSolver::with_zones(...).step()` with
+   inflow/outflow/slip zones and surface-force diagnostics) do not route their computation through
+   `CfdFlow`. Promoting them would need new crate workflows — a graded operator-study and a zoned
+   validation-march with a surface-force `StepView` seam — which is its own OpenSpec change.
 
 ## 3. Resolved
 
@@ -48,8 +44,18 @@ Loose ends from the consolidation + DSL migrations, with pointers:
   CSV helpers (`Report::write_series_csv`, `write_xy_csv`) in `deep_causality_cfd`.
   `dec_lid_cavity_re1000` now writes its centerline CSVs through it with **byte-identical** formatting;
   `dec_cylinder_wake` writes its full wake-probe series via `write_xy_csv` (new file output, not a
-  byte reproduction of the prior stdout stream). `dec_cylinder_validation` remains to migrate (open
-  issue #1).
+  byte reproduction of the prior stdout stream).
+
+- **DEC/MMS examples migrated to `deep_causality_cfd/verification/` and made self-verifying (was open
+  issues #1, #2).** All six DEC/MMS examples moved out of `examples/avionics_examples` into the cfd
+  crate's `verification/` folder, declared as `deep_causality_cfd` examples, and given a
+  `_verification` suffix (`dec_cylinder_validation` → `dec_cylinder_verification`). The Tier-1 cases
+  (`mms_taylor_green`, `dec_taylor_green_re1600`, `dec_lid_cavity_re1000`, `dec_cylinder_wake`) carry
+  the `config.rs`/`main.rs`/`FloatType` split with native-precision arithmetic (downcast only at the
+  display edge). Convention: a verification example **exits nonzero** when its invariant/reference
+  breaks — `dec_taylor_green_re1600` gates kinetic-energy monotonic decay, `dec_cylinder_wake` gates
+  the divergence residual + dropout/intervention log accounting, the cavity gates the Ghia-RMSE
+  refinement trend (`trend` mode). See `deep_causality_cfd/verification/README.md`.
 
 - **`uncertain_march` DSL promotion (was open issue #2 / §1's open decision).** The sensor-fed march is
   lifted into the `CfdFlow` DSL — `CfdConfigBuilder::uncertain_march` + `CfdFlow::uncertain_march`
@@ -78,7 +84,9 @@ Loose ends from the consolidation + DSL migrations, with pointers:
 - Consolidated home: `deep_causality_cfd/src/solvers/dec/uncertain_inflow/`,
   `deep_causality_cfd/src/{theories,solvers}/`.
 - Uncertain march via the DSL: `deep_causality_cfd/src/types/flow/uncertain_march_run.rs`
-  (`CfdFlow::uncertain_march`); example `examples/avionics_examples/dec_cylinder_wake/main.rs`.
+  (`CfdFlow::uncertain_march`); example `deep_causality_cfd/verification/dec_cylinder_wake_verification/`.
+- DEC/MMS verification examples: `deep_causality_cfd/verification/` (run with
+  `cargo run -p deep_causality_cfd --example <name>_verification`).
 - Related open notes: [qmc-presence-gate-followup.md](qmc-presence-gate-followup.md),
   [cfd-validation-plan.md](cfd-validation-plan.md).
 - Archived (implemented) context: `archive/cfd-crate.md`, `archive/cfd-gap.md`.
