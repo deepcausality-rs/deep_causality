@@ -152,6 +152,12 @@ fn buffer_validation() {
     let mut rs = vec![0.0; plan.scratch_real_len()];
     let mut cs = vec![Complex::new(0.0, 0.0); plan.scratch_complex_len()];
 
+    let bad_in = rbuf(4);
+    let err = plan
+        .execute(&bad_in, &mut out, &mut rs, &mut cs)
+        .unwrap_err();
+    assert!(matches!(err, FftError::LengthMismatch { .. }));
+
     let mut bad_out = vec![0.0; 4];
     let err = plan
         .execute(&x, &mut bad_out, &mut rs, &mut cs)

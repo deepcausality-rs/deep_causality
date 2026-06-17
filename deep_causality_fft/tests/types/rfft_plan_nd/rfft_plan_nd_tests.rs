@@ -108,6 +108,32 @@ fn test_odd_last_axis_round_trip() {
     }
 }
 
+/// A non-last axis of length 1 is a no-op: it must be skipped both when the
+/// plan is built and when the complex axes are transformed. Exercises the
+/// `len == 1 { continue }` branches in `new` and `complex_axes`.
+#[test]
+fn test_unit_leading_axis() {
+    // Forward half-spectrum still matches the full complex transform.
+    assert_matches_complex_nd(&[1, 8], 1e-10);
+    assert_matches_complex_nd(&[1, 1, 8], 1e-10);
+
+    // And the transform round-trips through the inverse.
+    let shape = [1usize, 16];
+    let n = 16;
+    let rplan = RfftPlanNd::<f64>::new(&shape).unwrap();
+    let input = rbuf(n);
+    let mut spec = vec![Complex::new(0.0, 0.0); rplan.spectrum_len()];
+    let mut scratch = vec![Complex::new(0.0, 0.0); rplan.scratch_len()];
+    rplan.execute(&input, &mut spec, &mut scratch).unwrap();
+    let mut back = vec![0.0f64; n];
+    rplan
+        .execute_inverse(&mut spec, &mut back, &mut scratch)
+        .unwrap();
+    for (a, b) in input.iter().zip(back.iter()) {
+        assert!((a - b).abs() < 1e-11, "shape {shape:?}: {a} vs {b}");
+    }
+}
+
 #[test]
 fn test_invalid_shapes_rejected() {
     assert_eq!(
