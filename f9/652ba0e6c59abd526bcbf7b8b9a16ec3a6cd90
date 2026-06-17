@@ -1,0 +1,48 @@
+deep_causality_cfd/benches/PERFORMANCE.md
+  s_5c5a6bcbf82d1e::t_991c8cd8561054 128-132
+  s_5c5a6bcbf82d1e::t_a1ea0c9245e53b 1-30,32-60,85-123,125-127,133
+  s_5c5a6bcbf82d1e::t_9f2792078976ab 135-136
+  s_5c5a6bcbf82d1e::t_d8ae1cd2b95742 61-84
+deep_causality_cfd/Cargo.toml
+  s_5c5a6bcbf82d1e::t_040c219cecb6d4 17-18
+  s_5c5a6bcbf82d1e::t_316d467289bfb9 98,108-109
+  s_5c5a6bcbf82d1e::t_3e8a809c92f6db 99-107
+deep_causality_cfd/benches/bench_dec_ns_march.rs
+  s_5c5a6bcbf82d1e::t_f24aaedbba35c1 1-15,18-31,36-40,43-44,46-47,49-65,80-95
+  s_5c5a6bcbf82d1e::t_c001783fcd8c10 16-17,32-33,35,41-42,45,48,66-79
+  s_5c5a6bcbf82d1e::t_b2aec8aacab894 34
+openspec/notes/cfd/consolidation-followups.md
+  s_5c5a6bcbf82d1e::t_aeab4063aef517 62-74
+  s_5c5a6bcbf82d1e::t_6e6b96a64a5281 54-58
+  s_5c5a6bcbf82d1e::t_cde7f823656c3f 36
+  s_5c5a6bcbf82d1e::t_5d619b3994a1ed 80-81
+  s_5c5a6bcbf82d1e::t_c25d4ed04ba628 9-10,12,14-16,18-24
+  s_5c5a6bcbf82d1e::t_87f2ac0022b8ef 37-39
+  s_5c5a6bcbf82d1e::t_df633a3ca448bf 31-34,40-48,53,59-60
+  s_5c5a6bcbf82d1e::t_a2780440a2a15b 49-52
+openspec/specs/dec-ns-validation/spec.md
+  s_5c5a6bcbf82d1e::t_65dbd3fc392ca9 3-4,9
+  s_5c5a6bcbf82d1e::t_d6c4da40a6ef79 100-102
+  s_5c5a6bcbf82d1e::t_321d9d3ae2fe87 117-118
+deep_causality_cfd/benches/bench_mms_verify.rs
+  s_5c5a6bcbf82d1e::t_1a347438c5f302 37-39,57-59
+  s_5c5a6bcbf82d1e::t_db086680a0bd19 1-36,40-56,60-72
+deep_causality_cfd/benches/bench_operator_study.rs
+  s_5c5a6bcbf82d1e::t_c0cdcfa0a79daf 1-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "f9652ba0e6c59abd526bcbf7b8b9a16ec3a6cd90",
+  "prompts": {},
+  "sessions": {
+    "s_5c5a6bcbf82d1e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "480bfd3b-3e94-457e-bd6e-4612cfa4dfd8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
