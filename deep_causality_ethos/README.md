@@ -136,7 +136,7 @@ A full worked example, including the `Context` setup and a CSM integration, live
 ## References
 
 * Olson, T., Salas-Damian, R., and Forbus, K. D. *A Defeasible Deontic Calculus for Resolving Norm Conflicts.* Department of Computer Science, Northwestern University. The DDIC formalism underlying the conflict resolution rules used here:
-  [docs/papers/ddic.pdf](../docs/papers/ddic.pdf)
+  [docs/papers/ddic.pdf](papers/ddic.pdf)
 * Effect Propagation Process paper, section 8 (Teleology):
   <https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf>
 * In-repo overview: [docs/ETHOS.md](../docs/ETHOS.md)

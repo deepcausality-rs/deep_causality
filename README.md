@@ -343,14 +343,27 @@ Inspired by research from:
 * [Lucien Hardy](https://perimeterinstitute.ca/people/lucien-hardy): Causaloid framework
 * [Elias Bareinboim](https://causalai.net/): Transportability and data fusion
 
-Implements research from:
+Implemented research:
 
-* ["Probability Theories with Dynamic Causal Structure"](docs/papers/causaloid.pdf), Hardy
-* ["A Defeasible Deontic Calculus for Resolving Norm Conflicts"](docs/papers/ddic.pdf), Olson & Forbus
-* ["Uncertain⟨T⟩: A First-Order Type for Uncertain Data"](docs/papers/uncertain_t.pdf), Bornholt et al.
-* ["Observational causality by states and interaction type for scientific discovery"](docs/papers/surd-state.pdf)
-* ["NWHy: A Framework for Hypergraph Analytics"](docs/papers/nwhy.pdf)
-* ["An Algebraic Roadmap of Particle Theories"](docs/papers/algebraic_physics.pdf)
+**deep_causality**
+* ["Probability Theories with Dynamic Causal Structure"](deep_causality/papers/causaloid.pdf), Hardy
+
+**deep_causality_algorithms**
+* "[Root Cause Analysis of Failures in Microservices via Bayesian Root Cause Discovery](https://icml.cc/virtual/2026/poster/65359)"
+* [Maximum Relevance and Minimum Redundancy Feature Selection](deep_causality_algorithms/papers/mrmr_feature_selector.pdf)
+* ["Observational causality by states and interaction type for scientific discovery"](deep_causality_algorithms/papers/surd-state.pdf)
+
+**deep_causality_ethos**
+* ["A Defeasible Deontic Calculus for Resolving Norm Conflicts"](deep_causality_ethos/papers/ddic.pdf), Olson & Forbus
+
+**deep_causality_multivector**
+* ["An Algebraic Roadmap of Particle Theories"](deep_causality_multivector/papers/algebraic_physics.pdf)
+
+**deep_causality_uncertain**
+* ["Uncertain⟨T⟩: A First-Order Type for Uncertain Data"](deep_causality_uncertain/papers/uncertain_t.pdf), Bornholt et al.
+
+**Ultragraph**
+* ["NWHy: A Framework for Hypergraph Analytics"](ultragraph/papers/nwhy.pdf)
 
 ---
 
