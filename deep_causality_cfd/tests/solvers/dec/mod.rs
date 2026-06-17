@@ -4,6 +4,8 @@
  */
 
 #[cfg(test)]
+pub mod boundary_construction_tests;
+#[cfg(test)]
 pub mod boundary_zone_tests;
 #[cfg(test)]
 pub mod cavity_tests;

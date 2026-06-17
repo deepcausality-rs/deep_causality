@@ -10,7 +10,7 @@ use deep_causality_cfd::{
     Ambient, CfdConfigBuilder, CoupledField, Coupling, Mesh, Observe, PhysicsError, PhysicsStage,
     Seed, StepContext, ThermalRelax, ViscosityArrhenius,
 };
-use deep_causality_physics::{SolenoidalField, VelocityOneForm};
+use deep_causality_physics::{PhysicsErrorEnum, SolenoidalField, VelocityOneForm};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
 
@@ -59,6 +59,93 @@ fn thermal_relax_then_arrhenius_drives_viscosity() {
         nu_after < nu_before,
         "rising temperature lowers ν via Arrhenius: {nu_before} -> {nu_after}"
     );
+}
+
+#[test]
+fn step_context_exposes_manifold_velocity_and_step() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.05, 7);
+    assert_eq!(ctx.step(), 7);
+    assert_eq!(ctx.dt(), 0.05);
+    let _ = ctx.manifold();
+    let _ = ctx.velocity();
+    // The zero state samples to zero velocity at any point.
+    let v = ctx.sample_velocity(&[1.0, 1.0]).expect("velocity sample");
+    assert!(v.iter().all(|c| c.abs() < 1e-12));
+}
+
+#[test]
+fn coupled_field_scalar_set_replace_and_access() {
+    let mut field = CoupledField::new(Ambient::new(0.01_f64, 0.0, None));
+    field.set_scalar("temperature", vec![1.0, 2.0]);
+    // Setting the same name again replaces the field in place (the `find` hit branch).
+    field.set_scalar("temperature", vec![3.0, 4.0, 5.0]);
+    assert_eq!(field.scalar("temperature"), Some(&[3.0, 4.0, 5.0][..]));
+    assert!(field.scalar("missing").is_none());
+
+    // Mutable access, present and absent.
+    field.scalar_mut("temperature").expect("present")[0] = 9.0;
+    assert_eq!(field.scalar("temperature").expect("present")[0], 9.0);
+    assert!(field.scalar_mut("missing").is_none());
+}
+
+#[test]
+fn coupling_is_itself_a_physics_stage() {
+    // Passing the `Coupling` (not its `.build()` tuple) as a stage delegates through its wrapper.
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.1, 1);
+    let coupling = Coupling::between_steps().then(MarkRan);
+    let mut field = CoupledField::new(Ambient::new(0.01_f64, 0.0, None));
+    PhysicsStage::apply(&coupling, &ctx, &mut field).expect("Coupling delegates to its stages");
+    assert_eq!(*field.ambient().freestream(), 1.0);
+}
+
+#[test]
+fn thermal_relax_without_field_is_a_noop() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.1, 1);
+    let mut field = CoupledField::new(Ambient::new(0.01_f64, 0.0, None));
+    // No "temperature" field present → the relaxation skips the absent field.
+    PhysicsStage::apply(&ThermalRelax::new(0.5, 400.0), &ctx, &mut field).expect("noop");
+    assert!(field.scalar("temperature").is_none());
+}
+
+#[test]
+fn arrhenius_edge_cases_leave_viscosity_unchanged() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.1, 1);
+    let stage = ViscosityArrhenius::new(0.01, 300.0, 0.7);
+
+    // No temperature field → no-op.
+    let mut field = CoupledField::new(Ambient::new(0.05_f64, 0.0, None));
+    PhysicsStage::apply(&stage, &ctx, &mut field).expect("no field");
+    assert_eq!(*field.ambient().nu(), 0.05);
+
+    // Empty temperature field → no-op.
+    field.set_scalar("temperature", Vec::<f64>::new());
+    PhysicsStage::apply(&stage, &ctx, &mut field).expect("empty field");
+    assert_eq!(*field.ambient().nu(), 0.05);
+
+    // Non-positive reference temperature → no-op.
+    field.set_scalar("temperature", vec![300.0, 320.0]);
+    let stage_bad_tref = ViscosityArrhenius::new(0.01, 0.0, 0.7);
+    PhysicsStage::apply(&stage_bad_tref, &ctx, &mut field).expect("t_ref <= 0");
+    assert_eq!(*field.ambient().nu(), 0.05);
+}
+
+#[test]
+fn arrhenius_nonpositive_mean_temperature_errors() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.1, 1);
+    let stage = ViscosityArrhenius::new(0.01, 300.0, 0.7);
+    let mut field = CoupledField::new(Ambient::new(0.05_f64, 0.0, None));
+    field.set_scalar("temperature", vec![-10.0, -20.0]);
+    let err = PhysicsStage::apply(&stage, &ctx, &mut field)
+        .expect_err("a non-positive mean temperature is rejected");
+    assert!(matches!(
+        err.0,
+        PhysicsErrorEnum::PhysicalInvariantBroken(_)
+    ));
 }
 
 #[test]

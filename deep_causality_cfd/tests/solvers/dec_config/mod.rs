@@ -3,5 +3,5 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-mod dec;
-mod dec_config;
+#[cfg(test)]
+pub mod dec_config_tests;

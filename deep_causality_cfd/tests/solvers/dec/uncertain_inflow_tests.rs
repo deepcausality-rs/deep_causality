@@ -15,8 +15,13 @@
 //! - **memory confined to the patch (C4/D6)**: the marched state's heavy field stays plain `R` at
 //!   the lattice's edge count — the `MaybeUncertain` carrier is only the per-step stream.
 
-use deep_causality_cfd::{DecNsSolver, DropoutVerbosity, UncertainInflowZone, march_inflow};
+use deep_causality_cfd::{
+    DecNsSolver, DropoutVerbosity, InflowContext, InflowMarchState, UncertainInflowZone,
+    inflow_march_step, march_inflow,
+};
+use deep_causality_core::EffectValue;
 use deep_causality_haft::LogSize;
+use deep_causality_physics::PhysicsErrorEnum;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
 use deep_causality_uncertain::MaybeUncertain;
@@ -175,6 +180,120 @@ fn transition_verbosity_logs_only_onset_and_recovery() {
     );
     // Two transition records, plus a value alternation for each of the two dropped steps.
     assert_eq!(process.logs().len(), 4);
+}
+
+/// A fully periodic `N×N` lattice — the prescribed moving wall is invalid on a periodic axis.
+fn periodic_manifold() -> Manifold<LatticeComplex<2, f64>, f64> {
+    let lattice = LatticeComplex::<2, f64>::new([N, N], [true, true]);
+    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
+    let metric: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::uniform(1.0);
+    Manifold::from_cubical_with_metric(lattice, data, metric, 0)
+}
+
+fn rest_seed(
+    m: &Manifold<LatticeComplex<2, f64>, f64>,
+) -> deep_causality_physics::SolenoidalField<f64> {
+    let n0 = m.complex().num_cells(0);
+    let rest = CausalTensor::new(vec![0.0; 2 * n0], vec![2 * n0]).unwrap();
+    base_solver(m).seed_from_vertex_vectors(&rest).unwrap()
+}
+
+#[test]
+fn march_state_reports_step_count_and_dropout_flag() {
+    let m = wall_manifold();
+
+    // A clean stream: the final state reports the full step count and no dropout.
+    let clean = vec![MaybeUncertain::<f64>::from_value(U_IN); STEPS];
+    let process = march_inflow(
+        base_solver(&m),
+        rest_seed(&m),
+        fast_zone(U_IN),
+        clean,
+        STEPS,
+    )
+    .unwrap();
+    assert_eq!(process.state().step(), STEPS);
+    assert!(!process.state().in_dropout());
+
+    // A stream whose final sample is absent leaves the march flagged in dropout.
+    let ends_absent = vec![
+        MaybeUncertain::<f64>::from_value(U_IN),
+        MaybeUncertain::<f64>::always_none(),
+    ];
+    let process = march_inflow(
+        base_solver(&m),
+        rest_seed(&m),
+        fast_zone(U_IN),
+        ends_absent,
+        2,
+    )
+    .unwrap();
+    assert!(process.state().in_dropout());
+}
+
+#[test]
+fn march_inflow_rejects_out_of_range_flow_axis() {
+    let m = wall_manifold();
+    let zone = UncertainInflowZone::new(1, true, 5, U_IN); // flow axis 5 ≥ D = 2
+    let stream = vec![MaybeUncertain::<f64>::from_value(U_IN); STEPS];
+    let err = march_inflow(base_solver(&m), rest_seed(&m), zone, stream, STEPS).unwrap_err();
+    assert!(matches!(err.0, PhysicsErrorEnum::DimensionMismatch(_)));
+}
+
+#[test]
+fn march_inflow_rejects_a_stream_shorter_than_the_horizon() {
+    let m = wall_manifold();
+    let stream = vec![MaybeUncertain::<f64>::from_value(U_IN); STEPS - 1];
+    let err = march_inflow(
+        base_solver(&m),
+        rest_seed(&m),
+        fast_zone(U_IN),
+        stream,
+        STEPS,
+    )
+    .unwrap_err();
+    assert!(matches!(err.0, PhysicsErrorEnum::DimensionMismatch(_)));
+}
+
+#[test]
+fn inflow_step_without_context_short_circuits() {
+    let m = wall_manifold();
+    let state = InflowMarchState::new(base_solver(&m), rest_seed(&m), U_IN);
+    let process = inflow_march_step::<2, f64>(EffectValue::Value(U_IN), state, None);
+    assert!(
+        process.error().is_some(),
+        "a missing context short-circuits the step"
+    );
+}
+
+#[test]
+fn inflow_step_with_exhausted_stream_short_circuits() {
+    let m = wall_manifold();
+    let state = InflowMarchState::new(base_solver(&m), rest_seed(&m), U_IN);
+    // Step 0 against an empty stream is past the horizon.
+    let context = InflowContext::new(fast_zone(U_IN), Vec::new());
+    let process = inflow_march_step(EffectValue::Value(U_IN), state, Some(context));
+    assert!(
+        process.error().is_some(),
+        "an exhausted stream short-circuits the step"
+    );
+}
+
+#[test]
+fn inflow_step_rejects_an_invalid_wall_reconfiguration() {
+    // A present sample resolves, but reconfiguring a moving wall on a periodic axis is rejected.
+    let m = periodic_manifold();
+    let state = InflowMarchState::new(base_solver(&m), rest_seed(&m), U_IN);
+    let zone = UncertainInflowZone::new(0, true, 1, U_IN) // wall axis 0 is periodic
+        .with_presence_gate(0.5, 0.9, 0.1, 64)
+        .with_collapse_samples(8);
+    let context = InflowContext::new(zone, vec![MaybeUncertain::<f64>::from_value(U_IN)]);
+    let process = inflow_march_step(EffectValue::Value(U_IN), state, Some(context));
+    assert!(
+        process.error().is_some(),
+        "reconfiguring a moving wall on a periodic axis is rejected"
+    );
 }
 
 #[test]

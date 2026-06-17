@@ -50,6 +50,8 @@ rust_test(
         "//deep_causality_cfd",
         # Internal dependencies
         "//deep_causality_physics",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
     ],
 )
 
