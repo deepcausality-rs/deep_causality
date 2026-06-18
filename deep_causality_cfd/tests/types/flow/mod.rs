@@ -37,4 +37,6 @@ pub mod operator_study_tests;
 #[cfg(test)]
 pub mod report_tests;
 #[cfg(test)]
+pub mod uncertain_march_run_tests;
+#[cfg(test)]
 pub mod verify_tests;
