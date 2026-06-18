@@ -23,11 +23,13 @@ cargo machete deep_causality_core/
 cargo machete deep_causality_data_structures/
 cargo machete deep_causality_discovery/
 cargo machete deep_causality_ethos/
+cargo machete deep_causality_fft/
 cargo machete deep_causality_haft/
 cargo machete deep_causality_macros/
 cargo machete deep_causality_metric/
 cargo machete deep_causality_multivector/
 cargo machete deep_causality_num/
+cargo machete deep_causality_par/
 cargo machete deep_causality_physics/
 cargo machete deep_causality_rand/
 cargo machete deep_causality_sparse/
