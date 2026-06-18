@@ -1,0 +1,47 @@
+deep_causality_algorithms/src/dag_sampling/utils.rs
+  s_fe2a59750ef15a::t_ab13bd0000c362 1-22
+deep_causality_algorithms/tests/dag_sampling/mod.rs
+  s_fe2a59750ef15a::t_73b345f34a05be 1-6
+deep_causality_algorithms/src/dag_sampling/index_set.rs
+  s_fe2a59750ef15a::t_ab13bd0000c362 1-134
+deep_causality_algorithms/src/dag_sampling/clique_tree.rs
+  s_fe2a59750ef15a::t_ab13bd0000c362 1-200
+deep_causality_algorithms/src/dag_sampling/memoization.rs
+  s_fe2a59750ef15a::t_ab13bd0000c362 1-47
+deep_causality_algorithms/src/dag_sampling/combinatorics.rs
+  s_fe2a59750ef15a::t_ab13bd0000c362 1-71
+deep_causality_algorithms/src/dag_sampling/count.rs
+  s_fe2a59750ef15a::t_ab13bd0000c362 1-268
+deep_causality_algorithms/src/dag_sampling/graph.rs
+  s_fe2a59750ef15a::t_ab13bd0000c362 1-128
+deep_causality_algorithms/tests/mod.rs
+  s_fe2a59750ef15a::t_73b345f34a05be 6
+deep_causality_algorithms/tests/BUILD.bazel
+  s_fe2a59750ef15a::t_73b345f34a05be 53-72
+deep_causality_algorithms/src/dag_sampling/chordal.rs
+  s_fe2a59750ef15a::t_ab13bd0000c362 1-49
+deep_causality_algorithms/src/dag_sampling/lazy_tokens.rs
+  s_fe2a59750ef15a::t_ab13bd0000c362 1-67
+deep_causality_algorithms/src/dag_sampling/mod.rs
+  s_fe2a59750ef15a::t_ab13bd0000c362 6-95
+deep_causality_algorithms/tests/dag_sampling/count_tests.rs
+  s_fe2a59750ef15a::t_73b345f34a05be 1-351
+deep_causality_algorithms/src/lib.rs
+  s_fe2a59750ef15a::t_32c7f09d5c40c4 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "8dda87f7edbab2d5327ee11b83cbd377bc8b957f",
+  "prompts": {},
+  "sessions": {
+    "s_fe2a59750ef15a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "21a3d25e-142e-4448-a20e-2b356720fb18",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
