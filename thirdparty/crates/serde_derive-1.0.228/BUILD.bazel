@@ -34,9 +34,6 @@ rust_proc_macro(
             "WORKSPACE.bazel",
         ],
     ),
-    crate_features = [
-        "default",
-    ],
     crate_root = "src/lib.rs",
     edition = "2021",
     rustc_env_files = [
@@ -104,6 +101,6 @@ rust_proc_macro(
     deps = [
         "//thirdparty/crates/proc-macro2-1.0.106:proc_macro2",
         "//thirdparty/crates/quote-1.0.45:quote",
-        "//thirdparty/crates/syn-2.0.117:syn",
+        "//thirdparty/crates/syn-2.0.118:syn",
     ],
 )

@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-06-04T10:59:47Z",
+    "created": "2026-06-18T02:06:53Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_calculus-96ea6ad7-e425-4263-893e-4827c04450ed",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_calculus-6297ee8c-168a-40fa-aea0-f2b6ea51a7af",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_calculus",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "3f62cbf1bd318fa34c524e1548f1ca6deead7aa8"
+          "checksumValue": "f7392f65d6a746809c1b6aa004c46d8a28b1299b"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -26,6 +26,24 @@
   ],
   "name": "deep_causality_calculus",
   "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--calculus-0.1.1",
+      "description": "Arrow-native differentiation and integration operators (the tangent functor over Dual, endomorphism iteration over endo-arrows, and quadrature) for the deep_causality project.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_calculus",
+      "versionInfo": "0.1.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "description": "Number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num",
+      "versionInfo": "0.3.3"
+    },
     {
       "SPDXID": "SPDXRef-Package-libm-0.2.16",
       "description": "libm in pure Rust",
@@ -43,58 +61,40 @@
       "versionInfo": "0.2.16"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.3.2",
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.3.3",
       "description": "HKT traits for for the deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_haft",
-      "versionInfo": "0.3.2"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--calculus-0.1.0",
-      "description": "Arrow-native differentiation and integration operators (the tangent functor over Dual, endomorphism iteration over endo-arrows, and quadrature) for the deep_causality project.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_calculus",
-      "versionInfo": "0.1.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.3.2",
-      "description": "Number utils for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.3.2"
+      "versionInfo": "0.3.3"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.2",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--calculus-0.1.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--calculus-0.1.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--calculus-0.1.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--calculus-0.1.1",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_calculus"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.3.3"
     },
     {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_calculus",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--calculus-0.1.0",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_calculus"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.2",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--calculus-0.1.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.3.2"
     }
   ],
   "spdxVersion": "SPDX-2.3"

@@ -52,6 +52,20 @@ pub use crate::types::flow_config::{
     MarchConfigBuilder, MarchStop, Mesh, Observe, Seed, TaylorGreen, VerifyConfig,
     VerifyConfigBuilder,
 };
+// IO effect: the `IoAction` trait (from haft), the core `write_csv` file action, and the CFD CSV
+// helper, so a `CfdFlow` example can describe and run file output through one crate.
+#[cfg(feature = "std")]
+pub use crate::types::flow::write_xy_csv;
+#[cfg(feature = "std")]
+pub use deep_causality_core::write_csv;
+#[cfg(feature = "std")]
+pub use deep_causality_haft::IoAction;
+
+// The sensor-fed uncertain-inflow march (std-only: consumes `deep_causality_uncertain`).
+#[cfg(feature = "std")]
+pub use crate::types::flow::{UncertainMarchPipeline, UncertainMarchRun, UncertainStepView};
+#[cfg(feature = "std")]
+pub use crate::types::flow_config::{UncertainMarchConfig, UncertainMarchConfigBuilder};
 
 // Fluid-dynamics theories: the DEC-native FluidTheory realization, the pointwise NS
 // regime evaluators (`*_rhs`), and their causal-effect wrappers (`*_rhs_effect`).

@@ -12,6 +12,7 @@ mod cybernetic_loop_tests;
 mod endomorphism_tests;
 mod foldable_tests;
 mod functor_tests;
+mod io_tests;
 mod monad_tests;
 mod morphism_tests;
 mod parametric_monad_tests;

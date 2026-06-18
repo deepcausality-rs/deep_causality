@@ -5,4 +5,5 @@
 
 pub mod branch_tests;
 pub mod flow_tests;
+pub mod io_tests;
 pub mod iterate_tests;

@@ -20,10 +20,10 @@ cargo run -p avionics_examples --example <example_name>
 | [geometric_tcas](geometric_tcas/README.md) | Collision Avoidance | NextGen TCAS using Geometric Algebra collision detection and `Intervenable` safety interlocks |
 | [hypersonic_2t](hypersonic_2t/README.md) | Defense/Tracking | Tracking Hypersonic Glide Vehicles (HGV) using Dual-Time (2T) Physics in 6D phase space |
 | [flight_envelope_monitor](flight_envelope_monitor/README.md) | Health Monitoring | Three-stage stateful pipeline (sensor collection → bind chain → envelope hypergraph) demonstrating uniform composition through `PropagatingProcess<_, FlightState, AircraftConfig>` |
-| [cfd_taylor_green](cfd_taylor_green/README.md) | CFD Verification | Incompressible Navier–Stokes RHS verified by the Method of Manufactured Solutions (Taylor–Green vortex): the tangent functor supplies exact `∇u`/`∇²u`/`∇p`, `Rk4` marches the amplitude, and a causal-monad pipeline sequences the stages; precision is a `FloatType` parameter (f32/f64/Float106) |
-| [dec_taylor_green_re1600](dec_taylor_green_re1600/README.md) | CFD Solver | The full DEC-native incompressible Navier–Stokes solver on the workshop benchmark (3D Taylor–Green at Re 1600): velocity as an edge 1-form, each `Rk4` stage Leray-projected (the projector *is* the incompressibility equation), the `SolenoidalField` type-state as the marching state, a `CausalFlow` seed → march chain, and the dissipation-rate CSV for comparison with the published DNS curve; precision-generic model with a `FloatType` switch |
 | [turbulence_flow](turbulence_flow/README.md) | Turbulence / Chaos | Forecast horizon of a chaotic convective flow (Lorenz, the Rayleigh–Bénard 3-mode truncation): the same `Rk4` march at f32/f64/Float106 isolates roundoff growth and shows precision setting how far ahead a turbulent flow can be trusted |
 
+> **CFD/MMS verification examples moved.** The Taylor–Green MMS, Re-1600 DEC solver, lid-driven cavity, graded-MMS, and cylinder cases are now self-verifying examples of the `deep_causality_cfd` crate under `deep_causality_cfd/verification/`; run them with `cargo run -p deep_causality_cfd --example <name>_verification`.
+>
 > **See also:** [physics_examples](../physics_examples/README.md) for more Geometric Algebra applications.
 
 ---
@@ -57,9 +57,7 @@ Both `geometric_tcas` and `hypersonic_2t` leverage **Geometric Algebra (`deep_ca
 | `deep_causality_core` | Causal Monads (`PropagatingEffect`, `Intervenable`) for safety logic |
 | `deep_causality_multivector` | Geometric Algebra for kinematics and relativistic physics |
 | `deep_causality_tensor` | Tensor operations for map-based navigation |
-| `deep_causality_calculus` | Arrow calculus: tangent-functor derivatives (`gradient`/`derivative`) and the `Euler`/`Rk4`/`quadrature` integration operators |
-| `deep_causality_physics` | Fluid-dynamics kernels (MMS verification) and the DEC-native Navier–Stokes solver (`DecNsSolver`, `SolenoidalField`) |
-| `deep_causality_topology` | The discrete differential geometry under the DEC solver: cubical lattice complexes, the Regge metric, and the Leray projection |
+| `deep_causality_calculus` | Arrow calculus: the `Rk4` integration operator (the turbulence-forecast march) |
 
 ---
 

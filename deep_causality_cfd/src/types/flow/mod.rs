@@ -15,10 +15,14 @@
 mod cfd_flow;
 mod coupling;
 mod frequency;
+#[cfg(feature = "std")]
+mod io;
 mod march_run;
 mod mms;
 mod operator_study;
 mod report;
+#[cfg(feature = "std")]
+mod uncertain_march_run;
 mod verify;
 mod zones;
 
@@ -27,8 +31,12 @@ pub use coupling::{
     CoupledField, Coupling, PhysicsStage, StepContext, ThermalRelax, ViscosityArrhenius,
 };
 pub use frequency::{dominant_frequency, strouhal_number};
+#[cfg(feature = "std")]
+pub use io::write_xy_csv;
 pub use march_run::{MarchPipeline, MarchRun, StepView};
 pub use mms::{MmsBuilder, Regime};
 pub use operator_study::{Operator, OperatorStudyBuilder};
 pub use report::Report;
+#[cfg(feature = "std")]
+pub use uncertain_march_run::{UncertainMarchPipeline, UncertainMarchRun, UncertainStepView};
 pub use verify::VerifyRun;

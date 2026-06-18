@@ -18,6 +18,8 @@ pub(crate) mod march_config;
 mod mesh;
 mod observe;
 mod seed;
+#[cfg(feature = "std")]
+pub(crate) mod uncertain_march_config;
 
 pub use body::Body;
 pub use cfd_config_builder::CfdConfigBuilder;
@@ -29,3 +31,5 @@ pub use march_config::{MarchConfig, MarchStop};
 pub use mesh::{Grading, Mesh};
 pub use observe::Observe;
 pub use seed::Seed;
+#[cfg(feature = "std")]
+pub use uncertain_march_config::{UncertainMarchConfig, UncertainMarchConfigBuilder};

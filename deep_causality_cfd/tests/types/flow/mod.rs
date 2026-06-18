@@ -25,6 +25,8 @@ pub mod coupling_tests;
 #[cfg(test)]
 pub mod frequency_tests;
 #[cfg(test)]
+pub mod io_tests;
+#[cfg(test)]
 pub mod march_case_tests;
 #[cfg(test)]
 pub mod march_run_tests;
@@ -34,5 +36,7 @@ pub mod mms_tests;
 pub mod operator_study_tests;
 #[cfg(test)]
 pub mod report_tests;
+#[cfg(test)]
+pub mod uncertain_march_run_tests;
 #[cfg(test)]
 pub mod verify_tests;

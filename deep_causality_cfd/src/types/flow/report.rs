@@ -16,6 +16,9 @@ pub struct Report<R: CfdScalar> {
     /// The final marched edge cochain (velocity 1-form), exposed so callers can compute bespoke
     /// diagnostics (centerline / streamfunction / edge-indexed probe) off the raw state.
     final_field: Option<Vec<R>>,
+    /// The number of `EffectLog` entries the run accumulated (e.g. an uncertain-inflow march records
+    /// dropout/intervention entries). `None` for runs with no effect log.
+    log_entries: Option<usize>,
 }
 
 impl<R: CfdScalar> Report<R> {
@@ -24,6 +27,7 @@ impl<R: CfdScalar> Report<R> {
             name: name.into(),
             series: Vec::new(),
             final_field: None,
+            log_entries: None,
         }
     }
 
@@ -33,6 +37,16 @@ impl<R: CfdScalar> Report<R> {
 
     pub(crate) fn set_final_field(&mut self, field: Vec<R>) {
         self.final_field = Some(field);
+    }
+
+    pub(crate) fn set_log_entries(&mut self, count: usize) {
+        self.log_entries = Some(count);
+    }
+
+    /// The number of `EffectLog` entries the run accumulated (uncertain-inflow dropout/intervention
+    /// records), if the run carried an effect log.
+    pub fn log_entries(&self) -> Option<usize> {
+        self.log_entries
     }
 
     /// The final marched edge cochain (velocity 1-form coefficients), if the run produced one.

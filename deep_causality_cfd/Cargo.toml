@@ -14,6 +14,8 @@ documentation = "https://docs.rs/deep_causality"
 categories = ["science", "simulation"]
 keywords = ["cfd", "fluid-dynamics", "causality", "simulation"]
 publish = false
+# Benches are declared explicitly (one per solver), so they are not auto-discovered.
+autobenches = false
 exclude = [
     "*.bazel",
     "*/*.bazel",
@@ -92,6 +94,46 @@ default-features = false
 
 [dev-dependencies]
 criterion = { version = "0.8" }
+
+[[bench]]
+name = "bench_dec_ns_march"
+harness = false
+
+[[bench]]
+name = "bench_mms_verify"
+harness = false
+
+[[bench]]
+name = "bench_operator_study"
+harness = false
+
+# Verification examples (migrated from `examples/avionics_examples`): each runs a DEC/MMS case
+# through the CfdFlow DSL and self-verifies against a known reference or an internal invariant.
+[[example]]
+name = "mms_taylor_green_verification"
+path = "verification/mms_taylor_green_verification/main.rs"
+
+[[example]]
+name = "dec_taylor_green_re1600_verification"
+path = "verification/dec_taylor_green_re1600_verification/main.rs"
+
+[[example]]
+name = "dec_lid_cavity_re1000_verification"
+path = "verification/dec_lid_cavity_re1000_verification/main.rs"
+
+[[example]]
+name = "dec_graded_mms_verification"
+path = "verification/dec_graded_mms_verification/main.rs"
+
+[[example]]
+name = "dec_cylinder_wake_verification"
+path = "verification/dec_cylinder_wake_verification/main.rs"
+required-features = ["std"]
+
+[[example]]
+name = "dec_cylinder_verification"
+path = "verification/dec_cylinder_verification/main.rs"
+required-features = ["std"]
 
 [lints]
 workspace = true

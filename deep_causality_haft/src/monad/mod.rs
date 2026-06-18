@@ -4,6 +4,10 @@
  */
 use crate::{Functor, HKT, Pure, Satisfies};
 
+pub(crate) mod comonad;
+pub(crate) mod parametric_monad;
+pub(crate) mod promonad;
+
 /// The `Monad` trait extends `Functor` and `Pure` by providing the `bind` operation
 /// for sequencing computations that produce effectful values.
 ///

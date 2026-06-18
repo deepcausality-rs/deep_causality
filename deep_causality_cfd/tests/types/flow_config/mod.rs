@@ -13,3 +13,5 @@ pub mod march_builder_tests;
 pub mod mesh_tests;
 #[cfg(test)]
 pub mod seed_tests;
+#[cfg(test)]
+pub mod uncertain_march_config_tests;

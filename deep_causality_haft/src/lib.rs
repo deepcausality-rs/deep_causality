@@ -47,8 +47,6 @@ pub(crate) mod adjunction;
 mod alias;
 pub(crate) mod applicative;
 mod arrow;
-pub(crate) mod bifunctor;
-pub(crate) mod comonad;
 pub(crate) mod cybernetic_loop;
 pub(crate) mod effect_system;
 pub(crate) mod either;
@@ -56,13 +54,11 @@ pub(crate) mod extensions;
 pub(crate) mod foldable;
 pub(crate) mod functor;
 pub(crate) mod hkt;
+pub(crate) mod io;
 pub mod iso;
 pub(crate) mod monad;
 pub(crate) mod morphism;
 pub(crate) mod morphism_endo;
-pub(crate) mod parametric_monad;
-pub(crate) mod profunctor;
-pub(crate) mod promonad;
 pub(crate) mod pure;
 pub(crate) mod riemann_map;
 pub(crate) mod traversable;
@@ -87,6 +83,11 @@ pub use crate::arrow::{
 // Either (the choice sum)
 pub use crate::either::Either;
 
+// IO effect (the lazy IO monad — value-level, no dyn, the Arrow twin)
+pub use crate::io::{
+    IoAction, IoAndThen, IoFail, IoMap, IoMapErr, IoPure, fail as io_fail, pure as io_pure,
+};
+
 // Isomorphism
 pub use crate::iso::{NaturalIso, NaturalIso2, NaturalIso3, NaturalIso4, NaturalIso5};
 
@@ -98,17 +99,17 @@ pub use crate::hkt::{NoConstraint, Placeholder};
 // Traits
 pub use crate::adjunction::Adjunction;
 pub use crate::applicative::Applicative;
-pub use crate::bifunctor::Bifunctor;
-pub use crate::comonad::CoMonad;
 pub use crate::cybernetic_loop::CyberneticLoop;
 pub use crate::foldable::Foldable;
-pub use crate::functor::Functor;
+pub use crate::functor::bifunctor::Bifunctor;
+pub use crate::functor::functor_base::Functor;
+pub use crate::functor::profunctor::Profunctor;
 pub use crate::monad::Monad;
+pub use crate::monad::comonad::CoMonad;
+pub use crate::monad::parametric_monad::ParametricMonad;
+pub use crate::monad::promonad::Promonad;
 pub use crate::morphism::{FnMorphism, Morphism};
 pub use crate::morphism_endo::Endomorphism;
-pub use crate::parametric_monad::ParametricMonad;
-pub use crate::profunctor::Profunctor;
-pub use crate::promonad::Promonad;
 pub use crate::pure::Pure;
 pub use crate::riemann_map::RiemannMap;
 pub use crate::traversable::Traversable;

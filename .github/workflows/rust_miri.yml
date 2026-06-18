@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Phase 2: full repository coverage — all 20 crates.
+        # Phase 2: full repository coverage of all crates.
         # findings under Miri, particularly with `-Zmiri-strict-provenance`.
         # See issue #536.
         crate:
@@ -30,6 +30,7 @@ jobs:
           - deep_causality_algorithms
           - deep_causality_ast
           - deep_causality_calculus
+          - deep_causality_cfd
           - deep_causality_core
           - deep_causality_data_structures
           - deep_causality_discovery
