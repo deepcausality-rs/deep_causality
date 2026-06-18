@@ -8,6 +8,7 @@
 use deep_causality::*;
 use deep_causality_core::CausalityErrorEnum;
 use deep_causality_haft::LogAddEntry;
+use std::sync::Arc;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 struct CounterState {
@@ -214,6 +215,148 @@ fn evaluate_stateful_passes_through_existing_error_unchanged() {
         !log_text.contains("Causaloid 29: Incoming"),
         "closure must not have run: {log_text}"
     );
+}
+
+/// A stateful closure whose output value is `None` but carries no error (drives the
+/// "causal_fn returned None output" arm).
+fn closure_none_output(
+    _obs: EffectValue<u64>,
+    state: CounterState,
+    ctx: Option<ConfigCtx>,
+) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
+    PropagatingProcess {
+        value: EffectValue::None,
+        state,
+        context: ctx,
+        error: None,
+        logs: EffectLog::new(),
+    }
+}
+
+/// A stateful closure whose output is a structural `RelayTo` (drives the output pass-through arm).
+fn closure_relay_output(
+    _obs: EffectValue<u64>,
+    state: CounterState,
+    ctx: Option<ConfigCtx>,
+) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
+    PropagatingProcess {
+        value: EffectValue::RelayTo(3, Box::new(PropagatingEffect::from_value(1u64))),
+        state,
+        context: ctx,
+        error: None,
+        logs: EffectLog::new(),
+    }
+}
+
+#[test]
+fn evaluate_stateful_errors_on_a_none_input_value() {
+    let causaloid: Causaloid<u64, u64, CounterState, ConfigCtx> =
+        Causaloid::new_with_context(31, stateful_increment, ConfigCtx { multiplier: 1 }, "n");
+    let incoming = PropagatingProcess {
+        value: EffectValue::None,
+        state: CounterState { count: 3 },
+        context: Some(ConfigCtx { multiplier: 1 }),
+        error: None,
+        logs: EffectLog::new(),
+    };
+
+    let out = causaloid.evaluate_stateful(&incoming);
+    let err = out.error.expect("a None input value errors");
+    assert!(format!("{err:?}").contains("input value is None"));
+    assert_eq!(out.state, CounterState { count: 3 }, "state preserved");
+}
+
+#[test]
+fn evaluate_stateful_passes_a_relay_input_through_unchanged() {
+    let causaloid: Causaloid<u64, u64, CounterState, ConfigCtx> =
+        Causaloid::new_with_context(32, stateful_increment, ConfigCtx { multiplier: 1 }, "n");
+    let incoming = PropagatingProcess {
+        value: EffectValue::RelayTo(5, Box::new(PropagatingEffect::from_value(1u64))),
+        state: CounterState { count: 4 },
+        context: Some(ConfigCtx { multiplier: 1 }),
+        error: None,
+        logs: EffectLog::new(),
+    };
+
+    let out = causaloid.evaluate_stateful(&incoming);
+    assert!(out.error.is_none(), "structural input flows through");
+    // `cast_effect_value` collapses structural input variants to `None` on the output channel.
+    assert_eq!(out.value, EffectValue::None);
+    assert_eq!(out.state, CounterState { count: 4 }, "state untouched");
+}
+
+#[test]
+fn evaluate_stateful_errors_when_the_closure_returns_a_none_output() {
+    let causaloid: Causaloid<u64, u64, CounterState, ConfigCtx> =
+        Causaloid::new_with_context(33, closure_none_output, ConfigCtx { multiplier: 1 }, "n");
+    let incoming = build_incoming(
+        CounterState { count: 0 },
+        Some(ConfigCtx { multiplier: 1 }),
+        5,
+    );
+
+    let out = causaloid.evaluate_stateful(&incoming);
+    let err = out.error.expect("a None output errors");
+    assert!(format!("{err:?}").contains("returned None output"));
+}
+
+#[test]
+fn evaluate_stateful_passes_a_relay_output_through_unchanged() {
+    let causaloid: Causaloid<u64, u64, CounterState, ConfigCtx> =
+        Causaloid::new_with_context(34, closure_relay_output, ConfigCtx { multiplier: 1 }, "n");
+    let incoming = build_incoming(
+        CounterState { count: 0 },
+        Some(ConfigCtx { multiplier: 1 }),
+        5,
+    );
+
+    let out = causaloid.evaluate_stateful(&incoming);
+    assert!(out.error.is_none());
+    assert!(
+        matches!(out.value, EffectValue::RelayTo(3, _)),
+        "a structural output is passed through without output logging"
+    );
+}
+
+#[test]
+fn evaluate_stateful_rejects_a_collection_causaloid() {
+    let child: Causaloid<u64, u64, CounterState, ConfigCtx> =
+        Causaloid::new(40, stateless_passthrough, "child");
+    let causaloid: Causaloid<u64, u64, CounterState, ConfigCtx> = Causaloid::from_causal_collection(
+        41,
+        Arc::new(vec![child]),
+        "collection",
+        AggregateLogic::All,
+        0.0,
+    );
+    let incoming = build_incoming(
+        CounterState { count: 0 },
+        Some(ConfigCtx { multiplier: 1 }),
+        5,
+    );
+
+    let out = causaloid.evaluate_stateful(&incoming);
+    let err = out
+        .error
+        .expect("collection stateful eval is unsupported here");
+    assert!(format!("{err:?}").contains("collection"));
+}
+
+#[test]
+fn evaluate_stateful_rejects_a_graph_causaloid() {
+    let inner: CausaloidGraph<Causaloid<u64, u64, CounterState, ConfigCtx>> =
+        CausaloidGraph::new(0u64);
+    let causaloid: Causaloid<u64, u64, CounterState, ConfigCtx> =
+        Causaloid::from_causal_graph(42, "graph", Arc::new(inner));
+    let incoming = build_incoming(
+        CounterState { count: 0 },
+        Some(ConfigCtx { multiplier: 1 }),
+        5,
+    );
+
+    let out = causaloid.evaluate_stateful(&incoming);
+    let err = out.error.expect("graph stateful eval is unsupported here");
+    assert!(format!("{err:?}").contains("graph"));
 }
 
 #[test]

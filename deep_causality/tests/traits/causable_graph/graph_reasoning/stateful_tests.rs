@@ -4,6 +4,11 @@
  */
 
 //! Tests for [`StatefulMonadicCausableGraphReasoning`] over `CausaloidGraph`.
+//!
+//! Coverage note: a few arms guard against a `get_causaloid` / `outbound_edges` failure *inside*
+//! the BFS / path walk, where the index originates from the graph's own frozen adjacency. On a
+//! frozen, validated graph those calls cannot fail, so the arms are defensive and left uncovered
+//! rather than forced through a corrupted graph.
 
 use deep_causality::*;
 use deep_causality_core::CausalityErrorEnum;
@@ -218,4 +223,164 @@ fn evaluate_shortest_path_between_causes_stateful_works() {
 
     assert!(out.error.is_none(), "got {:?}", out.error);
     assert_eq!(out.state.count, 3);
+}
+
+/// A `PropagatingProcess` that already carries an error (drives the short-circuit arms).
+fn build_errored() -> PropagatingProcess<u64, CounterState, ConfigCtx> {
+    PropagatingProcess {
+        value: EffectValue::None,
+        state: CounterState { count: 5 },
+        context: Some(ConfigCtx {}),
+        error: Some(CausalityError::new(CausalityErrorEnum::Custom(
+            "pre-existing".into(),
+        ))),
+        logs: EffectLog::new(),
+    }
+}
+
+/// A frozen graph with two unconnected nodes (no edge), so there is no path between them.
+fn build_two_unconnected() -> CausaloidGraph<Causaloid<u64, u64, CounterState, ConfigCtx>> {
+    let mut g: CausaloidGraph<Causaloid<u64, u64, CounterState, ConfigCtx>> =
+        CausaloidGraph::new(0u64);
+    let n0 = Causaloid::new_with_context(0, node_increment, ConfigCtx {}, "n0");
+    let n1 = Causaloid::new_with_context(1, node_increment, ConfigCtx {}, "n1");
+    g.add_root_causaloid(n0).expect("root");
+    g.add_causaloid(n1).expect("n1");
+    g.freeze();
+    g
+}
+
+// --- short-circuit on an incoming error (all three methods) ---
+
+#[test]
+fn stateful_methods_short_circuit_on_incoming_error() {
+    let g = build_three_node_path();
+    let errored = build_errored();
+
+    let single = g.evaluate_single_cause_stateful(0, &errored);
+    assert!(single.error.is_some());
+    assert_eq!(single.state.count, 5, "incoming state is preserved");
+
+    let subgraph = g.evaluate_subgraph_from_cause_stateful(0, &errored);
+    assert!(subgraph.error.is_some());
+
+    let path = g.evaluate_shortest_path_between_causes_stateful(0, 2, &errored);
+    assert!(path.error.is_some());
+}
+
+// --- not-frozen guard (all three methods) ---
+
+#[test]
+fn stateful_methods_require_a_frozen_graph() {
+    let mut g: CausaloidGraph<Causaloid<u64, u64, CounterState, ConfigCtx>> =
+        CausaloidGraph::new(0u64);
+    let n0 = Causaloid::new_with_context(0, node_increment, ConfigCtx {}, "n0");
+    g.add_root_causaloid(n0).expect("root");
+    // Deliberately NOT frozen.
+    let initial = build_initial();
+
+    for out in [
+        g.evaluate_single_cause_stateful(0, &initial),
+        g.evaluate_subgraph_from_cause_stateful(0, &initial),
+        g.evaluate_shortest_path_between_causes_stateful(0, 0, &initial),
+    ] {
+        let err = out.error.expect("must reject an unfrozen graph");
+        assert!(format!("{err:?}").contains("frozen"));
+    }
+}
+
+// --- index / containment guards ---
+
+#[test]
+fn evaluate_single_cause_stateful_rejects_a_missing_index() {
+    let g = build_three_node_path();
+    let initial = build_initial();
+    let out = g.evaluate_single_cause_stateful(99, &initial);
+    let err = out.error.expect("missing index errors");
+    assert!(format!("{err:?}").contains("not found"));
+}
+
+#[test]
+fn evaluate_subgraph_stateful_rejects_a_start_index_not_in_the_graph() {
+    let g = build_three_node_path();
+    let initial = build_initial();
+    let out = g.evaluate_subgraph_from_cause_stateful(99, &initial);
+    let err = out.error.expect("missing start errors");
+    assert!(format!("{err:?}").contains("does not contain"));
+}
+
+#[test]
+fn evaluate_subgraph_stateful_rejects_a_relay_to_a_missing_target() {
+    // A two-node graph whose root relays to index 2, which does not exist.
+    let mut g: CausaloidGraph<Causaloid<u64, u64, CounterState, ConfigCtx>> =
+        CausaloidGraph::new(0u64);
+    let n0 = Causaloid::new_with_context(0, node_relay_to_two, ConfigCtx {}, "relayer");
+    let n1 = Causaloid::new_with_context(1, node_increment, ConfigCtx {}, "n1");
+    let i0 = g.add_root_causaloid(n0).expect("root");
+    let i1 = g.add_causaloid(n1).expect("n1");
+    g.add_edge(i0, i1).expect("edge");
+    g.freeze();
+
+    let out = g.evaluate_subgraph_from_cause_stateful(0, &build_initial());
+    let err = out.error.expect("relay to a missing target errors");
+    assert!(format!("{err:?}").contains("RelayTo target"));
+}
+
+// --- shortest-path specific branches ---
+
+#[test]
+fn evaluate_shortest_path_stateful_start_equals_stop_runs_only_that_node() {
+    let g = build_three_node_path();
+    let out = g.evaluate_shortest_path_between_causes_stateful(1, 1, &build_initial());
+    assert!(out.error.is_none(), "got {:?}", out.error);
+    assert_eq!(out.state.count, 1, "exactly one node runs");
+}
+
+#[test]
+fn evaluate_shortest_path_stateful_errors_when_no_path_exists() {
+    let g = build_two_unconnected();
+    let out = g.evaluate_shortest_path_between_causes_stateful(0, 1, &build_initial());
+    assert!(out.error.is_some(), "no path between disconnected nodes");
+}
+
+#[test]
+fn evaluate_shortest_path_stateful_short_circuits_on_a_failing_node() {
+    let mut g: CausaloidGraph<Causaloid<u64, u64, CounterState, ConfigCtx>> =
+        CausaloidGraph::new(0u64);
+    let n0 = Causaloid::new_with_context(0, node_increment, ConfigCtx {}, "n0");
+    let n1 = Causaloid::new_with_context(1, node_failing, ConfigCtx {}, "n1");
+    let n2 = Causaloid::new_with_context(2, node_increment, ConfigCtx {}, "n2");
+    let i0 = g.add_root_causaloid(n0).expect("root");
+    let i1 = g.add_causaloid(n1).expect("n1");
+    let i2 = g.add_causaloid(n2).expect("n2");
+    g.add_edge(i0, i1).expect("edge");
+    g.add_edge(i1, i2).expect("edge");
+    g.freeze();
+
+    let out = g.evaluate_shortest_path_between_causes_stateful(0, 2, &build_initial());
+    assert!(out.error.is_some(), "a failing node aborts the path walk");
+    assert_eq!(out.state.count, 1, "only node 0 advanced state");
+}
+
+#[test]
+fn evaluate_shortest_path_stateful_returns_on_a_relay() {
+    // Path 0 -> 1 -> 2 where node 1 emits a RelayTo: the walk returns that process verbatim.
+    let mut g: CausaloidGraph<Causaloid<u64, u64, CounterState, ConfigCtx>> =
+        CausaloidGraph::new(0u64);
+    let n0 = Causaloid::new_with_context(0, node_increment, ConfigCtx {}, "n0");
+    let n1 = Causaloid::new_with_context(1, node_relay_to_two, ConfigCtx {}, "relayer");
+    let n2 = Causaloid::new_with_context(2, node_increment, ConfigCtx {}, "n2");
+    let i0 = g.add_root_causaloid(n0).expect("root");
+    let i1 = g.add_causaloid(n1).expect("n1");
+    let i2 = g.add_causaloid(n2).expect("n2");
+    g.add_edge(i0, i1).expect("edge");
+    g.add_edge(i1, i2).expect("edge");
+    g.freeze();
+
+    let out = g.evaluate_shortest_path_between_causes_stateful(0, 2, &build_initial());
+    assert!(out.error.is_none(), "got {:?}", out.error);
+    assert!(
+        matches!(out.value, EffectValue::RelayTo(2, _)),
+        "the walk returns the relaying node's process"
+    );
 }

@@ -18,7 +18,7 @@ use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, CutCell, CutCellRegistry, CutConstraintKind,
     CutFaceConstraint, CutFaceFragment, HodgeDecomposeOptions, LatticeCell, LatticeComplex,
-    Manifold, SourceGeometry,
+    Manifold, SourceGeometry, TopologyErrorEnum,
 };
 
 fn manifold_2d(
@@ -403,4 +403,128 @@ fn tangential_only_ablation_still_enforces_tangential_no_slip() {
         div < 1e-9,
         "interior divergence {div:e} above solve exactness"
     );
+}
+
+// -- open-weighted validation guards -------------------------------------------------------------
+//
+// Coverage note: the deeper interior branches of `leray_project_open_weighted` (the constrained-gauge
+// RHS path with no reference, the every-edge-constrained abort, and the dual-residual diagnostics)
+// are exercised by the broader CFD verification suite that drives full cut-cell solves; the cheap,
+// deterministic input-validation guards are pinned directly here.
+
+/// One non-empty weighted row over a single cut cell at `base`, plus the manifold and edge count.
+fn open_weighted_fixture() -> (
+    Manifold<LatticeComplex<2, f64>, f64>,
+    Vec<CutFaceConstraint<f64>>,
+    usize,
+) {
+    let m = manifold_2d([8, 8], [false, false], CubicalReggeGeometry::unit());
+    let n1 = m.complex().num_cells(1);
+    let reg = single_cut_cell(m.complex(), [4, 4]);
+    let rows = reg.cut_face_constraints(m.complex());
+    assert!(
+        !rows.is_empty(),
+        "fixture must produce at least one weighted row"
+    );
+    (m, rows, n1)
+}
+
+#[test]
+fn open_weighted_rejects_a_field_of_the_wrong_length() {
+    let (m, rows, n1) = open_weighted_fixture();
+    let field = random_field(n1 - 1, 5); // one short
+    let err = m
+        .leray_project_open_weighted_opts(
+            &field,
+            &[],
+            &[],
+            &[0usize],
+            &rows,
+            &HodgeDecomposeOptions::default(),
+            None,
+        )
+        .unwrap_err();
+    assert!(matches!(err.0, TopologyErrorEnum::DimensionMismatch(_)));
+}
+
+#[test]
+fn open_weighted_requires_a_metric() {
+    // A metric-less manifold cannot build the Hodge star the weighted operator needs.
+    let lattice = LatticeComplex::<2, f64>::new([8, 8], [false, false]);
+    let n1 = lattice.num_cells(1);
+    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
+    let m_metric = manifold_2d([8, 8], [false, false], CubicalReggeGeometry::unit());
+    let rows = single_cut_cell(m_metric.complex(), [4, 4]).cut_face_constraints(m_metric.complex());
+    let m: Manifold<LatticeComplex<2, f64>, f64> = Manifold::from_cubical(lattice, data, 0);
+
+    let field = random_field(n1, 5);
+    let err = m
+        .leray_project_open_weighted_opts(
+            &field,
+            &[],
+            &[],
+            &[0usize],
+            &rows,
+            &HodgeDecomposeOptions::default(),
+            None,
+        )
+        .unwrap_err();
+    assert!(matches!(err.0, TopologyErrorEnum::InvalidInput(_)));
+}
+
+#[test]
+fn open_weighted_requires_a_reference_for_a_prescribed_inflow() {
+    let (m, rows, n1) = open_weighted_fixture();
+    let field = random_field(n1, 5);
+    // A prescribed (inflow) edge with no reference (outflow) face to balance the net flux.
+    let err = m
+        .leray_project_open_weighted_opts(
+            &field,
+            &[],
+            &[0usize],
+            &[],
+            &rows,
+            &HodgeDecomposeOptions::default(),
+            None,
+        )
+        .unwrap_err();
+    assert!(matches!(err.0, TopologyErrorEnum::InvalidInput(_)));
+}
+
+#[test]
+fn open_weighted_rejects_a_fixed_edge_index_out_of_range() {
+    let (m, rows, n1) = open_weighted_fixture();
+    let field = random_field(n1, 5);
+    let err = m
+        .leray_project_open_weighted_opts(
+            &field,
+            &[n1 + 7], // zeroed edge out of range
+            &[],
+            &[0usize],
+            &rows,
+            &HodgeDecomposeOptions::default(),
+            None,
+        )
+        .unwrap_err();
+    assert!(matches!(err.0, TopologyErrorEnum::InvalidInput(_)));
+}
+
+#[test]
+fn open_weighted_rejects_a_reference_vertex_out_of_range() {
+    let (m, rows, n1) = open_weighted_fixture();
+    let n0 = m.complex().num_cells(0);
+    let field = random_field(n1, 5);
+    let err = m
+        .leray_project_open_weighted_opts(
+            &field,
+            &[],
+            &[],
+            &[n0 + 3], // reference vertex out of range
+            &rows,
+            &HodgeDecomposeOptions::default(),
+            None,
+        )
+        .unwrap_err();
+    assert!(matches!(err.0, TopologyErrorEnum::InvalidInput(_)));
 }

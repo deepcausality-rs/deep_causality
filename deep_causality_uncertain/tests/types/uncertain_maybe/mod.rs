@@ -13,3 +13,6 @@ mod uncertain_maybe_f64_tests;
 
 #[cfg(all(test, not(miri)))]
 mod uncertain_maybe_f64_arithmetic_tests;
+
+#[cfg(all(test, not(miri)))]
+mod uncertain_maybe_f106_tests;

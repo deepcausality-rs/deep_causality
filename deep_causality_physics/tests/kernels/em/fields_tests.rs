@@ -398,6 +398,67 @@ fn test_lagrangian_density_kernel_nan_b_error() {
     assert!(lagrangian_density_kernel(&e, &b).is_err());
 }
 
+// =============================================================================
+// Overflow guards: finite inputs whose intermediate products overflow to ±inf,
+// exercising the post-computation non-finite checks.
+// =============================================================================
+
+#[test]
+fn test_poynting_vector_kernel_overflow_result_is_rejected() {
+    // Finite but huge spatial components: the cross product overflows to ±inf, tripping the
+    // non-finite-result guard (distinct from the non-finite-input guard).
+    let e = CausalMultiVector::<f64>::new(
+        vec![0.0, f64::MAX, f64::MAX, f64::MAX, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::<f64>::new(
+        vec![0.0, f64::MAX, f64::MAX, f64::MAX, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    assert!(poynting_vector_kernel(&e, &b).is_err());
+}
+
+#[test]
+fn test_proca_equation_kernel_m_squared_overflow_is_rejected() {
+    // `mass` is finite, but `mass * mass` overflows to inf, tripping the m^2 guard.
+    let field_manifold = create_simple_manifold();
+    let potential_manifold = create_simple_manifold();
+    let result = proca_equation_kernel(&field_manifold, &potential_manifold, f64::MAX);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_energy_density_kernel_overflow_squared_magnitude_is_rejected() {
+    let e = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, f64::MAX, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    assert!(energy_density_kernel(&e, &b).is_err());
+}
+
+#[test]
+fn test_lagrangian_density_kernel_overflow_squared_magnitude_is_rejected() {
+    let e = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, f64::MAX, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    assert!(lagrangian_density_kernel(&e, &b).is_err());
+}
+
 #[test]
 fn test_lagrangian_density_kernel_dimension_mismatch() {
     let e = CausalMultiVector::<f64>::new(

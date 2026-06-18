@@ -297,6 +297,35 @@ fn inflow_step_rejects_an_invalid_wall_reconfiguration() {
 }
 
 #[test]
+fn inflow_step_on_a_consumed_solver_short_circuits() {
+    // A failed wall reconfiguration consumes the solver, leaving the returned state with
+    // `solver: None`. Re-binding that state must short-circuit on the "solver consumed by a prior
+    // failure" guard rather than panic.
+    let m = periodic_manifold();
+    let state = InflowMarchState::new(base_solver(&m), rest_seed(&m), U_IN);
+    let zone = UncertainInflowZone::new(0, true, 1, U_IN) // wall axis 0 is periodic → reconfig fails
+        .with_presence_gate(0.5, 0.9, 0.1, 64)
+        .with_collapse_samples(8);
+    let context = InflowContext::new(zone, vec![MaybeUncertain::<f64>::from_value(U_IN); 2]);
+    let failed = inflow_march_step(EffectValue::Value(U_IN), state, Some(context.clone()));
+    assert!(
+        failed.error().is_some(),
+        "the reconfiguration must fail first"
+    );
+
+    // Re-bind the errored state (its solver was consumed).
+    let again = inflow_march_step(EffectValue::Value(U_IN), failed.state, Some(context));
+    let err = again
+        .error()
+        .clone()
+        .expect("the consumed-solver guard must fire");
+    assert!(
+        format!("{err:?}").contains("consumed"),
+        "expected the consumed-solver guard: {err:?}"
+    );
+}
+
+#[test]
 fn memory_cost_is_confined_to_the_tagged_patch() {
     let m = wall_manifold();
     let n0 = m.complex().num_cells(0);

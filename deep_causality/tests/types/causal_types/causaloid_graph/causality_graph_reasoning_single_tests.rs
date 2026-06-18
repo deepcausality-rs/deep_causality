@@ -47,6 +47,19 @@ fn test_evaluate_single_causaloid_not_found_error() {
 }
 
 #[test]
+fn test_evaluate_single_cause_requires_a_frozen_graph() {
+    let mut g = CausaloidGraph::new(0);
+    let causaloid = test_utils::get_test_causaloid_deterministic_input_output();
+    let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
+    // Deliberately not frozen.
+
+    let effect = PropagatingEffect::from_value(true);
+    let res = g.evaluate_single_cause(index, &effect);
+    assert!(res.is_err());
+    assert!(res.error.unwrap().to_string().contains("not frozen"));
+}
+
+#[test]
 fn test_evaluate_single_eval_error() {
     // Case 2: The causaloid itself returns an error during evaluation.
     let mut g = CausaloidGraph::new(0);
