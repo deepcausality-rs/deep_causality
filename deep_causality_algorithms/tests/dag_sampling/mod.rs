@@ -4,3 +4,5 @@
  */
 #[cfg(test)]
 mod count_tests;
+#[cfg(test)]
+mod sample_tests;

@@ -54,10 +54,12 @@ mod graph;
 mod index_set;
 mod lazy_tokens;
 mod memoization;
+mod sample;
 mod utils;
 
 pub use count::{count_amos, count_chordal};
 pub use graph::Graph;
+pub use sample::{representative_dag, sample_dag};
 
 use crate::dag_sampling::graph::Graph as InternalGraph;
 use deep_causality_num::{FromPrimitive, RealField};

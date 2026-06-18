@@ -50,6 +50,14 @@ impl IndexSet {
         self.iter().copied().next()
     }
 
+    /// Returns the element at position `pos` in ascending order.
+    ///
+    /// Panics if `pos` is out of bounds. Used by the sampler to map a flower-local
+    /// candidate index back to a clique id.
+    pub(crate) fn get(&self, pos: usize) -> usize {
+        self.0[pos]
+    }
+
     /// Returns `true` if `x` is a member, via binary search.
     pub(crate) fn contains(&self, x: usize) -> bool {
         self.0.binary_search(&x).is_ok()
@@ -96,6 +104,29 @@ impl IndexSet {
             }
         }
         IndexSet::from_sorted(intersection_vec)
+    }
+
+    /// Returns the set difference `self \ other` as a new sorted set, via a
+    /// linear merge that exploits the sorted invariant.
+    pub(crate) fn set_difference(&self, other: &IndexSet) -> IndexSet {
+        let mut set_difference_vec = Vec::new();
+        let mut it = other.iter().peekable();
+        for &el in self {
+            while let Some(&&x) = it.peek() {
+                if x < el {
+                    it.next();
+                } else if x == el {
+                    break;
+                } else {
+                    set_difference_vec.push(el);
+                    break;
+                }
+            }
+            if it.peek().is_none() {
+                set_difference_vec.push(el);
+            }
+        }
+        IndexSet::from_sorted(set_difference_vec)
     }
 
     /// Returns `true` if this set, viewed as a multiset of distinct indices,
