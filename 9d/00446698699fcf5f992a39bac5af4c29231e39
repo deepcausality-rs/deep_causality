@@ -1,0 +1,37 @@
+deep_causality_cfd/tests/types/flow_config/mod.rs
+  s_92ea13190e7ed3::t_3d3956b20270af 16-17
+deep_causality_cfd/tests/BUILD.bazel
+  s_92ea13190e7ed3::t_1800523295ee52 32
+deep_causality_cfd/tests/types/flow_config/uncertain_march_config_tests.rs
+  s_92ea13190e7ed3::t_1cc988068e3acf 42-44
+  s_92ea13190e7ed3::t_ea1b62f4b02c0e 1-10,14-39,51-64,72-75,83-86,94-97,105-108,117
+  s_92ea13190e7ed3::t_0b44e27ba91157 87-93
+  s_92ea13190e7ed3::t_91311451c84eb7 40-41,45-50
+  s_92ea13190e7ed3::t_35bf12dce7abf8 98-104
+  s_92ea13190e7ed3::t_2b6d9bb1a6ff45 109-116
+  s_92ea13190e7ed3::t_a1cddd5623a921 11-13
+  s_92ea13190e7ed3::t_fac0dc8525a60f 65-71
+  s_92ea13190e7ed3::t_b2adc420c872f8 76-82
+deep_causality_cfd/tests/types/flow/mod.rs
+  s_92ea13190e7ed3::t_4e658e977d3e5b 40-41
+deep_causality_cfd/tests/types/flow/uncertain_march_run_tests.rs
+  s_92ea13190e7ed3::t_06fe643b7e10c0 17-24
+  s_92ea13190e7ed3::t_006bf1fa8be651 32
+  s_92ea13190e7ed3::t_0322e6217a8bb1 1-16,25-31,33-190
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "9d00446698699fcf5f992a39bac5af4c29231e39",
+  "prompts": {},
+  "sessions": {
+    "s_92ea13190e7ed3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c78a29ff-3df3-48ac-a0f6-499ebc55b666",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
