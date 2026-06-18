@@ -4,6 +4,7 @@
  */
 
 pub mod causal_discovery;
+pub mod dag_sampling;
 pub mod feature_selection;
 
 pub use causal_discovery::brcd;

@@ -260,7 +260,19 @@ fn valid_start(
     None
 }
 
+/// Result of a finder run: `max` is the best single-config weight (the top-1/MAP
+/// estimate, what the old `greedy` returned); `frontier_lse` is the `logsumexp`
+/// over **all distinct valid configs the finder visited** — a lower bound on the
+/// full marginal `Σ_b g_b` that captures the visited mass (Step 2: sum a frontier
+/// instead of taking the max). Both come from the same `O(du)`/`O(du·iters)` walk.
+#[derive(Clone, Copy)]
+struct Finder {
+    max: f64,
+    frontier_lse: f64,
+}
+
 /// H1: one greedy coordinate pass. H2: hill-climb to a local optimum (`climb`).
+/// Returns the MAP estimate and the visited-frontier sum (see [`Finder`]).
 fn greedy(
     cpdag: &MixedGraph<()>,
     r: usize,
@@ -270,18 +282,22 @@ fn greedy(
     cfg: &GaussianFamilyConfig<f64>,
     climb: bool,
     budget: &mut usize,
-) -> Option<f64> {
+) -> Option<Finder> {
     let du = nb.len();
     let (mut bits, mut cur) = valid_start(cpdag, r, nb, base, frame, cfg, budget)?;
+    // Distinct valid configs seen, keyed by orientation bits (dedup so a config
+    // re-evaluated across hill-climb iterations is not double-counted in the sum).
+    let mut seen: BTreeMap<usize, f64> = BTreeMap::new();
+    seen.insert(bits, cur);
     loop {
         let mut best = None;
         for j in 0..du {
             let cand = bits ^ (1usize << j);
-            if let Some(w) = evaluate(cpdag, r, nb, cand, base, frame, cfg, budget)
-                && w > cur + 1e-12
-                && best.is_none_or(|(_, bw)| w > bw)
-            {
-                best = Some((cand, w));
+            if let Some(w) = evaluate(cpdag, r, nb, cand, base, frame, cfg, budget) {
+                seen.insert(cand, w);
+                if w > cur + 1e-12 && best.is_none_or(|(_, bw)| w > bw) {
+                    best = Some((cand, w));
+                }
             }
         }
         match best {
@@ -295,7 +311,8 @@ fn greedy(
             None => break,
         }
     }
-    Some(cur)
+    let frontier: Vec<f64> = seen.values().copied().collect();
+    Some(Finder { max: cur, frontier_lse: logsumexp(&frontier) })
 }
 
 fn h0(
@@ -326,6 +343,38 @@ fn argmax(v: &[f64]) -> usize {
     bi
 }
 
+/// Descending order of the candidate indices in `cand` by their score in `s`.
+fn order_of(cand: &[usize], s: &[f64]) -> Vec<usize> {
+    let mut idx: Vec<usize> = cand.to_vec();
+    idx.sort_by(|&a, &b| s[b].partial_cmp(&s[a]).unwrap_or(std::cmp::Ordering::Equal));
+    idx
+}
+
+/// Kendall-τ-b between the candidate order under `oracle` and under `approx`,
+/// over the comparable candidate set `cand`. Pairs tied in either score are
+/// dropped (so trivial du=0 ties do not inflate it). Returns `1.0` when there is
+/// no orderable pair (degenerate; counted as agreement).
+fn kendall_tau(cand: &[usize], oracle: &[f64], approx: &[f64]) -> f64 {
+    let (mut conc, mut disc) = (0i64, 0i64);
+    for i in 0..cand.len() {
+        for j in (i + 1)..cand.len() {
+            let (a, b) = (cand[i], cand[j]);
+            let do_ = oracle[a] - oracle[b];
+            let da = approx[a] - approx[b];
+            if do_ == 0.0 || da == 0.0 {
+                continue;
+            }
+            if (do_ > 0.0) == (da > 0.0) {
+                conc += 1;
+            } else {
+                disc += 1;
+            }
+        }
+    }
+    let denom = conc + disc;
+    if denom == 0 { 1.0 } else { (conc - disc) as f64 / denom as f64 }
+}
+
 #[derive(Default)]
 struct Agg {
     trials: usize,
@@ -346,6 +395,17 @@ struct Agg {
     bud_h2: u64,
     sum_2du: u64,
     sum_valid: u64,
+    // Full-order (ranks 2..n) fidelity vs the oracle Σ ranking: Kendall-τ sums
+    // and exact-full-order match counts, for each finder's MAP (max) and the
+    // visited-frontier sum.
+    tau_h1m: f64,
+    tau_h1s: f64,
+    tau_h2m: f64,
+    tau_h2s: f64,
+    exact_h1m: usize,
+    exact_h1s: usize,
+    exact_h2m: usize,
+    exact_h2s: usize,
 }
 
 fn main() {
@@ -378,13 +438,11 @@ fn main() {
                 continue;
             }
 
-            // Per-candidate scores.
-            let (mut s_oracle, mut s_h0, mut s_h1, mut s_h2) = (
-                vec![f64::NEG_INFINITY; n],
-                vec![f64::NEG_INFINITY; n],
-                vec![f64::NEG_INFINITY; n],
-                vec![f64::NEG_INFINITY; n],
-            );
+            // Per-candidate scores: oracle marginal Σ, plus each finder's MAP
+            // (max single config) and frontier-SUM (Σ over visited valid configs).
+            let mk = || vec![f64::NEG_INFINITY; n];
+            let (mut s_oracle, mut s_h0) = (mk(), mk());
+            let (mut s_h1m, mut s_h1s, mut s_h2m, mut s_h2s) = (mk(), mk(), mk(), mk());
             for &r in &cand {
                 let nb = cpdag.undirected_neighbors(r);
                 let du = nb.len();
@@ -403,29 +461,31 @@ fn main() {
                 a.bud_h0 += b0 as u64;
                 let mut b1 = 0;
                 let w1 = greedy(&cpdag, r, &nb, &base, &frame, &cfg, false, &mut b1);
-                s_h1[r] = w1.unwrap_or(f64::NEG_INFINITY);
+                s_h1m[r] = w1.map_or(f64::NEG_INFINITY, |f| f.max);
+                s_h1s[r] = w1.map_or(f64::NEG_INFINITY, |f| f.frontier_lse);
                 a.bud_h1 += b1 as u64;
                 let mut b2 = 0;
                 let w2 = greedy(&cpdag, r, &nb, &base, &frame, &cfg, true, &mut b2);
-                s_h2[r] = w2.unwrap_or(f64::NEG_INFINITY);
+                s_h2m[r] = w2.map_or(f64::NEG_INFINITY, |f| f.max);
+                s_h2s[r] = w2.map_or(f64::NEG_INFINITY, |f| f.frontier_lse);
                 a.bud_h2 += b2 as u64;
 
                 if du >= 2 {
                     a.du2_cands += 1;
-                    if let Some(w) = w1
-                        && (w - o.maxw).abs() < 1e-6
+                    if let Some(f) = w1
+                        && (f.max - o.maxw).abs() < 1e-6
                     {
                         a.map_hit_h1 += 1;
                     }
-                    if let Some(w) = w2
-                        && (w - o.maxw).abs() < 1e-6
+                    if let Some(f) = w2
+                        && (f.max - o.maxw).abs() < 1e-6
                     {
                         a.map_hit_h2 += 1;
                     }
                 }
             }
 
-            // Rank only over the comparable candidate set.
+            // Top-1 (rank-1) agreement over the comparable candidate set.
             let mask = |s: &[f64]| {
                 let mut v = vec![f64::NEG_INFINITY; n];
                 for &r in &cand {
@@ -441,21 +501,34 @@ fn main() {
             if argmax(&mask(&s_h0)) == o_top {
                 a.h0_top1 += 1;
             }
-            if argmax(&mask(&s_h1)) == o_top {
+            if argmax(&mask(&s_h1m)) == o_top {
                 a.h1_top1 += 1;
             }
-            if argmax(&mask(&s_h2)) == o_top {
+            if argmax(&mask(&s_h2m)) == o_top {
                 a.h2_top1 += 1;
             }
             if argmax(&mask(&s_h0)) == rc {
                 a.h0_rc += 1;
             }
-            if argmax(&mask(&s_h1)) == rc {
+            if argmax(&mask(&s_h1m)) == rc {
                 a.h1_rc += 1;
             }
-            if argmax(&mask(&s_h2)) == rc {
+            if argmax(&mask(&s_h2m)) == rc {
                 a.h2_rc += 1;
             }
+
+            // Full-order (ranks 2..n) fidelity vs the oracle Σ ranking.
+            let o_order = order_of(&cand, &s_oracle);
+            let acc = |s: &[f64], tau: &mut f64, exact: &mut usize| {
+                *tau += kendall_tau(&cand, &s_oracle, s);
+                if order_of(&cand, s) == o_order {
+                    *exact += 1;
+                }
+            };
+            acc(&s_h1m, &mut a.tau_h1m, &mut a.exact_h1m);
+            acc(&s_h1s, &mut a.tau_h1s, &mut a.exact_h1s);
+            acc(&s_h2m, &mut a.tau_h2m, &mut a.exact_h2m);
+            acc(&s_h2s, &mut a.tau_h2s, &mut a.exact_h2s);
         }
 
         let t = a.trials.max(1) as f64;
@@ -483,79 +556,94 @@ fn main() {
             100.0 * a.h1_rc as f64 / t,
             100.0 * a.h2_rc as f64 / t,
         );
-    }
-
-    // --- high-du stress: planted clique (transitive tournament -> clique CPDAG) ---
-    println!("\n  High-du stress (planted clique, du = c-1, root cause = node 0, 60 graphs each):");
-    println!(
-        "  {:>4} | {:>3} | {:>6} | {:>9} | {:>8} {:>8} | {:>7} {:>7} | {:>16}",
-        "c", "du", "2^du", "oracle→rc", "H1 top1", "H2 top1", "H1 MAP", "H2 MAP", "evals H1/H2"
-    );
-    for c in 4..=9usize {
-        let du = c - 1;
-        let (mut orc, mut h1t, mut h2t, mut h1m, mut h2m, mut nt, mut cands) =
-            (0usize, 0usize, 0usize, 0usize, 0usize, 0usize, 0usize);
-        let (mut b1, mut b2) = (0u64, 0u64);
-        for gi in 0..60usize {
-            let seed = 0xC11_6E + (c as u64) * 7919 + gi as u64;
-            let (cpdag, frame, rc) = make_clique_case(c, 100, 4.0, seed);
-            let (mut so, mut s1, mut s2) =
-                (vec![f64::NEG_INFINITY; c], vec![f64::NEG_INFINITY; c], vec![f64::NEG_INFINITY; c]);
-            for r in 0..c {
-                let nb = cpdag.undirected_neighbors(r);
-                let base = baseline_parents(&cpdag, &[r]);
-                let mut bo = 0;
-                let o = oracle(&cpdag, r, &nb, &base, &frame, &cfg, &mut bo);
-                so[r] = o.full;
-                let mut e1 = 0;
-                let w1 = greedy(&cpdag, r, &nb, &base, &frame, &cfg, false, &mut e1);
-                s1[r] = w1.unwrap_or(f64::NEG_INFINITY);
-                b1 += e1 as u64;
-                let mut e2 = 0;
-                let w2 = greedy(&cpdag, r, &nb, &base, &frame, &cfg, true, &mut e2);
-                s2[r] = w2.unwrap_or(f64::NEG_INFINITY);
-                b2 += e2 as u64;
-                cands += 1;
-                if let Some(w) = w1 && (w - o.maxw).abs() < 1e-6 {
-                    h1m += 1;
-                }
-                if let Some(w) = w2 && (w - o.maxw).abs() < 1e-6 {
-                    h2m += 1;
-                }
-            }
-            let ot = argmax(&so);
-            nt += 1;
-            if ot == rc {
-                orc += 1;
-            }
-            if argmax(&s1) == ot {
-                h1t += 1;
-            }
-            if argmax(&s2) == ot {
-                h2t += 1;
-            }
-        }
-        let t = nt.max(1) as f64;
-        let nc = cands.max(1) as f64;
         println!(
-            "  {:>4} | {:>3} | {:>6} | {:>8.0}% | {:>7.0}% {:>7.0}% | {:>6.0}% {:>6.0}% | {:>6.1} / {:>5.1}",
-            c,
-            du,
-            1usize << du,
-            100.0 * orc as f64 / t,
-            100.0 * h1t as f64 / t,
-            100.0 * h2t as f64 / t,
-            100.0 * h1m as f64 / nc,
-            100.0 * h2m as f64 / nc,
-            b1 as f64 / nc,
-            b2 as f64 / nc,
+            "          | full-order vs oracleΣ — Kendall-τ  H1 max {:.3} sum {:.3} | H2 max {:.3} sum {:.3}",
+            a.tau_h1m / t, a.tau_h1s / t, a.tau_h2m / t, a.tau_h2s / t,
+        );
+        println!(
+            "          |                        exact-order  H1 max {:.0}% sum {:.0}% | H2 max {:.0}% sum {:.0}%",
+            100.0 * a.exact_h1m as f64 / t,
+            100.0 * a.exact_h1s as f64 / t,
+            100.0 * a.exact_h2m as f64 / t,
+            100.0 * a.exact_h2s as f64 / t,
         );
     }
 
+    // --- high-du stress: planted clique (transitive tournament -> clique CPDAG) ---
+    // Full-order fidelity (Kendall-τ vs the oracle marginal Σ) for the finder MAP
+    // (max) vs the visited-frontier SUM, swept over weak and strong anomaly. The
+    // weak row is where top-1/max is known to break (cf. brcd_topk_pruning K_7/0.5);
+    // the question is whether the frontier SUM rescues the ranks-2..n order.
+    println!("\n  High-du stress (planted clique, du = c-1, root cause = node 0, 60 graphs each):");
+    println!(
+        "  {:>5} | {:>4} | {:>3} | {:>6} | {:>9} | {:>15} | {:>15} | {:>11}",
+        "anom", "c", "du", "2^du", "oracle→rc", "τ H1 max/sum", "τ H2 max/sum", "evals H1/H2"
+    );
+    for &perturb in &[0.5_f64, 4.0] {
+        for c in 4..=9usize {
+            let du = c - 1;
+            let (mut orc, mut nt, mut cands) = (0usize, 0usize, 0usize);
+            let (mut b1, mut b2) = (0u64, 0u64);
+            let (mut t1m, mut t1s, mut t2m, mut t2s) = (0.0_f64, 0.0, 0.0, 0.0);
+            for gi in 0..60usize {
+                let seed = 0xC11_6E + (perturb as u64) * 1_000_000 + (c as u64) * 7919 + gi as u64;
+                let (cpdag, frame, rc) = make_clique_case(c, 100, perturb, seed);
+                let mk = || vec![f64::NEG_INFINITY; c];
+                let (mut so, mut s1m, mut s1s, mut s2m, mut s2s) = (mk(), mk(), mk(), mk(), mk());
+                for r in 0..c {
+                    let nb = cpdag.undirected_neighbors(r);
+                    let base = baseline_parents(&cpdag, &[r]);
+                    let mut bo = 0;
+                    let o = oracle(&cpdag, r, &nb, &base, &frame, &cfg, &mut bo);
+                    so[r] = o.full;
+                    let mut e1 = 0;
+                    let w1 = greedy(&cpdag, r, &nb, &base, &frame, &cfg, false, &mut e1);
+                    s1m[r] = w1.map_or(f64::NEG_INFINITY, |f| f.max);
+                    s1s[r] = w1.map_or(f64::NEG_INFINITY, |f| f.frontier_lse);
+                    b1 += e1 as u64;
+                    let mut e2 = 0;
+                    let w2 = greedy(&cpdag, r, &nb, &base, &frame, &cfg, true, &mut e2);
+                    s2m[r] = w2.map_or(f64::NEG_INFINITY, |f| f.max);
+                    s2s[r] = w2.map_or(f64::NEG_INFINITY, |f| f.frontier_lse);
+                    b2 += e2 as u64;
+                    cands += 1;
+                }
+                let all: Vec<usize> = (0..c).collect();
+                t1m += kendall_tau(&all, &so, &s1m);
+                t1s += kendall_tau(&all, &so, &s1s);
+                t2m += kendall_tau(&all, &so, &s2m);
+                t2s += kendall_tau(&all, &so, &s2s);
+                nt += 1;
+                if argmax(&so) == rc {
+                    orc += 1;
+                }
+            }
+            let t = nt.max(1) as f64;
+            let nc = cands.max(1) as f64;
+            println!(
+                "  {:>5.1} | {:>4} | {:>3} | {:>6} | {:>8.0}% | {:>6.3}/{:<7.3} | {:>6.3}/{:<7.3} | {:>5.1}/{:<5.1}",
+                perturb,
+                c,
+                du,
+                1usize << du,
+                100.0 * orc as f64 / t,
+                t1m / t,
+                t1s / t,
+                t2m / t,
+                t2s / t,
+                b1 as f64 / nc,
+                b2 as f64 / nc,
+            );
+        }
+    }
+
     println!("\n  Reading:");
-    println!("  - 'H* top1' = heuristic ranking's top candidate equals the oracle's.");
-    println!("  - 'H* MAP'  = heuristic found the exact best config (du>=2 candidates).");
-    println!("  - If H1/H2 top1 ≈ 100% at O(du) evals « 2^du, the cheap finder works:");
-    println!("    the pruned ranker reproduces full BRCD's decision without enumeration.");
+    println!("  - 'H* top1' = heuristic ranking's top candidate equals the oracle's (rank-1).");
+    println!("  - Kendall-τ / exact-order vs oracleΣ = whether ranks 2..n survive, NOT just");
+    println!("    rank-1. τ=1.0 ⇒ the finder reproduces the full marginal order.");
+    println!("  - max = score each candidate by its single best config; sum = logsumexp over");
+    println!("    the configs the finder visited (a lower bound on the marginal Σ_b g_b).");
+    println!("  - If τ(sum) > τ(max) at weak anomaly, summing the frontier rescues the tail");
+    println!("    that top-1/max distorts — at the same O(du) « 2^du evaluation budget.");
     println!("==================================================================");
 }

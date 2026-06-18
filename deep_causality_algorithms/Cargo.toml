@@ -67,14 +67,14 @@ harness = false
 #   cargo run -p deep_causality_algorithms --example verification_base
 [[example]]
 name = "verification_base"
-path = "examples/verification/brcd/verification_base.rs"
+path = "verification/brcd/verification_base.rs"
 
 # BOSS structure-learning verification: self-contained structural recovery plus
 # a learned-CPDAG (cpdag=None) end-to-end run on committed Online Boutique data.
 #   cargo run -p deep_causality_algorithms --example verification_boss
 [[example]]
 name = "verification_boss"
-path = "examples/verification/brcd/verification_boss.rs"
+path = "verification/brcd/verification_boss.rs"
 
 # Supplied-CPDAG vs BOSS-learned comparison (illustrates the learned-vs-map gap).
 # Sock Shop completes; Online Boutique's ~50-var / 2100-row cases can be intractable
@@ -83,37 +83,37 @@ path = "examples/verification/brcd/verification_boss.rs"
 #   cargo run --release -p deep_causality_algorithms --example verification_boss_online_boutique
 [[example]]
 name = "verification_boss_sockshop"
-path = "examples/verification/brcd/verification_boss_sockshop.rs"
+path = "verification/brcd/verification_boss_sockshop.rs"
 
 [[example]]
 name = "verification_boss_online_boutique"
-path = "examples/verification/brcd/verification_boss_online_boutique.rs"
+path = "verification/brcd/verification_boss_online_boutique.rs"
 
 # Real-world verification (Online Boutique): replays committed Python-derived
 #   cargo run -p deep_causality_algorithms --example verification_online_boutique
 [[example]]
 name = "verification_online_boutique"
-path = "examples/verification/brcd/verification_online_boutique.rs"
+path = "verification/brcd/verification_online_boutique.rs"
 
 # Real-world verification (Sock Shop).
 #   cargo run -p deep_causality_algorithms --example verification_sockshop
 [[example]]
 name = "verification_sockshop"
-path = "examples/verification/brcd/verification_sockshop.rs"
+path = "verification/brcd/verification_sockshop.rs"
 
 # Configuration census: implementation-independent counts of 2^du vs valid vs
 # distinct I-CPDAGs vs distinct likelihoods, plus family-cache compression.
 #   cargo run -p deep_causality_algorithms --example brcd_config_census
 [[example]]
 name = "brcd_config_census"
-path = "examples/verification/brcd/brcd_config_census.rs"
+path = "verification/brcd/brcd_config_census.rs"
 
 # Factorization probe: numerical rank of the configuration-sum weight tensor,
 # testing whether an exact treewidth/tensor-train DP can replace 2^du enumeration.
 #   cargo run --release -p deep_causality_algorithms --example brcd_factorization_probe
 [[example]]
 name = "brcd_factorization_probe"
-path = "examples/verification/brcd/brcd_factorization_probe.rs"
+path = "verification/brcd/brcd_factorization_probe.rs"
 
 [lints]
 workspace = true
@@ -122,11 +122,11 @@ workspace = true
 #   cargo run --release -p deep_causality_algorithms --example brcd_topk_pruning
 [[example]]
 name = "brcd_topk_pruning"
-path = "examples/verification/brcd/brcd_topk_pruning.rs"
+path = "verification/brcd/brcd_topk_pruning.rs"
 
 # Heuristic MAP-config finder vs oracle: can a cheap O(du) search recover the
 # full-enumeration ranking without 2^du? The load-bearing test for pruned BRCD.
 #   cargo run --release -p deep_causality_algorithms --example brcd_heuristic_mapconfig
 [[example]]
 name = "brcd_heuristic_mapconfig"
-path = "examples/verification/brcd/brcd_heuristic_mapconfig.rs"
+path = "verification/brcd/brcd_heuristic_mapconfig.rs"

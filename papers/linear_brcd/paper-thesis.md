@@ -1,8 +1,12 @@
 # Follow-up paper
 
 Author: Marvin Hansen
+
 Status: First draft
+
 Scope: Core thesis
+
+Introducing commit: 0019b48260fde2bae06308797cbc544a474bd68f
 ---
 
 ## Core thesis

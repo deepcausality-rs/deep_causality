@@ -50,3 +50,23 @@ rust_test_suite(
         "//deep_causality_topology",
     ],
 )
+
+rust_test_suite(
+    name = "dag_sampling",
+    srcs = glob([
+        "dag_sampling/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_algorithms",
+        # Deps
+        "//deep_causality_num",
+        "//deep_causality_rand",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
