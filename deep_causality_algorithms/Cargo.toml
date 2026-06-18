@@ -101,5 +101,32 @@ path = "examples/verification/brcd/verification_online_boutique.rs"
 name = "verification_sockshop"
 path = "examples/verification/brcd/verification_sockshop.rs"
 
+# Configuration census: implementation-independent counts of 2^du vs valid vs
+# distinct I-CPDAGs vs distinct likelihoods, plus family-cache compression.
+#   cargo run -p deep_causality_algorithms --example brcd_config_census
+[[example]]
+name = "brcd_config_census"
+path = "examples/verification/brcd/brcd_config_census.rs"
+
+# Factorization probe: numerical rank of the configuration-sum weight tensor,
+# testing whether an exact treewidth/tensor-train DP can replace 2^du enumeration.
+#   cargo run --release -p deep_causality_algorithms --example brcd_factorization_probe
+[[example]]
+name = "brcd_factorization_probe"
+path = "examples/verification/brcd/brcd_factorization_probe.rs"
+
 [lints]
 workspace = true
+
+# Top-k configuration pruning: config mass-capture + ranking preservation.
+#   cargo run --release -p deep_causality_algorithms --example brcd_topk_pruning
+[[example]]
+name = "brcd_topk_pruning"
+path = "examples/verification/brcd/brcd_topk_pruning.rs"
+
+# Heuristic MAP-config finder vs oracle: can a cheap O(du) search recover the
+# full-enumeration ranking without 2^du? The load-bearing test for pruned BRCD.
+#   cargo run --release -p deep_causality_algorithms --example brcd_heuristic_mapconfig
+[[example]]
+name = "brcd_heuristic_mapconfig"
+path = "examples/verification/brcd/brcd_heuristic_mapconfig.rs"
