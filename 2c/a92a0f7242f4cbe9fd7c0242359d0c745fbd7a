@@ -1,0 +1,24 @@
+deep_causality_algorithms/verification/brcd/brcd_heuristic_mapconfig.rs
+  s_fe2a59750ef15a::t_bd9e3cfa43fa0e 346-377
+  s_fe2a59750ef15a::t_d81eadc7361753 559-647
+  s_fe2a59750ef15a::t_20418fdc4942aa 263-315
+  s_fe2a59750ef15a::t_08b766df91e2c2 441-521,523-531
+  s_fe2a59750ef15a::t_c93b1ddd439977 522
+  s_fe2a59750ef15a::t_154a0ab25ff9d8 398-408
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "2ca92a0f7242f4cbe9fd7c0242359d0c745fbd7a",
+  "prompts": {},
+  "sessions": {
+    "s_fe2a59750ef15a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "21a3d25e-142e-4448-a20e-2b356720fb18",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
