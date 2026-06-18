@@ -1,0 +1,79 @@
+deep_causality_multivector/tests/extensions/hkt_multifield/hkt_multifield_tests.rs
+  s_92ea13190e7ed3::t_ae9fb48ca93045 135-148
+deep_causality/tests/types/context_node_types/space_time/lorentzian/adjustable_tests.rs
+  s_92ea13190e7ed3::t_cbd4cb6c552844 27-65
+deep_causality_uncertain/tests/types/uncertain_maybe/uncertain_maybe_f106_tests.rs
+  s_92ea13190e7ed3::t_75a53c0088d32e 1-92
+deep_causality_uncertain/tests/types/uncertain_maybe/mod.rs
+  s_92ea13190e7ed3::t_8467f50d96859b 16-18
+deep_causality_topology/tests/types/manifold/leray_weighted_tests.rs
+  s_92ea13190e7ed3::t_bdbce2d334919e 416-420,425-428
+  s_92ea13190e7ed3::t_8406342ad881cb 21,447,473,492,510,529
+  s_92ea13190e7ed3::t_77c258e3169403 407-415,421-424,429-446,448-472,474-491,493-509,511-528,530
+deep_causality_cfd/tests/solvers/dec/uncertain_inflow_tests.rs
+  s_92ea13190e7ed3::t_bdbce2d334919e 311-314,318-321
+  s_92ea13190e7ed3::t_b9e519920ec235 300-310,315-317,322,325-327
+  s_92ea13190e7ed3::t_b9fa330f1817cb 323-324
+deep_causality_discovery/tests/types/cdl/surd_data_tests.rs
+  s_92ea13190e7ed3::t_ff166677ea7840 102-109,114-146
+  s_92ea13190e7ed3::t_5862fe27a9b28b 7-9,11,15-26
+  s_92ea13190e7ed3::t_bdbce2d334919e 110-113
+deep_causality/tests/extensions/causable/causable_accessor_trait_tests.rs
+  s_92ea13190e7ed3::t_bdbce2d334919e 34-37,47-49,59-62,72-73,75-78,88-89,91-94
+  s_92ea13190e7ed3::t_dea583fe1dbc54 1-33,38-46,50-58,63-71,74,79-87,90,95-100
+deep_causality/tests/types/context_node_types/space_time/minkowski/adjustable_tests.rs
+  s_92ea13190e7ed3::t_c468918c0469ae 28-68
+deep_causality_uncertain/tests/types/sampler/sequential_sampler_tests.rs
+  s_92ea13190e7ed3::t_134983d8a25394 482-490,494-499,503-538,542-617
+  s_92ea13190e7ed3::t_e510f8f4477e71 491-493,500-502,539-541
+  s_92ea13190e7ed3::t_dce5222c92152f 7
+deep_causality/tests/extensions/causable/mod.rs
+  s_92ea13190e7ed3::t_d3e7d5e0d474ae 6-7
+deep_causality/tests/traits/causable_graph/graph_reasoning/stateful_tests.rs
+  s_92ea13190e7ed3::t_60225f14cd0e7a 7-11
+  s_92ea13190e7ed3::t_a9100d995eb03e 227-386
+deep_causality/tests/types/causal_types/causaloid_graph/causality_graph_reasoning_shortest_tests.rs
+  s_92ea13190e7ed3::t_ad455ab754b6bb 59-65
+  s_92ea13190e7ed3::t_18b8e778e12239 38-58,66-72,76-87
+  s_92ea13190e7ed3::t_631226127b2e31 6
+  s_92ea13190e7ed3::t_bdbce2d334919e 73-75
+deep_causality/tests/types/causal_types/causaloid/causable_stateful_tests.rs
+  s_92ea13190e7ed3::t_bdbce2d334919e 292-296,307-311,332-336,339-341,351-355
+  s_92ea13190e7ed3::t_87a6ff4a4bd5af 11
+  s_92ea13190e7ed3::t_7493bda3bf3305 220-291,297-306,312-331,337-338,342-350,356-361
+deep_causality_uncertain/tests/types/sampler/qmc_sampler_tests.rs
+  s_92ea13190e7ed3::t_99034f306eb139 121-145
+  s_92ea13190e7ed3::t_4a24718e19e60f 84-120
+  s_92ea13190e7ed3::t_5f3a1bb385a332 311-330
+  s_92ea13190e7ed3::t_c262cb250e67c1 223-310,331-340
+  s_92ea13190e7ed3::t_54bba73dd123db 21,25-27
+  s_92ea13190e7ed3::t_961f6e86cd8ccb 7-19
+deep_causality_physics/tests/kernels/em/fields_tests.rs
+  s_92ea13190e7ed3::t_63e8cc6337135f 401-461
+deep_causality/tests/types/causal_types/causaloid_graph/causality_graph_reasoning_single_tests.rs
+  s_92ea13190e7ed3::t_e696d5b26f98d4 50-61
+deep_causality_sparse/tests/solver/cg_tests.rs
+  s_92ea13190e7ed3::t_bdbce2d334919e 389-392
+  s_92ea13190e7ed3::t_2b8a35bf4844f5 295-388,393-405
+deep_causality/tests/types/causal_types/causaloid_graph/causality_graph_reasoning_sub_tests.rs
+  s_92ea13190e7ed3::t_bdbce2d334919e 67-69,88-90
+  s_92ea13190e7ed3::t_28cd831ed8ea1b 26-66,70-87,91-101
+  s_92ea13190e7ed3::t_3e0f0a06299961 6-10
+  s_92ea13190e7ed3::t_6e325ae0e204d9 14-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "af6532a87007f12fb6211cd510238a9af64df512",
+  "prompts": {},
+  "sessions": {
+    "s_92ea13190e7ed3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c78a29ff-3df3-48ac-a0f6-499ebc55b666",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
