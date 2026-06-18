@@ -25,6 +25,48 @@ fn test_update_success() {
 }
 
 #[test]
+fn test_update_and_adjust_over_1d_2d_4d_grids() {
+    // The 3D arm is covered above; exercise the remaining 1D / 2D / 4D index arms of both
+    // `update` and `adjust`.
+
+    // 1D
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array1D);
+    grid.set(PointIndex::new1d(0), 10.0);
+    grid.set(PointIndex::new1d(1), 20.0);
+    grid.set(PointIndex::new1d(2), 30.0);
+    grid.set(PointIndex::new1d(3), 40.0);
+    let mut s = MinkowskiSpacetime::new(1, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
+    assert!(s.update(&grid).is_ok());
+    assert_eq!(s.x(), 10.0);
+    assert!(s.adjust(&grid).is_ok());
+    assert_eq!(s.x(), 20.0);
+
+    // 2D
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array2D);
+    grid.set(PointIndex::new2d(0, 0), 1.0);
+    grid.set(PointIndex::new2d(1, 0), 2.0);
+    grid.set(PointIndex::new2d(2, 0), 3.0);
+    grid.set(PointIndex::new2d(3, 0), 4.0);
+    let mut s = MinkowskiSpacetime::new(1, 0.0, 0.0, 0.0, 0.0, TimeScale::Second);
+    assert!(s.update(&grid).is_ok());
+    assert_eq!(s.y(), 2.0);
+    assert!(s.adjust(&grid).is_ok());
+    assert_eq!(s.y(), 4.0);
+
+    // 4D
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
+    grid.set(PointIndex::new4d(0, 0, 0, 0), 5.0);
+    grid.set(PointIndex::new4d(0, 0, 0, 1), 6.0);
+    grid.set(PointIndex::new4d(0, 0, 0, 2), 7.0);
+    grid.set(PointIndex::new4d(0, 0, 0, 3), 8.0);
+    let mut s = MinkowskiSpacetime::new(1, 0.0, 0.0, 0.0, 0.0, TimeScale::Second);
+    assert!(s.update(&grid).is_ok());
+    assert_eq!(s.z(), 7.0);
+    assert!(s.adjust(&grid).is_ok());
+    assert_eq!(s.z(), 14.0);
+}
+
+#[test]
 fn test_update_with_nan_should_fail() {
     let mut s = MinkowskiSpacetime::new(1, 0.0, 0.0, 0.0, 0.0, TimeScale::Second);
 

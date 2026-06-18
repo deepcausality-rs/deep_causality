@@ -132,13 +132,20 @@ fn test_monad_bind() {
 
 #[test]
 fn test_monad_bind_empty() {
-    // How to create an empty field? CausalMultiField typically isn't empty in current constructors.
-    // Maybe with CausalTensor::new(vec![], shape)?
-    // But constructors usually enforce valid shapes.
-    // If we assume standard usage, we always have elements.
-    // The bind implementation handles empty case `if let Some(&first_val) = data_vec.first()`.
-    // Validating "empty" path might be hard if we can't construct an empty one.
-    // I'll stick to valid non-empty functionality.
+    // A zero-extent spatial shape yields a field with no coefficients, driving the empty-field
+    // branch of `bind` (which returns a freshly-built zero field rather than applying `f`).
+    let metric = Metric::from_signature(2, 0, 0);
+    let dx = [0.1f32, 0.1, 0.1];
+    let empty = CausalMultiField::<f32>::zeros([0, 1, 1], metric, dx);
+    assert!(empty.data().as_slice().is_empty(), "fixture must be empty");
+
+    let result = CausalMultiFieldWitness::<f32>::bind(empty, |x| {
+        CausalMultiFieldWitness::<f32>::pure(x * 3.0)
+    });
+
+    // The empty branch reconstructs a zero field preserving the source shape; `f` never runs.
+    assert_eq!(result.shape(), &[0, 1, 1]);
+    assert!(result.data().as_slice().is_empty());
 }
 
 #[test]

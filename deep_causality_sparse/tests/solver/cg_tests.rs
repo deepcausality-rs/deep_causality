@@ -292,3 +292,114 @@ fn warm_started_cg_surfaces_budget_exhaustion() {
     let err = cg_solve_preconditioned_from(&apply, &diag, &b, &x0, 1e-15, 1).unwrap_err();
     assert_eq!(err.iterations, 1);
 }
+
+// =============================================================================
+// Operator-failure and algebraic-breakdown guards across the three CG variants.
+// =============================================================================
+
+use std::cell::Cell;
+
+#[test]
+fn cg_solve_rejects_a_wrong_length_operator() {
+    // The operator returns a vector of the wrong length: caught on the first application.
+    let b = vec![1.0_f64, 2.0];
+    let apply = |_v: &[f64]| -> Vec<f64> { vec![0.0; 5] };
+    let err = cg_solve(apply, &b, 1e-12, 50).unwrap_err();
+    assert_eq!(err.iterations, 0);
+}
+
+#[test]
+fn cg_solve_breaks_down_on_a_singular_operator() {
+    // A·p = 0 for a non-zero search direction makes pᵀAp = 0 — the algebraic-breakdown guard.
+    let b = vec![1.0_f64, 1.0];
+    let apply = |_v: &[f64]| -> Vec<f64> { vec![0.0, 0.0] };
+    let err = cg_solve(apply, &b, 1e-12, 50).unwrap_err();
+    assert_eq!(err.iterations, 0, "breakdown fires on the first iteration");
+}
+
+#[test]
+fn preconditioned_cg_returns_zero_for_zero_rhs() {
+    use deep_causality_sparse::cg_solve_preconditioned;
+    // b = 0 takes the `b_norm == 0` absolute-tolerance branch and converges immediately.
+    let apply = |v: &[f64]| v.to_vec();
+    let diag = vec![1.0_f64, 1.0];
+    let b = vec![0.0_f64, 0.0];
+    let x = cg_solve_preconditioned(apply, &diag, &b, 1e-12, 50).unwrap();
+    assert_eq!(x, vec![0.0, 0.0]);
+}
+
+#[test]
+fn preconditioned_cg_rejects_a_wrong_length_operator() {
+    use deep_causality_sparse::cg_solve_preconditioned;
+    let diag = vec![1.0_f64, 1.0];
+    let b = vec![1.0_f64, 2.0];
+    let apply = |_v: &[f64]| -> Vec<f64> { vec![0.0; 7] };
+    let err = cg_solve_preconditioned(apply, &diag, &b, 1e-12, 50).unwrap_err();
+    assert_eq!(err.iterations, 0);
+}
+
+#[test]
+fn preconditioned_cg_breaks_down_on_a_singular_operator() {
+    use deep_causality_sparse::cg_solve_preconditioned;
+    let diag = vec![1.0_f64, 1.0];
+    let b = vec![1.0_f64, 1.0];
+    let apply = |_v: &[f64]| -> Vec<f64> { vec![0.0, 0.0] };
+    let err = cg_solve_preconditioned(apply, &diag, &b, 1e-12, 50).unwrap_err();
+    assert_eq!(err.iterations, 0);
+}
+
+#[test]
+fn warm_started_cg_returns_zero_for_zero_rhs() {
+    use deep_causality_sparse::cg_solve_preconditioned_from;
+    // b = 0, x0 = 0: r₀ = 0 converges immediately through the `b_norm == 0` branch.
+    let apply = |v: &[f64]| v.to_vec();
+    let diag = vec![1.0_f64, 1.0];
+    let b = vec![0.0_f64, 0.0];
+    let x0 = vec![0.0_f64, 0.0];
+    let x = cg_solve_preconditioned_from(apply, &diag, &b, &x0, 1e-12, 50).unwrap();
+    assert_eq!(x, vec![0.0, 0.0]);
+}
+
+#[test]
+fn warm_started_cg_rejects_a_wrong_length_operator_on_the_initial_residual() {
+    use deep_causality_sparse::cg_solve_preconditioned_from;
+    // The very first application (A·x₀) returns the wrong length.
+    let diag = vec![1.0_f64, 1.0];
+    let b = vec![1.0_f64, 2.0];
+    let x0 = vec![0.0_f64, 0.0];
+    let apply = |_v: &[f64]| -> Vec<f64> { vec![0.0; 9] };
+    let err = cg_solve_preconditioned_from(apply, &diag, &b, &x0, 1e-12, 50).unwrap_err();
+    assert_eq!(err.iterations, 0);
+}
+
+#[test]
+fn warm_started_cg_rejects_a_wrong_length_operator_inside_the_loop() {
+    use deep_causality_sparse::cg_solve_preconditioned_from;
+    // Correct length for the initial residual (A·x₀), wrong length once the loop applies A·p.
+    let calls = Cell::new(0usize);
+    let apply = |v: &[f64]| -> Vec<f64> {
+        let n = calls.get();
+        calls.set(n + 1);
+        if n == 0 { v.to_vec() } else { vec![0.0; 9] }
+    };
+    let diag = vec![1.0_f64, 1.0];
+    let b = vec![1.0_f64, 2.0];
+    let x0 = vec![0.0_f64, 0.0];
+    let err = cg_solve_preconditioned_from(apply, &diag, &b, &x0, 1e-12, 50).unwrap_err();
+    assert_eq!(
+        err.iterations, 0,
+        "the loop's operator application is rejected"
+    );
+}
+
+#[test]
+fn warm_started_cg_breaks_down_on_a_singular_operator() {
+    use deep_causality_sparse::cg_solve_preconditioned_from;
+    // A·x₀ = 0 (x₀ = 0) gives a non-zero residual, then A·p = 0 trips the breakdown guard.
+    let apply = |_v: &[f64]| -> Vec<f64> { vec![0.0, 0.0] };
+    let diag = vec![1.0_f64, 1.0];
+    let b = vec![1.0_f64, 1.0];
+    let x0 = vec![0.0_f64, 0.0];
+    let err = cg_solve_preconditioned_from(apply, &diag, &b, &x0, 1e-12, 50).unwrap_err();
+    assert_eq!(err.iterations, 0);
+}

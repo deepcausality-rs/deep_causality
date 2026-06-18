@@ -4,6 +4,7 @@
  */
 
 use deep_causality_ast::ConstTree;
+use deep_causality_num::Float106;
 use deep_causality_uncertain::{
     ArithmeticOperator, BernoulliParams, ComparisonOperator, DistributionEnum, LogicalOperator,
     NormalDistributionParams, SampledValue, Sampler, SequentialSampler, UncertainError,
@@ -474,6 +475,142 @@ fn test_conditional_op() {
     });
     assert!(matches!(
         Sampler::<f64>::sample(&sampler, &node, 0),
+        Err(UncertainError::UnsupportedTypeError(_))
+    ));
+}
+
+// =============================================================================
+// Float106 (double-double) precision paths
+// =============================================================================
+
+fn f106(x: f64) -> Float106 {
+    Float106::from_f64(x)
+}
+
+fn dfloat(x: f64) -> UncertainNode {
+    create_node(UncertainNodeContent::Value(SampledValue::DoubleFloat(
+        f106(x),
+    )))
+}
+
+#[test]
+fn test_distribution_f106_point_normal_uniform() {
+    let sampler = SequentialSampler;
+
+    let node = create_root(UncertainNodeContent::DistributionF106(
+        DistributionEnum::Point(f106(42.0)),
+    ));
+    assert_eq!(
+        Sampler::<Float106>::sample(&sampler, &node, 0).unwrap(),
+        SampledValue::DoubleFloat(f106(42.0))
+    );
+
+    let node = create_root(UncertainNodeContent::DistributionF106(
+        DistributionEnum::Normal(NormalDistributionParams::new(f106(0.0), f106(1.0))),
+    ));
+    assert!(matches!(
+        Sampler::<Float106>::sample(&sampler, &node, 0).unwrap(),
+        SampledValue::DoubleFloat(_)
+    ));
+
+    let node = create_root(UncertainNodeContent::DistributionF106(
+        DistributionEnum::Uniform(UniformDistributionParams::new(f106(0.0), f106(1.0))),
+    ));
+    assert!(matches!(
+        Sampler::<Float106>::sample(&sampler, &node, 0).unwrap(),
+        SampledValue::DoubleFloat(_)
+    ));
+}
+
+#[test]
+fn test_double_float_arithmetic_and_negation() {
+    let sampler = SequentialSampler;
+
+    let node = create_root(UncertainNodeContent::ArithmeticOp {
+        op: ArithmeticOperator::Add,
+        lhs: dfloat(10.0),
+        rhs: dfloat(5.0),
+    });
+    assert_eq!(
+        Sampler::<Float106>::sample(&sampler, &node, 0).unwrap(),
+        SampledValue::DoubleFloat(f106(15.0))
+    );
+
+    let node = create_root(UncertainNodeContent::NegationOp {
+        operand: dfloat(7.0),
+    });
+    assert_eq!(
+        Sampler::<Float106>::sample(&sampler, &node, 0).unwrap(),
+        SampledValue::DoubleFloat(f106(-7.0))
+    );
+}
+
+#[test]
+fn test_double_float_comparison_and_function_ops() {
+    let sampler = SequentialSampler;
+
+    // ComparisonOp over a DoubleFloat operand.
+    let node = create_root(UncertainNodeContent::ComparisonOp {
+        op: ComparisonOperator::GreaterThan,
+        threshold: 5.0,
+        operand: dfloat(10.0),
+    });
+    assert_eq!(
+        Sampler::<bool>::sample(&sampler, &node, 0).unwrap(),
+        SampledValue::Bool(true)
+    );
+
+    // FunctionOpF64 over a DoubleFloat operand (the func runs on the widened f64).
+    let func = Arc::new(|x: f64| x + 1.0);
+    let node = create_root(UncertainNodeContent::FunctionOpF64 {
+        func,
+        operand: dfloat(10.0),
+    });
+    assert_eq!(
+        Sampler::<Float106>::sample(&sampler, &node, 0).unwrap(),
+        SampledValue::DoubleFloat(f106(11.0))
+    );
+
+    // FunctionOpBool over a DoubleFloat operand.
+    let func = Arc::new(|x: f64| x > 0.0);
+    let node = create_root(UncertainNodeContent::FunctionOpBool {
+        func,
+        operand: dfloat(10.0),
+    });
+    assert_eq!(
+        Sampler::<bool>::sample(&sampler, &node, 0).unwrap(),
+        SampledValue::Bool(true)
+    );
+}
+
+#[test]
+fn test_distribution_variant_mismatch_errors() {
+    // Each distribution channel rejects a variant that does not belong to it. `Bernoulli` carries
+    // no `T`, so it slots into the f64 / f106 channels as a deliberate mismatch; a `Normal<bool>`
+    // is the analogous mismatch for the bool channel.
+    let sampler = SequentialSampler;
+
+    let node = create_root(UncertainNodeContent::DistributionF64(
+        DistributionEnum::Bernoulli(BernoulliParams::new(0.5)),
+    ));
+    assert!(matches!(
+        Sampler::<f64>::sample(&sampler, &node, 0),
+        Err(UncertainError::UnsupportedTypeError(_))
+    ));
+
+    let node = create_root(UncertainNodeContent::DistributionF106(
+        DistributionEnum::Bernoulli(BernoulliParams::new(0.5)),
+    ));
+    assert!(matches!(
+        Sampler::<Float106>::sample(&sampler, &node, 0),
+        Err(UncertainError::UnsupportedTypeError(_))
+    ));
+
+    let node = create_root(UncertainNodeContent::DistributionBool(
+        DistributionEnum::Normal(NormalDistributionParams::new(true, false)),
+    ));
+    assert!(matches!(
+        Sampler::<bool>::sample(&sampler, &node, 0),
         Err(UncertainError::UnsupportedTypeError(_))
     ));
 }
