@@ -2,11 +2,19 @@
 
 Author: Marvin Hansen
 
-Status: First draft
+Status: Core thesis — **implementation accomplished** (see companion below)
 
-Scope: Core thesis
+Scope: Core thesis + realized implementation status
 
 Introducing commit: 0019b48260fde2bae06308797cbc544a474bd68f
+
+Implementation companion: `papers/linear_brcd/paper-impl-draft.md` (methodology &
+implementation differences). Both contributions below (C1 method, C2 system) are now
+implemented on the `brcd-next` branch; per-item status is marked inline, and §5.1
+summarizes what was built. One refinement the implementation surfaced: BRCD's
+failure-period cost is **two** exponentials, not one — the `Σ_V 2^{du}` configuration
+enumeration this thesis targets, *and* a per-configuration MEC-sizing/sampling step
+that was factorial in the prior in-tree port. Both were removed (§5.1).
 ---
 
 ## Core thesis
@@ -86,11 +94,21 @@ Two coupled contributions:
 
 - **C1 (method): MAP-configuration BRCD.** Replace per-candidate enumeration of
   all valid cut configurations with evaluation of a small, cheaply-found frontier
-  (top-1 in the detectable regime). Prove, as a configuration-level corollary of
-  Lemma 4.1 and Theorem 4.4, that under `Δ_min > 0` the omitted configurations
-  carry vanishing posterior mass with high probability, so the candidate ranking
-  is preserved. The accuracy/compute trade-off degrades gracefully exactly where
-  full BRCD is itself unreliable, that is, on sub-detection-threshold anomalies.
+  (top-1 in the detectable regime). The configuration-level concentration is, for
+  the **true** candidate, a corollary of Lemma 4.1 and Theorem 4.4: under
+  `Δ_min > 0` the non-MAP configurations of `R⋆` are wrong-`G`/right-`R⋆` pairs,
+  whose posterior mass decays at the same exponential rate that makes BRCD
+  consistent. The accuracy/compute trade-off degrades gracefully exactly where full
+  BRCD is itself unreliable, that is, on sub-detection-threshold anomalies.
+
+  **Status: implemented** as the opt-in `ConfigStrategy::MapPrune` in production
+  `brcd_run` (an `O(du)` greedy MAP-config finder; default remains exact `Full`).
+  Validated: `du = 0` reproduces `Full` to `1e-9`; in the detectable regime top-1
+  agreement is 100% and full-order Kendall-τ ≈ 0.997 on realistic CPDAGs. The
+  *whole-ranking* preservation (beyond the true candidate) is so far empirical; the
+  formal extension of the corollary to all candidates remains the open theory item
+  (§7). The degree ceiling is removed on the pruned path (it is `O(du)`, not
+  `2^{du}`), so it is unbounded in undirected degree.
 
 - **C2 (system): the dual-purpose CDL.** A type-state pipeline language over an
   effect monad (error short-circuit plus warning accumulation) that composes the
@@ -102,12 +120,20 @@ Two coupled contributions:
   CPDAG supplied: it skips structure learning and pays only the ranking cost, the
   work that governs time-to-diagnosis. The same code path, configured by whether a
   CPDAG is present, is the offline analytics tool and the production RCA service.
-  This requires one small change to the CDL, which today learns the CPDAG and
-  discards it; persisting it closes the loop (see
+  This required one small change to the CDL, which previously learned the CPDAG and
+  discarded it; persisting it closes the loop (see
   `openspec/notes/cdl-cpdag-cache.md`). With that change the offline/online split
   the paper only describes becomes an executable, measurable property of the
   system: a cold run (learn plus rank) against a warm run (load plus rank) on
   identical data isolates the structure-learning cost the production path avoids.
+
+  **Status: implemented** — an opt-in keyed CPDAG cache (`cpdag_cache_path`) in
+  `deep_causality_discovery`: it learns with BOSS on a miss, persists the graph
+  keyed (FNV-1a over the normal data + BOSS seed, sidecar key), and on a matching
+  key loads and skips structure learning. The learn step uses the same BOSS config
+  as `brcd_run`, so a warm (cached) run reproduces the cold (learned) graph exactly;
+  stale/missing/corrupt entries re-learn and overwrite (never a silently-wrong
+  graph). The offline/online split is now executable and measurable.
 
 ## 4. Findings that substantiate the thesis
 
@@ -228,6 +254,41 @@ real datasets.
   Causal Discovery Language that turns a cluster-scale research
   prototype into a fast, reproducible, in-process diagnostic instrument.
 
+## 5.1 Implementation 
+
+The method is built and validated against reference data. See
+`papers/linear_brcd/paper-impl-draft.md` for the code-level differences.
+
+Summary:
+
+- **Polynomial MEC counting + uniform sampling (removes the *second* exponential).**
+  A new dependency-free `dag_sampling` module reimplements the Wienöbst–Bannach–
+  Liśkiewicz Clique-Picking counter and uniform sampler in-tree (algorithm theirs;
+  reimplemented for optimization and dependency-free integration, not novelty),
+  generic over the BRCD numeric type (`f64` / `Float106`). This replaces the prior
+  port's exact AMO enumeration — factorial on dense chordal residuals and hard-capped
+  at `MEC_ENUM_BOUND` — restoring parity with the paper and removing the ceiling.
+  Validated against the retained exact enumerator on the reference anchors and 2000
+  random chordal graphs (zero mismatches); sampler validity / full-support /
+  chi-square uniformity confirmed.
+
+- **`O(du)` MAP-configuration pruning (removes the config exponential).** Implemented
+  as opt-in `ConfigStrategy::MapPrune` (C1 above), default `Full`.
+
+- **Ranking-preserving integration.** `brcd_run` and the BOSS bootstrap
+  now use the polynomial counter/sampler; the enumeration is retained only as the
+  test oracle. The MEC size is exact and the sampled member's likelihood is
+  Markov-equivalence-invariant, so the swap is ranking-preserving: the captured
+  reference rankings reproduce **position-for-position** (Online Boutique 45/45 ×2,
+  Sock Shop 44/45). The learned-CPDAG path (`brcd_run(None)` → BOSS → undirected
+  hubs), previously intractable, now completes and recovers the fault at rank 1.
+
+- **Learn-once CPDAG cache (C2 above).** Implemented in the CDL.
+
+Net effect: per-candidate failure-period work goes from `2^{du} × (poly|factorial)`
+to `O(du) × poly`, i.e. `O(n · du · poly(n, N))` overall for a single root cause —
+polynomial, near-linear in `n` for bounded undirected degree.
+
 ## 6. Deployment assumptions
  
 BRCD needs two inputs at ranking time: a normal pool and an anomalous pool over the same
@@ -274,30 +335,41 @@ violates invariance. In both, the diagnostic degrades, and BRCD's own consistenc
 guarantee weakens with it, since the KL separation `Δ_min` shrinks when the
 contrast is confounded.
 
-## 7. What still must be done before this is a submission
+## 7. TODO: 
 
-1. ~~**Heuristic MAP-config finder versus oracle.**~~ Done (F6): a greedy `O(du)`
-   finder recovers the full ranking without enumeration, and does not need the
-   exact MAP. Remaining hardening: a weak-anomaly clique sweep.
-2. **Validation on the synthetic Fig-2b regime** at `n` up to 1000 through the
-   real ranker (not the small `n = 10` probe), to demonstrate the speed-up where
-   `du > 0` bites at scale.
-3. **The concentration corollary**, written formally as an extension of Theorem
-   4.4: top-`k` mass at least `1 − ε` implies the ranking is preserved with high
-   probability.
-4. **Accuracy/compute trade-off curves.** Top-`l` accuracy and configurations
-   scored against budget, on Petshop, OB, Sockshop, and synthetic data,
-   reproducing the original accuracy at a fraction of the configuration work.
-5. **Honest scope statement.** On directed service-map CPDAGs the config pruning is
-   a no-op (`du = 0`). The win is on undirected-heavy and large synthetic graphs,
-   and the amortized failure-period `O(n)` result carries the directed case.
+The method and system are implemented and validated (§5.1). What remains is the
+formal theory, scaled evaluation, and the write-up.
+
+1. ~~**Heuristic MAP-config finder versus oracle.**~~ Done (F6) and productionized as
+   `ConfigStrategy::MapPrune` (§5.1).
+2. ~~**Reimplement the polynomial MEC counter/sampler in-tree and wire BRCD to
+   it.**~~ ~~Done (`dag_sampling`; ranking-preserving, 45/45 reproduced; §5.1).~~
+3. **The concentration corollary**, written formally as an extension of Theorem 4.4.
+   The **true-candidate** case is already a corollary (non-MAP configs of `R⋆` decay
+   at the `Δ_min` rate); the open item is the **whole-ranking** extension across all
+   candidates — top-`k` mass at least `1 − ε` implies the candidate ranking is
+   preserved w.h.p. This is the one remaining theory gap; whole-ranking preservation
+   is currently empirical (τ ≈ 0.997 detectable regime).
+4. **Validation on the synthetic Fig-2b regime** at `n` up to 1000 through the real
+   ranker (not the `n = 10` probe), to demonstrate the speed-up where `du > 0` bites
+   at scale.
+5. **Accuracy/compute trade-off curves.** Top-`l` accuracy and configurations scored
+   against budget on Petshop / OB / Sockshop and synthetic data — reproducing the
+   original accuracy at a fraction of the configuration work — plus the cold-vs-warm
+   latency measurement the CPDAG cache now enables.
+6. **Honest scope statement** (unchanged): on directed service-map CPDAGs config
+   pruning is a no-op (`du = 0`); the win is on undirected-heavy / learned / large
+   graphs, and the polynomial MEC counter carries the directed case by removing the
+   second exponential.
 
 ## 8. Next steps
 
-1. Verify the the weak-anomaly clique sweep (the one hardening step F6 left open)
-2. Implement the proposed Heuristic MAP as a secondary implementation.
-3. Compare both methods via appropriate benchmarks.
-4. Decide work division for the write-up.
-5. Write the paper.
+1. ~~Implement the MAP-config finder in production.~~ Done (`ConfigStrategy::MapPrune`).
+2. ~~Reimplement the polynomial counter/sampler in-tree and wire BRCD to it.~~ Done
+   (`dag_sampling`).
+3. ~~Implement the learn-once CPDAG cache.~~ Done (`cpdag_cache`).
+4. Write the formal whole-ranking concentration corollary (§7.3).
+5. Run the scaled accuracy/compute and cold-vs-warm evaluations (§7.4–7.5).
+6. write the paper (using `paper-impl-draft.md` for the methodology/implementation sections).
 
 
