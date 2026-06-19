@@ -1,0 +1,21 @@
+website/web/src/content/blog/en/seven-stages-of-causal-inference.md
+  s_3497897573f86b::t_e5098fda5f014b 1-255
+website/web/src/content/blog/en/counterfactuals-via-the-causal-monad.md
+  s_3497897573f86b::t_134d64386df64f 295,327
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "5cb661b6b5e75a631af068d53e22d955cd9768f1",
+  "prompts": {},
+  "sessions": {
+    "s_3497897573f86b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "312eb5d1-f3b4-4ba6-a5c7-2d68c61794a5",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
