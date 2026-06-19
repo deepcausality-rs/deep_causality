@@ -1,0 +1,29 @@
+deep_causality_algorithms/verification/brcd/brcd_config_census.rs
+  s_fe2a59750ef15a::t_780138496f6a32 248
+deep_causality_algorithms/verification/brcd/verification_boss_online_boutique.rs
+  s_fe2a59750ef15a::t_7c51c23ecf28ff 41
+deep_causality_algorithms/verification/brcd/verification_boss_sockshop.rs
+  s_fe2a59750ef15a::t_8399c5856799b4 26
+deep_causality_algorithms/verification/brcd/verification_sockshop.rs
+  s_fe2a59750ef15a::t_186b354d0dcd7f 21
+deep_causality_algorithms/verification/brcd/verification_boss.rs
+  s_fe2a59750ef15a::t_23c0dfd9697929 112
+deep_causality_algorithms/verification/brcd/verification_online_boutique.rs
+  s_fe2a59750ef15a::t_02b04701ab9ea4 22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "abe8700d993e0fb64b966d13188a49f623cc666a",
+  "prompts": {},
+  "sessions": {
+    "s_fe2a59750ef15a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "21a3d25e-142e-4448-a20e-2b356720fb18",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
