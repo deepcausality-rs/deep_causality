@@ -1,0 +1,78 @@
+papers/linear_brcd/paper-results.md
+  s_fe2a59750ef15a::t_2947a922ce186e 80,83
+  s_fe2a59750ef15a::t_2137853cbdbf1f 199
+  s_fe2a59750ef15a::t_208dd29ba81641 140
+  s_fe2a59750ef15a::t_814a953926e367 54
+  s_fe2a59750ef15a::t_0cb2eae1b23519 200-202
+  s_fe2a59750ef15a::t_f0c91909599ff1 122,127
+  s_fe2a59750ef15a::t_6aa19276ee272e 162-168,170-175,177-182,184-185
+  s_fe2a59750ef15a::t_33218e03ad46e7 101-104
+  s_fe2a59750ef15a::t_91212a873b2473 34
+  s_fe2a59750ef15a::t_6a7b42de823418 74-75
+  s_fe2a59750ef15a::t_eb183a90cd245d 150,154,159
+  s_fe2a59750ef15a::t_127b6c1733ece8 17,19-20
+  s_fe2a59750ef15a::t_05b971b981f0a7 190
+  s_fe2a59750ef15a::t_38b61404951254 176,183,186
+  s_fe2a59750ef15a::t_f013c48660b1e4 13,16
+  s_fe2a59750ef15a::t_45eb3d77509c6b 198,203-216
+  s_fe2a59750ef15a::t_19937d754b5c3e 222-236
+  s_fe2a59750ef15a::t_9a0e13cf1b75cf 220-221
+  s_fe2a59750ef15a::t_ca09292d6dd2ed 237
+  s_fe2a59750ef15a::t_ecc34408d87ffe 255
+  s_fe2a59750ef15a::t_6a2045de3df905 114
+  s_fe2a59750ef15a::t_8df00feb25c31d 188-189,191-194
+  s_fe2a59750ef15a::t_072545a70a1b5d 18
+  s_fe2a59750ef15a::t_b13f869ca6e19f 81,85-100,105-107
+  s_fe2a59750ef15a::t_a79639b24f624e 169
+papers/linear_brcd/paper-thesis.md
+  s_fe2a59750ef15a::t_84eb4a71ba8b57 295-297
+  s_fe2a59750ef15a::t_7bf10aa96ecd3c 15-18
+  s_fe2a59750ef15a::t_7865cf064377e4 70-75
+  s_fe2a59750ef15a::t_9ec77060b18ac9 5
+  s_fe2a59750ef15a::t_ad2faf71498e43 370
+  s_fe2a59750ef15a::t_6e1c3aaf810420 374
+  s_fe2a59750ef15a::t_899d6f408d7758 365
+  s_fe2a59750ef15a::t_8da093e9eadc75 359
+  s_fe2a59750ef15a::t_f8eae06a960827 231-233
+  s_fe2a59750ef15a::t_48728d2731a552 275-276
+  s_fe2a59750ef15a::t_11dc7b32fa3e4c 135
+  s_fe2a59750ef15a::t_a4373c9bb486a9 367-369,371
+  s_fe2a59750ef15a::t_09afaa907adcd4 394-395
+papers/linear_brcd/paper-impl-draft.md
+  s_fe2a59750ef15a::t_366dbd049e9a8b 36
+  s_fe2a59750ef15a::t_15d6ae36b507a2 257
+  s_fe2a59750ef15a::t_a0ebdf05b6e938 289
+  s_fe2a59750ef15a::t_a9a37cfde6e332 301
+  s_fe2a59750ef15a::t_9d97ac0af3074f 204
+  s_fe2a59750ef15a::t_067b803c614301 237,239,243
+  s_fe2a59750ef15a::t_af01791465fbe5 264
+  s_fe2a59750ef15a::t_30ef69cbc28926 142
+  s_fe2a59750ef15a::t_dc75719db9411e 284-285
+  s_fe2a59750ef15a::t_626d7a5443d50e 12
+  s_fe2a59750ef15a::t_5e3eefbd0c9836 215
+  s_fe2a59750ef15a::t_852277ae170d8e 324
+  s_fe2a59750ef15a::t_b3f7785de51fed 185
+  s_fe2a59750ef15a::t_b582ec43dba5ad 70-71
+  s_fe2a59750ef15a::t_16fd4604801689 105-107
+  s_fe2a59750ef15a::t_44ab557e8ab8d3 82
+  s_fe2a59750ef15a::t_6f4494462e19f1 46,49
+  s_fe2a59750ef15a::t_93e3ba546a4494 131
+  s_fe2a59750ef15a::t_4ecb46ff720d68 159
+  s_fe2a59750ef15a::t_520733341a68f9 174-175
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "21ecb55996cf647395d1870573b89f6634ce7f8c",
+  "prompts": {},
+  "sessions": {
+    "s_fe2a59750ef15a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "21a3d25e-142e-4448-a20e-2b356720fb18",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
