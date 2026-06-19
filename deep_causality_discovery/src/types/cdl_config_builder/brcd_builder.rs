@@ -55,6 +55,7 @@ impl BrcdConfigNeedsConfig {
             normal: self.normal,
             anomalous: self.anomalous,
             cpdag: None,
+            cpdag_cache: None,
             csv: CsvConfig::default(),
             brcd_config,
         }
@@ -66,6 +67,7 @@ pub struct BrcdConfigReady<T> {
     normal: String,
     anomalous: String,
     cpdag: Option<String>,
+    cpdag_cache: Option<String>,
     csv: CsvConfig,
     brcd_config: BrcdConfig<T>,
 }
@@ -74,6 +76,18 @@ impl<T> BrcdConfigReady<T> {
     /// Sets the optional CPDAG file path. Absent ⇒ BOSS learns the structure.
     pub fn with_cpdag_path(mut self, path: impl Into<String>) -> Self {
         self.cpdag = Some(path.into());
+        self
+    }
+
+    /// Sets the optional CPDAG cache path for "learn-once, rank-many".
+    ///
+    /// Distinct from [`Self::with_cpdag_path`]: when no supplied CPDAG is set, the
+    /// loader keys a cache at this path to the normal data + seed. A hit loads the
+    /// stored graph and skips BOSS; a miss/stale entry re-learns and overwrites the
+    /// cache (CSV plus a `"<path>.key"` sidecar). The file need not exist yet, so
+    /// (unlike `with_cpdag_path`) `build()` does not require it on disk.
+    pub fn with_cpdag_cache_path(mut self, path: impl Into<String>) -> Self {
+        self.cpdag_cache = Some(path.into());
         self
     }
 
@@ -97,6 +111,7 @@ impl<T> BrcdConfigReady<T> {
             self.normal,
             self.anomalous,
             self.cpdag,
+            self.cpdag_cache,
             self.csv,
             self.brcd_config,
         ))

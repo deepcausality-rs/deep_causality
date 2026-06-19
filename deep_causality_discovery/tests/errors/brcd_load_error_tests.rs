@@ -18,6 +18,10 @@ fn test_display_variants() {
             .to_string()
             .contains("tensor construction failed")
     );
+    let learning = BrcdLoadError::Learning("boss".into());
+    assert!(learning.to_string().contains("learning/caching failed"));
+    // The Learning variant carries no nested source.
+    assert!(learning.source().is_none());
 }
 
 #[test]

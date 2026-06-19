@@ -10,12 +10,15 @@
 //! pipeline (mirroring SURD's in-pipeline load), not as a separate call.
 
 use crate::types::data_loader::cast::cast_loaded_tensor;
+use crate::types::data_loader::cpdag_cache::resolve_cached_cpdag;
 use crate::types::data_loader::cpdag_csv::load_cpdag_csv;
 use crate::{
     BrcdInput, BrcdLoadError, BrcdLoaderConfig, CsvConfig, CsvDataLoader, DataLoader,
     DataLoaderConfig, Precision,
 };
+use deep_causality_num::ToPrimitive;
 use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::MixedGraph;
 
 /// Loads the two datasets and the optional CPDAG named by a [`BrcdLoaderConfig`]
 /// into a single [`BrcdInput`] bundle.
@@ -29,7 +32,8 @@ impl BrcdDataLoader {
     /// * [`BrcdLoadError::DimensionMismatch`] if a dataset is not 2-D, the two
     ///   datasets disagree on variable count, or the CPDAG's vertex count differs.
     /// * [`BrcdLoadError::Cpdag`] if the CPDAG file fails to load or parse.
-    pub(crate) fn load<T: Precision>(
+    /// * [`BrcdLoadError::Learning`] if learning or persisting a cached CPDAG fails.
+    pub(crate) fn load<T: Precision + ToPrimitive>(
         config: &BrcdLoaderConfig<T>,
     ) -> Result<BrcdInput<T>, BrcdLoadError> {
         let normal = load_matrix::<T>(config.normal_path(), config.csv())?;
@@ -44,20 +48,35 @@ impl BrcdDataLoader {
             )));
         }
 
-        let cpdag = match config.cpdag_path() {
-            Some(path) => {
-                let graph = load_cpdag_csv(path)?;
-                if graph.num_vertices() != num_vars {
-                    return Err(BrcdLoadError::DimensionMismatch(format!(
-                        "CPDAG has {} vertices but the datasets have {} variables",
-                        graph.num_vertices(),
-                        num_vars
-                    )));
-                }
-                Some(graph)
-            }
-            None => None,
+        // CPDAG source resolution, in priority order:
+        //   1. supplied `cpdag_path`  -> load the user-managed file (unchanged);
+        //   2. else `cpdag_cache_path` -> keyed learn-once cache (hit loads, miss
+        //      learns + persists); the learn step matches `brcd_run(None)` exactly
+        //      so a warm (cached) run equals a cold (learned) run;
+        //   3. else `None`            -> defer learning to `brcd_run` (unchanged).
+        let cpdag: Option<MixedGraph<()>> = match config.cpdag_path() {
+            Some(path) => Some(load_cpdag_csv(path)?),
+            None => match config.cpdag_cache_path() {
+                Some(cache_path) => Some(resolve_cached_cpdag::<T>(
+                    &normal,
+                    cache_path,
+                    config.brcd_config().seed,
+                )?),
+                None => None,
+            },
         };
+
+        // The same dimension check applies whether the graph was supplied, cached,
+        // or freshly learned.
+        if let Some(graph) = &cpdag
+            && graph.num_vertices() != num_vars
+        {
+            return Err(BrcdLoadError::DimensionMismatch(format!(
+                "CPDAG has {} vertices but the datasets have {} variables",
+                graph.num_vertices(),
+                num_vars
+            )));
+        }
 
         Ok(BrcdInput::new(
             normal,

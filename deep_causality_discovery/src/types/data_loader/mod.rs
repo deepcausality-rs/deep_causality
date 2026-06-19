@@ -5,6 +5,7 @@
 
 pub(crate) mod brcd;
 pub(crate) mod cast;
+pub(crate) mod cpdag_cache;
 pub mod cpdag_csv;
 pub mod csv;
 pub mod parquet;
