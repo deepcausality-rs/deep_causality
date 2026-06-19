@@ -1,0 +1,46 @@
+deep_causality_algorithms/tests/causal_discovery/brcd/mod.rs
+  s_fe2a59750ef15a::t_889caca9f7d028 36-37
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_mapconfig.rs
+  s_fe2a59750ef15a::t_334b46f8d82fd2 1-17,19-24,26-39,41,52-64,147-162,167-184,186-189,200-204,208,215-216,218-225,230-233,235-250,252-259,264-267,269-273,282-288,290-295
+  s_fe2a59750ef15a::t_7cbfe913fcd188 18,25,40,65-146,190-199,205-207,209-214,217,226-229,234,251,260-263,268,274-281,289
+  s_fe2a59750ef15a::t_8693d13dd764f0 42-51
+  s_fe2a59750ef15a::t_63b9cc7a02bf91 163-166
+  s_fe2a59750ef15a::t_c4f2b08faba78b 185
+deep_causality_algorithms/src/causal_discovery/brcd/mod.rs
+  s_fe2a59750ef15a::t_db6bd57cc2fc25 76
+  s_fe2a59750ef15a::t_c4e009701f75e2 93
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_config.rs
+  s_fe2a59750ef15a::t_2fce14ac0a1414 21-42
+  s_fe2a59750ef15a::t_c9faf47f587131 82
+  s_fe2a59750ef15a::t_eb09ad0602fd85 63-67
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_algo.rs
+  s_fe2a59750ef15a::t_94ef989be617f1 33,37,39
+  s_fe2a59750ef15a::t_137c471e5a64c1 151-160,162-164
+  s_fe2a59750ef15a::t_111859dbc56a40 288-322
+deep_causality_algorithms/tests/causal_discovery/brcd/mapconfig_tests.rs
+  s_fe2a59750ef15a::t_e85d3a5ed171c4 445-446
+  s_fe2a59750ef15a::t_e251e9e8b40601 364-365
+  s_fe2a59750ef15a::t_f55616e5f0f141 529-530,532-534
+  s_fe2a59750ef15a::t_d5e6b55017b187 383
+  s_fe2a59750ef15a::t_3967b67e157595 482-525
+  s_fe2a59750ef15a::t_d2ad21b9431460 184-185,187,189,199-200,206-207,222-223
+  s_fe2a59750ef15a::t_bb1ca7e0803445 306
+  s_fe2a59750ef15a::t_aaccf89b9d7975 1-183,186,188,190-198,201-205,208-221,224-228,230-235,237-305,307-332,336-363,366-382,384-444,447-468,473-481,526-528,531,535-546
+  s_fe2a59750ef15a::t_cecea130eebae1 333-335
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "1da41907f31e5f1a49a4df1076695f9259b2cc70",
+  "prompts": {},
+  "sessions": {
+    "s_fe2a59750ef15a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "21a3d25e-142e-4448-a20e-2b356720fb18",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
