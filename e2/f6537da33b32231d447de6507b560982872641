@@ -1,0 +1,68 @@
+deep_causality_algorithms/verification/brcd/brcd_eval_accuracy_compute.rs
+  s_fe2a59750ef15a::t_074e2fe55811f7 435-443
+  s_fe2a59750ef15a::t_1a829a89b5e5ae 54-58,62-70
+  s_fe2a59750ef15a::t_d47d6423e8c8d7 1-52,71-167,169-203,206-307,313-317,449-506,512-524,529-540,542-560,570-580,582-597
+  s_fe2a59750ef15a::t_315623841e2935 204-205
+  s_fe2a59750ef15a::t_bd9959e3307ada 308-312
+  s_fe2a59750ef15a::t_b49e0950f6a2ff 318-434,444-448
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_boss_bootstrap.rs
+  s_fe2a59750ef15a::t_47c514e9d1cecd 97
+  s_fe2a59750ef15a::t_6068c366c0e452 42
+deep_causality_discovery/examples/brcd_cache_cold_vs_warm.rs
+  s_fe2a59750ef15a::t_3b2e75b5acda18 1-201,203-228
+  s_fe2a59750ef15a::t_31a5fa2f9e8e5b 202
+papers/linear_brcd/paper-thesis.md
+  s_fe2a59750ef15a::t_0815880d398537 292-295
+  s_fe2a59750ef15a::t_d0391ec3fca2d1 358-374
+  s_fe2a59750ef15a::t_48a26725bdcc1c 387-389
+  s_fe2a59750ef15a::t_7080e6d9a7ae45 27-29,88-90
+deep_causality_discovery/Cargo.toml
+  s_fe2a59750ef15a::t_1cbe9f7c261743 55-59
+  s_fe2a59750ef15a::t_f9c115823c2bef 51
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_algo.rs
+  s_fe2a59750ef15a::t_5622effb262683 41
+  s_fe2a59750ef15a::t_ad47b066c58300 238-265,268-300
+  s_fe2a59750ef15a::t_1b4d94ddee5421 144-152,154-169
+  s_fe2a59750ef15a::t_1119fbef0717b3 310
+  s_fe2a59750ef15a::t_23e2de35e803a7 73-74,95-96,266-267
+deep_causality_algorithms/Cargo.toml
+  s_fe2a59750ef15a::t_4a3992b2966394 80-86
+  s_fe2a59750ef15a::t_ae90697e67ba03 79
+  s_fe2a59750ef15a::t_0e1f9862be7fd8 51
+  s_fe2a59750ef15a::t_07ddc36cf1995f 35-40
+  s_fe2a59750ef15a::t_33a9f2d1e918ac 48-50
+papers/linear_brcd/paper-impl-draft.md
+  s_fe2a59750ef15a::t_752e6ae18b2e82 106-109
+  s_fe2a59750ef15a::t_ec62bf1509a370 249-330
+  s_fe2a59750ef15a::t_fb153ed50e3a82 230
+  s_fe2a59750ef15a::t_f9b73eebba2b46 147
+  s_fe2a59750ef15a::t_3e4bca75520633 242-245
+  s_fe2a59750ef15a::t_ba82acf10f6c5c 40
+  s_fe2a59750ef15a::t_ccf6d71cfd9282 56
+  s_fe2a59750ef15a::t_f6fdd504532b6e 13
+  s_fe2a59750ef15a::t_db36557b796771 160
+papers/linear_brcd/paper-results.md
+  s_fe2a59750ef15a::t_9e687b3897b2ea 1-27,30,32,36-76,107-129,215-233
+  s_fe2a59750ef15a::t_31139f22160743 33-35
+  s_fe2a59750ef15a::t_1ffd5eb97798b2 77-106
+  s_fe2a59750ef15a::t_3ce63354fd18e4 130-167
+  s_fe2a59750ef15a::t_576379465dccac 168-192
+  s_fe2a59750ef15a::t_1d626ed85ec06d 193-214
+  s_fe2a59750ef15a::t_a2fc2ae182c582 28-29,31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "e2f6537da33b32231d447de6507b560982872641",
+  "prompts": {},
+  "sessions": {
+    "s_fe2a59750ef15a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "21a3d25e-142e-4448-a20e-2b356720fb18",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
