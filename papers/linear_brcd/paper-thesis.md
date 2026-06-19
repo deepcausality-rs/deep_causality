@@ -2,7 +2,7 @@
 
 Author: Marvin Hansen
 
-Status: Core thesis — **implementation accomplished** (see companion below)
+Status: Core thesis, **implementation accomplished** (see companion below)
 
 Scope: Core thesis + realized implementation status
 
@@ -12,9 +12,10 @@ Implementation companion: `papers/linear_brcd/paper-impl-draft.md` (methodology 
 implementation differences). Both contributions below (C1 method, C2 system) are now
 implemented on the `brcd-next` branch; per-item status is marked inline, and §5.1
 summarizes what was built. One refinement the implementation surfaced: BRCD's
-failure-period cost is **two** exponentials, not one — the `Σ_V 2^{du}` configuration
-enumeration this thesis targets, *and* a per-configuration MEC-sizing/sampling step
-that was factorial in the prior in-tree port. Both were removed (§5.1).
+failure-period cost is **two** exponentials, not one. The first is the `Σ_V 2^{du}`
+configuration enumeration this thesis targets; the second is a per-configuration
+MEC-sizing/sampling step that was factorial in the prior in-tree port. Both were
+removed (§5.1).
 ---
 
 ## Core thesis
@@ -66,10 +67,12 @@ The original BRCD leaves two gaps open:
 
 1. **The exponential runtime gates scalability.** BRCD's runtime grows with
    the undirected structure of the CPDAG. The paper caps synthetic runs at three
-   minutes, and its scalability plot (Fig 2b) reaches roughly 150 seconds at
-   `n = 1000`. On well-identified graphs this stays benign. On large or weakly
-   identified structures the `2^{du}` enumeration becomes the blocker
-   when time-to-diagnosis drives MTTR directly.
+   minutes; its failure-period execution-time plot (Fig 2b, axis to 175 s) shows
+   BRCD rising steeply toward `n = 1000` (no exact value is stated, and the timings
+   are on a 128-CPU cluster with parallel graph sampling, Appendix D). On
+   well-identified graphs this stays benign. On large or weakly identified structures
+   the `2^{du}` enumeration becomes the blocker when time-to-diagnosis drives MTTR
+   directly.
 
 2. **The method is a research prototype.** It is a
    Python pipeline over `causal-learn` plus an external clique-picking package. It
@@ -129,7 +132,7 @@ Two coupled contributions:
   system: a cold run (learn plus rank) against a warm run (load plus rank) on
   identical data isolates the structure-learning cost the production path avoids.
 
-  **Status: implemented** — an opt-in keyed CPDAG cache (`cpdag_cache_path`) in
+  **Status: implemented.** An opt-in keyed CPDAG cache (`cpdag_cache_path`) in
   `deep_causality_discovery`: it learns with BOSS on a miss, persists the graph
   keyed (FNV-1a over the normal data + BOSS seed, sidecar key), and on a matching
   key loads and skips structure learning. The learn step uses the same BOSS config
@@ -225,8 +228,9 @@ validated the target with an oracle MAP config, leaving open whether the
 configuration can be found cheaply. F6 closes it: a greedy `O(du)` search
 reproduces the full ranking, and it does not even need the exact MAP. Two
 hardening steps remain for submission, as coverage rather than open risk: a
-weak-anomaly clique sweep, and the full Fig-2b protocol at `n` up to 1000 on the
-real datasets.
+weak-anomaly clique sweep, and a faithful **discrete** Fig-2b reproduction (the
+paper's synthetic protocol is PyAgrum DAGs with ≤ 4 states, *not* the real datasets);
+the continuous `n → 1000` axis is already covered (Sweep C, `paper-results.md`).
 
 ## 5. How C1 (method) and C2 (CDL) work together
 
@@ -268,8 +272,8 @@ Summary:
   Liśkiewicz Clique-Picking counter and uniform sampler in-tree (algorithm theirs;
   reimplemented for optimization and dependency-free integration, not novelty),
   generic over the BRCD numeric type (`f64` / `Float106`). This replaces the prior
-  port's exact AMO enumeration — factorial on dense chordal residuals and hard-capped
-  at `MEC_ENUM_BOUND` — restoring parity with the paper and removing the ceiling.
+  port's exact AMO enumeration (factorial on dense chordal residuals, hard-capped
+  at `MEC_ENUM_BOUND`), restoring parity with the paper and removing the ceiling.
   Validated against the retained exact enumerator on the reference anchors and 2000
   random chordal graphs (zero mismatches); sampler validity / full-support /
   chi-square uniformity confirmed.
@@ -288,9 +292,9 @@ Summary:
 - **Learn-once CPDAG cache (C2 above).** Implemented in the CDL.
 
 Net effect: per-candidate failure-period work goes from `2^{du} × (poly|factorial)`
-to `O(du) × poly`, i.e. `O(n · du · poly(n, N))` overall for a single root cause —
-polynomial: the two exponential factors (`2^{du}` configuration enumeration and the
-factorial MEC sizing) are removed. Note this is *polynomial in `n`, not linear* —
+to `O(du) × poly`, i.e. `O(n · du · poly(n, N))` overall for a single root cause. That
+is polynomial: the two exponential factors (`2^{du}` configuration enumeration and the
+factorial MEC sizing) are removed. Note this is *polynomial in `n`, not linear*. It is
 empirically ~cubic at bounded degree (`paper-results.md` Sweep C); "near-linear" refers
 to the per-candidate configuration factor (`2^{du} → O(du)`), not to total runtime.
 
@@ -352,20 +356,22 @@ formal theory, scaled evaluation, and the write-up.
 3. **The concentration corollary**, written formally as an extension of Theorem 4.4.
    The **true-candidate** case is already a corollary (non-MAP configs of `R⋆` decay
    at the `Δ_min` rate); the open item is the **whole-ranking** extension across all
-   candidates — top-`k` mass at least `1 − ε` implies the candidate ranking is
+   candidates, where top-`k` mass at least `1 − ε` implies the candidate ranking is
    preserved w.h.p. This is the one remaining theory gap; whole-ranking preservation
    is currently empirical (τ ≈ 0.997 detectable regime).
 4. ~~**Validation through the real ranker, where `du > 0` bites.**~~ Done, via the
    committed `brcd_eval_accuracy_compute` example: a controlled-degree clique sweep
    (`du = 3..25`) and a scaled-`n` random-CPDAG sweep (`n = 10..100`), both through the
-   production `brcd_run`. The speed-up where degree bites is demonstrated — `Full`
+   production `brcd_run`. The speed-up where degree bites is demonstrated: `Full`
    refuses past `du = 16` (10.9 s already at `du = 12`) while `MapPrune` completes at
-   `du = 25`, with top-1 **and** top-3 identical. *Remaining as hardening:* the full
-   Fig-2b protocol at `n = 1000` on the benchmark CPDAGs (Petshop/OB/Sockshop), not
-   just synthetic graphs to `n = 100`.
+   `du = 25`, with top-1 **and** top-3 identical. A scaled-`n` sweep now runs to
+   `n = 1000` (Sweep C, `paper-results.md`). *Remaining as hardening:* a faithful
+   **discrete** Fig-2b reproduction (PyAgrum-style DAGs, ≤ 4 states, the paper's `n`
+   grid `{10,25,50,75,100,1000}`). The paper's Fig 2b is its *synthetic* experiment,
+   not the Petshop/OB/Sockshop accuracy benchmarks.
 5. ~~**Accuracy/compute trade-off + cold-vs-warm.**~~ Done (§5.1 numbers; committed
    examples `brcd_eval_accuracy_compute` and `brcd_cache_cold_vs_warm`). Accuracy is
-   reproduced exactly — top-1/top-3 100% and 100% top-1 agreement — while the
+   reproduced exactly (top-1/top-3 100% and 100% top-1 agreement) while the
    per-candidate configuration budget drops from `2^{du}` to `du + 1`. The cache gives
    ≈ 23.6× warm-vs-cold (290 ms → 12.3 ms, identical ranking). **Honest caveat:** on
    low-`du` random CPDAGs `MapPrune` is *slower* in wall-clock than `Full` (finder
@@ -385,8 +391,8 @@ formal theory, scaled evaluation, and the write-up.
 3. ~~Implement the learn-once CPDAG cache.~~ Done (`cpdag_cache`).
 4. Write the formal whole-ranking concentration corollary (§7.3).
 5. ~~Run the scaled accuracy/compute and cold-vs-warm evaluations (§7.4–7.5).~~ Done
-   (committed examples; results in §5.1 / `paper-impl-draft.md` §3). Remaining: the
-   `n = 1000` Fig-2b protocol on the benchmark CPDAGs (§7.4).
+   (committed examples; results in §5.1 / `paper-impl-draft.md` §3, incl. the continuous
+   `n → 1000` axis). Remaining: a faithful **discrete** Fig-2b reproduction (§7.4).
 6. write the paper (using `paper-impl-draft.md` for the methodology/implementation sections).
 
 

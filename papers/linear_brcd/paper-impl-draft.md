@@ -9,7 +9,7 @@ Sccope: methodology and implementation differences
 Companion: `paper-thesis.md`.
 
 > Scope of this document: it records *only* how the method and its implementation
-> differ from the original BRCD — in particular, how failure-period cost is reduced
+> differ from the original BRCD. In particular, it shows how failure-period cost is reduced
 > from worst-case exponential to polynomial, conceptually and theoretically first,
 > then in code. It is not a full paper draft.
 
@@ -33,7 +33,7 @@ and BRCD adaptation ours):
 > and Sampling Markov Equivalent DAGs with Applications.* JMLR 24(213):1–45, 2023.
 
 Original BRCD reaches this counting/sampling through the external `cliquepicking`
-package. We reimplement it for performance reasons
+package. We reimplement it for performance reasons.
 
 ---
 
@@ -43,10 +43,10 @@ package. We reimplement it for performance reasons
 
 BRCD's failure-period cost has two independent exponential factors:
 
-- **(A) Configuration enumeration `Σ_V 2^{du(V)}`** — the per-candidate loop over all
+- **(A) Configuration enumeration `Σ_V 2^{du(V)}`**: the per-candidate loop over all
   cut configurations of the candidate's undirected neighborhood (`du` = incident
   undirected edges). This is the worst case the original paper names (Appendix E).
-- **(B) Per-configuration MEC sizing/sampling** — computing the I-MEC size `Q_i` and
+- **(B) Per-configuration MEC sizing/sampling**: computing the I-MEC size `Q_i` and
   a representative DAG. In the *original paper* this is already polynomial (Wienöbst
   et al.). In the prior in-tree port it was an **exact AMO enumeration**, which is
   factorial on dense chordal residuals and was hard-capped (`MEC_ENUM_BOUND`).
@@ -67,8 +67,8 @@ prefer one orientation of `R`'s neighborhood; the other configurations carry
 vanishing posterior mass. Exhaustive integration over all I-CPDAGs is, in practice,
 an integral against a near-degenerate distribution. Hence ranking candidates by their
 single dominant configuration reproduces the ranking by the full sum, and the
-`2^{du}` enumeration can be replaced by *finding* that configuration — an `O(du)`
-search — with no change to the decision.
+`2^{du}` enumeration can be replaced by *finding* that configuration (an `O(du)`
+search) with no change to the decision.
 
 ### 1.3 Theoretical foundation
 
@@ -79,7 +79,7 @@ Theorem 4.4 bounds the posterior mass on each wrong `(G,R)` by a term exponentia
 small in `n·(Δ_min − 2Bε)`. The non-MAP configurations of the **true** candidate
 `R⋆` are wrong-`G`/right-`R⋆` pairs, so their mass is bounded by that same
 exponential. Thus **configuration concentration for the true candidate is a corollary
-of Theorem 4.4** — the omitted configurations decay at the very rate that makes BRCD
+of Theorem 4.4**: the omitted configurations decay at the very rate that makes BRCD
 consistent.
 
 Two scope statements (carried honestly):
@@ -102,9 +102,9 @@ config enumeration       Σ_V 2^{du}             Σ_V 2^{du}              O(du) 
 ```
 
 Per candidate: `2^{du} × (poly|factorial)` → `O(du) × poly`. For a single root cause
-the candidate set is `O(n)`, so failure-period work becomes `O(n · du · poly(n,N))`
-— polynomial; no exponential remains in either factor. This is polynomial *in `n`,
-not linear* — empirically ~cubic at bounded degree (§3, Sweep C). "Near-linear" in
+the candidate set is `O(n)`, so failure-period work becomes `O(n · du · poly(n,N))`,
+which is polynomial; no exponential remains in either factor. This is polynomial *in `n`,
+not linear*; empirically ~cubic at bounded degree (§3, Sweep C). "Near-linear" in
 this work names the per-candidate configuration factor (`2^{du} → O(du)`), not total
 runtime in `n`.
 
@@ -128,7 +128,7 @@ Adaptations from the reference (the code-level differences):
   type BRCD uses everywhere; instantiates at `f64` and `Float106`; no `num-bigint`.
   BRCD only uses ratios `Q_i/T`, so this is exact for realistic sizes and overflow-
   free in the log-space posterior.
-- **`ρ` kept in linear space** — it subtracts terms, so log-space is invalid.
+- **`ρ` kept in linear space.** It subtracts terms, so log-space is invalid.
 - **`Option<T>` memo sentinel** instead of `BigUint::ZERO`-as-uncomputed.
 - **Vose alias table → exact inverse-CDF** weighted selection (no `gen_biguint_below`
   analogue under generic `T`); probabilities exactly proportional to AMO sub-counts.
@@ -139,7 +139,7 @@ Adaptations from the reference (the code-level differences):
   (orienting by index can create a spurious collider, e.g. path `0−2−1 → 0→2←1`).
 
 Correctness basis: validated against the retained *exact enumeration* counter
-(`brcd_mec::mec_size`, an independent algorithm) — anchors (54, 108, K4=24, K5=120)
+(`brcd_mec::mec_size`, an independent algorithm). Anchors (54, 108, K4=24, K5=120)
 and 2000 random chordal graphs, zero mismatches; sampler validity / full-support /
 chi-square uniformity; `Float106` instantiation. The enumeration counter is kept as
 the test oracle and must never be the thing under test (else validation is circular).
@@ -156,7 +156,7 @@ Cost: `O(du)` (`≤ du²+2du+2`) config evaluations vs `2^{du}`. For `du = 0` it
 the single configuration, so `MapPrune ≡ Full` on directed CPDAGs.
 
 Differences in behavior/scope:
-- **Default is `Full`** (exact enumeration) — existing behavior, tests, and the
+- **Default is `Full`** (exact enumeration). Existing behavior, tests, and the
   reference rankings are unchanged; the pruned (linear-in-degree) path is opt-in.
 - **No degree ceiling on the pruned path.** Since the finder never materializes the
   `2^{du}` space (it manipulates a `du`-bit label), it is bounded only by the `usize`
@@ -171,8 +171,8 @@ Differences in behavior/scope:
 `brcd_algo` (the `brcd_run` loop) and `brcd_boss_bootstrap` call
 `dag_sampling::mec_size` / `sample_dag` instead of the capped enumeration; the
 enumeration functions are retained untouched as the dag_sampling oracle. This swap is
-**exact and ranking-preserving** — it changes only *how* the MEC size and a
-representative DAG are computed, not *what* is scored: the MEC size is exact and the
+**exact and ranking-preserving**: it changes only *how* the MEC size and a
+representative DAG are computed, not *what* is scored. The MEC size is exact and the
 sampled member's likelihood is Markov-equivalence-invariant, so which member is drawn
 cannot change a candidate's score. It is independent of, and composes with, the
 opt-in MAP-pruning of §2.2 (the only source of approximation).
@@ -182,7 +182,7 @@ Two distinct consequences, not to be conflated:
   `du = 0`) the full ranking reproduces position-for-position: Online Boutique 45/45
   (both cases), Sock Shop 44/45.
 - **Newly tractable, still exact.** The learned-CPDAG path (`brcd_run(None)` → BOSS →
-  undirected hubs) that the prior factorial MEC step could not finish now completes —
+  undirected hubs) that the prior factorial MEC step could not finish now completes,
   with the **default `Full`** strategy, i.e. the exact marginal. "Completes" here is a
   tractability win from the polynomial counter/sampler, **not** an approximation; the
   ranking is the exact BRCD marginal (the fault is recovered at rank 1). The
@@ -201,7 +201,7 @@ discarded (it re-learned every run).
 ### 2.5 What is reconstructed, by configuration × scenario
 
 The **reference value** is the original paper's captured Python BRCD ranking where one
-exists — the supplied-CPDAG Online Boutique / Sock Shop cases (`expected.txt`). For
+exists: the supplied-CPDAG Online Boutique / Sock Shop cases (`expected.txt`). For
 `du > 0` graphs (learned or synthetic) no external number exists, so the reference is
 **full-enumeration BRCD** (the exact marginal `Σ_b L_b Q_b`), and `MapPrune` is
 measured against it.
@@ -212,7 +212,7 @@ measured against it.
 | **`MapPrune`** (opt-in, `O(du)`) | **Exact** — one valid config, identical to `Full`/the Python reference (== `Full` to 1e-9) | **top-1 100%**; full order Kendall-τ ≈ 0.997 vs `Full` | **top-1 100%**; full order τ ≈ 0.76 vs `Full` (tail reorders) |
 
 Read across: the published reference rankings are reproduced **exactly by both
-configurations** — the real datasets are `du = 0`, where pruning is a no-op. The only
+configurations**, because the real datasets are `du = 0`, where pruning is a no-op. The only
 approximation lives in `MapPrune` on `du > 0` graphs, and there it preserves the
 decision (top-1) always and the whole order almost exactly, fraying only on
 adversarial symmetric structure.
@@ -234,13 +234,13 @@ variables, `N` = samples; single-root-cause case.
 | Numeric type | `BigUint` | `usize` (capped) | generic `RealField` — `f64` / `Float106` |
 | Dependencies | causal-learn + cliquepicking + bignum | none | none, `unsafe`-free |
 
-**Headline.** For the *same* rankings — reproduced exactly on the published
+**Headline.** For the *same* rankings (reproduced exactly on the published
 benchmarks, and top-1-identical with ≈ 0.997 full-order fidelity on realistic
-`du > 0` graphs — the per-candidate configuration work drops from `2^{du}`
+`du > 0` graphs) the per-candidate configuration work drops from `2^{du}`
 evaluations to `du + 1`, the **binary logarithm of the space it used to enumerate**.
 In absolute terms the configuration factor goes from exponential to *linear* in the
 degree, and the failure-period cost from exponential to *polynomial* in `n` (empirically
-~cubic at bounded degree, §3 Sweep C — not linear). That is the practical win:
+~cubic at bounded degree, §3 Sweep C, not linear). That is the practical win:
 order-of-magnitude-or-more fewer evaluations for a ranking that is exact where it can be
 checked and decision-identical where it cannot.
 
@@ -254,14 +254,14 @@ committed examples (re-runnable, not transcribed by hand):
 - `deep_causality_discovery` → `examples/brcd_cache_cold_vs_warm` (cache cold vs warm).
 
 Two classes of number appear. **Configuration-evaluation counts are exact and
-deterministic** (`2^{du}` for `Full`, `du + 1` for `MapPrune`) — these are the robust
+deterministic** (`2^{du}` for `Full`, `du + 1` for `MapPrune`); these are the robust
 headline and do not vary by machine. **Wall-clock is indicative** (medians over
 ≥5 seeds / ≥3 reps on one machine) and is reported only to show the shape of the
 curve, never as a portable constant.
 
 ### 3.1 Accuracy vs compute — `MapPrune` vs `Full`
 
-**Sweep A — controlled degree (planted cliques, `du = c−1`, strong separation
+**Sweep A, controlled degree (planted cliques, `du = c−1`, strong separation
 perturb = 4.0, 5 seeds, 150 rows/regime).** This is the regime the `2^{du}` wall
 actually bites.
 
@@ -281,12 +281,12 @@ Reading: top-1 **and top-3** are identical (both 100%) everywhere `Full` is feas
 `Full`'s config count is exactly `2^{du}` and its wall-clock explodes (10.9 s at
 `du = 12`); past `du = 16` (`MAX_CONFIG_EDGES`) `Full` refuses entirely ("—"), while
 `MapPrune` stays at `du + 1` evals and completes through `du = 25`. Note that at this
-strong separation even the *clique tail* is preserved (top-3 100%) — the
-configuration concentration of §1.2 tightens with detectability; the looser
+strong separation even the *clique tail* is preserved (top-3 100%): the
+configuration concentration of §1.2 tightens with detectability. The looser
 clique-tail figure (Kendall-τ ≈ 0.76, §2.5) appears only at weaker separation, exactly
 as the thesis predicts.
 
-**Sweep B — scaled `n` (random linear-Gaussian CPDAGs, perturb = 3.0, ≥10 graphs/n).**
+**Sweep B, scaled `n` (random linear-Gaussian CPDAGs, perturb = 3.0, ≥10 graphs/n).**
 
 | n | Full top-1 | MAP top-1 | Full top-3 | MAP top-3 | Full ms | MAP ms | top-1 agree |
 |--:|--:|--:|--:|--:|--:|--:|--:|
@@ -298,7 +298,7 @@ as the thesis predicts.
 
 **Honest reading (do not overclaim a uniform speedup).** Accuracy is identical
 (top-1/top-3 100%, 100% top-1 agreement). But here **`MapPrune` is *slower* in
-wall-clock than `Full`** — on low-`du` random CPDAGs most candidates have only a
+wall-clock than `Full`**. On low-`du` random CPDAGs most candidates have only a
 handful of valid configs, so `Full`'s direct enumeration is already trivial and the
 finder's hill-climb bookkeeping (clone, Meek, MEC sizing per visited orientation)
 costs more. The compute win is **specifically the high-local-degree regime**
@@ -321,7 +321,7 @@ fresh cache per cold rep:
 | Δ | structure learning avoided | 277.8 ms |
 
 Speed-up ≈ **23.6×**, and the warm ranking is asserted **equal** to the cold ranking
-(both top `[v25]`) — the cache is correct, not merely fast. This is the offline-learn
+(both top `[v25]`): the cache is correct, not merely fast. This is the offline-learn
 / online-rank split (§2.4) made measurable: the warm number is the failure-period cost
 the production path actually pays, with structure learning amortized away.
 
