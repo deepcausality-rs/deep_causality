@@ -1,0 +1,49 @@
+deep_causality_discovery/tests/types/data_loader/mod.rs
+  s_fe2a59750ef15a::t_778485f00b7884 5
+deep_causality_discovery/src/types/data_loader/cpdag_cache.rs
+  s_fe2a59750ef15a::t_87be8055c5ec26 31
+  s_fe2a59750ef15a::t_f03faa9838982a 120-127
+  s_fe2a59750ef15a::t_9fde083f239b1c 1-30,32-115,117-119,128-139
+  s_fe2a59750ef15a::t_de31f2364c3ffa 116
+deep_causality_discovery/tests/errors/brcd_load_error_tests.rs
+  s_fe2a59750ef15a::t_28ec8a576cb650 21-24
+deep_causality_discovery/src/types/config/brcd_loader_config.rs
+  s_fe2a59750ef15a::t_239daf5c24a7ec 21,32,40
+  s_fe2a59750ef15a::t_89771f06907c3e 64-73
+  s_fe2a59750ef15a::t_37d67d64692d54 89,92-93
+deep_causality_discovery/src/types/cdl_config_builder/brcd_builder.rs
+  s_fe2a59750ef15a::t_85ee1b7496d0e5 58,70
+  s_fe2a59750ef15a::t_1d28b05aba03e2 82-93
+  s_fe2a59750ef15a::t_573f2284a534f3 114
+deep_causality_discovery/src/types/data_loader/mod.rs
+  s_fe2a59750ef15a::t_fa38a0bd76c428 8
+deep_causality_discovery/tests/types/data_loader/cpdag_cache_tests.rs
+  s_fe2a59750ef15a::t_6e7e6cde16c544 1-164,169-172,174-282
+  s_fe2a59750ef15a::t_6f3a6079a19ee8 165-168,173
+deep_causality_discovery/src/errors/brcd_load_error.rs
+  s_fe2a59750ef15a::t_74f65613a98afe 37
+  s_fe2a59750ef15a::t_15549dd567e33d 47-49
+  s_fe2a59750ef15a::t_4c2bb91991bb9c 23-25
+deep_causality_discovery/src/types/data_loader/brcd.rs
+  s_fe2a59750ef15a::t_adf7b853859f45 13,19,21
+  s_fe2a59750ef15a::t_2c14a2a30d81c9 35-36,51-66,69-79
+deep_causality_discovery/src/types/cdl/brcd_configured.rs
+  s_fe2a59750ef15a::t_25cca1d75007f8 38
+  s_fe2a59750ef15a::t_5748e33f221653 9,12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "7f8385bcba0af414fd124f5c1c52c6791b333340",
+  "prompts": {},
+  "sessions": {
+    "s_fe2a59750ef15a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "21a3d25e-142e-4448-a20e-2b356720fb18",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
