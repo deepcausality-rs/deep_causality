@@ -1,0 +1,51 @@
+openspec/notes/archive/error-per-cost-vs-spectral.md
+  s_fe2a59750ef15a::t_77520613f75778 1-160
+papers/linear_brcd/paper-impl-draft.md
+  s_fe2a59750ef15a::t_f76efe29b66f7a 2-3,15-17,19,21-22,24-25,28,31,37-39,83-84,97-98,102-103,108-110,133,200,224,243-245,247-253
+  s_3497897573f86b::t_da46f92d122a41 5-6,8-10,36,58
+  s_fe2a59750ef15a::t_77520613f75778 7,42,54-57
+  s_fe2a59750ef15a::t_fb4e31b32ccb91 199,201-223,225-242
+  s_fe2a59750ef15a::t_8241d336c88382 1,4,11-14,18,20,23,26-27,29-30,32-35,40-41,43-53,59-82,85-96,99-101,104-107,111-132,134-170,188-198,246,254-255
+  s_fe2a59750ef15a::t_bf457274dbc4e1 171-187
+openspec/notes/archive/qmc-sampler-design.md
+  s_fe2a59750ef15a::t_77520613f75778 1-159
+papers/linear_brcd/paper-thesis.md
+  s_fe2a59750ef15a::t_bf7b86f6fe8e64 97-111
+  s_fe2a59750ef15a::t_61331b2831dd69 340-345,347-363
+  s_3497897573f86b::t_da46f92d122a41 257,259-260,262-263,278,290,338,346
+  s_fe2a59750ef15a::t_8fd719e216853d 367-372
+  s_fe2a59750ef15a::t_8703f5e9211799 123-124
+  s_fe2a59750ef15a::t_dd6ddc54b9b8f2 5,7,10-17
+  s_fe2a59750ef15a::t_1ac1f9d759712c 258,261,264-277,279-289,291
+  s_fe2a59750ef15a::t_5f60cc8c9ea574 130-137
+openspec/notes/archive/cfd-crate.md
+  s_fe2a59750ef15a::t_77520613f75778 1-139
+.claude/settings.local.json
+  s_fe2a59750ef15a::t_77520613f75778 7-10
+openspec/notes/archive/cfd-gap.md
+  s_fe2a59750ef15a::t_77520613f75778 1-433
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "68a7b4487cc06043f60f1e0176287c79c614d3d3",
+  "prompts": {},
+  "sessions": {
+    "s_3497897573f86b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "312eb5d1-f3b4-4ba6-a5c7-2d68c61794a5",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_fe2a59750ef15a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "21a3d25e-142e-4448-a20e-2b356720fb18",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
