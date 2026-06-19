@@ -66,7 +66,11 @@ fn make_case(
         for j in 0..i {
             if rng.random_range(0.0..1.0) < p_edge {
                 parents[i].push(j);
-                let sign = if rng.random_range(0.0..1.0) < 0.5 { -1.0 } else { 1.0 };
+                let sign = if rng.random_range(0.0..1.0) < 0.5 {
+                    -1.0
+                } else {
+                    1.0
+                };
                 weight[i].push(sign * (0.5 + rng.random_range(0.0..1.0)));
             }
         }
@@ -101,12 +105,26 @@ fn make_case(
     let mut f_bool = vec![false; n_each];
     f_bool.extend(std::iter::repeat_n(true, n_each));
     cols.push(fcol);
-    Some((cpdag, Frame { columns: cols, f_bool, n_total, num_vars: n }, rc))
+    Some((
+        cpdag,
+        Frame {
+            columns: cols,
+            f_bool,
+            n_total,
+            num_vars: n,
+        },
+        rc,
+    ))
 }
 
 /// Planted clique: a transitive tournament on `c` nodes, whose CPDAG is the
 /// undirected `c`-clique (`du = c-1` for every node). Node 0 is the root cause.
-fn make_clique_case(c: usize, n_each: usize, perturb: f64, seed: u64) -> (MixedGraph<()>, Frame, usize) {
+fn make_clique_case(
+    c: usize,
+    n_each: usize,
+    perturb: f64,
+    seed: u64,
+) -> (MixedGraph<()>, Frame, usize) {
     let mut rng = Xoshiro256::from_seed(seed);
     let eps = Normal::new(0.0_f64, 1.0).unwrap();
     let mut parents: Vec<Vec<usize>> = vec![Vec::new(); c];
@@ -114,7 +132,11 @@ fn make_clique_case(c: usize, n_each: usize, perturb: f64, seed: u64) -> (MixedG
     for i in 0..c {
         for j in 0..i {
             parents[i].push(j);
-            let s = if rng.random_range(0.0..1.0) < 0.5 { -1.0 } else { 1.0 };
+            let s = if rng.random_range(0.0..1.0) < 0.5 {
+                -1.0
+            } else {
+                1.0
+            };
             weight[i].push(s * (0.5 + rng.random_range(0.0..1.0)));
         }
     }
@@ -141,7 +163,16 @@ fn make_clique_case(c: usize, n_each: usize, perturb: f64, seed: u64) -> (MixedG
     let mut f_bool = vec![false; n_each];
     f_bool.extend(std::iter::repeat_n(true, n_each));
     cols.push(fcol);
-    (cpdag, Frame { columns: cols, f_bool, n_total, num_vars: c }, 0)
+    (
+        cpdag,
+        Frame {
+            columns: cols,
+            f_bool,
+            n_total,
+            num_vars: c,
+        },
+        0,
+    )
 }
 
 fn total_loglik(dag: &MixedGraph<()>, frame: &Frame, cfg: &GaussianFamilyConfig<f64>) -> f64 {
@@ -158,7 +189,11 @@ fn total_loglik(dag: &MixedGraph<()>, frame: &Frame, cfg: &GaussianFamilyConfig<
                 .map(|r| cont.iter().map(|&q| frame.columns[q][r]).collect())
                 .collect()
         };
-        let f = if has_fnode { Some(frame.f_bool.as_slice()) } else { None };
+        let f = if has_fnode {
+            Some(frame.f_bool.as_slice())
+        } else {
+            None
+        };
         let per = gaussian_family_logdensity(&frame.columns[node], &rows, f, has_fnode, cfg)
             .expect("logdensity");
         total += per.iter().sum::<f64>();
@@ -231,7 +266,11 @@ fn oracle(
         }
     }
     let maxw = ws.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-    Oracle { full: logsumexp(&ws), maxw, valid: ws.len() }
+    Oracle {
+        full: logsumexp(&ws),
+        maxw,
+        valid: ws.len(),
+    }
 }
 
 /// Finds a valid starting orientation: all-out, then all-in, then first valid by
@@ -312,7 +351,10 @@ fn greedy(
         }
     }
     let frontier: Vec<f64> = seen.values().copied().collect();
-    Some(Finder { max: cur, frontier_lse: logsumexp(&frontier) })
+    Some(Finder {
+        max: cur,
+        frontier_lse: logsumexp(&frontier),
+    })
 }
 
 fn h0(
@@ -372,21 +414,25 @@ fn kendall_tau(cand: &[usize], oracle: &[f64], approx: &[f64]) -> f64 {
         }
     }
     let denom = conc + disc;
-    if denom == 0 { 1.0 } else { (conc - disc) as f64 / denom as f64 }
+    if denom == 0 {
+        1.0
+    } else {
+        (conc - disc) as f64 / denom as f64
+    }
 }
 
 #[derive(Default)]
 struct Agg {
     trials: usize,
-    cand_n: usize,       // total comparable candidates scored
-    oracle_rc: usize,    // oracle top-1 == true rc
-    h0_top1: usize,      // heuristic top-1 == oracle top-1
+    cand_n: usize,    // total comparable candidates scored
+    oracle_rc: usize, // oracle top-1 == true rc
+    h0_top1: usize,   // heuristic top-1 == oracle top-1
     h1_top1: usize,
     h2_top1: usize,
     h0_rc: usize,
     h1_rc: usize,
     h2_rc: usize,
-    map_hit_h1: usize,   // over du>=2 candidates
+    map_hit_h1: usize, // over du>=2 candidates
     map_hit_h2: usize,
     du2_cands: usize,
     bud_oracle: u64,
@@ -420,7 +466,14 @@ fn main() {
 
     println!(
         "  {:>7} | {:>9} | {:>10} {:>10} {:>10} | {:>9} {:>9} | {:>16}",
-        "anomaly", "oracle→rc", "H0 top1", "H1 top1", "H2 top1", "H1 MAP", "H2 MAP", "evals/cand (2^du|val)"
+        "anomaly",
+        "oracle→rc",
+        "H0 top1",
+        "H1 top1",
+        "H2 top1",
+        "H1 MAP",
+        "H2 MAP",
+        "evals/cand (2^du|val)"
     );
 
     for &perturb in &[1.0_f64, 4.0] {
@@ -456,8 +509,8 @@ fn main() {
                 a.sum_valid += o.valid as u64;
 
                 let mut b0 = 0;
-                s_h0[r] = h0(&cpdag, r, &nb, &base, &frame, &cfg, &mut b0)
-                    .unwrap_or(f64::NEG_INFINITY);
+                s_h0[r] =
+                    h0(&cpdag, r, &nb, &base, &frame, &cfg, &mut b0).unwrap_or(f64::NEG_INFINITY);
                 a.bud_h0 += b0 as u64;
                 let mut b1 = 0;
                 let w1 = greedy(&cpdag, r, &nb, &base, &frame, &cfg, false, &mut b1);
@@ -558,7 +611,10 @@ fn main() {
         );
         println!(
             "          | full-order vs oracleΣ — Kendall-τ  H1 max {:.3} sum {:.3} | H2 max {:.3} sum {:.3}",
-            a.tau_h1m / t, a.tau_h1s / t, a.tau_h2m / t, a.tau_h2s / t,
+            a.tau_h1m / t,
+            a.tau_h1s / t,
+            a.tau_h2m / t,
+            a.tau_h2s / t,
         );
         println!(
             "          |                        exact-order  H1 max {:.0}% sum {:.0}% | H2 max {:.0}% sum {:.0}%",

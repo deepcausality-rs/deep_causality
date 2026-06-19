@@ -18,8 +18,7 @@ use common::{Report, verify_dataset};
 use std::path::PathBuf;
 
 fn main() {
-    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("examples/verification/brcd/data/sock-shop-2");
+    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("verification/brcd/data/sock-shop-2");
 
     if !dir.exists() {
         eprintln!(

@@ -245,7 +245,7 @@ fn main() {
     // --- Part 1: real verification CPDAGs (service-map / BOSS output) ---------
     println!("PART 1 — real verification CPDAGs (single root cause, k=1)\n");
     print_run_header();
-    let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/verification/brcd/data");
+    let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("verification/brcd/data");
     let cases = [
         ("online-boutique/adservice_cpu_1", "OB/adservice_cpu_1"),
         ("online-boutique/adservice_cpu_2", "OB/adservice_cpu_2"),

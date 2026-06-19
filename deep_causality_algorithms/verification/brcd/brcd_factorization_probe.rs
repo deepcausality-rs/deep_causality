@@ -110,14 +110,9 @@ fn total_loglik(dag: &MixedGraph<()>, frame: &Frame, cfg: &GaussianFamilyConfig<
         } else {
             None
         };
-        let per_row = gaussian_family_logdensity(
-            &frame.columns[node],
-            &parent_rows,
-            f,
-            has_fnode,
-            cfg,
-        )
-        .expect("family logdensity");
+        let per_row =
+            gaussian_family_logdensity(&frame.columns[node], &parent_rows, f, has_fnode, cfg)
+                .expect("family logdensity");
         total += per_row.iter().sum::<f64>();
     }
     total
@@ -198,7 +193,13 @@ fn order_energy(w: &[f64], du: usize) -> (Vec<f64>, usize) {
     let interaction: f64 = by_order[1..].iter().sum();
     let frac: Vec<f64> = by_order
         .iter()
-        .map(|&e| if interaction > 0.0 { e / interaction } else { 0.0 })
+        .map(|&e| {
+            if interaction > 0.0 {
+                e / interaction
+            } else {
+                0.0
+            }
+        })
         .collect();
     let max_order = (1..=du).rev().find(|&k| frac[k] >= 0.01).unwrap_or(0);
     (frac, max_order)

@@ -37,8 +37,8 @@ use common::{Report, compare_dataset};
 use std::path::PathBuf;
 
 fn main() {
-    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("examples/verification/brcd/data/online-boutique");
+    let dir =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("verification/brcd/data/online-boutique");
     if !dir.exists() {
         eprintln!(
             "=== verification_boss_online_boutique — FAILED (no data at {}) ===",

@@ -70,7 +70,12 @@ fn make_frame(num_vars: usize, n_each: usize, perturb: f64, seed: u64) -> Frame 
     let mut f_bool = vec![false; n_each];
     f_bool.extend(std::iter::repeat_n(true, n_each));
     cols.push(fcol);
-    Frame { columns: cols, f_bool, n_total, num_vars }
+    Frame {
+        columns: cols,
+        f_bool,
+        n_total,
+        num_vars,
+    }
 }
 
 fn total_loglik(dag: &MixedGraph<()>, frame: &Frame, cfg: &GaussianFamilyConfig<f64>) -> f64 {
@@ -87,7 +92,11 @@ fn total_loglik(dag: &MixedGraph<()>, frame: &Frame, cfg: &GaussianFamilyConfig<
                 .map(|r| cont.iter().map(|&p| frame.columns[p][r]).collect())
                 .collect()
         };
-        let f = if has_fnode { Some(frame.f_bool.as_slice()) } else { None };
+        let f = if has_fnode {
+            Some(frame.f_bool.as_slice())
+        } else {
+            None
+        };
         let per_row =
             gaussian_family_logdensity(&frame.columns[node], &parent_rows, f, has_fnode, cfg)
                 .expect("family logdensity");
@@ -218,7 +227,11 @@ fn main() {
                 top1_rank[0],
                 depth,
                 c,
-                if full_rank == top1_rank { "exact" } else { "partial" },
+                if full_rank == top1_rank {
+                    "exact"
+                } else {
+                    "partial"
+                },
             );
         }
     }

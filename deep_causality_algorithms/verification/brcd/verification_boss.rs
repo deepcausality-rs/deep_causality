@@ -109,7 +109,7 @@ fn structural_checks(report: &mut Report) {
 
 fn end_to_end_check(report: &mut Report) {
     let case = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("examples/verification/brcd/data/online-boutique/adservice_cpu_1");
+        .join("verification/brcd/data/online-boutique/adservice_cpu_1");
     if !case.join("normal.csv").exists() {
         report.check(
             &format!("online-boutique case present at {}", case.display()),
