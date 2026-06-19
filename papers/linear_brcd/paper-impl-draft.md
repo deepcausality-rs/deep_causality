@@ -10,7 +10,7 @@ Companion: `paper-thesis.md`.
 
 > Scope of this document: it records *only* how the method and its implementation
 > differ from the original BRCD — in particular, how failure-period cost is reduced
-> from worst-case exponential to near-linear, conceptually and theoretically first,
+> from worst-case exponential to polynomial, conceptually and theoretically first,
 > then in code. It is not a full paper draft.
 
 ---
@@ -37,7 +37,7 @@ package. We reimplement it for performance reasons
 
 ---
 
-## 1. Methodology difference: exponential → near-linear
+## 1. Methodology difference: exponential → polynomial
 
 ### 1.1 Two exponentials as worst case 
 
@@ -53,7 +53,7 @@ BRCD's failure-period cost has two independent exponential factors:
 
 This work removes both: 
 (B) → polynomial (Section 2.1), 
-(A) → near-linear
+(A) → linear in degree (`2^{du}` → `O(du)`)
 
 (Section 2.2). As a result, the worst-case complexity reduces to polynomial.
 
@@ -103,8 +103,10 @@ config enumeration       Σ_V 2^{du}             Σ_V 2^{du}              O(du) 
 
 Per candidate: `2^{du} × (poly|factorial)` → `O(du) × poly`. For a single root cause
 the candidate set is `O(n)`, so failure-period work becomes `O(n · du · poly(n,N))`
-— polynomial, near-linear in `n` for bounded undirected degree. No exponential
-remains in either factor.
+— polynomial; no exponential remains in either factor. This is polynomial *in `n`,
+not linear* — empirically ~cubic at bounded degree (§3, Sweep C). "Near-linear" in
+this work names the per-candidate configuration factor (`2^{du} → O(du)`), not total
+runtime in `n`.
 
 ---
 
@@ -142,7 +144,7 @@ and 2000 random chordal graphs, zero mismatches; sampler validity / full-support
 chi-square uniformity; `Float106` instantiation. The enumeration counter is kept as
 the test oracle and must never be the thing under test (else validation is circular).
 
-### 2.2 MAP-configuration pruning (the near-linear step; beyond the paper)
+### 2.2 MAP-configuration pruning (the linear-in-degree step; beyond the paper)
 
 New module `brcd_mapconfig` + a `ConfigStrategy ∈ {Full (default), MapPrune}` switch
 on `BrcdConfig`. `MapPrune` replaces `get_configurations_multi`'s `2^{du}`
@@ -155,7 +157,7 @@ the single configuration, so `MapPrune ≡ Full` on directed CPDAGs.
 
 Differences in behavior/scope:
 - **Default is `Full`** (exact enumeration) — existing behavior, tests, and the
-  reference rankings are unchanged; near-linear is opt-in.
+  reference rankings are unchanged; the pruned (linear-in-degree) path is opt-in.
 - **No degree ceiling on the pruned path.** Since the finder never materializes the
   `2^{du}` space (it manipulates a `du`-bit label), it is bounded only by the `usize`
   width (`MAX_MAPPRUNE_EDGES = 62`), not the full path's `MAX_CONFIG_EDGES = 16`.
@@ -225,7 +227,7 @@ variables, `N` = samples; single-root-cause case.
 | MEC count / sample | poly (Wienöbst, external pkg) | exact AMO enumeration — **factorial**, capped at 100k | in-tree poly Wienöbst, generic `T`, **uncapped** |
 | Cut-config handling / candidate | enumerate all `2^{du}` | enumerate all `2^{du}` | `Full`: `2^{du}` (default) · `MapPrune`: `O(du)` greedy finder |
 | Config evaluations / candidate | `2^{du}` | `2^{du}` | `Full`: `2^{du}` · `MapPrune`: `du + 1` (= `log₂` of the `Full` space) |
-| Failure-period complexity (k=1) | `O(n · 2^{dmax} · poly)` — exp. in degree | `O(n · 2^{dmax} · factorial)` — two exponentials; often does **not** complete | `Full`: `O(n · 2^{dmax} · poly)` · `MapPrune`: `O(n · dmax · poly)` — **near-linear** |
+| Failure-period complexity (k=1) | `O(n · 2^{dmax} · poly)` — exp. in degree | `O(n · 2^{dmax} · factorial)` — two exponentials; often does **not** complete | `Full`: `O(n · 2^{dmax} · poly)` · `MapPrune`: `O(n · dmax · poly)` — **polynomial (linear in degree)** |
 | Reconstruction vs Python ref (`du = 0`, OB/SS) | the reference | exact *when it completes* | **exact** (both `Full` and `MapPrune`): OB 45/45 ×2, SS 44/45 |
 | Reconstruction on dense / learned (`du > 0`) | exact marginal | factorial MEC → cap/abort (e.g. learned OB did not finish) | `Full`: exact marginal (completes) · `MapPrune`: top-1 100%, τ ≈ 0.997 realistic / 0.76 clique |
 | Degree ceiling | none | `MEC_ENUM_BOUND` + `2^16` config cap | none on `MapPrune` (only `usize` width, 62) |
@@ -237,13 +239,95 @@ benchmarks, and top-1-identical with ≈ 0.997 full-order fidelity on realistic
 `du > 0` graphs — the per-candidate configuration work drops from `2^{du}`
 evaluations to `du + 1`, the **binary logarithm of the space it used to enumerate**.
 In absolute terms the configuration factor goes from exponential to *linear* in the
-degree, and the failure-period cost from exponential to *near-linear* in `n`. That is
-the practical win: order-of-magnitude-or-more fewer evaluations for a ranking that is
-exact where it can be checked and decision-identical where it cannot.
+degree, and the failure-period cost from exponential to *polynomial* in `n` (empirically
+~cubic at bounded degree, §3 Sweep C — not linear). That is the practical win:
+order-of-magnitude-or-more fewer evaluations for a ranking that is exact where it can be
+checked and decision-identical where it cannot.
 
 ---
 
-## 3. References
+## 3. Evaluation (measured)
+
+Two runnable harnesses on the `brcd-next` branch produce the evidence below; both are
+committed examples (re-runnable, not transcribed by hand):
+- `deep_causality_algorithms` → `examples/brcd_eval_accuracy_compute` (MapPrune vs Full),
+- `deep_causality_discovery` → `examples/brcd_cache_cold_vs_warm` (cache cold vs warm).
+
+Two classes of number appear. **Configuration-evaluation counts are exact and
+deterministic** (`2^{du}` for `Full`, `du + 1` for `MapPrune`) — these are the robust
+headline and do not vary by machine. **Wall-clock is indicative** (medians over
+≥5 seeds / ≥3 reps on one machine) and is reported only to show the shape of the
+curve, never as a portable constant.
+
+### 3.1 Accuracy vs compute — `MapPrune` vs `Full`
+
+**Sweep A — controlled degree (planted cliques, `du = c−1`, strong separation
+perturb = 4.0, 5 seeds, 150 rows/regime).** This is the regime the `2^{du}` wall
+actually bites.
+
+| c | du | Full cfg | MAP eval | Full top-1 | MAP top-1 | Full top-3 | MAP top-3 | Full ms | MAP ms |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 4 | 3 | 8 | 4 | 100% | 100% | 100% | 100% | 0.89 | 2.11 |
+| 6 | 5 | 32 | 6 | 100% | 100% | 100% | 100% | 8.58 | 12.52 |
+| 8 | 7 | 128 | 8 | 100% | 100% | 100% | 100% | 73.66 | 43.61 |
+| 10 | 9 | 512 | 10 | 100% | 100% | 100% | 100% | 547.46 | 108.21 |
+| 12 | 11 | 2048 | 12 | 100% | 100% | 100% | 100% | 4054.15 | 314.47 |
+| 13 | 12 | 4096 | 13 | 100% | 100% | 100% | 100% | 10905.14 | 401.54 |
+| 18 | 17 | — | 18 | — | 100% | — | 100% | — | 2332.59 |
+| 22 | 21 | — | 22 | — | 100% | — | 100% | — | 7558.10 |
+| 26 | 25 | — | 26 | — | 100% | — | 100% | — | 19436.11 |
+
+Reading: top-1 **and top-3** are identical (both 100%) everywhere `Full` is feasible.
+`Full`'s config count is exactly `2^{du}` and its wall-clock explodes (10.9 s at
+`du = 12`); past `du = 16` (`MAX_CONFIG_EDGES`) `Full` refuses entirely ("—"), while
+`MapPrune` stays at `du + 1` evals and completes through `du = 25`. Note that at this
+strong separation even the *clique tail* is preserved (top-3 100%) — the
+configuration concentration of §1.2 tightens with detectability; the looser
+clique-tail figure (Kendall-τ ≈ 0.76, §2.5) appears only at weaker separation, exactly
+as the thesis predicts.
+
+**Sweep B — scaled `n` (random linear-Gaussian CPDAGs, perturb = 3.0, ≥10 graphs/n).**
+
+| n | Full top-1 | MAP top-1 | Full top-3 | MAP top-3 | Full ms | MAP ms | top-1 agree |
+|--:|--:|--:|--:|--:|--:|--:|--:|
+| 10 | 100% | 100% | 100% | 100% | 0.55 | 2.19 | 100% |
+| 25 | 100% | 100% | 100% | 100% | 1.79 | 13.35 | 100% |
+| 50 | 100% | 100% | 100% | 100% | 9.28 | 75.55 | 100% |
+| 75 | 100% | 100% | 100% | 100% | 26.36 | 212.63 | 100% |
+| 100 | 100% | 100% | 100% | 100% | 76.29 | 558.21 | 100% |
+
+**Honest reading (do not overclaim a uniform speedup).** Accuracy is identical
+(top-1/top-3 100%, 100% top-1 agreement). But here **`MapPrune` is *slower* in
+wall-clock than `Full`** — on low-`du` random CPDAGs most candidates have only a
+handful of valid configs, so `Full`'s direct enumeration is already trivial and the
+finder's hill-climb bookkeeping (clone, Meek, MEC sizing per visited orientation)
+costs more. The compute win is **specifically the high-local-degree regime**
+(Sweep A), where `2^{du}` is the wall; on low-`du` graphs full enumeration is cheap
+and pruning buys nothing in time. The portable claim is therefore the deterministic
+`2^{du} → du + 1` evaluation reduction and the `du > 16` feasibility cliff, not a
+blanket wall-clock win.
+
+### 3.2 Learn-once cache — cold vs warm
+
+CDL pipeline driven end to end (`brcd_load_input → brcd_discover`) with a
+`cpdag_cache_path` and no supplied CPDAG, on a synthetic 30-variable dataset
+(800 normal + 800 anomalous rows, planted root cause `v25`), median of 3 reps with a
+fresh cache per cold rep:
+
+| Run | What it does | Time |
+|---|---|--:|
+| Cold | BOSS learns + persists + rank | 290.0 ms |
+| Warm | cache load + rank | 12.3 ms |
+| Δ | structure learning avoided | 277.8 ms |
+
+Speed-up ≈ **23.6×**, and the warm ranking is asserted **equal** to the cold ranking
+(both top `[v25]`) — the cache is correct, not merely fast. This is the offline-learn
+/ online-rank split (§2.4) made measurable: the warm number is the failure-period cost
+the production path actually pays, with structure learning amortized away.
+
+---
+
+## 4. References
 
 1. K. Lee, Z. Zhou, M. Kocaoglu. *Root Cause Analysis of Failures in Microservices
    via Bayesian Root Cause Discovery.* ICML 2026, PMLR 306.

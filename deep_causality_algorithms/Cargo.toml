@@ -32,6 +32,12 @@ version = "0.6"
 path = "../deep_causality_rand"
 version = "0.1"
 
+# Feature-conditional thread-safety marker (`MaybeParallel`): vacuous on serial
+# builds, `Send + Sync` when `parallel` is forwarded below. 
+[dependencies.deep_causality_par]
+path = "../deep_causality_par"
+version = "0.1"
+
 [dependencies.rayon]
 version = "1.12"
 optional = true
@@ -39,9 +45,10 @@ optional = true
 
 [features]
 default = []
-# Enables parallel execution of the SURD algorithm by adding a dependency on Rayon.
-# Disabled by default.
-parallel = ["dep:rayon"]
+# Enables parallel execution (via Rayon) of the SURD decomposition and the BRCD
+# per-candidate ranking loop; forwards `deep_causality_par/parallel` so the shared
+# `MaybeParallel` bound resolves to `Send + Sync`. Disabled by default.
+parallel = ["dep:rayon", "deep_causality_par/parallel"]
 
 
 [package.metadata.docs.rs]
@@ -68,6 +75,14 @@ harness = false
 [[example]]
 name = "verification_base"
 path = "verification/brcd/verification_base.rs"
+
+# Comparison: MAP-config pruning vs full enumeration (accuracy/compute).
+# Exact config counts (2^du vs du+1) plus a controlled-degree clique sweep and a
+# scaled-n random-CPDAG sweep.
+#   cargo run --release -p deep_causality_algorithms --example brcd_eval_accuracy_compute
+[[example]]
+name = "brcd_eval_accuracy_compute"
+path = "verification/brcd/brcd_eval_accuracy_compute.rs"
 
 # BOSS structure-learning verification: self-contained structural recovery plus
 # a learned-CPDAG (cpdag=None) end-to-end run on committed Online Boutique data.

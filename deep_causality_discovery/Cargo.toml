@@ -48,7 +48,14 @@ parquet = {version = "59", default-features = false}
 
 [dev-dependencies]
 tempfile = {version = "3", default-features = false}
+deep_causality_rand = { path = "../deep_causality_rand", version = "0.1" }
 
+
+# Comparison: cold (BOSS learns) vs warm (CPDAG cache) end-to-end runs.
+#   cargo run --release -p deep_causality_discovery --example brcd_cache_cold_vs_warm
+[[example]]
+name = "brcd_cache_cold_vs_warm"
+path = "examples/brcd_cache_cold_vs_warm.rs"
 
 [features]
 default = []

@@ -24,8 +24,9 @@ that was factorial in the prior in-tree port. Both were removed (§5.1).
 > same KL separation that drives BRCD's own posterior-consistency guarantee, the
 > per-candidate configuration posterior concentrates, so scoring a small frontier
 > (in the detectable-anomaly regime, the single MAP I-CPDAG) reproduces the exact
-> candidate ranking. This turns BRCD's `Σ_V 2^{du(V)}` worst case into near-linear
-> failure-period work with no loss of ranking accuracy, under a concentration
+> candidate ranking. This turns BRCD's `Σ_V 2^{du(V)}` worst case into polynomial
+> failure-period work (the per-candidate `2^{du}` configuration factor drops to
+> `O(du)`) with no loss of ranking accuracy, under a concentration
 > guarantee that is a corollary of the original Theorem 4.4. We deliver the result
 > as a deployable instrument: a compositional, type-safe Causal Discovery Language
 > (CDL) with a dependency-free, type-safe implementation.
@@ -84,8 +85,9 @@ The original BRCD leaves two gaps open:
 > same KL separation that drives BRCD's own posterior-consistency guarantee, the
 > per-candidate configuration posterior concentrates, so scoring a small frontier
 > (in the detectable-anomaly regime, the single MAP I-CPDAG) reproduces the exact
-> candidate ranking. This turns BRCD's `Σ_V 2^{du(V)}` worst case into near-linear
-> failure-period work with no loss of ranking accuracy, under a concentration
+> candidate ranking. This turns BRCD's `Σ_V 2^{du(V)}` worst case into polynomial
+> failure-period work (the per-candidate `2^{du}` configuration factor drops to
+> `O(du)`) with no loss of ranking accuracy, under a concentration
 > guarantee that is a corollary of the original Theorem 4.4. We deliver the result
 > as a deployable instrument: a compositional, type-safe Causal Discovery Language
 > (CDL) with a dependency-free, type-safe implementation.
@@ -287,7 +289,10 @@ Summary:
 
 Net effect: per-candidate failure-period work goes from `2^{du} × (poly|factorial)`
 to `O(du) × poly`, i.e. `O(n · du · poly(n, N))` overall for a single root cause —
-polynomial, near-linear in `n` for bounded undirected degree.
+polynomial: the two exponential factors (`2^{du}` configuration enumeration and the
+factorial MEC sizing) are removed. Note this is *polynomial in `n`, not linear* —
+empirically ~cubic at bounded degree (`paper-results.md` Sweep C); "near-linear" refers
+to the per-candidate configuration factor (`2^{du} → O(du)`), not to total runtime.
 
 ## 6. Deployment assumptions
  
@@ -350,13 +355,23 @@ formal theory, scaled evaluation, and the write-up.
    candidates — top-`k` mass at least `1 − ε` implies the candidate ranking is
    preserved w.h.p. This is the one remaining theory gap; whole-ranking preservation
    is currently empirical (τ ≈ 0.997 detectable regime).
-4. **Validation on the synthetic Fig-2b regime** at `n` up to 1000 through the real
-   ranker (not the `n = 10` probe), to demonstrate the speed-up where `du > 0` bites
-   at scale.
-5. **Accuracy/compute trade-off curves.** Top-`l` accuracy and configurations scored
-   against budget on Petshop / OB / Sockshop and synthetic data — reproducing the
-   original accuracy at a fraction of the configuration work — plus the cold-vs-warm
-   latency measurement the CPDAG cache now enables.
+4. ~~**Validation through the real ranker, where `du > 0` bites.**~~ Done, via the
+   committed `brcd_eval_accuracy_compute` example: a controlled-degree clique sweep
+   (`du = 3..25`) and a scaled-`n` random-CPDAG sweep (`n = 10..100`), both through the
+   production `brcd_run`. The speed-up where degree bites is demonstrated — `Full`
+   refuses past `du = 16` (10.9 s already at `du = 12`) while `MapPrune` completes at
+   `du = 25`, with top-1 **and** top-3 identical. *Remaining as hardening:* the full
+   Fig-2b protocol at `n = 1000` on the benchmark CPDAGs (Petshop/OB/Sockshop), not
+   just synthetic graphs to `n = 100`.
+5. ~~**Accuracy/compute trade-off + cold-vs-warm.**~~ Done (§5.1 numbers; committed
+   examples `brcd_eval_accuracy_compute` and `brcd_cache_cold_vs_warm`). Accuracy is
+   reproduced exactly — top-1/top-3 100% and 100% top-1 agreement — while the
+   per-candidate configuration budget drops from `2^{du}` to `du + 1`. The cache gives
+   ≈ 23.6× warm-vs-cold (290 ms → 12.3 ms, identical ranking). **Honest caveat:** on
+   low-`du` random CPDAGs `MapPrune` is *slower* in wall-clock than `Full` (finder
+   overhead vs trivial enumeration); the wall-clock win is specific to the
+   high-local-degree regime, so the portable claim is the deterministic
+   `2^{du} → du + 1` evaluation reduction, not a blanket speed-up.
 6. **Honest scope statement** (unchanged): on directed service-map CPDAGs config
    pruning is a no-op (`du = 0`); the win is on undirected-heavy / learned / large
    graphs, and the polynomial MEC counter carries the directed case by removing the
@@ -369,7 +384,9 @@ formal theory, scaled evaluation, and the write-up.
    (`dag_sampling`).
 3. ~~Implement the learn-once CPDAG cache.~~ Done (`cpdag_cache`).
 4. Write the formal whole-ranking concentration corollary (§7.3).
-5. Run the scaled accuracy/compute and cold-vs-warm evaluations (§7.4–7.5).
+5. ~~Run the scaled accuracy/compute and cold-vs-warm evaluations (§7.4–7.5).~~ Done
+   (committed examples; results in §5.1 / `paper-impl-draft.md` §3). Remaining: the
+   `n = 1000` Fig-2b protocol on the benchmark CPDAGs (§7.4).
 6. write the paper (using `paper-impl-draft.md` for the methodology/implementation sections).
 
 
