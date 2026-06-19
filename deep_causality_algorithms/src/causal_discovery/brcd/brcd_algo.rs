@@ -34,8 +34,8 @@ use crate::brcd::brcd_config::{BrcdConfig, FamilyKind};
 use crate::brcd::brcd_dirichlet::dirichlet_logdensity;
 use crate::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use crate::brcd::brcd_gaussian::{GaussianFamilyConfig, gaussian_family_logdensity};
-use crate::brcd::brcd_mec::{mec_sample_dag, mec_size};
 use crate::brcd::brcd_result::BrcdResult;
+use crate::dag_sampling::{mec_size, sample_dag};
 use deep_causality_num::{FromPrimitive, RealField, ToPrimitive};
 use deep_causality_rand::Xoshiro256;
 use deep_causality_tensor::CausalTensor;
@@ -153,18 +153,21 @@ where
             continue;
         }
         let mut dags: Vec<MixedGraph<()>> = Vec::with_capacity(configs.len());
-        let mut sizes: Vec<usize> = Vec::with_capacity(configs.len());
+        let mut sizes: Vec<T> = Vec::with_capacity(configs.len());
         for cfg in &configs {
             let aug = augmented_graph(cfg, combo)?;
-            sizes.push(mec_size(&aug)?);
-            dags.push(mec_sample_dag(&aug, &mut rng)?);
+            // Polynomial-time Clique-Picking MEC sizing + uniform sampling
+            // (`dag_sampling`), replacing the exponential enumeration in
+            // `brcd_mec`. The MEC size is exact (integer-valued in `T`); the
+            // sampled member's likelihood is Markov-equivalence-invariant, so the
+            // candidate ranking is preserved while the `MEC_ENUM_BOUND` ceiling on
+            // large undirected components is removed.
+            sizes.push(mec_size::<T, ()>(&aug));
+            dags.push(sample_dag::<T, (), _>(&aug, &mut rng)?);
         }
-        let total = sizes.iter().fold(T::zero(), |a, &s| a + from_usize::<T>(s));
+        let total = sizes.iter().fold(T::zero(), |a, &s| a + s);
         let tiny = from_f64::<T>(1e-300);
-        let log_p_g: Vec<T> = sizes
-            .iter()
-            .map(|&s| (from_usize::<T>(s) / total + tiny).ln())
-            .collect();
+        let log_p_g: Vec<T> = sizes.iter().map(|&s| (s / total + tiny).ln()).collect();
         plans.push(Some((dags, log_p_g)));
     }
 

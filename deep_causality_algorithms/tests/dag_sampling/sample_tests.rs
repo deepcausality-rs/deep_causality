@@ -174,12 +174,12 @@ fn validity_on_cpdag_with_compelled_arcs() {
     // arcs; the disjoint triangle {3,4,5} is fully reversible (undirected chain
     // component, AMO count 6). Built via dag_to_cpdag so it is Meek-closed.
     let parents = vec![
-        vec![],        // 0
-        vec![],        // 1
-        vec![0, 1],    // 2  (collider: 0 -> 2 <- 1)
-        vec![],        // 3
-        vec![3],       // 4  (triangle 3-4-5 reversible)
-        vec![3, 4],    // 5
+        vec![],     // 0
+        vec![],     // 1
+        vec![0, 1], // 2  (collider: 0 -> 2 <- 1)
+        vec![],     // 3
+        vec![3],    // 4  (triangle 3-4-5 reversible)
+        vec![3, 4], // 5
     ];
     let g = cpdag_from_dag(&parents);
     // Sanity: it carries compelled arcs and a size-6 undirected component.
@@ -374,14 +374,7 @@ fn representative_dag_valid_when_identity_is_not_a_peo() {
 
 #[test]
 fn representative_dag_on_cpdag_with_arcs() {
-    let parents = vec![
-        vec![],
-        vec![],
-        vec![0, 1],
-        vec![],
-        vec![3],
-        vec![3, 4],
-    ];
+    let parents = vec![vec![], vec![], vec![0, 1], vec![], vec![3], vec![3, 4]];
     let g = cpdag_from_dag(&parents);
     let rep = representative_dag::<()>(&g).expect("representative");
     assert_valid_member(&g, &rep, 6);

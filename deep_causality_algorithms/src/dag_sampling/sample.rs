@@ -399,8 +399,12 @@ impl<T: RealField + FromPrimitive> ComponentSampler<T> {
                 break;
             }
         }
-        let mut clique_ordering =
-            Self::draw_allowed_permutation(&remaining_clique_vertices, pos, &forbidden_prefixes, rng);
+        let mut clique_ordering = Self::draw_allowed_permutation(
+            &remaining_clique_vertices,
+            pos,
+            &forbidden_prefixes,
+            rng,
+        );
         ordering.append(&mut clique_ordering);
 
         let flower = &self.flowers[subproblem];
@@ -422,13 +426,8 @@ impl<T: RealField + FromPrimitive> ComponentSampler<T> {
                 }
                 if !considered.check(v) {
                     let new_flower_id = self.clique_tree.get_edge_id(u, v);
-                    let mut sub = self.rec_sample_ordering(
-                        new_flower_id,
-                        pos,
-                        visited,
-                        considered,
-                        rng,
-                    );
+                    let mut sub =
+                        self.rec_sample_ordering(new_flower_id, pos, visited, considered, rng);
                     ordering.append(&mut sub);
                     for &new_clique_id in &self.flowers[new_flower_id] {
                         considered.set(new_clique_id);

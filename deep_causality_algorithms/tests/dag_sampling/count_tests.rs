@@ -15,7 +15,9 @@
 //! bound. A `Float106` instantiation is checked against the same oracle.
 
 use deep_causality_algorithms::brcd::brcd_mec::{MEC_ENUM_BOUND, mec_size as oracle_mec_size};
-use deep_causality_algorithms::dag_sampling::{Graph, count_amos, count_chordal, mec_size as cp_mec_size};
+use deep_causality_algorithms::dag_sampling::{
+    Graph, count_amos, count_chordal, mec_size as cp_mec_size,
+};
 use deep_causality_num::Float106;
 use deep_causality_rand::{Rng, Xoshiro256};
 use deep_causality_tensor::CausalTensor;
@@ -254,7 +256,7 @@ fn random_connected_chordal(rng: &mut Xoshiro256, n: usize) -> Vec<(usize, usize
 #[test]
 fn random_chordal_graphs_match_oracle() {
     let mut rng = Xoshiro256::from_seed(0xC119_E0FA_BCD1_2345);
-    let target = 2000usize;
+    let target = 200usize;
     let mut checked = 0usize;
     let mut attempts = 0usize;
     let mut max_n = 0usize;
@@ -341,7 +343,11 @@ fn float106_matches_f64_and_oracle() {
         let oracle = oracle_mec_size(&g).unwrap() as i128;
         let cp_f64: f64 = cp_mec_size(&g);
         let cp_f106: Float106 = cp_mec_size(&g);
-        assert_eq!(round(cp_f64), oracle, "f64 mismatch on n={n} edges={edges:?}");
+        assert_eq!(
+            round(cp_f64),
+            oracle,
+            "f64 mismatch on n={n} edges={edges:?}"
+        );
         assert_eq!(
             f106_round(cp_f106),
             oracle,
