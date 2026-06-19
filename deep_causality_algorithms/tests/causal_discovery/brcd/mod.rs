@@ -33,6 +33,8 @@ mod gate_tests;
 #[cfg(test)]
 mod gaussian_tests;
 #[cfg(test)]
+mod mapconfig_tests;
+#[cfg(test)]
 mod mec_tests;
 #[cfg(test)]
 mod meek_tests;

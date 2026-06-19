@@ -18,6 +18,28 @@ pub enum FamilyKind {
     Discrete,
 }
 
+/// Strategy for enumerating a candidate's cut configurations in Phase 1.
+///
+/// The number of cut configurations of a candidate is exponential in `du`, the
+/// number of undirected edges incident on the candidate set (`2^{du}` before
+/// validity filtering). [`Full`](ConfigStrategy::Full) enumerates them all
+/// exactly; [`MapPrune`](ConfigStrategy::MapPrune) replaces that with an `O(du)`
+/// greedy MAP-configuration finder.
+///
+/// The default is [`Full`](ConfigStrategy::Full), which is the exact, original
+/// BRCD behavior. [`MapPrune`](ConfigStrategy::MapPrune) is strictly opt-in; on
+/// fully-directed CPDAGs (`du = 0` everywhere) the two strategies are identical.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ConfigStrategy {
+    /// Exact full `2^{du}` cut-configuration enumeration (original BRCD).
+    #[default]
+    Full,
+    /// `O(du)` greedy MAP-configuration finder: score the dominant configuration
+    /// (and the small frontier of valid configurations the greedy walk visits)
+    /// instead of all `2^{du}`. Near-linear in `du`; opt-in.
+    MapPrune,
+}
+
 /// Configuration for a BRCD run.
 #[derive(Debug, Clone)]
 pub struct BrcdConfig<T> {
@@ -38,6 +60,11 @@ pub struct BrcdConfig<T> {
     /// Logistic-gate configuration (continuous mixture; unused by `brcd_update`,
     /// which only hits the per-regime and single-expert branches).
     pub gate: GateConfig<T>,
+    /// Cut-configuration enumeration strategy. Defaults to
+    /// [`ConfigStrategy::Full`] (exact `2^{du}` enumeration, original behavior);
+    /// set to [`ConfigStrategy::MapPrune`] for the opt-in `O(du)` MAP-config
+    /// finder.
+    pub config_strategy: ConfigStrategy,
 }
 
 impl<T: RealField + FromPrimitive> BrcdConfig<T> {
@@ -52,6 +79,7 @@ impl<T: RealField + FromPrimitive> BrcdConfig<T> {
             ridge: from_f64(RIDGE_DEFAULT),
             alpha_star: from_f64(5.0),
             gate: GateConfig::default(),
+            config_strategy: ConfigStrategy::Full,
         }
     }
 

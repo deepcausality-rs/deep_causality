@@ -30,12 +30,13 @@ use crate::brcd::brcd_augment::{augmented_graph, f_node_indicator, get_configura
 use crate::brcd::brcd_boss_config::BossConfig;
 use crate::brcd::brcd_boss_learn::boss_learn;
 use crate::brcd::brcd_cache::{FamilyKey, family_key};
-use crate::brcd::brcd_config::{BrcdConfig, FamilyKind};
+use crate::brcd::brcd_config::{BrcdConfig, ConfigStrategy, FamilyKind};
 use crate::brcd::brcd_dirichlet::dirichlet_logdensity;
 use crate::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use crate::brcd::brcd_gaussian::{GaussianFamilyConfig, gaussian_family_logdensity};
+use crate::brcd::brcd_mapconfig::find_map_configs;
 use crate::brcd::brcd_result::BrcdResult;
-use crate::dag_sampling::{mec_size, sample_dag};
+use crate::dag_sampling::{mec_size, representative_dag, sample_dag};
 use deep_causality_num::{FromPrimitive, RealField, ToPrimitive};
 use deep_causality_rand::Xoshiro256;
 use deep_causality_tensor::CausalTensor;
@@ -147,7 +148,20 @@ where
     type Plan<T> = (Vec<MixedGraph<()>>, Vec<T>);
     let mut plans: Vec<Option<Plan<T>>> = Vec::with_capacity(combos.len());
     for combo in &combos {
-        let configs = get_configurations_multi(cpdag, combo)?;
+        // Strategy branch. `Full` (default) enumerates every valid cut
+        // configuration exactly (`2^{du}`), unchanged. `MapPrune` replaces that
+        // with the `O(du)` greedy finder, whose config weight reuses the SAME
+        // production family scoring (`config_weight` → `ScoreCtx::score`) so the
+        // pruned ranking is consistent with Phases 2/3. The downstream tail
+        // (`augmented_graph`/`mec_size`/`sample_dag`) is identical for both.
+        let configs: Vec<MixedGraph<N>> = match config.config_strategy {
+            ConfigStrategy::Full => get_configurations_multi(cpdag, combo)?,
+            ConfigStrategy::MapPrune => {
+                let pruned =
+                    find_map_configs::<T, N, _>(cpdag, combo, |g| config_weight(g, combo, &ctx))?;
+                pruned.configs
+            }
+        };
         if configs.is_empty() {
             plans.push(None);
             continue;
@@ -269,6 +283,41 @@ where
             })
             .collect()
     }
+}
+
+/// Weight of one completed cut configuration for the MAP-config finder
+/// ([`ConfigStrategy::MapPrune`]). F-node-augments `config`, sizes its Markov
+/// equivalence class, takes the deterministic representative DAG, and scores it as
+///
+/// ```text
+/// w = Σ_node logL(node | parents in the representative DAG over the data) + ln(mec_size)
+/// ```
+///
+/// The per-family log-likelihood is computed by [`ScoreCtx::score`] — the **exact**
+/// production scoring used in Phases 2/3 (`gaussian_family_logdensity` /
+/// `dirichlet_logdensity`) — so the finder's ranking is consistent with the full
+/// posterior. The representative DAG is used (not the RNG sampler) because the
+/// likelihood is Markov-equivalence-invariant and the finder must not perturb the
+/// candidate-by-candidate RNG stream that the Phase-1 tail threads.
+fn config_weight<T, N>(
+    config: &MixedGraph<N>,
+    combo: &[usize],
+    ctx: &ScoreCtx<'_, T>,
+) -> Result<T, BrcdError>
+where
+    T: RealField + FromPrimitive,
+    N: Clone,
+{
+    let aug = augmented_graph(config, combo)?;
+    let size = mec_size::<T, ()>(&aug);
+    let rep = representative_dag::<()>(&aug)?;
+    let mut log_lik = T::zero();
+    for node in 0..rep.num_vertices() {
+        let per_row = ctx.score(node, &rep.parents(node))?;
+        log_lik += per_row.iter().fold(T::zero(), |a, &x| a + x);
+    }
+    let tiny = from_f64::<T>(1e-300);
+    Ok(log_lik + (size + tiny).ln())
 }
 
 // --- scoring context --------------------------------------------------------
