@@ -1,0 +1,33 @@
+website/web/src/content/blog/en/seven-stages-of-causal-inference.md
+  s_3497897573f86b::t_6a02a39007f415 246
+  s_3497897573f86b::t_d4cdd79c87abc7 20-21
+  s_3497897573f86b::t_720f6e1707ef08 211
+  s_3497897573f86b::t_7f3706b95e4b1c 213,216-217
+  s_3497897573f86b::t_ce2f5c34574790 281
+  s_3497897573f86b::t_86bfdb7635d87b 3
+  s_3497897573f86b::t_de71a5ce7912bf 127-128
+  s_3497897573f86b::t_854199bee60a75 1-2,4-19,22-30,32-35,37,39,43,45,47,49,51,66,89-91,100-126,129-186,188-210,212,214-215,218-242,244,247-280,282-322
+  s_3497897573f86b::t_03dd1794cf37a7 187
+  s_3497897573f86b::t_1d39be1d975cdd 31
+  s_3497897573f86b::t_25b28ed7f3a30b 36,38,40-42,44,46,48,50,65,67-80,82-88,92-99
+  s_3497897573f86b::t_7f6b6b8dad63cf 52-64
+  s_3497897573f86b::t_a6af7b402c7b19 243
+  s_3497897573f86b::t_42c3a14658a385 81
+  s_3497897573f86b::t_080c044b3e3999 245
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "3cb07b60af97c48b7d389d922befb726f8240519",
+  "prompts": {},
+  "sessions": {
+    "s_3497897573f86b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "312eb5d1-f3b4-4ba6-a5c7-2d68c61794a5",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
