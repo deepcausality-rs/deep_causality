@@ -6,10 +6,9 @@
 use crate::types::cdl::{BrcdLoaded, BrcdResults};
 use crate::{CDL, CausalDiscoveryError, CdlBuilder, CdlEffect, CdlError, Precision};
 use deep_causality_algorithms::brcd::brcd_run;
-use deep_causality_num::ToPrimitive;
 
 // After the BRCD input bundle is loaded (BRCD sub-pipeline)
-impl<T: Precision + ToPrimitive> CDL<BrcdLoaded<T>> {
+impl<T: Precision> CDL<BrcdLoaded<T>> {
     /// Runs BRCD using the configuration carried in the loaded bundle.
     ///
     /// Calls [`brcd_run`] with the two datasets and the optional CPDAG. When the
@@ -45,7 +44,7 @@ impl<T: Precision + ToPrimitive> CDL<BrcdLoaded<T>> {
 }
 
 // Fluent stage method on the effect.
-impl<T: Precision + ToPrimitive> CdlEffect<CDL<BrcdLoaded<T>>> {
+impl<T: Precision> CdlEffect<CDL<BrcdLoaded<T>>> {
     /// See [`CDL::<BrcdLoaded<T>>::brcd_discover`].
     pub fn brcd_discover(self) -> CdlEffect<CDL<BrcdResults<T>>> {
         self.and_then(|cdl| cdl.brcd_discover())

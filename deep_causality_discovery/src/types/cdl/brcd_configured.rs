@@ -6,10 +6,9 @@
 use crate::types::cdl::{BrcdConfigured, BrcdLoaded};
 use crate::types::data_loader::brcd::BrcdDataLoader;
 use crate::{CDL, CdlBuilder, CdlEffect, CdlError, Precision};
-use deep_causality_num::ToPrimitive;
 
 // BRCD entry state: load the bundle named by the carried run config.
-impl<T: Precision + ToPrimitive> CDL<BrcdConfigured<T>> {
+impl<T: Precision> CDL<BrcdConfigured<T>> {
     /// Loads the two datasets and optional CPDAG named by the run config into a
     /// `BrcdInput` bundle, inside the pipeline. A loading failure surfaces as a
     /// `CdlError`.
@@ -35,7 +34,7 @@ impl<T: Precision + ToPrimitive> CDL<BrcdConfigured<T>> {
 }
 
 // Fluent stage method on the effect.
-impl<T: Precision + ToPrimitive> CdlEffect<CDL<BrcdConfigured<T>>> {
+impl<T: Precision> CdlEffect<CDL<BrcdConfigured<T>>> {
     /// See [`CDL::<BrcdConfigured<T>>::brcd_load_input`].
     pub fn brcd_load_input(self) -> CdlEffect<CDL<BrcdLoaded<T>>> {
         self.and_then(|cdl| cdl.brcd_load_input())

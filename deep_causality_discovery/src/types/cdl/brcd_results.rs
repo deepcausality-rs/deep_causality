@@ -7,10 +7,9 @@ use crate::types::analysis::brcd_result_analyzer::BrcdResultAnalyzer;
 use crate::types::cdl::{BrcdResults, WithAnalysis};
 use crate::types::cdl_discovery_outcome::CdlDiscoveryOutcome;
 use crate::{BrcdAnalyzeConfig, CDL, CdlBuilder, CdlEffect, Precision, ProcessResultAnalyzer};
-use deep_causality_num::ToPrimitive;
 
 // After BRCD discovery is performed
-impl<T: Precision + ToPrimitive> CDL<BrcdResults<T>> {
+impl<T: Precision> CDL<BrcdResults<T>> {
     /// Analyzes the BRCD result and converges onto the shared `WithAnalysis` state.
     pub fn brcd_analyze(self) -> CdlEffect<CDL<WithAnalysis<T>>> {
         let analyzer = BrcdResultAnalyzer;
@@ -37,7 +36,7 @@ impl<T: Precision + ToPrimitive> CDL<BrcdResults<T>> {
 }
 
 // Fluent stage method on the effect.
-impl<T: Precision + ToPrimitive> CdlEffect<CDL<BrcdResults<T>>> {
+impl<T: Precision> CdlEffect<CDL<BrcdResults<T>>> {
     /// See [`CDL::<BrcdResults<T>>::brcd_analyze`].
     pub fn brcd_analyze(self) -> CdlEffect<CDL<WithAnalysis<T>>> {
         self.and_then(|cdl| cdl.brcd_analyze())

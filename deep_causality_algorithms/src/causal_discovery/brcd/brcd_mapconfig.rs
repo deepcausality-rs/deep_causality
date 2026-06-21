@@ -33,6 +33,7 @@
 //! is identical to [`ConfigStrategy::Full`](crate::brcd::ConfigStrategy::Full) on
 //! directed CPDAGs.
 
+use crate::brcd::brcd_augment::incident_undirected_edges;
 use crate::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use crate::brcd::brcd_validity::{baseline_parents, is_valid_configuration};
 use deep_causality_num::RealField;
@@ -47,7 +48,11 @@ use std::collections::{BTreeMap, BTreeSet};
 /// a tractability limit: it is only the width of the `usize` orientation label
 /// `bits` (`1usize << du` must stay well-defined), far above any realistic
 /// undirected degree.
-const MAX_MAPPRUNE_EDGES: usize = 62;
+///
+/// Derived from the target's pointer width so the `1usize << du` shifts stay
+/// sound on every target (e.g. `62` on 64-bit, `30` on 32-bit). The `- 2` margin
+/// keeps `1usize << du` and `(1usize << du) - 1` well below the overflow edge.
+const MAX_MAPPRUNE_EDGES: usize = (usize::BITS - 2) as usize;
 
 /// The pruned set of cut configurations found by the greedy MAP finder.
 ///
@@ -280,16 +285,4 @@ where
         let _ = is_valid_configuration(&mut g, self.targets, self.baseline);
         g
     }
-}
-
-/// Collects the undirected edges incident on any node in `targets`, as canonical
-/// `(min, max)` pairs in ascending order (deterministic) — identical to the full
-/// path so both strategies index the same edges by the same bit positions.
-fn incident_undirected_edges<N>(cpdag: &MixedGraph<N>, targets: &[usize]) -> Vec<(usize, usize)> {
-    let target_set: BTreeSet<usize> = targets.iter().copied().collect();
-    cpdag
-        .undirected_edges()
-        .into_iter()
-        .filter(|&(a, b)| target_set.contains(&a) || target_set.contains(&b))
-        .collect()
 }

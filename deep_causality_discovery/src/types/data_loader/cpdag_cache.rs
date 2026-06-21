@@ -113,7 +113,7 @@ pub(crate) fn resolve_cached_cpdag<T>(
     seed: u64,
 ) -> Result<MixedGraph<()>, BrcdLoadError>
 where
-    T: Precision + ToPrimitive,
+    T: Precision,
 {
     let key = cache_key(normal, seed);
 

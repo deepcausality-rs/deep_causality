@@ -130,7 +130,16 @@ pub fn augmented_graph<N>(
 
 /// Collects the undirected edges incident on any node in `targets`, as canonical
 /// `(min, max)` pairs in ascending order (deterministic).
-fn incident_undirected_edges<N>(cpdag: &MixedGraph<N>, targets: &[usize]) -> Vec<(usize, usize)> {
+///
+/// The ascending, canonical ordering is load-bearing: both the exhaustive
+/// (`get_configurations_multi`) and the `O(du)` MAP-pruning
+/// ([`find_map_configs`](crate::brcd::brcd_mapconfig::find_map_configs)) strategies
+/// index these edges by the same bit positions, so they must share this one
+/// definition to stay in lockstep.
+pub(crate) fn incident_undirected_edges<N>(
+    cpdag: &MixedGraph<N>,
+    targets: &[usize],
+) -> Vec<(usize, usize)> {
     let target_set: BTreeSet<usize> = targets.iter().copied().collect();
     cpdag
         .undirected_edges()

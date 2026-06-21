@@ -6,10 +6,9 @@
 use crate::types::cdl::{SurdResults, WithAnalysis};
 use crate::types::cdl_discovery_outcome::CdlDiscoveryOutcome;
 use crate::{CDL, CdlBuilder, CdlEffect, Precision, ProcessResultAnalyzer, SurdResultAnalyzer};
-use deep_causality_num::ToPrimitive;
 
 // After SURD discovery is performed
-impl<T: Precision + ToPrimitive> CDL<SurdResults<T>> {
+impl<T: Precision> CDL<SurdResults<T>> {
     /// Analyzes the SURD result using the thresholds from the run config and
     /// converges onto the shared `WithAnalysis` state.
     pub fn surd_analyze(self) -> CdlEffect<CDL<WithAnalysis<T>>> {
@@ -38,7 +37,7 @@ impl<T: Precision + ToPrimitive> CDL<SurdResults<T>> {
 }
 
 // Fluent stage method on the effect.
-impl<T: Precision + ToPrimitive> CdlEffect<CDL<SurdResults<T>>> {
+impl<T: Precision> CdlEffect<CDL<SurdResults<T>>> {
     /// See [`CDL::<SurdResults<T>>::surd_analyze`].
     pub fn surd_analyze(self) -> CdlEffect<CDL<WithAnalysis<T>>> {
         self.and_then(|cdl| cdl.surd_analyze())

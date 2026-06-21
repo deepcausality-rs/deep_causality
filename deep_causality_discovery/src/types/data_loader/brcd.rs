@@ -16,7 +16,6 @@ use crate::{
     BrcdInput, BrcdLoadError, BrcdLoaderConfig, CsvConfig, CsvDataLoader, DataLoader,
     DataLoaderConfig, Precision,
 };
-use deep_causality_num::ToPrimitive;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::MixedGraph;
 
@@ -33,7 +32,7 @@ impl BrcdDataLoader {
     ///   datasets disagree on variable count, or the CPDAG's vertex count differs.
     /// * [`BrcdLoadError::Cpdag`] if the CPDAG file fails to load or parse.
     /// * [`BrcdLoadError::Learning`] if learning or persisting a cached CPDAG fails.
-    pub(crate) fn load<T: Precision + ToPrimitive>(
+    pub(crate) fn load<T: Precision>(
         config: &BrcdLoaderConfig<T>,
     ) -> Result<BrcdInput<T>, BrcdLoadError> {
         let normal = load_matrix::<T>(config.normal_path(), config.csv())?;
