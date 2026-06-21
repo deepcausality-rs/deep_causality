@@ -15,7 +15,9 @@
 //! configuration. Because the learn step always uses
 //! [`BossConfig::with_seed(seed)`], fixing the seed implicitly fixes the entire
 //! BOSS config (the two numeric knobs `ε`/`λ` are pinned to the reference). The
-//! cache key therefore hashes the normal tensor values, its shape, and the seed.
+//! cache key therefore hashes the normal tensor values, its shape, the seed, and a
+//! [`CACHE_FORMAT_VERSION`] tag that is bumped whenever a learner change would
+//! alter the CPDAG produced for the same data/seed.
 //!
 //! The key is stored out-of-band in a sidecar file `"<cache_path>.key"` so the
 //! CSV stays round-trippable through the unchanged
@@ -37,6 +39,15 @@ const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
 /// FNV-1a prime (64-bit).
 const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
 
+/// Learner/format version tag folded into every cache key.
+///
+/// The key authenticates the *inputs* (normal data + seed) but not the *learner*
+/// itself. Bump this whenever a change alters the CPDAG that BOSS produces for the
+/// same `(data, seed)` — a scoring fix, or a change to the pinned `ε`/`λ` defaults
+/// — so that caches written by an older learner are treated as a miss and
+/// re-learned rather than silently trusted.
+const CACHE_FORMAT_VERSION: u64 = 1;
+
 /// Computes a deterministic, dependency-free FNV-1a hash over the normal tensor
 /// values, its shape, and the BOSS seed.
 ///
@@ -51,6 +62,10 @@ pub(crate) fn cache_key<T: ToPrimitive>(normal: &CausalTensor<T>, seed: u64) -> 
             hash = hash.wrapping_mul(FNV_PRIME);
         }
     };
+
+    // Learner/format version first, so a learner change invalidates older caches
+    // regardless of data/seed.
+    fold(CACHE_FORMAT_VERSION.to_le_bytes());
 
     // Shape dims first (length, then each dim) so two tensors with the same flat
     // values but different shapes hash differently.
