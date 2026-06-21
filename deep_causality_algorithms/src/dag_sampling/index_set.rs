@@ -129,8 +129,11 @@ impl IndexSet {
         IndexSet::from_sorted(set_difference_vec)
     }
 
-    /// Returns `true` if this set, viewed as a multiset of distinct indices,
-    /// equals the elements of `vec` (order-insensitive).
+    /// Returns `true` if `vec` contains exactly the elements of this set,
+    /// order-insensitive. Implemented as a length check plus per-element
+    /// `contains`, so it assumes both sides hold distinct indices (this set does
+    /// by construction; `vec` must be duplicate-free). It is not a general
+    /// multiset comparison.
     pub(crate) fn equal_to_vec(&self, vec: &[usize]) -> bool {
         if self.len() != vec.len() {
             return false;
@@ -155,11 +158,5 @@ impl<'a> IntoIterator for &'a IndexSet {
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()
-    }
-}
-
-impl Default for IndexSet {
-    fn default() -> Self {
-        IndexSet::new()
     }
 }
