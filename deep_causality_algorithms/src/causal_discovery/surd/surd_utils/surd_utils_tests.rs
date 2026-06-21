@@ -54,3 +54,29 @@ fn test_ravel_index_from_coords_axis_out_of_bounds() {
     let result = surd_utils_cdl::ravel_index_from_coords_option(coords, shape);
     assert!(matches!(result, Err(CausalTensorError::AxisOutOfBounds)));
 }
+
+#[test]
+fn test_arg_sort_stable_orders_by_value() {
+    // Well-separated values (gaps far larger than `tol`) sort ascending.
+    let data = vec![3.0_f64, 1.0, 2.0];
+    let order = surd_utils::arg_sort_stable(&data, 1e-9);
+    assert_eq!(order, vec![1, 2, 0]);
+}
+
+#[test]
+fn test_arg_sort_stable_sub_tolerance_keeps_original_order() {
+    // Values differing by far less than `tol` fall in the same grid cell and are
+    // treated as ties; the stable sort preserves their original index order,
+    // independent of the sub-resolution differences (here the larger value comes
+    // first in the input and must stay first).
+    let data = vec![1.0_f64 + 1e-15, 1.0, 1.0 - 1e-15];
+    let order = surd_utils::arg_sort_stable(&data, 1e-9);
+    assert_eq!(order, vec![0, 1, 2]);
+}
+
+#[test]
+fn test_arg_sort_stable_empty() {
+    let data = Vec::<f64>::new();
+    let order = surd_utils::arg_sort_stable(&data, 1e-9);
+    assert!(order.is_empty());
+}

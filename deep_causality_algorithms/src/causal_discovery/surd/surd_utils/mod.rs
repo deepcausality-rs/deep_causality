@@ -32,24 +32,30 @@ pub(crate) fn diff<T: RealField>(slice: &[T]) -> Vec<T> {
     result
 }
 
-pub(crate) fn arg_sort<T: RealField>(slice: &[T]) -> Vec<usize> {
-    // 1. Create a vector of the original indices: [0, 1, 2, ..., n-1]
+/// Stable argsort that ranks values on a grid of resolution `tol`.
+///
+/// Each value is quantized to the nearest multiple of `tol` (`(v / tol).round()`)
+/// before comparison, so two values that fall in the same grid cell compare equal
+/// and — because the sort is stable — keep their original relative order. The SURD
+/// decomposition (martínezsánchez2025, Fig. S2) ranks the specific informations and
+/// takes consecutive increments; the paper is tie-robust because equal informations
+/// yield a zero increment regardless of their order. Plain value sorting breaks that
+/// invariant under any sub-resolution perturbation: differences far below numerical
+/// resolution (e.g. Miri's deliberate few-ULP fuzzing of `log2`) reorder
+/// would-be-tied terms, which then pair with a different neighbour in the hierarchy
+/// and produce a different (and target-state-inconsistent) decomposition. Quantizing
+/// the rank key makes the ranking invariant to perturbations below `tol`, so the
+/// result is a deterministic function of the data at the chosen resolution.
+///
+/// The quantized keys are finite, non-NaN floats, so the comparator is a genuine
+/// total order (no `sort_by` total-order violation).
+pub(crate) fn arg_sort_stable<T: RealField>(slice: &[T], tol: T) -> Vec<usize> {
     let mut indices: Vec<usize> = (0..slice.len()).collect();
-
-    // 2. Sort the `indices` vector. The magic is in the comparison closure.
-    //    Rust's `sort_by` is a stable sort.
     indices.sort_by(|&a_index, &b_index| {
-        // 3. For any two indices, compare the values in the *original data slice*
-        //    at those positions.
-        let a_value = slice[a_index];
-        let b_value = slice[b_index];
-
-        // 4. Use `partial_cmp` because floating-point types do not have a total
-        //    ordering (due to NaN). `.unwrap_or(Ordering::Equal)` robustly treats
-        //    any non-comparable values (NaNs) as equal, preventing a panic.
-        a_value.partial_cmp(&b_value).unwrap_or(Ordering::Equal)
+        let a_key = (slice[a_index] / tol).round();
+        let b_key = (slice[b_index] / tol).round();
+        a_key.partial_cmp(&b_key).unwrap_or(Ordering::Equal)
     });
-
     indices
 }
 
