@@ -5,7 +5,7 @@
 
 use crate::{AnalyzeError, Precision, ProcessAnalysis, ProcessResultAnalyzer, SurdAnalyzeConfig};
 use deep_causality_algorithms::surd::SurdResult;
-use deep_causality_num::{FromPrimitive, ToPrimitive};
+use deep_causality_num::FromPrimitive;
 
 /// An implementation of `ProcessResultAnalyzer` for `SurdResult`.
 ///
@@ -14,7 +14,7 @@ use deep_causality_num::{FromPrimitive, ToPrimitive};
 /// configured thresholds to generate a human-readable analysis report.
 pub struct SurdResultAnalyzer;
 
-impl<T: Precision + ToPrimitive> ProcessResultAnalyzer<T> for SurdResultAnalyzer {
+impl<T: Precision> ProcessResultAnalyzer<T> for SurdResultAnalyzer {
     type Input = SurdResult<T>;
     type Config = SurdAnalyzeConfig;
 

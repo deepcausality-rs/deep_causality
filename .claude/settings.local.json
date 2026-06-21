@@ -4,7 +4,10 @@
       "Bash(git checkout *)",
       "Bash(pdflatex -interaction=nonstopmode -halt-on-error main.tex)",
       "Read(//tmp/**)",
-      "Bash(brew list *)"
+      "Bash(brew list *)",
+      "Bash(grep -rl \"Seven Stages of Causal Inference\" --include=*.md --include=*.mdx .)",
+      "Bash(find . -iname '*seven*' -not -path '*/node_modules/*')",
+      "Bash(echo \"exit=$? \\(1 = no matches = clean\\)\")"
     ]
   }
 }

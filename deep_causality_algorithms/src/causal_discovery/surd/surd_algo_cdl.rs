@@ -330,7 +330,23 @@ where
     T: RealField + FromPrimitive + Default + Send + Sync,
 {
     let zero = T::zero();
+    // Numerical-zero floor for classifying information increments. The `info`
+    // values are differenced `log2`-derived sums: under native f64 an exactly-zero
+    // increment lands within machine epsilon, so the tight floor correctly drops
+    // it. Miri intentionally perturbs `log2` by a few ULP, drifting those zero
+    // increments up to ~1e-13 and past the tight floor, which would misclassify
+    // them into a state map. Relax the floor under Miri only; native precision is
+    // unchanged.
+    #[cfg(not(miri))]
     let eps = T::epsilon();
+    #[cfg(miri)]
+    let eps = <T as FromPrimitive>::from_f64(1e-9).expect("1e-9 is representable in RealField");
+
+    // Resolution at which specific informations are ranked. Differences below
+    // `rank_tol` are treated as ties (see `arg_sort_stable`), making the
+    // redundant→unique→synergistic ordering invariant to sub-resolution noise.
+    let rank_tol =
+        <T as FromPrimitive>::from_f64(1e-9).expect("1e-9 is representable in RealField");
 
     let mut i_r = HashMap::new();
     let mut i_s = HashMap::new();
@@ -349,9 +365,17 @@ where
         }
     }
 
-    // Sort based on the Some values
-    i1_values_with_indices
-        .sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+    // Sort based on the Some values, quantized to `rank_tol` so that
+    // sub-resolution perturbation cannot reorder would-be-tied terms. The vector
+    // is built in ascending `combs` index order and `sort_by` is stable, so ties
+    // keep that deterministic order.
+    i1_values_with_indices.sort_by(|a, b| {
+        let a_key = (a.0 / rank_tol).round();
+        let b_key = (b.0 / rank_tol).round();
+        a_key
+            .partial_cmp(&b_key)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
 
     let i1_sorted_indices: Vec<usize> =
         i1_values_with_indices.iter().map(|&(_, idx)| idx).collect();
@@ -390,7 +414,7 @@ where
         }
     }
 
-    let new_sorted_indices = surd_utils::arg_sort(&i1_sorted);
+    let new_sorted_indices = surd_utils::arg_sort_stable(&i1_sorted, rank_tol);
     let final_i1: Vec<T> = new_sorted_indices.iter().map(|&i| i1_sorted[i]).collect();
     let final_lab: Vec<Vec<usize>> = new_sorted_indices.iter().map(|&i| lab[i].clone()).collect();
     let di_values = surd_utils::diff(&final_i1);

@@ -5,7 +5,6 @@
 
 use crate::{AnalyzeError, BrcdAnalyzeConfig, Precision, ProcessAnalysis, ProcessResultAnalyzer};
 use deep_causality_algorithms::brcd::BrcdResult;
-use deep_causality_num::ToPrimitive;
 
 /// An implementation of `ProcessResultAnalyzer` for `BrcdResult`.
 ///
@@ -13,7 +12,7 @@ use deep_causality_num::ToPrimitive;
 /// posterior weights into a human-readable analysis report.
 pub struct BrcdResultAnalyzer;
 
-impl<T: Precision + ToPrimitive> ProcessResultAnalyzer<T> for BrcdResultAnalyzer {
+impl<T: Precision> ProcessResultAnalyzer<T> for BrcdResultAnalyzer {
     type Input = BrcdResult<T>;
     type Config = BrcdAnalyzeConfig;
 

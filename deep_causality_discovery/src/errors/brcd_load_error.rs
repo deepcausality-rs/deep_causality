@@ -20,6 +20,9 @@ pub enum BrcdLoadError {
     DimensionMismatch(String),
     /// Casting or constructing a tensor at the pipeline precision failed.
     Tensor(String),
+    /// Learning the CPDAG via BOSS, or persisting it to the keyed cache
+    /// (CSV or key sidecar), failed.
+    Learning(String),
 }
 
 impl fmt::Display for BrcdLoadError {
@@ -31,6 +34,7 @@ impl fmt::Display for BrcdLoadError {
                 write!(f, "BRCD input dimension mismatch: {}", e)
             }
             BrcdLoadError::Tensor(e) => write!(f, "BRCD tensor construction failed: {}", e),
+            BrcdLoadError::Learning(e) => write!(f, "BRCD CPDAG learning/caching failed: {}", e),
         }
     }
 }
@@ -40,7 +44,9 @@ impl std::error::Error for BrcdLoadError {
         match self {
             BrcdLoadError::DataLoading(e) => Some(e),
             BrcdLoadError::Cpdag(e) => Some(e),
-            BrcdLoadError::DimensionMismatch(_) | BrcdLoadError::Tensor(_) => None,
+            BrcdLoadError::DimensionMismatch(_)
+            | BrcdLoadError::Tensor(_)
+            | BrcdLoadError::Learning(_) => None,
         }
     }
 }

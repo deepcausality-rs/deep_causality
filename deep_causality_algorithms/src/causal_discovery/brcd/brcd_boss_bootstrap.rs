@@ -35,10 +35,11 @@ use crate::brcd::brcd_boss_learn::boss_learn;
 use crate::brcd::brcd_config::{BrcdConfig, FamilyKind};
 use crate::brcd::brcd_dirichlet::dirichlet_logdensity;
 use crate::brcd::brcd_gaussian::{GaussianFamilyConfig, gaussian_family_logdensity};
-use crate::brcd::brcd_mec::mec_sample_dag;
 use crate::brcd::brcd_result::BrcdResult;
 use crate::brcd::{BrcdError, BrcdErrorEnum};
+use crate::dag_sampling::sample_dag;
 use deep_causality_num::{FromPrimitive, RealField, ToPrimitive};
+use deep_causality_par::MaybeParallel;
 use deep_causality_rand::{Rng, Xoshiro256};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::MixedGraph;
@@ -93,7 +94,7 @@ pub fn brcd_run_bootstrap<T>(
     bootstrap: &BootstrapConfig,
 ) -> Result<BrcdResult<T>, BrcdError>
 where
-    T: RealField + FromPrimitive + ToPrimitive + Send + Sync,
+    T: RealField + FromPrimitive + ToPrimitive + MaybeParallel,
 {
     let (n, p) = shape_2d(normal)?;
     if n < 2 {
@@ -166,7 +167,7 @@ fn joint_log_likelihood<T>(
 where
     T: RealField + FromPrimitive + ToPrimitive,
 {
-    let dag = mec_sample_dag(cpdag, rng)?;
+    let dag = sample_dag::<T, (), _>(cpdag, rng)?;
     let (n, p) = shape_2d(sample)?;
     let columns = columns_of(sample, n, p);
 

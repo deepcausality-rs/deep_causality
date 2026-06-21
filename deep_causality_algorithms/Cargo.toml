@@ -32,6 +32,12 @@ version = "0.6"
 path = "../deep_causality_rand"
 version = "0.1"
 
+# Feature-conditional thread-safety marker (`MaybeParallel`): vacuous on serial
+# builds, `Send + Sync` when `parallel` is forwarded below. 
+[dependencies.deep_causality_par]
+path = "../deep_causality_par"
+version = "0.1"
+
 [dependencies.rayon]
 version = "1.12"
 optional = true
@@ -39,9 +45,10 @@ optional = true
 
 [features]
 default = []
-# Enables parallel execution of the SURD algorithm by adding a dependency on Rayon.
-# Disabled by default.
-parallel = ["dep:rayon"]
+# Enables parallel execution (via Rayon) of the SURD decomposition and the BRCD
+# per-candidate ranking loop; forwards `deep_causality_par/parallel` so the shared
+# `MaybeParallel` bound resolves to `Send + Sync`. Disabled by default.
+parallel = ["dep:rayon", "deep_causality_par/parallel"]
 
 
 [package.metadata.docs.rs]
@@ -67,14 +74,22 @@ harness = false
 #   cargo run -p deep_causality_algorithms --example verification_base
 [[example]]
 name = "verification_base"
-path = "examples/verification/brcd/verification_base.rs"
+path = "verification/brcd/verification_base.rs"
+
+# Comparison: MAP-config pruning vs full enumeration (accuracy/compute).
+# Exact config counts (2^du vs du+1) plus a controlled-degree clique sweep and a
+# scaled-n random-CPDAG sweep.
+#   cargo run --release -p deep_causality_algorithms --example brcd_eval_accuracy_compute
+[[example]]
+name = "brcd_eval_accuracy_compute"
+path = "verification/brcd/brcd_eval_accuracy_compute.rs"
 
 # BOSS structure-learning verification: self-contained structural recovery plus
 # a learned-CPDAG (cpdag=None) end-to-end run on committed Online Boutique data.
 #   cargo run -p deep_causality_algorithms --example verification_boss
 [[example]]
 name = "verification_boss"
-path = "examples/verification/brcd/verification_boss.rs"
+path = "verification/brcd/verification_boss.rs"
 
 # Supplied-CPDAG vs BOSS-learned comparison (illustrates the learned-vs-map gap).
 # Sock Shop completes; Online Boutique's ~50-var / 2100-row cases can be intractable
@@ -83,23 +98,23 @@ path = "examples/verification/brcd/verification_boss.rs"
 #   cargo run --release -p deep_causality_algorithms --example verification_boss_online_boutique
 [[example]]
 name = "verification_boss_sockshop"
-path = "examples/verification/brcd/verification_boss_sockshop.rs"
+path = "verification/brcd/verification_boss_sockshop.rs"
 
 [[example]]
 name = "verification_boss_online_boutique"
-path = "examples/verification/brcd/verification_boss_online_boutique.rs"
+path = "verification/brcd/verification_boss_online_boutique.rs"
 
 # Real-world verification (Online Boutique): replays committed Python-derived
 #   cargo run -p deep_causality_algorithms --example verification_online_boutique
 [[example]]
 name = "verification_online_boutique"
-path = "examples/verification/brcd/verification_online_boutique.rs"
+path = "verification/brcd/verification_online_boutique.rs"
 
 # Real-world verification (Sock Shop).
 #   cargo run -p deep_causality_algorithms --example verification_sockshop
 [[example]]
 name = "verification_sockshop"
-path = "examples/verification/brcd/verification_sockshop.rs"
+path = "verification/brcd/verification_sockshop.rs"
 
 [lints]
 workspace = true

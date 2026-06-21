@@ -352,7 +352,22 @@ where
     T: RealField + FromPrimitive + Default + Send + Sync,
 {
     let zero = T::zero();
+    // Numerical-zero floor for classifying information increments. The `info`
+    // values are differenced `log2`-derived sums: under native f64 an exactly-zero
+    // increment lands within 1e-14, so the tight floor correctly drops it. Miri
+    // intentionally perturbs `log2` by a few ULP, drifting those zero increments
+    // up to ~1e-13 and past the tight floor, which would misclassify them into a
+    // state map. Relax the floor under Miri only; native precision is unchanged.
+    #[cfg(not(miri))]
     let eps = <T as FromPrimitive>::from_f64(1e-14).expect("1e-14 is representable in RealField");
+    #[cfg(miri)]
+    let eps = <T as FromPrimitive>::from_f64(1e-9).expect("1e-9 is representable in RealField");
+
+    // Resolution at which specific informations are ranked. Differences below
+    // `rank_tol` are treated as ties (see `arg_sort_stable`), making the
+    // redundant→unique→synergistic ordering invariant to sub-resolution noise.
+    let rank_tol =
+        <T as FromPrimitive>::from_f64(1e-9).expect("1e-9 is representable in RealField");
 
     let mut i_r = HashMap::new();
     let mut i_s = HashMap::new();
@@ -364,7 +379,7 @@ where
     let mut non_causal_sy_states = HashMap::new();
 
     let i1_values: Vec<T> = combs.iter().map(|c| is_map[c].as_slice()[t]).collect();
-    let i1_sorted_indices = surd_utils::arg_sort(&i1_values);
+    let i1_sorted_indices = surd_utils::arg_sort_stable(&i1_values, rank_tol);
 
     let lab: Vec<Vec<usize>> = i1_sorted_indices
         .iter()
@@ -399,7 +414,7 @@ where
         }
     }
 
-    let new_sorted_indices = surd_utils::arg_sort(&i1_sorted);
+    let new_sorted_indices = surd_utils::arg_sort_stable(&i1_sorted, rank_tol);
     let final_i1: Vec<T> = new_sorted_indices.iter().map(|&i| i1_sorted[i]).collect();
     let final_lab: Vec<Vec<usize>> = new_sorted_indices.iter().map(|&i| lab[i].clone()).collect();
     let di_values = surd_utils::diff(&final_i1);

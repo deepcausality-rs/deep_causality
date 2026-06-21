@@ -30,13 +30,15 @@ use crate::brcd::brcd_augment::{augmented_graph, f_node_indicator, get_configura
 use crate::brcd::brcd_boss_config::BossConfig;
 use crate::brcd::brcd_boss_learn::boss_learn;
 use crate::brcd::brcd_cache::{FamilyKey, family_key};
-use crate::brcd::brcd_config::{BrcdConfig, FamilyKind};
+use crate::brcd::brcd_config::{BrcdConfig, ConfigStrategy, FamilyKind};
 use crate::brcd::brcd_dirichlet::dirichlet_logdensity;
 use crate::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use crate::brcd::brcd_gaussian::{GaussianFamilyConfig, gaussian_family_logdensity};
-use crate::brcd::brcd_mec::{mec_sample_dag, mec_size};
+use crate::brcd::brcd_mapconfig::find_map_configs;
 use crate::brcd::brcd_result::BrcdResult;
+use crate::dag_sampling::{mec_size, representative_dag, sample_dag};
 use deep_causality_num::{FromPrimitive, RealField, ToPrimitive};
+use deep_causality_par::MaybeParallel;
 use deep_causality_rand::Xoshiro256;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::MixedGraph;
@@ -68,8 +70,8 @@ pub fn brcd_run<T, N>(
     config: &BrcdConfig<T>,
 ) -> Result<BrcdResult<T>, BrcdError>
 where
-    T: RealField + FromPrimitive + ToPrimitive + Send + Sync,
-    N: Clone,
+    T: RealField + FromPrimitive + ToPrimitive + MaybeParallel,
+    N: Clone + MaybeParallel,
 {
     match cpdag {
         Some(graph) => run_with_cpdag(normal, anomalous, graph, config),
@@ -90,8 +92,8 @@ fn run_with_cpdag<T, N>(
     config: &BrcdConfig<T>,
 ) -> Result<BrcdResult<T>, BrcdError>
 where
-    T: RealField + FromPrimitive + ToPrimitive + Send + Sync,
-    N: Clone,
+    T: RealField + FromPrimitive + ToPrimitive + MaybeParallel,
+    N: Clone + MaybeParallel,
 {
     let (n_normal, num_vars) = shape_2d(normal)?;
     let (n_anom, num_vars2) = shape_2d(anomalous)?;
@@ -139,34 +141,32 @@ where
         n_total,
     };
 
-    // Phase 1 (sequential): structural enumeration. `mec_sample_dag` threads the
-    // RNG candidate-by-candidate, so this stays sequential to keep the run
-    // deterministic. Per candidate we retain its sampled DAGs and MEC log-weights;
+    // Phase 1: structural enumeration, per candidate. This is the work that grows
+    // with `2^{du}` (config enumeration) and with the candidate count, so it is the
+    // dominant cost — and the candidates are fully independent. Each candidate gets
+    // its own deterministically-derived RNG seed (`candidate_seed`), so the result is
+    // identical regardless of evaluation order: the sampled member's likelihood is
+    // Markov-equivalence-invariant, hence which member is drawn never changes a
+    // candidate's score. Under the `parallel` feature the candidate map runs across
+    // CPU cores via `rayon` (this is where parallelism actually pays off — see
+    // `brcd_mapconfig`/the eval harness); otherwise it is a plain sequential map.
     // `None` marks a candidate with no valid configuration (scored as −∞).
-    let mut rng = Xoshiro256::from_seed(config.seed);
-    type Plan<T> = (Vec<MixedGraph<()>>, Vec<T>);
-    let mut plans: Vec<Option<Plan<T>>> = Vec::with_capacity(combos.len());
-    for combo in &combos {
-        let configs = get_configurations_multi(cpdag, combo)?;
-        if configs.is_empty() {
-            plans.push(None);
-            continue;
-        }
-        let mut dags: Vec<MixedGraph<()>> = Vec::with_capacity(configs.len());
-        let mut sizes: Vec<usize> = Vec::with_capacity(configs.len());
-        for cfg in &configs {
-            let aug = augmented_graph(cfg, combo)?;
-            sizes.push(mec_size(&aug)?);
-            dags.push(mec_sample_dag(&aug, &mut rng)?);
-        }
-        let total = sizes.iter().fold(T::zero(), |a, &s| a + from_usize::<T>(s));
-        let tiny = from_f64::<T>(1e-300);
-        let log_p_g: Vec<T> = sizes
-            .iter()
-            .map(|&s| (from_usize::<T>(s) / total + tiny).ln())
-            .collect();
-        plans.push(Some((dags, log_p_g)));
-    }
+    #[cfg(feature = "parallel")]
+    let plans: Vec<Option<CandidatePlan<T>>> = combos
+        .par_iter()
+        .enumerate()
+        .map(|(i, combo)| {
+            build_candidate_plan(cpdag, combo, config, &ctx, candidate_seed(config.seed, i))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    #[cfg(not(feature = "parallel"))]
+    let plans: Vec<Option<CandidatePlan<T>>> = combos
+        .iter()
+        .enumerate()
+        .map(|(i, combo)| {
+            build_candidate_plan(cpdag, combo, config, &ctx, candidate_seed(config.seed, i))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
 
     // Phase 2: collect every unique `(node, parents)` family across all sampled
     // DAGs (first-seen parent order, matching the sequential traversal), then
@@ -235,6 +235,69 @@ where
     Ok(rank(combos, log_posterior))
 }
 
+/// One candidate's plan: the sampled DAG per cut configuration and the matching
+/// per-configuration MEC log-weights.
+type CandidatePlan<T> = (Vec<MixedGraph<()>>, Vec<T>);
+
+/// Derives a per-candidate RNG seed from the run seed and the candidate index, so
+/// Phase 1 is deterministic independent of (parallel) evaluation order. SplitMix64
+/// avalanche of `base ^ index` so adjacent candidates get well-separated streams.
+#[inline]
+fn candidate_seed(base: u64, index: usize) -> u64 {
+    let mut z = base ^ (index as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+    z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    z ^ (z >> 31)
+}
+
+/// Builds one candidate's [`CandidatePlan`] — the Phase 1 body for a single
+/// candidate: enumerate its cut configurations, then for each augment the graph,
+/// size its I-MEC, and sample a representative DAG. Returns `None` when the
+/// candidate has no valid configuration. Independent of every other candidate, so
+/// it is the unit of parallelism in [`run_with_cpdag`].
+fn build_candidate_plan<T, N>(
+    cpdag: &MixedGraph<N>,
+    combo: &[usize],
+    config: &BrcdConfig<T>,
+    ctx: &ScoreCtx<'_, T>,
+    seed: u64,
+) -> Result<Option<CandidatePlan<T>>, BrcdError>
+where
+    T: RealField + FromPrimitive + ToPrimitive + MaybeParallel,
+    N: Clone + MaybeParallel,
+{
+    // Strategy branch. `Full` (default) enumerates every valid cut configuration
+    // exactly (`2^{du}`). `MapPrune` replaces that with the `O(du)` greedy finder,
+    // whose config weight reuses the SAME production family scoring (`config_weight`
+    // → `ScoreCtx::score`) so the pruned ranking is consistent with Phases 2/3. The
+    // downstream tail (`augmented_graph`/`mec_size`/`sample_dag`) is identical.
+    let configs: Vec<MixedGraph<N>> = match config.config_strategy {
+        ConfigStrategy::Full => get_configurations_multi(cpdag, combo)?,
+        ConfigStrategy::MapPrune => {
+            find_map_configs::<T, N, _>(cpdag, combo, |g| config_weight(g, combo, ctx))?.configs
+        }
+    };
+    if configs.is_empty() {
+        return Ok(None);
+    }
+
+    let mut rng = Xoshiro256::from_seed(seed);
+    let mut dags: Vec<MixedGraph<()>> = Vec::with_capacity(configs.len());
+    let mut sizes: Vec<T> = Vec::with_capacity(configs.len());
+    for cfg in &configs {
+        let aug = augmented_graph(cfg, combo)?;
+        // Polynomial-time Clique-Picking MEC sizing + uniform sampling
+        // (`dag_sampling`). The MEC size is exact; the sampled member's likelihood
+        // is Markov-equivalence-invariant, so the ranking is preserved.
+        sizes.push(mec_size::<T, ()>(&aug));
+        dags.push(sample_dag::<T, (), _>(&aug, &mut rng)?);
+    }
+    let total = sizes.iter().fold(T::zero(), |a, &s| a + s);
+    let tiny = from_f64::<T>(1e-300);
+    let log_p_g: Vec<T> = sizes.iter().map(|&s| (s / total + tiny).ln()).collect();
+    Ok(Some((dags, log_p_g)))
+}
+
 /// Scores every unique family `(node, parents)` to its per-row log-likelihood
 /// and the row-sum total. Each family is independent of the others, so under the
 /// `parallel` feature the map runs across CPU cores via `rayon` (mirroring the
@@ -244,7 +307,7 @@ fn score_families<T>(
     ctx: &ScoreCtx<'_, T>,
 ) -> Result<BTreeMap<FamilyKey, (Vec<T>, T)>, BrcdError>
 where
-    T: RealField + FromPrimitive + Send + Sync,
+    T: RealField + FromPrimitive + MaybeParallel,
 {
     #[cfg(feature = "parallel")]
     {
@@ -266,6 +329,41 @@ where
             })
             .collect()
     }
+}
+
+/// Weight of one completed cut configuration for the MAP-config finder
+/// ([`ConfigStrategy::MapPrune`]). F-node-augments `config`, sizes its Markov
+/// equivalence class, takes the deterministic representative DAG, and scores it as
+///
+/// ```text
+/// w = Σ_node logL(node | parents in the representative DAG over the data) + ln(mec_size)
+/// ```
+///
+/// The per-family log-likelihood is computed by [`ScoreCtx::score`] — the **exact**
+/// production scoring used in Phases 2/3 (`gaussian_family_logdensity` /
+/// `dirichlet_logdensity`) — so the finder's ranking is consistent with the full
+/// posterior. The representative DAG is used (not the RNG sampler) because the
+/// likelihood is Markov-equivalence-invariant and the finder must not perturb the
+/// candidate-by-candidate RNG stream that the Phase-1 tail threads.
+fn config_weight<T, N>(
+    config: &MixedGraph<N>,
+    combo: &[usize],
+    ctx: &ScoreCtx<'_, T>,
+) -> Result<T, BrcdError>
+where
+    T: RealField + FromPrimitive,
+    N: Clone,
+{
+    let aug = augmented_graph(config, combo)?;
+    let size = mec_size::<T, ()>(&aug);
+    let rep = representative_dag::<()>(&aug)?;
+    let mut log_lik = T::zero();
+    for node in 0..rep.num_vertices() {
+        let per_row = ctx.score(node, &rep.parents(node))?;
+        log_lik += per_row.iter().fold(T::zero(), |a, &x| a + x);
+    }
+    let tiny = from_f64::<T>(1e-300);
+    Ok(log_lik + (size + tiny).ln())
 }
 
 // --- scoring context --------------------------------------------------------

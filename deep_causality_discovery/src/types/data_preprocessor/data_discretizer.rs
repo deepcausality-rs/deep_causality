@@ -7,13 +7,13 @@ use crate::Precision;
 use crate::errors::PreprocessError;
 use crate::traits::data_preprocessor::DataPreprocessor;
 use crate::types::config::{BinningStrategy, ColumnSelector, PreprocessConfig};
-use deep_causality_num::{FromPrimitive, ToPrimitive};
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 
 /// A concrete implementation of `DataPreprocessor` that discretizes continuous data into bins.
 pub struct DataDiscretizer;
 
-impl<T: Precision + ToPrimitive> DataPreprocessor<T> for DataDiscretizer {
+impl<T: Precision> DataPreprocessor<T> for DataDiscretizer {
     fn process(
         &self,
         tensor: CausalTensor<T>,
@@ -69,10 +69,7 @@ impl<T: Precision + ToPrimitive> DataPreprocessor<T> for DataDiscretizer {
     }
 }
 
-fn bin_equal_width<T: Precision + ToPrimitive>(
-    data: &[T],
-    num_bins: usize,
-) -> Result<Vec<T>, PreprocessError> {
+fn bin_equal_width<T: Precision>(data: &[T], num_bins: usize) -> Result<Vec<T>, PreprocessError> {
     if num_bins < 2 {
         return Err(PreprocessError::ConfigError(
             "Number of bins must be at least 2".to_string(),
@@ -121,7 +118,7 @@ fn bin_equal_width<T: Precision + ToPrimitive>(
     Ok(binned_data)
 }
 
-fn bin_equal_frequency<T: Precision + ToPrimitive>(
+fn bin_equal_frequency<T: Precision>(
     data: &[T],
     num_bins: usize,
 ) -> Result<Vec<T>, PreprocessError> {
