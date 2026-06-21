@@ -355,3 +355,37 @@ fn float106_matches_f64_and_oracle() {
         );
     }
 }
+
+/// Exercises the `count_amos` closed-form special case for a connected chordal
+/// graph with `m == C(n, 2) - 2` (the complete graph minus two adjacent edges).
+///
+/// `K5` minus `(0,1)` and `(0,2)` is chordal (vertex 0 is simplicial: its
+/// neighbours `{3,4}` are adjacent) and has `m = 10 - 2 = 8 != n, n-1`, so it
+/// reaches the dedicated `num_possible_edges - 2` branch rather than the generic
+/// clique-tree path. He–Jia–Yu Thm 3 gives `(n(n-1) - 4)·(n-3)! = 16·2 = 32`; the
+/// enumeration oracle cross-checks it.
+#[test]
+fn closed_form_complete_minus_two_adjacent_edges() {
+    let edges = &[
+        (0, 3),
+        (0, 4),
+        (1, 2),
+        (1, 3),
+        (1, 4),
+        (2, 3),
+        (2, 4),
+        (3, 4),
+    ];
+    let g = undirected_graph(5, edges);
+    let oracle = oracle_mec_size(&g).unwrap();
+    assert_eq!(
+        oracle, 32,
+        "enumeration oracle for K5 minus two adjacent edges"
+    );
+    let cp: f64 = cp_mec_size(&g);
+    assert_eq!(
+        round(cp),
+        oracle as i128,
+        "clique-picking must match the oracle"
+    );
+}

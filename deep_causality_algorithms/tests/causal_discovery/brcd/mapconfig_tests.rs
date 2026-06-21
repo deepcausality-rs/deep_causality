@@ -544,3 +544,64 @@ fn finder_du0_returns_single_config() {
     );
     assert_eq!(pruned.evals, 1, "du=0 must evaluate exactly once");
 }
+
+// --- finder guards & seed search --------------------------------------------
+
+/// A target index outside the graph is rejected (`NodeOutOfBounds`).
+#[test]
+fn finder_rejects_out_of_bounds_target() {
+    let parents = vec![vec![], vec![], vec![0, 1]];
+    let cpdag = dag_to_cpdag(&parents).expect("cpdag"); // 3 vertices
+    let res = find_map_configs::<f64, (), _>(&cpdag, &[3], |_| Ok(0.0));
+    assert!(
+        res.is_err(),
+        "target 3 must be rejected on a 3-vertex graph"
+    );
+}
+
+/// More than `MAX_MAPPRUNE_EDGES` incident undirected edges is refused before any
+/// work (`ConfigSpaceTooLarge`). An undirected star with 63 leaves gives du = 63,
+/// above the bound on both 64-bit (62) and 32-bit (30) targets.
+#[test]
+fn finder_rejects_too_many_incident_edges() {
+    let n = 64usize;
+    let data = CausalTensor::new(vec![(); n], vec![n]).unwrap();
+    let mut cpdag = MixedGraph::new(n, data, 0).unwrap();
+    for leaf in 1..n {
+        cpdag.add_undirected(0, leaf).unwrap();
+    }
+    let res = find_map_configs::<f64, (), _>(&cpdag, &[0], |_| Ok(0.0));
+    assert!(
+        res.is_err(),
+        "du = 63 exceeds MAX_MAPPRUNE_EDGES and must be refused"
+    );
+}
+
+/// Exercises `valid_start`'s single-bit-flip fallback. On an undirected star
+/// centered at the target, orienting every incident edge into the center
+/// (`bits = 0`) makes its non-adjacent leaves an unshielded collider, and so does
+/// orienting them all out (`all_in`); both seeds are invalid. The first valid seed
+/// is therefore a single-bit flip (one parent, no collider), so the finder must
+/// fall through to the single-bit loop and still return a non-empty result.
+#[test]
+fn finder_valid_start_uses_single_bit_fallback() {
+    // Undirected star: center 2 -- {0, 1, 3, 4}, du = 4. All-undirected, so it is
+    // a valid (Meek-closed) CPDAG with no baseline parents at the center.
+    let n = 5usize;
+    let data = CausalTensor::new(vec![(); n], vec![n]).unwrap();
+    let mut cpdag = MixedGraph::new(n, data, 0).unwrap();
+    for leaf in [0usize, 1, 3, 4] {
+        cpdag.add_undirected(2, leaf).unwrap();
+    }
+    assert_eq!(cpdag.undirected_neighbors(2).len(), 4, "du must be 4");
+
+    let pruned = find_map_configs::<f64, (), _>(&cpdag, &[2], |g| {
+        let aug = augmented_graph(g, &[2])?;
+        Ok(mec_size(&aug)? as f64)
+    })
+    .expect("a single-bit seed is valid, so the finder must succeed");
+    assert!(
+        !pruned.configs.is_empty(),
+        "the single-bit fallback must yield at least one valid config"
+    );
+}

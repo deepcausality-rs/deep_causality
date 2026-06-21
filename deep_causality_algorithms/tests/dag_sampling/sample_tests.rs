@@ -27,6 +27,7 @@
 
 use deep_causality_algorithms::brcd::brcd_mec::mec_size as oracle_mec_size;
 use deep_causality_algorithms::brcd::dag_to_cpdag;
+use deep_causality_algorithms::brcd::{BrcdError, BrcdErrorEnum};
 use deep_causality_algorithms::dag_sampling::{representative_dag, sample_dag};
 use deep_causality_num::Float106;
 use deep_causality_rand::{Rng, Xoshiro256};
@@ -452,4 +453,49 @@ fn random_connected_chordal(rng: &mut Xoshiro256, n: usize) -> Vec<(usize, usize
         cliques.push(new_clique);
     }
     edges
+}
+
+// --- input validation (validate_cpdag) --------------------------------------
+
+/// Both samplers reject a graph whose arc projection has a directed cycle
+/// (`validate_cpdag` → `NotAcyclic`).
+#[test]
+fn rejects_cyclic_input() {
+    let data = CausalTensor::new(vec![(); 3], vec![3]).unwrap();
+    let mut g = MixedGraph::new(3, data, 0).unwrap();
+    g.add_arc(0, 1).unwrap();
+    g.add_arc(1, 2).unwrap();
+    g.add_arc(2, 0).unwrap();
+
+    let mut rng = Xoshiro256::from_seed(1);
+    assert_eq!(
+        sample_dag::<f64, (), _>(&g, &mut rng).unwrap_err(),
+        BrcdError(BrcdErrorEnum::NotAcyclic)
+    );
+    assert_eq!(
+        representative_dag(&g).unwrap_err(),
+        BrcdError(BrcdErrorEnum::NotAcyclic)
+    );
+}
+
+/// Both samplers reject a graph containing an edge that is neither a directed arc
+/// nor an undirected edge (here a bidirected edge) (`validate_cpdag` →
+/// `NotACpdag`). The edge-kind check precedes the acyclicity check, so the
+/// bidirected edge is what trips it.
+#[test]
+fn rejects_non_cpdag_edge_kind() {
+    let data = CausalTensor::new(vec![(); 3], vec![3]).unwrap();
+    let mut g = MixedGraph::new(3, data, 0).unwrap();
+    g.add_undirected(0, 1).unwrap();
+    g.add_bidirected(1, 2).unwrap();
+
+    let mut rng = Xoshiro256::from_seed(1);
+    assert_eq!(
+        sample_dag::<f64, (), _>(&g, &mut rng).unwrap_err(),
+        BrcdError(BrcdErrorEnum::NotACpdag)
+    );
+    assert_eq!(
+        representative_dag(&g).unwrap_err(),
+        BrcdError(BrcdErrorEnum::NotACpdag)
+    );
 }

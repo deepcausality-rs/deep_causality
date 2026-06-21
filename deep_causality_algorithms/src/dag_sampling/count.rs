@@ -158,8 +158,17 @@ fn count<T: RealField + FromPrimitive>(
             if !flower.contains(u) || !flower.contains(v) {
                 break;
             }
-            assert!(size > separator.len());
-            forbidden_sizes.push(size - separator.len());
+            // `forbidden_sets` is sorted by descending `size` (separator length of
+            // the crossed edge), so once a size no longer exceeds the current
+            // subproblem's separator, no later one will either: stop. This mirrors
+            // the sampler (`sample.rs`) exactly. Using an early stop here rather
+            // than `assert!(size > separator.len())` avoids a release-mode panic
+            // (and a `usize` underflow in the push) on the boundary case.
+            if size > separator.len() {
+                forbidden_sizes.push(size - separator.len());
+            } else {
+                break;
+            }
         }
         let phi = combinatorics::rho(&forbidden_sizes, memoization);
 

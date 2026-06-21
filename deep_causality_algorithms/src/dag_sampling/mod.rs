@@ -24,8 +24,9 @@
 //! [`brcd::brcd_mec::mec_size`](crate::brcd::brcd_mec::mec_size) computes the same
 //! number by **exact enumeration**, capped at `MEC_ENUM_BOUND = 100_000`. This
 //! module is a **polynomial-time** alternative that never enumerates, so it scales
-//! to classes far beyond that bound; it is validated to match the enumerator
-//! exactly on every class small enough for the enumerator to handle.
+//! to classes far beyond that bound (subject to the count type's exactness ceiling
+//! — see *Exactness ceiling of the count type* below); it is validated to match the
+//! enumerator exactly on every class small enough for the enumerator to handle.
 //!
 //! ## Counting only (for now)
 //!
@@ -39,6 +40,17 @@
 //! count type here is a generic `T: RealField + FromPrimitive` (from
 //! `deep_causality_num`), matching the BRCD numeric bound. It instantiates at
 //! `f64` and at the higher-precision `deep_causality_num::Float106`.
+//!
+//! ## Exactness ceiling of the count type
+//!
+//! The count is carried in a floating-point `T`, so it is **exact only up to the
+//! mantissa width of `T`**: `2^53` for `f64`, `~2^106` for `Float106`. Beyond
+//! that, the inclusion–exclusion (which subtracts, see [`combinatorics::rho`])
+//! rounds and may cancel, and the returned integer can be off by one or more with
+//! no error or saturation signal. Classes large enough to exceed `2^53` are far
+//! larger than `MEC_ENUM_BOUND`, so the enumerator cannot cross-check them either.
+//! Callers that may encounter such classes should instantiate at `Float106` (exact
+//! to `~2^106`); the `f64` path is intended for classes within the `2^53` ceiling.
 //!
 //! ## Precondition
 //!
@@ -73,6 +85,11 @@ use deep_causality_topology::MixedGraph;
 /// [`brcd::brcd_mec::mec_size`](crate::brcd::brcd_mec::mec_size) for the
 /// undirected part. It counts AMOs without enumerating them, so unlike the
 /// enumerator it has no class-size bound.
+///
+/// The result is exact only up to `T`'s mantissa width (`2^53` for `f64`,
+/// `~2^106` for `Float106`); above that the count rounds silently. Instantiate at
+/// `Float106` when the class may exceed `2^53`. See the module-level documentation
+/// (*Exactness ceiling of the count type*).
 ///
 /// The undirected edges are read via the same accessors the BRCD code uses
 /// (`undirected_edges`, `undirected_neighbors`, `num_vertices`); directed arcs are
