@@ -1,0 +1,19 @@
+deep_causality_algorithms/src/dag_sampling/chordal.rs
+  s_9f8f48997705cf::t_06d5a08da99403 28-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "853f9de87617931e0fe3d2b3e781aca8e71a3eff",
+  "prompts": {},
+  "sessions": {
+    "s_9f8f48997705cf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9c5aae3b-2f51-4aa4-8f94-cf7690a9f815",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
