@@ -103,25 +103,28 @@ where
     }
 
     /// Evaluates orientation `bits`: orient, Meek-complete, validity-check, then
-    /// score. Returns `Some(w)` if valid (recording it in `visited`), `None` if
-    /// invalid. Counts one evaluation unless `bits` was already visited (then it
-    /// returns the cached weight without a new evaluation).
+    /// score. Returns `Some(w)` if valid, `None` if invalid. **Both** outcomes are
+    /// memoized in `visited` (valid as `Some(w)`, invalid as `None`), so a
+    /// re-visited orientation returns the cached result without a new evaluation or
+    /// Meek completion — the hill-climb revisits the same invalid neighbours across
+    /// passes, and caching them keeps `evals` at unique-orientation work.
     fn eval(
         &self,
         bits: usize,
-        visited: &mut BTreeMap<usize, T>,
+        visited: &mut BTreeMap<usize, Option<T>>,
         evals: &mut usize,
     ) -> Result<Option<T>, BrcdError> {
-        if let Some(&w) = visited.get(&bits) {
-            return Ok(Some(w));
+        if let Some(&cached) = visited.get(&bits) {
+            return Ok(cached);
         }
         *evals += 1;
         let mut g = self.orient(bits);
         if !is_valid_configuration(&mut g, self.targets, self.baseline) {
+            visited.insert(bits, None);
             return Ok(None);
         }
         let w = (self.weight)(&g)?;
-        visited.insert(bits, w);
+        visited.insert(bits, Some(w));
         Ok(Some(w))
     }
 
@@ -130,7 +133,7 @@ where
     fn valid_start(
         &self,
         du: usize,
-        visited: &mut BTreeMap<usize, T>,
+        visited: &mut BTreeMap<usize, Option<T>>,
         evals: &mut usize,
     ) -> Result<Option<(usize, T)>, BrcdError> {
         let all_in = (1usize << du) - 1;
@@ -200,7 +203,7 @@ where
         weight,
     };
 
-    let mut visited: BTreeMap<usize, T> = BTreeMap::new();
+    let mut visited: BTreeMap<usize, Option<T>> = BTreeMap::new();
     let mut evals = 0usize;
 
     // `du == 0`: a single fully-directed candidate. Meek-complete + validate the
@@ -253,8 +256,12 @@ where
         }
     }
 
-    // Rank the visited valid configs best-first; the MAP cut is first.
-    let mut ranked: Vec<(usize, T)> = visited.into_iter().collect();
+    // Rank the visited valid configs best-first; the MAP cut is first. The cache
+    // also holds the memoized invalid orientations (`None`), which are dropped here.
+    let mut ranked: Vec<(usize, T)> = visited
+        .into_iter()
+        .filter_map(|(bits, w)| w.map(|w| (bits, w)))
+        .collect();
     ranked.sort_by(|a, b| {
         b.1.partial_cmp(&a.1)
             .unwrap_or(std::cmp::Ordering::Equal)
