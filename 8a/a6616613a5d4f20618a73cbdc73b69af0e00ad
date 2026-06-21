@@ -1,0 +1,22 @@
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_mapconfig.rs
+  s_9f8f48997705cf::t_b3642b36b8bd1c 106-110,114,117-118,123,127
+  s_9f8f48997705cf::t_c259fdbe75fd97 206
+  s_9f8f48997705cf::t_3c90c146c694e1 259-264
+  s_9f8f48997705cf::t_824d909fd211ad 136
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "8aa6616613a5d4f20618a73cbdc73b69af0e00ad",
+  "prompts": {},
+  "sessions": {
+    "s_9f8f48997705cf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9c5aae3b-2f51-4aa4-8f94-cf7690a9f815",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
