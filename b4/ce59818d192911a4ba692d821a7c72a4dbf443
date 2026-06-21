@@ -1,0 +1,21 @@
+openspec/notes/causal_bhpi/bhpi-data-acquisition.md
+  s_49325202c57af5::t_bc94a3530f4906 1-132
+openspec/notes/causal_bhpi/bhpi-groundwork.md
+  s_49325202c57af5::t_c71122389ff2e9 1-218
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "b4ce59818d192911a4ba692d821a7c72a4dbf443",
+  "prompts": {},
+  "sessions": {
+    "s_49325202c57af5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297e527-61ae-449a-a0a2-18bc3006d1c0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
