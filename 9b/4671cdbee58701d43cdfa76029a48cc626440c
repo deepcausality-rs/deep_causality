@@ -1,0 +1,19 @@
+deep_causality_algorithms/src/dag_sampling/index_set.rs
+  s_9f8f48997705cf::t_4c8a9f6625a7c5 132-136
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "9b4671cdbee58701d43cdfa76029a48cc626440c",
+  "prompts": {},
+  "sessions": {
+    "s_9f8f48997705cf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9c5aae3b-2f51-4aa4-8f94-cf7690a9f815",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
