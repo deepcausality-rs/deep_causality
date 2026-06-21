@@ -25,6 +25,11 @@ pub(crate) fn mcs(g: &Graph) -> Vec<usize> {
 
     sets[0] = (0..g.n).collect();
 
+    // `max_cardinality` indexes `sets` (length `g.n`). It only ever holds a
+    // vertex cardinality, which counts already-eliminated neighbours and is thus
+    // bounded by the degree `<= g.n - 1`. So `max_cardinality <= g.n - 1` always
+    // holds here, and the `sets[max_cardinality]` / `sets[cardinality[v]]` indices
+    // below stay in bounds.
     let mut idx = 0;
     while idx < g.n {
         while max_cardinality > 0 && sets[max_cardinality].is_empty() {
