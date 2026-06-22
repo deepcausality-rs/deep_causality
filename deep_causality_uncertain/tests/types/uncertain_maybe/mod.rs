@@ -7,12 +7,16 @@
 // not implement the `posix_spawn*` libc shims, so the tests abort. They are
 // correct and run under normal CI.
 #[cfg(test)]
+#[cfg(not(miri))]
 mod uncertain_maybe_bool_tests;
-#[cfg(all(test, not(miri)))]
+#[cfg(test)]
+#[cfg(not(miri))]
 mod uncertain_maybe_f64_tests;
 
-#[cfg(all(test, not(miri)))]
+#[cfg(test)]
+#[cfg(not(miri))]
 mod uncertain_maybe_f64_arithmetic_tests;
 
-#[cfg(all(test, not(miri)))]
+#[cfg(test)]
+#[cfg(not(miri))]
 mod uncertain_maybe_f106_tests;

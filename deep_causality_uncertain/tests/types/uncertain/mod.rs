@@ -6,17 +6,24 @@
 // a subprocess via `posix_spawn`, and Miri does not implement the
 // `posix_spawn*` libc shims, so the tests abort. They are correct and run
 // under normal CI.
-#[cfg(all(test, not(miri)))]
+#[cfg(test)]
+#[cfg(not(miri))]
 mod uncertain_arithmetic_tests;
-#[cfg(all(test, not(miri)))]
+#[cfg(test)]
+#[cfg(not(miri))]
 mod uncertain_comparison_tests;
-#[cfg(all(test, not(miri)))]
+#[cfg(test)]
+#[cfg(not(miri))]
 mod uncertain_default;
-#[cfg(all(test, not(miri)))]
+#[cfg(test)]
+#[cfg(not(miri))]
 mod uncertain_logic_tests;
-#[cfg(all(test, not(miri)))]
+#[cfg(test)]
+#[cfg(not(miri))]
 mod uncertain_sampling_tests;
-#[cfg(all(test, not(miri)))]
+#[cfg(test)]
+#[cfg(not(miri))]
 mod uncertain_statistics_tests;
 #[cfg(test)]
+#[cfg(not(miri))]
 mod uncertain_tests;
