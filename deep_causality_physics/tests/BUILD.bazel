@@ -371,8 +371,6 @@ rust_test_suite(
     ],
 )
 
-
-
 rust_test_suite(
     name = "theories",
     srcs = glob([
