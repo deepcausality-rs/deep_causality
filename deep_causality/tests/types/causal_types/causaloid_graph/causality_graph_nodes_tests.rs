@@ -193,3 +193,17 @@ fn test_remove_causaloid_error() {
     let res = g.remove_causaloid(99); // Invalid index
     assert!(res.is_err());
 }
+
+#[test]
+fn test_add_causaloid_error_when_frozen() {
+    // `add_causaloid` delegates to the underlying graph's `add_node`, which
+    // returns an error once the graph is frozen. This drives the `Err(e)`
+    // mapping arm in `add_causaloid`.
+    let mut g = CausaloidGraph::new(0);
+    g.add_root_causaloid(test_utils::get_test_causaloid_deterministic(0))
+        .expect("root");
+    g.freeze();
+
+    let res = g.add_causaloid(test_utils::get_test_causaloid_deterministic(1));
+    assert!(res.is_err());
+}

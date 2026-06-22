@@ -4,5 +4,6 @@
  */
 
 mod adjust_tests;
+mod space_temporal_interval_tests;
 mod tangent_spacetime_tests;
 mod update_tests;

@@ -110,6 +110,29 @@ fn test_hkt_generative_system_evolve() {
 }
 
 #[test]
+fn test_evolve_succeeds_without_context() {
+    // A model with no context evolves successfully. The reconstruction step
+    // takes the `None` branch for the new context (model has no context to
+    // carry forward).
+    let causaloid: Arc<Causaloid<TestInput, TestOutput, (), Arc<RwLock<TestContext>>>> =
+        Arc::new(Causaloid::new(1, base_causal_fn, "Base Causaloid"));
+    let model = TestModel::new(1, "Author", "Description", None, causaloid, None);
+
+    // Replace the main causaloid; the causaloid id is preserved, so it is not lost.
+    let new_causaloid: Causaloid<TestInput, TestOutput, (), Arc<RwLock<TestContext>>> =
+        Causaloid::new(1, new_causal_fn, "New Causaloid");
+    let op = TestOperation::UpdateCausaloid(1, new_causaloid);
+    let op_tree = ConstTree::new(op);
+
+    let result = model.evolve(&op_tree);
+    assert!(result.is_ok(), "Evolve should succeed: {:?}", result.err());
+
+    let (new_model, _logs) = result.unwrap();
+    // The reconstructed model must carry no context.
+    assert!(new_model.context().is_none());
+}
+
+#[test]
 fn test_evolve_error_causaloid_lost() {
     // 1. Create a base model
     let causaloid: Arc<Causaloid<TestInput, TestOutput, (), Arc<RwLock<TestContext>>>> =
@@ -162,4 +185,44 @@ fn test_evolve_error_from_interpreter() {
         err,
         ModelValidationError::DuplicateContextId { .. }
     ));
+}
+
+#[test]
+fn test_evolve_error_on_poisoned_context_lock() {
+    // Poison the context RwLock so that `evolve`'s initial read fails, driving
+    // the `map_err(|_| InterpreterError ...)` arm in the state-initialization step.
+    let causaloid: Arc<Causaloid<TestInput, TestOutput, (), Arc<RwLock<TestContext>>>> =
+        Arc::new(Causaloid::new(1, base_causal_fn, "Base Causaloid"));
+    let context = Context::with_capacity(100, "BaseContext", 10);
+    let context_arc = Arc::new(RwLock::new(context));
+
+    // Poison the lock: take the write guard inside a thread that panics.
+    {
+        let poison_arc = Arc::clone(&context_arc);
+        let handle = std::thread::spawn(move || {
+            let _guard = poison_arc.write().unwrap();
+            panic!("intentional panic to poison the context lock");
+        });
+        assert!(handle.join().is_err(), "the helper thread must panic");
+    }
+
+    let model = TestModel::new(
+        1,
+        "Author",
+        "Description",
+        None,
+        causaloid,
+        Some(context_arc),
+    );
+
+    let op = TestOperation::NoOp;
+    let op_tree = ConstTree::new(op);
+
+    let result = model.evolve(&op_tree);
+    assert!(
+        result.is_err(),
+        "Evolve must fail on a poisoned context lock"
+    );
+    let err = result.err().unwrap();
+    assert!(matches!(err, ModelValidationError::InterpreterError { .. }));
 }

@@ -6,6 +6,7 @@ use deep_causality::utils_test::test_utils_csm::{
     get_test_action_with_tracker, get_test_causaloid, get_test_error_action,
     get_test_error_causaloid, get_test_probabilistic_causaloid,
 };
+use deep_causality::{EffectValue, MonadicCausable, PropagatingEffect};
 
 #[test]
 fn test_get_test_error_action() {
@@ -21,6 +22,12 @@ fn test_get_test_probabilistic_causaloid() {
     let causaloid = get_test_probabilistic_causaloid();
     assert_eq!(causaloid.id(), 99);
     assert_eq!(causaloid.description(), "Probabilistic Causaloid");
+
+    // Evaluate to exercise the causal function body.
+    let effect = PropagatingEffect::from_value(1.0f64);
+    let res = causaloid.evaluate(&effect);
+    assert!(res.error.is_none());
+    assert_eq!(res.value, EffectValue::Value(0.5));
 }
 
 #[test]
@@ -44,6 +51,13 @@ fn test_get_test_causaloid_without_context() {
     assert_eq!(causaloid.id(), 1);
     assert_eq!(causaloid.description(), "Test Causaloid");
     assert!(causaloid.context().is_none());
+
+    // Evaluate to exercise the context-less causal function body, which always
+    // returns `true` and logs an entry.
+    let effect = PropagatingEffect::from_value(false);
+    let res = causaloid.evaluate(&effect);
+    assert!(res.error.is_none());
+    assert_eq!(res.value, EffectValue::Value(true));
 }
 
 #[test]

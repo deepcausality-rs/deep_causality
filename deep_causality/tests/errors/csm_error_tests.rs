@@ -71,4 +71,8 @@ fn test_csm_error_from_uncertain_error() {
         format!("{}", csm_err),
         "CSM Uncertain Error: Unsupported type: error"
     );
+
+    // Test source - the Uncertain variant carries a String, not a nested
+    // error, so `source()` must return None.
+    assert!(csm_err.source().is_none());
 }

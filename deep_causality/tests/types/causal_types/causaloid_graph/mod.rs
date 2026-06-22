@@ -24,4 +24,6 @@ mod causality_graph_reasoning_sub_tests;
 #[cfg(test)]
 mod causality_graph_reasoning_tests;
 #[cfg(test)]
+mod causality_graph_shortest_path_tests;
+#[cfg(test)]
 mod causality_graph_tests;

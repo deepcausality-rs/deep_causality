@@ -2,6 +2,5 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-mod adjustable_tests;
-mod minkowski_spacetime_tests;
-mod space_temporal_interval_tests;
+#[cfg(test)]
+mod adjustable_default_tests;

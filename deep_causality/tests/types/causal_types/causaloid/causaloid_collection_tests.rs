@@ -145,6 +145,24 @@ fn test_evaluate_collection_with_sub_evaluation_error() {
 }
 
 #[test]
+fn test_evaluate_collection_aggregation_error() {
+    // Each item evaluates successfully to `Value(UncertainF64)`, but direct
+    // aggregation of `UncertainF64` is unsupported, so the aggregation helper
+    // returns an error which `evaluate_collection` propagates (the `Err(e)`
+    // aggregation arm).
+    let causal_coll = Arc::new(vec![
+        test_utils::get_test_causaloid_uncertain_float(),
+        test_utils::get_test_causaloid_uncertain_float(),
+    ]);
+
+    let effect = PropagatingEffect::from_value(0.99_f64);
+    let res = causal_coll.evaluate_collection(&effect, &AggregateLogic::All, Some(0.5));
+
+    assert!(res.error.is_some());
+    assert!(res.error.unwrap().to_string().contains("not supported"));
+}
+
+#[test]
 fn test_evaluate_collection_without_true_effect() {
     // Setup: A collection with only 'false' causaloids.
     let causal_coll = Arc::new(vec![

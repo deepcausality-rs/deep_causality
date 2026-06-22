@@ -167,6 +167,32 @@ fn test_applicative_apply_error_in_value() {
 }
 
 #[test]
+fn test_applicative_apply_no_value_no_error() {
+    // Both operands carry neither a value nor an error. `apply` cannot run the
+    // function (no func, no arg) and falls through to the defensive
+    // value: None / error: None branch.
+    let f_ab: AuditableGraphGenerator<fn(u32) -> u32> = GraphGeneratableEffect {
+        value: None,
+        error: None,
+        logs: ModificationLog::new(),
+    };
+    let m_a: AuditableGraphGenerator<u32> = GraphGeneratableEffect {
+        value: None,
+        error: None,
+        logs: ModificationLog::new(),
+    };
+
+    let result =
+        <GraphGeneratableEffectWitness<ModelValidationError, ModificationLog> as Applicative<
+            GraphGeneratableEffectWitness<ModelValidationError, ModificationLog>,
+        >>::apply(f_ab, m_a);
+
+    assert!(result.value.is_none());
+    assert!(result.error.is_none());
+    assert!(result.logs.is_empty());
+}
+
+#[test]
 fn test_applicative_apply_log_aggregation() {
     let mut logs1 = ModificationLog::new();
     logs1.add_entry(ModificationLogEntry::new(
