@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.10.0...deep_causality_core-v0.11.0) - 2026-06-22
+
+### Added
+
+- *(deep_causality_core)* file IO actions + CausalFlow read/write bridge
+
+### Fixed
+
+- fixed sone doctest warnings
+
+### Other
+
+- Generated new SBOM for all crates.
+- Updated README file across multiple crates to meet project standard.
+
 ## [0.0.9](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.0.8...deep_causality_core-v0.0.9) - 2026-06-09
 
 ### Added

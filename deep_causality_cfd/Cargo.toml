@@ -49,7 +49,7 @@ parallel = [
 
 [dependencies.deep_causality_physics]
 path = "../deep_causality_physics"
-version = "0.6"
+version = "0.7"
 default-features = false
 
 [dependencies.deep_causality_calculus]
@@ -58,7 +58,7 @@ version = "0.1"
 
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
-version = "0.10"
+version = "0.11"
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
@@ -76,7 +76,7 @@ version = "0.4"
 # sample cache. Gated behind `std` so the `alloc`-only build stays uncertain-free.
 [dependencies.deep_causality_uncertain]
 path = "../deep_causality_uncertain"
-version = "0.3"
+version = "0.4"
 optional = true
 
 [dependencies.deep_causality_topology]

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.4.4...deep_causality_tensor-v0.4.5) - 2026-06-22
+
+### Other
+
+- *(deep_causality_tensor)* Improve test coverage
+- Generated new SBOM for all crates.
+- Updated README file across multiple crates to meet project standard.
+
 ## [0.4.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.4.3...deep_causality_tensor-v0.4.4) - 2026-06-09
 
 ### Added
