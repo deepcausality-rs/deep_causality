@@ -4,6 +4,9 @@
  */
 
 #[cfg(test)]
+#[cfg(not(miri))]
+
 mod standard_uniform_tests;
 #[cfg(test)]
+#[cfg(not(miri))]
 mod uniform_tests;

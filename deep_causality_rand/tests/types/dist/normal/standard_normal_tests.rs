@@ -8,6 +8,7 @@ use deep_causality_rand::types::distr::normal::standard_normal::StandardNormal;
 macro_rules! standard_normal_tests {
     ($float_type:ty, $tolerance:expr) => {
         #[test]
+        #[cfg_attr(miri, ignore)]
         fn test_mean_and_std_dev() {
             let mut rng = rng();
             let distr = StandardNormal;
@@ -91,6 +92,7 @@ mod f106_tests {
     use deep_causality_rand::rng;
 
     #[test]
+    #[cfg_attr(miri, ignore)]
     fn test_mean_and_std_dev() {
         let mut rng = rng();
         let distr = StandardNormal;
