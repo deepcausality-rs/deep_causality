@@ -77,6 +77,7 @@ fn mixture_with_all_anomalous_collapses_to_the_present_expert() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)]
 fn mixture_is_finite_and_deterministic() {
     let node = vec![0.0, 1.0, 2.0, 8.0, 9.0, 10.0];
     let parents = vec![
