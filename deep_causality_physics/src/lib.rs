@@ -13,6 +13,8 @@ pub(crate) mod error;
 pub(crate) mod kernels;
 pub mod quantities;
 pub mod theories;
+#[cfg(feature = "alloc")]
+pub mod utils_tests;
 
 pub use crate::constants::*;
 

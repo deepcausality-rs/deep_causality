@@ -5,48 +5,48 @@
 
 // --- Domain quantities (moved from tests/kernels/<domain>/) ---
 #[cfg(test)]
-mod chronometric_quantities_tests;
+mod chronometric_quantities;
 #[cfg(test)]
-mod condensed_quantities_tests;
+mod condensed_quantities;
 #[cfg(test)]
-mod dynamics_quantities_tests;
+mod dynamics_quantities;
 #[cfg(test)]
-mod em_quantities_tests;
+mod em_quantities;
 #[cfg(test)]
-mod fluids_quantities_tests;
+mod fluids_quantities;
 #[cfg(test)]
-mod materials_quantities_tests;
+mod materials_quantities;
 #[cfg(test)]
-mod mhd_quantities_tests;
+mod mhd_quantities;
 #[cfg(test)]
-mod nuclear_quantities_tests;
+mod nuclear_quantities;
 #[cfg(test)]
-mod photonics_quantities_tests;
+mod photonics_quantities;
 #[cfg(test)]
-mod quantum_quantities_tests;
+mod quantum_quantities;
 #[cfg(test)]
-mod relativity_quantities_tests;
+mod relativity_quantities;
 #[cfg(test)]
-mod thermodynamics_quantities_tests;
+mod thermodynamics_quantities;
 
 // --- Physical-unit types (moved from tests/units/) ---
 #[cfg(test)]
-mod body_force_one_form_tests;
+mod body_force_one_form;
 #[cfg(test)]
-mod energy_tests;
+mod energy;
 #[cfg(test)]
-mod index_of_refraction_tests;
+mod index_of_refraction;
 #[cfg(test)]
-mod pressure_zero_form_tests;
+mod pressure_zero_form;
 #[cfg(test)]
-mod ratio_tests;
+mod ratio;
 #[cfg(test)]
-mod solenoidal_field_tests;
+mod solenoidal_field;
 #[cfg(test)]
-mod temperature_tests;
+mod temperature;
 #[cfg(test)]
-mod time_tests;
+mod time;
 #[cfg(test)]
-mod velocity_one_form_tests;
+mod velocity_one_form;
 #[cfg(test)]
-mod vorticity_two_form_tests;
+mod vorticity_two_form;
