@@ -1,0 +1,217 @@
+deep_causality_physics/tests/kernels/mhd/ideal_tests.rs
+  s_e518d8627dc02d::t_4fb80059d980a3 102-123
+  s_e518d8627dc02d::t_c196b3481eddfc 56-65
+deep_causality_physics/tests/quantities/temperature_tests.rs
+  s_e518d8627dc02d::t_158d8ef2a604f1 73-79
+  s_e518d8627dc02d::t_2be79a56dfe0f1 80-86
+deep_causality_physics/tests/kernels/relativity/spacetime_tests.rs
+  s_e518d8627dc02d::t_14e5075f714649 430-458
+deep_causality_physics/tests/theories/general_relativity/gr_ops_impl_tests.rs
+  s_e518d8627dc02d::t_4eedfb033b54d1 443-463,468,473-496
+  s_e518d8627dc02d::t_a0e586d9a117f7 621-623
+  s_e518d8627dc02d::t_d5bfd26ff6a947 783-827
+  s_e518d8627dc02d::t_366c08926e7833 469-471
+  s_e518d8627dc02d::t_3c1322ce09a4b1 464-467,472
+  s_e518d8627dc02d::t_c4cea8547f776c 595-620,624-633
+  s_e518d8627dc02d::t_50f773defd5f5a 442,594,634,782,828,923-992
+deep_causality_physics/tests/kernels/dynamics/mod.rs
+  s_e518d8627dc02d::t_074c009944bbfe 6-7,11-12,15-16
+deep_causality_physics/tests/theories/electroweak/electroweak_tests.rs
+  s_e518d8627dc02d::t_ecaaa47bb43bcd 489-498,500-516
+  s_e518d8627dc02d::t_74409435b4ac6f 499
+deep_causality_physics/tests/kernels/nuclear/mod.rs
+  s_e518d8627dc02d::t_b3f880770d782a 7
+deep_causality_physics/tests/kernels/dynamics/estimation_coverage_tests.rs
+  s_e518d8627dc02d::t_4092f92a16801b 67-73
+  s_e518d8627dc02d::t_f9ebf0d0ae975b 1-5,7,28-29,31-32,43,50,63,74-75
+  s_e518d8627dc02d::t_325dd86013fbb4 6,8-27,33-42,44-49,51-62,64-66
+  s_e518d8627dc02d::t_2662eb87885617 30
+deep_causality_physics/tests/error/physics_error_tests.rs
+  s_e518d8627dc02d::t_0ce3823f9910e8 175-224
+deep_causality_physics/tests/kernels/mhd/grmhd_tests.rs
+  s_e518d8627dc02d::t_e3586ec4632a42 168-181
+  s_e518d8627dc02d::t_0582b9bab1db92 138-165
+  s_e518d8627dc02d::t_e1c3171f4c21d1 9
+deep_causality_physics/tests/kernels/materials/mechanics_tests.rs
+  s_e518d8627dc02d::t_f391c8067d9e0d 166-176
+deep_causality_physics/tests/kernels/mhd/wrappers_tests.rs
+  s_e518d8627dc02d::t_364e8baf1c6044 7,12
+  s_e518d8627dc02d::t_bfa5a3b5022310 201,221
+  s_e518d8627dc02d::t_0d54cb5d414f0f 183-200,202-220,222-253
+deep_causality_physics/tests/kernels/fluids/wrappers_coverage_tests.rs
+  s_e518d8627dc02d::t_2dc4ab263dbc87 1-7,11-43
+  s_e518d8627dc02d::t_5953e243a1e40b 8-10
+  s_e518d8627dc02d::t_65f6528e90b01a 44-59
+deep_causality_physics/tests/theories/general_relativity/gr_lie_mapping_tests.rs
+  s_e518d8627dc02d::t_2be79a56dfe0f1 195-208
+  s_e518d8627dc02d::t_3f97449a7dee07 167-177
+deep_causality_physics/tests/kernels/em/fields_tests.rs
+  s_e518d8627dc02d::t_0ce3823f9910e8 134-185,194-202,253-354
+  s_e518d8627dc02d::t_7adbe873db17ac 355-356,358-379,400-427
+  s_e518d8627dc02d::t_eb0723276266f3 380-393
+deep_causality_physics/tests/kernels/astro/wrappers_tests.rs
+  s_e518d8627dc02d::t_65f6528e90b01a 88
+  s_e518d8627dc02d::t_a2b0ff66ea506f 89-103
+deep_causality_physics/tests/kernels/photonics/polarization_tests.rs
+  s_e518d8627dc02d::t_0d84d9ed1ae46c 108-129
+  s_e518d8627dc02d::t_f391c8067d9e0d 140-147
+deep_causality_physics/tests/kernels/thermodynamics/stats_coverage_tests.rs
+  s_e518d8627dc02d::t_5c37f2324fed7b 1-8,10-27,29-76
+  s_e518d8627dc02d::t_d1a0a4bae12d6c 28
+  s_e518d8627dc02d::t_a35bccd371caa1 77-83
+  s_e518d8627dc02d::t_3cfe5dce9919d5 9
+deep_causality_physics/tests/kernels/condensed/wrappers_tests.rs
+  s_e518d8627dc02d::t_ca8ad8b18a115f 213-285
+  s_e518d8627dc02d::t_74409435b4ac6f 13-14
+  s_e518d8627dc02d::t_cf83efb2176f16 12
+deep_causality_physics/tests/kernels/photonics/beam_tests.rs
+  s_e518d8627dc02d::t_1fa7021030f44c 83-89
+deep_causality_physics/tests/kernels/mhd/plasma_tests.rs
+  s_e518d8627dc02d::t_d484d8d8cd4384 23-46
+deep_causality_physics/tests/quantities/solenoidal_field_tests.rs
+  s_e518d8627dc02d::t_74409435b4ac6f 254-257,311-318
+  s_e518d8627dc02d::t_d8cc3b54801334 215-253,258-310,319-363
+deep_causality_physics/tests/quantities/em_quantities_tests.rs
+  s_e518d8627dc02d::t_93c68ad21a4c6e 102-108
+deep_causality_physics/tests/quantities/condensed_quantities_tests.rs
+  s_e518d8627dc02d::t_b25c36d0af4f15 225
+  s_e518d8627dc02d::t_6a58672e4e0e74 182-224,226-256
+deep_causality_physics/tests/kernels/dynamics/kinematics_coverage_tests.rs
+  s_e518d8627dc02d::t_e851a58cfc9726 1-47,52-59
+  s_e518d8627dc02d::t_c0234d2d76d2c0 48-51
+deep_causality_physics/tests/kernels/nuclear/pdg_tests.rs
+  s_e518d8627dc02d::t_68e1f7d230b27a 1-44
+deep_causality_physics/tests/kernels/fluids/wrappers_tests.rs
+  s_e518d8627dc02d::t_b074a94b6490b5 444,657,709-715
+  s_e518d8627dc02d::t_cd4d579e9626a2 445-450,457-462,469-475,481-485,680,716
+  s_e518d8627dc02d::t_a4b62621beaa26 658-664,673-679
+deep_causality_physics/tests/kernels/condensed/moire_tests.rs
+  s_e518d8627dc02d::t_0ad6f6f09bc473 76-121
+deep_causality_physics/tests/quantities/photonics_quantities_tests.rs
+  s_e518d8627dc02d::t_183d982f75f03b 215-261
+deep_causality_physics/tests/kernels/fluids/coherent_structures_coverage_tests.rs
+  s_e518d8627dc02d::t_4e2efa055e21ae 21-31
+  s_e518d8627dc02d::t_5953e243a1e40b 43-45
+  s_e518d8627dc02d::t_85494926668517 1-20,32-42,46
+deep_causality_physics/tests/quantities/thermodynamics_quantities_tests.rs
+  s_e518d8627dc02d::t_fc77a7cb115502 85-91
+deep_causality_physics/tests/kernels/waves/general_coverage_tests.rs
+  s_e518d8627dc02d::t_0e822e1884cdf9 1-23
+deep_causality_physics/tests/kernels/nuclear/qcd_tests.rs
+  s_e518d8627dc02d::t_5cc41e8d6d211a 208-222
+  s_e518d8627dc02d::t_ced1f063547bec 274-282
+  s_e518d8627dc02d::t_a44f2e01332a7c 101,407-417
+  s_e518d8627dc02d::t_af99825604fe37 102-120,223,283,418
+deep_causality_physics/tests/kernels/nuclear/wrappers_tests.rs
+  s_e518d8627dc02d::t_aa954d13cfda85 33-40,45-46
+  s_e518d8627dc02d::t_74409435b4ac6f 41-44
+  s_e518d8627dc02d::t_f391c8067d9e0d 57-63
+deep_causality_physics/tests/kernels/quantum/gates_haruna_tests.rs
+  s_e518d8627dc02d::t_ad78bd8a215886 139,141-148,170-184
+  s_e518d8627dc02d::t_f253d0538140f6 169
+  s_e518d8627dc02d::t_466bdbc8eba8a5 118-120
+  s_e518d8627dc02d::t_68f16ecb2ed51d 130
+  s_e518d8627dc02d::t_759baa5ff8fdbe 137-138,140,149-168
+  s_e518d8627dc02d::t_bb0551ac6d3e60 86-110,112-117,121-129,131-136
+  s_e518d8627dc02d::t_8c6a773892b47a 111
+deep_causality_physics/tests/kernels/em/solver_tests.rs
+  s_e518d8627dc02d::t_47ad2a6a20bf4c 109-130
+deep_causality_physics/tests/kernels/waves/mod.rs
+  s_e518d8627dc02d::t_b28bd6c7bd12b3 7,11
+deep_causality_physics/tests/kernels/relativity/gravity_tests.rs
+  s_e518d8627dc02d::t_74409435b4ac6f 254-255
+  s_e518d8627dc02d::t_805485f5454dcc 103-125,260
+  s_e518d8627dc02d::t_0471c772ae2788 239-253,256-259
+deep_causality_physics/tests/kernels/em/wrappers_tests.rs
+  s_e518d8627dc02d::t_a424ab5d4fe974 43-65
+  s_e518d8627dc02d::t_fd875eb1329f5e 201-218
+  s_e518d8627dc02d::t_4d7322db3da6c8 131-139
+deep_causality_physics/tests/kernels/quantum/gates_tests.rs
+  s_e518d8627dc02d::t_f391c8067d9e0d 78-86
+deep_causality_physics/tests/kernels/nuclear/physics_tests.rs
+  s_e518d8627dc02d::t_0ce3823f9910e8 90-99,104-115
+  s_e518d8627dc02d::t_c0234d2d76d2c0 100-103
+deep_causality_physics/tests/theories/electromagnetism/em_tests.rs
+  s_e518d8627dc02d::t_b3d6f1b036ecdf 734-738
+  s_e518d8627dc02d::t_7ab7265d5f90f5 788-803
+  s_e518d8627dc02d::t_0b3a3972df3b71 711-733,739-757
+  s_e518d8627dc02d::t_519db5d8aa4a56 758-787
+deep_causality_physics/tests/kernels/fluids/mod.rs
+  s_e518d8627dc02d::t_45468344c9251b 9-10,30
+  s_e518d8627dc02d::t_77d1b87afaf85e 29
+deep_causality_physics/tests/kernels/fluids/compressible_tests.rs
+  s_e518d8627dc02d::t_65f6528e90b01a 229-235
+deep_causality_physics/tests/kernels/thermodynamics/wrappers_tests.rs
+  s_e518d8627dc02d::t_85c905f3cf97fb 168-174
+deep_causality_physics/tests/kernels/mhd/resistive_tests.rs
+  s_e518d8627dc02d::t_e526c32cd30d0e 40-59
+deep_causality_physics/tests/kernels/relativity/mod.rs
+  s_e518d8627dc02d::t_e880adf29f7463 8-9
+deep_causality_physics/tests/quantities/time_tests.rs
+  s_e518d8627dc02d::t_2be79a56dfe0f1 106-112
+deep_causality_physics/tests/quantities/quantum_quantities_tests.rs
+  s_e518d8627dc02d::t_5af477ad63d3da 71-77
+deep_causality_physics/tests/kernels/materials/wrappers_tests.rs
+  s_e518d8627dc02d::t_f391c8067d9e0d 74-79
+deep_causality_physics/tests/kernels/thermodynamics/mod.rs
+  s_e518d8627dc02d::t_609acfaa3b0f1d 6-7
+deep_causality_physics/tests/kernels/waves/wrappers_coverage_tests.rs
+  s_e518d8627dc02d::t_f4b8f0ba426ae0 1-19
+deep_causality_physics/tests/kernels/relativity/wrappers_tests.rs
+  s_e518d8627dc02d::t_47ba14b92ae218 95-102,107-116,121-131,136-137
+  s_e518d8627dc02d::t_c0234d2d76d2c0 103-106,117-120,132-135
+deep_causality_physics/tests/quantities/ratio_tests.rs
+  s_e518d8627dc02d::t_a33383e5666b5e 57-63
+deep_causality_physics/tests/quantities/nuclear_quantities_tests.rs
+  s_e518d8627dc02d::t_beca20289a0ffd 329-399
+deep_causality_physics/tests/kernels/condensed/qgt_tests.rs
+  s_e518d8627dc02d::t_3fd3fa76bc50af 245-260
+deep_causality_physics/tests/kernels/em/forces_tests.rs
+  s_e518d8627dc02d::t_6750791424b3b3 90-121
+deep_causality_physics/tests/quantities/velocity_one_form_tests.rs
+  s_e518d8627dc02d::t_069c07a4c9dc35 112-130
+deep_causality_physics/tests/quantities/fluids_quantities_tests.rs
+  s_e518d8627dc02d::t_91a6f9884be02d 982-1015,1017-1045
+  s_e518d8627dc02d::t_74409435b4ac6f 1016
+deep_causality_physics/tests/quantities/materials_quantities_tests.rs
+  s_e518d8627dc02d::t_81aaa9551f68dc 61-85
+deep_causality_physics/tests/kernels/quantum/mechanics_tests.rs
+  s_e518d8627dc02d::t_e3bc2d14d98369 209-220,282
+  s_e518d8627dc02d::t_c8d16a290dd46c 271-281
+  s_e518d8627dc02d::t_946886f4f0244a 104-137,146-148,221,283
+  s_e518d8627dc02d::t_85c905f3cf97fb 400-421
+  s_e518d8627dc02d::t_615737662ccd0e 138-141,144
+  s_e518d8627dc02d::t_4b107d930e126e 142-143,145
+deep_causality_physics/tests/kernels/condensed/phase_tests.rs
+  s_e518d8627dc02d::t_28bba5ec3dadf5 224-237
+deep_causality_physics/tests/kernels/dynamics/kinematics_tests.rs
+  s_e518d8627dc02d::t_0ce3823f9910e8 199-250
+deep_causality_physics/tests/quantities/energy_tests.rs
+  s_e518d8627dc02d::t_2be79a56dfe0f1 77-84
+  s_e518d8627dc02d::t_9ac388d4ce3527 70-76
+deep_causality_physics/tests/kernels/dynamics/wrappers_coverage_tests.rs
+  s_e518d8627dc02d::t_65f6528e90b01a 30-39
+  s_e518d8627dc02d::t_608049a54fab4f 1-29
+deep_causality_physics/tests/kernels/relativity/spacetime_coverage_tests.rs
+  s_e518d8627dc02d::t_8c26f8748cd028 45-51,53-60,62-72
+  s_e518d8627dc02d::t_f0c7f52a10db0a 1-25,30-32,79
+  s_e518d8627dc02d::t_1e97e040b5730c 26-29
+  s_e518d8627dc02d::t_85c905f3cf97fb 80-90
+  s_e518d8627dc02d::t_6a843bed4d9f4b 33-44,52,61,73-78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "d84646f44aa4286bb06492f1a6c88d9da2861a07",
+  "prompts": {},
+  "sessions": {
+    "s_e518d8627dc02d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "56adcfb2-0a54-4aa3-84ac-c438be70f0fd",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
