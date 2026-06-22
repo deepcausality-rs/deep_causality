@@ -209,6 +209,7 @@ fn a_stage_error_short_circuits_the_coupling() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)]
 fn coupled_viscosity_feedback_changes_the_flow_dynamics() {
     // A 3D Taylor–Green vortex decay marched twice: once single-physics, once with a hot-wall
     // thermal relaxation feeding ν(T) back through the ambient. The coupled run dissipates
