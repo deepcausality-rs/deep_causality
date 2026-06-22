@@ -5,6 +5,8 @@
 #[cfg(test)]
 mod gravity_tests;
 #[cfg(test)]
+mod spacetime_coverage_tests;
+#[cfg(test)]
 mod spacetime_tests;
 #[cfg(test)]
 mod wrappers_tests;

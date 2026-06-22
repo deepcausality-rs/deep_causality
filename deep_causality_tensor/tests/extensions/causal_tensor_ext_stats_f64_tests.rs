@@ -235,6 +235,48 @@ fn conditional_variance_two_parent_identity_block() {
 }
 
 #[test]
+fn conditional_variance_three_parent_identity_block() {
+    // Σ_PP = I₃, Σ_yP = [a, b, c] → Var(y|P) = σ_yy − (a² + b² + c²).
+    // Three parents force the Cholesky factorization to accumulate the
+    // below-diagonal inner sum (the L[i,p]·L[j,p] term for p < j).
+    // y=0, p1=1, p2=2, p3=3. σ_yy=14, σ_yP=[1,2,3], parents = unit identity block.
+    let cov = CausalTensor::<f64>::new(
+        vec![
+            14.0, 1.0, 2.0, 3.0, // y row
+            1.0, 1.0, 0.0, 0.0, // p1 row
+            2.0, 0.0, 1.0, 0.0, // p2 row
+            3.0, 0.0, 0.0, 1.0, // p3 row
+        ],
+        vec![4, 4],
+    )
+    .unwrap();
+    let cv = cov.conditional_variance(0, &[1, 2, 3], 0.0).unwrap();
+    // 14 − (1² + 2² + 3²) = 14 − 14 = 0
+    assert!(cv.abs() < 1e-10);
+}
+
+#[test]
+fn conditional_variance_three_parent_correlated_block() {
+    // A non-diagonal 3-parent block keeps the Cholesky below-diagonal terms
+    // non-trivial. Σ_PP = [[2,1,0],[1,2,1],[0,1,2]], Σ_yP = [1,1,1], σ_yy = 3.
+    // Solve (Σ_PP) z = Σ_yP, then reduction = Σ_yP · z; cv = σ_yy − reduction.
+    // For this block, z = [0.5, 0, 0.5] and reduction = 1.0 → cv = 2.0.
+    let cov = CausalTensor::<f64>::new(
+        vec![
+            3.0, 1.0, 1.0, 1.0, // y
+            1.0, 2.0, 1.0, 0.0, // p1
+            1.0, 1.0, 2.0, 1.0, // p2
+            1.0, 0.0, 1.0, 2.0, // p3
+        ],
+        vec![4, 4],
+    )
+    .unwrap();
+    let cv = cov.conditional_variance(0, &[1, 2, 3], 0.0).unwrap();
+    assert!(cv.is_finite());
+    assert!((cv - 2.0).abs() < 1e-9, "expected 2.0, got {cv}");
+}
+
+#[test]
 fn conditional_variance_singular_block_stabilized_by_ridge() {
     // Σ_PP = [[1,1],[1,1]] is singular; ridge keeps the solve finite.
     let cov = CausalTensor::<f64>::new(

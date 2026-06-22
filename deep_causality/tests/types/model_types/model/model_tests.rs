@@ -4,7 +4,7 @@
  */
 
 use deep_causality::utils_test::test_utils;
-use deep_causality::{Assumption, Model};
+use deep_causality::{Assumption, Identifiable, Model};
 use std::sync::{Arc, RwLock};
 
 #[test]
@@ -19,6 +19,22 @@ fn test_new() {
     let model = Model::new(id, author, description, assumptions, causaloid, context);
 
     assert_eq!(model.id(), id);
+}
+
+#[test]
+fn test_identifiable_trait_id() {
+    let id = 7;
+    let author = "John Doe";
+    let description = "This is a test model";
+    let assumptions = None;
+    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic(12));
+    let context = Some(Arc::new(RwLock::new(test_utils::get_test_context())));
+
+    let model = Model::new(id, author, description, assumptions, causaloid, context);
+
+    // `model.id()` resolves to the inherent getter; call the trait method
+    // explicitly to exercise the `Identifiable` impl for `Model`.
+    assert_eq!(Identifiable::id(&model), id);
 }
 
 #[test]

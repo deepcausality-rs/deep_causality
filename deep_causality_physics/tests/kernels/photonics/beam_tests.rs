@@ -80,9 +80,13 @@ fn test_gaussian_propagation_singularity() {
 
 #[test]
 fn test_beam_spot_size_zero_q_error() {
-    // ComplexBeamParameter requires Im > 0, so we can't have q=0 directly.
-    // This error path is unreachable with valid ComplexBeamParameter.
-    // Skip or test with a different scenario.
+    // q = 0 has norm_sqr() == 0, tripping the Singularity guard in
+    // beam_spot_size_kernel (beam.rs:88-90). A valid ComplexBeamParameter
+    // requires Im > 0, so we construct the degenerate q via new_unchecked.
+    let q = ComplexBeamParameter::<f64>::new_unchecked(Complex::new(0.0, 0.0));
+    let lambda = Wavelength::<f64>::new(1.0).unwrap();
+    let res = beam_spot_size_kernel(q, lambda);
+    assert!(res.is_err());
 }
 
 #[test]

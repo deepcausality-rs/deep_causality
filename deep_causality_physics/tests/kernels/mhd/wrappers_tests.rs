@@ -4,11 +4,12 @@
  */
 
 use deep_causality_core::EffectValue;
+use deep_causality_metric::EastCoastMetric;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
     Density, Diffusivity, Mass, PhysicalField, Speed, Temperature, alfven_speed, debye_length,
     energy_momentum_tensor_em, ideal_induction, larmor_radius, magnetic_pressure,
-    magnetic_reconnection_rate, resistive_diffusion,
+    magnetic_reconnection_rate, relativistic_current, resistive_diffusion,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
@@ -179,9 +180,77 @@ fn test_resistive_diffusion_wrapper() {
 // ============================================================================
 
 #[test]
-fn test_relativistic_current_wrapper() {
-    // Note: This test is fully implemented in grmhd_tests.rs
-    // See test_relativistic_current_kernel_4d there.
+fn test_relativistic_current_wrapper_success() {
+    // 4D pentatope manifold (valid GRMHD setup) drives the wrapper's Ok arm
+    // (wrappers.rs:101-102).
+    let points_data = vec![
+        0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0,
+    ];
+    let point_tensor = CausalTensor::new(points_data, vec![5, 4]).unwrap();
+    let cloud = PointCloud::new(point_tensor, CausalTensor::<f64>::zeros(&[5]), 0).unwrap();
+    let complex = cloud.triangulate(1.5).unwrap();
+    let total = complex.total_simplices();
+    let manifold = Manifold::new(
+        complex,
+        CausalTensor::new(vec![0.0; total], vec![total]).unwrap(),
+        0,
+    )
+    .unwrap();
+
+    let metric = EastCoastMetric::new_nd(4).unwrap();
+    let result = relativistic_current(&manifold, &metric);
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_relativistic_current_wrapper_error() {
+    // A 1D complex lacks 2-simplices, so the kernel errors and the wrapper
+    // takes the Err arm (wrappers.rs:103).
+    let points = CausalTensor::new(vec![0.0, 1.0, 2.0], vec![3, 1]).unwrap();
+    let cloud = PointCloud::new(points, CausalTensor::<f64>::zeros(&[3]), 0).unwrap();
+    let complex = cloud.triangulate(1.5).unwrap();
+    let total = complex.total_simplices();
+    let manifold = Manifold::new(
+        complex,
+        CausalTensor::new(vec![0.0; total], vec![total]).unwrap(),
+        0,
+    )
+    .unwrap();
+
+    let metric = EastCoastMetric::new_nd(4).unwrap();
+    let result = relativistic_current(&manifold, &metric);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_ideal_induction_wrapper_error() {
+    // A 1D complex (only 0- and 1-skeletons) fails the kernel's dimension check,
+    // so the wrapper takes the Err arm (wrappers.rs:53).
+    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0], vec![2, 2]).unwrap();
+    let scalar = CausalTensor::new(vec![0.0, 0.0], vec![2]).unwrap();
+    let cloud = PointCloud::new(points, scalar, 0).unwrap();
+    let complex = cloud.triangulate(1.5).unwrap();
+    let num = complex.total_simplices();
+    let man = Manifold::new(
+        complex,
+        CausalTensor::new(vec![0.0; num], vec![num]).unwrap(),
+        0,
+    )
+    .unwrap();
+
+    let result = ideal_induction(&man, &man);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_resistive_diffusion_wrapper_error() {
+    // Negative diffusivity (via new_unchecked) forces the kernel error, so the
+    // wrapper takes the Err arm (wrappers.rs:70).
+    let man = create_test_manifold();
+    let eta = Diffusivity::<f64>::new_unchecked(-0.5);
+    let result = resistive_diffusion(&man, eta);
+    assert!(result.is_err());
 }
 
 #[test]

@@ -150,6 +150,53 @@ fn test_aggregate_uncertain_f64_error() {
 }
 
 #[test]
+fn test_aggregate_bool_non_value_errors() {
+    // A non-`Value` variant (`None`) must trigger the "Expected Value(bool)" error path.
+    let inputs: Vec<EffectValue<bool>> = vec![EffectValue::Value(true), EffectValue::None];
+    let res = monadic_collection_utils::aggregate_effects(&inputs, &AggregateLogic::All, None);
+    assert!(res.is_err());
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Expected Value(bool)")
+    );
+}
+
+#[test]
+fn test_aggregate_f64_non_value_errors() {
+    let inputs: Vec<EffectValue<f64>> = vec![EffectValue::Value(0.5), EffectValue::None];
+    let res = monadic_collection_utils::aggregate_effects(&inputs, &AggregateLogic::All, None);
+    assert!(res.is_err());
+    assert!(res.unwrap_err().to_string().contains("Expected Value(f64)"));
+}
+
+#[test]
+fn test_aggregate_uncertain_bool_missing_threshold_errors() {
+    let ub = Uncertain::<bool>::point(true);
+    let inputs = vec![EffectValue::Value(ub)];
+    // No threshold supplied -> must error.
+    let res = monadic_collection_utils::aggregate_effects(&inputs, &AggregateLogic::All, None);
+    assert!(res.is_err());
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Threshold is required")
+    );
+}
+
+#[test]
+fn test_aggregate_uncertain_bool_non_value_errors() {
+    let inputs: Vec<EffectValue<deep_causality_uncertain::UncertainBool>> = vec![EffectValue::None];
+    let res = monadic_collection_utils::aggregate_effects(&inputs, &AggregateLogic::All, Some(0.5));
+    assert!(res.is_err());
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Expected Value(UncertainBool)")
+    );
+}
+
+#[test]
 fn test_empty_collection_error() {
     let inputs: Vec<EffectValue<bool>> = vec![];
     let res = monadic_collection_utils::aggregate_effects(&inputs, &AggregateLogic::All, None);

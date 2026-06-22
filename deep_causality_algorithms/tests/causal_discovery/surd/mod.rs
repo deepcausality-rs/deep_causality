@@ -11,6 +11,10 @@ mod surd_algo_tests;
 #[cfg(test)]
 mod surd_consistency_tests;
 #[cfg(test)]
+mod surd_level_raise_tests;
+#[cfg(test)]
 mod surd_max_order_tests;
 #[cfg(test)]
 mod surd_result_tests;
+#[cfg(test)]
+mod surd_zero_target_entropy_tests;

@@ -7,6 +7,8 @@ mod base_topology_tests;
 #[cfg(test)]
 mod clone_tests;
 #[cfg(test)]
+mod constructors_coverage_tests;
+#[cfg(test)]
 mod display_tests;
 #[cfg(test)]
 mod getters_tests;
@@ -16,3 +18,5 @@ mod graph_topology_tests;
 mod hypergraph_tests;
 #[cfg(test)]
 mod hypergraph_topology_tests;
+#[cfg(test)]
+mod topology_trait_coverage_tests;

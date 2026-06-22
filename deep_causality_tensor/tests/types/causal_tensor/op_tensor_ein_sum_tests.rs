@@ -78,6 +78,22 @@ fn test_ein_sum_trace() {
 }
 
 #[test]
+fn test_ein_sum_trace_3d_batched() {
+    // Tracing a 3D tensor over its last two axes yields a 1D result, exercising
+    // the batched diagonal-sum path (one trace per batch element).
+    // Shape [2, 2, 2]: batch axis 0, trace over axes (1, 2).
+    // batch 0: [[1,2],[3,4]] -> trace 1 + 4 = 5
+    // batch 1: [[5,6],[7,8]] -> trace 5 + 8 = 13
+    let operand =
+        CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0], vec![2, 2, 2]).unwrap();
+    let expected = CausalTensor::new(vec![5.0, 13.0], vec![2]).unwrap();
+
+    let ast = EinSumOp::<f64>::trace(operand, 1, 2);
+    let result = CausalTensor::ein_sum(&ast).unwrap();
+    assert_eq!(result, expected);
+}
+
+#[test]
 fn test_ein_sum_tensor_product() {
     let lhs = utils_tests::vector_tensor(vec![1.0, 2.0]);
     let rhs = utils_tests::vector_tensor(vec![3.0, 4.0]);

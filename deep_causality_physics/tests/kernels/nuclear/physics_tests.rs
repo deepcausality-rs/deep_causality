@@ -87,6 +87,32 @@ fn test_radioactive_decay_zero_half_life() {
     }
 }
 
+#[test]
+fn test_radioactive_decay_zero_half_life_kernel_singularity() {
+    // The public HalfLife::new rejects zero, but new_unchecked bypasses that
+    // guard, letting us reach the kernel's `Singularity` branch directly
+    // (physics.rs: half_life.value() == zero).
+    let n0 = AmountOfSubstance::<f64>::new(1000.0).unwrap();
+    let half_life = HalfLife::<f64>::new_unchecked(0.0);
+    let time = Time::<f64>::new(100.0).unwrap();
+
+    let result = radioactive_decay_kernel(&n0, &half_life, &time);
+    assert!(
+        result.is_err(),
+        "Zero half-life must yield a Singularity error"
+    );
+
+    match result {
+        Err(e) => match e.0 {
+            deep_causality_physics::PhysicsErrorEnum::Singularity(msg) => {
+                assert!(msg.contains("half-life"), "unexpected message: {}", msg);
+            }
+            other => panic!("Expected Singularity error, got {:?}", other),
+        },
+        Ok(_) => panic!("Expected Singularity error, got Ok"),
+    }
+}
+
 /// Physics invariant: Decay is monotonically decreasing with time
 #[test]
 fn test_radioactive_decay_monotonic_decrease() {

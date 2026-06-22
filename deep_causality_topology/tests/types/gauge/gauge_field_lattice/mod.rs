@@ -7,7 +7,11 @@ mod continuum_tests;
 #[cfg(test)]
 mod gradient_flow_tests;
 #[cfg(test)]
+mod lattice_coverage_tests;
+#[cfg(test)]
 mod lattice_gauge_field_tests;
+#[cfg(test)]
+mod metropolis_coverage_tests;
 #[cfg(test)]
 mod metropolis_tests;
 #[cfg(test)]

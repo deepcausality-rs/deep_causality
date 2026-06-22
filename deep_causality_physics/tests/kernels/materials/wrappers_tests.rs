@@ -71,3 +71,9 @@ fn test_thermal_expansion_wrapper_success() {
     let effect = thermal_expansion(alpha, delta_temp);
     assert!(effect.is_ok());
 }
+
+// NOTE on materials/wrappers.rs:48 — the `Err(e)` arm of `thermal_expansion`.
+// `thermal_expansion_kernel`'s only fallible step is
+// `CausalTensor::<R>::identity(&[3, 3])`, which always succeeds for the fixed
+// valid 3×3 shape, so the kernel always returns `Ok` and the wrapper's error
+// arm can never run.

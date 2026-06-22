@@ -87,3 +87,35 @@ fn test_lorentz_force_kernel_zero_field() {
     assert!(result.is_ok());
     // Zero field gives zero force
 }
+
+#[test]
+fn test_lorentz_force_kernel_metric_mismatch_error() {
+    // Different metrics => DimensionMismatch error branch.
+    let j = CausalMultiVector::new(
+        vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
+
+    assert!(lorentz_force_kernel(&j, &b).is_err());
+}
+
+#[test]
+fn test_lorentz_force_kernel_overflow_result_is_rejected() {
+    // Inputs are finite, but the outer product (J ∧ B) of huge non-parallel
+    // vectors overflows to ±inf, tripping the post-computation non-finite
+    // guard at lines 40-43 (distinct from the metric-mismatch branch).
+    let j = CausalMultiVector::new(
+        vec![0.0, f64::MAX, f64::MAX, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::new(
+        vec![0.0, f64::MAX, 0.0, f64::MAX, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+
+    assert!(lorentz_force_kernel(&j, &b).is_err());
+}

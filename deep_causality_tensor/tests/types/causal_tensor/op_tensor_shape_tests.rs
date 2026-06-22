@@ -28,6 +28,28 @@ fn test_reshape_to_vector() {
 }
 
 #[test]
+fn test_reshape_scalar_to_vector() {
+    // A scalar has an empty shape; `is_contiguous` must take its empty-shape
+    // branch (skipping the stride loop) and report the scalar as contiguous.
+    let scalar = CausalTensor::new(vec![42], vec![]).unwrap();
+    let reshaped = scalar.reshape(&[1]).unwrap();
+    assert_eq!(reshaped.shape(), &[1]);
+    assert_eq!(reshaped.as_slice(), &[42]);
+}
+
+#[test]
+fn test_reshape_non_contiguous_materializes() {
+    // Transpose produces a strided (non-contiguous) view; reshaping it must
+    // materialize the data in logical row-major order before reinterpreting.
+    let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    let transposed = tensor.permute_axes(&[1, 0]).unwrap(); // shape [3, 2], strided
+    let reshaped = transposed.reshape(&[6]).unwrap();
+    assert_eq!(reshaped.shape(), &[6]);
+    // Logical order of the transpose is [1, 4, 2, 5, 3, 6].
+    assert_eq!(reshaped.as_slice(), &[1, 4, 2, 5, 3, 6]);
+}
+
+#[test]
 fn test_reshape_shape_mismatch() {
     let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     let result = tensor.reshape(&[2, 2]);

@@ -5,7 +5,9 @@
 
 use deep_causality::utils_test::test_utils;
 use deep_causality::utils_test::test_utils_csm;
-use deep_causality::{CSM, CausalState, PropagatingEffect, UncertainParameter};
+use deep_causality::{
+    BaseCausaloid, CSM, CausalState, Causaloid, EffectValue, PropagatingEffect, UncertainParameter,
+};
 
 #[test]
 fn add_single_state() {
@@ -324,6 +326,39 @@ fn eval_single_state_error_action_fails() {
     assert!(res.is_err());
     let err_msg = res.unwrap_err().to_string();
     assert!(err_msg.contains("CSM Action Error: ActionError: Error"));
+}
+
+// A causaloid whose effect is a `RelayTo` (neither a plain `Value` nor an
+// error). This drives the `_ => false` arm in `evaluate_and_fire_action`:
+// the state is treated as inactive, so the (failing) action is never fired and
+// the overall result is `Ok`.
+fn relay_causaloid() -> BaseCausaloid<bool, bool> {
+    fn causal_fn(_: bool) -> PropagatingEffect<bool> {
+        let inner = PropagatingEffect::from_value(true);
+        PropagatingEffect::from_effect_value(EffectValue::RelayTo(7, Box::new(inner)))
+    }
+    Causaloid::new(55, causal_fn, "Relay Causaloid")
+}
+
+#[test]
+fn eval_single_state_relay_effect_is_inactive_no_action() {
+    let id = 42;
+    let version = 1;
+    let data = PropagatingEffect::from_value(true);
+    let causaloid = relay_causaloid();
+
+    let cs = CausalState::new(id, version, data, causaloid, None);
+    // An action that would fail if fired, proving the relay effect is inactive.
+    let ca = test_utils_csm::get_test_error_action();
+    let state_action = &[(&cs, &ca)];
+    let csm = CSM::new(state_action);
+
+    let eval_data = PropagatingEffect::from_value(true);
+    let res = csm.eval_single_state(id, &eval_data);
+    dbg!(&res);
+
+    // The relay value is not active, so the failing action is never fired.
+    assert!(res.is_ok());
 }
 
 #[test]

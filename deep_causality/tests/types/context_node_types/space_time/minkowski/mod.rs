@@ -4,3 +4,4 @@
  */
 mod adjustable_tests;
 mod minkowski_spacetime_tests;
+mod space_temporal_interval_tests;

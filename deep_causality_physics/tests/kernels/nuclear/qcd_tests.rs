@@ -99,6 +99,26 @@ fn test_structure_constant_f458() {
 }
 
 #[test]
+fn test_structure_constant_all_nonzero_arms() {
+    // Directly exercise every non-zero match arm in `structure_constant`
+    // (sorted-index canonical form) so each branch is covered.
+    let half = 0.5;
+    let sqrt3_half = 3.0_f64.sqrt() * 0.5;
+
+    assert!((structure_constant(1, 2, 3) - 1.0).abs() < 1e-12);
+    assert!((structure_constant(1, 4, 7) - half).abs() < 1e-12);
+    // (1,5,6) carries an explicit negative sign in the canonical table.
+    assert!((structure_constant(1, 5, 6) + half).abs() < 1e-12);
+    assert!((structure_constant(2, 4, 6) - half).abs() < 1e-12);
+    assert!((structure_constant(2, 5, 7) - half).abs() < 1e-12);
+    assert!((structure_constant(3, 4, 5) - half).abs() < 1e-12);
+    // (3,6,7) carries an explicit negative sign in the canonical table.
+    assert!((structure_constant(3, 6, 7) + half).abs() < 1e-12);
+    assert!((structure_constant(4, 5, 8) - sqrt3_half).abs() < 1e-12);
+    assert!((structure_constant(6, 7, 8) - sqrt3_half).abs() < 1e-12);
+}
+
+#[test]
 fn test_all_structure_constants_non_empty() {
     let all = all_structure_constants();
     assert!(!all.is_empty(), "Should have non-zero structure constants");
@@ -185,6 +205,23 @@ fn test_covariant_derivative_dimension_error_gluon() {
     assert!(result.is_err());
 }
 
+#[test]
+fn test_covariant_derivative_non_finite_error() {
+    // A NaN gluon component poisons the gauge term, producing a non-finite
+    // result and exercising the NumericalInstability branch.
+    let psi = vec![1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    let psi_gradient = vec![0.0; 24];
+    let mut gluon_field = vec![0.0; 32];
+    gluon_field[2] = f64::NAN; // A_0^3 = NaN drives λ_3 contribution to NaN
+    let coupling = 1.0;
+
+    let result = covariant_derivative_kernel(&psi, &psi_gradient, &gluon_field, coupling);
+    assert!(
+        result.is_err(),
+        "NaN gluon field must yield NumericalInstability"
+    );
+}
+
 // =============================================================================
 // Wilson Loop Tests
 // =============================================================================
@@ -232,6 +269,17 @@ fn test_wilson_loop_dimension_error() {
 
     let result = wilson_loop_kernel(&gluon_values, &path_lengths, 1.0);
     assert!(result.is_err());
+}
+
+#[test]
+fn test_wilson_loop_non_finite_error() {
+    // A NaN gluon value propagates through phase_sum into a non-finite Wilson
+    // loop trace, hitting the NumericalInstability branch.
+    let gluon_values = vec![f64::NAN; 8]; // 1 segment, NaN field
+    let path_lengths = vec![1.0];
+
+    let result = wilson_loop_kernel(&gluon_values, &path_lengths, 1.0);
+    assert!(result.is_err(), "NaN gluon values must yield an error");
 }
 
 // =============================================================================
@@ -355,4 +403,16 @@ fn test_running_coupling_too_many_flavors_error() {
     // nf = 17 would make b0 = 11 - 34/3 < 0
     let result = running_coupling_kernel(100.0, 0.2, 17);
     assert!(result.is_err());
+}
+
+#[test]
+fn test_running_coupling_infinite_q2_non_finite_alpha_error() {
+    // Infinite Q² passes the positivity/perturbative guards (inf > λ²) but makes
+    // log_ratio = inf, so α_s = 4π/(b0·inf) = 0.0 → the `α_s <= 0.0` instability
+    // branch triggers.
+    let result = running_coupling_kernel(f64::INFINITY, 0.2, 3);
+    assert!(
+        result.is_err(),
+        "Infinite Q² must collapse α_s and yield an error"
+    );
 }

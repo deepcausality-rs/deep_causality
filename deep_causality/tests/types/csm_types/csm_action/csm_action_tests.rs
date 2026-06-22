@@ -28,6 +28,17 @@ fn test_new() {
 }
 
 #[test]
+fn test_action_getter() {
+    let ca = get_test_action();
+
+    // The `action()` getter returns the stored function pointer. Invoking it
+    // must run the original `hello_state` and return Ok(()).
+    let func = ca.action();
+    let res = func();
+    assert!(res.is_ok());
+}
+
+#[test]
 fn test_fire() {
     let ca = get_test_action();
 

@@ -4,6 +4,10 @@
  */
 
 #[cfg(test)]
+mod general_coverage_tests;
+#[cfg(test)]
 mod general_tests;
+#[cfg(test)]
+mod wrappers_coverage_tests;
 #[cfg(test)]
 mod wrappers_tests;

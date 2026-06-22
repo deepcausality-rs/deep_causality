@@ -708,3 +708,96 @@ fn test_from_fields_metric_mismatch_error() {
         "from_fields with mismatched metrics should return error"
     );
 }
+
+#[test]
+fn test_from_fields_multi_point_field_strength() {
+    // Exercises the f_data population loop and the CausalTensor::new success path
+    // (gauge_em_ops_impl.rs lines 80-83) with more than one base point.
+    use deep_causality_metric::WestCoastMetric;
+    use deep_causality_tensor::CausalTensor;
+    use deep_causality_topology::{
+        BaseTopology, Manifold, Simplex, SimplicialComplexBuilder, SimplicialManifold,
+    };
+
+    // Build a manifold with 3 vertices.
+    let mut builder = SimplicialComplexBuilder::new(0);
+    let _ = builder.add_simplex(Simplex::new(vec![0]));
+    let _ = builder.add_simplex(Simplex::new(vec![1]));
+    let _ = builder.add_simplex(Simplex::new(vec![2]));
+    let complex = builder.build().unwrap();
+    let num_points = complex.len();
+    let data = CausalTensor::new(vec![0.0; num_points], vec![num_points]).unwrap();
+    let base: SimplicialManifold<f64, f64> = Manifold::new(complex, data, 0).unwrap();
+
+    let metric = WestCoastMetric::minkowski_4d().into_metric();
+
+    // CausalMultiVector holds a single 4D multivector (16 components).
+    let mut e_data = vec![0.0; 16];
+    let mut b_data = vec![0.0; 16];
+    e_data[2] = 1.0; // E_x
+    b_data[3] = 2.0; // B_y
+    let e_field = CausalMultiVector::new(e_data, metric).unwrap();
+    let b_field = CausalMultiVector::new(b_data, metric).unwrap();
+
+    let result = EM::from_fields(base, e_field, b_field);
+    assert!(
+        result.is_ok(),
+        "from_fields should succeed for a multi-point base, exercising the F-tensor build"
+    );
+
+    let field = result.unwrap();
+    // The stored field strength tensor must have num_points * 16 elements.
+    let fs = field.computed_field_strength().unwrap();
+    assert_eq!(
+        fs.as_slice().len(),
+        num_points * 16,
+        "Field strength must contain num_points * 16 entries"
+    );
+    assert!(field.is_abelian(), "EM field should be abelian");
+}
+
+#[test]
+fn test_field_strength_always_has_at_least_16_entries() {
+    // electric_field()/magnetic_field() take the `else` branch (gauge_em_ops_impl.rs
+    // lines 154 and 176) only when the field strength tensor has fewer than 16
+    // entries. For U(1), GaugeField::new validates the field strength to
+    // num_points * SPACETIME_DIM² * LIE_DIM = num_points * 16 with num_points >= 1,
+    // so a validly constructed EM field can never have fewer than 16 entries and
+    // those `else` branches are unreachable. This test documents that invariant by
+    // sweeping several constructions and confirming data().len() >= 16, hence the
+    // `if data.len() >= 16` branch is always taken.
+    let cases = [
+        EM::from_components(1.0, 2.0, 3.0, 4.0, 5.0, 6.0).unwrap(),
+        EM::from_components(0.0, 0.0, 0.0, 0.0, 0.0, 0.0).unwrap(),
+        EM::plane_wave(2.5, 0).unwrap(),
+        EM::plane_wave(2.5, 1).unwrap(),
+    ];
+
+    for field in cases.iter() {
+        let fs = field.computed_field_strength().unwrap();
+        assert!(
+            fs.as_slice().len() >= 16,
+            "Field strength must have at least 16 entries (got {})",
+            fs.as_slice().len()
+        );
+        // Both extractors take the >= 16 branch and succeed.
+        assert!(field.electric_field().is_ok());
+        assert!(field.magnetic_field().is_ok());
+    }
+}
+
+// NOTE on the defensively-unreachable construction-error closures in
+// `gauge_em_ops_impl.rs` (`field_strength_from_eb_vectors` / `from_components`):
+//   * lines 82-83 — `CausalTensor::new(f_data, [num_points, 4, 4, 1])`. `f_data`
+//     is allocated with exactly `num_points * 16` entries to match that shape,
+//     so the tensor construction never fails.
+//   * lines 96-97 — `SimplicialComplexBuilder::build()` for a single-vertex
+//     complex (`add_simplex([0])`); building a valid 0-simplex complex always
+//     succeeds.
+//   * lines 100-101 — `CausalTensor::new(vec![S::zero()], [1])`: a 1-element
+//     tensor with shape [1] is always consistent.
+//   * lines 104-105 — `Manifold::new(complex, data, 0)` for the matching
+//     single-point complex/data; the lengths agree by construction, so it never
+//     fails.
+// All four `map_err` closures are pure error-forwarding for inputs that the
+// surrounding code constructs to be valid, so they are unreachable in practice.

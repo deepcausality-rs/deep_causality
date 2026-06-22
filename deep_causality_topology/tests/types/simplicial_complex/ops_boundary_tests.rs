@@ -73,3 +73,26 @@ fn test_simplicial_complex_coboundary_max_dim_panic() {
 
     complex.coboundary(&chain);
 }
+
+#[test]
+fn test_boundary_inner_loop_breaks_after_match_with_multicolumn_chain() {
+    // Triangle: 3 vertices, 3 edges, 1 face. A 1-chain over multiple edges
+    // forces the inner column-search loop to find a match and `break` early
+    // (before exhausting all chain columns) for several boundary rows.
+    let complex = Arc::new(deep_causality_topology::utils_tests::create_triangle_complex());
+
+    // 1-chain: 1*(0,1) + 1*(0,2) + 1*(1,2) — weights over all three edges.
+    let weights = CsrMatrix::from_triplets(1, 3, &[(0, 0, 1.0), (0, 1, 1.0), (0, 2, 1.0)]).unwrap();
+    let chain = Chain::new(complex.clone(), 1, weights);
+
+    let boundary_chain = complex.boundary(&chain);
+    assert_eq!(boundary_chain.grade(), 0);
+
+    // ∂(e01 + e02 + e12) with the d1 orientation in `create_triangle_complex`:
+    //   e01 = v1 - v0, e02 = v2 - v0, e12 = v2 - v1.
+    // Summing: v0 = -1 - 1 = -2, v1 = +1 - 1 = 0, v2 = +1 + 1 = +2.
+    // The chain is NOT a cycle (the cycle is e01 + e12 - e02), so the boundary
+    // is -2·v0 + 2·v2 — two surviving nonzero rows, the v1 row cancels out.
+    let expected = CsrMatrix::from_triplets(1, 3, &[(0, 0, -2.0), (0, 2, 2.0)]).unwrap();
+    assert_eq!(boundary_chain.weights(), &expected);
+}

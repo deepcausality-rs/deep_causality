@@ -163,3 +163,14 @@ fn test_thermal_expansion_kernel_zero_temp() {
         "Zero ΔT should give zero strain"
     );
 }
+
+// NOTE on defensively-unreachable extraction arms in `von_mises_stress_kernel`:
+//   * mechanics.rs:70, 74 — the trace-extraction `else` arm. `EinSumOp::trace`
+//     of a [3,3] tensor over axes (0,1) always produces a rank-0 / [1] scalar,
+//     so `trace_tensor.shape()` is always scalar and the "Trace failed" arm at
+//     line 74 never runs (line 70 is its non-taken predicate operand).
+//   * mechanics.rs:95, 99-101 — the J2-extraction `else` arm. The double-axis
+//     `EinSumOp::contraction` of the deviatoric stress with itself over (0,1),
+//     (0,1) likewise yields a scalar, so "J2 calculation failed" is unreachable.
+// Both guards require the einsum layer to return a non-scalar from a full
+// contraction, which it never does for the fixed 3×3 inputs here.

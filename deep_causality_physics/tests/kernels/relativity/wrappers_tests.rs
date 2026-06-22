@@ -93,6 +93,49 @@ fn test_time_dilation_angle_wrapper_success() {
 }
 
 #[test]
+fn test_einstein_tensor_wrapper_error() {
+    // Mismatched ricci/metric shapes make the kernel error, exercising the
+    // wrapper's `Err => from_error` branch.
+    let ricci = CausalTensor::new(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap();
+    let metric = CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap();
+
+    let effect = einstein_tensor(&ricci, 2.0, &metric);
+    assert!(
+        effect.is_err(),
+        "Shape mismatch must propagate as error effect"
+    );
+}
+
+#[test]
+fn test_time_dilation_angle_wrapper_error() {
+    // Metric mismatch between the two vectors makes the kernel error, hitting
+    // the wrapper's error branch.
+    let t1 = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
+    let t2 = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
+
+    let effect = time_dilation_angle(&t1, &t2);
+    assert!(
+        effect.is_err(),
+        "Metric mismatch must propagate as error effect"
+    );
+}
+
+#[test]
+fn test_chronometric_volume_wrapper_error() {
+    // One vector with a different metric makes the kernel error, exercising the
+    // wrapper's error branch.
+    let a = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
+    let b = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
+    let c = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
+
+    let effect = chronometric_volume(&a, &b, &c);
+    assert!(
+        effect.is_err(),
+        "Metric mismatch must propagate as error effect"
+    );
+}
+
+#[test]
 fn test_chronometric_volume_wrapper_success() {
     let a = CausalMultiVector::new(
         vec![

@@ -242,6 +242,23 @@ fn test_effective_band_drude_weight_error_negative_lattice() {
 }
 
 #[test]
+fn test_effective_band_drude_weight_error_non_finite_result() {
+    // Inputs individually pass the finite/positive guards, but their product
+    // overflows f64 to +inf, tripping the final non-finite check on
+    // physical_weight (qgt.rs:206-209).
+    // gap = |MAX - (-MAX)| = inf? No: each Energy is finite, but their abs
+    // difference can overflow. Use MAX and -MAX so gap -> inf, then geom -> inf.
+    let energy_n = Energy::new(f64::MAX).unwrap();
+    let energy_0 = Energy::new(-f64::MAX).unwrap();
+    let curvature = 1.0;
+    let metric = QuantumMetric::new(f64::MAX).unwrap();
+    let lattice = Length::new(f64::MAX).unwrap();
+
+    let res = effective_band_drude_weight_kernel(energy_n, energy_0, curvature, metric, lattice);
+    assert!(res.is_err());
+}
+
+#[test]
 fn test_effective_band_drude_weight_zero_gap() {
     // Same energy → zero gap
     let energy_n = Energy::new(1.0).unwrap();

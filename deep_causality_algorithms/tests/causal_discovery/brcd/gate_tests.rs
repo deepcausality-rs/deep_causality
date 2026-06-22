@@ -139,6 +139,19 @@ fn ragged_rows_are_rejected() {
 }
 
 #[test]
+fn non_finite_feature_diverges_to_singular_system() {
+    // A non-finite feature with mixed labels (so the single-class shortcut is not
+    // taken) poisons the Newton iteration: η, π and hence θ become non-finite, and
+    // the fit reports SingularSystem rather than returning a bogus gate.
+    let rows = vec![vec![f64::NAN], vec![1.0], vec![2.0], vec![3.0]];
+    let y = [false, true, false, true];
+    assert_eq!(
+        fit_logistic_gate(&rows, &y, &GateConfig::default()).err(),
+        Some(BrcdError(BrcdErrorEnum::SingularSystem))
+    );
+}
+
+#[test]
 fn fits_at_f32_and_f64_agree() {
     let rows64 = vec![vec![-1.0_f64], vec![1.0]];
     let y = [false, true];

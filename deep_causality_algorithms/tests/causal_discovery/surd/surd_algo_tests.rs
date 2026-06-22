@@ -170,6 +170,48 @@ fn test_redundant_information_case() {
     assert!(!result.non_causal_redundant_states().is_empty());
 }
 
+// NOTE on surd_algo.rs line ~133 (`info_leak = zero` when `h <= eps`):
+// `h` is the entropy of the target marginal P(T). The only way `h <= eps` is a
+// deterministic target (one target state carries all mass, the others are zero).
+// But a zero target-state probability makes a downstream `safe_div` in the
+// non-`Option` path return `Err(DivisionByZero)`, so `surd_states` cannot reach
+// a successful return for such an input. Line 133 is therefore unreachable via
+// the public API in this (non-`Option`) variant. The equivalent branch in the
+// `_cdl` variant (line ~130) IS reachable, because `safe_div_cdl` yields `None`
+// rather than erroring on division by zero; see
+// `test_deterministic_target_zero_entropy_info_leak_cdl`.
+
+/// Three source variables with redundant structure. This drives:
+/// - the level-raising loop (`for l in 1..max_len`) with `max_len == 3`, exercising
+///   the `*val < max_prev_level` raise (surd_algo.rs lines ~410, ~413, ~415);
+/// - multiple lower-ordered single-variable terms contributing to redundancy, so the
+///   `red_vars.retain(...)` (line ~465) runs more than once.
+#[test]
+fn test_three_source_redundant_level_raising() {
+    // T strongly correlated with S1 = S2 = S3 (redundant copies). A uniform floor
+    // over all 16 cells guarantees full support (no zero marginals -> no
+    // division-by-zero in the non-`Option` path), while extra mass on the
+    // "all equal" cells creates genuine redundant + higher-order structure that
+    // forces the level-raising loop (`max_len == 3`) to actually raise values.
+    let mut data = vec![0.02_f64; 16]; // uniform floor, full support
+    // index = ((t*2 + s1)*2 + s2)*2 + s3
+    let idx = |t: usize, s1: usize, s2: usize, s3: usize| ((t * 2 + s1) * 2 + s2) * 2 + s3;
+    data[idx(0, 0, 0, 0)] += 0.30;
+    data[idx(1, 1, 1, 1)] += 0.30;
+    data[idx(0, 0, 0, 1)] += 0.04;
+    data[idx(1, 1, 1, 0)] += 0.04;
+
+    let p_raw: CausalTensor<f64> = CausalTensor::new(data, vec![2, 2, 2, 2]).unwrap();
+    let result = surd_states(&p_raw, MaxOrder::Max).unwrap();
+
+    // A redundant multi-source system must populate redundant info / state maps.
+    assert!(!result.redundant_info().is_empty());
+    assert!(!result.causal_redundant_states().is_empty());
+    // Higher-order (synergistic) terms must also have been computed for 3 vars.
+    let has_order_3 = result.mutual_info().keys().any(|k| k.len() == 3);
+    assert!(has_order_3);
+}
+
 /// Test with a distribution where T, S1, S2 are all independent.
 #[test]
 fn test_independent_case_full_leak() {

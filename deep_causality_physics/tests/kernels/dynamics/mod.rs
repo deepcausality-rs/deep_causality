@@ -4,8 +4,14 @@
  */
 
 #[cfg(test)]
+mod estimation_coverage_tests;
+#[cfg(test)]
 mod estimation_tests;
 #[cfg(test)]
+pub mod kinematics_coverage_tests;
+#[cfg(test)]
 pub mod kinematics_tests;
+#[cfg(test)]
+pub mod wrappers_coverage_tests;
 #[cfg(test)]
 pub mod wrappers_tests;

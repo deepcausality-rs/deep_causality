@@ -45,3 +45,20 @@ fn test_von_neumann_invalid_cell_id_yields_empty() {
     let n: Vec<_> = VonNeumann.neighbors(&c, 9999).collect();
     assert!(n.is_empty());
 }
+
+#[test]
+fn test_von_neumann_zero_shape_axis_yields_empty() {
+    // An open axis with shape 0 forces `top_axis_range` into its `shape == 0` branch
+    // (returning 0), which in turn makes `cell_id_to_top_pos` hit its `dim_max == 0`
+    // early-return (`None`). Any cell_id therefore resolves to no position and the
+    // neighbor iterator is empty. Covers src/types/neighborhood/mod.rs lines 51 and 68.
+    let c = LatticeComplex::<2, f64>::new([0, 4], [false, false]);
+    let n: Vec<_> = VonNeumann.neighbors(&c, 0).collect();
+    assert!(n.is_empty());
+
+    // Also exercise the case where the zero axis is not the first axis: the loop in
+    // `cell_id_to_top_pos` advances past axis 0 (valid) and rejects at axis 1.
+    let c2 = LatticeComplex::<2, f64>::new([4, 0], [false, false]);
+    let n2: Vec<_> = VonNeumann.neighbors(&c2, 0).collect();
+    assert!(n2.is_empty());
+}

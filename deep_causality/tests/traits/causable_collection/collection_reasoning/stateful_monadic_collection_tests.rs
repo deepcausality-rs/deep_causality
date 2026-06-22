@@ -82,6 +82,93 @@ fn build_incoming() -> PropagatingProcess<u64, CounterState, ConfigCtx> {
     }
 }
 
+fn item_uncertain_float(
+    _obs: EffectValue<u64>,
+    state: CounterState,
+    ctx: Option<ConfigCtx>,
+) -> PropagatingProcess<deep_causality_uncertain::UncertainF64, CounterState, ConfigCtx> {
+    PropagatingProcess {
+        value: EffectValue::Value(deep_causality_uncertain::Uncertain::<f64>::point(1.0)),
+        state,
+        context: ctx,
+        error: None,
+        logs: EffectLog::new(),
+    }
+}
+
+#[test]
+fn evaluate_collection_stateful_short_circuits_on_incoming_error() {
+    // An incoming process that already carries an error returns immediately
+    // with that error and the incoming state preserved; no item runs.
+    let items: Vec<Causaloid<u64, bool, CounterState, ConfigCtx>> =
+        vec![Causaloid::new_with_context(
+            1,
+            item_true_increment,
+            ConfigCtx { threshold: 1 },
+            "a",
+        )];
+
+    let incoming = PropagatingProcess {
+        value: EffectValue::Value(7u64),
+        state: CounterState { count: 9 },
+        context: Some(ConfigCtx { threshold: 1 }),
+        error: Some(CausalityError::new(CausalityErrorEnum::Custom(
+            "pre-existing".into(),
+        ))),
+        logs: EffectLog::new(),
+    };
+
+    let out =
+        items
+            .as_slice()
+            .evaluate_collection_stateful(&incoming, &AggregateLogic::All, Some(0.5));
+
+    assert!(out.error.is_some());
+    assert_eq!(out.state.count, 9, "incoming state preserved, no item ran");
+}
+
+#[test]
+fn evaluate_collection_stateful_empty_collection_errors() {
+    let items: Vec<Causaloid<u64, bool, CounterState, ConfigCtx>> = vec![];
+
+    let out = items.as_slice().evaluate_collection_stateful(
+        &build_incoming(),
+        &AggregateLogic::All,
+        Some(0.5),
+    );
+
+    assert!(out.error.is_some());
+    assert!(format!("{:?}", out.error).contains("Cannot evaluate an empty collection"));
+}
+
+#[test]
+fn evaluate_collection_stateful_aggregation_error() {
+    // Items evaluate successfully but produce UncertainF64 values, which the
+    // aggregation helper cannot combine -> the `Err(e)` aggregation arm runs.
+    let items: Vec<
+        Causaloid<u64, deep_causality_uncertain::UncertainF64, CounterState, ConfigCtx>,
+    > = vec![
+        Causaloid::new_with_context(1, item_uncertain_float, ConfigCtx { threshold: 1 }, "a"),
+        Causaloid::new_with_context(2, item_uncertain_float, ConfigCtx { threshold: 1 }, "b"),
+    ];
+
+    let incoming = PropagatingProcess {
+        value: EffectValue::Value(7u64),
+        state: CounterState::default(),
+        context: Some(ConfigCtx { threshold: 1 }),
+        error: None,
+        logs: EffectLog::new(),
+    };
+
+    let out =
+        items
+            .as_slice()
+            .evaluate_collection_stateful(&incoming, &AggregateLogic::All, Some(0.5));
+
+    assert!(out.error.is_some());
+    assert!(format!("{:?}", out.error).contains("not supported"));
+}
+
 #[test]
 fn evaluate_collection_stateful_aggregates_and_threads_state() {
     // Three items each increment the counter; aggregator is "Some(2)" out of 3 trues.

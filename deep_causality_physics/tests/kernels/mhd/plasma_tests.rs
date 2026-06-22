@@ -21,6 +21,30 @@ fn test_debye_length() {
 }
 
 #[test]
+fn test_debye_length_zero_density_error() {
+    // density_n <= 0 -> Singularity (plasma.rs:31-33).
+    let t = Temperature::new(100.0).unwrap();
+    assert!(debye_length_kernel(t, 0.0, 8.854e-12, 1.602e-19).is_err());
+    let t2 = Temperature::new(100.0).unwrap();
+    assert!(debye_length_kernel(t2, -1.0, 8.854e-12, 1.602e-19).is_err());
+}
+
+#[test]
+fn test_debye_length_non_positive_permittivity_error() {
+    // epsilon_0 <= 0 -> PhysicalInvariantBroken (plasma.rs:34-38).
+    let t = Temperature::new(100.0).unwrap();
+    assert!(debye_length_kernel(t, 1e18, 0.0, 1.602e-19).is_err());
+    let t2 = Temperature::new(100.0).unwrap();
+    assert!(debye_length_kernel(t2, 1e18, -1.0, 1.602e-19).is_err());
+}
+
+// NOTE on plasma.rs:41-42 — the `ok_or_else` closure body for
+// `R::from_f64(BOLTZMANN_CONSTANT)`. `from_f64` is infallible for every
+// concrete `RealField` used by this crate (f32/f64 always return `Some`), so
+// the closure can never run. It is a defensive guard with no reachable input
+// and is therefore left uncovered by design.
+
+#[test]
 fn test_larmor_radius() {
     let m = Mass::new(1.0).unwrap();
     let v = Speed::new(10.0).unwrap();

@@ -336,3 +336,20 @@ fn test_klein_gordon_wrapper_error() {
     // It should return Err because m^2 overflows and we now check for finiteness.
     assert!(effect.is_err());
 }
+
+// NOTE on the defensively-unreachable error arms in `kernels::quantum::wrappers`:
+//
+//   * wrappers.rs:90, 101, 112, 151 — the `Err(e)` arms of `haruna_s_gate`,
+//     `haruna_z_gate`, `haruna_x_gate`, and `haruna_t_gate`. Each wrapped
+//     kernel (`haruna_{s,z,x,t}_gate_kernel`) only `fmap`s the field into
+//     complex form and applies a fixed gate; it unconditionally returns `Ok`
+//     (it has no `Err` path), so the wrapper's error arm can never run. The
+//     happy paths are covered by the `*_wrapper_success` tests above.
+//
+//   * wrappers.rs:44, 166 — the inner `Err` arms for `Probability::<R>::new`
+//     in `born_probability` and `fidelity`. Both wrap `born_probability_kernel`,
+//     whose `Ok` value is `p.clamp(R::zero(), R::one())` — always in [0, 1] and
+//     finite. `Probability::new` only rejects values outside [0, 1] or
+//     non-finite, so it can never reject a clamped kernel output and these inner
+//     error arms are unreachable. The metric-mismatch error path of the kernel
+//     itself (the *outer* Err arm) is exercised by the dedicated error tests.

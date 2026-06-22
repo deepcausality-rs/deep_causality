@@ -440,3 +440,37 @@ fn test_gauge_groups_hash() {
     su2_set.insert(SU2);
     assert!(su2_set.contains(&SU2));
 }
+
+// ============================================================================
+// Default `matrix_dim` non-perfect-square branch
+// ============================================================================
+
+/// A synthetic gauge group whose `LIE_ALGEBRA_DIM + 1` is NOT a perfect square.
+/// It relies on the default `GaugeGroup::matrix_dim` so we can exercise the
+/// fallback `else { 0 }` branch (the SU(N) formula has no integer solution).
+#[derive(Clone, Debug)]
+struct NonSquareGroup;
+
+impl GaugeGroup for NonSquareGroup {
+    // dim + 1 = 5, which is not a perfect square.
+    const LIE_ALGEBRA_DIM: usize = 4;
+    const IS_ABELIAN: bool = false;
+
+    fn name() -> &'static str {
+        "NonSquareGroup"
+    }
+}
+
+#[test]
+fn test_default_matrix_dim_non_perfect_square_returns_zero() {
+    // n_sq = 5; integer sqrt seed = 2; (2+1)^2 = 9 > 5 (no increment);
+    // 2^2 = 4 != 5 -> falls through to the `else { 0 }` branch.
+    assert_eq!(NonSquareGroup::matrix_dim(), 0);
+}
+
+#[test]
+fn test_default_structure_constant_is_zero_for_custom_group() {
+    // NonSquareGroup does not override `structure_constant`, so the default
+    // (returns 0.0) is exercised.
+    assert_eq!(NonSquareGroup::structure_constant(0, 1, 2), 0.0);
+}

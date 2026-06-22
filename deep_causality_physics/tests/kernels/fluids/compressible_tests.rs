@@ -226,3 +226,10 @@ fn test_total_temperature_f32() {
     let t0 = total_temperature_isentropic_kernel(&t, 1.0_f32, 1.4).unwrap();
     assert!((t0.value() - 360.0_f32).abs() < 1e-3);
 }
+
+// NOTE on compressible.rs:88-90 — the "base of exponent must be positive" guard
+// in `total_pressure_isentropic_kernel`. By the time this guard runs the kernel
+// has already required `gamma > 1` (line 79). The base is
+// `1 + (gamma - 1)/2 · mach²`; with `gamma > 1` the coefficient `(gamma-1)/2`
+// is positive and `mach²` is non-negative for any real `mach`, so `base >= 1`
+// always. `base <= 0` is therefore unreachable for any real-valued input.

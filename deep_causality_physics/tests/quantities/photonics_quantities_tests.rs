@@ -212,3 +212,50 @@ fn test_photonics_scalars_traits() {
     assert_eq!(ra, ra.clone());
     let _ = format!("{:?}", ra);
 }
+
+// =============================================================================
+// From<X> for f64 conversions
+// photonics/mod.rs:31-33, 57-59, 91-93, 125-127, 159-161, 185-187, 211-213
+// =============================================================================
+
+#[test]
+fn test_focal_length_into_f64() {
+    let v: f64 = FocalLength::<f64>::new(-0.5).unwrap().into();
+    assert!((v - (-0.5)).abs() < 1e-10);
+}
+
+#[test]
+fn test_optical_power_into_f64() {
+    let v: f64 = OpticalPower::<f64>::new(2.0).unwrap().into();
+    assert!((v - 2.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_wavelength_into_f64() {
+    let v: f64 = Wavelength::<f64>::new(500e-9).unwrap().into();
+    assert!((v - 500e-9).abs() < 1e-18);
+}
+
+#[test]
+fn test_numerical_aperture_into_f64() {
+    let v: f64 = NumericalAperture::<f64>::new(0.65).unwrap().into();
+    assert!((v - 0.65).abs() < 1e-10);
+}
+
+#[test]
+fn test_beam_waist_into_f64() {
+    let v: f64 = BeamWaist::<f64>::new(1e-3).unwrap().into();
+    assert!((v - 1e-3).abs() < 1e-12);
+}
+
+#[test]
+fn test_ray_height_into_f64() {
+    let v: f64 = RayHeight::<f64>::new(0.02).unwrap().into();
+    assert!((v - 0.02).abs() < 1e-10);
+}
+
+#[test]
+fn test_ray_angle_into_f64() {
+    let v: f64 = RayAngle::<f64>::new(0.1).unwrap().into();
+    assert!((v - 0.1).abs() < 1e-10);
+}

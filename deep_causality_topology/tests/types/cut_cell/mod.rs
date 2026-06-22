@@ -10,6 +10,9 @@ mod carrier_tests;
 mod consistency_tests;
 
 #[cfg(test)]
+mod coverage_tests;
+
+#[cfg(test)]
 mod cut_face_constraint_tests;
 
 #[cfg(test)]

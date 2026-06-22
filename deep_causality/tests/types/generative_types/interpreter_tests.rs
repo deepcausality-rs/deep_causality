@@ -37,6 +37,22 @@ fn create_sys_state() -> TestState {
 }
 
 #[test]
+fn test_interpreter_default_trait_impl() {
+    // Exercises the `Default` impl, which delegates to `Interpreter::new()`.
+    // Use the fully-qualified form so clippy does not rewrite it back to the
+    // bare unit-struct literal (which would bypass the `Default` impl).
+    let interpreter: Interpreter = Default::default();
+    let state = create_sys_state();
+    let id = 1;
+    let causaloid = create_dummy_causaloid(id);
+    let op = Operation::CreateCausaloid(id, causaloid);
+    let tree = OpTree::new(op);
+
+    let effect = interpreter.execute(&tree, state);
+    assert!(effect.error.is_none());
+}
+
+#[test]
 fn test_create_causaloid() {
     let interpreter = Interpreter::new();
     let state = create_sys_state();

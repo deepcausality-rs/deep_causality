@@ -979,3 +979,67 @@ fn test_reynolds_stress_into_raw_matrix() {
     let raw: [[f64; 3]; 3] = r.into();
     assert_eq!(raw, m);
 }
+
+// =============================================================================
+// ViscousStress validation + accessors (fluids/mod.rs:593-595, 599-607)
+// =============================================================================
+
+#[test]
+fn test_viscous_stress_new_asymmetric_error() {
+    // fluids/mod.rs:592-596 — τ_ij != τ_ji must be rejected.
+    let m = [[1.0, 2.0, 3.0], [9.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
+    let s = ViscousStress::<f64>::new(m);
+    assert!(s.is_err());
+    match s.unwrap_err().0 {
+        PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("symmetric")),
+        other => panic!("expected PhysicalInvariantBroken, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_viscous_stress_new_unchecked_and_into_inner() {
+    // fluids/mod.rs:599-601 (new_unchecked) and 605-607 (into_inner).
+    let m = [[1.0, 9.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]]; // intentionally asymmetric
+    let s = ViscousStress::<f64>::new_unchecked(m);
+    assert_eq!(s.value(), &m);
+    let inner = s.into_inner();
+    assert_eq!(inner, m);
+}
+
+// =============================================================================
+// ReynoldsStress validation + accessors (fluids/mod.rs:634-636, 639-641, 651-653)
+// =============================================================================
+
+#[test]
+fn test_reynolds_stress_new_non_finite_error() {
+    // fluids/mod.rs:633-636 — non-finite components rejected.
+    let m = [[f64::NAN, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
+    let r = ReynoldsStress::<f64>::new(m);
+    assert!(r.is_err());
+    match r.unwrap_err().0 {
+        PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("finite")),
+        other => panic!("expected PhysicalInvariantBroken, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_reynolds_stress_new_asymmetric_error() {
+    // fluids/mod.rs:638-641 — R_ij != R_ji must be rejected.
+    let m = [[1.0, 0.5, 0.0], [9.0, 2.0, 0.0], [0.0, 0.0, 1.5]];
+    let r = ReynoldsStress::<f64>::new(m);
+    assert!(r.is_err());
+    match r.unwrap_err().0 {
+        PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("symmetric")),
+        other => panic!("expected PhysicalInvariantBroken, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_reynolds_stress_new_unchecked_and_into_inner() {
+    // fluids/mod.rs:645-647 (new_unchecked) and 651-653 (into_inner).
+    let m = [[1.0, 9.0, 0.0], [0.5, 2.0, 0.0], [0.0, 0.0, 1.5]]; // intentionally asymmetric
+    let r = ReynoldsStress::<f64>::new_unchecked(m);
+    assert_eq!(r.value(), &m);
+    let inner = r.into_inner();
+    assert_eq!(inner, m);
+}

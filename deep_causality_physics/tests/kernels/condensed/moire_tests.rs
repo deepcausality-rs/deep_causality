@@ -74,6 +74,52 @@ fn create_flat_manifold() -> SimplicialManifold<f64, f64> {
 }
 
 #[test]
+fn test_foppl_von_karman_strain_simple_rank_error() {
+    // Strain tensor with Rank 1 (not Rank 2) trips the DimensionMismatch
+    // guard in foppl_von_karman_strain_simple_kernel (moire.rs:199-201).
+    let eps_tensor = CausalTensor::new(vec![1.0, 0.0, 0.0, 1.0], vec![4]).unwrap();
+    let disp_u = Displacement::new(eps_tensor);
+
+    let e = Stiffness::<f64>::new(100.0).unwrap();
+    let nu = Ratio::new(0.5).unwrap();
+
+    let res = foppl_von_karman_strain_simple_kernel(&disp_u, e, nu);
+    assert!(res.is_err());
+}
+
+// Build a manifold from a point cloud with a configurable number of vertices,
+// so two manifolds can differ in vertex/edge count and thus produce
+// exterior-derivative fields of mismatched shape.
+fn create_line_manifold() -> SimplicialManifold<f64, f64> {
+    // Two points => 1 edge, fewer simplices than the triangular manifold.
+    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0], vec![2, 2]).unwrap();
+    let point_cloud =
+        PointCloud::new(points, CausalTensor::new(vec![0.0; 2], vec![2]).unwrap(), 0).unwrap();
+    let complex = point_cloud.triangulate(1.1).unwrap();
+    let num = complex.total_simplices();
+    Manifold::new(
+        complex,
+        CausalTensor::new(vec![0.0; num], vec![num]).unwrap(),
+        0,
+    )
+    .unwrap()
+}
+
+#[test]
+fn test_foppl_von_karman_strain_full_shape_mismatch() {
+    // u_manifold (triangle, 3 vertices) and w_manifold (line, 2 vertices) produce
+    // gradient fields of different shape, tripping the DimensionMismatch guard
+    // in foppl_von_karman_strain_kernel (moire.rs:277-279).
+    let u_man = create_flat_manifold(); // 3 vertices
+    let w_man = create_line_manifold(); // 2 vertices
+    let e = Stiffness::<f64>::new(100.0).unwrap();
+    let nu = Ratio::new(0.3).unwrap();
+
+    let res = foppl_von_karman_strain_kernel(&u_man, &w_man, e, nu);
+    assert!(res.is_err());
+}
+
+#[test]
 fn test_foppl_von_karman_strain_full() {
     let u_man = create_flat_manifold();
     let w_man = create_flat_manifold();

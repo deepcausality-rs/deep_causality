@@ -291,3 +291,57 @@ fn test_cwcomplex_boundary_matrix() {
     assert_eq!(rows, 2, "Should have 2 rows (vertices)");
     assert_eq!(cols, 1, "Should have 1 column (edge)");
 }
+
+#[test]
+fn test_coboundary_matrix_is_transpose_of_next_boundary() {
+    // Exercises `CellComplex::coboundary_matrix`, which recomputes
+    // δ_k = (∂_{k+1})ᵀ on each call.
+    let cells = vec![
+        TestCell::vertex(0),
+        TestCell::vertex(1),
+        TestCell::edge(2, 0, 1),
+    ];
+    let complex = CellComplex::from_cells(cells);
+
+    // ∂_1 is 2x1 (vertices x edges); its transpose δ_0 must be 1x2.
+    let boundary_1 = complex.boundary_matrix(1);
+    let (b_rows, b_cols) = boundary_1.shape();
+    assert_eq!((b_rows, b_cols), (2, 1));
+
+    let coboundary_0 = complex.coboundary_matrix(0);
+    let (c_rows, c_cols) = coboundary_0.shape();
+    assert_eq!(
+        (c_rows, c_cols),
+        (b_cols, b_rows),
+        "δ_0 must be the transpose of ∂_1"
+    );
+}
+
+#[test]
+fn test_coboundary_matrix_empty_beyond_dimension() {
+    // Beyond the top dimension, ∂_{k+1} is empty, so its transpose is empty too.
+    let cells = vec![TestCell::vertex(0), TestCell::vertex(1)];
+    let complex = CellComplex::from_cells(cells);
+
+    let coboundary = complex.coboundary_matrix(5);
+    assert_eq!(coboundary.shape(), (0, 0));
+}
+
+#[test]
+fn test_compute_boundary_matrix_skips_missing_face_cells() {
+    // Construct a complex where a 1-cell's boundary references a vertex that is
+    // NOT present in the 0-skeleton. The boundary-matrix builder must skip the
+    // missing term (the `else` branch of the row-map lookup) rather than panic.
+    //
+    // `edge(10, 0, 99)` has boundary {Vertex(99): +1, Vertex(0): -1}. Only
+    // Vertex(0) is present; Vertex(99) is absent, so its triplet is dropped.
+    let cells = vec![TestCell::vertex(0), TestCell::edge(10, 0, 99)];
+    let complex = CellComplex::from_cells(cells);
+
+    let bdry = complex.boundary_matrix(1);
+    let (rows, cols) = bdry.shape();
+    // Only 1 vertex present, 1 edge.
+    assert_eq!((rows, cols), (1, 1));
+    // Exactly one non-zero survives (the Vertex(0) term); Vertex(99) was skipped.
+    assert_eq!(bdry.values().len(), 1);
+}

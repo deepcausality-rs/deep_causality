@@ -14,4 +14,6 @@ mod pag_tests;
 #[cfg(test)]
 mod queries_tests;
 #[cfg(test)]
+mod topology_coverage_tests;
+#[cfg(test)]
 mod topology_tests;

@@ -2,7 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_topology::utils_tests::create_triangle_complex;
+use deep_causality_topology::SimplicialComplex;
+use deep_causality_topology::utils_tests::{create_test_tensor, create_triangle_complex};
 
 #[test]
 fn test_simplicial_complex_getters() {
@@ -30,6 +31,33 @@ fn test_simplicial_complex_getters() {
     let err = complex.hodge_star_operators().unwrap_err();
     let msg = format!("{}", err);
     assert!(msg.contains("geometric data is not available"));
+}
+
+#[test]
+fn test_create_test_tensor_helper_yields_zeroed_tensor() {
+    // Exercises the public `utils_tests::create_test_tensor` helper, which
+    // allocates a 1-D zero tensor of the requested length.
+    let t = create_test_tensor::<f64>(5);
+    assert_eq!(t.shape(), &[5]);
+    assert_eq!(t.len(), 5);
+    assert!(t.as_slice().iter().all(|&x| x == 0.0));
+}
+
+#[test]
+fn test_hodge_star_operators_on_empty_complex_is_empty() {
+    // A complex with no skeletons takes the `skeletons.is_empty()` fast path:
+    // it caches and returns an empty operator vector instead of erroring on
+    // missing geometric data.
+    let complex: SimplicialComplex<f64> =
+        SimplicialComplex::new(vec![], vec![], vec![], Vec::new());
+    let ops = complex
+        .hodge_star_operators()
+        .expect("empty complex yields empty operator set, not an error");
+    assert!(ops.is_empty());
+
+    // A second call returns the same cached empty vector.
+    let ops_again = complex.hodge_star_operators().expect("cached empty set");
+    assert!(ops_again.is_empty());
 }
 
 #[test]

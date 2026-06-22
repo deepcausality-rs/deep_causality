@@ -427,3 +427,32 @@ fn test_proper_time_dimension_mismatch() {
     let result = proper_time_kernel(&path, &metric);
     assert!(result.is_err());
 }
+
+#[test]
+fn test_time_dilation_angle_non_scalar_grade_error() {
+    // Craft t1 = e0 (grade-1) and t2 = e0∧e1 (grade-2 bivector). The left
+    // contraction e0 ⌋ (e0∧e1) = ±e1 is grade-1, so the inner product carries a
+    // non-zero non-scalar component, triggering the "did not yield scalar grade"
+    // branch.
+    //
+    // Binary blade indexing (Minkowski(4)): e0→idx 1, e1→idx 2, e0∧e1→idx 3.
+    let mut d1 = vec![0.0f64; 16];
+    d1[1] = 1.0; // e0
+    let t1 = CausalMultiVector::<f64>::new(d1, Metric::Minkowski(4)).unwrap();
+
+    let mut d2 = vec![0.0f64; 16];
+    d2[3] = 1.0; // e0 ∧ e1 (bivector)
+    let t2 = CausalMultiVector::<f64>::new(d2, Metric::Minkowski(4)).unwrap();
+
+    let result = time_dilation_angle_kernel(&t1, &t2);
+    assert!(
+        result.is_err(),
+        "Bivector second argument must produce a non-scalar inner product error"
+    );
+    match result.unwrap_err().0 {
+        deep_causality_physics::PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
+            assert!(msg.contains("scalar grade"), "unexpected message: {}", msg);
+        }
+        other => panic!("Expected PhysicalInvariantBroken, got {:?}", other),
+    }
+}

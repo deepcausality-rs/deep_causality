@@ -486,6 +486,35 @@ fn test_z_resonance_cross_section_zero_energy_error() {
 }
 
 #[test]
+fn test_z_resonance_cross_section_no_singularity_across_sweep() {
+    // The Breit-Wigner denominator is (s - M_Z²)² + s²·Γ_Z²/M_Z². For any positive
+    // energy this is strictly positive (the second term never vanishes because
+    // Γ_Z > 0 and M_Z > 0), so the singularity guard at electroweak_params.rs
+    // lines 416-418 is a defensive branch that is unreachable through this public
+    // API. This test asserts that invariant: every positive energy, including
+    // values extremely close to zero and exactly on the pole, yields Ok(..).
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
+    let mz = params.z_mass();
+
+    let energies = [1e-12, 1e-6, 1e-3, 1.0, 50.0, mz, mz + 1e-9, 120.0, 1000.0];
+    for &e in energies.iter() {
+        let result = params.z_resonance_cross_section(e, 2.5);
+        assert!(
+            result.is_ok(),
+            "Cross section must be finite (no singularity) at energy {}",
+            e
+        );
+        let sigma = result.unwrap();
+        assert!(
+            sigma.is_finite() && sigma >= 0.0,
+            "Cross section at energy {} should be finite and non-negative, got {}",
+            e,
+            sigma
+        );
+    }
+}
+
+#[test]
 fn test_standard_model_precision_masses() {
     let params = ElectroweakParams::<f64>::standard_model_precision();
 

@@ -50,3 +50,16 @@ fn test_has_boundary() {
     // This assumes `has_boundary` checks if the manifold boundary is non-empty.
     assert!(manifold.has_boundary());
 }
+
+#[test]
+fn test_is_manifold_default_aggregates_checks() {
+    // Exercises the default `ManifoldTopology::is_manifold` body:
+    // is_oriented() && satisfies_link_condition() && !has_boundary().
+    let manifold = setup_triangle_manifold();
+    // The triangle manifold has a boundary, so the aggregate check returns false
+    // even though it is oriented and satisfies the link condition.
+    assert!(manifold.is_oriented());
+    assert!(manifold.satisfies_link_condition());
+    assert!(manifold.has_boundary());
+    assert!(!manifold.is_manifold());
+}

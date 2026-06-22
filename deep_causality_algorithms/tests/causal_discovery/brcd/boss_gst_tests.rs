@@ -156,6 +156,28 @@ fn vertex_getter_reports_the_target() {
 }
 
 #[test]
+fn re_tracing_a_shrinking_prefix_replays_cached_removals() {
+    // Z given {X, Y}: grow descends X then Y, then shrink drops X (Y screens it).
+    // The first trace records the removal; a second trace of the *same* prefix must
+    // replay the cached removal list (the `self.remove` is-Some branch) and return
+    // the identical parent set {Y}, not the pre-shrink {X, Y}.
+    let (data, n) = chain_cov();
+    let cov = data.sample_covariance().unwrap();
+    let cfg = BossConfig::<f64>::default();
+    let scorer = BicScorer::new(&cov, n, &cfg).unwrap();
+
+    let mut gst = Gst::new(2, &scorer).unwrap();
+    let (first, _) = gst.trace(&[0, 1], &scorer).unwrap();
+    assert_eq!(first, vec![1], "first trace must shrink to {{Y}}");
+
+    // Re-trace replays the cached removals onto a fresh parent accumulator.
+    let (second, _) = gst.trace(&[0, 1], &scorer).unwrap();
+    assert_eq!(second, vec![1], "cached replay must reproduce {{Y}}");
+    let (third, _) = gst.trace(&[0, 1], &scorer).unwrap();
+    assert_eq!(third, vec![1]);
+}
+
+#[test]
 fn new_propagates_an_out_of_range_vertex_error() {
     let (data, n) = chain_cov();
     let cov = data.sample_covariance().unwrap(); // 3 × 3

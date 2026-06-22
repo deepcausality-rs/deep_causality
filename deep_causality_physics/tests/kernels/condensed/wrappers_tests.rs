@@ -9,9 +9,9 @@ use deep_causality_num::Complex;
 use deep_causality_physics::{
     ChemicalPotentialGradient, Concentration, Displacement, Energy, Length, Mobility, Momentum,
     OrderParameter, QuantumEigenvector, QuantumMetric, QuantumVelocity, Ratio, Speed, Stiffness,
-    TwistAngle, bistritzer_macdonald, cahn_hilliard_flux, effective_band_drude_weight,
-    foppl_von_karman_strain, foppl_von_karman_strain_simple, ginzburg_landau_free_energy,
-    quantum_geometric_tensor, quasi_qgt,
+    TwistAngle, VectorPotential, bistritzer_macdonald, cahn_hilliard_flux,
+    effective_band_drude_weight, foppl_von_karman_strain, foppl_von_karman_strain_simple,
+    ginzburg_landau_free_energy, quantum_geometric_tensor, quasi_qgt,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
@@ -208,5 +208,78 @@ fn test_wrapper_qgt_error_propagation() {
     );
 
     let effect = quantum_geometric_tensor(&energies, &u, &v, &v, 0, 1e-12);
+    assert!(effect.is_err());
+}
+
+#[test]
+fn test_wrapper_quasi_qgt_error_propagation() {
+    // Exercises the Err branch of the quasi_qgt wrapper (wrappers.rs:64).
+    let energies = CausalTensor::new(vec![0.0, 1.0], vec![2]).unwrap();
+    // Wrong shape eigenvector -> kernel error.
+    let u = QuantumEigenvector::new(
+        CausalTensor::new(vec![Complex::new(1.0, 0.0); 4], vec![4]).unwrap(),
+    );
+    let v = QuantumVelocity::new(
+        CausalTensor::new(vec![Complex::new(0.0, 0.0); 4], vec![2, 2]).unwrap(),
+    );
+
+    let effect = quasi_qgt(&energies, &u, &v, &v, 0, 1e-12);
+    assert!(effect.is_err());
+}
+
+#[test]
+fn test_wrapper_strain_simple_error_propagation() {
+    // Rank-1 strain tensor -> DimensionMismatch in kernel, exercising the
+    // Err branch of foppl_von_karman_strain_simple wrapper (wrappers.rs:124).
+    let eps = Displacement::new(CausalTensor::new(vec![1.0; 4], vec![4]).unwrap());
+    let e = Stiffness::<f64>::new(100.0).unwrap();
+    let nu = Ratio::new(0.3).unwrap();
+
+    let effect = foppl_von_karman_strain_simple(&eps, e, nu);
+    assert!(effect.is_err());
+}
+
+fn create_line_manifold_w() -> SimplicialManifold<f64, f64> {
+    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0], vec![2, 2]).unwrap();
+    let point_cloud =
+        PointCloud::new(points, CausalTensor::new(vec![0.0; 2], vec![2]).unwrap(), 0).unwrap();
+    let complex = point_cloud.triangulate(1.1).unwrap();
+    let num = complex.total_simplices();
+    Manifold::new(
+        complex,
+        CausalTensor::new(vec![0.0; num], vec![num]).unwrap(),
+        0,
+    )
+    .unwrap()
+}
+
+#[test]
+fn test_wrapper_strain_full_error_propagation() {
+    // Mismatched manifolds -> shape mismatch in kernel, exercising the Err
+    // branch of foppl_von_karman_strain wrapper (wrappers.rs:142).
+    let u_man = create_flat_manifold(); // 3 vertices
+    let w_man = create_line_manifold_w(); // 2 vertices
+    let e = Stiffness::<f64>::new(100.0).unwrap();
+    let nu = Ratio::new(0.3).unwrap();
+
+    let effect = foppl_von_karman_strain(&u_man, &w_man, e, nu);
+    assert!(effect.is_err());
+}
+
+#[test]
+fn test_wrapper_ginzburg_error_propagation() {
+    // Metric mismatch between gradient and vector potential -> kernel error,
+    // exercising the Err branch of ginzburg_landau_free_energy wrapper
+    // (wrappers.rs:166).
+    let psi = OrderParameter::new(Complex::new(1.0, 0.0));
+    let grad = CausalMultiVector::new(vec![0.0; 4], Metric::Euclidean(2)).unwrap();
+    let grad_c =
+        deep_causality_multivector::CausalMultiVectorWitness::fmap(grad, |x| Complex::new(x, 0.0));
+
+    // Vector potential in a different metric.
+    let a_field = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
+    let vector_potential = VectorPotential::new(a_field);
+
+    let effect = ginzburg_landau_free_energy(psi, -1.0, 1.0, &grad_c, Some(&vector_potential));
     assert!(effect.is_err());
 }

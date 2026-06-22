@@ -164,6 +164,18 @@ fn test_expand_lie_too_small_dimension() {
 }
 
 #[test]
+fn test_contract_riemann_to_lie_rejects_wrong_shape() {
+    // A [3, 3, 3, 3] tensor has the right rank but wrong dimensions; the
+    // `shape != [4,4,4,4]` guard must reject it (gr_lie_mapping error branch).
+    let wrong = CausalTensor::from_vec(vec![0.0; 81], &[3, 3, 3, 3]);
+    let result = contract_riemann_to_lie(&wrong);
+    assert!(
+        result.is_err(),
+        "[3,3,3,3] Riemann must be rejected by contract_riemann_to_lie"
+    );
+}
+
+#[test]
 fn test_contract_riemann_wrong_shape() {
     // Create a correctly-sized tensor with wrong shape [4,4,4,4] -> 256 elements
     // Then test that a [3,3,3,3] shape is rejected
@@ -180,3 +192,17 @@ fn test_contract_riemann_wrong_shape() {
     let expand_result = expand_lie_to_riemann(&too_small);
     assert!(expand_result.is_err(), "2D should fail");
 }
+
+// NOTE on three defensively-unreachable lines in `gr_lie_mapping`:
+//   * gr_lie_mapping.rs:49 — the `_ => return None` arm of the inner `match` in
+//     `pair_to_lie_index`. The function's first statement (line 37) already
+//     returns `None` for every invalid pair (`mu >= nu || mu >= 4 || nu >= 4`),
+//     so any pair reaching the `match` is one of the six valid antisymmetric
+//     pairs (0,1)..(2,3) — all of which have explicit arms. The catch-all is
+//     dead for every input the `match` can actually see.
+//   * gr_lie_mapping.rs:148, 159 — the `else { T::zero() }` arms in
+//     `expand_lie_to_riemann` taken when `pair_to_lie_index(mu, nu)` (resp.
+//     `(nu, mu)`) returns `None`. The surrounding loop only calls them with
+//     `mu < nu < 4` (line 148) or `nu < mu < 4` (line 159), which always map to
+//     a valid Lie index, so `pair_to_lie_index` always returns `Some` here and
+//     these `else` branches never execute.

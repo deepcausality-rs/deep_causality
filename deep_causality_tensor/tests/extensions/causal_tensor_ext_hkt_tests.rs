@@ -38,6 +38,21 @@ fn test_applicative_causal_tensor_apply_scalar_func() {
 }
 
 #[test]
+fn test_applicative_causal_tensor_apply_equal_length() {
+    // funcs.len() == args.len() (> 1): zip the functions against the arguments.
+    let f_tensor = CausalTensor::new(
+        vec![|x: i32| x + 1, |x: i32| x * 10, |x: i32| x - 3],
+        vec![3],
+    )
+    .unwrap();
+    let a_tensor = CausalTensor::new(vec![1, 2, 3], vec![3]).unwrap();
+    let result_tensor = CausalTensorWitness::apply(f_tensor, a_tensor);
+    // [1+1, 2*10, 3-3] = [2, 20, 0]
+    assert_eq!(result_tensor.as_slice(), &[2, 20, 0]);
+    assert_eq!(result_tensor.shape(), &[3]);
+}
+
+#[test]
 fn test_applicative_causal_tensor_apply_non_scalar_func() {
     // Create a non-scalar function tensor (e.g., a vector of functions)
     let f_tensor = CausalTensor::new(vec![|x: i32| x * 2, |x: i32| x * 3], vec![2]).unwrap();

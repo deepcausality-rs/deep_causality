@@ -297,3 +297,74 @@ fn test_calculate_state_slice_none_handling_cdl() {
     // Just ensure it runs without panic and produces some results
     assert!(result.causal_unique_states().is_empty());
 }
+
+/// Deterministic target (all mass on T=0) gives H(T)=0, driving the
+/// `info_leak = zero` else-branch (surd_algo_cdl.rs line ~130).
+#[test]
+fn test_deterministic_target_zero_entropy_info_leak_cdl() {
+    let data: Vec<Option<f64>> = vec![
+        Some(0.3),
+        Some(0.2), // T=0, S1=0
+        Some(0.1),
+        Some(0.4), // T=0, S1=1
+        Some(0.0),
+        Some(0.0), // T=1, S1=0
+        Some(0.0),
+        Some(0.0), // T=1, S1=1
+    ];
+    let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
+    let result = surd_states_cdl(&p_raw, MaxOrder::Max).unwrap();
+    assert!(result.info_leak().abs() < TOLERANCE);
+}
+
+/// Fully-`Some` three-source redundant distribution. This drives the full
+/// state-slice path in `calculate_state_slice_cdl` (lines ~523, ~534, ~555,
+/// ~564, ~591, ~609, ~613, ~636), the level-raising loop (lines ~410, ~413,
+/// ~415), the log-diff (line ~179), and the redundancy `retain` (line ~470)
+/// over multiple single-variable terms.
+#[test]
+fn test_three_source_redundant_full_cdl() {
+    let mut data = vec![0.0_f64; 16];
+    let idx = |t: usize, s1: usize, s2: usize, s3: usize| ((t * 2 + s1) * 2 + s2) * 2 + s3;
+    data[idx(0, 0, 0, 0)] = 0.40;
+    data[idx(1, 1, 1, 1)] = 0.40;
+    data[idx(0, 0, 0, 1)] = 0.05;
+    data[idx(0, 0, 1, 0)] = 0.03;
+    data[idx(1, 1, 1, 0)] = 0.05;
+    data[idx(1, 1, 0, 1)] = 0.03;
+    data[idx(0, 1, 0, 0)] = 0.02;
+    data[idx(1, 0, 1, 1)] = 0.02;
+
+    let opt: Vec<Option<f64>> = data.into_iter().map(Some).collect();
+    let p_raw = CausalTensor::new(opt, vec![2, 2, 2, 2]).unwrap();
+    let result = surd_states_cdl(&p_raw, MaxOrder::Max).unwrap();
+
+    assert!(!result.redundant_info().is_empty());
+    assert!(!result.causal_redundant_states().is_empty());
+    let has_order_3 = result.mutual_info().keys().any(|k| k.len() == 3);
+    assert!(has_order_3);
+}
+
+/// A target state whose `p_s` marginal is entirely `None` drives the
+/// `else { zero }` info branch (surd_algo_cdl.rs line ~435): for that target
+/// state every source-combination probability is missing, so `p_s[t]` is None
+/// and the per-term info contribution is forced to zero.
+#[test]
+fn test_target_state_all_none_marginal_info_zero_cdl() {
+    // Shape [2, 2, 2]. The entire T=1 plane is None, so summing the source axes
+    // for target state t=1 yields a None marginal probability.
+    let data: Vec<Option<f64>> = vec![
+        Some(0.2),
+        Some(0.1), // T=0, S1=0
+        Some(0.1),
+        Some(0.2), // T=0, S1=1
+        None,
+        None, // T=1, S1=0
+        None,
+        None, // T=1, S1=1
+    ];
+    let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
+    // Must still succeed (T=0 plane has mass), exercising the None p_s branch for t=1.
+    let result = surd_states_cdl(&p_raw, MaxOrder::Max).unwrap();
+    assert!(!result.mutual_info().is_empty());
+}

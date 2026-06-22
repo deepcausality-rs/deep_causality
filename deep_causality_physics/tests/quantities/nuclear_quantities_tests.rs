@@ -326,3 +326,74 @@ fn test_nuclear_scalars_traits() {
     assert_eq!(ed, ed.clone());
     let _ = format!("{:?}", ed);
 }
+
+// =============================================================================
+// FourMomentum: Default, transverse_mass, phi, near-zero early returns
+// nuclear/mod.rs:172-179, 255-259, 272-274, 285, 298
+// =============================================================================
+
+#[test]
+fn test_four_momentum_default() {
+    // nuclear/mod.rs:172-179
+    let p = FourMomentum::<f64>::default();
+    assert_eq!(p.e(), 0.0);
+    assert_eq!(p.px(), 0.0);
+    assert_eq!(p.py(), 0.0);
+    assert_eq!(p.pz(), 0.0);
+}
+
+#[test]
+fn test_four_momentum_transverse_mass() {
+    // nuclear/mod.rs:255-259. m^2 = E^2 - |p|^2; pt^2 = px^2 + py^2.
+    // E=10, px=3, py=4, pz=0 => m^2 = 100 - 25 = 75, pt^2 = 25 => mT = sqrt(100) = 10.
+    let p = FourMomentum::<f64>::new(10.0, 3.0, 4.0, 0.0);
+    assert!((p.transverse_mass() - 10.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_four_momentum_phi() {
+    // nuclear/mod.rs:272-274. phi = atan2(py, px); px=1, py=1 => pi/4.
+    let p = FourMomentum::<f64>::new(2.0, 1.0, 1.0, 0.0);
+    assert!((p.phi() - std::f64::consts::FRAC_PI_4).abs() < 1e-10);
+}
+
+#[test]
+fn test_four_momentum_rapidity_near_zero_denominator() {
+    // nuclear/mod.rs:284-285. denom = E - pz near zero => early return 0.
+    let p = FourMomentum::<f64>::new(5.0, 0.1, 0.0, 5.0); // E == pz
+    assert_eq!(p.rapidity(), 0.0);
+}
+
+#[test]
+fn test_four_momentum_pseudorapidity_near_zero_momentum() {
+    // nuclear/mod.rs:297-298. |p| near zero => early return 0.
+    let p = FourMomentum::<f64>::new(1.0, 0.0, 0.0, 0.0); // at rest, |p| = 0
+    assert_eq!(p.pseudorapidity(), 0.0);
+}
+
+// =============================================================================
+// Hadron::rapidity (nuclear/mod.rs:388-390)
+// =============================================================================
+
+#[test]
+fn test_hadron_rapidity() {
+    // E=10, pz=8 => rapidity = 0.5*ln(18/2) > 0.
+    let p = FourMomentum::<f64>::new(10.0, 0.0, 0.0, 8.0);
+    let h = Hadron::<f64>::new(211, p);
+    let expected = 0.5_f64 * (18.0_f64 / 2.0_f64).ln();
+    assert!((h.rapidity() - expected).abs() < 1e-10);
+}
+
+// =============================================================================
+// LundParameters remaining getters
+// nuclear/mod.rs:473-475, 478-480, 488-490, 493-495
+// =============================================================================
+
+#[test]
+fn test_lund_parameters_remaining_getters() {
+    let params = LundParameters::new(2.0, 0.5, 0.8, 0.4, 0.2, 0.1, 0.6, 0.3);
+    assert!((params.lund_b() - 0.8).abs() < 1e-10);
+    assert!((params.sigma_pt() - 0.4).abs() < 1e-10);
+    assert!((params.diquark_suppression() - 0.1).abs() < 1e-10);
+    assert!((params.vector_meson_fraction() - 0.6).abs() < 1e-10);
+}

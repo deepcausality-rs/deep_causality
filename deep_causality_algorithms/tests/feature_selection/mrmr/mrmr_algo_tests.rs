@@ -146,6 +146,130 @@ fn test_select_features_nan_score_error() {
 }
 
 #[test]
+fn test_first_feature_relevance_not_finite() {
+    // An infinite value in the target column makes EVERY feature's relevance
+    // (F-statistic) non-finite, so the very first feature scanned trips the
+    // first-feature `relevance.is_finite()` guard. `f64::INFINITY` is not `NaN`,
+    // so `FloatOption::to_option` passes it through into the Pearson sums (NaN
+    // mapping only catches NaN), producing a non-finite F-statistic.
+    let data = vec![
+        // F0,  F1,  Target
+        1.0,
+        2.0,
+        f64::INFINITY,
+        2.0,
+        4.0,
+        2.0,
+        3.0,
+        6.0,
+        3.0,
+        4.0,
+        8.0,
+        4.0,
+    ];
+    let tensor = CausalTensor::new(data, vec![4, 3]).unwrap();
+    let result = mrmr::mrmr_features_selector(&tensor, 1, 2);
+    assert!(matches!(result, Err(MrmrError::FeatureScoreError(_))));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("Relevance score for feature")
+    );
+}
+
+#[test]
+fn test_iteration_relevance_not_finite() {
+    // The first feature is finite/relevant and is selected; a *later* feature has
+    // a non-finite relevance because the target value it correlates against is
+    // infinite only on a row where that feature also varies. Here F0 is cleanly
+    // relevant (selected first), and F1's relevance becomes non-finite due to the
+    // infinite target entry, tripping the iteration-loop relevance guard.
+    let data = vec![
+        // F0,    F1,  Target
+        1.0,
+        5.0,
+        1.0,
+        2.0,
+        9.0,
+        2.0,
+        3.0,
+        4.0,
+        3.0,
+        4.0,
+        7.0,
+        f64::INFINITY,
+    ];
+    let tensor = CausalTensor::new(data, vec![4, 3]).unwrap();
+    // Request both features; F0 selected first (finite), F1 evaluated in the loop.
+    let result = mrmr::mrmr_features_selector(&tensor, 2, 2);
+    assert!(matches!(result, Err(MrmrError::FeatureScoreError(_))));
+    let msg = result.unwrap_err().to_string();
+    assert!(
+        msg.contains("not finite"),
+        "expected a non-finite score error, got: {msg}"
+    );
+}
+
+#[test]
+fn test_iteration_correlation_not_finite() {
+    // First feature finite/selected; for a later feature the *correlation* with an
+    // already-selected feature is non-finite (an infinite value in the candidate
+    // feature column, distinct from the target), tripping the redundancy/
+    // correlation finiteness guard inside the selection loop.
+    let data = vec![
+        // F0,    F1 (relevant target proxy), F2 (has inf), Target
+        1.0,
+        1.0,
+        2.0,
+        1.0,
+        2.0,
+        2.0,
+        3.0,
+        2.0,
+        3.0,
+        3.0,
+        f64::INFINITY,
+        3.0,
+        4.0,
+        4.0,
+        9.0,
+        4.0,
+    ];
+    let tensor = CausalTensor::new(data, vec![4, 4]).unwrap();
+    // Target col 3. F1 is perfectly relevant -> selected first. F2 has an infinite
+    // entry so its correlation/redundancy with F1 (or its own relevance) is
+    // non-finite, exercising a finiteness guard in the iteration loop.
+    let result = mrmr::mrmr_features_selector(&tensor, 3, 3);
+    assert!(matches!(result, Err(MrmrError::FeatureScoreError(_))));
+    let msg = result.unwrap_err().to_string();
+    assert!(
+        msg.contains("not finite"),
+        "expected a non-finite score error, got: {msg}"
+    );
+}
+
+#[test]
+fn test_normalization_skipped_when_max_score_non_positive() {
+    // When the single selected feature has zero relevance (a constant feature vs a
+    // varying target gives F-statistic 0), `max_score` is 0.0, so the
+    // `if max_score > 0.0` normalization branch is skipped (its false arm), and
+    // the raw (zero) score is returned unmodified.
+    let data = vec![
+        // F0 (constant -> zero relevance), Target (varies)
+        5.0, 1.0, 5.0, 2.0, 5.0, 3.0, 5.0, 4.0,
+    ];
+    let tensor = CausalTensor::new(data, vec![4, 2]).unwrap();
+    // Only one feature available (F0); select it. Its relevance is 0.0.
+    let result = mrmr::mrmr_features_selector(&tensor, 1, 1).unwrap();
+    assert_eq!(result.len(), 1);
+    let (idx, score) = result.features()[0];
+    assert_eq!(idx, 0);
+    // Normalization skipped: the score stays at its raw 0.0 value (not divided).
+    assert_eq!(score, 0.0);
+}
+
+#[test]
 fn test_select_features_infinite_score_error() {
     // Create a tensor where a feature's F-statistic might become infinite
     // This is harder to reliably trigger with simple data, but can happen if
