@@ -1,0 +1,156 @@
+deep_causality_topology/tests/types/cubical_regge_geometry/coverage_tests.rs
+  s_e518d8627dc02d::t_fb6a544ce710b4 287-308,310-322,324-328,333-366
+  s_e518d8627dc02d::t_e151b788590500 53-56,148-150,309,323
+  s_e518d8627dc02d::t_4133cf3ae86a92 24-44,51,57,65-69
+  s_e518d8627dc02d::t_ec33f09d38d497 329-332
+  s_e518d8627dc02d::t_f0d97bd878bfb3 1-23,45-50,52,58-64,70-147,151-286
+deep_causality_topology/tests/types/differential_form/mod.rs
+  s_e518d8627dc02d::t_b157ea87e536e7 7
+deep_causality_topology/tests/types/cut_cell/coverage_tests.rs
+  s_e518d8627dc02d::t_e151b788590500 157-160,237-240,261
+  s_e518d8627dc02d::t_8c83e1cfde2e74 14-15
+  s_e518d8627dc02d::t_669b5bbd1161b6 1-13,16-156,161-236,241-260,262-271
+deep_causality_topology/tests/types/hypergraph/topology_trait_coverage_tests.rs
+  s_e518d8627dc02d::t_e88b021781402d 1-40
+deep_causality_topology/tests/types/gauge/link_variable/mod.rs
+  s_e518d8627dc02d::t_03fe2a4a603713 6-7
+deep_causality_topology/tests/types/simplicial_complex/mod.rs
+  s_e518d8627dc02d::t_338c3e8e88fc12 20-21
+deep_causality_topology/tests/types/manifold/geometry_topology_coverage_tests.rs
+  s_e518d8627dc02d::t_5953e243a1e40b 31-35
+  s_e518d8627dc02d::t_2cdf5c5bc2595d 20-21
+  s_e518d8627dc02d::t_81ab7e35c1cc49 1-19,22-30,36-54,56-61,64-119
+  s_e518d8627dc02d::t_7e369f0b357ae7 55
+  s_e518d8627dc02d::t_a966e388bd5196 62-63
+deep_causality_topology/tests/types/manifold/mod.rs
+  s_e518d8627dc02d::t_e9dab226420280 60
+  s_e518d8627dc02d::t_e3a858cc8b4e83 12-13
+  s_e518d8627dc02d::t_730d16ad62e349 42-43
+  s_e518d8627dc02d::t_8d3f6fc7d4fd94 22-23,30
+  s_e518d8627dc02d::t_60fc14fa7d26c4 31,48-49,61
+deep_causality_topology/tests/types/simplicial_complex/getters_tests.rs
+  s_e518d8627dc02d::t_78e24d2941f4d7 36-46,61
+  s_e518d8627dc02d::t_d939f20d9ab561 5
+  s_e518d8627dc02d::t_304fbe6375b5ea 6
+  s_e518d8627dc02d::t_2c684a58f0f0fe 47-60
+deep_causality_topology/tests/extensions/hkt_gauge_field_tests.rs
+  s_e518d8627dc02d::t_a371a7e9820d06 449-517
+deep_causality_topology/tests/extensions/adjunction_stokes_tests.rs
+  s_e518d8627dc02d::t_52f24e9379ba60 324-327,330-413
+  s_e518d8627dc02d::t_269b52e63cd7b9 322-323,328-329,414
+  s_e518d8627dc02d::t_98d6c632bb2ac9 415-461
+deep_causality_topology/tests/types/mixed_graph/topology_coverage_tests.rs
+  s_e518d8627dc02d::t_0f1778178fe652 1-42
+deep_causality_topology/tests/types/point_cloud/display_coverage_tests.rs
+  s_e518d8627dc02d::t_22d9eb76e8c4c7 1-21
+deep_causality_topology/tests/types/manifold/leray_coverage_tests.rs
+  s_e518d8627dc02d::t_2f2bc5c056bcac 253,255
+  s_e518d8627dc02d::t_278ad9bf94dea8 199-252,254,256-259
+  s_e518d8627dc02d::t_df69f8fb9f4318 1-198,260-347
+deep_causality_topology/tests/types/regge_geometry/coverage_tests.rs
+  s_e518d8627dc02d::t_e278fc9c091155 79-97
+  s_e518d8627dc02d::t_ed239b40d144ec 1-11,14-50,55-78
+  s_e518d8627dc02d::t_016f5b4a554aeb 12
+  s_e518d8627dc02d::t_e151b788590500 13,51-54
+deep_causality_topology/tests/types/manifold/stencil_coverage_tests.rs
+  s_e518d8627dc02d::t_f30e2259d4105a 1-51,56-77,82-116,121-151,156-185
+  s_e518d8627dc02d::t_5953e243a1e40b 52-55,78-81,117-120,152-155
+deep_causality_topology/tests/types/neighborhood/von_neumann_tests.rs
+  s_e518d8627dc02d::t_b24376b89f9db1 48-64
+deep_causality_topology/tests/types/hypergraph/mod.rs
+  s_e518d8627dc02d::t_b410166f0b168b 10-11
+  s_e518d8627dc02d::t_f7516f3e68af15 21-22
+deep_causality_topology/tests/types/graph/mod.rs
+  s_e518d8627dc02d::t_6e3e83e66b63ad 18-19
+deep_causality_topology/tests/traits/has_hodge_star_tests.rs
+  s_e518d8627dc02d::t_419c57fbcc32b0 92-100
+deep_causality_topology/tests/types/differential_form/differential_form_coverage_tests.rs
+  s_e518d8627dc02d::t_dc9e14c2ae4f0c 1-30
+deep_causality_topology/tests/extensions/hkt_curvature_tests.rs
+  s_e518d8627dc02d::t_79eb2214872e07 121-151
+deep_causality_topology/tests/extensions/hkt_manifold_tests.rs
+  s_e518d8627dc02d::t_e1c22376656a83 105-127
+deep_causality_topology/tests/types/simplicial_complex/ops_boundary_tests.rs
+  s_e518d8627dc02d::t_3f52c46403dd71 91-97
+  s_e518d8627dc02d::t_97c21118a65760 76-84,86-90,98
+  s_e518d8627dc02d::t_e151b788590500 85
+deep_causality_topology/tests/types/simplicial_complex/mod_map_geometry_tests.rs
+  s_e518d8627dc02d::t_60b63821db201f 1-99
+deep_causality_topology/tests/extensions/hkt_simplicial_complex_tests.rs
+  s_e518d8627dc02d::t_e9584da9099056 119-162
+deep_causality_topology/tests/types/manifold/manifold_topology_tests.rs
+  s_e518d8627dc02d::t_419c57fbcc32b0 53-65
+deep_causality_topology/tests/types/mixed_graph/mod.rs
+  s_e518d8627dc02d::t_39b6173306ee8b 17-18
+deep_causality_topology/tests/types/point_cloud/base_topology_trait_coverage_tests.rs
+  s_e518d8627dc02d::t_f227ca6c526cae 31-38
+  s_e518d8627dc02d::t_191003b3e7cc4f 1-30
+deep_causality_topology/tests/types/gauge/gauge_groups/groups_coverage_tests.rs
+  s_e518d8627dc02d::t_1b1938106878bb 1-55
+deep_causality_topology/tests/types/cell_complex/cell_complex_test.rs
+  s_e518d8627dc02d::t_4b19bd9e34a55e 294-347
+deep_causality_topology/tests/types/manifold/covariance_coverage_tests.rs
+  s_e518d8627dc02d::t_e151b788590500 13
+  s_e518d8627dc02d::t_118d3203961876 57-75,79-81
+  s_e518d8627dc02d::t_304fbe6375b5ea 76-78
+  s_e518d8627dc02d::t_22fcb839124307 10,21-32
+  s_e518d8627dc02d::t_1e80ed7f88c2c5 1-9,11-12,14-20,33-56
+deep_causality_topology/tests/types/gauge/gauge_groups/mod.rs
+  s_e518d8627dc02d::t_d338be9db892cd 6-7
+deep_causality_topology/tests/types/gauge/gauge_groups/groups_tests.rs
+  s_e518d8627dc02d::t_f700feb89c14c8 443-476
+deep_causality_topology/tests/types/cut_cell/mod.rs
+  s_e518d8627dc02d::t_2e74ba680340d3 13-14
+deep_causality_topology/tests/types/point_cloud/mod.rs
+  s_e518d8627dc02d::t_10911e8301f1a3 8-11,14-15
+deep_causality_topology/tests/types/manifold/leray_weighted_coverage_tests.rs
+  s_e518d8627dc02d::t_1765e89f85cee0 157
+  s_e518d8627dc02d::t_e151b788590500 115
+  s_e518d8627dc02d::t_76422ee2e85404 1-114,116-134,139,142,144,146,148-152,168,178
+  s_e518d8627dc02d::t_572b5ec519aa68 135-138,140-141,143,145,147,153-156,158-167,169-177
+deep_causality_topology/tests/types/cubical_regge_geometry/mod.rs
+  s_e518d8627dc02d::t_cbedea97542bd1 6-7
+deep_causality_topology/tests/types/gauge/gauge_field_lattice/lattice_coverage_tests.rs
+  s_e518d8627dc02d::t_9552deb1294428 1-14,16-77,81-114
+  s_e518d8627dc02d::t_e151b788590500 15,78-80
+deep_causality_topology/tests/types/gauge/gauge_field_lattice/mod.rs
+  s_e518d8627dc02d::t_87b3304b4a5643 14
+  s_e518d8627dc02d::t_fe10b9e1a3202b 10-11,15
+deep_causality_topology/tests/types/gauge/gauge_field_lattice/metropolis_coverage_tests.rs
+  s_e518d8627dc02d::t_a9ae5eed8b4ce4 1-15,17-32,35-59
+  s_e518d8627dc02d::t_e151b788590500 16,33-34
+deep_causality_topology/tests/types/regge_geometry/mod.rs
+  s_e518d8627dc02d::t_06b42ebc2f9022 6-7
+deep_causality_topology/tests/types/graph/graph_topology_trait_coverage_tests.rs
+  s_e518d8627dc02d::t_4230ebbe8fb981 1-28
+deep_causality_topology/tests/types/gauge/link_variable/link_variable_coverage_tests.rs
+  s_e518d8627dc02d::t_a109acb874678b 28,33-34
+  s_e518d8627dc02d::t_6b491bf014f287 1-27,29-32,35-59,63-67
+  s_e518d8627dc02d::t_e151b788590500 60-62
+deep_causality_topology/tests/types/hypergraph/constructors_coverage_tests.rs
+  s_e518d8627dc02d::t_e151b788590500 18
+  s_e518d8627dc02d::t_c6a1738841f6ee 1-17,19-37
+deep_causality_topology/tests/types/point_cloud/op_triangulate_coverage_tests.rs
+  s_e518d8627dc02d::t_d1acd6226c2a11 1-35
+deep_causality_topology/tests/types/manifold/differential_coverage_tests.rs
+  s_e518d8627dc02d::t_ff6a77155492da 30,161
+  s_e518d8627dc02d::t_8a58bbd7b356f1 1-29,31-81,94-107,119-160,162-212
+  s_e518d8627dc02d::t_1aa22599feff73 108-118
+  s_e518d8627dc02d::t_7defd2093856f9 82-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "303dd8efadad4b7b90080e19dde202a6b6554dc0",
+  "prompts": {},
+  "sessions": {
+    "s_e518d8627dc02d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "56adcfb2-0a54-4aa3-84ac-c438be70f0fd",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
