@@ -1,0 +1,34 @@
+deep_causality_num/tests/float/float_32_tests.rs
+  a1d1d1df2fad7658 167,180,185,194,199,204,237
+deep_causality_num/tests/float/float_64_tests.rs
+  a1d1d1df2fad7658 163,168,189,194,203,208,241,246,251,264,269,274,279
+deep_causality_num/tests/float_double/double_transcendental_tests.rs
+  a1d1d1df2fad7658 162
+deep_causality_num/tests/algebra/field_real_f64_tests.rs
+  a1d1d1df2fad7658 73-76
+deep_causality_num/tests/algebra/field_real_f32_tests.rs
+  a1d1d1df2fad7658 49-52,72-75
+deep_causality_num/tests/complex/quaternion_number/quaternion_number_tests.rs
+  a1d1d1df2fad7658 23-26
+deep_causality_num/tests/complex/quaternion_number/rotation_tests.rs
+  a1d1d1df2fad7658 46-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "37d5a5262276849e76ea68c724758447a876da6f",
+  "prompts": {
+    "a1d1d1df2fad7658": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e27723fc-05ba-43d3-96eb-cf2fde46ff98",
+        "model": "<synthetic>"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>",
+      "total_additions": 41,
+      "total_deletions": 0,
+      "accepted_lines": 41,
+      "overriden_lines": 0
+    }
+  }
+}
