@@ -10,6 +10,7 @@ help:
 	@echo '    make fix   		Fixes linting issues as reported by clippy.'
 	@echo '    make format   	Formats call code according to cargo fmt style.'
 	@echo '    make install   	Tests and installs all make script dependencies.'
+	@echo '    make miri   	Runs the test suite under the Miri interpreter for undefined-behavior detection.'
 	@echo '    make start   	Starts the dev day with updating rust, pulling from git remote, and build the project.'
 	@echo '    make test   	Runs all tests across all crates.'
 	@echo '    make update   	Update all dependencies for all crates'
@@ -32,6 +33,7 @@ bench:
 check:
 	@source build/scripts/check.sh
 
+
 .PHONY: fix
 fix:
 	@source build/scripts/fix.sh
@@ -47,9 +49,15 @@ install:
 	@source build/scripts/install_deps.sh
 
 
+.PHONY: miri
+miri:
+	@source build/scripts/miri.sh
+
+
 .PHONY: release
 release:
 	@source build/scripts/release.sh
+
 
 .PHONY: start
 start:
@@ -60,13 +68,16 @@ start:
 test:
 	@source build/scripts/test.sh
 
+
 .PHONY: sbom
 sbom:
 	 @source build/scripts/sbom.sh
 
+
 .PHONY: update
 update:
 	 @source build/scripts/update.sh
+
 
 .PHONY: vendor
 vendor:

@@ -54,6 +54,7 @@ fn march(solver: &DecNsSolver<'_, 2, f64>, seed: &SolenoidalField<f64>, steps: u
 }
 
 #[test]
+#[cfg_attr(miri, ignore)]
 fn body_force_zone_marches_bit_identically_to_the_legacy_solver() {
     let (m, h) = channel(9, [true, false]);
     let dt = 0.5 * h * h / (4.0 * NU);

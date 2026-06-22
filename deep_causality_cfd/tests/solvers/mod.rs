@@ -3,5 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+#[cfg(test)]
+#[cfg(not(miri))]
 mod dec;
 mod dec_config;
