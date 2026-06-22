@@ -1,0 +1,31 @@
+deep_causality_physics/tests/quantities/dynamics_quantities/mass_tests.rs
+  s_49325202c57af5::t_34d01a11db7a39 28,38-41,48-51
+deep_causality_physics/tests/quantities/dynamics_quantities/moment_of_inertia_tests.rs
+  s_49325202c57af5::t_46f414b02cb3b1 6,12,19-22
+deep_causality_physics/tests/quantities/condensed_quantities/vector_potential_tests.rs
+  s_49325202c57af5::t_45d54d99ea4efb 7,11-12,14-15,21-22
+deep_causality_physics/tests/quantities/dynamics_quantities/length_tests.rs
+  s_49325202c57af5::t_3df447571eb8e1 15-20
+makefile
+  s_49325202c57af5::t_889fa8f36d5e13 13
+deep_causality_algorithms/tests/mod.rs
+  s_49325202c57af5::t_a25e1ce369eb4b 6
+deep_causality_physics/tests/quantities/condensed_quantities/trait_coverage_tests.rs
+  s_49325202c57af5::t_6ba6de3cbfa0ba 15,20,25,30,40,45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "76de3b70d65b19d31efdeaf8ff9c31f6fd3281ad",
+  "prompts": {},
+  "sessions": {
+    "s_49325202c57af5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297e527-61ae-449a-a0a2-18bc3006d1c0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
