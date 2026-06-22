@@ -1,0 +1,84 @@
+deep_causality/tests/errors/csm_error_tests.rs
+  s_e518d8627dc02d::t_f24dd10e0b7f79 74-77
+deep_causality/tests/traits/mod.rs
+  s_e518d8627dc02d::t_9288afe390100d 5
+deep_causality/tests/types/context_node_types/space_time/lorentzian/mod.rs
+  s_e518d8627dc02d::t_51aec7374e2196 7
+deep_causality/tests/traits/adjustable/mod.rs
+  s_e518d8627dc02d::t_4b13b4dbfb184a 1-6
+deep_causality/tests/types/context_node_types/space_time/minkowski/space_temporal_interval_tests.rs
+  s_e518d8627dc02d::t_92ecf918170017 1-75
+deep_causality/tests/types/context_node_types/space_time/minkowski/mod.rs
+  s_e518d8627dc02d::t_986418f732d9ac 7
+deep_causality/tests/types/causal_types/causaloid_graph/causality_graph_nodes_tests.rs
+  s_e518d8627dc02d::t_23ac5b2cb687e7 196-209
+deep_causality/tests/types/context_node_types/space_time/tangent_spacetime/space_temporal_interval_tests.rs
+  s_e518d8627dc02d::t_8089016017b5ba 1-18
+deep_causality/tests/types/causal_types/causaloid/causaloid_collection_tests.rs
+  s_e518d8627dc02d::t_fee2080bd045cd 148-161,163-164
+  s_e518d8627dc02d::t_8109f71640fa97 162
+deep_causality/tests/extensions/inferable/inferable_vec_tests.rs
+  s_e518d8627dc02d::t_07e2588cf39386 40-87
+  s_e518d8627dc02d::t_6fa6a4b08e35a4 177-236
+deep_causality/tests/errors/action_error_tests.rs
+  s_e518d8627dc02d::t_efcd2cdca9dfd0 46-54
+  s_e518d8627dc02d::t_c355068c6b28ad 6
+deep_causality/tests/types/generative_types/interpreter_tests.rs
+  s_e518d8627dc02d::t_fbe57555c01494 42-44
+  s_e518d8627dc02d::t_14edf59e443991 40
+  s_e518d8627dc02d::t_4e60e0802083ac 41,45-54
+deep_causality/tests/traits/causable_collection/collection_reasoning/stateful_monadic_collection_tests.rs
+  s_e518d8627dc02d::t_fcbb7e39f0964a 85-102,110-120,125-133,139-140,142-147,151-171
+  s_e518d8627dc02d::t_8109f71640fa97 103-109,121-124,134-138,141,148-150
+deep_causality/tests/traits/adjustable/adjustable_default_tests.rs
+  s_e518d8627dc02d::t_584e6203d64680 1-66
+deep_causality/tests/types/csm_types/csm_action/csm_action_tests.rs
+  s_e518d8627dc02d::t_a2d7f79512c3a0 31-40
+deep_causality/tests/types/context_node_types/space_time/tangent_spacetime/mod.rs
+  s_e518d8627dc02d::t_96a27deb2f282c 7
+deep_causality/tests/types/csm_types/csm/csm_single_state_tests.rs
+  s_e518d8627dc02d::t_8109f71640fa97 9
+  s_e518d8627dc02d::t_b1e960daf18228 331-363
+  s_e518d8627dc02d::t_1044916a1989f7 8,10
+deep_causality/tests/types/causal_types/causaloid_graph/mod.rs
+  s_e518d8627dc02d::t_8109f71640fa97 27
+deep_causality/tests/types/generative_types/hkt_generative_tests.rs
+  s_e518d8627dc02d::t_eb58cde4280703 113-134
+  s_e518d8627dc02d::t_f2a93e3b810c7d 112,189-221,226-228
+  s_e518d8627dc02d::t_8109f71640fa97 222-225
+deep_causality/tests/utils/monadic_collection_utils_tests.rs
+  s_e518d8627dc02d::t_8109f71640fa97 158-162
+  s_e518d8627dc02d::t_7b4f604c60bdb5 152-157,163-198
+deep_causality/tests/types/context_types/context_graph/contextuable_graph_tests.rs
+  s_e518d8627dc02d::t_a440429b2f6f69 46-56,61-111
+  s_e518d8627dc02d::t_8109f71640fa97 57-60
+deep_causality/tests/utils_test/test_utils_csm_tests.rs
+  s_e518d8627dc02d::t_73e202da27b367 25-30
+  s_e518d8627dc02d::t_5778df6080e6b3 9
+  s_e518d8627dc02d::t_1a5ec051f5ae7c 54-60
+deep_causality/tests/types/causal_types/causaloid_graph/causality_graph_shortest_path_tests.rs
+  s_e518d8627dc02d::t_c7885c316ccebc 1-55
+deep_causality/tests/types/generative_types/effect_system_tests.rs
+  s_e518d8627dc02d::t_2f9fc12fae807d 170-194
+deep_causality/tests/types/model_types/model/model_tests.rs
+  s_e518d8627dc02d::t_2432da3bff8c02 25-39
+  s_e518d8627dc02d::t_00106a4d8b4105 7
+deep_causality/tests/types/context_node_types/space_time/lorentzian/space_temporal_interval_tests.rs
+  s_e518d8627dc02d::t_73286a2ef8b728 1-78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "4cc6dcc7b9c47f29f993bccb2c5a59df3a104ca1",
+  "prompts": {},
+  "sessions": {
+    "s_e518d8627dc02d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "56adcfb2-0a54-4aa3-84ac-c438be70f0fd",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
