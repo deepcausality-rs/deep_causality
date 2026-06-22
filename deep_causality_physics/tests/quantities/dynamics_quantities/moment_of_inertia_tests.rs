@@ -3,18 +3,23 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::MomentOfInertia;
+use deep_causality_physics::{MomentOfInertia, PhysicsErrorEnum};
 
 #[test]
 fn test_moment_of_inertia_new_valid() {
     let moi = MomentOfInertia::<f64>::new(5.0);
     assert!(moi.is_ok());
+    assert!((moi.unwrap().value() - 5.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_moment_of_inertia_new_negative_error() {
     let moi = MomentOfInertia::<f64>::new(-1.0);
     assert!(moi.is_err());
+    match &moi.unwrap_err().0 {
+        PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("negative")),
+        _ => panic!("Expected PhysicalInvariantBroken error"),
+    }
 }
 
 #[test]

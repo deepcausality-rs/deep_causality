@@ -12,6 +12,13 @@ fn test_length_new_valid() {
 }
 
 #[test]
+fn test_length_new_zero() {
+    let length = Length::<f64>::new(0.0);
+    assert!(length.is_ok());
+    assert!((length.unwrap().value() - 0.0).abs() < 1e-10);
+}
+
+#[test]
 fn test_length_new_negative_error() {
     let length = Length::<f64>::new(-1.0);
     assert!(length.is_err());
