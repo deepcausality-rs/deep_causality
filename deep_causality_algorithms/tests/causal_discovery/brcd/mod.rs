@@ -31,6 +31,7 @@ mod error_tests;
 #[cfg(test)]
 mod family_tests;
 #[cfg(test)]
+#[cfg(not(miri))]
 mod gate_tests;
 #[cfg(test)]
 mod gaussian_tests;
