@@ -64,7 +64,7 @@ jobs:
           - crate: deep_causality_uncertain
             extra_flags: -Zmiri-disable-isolation       # open() in tests/mod.rs binary
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install nightly toolchain with Miri
         run: |
