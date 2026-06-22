@@ -446,3 +446,72 @@ fn test_compute_field_strength_non_abelian_multipoint_and_nonzero_coupling() {
     let result = GaugeFieldWitness::compute_field_strength_non_abelian(&field, 0.5);
     assert_eq!(result.shape(), &[3, 4, 4, 3]);
 }
+
+// ============================================================================
+// Empty-shape (0-dimensional / scalar) connection: drives the `conn_shape
+// .is_empty()` arm that defaults `num_points` to 1 in both the abelian and
+// non-abelian field-strength routines.
+//
+// A single-point gauge group with `SPACETIME_DIM == 1` and
+// `LIE_ALGEBRA_DIM == 1` expects exactly `1 * 1 * 1 == 1` connection element,
+// which a 0-d scalar tensor satisfies. The constructor's shape validation
+// counts elements via `shape.iter().product()` (the empty product is 1), so a
+// scalar connection passes and reaches the field-strength kernels with an
+// empty shape.
+// Covers src/extensions/hkt_gauge/hkt_gauge_witness.rs lines 482 and 594.
+// ============================================================================
+
+#[derive(Clone, Debug)]
+struct ScalarAbelianGroup;
+
+impl deep_causality_topology::GaugeGroup for ScalarAbelianGroup {
+    const LIE_ALGEBRA_DIM: usize = 1;
+    const IS_ABELIAN: bool = true;
+    const SPACETIME_DIM: usize = 1;
+
+    fn name() -> &'static str {
+        "ScalarAbelian"
+    }
+
+    fn matrix_dim() -> usize {
+        1
+    }
+}
+
+#[test]
+fn test_field_strength_abelian_scalar_connection_uses_single_point_default() {
+    let manifold = create_test_manifold();
+
+    // 0-d scalar connection: 1 element, empty shape.
+    let connection = CausalTensor::new(vec![1.5_f64], Vec::new()).expect("scalar connection");
+    assert!(connection.shape().is_empty());
+    // Field strength expects 1*1*1*1 == 1 element; a scalar tensor also fits.
+    let field_strength = CausalTensor::new(vec![0.0_f64], Vec::new()).expect("scalar fs");
+
+    let field: GaugeField<ScalarAbelianGroup, f64, f64> =
+        GaugeField::with_default_metric(manifold, connection, field_strength)
+            .expect("scalar abelian field");
+
+    let fs = GaugeFieldWitness::compute_field_strength_abelian(&field)
+        .expect("abelian group returns Some");
+    // num_points defaulted to 1, dim = lie = 1 -> a single F component.
+    assert_eq!(fs.shape(), &[1, 1, 1, 1]);
+    assert!(fs.as_slice().iter().all(|x| x.is_finite()));
+}
+
+#[test]
+fn test_field_strength_non_abelian_scalar_connection_uses_single_point_default() {
+    let manifold = create_test_manifold();
+
+    let connection = CausalTensor::new(vec![2.0_f64], Vec::new()).expect("scalar connection");
+    assert!(connection.shape().is_empty());
+    let field_strength = CausalTensor::new(vec![0.0_f64], Vec::new()).expect("scalar fs");
+
+    let field: GaugeField<ScalarAbelianGroup, f64, f64> =
+        GaugeField::with_default_metric(manifold, connection, field_strength)
+            .expect("scalar field");
+
+    let result = GaugeFieldWitness::compute_field_strength_non_abelian(&field, 0.25);
+    assert_eq!(result.shape(), &[1, 1, 1, 1]);
+    assert!(result.as_slice().iter().all(|x| x.is_finite()));
+}

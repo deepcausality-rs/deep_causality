@@ -319,3 +319,149 @@ fn test_adjunction_counit_empty_chain_in_form() {
     let _ =
         <StokesAdjunction as Adjunction<_, _, StokesContext<f64>>>::counit(&ctx, form_of_chains);
 }
+
+#[test]
+fn test_adjunction_counit_returns_first_chain_value() {
+    // Success path of `counit`: the form's single coefficient is a NON-empty chain,
+    // so `chain.weights().values().first()` is `Some(val)` and the value is returned.
+    // Covers src/extensions/hkt_gauge/hkt_adjunction_stokes.rs line 164.
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex.clone());
+
+    // A 0-chain carrying the value 7.0 at vertex 0.
+    let weights = CsrMatrix::from_triplets(1, 1, &[(0, 0, 7.0)]).unwrap();
+    let chain = Chain::new(Arc::new(complex), 0, weights);
+
+    // DifferentialForm<Chain<f64>> with the chain as its single coefficient.
+    let form_of_chains = DifferentialForm::from_coefficients(0, 2, vec![chain]);
+
+    let result =
+        <StokesAdjunction as Adjunction<_, _, StokesContext<f64>>>::counit(&ctx, form_of_chains);
+    assert_eq!(result, 7.0);
+}
+
+#[test]
+fn test_exterior_derivative_k_beyond_coboundary_ops_len() {
+    // Reach the `k >= coboundary_ops.len()` early-return *without* tripping the
+    // earlier `k >= dim` guard. We build a dim-2 complex (three skeletons) but pass an
+    // EMPTY coboundary-operator list, so `coboundary_ops.len() == 0`. A degree-0 form
+    // then satisfies `0 < dim(=2)` yet `0 >= len(=0)`.
+    // Covers src/extensions/hkt_gauge/hkt_adjunction_stokes.rs line 258.
+    let v = vec![Simplex::new(vec![0]), Simplex::new(vec![1])];
+    let e = vec![Simplex::new(vec![0, 1])];
+    let f = vec![Simplex::new(vec![0, 1, 2])];
+    let complex: SimplicialComplex<f64> = SimplicialComplex::new(
+        vec![
+            deep_causality_topology::Skeleton::new(0, v),
+            deep_causality_topology::Skeleton::new(1, e),
+            deep_causality_topology::Skeleton::new(2, f),
+        ],
+        vec![],
+        vec![], // empty coboundary operators -> len 0
+        vec![],
+    );
+    let ctx = StokesContext::new(complex);
+    assert_eq!(ctx.dim(), 2);
+
+    let form = DifferentialForm::from_coefficients(0, 2, vec![1.0, 2.0]);
+    let dform = StokesAdjunction::exterior_derivative(&ctx, &form);
+
+    // Returns a zero (k+1)-form because the coboundary operator is absent.
+    assert_eq!(dform.degree(), 1);
+}
+
+#[test]
+fn test_exterior_derivative_accumulates_signed_sum() {
+    // Drives the inner accumulation `sum += coeffs[col] * sign_t` over a real coboundary
+    // row with both a +1 and a -1 entry.
+    // Covers src/extensions/hkt_gauge/hkt_adjunction_stokes.rs line 288.
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex);
+
+    // df((a,b)) = f(b) - f(a). With f = [0, 10, 100] on the 3 vertices, every edge
+    // derivative is non-zero, so the signed accumulation must execute.
+    let form = DifferentialForm::from_coefficients(0, 2, vec![0.0, 10.0, 100.0]);
+    let dform = StokesAdjunction::exterior_derivative(&ctx, &form);
+
+    let coeffs = dform.coefficients().as_slice();
+    assert_eq!(coeffs.len(), 3);
+    // At least one edge derivative is non-zero -> the multiply-add ran.
+    assert!(coeffs.iter().any(|&x| x != 0.0));
+}
+
+#[test]
+fn test_boundary_accumulates_signed_sum() {
+    // Drives the inner accumulation `sum += *val * sign_t` of the boundary operator over
+    // a 1-chain whose weighted edges map onto shared vertices.
+    // Covers src/extensions/hkt_gauge/hkt_adjunction_stokes.rs line 357.
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex.clone());
+
+    let num_edges = ctx.num_simplices(1);
+    assert!(num_edges >= 1);
+
+    // Distinct non-zero weights on every edge so the per-vertex dot product is non-trivial.
+    let triplets: Vec<(usize, usize, f64)> =
+        (0..num_edges).map(|i| (0, i, (i as f64) + 1.0)).collect();
+    let weights = CsrMatrix::from_triplets(1, num_edges, &triplets).unwrap();
+    let chain = Chain::new(Arc::new(complex), 1, weights);
+
+    let bd = StokesAdjunction::boundary(&ctx, &chain);
+    assert_eq!(bd.grade(), 0);
+    // The boundary of a weighted edge chain yields vertex weights via the signed sum.
+    let vals = bd.weights().values();
+    assert!(vals.iter().any(|&x| x != 0.0));
+}
+
+#[test]
+fn test_boundary_partial_chain_misses_some_columns() {
+    // The boundary inner loop looks up each boundary column in the chain's weight
+    // map. When the chain covers only a *subset* of the edges, the lookup misses
+    // for the absent columns, exercising the `if let Some(val) = chain_map.get(&col)`
+    // false arm (the loop continues without accumulating). Covers the not-found
+    // branch at src/extensions/hkt_gauge/hkt_adjunction_stokes.rs line 357.
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex.clone());
+
+    let num_edges = ctx.num_simplices(1);
+    assert!(num_edges >= 2, "triangle has 3 edges");
+
+    // Populate only the first edge; the remaining boundary columns must miss.
+    let triplets: Vec<(usize, usize, f64)> = vec![(0, 0, 2.0)];
+    let weights = CsrMatrix::from_triplets(1, num_edges, &triplets).unwrap();
+    let chain = Chain::new(Arc::new(complex), 1, weights);
+
+    let bd = StokesAdjunction::boundary(&ctx, &chain);
+    assert_eq!(bd.grade(), 0);
+    // A single weighted edge contributes to its two endpoint vertices only.
+    let vals = bd.weights().values();
+    assert!(vals.iter().any(|&x| x != 0.0));
+}
+
+#[test]
+fn test_exterior_derivative_short_coefficients_skips_out_of_range_columns() {
+    // `exterior_derivative` guards each coboundary column with `col < coeffs.len()`.
+    // Supplying a 0-form with FEWER coefficients than there are vertices forces the
+    // guard's false arm for the out-of-range columns, so those terms are skipped.
+    // Covers the column-bound guard skip at
+    // src/extensions/hkt_gauge/hkt_adjunction_stokes.rs line 288.
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex);
+
+    // The triangle has 3 vertices, but we deliberately supply only 1 coefficient.
+    // Coboundary columns 1 and 2 therefore exceed `coeffs.len() == 1` and are skipped.
+    let form = DifferentialForm::from_coefficients(0, 2, vec![7.0]);
+    let dform = StokesAdjunction::exterior_derivative(&ctx, &form);
+
+    // Result is still a well-formed 1-form on the 3 edges.
+    assert_eq!(dform.degree(), 1);
+    assert_eq!(dform.coefficients().as_slice().len(), 3);
+    // Every entry is finite (only the in-range column 0 ever contributes).
+    assert!(
+        dform
+            .coefficients()
+            .as_slice()
+            .iter()
+            .all(|x| x.is_finite())
+    );
+}

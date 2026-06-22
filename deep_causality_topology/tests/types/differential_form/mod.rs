@@ -4,4 +4,6 @@
  */
 
 #[cfg(test)]
+mod differential_form_coverage_tests;
+#[cfg(test)]
 mod differential_form_tests;

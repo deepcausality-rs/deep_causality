@@ -3,4 +3,6 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 #[cfg(test)]
+mod groups_coverage_tests;
+#[cfg(test)]
 mod groups_tests;

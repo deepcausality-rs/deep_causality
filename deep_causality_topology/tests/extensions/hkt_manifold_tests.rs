@@ -102,3 +102,26 @@ fn test_manifold_applicative_single_func() {
 
     assert_eq!(result.data().as_slice(), &[3.0, 6.0, 9.0]);
 }
+
+#[test]
+fn test_manifold_applicative_multi_func() {
+    // When the function manifold carries MORE than one function, `apply` takes the
+    // `else` branch and zips functions with arguments pairwise.
+    // Covers src/extensions/hkt_manifold/mod.rs line 176.
+    let complex = create_line_manifold().complex().clone();
+
+    // Three distinct functions, one per simplex (2 vertices + 1 edge = 3 cells).
+    let funcs: Vec<fn(f64) -> f64> = vec![|x| x + 1.0, |x| x * 2.0, |x| x - 3.0];
+    let func_data = CausalTensor::new(funcs, vec![3]).unwrap();
+    let func_manifold: SimplicialManifold<f64, fn(f64) -> f64> =
+        Manifold::new(complex.clone(), func_data, 0).unwrap();
+
+    let arg_data = CausalTensor::new(vec![10.0, 20.0, 30.0], vec![3]).unwrap();
+    let data_manifold = Manifold::new(complex, arg_data, 0).unwrap();
+
+    let result: SimplicialManifold<f64, f64> =
+        ManifoldWitness::<f64>::apply(func_manifold, data_manifold);
+
+    // f0(10)=11, f1(20)=40, f2(30)=27
+    assert_eq!(result.data().as_slice(), &[11.0, 40.0, 27.0]);
+}

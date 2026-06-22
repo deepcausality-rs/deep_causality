@@ -15,3 +15,5 @@ mod getters_tests;
 mod graph_tests;
 #[cfg(test)]
 mod graph_topology_tests;
+#[cfg(test)]
+mod graph_topology_trait_coverage_tests;

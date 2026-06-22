@@ -89,3 +89,12 @@ fn dummy_metric_returns_owned_cow_for_compute_on_demand_backends() {
     let star = metric.hodge_star_matrix(&complex, 0);
     assert!(matches!(star, Ok(Cow::Owned(_))));
 }
+
+#[test]
+fn uniform_axis_spacings_defaults_to_none() {
+    // `DummyMetric` does not override `uniform_axis_spacings`, so the default
+    // trait-method body (returns `None`) is exercised here.
+    let metric = DummyMetric;
+    let spacings: Option<Vec<f64>> = metric.uniform_axis_spacings();
+    assert!(spacings.is_none());
+}

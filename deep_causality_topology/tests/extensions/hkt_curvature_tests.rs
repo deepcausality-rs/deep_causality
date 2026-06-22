@@ -118,3 +118,34 @@ fn test_scatter_vectors() {
     assert!((out1.data[0] - 1.0).abs() < 1e-6);
     assert!((out2.data[0] - 1.0).abs() < 1e-6);
 }
+
+#[test]
+fn test_tensor_vector_zeros() {
+    // Exercises TensorVector::zeros (data filled with T::zero()).
+    let z = TensorVector::<f64>::zeros(4);
+    assert_eq!(z.dim(), 4);
+    assert!(z.data.iter().all(|&x| x == 0.0));
+    assert_eq!(z.as_slice(), &[0.0, 0.0, 0.0, 0.0]);
+
+    // Zero-dimension edge case.
+    let empty = TensorVector::<f64>::zeros(0);
+    assert_eq!(empty.dim(), 0);
+    assert!(empty.data.is_empty());
+}
+
+#[test]
+fn test_tensor_vector_into_vec() {
+    // Exercises `From<TensorVector<T>> for Vec<T>`.
+    let v = TensorVector::<f64>::new(&[1.0, 2.0, 3.0]);
+    let raw: Vec<f64> = v.into();
+    assert_eq!(raw, vec![1.0, 2.0, 3.0]);
+}
+
+#[test]
+fn test_tensor_vector_from_vec() {
+    // Exercises `From<Vec<T>> for TensorVector<T>` round-trip with into-Vec.
+    let tv: TensorVector<f64> = vec![4.0, 5.0].into();
+    assert_eq!(tv.dim(), 2);
+    let back: Vec<f64> = tv.into();
+    assert_eq!(back, vec![4.0, 5.0]);
+}

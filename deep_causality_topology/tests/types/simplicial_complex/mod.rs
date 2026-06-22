@@ -17,6 +17,8 @@ mod getters_tests;
 #[cfg(test)]
 mod map_and_default_tests;
 #[cfg(test)]
+mod mod_map_geometry_tests;
+#[cfg(test)]
 mod ops_boundary_tests;
 #[cfg(test)]
 mod simplicial_topology_tests;

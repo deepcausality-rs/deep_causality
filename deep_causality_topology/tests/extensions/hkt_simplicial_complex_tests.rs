@@ -117,6 +117,50 @@ fn test_simplicial_complex_right_adjunct() {
 // ============================================================================
 
 #[test]
+fn test_simplicial_complex_right_adjunct_returns_inner_value() {
+    // Drives the success path of `right_adjunct`: the produced `Chain<Chain<B>>` has a
+    // non-empty outer chain whose first inner chain has a non-empty value list, so the
+    // function returns `val` from the innermost `if let`.
+    // Covers src/extensions/hkt_simplicial_complex/mod.rs line 144.
+    let complex = create_simple_complex();
+
+    // Chain<A> with a single weight at index 0.
+    let weights = CsrMatrix::from_triplets(1, 1, &[(0, 0, 4.0)]).expect("Matrix failed");
+    let chain = Chain::new(complex.clone(), 0, weights);
+
+    let ctx_complex = complex.clone();
+    let f = |w: f64| -> Chain<f64> {
+        let w_matrix = CsrMatrix::from_triplets(1, 1, &[(0, 0, w + 1.0)]).unwrap();
+        Chain::new(complex.clone(), 0, w_matrix)
+    };
+
+    let result = ChainWitness::right_adjunct(&(ctx_complex, 0), chain, f);
+    assert_eq!(result, 5.0);
+}
+
+#[test]
+#[should_panic(expected = "Adjunction::right_adjunct resulted in empty chain.")]
+fn test_simplicial_complex_right_adjunct_empty_panics() {
+    // When the generated chain produces no inner value, `right_adjunct` falls through
+    // both `if let` guards and panics.
+    // Covers src/extensions/hkt_simplicial_complex/mod.rs lines 145 and 147.
+    let complex = create_simple_complex();
+
+    // Outer chain has a single element so `outer_values.into_iter().next()` is `Some`,
+    // but the inner chain is empty so `inner_values.into_iter().next()` is `None`.
+    let weights = CsrMatrix::from_triplets(1, 1, &[(0, 0, 1.0)]).expect("Matrix failed");
+    let chain = Chain::new(complex.clone(), 0, weights);
+
+    let ctx_complex = complex.clone();
+    let f = |_w: f64| -> Chain<f64> {
+        let empty: CsrMatrix<f64> = CsrMatrix::new();
+        Chain::new(complex.clone(), 0, empty)
+    };
+
+    let _ = ChainWitness::right_adjunct(&(ctx_complex, 0), chain, f);
+}
+
+#[test]
 fn test_chain_functor_fmap() {
     let complex = create_simple_complex();
     let size = 3;
