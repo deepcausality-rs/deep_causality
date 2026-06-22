@@ -1,0 +1,88 @@
+deep_causality_algorithms/tests/causal_discovery/surd/mod.rs
+  s_e518d8627dc02d::t_227834c8d9b232 15,19-20
+  s_e518d8627dc02d::t_dafab73e2ae189 14
+deep_causality_algorithms/tests/causal_discovery/brcd/gate_tests.rs
+  s_e518d8627dc02d::t_ab8cbf5aef7aa8 142-153
+deep_causality_algorithms/tests/causal_discovery/brcd/family_tests.rs
+  s_e518d8627dc02d::t_5953e243a1e40b 195-199
+  s_e518d8627dc02d::t_e81fa0602cf8fc 133-194,200-264
+deep_causality_algorithms/tests/causal_discovery/surd/surd_result_tests.rs
+  s_e518d8627dc02d::t_6045bfd527e92d 229-288
+deep_causality_algorithms/tests/causal_discovery/surd/surd_level_raise_tests.rs
+  s_e518d8627dc02d::t_3fd56f50b98923 1-7,26-27,29-34,36-37,40,45,49,60-63,68-69,71,79
+  s_e518d8627dc02d::t_999920bcee8372 8-25,28,35,38-39,41-44,46-48,50-59,64-67,70,72-78
+deep_causality_algorithms/tests/dag_sampling/sample_branch_tests.rs
+  s_e518d8627dc02d::t_e25c9df85d7a9b 231-232,235-236,251-265,268-287,290-300
+  s_e518d8627dc02d::t_6111facd664d6b 217-230,233-234
+  s_e518d8627dc02d::t_ff6a77155492da 38
+  s_e518d8627dc02d::t_2c1e22bf59edeb 266-267
+  s_e518d8627dc02d::t_11b7e08a439821 216,301-329,346-374
+  s_e518d8627dc02d::t_370d0afcf92a1c 183-187,192-193
+  s_e518d8627dc02d::t_c582bf6c21fadd 40
+  s_e518d8627dc02d::t_b33c990e04f233 237-249
+  s_e518d8627dc02d::t_a8dd4896dfed27 88-89
+  s_e518d8627dc02d::t_2ae3de5bae4b9f 1-5,13,19,35-37,39,41-87,90-129,133-182,188-191,194-215
+  s_e518d8627dc02d::t_92f0363e30e35b 6-12,14-18,20-34
+  s_e518d8627dc02d::t_6d1807d98d4d95 130-132
+  s_e518d8627dc02d::t_79a2be1cd5dd06 250
+  s_e518d8627dc02d::t_5dc2a4cb1622e3 288-289
+  s_e518d8627dc02d::t_abfea07fe98223 330-345
+deep_causality_algorithms/tests/causal_discovery/surd/surd_algo_tests.rs
+  s_e518d8627dc02d::t_446f471a6ed9b4 173-182
+  s_e518d8627dc02d::t_855938836a0ffa 191-196,199-202
+  s_e518d8627dc02d::t_301739af89f6b5 183-190,197-198,203-214
+deep_causality_algorithms/tests/causal_discovery/brcd/gaussian_tests.rs
+  s_e518d8627dc02d::t_67a054657122a6 222-236
+deep_causality_algorithms/tests/causal_discovery/brcd/mec_tests.rs
+  s_e518d8627dc02d::t_bb70895f4934ce 204-280
+deep_causality_algorithms/tests/feature_selection/mrmr/mrmr_algo_tests.rs
+  s_e518d8627dc02d::t_5953e243a1e40b 157-168,190-201,222-237
+  s_e518d8627dc02d::t_b40892bd62ce0a 266
+  s_e518d8627dc02d::t_261f883a4e2ff4 148-156,169-189,202-221,238-265,267-271
+deep_causality_algorithms/tests/causal_discovery/brcd/boss_gst_tests.rs
+  s_e518d8627dc02d::t_79b92369a1beea 159-179
+deep_causality_algorithms/tests/causal_discovery/brcd/mapconfig_tests.rs
+  s_e518d8627dc02d::t_7b663c00fe7032 550-569,574-598
+  s_e518d8627dc02d::t_5953e243a1e40b 570-573
+deep_causality_algorithms/tests/causal_discovery/surd/surd_algo_cdl_tests.rs
+  s_e518d8627dc02d::t_ee7f709a253007 300-370
+deep_causality_algorithms/src/causal_discovery/surd/surd_utils/surd_utils_tests.rs
+  s_e518d8627dc02d::t_f88227a9bf087b 11
+  s_e518d8627dc02d::t_3505a223f043b9 83-162,168-172
+  s_e518d8627dc02d::t_bd6ae05db88e70 163-167
+deep_causality_algorithms/tests/causal_discovery/brcd/update_tests.rs
+  s_e518d8627dc02d::t_18d61380571e6b 283-324,332-334,350-403,411-421,429-432
+  s_e518d8627dc02d::t_7be0b08833aa21 325-331,404-410,422-428
+  s_e518d8627dc02d::t_0486951126f65b 335-349
+deep_causality_algorithms/tests/causal_discovery/brcd/boss_search_tests.rs
+  s_e518d8627dc02d::t_0f1ffc8a2e5d2a 142-176
+deep_causality_algorithms/tests/causal_discovery/brcd/boss_bootstrap_tests.rs
+  s_e518d8627dc02d::t_63caf64c7caadd 171-213,216-218
+  s_e518d8627dc02d::t_bae12cdfa20f08 120-170
+  s_e518d8627dc02d::t_7be0b08833aa21 214-215
+deep_causality_algorithms/tests/causal_discovery/surd/surd_zero_target_entropy_tests.rs
+  s_e518d8627dc02d::t_1f1ad837f46af7 16
+  s_e518d8627dc02d::t_9f0624e04cd0fb 40-49
+  s_e518d8627dc02d::t_cc240261e376ee 1-15,17-39,50-58
+deep_causality_algorithms/tests/causal_discovery/brcd/augment_tests.rs
+  s_e518d8627dc02d::t_5b0551b71216a1 130,148-149
+  s_e518d8627dc02d::t_b0387567974074 131-147
+deep_causality_algorithms/tests/dag_sampling/mod.rs
+  s_e518d8627dc02d::t_bcff2eee2616b0 8-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "8a27e2ff0d28e4952c1d08212933dc7710cdd329",
+  "prompts": {},
+  "sessions": {
+    "s_e518d8627dc02d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "56adcfb2-0a54-4aa3-84ac-c438be70f0fd",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
