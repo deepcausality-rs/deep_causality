@@ -14,6 +14,10 @@ mod double_attributes_tests;
 mod double_comparison_tests;
 #[cfg(test)]
 mod double_display_tests;
+// Disabled under Miri: software-emulated floats produce different last-bit
+// results for transcendental ops, so exact equality cannot hold. The test
+// itself is correct and runs under normal CI.
+#[cfg_attr(miri, ignore)]
 #[cfg(test)]
 mod double_erf_tests;
 #[cfg(test)]
@@ -26,5 +30,9 @@ mod double_num_traits_tests;
 mod double_ops_tests;
 #[cfg(test)]
 mod double_traits_tests;
+// Disabled under Miri: software-emulated floats produce different last-bit
+// results for transcendental ops, so exact equality cannot hold. The test
+// itself is correct and runs under normal CI.
+#[cfg_attr(miri, ignore)]
 #[cfg(test)]
 mod double_transcendental_tests;
