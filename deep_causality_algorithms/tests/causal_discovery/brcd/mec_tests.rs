@@ -202,6 +202,83 @@ fn representative_of_cyclic_graph_errors_not_acyclic() {
 }
 
 #[test]
+fn single_large_clique_component_exceeds_the_bound_during_enumeration() {
+    // A 9-clique component has 9! = 362_880 acyclic moral orientations, above the
+    // 100_000 bound. The bound is hit *inside* the per-component MCS enumeration
+    // (not by the cross-component product), so `enumerate_amos` short-circuits with
+    // ClassTooLarge and the error propagates out of `mec_size`.
+    let c = 9;
+    let mut g = graph(c);
+    for i in 0..c {
+        for j in (i + 1)..c {
+            g.add_undirected(i, j).unwrap();
+        }
+    }
+    assert_eq!(
+        mec_size(&g),
+        Err(BrcdError(BrcdErrorEnum::ClassTooLarge {
+            bound: MEC_ENUM_BOUND
+        }))
+    );
+    // The same in-enumeration error surfaces through the member builders.
+    assert_eq!(
+        representative_dag(&g).err(),
+        Some(BrcdError(BrcdErrorEnum::ClassTooLarge {
+            bound: MEC_ENUM_BOUND
+        }))
+    );
+    let mut rng = Xoshiro256::from_seed(1);
+    assert_eq!(
+        mec_sample_dag(&g, &mut rng).err(),
+        Some(BrcdError(BrcdErrorEnum::ClassTooLarge {
+            bound: MEC_ENUM_BOUND
+        }))
+    );
+}
+
+#[test]
+fn longer_undirected_path_excludes_every_collider() {
+    // 0 — 1 — 2 — 3 (no chords): a chordal path. Its acyclic moral orientations
+    // exclude every unshielded collider, so the collider-rejection check fires
+    // during enumeration. The class size of an n-edge path is n+1 = 4.
+    let mut g = graph(4);
+    g.add_undirected(0, 1).unwrap();
+    g.add_undirected(1, 2).unwrap();
+    g.add_undirected(2, 3).unwrap();
+    assert_eq!(mec_size(&g), Ok(4));
+    // Every sampled member is collider-free (≤ 1 parent at each interior node).
+    let mut rng = Xoshiro256::from_seed(9);
+    for _ in 0..30 {
+        let s = mec_sample_dag(&g, &mut rng).unwrap();
+        assert!(is_fully_directed_dag(&s));
+        assert!(s.parents(1).len() <= 1);
+        assert!(s.parents(2).len() <= 1);
+    }
+}
+
+#[test]
+fn non_chordal_cycle_is_not_a_cpdag_for_member_building() {
+    // A chordless 4-cycle 0 — 1 — 2 — 3 — 0 is not chordal, so it admits no acyclic
+    // moral orientation covering all four edges: `enumerate_amos` returns an empty
+    // set. `mec_size` reports size 0; the member builders reject it as NotACpdag.
+    let mut g = graph(4);
+    g.add_undirected(0, 1).unwrap();
+    g.add_undirected(1, 2).unwrap();
+    g.add_undirected(2, 3).unwrap();
+    g.add_undirected(3, 0).unwrap();
+    assert_eq!(mec_size(&g), Ok(0));
+    assert_eq!(
+        representative_dag(&g).err(),
+        Some(BrcdError(BrcdErrorEnum::NotACpdag))
+    );
+    let mut rng = Xoshiro256::from_seed(2);
+    assert_eq!(
+        mec_sample_dag(&g, &mut rng).err(),
+        Some(BrcdError(BrcdErrorEnum::NotACpdag))
+    );
+}
+
+#[test]
 fn class_larger_than_the_bound_is_refused() {
     // 17 disjoint undirected edges → class size 2^17 = 131072 > the bound, caught
     // by the product check before enumeration runs away.

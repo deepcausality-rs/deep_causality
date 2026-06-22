@@ -280,6 +280,156 @@ fn absent_cpdag_still_rejects_empty_data() {
     );
 }
 
+/// Four-variable linear-Gaussian data, columns [X0, X1, X2, X3]. The mechanism
+/// is arbitrary but full-rank so every family scores finitely.
+fn data4(n: usize, seed: u64) -> CausalTensor<f64> {
+    let mut rng = Xoshiro256::from_seed(seed);
+    let dist = Normal::new(0.0_f64, 1.0).unwrap();
+    let mut data = Vec::with_capacity(n * 4);
+    for _ in 0..n {
+        let x0 = dist.sample(&mut rng);
+        let x1 = 0.7 * x0 + dist.sample(&mut rng);
+        let x2 = 1.3 * x1 + dist.sample(&mut rng);
+        let x3 = 0.5 * x2 + dist.sample(&mut rng);
+        data.push(x0);
+        data.push(x1);
+        data.push(x2);
+        data.push(x3);
+    }
+    CausalTensor::new(data, vec![n, 4]).unwrap()
+}
+
+/// A 4-vertex CPDAG in which candidate {0} has NO valid cut configuration:
+/// arcs 1→2, 2→0, 3→0 and undirected 0—1. (See augment_tests for the proof that
+/// both orientations of 0—1 are invalid.) Candidate {0} therefore scores as −∞
+/// (the None-plan branch); the other single-element candidates score normally.
+fn no_config_cpdag() -> MixedGraph<()> {
+    let data = CausalTensor::new(vec![(); 4], vec![4]).unwrap();
+    let mut g = MixedGraph::new(4, data, 0).unwrap();
+    g.add_arc(1, 2).unwrap();
+    g.add_arc(2, 0).unwrap();
+    g.add_arc(3, 0).unwrap();
+    g.add_undirected(0, 1).unwrap();
+    g
+}
+
+#[test]
+fn candidate_without_a_valid_configuration_scores_neg_inf() {
+    // brcd_run must still return a full ranking: candidate {0} has no valid cut
+    // configuration, so its plan is None and its log-posterior is −∞ (it sorts
+    // last), while the remaining candidates rank normally. This exercises the
+    // None-plan branch of the posterior assembly.
+    let normal = data4(120, 101);
+    let anomalous = data4(120, 102);
+    let cpdag = no_config_cpdag();
+    let result = brcd_run(
+        &normal,
+        &anomalous,
+        Some(&cpdag),
+        &BrcdConfig::continuous(7),
+    )
+    .unwrap();
+
+    // k = 1 over 4 variables → 4 single-element candidates.
+    assert_eq!(result.ranks().len(), 4);
+    // Candidate {0} has no valid configuration → its plan is None and its
+    // posterior weight collapses to 0.0 (−∞ log-posterior, exp-shifted).
+    let idx0 = result
+        .ranks()
+        .iter()
+        .position(|c| c == &vec![0])
+        .expect("candidate {0} is present");
+    assert_eq!(
+        result.posterior()[idx0],
+        0.0,
+        "candidate {{0}} (no valid config) carries zero posterior; ranks: {:?}, post: {:?}",
+        result.ranks(),
+        result.posterior()
+    );
+    // The reported posterior weights are descending.
+    let post = result.posterior();
+    assert!(post.windows(2).all(|w| w[0] >= w[1]));
+}
+
+#[test]
+fn multiple_root_causes_enumerate_pairwise_candidates() {
+    // num_root_causes = 2 over 4 variables → C(4,2) = 6 candidate pairs. This
+    // drives the k ≥ 2 path of the candidate combinations (the inner index-fill
+    // loop), and every returned candidate is a sorted 2-element set.
+    let normal = data4(120, 111);
+    let anomalous = data4(120, 112);
+    let cpdag = chain_cpdag4();
+    let mut config = BrcdConfig::continuous(7);
+    config.num_root_causes = 2;
+    let result = brcd_run(&normal, &anomalous, Some(&cpdag), &config).unwrap();
+
+    assert_eq!(result.ranks().len(), 6, "C(4,2) = 6 pairs");
+    for cand in result.ranks() {
+        assert_eq!(cand.len(), 2);
+        assert!(cand[0] < cand[1], "each pair is sorted ascending");
+    }
+    // All six unordered pairs over {0,1,2,3} appear exactly once.
+    let mut seen: Vec<Vec<usize>> = result.ranks().to_vec();
+    seen.sort();
+    assert_eq!(
+        seen,
+        vec![
+            vec![0, 1],
+            vec![0, 2],
+            vec![0, 3],
+            vec![1, 2],
+            vec![1, 3],
+            vec![2, 3],
+        ]
+    );
+}
+
+/// The undirected chain CPDAG X0 — X1 — X2 — X3 over four vertices.
+fn chain_cpdag4() -> MixedGraph<()> {
+    let data = CausalTensor::new(vec![(); 4], vec![4]).unwrap();
+    let mut g = MixedGraph::new(4, data, 0).unwrap();
+    g.add_undirected(0, 1).unwrap();
+    g.add_undirected(1, 2).unwrap();
+    g.add_undirected(2, 3).unwrap();
+    g
+}
+
+#[test]
+fn non_2d_normal_tensor_is_rejected() {
+    // A 1-D (non-matrix) normal tensor fails the shape_2d guard → DimensionMismatch.
+    let normal = CausalTensor::new(vec![1.0_f64, 2.0, 3.0], vec![3]).unwrap();
+    let anomalous = chain_data(20, 3.0, 121);
+    let cpdag = chain_cpdag();
+    assert_eq!(
+        brcd_run(
+            &normal,
+            &anomalous,
+            Some(&cpdag),
+            &BrcdConfig::continuous(0)
+        )
+        .err(),
+        Some(BrcdError(BrcdErrorEnum::DimensionMismatch))
+    );
+}
+
+#[test]
+fn non_2d_anomalous_tensor_is_rejected() {
+    // A 3-D anomalous tensor fails the shape_2d guard → DimensionMismatch.
+    let normal = chain_data(20, 0.0, 131);
+    let anomalous = CausalTensor::new(vec![0.0_f64; 8], vec![2, 2, 2]).unwrap();
+    let cpdag = chain_cpdag();
+    assert_eq!(
+        brcd_run(
+            &normal,
+            &anomalous,
+            Some(&cpdag),
+            &BrcdConfig::continuous(0)
+        )
+        .err(),
+        Some(BrcdError(BrcdErrorEnum::DimensionMismatch))
+    );
+}
+
 #[test]
 fn discrete_family_rejects_negative_states() {
     // The discrete family rounds each value to a non-negative integer state; a

@@ -117,6 +117,105 @@ fn marginalizes_the_discrete_family() {
     assert!(result.posterior().iter().all(|p| p.is_finite()));
 }
 
+/// Linear-Gaussian v-structure X → Z ← Y (Z = X + Y + ε): the collider compels
+/// both arcs, so the learned CPDAG carries directed arcs. `shift` perturbs Z.
+fn vstructure_data(n: usize, shift: f64, seed: u64) -> CausalTensor<f64> {
+    let mut rng = Xoshiro256::from_seed(seed);
+    let dist = Normal::new(0.0_f64, 1.0).unwrap();
+    let mut data = Vec::with_capacity(n * 3);
+    for _ in 0..n {
+        let x = dist.sample(&mut rng);
+        let y = dist.sample(&mut rng);
+        let z = shift + x + y + 0.2 * dist.sample(&mut rng);
+        data.extend([x, y, z]);
+    }
+    CausalTensor::new(data, vec![n, 3]).unwrap()
+}
+
+#[test]
+fn marginalizes_over_a_cpdag_with_directed_arcs() {
+    // The v-structure forces compelled arcs into the learned CPDAG, exercising the
+    // arc-collection branch of the structural key (deduplicating CPDAGs by their
+    // directed arcs as well as their undirected edges).
+    let normal = vstructure_data(200, 0.0, 61);
+    let anomalous = vstructure_data(200, 5.0, 62);
+    let config = BrcdConfig::continuous(13);
+    let boot = BootstrapConfig::new(8, 4);
+
+    let result = brcd_run_bootstrap(&normal, &anomalous, &config, &boot).unwrap();
+    assert_eq!(result.ranks().len(), 3);
+    let sum: f64 = result.posterior().iter().sum();
+    assert!((sum - 1.0).abs() < 1e-9, "marginal must normalize: {sum}");
+    assert!(result.posterior().iter().all(|p| p.is_finite()));
+}
+
+#[test]
+fn negative_discrete_state_is_out_of_range() {
+    // With the discrete family, a negative value cannot be a categorical state, so
+    // `build_discrete` (reached through the bootstrap's per-CPDAG joint likelihood)
+    // rejects it as StateOutOfRange.
+    let mut data = vec![0.0_f64; 4 * 3];
+    data[5] = -1.0; // a negative entry in row 1, column 2
+    let normal = CausalTensor::new(data.clone(), vec![4, 3]).unwrap();
+    let anomalous = CausalTensor::new(data, vec![4, 3]).unwrap();
+    let err = brcd_run_bootstrap(
+        &normal,
+        &anomalous,
+        &BrcdConfig::discrete(71),
+        &BootstrapConfig::new(2, 1),
+    )
+    .unwrap_err();
+    assert_eq!(*err.kind(), BrcdErrorEnum::StateOutOfRange);
+}
+
+/// A genuine collider X(0) → Z(2) ← Y(1) with large noise (std 3) so BOSS
+/// cleanly orients the unshielded collider into directed arcs. `shift` perturbs Z.
+fn collider_data(n: usize, shift: f64, seed: u64) -> CausalTensor<f64> {
+    let mut rng = Xoshiro256::from_seed(seed);
+    let dist = Normal::new(0.0_f64, 1.0).unwrap();
+    let mut data = Vec::with_capacity(n * 3);
+    for _ in 0..n {
+        let x = dist.sample(&mut rng);
+        let y = dist.sample(&mut rng);
+        let z = shift + x + y + 3.0 * dist.sample(&mut rng);
+        data.extend([x, y, z]);
+    }
+    CausalTensor::new(data, vec![n, 3]).unwrap()
+}
+
+#[test]
+fn marginalizes_over_a_cpdag_whose_structural_key_has_directed_arcs() {
+    // Large-noise collider data makes BOSS learn a CPDAG with compelled directed
+    // arcs (0→2, 1→2). Deduplicating those CPDAGs by their structural key walks
+    // each vertex's parent set, exercising the arc-collection loop body of
+    // `cpdag_key` (which the small-noise v-structure case does not reliably hit).
+    let normal = collider_data(600, 0.0, 301);
+    let anomalous = collider_data(600, 6.0, 302);
+    let config = BrcdConfig::continuous(7);
+    let boot = BootstrapConfig::new(8, 4);
+
+    let result = brcd_run_bootstrap(&normal, &anomalous, &config, &boot).unwrap();
+    assert_eq!(result.ranks().len(), 3);
+    let sum: f64 = result.posterior().iter().sum();
+    assert!((sum - 1.0).abs() < 1e-9, "marginal must normalize: {sum}");
+    assert!(result.posterior().iter().all(|p| p.is_finite()));
+}
+
+#[test]
+fn discrete_joint_likelihood_rejects_non_positive_concentration() {
+    // The discrete bootstrap weight computes each CPDAG's joint log-likelihood via
+    // the Dirichlet density. A non-positive `alpha_star` makes the concentration
+    // α₀ = α*/K ≤ 0, so `dirichlet_logdensity` returns NonPositiveConcentration;
+    // the `?` propagates it out of `joint_log_likelihood`.
+    let normal = discrete_chain(120, 0.0, 311);
+    let anomalous = discrete_chain(120, 1.5, 312);
+    let mut config = BrcdConfig::discrete(7);
+    config.alpha_star = 0.0; // non-positive concentration
+    let err =
+        brcd_run_bootstrap(&normal, &anomalous, &config, &BootstrapConfig::new(4, 2)).unwrap_err();
+    assert_eq!(*err.kind(), BrcdErrorEnum::NonPositiveConcentration);
+}
+
 #[test]
 fn config_is_copy_and_constructible() {
     let c = BootstrapConfig::new(10, 5);

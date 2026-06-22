@@ -226,3 +226,63 @@ fn test_display_error_propagation() {
     // Assert that the write operation failed.
     assert!(result.is_err());
 }
+
+#[test]
+fn test_display_error_propagation_on_last_write() {
+    use std::cell::Cell;
+    use std::fmt::{self, Write};
+
+    // A writer that succeeds for the first `n` writes, then fails. This forces the
+    // `?` on the final `writeln!` (the Non-Causal Synergistic line) to take its
+    // error path, covering surd_result.rs line ~161.
+    struct LastFailingWriter {
+        remaining_ok: Cell<usize>,
+    }
+
+    impl Write for LastFailingWriter {
+        fn write_str(&mut self, _s: &str) -> fmt::Result {
+            let n = self.remaining_ok.get();
+            if n == 0 {
+                Err(fmt::Error)
+            } else {
+                self.remaining_ok.set(n - 1);
+                Ok(())
+            }
+        }
+    }
+
+    let surd_result = create_test_surd_result();
+
+    // Count how many successful writes a full Display performs.
+    let mut counter = String::new();
+    write!(&mut counter, "{}", surd_result).expect("format into String must succeed");
+
+    // The Display impl uses many `writeln!`/`write!` calls; `write_str` may be
+    // invoked more than once per macro. Discover the exact count by formatting
+    // into a writer that counts calls.
+    struct Counting {
+        count: Cell<usize>,
+    }
+    impl Write for Counting {
+        fn write_str(&mut self, _s: &str) -> fmt::Result {
+            self.count.set(self.count.get() + 1);
+            Ok(())
+        }
+    }
+    let counting = Counting {
+        count: Cell::new(0),
+    };
+    let mut counting = counting;
+    write!(&mut counting, "{}", surd_result).expect("counting format must succeed");
+    let total_writes = counting.count.get();
+    assert!(total_writes > 0);
+
+    // Allow all writes except the very last one to succeed.
+    let mut writer = LastFailingWriter {
+        remaining_ok: Cell::new(total_writes - 1),
+    };
+    let result = write!(&mut writer, "{}", surd_result);
+
+    // The final write fails, so the trailing `?` propagates the error.
+    assert!(result.is_err());
+}

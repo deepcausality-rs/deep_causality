@@ -139,3 +139,38 @@ fn propagates_scorer_errors() {
         Ok(_) => panic!("expected the scorer error to propagate"),
     }
 }
+
+/// A scorer whose target vertex 0 always scores `−∞` (every parent set, including
+/// the empty one). All other vertices score a fixed finite value. This drives the
+/// non-finite handling in `total_score` and `better_mutation`.
+struct NonFiniteScorer {
+    n: usize,
+}
+impl FamilyScorer<f64> for NonFiniteScorer {
+    fn score(&self, node: usize, _parents: &[usize]) -> Result<f64, BrcdError> {
+        if node == 0 {
+            Ok(f64::NEG_INFINITY)
+        } else {
+            Ok(1.0)
+        }
+    }
+    fn num_vars(&self) -> usize {
+        self.n
+    }
+}
+
+#[test]
+fn non_finite_family_score_yields_a_non_finite_total() {
+    // Vertex 0 always scores −∞, so the total score over any order is −∞ (the
+    // `total_score` non-finite short-circuit) and `better_mutation`'s prefix
+    // accumulation hits its non-finite branch. The search must still terminate and
+    // return a valid permutation of {0, 1, 2}.
+    let scorer = NonFiniteScorer { n: 3 };
+    let res = best_order_search(&scorer, 4).unwrap();
+    let mut order = res.order.clone();
+    order.sort_unstable();
+    assert_eq!(order, vec![0, 1, 2]);
+    assert_eq!(res.parents.len(), 3);
+    // Vertex 0 can never improve any fit, so it takes no parents.
+    assert!(res.parents[0].is_empty());
+}

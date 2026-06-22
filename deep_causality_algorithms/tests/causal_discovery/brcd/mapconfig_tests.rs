@@ -547,6 +547,55 @@ fn finder_du0_returns_single_config() {
 
 // --- finder guards & seed search --------------------------------------------
 
+/// du = 0 with an invalid lone configuration: a graph whose arc projection is
+/// already cyclic has no undirected edges incident on the target (du = 0), but the
+/// single completed configuration is rejected by the acyclicity check. The finder
+/// returns an empty config set (the candidate scores as −∞ in the driver).
+#[test]
+fn finder_du0_invalid_config_returns_empty() {
+    // Directed 3-cycle 0 → 1 → 2 → 0; no undirected edges, so du = 0 at every node.
+    let n = 3usize;
+    let data = CausalTensor::new(vec![(); n], vec![n]).unwrap();
+    let mut g = MixedGraph::new(n, data, 0).unwrap();
+    g.add_arc(0, 1).unwrap();
+    g.add_arc(1, 2).unwrap();
+    g.add_arc(2, 0).unwrap();
+    assert!(g.undirected_neighbors(0).is_empty(), "du must be 0");
+
+    let pruned = find_map_configs::<f64, (), _>(&g, &[0], |_| Ok(0.0)).expect("finder runs");
+    assert!(
+        pruned.configs.is_empty(),
+        "a cyclic lone configuration must be rejected"
+    );
+    assert_eq!(
+        pruned.evals, 1,
+        "du=0 evaluates the lone config exactly once"
+    );
+}
+
+/// du > 0 with no valid start: an incident undirected edge sits on a target whose
+/// arc projection is already cyclic. Every orientation of that edge still leaves
+/// the cycle, so all-out, all-in and every single-bit seed are invalid;
+/// `valid_start` returns `None` and the finder yields an empty config set.
+#[test]
+fn finder_no_valid_start_returns_empty() {
+    // Directed 3-cycle 0 → 1 → 2 → 0 plus an undirected edge 0 — 3 (du = 1 at 0).
+    let n = 4usize;
+    let data = CausalTensor::new(vec![(); n], vec![n]).unwrap();
+    let mut g = MixedGraph::new(n, data, 0).unwrap();
+    g.add_arc(0, 1).unwrap();
+    g.add_arc(1, 2).unwrap();
+    g.add_arc(2, 0).unwrap();
+    g.add_undirected(0, 3).unwrap();
+    assert_eq!(g.undirected_neighbors(0).len(), 1, "du must be 1");
+
+    let pruned = find_map_configs::<f64, (), _>(&g, &[0], |_| Ok(0.0)).expect("finder runs");
+    assert!(
+        pruned.configs.is_empty(),
+        "no orientation can remove the pre-existing cycle"
+    );
+}
+
 /// A target index outside the graph is rejected (`NodeOutOfBounds`).
 #[test]
 fn finder_rejects_out_of_bounds_target() {

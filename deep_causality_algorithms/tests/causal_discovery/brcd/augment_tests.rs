@@ -127,6 +127,26 @@ fn too_many_incident_edges_are_refused() {
     );
 }
 
+#[test]
+fn candidate_with_no_valid_configuration_yields_empty() {
+    // CPDAG: arcs 1→2, 2→0, 3→0, plus undirected 0—1. Acyclic by construction.
+    // For candidate {0} the single incident undirected edge (0—1) is invalid in
+    // both orientations:
+    //   0→1 closes the cycle 0→1→2→0 (cyclic), and
+    //   1→0 makes 1 a parent of 0 non-adjacent to the existing parent 3, a new
+    //       unshielded collider 1→0←3.
+    // So neither orientation survives → get_configurations_multi is empty. This
+    // is the structural precondition for the −∞ / None-plan branch in brcd_run.
+    let mut g = graph(4);
+    g.add_arc(1, 2).unwrap();
+    g.add_arc(2, 0).unwrap();
+    g.add_arc(3, 0).unwrap();
+    g.add_undirected(0, 1).unwrap();
+    assert!(!g.has_cycle());
+    let configs = get_configurations_multi(&g, &[0]).unwrap();
+    assert!(configs.is_empty(), "expected no valid configuration");
+}
+
 // --- augmented_graph --------------------------------------------------------
 
 #[test]

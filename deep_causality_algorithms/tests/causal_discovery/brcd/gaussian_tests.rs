@@ -219,6 +219,22 @@ fn single_expert_rejects_bad_shapes() {
 }
 
 #[test]
+fn parented_density_falls_back_when_no_row_is_finite() {
+    // Every parent row is non-finite, so the finite-row filter empties `x_fit`
+    // and the fit falls back to the node's sample mean/variance (the parentless
+    // closed form) instead of a ridge fit.
+    let y = vec![1.0, 2.0, 3.0];
+    let parents = vec![vec![f64::NAN], vec![f64::INFINITY], vec![f64::NAN]];
+    let out = gaussian_single_expert_logdensity(&y, &parents, Transform::None, ridge()).unwrap();
+
+    // Fallback is mean(y)=2, var(ddof1)=1: identical to the parentless density.
+    let parentless = gaussian_single_expert_logdensity(&y, &[], Transform::None, ridge()).unwrap();
+    for (a, b) in out.iter().zip(parentless.iter()) {
+        assert!((a - b).abs() < 1e-12, "{a} vs {b}");
+    }
+}
+
+#[test]
 fn density_agrees_at_f32_and_f64() {
     let y64 = vec![1.0_f64, 2.0, 3.0];
     let o64 = gaussian_single_expert_logdensity(&y64, &[], Transform::None, RIDGE_DEFAULT).unwrap();
