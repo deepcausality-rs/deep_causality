@@ -67,3 +67,18 @@ fn test_energy_into_f64() {
     let val: f64 = e.into();
     assert!((val - 42.0).abs() < 1e-10);
 }
+
+#[test]
+fn test_energy_default() {
+    // si_primitives/mod.rs:401-403
+    let e = Energy::<f64>::default();
+    assert!((e.value() - 0.0).abs() < 1e-10);
+}
+
+// NOTE on si_primitives/mod.rs:423-424, 430-431, 437-438 — the `ok_or_else`
+// closure bodies for `R::from_f64(JOULES_PER_EV / JOULES_PER_CALORIE /
+// JOULES_PER_KWH)` in `Energy::from_electron_volts`, `from_calories`, and
+// `from_kilowatt_hours`. `from_f64` is infallible for f64, so these conversions
+// never return `None` and the defensive error closures are unreachable for the
+// f64 monomorphisation. The success paths are covered by the conversion tests
+// above.

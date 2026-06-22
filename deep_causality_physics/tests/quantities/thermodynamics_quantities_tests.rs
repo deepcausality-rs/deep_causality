@@ -82,3 +82,10 @@ fn test_efficiency_into_f64() {
     let val: f64 = eff.into();
     assert!((val - 0.75).abs() < 1e-10);
 }
+
+#[test]
+fn test_efficiency_default() {
+    // thermodynamics/mod.rs:42-44
+    let eff = Efficiency::<f64>::default();
+    assert!((eff.value() - 0.0).abs() < 1e-10);
+}

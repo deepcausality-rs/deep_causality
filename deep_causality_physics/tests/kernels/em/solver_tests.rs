@@ -106,6 +106,29 @@ fn test_potential_divergence_non_zero() {
 }
 
 #[test]
+fn test_potential_divergence_non_finite_scalar_result() {
+    // Both inputs are *pure grade-1* (only e1 populated), so they pass the
+    // pure-grade validation, but their inner product e1·e1 = MAX*MAX overflows
+    // to +inf, tripping the non-finite scalar guard at solver.rs:63-66.
+    let metric = Metric::Euclidean(3);
+    let mut d_data = vec![0.0; 8];
+    d_data[1] = f64::MAX; // e1 only -> pure grade 1
+    let d = CausalMultiVector::new(d_data, metric).unwrap();
+
+    let mut a_data = vec![0.0; 8];
+    a_data[1] = f64::MAX; // e1 only -> pure grade 1
+    let a = CausalMultiVector::new(a_data, metric).unwrap();
+
+    match MaxwellSolver::calculate_potential_divergence::<f64>(&d, &a) {
+        Err(e) => match e.0 {
+            PhysicsErrorEnum::NumericalInstability(_) => {}
+            _ => panic!("Expected NumericalInstability, got {:?}", e),
+        },
+        Ok(v) => panic!("Expected non-finite divergence error, got {}", v),
+    }
+}
+
+#[test]
 fn test_potential_divergence_metric_mismatch() {
     let d = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
     let a = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();

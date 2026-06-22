@@ -75,3 +75,12 @@ fn test_normalize() {
     let mag = (val.re * val.re + val.im * val.im).sqrt();
     assert!((mag - 1.0).abs() < 1e-10);
 }
+
+// NOTE on gates.rs:47-49, 51-52 — the `unwrap_or_else` fallback closure of
+// `QuantumOps::dag` for `CausalMultiVector<Complex<R>>`. `dag` reverses and
+// conjugates the multivector, then calls
+// `CausalMultiVector::new(conjugated_data, reverted.metric())`. The conjugated
+// data has exactly the same length as the reverted multivector and reuses its
+// metric, so the rebuild is always consistent and `new` always returns `Ok`.
+// The `Err(_)` fallback (which would rebuild a zeroed multivector) is therefore
+// unreachable for any input.

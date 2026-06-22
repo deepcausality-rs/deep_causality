@@ -100,6 +100,29 @@ fn test_geodesic_deviation_kernel_dimension_error() {
     assert!(result.is_err(), "Should error on wrong Riemann rank");
 }
 
+#[test]
+fn test_geodesic_deviation_kernel_vector_length_error() {
+    // Correct rank-4 Riemann but velocity/separation are not length 4 → the
+    // `u.len() != dim || n.len() != dim` guard must error.
+    let riemann = CausalTensor::new(vec![0.0f64; 256], vec![4, 4, 4, 4]).unwrap();
+
+    // Velocity too short
+    let bad_u: [f64; 3] = [1.0, 0.0, 0.0];
+    let good_n: [f64; 4] = [0.0, 1.0, 0.0, 0.0];
+    assert!(
+        geodesic_deviation_kernel(&riemann, &bad_u, &good_n).is_err(),
+        "Velocity of length 3 must error"
+    );
+
+    // Separation too long
+    let good_u: [f64; 4] = [1.0, 0.0, 0.0, 0.0];
+    let bad_n: [f64; 5] = [0.0, 1.0, 0.0, 0.0, 0.0];
+    assert!(
+        geodesic_deviation_kernel(&riemann, &good_u, &bad_n).is_err(),
+        "Separation of length 5 must error"
+    );
+}
+
 // =============================================================================
 // geodesic_integrator_kernel Tests
 // =============================================================================
@@ -212,4 +235,26 @@ fn test_geodesic_integrator_kernel_invalid_step() {
         10,
     );
     assert!(result.is_err());
+}
+
+#[test]
+fn test_geodesic_integrator_kernel_divergence_error() {
+    // A huge Christoffel coupling with a large velocity and step size makes the
+    // RK4 acceleration grow without bound, overflowing to a non-finite value and
+    // exercising the "geodesic integration diverged" instability branch.
+    let initial_position: Vec<f64> = vec![0.0, 0.0];
+    let initial_velocity: Vec<f64> = vec![1e150, 1e150];
+
+    // Γ[0,0,0] and Γ[1,1,1] enormous → a^mu ∝ -Γ u u explodes.
+    let mut gamma = vec![0.0f64; 8]; // [2,2,2]
+    gamma[0] = 1e150; // Γ^0_00
+    gamma[7] = 1e150; // Γ^1_11
+    let christoffel = CausalTensor::new(gamma, vec![2, 2, 2]).unwrap();
+
+    let result =
+        geodesic_integrator_kernel(&initial_position, &initial_velocity, &christoffel, 1e10, 20);
+    assert!(
+        result.is_err(),
+        "Diverging RK4 integration must yield a NumericalInstability error"
+    );
 }

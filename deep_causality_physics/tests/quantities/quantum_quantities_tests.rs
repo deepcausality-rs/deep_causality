@@ -68,6 +68,13 @@ fn test_probability_into_f64() {
     assert!((val - 0.75).abs() < 1e-10);
 }
 
+#[test]
+fn test_probability_default() {
+    // dimensionless/mod.rs:78-80
+    let prob = Probability::<f64>::default();
+    assert!((prob.value() - 0.0).abs() < 1e-10);
+}
+
 // =============================================================================
 // PhaseAngle Tests
 // =============================================================================

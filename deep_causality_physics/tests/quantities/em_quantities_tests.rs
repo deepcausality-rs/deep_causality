@@ -99,3 +99,10 @@ fn test_physical_field_new_and_accessors() {
     let inner = field.into_inner();
     assert_eq!(inner.data(), mv.data());
 }
+
+#[test]
+fn test_magnetic_flux_default() {
+    // em/mod.rs:43-45
+    let flux = MagneticFlux::<f64>::default();
+    assert!((flux.value() - 0.0).abs() < 1e-10);
+}

@@ -221,3 +221,17 @@ fn test_cahn_hilliard_flux_multi_element() {
     assert!((flux.data()[1] - (-0.375)).abs() < 1e-10);
     assert!((flux.data()[2] - (-0.5625)).abs() < 1e-10);
 }
+
+// NOTE on two defensively-unreachable size guards in the condensed-phase
+// kernels:
+//   * phase.rs:70-72 — "Vector size mismatch" in
+//     `ginzburg_landau_free_energy_kernel`. By the time this runs the kernel has
+//     already verified `a.metric() == gradient_psi.metric()` (line 58). For
+//     `CausalMultiVector` the metric fully determines the component count, so
+//     equal metrics imply `a.data().len() == grad_data.len()`; the length guard
+//     can never fire. (See `test_ginzburg_landau_error_vector_size_mismatch`.)
+//   * phase.rs:154-156 — "Mobility field size does not match gradient field
+//     size" in `cahn_hilliard_flux_kernel`. `mobility_field` is derived
+//     element-wise from `c_tensor`, whose shape was already required to equal
+//     `grad_mu.shape()` (line 132), so `m_data.len() == g_data.len()` always
+//     holds and this guard is unreachable.

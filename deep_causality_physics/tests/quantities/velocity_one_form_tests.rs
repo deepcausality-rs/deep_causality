@@ -110,6 +110,25 @@ fn add_panics_on_mismatched_lattices() {
 }
 
 #[test]
+fn from_raw_wraps_without_validation() {
+    // from_raw skips length/finiteness validation; it wraps any tensor verbatim,
+    // including one whose length does not match any manifold and a NaN coefficient.
+    let raw = CausalTensor::new(vec![1.0, f64::NAN, 3.0], vec![3]).unwrap();
+    let v = VelocityOneForm::from_raw(raw);
+    assert_eq!(v.len(), 3);
+    assert!(!v.is_empty());
+    assert_eq!(v.as_tensor().as_slice()[0], 1.0);
+    assert!(v.as_tensor().as_slice()[1].is_nan());
+}
+
+#[test]
+fn from_raw_empty_is_empty() {
+    let v = VelocityOneForm::from_raw(CausalTensor::new(Vec::<f64>::new(), vec![0]).unwrap());
+    assert!(v.is_empty());
+    assert_eq!(v.len(), 0);
+}
+
+#[test]
 fn derives_debug_clone_partial_eq() {
     let manifold = unit_manifold::<f64>(3);
     let a = VelocityOneForm::new(edge_tensor(&manifold, 1.0), &manifold).unwrap();

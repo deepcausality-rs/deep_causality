@@ -172,3 +172,53 @@ fn test_into_causality_error() {
     let err_str = format!("{}", causality_err);
     assert!(err_str.contains("Metric Singularity: test"));
 }
+
+#[test]
+fn test_metric_convention_error() {
+    // Exercises the MetricConventionError constructor (physics_error.rs:104-106).
+    let msg = "convention mismatch".to_string();
+    let err = PhysicsError::MetricConventionError(msg.clone());
+    match err.0 {
+        PhysicsErrorEnum::MetricConventionError(m) => assert_eq!(m, msg),
+        _ => panic!("Wrong variant"),
+    }
+}
+
+#[test]
+fn test_topology_error() {
+    let msg = "topology problem".to_string();
+    let err = PhysicsError::TopologyError(msg.clone());
+    match err.0 {
+        PhysicsErrorEnum::TopologyError(m) => assert_eq!(m, msg),
+        _ => panic!("Wrong variant"),
+    }
+}
+
+#[test]
+fn test_metric_convention_error_display() {
+    // Exercises the MetricConventionError Display arm (physics_error.rs:156-157).
+    assert_eq!(
+        format!("{}", PhysicsError::MetricConventionError("oops".into())),
+        "Metric Convention Error: oops"
+    );
+}
+
+#[test]
+fn test_topology_error_display() {
+    assert_eq!(
+        format!("{}", PhysicsError::TopologyError("graph".into())),
+        "Topology Error: graph"
+    );
+}
+
+#[test]
+fn test_from_metric_error() {
+    // Exercises From<MetricError> for PhysicsError (physics_error.rs:132-134).
+    // Construct a real MetricError and convert it.
+    let metric_err = deep_causality_metric::MetricError::ValidationFailed("bad metric".into());
+    let err: PhysicsError = PhysicsError::from(metric_err);
+    match err.0 {
+        PhysicsErrorEnum::MetricConventionError(m) => assert!(!m.is_empty()),
+        other => panic!("Wrong variant: {:?}", other),
+    }
+}

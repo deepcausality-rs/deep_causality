@@ -103,3 +103,10 @@ fn test_time_into_f64() {
     let val: f64 = t.into();
     assert!((val - 123.0).abs() < 1e-10);
 }
+
+// NOTE on si_primitives/mod.rs:353-354 and 360-361 — the `ok_or_else` closure
+// bodies for `R::from_f64(86400.0)` / `R::from_f64(31_557_600.0)` in
+// `Time::from_days` and `Time::from_years`. `from_f64` is infallible for f64,
+// so these conversions never return `None` and the defensive error closures are
+// unreachable for the f64 monomorphisation. The success paths are covered by
+// the unit-conversion tests above.

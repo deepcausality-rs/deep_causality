@@ -6,7 +6,7 @@
 use deep_causality_metric::{EastCoastMetric, LorentzianMetric};
 use deep_causality_physics::{energy_momentum_tensor_em_kernel, relativistic_current_kernel};
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud};
+use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry};
 
 #[test]
 fn test_relativistic_current_kernel_4d() {
@@ -133,6 +133,52 @@ fn test_relativistic_current_kernel_low_skeleton_error() {
     let r = relativistic_current_kernel(&manifold, &metric);
     assert!(r.is_err(), "1D complex must fail for relativistic current");
 }
+
+#[test]
+fn test_relativistic_current_kernel_insufficient_hodge_ops_error() {
+    // A 2D triangular complex has skeletons {0,1,2} (len 3, passes the >=3
+    // check) and a 4D metric (passes the dimension>=4 check), but only 3 Hodge
+    // star operators (dims 0..=2) — fewer than the 4 required — so the kernel
+    // hits the "Missing Hodge star operators" guard (grmhd.rs:69-74).
+    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 0.866], vec![3, 2]).unwrap();
+    let cloud = PointCloud::new(points, CausalTensor::<f64>::zeros(&[3]), 0).unwrap();
+    let complex = cloud.triangulate(1.1).unwrap();
+    let total = complex.total_simplices();
+    let num_edges = complex.skeletons()[1].simplices().len();
+    let metric_regge =
+        ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges]).unwrap());
+    let manifold = Manifold::with_metric(
+        complex,
+        CausalTensor::new(vec![1.0; total], vec![total]).unwrap(),
+        Some(metric_regge),
+        0,
+    )
+    .unwrap();
+
+    // 4D spacetime metric so the dimension check passes; failure must come from
+    // the Hodge-operator count, not the metric dimension.
+    let spacetime = EastCoastMetric::minkowski_4d();
+    let r = relativistic_current_kernel(&manifold, &spacetime);
+    assert!(
+        r.is_err(),
+        "2D complex must lack the 4 Hodge operators needed for a 4D EM 2-form"
+    );
+}
+
+// NOTE on defensively-unreachable GRMHD branches:
+//   * grmhd.rs:77-80 — "Missing coboundary operators: need 3". To reach it the
+//     manifold must first pass the `hodge_ops.len() >= 4` check (lines 69-74),
+//     which requires max_dim >= 3. A complex with max_dim >= 3 always yields
+//     >= 3 coboundary operators (k -> k+1 for k = 0..max_dim), so the < 3
+//     branch can never fire.
+//   * grmhd.rs:91-93 — "Manifold data too short for 2-form extraction".
+//     `Manifold` enforces `data().len() == total_simplices >= n0 + n1 + n2` at
+//     construction, so the data slab is never shorter than the 2-form domain.
+//   * grmhd.rs:206 (the `|| (len == 1 && [0] == 1)` operand) and 210-212
+//     (the "Scalar contraction failed" else-arm): the double-axis contraction
+//     of two rank-2 tensors always yields a scalar whose shape `is_empty()` is
+//     true, short-circuiting the `||` and never taking the else. Covered scalar
+//     path is exercised by `test_energy_momentum_tensor`.
 
 #[test]
 fn test_energy_momentum_tensor_dimension_error() {

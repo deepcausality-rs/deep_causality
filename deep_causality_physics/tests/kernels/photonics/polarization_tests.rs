@@ -106,6 +106,28 @@ fn test_dop_errors() {
 }
 
 #[test]
+fn test_dop_wrong_length_error() {
+    // A default StokesVector wraps an empty tensor whose shape is not [4],
+    // tripping the DimensionMismatch guard in degree_of_polarization_kernel
+    // (polarization.rs:135-138).
+    let stokes = StokesVector::<f64>::default();
+    let res = degree_of_polarization_kernel(&stokes);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_dop_zero_intensity_returns_zero() {
+    // S = [0, 0, 0, 0] passes StokesVector::new (0 >= 0) and exercises the
+    // zero-intensity early return that yields DOP = 0 (polarization.rs:147-150).
+    let stokes =
+        StokesVector::<f64>::new(CausalTensor::new(vec![0.0, 0.0, 0.0, 0.0], vec![4]).unwrap())
+            .unwrap();
+    let res = degree_of_polarization_kernel(&stokes);
+    assert!(res.is_ok());
+    assert!((res.unwrap().value() - 0.0).abs() < 1e-12);
+}
+
+#[test]
 fn test_stokes_vector_new_error() {
     // Shape error
     let t_wrong = CausalTensor::new(vec![1.0], vec![1]).unwrap();
@@ -115,3 +137,11 @@ fn test_stokes_vector_new_error() {
     let t_inv = CausalTensor::new(vec![1.0, 1.0, 1.0, 1.0], vec![4]).unwrap();
     assert!(StokesVector::<f64>::new(t_inv).is_err());
 }
+
+// NOTE on polarization.rs:163-165 — the "DOP > 1, unphysical Stokes vector"
+// guard in `degree_of_polarization_kernel`. The only constructor for a
+// non-default `StokesVector` is `StokesVector::new`, which enforces the
+// physical invariant `S0² >= S1² + S2² + S3²`. That invariant implies
+// `sqrt(S1²+S2²+S3²) / S0 <= 1` whenever `S0 > 0`, so the computed DOP can never
+// exceed the `1.000001` tolerance. There is no `new_unchecked` escape hatch for
+// `StokesVector`, so this guard is unreachable for any constructible input.

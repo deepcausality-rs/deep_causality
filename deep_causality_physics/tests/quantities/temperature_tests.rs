@@ -70,3 +70,17 @@ fn test_temperature_into_f64() {
     let val: f64 = t.into();
     assert!((val - 300.0).abs() < 1e-10);
 }
+
+#[test]
+fn test_temperature_default() {
+    // si_primitives/mod.rs:248-250
+    let t = Temperature::<f64>::default();
+    assert!((t.value() - 0.0).abs() < 1e-10);
+}
+
+// NOTE on si_primitives/mod.rs:274-275 — the `ok_or_else` closure body for
+// `R::from_f64(ZERO_CELSIUS_IN_KELVIN)` in `Temperature::from_celsius` (also
+// reached transitively by `from_fahrenheit`). `from_f64` is infallible for f64,
+// so the conversion never returns `None` and this defensive error closure can
+// never run for the f64 monomorphisation. The success path of `from_celsius`
+// is covered by the conversion tests above.

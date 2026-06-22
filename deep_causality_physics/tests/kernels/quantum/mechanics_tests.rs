@@ -101,6 +101,51 @@ fn test_klein_gordon_kernel_inf_mass() {
     assert!(result.is_err());
 }
 
+// Builds a triangular manifold whose stored field data is supplied by the
+// caller, so non-finite or oversized vertex values can be injected to
+// exercise the Klein-Gordon finiteness guards.
+fn create_manifold_with_data(data: Vec<f64>) -> SimplicialManifold<f64, f64> {
+    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 0.866], vec![3, 2]).unwrap();
+    let point_cloud =
+        PointCloud::new(points, CausalTensor::new(vec![0.0; 3], vec![3]).unwrap(), 0).unwrap();
+    let complex = point_cloud.triangulate(1.1).unwrap();
+    let num_simplices = complex.total_simplices();
+    let num_edges = complex.skeletons()[1].simplices().len();
+    assert_eq!(data.len(), num_simplices);
+    let metric =
+        ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges]).unwrap());
+    Manifold::with_metric(
+        complex,
+        CausalTensor::new(data, vec![num_simplices]).unwrap(),
+        Some(metric),
+        0,
+    )
+    .unwrap()
+}
+
+#[test]
+fn test_klein_gordon_kernel_nonfinite_laplacian() {
+    // NaN vertex data propagates through the exterior derivative into the
+    // Hodge-Laplacian, tripping the "Laplacian contains non-finite entries"
+    // guard (mechanics.rs:37-41).
+    let manifold = create_manifold_with_data(vec![f64::NAN; 7]);
+    let result = klein_gordon_kernel(&manifold, 1.0);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_klein_gordon_kernel_m2_psi_overflow() {
+    // Finite-but-huge uniform vertex data combined with a huge (finite) mass
+    // makes m^2 * psi overflow to +inf, tripping the "m^2 * psi produced
+    // non-finite entries" guard (mechanics.rs:66-70). A uniform field yields a
+    // finite (~0) laplacian, so the earlier laplacian guard does not fire, and
+    // m^2 = (1e60)^2 = 1e120 is finite, so the m^2 guard does not fire either.
+    // 1e120 * 1e200 = 1e320 = +inf (> f64::MAX ~ 1.8e308) trips line 66-70.
+    let manifold = create_manifold_with_data(vec![1e200; 7]);
+    let result = klein_gordon_kernel(&manifold, 1e60);
+    assert!(result.is_err());
+}
+
 // =============================================================================
 // Born Probability Kernel Tests
 // =============================================================================
@@ -161,6 +206,20 @@ fn test_born_probability_kernel_orthogonal() {
     );
 }
 
+#[test]
+fn test_born_probability_kernel_nonfinite() {
+    // A state with enormous amplitudes makes |<basis|state>|^2 overflow to
+    // +inf, tripping the "Born probability is not finite" guard
+    // (mechanics.rs:101-105).
+    let huge = vec![Complex::new(f64::MAX, 0.0); 8];
+    let mv = CausalMultiVector::new(huge, Metric::Euclidean(3)).unwrap();
+    let state = HilbertState::<f64>::from_multivector(mv.clone());
+    let basis = HilbertState::<f64>::from_multivector(mv);
+
+    let result = born_probability_kernel(&state, &basis);
+    assert!(result.is_err());
+}
+
 // =============================================================================
 // Expectation Value Kernel Tests
 // =============================================================================
@@ -206,6 +265,20 @@ fn test_apply_gate_kernel_dimension_error() {
     let gate_wrong = HilbertState::<f64>::from_multivector(mv_wrong);
 
     let result = apply_gate_kernel(&state, &gate_wrong);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_apply_gate_kernel_nonfinite() {
+    // A gate and state with enormous amplitudes make the geometric product
+    // overflow to non-finite components, tripping the "Non-finite component in
+    // state after gate application" guard (mechanics.rs:158-166).
+    let huge = vec![Complex::new(f64::MAX, 0.0); 8];
+    let mv = CausalMultiVector::new(huge, Metric::Euclidean(3)).unwrap();
+    let state = HilbertState::<f64>::from_multivector(mv.clone());
+    let gate = HilbertState::<f64>::from_multivector(mv);
+
+    let result = apply_gate_kernel(&state, &gate);
     assert!(result.is_err());
 }
 
@@ -324,3 +397,25 @@ fn test_haruna_t_gate_kernel_valid() {
     let result = haruna_t_gate_kernel(&field);
     assert!(result.is_ok());
 }
+
+// NOTE on three defensively-unreachable Klein-Gordon guards
+// (`klein_gordon_kernel`):
+//   * mechanics.rs:53-55 — "psi_data is smaller than laplacian data".
+//     `vertex_count == laplacian.len()` is the number of 0-simplices (vertices),
+//     and `Manifold` stores one datum per simplex, so `psi_data.len() ==
+//     total_simplices >= vertex_count` always. The guard never fires.
+//   * mechanics.rs:59-61 — "psi data contains non-finite entries". To reach
+//     this, the *laplacian* (line 37 guard) must first be finite. But the
+//     Hodge-Laplacian of a 0-form is built from the vertex values; a non-finite
+//     vertex value propagates into the laplacian and is caught by the earlier
+//     line-37 guard, so a finite laplacian implies finite vertex psi. The two
+//     conditions are mutually exclusive.
+//   * mechanics.rs:74-76 — "Klein-Gordon result contains non-finite entries"
+//     (`laplacian + m2_psi`). Both summands are already guaranteed finite (lines
+//     37 and 66). The sum overflows to ±inf only if both summands are ~1e308;
+//     but a uniform field (which keeps m2_psi large) yields laplacian ≈ 0, and a
+//     non-uniform field large enough to push the laplacian near 1e308 overflows
+//     the laplacian first (caught at line 37). No data configuration makes both
+//     summands simultaneously near MAX, so the result-overflow guard is
+//     unreachable. An offline scan over magnitudes 1e150..1e308 confirmed only
+//     the laplacian and m2_psi guards ever fire.

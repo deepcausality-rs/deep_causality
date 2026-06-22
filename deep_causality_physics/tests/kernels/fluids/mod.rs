@@ -6,6 +6,8 @@
 #[cfg(test)]
 pub mod boundary_layer_tests;
 #[cfg(test)]
+pub mod coherent_structures_coverage_tests;
+#[cfg(test)]
 pub mod coherent_structures_tests;
 #[cfg(test)]
 pub mod compressible_tests;
@@ -23,5 +25,7 @@ pub mod kinematics_tests;
 pub mod mechanics_tests;
 #[cfg(test)]
 pub mod turbulence_tests;
+#[cfg(test)]
+pub mod wrappers_coverage_tests;
 #[cfg(test)]
 pub mod wrappers_tests;

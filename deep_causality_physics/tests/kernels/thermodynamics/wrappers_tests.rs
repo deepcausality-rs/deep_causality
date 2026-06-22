@@ -165,3 +165,10 @@ fn test_heat_diffusion_wrapper_error() {
     let effect = heat_diffusion(&manifold, -0.5); // Negative diffusivity
     assert!(effect.is_err());
 }
+
+// NOTE on thermodynamics/wrappers.rs:44, 61 — the `ok_or_else` closure bodies
+// for `R::from_f64(BOLTZMANN_CONSTANT)` inside the `boltzmann_factor` /
+// `partition_function` wrappers' underlying kernels (mirrored here at the
+// wrapper layer). `from_f64` is infallible for f64, so the conversion never
+// returns `None` and these defensive error closures can never run for the f64
+// monomorphisation exercised by this suite.

@@ -179,3 +179,78 @@ fn test_condensed_scalars_traits() {
     assert_eq!(ta, ta.clone());
     let _ = format!("{:?}", ta);
 }
+
+// =============================================================================
+// From<X> for f64 conversions (condensed/mod.rs:161-163, 196-198, 236-238)
+// =============================================================================
+
+#[test]
+fn test_conductance_into_f64() {
+    let c = Conductance::<f64>::new(3.5).unwrap();
+    let val: f64 = c.into();
+    assert!((val - 3.5).abs() < 1e-10);
+}
+
+#[test]
+fn test_mobility_into_f64() {
+    let m = Mobility::<f64>::new(0.25).unwrap();
+    let val: f64 = m.into();
+    assert!((val - 0.25).abs() < 1e-10);
+}
+
+#[test]
+fn test_twist_angle_into_f64() {
+    let ta = TwistAngle::<f64>::new(1.1).unwrap();
+    let val: f64 = ta.into();
+    assert!((val - 1.1).abs() < 1e-10);
+}
+
+// =============================================================================
+// Concentration (condensed/mod.rs:346-348 negative branch, 355-357 unchecked)
+// =============================================================================
+
+#[test]
+fn test_concentration_new_valid() {
+    let t = deep_causality_tensor::CausalTensor::new(vec![0.1, 0.2, 0.3], vec![3]).unwrap();
+    let c = deep_causality_physics::Concentration::new(t.clone());
+    assert!(c.is_ok());
+    assert_eq!(c.unwrap().inner().shape(), t.shape());
+}
+
+#[test]
+fn test_concentration_new_negative_rejected() {
+    let t = deep_causality_tensor::CausalTensor::new(vec![0.1, -0.5, 0.3], vec![3]).unwrap();
+    let c = deep_causality_physics::Concentration::new(t);
+    assert!(c.is_err());
+    match c.unwrap_err().0 {
+        PhysicsErrorEnum::PhysicalInvariantBroken(_) => {}
+        other => panic!("expected PhysicalInvariantBroken, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_concentration_new_unchecked() {
+    // new_unchecked bypasses the non-negativity check.
+    let t = deep_causality_tensor::CausalTensor::new(vec![-1.0, 0.0, 2.0], vec![3]).unwrap();
+    let c = deep_causality_physics::Concentration::new_unchecked(t.clone());
+    assert_eq!(c.inner().shape(), t.shape());
+}
+
+// =============================================================================
+// VectorPotential Default (condensed/mod.rs:385-387)
+// =============================================================================
+
+#[test]
+fn test_vector_potential_default_and_new() {
+    let vp = deep_causality_physics::VectorPotential::default();
+    // Default is a single-component zero multivector.
+    assert_eq!(vp.inner().data().len(), 1);
+
+    let mv = deep_causality_multivector::CausalMultiVector::new(
+        vec![1.0],
+        deep_causality_multivector::Metric::Euclidean(0),
+    )
+    .unwrap();
+    let vp2 = deep_causality_physics::VectorPotential::new(mv.clone());
+    assert_eq!(vp2.inner().data(), mv.data());
+}

@@ -196,3 +196,55 @@ fn test_physical_vector_new_and_accessors() {
     let inner = pv.into_inner();
     assert_eq!(inner.data(), mv.data());
 }
+
+// =============================================================================
+// kinetic_energy_kernel error branches (kinematics.rs:55-57, 62-64)
+// =============================================================================
+
+#[test]
+fn test_kinetic_energy_kernel_non_finite_velocity() {
+    // A velocity component of +∞ makes the squared magnitude non-finite,
+    // hitting the `!v_sq.is_finite()` branch (kinematics.rs:55-57).
+    let mass = Mass::<f64>::new(2.0).unwrap();
+    let velocity = CausalMultiVector::new(
+        vec![0.0, f64::INFINITY, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+
+    let result = kinetic_energy_kernel(mass, &velocity);
+    assert!(result.is_err());
+    match result.unwrap_err().0 {
+        deep_causality_physics::PhysicsErrorEnum::NumericalInstability(_) => {}
+        e => panic!("Expected NumericalInstability, got {e:?}"),
+    }
+}
+
+#[test]
+fn test_kinetic_energy_kernel_negative_squared_speed() {
+    // Under a Minkowski (+ - - -) metric a purely spacelike vector has a
+    // strictly negative squared magnitude, hitting the negative-squared-speed
+    // branch (kinematics.rs:62-64).
+    let mass = Mass::<f64>::new(2.0).unwrap();
+    // Cl(1,3): 16 basis blades; place a unit value on a spacelike grade-1 axis.
+    let mut data = vec![0.0_f64; 16];
+    data[2] = 1.0; // spacelike basis vector e1
+    let velocity = CausalMultiVector::new(data, Metric::Minkowski(4)).unwrap();
+
+    // Only proceed if this metric does yield a negative squared magnitude.
+    let v_sq = {
+        use deep_causality_multivector::MultiVector;
+        velocity.squared_magnitude()
+    };
+    assert!(
+        v_sq < 0.0,
+        "expected negative squared magnitude, got {v_sq}"
+    );
+
+    let result = kinetic_energy_kernel(mass, &velocity);
+    assert!(result.is_err());
+    match result.unwrap_err().0 {
+        deep_causality_physics::PhysicsErrorEnum::PhysicalInvariantBroken(_) => {}
+        e => panic!("Expected PhysicalInvariantBroken, got {e:?}"),
+    }
+}

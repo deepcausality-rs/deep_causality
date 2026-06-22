@@ -38,6 +38,26 @@ fn test_resistive_diffusion() {
 }
 
 #[test]
+fn test_resistive_diffusion_negative_diffusivity_error() {
+    // Diffusivity::new rejects negatives, so use new_unchecked to feed a
+    // negative eta straight into the kernel and trip its PhysicalInvariantBroken
+    // guard (resistive.rs:25-29).
+    let m = create_dummy_manifold();
+    let eta = Diffusivity::<f64>::new_unchecked(-0.5);
+    let res = resistive_diffusion_kernel(&m, eta);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_reconnection_rate_non_positive_lundquist_error() {
+    // lundquist <= 0 -> Singularity (resistive.rs:51-55).
+    let va = AlfvenSpeed::<f64>::new(100.0).unwrap();
+    assert!(magnetic_reconnection_rate_kernel(va, 0.0).is_err());
+    let va2 = AlfvenSpeed::<f64>::new(100.0).unwrap();
+    assert!(magnetic_reconnection_rate_kernel(va2, -1.0).is_err());
+}
+
+#[test]
 fn test_reconnection_rate() {
     let va = AlfvenSpeed::<f64>::new(100.0).unwrap();
     let s = 100.0; // Lundquist

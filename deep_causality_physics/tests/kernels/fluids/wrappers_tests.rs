@@ -442,9 +442,22 @@ fn test_kolmogorov_time_wrapper() {
 }
 
 #[test]
+fn test_kolmogorov_time_wrapper_error_path() {
+    // epsilon ≤ 0 ⇒ require_positive rejects.
+    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
+    assert!(!kolmogorov_time(&nu, 0.0_f64).is_ok());
+}
+
+#[test]
 fn test_kolmogorov_velocity_wrapper() {
     let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
     assert!(kolmogorov_velocity(&nu, 1.0e-3_f64).is_ok());
+}
+
+#[test]
+fn test_kolmogorov_velocity_wrapper_error_path() {
+    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
+    assert!(!kolmogorov_velocity(&nu, 0.0_f64).is_ok());
 }
 
 #[test]
@@ -454,8 +467,21 @@ fn test_taylor_microscale_wrapper() {
 }
 
 #[test]
+fn test_taylor_microscale_wrapper_error_path() {
+    // epsilon ≤ 0 ⇒ require_positive rejects.
+    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
+    assert!(!taylor_microscale(2.0_f64, 0.0, &nu).is_ok());
+}
+
+#[test]
 fn test_integral_length_scale_wrapper() {
     assert!(integral_length_scale(4.0_f64, 8.0).is_ok());
+}
+
+#[test]
+fn test_integral_length_scale_wrapper_error_path() {
+    // epsilon ≤ 0 ⇒ require_positive rejects.
+    assert!(!integral_length_scale(4.0_f64, 0.0).is_ok());
 }
 
 #[test]
@@ -629,11 +655,28 @@ fn test_viscous_length_scale_wrapper() {
 }
 
 #[test]
+fn test_viscous_length_scale_wrapper_error_path() {
+    // u_tau = 0 ⇒ friction velocity is zero.
+    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
+    let u_tau = Speed::<f64>::new(0.0).unwrap();
+    assert!(!viscous_length_scale(&nu, &u_tau).is_ok());
+}
+
+#[test]
 fn test_y_plus_wrapper() {
     let y = Length::<f64>::new(1.0e-4).unwrap();
     let u_tau = Speed::<f64>::new(0.5).unwrap();
     let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
     assert!(y_plus(&y, &u_tau, &nu).is_ok());
+}
+
+#[test]
+fn test_y_plus_wrapper_error_path() {
+    // nu = 0 ⇒ kinematic viscosity is zero.
+    let y = Length::<f64>::new(1.0e-4).unwrap();
+    let u_tau = Speed::<f64>::new(0.5).unwrap();
+    let nu = KinematicViscosity::<f64>::new(0.0).unwrap();
+    assert!(!y_plus(&y, &u_tau, &nu).is_ok());
 }
 
 #[test]
@@ -661,6 +704,15 @@ fn test_skin_friction_coefficient_wrapper() {
     let effect = skin_friction_coefficient(&tau, &rho, &u_inf);
     assert!(effect.is_ok());
     assert!((effect.value().clone().into_value().unwrap() - 0.01).abs() < 1e-12);
+}
+
+#[test]
+fn test_skin_friction_coefficient_wrapper_error_path() {
+    // u_inf = 0 ⇒ division by zero guard.
+    let tau = WallShearStress::<f64>::new(0.5).unwrap();
+    let rho = Density::<f64>::new(1.0).unwrap();
+    let u_inf = Speed::<f64>::new(0.0).unwrap();
+    assert!(!skin_friction_coefficient(&tau, &rho, &u_inf).is_ok());
 }
 
 // =============================================================================

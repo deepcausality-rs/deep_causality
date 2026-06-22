@@ -440,6 +440,61 @@ fn test_kretschmann_curvature_radius_flat_spacetime() {
 }
 
 #[test]
+fn test_kretschmann_curvature_radius_curved_spacetime() {
+    // A non-zero Riemann field strength over a non-singular Minkowski metric
+    // yields K > 0, exercising the non-flat branch of the
+    // `kretschmann_curvature_radius` default method (R_curv = K^(-1/4)).
+    let mut builder = SimplicialComplexBuilder::new(0);
+    builder.add_simplex(Simplex::new(vec![0])).unwrap();
+    let complex = builder.build().unwrap();
+
+    let num_simplices = complex.total_simplices();
+    let data = CausalTensor::zeros(&[num_simplices]);
+    let base = Manifold::new(complex, data, 0).unwrap();
+
+    // Non-singular Minkowski metric padded to [N, 4, 6] (stride 6).
+    let mut conn_data = vec![0.0; num_simplices * 4 * 6];
+    conn_data[0] = -1.0; // g_00
+    conn_data[7] = 1.0; // g_11
+    conn_data[14] = 1.0; // g_22
+    conn_data[21] = 1.0; // g_33
+    let metric_tensor = CausalTensor::from_vec(conn_data, &[num_simplices, 4, 6]);
+
+    // Non-zero Lie field strength [N, 4, 4, 6] → non-zero Riemann → K > 0.
+    // Use a purely *spatial* component so every raised index multiplies the
+    // +1 spatial part of the (-+++) metric, keeping K = R_μνρσ R^μνρσ positive.
+    // Layout: flat = ((rho*4 + sigma)*6) + lie_idx. Choose rho=1, sigma=2,
+    // lie_idx=5 → pair (2,3): all indices spatial.
+    let mut fs = vec![0.0; num_simplices * 4 * 4 * 6];
+    // flat = ((rho*4 + sigma)*6) + lie_idx with rho=1, sigma=2, lie_idx=5.
+    let (rho, sigma, lie_idx) = (1usize, 2usize, 5usize);
+    let idx = (rho * 4 + sigma) * 6 + lie_idx; // = 41
+    fs[idx] = 1.0;
+    let riemann = CausalTensor::from_vec(fs, &[num_simplices, 4, 4, 6]);
+
+    let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
+    let gravity: GR<f64> = GaugeField::new(base, topo_metric, metric_tensor, riemann).unwrap();
+
+    let k = gravity.kretschmann_scalar().unwrap();
+    assert!(k > 0.0, "Expected positive Kretschmann scalar, got {}", k);
+
+    let r_curv = gravity.kretschmann_curvature_radius().unwrap();
+    assert!(
+        r_curv.is_finite() && r_curv > 0.0,
+        "Curvature radius should be finite and positive for K>0, got {}",
+        r_curv
+    );
+    // R_curv = K^(-1/4): cross-check the conversion.
+    let expected = 1.0 / k.powf(0.25);
+    assert!(
+        (r_curv - expected).abs() < 1e-12,
+        "R_curv mismatch: got {}, expected {}",
+        r_curv,
+        expected
+    );
+}
+
+#[test]
 fn test_geodesic_deviation_si() {
     let mut builder = SimplicialComplexBuilder::new(0);
     builder
@@ -534,6 +589,48 @@ fn test_proper_time_si() {
         );
     }
     // The test passes if the method exists and is callable
+}
+
+#[test]
+fn test_proper_time_si_runs_with_square_connection() {
+    // proper_time_kernel requires a rank-2 *square* metric, while a Lorentz GR
+    // connection normally has the Lie shape [N, 4, 6]. GaugeField::new validates
+    // only the element count (N * 4 * 6), so for N = 6 (144 elements) we can
+    // reshape the connection to a square [12, 12]. That lets proper_time return
+    // Ok, so the proper_time_si default method body (divide-by-c) actually runs.
+    let mut builder = SimplicialComplexBuilder::new(0);
+    for v in 0..6 {
+        builder.add_simplex(Simplex::new(vec![v])).unwrap();
+    }
+    let complex = builder.build().unwrap();
+    let n = complex.total_simplices(); // 6
+    assert_eq!(n, 6);
+
+    let data = CausalTensor::zeros(&[n]);
+    let base = Manifold::new(complex, data, 0).unwrap();
+
+    // 6 * 4 * 6 = 144 elements, reshaped square [12, 12].
+    let connection = CausalTensor::from_vec(vec![0.0f64; n * 4 * 6], &[12, 12]);
+    let riemann = CausalTensor::zeros(&[n, 4, 4, 6]);
+    let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
+    let gr: GR<f64> = GaugeField::new(base, topo_metric, connection, riemann).unwrap();
+
+    // Path points must match the metric dimension (12).
+    let path = vec![vec![0.0f64; 12], vec![1.0f64; 12]];
+
+    let tau = gr
+        .proper_time(&path)
+        .expect("square metric ⇒ proper_time Ok");
+    let tau_si = gr
+        .proper_time_si(&path)
+        .expect("proper_time_si should compute");
+    let expected = tau / SPEED_OF_LIGHT;
+    assert!(
+        (tau_si - expected).abs() < 1e-12,
+        "proper_time_si must divide geometric proper time by c: got {}, expected {}",
+        tau_si,
+        expected
+    );
 }
 
 #[test]
@@ -683,6 +780,54 @@ fn test_ricci_scalar_singular_metric_errors() {
 }
 
 #[test]
+fn test_ricci_scalar_connection_cols_too_small_errors() {
+    // GaugeField::new only checks the element count (1*4*6 = 24), so a connection
+    // reshaped to [8, 3] passes construction yet has a last dimension < 4. When
+    // ricci_scalar calls invert_4x4 on it, the `cols < 4` guard (gr_utils) fires.
+    let mut builder = SimplicialComplexBuilder::new(0);
+    builder.add_simplex(Simplex::new(vec![0])).unwrap();
+    let complex = builder.build().unwrap();
+    let n = complex.total_simplices();
+    let data = CausalTensor::zeros(&[n]);
+    let base = Manifold::new(complex, data, 0).unwrap();
+
+    // 24 elements shaped [8, 3] → cols = 3 < 4.
+    let connection = CausalTensor::from_vec(vec![1.0f64; n * 4 * 6], &[8, 3]);
+    let riemann = CausalTensor::zeros(&[n, 4, 4, 6]);
+    let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
+    let gr: GR<f64> = GaugeField::new(base, topo_metric, connection, riemann).unwrap();
+
+    assert!(
+        gr.ricci_scalar().is_err(),
+        "Connection with last dim < 4 must fail invert_4x4 (cols < 4)"
+    );
+}
+
+#[test]
+fn test_ricci_scalar_connection_too_small_data_errors() {
+    // A rank-1 connection [24] makes invert_4x4 read cols = last = 24, so
+    // 4*cols = 96 > data.len() = 24, tripping the "Metric tensor too small"
+    // guard (gr_utils).
+    let mut builder = SimplicialComplexBuilder::new(0);
+    builder.add_simplex(Simplex::new(vec![0])).unwrap();
+    let complex = builder.build().unwrap();
+    let n = complex.total_simplices();
+    let data = CausalTensor::zeros(&[n]);
+    let base = Manifold::new(complex, data, 0).unwrap();
+
+    // 24 elements shaped [24] → cols = 24, 4*cols = 96 > 24 elements.
+    let connection = CausalTensor::from_vec(vec![1.0f64; n * 4 * 6], &[n * 4 * 6]);
+    let riemann = CausalTensor::zeros(&[n, 4, 4, 6]);
+    let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
+    let gr: GR<f64> = GaugeField::new(base, topo_metric, connection, riemann).unwrap();
+
+    assert!(
+        gr.ricci_scalar().is_err(),
+        "Connection with too few elements for 4xcols must fail invert_4x4"
+    );
+}
+
+#[test]
 fn test_einstein_tensor_flat() {
     let gr = build_flat_gr();
     let g = gr.einstein_tensor().unwrap();
@@ -773,6 +918,77 @@ fn test_momentum_constraint_singular_spatial_metric() {
         result.is_err(),
         "Singular spatial metric must propagate as error"
     );
+}
+
+#[test]
+fn test_momentum_constraint_rank1_connection_stride_fallback() {
+    // GaugeField::new validates element COUNT (num_points * 4 * 6 = 24) but not
+    // the exact shape. A rank-1 connection [24] drives metric_shape.len() < 2, so
+    // momentum_constraint uses the `else { 16 }` stride fallback (gr_ops_impl
+    // line ~253) and then the 4x4 extraction path.
+    let mut builder = SimplicialComplexBuilder::new(0);
+    builder.add_simplex(Simplex::new(vec![0])).unwrap();
+    let complex = builder.build().unwrap();
+    let n = complex.total_simplices(); // 1
+
+    let data = CausalTensor::zeros(&[n]);
+    let base = Manifold::new(complex, data, 0).unwrap();
+
+    // Embed a 4x4 Minkowski metric in the first 16 of 24 slots (stride-16 layout).
+    let mut conn = vec![0.0f64; n * 4 * 6]; // 24 elements
+    conn[0] = -1.0; // g_00
+    conn[5] = 1.0; // g_11 (idx (1)*4+1)
+    conn[10] = 1.0; // g_22 (idx (2)*4+2)
+    conn[15] = 1.0; // g_33 (idx (3)*4+3)
+    // Rank-1 connection shape [24] triggers the len() < 2 stride fallback.
+    let connection = CausalTensor::from_vec(conn, &[n * 4 * 6]);
+    let riemann = CausalTensor::zeros(&[n, 4, 4, 6]);
+    let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
+    let gr: GR<f64> = GaugeField::new(base, topo_metric, connection, riemann).unwrap();
+
+    let k = CausalTensor::zeros(&[3, 3]);
+    let result = gr.momentum_constraint_field(&k, None);
+    // The fallback path runs; with a valid spatial metric and K=0 it succeeds.
+    assert!(
+        result.is_ok(),
+        "Rank-1 connection stride fallback should still compute: {:?}",
+        result.err()
+    );
+    assert_eq!(result.unwrap().shape(), &[3]);
+}
+
+#[test]
+fn test_momentum_constraint_small_stride_identity_fallback() {
+    // A connection reshaped to [6, 2, 2] keeps the required 24-element count but
+    // makes metric_stride = 2*2 = 4 < 16, so extract_spatial_metric takes the
+    // identity-metric fallback branch (gr_ops_impl lines ~276-280).
+    let mut builder = SimplicialComplexBuilder::new(0);
+    builder.add_simplex(Simplex::new(vec![0])).unwrap();
+    let complex = builder.build().unwrap();
+    let n = complex.total_simplices(); // 1
+
+    let data = CausalTensor::zeros(&[n]);
+    let base = Manifold::new(complex, data, 0).unwrap();
+
+    // 24 elements, but shaped [6, 2, 2] → stride = 4 < 16 → identity fallback.
+    let connection = CausalTensor::from_vec(vec![0.0f64; n * 4 * 6], &[6, 2, 2]);
+    let riemann = CausalTensor::zeros(&[n, 4, 4, 6]);
+    let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
+    let gr: GR<f64> = GaugeField::new(base, topo_metric, connection, riemann).unwrap();
+
+    let k = CausalTensor::zeros(&[3, 3]);
+    let result = gr.momentum_constraint_field(&k, None);
+    // Identity spatial metric is invertible; with K=0 the constraint is zero.
+    assert!(
+        result.is_ok(),
+        "Identity-metric fallback should compute: {:?}",
+        result.err()
+    );
+    let m = result.unwrap();
+    assert_eq!(m.shape(), &[3]);
+    for v in m.as_slice() {
+        assert!(v.abs() < 1e-12, "Flat identity metric ⇒ M_i = 0, got {}", v);
+    }
 }
 
 #[test]
