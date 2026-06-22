@@ -1,0 +1,71 @@
+deep_causality_physics/tests/quantities/temperature/mod.rs
+  s_49325202c57af5::t_589d1829e0a1ad 1-6
+deep_causality_physics/tests/quantities/mod.rs
+  s_49325202c57af5::t_589d1829e0a1ad 8,10,12,14,16,18,20,22,24,26,28,30,34,36,38,40,42,44,46,48,50,52
+deep_causality_physics/tests/BUILD.bazel
+  s_49325202c57af5::t_589d1829e0a1ad 409
+deep_causality_physics/tests/quantities/body_force_one_form/mod.rs
+  s_49325202c57af5::t_589d1829e0a1ad 1-6
+deep_causality_physics/tests/quantities/energy/mod.rs
+  s_49325202c57af5::t_589d1829e0a1ad 1-6
+deep_causality_physics/tests/quantities/index_of_refraction/mod.rs
+  s_49325202c57af5::t_589d1829e0a1ad 1-6
+deep_causality_physics/tests/quantities/pressure_zero_form/mod.rs
+  s_49325202c57af5::t_589d1829e0a1ad 1-6
+deep_causality_physics/tests/quantities/relativity_quantities/mod.rs
+  s_49325202c57af5::t_589d1829e0a1ad 1-6
+deep_causality_physics/src/lib.rs
+  s_49325202c57af5::t_3b56a4c0e833b1 16-17
+deep_causality_physics/tests/quantities/solenoidal_field/mod.rs
+  s_49325202c57af5::t_6b54c08963dc9f 11-14
+deep_causality_physics/tests/quantities/chronometric_quantities/central_body_tests.rs
+  s_49325202c57af5::t_1ed362428a9a38 1-124
+deep_causality_physics/tests/quantities/ratio/mod.rs
+  s_49325202c57af5::t_589d1829e0a1ad 1-6
+deep_causality_physics/tests/quantities/thermodynamics_quantities/mod.rs
+  s_49325202c57af5::t_589d1829e0a1ad 1-6
+deep_causality_physics/tests/quantities/chronometric_quantities/space_time_coordinate_tests.rs
+  s_49325202c57af5::t_1ed362428a9a38 1-204
+deep_causality_physics/tests/quantities/materials_quantities/mod.rs
+  s_49325202c57af5::t_589d1829e0a1ad 1-6
+deep_causality_physics/tests/quantities/vorticity_two_form/mod.rs
+  s_49325202c57af5::t_589d1829e0a1ad 1-6
+deep_causality_physics/tests/quantities/solenoidal_field/wall_bounded_tests.rs
+  s_49325202c57af5::t_1ed362428a9a38 1-12,14-89
+  s_49325202c57af5::t_6ec7598ca42875 13
+deep_causality_physics/tests/quantities/quantum_quantities/mod.rs
+  s_49325202c57af5::t_589d1829e0a1ad 1-6
+deep_causality_physics/tests/quantities/time/mod.rs
+  s_49325202c57af5::t_589d1829e0a1ad 1-6
+deep_causality_physics/tests/quantities/solenoidal_field/divergence_free_tests.rs
+  s_49325202c57af5::t_1ed362428a9a38 1-6,8-9,11-82
+  s_49325202c57af5::t_6ec7598ca42875 7,10
+deep_causality_physics/tests/quantities/solenoidal_field/open_boundary_tests.rs
+  s_49325202c57af5::t_1ed362428a9a38 1-12,14-95
+  s_49325202c57af5::t_6ec7598ca42875 13
+deep_causality_physics/src/utils_tests/mod.rs
+  s_49325202c57af5::t_a6169a71cbfc61 1-110
+deep_causality_physics/tests/quantities/velocity_one_form/mod.rs
+  s_49325202c57af5::t_589d1829e0a1ad 1-6
+deep_causality_physics/tests/quantities/em_quantities/mod.rs
+  s_49325202c57af5::t_589d1829e0a1ad 1-6
+deep_causality_physics/tests/quantities/solenoidal_field/rejection_tests.rs
+  s_49325202c57af5::t_6ec7598ca42875 9
+  s_49325202c57af5::t_1ed362428a9a38 1-8,10-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "420522c3e56642bd8f2a33b9e1471a6482e16ce9",
+  "prompts": {},
+  "sessions": {
+    "s_49325202c57af5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297e527-61ae-449a-a0a2-18bc3006d1c0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
