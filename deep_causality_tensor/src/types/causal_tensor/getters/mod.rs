@@ -3,6 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 mod get_ref;
+#[cfg(test)]
+mod get_ref_tests;
 
 use crate::CausalTensor;
 

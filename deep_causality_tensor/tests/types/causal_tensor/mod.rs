@@ -4,6 +4,10 @@
  */
 
 #[cfg(test)]
+mod algebra_tests;
+#[cfg(test)]
+mod arithmetic_identity_neg_tests;
+#[cfg(test)]
 mod constructor_tests;
 #[cfg(test)]
 mod display_tests;
@@ -13,6 +17,8 @@ mod ein_sum_error_tests;
 mod from_tests;
 #[cfg(test)]
 mod getters_tests;
+#[cfg(test)]
+mod misc_coverage_tests;
 #[cfg(test)]
 mod op_scalar_tensor_tests;
 #[cfg(test)]
@@ -28,6 +34,9 @@ mod op_tensor_reduction_tests;
 mod op_tensor_scalar_tests;
 #[cfg(test)]
 mod op_tensor_shape_tests;
+#[cfg(test)]
+mod op_tensor_stack_tests;
+mod op_tensor_svd_decomp_tests;
 mod op_tensor_svd_tests;
 #[cfg(test)]
 mod op_tensor_tensor_tests;
