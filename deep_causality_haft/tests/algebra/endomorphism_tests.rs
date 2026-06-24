@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Endomorphism, FnMorphism};
+use deep_causality_haft::Endomorphism;
+use deep_causality_haft::FnMorphism;
 
 fn inc(x: i32) -> i32 {
     x + 1
