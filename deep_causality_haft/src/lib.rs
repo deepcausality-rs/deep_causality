@@ -58,7 +58,6 @@ pub(crate) mod io;
 pub mod iso;
 pub(crate) mod monad;
 pub(crate) mod morphism;
-pub(crate) mod morphism_endo;
 pub(crate) mod pure;
 pub(crate) mod riemann_map;
 pub(crate) mod traversable;
@@ -74,7 +73,6 @@ pub use alias::alias_foldable::AliasFoldable;
 pub use alias::alias_functor::AliasFunctor;
 pub use alias::alias_monad::AliasMonad;
 pub use alias::alias_profunctor::AliasProfunctor;
-
 // Arrow algebra (value-level strong category: composition + the monoidal product, + builder)
 pub use crate::arrow::{
     Arrow, ArrowBuilder, Compose, EndoArrow, Fanout, First, Id, Lift, Second, Split, arrow,
@@ -108,8 +106,8 @@ pub use crate::monad::Monad;
 pub use crate::monad::comonad::CoMonad;
 pub use crate::monad::parametric_monad::ParametricMonad;
 pub use crate::monad::promonad::Promonad;
-pub use crate::morphism::{FnMorphism, Morphism};
-pub use crate::morphism_endo::Endomorphism;
+pub use crate::morphism::morphism_base::{FnMorphism, Morphism};
+pub use crate::morphism::morphism_endo::Endomorphism;
 pub use crate::pure::Pure;
 pub use crate::riemann_map::RiemannMap;
 pub use crate::traversable::Traversable;
