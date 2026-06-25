@@ -4,6 +4,9 @@ allowBuilds:
   # Required so `wrangler deploy` can run its packaging step under pnpm 11.
   workerd: true
 
+minimumReleaseAgeExclude:
+  - astro-mermaid@2.1.0
+
 # Force-patch transitive deps that ship with known CVEs. Remove an entry
 # once the parent dependency upstream bumps the pinned version.
 overrides:
