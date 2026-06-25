@@ -1,0 +1,38 @@
+papers/src/EPP/Preprint_EPP/introduction.tex
+  s_0200e6509c4c70::t_a9aaeaa12a89da 41
+  s_0200e6509c4c70::t_5c581a0c7131c8 81
+  s_0200e6509c4c70::t_b8729678e2098a 39
+  s_0200e6509c4c70::t_0a9d125ea52796 45-46
+  s_0200e6509c4c70::t_fa02652d6fa2a9 98
+  s_0200e6509c4c70::t_a3a52dfa94345b 140
+  s_0200e6509c4c70::t_d20907555fbe0d 166
+  s_0200e6509c4c70::t_9f2095cd9ff50f 4
+  s_0200e6509c4c70::t_925c69c027495a 58
+  s_0200e6509c4c70::t_264c378b82f393 77
+  s_0200e6509c4c70::t_26fae076a6c19a 172
+  s_0200e6509c4c70::t_94de17954b2fe2 56
+  s_0200e6509c4c70::t_ec478866dea770 37
+  s_0200e6509c4c70::t_f42d3d0ec15130 63
+  s_0200e6509c4c70::t_9e221cfec100aa 110
+  s_0200e6509c4c70::t_86e0325bb42cd9 148
+  s_0200e6509c4c70::t_9eb05c6d6d91f5 6
+  s_0200e6509c4c70::t_1b6b191b0b088e 121
+  s_0200e6509c4c70::t_b96252a855e83b 8
+  s_0200e6509c4c70::t_0f3fe3865ae4d0 49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.13",
+  "base_commit_sha": "17e3adbe0ba8f3a435dc46280b3165dbe6658c00",
+  "prompts": {},
+  "sessions": {
+    "s_0200e6509c4c70": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "65fdc503-a837-4cd0-9fa9-f72ecfc63c0f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
