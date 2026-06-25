@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.2](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.1...ultragraph-v0.9.2) - 2026-06-25
+
+### Other
+
+- Generated new SBOM for all crates.
+- *(papers)* Reorganized publication by moving each paper into the crate where it is actually implemented.
+- Updated README file across multiple crates to meet project standard.
+
 ## [0.9.1](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.0...ultragraph-v0.9.1) - 2026-06-09
 
 ### Other

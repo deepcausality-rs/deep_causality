@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.3.3...deep_causality_num-v0.3.4) - 2026-06-25
+
+### Added
+
+- *(deep_causality_num)* double-double erf/erfc for Float106
+
+### Fixed
+
+- *(deep_causality_num)* Fixed miri test config
+- *(deep_causality_num)* Fixed miri test config
+- *(deep_causality_num)* Fixed miri test config
+- *(deep_causality_num)* Fixed miri test config
+
+### Other
+
+- Generated new SBOM for all crates.
+- *(deep_causality_num)* skip cos_val under Miri
+- Updated README file across multiple crates to meet project standard.
+- *(deep_causality_num)* Add table-based fast path for Float106::sin_cos
+
 ## [0.3.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.3.1...deep_causality_num-v0.3.2) - 2026-05-26
 
 ### Added

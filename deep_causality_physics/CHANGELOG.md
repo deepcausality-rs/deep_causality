@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.6.3...deep_causality_physics-v0.7.0) - 2026-06-25
+
+### Added
+
+- *(deep_causality_physics)* removed unused deps
+- *(deep_causality_physics)* opt-in Quasi-Monte-Carlo collapse for the uncertain inflow
+- *(cfd)* scaffold deep_causality_cfd and migrate the fluid stack + tests
+- *(deep_causality_physics)* staircase-vs-aperture-resolved no-slip toggle + cylinder validation harness
+- *(deep_causality_physics)* wire aperture-resolved immersed no-slip into the DEC solver
+- *(deep_causality_physics)* one-sided wall-normal friction diagnostic (Kirkpatrick true Δh)
+- *(deep_causality_physics)* free outflow tangential edges (zero-gradient outflow)
+- *(deep_causality_physics)* pressure surface-force diagnostic on cut bodies
+- *(deep_causality_physics)* free-slip / far-field boundary zone
+- *(deep_causality_physics)* inflow/outflow boundary zones + open-projection wiring
+- *(deep_causality_physics)* inflow/outflow boundary zones + open-projection wiring
+- *(deep_causality_physics)* composable boundary-zone abstraction (static dispatch)
+- *(deep_causality_physics)* CFD Stage-4 Group C — the uncertain-inflow zone
+- *(cfd)* Small-cut-cell stabilization — CFD Stage 4 B1–B3 (cell-merging; inherent stability finding)
+- *(cfd)* Cut-cell cylinder wake harness — CFD Stage 4 Group D
+- feat(deep_causality_physics):
+- feat(deep_causality_physics):
+- *(deep_causality_physics)* Add the wall-bounded DEC Navier-Stokes
+- *(deep_causality_fft)* Add FFT crate, deep_causality_par, and the spectral Poisson solve (closes add-fft)
+- *(deep_causality_physics)* Update  readme with parallel flag.
+- *(deep_causality_physics)* Add the periodic DEC-native incompressible
+- *(deep_causality_physics)* Add typed fluid-dynamics form units incl. the
+
+### Fixed
+
+- *(deep_causality_rand)* Format and linting
+- *(deep_causality_physics)* Fixed bazel test config
+- *(deep_causality_topology)* Diagnosis (2026-06-12, task 1.3 — budget probe on the 32³ Re-1600 trajectory): hypothesis (1) confirmed. The convective power ⟨u, −i_u(du)⟩_M is exactly zero on the smooth single-mode initial state (−9e-16), turns positive as the spectrum fills (+0.59 at t* 3.1, +28 at 7.9), and overwhelms the viscous sink (always properly negative) at t* ≈ 8.5 — energy growth follows.
+- fixed sone doctest warnings
+
+### Other
+
+- strengthen physics quantity assertions and fix review nits
+- *(deep_causality_physics)* split quantity tests into per-quantity leaves
+- *(deep_causality_physics)* close reachable coverage gaps; document the rest
+- raise test coverage across 8 crates.
+- Generated new SBOM for all crates.
+- *(papers)* Reorganized publication by moving each paper into the crate where it is actually implemented.
+- Merge remote-tracking branch 'origin/main'
+- *(deep_causality_physics)* updated README
+- *(deep_causality_physics)* [**breaking**] remove the fluid-dynamics theories (consolidated into deep_causality_cfd)
+- *(dec-solver)* warm-start the λ (cut-face multiplier) block in the weighted projection
+- *(dec-solver)* projection CG warm-start + cycle-mean cylinder drag
+- *(deep_causality_physics)* cross-domain UncertainBoundarySource
+- *(deep_causality_physics)* Improved testing.
+- *(deep_causality_physics)* Verify the convective-instability fix —
+- added new specs to fix a bug
+- *(deep_causality_topology)* Add compiled DEC stencil tables and the
+- *(deep_causality_num)* Add table-based fast path for Float106::sin_cos
+- *(deep_causality_topology)* Add DEC solver benchmark, eliminate
+- *(deep_causality_topology)* Memoize boundary matrices and preserve
+- *(deep_causality_physics)* Consolidate quantity tests into tests/quantities/
+- *(deep_causality_physics)* Consolidate quantities to 13 coherent files (19 → 13)
+- *(deep_causality_physics)* Consolidate all quantities into src/quantities/
+
 ## [0.6.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.6.2...deep_causality_physics-v0.6.3) - 2026-06-12
 
 ### Other
