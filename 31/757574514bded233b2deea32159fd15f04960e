@@ -1,0 +1,74 @@
+openspec/changes/add-tensor-network/proposal.md
+  s_162aba3d26275e::t_65aff69e50fbbf 1-70
+openspec/changes/add-tensor-network/design.md
+  s_162aba3d26275e::t_5bbf3d8f69bf85 1-105
+openspec/changes/add-tensor-network/.openspec.yaml
+  s_162aba3d26275e::t_602ccb6824396e 1-2
+openspec/changes/add-tensor-network/specs/tensor-network-numerics/spec.md
+  s_162aba3d26275e::t_85f9fd1addc5f2 1-70
+openspec/changes/add-tensor-network/specs/tensor-train/spec.md
+  s_162aba3d26275e::t_018b04ef4fb3fc 1-132
+openspec/changes/add-tensor-network/specs/tensor-train-operator/spec.md
+  s_162aba3d26275e::t_cf693bd05ac7b9 1-55
+openspec/changes/add-tensor-network/specs/tensor-train-cross/spec.md
+  s_162aba3d26275e::t_204a7300fa889b 1-41
+openspec/changes/add-tensor-network/specs/tensor-train-solve/spec.md
+  s_162aba3d26275e::t_2c9cbdb67b68c0 51
+  s_162aba3d26275e::t_2a37fb1470bafb 1-50,52-55
+openspec/changes/add-tensor-network/specs/tensor-train-scalars/spec.md
+  s_162aba3d26275e::t_7b01f8cdd7e811 1-52
+openspec/changes/add-tensor-network/tasks.md
+  s_162aba3d26275e::t_8b40543f2db751 1-70
+openspec/notes/tensor-network/Tensor-Network-Spec.md
+  s_162aba3d26275e::t_8ebf2bced173ae 742-744
+  s_162aba3d26275e::t_e3646c75cf1c70 699-701
+  s_162aba3d26275e::t_7e480d5dcc8279 416-461
+  s_162aba3d26275e::t_0c94d912a77263 271,275,278,283,322-324
+  s_162aba3d26275e::t_937dbf9c03fde3 678-681
+  s_162aba3d26275e::t_c47e53d7123e73 33-34,37-38
+  s_162aba3d26275e::t_c852afe43978a5 325-354,358,367-401,407-415
+  s_162aba3d26275e::t_709516e23f307b 174-177
+  s_162aba3d26275e::t_880c965edec318 230,232-236,239,248-265,267-268
+  s_162aba3d26275e::t_3800a97b53508a 746-751,753-771
+  s_162aba3d26275e::t_052282f793ecba 238,243-247
+  s_162aba3d26275e::t_f718c4d6275f59 10,90,138,674,712-717
+  s_162aba3d26275e::t_1237f8c75241ce 772-774
+  s_162aba3d26275e::t_768a1cf2a66d49 513
+  s_162aba3d26275e::t_ca77a55f0882c2 571-574
+  s_162aba3d26275e::t_218e0bb8b2fedb 67-73
+  s_162aba3d26275e::t_ba5a1e8f929f62 698
+  s_162aba3d26275e::t_60d862a0ec7782 550-562
+  s_162aba3d26275e::t_0b593c2116be98 682
+  s_162aba3d26275e::t_9a9a41b1b0682b 402-406
+  s_162aba3d26275e::t_bf508f567dff67 6-9,11-16,20-21,23-30,36,39,47-50,52,56-57,63-66,77,79-83,86-89,91,93-102,104-110,112,114-122,124-125,127-135,139-140,144,146,148-149,157-158,160-163,167-169,171-173,179,181-183,185-186,188,192-209,213,216-217,221-222,226-228,270,272-274,276-277,279-282,284-321,464-476,479-480,482-483,485,487-493,499,501-502,505-507,509-512,514-522,526-530,532-537,541-548,568-570,577-581,584-585,589-610,641-642,644-645,647,650,656,667-668,675-676,684,686-689,691-693,695-697,707,710-711,718-719,722-723,727,729-732,734-737,741,745,752
+  s_162aba3d26275e::t_bca9d894b2281e 775-784
+  s_162aba3d26275e::t_c8f9254ccda22a 355-357,359-366
+  s_162aba3d26275e::t_b1e9dd3907e3c6 531
+  s_162aba3d26275e::t_134d7e572b5905 738
+  s_162aba3d26275e::t_38c65185109107 657-662
+  s_162aba3d26275e::t_c33f31438b078e 494-498
+  s_162aba3d26275e::t_fd79e7eebc0b4d 1-5,17-19,22,40-46,51,53-55,58-62,74-76,78,84-85,92,103,111,113,123,126,136-137,141-143,145,147,150-156,159,164-166,170,178,180,184,187,189-191,210-212,214-215,218-220,223-225,229,231,237,240-242,266,269,462-463,477-478,481,484,486,500,503-504,508,523-525,538-540,549,563-567,575-576,582-583,586-588,611,637-640,643,646,648-649,651-655,663-666,669-673,677,685,690,694,702-706,708-709,720-721,724-726,728,733,739-740
+  s_162aba3d26275e::t_b0dd6898f634db 683
+  s_162aba3d26275e::t_b2b28408d89126 31-32,35
+  s_162aba3d26275e::t_979592bc7dfb50 612-636
+deep_causality_tensor/benches/benchmarks/causal_tensor_network_type/mod.rs
+  s_162aba3d26275e::t_32dd3adba8dd2b 1-5
+deep_causality_tensor/benches/benchmarks/mod.rs
+  s_162aba3d26275e::t_07b4b90f157789 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "31757574514bded233b2deea32159fd15f04960e",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
