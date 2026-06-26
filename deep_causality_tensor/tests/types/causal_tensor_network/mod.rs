@@ -8,6 +8,8 @@ mod causal_tensor_train_algebra_tests;
 #[cfg(test)]
 mod causal_tensor_train_canonical_tests;
 #[cfg(test)]
+mod causal_tensor_train_operator_tests;
+#[cfg(test)]
 mod causal_tensor_train_ops_tests;
 #[cfg(test)]
 mod causal_tensor_train_tests;

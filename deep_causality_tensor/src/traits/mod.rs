@@ -4,3 +4,4 @@
  */
 pub(crate) mod tensor;
 pub(crate) mod tensor_train;
+pub(crate) mod tensor_train_operator;

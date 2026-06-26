@@ -26,12 +26,12 @@
 
 ## 3. Stage 2a — Matrix-product operator (`tensor-train-operator`)
 
-- [ ] 3.1 Add the `TensorTrainOperator<T>` trait (`src/traits/tensor_train_operator.rs`) and `CausalTensorTrainOperator<T>` type with rank-4 cores + getters
-- [ ] 3.2 Implement inherent constructors `identity(dims)` and `from_dense` (operator TT-SVD)
-- [ ] 3.3 Implement `apply` (MPO·MPS), `compose` (MPO·MPO), `adjoint`, and operator `round`
-- [ ] 3.4 Implement `EndoArrow<CausalTensorTrain<T>>` (`compose` = `>>>`, `identity` = `Id`, `apply` = action)
-- [ ] 3.5 Re-export operator types from `lib.rs`
-- [ ] 3.6 Tests: `apply` vs dense matrix–vector, `compose` vs dense matmul, identity action, EndoArrow associativity/identity/action laws to tolerance; register in `mod.rs` + Bazel
+- [x] 3.1 Add the `TensorTrainOperator<T>` trait (`src/traits/tensor_train_operator.rs`) and `CausalTensorTrainOperator<T>` type with rank-4 cores + getters
+- [x] 3.2 Implement inherent constructors `from_cores`, `identity(dims)`, and `from_dense` (operator TT-SVD over combined `(out,in)` indices), plus `with_rounding`
+- [x] 3.3 Implement `apply` (MPO·MPS), `compose` (MPO·MPO), `transpose` (physical leg-swap), operator `round`, and `to_dense` (combined-train reuse)
+- [x] 3.4 Implement `Arrow` (`run` = apply-then-round with the embedded policy) → blanket `EndoArrow<CausalTensorTrain<T>>` gives bounded `iterate_n` time-march
+- [x] 3.5 Re-export `TensorTrainOperator`/`CausalTensorTrainOperator` from `lib.rs`
+- [x] 3.6 Tests: identity action, `from_dense`/`to_dense` round-trip, `apply` vs brute-force dense matrix–vector, `compose` equivalence `(M∘N)x = M(Nx)`, transpose, operator round, EndoArrow `iterate_n`, error paths — at `f32`/`f64`/`Float106`; clippy clean, workspace builds. (Caught a real bug: `permute_axes` is a strided view, so transpose physically reorders.)
 
 ## 4. Stage 2b — TT-cross and nonlinear maps (`tensor-train-cross`)
 

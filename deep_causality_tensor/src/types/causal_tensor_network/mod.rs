@@ -5,4 +5,5 @@
 
 pub mod canonical_form;
 pub mod causal_tensor_train;
+pub mod causal_tensor_train_operator;
 pub mod truncation;
