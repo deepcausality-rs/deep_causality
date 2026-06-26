@@ -18,6 +18,7 @@ mod integer;
 pub mod iso;
 mod num;
 pub mod utils_tests;
+mod identity;
 
 // Algebra types
 pub use crate::algebra::algebra_assoc::AssociativeAlgebra;
@@ -76,6 +77,10 @@ pub use crate::float_106::Float106;
 // Float option number type
 pub use crate::float_option::FloatOption;
 
+// Identity types
+pub use crate::identity::one::{ConstOne, One};
+pub use crate::identity::zero::{ConstZero, Zero};
+
 // Integer types
 pub use crate::integer::{Integer, SignedInt, UnsignedInt};
 
@@ -84,6 +89,4 @@ pub use crate::iso::{AlgebraIso, DivisionAlgebraIso, FieldIso, GroupIso, RingIso
 
 // General numeric traits
 pub use crate::num::Num;
-pub use crate::num::identity::one::{ConstOne, One};
-pub use crate::num::identity::zero::{ConstZero, Zero};
-pub use crate::num::ops::num_ops::*;
+pub use crate::num::num_ops::*;
