@@ -47,8 +47,8 @@
 - [x] 5.2 Implement the shared one-site ALS sweep machinery (`solve/local.rs`): forward-then-back site order, ridge-regularized local solves, `solve_dense` Gaussian solver, deterministic random init, per-bond rank caps
 - [x] 5.3 Implement `solve::fit` (TT completion — block-diagonal-over-physical-index local LLS from samples) and `solve::linear` (`A x = b` via the normal-equation operator `G = AᵀA`, rhs `c = Aᵀb`, one-site ALS with running `<x|G|x>` / `<x|c>` environments)
 - [x] 5.4 Implement `integrate` on the `TensorTrain` trait (per-site weight contraction; total on the order-0 identity)
-- [ ] 5.5 `solve::eigen` (two-site DMRG ground state) — **deferred to Stage 3**
-- [ ] 5.6 `solve::tdvp_step` — **deferred to Stage 3** (optional)
+- [ ] 5.5 `solve::eigen` (**DMRG3S** ground state — single-site + subspace expansion reusing the AMEn residual-enrichment engine; local eigenproblem via Lanczos/Rayleigh-quotient iteration; rank grows by projected-residual enrichment before truncation) — **Stage 3**. Ref: Hubig–McCulloch–Schollwöck–Wolf 2015, *Phys. Rev. B* 91, 155115 (arXiv:1501.05504)
+- [ ] 5.6 `solve::tdvp_step` — **two-site / CBE-TDVP** (rank-adaptive; one-site TDVP cannot grow the bond) — **Stage 3** (optional, gated on a dynamics consumer). Refs: Paeckel et al. 2019 (*Ann. Phys.* 411, 167998); Gleis et al. CBE-TDVP (*Phys. Rev. Lett.* 133, 026401)
 - [x] 5.7 Re-export `solve` module + `SolveConfig` from `lib.rs`
 - [x] 5.8 Tests (f32/f64/Float106 where applicable): `integrate` vs dense sum + error path; `fit` recovers a known train from full samples (f64/Float106); `linear` recovers `x` with `A·x ≈ b` (f64/Float106); config errors. clippy clean, workspace builds. (Caught a real conditioning point: the ridge floors achievable accuracy, so it must be precision-scaled for the tighter `Float106` target.)
 

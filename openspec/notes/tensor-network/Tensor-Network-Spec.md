@@ -129,7 +129,7 @@ src/types/causal_tensor_network/
     mod.rs                     # alternating one-/two-site sweep driver
     linear.rs                  # solve A x = b in TT form           (Stage 2)
     fit.rs                     # TT fit / completion from samples   (Stage 2)
-    eigen.rs                   # ground-state DMRG eigensolve        (Stage 3)
+    eigen.rs                   # ground-state DMRG3S eigensolve      (Stage 3)
 
 src/extensions/                # crate-level HKT witnesses (next to CausalTensorWitness)
   ext_hkt_tensor_train.rs      # CausalTensorTrainWitness: HKT + Functor + Foldable + Pure (§3.6)
@@ -534,18 +534,40 @@ Stage 1 alone makes SURD's high-order joints tractable.
 | integrate | `train.integrate(&[CausalTensor<T>]) -> Result<T,_>` | contract each site vs a weight vector — UQ expectations, SURD normalization |
 | QTT helpers | `qtt::quantize`, `qtt::dequantize` | `n=2^L` axis ↔ `L` binary sites (CFD/UQ) |
 
-### Stage 3 — DMRG eigensolver and advanced dynamics
+### Stage 3 — DMRG3S eigensolver and advanced dynamics
 
 | Operation | Signature (sketch) | Semantics / consumer |
 |---|---|---|
-| DMRG ground state | `solve::eigen(&CausalTensorTrainOperator<T>, &SolveConfig) -> Result<(T, CausalTensorTrain<T>),_>` | lowest eigenpair via two-site DMRG on the shared sweep driver |
-| TDVP step (optional) | `solve::tdvp_step(&op, &mut train, dt, &Truncation)` | time-dependent variational propagation — compressed dynamics for CFD/quantum |
+| DMRG3S ground state | `solve::eigen(&CausalTensorTrainOperator<T>, &SolveConfig) -> Result<(T, CausalTensorTrain<T>),_>` | lowest eigenpair via **single-site DMRG with subspace expansion** (DMRG3S); the local eigenproblem is solved by Lanczos/Rayleigh-quotient iteration, and the bond is grown by **residual-subspace enrichment reusing the AMEn engine** before each truncation |
+| TDVP step (optional) | `solve::tdvp_step(&op, &mut train, dt, &Truncation)` | **two-site** (or CBE-) time-dependent variational propagation — compressed dynamics for CFD/quantum |
 
-**Honest stance:** SURD, CFD, and UQ do not *require* an eigensolver; DMRG and TDVP are included for
-completeness and the quantum-EPP direction, and are cheap once the shared `solve` sweep driver
-(Stage 2) exists. The reusable artifact is the **alternating one-/two-site sweep engine**, shared by
-`linear`, `fit`, `eigen`, and `tdvp`. TDVP is marked optional pending a concrete dynamics consumer.
-**[Stage 3 is genuine, not deferred-indefinitely; built after Stage 2 lands.]**
+**Why DMRG3S over two-site DMRG.** Classic two-site DMRG grows rank by contracting *two* neighbouring
+cores into a `[r·n × n·r]` block, solving the local eigenproblem there, then SVD-splitting — `O(n²)`
+larger local systems and an `O(r³n³)` split per site. **DMRG3S** (strictly single-site + subspace
+expansion, Hubig–McCulloch–Schollwöck–Wolf 2015) keeps the local problem single-site (`[r·n × r·n]`)
+yet still adapts the rank by **augmenting the basis with the projected residual** `P·(H x)` before
+truncating — exactly the AMEn enrichment already implemented for `solve::linear`. So Stage 3 reuses the
+Stage-2c enrichment machinery rather than introducing a separate two-site code path. **CBE** (controlled
+bond expansion, Gleis–Li–von Delft) is the optional frontier refinement of the same idea.
+
+**Why two-site / CBE-TDVP, not one-site TDVP.** One-site TDVP is rank-*static* — it cannot grow the bond
+dimension, so it silently under-resolves any dynamics that build entanglement. The two-site variant (or
+CBE-TDVP) adapts the rank each step, which is the only honest default for a general dynamics consumer.
+
+**Honest stance:** SURD, CFD, and UQ do not *require* an eigensolver; DMRG3S and TDVP are included for
+completeness and the quantum-EPP direction, and are cheap once the shared `solve` sweep driver + AMEn
+enrichment (Stage 2c) exist. The reusable artifact is the **alternating single-site sweep engine with
+residual enrichment**, shared by `linear`, `fit`, `eigen`, and `tdvp`. TDVP is marked optional pending a
+concrete dynamics consumer. **[Stage 3 is genuine, not deferred-indefinitely; built after Stage 2 lands.]**
+
+**Stage 3 references** (also cited at the implementation site + in the crate README):
+- C. Hubig, I. P. McCulloch, U. Schollwöck, F. A. Wolf, "Strictly single-site DMRG algorithm with
+  subspace expansion," *Phys. Rev. B* 91, 155115 (2015), arXiv:1501.05504 — **DMRG3S**.
+- J. Gleis, J.-W. Li, J. von Delft, "Controlled bond expansion for DMRG ground state search at
+  single-site costs," *Phys. Rev. Lett.* 130, 246402 (2023), arXiv:2207.14712; CBE-TDVP, *Phys. Rev.
+  Lett.* 133, 026401 (2024) — **CBE**.
+- S. Paeckel et al., "Time-evolution methods for matrix-product states," *Ann. Phys.* 411, 167998
+  (2019), arXiv:1901.05824 — **TDVP** review (two-site vs one-site rank growth).
 
 ### Stage 4 — Scalar generality (complex + dual)
 
@@ -628,7 +650,7 @@ op). Expensive groups use `sample_size(10)` as the existing bench does.
 | `bench_tensor_train_core.rs` (Stage 1) | `from_dense`/TT-SVD, `round`, `canonicalize_at`, `norm`, `inner`, `add`(+rounded), `hadamard`, `marginalize`, `eval` | `(order d, phys n, bond r)` over small/medium/large triples | TT-SVD, round, norm/inner, marginalize, eval |
 | `bench_tensor_train_operator.rs` (Stage 2) | `mpo_from_dense`, `mpo_apply` (MPO·MPS), `mpo_compose` (MPO·MPO), `integrate` | `(d, n, r, op-bond R)` | MPO·MPS row; operator scaling in `R` |
 | `bench_tensor_train_cross.rs` (Stage 2) | `cross_build` from a known low-rank oracle | `(d, target rank)` × oracle cost | cross convergence cost vs rank |
-| `bench_tensor_train_solve.rs` (Stage 2→3) | `als_linear`, `als_fit`, `dmrg_eigen`, (opt) `tdvp_step` | `(d, n, r, sweeps)` | sweep-engine cost per stage |
+| `bench_tensor_train_solve.rs` (Stage 2→3) | `amen_linear`, `als_fit`, `dmrg3s_eigen`, (opt) `tdvp_step` | `(d, n, r, sweeps)` | sweep-engine cost per stage |
 | `bench_svd_qr.rs` (Stage 0) | `svd_truncated`, `qr` | `(rows m, cols n, kept rank k)` | the gating Stage-0 kernels |
 
 Size constants live at the top of each file (the existing bench's pattern), chosen so the full suite runs

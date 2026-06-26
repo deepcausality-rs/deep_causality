@@ -37,18 +37,29 @@ vector to produce a scalar (quadrature / expectation / normalization).
 - **WHEN** `integrate(weights)` is evaluated on a small train
 - **THEN** the result equals the dense contraction of the tensor against the weight vectors to `≤ tol`
 
-### Requirement: DMRG eigensolver
+### Requirement: DMRG3S eigensolver
 
-`solve::eigen` SHALL compute the lowest eigenpair of a `CausalTensorTrainOperator<T>` via two-site DMRG on
-the shared sweep driver, returning the eigenvalue and its tensor-train eigenvector.
+`solve::eigen` SHALL compute the lowest eigenpair of a `CausalTensorTrainOperator<T>` via single-site
+DMRG with subspace expansion (DMRG3S; Hubig–McCulloch–Schollwöck–Wolf 2015), reusing the AMEn
+residual-enrichment machinery on the shared sweep driver to grow the bond dimension, and returning the
+eigenvalue together with its tensor-train eigenvector.
 
 #### Scenario: Recovers a known smallest eigenpair
 - **WHEN** `solve::eigen` runs on an operator with a known smallest eigenvalue and eigenvector
 - **THEN** the returned eigenvalue and eigenvector match the reference to the configured tolerance
 
-### Requirement: Optional TDVP time step
+#### Scenario: Bond dimension adapts via subspace expansion
+- **WHEN** the eigenvector's true rank exceeds the seed rank
+- **THEN** the subspace-expansion step grows the bond toward the true rank (capped by the rank cap),
+  rather than staying pinned at the seed rank as strictly single-site DMRG would
 
-`solve::tdvp_step`, when provided, SHALL perform one time-dependent variational propagation step under a `Truncation<T>` and SHALL conserve norm to the truncation tolerance for a unitary generator. It is an optional deliverable, gated on a concrete dynamics consumer.
+### Requirement: Optional two-site TDVP time step
+
+`solve::tdvp_step`, when provided, SHALL perform one **two-site** (rank-adaptive) time-dependent
+variational propagation step under a `Truncation<T>` and SHALL conserve norm to the truncation tolerance
+for a unitary generator. The two-site (or controlled-bond-expansion) variant is required over one-site
+TDVP because one-site TDVP cannot grow the bond dimension. It is an optional deliverable, gated on a
+concrete dynamics consumer.
 
 #### Scenario: Norm conservation under unitary evolution
 - **WHEN** `tdvp_step` advances a state under a unitary (skew-Hermitian) generator
