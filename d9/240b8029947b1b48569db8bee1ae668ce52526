@@ -1,0 +1,57 @@
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_svd_truncated/mod.rs
+  s_162aba3d26275e::t_1a6a08e07cc170 150-152,171-175,205
+  s_162aba3d26275e::t_83a9dd3348c7df 210-212,214
+  s_162aba3d26275e::t_03e5289a21e0ca 8,12,106,124
+  s_162aba3d26275e::t_d7284ea9f263b4 1-7,9-11,13-105,107-123,125-149,153-170,176-204,206-209,213,215-220
+deep_causality_tensor/src/types/causal_tensor/ops/mod.rs
+  s_162aba3d26275e::t_ee62e47b6d04ae 18-19
+  s_162aba3d26275e::t_1a6a08e07cc170 9-10
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_qr/mod.rs
+  s_162aba3d26275e::t_2b73c93511cf9d 1-6,8-10,12-46,48-53,59-64,66-67,70-78,80-82,84-89,91-93,95-118
+  s_162aba3d26275e::t_03e5289a21e0ca 7,11
+  s_162aba3d26275e::t_9311387a18c0a1 68-69
+  s_162aba3d26275e::t_1a6a08e07cc170 47,54-58,65,79,83,90,94
+deep_causality_tensor/tests/types/causal_tensor_network/op_tensor_qr_tests.rs
+  s_162aba3d26275e::t_6004bd3cbd8b6b 1-5,7-22,27-39,41-55,57-71,73-139
+  s_162aba3d26275e::t_1a6a08e07cc170 23-26,40,56
+  s_162aba3d26275e::t_555fa866053362 72
+  s_162aba3d26275e::t_76bf09638a4d43 6
+deep_causality_tensor/tests/types/causal_tensor_network/mod.rs
+  s_162aba3d26275e::t_2c85e31ed7f457 6-11
+deep_causality_tensor/tests/BUILD.bazel
+  s_162aba3d26275e::t_2c0aedad1f0471 42
+openspec/changes/add-tensor-network/tasks.md
+  s_162aba3d26275e::t_2658ec05b54c5a 3-8
+deep_causality_tensor/src/types/causal_tensor_network/truncation/mod.rs
+  s_162aba3d26275e::t_03e5289a21e0ca 7,30
+  s_162aba3d26275e::t_f80a79ab5dca84 1-6,8-29,31-111
+deep_causality_tensor/tests/types/causal_tensor_network/truncation_tests.rs
+  s_162aba3d26275e::t_df98facc89ef54 40-41
+  s_162aba3d26275e::t_3e8badeb80ea9b 1-39,42-92
+deep_causality_tensor/benches/benchmarks/mod.rs
+  s_162aba3d26275e::t_1a6a08e07cc170 7
+deep_causality_tensor/tests/types/causal_tensor_network/op_tensor_svd_truncated_tests.rs
+  s_162aba3d26275e::t_d5a5a5aa983bc2 1-5,7-23,28-30,36-44,46-61,63-78,80-148,150-196
+  s_162aba3d26275e::t_999ea5120e25de 6
+  s_162aba3d26275e::t_1a6a08e07cc170 24-27,31-35,45,62,79,149
+deep_causality_tensor/src/types/causal_tensor_network/mod.rs
+  s_162aba3d26275e::t_cbf4aea6833ee5 6
+deep_causality_tensor/src/lib.rs
+  s_162aba3d26275e::t_4546973489185f 19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "d9240b8029947b1b48569db8bee1ae668ce52526",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
