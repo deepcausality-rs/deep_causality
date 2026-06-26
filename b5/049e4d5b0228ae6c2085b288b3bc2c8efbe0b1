@@ -1,0 +1,34 @@
+openspec/notes/causaloid/Causaloid-Formalization.md
+  s_0200e6509c4c70::t_aec4453ec9e22b 1-247
+openspec/notes/causaloid/algebraic-causaloid-assumptions.md
+  s_0200e6509c4c70::t_7be58e5fc3204c 71-78,80-84,86-87
+  s_0200e6509c4c70::t_60253f2af59d24 204-205
+  s_0200e6509c4c70::t_adc548842879f0 208-209
+  s_0200e6509c4c70::t_e64c1c6d27f891 207
+  s_0200e6509c4c70::t_57865a8d31e1a9 10-11
+  s_0200e6509c4c70::t_c01569b08e5281 31
+  s_0200e6509c4c70::t_1fbc89f67a9f48 85
+  s_0200e6509c4c70::t_16e5533106dfe2 52,54-69
+  s_0200e6509c4c70::t_b4ebb25ec99f87 79
+  s_0200e6509c4c70::t_4fa8f63d4ec78a 32
+  s_0200e6509c4c70::t_0e99a2b264d2e2 206
+  s_0200e6509c4c70::t_9d25400e1b43c2 70
+openspec/notes/causal-algebra/Formalization.md
+  s_0200e6509c4c70::t_51fb9f8c92dfc2 1-417
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "b5049e4d5b0228ae6c2085b288b3bc2c8efbe0b1",
+  "prompts": {},
+  "sessions": {
+    "s_0200e6509c4c70": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "65fdc503-a837-4cd0-9fa9-f72ecfc63c0f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
