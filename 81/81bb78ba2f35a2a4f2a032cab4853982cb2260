@@ -1,0 +1,32 @@
+openspec/notes/quantum-epp.md
+  s_71a84d1f9eb4d4::t_f26a4c71ac445d 1-32,34-147,149-154
+  s_0200e6509c4c70::t_283509a8fed0a7 248-251
+  s_0200e6509c4c70::t_47ea2cfb24cf81 155-247
+  s_0200e6509c4c70::t_0853d5f9ad3c18 33,148
+openspec/notes/plasma-blackout-corridor.md
+  s_0200e6509c4c70::t_c0572212544de6 1-237
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "8181bb78ba2f35a2a4f2a032cab4853982cb2260",
+  "prompts": {},
+  "sessions": {
+    "s_0200e6509c4c70": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "65fdc503-a837-4cd0-9fa9-f72ecfc63c0f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_71a84d1f9eb4d4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d4d0095b-4d50-4b21-b5df-6fdb07b06e08",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
