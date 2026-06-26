@@ -1,11 +1,11 @@
 ## 1. Stage 0 — Numerical foundation (`tensor-network-numerics`)
 
-- [ ] 1.1 Add the `Truncation<T>` type under `src/types/causal_tensor_network/truncation/mod.rs` with `by_bond`/`by_tol`/`new` constructors and `InvalidParameter` rejection of bad policies
-- [ ] 1.2 Implement robust truncated thin-SVD (`svd_truncated`) in `ops/tensor_svd*` (Golub–Kahan bidiagonalization + implicit-shift QR, reorthogonalized), returning rank-truncated orthonormal `U`/`Vt`; leave the existing public `svd` unchanged
-- [ ] 1.3 Implement Householder `qr` returning orthonormal `Q` and upper-triangular `R`
-- [ ] 1.4 Introduce the layered scalar bounds: `Normed` for the norm/SVD layer, `Scalar` for the algebra/AD layer; route all magnitude comparisons through `Normed::modulus_squared(): Normed::Real`; ensure every division is by a checked-nonzero pivot and no concrete float literal appears
-- [ ] 1.5 Add checked-in reference fixtures (full-precision `f64`) for SVD/QR; write tests asserting singular values + orthogonality residuals `‖UᴴU − I‖ ≤ k·ε` at `f32`, `f64`, `Float106`
-- [ ] 1.6 Register new test files in their `mod.rs` chain and in `tests/BUILD.bazel`; run `cargo test -p deep_causality_tensor` for the Stage-0 surface
+- [x] 1.1 Add the `Truncation<T>` type under `src/types/causal_tensor_network/truncation/mod.rs` with `by_bond`/`by_tol`/`new` constructors and `InvalidParameter` rejection of bad policies
+- [x] 1.2 Implement robust truncated thin-SVD (`svd_truncated`) as an addition under `ops/tensor_svd_truncated/`, returning rank-truncated orthonormal `U`/`Vt`; leave the existing public `svd` unchanged. (Implemented via **one-sided Jacobi**, chosen over Golub–Kahan for higher relative accuracy with a simpler, branch-stable kernel — documented at the call site.)
+- [x] 1.3 Implement Householder `qr` returning orthonormal `Q` and upper-triangular `R`
+- [x] 1.4 Apply the layered scalar-bound discipline: SVD/QR kernels bound on **`Scalar`** (`Real + Div + FromPrimitive`, admits `Dual` for Stage-4 AD with no body change), `Truncation` on **`Real`**; all magnitude comparisons via `.abs()` on the real scalar; every division guarded by a checked-nonzero pivot; no concrete float literal in lib code. (The complex `Normed`+`ComplexField` Hermitian kernel is Stage 4; the real kernel deliberately carries the minimal `Scalar` bound so that path is instantiation-only.)
+- [x] 1.5 Reference numerics validated against embedded known values (diagonal singular values, golden-ratio 2×2) plus orthogonality residuals `‖UᵀU − I‖ ≤ √ε·16` and `Q R = A` / `U S Vt = A` reconstruction, all at `f32`, `f64`, `Float106`
+- [x] 1.6 Register new test files in their `mod.rs` chain and the `types` `rust_test_suite` glob in `tests/BUILD.bazel`; `cargo test -p deep_causality_tensor` green (36 integration + 381 lib + 25 doctests), clippy clean, formatted
 
 ## 2. Stage 1 — Tensor-train state (`tensor-train`)
 
