@@ -1,0 +1,19 @@
+papers/src/EPP/Preprint_EPP/introduction.tex
+  s_0200e6509c4c70::t_5c021bb4c4e9ca 27-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "f8af347bc2b683b9750630cac5806de0488020be",
+  "prompts": {},
+  "sessions": {
+    "s_0200e6509c4c70": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "65fdc503-a837-4cd0-9fa9-f72ecfc63c0f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
