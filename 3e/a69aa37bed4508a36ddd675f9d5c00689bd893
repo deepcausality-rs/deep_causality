@@ -1,0 +1,25 @@
+openspec/notes/causaloid/freeze-dag-optin.md
+  s_0200e6509c4c70::t_d065ffe3ca57f7 1-7,9,12-57
+  s_0200e6509c4c70::t_01a8b47f3663aa 8,10-11
+deep_causality/tests/types/causal_types/causaloid_graph/causality_graph_freeze_tests.rs
+  s_0200e6509c4c70::t_333b23d3689d99 42-207
+deep_causality/src/traits/causable_graph/graph/mod.rs
+  s_0200e6509c4c70::t_38803c4ee8e852 8
+  s_0200e6509c4c70::t_2ca59f70bda287 30-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "3ea69aa37bed4508a36ddd675f9d5c00689bd893",
+  "prompts": {},
+  "sessions": {
+    "s_0200e6509c4c70": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "65fdc503-a837-4cd0-9fa9-f72ecfc63c0f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
