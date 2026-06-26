@@ -108,4 +108,12 @@ pub trait TensorTrain<T>: Sized {
     ) -> Result<(Self, T), CausalTensorError>
     where
         F: FnMut(T) -> T;
+
+    /// Contracts each site against a per-site weight vector, returning a scalar — quadrature,
+    /// expectation, or normalization. `weights[k]` is a length-`n_k` vector.
+    ///
+    /// # Errors
+    /// - [`CausalTensorError::DimensionMismatch`] if `weights.len()` differs from the order.
+    /// - [`CausalTensorError::ShapeMismatch`] if a weight length differs from its physical dimension.
+    fn integrate(&self, weights: &[CausalTensor<T>]) -> Result<T, CausalTensorError>;
 }

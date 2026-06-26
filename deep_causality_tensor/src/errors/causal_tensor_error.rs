@@ -26,6 +26,8 @@ pub enum CausalTensorError {
     RankExceeded,
     /// A TT-cross oracle returned a non-finite value during sampling.
     CrossSampleFailure,
+    /// An ALS/DMRG sweep did not reach the residual target within the sweep budget.
+    SweepDidNotConverge,
     /// Encapsulates errors specific to EinSum AST validation and execution.
     EinSumError(EinSumValidationError),
 }
@@ -85,6 +87,12 @@ impl std::fmt::Display for CausalTensorError {
                 write!(
                     f,
                     "CausalTensorError: TT-cross oracle returned a non-finite value"
+                )
+            }
+            CausalTensorError::SweepDidNotConverge => {
+                write!(
+                    f,
+                    "CausalTensorError: ALS/DMRG sweep did not converge within the sweep budget"
                 )
             }
             CausalTensorError::EinSumError(e) => {

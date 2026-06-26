@@ -493,4 +493,43 @@ where
             config,
         )
     }
+
+    fn integrate(&self, weights: &[CausalTensor<T>]) -> Result<T, CausalTensorError> {
+        let cores = self.cores();
+        if weights.len() != cores.len() {
+            return Err(CausalTensorError::DimensionMismatch);
+        }
+        if cores.is_empty() {
+            return Ok(match self.identity_kind() {
+                Identity::MultiplicativeOne => T::one(),
+                _ => T::zero(),
+            });
+        }
+        let mut vrow = vec![T::one()]; // [r_0 == 1]
+        let mut rk = 1usize;
+        for (core, w) in cores.iter().zip(weights.iter()) {
+            let (_, n, rr) = dims(core);
+            if w.len() != n {
+                return Err(CausalTensorError::ShapeMismatch);
+            }
+            let cd = core.as_slice();
+            let wd = w.as_slice();
+            // M[a,b] = Σ_i core[a,i,b]·w[i]; vrow ← vrow · M.
+            let mut nv = vec![T::zero(); rr];
+            for (a, &va) in vrow.iter().enumerate().take(rk) {
+                if va == T::zero() {
+                    continue;
+                }
+                for (i, &wi) in wd.iter().enumerate() {
+                    let base = a * (n * rr) + i * rr;
+                    for (b, nvb) in nv.iter_mut().enumerate() {
+                        *nvb += va * cd[base + b] * wi;
+                    }
+                }
+            }
+            vrow = nv;
+            rk = rr;
+        }
+        Ok(vrow[0])
+    }
 }

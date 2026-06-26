@@ -43,14 +43,14 @@
 
 ## 5. Stage 2c/3 — Solve engine (`tensor-train-solve`)
 
-- [ ] 5.1 Add `SolveConfig<T>` (`solve_config/mod.rs`) and extend `CausalTensorError` with `SweepDidNotConverge`
-- [ ] 5.2 Implement the shared alternating one-/two-site sweep driver (`solve/mod.rs`)
-- [ ] 5.3 Implement `solve::linear` (ALS `A x = b`) and `solve::fit` (TT regression/completion)
-- [ ] 5.4 Implement `integrate` on the `TensorTrain` trait (per-site weight contraction)
-- [ ] 5.5 Implement `solve::eigen` (two-site DMRG ground state) on the shared driver
-- [ ] 5.6 (Optional, if a consumer exists) implement `solve::tdvp_step`
-- [ ] 5.7 Re-export `solve::{linear,fit,eigen}` and `SolveConfig` from `lib.rs`
-- [ ] 5.8 Tests: linear recovers known `x`, fit recovers known train, integrate vs dense, eigen recovers known eigenpair, `SweepDidNotConverge`; register in `mod.rs` + Bazel
+- [x] 5.1 Add `SolveConfig<T>` (`solve_config/mod.rs`: `max_sweeps`, `tol`, `ridge`) and extend `CausalTensorError` with `SweepDidNotConverge` (+ `Display`)
+- [x] 5.2 Implement the shared one-site ALS sweep machinery (`solve/local.rs`): forward-then-back site order, ridge-regularized local solves, `solve_dense` Gaussian solver, deterministic random init, per-bond rank caps
+- [x] 5.3 Implement `solve::fit` (TT completion — block-diagonal-over-physical-index local LLS from samples) and `solve::linear` (`A x = b` via the normal-equation operator `G = AᵀA`, rhs `c = Aᵀb`, one-site ALS with running `<x|G|x>` / `<x|c>` environments)
+- [x] 5.4 Implement `integrate` on the `TensorTrain` trait (per-site weight contraction; total on the order-0 identity)
+- [ ] 5.5 `solve::eigen` (two-site DMRG ground state) — **deferred to Stage 3**
+- [ ] 5.6 `solve::tdvp_step` — **deferred to Stage 3** (optional)
+- [x] 5.7 Re-export `solve` module + `SolveConfig` from `lib.rs`
+- [x] 5.8 Tests (f32/f64/Float106 where applicable): `integrate` vs dense sum + error path; `fit` recovers a known train from full samples (f64/Float106); `linear` recovers `x` with `A·x ≈ b` (f64/Float106); config errors. clippy clean, workspace builds. (Caught a real conditioning point: the ridge floors achievable accuracy, so it must be precision-scaled for the tighter `Float106` target.)
 
 ## 6. Stage 4 — Scalar generality (`tensor-train-scalars`)
 

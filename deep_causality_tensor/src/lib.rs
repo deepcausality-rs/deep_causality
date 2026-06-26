@@ -23,5 +23,7 @@ pub use crate::types::causal_tensor_network::canonical_form::CanonicalForm;
 pub use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 pub use crate::types::causal_tensor_network::causal_tensor_train_operator::CausalTensorTrainOperator;
 pub use crate::types::causal_tensor_network::cross_config::CrossConfig;
+pub use crate::types::causal_tensor_network::solve;
+pub use crate::types::causal_tensor_network::solve_config::SolveConfig;
 pub use crate::types::causal_tensor_network::truncation::Truncation;
 pub use crate::utils::utils_tests;

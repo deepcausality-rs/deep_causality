@@ -14,6 +14,8 @@ mod causal_tensor_train_operator_tests;
 #[cfg(test)]
 mod causal_tensor_train_ops_tests;
 #[cfg(test)]
+mod causal_tensor_train_solve_tests;
+#[cfg(test)]
 mod causal_tensor_train_tests;
 #[cfg(test)]
 mod op_tensor_qr_tests;
