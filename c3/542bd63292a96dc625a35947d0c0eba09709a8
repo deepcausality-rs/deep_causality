@@ -1,0 +1,33 @@
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_svd_truncated/mod.rs
+  s_162aba3d26275e::t_c1ae7cdab2bd2c 32-36
+deep_causality_tensor/README.md
+  s_162aba3d26275e::t_2e424673c3c1ff 238-279
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/construct/mod.rs
+  s_162aba3d26275e::t_4aa81ac4e6beae 24-28
+openspec/notes/tensor-network/IMPLEMENTATION-STATUS.md
+  s_162aba3d26275e::t_952614a543efc7 89-97,100-102,105-124
+  s_162aba3d26275e::t_834181c721a986 1-88,98-99,103-104,125-132
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_qr/mod.rs
+  s_162aba3d26275e::t_275b94e5b5e574 20-23
+deep_causality_tensor/src/types/causal_tensor_network/solve/local.rs
+  s_162aba3d26275e::t_c558dff02b80f1 23-30
+  s_162aba3d26275e::t_72e52dd69b9b56 64-72,74-76,80,91-98,102-109,112,114,116-121,124-125
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/construct/cross.rs
+  s_162aba3d26275e::t_83f42a2760070c 27-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "c3542bd63292a96dc625a35947d0c0eba09709a8",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
