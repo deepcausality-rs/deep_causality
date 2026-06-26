@@ -7,6 +7,8 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 **Companion to** [`algebraic-causaloid.md`](algebraic-causaloid.md). That note states the formalization; this one tracks every hidden or implicit assumption it rests on, so each can be interrogated, decided, and documented before the formalization is treated as settled.
 
+**Purpose.** The goal is to formalize the causaloid in a rigorous abstract algebra and/or category theory, which first requires the *right* abstraction. A partial or full rewrite of the causaloid to reach that formalization is on the table, but every such rewrite must be justified. These assumption tests exist to separate what the current design already justifies from what a rewrite would have to earn.
+
 **Do not promote any claim in `algebraic-causaloid.md` to "settled" while the assumption it depends on is `OPEN`.**
 
 ## How to use this tracker
@@ -26,8 +28,8 @@ Severity: **L** = load-bearing (falsifies a headline claim if wrong); **C** = ca
 
 | # | Title | Sev | Status |
 |---|---|---|---|
-| 1 | Order-independence of Collection | L | OPEN |
-| 2 | Graph = acyclic, series-parallel Arrow | L | OPEN |
+| 1 | Order-independence of Collection | L | DECIDED |
+| 2 | Graph form: which algebra? (join/reconvergence semantics) | L | INVESTIGATING |
 | 3 | Reified free Arrow: uniform *and* statically typed | L | OPEN |
 | 4 | Generation over a closed, decidable atom set | L | OPEN |
 | 5 | Collection output is a verdict, not arbitrary `O` | C | OPEN |
@@ -47,23 +49,42 @@ Severity: **L** = load-bearing (falsifies a headline claim if wrong); **C** = ca
 - **Assumption.** Collection evaluation is a commutative-monoid / multiset fold: child order is semantically irrelevant and parallel evaluation is sound.
 - **Depends-on / Affects.** A2, B1; Part 2 "Aggregation is a multiset operation"; Part 3 item 3 (parallelism).
 - **Confounder / bias.** *Streetlight + level-confusion.* The boolean verdict (`All`/`Any`) is genuinely symmetric; that easy fact is laundered into "the whole evaluation is order-independent," dropping the carrier. Evaluation is `PropagatingEffect<O>`, which threads an order-sensitive `EffectLog` (and `PS` on the stateful path). Symmetry of the verdict ≠ commutativity of the effect.
-- **Status.** OPEN
+- **Status.** DECIDED
 - **Resolves when.**
-  - Q1. Is the canonical Collection path the stateless `MonadicCausable` one (`State = ()`), or does any production path thread `PS` across siblings? (Code: `collection_reasoning/monadic_collection.rs` vs `stateful_monadic_collection.rs`.)
-  - Q2. Is `EffectLog` order semantically meaningful, or a reorderable multiset/bag? Decide: order-significant ⇒ Collection is *not* commutative; multiset ⇒ define a canonical commutative log-merge.
-  - Q3. Restate the theorem as "order-independent **up to log permutation**, stateless path, siblings sharing no mutable context," and property-test exactly that.
-- **Decision.** _(blank)_
+  - Q1. Is the canonical Collection path the stateless `MonadicCausable` one (`State = ()`), or does any production path thread `PS` across siblings? (Code: `collection_reasoning/monadic_collection.rs` vs `stateful_monadic_collection.rs`.) **Answered: both exist; the stateful path threads `PS` across siblings.**
+  - Q2. Is `EffectLog` order semantically meaningful, or a reorderable multiset/bag? Decide: order-significant ⇒ Collection is *not* commutative; multiset ⇒ define a canonical commutative log-merge. **Answered: order-significant (append/chronological log).**
+  - Q3. Restate the theorem as "order-independent **up to log permutation**, stateless path, siblings sharing no mutable context," and property-test exactly that. **Adopted as the scoped theorem below.**
+- **Decision.** DECIDED 2026-06-26. The unqualified claim is **REJECTED**; the following scoped claim is accepted.
 
-### 2 — Graph = acyclic, series-parallel Arrow
-- **Assumption.** Every `CausaloidGraph` is an acyclic, series-parallel diagram interpretable via `Compose`/`Split`/`Fanout` in topological order.
-- **Depends-on / Affects.** B3, B4; Part 2 "Graph form"; Part 3 item 4 (Arrow closure).
-- **Confounder / bias.** *Elegance bias + an internal contradiction in the note* ("free **(traced)** SMC" vs "**topological** order"; traced ⇒ cycles, topological ⇒ none). `Compose/Split/Fanout` generate only series-parallel diagrams; general DAGs with shared fan-in / reconvergent paths (the bridge graph) are not SP-decomposable. Assumed SP because the examples are SP.
-- **Status.** OPEN
-- **Resolves when.**
-  - Q1. Does `CausaloidGraph` construction reject cycles (`ultragraph::has_cycle` / `topological_sort`), or can a cyclic graph be built and fail only at reason-time? Enforce at construction if "acyclic" is a premise.
-  - Q2. Are real causal graphs series-parallel? Find any non-SP graph in tests/examples. If one exists, `Compose/Split/Fanout` is insufficient — need an explicit sharing/wire node or `ArrowLoop`.
-  - Q3. Drop "traced" unless feedback is genuinely supported; if cycles are intended, specify termination / fixpoint semantics.
-- **Decision.** _(blank)_
+  **Scoped theorem.** Collection evaluation is order-independent in the **aggregated value only**, on the **stateless** `MonadicCausableCollection` path, in the **all-success** case, and **up to log permutation**. It is order-sensitive (a) in the `EffectLog` channel in all cases, (b) under the first-error short-circuit (which error surfaces, and the partial logs at failure, depend on order), and (c) in the **value** channel on the `StatefulMonadicCausableCollection` path (state is threaded across siblings, so each item evaluates against a different state).
+
+  **Evidence.**
+  - *Value symmetric:* `aggregate_effects` is a symmetric function for every `AggregateLogic` and carrier — bool `.all`/`.any`/count, f64 `product`/inclusion-exclusion/count, `UncertainBool` commutative `&`/`|` reduce (`utils/monadic_collection_utils.rs:50-87`). The stateless fold evaluates every item against the *same* `incoming_effect` (`collection_reasoning/monadic_collection.rs:76`), so items are independent.
+  - *Log order-sensitive:* logs append in iteration order (`monadic_collection.rs` bind log-merge; `stateful_monadic_collection.rs:116`). `EffectLog` is an append/chronological log, not a reorderable multiset.
+  - *Error short-circuit:* the first item error in iteration order halts the fold (`monadic_collection.rs:79`; `stateful_monadic_collection.rs:118-128`).
+  - *Stateful threads state across siblings:* `acc_state`/`acc_context` are propagated item-to-item (`stateful_monadic_collection.rs:99,113,131`).
+
+  **Consequence.** "Parallel evaluation is sound" holds only for the value, on the stateless error-free path, with logs treated as a bag. A2/B1, Part 2 "Aggregation is a multiset operation," and Part 3 item 3 (parallelism) must carry this scope, not the unqualified claim.
+
+  **Determinism ≠ commutativity (recorded to prevent conflation).** `HashMap`-backed collections iterate in non-deterministic order, so logs, the surfaced error, and stateful results are non-reproducible across runs. A deterministic ordering (e.g. a `Sortable` accessor keyed on `Identifiable::id()`) would fix *reproducibility* but does **not** make order semantically irrelevant. Sorting buys determinism, not commutativity; do not present one as the other.
+
+### 2 — Graph form: which algebra, and is reconvergence defined?
+- **Assumption.** The `CausaloidGraph` form has a compositional algebra: it is acyclic, reconvergent nodes (joins) combine their incoming effects under a defined operator, and the whole interprets into the effect category as a single morphism (the formalization's "Graph form" / Arrow closure).
+- **Depends-on / Affects.** B3, B4; Part 2 "Graph form"; Part 3 item 4 (Arrow closure); #11a (is `RelayTo` a further control construct `F` must name?).
+- **Confounder / bias.** *Elegance bias.* The categorical reading (an Arrow / monoidal interpretation in topological order) was assumed because the examples are chains and trees, where it happens to hold. The graph form's actual semantics — in particular what a *join* means — was never decided; the notation hides it.
+- **Status.** INVESTIGATING
+- **Findings (from code, 2026-06-26).** The original "Arrow / topological-fold" reading is **rejected**: the engine does not interpret the graph compositionally and has no join semantics.
+  - *No join.* `evaluate_subgraph_from_cause` is a hand-written BFS that broadcasts each node's whole output (clone) to its **unvisited** children (`traits/causable_graph/graph_reasoning/mod.rs:177-183`). At any reconvergent node the first parent in BFS order supplies the input; every other parent's effect is **silently dropped**. The acyclic diamond `A→{B,C}→D` evaluates `D` on `B`'s output only; `C`'s contribution is lost. So even the simplest join — two causes determining one effect, the basic reason to have a graph — is mis-evaluated.
+  - *Result is "last node," not a sink combination.* The return value is the last node popped in BFS order (`graph_reasoning/mod.rs:116,189`), not a structured aggregation; it depends on node-index / edge-insertion order.
+  - *Acyclicity is not enforced by default.* `add_edge` performs no cycle check (`types/causal_types/causaloid_graph/causable_graph.rs:112-117`) and `freeze()` accepts cyclic graphs; "DAG" is documented intent only (`causaloid/mod.rs:53`). BFS tolerates a cycle via the `visited` guard but assigns it no meaning. **Mitigated (opt-in):** `CausableGraph::freeze_dag()` now enforces acyclicity at the freeze boundary — see Q3.
+  - *`RelayTo` is dynamic control flow outside any static diagram.* A causaloid may return `EffectValue::RelayTo(target, inner)`, which clears `visited`/queue and jumps (`graph_reasoning/mod.rs:143-166`) — a computed `goto`, not composition. It can **fail to terminate** (each relay does `visited.fill(false)` with no relay bound), and a static cycle check cannot see relay loops because the target is decided at runtime.
+  - *Graph bypasses `evaluate`.* A `Graph` causaloid is not run through the base `evaluate` (it returns "use specialized graph APIs"); the graph is reached only by calling the reasoning methods explicitly (the split-brain of #10).
+- **Resolves when (the live question, reframed).**
+  - Q1. **Decide join/reconvergence semantics first.** When node `D` has parents `B` and `C`, does `D` see a *merge* of their effects, and under what operator (the collection `AggregateLogic`? a user-supplied join? value-only vs log/state merge)? No algebra for the graph is definable until this is decided. Today it is decided by accident (BFS first-parent-wins).
+  - Q2. **Identify the right abstraction.** Arbitrary causal graphs with copy and merge are not the free arrow generated by `compose`/`split`/`fanout`; the natural target is a dataflow / PROP / symmetric-monoidal category with explicit copy (Δ) and merge (∇) generators, over the effect monad. Confirm or replace this target.
+  - Q3. **Decide `RelayTo`'s status** (a further control construct `F` must name, or out of scope) and add a relay-termination bound. **[DONE — structural hygiene]** The opt-in `freeze_dag()` that enforces acyclicity at the freeze boundary is **implemented** (`CausableGraph::freeze_dag`, additive/non-breaking; see [`freeze-dag-optin.md`](freeze-dag-optin.md)). This closes the "acyclicity is not enforced" finding *as an opt-in* — the default `freeze()` still accepts cyclic graphs. It is orthogonal to Q1/Q2 and to the rest of Q3: a DAG can still reconverge, and a static cycle check cannot see `RelayTo` loops, so **`RelayTo` status + a relay-termination bound remain open.**
+- **Justification gate (purpose of this entry).** Making the graph form a rigorous algebra requires deciding Q1 and then a real rewrite (topological fold with the chosen merge generator; `RelayTo` semantics). That rewrite is **justified only if** a formal graph algebra is a goal worth the blast radius (it overlaps #10). It is independently justified on correctness grounds regardless of the formalization, because the current silent join-drop is a latent bug. Record the go/no-go decision here.
+- **Decision.** _(pending Q1 — join semantics — and the go/no-go on a graph-form rewrite)_
 
 ### 3 — Reified free Arrow: uniform *and* statically typed
 - **Assumption.** The free Arrow can be a single storable/generatable `ArrowTerm` type **and** have its `In`/`Out` wiring rejected by the type system at compile time.
@@ -180,3 +201,9 @@ Severity: **L** = load-bearing (falsifies a headline claim if wrong); **C** = ca
 ## Resolution log
 
 _(Append one line per state change: `YYYY-MM-DD #N OPEN→DECIDED — <ruling> — <commit/test/spec>`.)_
+
+2026-06-26 #1 OPEN→DECIDED — unqualified order-independence rejected; scoped to value-only / stateless / all-success / up-to-log-permutation; stateful path and first-error short-circuit are order-sensitive; determinism ≠ commutativity — code: `utils/monadic_collection_utils.rs`, `traits/causable_collection/collection_reasoning/{monadic_collection,stateful_monadic_collection}.rs`
+
+2026-06-26 #2 OPEN→INVESTIGATING — Arrow / topological-fold reading rejected (engine is BFS-broadcast with no join; reconvergent nodes silently drop all but the first parent; `RelayTo` is dynamic and may not terminate; acyclicity unenforced); reframed to "decide join/reconvergence semantics, then pick a copy/merge dataflow abstraction"; graph-form rewrite gated on justification — code: `traits/causable_graph/graph_reasoning/mod.rs`, `types/causal_types/causaloid_graph/causable_graph.rs`
+
+2026-06-26 #2 Q3 partial — opt-in `CausableGraph::freeze_dag()` implemented (enforces acyclicity at the freeze boundary; additive/non-breaking; default `freeze()` unchanged). Closes the acyclicity finding as opt-in. STILL OPEN: join/reconvergence semantics (Q1), the categorical abstraction (Q2), `RelayTo` status + relay-termination bound (Q3). — code: `traits/causable_graph/graph/mod.rs`, tests `tests/types/causal_types/causaloid_graph/causality_graph_freeze_tests.rs`; note: `freeze-dag-optin.md`
