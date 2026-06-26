@@ -24,6 +24,8 @@ pub enum CausalTensorError {
     NotCanonical,
     /// A dense materialization would exceed the element-count guard.
     RankExceeded,
+    /// A TT-cross oracle returned a non-finite value during sampling.
+    CrossSampleFailure,
     /// Encapsulates errors specific to EinSum AST validation and execution.
     EinSumError(EinSumValidationError),
 }
@@ -77,6 +79,12 @@ impl std::fmt::Display for CausalTensorError {
                 write!(
                     f,
                     "CausalTensorError: Dense materialization exceeds the element-count guard"
+                )
+            }
+            CausalTensorError::CrossSampleFailure => {
+                write!(
+                    f,
+                    "CausalTensorError: TT-cross oracle returned a non-finite value"
                 )
             }
             CausalTensorError::EinSumError(e) => {

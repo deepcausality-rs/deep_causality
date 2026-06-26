@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::types::causal_tensor_network::cross_config::CrossConfig;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError};
 
@@ -88,4 +89,23 @@ pub trait TensorTrain<T>: Sized {
     /// - [`CausalTensorError::IndexOutOfBounds`] if any site is out of range.
     /// - [`CausalTensorError::InvalidParameter`] if every site would be summed out.
     fn marginalize(&self, sites: &[usize]) -> Result<Self, CausalTensorError>;
+
+    /// Applies a general nonlinear scalar map `f` to every logical entry, returning a *new*
+    /// approximate train and a sampled residual.
+    ///
+    /// A nonlinear map of a tensor train has no exact local form (and can inflate rank), so this
+    /// re-approximates `f∘self` by TT-cross over the oracle `i ↦ f(self.eval(i))`. The returned
+    /// residual makes the approximation explicit. For exact linear/affine maps use `scale` /
+    /// `add_scalar` instead.
+    ///
+    /// # Errors
+    /// Propagates [`CausalTensorError::CrossSampleFailure`] if `f` or evaluation produces a
+    /// non-finite value, and other cross errors.
+    fn apply_nonlinear<F>(
+        &self,
+        f: F,
+        config: &CrossConfig<T>,
+    ) -> Result<(Self, T), CausalTensorError>
+    where
+        F: FnMut(T) -> T;
 }

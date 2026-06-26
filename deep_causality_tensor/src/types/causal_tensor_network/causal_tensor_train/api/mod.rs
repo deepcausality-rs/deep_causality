@@ -8,6 +8,7 @@ use crate::types::causal_tensor_network::canonical_form::CanonicalForm;
 use crate::types::causal_tensor_network::causal_tensor_train::construct::MAX_DENSE_ELEMS;
 use crate::types::causal_tensor_network::causal_tensor_train::linalg::{matmul, transpose};
 use crate::types::causal_tensor_network::causal_tensor_train::{CausalTensorTrain, Identity};
+use crate::types::causal_tensor_network::cross_config::CrossConfig;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor};
 use deep_causality_num::Scalar;
@@ -472,5 +473,24 @@ where
         }
 
         Self::from_cores(out)
+    }
+
+    fn apply_nonlinear<F>(
+        &self,
+        mut f: F,
+        config: &CrossConfig<T>,
+    ) -> Result<(Self, T), CausalTensorError>
+    where
+        F: FnMut(T) -> T,
+    {
+        let shape = self.phys_dims().to_vec();
+        CausalTensorTrain::cross(
+            &shape,
+            |idx| match self.eval(idx) {
+                Ok(x) => f(x),
+                Err(_) => T::nan(),
+            },
+            config,
+        )
     }
 }

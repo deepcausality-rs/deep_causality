@@ -35,11 +35,11 @@
 
 ## 4. Stage 2b — TT-cross and nonlinear maps (`tensor-train-cross`)
 
-- [ ] 4.1 Add `CrossConfig<T>` (`cross_config/mod.rs`: `max_sweeps`, `rank_cap`, tolerance)
-- [ ] 4.2 Extend `CausalTensorError` with `CrossSampleFailure`
-- [ ] 4.3 Implement `CausalTensorTrain::cross` (ACA/maxvol pivoting) building a train from an oracle without going dense, returning a residual estimate, bounded by the config, and failing on non-finite samples
-- [ ] 4.4 Implement `apply_nonlinear(f, &CrossConfig) -> (Self, residual)` on the `TensorTrain` trait; confirm no `map_elementwise` is exposed
-- [ ] 4.5 Tests: recover a known low-rank oracle + residual, no dense allocation, budget respected, `CrossSampleFailure`, `apply_nonlinear` residual; register in `mod.rs` + Bazel
+- [x] 4.1 Add `CrossConfig<T>` (`cross_config/mod.rs`: `max_sweeps`, `rank_cap`, `tol`, `check_samples`, `seed`) with validation
+- [x] 4.2 Extend `CausalTensorError` with `CrossSampleFailure` (+ `Display`)
+- [x] 4.3 Implement `CausalTensorTrain::cross` — alternating L→R/R→L sweeps with rank-revealing LU-pivot index selection and a final interpolatory `C·Q⁻¹` pass; queries the oracle only on cross fibers (no `nᵈ` buffer); rank-adapts to the numerical rank (capped); returns a sampled relative residual; bounded by `max_sweeps`; fails on non-finite samples. Scalar-bound `invert_square`/`pivot_rows` helpers (admit `Dual`).
+- [x] 4.4 Implement `apply_nonlinear(f, &CrossConfig) -> (Self, residual)` on the `TensorTrain` trait (cross over `i ↦ f(self.eval(i))`); no `map_elementwise` exposed
+- [x] 4.5 Tests (f32/f64/Float106): recover rank-1 (bonds = 1) and rank-2 (bonds ≤ 2) oracles exactly + residual, order-1, `CrossSampleFailure` on NaN oracle, config errors, `apply_nonlinear` square (rank-preserving) + linear-matches-scale. clippy clean, workspace builds. (Caught a real bug: the rank-revealing pivot break needs a scale-relative threshold, not an exact-zero test, or float residuals inflate the rank.)
 
 ## 5. Stage 2c/3 — Solve engine (`tensor-train-solve`)
 
