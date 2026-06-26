@@ -14,11 +14,11 @@ mod dual;
 mod float;
 mod float_106;
 mod float_option;
+mod identity;
 mod integer;
 pub mod iso;
 mod num;
 pub mod utils_tests;
-mod identity;
 
 // Algebra types
 pub use crate::algebra::algebra_assoc::AssociativeAlgebra;

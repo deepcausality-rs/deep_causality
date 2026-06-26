@@ -3,4 +3,6 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+pub mod canonical_form;
+pub mod causal_tensor_train;
 pub mod truncation;

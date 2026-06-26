@@ -18,6 +18,12 @@ pub enum CausalTensorError {
     InvalidParameter(String),
     SingularMatrix,   // Added for matrix inversion errors
     IndexOutOfBounds, // Added for out-of-bounds access errors
+    /// Adjacent tensor-train cores disagree on the shared bond dimension.
+    BondDimensionMismatch,
+    /// A tensor-train operation required a canonical gauge the train was not in.
+    NotCanonical,
+    /// A dense materialization would exceed the element-count guard.
+    RankExceeded,
     /// Encapsulates errors specific to EinSum AST validation and execution.
     EinSumError(EinSumValidationError),
 }
@@ -57,6 +63,21 @@ impl std::fmt::Display for CausalTensorError {
             }
             CausalTensorError::IndexOutOfBounds => {
                 write!(f, "CausalTensorError: Index out of bounds error")
+            }
+            CausalTensorError::BondDimensionMismatch => {
+                write!(f, "CausalTensorError: Tensor-train bond dimension mismatch")
+            }
+            CausalTensorError::NotCanonical => {
+                write!(
+                    f,
+                    "CausalTensorError: Tensor train is not in the required canonical form"
+                )
+            }
+            CausalTensorError::RankExceeded => {
+                write!(
+                    f,
+                    "CausalTensorError: Dense materialization exceeds the element-count guard"
+                )
             }
             CausalTensorError::EinSumError(e) => {
                 write!(f, "CausalTensorError: EinSumError: {}", e)

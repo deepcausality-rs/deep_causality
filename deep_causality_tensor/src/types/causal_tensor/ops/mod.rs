@@ -8,6 +8,8 @@ mod tensor_inverse;
 mod tensor_product;
 /// Householder QR decomposition (tensor-network canonicalization primitive).
 mod tensor_qr;
+/// QTT (quantized tensor-train) reshape helpers.
+mod tensor_qtt;
 /// Defines tensor reduction operations (e.g., sum, mean).
 mod tensor_reduction;
 /// Defines tensor shape manipulation operations (e.g., reshape, ravel).

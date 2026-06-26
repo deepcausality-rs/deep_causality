@@ -9,20 +9,20 @@
 
 ## 2. Stage 1 — Tensor-train state (`tensor-train`)
 
-- [ ] 2.1 Add `CanonicalForm` enum (`canonical_form/mod.rs`) and the `TensorTrain<T>` trait in `src/traits/tensor_train.rs`
-- [ ] 2.2 Add `CausalTensorTrain<T>` struct + private fields (`causal_tensor_train/mod.rs`) and getters (`cores`/`order`/`phys_dims`/`bond_dims`/`max_bond`/`canonical_form`)
-- [ ] 2.3 Extend `CausalTensorError` with `BondDimensionMismatch`, `NotCanonical`, `RankExceeded` (+ `Display` arms)
-- [ ] 2.4 Implement `from_dense` (TT-SVD left-to-right sweep), and `from_fn`/`to_dense` with the `RankExceeded` element-count guard; add `zeros`/`ones`/`random_seeded`
-- [ ] 2.5 Implement QR-based `left_canonicalize`/`right_canonicalize`/`canonicalize_at` updating the tracked `CanonicalForm` (in-place via `get_mut`)
-- [ ] 2.6 Implement `round(&Truncation)` (SVD recompression, idempotent)
-- [ ] 2.7 Implement `norm`/`inner` via the mixed-canonical center
-- [ ] 2.8 Implement exact `add`/`scale`/`add_scalar`/`hadamard` and their `*_rounded(&Truncation)` variants
-- [ ] 2.9 Implement `marginalize` and `eval`
-- [ ] 2.10 Implement QTT `quantize`/`dequantize` reshape helpers (`ops/qtt.rs`)
-- [ ] 2.11 Implement the algebra-trait impls — `Module<T>` (exact `scale`), `AbelianGroup`/`AddGroup` (via `add`), `Ring` (via `hadamard`) — via marker traits + num blanket impls; do NOT implement `Field`/`InvMonoid`; document the lax + shape-dependent-`Zero`/`One` caveats
-- [ ] 2.12 Add `CausalTensorTrainWitness` (`extensions/ext_hkt_tensor_train.rs`) implementing `Functor`/`Foldable`/`Pure` over core storage only
-- [ ] 2.13 Wire `lib.rs` re-exports (`TensorTrain`, `CausalTensorTrain`, `Truncation`, `CanonicalForm`, `CausalTensorTrainWitness`)
-- [ ] 2.14 Write mirror tests (round-trip, compression accuracy, algebra laws vs dense, marginalize vs `sum_axes`, eval, functor laws, error paths) at `f32`/`f64`/`Float106`; register in `mod.rs` + `tests/BUILD.bazel`
+- [x] 2.1 Add `CanonicalForm` enum (`canonical_form/mod.rs`) and the `TensorTrain<T>` trait in `src/traits/tensor_train.rs`
+- [x] 2.2 Add `CausalTensorTrain<T>` struct + private fields (`causal_tensor_train/mod.rs`) and getters (`cores`/`order`/`phys_dims`/`bond_dims`/`max_bond`/`canonical_form`)
+- [x] 2.3 Extend `CausalTensorError` with `BondDimensionMismatch`, `NotCanonical`, `RankExceeded` (+ `Display` arms)
+- [x] 2.4 Implement `from_dense` (TT-SVD left-to-right sweep), and `from_fn`/`to_dense` with the `RankExceeded` element-count guard; add `zeros`/`ones`/`random_seeded` (self-contained splitmix64, no RNG crate)
+- [x] 2.5 Implement QR-based `left_canonicalize`/`right_canonicalize`/`canonicalize_at` updating the tracked `CanonicalForm`
+- [x] 2.6 Implement `round(&Truncation)` (left-canonicalize + R→L truncated-SVD sweep)
+- [x] 2.7 Implement `norm`/`inner` (two-step transfer-matrix contraction, `O(d·n·r³)`)
+- [x] 2.8 Implement exact `add`/`scale`/`add_scalar`/`hadamard` and their `*_rounded(&Truncation)` variants (`scale` is inherent, not on the trait, to avoid colliding with `Module::scale`)
+- [x] 2.9 Implement `marginalize` and `eval`
+- [x] 2.10 Implement QTT `quantize_axis`/`merge_binary_axes` reshape helpers (`ops/tensor_qtt`)
+- [x] 2.11 Implement the full algebra tower — `Zero`/`One` with a **total shape-polymorphic identity** (order-0 absorbing `0`/`1`, mirroring `CausalTensor`'s broadcasting scalar zero), value operators `Add`/`Sub`/`Neg`/`Mul<T>`/`MulAssign<T>`/`Mul<Self>`, and the markers → `AddGroup`/`AbelianGroup`/`Module`/`Ring` derive by blanket impl. Lawful (`a+0=a`, `a*1=a`), total (no panics on the identity), verified via generic `Module<f64>`/`Ring` bounds. `Field`/`InvMonoid` deliberately not implemented (a train has no multiplicative inverse).
+- [x] 2.12 Add `CausalTensorTrainWitness` (`extensions/ext_hkt_tensor_train.rs`) implementing `Functor`/`Foldable`/`Pure` over core storage only
+- [x] 2.13 Wire `lib.rs` re-exports (`TensorTrain`, `CausalTensorTrain`, `Truncation`, `CanonicalForm`, `CausalTensorTrainWitness`)
+- [x] 2.14 Mirror tests (round-trip, compression accuracy, ops vs dense, marginalize vs `sum_axes`, canonical orthonormality, round compression, algebra laws + markers, functor laws, QTT, error paths) at `f32`/`f64`/`Float106`; registered in `mod.rs` + covered by `tests/BUILD.bazel` globs. Full workspace builds; clippy clean.
 
 ## 3. Stage 2a — Matrix-product operator (`tensor-train-operator`)
 
