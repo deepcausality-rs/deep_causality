@@ -20,7 +20,7 @@ deep_causality_tensor =  { path = "../../deep_causality_tensor" }
 
 # Example-only ML dependency (the `example_ml_rca` Candle integration).
 # CPU-only, default features.
-candle-core = { version = "0.10"}
+candle-core = { version = "0.11"}
 
 
 [[example]]
