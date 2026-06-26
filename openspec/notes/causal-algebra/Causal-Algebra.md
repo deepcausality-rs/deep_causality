@@ -15,7 +15,7 @@ This note is a construction *and* an honest ledger: every claim is marked **[hol
 precondition]**, or **[open]**. It is written to survive a seasoned PL/category-theory reviewer, which
 means it does **not** claim more than the construction earns.
 
-Companion to [`Causaloid-Formalization.md`](../causaloid/Causaloid-Formalization.md) (singleton already
+Companion to [`Causaloid-Formalization.md`](Causaloid-Formalization.md) (singleton already
 formalized) and the assumptions tracker (#2 graph join, #5 verdict carrier, #7 monad lawfulness).
 
 ---

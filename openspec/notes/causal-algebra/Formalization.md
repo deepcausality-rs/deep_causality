@@ -18,8 +18,8 @@ Formalism + proof + implementation + code‑level verification, as one artifact,
 
 This note is the umbrella. Detail lives in:
 [`../causaloid/Causal-Algebra.md`](../causaloid/Causal-Algebra.md) (the algebra construction),
-[`../causaloid/Causaloid-Formalization.md`](../causaloid/Causaloid-Formalization.md) (singleton),
-[`../causaloid/algebraic-causaloid-assumptions.md`](../causaloid/algebraic-causaloid-assumptions.md)
+[`../causaloid/Causaloid-Formalization.md`](Causaloid-Formalization.md) (singleton),
+[`../causaloid/algebraic-causaloid-assumptions.md`](algebraic-causaloid-assumptions.md)
 (open assumptions). Honesty convention: **[holds]**, **[holds under precondition]**, **[open]**.
 
 ---

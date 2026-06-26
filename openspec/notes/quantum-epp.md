@@ -29,7 +29,7 @@ Two senses of "quantum" must be separated:
   this, and does not claim to be. Its algebra is the **Kleisli category of the causal monad**
   (Writer ∘ Exception ∘ State/Reader) — directional, irreversible, copy-ful — i.e. the *classical*
   corner (Markov-category-bound), not the dagger-compact corner. See
-  [`causaloid/Causaloid-Formalization.md`](causaloid/Causaloid-Formalization.md) and
+  [`causaloid/Causaloid-Formalization.md`](causal-algebra/Causaloid-Formalization.md) and
   [`causal-algebra/Formalization.md`](causal-algebra/Formalization.md) §7.2.
 - **Carrier (EPP).** The axiom `m₂ = m₁ >>= f` commits to no spatial, temporal, or probabilistic
   structure, so the bind composes effects identically whether `f` encodes a Newtonian, relativistic,
@@ -143,7 +143,7 @@ auditable, ethically-governed causal process, with zero changes to the compositi
 
 ## 8. Related notes
 
-- [`causaloid/Causaloid-Formalization.md`](causaloid/Causaloid-Formalization.md) — the causal monad
+- [`causaloid/Causaloid-Formalization.md`](causal-algebra/Causaloid-Formalization.md) — the causal monad
   and the singleton as a Kleisli arrow (the classical substrate this note builds on).
 - [`causal-algebra/Formalization.md`](causal-algebra/Formalization.md) — §7 Markov-category
   positioning; the "why not a Markov category?" answer and the `Uncertain<T>` → Stoch bridge.
