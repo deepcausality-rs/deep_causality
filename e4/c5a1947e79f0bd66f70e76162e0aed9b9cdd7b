@@ -1,0 +1,51 @@
+deep_causality_tensor/tests/types/causal_tensor_network/mod.rs
+  s_162aba3d26275e::t_d5612beb56e199 11
+  s_162aba3d26275e::t_8107c90657014d 12
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/construct/mod.rs
+  s_162aba3d26275e::t_4655818b2b5861 6-7
+deep_causality_tensor/src/lib.rs
+  s_162aba3d26275e::t_8430c20db68d2f 25
+deep_causality_tensor/src/traits/tensor_train.rs
+  s_162aba3d26275e::t_8c1678d874f9bb 6
+  s_162aba3d26275e::t_82b453706a80c4 92-110
+openspec/changes/add-tensor-network/tasks.md
+  s_162aba3d26275e::t_f1de7f8fbda914 38-42
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_cross_tests.rs
+  s_162aba3d26275e::t_c50bd3431072be 99-126
+  s_162aba3d26275e::t_7b7cd365a94b0f 1-37,39-47,50-69,71-98,127-129,132-159
+  s_162aba3d26275e::t_5347af507dc187 70
+  s_162aba3d26275e::t_d5612beb56e199 130-131
+  s_162aba3d26275e::t_d8aa6c871c7e29 38,48-49
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/api/mod.rs
+  s_162aba3d26275e::t_a98ebc09edb851 11
+  s_162aba3d26275e::t_dc9f210905f633 477-495
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/construct/cross.rs
+  s_162aba3d26275e::t_7fa6b06187b938 1-55,60-106,108-255,257-277,293-307,309-454
+  s_162aba3d26275e::t_10f84d528af6e3 107
+  s_162aba3d26275e::t_d5612beb56e199 56-59
+  s_162aba3d26275e::t_3060a370217108 278-292,308
+  s_162aba3d26275e::t_9d89f061b85fce 256
+deep_causality_tensor/src/types/causal_tensor_network/cross_config/mod.rs
+  s_162aba3d26275e::t_8e5fb23c56efdd 1-87
+deep_causality_tensor/src/errors/causal_tensor_error.rs
+  s_162aba3d26275e::t_406c7a62d439be 27-28
+  s_162aba3d26275e::t_ad8267d04c9371 84-89
+deep_causality_tensor/src/types/causal_tensor_network/mod.rs
+  s_162aba3d26275e::t_1ab6b4fe075f83 9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "e4c5a1947e79f0bd66f70e76162e0aed9b9cdd7b",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
