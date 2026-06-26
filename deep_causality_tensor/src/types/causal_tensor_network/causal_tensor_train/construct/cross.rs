@@ -24,6 +24,15 @@ where
     /// bond dimensions adapt to the numerical rank (capped by [`CrossConfig::rank_cap`]). Returns
     /// the train together with a sampled relative-residual estimate.
     ///
+    /// # References
+    /// - I. V. Oseledets and E. E. Tyrtyshnikov, "TT-cross approximation for multidimensional
+    ///   arrays," *Linear Algebra Appl.* 432(1), 70–88 (2010).
+    ///   <https://doi.org/10.1016/j.laa.2009.07.024> — the alternating cross interpolation scheme.
+    /// - S. A. Goreinov, I. V. Oseledets, D. V. Savostyanov, E. E. Tyrtyshnikov, and N. L.
+    ///   Zamarashkin, "How to find a good submatrix," in *Matrix Methods: Theory, Algorithms and
+    ///   Applications* (World Scientific, 2010), pp. 247–256 — the maxvol index-selection principle
+    ///   underlying the rank-revealing pivots.
+    ///
     /// # Errors
     /// - [`CausalTensorError::EmptyTensor`] if `shape` is empty or has a zero dimension.
     /// - [`CausalTensorError::CrossSampleFailure`] if the oracle returns a non-finite value.

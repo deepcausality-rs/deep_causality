@@ -235,6 +235,48 @@ The `CausalTensor` API is designed to be comprehensive and intuitive:
 -   **Reduction Operations:** `sum_axes()`, `mean_axes()`, `arg_sort()`
 -   **Arithmetic:** Overloaded `+`, `-`, `*`, `/` operators for both tensor-scalar and tensor-tensor operations.
 
+## References
+
+The tensor-network (tensor-train / MPS–MPO) layer implements the following algorithms. Each is also
+cited in the doc comment of the source file where it is implemented.
+
+**Decomposition & numerics**
+- I. V. Oseledets, "Tensor-train decomposition," *SIAM J. Sci. Comput.* 33(5), 2295–2317 (2011).
+  [doi:10.1137/090752286](https://doi.org/10.1137/090752286) — TT format and sequential-SVD construction (`from_dense`).
+- J. Demmel and K. Veselić, "Jacobi's method is more accurate than QR," *SIAM J. Matrix Anal. Appl.*
+  13(4), 1204–1245 (1992). [doi:10.1137/0613074](https://doi.org/10.1137/0613074) — high-relative-accuracy one-sided Jacobi SVD.
+- G. H. Golub and C. F. Van Loan, *Matrix Computations*, 4th ed. (Johns Hopkins Univ. Press, 2013),
+  §5.2 — Householder QR factorization (canonicalization).
+
+**Cross approximation**
+- I. V. Oseledets and E. E. Tyrtyshnikov, "TT-cross approximation for multidimensional arrays,"
+  *Linear Algebra Appl.* 432(1), 70–88 (2010). [doi:10.1016/j.laa.2009.07.024](https://doi.org/10.1016/j.laa.2009.07.024) — black-box TT-cross (`cross`, `apply_nonlinear`).
+- S. A. Goreinov, I. V. Oseledets, D. V. Savostyanov, E. E. Tyrtyshnikov, and N. L. Zamarashkin,
+  "How to find a good submatrix," in *Matrix Methods: Theory, Algorithms and Applications* (World
+  Scientific, 2010), pp. 247–256 — the maxvol index-selection principle.
+
+**Solvers**
+- S. Holtz, T. Rohwedder, and R. Schneider, "The alternating linear scheme for tensor optimization in
+  the tensor train format," *SIAM J. Sci. Comput.* 34(2), A683–A713 (2012).
+  [doi:10.1137/100818893](https://doi.org/10.1137/100818893) — one-site ALS (`solve::fit`).
+- L. Grasedyck, M. Kluge, and S. Krämer, "Variants of alternating least squares tensor completion in
+  the tensor train format," *SIAM J. Sci. Comput.* 37(5), A2424–A2450 (2015).
+  [doi:10.1137/130942401](https://doi.org/10.1137/130942401) — ALS tensor completion from samples (`solve::fit`).
+- S. V. Dolgov and D. V. Savostyanov, "Alternating minimal energy methods for linear systems in higher
+  dimensions," *SIAM J. Sci. Comput.* 36(5), A2248–A2271 (2014).
+  [doi:10.1137/140953289](https://doi.org/10.1137/140953289) (arXiv:1301.6068) — AMEn rank-adaptive linear solver (`solve::linear`).
+
+**Roadmap (Stage 3+)**
+- C. Hubig, I. P. McCulloch, U. Schollwöck, and F. A. Wolf, "Strictly single-site DMRG algorithm with
+  subspace expansion," *Phys. Rev. B* 91, 155115 (2015).
+  [doi:10.1103/PhysRevB.91.155115](https://doi.org/10.1103/PhysRevB.91.155115) (arXiv:1501.05504) — DMRG3S eigensolver.
+- J. Gleis, J.-W. Li, and J. von Delft, "Controlled bond expansion for density matrix renormalization
+  group ground state search at single-site costs," *Phys. Rev. Lett.* 130, 246402 (2023)
+  (arXiv:2207.14712); and CBE-TDVP, *Phys. Rev. Lett.* 133, 026401 (2024) — controlled bond expansion.
+- S. Paeckel, T. Köhler, A. Swoboda, S. R. Manmana, U. Schollwöck, and C. Hubig, "Time-evolution
+  methods for matrix-product states," *Ann. Phys.* 411, 167998 (2019).
+  [doi:10.1016/j.aop.2019.167998](https://doi.org/10.1016/j.aop.2019.167998) (arXiv:1901.05824) — TDVP and time-evolution review.
+
 ## Contribution
 
 Contributions are welcomed especially related to documentation, example code, and fixes.

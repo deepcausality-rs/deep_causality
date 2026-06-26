@@ -21,6 +21,11 @@ where
 {
     /// Factors a dense tensor into a tensor train by a left-to-right truncated-SVD sweep (TT-SVD).
     ///
+    /// # Reference
+    /// I. V. Oseledets, "Tensor-train decomposition," *SIAM J. Sci. Comput.* 33(5), 2295–2317
+    /// (2011). <https://doi.org/10.1137/090752286> (arXiv:1006.4131) — the TT format and the
+    /// sequential-SVD construction implemented here.
+    ///
     /// # Errors
     /// - [`CausalTensorError::EmptyTensor`] if `dense` has rank 0 or any zero dimension.
     /// - Propagates SVD/reshape errors.

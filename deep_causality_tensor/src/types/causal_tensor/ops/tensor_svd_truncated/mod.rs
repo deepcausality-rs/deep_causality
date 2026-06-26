@@ -29,6 +29,11 @@ where
     /// checked-nonzero pivots so the kernel stays valid when the bound later widens to `Normed`
     /// for complex scalars.
     ///
+    /// # Reference
+    /// J. Demmel and K. Veselić, "Jacobi's method is more accurate than QR," *SIAM J. Matrix Anal.
+    /// Appl.* 13(4), 1204–1245 (1992). <https://doi.org/10.1137/0613074> — establishes the high
+    /// relative accuracy of the one-sided Jacobi SVD used here.
+    ///
     /// # Errors
     /// Returns [`CausalTensorError::DimensionMismatch`] if `self` is not 2-dimensional, or
     /// [`CausalTensorError::EmptyTensor`] if either dimension is zero.

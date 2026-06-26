@@ -20,6 +20,14 @@ use deep_causality_num::Scalar;
 /// physical index** (a sample only touches its own physical slice), so each slice is a small
 /// `(r_k·r_{k+1})` ridge-regularized normal-equation solve.
 ///
+/// # References
+/// - S. Holtz, T. Rohwedder, and R. Schneider, "The alternating linear scheme for tensor
+///   optimization in the tensor train format," *SIAM J. Sci. Comput.* 34(2), A683–A713 (2012).
+///   <https://doi.org/10.1137/100818893> — the one-site ALS optimization scheme.
+/// - L. Grasedyck, M. Kluge, and S. Krämer, "Variants of alternating least squares tensor
+///   completion in the tensor train format," *SIAM J. Sci. Comput.* 37(5), A2424–A2450 (2015).
+///   <https://doi.org/10.1137/130942401> — ALS specialized to completion from samples.
+///
 /// # Errors
 /// - [`CausalTensorError::EmptyTensor`] if `shape` is empty / has a zero dimension or there are no
 ///   samples.
@@ -53,16 +61,23 @@ pub fn fit<T: Scalar>(
     Err(CausalTensorError::SweepDidNotConverge)
 }
 
-/// Solves `A x = b` for `x` (bond dimension up to `max_rank`) in tensor-train form by one-site ALS
-/// on the normal equations `(AᵀA) x = Aᵀb`.
+/// Solves `A x = b` for `x` in tensor-train form by the **AMEn** (Alternating Minimal Energy)
+/// algorithm: one-site ALS optimization with **residual subspace enrichment**, which makes the
+/// bond dimension *rank-adaptive* — `x` is seeded at a small rank and grown toward the residual each
+/// sweep (capped at `max_rank`), so the caller does not have to guess the right rank.
 ///
-/// `G = Aᵀ∘A` (an MPO on the input space) and `c = Aᵀ·b` (a state) are formed once; each site then
-/// solves the local effective system `G_local · vec(core_k) = c_local` built from the running
-/// environments.
+/// When `A` is **square** (`in_dims == out_dims`) the local Galerkin systems use `A` and `b`
+/// directly, so the conditioning is `cond(A)`. For a rectangular `A` it falls back to the symmetric
+/// positive-definite normal equations `G x = c` with `G = Aᵀ∘A`, `c = Aᵀ·b` (conditioning
+/// `cond(A)²`) — the original AMEn-Part-I setting.
+///
+/// Reference: S. V. Dolgov and D. V. Savostyanov, "Alternating minimal energy methods for linear
+/// systems in higher dimensions," *SIAM J. Sci. Comput.* 36(5), A2248–A2271 (2014).
+/// <https://doi.org/10.1137/140953289> (arXiv:1301.6068).
 ///
 /// # Errors
 /// - [`CausalTensorError::ShapeMismatch`] if `b`'s physical dimensions differ from `A`'s output.
-/// - [`CausalTensorError::SweepDidNotConverge`] if the residual stays above `tol`.
+/// - [`CausalTensorError::SweepDidNotConverge`] if the relative residual stays above `tol`.
 pub fn linear<T: Scalar>(
     a: &CausalTensorTrainOperator<T>,
     b: &CausalTensorTrain<T>,
@@ -73,27 +88,42 @@ pub fn linear<T: Scalar>(
         return Err(CausalTensorError::ShapeMismatch);
     }
     let exact = Truncation::by_bond(usize::MAX)?;
-    // Normal-equation operator G = Aᵀ ∘ A (maps the input space to itself) and rhs c = Aᵀ b.
-    let at = a.transpose();
-    let g = at.compose(a, &exact)?;
-    let c = at.apply(b, &exact)?;
+
+    // Square operator: solve A x = b directly (cond A). Otherwise normal equations (cond A²).
+    let (op, rhs) = if a.in_dims() == a.out_dims() {
+        (a.clone(), b.clone())
+    } else {
+        let at = a.transpose();
+        (at.compose(a, &exact)?, at.apply(b, &exact)?)
+    };
 
     let shape = a.in_dims().to_vec();
     let d = shape.len();
-    let ranks = bond_ranks(&shape, max_rank);
-    let mut x = init_random(&shape, &ranks, 0x5017_5017);
+    let caps = bond_ranks(&shape, max_rank);
+    // Seed at a small rank; AMEn enrichment grows it toward the residual.
+    let seed: Vec<usize> = caps.iter().map(|&r| r.min(2)).collect();
+    let mut x = init_random(&shape, &seed, 0x5017_5017);
 
-    let mut residual = linear_residual(&g, &c, &x)?;
+    // Enrichment rounding: cap at max_rank and drop directions below the tolerance (rank-adaptive).
+    let enrich_trunc = Truncation::new(max_rank, config.tol(), T::zero())?;
+    let rhs_norm = rhs.norm()?;
+
     for _sweep in 0..config.max_sweeps() {
+        // ALS optimization of the cores at the current rank.
         for k in forward_then_back(d) {
-            linear_site(&mut x, &g, &c, k, config.ridge())?;
+            linear_site(&mut x, &op, &rhs, k, config.ridge())?;
         }
-        residual = linear_residual(&g, &c, &x)?;
-        if residual <= config.tol() {
+        // Residual r = rhs − op·x.
+        let xt = CausalTensorTrain::from_cores_raw(x.clone(), CanonicalForm::None);
+        let ox = op.apply(&xt, &exact)?;
+        let res = rhs.add(&ox.scale(-T::one()))?;
+        let rnorm = res.norm()? / (rhs_norm + T::epsilon());
+        if rnorm <= config.tol() {
             return CausalTensorTrain::from_cores(x);
         }
+        // AMEn enrichment: augment the basis with the residual direction, capped at max_rank.
+        x = xt.add(&res)?.round(&enrich_trunc)?.into_cores();
     }
-    let _ = residual;
     Err(CausalTensorError::SweepDidNotConverge)
 }
 
@@ -496,20 +526,6 @@ fn env_c_right<T: Scalar>(x: &[CausalTensor<T>], c: &CausalTensorTrain<T>, k: us
         cr = crl;
     }
     e
-}
-
-fn linear_residual<T: Scalar>(
-    g: &CausalTensorTrainOperator<T>,
-    c: &CausalTensorTrain<T>,
-    x: &[CausalTensor<T>],
-) -> Result<T, CausalTensorError> {
-    // ‖G x − c‖ relative to ‖c‖.
-    let exact = Truncation::by_bond(usize::MAX)?;
-    let train = CausalTensorTrain::from_cores_raw(x.to_vec(), CanonicalForm::None);
-    let gx = g.apply(&train, &exact)?;
-    let diff = gx.add(&c.scale(-T::one()))?;
-    let nc = c.norm()?;
-    Ok(diff.norm()? / (nc + T::epsilon()))
 }
 
 // ============================================================================

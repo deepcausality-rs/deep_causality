@@ -17,6 +17,10 @@ where
     /// standard, cheaper gauge sweep. The reflectors are applied in place to a working copy of `A`
     /// to form `R`, and accumulated into `Q`.
     ///
+    /// # Reference
+    /// G. H. Golub and C. F. Van Loan, *Matrix Computations*, 4th ed. (Johns Hopkins Univ. Press,
+    /// 2013), §5.2 (Householder QR factorization).
+    ///
     /// # Errors
     /// Returns [`CausalTensorError::DimensionMismatch`] if `self` is not 2-dimensional, or
     /// [`CausalTensorError::EmptyTensor`] if either dimension is zero.
