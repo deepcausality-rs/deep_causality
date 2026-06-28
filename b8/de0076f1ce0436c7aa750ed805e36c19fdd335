@@ -1,0 +1,92 @@
+deep_causality_cfd/src/solvers/qtt/mod.rs
+  s_162aba3d26275e::t_6dda21e0c244f4 11,14
+openspec/specs/qtt-codec-2d/spec.md
+  s_162aba3d26275e::t_388af245dc3514 1-28
+deep_causality_cfd/src/solvers/qtt/observe.rs
+  s_162aba3d26275e::t_832036674de30d 1-93
+deep_causality_cfd/src/solvers/mod.rs
+  s_162aba3d26275e::t_7d5148405bbb32 23-25
+  s_162aba3d26275e::t_34825d329a6cd1 15
+deep_causality_cfd/tests/types/flow_config/qtt_march_config_tests.rs
+  s_162aba3d26275e::t_c726c9b4e79167 1-43,71-110
+  s_162aba3d26275e::t_94f1f32ef8a419 44-70
+openspec/specs/qtt-linear-rollout/spec.md
+  s_162aba3d26275e::t_0c0d3e5e0a0cd6 1-29
+openspec/notes/plasma-blackout/gap-one-cfd-tensor-bridge.md
+  s_162aba3d26275e::t_6f56ff7964fd05 200-215
+deep_causality_cfd/tests/types/flow/mod.rs
+  s_162aba3d26275e::t_686b23830de0d3 43-45
+openspec/specs/qtt-field-codec/spec.md
+  s_162aba3d26275e::t_0c0d3e5e0a0cd6 1-26
+deep_causality_cfd/src/types/flow/qtt_march_run.rs
+  s_162aba3d26275e::t_1ab58e3df24268 40-43,283-285,291-292
+  s_162aba3d26275e::t_f11161ead13c38 1-20,22-39,44-111,116-282,286-290,293-331
+  s_162aba3d26275e::t_8230ece5c0f62b 21
+  s_162aba3d26275e::t_9800ea34fe7b60 112-115
+deep_causality_cfd/tests/types/flow_config/mod.rs
+  s_162aba3d26275e::t_233998cb4e05a4 15-16
+deep_causality_cfd/src/solvers/qtt/incompressible_2d.rs
+  s_162aba3d26275e::t_df0e338023f2c7 74-84
+openspec/specs/qtt-differential-operators/spec.md
+  s_162aba3d26275e::t_0c0d3e5e0a0cd6 1-35
+deep_causality_cfd/src/types/flow_config/qtt_march_config.rs
+  s_162aba3d26275e::t_021cc4b8ac1377 79-103
+  s_162aba3d26275e::t_4e1d3270f169d2 203-211
+  s_162aba3d26275e::t_98f5ea17033145 1-78,104-202,212-259
+openspec/specs/qtt-incompressible-2d/spec.md
+  s_162aba3d26275e::t_388af245dc3514 1-27
+deep_causality_cfd/src/lib.rs
+  s_162aba3d26275e::t_2f34a46fdeca4c 88-90
+  s_162aba3d26275e::t_d20582495cf605 53-55
+  s_162aba3d26275e::t_1ab58e3df24268 60-61
+deep_causality_cfd/tests/solvers/qtt/observe_tests.rs
+  s_162aba3d26275e::t_b4d9e0386e2a3c 1-104,109
+  s_162aba3d26275e::t_1ab58e3df24268 105-108
+deep_causality_cfd/src/solvers/dec/mod.rs
+  s_162aba3d26275e::t_34825d329a6cd1 76-77
+deep_causality_cfd/src/types/flow_config/mod.rs
+  s_162aba3d26275e::t_9f4e12f0d05e5a 20
+  s_162aba3d26275e::t_0b6f98a41763ff 34
+deep_causality_cfd/tests/solvers/qtt/mod.rs
+  s_162aba3d26275e::t_ba4ec82cb1b94f 9-10
+deep_causality_cfd/src/types/flow/cfd_flow.rs
+  s_162aba3d26275e::t_46ac76cc090554 32-41
+  s_162aba3d26275e::t_327b38700d203d 15-17
+deep_causality_cfd/tests/types/flow/qtt_march_run_tests.rs
+  s_162aba3d26275e::t_7c2c07b277a105 1-66,70-118,126-127,130-132,135,137-141,144-186
+  s_162aba3d26275e::t_1ab58e3df24268 67-69
+  s_162aba3d26275e::t_a0e6c591015df9 119-125,128-129,133-134,136,142-143
+openspec/specs/qtt-projection/spec.md
+  s_162aba3d26275e::t_388af245dc3514 1-28
+deep_causality_cfd/src/types/flow/mod.rs
+  s_162aba3d26275e::t_48f15d6a217cc5 23
+  s_162aba3d26275e::t_3f7a31de46a089 40
+openspec/changes/archive/2026-06-28-add-cfd-qtt-flow-observe/tasks.md
+  s_162aba3d26275e::t_ca2b4dba8a4bec 1-28
+openspec/changes/archive/2026-06-28-add-cfd-qtt-tensor-bridge/.openspec.yaml
+  s_162aba3d26275e::t_357663792dad8d 1-2
+openspec/changes/archive/2026-06-28-add-cfd-qtt-flow-observe/design.md
+  s_162aba3d26275e::t_f6169e59cd80a6 1-80
+openspec/changes/archive/2026-06-28-add-cfd-qtt-flow-observe/proposal.md
+  s_162aba3d26275e::t_cdc768a224ad43 1-52
+openspec/changes/archive/2026-06-28-add-cfd-qtt-flow-observe/specs/qtt-flow/spec.md
+  s_162aba3d26275e::t_1680648253a91a 1-51
+openspec/changes/archive/2026-06-28-add-cfd-qtt-flow-observe/specs/qtt-observe/spec.md
+  s_162aba3d26275e::t_f11a7262af85ea 1-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "b8de0076f1ce0436c7aa750ed805e36c19fdd335",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
