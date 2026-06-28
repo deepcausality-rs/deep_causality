@@ -34,6 +34,8 @@ mod op_tensor_complex_tests;
 #[cfg(test)]
 mod op_tensor_qr_tests;
 #[cfg(test)]
+mod op_tensor_svd_randomized_tests;
+#[cfg(test)]
 mod op_tensor_svd_truncated_tests;
 #[cfg(test)]
 mod truncation_tests;

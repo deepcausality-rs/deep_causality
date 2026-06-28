@@ -18,11 +18,32 @@ use deep_causality_num::Real;
 ///
 /// Precision is the scalar parameter `T`; the policy carries no concrete float. A `Truncation` is
 /// threaded **explicitly** into every lossy operation — there is no hidden global default.
+///
+/// The [`RoundStrategy`] selects *how* the truncated SVD behind each lossy step is computed —
+/// deterministic one-sided Jacobi (the default, high relative accuracy) or an adaptive randomized
+/// range-finder (faster on low-rank data, tolerance-accurate). The gates above are identical for
+/// both strategies; only the numerical kernel differs.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Truncation<T> {
     max_bond: usize,
     rel_tol: T,
     abs_tol: T,
+    strategy: RoundStrategy,
+}
+
+/// How the truncated SVD behind a lossy tensor-network step (TT-SVD, rounding, MPO apply) is computed.
+///
+/// The deterministic kernel is the **default**; the randomized kernel is strictly opt-in. Selecting
+/// the randomized strategy makes the operation tolerance-accurate but no longer bit-reproducible
+/// beyond the fixed `seed` (see [`Truncation::randomized`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum RoundStrategy {
+    /// One-sided Jacobi truncated SVD — high relative accuracy, the default.
+    #[default]
+    Deterministic,
+    /// Adaptive randomized range-finder truncated SVD with Gaussian sketches, `oversample` extra
+    /// sketch columns past the target rank, seeded by `seed` for reproducibility.
+    Randomized { oversample: usize, seed: u64 },
 }
 
 impl<T> Truncation<T>
@@ -49,6 +70,7 @@ where
             max_bond,
             rel_tol,
             abs_tol,
+            strategy: RoundStrategy::Deterministic,
         })
     }
 
@@ -66,6 +88,24 @@ where
     /// Returns [`CausalTensorError::InvalidParameter`] if `rel_tol` is negative.
     pub fn by_tol(rel_tol: T) -> Result<Self, CausalTensorError> {
         Self::new(usize::MAX, rel_tol, T::zero())
+    }
+
+    /// Returns the same policy with the **adaptive randomized** SVD strategy selected.
+    ///
+    /// `oversample` is the number of extra Gaussian sketch columns drawn past the target rank
+    /// (a small value such as 8–10 is typical; larger trades cost for a tighter range estimate).
+    /// `seed` makes the randomized run reproducible. The gate thresholds (`max_bond`/`rel_tol`/
+    /// `abs_tol`) are unchanged; only the kernel that realizes them differs.
+    pub fn randomized(self, oversample: usize, seed: u64) -> Self {
+        Self {
+            strategy: RoundStrategy::Randomized { oversample, seed },
+            ..self
+        }
+    }
+
+    /// The rounding/SVD strategy this policy selects.
+    pub fn strategy(&self) -> RoundStrategy {
+        self.strategy
     }
 
     /// The hard bond-dimension cap.

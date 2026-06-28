@@ -1,12 +1,12 @@
 ## 1. Adaptive randomized TT-rounding (`tensor-train`) — primary
 
-- [ ] 1.1 Add a Gaussian sampler over `T::Real` to the TT layer's seeded splitmix64 generator (Box–Muller on the existing `rand_unit`-style uniforms); inject into `T` via `from_real`. No new external crate.
-- [ ] 1.2 Extend `Truncation<R>` with a rounding-strategy selector (`Deterministic` default | `Randomized { oversample, f_init, f_inc }`), validated; keep all existing constructors defaulting to `Deterministic`.
-- [ ] 1.3 Implement the Khatri-Rao partial-contraction recurrence `W_k = H(X_k)·(W_{k+1} ⊙ Ω_k)` (right-to-left), reusing the conjugate-aware `linalg`; no full sketch materialized. Cost `O(d·n·r²·ℓ)`.
-- [ ] 1.4 Implement the fixed-rank randomize-then-orthogonalize sweep (left-to-right QR via the existing Householder `qr`), producing a left-canonical rounded train.
-- [ ] 1.5 Implement the adaptive loop: seed `ℓ = ⌈max r·f_init⌉`, residual estimate `‖(I−QQᴴ)XΩ‖_F/(√s·‖X‖)` in `T::Real`, grow `ℓ` by `f_inc` until ≤ tol (cap at the deterministic bound).
-- [ ] 1.6 Route `round` (and `add_rounded`/`hadamard_rounded` and the AMEn enrichment `round`) through the strategy: deterministic path byte-identical to today; randomized path used only when selected.
-- [ ] 1.7 Tests (f32/f64/Float106 + `Complex<f64>`): randomized-vs-deterministic agreement to tolerance; adaptive rank matches the deterministic rank; default path unchanged; seed reproducibility. Reference: Al Daas–Ballard 2023 (arXiv:2110.04393); adaptive Khatri-Rao arXiv:2511.03598.
+- [x] 1.1 Gaussian sampler added: `rng::gaussian_vec<T>` (splitmix64 → Box–Muller normals injected via `from_f64` = `from_real` on the real axis). No new external crate; deterministic/reproducible.
+- [x] 1.2 `Truncation` extended with `RoundStrategy` (`Deterministic` default | `Randomized { oversample, seed }`) + `.randomized(oversample, seed)` builder + `.strategy()` getter; all existing constructors default to `Deterministic`; `RoundStrategy` re-exported. (Used `oversample`+`seed`; the `f_init`/`f_inc` growth control is realized as start = `2·oversample` and geometric doubling — see 1.5.)
+- [x] 1.3 Realized as a per-unfolding **randomized range-finder** (Halko–Martinsson–Tropp) rather than the literal cross-core KRP recurrence: each rounding-sweep unfolding `m = [r_left, n·r_right]` (already formed by the existing sweep — the `nᵈ` dense is never materialized) is sketched `Y = m·Ω`, giving the same `O(d·n·r²·ℓ)` cost and integrating with zero churn. The cross-core KRP "never form the per-core unfolding" refinement is noted as optional future work.
+- [x] 1.4 Randomize-then-orthogonalize sweep: `Y = m·Ω` → `Q = qr(Y)` → `B = Qᴴ·m` → deterministic SVD of small `B` → lift `U = Q·U_B`. Uses the existing Householder `qr` and conjugate-aware `linalg`.
+- [x] 1.5 Adaptive loop implemented: bond-capped policies set `ℓ = max_bond + oversample`; tolerance policies start at `ℓ = 2·oversample` and **double** until `‖A − Q·Qᴴ·A‖_F ≤ max(abs_tol, rel_tol·‖A‖)` (residual in `T::Real`), capped at the full rank.
+- [x] 1.6 Routed through the strategy at the `svd_truncated` dispatch layer — so `round`, `from_dense`, `add_rounded`, `hadamard_rounded`, and every solver truncation inherit it. Deterministic path is byte-identical (verified); randomized only when selected.
+- [x] 1.7 Tests added (`op_tensor_svd_randomized_tests.rs`, 9 tests, `f64`/`Float106` + `Complex<f64>`): low-rank reconstruction to tolerance, adaptive-growth path, randomized-vs-deterministic round agreement + original recovery, default-strategy-unchanged, seed reproducibility (bit-for-bit). Reference: Al Daas–Ballard 2023 (arXiv:2110.04393); adaptive Khatri-Rao arXiv:2511.03598; Halko–Martinsson–Tropp 2011.
 
 ## 2. Greedy-pivot TT-cross (`tensor-train-cross`) — secondary
 
@@ -20,7 +20,7 @@
 - [ ] 3.1 Implement fused `hadamard_rounded`: compress each squared-bond core against the running canonical `R` as it is built, so the peak bond stays `~r·r_keep` < `r²`. Result equals build-then-round to tolerance.
 - [ ] 3.2 Rewrite `linalg::matmul` as a B-transposed, cache-blocked loop (integer block constant; no float literals; no `Default` bound); result identical to the naive product.
 - [ ] 3.3 Reuse ping-pong scratch buffers in the `inner`/`norm` transfer-matrix contraction (no per-site allocation); results bit-identical.
-- [ ] 3.4 (Optional) Randomized range-finder `svd_truncated` variant behind the `Truncation` policy; deterministic Jacobi stays default. Reference: block-Krylov arXiv:2308.01480 / arXiv:2504.04989.
+- [x] 3.4 Randomized range-finder `svd_truncated` variant behind the `Truncation` policy delivered as part of Stage 1 (`CausalTensor::svd_randomized`); deterministic Jacobi stays default. (Single-pass range-finder; block-Krylov refinement for slowly-decaying spectra — arXiv:2308.01480 / arXiv:2504.04989 — left as future work.)
 - [ ] 3.5 Tests: fused-vs-build-then-round agreement; blocked-vs-naive matmul equality; inner/norm unchanged; (if 3.4) randomized SVD reconstructs to tolerance.
 
 ## 4. Benchmarks and finalization
