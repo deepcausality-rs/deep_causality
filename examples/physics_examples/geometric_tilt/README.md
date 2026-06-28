@@ -7,7 +7,7 @@ This example demonstrates a robust IMU sensor fusion system using DeepCausality'
 From the root of the `deep_causality` project, run:
 
 ```bash
-cargo run -p physics_examples --example geometric_tilt_example
+cargo run -p physics_examples --example geometric_tilt
 ```
 
 ---
