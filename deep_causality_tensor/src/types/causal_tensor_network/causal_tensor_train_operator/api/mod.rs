@@ -10,16 +10,16 @@ use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::causal_tensor_train_operator::CausalTensorTrainOperator;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor};
-use deep_causality_num::{ConjugateScalar, Scalar};
+use deep_causality_num::ConjugateScalar;
 
 impl<T> TensorTrainOperator<T> for CausalTensorTrainOperator<T>
 where
-    T: Scalar + ConjugateScalar<Real = T>,
+    T: ConjugateScalar,
 {
     fn apply(
         &self,
         state: &CausalTensorTrain<T>,
-        trunc: &Truncation<T>,
+        trunc: &Truncation<<T as ConjugateScalar>::Real>,
     ) -> Result<CausalTensorTrain<T>, CausalTensorError> {
         if state.phys_dims() != self.in_dims.as_slice() {
             return Err(CausalTensorError::ShapeMismatch);
@@ -66,7 +66,11 @@ where
         CausalTensorTrain::from_cores_raw(out_cores, CanonicalForm::None).round(trunc)
     }
 
-    fn compose(&self, other: &Self, trunc: &Truncation<T>) -> Result<Self, CausalTensorError> {
+    fn compose(
+        &self,
+        other: &Self,
+        trunc: &Truncation<<T as ConjugateScalar>::Real>,
+    ) -> Result<Self, CausalTensorError> {
         // self: out ← mid ; other: mid ← in ; result: out ← in.
         if self.in_dims != other.out_dims {
             return Err(CausalTensorError::ShapeMismatch);
@@ -116,7 +120,10 @@ where
         Self::from_cores_raw(cores, self.round_policy).round(trunc)
     }
 
-    fn round(&self, trunc: &Truncation<T>) -> Result<Self, CausalTensorError> {
+    fn round(
+        &self,
+        trunc: &Truncation<<T as ConjugateScalar>::Real>,
+    ) -> Result<Self, CausalTensorError> {
         let rounded = self.as_combined_train().round(trunc)?;
         Self::from_combined_train(&rounded, &self.out_dims, &self.in_dims, self.round_policy)
     }

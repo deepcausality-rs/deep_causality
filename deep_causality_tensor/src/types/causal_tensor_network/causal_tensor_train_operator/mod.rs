@@ -11,7 +11,7 @@ use crate::types::causal_tensor_network::canonical_form::CanonicalForm;
 use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor};
-use deep_causality_num::{ConjugateScalar, Scalar};
+use deep_causality_num::ConjugateScalar;
 
 /// A matrix-product operator (MPO) over the same site structure as a
 /// [`CausalTensorTrain`](crate::CausalTensorTrain).
@@ -23,29 +23,49 @@ use deep_causality_num::{ConjugateScalar, Scalar};
 /// The operator carries a `round_policy` [`Truncation`] used by its [`Arrow`](deep_causality_haft::Arrow)
 /// realization (`run` = apply-then-round), so `EndoArrow` iteration is a *bounded* time-march. The
 /// explicit `apply`/`compose`/`round` methods take their own truncation and ignore this field.
-#[derive(Debug, Clone, PartialEq)]
-pub struct CausalTensorTrainOperator<T> {
+#[derive(Clone, PartialEq)]
+pub struct CausalTensorTrainOperator<T: ConjugateScalar> {
     /// Cores `0..order`; core `k` has shape `[r_k, n_out_k, n_in_k, r_{k+1}]`.
     cores: Vec<CausalTensor<T>>,
     /// Output physical dimensions `[n_out_0, …]`.
     out_dims: Vec<usize>,
     /// Input physical dimensions `[n_in_0, …]`.
     in_dims: Vec<usize>,
-    /// Truncation used by the `Arrow::run` realization.
-    round_policy: Truncation<T>,
+    /// Truncation used by the `Arrow::run` realization (thresholds live in the real type).
+    round_policy: Truncation<<T as ConjugateScalar>::Real>,
+}
+
+// Hand-written `Debug` (instead of derived): the associated real type `T::Real` is not guaranteed
+// `Debug` by `ConjugateScalar` alone, so the bound is stated explicitly here.
+impl<T> core::fmt::Debug for CausalTensorTrainOperator<T>
+where
+    T: ConjugateScalar + core::fmt::Debug,
+    <T as ConjugateScalar>::Real: core::fmt::Debug,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("CausalTensorTrainOperator")
+            .field("cores", &self.cores)
+            .field("out_dims", &self.out_dims)
+            .field("in_dims", &self.in_dims)
+            .field("round_policy", &self.round_policy)
+            .finish()
+    }
 }
 
 impl<T> CausalTensorTrainOperator<T>
 where
-    T: Scalar + ConjugateScalar<Real = T>,
+    T: ConjugateScalar,
 {
     /// The exact (no-op) truncation: keep every singular value.
-    pub(crate) fn exact_truncation() -> Truncation<T> {
+    pub(crate) fn exact_truncation() -> Truncation<<T as ConjugateScalar>::Real> {
         Truncation::by_bond(usize::MAX).expect("usize::MAX is a valid bond cap")
     }
 
     /// Builds an operator from cores and a rounding policy, without validation.
-    pub(crate) fn from_cores_raw(cores: Vec<CausalTensor<T>>, round_policy: Truncation<T>) -> Self {
+    pub(crate) fn from_cores_raw(
+        cores: Vec<CausalTensor<T>>,
+        round_policy: Truncation<<T as ConjugateScalar>::Real>,
+    ) -> Self {
         let out_dims = cores.iter().map(|c| c.shape()[1]).collect();
         let in_dims = cores.iter().map(|c| c.shape()[2]).collect();
         Self {
@@ -113,7 +133,7 @@ where
         dense: &CausalTensor<T>,
         out_dims: &[usize],
         in_dims: &[usize],
-        trunc: &Truncation<T>,
+        trunc: &Truncation<<T as ConjugateScalar>::Real>,
     ) -> Result<Self, CausalTensorError> {
         if out_dims.len() != in_dims.len() || out_dims.is_empty() {
             return Err(CausalTensorError::ShapeMismatch);
@@ -147,7 +167,7 @@ where
     }
 
     /// Sets the rounding policy used by the `Arrow::run` realization.
-    pub fn with_rounding(mut self, trunc: Truncation<T>) -> Self {
+    pub fn with_rounding(mut self, trunc: Truncation<<T as ConjugateScalar>::Real>) -> Self {
         self.round_policy = trunc;
         self
     }
@@ -171,7 +191,7 @@ where
         train: &CausalTensorTrain<T>,
         out_dims: &[usize],
         in_dims: &[usize],
-        round_policy: Truncation<T>,
+        round_policy: Truncation<<T as ConjugateScalar>::Real>,
     ) -> Result<Self, CausalTensorError> {
         let cores = train
             .cores()

@@ -14,11 +14,11 @@ use crate::traits::tensor_train_operator::TensorTrainOperator;
 use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::causal_tensor_train_operator::CausalTensorTrainOperator;
 use deep_causality_haft::Arrow;
-use deep_causality_num::{ConjugateScalar, Scalar};
+use deep_causality_num::ConjugateScalar;
 
 impl<T> Arrow for CausalTensorTrainOperator<T>
 where
-    T: Scalar + ConjugateScalar<Real = T>,
+    T: ConjugateScalar,
 {
     type In = CausalTensorTrain<T>;
     type Out = CausalTensorTrain<T>;

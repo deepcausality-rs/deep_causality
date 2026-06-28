@@ -6,8 +6,9 @@
 use crate::CausalTensor;
 use crate::types::causal_tensor_network::causal_tensor_train_operator::CausalTensorTrainOperator;
 use crate::types::causal_tensor_network::truncation::Truncation;
+use deep_causality_num::ConjugateScalar;
 
-impl<T> CausalTensorTrainOperator<T> {
+impl<T: ConjugateScalar> CausalTensorTrainOperator<T> {
     /// The cores, in order; core `k` has shape `[r_k, n_out_k, n_in_k, r_{k+1}]`.
     pub fn cores(&self) -> &[CausalTensor<T>] {
         &self.cores
@@ -44,7 +45,7 @@ impl<T> CausalTensorTrainOperator<T> {
     }
 
     /// The truncation used by the `Arrow::run` realization.
-    pub fn round_policy(&self) -> &Truncation<T> {
+    pub fn round_policy(&self) -> &Truncation<<T as ConjugateScalar>::Real> {
         &self.round_policy
     }
 }
