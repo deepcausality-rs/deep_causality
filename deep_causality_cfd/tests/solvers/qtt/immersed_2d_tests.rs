@@ -1,0 +1,145 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+use deep_causality_cfd::{
+    Marcher, QttImmersed2d, QttIncompressible2d, body_mask_2d, dequantize_2d, quantize_2d,
+};
+use deep_causality_tensor::{CausalTensor, CausalTensorTrain, Truncation};
+
+const TAU: f64 = core::f64::consts::TAU;
+const N: usize = 16;
+const L: usize = 4;
+
+fn uniform(value: f64) -> CausalTensor<f64> {
+    CausalTensor::new(vec![value; N * N], vec![N, N]).unwrap()
+}
+
+fn zeros() -> CausalTensor<f64> {
+    uniform(0.0)
+}
+
+// A centered cylinder mask covering the middle of the box.
+fn cyl_mask(dx: f64, trunc: &Truncation<f64>) -> CausalTensorTrain<f64> {
+    let c = TAU * 0.5;
+    body_mask_2d::<f64>(L, L, dx, dx, c, c, TAU * 0.18, 2.0 * dx, trunc).unwrap()
+}
+
+#[test]
+fn no_slip_drives_interior_velocity_to_zero() {
+    let dx = TAU / N as f64;
+    let (nu, dt, eta) = (0.05f64, 0.005f64, 0.02f64); // dt/eta = 0.25 (explicit-stable)
+    let trunc = Truncation::<f64>::by_bond(4096).unwrap();
+    let mask = cyl_mask(dx, &trunc);
+    let solver =
+        QttImmersed2d::new(L, L, dx, dx, dt, nu, mask.clone(), 0.0, 0.0, eta, trunc).unwrap();
+
+    // Seed a uniform free-stream u = 1, v = 0 (rank-1); the body should brake the flow inside it.
+    let (u, _v) = solver.run(&uniform(1.0), &zeros(), 40).unwrap();
+    let md = dequantize_2d(&mask, L, L).unwrap();
+    let (us, ms) = (u.as_slice(), md.as_slice());
+
+    // Mean speed inside the body (mask > 0.9) vs. outside (mask < 0.1).
+    let (mut in_sum, mut in_n, mut out_sum, mut out_n) = (0.0, 0, 0.0, 0);
+    for k in 0..N * N {
+        if ms[k] > 0.9 {
+            in_sum += us[k].abs();
+            in_n += 1;
+        } else if ms[k] < 0.1 {
+            out_sum += us[k].abs();
+            out_n += 1;
+        }
+    }
+    let inside = in_sum / in_n as f64;
+    let outside = out_sum / out_n as f64;
+    assert!(
+        in_n > 0 && out_n > 0,
+        "mask did not separate interior/exterior"
+    );
+    assert!(
+        inside < 0.2,
+        "no-slip not enforced: interior mean speed {inside}"
+    );
+    assert!(
+        outside > 0.6,
+        "free-stream collapsed outside the body: {outside}"
+    );
+}
+
+#[test]
+fn stays_divergence_free_and_bounded_rank() {
+    let dx = TAU / N as f64;
+    let (nu, dt, eta) = (0.05f64, 0.005f64, 0.02f64);
+    let trunc = Truncation::<f64>::by_tol(1e-9).unwrap();
+    let mask = cyl_mask(dx, &trunc);
+    let solver = QttImmersed2d::new(L, L, dx, dx, dt, nu, mask, 0.0, 0.0, eta, trunc).unwrap();
+
+    let mut state: (CausalTensorTrain<f64>, CausalTensorTrain<f64>) = (
+        quantize_2d(&uniform(1.0), &trunc).unwrap(),
+        quantize_2d(&zeros(), &trunc).unwrap(),
+    );
+    for _ in 0..30 {
+        state = solver.advance(&state, &()).unwrap();
+        let bond = state.0.cores().iter().map(|c| c.shape()[2]).max().unwrap();
+        assert!(bond <= 24, "bond grew under recompression: {bond}");
+        let u = dequantize_2d(&state.0, L, L).unwrap();
+        let v = dequantize_2d(&state.1, L, L).unwrap();
+        let div = max_divergence(&u, &v, dx);
+        assert!(div <= 1e-5, "divergence grew: {div}");
+    }
+}
+
+#[test]
+fn zero_mask_reduces_to_the_body_free_solver() {
+    let dx = TAU / N as f64;
+    let (nu, dt, eta) = (0.05f64, 0.01f64, 0.02f64);
+    let trunc = Truncation::<f64>::by_bond(4096).unwrap();
+
+    // A genuinely empty body (mask ≡ 0): penalization vanishes.
+    let zero_mask = quantize_2d(&zeros(), &trunc).unwrap();
+    let immersed =
+        QttImmersed2d::new(L, L, dx, dx, dt, nu, zero_mask, 0.0, 0.0, eta, trunc).unwrap();
+    let plain = QttIncompressible2d::new(L, L, dx, dx, dt, nu, trunc).unwrap();
+
+    let u0 = field(dx, |x, y| -(x.cos() * y.sin()));
+    let v0 = field(dx, |x, y| x.sin() * y.cos());
+    let (iu, iv) = immersed.run(&u0, &v0, 8).unwrap();
+    let (pu, pv) = plain.run(&u0, &v0, 8).unwrap();
+
+    for (a, b) in iu.as_slice().iter().zip(pu.as_slice()) {
+        assert!(
+            (a - b).abs() <= 1e-10,
+            "u diverged from body-free: {a} vs {b}"
+        );
+    }
+    for (a, b) in iv.as_slice().iter().zip(pv.as_slice()) {
+        assert!(
+            (a - b).abs() <= 1e-10,
+            "v diverged from body-free: {a} vs {b}"
+        );
+    }
+}
+
+fn field(dx: f64, f: impl Fn(f64, f64) -> f64) -> CausalTensor<f64> {
+    let mut data = vec![0.0; N * N];
+    for i in 0..N {
+        for j in 0..N {
+            data[i * N + j] = f(i as f64 * dx, j as f64 * dx);
+        }
+    }
+    CausalTensor::new(data, vec![N, N]).unwrap()
+}
+
+fn max_divergence(u: &CausalTensor<f64>, v: &CausalTensor<f64>, dx: f64) -> f64 {
+    let (us, vs) = (u.as_slice(), v.as_slice());
+    let mut m = 0.0f64;
+    for i in 0..N {
+        for j in 0..N {
+            let dudx = (us[((i + 1) % N) * N + j] - us[((i + N - 1) % N) * N + j]) / (2.0 * dx);
+            let dvdy = (vs[i * N + (j + 1) % N] - vs[i * N + (j + N - 1) % N]) / (2.0 * dx);
+            m = m.max((dudx + dvdy).abs());
+        }
+    }
+    m
+}

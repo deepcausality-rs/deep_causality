@@ -1,0 +1,13 @@
+=== QTT immersed cylinder: Brinkman-penalized drag (tensor-train) ===
+
+Case: nu = 0.05, dt = 0.004, steps = 40, eta = 0.016, U = 1, grid 32^2, precision f64
+
+Accuracy vs bond: immersed cylinder, drag from the penalization contraction
+  bond <=   4   C_d = 24.0543   |dC_d| =    --    interior_max|u| = 4.88e-2   divergence = 3.82e-1
+  bond <=   8   C_d = 23.7649   |dC_d| = 2.89e-1   interior_max|u| = 4.35e-2   divergence = 3.25e-2
+  bond <=  16   C_d = 23.7577   |dC_d| = 7.22e-3   interior_max|u| = 4.22e-2   divergence = 3.01e-7
+  bond <=  24   C_d = 23.7577   |dC_d| = 1.89e-11   interior_max|u| = 4.22e-2   divergence = 5.47e-14
+
+Immersed cylinder verified: no-slip enforced, drag converges with bond dimension, and the
+streamwise drag is positive and finite (its magnitude reflects the smoothing skirt + blockage,
+so the convergence trend is the result — cross-referenced to the DEC solver).
