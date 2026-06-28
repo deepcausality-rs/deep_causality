@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.3.0...deep_causality_algorithms-v0.4.0) - 2026-06-28
+
+### Added
+
+- *(deep_causality_algorithms)* opt-in O(du) MAP-config pruning for BRCD (near-linear path)
+- *(deep_causality_algorithms)* add dag_sampling uniform MEC DAG sampler
+- *(deep_causality_algorithms)* add dag_sampling — polynomial-time Clique-Picking AMO counter
+
+### Fixed
+
+- *(deep_causality_algorithms)* Fixed miri test config
+- *(deep_causality_algorithms)* Fixed miri test config
+- *(deep_causality_algorithms,deep_causality_discovery)* cache version tag, docs,
+- *(deep_causality_algorithms)* Removed dead code
+- *(deep_causality_algorithms)* remove latent panic in Clique-Picking AMO counter
+- *(brcd,discovery)* address QA findings (32-bit shift, DRY, Precision bound)
+- *(deep_causality_algorithms)* Resolved sorting order issues reported in https://github.com/deepcausality-rs/deep_causality/issues/641
+- *(deep_causality_algorithms)* correct verification data path after brcd-paper move
+
+### Other
+
+- strengthen physics quantity assertions and fix review nits
+- *(deep_causality_algorithms)* close remaining coverage gaps with targeted branch tests
+- *(deep_causality_algorithms)* memoize invalid MapPrune orientations
+- *(deep_causality_algorithms)* updated
+- *(deep_causality_algorithms)* parallelize BRCD across candidates; add BRCD eval harnesses + companion papers
+- *(deep_causality_algorithms)* remove experimental BRCD thesis probes from verification
+- *(deep_causality_algorithms)* wire BRCD to the polynomial dag_sampling counter + sampler
+- Merge branch 'brcd-paper'
+- Generated new SBOM for all crates.
+- *(papers)* Reorganized publication by moving each paper into the crate where it is actually implemented.
+- Updated README file across multiple crates to meet project standard.
+
 ## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.2.14...deep_causality_algorithms-v0.3.0) - 2026-06-09
 
 ### Added

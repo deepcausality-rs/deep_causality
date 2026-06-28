@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_calculus-v0.1.1...deep_causality_calculus-v0.1.2) - 2026-06-28
+
+### Other
+
+- Generated new SBOM for all crates.
+- Add the readme file to the calculus crate.
+
 ## [0.1.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_calculus-v0.1.0...deep_causality_calculus-v0.1.1) - 2026-06-09
 
 ### Other
