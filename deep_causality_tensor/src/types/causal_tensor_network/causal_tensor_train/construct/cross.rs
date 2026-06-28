@@ -8,14 +8,17 @@ use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::causal_tensor_train::linalg::matmul;
 use crate::types::causal_tensor_network::cross_config::CrossConfig;
 use crate::{CausalTensor, CausalTensorError};
-use deep_causality_num::{ConjugateScalar, Scalar};
+use deep_causality_num::{ConjugateScalar, Real, Zero};
+
+/// The real magnitude type of a conjugate scalar.
+type Re<T> = <T as ConjugateScalar>::Real;
 
 /// A list of multi-indices (each a fixed-length `Vec<usize>`).
 type IndexSet = Vec<Vec<usize>>;
 
 impl<T> CausalTensorTrain<T>
 where
-    T: Scalar + ConjugateScalar<Real = T>,
+    T: ConjugateScalar,
 {
     /// Builds a tensor train from an oracle `f(index) -> value` **without forming the dense
     /// tensor**, via TT-cross (alternating maxvol-style index selection).
@@ -40,8 +43,8 @@ where
     pub fn cross<F>(
         shape: &[usize],
         mut oracle: F,
-        config: &CrossConfig<T>,
-    ) -> Result<(Self, T), CausalTensorError>
+        config: &CrossConfig<<T as ConjugateScalar>::Real>,
+    ) -> Result<(Self, <T as ConjugateScalar>::Real), CausalTensorError>
     where
         F: FnMut(&[usize]) -> T,
     {
@@ -56,7 +59,7 @@ where
             let mut data = Vec::with_capacity(n);
             for i in 0..n {
                 let val = oracle(&[i]);
-                if !val.is_finite() {
+                if !val.modulus_squared().is_finite() {
                     return Err(CausalTensorError::CrossSampleFailure);
                 }
                 data.push(val);
@@ -64,7 +67,7 @@ where
             let core = CausalTensor::new(data, vec![1, n, 1])?;
             return Ok((
                 Self::from_cores_unchecked(vec![core], CanonicalForm::None),
-                T::zero(),
+                Re::<T>::zero(),
             ));
         }
 
@@ -138,7 +141,7 @@ fn eval_cross<T, F>(
     oracle: &mut F,
 ) -> Result<(Vec<T>, usize), CausalTensorError>
 where
-    T: Scalar + ConjugateScalar<Real = T>,
+    T: ConjugateScalar,
     F: FnMut(&[usize]) -> T,
 {
     let nk = shape[k];
@@ -151,7 +154,7 @@ where
             for (b, ridx) in right.iter().enumerate() {
                 fill_index(&mut full, lidx, i, ridx);
                 let val = oracle(&full);
-                if !val.is_finite() {
+                if !val.modulus_squared().is_finite() {
                     return Err(CausalTensorError::CrossSampleFailure);
                 }
                 c[(a * nk + i) * rcols + b] = val;
@@ -171,7 +174,7 @@ fn eval_cross_right<T, F>(
     oracle: &mut F,
 ) -> Result<(Vec<T>, usize), CausalTensorError>
 where
-    T: Scalar + ConjugateScalar<Real = T>,
+    T: ConjugateScalar,
     F: FnMut(&[usize]) -> T,
 {
     let nk = shape[k];
@@ -185,7 +188,7 @@ where
             for (a, lidx) in left.iter().enumerate() {
                 fill_index(&mut full, lidx, i, ridx);
                 let val = oracle(&full);
-                if !val.is_finite() {
+                if !val.modulus_squared().is_finite() {
                     return Err(CausalTensorError::CrossSampleFailure);
                 }
                 dmat[(i * rright + b) * rk + a] = val;
@@ -204,7 +207,7 @@ fn build_cores<T, F>(
     oracle: &mut F,
 ) -> Result<Vec<CausalTensor<T>>, CausalTensorError>
 where
-    T: Scalar + ConjugateScalar<Real = T>,
+    T: ConjugateScalar,
     F: FnMut(&[usize]) -> T,
 {
     let d = shape.len();
@@ -278,12 +281,7 @@ fn extend_right(right: &IndexSet, pivots: &[usize]) -> IndexSet {
 
 /// Selects up to `target` independent pivot rows of a row-major `rows × cols` matrix by Gaussian
 /// elimination with partial pivoting (rank-revealing). Returns the pivot row indices.
-fn pivot_rows<T: Scalar + ConjugateScalar<Real = T>>(
-    a: &[T],
-    rows: usize,
-    cols: usize,
-    target: usize,
-) -> Vec<usize> {
+fn pivot_rows<T: ConjugateScalar>(a: &[T], rows: usize, cols: usize, target: usize) -> Vec<usize> {
     let limit = target.min(cols).min(rows);
     let mut work = a.to_vec();
     let mut used = vec![false; rows];
@@ -292,14 +290,14 @@ fn pivot_rows<T: Scalar + ConjugateScalar<Real = T>>(
     // Relative rank-detection threshold: after Gaussian elimination the residual of a rank-deficient
     // matrix is ~ machine-eps · scale, not exactly zero, so an exact `> 0` test would keep selecting
     // noise rows and inflate the rank. Break once the best remaining pivot drops below this.
-    let mut max_abs = T::zero();
+    let mut max_abs = Re::<T>::zero();
     for &x in a {
-        let ax = x.abs();
+        let ax = x.modulus_squared().sqrt();
         if ax > max_abs {
             max_abs = ax;
         }
     }
-    let mut threshold = max_abs * T::epsilon();
+    let mut threshold = max_abs * Re::<T>::epsilon();
     for _ in 0..6 {
         threshold = threshold + threshold; // · 64
     }
@@ -307,12 +305,12 @@ fn pivot_rows<T: Scalar + ConjugateScalar<Real = T>>(
     for c in 0..limit {
         // Largest-magnitude unused entry in column c.
         let mut best: Option<usize> = None;
-        let mut best_val = T::zero();
+        let mut best_val = Re::<T>::zero();
         for (r, &is_used) in used.iter().enumerate() {
             if is_used {
                 continue;
             }
-            let val = work[r * cols + c].abs();
+            let val = work[r * cols + c].modulus_squared().sqrt();
             if best.is_none() || val > best_val {
                 best_val = val;
                 best = Some(r);
@@ -347,24 +345,24 @@ fn pivot_rows<T: Scalar + ConjugateScalar<Real = T>>(
 /// Inverts a square `n × n` row-major matrix by Gauss–Jordan elimination with partial pivoting.
 /// Returns `None` if singular. Bound on `Scalar` (so it admits the dual scalar), unlike
 /// `CausalTensor::inverse`.
-fn invert_square<T: Scalar + ConjugateScalar<Real = T>>(a: &[T], n: usize) -> Option<Vec<T>> {
+fn invert_square<T: ConjugateScalar>(a: &[T], n: usize) -> Option<Vec<T>> {
     let mut m = a.to_vec();
     let mut inv = vec![T::zero(); n * n];
     for i in 0..n {
         inv[i * n + i] = T::one();
     }
     for col in 0..n {
-        // Partial pivot.
+        // Partial pivot by modulus.
         let mut piv = col;
-        let mut best = m[col * n + col].abs();
+        let mut best = m[col * n + col].modulus_squared().sqrt();
         for r in (col + 1)..n {
-            let v = m[r * n + col].abs();
+            let v = m[r * n + col].modulus_squared().sqrt();
             if v > best {
                 best = v;
                 piv = r;
             }
         }
-        if best <= T::zero() {
+        if best <= Re::<T>::zero() {
             return None;
         }
         if piv != col {
@@ -403,36 +401,37 @@ fn estimate_residual<T, F>(
     train: &CausalTensorTrain<T>,
     shape: &[usize],
     oracle: &mut F,
-    config: &CrossConfig<T>,
+    config: &CrossConfig<<T as ConjugateScalar>::Real>,
     state: &mut u64,
-) -> Result<T, CausalTensorError>
+) -> Result<<T as ConjugateScalar>::Real, CausalTensorError>
 where
-    T: Scalar + ConjugateScalar<Real = T>,
+    T: ConjugateScalar,
     F: FnMut(&[usize]) -> T,
 {
     use crate::TensorTrain;
-    let mut max_err = T::zero();
-    let mut max_val = T::zero();
+    let mut max_err = Re::<T>::zero();
+    let mut max_val = Re::<T>::zero();
     let mut idx = vec![0usize; shape.len()];
     for _ in 0..config.check_samples() {
         for (slot, &n) in idx.iter_mut().zip(shape.iter()) {
             *slot = rand_below(state, n);
         }
         let want = oracle(&idx);
-        if !want.is_finite() {
+        if !want.modulus_squared().is_finite() {
             return Err(CausalTensorError::CrossSampleFailure);
         }
         let got = train.eval(&idx)?;
-        let err = (want - got).abs();
+        // Magnitudes are real moduli.
+        let err = (want - got).modulus_squared().sqrt();
         if err > max_err {
             max_err = err;
         }
-        let av = want.abs();
+        let av = want.modulus_squared().sqrt();
         if av > max_val {
             max_val = av;
         }
     }
-    Ok(max_err / (max_val + T::epsilon()))
+    Ok(max_err / (max_val + Re::<T>::epsilon()))
 }
 
 /// `count` distinct random multi-indices over `dims` (or all of them if fewer exist).

@@ -10,6 +10,8 @@ mod causal_tensor_train_canonical_tests;
 #[cfg(test)]
 mod causal_tensor_train_complex_tests;
 #[cfg(test)]
+mod causal_tensor_train_cross_complex_tests;
+#[cfg(test)]
 mod causal_tensor_train_cross_tests;
 #[cfg(test)]
 mod causal_tensor_train_operator_complex_tests;
