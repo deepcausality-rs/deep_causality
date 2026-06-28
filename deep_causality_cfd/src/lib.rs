@@ -25,6 +25,7 @@
 extern crate alloc;
 
 mod solvers;
+mod tensor_bridge;
 mod theories;
 mod traits;
 mod types;
@@ -38,6 +39,11 @@ pub use deep_causality_physics::quantities::*;
 // Core CFD trait seams and value types.
 pub use crate::traits::{FluidTheory, Marcher, Solver};
 pub use crate::types::{Ambient, CfdScalar};
+
+// The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
+pub use crate::tensor_bridge::{
+    dequantize, gradient, laplacian, quantize, shift_minus, shift_plus,
+};
 
 // The CfdFlow DSL facade (owned case descriptions materialized at run).
 // Workflow composition — the CfdFlow DSL (the "how").
@@ -74,6 +80,7 @@ pub use crate::theories::*;
 // Solver configuration + type-state builder.
 pub use crate::solvers::{
     DecNs, DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity, DecNsConfigReady,
+    QttLinear1d,
 };
 
 // Public API of the Navier–Stokes solver.

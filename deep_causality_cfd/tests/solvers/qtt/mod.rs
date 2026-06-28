@@ -4,7 +4,4 @@
  */
 
 #[cfg(test)]
-#[cfg(not(miri))]
-mod dec;
-mod dec_config;
-mod qtt;
+pub mod qtt_linear_tests;

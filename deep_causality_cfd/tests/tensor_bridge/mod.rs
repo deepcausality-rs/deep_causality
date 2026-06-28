@@ -4,7 +4,6 @@
  */
 
 #[cfg(test)]
-#[cfg(not(miri))]
-mod dec;
-mod dec_config;
-mod qtt;
+pub mod codec_tests;
+#[cfg(test)]
+pub mod operators_tests;

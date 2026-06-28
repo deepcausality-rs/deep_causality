@@ -185,18 +185,20 @@ Cross-check primitive behaviour against **SeeMPS** on a shared toy problem befor
 
 ## 6. Staged plan (Tier-A first)
 
-1. **3.1 QTT codec** + round-trip test (`from_dense`→quantize→dequantize→`to_dense` within tolerance).
-2. **3.2 shift-MPO + Laplacian** + test against a dense finite-difference Laplacian (already have
-   `svd_truncated`/dense matmul to compare).
-3. **3.3 quasi-1D linear advection–diffusion** QTT rollout — the smallest end-to-end loop (encode →
-   MPO-apply → round), validated against an analytic solution.
+1. **[DONE] QTT codec** (`tensor_bridge::quantize`/`dequantize`) + round-trip / compression / guard tests.
+2. **[DONE] shift-MPO + gradient/Laplacian** (`tensor_bridge::shift_plus`/`gradient`/`laplacian`, hand-built
+   `S₊` via `from_cores`, stencils via the operator algebra) + tests against the periodic FD stencils.
+3. **[DONE] quasi-1D linear advection–diffusion** QTT rollout (`solvers::QttLinear1d`, a `Marcher`) —
+   encode → MPO-apply → round — validated against the analytic diffusion solution, with bounded-rank and
+   mean-conservation tests. (OpenSpec change `add-cfd-qtt-tensor-bridge`.)
 4. Add **projection** (`solve::linear`) → quasi-2D incompressible; reproduce a compressed lid cavity.
 5. Add **TT-cross nonlinear source** → the Gap-2 parametric ionization/reacting surrogate rides the same
    rollout (Pinkston pattern).
 6. Wire into `CfdFlow` as `QttIncompressible`; expose observables; hand to the flagship's step [4].
 
-Steps 1–3 are the **minimum that proves Gap 1 closed**: a working CFD field living in, and evolving as, a
-tensor train built on `deep_causality_tensor`.
+**Steps 1–3 are done — Gap 1 is closed at the foundation level:** a CFD field now lives in, and evolves
+as, a tensor train built on `deep_causality_tensor`. Steps 4–6 (projection, nonlinearity, full NS wiring)
+are the next change.
 
 ---
 

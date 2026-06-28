@@ -4,5 +4,6 @@
  */
 
 mod solvers;
+mod tensor_bridge;
 mod theories;
 mod types;

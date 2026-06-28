@@ -18,3 +18,9 @@ mod dec_config;
 pub use dec_config::{
     DecNs, DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity, DecNsConfigReady,
 };
+
+// The quantized-tensor-train (QTT) rollout: a quasi-1D linear advection–diffusion marcher that
+// evolves a flowfield in compressed tensor-train form (the CFD ↔ tensor-network bridge).
+mod qtt;
+
+pub use qtt::QttLinear1d;

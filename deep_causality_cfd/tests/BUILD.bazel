@@ -84,3 +84,25 @@ rust_test(
         "//deep_causality_uncertain",
     ],
 )
+
+rust_test(
+    name = "tensor_bridge",
+    srcs = glob([
+        "tensor_bridge/**/*.rs",
+    ]),
+    crate_features = [
+        "std",
+    ],
+    crate_root = "tensor_bridge/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_cfd",
+        # Internal dependencies
+        "//deep_causality_physics",
+        "//deep_causality_tensor",
+    ],
+)
