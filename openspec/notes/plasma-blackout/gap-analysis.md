@@ -137,14 +137,28 @@ because it also requires a **compressible QTT marcher** (the built `QttIncompres
 physics for a shock). The mesh *strategy* is sound on the incompressible solver already built; the shock
 *physics* is **Tier-B / not yet written**. **[open: compressible QTT + shock-rank control]**
 
+Gap 2's dedicated plan — the **physics-kernel / solver split** (kernels in `deep_causality_physics`, solver +
+coupling in `deep_causality_cfd`), the Park-2T / ionization kernel list, and the two composition idioms —
+is in [`gap-two-reacting-plasma.md`](gap-two-reacting-plasma.md).
+
 ### Gap 3 — trajectory axis is a proof-of-concept skeleton (matches corridor seam §6)
 
 `hypersonic_2t/model.rs` has a "simplified for demo" conformal embedding (`data[16] = sqrt(x²+y²+z²)`), a
 hand-set generator, and a `correct()` that is a literal no-op stub — no 6D measurement update.
-`grmhd/model.rs` uses hardcoded proxy curvature (`g_00 = -0.9`, `ricci = g·-0.1`). Both are honest
-skeletons, not engines. Carrying the flagship needs the real conformal lift, a genuine 6D filter update,
-a relativistic-timing causaloid (IERS terms), and the **2T-exact-gravity + perturbative-aero coupling**,
-which is correctly named open research — *not* something the tensor train touches. **[open]**
+`grmhd/model.rs` uses hardcoded proxy curvature (`g_00 = -0.9`, `g_11 = 1.1`, `ricci = g·-0.1`,
+`scalar_r = -0.4`). Both are honest skeletons, not engines. Carrying the flagship needs the real conformal
+lift, a genuine 6D filter update, a relativistic-timing causaloid (IERS terms), and the **2T-exact-gravity +
+perturbative-aero coupling**, which is correctly named open research — *not* something the tensor train
+touches. **[open]**
+
+**Mandate — curvature must be dynamic, not hardcoded** (the same invariant as the Park-2T physics, see
+[`gap-two-reacting-plasma.md`](gap-two-reacting-plasma.md) §1.2): the metric `g_uv` is computed from the
+physical state (`g_00 = −(1 − 2GM/rc²)` from the real `GM`/`r`, plus `γ(v)` for the SR timing term), and the
+**Ricci/curvature from the metric** (the real `einstein_tensor` inputs / energy-momentum route) — replacing
+the `−0.9` / `−0.1·g` / `−0.4` proxies. Only constants of nature and cited gravity coefficients (`G`, `c`,
+EGM/IERS terms) stay literal, in `constants/`. The regime threshold the `select_metric` coupling compares
+against is *config*; the curvature it compares *is computed from state*. **[open: hardening Gap 3 honors the
+dynamic invariant]**
 
 ### Gap 4 — EPP composition glue (substrate present, flagship wiring absent)
 
@@ -184,7 +198,8 @@ Gap 1 is the critical path; its dedicated closing plan is in
 
 - [`../plasma-blackout-corridor.md`](../plasma-blackout-corridor.md) — the flagship specification this
   analysis measures against.
-- [`gap-one-cfd-tensor-bridge.md`](gap-one-cfd-tensor-bridge.md) — SOTA methodologies for closing Gap 1.
+- [`gap-one-cfd-tensor-bridge.md`](gap-one-cfd-tensor-bridge.md) — SOTA methodologies for closing Gap 1 (**closed**).
+- [`gap-two-reacting-plasma.md`](gap-two-reacting-plasma.md) — the Gap-2 physics-kernel/solver split + Park-2T plan.
 - `deep_causality_tensor` tensor-network layer — the primitives Gap 1 builds on.
 - `examples/avionics_examples/hypersonic_2t/`, `examples/physics_examples/grmhd/` — the skeletons of
   axes 3 and 4.

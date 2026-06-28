@@ -193,7 +193,11 @@ blackout window becomes trivial. This is the real meaning of "get the math up to
   explicitly "simplified for demo" (`model.rs:41-48`), the generator is hand-set, and `correct()` is a
   stub (`model.rs:84-86`) — no real 6D measurement update yet. "Zero-lag tracking" is the formalism's
   *aspiration*, shown in toy form. Carrying the flagship needs the real conformal lift + a genuine 6D
-  filter update. **[holds under precondition: example hardened]**
+  filter update — and, like the Park-2T physics, **the metric and curvature computed dynamically from state**
+  (`g_00 = −(1 − 2GM/rc²)` from the real `GM`/`r`; the Ricci from the metric — **not** the grmhd skeleton's
+  `g_00 = −0.9` / `ricci = −0.1·g` proxies). No hardcoded physics: only constants of nature stay literal.
+  See [`gap-two-reacting-plasma.md`](gap-two-reacting-plasma.md) §1.2 for the binding invariant.
+  **[holds under precondition: example hardened, dynamic invariant honored]**
 - **Park 2T at Tier A is a surrogate fit.** A parametric ionization-fraction model is acceptable for the
   demonstrator; the validated reacting-flow closure is Tier B.
 - **EPP is a macroscope, not the inner solve loop.** It composes, gates, and audits; the heavy compute
