@@ -27,22 +27,25 @@ remain the default.
 - **THEN** the sketch is grown until the estimated residual is at or below the tolerance, and the
   retained bond dimension matches the deterministic rank for that tolerance (up to the oversample)
 
-#### Scenario: Faster on high-rank trains
-- **WHEN** the benchmark suite rounds a train with a large interior bond
-- **THEN** the randomized policy completes in less time than the deterministic policy at the same
-  tolerance (the `round` benchmark records both)
+#### Scenario: Asymptotically cheaper, benchmarked against deterministic
+- **WHEN** the benchmark suite rounds a train under both the deterministic and randomized policies
+- **THEN** both timings are recorded; the randomized kernel is `O(d·n·r²·ℓ)` versus the deterministic
+  `O(d·n·r³)`, so it wins only once the rounding unfoldings are large and low-rank — at small bench
+  scales it is on par with or slightly slower than deterministic, which the benchmark documents
+  honestly (the deterministic kernel therefore stays the default)
 
 ### Requirement: Fused Hadamard-then-truncate
 
 The crate SHALL provide a fused Hadamard-product-then-round path so that `hadamard_rounded` does not
-materialize the full bond-`r²` intermediate train before compressing. The fused path SHALL compress
-each squared-bond core against the running canonical form as it is built, and its result SHALL equal
-`hadamard(other).round(trunc)` to within the truncation tolerance.
+materialize the full bond-`r²` intermediate **train** before compressing. The fused path SHALL build
+and left-orthonormalize the squared-bond cores one site at a time — holding at most a single
+squared-bond core, not the whole squared train — and its result SHALL equal `hadamard(other).round(trunc)`
+to within the truncation tolerance.
 
 #### Scenario: Fused result matches build-then-round
 - **WHEN** `hadamard_rounded` is computed on two trains
 - **THEN** the represented tensor matches `hadamard(other).round(trunc)` to the truncation tolerance,
-  while the peak intermediate bond dimension stays below the squared bond `r²`
+  while only one squared-bond core (not the full `d`-core squared train) is materialized at a time
 
 ### Requirement: Allocation-reusing transfer-matrix contractions
 

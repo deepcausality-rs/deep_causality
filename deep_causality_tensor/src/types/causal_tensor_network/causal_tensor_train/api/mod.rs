@@ -256,6 +256,10 @@ where
         let mut l = vec![T::one()]; // [ra=1, rb=1]
         let mut ra = 1usize;
         let mut rb = 1usize;
+        // Scratch buffers reused across sites (cleared/resized in place) to avoid a per-site
+        // allocation; the arithmetic and its order are unchanged, so the result is bit-identical.
+        let mut m: Vec<T> = Vec::new();
+        let mut nl: Vec<T> = Vec::new();
         for (ac, bc) in a.iter().zip(b.iter()) {
             let (_, n, ar) = dims(ac);
             let (_, _, br) = dims(bc);
@@ -265,7 +269,8 @@ where
             // Hermitian inner product ⟨self|other⟩ = Σ conj(self)·other: the `self` (a) factors are
             // conjugated. For a real scalar the conjugation is the identity.
             // Step 1: M[bb, i, ga] = Σ_aa L[aa,bb] · conj(a[aa,i,ga]).
-            let mut m = vec![T::zero(); rb * n * ar];
+            m.clear();
+            m.resize(rb * n * ar, T::zero());
             for aa in 0..ra {
                 for bb in 0..rb {
                     let lval = l[aa * rb + bb];
@@ -282,7 +287,8 @@ where
                 }
             }
             // Step 2: L'[ga, gb] = Σ_{bb,i} M[bb,i,ga] · b[bb,i,gb].
-            let mut nl = vec![T::zero(); ar * br];
+            nl.clear();
+            nl.resize(ar * br, T::zero());
             for bb in 0..rb {
                 for i in 0..n {
                     let mbase = (bb * n + i) * ar;
@@ -299,7 +305,8 @@ where
                     }
                 }
             }
-            l = nl;
+            // Swap the new carry into `l`, keeping `nl`'s freed buffer for the next site.
+            core::mem::swap(&mut l, &mut nl);
             ra = ar;
             rb = br;
         }
@@ -436,7 +443,70 @@ where
         other: &Self,
         trunc: &Truncation<Re<T>>,
     ) -> Result<Self, CausalTensorError> {
-        self.hadamard(other)?.round(trunc)
+        if self.phys_dims() != other.phys_dims() {
+            return Err(CausalTensorError::ShapeMismatch);
+        }
+        let a = self.cores();
+        let b = other.cores();
+        let d = a.len();
+
+        // Fused build-and-left-canonicalize: form the squared-bond Hadamard core for *one* site at a
+        // time, fold in the carried `R`, and immediately QR-reduce its left unfolding before moving
+        // on. Only a single bond-`r²` core is ever materialized (not the whole squared train), and
+        // the stored cores come out left-orthonormal — so the trailing `round` is just the cheap
+        // right-to-left truncation sweep. The represented tensor equals `hadamard(other).round(trunc)`.
+        let mut cores: Vec<CausalTensor<T>> = Vec::with_capacity(d);
+        let mut carry: Vec<T> = vec![T::one()]; // [carry_rows, nrl_0] = [1, 1]
+        let mut carry_rows = 1usize;
+
+        for k in 0..d {
+            let (al, n, ar) = dims(&a[k]);
+            let (bl, _, br) = dims(&b[k]);
+            let ad = a[k].as_slice();
+            let bd = b[k].as_slice();
+            let nrl = al * bl;
+            let nrr = ar * br;
+
+            // Squared-bond core H_k[(x·bl+y), i, (g·br+h)] = a[x,i,g]·b[y,i,h] (transient).
+            let mut hk = vec![T::zero(); nrl * n * nrr];
+            for x in 0..al {
+                for y in 0..bl {
+                    let row = x * bl + y;
+                    for i in 0..n {
+                        for g in 0..ar {
+                            let aval = ad[x * (n * ar) + i * ar + g];
+                            if aval == T::zero() {
+                                continue;
+                            }
+                            for h in 0..br {
+                                let bval = bd[y * (n * br) + i * br + h];
+                                let col = g * br + h;
+                                hk[row * (n * nrr) + i * nrr + col] = aval * bval;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Absorb the carry into the left bond: M = carry · H_k, shape [carry_rows, n·nrr].
+            let m = matmul(&carry, carry_rows, nrl, &hk, n * nrr);
+
+            if k < d - 1 {
+                // Left-orthonormalize: QR of [carry_rows·n, nrr]; R is carried into the next site.
+                let mt = CausalTensor::new(m, vec![carry_rows * n, nrr])?;
+                let (q, r) = mt.qr()?;
+                let qd = q.shape()[1];
+                cores.push(q.reshape(&[carry_rows, n, qd])?);
+                carry = r.as_slice().to_vec(); // [qd, nrr] → next core's left bond
+                carry_rows = qd;
+            } else {
+                // Last site: nrr == 1, so M is already the final core [carry_rows, n, 1].
+                cores.push(CausalTensor::new(m, vec![carry_rows, n, 1])?);
+            }
+        }
+
+        let train = Self::from_cores_unchecked(cores, CanonicalForm::LeftAt(d - 1));
+        train.round(trunc)
     }
 
     fn marginalize(&self, sites: &[usize]) -> Result<Self, CausalTensorError> {

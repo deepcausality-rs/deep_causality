@@ -11,7 +11,9 @@
 //! `Complex<f64>` (Hermitian).
 
 use deep_causality_num::{Complex, ConjugateScalar, Float106, FromPrimitive, RealField};
-use deep_causality_tensor::{CausalTensor, CausalTensorTrain, RoundStrategy, TensorTrain, Truncation};
+use deep_causality_tensor::{
+    CausalTensor, CausalTensorTrain, RoundStrategy, TensorTrain, Truncation,
+};
 
 fn v<T: FromPrimitive>(x: f64) -> T {
     T::from_f64(x).unwrap()
@@ -32,7 +34,10 @@ fn tol<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> T {
 }
 
 fn approx<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(a: T, b: T) {
-    assert!((a - b).abs() <= tol::<T>(), "values differ beyond tolerance");
+    assert!(
+        (a - b).abs() <= tol::<T>(),
+        "values differ beyond tolerance"
+    );
 }
 
 /// `U · diag(S) · Vt` for a real scalar (`S` is real, so `T = T::Real`).
@@ -91,7 +96,9 @@ fn check_randomized_svd_lowrank<T: RealField + FromPrimitive + ConjugateScalar<R
     }
 }
 
-fn check_randomized_svd_adaptive_growth<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
+fn check_randomized_svd_adaptive_growth<
+    T: RealField + FromPrimitive + ConjugateScalar<Real = T>,
+>() {
     // oversample = 1 ⇒ ℓ starts at 2 ≪ maxr = 18, so the adaptive loop must grow to capture rank 3.
     let (data, m, n) = low_rank(20, 18, 3);
     let mat = tensor::<T>(&data, &[m, n]);
@@ -154,7 +161,10 @@ fn default_strategy_is_deterministic() {
         }
     );
     // The randomized builder leaves the gates untouched.
-    assert_eq!(r.max_bond(), Truncation::<f64>::by_tol(1e-9).unwrap().max_bond());
+    assert_eq!(
+        r.max_bond(),
+        Truncation::<f64>::by_tol(1e-9).unwrap().max_bond()
+    );
     assert_eq!(r.rel_tol(), 1e-9);
 }
 
@@ -164,7 +174,9 @@ fn default_strategy_is_deterministic() {
 fn randomized_is_reproducible() {
     let (data, m, n) = low_rank(12, 10, 4);
     let mat = tensor::<f64>(&data, &[m, n]);
-    let trunc = Truncation::<f64>::by_tol(1e-10).unwrap().randomized(4, 0xFEED);
+    let trunc = Truncation::<f64>::by_tol(1e-10)
+        .unwrap()
+        .randomized(4, 0xFEED);
     let (u1, s1, vt1) = mat.svd_truncated(&trunc).unwrap();
     let (u2, s2, vt2) = mat.svd_truncated(&trunc).unwrap();
     assert_eq!(u1.as_slice(), u2.as_slice());
@@ -196,7 +208,9 @@ fn complex_randomized_svd_lowrank() {
         }
     }
     let mat = CausalTensor::new(data.clone(), vec![m, n]).unwrap();
-    let trunc = Truncation::<f64>::by_tol(1e-12).unwrap().randomized(6, 0xC0FFEE);
+    let trunc = Truncation::<f64>::by_tol(1e-12)
+        .unwrap()
+        .randomized(6, 0xC0FFEE);
     let (u, s, vt) = mat.svd_truncated(&trunc).unwrap();
     assert!(s.len() <= 3, "expected ~rank-2, got {}", s.len());
 
@@ -217,6 +231,53 @@ fn complex_randomized_svd_lowrank() {
             );
         }
     }
+}
+
+// ---- crossover study: deterministic Jacobi vs randomized range-finder at scale ----------------
+// Ignored by default (timing, not assertions). Run with:
+//   cargo test -p deep_causality_tensor --test mod -- --ignored --nocapture svd_crossover
+
+#[test]
+#[ignore]
+fn svd_crossover_study() {
+    use std::time::Instant;
+    let rank = 20usize;
+    println!(
+        "\n{:>8} {:>6} {:>14} {:>14} {:>8}",
+        "size", "rank", "deterministic", "randomized", "speedup"
+    );
+    // Sizes kept modest so `--ignored` runs in a few seconds; the speedup grows ~linearly with size
+    // (measured: 38× at 100², 274× at 400², ~935× at 1000² for rank 20 on an M3 Max).
+    for &s in &[100usize, 200, 400] {
+        let (data, _, _) = low_rank(s, s, rank);
+        let mat = tensor::<f64>(&data, &[s, s]);
+        let det = Truncation::<f64>::by_tol(1e-9).unwrap();
+        let rnd = det.randomized(10, 0x1234_5678);
+
+        // Warm + measure best-of-3 to damp noise.
+        let mut td = f64::INFINITY;
+        let mut tr = f64::INFINITY;
+        for _ in 0..3 {
+            let t = Instant::now();
+            let (_u, sd, _v) = mat.svd_truncated(&det).unwrap();
+            td = td.min(t.elapsed().as_secs_f64());
+            assert!(sd.len() <= rank + 2);
+
+            let t = Instant::now();
+            let (_u, sr, _v) = mat.svd_truncated(&rnd).unwrap();
+            tr = tr.min(t.elapsed().as_secs_f64());
+            assert!(sr.len() <= rank + 2);
+        }
+        println!(
+            "{:>8} {:>6} {:>12.3} ms {:>12.3} ms {:>7.1}x",
+            s,
+            rank,
+            td * 1e3,
+            tr * 1e3,
+            td / tr
+        );
+    }
+    println!();
 }
 
 // ---- monomorphized entry points ---------------------------------------------------------------

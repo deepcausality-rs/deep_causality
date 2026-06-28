@@ -44,6 +44,34 @@ fn bench_round(c: &mut Criterion) {
     });
 }
 
+/// The sum of nine rank-1 trains over `[8,8,8,8]` (interior bond up to 9). This is a *small*-unfolding
+/// case where deterministic Jacobi is expected to win — randomized rounding's `O(ℓ)` advantage only
+/// amortizes once the unfoldings are large and low-rank (see the README crossover table and the
+/// `svd_crossover_study` ignored test, where randomized is 38×–935× faster at 100²–1000²). Kept as the
+/// honest small-scale data point that motivates keeping the deterministic kernel the default.
+fn high_bond_train() -> CausalTensorTrain<f64> {
+    let shape = [8usize, 8, 8, 8];
+    let mut x = CausalTensorTrain::random_seeded(&shape, 1, 1);
+    for s in 2..10u64 {
+        x = x
+            .add(&CausalTensorTrain::random_seeded(&shape, 1, s))
+            .unwrap();
+    }
+    x
+}
+
+fn bench_round_randomized(c: &mut Criterion) {
+    let x = high_bond_train();
+    let det = Truncation::<f64>::by_tol(1e-8).unwrap();
+    let rnd = det.randomized(8, 0xBEEF_CAFE);
+    c.bench_function("tt_round_highbond_deterministic", |b| {
+        b.iter(|| black_box(&x).round(black_box(&det)).unwrap())
+    });
+    c.bench_function("tt_round_highbond_randomized", |b| {
+        b.iter(|| black_box(&x).round(black_box(&rnd)).unwrap())
+    });
+}
+
 fn bench_canonicalize_at(c: &mut Criterion) {
     let x = train();
     c.bench_function("tt_canonicalize_at", |b| {
@@ -99,6 +127,7 @@ criterion_group!(
     tensor_train_core_benches,
     bench_from_dense,
     bench_round,
+    bench_round_randomized,
     bench_canonicalize_at,
     bench_norm,
     bench_inner,

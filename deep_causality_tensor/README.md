@@ -339,6 +339,44 @@ in seconds). Each row is a Criterion `bench_function`; the `Size` column gives t
    the same one-/two-site sweep engine; their cost grows as `sweeps · n · r³`, so they stay fast while
    the bond dimension `r` stays small.
 
+#### Deterministic vs. randomized rounding
+
+`round` (and every truncating op) can run an opt-in **adaptive randomized range-finder SVD**
+(`Truncation::randomized(oversample, seed)`) instead of the default deterministic one-sided Jacobi.
+Its cost is `O(rows·cols·ℓ)` versus the deterministic `O(min(rows,cols)³)` Jacobi, so the win is
+*conditional*: it needs the truncated matrix to be **large and low-rank**. Two regimes bracket it.
+
+**Small unfoldings (deterministic wins).** Rounding an order-4 `[8,8,8,8]` train (interior bond 9) at
+`by_tol(1e-8)`:
+
+| `round` strategy                | Time     |
+|---------------------------------|----------|
+| deterministic                   | ~112 µs  |
+| randomized (`oversample = 8`)   | ~124 µs  |
+
+Here randomized is **~10 % slower** — the unfoldings are tiny, Jacobi converges in a few sweeps, and
+the sketch/QR overhead does not amortize.
+
+**Large low-rank matrices (randomized wins, hugely).** The truncated SVD of a rank-20 `S×S` matrix
+(the kernel every rounding step calls), deterministic Jacobi vs. randomized range-finder:
+
+| `S × S`     | rank | deterministic | randomized | speedup |
+|-------------|------|---------------|------------|---------|
+| 100 × 100   | 20   | 17.1 ms       | 0.45 ms    | 38×     |
+| 200 × 200   | 20   | 135 ms        | 1.51 ms    | 89×     |
+| 400 × 400   | 20   | 1.44 s        | 5.25 ms    | 274×    |
+| 700 × 700   | 20   | 7.63 s        | 15.3 ms    | 498×    |
+| 1000 × 1000 | 20   | 29.1 s        | 31.2 ms    | 935×    |
+
+The gap widens ~linearly with size because the Jacobi SVD is `O(S³)` regardless of rank while the
+range-finder is `O(S²·ℓ)` with `ℓ ≈ rank + oversample`. (Part of this gap is that our deterministic
+Jacobi does not shortcut low rank; it is the accuracy-first default, not a rank-revealing method.) In
+TT terms the payoff therefore lands when rounding **sums of many tensors** — large input bond, low
+output rank — which is exactly the case the randomized-rounding literature targets. The deterministic
+kernel stays the **default**; the randomized strategy is for large/compressible instances and for
+tolerance-driven adaptive rank selection. Both produce the same result to the requested tolerance.
+Reproduce the table with `cargo test --release --test mod -- --ignored svd_crossover_study`.
+
 #### Hardware & precision
 - Scalar: `f64`
 - Reproduce with `cargo bench -p deep_causality_tensor --bench bench_causal_tensor`.

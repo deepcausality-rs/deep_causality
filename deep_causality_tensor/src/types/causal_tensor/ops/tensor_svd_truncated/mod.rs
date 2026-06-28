@@ -164,8 +164,10 @@ where
 
         // Range-finding loop: grow ℓ until the projection residual meets the tolerance.
         let (q, qd, b) = loop {
-            let omega =
-                gaussian_vec::<T>(cols * ell, seed ^ (ell as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15));
+            let omega = gaussian_vec::<T>(
+                cols * ell,
+                seed ^ (ell as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15),
+            );
             let y = matmul(a, rows, cols, &omega, ell); // rows × ell
             let yt = CausalTensor::new(y, vec![rows, ell])?;
             let (q, _r) = yt.qr()?;

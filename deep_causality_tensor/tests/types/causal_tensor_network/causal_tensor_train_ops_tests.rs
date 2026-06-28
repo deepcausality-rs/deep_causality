@@ -182,6 +182,49 @@ fn test_marginalize_float106() {
     check_marginalize::<Float106>();
 }
 
+/// Fused `hadamard_rounded` must equal `hadamard(other).round(trunc)` to tolerance, at every
+/// supported real precision.
+fn check_hadamard_rounded_fused<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
+    let (da, db) = (dense_a::<T>(), dense_b::<T>());
+    let (ta, tb) = (tt(&da), tt(&db));
+    for trunc in [
+        Truncation::<T>::by_bond(4096).unwrap(),
+        Truncation::<T>::by_tol(v::<T>(1e-10)).unwrap(),
+    ] {
+        let fused = ta
+            .hadamard_rounded(&tb, &trunc)
+            .unwrap()
+            .to_dense()
+            .unwrap();
+        let build_then_round = ta
+            .hadamard(&tb)
+            .unwrap()
+            .round(&trunc)
+            .unwrap()
+            .to_dense()
+            .unwrap();
+        assert_dense_eq(&fused, &build_then_round);
+        // ...and both equal the exact elementwise product.
+        let want = tensor_from::<T>(
+            da.as_slice()
+                .iter()
+                .zip(db.as_slice())
+                .map(|(x, y)| *x * *y)
+                .collect(),
+            &[2, 3, 2],
+        );
+        assert_dense_eq(&fused, &want);
+    }
+}
+#[test]
+fn test_hadamard_rounded_fused_f64() {
+    check_hadamard_rounded_fused::<f64>();
+}
+#[test]
+fn test_hadamard_rounded_fused_float106() {
+    check_hadamard_rounded_fused::<Float106>();
+}
+
 #[test]
 fn test_shape_mismatch_errors() {
     let a = tt(&dense_a::<f64>());

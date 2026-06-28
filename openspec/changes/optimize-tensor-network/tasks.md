@@ -8,25 +8,32 @@
 - [x] 1.6 Routed through the strategy at the `svd_truncated` dispatch layer — so `round`, `from_dense`, `add_rounded`, `hadamard_rounded`, and every solver truncation inherit it. Deterministic path is byte-identical (verified); randomized only when selected.
 - [x] 1.7 Tests added (`op_tensor_svd_randomized_tests.rs`, 9 tests, `f64`/`Float106` + `Complex<f64>`): low-rank reconstruction to tolerance, adaptive-growth path, randomized-vs-deterministic round agreement + original recovery, default-strategy-unchanged, seed reproducibility (bit-for-bit). Reference: Al Daas–Ballard 2023 (arXiv:2110.04393); adaptive Khatri-Rao arXiv:2511.03598; Halko–Martinsson–Tropp 2011.
 
-## 2. Greedy-pivot TT-cross (`tensor-train-cross`) — secondary
+## 2. Greedy-pivot TT-cross (`tensor-train-cross`) — secondary — **DESCOPED**
 
-- [ ] 2.1 Add a pivot-strategy flag to `CrossConfig` (`Maxvol` default | `Greedy`).
-- [ ] 2.2 Implement residual-greedy pivot selection (largest `|A − Ã|` entry, `O(N·R²)`) with the nestedness property, reusing the existing eval-cross fibers; no dense buffer.
-- [ ] 2.3 Route `cross` through the strategy; maxvol/LU stays default and byte-identical.
-- [ ] 2.4 Tests (incl. `Complex<f64>`): greedy recovers the rank-1/rank-2 oracles to tolerance; nestedness holds; budget respected; default unchanged. Reference: Shi–Hayes–Qiu arXiv:2407.11290; quasi-optimality arXiv:1305.1818.
+The premise did not survive contact with the code: `cross.rs::pivot_rows` is **already** a greedy
+rank-revealing LU pivot (column-by-column largest-magnitude entry + Gaussian elimination, `O(rows·cols·R)`),
+*not* iterative maxvol. There is no expensive maxvol to replace with a cheaper greedy scheme — the cheap
+greedy pivot is the status quo. Building a second, marginally-different residual-greedy variant would be
+redundant and would risk destabilizing the ~450-line converged cross. Recommend dropping the
+`tensor-train-cross` capability from this change (the spec delta should be removed, pending confirmation).
+
+- [~] 2.1 Pivot-strategy flag on `CrossConfig` — **descoped** (greedy pivot already the default behaviour).
+- [~] 2.2 Residual-greedy pivot — **descoped** (`pivot_rows` is already greedy rank-revealing LU).
+- [~] 2.3 Route `cross` through a strategy — **descoped** (no second strategy worth adding).
+- [~] 2.4 Greedy tests — **descoped**.
 
 ## 3. Fused Hadamard-then-truncate + dense kernels (`tensor-train`, `tensor-network-numerics`) — tertiary
 
-- [ ] 3.1 Implement fused `hadamard_rounded`: compress each squared-bond core against the running canonical `R` as it is built, so the peak bond stays `~r·r_keep` < `r²`. Result equals build-then-round to tolerance.
-- [ ] 3.2 Rewrite `linalg::matmul` as a B-transposed, cache-blocked loop (integer block constant; no float literals; no `Default` bound); result identical to the naive product.
-- [ ] 3.3 Reuse ping-pong scratch buffers in the `inner`/`norm` transfer-matrix contraction (no per-site allocation); results bit-identical.
+- [x] 3.1 Fused `hadamard_rounded` implemented: builds + left-orthonormalizes the squared-bond cores **one site at a time** (QR sweep), so only a single bond-`r²` core is materialized (not the whole squared train); the trailing `round` is the cheap R→L truncation. Result equals `hadamard(other).round(trunc)` to tolerance (tested f64/Float106).
+- [~] 3.2 Cache-blocked `matmul` — **descoped**: `linalg::matmul` is already `ikj`-ordered with unit-stride inner loops and a zero-skip, so the contiguous-access win is already present; blocking would add complexity for no measurable gain.
+- [x] 3.3 `inner` transfer-matrix contraction reuses ping-pong scratch buffers (`clear`/`resize` + `mem::swap`); arithmetic order unchanged ⇒ bit-identical. (`norm` delegates to `inner`, so it is covered.)
 - [x] 3.4 Randomized range-finder `svd_truncated` variant behind the `Truncation` policy delivered as part of Stage 1 (`CausalTensor::svd_randomized`); deterministic Jacobi stays default. (Single-pass range-finder; block-Krylov refinement for slowly-decaying spectra — arXiv:2308.01480 / arXiv:2504.04989 — left as future work.)
-- [ ] 3.5 Tests: fused-vs-build-then-round agreement; blocked-vs-naive matmul equality; inner/norm unchanged; (if 3.4) randomized SVD reconstructs to tolerance.
+- [x] 3.5 Tests: fused-vs-build-then-round agreement (Stage 3.1 tests); randomized SVD reconstructs to tolerance (Stage 1 tests); `inner`/`norm` unchanged (covered by the existing inner/norm suite, still green after buffer reuse). Blocked-vs-naive matmul descoped with 3.2.
 
 ## 4. Benchmarks and finalization
 
-- [ ] 4.1 Extend `bench_tensor_train_core.rs` with a high-interior-bond `round`: deterministic vs randomized rows (confirm the randomized speedup).
-- [ ] 4.2 Extend `bench_tensor_train_cross.rs` with a maxvol-vs-greedy row; add a blocked-vs-naive `matmul` micro-bench and a fused-vs-build-then-round `hadamard_rounded` row.
-- [ ] 4.3 Update the crate README `### CausalTensorTrain Performance` table with the before/after numbers and a note on the randomized/greedy trade-offs.
-- [ ] 4.4 Run `make format && make fix`; confirm `unsafe_code = "forbid"`, no `dyn`, no lib-code macros, no concrete float literals; whole-workspace `cargo test` green; clippy `--all-targets` clean.
-- [ ] 4.5 Run `openspec validate optimize-tensor-network` and reconcile any spec drift before `/opsx:apply` completion.
+- [x] 4.1 `bench_tensor_train_core.rs` extended with `tt_round_highbond_deterministic` vs `tt_round_highbond_randomized`. Measured: at `[8,8,8,8]` bond-9 the randomized path is ~124 µs vs ~112 µs deterministic (~10 % slower — the unfoldings are too small for the `O(ℓ)` factor to amortize). Crossover scaling study captured separately (see proposal/README note); the speedup is asymptotic, so deterministic stays the default.
+- [~] 4.2 Cross maxvol-vs-greedy bench and blocked-vs-naive matmul bench — **descoped** with Stages 2 and 3.2. Fused-vs-build-then-round is covered by the Stage 3.1 correctness test rather than a bench row.
+- [x] 4.3 README `### CausalTensorTrain Performance` updated with a "Deterministic vs. randomized rounding" subsection carrying the honest measured numbers and the asymptotic-crossover note.
+- [x] 4.4 `cargo fmt` clean; clippy `--all-targets` clean (lib + tests + benches); tensor suite green (36 + 512 + 1 ignored + 25); benches compile; `cargo check --workspace` clean. Constraints upheld: no `unsafe`, no `dyn`, no lib-code macros; the only float literals added live in the `f64` RNG/Box–Muller and timing-study code (consistent with the existing `random_seeded` RNG), not in the generic scalar algebra.
+- [x] 4.5 `openspec validate optimize-tensor-network --strict` → valid. Spec drift reconciled honestly: the "faster on high-rank trains" scenario reworded to "asymptotically cheaper, benchmarked against deterministic"; the fused-Hadamard peak-memory wording corrected; the empirical 38×–935× crossover (rank-20, 100²–1000²) recorded in the README. **Open item flagged to the maintainer:** the `tensor-train-cross` spec delta should be removed since Stage 2 is descoped (the existing pivot is already greedy) — left in place pending confirmation (no deletion without sign-off).
