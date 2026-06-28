@@ -1,0 +1,43 @@
+openspec/changes/add-cfd-qtt-tensor-bridge/.openspec.yaml
+  s_162aba3d26275e::t_432be61375e7ec 1-2
+openspec/specs/tensor-train-operator/spec.md
+  s_162aba3d26275e::t_5e620219991fd3 60-85
+openspec/changes/add-cfd-qtt-tensor-bridge/specs/qtt-linear-rollout/spec.md
+  s_162aba3d26275e::t_3ac80c46d7f2f7 1-25
+openspec/notes/plasma-blackout/gap-one-cfd-tensor-bridge.md
+  s_162aba3d26275e::t_cc8c34b0542bbd 100-108,116
+  s_162aba3d26275e::t_d6759333fbe5a6 68-69
+  s_162aba3d26275e::t_cd78a40b0ff114 1-67,70-99,123-226
+  s_162aba3d26275e::t_fb0b8d58953449 109-115,117-122
+openspec/changes/add-cfd-qtt-tensor-bridge/tasks.md
+  s_162aba3d26275e::t_f789f22769deab 1-24
+openspec/changes/add-cfd-qtt-tensor-bridge/specs/qtt-differential-operators/spec.md
+  s_162aba3d26275e::t_eb98eeeb60e3ec 1-31
+openspec/changes/add-cfd-qtt-tensor-bridge/design.md
+  s_162aba3d26275e::t_1ab933d0e64f53 1-55
+openspec/notes/plasma-blackout/gap-analysis.md
+  s_162aba3d26275e::t_99bb49202d2c48 80-81,86-91
+  s_162aba3d26275e::t_b3354744e13a49 1-79,82-85,92-160
+openspec/changes/add-cfd-qtt-tensor-bridge/proposal.md
+  s_162aba3d26275e::t_c5d7c81eb14829 1-35
+openspec/changes/add-cfd-qtt-tensor-bridge/specs/qtt-field-codec/spec.md
+  s_162aba3d26275e::t_67e42875893cf9 1-22
+openspec/changes/archive/2026-06-28-add-tensor-operator-algebra/.openspec.yaml
+  s_162aba3d26275e::t_0f5ae8f394d350 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "19c0a991eafb11d0a72328ccb5f7c50ed7755f1f",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
