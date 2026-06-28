@@ -11,7 +11,7 @@ use crate::types::causal_tensor_network::causal_tensor_train_operator::CausalTen
 use crate::types::causal_tensor_network::solve_config::SolveConfig;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor};
-use deep_causality_num::{ConjugateScalar, One, Real, Scalar, Zero};
+use deep_causality_num::{ConjugateScalar, One, Real, Zero};
 
 /// The real magnitude type of a conjugate scalar.
 type Re<T> = <T as ConjugateScalar>::Real;
@@ -130,19 +130,19 @@ pub fn linear<T: ConjugateScalar>(
     Err(CausalTensorError::SweepDidNotConverge)
 }
 
-/// Computes the lowest eigenpair `(λ, v)` of a **symmetric** tensor-train operator `A` by the
+/// Computes the lowest eigenpair `(λ, v)` of a **Hermitian** tensor-train operator `A` by the
 /// **DMRG3S** algorithm: a single-site DMRG sweep (each site solves the local single-site eigenproblem
 /// for the smallest Rayleigh quotient) combined with **subspace expansion** — the bond dimension is
 /// grown rank-adaptively by enriching `v` with the projected residual `A·v − λ·v` (the same
 /// residual-enrichment engine used by [`linear`]), seeded small and capped at `max_rank`.
 ///
 /// Each site is solved in **mixed-canonical gauge**: the state is `canonicalize_at(k)`-ed before the
-/// local solve so the environment is orthonormal and the single-site problem is a *standard* symmetric
-/// eigenproblem `H z = λ z` (solved by a cyclic-Jacobi `sym_eig`), avoiding the conditioning of a
-/// generalized problem. The returned eigenvector is normalized.
+/// local solve so the environment is orthonormal and the single-site problem is a *standard* Hermitian
+/// eigenproblem `H z = λ z` (solved by the cyclic-Jacobi `sym_eig`, which uses complex Givens
+/// similarity for complex scalars and reduces to the real symmetric Jacobi for real ones).
 ///
-/// `A` must be (numerically) symmetric — the effective operator is symmetrized before each local
-/// solve. The returned `λ` is the smallest (most negative) eigenvalue.
+/// `A` must be (numerically) Hermitian — the effective operator is Hermitian-symmetrized before each
+/// local solve. The returned `λ` is real (returned as `T`) and the smallest (most negative) eigenvalue.
 ///
 /// Reference: C. Hubig, I. P. McCulloch, U. Schollwöck, and F. A. Wolf, "Strictly single-site DMRG
 /// algorithm with subspace expansion," *Phys. Rev. B* 91, 155115 (2015).
@@ -151,7 +151,7 @@ pub fn linear<T: ConjugateScalar>(
 /// # Errors
 /// - [`CausalTensorError::ShapeMismatch`] if `A` is not square (`in_dims != out_dims`).
 /// - [`CausalTensorError::SweepDidNotConverge`] if the relative residual stays above `tol`.
-pub fn eigen<T: Scalar + ConjugateScalar<Real = T>>(
+pub fn eigen<T: ConjugateScalar>(
     a: &CausalTensorTrainOperator<T>,
     max_rank: usize,
     config: &SolveConfig<<T as ConjugateScalar>::Real>,
@@ -166,33 +166,33 @@ pub fn eigen<T: Scalar + ConjugateScalar<Real = T>>(
     // Seed at a small rank; subspace expansion grows it toward the eigenvector.
     let seed: Vec<usize> = caps.iter().map(|&r| r.min(2)).collect();
     let mut x = init_random(&shape, &seed, 0xE16E_5017);
-    let enrich_trunc = Truncation::new(max_rank, config.tol(), T::zero())?;
+    let enrich_trunc = Truncation::new(max_rank, config.tol(), Re::<T>::zero())?;
 
     for _sweep in 0..config.max_sweeps() {
         // Single-site DMRG sweep. Each site is solved in mixed-canonical gauge (orthogonality
         // center at `k`), so the environment is orthonormal and the local problem is a *standard*
-        // symmetric eigenproblem — no overlap whitening, no ridge, machine-precision accurate.
+        // Hermitian eigenproblem — no overlap whitening, no ridge, machine-precision accurate.
         for k in forward_then_back(d) {
             let centered =
                 CausalTensorTrain::from_cores_raw(x, CanonicalForm::None).canonicalize_at(k)?;
             x = centered.into_cores();
             eigen_site(&mut x, a, k)?;
         }
-        // Rayleigh quotient λ = <x|A|x> / <x|x> and residual r = A·x − λ·x.
+        // Rayleigh quotient λ = <x|A|x> / <x|x> (real for a Hermitian A) and residual r = A·x − λ·x.
         let xt = CausalTensorTrain::from_cores_raw(x, CanonicalForm::None);
-        let xx = xt.inner(&xt)?;
-        if xx <= T::zero() {
+        let xx = xt.inner(&xt)?.real_part();
+        if xx <= Re::<T>::zero() {
             return Err(CausalTensorError::SweepDidNotConverge);
         }
         let ax = a.apply(&xt, &exact)?;
-        let lambda = xt.inner(&ax)? / xx;
+        let lambda = xt.inner(&ax)? / T::from_real(xx);
         let res = ax.add(&xt.scale(-lambda))?;
-        let rnorm = res.norm()? / xx.sqrt();
+        let rnorm = res.norm()?.real_part() / xx.sqrt();
         if rnorm <= config.tol() {
             // Normalize the eigenvector before returning. No re-truncation here: `xt` already has
             // bond ≤ max_rank from the previous enrichment round, and a tol-based round would drop
             // small-but-real components and inflate the residual.
-            let inv = T::one() / xx.sqrt();
+            let inv = T::from_real(Re::<T>::one() / xx.sqrt());
             return Ok((lambda, xt.scale(inv)));
         }
         // DMRG3S subspace expansion: enrich with the residual direction, capped at max_rank.
@@ -724,7 +724,7 @@ fn env_c_right<T: ConjugateScalar>(
 /// with the orthogonality center at `k`, so the environment is orthonormal and the local problem is a
 /// standard symmetric eigenproblem `H z = λ z`. Builds and symmetrizes the local effective operator,
 /// takes the smallest eigenpair, and writes the (unit-norm) eigenvector back into the core.
-fn eigen_site<T: Scalar + ConjugateScalar<Real = T>>(
+fn eigen_site<T: ConjugateScalar>(
     x: &mut [CausalTensor<T>],
     a: &CausalTensorTrainOperator<T>,
     k: usize,
@@ -737,9 +737,10 @@ fn eigen_site<T: Scalar + ConjugateScalar<Real = T>>(
     symmetrize(&mut h, n);
 
     let (vals, vecs) = sym_eig(&h, n);
+    // Smallest eigenvalue (eigenvalues of a Hermitian matrix are real).
     let mut imin = 0usize;
     for i in 1..n {
-        if vals[i] < vals[imin] {
+        if vals[i].real_part() < vals[imin].real_part() {
             imin = i;
         }
     }
@@ -748,35 +749,41 @@ fn eigen_site<T: Scalar + ConjugateScalar<Real = T>>(
     Ok(())
 }
 
-/// Symmetrizes a row-major `n×n` matrix in place: `H ← (H + Hᵀ)/2`.
-fn symmetrize<T: Scalar + ConjugateScalar<Real = T>>(h: &mut [T], n: usize) {
+/// Hermitian-symmetrizes a row-major `n×n` matrix in place: `H ← (H + Hᴴ)/2`, with a real diagonal.
+/// For a real scalar the conjugation is the identity and this is the ordinary `(H + Hᵀ)/2`.
+fn symmetrize<T: ConjugateScalar>(h: &mut [T], n: usize) {
     let two = T::one() + T::one();
     for i in 0..n {
         for j in (i + 1)..n {
-            let avg = (h[i * n + j] + h[j * n + i]) / two;
+            let avg = (h[i * n + j] + h[j * n + i].conjugate()) / two;
             h[i * n + j] = avg;
-            h[j * n + i] = avg;
+            h[j * n + i] = avg.conjugate();
         }
+    }
+    for i in 0..n {
+        h[i * n + i] = T::from_real(h[i * n + i].real_part());
     }
 }
 
-/// Eigendecomposition of a symmetric row-major `n×n` matrix by cyclic one-sided Jacobi rotations.
-/// Returns `(eigenvalues, V)` where the columns of the row-major `n×n` `V` are the eigenvectors:
-/// `A = V diag(λ) Vᵀ`. Eigenvalues are not sorted.
-fn sym_eig<T: Scalar + ConjugateScalar<Real = T>>(mat: &[T], n: usize) -> (Vec<T>, Vec<T>) {
+/// Eigendecomposition of a **Hermitian** row-major `n×n` matrix by cyclic Jacobi rotations
+/// (`Uᴴ A U`). Returns `(eigenvalues, V)` where the columns of the row-major `n×n` `V` are the
+/// eigenvectors: `A = V diag(λ) Vᴴ`. Eigenvalues are real (returned as `T`) and unsorted. For a real
+/// scalar the phase `ρ = ±1` and this reduces to the ordinary real-symmetric Jacobi.
+fn sym_eig<T: ConjugateScalar>(mat: &[T], n: usize) -> (Vec<T>, Vec<T>) {
     let mut a = mat.to_vec();
     let mut v = vec![T::zero(); n * n];
     for i in 0..n {
         v[i * n + i] = T::one();
     }
-    let one = T::one();
+    let one = Re::<T>::one();
     let two = one + one;
-    let eps2 = T::epsilon() * T::epsilon();
+    let eps2 = Re::<T>::epsilon() * Re::<T>::epsilon();
     for _ in 0..100 {
-        let mut off = T::zero();
+        // Off-diagonal magnitude (real): Σ_{p<q} |a[p,q]|².
+        let mut off = Re::<T>::zero();
         for p in 0..n {
             for q in (p + 1)..n {
-                off += a[p * n + q] * a[p * n + q];
+                off += a[p * n + q].modulus_squared();
             }
         }
         if off <= eps2 {
@@ -785,40 +792,53 @@ fn sym_eig<T: Scalar + ConjugateScalar<Real = T>>(mat: &[T], n: usize) -> (Vec<T
         for p in 0..n {
             for q in (p + 1)..n {
                 let apq = a[p * n + q];
-                if apq == T::zero() {
+                let gmod = apq.modulus_squared().sqrt(); // |γ|
+                if gmod <= Re::<T>::zero() {
                     continue;
                 }
-                let app = a[p * n + p];
-                let aqq = a[q * n + q];
-                let theta = (aqq - app) / (two * apq);
-                let t = if theta == T::zero() {
+                // Hermitian diagonal is real.
+                let app = a[p * n + p].real_part();
+                let aqq = a[q * n + q].real_part();
+                let zeta = (app - aqq) / (two * gmod);
+                let t = if zeta == Re::<T>::zero() {
                     one
                 } else {
-                    let sgn = if theta < T::zero() { -one } else { one };
-                    sgn / (theta.abs() + (theta * theta + one).sqrt())
+                    let sgn = if zeta < Re::<T>::zero() { -one } else { one };
+                    sgn / (zeta.abs() + (zeta * zeta + one).sqrt())
                 };
                 let c = one / (t * t + one).sqrt();
                 let s = t * c;
-                // A ← (A J) : rotate columns p, q.
+
+                // Rotation U = diag(1, conj(ρ))·[[c,-s],[s,c]] with phase ρ = γ/|γ|; apply Uᴴ A U.
+                let rho = apq * T::from_real(one / gmod);
+                let ct = T::from_real(c);
+                let cs = T::from_real(s);
+                let conj_rho = rho.conjugate();
+                let srho = conj_rho * cs; // conj(ρ)·s
+                let crho = conj_rho * ct; // conj(ρ)·c
+                let rs = rho * cs; // ρ·s
+                let rc = rho * ct; // ρ·c
+
+                // A ← A·U (columns p, q).
                 for i in 0..n {
                     let aip = a[i * n + p];
                     let aiq = a[i * n + q];
-                    a[i * n + p] = c * aip - s * aiq;
-                    a[i * n + q] = s * aip + c * aiq;
+                    a[i * n + p] = ct * aip + srho * aiq;
+                    a[i * n + q] = crho * aiq - cs * aip;
                 }
-                // A ← (Jᵀ A) : rotate rows p, q.
+                // A ← Uᴴ·A (rows p, q).
                 for j in 0..n {
                     let apj = a[p * n + j];
                     let aqj = a[q * n + j];
-                    a[p * n + j] = c * apj - s * aqj;
-                    a[q * n + j] = s * apj + c * aqj;
+                    a[p * n + j] = ct * apj + rs * aqj;
+                    a[q * n + j] = rc * aqj - cs * apj;
                 }
-                // V ← V J : accumulate eigenvectors.
+                // V ← V·U (accumulate eigenvectors).
                 for i in 0..n {
                     let vip = v[i * n + p];
                     let viq = v[i * n + q];
-                    v[i * n + p] = c * vip - s * viq;
-                    v[i * n + q] = s * vip + c * viq;
+                    v[i * n + p] = ct * vip + srho * viq;
+                    v[i * n + q] = crho * viq - cs * vip;
                 }
             }
         }

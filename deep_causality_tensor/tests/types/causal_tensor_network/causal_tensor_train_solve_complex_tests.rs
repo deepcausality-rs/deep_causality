@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Stage-4 complex solvers: the AMEn linear solve, ALS fit, and two-site TDVP over `Complex<f64>`
-//! (modulus-based pivoting, real residuals). The eigensolver stays real/dual-only (it needs a
-//! complex Hermitian eigensolver), so it is not exercised here.
+//! Stage-4 complex solvers over `Complex<f64>` (modulus-based pivoting, real residuals): the AMEn
+//! linear solve, ALS fit, two-site TDVP (norm-conserving under a skew-Hermitian generator), and
+//! DMRG3S ground state via a complex **Hermitian** eigensolver.
 
 use deep_causality_num::{Complex, ConjugateScalar, Zero};
 use deep_causality_tensor::{
@@ -151,4 +151,64 @@ fn test_complex_tdvp_conserves_norm_under_skew_hermitian() {
         (n1 - n0).abs() <= 1e-6 * (n0 + 1.0),
         "complex TDVP did not conserve norm: {n0} -> {n1}"
     );
+}
+
+#[test]
+fn test_complex_eigen_recovers_hermitian_ground_state() {
+    // A Hermitian operator A = s·I + (g − s)·v·vᴴ with g < s, so the complex unit vector v is the
+    // ground state with eigenvalue g. DMRG3S with a complex Hermitian eigensolver recovers it.
+    let dims = [3usize, 3];
+    let nn = 9usize;
+    let mut v: Vec<C> = (0..nn)
+        .map(|i| Complex::new((i as f64 * 0.7).sin() + 0.4, (i as f64 * 0.5).cos() - 0.2))
+        .collect();
+    let nrm = v.iter().map(|z| z.modulus_squared()).sum::<f64>().sqrt();
+    for z in v.iter_mut() {
+        *z *= Complex::new(1.0 / nrm, 0.0);
+    }
+    let (g, s) = (-3.0f64, 1.0f64);
+
+    let mut amat = vec![C::zero(); nn * nn];
+    for out in 0..nn {
+        for inx in 0..nn {
+            // (g − s)·v[out]·conj(v[in]) + s·δ — Hermitian by construction.
+            let mut val = v[out] * v[inx].conjugate() * Complex::new(g - s, 0.0);
+            if out == inx {
+                val += Complex::new(s, 0.0);
+            }
+            amat[out * nn + inx] = val;
+        }
+    }
+    let a = operator_from_matrix(&amat, &dims);
+
+    let cfg = SolveConfig::<f64>::new(200, 1e-9, 1e-13).unwrap();
+    let (lambda, vtt) = solve::eigen(&a, 3, &cfg).unwrap();
+
+    // Eigenvalue is real and equals the planted ground-state value.
+    assert!(lambda.im().abs() <= 1e-6, "eigenvalue not real");
+    assert!(
+        (lambda.re() - g).abs() <= 1e-5,
+        "eigenvalue off: {}",
+        lambda.re()
+    );
+
+    // Eigenvector aligns with v (up to a global phase): |⟨v|vtt⟩| / ‖vtt‖ ≈ 1.
+    let vd = vtt.to_dense().unwrap();
+    let mut dot = C::zero();
+    let mut vn = 0.0;
+    for (k, &vk) in v.iter().enumerate() {
+        dot += vk.conjugate() * vd.as_slice()[k];
+        vn += vd.as_slice()[k].modulus_squared();
+    }
+    let cosine = cabs(dot) / vn.sqrt();
+    assert!(
+        (cosine - 1.0).abs() <= 1e-5,
+        "eigenvector misaligned: {cosine}"
+    );
+
+    // Residual A·v ≈ λ·v.
+    let av = a.apply(&vtt, &full()).unwrap();
+    let resid = av.add(&vtt.scale(-lambda)).unwrap();
+    let rrel = resid.norm().unwrap().re() / vtt.norm().unwrap().re();
+    assert!(rrel <= 1e-5, "complex eigen residual too large: {rrel}");
 }
