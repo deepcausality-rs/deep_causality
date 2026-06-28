@@ -1,0 +1,30 @@
+deep_causality_tensor/src/types/causal_tensor_network/solve/local.rs
+  s_162aba3d26275e::t_2c96b9e026ac1d 13
+  s_162aba3d26275e::t_2cb7ca971f1e69 136-139
+  s_162aba3d26275e::t_054186b1a53e77 815-835,838-889,892-895,898-945,947-1009
+  s_162aba3d26275e::t_c1bb5dd44a7c4c 836-837,890-891,896-897
+  s_162aba3d26275e::t_8e9f09c7dba992 946
+  s_162aba3d26275e::t_8c573c4b1d99ec 201-285
+deep_causality_tensor/src/types/causal_tensor_network/solve/mod.rs
+  s_162aba3d26275e::t_551ff21ee74b59 11-12,16
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_solve_tests.rs
+  s_162aba3d26275e::t_3711028b56a2ab 257-284,287-420,422,424-435,438-452
+  s_162aba3d26275e::t_b842fb3d6524be 421,423
+  s_162aba3d26275e::t_c1bb5dd44a7c4c 285-286,436-437
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "6879e6e0cdd9b3729f6017c3c8ea7417282ecdf4",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
