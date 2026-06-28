@@ -135,5 +135,9 @@ name = "dec_cylinder_verification"
 path = "verification/dec_cylinder_verification/main.rs"
 required-features = ["std"]
 
+[[example]]
+name = "qtt_taylor_green_verification"
+path = "verification/qtt_taylor_green_verification/main.rs"
+
 [lints]
 workspace = true

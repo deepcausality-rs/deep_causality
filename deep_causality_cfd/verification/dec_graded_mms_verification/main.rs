@@ -47,6 +47,46 @@ use deep_causality_topology::{
 };
 use std::f64::consts::PI;
 
+fn main() {
+    let resolutions = [8usize, 16, 32, 64];
+    let amplitudes = [0.0, 0.1, 0.2, 0.3];
+
+    for (name, kernel) in [
+        (
+            "CONVECTIVE  i_X ω (interior product)",
+            convective_mms as fn(usize, f64) -> (f64, f64),
+        ),
+        (
+            "VISCOUS     Δ₀ = δd  (Laplacian)",
+            viscous_mms as fn(usize, f64) -> (f64, f64),
+        ),
+    ] {
+        println!("\n=== {name} — order vs grading amplitude (max-norm | L2-norm) ===");
+        println!(
+            "{:>5}  {:>10} {:>10}   {:>14}   {:>14}",
+            "a", "max E(64)", "L2 E(64)", "max-norm p", "L2-norm p"
+        );
+        println!("{}", "-".repeat(70));
+        for &amp in &amplitudes {
+            let (maxs, l2s): (Vec<f64>, Vec<f64>) =
+                resolutions.iter().map(|&n| kernel(n, amp)).unzip();
+            println!(
+                "{amp:>5.2}  {:>10.2e} {:>10.2e}   {:>14}   {:>14}",
+                maxs.last().unwrap(),
+                l2s.last().unwrap(),
+                fmt_orders(&observed_orders(&maxs)),
+                fmt_orders(&observed_orders(&l2s)),
+            );
+        }
+    }
+
+    println!("\nReading: both operators hold ≈ second order (both norms) at every grading");
+    println!("amplitude — smooth grading retains second order. The error constant grows mildly");
+    println!("with grading; the order does not degrade. Structure (divergence-freeness) is exact");
+    println!("at every amplitude regardless. (Cochains must be edge-integrals — see the module");
+    println!("doc; omitting the ℓ factor mis-measures a false order-loss on graded meshes.)");
+}
+
 /// Relative max- and L2-norm errors of a discrete field against an analytic reference.
 fn rel_errors(discrete: &[f64], analytic: &[f64]) -> (f64, f64) {
     let mut max_err = 0.0_f64;
@@ -222,44 +262,4 @@ fn fmt_orders(orders: &[f64]) -> String {
         .map(|p| format!("{p:.2}"))
         .collect::<Vec<_>>()
         .join(",")
-}
-
-fn main() {
-    let resolutions = [8usize, 16, 32, 64];
-    let amplitudes = [0.0, 0.1, 0.2, 0.3];
-
-    for (name, kernel) in [
-        (
-            "CONVECTIVE  i_X ω (interior product)",
-            convective_mms as fn(usize, f64) -> (f64, f64),
-        ),
-        (
-            "VISCOUS     Δ₀ = δd  (Laplacian)",
-            viscous_mms as fn(usize, f64) -> (f64, f64),
-        ),
-    ] {
-        println!("\n=== {name} — order vs grading amplitude (max-norm | L2-norm) ===");
-        println!(
-            "{:>5}  {:>10} {:>10}   {:>14}   {:>14}",
-            "a", "max E(64)", "L2 E(64)", "max-norm p", "L2-norm p"
-        );
-        println!("{}", "-".repeat(70));
-        for &amp in &amplitudes {
-            let (maxs, l2s): (Vec<f64>, Vec<f64>) =
-                resolutions.iter().map(|&n| kernel(n, amp)).unzip();
-            println!(
-                "{amp:>5.2}  {:>10.2e} {:>10.2e}   {:>14}   {:>14}",
-                maxs.last().unwrap(),
-                l2s.last().unwrap(),
-                fmt_orders(&observed_orders(&maxs)),
-                fmt_orders(&observed_orders(&l2s)),
-            );
-        }
-    }
-
-    println!("\nReading: both operators hold ≈ second order (both norms) at every grading");
-    println!("amplitude — smooth grading retains second order. The error constant grows mildly");
-    println!("with grading; the order does not degrade. Structure (divergence-freeness) is exact");
-    println!("at every amplitude regardless. (Cochains must be edge-integrals — see the module");
-    println!("doc; omitting the ℓ factor mis-measures a false order-loss on graded meshes.)");
 }

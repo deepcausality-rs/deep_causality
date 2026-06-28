@@ -1,7 +1,7 @@
 # CFD Verification Examples
 
-Runnable **verification** programs for the DEC-native CFD stack, each driven through the `CfdFlow`
-DSL. *Verification* here is the broad sense: a run is checked against either an **internal
+Runnable **verification** programs for the CFD stack — the DEC-native solver and the
+quantized-tensor-train (QTT) solver — each driven through the `CfdFlow` DSL. *Verification* here is the broad sense: a run is checked against either an **internal
 consistency** invariant (a property the discretization must preserve at any grid/precision — energy
 decay, incompressibility, observed convergence order) **or** a **published reference** result
 (analytic solutions and benchmark papers).
@@ -34,6 +34,7 @@ difference. Measured at `f64` on an Apple M3 Max (release).
 | `dec_lid_cavity_re1000_verification` | primary vortex (x, y); centerline RMSE | (0.563, 0.594); RMSE 0.137 | Ghia (0.531, 0.563) | Δ ≈ (0.031, 0.031) ≈ **6 % of span** | 33², t=40 | ~28 s |
 | `dec_cylinder_wake_verification` | max divergence residual; log count | 3.3e-15; 80 | 0; 80 (= 2×40) | ≈ machine-ε; exact | 2000 steps, 93×32 | ~155 s |
 | `dec_cylinder_verification` | Strouhal St; drag C_d | 0.171; 1.345 | 0.164; 1.24–1.33 | **+4.3 %**; **+1.1 %** (over band top) | 96², Re=100, 1500 steps | ~510 s |
+| `qtt_taylor_green_verification` | TG decay error (32²); observed order; convection | 5.3e-5; 2.02–2.18; 3.2e-3 | 0 (analytic); 2.00; 0 (analytic) | converges 2nd-order; **+9 %** order; conv ≈ 0.6 % | 8²–32², t=0.2 | <1 s |
 
 Reference papers per example are in the sections below and the [References](#references). The cavity
 centerline RMSE (0.137) is itself a deviation-from-Ghia measure (no single reference value), so its
@@ -164,10 +165,40 @@ default grid is below reference-grid quality (see below).
 
 ---
 
+## `qtt_taylor_green_verification` — quantized-tensor-train 2-D Taylor–Green
+
+**Verifies.** The `QttIncompressible2d` solver — a 2-D incompressible flowfield that evolves entirely
+as a **tensor train** — against the closed-form 2-D Taylor–Green vortex (Taylor & Green 1937),
+`u = −cos x sin y`, `v = sin x cos y`, decaying as `e^{−2νt}`. Four gates: (1) the final-field error
+vs. the analytic decay **strictly decreases under refinement** to a pinned bound at ~2nd order;
+(2) the nonlinear convection `u·∇u` matches the closed form `−½ sin 2x` — checked **directly**, because
+single-mode TG's convective term is a pure gradient the projection removes, so the marched decay alone
+cannot test it; (3) the post-projection divergence stays at the projection floor; (4) the MPS
+compression (bond vs. dense) is reported. Driven through `CfdFlow::qtt_march`.
+
+**Self-check.** `verify()` gates all four and **exits nonzero** on any break (error not converging,
+order < 1.8, convection wrong/zero, or divergence above 1e-6).
+
+**Measured (f64, 8²–32², t=0.2, <1 s).** Error `9.8e-4 → 2.4e-4 → 5.3e-5` (N=8→16→32), observed order
+**2.02 → 2.18** — clean 2nd-order convergence to the analytic decay; finest-grid error **5.3e-5**.
+Convection vs the closed form **3.2e-3** (≈ 0.6 % of the 0.5 signal) — the nonlinear term is real and
+correct. Divergence **~1e-14** (the spectral Leray projection is exact to machine precision). Bond `= N`
+on this smooth field → `N×` compression that grows with resolution.
+
+**Reference.** Taylor & Green (1937); the MPS-CFD method: Peddinti et al. (2024), Gourianov et al.
+(2022).
+
+---
+
 ## References
 
 - **Taylor, G. I. & Green, A. E.** (1937). *Mechanism of the production of small eddies from large
   ones.* Proc. R. Soc. Lond. A **158**, 499–521.
+- **Peddinti, R. D., Pisoni, S., Marini, A., Lott, P., Argentieri, H., Tiunov, E. & Aolita, L.** (2024).
+  *A quantum-inspired framework for computational fluid dynamics.* Commun. Phys. **7**, 135.
+- **Gourianov, N., Lubasch, M., Dolgov, S., van den Berg, Q. Y., Babaee, H., Givi, P., Kiffner, M. &
+  Jaksch, D.** (2022). *A quantum-inspired approach to exploit turbulence structures.* Nat. Comput.
+  Sci. **2**, 30–37.
 - **Brachet, M. E., Meiron, D. I., Orszag, S. A., Nickel, B. G., Morf, R. H. & Frisch, U.** (1983).
   *Small-scale structure of the Taylor–Green vortex.* J. Fluid Mech. **130**, 411–452.
 - **van Rees, W. M., Leonard, A., Pullin, D. I. & Koumoutsakos, P.** (2011). *A comparison of vortex
