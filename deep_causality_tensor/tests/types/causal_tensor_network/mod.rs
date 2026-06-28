@@ -22,6 +22,8 @@ mod causal_tensor_train_ops_tests;
 #[cfg(test)]
 mod causal_tensor_train_scalar_tests;
 #[cfg(test)]
+mod causal_tensor_train_solve_complex_tests;
+#[cfg(test)]
 mod causal_tensor_train_solve_tests;
 #[cfg(test)]
 mod causal_tensor_train_tests;
