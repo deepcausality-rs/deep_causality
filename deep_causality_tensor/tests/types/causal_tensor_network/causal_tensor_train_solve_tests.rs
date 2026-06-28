@@ -254,6 +254,202 @@ fn test_eigen_not_square_errors() {
     ));
 }
 
+// ---- tdvp (two-site TDVP2) ----
+
+/// Row-major interleaved index `[o0,i0,o1,i1,…]` for matrix entry `M[out, in]`.
+fn interleaved_index(out: usize, inx: usize, dims: &[usize]) -> usize {
+    let d = dims.len();
+    let mut o_dig = vec![0usize; d];
+    let mut i_dig = vec![0usize; d];
+    let (mut o, mut i) = (out, inx);
+    for k in (0..d).rev() {
+        o_dig[k] = o % dims[k];
+        o /= dims[k];
+        i_dig[k] = i % dims[k];
+        i /= dims[k];
+    }
+    let mut idx = 0usize;
+    for k in 0..d {
+        idx = idx * dims[k] + o_dig[k];
+        idx = idx * dims[k] + i_dig[k];
+    }
+    idx
+}
+
+/// A skew-symmetric operator `M = R − Rᵀ` (so `exp(M·dt)` is orthogonal / norm-preserving).
+fn skew_op<T: RealField + FromPrimitive>(dims: &[usize]) -> CausalTensorTrainOperator<T> {
+    let nn: usize = dims.iter().product();
+    let mut inter = vec![T::zero(); nn * nn];
+    for out in 0..nn {
+        for inx in 0..nn {
+            let val =
+                v::<T>(((out * nn + inx) as f64).sin()) - v::<T>(((inx * nn + out) as f64).sin());
+            inter[interleaved_index(out, inx, dims)] = val;
+        }
+    }
+    let shape: Vec<usize> = dims.iter().flat_map(|&dd| [dd, dd]).collect();
+    let a_dense = CausalTensor::new(inter, shape).unwrap();
+    CausalTensorTrainOperator::from_dense(&a_dense, dims, dims, &full::<T>()).unwrap()
+}
+
+fn check_tdvp_norm<T: RealField + FromPrimitive>() {
+    // A skew-symmetric generator on a 3-site space; one step must conserve the state norm.
+    let dims = [2usize, 2, 2];
+    let a = skew_op::<T>(&dims);
+    let mut x = known_train::<T>(&dims);
+    let n0 = x.norm().unwrap();
+    let dt = v::<T>(0.05);
+    solve::tdvp_step(&a, &mut x, dt, &full::<T>()).unwrap();
+    let n1 = x.norm().unwrap();
+    assert!(
+        (n1 - n0).abs() <= tol::<T>() * (n0 + T::one()),
+        "norm not conserved"
+    );
+}
+
+#[test]
+fn test_tdvp_norm_f32() {
+    check_tdvp_norm::<f32>();
+}
+#[test]
+fn test_tdvp_norm_f64() {
+    check_tdvp_norm::<f64>();
+}
+#[test]
+fn test_tdvp_norm_float106() {
+    check_tdvp_norm::<Float106>();
+}
+
+/// Independent dense `exp(dt·M)` oracle (scaling-and-squaring + order-18 Taylor).
+fn dense_expm(m: &[f64], n: usize, dt: f64) -> Vec<f64> {
+    let mut b: Vec<f64> = m.iter().map(|x| x * dt).collect();
+    let mut norm = 0.0;
+    for i in 0..n {
+        let mut r = 0.0;
+        for j in 0..n {
+            r += b[i * n + j].abs();
+        }
+        if r > norm {
+            norm = r;
+        }
+    }
+    let mut s = 0u32;
+    let mut sc = norm;
+    while sc > 0.125 {
+        sc /= 2.0;
+        s += 1;
+    }
+    let p2 = 2f64.powi(s as i32);
+    for x in b.iter_mut() {
+        *x /= p2;
+    }
+    let mm = |a: &[f64], c: &[f64]| {
+        let mut out = vec![0.0; n * n];
+        for i in 0..n {
+            for p in 0..n {
+                let av = a[i * n + p];
+                if av == 0.0 {
+                    continue;
+                }
+                for j in 0..n {
+                    out[i * n + j] += av * c[p * n + j];
+                }
+            }
+        }
+        out
+    };
+    let mut e = vec![0.0; n * n];
+    for i in 0..n {
+        e[i * n + i] = 1.0;
+    }
+    let mut term = e.clone();
+    for k in 1..=18 {
+        term = mm(&term, &b);
+        for x in term.iter_mut() {
+            *x /= k as f64;
+        }
+        for (ei, ti) in e.iter_mut().zip(term.iter()) {
+            *ei += ti;
+        }
+    }
+    for _ in 0..s {
+        e = mm(&e, &e);
+    }
+    e
+}
+
+#[test]
+fn test_tdvp_matches_dense_f64() {
+    // For a 2-site state the single two-site block spans the whole space, so TDVP2 is exact:
+    // the step equals exp(dt·M)·x. Verify against an independent dense matrix exponential.
+    let dims = [2usize, 2];
+    let nn = 4usize;
+    let mut mmat = vec![0.0f64; nn * nn];
+    for o in 0..nn {
+        for i in 0..nn {
+            mmat[o * nn + i] = ((o * 3 + i * 5 + 1) as f64).cos() * 0.2;
+        }
+    }
+    let mut inter = vec![0.0f64; nn * nn];
+    for out in 0..nn {
+        for inx in 0..nn {
+            inter[interleaved_index(out, inx, &dims)] = mmat[out * nn + inx];
+        }
+    }
+    let a = CausalTensorTrainOperator::from_dense(
+        &CausalTensor::new(inter, vec![2, 2, 2, 2]).unwrap(),
+        &dims,
+        &dims,
+        &full::<f64>(),
+    )
+    .unwrap();
+
+    let x0 = known_train::<f64>(&dims);
+    let xvec = x0.to_dense().unwrap();
+    let dt = 0.1;
+    let e = dense_expm(&mmat, nn, dt);
+    let mut yref = vec![0.0f64; nn];
+    for o in 0..nn {
+        for i in 0..nn {
+            yref[o] += e[o * nn + i] * xvec.as_slice()[i];
+        }
+    }
+
+    let mut x = x0.clone();
+    solve::tdvp_step(&a, &mut x, dt, &full::<f64>()).unwrap();
+    let yd = x.to_dense().unwrap();
+    for (got, want) in yd.as_slice().iter().zip(yref.iter()) {
+        assert!(
+            (got - want).abs() <= 1e-9,
+            "tdvp step does not match dense exp(M·dt)·x"
+        );
+    }
+}
+
+#[test]
+fn test_tdvp_shape_errors() {
+    // Non-square operator.
+    let a_dense = tensor::<f64>(
+        &(0..36).map(|i| (i as f64) * 0.1).collect::<Vec<_>>(),
+        &[3, 2, 3, 2],
+    );
+    let a =
+        CausalTensorTrainOperator::from_dense(&a_dense, &[3, 3], &[2, 2], &full::<f64>()).unwrap();
+    let mut x = known_train::<f64>(&[2, 2]);
+    assert!(matches!(
+        solve::tdvp_step(&a, &mut x, 0.1, &full::<f64>()),
+        Err(deep_causality_tensor::CausalTensorError::ShapeMismatch)
+    ));
+
+    // Square operator but mismatched state physical dims.
+    let sq = skew_op::<f64>(&[2, 2]);
+    let mut y = known_train::<f64>(&[3, 3]);
+    assert!(matches!(
+        solve::tdvp_step(&sq, &mut y, 0.1, &full::<f64>()),
+        Err(deep_causality_tensor::CausalTensorError::ShapeMismatch)
+    ));
+}
+
 #[test]
 fn test_solve_config_errors() {
     assert!(matches!(

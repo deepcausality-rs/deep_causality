@@ -8,7 +8,9 @@
 //! - `linear` — `A x = b` in tensor-train form via AMEn (rank-adaptive residual enrichment).
 //! - `eigen` — lowest eigenpair of a symmetric operator via DMRG3S (single-site DMRG with
 //!   subspace expansion).
+//! - `tdvp_step` — one two-site TDVP2 time step `dx/dt = op·x` (rank-adaptive, norm-conserving for
+//!   a skew-symmetric generator).
 
 mod local;
 
-pub use local::{eigen, fit, linear};
+pub use local::{eigen, fit, linear, tdvp_step};

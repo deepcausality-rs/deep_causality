@@ -10,7 +10,7 @@ use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::causal_tensor_train_operator::CausalTensorTrainOperator;
 use crate::types::causal_tensor_network::solve_config::SolveConfig;
 use crate::types::causal_tensor_network::truncation::Truncation;
-use crate::{CausalTensor, CausalTensorError};
+use crate::{CausalTensor, CausalTensorError, Tensor};
 use deep_causality_num::Scalar;
 
 /// Fits a tensor train of bond dimension up to `max_rank` to a set of `(index, value)` samples by
@@ -133,10 +133,10 @@ pub fn linear<T: Scalar>(
 /// grown rank-adaptively by enriching `v` with the projected residual `A·v − λ·v` (the same
 /// residual-enrichment engine used by [`linear`]), seeded small and capped at `max_rank`.
 ///
-/// The single-site local problem is a *generalized* eigenproblem `H z = λ S z` where `S` is the
-/// environment overlap; it is reduced to a standard symmetric eigenproblem by congruence whitening
-/// with `S^{-1/2}` (computed per bond factor, ridge-guarded), so no global re-canonicalization sweep
-/// is required between site solves. The returned eigenvector is normalized.
+/// Each site is solved in **mixed-canonical gauge**: the state is `canonicalize_at(k)`-ed before the
+/// local solve so the environment is orthonormal and the single-site problem is a *standard* symmetric
+/// eigenproblem `H z = λ z` (solved by a cyclic-Jacobi `sym_eig`), avoiding the conditioning of a
+/// generalized problem. The returned eigenvector is normalized.
 ///
 /// `A` must be (numerically) symmetric — the effective operator is symmetrized before each local
 /// solve. The returned `λ` is the smallest (most negative) eigenvalue.
@@ -196,6 +196,91 @@ pub fn eigen<T: Scalar>(
         x = xt.add(&res)?.round(&enrich_trunc)?.into_cores();
     }
     Err(CausalTensorError::SweepDidNotConverge)
+}
+
+/// Advances a tensor-train state one time step `dt` under the generator `op` (`dx/dt = op·x`) by a
+/// **two-site Time-Dependent Variational Principle (TDVP2)** sweep — a single forward sweep over the
+/// two-site blocks, rank-adaptive through the SVD split under `trunc`.
+///
+/// Each block `(k, k+1)` is evolved forward by `exp(+dt·H₂)` (the two-site effective generator), split
+/// by a truncated SVD, and the single-site center is evolved back by `exp(−dt·H₁)` to avoid
+/// double-counting the shared site — the standard TDVP2 scheme. Every local update is an isometry
+/// (the SVD split) or a `exp`-of-generator map (orthogonal when the generator is skew-symmetric), so
+/// the step **conserves norm** to the truncation tolerance for a unitary (real skew-symmetric)
+/// generator. Two-site (not one-site) so the bond dimension can grow.
+///
+/// Reference: J. Haegeman, C. Lubich, I. Oseledets, B. Vandereycken, F. Verstraete, "Unifying time
+/// evolution and optimization with matrix product states," *Phys. Rev. B* 94, 165116 (2016)
+/// (arXiv:1408.5056); review: S. Paeckel et al., *Ann. Phys.* 411, 167998 (2019) (arXiv:1901.05824).
+///
+/// # Errors
+/// - [`CausalTensorError::ShapeMismatch`] if `op` is not square or its dimensions do not match the
+///   state's physical dimensions.
+/// - Propagates SVD/reshape errors.
+pub fn tdvp_step<T: Scalar>(
+    op: &CausalTensorTrainOperator<T>,
+    train: &mut CausalTensorTrain<T>,
+    dt: T,
+    trunc: &Truncation<T>,
+) -> Result<(), CausalTensorError> {
+    if op.in_dims() != op.out_dims() || train.phys_dims() != op.in_dims() {
+        return Err(CausalTensorError::ShapeMismatch);
+    }
+    let d = train.order();
+    // Right-canonicalize so the orthogonality center starts at site 0.
+    let mut x = train.right_canonicalize()?.into_cores();
+
+    if d == 1 {
+        // Single core: evolve by the full effective generator (the operator matrix itself).
+        let (h, n) = build_local_h(&x, op, 0);
+        let e = expm_scaled(&h, n, dt);
+        let shape = x[0].shape().to_vec();
+        let v = mat_vec(&e, x[0].as_slice(), n);
+        x[0] = CausalTensor::new(v, shape)?;
+        *train = CausalTensorTrain::from_cores(x)?;
+        return Ok(());
+    }
+
+    for k in 0..d - 1 {
+        let rk = x[k].shape()[0];
+        let nk = x[k].shape()[1];
+        let nk1 = x[k + 1].shape()[1];
+        let rk2 = x[k + 1].shape()[2];
+
+        // Θ = x[k]·x[k+1] over the shared bond, then forward two-site evolution.
+        let theta = contract_two(&x[k], &x[k + 1]);
+        let (h2, n2) = build_local_h2(&x, op, k);
+        let e2 = expm_scaled(&h2, n2, dt);
+        let theta_e = mat_vec(&e2, &theta, n2);
+
+        // Truncated SVD split: x[k] ← U (left-orthonormal); center ← diag(S)·Vt.
+        let rows = rk * nk;
+        let cols = nk1 * rk2;
+        let m = CausalTensor::new(theta_e, vec![rows, cols])?;
+        let (u, sv, vt) = m.svd_truncated(trunc)?;
+        let q = sv.len();
+        x[k] = u.reshape(&[rk, nk, q])?;
+        let svs = sv.as_slice();
+        let vts = vt.as_slice();
+        let mut center = vec![T::zero(); q * cols];
+        for a in 0..q {
+            let sa = svs[a];
+            for j in 0..cols {
+                center[a * cols + j] = sa * vts[a * cols + j];
+            }
+        }
+        x[k + 1] = CausalTensor::new(center, vec![q, nk1, rk2])?;
+
+        // Backward single-site evolution of the center (all blocks but the last).
+        if k < d - 2 {
+            let (h1, n1) = build_local_h(&x, op, k + 1);
+            let e1 = expm_scaled(&h1, n1, -dt);
+            let cvec = mat_vec(&e1, x[k + 1].as_slice(), n1);
+            x[k + 1] = CausalTensor::new(cvec, vec![q, nk1, rk2])?;
+        }
+    }
+    *train = CausalTensorTrain::from_cores(x)?;
+    Ok(())
 }
 
 // ============================================================================
@@ -725,6 +810,201 @@ fn sym_eig<T: Scalar>(mat: &[T], n: usize) -> (Vec<T>, Vec<T>) {
     }
     let evals: Vec<T> = (0..n).map(|i| a[i * n + i]).collect();
     (evals, v)
+}
+
+// ============================================================================
+// tdvp internals (two-site TDVP2)
+// ============================================================================
+
+/// Contracts adjacent cores `a [r_k, n_k, m]` and `b [m, n_{k+1}, r_{k+2}]` over the shared bond `m`
+/// into the two-site tensor `Θ [r_k, n_k, n_{k+1}, r_{k+2}]` (row-major).
+fn contract_two<T: Scalar>(a: &CausalTensor<T>, b: &CausalTensor<T>) -> Vec<T> {
+    let (rk, nk, mk) = (a.shape()[0], a.shape()[1], a.shape()[2]);
+    let (nk1, rk2) = (b.shape()[1], b.shape()[2]);
+    let ad = a.as_slice();
+    let bd = b.as_slice();
+    let mut out = vec![T::zero(); rk * nk * nk1 * rk2];
+    for i0 in 0..rk {
+        for i1 in 0..nk {
+            for m in 0..mk {
+                let av = ad[(i0 * nk + i1) * mk + m];
+                if av == T::zero() {
+                    continue;
+                }
+                for j in 0..nk1 {
+                    for r in 0..rk2 {
+                        out[((i0 * nk + i1) * nk1 + j) * rk2 + r] +=
+                            av * bd[(m * nk1 + j) * rk2 + r];
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Two-site effective generator at block `(k, k+1)`:
+/// `H₂[(a,i,j,b),(a',i',j',b')] = Σ gl[a,gl_,a']·Aₖ[gl_,i,i',m]·Aₖ₊₁[m,j,j',gr_]·gr[b,gr_,b']`.
+/// **Precondition:** `x` is mixed-canonical with the block holding the center (orthonormal
+/// environment), so this is the true projected generator. Returns the `n₂×n₂` matrix and `n₂`.
+fn build_local_h2<T: Scalar>(
+    x: &[CausalTensor<T>],
+    op: &CausalTensorTrainOperator<T>,
+    k: usize,
+) -> (Vec<T>, usize) {
+    let rk = x[k].shape()[0];
+    let nk = x[k].shape()[1];
+    let nk1 = x[k + 1].shape()[1];
+    let rk2 = x[k + 1].shape()[2];
+    let (gl, gk) = env_g_left(x, op, k); // [rk, gk, rk]
+    let (gr, gkp) = env_g_right(x, op, k + 1); // [rk2, gkp, rk2]
+    let ak = &op.cores()[k]; // [gk, nk, nk, gm]
+    let ak1 = &op.cores()[k + 1]; // [gm, nk1, nk1, gkp]
+    let gm = ak.shape()[3];
+    let akd = ak.as_slice();
+    let ak1d = ak1.as_slice();
+    let n2 = rk * nk * nk1 * rk2;
+
+    let mut h = vec![T::zero(); n2 * n2];
+    for a in 0..rk {
+        for ap in 0..rk {
+            for gl_ in 0..gk {
+                let lval = gl[(a * gk + gl_) * rk + ap];
+                if lval == T::zero() {
+                    continue;
+                }
+                for b in 0..rk2 {
+                    for bp in 0..rk2 {
+                        for gr_ in 0..gkp {
+                            let rval = gr[(b * gkp + gr_) * rk2 + bp];
+                            if rval == T::zero() {
+                                continue;
+                            }
+                            let lr = lval * rval;
+                            for i in 0..nk {
+                                for ip in 0..nk {
+                                    for j in 0..nk1 {
+                                        for jp in 0..nk1 {
+                                            let mut asum = T::zero();
+                                            for m in 0..gm {
+                                                let akv =
+                                                    akd[(((gl_ * nk) + i) * nk + ip) * gm + m];
+                                                if akv == T::zero() {
+                                                    continue;
+                                                }
+                                                asum += akv
+                                                    * ak1d
+                                                        [(((m * nk1) + j) * nk1 + jp) * gkp + gr_];
+                                            }
+                                            if asum == T::zero() {
+                                                continue;
+                                            }
+                                            let row = ((a * nk + i) * nk1 + j) * rk2 + b;
+                                            let col = ((ap * nk + ip) * nk1 + jp) * rk2 + bp;
+                                            h[row * n2 + col] += lr * asum;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    (h, n2)
+}
+
+/// `exp(dt·M)` for a row-major `n×n` matrix by scaling-and-squaring with an order-18 Taylor series.
+/// The matrix is scaled so its norm is `≤ 1/8` before the Taylor sum, then squared back; this reaches
+/// machine precision across `f32`/`f64`/`Float106` (the Taylor remainder is `≤ (1/8)^19/19!`).
+fn expm_scaled<T: Scalar>(m: &[T], n: usize, dt: T) -> Vec<T> {
+    // B = dt·M.
+    let mut b: Vec<T> = m.iter().map(|&x| x * dt).collect();
+    // Max-abs row-sum norm.
+    let mut norm = T::zero();
+    for i in 0..n {
+        let mut row = T::zero();
+        for j in 0..n {
+            row += b[i * n + j].abs();
+        }
+        if row > norm {
+            norm = row;
+        }
+    }
+    let two = T::one() + T::one();
+    let eighth = T::one() / (two * two * two);
+    // Scale B by 1/2^s so its norm ≤ 1/8.
+    let mut s = 0u32;
+    let mut scaled = norm;
+    while scaled > eighth {
+        scaled = scaled / two;
+        s += 1;
+    }
+    let mut pow2 = T::one();
+    for _ in 0..s {
+        pow2 *= two;
+    }
+    for x in b.iter_mut() {
+        *x = *x / pow2;
+    }
+    // Taylor: E = I + B + B²/2! + … + B¹⁸/18!.
+    let mut e = mat_id::<T>(n);
+    let mut term = mat_id::<T>(n);
+    for kk in 1..=18u32 {
+        let k_t = <T as deep_causality_num::FromPrimitive>::from_u32(kk).unwrap();
+        term = mat_mul(&term, &b, n);
+        for x in term.iter_mut() {
+            *x = *x / k_t;
+        }
+        for (ei, ti) in e.iter_mut().zip(term.iter()) {
+            *ei += *ti;
+        }
+    }
+    // Square s times: exp(B) = (exp(B/2^s))^{2^s}.
+    for _ in 0..s {
+        e = mat_mul(&e, &e, n);
+    }
+    e
+}
+
+/// Row-major `n×n` identity.
+fn mat_id<T: Scalar>(n: usize) -> Vec<T> {
+    let mut m = vec![T::zero(); n * n];
+    for i in 0..n {
+        m[i * n + i] = T::one();
+    }
+    m
+}
+
+/// Row-major `n×n` matrix product `A·B`.
+fn mat_mul<T: Scalar>(a: &[T], b: &[T], n: usize) -> Vec<T> {
+    let mut c = vec![T::zero(); n * n];
+    for i in 0..n {
+        for p in 0..n {
+            let aip = a[i * n + p];
+            if aip == T::zero() {
+                continue;
+            }
+            for j in 0..n {
+                c[i * n + j] += aip * b[p * n + j];
+            }
+        }
+    }
+    c
+}
+
+/// Matrix–vector product `M·v` for a row-major `n×n` `M`.
+fn mat_vec<T: Scalar>(m: &[T], v: &[T], n: usize) -> Vec<T> {
+    let mut out = vec![T::zero(); n];
+    for i in 0..n {
+        let mut acc = T::zero();
+        for j in 0..n {
+            acc += m[i * n + j] * v[j];
+        }
+        out[i] = acc;
+    }
+    out
 }
 
 // ============================================================================
