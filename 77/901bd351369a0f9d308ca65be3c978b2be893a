@@ -1,0 +1,75 @@
+openspec/notes/plasma-blackout/gap-analysis.md
+  s_162aba3d26275e::t_a725a9c7aa4f77 20-24
+  s_162aba3d26275e::t_effd37abaa04c0 99,101-115
+  s_162aba3d26275e::t_480c92d29eaf55 149-153
+deep_causality_cfd/src/lib.rs
+  s_162aba3d26275e::t_1c6c210d5efd1c 45-46
+  s_162aba3d26275e::t_48c4d5d30babea 85
+  s_162aba3d26275e::t_5101c86f09aef2 88-91
+  s_162aba3d26275e::t_3c1f00e89c90e6 60
+deep_causality_cfd/tests/tensor_bridge/mod.rs
+  s_162aba3d26275e::t_0f785a70b45386 9-10
+deep_causality_cfd/verification/README.md
+  s_162aba3d26275e::t_2a4cb838e8ee48 226-227
+  s_162aba3d26275e::t_a968dfaae6b326 194-216
+  s_162aba3d26275e::t_d40576139b7561 38
+deep_causality_cfd/src/tensor_bridge/mod.rs
+  s_162aba3d26275e::t_7c8b96c0d2c741 16,21
+deep_causality_cfd/src/solvers/mod.rs
+  s_162aba3d26275e::t_dce17fd1430549 24-25
+deep_causality_cfd/src/solvers/qtt/observe.rs
+  s_162aba3d26275e::t_83339ebe3111b5 20-94
+deep_causality_cfd/src/types/flow_config/qtt_march_config.rs
+  s_162aba3d26275e::t_e93655a6ce3a61 20
+  s_162aba3d26275e::t_aa08f62f95ff0d 140,155
+  s_162aba3d26275e::t_4bbe659f98a4d2 193-217
+  s_162aba3d26275e::t_580e8f02edf20d 307
+  s_162aba3d26275e::t_41a07078c71db7 58-78
+  s_162aba3d26275e::t_5b8423a858abf0 31
+  s_162aba3d26275e::t_2a09e80d55dce3 99
+deep_causality_cfd/src/types/flow_config/mod.rs
+  s_162aba3d26275e::t_3130189ee24b01 34
+deep_causality_cfd/tests/types/flow/qtt_march_run_tests.rs
+  s_162aba3d26275e::t_bd4e0df504f4a3 219-223
+  s_162aba3d26275e::t_fe8b6bb3ae13cb 187-218,224
+deep_causality_cfd/src/solvers/qtt/mod.rs
+  s_162aba3d26275e::t_fa46d130fe9ae0 16-18
+  s_162aba3d26275e::t_a6c4fef2cb7b29 10,14
+openspec/notes/plasma-blackout/gap-one-cfd-tensor-bridge.md
+  s_162aba3d26275e::t_ca02a8641e55dd 205-219
+deep_causality_cfd/src/types/flow/qtt_march_run.rs
+  s_162aba3d26275e::t_94212ad089dee0 391-392,402-403,420-422
+  s_162aba3d26275e::t_4ad0532e488a9f 323-337,345
+  s_162aba3d26275e::t_6cd3fa3320bbc9 147-165,168-182,186,197,205
+  s_162aba3d26275e::t_807ca6a64e0483 374-380,423
+  s_162aba3d26275e::t_a86f330d41830f 18-19,34-61
+  s_162aba3d26275e::t_52acc5aa1054b1 62
+deep_causality_cfd/Cargo.toml
+  s_162aba3d26275e::t_25bcd644d3c81f 142-145
+deep_causality_cfd/tests/solvers/qtt/mod.rs
+  s_162aba3d26275e::t_f26f5a0db20bd0 7
+  s_162aba3d26275e::t_f769d400063825 6
+deep_causality_cfd/src/solvers/qtt/incompressible_2d.rs
+  s_162aba3d26275e::t_95d7f78c4f369e 85-107
+  s_162aba3d26275e::t_124c1f850c3e7a 108-132
+deep_causality_cfd/tests/solvers/qtt/observe_tests.rs
+  s_162aba3d26275e::t_263f6b8afc5c56 7-8
+  s_162aba3d26275e::t_fedb7531cdb641 111-135,146-162,167-172
+  s_162aba3d26275e::t_bd4e0df504f4a3 136-145,163-166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "77901bd351369a0f9d308ca65be3c978b2be893a",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
