@@ -10,7 +10,7 @@ mod getters;
 use crate::types::causal_tensor_network::canonical_form::CanonicalForm;
 use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::truncation::Truncation;
-use crate::{CausalTensor, CausalTensorError, Tensor};
+use crate::{CausalTensor, CausalTensorError, Tensor, TensorTrain};
 use deep_causality_num::ConjugateScalar;
 
 /// A matrix-product operator (MPO) over the same site structure as a
@@ -164,6 +164,44 @@ where
             })
             .collect::<Result<Vec<_>, _>>()?;
         Ok(Self::from_cores_raw(cores, Self::exact_truncation()))
+    }
+
+    /// Sums two operators on the same physical dimensions: `(a.add(b))·x = a·x + b·x`.
+    ///
+    /// The operators form an algebra — this completes it alongside `compose` (operator product) and
+    /// `scale`. Realized as the tensor-train sum of the combined-index views, so the bond dimensions
+    /// add (`r ← rₐ + r_b`); call [`round`](crate::TensorTrainOperator::round) afterwards to recompress
+    /// (e.g. assembling a finite-difference Laplacian `(S₊ + S₋ − 2·I)/Δx²` from shift operators).
+    ///
+    /// # Errors
+    /// [`CausalTensorError::ShapeMismatch`] if the operators disagree on input or output dimensions.
+    pub fn add(&self, other: &Self) -> Result<Self, CausalTensorError> {
+        if self.out_dims != other.out_dims || self.in_dims != other.in_dims {
+            return Err(CausalTensorError::ShapeMismatch);
+        }
+        let sum = self.as_combined_train().add(&other.as_combined_train())?;
+        Self::from_combined_train(&sum, &self.out_dims, &self.in_dims, self.round_policy)
+    }
+
+    /// Scales the operator by a scalar: `(a.scale(s))·x = s·(a·x)` (exact, rank-preserving).
+    pub fn scale(&self, s: T) -> Self {
+        let scaled = self.as_combined_train().scale(s);
+        Self::from_combined_train(&scaled, &self.out_dims, &self.in_dims, self.round_policy)
+            .expect("scale preserves the operator's bond structure")
+    }
+
+    /// Negates the operator (the additive inverse): `(a.neg())·x = −(a·x)`.
+    pub fn neg(&self) -> Self {
+        self.scale(T::zero() - T::one())
+    }
+
+    /// Difference of two operators: `(a.sub(b))·x = a·x − b·x`. Completes the additive group alongside
+    /// `add`/`neg` (e.g. a centered first difference `(S₊ − S₋)/2Δx` from two shift operators).
+    ///
+    /// # Errors
+    /// [`CausalTensorError::ShapeMismatch`] if the operators disagree on input or output dimensions.
+    pub fn sub(&self, other: &Self) -> Result<Self, CausalTensorError> {
+        self.add(&other.neg())
     }
 
     /// Sets the rounding policy used by the `Arrow::run` realization.

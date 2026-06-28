@@ -165,6 +165,92 @@ fn check_round<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     assert_dense_eq(&rounded.to_dense().unwrap(), &op.to_dense().unwrap());
 }
 
+/// `add` / `scale` / `neg` / `sub` complete the operator algebra: they densify to the elementwise
+/// real-space operations, are linear under `apply`, and reject mismatched dimensions.
+fn check_operator_algebra<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
+    let a_d = op_dense::<T>(0.2);
+    let b_d = op_dense::<T>(1.1);
+    let mk = |d: &CausalTensor<T>| {
+        CausalTensorTrainOperator::from_dense(d, &[2, 2], &[2, 2], &full::<T>()).unwrap()
+    };
+    let (a, b) = (mk(&a_d), mk(&b_d));
+    let zip = |x: &CausalTensor<T>, y: &CausalTensor<T>, f: fn(T, T) -> T| {
+        CausalTensor::new(
+            x.as_slice()
+                .iter()
+                .zip(y.as_slice())
+                .map(|(p, q)| f(*p, *q))
+                .collect(),
+            x.shape().to_vec(),
+        )
+        .unwrap()
+    };
+
+    // add / sub densify to the elementwise sum / difference.
+    assert_dense_eq(
+        &a.add(&b).unwrap().to_dense().unwrap(),
+        &zip(&a_d, &b_d, |x, y| x + y),
+    );
+    assert_dense_eq(
+        &a.sub(&b).unwrap().to_dense().unwrap(),
+        &zip(&a_d, &b_d, |x, y| x - y),
+    );
+
+    // scale / neg.
+    let s = v::<T>(2.5);
+    let scaled = CausalTensor::new(
+        a_d.as_slice().iter().map(|x| *x * s).collect(),
+        a_d.shape().to_vec(),
+    )
+    .unwrap();
+    assert_dense_eq(&a.scale(s).to_dense().unwrap(), &scaled);
+    let negd = CausalTensor::new(
+        a_d.as_slice().iter().map(|x| T::zero() - *x).collect(),
+        a_d.shape().to_vec(),
+    )
+    .unwrap();
+    assert_dense_eq(&a.neg().to_dense().unwrap(), &negd);
+
+    // Linearity of apply: (a + b)·x == a·x + b·x.
+    let x = CausalTensorTrain::from_dense(&state_dense::<T>(0.3), &full::<T>()).unwrap();
+    let ax = a.apply(&x, &full::<T>()).unwrap().to_dense().unwrap();
+    let bx = b.apply(&x, &full::<T>()).unwrap().to_dense().unwrap();
+    let lhs = a
+        .add(&b)
+        .unwrap()
+        .apply(&x, &full::<T>())
+        .unwrap()
+        .to_dense()
+        .unwrap();
+    assert_dense_eq(&lhs, &zip(&ax, &bx, |p, q| p + q));
+
+    // Mismatched dimensions are rejected.
+    let single = CausalTensorTrainOperator::from_dense(
+        &tensor::<T>(&[1.0, 2.0, 3.0, 4.0], &[2, 2]),
+        &[2],
+        &[2],
+        &full::<T>(),
+    )
+    .unwrap();
+    assert!(matches!(
+        a.add(&single),
+        Err(CausalTensorError::ShapeMismatch)
+    ));
+    assert!(matches!(
+        a.sub(&single),
+        Err(CausalTensorError::ShapeMismatch)
+    ));
+}
+
+#[test]
+fn test_operator_algebra_f64() {
+    check_operator_algebra::<f64>();
+}
+#[test]
+fn test_operator_algebra_float106() {
+    check_operator_algebra::<Float106>();
+}
+
 #[test]
 fn test_identity_f32() {
     check_identity::<f32>();
