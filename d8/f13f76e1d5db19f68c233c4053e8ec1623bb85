@@ -1,0 +1,28 @@
+deep_causality_tensor/README.md
+  s_162aba3d26275e::t_5aee6606189dae 248-259,264-265,274-277,283-289,334
+  s_162aba3d26275e::t_6d313f9a074e87 304-307
+  s_162aba3d26275e::t_6bca1f480143fa 25,28,181-246
+  s_162aba3d26275e::t_8478a710563f11 22-24
+  s_162aba3d26275e::t_f5d5f0448bcab2 26-27
+  s_162aba3d26275e::t_e53452847c25ae 29-31
+  s_162aba3d26275e::t_c0e312887c7125 247
+  s_162aba3d26275e::t_a1f07ec038460f 290-292,301-303
+  s_162aba3d26275e::t_4328c485dc31d9 308-310,331-333
+  s_162aba3d26275e::t_302dd5d9a4f560 335-337
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "d8f13f76e1d5db19f68c233c4053e8ec1623bb85",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
