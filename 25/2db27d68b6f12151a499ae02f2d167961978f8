@@ -1,0 +1,70 @@
+deep_causality_tensor/README.md
+  s_162aba3d26275e::t_00675d3609256a 373-374,383-385
+  s_162aba3d26275e::t_f1c86cab6cddb3 375-382,386-395
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/mod.rs
+  s_162aba3d26275e::t_dc318a2d10ea1a 162-164,166,170
+  s_162aba3d26275e::t_71e242c8395894 11
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/round_rand/mod.rs
+  s_162aba3d26275e::t_0926266dce5090 55,66-67,95-97
+  s_162aba3d26275e::t_0e7207de657ac6 1-18,20-54,56-65,68-94,98-152
+  s_162aba3d26275e::t_dcafb2a4818825 19
+openspec/specs/tensor-network-numerics/spec.md
+  s_162aba3d26275e::t_20961c67d6d1f8 75-114
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/api/mod.rs
+  s_162aba3d26275e::t_a03cc0b695a400 12
+  s_162aba3d26275e::t_629b00b9a200ee 207-212
+deep_causality_tensor/tests/types/causal_tensor_network/op_tensor_svd_randomized_tests.rs
+  s_162aba3d26275e::t_9c3e771600a66d 475-482
+  s_162aba3d26275e::t_447a533049be63 143-145,147-151,153-154,158-159,161-162,165,176-178
+  s_162aba3d26275e::t_2c1f7ee4961ff2 319-368
+  s_162aba3d26275e::t_f35d9ef403f237 508-512,531-533
+  s_162aba3d26275e::t_63c08c1242f00b 169,172-173,175
+  s_162aba3d26275e::t_56658d5581f47c 483-507,513-530,534-562
+  s_162aba3d26275e::t_7fbd29a797c6cb 369-416,419-448
+  s_162aba3d26275e::t_4249af883f5d98 146,152,155-157,160,163-164,166-168,170-171,174
+  s_162aba3d26275e::t_c3681657536ae4 417-418
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_svd_truncated/mod.rs
+  s_162aba3d26275e::t_9dc4e0a4df556f 251-267
+  s_162aba3d26275e::t_5d146694d796c0 283-287
+  s_162aba3d26275e::t_b9cea49b2f26dc 311-322
+deep_causality_tensor/src/types/causal_tensor_network/rng/mod.rs
+  s_162aba3d26275e::t_0a011252cc057e 46
+  s_162aba3d26275e::t_b6bcffd7e5e318 6,8-21,25,27-28,34-45,47,49-60,63,65-67,70-71,74-76,78-81,83
+  s_162aba3d26275e::t_019bda5dbf3644 48
+  s_162aba3d26275e::t_7dfea0ef648823 23
+  s_162aba3d26275e::t_aefe6b2b0faf2a 22
+deep_causality_tensor/src/types/causal_tensor_network/solve/local.rs
+  s_162aba3d26275e::t_d31bd6f989a9a5 1145-1146
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_qr/mod.rs
+  s_162aba3d26275e::t_50a98fd1043817 50-60,67,70
+openspec/specs/tensor-train/spec.md
+  s_162aba3d26275e::t_20961c67d6d1f8 137-203
+Cargo.lock
+  s_162aba3d26275e::t_7c09d2d58d4a98 136,138,144,156,1735,1737,1740,1743,2375,2377
+examples/causal_discovery_examples/Cargo.toml
+  s_162aba3d26275e::t_cd05699afc7d33 23
+openspec/changes/archive/2026-06-28-optimize-tensor-network/design.md
+  s_162aba3d26275e::t_3bf1d5388a070f 60-77
+openspec/changes/archive/2026-06-28-optimize-tensor-network/specs/tensor-network-numerics/spec.md
+  s_162aba3d26275e::t_b4da1133c2dca3 3-25
+openspec/changes/archive/2026-06-28-optimize-tensor-network/specs/tensor-train/spec.md
+  s_162aba3d26275e::t_e8a8345a015ba8 8-11,33-44
+openspec/changes/archive/2026-06-28-optimize-tensor-network/tasks.md
+  s_162aba3d26275e::t_ed460cfd02ca58 10-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "252db27d68b6f12151a499ae02f2d167961978f8",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
