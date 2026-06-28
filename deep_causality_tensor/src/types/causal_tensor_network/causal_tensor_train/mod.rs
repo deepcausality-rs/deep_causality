@@ -11,7 +11,7 @@ pub(crate) mod linalg;
 
 use crate::types::causal_tensor_network::canonical_form::CanonicalForm;
 use crate::{CausalTensor, CausalTensorError};
-use deep_causality_num::{ConjugateScalar, Scalar};
+use deep_causality_num::ConjugateScalar;
 
 /// A tensor-train (matrix-product-state) factorization of a rank-`order` tensor.
 ///
@@ -92,7 +92,7 @@ impl<T> CausalTensorTrain<T> {
 
 impl<T> CausalTensorTrain<T>
 where
-    T: Scalar + ConjugateScalar<Real = T>,
+    T: ConjugateScalar,
 {
     /// Builds a tensor train from an explicit chain of rank-3 cores, validating the bond structure.
     ///

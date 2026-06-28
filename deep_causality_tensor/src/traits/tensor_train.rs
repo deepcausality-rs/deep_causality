@@ -3,21 +3,23 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::causal_tensor_network::cross_config::CrossConfig;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError};
+use deep_causality_num::ConjugateScalar;
 
 /// Behaviour of a tensor train (matrix-product state).
 ///
 /// This is the trait/`CausalTensorTrain` split that mirrors the existing
 /// [`Tensor`](crate::Tensor) / [`CausalTensor`](crate::CausalTensor) pairing: the trait declares the
 /// transformation and query surface, while constructors stay inherent on the concrete type. The
-/// implementation is precision-generic over the scalar (`Scalar` bound at the impl site).
+/// implementation is precision-generic over the scalar ([`ConjugateScalar`] at the impl site, so the
+/// same surface serves real, dual, and complex trains; truncation thresholds and singular values
+/// live in the real type [`T::Real`](ConjugateScalar::Real)).
 ///
 /// Lossless operations (`add`, `hadamard`) grow bond dimension exactly; the paired `*_rounded`
 /// variants recompress to a [`Truncation`]. The algebraic laws they satisfy hold exactly without
 /// truncation and to the truncation tolerance otherwise.
-pub trait TensorTrain<T>: Sized {
+pub trait TensorTrain<T: ConjugateScalar>: Sized {
     /// Contracts the train back to a dense tensor.
     ///
     /// # Errors
@@ -46,7 +48,10 @@ pub trait TensorTrain<T>: Sized {
 
     /// Recompresses the train to the given [`Truncation`] via a left-canonicalize + right-to-left
     /// truncated-SVD sweep.
-    fn round(&self, trunc: &Truncation<T>) -> Result<Self, CausalTensorError>;
+    fn round(
+        &self,
+        trunc: &Truncation<<T as ConjugateScalar>::Real>,
+    ) -> Result<Self, CausalTensorError>;
 
     /// The Frobenius norm of the represented tensor.
     fn norm(&self) -> Result<T, CausalTensorError>;
@@ -64,7 +69,11 @@ pub trait TensorTrain<T>: Sized {
     fn add(&self, other: &Self) -> Result<Self, CausalTensorError>;
 
     /// `add` followed by `round`.
-    fn add_rounded(&self, other: &Self, trunc: &Truncation<T>) -> Result<Self, CausalTensorError>;
+    fn add_rounded(
+        &self,
+        other: &Self,
+        trunc: &Truncation<<T as ConjugateScalar>::Real>,
+    ) -> Result<Self, CausalTensorError>;
 
     /// Adds a scalar constant to every entry (exact affine offset via a rank-1 ones-train).
     fn add_scalar(&self, c: T) -> Result<Self, CausalTensorError>;
@@ -80,7 +89,7 @@ pub trait TensorTrain<T>: Sized {
     fn hadamard_rounded(
         &self,
         other: &Self,
-        trunc: &Truncation<T>,
+        trunc: &Truncation<<T as ConjugateScalar>::Real>,
     ) -> Result<Self, CausalTensorError>;
 
     /// Sums out the given physical sites, returning a train over the remaining sites.
@@ -89,25 +98,6 @@ pub trait TensorTrain<T>: Sized {
     /// - [`CausalTensorError::IndexOutOfBounds`] if any site is out of range.
     /// - [`CausalTensorError::InvalidParameter`] if every site would be summed out.
     fn marginalize(&self, sites: &[usize]) -> Result<Self, CausalTensorError>;
-
-    /// Applies a general nonlinear scalar map `f` to every logical entry, returning a *new*
-    /// approximate train and a sampled residual.
-    ///
-    /// A nonlinear map of a tensor train has no exact local form (and can inflate rank), so this
-    /// re-approximates `f∘self` by TT-cross over the oracle `i ↦ f(self.eval(i))`. The returned
-    /// residual makes the approximation explicit. For exact linear/affine maps use `scale` /
-    /// `add_scalar` instead.
-    ///
-    /// # Errors
-    /// Propagates [`CausalTensorError::CrossSampleFailure`] if `f` or evaluation produces a
-    /// non-finite value, and other cross errors.
-    fn apply_nonlinear<F>(
-        &self,
-        f: F,
-        config: &CrossConfig<T>,
-    ) -> Result<(Self, T), CausalTensorError>
-    where
-        F: FnMut(T) -> T;
 
     /// Contracts each site against a per-site weight vector, returning a scalar — quadrature,
     /// expectation, or normalization. `weights[k]` is a length-`n_k` vector.

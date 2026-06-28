@@ -11,7 +11,10 @@ use crate::types::causal_tensor_network::causal_tensor_train::{CausalTensorTrain
 use crate::types::causal_tensor_network::cross_config::CrossConfig;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor};
-use deep_causality_num::{ConjugateScalar, Scalar};
+use deep_causality_num::{ConjugateScalar, Real, Scalar, Zero};
+
+/// The real magnitude type of a conjugate scalar.
+type Re<T> = <T as ConjugateScalar>::Real;
 
 /// `(r_left, n, r_right)` of a rank-3 core.
 fn dims<T>(core: &CausalTensor<T>) -> (usize, usize, usize) {
@@ -20,7 +23,7 @@ fn dims<T>(core: &CausalTensor<T>) -> (usize, usize, usize) {
 }
 
 /// `k × k` identity buffer (row-major).
-fn identity<T: Scalar + ConjugateScalar<Real = T>>(k: usize) -> Vec<T> {
+fn identity<T: ConjugateScalar>(k: usize) -> Vec<T> {
     let mut m = vec![T::zero(); k * k];
     for i in 0..k {
         m[i * k + i] = T::one();
@@ -29,7 +32,7 @@ fn identity<T: Scalar + ConjugateScalar<Real = T>>(k: usize) -> Vec<T> {
 }
 
 /// In-place left-orthonormalize core `k` via QR, absorbing `R` into core `k+1`.
-fn qr_step<T: Scalar + ConjugateScalar<Real = T>>(
+fn qr_step<T: ConjugateScalar>(
     cores: &mut [CausalTensor<T>],
     k: usize,
 ) -> Result<(), CausalTensorError> {
@@ -47,7 +50,7 @@ fn qr_step<T: Scalar + ConjugateScalar<Real = T>>(
 }
 
 /// In-place right-orthonormalize core `k` via LQ, absorbing `L` into core `k-1`.
-fn lq_step<T: Scalar + ConjugateScalar<Real = T>>(
+fn lq_step<T: ConjugateScalar>(
     cores: &mut [CausalTensor<T>],
     k: usize,
 ) -> Result<(), CausalTensorError> {
@@ -71,7 +74,7 @@ fn lq_step<T: Scalar + ConjugateScalar<Real = T>>(
 
 impl<T> CausalTensorTrain<T>
 where
-    T: Scalar + ConjugateScalar<Real = T>,
+    T: ConjugateScalar,
 {
     /// Scales the represented tensor by a scalar (exact, rank-preserving).
     ///
@@ -92,7 +95,7 @@ where
 
 impl<T> TensorTrain<T> for CausalTensorTrain<T>
 where
-    T: Scalar + ConjugateScalar<Real = T>,
+    T: ConjugateScalar,
 {
     fn to_dense(&self) -> Result<CausalTensor<T>, CausalTensorError> {
         // An algebraic identity is shape-polymorphic; densify it to the corresponding scalar,
@@ -200,7 +203,7 @@ where
         ))
     }
 
-    fn round(&self, trunc: &Truncation<T>) -> Result<Self, CausalTensorError> {
+    fn round(&self, trunc: &Truncation<Re<T>>) -> Result<Self, CausalTensorError> {
         let d = self.order();
         let mut cores = self.cores().to_vec();
         // Left-canonicalize, then a right-to-left truncated-SVD sweep.
@@ -214,12 +217,12 @@ where
             let q = s.len();
             cores[k] = vt.reshape(&[q, n, rr])?;
 
-            // US = U · diag(S), shape [rl, q].
+            // US = U · diag(S), shape [rl, q] (singular values are real).
             let mut us = u.as_slice().to_vec();
             let s_slice = s.as_slice();
             for a in 0..rl {
                 for (j, sj) in s_slice.iter().enumerate() {
-                    us[a * q + j] *= *sj;
+                    us[a * q + j] *= T::from_real(*sj);
                 }
             }
             let (rl0, n0, rr0) = dims(&cores[k - 1]);
@@ -231,12 +234,17 @@ where
     }
 
     fn norm(&self) -> Result<T, CausalTensorError> {
-        // ⟨x|x⟩ is non-negative in exact arithmetic; a tiny negative value is a rounding artifact of
-        // catastrophic cancellation on a near-zero train. Clamp before the square root so the norm is
-        // always real (otherwise `sqrt` of a small negative yields `NaN`).
-        let sq = self.inner(self)?;
-        let sq = if sq < T::zero() { T::zero() } else { sq };
-        Ok(sq.sqrt())
+        // ‖x‖² = ⟨x|x⟩ is a non-negative real (its imaginary part is zero up to rounding); take the
+        // real part and clamp before the square root, so the norm is always real and never `NaN`
+        // (a tiny negative from catastrophic cancellation on a near-zero train would otherwise
+        // produce `NaN`). The result is returned as `T` (real-valued for a complex train).
+        let sq = self.inner(self)?.real_part();
+        let sq = if sq < Re::<T>::zero() {
+            Re::<T>::zero()
+        } else {
+            sq
+        };
+        Ok(T::from_real(sq.sqrt()))
     }
 
     fn inner(&self, other: &Self) -> Result<T, CausalTensorError> {
@@ -254,7 +262,9 @@ where
             let ad = ac.as_slice();
             let bd = bc.as_slice();
 
-            // Step 1: M[bb, i, ga] = Σ_aa L[aa,bb] · a[aa,i,ga].
+            // Hermitian inner product ⟨self|other⟩ = Σ conj(self)·other: the `self` (a) factors are
+            // conjugated. For a real scalar the conjugation is the identity.
+            // Step 1: M[bb, i, ga] = Σ_aa L[aa,bb] · conj(a[aa,i,ga]).
             let mut m = vec![T::zero(); rb * n * ar];
             for aa in 0..ra {
                 for bb in 0..rb {
@@ -266,7 +276,7 @@ where
                         let abase = aa * (n * ar) + i * ar;
                         let mbase = (bb * n + i) * ar;
                         for ga in 0..ar {
-                            m[mbase + ga] += lval * ad[abase + ga];
+                            m[mbase + ga] += lval * ad[abase + ga].conjugate();
                         }
                     }
                 }
@@ -370,7 +380,11 @@ where
         Ok(Self::from_cores_unchecked(cores, CanonicalForm::None))
     }
 
-    fn add_rounded(&self, other: &Self, trunc: &Truncation<T>) -> Result<Self, CausalTensorError> {
+    fn add_rounded(
+        &self,
+        other: &Self,
+        trunc: &Truncation<Re<T>>,
+    ) -> Result<Self, CausalTensorError> {
         self.add(other)?.round(trunc)
     }
 
@@ -420,7 +434,7 @@ where
     fn hadamard_rounded(
         &self,
         other: &Self,
-        trunc: &Truncation<T>,
+        trunc: &Truncation<Re<T>>,
     ) -> Result<Self, CausalTensorError> {
         self.hadamard(other)?.round(trunc)
     }
@@ -486,25 +500,6 @@ where
         Self::from_cores(out)
     }
 
-    fn apply_nonlinear<F>(
-        &self,
-        mut f: F,
-        config: &CrossConfig<T>,
-    ) -> Result<(Self, T), CausalTensorError>
-    where
-        F: FnMut(T) -> T,
-    {
-        let shape = self.phys_dims().to_vec();
-        CausalTensorTrain::cross(
-            &shape,
-            |idx| match self.eval(idx) {
-                Ok(x) => f(x),
-                Err(_) => T::nan(),
-            },
-            config,
-        )
-    }
-
     fn integrate(&self, weights: &[CausalTensor<T>]) -> Result<T, CausalTensorError> {
         let cores = self.cores();
         if weights.len() != cores.len() {
@@ -542,5 +537,43 @@ where
             rk = rr;
         }
         Ok(vrow[0])
+    }
+}
+
+impl<T> CausalTensorTrain<T>
+where
+    T: Scalar + ConjugateScalar<Real = T>,
+{
+    /// Applies a general nonlinear scalar map `f` to every logical entry, returning a *new*
+    /// approximate train and a sampled residual.
+    ///
+    /// A nonlinear map of a tensor train has no exact local form (and can inflate rank), so this
+    /// re-approximates `f∘self` by TT-cross over the oracle `i ↦ f(self.eval(i))`. The returned
+    /// residual makes the approximation explicit. For exact linear/affine maps use `scale` /
+    /// `add_scalar` instead.
+    ///
+    /// Inherent (not on the `TensorTrain` trait) and bound on [`Scalar`]: TT-cross relies on ordered
+    /// pivoting, so it is real/dual only — complex trains do not get this method.
+    ///
+    /// # Errors
+    /// Propagates [`CausalTensorError::CrossSampleFailure`] if `f` or evaluation produces a
+    /// non-finite value, and other cross errors.
+    pub fn apply_nonlinear<F>(
+        &self,
+        mut f: F,
+        config: &CrossConfig<T>,
+    ) -> Result<(Self, T), CausalTensorError>
+    where
+        F: FnMut(T) -> T,
+    {
+        let shape = self.phys_dims().to_vec();
+        CausalTensorTrain::cross(
+            &shape,
+            |idx| match self.eval(idx) {
+                Ok(x) => f(x),
+                Err(_) => T::nan(),
+            },
+            config,
+        )
     }
 }

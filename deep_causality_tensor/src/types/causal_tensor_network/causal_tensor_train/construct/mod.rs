@@ -9,7 +9,7 @@ use crate::types::causal_tensor_network::canonical_form::CanonicalForm;
 use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor};
-use deep_causality_num::{ConjugateScalar, Scalar};
+use deep_causality_num::ConjugateScalar;
 
 /// Guard on dense materialization: constructors/contractions that would form more than this many
 /// elements fail with [`CausalTensorError::RankExceeded`] rather than allocate `nᵈ`.
@@ -17,7 +17,7 @@ pub(crate) const MAX_DENSE_ELEMS: usize = 1 << 24; // 16,777,216
 
 impl<T> CausalTensorTrain<T>
 where
-    T: Scalar + ConjugateScalar<Real = T>,
+    T: ConjugateScalar,
 {
     /// Factors a dense tensor into a tensor train by a left-to-right truncated-SVD sweep (TT-SVD).
     ///
@@ -31,7 +31,7 @@ where
     /// - Propagates SVD/reshape errors.
     pub fn from_dense(
         dense: &CausalTensor<T>,
-        trunc: &Truncation<T>,
+        trunc: &Truncation<<T as ConjugateScalar>::Real>,
     ) -> Result<Self, CausalTensorError> {
         let shape = dense.shape().to_vec();
         if shape.is_empty() || shape.contains(&0) {
@@ -66,7 +66,8 @@ where
             let vt_slice = vt.as_slice();
             let mut next = vec![T::zero(); q * cols];
             for a in 0..q {
-                let sa = s_slice[a];
+                // Singular values are real; inject into the scalar type before scaling Vᴴ.
+                let sa = T::from_real(s_slice[a]);
                 for j in 0..cols {
                     next[a * cols + j] = sa * vt_slice[a * cols + j];
                 }
@@ -92,7 +93,7 @@ where
     pub fn from_fn<F>(
         shape: &[usize],
         f: F,
-        trunc: &Truncation<T>,
+        trunc: &Truncation<<T as ConjugateScalar>::Real>,
     ) -> Result<Self, CausalTensorError>
     where
         F: FnMut(&[usize]) -> T,
