@@ -1,0 +1,39 @@
+openspec/changes/add-cfd-qtt-incompressible-2d/proposal.md
+  s_162aba3d26275e::t_836210e212cf7b 1-36
+openspec/changes/add-cfd-qtt-incompressible-2d/specs/qtt-codec-2d/spec.md
+  s_162aba3d26275e::t_4a7bfb6c52c861 1-24
+openspec/notes/plasma-blackout/qtt-incompressible-2d-ariz.md
+  s_162aba3d26275e::t_66a7acf87951b1 1-107
+openspec/changes/add-cfd-qtt-incompressible-2d/specs/qtt-projection/spec.md
+  s_162aba3d26275e::t_94aaa3b27f84d1 1-5,13-24
+  s_162aba3d26275e::t_beb54d550db64a 6-12
+openspec/changes/add-cfd-qtt-incompressible-2d/.openspec.yaml
+  s_162aba3d26275e::t_b9f339925d08b8 1-2
+openspec/changes/add-cfd-qtt-incompressible-2d/specs/qtt-incompressible-2d/spec.md
+  s_162aba3d26275e::t_2dab9cdc4b6c69 1-23
+openspec/changes/add-cfd-qtt-incompressible-2d/design.md
+  s_162aba3d26275e::t_eaf5589b1a4d26 1-29,40,49-59,74-75
+  s_162aba3d26275e::t_bf2c10802234d6 60-73
+  s_162aba3d26275e::t_9ca11454925c37 41-48
+  s_162aba3d26275e::t_c1229de6d72b4f 30-39
+openspec/changes/add-cfd-qtt-incompressible-2d/tasks.md
+  s_162aba3d26275e::t_0db654277cf4cd 11
+  s_162aba3d26275e::t_b4c9f56bed53a2 1-10,12-16,18-24
+  s_162aba3d26275e::t_4651c8a03021f8 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "e3e9ff2094b69870c3de30b43a040b5e7c092873",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
