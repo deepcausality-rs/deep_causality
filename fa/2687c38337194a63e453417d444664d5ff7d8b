@@ -1,0 +1,68 @@
+openspec/changes/add-cfd-qtt-immersed-body/specs/qtt-surface-observables/spec.md
+  s_162aba3d26275e::t_53e438c37a8206 38,40-42,47
+  s_162aba3d26275e::t_5f19df16f1e301 1-31,33,43,48
+  s_162aba3d26275e::t_00c763a73b8d8b 32,34-37,39,44-46,49-52
+deep_causality_cfd/verification/qtt_cylinder_verification/README.md
+  s_162aba3d26275e::t_30fee704b5d4b7 1-81
+openspec/changes/add-cfd-qtt-immersed-body/tasks.md
+  s_162aba3d26275e::t_cadec09039cea8 1-2,6-8,12-14,19-21,25-27
+  s_162aba3d26275e::t_6ba13b44423b7f 23
+  s_162aba3d26275e::t_85a372f298ea9d 11
+  s_162aba3d26275e::t_4986d668ed9912 3-5,9-10,15-18,22,24,28-30
+openspec/changes/add-cfd-qtt-immersed-body/.openspec.yaml
+  s_162aba3d26275e::t_adadf2f154e7a8 1-2
+deep_causality_cfd/tests/solvers/qtt/immersed_2d_tests.rs
+  s_162aba3d26275e::t_bd4e0df504f4a3 56-67,76,111-114,117-120
+  s_162aba3d26275e::t_919e05375adc23 39
+  s_162aba3d26275e::t_d248b6a9ff2b21 1-38,40-55,68-75,77-110,115-116,121-145
+deep_causality_cfd/tests/tensor_bridge/mask_tests.rs
+  s_162aba3d26275e::t_bd4e0df504f4a3 13-18,39-42,46-53
+  s_162aba3d26275e::t_b49f14feb0d93f 1-6,8-12,19-38,43-45,54-57,62-64,67,79,82,85-86
+  s_162aba3d26275e::t_7555889318309e 7
+  s_162aba3d26275e::t_3c8fa5acddcdbf 58-61,65-66,68-78,80-81,83-84
+openspec/changes/add-cfd-qtt-immersed-body/proposal.md
+  s_162aba3d26275e::t_ff5c437044ffe2 1-37,43-59
+  s_162aba3d26275e::t_c253afe4a2195c 38-42
+deep_causality_cfd/src/tensor_bridge/mask.rs
+  s_162aba3d26275e::t_b0588fc208f48f 1-22,24-92
+  s_162aba3d26275e::t_d9907b7ecfc5d5 23
+deep_causality_cfd/verification/qtt_cylinder_verification/print_utils.rs
+  s_162aba3d26275e::t_bd4e0df504f4a3 67-70
+  s_162aba3d26275e::t_0fd63e3d82359b 106-107,109,121-124
+  s_162aba3d26275e::t_ee47d17a2af086 1-66,71-105,108,110-120,125
+deep_causality_cfd/verification/qtt_cylinder_verification/config.rs
+  s_162aba3d26275e::t_08502a4342f812 1-63,68-95
+  s_162aba3d26275e::t_bd4e0df504f4a3 64-67
+deep_causality_cfd/src/solvers/qtt/immersed_2d.rs
+  s_162aba3d26275e::t_889f8eb27db2a3 1-94,100,106-133,156-204
+  s_162aba3d26275e::t_7ca963d4f8c95d 134-155
+  s_162aba3d26275e::t_4e899d504b12d2 95-99
+  s_162aba3d26275e::t_bd4e0df504f4a3 101-105
+deep_causality_cfd/verification/qtt_cylinder_verification/main.rs
+  s_162aba3d26275e::t_8984ac7a4bcfc4 1-64,72-87
+  s_162aba3d26275e::t_bd4e0df504f4a3 65-71
+openspec/changes/add-cfd-qtt-immersed-body/design.md
+  s_162aba3d26275e::t_e62061ede351b1 1-56,66-85
+  s_162aba3d26275e::t_9ddc4852d654b8 57-65
+openspec/changes/add-cfd-qtt-immersed-body/specs/qtt-immersed-body/spec.md
+  s_162aba3d26275e::t_bf49d9bde791db 1-16,21-37
+  s_162aba3d26275e::t_e7ea12d1b19866 17-20
+deep_causality_cfd/verification/qtt_cylinder_verification/baseline.txt
+  s_162aba3d26275e::t_bd4e0df504f4a3 1-13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "fa2687c38337194a63e453417d444664d5ff7d8b",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
