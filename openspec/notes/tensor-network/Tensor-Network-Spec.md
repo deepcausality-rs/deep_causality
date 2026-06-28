@@ -324,6 +324,20 @@ laws on a rounded chain.
 
 ## 3.7 Scalar generality — real, complex, and dual (forward-mode AD)
 
+> **As built (Stage 4).** The layered-bound *intent* below was realized through a single bridge trait
+> rather than a per-layer split. `deep_causality_num` gained two sibling traits —
+> **`ConjugateScalar`** (ring/field arithmetic + `conjugate` + real `modulus_squared`/`real_part`/
+> `from_real`, with an associated `Real: Scalar`) and **`NormedScalar`** (the clean `Field + Normed`
+> composition). The whole tensor-train layer (kernels, states, MPO operators, TT-cross, and the
+> `linear`/`fit`/`tdvp`/`eigen` solvers) is bound on **`ConjugateScalar`**, which is implemented for
+> `f32`/`f64`/`Float106`, `Dual<T>`, and `Complex<T>` over disjoint type constructors (a blanket
+> `impl<T: Scalar>` would collide with `Complex` under coherence — Rust cannot prove `Complex: !Scalar`).
+> Truncation thresholds and singular values live in `T::Real`. The complex path is the genuine Hermitian
+> stack (conjugated inner, real singular values, complex Givens/Householder, a complex Hermitian DMRG
+> eigensolver). Only `apply_nonlinear` stays `Scalar` (it needs `T::nan`). The original `Normed` +
+> `ComplexField` analysis that follows is the design *rationale*; `ConjugateScalar` is the concrete bound
+> that delivers it without forcing callers to thread a second type parameter.
+
 **Correction of an earlier mistake.** Prior revisions of this spec listed *complex scalars* and *autodiff*
 as out of scope, on the assumption that the layer is `RealField`-only. Reading `deep_causality_num`
 reverses that: the crate's scalar tower was **built to support exactly these two extensions**, and a flat

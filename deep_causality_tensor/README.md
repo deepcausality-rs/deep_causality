@@ -235,6 +235,25 @@ The `CausalTensor` API is designed to be comprehensive and intuitive:
 -   **Reduction Operations:** `sum_axes()`, `mean_axes()`, `arg_sort()`
 -   **Arithmetic:** Overloaded `+`, `-`, `*`, `/` operators for both tensor-scalar and tensor-tensor operations.
 
+## Scalar generality (tensor-network layer)
+
+Precision and scalar *kind* are a parameter throughout the tensor-train / MPS–MPO layer, via the
+[`deep_causality_num::ConjugateScalar`] bridge trait (arithmetic + conjugation + a real modulus). One
+generic implementation serves three families:
+
+| Scalar | What you get |
+|--------|--------------|
+| `f32` / `f64` / `Float106` | the ordinary real stack at three precisions (`Float106` is double-double, ~32 digits) |
+| `Dual<f64>` | forward-mode **automatic differentiation** — derivatives flow through TT-SVD, MPO apply, and the solvers by the chain rule |
+| `Complex<f64>` | the genuine **Hermitian** stack: conjugated inner products `⟨a\|b⟩ = Σ āᵢ bᵢ`, real singular values, unitary `U`/`V`/`Q`, complex Givens/Householder kernels, and a complex Hermitian DMRG eigensolver |
+
+`Complex` is unordered, so it cannot be a `Real`/`Scalar` (ℂ is not an ordered field); `Dual` is the
+opposite (`Real` but not a field). `ConjugateScalar` (with its sibling `NormedScalar`) is the
+tensor-layer bridge that spans all three, with truncation thresholds and singular values living in the
+real type `T::Real`. The full surface — states, MPO operators, TT-cross, and the `linear`/`fit`/`tdvp`/
+`eigen` solvers — instantiates at `Complex<f64>`; only `apply_nonlinear` (TT-cross over a nonlinear
+oracle) is real/dual-only.
+
 ## References
 
 The tensor-network (tensor-train / MPS–MPO) layer implements the following algorithms. Each is also
