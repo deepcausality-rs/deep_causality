@@ -11,7 +11,7 @@ use crate::types::causal_tensor_network::canonical_form::CanonicalForm;
 use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor};
-use deep_causality_num::Scalar;
+use deep_causality_num::{ConjugateScalar, Scalar};
 
 /// A matrix-product operator (MPO) over the same site structure as a
 /// [`CausalTensorTrain`](crate::CausalTensorTrain).
@@ -37,7 +37,7 @@ pub struct CausalTensorTrainOperator<T> {
 
 impl<T> CausalTensorTrainOperator<T>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
 {
     /// The exact (no-op) truncation: keep every singular value.
     pub(crate) fn exact_truncation() -> Truncation<T> {

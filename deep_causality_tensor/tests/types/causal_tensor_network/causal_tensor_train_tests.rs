@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_num::{ConjugateScalar, Float106, FromPrimitive, RealField};
 use deep_causality_tensor::{
     CausalTensor, CausalTensorError, CausalTensorTrain, TensorTrain, Truncation,
 };
@@ -12,15 +12,21 @@ fn v<T: FromPrimitive>(x: f64) -> T {
     T::from_f64(x).unwrap()
 }
 
-fn tensor<T: RealField + FromPrimitive>(data: &[f64], shape: &[usize]) -> CausalTensor<T> {
+fn tensor<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    data: &[f64],
+    shape: &[usize],
+) -> CausalTensor<T> {
     CausalTensor::new(data.iter().map(|&x| v::<T>(x)).collect(), shape.to_vec()).unwrap()
 }
 
-fn tol<T: RealField + FromPrimitive>() -> T {
+fn tol<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> T {
     T::epsilon().sqrt() * v::<T>(64.0)
 }
 
-fn assert_dense_eq<T: RealField + FromPrimitive>(a: &CausalTensor<T>, b: &CausalTensor<T>) {
+fn assert_dense_eq<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    a: &CausalTensor<T>,
+    b: &CausalTensor<T>,
+) {
     assert_eq!(a.shape(), b.shape());
     for (x, y) in a.as_slice().iter().zip(b.as_slice().iter()) {
         assert!(
@@ -30,13 +36,13 @@ fn assert_dense_eq<T: RealField + FromPrimitive>(a: &CausalTensor<T>, b: &Causal
     }
 }
 
-fn sample_3d<T: RealField + FromPrimitive>() -> CausalTensor<T> {
+fn sample_3d<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> CausalTensor<T> {
     // A 2×3×2 tensor with distinct entries.
     let data: Vec<f64> = (0..12).map(|i| (i as f64) * 0.5 - 1.0).collect();
     tensor::<T>(&data, &[2, 3, 2])
 }
 
-fn check_roundtrip<T: RealField + FromPrimitive>() {
+fn check_roundtrip<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let dense = sample_3d::<T>();
     let full = Truncation::<T>::by_bond(1024).unwrap();
     let tt = CausalTensorTrain::from_dense(&dense, &full).unwrap();
@@ -61,7 +67,7 @@ fn check_roundtrip<T: RealField + FromPrimitive>() {
     }
 }
 
-fn check_order_one<T: RealField + FromPrimitive>() {
+fn check_order_one<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let dense = tensor::<T>(&[1.0, -2.0, 3.0, 4.0], &[4]);
     let full = Truncation::<T>::by_bond(8).unwrap();
     let tt = CausalTensorTrain::from_dense(&dense, &full).unwrap();
@@ -70,7 +76,7 @@ fn check_order_one<T: RealField + FromPrimitive>() {
     assert!((tt.eval(&[2]).unwrap() - v::<T>(3.0)).abs() <= tol::<T>());
 }
 
-fn check_constructors<T: RealField + FromPrimitive>() {
+fn check_constructors<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     // zeros / ones via to_dense.
     let z = CausalTensorTrain::<T>::zeros(&[2, 2]).to_dense().unwrap();
     assert!(z.as_slice().iter().all(|x| x.abs() <= tol::<T>()));

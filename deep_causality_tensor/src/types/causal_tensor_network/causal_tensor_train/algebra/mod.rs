@@ -16,7 +16,9 @@
 use crate::TensorTrain;
 use crate::types::causal_tensor_network::causal_tensor_train::{CausalTensorTrain, Identity};
 use core::ops::{Add, Mul, MulAssign, Neg, Sub};
-use deep_causality_num::{AbelianGroup, Associative, Commutative, Distributive, One, Scalar, Zero};
+use deep_causality_num::{
+    AbelianGroup, Associative, Commutative, ConjugateScalar, Distributive, One, Scalar, Zero,
+};
 
 // ============================================================================
 // Additive group: Add, Sub, Neg
@@ -24,7 +26,7 @@ use deep_causality_num::{AbelianGroup, Associative, Commutative, Distributive, O
 
 impl<T> Add for CausalTensorTrain<T>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
 {
     type Output = Self;
 
@@ -40,7 +42,7 @@ where
 
 impl<T> Sub for CausalTensorTrain<T>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
 {
     type Output = Self;
 
@@ -59,7 +61,7 @@ where
 
 impl<T> Neg for CausalTensorTrain<T>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
 {
     type Output = Self;
 
@@ -78,7 +80,7 @@ where
 
 impl<T> Mul<T> for CausalTensorTrain<T>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
 {
     type Output = Self;
 
@@ -93,7 +95,7 @@ where
 
 impl<T> MulAssign<T> for CausalTensorTrain<T>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
 {
     fn mul_assign(&mut self, rhs: T) {
         if self.identity_kind() == Identity::Normal {
@@ -108,7 +110,7 @@ where
 
 impl<T> Mul for CausalTensorTrain<T>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
 {
     type Output = Self;
 
@@ -131,7 +133,7 @@ where
 
 impl<T> Zero for CausalTensorTrain<T>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
 {
     fn zero() -> Self {
         Self::identity_train(Identity::AdditiveZero)
@@ -153,7 +155,7 @@ where
 
 impl<T> One for CausalTensorTrain<T>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
 {
     fn one() -> Self {
         Self::identity_train(Identity::MultiplicativeOne)
@@ -170,7 +172,7 @@ where
 // Marker traits → AddGroup / AbelianGroup / Ring / Module derive by blanket impl
 // ============================================================================
 
-impl<T> Associative for CausalTensorTrain<T> where T: Scalar {}
-impl<T> Commutative for CausalTensorTrain<T> where T: Scalar {}
-impl<T> Distributive for CausalTensorTrain<T> where T: Scalar {}
-impl<T> AbelianGroup for CausalTensorTrain<T> where T: Scalar {}
+impl<T> Associative for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}
+impl<T> Commutative for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}
+impl<T> Distributive for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}
+impl<T> AbelianGroup for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}

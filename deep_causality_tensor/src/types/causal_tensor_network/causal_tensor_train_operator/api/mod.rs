@@ -10,11 +10,11 @@ use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::causal_tensor_train_operator::CausalTensorTrainOperator;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor};
-use deep_causality_num::Scalar;
+use deep_causality_num::{ConjugateScalar, Scalar};
 
 impl<T> TensorTrainOperator<T> for CausalTensorTrainOperator<T>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
 {
     fn apply(
         &self,

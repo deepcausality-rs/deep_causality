@@ -11,7 +11,7 @@ use crate::types::causal_tensor_network::causal_tensor_train::{CausalTensorTrain
 use crate::types::causal_tensor_network::cross_config::CrossConfig;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor};
-use deep_causality_num::Scalar;
+use deep_causality_num::{ConjugateScalar, Scalar};
 
 /// `(r_left, n, r_right)` of a rank-3 core.
 fn dims<T>(core: &CausalTensor<T>) -> (usize, usize, usize) {
@@ -20,7 +20,7 @@ fn dims<T>(core: &CausalTensor<T>) -> (usize, usize, usize) {
 }
 
 /// `k × k` identity buffer (row-major).
-fn identity<T: Scalar>(k: usize) -> Vec<T> {
+fn identity<T: Scalar + ConjugateScalar<Real = T>>(k: usize) -> Vec<T> {
     let mut m = vec![T::zero(); k * k];
     for i in 0..k {
         m[i * k + i] = T::one();
@@ -29,7 +29,10 @@ fn identity<T: Scalar>(k: usize) -> Vec<T> {
 }
 
 /// In-place left-orthonormalize core `k` via QR, absorbing `R` into core `k+1`.
-fn qr_step<T: Scalar>(cores: &mut [CausalTensor<T>], k: usize) -> Result<(), CausalTensorError> {
+fn qr_step<T: Scalar + ConjugateScalar<Real = T>>(
+    cores: &mut [CausalTensor<T>],
+    k: usize,
+) -> Result<(), CausalTensorError> {
     let (rl, n, rr) = dims(&cores[k]);
     let m = cores[k].reshape(&[rl * n, rr])?;
     let (q, r) = m.qr()?;
@@ -44,7 +47,10 @@ fn qr_step<T: Scalar>(cores: &mut [CausalTensor<T>], k: usize) -> Result<(), Cau
 }
 
 /// In-place right-orthonormalize core `k` via LQ, absorbing `L` into core `k-1`.
-fn lq_step<T: Scalar>(cores: &mut [CausalTensor<T>], k: usize) -> Result<(), CausalTensorError> {
+fn lq_step<T: Scalar + ConjugateScalar<Real = T>>(
+    cores: &mut [CausalTensor<T>],
+    k: usize,
+) -> Result<(), CausalTensorError> {
     let (rl, n, rr) = dims(&cores[k]);
     let m = cores[k].reshape(&[rl, n * rr])?;
     // LQ via QR of the transpose: Mᵀ = Q R ⇒ M = Rᵀ Qᵀ.
@@ -65,7 +71,7 @@ fn lq_step<T: Scalar>(cores: &mut [CausalTensor<T>], k: usize) -> Result<(), Cau
 
 impl<T> CausalTensorTrain<T>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
 {
     /// Scales the represented tensor by a scalar (exact, rank-preserving).
     ///
@@ -86,7 +92,7 @@ where
 
 impl<T> TensorTrain<T> for CausalTensorTrain<T>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
 {
     fn to_dense(&self) -> Result<CausalTensor<T>, CausalTensorError> {
         // An algebraic identity is shape-polymorphic; densify it to the corresponding scalar,

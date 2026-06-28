@@ -3,23 +3,26 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_num::{ConjugateScalar, Float106, FromPrimitive, RealField};
 use deep_causality_tensor::{CausalTensor, CausalTensorError};
 
 fn v<T: FromPrimitive>(x: f64) -> T {
     T::from_f64(x).unwrap()
 }
 
-fn tensor<T: RealField + FromPrimitive>(data: &[f64], shape: &[usize]) -> CausalTensor<T> {
+fn tensor<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    data: &[f64],
+    shape: &[usize],
+) -> CausalTensor<T> {
     let d: Vec<T> = data.iter().map(|&x| v::<T>(x)).collect();
     CausalTensor::new(d, shape.to_vec()).unwrap()
 }
 
-fn tol<T: RealField + FromPrimitive>() -> T {
+fn tol<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> T {
     T::epsilon().sqrt() * v::<T>(16.0)
 }
 
-fn approx<T: RealField + FromPrimitive>(a: T, b: T) {
+fn approx<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(a: T, b: T) {
     assert!(
         (a - b).abs() <= tol::<T>(),
         "values differ beyond tolerance"
@@ -45,7 +48,9 @@ fn matmul<T: RealField>(q: &CausalTensor<T>, r: &CausalTensor<T>) -> Vec<T> {
     out
 }
 
-fn assert_orthonormal_cols<T: RealField + FromPrimitive>(m: &CausalTensor<T>) {
+fn assert_orthonormal_cols<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    m: &CausalTensor<T>,
+) {
     let rows = m.shape()[0];
     let cols = m.shape()[1];
     let data = m.as_slice();
@@ -75,7 +80,7 @@ fn assert_upper_triangular<T: RealField>(r: &CausalTensor<T>) {
     }
 }
 
-fn check_qr<T: RealField + FromPrimitive>() {
+fn check_qr<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     // Tall matrix.
     let a = tensor::<T>(&[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], &[3, 2]);
     let (q, r) = a.qr().unwrap();

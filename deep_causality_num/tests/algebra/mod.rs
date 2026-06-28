@@ -29,3 +29,7 @@ pub(crate) mod field_real_f64_tests;
 #[cfg(test)]
 #[cfg(not(miri))]
 mod real_tests;
+#[cfg(test)]
+mod scalar_conjugate_tests;
+#[cfg(test)]
+mod scalar_normed_tests;

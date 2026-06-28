@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_num::{ConjugateScalar, Float106, FromPrimitive, RealField};
 use deep_causality_tensor::{
     CausalTensor, CausalTensorError, CausalTensorTrain, CrossConfig, TensorTrain,
 };
@@ -12,19 +12,22 @@ fn v<T: FromPrimitive>(x: f64) -> T {
     T::from_f64(x).unwrap()
 }
 
-fn tol<T: RealField + FromPrimitive>() -> T {
+fn tol<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> T {
     T::epsilon().sqrt() * v::<T>(64.0)
 }
 
 /// Densifies an oracle for a reference comparison.
-fn dense_of<T: RealField + FromPrimitive, F: FnMut(&[usize]) -> T>(
+fn dense_of<T: RealField + FromPrimitive + ConjugateScalar<Real = T>, F: FnMut(&[usize]) -> T>(
     shape: &[usize],
     f: F,
 ) -> CausalTensor<T> {
     CausalTensor::from_shape_fn(shape, f)
 }
 
-fn assert_dense_eq<T: RealField + FromPrimitive>(a: &CausalTensor<T>, b: &CausalTensor<T>) {
+fn assert_dense_eq<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    a: &CausalTensor<T>,
+    b: &CausalTensor<T>,
+) {
     assert_eq!(a.shape(), b.shape());
     for (x, y) in a.as_slice().iter().zip(b.as_slice().iter()) {
         assert!((*x - *y).abs() <= tol::<T>(), "differ beyond tolerance");
@@ -32,7 +35,7 @@ fn assert_dense_eq<T: RealField + FromPrimitive>(a: &CausalTensor<T>, b: &Causal
 }
 
 // Rank-1 separable oracle: f(i) = ∏_k (i_k + k + 1).
-fn rank1<T: RealField + FromPrimitive>(idx: &[usize]) -> T {
+fn rank1<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(idx: &[usize]) -> T {
     let mut p = v::<T>(1.0);
     for (k, &i) in idx.iter().enumerate() {
         p *= v::<T>((i + k + 1) as f64);
@@ -41,7 +44,7 @@ fn rank1<T: RealField + FromPrimitive>(idx: &[usize]) -> T {
 }
 
 // Rank-2 oracle: f(i) = ∏ (i_k+1) + ∏ (-1)^? ... use two distinct separable terms.
-fn rank2<T: RealField + FromPrimitive>(idx: &[usize]) -> T {
+fn rank2<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(idx: &[usize]) -> T {
     let mut a = v::<T>(1.0);
     let mut b = v::<T>(1.0);
     for (k, &i) in idx.iter().enumerate() {
@@ -51,7 +54,7 @@ fn rank2<T: RealField + FromPrimitive>(idx: &[usize]) -> T {
     a + b
 }
 
-fn check_rank1<T: RealField + FromPrimitive>() {
+fn check_rank1<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let shape = [3usize, 3, 3];
     let cfg = CrossConfig::<T>::with_rank_cap(4, v::<T>(1e-10)).unwrap();
     let (tt, residual) = CausalTensorTrain::cross(&shape, rank1::<T>, &cfg).unwrap();
@@ -62,7 +65,7 @@ fn check_rank1<T: RealField + FromPrimitive>() {
     assert_dense_eq(&tt.to_dense().unwrap(), &dense_of(&shape, rank1::<T>));
 }
 
-fn check_rank2<T: RealField + FromPrimitive>() {
+fn check_rank2<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let shape = [4usize, 4, 4, 4];
     let cfg = CrossConfig::<T>::with_rank_cap(6, v::<T>(1e-10)).unwrap();
     let (tt, residual) = CausalTensorTrain::cross(&shape, rank2::<T>, &cfg).unwrap();

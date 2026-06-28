@@ -9,10 +9,16 @@
 //! (no `Default`), so they stay valid for the dual-number scalar — unlike `CausalTensor::matmul`,
 //! which requires `Default`.
 
-use deep_causality_num::Scalar;
+use deep_causality_num::{ConjugateScalar, Scalar};
 
 /// Row-major matrix product: `a` (`m × k`) times `b` (`k × n`) into an `m × n` buffer.
-pub(crate) fn matmul<T: Scalar>(a: &[T], m: usize, k: usize, b: &[T], n: usize) -> Vec<T> {
+pub(crate) fn matmul<T: Scalar + ConjugateScalar<Real = T>>(
+    a: &[T],
+    m: usize,
+    k: usize,
+    b: &[T],
+    n: usize,
+) -> Vec<T> {
     let mut out = vec![T::zero(); m * n];
     for i in 0..m {
         for p in 0..k {
@@ -31,7 +37,11 @@ pub(crate) fn matmul<T: Scalar>(a: &[T], m: usize, k: usize, b: &[T], n: usize) 
 }
 
 /// Transposes a row-major `rows × cols` buffer into `cols × rows`.
-pub(crate) fn transpose<T: Scalar>(a: &[T], rows: usize, cols: usize) -> Vec<T> {
+pub(crate) fn transpose<T: Scalar + ConjugateScalar<Real = T>>(
+    a: &[T],
+    rows: usize,
+    cols: usize,
+) -> Vec<T> {
     let mut out = vec![T::zero(); rows * cols];
     for i in 0..rows {
         for j in 0..cols {

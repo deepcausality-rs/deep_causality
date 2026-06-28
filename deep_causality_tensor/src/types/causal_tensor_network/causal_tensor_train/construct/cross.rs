@@ -8,14 +8,14 @@ use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::causal_tensor_train::linalg::matmul;
 use crate::types::causal_tensor_network::cross_config::CrossConfig;
 use crate::{CausalTensor, CausalTensorError};
-use deep_causality_num::Scalar;
+use deep_causality_num::{ConjugateScalar, Scalar};
 
 /// A list of multi-indices (each a fixed-length `Vec<usize>`).
 type IndexSet = Vec<Vec<usize>>;
 
 impl<T> CausalTensorTrain<T>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
 {
     /// Builds a tensor train from an oracle `f(index) -> value` **without forming the dense
     /// tensor**, via TT-cross (alternating maxvol-style index selection).
@@ -138,7 +138,7 @@ fn eval_cross<T, F>(
     oracle: &mut F,
 ) -> Result<(Vec<T>, usize), CausalTensorError>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
     F: FnMut(&[usize]) -> T,
 {
     let nk = shape[k];
@@ -171,7 +171,7 @@ fn eval_cross_right<T, F>(
     oracle: &mut F,
 ) -> Result<(Vec<T>, usize), CausalTensorError>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
     F: FnMut(&[usize]) -> T,
 {
     let nk = shape[k];
@@ -204,7 +204,7 @@ fn build_cores<T, F>(
     oracle: &mut F,
 ) -> Result<Vec<CausalTensor<T>>, CausalTensorError>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
     F: FnMut(&[usize]) -> T,
 {
     let d = shape.len();
@@ -278,7 +278,12 @@ fn extend_right(right: &IndexSet, pivots: &[usize]) -> IndexSet {
 
 /// Selects up to `target` independent pivot rows of a row-major `rows × cols` matrix by Gaussian
 /// elimination with partial pivoting (rank-revealing). Returns the pivot row indices.
-fn pivot_rows<T: Scalar>(a: &[T], rows: usize, cols: usize, target: usize) -> Vec<usize> {
+fn pivot_rows<T: Scalar + ConjugateScalar<Real = T>>(
+    a: &[T],
+    rows: usize,
+    cols: usize,
+    target: usize,
+) -> Vec<usize> {
     let limit = target.min(cols).min(rows);
     let mut work = a.to_vec();
     let mut used = vec![false; rows];
@@ -342,7 +347,7 @@ fn pivot_rows<T: Scalar>(a: &[T], rows: usize, cols: usize, target: usize) -> Ve
 /// Inverts a square `n × n` row-major matrix by Gauss–Jordan elimination with partial pivoting.
 /// Returns `None` if singular. Bound on `Scalar` (so it admits the dual scalar), unlike
 /// `CausalTensor::inverse`.
-fn invert_square<T: Scalar>(a: &[T], n: usize) -> Option<Vec<T>> {
+fn invert_square<T: Scalar + ConjugateScalar<Real = T>>(a: &[T], n: usize) -> Option<Vec<T>> {
     let mut m = a.to_vec();
     let mut inv = vec![T::zero(); n * n];
     for i in 0..n {
@@ -402,7 +407,7 @@ fn estimate_residual<T, F>(
     state: &mut u64,
 ) -> Result<T, CausalTensorError>
 where
-    T: Scalar,
+    T: Scalar + ConjugateScalar<Real = T>,
     F: FnMut(&[usize]) -> T,
 {
     use crate::TensorTrain;

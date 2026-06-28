@@ -89,3 +89,5 @@ pub mod ring_commutative;
 pub(crate) mod rotation;
 pub mod scalar;
 pub mod semigroup;
+pub mod scalar_conjugate;
+pub mod scalar_normed;

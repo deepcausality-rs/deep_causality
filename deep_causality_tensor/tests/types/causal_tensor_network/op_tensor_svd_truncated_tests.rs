@@ -3,24 +3,27 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_num::{ConjugateScalar, Float106, FromPrimitive, RealField};
 use deep_causality_tensor::{CausalTensor, CausalTensorError, Truncation};
 
 fn v<T: FromPrimitive>(x: f64) -> T {
     T::from_f64(x).unwrap()
 }
 
-fn tensor<T: RealField + FromPrimitive>(data: &[f64], shape: &[usize]) -> CausalTensor<T> {
+fn tensor<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    data: &[f64],
+    shape: &[usize],
+) -> CausalTensor<T> {
     let d: Vec<T> = data.iter().map(|&x| v::<T>(x)).collect();
     CausalTensor::new(d, shape.to_vec()).unwrap()
 }
 
 /// Working tolerance scaled by precision: `√ε · 16`.
-fn tol<T: RealField + FromPrimitive>() -> T {
+fn tol<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> T {
     T::epsilon().sqrt() * v::<T>(16.0)
 }
 
-fn approx<T: RealField + FromPrimitive>(a: T, b: T) {
+fn approx<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(a: T, b: T) {
     assert!(
         (a - b).abs() <= tol::<T>(),
         "values differ beyond tolerance"
@@ -51,7 +54,9 @@ fn reconstruct<T: RealField>(
 }
 
 /// Asserts the columns of an `r × c` matrix are orthonormal (`MᵀM ≈ I`).
-fn assert_orthonormal_cols<T: RealField + FromPrimitive>(m: &CausalTensor<T>) {
+fn assert_orthonormal_cols<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    m: &CausalTensor<T>,
+) {
     let rows = m.shape()[0];
     let cols = m.shape()[1];
     let data = m.as_slice();
@@ -68,7 +73,9 @@ fn assert_orthonormal_cols<T: RealField + FromPrimitive>(m: &CausalTensor<T>) {
 }
 
 /// Asserts the rows of an `r × c` matrix are orthonormal (`MMᵀ ≈ I`).
-fn assert_orthonormal_rows<T: RealField + FromPrimitive>(m: &CausalTensor<T>) {
+fn assert_orthonormal_rows<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    m: &CausalTensor<T>,
+) {
     let rows = m.shape()[0];
     let cols = m.shape()[1];
     let data = m.as_slice();
@@ -84,7 +91,7 @@ fn assert_orthonormal_rows<T: RealField + FromPrimitive>(m: &CausalTensor<T>) {
     }
 }
 
-fn check_svd<T: RealField + FromPrimitive>() {
+fn check_svd<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let full = Truncation::<T>::by_bond(1024).unwrap();
 
     // (1) Diagonal matrix: singular values are |diagonal|, descending.

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_num::{ConjugateScalar, Float106, FromPrimitive, RealField};
 use deep_causality_tensor::{
     CanonicalForm, CausalTensor, CausalTensorError, CausalTensorTrain, TensorTrain, Truncation,
 };
@@ -12,39 +12,49 @@ fn v<T: FromPrimitive>(x: f64) -> T {
     T::from_f64(x).unwrap()
 }
 
-fn tensor<T: RealField + FromPrimitive>(data: &[f64], shape: &[usize]) -> CausalTensor<T> {
+fn tensor<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    data: &[f64],
+    shape: &[usize],
+) -> CausalTensor<T> {
     CausalTensor::new(data.iter().map(|&x| v::<T>(x)).collect(), shape.to_vec()).unwrap()
 }
 
-fn tol<T: RealField + FromPrimitive>() -> T {
+fn tol<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> T {
     T::epsilon().sqrt() * v::<T>(64.0)
 }
 
-fn close<T: RealField + FromPrimitive>(a: T, b: T) {
+fn close<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(a: T, b: T) {
     assert!(
         (a - b).abs() <= tol::<T>(),
         "values differ beyond tolerance"
     );
 }
 
-fn assert_dense_eq<T: RealField + FromPrimitive>(a: &CausalTensor<T>, b: &CausalTensor<T>) {
+fn assert_dense_eq<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    a: &CausalTensor<T>,
+    b: &CausalTensor<T>,
+) {
     assert_eq!(a.shape(), b.shape());
     for (x, y) in a.as_slice().iter().zip(b.as_slice().iter()) {
         close(*x, *y);
     }
 }
 
-fn sample<T: RealField + FromPrimitive>() -> CausalTensor<T> {
+fn sample<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> CausalTensor<T> {
     let data: Vec<f64> = (0..24).map(|i| (i as f64).sin()).collect();
     tensor::<T>(&data, &[2, 3, 4])
 }
 
-fn tt<T: RealField + FromPrimitive>(dense: &CausalTensor<T>) -> CausalTensorTrain<T> {
+fn tt<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    dense: &CausalTensor<T>,
+) -> CausalTensorTrain<T> {
     CausalTensorTrain::from_dense(dense, &Truncation::<T>::by_bond(4096).unwrap()).unwrap()
 }
 
 /// Columns of each core (reshaped `[rl*n, rr]`) are orthonormal.
-fn assert_left_orthonormal<T: RealField + FromPrimitive>(core: &CausalTensor<T>) {
+fn assert_left_orthonormal<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    core: &CausalTensor<T>,
+) {
     let (rl, n, rr) = (core.shape()[0], core.shape()[1], core.shape()[2]);
     let rows = rl * n;
     let data = core.as_slice();
@@ -60,7 +70,9 @@ fn assert_left_orthonormal<T: RealField + FromPrimitive>(core: &CausalTensor<T>)
 }
 
 /// Rows of each core (reshaped `[rl, n*rr]`) are orthonormal.
-fn assert_right_orthonormal<T: RealField + FromPrimitive>(core: &CausalTensor<T>) {
+fn assert_right_orthonormal<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    core: &CausalTensor<T>,
+) {
     let (rl, n, rr) = (core.shape()[0], core.shape()[1], core.shape()[2]);
     let cols = n * rr;
     let data = core.as_slice();
@@ -75,7 +87,7 @@ fn assert_right_orthonormal<T: RealField + FromPrimitive>(core: &CausalTensor<T>
     }
 }
 
-fn check_left<T: RealField + FromPrimitive>() {
+fn check_left<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let dense = sample::<T>();
     let lc = tt(&dense).left_canonicalize().unwrap();
     assert_eq!(lc.canonical_form(), CanonicalForm::LeftAt(2));
@@ -86,7 +98,7 @@ fn check_left<T: RealField + FromPrimitive>() {
     }
 }
 
-fn check_right<T: RealField + FromPrimitive>() {
+fn check_right<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let dense = sample::<T>();
     let rc = tt(&dense).right_canonicalize().unwrap();
     assert_eq!(rc.canonical_form(), CanonicalForm::RightAt(0));
@@ -97,7 +109,7 @@ fn check_right<T: RealField + FromPrimitive>() {
     }
 }
 
-fn check_mixed<T: RealField + FromPrimitive>() {
+fn check_mixed<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let dense = sample::<T>();
     let mc = tt(&dense).canonicalize_at(1).unwrap();
     assert_eq!(mc.canonical_form(), CanonicalForm::Mixed(1));
@@ -106,7 +118,7 @@ fn check_mixed<T: RealField + FromPrimitive>() {
     assert_right_orthonormal(&mc.cores()[2]);
 }
 
-fn check_round<T: RealField + FromPrimitive>() {
+fn check_round<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let dense = sample::<T>();
     let ta = tt(&dense);
     let full = Truncation::<T>::by_bond(4096).unwrap();
@@ -130,7 +142,7 @@ fn check_round<T: RealField + FromPrimitive>() {
     assert!(rounded.max_bond() < inflated_bond);
 }
 
-fn check_round_truncation<T: RealField + FromPrimitive>() {
+fn check_round_truncation<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     // A separable (rank-1) tensor: outer product, exact at bond 1.
     let a = [v::<T>(1.0), v::<T>(2.0)];
     let b = [v::<T>(1.0), v::<T>(-1.0), v::<T>(0.5)];

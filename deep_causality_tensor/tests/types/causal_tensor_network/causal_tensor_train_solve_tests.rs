@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_num::{ConjugateScalar, Float106, FromPrimitive, RealField};
 use deep_causality_tensor::{
     CausalTensor, CausalTensorTrain, CausalTensorTrainOperator, SolveConfig, TensorTrain,
     TensorTrainOperator, Truncation, solve,
@@ -13,19 +13,24 @@ fn v<T: FromPrimitive>(x: f64) -> T {
     T::from_f64(x).unwrap()
 }
 
-fn tensor<T: RealField + FromPrimitive>(data: &[f64], shape: &[usize]) -> CausalTensor<T> {
+fn tensor<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    data: &[f64],
+    shape: &[usize],
+) -> CausalTensor<T> {
     CausalTensor::new(data.iter().map(|&x| v::<T>(x)).collect(), shape.to_vec()).unwrap()
 }
 
-fn tol<T: RealField + FromPrimitive>() -> T {
+fn tol<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> T {
     T::epsilon().sqrt() * v::<T>(256.0)
 }
 
-fn full<T: RealField + FromPrimitive>() -> Truncation<T> {
+fn full<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> Truncation<T> {
     Truncation::by_bond(4096).unwrap()
 }
 
-fn known_train<T: RealField + FromPrimitive>(shape: &[usize]) -> CausalTensorTrain<T> {
+fn known_train<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    shape: &[usize],
+) -> CausalTensorTrain<T> {
     let data: Vec<f64> = (0..shape.iter().product::<usize>())
         .map(|i| (i as f64).sin() + 1.5)
         .collect();
@@ -34,7 +39,7 @@ fn known_train<T: RealField + FromPrimitive>(shape: &[usize]) -> CausalTensorTra
 
 // ---- integrate ----
 
-fn check_integrate<T: RealField + FromPrimitive>() {
+fn check_integrate<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let shape = [2usize, 3, 2];
     let tt = known_train::<T>(&shape);
     // Integrate against all-ones weights == sum of all entries.
@@ -75,7 +80,7 @@ fn test_integrate_errors() {
 
 // ---- fit ----
 
-fn check_fit<T: RealField + FromPrimitive>() {
+fn check_fit<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     // Sample a known rank-bounded train fully, fit, and compare densely.
     let shape = [3usize, 3, 3];
     let target = known_train::<T>(&shape);
@@ -100,7 +105,10 @@ fn check_fit<T: RealField + FromPrimitive>() {
     assert_dense_eq(&fitted.to_dense().unwrap(), &dense);
 }
 
-fn assert_dense_eq<T: RealField + FromPrimitive>(a: &CausalTensor<T>, b: &CausalTensor<T>) {
+fn assert_dense_eq<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    a: &CausalTensor<T>,
+    b: &CausalTensor<T>,
+) {
     assert_eq!(a.shape(), b.shape());
     for (x, y) in a.as_slice().iter().zip(b.as_slice().iter()) {
         assert!((*x - *y).abs() <= tol::<T>(), "differ beyond tolerance");
@@ -118,7 +126,7 @@ fn test_fit_float106() {
 
 // ---- linear ----
 
-fn check_linear<T: RealField + FromPrimitive>() {
+fn check_linear<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     // A is a 2-site operator; x* is a known state; b = A·x*. Solving recovers x*.
     let a_dense = tensor::<T>(
         &(0..16)
@@ -151,7 +159,7 @@ fn test_linear_float106() {
 
 // ---- eigen (DMRG3S) ----
 
-fn check_eigen<T: RealField + FromPrimitive>() {
+fn check_eigen<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     // Build a symmetric operator A = s·I + (g − s)·w·wᵀ on a 3×3 (= 9-dim) space, with g < s.
     // Then w is the unique ground state with eigenvalue g, every u ⊥ w has eigenvalue s.
     // w's 3×3 reshape is full rank 3, so the ground-state train has bond 3 — exercising the
@@ -277,7 +285,9 @@ fn interleaved_index(out: usize, inx: usize, dims: &[usize]) -> usize {
 }
 
 /// A skew-symmetric operator `M = R − Rᵀ` (so `exp(M·dt)` is orthogonal / norm-preserving).
-fn skew_op<T: RealField + FromPrimitive>(dims: &[usize]) -> CausalTensorTrainOperator<T> {
+fn skew_op<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    dims: &[usize],
+) -> CausalTensorTrainOperator<T> {
     let nn: usize = dims.iter().product();
     let mut inter = vec![T::zero(); nn * nn];
     for out in 0..nn {
@@ -292,7 +302,7 @@ fn skew_op<T: RealField + FromPrimitive>(dims: &[usize]) -> CausalTensorTrainOpe
     CausalTensorTrainOperator::from_dense(&a_dense, dims, dims, &full::<T>()).unwrap()
 }
 
-fn check_tdvp_norm<T: RealField + FromPrimitive>() {
+fn check_tdvp_norm<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     // A skew-symmetric generator on a 3-site space; one step must conserve the state norm.
     let dims = [2usize, 2, 2];
     let a = skew_op::<T>(&dims);

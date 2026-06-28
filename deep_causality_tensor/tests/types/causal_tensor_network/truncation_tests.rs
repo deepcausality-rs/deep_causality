@@ -3,14 +3,14 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_num::{ConjugateScalar, Float106, FromPrimitive, RealField};
 use deep_causality_tensor::{CausalTensorError, Truncation};
 
 fn v<T: FromPrimitive>(x: f64) -> T {
     T::from_f64(x).unwrap()
 }
 
-fn check_truncation<T: RealField + FromPrimitive>() {
+fn check_truncation<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let svals = [v::<T>(4.0), v::<T>(3.0), v::<T>(2.0), v::<T>(1.0)];
 
     // Pure bond cap keeps exactly the leading `max_bond` values.

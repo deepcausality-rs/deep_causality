@@ -4,7 +4,7 @@
  */
 
 use deep_causality_haft::EndoArrow;
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_num::{ConjugateScalar, Float106, FromPrimitive, RealField};
 use deep_causality_tensor::{
     CausalTensor, CausalTensorError, CausalTensorTrain, CausalTensorTrainOperator, Tensor,
     TensorTrain, TensorTrainOperator, Truncation,
@@ -14,38 +14,48 @@ fn v<T: FromPrimitive>(x: f64) -> T {
     T::from_f64(x).unwrap()
 }
 
-fn tensor<T: RealField + FromPrimitive>(data: &[f64], shape: &[usize]) -> CausalTensor<T> {
+fn tensor<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    data: &[f64],
+    shape: &[usize],
+) -> CausalTensor<T> {
     CausalTensor::new(data.iter().map(|&x| v::<T>(x)).collect(), shape.to_vec()).unwrap()
 }
 
-fn tol<T: RealField + FromPrimitive>() -> T {
+fn tol<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> T {
     T::epsilon().sqrt() * v::<T>(64.0)
 }
 
-fn assert_dense_eq<T: RealField + FromPrimitive>(a: &CausalTensor<T>, b: &CausalTensor<T>) {
+fn assert_dense_eq<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    a: &CausalTensor<T>,
+    b: &CausalTensor<T>,
+) {
     assert_eq!(a.shape(), b.shape());
     for (x, y) in a.as_slice().iter().zip(b.as_slice().iter()) {
         assert!((*x - *y).abs() <= tol::<T>(), "differ beyond tolerance");
     }
 }
 
-fn full<T: RealField + FromPrimitive>() -> Truncation<T> {
+fn full<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> Truncation<T> {
     Truncation::by_bond(4096).unwrap()
 }
 
 // A 2×2×2×2 (site-interleaved [out0,in0,out1,in1]) operator with distinct entries.
-fn op_dense<T: RealField + FromPrimitive>(seed: f64) -> CausalTensor<T> {
+fn op_dense<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    seed: f64,
+) -> CausalTensor<T> {
     let data: Vec<f64> = (0..16).map(|i| (i as f64 + seed).sin()).collect();
     tensor::<T>(&data, &[2, 2, 2, 2])
 }
 
-fn state_dense<T: RealField + FromPrimitive>(seed: f64) -> CausalTensor<T> {
+fn state_dense<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    seed: f64,
+) -> CausalTensor<T> {
     let data: Vec<f64> = (0..4).map(|i| (i as f64) * 0.5 + seed).collect();
     tensor::<T>(&data, &[2, 2])
 }
 
 /// Brute-force dense action of a 2-site operator on a 2-site state.
-fn dense_apply<T: RealField + FromPrimitive>(
+fn dense_apply<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
     op: &CausalTensor<T>,
     state: &CausalTensor<T>,
 ) -> CausalTensor<T> {
@@ -68,14 +78,14 @@ fn dense_apply<T: RealField + FromPrimitive>(
     CausalTensor::new(out, vec![2, 2]).unwrap()
 }
 
-fn check_identity<T: RealField + FromPrimitive>() {
+fn check_identity<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let x = CausalTensorTrain::from_dense(&state_dense::<T>(0.0), &full::<T>()).unwrap();
     let id = CausalTensorTrainOperator::<T>::identity(&[2, 2]);
     let applied = id.apply(&x, &full::<T>()).unwrap();
     assert_dense_eq(&applied.to_dense().unwrap(), &x.to_dense().unwrap());
 }
 
-fn check_from_dense_roundtrip<T: RealField + FromPrimitive>() {
+fn check_from_dense_roundtrip<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let dense = op_dense::<T>(1.0);
     let op = CausalTensorTrainOperator::from_dense(&dense, &[2, 2], &[2, 2], &full::<T>()).unwrap();
     assert_eq!(op.out_dims(), &[2, 2]);
@@ -83,7 +93,7 @@ fn check_from_dense_roundtrip<T: RealField + FromPrimitive>() {
     assert_dense_eq(&op.to_dense().unwrap(), &dense);
 }
 
-fn check_apply_matches_dense<T: RealField + FromPrimitive>() {
+fn check_apply_matches_dense<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let op_d = op_dense::<T>(0.7);
     let st_d = state_dense::<T>(-0.3);
     let op = CausalTensorTrainOperator::from_dense(&op_d, &[2, 2], &[2, 2], &full::<T>()).unwrap();
@@ -94,7 +104,7 @@ fn check_apply_matches_dense<T: RealField + FromPrimitive>() {
     assert_dense_eq(&got, &want);
 }
 
-fn check_compose<T: RealField + FromPrimitive>() {
+fn check_compose<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let m =
         CausalTensorTrainOperator::from_dense(&op_dense::<T>(0.2), &[2, 2], &[2, 2], &full::<T>())
             .unwrap();
@@ -118,7 +128,7 @@ fn check_compose<T: RealField + FromPrimitive>() {
     assert_dense_eq(&via_compose, &via_chain);
 }
 
-fn check_transpose<T: RealField + FromPrimitive>() {
+fn check_transpose<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let dense = op_dense::<T>(0.9);
     let op = CausalTensorTrainOperator::from_dense(&dense, &[2, 2], &[2, 2], &full::<T>()).unwrap();
     let t = op.transpose();
@@ -142,7 +152,7 @@ fn check_transpose<T: RealField + FromPrimitive>() {
     assert_dense_eq(&t.to_dense().unwrap(), &want);
 }
 
-fn check_round<T: RealField + FromPrimitive>() {
+fn check_round<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let op =
         CausalTensorTrainOperator::from_dense(&op_dense::<T>(0.4), &[2, 2], &[2, 2], &full::<T>())
             .unwrap();

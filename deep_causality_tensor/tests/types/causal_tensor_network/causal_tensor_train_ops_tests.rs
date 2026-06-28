@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_num::{ConjugateScalar, Float106, FromPrimitive, RealField};
 use deep_causality_tensor::{
     CausalTensor, CausalTensorError, CausalTensorTrain, Tensor, TensorTrain, Truncation,
 };
@@ -12,43 +12,51 @@ fn v<T: FromPrimitive>(x: f64) -> T {
     T::from_f64(x).unwrap()
 }
 
-fn tensor<T: RealField + FromPrimitive>(data: &[f64], shape: &[usize]) -> CausalTensor<T> {
+fn tensor<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    data: &[f64],
+    shape: &[usize],
+) -> CausalTensor<T> {
     CausalTensor::new(data.iter().map(|&x| v::<T>(x)).collect(), shape.to_vec()).unwrap()
 }
 
-fn tol<T: RealField + FromPrimitive>() -> T {
+fn tol<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> T {
     T::epsilon().sqrt() * v::<T>(64.0)
 }
 
-fn close<T: RealField + FromPrimitive>(a: T, b: T) {
+fn close<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(a: T, b: T) {
     assert!(
         (a - b).abs() <= tol::<T>(),
         "values differ beyond tolerance"
     );
 }
 
-fn assert_dense_eq<T: RealField + FromPrimitive>(a: &CausalTensor<T>, b: &CausalTensor<T>) {
+fn assert_dense_eq<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    a: &CausalTensor<T>,
+    b: &CausalTensor<T>,
+) {
     assert_eq!(a.shape(), b.shape());
     for (x, y) in a.as_slice().iter().zip(b.as_slice().iter()) {
         close(*x, *y);
     }
 }
 
-fn dense_a<T: RealField + FromPrimitive>() -> CausalTensor<T> {
+fn dense_a<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> CausalTensor<T> {
     let data: Vec<f64> = (0..12).map(|i| (i as f64) * 0.5 - 1.0).collect();
     tensor::<T>(&data, &[2, 3, 2])
 }
-fn dense_b<T: RealField + FromPrimitive>() -> CausalTensor<T> {
+fn dense_b<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> CausalTensor<T> {
     let data: Vec<f64> = (0..12).map(|i| 2.0 - (i as f64) * 0.3).collect();
     tensor::<T>(&data, &[2, 3, 2])
 }
 
-fn tt<T: RealField + FromPrimitive>(dense: &CausalTensor<T>) -> CausalTensorTrain<T> {
+fn tt<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    dense: &CausalTensor<T>,
+) -> CausalTensorTrain<T> {
     let full = Truncation::<T>::by_bond(4096).unwrap();
     CausalTensorTrain::from_dense(dense, &full).unwrap()
 }
 
-fn check_inner_norm<T: RealField + FromPrimitive>() {
+fn check_inner_norm<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let (da, db) = (dense_a::<T>(), dense_b::<T>());
     let (ta, tb) = (tt(&da), tt(&db));
 
@@ -67,7 +75,7 @@ fn check_inner_norm<T: RealField + FromPrimitive>() {
     close(ta.norm().unwrap(), sq.sqrt());
 }
 
-fn check_linear<T: RealField + FromPrimitive>() {
+fn check_linear<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let (da, db) = (dense_a::<T>(), dense_b::<T>());
     let (ta, tb) = (tt(&da), tt(&db));
 
@@ -108,7 +116,7 @@ fn check_linear<T: RealField + FromPrimitive>() {
     assert_dense_eq(&had, &want);
 }
 
-fn check_marginalize<T: RealField + FromPrimitive + Default>() {
+fn check_marginalize<T: RealField + FromPrimitive + ConjugateScalar<Real = T> + Default>() {
     let da = dense_a::<T>();
     let ta = tt(&da);
 
@@ -128,7 +136,10 @@ fn check_marginalize<T: RealField + FromPrimitive + Default>() {
     assert_dense_eq(&got, &want);
 }
 
-fn tensor_from<T: RealField + FromPrimitive>(data: Vec<T>, shape: &[usize]) -> CausalTensor<T> {
+fn tensor_from<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    data: Vec<T>,
+    shape: &[usize],
+) -> CausalTensor<T> {
     CausalTensor::new(data, shape.to_vec()).unwrap()
 }
 

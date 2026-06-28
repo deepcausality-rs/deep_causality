@@ -11,7 +11,7 @@ use crate::types::causal_tensor_network::causal_tensor_train_operator::CausalTen
 use crate::types::causal_tensor_network::solve_config::SolveConfig;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor};
-use deep_causality_num::Scalar;
+use deep_causality_num::{ConjugateScalar, Scalar};
 
 /// Fits a tensor train of bond dimension up to `max_rank` to a set of `(index, value)` samples by
 /// alternating least squares (TT completion / regression).
@@ -33,7 +33,7 @@ use deep_causality_num::Scalar;
 ///   samples.
 /// - [`CausalTensorError::SweepDidNotConverge`] if the RMS residual stays above `tol` after
 ///   `max_sweeps`.
-pub fn fit<T: Scalar>(
+pub fn fit<T: Scalar + ConjugateScalar<Real = T>>(
     shape: &[usize],
     max_rank: usize,
     samples: &[(Vec<usize>, T)],
@@ -78,7 +78,7 @@ pub fn fit<T: Scalar>(
 /// # Errors
 /// - [`CausalTensorError::ShapeMismatch`] if `b`'s physical dimensions differ from `A`'s output.
 /// - [`CausalTensorError::SweepDidNotConverge`] if the relative residual stays above `tol`.
-pub fn linear<T: Scalar>(
+pub fn linear<T: Scalar + ConjugateScalar<Real = T>>(
     a: &CausalTensorTrainOperator<T>,
     b: &CausalTensorTrain<T>,
     max_rank: usize,
@@ -148,7 +148,7 @@ pub fn linear<T: Scalar>(
 /// # Errors
 /// - [`CausalTensorError::ShapeMismatch`] if `A` is not square (`in_dims != out_dims`).
 /// - [`CausalTensorError::SweepDidNotConverge`] if the relative residual stays above `tol`.
-pub fn eigen<T: Scalar>(
+pub fn eigen<T: Scalar + ConjugateScalar<Real = T>>(
     a: &CausalTensorTrainOperator<T>,
     max_rank: usize,
     config: &SolveConfig<T>,
@@ -217,7 +217,7 @@ pub fn eigen<T: Scalar>(
 /// - [`CausalTensorError::ShapeMismatch`] if `op` is not square or its dimensions do not match the
 ///   state's physical dimensions.
 /// - Propagates SVD/reshape errors.
-pub fn tdvp_step<T: Scalar>(
+pub fn tdvp_step<T: Scalar + ConjugateScalar<Real = T>>(
     op: &CausalTensorTrainOperator<T>,
     train: &mut CausalTensorTrain<T>,
     dt: T,
@@ -287,7 +287,7 @@ pub fn tdvp_step<T: Scalar>(
 // fit internals
 // ============================================================================
 
-fn fit_site<T: Scalar>(
+fn fit_site<T: Scalar + ConjugateScalar<Real = T>>(
     cores: &mut [CausalTensor<T>],
     shape: &[usize],
     k: usize,
@@ -343,7 +343,11 @@ fn fit_site<T: Scalar>(
 }
 
 /// Left partial product `∏_{j<k} core_j[:, idx_j, :]`, a length-`r_k` row vector.
-fn left_product<T: Scalar>(cores: &[CausalTensor<T>], idx: &[usize], k: usize) -> Vec<T> {
+fn left_product<T: Scalar + ConjugateScalar<Real = T>>(
+    cores: &[CausalTensor<T>],
+    idx: &[usize],
+    k: usize,
+) -> Vec<T> {
     let mut v = vec![T::one()]; // r_0 == 1
     for (j, core) in cores.iter().enumerate().take(k) {
         let (rl, n, rr) = (core.shape()[0], core.shape()[1], core.shape()[2]);
@@ -365,7 +369,11 @@ fn left_product<T: Scalar>(cores: &[CausalTensor<T>], idx: &[usize], k: usize) -
 }
 
 /// Right partial product `∏_{j>k} core_j[:, idx_j, :]`, a length-`r_{k+1}` column vector.
-fn right_product<T: Scalar>(cores: &[CausalTensor<T>], idx: &[usize], k: usize) -> Vec<T> {
+fn right_product<T: Scalar + ConjugateScalar<Real = T>>(
+    cores: &[CausalTensor<T>],
+    idx: &[usize],
+    k: usize,
+) -> Vec<T> {
     let d = cores.len();
     let mut v = vec![T::one()]; // r_d == 1
     for j in (k + 1..d).rev() {
@@ -387,7 +395,7 @@ fn right_product<T: Scalar>(cores: &[CausalTensor<T>], idx: &[usize], k: usize) 
     v
 }
 
-fn rms_residual<T: Scalar>(
+fn rms_residual<T: Scalar + ConjugateScalar<Real = T>>(
     cores: &[CausalTensor<T>],
     samples: &[(Vec<usize>, T)],
 ) -> Result<T, CausalTensorError> {
@@ -413,7 +421,7 @@ fn rms_residual<T: Scalar>(
 /// MPO `op` onto the current cores of `x` at site `k`. Returns the row-major `n×n` matrix
 /// (`n = r_k·n_k·r_{k+1}`) and `n`. Shared by the linear solve (`op = AᵀA`) and the DMRG3S
 /// eigensolver (`op = A`).
-fn build_local_h<T: Scalar>(
+fn build_local_h<T: Scalar + ConjugateScalar<Real = T>>(
     x: &[CausalTensor<T>],
     op: &CausalTensorTrainOperator<T>,
     k: usize,
@@ -466,7 +474,7 @@ fn build_local_h<T: Scalar>(
 }
 
 /// One ALS site update for `G x = c`: build the local system from the environments and solve.
-fn linear_site<T: Scalar>(
+fn linear_site<T: Scalar + ConjugateScalar<Real = T>>(
     x: &mut [CausalTensor<T>],
     g: &CausalTensorTrainOperator<T>,
     c: &CausalTensorTrain<T>,
@@ -519,7 +527,7 @@ fn linear_site<T: Scalar>(
 }
 
 /// Left environment of `<x|G|x>` up to (not including) site `k`: shape `[r_k, gG_k, r_k]`.
-fn env_g_left<T: Scalar>(
+fn env_g_left<T: Scalar + ConjugateScalar<Real = T>>(
     x: &[CausalTensor<T>],
     g: &CausalTensorTrainOperator<T>,
     k: usize,
@@ -577,7 +585,7 @@ fn env_g_left<T: Scalar>(
 }
 
 /// Right environment of `<x|G|x>` from site `k+1`: shape `[r_{k+1}, gG_{k+1}, r_{k+1}]`.
-fn env_g_right<T: Scalar>(
+fn env_g_right<T: Scalar + ConjugateScalar<Real = T>>(
     x: &[CausalTensor<T>],
     g: &CausalTensorTrainOperator<T>,
     k: usize,
@@ -629,7 +637,11 @@ fn env_g_right<T: Scalar>(
 }
 
 /// Left environment of `<x|c>` up to site `k`: shape `[r_k, c_k]`.
-fn env_c_left<T: Scalar>(x: &[CausalTensor<T>], c: &CausalTensorTrain<T>, k: usize) -> Vec<T> {
+fn env_c_left<T: Scalar + ConjugateScalar<Real = T>>(
+    x: &[CausalTensor<T>],
+    c: &CausalTensorTrain<T>,
+    k: usize,
+) -> Vec<T> {
     let mut e = vec![T::one()];
     let mut rl = 1usize;
     let mut cl = 1usize;
@@ -666,7 +678,11 @@ fn env_c_left<T: Scalar>(x: &[CausalTensor<T>], c: &CausalTensorTrain<T>, k: usi
 }
 
 /// Right environment of `<x|c>` from site `k+1`: shape `[r_{k+1}, c_{k+1}]`.
-fn env_c_right<T: Scalar>(x: &[CausalTensor<T>], c: &CausalTensorTrain<T>, k: usize) -> Vec<T> {
+fn env_c_right<T: Scalar + ConjugateScalar<Real = T>>(
+    x: &[CausalTensor<T>],
+    c: &CausalTensorTrain<T>,
+    k: usize,
+) -> Vec<T> {
     let d = x.len();
     let mut e = vec![T::one()];
     let mut rr = 1usize;
@@ -709,7 +725,7 @@ fn env_c_right<T: Scalar>(x: &[CausalTensor<T>], c: &CausalTensorTrain<T>, k: us
 /// with the orthogonality center at `k`, so the environment is orthonormal and the local problem is a
 /// standard symmetric eigenproblem `H z = λ z`. Builds and symmetrizes the local effective operator,
 /// takes the smallest eigenpair, and writes the (unit-norm) eigenvector back into the core.
-fn eigen_site<T: Scalar>(
+fn eigen_site<T: Scalar + ConjugateScalar<Real = T>>(
     x: &mut [CausalTensor<T>],
     a: &CausalTensorTrainOperator<T>,
     k: usize,
@@ -734,7 +750,7 @@ fn eigen_site<T: Scalar>(
 }
 
 /// Symmetrizes a row-major `n×n` matrix in place: `H ← (H + Hᵀ)/2`.
-fn symmetrize<T: Scalar>(h: &mut [T], n: usize) {
+fn symmetrize<T: Scalar + ConjugateScalar<Real = T>>(h: &mut [T], n: usize) {
     let two = T::one() + T::one();
     for i in 0..n {
         for j in (i + 1)..n {
@@ -748,7 +764,7 @@ fn symmetrize<T: Scalar>(h: &mut [T], n: usize) {
 /// Eigendecomposition of a symmetric row-major `n×n` matrix by cyclic one-sided Jacobi rotations.
 /// Returns `(eigenvalues, V)` where the columns of the row-major `n×n` `V` are the eigenvectors:
 /// `A = V diag(λ) Vᵀ`. Eigenvalues are not sorted.
-fn sym_eig<T: Scalar>(mat: &[T], n: usize) -> (Vec<T>, Vec<T>) {
+fn sym_eig<T: Scalar + ConjugateScalar<Real = T>>(mat: &[T], n: usize) -> (Vec<T>, Vec<T>) {
     let mut a = mat.to_vec();
     let mut v = vec![T::zero(); n * n];
     for i in 0..n {
@@ -818,7 +834,10 @@ fn sym_eig<T: Scalar>(mat: &[T], n: usize) -> (Vec<T>, Vec<T>) {
 
 /// Contracts adjacent cores `a [r_k, n_k, m]` and `b [m, n_{k+1}, r_{k+2}]` over the shared bond `m`
 /// into the two-site tensor `Θ [r_k, n_k, n_{k+1}, r_{k+2}]` (row-major).
-fn contract_two<T: Scalar>(a: &CausalTensor<T>, b: &CausalTensor<T>) -> Vec<T> {
+fn contract_two<T: Scalar + ConjugateScalar<Real = T>>(
+    a: &CausalTensor<T>,
+    b: &CausalTensor<T>,
+) -> Vec<T> {
     let (rk, nk, mk) = (a.shape()[0], a.shape()[1], a.shape()[2]);
     let (nk1, rk2) = (b.shape()[1], b.shape()[2]);
     let ad = a.as_slice();
@@ -847,7 +866,7 @@ fn contract_two<T: Scalar>(a: &CausalTensor<T>, b: &CausalTensor<T>) -> Vec<T> {
 /// `H₂[(a,i,j,b),(a',i',j',b')] = Σ gl[a,gl_,a']·Aₖ[gl_,i,i',m]·Aₖ₊₁[m,j,j',gr_]·gr[b,gr_,b']`.
 /// **Precondition:** `x` is mixed-canonical with the block holding the center (orthonormal
 /// environment), so this is the true projected generator. Returns the `n₂×n₂` matrix and `n₂`.
-fn build_local_h2<T: Scalar>(
+fn build_local_h2<T: Scalar + ConjugateScalar<Real = T>>(
     x: &[CausalTensor<T>],
     op: &CausalTensorTrainOperator<T>,
     k: usize,
@@ -918,7 +937,7 @@ fn build_local_h2<T: Scalar>(
 /// `exp(dt·M)` for a row-major `n×n` matrix by scaling-and-squaring with an order-18 Taylor series.
 /// The matrix is scaled so its norm is `≤ 1/8` before the Taylor sum, then squared back; this reaches
 /// machine precision across `f32`/`f64`/`Float106` (the Taylor remainder is `≤ (1/8)^19/19!`).
-fn expm_scaled<T: Scalar>(m: &[T], n: usize, dt: T) -> Vec<T> {
+fn expm_scaled<T: Scalar + ConjugateScalar<Real = T>>(m: &[T], n: usize, dt: T) -> Vec<T> {
     // B = dt·M.
     let mut b: Vec<T> = m.iter().map(|&x| x * dt).collect();
     // Max-abs row-sum norm.
@@ -969,7 +988,7 @@ fn expm_scaled<T: Scalar>(m: &[T], n: usize, dt: T) -> Vec<T> {
 }
 
 /// Row-major `n×n` identity.
-fn mat_id<T: Scalar>(n: usize) -> Vec<T> {
+fn mat_id<T: Scalar + ConjugateScalar<Real = T>>(n: usize) -> Vec<T> {
     let mut m = vec![T::zero(); n * n];
     for i in 0..n {
         m[i * n + i] = T::one();
@@ -978,7 +997,7 @@ fn mat_id<T: Scalar>(n: usize) -> Vec<T> {
 }
 
 /// Row-major `n×n` matrix product `A·B`.
-fn mat_mul<T: Scalar>(a: &[T], b: &[T], n: usize) -> Vec<T> {
+fn mat_mul<T: Scalar + ConjugateScalar<Real = T>>(a: &[T], b: &[T], n: usize) -> Vec<T> {
     let mut c = vec![T::zero(); n * n];
     for i in 0..n {
         for p in 0..n {
@@ -995,7 +1014,7 @@ fn mat_mul<T: Scalar>(a: &[T], b: &[T], n: usize) -> Vec<T> {
 }
 
 /// Matrix–vector product `M·v` for a row-major `n×n` `M`.
-fn mat_vec<T: Scalar>(m: &[T], v: &[T], n: usize) -> Vec<T> {
+fn mat_vec<T: Scalar + ConjugateScalar<Real = T>>(m: &[T], v: &[T], n: usize) -> Vec<T> {
     let mut out = vec![T::zero(); n];
     for i in 0..n {
         let mut acc = T::zero();
@@ -1030,7 +1049,11 @@ fn bond_ranks(shape: &[usize], max_rank: usize) -> Vec<usize> {
 }
 
 /// A deterministically-seeded random train with the given per-bond ranks.
-fn init_random<T: Scalar>(shape: &[usize], ranks: &[usize], seed: u64) -> Vec<CausalTensor<T>> {
+fn init_random<T: Scalar + ConjugateScalar<Real = T>>(
+    shape: &[usize],
+    ranks: &[usize],
+    seed: u64,
+) -> Vec<CausalTensor<T>> {
     let d = shape.len();
     let mut state = seed;
     (0..d)
@@ -1053,7 +1076,7 @@ fn forward_then_back(d: usize) -> Vec<usize> {
 
 /// Solves `m·z = y` (row-major `n×n`) by Gaussian elimination with partial pivoting; on return `y`
 /// holds `z`. A (near-)singular pivot leaves that component at zero.
-fn solve_dense<T: Scalar>(m: &mut [T], y: &mut [T], n: usize) {
+fn solve_dense<T: Scalar + ConjugateScalar<Real = T>>(m: &mut [T], y: &mut [T], n: usize) {
     for col in 0..n {
         let mut piv = col;
         let mut best = m[col * n + col].abs();
@@ -1100,7 +1123,7 @@ fn solve_dense<T: Scalar>(m: &mut [T], y: &mut [T], n: usize) {
     }
 }
 
-fn rand_unit<T: Scalar>(state: &mut u64) -> T {
+fn rand_unit<T: Scalar + ConjugateScalar<Real = T>>(state: &mut u64) -> T {
     *state = state.wrapping_add(0x9E37_79B9_7F4A_7C15);
     let mut z = *state;
     z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);

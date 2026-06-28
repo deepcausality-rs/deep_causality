@@ -3,29 +3,39 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Float106, FromPrimitive, Module, One, RealField, Ring, Zero};
+use deep_causality_num::{
+    ConjugateScalar, Float106, FromPrimitive, Module, One, RealField, Ring, Zero,
+};
 use deep_causality_tensor::{CausalTensor, CausalTensorTrain, TensorTrain, Truncation};
 
 fn v<T: FromPrimitive>(x: f64) -> T {
     T::from_f64(x).unwrap()
 }
 
-fn tensor<T: RealField + FromPrimitive>(data: &[f64], shape: &[usize]) -> CausalTensor<T> {
+fn tensor<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    data: &[f64],
+    shape: &[usize],
+) -> CausalTensor<T> {
     CausalTensor::new(data.iter().map(|&x| v::<T>(x)).collect(), shape.to_vec()).unwrap()
 }
 
-fn tol<T: RealField + FromPrimitive>() -> T {
+fn tol<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() -> T {
     T::epsilon().sqrt() * v::<T>(64.0)
 }
 
-fn assert_dense_eq<T: RealField + FromPrimitive>(a: &CausalTensor<T>, b: &CausalTensor<T>) {
+fn assert_dense_eq<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    a: &CausalTensor<T>,
+    b: &CausalTensor<T>,
+) {
     assert_eq!(a.shape(), b.shape());
     for (x, y) in a.as_slice().iter().zip(b.as_slice().iter()) {
         assert!((*x - *y).abs() <= tol::<T>(), "differ beyond tolerance");
     }
 }
 
-fn sample<T: RealField + FromPrimitive>(seed: f64) -> CausalTensorTrain<T> {
+fn sample<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>(
+    seed: f64,
+) -> CausalTensorTrain<T> {
     let data: Vec<f64> = (0..12).map(|i| (i as f64) * 0.3 + seed).collect();
     CausalTensorTrain::from_dense(
         &tensor::<T>(&data, &[2, 3, 2]),
@@ -38,7 +48,7 @@ fn sample<T: RealField + FromPrimitive>(seed: f64) -> CausalTensorTrain<T> {
 fn assert_is_module<V: Module<f64>>(_: &V) {}
 fn assert_is_ring<R: Ring>(_: &R) {}
 
-fn check_additive_identity<T: RealField + FromPrimitive>() {
+fn check_additive_identity<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let a = sample::<T>(1.0);
     let zero = CausalTensorTrain::<T>::zero();
 
@@ -65,7 +75,7 @@ fn check_additive_identity<T: RealField + FromPrimitive>() {
     }
 }
 
-fn check_multiplicative_identity<T: RealField + FromPrimitive>() {
+fn check_multiplicative_identity<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let a = sample::<T>(0.5);
     let one = CausalTensorTrain::<T>::one();
 
@@ -85,7 +95,7 @@ fn check_multiplicative_identity<T: RealField + FromPrimitive>() {
     assert!((od.as_slice()[0] - v::<T>(1.0)).abs() <= tol::<T>());
 }
 
-fn check_operators<T: RealField + FromPrimitive>() {
+fn check_operators<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     let a = sample::<T>(1.0);
     let b = sample::<T>(-2.0);
 

@@ -8,7 +8,7 @@
 //! differentiation flows through the network with no change to the library code. Derivatives are
 //! checked against central finite differences.
 
-use deep_causality_num::{Dual, FromPrimitive, Scalar};
+use deep_causality_num::{ConjugateScalar, Dual, FromPrimitive, Scalar};
 use deep_causality_tensor::{CausalTensor, CausalTensorTrain, TensorTrain, Truncation};
 
 fn c<T: FromPrimitive>(x: f64) -> T {
@@ -17,7 +17,7 @@ fn c<T: FromPrimitive>(x: f64) -> T {
 
 /// Norm of a small tensor train whose core entries depend smoothly (affinely) on `t`. Built via
 /// `from_cores` (pure arithmetic, no SVD), so the result is a smooth function of `t`.
-fn param_norm<T: Scalar>(t: T) -> T {
+fn param_norm<T: Scalar + ConjugateScalar<Real = T>>(t: T) -> T {
     let a = [1.0, -0.5, 0.7, 0.3, -0.2, 0.9, 0.4, -0.6];
     let b = [0.5, 0.2, -0.3, 0.8, 0.1, -0.4, 0.6, 0.25];
     let core0: Vec<T> = (0..4).map(|j| c::<T>(a[j]) + c::<T>(b[j]) * t).collect();
@@ -33,7 +33,7 @@ fn param_norm<T: Scalar>(t: T) -> T {
 /// A single entry of a tensor train built from a `t`-dependent dense tensor via TT-SVD, exercising
 /// automatic differentiation *through the SVD kernel* (full rank, so reconstruction is exact and the
 /// derivative must survive the factorization).
-fn param_eval<T: Scalar>(t: T, idx: &[usize]) -> T {
+fn param_eval<T: Scalar + ConjugateScalar<Real = T>>(t: T, idx: &[usize]) -> T {
     let a = [1.3, -0.4, 0.6, 0.9];
     let b = [0.3, 0.7, -0.5, 0.2];
     let q = [0.1, -0.2, 0.15, 0.05];

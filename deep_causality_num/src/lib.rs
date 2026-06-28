@@ -47,6 +47,8 @@ pub use crate::algebra::ring_associative::AssociativeRing;
 pub use crate::algebra::ring_commutative::CommutativeRing;
 pub use crate::algebra::rotation::Rotation;
 pub use crate::algebra::scalar::Scalar;
+pub use crate::algebra::scalar_conjugate::ConjugateScalar;
+pub use crate::algebra::scalar_normed::NormedScalar;
 pub use crate::algebra::semigroup::{AddSemigroup, MulSemigroup};
 
 // Alias types

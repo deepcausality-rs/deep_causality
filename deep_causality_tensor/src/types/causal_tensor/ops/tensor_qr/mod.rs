@@ -4,18 +4,23 @@
  */
 
 use crate::{CausalTensor, CausalTensorError};
-use deep_causality_num::Scalar;
+use deep_causality_num::{ConjugateScalar, One, Real, Zero};
+
+/// The real magnitude type of a conjugate scalar.
+type Re<T> = <T as ConjugateScalar>::Real;
 
 impl<T> CausalTensor<T>
 where
-    T: Scalar,
+    T: ConjugateScalar,
 {
     /// Thin Householder QR: `A = Q · R` with `Q` (`m × k`) orthonormal columns and `R` (`k × n`)
     /// upper-triangular, where `k = min(m, n)`.
     ///
     /// This is the canonicalization primitive for tensor trains (Stage 0): QR — not SVD — is the
     /// standard, cheaper gauge sweep. The reflectors are applied in place to a working copy of `A`
-    /// to form `R`, and accumulated into `Q`.
+    /// to form `R`, and accumulated into `Q`. For a complex scalar the reflectors are the genuine
+    /// Householder reflectors `H = I − β v vᴴ` (conjugated inner products, unitary `Q`); for a real
+    /// scalar the conjugation is the identity and it reduces to the ordinary real Householder QR.
     ///
     /// # Reference
     /// G. H. Golub and C. F. Van Loan, *Matrix Computations*, 4th ed. (Johns Hopkins Univ. Press,
@@ -34,7 +39,6 @@ where
             return Err(CausalTensorError::EmptyTensor);
         }
         let k = m.min(n);
-        let two = T::one() + T::one();
 
         // Working copy of A (becomes R after the reflectors); Q accumulates as m × m.
         let mut r = self.as_slice().to_vec(); // m × n, row-major
@@ -44,58 +48,63 @@ where
         }
 
         for j in 0..k {
-            // Norm of the sub-column r[j..m, j].
-            let mut norm_sq = T::zero();
+            // Norm of the sub-column r[j..m, j] (real).
+            let mut norm_sq = Re::<T>::zero();
             for i in j..m {
-                let x = r[i * n + j];
-                norm_sq += x * x;
+                norm_sq += r[i * n + j].modulus_squared();
             }
             let norm = norm_sq.sqrt();
-            if norm <= T::zero() {
+            if norm <= Re::<T>::zero() {
                 continue;
             }
-            // Sign chosen to avoid cancellation: alpha = -sign(r[j,j]) · ‖x‖.
-            let alpha = if r[j * n + j] > T::zero() {
-                -norm
-            } else {
-                norm
-            };
 
-            // Householder vector v = x - alpha·e_j, supported on rows j..m.
+            // Pivot phase: alpha = −phase(r[j,j])·‖x‖ avoids cancellation and matches the real
+            // ±sign convention (phase = r_jj / |r_jj|, or 1 when the pivot is zero).
+            let pivot = r[j * n + j];
+            let pmod = pivot.modulus_squared().sqrt();
+            let phase = if pmod > Re::<T>::zero() {
+                pivot * T::from_real(Re::<T>::one() / pmod)
+            } else {
+                T::one()
+            };
+            let alpha = -(phase * T::from_real(norm));
+
+            // Householder vector v = x − alpha·e_j, supported on rows j..m.
             let mut v = vec![T::zero(); m];
             for i in j..m {
                 v[i] = r[i * n + j];
             }
             v[j] -= alpha;
 
-            let mut v_norm_sq = T::zero();
-            for &vi in v.iter().skip(j) {
-                v_norm_sq += vi * vi;
+            let mut v_norm_sq = Re::<T>::zero();
+            for vi in v.iter().skip(j) {
+                v_norm_sq += vi.modulus_squared();
             }
-            if v_norm_sq <= T::zero() {
+            if v_norm_sq <= Re::<T>::zero() {
                 continue;
             }
+            let beta = (Re::<T>::one() + Re::<T>::one()) / v_norm_sq; // 2 / (vᴴv)
 
-            // Apply H = I - 2 vvᵀ / (vᵀv) to the trailing columns of R.
+            // Apply H = I − β v vᴴ to the trailing columns of R: R_col -= β·(vᴴ R_col)·v.
             for col in j..n {
-                let mut dot = T::zero();
+                let mut dot = T::zero(); // vᴴ R_col = Σ conj(v_i)·R[i,col]
                 for i in j..m {
-                    dot += v[i] * r[i * n + col];
+                    dot += v[i].conjugate() * r[i * n + col];
                 }
-                let factor = two * dot / v_norm_sq;
+                let factor = T::from_real(beta) * dot;
                 for i in j..m {
                     r[i * n + col] -= factor * v[i];
                 }
             }
-            // Accumulate Q ← Q · H (apply on the right, so rows of Q are transformed).
+            // Accumulate Q ← Q · H = Q − β·(Q v)·vᴴ: Q[row,i] -= β·(Q v)_row·conj(v_i).
             for row in 0..m {
-                let mut dot = T::zero();
+                let mut dot = T::zero(); // (Q v)_row = Σ Q[row,l]·v_l
                 for i in j..m {
                     dot += q[row * m + i] * v[i];
                 }
-                let factor = two * dot / v_norm_sq;
+                let factor = T::from_real(beta) * dot;
                 for i in j..m {
-                    q[row * m + i] -= factor * v[i];
+                    q[row * m + i] -= factor * v[i].conjugate();
                 }
             }
         }
