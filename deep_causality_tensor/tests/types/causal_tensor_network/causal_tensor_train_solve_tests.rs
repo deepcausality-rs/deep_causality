@@ -149,6 +149,111 @@ fn test_linear_float106() {
     check_linear::<Float106>();
 }
 
+// ---- eigen (DMRG3S) ----
+
+fn check_eigen<T: RealField + FromPrimitive>() {
+    // Build a symmetric operator A = s·I + (g − s)·w·wᵀ on a 3×3 (= 9-dim) space, with g < s.
+    // Then w is the unique ground state with eigenvalue g, every u ⊥ w has eigenvalue s.
+    // w's 3×3 reshape is full rank 3, so the ground-state train has bond 3 — exercising the
+    // subspace expansion from the rank-2 seed.
+    let nn = 9usize;
+    let mut w: Vec<T> = (0..nn).map(|i| v::<T>((i as f64).sin() + 1.5)).collect();
+    let mut nrm = T::zero();
+    for &x in &w {
+        nrm += x * x;
+    }
+    nrm = nrm.sqrt();
+    for x in w.iter_mut() {
+        *x /= nrm;
+    }
+    let g = v::<T>(-3.0);
+    let s = v::<T>(1.0);
+
+    // Operator as a matrix M[out, in], then reorder into the site-interleaved [o0,i0,o1,i1] layout.
+    let mut inter = vec![T::zero(); nn * nn];
+    for o0 in 0..3 {
+        for o1 in 0..3 {
+            for i0 in 0..3 {
+                for i1 in 0..3 {
+                    let out = o0 * 3 + o1;
+                    let inx = i0 * 3 + i1;
+                    let mut val = (g - s) * w[out] * w[inx];
+                    if out == inx {
+                        val += s;
+                    }
+                    let idx = ((o0 * 3 + i0) * 3 + o1) * 3 + i1;
+                    inter[idx] = val;
+                }
+            }
+        }
+    }
+    let a_dense = CausalTensor::new(inter, vec![3, 3, 3, 3]).unwrap();
+    let a =
+        CausalTensorTrainOperator::from_dense(&a_dense, &[3, 3], &[3, 3], &full::<T>()).unwrap();
+
+    let cfg = SolveConfig::<T>::new(200, tol::<T>(), T::epsilon()).unwrap();
+    let (lambda, vtt) = solve::eigen(&a, 3, &cfg).unwrap();
+
+    // Eigenvalue matches the planted ground-state value.
+    assert!(
+        (lambda - g).abs() <= tol::<T>() * v::<T>(10.0),
+        "eigenvalue off"
+    );
+
+    // Eigenvector aligns with w (up to sign): |⟨v,w⟩| / ‖v‖ ≈ 1.
+    let vd = vtt.to_dense().unwrap();
+    let mut dot = T::zero();
+    let mut vnsq = T::zero();
+    for (k, &wv) in w.iter().enumerate() {
+        let vk = vd.as_slice()[k];
+        dot += vk * wv;
+        vnsq += vk * vk;
+    }
+    let cosine = dot.abs() / vnsq.sqrt();
+    assert!(
+        (cosine - T::one()).abs() <= tol::<T>() * v::<T>(10.0),
+        "eigenvector misaligned"
+    );
+
+    // Residual A·v ≈ λ·v.
+    let av = a.apply(&vtt, &full::<T>()).unwrap();
+    let resid = av.add(&vtt.scale(-lambda)).unwrap();
+    let rrel = resid.norm().unwrap() / vtt.norm().unwrap();
+    assert!(
+        rrel <= tol::<T>() * v::<T>(10.0),
+        "eigen residual too large"
+    );
+}
+
+#[test]
+fn test_eigen_f32() {
+    check_eigen::<f32>();
+}
+#[test]
+fn test_eigen_f64() {
+    check_eigen::<f64>();
+}
+#[test]
+fn test_eigen_float106() {
+    check_eigen::<Float106>();
+}
+
+#[test]
+fn test_eigen_not_square_errors() {
+    // A rectangular operator (out ≠ in) is rejected.
+    let a_dense = tensor::<f64>(
+        &(0..36).map(|i| (i as f64) * 0.1).collect::<Vec<_>>(),
+        &[3, 2, 3, 2],
+    );
+    let a =
+        CausalTensorTrainOperator::from_dense(&a_dense, &[3, 3], &[2, 2], &full::<f64>()).unwrap();
+    let cfg = SolveConfig::<f64>::new(10, 1e-9, 1e-12).unwrap();
+    assert!(matches!(
+        solve::eigen(&a, 4, &cfg),
+        Err(deep_causality_tensor::CausalTensorError::ShapeMismatch)
+    ));
+}
+
 #[test]
 fn test_solve_config_errors() {
     assert!(matches!(

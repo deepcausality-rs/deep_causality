@@ -127,6 +127,77 @@ pub fn linear<T: Scalar>(
     Err(CausalTensorError::SweepDidNotConverge)
 }
 
+/// Computes the lowest eigenpair `(λ, v)` of a **symmetric** tensor-train operator `A` by the
+/// **DMRG3S** algorithm: a single-site DMRG sweep (each site solves the local single-site eigenproblem
+/// for the smallest Rayleigh quotient) combined with **subspace expansion** — the bond dimension is
+/// grown rank-adaptively by enriching `v` with the projected residual `A·v − λ·v` (the same
+/// residual-enrichment engine used by [`linear`]), seeded small and capped at `max_rank`.
+///
+/// The single-site local problem is a *generalized* eigenproblem `H z = λ S z` where `S` is the
+/// environment overlap; it is reduced to a standard symmetric eigenproblem by congruence whitening
+/// with `S^{-1/2}` (computed per bond factor, ridge-guarded), so no global re-canonicalization sweep
+/// is required between site solves. The returned eigenvector is normalized.
+///
+/// `A` must be (numerically) symmetric — the effective operator is symmetrized before each local
+/// solve. The returned `λ` is the smallest (most negative) eigenvalue.
+///
+/// Reference: C. Hubig, I. P. McCulloch, U. Schollwöck, and F. A. Wolf, "Strictly single-site DMRG
+/// algorithm with subspace expansion," *Phys. Rev. B* 91, 155115 (2015).
+/// <https://doi.org/10.1103/PhysRevB.91.155115> (arXiv:1501.05504).
+///
+/// # Errors
+/// - [`CausalTensorError::ShapeMismatch`] if `A` is not square (`in_dims != out_dims`).
+/// - [`CausalTensorError::SweepDidNotConverge`] if the relative residual stays above `tol`.
+pub fn eigen<T: Scalar>(
+    a: &CausalTensorTrainOperator<T>,
+    max_rank: usize,
+    config: &SolveConfig<T>,
+) -> Result<(T, CausalTensorTrain<T>), CausalTensorError> {
+    if a.in_dims() != a.out_dims() {
+        return Err(CausalTensorError::ShapeMismatch);
+    }
+    let exact = Truncation::by_bond(usize::MAX)?;
+    let shape = a.in_dims().to_vec();
+    let d = shape.len();
+    let caps = bond_ranks(&shape, max_rank);
+    // Seed at a small rank; subspace expansion grows it toward the eigenvector.
+    let seed: Vec<usize> = caps.iter().map(|&r| r.min(2)).collect();
+    let mut x = init_random(&shape, &seed, 0xE16E_5017);
+    let enrich_trunc = Truncation::new(max_rank, config.tol(), T::zero())?;
+
+    for _sweep in 0..config.max_sweeps() {
+        // Single-site DMRG sweep. Each site is solved in mixed-canonical gauge (orthogonality
+        // center at `k`), so the environment is orthonormal and the local problem is a *standard*
+        // symmetric eigenproblem — no overlap whitening, no ridge, machine-precision accurate.
+        for k in forward_then_back(d) {
+            let centered =
+                CausalTensorTrain::from_cores_raw(x, CanonicalForm::None).canonicalize_at(k)?;
+            x = centered.into_cores();
+            eigen_site(&mut x, a, k)?;
+        }
+        // Rayleigh quotient λ = <x|A|x> / <x|x> and residual r = A·x − λ·x.
+        let xt = CausalTensorTrain::from_cores_raw(x, CanonicalForm::None);
+        let xx = xt.inner(&xt)?;
+        if xx <= T::zero() {
+            return Err(CausalTensorError::SweepDidNotConverge);
+        }
+        let ax = a.apply(&xt, &exact)?;
+        let lambda = xt.inner(&ax)? / xx;
+        let res = ax.add(&xt.scale(-lambda))?;
+        let rnorm = res.norm()? / xx.sqrt();
+        if rnorm <= config.tol() {
+            // Normalize the eigenvector before returning. No re-truncation here: `xt` already has
+            // bond ≤ max_rank from the previous enrichment round, and a tol-based round would drop
+            // small-but-real components and inflate the residual.
+            let inv = T::one() / xx.sqrt();
+            return Ok((lambda, xt.scale(inv)));
+        }
+        // DMRG3S subspace expansion: enrich with the residual direction, capped at max_rank.
+        x = xt.add(&res)?.round(&enrich_trunc)?.into_cores();
+    }
+    Err(CausalTensorError::SweepDidNotConverge)
+}
+
 // ============================================================================
 // fit internals
 // ============================================================================
@@ -252,34 +323,27 @@ fn rms_residual<T: Scalar>(
 // linear internals
 // ============================================================================
 
-/// One ALS site update for `G x = c`: build the local system from the environments and solve.
-fn linear_site<T: Scalar>(
-    x: &mut [CausalTensor<T>],
-    g: &CausalTensorTrainOperator<T>,
-    c: &CausalTensorTrain<T>,
+/// Builds the dense single-site effective operator `H_eff` for site `k`:
+/// `H[(a,i,b),(a',i',b')] = Σ gl[a,gl_,a']·op[gl_,i,i',gr_]·gr[b,gr_,b']`, the projection of the
+/// MPO `op` onto the current cores of `x` at site `k`. Returns the row-major `n×n` matrix
+/// (`n = r_k·n_k·r_{k+1}`) and `n`. Shared by the linear solve (`op = AᵀA`) and the DMRG3S
+/// eigensolver (`op = A`).
+fn build_local_h<T: Scalar>(
+    x: &[CausalTensor<T>],
+    op: &CausalTensorTrainOperator<T>,
     k: usize,
-    ridge: T,
-) -> Result<(), CausalTensorError> {
+) -> (Vec<T>, usize) {
     let rk = x[k].shape()[0];
     let nk = x[k].shape()[1];
     let rkp = x[k].shape()[2];
     let n = rk * nk * rkp;
 
-    // Left/right environments of <x|G|x> (3-index) and <x|c> (2-index).
-    let (gl, grl) = env_g_left(x, g, k); // gl: [rk, gk, rk]
-    let (gr, grr) = env_g_right(x, g, k); // gr: [rkp, gkp, rkp]
-    let cl = env_c_left(x, c, k); // [rk, ck]
-    let cr = env_c_right(x, c, k); // [rkp, ckp]
-    let gcore = &g.cores()[k]; // [gk, nk, nk, gkp]
-    let ccore = &c.cores()[k]; // [ck, nk, ckp]
-    let gk = grl;
-    let gkp = grr;
-    let ck = ccore.shape()[0];
-    let ckp = ccore.shape()[2];
+    // Left/right environments of <x|op|x> (3-index).
+    let (gl, gk) = env_g_left(x, op, k); // gl: [rk, gk, rk]
+    let (gr, gkp) = env_g_right(x, op, k); // gr: [rkp, gkp, rkp]
+    let gcore = &op.cores()[k]; // [gk, nk, nk, gkp]
     let gd = gcore.as_slice();
-    let cd = ccore.as_slice();
 
-    // Local operator H[(a,i,b),(a',i',b')] = Σ gl[a,gl_,a']·G[gl_,i,i',gr_]·gr[b,gr_,b'].
     let mut hmat = vec![T::zero(); n * n];
     for a in 0..rk {
         for ap in 0..rk {
@@ -313,6 +377,30 @@ fn linear_site<T: Scalar>(
             }
         }
     }
+    (hmat, n)
+}
+
+/// One ALS site update for `G x = c`: build the local system from the environments and solve.
+fn linear_site<T: Scalar>(
+    x: &mut [CausalTensor<T>],
+    g: &CausalTensorTrainOperator<T>,
+    c: &CausalTensorTrain<T>,
+    k: usize,
+    ridge: T,
+) -> Result<(), CausalTensorError> {
+    let rk = x[k].shape()[0];
+    let nk = x[k].shape()[1];
+    let rkp = x[k].shape()[2];
+
+    let (mut hmat, n) = build_local_h(x, g, k);
+
+    // Right-hand-side environments of <x|c> (2-index).
+    let cl = env_c_left(x, c, k); // [rk, ck]
+    let cr = env_c_right(x, c, k); // [rkp, ckp]
+    let ccore = &c.cores()[k]; // [ck, nk, ckp]
+    let ck = ccore.shape()[0];
+    let ckp = ccore.shape()[2];
+    let cd = ccore.as_slice();
 
     // Local rhs y[(a,i,b)] = Σ cl[a,cl_]·C[cl_,i,cr_]·cr[b,cr_].
     let mut y = vec![T::zero(); n];
@@ -526,6 +614,117 @@ fn env_c_right<T: Scalar>(x: &[CausalTensor<T>], c: &CausalTensorTrain<T>, k: us
         cr = crl;
     }
     e
+}
+
+// ============================================================================
+// eigen internals (DMRG3S)
+// ============================================================================
+
+/// One single-site DMRG eigen update at site `k`. **Precondition:** `x` is in mixed-canonical gauge
+/// with the orthogonality center at `k`, so the environment is orthonormal and the local problem is a
+/// standard symmetric eigenproblem `H z = λ z`. Builds and symmetrizes the local effective operator,
+/// takes the smallest eigenpair, and writes the (unit-norm) eigenvector back into the core.
+fn eigen_site<T: Scalar>(
+    x: &mut [CausalTensor<T>],
+    a: &CausalTensorTrainOperator<T>,
+    k: usize,
+) -> Result<(), CausalTensorError> {
+    let rk = x[k].shape()[0];
+    let nk = x[k].shape()[1];
+    let rkp = x[k].shape()[2];
+
+    let (mut h, n) = build_local_h(x, a, k);
+    symmetrize(&mut h, n);
+
+    let (vals, vecs) = sym_eig(&h, n);
+    let mut imin = 0usize;
+    for i in 1..n {
+        if vals[i] < vals[imin] {
+            imin = i;
+        }
+    }
+    let y: Vec<T> = (0..n).map(|i| vecs[i * n + imin]).collect();
+    x[k] = CausalTensor::new(y, vec![rk, nk, rkp])?;
+    Ok(())
+}
+
+/// Symmetrizes a row-major `n×n` matrix in place: `H ← (H + Hᵀ)/2`.
+fn symmetrize<T: Scalar>(h: &mut [T], n: usize) {
+    let two = T::one() + T::one();
+    for i in 0..n {
+        for j in (i + 1)..n {
+            let avg = (h[i * n + j] + h[j * n + i]) / two;
+            h[i * n + j] = avg;
+            h[j * n + i] = avg;
+        }
+    }
+}
+
+/// Eigendecomposition of a symmetric row-major `n×n` matrix by cyclic one-sided Jacobi rotations.
+/// Returns `(eigenvalues, V)` where the columns of the row-major `n×n` `V` are the eigenvectors:
+/// `A = V diag(λ) Vᵀ`. Eigenvalues are not sorted.
+fn sym_eig<T: Scalar>(mat: &[T], n: usize) -> (Vec<T>, Vec<T>) {
+    let mut a = mat.to_vec();
+    let mut v = vec![T::zero(); n * n];
+    for i in 0..n {
+        v[i * n + i] = T::one();
+    }
+    let one = T::one();
+    let two = one + one;
+    let eps2 = T::epsilon() * T::epsilon();
+    for _ in 0..100 {
+        let mut off = T::zero();
+        for p in 0..n {
+            for q in (p + 1)..n {
+                off += a[p * n + q] * a[p * n + q];
+            }
+        }
+        if off <= eps2 {
+            break;
+        }
+        for p in 0..n {
+            for q in (p + 1)..n {
+                let apq = a[p * n + q];
+                if apq == T::zero() {
+                    continue;
+                }
+                let app = a[p * n + p];
+                let aqq = a[q * n + q];
+                let theta = (aqq - app) / (two * apq);
+                let t = if theta == T::zero() {
+                    one
+                } else {
+                    let sgn = if theta < T::zero() { -one } else { one };
+                    sgn / (theta.abs() + (theta * theta + one).sqrt())
+                };
+                let c = one / (t * t + one).sqrt();
+                let s = t * c;
+                // A ← (A J) : rotate columns p, q.
+                for i in 0..n {
+                    let aip = a[i * n + p];
+                    let aiq = a[i * n + q];
+                    a[i * n + p] = c * aip - s * aiq;
+                    a[i * n + q] = s * aip + c * aiq;
+                }
+                // A ← (Jᵀ A) : rotate rows p, q.
+                for j in 0..n {
+                    let apj = a[p * n + j];
+                    let aqj = a[q * n + j];
+                    a[p * n + j] = c * apj - s * aqj;
+                    a[q * n + j] = s * apj + c * aqj;
+                }
+                // V ← V J : accumulate eigenvectors.
+                for i in 0..n {
+                    let vip = v[i * n + p];
+                    let viq = v[i * n + q];
+                    v[i * n + p] = c * vip - s * viq;
+                    v[i * n + q] = s * vip + c * viq;
+                }
+            }
+        }
+    }
+    let evals: Vec<T> = (0..n).map(|i| a[i * n + i]).collect();
+    (evals, v)
 }
 
 // ============================================================================

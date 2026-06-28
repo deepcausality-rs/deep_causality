@@ -3,10 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Alternating-least-squares (ALS) tensor-train solvers: `fit` (TT completion from samples) and
-//! `linear` (`A x = b` in tensor-train form). Both sweep the cores of the unknown train, solving a
-//! small local least-squares system per site, sharing the dense `solve_local` helper.
+//! Tensor-train solvers sharing one alternating single-site sweep engine:
+//! - `fit` — TT completion / regression from samples (block-diagonal local least squares).
+//! - `linear` — `A x = b` in tensor-train form via AMEn (rank-adaptive residual enrichment).
+//! - `eigen` — lowest eigenpair of a symmetric operator via DMRG3S (single-site DMRG with
+//!   subspace expansion).
 
 mod local;
 
-pub use local::{fit, linear};
+pub use local::{eigen, fit, linear};

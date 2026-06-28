@@ -225,7 +225,12 @@ where
     }
 
     fn norm(&self) -> Result<T, CausalTensorError> {
-        Ok(self.inner(self)?.sqrt())
+        // ⟨x|x⟩ is non-negative in exact arithmetic; a tiny negative value is a rounding artifact of
+        // catastrophic cancellation on a near-zero train. Clamp before the square root so the norm is
+        // always real (otherwise `sqrt` of a small negative yields `NaN`).
+        let sq = self.inner(self)?;
+        let sq = if sq < T::zero() { T::zero() } else { sq };
+        Ok(sq.sqrt())
     }
 
     fn inner(&self, other: &Self) -> Result<T, CausalTensorError> {
