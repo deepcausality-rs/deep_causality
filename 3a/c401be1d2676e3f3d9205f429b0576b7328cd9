@@ -1,0 +1,66 @@
+deep_causality_cfd/tests/tensor_bridge/operators_tests.rs
+  s_162aba3d26275e::t_37f36562629b81 69,71
+  s_162aba3d26275e::t_006e294d354101 1-6,10-33,35,37-42,47-48,55-64,70,72-89,91,93-94
+  s_162aba3d26275e::t_0535cd0f75b259 90,92
+  s_162aba3d26275e::t_279480632d1166 34,36
+  s_162aba3d26275e::t_2203b84bc31004 8
+  s_162aba3d26275e::t_74cfd41c3fdd80 7,9,43-46,49-54,65-68
+deep_causality_cfd/src/solvers/mod.rs
+  s_162aba3d26275e::t_7b67a6f8262cc3 21-26
+deep_causality_cfd/src/tensor_bridge/codec.rs
+  s_162aba3d26275e::t_3e7fd516e46637 1-10,12-53
+  s_162aba3d26275e::t_c14dc50e2e11e5 11
+deep_causality_cfd/tests/tensor_bridge/mod.rs
+  s_162aba3d26275e::t_63a26ecff2fa8b 1-9
+deep_causality_cfd/src/solvers/qtt/mod.rs
+  s_162aba3d26275e::t_04329dc3da4600 16-17
+  s_162aba3d26275e::t_a0334cb1a9e547 1-15,18-114
+deep_causality_cfd/tests/solvers/qtt/mod.rs
+  s_162aba3d26275e::t_2b026113e8ee1b 1-7
+deep_causality_cfd/tests/solvers/qtt/qtt_linear_tests.rs
+  s_162aba3d26275e::t_bb10ddce2b472c 1-6,8-34,36,38-55,62-83,88
+  s_162aba3d26275e::t_89cb525a84d7ec 7
+  s_162aba3d26275e::t_6b4ead13b35d03 35,37
+  s_162aba3d26275e::t_74cfd41c3fdd80 56-61,84-87
+deep_causality_cfd/tests/BUILD.bazel
+  s_162aba3d26275e::t_8778a468111a25 87-108
+deep_causality_cfd/src/tensor_bridge/mod.rs
+  s_162aba3d26275e::t_fa033d26894dc0 1-19
+openspec/notes/plasma-blackout/gap-one-cfd-tensor-bridge.md
+  s_162aba3d26275e::t_85c37fd1b303ed 188-193,199-201
+openspec/changes/add-cfd-qtt-tensor-bridge/tasks.md
+  s_162aba3d26275e::t_f0a030ba6e2f28 3-6,10-12,16-18,22-24
+deep_causality_cfd/tests/solvers/mod.rs
+  s_162aba3d26275e::t_01b32ee7329173 10
+deep_causality_cfd/tests/mod.rs
+  s_162aba3d26275e::t_ddceef86e9c2f1 7
+deep_causality_cfd/src/tensor_bridge/operators.rs
+  s_162aba3d26275e::t_fc9ba10c3356ce 10
+  s_162aba3d26275e::t_bfd5ee69142a91 1-9,11-86,88,92-103,106-130
+  s_162aba3d26275e::t_fc1b96c8ccb585 87,89-91,104-105
+deep_causality_cfd/src/lib.rs
+  s_162aba3d26275e::t_e60f7c9f7b47e9 43,47
+  s_162aba3d26275e::t_0867ddd5d336e3 28
+  s_162aba3d26275e::t_74cfd41c3fdd80 44-46
+  s_162aba3d26275e::t_5cdc6e499e3f1e 83
+deep_causality_cfd/tests/tensor_bridge/codec_tests.rs
+  s_162aba3d26275e::t_74cfd41c3fdd80 38-41,44-47
+  s_162aba3d26275e::t_53e888c7aa9c45 7
+  s_162aba3d26275e::t_3fb3762a8b1119 1-6,8-37,42-43,48-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "3ac401be1d2676e3f3d9205f429b0576b7328cd9",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
