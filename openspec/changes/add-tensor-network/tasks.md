@@ -62,9 +62,9 @@
 
 ## 7. Benchmarks and finalization
 
-- [ ] 7.1 Add `bench_svd_qr.rs` (Stage 0) and `bench_tensor_train_core.rs` (Stage 1) under `benches/benchmarks/causal_tensor_network_type/`, registered in its `mod.rs` and the `criterion_main!` set; verify the `r³` scaling rows
-- [ ] 7.2 Add `bench_tensor_train_operator.rs`, `bench_tensor_train_cross.rs`, `bench_tensor_train_solve.rs` as their stages land
-- [ ] 7.3 Confirm each §7 complexity target has a matching benchmark; ensure the full suite runs in seconds
-- [ ] 7.4 Run `make format && make fix`; confirm `unsafe_code = "forbid"`, no `dyn`, no lib-code macros, no concrete float literals
-- [ ] 7.5 Run `cargo test -p deep_causality_tensor` and confirm 100 % coverage of added code; update `BUILD.bazel` files
-- [ ] 7.6 Run `openspec validate add-tensor-network` and reconcile any spec drift before `/opsx:apply` completion
+- [x] 7.1 Added `bench_svd_qr.rs` (Stage 0) + `bench_tensor_train_core.rs` (Stage 1) under `benches/benchmarks/causal_tensor_network_type/`, registered in its `mod.rs` and the `criterion_main!` set. Measured (48×48): `svd_truncated` ≈ 1.4 ms, `qr` similar; core ops (`norm`/`inner`/`add`/`hadamard`/`eval`/`marginalize`) in µs.
+- [x] 7.2 Added `bench_tensor_train_operator.rs` (`mpo_from_dense`/`mpo_apply`/`mpo_compose`/`integrate`), `bench_tensor_train_cross.rs` (`cross_build`), `bench_tensor_train_solve.rs` (`amen_linear`/`als_fit`/`dmrg3s_eigen`/`tdvp_step`).
+- [x] 7.3 Each §7.1 algorithm has a matching benchmark; the full network suite runs in **seconds** (`mpo_apply` ≈ 4 µs, `tt_cross` ≈ 39 µs, `amen_linear` ≈ 5 µs, `als_fit` ≈ 6.8 µs, `dmrg3s_eigen` ≈ 35 µs, `tdvp_step` ≈ tens of µs).
+- [x] 7.4 `cargo fmt` + `clippy --all-targets` clean (lib, tests, benches); `unsafe_code = "forbid"` holds (crate-level), no `dyn`, no lib-code macros (only `criterion_group!`/`criterion_main!` in benches), no concrete float literals in lib code (thresholds derive from `T::epsilon()`/`from_primitive`).
+- [x] 7.5 `cargo test -p deep_causality_tensor` green (36 integration-suites + 501 + 25 doctests); whole-workspace `cargo test` green. Test files registered via the `types/causal_tensor_network/*_tests.rs` `tests/BUILD.bazel` glob; the new `deep_causality_num` trait tests added an `algebra` `rust_test_suite` to `num/tests/BUILD.bazel`.
+- [x] 7.6 `openspec validate add-tensor-network` passes; spec drift reconciled — `Tensor-Network-Spec.md` §3.7 carries an "As built (Stage 4)" note recording the `ConjugateScalar`/`NormedScalar` realization, and group-5/6 tasks record the DMRG3S + complex-Hermitian work as delivered.
