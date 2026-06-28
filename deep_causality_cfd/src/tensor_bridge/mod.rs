@@ -14,6 +14,10 @@
 
 mod codec;
 mod operators;
+mod projection;
 
-pub use codec::{dequantize, quantize};
-pub use operators::{gradient, laplacian, shift_minus, shift_plus};
+pub use codec::{dequantize, dequantize_2d, quantize, quantize_2d};
+pub use operators::{
+    gradient, gradient_x, gradient_y, laplacian, laplacian_2d, shift_minus, shift_plus,
+};
+pub use projection::QttProjector2d;

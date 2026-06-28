@@ -128,3 +128,86 @@ where
         .scale(inv_dx2);
     Ok(lap.round(trunc)?)
 }
+
+/// A single identity MPO core `[1, 2, 2, 1]` (`out == in`).
+fn identity_core<R: ConjugateScalar>() -> CausalTensor<R> {
+    build_core::<R, _>(1, 1, |_cl, o, i, _cr| o == i)
+}
+
+/// Lifts a 1-D operator to act on the **leading** modes of an `(L + m)`-mode field, identity on the
+/// trailing `m` modes (`op ⊗ I_m`). The shared bonds are all 1, so the cores concatenate directly.
+fn lift_leading<R>(
+    op: &CausalTensorTrainOperator<R>,
+    m: usize,
+) -> Result<CausalTensorTrainOperator<R>, PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    let mut cores = op.cores().to_vec();
+    cores.extend((0..m).map(|_| identity_core::<R>()));
+    Ok(CausalTensorTrainOperator::from_cores(cores)?)
+}
+
+/// Lifts a 1-D operator to act on the **trailing** modes, identity on the leading `m` (`I_m ⊗ op`).
+fn lift_trailing<R>(
+    op: &CausalTensorTrainOperator<R>,
+    m: usize,
+) -> Result<CausalTensorTrainOperator<R>, PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    let mut cores: Vec<CausalTensor<R>> = (0..m).map(|_| identity_core::<R>()).collect();
+    cores.extend(op.cores().to_vec());
+    Ok(CausalTensorTrainOperator::from_cores(cores)?)
+}
+
+/// `∂ₓ` on a `2^Lx × 2^Ly` field (serial x-then-y mode layout): `gradient_1d(x) ⊗ I_y`.
+///
+/// # Errors
+/// Propagates 1-D operator and lift errors.
+pub fn gradient_x<R>(
+    lx: usize,
+    ly: usize,
+    dx: R,
+    trunc: &Truncation<R>,
+) -> Result<CausalTensorTrainOperator<R>, PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    lift_leading(&gradient::<R>(lx, dx, trunc)?, ly)
+}
+
+/// `∂ᵧ` on a `2^Lx × 2^Ly` field: `I_x ⊗ gradient_1d(y)`.
+///
+/// # Errors
+/// Propagates 1-D operator and lift errors.
+pub fn gradient_y<R>(
+    lx: usize,
+    ly: usize,
+    dy: R,
+    trunc: &Truncation<R>,
+) -> Result<CausalTensorTrainOperator<R>, PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    lift_trailing(&gradient::<R>(ly, dy, trunc)?, lx)
+}
+
+/// 2-D periodic Laplacian `∂²ₓ + ∂²ᵧ` on a `2^Lx × 2^Ly` field (the five-point stencil), recompressed.
+///
+/// # Errors
+/// Propagates 1-D operator, lift, and rounding errors.
+pub fn laplacian_2d<R>(
+    lx: usize,
+    ly: usize,
+    dx: R,
+    dy: R,
+    trunc: &Truncation<R>,
+) -> Result<CausalTensorTrainOperator<R>, PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    let lap_x = lift_leading(&laplacian::<R>(lx, dx, trunc)?, ly)?;
+    let lap_y = lift_trailing(&laplacian::<R>(ly, dy, trunc)?, lx)?;
+    Ok(lap_x.add(&lap_y)?.round(trunc)?)
+}

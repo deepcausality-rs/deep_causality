@@ -51,3 +51,51 @@ where
     let n: usize = dense.shape().iter().product();
     Ok(dense.reshape(&[n])?)
 }
+
+/// Encodes a `2^Lx × 2^Ly` periodic field (shape `[Nx, Ny]`) as an `(Lx + Ly)`-mode QTT: the leading
+/// `Lx` modes are the x-bits, the trailing `Ly` the y-bits (MSB-first per axis, the natural row-major
+/// reshape). Axis operators built by lifting (see `gradient_x`/`gradient_y`) act on the matching block.
+///
+/// # Errors
+/// [`PhysicsError::DimensionMismatch`] if the field is not 2-D or either extent is not a power of two.
+pub fn quantize_2d<R>(
+    field: &CausalTensor<R>,
+    trunc: &Truncation<R>,
+) -> Result<CausalTensorTrain<R>, PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    let shape = field.shape();
+    if shape.len() != 2 {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "quantize_2d requires a 2-D field, got {} dims",
+            shape.len()
+        )));
+    }
+    let (nx, ny) = (shape[0], shape[1]);
+    if nx == 0 || ny == 0 || !nx.is_power_of_two() || !ny.is_power_of_two() {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "quantize_2d requires power-of-two extents, got {nx} x {ny}"
+        )));
+    }
+    let modes = vec![2usize; nx.trailing_zeros() as usize + ny.trailing_zeros() as usize];
+    let reshaped = field.reshape(&modes)?;
+    Ok(CausalTensorTrain::from_dense(&reshaped, trunc)?)
+}
+
+/// Recovers the dense `[2^Lx, 2^Ly]` field from its quantized tensor train (inverse of [`quantize_2d`]).
+/// `lx`/`ly` give the per-axis mode split.
+///
+/// # Errors
+/// Propagates densification/reshape errors.
+pub fn dequantize_2d<R>(
+    train: &CausalTensorTrain<R>,
+    lx: usize,
+    ly: usize,
+) -> Result<CausalTensor<R>, PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    let dense = train.to_dense()?;
+    Ok(dense.reshape(&[1usize << lx, 1usize << ly])?)
+}

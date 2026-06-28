@@ -42,7 +42,8 @@ pub use crate::types::{Ambient, CfdScalar};
 
 // The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
 pub use crate::tensor_bridge::{
-    dequantize, gradient, laplacian, quantize, shift_minus, shift_plus,
+    QttProjector2d, dequantize, dequantize_2d, gradient, gradient_x, gradient_y, laplacian,
+    laplacian_2d, quantize, quantize_2d, shift_minus, shift_plus,
 };
 
 // The CfdFlow DSL facade (owned case descriptions materialized at run).
@@ -80,7 +81,7 @@ pub use crate::theories::*;
 // Solver configuration + type-state builder.
 pub use crate::solvers::{
     DecNs, DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity, DecNsConfigReady,
-    QttLinear1d,
+    QttIncompressible2d, QttLinear1d,
 };
 
 // Public API of the Navier–Stokes solver.

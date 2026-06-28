@@ -23,4 +23,4 @@ pub use dec_config::{
 // evolves a flowfield in compressed tensor-train form (the CFD ↔ tensor-network bridge).
 mod qtt;
 
-pub use qtt::QttLinear1d;
+pub use qtt::{QttIncompressible2d, QttLinear1d};

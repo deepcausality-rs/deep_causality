@@ -191,14 +191,19 @@ Cross-check primitive behaviour against **SeeMPS** on a shared toy problem befor
 3. **[DONE] quasi-1D linear advection–diffusion** QTT rollout (`solvers::QttLinear1d`, a `Marcher`) —
    encode → MPO-apply → round — validated against the analytic diffusion solution, with bounded-rank and
    mean-conservation tests. (OpenSpec change `add-cfd-qtt-tensor-bridge`.)
-4. Add **projection** (`solve::linear`) → quasi-2D incompressible; reproduce a compressed lid cavity.
-5. Add **TT-cross nonlinear source** → the Gap-2 parametric ionization/reacting surrogate rides the same
-   rollout (Pinkston pattern).
-6. Wire into `CfdFlow` as `QttIncompressible`; expose observables; hand to the flagship's step [4].
+4. **[DONE] projection → 2-D incompressible** — `QttProjector2d` (spectral Poisson, consistent
+   `grad∘grad` eigenvalues, checkerboard/Nyquist null modes zeroed) + `QttIncompressible2d` marcher;
+   validated against the analytic Taylor–Green vortex (divergence-free, bounded rank).
+5. **[DONE] nonlinear convection** — `u·∇u` via the fused `hadamard_rounded` inside `QttIncompressible2d`
+   (the same rollout the Gap-2 ionization/reacting surrogate will ride; TT-cross is the escape hatch).
+   (OpenSpec change `add-cfd-qtt-incompressible-2d`.)
+6. Wire into `CfdFlow` as a `FluidTheory`/observable-exposing solver; hand to the flagship's step [4].
 
-**Steps 1–3 are done — Gap 1 is closed at the foundation level:** a CFD field now lives in, and evolves
-as, a tensor train built on `deep_causality_tensor`. Steps 4–6 (projection, nonlinearity, full NS wiring)
-are the next change.
+**Steps 1–5 are done — Gap 1's solver core is complete:** a 2-D incompressible Navier–Stokes flowfield
+now lives in, and evolves as, a tensor train on `deep_causality_tensor`, with a working spectral
+projection keeping it divergence-free and rounding keeping the rank bounded. The headline numerical risks
+(singular Poisson, nonlinear rank growth) were ARIZ-resolved and the resolutions verified in code. Step 6
+(CfdFlow wiring + observables, then the Gap-2 ionization physics) is the next change.
 
 ---
 

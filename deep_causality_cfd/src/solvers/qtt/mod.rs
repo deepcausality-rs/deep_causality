@@ -3,8 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! A quasi-1D linear advection–diffusion marcher in quantized-tensor-train (QTT) form — the first
-//! solver that evolves a flowfield as a tensor train (the CFD ↔ tensor-network bridge).
+//! Quantized-tensor-train (QTT) flow solvers — the first solvers that evolve a flowfield as a tensor
+//! train (the CFD ↔ tensor-network bridge): a quasi-1D linear advection–diffusion marcher and a 2-D
+//! incompressible Navier–Stokes marcher.
+
+mod incompressible_2d;
+
+pub use incompressible_2d::QttIncompressible2d;
 
 use crate::tensor_bridge::{dequantize, gradient, laplacian, quantize};
 use crate::traits::Marcher;
