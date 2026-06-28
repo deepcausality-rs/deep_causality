@@ -50,14 +50,15 @@ pub use crate::tensor_bridge::{
 // Workflow composition — the CfdFlow DSL (the "how").
 pub use crate::types::flow::{
     CfdFlow, CoupledField, Coupling, MarchPipeline, MarchRun, MmsBuilder, Operator,
-    OperatorStudyBuilder, PhysicsStage, Regime, Report, StepContext, StepView, ThermalRelax,
-    VerifyRun, ViscosityArrhenius, dominant_frequency, fail, strouhal_number,
+    OperatorStudyBuilder, PhysicsStage, QttMarchRun, QttStepView, Regime, Report, StepContext,
+    StepView, ThermalRelax, VerifyRun, ViscosityArrhenius, dominant_frequency, fail,
+    strouhal_number,
 };
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
 pub use crate::types::flow_config::{
     Body, CfdConfigBuilder, Grading, Manufactured, ManufacturedSample, MarchConfig,
-    MarchConfigBuilder, MarchStop, Mesh, Observe, Seed, TaylorGreen, VerifyConfig,
-    VerifyConfigBuilder,
+    MarchConfigBuilder, MarchStop, Mesh, Observe, QttMarchConfig, QttMarchConfigBuilder,
+    QttObserve, Seed, TaylorGreen, VerifyConfig, VerifyConfigBuilder,
 };
 // IO effect: the `IoAction` trait (from haft), the core `write_csv` file action, and the CFD CSV
 // helper, so a `CfdFlow` example can describe and run file output through one crate.
@@ -83,6 +84,9 @@ pub use crate::solvers::{
     DecNs, DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity, DecNsConfigReady,
     QttIncompressible2d, QttLinear1d,
 };
+
+// QTT rollout observable extraction (tensor-train-native diagnostics).
+pub use crate::solvers::{divergence_residual, kinetic_energy, max_bond, max_speed};
 
 // Public API of the Navier–Stokes solver.
 pub use crate::solvers::dec::*;

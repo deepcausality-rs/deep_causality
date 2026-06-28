@@ -71,6 +71,17 @@ where
         })
     }
 
+    /// The grid mode counts `(Lx, Ly)` (the grid is `2^Lx × 2^Ly`).
+    pub fn modes(&self) -> (usize, usize) {
+        (self.lx, self.ly)
+    }
+
+    /// The Leray projector — exposed so a driver can read the divergence residual off the same
+    /// gradient MPOs the solver projects with (no operator rebuild).
+    pub fn projector(&self) -> &QttProjector2d<R> {
+        &self.projector
+    }
+
     /// `−(u·∇)a + ν·∇²a` for one velocity component `a`, with `(u, v)` the advecting velocity.
     fn rate(
         &self,

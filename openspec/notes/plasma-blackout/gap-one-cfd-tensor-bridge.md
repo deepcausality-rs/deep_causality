@@ -197,13 +197,22 @@ Cross-check primitive behaviour against **SeeMPS** on a shared toy problem befor
 5. **[DONE] nonlinear convection** — `u·∇u` via the fused `hadamard_rounded` inside `QttIncompressible2d`
    (the same rollout the Gap-2 ionization/reacting surrogate will ride; TT-cross is the escape hatch).
    (OpenSpec change `add-cfd-qtt-incompressible-2d`.)
-6. Wire into `CfdFlow` as a `FluidTheory`/observable-exposing solver; hand to the flagship's step [4].
+6. **[DONE] CfdFlow wiring + observable extraction** — `CfdFlow::qtt_march` (a parallel, geometry-free
+   pipeline, sibling of `CfdFlow::march`), a `QttMarchConfig`/`QttMarchConfigBuilder` config layer, TT-native
+   observables (`kinetic_energy`/`divergence_residual`/`max_bond` on the trains, `max_speed` via dequantize),
+   and a per-step `QttStepView` hook — all reusing the owned `Report`/`MarchStop`. Validated bit-for-bit
+   against the direct `QttIncompressible2d::run` driver. (OpenSpec change `add-cfd-qtt-flow-observe`.)
+7. Immersed-body BCs in QTT (§3.4) and the body-surface observables that ride them (drag/lift/heat flux as
+   boundary-fiber contractions), then the Gap-2 ionization/reacting surrogate (electron density `n_e`),
+   then hand to the flagship's step [4].
 
-**Steps 1–5 are done — Gap 1's solver core is complete:** a 2-D incompressible Navier–Stokes flowfield
-now lives in, and evolves as, a tensor train on `deep_causality_tensor`, with a working spectral
-projection keeping it divergence-free and rounding keeping the rank bounded. The headline numerical risks
-(singular Poisson, nonlinear rank growth) were ARIZ-resolved and the resolutions verified in code. Step 6
-(CfdFlow wiring + observables, then the Gap-2 ionization physics) is the next change.
+**Steps 1–6 are done — Gap 1's solver core is complete and composable:** a 2-D incompressible Navier–Stokes
+flowfield now lives in, and evolves as, a tensor train on `deep_causality_tensor`, with a working spectral
+projection keeping it divergence-free and rounding keeping the rank bounded — and it is now driven through
+the `CfdFlow` DSL with tensor-train-native observable extraction. The headline numerical risks (singular
+Poisson, nonlinear rank growth) were ARIZ-resolved and the resolutions verified in code. The next change is
+the immersed-body QTT encoding (§3.4) — the boundary BCs that unlock the body-surface observables — and the
+Gap-2 ionization physics.
 
 ---
 

@@ -8,8 +8,10 @@
 //! incompressible Navier–Stokes marcher.
 
 mod incompressible_2d;
+mod observe;
 
 pub use incompressible_2d::QttIncompressible2d;
+pub use observe::{divergence_residual, kinetic_energy, max_bond, max_speed};
 
 use crate::tensor_bridge::{dequantize, gradient, laplacian, quantize};
 use crate::traits::Marcher;

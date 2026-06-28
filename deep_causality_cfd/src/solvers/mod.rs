@@ -12,10 +12,7 @@
 // splits the DEC-native rate (a `FluidTheory`) out of the solver machinery.
 pub(crate) mod dec;
 
-// Owned configuration + type-state builder for the DEC solver (design D2).
-mod dec_config;
-
-pub use dec_config::{
+pub use dec::dec_config::{
     DecNs, DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity, DecNsConfigReady,
 };
 
@@ -23,4 +20,6 @@ pub use dec_config::{
 // evolves a flowfield in compressed tensor-train form (the CFD ↔ tensor-network bridge).
 mod qtt;
 
-pub use qtt::{QttIncompressible2d, QttLinear1d};
+pub use qtt::{
+    QttIncompressible2d, QttLinear1d, divergence_residual, kinetic_energy, max_bond, max_speed,
+};

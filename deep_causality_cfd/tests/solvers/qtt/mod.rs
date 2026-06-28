@@ -6,4 +6,6 @@
 #[cfg(test)]
 pub mod incompressible_2d_tests;
 #[cfg(test)]
+pub mod observe_tests;
+#[cfg(test)]
 pub mod qtt_linear_tests;

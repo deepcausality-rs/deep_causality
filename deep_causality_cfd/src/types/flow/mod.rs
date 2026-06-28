@@ -20,6 +20,7 @@ mod io;
 mod march_run;
 mod mms;
 mod operator_study;
+mod qtt_march_run;
 mod report;
 #[cfg(feature = "std")]
 mod uncertain_march_run;
@@ -36,6 +37,7 @@ pub use io::write_xy_csv;
 pub use march_run::{MarchPipeline, MarchRun, StepView};
 pub use mms::{MmsBuilder, Regime};
 pub use operator_study::{Operator, OperatorStudyBuilder};
+pub use qtt_march_run::{QttMarchRun, QttStepView};
 pub use report::Report;
 #[cfg(feature = "std")]
 pub use uncertain_march_run::{UncertainMarchPipeline, UncertainMarchRun, UncertainStepView};
