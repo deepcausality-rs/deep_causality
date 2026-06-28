@@ -1,0 +1,19 @@
+openspec/notes/quantum/QCM-on-EPP.md
+  s_98cfce63747b43::t_8eff8d61d464e9 1-117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "e3344748318c55ac4e51f44e93a16ea4e2f2f7cc",
+  "prompts": {},
+  "sessions": {
+    "s_98cfce63747b43": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a90d9939a6d9da96d",
+        "model": "unknown"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
