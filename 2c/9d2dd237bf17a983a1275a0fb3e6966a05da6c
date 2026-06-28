@@ -1,0 +1,54 @@
+openspec/specs/qtt-observe/spec.md
+  s_162aba3d26275e::t_d7f42a2c3b12a7 1-27
+deep_causality_cfd/verification/qtt_taylor_green_verification/config.rs
+  s_162aba3d26275e::t_7008c263b8554c 1-5,10,14-19,21-22,24-38,44-62,66-68,71-85
+  s_162aba3d26275e::t_72b057df0709dd 6-9,11-13,20,23,39-43,63-65,69-70
+deep_causality_cfd/Cargo.toml
+  s_162aba3d26275e::t_bd1bde7a78913f 138-141
+deep_causality_cfd/verification/qtt_taylor_green_verification/README.md
+  s_162aba3d26275e::t_8d79471b16faa5 45-49
+  s_162aba3d26275e::t_29f62f28e41f7a 79-81
+  s_162aba3d26275e::t_297131f84152e0 1-44,50-78,82-106
+deep_causality_cfd/verification/qtt_taylor_green_verification/print_utils.rs
+  s_162aba3d26275e::t_b20638d9e1ba4f 174-176
+  s_162aba3d26275e::t_cafb110e36e8a8 1-5,10,12-13,16-25,95-96,98,100-101,104-105,112-113,118,123-125,134,136-146,148-152,154-155,157-161,163-164,166-173,177-181,183-194,196-197,199-208,210
+  s_162aba3d26275e::t_3c93f60fcc313a 6-9,11,14-15,26-87,91,147,153,156,162,165,182,195,198,209
+  s_162aba3d26275e::t_561013f4793059 88-90,92-94,97,99,102-103,106-111,114-117,119-122,126-133,135
+deep_causality_cfd/verification/README.md
+  s_162aba3d26275e::t_17ffe4e72ca531 3-4
+  s_162aba3d26275e::t_ebfbf004100b76 168-192,197-201
+  s_162aba3d26275e::t_bc83917e622f78 37
+deep_causality_cfd/verification/dec_graded_mms_verification/main.rs
+  s_162aba3d26275e::t_e3d227c648bc63 50-89
+openspec/specs/qtt-flow/spec.md
+  s_162aba3d26275e::t_d7f42a2c3b12a7 1-55
+deep_causality_cfd/verification/qtt_taylor_green_verification/baseline.txt
+  s_162aba3d26275e::t_334213edda59d2 1-19
+deep_causality_cfd/verification/qtt_taylor_green_verification/main.rs
+  s_162aba3d26275e::t_08db4666c21de4 1-12,17-20,23,25-31,34-37,42-53,57,61-67,74,81-82,84-85,87,94-95,145
+  s_162aba3d26275e::t_08d74808fe85ea 58-60
+  s_162aba3d26275e::t_42579abf7a5a08 32-33
+  s_162aba3d26275e::t_2b1912bec2a767 54-56
+  s_162aba3d26275e::t_f7b1871e97bfcb 91-93
+  s_162aba3d26275e::t_b20638d9e1ba4f 75-76
+  s_162aba3d26275e::t_87b7e4c6f2f24f 13-16,21-22,24,38-41,68-73,78-80,83,86,88-90,96-144
+  s_162aba3d26275e::t_95775cd447f136 77
+deep_causality_cfd/verification/dec_taylor_green_re1600_verification/main.rs
+  s_162aba3d26275e::t_2dfac4d34f712d 63,67,72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "2c9d2dd237bf17a983a1275a0fb3e6966a05da6c",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
