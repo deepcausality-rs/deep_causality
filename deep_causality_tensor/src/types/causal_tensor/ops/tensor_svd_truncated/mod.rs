@@ -248,6 +248,23 @@ where
         v[i * cols + i] = T::one();
     }
 
+    // Noise floor on a column's squared norm: a column whose norm falls below `‖A‖·ε` is numerically
+    // zero. Rank-deficient matrices drive surplus columns toward zero, and rotating a near-zero column
+    // yields pathological angles (`gmod → 0 ⇒ ζ → ∞`) that overflow/NaN the rotation. Skipping such
+    // columns leaves their singular value ~0 (dropped downstream by `retained_rank`).
+    let eps = Re::<T>::epsilon();
+    let mut max_diag = Re::<T>::zero();
+    for j in 0..cols {
+        let mut nrm = Re::<T>::zero();
+        for i in 0..rows {
+            nrm += u[i * cols + j].modulus_squared();
+        }
+        if nrm > max_diag {
+            max_diag = nrm;
+        }
+    }
+    let floor = max_diag * eps * eps;
+
     for _sweep in 0..max_sweeps {
         let mut max_off = Re::<T>::zero();
         for p in 0..cols {
@@ -262,6 +279,11 @@ where
                     alpha += uip.modulus_squared();
                     beta += uiq.modulus_squared();
                     gamma += uip.conjugate() * uiq;
+                }
+                // Either column numerically zero ⇒ nothing to orthogonalize; skip (avoids the
+                // near-zero-column rotation pathology).
+                if alpha <= floor || beta <= floor {
+                    continue;
                 }
                 let gmod = gamma.modulus_squared().sqrt(); // |γ| (real)
                 let denom = (alpha * beta).sqrt();
@@ -286,7 +308,18 @@ where
                 } else {
                     Re::<T>::one()
                 };
-                let t = sign / (zeta.abs() + (Re::<T>::one() + zeta * zeta).sqrt());
+                // `sqrt(1 + ζ²)` computed without overflow: when `|ζ|` is large (a near-zero column
+                // drives `gmod → 0`, so `ζ → ∞`), `ζ²` would overflow and `sqrt(∞)` is NaN on a
+                // double-double scalar — poisoning the rotation. Factor out `|ζ|` instead, so the term
+                // is `|ζ|·sqrt(1 + 1/ζ²)` with `1/ζ²` harmlessly underflowing to zero.
+                let az = zeta.abs();
+                let root = if az > Re::<T>::one() {
+                    let inv = Re::<T>::one() / az;
+                    az * (Re::<T>::one() + inv * inv).sqrt()
+                } else {
+                    (Re::<T>::one() + zeta * zeta).sqrt()
+                };
+                let t = sign / (az + root);
                 let c = Re::<T>::one() / (Re::<T>::one() + t * t).sqrt();
                 let s = c * t;
 

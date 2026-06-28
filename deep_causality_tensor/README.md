@@ -370,12 +370,29 @@ the sketch/QR overhead does not amortize.
 
 The gap widens ~linearly with size because the Jacobi SVD is `O(S³)` regardless of rank while the
 range-finder is `O(S²·ℓ)` with `ℓ ≈ rank + oversample`. (Part of this gap is that our deterministic
-Jacobi does not shortcut low rank; it is the accuracy-first default, not a rank-revealing method.) In
-TT terms the payoff therefore lands when rounding **sums of many tensors** — large input bond, low
-output rank — which is exactly the case the randomized-rounding literature targets. The deterministic
-kernel stays the **default**; the randomized strategy is for large/compressible instances and for
-tolerance-driven adaptive rank selection. Both produce the same result to the requested tolerance.
-Reproduce the table with `cargo test --release --test mod -- --ignored svd_crossover_study`.
+Jacobi does not shortcut low rank; it is the accuracy-first default, not a rank-revealing method.)
+
+**TT `round()` — randomize-then-orthogonalize.** Naively swapping the SVD kernel inside the existing
+`round()` does *not* help (a measured breakdown showed ~92 % of `round`'s time is the deterministic
+left-canonicalization QR sweep, which already shrinks the bonds before any SVD runs). So the randomized
+`round` instead uses the literature's **randomize-then-orthogonalize** scheme (Al Daas–Ballard 2023): it
+sketches the train against random Gaussians via a structured (Khatri-Rao) right-to-left contraction,
+then orthogonalizes only the small `ℓ`-column sketched basis — **never canonicalizing the full high-bond
+train**. Rounding a *sum of `k` copies* of a bond-6 train over `[16,16,16,16]` (the "sum of TT-tensors"
+regime — large input bond, output rank 6):
+
+| input bond | deterministic `round` | randomized `round` | speedup |
+|------------|-----------------------|--------------------|---------|
+| 24         | 4.85 ms               | 4.26 ms            | 1.1×    |
+| 48         | 28.7 ms               | 4.37 ms            | 6.6×    |
+| 96         | 175 ms                | 5.23 ms            | 33×     |
+| 144        | 370 ms                | 6.38 ms            | **58×** |
+
+The randomized `round` time stays **nearly flat (~4–6 ms)** as the input bond grows, while the
+deterministic round grows cubically — so the speedup widens with bond (1.1× → 58×), matching the 20–50×
+the papers report for rounding sums of TT-tensors. Both strategies produce the same result to the
+requested tolerance (verified), and the deterministic kernel stays the **default**. Reproduce with
+`cargo test --release --test mod -- --ignored svd_crossover_study tt_round_compressing_study`.
 
 #### Hardware & precision
 - Scalar: `f64`

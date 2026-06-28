@@ -140,6 +140,42 @@ fn check_randomized_round_matches<T: RealField + FromPrimitive + ConjugateScalar
     }
 }
 
+/// Exercises the randomize-then-orthogonalize `round` at a meaningful interior bond: a sum of `k`
+/// copies of a bond-3 train (input bond 3k, output rank 3) must round to the same tensor as the
+/// deterministic round, to tolerance.
+fn check_randomized_round_highbond<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
+    let x0 = CausalTensorTrain::<T>::random_seeded(&[6, 6, 6, 6], 3, 0x33);
+    let mut x = x0.clone();
+    for _ in 1..6 {
+        x = x.add(&x0).unwrap();
+    }
+    // Interior bond is now 18; numerical rank stays 3 (the sum of copies is a scalar multiple).
+    assert!(x.cores()[1].shape()[2] >= 12);
+
+    let rnd = Truncation::<T>::by_tol(v::<T>(1e-9))
+        .unwrap()
+        .randomized(6, 0x0ACE);
+    let yr = x.round(&rnd).unwrap();
+
+    // The randomize-then-orthogonalize round compresses the bond-18 train back to its true rank…
+    assert!(
+        yr.cores()[1].shape()[2] <= 4,
+        "expected compression to ~rank 3, got bond {}",
+        yr.cores()[1].shape()[2]
+    );
+    // …and reproduces the original tensor to the rounding tolerance. (Compared against the original,
+    // not the deterministic round — whose rank cutoff for this exactly-rank-3 data is borderline at
+    // Float106, independent of the randomized path under test.)
+    let round_tol = v::<T>(1e-6);
+    let (orig, got) = (x.to_dense().unwrap(), yr.to_dense().unwrap());
+    for (a, b) in got.as_slice().iter().zip(orig.as_slice()) {
+        assert!(
+            (*a - *b).abs() <= round_tol,
+            "randomized round does not reproduce the original tensor"
+        );
+    }
+}
+
 // ---- (c) default strategy is deterministic and untouched --------------------------------------
 
 #[test]
@@ -280,6 +316,136 @@ fn svd_crossover_study() {
     println!();
 }
 
+/// TT-level analogue of `svd_crossover_study`: round a **sum of `k` copies** of a low-rank train —
+/// the literature's "rounding a sum of TT-tensors" regime, where the input bond is large (`k·r0`) but
+/// the numerical rank stays `r0`. This is where randomized rounding is expected to pay off, unlike the
+/// tiny-bond `tt_round_highbond` criterion bench. Ignored by default; run with:
+///   cargo test -p deep_causality_tensor --test mod --release -- --ignored --nocapture tt_round_compressing
+#[test]
+#[ignore]
+fn tt_round_compressing_study() {
+    use std::time::Instant;
+    let n = 16usize;
+    let r0 = 6usize;
+    println!(
+        "\n{:>4} {:>10} {:>14} {:>14} {:>8}",
+        "k", "in-bond", "deterministic", "randomized", "speedup"
+    );
+    for &k in &[4usize, 8, 16, 24] {
+        let x0 = CausalTensorTrain::<f64>::random_seeded(&[n, n, n, n], r0, 0x77);
+        let mut x = x0.clone();
+        for _ in 1..k {
+            x = x.add(&x0).unwrap();
+        }
+        let in_bond = x.cores()[1].shape()[2]; // interior bond after summation
+        let det = Truncation::<f64>::by_tol(1e-8).unwrap();
+        let rnd = det.randomized(8, 0x9119);
+
+        let mut td = f64::INFINITY;
+        let mut tr = f64::INFINITY;
+        for _ in 0..3 {
+            let t = Instant::now();
+            let yd = x.round(&det).unwrap();
+            td = td.min(t.elapsed().as_secs_f64());
+            let t = Instant::now();
+            let yr = x.round(&rnd).unwrap();
+            tr = tr.min(t.elapsed().as_secs_f64());
+            // Both must recover the same tensor to tolerance (spot-check one entry).
+            let idx = [1usize, 2, 3, 0];
+            assert!((yd.eval(&idx).unwrap() - yr.eval(&idx).unwrap()).abs() < 1e-6);
+        }
+        println!(
+            "{:>4} {:>10} {:>12.3} ms {:>12.3} ms {:>7.1}x",
+            k,
+            in_bond,
+            td * 1e3,
+            tr * 1e3,
+            td / tr
+        );
+    }
+    println!();
+}
+
+/// Component-level breakdown of why TT `round()` shows only ~1.1× from randomized SVD. Times the
+/// deterministic left-canonicalization, the single SVD on the *actual* largest round unfolding
+/// (det vs rand), and the full round (det vs rand). Ignored; run with:
+///   cargo test -p deep_causality_tensor --test mod --release -- --ignored --nocapture round_breakdown
+#[test]
+#[ignore]
+fn round_breakdown_study() {
+    use std::time::Instant;
+    let n = 16usize;
+    let r0 = 6usize;
+    let k = 24usize;
+    let x0 = CausalTensorTrain::<f64>::random_seeded(&[n, n, n, n], r0, 0x77);
+    let mut x = x0.clone();
+    for _ in 1..k {
+        x = x.add(&x0).unwrap();
+    }
+    let bonds: Vec<usize> = x.cores().iter().map(|c| c.shape()[2]).collect();
+    println!("\nbonds (right) per core: {:?}", bonds);
+
+    let det = Truncation::<f64>::by_tol(1e-8).unwrap();
+    let rnd = det.randomized(8, 0x9119);
+
+    let best = |mut f: Box<dyn FnMut() -> usize>| -> f64 {
+        let mut t = f64::INFINITY;
+        for _ in 0..3 {
+            let s = Instant::now();
+            let _ = f();
+            t = t.min(s.elapsed().as_secs_f64());
+        }
+        t
+    };
+
+    // 1. Deterministic left-canonicalization (strategy-independent part of round).
+    let xc = x.clone();
+    let t_lcanon = best(Box::new(move || xc.left_canonicalize().unwrap().order()));
+    println!("left_canonicalize:        {:>10.3} ms", t_lcanon * 1e3);
+
+    // 2. Single SVD on the actual largest round unfolding, extracted after canonicalization.
+    let xl = x.left_canonicalize().unwrap();
+    // Pick the core with the largest left bond (the compressing SVD target).
+    let (kc, _) = xl
+        .cores()
+        .iter()
+        .enumerate()
+        .max_by_key(|(_, c)| c.shape()[0])
+        .unwrap();
+    let c = &xl.cores()[kc];
+    let (rl, nn, rr) = (c.shape()[0], c.shape()[1], c.shape()[2]);
+    // Row-major [rl, nn, rr] reshaped to [rl, nn*rr] is the same buffer with a 2D shape.
+    let unfold = CausalTensor::new(c.as_slice().to_vec(), vec![rl, nn * rr]).unwrap();
+    println!("largest unfolding: core {kc} shape [{rl}, {}]", nn * rr);
+    let u1 = unfold.clone();
+    let det1 = det;
+    let t_svd_det = best(Box::new(move || u1.svd_truncated(&det1).unwrap().1.len()));
+    let u2 = unfold.clone();
+    let rnd1 = rnd;
+    let t_svd_rnd = best(Box::new(move || u2.svd_truncated(&rnd1).unwrap().1.len()));
+    let kept_det = unfold.svd_truncated(&det).unwrap().1.len();
+    let kept_rnd = unfold.svd_truncated(&rnd).unwrap().1.len();
+    println!(
+        "single SVD det:           {:>10.3} ms  (kept rank {kept_det})",
+        t_svd_det * 1e3
+    );
+    println!(
+        "single SVD rnd:           {:>10.3} ms  (kept rank {kept_rnd})",
+        t_svd_rnd * 1e3
+    );
+
+    // 3. Full round, det vs rand.
+    let xd = x.clone();
+    let dd = det;
+    let t_round_det = best(Box::new(move || xd.round(&dd).unwrap().order()));
+    let xr = x.clone();
+    let rr2 = rnd;
+    let t_round_rnd = best(Box::new(move || xr.round(&rr2).unwrap().order()));
+    println!("round det:                {:>10.3} ms", t_round_det * 1e3);
+    println!("round rnd:                {:>10.3} ms", t_round_rnd * 1e3);
+    println!();
+}
+
 // ---- monomorphized entry points ---------------------------------------------------------------
 
 #[test]
@@ -305,4 +471,92 @@ fn randomized_round_matches_f64() {
 #[test]
 fn randomized_round_matches_float106() {
     check_randomized_round_matches::<Float106>();
+}
+#[test]
+fn randomized_round_highbond_f64() {
+    check_randomized_round_highbond::<f64>();
+}
+#[test]
+fn randomized_round_highbond_float106() {
+    check_randomized_round_highbond::<Float106>();
+}
+
+/// Regression: the Jacobi SVD and Householder QR must stay finite on rank-deficient matrices, even at
+/// double-double precision where a near-zero column previously overflowed `ζ²`/`β=2/(vᴴv)` to `±∞`
+/// and produced NaN singular values (which then defeated the rank gate, blocking compression).
+fn check_rank_deficient_svd_finite<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
+    // [6,3] of exact rank 2 (col3 = col1 + col2), with redundant rows (two stacked copies).
+    let blk = [1.0, 2.0, 3.0, 0.5, 1.0, 1.5, 4.0, 1.0, 5.0];
+    let data: Vec<f64> = blk.iter().chain(blk.iter()).copied().collect();
+    let mat = tensor::<T>(&data, &[6, 3]);
+    let (u, s, vt) = mat
+        .svd_truncated(&Truncation::<T>::by_bond(99).unwrap())
+        .unwrap();
+    for x in s.as_slice() {
+        assert!(x.is_finite(), "singular value is non-finite");
+    }
+    // Rank 2: the third singular value is negligible relative to the first.
+    let sv = s.as_slice();
+    assert!(sv.len() == 3);
+    assert!(sv[2] <= sv[0] * v::<T>(1e-12), "expected rank-2 spectrum");
+    // QR of the same matrix is finite and reconstructs A.
+    let (q, r) = mat.qr().unwrap();
+    for x in q.as_slice().iter().chain(r.as_slice()) {
+        assert!(x.is_finite(), "QR factor is non-finite");
+    }
+    // U·diag(S)·Vt reproduces A.
+    let rec = reconstruct(
+        &u,
+        &CausalTensor::new(sv.to_vec(), vec![sv.len()]).unwrap(),
+        &vt,
+    );
+    for (g, w) in rec.iter().zip(mat.as_slice()) {
+        approx(*g, *w);
+    }
+}
+
+/// Regression (end-to-end): the *deterministic* round must compress an exactly-rank-3 train (a sum of
+/// six copies of a bond-3 train, input bond 18) back to rank 3 — at both precisions. Before the
+/// near-zero-column NaN fix, `Float106` left the bond uncompressed because NaN singular values slipped
+/// past the tolerance gate.
+fn check_deterministic_round_rank_deficient<
+    T: RealField + FromPrimitive + ConjugateScalar<Real = T>,
+>() {
+    let x0 = CausalTensorTrain::<T>::random_seeded(&[6, 6, 6, 6], 3, 0x33);
+    let mut x = x0.clone();
+    for _ in 1..6 {
+        x = x.add(&x0).unwrap();
+    }
+    assert!(x.cores()[1].shape()[2] >= 12);
+    let yd = x
+        .round(&Truncation::<T>::by_tol(v::<T>(1e-9)).unwrap())
+        .unwrap();
+    for c in yd.cores() {
+        assert!(
+            c.shape()[2] <= 4,
+            "deterministic round failed to compress rank-3 train: bond {}",
+            c.shape()[2]
+        );
+    }
+    let (orig, got) = (x.to_dense().unwrap(), yd.to_dense().unwrap());
+    for (a, b) in got.as_slice().iter().zip(orig.as_slice()) {
+        assert!((*a - *b).abs() <= v::<T>(1e-6));
+    }
+}
+
+#[test]
+fn rank_deficient_svd_finite_f64() {
+    check_rank_deficient_svd_finite::<f64>();
+}
+#[test]
+fn rank_deficient_svd_finite_float106() {
+    check_rank_deficient_svd_finite::<Float106>();
+}
+#[test]
+fn deterministic_round_rank_deficient_f64() {
+    check_deterministic_round_rank_deficient::<f64>();
+}
+#[test]
+fn deterministic_round_rank_deficient_float106() {
+    check_deterministic_round_rank_deficient::<Float106>();
 }

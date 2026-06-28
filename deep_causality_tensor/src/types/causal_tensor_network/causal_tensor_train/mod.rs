@@ -8,6 +8,7 @@ mod api;
 mod construct;
 mod getters;
 pub(crate) mod linalg;
+mod round_rand;
 
 use crate::types::causal_tensor_network::canonical_form::CanonicalForm;
 use crate::{CausalTensor, CausalTensorError};
@@ -158,22 +159,15 @@ where
     /// uniform interior bond dimension, with entries in `[-1, 1)`.
     ///
     /// Uses a self-contained `splitmix64` stream so the constructor needs no external RNG crate and
-    /// produces reproducible data for tests, benchmarks, and iterative-solver initialization.
+    /// produces reproducible data for tests, benchmarks, and iterative-solver initialization. Entries
+    /// are sampled at the **working precision** of `T` (see [`crate::types::causal_tensor_network::rng`]),
+    /// so a `Float106` train carries full double-double precision rather than `f64`-pinned values.
     pub fn random_seeded(phys_dims: &[usize], bond: usize, seed: u64) -> Self {
+        use crate::types::causal_tensor_network::rng::uniform_signed;
         let bond = bond.max(1);
         let d = phys_dims.len();
         let mut state = seed;
-        let mut next = || -> T {
-            // splitmix64
-            state = state.wrapping_add(0x9E37_79B9_7F4A_7C15);
-            let mut z = state;
-            z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
-            z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
-            z ^= z >> 31;
-            // Map the high 53 bits to [0, 1), then to [-1, 1).
-            let unit = (z >> 11) as f64 / (1u64 << 53) as f64;
-            <T as deep_causality_num::FromPrimitive>::from_f64(unit * 2.0 - 1.0).unwrap()
-        };
+        let mut next = || -> T { uniform_signed::<T>(&mut state) };
 
         let cores = (0..d)
             .map(|k| {

@@ -47,16 +47,27 @@ where
             q[i * m + i] = T::one();
         }
 
+        // Noise floor on a sub-column's squared norm. A column whose norm falls below `‖A‖·ε` is
+        // numerically zero; reflecting it makes `vᴴv` a denormal and `β = 2/(vᴴv)` overflow to ∞,
+        // which then poisons the factor `β·dot` with NaN. Such a column is already (numerically)
+        // upper-triangular, so its reflector is simply skipped (Q's column stays the identity column).
+        let eps = Re::<T>::epsilon();
+        let mut frob_sq = Re::<T>::zero();
+        for x in &r {
+            frob_sq += x.modulus_squared();
+        }
+        let floor = frob_sq * eps * eps;
+
         for j in 0..k {
             // Norm of the sub-column r[j..m, j] (real).
             let mut norm_sq = Re::<T>::zero();
             for i in j..m {
                 norm_sq += r[i * n + j].modulus_squared();
             }
-            let norm = norm_sq.sqrt();
-            if norm <= Re::<T>::zero() {
+            if norm_sq <= floor {
                 continue;
             }
+            let norm = norm_sq.sqrt();
 
             // Pivot phase: alpha = −phase(r[j,j])·‖x‖ avoids cancellation and matches the real
             // ±sign convention (phase = r_jj / |r_jj|, or 1 when the pivot is zero).

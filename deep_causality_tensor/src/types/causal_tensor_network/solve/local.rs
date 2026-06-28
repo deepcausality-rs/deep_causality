@@ -1142,11 +1142,6 @@ fn solve_dense<T: ConjugateScalar>(m: &mut [T], y: &mut [T], n: usize) {
 }
 
 fn rand_unit<T: ConjugateScalar>(state: &mut u64) -> T {
-    *state = state.wrapping_add(0x9E37_79B9_7F4A_7C15);
-    let mut z = *state;
-    z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
-    z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
-    z ^= z >> 31;
-    let unit = (z >> 11) as f64 / (1u64 << 53) as f64;
-    <T as deep_causality_num::FromPrimitive>::from_f64(unit * 2.0 - 1.0).unwrap()
+    // Precision-generic uniform in [-1, 1): sampled at the working precision of `T`, not pinned to f64.
+    crate::types::causal_tensor_network::rng::uniform_signed::<T>(state)
 }

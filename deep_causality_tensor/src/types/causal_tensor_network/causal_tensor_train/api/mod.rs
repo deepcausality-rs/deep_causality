@@ -9,7 +9,7 @@ use crate::types::causal_tensor_network::causal_tensor_train::construct::MAX_DEN
 use crate::types::causal_tensor_network::causal_tensor_train::linalg::{matmul, transpose};
 use crate::types::causal_tensor_network::causal_tensor_train::{CausalTensorTrain, Identity};
 use crate::types::causal_tensor_network::cross_config::CrossConfig;
-use crate::types::causal_tensor_network::truncation::Truncation;
+use crate::types::causal_tensor_network::truncation::{RoundStrategy, Truncation};
 use crate::{CausalTensor, CausalTensorError, Tensor};
 use deep_causality_num::{ConjugateScalar, Real, Scalar, Zero};
 
@@ -204,6 +204,12 @@ where
     }
 
     fn round(&self, trunc: &Truncation<Re<T>>) -> Result<Self, CausalTensorError> {
+        // The randomized strategy uses randomize-then-orthogonalize, which sketches the train first and
+        // never canonicalizes the full high-bond cores (the deterministic sweep below would). The inner
+        // trim it performs uses a deterministic policy, so there is no recursion.
+        if let RoundStrategy::Randomized { oversample, seed } = trunc.strategy() {
+            return self.round_randomized(trunc, oversample, seed);
+        }
         let d = self.order();
         let mut cores = self.cores().to_vec();
         // Left-canonicalize, then a right-to-left truncated-SVD sweep.

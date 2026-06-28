@@ -57,6 +57,24 @@ object already threads everywhere `round` is called, so no method-signature chur
 the default; randomized requires the caller to opt in (and, being randomized, is documented as
 tolerance-accurate, not bit-reproducible beyond the fixed seed).
 
+**Measured learning, then the real fix (both done).** First, swapping only the SVD *kernel* inside the
+existing `round()` was implemented and benchmarked. The kernel itself is a large win (38×–935× on `S×S`
+rank-20 matrices), but `round()` end-to-end gained only ~1.1×. A component breakdown
+(`round_breakdown_study`) pinned the cause: at input bond 144, `round()` spent ~92% of its time
+(330 ms / 357 ms) in the deterministic `left_canonicalize` QR sweep, which reduces the bonds *before*
+the SVD sweep runs — so the truncating SVDs only ever see tiny unfoldings the kernel swap cannot help.
+
+This is precisely why the literature's scheme is **randomize-then-orthogonalize**, so that was then
+implemented (`round_rand::round_randomized` / `sketch_orthogonalize`): a right-to-left structured
+Khatri-Rao Gaussian sketch builds per-bond sketch matrices `p[k]` (`W_k = H(X_k)·(W_{k+1} ⊙ Ω_k)`),
+then a left-to-right pass forms `S_k = V(cur)·p[k+1]`, QR-factors the *small* `[r·n, ℓ]` matrix, and
+pushes the gauge `Qᴴ·V(cur)` into the next core — never canonicalizing a full bond-`r` unfolding. The
+sketch size grows geometrically until a cheap deterministic trim of the small sketched train no longer
+saturates `ℓ` (so the captured rank is complete). `round()` routes the randomized strategy here; the
+deterministic sweep is untouched. Result: TT `round` now scales 1.1× → 6.6× → 33× → 58× at input bond
+24 → 48 → 96 → 144 (randomized time flat at ~4–6 ms vs deterministic's cubic growth), matching the
+literature's 20–50× for rounding sums of TT-tensors, with results equal to deterministic to tolerance.
+
 ### 2. Greedy-pivot TT-cross (secondary)
 
 Replace the cost of the maxvol/LU rank-revealing pivot with **residual-greedy pivoting**
