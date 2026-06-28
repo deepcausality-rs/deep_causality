@@ -1,0 +1,47 @@
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/construct/mod.rs
+  s_162aba3d26275e::t_0568f4e7353450 69-70
+  s_162aba3d26275e::t_334d54b2228fb0 34
+  s_162aba3d26275e::t_c218bc6a1e221e 96
+  s_162aba3d26275e::t_1405d6eb9c4550 12,20
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/linalg/mod.rs
+  s_162aba3d26275e::t_1405d6eb9c4550 12
+  s_162aba3d26275e::t_874564210ceceb 15,34
+deep_causality_tensor/src/traits/tensor_train.rs
+  s_162aba3d26275e::t_a47181c8d9e607 92
+  s_162aba3d26275e::t_d48fe96abceccd 51-54
+  s_162aba3d26275e::t_97ebf98e35ef19 72-76
+  s_162aba3d26275e::t_02c13d542d94c6 8,15-17,22
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_complex_tests.rs
+  s_162aba3d26275e::t_9eb1c2ba2fb744 1-73,80-120,125-137,142-144
+  s_162aba3d26275e::t_874564210ceceb 74-79,121-124,138-141
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/api/mod.rs
+  s_162aba3d26275e::t_6256f34150549e 437
+  s_162aba3d26275e::t_d5b4efaa2e43f8 265-267,279
+  s_162aba3d26275e::t_8fbfafc8828cc2 206,220,225
+  s_162aba3d26275e::t_c303d2a2386519 16-17,26,35,53,77,98
+  s_162aba3d26275e::t_874564210ceceb 383-387
+  s_162aba3d26275e::t_0af2a76381e3ca 14
+  s_162aba3d26275e::t_cb8098409f26d2 237-247
+  s_162aba3d26275e::t_ac81fc16434c04 542-579
+  s_162aba3d26275e::t_fd36e59db8c06f 15
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/mod.rs
+  s_162aba3d26275e::t_1405d6eb9c4550 14,95
+deep_causality_tensor/tests/types/causal_tensor_network/mod.rs
+  s_162aba3d26275e::t_874564210ceceb 11-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "320d6506da100ab476ec01f9b83322be766ca0f0",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
