@@ -1,0 +1,30 @@
+openspec/notes/plasma-blackout/gap-two-reacting-plasma.md
+  s_162aba3d26275e::t_37fee8e4e2d97e 66-101
+  s_162aba3d26275e::t_ef21e8d3b732a6 102-142
+  s_162aba3d26275e::t_1f6951e16a09db 270-273
+  s_162aba3d26275e::t_f2af5cf5b5f1ff 194-204
+  s_162aba3d26275e::t_23d732af40934a 294-299
+  s_162aba3d26275e::t_064b13a04bfc02 1-65,143-193,205-269,274-293
+openspec/notes/plasma-blackout/plasma-blackout-corridor.md
+  s_162aba3d26275e::t_431247ec1cbd84 196-200
+openspec/notes/plasma-blackout/gap-analysis.md
+  s_162aba3d26275e::t_a26b96f33eb7d6 201-202
+  s_162aba3d26275e::t_52f68b42fca931 140-143
+  s_162aba3d26275e::t_1b5e652f8c0c70 148-161
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "6307202f26b6aedbadc314836f4bc899c4534128",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
