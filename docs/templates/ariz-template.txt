@@ -1,0 +1,313 @@
+# TRIZ / ARIZ Working Template
+
+A practical, fill-in-the-blanks problem-solving template distilled from
+ARIZ-85C (MATRIZ), the 1998 "Americanized ARIZ" framework, and the
+classical Contradiction Matrix. Reorganized for **conceptual and engineering
+problems**, not just mechanical patents.
+
+> **How to use this file.** Copy it per problem. Work top to bottom.
+> Stop early the moment a solution concept becomes obvious — ARIZ is
+> ~50% reformulation, and most problems dissolve before you reach the
+> matrix. The matrix and principles (Part B) are a *lookup* you jump to
+> from Part A, not a linear stage.
+
+---
+
+## Part 0 — Frame the problem (5 min, do not skip)
+
+| Field | Your entry |
+|---|---|
+| **Key problem** (one sentence, no solution words) | |
+| **System** (the part/space where the problem occurs) | |
+| **Main function** of that system (verb + object: "to *hold* the substrate") | |
+| **Why now / cost of not solving** | |
+| **Constraint I am tempted to treat as fixed** (name it — it is usually the lever) | |
+
+**Solution-neutrality check:** rewrite the key problem so it contains *no
+implied solution*. "Make the bracket stiffer" → "Prevent deflection under
+load." If you can't, you're still describing a solution, not a problem.
+
+---
+
+# PART A — REFORMULATE (the ARIZ spine)
+
+## A1. Components & functions
+
+- **Components / subsystems:** _(list; long is fine)_
+- **Supersystem / environment:** _
+- **Useful functions:** _
+- **Harmful / insufficient / excessive functions:** _
+
+Simple labelled sketch (or describe): _
+
+## A2. State the two technical contradictions
+
+A *technical contradiction* = improving one thing worsens another.
+Write it **both ways**; you don't yet know which serves the main function best.
+
+| | IF (action/change) | THEN (improves) | BUT (worsens) |
+|---|---|---|---|
+| **TC-1** | | | |
+| **TC-2** (inverse of TC-1) | | | |
+
+## A3. Intensify (push to the extreme — this is where quality comes from)
+
+| | Extreme statement |
+|---|---|
+| **TC-1 intensified** | harmful action *fully* eliminated, but useful action *not performed at all* |
+| **TC-2 intensified** | useful action *fully* performed, but harmful action is *as bad as possible* |
+
+> Tip from ARIZ-85C: "few elements" → push to **zero elements**;
+> "weak/strong" → push to **absent/infinite**. Extremes break inertia.
+
+**Select** the intensified version that best preserves the **main function** → _
+*(Keep both; you may revisit the rejected one in A8.)*
+
+## A4. Conflicting pair (max 3 elements)
+
+| Role | Element | State 1 | State 2 |
+|---|---|---|---|
+| **Product** (object acted on) | | | |
+| **Tool** (object directly conflicting with product) | | | |
+
+## A5. Resources (the raw material of "free" solutions)
+
+The ideal solution uses what's already present. Inventory aggressively —
+**introducing new substances/fields is discouraged.**
+
+| Resource type | Internal (tool / product) | External (environment / supersystem) |
+|---|---|---|
+| **Substances** | | |
+| **Fields** (mech, thermal, EM, chemical, gravitational…) | | |
+| **Space** | | |
+| **Time** | | |
+| **Derived / modified** (combinations, phase changes, by-products, voids) | | |
+
+## A6. Operating Zone & Operating Time
+
+| | Where / when the conflict lives |
+|---|---|
+| **OZ-1** (useful action) | |
+| **OZ-2** (harmful action) | |
+| OZ overlap? | yes / no — sketch |
+| **OT-1 / OT-2** (before · during · after) | |
+| OT overlap? | yes / no |
+
+*(If the conflict splits cleanly in space or time, you may already have a
+separation-principle solution — jump to B3.)*
+
+## A7. Ideal Final Result & Physical Contradiction
+
+**IFR (X-element form):**
+> The **X-element**, using only existing resources, preserves the ability to
+> _(main useful function)_ inside _(OZ)_ during _(OT)_, and eliminates
+> _(harmful effect)_ — **without** added complexity or new harm.
+
+Now substitute real resources for "X-element" (5–6 best candidates from A5):
+
+| Candidate resource | IFR statement holds? Notes |
+|---|---|
+| | |
+| | |
+
+**Physical contradiction** (the same parameter must take opposite values):
+
+| | Macro level | Micro level (particle / molecular) |
+|---|---|---|
+| The **parameter** _ of _ | should be **___** to provide useful function | |
+| **BUT** | should be **___** to eliminate harm | |
+
+> The micro restatement ("what must each particle do?") often reveals
+> interactions hidden at component scale, and strips away inertia-laden
+> vocabulary. Use **Smart Little People**: imagine the operating zone filled
+> with tiny agents free to act however needed — what would they do to satisfy
+> both opposing states at once?
+
+## A8. If still stuck — change the problem, not the effort
+
+- [ ] Is this actually 2+ problems? Split them.
+- [ ] Switch to the **other** technical contradiction (the one you parked in A3).
+- [ ] Reformulate the mini-problem with a different main function.
+- [ ] Restate at the **supersystem** level.
+- [ ] "One step back from IFR": deliberately degrade/disassemble the ideal —
+      the easier nearby problem often hands you the real solution.
+
+---
+
+# PART B — SOLVE (knowledge-base lookups)
+
+Reach here from A7/A8. Use in this order: **Separation → 76 Standards →
+Contradiction Matrix → 40 Principles → Effects.**
+
+## B3. Separation principles (for the *physical* contradiction)
+
+When one parameter must be X and not-X, separate the requirement by:
+
+| Separate by… | Ask | Typical principles |
+|---|---|---|
+| **Space** | Can X hold *here* and not-X *there*? | 1,2,3,4,7,13,17,24,26,30 |
+| **Time** | Can X hold *now* and not-X *later*? | 9,10,11,15,16,18,19,20,21,29,34,37 |
+| **Scale / condition** (system vs part) | X at whole-system level, not-X at component level (or by phase/state)? | 1,3,5,12,28,31,32,35,36,38,40 |
+| **On condition** | X under one condition, not-X under another | 28,31,32,35,36 |
+
+## B4. Contradiction Matrix — reformulated as a lookup
+
+The classic 39×39 grid is unusable by hand. Use this **two-step lookup**
+instead. (1) Map your "improving" and "worsening" terms to the nearest of the
+39 parameters below. (2) Read the recommended principles from the abridged
+high-yield matrix.
+
+### The 39 parameters (grouped for fast scanning)
+
+**Physical / geometric**
+1 Weight (moving) · 2 Weight (stationary) · 3 Length (moving) · 4 Length
+(stationary) · 5 Area (moving) · 6 Area (stationary) · 7 Volume (moving) ·
+8 Volume (stationary) · 12 Shape · 17 Temperature · 18 Illumination/brightness
+
+**Dynamics / mechanics**
+9 Speed · 10 Force · 11 Stress/pressure · 13 Stability of object ·
+14 Strength · 15 Duration of action (moving) · 16 Duration of action
+(stationary) · 19 Energy used (moving) · 20 Energy used (stationary) ·
+21 Power · 22 Loss of energy · 23 Loss of substance · 24 Loss of information ·
+25 Loss of time · 26 Quantity of substance
+
+**Quality / performance**
+27 Reliability · 28 Measurement accuracy · 29 Manufacturing precision ·
+30 Harmful factors acting *on* object · 31 Harmful factors *generated* by
+object
+
+**System-level**
+32 Ease of manufacture · 33 Ease of operation · 34 Ease of repair ·
+35 Adaptability/versatility · 36 Device complexity · 37 Difficulty of
+detecting/measuring · 38 Extent of automation · 39 Productivity
+
+> **Conceptual-domain translation** (for non-mechanical problems — software,
+> research, organizations): read parameters as analogies.
+> *Weight/volume → resource footprint or code size.*
+> *Speed → throughput/latency.* *Strength → robustness.*
+> *Stability → invariance under change.* *Complexity → coupling/cognitive load.*
+> *Loss of information → observability.* *Adaptability → generality.*
+> *Harmful factors → side effects / technical debt.*
+
+### High-yield abridged matrix (most common engineering conflicts)
+
+Improving ↓ / Worsening → : principles to try (by number, see B5).
+
+| Improving \ Worsening | Weight/size | Speed | Strength | Reliability | Energy/loss | Complexity | Accuracy |
+|---|---|---|---|---|---|---|---|
+| **Weight / size** | — | 13,28,15,19 | 1,8,40,15 | 1,8,15,34 | 35,12,34,31 | 26,30,36,34 | 28,32,1,24 |
+| **Speed** | 2,28,13,38 | — | 13,14,8 | 11,35,27,28 | 19,35,38,2 | 10,28,32,1 | 28,32,1,24 |
+| **Strength** | 40,26,27,1 | 8,13,26,14 | — | 11,3,10,32 | 19,35,10 | 2,13,28 | 3,27,16 |
+| **Reliability** | 3,8,10,40 | 21,35,11,28 | 11,28 | — | 21,11,27,19 | 13,35,1 | 32,3,11,23 |
+| **Energy / loss** | 6,2,34,19 | 16,35,38 | 35,10,14 | 11,10,35 | — | 7,23,35,2 | 35,18,10 |
+| **Complexity** | 26,30,34,36 | 10,28 | 1,26,13 | 13,35,1 | 2,22,17,19 | — | 27,26,28 |
+| **Accuracy** | 26,28,32,3 | 28,32,1 | 3,27,40 | 32,3,11 | 35,18,10 | 26,24,32 | — |
+
+*This is a working subset; for any pair outside it, consult the full matrix
+(matriz.org or any TRIZ matrix tool), but the principles above resolve a large
+fraction of real conflicts. Empty/—  = no strong pattern; go to separation
+principles or Effects.*
+
+## B5. The 40 Inventive Principles (reference)
+
+1. **Segmentation** — divide into independent parts; make sectional/modular.
+2. **Taking out / extraction** — separate the interfering part or property.
+3. **Local quality** — make parts non-uniform; each part does its own job.
+4. **Asymmetry** — replace symmetric form with asymmetric.
+5. **Merging / consolidation** — combine identical or parallel operations.
+6. **Universality** — one part performs several functions; eliminate others.
+7. **Nested doll (matryoshka)** — place objects inside one another.
+8. **Anti-weight / counterweight** — compensate weight with lift/buoyancy.
+9. **Preliminary anti-action** — pre-stress in the opposite direction.
+10. **Preliminary action** — do it (partly) in advance; pre-arrange.
+11. **Beforehand cushioning** — prepare emergency means in advance.
+12. **Equipotentiality** — remove the need to raise/lower in a field.
+13. **The other way around** — invert the action; make movable fixed / vice versa.
+14. **Spheroidality / curvature** — use curves, rollers, spirals instead of lines.
+15. **Dynamics** — make rigid things adjustable/movable; optimize per stage.
+16. **Partial or excessive action** — if 100% is hard, do slightly less/more.
+17. **Another dimension** — move to 2D/3D; tilt; use the other side; stack.
+18. **Mechanical vibration** — oscillate; use resonance; ultrasound.
+19. **Periodic action** — replace continuous with pulsed; use pauses.
+20. **Continuity of useful action** — eliminate idle/intermittent strokes.
+21. **Skipping / rushing through** — run a harmful stage at high speed.
+22. **Blessing in disguise** — turn a harm into a benefit.
+23. **Feedback** — introduce or change feedback; make it adaptive.
+24. **Intermediary** — use a temporary carrier or go-between, then remove it.
+25. **Self-service** — system serves/repairs itself; use waste.
+26. **Copying** — use cheap copies/optical/virtual instead of the real thing.
+27. **Cheap short-living objects** — replace expensive durable with cheap disposable.
+28. **Mechanics substitution** — replace mechanical with field (EM, acoustic, optical).
+29. **Pneumatics / hydraulics** — use gas/liquid instead of solid parts.
+30. **Flexible shells / thin films** — use membranes, films, isolation layers.
+31. **Porous materials** — make porous; fill pores with a useful substance.
+32. **Color / optical changes** — change color, transparency, visibility.
+33. **Homogeneity** — interacting objects from the same (or matched) material.
+34. **Discarding & recovering** — let parts disappear/dissolve after use; restore consumables.
+35. **Parameter change** — change phase, concentration, temperature, flexibility.
+36. **Phase transitions** — exploit volume/heat changes during phase change.
+37. **Thermal expansion** — use expansion/contraction; bimetals.
+38. **Strong oxidants / enriched atmosphere** — use enriched/active media.
+39. **Inert atmosphere** — replace normal environment with inert/vacuum.
+40. **Composite materials** — replace uniform with composite/multi-material.
+
+## B6. Standard Solutions & Effects (when principles don't land)
+
+- **Su-Field check:** model the conflict as Substance1 — Field — Substance2.
+  Incomplete field? → add the missing one. Harmful field? → block, counter, or
+  convert it. (This is the gateway to the 76 Standard Solutions.)
+- **Effects database:** if you need a *function* ("move liquid without a pump",
+  "measure temperature without contact"), look it up in a scientific-effects
+  index rather than inventing — there is almost always a known physical effect.
+
+---
+
+# PART C — VERIFY & HARVEST
+
+## C1. Did it actually work?
+
+- [ ] Was the **physical contradiction removed** (not compromised)?
+- [ ] Did the solution use **only resources from A5** (no smuggled new substances/fields)?
+- [ ] Does it satisfy the **IFR** / main function?
+- [ ] Is it **implementable** in the real system?
+- [ ] Any **new** harmful effects introduced? List them → these are your next problem.
+
+## C2. Maximize the win
+
+- What must change in the **supersystem** to deploy this?
+- Does the changed system enable **new applications**?
+- **Generalize** the solution into a *method*. State it, then state its
+  *inverse*, and test both against your other open problems.
+- How does it scale as size/time/cost → 0 or → ∞?
+
+## C3. Capture the learning
+
+- Where did your actual path diverge from this template? (That delta is the lesson.)
+- What makes this solution distinct from the standard effect/principle it came from?
+- Add to your own solutions database.
+
+---
+
+### One-page flow (memory aid)
+
+```
+Frame → solution-neutral problem statement
+  │
+  ▼  PART A: REFORMULATE
+Components/functions → Two TCs → Intensify → Conflicting pair
+  → Resources → OZ/OT → IFR + Physical Contradiction
+  → (stuck? change the problem)
+  │
+  ▼  PART B: SOLVE
+Separate (space/time/scale/condition)
+  → 76 Standards (Su-Field) → Matrix lookup → 40 Principles → Effects
+  │
+  ▼  PART C: VERIFY & HARVEST
+Contradiction removed? resources-only? IFR met?
+  → generalize → capture
+```
+
+*Sources distilled: ARIZ-85C (MATRIZ); Marconi, "ARIZ: An Americanized
+Learning Framework," TRIZ Journal 1998; Altshuller's 39 parameters / 40
+principles / separation principles.*
+
