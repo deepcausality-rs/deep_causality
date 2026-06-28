@@ -1,0 +1,23 @@
+deep_causality_num/src/algebra/mod.rs
+  s_162aba3d26275e::t_caee426eac15ed 93
+openspec/notes/tensor-network/Tensor-Network-Spec.md
+  s_162aba3d26275e::t_9595305f243570 327-340
+deep_causality_tensor/README.md
+  s_162aba3d26275e::t_470279653f0fe3 238-256
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "a7994030a5f09d0068e8dfaf6ddeca237394236a",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
