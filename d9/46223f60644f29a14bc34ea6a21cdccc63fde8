@@ -1,0 +1,61 @@
+deep_causality_cfd/tests/tensor_bridge/mod.rs
+  s_162aba3d26275e::t_9b94a168b33bda 9-10
+  s_162aba3d26275e::t_49bfa9e9cb0bc9 12-13
+deep_causality_cfd/tests/tensor_bridge/operators_2d_tests.rs
+  s_162aba3d26275e::t_26bc7f063e61b9 7-9,41-43,65-72,88-90
+  s_162aba3d26275e::t_9c7ebf3b18e9c5 83
+  s_162aba3d26275e::t_6f207d2ff8a799 1-6,10-40,44-64,73-82,84-87,91-101
+openspec/notes/plasma-blackout/gap-one-cfd-tensor-bridge.md
+  s_162aba3d26275e::t_a40af4c1e7c9f0 194-206
+deep_causality_cfd/src/solvers/qtt/mod.rs
+  s_162aba3d26275e::t_8b6372227ed139 6-12
+deep_causality_cfd/src/lib.rs
+  s_162aba3d26275e::t_916dcf533f4cff 45-46
+  s_162aba3d26275e::t_82eea03edc3c39 84
+deep_causality_cfd/src/tensor_bridge/codec.rs
+  s_162aba3d26275e::t_6893bb379377d8 54-101
+deep_causality_cfd/tests/solvers/qtt/incompressible_2d_tests.rs
+  s_162aba3d26275e::t_961c6ce9df2005 7
+  s_162aba3d26275e::t_ae182e7ea81174 1-6,8-89
+deep_causality_cfd/src/tensor_bridge/mod.rs
+  s_162aba3d26275e::t_5d4dc5b5907c6d 17,23
+  s_162aba3d26275e::t_4ae8b94ec086af 19-22
+deep_causality_cfd/src/tensor_bridge/projection.rs
+  s_162aba3d26275e::t_a585a1b45f4c0a 151-154
+  s_162aba3d26275e::t_0634f500942746 1-14,17-21,23-150,155-156,159,162,166-182
+  s_162aba3d26275e::t_3192f335404d28 15-16
+  s_162aba3d26275e::t_f4ab3bb8a337fd 22
+  s_162aba3d26275e::t_65abaeb91d4b19 157-158,160-161,163-165
+openspec/changes/add-cfd-qtt-incompressible-2d/tasks.md
+  s_162aba3d26275e::t_3881224fbb02db 3-6,10-13
+  s_162aba3d26275e::t_87a8c8b0031acd 17-19,23-24
+deep_causality_cfd/src/solvers/mod.rs
+  s_162aba3d26275e::t_34c1e61f78735c 26
+deep_causality_cfd/tests/tensor_bridge/projection_tests.rs
+  s_162aba3d26275e::t_26bc7f063e61b9 33-37,68-71,73-76
+  s_162aba3d26275e::t_be1e0849870823 1-32,38-66,81-95
+  s_162aba3d26275e::t_34fb699936eb36 67,72,77-80
+deep_causality_cfd/tests/solvers/qtt/mod.rs
+  s_162aba3d26275e::t_64d99648df1cb4 7
+  s_162aba3d26275e::t_9f3c3ed826ed73 6
+deep_causality_cfd/src/tensor_bridge/operators.rs
+  s_162aba3d26275e::t_7ba3729d8870f2 131-213
+deep_causality_cfd/src/solvers/qtt/incompressible_2d.rs
+  s_162aba3d26275e::t_bca44e581c9a72 1-158
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "d946223f60644f29a14bc34ea6a21cdccc63fde8",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
