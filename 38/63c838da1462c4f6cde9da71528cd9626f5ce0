@@ -1,0 +1,25 @@
+openspec/changes/add-tensor-network/tasks.md
+  s_162aba3d26275e::t_a52fd4103d5d75 51
+  s_162aba3d26275e::t_338ea7377272b9 59
+deep_causality_tensor/tests/types/causal_tensor_network/mod.rs
+  s_162aba3d26275e::t_064845560315b8 17-18
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_scalar_tests.rs
+  s_162aba3d26275e::t_8ba0dc3418f819 24-26
+  s_162aba3d26275e::t_09e576604d8175 1-23,27-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "3863c838da1462c4f6cde9da71528cd9626f5ce0",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
