@@ -104,6 +104,22 @@ for the turbulence-compression precedent). This is the lever that serves the CFD
 north-star and makes "many counterfactual rollouts in the blackout window" affordable. **[holds under
 precondition: written; classical hardware]**
 
+**Resolution: tensor *rank* in place of adaptive mesh refinement.** The blackout problem's defining
+numerical difficulty is scale separation — the vehicle is ~meters, the shock layer and plasma sheath
+~micrometers: a **~10⁶ dynamic range**. Conventional CFD is *forced* into adaptive mesh refinement or
+body-fitted graded meshes, because a uniform micrometer grid over a meter is ~10¹² points in 2-D, ~10¹⁸
+in 3-D. A quantized tensor train removes that forcing: a `2^L` grid costs `O(χ²·L)` — **logarithmic in
+the point count** — so `L ≈ 20` lays down a uniform micrometer grid over a meter for the cost of ~40
+binary modes in 2-D. The micrometer resolution at the shock and sheath is then *free in point-count
+terms*, paid for only in **bond dimension**, and only where sharp structure lives. The "variable mesh" is
+therefore **not a graded mesh at all** — it is a globally uniform ultra-fine grid whose cost the tensor
+rank localizes to the shock and sheath; the plasma sheath (Debye/sheath thickness ~µm–mm) is resolved at
+the same uniform resolution with no separate refinement region. For true wall-normal clustering, a smooth
+analytic coordinate stretch keeps the uniform *computational* lattice QTT loves and maps it to a graded
+*physical* mesh through a low-rank Jacobian — boundary-layer resolution without leaving the tensor
+structure. This is the strongest single argument for the tensor-network axis on *this* problem. **[holds
+under precondition: shock rank controlled — see seam §6]**
+
 ---
 
 ## 4. The causal chain (CausalFlow)
@@ -183,6 +199,19 @@ blackout window becomes trivial. This is the real meaning of "get the math up to
 - **EPP is a macroscope, not the inner solve loop.** It composes, gates, and audits; the heavy compute
   lives behind the causaloid boundary. Reentry guidance is latency-bound — state the value as
   orchestration + auditable safety + counterfactual decision, not as the CFD hot kernel.
+- **Shocks are the anti-QTT structure — rank control at the shock is the open numerical risk.** The
+  resolution argument (§3.3) rests on the flowfield staying low-rank, but a Mach-25 bow shock is nearly a
+  discontinuity, and discontinuities are **high tensor-train rank** (verified directly: a sharp
+  immersed-body mask blew the bond up; smoothing it restored a bounded rank). So the bond dimension *at
+  the shock* — exactly where resolution is needed — is where the compression advantage is most at risk.
+  The mitigations are standard and physically honest: artificial viscosity / shock smoothing (at
+  micrometer resolution the real shock is ~a few mean free paths, sub-micron, so the captured shock is
+  genuinely a few fine-grid cells, not a true discontinuity), TT-cross to build nonlinear/source terms at
+  a capped rank, and the hardened per-step rounding. Separately, the **present QTT solver is
+  incompressible** — the wrong governing equations for a hypersonic shock; the flagship needs a
+  **compressible QTT marcher** (Euler/NS + energy + EOS), which is Tier-B / Gap-2 territory, not built.
+  The mesh *strategy* of §3.3 is sound on the incompressible solver we have; the shock *physics* is not
+  yet in place. **[open: shock-rank control + a compressible QTT solver]**
 
 ---
 

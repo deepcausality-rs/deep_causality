@@ -123,6 +123,20 @@ ionization surrogate** → electron density → plasma frequency → blackout tr
 but **not yet written**. The `PhysicsStage` coupling DSL is the right home (`IonizationStage`, `EosStage`)
 and is already in place. **[holds under precondition: surrogate acceptable for Tier A]**
 
+**Resolution / mesh strategy (the micrometer shock-sheath requirement).** Reentry needs ~µm resolution at
+the shock layer and plasma sheath over a ~m vehicle — a **~10⁶ dynamic range** that forces conventional
+CFD into adaptive mesh refinement. The QTT representation answers this *without* AMR: a `2^L` grid costs
+`O(χ²·L)`, so a uniform micrometer grid (`L ≈ 20`) is affordable and the cost localizes to the **bond
+dimension** where the sharp shock/sheath gradients live (a smooth coordinate stretch adds wall-normal
+clustering through a low-rank Jacobian if wanted). "Variable mesh" becomes *tensor rank*, not a graded
+mesh — see corridor §3.3. The catch is that a near-discontinuous Mach-25 shock is **high tensor-train
+rank** (verified with the immersed-body mask: sharp → high bond, smoothed → bounded), so shock-capturing
+in QTT needs artificial viscosity / shock smoothing (physically honest — the true shock is a few mean
+free paths thick), TT-cross for the nonlinear/source terms, and aggressive rounding. This sits with Gap 2
+because it also requires a **compressible QTT marcher** (the built `QttIncompressible2d` is the wrong
+physics for a shock). The mesh *strategy* is sound on the incompressible solver already built; the shock
+*physics* is **Tier-B / not yet written**. **[open: compressible QTT + shock-rank control]**
+
 ### Gap 3 — trajectory axis is a proof-of-concept skeleton (matches corridor seam §6)
 
 `hypersonic_2t/model.rs` has a "simplified for demo" conformal embedding (`data[16] = sqrt(x²+y²+z²)`), a
@@ -151,8 +165,10 @@ provenance log are composition work — not missing primitives. **[holds under p
   verified). Tier A now needs: (2) a parametric Park-2T / ionization `PhysicsStage` surrogate (Gap 2), and
   (3) wiring the existing skeletons + Ethos gate + provenance (Gap 4). Neither is blocked on missing
   mathematics.
-- **Tier B** retains genuine open research: validated coupled reacting-plasma CFD, and the
-  Bars-2T-exact-gravity + perturbative-aero coupling — keep labelled **[open]**.
+- **Tier B** retains genuine open research: validated coupled reacting-plasma CFD, a **compressible QTT
+  shock-capturing marcher** (the µm shock/sheath resolution rides the QTT multi-resolution property —
+  uniform-fine grid, rank-localized cost — but needs compressible physics + shock-rank control, see Gap 2),
+  and the Bars-2T-exact-gravity + perturbative-aero coupling — keep labelled **[open]**.
 
 **Smallest honest slice that proves the thesis:** a Tier-A vertical slice — quasi-1D reacting flow as a
 QTT/MPS rollout (new tensor train), a parametric ionization surrogate feeding a blackout trigger, 2–3
