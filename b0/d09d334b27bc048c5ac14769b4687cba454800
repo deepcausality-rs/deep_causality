@@ -1,0 +1,23 @@
+openspec/notes/plasma-blackout/gap-analysis.md
+  s_162aba3d26275e::t_bc0fc818e45f80 168-171
+  s_162aba3d26275e::t_3562fc46ea5fd0 126-139
+openspec/notes/plasma-blackout/plasma-blackout-corridor.md
+  s_162aba3d26275e::t_f5cda69d1fc33b 202-214
+  s_162aba3d26275e::t_56e8bb54861f6d 107-122
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "b0d09d334b27bc048c5ac14769b4687cba454800",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
