@@ -1,0 +1,34 @@
+openspec/changes/add-tensor-operator-algebra/.openspec.yaml
+  s_162aba3d26275e::t_0ab00f11d2face 1-2
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train_operator/mod.rs
+  s_162aba3d26275e::t_997a8ce37b0f3d 13
+  s_162aba3d26275e::t_8868853dcca6ad 169-192
+  s_162aba3d26275e::t_4141ad0b26d5b0 193-206
+openspec/changes/add-tensor-operator-algebra/specs/tensor-train-operator/spec.md
+  s_162aba3d26275e::t_0ce82031063769 1-27
+openspec/changes/add-tensor-operator-algebra/tasks.md
+  s_162aba3d26275e::t_abc0576a94bd15 1-7
+openspec/changes/add-tensor-operator-algebra/proposal.md
+  s_162aba3d26275e::t_bc1179055ce2d3 1-23
+openspec/changes/add-tensor-operator-algebra/design.md
+  s_162aba3d26275e::t_326b333df90c6e 1-34
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_operator_tests.rs
+  s_162aba3d26275e::t_c339833217d307 179-183,190-197,201-205,207-211,218-224,228-242
+  s_162aba3d26275e::t_eb42049b20b241 168-178,184-189,198-200,206,212-217,225-227,243-253
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "965b1a57bf274d45133b3942d5bd84546ff2d158",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
