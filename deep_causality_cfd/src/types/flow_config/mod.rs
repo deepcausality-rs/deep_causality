@@ -31,7 +31,7 @@ pub use march_builder::MarchConfigBuilder;
 pub use march_config::{MarchConfig, MarchStop};
 pub use mesh::{Grading, Mesh};
 pub use observe::Observe;
-pub use qtt_march_config::{QttMarchConfig, QttMarchConfigBuilder, QttObserve};
+pub use qtt_march_config::{QttBody, QttMarchConfig, QttMarchConfigBuilder, QttObserve};
 pub use seed::Seed;
 #[cfg(feature = "std")]
 pub use uncertain_march_config::{UncertainMarchConfig, UncertainMarchConfigBuilder};

@@ -202,17 +202,21 @@ Cross-check primitive behaviour against **SeeMPS** on a shared toy problem befor
    observables (`kinetic_energy`/`divergence_residual`/`max_bond` on the trains, `max_speed` via dequantize),
    and a per-step `QttStepView` hook — all reusing the owned `Report`/`MarchStop`. Validated bit-for-bit
    against the direct `QttIncompressible2d::run` driver. (OpenSpec change `add-cfd-qtt-flow-observe`.)
-7. Immersed-body BCs in QTT (§3.4) and the body-surface observables that ride them (drag/lift/heat flux as
-   boundary-fiber contractions), then the Gap-2 ionization/reacting surrogate (electron density `n_e`),
-   then hand to the flagship's step [4].
+7. **[DONE] Immersed body + surface observables** — a Brinkman volume-penalization body (`QttImmersed2d`,
+   a smoothed mask MPS, no cut cells), drag/lift as the penalization-force tensor-train contraction, a
+   neutral wall heat-flux via a penalized passive scalar, the `CfdFlow::qtt_march` body wiring, and a
+   self-verifying `qtt_cylinder_verification` (no-slip + accuracy-vs-bond convergence). (OpenSpec change
+   `add-cfd-qtt-immersed-body`.) Then the Gap-2 ionization/reacting surrogate (electron density `n_e`,
+   reacting heat flux) and the hand-off to the flagship's step [4].
 
-**Steps 1–6 are done — Gap 1's solver core is complete and composable:** a 2-D incompressible Navier–Stokes
-flowfield now lives in, and evolves as, a tensor train on `deep_causality_tensor`, with a working spectral
-projection keeping it divergence-free and rounding keeping the rank bounded — and it is now driven through
-the `CfdFlow` DSL with tensor-train-native observable extraction. The headline numerical risks (singular
-Poisson, nonlinear rank growth) were ARIZ-resolved and the resolutions verified in code. The next change is
-the immersed-body QTT encoding (§3.4) — the boundary BCs that unlock the body-surface observables — and the
-Gap-2 ionization physics.
+**Steps 1–7 are done — Gap 1 is CLOSED:** a 2-D incompressible Navier–Stokes flowfield now lives in, and
+evolves as, a tensor train on `deep_causality_tensor`, with a spectral projection keeping it
+divergence-free, rounding keeping the rank bounded, an immersed body by volume penalization, and the
+surface observables (drag/lift, neutral wall heat flux) the flagship's step [4] reads — all driven through
+the `CfdFlow` DSL and verified (2nd-order Taylor–Green; no-slip + accuracy-vs-bond cylinder). The headline
+numerical risks (singular Poisson, nonlinear rank growth, mask rank) were resolved and verified in code.
+The only outstanding flagship physics is **Gap 2** (Park-2T ionization → `n_e`, reacting heat flux) — the
+neutral thermal observable here is the seam it plugs into.
 
 ---
 

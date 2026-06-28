@@ -21,5 +21,6 @@ pub use dec::dec_config::{
 mod qtt;
 
 pub use qtt::{
-    QttIncompressible2d, QttLinear1d, divergence_residual, kinetic_energy, max_bond, max_speed,
+    QttImmersed2d, QttIncompressible2d, QttLinear1d, divergence_residual, drag_lift,
+    kinetic_energy, max_bond, max_speed, wall_heat_flux,
 };

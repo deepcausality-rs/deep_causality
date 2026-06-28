@@ -17,6 +17,81 @@ use deep_causality_num::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{CausalTensorTrain, TensorTrain};
 
+/// The penalization-force integral `(1/η) ∫ χ_body ⊙ (a − a_body) dV` over the grid — a single
+/// tensor-train contraction (`inner` of the mask with the field deficit), no surface reconstruction.
+/// This is the momentum (or heat) the Brinkman penalization exchanges with the body.
+fn penalization_integral<R>(
+    mask: &CausalTensorTrain<R>,
+    a: &CausalTensorTrain<R>,
+    a_body: R,
+    eta: R,
+    cell_volume: R,
+) -> Result<R, PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    // a − a_body (the deficit); for a_body = 0 this is just `a`.
+    let deficit = if a_body == R::zero() {
+        mask.inner(a)?
+    } else {
+        mask.inner(&a.add_scalar(R::zero() - a_body)?)?
+    };
+    Ok(deficit * cell_volume / eta)
+}
+
+/// Drag and lift coefficients on the immersed body, from the **penalization-force contraction**:
+/// the force the fluid exerts on the body is the penalization momentum integral `F = (1/η) ∫ χ_body ⊙
+/// (u − u_body) dV` per component, nondimensionalized as `C_d = F_x / (½ ρ U² D)` (ρ = 1). A pure
+/// tensor-train contraction — no cut-cell surface or boundary fiber.
+///
+/// # Errors
+/// Propagates the train-contraction errors.
+#[allow(clippy::too_many_arguments)]
+pub fn drag_lift<R>(
+    mask: &CausalTensorTrain<R>,
+    u: &CausalTensorTrain<R>,
+    v: &CausalTensorTrain<R>,
+    ubx: R,
+    uby: R,
+    eta: R,
+    dx: R,
+    dy: R,
+    u_ref: R,
+    d_ref: R,
+) -> Result<(R, R), PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    let cell_volume = dx * dy;
+    let fx = penalization_integral(mask, u, ubx, eta, cell_volume)?;
+    let fy = penalization_integral(mask, v, uby, eta, cell_volume)?;
+    let half = R::from_f64(0.5).expect("0.5 lifts into every real field");
+    let denom = half * u_ref * u_ref * d_ref;
+    Ok((fx / denom, fy / denom))
+}
+
+/// Wall heat flux on the immersed body, from the penalization **heat** integral `Q = (1/η) ∫ χ_body ⊙
+/// (T_w − T) dV` (the heat the wall exchanges with the fluid to hold the body at `t_wall`). The same
+/// contraction shape as [`drag_lift`]. **Neutral** — the seam the Gap-2 reacting energy equation replaces.
+///
+/// # Errors
+/// Propagates the train-contraction errors.
+pub fn wall_heat_flux<R>(
+    mask: &CausalTensorTrain<R>,
+    temp: &CausalTensorTrain<R>,
+    t_wall: R,
+    eta: R,
+    dx: R,
+    dy: R,
+) -> Result<R, PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    // Q = (1/η) ∫ χ_body (T_w − T) dV = −[(1/η) ∫ χ_body (T − T_w) dV].
+    let q = penalization_integral(mask, temp, t_wall, eta, dx * dy)?;
+    Ok(R::zero() - q)
+}
+
 /// Kinetic energy `½(‖u‖² + ‖v‖²)` from the train norms — the `‖·‖` is the Frobenius/L2 norm over the
 /// `2^Lx · 2^Ly` grid coefficients, so this is the (unweighted) discrete kinetic energy. No dequantize.
 ///

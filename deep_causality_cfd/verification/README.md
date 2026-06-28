@@ -35,6 +35,7 @@ difference. Measured at `f64` on an Apple M3 Max (release).
 | `dec_cylinder_wake_verification` | max divergence residual; log count | 3.3e-15; 80 | 0; 80 (= 2×40) | ≈ machine-ε; exact | 2000 steps, 93×32 | ~155 s |
 | `dec_cylinder_verification` | Strouhal St; drag C_d | 0.171; 1.345 | 0.164; 1.24–1.33 | **+4.3 %**; **+1.1 %** (over band top) | 96², Re=100, 1500 steps | ~510 s |
 | `qtt_taylor_green_verification` | TG decay error (32²); observed order; convection | 5.3e-5; 2.02–2.18; 3.2e-3 | 0 (analytic); 2.00; 0 (analytic) | converges 2nd-order; **+9 %** order; conv ≈ 0.6 % | 8²–32², t=0.2 | <1 s |
+| `qtt_cylinder_verification` | drag convergence vs bond; no-slip interior | ΔC_d 1.9e-11; max\|u\| 4.2e-2 | 0 (converged); 0 (no-slip) | converges to machine-ε; **4 %** of free-stream | 32², 4 bond caps | ~1 s |
 
 Reference papers per example are in the sections below and the [References](#references). The cavity
 centerline RMSE (0.137) is itself a deviation-from-Ghia measure (no single reference value), so its
@@ -190,6 +191,29 @@ on this smooth field → `N×` compression that grows with resolution.
 
 ---
 
+## `qtt_cylinder_verification` — immersed cylinder by Brinkman penalization (tensor-train)
+
+**Verifies.** The immersed-body QTT solver (`QttImmersed2d`): a cylinder in a periodic free-stream
+enforced by **Brinkman volume penalization** (a smoothed mask, no cut cells), with drag read as a
+**tensor-train contraction** of the mask with the velocity deficit. Closes Gap 1 of the plasma-blackout
+analysis (immersed body + surface observables). Driven through `CfdFlow::qtt_march`.
+
+**Self-check.** Three gates, **exit nonzero** on break: (a) no-slip — interior `max|u|` at the
+penalization floor; (b) accuracy-vs-bond — the drag coefficient **converges** as the round bond cap rises;
+(c) physical drag — positive and finite.
+
+**Measured (f64, 32², 4 bond caps, ~1 s).** `C_d` settles `24.05 → 23.76 → 23.7577 → 23.7577`, with the
+successive change collapsing `2.9e-1 → 7.2e-3 → 1.9e-11` and divergence dropping `3.8e-1 → 5.5e-14` as the
+bond cap rises — the headline accuracy-vs-bond trade-off. Interior `max|u| ≈ 4.2e-2` vs free-stream `1.0`
+(no-slip). The **absolute** `C_d ≈ 23.8` is *not* the isolated-cylinder value (DEC `≈ 1.345`): it is
+inflated by ~30 % blockage, the smoothing-skirt penalization-force definition, and the transient — so the
+**convergence trend** is the verification result, with the DEC `C_d` a disclaimed cross-reference.
+
+**Reference.** Angot, Bruneau & Fabrie (1999) — volume penalization; Peddinti et al. (2024) — MPS
+immersed objects; DEC cross-reference `dec_cylinder_verification`.
+
+---
+
 ## References
 
 - **Taylor, G. I. & Green, A. E.** (1937). *Mechanism of the production of small eddies from large
@@ -199,6 +223,8 @@ on this smooth field → `N×` compression that grows with resolution.
 - **Gourianov, N., Lubasch, M., Dolgov, S., van den Berg, Q. Y., Babaee, H., Givi, P., Kiffner, M. &
   Jaksch, D.** (2022). *A quantum-inspired approach to exploit turbulence structures.* Nat. Comput.
   Sci. **2**, 30–37.
+- **Angot, P., Bruneau, C.-H. & Fabrie, P.** (1999). *A penalization method to take into account obstacles
+  in incompressible viscous flows.* Numer. Math. **81**, 497–520.
 - **Brachet, M. E., Meiron, D. I., Orszag, S. A., Nickel, B. G., Morf, R. H. & Frisch, U.** (1983).
   *Small-scale structure of the Taylor–Green vortex.* J. Fluid Mech. **130**, 411–452.
 - **van Rees, W. M., Leonard, A., Pullin, D. I. & Koumoutsakos, P.** (2011). *A comparison of vortex

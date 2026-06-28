@@ -184,3 +184,41 @@ fn observe_override_swaps_the_series() {
     assert!(report.series("bond").is_some());
     assert!(report.series("max_speed").is_none());
 }
+
+#[test]
+fn pipeline_emits_a_drag_series_with_a_body() {
+    use deep_causality_cfd::body_mask_2d;
+    use deep_causality_tensor::TensorTrain;
+
+    let dx = TAU / N as f64;
+    let trunc = Truncation::<f64>::by_bond(4096).unwrap();
+    let c = TAU * 0.5;
+    let mask = body_mask_2d::<f64>(L, L, dx, dx, c, c, TAU * 0.18, 2.0 * dx, &trunc).unwrap();
+    let _ = mask.norm(); // touch the trait so the import is used
+
+    let steps = 5usize;
+    let cfg = QttMarchConfigBuilder::<f64>::new()
+        .name("cyl")
+        .grid(L, L, dx, dx)
+        .solver(0.005, 0.05, trunc)
+        .seed_fn(|_, _| (1.0, 0.0))
+        .unwrap()
+        .body(mask, 0.0, 0.0, 0.02, 1.0, 2.0 * TAU * 0.18)
+        .stop(MarchStop::Fixed(steps))
+        .observe(QttObserve::default().drag().divergence())
+        .build()
+        .unwrap();
+
+    let report = CfdFlow::qtt_march(&cfg).run().unwrap();
+    let drag = report.series("drag").expect("drag series");
+    let lift = report.series("lift").expect("lift series");
+    assert_eq!(drag.len(), steps + 1, "one drag sample per step + seed");
+    assert_eq!(lift.len(), steps + 1);
+    assert!(drag.iter().all(|d| d.is_finite()), "drag finite");
+    // A free-stream past a static body produces a positive streamwise drag.
+    assert!(
+        drag[steps] > 0.0,
+        "expected positive drag, got {}",
+        drag[steps]
+    );
+}

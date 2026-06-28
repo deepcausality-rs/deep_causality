@@ -6,6 +6,8 @@
 #[cfg(test)]
 pub mod codec_tests;
 #[cfg(test)]
+pub mod mask_tests;
+#[cfg(test)]
 pub mod operators_2d_tests;
 #[cfg(test)]
 pub mod operators_tests;

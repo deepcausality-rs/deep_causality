@@ -82,6 +82,54 @@ where
         &self.projector
     }
 
+    /// The time step.
+    pub fn dt(&self) -> R {
+        self.dt
+    }
+
+    /// The per-step round policy.
+    pub fn trunc(&self) -> Truncation<R> {
+        self.trunc
+    }
+
+    /// The convection + diffusion rate `−(u·∇)a + ν·∇²a` for both velocity components — exposed so a
+    /// sibling solver (e.g. the immersed-body marcher) can add its own forcing before the projection.
+    ///
+    /// # Errors
+    /// Propagates operator-apply / round errors.
+    pub fn rate_pair(
+        &self,
+        u: &CausalTensorTrain<R>,
+        v: &CausalTensorTrain<R>,
+    ) -> Result<(CausalTensorTrain<R>, CausalTensorTrain<R>), PhysicsError> {
+        Ok((self.rate(u, u, v)?, self.rate(v, u, v)?))
+    }
+
+    /// The advection–diffusion rate `−(u·∇)s + κ·∇²s` of a **passive scalar** `s` carried by the
+    /// velocity `(u, v)` with diffusivity `kappa` — the same operators a velocity component uses,
+    /// exposed so the immersed-body marcher can transport a temperature field on this rollout.
+    ///
+    /// # Errors
+    /// Propagates operator-apply / round errors.
+    pub fn scalar_rate(
+        &self,
+        s: &CausalTensorTrain<R>,
+        u: &CausalTensorTrain<R>,
+        v: &CausalTensorTrain<R>,
+        kappa: R,
+    ) -> Result<CausalTensorTrain<R>, PhysicsError> {
+        let t = &self.trunc;
+        let neg = R::zero() - R::one();
+        let dsx = self.gx.apply(s, t)?;
+        let dsy = self.gy.apply(s, t)?;
+        let conv = u
+            .hadamard_rounded(&dsx, t)?
+            .add(&v.hadamard_rounded(&dsy, t)?)?
+            .round(t)?;
+        let diff = self.lap.apply(s, t)?.scale(kappa);
+        Ok(diff.add(&conv.scale(neg))?.round(t)?)
+    }
+
     /// `−(u·∇)a + ν·∇²a` for one velocity component `a`, with `(u, v)` the advecting velocity.
     fn rate(
         &self,

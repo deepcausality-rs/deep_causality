@@ -13,10 +13,12 @@
 //! (MPS Navier–Stokes) and Kazeev–Khoromskij (QTT operators) constructions.
 
 mod codec;
+mod mask;
 mod operators;
 mod projection;
 
 pub use codec::{dequantize, dequantize_2d, quantize, quantize_2d};
+pub use mask::{body_mask_2d, mask_from_fn};
 pub use operators::{
     gradient, gradient_x, gradient_y, laplacian, laplacian_2d, shift_minus, shift_plus,
 };

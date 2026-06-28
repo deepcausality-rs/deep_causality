@@ -7,11 +7,15 @@
 //! train (the CFD ↔ tensor-network bridge): a quasi-1D linear advection–diffusion marcher and a 2-D
 //! incompressible Navier–Stokes marcher.
 
+mod immersed_2d;
 mod incompressible_2d;
 mod observe;
 
+pub use immersed_2d::QttImmersed2d;
 pub use incompressible_2d::QttIncompressible2d;
-pub use observe::{divergence_residual, kinetic_energy, max_bond, max_speed};
+pub use observe::{
+    divergence_residual, drag_lift, kinetic_energy, max_bond, max_speed, wall_heat_flux,
+};
 
 use crate::tensor_bridge::{dequantize, gradient, laplacian, quantize};
 use crate::traits::Marcher;

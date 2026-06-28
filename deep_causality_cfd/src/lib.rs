@@ -42,8 +42,8 @@ pub use crate::types::{Ambient, CfdScalar};
 
 // The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
 pub use crate::tensor_bridge::{
-    QttProjector2d, dequantize, dequantize_2d, gradient, gradient_x, gradient_y, laplacian,
-    laplacian_2d, quantize, quantize_2d, shift_minus, shift_plus,
+    QttProjector2d, body_mask_2d, dequantize, dequantize_2d, gradient, gradient_x, gradient_y,
+    laplacian, laplacian_2d, mask_from_fn, quantize, quantize_2d, shift_minus, shift_plus,
 };
 
 // The CfdFlow DSL facade (owned case descriptions materialized at run).
@@ -57,7 +57,7 @@ pub use crate::types::flow::{
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
 pub use crate::types::flow_config::{
     Body, CfdConfigBuilder, Grading, Manufactured, ManufacturedSample, MarchConfig,
-    MarchConfigBuilder, MarchStop, Mesh, Observe, QttMarchConfig, QttMarchConfigBuilder,
+    MarchConfigBuilder, MarchStop, Mesh, Observe, QttBody, QttMarchConfig, QttMarchConfigBuilder,
     QttObserve, Seed, TaylorGreen, VerifyConfig, VerifyConfigBuilder,
 };
 // IO effect: the `IoAction` trait (from haft), the core `write_csv` file action, and the CFD CSV
@@ -82,11 +82,13 @@ pub use crate::theories::*;
 // Solver configuration + type-state builder.
 pub use crate::solvers::{
     DecNs, DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity, DecNsConfigReady,
-    QttIncompressible2d, QttLinear1d,
+    QttImmersed2d, QttIncompressible2d, QttLinear1d,
 };
 
-// QTT rollout observable extraction (tensor-train-native diagnostics).
-pub use crate::solvers::{divergence_residual, kinetic_energy, max_bond, max_speed};
+// QTT rollout observable extraction (tensor-train-native diagnostics + surface observables).
+pub use crate::solvers::{
+    divergence_residual, drag_lift, kinetic_energy, max_bond, max_speed, wall_heat_flux,
+};
 
 // Public API of the Navier–Stokes solver.
 pub use crate::solvers::dec::*;

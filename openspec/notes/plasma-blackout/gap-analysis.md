@@ -17,9 +17,11 @@ state-of-the-art methods?*
 The tensor-train addition **closes the tensor-network *primitive* gap** — the MPS flowfield-compression
 lever (chain step [4]) is now buildable, and the recently-hardened SVD/QR (overflow-safe Jacobi,
 noise-floor rank revealing) plus randomized rounding directly serve the per-step recompression that
-QTT/MPS solvers depend on. **It does not, by itself, unblock the example.** Three of the four axes still
-have real gaps, and the largest is that **nothing in `deep_causality_cfd` touches a tensor network yet**:
-the generic primitives live in `deep_causality_tensor`; the CFD-side encoding does not exist.
+QTT/MPS solvers depend on. **It did not, by itself, unblock the example.** *(Update: **Gap 1 is now closed** — the CFD-side encoding,
+the immersed-body solver, and the surface observables have since been built and verified across the
+`add-cfd-qtt-*` change series; see §4. The remaining gaps are 2–4.)* At the time of writing, the largest
+gap was that **nothing in `deep_causality_cfd` touched a tensor network**: the generic primitives lived in
+`deep_causality_tensor`; the CFD-side encoding did not exist.
 
 For **Tier A** (the buildable demonstrator with surrogate physics) the remaining work is bounded and no
 longer blocked on missing mathematics. For **Tier B** genuine open research remains (validated coupled
@@ -94,13 +96,23 @@ crate (see [`gap-one-cfd-tensor-bridge.md`](gap-one-cfd-tensor-bridge.md) §3.2)
 
 ## 4. Remaining gaps (the actual answer)
 
-### Gap 1 — CFD ↔ tensor-network bridge is entirely missing **(highest priority)**
+### Gap 1 — CFD ↔ tensor-network bridge — **CLOSED**
 
-`deep_causality_cfd` uses `CausalTensor` only as a flat `Vec` container; there is **zero** MPS/MPO usage.
-Nobody has written the QTT quantization of the lattice field, the **MPO assembly from a CFD
-stencil/differential operator**, or a TT-based rollout that yields `(heat flux, drag, electron density)`.
-Step [4] is a *separate solver* from the committed DEC incompressible NS marcher, and it does not exist.
-The library is ready; the encoding layer is the work. **[holds: buildable now; absent]**
+*(Original state: `deep_causality_cfd` used `CausalTensor` only as a flat `Vec`; zero MPS/MPO usage.)*
+
+**Resolved across the `add-cfd-qtt-*` change series.** `deep_causality_cfd` now has: a QTT codec (1-D/2-D
+field ⇄ MPS); finite-difference MPO assembly (hand-built shift operators + the stencil algebra); a
+periodic 2-D incompressible Navier–Stokes tensor-train marcher (`QttIncompressible2d`) with spectral Leray
+projection and nonlinear convection; an immersed body by Brinkman volume penalization (`QttImmersed2d`, a
+smoothed mask MPS — no cut cells); the surface observables the flagship's step [4] reads — **drag/lift** as
+the penalization-force tensor-train contraction and a **neutral wall heat flux** via a penalized passive
+scalar; and the `CfdFlow::qtt_march` DSL wiring + TT-native diagnostics. Verified: 2nd-order convergence to
+the analytic Taylor–Green vortex; no-slip + accuracy-vs-bond convergence on an immersed cylinder. The
+headline numerical risks (singular periodic Poisson, nonlinear rank growth, mask rank) were resolved and
+verified in code. **[CLOSED — solver core + immersed body + surface observables built and verified]**
+
+The one remaining flagship deliverable that *touches* this bridge — **electron density** and a *reacting*
+heat flux — is **Gap 2** physics, not Gap 1; the neutral thermal observable is the seam it plugs into.
 
 ### Gap 2 — reacting / ionized physics is absent in the CFD crate
 
@@ -134,9 +146,11 @@ provenance log are composition work — not missing primitives. **[holds under p
 - **Did the tensor train remove a gap?** Yes — the one that made step [4] aspirational. The
   flowfield-compression axis is now primitive-complete and the SOTA reacting-MPS method
   (arXiv:2512.13661) maps cleanly onto what we have.
-- **Can the example be built now?** Not yet. Tier A needs: (1) a CFD→QTT/MPO bridge + a small MPS rollout
-  (Gap 1), (2) a parametric Park-2T / ionization `PhysicsStage` surrogate (Gap 2), (3) wiring the existing
-  skeletons + Ethos gate + provenance (Gap 4). None is blocked on missing mathematics anymore.
+- **Can the example be built now?** Closer. ~~(1) a CFD→QTT/MPO bridge + a small MPS rollout (Gap 1)~~ —
+  **done** (the bridge, the immersed-body solver, and the drag/heat surface observables are built and
+  verified). Tier A now needs: (2) a parametric Park-2T / ionization `PhysicsStage` surrogate (Gap 2), and
+  (3) wiring the existing skeletons + Ethos gate + provenance (Gap 4). Neither is blocked on missing
+  mathematics.
 - **Tier B** retains genuine open research: validated coupled reacting-plasma CFD, and the
   Bars-2T-exact-gravity + perturbative-aero coupling — keep labelled **[open]**.
 

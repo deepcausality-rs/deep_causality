@@ -15,7 +15,8 @@
 //! horizon, and round policy.
 
 use crate::solvers::{
-    QttIncompressible2d, divergence_residual, kinetic_energy, max_bond, max_speed,
+    QttImmersed2d, QttIncompressible2d, divergence_residual, drag_lift, kinetic_energy, max_bond,
+    max_speed,
 };
 use crate::tensor_bridge::{QttProjector2d, dequantize_2d, quantize_2d};
 use crate::traits::Marcher;
@@ -29,6 +30,35 @@ use deep_causality_tensor::CausalTensorTrain;
 
 /// The `(u, v)` velocity train pair the QTT marcher carries.
 type QttState<R> = (CausalTensorTrain<R>, CausalTensorTrain<R>);
+
+/// The marcher behind the pipeline: the body-free solver, or the Brinkman-penalized immersed solver
+/// when the config carries a body. Both share the `(u, v)` state and expose a projector.
+enum QttSolver<R>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    Free(QttIncompressible2d<R>),
+    Body(QttImmersed2d<R>),
+}
+
+impl<R> QttSolver<R>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    fn advance(&self, state: &QttState<R>) -> Result<QttState<R>, PhysicsError> {
+        match self {
+            QttSolver::Free(s) => s.advance(state, &()),
+            QttSolver::Body(s) => s.advance(state, &()),
+        }
+    }
+
+    fn projector(&self) -> &QttProjector2d<R> {
+        match self {
+            QttSolver::Free(s) => s.projector(),
+            QttSolver::Body(s) => s.projector(),
+        }
+    }
+}
 
 /// A geometry-free, runnable QTT marching pipeline. The overrides (`seed_with` / `march_with` /
 /// `observe_with`) swap one spec for a counterfactual while reusing the borrowed container.
@@ -114,13 +144,46 @@ where
             None => (cfg.u0.clone(), cfg.v0.clone()),
         };
 
-        let solver =
-            QttIncompressible2d::new(cfg.lx, cfg.ly, cfg.dx, cfg.dy, cfg.dt, cfg.nu, cfg.trunc)?;
+        // The immersed body (if any) makes this the penalized solver; else the body-free solver.
+        let solver = match &cfg.body {
+            Some(b) => QttSolver::Body(QttImmersed2d::new(
+                cfg.lx,
+                cfg.ly,
+                cfg.dx,
+                cfg.dy,
+                cfg.dt,
+                cfg.nu,
+                b.mask.clone(),
+                b.ubx,
+                b.uby,
+                b.eta,
+                cfg.trunc,
+            )?),
+            None => QttSolver::Free(QttIncompressible2d::new(
+                cfg.lx, cfg.ly, cfg.dx, cfg.dy, cfg.dt, cfg.nu, cfg.trunc,
+            )?),
+        };
         let mut state: QttState<R> = (quantize_2d(&u0, &cfg.trunc)?, quantize_2d(&v0, &cfg.trunc)?);
+
+        // Drag context: active only with a body + the drag observable.
+        let drag = match (&cfg.body, observe.drag) {
+            (Some(b), true) => Some(DragCtx {
+                mask: &b.mask,
+                ubx: b.ubx,
+                uby: b.uby,
+                eta: b.eta,
+                dx: cfg.dx,
+                dy: cfg.dy,
+                u_ref: b.u_ref,
+                d_ref: b.d_ref,
+            }),
+            _ => None,
+        };
 
         let ctx = Context {
             observe,
             projector: solver.projector(),
+            drag,
             lx: cfg.lx,
             ly: cfg.ly,
             dt: cfg.dt,
@@ -131,7 +194,7 @@ where
         match stop {
             MarchStop::Fixed(n) => {
                 for s in 0..n {
-                    state = solver.advance(&state, &())?;
+                    state = solver.advance(&state)?;
                     ctx.sample(&state, &mut series)?;
                     call_hook(&mut hook, &ctx, s + 1, &state);
                 }
@@ -139,7 +202,7 @@ where
             MarchStop::Steady { tol, max_steps } => {
                 let mut prev_e = kinetic_energy(&state.0, &state.1)?;
                 for s in 0..max_steps {
-                    state = solver.advance(&state, &())?;
+                    state = solver.advance(&state)?;
                     ctx.sample(&state, &mut series)?;
                     call_hook(&mut hook, &ctx, s + 1, &state);
                     let e = kinetic_energy(&state.0, &state.1)?;
@@ -257,6 +320,21 @@ where
     }
 }
 
+/// The immersed-body context the drag observable contracts against (borrowed from the config).
+struct DragCtx<'a, R>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    mask: &'a CausalTensorTrain<R>,
+    ubx: R,
+    uby: R,
+    eta: R,
+    dx: R,
+    dy: R,
+    u_ref: R,
+    d_ref: R,
+}
+
 /// The per-step observation context — the immutable run state the sampler reads.
 struct Context<'a, R>
 where
@@ -264,6 +342,7 @@ where
 {
     observe: QttObserve,
     projector: &'a QttProjector2d<R>,
+    drag: Option<DragCtx<'a, R>>,
     lx: usize,
     ly: usize,
     dt: R,
@@ -292,6 +371,13 @@ where
                 R::from_usize(max_bond(u, v)).expect("a bond count lifts into every real field");
             series.bond.push(b);
         }
+        if let Some(d) = &self.drag {
+            let (cd, cl) = drag_lift(
+                d.mask, u, v, d.ubx, d.uby, d.eta, d.dx, d.dy, d.u_ref, d.d_ref,
+            )?;
+            series.drag.push(cd);
+            series.lift.push(cl);
+        }
         Ok(())
     }
 }
@@ -302,6 +388,8 @@ struct Series<R: CfdScalar> {
     divergence: Vec<R>,
     max_speed: Vec<R>,
     bond: Vec<R>,
+    drag: Vec<R>,
+    lift: Vec<R>,
 }
 
 impl<R: CfdScalar> Series<R> {
@@ -311,6 +399,8 @@ impl<R: CfdScalar> Series<R> {
             divergence: Vec::new(),
             max_speed: Vec::new(),
             bond: Vec::new(),
+            drag: Vec::new(),
+            lift: Vec::new(),
         }
     }
 
@@ -326,6 +416,10 @@ impl<R: CfdScalar> Series<R> {
         }
         if observe.bond {
             report.add_series("bond", self.bond);
+        }
+        if !self.drag.is_empty() {
+            report.add_series("drag", self.drag);
+            report.add_series("lift", self.lift);
         }
     }
 }

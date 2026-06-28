@@ -17,7 +17,7 @@ use crate::types::flow_config::MarchStop;
 use alloc::format;
 use deep_causality_num::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
-use deep_causality_tensor::{CausalTensor, Truncation};
+use deep_causality_tensor::{CausalTensor, CausalTensorTrain, Truncation};
 
 /// The set of tensor-train-native diagnostics a QTT march collects into its `Report`. Built fluently;
 /// each is a one-value-per-step series. No immersed-body / probe / centerline options — those need a
@@ -28,6 +28,7 @@ pub struct QttObserve {
     pub(crate) divergence: bool,
     pub(crate) max_speed: bool,
     pub(crate) bond: bool,
+    pub(crate) drag: bool,
 }
 
 impl QttObserve {
@@ -54,6 +55,27 @@ impl QttObserve {
         self.bond = true;
         self
     }
+
+    /// Collect the drag/lift coefficient series on the immersed body (requires the config to carry a
+    /// body; the reference speed/length come from it). No-op without a body.
+    pub fn drag(mut self) -> Self {
+        self.drag = true;
+        self
+    }
+}
+
+/// An immersed body for the QTT march: the (smoothed) volume-fraction mask, the body velocity, the
+/// Brinkman penalization `eta`, and the reference speed/length the drag coefficients use.
+pub struct QttBody<R>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    pub(crate) mask: CausalTensorTrain<R>,
+    pub(crate) ubx: R,
+    pub(crate) uby: R,
+    pub(crate) eta: R,
+    pub(crate) u_ref: R,
+    pub(crate) d_ref: R,
 }
 
 /// The owned configuration container for a QTT 2-D incompressible marching case. Holds only owned
@@ -74,6 +96,7 @@ where
     pub(crate) v0: CausalTensor<R>,
     pub(crate) stop: MarchStop<R>,
     pub(crate) observe: QttObserve,
+    pub(crate) body: Option<QttBody<R>>,
 }
 
 impl<R> QttMarchConfig<R>
@@ -114,6 +137,7 @@ where
     seed: Option<(CausalTensor<R>, CausalTensor<R>)>,
     stop: Option<MarchStop<R>>,
     observe: QttObserve,
+    body: Option<QttBody<R>>,
 }
 
 impl<R> Default for QttMarchConfigBuilder<R>
@@ -128,6 +152,7 @@ where
             seed: None,
             stop: None,
             observe: QttObserve::default(),
+            body: None,
         }
     }
 }
@@ -162,6 +187,31 @@ where
     /// Set the march-stop (defaults to `Fixed(1)`).
     pub fn stop(mut self, stop: MarchStop<R>) -> Self {
         self.stop = Some(stop);
+        self
+    }
+
+    /// Set an immersed body (Brinkman volume penalization): the `[0,1]` mask, the body velocity
+    /// `(ubx, uby)` (zero for a static wall), the penalization `eta`, and the drag reference speed
+    /// `u_ref` / length `d_ref`. The run then marches the penalized solver and (with `observe.drag`)
+    /// emits the drag/lift series.
+    #[allow(clippy::too_many_arguments)]
+    pub fn body(
+        mut self,
+        mask: CausalTensorTrain<R>,
+        ubx: R,
+        uby: R,
+        eta: R,
+        u_ref: R,
+        d_ref: R,
+    ) -> Self {
+        self.body = Some(QttBody {
+            mask,
+            ubx,
+            uby,
+            eta,
+            u_ref,
+            d_ref,
+        });
         self
     }
 
@@ -254,6 +304,7 @@ where
             v0,
             stop: self.stop.unwrap_or(MarchStop::Fixed(1)),
             observe: self.observe,
+            body: self.body,
         })
     }
 }
