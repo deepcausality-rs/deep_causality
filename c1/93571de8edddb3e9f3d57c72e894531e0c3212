@@ -1,0 +1,61 @@
+deep_causality_physics/tests/BUILD.bazel
+  s_f1ae76f7ad884d::t_bbe09b3472eb62 257
+deep_causality_physics/src/constants/universal.rs
+  s_f1ae76f7ad884d::t_c2e2667ee8ca71 12-23
+deep_causality_physics/tests/kernels/nuclear/mod.rs
+  s_f1ae76f7ad884d::t_226ea2c8a519f6 7
+  s_f1ae76f7ad884d::t_3ca6c9078dcce5 6
+deep_causality_physics/tests/quantities/nuclear_quantities/lund_parameters_tests.rs
+  s_f1ae76f7ad884d::t_0c9273818411e4 10,18,36
+deep_causality_physics/src/kernels/nuclear/lund/string.rs
+  s_f1ae76f7ad884d::t_26ac4919100686 14
+  s_f1ae76f7ad884d::t_22edd6180c1862 62-63,95-96,142
+deep_causality_physics/src/kernels/nuclear/qcd.rs
+  s_f1ae76f7ad884d::t_560a42fa77ae3e 15-17,20-21,36-39,41,46,49,52,55,58,61,64,67-69,71-74,94,97-98,102,109,118,127,134-136,139,160,166-175,196-199,218-219,261-270,282,287,293,303-304,325-335,373-376,378-383,389,402-404,407,410,413-414,416-419
+deep_causality_physics/src/kernels/nuclear/lund/kinematics.rs
+  s_f1ae76f7ad884d::t_ceac412bcf25ca 48
+  s_f1ae76f7ad884d::t_eba36e70a25121 118,129-130,134,140
+  s_f1ae76f7ad884d::t_c06a205193870e 22
+deep_causality_physics/src/kernels/nuclear/lund/flavor.rs
+  s_f1ae76f7ad884d::t_80fda6823cf6db 112,121-129,134-138,143-146
+  s_f1ae76f7ad884d::t_0e2da471ed8c8c 47,56
+  s_f1ae76f7ad884d::t_98f9f82d3b475b 64-73,75,77
+  s_f1ae76f7ad884d::t_98b4128846dda8 22
+deep_causality_physics/src/kernels/nuclear/lund/fragmentation.rs
+  s_f1ae76f7ad884d::t_dd2a93cbd14d66 99
+  s_f1ae76f7ad884d::t_c6e152e2dc6ac6 178
+  s_f1ae76f7ad884d::t_2af26f53241f5e 11
+  s_f1ae76f7ad884d::t_ec3cbdb64f754b 118-120
+  s_f1ae76f7ad884d::t_d58b06068801eb 78
+deep_causality_physics/src/kernels/nuclear/physics.rs
+  s_f1ae76f7ad884d::t_1bffdfc18de4fe 64
+  s_f1ae76f7ad884d::t_1656460fc0e3d0 45
+  s_f1ae76f7ad884d::t_4fd0575aea1547 6-7
+deep_causality_physics/tests/kernels/nuclear/qcd_tests.rs
+  s_f1ae76f7ad884d::t_8cbd986b6d4988 167-168
+  s_f1ae76f7ad884d::t_5a3b3b780b91d3 17,23,31,42,58,64-65,77-79,89-91,98,108-109,111-114,116-118,123,140,185,195,205,219,236,247,258,271,282,296,310,325,331,337,343,358,372-373,386,392,398,405,414
+deep_causality_physics/src/quantities/nuclear/mod.rs
+  s_f1ae76f7ad884d::t_8f0a64c6e96dec 400,402,404,406,408,410,412,414,416,419-421,424-425,427,429-436,441,445-452,467,472,477,482,487,492,497,502
+deep_causality_physics/tests/kernels/nuclear/generic_real_field_tests.rs
+  s_f1ae76f7ad884d::t_d9958811258aa9 1-45,47-127,130-206
+  s_f1ae76f7ad884d::t_f50f2f7650edde 46
+  s_f1ae76f7ad884d::t_8cbd986b6d4988 128-129
+deep_causality_physics/src/constants/mod.rs
+  s_f1ae76f7ad884d::t_8682d6d7490822 6-10,18,28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "c193571de8edddb3e9f3d57c72e894531e0c3212",
+  "prompts": {},
+  "sessions": {
+    "s_f1ae76f7ad884d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b090d8fb-3ce3-4f42-a52e-d2c0c8561c2c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
