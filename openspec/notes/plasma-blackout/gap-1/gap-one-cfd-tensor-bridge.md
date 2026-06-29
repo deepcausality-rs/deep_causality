@@ -6,7 +6,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 # Gap 1 — closing the CFD ↔ tensor-network bridge
 
 **What this is.** A focused, literature-grounded plan for closing **Gap 1** of the
-[plasma-blackout gap analysis](gap-analysis.md): the missing layer that connects `deep_causality_cfd`'s
+[plasma-blackout gap analysis](../gap-analysis.md): the missing layer that connects `deep_causality_cfd`'s
 flowfield to a quantized-tensor-train (QTT/MPS) representation and operators, so chain step [4] of the
 [flagship](../plasma-blackout-corridor.md) — *MPS flowfield → heat flux + drag + electron density* —
 becomes real rather than aspirational.
@@ -239,7 +239,7 @@ neutral thermal observable here is the seam it plugs into.
 
 ## 8. Related
 
-- [`gap-analysis.md`](gap-analysis.md) — the four-gap analysis this note drills into.
+- [`gap-analysis.md`](../gap-analysis.md) — the four-gap analysis this note drills into.
 - [`../plasma-blackout-corridor.md`](../plasma-blackout-corridor.md) — the flagship; step [4] is what this
   bridge powers.
 - `deep_causality_tensor` tensor-network layer — the primitives mapped in §2.

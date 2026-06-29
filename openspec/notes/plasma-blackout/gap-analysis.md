@@ -90,7 +90,7 @@ was the one genuine hole found while drilling into Gap 1 — the MPO type had `c
 additive structure, so differential stencils like `(S₊ − S₋)/2Δx` could not be assembled. That hole is
 now closed (`add`/`sub`/`neg`/`scale`, tested f64/Float106; spec change `add-tensor-operator-algebra`).
 The shift operator `S₊` itself is hand-built via `from_cores` and lives in the CFD bridge, not the tensor
-crate (see [`gap-one-cfd-tensor-bridge.md`](gap-one-cfd-tensor-bridge.md) §3.2).
+crate (see [`gap-one-cfd-tensor-bridge.md`](gap-1/gap-one-cfd-tensor-bridge.md) §3.2).
 
 ---
 
@@ -139,7 +139,7 @@ physics for a shock). The mesh *strategy* is sound on the incompressible solver 
 
 Gap 2's dedicated plan — the **physics-kernel / solver split** (kernels in `deep_causality_physics`, solver +
 coupling in `deep_causality_cfd`), the Park-2T / ionization kernel list, and the two composition idioms —
-is in [`gap-two-reacting-plasma.md`](gap-two-reacting-plasma.md).
+is in [`gap-two-reacting-plasma.md`](gap-2/gap-two-reacting-plasma.md).
 
 ### Gap 3 — trajectory axis is a proof-of-concept skeleton (matches corridor seam §6)
 
@@ -152,7 +152,7 @@ perturbative-aero coupling**, which is correctly named open research — *not* s
 touches. **[open]**
 
 **Mandate — curvature must be dynamic, not hardcoded** (the same invariant as the Park-2T physics, see
-[`gap-two-reacting-plasma.md`](gap-two-reacting-plasma.md) §1.2): the metric `g_uv` is computed from the
+[`gap-two-reacting-plasma.md`](gap-2/gap-two-reacting-plasma.md) §1.2): the metric `g_uv` is computed from the
 physical state (`g_00 = −(1 − 2GM/rc²)` from the real `GM`/`r`, plus `γ(v)` for the SR timing term), and the
 **Ricci/curvature from the metric** (the real `einstein_tensor` inputs / energy-momentum route) — replacing
 the `−0.9` / `−0.1·g` / `−0.4` proxies. Only constants of nature and cited gravity coefficients (`G`, `c`,
@@ -190,7 +190,7 @@ QTT/MPS rollout (new tensor train), a parametric ionization surrogate feeding a 
 trajectory axis at its current skeleton fidelity and labelling it so.
 
 Gap 1 is the critical path; its dedicated closing plan is in
-[`gap-one-cfd-tensor-bridge.md`](gap-one-cfd-tensor-bridge.md).
+[`gap-one-cfd-tensor-bridge.md`](gap-1/gap-one-cfd-tensor-bridge.md).
 
 ---
 
@@ -198,8 +198,8 @@ Gap 1 is the critical path; its dedicated closing plan is in
 
 - [`../plasma-blackout-corridor.md`](../plasma-blackout-corridor.md) — the flagship specification this
   analysis measures against.
-- [`gap-one-cfd-tensor-bridge.md`](gap-one-cfd-tensor-bridge.md) — SOTA methodologies for closing Gap 1 (**closed**).
-- [`gap-two-reacting-plasma.md`](gap-two-reacting-plasma.md) — the Gap-2 physics-kernel/solver split + Park-2T plan.
+- [`gap-one-cfd-tensor-bridge.md`](gap-1/gap-one-cfd-tensor-bridge.md) — SOTA methodologies for closing Gap 1 (**closed**).
+- [`gap-two-reacting-plasma.md`](gap-2/gap-two-reacting-plasma.md) — the Gap-2 physics-kernel/solver split + Park-2T plan.
 - `deep_causality_tensor` tensor-network layer — the primitives Gap 1 builds on.
 - `examples/avionics_examples/hypersonic_2t/`, `examples/physics_examples/grmhd/` — the skeletons of
   axes 3 and 4.

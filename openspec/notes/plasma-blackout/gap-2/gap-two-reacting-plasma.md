@@ -6,7 +6,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 # Gap 2 — reacting / ionized physics (Park-2T → electron density → blackout)
 
 **What this is.** A focused plan for closing **Gap 2** of the
-[plasma-blackout gap analysis](gap-analysis.md): the reacting / ionized physics that turns the (now
+[plasma-blackout gap analysis](../gap-analysis.md): the reacting / ionized physics that turns the (now
 closed, Gap 1) tensor-train flowfield into the flagship's actual regime driver — *vibrational–electron
 nonequilibrium → ionization → electron density → plasma frequency → GNSS/comms blackout* (chain steps
 [2]/[3], feeding [4]). Its organizing decision, per the project owner, is an **architecture split**:
@@ -140,6 +140,63 @@ This invariant is **testable**: a Gap-2 kernel fed two different states must ret
 (no constant-folding to a fixed answer), and a counterfactual branch with a perturbed seed must produce a
 perturbed `n_e`/blackout result — the regression guard against a proxy creeping back in.
 
+### 1.4 Resolution: the Lagging-Equilibrium Relaxation (LER) stage
+
+Three load-bearing assumptions were hidden in the plan above, each able to break the Tier-A slice:
+
+1. **Stiffness** — the Park-2T relaxation/ionization sources are stiff (ns chemistry vs. µs–ms flow), so an
+   **explicit** between-step `IonizationStage` (the §1.1 `PhysicsStage` idiom, taken naively) is unstable or
+   forces the marcher timestep to collapse.
+2. **Temperature provenance** — the built QTT marcher is **incompressible** (no compression heating), so the
+   temperature that drives ionization cannot emerge from the flow and looks like it must be *prescribed* —
+   colliding with the §1.2 dynamic invariant.
+3. **Equilibrium vs. lag** — a memoryless algebraic surrogate `α(ρ, T)` is cheap but **loses the
+   nonequilibrium lag that is the entire regime driver**; the full finite-rate closure recovers the lag but
+   reintroduces the stiffness of (1).
+
+A single TRIZ/ARIZ resolution dissolves all three. They were never three problems — they share one false
+constraint: *that the kernel returns a **rate** the marcher integrates **explicitly**.* Drop it and the wall
+disappears. The unified mechanism is the **Lagging-Equilibrium Relaxation (LER) stage**:
+
+> **Carry K extra scalar states (`T_ve`, `α`, …). Each relaxes toward a cheap algebraic *equilibrium target*
+> computed from the current flow state, with a physically-grounded timescale, advanced by a closed-form
+> *exponential* update inside a between-step `PhysicsStage`:**
+>
+> ```
+> x(t+Δt) = x_eq(state) − (x_eq(state) − x(t)) · exp(−Δt / τ)
+> ```
+
+How the one mechanism answers each contradiction:
+
+| Contradiction | LER answer | Dedicated note |
+|---|---|---|
+| (1) Stiffness | The kernel returns the **integrated increment over `Δt`**, not the rate; the exponential update is **unconditionally stable** (linearly-implicit for the nonlinear source). The stiffness is confined *inside* the stage — the marcher and the `PhysicsStage` seam are untouched. | [Resolution 1](gap-two-resolution-1-stiff-source.md) |
+| (2) Temperature provenance | The equilibrium target reads a **state-derived `T_tr`**: a recovery-temperature reconstruction `T_tr = T_post − ½|u|²/c_p` of the velocity field the incompressible solver already produces, with `T_post` from a **Rankine–Hugoniot jump** off the config flight Mach. Structure is computed; only the flight condition is config. | [Resolution 2](gap-two-resolution-2-temperature-provenance.md) |
+| (3) Equilibrium vs. lag | The surrogate is the **target, not the answer**: `α` relaxes toward `α_eq(ρ, T_tr)` with `τ_ion`. The gap `α ≠ α_eq` in transients **is** the nonequilibrium lag — one scalar of memory, not a network. Saha is recovered as `τ_ion → 0`. | [Resolution 3](gap-two-resolution-3-ionization-lag.md) |
+
+**Why this is the right resolution:**
+
+- **It preserves the architecture.** Only the *integrator inside* a stage changes (explicit Euler →
+  closed-form exponential). The §1.1 `PhysicsStage`/`Coupling` seam, the kernel/solver split, and the
+  Tier-A→Tier-B swap all survive verbatim — the `ThermalRelax` template already wants to be an LER stage.
+- **It honors §1.2 by construction.** Every *target* is computed from state; every *timescale* is a function
+  of state (`τ_vt` Millikan–White; `τ_ion ≈ 1/(k_f(T)·[M])` from the dominant associative-ionization rate).
+  Only constants of nature and cited coefficients stay literal in `constants/`. It even **strengthens** the
+  test: the memory state makes branches path-dependent — *two histories → two outcomes*, not just two states.
+- **It spans the fidelity axis from one interface.** `τ → 0` degrades to the algebraic equilibrium
+  (the validation limit); fidelity → ∞ swaps each `(target, τ)` for the full stiff network behind the
+  unchanged stage — the literal §1.1 "only the stage implementations change" promise.
+
+**The two weakest links (verification gates, carried from the resolution notes):**
+
+- **The Rankine–Hugoniot jump is mandatory** for the temperature *magnitude*. Isentropic recovery alone is
+  too cold to ionize; without the RH jump the slice silently produces no plasma. **[holds under precondition]**
+- **`τ_ion` must be grounded** in the dominant associative-ionization rate, not left a free fit, or the lag is
+  unphysical. **[holds under precondition]**
+
+This LER stage is the concrete mechanism behind §1.2 — the staged plan (§6) builds it; the three resolution
+notes carry the full ARIZ derivation, the TRIZ principles, and the per-contradiction verification gates.
+
 ---
 
 ## 2. The physics to follow (SOTA, from gap-analysis §2 Axis 2)
@@ -196,7 +253,14 @@ testable against Park tables / RAM-C.
     `IonizationStage` (reads the `T_tr`/`T_ve`/species scalar fields from `CoupledField`, calls the
     ionization kernel, writes back `n_e`) and `EosStage` (the two-temperature pressure closure into the
     ambient). These advance *with* the flow each step; `Coupling::between_steps().then(IonizationStage)
-    .then(EosStage)` composes them statically, exactly like the existing thermal loop.
+    .then(EosStage)` composes them statically, exactly like the existing thermal loop. **Each is an
+    *LER stage* (§1.4), not a naive explicit update**: `IonizationStage` relaxes `α`/`n_e` toward the
+    equilibrium target `α_eq(ρ, T_tr)` with `τ_ion` via a closed-form exponential step — which is what
+    keeps the stiff source stable inside the seam ([Resolution 1](gap-two-resolution-1-stiff-source.md)),
+    carries the nonequilibrium lag for one scalar of memory
+    ([Resolution 3](gap-two-resolution-3-ionization-lag.md)), and reads a `T_tr` that is *computed from the
+    flow*, not prescribed ([Resolution 2](gap-two-resolution-2-temperature-provenance.md)). The kernel it
+    calls returns the **integrated increment over `dt`** (in `StepContext`), not a rate.
   - **`CausalFlow` / `bind_or_error` stages** (the grmhd `select_metric` shape): the **regime classifier**
     (Knudsen + ionization fraction + GNSS state → governing-model selection, corridor step [3]) and the
     **`BlackoutTrigger`** (`n_e → plasma_frequency_kernel →` comms-band compare → GNSS-denied flag) — and
@@ -217,7 +281,7 @@ Gap 2's physics is *compressible* and *shock-bearing*; the built QTT solver is i
 kernels are pointwise and solver-agnostic (they will unit-test against RAM-C the day they are written), but
 **marching them on a real reentry flowfield needs a compressible QTT marcher** — density/energy transport,
 an EOS pressure closure, and **shock-capturing**. As established in the
-[corridor note §6](plasma-blackout-corridor.md) and [gap-analysis §4 Gap 2](gap-analysis.md), the Mach-25
+[corridor note §6](../plasma-blackout-corridor.md) and [gap-analysis §4 Gap 2](../gap-analysis.md), the Mach-25
 shock is near-discontinuous → **high tensor-train rank** (verified with the immersed-body mask: sharp → high
 bond, smoothed → bounded), so shock-capturing in QTT needs artificial viscosity / shock smoothing
 (physically honest — the true shock is a few mean free paths thick), TT-cross for the nonlinear/source terms,
@@ -259,7 +323,14 @@ any solver integration — the payoff of the split.
 3. **Tier-A coupling** (`cfd/types/flow/`) — `IonizationStage` + `BlackoutTrigger` (+ `EosStage`) driving the
    kernels over the temperature/species scalar fields of the existing QTT rollout (reuse
    `advance_scalar`/`wall_heat_flux`); emit `n_e` / plasma-frequency / blackout-dwell observables. **This is
-   the smallest honest slice that makes the regime change physically real.**
+   the smallest honest slice that makes the regime change physically real.** Build the stages as the
+   **LER stage of §1.4** — closed-form exponential relaxation toward a state-derived equilibrium target —
+   which is what makes this slice buildable *on the incompressible rollout*: stable stiff sources
+   ([Res 1](gap-two-resolution-1-stiff-source.md)), a `T_tr` reconstructed from the flow with the mandatory
+   Rankine–Hugoniot jump ([Res 2](gap-two-resolution-2-temperature-provenance.md)), and nonequilibrium lag
+   from one scalar with `τ_ion` grounded in the dominant ionization rate
+   ([Res 3](gap-two-resolution-3-ionization-lag.md)). The two preconditions (RH jump; grounded `τ_ion`) are
+   the verification gates.
 4. **Reacting `*_rhs`** (`cfd/theories/`) — species transport + the two-temperature energy split, for the
    verification solvers.
 5. **[Tier-B] Compressible QTT marcher** — density/energy + EOS + shock-capturing (§4); ride the reacting
@@ -270,6 +341,15 @@ Steps 1–3 are buildable now and unblock the flagship's steps [2]/[3]; step 5 i
 **Gate on every step:** the **dynamic-by-construction invariant (§1.2)** — each kernel's output is a
 function of the state it is given (verified by the two-states-two-outputs test), no fabricated proxies, no
 hardcoded schedules; the only literals are constants of nature / cited coefficients in `constants/`.
+
+**Plus the LER gates (§1.4)** for steps 3–5 — the four checks the resolution notes pin down:
+*(a)* stability at stiffness (`τ = Δt/1000` stays bounded; the kernel returns the increment over `dt`, not a
+rate — [Res 1](gap-two-resolution-1-stiff-source.md)); *(b)* temperature magnitude — the **Rankine–Hugoniot
+jump** lands peak `T_post` in the ~10⁴ K band, not the cold isentropic value
+([Res 2](gap-two-resolution-2-temperature-provenance.md)); *(c)* lag is real and `τ_ion` is **grounded in the
+dominant ionization rate**, recovering the Saha limit as `τ → 0`
+([Res 3](gap-two-resolution-3-ionization-lag.md)); *(d)* path-dependence — two counterfactual histories yield
+two blackout outcomes, the strengthened §1.2 test the memory state enables.
 
 ---
 
@@ -285,8 +365,12 @@ hardcoded schedules; the only literals are constants of nature / cited coefficie
 
 ## 8. Related
 
-- [`gap-analysis.md`](gap-analysis.md) §4 Gap 2 — the gap this note drills into.
-- [`gap-one-cfd-tensor-bridge.md`](gap-one-cfd-tensor-bridge.md) — the **closed** Gap 1 this builds on; its
+- [`gap-two-resolution-1-stiff-source.md`](gap-two-resolution-1-stiff-source.md),
+  [`gap-two-resolution-2-temperature-provenance.md`](gap-two-resolution-2-temperature-provenance.md),
+  [`gap-two-resolution-3-ionization-lag.md`](gap-two-resolution-3-ionization-lag.md) — the three ARIZ
+  resolutions unified by §1.4 (the **LER stage**); each carries the full derivation + verification gates.
+- [`gap-analysis.md`](../gap-analysis.md) §4 Gap 2 — the gap this note drills into.
+- [`gap-one-cfd-tensor-bridge.md`](../gap-1/gap-one-cfd-tensor-bridge.md) — the **closed** Gap 1 this builds on; its
   §3.4 neutral wall heat-flux is the thermal seam Gap 2 replaces.
 - [`../plasma-blackout-corridor.md`](../plasma-blackout-corridor.md) §3.2 (Park-2T regime driver), §6
   (shock-rank / compressible-solver seam), §7 (Tier-A surrogate).
