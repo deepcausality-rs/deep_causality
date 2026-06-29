@@ -2,14 +2,14 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::{Displacement, Energy, Momentum, PhysicsError, Ratio, Speed, Stiffness, TwistAngle};
+use core::fmt::Debug;
 
-use deep_causality_num::Complex;
+use deep_causality_num::{Complex, FromPrimitive, RealField};
+use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::{CausalTensor, Tensor};
 
-use crate::constants::GRAPHENE_LATTICE_CONST;
-use crate::constants::REDUCED_PLANCK_CONSTANT;
+use crate::constants::{graphene_lattice_const, real_from_f64, reduced_planck_constant};
 use deep_causality_topology::SimplicialManifold;
 use std::f64::consts::PI;
 
@@ -46,22 +46,32 @@ use std::f64::consts::PI;
 /// *   `shell_cutoff` - Number of shells to include in the basis expansion (Must be 1).
 ///
 /// # Returns
-/// *   `Result<CausalTensor<Complex<f64>>, PhysicsError>` - The Hamiltonian matrix.
+/// *   `Result<CausalTensor<Complex<R>>, PhysicsError>` - The Hamiltonian matrix.
 ///
 /// # Errors
 /// *   `CalculationError` - If `shell_cutoff` is not 1.
-pub fn bistritzer_macdonald_kernel(
-    twist_angle: TwistAngle<f64>,
-    interlayer_coupling: Energy<f64>,
-    fermi_velocity: Speed<f64>,
-    k_point: Momentum,
+pub fn bistritzer_macdonald_kernel<R>(
+    twist_angle: TwistAngle<R>,
+    interlayer_coupling: Energy<R>,
+    fermi_velocity: Speed<R>,
+    k_point: Momentum<R>,
     shell_cutoff: usize,
-) -> Result<CausalTensor<Complex<f64>>, PhysicsError> {
+) -> Result<CausalTensor<Complex<R>>, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
     if shell_cutoff != 1 {
         return Err(PhysicsError::CalculationError(
             "Only shell_cutoff=1 is currently supported".into(),
         ));
     }
+
+    let zero = R::zero();
+    let two = real_from_f64::<R>(2.0);
+    let three = real_from_f64::<R>(3.0);
+    let eight = real_from_f64::<R>(8.0);
+    let half = real_from_f64::<R>(0.5);
+    let pi = real_from_f64::<R>(PI);
 
     let theta = twist_angle.value();
     let w = interlayer_coupling.value();
@@ -69,64 +79,68 @@ pub fn bistritzer_macdonald_kernel(
 
     // Energy scale: hbar * vf
     // Assuming standard units (SI).
-    let hbar = REDUCED_PLANCK_CONSTANT;
+    let hbar = reduced_planck_constant::<R>();
     let scale = hbar * vf;
 
     // Moiré momentum scale: k_theta = 8*pi / (3*a) * sin(theta/2)
     // This defines the size of the Moiré Brillouin Zone.
-    let k_theta = (8.0 * PI / (3.0 * GRAPHENE_LATTICE_CONST)) * (theta / 2.0).sin();
+    let a = graphene_lattice_const::<R>();
+    let k_theta = (eight * pi / (three * a)) * (theta / two).sin();
 
     // Extract input momentum components (assuming Euclidean 3D metric layout: [scalar, x, y, z])
     let k_vec = k_point.inner().data();
-    let kx = k_vec.get(1).copied().unwrap_or(0.0);
-    let ky = k_vec.get(2).copied().unwrap_or(0.0);
+    let kx = k_vec.get(1).copied().unwrap_or(zero);
+    let ky = k_vec.get(2).copied().unwrap_or(zero);
 
     // Q vectors (Momentum shifts for Layer 2 shells)
     // q1 = (0, -k_theta)
     // q2 = (sqrt(3)/2 k_theta, 1/2 k_theta)
     // q3 = (-sqrt(3)/2 k_theta, 1/2 k_theta)
-    let sqrt3 = 3.0f64.sqrt();
+    let sqrt3 = real_from_f64::<R>(3.0_f64.sqrt());
     let q_vectors = [
-        (0.0, -k_theta),
-        (sqrt3 * 0.5 * k_theta, 0.5 * k_theta),
-        (-sqrt3 * 0.5 * k_theta, 0.5 * k_theta),
+        (zero, -k_theta),
+        (sqrt3 * half * k_theta, half * k_theta),
+        (-sqrt3 * half * k_theta, half * k_theta),
     ];
 
     // Helper to construct Tunnelling Matrices T_j
     // Form: T = w * [[1, z*], [z, 1]] where z = exp(i*phi)
-    fn t_matrix(w: f64, phi: f64) -> [[Complex<f64>; 2]; 2] {
-        let z = Complex::new(0.0, phi).exp(); // e^{i phi}
+    fn t_matrix<R: RealField>(w: R, phi: R) -> [[Complex<R>; 2]; 2] {
+        let z = Complex::new(R::zero(), phi).exp(); // e^{i phi}
         let z_conj = Complex::new(z.re, -z.im);
         [
-            [Complex::new(w, 0.0), Complex::new(w, 0.0) * z_conj],
-            [Complex::new(w, 0.0) * z, Complex::new(w, 0.0)],
+            [
+                Complex::new(w, R::zero()),
+                Complex::new(w, R::zero()) * z_conj,
+            ],
+            [Complex::new(w, R::zero()) * z, Complex::new(w, R::zero())],
         ]
     }
 
     // Tunneling matrices with phase shifts 0, 2pi/3, -2pi/3
-    let t1 = t_matrix(w, 0.0);
-    let t2 = t_matrix(w, 2.0 * PI / 3.0);
-    let t3 = t_matrix(w, -2.0 * PI / 3.0);
+    let t1 = t_matrix(w, zero);
+    let t2 = t_matrix(w, two * pi / three);
+    let t3 = t_matrix(w, -(two * pi / three));
     let ts = [t1, t2, t3];
 
     // Dirac Hamiltonian helper: H(k) = hbar * vf * (sigma . k)
     // Uses standard Pauli matrices sigma_x and sigma_y.
-    let dirac = |kx: f64, ky: f64| -> [[Complex<f64>; 2]; 2] {
+    let dirac = |kx: R, ky: R| -> [[Complex<R>; 2]; 2] {
         let k_plus = Complex::new(kx, ky);
         let k_minus = Complex::new(kx, -ky);
         [
-            [Complex::new(0.0, 0.0), k_minus * scale],
-            [k_plus * scale, Complex::new(0.0, 0.0)],
+            [Complex::new(zero, zero), k_minus * scale],
+            [k_plus * scale, Complex::new(zero, zero)],
         ]
     };
 
     // Initialize 8x8 zero matrix
     // Layout: 4 blocks of 2x2 on diagonal (1 central + 3 shells)
-    let mut data = vec![Complex::new(0.0, 0.0); 64];
+    let mut data = vec![Complex::new(zero, zero); 64];
 
     // Helper to set a 2x2 block in the 8x8 flattened matrix
     let set_block =
-        |d: &mut Vec<Complex<f64>>, row_blk: usize, col_blk: usize, mat: [[Complex<f64>; 2]; 2]| {
+        |d: &mut Vec<Complex<R>>, row_blk: usize, col_blk: usize, mat: [[Complex<R>; 2]; 2]| {
             for (r, row) in mat.iter().enumerate() {
                 for (c, &val) in row.iter().enumerate() {
                     let gr = row_blk * 2 + r;
@@ -186,12 +200,16 @@ pub fn bistritzer_macdonald_kernel(
 /// *   `poisson_ratio` - Poisson's Ratio $\nu$.
 ///
 /// # Returns
-/// *   `Result<CausalTensor<f64>, PhysicsError>` - Stress Tensor $\boldsymbol{\sigma}$.
-pub fn foppl_von_karman_strain_simple_kernel(
-    displacement_u: &Displacement,
-    youngs_modulus: Stiffness<f64>,
-    poisson_ratio: Ratio<f64>,
-) -> Result<CausalTensor<f64>, PhysicsError> {
+/// *   `Result<CausalTensor<R>, PhysicsError>` - Stress Tensor $\boldsymbol{\sigma}$.
+pub fn foppl_von_karman_strain_simple_kernel<R>(
+    displacement_u: &Displacement<R>,
+    youngs_modulus: Stiffness<R>,
+    poisson_ratio: Ratio<R>,
+) -> Result<CausalTensor<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive + Default,
+{
+    let one = R::one();
     let epsilon = displacement_u.inner();
     let e = youngs_modulus.value();
     let nu = poisson_ratio.value();
@@ -203,25 +221,25 @@ pub fn foppl_von_karman_strain_simple_kernel(
     }
 
     // Calculate Trace: Tr(epsilon) = eps_xx + eps_yy
-    let trace_op = deep_causality_tensor::EinSumOp::<f64>::trace(epsilon.clone(), 0, 1);
+    let trace_op = deep_causality_tensor::EinSumOp::<R>::trace(epsilon.clone(), 0, 1);
     let trace_tensor = CausalTensor::ein_sum(&trace_op)?;
-    let tr_eps: f64 = trace_tensor.data()[0];
+    let tr_eps: R = trace_tensor.data()[0];
 
     // Identity Tensor (delta_ij)
     let shape = epsilon.shape();
     let identity = CausalTensor::identity(shape)?;
 
     // Term 1: (1 - nu) * epsilon
-    let term1 = epsilon.clone() * (1.0 - nu);
+    let term1 = epsilon.clone() * (one - nu);
 
     // Term 2: nu * Tr(eps) * I
-    let term2: CausalTensor<f64> = identity * (nu * tr_eps);
+    let term2: CausalTensor<R> = identity * (nu * tr_eps);
 
     // Sum terms
     let sum = term1 + term2;
 
     // Apply Prefactor: E / (1 - nu^2)
-    let prefactor = e / (1.0 - nu * nu);
+    let prefactor = e / (one - nu * nu);
     let sigma = sum * prefactor;
 
     Ok(sigma)
@@ -253,20 +271,26 @@ pub fn foppl_von_karman_strain_simple_kernel(
 /// *   `poisson_ratio` - Poisson's Ratio $\\nu$.
 ///
 /// # Returns
-/// *   `Result<CausalTensor<f64>, PhysicsError>` - The computed Stress Tensor field.
-pub fn foppl_von_karman_strain_kernel(
-    u_manifold: &SimplicialManifold<f64, f64>,
-    w_manifold: &SimplicialManifold<f64, f64>,
-    youngs_modulus: Stiffness<f64>,
-    poisson_ratio: Ratio<f64>,
-) -> Result<CausalTensor<f64>, PhysicsError> {
+/// *   `Result<CausalTensor<R>, PhysicsError>` - The computed Stress Tensor field.
+pub fn foppl_von_karman_strain_kernel<R>(
+    u_manifold: &SimplicialManifold<R, R>,
+    w_manifold: &SimplicialManifold<R, R>,
+    youngs_modulus: Stiffness<R>,
+    poisson_ratio: Ratio<R>,
+) -> Result<CausalTensor<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive + MaybeParallel + Default + Debug,
+{
+    let one = R::one();
+    let half = real_from_f64::<R>(0.5);
+
     // 1. Non-linear term: 1/2 (grad w)^2
     // Calculate gradient dw (1-form) from w (0-form)
     let dw = w_manifold.exterior_derivative(0);
 
     // Approximate tensor product contraction as element-wise square for field magnitude
     let dw_sq = dw.clone() * dw.clone();
-    let strain_nonlinear = dw_sq * 0.5;
+    let strain_nonlinear = dw_sq * half;
 
     // 2. Linear term: Strain(u) approx du
     // Calculate gradient du from u
@@ -285,7 +309,7 @@ pub fn foppl_von_karman_strain_kernel(
     // Apply constitutive relation to the strain field
     let e = youngs_modulus.value();
     let nu = poisson_ratio.value();
-    let prefactor = e / (1.0 - nu * nu);
+    let prefactor = e / (one - nu * nu);
 
     // For this field-based approximation, we treat epsilon as the effective strain magnitude/trace.
     // Full tensor reconstruction would require a tensor-valued manifold.

@@ -2,14 +2,15 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
+use crate::constants::real_from_f64;
 use crate::{
     ChemicalPotentialGradient, Concentration, Energy, Mobility, OrderParameter, PhysicsError,
     VectorPotential,
 };
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::{Complex, DivisionAlgebra};
+use deep_causality_num::{Complex, DivisionAlgebra, FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
+use std::iter::Sum;
 
 /// Calculates the Ginzburg-Landau Free Energy density.
 ///
@@ -38,18 +39,22 @@ use deep_causality_tensor::CausalTensor;
 ///
 /// # Returns
 /// *   `Result<Energy, PhysicsError>` - Free energy density.
-pub fn ginzburg_landau_free_energy_kernel(
-    psi: OrderParameter,
-    alpha: f64,
-    beta: f64,
-    gradient_psi: &CausalMultiVector<Complex<f64>>,
-    vector_potential: Option<&VectorPotential>,
-) -> Result<Energy<f64>, PhysicsError> {
+pub fn ginzburg_landau_free_energy_kernel<R>(
+    psi: OrderParameter<R>,
+    alpha: R,
+    beta: R,
+    gradient_psi: &CausalMultiVector<Complex<R>>,
+    vector_potential: Option<&VectorPotential<R>>,
+) -> Result<Energy<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive + Sum,
+{
+    let two = real_from_f64::<R>(2.0);
     let val = psi.value();
     let mag_sq = psi.magnitude_squared();
 
     // Potential term
-    let potential_term = alpha * mag_sq + (beta / 2.0) * mag_sq * mag_sq;
+    let potential_term = alpha * mag_sq + (beta / two) * mag_sq * mag_sq;
 
     // Kinetic term: |(grad - iA)psi|^2
     // Calculation iterates over vector components.
@@ -61,7 +66,7 @@ pub fn ginzburg_landau_free_energy_kernel(
             ));
         }
 
-        let i_psi = Complex::new(0.0, 1.0) * val;
+        let i_psi = Complex::new(R::zero(), R::one()) * val;
 
         let a_data = a.data();
         let grad_data = gradient_psi.data();
@@ -78,17 +83,13 @@ pub fn ginzburg_landau_free_energy_kernel(
             .zip(a.data().iter())
             .map(|(g, a_val)| {
                 // Component: grad_k - i * A_k * psi
-                let term_a = Complex::new(*a_val, 0.0) * i_psi;
+                let term_a = Complex::new(*a_val, R::zero()) * i_psi;
                 (*g - term_a).norm_sqr()
             })
-            .sum::<f64>()
+            .sum::<R>()
     } else {
         // A = 0 case
-        gradient_psi
-            .data()
-            .iter()
-            .map(|c| c.norm_sqr())
-            .sum::<f64>()
+        gradient_psi.data().iter().map(|c| c.norm_sqr()).sum::<R>()
     };
 
     let total = potential_term + kinetic_norm_sq;
@@ -120,11 +121,14 @@ pub fn ginzburg_landau_free_energy_kernel(
 ///
 /// # Returns
 /// *   `Result<CausalTensor<f64>, PhysicsError>` - Flux vector field $\mathbf{J}$.
-pub fn cahn_hilliard_flux_kernel(
-    concentration: &Concentration,
-    mobility: Mobility<f64>,
-    chem_potential_grad: &ChemicalPotentialGradient,
-) -> Result<CausalTensor<f64>, PhysicsError> {
+pub fn cahn_hilliard_flux_kernel<R>(
+    concentration: &Concentration<R>,
+    mobility: Mobility<R>,
+    chem_potential_grad: &ChemicalPotentialGradient<R>,
+) -> Result<CausalTensor<R>, PhysicsError>
+where
+    R: RealField,
+{
     let grad_mu = chem_potential_grad.inner();
     let c_tensor = concentration.inner();
     let m0 = mobility.value();
@@ -139,12 +143,12 @@ pub fn cahn_hilliard_flux_kernel(
 
     // 1. Calculate degenerate mobility field M(c)
     // Create ones tensor for (1-c) term
-    let ones: CausalTensor<f64> = CausalTensor::one(c_tensor.shape());
-    let one_minus_c: CausalTensor<f64> = ones - c_tensor.clone();
+    let ones: CausalTensor<R> = CausalTensor::one(c_tensor.shape());
+    let one_minus_c: CausalTensor<R> = ones - c_tensor.clone();
 
     // M(c) = M0 * c * (1 - c)
     let c_factor = c_tensor.clone() * one_minus_c;
-    let mobility_field: CausalTensor<f64> = c_factor * m0;
+    let mobility_field: CausalTensor<R> = c_factor * m0;
 
     // 2. Calculate Flux J = - M(c) * grad_mu
     let m_data = mobility_field.as_slice();
@@ -157,12 +161,13 @@ pub fn cahn_hilliard_flux_kernel(
     }
 
     // Apply flux formula element-wise with stability clamping
-    let flux_data: Vec<f64> = m_data
+    let zero = R::zero();
+    let flux_data: Vec<R> = m_data
         .iter()
         .zip(g_data.iter())
-        .map(|(&m_val, &g_val): (&f64, &f64)| {
+        .map(|(&m_val, &g_val): (&R, &R)| {
             // Clamp mobility to be non-negative
-            let m_clamped = m_val.max(0.0);
+            let m_clamped = if m_val < zero { zero } else { m_val };
             -m_clamped * g_val
         })
         .collect();

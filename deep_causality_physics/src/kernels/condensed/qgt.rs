@@ -7,7 +7,8 @@ use crate::{
     BandDrudeWeight, Energy, Length, PhysicsError, QuantumEigenvector, QuantumMetric,
     QuantumVelocity,
 };
-use deep_causality_num::Complex;
+use deep_causality_num::{Complex, RealField};
+use deep_causality_tensor::CausalTensor;
 
 /// Calculates the Quantum Geometric Tensor (QGT) component $Q_{ij}^n(\mathbf{k})$ for band $n$.
 ///
@@ -40,14 +41,17 @@ use deep_causality_num::Complex;
 ///
 /// # Errors
 /// *   `DimensionMismatch` - If input tensor shapes are inconsistent.
-pub fn quantum_geometric_tensor_kernel(
-    eigenvalues: &deep_causality_tensor::CausalTensor<f64>,
-    eigenvectors: &QuantumEigenvector,
-    velocity_i: &QuantumVelocity,
-    velocity_j: &QuantumVelocity,
+pub fn quantum_geometric_tensor_kernel<R>(
+    eigenvalues: &CausalTensor<R>,
+    eigenvectors: &QuantumEigenvector<R>,
+    velocity_i: &QuantumVelocity<R>,
+    velocity_j: &QuantumVelocity<R>,
     band_n: usize,
-    regularization: f64,
-) -> Result<Complex<f64>, PhysicsError> {
+    regularization: R,
+) -> Result<Complex<R>, PhysicsError>
+where
+    R: RealField,
+{
     let ev_data = eigenvectors.inner().as_slice();
     let vi_data = velocity_i.inner().as_slice();
     let vj_data = velocity_j.inner().as_slice();
@@ -80,23 +84,22 @@ pub fn quantum_geometric_tensor_kernel(
     // Since we are given velocity vector columns V|m> directly (or pre-computed matrix elements?
     // The previous implementation assumed `velocity_i` stores the velocity vectors V|u_m>).
     // Specifically: dot product of <u_n| (conjugated) and V|u_m>.
-    let inner_prod =
-        |col_u: usize, col_v_matrix: &[Complex<f64>], col_v_idx: usize| -> Complex<f64> {
-            let mut sum = Complex::new(0.0, 0.0);
-            // Iterate over basis elements
-            for b in 0..basis_size {
-                let idx_u = b * num_states + col_u;
-                let idx_v = b * num_states + col_v_idx;
-                let u_val = ev_data[idx_u];
-                let v_val = col_v_matrix[idx_v];
-                // <u | v> = sum( u_k* * v_k )
-                sum += Complex::new(u_val.re, -u_val.im) * v_val;
-            }
-            sum
-        };
+    let inner_prod = |col_u: usize, col_v_matrix: &[Complex<R>], col_v_idx: usize| -> Complex<R> {
+        let mut sum = Complex::new(R::zero(), R::zero());
+        // Iterate over basis elements
+        for b in 0..basis_size {
+            let idx_u = b * num_states + col_u;
+            let idx_v = b * num_states + col_v_idx;
+            let u_val = ev_data[idx_u];
+            let v_val = col_v_matrix[idx_v];
+            // <u | v> = sum( u_k* * v_k )
+            sum += Complex::new(u_val.re, -u_val.im) * v_val;
+        }
+        sum
+    };
 
     let e_n = energies[band_n];
-    let mut q_sum = Complex::new(0.0, 0.0);
+    let mut q_sum = Complex::new(R::zero(), R::zero());
 
     for (m, &e_m) in energies.iter().enumerate() {
         if m == band_n {
@@ -128,14 +131,17 @@ pub fn quantum_geometric_tensor_kernel(
 ///
 /// *   $\\text{Re}(q_{ij})$ maps to the band Drude weight (BDW).
 /// *   $\\text{Im}(q_{ij})$ maps to the intrinsic orbital angular momentum (OAM).
-pub fn quasi_qgt_kernel(
-    eigenvalues: &deep_causality_tensor::CausalTensor<f64>,
-    eigenvectors: &QuantumEigenvector,
-    velocity_i: &QuantumVelocity,
-    velocity_j: &QuantumVelocity,
+pub fn quasi_qgt_kernel<R>(
+    eigenvalues: &CausalTensor<R>,
+    eigenvectors: &QuantumEigenvector<R>,
+    velocity_i: &QuantumVelocity<R>,
+    velocity_j: &QuantumVelocity<R>,
     band_n: usize,
-    regularization: f64,
-) -> Result<Complex<f64>, PhysicsError> {
+    regularization: R,
+) -> Result<Complex<R>, PhysicsError>
+where
+    R: RealField,
+{
     quantum_geometric_tensor_kernel(
         eigenvalues,
         eigenvectors,
@@ -169,13 +175,16 @@ pub fn quasi_qgt_kernel(
 ///
 /// # Returns
 /// *   `Result<BandDrudeWeight<f64>, PhysicsError>` - The physical Drude Weight.
-pub fn effective_band_drude_weight_kernel(
-    energy_n: Energy<f64>,
-    energy_0: Energy<f64>,
-    curvature_ii: f64,
-    quantum_metric: QuantumMetric<f64>,
-    lattice_const: Length<f64>,
-) -> Result<BandDrudeWeight<f64>, PhysicsError> {
+pub fn effective_band_drude_weight_kernel<R>(
+    energy_n: Energy<R>,
+    energy_0: Energy<R>,
+    curvature_ii: R,
+    quantum_metric: QuantumMetric<R>,
+    lattice_const: Length<R>,
+) -> Result<BandDrudeWeight<R>, PhysicsError>
+where
+    R: RealField,
+{
     if !curvature_ii.is_finite() {
         return Err(PhysicsError::NumericalInstability(
             "Band curvature is not finite".into(),
@@ -183,11 +192,10 @@ pub fn effective_band_drude_weight_kernel(
     }
 
     let a = lattice_const.value();
-    if a <= 0.0 {
-        return Err(PhysicsError::PhysicalInvariantBroken(format!(
-            "Lattice constant must be positive, got {}",
-            a
-        )));
+    if a <= R::zero() {
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Lattice constant must be positive".into(),
+        ));
     }
 
     // Energy gap scale

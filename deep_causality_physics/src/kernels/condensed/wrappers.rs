@@ -11,25 +11,31 @@ use crate::{
     Mobility, Momentum, OrderParameter, QuantumEigenvector, QuantumMetric, QuantumVelocity, Ratio,
     Speed, Stiffness, TwistAngle, VectorPotential,
 };
+use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::Complex;
+use deep_causality_num::{Complex, FromPrimitive, RealField};
+use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::SimplicialManifold;
+use std::iter::Sum;
 
 // ============================================================================
 // QGT Wrappers
 // ============================================================================
 
 /// Wrapper for [`qgt::quantum_geometric_tensor_kernel`].
-pub fn quantum_geometric_tensor(
-    eigenvalues: &CausalTensor<f64>,
-    eigenvectors: &QuantumEigenvector,
-    velocity_i: &QuantumVelocity,
-    velocity_j: &QuantumVelocity,
+pub fn quantum_geometric_tensor<R>(
+    eigenvalues: &CausalTensor<R>,
+    eigenvectors: &QuantumEigenvector<R>,
+    velocity_i: &QuantumVelocity<R>,
+    velocity_j: &QuantumVelocity<R>,
     band_n: usize,
-    regularization: f64,
-) -> PropagatingEffect<Complex<f64>> {
+    regularization: R,
+) -> PropagatingEffect<Complex<R>>
+where
+    R: RealField + Default + Debug,
+{
     match qgt::quantum_geometric_tensor_kernel(
         eigenvalues,
         eigenvectors,
@@ -44,14 +50,17 @@ pub fn quantum_geometric_tensor(
 }
 
 /// Wrapper for [`qgt::quasi_qgt_kernel`].
-pub fn quasi_qgt(
-    eigenvalues: &CausalTensor<f64>,
-    eigenvectors: &QuantumEigenvector,
-    velocity_i: &QuantumVelocity,
-    velocity_j: &QuantumVelocity,
+pub fn quasi_qgt<R>(
+    eigenvalues: &CausalTensor<R>,
+    eigenvectors: &QuantumEigenvector<R>,
+    velocity_i: &QuantumVelocity<R>,
+    velocity_j: &QuantumVelocity<R>,
     band_n: usize,
-    regularization: f64,
-) -> PropagatingEffect<Complex<f64>> {
+    regularization: R,
+) -> PropagatingEffect<Complex<R>>
+where
+    R: RealField + Default + Debug,
+{
     match qgt::quasi_qgt_kernel(
         eigenvalues,
         eigenvectors,
@@ -66,13 +75,16 @@ pub fn quasi_qgt(
 }
 
 /// Wrapper for [`qgt::effective_band_drude_weight_kernel`].
-pub fn effective_band_drude_weight(
-    energy_n: Energy<f64>,
-    energy_0: Energy<f64>,
-    curvature_ii: f64,
-    quantum_metric: QuantumMetric<f64>,
-    lattice_const: Length<f64>,
-) -> PropagatingEffect<BandDrudeWeight<f64>> {
+pub fn effective_band_drude_weight<R>(
+    energy_n: Energy<R>,
+    energy_0: Energy<R>,
+    curvature_ii: R,
+    quantum_metric: QuantumMetric<R>,
+    lattice_const: Length<R>,
+) -> PropagatingEffect<BandDrudeWeight<R>>
+where
+    R: RealField + Default + Debug,
+{
     match qgt::effective_band_drude_weight_kernel(
         energy_n,
         energy_0,
@@ -90,13 +102,16 @@ pub fn effective_band_drude_weight(
 // ============================================================================
 
 /// Wrapper for [`moire::bistritzer_macdonald_kernel`].
-pub fn bistritzer_macdonald(
-    twist_angle: TwistAngle<f64>,
-    interlayer_coupling: Energy<f64>,
-    fermi_velocity: Speed<f64>,
-    k_point: Momentum,
+pub fn bistritzer_macdonald<R>(
+    twist_angle: TwistAngle<R>,
+    interlayer_coupling: Energy<R>,
+    fermi_velocity: Speed<R>,
+    k_point: Momentum<R>,
     shell_cutoff: usize,
-) -> PropagatingEffect<CausalTensor<Complex<f64>>> {
+) -> PropagatingEffect<CausalTensor<Complex<R>>>
+where
+    R: RealField + FromPrimitive + Default + Debug,
+{
     match moire::bistritzer_macdonald_kernel(
         twist_angle,
         interlayer_coupling,
@@ -110,11 +125,14 @@ pub fn bistritzer_macdonald(
 }
 
 /// Wrapper for [`moire::foppl_von_karman_strain_simple_kernel`].
-pub fn foppl_von_karman_strain_simple(
-    displacement_u: &Displacement,
-    youngs_modulus: Stiffness<f64>,
-    poisson_ratio: Ratio<f64>,
-) -> PropagatingEffect<CausalTensor<f64>> {
+pub fn foppl_von_karman_strain_simple<R>(
+    displacement_u: &Displacement<R>,
+    youngs_modulus: Stiffness<R>,
+    poisson_ratio: Ratio<R>,
+) -> PropagatingEffect<CausalTensor<R>>
+where
+    R: RealField + FromPrimitive + Default + Debug,
+{
     match moire::foppl_von_karman_strain_simple_kernel(
         displacement_u,
         youngs_modulus,
@@ -126,12 +144,15 @@ pub fn foppl_von_karman_strain_simple(
 }
 
 /// Wrapper for [`moire::foppl_von_karman_strain_kernel`].
-pub fn foppl_von_karman_strain(
-    u_manifold: &SimplicialManifold<f64, f64>,
-    w_manifold: &SimplicialManifold<f64, f64>,
-    youngs_modulus: Stiffness<f64>,
-    poisson_ratio: Ratio<f64>,
-) -> PropagatingEffect<CausalTensor<f64>> {
+pub fn foppl_von_karman_strain<R>(
+    u_manifold: &SimplicialManifold<R, R>,
+    w_manifold: &SimplicialManifold<R, R>,
+    youngs_modulus: Stiffness<R>,
+    poisson_ratio: Ratio<R>,
+) -> PropagatingEffect<CausalTensor<R>>
+where
+    R: RealField + FromPrimitive + MaybeParallel + Default + Debug,
+{
     match moire::foppl_von_karman_strain_kernel(
         u_manifold,
         w_manifold,
@@ -148,13 +169,16 @@ pub fn foppl_von_karman_strain(
 // ============================================================================
 
 /// Wrapper for [`phase::ginzburg_landau_free_energy_kernel`].
-pub fn ginzburg_landau_free_energy(
-    psi: OrderParameter,
-    alpha: f64,
-    beta: f64,
-    gradient_psi: &CausalMultiVector<Complex<f64>>,
-    vector_potential: Option<&VectorPotential>,
-) -> PropagatingEffect<Energy<f64>> {
+pub fn ginzburg_landau_free_energy<R>(
+    psi: OrderParameter<R>,
+    alpha: R,
+    beta: R,
+    gradient_psi: &CausalMultiVector<Complex<R>>,
+    vector_potential: Option<&VectorPotential<R>>,
+) -> PropagatingEffect<Energy<R>>
+where
+    R: RealField + FromPrimitive + Default + Debug + Sum,
+{
     match phase::ginzburg_landau_free_energy_kernel(
         psi,
         alpha,
@@ -168,11 +192,14 @@ pub fn ginzburg_landau_free_energy(
 }
 
 /// Wrapper for [`phase::cahn_hilliard_flux_kernel`].
-pub fn cahn_hilliard_flux(
-    concentration: &Concentration,
-    mobility: Mobility<f64>,
-    chem_potential_grad: &ChemicalPotentialGradient,
-) -> PropagatingEffect<CausalTensor<f64>> {
+pub fn cahn_hilliard_flux<R>(
+    concentration: &Concentration<R>,
+    mobility: Mobility<R>,
+    chem_potential_grad: &ChemicalPotentialGradient<R>,
+) -> PropagatingEffect<CausalTensor<R>>
+where
+    R: RealField + Default + Debug,
+{
     match phase::cahn_hilliard_flux_kernel(concentration, mobility, chem_potential_grad) {
         Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
