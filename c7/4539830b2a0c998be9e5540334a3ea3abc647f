@@ -1,0 +1,85 @@
+openspec/changes/add-park2t-blackout-tier-a/.openspec.yaml
+  s_162aba3d26275e::t_9d943de921f6b9 1-2
+openspec/changes/add-cfd-compressible-qtt-marcher/tasks.md
+  s_162aba3d26275e::t_10dbdc2ee4d6e7 1-66,68-69,74-86
+  s_162aba3d26275e::t_e5fb02514f7300 67,70-73
+  s_162aba3d26275e::t_06ed48fea01520 87-89
+openspec/notes/plasma-blackout/gap-2/gap-two-reacting-plasma.md
+  s_162aba3d26275e::t_0e8098fd19dcef 379-381
+  s_162aba3d26275e::t_1d55994f52f076 283-294
+  s_162aba3d26275e::t_b96ee28164c512 341-344
+openspec/changes/add-cfd-compressible-qtt-marcher/.openspec.yaml
+  s_162aba3d26275e::t_ab9327bc2559eb 1-2
+openspec/changes/add-cfd-compressible-qtt-marcher/specs/body-fitted-qtt-coordinate/spec.md
+  s_162aba3d26275e::t_04739a9d853062 1-47
+openspec/notes/plasma-blackout/gap-2/tier-b-compressible-marcher.md
+  s_162aba3d26275e::t_4456618d34c0bb 1-148
+openspec/notes/plasma-blackout/plasma-blackout-corridor.md
+  s_162aba3d26275e::t_ff20668c8061e8 214-224,226-230
+  s_162aba3d26275e::t_39976f4e6b8716 120-129
+openspec/changes/add-park2t-blackout-tier-a/tasks.md
+  s_162aba3d26275e::t_8aac9e0f076280 1-107
+  s_162aba3d26275e::t_87b0aac2ba6bbd 108-110
+openspec/changes/add-cfd-compressible-qtt-marcher/specs/compressible-reacting-qtt-marcher/spec.md
+  s_162aba3d26275e::t_17f3ce9cddfbd3 1-37,39-40,44
+  s_162aba3d26275e::t_5e66a0f3f9f87c 38,41-43,45-48
+openspec/notes/plasma-blackout/gap-analysis.md
+  s_162aba3d26275e::t_3a3339b03a55b9 186-192
+  s_162aba3d26275e::t_d8d030f3906655 131-141
+  s_162aba3d26275e::t_170ca1dd717ece 210-212
+openspec/changes/add-park2t-blackout-tier-a/proposal.md
+  s_162aba3d26275e::t_c0a2b30bc7d4a4 1-50,57-98
+  s_162aba3d26275e::t_569b8133324ea5 51-56
+openspec/changes/add-cfd-compressible-qtt-marcher/design.md
+  s_162aba3d26275e::t_42d7e33e6240c9 32-36,38-59
+  s_162aba3d26275e::t_5e39fe1a599a9c 1-31,37,60-115,121-142,145-147,149-151,155,158-162
+  s_162aba3d26275e::t_017b6d9343bf36 143-144,148
+  s_162aba3d26275e::t_8c2715cfdaab87 116-120
+  s_162aba3d26275e::t_09e17da597c5b8 152-154,156-157
+openspec/changes/add-park2t-blackout-tier-a/design.md
+  s_162aba3d26275e::t_fcb4965f47cbab 78-84,86-88
+  s_162aba3d26275e::t_ff6bfadc939c90 1-77,90-185
+  s_162aba3d26275e::t_6b7821be47b038 85,89
+openspec/changes/add-park2t-blackout-tier-a/specs/plasma-blackout-trigger/spec.md
+  s_162aba3d26275e::t_18b74cab45494c 1-78
+openspec/changes/add-park2t-blackout-tier-a/specs/lagging-equilibrium-relaxation/spec.md
+  s_162aba3d26275e::t_f2ca24339d9953 1-53
+openspec/changes/add-cfd-compressible-qtt-marcher/proposal.md
+  s_162aba3d26275e::t_007e58972088f8 77
+  s_162aba3d26275e::t_96616be0ad347a 1-51,55-76,78-98
+  s_162aba3d26275e::t_e77b6717ca02ea 99-104
+  s_162aba3d26275e::t_9fdacf4b93faee 52-54
+openspec/changes/add-cfd-compressible-qtt-marcher/specs/qtt-imex-time-integration/spec.md
+  s_162aba3d26275e::t_9066a73a534417 1-43
+openspec/changes/add-cfd-compressible-qtt-marcher/specs/qtt-codec-3d/spec.md
+  s_162aba3d26275e::t_973abe66ed8628 1-35
+openspec/changes/add-cfd-compressible-qtt-marcher/specs/compressible-qtt-validation/spec.md
+  s_162aba3d26275e::t_d72ae21ee14b7a 41,43-48,50-53
+  s_162aba3d26275e::t_12d23cd855aff9 1-40,42,49,54-63
+openspec/changes/add-park2t-blackout-tier-a/specs/park2t-ionization-kernels/spec.md
+  s_162aba3d26275e::t_d3a52718ab274b 1-32,37-68
+  s_162aba3d26275e::t_f38e752ef6afbe 33-36
+openspec/changes/add-park2t-blackout-tier-a/specs/park2t-blackout-validation/spec.md
+  s_162aba3d26275e::t_452dbbfb46b140 1-61
+openspec/changes/add-cfd-compressible-qtt-marcher/specs/qtt-shock-fitting/spec.md
+  s_162aba3d26275e::t_71821dccb316a6 1-44
+openspec/changes/add-cfd-compressible-qtt-marcher/specs/compressible-qtt-flux/spec.md
+  s_162aba3d26275e::t_147c81f44614dd 1-36,41-44
+  s_162aba3d26275e::t_4e70b895286f43 37-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "c74539830b2a0c998be9e5540334a3ea3abc647f",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
