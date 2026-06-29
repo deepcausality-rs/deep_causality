@@ -1,0 +1,88 @@
+deep_causality_physics/src/kernels/mod.rs
+  s_162aba3d26275e::t_1c4df3cb409723 11
+deep_causality_physics/tests/kernels/hypersonic/wrappers_tests.rs
+  s_162aba3d26275e::t_c20b44f401b107 1-96
+deep_causality_physics/tests/quantities/hypersonic_quantities/vibrational_temperature_tests.rs
+  s_162aba3d26275e::t_ebaf356c83835d 1-46
+deep_causality_physics/tests/kernels/hypersonic/thermochemistry_tests.rs
+  s_162aba3d26275e::t_5de7022113f6e6 1-104
+deep_causality_physics/src/kernels/mhd/plasma.rs
+  s_162aba3d26275e::t_ebaf356c83835d 113-115
+  s_162aba3d26275e::t_f1792e20db4eec 91-112,116-126
+  s_162aba3d26275e::t_d9b63d8684a5c2 5-8
+deep_causality_physics/src/kernels/hypersonic/thermochemistry.rs
+  s_162aba3d26275e::t_ebaf356c83835d 78-80
+  s_162aba3d26275e::t_c081784db65126 1-77,81-153
+deep_causality_physics/src/constants/hypersonic.rs
+  s_162aba3d26275e::t_11bb7da2f5c808 1-94
+deep_causality_physics/tests/kernels/hypersonic/shock_tests.rs
+  s_162aba3d26275e::t_8561be8f605c02 1-55
+deep_causality_physics/src/constants/mod.rs
+  s_162aba3d26275e::t_727959776d82bf 18,28
+deep_causality_physics/src/kernels/hypersonic/ionization.rs
+  s_162aba3d26275e::t_a43c4ff5969481 1-62,66-151
+  s_162aba3d26275e::t_ebaf356c83835d 63-65
+deep_causality_physics/tests/kernels/hypersonic/mod.rs
+  s_162aba3d26275e::t_8edec1a18d4dce 1-12
+deep_causality_physics/src/quantities/mod.rs
+  s_162aba3d26275e::t_ebaf356c83835d 23
+  s_162aba3d26275e::t_91a68668083140 45
+deep_causality_physics/tests/quantities/mod.rs
+  s_162aba3d26275e::t_ebaf356c83835d 18-19
+deep_causality_physics/tests/kernels/mod.rs
+  s_162aba3d26275e::t_bd2b6dcf4cc67c 11
+deep_causality_physics/tests/kernels/mhd/plasma_tests.rs
+  s_162aba3d26275e::t_12573d8bd1b290 8-9,12-21,25,27-34
+  s_162aba3d26275e::t_a0b6ead0ee572d 22-24,26
+  s_162aba3d26275e::t_a7b3c6263a313d 35
+deep_causality_physics/src/kernels/mhd/wrappers.rs
+  s_162aba3d26275e::t_6d01b06169554e 151-160
+  s_162aba3d26275e::t_4732a2ebb30572 7-10
+deep_causality_physics/src/kernels/hypersonic/mod.rs
+  s_162aba3d26275e::t_e393403f85f1a9 1-21
+deep_causality_physics/tests/BUILD.bazel
+  s_162aba3d26275e::t_a8edcfc8f2d8d4 174-193
+  s_162aba3d26275e::t_f115034add2c8a 173
+deep_causality_physics/src/lib.rs
+  s_162aba3d26275e::t_ced82b8b35d429 29
+deep_causality_physics/tests/kernels/hypersonic/ionization_tests.rs
+  s_162aba3d26275e::t_ebaf356c83835d 48
+  s_162aba3d26275e::t_c64c9fc45545a7 1-47,49-81
+deep_causality_physics/src/kernels/hypersonic/shock.rs
+  s_162aba3d26275e::t_c06e0f41e79996 1-91
+deep_causality_physics/src/kernels/hypersonic/wrappers.rs
+  s_162aba3d26275e::t_ebaf356c83835d 10-12,51-52
+  s_162aba3d26275e::t_27b24594c0eda2 1-9,13-50,53-130
+deep_causality_physics/tests/quantities/hypersonic_quantities/ionization_fraction_tests.rs
+  s_162aba3d26275e::t_df1a6f376dcdbd 1-44
+deep_causality_physics/tests/quantities/hypersonic_quantities/mod.rs
+  s_162aba3d26275e::t_7af15c7d3b2a74 1-11
+deep_causality_physics/src/kernels/condensed/moire.rs
+  s_162aba3d26275e::t_1b2aef9bc5d6c5 12,72
+deep_causality_physics/src/quantities/hypersonic/mod.rs
+  s_162aba3d26275e::t_352edd1d23e67c 1-252
+deep_causality_physics/tests/quantities/hypersonic_quantities/electron_density_tests.rs
+  s_162aba3d26275e::t_9c99e551e1c464 1-44
+deep_causality_physics/tests/quantities/hypersonic_quantities/electron_temperature_tests.rs
+  s_162aba3d26275e::t_a2f8578053d342 1-43
+deep_causality_physics/tests/quantities/hypersonic_quantities/mass_fraction_tests.rs
+  s_162aba3d26275e::t_7ea64248c82a8f 1-44
+deep_causality_physics/tests/quantities/hypersonic_quantities/reaction_rate_tests.rs
+  s_162aba3d26275e::t_e2f0785b43caf4 1-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "487fed7de60ca8c761e987376f7bc9b37d542194",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
