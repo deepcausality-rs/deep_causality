@@ -117,8 +117,16 @@ rank localizes to the shock and sheath; the plasma sheath (Debye/sheath thicknes
 the same uniform resolution with no separate refinement region. For true wall-normal clustering, a smooth
 analytic coordinate stretch keeps the uniform *computational* lattice QTT loves and maps it to a graded
 *physical* mesh through a low-rank Jacobian — boundary-layer resolution without leaving the tensor
-structure. This is the strongest single argument for the tensor-network axis on *this* problem. **[holds
-under precondition: shock rank controlled — see seam §6]**
+structure. This is the strongest single argument for the tensor-network axis on *this* problem.
+
+**Measured caveat (the coordinate is now *mandatory*, not a nicety).** Rank studies in
+`deep_causality_cfd/studies/` show the rank driver is **coordinate alignment, not sharpness or curvature**: a
+realistically-formed **3-D** curved shock *captured on a Cartesian QTT grid* has bond `χ ~ √side` (unbounded
+in resolution), whereas a **shock-aligned / body-fitted coordinate** holds it at `χ ~ O(10)` (constant). So
+the "free micrometre resolution" claim holds for *storage* (always sub-dense in 3-D) but the *solve* cost
+grows unless the coordinate aligns the shock to an axis. The coordinate stretch above is therefore **required**
+for a curved shock, not optional. **[measured: body-fitted coordinate mandatory — see seam §6 and
+[`gap-2/tier-b-compressible-marcher.md`](gap-2/tier-b-compressible-marcher.md)]**
 
 ---
 
@@ -203,19 +211,23 @@ blackout window becomes trivial. This is the real meaning of "get the math up to
 - **EPP is a macroscope, not the inner solve loop.** It composes, gates, and audits; the heavy compute
   lives behind the causaloid boundary. Reentry guidance is latency-bound — state the value as
   orchestration + auditable safety + counterfactual decision, not as the CFD hot kernel.
-- **Shocks are the anti-QTT structure — rank control at the shock is the open numerical risk.** The
-  resolution argument (§3.3) rests on the flowfield staying low-rank, but a Mach-25 bow shock is nearly a
-  discontinuity, and discontinuities are **high tensor-train rank** (verified directly: a sharp
-  immersed-body mask blew the bond up; smoothing it restored a bounded rank). So the bond dimension *at
-  the shock* — exactly where resolution is needed — is where the compression advantage is most at risk.
-  The mitigations are standard and physically honest: artificial viscosity / shock smoothing (at
-  micrometer resolution the real shock is ~a few mean free paths, sub-micron, so the captured shock is
-  genuinely a few fine-grid cells, not a true discontinuity), TT-cross to build nonlinear/source terms at
-  a capped rank, and the hardened per-step rounding. Separately, the **present QTT solver is
+- **Shocks are the anti-QTT structure — and the rank control is now *measured*, with a named fix.** The
+  resolution argument (§3.3) rests on the flowfield staying low-rank. Four self-verifying rank studies
+  (`deep_causality_cfd/studies/`) settle what that requires: the rank driver is **coordinate alignment, not
+  sharpness or curvature** — a 1-D shock is rank ≤2 (cheap), but a *coordinate-misaligned* 2-D/3-D curved
+  shock is expensive (a straight 45° oblique front is even worse than a curve). A realistically-formed
+  **3-D** curved shock *captured on a Cartesian grid* measures **`χ ~ √side` (unbounded)**; the **same shock
+  in a body-fitted / shock-aligned coordinate** is **`χ ~ O(10)` (constant)**. **Artificial viscosity is
+  *not* the lever** — thickening cannot remove curvature, and over-thickening is **diffusion-CFL-unstable**
+  (it blows up to full rank), so stable dissipation needs an **implicit / IMEX** step. The fix is therefore
+  named and mandatory: a **shock-aligned / body-fitted coordinate** (the §3.3 stretch) **+ an implicit/IMEX
+  step**, with the interface jump handled by exact Rankine–Hugoniot. Separately, the **present QTT solver is
   incompressible** — the wrong governing equations for a hypersonic shock; the flagship needs a
-  **compressible QTT marcher** (Euler/NS + energy + EOS), which is Tier-B / Gap-2 territory, not built.
-  The mesh *strategy* of §3.3 is sound on the incompressible solver we have; the shock *physics* is not
-  yet in place. **[open: shock-rank control + a compressible QTT solver]**
+  **compressible QTT marcher** (Euler/NS + energy + EOS), which is Tier-B / Gap-2 territory, not built. The
+  mesh *strategy* of §3.3 is sound on the incompressible solver we have; the shock *physics* is not yet in
+  place. Full analysis + the C1–C8 capability map + the de-risking slice:
+  [`gap-2/tier-b-compressible-marcher.md`](gap-2/tier-b-compressible-marcher.md). **[measured: body-fitted
+  coordinate + IMEX mandatory; compressible QTT solver still open]**
 
 ---
 

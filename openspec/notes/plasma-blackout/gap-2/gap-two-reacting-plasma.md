@@ -280,14 +280,18 @@ testable against Park tables / RAM-C.
 Gap 2's physics is *compressible* and *shock-bearing*; the built QTT solver is incompressible. The reacting
 kernels are pointwise and solver-agnostic (they will unit-test against RAM-C the day they are written), but
 **marching them on a real reentry flowfield needs a compressible QTT marcher** — density/energy transport,
-an EOS pressure closure, and **shock-capturing**. As established in the
-[corridor note §6](../plasma-blackout-corridor.md) and [gap-analysis §4 Gap 2](../gap-analysis.md), the Mach-25
-shock is near-discontinuous → **high tensor-train rank** (verified with the immersed-body mask: sharp → high
-bond, smoothed → bounded), so shock-capturing in QTT needs artificial viscosity / shock smoothing
-(physically honest — the true shock is a few mean free paths thick), TT-cross for the nonlinear/source terms,
-and aggressive rounding. The micrometer shock/sheath resolution rides QTT's multi-resolution property
-(uniform-fine grid, rank-localized cost), *not* an adaptive mesh. **[open: compressible + shock-rank
-control — Tier-B]**
+an EOS pressure closure, and **shock-capturing**.
+
+**This precondition is now measured, not argued** — see the dedicated
+[**Tier-B note**](tier-b-compressible-marcher.md) and the four rank studies in `deep_causality_cfd/studies/`.
+The headline: the rank driver is **coordinate alignment, not sharpness or curvature** — a realistically-formed
+**3-D** curved shock captured on a Cartesian QTT grid has **`χ ~ √side` (unbounded in resolution)**, while a
+**body-fitted (shock-aligned) coordinate** holds the same shock at **`χ ~ O(10)` (constant)**. So the
+micrometre shock/sheath resolution rides QTT's multi-resolution property **only with a body-fitted coordinate**
+(corridor §3.3's coordinate stretch, now *mandatory*); artificial viscosity is **not** the lever (it cannot
+remove curvature, and over-thickening is diffusion-CFL-unstable → needs an implicit/IMEX step). TT-cross for
+the nonlinear/source terms and aggressive rounding still apply, on the *smooth* fitted field. **[measured —
+body-fitted coordinate + IMEX mandatory; compressible marcher still Tier-B / open]**
 
 **Tier-A escape hatch (corridor §7):** skip the compressible shock entirely — a **parametric Park-2T
 ionization surrogate** (`park2t_ionization_surrogate_kernel`, §3.1) over a quasi-1D/reduced flow gives
@@ -334,7 +338,10 @@ any solver integration — the payoff of the split.
 4. **Reacting `*_rhs`** (`cfd/theories/`) — species transport + the two-temperature energy split, for the
    verification solvers.
 5. **[Tier-B] Compressible QTT marcher** — density/energy + EOS + shock-capturing (§4); ride the reacting
-   sources on it via TT-cross (Pinkston et al.).
+   sources on it via TT-cross (Pinkston et al.). **Measured precondition** (see
+   [Tier-B note](tier-b-compressible-marcher.md)): a **shock-aligned / body-fitted coordinate** (χ~O(10) vs
+   captured χ~√side) **plus an implicit/IMEX step** are mandatory. Smallest de-risking slice: the RAM-C
+   stagnation-line vertical slice (a 1-D fitted normal shock + exact RH + the Tier-A LER stack reused).
 
 Steps 1–3 are buildable now and unblock the flagship's steps [2]/[3]; step 5 is the genuine open research.
 
@@ -369,6 +376,9 @@ two blackout outcomes, the strengthened §1.2 test the memory state enables.
   [`gap-two-resolution-2-temperature-provenance.md`](gap-two-resolution-2-temperature-provenance.md),
   [`gap-two-resolution-3-ionization-lag.md`](gap-two-resolution-3-ionization-lag.md) — the three ARIZ
   resolutions unified by §1.4 (the **LER stage**); each carries the full derivation + verification gates.
+- [`tier-b-compressible-marcher.md`](tier-b-compressible-marcher.md) — the **measured** Tier-B note: the four
+  rank studies, the singularity-confinement reformulation (spatial dual of LER), and the body-fitted-coordinate
+  + IMEX mandate for the compressible marcher (§4 precondition).
 - [`gap-analysis.md`](../gap-analysis.md) §4 Gap 2 — the gap this note drills into.
 - [`gap-one-cfd-tensor-bridge.md`](../gap-1/gap-one-cfd-tensor-bridge.md) — the **closed** Gap 1 this builds on; its
   §3.4 neutral wall heat-flux is the thermal seam Gap 2 replaces.

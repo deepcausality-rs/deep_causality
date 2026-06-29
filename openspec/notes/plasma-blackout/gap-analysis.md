@@ -128,14 +128,17 @@ the shock layer and plasma sheath over a ~m vehicle — a **~10⁶ dynamic range
 CFD into adaptive mesh refinement. The QTT representation answers this *without* AMR: a `2^L` grid costs
 `O(χ²·L)`, so a uniform micrometer grid (`L ≈ 20`) is affordable and the cost localizes to the **bond
 dimension** where the sharp shock/sheath gradients live (a smooth coordinate stretch adds wall-normal
-clustering through a low-rank Jacobian if wanted). "Variable mesh" becomes *tensor rank*, not a graded
-mesh — see corridor §3.3. The catch is that a near-discontinuous Mach-25 shock is **high tensor-train
-rank** (verified with the immersed-body mask: sharp → high bond, smoothed → bounded), so shock-capturing
-in QTT needs artificial viscosity / shock smoothing (physically honest — the true shock is a few mean
-free paths thick), TT-cross for the nonlinear/source terms, and aggressive rounding. This sits with Gap 2
-because it also requires a **compressible QTT marcher** (the built `QttIncompressible2d` is the wrong
-physics for a shock). The mesh *strategy* is sound on the incompressible solver already built; the shock
-*physics* is **Tier-B / not yet written**. **[open: compressible QTT + shock-rank control]**
+clustering through a low-rank Jacobian). "Variable mesh" becomes *tensor rank*, not a graded mesh — see
+corridor §3.3. **This is now measured** (four rank studies in `deep_causality_cfd/studies/`): the rank driver
+is **coordinate alignment, not sharpness or curvature** — a realistically-formed **3-D** curved shock
+*captured on a Cartesian grid* measures **`χ ~ √side` (unbounded in resolution)**, while a **shock-aligned /
+body-fitted coordinate** holds the same shock at **`χ ~ O(10)` (constant)**. So the coordinate stretch is
+**mandatory, not optional**, and **artificial viscosity is not the lever** (it cannot remove curvature, and
+over-thickening is diffusion-CFL-unstable → needs an implicit/IMEX step). This still requires a **compressible
+QTT marcher** (the built `QttIncompressible2d` is the wrong physics for a shock). The mesh *strategy* is sound
+and now quantified; the shock *physics* is **Tier-B / not yet written** — full analysis in
+[`gap-2/tier-b-compressible-marcher.md`](gap-2/tier-b-compressible-marcher.md). **[measured: body-fitted
+coordinate + IMEX mandatory; compressible QTT marcher open]**
 
 Gap 2's dedicated plan — the **physics-kernel / solver split** (kernels in `deep_causality_physics`, solver +
 coupling in `deep_causality_cfd`), the Park-2T / ionization kernel list, and the two composition idioms —
@@ -180,9 +183,13 @@ provenance log are composition work — not missing primitives. **[holds under p
   (3) wiring the existing skeletons + Ethos gate + provenance (Gap 4). Neither is blocked on missing
   mathematics.
 - **Tier B** retains genuine open research: validated coupled reacting-plasma CFD, a **compressible QTT
-  shock-capturing marcher** (the µm shock/sheath resolution rides the QTT multi-resolution property —
-  uniform-fine grid, rank-localized cost — but needs compressible physics + shock-rank control, see Gap 2),
-  and the Bars-2T-exact-gravity + perturbative-aero coupling — keep labelled **[open]**.
+  shock-capturing marcher**, and the Bars-2T-exact-gravity + perturbative-aero coupling — keep labelled
+  **[open]**. The shock-rank question is now **measured** (`deep_causality_cfd/studies/`): a Cartesian-captured
+  3-D curved shock is `χ ~ √side` (unbounded) while a **body-fitted / shock-aligned coordinate** holds it at
+  `χ ~ O(10)` — so that coordinate **plus an implicit/IMEX step** are a *mandatory* design commitment, not an
+  open question; the open part is building the compressible marcher around them (and shock-fitting-in-QTT is
+  itself a research move). Smallest de-risking slice and the C1–C8 map:
+  [`gap-2/tier-b-compressible-marcher.md`](gap-2/tier-b-compressible-marcher.md).
 
 **Smallest honest slice that proves the thesis:** a Tier-A vertical slice — quasi-1D reacting flow as a
 QTT/MPS rollout (new tensor train), a parametric ionization surrogate feeding a blackout trigger, 2–3
@@ -200,6 +207,9 @@ Gap 1 is the critical path; its dedicated closing plan is in
   analysis measures against.
 - [`gap-one-cfd-tensor-bridge.md`](gap-1/gap-one-cfd-tensor-bridge.md) — SOTA methodologies for closing Gap 1 (**closed**).
 - [`gap-two-reacting-plasma.md`](gap-2/gap-two-reacting-plasma.md) — the Gap-2 physics-kernel/solver split + Park-2T plan.
+- [`gap-2/tier-b-compressible-marcher.md`](gap-2/tier-b-compressible-marcher.md) — the **measured** Tier-B note:
+  the four `deep_causality_cfd/studies/` rank studies, the `χ ~ √side` upper bound, and the body-fitted-coordinate
+  + IMEX mandate for the compressible shock-capturing marcher.
 - `deep_causality_tensor` tensor-network layer — the primitives Gap 1 builds on.
 - `examples/avionics_examples/hypersonic_2t/`, `examples/physics_examples/grmhd/` — the skeletons of
   axes 3 and 4.
