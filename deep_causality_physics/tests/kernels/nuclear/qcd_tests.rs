@@ -14,13 +14,13 @@ use deep_causality_physics::{
 
 #[test]
 fn test_gell_mann_matrices_count() {
-    let matrices = gell_mann_matrices();
+    let matrices = gell_mann_matrices::<f64>();
     assert_eq!(matrices.len(), 8, "Should have 8 Gell-Mann matrices");
 }
 
 #[test]
 fn test_gell_mann_matrices_size() {
-    for (i, matrix) in gell_mann_matrices().iter().enumerate() {
+    for (i, matrix) in gell_mann_matrices::<f64>().iter().enumerate() {
         assert_eq!(matrix.len(), 9, "Matrix {} should have 9 elements (3x3)", i);
     }
 }
@@ -28,7 +28,7 @@ fn test_gell_mann_matrices_size() {
 #[test]
 fn test_gell_mann_lambda3_diagonal() {
     // λ_3 = diag(1, -1, 0)
-    let matrices = gell_mann_matrices();
+    let matrices = gell_mann_matrices::<f64>();
     let l3 = matrices[2]; // Index 2 for λ_3
 
     assert!((l3[0] - 1.0).abs() < 1e-10, "λ_3[0,0] should be 1");
@@ -39,7 +39,7 @@ fn test_gell_mann_lambda3_diagonal() {
 #[test]
 fn test_gell_mann_lambda8_diagonal() {
     // λ_8 = diag(1, 1, -2) / sqrt(3)
-    let matrices = gell_mann_matrices();
+    let matrices = gell_mann_matrices::<f64>();
     let l8 = matrices[7]; // Index 7 for λ_8
 
     let inv_sqrt3 = 1.0 / 3.0_f64.sqrt();
@@ -55,14 +55,14 @@ fn test_gell_mann_lambda8_diagonal() {
 #[test]
 fn test_structure_constant_f123() {
     // f^123 = 1
-    assert!((structure_constant(1, 2, 3) - 1.0).abs() < 1e-10);
+    assert!((structure_constant::<f64>(1, 2, 3) - 1.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_structure_constant_antisymmetry() {
     // f^abc = -f^bac
-    let f123 = structure_constant(1, 2, 3);
-    let f213 = structure_constant(2, 1, 3);
+    let f123 = structure_constant::<f64>(1, 2, 3);
+    let f213 = structure_constant::<f64>(2, 1, 3);
     assert!(
         (f123 + f213).abs() < 1e-10,
         "Should be antisymmetric: f123={}, f213={}",
@@ -74,9 +74,9 @@ fn test_structure_constant_antisymmetry() {
 #[test]
 fn test_structure_constant_cyclic() {
     // f^abc = f^bca for cyclic permutations (accounting for antisymmetry)
-    let f123 = structure_constant(1, 2, 3);
-    let f231 = structure_constant(2, 3, 1);
-    let f312 = structure_constant(3, 1, 2);
+    let f123 = structure_constant::<f64>(1, 2, 3);
+    let f231 = structure_constant::<f64>(2, 3, 1);
+    let f312 = structure_constant::<f64>(3, 1, 2);
 
     // All cyclic permutations should have same magnitude
     assert!((f123.abs() - f231.abs()).abs() < 1e-10);
@@ -86,16 +86,16 @@ fn test_structure_constant_cyclic() {
 #[test]
 fn test_structure_constant_zero_for_invalid() {
     // Non-existent combinations should be 0
-    assert_eq!(structure_constant(1, 1, 1), 0.0);
-    assert_eq!(structure_constant(1, 1, 2), 0.0);
-    assert_eq!(structure_constant(1, 2, 2), 0.0);
+    assert_eq!(structure_constant::<f64>(1, 1, 1), 0.0);
+    assert_eq!(structure_constant::<f64>(1, 1, 2), 0.0);
+    assert_eq!(structure_constant::<f64>(1, 2, 2), 0.0);
 }
 
 #[test]
 fn test_structure_constant_f458() {
     // f^458 = √3/2
     let sqrt3_half = 3.0_f64.sqrt() * 0.5;
-    assert!((structure_constant(4, 5, 8) - sqrt3_half).abs() < 1e-10);
+    assert!((structure_constant::<f64>(4, 5, 8) - sqrt3_half).abs() < 1e-10);
 }
 
 #[test]
@@ -105,22 +105,22 @@ fn test_structure_constant_all_nonzero_arms() {
     let half = 0.5;
     let sqrt3_half = 3.0_f64.sqrt() * 0.5;
 
-    assert!((structure_constant(1, 2, 3) - 1.0).abs() < 1e-12);
-    assert!((structure_constant(1, 4, 7) - half).abs() < 1e-12);
+    assert!((structure_constant::<f64>(1, 2, 3) - 1.0).abs() < 1e-12);
+    assert!((structure_constant::<f64>(1, 4, 7) - half).abs() < 1e-12);
     // (1,5,6) carries an explicit negative sign in the canonical table.
-    assert!((structure_constant(1, 5, 6) + half).abs() < 1e-12);
-    assert!((structure_constant(2, 4, 6) - half).abs() < 1e-12);
-    assert!((structure_constant(2, 5, 7) - half).abs() < 1e-12);
-    assert!((structure_constant(3, 4, 5) - half).abs() < 1e-12);
+    assert!((structure_constant::<f64>(1, 5, 6) + half).abs() < 1e-12);
+    assert!((structure_constant::<f64>(2, 4, 6) - half).abs() < 1e-12);
+    assert!((structure_constant::<f64>(2, 5, 7) - half).abs() < 1e-12);
+    assert!((structure_constant::<f64>(3, 4, 5) - half).abs() < 1e-12);
     // (3,6,7) carries an explicit negative sign in the canonical table.
-    assert!((structure_constant(3, 6, 7) + half).abs() < 1e-12);
-    assert!((structure_constant(4, 5, 8) - sqrt3_half).abs() < 1e-12);
-    assert!((structure_constant(6, 7, 8) - sqrt3_half).abs() < 1e-12);
+    assert!((structure_constant::<f64>(3, 6, 7) + half).abs() < 1e-12);
+    assert!((structure_constant::<f64>(4, 5, 8) - sqrt3_half).abs() < 1e-12);
+    assert!((structure_constant::<f64>(6, 7, 8) - sqrt3_half).abs() < 1e-12);
 }
 
 #[test]
 fn test_all_structure_constants_non_empty() {
-    let all = all_structure_constants();
+    let all = all_structure_constants::<f64>();
     assert!(!all.is_empty(), "Should have non-zero structure constants");
     assert!(all.len() >= 9, "Should have at least 9 non-zero entries");
 }
@@ -137,7 +137,7 @@ fn test_covariant_derivative_pure_gauge() {
     let gluon_field = vec![0.0; 32]; // Zero gauge field
     let coupling = 1.0;
 
-    let result = covariant_derivative_kernel(&psi, &psi_gradient, &gluon_field, coupling);
+    let result = covariant_derivative_kernel::<f64>(&psi, &psi_gradient, &gluon_field, coupling);
     assert!(result.is_ok());
 
     let d_psi = result.unwrap();
@@ -164,7 +164,8 @@ fn test_covariant_derivative_gauge_term_active() {
     gluon_field[2] = 1.0;
     let coupling = 1.0;
 
-    let r = covariant_derivative_kernel(&psi, &psi_gradient, &gluon_field, coupling).unwrap();
+    let r =
+        covariant_derivative_kernel::<f64>(&psi, &psi_gradient, &gluon_field, coupling).unwrap();
 
     // T^3 = λ_3/2 = diag(0.5, -0.5, 0). i*g*A^3*T^3 * psi gives purely imaginary correction.
     // mu=0, i=0 (color 0): Im += g*A*0.5*psi_re_0 = 0.5
@@ -181,7 +182,7 @@ fn test_covariant_derivative_dimension_error_psi() {
     let psi_gradient = vec![0.0; 24];
     let gluon_field = vec![0.0; 32];
 
-    let result = covariant_derivative_kernel(&psi, &psi_gradient, &gluon_field, 1.0);
+    let result = covariant_derivative_kernel::<f64>(&psi, &psi_gradient, &gluon_field, 1.0);
     assert!(result.is_err());
 }
 
@@ -191,7 +192,7 @@ fn test_covariant_derivative_dimension_error_gradient() {
     let psi_gradient = vec![0.0; 12]; // Wrong size
     let gluon_field = vec![0.0; 32];
 
-    let result = covariant_derivative_kernel(&psi, &psi_gradient, &gluon_field, 1.0);
+    let result = covariant_derivative_kernel::<f64>(&psi, &psi_gradient, &gluon_field, 1.0);
     assert!(result.is_err());
 }
 
@@ -201,7 +202,7 @@ fn test_covariant_derivative_dimension_error_gluon() {
     let psi_gradient = vec![0.0; 24];
     let gluon_field = vec![0.0; 16]; // Wrong size
 
-    let result = covariant_derivative_kernel(&psi, &psi_gradient, &gluon_field, 1.0);
+    let result = covariant_derivative_kernel::<f64>(&psi, &psi_gradient, &gluon_field, 1.0);
     assert!(result.is_err());
 }
 
@@ -215,7 +216,7 @@ fn test_covariant_derivative_non_finite_error() {
     gluon_field[2] = f64::NAN; // A_0^3 = NaN drives λ_3 contribution to NaN
     let coupling = 1.0;
 
-    let result = covariant_derivative_kernel(&psi, &psi_gradient, &gluon_field, coupling);
+    let result = covariant_derivative_kernel::<f64>(&psi, &psi_gradient, &gluon_field, coupling);
     assert!(
         result.is_err(),
         "NaN gluon field must yield NumericalInstability"
@@ -232,7 +233,7 @@ fn test_wilson_loop_trivial_path() {
     let gluon_values: Vec<f64> = vec![];
     let path_lengths: Vec<f64> = vec![];
 
-    let result = wilson_loop_kernel(&gluon_values, &path_lengths, 1.0);
+    let result = wilson_loop_kernel::<f64>(&gluon_values, &path_lengths, 1.0);
     assert!(result.is_ok());
     assert!((result.unwrap() - 3.0).abs() < 1e-10);
 }
@@ -243,7 +244,7 @@ fn test_wilson_loop_zero_field() {
     let gluon_values = vec![0.0; 16]; // 2 segments × 8 colors
     let path_lengths = vec![1.0, 1.0];
 
-    let result = wilson_loop_kernel(&gluon_values, &path_lengths, 1.0);
+    let result = wilson_loop_kernel::<f64>(&gluon_values, &path_lengths, 1.0);
     assert!(result.is_ok());
     assert!((result.unwrap() - 3.0).abs() < 1e-10);
 }
@@ -254,7 +255,7 @@ fn test_wilson_loop_confinement_decay() {
     let gluon_values = vec![1.0; 8]; // 1 segment, unit field
     let path_lengths = vec![1.0];
 
-    let result = wilson_loop_kernel(&gluon_values, &path_lengths, 1.0);
+    let result = wilson_loop_kernel::<f64>(&gluon_values, &path_lengths, 1.0);
     assert!(result.is_ok());
 
     let w = result.unwrap();
@@ -267,7 +268,7 @@ fn test_wilson_loop_dimension_error() {
     let gluon_values = vec![0.0; 8]; // 1 segment
     let path_lengths = vec![1.0, 2.0]; // 2 segments - mismatch
 
-    let result = wilson_loop_kernel(&gluon_values, &path_lengths, 1.0);
+    let result = wilson_loop_kernel::<f64>(&gluon_values, &path_lengths, 1.0);
     assert!(result.is_err());
 }
 
@@ -278,7 +279,7 @@ fn test_wilson_loop_non_finite_error() {
     let gluon_values = vec![f64::NAN; 8]; // 1 segment, NaN field
     let path_lengths = vec![1.0];
 
-    let result = wilson_loop_kernel(&gluon_values, &path_lengths, 1.0);
+    let result = wilson_loop_kernel::<f64>(&gluon_values, &path_lengths, 1.0);
     assert!(result.is_err(), "NaN gluon values must yield an error");
 }
 
@@ -292,7 +293,7 @@ fn test_confinement_potential_linear() {
     let sigma = 0.18; // String tension in GeV²
     let r = 2.0;
 
-    let result = confinement_potential_kernel(r, sigma, None);
+    let result = confinement_potential_kernel::<f64>(r, sigma, None);
     assert!(result.is_ok());
 
     let v = result.unwrap();
@@ -306,7 +307,7 @@ fn test_confinement_potential_with_coulomb() {
     let alpha = 0.3;
     let r = 1.0;
 
-    let result = confinement_potential_kernel(r, sigma, Some(alpha));
+    let result = confinement_potential_kernel::<f64>(r, sigma, Some(alpha));
     assert!(result.is_ok());
 
     let v = result.unwrap();
@@ -321,25 +322,25 @@ fn test_confinement_potential_with_coulomb() {
 
 #[test]
 fn test_confinement_potential_nan_string_tension_error() {
-    let r = confinement_potential_kernel(1.0, f64::NAN, None);
+    let r = confinement_potential_kernel::<f64>(1.0, f64::NAN, None);
     assert!(r.is_err());
 }
 
 #[test]
 fn test_confinement_potential_nan_coulomb_error() {
-    let r = confinement_potential_kernel(1.0, 0.18, Some(f64::NAN));
+    let r = confinement_potential_kernel::<f64>(1.0, 0.18, Some(f64::NAN));
     assert!(r.is_err());
 }
 
 #[test]
 fn test_confinement_potential_zero_distance_error() {
-    let result = confinement_potential_kernel(0.0, 0.18, None);
+    let result = confinement_potential_kernel::<f64>(0.0, 0.18, None);
     assert!(result.is_err());
 }
 
 #[test]
 fn test_confinement_potential_negative_distance_error() {
-    let result = confinement_potential_kernel(-1.0, 0.18, None);
+    let result = confinement_potential_kernel::<f64>(-1.0, 0.18, None);
     assert!(result.is_err());
 }
 
@@ -354,7 +355,7 @@ fn test_running_coupling_high_q2() {
     let lambda = 0.2; // Λ_QCD ≈ 200 MeV
     let nf = 3; // 3 light flavors
 
-    let result = running_coupling_kernel(q2, lambda, nf);
+    let result = running_coupling_kernel::<f64>(q2, lambda, nf);
     assert!(result.is_ok());
 
     let alpha_s = result.unwrap();
@@ -368,8 +369,8 @@ fn test_running_coupling_decreases_with_q2() {
     let lambda = 0.2;
     let nf = 3;
 
-    let alpha_low = running_coupling_kernel(10.0, lambda, nf).unwrap();
-    let alpha_high = running_coupling_kernel(100.0, lambda, nf).unwrap();
+    let alpha_low = running_coupling_kernel::<f64>(10.0, lambda, nf).unwrap();
+    let alpha_high = running_coupling_kernel::<f64>(100.0, lambda, nf).unwrap();
 
     assert!(
         alpha_low > alpha_high,
@@ -382,26 +383,26 @@ fn test_running_coupling_decreases_with_q2() {
 #[test]
 fn test_running_coupling_q2_below_lambda_error() {
     // Q² ≤ Λ² should error (non-perturbative regime)
-    let result = running_coupling_kernel(0.01, 0.2, 3);
+    let result = running_coupling_kernel::<f64>(0.01, 0.2, 3);
     assert!(result.is_err());
 }
 
 #[test]
 fn test_running_coupling_zero_q2_error() {
-    let result = running_coupling_kernel(0.0, 0.2, 3);
+    let result = running_coupling_kernel::<f64>(0.0, 0.2, 3);
     assert!(result.is_err());
 }
 
 #[test]
 fn test_running_coupling_zero_lambda_error() {
-    let result = running_coupling_kernel(100.0, 0.0, 3);
+    let result = running_coupling_kernel::<f64>(100.0, 0.0, 3);
     assert!(result.is_err());
 }
 
 #[test]
 fn test_running_coupling_too_many_flavors_error() {
     // nf = 17 would make b0 = 11 - 34/3 < 0
-    let result = running_coupling_kernel(100.0, 0.2, 17);
+    let result = running_coupling_kernel::<f64>(100.0, 0.2, 17);
     assert!(result.is_err());
 }
 
@@ -410,7 +411,7 @@ fn test_running_coupling_infinite_q2_non_finite_alpha_error() {
     // Infinite Q² passes the positivity/perturbative guards (inf > λ²) but makes
     // log_ratio = inf, so α_s = 4π/(b0·inf) = 0.0 → the `α_s <= 0.0` instability
     // branch triggers.
-    let result = running_coupling_kernel(f64::INFINITY, 0.2, 3);
+    let result = running_coupling_kernel::<f64>(f64::INFINITY, 0.2, 3);
     assert!(
         result.is_err(),
         "Infinite Q² must collapse α_s and yield an error"

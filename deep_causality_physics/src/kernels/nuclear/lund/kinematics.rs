@@ -19,6 +19,7 @@
 //! via `R::from_f64` at the RNG boundary.
 
 use crate::FourMomentum;
+use crate::real_from_f64;
 use deep_causality_num::{FromPrimitive, RealField};
 
 /// A string endpoint in lightcone coordinates.
@@ -44,7 +45,7 @@ impl<R: RealField + FromPrimitive> LightconeEndpoint<R> {
     /// Convert to 4-momentum.
     #[allow(clippy::wrong_self_convention)]
     pub fn to_four_momentum(&self) -> FourMomentum<R> {
-        let two = R::from_f64(2.0).expect("R::from_f64(2.0) failed");
+        let two = real_from_f64::<R>(2.0);
         let e = (self.p_plus + self.p_minus) / two;
         let pz = (self.p_plus - self.p_minus) / two;
         FourMomentum::<R>::new(e, self.pt_x, self.pt_y, pz)
@@ -114,7 +115,7 @@ where
     RNG: deep_causality_rand::Rng,
 {
     let one = R::one();
-    let small = R::from_f64(0.01).expect("R::from_f64(0.01) failed");
+    let small = real_from_f64::<R>(0.01);
 
     // Maximum is approximately at z_max = 1 / (1 + b * m_T^2 / (a+1))
     let denom_factor = if lund_a + one > small {
@@ -125,18 +126,18 @@ where
     let z_max = one / (one + lund_b * mt_squared / denom_factor);
     let f_max = lund_function(z_max, lund_a, lund_b, mt_squared);
 
-    let z_min = R::from_f64(0.01).expect("R::from_f64(0.01) failed");
-    let z_max_cutoff = R::from_f64(0.99).expect("R::from_f64(0.99) failed");
+    let z_min = real_from_f64::<R>(0.01);
+    let z_max_cutoff = real_from_f64::<R>(0.99);
 
     loop {
         // Sample uniform z in [z_min, z_max_cutoff].
-        let u: R = R::from_f64(rng.random::<f64>()).expect("R::from_f64(rng) failed");
+        let u: R = real_from_f64(rng.random::<f64>());
         let z = z_min + (z_max_cutoff - z_min) * u;
 
         let f_z = lund_function(z, lund_a, lund_b, mt_squared);
 
         // Accept/reject — second uniform also lifted from f64.
-        let u2: R = R::from_f64(rng.random::<f64>()).expect("R::from_f64(rng) failed");
+        let u2: R = real_from_f64(rng.random::<f64>());
         if u2 * f_max < f_z {
             return z;
         }
