@@ -107,3 +107,24 @@ rust_test(
         "//deep_causality_tensor",
     ],
 )
+
+rust_test(
+    name = "coordinate",
+    srcs = glob([
+        "coordinate/**/*.rs",
+    ]),
+    crate_features = [
+        "std",
+    ],
+    crate_root = "coordinate/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_cfd",
+        # Internal dependencies
+        "//deep_causality_tensor",
+    ],
+)

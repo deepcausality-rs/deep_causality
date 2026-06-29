@@ -7,10 +7,12 @@
 //! train (the CFD ↔ tensor-network bridge): a quasi-1D linear advection–diffusion marcher and a 2-D
 //! incompressible Navier–Stokes marcher.
 
+mod compressible;
 mod immersed_2d;
 mod incompressible_2d;
 mod observe;
 
+pub use compressible::{CompressibleEuler1d, EulerState, ideal_gas_pressure};
 pub use immersed_2d::QttImmersed2d;
 pub use incompressible_2d::QttIncompressible2d;
 pub use observe::{

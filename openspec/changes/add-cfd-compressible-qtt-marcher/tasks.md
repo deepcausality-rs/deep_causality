@@ -9,32 +9,32 @@ and a valid standalone deliverable. Stages 5–6 carry the named open-research n
 
 ## 0. 3-D QTT codec + operators (`tensor_bridge/`)
 
-- [ ] 0.1 `quantize_3d` / `dequantize_3d` (`tensor_bridge/codec.rs`) — dense `2^Lx×2^Ly×2^Lz` ⇄
+- [x] 0.1 `quantize_3d` / `dequantize_3d` (`tensor_bridge/codec.rs`) — dense `2^Lx×2^Ly×2^Lz` ⇄
   `CausalTensorTrain`, matching the 2-D bit-ordering. Round-trip + dimension-mismatch tests.
-- [ ] 0.2 `gradient_x` / `gradient_y` / `gradient_z` / `laplacian_3d` + a divergence helper
+- [x] 0.2 `gradient_x` / `gradient_y` / `gradient_z` / `laplacian_3d` + a divergence helper
   (`tensor_bridge/operators.rs`), hand-built via `from_cores` shift operators + the stencil algebra (the 2-D
   pattern extended). Tests: each matches its analytic derivative to scheme order; bounded rank on smooth input.
-- [ ] 0.3 Register test modules in `mod.rs` + `tests/BUILD.bazel`; crate-root imports; 100% coverage.
+- [x] 0.3 Register test modules in `mod.rs` + `tests/BUILD.bazel`; crate-root imports; 100% coverage.
 
 ## 1. Body-fitted / shock-aligned coordinate (`coordinate/`)
 
-- [ ] 1.1 A smooth analytic curvilinear map (sphere-cone baseline) aligning wall + bow shock to coordinate
+- [x] 1.1 A smooth analytic curvilinear map (sphere-cone baseline) aligning wall + bow shock to coordinate
   surfaces; the Jacobian/metric computed from geometry (no hardcoded components), carried as a low-rank TT.
-- [ ] 1.2 Chain-rule transform of the §0 operators to physical derivatives via the Jacobian. Test: physical
+- [x] 1.2 Chain-rule transform of the §0 operators to physical derivatives via the Jacobian. Test: physical
   gradient matches analytic to scheme order.
-- [ ] 1.3 **Rank-lever gate** (study-style example): a representative curved shell is `χ ~ O(10)` and
+- [x] 1.3 **Rank-lever gate** (study-style example): a representative curved shell is `χ ~ O(10)` and
   resolution-independent in the fitted coordinate, vs `χ ~ √side` captured on Cartesian — matching
   `studies/qtt_rank_3d`. Free-stream preservation holds discretely.
 
 ## 2. Compressible conservative flux (`solvers/qtt/compressible/flux.rs`)
 
-- [ ] 2.1 Conservative state `(ρ, ρu, ρv, ρw, ρE, {ρY_s})` as tensor trains; conservative flux divergence
+- [x] 2.1 Conservative state `(ρ, ρu, ρv, ρw, ρE, {ρY_s})` as tensor trains; conservative flux divergence
   `∇·F(U)` via the §0/§1 operators (telescoping/conservative).
-- [ ] 2.2 Approximate Riemann flux — Rusanov/LLF baseline (state-derived wave speed), HLLC option; reduces to a
+- [x] 2.2 Approximate Riemann flux — Rusanov/LLF baseline (state-derived wave speed), HLLC option; reduces to a
   centred flux on smooth fields.
-- [ ] 2.3 EOS closure `p,T = EOS(ρ,e,{Y_s})` (ideal-gas baseline; Tier-A 2-T mixture option) via TT-cross,
+- [x] 2.3 EOS closure `p,T = EOS(ρ,e,{Y_s})` (ideal-gas baseline; Tier-A 2-T mixture option) via TT-cross,
   bounded rank on smooth fields.
-- [ ] 2.4 **Gate: Sod shock tube** — `verification/qtt_sod/` self-verifying example vs the exact Riemann
+- [x] 2.4 **Gate: Sod shock tube** — `verification/qtt_sod/` self-verifying example vs the exact Riemann
   solution (ρ/u/p, shock/contact/expansion speeds); conservation + free-stream preservation tests.
 
 ## 3. IMEX time integration + conservation/positivity (`solvers/qtt/compressible/imex.rs`)

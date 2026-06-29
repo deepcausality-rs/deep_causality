@@ -17,9 +17,10 @@ mod mask;
 mod operators;
 mod projection;
 
-pub use codec::{dequantize, dequantize_2d, quantize, quantize_2d};
+pub use codec::{dequantize, dequantize_2d, dequantize_3d, quantize, quantize_2d, quantize_3d};
 pub use mask::{body_mask_2d, mask_from_fn};
 pub use operators::{
-    gradient, gradient_x, gradient_y, laplacian, laplacian_2d, shift_minus, shift_plus,
+    divergence_3d, gradient, gradient_x, gradient_x_3d, gradient_y, gradient_y_3d, gradient_z_3d,
+    laplacian, laplacian_2d, laplacian_3d, shift_minus, shift_plus,
 };
 pub use projection::QttProjector2d;

@@ -24,6 +24,7 @@
 
 extern crate alloc;
 
+mod coordinate;
 mod solvers;
 mod tensor_bridge;
 mod theories;
@@ -41,9 +42,12 @@ pub use crate::traits::{FluidTheory, Marcher, Solver};
 pub use crate::types::{Ambient, CfdScalar};
 
 // The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
+pub use crate::coordinate::BodyFittedCoordinate;
 pub use crate::tensor_bridge::{
-    QttProjector2d, body_mask_2d, dequantize, dequantize_2d, gradient, gradient_x, gradient_y,
-    laplacian, laplacian_2d, mask_from_fn, quantize, quantize_2d, shift_minus, shift_plus,
+    QttProjector2d, body_mask_2d, dequantize, dequantize_2d, dequantize_3d, divergence_3d,
+    gradient, gradient_x, gradient_x_3d, gradient_y, gradient_y_3d, gradient_z_3d, laplacian,
+    laplacian_2d, laplacian_3d, mask_from_fn, quantize, quantize_2d, quantize_3d, shift_minus,
+    shift_plus,
 };
 
 // The CfdFlow DSL facade (owned case descriptions materialized at run).
@@ -82,8 +86,9 @@ pub use crate::theories::*;
 
 // Solver configuration + type-state builder.
 pub use crate::solvers::{
-    DecNs, DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity, DecNsConfigReady,
-    QttImmersed2d, QttIncompressible2d, QttLinear1d,
+    CompressibleEuler1d, DecNs, DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity,
+    DecNsConfigReady, EulerState, QttImmersed2d, QttIncompressible2d, QttLinear1d,
+    ideal_gas_pressure,
 };
 
 // QTT rollout observable extraction (tensor-train-native diagnostics + surface observables).

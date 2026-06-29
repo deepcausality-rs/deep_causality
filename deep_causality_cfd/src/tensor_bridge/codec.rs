@@ -99,3 +99,62 @@ where
     let dense = train.to_dense()?;
     Ok(dense.reshape(&[1usize << lx, 1usize << ly])?)
 }
+
+/// Encodes a `2^Lx × 2^Ly × 2^Lz` periodic field (shape `[Nx, Ny, Nz]`) as an `(Lx + Ly + Lz)`-mode
+/// QTT: the leading `Lx` modes are the x-bits, the middle `Ly` the y-bits, the trailing `Lz` the
+/// z-bits (MSB-first per axis, the natural row-major reshape). Axis operators built by block lifting
+/// (see `gradient_x_3d`/`gradient_y_3d`/`gradient_z_3d`) act on the matching block. The 3-D extension
+/// of [`quantize_2d`], the prerequisite codec for the Tier-B compressible marcher.
+///
+/// # Errors
+/// [`PhysicsError::DimensionMismatch`] if the field is not 3-D or any extent is not a power of two.
+pub fn quantize_3d<R>(
+    field: &CausalTensor<R>,
+    trunc: &Truncation<R>,
+) -> Result<CausalTensorTrain<R>, PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    let shape = field.shape();
+    if shape.len() != 3 {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "quantize_3d requires a 3-D field, got {} dims",
+            shape.len()
+        )));
+    }
+    let (nx, ny, nz) = (shape[0], shape[1], shape[2]);
+    if nx == 0
+        || ny == 0
+        || nz == 0
+        || !nx.is_power_of_two()
+        || !ny.is_power_of_two()
+        || !nz.is_power_of_two()
+    {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "quantize_3d requires power-of-two extents, got {nx} x {ny} x {nz}"
+        )));
+    }
+    let l =
+        nx.trailing_zeros() as usize + ny.trailing_zeros() as usize + nz.trailing_zeros() as usize;
+    let modes = vec![2usize; l];
+    let reshaped = field.reshape(&modes)?;
+    Ok(CausalTensorTrain::from_dense(&reshaped, trunc)?)
+}
+
+/// Recovers the dense `[2^Lx, 2^Ly, 2^Lz]` field from its QTT (inverse of [`quantize_3d`]).
+/// `lx`/`ly`/`lz` give the per-axis mode split.
+///
+/// # Errors
+/// Propagates densification/reshape errors.
+pub fn dequantize_3d<R>(
+    train: &CausalTensorTrain<R>,
+    lx: usize,
+    ly: usize,
+    lz: usize,
+) -> Result<CausalTensor<R>, PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    let dense = train.to_dense()?;
+    Ok(dense.reshape(&[1usize << lx, 1usize << ly, 1usize << lz])?)
+}
