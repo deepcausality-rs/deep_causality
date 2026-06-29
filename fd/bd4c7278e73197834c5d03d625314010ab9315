@@ -1,0 +1,23 @@
+openspec/notes/plasma-blackout/gap-2/gap-two-resolution-1-stiff-source.md
+  s_162aba3d26275e::t_2b7d720fa5a407 1-158
+openspec/notes/plasma-blackout/gap-2/gap-two-resolution-2-temperature-provenance.md
+  s_162aba3d26275e::t_0e0f36aa7032d5 1-156
+openspec/notes/plasma-blackout/gap-2/gap-two-resolution-3-ionization-lag.md
+  s_162aba3d26275e::t_d760377d97a01f 1-151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "fdbd4c7278e73197834c5d03d625314010ab9315",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "unknown"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
