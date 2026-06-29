@@ -1,0 +1,57 @@
+openspec/specs/park2t-ionization-kernels/spec.md
+  s_162aba3d26275e::t_f2bf0f8f286218 1-76
+openspec/specs/lagging-equilibrium-relaxation/spec.md
+  s_162aba3d26275e::t_f2bf0f8f286218 1-52
+openspec/specs/qtt-surface-observables/spec.md
+  s_162aba3d26275e::t_2b2608ce01eb84 1-56
+openspec/specs/qtt-immersed-body/spec.md
+  s_162aba3d26275e::t_2b2608ce01eb84 1-41
+openspec/specs/park2t-blackout-validation/spec.md
+  s_162aba3d26275e::t_f2bf0f8f286218 1-67
+openspec/specs/plasma-blackout-trigger/spec.md
+  s_162aba3d26275e::t_f2bf0f8f286218 1-105
+openspec/changes/archive/2026-06-29-add-cfd-qtt-immersed-body/.openspec.yaml
+  s_162aba3d26275e::t_d00546d9d8824b 1-2
+openspec/changes/archive/2026-06-29-add-park2t-blackout-tier-a/.openspec.yaml
+  s_162aba3d26275e::t_c6ff5043ec745a 1-2
+openspec/changes/archive/2026-06-29-add-cfd-qtt-immersed-body/design.md
+  s_162aba3d26275e::t_a7c4dcdec21278 1-85
+openspec/changes/archive/2026-06-29-add-cfd-qtt-immersed-body/proposal.md
+  s_162aba3d26275e::t_5d58c3a1f98f28 1-59
+openspec/changes/archive/2026-06-29-add-cfd-qtt-immersed-body/specs/qtt-immersed-body/spec.md
+  s_162aba3d26275e::t_9c2de0c6677476 1-37
+openspec/changes/archive/2026-06-29-add-cfd-qtt-immersed-body/specs/qtt-surface-observables/spec.md
+  s_162aba3d26275e::t_ba9b4ec3a05c7d 1-52
+openspec/changes/archive/2026-06-29-add-cfd-qtt-immersed-body/tasks.md
+  s_162aba3d26275e::t_a1dc82706ad98d 1-30
+openspec/changes/archive/2026-06-29-add-park2t-blackout-tier-a/design.md
+  s_162aba3d26275e::t_cf2c36a6fc90f9 1-265
+openspec/changes/archive/2026-06-29-add-park2t-blackout-tier-a/proposal.md
+  s_162aba3d26275e::t_dd6999e853f926 1-100
+openspec/changes/archive/2026-06-29-add-park2t-blackout-tier-a/specs/lagging-equilibrium-relaxation/spec.md
+  s_162aba3d26275e::t_70fb7b526abbf8 1-53
+openspec/changes/archive/2026-06-29-add-park2t-blackout-tier-a/specs/park2t-blackout-validation/spec.md
+  s_162aba3d26275e::t_53890a0ed39e83 1-68
+openspec/changes/archive/2026-06-29-add-park2t-blackout-tier-a/specs/park2t-ionization-kernels/spec.md
+  s_162aba3d26275e::t_18760a4ae70d2b 1-77
+openspec/changes/archive/2026-06-29-add-park2t-blackout-tier-a/specs/plasma-blackout-trigger/spec.md
+  s_162aba3d26275e::t_d8702dc2c8fa4f 1-106
+openspec/changes/archive/2026-06-29-add-park2t-blackout-tier-a/tasks.md
+  s_162aba3d26275e::t_e1f3267d36f5f7 1-130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "3006031ebf3b088c7b22b4ef291fe0ffcde8502c",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
