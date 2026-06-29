@@ -1,0 +1,83 @@
+deep_causality_physics/src/kernels/condensed/phase.rs
+  s_f1ae76f7ad884d::t_ed3e42598057a2 50
+  s_f1ae76f7ad884d::t_243454d3b1d0ca 146-147,151
+  s_f1ae76f7ad884d::t_8e291f5c627b87 164-165,168,170
+  s_f1ae76f7ad884d::t_b39f1f886b2776 5,11
+  s_f1ae76f7ad884d::t_ac70ec56acc177 124-131
+  s_f1ae76f7ad884d::t_a35f5e5d4c0037 42-49,51-52,57
+  s_f1ae76f7ad884d::t_f84dadf608178e 69,86,89,92
+deep_causality_physics/src/constants/universal.rs
+  s_f1ae76f7ad884d::t_3b9cb2aec07231 33-44
+deep_causality_physics/src/kernels/condensed/moire.rs
+  s_f1ae76f7ad884d::t_3d1c42102d1af9 9
+  s_f1ae76f7ad884d::t_11c31a923bc477 312
+  s_f1ae76f7ad884d::t_6a893fde18f20a 49,53-57,59-62,69-75,82,87-88,92-93,99,101-103,108-109,112-113,115-116,121-123,128,132-133,139
+  s_f1ae76f7ad884d::t_52a07c11ee88ad 8,12
+  s_f1ae76f7ad884d::t_28d13d76d1e015 143
+  s_f1ae76f7ad884d::t_3eb24f87a927da 203-209,211-212,224,226,233,236,242
+  s_f1ae76f7ad884d::t_941353348f7a5c 210
+  s_f1ae76f7ad884d::t_9e617e90cd6f9e 274-281,283-286,293
+  s_f1ae76f7ad884d::t_5b9a376c441097 114
+  s_f1ae76f7ad884d::t_8b76c7810e74c1 282
+deep_causality_physics/src/constants/condensed.rs
+  s_f1ae76f7ad884d::t_5e2fc79b914654 7-18
+deep_causality_physics/src/constants/mod.rs
+  s_f1ae76f7ad884d::t_2d83ca51b7aa08 32-53
+deep_causality_physics/src/kernels/condensed/qgt.rs
+  s_f1ae76f7ad884d::t_15fc26e8ec13f4 178-187,195-198
+  s_f1ae76f7ad884d::t_f6b2c84a3dba26 134-138,140-144
+  s_f1ae76f7ad884d::t_a65c51d7c3a07b 44,46-48,50-54
+  s_f1ae76f7ad884d::t_74dcf8629644db 87-88
+  s_f1ae76f7ad884d::t_774a1967733f4c 102
+  s_f1ae76f7ad884d::t_fa2da5c5baf6c8 10
+  s_f1ae76f7ad884d::t_3dac186b9c54b5 45
+  s_f1ae76f7ad884d::t_aac53391f6f8cc 11
+  s_f1ae76f7ad884d::t_640ffc7c426e0a 89-91
+deep_causality_physics/tests/quantities/condensed_quantities/vector_potential_tests.rs
+  s_f1ae76f7ad884d::t_3c0096625d550e 8
+deep_causality_physics/tests/kernels/condensed/wrappers_tests.rs
+  s_f1ae76f7ad884d::t_014dcc20026dd6 33,47,65,82,97,110,125,149,164,174,191,210,226,238,265
+  s_f1ae76f7ad884d::t_b27cb24935de8e 283-284
+deep_causality_physics/src/kernels/condensed/wrappers.rs
+  s_f1ae76f7ad884d::t_20da8596f29ae0 180
+  s_f1ae76f7ad884d::t_58e32a189a07c1 37,62,86,113,134,201
+  s_f1ae76f7ad884d::t_9e471b88439c37 17-18,21,28-32,34-36,38,53-57,59-61,63,78-85,87,105-109,111-112,114,128-133,135,147-153,155,172-179,181,195-200,202
+  s_f1ae76f7ad884d::t_c18a6b5c176b24 154
+deep_causality_physics/tests/kernels/condensed/qgt_tests.rs
+  s_f1ae76f7ad884d::t_014dcc20026dd6 60,88-89,112,174,189,204
+  s_f1ae76f7ad884d::t_b27cb24935de8e 125-126,146-147,216-217,229-230,244-245,262-263,276-277
+deep_causality_physics/tests/kernels/condensed/phase_tests.rs
+  s_f1ae76f7ad884d::t_b27cb24935de8e 118-124,148-154
+  s_f1ae76f7ad884d::t_014dcc20026dd6 23,38,58,78,96,164,180,195,210,223
+deep_causality_physics/tests/kernels/condensed/mod.rs
+  s_f1ae76f7ad884d::t_d5f8a1d1380fef 6-7
+deep_causality_physics/tests/kernels/condensed/generic_real_field_tests.rs
+  s_f1ae76f7ad884d::t_b27cb24935de8e 72-73
+  s_f1ae76f7ad884d::t_f298a61112f62f 1-31,33-71,74-244
+  s_f1ae76f7ad884d::t_54437957d1c299 32
+deep_causality_physics/src/quantities/condensed/mod.rs
+  s_f1ae76f7ad884d::t_5ab7e8474038e8 382,384,386,390-391,394
+  s_f1ae76f7ad884d::t_f8a03aaf0d019f 323,325-326,329
+  s_f1ae76f7ad884d::t_3e3aaa9fd7b73f 270,272-273,276
+  s_f1ae76f7ad884d::t_8efd773b402314 246,248-249,252,255
+  s_f1ae76f7ad884d::t_26399620c07b7c 287,289-290,293
+  s_f1ae76f7ad884d::t_ab8f32e8590e00 302,304,306,310-311,314
+  s_f1ae76f7ad884d::t_c47387cce3c587 339,341-342,345,355,358
+  s_f1ae76f7ad884d::t_14d788c708797f 367,369-370,373
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "87413a3adc69051fd1c08efa91f3c43788aa4a1d",
+  "prompts": {},
+  "sessions": {
+    "s_f1ae76f7ad884d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b090d8fb-3ce3-4f42-a52e-d2c0c8561c2c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
