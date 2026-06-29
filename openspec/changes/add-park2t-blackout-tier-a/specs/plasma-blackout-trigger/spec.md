@@ -51,6 +51,26 @@ sits in the mixed associative + electron-impact band (Aiken–Carter–Boyd 2025
 - **WHEN** the ionization stage runs at a reentry-representative temperature with the ionized-species target
 - **THEN** the electron density is strictly positive (the target is not identically zero)
 
+### Requirement: The QTT marcher hosts the between-step coupling seam
+
+The `PhysicsStage` coupling seam SHALL be generalized off the DEC-specific context — a `FlowSnapshot<R>`
+read-view trait (`dt`, `step`) over which `PhysicsStage` is generic (static dispatch, no `dyn`) — so the same
+stages run under both the DEC `MarchRun` and the QTT `QttMarchRun`. `QttMarchRun` SHALL gain a between-step
+coupling host that, each step, publishes the primary-state projections its coupling needs (e.g. a per-cell
+`"speed"` field, dequantized from the tensor-train state), transports the reacting scalar fields via
+`QttImmersed2d::advance_scalar`, applies the coupling, and reads back `Ambient`. The QTT **solver math (the
+spectral-projection / Brinkman `advance`) SHALL NOT change**.
+
+#### Scenario: One stage, two marcher hosts
+- **WHEN** an LER stage built against the `FlowSnapshot` seam is composed onto the QTT march
+- **THEN** it runs under `QttMarchRun` with no modification (it reads only `dt` and named scalar fields), exactly
+  as it would under the DEC `MarchRun`
+
+#### Scenario: Reacting scalars are transported as tensor trains
+- **WHEN** the QTT march advances a step with the ionization coupling wired in
+- **THEN** the reacting scalar fields are advected by `advance_scalar` (staying tensor trains) and updated
+  pointwise by the LER stage, and the solver's spectral projection is unchanged
+
 ### Requirement: Blackout trigger on the causal seam
 
 `deep_causality_cfd` SHALL provide a `BlackoutTrigger` on the `CausalFlow`/`bind_or_error` seam that maps the

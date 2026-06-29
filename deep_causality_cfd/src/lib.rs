@@ -49,9 +49,10 @@ pub use crate::tensor_bridge::{
 // The CfdFlow DSL facade (owned case descriptions materialized at run).
 // Workflow composition — the CfdFlow DSL (the "how").
 pub use crate::types::flow::{
-    CfdFlow, CoupledField, Coupling, MarchPipeline, MarchRun, MmsBuilder, Operator,
-    OperatorStudyBuilder, PhysicsStage, QttMarchRun, QttStepView, Regime, Report, StepContext,
-    StepView, ThermalRelax, VerifyRun, ViscosityArrhenius, dominant_frequency, fail,
+    BlackoutState, BlackoutTrigger, CfdFlow, CoupledField, Coupling, EosStage, IonizationStage,
+    MarchPipeline, MarchRun, MmsBuilder, Operator, OperatorStudyBuilder, PhysicsStage, QttMarchRun,
+    QttStepView, RecoveryTemperatureStage, Regime, Report, StepContext, StepView, ThermalRelax,
+    VerifyRun, ViscosityArrhenius, dominant_frequency, fail, ler_relax_scalar, ler_step,
     strouhal_number,
 };
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").

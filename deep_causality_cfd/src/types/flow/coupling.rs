@@ -21,17 +21,29 @@ use crate::types::{Ambient, CfdScalar};
 use deep_causality_physics::{PhysicsError, SolenoidalField};
 use deep_causality_topology::{LatticeComplex, Manifold};
 
-/// The immutable per-step context a coupling stage reads: the manifold, the current fluid state
-/// (for advection / wall sampling), the time step, and the step index.
+/// The primary-state backing of a [`StepContext`]: a DEC marcher carries a metric-bearing manifold
+/// and the divergence-free velocity; the QTT marcher carries neither (it publishes the projections a
+/// coupling needs — e.g. a per-cell `"speed"` field — into the [`CoupledField`] instead).
+enum StepBacking<'a, const D: usize, R: CfdScalar> {
+    Dec {
+        manifold: &'a Manifold<LatticeComplex<D, R>, R>,
+        velocity: &'a SolenoidalField<R>,
+    },
+    Qtt,
+}
+
+/// The immutable per-step read-view a coupling stage consults: the time step and step index
+/// (universal), plus a DEC-only manifold/velocity for stages that sample the primary field. The
+/// backing sum type (design D8) lets the same `PhysicsStage` run under both the DEC and QTT marchers
+/// with no change to the stage trait.
 pub struct StepContext<'a, const D: usize, R: CfdScalar> {
-    manifold: &'a Manifold<LatticeComplex<D, R>, R>,
-    velocity: &'a SolenoidalField<R>,
+    backing: StepBacking<'a, D, R>,
     dt: R,
     step: usize,
 }
 
 impl<'a, const D: usize, R: CfdScalar> StepContext<'a, D, R> {
-    /// Build a step context (called by the marcher between steps).
+    /// Build a DEC-backed step context (the manifold + divergence-free fluid state).
     pub fn new(
         manifold: &'a Manifold<LatticeComplex<D, R>, R>,
         velocity: &'a SolenoidalField<R>,
@@ -39,21 +51,36 @@ impl<'a, const D: usize, R: CfdScalar> StepContext<'a, D, R> {
         step: usize,
     ) -> Self {
         Self {
-            manifold,
-            velocity,
+            backing: StepBacking::Dec { manifold, velocity },
             dt,
             step,
         }
     }
 
-    /// The metric-bearing manifold.
-    pub fn manifold(&self) -> &Manifold<LatticeComplex<D, R>, R> {
-        self.manifold
+    /// Build a QTT-backed step context (no manifold/velocity — the QTT marcher publishes the
+    /// primary-state projections a coupling needs as [`CoupledField`] scalars).
+    pub fn qtt(dt: R, step: usize) -> Self {
+        Self {
+            backing: StepBacking::Qtt,
+            dt,
+            step,
+        }
     }
 
-    /// The current divergence-free fluid state.
-    pub fn velocity(&self) -> &SolenoidalField<R> {
-        self.velocity
+    /// The metric-bearing manifold, if this is a DEC-backed context.
+    pub fn manifold(&self) -> Option<&Manifold<LatticeComplex<D, R>, R>> {
+        match &self.backing {
+            StepBacking::Dec { manifold, .. } => Some(manifold),
+            StepBacking::Qtt => None,
+        }
+    }
+
+    /// The current divergence-free fluid state, if this is a DEC-backed context.
+    pub fn velocity(&self) -> Option<&SolenoidalField<R>> {
+        match &self.backing {
+            StepBacking::Dec { velocity, .. } => Some(velocity),
+            StepBacking::Qtt => None,
+        }
     }
 
     /// The time step.
@@ -69,9 +96,16 @@ impl<'a, const D: usize, R: CfdScalar> StepContext<'a, D, R> {
     /// The fluid velocity vector at a physical point (in spacing units) — for an advecting stage.
     ///
     /// # Errors
-    /// As [`dec_sample_velocity`].
+    /// As [`dec_sample_velocity`]; `Err` on a QTT-backed context (no manifold to sample).
     pub fn sample_velocity(&self, point: &[R; D]) -> Result<[R; D], PhysicsError> {
-        dec_sample_velocity(self.manifold, self.velocity.as_one_form(), point)
+        match &self.backing {
+            StepBacking::Dec { manifold, velocity } => {
+                dec_sample_velocity(manifold, velocity.as_one_form(), point)
+            }
+            StepBacking::Qtt => Err(PhysicsError::PhysicalInvariantBroken(
+                "sample_velocity is unavailable on a QTT-backed StepContext".into(),
+            )),
+        }
     }
 }
 

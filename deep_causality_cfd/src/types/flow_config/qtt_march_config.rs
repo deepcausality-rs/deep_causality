@@ -29,6 +29,9 @@ pub struct QttObserve {
     pub(crate) max_speed: bool,
     pub(crate) bond: bool,
     pub(crate) drag: bool,
+    pub(crate) electron_density: bool,
+    pub(crate) plasma_frequency: bool,
+    pub(crate) blackout_dwell: bool,
 }
 
 impl QttObserve {
@@ -60,6 +63,24 @@ impl QttObserve {
     /// body; the reference speed/length come from it). No-op without a body.
     pub fn drag(mut self) -> Self {
         self.drag = true;
+        self
+    }
+
+    /// Collect the peak electron-density series `n_e` (the blackout coupling host, `run_coupled`).
+    pub fn electron_density(mut self) -> Self {
+        self.electron_density = true;
+        self
+    }
+
+    /// Collect the (angular) plasma-frequency series `ω_p` (the blackout coupling host).
+    pub fn plasma_frequency(mut self) -> Self {
+        self.plasma_frequency = true;
+        self
+    }
+
+    /// Collect the blackout dwell — the total time the GNSS/comms-denied flag is raised.
+    pub fn blackout_dwell(mut self) -> Self {
+        self.blackout_dwell = true;
         self
     }
 }

@@ -78,7 +78,10 @@ without a stiff network).
   the recombination-dominated wake is **LER-native** — it is one additional relaxing `T_e` scalar with its own
   `τ_e` — so it is deferred as a clean add-on, not a redesign. This is the named remedy for the ~2× peak-`n_e`
   over-prediction (Risks).
-- Modifying the QTT marcher core or the `PhysicsStage`/`Coupling`/`CausalFlow` substrate (reused unchanged).
+- Modifying the QTT marcher's **solver math** (the spectral-projection / Brinkman `advance`) — that is reused
+  unchanged. **In scope (D5/D8):** generalizing the `PhysicsStage` seam over a `FlowSnapshot` read-view and
+  giving `QttMarchRun` a between-step coupling host (the original "QTT core untouched" non-goal was the root
+  cause of the missing coupling and is revised).
 
 > **Tier-A does not depend on the Tier-B marcher, and Tier-B reuses Tier-A.** This change rides the
 > *incompressible* rollout, where the field stays low-rank (measured: `qtt_rank_dynamic` shows linear marching
@@ -144,12 +147,58 @@ the equilibrium **target `α_eq` carries electron-impact-produced electrons as w
 they are a non-negligible fraction of the equilibrium `n_e`. The exact `α_eq` split is calibrated against the
 RAM-C reference at step 2; it remains one `α_eq` evaluation, not a marched second channel.
 
-### D5 — Blackout observables are new; the QTT marcher core is untouched
+### D5 — The QTT marcher gains the between-step coupling seam (revised)
 
-`QttObserve` gains opt-in flags for `n_e` / plasma frequency / blackout dwell, emitted as `Report` series via
-the existing `add_series` path. The marcher, projector, and `advance_scalar` are reused unchanged; the
-ionization/temperature scalars ride `advance_scalar` exactly like the Gap-1 passive scalar. `wall_heat_flux`
-already exists as a standalone diagnostic and is reused.
+*Superseded the original "QTT marcher core untouched" decision after a first-principles review.* The QTT
+marcher (`QttMarchRun`) marches `(u, v)` tensor trains and samples diagnostics; it had **no** `PhysicsStage`
+seam (that lived only in the DEC `MarchRun`). The original D5 assumed the reacting scalars could ride
+`advance_scalar` and that `QttObserve` could emit `n_e` "unchanged" — but neither was wired, so the LER stages
+had no host on the QTT rollout. Driving the coupling from the verification example would be a workaround
+(physics in a test harness), so the seam is built into the engine instead.
+
+**Root cause:** the coupling seam was nailed to DEC types — `StepContext` over-exposed a DEC `Manifold` /
+`SolenoidalField`. A between-step coupling is a functor on the marcher's *auxiliary* state and must communicate
+with the primary solver through only (i) a **read-view** of the primary state and (ii) the auxiliary
+**field-bag** (`CoupledField` scalars + `Ambient`). The DEC `manifold()/velocity()` accessors are an
+over-coupling that no shipped stage uses.
+
+**Resolution (D8 details the mechanism):** narrow the seam to its essence and host it in *both* marchers:
+
+- `StepContext` becomes the **universal read-view** via a **backing sum type** (`Dec { manifold, velocity }` |
+  `Qtt {}`): `dt()` / `step()` are universal; `manifold()` / `velocity()` / `sample_velocity()` are
+  DEC-only and fallible (`None` / `Err` under the `Qtt` backing — semantically correct, a manifold-sampling
+  stage cannot run without a manifold). `PhysicsStage<const D, R>` and **every stage impl are unchanged**; the
+  QTT marcher simply constructs a `Qtt`-backed `StepContext`. (A `FlowSnapshot` *trait* with `PhysicsStage`
+  generic over it was the first sketch; it forces higher-ranked `for<'a>` bounds across every config/marcher
+  site because `StepContext` is a per-step borrow — the sum type realizes the same read-view abstraction with
+  no churn to the stage trait, and is honest about there being exactly two marcher backings.)
+- Primary-state projections (e.g. `"speed"`) flow through **published `CoupledField` scalars** — the marcher
+  publishes what its coupling needs (DEC by sampling; QTT by dequantizing its TT state). The blackboard
+  principle: communicate only through the field-bag.
+- `QttMarchRun` hosts the coupling: each step it publishes projections, **transports the auxiliary scalar
+  fields with `advance_scalar`** (so `T_tr`/species advect and stay tensor trains — true to the QTT
+  compression thesis), runs `coupling.apply`, reads back `Ambient`, and samples the blackout observables
+  (`n_e`, plasma frequency, dwell) into the `Report` via `add_series`.
+- The LER scalars are tensor trains; at the LER seam they are dequantized to `Vec<R>`, updated pointwise, and
+  re-`round`ed (exact, re-compresses). TT-cross (`apply_nonlinear`) is the Tier-B upgrade for large `L`.
+
+The **solver math (advance / spectral projection) is untouched**; only the march loop's state threading and the
+config change. The proof the cut is right: the three LER stages built against the narrowed seam port to the QTT
+host **unchanged** (they read only `dt` + named scalars). `wall_heat_flux` remains the reused neutral thermal
+diagnostic.
+
+### D8 — One coupling seam, two marcher hosts (the `StepContext` backing sum type)
+
+`StepContext` carries a backing `enum { Dec { manifold, velocity }, Qtt {} }` and keeps `PhysicsStage<const D,
+R>` exactly as-is. `MarchRun` builds a `Dec`-backed context; `QttMarchRun` builds a `Qtt`-backed one — the same
+stage value runs under both because it reads only the universal `dt()`/`step()` plus published `CoupledField`
+scalars. `QttMarchConfig` carries an optional coupling (`Coupling<S>`) and the initial reacting scalar fields;
+the QTT solver reads `Ambient` per step (ν / freestream) so the `ν(T)` channel is real rather than
+construction-fixed. *Alternative — `PhysicsStage` generic over a `FlowSnapshot` trait:* rejected — it forces
+higher-ranked `for<'a> PhysicsStage<…, StepContext<'a, …>>` bounds at every config/marcher site (the context is
+a per-step borrow) and adds a type parameter to every stage impl, for openness that no third marcher needs; the
+sum type is the honest, churn-free realization. *Alternative — drive the coupling from the example via the run
+hook:* rejected (a workaround that puts physics in the test harness, not the engine).
 
 ### D6 — Validation is pointwise-first, then a self-verifying example
 

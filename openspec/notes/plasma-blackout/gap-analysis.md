@@ -175,14 +175,26 @@ verified in code. **[CLOSED — solver core + immersed body + surface observable
 The one remaining flagship deliverable that *touches* this bridge — **electron density** and a *reacting*
 heat flux — is **Gap 2** physics, not Gap 1; the neutral thermal observable is the seam it plugs into.
 
-### Gap 2 — reacting / ionized physics is absent in the CFD crate
+### Gap 2 — reacting / ionized physics — **Tier-A CLOSED**
 
-No species transport, finite-rate chemistry, Park-2T vibrational–electron energy, ionization /
-electron-density, or shock-capturing. The compressible Navier–Stokes *pointwise kernels exist but are not
-integrated into the marcher*. Tier A's escape hatch (corridor note §7) is a **parametric Park-2T
-ionization surrogate** → electron density → plasma frequency → blackout trigger — narrow and tractable,
-but **not yet written**. The `PhysicsStage` coupling DSL is the right home (`IonizationStage`, `EosStage`)
-and is already in place. **[holds under precondition: surrogate acceptable for Tier A]**
+**Tier-A resolved across `add-park2t-blackout-tier-a`.** The Park-2T pointwise kernels now exist in
+`deep_causality_physics` (`kernels/hypersonic/`: vibrational relaxation as the closed-form LER step,
+Arrhenius rate, Saha / Park-2T ionization surrogate, Rankine–Hugoniot temperature jump, recovery
+temperature, plus the plasma-frequency kernel reusing `mhd`), each cited and validated pointwise
+(papers in `deep_causality_physics/papers/`). The **Lagging-Equilibrium Relaxation (LER)** coupling —
+`RecoveryTemperatureStage` → `IonizationStage` → `EosStage` — and the `BlackoutTrigger` run **inside the
+QTT march**: the coupling seam was generalized (`StepContext` backing sum type) and `QttMarchRun` gained a
+between-step coupling host (`run_coupled`) that transports the reacting scalars via `advance_scalar` and
+emits the `n_e` / plasma-frequency / blackout-dwell observables. The self-verifying
+`verification/qtt_park2t_blackout` example gates the six LER criteria (stability-at-stiffness, exponential
+exactness, the mandatory RH temperature band, ionization lag + Saha limit, counterfactual path-dependence,
+electrons produced) and passes. **[CLOSED — Tier-A reacting/ionization slice built and verified on the
+incompressible rollout; `T_tr` is a recovery-temperature reconstruction, disclaimed.]**
+
+**Tier-B still open** (compressible shock-capturing QTT marcher, real transported `T_tr`/`T_ve`, the
+reacting `*_rhs` family, multi-mode relaxation, shock-rank control) — specified and staged in the sibling
+change [`add-cfd-compressible-qtt-marcher`](../../changes/add-cfd-compressible-qtt-marcher/proposal.md),
+which reuses every Tier-A kernel and LER stage unchanged.
 
 **Resolution / mesh strategy (the micrometer shock-sheath requirement).** Reentry needs ~µm resolution at
 the shock layer and plasma sheath over a ~m vehicle — a **~10⁶ dynamic range** that forces conventional

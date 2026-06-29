@@ -319,22 +319,27 @@ any solver integration — the payoff of the split.
 
 ## 6. Staged plan (Tier-A first)
 
-1. **Quantity newtypes** (`physics/quantities/`) — `ElectronDensity`, `IonizationFraction`,
+> **Status: Tier-A (steps 1–3) BUILT AND VERIFIED** — `add-park2t-blackout-tier-a`. Kernels cited + tested
+> pointwise; the LER coupling + `BlackoutTrigger` run inside the QTT march via the generalized seam
+> (`StepContext` backing sum type + `QttMarchRun::run_coupled`); `verification/qtt_park2t_blackout` gates the
+> six LER criteria and passes. Steps 4–5 are Tier-B (sibling change `add-cfd-compressible-qtt-marcher`).
+
+1. **[DONE] Quantity newtypes** (`physics/quantities/hypersonic/`) — `ElectronDensity`, `IonizationFraction`,
    `Electron`/`VibrationalTemperature`, `MassFraction`, `ReactionRate`. Cheap, mechanical.
-2. **Pointwise kernels** (`physics/kernels/hypersonic/`) — vibrational relaxation, Arrhenius rate, the
-   ionization/Saha kernel, plasma frequency (reuse `mhd`), 2-T EOS, and the **Tier-A surrogate** — each with
-   a `PropagatingEffect` wrapper, **unit-tested against Park / RAM-C**.
-3. **Tier-A coupling** (`cfd/types/flow/`) — `IonizationStage` + `BlackoutTrigger` (+ `EosStage`) driving the
-   kernels over the temperature/species scalar fields of the existing QTT rollout (reuse
-   `advance_scalar`/`wall_heat_flux`); emit `n_e` / plasma-frequency / blackout-dwell observables. **This is
-   the smallest honest slice that makes the regime change physically real.** Build the stages as the
-   **LER stage of §1.4** — closed-form exponential relaxation toward a state-derived equilibrium target —
-   which is what makes this slice buildable *on the incompressible rollout*: stable stiff sources
-   ([Res 1](gap-two-resolution-1-stiff-source.md)), a `T_tr` reconstructed from the flow with the mandatory
-   Rankine–Hugoniot jump ([Res 2](gap-two-resolution-2-temperature-provenance.md)), and nonequilibrium lag
-   from one scalar with `τ_ion` grounded in the dominant ionization rate
+2. **[DONE] Pointwise kernels** (`physics/kernels/hypersonic/`) — vibrational relaxation (LER), Arrhenius rate,
+   the ionization/Saha kernel, plasma frequency (reuse `mhd`), the recovery/RH temperature kernels, and the
+   **Tier-A surrogate** — each with a `PropagatingEffect` wrapper, **unit-tested against Park / RAM-C / the
+   Saha limit** (source PDFs in `deep_causality_physics/papers/`).
+3. **[DONE] Tier-A coupling** (`cfd/types/flow/blackout.rs`) — `RecoveryTemperatureStage` + `IonizationStage` +
+   `EosStage` + `BlackoutTrigger` driving the kernels over the scalar fields of the existing QTT rollout via
+   the hosted coupling (`run_coupled`, transporting the reacting fraction with `advance_scalar`); emits `n_e` /
+   plasma-frequency / blackout-dwell observables. Built as the **LER stage of §1.4** — closed-form exponential
+   relaxation toward a state-derived equilibrium target — buildable *on the incompressible rollout*: stable
+   stiff sources ([Res 1](gap-two-resolution-1-stiff-source.md)), a `T_tr` reconstructed from the flow with the
+   mandatory Rankine–Hugoniot jump ([Res 2](gap-two-resolution-2-temperature-provenance.md)), and
+   nonequilibrium lag from one scalar with `τ_ion` grounded in the dominant ionization rate
    ([Res 3](gap-two-resolution-3-ionization-lag.md)). The two preconditions (RH jump; grounded `τ_ion`) are
-   the verification gates.
+   verification gates that pass.
 4. **Reacting `*_rhs`** (`cfd/theories/`) — species transport + the two-temperature energy split, for the
    verification solvers.
 5. **[Tier-B] Compressible QTT marcher** — density/energy + EOS + shock-capturing (§4); ride the reacting

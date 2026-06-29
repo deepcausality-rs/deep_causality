@@ -36,6 +36,7 @@ difference. Measured at `f64` on an Apple M3 Max (release).
 | `dec_cylinder_verification` | Strouhal St; drag C_d | 0.171; 1.345 | 0.164; 1.24–1.33 | **+4.3 %**; **+1.1 %** (over band top) | 96², Re=100, 1500 steps | ~510 s |
 | `qtt_taylor_green_verification` | TG decay error (32²); observed order; convection | 5.3e-5; 2.02–2.18; 3.2e-3 | 0 (analytic); 2.00; 0 (analytic) | converges 2nd-order; **+9 %** order; conv ≈ 0.6 % | 8²–32², t=0.2 | <1 s |
 | `qtt_cylinder_verification` | drag convergence vs bond; no-slip interior | ΔC_d 1.9e-11; max\|u\| 4.2e-2 | 0 (converged); 0 (no-slip) | converges to machine-ε; **4 %** of free-stream | 32², 4 bond caps | ~1 s |
+| `qtt_park2t_blackout` | 6 LER gates (stability, exactness, RH band, lag+Saha, path-dependence, n_e>0) | all 6 PASS; ω_p 5.6e12 ≫ band | all gates pass | Gap-2 Tier-A verified (cross-refs, Tier-A disclaimers) | 32², 40 steps | ~1 s |
 
 Reference papers per example are in the sections below and the [References](#references). The cavity
 centerline RMSE (0.137) is itself a deviation-from-Ghia measure (no single reference value), so its

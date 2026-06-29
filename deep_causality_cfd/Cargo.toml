@@ -143,6 +143,10 @@ path = "verification/qtt_taylor_green_verification/main.rs"
 name = "qtt_cylinder_verification"
 path = "verification/qtt_cylinder_verification/main.rs"
 
+[[example]]
+name = "qtt_park2t_blackout"
+path = "verification/qtt_park2t_blackout/main.rs"
+
 # Tier-B rank studies: empirical tests of the "flowfield is low tensor-train rank" thesis.
 [[example]]
 name = "qtt_rank_study"

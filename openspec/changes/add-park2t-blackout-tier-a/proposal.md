@@ -86,9 +86,11 @@ change makes that mechanism real, and proves it.
   `lib.rs`); new quantity newtypes under `quantities/`; new Park / Millikan–White coefficient constants under
   `constants/`. Reuses `quantities/mhd/` (`PlasmaFrequency`, `DebyeLength`) and `mhd/plasma.rs`.
 - **`deep_causality_cfd`** — new `PhysicsStage` LER stages and `BlackoutTrigger` in `types/flow/`; blackout
-  observables on the QTT march run; reuses `QttImmersed2d::advance_scalar` and the `Coupling`/`CausalFlow`
-  seams unchanged; new `verification/qtt_park2t_blackout/` example registered in `Cargo.toml` and
-  `verification/README.md`.
+  observables emitted by the QTT march run. The coupling seam is **generalized** (design D5/D8): a
+  `FlowSnapshot` read-view trait lifts `PhysicsStage` off the DEC-specific `StepContext`, and `QttMarchRun`
+  gains a between-step coupling host that transports the reacting scalars via `QttImmersed2d::advance_scalar`
+  and reads `Ambient` per step. The QTT **solver math (advance / spectral projection) is unchanged**. New
+  `verification/qtt_park2t_blackout/` example registered in `Cargo.toml` and `verification/README.md`.
 - **Dependencies** — no new external crates. `deep_causality_cfd` already depends on `deep_causality_physics`.
 - **Tests / Bazel** — new test modules mirror the src tree, registered in `mod.rs` and the `tests/BUILD.bazel`
   targets of both crates; 100% coverage of new code.

@@ -12,6 +12,7 @@
 //! facade spans three solver kinds sharing one `Report`: the marching solver (here), and the
 //! MMS-verification and operator-accuracy solvers.
 
+mod blackout;
 mod cfd_flow;
 mod coupling;
 mod frequency;
@@ -27,6 +28,10 @@ mod uncertain_march_run;
 mod verify;
 mod zones;
 
+pub use blackout::{
+    BlackoutState, BlackoutTrigger, EosStage, IonizationStage, RecoveryTemperatureStage,
+    ler_relax_scalar, ler_step,
+};
 pub use cfd_flow::{CfdFlow, fail};
 pub use coupling::{
     CoupledField, Coupling, PhysicsStage, StepContext, ThermalRelax, ViscosityArrhenius,

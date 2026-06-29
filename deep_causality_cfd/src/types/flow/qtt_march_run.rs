@@ -14,6 +14,8 @@
 //! The pipeline adds **no numerics**: its result matches `QttIncompressible2d::run` for the same seed,
 //! horizon, and round policy.
 
+use super::blackout::BlackoutTrigger;
+use super::coupling::{CoupledField, PhysicsStage, StepContext};
 use crate::solvers::{
     QttImmersed2d, QttIncompressible2d, divergence_residual, drag_lift, kinetic_energy, max_bond,
     max_speed,
@@ -25,8 +27,8 @@ use crate::types::flow::Report;
 use crate::types::flow_config::{MarchStop, QttMarchConfig, QttObserve};
 use alloc::vec::Vec;
 use deep_causality_num::ConjugateScalar;
-use deep_causality_physics::PhysicsError;
-use deep_causality_tensor::CausalTensorTrain;
+use deep_causality_physics::{ElectronDensity, PhysicsError};
+use deep_causality_tensor::{CausalTensor, CausalTensorTrain};
 
 /// The `(u, v)` velocity train pair the QTT marcher carries.
 type QttState<R> = (CausalTensorTrain<R>, CausalTensorTrain<R>);
@@ -56,6 +58,23 @@ where
         match self {
             QttSolver::Free(s) => s.projector(),
             QttSolver::Body(s) => s.projector(),
+        }
+    }
+
+    /// Transport (advect + diffuse) a passive scalar train one step. The penalized immersed solver
+    /// drives the scalar toward `t_wall` inside the body; the body-free solver has no penalization,
+    /// so the scalar is carried unchanged (the coupling still updates it pointwise).
+    fn advance_scalar(
+        &self,
+        scalar: &CausalTensorTrain<R>,
+        u: &CausalTensorTrain<R>,
+        v: &CausalTensorTrain<R>,
+        t_wall: R,
+        kappa: R,
+    ) -> Result<CausalTensorTrain<R>, PhysicsError> {
+        match self {
+            QttSolver::Body(s) => s.advance_scalar(scalar, u, v, t_wall, kappa),
+            QttSolver::Free(_) => Ok(scalar.clone()),
         }
     }
 }
@@ -130,6 +149,136 @@ where
         hook: H,
     ) -> Result<Report<R>, PhysicsError> {
         self.execute(Some(hook))
+    }
+
+    /// Run the QTT march with a between-step **coupling** hosted in the loop (design D5/D8): each step
+    /// publishes a per-cell `"speed"` projection from the dequantized state, transports the carried
+    /// reacting fraction (`"alpha"`) via the solver's `advance_scalar` (it stays a tensor train),
+    /// applies the coupling, and samples the blackout observables (`n_e`, plasma frequency, dwell)
+    /// into the report per the `QttObserve` opt-in flags. The solver's spectral-projection / Brinkman
+    /// `advance` is unchanged. `trigger` maps the peak electron density to the blackout decision;
+    /// `scalar_kappa` is the passive-scalar diffusivity used to transport the carried fraction.
+    ///
+    /// # Errors
+    /// Any solver-assembly, quantization, marching, coupling, or observable-extraction failure.
+    pub fn run_coupled<S>(
+        self,
+        coupling: S,
+        initial: CoupledField<R>,
+        trigger: BlackoutTrigger<R>,
+        scalar_kappa: R,
+    ) -> Result<Report<R>, PhysicsError>
+    where
+        S: PhysicsStage<2, R>,
+    {
+        let cfg = self.config;
+        let observe = self.observe_ov.unwrap_or(cfg.observe);
+        let stop = self.stop_ov.unwrap_or(cfg.stop);
+        let (u0, v0) = match self.seed_ov {
+            Some(seed) => seed,
+            None => (cfg.u0.clone(), cfg.v0.clone()),
+        };
+
+        let solver = match &cfg.body {
+            Some(b) => QttSolver::Body(QttImmersed2d::new(
+                cfg.lx,
+                cfg.ly,
+                cfg.dx,
+                cfg.dy,
+                cfg.dt,
+                cfg.nu,
+                b.mask.clone(),
+                b.ubx,
+                b.uby,
+                b.eta,
+                cfg.trunc,
+            )?),
+            None => QttSolver::Free(QttIncompressible2d::new(
+                cfg.lx, cfg.ly, cfg.dx, cfg.dy, cfg.dt, cfg.nu, cfg.trunc,
+            )?),
+        };
+        let mut state: QttState<R> = (quantize_2d(&u0, &cfg.trunc)?, quantize_2d(&v0, &cfg.trunc)?);
+        let shape = [1usize << cfg.lx, 1usize << cfg.ly];
+
+        let mut field = initial;
+        let mut ne_series: Vec<R> = Vec::new();
+        let mut wp_series: Vec<R> = Vec::new();
+        let mut denied_steps: usize = 0;
+
+        let steps = match stop {
+            MarchStop::Fixed(n) => n,
+            MarchStop::Steady { max_steps, .. } => max_steps,
+        };
+
+        for s in 0..steps {
+            state = solver.advance(&state)?;
+
+            // Publish the per-cell speed projection from the dequantized state.
+            let uf = dequantize_2d(&state.0, cfg.lx, cfg.ly)?;
+            let vf = dequantize_2d(&state.1, cfg.lx, cfg.ly)?;
+            let speed: Vec<R> = uf
+                .as_slice()
+                .iter()
+                .zip(vf.as_slice())
+                .map(|(&a, &b)| (a * a + b * b).sqrt())
+                .collect();
+            field.set_scalar("speed", speed);
+
+            // Transport the carried reacting fraction as a tensor train (advect + diffuse), then let
+            // the coupling react (operator split: transport, then relax).
+            let carried = field.scalar("alpha").map(|s| s.to_vec());
+            if let Some(alpha) = carried {
+                let alpha_ct = CausalTensor::new(alpha, shape.to_vec()).map_err(|e| {
+                    PhysicsError::DimensionMismatch(alloc::format!("alpha quantize: {e:?}"))
+                })?;
+                let alpha_tt = quantize_2d(&alpha_ct, &cfg.trunc)?;
+                let advected = solver.advance_scalar(
+                    &alpha_tt,
+                    &state.0,
+                    &state.1,
+                    R::zero(),
+                    scalar_kappa,
+                )?;
+                let adv_ct = dequantize_2d(&advected, cfg.lx, cfg.ly)?;
+                field.set_scalar("alpha", adv_ct.as_slice().to_vec());
+            }
+
+            let ctx = StepContext::<2, R>::qtt(cfg.dt, s + 1);
+            coupling.apply(&ctx, &mut field)?;
+
+            // Sample the blackout observables from the peak electron density.
+            if let Some(ne) = field.scalar("n_e") {
+                let ne_max = ne
+                    .iter()
+                    .copied()
+                    .fold(R::zero(), |acc, x| if x > acc { x } else { acc });
+                let decision = trigger.evaluate(ElectronDensity::new(ne_max)?)?;
+                ne_series.push(ne_max);
+                wp_series.push(decision.plasma_frequency);
+                if decision.denied {
+                    denied_steps += 1;
+                }
+            }
+        }
+
+        let mut report = Report::new(cfg.name.clone());
+        if observe.electron_density {
+            report.add_series("n_e", ne_series);
+        }
+        if observe.plasma_frequency {
+            report.add_series("plasma_frequency", wp_series);
+        }
+        if observe.blackout_dwell {
+            let dwell = R::from_usize(denied_steps)
+                .ok_or_else(|| PhysicsError::NumericalInstability("dwell count lift".into()))?
+                * cfg.dt;
+            report.add_series("blackout_dwell", Vec::from([dwell]));
+        }
+        let uf = dequantize_2d(&state.0, cfg.lx, cfg.ly)?;
+        let vf = dequantize_2d(&state.1, cfg.lx, cfg.ly)?;
+        report.set_final_field(uf.as_slice().to_vec());
+        report.add_series("final_v", vf.as_slice().to_vec());
+        Ok(report)
     }
 
     fn execute<H: FnMut(&QttStepView<'_, R>)>(
