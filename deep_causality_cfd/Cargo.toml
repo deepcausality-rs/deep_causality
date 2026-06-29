@@ -143,5 +143,22 @@ path = "verification/qtt_taylor_green_verification/main.rs"
 name = "qtt_cylinder_verification"
 path = "verification/qtt_cylinder_verification/main.rs"
 
+# Tier-B rank studies: empirical tests of the "flowfield is low tensor-train rank" thesis.
+[[example]]
+name = "qtt_rank_study"
+path = "studies/qtt_rank_study/main.rs"
+
+[[example]]
+name = "qtt_rank_dynamic"
+path = "studies/qtt_rank_dynamic/main.rs"
+
+[[example]]
+name = "qtt_rank_nonlinear"
+path = "studies/qtt_rank_nonlinear/main.rs"
+
+[[example]]
+name = "qtt_rank_3d"
+path = "studies/qtt_rank_3d/main.rs"
+
 [lints]
 workspace = true
