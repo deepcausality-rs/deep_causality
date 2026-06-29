@@ -31,13 +31,21 @@ thermodynamic path.
 that drive the Park-2T kernels over the temperature/species scalar fields of the existing QTT rollout (reusing
 `QttImmersed2d::advance_scalar`). `IonizationStage` SHALL relax the carried ionization state toward
 `α_eq(ρ, T_tr)` with `τ_ion` and write back `ElectronDensity`. `τ_ion` SHALL be grounded in the dominant
-associative-ionization reaction rate (N + O → NO⁺ + e⁻), computed from state — not a free fitted constant. The
-equilibrium ionization target SHALL include the ionized species so that it can be nonzero.
+associative-ionization reaction rate (N + O → NO⁺ + e⁻), computed from state — not a free fitted constant — as
+the rate-limiting onset timescale. The equilibrium ionization target SHALL include the ionized species so that
+it can be nonzero, and SHALL carry electron-impact-produced electrons as well as NO⁺ because RAM-C (~7.6 km/s)
+sits in the mixed associative + electron-impact band (Aiken–Carter–Boyd 2025).
 
 #### Scenario: Nonequilibrium lag is present
 - **WHEN** the driving temperature is ramped faster than `τ_ion`
 - **THEN** the ionization state visibly lags its equilibrium target (`α ≠ α_eq` during the transient), and the
   gap closes as the ramp slows
+
+#### Scenario: Electron-density overshoot signature
+- **WHEN** the driving temperature rises then relaxes along a streamline (a compression followed by expansion)
+- **THEN** the carried `n_e` transiently overshoots its instantaneous local-equilibrium value before relaxing
+  back down — the documented nonequilibrium overshoot (Lin et al. 1962; Aiken–Carter–Boyd 2025) that a
+  memoryless equilibrium model cannot produce (asserted qualitatively, given the Tier-A reconstruction)
 
 #### Scenario: Electrons are produced
 - **WHEN** the ionization stage runs at a reentry-representative temperature with the ionized-species target

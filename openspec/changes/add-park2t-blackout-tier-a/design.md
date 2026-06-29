@@ -73,6 +73,11 @@ without a stiff network).
 - Multi-mode relaxation spectra (single dominant `τ` only); shock-rank control / artificial viscosity.
 - A full multi-species finite-rate reaction network (the Tier-A surrogate + one dominant ionization channel
   is the scope).
+- A separate electron-translational temperature (the **3T** model, `T_e ≠ T_ve`). Tier-A lumps `T_e = T_ve`
+  (Park 2T). The 3T upgrade that Farbar–Boyd–Martin (2013) and Clarey–Greendyke (2019) show matters most in
+  the recombination-dominated wake is **LER-native** — it is one additional relaxing `T_e` scalar with its own
+  `τ_e` — so it is deferred as a clean add-on, not a redesign. This is the named remedy for the ~2× peak-`n_e`
+  over-prediction (Risks).
 - Modifying the QTT marcher core or the `PhysicsStage`/`Coupling`/`CausalFlow` substrate (reused unchanged).
 
 > **Tier-A does not depend on the Tier-B marcher, and Tier-B reuses Tier-A.** This change rides the
@@ -106,6 +111,14 @@ pointwise kernel split and couples to the marcher. The closed-form exponential i
 treatment of a relaxation operator. The split is first-order Lie; **Strang** (half-source/transport/half-
 source) is the documented upgrade if onset timing needs second order.
 
+*Literature framing.* The LER stage is an instance of the **macro–micro moment-reduction** pattern — keep the
+conserved low-order flow state exact and carry a small compressed correction that relaxes toward equilibrium —
+formalized for moment systems by Koellermeier–Krah–Kusch (DLRA/POD on the hyperbolic shallow-water *moment*
+equations, 2023), Issan et al. (POD on a Hermite moment hierarchy with a learned closure, 2025), and
+Peng–McClarren–Frank (low-rank on the angular `P_N` moments, 2020). Tier-A's carried `α`/`T_ve` scalars are
+the "micro" correction; this is the recognized closure structure LER specializes, not an ad-hoc integration
+trick.
+
 ### D3 — `T_tr` is a recovery-temperature reconstruction, not a prescribed field
 
 `T_tr(x) = T_post − ½|u(x)|²/c_p`, with `T_post` from a **Rankine–Hugoniot normal-shock jump** off the
@@ -123,6 +136,13 @@ network. `τ_ion` is computed from the dominant associative-ionization reaction 
 `τ_ion ≈ 1/(k_f(T)·[M])`, **not** a free fit. *Alternatives:* memoryless algebraic `α(ρ,T)` — rejected,
 loses the lag (the whole regime driver); full finite-rate network — rejected, reintroduces stiffness and is
 Tier-B. As `τ_ion → 0` the stage recovers Saha (a verification gate).
+
+*Regime grounding (Aiken–Carter–Boyd 2025 review).* Ionization is associative-dominated below ~7 km/s and
+electron-impact-dominated above ~9 km/s; RAM-C / orbital reentry (~7.6 km/s) sits in the **mixed band**. So
+`τ_ion` is grounded in the associative channel (the slower, *rate-limiting* onset timescale — correct), while
+the equilibrium **target `α_eq` carries electron-impact-produced electrons as well as NO⁺**, since at ~7.6 km/s
+they are a non-negligible fraction of the equilibrium `n_e`. The exact `α_eq` split is calibrated against the
+RAM-C reference at step 2; it remains one `α_eq` evaluation, not a marched second channel.
 
 ### D5 — Blackout observables are new; the QTT marcher core is untouched
 
@@ -163,6 +183,14 @@ f64`, lifted via `R::from_f64`. `k_B`, `e`, `ε₀`, `m_e` are reused from the e
 - **[Risk] `ConjugateScalar`/`CfdScalar` bound creep.** TT contractions need `ConjugateScalar<Real = R>`.
   **Mitigation:** CFD-side stages bind `CfdScalar + ConjugateScalar<Real = R>` exactly as the existing QTT
   observe functions do; physics kernels stay on bare `RealField`.
+- **[Known limitation, quantified] Two-temperature (`T_ve = T_e`) lumping over-predicts peak `n_e`.**
+  Farbar–Boyd–Martin (2013) show that adding a separate electron-translational energy equation cuts peak
+  plasma density by **~2×** and improves RAM-C agreement; Tier-A's single `T_ve` therefore over-predicts the
+  very quantity blackout depends on. **Mitigation:** the RAM-C electron-density gate tolerance is set wide
+  enough to absorb the ~2× lumping bias (alongside the reconstruction and rate-set sensitivities), and the
+  bias is named explicitly in the verification README — not silently folded into a hand-tuned tolerance. The
+  3T remedy is LER-native (a second relaxing `T_e` scalar) and is recorded as a Non-Goal upgrade, not a
+  redesign.
 
 ## Migration Plan
 
@@ -177,9 +205,12 @@ success, mark Gap 2 **Tier-A closed** in the notes, Tier-B still open.
 
 - **Newtype home** — `quantities/plasma/` (new) vs. extending `quantities/mhd/`? Resolve by matching the
   existing module granularity at implementation time; does not affect the public flat re-export.
-- **Reaction channel set** — Tier-A commits to the dominant associative-ionization channel (N + O → NO⁺ +
-  e⁻) for `τ_ion` and a Saha/fitted `α_eq` that includes NO⁺ + e⁻ so `α_eq > 0`. Is one channel enough to
-  reproduce the RAM-C onset within the chosen tolerance, or is a 2–3 channel `α_eq` needed? Decide against
-  the RAM-C reference during step 2; either way it is one `α_eq` evaluation, not a marched network.
+- **Reaction channel set (literature-resolved direction).** Tier-A grounds `τ_ion` in the dominant
+  associative-ionization channel (N + O → NO⁺ + e⁻). The Aiken–Carter–Boyd 2025 review places RAM-C
+  (~7.6 km/s) in the **mixed associative + electron-impact band**, so the equilibrium target `α_eq` should
+  carry electron-impact electrons too (not only NO⁺) to reach the RAM-C onset; the associative channel remains
+  the rate-limiting `τ_ion`. The open part is only the precise `α_eq` split — decided against the RAM-C
+  reference during step 2 — and it stays one `α_eq` evaluation, not a marched network. A fully resolved
+  multi-channel electron-impact treatment is Tier-B+.
 - **`c_p` provenance** — the recovery reconstruction needs a mixture `c_p`. Tier-A uses a config/cited
   frozen-mixture `c_p`; a composition-dependent `c_p(Y_s)` is a Tier-B refinement.

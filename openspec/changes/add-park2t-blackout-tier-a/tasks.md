@@ -42,7 +42,10 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
   `PropagatingEffect`/`CausalityError` from `deep_causality_core`).
 - [ ] 2.10 **Isolation validation tests** (f64, `tests/` mirror): Arrhenius + relaxation kernels vs Park-2T
   table values; `ionization_fraction_kernel` recovers the Saha-equilibrium value as `τ → 0`; an
-  electron-density point reproduces a documented RAM-C II / Park-2T reference within a recorded tolerance.
+  electron-density point reproduces a **named RAM-C II station** (record the altitude, e.g. 71 km peak) within
+  a tolerance set wide enough to absorb the named Tier-A biases — the ~2× two-temperature-lumping
+  over-prediction (Farbar–Boyd–Martin 2013) and the Gupta-vs-Park rate-set sensitivity — with the tolerance
+  justified in a comment (anchors: RAM-C II, *Fluid Dynamics* 2022, Aiken–Carter–Boyd 2025), not hand-tuned.
   Register in `mod.rs` + `tests/BUILD.bazel`.
 
 ## 3. LER stage mechanism + state-derived temperature (`deep_causality_cfd/src/types/flow/`)
@@ -50,9 +53,11 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 - [ ] 3.1 Add an `ler` helper (closed-form exponential relaxation `x_eq − (x_eq − x)·exp(−Δt/τ)` over a named
   `CoupledField` scalar) used by the stages below — bound `R: CfdScalar`, `Δt` from `StepContext::dt()`.
 - [ ] 3.2 `IonizationStage<R>` as a `PhysicsStage<D, R: CfdScalar>` — reads `T_tr`/species scalars from
-  `CoupledField`, computes `α_eq(ρ, T_tr)` and `τ_ion` (grounded in the dominant-rate Arrhenius coefficient,
-  computed from `T` — not a constant), relaxes the carried `α`/`n_e` scalar via the LER helper, writes back
-  `n_e`. Static composition with `Coupling::between_steps().then(…)`.
+  `CoupledField`, computes `α_eq(ρ, T_tr)` (the target carries electron-impact electrons as well as NO⁺ — RAM-C
+  is in the mixed band, Aiken–Carter–Boyd 2025 — so it is not NO⁺-only) and `τ_ion` (grounded in the dominant
+  associative-rate Arrhenius coefficient as the rate-limiting onset, computed from `T` — not a constant),
+  relaxes the carried `α`/`n_e` scalar via the LER helper, writes back `n_e`. Static composition with
+  `Coupling::between_steps().then(…)`.
 - [ ] 3.3 `EosStage<R>` as a `PhysicsStage` — two-temperature pressure closure into the `Ambient` (the
   `ViscosityArrhenius`→ambient template). Note in-scope effect on the incompressible ambient is limited;
   keep the interface so Tier-B reuses it.
@@ -85,13 +90,17 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 - [ ] 5.2 Gate (exit non-zero on break) the six LER criteria: (i) stability at stiffness (`τ = dt/1000`
   bounded/monotone); (ii) exponential exactness on the linear relaxation (equality to round-off); (iii) the
   RH-jump peak `T_post` lands in the ~10⁴ K band at `M ≈ 25` (not the cold isentropic value); (iv) lag is
-  real and the Saha limit is recovered as `τ → 0`, with `τ_ion` grounded in the dominant rate; (v)
-  counterfactual path-dependence (two histories → two blackout outcomes); (vi) ionized-species target
-  nonzero (`n_e > 0`). Each failing gate names itself.
+  real and the Saha limit is recovered as `τ → 0`, with `τ_ion` grounded in the dominant rate, and the lag
+  reproduces the qualitative electron-density **overshoot** (`n_e` above local equilibrium on a rise-then-relax
+  history; Lin et al. 1962); (v) counterfactual path-dependence (two histories → two blackout outcomes); (vi)
+  ionized-species target nonzero (`n_e > 0`). Each failing gate names itself.
 - [ ] 5.3 `baseline.txt` + `README.md` (human-readable labeled report) reporting the published reference
-  cross-references (RAM-C II electron density / onset; Park-2T tables; Saha limit; Apollo dwell) **with
-  Tier-A disclaimers** — incompressible rollout, `T_tr` is a recovery-temperature reconstruction (not a true
-  post-shock path), first-order Lie split; no absolute coupled-CFD match claimed.
+  cross-references (RAM-C II electron density / onset; *Fluid Dynamics* 2022; Aiken–Carter–Boyd 2025 review;
+  Park-2T tables; Saha limit; Apollo dwell) **with Tier-A disclaimers** — incompressible rollout, `T_tr` is a
+  recovery-temperature reconstruction (not a true post-shock path), first-order Lie split — and the **named
+  quantified biases**: the ~2× two-temperature (`T_ve = T_e`) lumping over-prediction (Farbar–Boyd–Martin 2013;
+  3T fix is an LER-native deferral), non-Maxwellian EEDF, and Gupta-vs-Park rate-set sensitivity, reported as
+  the reason the `n_e` tolerance is what it is; no absolute coupled-CFD match claimed.
 
 ## 6. Finalize
 

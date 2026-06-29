@@ -55,14 +55,70 @@ The field has moved onto the flagship's thesis since the original note was writt
   (2024). Current refinements of the `T_ve` / electron-density physics that drives blackout onset.
 - **Data-driven lookup-table reduction for hypersonic chemical nonequilibrium** — arXiv:2210.04269. The
   surrogate-table route that Tier A explicitly permits.
+- **Review of nonequilibrium plasma kinetics in hypersonic flows** — Aiken, Carter & Boyd, *Plasma Sources
+  Sci. Technol.* 34 (2025). The authoritative modern anchor: confirms **Park-2T is the current standard** for
+  RAM-C-type electron density; gives the ionization-by-velocity bands (associative `<7` km/s, electron-impact
+  `>9` km/s, mixed in between — RAM-C/orbital ~7.6 km/s is *mixed*); documents the electron-density
+  **overshoot** (Lin et al. 1962). <https://iopscience.iop.org/article/10.1088/1361-6595/ae2ba2>
+- **Numerical prediction of hypersonic flowfields including electron translational nonequilibrium** — Farbar,
+  Boyd & Martin, *JTHT* 27 (2013); and **3-T thermochemical nonequilibrium with application to slender-body
+  wakes** — Clarey & Greendyke, *JTHT* 33 (2019). A separate electron-energy equation (3T, `T_e ≠ T_ve`) cuts
+  peak plasma density **~2×** vs Park's `T_e = T_ve` lumping and matters most in the wake — the named,
+  quantified bias of a Tier-A 2-T closure, and an LER-native upgrade (one extra relaxing scalar).
 
-### Axis 2′ — Tensor networks *for* plasma kinetics (bonus, not in the original note)
+### Axis 2′ — Kinetic tensor-networks vs the continuum/moment closure (read in full)
 
-The same tensor-train layer could later carry a kinetic plasma closure, not just neutral flow:
+The same tensor-train layer could later carry a *kinetic* plasma closure (the full `f(x,v,t)` phase space),
+not just a continuum/moment closure (Park-2T). The three kinetic-TN papers were read end to end; the verdict
+is that **continuum Park-2T is correct for the forebody blackout deliverable, and kinetic-TN is a future
+Tier-C reserved for the rarefied legs.** Corroborated four ways.
 
-- **Quantized tensor networks for the Vlasov–Maxwell equations** — Ye & Loureiro, arXiv:2311.07756 (2024).
-- **Dynamical tensor-train approximation for kinetic (Boltzmann) equations** — arXiv:2512.14950 (2025).
-- **Tensor-network compression for fully spectral Vlasov–Poisson** — arXiv:2602.13092.
+**The kinetic-TN papers work — but on the wrong regime, with rank unsolved.**
+
+- **Quantized tensor networks for Vlasov–Maxwell** — Ye & Loureiro, arXiv:2311.07756 (J. Plasma Phys. 2024).
+  Comb-tree QTT, 2D3V; `D=64` vs a full-rank `2^18`. But rank is held by a **fixed cap**, the fields'
+  entanglement entropy grows over time, and the authors state plainly that convergence "must be addressed in
+  order to trust results." **Collisionless.**
+- **Dynamical tensor-train approximation for kinetic equations** — Wang & Hu, arXiv:2512.14950 (2025).
+  Correction to the original note's title: it solves **BGK + Fokker–Planck, not the full Boltzmann `Q(f,f)`.**
+  Velocity-TT *per spatial point* to avoid x–v coupling growth; ranks tiny (~5). Key fact: **the Maxwellian is
+  TT-rank-1**, so the near-equilibrium (collisional) regime stays low-rank — but **stiff collisions in TT are
+  explicitly unsolved** (forced small collision strength, explicit stepping).
+- **Tensor-network compression for fully spectral Vlasov–Poisson** — Åsgrim, Pennati, Pasquale & Markidis,
+  arXiv:2602.13092 (2026). Correction: it is **Fourier–Fourier, not Fourier–Hermite.** `χ ≈ 15–45` (Landau),
+  plateaus at `120–150` (two-stream); negativity artifacts under aggressive truncation. Collisionless, no
+  Maxwell coupling.
+- Common to all three: **none is run on reacting hypersonic air**, and rank control is the open problem.
+
+**Why the kinetic side points back to continuum.** Wang & Hu's rank-1-Maxwellian result is the bridge: in the
+collisional sheath that drives blackout, the distribution is near-rank-1 in velocity — which is the
+mathematical statement that **a moment closure is accurate there.** A kinetic solver would pay a 6-D
+computation to recover what a few moments already give. And `n_e` (the quantity blackout needs) is the zeroth
+moment.
+
+**The continuum/moment side, placed by Knudsen ceiling.** Park-2T is the validated RAM-C standard on the
+collisional forebody (Aiken–Carter–Boyd 2025, Axis 2). Above it sits a graded ladder — Grad-13 → **R13**
+(Kn ≲ 0.5, Struchtrup–Torrilhon) → **R26** (Kn ~1–3, Gu–Emerson) → **hyperbolic HME** (Cai–Fan–Li, arbitrary
+order, globally well-posed) → **HyQMOM** (Fox et al., the moment route built for *non-Maxwellian / multi-stream*
+plasma VDFs, realizability-preserving). No moment hierarchy reaches free-molecular (Kn > 10) — that is the hard
+wall where kinetics is mandatory — but the forebody sheath is nowhere near it.
+
+**The architecture already embodies the right pattern.** "Tensor-train on a moment *vector*" is structurally
+empty (a Park-2T state is too small to compress). But **DLRA on a moment *system* (macro–micro)** is a real,
+thin, under-occupied niche: low-rank on the angular `P_N` moments (Peng–McClarren–Frank 2020, arXiv:1912.07522),
+DLRA/POD on the hyperbolic shallow-water *moment* equations (Koellermeier–Krah–Kusch 2023, arXiv:2302.01391),
+and POD on a Hermite moment hierarchy with a learned closure (Issan et al. 2025, arXiv:2504.09682). Their
+pattern — keep the conserved low-order moments exact, carry a compressed correction toward equilibrium — **is
+exactly the LER stage.** So the upgrade ladder `LER scalar → per-point BGK-DLR (Wang/Hu) → kinetic` is
+non-fighting and rides the existing per-point `PhysicsStage` seam. Extending macro–micro moment reduction into
+*reacting multi-temperature plasma* is itself an open niche, not a crowded one.
+
+> **Net.** Park-2T (continuum/moment) is the right tool for the forebody blackout deliverable, corroborated by
+> the kinetic side's own rank-1-Maxwellian result, the Kn-ceiling ladder, and the macro–micro framing. The
+> kinetic-TN route (full `f(x,v)`) is genuine future Tier-C, valuable for the rarefied / high-altitude / wake
+> legs where the near-Maxwellian assumption breaks — *not* the sheath that decides onset. Two named blockers
+> gate any kinetic move and Tier-A/B sidestep both: stiff collisions in TT (open, Wang & Hu) and
+> convergence/trust (open, Ye & Loureiro).
 
 ### Axis 3 — Trajectory / relativity
 
@@ -91,6 +147,11 @@ additive structure, so differential stencils like `(S₊ − S₋)/2Δx` could n
 now closed (`add`/`sub`/`neg`/`scale`, tested f64/Float106; spec change `add-tensor-operator-algebra`).
 The shift operator `S₊` itself is hand-built via `from_cores` and lives in the CFD bridge, not the tensor
 crate (see [`gap-one-cfd-tensor-bridge.md`](gap-1/gap-one-cfd-tensor-bridge.md) §3.2).
+
+This table covers the **continuum/moment** flowfield (Tier-A/B). A **kinetic** closure (Axis 2′, Tier-C) would
+additionally need primitives this layer does *not* have — a velocity-space discretization, a collision operator
+(BGK → Boltzmann) as MPOs, Vlasov streaming, and Maxwell/Poisson coupling — so it is a separate build, not a
+closure swap on the present substrate.
 
 ---
 
