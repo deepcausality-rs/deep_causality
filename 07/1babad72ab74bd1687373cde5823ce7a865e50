@@ -1,0 +1,25 @@
+deep_causality_num/tests/algebra/algebra_tests.rs
+  s_38bf9985f67766::t_3d6d2cc05f0c58 6
+deep_causality_num/src/algebra/mod.rs
+  s_38bf9985f67766::t_af180ef5c87941 17-18
+  s_38bf9985f67766::t_9b865df0f94a1e 45
+  s_38bf9985f67766::t_e3353f9ab81930 78
+deep_causality_num/src/lib.rs
+  s_38bf9985f67766::t_a4bba0633db736 39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "071babad72ab74bd1687373cde5823ce7a865e50",
+  "prompts": {},
+  "sessions": {
+    "s_38bf9985f67766": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "82d0b09f-03ff-4f69-97b7-4eb4770a2e49",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
