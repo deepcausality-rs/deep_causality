@@ -9,6 +9,7 @@ use deep_causality_num::Complex;
 use deep_causality_tensor::{CausalTensor, Tensor};
 
 use crate::constants::GRAPHENE_LATTICE_CONST;
+use crate::constants::REDUCED_PLANCK_CONSTANT;
 use deep_causality_topology::SimplicialManifold;
 use std::f64::consts::PI;
 
@@ -68,7 +69,7 @@ pub fn bistritzer_macdonald_kernel(
 
     // Energy scale: hbar * vf
     // Assuming standard units (SI).
-    let hbar = crate::constants::REDUCED_PLANCK_CONSTANT;
+    let hbar = REDUCED_PLANCK_CONSTANT;
     let scale = hbar * vf;
 
     // Moiré momentum scale: k_theta = 8*pi / (3*a) * sin(theta/2)
