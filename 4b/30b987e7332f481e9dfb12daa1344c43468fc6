@@ -1,0 +1,44 @@
+deep_causality_cfd/src/solvers/qtt/mod.rs
+  s_162aba3d26275e::t_b4752ec35dc1f0 17
+  s_162aba3d26275e::t_27a4872df61f0d 15-16,18
+deep_causality_cfd/tests/solvers/qtt/compressible_imex_tests.rs
+  s_162aba3d26275e::t_283dae3a46461c 93-96,106-108,122-124
+  s_162aba3d26275e::t_762f5739af7761 111,114
+  s_162aba3d26275e::t_56697db971f904 1-92,97-105,109-110,112-113,115-121,125-128,130-161
+  s_162aba3d26275e::t_5b5d1e780206c9 129
+deep_causality_cfd/src/solvers/qtt/compressible/imex.rs
+  s_162aba3d26275e::t_e0f7f2afd932c8 199-221
+  s_162aba3d26275e::t_e9be740947da34 171-176,182,191,194
+  s_162aba3d26275e::t_191d80614704a6 1-138,142-156,161-170,177-181,183-190,195-198
+  s_162aba3d26275e::t_283dae3a46461c 139-141,157-160,192-193
+deep_causality_cfd/src/solvers/mod.rs
+  s_162aba3d26275e::t_283dae3a46461c 26
+  s_162aba3d26275e::t_f2261dfffeaa96 24-25
+openspec/changes/add-cfd-compressible-qtt-marcher/tasks.md
+  s_162aba3d26275e::t_7ea2c03f4d6176 51-61
+deep_causality_cfd/src/solvers/qtt/compressible/mod.rs
+  s_162aba3d26275e::t_b4752ec35dc1f0 14
+  s_162aba3d26275e::t_31f5e48d951faa 11
+deep_causality_cfd/tests/solvers/qtt/mod.rs
+  s_162aba3d26275e::t_9a7a850fd79ac5 7
+  s_162aba3d26275e::t_eb9663649310d9 6
+deep_causality_cfd/src/lib.rs
+  s_162aba3d26275e::t_0630c8c04b2c1d 91
+  s_162aba3d26275e::t_e3a3c3cf5d463e 89-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "4b30b987e7332f481e9dfb12daa1344c43468fc6",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
