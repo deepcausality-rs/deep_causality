@@ -8,7 +8,9 @@
 //! body-fitted coordinate coupling, IMEX time integration, and shock fitting.
 
 mod euler_1d;
+mod fitting;
 mod imex;
 
 pub use euler_1d::{CompressibleEuler1d, EulerState, ideal_gas_pressure};
+pub use fitting::{FittedNormalShock, PostShockState, StagnationOutcome};
 pub use imex::{AcousticImex1d, conservation_round, positivity_floor};

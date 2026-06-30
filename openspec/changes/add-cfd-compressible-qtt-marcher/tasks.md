@@ -62,13 +62,17 @@ and a valid standalone deliverable. Stages 5–6 carry the named open-research n
 
 ## 4. Shock fitting + the RAM-C stagnation line — the buildable milestone (`solvers/qtt/compressible/fitting.rs`)
 
-- [ ] 4.1 Fitted interface with exact Rankine–Hugoniot jump; **1-D fitted normal shock** — post-shock state
-  matches exact RH at the flight Mach; each side `O(1)` rank.
-- [ ] 4.2 Interface motion from local jump/flow state (dynamic); couple to the bulk each step.
-- [ ] 4.3 **RAM-C stagnation line**: drive the **reused Tier-A** `IonizationStage`/`BlackoutTrigger` (LER
-  stack, unchanged) in the smooth post-shock relaxation zone behind the fitted shock; `T_tr`/`T_ve` are the
-  transported energies (reconstruction retired). **Gate: peak electron density / blackout onset vs RAM-C II**
-  within a recorded tolerance — `verification/qtt_ramc_stagline/`.
+- [x] 4.1 Fitted interface with exact Rankine–Hugoniot jump (`FittedNormalShock`); **1-D fitted normal
+  shock** — post-shock `ρ/u/p/T` match the exact RH relations at the flight Mach (test); the smooth
+  post-shock relaxation profile is `O(1)` rank (bond 2). No flux is marched *through* the front.
+- [~] 4.2 Interface motion — for the 1-D **stagnation line** the fitted shock is a standing normal shock (no
+  motion); the **dynamic** interface motion + per-step bulk coupling is the 2-D bow-shock concern, deferred to
+  Stage 5.
+- [x] 4.3 **RAM-C stagnation line**: the exact-RH `T₂` is the **transported energy** (recovery-temperature
+  reconstruction retired), driving the **reused Tier-A** Saha/Park-2T ionization in the smooth post-shock zone
+  with the **grounded nonequilibrium lag** (`τ_ion = 1/(k_f·n₂)`, the Park associative-ionization rate).
+  **Gate: peak electron density / blackout onset vs RAM-C II** within ~2 decades (order-of-magnitude;
+  measured `n_e ≈ 1.2e20`, +1.1 decades vs the `1e19` anchor) — `verification/qtt_ramc_stagline/` (exit 0).
 
 ## 5. 2-D body-fitted compressible reacting marcher (`solvers/qtt/compressible/marcher_2d.rs`)
 

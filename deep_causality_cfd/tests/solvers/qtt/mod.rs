@@ -4,6 +4,8 @@
  */
 
 #[cfg(test)]
+pub mod compressible_fitting_tests;
+#[cfg(test)]
 pub mod compressible_imex_tests;
 #[cfg(test)]
 pub mod compressible_tests;

@@ -151,6 +151,10 @@ path = "verification/qtt_park2t_blackout/main.rs"
 name = "qtt_sod"
 path = "verification/qtt_sod/main.rs"
 
+[[example]]
+name = "qtt_ramc_stagline"
+path = "verification/qtt_ramc_stagline/main.rs"
+
 # Tier-B rank studies: empirical tests of the "flowfield is low tensor-train rank" thesis.
 [[example]]
 name = "qtt_rank_study"

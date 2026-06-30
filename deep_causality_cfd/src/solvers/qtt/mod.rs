@@ -13,8 +13,8 @@ mod incompressible_2d;
 mod observe;
 
 pub use compressible::{
-    AcousticImex1d, CompressibleEuler1d, EulerState, conservation_round, ideal_gas_pressure,
-    positivity_floor,
+    AcousticImex1d, CompressibleEuler1d, EulerState, FittedNormalShock, PostShockState,
+    StagnationOutcome, conservation_round, ideal_gas_pressure, positivity_floor,
 };
 pub use immersed_2d::QttImmersed2d;
 pub use incompressible_2d::QttIncompressible2d;

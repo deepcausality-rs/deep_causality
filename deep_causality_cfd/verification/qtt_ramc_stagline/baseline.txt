@@ -1,0 +1,31 @@
+=== RAM-C stagnation line: exact Rankine–Hugoniot fit + reused Tier-A ionization ===
+
+Flight: M = 25, γ = 1.1, T_inf = 250 K, n_inf = 1e21 m^-3 (RAM-C II ~71 km)
+
+Residence time t_res = standoff/u2 = 2.022e-5 s  (Saha-equilibrium upper bound n_e = 9.620e21 m^-3)
+
+Exact Rankine–Hugoniot post-shock state (the transported energy, no reconstruction):
+  T_inf -> T2 ............ 250 K -> 8044 K
+  density ratio ρ2/ρ1 ... 20.349
+  velocity ratio u2/u1 .. 0.049
+  pressure ratio p2/p1 .. 6.547e2
+  post-shock n_tot ...... 2.645e22 m^-3
+
+Stagnation-line blackout (Saha/Park-2T at the post-shock state):
+  ionization fraction α .. 4.628e-3
+  peak electron density .. 1.224e20 m^-3
+  plasma frequency ω_p ... 6.242e11 rad/s
+  blackout (ω_p > comms) . true (comms band 9.40e9 rad/s)
+  relaxation-profile bond  2  (smooth post-shock zone, O(1) rank)
+
+--- RAM-C stagnation-line gates ---
+  [PASS] T2 in the ~10^4 K post-shock band
+  [PASS] peak n_e within ~2 decades of RAM-C II
+  [PASS] blackout onset (ω_p > comms band)
+  [PASS] relaxation profile O(1) rank
+
+=== RAM-C stagnation line: peak n_e = 1.22e20 m^-3, +1.1 decades vs the RAM-C II anchor 1e19. ===
+Disclaimer: Park-2T Saha surrogate (the T_e = T_ve lumping over-predicts peak n_e ~2× vs a 3-T
+closure); perfect-gas γ = 1.4 over-predicts T2 (real reacting air dissociates). Order-of-magnitude
+anchor, not a calibrated match. The post-shock T2 is the exact-RH transported energy, retiring the
+Tier-A recovery-temperature reconstruction.
