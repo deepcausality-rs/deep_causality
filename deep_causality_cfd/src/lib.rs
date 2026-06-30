@@ -42,7 +42,9 @@ pub use crate::traits::{FluidTheory, Marcher, Solver};
 pub use crate::types::{Ambient, CfdScalar};
 
 // The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
-pub use crate::coordinate::{BodyFittedCoordinate, CartesianIdentity, MetricProvider};
+pub use crate::coordinate::{
+    BlendedMap, BlendedMapConfig, BodyFittedCoordinate, CartesianIdentity, MetricProvider,
+};
 pub use crate::tensor_bridge::{
     AcousticCoreInverse, AcousticCoreInverse2d, QttProjector2d, body_mask_2d, dequantize,
     dequantize_2d, dequantize_3d, divergence_3d, gradient, gradient_x, gradient_x_3d, gradient_y,

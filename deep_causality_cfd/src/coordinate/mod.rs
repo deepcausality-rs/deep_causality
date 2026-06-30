@@ -24,9 +24,11 @@
 //! operators are exact in `ξ`; non-periodic radial boundary stencils are a Stage-2 refinement (the
 //! interior gradient is correct to scheme order).
 
+mod blended;
 mod cartesian;
 mod metric_provider;
 
+pub use blended::{BlendedMap, BlendedMapConfig};
 pub use cartesian::CartesianIdentity;
 pub use metric_provider::MetricProvider;
 

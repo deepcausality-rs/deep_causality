@@ -22,8 +22,13 @@ and a valid standalone deliverable. Stages 5–6 carry the named open-research n
   so the marcher runs generically over any structured coordinate. `CartesianIdentity` (capture limit) and
   `BodyFittedCoordinate` (fitted limit) both impl it; tests gate identity-gradient-vs-analytic, the constant
   cell-volume Jacobian, the fitted chart reached through the trait, and a generic-over-`M` consumer.
-- [ ] 0.5.2 `BlendedMap` (the continuous `λ` dial) — follow-on; needs forward-Jacobian plumbing. The blend is
-  already validated numerically (`studies/qtt_blend_metric`: valid map, bond dials 114→5).
+- [x] 0.5.2 `BlendedMap` (the continuous `λ` dial, `coordinate/blended.rs`) — implements `MetricProvider` from a
+  `BlendedMapConfig`. The two charts' **forward** Jacobians blend linearly (`J_λ = (1−λ)J_cart + λ J_fit`),
+  inverted pointwise to the low-rank inverse metric the marcher consumes (sampled analytically — no TT
+  reciprocal). `λ=1` reproduces `BodyFittedCoordinate` exactly, `λ=0` is the Cartesian-capture rectangle;
+  validity (BM-A) holds by construction (compatible charts, derived fan chord). Gates: λ=1 metric match,
+  free-stream-exact across λ, and the **rank dial** BM-B (capture bond → `O(10)` fitted), per
+  `studies/qtt_blend_metric`.
 
 ## 1. Body-fitted / shock-aligned coordinate (`coordinate/`)
 
