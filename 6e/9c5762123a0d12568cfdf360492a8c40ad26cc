@@ -1,0 +1,29 @@
+openspec/notes/plasma-blackout/gap-3/chemistry-fidelity-gap.md
+  s_c4c919f578d611::t_1210ede3fe4b8a 62-69
+  s_c4c919f578d611::t_f3282e4099db5a 8,10-17
+  s_c4c919f578d611::t_fdc004babc0183 9,18-20
+openspec/notes/plasma-blackout/gap-3/gap-three-resolution-2-tve-controlled-ionization.md
+  s_c4c919f578d611::t_2406c1e7e3d838 210-211,218-219
+  s_c4c919f578d611::t_2186fcd5fcdf3d 159-162
+  s_c4c919f578d611::t_6bc6fcf2b4f8aa 35-37
+  s_c4c919f578d611::t_dfb58d4e05e22e 164
+  s_c4c919f578d611::t_f9c82c51c7a9a6 34
+  s_c4c919f578d611::t_f66208e763d53e 180,183-204
+  s_c4c919f578d611::t_d8e2902884cd24 181-182,205-207
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "6e9c5762123a0d12568cfdf360492a8c40ad26cc",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
