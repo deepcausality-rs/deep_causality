@@ -1,0 +1,19 @@
+openspec/notes/plasma-blackout/gap-3/gap-three-resolution-1-perturbed-conformal-trajectory.md
+  s_162aba3d26275e::t_f932137f76c563 35-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "9d674bae1232dbe417ac08f50d2b036a35bedd72",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
