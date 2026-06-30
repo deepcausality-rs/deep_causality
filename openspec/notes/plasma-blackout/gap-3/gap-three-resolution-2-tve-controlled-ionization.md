@@ -31,6 +31,10 @@ Honesty convention: **[holds]**, **[holds under precondition]**, **[open]**, **[
 >
 > The landing sits *inside* the production reacting-CFD band (DPLR/LAURA reach ~2–3×) and well within the
 > ~2–5× chemistry-model spread — better than the Gap-3 note's ~3–4× target.
+>
+> **Lever 2 (3-T electron-energy separation) was prototyped and *not adopted*** — it brackets low
+> (`n_e ≈ 2.7×10¹⁸`, ~3.7×) without improving the ~1.1× point estimate, so the added code bought nothing and
+> was reverted. The negative result is recorded in §"Lever 2 — investigated, not adopted" below.
 
 ---
 
@@ -152,10 +156,12 @@ known physical effect — the contribution is recognizing them as the confinemen
   `τ_vt`, the reduced-mass / `θ_v` choice, and the `q = ½` exponent. This *is* the documented ~2–5×
   chemistry-model spread; the ~1.1× landing is honest but not a calibrated match, and the MW correlation
   (without the Park high-temperature limiting correction) is the controlling approximation.
-- **2-T lumping `T_e = T_ve` `[open]`** — separating a third electron-energy equation (Farbar–Boyd–Martin,
-  ~2×) is the next lever.
+- **2-T lumping `T_e = T_ve` `[investigated, not adopted — see "Lever 2" below]`** — the third
+  electron-energy equation (Farbar–Boyd–Martin) was prototyped and reverted; it brackets the spread on the
+  low side (~3.7×) rather than improving the ~1.1× point estimate, and a *faithful* 3-T needs more (e–ion
+  Coulomb heating, the ionization-energy sink), not less. Closed unless the anchor is tightened.
 - **Single associative channel `[open]`** — a finite-rate network (associative + thresholded electron-impact
-  + recombination) is the lever after that.
+  + recombination) is the remaining lever.
 
 **Generalized method (the reusable invariant).** *When a relaxing system is being driven by the wrong
 (fastest-arriving) energy mode, don't add a transported equation — compute the lagging mode in closed form
@@ -171,17 +177,46 @@ nonequilibrium relaxation zone where the real RAM-C flow lives.
 
 ---
 
+## Lever 2 — investigated, not adopted (a negative result worth recording)
+
+Lever 1 routes ionization through the geometric-mean **proxy** `Tₐ = √(T_tr·T_ve)` for the electron
+controller. The natural next lever (Farbar–Boyd–Martin) is to **un-lump `T_e` from `T_ve`** — track the
+electron temperature as its own relaxing scalar and evaluate the Saha target at the *resolved* `T_e`. This
+was **prototyped end-to-end** (a two-target electron-energy LER toward `T_tr` via Appleton–Bray elastic
+exchange and toward `T_ve` via e–V on the vibrational timescale) and then **reverted**, because it does not
+improve the result. The finding:
+
+- **It brackets low, not better.** The explicit 3-T is higher fidelity but predicts **less** ionization than
+  the 2-T proxy — `n_e ≈ 2.7×10¹⁸` (~3.7× **low**) vs the 2-T's ~1.1×. The geometric-mean proxy turns out to
+  be the better-calibrated *point* estimate; the two only **bracket** the ~2–5× spread. The 2-T result is
+  already inside the production band (~2–3×) and within 10% of the anchor — there is nothing to improve.
+- **The crux is an initial condition, not a constant.** A naive `T_e(0) = T_∞` (treating electrons like the
+  frozen-cold vibrational bath) collapses `n_e` ~100× (`8.5×10¹⁶`, −2.1 dec) because the Saha target is
+  *exponentially* sensitive to `T_e`. The physical fix is recognising that **electrons do not pre-exist —
+  they are *created* in the post-shock bath**, so `T_e(0) = T_ve`. With that, the model lands at the ~3.7×
+  above. *This is the durable insight from the exercise; it does not require the 3-T code to be kept.*
+- **A faithful 3-T needs more, not less.** The prototype omits e–ion Coulomb heating and the
+  ionization-energy sink — the terms a production 3-T carries to stay calibrated. Adding a half-built 3-T
+  would trade a clean, calibrated ~1.1× surrogate for a more complex one that brackets low. Not worth it.
+
+**Decision:** lever 2 is **closed as "investigated, not adopted."** The 2-T geometric-mean controller is the
+shipped chemistry-fidelity model. A fully-calibrated 3-T (with the electron source terms) remains a possible
+future lever, but only if the anchor itself is tightened beyond the ~2–3× the surrogate already achieves.
+
+---
+
 ## Verification gates (built, in `tests/solvers/qtt/compressible_fitting_tests.rs` + the example)
 
-1. **RAM-C landing:** `park2t_controller_marches_ramc_within_3x` — peak `n_e ∈ (3×10¹⁸, 3×10¹⁹)`, i.e.
-   within ~3× of the RAM-C II anchor; blackout still triggers. (Measured 1.09×10¹⁹.)
+1. **RAM-C landing:** `park2t_controller_marches_ramc_within_3x` — peak `n_e ∈ (3×10¹⁸, 3×10¹⁹)`, within ~3×
+   of the RAM-C II anchor; blackout still triggers. (Measured 1.09×10¹⁹.)
 2. **Suppression direction:** `park2t_controller_suppresses_below_single_temperature_surrogate` — the 2-T
    `n_e` sits strictly below the single-T surrogate (the cold bath suppresses ionization).
 3. **Equilibrium limit:** `park2t_recovers_single_temperature_when_fully_relaxed` — at long residence the
    controller approaches the single-T Saha equilibrium within 10% (graceful degradation, no spurious
    suppression).
 4. **Example gate:** `verification/qtt_ramc_stagline` self-verifies (exit nonzero on break) with the
-   tightened "within ~3× of RAM-C II (Park-2T controller)" `n_e` gate.
+   "within ~3× of RAM-C II (Park-2T controller)" `n_e` gate as the headline (it also prints the single-T
+   surrogate for contrast).
 
 ---
 

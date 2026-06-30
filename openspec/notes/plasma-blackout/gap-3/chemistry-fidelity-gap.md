@@ -5,13 +5,19 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # Chemistry-fidelity gap — RAM-C electron-density precision (deferred, bundled with Gap 3)
 
-> **STATUS — lever 1 implemented (the dominant one).** The T_ve-controlled ionization upgrade is **built,
-> measured, and gated**: peak `n_e` went from the single-temperature surrogate's **~12× over-prediction to
-> ~1.1×** of the RAM-C II anchor (`α: 4.6×10⁻³ → 4.1×10⁻⁴` vs RAM-C `~3.8×10⁻⁴`). See
-> [Resolution 2 — T_ve-controlled ionization](gap-three-resolution-2-tve-controlled-ionization.md). Levers 2
-> (3-T electron-energy separation) and 3 (finite-rate ionization network) remain **[open]**, as does the
-> trajectory/timing half of the bundle ([Resolution 1](gap-three-resolution-1-perturbed-conformal-trajectory.md),
-> preliminary).
+> **STATUS — lever 1 implemented; lever 2 investigated and not adopted** (see
+> [Resolution 2](gap-three-resolution-2-tve-controlled-ionization.md)):
+> - **Lever 1 — T_ve-controlled ionization (the dominant one): ✅ shipped.** Peak `n_e` from the
+>   single-temperature surrogate's **~12× over-prediction to ~1.1×** of the RAM-C II anchor
+>   (`α: 4.6×10⁻³ → 4.1×10⁻⁴` vs RAM-C `~3.8×10⁻⁴`). Saha/rate driven off `Tₐ = √(T_tr·T_ve)`.
+> - **Lever 2 — 3-T electron-energy separation: prototyped, then reverted.** The explicit `T_e` is higher
+>   fidelity but predicts *less* ionization (~3.7× low) — it brackets the spread rather than improving the
+>   already-calibrated ~1.1×, so the added code bought nothing. The durable insight (electrons are *created*
+>   in the post-shock bath, so `T_e(0) = T_ve`, not the frozen-cold free-stream) is recorded; the code is not
+>   kept. A *faithful* 3-T would need e–ion Coulomb heating + the ionization-energy sink, not less.
+>
+> Lever 3 (finite-rate ionization network) remains **[open]**, as does the trajectory/timing half of the
+> bundle ([Resolution 1](gap-three-resolution-1-perturbed-conformal-trajectory.md), preliminary).
 
 **Scheduling.** This is a precision upgrade for the Gap-2 ionization physics, **deferred and lumped with
 [Gap 3 (the trajectory axis)](gap-three-resolution-1-perturbed-conformal-trajectory.md)**, to be
@@ -53,8 +59,14 @@ equilibrium down ~30×. **The lag is too weak, and it ionizes at the wrong (tran
    Tier-A `vibrational_relaxation_kernel` (Millikan–White `τ_vt`, closed-form LER) already computes `T_ve`;
    the change drove the Saha target and the rate off `Tₐ`, not `T_tr`. Exponentially sensitive — **measured
    to move the full ~12× → ~1.1×** on its own (`stagnation_line_blackout_2t`), better than the ~3–4× target.
-2. **3-T: separate electron energy (drop the `T_e = T_ve` lumping).** The documented Farbar–Boyd–Martin ~2×
-   over-prediction. LER-native: one extra relaxing scalar.
+2. **3-T: separate electron energy (drop the `T_e = T_ve` lumping). — 🔬 INVESTIGATED, NOT ADOPTED, see
+   [Resolution 2 §"Lever 2"](gap-three-resolution-2-tve-controlled-ionization.md).** The Farbar–Boyd–Martin
+   direction, prototyped LER-native (`T_e` relaxing toward `T_tr` via Appleton–Bray `τ_eT` and `T_ve` via
+   `τ_eV = τ_vt`, Saha target at the resolved `T_e`) and then reverted. It predicts *less* ionization
+   (`n_e ≈ 2.7×10¹⁸`, ~3.7× low) — it brackets the spread rather than improving the already-calibrated ~1.1×.
+   The durable insight: electrons are *created* in the post-shock bath (init `T_e = T_ve`), not frozen-cold
+   from free-stream (a cold start collapses `n_e` ~100×). A faithful 3-T would need e–ion Coulomb heating +
+   the ionization-energy sink — more, not less — so it is closed unless the anchor is tightened.
 3. **Finite-rate ionization network instead of Saha-target × single associative rate.** RAM-C (~7.6 km/s) is
    *mixed* associative + electron-impact, the latter thresholded, plus recombination. A two-way finite-rate
    network with the right rates tracks the real buildup instead of chasing a too-high Saha target.
