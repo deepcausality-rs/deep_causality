@@ -44,10 +44,10 @@ pub use crate::types::{Ambient, CfdScalar};
 // The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
 pub use crate::coordinate::{BodyFittedCoordinate, CartesianIdentity, MetricProvider};
 pub use crate::tensor_bridge::{
-    QttProjector2d, body_mask_2d, dequantize, dequantize_2d, dequantize_3d, divergence_3d,
-    gradient, gradient_x, gradient_x_3d, gradient_y, gradient_y_3d, gradient_z_3d, laplacian,
-    laplacian_2d, laplacian_3d, mask_from_fn, quantize, quantize_2d, quantize_3d, shift_minus,
-    shift_plus,
+    AcousticCoreInverse, AcousticCoreInverse2d, QttProjector2d, body_mask_2d, dequantize,
+    dequantize_2d, dequantize_3d, divergence_3d, gradient, gradient_x, gradient_x_3d, gradient_y,
+    gradient_y_3d, gradient_z_3d, laplacian, laplacian_2d, laplacian_3d, mask_from_fn, quantize,
+    quantize_2d, quantize_3d, shift_minus, shift_plus,
 };
 
 // The CfdFlow DSL facade (owned case descriptions materialized at run).
@@ -86,10 +86,11 @@ pub use crate::theories::*;
 
 // Solver configuration + type-state builder.
 pub use crate::solvers::{
-    AcousticImex1d, CompressibleEuler1d, DecNs, DecNsConfig, DecNsConfigNeedsTimeStep,
-    DecNsConfigNeedsViscosity, DecNsConfigReady, EulerState, FittedNormalShock, PostShockState,
-    QttImmersed2d, QttIncompressible2d, QttLinear1d, StagnationOutcome, conservation_round,
-    ideal_gas_pressure, positivity_floor,
+    AcousticImex1d, CompressibleEuler1d, CompressibleMarcher2d, DecNs, DecNsConfig,
+    DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity, DecNsConfigReady, EulerState,
+    EulerState2d, EulerStateTt2d, FittedNormalShock, PostShockState, QttImmersed2d,
+    QttIncompressible2d, QttLinear1d, StagnationOutcome, conservation_round, ideal_gas_pressure,
+    ideal_gas_pressure_2d, positivity_floor,
 };
 
 // QTT rollout observable extraction (tensor-train-native diagnostics + surface observables).

@@ -137,7 +137,7 @@ fn identity_core<R: ConjugateScalar>() -> CausalTensor<R> {
 
 /// Lifts a 1-D operator to act on the **leading** modes of an `(L + m)`-mode field, identity on the
 /// trailing `m` modes (`op ⊗ I_m`). The shared bonds are all 1, so the cores concatenate directly.
-fn lift_leading<R>(
+pub(crate) fn lift_leading<R>(
     op: &CausalTensorTrainOperator<R>,
     m: usize,
 ) -> Result<CausalTensorTrainOperator<R>, PhysicsError>
@@ -150,7 +150,7 @@ where
 }
 
 /// Lifts a 1-D operator to act on the **trailing** modes, identity on the leading `m` (`I_m ⊗ op`).
-fn lift_trailing<R>(
+pub(crate) fn lift_trailing<R>(
     op: &CausalTensorTrainOperator<R>,
     m: usize,
 ) -> Result<CausalTensorTrainOperator<R>, PhysicsError>

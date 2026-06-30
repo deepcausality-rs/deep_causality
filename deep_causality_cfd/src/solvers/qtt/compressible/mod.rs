@@ -10,7 +10,9 @@
 mod euler_1d;
 mod fitting;
 mod imex;
+mod marcher_2d;
 
 pub use euler_1d::{CompressibleEuler1d, EulerState, ideal_gas_pressure};
 pub use fitting::{FittedNormalShock, PostShockState, StagnationOutcome};
 pub use imex::{AcousticImex1d, conservation_round, positivity_floor};
+pub use marcher_2d::{CompressibleMarcher2d, EulerState2d, EulerStateTt2d, ideal_gas_pressure_2d};

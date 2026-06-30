@@ -133,6 +133,28 @@ divergence threshold at 1). The reading: the **jump is the hard part, not the bu
 [Res 5](gap-two-resolution-5-dynamic-rank-lever.md), by keeping the interior smooth, is what keeps the implicit
 step cheap. **[holds: closed-form core low-rank; smooth-interior preconditioner contracts]**
 
+## Implemented (closed-form inverse, 2026-06-30)
+
+The closed-form core inverse is now **built**, not merely measured densely. `AcousticCoreInverse`
+(`deep_causality_cfd/src/tensor_bridge/acoustic_inverse.rs`) realizes `A₀⁻¹` directly: `A₀ = I − β∂²` factors
+exactly through the cyclic shift as `A₀ = (s/ρ)(I−ρS₊)(I−ρS₋)` with `ρ = (1+2s−√(1+4s))/(2s) ∈ (0,1)`, so
+`A₀⁻¹ = (ρ/s)(I−ρS₋)⁻¹(I−ρS₊)⁻¹` and each resolvent is the binary-doubling product
+`Σ_{k<2^l} ρ^k S₊^k = Π_{j<l}(I + ρ^{2^j} S₊^{2^j})` — `O(l)` shift-applies, no iterative solve. `S₊^{2^j}` is the
+existing shift on the high `l−j` bits (`lift_leading(shift_plus(l−j), j)`), so no new operator. The prefactor
+`ρ/s` exactly cancels the two `1/(1−ρ)` resolvent gains (`s(1−ρ)² = ρ`), making the inverse **free-stream-exact**
+— the property an AMEn-per-step solve loses to its residual tolerance, and the reason the marcher waited for this
+rather than swapping in the AMEn prototype.
+
+- **Gate 1 [holds]:** `A₀A₀⁻¹ = I` to round-off (residual `< 1e-9`) at bounded, resolution-stable bond
+  (`≤ 16`, flat `L=8 → L=10`) — `acoustic_inverse_tests.rs`.
+- **`AcousticImex1d` (Stage 3)** now advances the core with this inverse instead of `solve::linear`; all Stage-3
+  gates (free-stream-exact step, stability beyond the explicit acoustic-diffusion number, conservation,
+  positivity) hold.
+- **2-D marcher (Stage 5)** uses the ADI form `AcousticCoreInverse2d = (I−β∂ₓ²)⁻¹(I−β∂ᵧ²)⁻¹` as its implicit
+  acoustic-dissipation step (explicit convection + implicit dissipation, the 2-D analogue of `AcousticImex1d`):
+  free-stream-exact and bounded past the explicit limit. The hyperbolic all-Mach acoustic-*flux*-implicit Euler
+  scheme (lifting the true acoustic CFL, vs. the acoustic-*diffusion* limit) remains the open Stage-6 remainder.
+
 ## Verification gates (what a spec/PR must prove)
 
 1. **Closed-form inverse:** the precomputed `A₀⁻¹` MPO satisfies `A₀ A₀⁻¹ = I` to round-off at bounded bond.

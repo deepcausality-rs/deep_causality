@@ -15,28 +15,28 @@
 //!   A₁ = −Δt·κ·(c²−c̄²)·∂²  (variable remainder — a bounded perturbation, lagged explicitly)
 //! ```
 //!
-//! so the implicit solve is always against the well-conditioned constant-coefficient core (the study
-//! measured its inverse at bounded, resolution-stable bond, and the perturbation spectral radius `< 1` on
-//! a smooth interior). This is the isolated 1-D acoustic operator that task 3.1 gates *first*, before the
-//! full system coupling in the marcher. The model equation is `u_t = −a·u_x + κ·c²(x)·u_xx`: explicit
-//! advection, split-implicit acoustic/diffusion.
+//! so the implicit solve is always against the well-conditioned constant-coefficient core. That core is
+//! advanced by its **closed-form low-rank inverse** ([`AcousticCoreInverse`], design D10) — `A₀` factors
+//! exactly through the cyclic shift and its inverse is applied in `O(l)` shift-applies with no iterative
+//! solve, so the step is unconditionally robust and **free-stream-exact** (an AMEn-per-step solve loses
+//! free-stream to its residual tolerance). This is the isolated 1-D acoustic operator that task 3.1 gates
+//! *first*, before the full system coupling in the marcher. The model equation is
+//! `u_t = −a·u_x + κ·c²(x)·u_xx`: explicit advection, split-implicit acoustic/diffusion.
 
-use crate::tensor_bridge::{dequantize, gradient, laplacian, quantize};
+use crate::tensor_bridge::{AcousticCoreInverse, dequantize, gradient, laplacian, quantize};
 use crate::types::CfdScalar;
 use alloc::format;
 use alloc::vec;
 use deep_causality_num::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{
-    CausalTensor, CausalTensorTrain, CausalTensorTrainOperator, SolveConfig, TensorTrain,
-    TensorTrainOperator, Truncation, solve,
+    CausalTensor, CausalTensorTrain, CausalTensorTrainOperator, TensorTrain, TensorTrainOperator,
+    Truncation,
 };
 
-/// AMEn rank cap for the implicit acoustic solve.
-const SOLVE_MAX_RANK: usize = 32;
-
 /// A 1-D IMEX integrator for `u_t = −a·u_x + κ·c²(x)·u_xx` (fixed `Δt`), with the stiff acoustic/diffusion
-/// term advanced by the D10 split: constant-coefficient core implicit (AMEn), variable remainder lagged.
+/// term advanced by the D10 split: constant-coefficient core implicit (closed-form inverse), variable
+/// remainder lagged.
 pub struct AcousticImex1d<R>
 where
     R: CfdScalar + ConjugateScalar<Real = R>,
@@ -47,13 +47,12 @@ where
     kappa: R,
     grad: CausalTensorTrainOperator<R>,
     lap: CausalTensorTrainOperator<R>,
-    /// `I − Δt·κ·c̄²·∂²`, the constant-coefficient implicit core.
-    a0: CausalTensorTrainOperator<R>,
+    /// `(I − Δt·κ·c̄²·∂²)⁻¹`, the closed-form inverse of the constant-coefficient implicit core.
+    a0_inv: AcousticCoreInverse<R>,
     /// `c²(x)`, the full sound-speed-squared field.
     c2: CausalTensorTrain<R>,
     /// `c²(x) − c̄²`, the variable remainder field (lagged each step).
     dc2: CausalTensorTrain<R>,
-    cfg: SolveConfig<R>,
     trunc: Truncation<R>,
 }
 
@@ -89,19 +88,13 @@ where
         let n_r = R::from_usize(n)
             .ok_or_else(|| PhysicsError::NumericalInstability("R::from_usize(n)".into()))?;
         let cbar2 = c2.iter().fold(R::zero(), |a, &v| a + v) / n_r;
-        let beta = dt * kappa * cbar2;
-        let neg_beta = R::zero() - beta;
-        let id = CausalTensorTrainOperator::<R>::identity(&vec![2usize; l]);
-        let a0 = id.add(&lap.scale(neg_beta))?;
+        // A₀ = I − Δt·κ·c̄²·∂² = (1+2s)·I − s·(S₊+S₋) with the dimensionless stiffness s = Δt·κ·c̄²/Δx².
+        let s = dt * kappa * cbar2 / (dx * dx);
+        let a0_inv = AcousticCoreInverse::new_1d(l, s, trunc)?;
 
         let c2_field = quantize(&CausalTensor::new(c2.to_vec(), vec![n])?, &trunc)?;
         let dc2_dense: vec::Vec<R> = c2.iter().map(|&v| v - cbar2).collect();
         let dc2 = quantize(&CausalTensor::new(dc2_dense, vec![n])?, &trunc)?;
-
-        let tol = R::from_f64(1e-6).unwrap_or_else(R::epsilon);
-        let ridge = R::from_f64(1e-13).unwrap_or_else(R::epsilon);
-        let cfg = SolveConfig::new(300, tol, ridge)
-            .map_err(|e| PhysicsError::NumericalInstability(format!("solve config: {e:?}")))?;
 
         Ok(Self {
             l,
@@ -110,22 +103,20 @@ where
             kappa,
             grad,
             lap,
-            a0,
+            a0_inv,
             c2: c2_field,
             dc2,
-            cfg,
             trunc,
         })
     }
 
     /// One IMEX step: explicit advection + lagged variable remainder on the right, the constant-coefficient
-    /// acoustic core solved implicitly by AMEn.
+    /// acoustic core advanced by its closed-form inverse `A₀⁻¹` (no iterative solve).
     ///
-    /// `A₀ uⁿ⁺¹ = uⁿ − Δt·a·∂ₓuⁿ + Δt·κ·(c²−c̄²)·∂²ₓuⁿ`.
+    /// `uⁿ⁺¹ = A₀⁻¹·(uⁿ − Δt·a·∂ₓuⁿ + Δt·κ·(c²−c̄²)·∂²ₓuⁿ)`.
     ///
     /// # Errors
-    /// [`PhysicsError::NumericalInstability`] if the AMEn solve does not converge; propagates apply /
-    /// rounding errors.
+    /// Propagates apply / rounding errors.
     pub fn step(&self, u: &CausalTensorTrain<R>) -> Result<CausalTensorTrain<R>, PhysicsError> {
         let neg_a = R::zero() - self.advect;
         let conv = self.grad.apply(u, &self.trunc)?.scale(neg_a * self.dt);
@@ -135,11 +126,7 @@ where
             .hadamard_rounded(&lap_u, &self.trunc)?
             .scale(self.kappa * self.dt);
         let rhs = u.add(&conv)?.add(&rem)?.round(&self.trunc)?;
-        solve::linear(&self.a0, &rhs, SOLVE_MAX_RANK, &self.cfg).map_err(|e| {
-            PhysicsError::NumericalInstability(format!(
-                "acoustic AMEn solve did not converge: {e:?}"
-            ))
-        })
+        self.a0_inv.apply(&rhs)
     }
 
     /// One fully-explicit step `uⁿ⁺¹ = uⁿ + Δt(−a·∂ₓu + κ·c²·∂²ₓu)` — the control that diverges beyond the

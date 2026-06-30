@@ -48,10 +48,14 @@ and a valid standalone deliverable. Stages 5–6 carry the named open-research n
 
 ## 3. IMEX time integration + conservation/positivity (`solvers/qtt/compressible/imex.rs`)
 
-- [x] 3.1 IMEX step (`AcousticImex1d`) — explicit convection, **implicit acoustic** via `solve::linear` (AMEn)
-  on the **D10 split** (constant-coefficient core implicit, variable remainder lagged), so the solve is always
-  against the well-conditioned core. **AMEn convergence gated in isolation** (`amen_converges_in_isolation`),
-  per the `studies/qtt_acoustic_precond` result.
+- [x] 3.1 IMEX step (`AcousticImex1d`) — explicit convection, **implicit acoustic** on the **D10 split**
+  (constant-coefficient core implicit, variable remainder lagged), so the solve is always against the
+  well-conditioned core. The core is advanced by its **closed-form low-rank inverse**
+  (`AcousticCoreInverse`, `tensor_bridge/acoustic_inverse.rs`): `A₀ = (s/ρ)(I−ρS₊)(I−ρS₋)` factors exactly
+  through the cyclic shift, so `A₀⁻¹ = (ρ/s)R₋R₊` is applied in `O(l)` shift-applies by binary doubling — **no
+  iterative solve, no AMEn-convergence gamble**, and **free-stream-exact** (the property an AMEn-per-step solve
+  loses to its residual tolerance). **D10 gate 1** (`A₀A₀⁻¹ = I` to round-off, resolution-stable bond) and the
+  isolated free-stream/run gates pass, realizing the `studies/qtt_acoustic_precond` closed-form-core ideal.
 - [x] 3.2 Conservation-preserving rounding (`conservation_round`) — carry the conserved total + rank-1 uniform
   fixup; tests: coarse-round integral restored, and **zero secular mass drift** over a 200-step run.
 - [x] 3.3 Positivity (`positivity_floor` limiter; entropy/log-variable evolution noted as the structural
@@ -76,7 +80,13 @@ and a valid standalone deliverable. Stages 5–6 carry the named open-research n
 
 ## 5. 2-D body-fitted compressible reacting marcher (`solvers/qtt/compressible/marcher_2d.rs`)
 
-- [ ] 5.1 Assemble the 2-D compressible reacting marcher implementing `Marcher`; drop into `CfdFlow`.
+- [~] 5.1 Assemble the 2-D compressible reacting marcher (`CompressibleMarcher2d`) over the `MetricProvider`
+  seam, **implementing `Marcher`** (`advance` = one IMEX step on the tensor-train state `EulerStateTt2d`, gated
+  by `marcher_trait_advance_matches_one_step_and_preserves_free_stream`). The time step is **IMEX** (design
+  D10): explicit convective flux + **implicit acoustic dissipation** via the closed-form 2-D ADI inverse
+  (`AcousticCoreInverse2d` = `(I−β∂ₓ²)⁻¹(I−β∂ᵧ²)⁻¹`), the 2-D system analogue of `AcousticImex1d` —
+  free-stream-exact, bounded beyond the explicit acoustic-diffusion limit, no iterative solve. **Remaining:**
+  the `CfdFlow`/`QttMarchRun` enum wiring (mirroring `QttImmersed2d`) for an end-to-end DSL march.
 - [ ] 5.2 Blunt-body bow shock in the fitted coordinate to quasi-steady standoff; carry the Tier-A LER stages
   unchanged. **Gate: bounded, resolution-stable χ** vs a Cartesian-captured control that reproduces
   `χ ~ √side` — `verification/qtt_blunt_body_2d/`.

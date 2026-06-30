@@ -4,6 +4,8 @@
  */
 
 #[cfg(test)]
+pub mod acoustic_inverse_tests;
+#[cfg(test)]
 pub mod codec_tests;
 #[cfg(test)]
 pub mod mask_tests;

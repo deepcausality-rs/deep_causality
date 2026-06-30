@@ -59,14 +59,27 @@ fn build(l: usize, s: f64) -> (AcousticImex1d<f64>, usize, f64) {
 }
 
 #[test]
-fn amen_converges_in_isolation() {
-    // Task 3.1: the implicit acoustic solve converges on the (split) operator, gated before any coupling.
+fn closed_form_acoustic_step_in_isolation() {
+    // Task 3.1 / D10: the implicit acoustic step runs via the closed-form core inverse (no iterative
+    // solve, so nothing to "converge"), gated in isolation before any coupling. It is also free-stream-
+    // exact at the integrator level: a uniform field has zero advection and zero remainder, so the
+    // implicit core must return it unchanged to round-off — the property an AMEn-per-step solve lost.
     let (imex, n, _dx) = build(7, 4.0);
     let u0 = enc((0..n).map(|i| (TAU * i as f64 / n as f64).sin()).collect());
     assert!(
         imex.step(&u0).is_ok(),
-        "the AMEn implicit acoustic solve must converge in isolation"
+        "the closed-form acoustic step must run"
     );
+
+    let c = 2.5;
+    let uniform = enc(vec![c; n]);
+    let stepped = dense(&imex.step(&uniform).unwrap());
+    for v in stepped {
+        assert!(
+            (v - c).abs() < 1e-9,
+            "free-stream must be a fixed point of the implicit acoustic step: {v} vs {c}"
+        );
+    }
 }
 
 #[test]
