@@ -1,0 +1,52 @@
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_703c7629a59d17 93-95
+deep_causality_cfd/src/solvers/qtt/compressible/mod.rs
+  s_c4c919f578d611::t_864d6aaec03718 17
+deep_causality_cfd/verification/qtt_ramc_stagline/main.rs
+  s_c4c919f578d611::t_0be223e5bb39d4 24-25
+  s_c4c919f578d611::t_d1604a06abe466 58-60,66-85,87,90-94
+  s_c4c919f578d611::t_4bd8995ef05b90 95
+deep_causality_cfd/verification/qtt_ramc_stagline/baseline.txt
+  s_c4c919f578d611::t_ed7a6029744462 6,16-18,24,28-39
+deep_causality_cfd/verification/qtt_ramc_stagline/print_utils.rs
+  s_c4c919f578d611::t_4ea16e53e3e73e 63
+  s_c4c919f578d611::t_cbbce5513fab91 83-93
+  s_c4c919f578d611::t_90ad96334738eb 14-19
+deep_causality_cfd/src/solvers/mod.rs
+  s_c4c919f578d611::t_dae2b594d6920d 25-28
+deep_causality_cfd/src/solvers/qtt/mod.rs
+  s_c4c919f578d611::t_8c2d923784e34b 17-18
+openspec/notes/plasma-blackout/gap-3/chemistry-fidelity-gap.md
+  s_c4c919f578d611::t_34b0aba199b694 48-51,54-55
+  s_c4c919f578d611::t_eab066f13c35af 8-15
+deep_causality_cfd/verification/qtt_ramc_stagline/config.rs
+  s_c4c919f578d611::t_5b6e470b9b63c7 34-40
+openspec/notes/plasma-blackout/gap-3/gap-three-resolution-2-tve-controlled-ionization.md
+  s_c4c919f578d611::t_5250ef68a8d6ab 1-202
+deep_causality_cfd/tests/solvers/qtt/compressible_fitting_tests.rs
+  s_c4c919f578d611::t_b8133adbe901ac 9,16-26
+  s_c4c919f578d611::t_a4bca4d10d9f97 27,107-175
+  s_c4c919f578d611::t_f9cc38ab8cbb25 28
+deep_causality_cfd/src/solvers/qtt/compressible/fitting.rs
+  s_c4c919f578d611::t_155d5af167bc19 57-77
+  s_c4c919f578d611::t_6b95524bb1c5b1 198-257
+  s_c4c919f578d611::t_b7f8a213dcd0b3 23-25
+  s_c4c919f578d611::t_992828ad90179a 195-197
+  s_c4c919f578d611::t_1d3b32199bfc47 182-194
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "3b3f05e24d9e50167bacfb6c85de55f51f68b30e",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
