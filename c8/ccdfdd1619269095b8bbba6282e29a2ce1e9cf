@@ -1,0 +1,88 @@
+examples/avionics_examples/ins_gnss_blackout/model.rs
+  s_c4c919f578d611::t_0ddc7e87c5e336 103,135,138,171,178,246,257-258,263,294-298,302-303,305
+  s_c4c919f578d611::t_ad5000bdee7128 116,119,123-124,186-188
+  s_c4c919f578d611::t_151f8838034ff8 140-141
+  s_c4c919f578d611::t_312dea22483483 202-203
+  s_c4c919f578d611::t_71cefaa4b48190 22,29,31,33,35,37,39,51,53,55,62-66,71-76,102,109,111-112,134,143,174-175,179-180,210-213,252-255,271-274,283,285,293,299-301
+  s_c4c919f578d611::t_5452191a469160 214-215,220
+  s_c4c919f578d611::t_cd7dc6b6d083f6 223,227
+  s_c4c919f578d611::t_74fca0ec83e3d1 87-88
+  s_c4c919f578d611::t_275e88fb684067 184
+  s_c4c919f578d611::t_d438015a54bc04 1-5,7-9,14-21,23-28,30,32,34,36,38,43-49,52,54,56-61,67-70,77-86,89-101,104-108,110,113-115,117-118,120-122,125-133,136-137,139,142,145-152,154-170,172-173,176-177,181-183,185,190-201,204-209,216-219,221-222,224-226,228-245,247-251,256,259-262,264-270,275-282,284,286-292,304,306-317
+  s_c4c919f578d611::t_b7d0447644a906 40-41
+  s_c4c919f578d611::t_9b0f0efa3139b4 50
+  s_c4c919f578d611::t_b5a143d8735c6c 6,10-13
+  s_c4c919f578d611::t_5b52c27c2a8a46 42,144,153,189
+examples/chronometric_examples/src/lib.rs
+  s_c4c919f578d611::t_99fc9db5353353 6-11,14,16-17
+examples/chronometric_examples/Cargo.toml
+  s_c4c919f578d611::t_6a8e3ec473682c 20
+examples/chronometric_examples/gm_recovery/pipeline.rs
+  s_c4c919f578d611::t_c76c3c754ca170 125
+examples/avionics_examples/ins_gnss_blackout/main.rs
+  s_c4c919f578d611::t_c7299b0cfce113 8-12,17-18,25-26
+  s_c4c919f578d611::t_9f9593631a67b7 1-7,13-16,19,22-24,27-32,34-35,37-54,56-62,64-69,71,73-79,83,85,90-91,126
+  s_c4c919f578d611::t_49a3dbbaf4d1d9 87
+  s_c4c919f578d611::t_a2c99cc308d79c 92-106,108-125
+  s_c4c919f578d611::t_13d498210bae1f 20-21,33,55,63,70,84,86,88-89
+  s_c4c919f578d611::t_e1652fa35ca140 36,80-82,107
+  s_c4c919f578d611::t_69168f1ecf6f38 72
+examples/chronometric_examples/src/types/mod.rs
+  s_c4c919f578d611::t_fa9d1a0121dd56 5-7
+examples/README.md
+  s_c4c919f578d611::t_b9cd803aea3434 187
+examples/chronometric_examples/src/data_manager/mod.rs
+  s_c4c919f578d611::t_1dfc38015c4bed 6-14
+examples/avionics_examples/ins_gnss_blackout/README.md
+  s_c4c919f578d611::t_76613ad6295705 1-2,8-14,17-19,26-37,39,41-42,47-53,57-67
+  s_c4c919f578d611::t_3b22bbd696cc7d 3-7,15-16,20-25,38,40,43-46,54-56
+openspec/notes/plasma-blackout/gap-analysis.md
+  s_c4c919f578d611::t_c65595ce2c6fa6 263-279
+examples/avionics_examples/Cargo.toml
+  s_c4c919f578d611::t_585243eaed6252 32-35,44
+  s_c4c919f578d611::t_3daf650b89e51c 45-46
+openspec/notes/plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md
+  s_c4c919f578d611::t_bdeb9625218eee 259-351,357-361,375-394
+  s_c4c919f578d611::t_ea94e2d63d1564 352-356,362-374
+examples/avionics_examples/ins_gnss_blackout/utils_print.rs
+  s_1d9ac065fd2a2a::t_e2cff5e5a3e082 10
+  s_c4c919f578d611::t_326af8c3c0a380 1-6,8,11-24,26,30-47,49-51,53-55,57-69,71-73,75-77,80,84-98,100-103,105-114
+  s_c4c919f578d611::t_263ef33c903c8b 7
+  s_c4c919f578d611::t_e1652fa35ca140 27-29,48,52,56,70,74,78-79,99
+  s_c4c919f578d611::t_5b52c27c2a8a46 9,25
+  s_c4c919f578d611::t_a4a368e4f70b30 104
+  s_c4c919f578d611::t_a10d31bbec77dd 81-83
+examples/avionics_examples/README.md
+  s_c4c919f578d611::t_5b01aa50ed2773 24
+  s_c4c919f578d611::t_0ae93cc7e8b133 62
+  s_c4c919f578d611::t_567a8609803682 63
+  s_c4c919f578d611::t_cad8649c20e9fc 21-23
+  s_c4c919f578d611::t_ca02c43a02018c 17-20
+openspec/notes/plasma-blackout/gap-3/gap-three-research-note.md
+  s_c4c919f578d611::t_3d41a7f3b41e74 1-283,320-323,326-332
+  s_c4c919f578d611::t_72dc6de93e853d 284-319,324-325
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "c8ccdfdd1619269095b8bbba6282e29a2ce1e9cf",
+  "prompts": {},
+  "sessions": {
+    "s_1d9ac065fd2a2a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "cce51aa3-32af-4cd1-aa69-dad4089bda76",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
