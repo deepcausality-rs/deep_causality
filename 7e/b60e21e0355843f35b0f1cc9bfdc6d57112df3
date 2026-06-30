@@ -1,0 +1,46 @@
+deep_causality_cfd/src/coordinate/blended.rs
+  s_c4c919f578d611::t_2637428565a767 163-166
+  s_c4c919f578d611::t_c1e486983df3c3 205-209,224-237
+  s_c4c919f578d611::t_2e3ecd44258d08 39-65
+  s_c4c919f578d611::t_87a10c5ca7180b 1-38,66-75,82-98,102-103,116-162,167-204,210-223,238-305
+  s_c4c919f578d611::t_fd8e389319253d 99-101,106-115
+  s_c4c919f578d611::t_3d43b979ebe064 76-81
+  s_c4c919f578d611::t_9da0e942142837 104-105
+deep_causality_cfd/src/coordinate/mod.rs
+  s_c4c919f578d611::t_53b2f9e37e20ca 27
+  s_c4c919f578d611::t_4b955c9f944c33 31
+deep_causality_cfd/tests/coordinate/mod.rs
+  s_c4c919f578d611::t_4e43da6515b34f 7
+  s_c4c919f578d611::t_58d188ae4c7e76 6
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_f5918d31691e19 45-47
+openspec/changes/add-cfd-compressible-qtt-marcher/tasks.md
+  s_c4c919f578d611::t_d4ddb0c02e90eb 25-31
+deep_causality_cfd/tests/coordinate/blended_tests.rs
+  s_c4c919f578d611::t_67c4b8d5123e5d 1-9,13-18,24-33,38-65,67-86,88-106,108-120,125-129,135-136,142-150,159
+  s_c4c919f578d611::t_dc8ebfa5457712 107
+  s_c4c919f578d611::t_e671255a3b8212 37
+  s_c4c919f578d611::t_90c8c31110034d 130-134,151-153
+  s_c4c919f578d611::t_99ab6e0be243e5 121-124,137-141
+  s_c4c919f578d611::t_2b42521fe5a288 154-158
+  s_c4c919f578d611::t_12f9076bd638a4 34-36
+  s_c4c919f578d611::t_85edaf1cf8d672 10-12,19-23
+  s_c4c919f578d611::t_27b4511bd9bae4 66
+  s_c4c919f578d611::t_e02c2c08641886 87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "7eb60e21e0355843f35b0f1cc9bfdc6d57112df3",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
