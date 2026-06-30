@@ -1,0 +1,71 @@
+deep_causality_cfd/src/tensor_bridge/operators.rs
+  s_c4c919f578d611::t_524a5ad4629dcc 224
+deep_causality_cfd/src/solvers/mod.rs
+  s_c4c919f578d611::t_0ff385c00ec293 24-28
+deep_causality_cfd/verification/qtt_reentry_3d/main.rs
+  s_c4c919f578d611::t_8f0322cb1b3cd2 190-192
+  s_c4c919f578d611::t_286bfaec266de6 1-161,164,167-189,193-215
+  s_c4c919f578d611::t_f33da972c52445 162-163,165-166
+deep_causality_cfd/Cargo.toml
+  s_c4c919f578d611::t_0f94619eff6606 158-161
+  s_c4c919f578d611::t_af1042b89c3649 162-165
+deep_causality_cfd/tests/tensor_bridge/acoustic_inverse_tests.rs
+  s_c4c919f578d611::t_df089f68a9fb21 239-243,258-267
+  s_c4c919f578d611::t_db366861b8d2d7 272-274
+  s_c4c919f578d611::t_20b690fbc5a631 213,244
+  s_c4c919f578d611::t_38172899d167fb 201-212,214-238,245-257,268-271,275-276
+  s_c4c919f578d611::t_85e2bba28fa8df 12-14
+deep_causality_cfd/src/solvers/qtt/compressible/mod.rs
+  s_c4c919f578d611::t_689c2522c59d7e 14,20
+openspec/changes/add-cfd-compressible-qtt-marcher/tasks.md
+  s_c4c919f578d611::t_5b6d69e1c8bee5 105-112
+  s_c4c919f578d611::t_aab2466d8e3425 95-101
+  s_c4c919f578d611::t_f9bd595bb6d571 113-120
+deep_causality_cfd/src/tensor_bridge/acoustic_inverse.rs
+  s_c4c919f578d611::t_22d15b2351e18b 39
+  s_c4c919f578d611::t_d7ea549913265c 129-135
+  s_c4c919f578d611::t_88d1c9f05db32d 244-261,265-269,272-274,277-322
+  s_c4c919f578d611::t_252b9f7b383c2b 262-264,270-271,275-276
+deep_causality_cfd/verification/qtt_blunt_body_2d/main.rs
+  s_c4c919f578d611::t_8f0322cb1b3cd2 106-108
+  s_c4c919f578d611::t_4a3e845e36439c 142-146,151,154-155,158-159,161-169,172-174
+  s_c4c919f578d611::t_1f9c0e60466808 1-45,47-105,109-141,147-150,152-153,156-157,160,170-171,175-182
+  s_c4c919f578d611::t_9f8b2815b38b87 46
+deep_causality_cfd/src/solvers/qtt/compressible/marcher_3d.rs
+  s_c4c919f578d611::t_d46c2b2051d8f5 1-60,64-68,70-75,77-87,89-154,159-289
+  s_c4c919f578d611::t_c2d950b2c6efb6 61-63,69,76,88
+  s_c4c919f578d611::t_3473798b69a91a 155-158
+deep_causality_cfd/tests/solvers/qtt/compressible_marcher2d_tests.rs
+  s_c4c919f578d611::t_2fbe539f592554 30
+deep_causality_cfd/tests/solvers/qtt/compressible_marcher3d_tests.rs
+  s_c4c919f578d611::t_c8840c526ba5b9 38-39,73-74,141-142
+  s_c4c919f578d611::t_c1d9135526c65e 40
+  s_c4c919f578d611::t_240e91175c8c9e 1-37,41-72,75-82,87-118,120-133,136-140,150-151
+  s_c4c919f578d611::t_df089f68a9fb21 83-86,143-149
+  s_c4c919f578d611::t_20b690fbc5a631 119,134-135
+deep_causality_cfd/src/solvers/qtt/mod.rs
+  s_c4c919f578d611::t_2d5cfea475774f 16-19
+deep_causality_cfd/tests/solvers/qtt/mod.rs
+  s_c4c919f578d611::t_31242c80c6f52c 13-14
+deep_causality_cfd/src/tensor_bridge/mod.rs
+  s_c4c919f578d611::t_e4e1002986967a 21
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_75f09252a274b0 91-95
+  s_c4c919f578d611::t_df089f68a9fb21 49-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "89d4d0359ef39d6b5615900dc5364d0785e22fad",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
