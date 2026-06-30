@@ -121,7 +121,10 @@ fn park2t_controller_marches_ramc_within_3x() {
         "Park-2T peak n_e {:.3e} should be within ~3× of RAM-C II (1e19)",
         out.electron_density
     );
-    assert!(out.blackout, "the controller must still black out the comms band");
+    assert!(
+        out.blackout,
+        "the controller must still black out the comms band"
+    );
 }
 
 #[test]

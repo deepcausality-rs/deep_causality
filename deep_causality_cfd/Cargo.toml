@@ -197,5 +197,19 @@ path = "studies/qtt_blend_metric/main.rs"
 name = "qtt_repin_marcher"
 path = "studies/qtt_repin_marcher/main.rs"
 
+# Gap-3 trajectory-axis feasibility studies: de-risk Resolution-1's perturbed-conformal split (the
+# generator, the aero-coupling law, the relativistic clock) before specifying the trajectory propagator.
+[[example]]
+name = "traj_fs1_generator"
+path = "studies/traj_fs1_generator/main.rs"
+
+[[example]]
+name = "traj_fs2_coupling"
+path = "studies/traj_fs2_coupling/main.rs"
+
+[[example]]
+name = "traj_fs3_clock"
+path = "studies/traj_fs3_clock/main.rs"
+
 [lints]
 workspace = true

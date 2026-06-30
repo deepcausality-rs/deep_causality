@@ -67,8 +67,8 @@ fn main() {
 
     // Gap-3 Park two-temperature controller: ionization driven off Tₐ = √(T_tr·T_ve), with T_ve relaxed
     // from the free-stream value over the residence time. Post-shock pressure (atm) sets τ_vt.
-    let pressure_atm =
-        post.n_tot2 * config::ft(1.380_649e-23) * post.t2 / config::ft(config::STANDARD_ATMOSPHERE_PA);
+    let pressure_atm = post.n_tot2 * config::ft(1.380_649e-23) * post.t2
+        / config::ft(config::STANDARD_ATMOSPHERE_PA);
     let closure = Park2tClosure {
         t_ve_initial: config::ft(config::T_INF),
         pressure_atm,

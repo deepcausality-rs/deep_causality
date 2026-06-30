@@ -21,8 +21,8 @@ use deep_causality_physics::{
     AVOGADRO_CONSTANT, ElectronDensity, PARK_NO_IONIZATION_ACTIVATION_TEMP,
     PARK_NO_IONIZATION_EXPONENT, PARK_NO_IONIZATION_PREFACTOR, PhysicsError, Temperature,
     VibrationalTemperature, arrhenius_rate_kernel, electron_density_kernel,
-    park2t_ionization_surrogate_kernel, plasma_frequency_kernel, rankine_hugoniot_temperature_kernel,
-    vibrational_relaxation_kernel,
+    park2t_ionization_surrogate_kernel, plasma_frequency_kernel,
+    rankine_hugoniot_temperature_kernel, vibrational_relaxation_kernel,
 };
 use deep_causality_tensor::{CausalTensor, Truncation};
 

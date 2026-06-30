@@ -45,3 +45,19 @@ fitted coordinate does not self-bound under marching, and re-pinning the coordin
 either; the rank driver is carrying Cartesian fluxes *through* a curved front. The lever that works is
 re-pinning **plus** treating the front as an exact Rankine–Hugoniot interface, so fluxes are never marched
 across it and each side stays smooth.
+
+## Gap-3 trajectory axis — de-risking the perturbed-conformal split
+
+A third batch de-risks the **trajectory/timing** axis (Resolution 1's B1 perturbed-conformal split) before
+specifying the propagator. See `openspec/notes/plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`.
+
+| Study | Question | Finding |
+|---|---|---|
+| `traj_fs1_generator` | Is the inverse-square core an exact **constant-generator matrix exponential** (Resolution-1 B1's unspecified `G`)? | **Yes, to round-off.** The eccentric-anomaly / Kustaanheimo–Stiefel generator `Ω` reproduces a Kepler orbit to **2.3×10⁻¹⁵·a** vs independent element propagation; `e^{Ω·2π}=I` and the semigroup law hold to ~1e-15. The exact core is concrete and textbook (KS); the heavier Bars `(4,2)` packaging is **optional, not required**. |
+| `traj_fs2_coupling` | Can **non-conformal aero** ride a between-step kick without touching the core (the corridor's `[open]` "research move")? | **Yes — the `[open]` concern dissolves.** A mock drag `−k·v` (ε≈9e-4) carried as a Strang kick in physical Cartesian velocity around an exact Kepler core is **2nd-order (observed 2.000)** and its error **vanishes linearly with ε**. You split in physical space (Encke/Strang); aero is never expressed in the conformal algebra. |
+| `traj_fs3_clock` | Is the "two-time" parameter the proper time, and does a forward `dτ/dt` kernel hit ns-level offsets? | **Forward kernel feasible; a conceptual fix.** `dτ/dt = 1+Φ/c²−v²/2c²` reproduces the GPS split (**+45.65 / −7.21 / +38.44 µs/day** vs textbook +45.7/−7.2/+38.5). The KS linearising `s` is a *reparametrisation*, **not** proper time `τ` — the spec must carry **both**. A 180 s reentry blackout drifts **−57 ns ⇒ 17 m** uncorrected. |
+
+Gap-3 result: the three hardest physics items of the trajectory axis (the generator, the aero-coupling law,
+the relativistic clock) are now **measured facts**, and two of them **simplify** Resolution 1 (KS instead of
+hand-set `(4,2)`; a physical-space split instead of a conformal-coupling law). The axis is spec-ready for a
+gravity-clock-core **Phase 1**; only the real aero interface (Tier-B Stage-4+) gates **Phase 2**.

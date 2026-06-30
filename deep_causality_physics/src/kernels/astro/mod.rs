@@ -4,7 +4,9 @@
  */
 
 pub(crate) mod mechanics;
+pub(crate) mod two_body;
 pub(crate) mod wrappers;
 
 pub use mechanics::*;
+pub use two_body::*;
 pub use wrappers::*;
