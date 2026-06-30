@@ -120,11 +120,46 @@ failure.
 
 ---
 
+## Measured (study `qtt_rank_fitted_dynamic`, 2026-06-30)
+
+The dynamic lever was probed before the build, the sequel to `qtt_rank_nonlinear`. Three marched cases at two
+resolutions each:
+
+- **Axis-aligned front:** bond holds `7` at both `64²` and `128²` (flat in resolution). When the feature stays
+  on a grid axis throughout the march, the bond is bounded by construction. This is the lever, confirmed
+  dynamically. **[holds]**
+- **Misaligned curved shock:** bond grows `20 → 25` with resolution, reproducing the `√side` threat under a
+  marcher. **[holds]**
+- **Static body-fitted coordinate (set once):** bond grows `25 → 35`, no better than the capture. Under
+  Cartesian fluxes the marched front drifts off a *fixed* curvilinear chart and the rank climbs. **A one-time
+  fitted coordinate does not self-bound.** **[measured: static fit insufficient]**
+
+So the study **sharpens the design**: alignment bounds the rank, but holding alignment as the front moves
+requires the **feedback re-pinning of B/D9, not a static chart**. Re-pinning is mandatory, not a refinement.
+
+A follow-up study (`qtt_repin_marcher`) prototyped the re-pinned marcher and sharpened it further, with one
+honest negative result and one positive:
+
+- **Re-pinning the coordinate *alone* does not curb the growth.** A re-pinned Cartesian-flux march still grows
+  `25 → 35` (18 re-pins fired at `128²`), identical to the static chart. The rank driver is **not** the front's
+  drift; it is the **angular structure a Cartesian-flux march injects by carrying fluxes *through* a curved
+  front**. **[measured: re-pin necessary, not sufficient]**
+- **Aligning the transport with the coordinate bounds it.** A radial transport on the *same* re-pinned tracked
+  interface — the front carried as an aligned interface, no flux marched across it — holds the bond at `8`, flat
+  in resolution. **[holds: coordinate-aligned tracked transport is `O(1)` and resolution-flat]**
+
+So the Stage-4 mechanism is **re-pin *and* treat the front as an exact Rankine–Hugoniot interface** (smooth each
+side), never marching Cartesian fluxes across it. The fitting that controls the rank and the RH jump that handles
+the discontinuity are the same act; a plain marcher in a good-but-static (or even re-pinned) coordinate is not.
+This is the C7 "dissolved by fitting" line ([tier-b note](tier-b-compressible-marcher.md) §4), now measured.
+
 ## Verification gates (what a spec/PR must prove)
 
-1. **Rank-vs-time:** a *marched* fitted shock holds `max_bond` bounded over a long run, while the Cartesian
-   control's bond grows `~√side` — the **dynamic** version of the static study, the make-or-break gate.
-   **[holds under precondition: single dominant feature]**
+1. **Rank-vs-time:** a **re-pinned** fitted marcher (the map updated to the live front each step) holds
+   `max_bond` bounded over a long run, while both the Cartesian control *and a static fitted chart* grow with
+   resolution — the **dynamic** version of the static study, the make-or-break gate. (`qtt_rank_fitted_dynamic`
+   established the static-chart growth and the aligned-bounded baseline; the re-pinned case is the Stage-4
+   gate.) **[holds under precondition: single dominant feature + active re-pinning]**
 2. **Correct shock speed:** conservation-preserving rounding (design D4) keeps the pinned front propagating at
    the exact Rankine–Hugoniot speed (no rounding-induced drift).
 3. **Pin tracks the front:** the `η = const` interface follows the live max-gradient cell within tolerance each

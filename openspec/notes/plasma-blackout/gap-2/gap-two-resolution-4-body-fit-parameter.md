@@ -133,6 +133,16 @@ change.
 
 ---
 
+## Measured (study `qtt_blend_metric`, 2026-06-30)
+
+Probed before the build. The position-blend `T_λ = (1−λ)·Cartesian + λ·fitted`, over compatibly-oriented charts
+in front of the nose, stays a **valid map**: `det J` holds one sign with `min‖det J‖ ≈ 1.5` across the whole
+`λ ∈ {0, 0.25, 0.5, 0.75, 1}` sweep, so no cell folds (the blend-validity residual holds for compatible charts).
+A fixed physical shock sampled on the blended lattice runs **monotonically from bond 114 at `λ=0` (Cartesian
+capture) to 5 at `λ=1` (body-fitted)**. So `λ` is a clean, continuous rank dial. **[holds: blend valid +
+dialable for compatibly-oriented charts]** The open part stays the *incompatibly-oriented* (twisted) chart pair,
+where a fold is possible and the positive-Jacobian guard does real work.
+
 ## Verification gates (what a spec/PR must prove)
 
 1. **`λ`-sweep on one solver:** with the *same* marcher, `λ = 0` reproduces the Cartesian control's `√side`

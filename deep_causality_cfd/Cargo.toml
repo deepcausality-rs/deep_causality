@@ -168,5 +168,22 @@ path = "studies/qtt_rank_nonlinear/main.rs"
 name = "qtt_rank_3d"
 path = "studies/qtt_rank_3d/main.rs"
 
+# Round-2 studies: de-risk the resolution-4/5/6 design nodes before the compressible build.
+[[example]]
+name = "qtt_rank_fitted_dynamic"
+path = "studies/qtt_rank_fitted_dynamic/main.rs"
+
+[[example]]
+name = "qtt_acoustic_precond"
+path = "studies/qtt_acoustic_precond/main.rs"
+
+[[example]]
+name = "qtt_blend_metric"
+path = "studies/qtt_blend_metric/main.rs"
+
+[[example]]
+name = "qtt_repin_marcher"
+path = "studies/qtt_repin_marcher/main.rs"
+
 [lints]
 workspace = true

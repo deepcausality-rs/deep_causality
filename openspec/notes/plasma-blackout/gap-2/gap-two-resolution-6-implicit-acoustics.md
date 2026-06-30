@@ -123,6 +123,16 @@ preconditioned AMEn → explicit `Δt`) degrades gracefully at every rung.
 
 ---
 
+## Measured (study `qtt_acoustic_precond`, 2026-06-30)
+
+Probed before the build. The constant-coefficient core `A₀ = I − β∂²` inverts at **bond 8, flat from `L=8` to
+`L=10`** (low-rank and resolution-stable, residual `~10⁻¹¹`). The perturbation spectral radius `ρ(A₀⁻¹A₁)` is
+**0.59 on a smooth interior** (`< 1`, so `I + A₀⁻¹A₁` contracts and the preconditioned solve converges
+geometrically, the Res-6 claim) and rises to **0.87 across a captured ×5 sound-speed jump** (toward the
+divergence threshold at 1). The reading: the **jump is the hard part, not the bulk**, so the fitting of
+[Res 5](gap-two-resolution-5-dynamic-rank-lever.md), by keeping the interior smooth, is what keeps the implicit
+step cheap. **[holds: closed-form core low-rank; smooth-interior preconditioner contracts]**
+
 ## Verification gates (what a spec/PR must prove)
 
 1. **Closed-form inverse:** the precomputed `A₀⁻¹` MPO satisfies `A₀ A₀⁻¹ = I` to round-off at bounded bond.

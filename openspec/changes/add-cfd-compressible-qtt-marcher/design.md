@@ -154,7 +154,13 @@ is **coordinate-stationary** ⇒ `O(1)` rank on its axis for all time. Rank is h
 un-pinned features (the contact). This makes shock-fitting (D1) and dynamic rank control the **same mechanism** —
 fitting is not bolted onto the bulk, it *is* the coordinate the bulk runs in. *Boundary:* one dominant feature
 per structured map is pinnable; the multi-feature unsteady **wake** is not (the out-of-scope `qtt_rank_3d`
-residual — now explained, not just stipulated).
+residual — now explained, not just stipulated). *Measured (`studies/qtt_rank_fitted_dynamic`, `studies/qtt_repin_marcher`):* an aligned
+front stays bounded under marching (bond 7, flat in resolution), but a **static** fitted chart is insufficient
+(bond grows 25→35, no better than capture). The re-pin prototype sharpened this: re-pinning the coordinate
+*alone* still grows 25→35 (the rank driver is the angular structure a Cartesian-flux march injects *through* a
+curved front, not the front's drift), while a coordinate-aligned transport on the same tracked interface holds
+bond 8, flat. So the Stage-4 gate is **re-pin *and* an exact-RH interface** (smooth each side, no flux marched
+across the front), not a one-time fitted coordinate and not a re-pinned flux-through-front marcher.
 
 ### D10 — Split acoustic operator with a closed-form constant-coefficient inverse
 
