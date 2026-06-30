@@ -32,6 +32,13 @@ second showcase of the flagship's core thesis.
 
 Honesty convention: **[holds]**, **[holds under precondition]**, **[open]**, **[preliminary]**.
 
+> **Scheduling (bundled work item).** Gap 3 is solved **right after Gap 2 closes**, and is **bundled with the
+> [chemistry-fidelity gap](chemistry-fidelity-gap.md)** — the RAM-C electron-density precision upgrade
+> (T_ve-controlled ionization → 3-T electron energy → finite-rate ionization network) that takes Stage-4 peak
+> `n_e` from the surrogate's ~12× down toward the production ~3–4× band. Both are deferred past Gap-2 closure
+> and ride the transported `T_tr`/`T_ve`/species fields the compressible marcher provides. The two together are
+> the post-Gap-2 work package: **trajectory/timing axis + reacting-chemistry fidelity.**
+
 ---
 
 ## 0. Frame
