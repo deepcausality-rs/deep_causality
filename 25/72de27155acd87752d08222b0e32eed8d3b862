@@ -1,0 +1,114 @@
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_889f9f48af7139 47-48
+  s_162aba3d26275e::t_cecb6d2be82cc2 89-90
+  s_c4c919f578d611::t_90af7a340b1eb9 91-93
+  s_c4c919f578d611::t_d975cd08134d41 49-50
+deep_causality_cfd/tests/tensor_bridge/acoustic_inverse_tests.rs
+  s_c4c919f578d611::t_5ad205b097480e 1-10,15,17-86,88-123,200-210
+  s_c4c919f578d611::t_72f2b490024a2f 11-14,16
+  s_c4c919f578d611::t_5f02d41bef475e 124-146,150-170,172-199
+  s_c4c919f578d611::t_1dde9674fe310b 87
+  s_c4c919f578d611::t_9ef7d6fec3b169 147-149
+  s_c4c919f578d611::t_decfa008779580 171
+openspec/changes/add-cfd-compressible-qtt-marcher/tasks.md
+  s_c4c919f578d611::t_93256ab9e825dc 84-89
+  s_c4c919f578d611::t_208971089be81a 51-58
+  s_c4c919f578d611::t_3e056d25f2bfe0 83
+openspec/notes/plasma-blackout/gap-2/gap-two-resolution-6-implicit-acoustics.md
+  s_c4c919f578d611::t_df72f8311fc463 136-157
+deep_causality_cfd/src/solvers/qtt/mod.rs
+  s_162aba3d26275e::t_cecb6d2be82cc2 16
+  s_c4c919f578d611::t_4d583bfbac0bed 17-18
+deep_causality_cfd/src/solvers/qtt/compressible/marcher_2d.rs
+  s_c4c919f578d611::t_51f7c5fd87a131 33
+  s_c4c919f578d611::t_90b1c8f6be8b18 248
+  s_c4c919f578d611::t_a1ac7890f02c99 124
+  s_162aba3d26275e::t_b99b67468fee38 1-13,24-25,28-32,34-37,41-52,55-61,65-66,76-81,91-97,99-123,125-157,162-184,186-190,193,196-207,249-256,276-279
+  s_162aba3d26275e::t_cecb6d2be82cc2 158-161
+  s_c4c919f578d611::t_6c751080178c3c 27,38-40,53-54,62-64,67-75,82-83,86-90,98
+  s_c4c919f578d611::t_516b56489a9c8d 257-274
+  s_162aba3d26275e::t_924c70ede58e5d 191,195
+  s_c4c919f578d611::t_f649a2c47e8fde 192
+  s_162aba3d26275e::t_b7fa8c398513af 275
+  s_c4c919f578d611::t_6c2dda249b43fc 185,194,208-247
+  s_c4c919f578d611::t_29bd00804e20fc 84-85
+  s_c4c919f578d611::t_ad23a85af8c3e0 14-23,26
+deep_causality_cfd/tests/solvers/qtt/compressible_imex_tests.rs
+  s_c4c919f578d611::t_b78138d619da6b 62-66,71,73-78
+  s_c4c919f578d611::t_8248dc58f13049 79-81
+  s_c4c919f578d611::t_50379dabcd6ee3 82
+deep_causality_cfd/src/solvers/qtt/compressible/imex.rs
+  s_c4c919f578d611::t_1d8a725165f350 18-24,26,33-34,38-39,50-51
+  s_c4c919f578d611::t_3f74f18d9199ac 91-93,106
+  s_c4c919f578d611::t_da6615868c566c 114,116,119,129
+deep_causality_cfd/tests/solvers/qtt/compressible_marcher2d_tests.rs
+  s_c4c919f578d611::t_ed57d5c072cb05 11-12,14
+  s_162aba3d26275e::t_f2526c08b4d174 33,107,152-153,158-159,161-162,165
+  s_c4c919f578d611::t_344b1f82c9d654 44-74,79-90
+  s_162aba3d26275e::t_f827b8daa5c10e 130,146,160,163-164
+  s_c4c919f578d611::t_adfb7e9e7970a5 169,171-177,185,191-192,198,200-203,209
+  s_c4c919f578d611::t_34bd5cd560999a 193,196
+  s_c4c919f578d611::t_c179afaad170e9 154
+  s_162aba3d26275e::t_9dd3e07361fa4b 98-102,104-106,108,111,113-115,117,119-129,140,143-145,148-149,155,157
+  s_162aba3d26275e::t_95b646fa0a8048 1-10,13,15-25,27,30-32,40-43,91-97,138-139,141-142,147,150-151,166
+  s_c4c919f578d611::t_29bd00804e20fc 75-78
+  s_c4c919f578d611::t_003df653b9ff5f 26,28,34
+  s_c4c919f578d611::t_c962bfd2fc7fc5 103,109,112,118
+  s_c4c919f578d611::t_46d8d8fee1fd67 116
+  s_c4c919f578d611::t_516a7a3f7de4ab 167-168,170,178-184,186-190,194-195,197,199,204-208,210-212
+  s_c4c919f578d611::t_c5de9e16ad72e6 29
+  s_c4c919f578d611::t_6024275a35bff5 131-137
+  s_c4c919f578d611::t_fe4ed8c94c609a 35-39
+  s_c4c919f578d611::t_4375149be3c0f9 110
+  s_c4c919f578d611::t_ed52542bff8e6f 156
+deep_causality_cfd/tests/solvers/qtt/mod.rs
+  s_162aba3d26275e::t_5334b20795df3a 11-12
+deep_causality_cfd/src/tensor_bridge/acoustic_inverse.rs
+  s_c4c919f578d611::t_b147ddb5b76db6 113
+  s_c4c919f578d611::t_f37414b16c752a 1-38,40-112,117-162
+  s_c4c919f578d611::t_b442957700b24c 114-116
+  s_c4c919f578d611::t_0d4b6beb601cf4 163-215,217-219,221-237
+  s_c4c919f578d611::t_f309629c4c41ef 39
+  s_c4c919f578d611::t_196f73a11a4a53 216
+  s_c4c919f578d611::t_5dd014153196e3 220
+deep_causality_cfd/src/tensor_bridge/operators.rs
+  s_c4c919f578d611::t_271b476663e74b 140
+  s_c4c919f578d611::t_6df2d24ec735bc 153
+deep_causality_cfd/src/tensor_bridge/mod.rs
+  s_c4c919f578d611::t_9e95d45afe5999 15
+  s_c4c919f578d611::t_b9a1ba03bcad17 21
+deep_causality_cfd/src/solvers/qtt/compressible/mod.rs
+  s_162aba3d26275e::t_1894e0760bff0f 13
+  s_c4c919f578d611::t_29bd00804e20fc 18
+deep_causality_cfd/tests/tensor_bridge/mod.rs
+  s_c4c919f578d611::t_1416e6274e75f9 7
+  s_c4c919f578d611::t_c43c977f040aa9 6
+deep_causality_cfd/src/solvers/mod.rs
+  s_c4c919f578d611::t_5cb09b6993b3a8 25-26
+  s_162aba3d26275e::t_cecb6d2be82cc2 24
+  s_c4c919f578d611::t_29bd00804e20fc 27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "2572de27155acd87752d08222b0e32eed8d3b862",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
