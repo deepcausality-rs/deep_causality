@@ -21,7 +21,7 @@ pub use dec::dec_config::{
 mod qtt;
 
 pub use qtt::{
-    CompressibleEuler1d, EulerState, QttImmersed2d, QttIncompressible2d, QttLinear1d,
-    divergence_residual, drag_lift, ideal_gas_pressure, kinetic_energy, max_bond, max_speed,
-    wall_heat_flux,
+    AcousticImex1d, CompressibleEuler1d, EulerState, QttImmersed2d, QttIncompressible2d,
+    QttLinear1d, conservation_round, divergence_residual, drag_lift, ideal_gas_pressure,
+    kinetic_energy, max_bond, max_speed, positivity_floor, wall_heat_flux,
 };

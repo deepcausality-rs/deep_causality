@@ -12,7 +12,10 @@ mod immersed_2d;
 mod incompressible_2d;
 mod observe;
 
-pub use compressible::{CompressibleEuler1d, EulerState, ideal_gas_pressure};
+pub use compressible::{
+    AcousticImex1d, CompressibleEuler1d, EulerState, conservation_round, ideal_gas_pressure,
+    positivity_floor,
+};
 pub use immersed_2d::QttImmersed2d;
 pub use incompressible_2d::QttIncompressible2d;
 pub use observe::{
