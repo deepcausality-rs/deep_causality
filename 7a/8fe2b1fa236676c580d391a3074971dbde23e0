@@ -1,0 +1,35 @@
+deep_causality_cfd/src/coordinate/cartesian.rs
+  s_162aba3d26275e::t_5877f39d657ec1 1-94
+deep_causality_cfd/src/coordinate/mod.rs
+  s_162aba3d26275e::t_3d3c6b448cb537 69
+  s_162aba3d26275e::t_d3c6c527d31f8d 27-32
+  s_162aba3d26275e::t_8b01e8eda25fed 233-259
+deep_causality_cfd/src/lib.rs
+  s_162aba3d26275e::t_a87d75b7c8affa 45
+deep_causality_cfd/tests/coordinate/metric_provider_tests.rs
+  s_162aba3d26275e::t_b95e16e8d465af 46-47,49
+  s_162aba3d26275e::t_7e64102228b8ee 1-45,48,50-106
+  s_162aba3d26275e::t_27f9bc190dfdc2 107-109
+deep_causality_cfd/tests/coordinate/mod.rs
+  s_162aba3d26275e::t_23449c13b962f0 8-9
+openspec/changes/add-cfd-compressible-qtt-marcher/tasks.md
+  s_162aba3d26275e::t_88db9d7fc2e2ad 19-27
+deep_causality_cfd/src/coordinate/metric_provider.rs
+  s_162aba3d26275e::t_f8052cc86d009f 1-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "7a8fe2b1fa236676c580d391a3074971dbde23e0",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
