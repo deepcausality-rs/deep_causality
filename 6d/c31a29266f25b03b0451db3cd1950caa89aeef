@@ -1,0 +1,89 @@
+deep_causality_file/src/types/mod.rs
+  s_c4c919f578d611::t_dba537ea39b529 1-8
+deep_causality_file/src/errors/data_loading_error.rs
+  s_c4c919f578d611::t_5cdd2790a29aea 1-84
+deep_causality_file/BUILD.bazel
+  s_1d9ac065fd2a2a::t_cf83ad076767f8 1-34
+build/scripts/miri.sh
+  s_1d9ac065fd2a2a::t_5acfb8311a02ce 21
+deep_causality_file/deep_causality_file_sbom.spdx.json.sha
+  s_1d9ac065fd2a2a::t_4e8b95844c19a4 1
+deep_causality_file/src/types/clock_types.rs
+  s_c4c919f578d611::t_f9ae0d7a8480b3 1-62
+build/scripts/format.sh
+  s_1d9ac065fd2a2a::t_16c06514b98cea 22
+deep_causality_file/Cargo.toml
+  s_c4c919f578d611::t_97bc1ab1736111 1-33
+deep_causality_file/src/types/gnss_types.rs
+  s_c4c919f578d611::t_75abe7aa05c1e1 8,10-12
+  s_c4c919f578d611::t_95cc9114fefe75 1-7,9
+deep_causality_file/src/errors/conversion_error.rs
+  s_c4c919f578d611::t_e09cc1734ff846 1-37
+deep_causality_file/tests/BUILD.bazel
+  s_1d9ac065fd2a2a::t_6b6cf2b39edb51 1-18
+deep_causality_file/LICENSE
+  s_1d9ac065fd2a2a::t_8fbb049eb5ef93 1-23
+deep_causality_file/src/types/satelite_types.rs
+  s_c4c919f578d611::t_c031812e285b1d 1-153
+deep_causality_file/src/errors/mod.rs
+  s_c4c919f578d611::t_00ce20919be4e4 1-5
+  s_c4c919f578d611::t_5fe85a3e118e0a 6
+deep_causality_file/src/types/orbit_types.rs
+  s_c4c919f578d611::t_583891de1054e2 1-82
+deep_causality_file/src/loaders/read_clk.rs
+  s_c4c919f578d611::t_e8ac6f4ab7a6fa 1-7,9-31,33,35-47,51-100
+  s_c4c919f578d611::t_eff451be1498ad 32,34
+  s_c4c919f578d611::t_89ca2d28b6b0d0 8
+  s_c4c919f578d611::t_d43918c8b6d617 48-50
+deep_causality_file/README.md
+  s_1d9ac065fd2a2a::t_55495d2d412f16 1-82
+deep_causality_file/src/loaders/mod.rs
+  s_c4c919f578d611::t_3240ae1dd316f9 1-14
+build/scripts/check.sh
+  s_1d9ac065fd2a2a::t_4a52297a639b77 27
+deep_causality_file/src/lib.rs
+  s_c4c919f578d611::t_08ee88bef530c5 1-32,34-41
+  s_c4c919f578d611::t_fcf67c5880633a 33
+deep_causality_file/tests/load_real_galileo.rs
+  s_c4c919f578d611::t_1d234bbb1cead0 1-52
+build/scripts/sbom.sh
+  s_1d9ac065fd2a2a::t_6b673db8faf94c 21
+deep_causality_file/src/loaders/read_gnss.rs
+  s_c4c919f578d611::t_969154911bf96b 1-10,12-22,24-61,63-73,75-80
+  s_c4c919f578d611::t_7d94404418c5e7 23
+  s_c4c919f578d611::t_0fd963ee0de216 11
+  s_c4c919f578d611::t_f6ad30840bbab1 62,74
+deep_causality_file/deep_causality_file_sbom.spdx.json
+  s_1d9ac065fd2a2a::t_4e8b95844c19a4 1-869
+deep_causality_file/src/loaders/read_sp3.rs
+  s_c4c919f578d611::t_094263624d1560 35,37
+  s_c4c919f578d611::t_623d8a354b3898 1-7,9-17,20-34,36,38-51,53-61,63-151
+  s_c4c919f578d611::t_1558eb247a17be 52,62
+  s_c4c919f578d611::t_4d1f3190eabdbc 8,18-19
+Cargo.lock
+  s_c4c919f578d611::t_0a4f9221be3bd5 75,79,83,618-626
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "6dc31a29266f25b03b0451db3cd1950caa89aeef",
+  "prompts": {},
+  "sessions": {
+    "s_1d9ac065fd2a2a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "cce51aa3-32af-4cd1-aa69-dad4089bda76",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
