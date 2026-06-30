@@ -18,7 +18,7 @@ mod mask;
 mod operators;
 mod projection;
 
-pub use acoustic_inverse::{AcousticCoreInverse, AcousticCoreInverse2d};
+pub use acoustic_inverse::{AcousticCoreInverse, AcousticCoreInverse2d, AcousticCoreInverse3d};
 pub use codec::{dequantize, dequantize_2d, dequantize_3d, quantize, quantize_2d, quantize_3d};
 pub use mask::{body_mask_2d, mask_from_fn};
 pub use operators::{

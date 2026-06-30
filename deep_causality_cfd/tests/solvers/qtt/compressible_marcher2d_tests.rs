@@ -27,6 +27,7 @@ fn free_stream_is_a_fixed_point() {
     let n = (1usize << l) * (1usize << l);
     let cart = CartesianIdentity::<f64>::new(l, l, 1.0 / 16.0, 1.0 / 16.0, tr()).unwrap();
     let marcher = CompressibleMarcher2d::new(cart, GAMMA, 0.002, 1.3, tr()).unwrap();
+    assert!((marcher.gamma() - GAMMA).abs() < 1e-15, "gamma getter");
 
     let (rho, u, v, p) = (1.2, 0.3, 0.1, 0.8);
     let e = p / (GAMMA - 1.0) + 0.5 * rho * (u * u + v * v);

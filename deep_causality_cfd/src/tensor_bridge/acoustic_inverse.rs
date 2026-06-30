@@ -36,7 +36,7 @@
 //! its residual tolerance — which is why it was rank-fragile on a captured curved field. The whole
 //! construction is verified end-to-end by the `A₀·A₀⁻¹ = I` round-off gate (Resolution 6, gate 1).
 
-use crate::tensor_bridge::operators::{lift_leading, lift_trailing};
+use crate::tensor_bridge::operators::{lift_block, lift_leading, lift_trailing};
 use crate::tensor_bridge::{shift_minus, shift_plus};
 use crate::types::CfdScalar;
 use alloc::format;
@@ -120,13 +120,19 @@ where
         let four = two + two;
         // ρ = (1 + 2s − √(1+4s)) / (2s) ∈ (0,1), the contracting root of s·ρ² − (1+2s)·ρ + s = 0.
         let rho = (one + two * s - (one + four * s).sqrt()) / (two * s);
-        let pre_scale = rho / s;
         let mut rho_pow = Vec::with_capacity(l);
         let mut p = rho;
         for _ in 0..l {
             rho_pow.push(p);
             p = p * p; // ρ^{2^{j+1}} = (ρ^{2^j})²
         }
+        // After the loop `p = ρ^{2^l} = ρ^N`. The binary-doubling product is the **finite** geometric sum
+        // `Σ_{k<N} ρ^k Sᵏ = (1−ρ^N)·(I−ρS)⁻¹`, so each of the two resolvents carries a `(1−ρ^N)` factor.
+        // Folding `1/(1−ρ^N)²` into the prefactor makes `A₀⁻¹` exact (and free-stream-exact) at **all** N,
+        // not just in the large-N limit where `ρ^N → 0`. (`s·(1−ρ)² = ρ` gives `(ρ/s)/(1−ρ)² = 1`.)
+        let rho_n = p;
+        let gain = (one - rho_n) * (one - rho_n);
+        let pre_scale = (rho / s) / gain;
         Ok(Self {
             rho_pow,
             pre_scale,
@@ -233,5 +239,84 @@ where
     /// Propagates the per-axis apply / rounding errors.
     pub fn apply(&self, b: &CausalTensorTrain<R>) -> Result<CausalTensorTrain<R>, PhysicsError> {
         self.inv_x.apply(&self.inv_y.apply(b)?)
+    }
+}
+
+/// Closed-form inverse of the 3-D constant-coefficient acoustic core `A₀ = I − β·∇²` on a periodic
+/// `2^lx × 2^ly × 2^lz` grid, via **ADI dimensional splitting**:
+/// `A₀⁻¹ ≈ (I−β∂ₓ²)⁻¹·(I−β∂ᵧ²)⁻¹·(I−β∂_z²)⁻¹`. The splitting error is the `O(β²)` cross terms; free-stream
+/// exactness is preserved exactly (each 1-D factor maps a uniform field to itself).
+pub struct AcousticCoreInverse3d<R>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    inv_x: AcousticCoreInverse<R>,
+    inv_y: AcousticCoreInverse<R>,
+    inv_z: AcousticCoreInverse<R>,
+}
+
+impl<R> AcousticCoreInverse3d<R>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    /// Build the 3-D ADI inverse of `A₀ = I − β·∇²` on a periodic `2^lx × 2^ly × 2^lz` grid `dims`, with
+    /// per-axis cell sizes `cells = (dx, dy, dz)`. The shift powers `S±^{2^j}` are the existing 1-D shifts
+    /// lifted onto each axis of the serial `x`-`y`-`z` mode layout via `lift_block` — no new operator.
+    ///
+    /// # Errors
+    /// [`PhysicsError::DimensionMismatch`] if any of `lx, ly, lz` is zero;
+    /// [`PhysicsError::NumericalInstability`] if `β`, `dx`, `dy`, or `dz` is not finite and positive.
+    pub fn new(
+        dims: (usize, usize, usize),
+        cells: (R, R, R),
+        beta: R,
+        trunc: Truncation<R>,
+    ) -> Result<Self, PhysicsError> {
+        let (lx, ly, lz) = dims;
+        let (dx, dy, dz) = cells;
+        if lx == 0 || ly == 0 || lz == 0 {
+            return Err(PhysicsError::DimensionMismatch(format!(
+                "3-D acoustic inverse requires lx,ly,lz >= 1 (got {lx},{ly},{lz})"
+            )));
+        }
+        // S±^{2^j} along an axis = the 1-D shift on the high `l−j` bits of that axis's block, identity on
+        // the `j` low bits of the block and on every mode of the other two axes.
+        let mut xp = Vec::with_capacity(lx);
+        let mut xm = Vec::with_capacity(lx);
+        for j in 0..lx {
+            xp.push(lift_block(&shift_plus::<R>(lx - j)?, 0, j + ly + lz)?);
+            xm.push(lift_block(&shift_minus::<R>(lx - j)?, 0, j + ly + lz)?);
+        }
+        let mut yp = Vec::with_capacity(ly);
+        let mut ym = Vec::with_capacity(ly);
+        for j in 0..ly {
+            yp.push(lift_block(&shift_plus::<R>(ly - j)?, lx, j + lz)?);
+            ym.push(lift_block(&shift_minus::<R>(ly - j)?, lx, j + lz)?);
+        }
+        let mut zp = Vec::with_capacity(lz);
+        let mut zm = Vec::with_capacity(lz);
+        for j in 0..lz {
+            zp.push(lift_block(&shift_plus::<R>(lz - j)?, lx + ly, j)?);
+            zm.push(lift_block(&shift_minus::<R>(lz - j)?, lx + ly, j)?);
+        }
+        let sx = beta / (dx * dx);
+        let sy = beta / (dy * dy);
+        let sz = beta / (dz * dz);
+        let inv_x = AcousticCoreInverse::from_shift_pows(sx, xp, xm, trunc)?;
+        let inv_y = AcousticCoreInverse::from_shift_pows(sy, yp, ym, trunc)?;
+        let inv_z = AcousticCoreInverse::from_shift_pows(sz, zp, zm, trunc)?;
+        Ok(Self {
+            inv_x,
+            inv_y,
+            inv_z,
+        })
+    }
+
+    /// Apply the 3-D inverse `A₀⁻¹·b = (I−β∂ₓ²)⁻¹·(I−β∂ᵧ²)⁻¹·(I−β∂_z²)⁻¹·b`.
+    ///
+    /// # Errors
+    /// Propagates the per-axis apply / rounding errors.
+    pub fn apply(&self, b: &CausalTensorTrain<R>) -> Result<CausalTensorTrain<R>, PhysicsError> {
+        self.inv_x.apply(&self.inv_y.apply(&self.inv_z.apply(b)?)?)
     }
 }

@@ -92,17 +92,32 @@ and a valid standalone deliverable. Stages 5–6 carry the named open-research n
   (`AcousticCoreInverse2d` = `(I−β∂ₓ²)⁻¹(I−β∂ᵧ²)⁻¹`), the 2-D system analogue of `AcousticImex1d` —
   free-stream-exact, bounded beyond the explicit acoustic-diffusion limit, no iterative solve. **Remaining:**
   the `CfdFlow`/`QttMarchRun` enum wiring (mirroring `QttImmersed2d`) for an end-to-end DSL march.
-- [ ] 5.2 Blunt-body bow shock in the fitted coordinate to quasi-steady standoff; carry the Tier-A LER stages
-  unchanged. **Gate: bounded, resolution-stable χ** vs a Cartesian-captured control that reproduces
-  `χ ~ √side` — `verification/qtt_blunt_body_2d/`.
+- [~] 5.2 Blunt-body bow shock — `verification/qtt_blunt_body_2d/` (exit 0). **Gate (static rank lever,
+  passes):** the bow shock is a constant-physical-radius surface, so its χ is **bounded + resolution-stable**
+  in the fitted coordinate (`BlendedMap` λ=1: χ 3→5, flat) vs the Cartesian capture (λ=0: χ 16→61, growing
+  ~√side and overtaking). The same `CompressibleMarcher2d` runs both over the `MetricProvider` seam.
+  **Reported, not gated (open):** marching a flux-through-front in the fitted coordinate still grows χ —
+  re-pinning + an exact-RH interface (no flux marched across the front) is the open remainder (D9 /
+  `qtt_repin_marcher`); the Tier-A LER reacting stages are unchanged from Stage 4.
 
 ## 6. 3-D forebody (`solvers/qtt/compressible/marcher_3d.rs`)
 
-- [ ] 6.1 3-D compressible reacting marcher (the §0 3-D operators + §1 coordinate + §2–4 machinery).
-- [ ] 6.2 March and validate the **3-D forebody sheath** in the body-fitted coordinate;
-  **gate bounded forebody χ** — `verification/qtt_reentry_3d/`. The **wake is out of scope** (needs turbulence,
-  a non-goal; downstream of the sheath): report any wake bond dimension as an out-of-scope datapoint for the
-  standing `qtt_rank_3d` research question, never gated or asserted.
+- [~] 6.1 3-D compressible Euler marcher (`CompressibleMarcher3d`, `marcher_3d.rs`) — conservative state
+  `(ρ, ρu, ρv, ρw, ρE)` on a periodic Cartesian `2^Lx × 2^Ly × 2^Lz` lattice (the §0 3-D operators), with the
+  §2 flux/EOS machinery in 3-D and the **IMEX** time step: explicit convective `∂ₓF+∂ᵧG+∂_zH` + implicit
+  acoustic dissipation via the closed-form **3-D ADI inverse** (`AcousticCoreInverse3d` =
+  `(I−β∂ₓ²)⁻¹(I−β∂ᵧ²)⁻¹(I−β∂_z²)⁻¹`). Implements `Marcher`; free-stream-exact, stable in 3-D. The 1-D inverse
+  was also made **exact at all N** (the `1/(1−ρ^N)²` finite-sum correction), so 3-D free-stream holds to
+  round-off at small `l`. **Remaining (= §1 in 3-D):** a 3-D body-fitted `MetricProvider` (the marcher is
+  Cartesian-capture so far); the **wake** stays out of scope.
+- [~] 6.2 **3-D forebody sheath** — `verification/qtt_reentry_3d/` (exit 0). **Gate (bounded forebody χ,
+  passes):** the curved bow-shock sheath is a constant-radius surface, so its χ is **bounded + flat at scale**
+  in the body-fitted (radial-axis) representation (χ 2→4, plateau) vs the Cartesian capture (χ 10→59,
+  growing) — the 3-D rank lever on the crate's `quantize_3d` codec. **Reported, not gated:** the **wake**
+  bond (a separated multi-lobe structure, χ≈41) — **out of scope** (turbulence; no single fitted coordinate
+  aligns it), a datapoint for the standing `qtt_rank_3d` question (D9). The dynamic *marched* forebody rank
+  (Cartesian `CompressibleMarcher3d`) is reported as the open remainder — a **3-D body-fitted
+  `MetricProvider`** + re-pinning is what would bound the marched χ (not yet built).
 - [ ] 6.3 Cross-references with scope labels: Sod analytic, RAM-C II `n_e`, Apollo dwell.
 
 ## 7. Finalize

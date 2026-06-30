@@ -155,6 +155,14 @@ path = "verification/qtt_sod/main.rs"
 name = "qtt_ramc_stagline"
 path = "verification/qtt_ramc_stagline/main.rs"
 
+[[example]]
+name = "qtt_blunt_body_2d"
+path = "verification/qtt_blunt_body_2d/main.rs"
+
+[[example]]
+name = "qtt_reentry_3d"
+path = "verification/qtt_reentry_3d/main.rs"
+
 # Tier-B rank studies: empirical tests of the "flowfield is low tensor-train rank" thesis.
 [[example]]
 name = "qtt_rank_study"

@@ -221,7 +221,7 @@ where
 
 /// Lifts a 1-D operator to act on a contiguous mode block, identity on `lead` modes before and
 /// `trail` modes after (`I_lead ⊗ op ⊗ I_trail`). The shared bonds are all 1, so cores concatenate.
-fn lift_block<R>(
+pub(crate) fn lift_block<R>(
     op: &CausalTensorTrainOperator<R>,
     lead: usize,
     trail: usize,

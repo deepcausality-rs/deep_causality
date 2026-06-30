@@ -9,8 +9,9 @@
 //! AMEn-per-step solve loses to its residual tolerance.
 
 use deep_causality_cfd::{
-    AcousticCoreInverse, AcousticCoreInverse2d, dequantize, dequantize_2d, laplacian_2d, quantize,
-    quantize_2d, shift_minus, shift_plus,
+    AcousticCoreInverse, AcousticCoreInverse2d, AcousticCoreInverse3d, dequantize, dequantize_2d,
+    dequantize_3d, laplacian_2d, laplacian_3d, quantize, quantize_2d, quantize_3d, shift_minus,
+    shift_plus,
 };
 use deep_causality_tensor::{
     CausalTensor, CausalTensorTrain, CausalTensorTrainOperator, TensorTrainOperator, Truncation,
@@ -195,6 +196,82 @@ fn adi_inverse_approximates_the_2d_solve() {
 fn adi_inverse_rejects_zero_modes() {
     assert!(AcousticCoreInverse2d::<f64>::new(0, 3, 0.1, 0.1, 0.01, tr()).is_err());
     assert!(AcousticCoreInverse2d::<f64>::new(3, 0, 0.1, 0.1, 0.01, tr()).is_err());
+}
+
+#[test]
+fn adi_3d_inverse_is_free_stream_exact() {
+    // The 3-D ADI split maps a uniform field to itself (each 1-D factor does), to round-off.
+    let (lx, ly, lz) = (3usize, 3usize, 3usize);
+    let (nx, ny, nz) = (1 << lx, 1 << ly, 1 << lz);
+    let h = 1.0 / nx as f64;
+    let c = 0.9;
+    let b = quantize_3d(
+        &CausalTensor::new(vec![c; nx * ny * nz], vec![nx, ny, nz]).unwrap(),
+        &tr(),
+    )
+    .unwrap();
+    let inv = AcousticCoreInverse3d::new((lx, ly, lz), (h, h, h), 0.5 * h * h, tr()).unwrap();
+    let x = dequantize_3d(&inv.apply(&b).unwrap(), lx, ly, lz).unwrap();
+    for &v in x.as_slice() {
+        assert!((v - c).abs() < 1e-8, "3-D free-stream drifted: {v} vs {c}");
+    }
+}
+
+#[test]
+fn adi_3d_inverse_approximates_the_solve() {
+    // A smooth 3-D field at modest stiffness: ‖A₀·(A₀⁻¹b) − b‖/‖b‖ at the O(β²) splitting error, low-rank.
+    let (lx, ly, lz) = (4usize, 4usize, 4usize);
+    let (nx, ny, nz) = (1 << lx, 1 << ly, 1 << lz);
+    let h = 1.0 / nx as f64;
+    let beta = 0.5 * h * h;
+    let mut b_dense = vec![0.0f64; nx * ny * nz];
+    for ix in 0..nx {
+        for iy in 0..ny {
+            for iz in 0..nz {
+                let x = ix as f64 / nx as f64;
+                let y = iy as f64 / ny as f64;
+                let z = iz as f64 / nz as f64;
+                b_dense[(ix * ny + iy) * nz + iz] =
+                    (TAU * x).sin() * (TAU * y).cos() * (TAU * z).cos() + 0.4;
+            }
+        }
+    }
+    let b = quantize_3d(
+        &CausalTensor::new(b_dense.clone(), vec![nx, ny, nz]).unwrap(),
+        &tr(),
+    )
+    .unwrap();
+    let inv = AcousticCoreInverse3d::new((lx, ly, lz), (h, h, h), beta, tr()).unwrap();
+    let x = inv.apply(&b).unwrap();
+    let id = CausalTensorTrainOperator::<f64>::identity(&vec![2usize; lx + ly + lz]);
+    let lap = laplacian_3d::<f64>(lx, ly, lz, h, h, h, &tr()).unwrap();
+    let a0 = id.add(&lap.scale(-beta)).unwrap();
+    let ax = dequantize_3d(&a0.apply(&x, &tr()).unwrap(), lx, ly, lz).unwrap();
+    let num: f64 = ax
+        .as_slice()
+        .iter()
+        .zip(&b_dense)
+        .map(|(a, b)| (a - b) * (a - b))
+        .sum::<f64>()
+        .sqrt();
+    let den: f64 = b_dense.iter().map(|v| v * v).sum::<f64>().sqrt();
+    assert!(
+        num / den < 2e-2,
+        "3-D ADI residual {:.2e} too large",
+        num / den
+    );
+    assert!(
+        x.max_bond() <= 32,
+        "3-D inverse bond {} not low-rank",
+        x.max_bond()
+    );
+}
+
+#[test]
+fn adi_3d_inverse_rejects_zero_modes() {
+    assert!(AcousticCoreInverse3d::<f64>::new((0, 2, 2), (0.1, 0.1, 0.1), 0.01, tr()).is_err());
+    assert!(AcousticCoreInverse3d::<f64>::new((2, 0, 2), (0.1, 0.1, 0.1), 0.01, tr()).is_err());
+    assert!(AcousticCoreInverse3d::<f64>::new((2, 2, 0), (0.1, 0.1, 0.1), 0.01, tr()).is_err());
 }
 
 #[test]
