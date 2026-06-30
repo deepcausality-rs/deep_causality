@@ -5,3 +5,5 @@
 
 #[cfg(test)]
 pub mod body_fitted_tests;
+#[cfg(test)]
+pub mod metric_provider_tests;

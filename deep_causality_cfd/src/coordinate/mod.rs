@@ -24,6 +24,12 @@
 //! operators are exact in `ξ`; non-periodic radial boundary stencils are a Stage-2 refinement (the
 //! interior gradient is correct to scheme order).
 
+mod cartesian;
+mod metric_provider;
+
+pub use cartesian::CartesianIdentity;
+pub use metric_provider::MetricProvider;
+
 use crate::tensor_bridge::{gradient_x, gradient_y, quantize_2d};
 use crate::types::CfdScalar;
 use alloc::vec;
@@ -60,7 +66,7 @@ where
 }
 
 /// Sample `f(ξ, η)` on the `2^lx × 2^ly` computational lattice (`ξ_i = i/Nx`, `η_j = j/Ny`).
-fn sample_grid<R, F>(lx: usize, ly: usize, f: F) -> Result<CausalTensor<R>, PhysicsError>
+pub(crate) fn sample_grid<R, F>(lx: usize, ly: usize, f: F) -> Result<CausalTensor<R>, PhysicsError>
 where
     R: CfdScalar,
     F: Fn(R, R) -> R,
@@ -222,5 +228,32 @@ where
             .add(&self.deta_dy.hadamard_rounded(&du_deta, &self.trunc)?)?
             .round(&self.trunc)?;
         Ok((du_dx, du_dy))
+    }
+}
+
+impl<R> MetricProvider<R> for BodyFittedCoordinate<R>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    fn dims(&self) -> (usize, usize) {
+        (self.lx, self.ly)
+    }
+
+    fn sample<F>(&self, f: F) -> Result<CausalTensorTrain<R>, PhysicsError>
+    where
+        F: Fn(R, R) -> R,
+    {
+        BodyFittedCoordinate::sample(self, f)
+    }
+
+    fn physical_gradient(
+        &self,
+        u: &CausalTensorTrain<R>,
+    ) -> Result<(CausalTensorTrain<R>, CausalTensorTrain<R>), PhysicsError> {
+        BodyFittedCoordinate::physical_gradient(self, u)
+    }
+
+    fn jacobian(&self) -> &CausalTensorTrain<R> {
+        BodyFittedCoordinate::jacobian(self)
     }
 }

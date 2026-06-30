@@ -16,6 +16,15 @@ and a valid standalone deliverable. Stages 5–6 carry the named open-research n
   pattern extended). Tests: each matches its analytic derivative to scheme order; bounded rank on smooth input.
 - [x] 0.3 Register test modules in `mod.rs` + `tests/BUILD.bazel`; crate-root imports; 100% coverage.
 
+## 0.5 `MetricProvider` seam — body-fit as data, not a code path (D8, `coordinate/`)
+
+- [x] 0.5.1 `MetricProvider<R>` trait (static dispatch): `dims` / `sample` / `physical_gradient` / `jacobian`,
+  so the marcher runs generically over any structured coordinate. `CartesianIdentity` (capture limit) and
+  `BodyFittedCoordinate` (fitted limit) both impl it; tests gate identity-gradient-vs-analytic, the constant
+  cell-volume Jacobian, the fitted chart reached through the trait, and a generic-over-`M` consumer.
+- [ ] 0.5.2 `BlendedMap` (the continuous `λ` dial) — follow-on; needs forward-Jacobian plumbing. The blend is
+  already validated numerically (`studies/qtt_blend_metric`: valid map, bond dials 114→5).
+
 ## 1. Body-fitted / shock-aligned coordinate (`coordinate/`)
 
 - [x] 1.1 A smooth analytic curvilinear map (sphere-cone baseline) aligning wall + bow shock to coordinate
