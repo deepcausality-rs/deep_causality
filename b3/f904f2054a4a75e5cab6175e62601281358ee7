@@ -1,0 +1,75 @@
+deep_causality_file/tests/types/satelite_types_tests.rs
+  s_1d9ac065fd2a2a::t_c6b5fa2129fdb4 87
+  s_1d9ac065fd2a2a::t_44f5cb06482c98 1-86,88-108
+deep_causality_file/tests/errors/data_loading_error_tests.rs
+  s_1d9ac065fd2a2a::t_a2a17fd89bebae 1-39
+deep_causality_file/tests/types/clock_types_tests.rs
+  s_1d9ac065fd2a2a::t_c8f790ed857a89 1-47
+deep_causality_file/tests/types/orbit_types_tests.rs
+  s_1d9ac065fd2a2a::t_777560e94d8024 1-58
+deep_causality_file/tests/BUILD.bazel
+  s_1d9ac065fd2a2a::t_9afb57987cb666 57
+  s_1d9ac065fd2a2a::t_a6fa5334f9d76b 3-34,38,44-56,58-61
+deep_causality_file/Cargo.toml
+  s_1d9ac065fd2a2a::t_e5753f5e5a96d4 32-34
+deep_causality_file/src/loaders/read_gnss.rs
+  s_c4c919f578d611::t_b433884ac34884 47,49-50,55,63,65,70,76,78,83
+  s_c4c919f578d611::t_9ce8c502cadc15 44-46,54,57-59
+deep_causality_file/deep_causality_file_sbom.spdx.json.sha
+  s_1d9ac065fd2a2a::t_1e532e71db8cb7 1
+deep_causality_file/tests/loaders/read_clk_tests.rs
+  s_1d9ac065fd2a2a::t_2b34cb49a4ad76 1-95
+deep_causality_file/tests/types/gnss_types_tests.rs
+  s_1d9ac065fd2a2a::t_f1924488846ff4 12-14,21-22,24-26
+  s_1d9ac065fd2a2a::t_d20d51b2c33be8 1-11,15-20,23,27-29
+deep_causality_file/tests/load_real_galileo.rs
+  s_1d9ac065fd2a2a::t_42855f92a06941 22-25
+deep_causality_file/deep_causality_file_sbom.spdx.json
+  s_1d9ac065fd2a2a::t_1e532e71db8cb7 4,10,17,30-31,36,42-43,46-47,52,56,59-60,63-64,69,73,76-77,80-81,86,90,93-94,97-98,103,109-110,113-114,119,123-126,129-130,135,142,146-147,152,158-159,178-179,184,190-191,229-230,235,239,242-243,246-247,252,256,259-260,263-264,269,275-276,279-280,285,289,292-293,296-297,302,308-309,312-313,318,324-325,328-329,334,338,341-342,345-346,351,355,358-359,362-363,368,374-375,378-379,384,390-416,436-437,442-474,480-481,484-485,490,494-497,500-501,506,512-513,516-517,522,528-529,532-533,538,542-545,548-549,554,560-578,583,585,588,590,593,595,598,600,603,605,608,610,613,615,618,620,623,625,628,630,633,635,638,643,645,648,650,653,655,658,660,663,665,668-670,673,675,678,680,685,690,693,695,698,700,703,705,708,710,713,715,723,725-730,735,738,740-745,753,755,758,760,763,765,768,770,773,775,778,780,783,785,788,790,793,795,798,800,805,810,813,815,818,820,823,825,828,830,833,835,838,840,843,845,848,850,853,855,858,860,863,865
+deep_causality_file/tests/types/mod.rs
+  s_1d9ac065fd2a2a::t_8d59a593fbe7fe 1-12
+deep_causality_file/tests/mod.rs
+  s_1d9ac065fd2a2a::t_30ece3e8e9ac63 1-7
+deep_causality_file/tests/errors/conversion_error_tests.rs
+  s_1d9ac065fd2a2a::t_5dd54abcd16e4c 1-53
+deep_causality_file/tests/loaders/mod.rs
+  s_1d9ac065fd2a2a::t_68b6a4e9a9c538 1-10
+deep_causality_file/tests/loaders/read_sp3_tests.rs
+  s_1d9ac065fd2a2a::t_dfc896ec9b24a8 119-153
+  s_1d9ac065fd2a2a::t_a7027ce596cefe 1-49,53-118,154-197
+  s_1d9ac065fd2a2a::t_42855f92a06941 50-52
+deep_causality_file/tests/errors/mod.rs
+  s_1d9ac065fd2a2a::t_93b91475d4ce4b 1-8
+deep_causality_file/tests/loaders/read_gnss_tests.rs
+  s_1d9ac065fd2a2a::t_45c8b00dfdfad1 1-53,55-62,67-74,78-84,86-87,89
+  s_1d9ac065fd2a2a::t_2c8d6feefdac5a 54
+  s_1d9ac065fd2a2a::t_ad92fb5d4840f9 63
+  s_1d9ac065fd2a2a::t_305e200c900e00 85,88
+  s_1d9ac065fd2a2a::t_42855f92a06941 64-66,75-77
+Cargo.lock
+  s_c4c919f578d611::t_57bf71dabd36c0 253,626
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "b3f904f2054a4a75e5cab6175e62601281358ee7",
+  "prompts": {},
+  "sessions": {
+    "s_1d9ac065fd2a2a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "cce51aa3-32af-4cd1-aa69-dad4089bda76",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
