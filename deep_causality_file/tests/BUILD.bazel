@@ -1,0 +1,18 @@
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
+rust_test_suite(
+    name = "loaders",
+    srcs = glob([
+        "*.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_file",
+        # Internal dependencies
+        "//deep_causality_haft",
+    ],
+)

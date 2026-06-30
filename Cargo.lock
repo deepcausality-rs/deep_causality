@@ -72,12 +72,15 @@ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 name = "avionics_examples"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "deep_causality",
  "deep_causality_calculus",
  "deep_causality_core",
+ "deep_causality_file",
  "deep_causality_haft",
  "deep_causality_multivector",
  "deep_causality_num",
+ "deep_causality_physics",
  "deep_causality_tensor",
 ]
 
@@ -610,6 +613,15 @@ dependencies = [
  "deep_causality_num",
  "deep_causality_par",
  "rayon",
+]
+
+[[package]]
+name = "deep_causality_file"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "deep_causality_haft",
+ "deep_causality_num",
 ]
 
 [[package]]
