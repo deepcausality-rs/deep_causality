@@ -31,6 +31,13 @@ pub const FREESTREAM_VELOCITY: f64 = 7650.0;
 /// post-shock residence time `t_res = standoff / u₂` over which ionization lags equilibrium.
 pub const STANDOFF_M: f64 = 0.0076;
 
+// ── Park two-temperature ionization closure (the Gap-3 chemistry-fidelity controller) ──
+/// Reduced mass `μ_sr` of the dominant relaxing collision pair (N₂–N₂ ≈ 14·14/28 = 7), in amu — sets the
+/// Millikan–White vibrational relaxation time `τ_vt` that controls how far the lagging `T_ve` catches up.
+pub const REDUCED_MASS_AMU: f64 = 7.0;
+/// Standard atmosphere, Pa — converts the post-shock pressure to atm for the Millikan–White correlation.
+pub const STANDARD_ATMOSPHERE_PA: f64 = 101_325.0;
+
 // ── Post-shock relaxation profile (the smooth fitted-interior zone) ───────
 /// QTT mode count for the 1-D relaxation profile (`2^L` points along the streamline).
 pub const PROFILE_L: usize = 10;

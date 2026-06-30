@@ -3,6 +3,7 @@
 Flight: M = 25, γ = 1.1, T_inf = 250 K, n_inf = 1e21 m^-3 (RAM-C II ~71 km)
 
 Residence time t_res = standoff/u2 = 2.022e-5 s  (Saha-equilibrium upper bound n_e = 9.620e21 m^-3)
+Single-T surrogate (ionizes at T₂, over-predicts): α = 4.628e-3, n_e = 1.224e20 m^-3 (+1.1 dec vs RAM-C)
 
 Exact Rankine–Hugoniot post-shock state (the transported energy, no reconstruction):
   T_inf -> T2 ............ 250 K -> 8044 K
@@ -12,20 +13,27 @@ Exact Rankine–Hugoniot post-shock state (the transported energy, no reconstruc
   post-shock n_tot ...... 2.645e22 m^-3
 
 Stagnation-line blackout (Saha/Park-2T at the post-shock state):
-  ionization fraction α .. 4.628e-3
-  peak electron density .. 1.224e20 m^-3
-  plasma frequency ω_p ... 6.242e11 rad/s
+  ionization fraction α .. 4.101e-4
+  peak electron density .. 1.085e19 m^-3
+  plasma frequency ω_p ... 1.858e11 rad/s
   blackout (ω_p > comms) . true (comms band 9.40e9 rad/s)
   relaxation-profile bond  2  (smooth post-shock zone, O(1) rank)
 
 --- RAM-C stagnation-line gates ---
   [PASS] T2 in the ~10^4 K post-shock band
-  [PASS] peak n_e within ~2 decades of RAM-C II
+  [PASS] peak n_e within ~3× of RAM-C II (Park-2T controller)
   [PASS] blackout onset (ω_p > comms band)
   [PASS] relaxation profile O(1) rank
 
-=== RAM-C stagnation line: peak n_e = 1.22e20 m^-3, +1.1 decades vs the RAM-C II anchor 1e19. ===
-Disclaimer: Park-2T Saha surrogate (the T_e = T_ve lumping over-predicts peak n_e ~2× vs a 3-T
-closure); perfect-gas γ = 1.4 over-predicts T2 (real reacting air dissociates). Order-of-magnitude
-anchor, not a calibrated match. The post-shock T2 is the exact-RH transported energy, retiring the
-Tier-A recovery-temperature reconstruction.
+=== RAM-C stagnation line: peak n_e = 1.08e19 m^-3, +0.0 decades vs the RAM-C II anchor 1e19. ===
+Ionization is driven off the Park rate-controlling temperature Tₐ = √(T_tr·T_ve), with the lagging
+vibrational-electron temperature T_ve relaxed from the free-stream value over the residence time by
+the closed-form Millikan–White LER kernel — not the hot translational T₂. This is the Gap-3
+chemistry-fidelity upgrade: it takes peak n_e from the single-temperature surrogate's ~12× over-
+prediction down to ~1.1× of the RAM-C II anchor.
+Disclaimer: still a two-temperature Saha surrogate. The T_e = T_ve lumping (a 3-T electron-energy
+separation is ~2×) and the single associative-ionization channel (vs a finite-rate associative +
+electron-impact + recombination network) remain open levers, and the exact landing is sensitive to
+the Millikan–White τ_vt model (the documented ~2–5× chemistry-model spread). The effective γ = 1.1
+lands T2 in the realistic ~8000 K reacting-air band. The post-shock T2 is the exact-RH transported
+energy, retiring the Tier-A recovery-temperature reconstruction.

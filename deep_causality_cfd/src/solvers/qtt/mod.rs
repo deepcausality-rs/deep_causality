@@ -14,8 +14,8 @@ mod observe;
 
 pub use compressible::{
     AcousticImex1d, CompressibleEuler1d, CompressibleMarcher2d, CompressibleMarcher3d, EulerState,
-    EulerState2d, EulerState3d, EulerStateTt2d, EulerStateTt3d, FittedNormalShock, PostShockState,
-    StagnationOutcome, conservation_round, ideal_gas_pressure, ideal_gas_pressure_2d,
+    EulerState2d, EulerState3d, EulerStateTt2d, EulerStateTt3d, FittedNormalShock, Park2tClosure,
+    PostShockState, StagnationOutcome, conservation_round, ideal_gas_pressure, ideal_gas_pressure_2d,
     positivity_floor,
 };
 pub use immersed_2d::QttImmersed2d;

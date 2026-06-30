@@ -5,6 +5,14 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # Chemistry-fidelity gap — RAM-C electron-density precision (deferred, bundled with Gap 3)
 
+> **STATUS — lever 1 implemented (the dominant one).** The T_ve-controlled ionization upgrade is **built,
+> measured, and gated**: peak `n_e` went from the single-temperature surrogate's **~12× over-prediction to
+> ~1.1×** of the RAM-C II anchor (`α: 4.6×10⁻³ → 4.1×10⁻⁴` vs RAM-C `~3.8×10⁻⁴`). See
+> [Resolution 2 — T_ve-controlled ionization](gap-three-resolution-2-tve-controlled-ionization.md). Levers 2
+> (3-T electron-energy separation) and 3 (finite-rate ionization network) remain **[open]**, as does the
+> trajectory/timing half of the bundle ([Resolution 1](gap-three-resolution-1-perturbed-conformal-trajectory.md),
+> preliminary).
+
 **Scheduling.** This is a precision upgrade for the Gap-2 ionization physics, **deferred and lumped with
 [Gap 3 (the trajectory axis)](gap-three-resolution-1-perturbed-conformal-trajectory.md)**, to be
 solved **right after Gap 2 is closed**. It is *not* part of the Tier-A/B surrogate scope; the Stage-4 RAM-C
@@ -37,13 +45,14 @@ equilibrium down ~30×. **The lag is too weak, and it ionizes at the wrong (tran
 
 ## The levers to reach ~3–4× (all chemistry-model fidelity)
 
-1. **T_ve-controlled ionization (the real Park-2T mechanism, the biggest single lever).** The surrogate
-   ionizes at the translational `T₂`; the physically correct control is the **lagging electron-vibrational
-   temperature `T_ve`** (or the geometric-mean `Tₐ = √(T_tr·T_ve)`). In the post-shock zone `T_ve ≪ T_tr`
+1. **T_ve-controlled ionization (the real Park-2T mechanism, the biggest single lever). — ✅ IMPLEMENTED,
+   see [Resolution 2](gap-three-resolution-2-tve-controlled-ionization.md).** The surrogate ionized at the
+   translational `T₂`; the physically correct control is the **lagging electron-vibrational temperature
+   `T_ve`** (or the geometric-mean `Tₐ = √(T_tr·T_ve)`). In the post-shock zone `T_ve ≪ T_tr`
    (vibrational/electronic modes lag), which suppresses ionization — *that lag is the regime driver*. The
    Tier-A `vibrational_relaxation_kernel` (Millikan–White `τ_vt`, closed-form LER) already computes `T_ve`;
-   the change is to drive the Saha target and the rate off `T_ve`/`Tₐ`, not `T_tr`. Exponentially sensitive,
-   so this alone can move several ×.
+   the change drove the Saha target and the rate off `Tₐ`, not `T_tr`. Exponentially sensitive — **measured
+   to move the full ~12× → ~1.1×** on its own (`stagnation_line_blackout_2t`), better than the ~3–4× target.
 2. **3-T: separate electron energy (drop the `T_e = T_ve` lumping).** The documented Farbar–Boyd–Martin ~2×
    over-prediction. LER-native: one extra relaxing scalar.
 3. **Finite-rate ionization network instead of Saha-target × single associative rate.** RAM-C (~7.6 km/s) is

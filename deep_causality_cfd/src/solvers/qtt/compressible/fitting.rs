@@ -20,8 +20,9 @@ use deep_causality_num::ConjugateScalar;
 use deep_causality_physics::{
     AVOGADRO_CONSTANT, ElectronDensity, PARK_NO_IONIZATION_ACTIVATION_TEMP,
     PARK_NO_IONIZATION_EXPONENT, PARK_NO_IONIZATION_PREFACTOR, PhysicsError, Temperature,
-    arrhenius_rate_kernel, electron_density_kernel, park2t_ionization_surrogate_kernel,
-    plasma_frequency_kernel, rankine_hugoniot_temperature_kernel,
+    VibrationalTemperature, arrhenius_rate_kernel, electron_density_kernel,
+    park2t_ionization_surrogate_kernel, plasma_frequency_kernel, rankine_hugoniot_temperature_kernel,
+    vibrational_relaxation_kernel,
 };
 use deep_causality_tensor::{CausalTensor, Truncation};
 
@@ -51,6 +52,27 @@ pub struct StagnationOutcome<R> {
     pub ionization_fraction: R,
     /// Whether the plasma frequency exceeds the comms band (signal cutoff).
     pub blackout: bool,
+}
+
+/// Park two-temperature ionization closure — the gas-property inputs that turn the *translational*
+/// post-shock state into the **lagging vibrational-electron controller** that actually governs ionization.
+///
+/// Behind the shock the heavy-particle translational temperature `T_tr = T₂` jumps immediately, but the
+/// vibrational / electronic / free-electron bath is still cold (frozen at the free-stream value) and
+/// relaxes up over the residence time on the Millikan–White clock `τ_vt`. Ionization is a heavy-particle ↔
+/// electron handshake, so Park drives it off the **rate-controlling temperature** `Tₐ = √(T_tr·T_ve)`, not
+/// the hot translation. This struct carries the four gas properties the relaxation needs.
+#[derive(Clone, Copy, Debug)]
+pub struct Park2tClosure<R> {
+    /// Free-stream (pre-shock) temperature `T_∞` — the frozen initial vibrational temperature `T_ve(0)`
+    /// just behind the shock, before relaxation toward `T₂` begins.
+    pub t_ve_initial: R,
+    /// Post-shock pressure `p₂` in **atm** — sets the Millikan–White relaxation time `τ_vt ∝ 1/p`.
+    pub pressure_atm: R,
+    /// Reduced mass `μ_sr` of the dominant relaxing collision pair, in **amu** (N₂–N₂ ≈ 7).
+    pub reduced_mass_amu: R,
+    /// Characteristic vibrational temperature `θ_v` of the dominant species, in **K** (N₂ ≈ 3393).
+    pub theta_vib: R,
 }
 
 /// A fitted normal shock on the stagnation streamline: the exact Rankine–Hugoniot interface (task 4.1).
@@ -154,6 +176,82 @@ where
         let theta_d = R::from_f64(PARK_NO_IONIZATION_ACTIVATION_TEMP)
             .ok_or_else(|| PhysicsError::NumericalInstability("Park activation temp".into()))?;
         let k_cgs = arrhenius_rate_kernel(t2, prefactor, exponent, theta_d)?.value();
+        let cm3_per_m3 = R::from_f64(1.0e-6)
+            .ok_or_else(|| PhysicsError::NumericalInstability("cm³→m³".into()))?;
+        let avogadro = R::from_f64(AVOGADRO_CONSTANT)
+            .ok_or_else(|| PhysicsError::NumericalInstability("Avogadro".into()))?;
+        let k_si = k_cgs * cm3_per_m3 / avogadro;
+        let tau_ion = R::one() / (k_si * post.n_tot2);
+
+        let frac = R::one() - (R::zero() - residence_time / tau_ion).exp();
+        let alpha = alpha_eq * frac;
+        let n_e = ElectronDensity::new(alpha * post.n_tot2)?;
+        let omega_p = plasma_frequency_kernel(n_e)?;
+        Ok(StagnationOutcome {
+            electron_density: n_e.value(),
+            plasma_frequency: omega_p.value(),
+            ionization_fraction: alpha,
+            blackout: omega_p.value() > comms_band,
+        })
+    }
+
+    /// The **Park two-temperature** stagnation-line blackout (the chemistry-fidelity upgrade, Gap-3): the
+    /// physically faithful peak. Ionization is no longer evaluated at the hot translational `T₂` — it is
+    /// driven off the **rate-controlling temperature** `Tₐ = √(T_tr·T_ve)`, where the lagging
+    /// vibrational-electron temperature `T_ve` is relaxed from the free-stream value toward `T₂` over the
+    /// residence time by the closed-form Landau–Teller / Millikan–White LER kernel. Both the Saha
+    /// equilibrium target and the associative-ionization rate use `Tₐ`, so the cold electron bath suppresses
+    /// the equilibrium the single-temperature surrogate over-counted (`α ≈ 4.6×10⁻³ → ~4×10⁻⁴`), marching the
+    /// RAM-C peak `n_e` from ~12× high down into the production chemistry-spread band.
+    ///
+    /// `residence_time` is `t_res = standoff/u₂` (s); `closure` carries the gas properties the relaxation
+    /// needs (free-stream `T_ve(0)`, post-shock pressure, reduced mass, `θ_v`). Returns the same outcome
+    /// shape as [`stagnation_line_blackout`], plus the controller is recorded in `ionization_fraction`.
+    ///
+    /// # Errors
+    /// Propagates the vibrational-relaxation / ionization / rate / electron-density / plasma-frequency kernels.
+    ///
+    /// # References
+    /// * Park, "Nonequilibrium Hypersonic Aerothermodynamics," Wiley (1990) — the two-temperature model and
+    ///   the geometric-mean rate-controlling temperature `Tₐ = √(T_tr·T_ve)`.
+    /// * Park, J. Thermophys. Heat Transfer 7(3):385 (1993).
+    pub fn stagnation_line_blackout_2t(
+        &self,
+        post: &PostShockState<R>,
+        residence_time: R,
+        closure: &Park2tClosure<R>,
+        comms_band: R,
+    ) -> Result<StagnationOutcome<R>, PhysicsError> {
+        let t_tr = Temperature::new(post.t2)?;
+
+        // 1. Relax the lagging vibrational-electron temperature T_ve over the residence time (closed-form
+        //    LER exponential): T_ve(0) = free-stream value (frozen behind the shock) → T_tr = T₂.
+        let t_ve = vibrational_relaxation_kernel(
+            VibrationalTemperature::new(closure.t_ve_initial)?,
+            t_tr,
+            closure.pressure_atm,
+            closure.reduced_mass_amu,
+            closure.theta_vib,
+            residence_time,
+        )?
+        .value();
+
+        // 2. Park rate-controlling temperature Tₐ = √(T_tr·T_ve) — the heavy-particle ↔ electron handshake.
+        let t_a_val = (post.t2 * t_ve).sqrt();
+        let t_a = Temperature::new(t_a_val)?;
+
+        // 3. Saha equilibrium target at the *controller* Tₐ (not T_tr) — the cold electron bath suppresses it.
+        let alpha_eq = park2t_ionization_surrogate_kernel(t_a, post.n_tot2)?.value();
+
+        // 4. Associative-ionization lag, also at Tₐ. k_f in Park/Gupta units (cm³·mol⁻¹·s⁻¹) → SI per
+        //    particle (m³·s⁻¹): ×1e-6 / N_A. τ_ion = 1/(k·n₂); α = α_eq·(1 − e^{−t_res/τ_ion}).
+        let prefactor = R::from_f64(PARK_NO_IONIZATION_PREFACTOR)
+            .ok_or_else(|| PhysicsError::NumericalInstability("Park prefactor".into()))?;
+        let exponent = R::from_f64(PARK_NO_IONIZATION_EXPONENT)
+            .ok_or_else(|| PhysicsError::NumericalInstability("Park exponent".into()))?;
+        let theta_d = R::from_f64(PARK_NO_IONIZATION_ACTIVATION_TEMP)
+            .ok_or_else(|| PhysicsError::NumericalInstability("Park activation temp".into()))?;
+        let k_cgs = arrhenius_rate_kernel(t_a, prefactor, exponent, theta_d)?.value();
         let cm3_per_m3 = R::from_f64(1.0e-6)
             .ok_or_else(|| PhysicsError::NumericalInstability("cm³→m³".into()))?;
         let avogadro = R::from_f64(AVOGADRO_CONSTANT)

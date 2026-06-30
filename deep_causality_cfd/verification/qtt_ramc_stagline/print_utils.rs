@@ -11,9 +11,12 @@ use deep_causality_cfd::{PostShockState, StagnationOutcome};
 /// Lower / upper bound of the post-shock "~10⁴ K" temperature band (K).
 const T2_MIN: f64 = 5_000.0;
 const T2_MAX: f64 = 60_000.0;
-/// Peak electron density accepted within ~2 orders of magnitude of the RAM-C anchor.
-const NE_LO: f64 = 1.0e17;
-const NE_HI: f64 = 1.0e21;
+/// Peak electron density gate. The Gap-3 Park two-temperature controller (ionization off
+/// `Tₐ = √(T_tr·T_ve)`, not the hot `T₂`) lands `n_e ≈ 1.1×10¹⁹` — within ~half a decade (~3×) of the
+/// RAM-C II anchor `1×10¹⁹`, the production chemistry-spread band. This replaces the old ~2-decade
+/// order-of-magnitude gate the single-temperature surrogate needed.
+const NE_LO: f64 = 3.0e18;
+const NE_HI: f64 = 3.0e19;
 /// The smooth post-shock relaxation profile must stay `O(1)` rank.
 const BOND_CAP: usize = 4;
 
@@ -57,7 +60,7 @@ pub fn verify(
         post.t2 > T2_MIN && post.t2 < T2_MAX,
     );
     let g2 = gate(
-        "peak n_e within ~2 decades of RAM-C II",
+        "peak n_e within ~3× of RAM-C II (Park-2T controller)",
         out.electron_density > NE_LO && out.electron_density < NE_HI,
     );
     let g3 = gate("blackout onset (ω_p > comms band)", out.blackout);
@@ -77,9 +80,16 @@ pub fn summary(out: &StagnationOutcome<f64>) {
         out.electron_density, decades, RAMC_NE_REFERENCE
     );
     println!(
-        "Disclaimer: Park-2T Saha surrogate (the T_e = T_ve lumping over-predicts peak n_e ~2× vs a 3-T\n\
-         closure); perfect-gas γ = 1.4 over-predicts T2 (real reacting air dissociates). Order-of-magnitude\n\
-         anchor, not a calibrated match. The post-shock T2 is the exact-RH transported energy, retiring the\n\
-         Tier-A recovery-temperature reconstruction."
+        "Ionization is driven off the Park rate-controlling temperature Tₐ = √(T_tr·T_ve), with the lagging\n\
+         vibrational-electron temperature T_ve relaxed from the free-stream value over the residence time by\n\
+         the closed-form Millikan–White LER kernel — not the hot translational T₂. This is the Gap-3\n\
+         chemistry-fidelity upgrade: it takes peak n_e from the single-temperature surrogate's ~12× over-\n\
+         prediction down to ~1.1× of the RAM-C II anchor.\n\
+         Disclaimer: still a two-temperature Saha surrogate. The T_e = T_ve lumping (a 3-T electron-energy\n\
+         separation is ~2×) and the single associative-ionization channel (vs a finite-rate associative +\n\
+         electron-impact + recombination network) remain open levers, and the exact landing is sensitive to\n\
+         the Millikan–White τ_vt model (the documented ~2–5× chemistry-model spread). The effective γ = 1.1\n\
+         lands T2 in the realistic ~8000 K reacting-air band. The post-shock T2 is the exact-RH transported\n\
+         energy, retiring the Tier-A recovery-temperature reconstruction."
     );
 }

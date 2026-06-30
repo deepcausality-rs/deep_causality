@@ -14,7 +14,7 @@ mod marcher_2d;
 mod marcher_3d;
 
 pub use euler_1d::{CompressibleEuler1d, EulerState, ideal_gas_pressure};
-pub use fitting::{FittedNormalShock, PostShockState, StagnationOutcome};
+pub use fitting::{FittedNormalShock, Park2tClosure, PostShockState, StagnationOutcome};
 pub use imex::{AcousticImex1d, conservation_round, positivity_floor};
 pub use marcher_2d::{CompressibleMarcher2d, EulerState2d, EulerStateTt2d, ideal_gas_pressure_2d};
 pub use marcher_3d::{CompressibleMarcher3d, EulerState3d, EulerStateTt3d};
