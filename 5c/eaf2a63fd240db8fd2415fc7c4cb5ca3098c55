@@ -1,0 +1,303 @@
+thirdparty/crates/BUILD.bazel
+  s_c4c919f578d611::t_ad1b94a25d6f37 14,34-45
+thirdparty/crates/ahash-0.8.12/BUILD.bazel
+  s_c4c919f578d611::t_a1146d06f87a97 78-81,126-133,138-141,158-169,182-185,190-193,285,297-298,300,305-307,311,313,374-377,422-429,434-437,454-465,475-477,481-483,608-611,656-663,668-671,688-699,712-715,720-723,805
+thirdparty/crates/android_system_properties-0.1.5/BUILD.bazel
+  s_c4c919f578d611::t_77988f9eec971f 62,74-75,77,82-84,88,90
+thirdparty/crates/autocfg-1.5.1/BUILD.bazel
+  s_c4c919f578d611::t_29d0714a10dfa0 62,74-75,77,82-84,88,90
+thirdparty/crates/bitflags-2.13.0/BUILD.bazel
+  s_c4c919f578d611::t_ae1219c20ddb12 65,77-78,80,85-87,91,93
+thirdparty/crates/bumpalo-3.20.3/BUILD.bazel
+  s_c4c919f578d611::t_fc40631f6b732d 65,77-78,80,85-87,91,93
+thirdparty/crates/bytes-1.12.0/.cargo-checksum.json
+  s_c4c919f578d611::t_0c289d787bb1ec 1
+thirdparty/crates/bytes-1.12.0/.cargo_vcs_info.json
+  s_c4c919f578d611::t_5d3fa446d1717e 3
+thirdparty/crates/bytes-1.12.0/BUILD.bazel
+  s_c4c919f578d611::t_ddbc4190d2050d 65,77-78,80,85-87,91,93,112
+thirdparty/crates/bytes-1.12.0/CHANGELOG.md
+  s_c4c919f578d611::t_26cb11dbb03aff 1-16
+thirdparty/crates/bytes-1.12.0/Cargo.lock
+  s_c4c919f578d611::t_a54807796c5d40 16
+thirdparty/crates/bytes-1.12.0/Cargo.toml
+  s_c4c919f578d611::t_7f024fff7096a9 16,22-31
+thirdparty/crates/bytes-1.12.0/Cargo.toml.orig
+  s_c4c919f578d611::t_2ac471cdda18f9 7,20
+thirdparty/crates/bytes-1.12.0/src/buf/buf_impl.rs
+  s_c4c919f578d611::t_3510716a791a50 89-95
+thirdparty/crates/bytes-1.12.0/src/bytes.rs
+  s_c4c919f578d611::t_feb537ec62292d 109-112,119-120,124,374,492-493,542-543,655-659,669-670,1030-1032,1044-1046,1076,1081,1090,1127,1130,1134-1135,1160-1161,1196,1221,1248-1249,1254-1255,1260-1261,1263-1269,1284-1285,1288-1289,1292-1293,1295-1298,1300-1301,1388-1389,1427-1428,1437-1438
+thirdparty/crates/bytes-1.12.0/src/bytes_mut.rs
+  s_c4c919f578d611::t_4e9ec4f50c171b 327-330,407-410,562-563,814-815,895-931,1044-1072,1889-1890,1911-1912,1946-1947
+thirdparty/crates/bytes-1.12.0/src/lib.rs
+  s_c4c919f578d611::t_d9dd784c0aecb8 132-168
+thirdparty/crates/bytes-1.12.0/tests/test_buf.rs
+  s_c4c919f578d611::t_6895d3373546d4 253-258,279,290-300,451-461
+thirdparty/crates/bytes-1.12.0/tests/test_bytes.rs
+  s_c4c919f578d611::t_1d3a45f98f89ce 610-626,1546-1604
+thirdparty/crates/cc-1.2.65/.cargo-checksum.json
+  s_c4c919f578d611::t_e0fac1f879cbcb 1
+thirdparty/crates/cc-1.2.65/.cargo_vcs_info.json
+  s_c4c919f578d611::t_253aba509fb5e3 3
+thirdparty/crates/cc-1.2.65/BUILD.bazel
+  s_c4c919f578d611::t_31856eaa455820 62,74-75,77,82-84,88,90,109
+thirdparty/crates/cc-1.2.65/CHANGELOG.md
+  s_c4c919f578d611::t_8394c8a5d12c72 10-15
+thirdparty/crates/cc-1.2.65/Cargo.lock
+  s_c4c919f578d611::t_64f080f1cd7778 13,64,66,139,147,149,151
+thirdparty/crates/cc-1.2.65/Cargo.toml
+  s_c4c919f578d611::t_45015124d0c298 16
+thirdparty/crates/cc-1.2.65/Cargo.toml.orig
+  s_c4c919f578d611::t_7655ea54a29490 3
+thirdparty/crates/cc-1.2.65/src/target/generated.rs
+  s_c4c919f578d611::t_ed1811bbeffca8 189,277
+thirdparty/crates/cfg-if-1.0.4/BUILD.bazel
+  s_c4c919f578d611::t_ee4e73e350feb0 62,74-75,77,82-84,88,90
+thirdparty/crates/chrono-0.4.45/BUILD.bazel
+  s_c4c919f578d611::t_5e0255b9909bfa 71,83-84,86,91-93,97,99,179-184,194-202
+thirdparty/crates/const-random-0.1.18/BUILD.bazel
+  s_c4c919f578d611::t_f1f7e2ada88ccb 65,77-78,80,85-87,91,93
+thirdparty/crates/const-random-macro-0.1.16/BUILD.bazel
+  s_c4c919f578d611::t_3717d98476e67b 62,74-75,77,82-84,88,90
+thirdparty/crates/core-foundation-sys-0.8.7/BUILD.bazel
+  s_c4c919f578d611::t_bc968ecb4e94c7 66,78-79,81,86-88,92,94
+thirdparty/crates/crates.bzl
+  s_c4c919f578d611::t_dd6a3bbb3959fd 1-469
+thirdparty/crates/crunchy-0.2.4/BUILD.bazel
+  s_c4c919f578d611::t_9c34e3966c412e 70,82-83,85,90-92,96,98,161
+thirdparty/crates/csv-1.4.0/BUILD.bazel
+  s_c4c919f578d611::t_e68916254b6ea8 62,74-75,77,82-84,88,90
+thirdparty/crates/csv-core-0.1.13/BUILD.bazel
+  s_c4c919f578d611::t_e766556b5b705b 65,77-78,80,85-87,91,93
+thirdparty/crates/defs.bzl
+  s_c4c919f578d611::t_4d787e49ae909e 8-23
+thirdparty/crates/errno-0.3.14/BUILD.bazel
+  s_c4c919f578d611::t_74a065122740ca 65,77-78,80,85-87,91,93,171-176,186-194
+thirdparty/crates/fastrand-2.4.1/BUILD.bazel
+  s_c4c919f578d611::t_3ca7a39eb45cc2 67,79-80,82,87-89,93,95
+thirdparty/crates/find-msvc-tools-0.1.9/BUILD.bazel
+  s_c4c919f578d611::t_80eae401c83321 62,74-75,77,82-84,88,90
+thirdparty/crates/fnv-1.0.7/BUILD.bazel
+  s_c4c919f578d611::t_96dcc7a7e7e0ab 66,78-79,81,86-88,92,94
+thirdparty/crates/futures-core-0.3.32/BUILD.bazel
+  s_c4c919f578d611::t_9fd402748e2db5 62,74-75,77,82-84,88,90
+thirdparty/crates/futures-task-0.3.32/BUILD.bazel
+  s_c4c919f578d611::t_5555657ab6df7f 62,74-75,77,82-84,88,90
+thirdparty/crates/futures-util-0.3.32/BUILD.bazel
+  s_c4c919f578d611::t_f06db10efa0a14 62,74-75,77,82-84,88,90
+thirdparty/crates/getrandom-0.2.17/BUILD.bazel
+  s_c4c919f578d611::t_23a3cdba9109f2 62,74-75,77,82-84,88,90,164-169,179-187
+thirdparty/crates/getrandom-0.3.4/BUILD.bazel
+  s_c4c919f578d611::t_8495bb5d587e76 66,78-79,81,86-88,92,94,166-171,181-189,255
+thirdparty/crates/getrandom-0.4.3/BUILD.bazel
+  s_c4c919f578d611::t_f40add9da69875 66,78-79,81,86-88,92,94,166-171,181-189,252
+thirdparty/crates/half-2.7.1/BUILD.bazel
+  s_c4c919f578d611::t_3bae26582c4c12 65,77-78,80,85-87,91,93
+thirdparty/crates/hashbrown-0.17.1/BUILD.bazel
+  s_c4c919f578d611::t_132330a9cbb839 62,74-75,77,82-84,88,90
+thirdparty/crates/iana-time-zone-0.1.65/BUILD.bazel
+  s_c4c919f578d611::t_63de0bf3fc8657 65,77-78,80,85-87,91,93,145-147
+thirdparty/crates/iana-time-zone-haiku-0.1.2/BUILD.bazel
+  s_c4c919f578d611::t_3d87525f675dab 66,78-79,81,86-88,92,94,153,171
+thirdparty/crates/itoa-1.0.18/BUILD.bazel
+  s_c4c919f578d611::t_1f7898da551b99 62,74-75,77,82-84,88,90
+thirdparty/crates/js-sys-0.3.103/.cargo-checksum.json
+  s_c4c919f578d611::t_9c5e4c405ea138 1
+thirdparty/crates/js-sys-0.3.103/.cargo_vcs_info.json
+  s_c4c919f578d611::t_a56b2b779a32ff 3
+thirdparty/crates/js-sys-0.3.103/BUILD.bazel
+  s_c4c919f578d611::t_76815b2c56c27f 62,74-75,77,82-84,88,90,109,112
+thirdparty/crates/js-sys-0.3.103/Cargo.lock
+  s_c4c919f578d611::t_92935976e48b97 79,113,115,134,136,151,153,164,166,174,176,187,189
+thirdparty/crates/js-sys-0.3.103/Cargo.toml
+  s_c4c919f578d611::t_cb7371e30644b6 16,75
+thirdparty/crates/js-sys-0.3.103/Cargo.toml.orig
+  s_c4c919f578d611::t_a383169713e2b0 17,39
+thirdparty/crates/libc-0.2.186/BUILD.bazel
+  s_c4c919f578d611::t_5cdbf6b1c2c8d0 95-100,110-118,173,185-186,188,193-195,199,201,299-304,314-322,367
+thirdparty/crates/libm-0.2.16/BUILD.bazel
+  s_c4c919f578d611::t_bdf2de68ff01ad 70,82-83,85,90-92,96,98,161
+thirdparty/crates/linux-raw-sys-0.12.1/BUILD.bazel
+  s_c4c919f578d611::t_53d9263aac3695 114,126-127,129,134-136,140,142
+thirdparty/crates/log-0.4.33/.cargo-checksum.json
+  s_c4c919f578d611::t_229d798b311f6e 1
+thirdparty/crates/log-0.4.33/.cargo_vcs_info.json
+  s_c4c919f578d611::t_10bfca02050723 3
+thirdparty/crates/log-0.4.33/BUILD.bazel
+  s_c4c919f578d611::t_e8eec9aedda00e 62,74-75,77,82-84,88,90,109
+thirdparty/crates/log-0.4.33/CHANGELOG.md
+  s_c4c919f578d611::t_af8928d1bb3622 3-12,431-432
+thirdparty/crates/log-0.4.33/Cargo.lock
+  s_c4c919f578d611::t_888c0819c545f5 24,39,41,108,110,130,132,136,138,146,148,155,157,166,168,175,177,186,188,197,199,208,210,217,219
+thirdparty/crates/log-0.4.33/Cargo.toml
+  s_c4c919f578d611::t_29d18e09c60984 16
+thirdparty/crates/log-0.4.33/Cargo.toml.orig
+  s_c4c919f578d611::t_3c4cc7a3ff29c5 4
+thirdparty/crates/log-0.4.33/src/kv/key.rs
+  s_c4c919f578d611::t_fc08a933051422 181-201
+thirdparty/crates/log-0.4.33/src/lib.rs
+  s_c4c919f578d611::t_b923a95926bad1 351,780,796-821
+thirdparty/crates/memchr-2.8.2/BUILD.bazel
+  s_c4c919f578d611::t_cfd08b8e4e46c5 62,74-75,77,82-84,88,90
+thirdparty/crates/num-bigint-0.4.6/BUILD.bazel
+  s_c4c919f578d611::t_502c434b25d8f2 62,74-75,77,82-84,88,90
+thirdparty/crates/num-integer-0.1.46/BUILD.bazel
+  s_c4c919f578d611::t_b044781e6f5748 66,78-79,81,86-88,92,94
+thirdparty/crates/num-traits-0.2.19/BUILD.bazel
+  s_c4c919f578d611::t_09c99035b6fbbf 71,83-84,86,91-93,97,99,164
+thirdparty/crates/once_cell-1.21.4/BUILD.bazel
+  s_c4c919f578d611::t_e4ebaf4da8d7ec 67,79-80,82,87-89,93,95
+thirdparty/crates/parquet-59.0.0/BUILD.bazel
+  s_c4c919f578d611::t_6d3969a06da9ed 66,78-79,81,86-88,92,94,115,151-153,187-192,196-198,211-219,229-231,235-237
+thirdparty/crates/paste-1.0.15/BUILD.bazel
+  s_c4c919f578d611::t_17841af867470d 66,78-79,81,86-88,92,94,153
+thirdparty/crates/pin-project-lite-0.2.17/BUILD.bazel
+  s_c4c919f578d611::t_d081e95fc6fa05 62,74-75,77,82-84,88,90
+thirdparty/crates/proc-macro2-1.0.106/BUILD.bazel
+  s_c4c919f578d611::t_760e3f071b1a79 70,82-83,85,90-92,96,98,162
+thirdparty/crates/quick-error-1.2.3/BUILD.bazel
+  s_c4c919f578d611::t_0f9edfd8ccaaef 62,74-75,77,82-84,88,90
+thirdparty/crates/quote-1.0.46/.cargo-checksum.json
+  s_c4c919f578d611::t_0fa16e86cffc17 1
+thirdparty/crates/quote-1.0.46/.cargo_vcs_info.json
+  s_c4c919f578d611::t_d0ff4e06354137 3
+thirdparty/crates/quote-1.0.46/.github/workflows/ci.yml
+  s_c4c919f578d611::t_3b427cfec0b3f8 27,30,56,70,83,96,109
+thirdparty/crates/quote-1.0.46/BUILD.bazel
+  s_c4c919f578d611::t_aac751673bcabc 70,82-83,85,90-92,96,98,117,120,162,177
+thirdparty/crates/quote-1.0.46/Cargo.lock
+  s_c4c919f578d611::t_2cb5111c6df492 7,9,25,27,31,33,41,43,47,49,62,64,71,109,115,117,128,130,137,139,142,163,165,178,180,187,189,196,198,202,204,248,250
+thirdparty/crates/quote-1.0.46/Cargo.toml
+  s_c4c919f578d611::t_3eab1e44907e09 16
+thirdparty/crates/quote-1.0.46/Cargo.toml.orig
+  s_c4c919f578d611::t_c4e5486bba8593 3
+thirdparty/crates/quote-1.0.46/src/lib.rs
+  s_c4c919f578d611::t_fd70caeae0acf5 92,528-627,630-638,640-645,647-658,660-666,1252-1254,1263-1265,1274-1276
+thirdparty/crates/quote-1.0.46/src/to_tokens.rs
+  s_c4c919f578d611::t_9b7eae2ffc7bb8 10
+thirdparty/crates/r-efi-5.3.0/BUILD.bazel
+  s_c4c919f578d611::t_1e775ffbf4c2dc 62,74-75,77,82-84,88,90
+thirdparty/crates/r-efi-6.0.0/BUILD.bazel
+  s_c4c919f578d611::t_e991a9589c849e 62,74-75,77,82-84,88,90
+thirdparty/crates/rustix-1.1.4/BUILD.bazel
+  s_c4c919f578d611::t_e88cc1b2d38887 51-53,75-80,84-86,96-104,114-116,120-122,210,222-223,225,230-232,236,238,297-300,343-352,358-361,378-390,403-406,411-414,522
+thirdparty/crates/rustversion-1.0.22/BUILD.bazel
+  s_c4c919f578d611::t_1dc71b29e75b24 66,78-79,81,86-88,92,94,153
+thirdparty/crates/rusty-fork-0.3.1/BUILD.bazel
+  s_c4c919f578d611::t_7dd6eae4d01c5a 67,79-80,82,87-89,93,95
+thirdparty/crates/ryu-1.0.23/BUILD.bazel
+  s_c4c919f578d611::t_e53c8052b1c887 62,74-75,77,82-84,88,90
+thirdparty/crates/seq-macro-0.3.6/BUILD.bazel
+  s_c4c919f578d611::t_e50fe42327bebf 62,74-75,77,82-84,88,90
+thirdparty/crates/serde_core-1.0.228/BUILD.bazel
+  s_c4c919f578d611::t_2468272cd433d6 71,83-84,86,91-93,97,99,163
+thirdparty/crates/serde_derive-1.0.228/BUILD.bazel
+  s_c4c919f578d611::t_06182c5b5516c8 62,74-75,77,82-84,88,90,112
+thirdparty/crates/shlex-2.0.1/BUILD.bazel
+  s_c4c919f578d611::t_a6a2106a531a32 62,74-75,77,82-84,88,90
+thirdparty/crates/slab-0.4.12/BUILD.bazel
+  s_c4c919f578d611::t_702f1c8acae74f 62,74-75,77,82-84,88,90
+thirdparty/crates/syn-2.0.118/BUILD.bazel
+  s_c4c919f578d611::t_dd06aad39cf0c8 74,86-87,89,94-96,100,102,124
+thirdparty/crates/tempfile-3.27.0/BUILD.bazel
+  s_c4c919f578d611::t_5221fc7fcad4d8 66,78-79,81,86-88,92,94,194-201,214-225
+thirdparty/crates/tiny-keccak-2.0.2/BUILD.bazel
+  s_c4c919f578d611::t_4a055d333d9a58 70,82-83,85,90-92,96,98,162
+thirdparty/crates/twox-hash-2.1.2/BUILD.bazel
+  s_c4c919f578d611::t_8718105ebab52a 65,77-78,80,85-87,91,93
+thirdparty/crates/unicode-ident-1.0.24/BUILD.bazel
+  s_c4c919f578d611::t_bbb29f532f18f4 62,74-75,77,82-84,88,90
+thirdparty/crates/version_check-0.9.5/BUILD.bazel
+  s_c4c919f578d611::t_b26bf80ec93a44 62,74-75,77,82-84,88,90
+thirdparty/crates/wait-timeout-0.2.1/BUILD.bazel
+  s_c4c919f578d611::t_2532cdefe7f96c 62,74-75,77,82-84,88,90,162-167,177-185
+thirdparty/crates/wasi-0.11.1-wasi-snapshot-preview1/BUILD.bazel
+  s_c4c919f578d611::t_4ae7d446dd58cd 62,74-75,77,82-84,88,90
+thirdparty/crates/wasip2-1.0.4-wasi-0.2.12/BUILD.bazel
+  s_c4c919f578d611::t_52b7dde6e44c03 62,74-75,77,82-84,88,90
+thirdparty/crates/wasm-bindgen-0.2.126/.cargo-checksum.json
+  s_c4c919f578d611::t_bb1f69538e2c4f 1
+thirdparty/crates/wasm-bindgen-0.2.126/.cargo_vcs_info.json
+  s_c4c919f578d611::t_f5217a1f439212 1-6
+thirdparty/crates/wasm-bindgen-0.2.126/BUILD.bazel
+  s_c4c919f578d611::t_f588bf8c36d11b 44,69,81-82,84,89-91,95,97,116,120-121,162,164,183
+thirdparty/crates/wasm-bindgen-0.2.126/Cargo.lock
+  s_c4c919f578d611::t_55bcb5d701ac0f 52,54,109,111,126,141,143,151,153,164,166
+thirdparty/crates/wasm-bindgen-0.2.126/Cargo.toml
+  s_c4c919f578d611::t_793456e1675784 16,79,82
+thirdparty/crates/wasm-bindgen-0.2.126/Cargo.toml.orig
+  s_c4c919f578d611::t_6765ba301da855 16,49-50
+thirdparty/crates/wasm-bindgen-macro-0.2.126/.cargo-checksum.json
+  s_c4c919f578d611::t_96f5a476073017 1
+thirdparty/crates/wasm-bindgen-macro-0.2.126/.cargo_vcs_info.json
+  s_c4c919f578d611::t_8cf95fe838ba17 3
+thirdparty/crates/wasm-bindgen-macro-0.2.126/BUILD.bazel
+  s_c4c919f578d611::t_fe51c13ae275ac 62,74-75,77,82-84,88,90,109,111-112
+thirdparty/crates/wasm-bindgen-macro-0.2.126/Cargo.lock
+  s_c4c919f578d611::t_bc9751d924dac3 62,64,122,124,187,189,208,217,219,230,232
+thirdparty/crates/wasm-bindgen-macro-0.2.126/Cargo.toml
+  s_c4c919f578d611::t_cf04b20b26f149 16,49
+thirdparty/crates/wasm-bindgen-macro-0.2.126/Cargo.toml.orig
+  s_c4c919f578d611::t_2c4f4ab5f8f90e 14,24
+thirdparty/crates/wasm-bindgen-macro-support-0.2.126/.cargo-checksum.json
+  s_c4c919f578d611::t_2fb822ebcc3a59 1
+thirdparty/crates/wasm-bindgen-macro-support-0.2.126/.cargo_vcs_info.json
+  s_c4c919f578d611::t_277c0f648fa279 3
+thirdparty/crates/wasm-bindgen-macro-support-0.2.126/BUILD.bazel
+  s_c4c919f578d611::t_fc8a6d88874f5a 62,74-75,77,82-84,88,90,109,113,115
+thirdparty/crates/wasm-bindgen-macro-support-0.2.126/Cargo.lock
+  s_c4c919f578d611::t_85634acc5be0a7 22,24,31,33,48,59,61
+thirdparty/crates/wasm-bindgen-macro-support-0.2.126/Cargo.toml
+  s_c4c919f578d611::t_38888f0cb6ab98 16,62
+thirdparty/crates/wasm-bindgen-macro-support-0.2.126/Cargo.toml.orig
+  s_c4c919f578d611::t_713fc0d08d0201 12,23
+thirdparty/crates/wasm-bindgen-shared-0.2.126/.cargo-checksum.json
+  s_c4c919f578d611::t_accdbc69fb766d 1
+thirdparty/crates/wasm-bindgen-shared-0.2.126/.cargo_vcs_info.json
+  s_c4c919f578d611::t_2d0565e07ffc5f 3
+thirdparty/crates/wasm-bindgen-shared-0.2.126/BUILD.bazel
+  s_c4c919f578d611::t_4fae021244d08c 66,78-79,81,86-88,92,94,113,116,154,170
+thirdparty/crates/wasm-bindgen-shared-0.2.126/Cargo.lock
+  s_c4c919f578d611::t_c0b872f9248546 13
+thirdparty/crates/wasm-bindgen-shared-0.2.126/Cargo.toml
+  s_c4c919f578d611::t_1cd3b98ceaee6c 16
+thirdparty/crates/wasm-bindgen-shared-0.2.126/Cargo.toml.orig
+  s_c4c919f578d611::t_eb4ffeccb87166 15
+thirdparty/crates/windows-core-0.62.2/BUILD.bazel
+  s_c4c919f578d611::t_224a190639e5dc 66,78-79,81,86-88,92,94
+thirdparty/crates/windows-implement-0.60.2/BUILD.bazel
+  s_c4c919f578d611::t_5ec5dfa1570124 62,74-75,77,82-84,88,90,112
+thirdparty/crates/windows-interface-0.59.3/BUILD.bazel
+  s_c4c919f578d611::t_8805468c32e2b7 62,74-75,77,82-84,88,90,112
+thirdparty/crates/windows-link-0.2.1/BUILD.bazel
+  s_c4c919f578d611::t_449b9da0d432da 62,74-75,77,82-84,88,90
+thirdparty/crates/windows-result-0.4.1/BUILD.bazel
+  s_c4c919f578d611::t_fa7fa9f605fac5 62,74-75,77,82-84,88,90
+thirdparty/crates/windows-strings-0.5.1/BUILD.bazel
+  s_c4c919f578d611::t_f6efe87ed0fd26 62,74-75,77,82-84,88,90
+thirdparty/crates/windows-sys-0.61.2/BUILD.bazel
+  s_c4c919f578d611::t_d1649d85808ece 69,81-82,84,89-91,95,97
+thirdparty/crates/wit-bindgen-0.57.1/BUILD.bazel
+  s_c4c919f578d611::t_3f257ebc3db592 66,78-79,81,86-88,92,94,153
+thirdparty/crates/zerocopy-0.8.52/BUILD.bazel
+  s_c4c919f578d611::t_89c82a2af0af9c 74,86-87,89,94-96,100,102,166
+thirdparty/crates/zerocopy-derive-0.8.52/BUILD.bazel
+  s_c4c919f578d611::t_a8511d9b8f88cd 62,74-75,77,82-84,88,90,112
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "5ceaf2a63fd240db8fd2415fc7c4cb5ca3098c55",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "unknown"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
