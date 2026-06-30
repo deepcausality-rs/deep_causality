@@ -128,6 +128,14 @@ grows unless the coordinate aligns the shock to an axis. The coordinate stretch 
 for a curved shock, not optional. **[measured: body-fitted coordinate mandatory — see seam §6 and
 [`gap-2/tier-b-compressible-marcher.md`](gap-2/tier-b-compressible-marcher.md)]**
 
+**Progress (2026-06-29).** The compressible-marcher change has Stages 0–2 built and gated (3-D operators;
+body-fitted coordinate + the rank-lever gate; conservative Euler + Sod), and Stages 3–6 are **de-risked** by
+six ARIZ resolutions ([`gap-2/`](gap-2/) Res 4–9): the body-fitted coordinate is now a generality-preserving
+**`MetricProvider` blend parameter**, the rank lever is **bounded by construction** (feedback shock-fitting),
+the implicit-acoustic step is built on a **closed-form constant-coefficient inverse** (no AMEn-convergence
+gamble), and the wake/turbulence residual has levers (spectral pinning + a RANS mean closure). The mandatory
+coordinate is no longer a research risk — it is a built, gated commitment with an unbuilt remainder.
+
 ---
 
 ## 4. The causal chain (CausalFlow)
@@ -223,11 +231,16 @@ blackout window becomes trivial. This is the real meaning of "get the math up to
   named and mandatory: a **shock-aligned / body-fitted coordinate** (the §3.3 stretch) **+ an implicit/IMEX
   step**, with the interface jump handled by exact Rankine–Hugoniot. Separately, the **present QTT solver is
   incompressible** — the wrong governing equations for a hypersonic shock; the flagship needs a
-  **compressible QTT marcher** (Euler/NS + energy + EOS), which is Tier-B / Gap-2 territory, not built. The
-  mesh *strategy* of §3.3 is sound on the incompressible solver we have; the shock *physics* is not yet in
-  place. Full analysis + the C1–C8 capability map + the de-risking slice:
-  [`gap-2/tier-b-compressible-marcher.md`](gap-2/tier-b-compressible-marcher.md). **[measured: body-fitted
-  coordinate + IMEX mandatory; compressible QTT solver still open]**
+  **compressible QTT marcher** (Euler/NS + energy + EOS), which is Tier-B / Gap-2 territory. **Now partly
+  built:** the compressible marcher's Stages 0–2 are gated (3-D operators; body-fitted coordinate + rank-lever
+  gate; conservative Euler + Sod exact-Riemann), and Stages 3–6 are **de-risked** by resolutions 4–9 (the
+  fitting that controls rank is the dynamic `MetricProvider` the bulk runs in; the implicit step uses a
+  closed-form inverse, not an unproven AMEn solve). The mesh *strategy* of §3.3 is sound and now gated; the
+  shock *physics* is built through Sod and design-complete through the RAM-C milestone (Stage 4), unbuilt
+  beyond Stage 2. Full analysis + the C1–C8 capability map + the de-risking slice:
+  [`gap-2/tier-b-compressible-marcher.md`](gap-2/tier-b-compressible-marcher.md). **[Stages 0–2 built &
+  gated; Stages 3–6 de-risked, unbuilt; the genuine residual narrowed to turbulent fine structure (not
+  needed for `n_e`) + RANS fidelity]**
 
 ---
 
@@ -240,8 +253,13 @@ blackout window becomes trivial. This is the real meaning of "get the math up to
   real Effect Ethos gate; full provenance. Surrogate physics, but **real composition + real tensor
   compression + real counterfactuals + real regime switch + real relativistic-timing causaloid.** This is
   the deliverable.
-- **Tier B — research.** Higher-fidelity coupled CFD / Park-2T / plasma, validated; the 2T-exact-gravity +
-  perturbative-aero coupling (§6) worked out properly; a genuine 6D conformal filter.
+- **Tier B — split into de-risked engineering vs genuine research.** The higher-fidelity **CFD side**
+  (compressible shock-capturing QTT marcher, validated Park-2T on a real post-shock state) is **no longer open
+  research** — Stages 0–2 are built and gated and Stages 3–6 are de-risked by resolutions 4–9 (§3.3 progress
+  note); it is now a *build-and-validate* effort with two named caveats (turbulent fine structure, not needed
+  for `n_e`; RANS fidelity). The genuine **research** that remains is the **trajectory axis**: the
+  2T-exact-gravity + perturbative-aero coupling (§6) and a genuine 6D conformal filter — untouched by the
+  tensor work.
 
 ---
 

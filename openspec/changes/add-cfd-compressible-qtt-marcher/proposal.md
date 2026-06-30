@@ -29,20 +29,35 @@ the shock to an axis, an exact Rankine–Hugoniot interface, and an IMEX acousti
 Tier-A LER pattern. This change specifies that solver end to end, staged so the first milestone (the RAM-C
 stagnation line) is buildable on day one and each later stage is gated.
 
+The two make-or-break risks (*does the static rank lever survive marching?* and *does the implicit AMEn step
+converge?*) and the *structured-only* trade-off have been put through ARIZ
+([resolutions 4–7](../../notes/plasma-blackout/gap-2/gap-two-resolution-7-feature-adaptive-coordinate.md)), which
+collapse onto **one mechanism — the Feature-Adaptive Coordinate (FAC)**: a low-rank, data-supplied,
+feedback-updated coordinate map behind a `MetricProvider` seam. FAC (a) makes **body-fit a free blend parameter**
+(general across structured geometries, not geometry-locked), (b) **pins the shock to a moving coordinate
+surface** so bounded rank is true *by construction* under marching, and (c) **splits the acoustic operator** so
+its stiff core has a **closed-form low-rank inverse** — the implicit step no longer depends on unproven AMEn
+convergence. Each is gated; the design records D8–D10 and the revised risks/open questions.
+
 ## What Changes
 
 - **3-D QTT codec + operators** in `deep_causality_cfd/tensor_bridge/` — `quantize_3d`/`dequantize_3d` and
   `gradient_{x,y,z}` / `laplacian_3d` / divergence MPOs, extending the existing 1-D/2-D bridge. (None exist
   today.)
-- **A body-fitted / shock-aligned curvilinear coordinate** with a **low-rank Jacobian** — the measured
-  mandatory rank lever; transforms the finite-difference operators by chain rule so the curved bow shock and
-  the wall become axis-aligned coordinate surfaces (`χ ~ O(10)`, not `√side`).
+- **A body-fitted / shock-aligned curvilinear coordinate** behind a **`MetricProvider` seam** with a **low-rank
+  Jacobian** — the measured mandatory rank lever; transforms the finite-difference operators by chain rule so the
+  curved bow shock and the wall become axis-aligned coordinate surfaces (`χ ~ O(10)`, not `√side`).
+  Body-fittedness is a **free blend parameter `λ`** (`CartesianIdentity` / `BodyFittedCoordinate` / `BlendedMap`),
+  and the fitted interface is **feedback-updated to the live shock each step** so bounded rank holds *by
+  construction* under marching (the make-or-break; design D8–D9).
 - **A conservative compressible flux** on conservative variables `(ρ, ρu, ρE, {ρY_s})` in tensor-train form —
   an approximate Riemann flux (Rusanov/HLLC) + an **EOS pressure closure via TT-cross**, in entropy / log
   variables for positivity.
-- **IMEX time integration** — explicit convective + **implicit acoustic** step via `solve::linear` (AMEn),
-  inside the acoustic/diffusion CFL; **conservation-preserving rounding** (carry the conserved totals + a
-  rank-1 projection fixup, because `round` minimizes Frobenius error, not invariants).
+- **IMEX time integration** — explicit convective + **implicit acoustic** step built on a **split operator**: a
+  constant-coefficient core with a **closed-form low-rank inverse** plus a bounded variable-coefficient
+  remainder (so `solve::linear`/AMEn, if used, is preconditioned to `I + small` — no unproven-convergence gamble;
+  design D10), inside the acoustic/diffusion CFL; **conservation-preserving rounding** (carry the conserved
+  totals + a rank-1 projection fixup, because `round` minimizes Frobenius error, not invariants).
 - **Shock fitting** — the bow shock as a **tracked moving interface** with the **exact Rankine–Hugoniot jump**
   applied across it; each side stays smooth (low-rank), and the wrong-shock-speed coupling caveat is removed.
 - **The compressible reacting marcher** — ride the **Tier-A reacting/ionization LER sources unchanged** on the
@@ -62,13 +77,16 @@ stagnation line) is buildable on day one and each later stage is gated.
 - `qtt-codec-3d`: 3-D QTT field codec (`quantize_3d`/`dequantize_3d`) and 3-D finite-difference MPO operators
   (`gradient_{x,y,z}`, `laplacian_3d`, divergence), extending the 1-D/2-D `tensor_bridge`.
 - `body-fitted-qtt-coordinate`: a smooth curvilinear coordinate that aligns the shock/body to coordinate
-  surfaces, carried as a **low-rank Jacobian**, with chain-rule-transformed operators — the measured
-  mandatory rank lever (`χ ~ O(10)` vs captured `√side`).
+  surfaces, carried as a **low-rank Jacobian** behind a static-dispatch **`MetricProvider` seam**, with
+  chain-rule-transformed operators — the measured mandatory rank lever (`χ ~ O(10)` vs captured `√side`).
+  Body-fittedness is a **free blend parameter** and the fitted interface is **feedback-updated to the live
+  shock** (bounded rank by construction; D8–D9).
 - `compressible-qtt-flux`: conservative compressible Euler/NS in tensor-train form — conservative variables,
   an approximate Riemann flux, and an EOS closure via TT-cross, in positivity-preserving (entropy/log)
   variables.
-- `qtt-imex-time-integration`: IMEX time stepping (explicit convection + implicit-acoustic AMEn) within the
-  CFL, plus conservation- and positivity-preserving rounding.
+- `qtt-imex-time-integration`: IMEX time stepping (explicit convection + a **split** implicit-acoustic step —
+  closed-form constant-coefficient inverse + bounded remainder, AMEn only as a preconditioned fallback) within
+  the CFL, plus conservation- and positivity-preserving rounding.
 - `qtt-shock-fitting`: the shock as a tracked moving interface with the exact Rankine–Hugoniot jump, coupled
   to the QTT bulk, keeping each side smooth and removing the wrong-shock-speed caveat.
 - `compressible-reacting-qtt-marcher`: the assembled marcher carrying the Tier-A reacting/ionization LER
@@ -88,8 +106,9 @@ stagnation line) is buildable on day one and each later stage is gated.
   `physics`-crate kernels and the `PhysicsStage`/`Marcher`/`CausalFlow` substrate unchanged; new
   `studies/`-style verification examples under `verification/`.
 - **`deep_causality_tensor`** — likely additions to the operator algebra for n-D / chain-rule operators and
-  conservation-aware rounding; the AMEn `solve::linear` is reused (its convergence on the variable-coefficient
-  compressible operator is a stage-gated risk).
+  conservation-aware rounding; the AMEn `solve::linear` is reused only as a **preconditioned** fallback (D10
+  splits off a closed-form constant-coefficient inverse, so the bare-AMEn-convergence risk is discharged into a
+  measurable perturbation bound).
 - **Dependencies** — no new external crates.
 - **Tests / Bazel** — new test modules mirror the src tree, registered in `mod.rs` and `tests/BUILD.bazel`;
   100% coverage of new library code; examples are coverage-exempt.

@@ -191,10 +191,21 @@ exactness, the mandatory RH temperature band, ionization lag + Saha limit, count
 electrons produced) and passes. **[CLOSED — Tier-A reacting/ionization slice built and verified on the
 incompressible rollout; `T_tr` is a recovery-temperature reconstruction, disclaimed.]**
 
-**Tier-B still open** (compressible shock-capturing QTT marcher, real transported `T_tr`/`T_ve`, the
-reacting `*_rhs` family, multi-mode relaxation, shock-rank control) — specified and staged in the sibling
-change [`add-cfd-compressible-qtt-marcher`](../../changes/add-cfd-compressible-qtt-marcher/proposal.md),
-which reuses every Tier-A kernel and LER stage unchanged.
+**Tier-B in progress — Stages 0–2 built, 3–6 de-risked.** The sibling change
+[`add-cfd-compressible-qtt-marcher`](../../changes/add-cfd-compressible-qtt-marcher/proposal.md) (reusing every
+Tier-A kernel and LER stage unchanged) is staged 0–6. **Built and gated:** Stage 0 (3-D QTT codec + operators),
+Stage 1 (body-fitted coordinate + low-rank Jacobian + the **rank-lever gate**), Stage 2 (conservative
+compressible Euler + Rusanov, **Sod exact-Riemann gate** passing). **Design-complete and de-risked, not built:**
+Stages 3–6, hardened by six ARIZ resolutions
+([4](gap-2/gap-two-resolution-4-body-fit-parameter.md)–[9](gap-2/gap-two-resolution-9-moment-closure-turbulence.md))
+that converted the Tier-B make-or-break and open-research nodes into measurable engineering gates — body-fit as a
+`MetricProvider` blend parameter (Res 4), **rank bounded by construction** via feedback shock-fitting (Res 5),
+the implicit-acoustic step de-risked by a **closed-form constant-coefficient inverse** (Res 6, retiring the
+"AMEn may not converge" gamble), and the **wake/turbulence residual** given levers — spectral pinning (DLRA, Res
+8) and a RANS moment closure for the mean `n_e` (Res 9). The genuinely-irreducible residual is now narrowed to
+**instantaneous turbulent fine structure** (never needed for `n_e`) + **RANS-closure fidelity** (the standard
+hypersonic-CFD caveat). Next physics deliverable: **Stage 3 → Stage 4 (the RAM-C stagnation line)**, the honest
+first Tier-B validation point.
 
 **Resolution / mesh strategy (the micrometer shock-sheath requirement).** Reentry needs ~µm resolution at
 the shock layer and plasma sheath over a ~m vehicle — a **~10⁶ dynamic range** that forces conventional
@@ -225,7 +236,15 @@ hand-set generator, and a `correct()` that is a literal no-op stub — no 6D mea
 `scalar_r = -0.4`). Both are honest skeletons, not engines. Carrying the flagship needs the real conformal
 lift, a genuine 6D filter update, a relativistic-timing causaloid (IERS terms), and the **2T-exact-gravity +
 perturbative-aero coupling**, which is correctly named open research — *not* something the tensor train
-touches. **[open]**
+touches. **[open — preliminary resolution drafted:
+[`gap-3/gap-three-resolution-1-perturbed-conformal-trajectory.md`](gap-3/gap-three-resolution-1-perturbed-conformal-trajectory.md)
+splits an exact conformal core (2T matrix exponential) from a between-step aero+J2 perturbation, runs the 6D
+filter as predict + Sp(2,R) constraint projection, and reads the clock correction off the dynamic `τ↔t` metric.
+Peak dynamic pressure is **not** an open node but a **regime change** (the Encke→Cowell crossover,
+`ε = a_aero/a_grav ≳ 1`), handled by adopting the built `grmhd/select_metric` detector to switch the integrator
+— giving the trajectory axis its own regime change parallel to continuum→plasma. The residual is the
+integrator handover (overlap-band agreement + hysteresis), and the factoring is provisional pending the Tier-B
+Stage-4+ aero interface.]**
 
 **Mandate — curvature must be dynamic, not hardcoded** (the same invariant as the Park-2T physics, see
 [`gap-two-reacting-plasma.md`](gap-2/gap-two-reacting-plasma.md) §1.2): the metric `g_uv` is computed from the
@@ -255,14 +274,17 @@ provenance log are composition work — not missing primitives. **[holds under p
   verified). Tier A now needs: (2) a parametric Park-2T / ionization `PhysicsStage` surrogate (Gap 2), and
   (3) wiring the existing skeletons + Ethos gate + provenance (Gap 4). Neither is blocked on missing
   mathematics.
-- **Tier B** retains genuine open research: validated coupled reacting-plasma CFD, a **compressible QTT
-  shock-capturing marcher**, and the Bars-2T-exact-gravity + perturbative-aero coupling — keep labelled
-  **[open]**. The shock-rank question is now **measured** (`deep_causality_cfd/studies/`): a Cartesian-captured
-  3-D curved shock is `χ ~ √side` (unbounded) while a **body-fitted / shock-aligned coordinate** holds it at
-  `χ ~ O(10)` — so that coordinate **plus an implicit/IMEX step** are a *mandatory* design commitment, not an
-  open question; the open part is building the compressible marcher around them (and shock-fitting-in-QTT is
-  itself a research move). Smallest de-risking slice and the C1–C8 map:
-  [`gap-2/tier-b-compressible-marcher.md`](gap-2/tier-b-compressible-marcher.md).
+- **Tier B** is now **mostly de-risked engineering, not open research.** The compressible QTT marcher's Stages
+  0–2 are built and gated; the shock-rank lever is **measured** (`deep_causality_cfd/studies/`: Cartesian-captured
+  3-D curved shock `χ ~ √side`, body-fitted `χ ~ O(10)`) and **mandatory by design**. The six resolutions
+  ([gap-2/](gap-2/) Res 4–9) discharged what used to be the open parts: shock-fitting-in-QTT is no longer "a
+  research move" but the dynamic `MetricProvider` the bulk runs in (Res 5); the implicit-acoustic convergence
+  gamble is replaced by a closed-form inverse (Res 6); body-fit is a generality-preserving blend parameter (Res
+  4); and the wake/turbulence residual has levers (Res 8–9). What remains is **building** Stages 3–6 (Stage 4 =
+  the RAM-C milestone) and **validating** against flight — with two honest standing caveats (instantaneous
+  turbulent fine structure, never needed for `n_e`; RANS fidelity) and the separate **Bars-2T-exact-gravity +
+  perturbative-aero coupling**, which stays genuinely **[open]** and is untouched by the tensor work. Smallest
+  de-risking slice and the C1–C8 map: [`gap-2/tier-b-compressible-marcher.md`](gap-2/tier-b-compressible-marcher.md).
 
 **Smallest honest slice that proves the thesis:** a Tier-A vertical slice — quasi-1D reacting flow as a
 QTT/MPS rollout (new tensor train), a parametric ionization surrogate feeding a blackout trigger, 2–3

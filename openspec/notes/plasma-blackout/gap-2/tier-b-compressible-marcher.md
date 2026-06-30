@@ -37,6 +37,43 @@ resolved the Tier-A source stiffness.
 
 ---
 
+## 1a. Build status (post-resolution, 2026-06-29)
+
+The `add-cfd-compressible-qtt-marcher` change is staged 0–6. **Stages 0–2 are built and gated; Stages 3–6
+are design-complete and de-risked but not yet implemented.** Separately, six ARIZ resolutions
+([4](gap-two-resolution-4-body-fit-parameter.md)–[9](gap-two-resolution-9-moment-closure-turbulence.md))
+converted every Tier-B *make-or-break* and *open-research* node named in this file into **de-risked
+engineering with a measurable gate**. What changed is the risk profile, not yet the build bar.
+
+**Built & verified (code, exit-nonzero gates):**
+- **Stage 0** — 3-D QTT codec + `gradient_{x,y,z}` / `laplacian_3d` / divergence MPOs (7 gates).
+- **Stage 1** — body-fitted polar coordinate, low-rank Jacobian, chain-rule physical gradient, **rank-lever
+  gate** (fitted bond bounded `O(10)` while the Cartesian control grows) (5 gates).
+- **Stage 2** — conservative compressible Euler (ideal gas + Rusanov), **Sod exact-Riemann gate** passing
+  (density/velocity/pressure L1 within tol).
+
+**Design-complete, de-risked, not built (Stages 3–6 + the resolutions):**
+
+| Node (was) | Resolution | New status |
+|---|---|---|
+| "Structured/body-fitted only sacrifices generality" | [Res 4](gap-two-resolution-4-body-fit-parameter.md) (D8) | body-fit is a **`MetricProvider` blend parameter `λ`** — general across structured geometries; **[de-risked]** |
+| **Make-or-break:** does the static rank lever survive *marching*? | [Res 5](gap-two-resolution-5-dynamic-rank-lever.md) (D9) | **feedback-pinned** map ⇒ rank `O(1)` **by construction**, not by rounding; **[de-risked, gate = bounded `max_bond` over the march]** |
+| **Make-or-break:** does AMEn converge on the acoustic operator? | [Res 6](gap-two-resolution-6-implicit-acoustics.md) (D10) | **split** operator + **closed-form constant-coefficient inverse**; AMEn (if used) is preconditioned to `I + small`; **[de-risked, gate = `‖A₀⁻¹A₁‖<1`]** |
+| "shock-fitting coupled to a QTT bulk is unprecedented" | [Res 5](gap-two-resolution-5-dynamic-rank-lever.md) | fitting **is** the dynamic `MetricProvider` — not a bolt-on; the bulk runs *in* the fitted coordinate; **[de-risked]** |
+| "the *wake* is the residual rank unknown" | [Res 8](gap-two-resolution-8-spectral-pinning.md) | **spectral pinning** (DLRA/`tdvp`): pin the discontinuity geometrically, carry the rest spectrally; extends closure to the **transitional near-wake**; out-of-scope boundary becomes a **measurable `K(t)` tripwire**; **[lever found]** |
+| "the wake needs turbulence (a non-goal)" | [Res 9](gap-two-resolution-9-moment-closure-turbulence.md) | turbulence becomes a **modeled** region — RANS/moment closure (LER stages + low-rank eddy-viscosity MPO) delivering the **mean** `n_e`; **[reframed]** |
+
+**The residual, now narrowed.** After the resolutions the genuinely-irreducible unknown is no longer "the
+flowfield may not be low-rank" — it is two named, defensible caveats: **(i) instantaneous turbulent fine
+structure** (high-rank, but *never needed* for the mean `n_e` that drives blackout) and **(ii) RANS-closure
+fidelity** (the standard hypersonic-CFD modeling caveat). Everything between Stage 2 and the RAM-C milestone
+is now engineering with a gate, not open research.
+
+**Next physics deliverable:** Stage 3 (split-acoustic IMEX) → **Stage 4 (the RAM-C stagnation line, §6)** —
+the honest first Tier-B validation point, a valid standalone deliverable.
+
+---
+
 ## 2. The empirical backbone — four rank studies
 
 All in `deep_causality_cfd/studies/` (self-verifying, `cargo run --release -p deep_causality_cfd --example
@@ -96,9 +133,13 @@ LeVeque–Yee wrong-shock-speed coupling caveat (C7) for the Tier-A reacting sou
 | **C8** | Dimensionality — axisymmetric / 3-D | **[measured-critical]** 3-D is where `χ ~ √side` bites; sphere-cone is naturally body-fitted/axisymmetric → fitting is also the C8 answer |
 
 The single reformulation (fitting + IMEX + carry-invariants) discharges or reduces C2, C4, C5, C6, C7, C8
-and is **mandated** by the C3/C8 measurements. C1 (a smooth conservative TT flux) is the main remaining
-engineering. **[genuinely open research: shock-fitting coupled to a QTT bulk is unprecedented; and the
-*wake* — not the shock — is the residual rank unknown a fitted coordinate does not flatten.]**
+and is **mandated** by the C3/C8 measurements. C1 (a smooth conservative TT flux) is built (Stage 2, Sod-gated).
+**Update (resolutions 4–9, §1a):** the two clauses formerly flagged here as *genuinely open research* are now
+**de-risked**: "shock-fitting coupled to a QTT bulk is unprecedented" is resolved by making fitting the dynamic
+`MetricProvider` the bulk runs in ([Res 5](gap-two-resolution-5-dynamic-rank-lever.md)); the *wake* residual now
+has a lever — spectral pinning (DLRA/`tdvp`, [Res 8](gap-two-resolution-8-spectral-pinning.md)) plus a RANS
+moment closure for the mean ([Res 9](gap-two-resolution-9-moment-closure-turbulence.md)), leaving only
+instantaneous fine structure (not needed) + RANS fidelity as the standing caveat.
 
 ---
 
@@ -129,11 +170,12 @@ deliverable]**
 ## 7. Fallback (cautioned by measurement)
 
 If shock-fitting-in-QTT proves too hard, the fallback is **capture-and-thicken**: smooth the shock to a
-fixed cell count + entropy variables + a conservation fixup. The studies caution this: thickening does
-**not** remove the curvature-driven `√side` rank growth, and over-thickening is diffusion-CFL-unstable — so
-the fallback still needs an implicit step and still pays the `χ ~ √side` solve cost in 3-D. It is more
-robust to shock topology (complex shock–shock interactions where fitting fails) but is **not** a rank fix.
-**[open — last resort]**
+fixed cell count + entropy variables + a conservation fixup. Post-Res-4 this is **not a separate code path** —
+it is simply **`λ = 0`** on the `MetricProvider` blend (the Cartesian limit), so the marcher degrades to capture
+continuously rather than by a branch. The studies still caution it: thickening does **not** remove the
+curvature-driven `√side` rank growth, and over-thickening is diffusion-CFL-unstable — so the fallback still
+needs an implicit step and still pays the `χ ~ √side` solve cost in 3-D. It is more robust to shock topology
+(complex shock–shock interactions where fitting fails) but is **not** a rank fix. **[escape hatch — `λ=0`]**
 
 ---
 
