@@ -260,6 +260,23 @@ EGM/IERS terms) stay literal, in `constants/`. The regime threshold the `select_
 against is *config*; the curvature it compares *is computed from state*. **[open: hardening Gap 3 honors the
 dynamic invariant]**
 
+**Progress (2026-06-30) — the navigation/timing core is now demonstrated on real data.** Product decisions
+⑥ (filter/sensor model) and ⑧ (one unified envelope) of
+[`gap-3/gap-three-resolution-3-trajectory-axis.md`](gap-3/gap-three-resolution-3-trajectory-axis.md) are no
+longer just decided — they have a working artifact: **`examples/avionics_examples/ins_gnss_blackout`**. It
+runs on the **real Galileo E14** SP3/CLK products and composes the three native mechanisms the resolution
+calls for: the **grmhd `select_metric` regime detector** flips GNSS available↔denied (two regime changes), the
+**`intervene`/`branch_with`** corrective loop disciplines the INS when GNSS is up and is *withheld* through the
+blackout, and the shipped **`relativistic_clock_drift_rate_kernel`** (FS-3) is *carried* across the dark — and
+beats a naive last-rate hold against the real measured clock (≈3532 ns vs 3663 ns). Open-loop pure INS drifts
+~375 km over the day; the closed loop stays bounded and snaps back, all in one auditable `CausalFlow` with the
+regime changes + interventions in the `EffectLog`. This is the **physics-gated GNSS denial + carried
+relativistic clock + corrective reacquisition** thesis — the clock-holdover *core* of the blackout problem —
+realised without plasma CFD. The real-data ingestion was factored into the reusable **`deep_causality_file`**
+crate (RINEX SP3/CLK loaders over the haft IO monad), which the chronometric `gm_recovery` example now also
+rides. **[demonstrated for the timing/navigation core; the full 2T conformal lift + aero coupling (Gap-3
+resolutions 1/3) remain the open trajectory research].**
+
 ### Gap 4 — EPP composition glue (substrate present, flagship wiring absent)
 
 `CausalFlow` / `PropagatingEffect` (counterfactual `continue_with`), the `grmhd` metric-selection coupling

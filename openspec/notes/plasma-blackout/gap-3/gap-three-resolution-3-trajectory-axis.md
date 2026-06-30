@@ -256,6 +256,142 @@ code, not a private copy). The B1 core and B3 clock of a Phase-1 propagator can 
 
 ---
 
+## Part F — Product decisions ⑥/⑦/⑧ resolved (SOTA-grounded)
+
+The three non-physics blockers from Part A.2 are now decided, grounded in a SOTA literature sweep (three
+research passes; citations in [References](#references-part-f)). The unifying realisation, from the user:
+**the physics is already verified and is *not* the hard part** (`verification/` gates `qtt_park2t_blackout`,
+`qtt_sod`, `qtt_ramc_stagline`, the rank studies, the incompressible suite). **The hard part is the
+navigation data — and in a unified envelope the simulation *generates* it.**
+
+### ⑧ Scope — one unified envelope (DECIDED)
+
+**Build a single simulation that couples aerothermo/plasma physics and PNT/navigation in one auditable
+`CausalFlow` process** — not the ground-tracker, and not three stovepipes. This is the corridor doc's whole
+thesis, and the SOTA sweep **confirms the gap is real, in survey language, not just inferred**:
+
+- Production reentry tools exchange **tables/decks, not live state**: POST2 (trajectory) reads pre-computed
+  aero/aerothermal databases; DPLR/LAURA/US3D generate those databases offline (Hash et al., AIAA 2007-605).
+- The plasma/blackout side is *explicitly decoupled*: "a decoupled modeling approach … the stagnation region
+  approximated as a 1-D inviscid normal shock" (J. Spacecraft & Rockets, 10.2514/1.A33122).
+- Multiphysics coupling itself is partitioned: "separate solvers … exchanging boundary data once per step"
+  (HYPATE aerothermoelastic).
+- GNC treats blackout as an **external outage to coast through on IMU**, not coupled physics (reentry-nav
+  literature; *Chinese J. Aeronautics* 2021 review notes full-state coupled frameworks "remain underexplored").
+- The closest published analog to a unified loop is the **Kapteyn–Willcox predictive digital twin**
+  (arXiv:2004.11356) — physics-model + onboard data + replanning in one loop, but for *structural health*,
+  not plasma + navigation. **No framework couples aerothermo → plasma sheath → GNSS/optical degradation →
+  Kalman GNC as live shared state.** That loop is the EPP contribution.
+
+**The key reframe:** the simulation already computes the ground-truth trajectory and the electron-density
+field → plasma frequency → **GNSS-denial trigger**. So the "sensors" are *synthetic models sampling the
+sim's own ground truth*, and the **physics→navigation coupling is the deliverable**. The substrate already
+exists in-tree: `dec_cylinder_wake_verification` is a **"sensor-fed uncertain inflow"** harness with sensor
+**dropout → fallback + intervention** logged via `EffectLog`, riding `UncertainMarchConfig` /
+`deep_causality_uncertain`. The flagship reuses this, with the dropout driver wired to the Park-2T blackout
+trigger instead of a synthetic schedule.
+
+### ⑥ Sensor configuration + 6D gain — synthetic sensor-in-the-loop (DECIDED, SOTA-parameterised)
+
+Not a data-collection problem — a **parameterisation** problem. The sim drives synthetic sensor models from
+ground truth; SOTA sets the noise/grades. Blackout-survivability tiers the suite:
+
+| Sensor (synthetic model) | Works *during* blackout? | SOTA grade / noise | Role in the filter |
+|---|---|---|---|
+| Strapdown IMU/INS | **Yes — primary** | nav-grade: gyro bias < 0.01 °/hr, accel < 10 µg (RLG/FOG); tactical fallback ~1 °/hr, ~1 mg | dead-reckoning propagation core |
+| Through-plasma optical/celestial (star + LEO-sat tracker) | **Yes — the 2025-26 SOTA aid** | ~50 m (1σ), Draper sliced-lens / Rhea **AutoNav** on **Varda W-6**, Mar 2026 | intermittent bearing fix, bounds INS drift |
+| GNSS receiver | **No** — physics-gated off | m-level pseudorange | pre/post-blackout; **denial driven by Park-2T `BlackoutTrigger`** |
+| Relativistic clock | carried internally | FS-3 `relativistic_clock_offset_kernel` | the carried bias (B3) |
+| MHD "magnetic window" | comms-recovery, not nav | — | out of scope as a nav sensor |
+
+**The 6D gain (the filter):** a **15-state error-state EKF (ESKF)** — position (3), velocity (3),
+attitude-error (3), gyro bias (3), accel bias (3) — **+ 2 clock states (17-state), tightly coupled**, so the
+carried relativistic clock bias snaps the filter back on GNSS reacquisition. Use a UKF/CKF *only* for the
+nonlinear optical-bearing update if added. Tuning: **Q** from the IMU spec (angle/velocity random walk +
+bias random-walk), inflated during reentry buffet; **R** from sensor accuracy (optical ~50 m 1σ; GNSS
+m-level). **The load-bearing gate quantity** is the INS-only drift through the ~3–4 min denial: it grows as
+**t³ (gyro bias) / t² (accel bias)**; a nav-grade unit accumulates **~hundreds of metres** over the window
+(≈28 m accelerometer-bias floor in a worked 10 µg / 240 s example), tactical-grade blows out to **km** —
+which is precisely *why* the through-plasma optical aid matters. On reacquisition, keeping the bias + clock
+states alive through the coast gives rapid carrier-phase ambiguity recovery from even a single pseudorange.
+
+### ⑦ Validation references — closed-loop + the anchors you already have (DECIDED)
+
+**There is no external reentry nav-sensor dataset** (confirmed — sparse/redacted; the integrated-sim field
+is slim). So navigation validation is **closed-loop self-consistency**, and the only *external* anchors are
+physics ones you already gate:
+
+1. **Closed-loop nav gate** (new): drive synthetic sensors from a known ground-truth trajectory, let the
+   ESKF estimate it back, and gate — (a) tracks truth pre-blackout, (b) INS-only error grows at the expected
+   t²/t³ rate *during the physics-triggered blackout*, (c) re-converges on GNSS reacquisition, (d) the carried
+   clock matches the FS-3 analytic anchor.
+2. **Electron density / blackout** (have it): RAM-C II — **Grantham, NASA TN D-6062 (1970)** (peak `n_e` vs
+   altitude by microwave reflectometer; blackout boundaries Fig. 24 / Table X), companion **Jones & Cross,
+   NASA TN D-6617 (1972)** (wall-normal `n_e`). Already gated by `qtt_ramc_stagline` / `qtt_park2t_blackout`.
+3. **Trajectory profile to drive the sim** (new): the **RAM-C II trajectory itself** — constant ~7.65 km/s,
+   the community **three-altitude benchmark (61 / 71 / 81 km)**; the blackout-window arc runs ~84 km
+   (attenuation onset) → ~38 km over ~30 s. Lets the physics arc and the validation share one envelope.
+4. **Accuracy tolerance** (sets the gate bands): production codes (CFDWARP, Parent et al. 2021/2025/2026)
+   reach **few-percent** on *axial peak `n_e`* at 61/71 km, but only **~2–3×** on the *wall-normal* peak and
+   the 81 km slip case — and that spread is **partly dataset-internal** (reflectometer-vs-electrostatic-probe
+   disagree by ~2× at the same station). So a ~2–3× band is honest, not loose.
+5. **Clock** (have it): **IERS Conventions (2010) TN36 §10.2, Eqs. 10.6–10.9** (the authoritative `dτ/dt`
+   terms — identical to FS-3's `1 + Φ/c² − v²/2c²`, Φ ≡ −U_E) + **Ashby (2003)** GPS split +45.7/−7.1/+38
+   µs/day. Already the FS-3 anchor; no reentry flight-clock dataset exists, so this is *the* anchor.
+
+### Acceptable simplifications (explicitly justified)
+
+Given how slim integrated-sim work is, a clean **synthetic-sensor-in-the-loop** design is itself novel and
+sufficient — the contribution is the **coupling + audit**, not sensor-hardware fidelity. Declared
+simplifications: a representative (RAM-C) trajectory rather than a full 6-DOF entry; synthetic sensors rather
+than real telemetry; the optical aid idealised as a plasma-gated ~50 m fix; 1PN clock; planar two-body core
+(FS-1) with the 3-D KS extension deferred. Each is a labelled `[holds under precondition]`, not a hidden gap.
+
+### Net effect on Part A.2
+
+| Item | Before | After Part F | Now (2026-06-30) |
+|---|---|---|---|
+| ⑥ filter / sensor model | `[X]` decision | **resolved** — synthetic sensor-in-the-loop; 15/17-state tightly-coupled ESKF; SOTA Q/R + drift band | **demonstrated** — `ins_gnss_blackout` example: regime-gated `intervene` correction + carried clock, on real Galileo data |
+| ⑦ validation references | `[R]` reference-data | **resolved** — closed-loop self-consistency + RAM-C (Grantham TN D-6062) + IERS/Ashby clock; ~2–3× honest band | clock anchor exercised on real E14 data |
+| ⑧ scope | `[X]` decision | **resolved** — one unified physics+nav envelope; the stovepipe gap is the contribution | **demonstrated** — physics-gated GNSS denial + carried relativistic clock + reacquisition, one `CausalFlow` |
+
+With ①②③⑤ measured (Parts C/E) and ⑥⑦⑧ decided here, **the trajectory-timing axis is spec-ready**: the
+Phase-1 OpenSpec change can be written against the FS gates + the closed-loop nav gate, the SOTA-grade sensor
+config, and the RAM-C / IERS / Ashby references. Phase 2 (real aero coupling + Encke↔Cowell switch) still
+gates on the Tier-B Stage-4+ aero interface (④).
+
+### Demonstrated (2026-06-30): the navigation/timing core runs on real data
+
+The clock-holdover *core* of the blackout problem is now a working artifact —
+**`examples/avionics_examples/ins_gnss_blackout`** — on the **real Galileo E14** GNSS products. It composes
+the grmhd `select_metric` regime detector (two regime changes), the `intervene`/`branch_with` corrective loop
+(GNSS fix withheld through the dark), and the shipped `relativistic_clock_drift_rate_kernel` (FS-3) **carried**
+across the outage, in one auditable `CausalFlow` (regime changes + interventions in the `EffectLog`). Measured:
+the relativistic carry beats a naive last-rate hold vs the real measured clock (≈3532 ns vs 3663 ns); open-loop
+pure INS drifts ~375 km while the closed loop stays bounded and reacquires; five self-verifying gates pass. The
+real-data ingestion was factored into the reusable **`deep_causality_file`** crate (RINEX SP3/CLK over the haft
+IO monad). Full evidence + the SOTA backing: [`gap-three-research-note.md`](gap-three-research-note.md)
+§"Demonstrated".
+
+### References (Part F)
+
+- Grantham, W. L., *Flight Results of a 25,000-ft/s Reentry Experiment … Plasma Electron Density …*, **NASA
+  TN D-6062** (1970). ntrs.nasa.gov/citations/19710004000
+- Jones, W. L. & Cross, A. E., *Electrostatic-Probe Measurements … Two Reentry Flight Experiments at
+  25,000 ft/s*, **NASA TN D-6617** (1972). (Verify exact TN number vs the SP-252 metadata before locking.)
+- Parent, B. et al., *Electron Losses in Hypersonic Flows*, arXiv:2111.09432 (2021); Rodriguez-Fuentes &
+  Parent, *Impact of Ion Mobility …*, Phys. Fluids 37, 013609 (2025), arXiv:2410.12760 — the production
+  accuracy band vs RAM-C.
+- Hash, D. et al., *FIRE II Calculations … DPLR, LAURA, and US3D*, AIAA 2007-605 (the stovepipe toolchain).
+- Kapteyn, Knezevic & Willcox, *Toward predictive digital twins …*, AIAA SciTech 2020 / arXiv:2004.11356.
+- Reentry GNC through blackout (SOTA aid): Rhea Space Activity **AutoNav** on **Varda W-6** (Mar 2026);
+  Draper sliced-lens star tracker (~50 m, GNSS-denied). INS error laws (gyro t³ / accel t²): Inside GNSS,
+  *Inertial Error Propagation*. ESKF/CKF for GNSS-denied INS: MDPI Micromachines 16(10):1116 (2025).
+- Ashby, N., *Relativity in the GPS*, Living Reviews in Relativity 6:1 (2003); Petit & Luzum (eds.), *IERS
+  Conventions (2010)*, IERS TN 36, Ch. 10 §10.2.
+
+---
+
 ## Related
 
 - [`gap-three-resolution-1-perturbed-conformal-trajectory.md`](gap-three-resolution-1-perturbed-conformal-trajectory.md)

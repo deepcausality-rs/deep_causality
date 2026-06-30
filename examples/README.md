@@ -184,6 +184,7 @@ High-assurance examples for Aerospace, Defense, and Safety Critical systems.
 | hypersonic_2t | Defense/Tracking | Tracking Hypersonic Glide Vehicles (HGV) using Dual-Time (2T) Physics in 6D phase space | `cargo run -p avionics_examples --example hypersonic_2t` |
 | flight_envelope_monitor | Health Monitoring | Three-stage stateful pipeline (sensor collection → bind chain → envelope hypergraph) demonstrating uniform composition through `PropagatingProcess<_, FlightState, AircraftConfig>` | `cargo run -p avionics_examples --example flight_envelope_monitor` |
 | turbulence_flow | Turbulence / Chaos | Forecast horizon of a chaotic convective flow (Lorenz / Rayleigh–Bénard truncation); the same `Rk4` march at f32/f64/Float106 shows precision setting how far ahead a turbulent flow can be trusted | `cargo run -p avionics_examples --example turbulence_flow` |
+| ins_gnss_blackout | Navigation / Timing | INS clock holdover through a GPS-denial blackout (jamming / urban canyon / tunnel) on **real Galileo** data: a grmhd-style regime detector + the `intervene` corrective loop (withheld through the dark) + a carried relativistic clock kernel, in one auditable `CausalFlow` — the navigation/timing core of any GPS-denied flight | `cargo run -p avionics_examples --example ins_gnss_blackout` |
 
 See [avionics_examples/README.md](avionics_examples/README.md) for detailed documentation.
 
