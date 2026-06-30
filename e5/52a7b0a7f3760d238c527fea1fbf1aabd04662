@@ -1,0 +1,88 @@
+deep_causality_cfd/studies/qtt_repin_marcher/main.rs
+  s_162aba3d26275e::t_6880267907e6fa 225-227
+  s_162aba3d26275e::t_69a63ac32db30a 250,254-255
+  s_162aba3d26275e::t_421646a749d70e 1-21,23-31,35,37-40,44-47,59,61-62,64-65,67,74,76-77,81,83-85,109-110,114-119,166,168-207,217-224,228-249,251-253,256-269
+  s_162aba3d26275e::t_31dc1791b9a0e9 22,32-34,36,41-43,48-58,60,63,66,68-73,75,78-80,82,86-108,111-113,120-132,137-165,167
+  s_162aba3d26275e::t_82148839030ea4 208-216
+  s_162aba3d26275e::t_6a7f4479e492db 133-136
+openspec/notes/plasma-blackout/gap-2/gap-two-resolution-4-body-fit-parameter.md
+  s_162aba3d26275e::t_d41594d91da794 136-145
+openspec/notes/plasma-blackout/gap-2/gap-two-resolution-6-implicit-acoustics.md
+  s_162aba3d26275e::t_0d3fdae064309c 126-135
+openspec/notes/plasma-blackout/gap-2/gap-two-resolution-5-dynamic-rank-lever.md
+  s_162aba3d26275e::t_30a9772a9ef916 139-154
+  s_162aba3d26275e::t_c6f4d1f7fca91c 123-138,155,158-162
+openspec/changes/add-cfd-compressible-qtt-marcher/design.md
+  s_162aba3d26275e::t_beff42a2c4e128 157-163
+deep_causality_cfd/studies/README.md
+  s_162aba3d26275e::t_3fc271458eb3bf 26,28-38,40-42
+  s_162aba3d26275e::t_b5b69f0893f339 43-47
+  s_162aba3d26275e::t_a3346551ea4126 39
+deep_causality_cfd/studies/qtt_blend_metric/main.rs
+  s_162aba3d26275e::t_c563c850b231de 1-21,23-180
+  s_162aba3d26275e::t_6b51dd6148b081 22
+deep_causality_cfd/studies/qtt_acoustic_precond/main.rs
+  s_162aba3d26275e::t_457d5eca7da547 62
+  s_162aba3d26275e::t_b88afe2c0b4464 67-72
+  s_162aba3d26275e::t_e9d944e8794456 56-57
+  s_162aba3d26275e::t_07999ff5377e45 111
+  s_162aba3d26275e::t_6f7947bdd793c5 127-128
+  s_162aba3d26275e::t_3ea274ca055543 205
+  s_162aba3d26275e::t_d31c151a1218d3 30-34
+  s_162aba3d26275e::t_1c555896d5868d 164-168
+  s_162aba3d26275e::t_a48880c613e2bf 52,66,74,101,103-104,113,125,129-130,133,144,154,173,175-202,209-307
+  s_162aba3d26275e::t_d149d7ac32914a 27-29
+  s_162aba3d26275e::t_7ac2cdb4fae72e 35-37,49-51
+  s_162aba3d26275e::t_7fdc4dc659c2c5 53-55
+  s_162aba3d26275e::t_0c07b656f0c7cb 58-61
+  s_162aba3d26275e::t_90dcab18ec1d4b 63-65
+  s_162aba3d26275e::t_5d457f911d9262 73
+  s_162aba3d26275e::t_534f68243f3e5c 75-77,98-100
+  s_162aba3d26275e::t_27c95924d0fb9d 102
+  s_162aba3d26275e::t_eba256f2b4dceb 105-110
+  s_162aba3d26275e::t_3a26040e0db9c1 112
+  s_162aba3d26275e::t_29d31d84bf9bbb 114-116,122-124
+  s_162aba3d26275e::t_90f7525c6cc7c5 126
+  s_162aba3d26275e::t_c2299ef1763348 131-132
+  s_162aba3d26275e::t_686666cd96e814 134-136,141-143
+  s_162aba3d26275e::t_a0a016cd009bed 145-147,151-153
+  s_162aba3d26275e::t_103612358b5bee 155-157,161-163
+  s_162aba3d26275e::t_bd81be02b3e4c4 169-172
+  s_162aba3d26275e::t_6cda4920960cad 174
+  s_162aba3d26275e::t_b1160685647079 203-204
+  s_162aba3d26275e::t_8149968da1f75e 206-208
+openspec/notes/plasma-blackout/gap-2/tier-b-compressible-marcher.md
+  s_162aba3d26275e::t_880131c447a948 60
+  s_162aba3d26275e::t_b7cc59a578ebac 61
+  s_162aba3d26275e::t_15350c53c5c162 59
+deep_causality_cfd/studies/qtt_rank_fitted_dynamic/main.rs
+  s_162aba3d26275e::t_0ed3bdb98b9f0f 198
+  s_162aba3d26275e::t_eef41831ea09c1 21-25,27-29
+  s_162aba3d26275e::t_fcd7e2a8f82959 57-62
+  s_162aba3d26275e::t_977b46083fdd7e 80-84,86-87,92,94,96,98,104,117-119
+  s_162aba3d26275e::t_e41fb0a58c0d66 1-20,26,30,32-56,63-79,85,88-91,93,95,97,99-100,102-103,105-106,108-109,111-112,114-116,120-197,199-235
+  s_162aba3d26275e::t_1942a0654b6611 31
+  s_162aba3d26275e::t_c9df7a2a7de72a 101
+  s_162aba3d26275e::t_a68fc0f539a9ad 107
+  s_162aba3d26275e::t_7ac27eaab7c528 110
+  s_162aba3d26275e::t_790e183ab4fbbc 113
+deep_causality_cfd/Cargo.toml
+  s_162aba3d26275e::t_a8232f5125205a 184-187
+  s_162aba3d26275e::t_ecd163372317c8 171-183
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "e552a7b0a7f3760d238c527fea1fbf1aabd04662",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
