@@ -191,21 +191,24 @@ exactness, the mandatory RH temperature band, ionization lag + Saha limit, count
 electrons produced) and passes. **[CLOSED — Tier-A reacting/ionization slice built and verified on the
 incompressible rollout; `T_tr` is a recovery-temperature reconstruction, disclaimed.]**
 
-**Tier-B in progress — Stages 0–2 built, 3–6 de-risked.** The sibling change
+### Tier-B — Stages 0–6 built and gated. — **Tier-B CLOSED**
+
 [`add-cfd-compressible-qtt-marcher`](../../changes/add-cfd-compressible-qtt-marcher/proposal.md) (reusing every
-Tier-A kernel and LER stage unchanged) is staged 0–6. **Built and gated:** Stage 0 (3-D QTT codec + operators),
-Stage 1 (body-fitted coordinate + low-rank Jacobian + the **rank-lever gate**), Stage 2 (conservative
-compressible Euler + Rusanov, **Sod exact-Riemann gate** passing). **Design-complete and de-risked, not built:**
-Stages 3–6, hardened by six ARIZ resolutions
+Tier-A kernel and LER stage unchanged) is staged 0–6, **all built and gated:** Stage 0 (3-D QTT codec +
+operators), Stage 1 (body-fitted coordinate + the **rank-lever gate**), Stage 2 (conservative compressible
+Euler + Rusanov, **Sod exact-Riemann gate**), Stage 3 (IMEX split-acoustic with the **closed-form
+constant-coefficient inverse** — the D10 ideal realized, no AMEn gamble, exact at all N), Stage 4 (RAM-C
+stagnation line, peak `n_e` gate), Stage 5 (2-D body-fitted IMEX marcher + the `BlendedMap` `λ` dial,
+**blunt-body rank-lever gate** `qtt_blunt_body_2d`), Stage 6 (3-D IMEX marcher, **forebody rank-lever gate**
+`qtt_reentry_3d`). The six ARIZ resolutions
 ([4](gap-2/gap-two-resolution-4-body-fit-parameter.md)–[9](gap-2/gap-two-resolution-9-moment-closure-turbulence.md))
-that converted the Tier-B make-or-break and open-research nodes into measurable engineering gates — body-fit as a
-`MetricProvider` blend parameter (Res 4), **rank bounded by construction** via feedback shock-fitting (Res 5),
-the implicit-acoustic step de-risked by a **closed-form constant-coefficient inverse** (Res 6, retiring the
-"AMEn may not converge" gamble), and the **wake/turbulence residual** given levers — spectral pinning (DLRA, Res
-8) and a RANS moment closure for the mean `n_e` (Res 9). The genuinely-irreducible residual is now narrowed to
-**instantaneous turbulent fine structure** (never needed for `n_e`) + **RANS-closure fidelity** (the standard
-hypersonic-CFD caveat). Next physics deliverable: **Stage 3 → Stage 4 (the RAM-C stagnation line)**, the honest
-first Tier-B validation point.
+that de-risked the make-or-break nodes are realized in code. **Named open remainders:** (i) bounding the
+*dynamic marched* rank of a flux-through-front (re-pin + exact-RH interface, Res 5 / D9); (ii) a **3-D
+body-fitted `MetricProvider`** (the 3-D marcher is Cartesian-capture so far); (iii) `CfdFlow` wiring; with the
+**wake/turbulence residual** out of scope (spectral pinning, Res 8; RANS mean `n_e`, Res 9). The
+genuinely-irreducible residual stays **instantaneous turbulent fine structure** (never needed for `n_e`) +
+**RANS-closure fidelity** (the standard hypersonic-CFD caveat). The RAM-C stagnation line (Stage 4) is the
+honest first Tier-B validation point.
 
 **Resolution / mesh strategy (the micrometer shock-sheath requirement).** Reentry needs ~µm resolution at
 the shock layer and plasma sheath over a ~m vehicle — a **~10⁶ dynamic range** that forces conventional
@@ -218,11 +221,13 @@ is **coordinate alignment, not sharpness or curvature** — a realistically-form
 *captured on a Cartesian grid* measures **`χ ~ √side` (unbounded in resolution)**, while a **shock-aligned /
 body-fitted coordinate** holds the same shock at **`χ ~ O(10)` (constant)**. So the coordinate stretch is
 **mandatory, not optional**, and **artificial viscosity is not the lever** (it cannot remove curvature, and
-over-thickening is diffusion-CFL-unstable → needs an implicit/IMEX step). This still requires a **compressible
-QTT marcher** (the built `QttIncompressible2d` is the wrong physics for a shock). The mesh *strategy* is sound
-and now quantified; the shock *physics* is **Tier-B / not yet written** — full analysis in
+over-thickening is diffusion-CFL-unstable → needs an implicit/IMEX step). The **compressible QTT marcher** this
+requires is now **built** (`CompressibleMarcher2d` / `CompressibleMarcher3d`, IMEX with the closed-form acoustic
+inverse), with the body-fitted rank lever gated in 2-D and 3-D (`qtt_blunt_body_2d`, `qtt_reentry_3d`). The mesh
+*strategy* is sound and quantified; the shock *physics* is **Tier-B, Stages 0–6 built** — full analysis in
 [`gap-2/tier-b-compressible-marcher.md`](gap-2/tier-b-compressible-marcher.md). **[measured: body-fitted
-coordinate + IMEX mandatory; compressible QTT marcher open]**
+coordinate + IMEX mandatory; compressible QTT marcher built (Stages 0–6); dynamic marched-rank re-pin + 3-D
+body-fit metric are the named open remainders]**
 
 Gap 2's dedicated plan — the **physics-kernel / solver split** (kernels in `deep_causality_physics`, solver +
 coupling in `deep_causality_cfd`), the Park-2T / ionization kernel list, and the two composition idioms —

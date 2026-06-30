@@ -38,6 +38,18 @@ difference. Measured at `f64` on an Apple M3 Max (release).
 | `qtt_cylinder_verification` | drag convergence vs bond; no-slip interior | ΔC_d 1.9e-11; max\|u\| 4.2e-2 | 0 (converged); 0 (no-slip) | converges to machine-ε; **4 %** of free-stream | 32², 4 bond caps | ~1 s |
 | `qtt_park2t_blackout` | 6 LER gates (stability, exactness, RH band, lag+Saha, path-dependence, n_e>0) | all 6 PASS; ω_p 5.6e12 ≫ band | all gates pass | Gap-2 Tier-A verified (cross-refs, Tier-A disclaimers) | 32², 40 steps | ~1 s |
 | `qtt_sod` | Sod shock tube vs exact Riemann (L1 of ρ/u/p) | 0.018 / 0.027 / 0.015 | < 0.03 (1st-order Rusanov) | p\*=0.303 (exact), fan+contact+shock correct | 512 cells, t=0.2 | ~1 s |
+| `qtt_ramc_stagline` | peak electron density `n_e` / blackout onset | `n_e` ≈ 1.2e20 | ~1e19 (RAM-C II, order-of-mag) | +1.1 decades (within ~2) | stagnation line | ~1 s |
+| `qtt_blunt_body_2d` | rank lever: bow-shock χ, fitted vs Cartesian capture | fitted 3→5; capture 16→61 | structural (no √side growth, fitted) | fitted bounded; capture ~√side | 2^5–2^7 | ~2 s |
+| `qtt_reentry_3d` | rank lever: 3-D forebody χ (wake out-of-scope) | fitted 2→4; Cartesian 10→59; wake 41 | structural (`qtt_rank_3d` bound) | fitted plateau; capture grows | 2^3–2^5 | ~3 s |
+
+**Validation scope labels.** The QTT compressible gates verify at three distinct tiers — read each gate for
+what it actually proves: **analytic** (`qtt_sod` vs the exact Riemann solution — rigorous, the only
+quantitative-accuracy gate); **flight-data, order-of-magnitude** (`qtt_ramc_stagline` peak `n_e` vs RAM-C II;
+the Apollo re-entry dwell window is the corridor-time anchor, not a per-point accuracy claim); and
+**structural / rank-lever** (`qtt_blunt_body_2d`, `qtt_reentry_3d` — the body-fitted coordinate *bounds* χ
+where the Cartesian capture grows ~√side; these gate **rank**, not physical accuracy). The **dynamic marched**
+rank growth (flux-through-front) and the **wake** are *reported, never asserted* — bounding the marched χ
+needs re-pinning + an exact-RH interface (design D9), the named open remainder.
 
 Reference papers per example are in the sections below and the [References](#references). The cavity
 centerline RMSE (0.137) is itself a deviation-from-Ghia measure (no single reference value), so its

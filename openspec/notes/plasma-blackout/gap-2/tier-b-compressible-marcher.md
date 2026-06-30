@@ -37,13 +37,15 @@ resolved the Tier-A source stiffness.
 
 ---
 
-## 1a. Build status (post-resolution, 2026-06-29)
+## 1a. Build status (Stages 0–6 built, 2026-06-30)
 
-The `add-cfd-compressible-qtt-marcher` change is staged 0–6. **Stages 0–2 are built and gated; Stages 3–6
-are design-complete and de-risked but not yet implemented.** Separately, six ARIZ resolutions
-([4](gap-two-resolution-4-body-fit-parameter.md)–[9](gap-two-resolution-9-moment-closure-turbulence.md))
-converted every Tier-B *make-or-break* and *open-research* node named in this file into **de-risked
-engineering with a measurable gate**. What changed is the risk profile, not yet the build bar.
+The `add-cfd-compressible-qtt-marcher` change is staged 0–6. **Stages 0–6 are now built and gated.** The
+genuinely-irreducible remainders are two named, defensible open nodes: **(i)** bounding the *dynamic marched*
+rank of a flux-through-front (needs re-pinning + an exact-RH interface, design D9 / `qtt_repin_marcher`), and
+**(ii)** a **3-D body-fitted `MetricProvider`** (the 3-D marcher is Cartesian-capture so far) — plus the
+standing out-of-scope **wake** (turbulence). The six ARIZ resolutions
+([4](gap-two-resolution-4-body-fit-parameter.md)–[9](gap-two-resolution-9-moment-closure-turbulence.md)) that
+de-risked the make-or-break nodes are now realized in code.
 
 **Built & verified (code, exit-nonzero gates):**
 - **Stage 0** — 3-D QTT codec + `gradient_{x,y,z}` / `laplacian_3d` / divergence MPOs (7 gates).
@@ -51,8 +53,22 @@ engineering with a measurable gate**. What changed is the risk profile, not yet 
   gate** (fitted bond bounded `O(10)` while the Cartesian control grows) (5 gates).
 - **Stage 2** — conservative compressible Euler (ideal gas + Rusanov), **Sod exact-Riemann gate** passing
   (density/velocity/pressure L1 within tol).
+- **Stage 3** — IMEX split-acoustic integrator (`AcousticImex1d`). The stiff constant-coefficient core is
+  advanced by its **closed-form low-rank inverse** (`AcousticCoreInverse`), realizing the D10 ideal the
+  `qtt_acoustic_precond` study validated densely — **no AMEn-convergence gamble**, free-stream-exact, **exact
+  at all N**. Gates: D10 gate 1 (`A₀A₀⁻¹ = I` to round-off, bond ≤16 flat L8→L10), stability beyond the
+  explicit acoustic-diffusion limit, conservation, positivity.
+- **Stage 4** — RAM-C stagnation line (`FittedNormalShock` + reused Tier-A LER), peak `n_e` vs RAM-C II
+  within ~1 decade (`verification/qtt_ramc_stagline`, exit 0).
+- **Stage 5** — 2-D body-fitted compressible marcher (`CompressibleMarcher2d`), IMEX (explicit convection +
+  implicit acoustic dissipation via the closed-form 2-D ADI inverse), implements `Marcher`, runs over the
+  `MetricProvider` seam; the continuous body-fit blend (`BlendedMap`, the `λ` dial). **Rank-lever gate**
+  (`verification/qtt_blunt_body_2d`, exit 0): static χ bounded fitted (3→5) vs Cartesian capture (16→61).
+- **Stage 6** — 3-D compressible marcher (`CompressibleMarcher3d`, 5 conserved vars, closed-form 3-D ADI
+  inverse), implements `Marcher`. **Forebody rank-lever gate** (`verification/qtt_reentry_3d`, exit 0):
+  body-fitted forebody χ bounded (2→4) vs Cartesian (10→59); the **wake** reported out-of-scope.
 
-**Design-complete, de-risked, not built (Stages 3–6 + the resolutions):**
+**Open remainders (named, defensible) and the de-risking resolutions:**
 
 | Node (was) | Resolution | New status |
 |---|---|---|
@@ -69,8 +85,10 @@ structure** (high-rank, but *never needed* for the mean `n_e` that drives blacko
 fidelity** (the standard hypersonic-CFD modeling caveat). Everything between Stage 2 and the RAM-C milestone
 is now engineering with a gate, not open research.
 
-**Next physics deliverable:** Stage 3 (split-acoustic IMEX) → **Stage 4 (the RAM-C stagnation line, §6)** —
-the honest first Tier-B validation point, a valid standalone deliverable.
+**Next deliverables (post-Stage-6):** (i) a **3-D body-fitted `MetricProvider`** so the 3-D marcher runs in
+the fitted coordinate (the §1-in-3-D piece); (ii) **re-pinning + exact-RH interface** to bound the dynamic
+marched χ of a flux-through-front (D9); (iii) `CfdFlow`/`QttMarchRun` wiring for the compressible marchers.
+The RAM-C stagnation line (Stage 4) remains the honest first Tier-B validation point.
 
 ---
 

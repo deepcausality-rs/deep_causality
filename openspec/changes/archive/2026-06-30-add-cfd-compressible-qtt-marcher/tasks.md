@@ -118,19 +118,27 @@ and a valid standalone deliverable. Stages 5–6 carry the named open-research n
   aligns it), a datapoint for the standing `qtt_rank_3d` question (D9). The dynamic *marched* forebody rank
   (Cartesian `CompressibleMarcher3d`) is reported as the open remainder — a **3-D body-fitted
   `MetricProvider`** + re-pinning is what would bound the marched χ (not yet built).
-- [ ] 6.3 Cross-references with scope labels: Sod analytic, RAM-C II `n_e`, Apollo dwell.
+- [x] 6.3 Cross-references with scope labels (`verification/README.md`): the QTT compressible gates are
+  labelled by validation tier — **analytic** (`qtt_sod` vs exact Riemann), **flight-data order-of-magnitude**
+  (`qtt_ramc_stagline` `n_e` vs RAM-C II; Apollo dwell = corridor-time anchor), and **structural / rank-lever**
+  (`qtt_blunt_body_2d`, `qtt_reentry_3d` — gate rank, not accuracy). Dynamic marched-rank + wake reported, not
+  asserted.
 
 ## 7. Finalize
 
-- [ ] 7.1 `make format && make fix` (cfd + any tensor additions); clippy `--all-targets` clean (fix, don't
-  suppress); `cargo test -p deep_causality_cfd` (+ `-p deep_causality_tensor` if touched) green; run each
-  verification example → exit 0.
-- [ ] 7.2 Constraints: static dispatch, no `dyn`/`unsafe`/lib-macros; crate-root imports; lib float literals
-  confined to `constants/` via `from_f64`; dynamic-by-construction (metric/curvature/thermo from state);
-  100% coverage of new lib code; tests registered in `mod.rs` + Bazel for every crate touched.
-- [ ] 7.3 `openspec validate add-cfd-compressible-qtt-marcher --strict` passes.
-- [ ] 7.4 Update the notes: mark the Tier-B stages reached in
-  [`gap-2/tier-b-compressible-marcher.md`](../../notes/plasma-blackout/gap-2/tier-b-compressible-marcher.md)
-  and `gap-analysis.md` §4/§5; record the 3-D **forebody** result (the §6.2 gate). The 3-D **wake** rank
-  remains the standing **out-of-scope** `qtt_rank_3d` research question — note it as such, do not claim it
-  resolved.
+- [x] 7.1 `cargo fmt -p deep_causality_cfd` applied; clippy `--all-targets` **clean** (fixed, not suppressed
+  — `too_many_arguments` resolved via tuple/config params, `approx_constant`, `needless_range_loop`,
+  `neg_cmp_op_on_partial_ord`); `cargo test -p deep_causality_cfd` **green (393 passed)**; every verification
+  example exits 0 (`qtt_sod`, `qtt_ramc_stagline`, `qtt_blunt_body_2d`, `qtt_reentry_3d`). Only `cfd` was
+  touched (no `deep_causality_tensor` changes).
+- [x] 7.2 Constraints verified: static dispatch only (marchers generic over `MetricProvider`, no `dyn`); no
+  `unsafe`/lib-macros; crate-root imports (the one intra-crate `tensor_bridge::operators` path is a documented
+  `pub(crate)` lift helper); lib float literals only via `R::from_f64` / `R::one()/two/four` (no bare
+  literals); dynamic-by-construction (metric/flux/EOS from state); new lib code covered (every public method +
+  error path tested); tests registered in `mod.rs`, Bazel test targets are glob-covered, verification examples
+  cargo-only (consistent with `qtt_sod`).
+- [x] 7.3 `openspec validate add-cfd-compressible-qtt-marcher --strict` **passes**.
+- [x] 7.4 Notes updated: `gap-2/tier-b-compressible-marcher.md` §1a now reads **Stages 0–6 built and gated**
+  (with the named open remainders); `gap-analysis.md` §4 Gap-2 updated to **Stages 0–6 built**; the 3-D
+  **forebody** §6.2 gate recorded; the 3-D **wake** rank kept as the standing **out-of-scope** `qtt_rank_3d`
+  research question (not claimed resolved).
