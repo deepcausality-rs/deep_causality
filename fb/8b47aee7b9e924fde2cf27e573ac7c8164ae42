@@ -1,0 +1,75 @@
+deep_causality_cfd/studies/README.md
+  s_c4c919f578d611::t_3d1c133fc62518 48-63
+deep_causality_cfd/studies/traj_fs1_generator/main.rs
+  s_c4c919f578d611::t_502b390cfdbd07 1-314
+  s_c4c919f578d611::t_493caeac84fc31 315-317
+  s_c4c919f578d611::t_a4803c059766b4 318-326
+deep_causality_physics/tests/kernels/chronometric/mod.rs
+  s_c4c919f578d611::t_cfffaca503cee5 6-7
+deep_causality_physics/src/kernels/astro/two_body.rs
+  s_c4c919f578d611::t_02f3045dadbcec 1-92,94-186,188-194
+  s_c4c919f578d611::t_0be1cb49a54790 187
+  s_c4c919f578d611::t_a4fb4adc7df48a 93
+deep_causality_physics/tests/kernels/astro/mod.rs
+  s_c4c919f578d611::t_ef6f75c1c6ed13 9-10
+deep_causality_physics/src/kernels/chronometric/forward_clock.rs
+  s_c4c919f578d611::t_d7fbbaab586cdc 1-114
+deep_causality_physics/tests/kernels/astro/two_body_tests.rs
+  s_c4c919f578d611::t_d6f1c7a279c2cb 1-106
+  s_c4c919f578d611::t_228c84f33bb05a 107-109
+  s_c4c919f578d611::t_b52f1a9c7d28ff 110-127
+deep_causality_cfd/studies/traj_fs2_coupling/main.rs
+  s_c4c919f578d611::t_bf6754b66fc9d2 1-232
+  s_c4c919f578d611::t_1bac0ba6b9bc0b 233-235
+  s_c4c919f578d611::t_9d01fd03c65188 236-238
+deep_causality_cfd/examples.txt
+  s_c4c919f578d611::t_336fe51cf7a1b5 3
+deep_causality_physics/src/kernels/astro/mod.rs
+  s_c4c919f578d611::t_4bc3936a1a088c 7,11
+deep_causality_physics/src/kernels/chronometric/mod.rs
+  s_c4c919f578d611::t_f1e14ca2f70419 5,9
+deep_causality_physics/tests/kernels/chronometric/forward_clock_tests.rs
+  s_c4c919f578d611::t_b012978d8b2117 1-95
+  s_c4c919f578d611::t_b96bb05fbb53ed 96-98
+  s_c4c919f578d611::t_ec6fc8eb0b5600 99-111
+deep_causality_cfd/Cargo.toml
+  s_c4c919f578d611::t_05a14e10352c5a 200-213
+deep_causality_cfd/studies/traj_fs3_clock/main.rs
+  s_c4c919f578d611::t_aba0a821ebd51e 58-59,73-74
+  s_c4c919f578d611::t_b1f71e67b5a925 1-21,27-57,60-72,75-112
+  s_c4c919f578d611::t_b82c681fcce1e5 22-26
+  s_c4c919f578d611::t_1f7095f377feb9 113-115
+  s_c4c919f578d611::t_d3a4a1c10a633c 116-120
+openspec/notes/plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md
+  s_c4c919f578d611::t_b3378f4e1ad107 150,152-154,156-215,217-231
+  s_c4c919f578d611::t_ca0f0d16f3fc0e 1-101,105-149,151,155,216,232,256-267,270
+  s_c4c919f578d611::t_86826e9140d6a8 102-104
+  s_c4c919f578d611::t_3b1df1ac33f520 233-255
+  s_c4c919f578d611::t_664dd8ef03305f 268-269
+deep_causality_cfd/src/solvers/mod.rs
+  s_c4c919f578d611::t_fc1d49795f1366 28
+deep_causality_cfd/src/solvers/qtt/compressible/fitting.rs
+  s_c4c919f578d611::t_f0d2d23b9a1578 24-25
+deep_causality_cfd/src/solvers/qtt/mod.rs
+  s_c4c919f578d611::t_5592f22a04682a 18-19
+deep_causality_cfd/tests/solvers/qtt/compressible_fitting_tests.rs
+  s_c4c919f578d611::t_10241273a64edd 124-127
+deep_causality_cfd/verification/qtt_ramc_stagline/main.rs
+  s_c4c919f578d611::t_b4dfd979978cdd 70-71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "fb8b47aee7b9e924fde2cf27e573ac7c8164ae42",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
