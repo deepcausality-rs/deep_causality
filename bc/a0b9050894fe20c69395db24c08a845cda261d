@@ -1,0 +1,73 @@
+openspec/changes/add-cfd-compressible-qtt-marcher/proposal.md
+  s_162aba3d26275e::t_2342112ffdcc50 109-111
+  s_162aba3d26275e::t_a4259b8d27c637 32-41
+  s_162aba3d26275e::t_ebd5093ff15786 87-89
+  s_162aba3d26275e::t_b4b66a7f064856 47-52
+  s_162aba3d26275e::t_86bcb5d20189b8 80-83
+  s_162aba3d26275e::t_62627c5b872f5d 56-60
+openspec/notes/plasma-blackout/plasma-blackout-corridor.md
+  s_162aba3d26275e::t_6b7176d1857771 234-243
+  s_162aba3d26275e::t_85ed3e75d4e219 256-262
+  s_162aba3d26275e::t_34c566a2f50e03 131-138
+openspec/notes/plasma-blackout/gap-2/gap-two-resolution-5-dynamic-rank-lever.md
+  s_162aba3d26275e::t_8363ac69d79ce1 1-146
+openspec/notes/plasma-blackout/gap-2/tier-b-compressible-marcher.md
+  s_162aba3d26275e::t_a29b1f5f51ceb8 40-76
+  s_162aba3d26275e::t_9c5fd169a8e5ac 136-142
+  s_162aba3d26275e::t_918cd057be7471 173-178
+openspec/notes/plasma-blackout/gap-analysis.md
+  s_162aba3d26275e::t_b7e38583dcb625 239-241
+  s_162aba3d26275e::t_65b6f72dae9818 194-208
+  s_162aba3d26275e::t_8891f2c661f2d2 242-247
+  s_162aba3d26275e::t_5371a077e39d8d 277-287
+openspec/notes/plasma-blackout/gap-3/gap-three-resolution-1-perturbed-conformal-trajectory.md
+  s_162aba3d26275e::t_3cd5139f1058c2 22-32
+  s_162aba3d26275e::t_a3f499c699e5f6 137-156
+  s_162aba3d26275e::t_af2305dceab6b4 249-252
+  s_162aba3d26275e::t_a951d6170a4de1 1-21,33-78,84-87,91-92,99,102-104,106-136,164-173,176-177,188-198,205-206,211-227,234-248
+  s_162aba3d26275e::t_dd3209812d72c3 105
+  s_162aba3d26275e::t_6455ce73f63290 79-83,88-90,93-98,100-101
+  s_162aba3d26275e::t_89837c324bd76c 157-163
+  s_162aba3d26275e::t_e86b01d2ddaf26 174-175,178-187
+  s_162aba3d26275e::t_0bc4243fd2a328 199-204,207-210
+  s_162aba3d26275e::t_dd4b431c19ae2e 228-233
+openspec/changes/add-cfd-compressible-qtt-marcher/design.md
+  s_162aba3d26275e::t_b492e302205df0 55-61
+  s_162aba3d26275e::t_790262cfb3cdc9 135-172
+  s_162aba3d26275e::t_541f1a70380ea6 214-222
+  s_162aba3d26275e::t_2ade46d771c6db 175-182
+  s_162aba3d26275e::t_8553e1d51088db 71-75
+  s_162aba3d26275e::t_2df0f7d0e02b54 235-240,244-246
+  s_162aba3d26275e::t_bfca904ac36be1 253-258
+  s_162aba3d26275e::t_db95c99a7c2862 30-43
+  s_162aba3d26275e::t_d0132d8423dc13 106-108
+  s_162aba3d26275e::t_2d0d92d7f1afea 191-201
+  s_162aba3d26275e::t_cc3bb6474838ed 210-212
+  s_162aba3d26275e::t_7b7003565584c8 247-252
+openspec/notes/plasma-blackout/gap-2/gap-two-resolution-7-feature-adaptive-coordinate.md
+  s_162aba3d26275e::t_537d32dec50505 1-125
+openspec/notes/plasma-blackout/gap-2/gap-two-resolution-9-moment-closure-turbulence.md
+  s_162aba3d26275e::t_37a0d119d52b7c 1-202
+openspec/notes/plasma-blackout/gap-2/gap-two-resolution-8-spectral-pinning.md
+  s_162aba3d26275e::t_4c49ee496151fb 1-202
+openspec/notes/plasma-blackout/gap-2/gap-two-resolution-6-implicit-acoustics.md
+  s_162aba3d26275e::t_e0cd18f601bb83 1-149
+openspec/notes/plasma-blackout/gap-2/gap-two-resolution-4-body-fit-parameter.md
+  s_162aba3d26275e::t_70fd58d90e134b 1-159
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "bca0b9050894fe20c69395db24c08a845cda261d",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
