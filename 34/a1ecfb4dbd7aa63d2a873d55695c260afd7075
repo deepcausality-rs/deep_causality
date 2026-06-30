@@ -1,0 +1,55 @@
+deep_causality_cfd/src/solvers/qtt/mod.rs
+  s_162aba3d26275e::t_4a428028309188 16-17
+deep_causality_cfd/src/solvers/qtt/compressible/mod.rs
+  s_162aba3d26275e::t_b8ee6f522cdbbb 11,15
+deep_causality_cfd/src/lib.rs
+  s_162aba3d26275e::t_4a428028309188 90-92
+deep_causality_cfd/verification/qtt_ramc_stagline/main.rs
+  s_162aba3d26275e::t_a4ad1eeb11ba7f 1-50,55,68-88
+  s_162aba3d26275e::t_8fabb214ca523f 51-54,56-67
+deep_causality_cfd/Cargo.toml
+  s_162aba3d26275e::t_ba38a8073e8b5a 154-157
+deep_causality_cfd/tests/solvers/qtt/mod.rs
+  s_162aba3d26275e::t_8633b4d786d156 7
+  s_162aba3d26275e::t_330d9d7adfe6f7 6
+deep_causality_cfd/tests/solvers/qtt/compressible_fitting_tests.rs
+  s_162aba3d26275e::t_2fafcd96836824 1-97,105-106
+  s_162aba3d26275e::t_9f34d59539d058 98-104
+deep_causality_cfd/src/solvers/mod.rs
+  s_162aba3d26275e::t_4a428028309188 24-27
+deep_causality_cfd/verification/qtt_ramc_stagline/baseline.txt
+  s_162aba3d26275e::t_ec3e9c00dd3ace 1-31
+deep_causality_cfd/verification/qtt_ramc_stagline/print_utils.rs
+  s_162aba3d26275e::t_a89163b4339e5f 1-73
+  s_162aba3d26275e::t_11f147a3464fdc 74-76
+deep_causality_cfd/verification/qtt_ramc_stagline/README.md
+  s_162aba3d26275e::t_1e276b3b359c5f 1-48
+openspec/changes/add-cfd-compressible-qtt-marcher/tasks.md
+  s_162aba3d26275e::t_e11da9efdb3650 65-75
+deep_causality_cfd/src/solvers/qtt/compressible/fitting.rs
+  s_162aba3d26275e::t_3ab07ad5584a5b 26
+  s_162aba3d26275e::t_c59c05251160bf 1-20,24-25,27-130,176-206
+  s_162aba3d26275e::t_91e83729429737 21-23
+  s_162aba3d26275e::t_7ff8e6cb3ecaff 131-175
+deep_causality_cfd/verification/qtt_ramc_stagline/config.rs
+  s_162aba3d26275e::t_b6aad858b1363c 23-25
+  s_162aba3d26275e::t_864b709f258cfc 1-15,21-22,26-27,33-47
+  s_162aba3d26275e::t_64486882063880 28-32
+  s_162aba3d26275e::t_234adf92604173 16-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "34a1ecfb4dbd7aa63d2a873d55695c260afd7075",
+  "prompts": {},
+  "sessions": {
+    "s_162aba3d26275e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9ef903a7-24ef-4e1d-ac23-49ed75b8a3e0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
