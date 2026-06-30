@@ -1,0 +1,43 @@
+openspec/specs/compressible-qtt-flux/spec.md
+  s_c4c919f578d611::t_eb23f460142009 1-43
+openspec/specs/compressible-reacting-qtt-marcher/spec.md
+  s_c4c919f578d611::t_eb23f460142009 1-47
+openspec/specs/qtt-imex-time-integration/spec.md
+  s_c4c919f578d611::t_eb23f460142009 1-42
+openspec/notes/plasma-blackout/gap-2/tier-b-compressible-marcher.md
+  s_c4c919f578d611::t_4b0f3edb13d9a6 40,42-48,56-71
+  s_c4c919f578d611::t_67b4143e5f71ad 88-91
+openspec/specs/body-fitted-qtt-coordinate/spec.md
+  s_c4c919f578d611::t_eb23f460142009 1-46
+openspec/specs/compressible-qtt-validation/spec.md
+  s_c4c919f578d611::t_eb23f460142009 1-62
+openspec/specs/qtt-codec-3d/spec.md
+  s_c4c919f578d611::t_eb23f460142009 1-34
+openspec/notes/plasma-blackout/gap-analysis.md
+  s_c4c919f578d611::t_738a5ea358e702 229-230
+  s_c4c919f578d611::t_f1f8c8c61cae7e 197-203,205-211
+  s_c4c919f578d611::t_08859d4c075645 194-195
+  s_c4c919f578d611::t_b68d4424a6d2e2 224-227
+openspec/specs/qtt-shock-fitting/spec.md
+  s_c4c919f578d611::t_eb23f460142009 1-43
+deep_causality_cfd/verification/README.md
+  s_c4c919f578d611::t_b303061a8bef3c 41-52
+openspec/changes/archive/2026-06-30-add-cfd-compressible-qtt-marcher/tasks.md
+  s_c4c919f578d611::t_acf7bb7be0e805 121-125,129-144
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "034043f25a97d24e5ba12b0864f40748633b507e",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
