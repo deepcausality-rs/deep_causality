@@ -41,39 +41,46 @@ impl DataManager {
         Self
     }
 
-    /// Load one satellite's clock + orbit series (performs the IO).
-    pub fn load_gnss_single_satellite<R>(
+    /// Load one satellite's clock + orbit series (performs the IO). Runs the two concrete loaders
+    /// directly (no `'static` bound on `R`); for lazy IO-monad composition use the free function
+    /// [`read_gnss_single_satellite`].
+    pub fn load_gnss_single_satellite<R, P>(
         &self,
-        clk_path: impl AsRef<Path>,
-        sp3_path: impl AsRef<Path>,
+        clk_path: P,
+        sp3_path: P,
         target_sat: &str,
     ) -> GnssDataResult<R>
     where
-        R: RealField + From<f64> + 'static,
+        R: RealField + From<f64>,
+        P: AsRef<Path>,
     {
-        read_gnss_single_satellite::<R>(clk_path, sp3_path, target_sat).run()
+        let clocks = read_clock_data::<R>(clk_path, target_sat).run()?;
+        let orbits = read_orbit_data::<R>(sp3_path, target_sat).run()?;
+        Ok((clocks, orbits))
     }
 
     /// Load one satellite's clock-bias series (performs the IO).
-    pub fn load_gnss_clock_data<R>(
+    pub fn load_gnss_clock_data<R, P>(
         &self,
-        clk_path: impl AsRef<Path>,
+        clk_path: P,
         target_sat: &str,
     ) -> Result<Vec<ClockData<R>>, DataLoadingError>
     where
         R: RealField + From<f64>,
+        P: AsRef<Path>,
     {
         read_clock_data::<R>(clk_path, target_sat).run()
     }
 
     /// Load one satellite's SP3 orbit series (performs the IO).
-    pub fn load_gnss_orbit_data<R>(
+    pub fn load_gnss_orbit_data<R, P>(
         &self,
-        sp3_path: impl AsRef<Path>,
+        sp3_path: P,
         target_sat: &str,
     ) -> Result<Vec<OrbitData<R>>, DataLoadingError>
     where
         R: RealField + From<f64>,
+        P: AsRef<Path>,
     {
         read_orbit_data::<R>(sp3_path, target_sat).run()
     }

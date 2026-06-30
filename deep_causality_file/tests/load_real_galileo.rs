@@ -19,7 +19,10 @@ fn loads_e14_clock_and_orbit_from_real_data() {
     let clk = data_dir().join("gbm18770.clk");
     let sp3 = data_dir().join("gbm18770.sp3");
     if !clk.exists() || !sp3.exists() {
-        eprintln!("skipping: Galileo fixtures not present at {}", data_dir().display());
+        eprintln!(
+            "skipping: Galileo fixtures not present at {}",
+            data_dir().display()
+        );
         return;
     }
 

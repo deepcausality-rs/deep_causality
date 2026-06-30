@@ -250,6 +250,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "deep_causality_core",
+ "deep_causality_file",
  "deep_causality_num",
  "deep_causality_physics",
 ]
@@ -622,6 +623,7 @@ dependencies = [
  "chrono",
  "deep_causality_haft",
  "deep_causality_num",
+ "tempfile",
 ]
 
 [[package]]

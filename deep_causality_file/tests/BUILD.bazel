@@ -1,10 +1,60 @@
 load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 
 rust_test_suite(
+    name = "errors",
+    srcs = glob([
+        "errors/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_file",
+    ],
+)
+
+rust_test_suite(
+    name = "types",
+    srcs = glob([
+        "types/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_file",
+        # External dependencies
+        "//thirdparty/crates:chrono",
+    ],
+)
+
+rust_test_suite(
     name = "loaders",
     srcs = glob([
-        "*.rs",
+        "loaders/*_tests.rs",
     ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_file",
+        # Internal dependencies
+        "//deep_causality_haft",
+        # External dependencies
+        "//thirdparty/crates:chrono",
+        "//thirdparty/crates:tempfile",
+    ],
+)
+
+rust_test_suite(
+    name = "integration",
+    srcs = ["load_real_galileo.rs"],
     tags = [
         "unit-test",
     ],
