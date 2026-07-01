@@ -11,6 +11,7 @@ mod fluids;
 mod hypersonic;
 mod materials;
 mod mhd;
+mod navigation;
 mod nuclear;
 mod photonics;
 mod quantum;

@@ -239,6 +239,31 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "kernels_navigation",
+    srcs = glob([
+        "kernels/navigation/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_physics",
+        # Internal dependencies
+        "//deep_causality_core",
+        "//deep_causality_multivector",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+        "//deep_causality_metric",
+    ],
+)
+
+rust_test_suite(
     name = "kernels_nuclear",
     srcs = glob([
         "kernels/nuclear/*_tests.rs",
