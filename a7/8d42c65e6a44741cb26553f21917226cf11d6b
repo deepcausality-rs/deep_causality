@@ -1,0 +1,27 @@
+deep_causality_cfd/src/solvers/qtt/compressible/marcher_3d_fitted.rs
+  s_c4c919f578d611::t_ae2d4ae0d2c397 101-107
+  s_c4c919f578d611::t_2a9db2605a8e7e 283-303,305-432
+  s_c4c919f578d611::t_d5fa5b5c6b2067 23,28,30
+  s_c4c919f578d611::t_36689a912f3b30 304
+deep_causality_cfd/tests/solvers/qtt/compressible_marcher3d_fitted_tests.rs
+  s_c4c919f578d611::t_95e4fbd95c92bf 160-226,231-240
+  s_c4c919f578d611::t_6f2af13539e0f2 227-230
+deep_causality_cfd/src/coordinate/body_fitted_3d.rs
+  s_c4c919f578d611::t_3774a8f80dbadf 173-197
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "a78d42c65e6a44741cb26553f21917226cf11d6b",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
