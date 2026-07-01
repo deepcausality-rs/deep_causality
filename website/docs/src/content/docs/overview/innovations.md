@@ -21,7 +21,7 @@ Once the axiom is set, it needs a numerical floor that the rest of the library s
 
 **2. A uniform mathematical surface.** Tensors, multivectors, manifolds, sparse matrices, and propagating effects all implement the same `Functor`, `Monad`, and `CoMonad` surface. `fmap`, `bind`, `extend`, and `extract` mean the same thing on every container, which is how cross-domain pipelines stay readable and how bridge code disappears. *See [Uniform Math](/concepts/uniform-math/).*
 
-**3. An explicit algebraic trait hierarchy.** `Magma → Semigroup → Monoid → Group → AbelianGroup`; then `Ring → CommutativeRing → Field → RealField → ComplexField<R>`; plus `Module<R>`, `Algebra<R>`, `AssociativeAlgebra<R>`, `DivisionAlgebra<R>`, and `EuclideanDomain`. Marker traits move algebraic laws into the type system, so an algorithm that requires associativity cannot accept a type that violates it. *See [Uniform Math](/concepts/uniform-math/).*
+**3. An explicit algebraic trait hierarchy.** `Magma → Semigroup → Monoid → Group → AbelianGroup`; then `Ring → CommutativeRing → Field → RealField → ComplexField<R>`; plus `Module<R>`, `Algebra<R>`, `AssociativeAlgebra<R>`, and `DivisionAlgebra<R>`. Marker traits move algebraic laws into the type system, so an algorithm that requires associativity cannot accept a type that violates it. *See [Uniform Math](/concepts/uniform-math/).*
 
 **4. Higher-Kinded Types via the witness pattern.** Rust does not have native HKTs. `deep_causality_haft` fills the gap with zero-sized witness structs that stand in for type constructors, so the Causal Monad's `bind` is written once generically and specialized per concrete instantiation through monomorphization. No boxed type erasure, no virtual calls. *See [Higher-Kinded Types](/concepts/hkt/).*
 

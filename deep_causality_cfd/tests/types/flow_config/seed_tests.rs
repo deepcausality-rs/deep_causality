@@ -66,6 +66,38 @@ fn taylor_green_vortex_seed_is_nonzero_in_3d() {
 }
 
 #[test]
+fn taylor_green_vortex_seed_on_a_2d_mesh_errors_cleanly() {
+    // The Taylor–Green vortex is a 3D field; on a 2D mesh it must return a clean
+    // DimensionMismatch rather than panicking on the missing z-position.
+    let config = CfdConfigBuilder::march::<2, f64>("tgv-2d")
+        .mesh(Mesh::periodic_cube(6))
+        .solver(
+            CfdConfigBuilder::dec_ns()
+                .viscosity(0.05)
+                .time_step(0.005)
+                .build()
+                .unwrap(),
+        )
+        .seed(Seed::TaylorGreenVortex)
+        .march_for(0)
+        .observe(Observe::default().kinetic_energy())
+        .build()
+        .unwrap();
+    let manifold = config.materialize().unwrap();
+    let err = CfdFlow::march(&config)
+        .on(&manifold)
+        .run()
+        .expect_err("TGV on a 2D mesh must be rejected, not panic");
+    assert!(
+        matches!(
+            err.0,
+            deep_causality_physics::PhysicsErrorEnum::DimensionMismatch(_)
+        ),
+        "expected DimensionMismatch, got {err:?}"
+    );
+}
+
+#[test]
 fn seed_is_debug_clone_copy() {
     let seed = Seed::UniformX { speed: 2.0 };
     let copied = seed;

@@ -1,0 +1,19 @@
+=== QTT 2-D Taylor-Green vortex: tensor-train incompressible solver ===
+
+Case: nu = 0.05, dt = 0.01, steps = 20, t_final = 0.200, precision f64
+
+Convergence: refinement ladder vs the analytic e^(-2 nu t) decay
+  N =   8   max_err = 9.789e-4   l2_err = 4.894e-4   order =   --    bond =   8   divergence = 1.06e-14
+  N =  16   max_err = 2.411e-4   l2_err = 1.206e-4   order = 2.02   bond =  16   divergence = 1.45e-14
+  N =  32   max_err = 5.316e-5   l2_err = 2.658e-5   order = 2.18   bond =  32   divergence = 4.14e-14
+  observed order = 2.18 (centered FD + spectral projection -> 2)
+
+Convection: nonlinear u.grad(u), u-component vs the closed form -1/2 sin(2x)
+  max abs error = 3.207e-3   (signal amplitude 0.500)
+  (single-mode TG's convective term is a pure gradient the projection removes -- checked directly)
+
+Compression: MPS bond vs dense storage at the finest grid
+  bond 32 vs 1024 dense elements = 32.0x
+
+Taylor-Green vortex reproduced: 2nd-order convergence to the analytic e^(-2 nu t) decay,
+correct nonlinear convection, and divergence-free to machine precision.

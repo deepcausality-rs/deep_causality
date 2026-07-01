@@ -7,7 +7,7 @@ use deep_causality_physics::LundParameters;
 
 #[test]
 fn test_lund_parameters_default() {
-    let params = LundParameters::default();
+    let params = LundParameters::<f64>::default();
     assert!((params.kappa() - 1.0).abs() < 1e-10);
     assert!(params.strange_suppression() > 0.0);
     assert!(params.strange_suppression() < 1.0);
@@ -15,7 +15,7 @@ fn test_lund_parameters_default() {
 
 #[test]
 fn test_lund_parameters_custom() {
-    let params = LundParameters::new(
+    let params = LundParameters::<f64>::new(
         2.0, // kappa
         0.5, // a
         0.8, // b
@@ -33,7 +33,7 @@ fn test_lund_parameters_custom() {
 
 #[test]
 fn test_lund_parameters_remaining_getters() {
-    let params = LundParameters::new(2.0, 0.5, 0.8, 0.4, 0.2, 0.1, 0.6, 0.3);
+    let params = LundParameters::<f64>::new(2.0, 0.5, 0.8, 0.4, 0.2, 0.1, 0.6, 0.3);
     assert!((params.lund_b() - 0.8).abs() < 1e-10);
     assert!((params.sigma_pt() - 0.4).abs() < 1e-10);
     assert!((params.diquark_suppression() - 0.1).abs() < 1e-10);

@@ -111,6 +111,22 @@ fn spectral_construction_rejects_mixed_periodicity() {
     assert!(format!("{err}").contains("periodic"), "{err}");
 }
 
+/// A fully periodic torus whose metric is a *per-edge* geometry has no
+/// per-axis Euclidean spacings, so the spectral construction rejects it
+/// with a `TopologyError` mentioning the required spacings.
+#[test]
+fn spectral_construction_rejects_per_edge_metric() {
+    let lattice = LatticeComplex::<2, f64>::square_torus(4);
+    let n1 = lattice.num_cells(1);
+    let metric = CubicalReggeGeometry::<2, f64>::from_edge_lengths(vec![1.0; n1]);
+    let m = manifold_with_metric(lattice, metric);
+    let err = DecNsRate::new(&m, NU, None)
+        .unwrap()
+        .with_spectral_diffusion()
+        .unwrap_err();
+    assert!(format!("{err}").contains("spacings"), "{err}");
+}
+
 /// March-level gate: a multi-step solver run with spectral diffusion must
 /// track the operator path at rounding, which implies identical observed
 /// convergence orders on the Taylor–Green ladder.

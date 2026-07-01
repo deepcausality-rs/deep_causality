@@ -122,7 +122,7 @@ where
         return Err(err("stage_load: no datasets specified"));
     }
 
-    let dm = DataManager::default();
+    let dm = DataManager;
     let mut all_clocks = Vec::new();
     let mut all_orbits = Vec::new();
 

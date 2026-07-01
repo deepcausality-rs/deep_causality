@@ -14,7 +14,11 @@ crates_vendor(
         ),
         #
         # Regular dependencies
-        # CXV and parquet are used in deep_causality_discovery for file loading
+        "chrono": crate.spec(
+            default_features = False,
+            package = "chrono",
+            version = "0.4",
+        ),
         "csv": crate.spec(
             default_features = False,
             package = "csv",

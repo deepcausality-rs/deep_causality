@@ -12,9 +12,19 @@
 // splits the DEC-native rate (a `FluidTheory`) out of the solver machinery.
 pub(crate) mod dec;
 
-// Owned configuration + type-state builder for the DEC solver (design D2).
-mod dec_config;
-
-pub use dec_config::{
+pub use dec::dec_config::{
     DecNs, DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity, DecNsConfigReady,
+};
+
+// The quantized-tensor-train (QTT) rollout: a quasi-1D linear advection–diffusion marcher that
+// evolves a flowfield in compressed tensor-train form (the CFD ↔ tensor-network bridge).
+mod qtt;
+
+pub use qtt::{
+    AcousticImex1d, CompressibleEuler1d, CompressibleMarcher2d, CompressibleMarcher3d,
+    CompressibleMarcher3dFitted, EulerState, EulerState2d, EulerState3d, EulerStateTt2d,
+    EulerStateTt3d, FittedNormalShock, Park2tClosure, PostShockState, QttImmersed2d,
+    QttIncompressible2d, QttLinear1d, StagnationOutcome, conservation_round, divergence_residual,
+    drag_lift, ideal_gas_pressure, ideal_gas_pressure_2d, kinetic_energy, max_bond, max_speed,
+    positivity_floor, wall_heat_flux,
 };

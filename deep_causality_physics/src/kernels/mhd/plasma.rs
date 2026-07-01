@@ -2,8 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::constants::BOLTZMANN_CONSTANT;
-use crate::{DebyeLength, LarmorRadius};
+use crate::constants::{
+    BOLTZMANN_CONSTANT, ELECTRON_MASS, ELEMENTARY_CHARGE, VACUUM_ELECTRIC_PERMITTIVITY,
+};
+use crate::{DebyeLength, ElectronDensity, LarmorRadius, PlasmaFrequency};
 use crate::{Mass, PhysicalField, PhysicsError, Speed, Temperature};
 use deep_causality_multivector::MultiVector;
 use deep_causality_num::{FromPrimitive, RealField};
@@ -85,4 +87,40 @@ where
     let den = charge.abs() * b_mag;
 
     LarmorRadius::new(num / den)
+}
+
+/// Calculates the (angular) electron plasma frequency $\omega_p$.
+/// $$ \omega_p = \sqrt{\frac{n_e e^2}{\epsilon_0 m_e}} $$
+///
+/// Constructs the existing `PlasmaFrequency` newtype, reusing the universal
+/// constants `ELECTRON_MASS`, `VACUUM_ELECTRIC_PERMITTIVITY`, `ELEMENTARY_CHARGE`.
+/// The blackout criterion compares this against the comms-band angular frequency.
+///
+/// # Arguments
+/// * `electron_density` - Electron number density $n_e$ ($m^{-3}$).
+///
+/// # Returns
+/// * `Result<PlasmaFrequency<R>, PhysicsError>` - Angular plasma frequency (rad/s).
+pub fn plasma_frequency_kernel<R>(
+    electron_density: ElectronDensity<R>,
+) -> Result<PlasmaFrequency<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
+    let n_e = electron_density.value();
+
+    let eps0 = R::from_f64(VACUUM_ELECTRIC_PERMITTIVITY).ok_or_else(|| {
+        PhysicsError::NumericalInstability(
+            "R::from_f64(VACUUM_ELECTRIC_PERMITTIVITY) failed".into(),
+        )
+    })?;
+    let m_e = R::from_f64(ELECTRON_MASS).ok_or_else(|| {
+        PhysicsError::NumericalInstability("R::from_f64(ELECTRON_MASS) failed".into())
+    })?;
+    let e = R::from_f64(ELEMENTARY_CHARGE).ok_or_else(|| {
+        PhysicsError::NumericalInstability("R::from_f64(ELEMENTARY_CHARGE) failed".into())
+    })?;
+
+    let omega_p = (n_e * e * e / (eps0 * m_e)).sqrt();
+    PlasmaFrequency::new(omega_p)
 }

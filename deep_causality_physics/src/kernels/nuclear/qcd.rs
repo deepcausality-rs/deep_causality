@@ -12,8 +12,13 @@
 //! - Wilson loop (confinement order parameter)
 //! - Confinement potential (string tension)
 //! - Running coupling (asymptotic freedom)
+//!
+//! All kernels are generic over a real field `R: RealField`. The `f64`-defined
+//! numeric constants (½, √3, 4π, …) are cast into `R` via [`crate::real_from_f64`].
 
 use crate::PhysicsError;
+use crate::real_from_f64;
+use deep_causality_num::{FromPrimitive, RealField};
 
 // ============================================================================
 // Constants: Gell-Mann Matrices
@@ -28,42 +33,45 @@ use crate::PhysicsError;
 /// Non-zero imaginary parts are handled via the structure constants.
 ///
 /// Returns: 8 matrices, each as `[3][3]` = 9 real values (imaginary handled separately).
-pub fn gell_mann_matrices() -> [[f64; 9]; 8] {
+pub fn gell_mann_matrices<R: RealField + FromPrimitive>() -> [[R; 9]; 8] {
+    let zero = R::zero();
+    let one = R::one();
+
     // λ_1: off-diagonal in (1,2) positions
-    let lambda1 = [0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    let lambda1 = [zero, one, zero, one, zero, zero, zero, zero, zero];
 
     // λ_2: anti-symmetric imaginary (1,2) - stored as pure real with sign convention
     // Actually has imaginary parts: (0,-i,0), (i,0,0), (0,0,0)
     // We store the magnitude; use structure constants for phases
-    let lambda2 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; // Imaginary - use structure constants
+    let lambda2 = [zero, zero, zero, zero, zero, zero, zero, zero, zero]; // Imaginary - use structure constants
 
     // λ_3: diagonal (1, -1, 0)
-    let lambda3 = [1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0];
+    let lambda3 = [one, zero, zero, zero, -one, zero, zero, zero, zero];
 
     // λ_4: off-diagonal in (1,3) positions
-    let lambda4 = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0];
+    let lambda4 = [zero, zero, one, zero, zero, zero, one, zero, zero];
 
     // λ_5: anti-symmetric imaginary (1,3)
-    let lambda5 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; // Imaginary
+    let lambda5 = [zero, zero, zero, zero, zero, zero, zero, zero, zero]; // Imaginary
 
     // λ_6: off-diagonal in (2,3) positions
-    let lambda6 = [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0];
+    let lambda6 = [zero, zero, zero, zero, zero, one, zero, one, zero];
 
     // λ_7: anti-symmetric imaginary (2,3)
-    let lambda7 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; // Imaginary
+    let lambda7 = [zero, zero, zero, zero, zero, zero, zero, zero, zero]; // Imaginary
 
     // λ_8: diagonal (1, 1, -2) / sqrt(3)
-    let inv_sqrt3 = 1.0 / 3.0_f64.sqrt();
+    let inv_sqrt3 = real_from_f64::<R>(1.0 / 3.0_f64.sqrt());
     let lambda8 = [
         inv_sqrt3,
-        0.0,
-        0.0,
-        0.0,
+        zero,
+        zero,
+        zero,
         inv_sqrt3,
-        0.0,
-        0.0,
-        0.0,
-        -2.0 * inv_sqrt3,
+        zero,
+        zero,
+        zero,
+        real_from_f64::<R>(-2.0) * inv_sqrt3,
     ];
 
     [
@@ -83,22 +91,22 @@ pub fn gell_mann_matrices() -> [[f64; 9]; 8] {
 /// - f^{458} = f^{678} = √3/2
 ///
 /// Returns: Function that computes f^{abc} for given indices (1-indexed).
-pub fn structure_constant(a: usize, b: usize, c: usize) -> f64 {
+pub fn structure_constant<R: RealField + FromPrimitive>(a: usize, b: usize, c: usize) -> R {
     // Canonical non-zero structure constants (1-indexed in physics convention)
     // We convert to 0-indexed internally
-    let half = 0.5;
-    let sqrt3_half = 3.0_f64.sqrt() * 0.5;
+    let half = real_from_f64::<R>(0.5);
+    let sqrt3_half = real_from_f64::<R>(3.0_f64.sqrt() * 0.5);
 
     // Normalize to sorted order with sign tracking for antisymmetry
     let mut indices = [a, b, c];
-    let mut sign = 1.0;
+    let mut sign = R::one();
 
     // Bubble sort with sign tracking
     for i in 0..2 {
         for j in 0..2 - i {
             if indices[j] > indices[j + 1] {
                 indices.swap(j, j + 1);
-                sign *= -1.0;
+                sign = -sign;
             }
         }
     }
@@ -107,7 +115,7 @@ pub fn structure_constant(a: usize, b: usize, c: usize) -> f64 {
 
     // Non-zero structure constants (1-indexed)
     let value = match (i, j, k) {
-        (1, 2, 3) => 1.0,
+        (1, 2, 3) => R::one(),
         (1, 4, 7) => half,
         (1, 5, 6) => -half, // Note sign
         (2, 4, 6) => half,
@@ -116,19 +124,19 @@ pub fn structure_constant(a: usize, b: usize, c: usize) -> f64 {
         (3, 6, 7) => -half, // Note sign
         (4, 5, 8) => sqrt3_half,
         (6, 7, 8) => sqrt3_half,
-        _ => 0.0,
+        _ => R::zero(),
     };
 
     sign * value
 }
 
 /// Returns all non-zero structure constants as a list of (a, b, c, f^abc).
-pub fn all_structure_constants() -> Vec<(usize, usize, usize, f64)> {
-    let half = 0.5;
-    let sqrt3_half = 3.0_f64.sqrt() * 0.5;
+pub fn all_structure_constants<R: RealField + FromPrimitive>() -> Vec<(usize, usize, usize, R)> {
+    let half = real_from_f64::<R>(0.5);
+    let sqrt3_half = real_from_f64::<R>(3.0_f64.sqrt() * 0.5);
 
     vec![
-        (1, 2, 3, 1.0),
+        (1, 2, 3, R::one()),
         (1, 4, 7, half),
         (1, 6, 5, half), // Permutation of (1,5,6)
         (2, 4, 6, half),
@@ -149,19 +157,22 @@ pub fn all_structure_constants() -> Vec<(usize, usize, usize, f64)> {
 /// For SU(3), $A_\mu = A_\mu^a T^a$ where $T^a = \lambda^a / 2$.
 ///
 /// # Arguments
-/// * `psi` - Field value (color triplet, 3 complex components = 6 f64).
+/// * `psi` - Field value (color triplet, 3 complex components = 6 real values).
 /// * `psi_gradient` - Ordinary derivative $\partial_\mu \psi$ (4 spacetime × 6 color = 24 values).
 /// * `gluon_field` - Gluon potential $A_\mu^a$ (4 spacetime × 8 color = 32 values).
 /// * `coupling` - QCD coupling constant $g$.
 ///
 /// # Returns
-/// * `Ok(Vec<f64>)` - Covariant derivative $D_\mu \psi$ (4 × 6 = 24 values).
-pub fn covariant_derivative_kernel(
-    psi: &[f64],          // 6 values: (Re, Im) for each color
-    psi_gradient: &[f64], // 24 values: 4 spacetime × 6 color
-    gluon_field: &[f64],  // 32 values: 4 spacetime × 8 color adjoint
-    coupling: f64,
-) -> Result<Vec<f64>, PhysicsError> {
+/// * `Ok(Vec<R>)` - Covariant derivative $D_\mu \psi$ (4 × 6 = 24 values).
+pub fn covariant_derivative_kernel<R>(
+    psi: &[R],          // 6 values: (Re, Im) for each color
+    psi_gradient: &[R], // 24 values: 4 spacetime × 6 color
+    gluon_field: &[R],  // 32 values: 4 spacetime × 8 color adjoint
+    coupling: R,
+) -> Result<Vec<R>, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
     // Validate input dimensions
     if psi.len() != 6 {
         return Err(PhysicsError::DimensionMismatch(format!(
@@ -182,8 +193,10 @@ pub fn covariant_derivative_kernel(
         )));
     }
 
-    let matrices = gell_mann_matrices();
-    let mut result = vec![0.0; 24];
+    let zero = R::zero();
+    let half = real_from_f64::<R>(0.5);
+    let matrices = gell_mann_matrices::<R>();
+    let mut result = vec![zero; 24];
 
     // For each spacetime direction mu
     for mu in 0..4 {
@@ -202,8 +215,8 @@ pub fn covariant_derivative_kernel(
             // For real matrices acting on complex vector
             for i in 0..3 {
                 for j in 0..3 {
-                    let m_ij = lambda[i * 3 + j] * 0.5; // T^a = λ^a / 2
-                    if m_ij != 0.0 {
+                    let m_ij = lambda[i * 3 + j] * half; // T^a = λ^a / 2
+                    if m_ij != zero {
                         // Multiply complex: (0 + i * g * A * m_ij) * psi[j]
                         // = i * g * A * m_ij * (psi_re + i * psi_im)
                         // = i * g * A * m_ij * psi_re - g * A * m_ij * psi_im
@@ -245,12 +258,16 @@ pub fn covariant_derivative_kernel(
 /// * `coupling` - QCD coupling constant $g$.
 ///
 /// # Returns
-/// * `Ok(f64)` - Wilson loop trace (should be ~3 for trivial loop, decays for confinement).
-pub fn wilson_loop_kernel(
-    gluon_values: &[f64],
-    path_lengths: &[f64],
-    coupling: f64,
-) -> Result<f64, PhysicsError> {
+/// * `Ok(R)` - Wilson loop trace (should be ~3 for trivial loop, decays for confinement).
+pub fn wilson_loop_kernel<R>(
+    gluon_values: &[R],
+    path_lengths: &[R],
+    coupling: R,
+) -> Result<R, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
+    let three = real_from_f64::<R>(3.0);
     let num_segments = path_lengths.len();
     if gluon_values.len() != num_segments * 8 {
         return Err(PhysicsError::DimensionMismatch(format!(
@@ -262,18 +279,18 @@ pub fn wilson_loop_kernel(
     }
 
     if num_segments == 0 {
-        return Ok(3.0); // Tr(I) = 3 for SU(3)
+        return Ok(three); // Tr(I) = 3 for SU(3)
     }
 
     // For small loops, approximate: W ≈ 1 - (g²/2) * sum(A² * dl²)
     // This captures the area law behavior for confinement
-    let mut phase_sum = 0.0;
+    let mut phase_sum = R::zero();
 
     for i in 0..num_segments {
         let dl = path_lengths[i];
 
         // Sum of |A|² at this segment
-        let mut a_squared = 0.0;
+        let mut a_squared = R::zero();
         for a in 0..8 {
             let a_a = gluon_values[i * 8 + a];
             a_squared += a_a * a_a;
@@ -283,7 +300,8 @@ pub fn wilson_loop_kernel(
     }
 
     // Wilson loop with quadratic approximation
-    let w = 3.0 * (-0.5 * coupling * coupling * phase_sum).exp();
+    let neg_half = real_from_f64::<R>(-0.5);
+    let w = three * (neg_half * coupling * coupling * phase_sum).exp();
 
     if !w.is_finite() {
         return Err(PhysicsError::NumericalInstability(
@@ -304,13 +322,17 @@ pub fn wilson_loop_kernel(
 /// * `coulomb_term` - Optional Coulomb coefficient for short-range: $-\alpha/r$.
 ///
 /// # Returns
-/// * `Ok(f64)` - Potential energy $V(r)$ in GeV.
-pub fn confinement_potential_kernel(
-    distance: f64,
-    string_tension: f64,
-    coulomb_term: Option<f64>,
-) -> Result<f64, PhysicsError> {
-    if distance <= 0.0 {
+/// * `Ok(R)` - Potential energy $V(r)$ in GeV.
+pub fn confinement_potential_kernel<R>(
+    distance: R,
+    string_tension: R,
+    coulomb_term: Option<R>,
+) -> Result<R, PhysicsError>
+where
+    R: RealField,
+{
+    let zero = R::zero();
+    if distance <= zero {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Distance must be positive".into(),
         ));
@@ -348,19 +370,23 @@ pub fn confinement_potential_kernel(
 /// * `n_flavors` - Number of active quark flavors (typically 3-6).
 ///
 /// # Returns
-/// * `Ok(f64)` - Running coupling $\alpha_s(Q^2)$.
-pub fn running_coupling_kernel(
-    q_squared: f64,
-    lambda_qcd: f64,
+/// * `Ok(R)` - Running coupling $\alpha_s(Q^2)$.
+pub fn running_coupling_kernel<R>(
+    q_squared: R,
+    lambda_qcd: R,
     n_flavors: u32,
-) -> Result<f64, PhysicsError> {
-    if q_squared <= 0.0 {
+) -> Result<R, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
+    let zero = R::zero();
+    if q_squared <= zero {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Q² must be positive".into(),
         ));
     }
 
-    if lambda_qcd <= 0.0 {
+    if lambda_qcd <= zero {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "Lambda_QCD must be positive".into(),
         ));
@@ -373,23 +399,24 @@ pub fn running_coupling_kernel(
         ));
     }
 
-    // One-loop beta function coefficient
-    let b0 = 11.0 - (2.0 * n_flavors as f64) / 3.0;
-    if b0 <= 0.0 {
+    // One-loop beta function coefficient (computed in f64 since n_flavors is integral).
+    let b0_f64 = 11.0 - (2.0 * n_flavors as f64) / 3.0;
+    if b0_f64 <= 0.0 {
         return Err(PhysicsError::PhysicalInvariantBroken(format!(
             "Too many flavors ({}): b0 = {} <= 0",
-            n_flavors, b0
+            n_flavors, b0_f64
         )));
     }
+    let b0 = real_from_f64::<R>(b0_f64);
 
     let log_ratio = (q_squared / lambda_squared).ln();
-    let alpha_s = 4.0 * std::f64::consts::PI / (b0 * log_ratio);
+    let four_pi = real_from_f64::<R>(4.0 * std::f64::consts::PI);
+    let alpha_s = four_pi / (b0 * log_ratio);
 
-    if !alpha_s.is_finite() || alpha_s <= 0.0 {
-        return Err(PhysicsError::NumericalInstability(format!(
-            "Invalid running coupling: α_s = {}",
-            alpha_s
-        )));
+    if !alpha_s.is_finite() || alpha_s <= zero {
+        return Err(PhysicsError::NumericalInstability(
+            "Invalid running coupling (non-finite or non-positive)".into(),
+        ));
     }
 
     Ok(alpha_s)

@@ -20,7 +20,7 @@ fn test_ginzburg_landau_zero() {
     let grad_complex =
         deep_causality_multivector::CausalMultiVectorWitness::fmap(grad, |x| Complex::new(x, 0.0));
 
-    let res = ginzburg_landau_free_energy_kernel(psi, alpha, beta, &grad_complex, None);
+    let res = ginzburg_landau_free_energy_kernel::<f64>(psi, alpha, beta, &grad_complex, None);
     assert!(res.is_ok());
     assert_eq!(res.unwrap().value(), 0.0);
 }
@@ -35,7 +35,7 @@ fn test_ginzburg_landau_uniform() {
         deep_causality_multivector::CausalMultiVectorWitness::fmap(grad, |x| Complex::new(x, 0.0));
 
     // F = 1*1 + (2/2)*1 + 0 = 2
-    let res = ginzburg_landau_free_energy_kernel(psi, alpha, beta, &grad_complex, None);
+    let res = ginzburg_landau_free_energy_kernel::<f64>(psi, alpha, beta, &grad_complex, None);
     assert!(res.is_ok());
     assert!((res.unwrap().value() - 2.0).abs() < 1e-10);
 }
@@ -55,7 +55,7 @@ fn test_ginzburg_landau_with_vector_potential() {
     let a_field = CausalMultiVector::new(vec![0.1, 0.2, 0.3, 0.4], Metric::Euclidean(2)).unwrap();
     let vector_potential = VectorPotential::new(a_field);
 
-    let res = ginzburg_landau_free_energy_kernel(
+    let res = ginzburg_landau_free_energy_kernel::<f64>(
         psi,
         alpha,
         beta,
@@ -75,7 +75,7 @@ fn test_ginzburg_landau_superconducting_state() {
     let grad_complex =
         deep_causality_multivector::CausalMultiVectorWitness::fmap(grad, |x| Complex::new(x, 0.0));
 
-    let res = ginzburg_landau_free_energy_kernel(psi, alpha, beta, &grad_complex, None);
+    let res = ginzburg_landau_free_energy_kernel::<f64>(psi, alpha, beta, &grad_complex, None);
     assert!(res.is_ok());
 
     // |psi|^2 = 1 + 0.25 = 1.25
@@ -93,7 +93,7 @@ fn test_ginzburg_landau_complex_order_parameter() {
     let grad_complex =
         deep_causality_multivector::CausalMultiVectorWitness::fmap(grad, |x| Complex::new(x, 0.0));
 
-    let res = ginzburg_landau_free_energy_kernel(psi, alpha, beta, &grad_complex, None);
+    let res = ginzburg_landau_free_energy_kernel::<f64>(psi, alpha, beta, &grad_complex, None);
     assert!(res.is_ok());
 
     // |psi|^2 = 0.5, |psi|^4 = 0.25
@@ -115,8 +115,13 @@ fn test_ginzburg_landau_error_metric_mismatch() {
     let a_field = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
     let vector_potential = VectorPotential::new(a_field);
 
-    let res =
-        ginzburg_landau_free_energy_kernel(psi, 1.0, 1.0, &grad_complex, Some(&vector_potential));
+    let res = ginzburg_landau_free_energy_kernel::<f64>(
+        psi,
+        1.0,
+        1.0,
+        &grad_complex,
+        Some(&vector_potential),
+    );
     assert!(res.is_err());
 }
 
@@ -140,8 +145,13 @@ fn test_ginzburg_landau_error_vector_size_mismatch() {
     let a_field = CausalMultiVector::new(vec![0.0; 4], Metric::Euclidean(2)).unwrap();
     let vector_potential = VectorPotential::new(a_field);
 
-    let res =
-        ginzburg_landau_free_energy_kernel(psi, 1.0, 1.0, &grad_complex, Some(&vector_potential));
+    let res = ginzburg_landau_free_energy_kernel::<f64>(
+        psi,
+        1.0,
+        1.0,
+        &grad_complex,
+        Some(&vector_potential),
+    );
     assert!(res.is_ok()); // Should pass with matching sizes
 }
 
@@ -151,7 +161,7 @@ fn test_cahn_hilliard_flux() {
     let m = Mobility::new(2.0).unwrap();
     let grad = ChemicalPotentialGradient::new(CausalTensor::new(vec![10.0], vec![1]).unwrap());
 
-    let res = cahn_hilliard_flux_kernel(&conc, m, &grad);
+    let res = cahn_hilliard_flux_kernel::<f64>(&conc, m, &grad);
     assert!(res.is_ok());
 
     let flux = res.unwrap();
@@ -167,7 +177,7 @@ fn test_cahn_hilliard_flux_pure_phase_c0() {
     let m = Mobility::new(2.0).unwrap();
     let grad = ChemicalPotentialGradient::new(CausalTensor::new(vec![10.0], vec![1]).unwrap());
 
-    let res = cahn_hilliard_flux_kernel(&conc, m, &grad);
+    let res = cahn_hilliard_flux_kernel::<f64>(&conc, m, &grad);
     assert!(res.is_ok());
 
     let flux = res.unwrap();
@@ -182,7 +192,7 @@ fn test_cahn_hilliard_flux_pure_phase_c1() {
     let m = Mobility::new(2.0).unwrap();
     let grad = ChemicalPotentialGradient::new(CausalTensor::new(vec![10.0], vec![1]).unwrap());
 
-    let res = cahn_hilliard_flux_kernel(&conc, m, &grad);
+    let res = cahn_hilliard_flux_kernel::<f64>(&conc, m, &grad);
     assert!(res.is_ok());
 
     let flux = res.unwrap();
@@ -197,7 +207,7 @@ fn test_cahn_hilliard_flux_error_dimension_mismatch() {
     let m = Mobility::new(1.0).unwrap();
     let grad = ChemicalPotentialGradient::new(CausalTensor::new(vec![1.0], vec![1]).unwrap());
 
-    let res = cahn_hilliard_flux_kernel(&conc, m, &grad);
+    let res = cahn_hilliard_flux_kernel::<f64>(&conc, m, &grad);
     assert!(res.is_err());
 }
 
@@ -210,7 +220,7 @@ fn test_cahn_hilliard_flux_multi_element() {
     let grad =
         ChemicalPotentialGradient::new(CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap());
 
-    let res = cahn_hilliard_flux_kernel(&conc, m, &grad);
+    let res = cahn_hilliard_flux_kernel::<f64>(&conc, m, &grad);
     assert!(res.is_ok());
 
     let flux = res.unwrap();

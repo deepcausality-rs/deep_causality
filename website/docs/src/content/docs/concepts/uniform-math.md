@@ -113,7 +113,7 @@ Magma → Semigroup → Monoid → Group → AbelianGroup
                                        Ring → CommutativeRing → Field → RealField → ComplexField<R>
 ```
 
-with `Module<R>`, `Algebra<R>`, `AssociativeAlgebra<R>`, `DivisionAlgebra<R>`, and `EuclideanDomain` for vector and ring-with-division structures. Marker traits (`Associative`, `Commutative`, `Distributive`) make algebraic laws compile-time promises rather than convention. Concrete classifications:
+with `Module<R>`, `Algebra<R>`, `AssociativeAlgebra<R>`, and `DivisionAlgebra<R>` for vector and ring-with-division structures. Marker traits (`Associative`, `Commutative`, `Distributive`) make algebraic laws compile-time promises rather than convention. Concrete classifications:
 
 | Type | Primary traits |
 |---|---|

@@ -1,0 +1,27 @@
+=== QTT Sod shock tube: compressible Euler (Rusanov, tensor-train) ===
+
+Case: gamma = 1.4, CFL = 0.4, t = 0.2, domain [-1, 1], 512 cells, precision f64
+
+Profiles (numeric vs exact) at a few stations:
+        x |  rho (num / exact) |    p (num / exact)
+   -0.400 |   1.0000 /  1.0000 |   1.0000 /  1.0000
+   -0.100 |   0.6302 /  0.6029 |   0.5273 /  0.4925
+    0.100 |   0.4137 /  0.4263 |   0.3032 /  0.3031
+    0.300 |   0.2656 /  0.2656 |   0.3033 /  0.3031
+    0.450 |   0.1250 /  0.1250 |   0.1000 /  0.1000
+
+--- Sod gate (L1 error over |x| <= 0.5, tol 0.03) ---
+  [PASS] density  L1 error = 0.0175
+  [PASS] velocity L1 error = 0.0274
+  [PASS] pressure L1 error = 0.0151
+
+=== Sod profiles match the exact Riemann solution — compressible flux verified. ===
+
+Notes:
+  - 1-D conservative compressible Euler (rho, rho*u, rho*E) marched as three tensor trains.
+  - Ideal-gas EOS + Rusanov (local Lax-Friedrichs) flux; the Rusanov update is a conservative central
+    flux difference plus a scalar artificial viscosity, assembled from the gradient/laplacian MPOs.
+  - First-order Rusanov smears the contact discontinuity (the L1 tolerance reflects mean accuracy);
+    the star pressure p* = 0.3031 (the canonical Sod value) and all wave speeds are correct.
+  - The nonlinear flux/EOS are evaluated pointwise (dequantize -> compute -> requantize); the
+    rank-preserving TT-cross (apply_nonlinear) form is the large-L upgrade.

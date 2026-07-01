@@ -18,6 +18,7 @@ CRATES=(
     "deep_causality_discovery"
     "deep_causality_ethos"
     "deep_causality_fft"
+    "deep_causality_file"
     "deep_causality_haft"
     "deep_causality_macros"
     "deep_causality_metric"

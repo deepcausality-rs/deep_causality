@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::constants::universal::SPEED_OF_LIGHT;
+use crate::constants::universal::speed_of_light;
+use crate::real_from_f64;
 use crate::{AmountOfSubstance, Energy, HalfLife, Mass, PhysicsError, Time};
 use deep_causality_num::{FromPrimitive, RealField};
 
@@ -41,8 +42,7 @@ where
         ));
     }
 
-    let two = R::from_f64(2.0)
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(2.0) failed".into()))?;
+    let two = real_from_f64::<R>(2.0);
 
     let decay_ratio = time.value() / half_life.value();
     let remaining = n0.value() * two.powf(-decay_ratio);
@@ -61,8 +61,7 @@ pub fn binding_energy_kernel<R>(mass_defect: &Mass<R>) -> Result<Energy<R>, Phys
 where
     R: RealField + FromPrimitive,
 {
-    let c = R::from_f64(SPEED_OF_LIGHT)
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(c)".into()))?;
+    let c = speed_of_light::<R>();
     let e = mass_defect.value() * c * c;
     Energy::new(e)
 }

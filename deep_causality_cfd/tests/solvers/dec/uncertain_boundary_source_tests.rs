@@ -77,6 +77,31 @@ fn transition_verbosity_records_only_onset_and_recovery() {
     );
 }
 
+#[test]
+fn verbosity_getter_reports_configured_level() {
+    let default_src = UncertainBoundarySource::new(0.0);
+    assert_eq!(default_src.verbosity(), DropoutVerbosity::EachDropout);
+
+    let transitions =
+        UncertainBoundarySource::new(0.0).with_verbosity(DropoutVerbosity::Transitions);
+    assert_eq!(transitions.verbosity(), DropoutVerbosity::Transitions);
+}
+
+/// A *present* sample whose collapsed mean is non-finite (a point mass at
+/// NaN) is treated as a dropout: the source returns the last-good value and
+/// leaves it unchanged. Drives the `Ok(_)` non-finite arm of `resolve`.
+#[test]
+fn present_but_non_finite_mean_is_a_dropout() {
+    let source = fast_source(0.0);
+    let mut last_good = 4.0; // a prior present value.
+    let nan_sample = MaybeUncertain::<f64>::from_uncertain(Uncertain::<f64>::point(f64::NAN));
+
+    let (value, dropout) = source.resolve(&nan_sample, &mut last_good).unwrap();
+    assert!(dropout, "a non-finite mean must be treated as a dropout");
+    assert_eq!(value, 4.0, "a dropout returns the last-good value");
+    assert_eq!(last_good, 4.0, "a dropout must not change the last-good");
+}
+
 // Opt-in QMC collapse: a present sample resolves to its (variance-reduced) mean, and the collapse
 // is reproducible — the Sobol shift `base ⊕ present.id()` is fixed for a given sample.
 #[test]
@@ -104,5 +129,33 @@ fn qmc_collapse_resolves_present_sample_reproducibly() {
     assert!(
         (lg1 - v1).abs() < 1e-12,
         "last-good must update to the resolved value"
+    );
+}
+
+/// A present sample whose QMC collapse fails (a branch-divergent
+/// `ConditionalOp` is not QMC-eligible) propagates the underlying
+/// `UncertainError` out of `resolve` — the non-presence `Err` arm.
+#[test]
+fn qmc_collapse_of_ineligible_sample_returns_error() {
+    let source = UncertainBoundarySource::new(0.0)
+        .with_presence_gate(0.5, 0.9, 0.1, 64)
+        .with_collapse_samples(64)
+        .with_qmc_collapse(0x0BAD_5EED);
+
+    // Branches draw different distributions: QMC rejects the tree as non-static.
+    let cond = Uncertain::<bool>::point(true);
+    let dynamic = Uncertain::<f64>::conditional(
+        cond,
+        Uncertain::normal(1.0, 0.1),
+        Uncertain::normal(5.0, 0.1),
+    );
+    let sample = MaybeUncertain::<f64>::from_uncertain(dynamic);
+
+    let mut last_good = 0.0;
+    let err = source.resolve(&sample, &mut last_good).unwrap_err();
+    assert!(
+        format!("{err}").to_lowercase().contains("static")
+            || format!("{err}").to_lowercase().contains("qmc"),
+        "expected a QMC static-structure error, got: {err}"
     );
 }

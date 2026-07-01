@@ -39,10 +39,6 @@ graph TD
         CommRing["CommutativeRing"]
     end
 
-    subgraph Domain Structures
-        EucDom["EuclideanDomain"]
-    end
-
     subgraph Field Structures
         Real["Real"]
         Field["Field"]
@@ -88,9 +84,6 @@ graph TD
     Assoc --> AssocRing
     Ring --> CommRing
     Comm --> CommRing
-
-    %% Domain path
-    CommRing --> EucDom
 
     %% Field path
     CommRing --> Real
@@ -440,29 +433,6 @@ pub trait ComplexField<R: Field>: Field {
 > [!NOTE]
 > Quaternions and Octonions are NOT complex fields (non-commutative/non-associative).
 > They implement `DivisionAlgebra` instead.
-
----
-
-### Domain Structures
-
-#### EuclideanDomain
-A commutative ring with well-defined Euclidean division (enables GCD algorithm).
-
-```rust
-pub trait EuclideanDomain: CommutativeRing {
-    type EuclideanValue: Ord;
-    fn euclidean_fn(&self) -> Self::EuclideanValue;
-    fn div_euclid(&self, other: &Self) -> Self;
-    fn rem_euclid(&self, other: &Self) -> Self;
-    fn gcd(&self, other: &Self) -> Self;
-    fn lcm(&self, other: &Self) -> Self;
-}
-```
-
-**Mathematical Hierarchy:**
-$$\text{Euclidean Domain} \subset \text{PID} \subset \text{UFD} \subset \text{Integral Domain}$$
-
-**Implemented for:** All primitive integer types (`i8`–`i128`, `u8`–`u128`, `isize`, `usize`)
 
 ---
 

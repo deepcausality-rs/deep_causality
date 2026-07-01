@@ -19,6 +19,7 @@ buildifier -r deep_causality_data_structures/
 buildifier -r deep_causality_discovery/
 buildifier -r deep_causality_ethos/
 buildifier -r deep_causality_fft/
+buildifier -r deep_causality_file/
 buildifier -r deep_causality_haft/
 buildifier -r deep_causality_macros/
 buildifier -r deep_causality_metric/

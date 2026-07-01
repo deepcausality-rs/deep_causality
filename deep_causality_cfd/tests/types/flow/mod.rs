@@ -21,6 +21,10 @@ where
 }
 
 #[cfg(test)]
+pub mod blackout_tests;
+#[cfg(test)]
+pub mod corridor_tests;
+#[cfg(test)]
 pub mod coupling_tests;
 #[cfg(test)]
 pub mod frequency_tests;
@@ -39,6 +43,9 @@ pub mod mms_tests;
 #[cfg(test)]
 #[cfg(not(miri))]
 pub mod operator_study_tests;
+#[cfg(test)]
+#[cfg(not(miri))]
+pub mod qtt_march_run_tests;
 #[cfg(test)]
 pub mod report_tests;
 // IO operations are unsupported under MIRI.

@@ -1,0 +1,28 @@
+=== QTT Park-2T plasma blackout (Tier-A, LER on the incompressible rollout) ===
+
+Case: M = 25, T_inf = 250 K, n_tot = 1.0e22 m^-3, steps = 40, grid 32^2, precision f64
+
+--- Blackout observables (Tier-A, incompressible rollout) ---
+  peak electron density n_e   : 1.000e22 m^-3
+  peak plasma frequency w_p   : 5.641e12 rad/s
+  comms band (config)         : 9.400e9 rad/s
+  blackout dwell              : 1.6000e-1 s
+
+--- LER acceptance gates ---
+  [PASS] (i)   stability at stiffness (tau = dt/1000)
+  [PASS] (ii)  closed-form exponential exactness
+  [PASS] (iii) RH jump peak T_post in ~10^4 K band
+  [PASS] (iv)  ionization lag real + Saha limit
+  [PASS] (v)   counterfactual path-dependence
+  [PASS] (vi)  ionized species present (n_e > 0)
+
+=== All six LER gates passed — Gap-2 Tier-A slice verified. ===
+
+Notes (Tier-A disclaimers):
+  - Rides the INCOMPRESSIBLE QTT rollout; T_tr is a recovery-temperature reconstruction
+    (mandatory Rankine-Hugoniot jump + 1/2|u|^2/c_p), NOT a true post-shock thermodynamic path.
+  - Saha equilibrium at the frozen RH post-shock temperature drives near-full ionization here
+    (n_e ~ n_tot); the two-temperature (T_ve = T_e) lumping over-predicts peak n_e by ~2x
+    (Farbar-Boyd-Martin 2013), and real-gas dissociation caps the post-shock temperature lower,
+    so this peak n_e is an over-prediction relative to the RAM-C II ~1e19 m^-3 anchor. No absolute
+    coupled-CFD match is claimed; the published values are reported as cross-references.

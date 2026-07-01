@@ -60,16 +60,16 @@ fn main() {
     // ────────────────────────────────────────────────────────────────────
     // Build configuration
     let steps = config::build_steps(n, t_star_max);
-    let case = config::build_march_config(n, steps)
+    let case_config = config::build_march_config(n, steps)
         .unwrap_or_else(|e| fail("DEC Taylor-Green configuration", e));
 
     //  Materialize geometry
-    let manifold = case
+    let manifold = case_config
         .materialize()
         .unwrap_or_else(|e| fail("DEC Taylor-Green geometry", e));
 
     // Solve
-    let results = CfdFlow::march(&case)
+    let results = CfdFlow::march(&case_config)
         .on(&manifold)
         .run()
         .unwrap_or_else(|e| fail("DEC Taylor-Green pipeline", e));
