@@ -1,0 +1,25 @@
+deep_causality_cfd/src/solvers/qtt/compressible/fitting.rs
+  s_c79d455421e112::t_b3892fb0d9f44f 209
+  s_c79d455421e112::t_ae3636fd56589d 158
+deep_causality_cfd/src/types/flow/corridor.rs
+  s_c79d455421e112::t_6bfe56231d0b25 343
+  s_c79d455421e112::t_f280f7cc899159 85
+deep_causality_cfd/src/solvers/dec/dec_ns_solver/mod.rs
+  s_c79d455421e112::t_0a25db72d32534 112-114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "c65b6a4947d42cfb6c3384d26e0f857238a75990",
+  "prompts": {},
+  "sessions": {
+    "s_c79d455421e112": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "044c1a68-f6a7-4610-aa17-305c1ce2b5f4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
