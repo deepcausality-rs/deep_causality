@@ -89,11 +89,12 @@ pub use crate::theories::*;
 
 // Solver configuration + type-state builder.
 pub use crate::solvers::{
-    AcousticImex1d, CompressibleEuler1d, CompressibleMarcher2d, CompressibleMarcher3d, DecNs,
-    DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity, DecNsConfigReady, EulerState,
-    EulerState2d, EulerState3d, EulerStateTt2d, EulerStateTt3d, FittedNormalShock, Park2tClosure,
-    PostShockState, QttImmersed2d, QttIncompressible2d, QttLinear1d, StagnationOutcome,
-    conservation_round, ideal_gas_pressure, ideal_gas_pressure_2d, positivity_floor,
+    AcousticImex1d, CompressibleEuler1d, CompressibleMarcher2d, CompressibleMarcher3d,
+    CompressibleMarcher3dFitted, DecNs, DecNsConfig, DecNsConfigNeedsTimeStep,
+    DecNsConfigNeedsViscosity, DecNsConfigReady, EulerState, EulerState2d, EulerState3d,
+    EulerStateTt2d, EulerStateTt3d, FittedNormalShock, Park2tClosure, PostShockState,
+    QttImmersed2d, QttIncompressible2d, QttLinear1d, StagnationOutcome, conservation_round,
+    ideal_gas_pressure, ideal_gas_pressure_2d, positivity_floor,
 };
 
 // QTT rollout observable extraction (tensor-train-native diagnostics + surface observables).

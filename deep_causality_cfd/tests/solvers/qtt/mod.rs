@@ -10,6 +10,8 @@ pub mod compressible_imex_tests;
 #[cfg(test)]
 pub mod compressible_marcher2d_tests;
 #[cfg(test)]
+pub mod compressible_marcher3d_fitted_tests;
+#[cfg(test)]
 pub mod compressible_marcher3d_tests;
 #[cfg(test)]
 pub mod compressible_tests;
