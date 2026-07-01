@@ -1,0 +1,31 @@
+openspec/changes/add-plasma-blackout-corridor/tasks.md
+  s_c4c919f578d611::t_47c943455fb628 49-57
+  s_c4c919f578d611::t_799b64d5153946 33-48
+deep_causality_cfd/src/types/flow/coupling.rs
+  s_c4c919f578d611::t_d8e247a3dd2be5 420-467
+deep_causality_cfd/src/types/flow/mod.rs
+  s_c4c919f578d611::t_fb6fe1f65336a7 37-38
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_1c418a87339f5f 59
+  s_c4c919f578d611::t_0e70ffd8803c37 60-63
+deep_causality_cfd/tests/types/flow/coupling_tests.rs
+  s_c4c919f578d611::t_9d12ad7ce40c4f 10-12
+  s_c4c919f578d611::t_81b43805a96159 312-324,329-335,341-369,373-374,382
+  s_c4c919f578d611::t_0e70ffd8803c37 325-328,336-340,370-372,375-381
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "695e5dfb56173bb257e3bdd2469b32ec740dc6da",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
