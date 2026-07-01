@@ -23,6 +23,8 @@ where
 #[cfg(test)]
 pub mod blackout_tests;
 #[cfg(test)]
+pub mod corridor_tests;
+#[cfg(test)]
 pub mod coupling_tests;
 #[cfg(test)]
 pub mod frequency_tests;

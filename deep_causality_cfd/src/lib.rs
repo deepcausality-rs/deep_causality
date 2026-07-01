@@ -64,11 +64,13 @@ pub use crate::navigation::{
 // The CfdFlow DSL facade (owned case descriptions materialized at run).
 // Workflow composition — the CfdFlow DSL (the "how").
 pub use crate::types::flow::{
-    AeroBlackoutStub, AeroForceCoupling, BlackoutState, BlackoutTrigger, CfdFlow, CoupledField,
-    Coupling, EosStage, IonizationStage, MarchPipeline, MarchRun, MmsBuilder, Operator,
+    AeroBlackoutStub, AeroForceCoupling, BankCorrection, BlackoutState, BlackoutTrigger,
+    BranchAccumulator, BranchOutcome, CfdFlow, CoupledField, Coupling, CyberneticCorrect, EosStage,
+    GoverningModel, IonizationStage, MarchPipeline, MarchRun, MmsBuilder, Operator,
     OperatorStudyBuilder, PhysicsStage, QttMarchRun, QttStepView, RecoveryTemperatureStage, Regime,
-    Report, StepContext, StepView, ThermalRelax, VerifyRun, ViscosityArrhenius, dominant_frequency,
-    fail, ler_relax_scalar, ler_step, strouhal_number,
+    RegimeClass, RegimeClassify, Report, SafetyEnvelope, StepContext, StepView, ThermalRelax,
+    VerifyRun, ViscosityArrhenius, dominant_frequency, fail, ler_relax_scalar, ler_step,
+    strouhal_number,
 };
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
 pub use crate::types::flow_config::{

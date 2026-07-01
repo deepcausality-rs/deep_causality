@@ -14,6 +14,7 @@
 
 mod blackout;
 mod cfd_flow;
+mod corridor;
 mod coupling;
 mod frequency;
 #[cfg(feature = "std")]
@@ -33,6 +34,10 @@ pub use blackout::{
     ler_relax_scalar, ler_step,
 };
 pub use cfd_flow::{CfdFlow, fail};
+pub use corridor::{
+    BankCorrection, BranchAccumulator, BranchOutcome, CyberneticCorrect, GoverningModel,
+    RegimeClass, RegimeClassify, SafetyEnvelope,
+};
 pub use coupling::{
     AeroBlackoutStub, AeroForceCoupling, CoupledField, Coupling, PhysicsStage, StepContext,
     ThermalRelax, ViscosityArrhenius,

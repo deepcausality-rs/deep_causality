@@ -78,16 +78,25 @@ swapped (not rewritten) at Stage 1.
 
 ## Stage 3 — Composition (fill the Stage-0 seams)
 
-- [ ] 3.1 Regime classifier (Knudsen + `n_e`/ionization + GNSS state → governing-model selection); thresholds
-  config, indicators from state; logs regime changes.
-- [ ] 3.2 Counterfactual bank-angle branches (`continue_with`) — each a coupled rollout returning (peak heat,
-  thermal load, miss distance, blackout dwell), predict-only through the window.
-- [ ] 3.3 Cybernetic bounded-correction gate (`deep_causality_haft::CyberneticLoop::control_step`): S = sensed
+> **Landed in** `deep_causality_cfd/src/types/flow/corridor.rs` (stages) + the two new `CoupledField`
+> channels (`regime`, provenance `EffectLog`). Tests in `tests/types/flow/corridor_tests.rs` (17, all green).
+> The counterfactual *rollout driver* (alternate-world `run_coupled`) lands with the DSL in Stage 4; 3.2
+> here is the outcome vocabulary + its tested reducer the driver feeds.
+
+- [x] 3.1 Regime classifier (Knudsen + `n_e`/ionization + GNSS state → governing-model selection); thresholds
+  config, indicators from state; logs regime changes. → `RegimeClassify` (`GoverningModel` bands via
+  `knudsen_number_kernel`; `n_e`→`BlackoutTrigger`→GNSS-denial; logs only genuine regime transitions).
+- [x] 3.2 Counterfactual bank-angle branches (`continue_with`) — each a coupled rollout returning (peak heat,
+  thermal load, miss distance, blackout dwell), predict-only through the window. → `BranchOutcome` +
+  `BranchAccumulator` (predict-only fold; driver in Stage 4).
+- [x] 3.3 Cybernetic bounded-correction gate (`deep_causality_haft::CyberneticLoop::control_step`): S = sensed
   coupled state, B = trajectory/thermal-margin belief (`observe_fn`), C = the verified safety envelope
   (thermal/g-load/physiological/ROE), A = bounded bank-angle correction (`decide_fn`, clamped into C), E =
   unrecoverable breach. Deterministic, no Effect-monad allocation on the hot path. Tests: correction clamps to the
   envelope; no-safe-action returns E; identical inputs → identical Action. Provenance to `EffectLog` per the
-  Stage-0 schema. (Effect Ethos stays for non-real-time deontic checks, not this gate.)
+  Stage-0 schema. (Effect Ethos stays for non-real-time deontic checks, not this gate.) → `CyberneticCorrect`
+  (`GuidanceWitness: CyberneticLoop`; `SafetyEnvelope` = Context `C`; `BankCorrection::NoSafeAction`→`Err` short-
+  circuits the coupling; breach + bounding logged to the field's `EffectLog`).
 
 ## Stage 4 — CFD Flow DSL (re)design
 

@@ -17,7 +17,9 @@
 //! change to the DSL core.
 
 use crate::solvers::dec::diagnostics::dec_sample_velocity;
+use crate::types::flow::corridor::RegimeClass;
 use crate::types::{Ambient, CfdScalar};
+use deep_causality_core::EffectLog;
 use deep_causality_physics::{PhysicsError, SolenoidalField};
 use deep_causality_topology::{LatticeComplex, Manifold};
 
@@ -118,12 +120,20 @@ impl<'a, const D: usize, R: CfdScalar> StepContext<'a, D, R> {
 /// integrated Cartesian force a trajectory stage reads as its perturbation kick) and the **control
 /// action** (the bounded command a corrective stage writes, e.g. a bank-angle correction). Both are
 /// `None` until a producing stage sets them, so existing couplings are unaffected.
+///
+/// Two further composition channels ride alongside, carrying the Stage-3 corridor state: the last
+/// [`RegimeClass`] the classifier selected (the governing-model + GNSS-denial decision downstream
+/// stages read, and against which a regime *change* is detected), and an [`EffectLog`] of provenance
+/// entries (regime transitions, bounded corrections, envelope breaches) — the auditable record the
+/// flagship surfaces. Both start empty, so existing couplings are unaffected.
 #[derive(Debug, Clone)]
 pub struct CoupledField<R: CfdScalar> {
     ambient: Ambient<R>,
     scalars: Vec<(String, Vec<R>)>,
     aero_force: Option<[R; 3]>,
     control_action: Option<R>,
+    regime: Option<RegimeClass<R>>,
+    log: EffectLog,
 }
 
 impl<R: CfdScalar> CoupledField<R> {
@@ -134,6 +144,8 @@ impl<R: CfdScalar> CoupledField<R> {
             scalars: Vec::new(),
             aero_force: None,
             control_action: None,
+            regime: None,
+            log: EffectLog::new(),
         }
     }
 
@@ -192,6 +204,27 @@ impl<R: CfdScalar> CoupledField<R> {
     /// Write the bounded control action (a corrective stage writes its clamped command here).
     pub fn set_control_action(&mut self, action: R) {
         self.control_action = Some(action);
+    }
+
+    /// The last governing-model regime the classifier selected, if a classifier stage has run.
+    pub fn regime(&self) -> Option<RegimeClass<R>> {
+        self.regime
+    }
+
+    /// Record the currently-selected governing-model regime (the classifier writes it each step; a
+    /// downstream stage reads it to pick its governing model).
+    pub fn set_regime(&mut self, regime: RegimeClass<R>) {
+        self.regime = Some(regime);
+    }
+
+    /// The provenance log accumulated by the corridor stages (regime changes, corrections, breaches).
+    pub fn log(&self) -> &EffectLog {
+        &self.log
+    }
+
+    /// Mutable access to the provenance log — a stage appends an audit entry here.
+    pub fn log_mut(&mut self) -> &mut EffectLog {
+        &mut self.log
     }
 }
 
