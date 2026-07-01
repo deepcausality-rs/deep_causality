@@ -123,6 +123,43 @@ where
         self.clock_drift
     }
 
+    /// Pack the error state into its 17-vector form (the order the covariance filter uses):
+    /// `[pos(3), vel(3), att(3), accel_bias(3), gyro_bias(3), clock_bias, clock_drift]`.
+    pub fn to_array(&self) -> [R; 17] {
+        [
+            self.position[0],
+            self.position[1],
+            self.position[2],
+            self.velocity[0],
+            self.velocity[1],
+            self.velocity[2],
+            self.attitude[0],
+            self.attitude[1],
+            self.attitude[2],
+            self.accel_bias[0],
+            self.accel_bias[1],
+            self.accel_bias[2],
+            self.gyro_bias[0],
+            self.gyro_bias[1],
+            self.gyro_bias[2],
+            self.clock_bias,
+            self.clock_drift,
+        ]
+    }
+
+    /// Rebuild the error state from its 17-vector form (inverse of [`to_array`](Self::to_array)).
+    pub fn from_array(a: [R; 17]) -> Self {
+        Self {
+            position: [a[0], a[1], a[2]],
+            velocity: [a[3], a[4], a[5]],
+            attitude: [a[6], a[7], a[8]],
+            accel_bias: [a[9], a[10], a[11]],
+            gyro_bias: [a[12], a[13], a[14]],
+            clock_bias: a[15],
+            clock_drift: a[16],
+        }
+    }
+
     /// The Euclidean norm of the position error — the scalar drift the closed-loop gate reads.
     pub fn position_error_norm(&self) -> R {
         (self.position[0] * self.position[0]

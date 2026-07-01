@@ -6,6 +6,8 @@
 //! GNSS-denial navigation primitives (Gap-3 B2): the strapdown-INS error state and its propagation,
 //! the foundation of the error-state Kalman filter carried through the plasma-blackout coast.
 
+pub(crate) mod eskf;
 pub(crate) mod ins_error_state;
 
+pub use eskf::*;
 pub use ins_error_state::*;
