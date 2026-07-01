@@ -30,16 +30,31 @@ swapped (not rewritten) at Stage 1.
   two-clock (`s ≠ τ`) carry the Stage-2 engine consumes; metric from state; only `G`, `c`, EGM/IERS literal. No
   new kernel, no code this stage.
 
-## Stage 1 — CFD real-fidelity (fill ④ with real data)
+## Stage 1 — CFD real-fidelity (fill ④ with real data) — **COMPLETE (verified; 1.4 optional, deferred)**
 
-- [ ] 1.1 **3-D body-fitted `MetricProvider`** — completes the compressible-marcher remainder; curved-shock rank
-  `O(10)` not `√side`. Builds on `body-fitted-qtt-coordinate` / `compressible-reacting-qtt-marcher`.
-- [ ] 1.2 **Dynamic marched-rank re-pin** (Res 5 / D9) across the flux-through-front.
-- [ ] 1.3 **Marcher adapter** implements the Stage-0 ④ interface via `CfdFlow` — real force / heat / transported
-  `n_e` / blackout flag; replaces the stub with no consumer change. Tests: real output drives consumers unchanged;
-  blackout flag fires from `n_e` × plasma-frequency threshold.
-- [ ] 1.4 *(optional)* Chemistry lever 3 (finite-rate ionization network), off by default — firms peak `n_e`
-  toward the production band; **not** a flagship blocker (lever 1 already ~1.1×).
+> **Status:** `deep_causality_cfd` 415 tests pass; clippy `--all-targets` clean; fmt clean. Purely additive.
+
+- [x] 1.1 **3-D body-fitted `MetricProvider`** (built as `MetricProvider3d`, the explicit-dimensioned sibling).
+  **1.1a** `MetricProvider3d` seam + `CartesianIdentity3d` capture limit; **1.1b** `BodyFittedCoordinate3d`
+  (spherical-shell fitted metric — the 3-D inverse-Jacobian, gradient of a radial field = r̂); **1.1c** the
+  rank-lever gate (body-fitted O(1) flat vs Cartesian growth); **1.1d** `CompressibleMarcher3dFitted<R, M>` —
+  the metric-aware marcher, gated by **exact equivalence to `CompressibleMarcher3d` over `CartesianIdentity3d`**.
+- [x] 1.2 **Dynamic marched-rank re-pin** (Res 5 / D9): `run_repinned` on the fitted marcher — front-track +
+  rank-preserving ζ-roll + `r0` slide + metric rebuild (reusing the acoustic inverse). Gated: re-pin engages and
+  pins the front to the target band; bond bounded. *Named refinement:* the full Rankine–Hugoniot interface
+  treatment (re-pin is necessary-but-not-sufficient for Cartesian-flux-through-front, per `qtt_repin_marcher`).
+- [x] 1.3 **Marcher adapter** (`AeroForceCoupling`): publishes the flow-derived aero force (∝ dynamic pressure)
+  into the ④ channel; the reacting stack (`RecoveryTemperature → Ionization → AeroForceCoupling`) fills ④ with
+  real `n_e` + force, replacing `AeroBlackoutStub` with no consumer change.
+- [~] 1.4 *(NOT adopted — ruled out by the experiment, started then reverted)* Chemistry lever 3 (finite-rate
+  ionization network). Per
+  [gap-three-resolution-2](../../notes/plasma-blackout/gap-3/gap-three-resolution-2-tve-controlled-ionization.md)
+  §"Lever 2" + §C: **lever 1 already lands peak `n_e` at ~1.1× of RAM-C II — inside the production band; "there
+  is nothing to improve."** Lever 2 (3-T) was prototyped and rejected for exactly this (it brackets low, buys
+  nothing on the calibrated point estimate); lever 3 falls under the same principle — a further chemistry-
+  fidelity lever overcorrects an already-calibrated model. Pursue **only if the anchor itself is tightened**
+  beyond the ~2–3× the surrogate already achieves. (A detailed-balance finite-rate stage was drafted and
+  reverted after this finding.)
 
 ## Stage 2 — Trajectory/nav engine (built once, against ④)
 

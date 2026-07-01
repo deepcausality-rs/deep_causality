@@ -7,8 +7,9 @@
 //! end-to-end `ν(T)` feedback through the march (coupled physics changes the flow dynamics).
 
 use deep_causality_cfd::{
-    AeroBlackoutStub, Ambient, CfdConfigBuilder, CoupledField, Coupling, Mesh, Observe,
-    PhysicsError, PhysicsStage, Seed, StepContext, ThermalRelax, ViscosityArrhenius,
+    AeroBlackoutStub, AeroForceCoupling, Ambient, CfdConfigBuilder, CoupledField, Coupling,
+    IonizationStage, Mesh, Observe, PhysicsError, PhysicsStage, RecoveryTemperatureStage, Seed,
+    StepContext, ThermalRelax, ViscosityArrhenius,
 };
 use deep_causality_physics::{PhysicsErrorEnum, SolenoidalField, VelocityOneForm};
 use deep_causality_tensor::CausalTensor;
@@ -307,4 +308,75 @@ fn aero_blackout_stub_publishes_force_and_windowed_ne() {
     let ctx_past = StepContext::<2, f64>::qtt(0.1, 5);
     stub.apply(&ctx_past, &mut field).expect("stub applies");
     assert_eq!(field.scalar("n_e"), Some([1.0e17].as_slice()));
+}
+
+#[test]
+fn aero_force_coupling_scales_with_dynamic_pressure() {
+    // a = −(C_d·A/m)·½·ρ·U_max²; the force scales quadratically with the flow speed.
+    let (rho, cda) = (0.01_f64, 2.0_f64);
+    let stage = AeroForceCoupling::new(rho, cda);
+    let ctx = StepContext::<2, f64>::qtt(0.1, 1);
+
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    field.set_scalar("speed", vec![1000.0, 500.0, 800.0]); // U_max = 1000
+    stage.apply(&ctx, &mut field).expect("aero applies");
+    let expected = -(cda * 0.5 * rho * 1000.0 * 1000.0);
+    let f = field.aero_force().expect("aero force set");
+    assert!(
+        (f[0] - expected).abs() < 1e-9,
+        "aero accel {f:?} vs {expected}"
+    );
+    assert_eq!((f[1], f[2]), (0.0, 0.0));
+
+    // Doubling the peak speed quadruples the drag.
+    let mut field2 = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    field2.set_scalar("speed", vec![2000.0]);
+    stage.apply(&ctx, &mut field2).expect("aero applies");
+    let f2 = field2.aero_force().expect("aero force set");
+    assert!(
+        (f2[0] / f[0] - 4.0).abs() < 1e-9,
+        "quadratic in speed: {}",
+        f2[0] / f[0]
+    );
+}
+
+#[test]
+fn aero_force_coupling_is_a_noop_without_speed() {
+    let stage = AeroForceCoupling::new(0.01_f64, 2.0);
+    let ctx = StepContext::<2, f64>::qtt(0.1, 1);
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    stage.apply(&ctx, &mut field).expect("noop");
+    assert_eq!(field.aero_force(), None, "no speed ⇒ no aero force");
+}
+
+#[test]
+fn real_reacting_plus_aero_stack_fills_the_coupling_contract() {
+    // The real ④ producer stack — RecoveryTemperature → Ionization → AeroForceCoupling — populates the
+    // same channels the AeroBlackoutStub faked: a real transported n_e (from the reacting physics) and a
+    // real flow-derived aero force. Swapping the stub for this stack changes no consumer.
+    let stack = Coupling::between_steps()
+        .then(RecoveryTemperatureStage::new(20.0_f64, 1.4, 250.0, 1004.5))
+        .then(IonizationStage::new(1.0e22))
+        .then(AeroForceCoupling::new(0.01, 2.0))
+        .build();
+
+    let ctx = StepContext::<2, f64>::qtt(1.0e-6, 1);
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    field.set_scalar("speed", vec![1000.0_f64, 1200.0, 900.0, 1100.0]); // the marcher's per-cell |u|
+
+    PhysicsStage::apply(&stack, &ctx, &mut field).expect("real stack applies");
+
+    // ④ aero-force channel populated (flow-derived, non-zero).
+    let f = field
+        .aero_force()
+        .expect("aero force produced by the real stack");
+    assert!(f[0] < 0.0, "drag opposes motion: {f:?}");
+    // ④ electron density produced by the real reacting physics (not a scheduled constant).
+    let ne = field
+        .scalar("n_e")
+        .expect("n_e produced by the reacting stage");
+    assert!(
+        ne.iter().copied().fold(0.0, f64::max) > 0.0,
+        "reacting flow ionizes"
+    );
 }

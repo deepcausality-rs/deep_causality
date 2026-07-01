@@ -417,3 +417,51 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for AeroBlackoutStub<R> {
         Ok(())
     }
 }
+
+/// The **real** ④ aero-force producer (Stage 1.3): the marcher→trajectory adapter that closes the
+/// physics→navigation coupling with flow-derived data, replacing [`AeroBlackoutStub`]'s constant mock.
+/// It reads the per-cell `"speed"` field the marcher publishes each step, forms the peak dynamic pressure
+/// `q = ½·ρ_ref·U_max²`, and writes the aero *acceleration* `a = −(C_d·A/m)·q` into the aero-force channel
+/// the trajectory kick reads. The electron density / blackout side of ④ is produced upstream by the
+/// reacting stages ([`IonizationStage`](super::IonizationStage) writing `"n_e"`), so the real ④ producer
+/// stack is `RecoveryTemperature → Ionization → AeroForceCoupling`. A no-op if `"speed"` is absent.
+#[derive(Debug, Clone, Copy)]
+pub struct AeroForceCoupling<R: CfdScalar> {
+    speed_field: &'static str,
+    rho_ref: R,
+    cd_area_over_mass: R,
+}
+
+impl<R: CfdScalar> AeroForceCoupling<R> {
+    /// Drive the aero acceleration from a reference freestream density `rho_ref` and the vehicle
+    /// ballistic coefficient bundle `cd_area_over_mass = C_d·A/m` (so the channel carries an
+    /// acceleration the trajectory adds directly).
+    pub fn new(rho_ref: R, cd_area_over_mass: R) -> Self {
+        Self {
+            speed_field: "speed",
+            rho_ref,
+            cd_area_over_mass,
+        }
+    }
+}
+
+impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for AeroForceCoupling<R> {
+    fn apply(
+        &self,
+        _ctx: &StepContext<'_, D, R>,
+        field: &mut CoupledField<R>,
+    ) -> Result<(), PhysicsError> {
+        let Some(speed) = field.scalar(self.speed_field) else {
+            return Ok(());
+        };
+        let u_max = speed
+            .iter()
+            .copied()
+            .fold(R::zero(), |a, x| if x > a { x } else { a });
+        let half = R::from_f64(0.5).unwrap_or_else(R::one);
+        let q = half * self.rho_ref * u_max * u_max;
+        let a_drag = self.cd_area_over_mass * q;
+        field.set_aero_force([R::zero() - a_drag, R::zero(), R::zero()]);
+        Ok(())
+    }
+}
