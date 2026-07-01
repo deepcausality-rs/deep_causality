@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.3.3...deep_causality_haft-v0.3.4) - 2026-07-01
+
+### Added
+
+- *(deep_causality_haft)* formatting
+- *(deep_causality_haft)* add lazy IoAction effect (the Arrow twin)
+- *(deep_causality_haft)* To reorganize source code structure
+
+### Other
+
+- chorde(deep_causality_haft); reorganized source code
+- Generated new SBOM for all crates.
+- Updated README file across multiple crates to meet project standard.
+
 ## [0.3.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.3.1...deep_causality_haft-v0.3.2) - 2026-05-26
 
 ### Fixed

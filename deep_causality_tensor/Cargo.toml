@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_tensor"
-version = "0.4.4"
+version = "0.5.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
@@ -33,7 +33,7 @@ version = "0.3"
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.3"
+version = "0.4"
 
 [dev-dependencies]
 criterion = { version = "0.8" }
