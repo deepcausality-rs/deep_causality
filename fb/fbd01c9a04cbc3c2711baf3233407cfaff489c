@@ -1,0 +1,22 @@
+deep_causality_cfd/tests/coordinate/rank_lever_3d_tests.rs
+  s_c4c919f578d611::t_6e40d970141fb1 1-45,48-80
+  s_c4c919f578d611::t_a61fe71ff9c3b3 46-47
+deep_causality_cfd/tests/coordinate/mod.rs
+  s_c4c919f578d611::t_4e91e5be79b76d 16-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "fbfbd01c9a04cbc3c2711baf3233407cfaff489c",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
