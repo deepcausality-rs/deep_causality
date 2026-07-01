@@ -157,3 +157,84 @@ fn body_fitted_shell_marches_stably_with_bounded_rank() {
         "peak bond within the full-rank ceiling: {peak}"
     );
 }
+
+/// Locate the radial front (steepest (i,j)-averaged density gradient along the z/ζ lattice).
+fn front_k(density: &[f64], n: usize) -> usize {
+    let mut prof = vec![0.0f64; n];
+    for i in 0..n {
+        for j in 0..n {
+            for (k, p) in prof.iter_mut().enumerate() {
+                *p += density[(i * n + j) * n + k];
+            }
+        }
+    }
+    let (mut best, mut ks) = (-1.0f64, 0usize);
+    for k in 2..n - 2 {
+        let g = (prof[k + 1] - prof[k - 1]).abs();
+        if g > best {
+            best = g;
+            ks = k;
+        }
+    }
+    ks
+}
+
+#[test]
+fn repin_engages_and_pins_the_radial_front_to_the_target_band() {
+    // A radial density front at ζ-band k0 = 4, off the target band k = 8. The re-pin must roll it back to
+    // the target (a rank-preserving relabel) and slide the shell; without re-pin the front stays put.
+    let l = 4usize;
+    let n = 1usize << l;
+    let tot = n * n * n;
+    let (k0, target) = (4.0f64, 8usize);
+    let (w, p) = (0.05, 1.0);
+    let (mut rho, mut mx, mut my, mut mz, mut e) = (
+        Vec::with_capacity(tot),
+        Vec::with_capacity(tot),
+        Vec::with_capacity(tot),
+        Vec::with_capacity(tot),
+        Vec::with_capacity(tot),
+    );
+    for _i in 0..n {
+        for _j in 0..n {
+            for k in 0..n {
+                let d = 1.2 - 0.4 * ((k as f64 - k0) / 1.5).tanh();
+                rho.push(d);
+                mx.push(0.0);
+                my.push(0.0);
+                mz.push(d * w);
+                e.push(p / (GAMMA - 1.0) + 0.5 * d * w * w);
+            }
+        }
+    }
+    let state: EulerState3d<f64> = [rho, mx, my, mz, e];
+
+    let shell =
+        BodyFittedCoordinate3d::<f64>::new(l, l, l, 0.5, 1.0, 0.4, 1.5, 0.0, TAU, tr()).unwrap();
+    let dx = 1.0 / n as f64;
+    let marcher = CompressibleMarcher3dFitted::new(shell, dx, GAMMA, 0.0005, 2.0, tr()).unwrap();
+
+    // Without re-pin the marcher barely moves the front — it stays near k0.
+    let (out_static, _) = marcher.run(&state, 3).unwrap();
+    let kf_static = front_k(&out_static[0], n);
+    assert!(
+        (kf_static as isize - k0 as isize).abs() <= 2,
+        "without re-pin the front stays near k0: {kf_static}"
+    );
+
+    // With re-pin the front is relocated to the target band and the bond stays bounded.
+    let (out, peak, n_repin) = marcher.run_repinned(&state, 3, target).unwrap();
+    assert!(
+        n_repin >= 1,
+        "re-pin must engage when the front is off-band"
+    );
+    let kf = front_k(&out[0], n);
+    assert!(
+        (kf as isize - target as isize).abs() <= 1,
+        "re-pin pins the front to the target band: {kf} vs {target}"
+    );
+    assert!(
+        peak <= 1usize << ((3 * l) / 2),
+        "re-pinned bond stays within the full-rank ceiling: {peak}"
+    );
+}

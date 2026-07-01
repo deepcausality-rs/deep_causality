@@ -170,6 +170,31 @@ where
         })
     }
 
+    /// The inner radius `r0` of the radial (ζ) shell.
+    pub fn r0(&self) -> R {
+        self.r0
+    }
+    /// The radial span `Δr`.
+    pub fn dr(&self) -> R {
+        self.dr
+    }
+    /// The polar start `θ0`.
+    pub fn theta0(&self) -> R {
+        self.theta0
+    }
+    /// The polar span `Δθ`.
+    pub fn dtheta(&self) -> R {
+        self.dtheta
+    }
+    /// The azimuth start `φ0`.
+    pub fn phi0(&self) -> R {
+        self.phi0
+    }
+    /// The azimuth span `Δφ`.
+    pub fn dphi(&self) -> R {
+        self.dphi
+    }
+
     /// The physical position `(x, y, z)` at computational `(ξ, η, ζ)`.
     pub fn position(&self, xi: R, eta: R, zeta: R) -> (R, R, R) {
         let phi = self.phi0 + xi * self.dphi;

@@ -20,13 +20,14 @@
 //! per flux instead of three) are the perf follow-on.
 
 use super::marcher_3d::{EulerState3d, EulerStateTt3d};
-use crate::coordinate::MetricProvider3d;
+use crate::coordinate::{BodyFittedCoordinate3d, MetricProvider3d};
 use crate::tensor_bridge::{AcousticCoreInverse3d, dequantize_3d, quantize_3d};
 use crate::traits::Marcher;
 use crate::types::CfdScalar;
 use alloc::format;
+use alloc::vec;
 use alloc::vec::Vec;
-use deep_causality_num::ConjugateScalar;
+use deep_causality_num::{ConjugateScalar, RealField};
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{CausalTensor, CausalTensorTrain, TensorTrain, Truncation};
 
@@ -95,6 +96,13 @@ where
     /// The curvilinear coordinate this marcher runs over.
     pub fn metric(&self) -> &M {
         &self.metric
+    }
+
+    /// Swap the coordinate, keeping the (unchanged) acoustic inverse and step parameters. This is the
+    /// per-step re-pin move: the lattice `dims`/`dx` and the acoustic dissipation are invariant across a
+    /// re-pin, only the fitted metric slides.
+    pub fn with_metric(self, metric: M) -> Self {
+        Self { metric, ..self }
     }
 
     fn encode(&self, v: &[R]) -> Result<CausalTensorTrain<R>, PhysicsError> {
@@ -270,5 +278,155 @@ where
         _ambient: &Self::Ambient,
     ) -> Result<Self::Output, PhysicsError> {
         self.step(state)
+    }
+}
+
+// ── Res-5 / D9 dynamic marched-rank re-pin (body-fitted shell only) ──────────────────────────────
+
+/// Locate the radial front: the interior `ζ` index of steepest `(ξ, η)`-averaged gradient of a scalar
+/// (density) train. `None` if the grid is too thin (`Nz < 5`).
+fn front_index_zeta<R>(
+    density: &CausalTensorTrain<R>,
+    lx: usize,
+    ly: usize,
+    lz: usize,
+) -> Result<Option<usize>, PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    let (nx, ny, nz) = (1usize << lx, 1usize << ly, 1usize << lz);
+    let dense = dequantize_3d(density, lx, ly, lz)?;
+    let s = dense.as_slice();
+    let mut prof = vec![R::zero(); nz];
+    for i in 0..nx {
+        for j in 0..ny {
+            for (k, p) in prof.iter_mut().enumerate() {
+                *p += s[(i * ny + j) * nz + k];
+            }
+        }
+    }
+    if nz < 5 {
+        return Ok(None);
+    }
+    let mut kstar = None;
+    let mut best = R::zero() - R::one();
+    for k in 2..nz - 2 {
+        let g = (prof[k + 1] - prof[k - 1]).abs();
+        if g > best {
+            best = g;
+            kstar = Some(k);
+        }
+    }
+    Ok(kstar)
+}
+
+/// Cyclically roll a train by `shift` cells along `ζ` (a rank-preserving relabel) and re-encode — the
+/// move that keeps a tracked front coordinate-stationary.
+fn roll_zeta<R>(
+    u: &CausalTensorTrain<R>,
+    lx: usize,
+    ly: usize,
+    lz: usize,
+    shift: isize,
+    trunc: &Truncation<R>,
+) -> Result<CausalTensorTrain<R>, PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    let (nx, ny, nz) = (1usize << lx, 1usize << ly, 1usize << lz);
+    let dense = dequantize_3d(u, lx, ly, lz)?;
+    let s = dense.as_slice();
+    let mut rolled = vec![R::zero(); nx * ny * nz];
+    for i in 0..nx {
+        for j in 0..ny {
+            for k in 0..nz {
+                let src = ((k as isize - shift).rem_euclid(nz as isize)) as usize;
+                rolled[(i * ny + j) * nz + k] = s[(i * ny + j) * nz + src];
+            }
+        }
+    }
+    quantize_3d(&CausalTensor::new(rolled, vec![nx, ny, nz])?, trunc)
+}
+
+impl<R> CompressibleMarcher3dFitted<R, BodyFittedCoordinate3d<R>>
+where
+    R: CfdScalar + ConjugateScalar<Real = R> + RealField,
+{
+    /// March with **Res-5 / D9 re-pinning**: each step, track the radial (density) front and, if it has
+    /// drifted off the fixed computational band `target`, roll the state back to it (a rank-preserving
+    /// relabel that keeps the feature coordinate-stationary) and slide the shell's inner radius `r0` so
+    /// the front's physical radius maps to that band — rebuilding the fitted metric while reusing the
+    /// invariant acoustic inverse. Returns the final dense state, the peak `max_bond`, and the re-pin count.
+    ///
+    /// # Errors
+    /// [`PhysicsError::DimensionMismatch`] on a wrong-length input; propagates step / re-pin errors.
+    pub fn run_repinned(
+        mut self,
+        state0: &EulerState3d<R>,
+        steps: usize,
+        target: usize,
+    ) -> Result<(EulerState3d<R>, usize, usize), PhysicsError> {
+        let (lx, ly, lz) = (self.lx, self.ly, self.lz);
+        let nz = 1usize << lz;
+        let n = (1usize << lx) * (1usize << ly) * nz;
+        for buf in state0.iter() {
+            if buf.len() != n {
+                return Err(PhysicsError::DimensionMismatch(format!(
+                    "state length {} does not match grid 2^{lx}·2^{ly}·2^{lz}",
+                    buf.len()
+                )));
+            }
+        }
+        let mut u: EulerStateTt3d<R> = [
+            self.encode(&state0[0])?,
+            self.encode(&state0[1])?,
+            self.encode(&state0[2])?,
+            self.encode(&state0[3])?,
+            self.encode(&state0[4])?,
+        ];
+        let mut peak = u.iter().map(|t| t.max_bond()).max().unwrap_or(0);
+        let mut n_repin = 0usize;
+        for _ in 0..steps {
+            u = self.step(&u)?;
+            if let Some(kstar) = front_index_zeta(&u[0], lx, ly, lz)? {
+                let shift = target as isize - kstar as isize;
+                if shift != 0 {
+                    for t in u.iter_mut() {
+                        *t = roll_zeta(t, lx, ly, lz, shift, &self.trunc)?;
+                    }
+                    let frac = R::from_f64((kstar as f64 - target as f64) / nz as f64)
+                        .unwrap_or_else(R::zero);
+                    let new_r0 = self.metric.r0() + frac * self.metric.dr();
+                    if new_r0 > R::zero() {
+                        let coord = BodyFittedCoordinate3d::new(
+                            lx,
+                            ly,
+                            lz,
+                            new_r0,
+                            self.metric.dr(),
+                            self.metric.theta0(),
+                            self.metric.dtheta(),
+                            self.metric.phi0(),
+                            self.metric.dphi(),
+                            self.trunc,
+                        )?;
+                        self = self.with_metric(coord);
+                    }
+                    n_repin += 1;
+                }
+            }
+            let step_peak = u.iter().map(|t| t.max_bond()).max().unwrap_or(0);
+            if step_peak > peak {
+                peak = step_peak;
+            }
+        }
+        let out: EulerState3d<R> = [
+            self.decode(&u[0])?,
+            self.decode(&u[1])?,
+            self.decode(&u[2])?,
+            self.decode(&u[3])?,
+            self.decode(&u[4])?,
+        ];
+        Ok((out, peak, n_repin))
     }
 }
