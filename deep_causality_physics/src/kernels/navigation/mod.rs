@@ -8,8 +8,10 @@
 
 pub(crate) mod eskf;
 pub(crate) mod ins_error_state;
+pub(crate) mod nav_sensors;
 pub(crate) mod reentry_nav;
 
 pub use eskf::*;
 pub use ins_error_state::*;
+pub use nav_sensors::*;
 pub use reentry_nav::*;
