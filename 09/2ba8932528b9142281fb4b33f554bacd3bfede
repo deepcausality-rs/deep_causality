@@ -1,0 +1,36 @@
+deep_causality_cfd/src/solvers/qtt/mod.rs
+  s_c4c919f578d611::t_bd816463c6dc00 16-19
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_816cbff0d9a36d 93-97
+  s_c4c919f578d611::t_7fb5eaea5120f2 92
+deep_causality_cfd/src/solvers/mod.rs
+  s_c4c919f578d611::t_f38f0300263b20 24-29
+deep_causality_cfd/src/solvers/qtt/compressible/marcher_3d_fitted.rs
+  s_c4c919f578d611::t_634c67afcf93c7 1-174,182,190-231,239-246,254-274
+  s_c4c919f578d611::t_bc4149775e93d3 232-238,247-253
+  s_c4c919f578d611::t_20178c1d34fd8f 175-181,183-189
+deep_causality_cfd/src/solvers/qtt/compressible/mod.rs
+  s_c4c919f578d611::t_f8c3fa7c692d4a 15,22
+deep_causality_cfd/tests/solvers/qtt/mod.rs
+  s_c4c919f578d611::t_9b6fbdeaef1fea 13-14
+deep_causality_cfd/tests/solvers/qtt/compressible_marcher3d_fitted_tests.rs
+  s_c4c919f578d611::t_816cbff0d9a36d 13-14,40-44,139-140
+  s_c4c919f578d611::t_2c484dd9901f43 144-148,150-158
+  s_c4c919f578d611::t_aa1629fd92c1c6 1-12,15-39,45-138,141-143,149,159
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "092ba8932528b9142281fb4b33f554bacd3bfede",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
