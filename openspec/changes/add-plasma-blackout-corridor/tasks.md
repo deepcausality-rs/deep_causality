@@ -3,24 +3,32 @@
 Each stage builds only on completed lower stages. The only mocks are Stage-0 stubs behind the final interface,
 swapped (not rewritten) at Stage 1.
 
-## Stage 0 — Foundations & contracts (promote + extend the seam)
+## Stage 0 — Foundations & contracts (promote + extend the seam) — **COMPLETE (verified)**
 
-- [ ] 0.1 **Extend the `.couple` seam (④).** `deep_causality_cfd` `types/flow/coupling.rs`: add an aero-force
-  (Cartesian vector) channel + a control/action channel to `CoupledField` (or `Ambient`), alongside the existing
-  named scalars; add the classifier-input fields (Knudsen, ionization fraction, GNSS state) + the provenance/
-  `EffectLog` schema. Consumers stay `PhysicsStage` impls on the static cons-tuple (no `dyn`); `BlackoutTrigger`
-  keeps deriving the flag from peak `n_e`. **No new seam type.**
-- [ ] 0.2 **Stub `PhysicsStage`** (mock drag + scheduled blackout) satisfying the extended contract so Stages 2–3
-  build now; swapping it for the Stage-1 marcher stage changes no consumer. Tests: stub satisfies the contract; a
-  consumer stage composes against the seam alone.
-- [ ] 0.3 **Promote KS propagator (B1).** `deep_causality_physics` `kernels/astro/ks_propagator.rs`: 3-D KS
-  matrix-exponential core generalizing the shipped planar `TwoBodyPropagator`; between-step Strang perturbation
-  hook (closure = the ④ force channel). Cite Stiefel–Scheifele (1971), Battin (1999); PDF in `papers/`. Tests
-  (f64 + Float106, 100% cov): coast round-off, semigroup, conservation, rejection, Strang order ≈ 2, linear-in-ε.
-- [ ] 0.4 **Promote Sp(2,R)/KS projection (B2).** `deep_causality_physics` constraint-projection kernel with a
-  documented fixed gauge. Tests: idempotent, restores a perturbed state, residuals bounded across a denial cycle.
-- [ ] 0.5 **Wire the shipped clock (B3).** Confirm consumption of `relativistic_clock_drift_rate_kernel` with the
-  two-clock (`s ≠ τ`) carry; metric from state; only `G`, `c`, EGM/IERS literal. (No new kernel.)
+> **Status:** `deep_causality_physics` 1688 tests + `deep_causality_cfd` 398 tests pass; clippy `--all-targets`
+> clean on both; fmt clean. Bazel needs no edit (`kernels/astro/*_tests.rs` is glob-matched). Purely additive.
+
+- [~] 0.1 **Extend the `.couple` seam (④).** `deep_causality_cfd` `types/flow/coupling.rs`. **Done:** the
+  `aero_force` (`[R;3]`, the trajectory kick input) + `control_action` (`R`, the corrective command output)
+  channels on `CoupledField` with getters/setters; re-exported from the flow module and crate root; consumers
+  stay `PhysicsStage` impls (no `dyn`). **Deferred to Stage 3** (added when their consumer lands): the typed
+  classifier-input fields (Knudsen / ionization / GNSS) and the provenance/`EffectLog` schema.
+- [x] 0.2 **Stub `PhysicsStage`.** `AeroBlackoutStub` (constant mock drag + a windowed `n_e` schedule) satisfies
+  the extended contract; swapping it for the real marcher stage changes no consumer. Tests: nav-channel
+  default-None + round-trip; the stub publishes the force and the windowed `n_e` (in/out/past the window).
+- [x] 0.3 **Promote KS propagator (B1).** `deep_causality_physics` `kernels/astro/ks_propagator.rs`: `KsPropagator`
+  (exact 3-D KS matrix-exponential core, singularity-free / near-radial-safe) + `ks_strang_step` (the between-step
+  Strang hook; its `accel` closure = the ④ force channel). Tests (f64 + Float106): coast exactness vs the
+  independent planar `TwoBodyPropagator` to round-off, one-period closure, semigroup, energy/`|L|` conservation,
+  Kepler III, rejections; Strang order ≈ 2 vs an RK4 truth, linear-in-ε, zero-kick identity. Stiefel–Scheifele
+  (1971) / Battin (1999) cited in the docstring — **no PDF** (textbooks; matches the `two_body` cite-only precedent).
+- [x] 0.4 **Promote Sp(2,R)/KS projection (B2).** `deep_causality_physics` `kernels/astro/ks_constraint.rs`:
+  `ks_bilinear_residual` + `ks_project_velocity` (nearest under the fixed gauge that holds `u`). Tests: idempotent,
+  restores a perturbed velocity, correction is along the constraint gradient (nearest), zero-position rejection.
+  (The across-a-denial-cycle residual bound is a Stage-2 integration gate, not a kernel unit test.)
+- [x] 0.5 **Wire the shipped clock (B3).** Confirmed: the shipped `relativistic_clock_drift_rate_kernel` is the
+  two-clock (`s ≠ τ`) carry the Stage-2 engine consumes; metric from state; only `G`, `c`, EGM/IERS literal. No
+  new kernel, no code this stage.
 
 ## Stage 1 — CFD real-fidelity (fill ④ with real data)
 

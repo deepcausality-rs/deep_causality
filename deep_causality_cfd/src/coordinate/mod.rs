@@ -26,11 +26,15 @@
 
 mod blended;
 mod cartesian;
+mod cartesian_3d;
 mod metric_provider;
+mod metric_provider_3d;
 
 pub use blended::{BlendedMap, BlendedMapConfig};
 pub use cartesian::CartesianIdentity;
+pub use cartesian_3d::CartesianIdentity3d;
 pub use metric_provider::MetricProvider;
+pub use metric_provider_3d::{MetricProvider3d, PhysicalGradient3d};
 
 use crate::tensor_bridge::{gradient_x, gradient_y, quantize_2d};
 use crate::types::CfdScalar;
@@ -92,6 +96,39 @@ where
         }
     }
     Ok(CausalTensor::new(data, vec![nx, ny])?)
+}
+
+/// Sample `f(ξ, η, ζ)` on the `2^lx × 2^ly × 2^lz` computational lattice
+/// (`ξ_i = i/Nx`, `η_j = j/Ny`, `ζ_k = k/Nz`), row-major `[nx, ny, nz]`.
+pub(crate) fn sample_grid_3d<R, F>(
+    lx: usize,
+    ly: usize,
+    lz: usize,
+    f: F,
+) -> Result<CausalTensor<R>, PhysicsError>
+where
+    R: CfdScalar,
+    F: Fn(R, R, R) -> R,
+{
+    let (nx, ny, nz) = (1usize << lx, 1usize << ly, 1usize << lz);
+    let lift = |n: usize, what: &str| {
+        R::from_usize(n).ok_or_else(|| {
+            PhysicsError::NumericalInstability(alloc::format!("R::from_usize({what}) failed"))
+        })
+    };
+    let (nxr, nyr, nzr) = (lift(nx, "nx")?, lift(ny, "ny")?, lift(nz, "nz")?);
+    let mut data = vec![R::zero(); nx * ny * nz];
+    for i in 0..nx {
+        let xi = lift(i, "i")? / nxr;
+        for j in 0..ny {
+            let eta = lift(j, "j")? / nyr;
+            for k in 0..nz {
+                let zeta = lift(k, "k")? / nzr;
+                data[(i * ny + j) * nz + k] = f(xi, eta, zeta);
+            }
+        }
+    }
+    Ok(CausalTensor::new(data, vec![nx, ny, nz])?)
 }
 
 impl<R> BodyFittedCoordinate<R>
