@@ -13,3 +13,5 @@ pub mod body_fitted_tests;
 pub mod cartesian_3d_tests;
 #[cfg(test)]
 pub mod metric_provider_tests;
+#[cfg(test)]
+pub mod rank_lever_3d_tests;
