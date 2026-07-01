@@ -1,0 +1,45 @@
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_d42f7094c3e6f2 67-69,71-73
+deep_causality_cfd/src/types/flow/mod.rs
+  s_c4c919f578d611::t_6fa18996ea56bc 37-40
+  s_c4c919f578d611::t_527544e9b6e77e 17
+deep_causality_cfd/src/types/flow/corridor.rs
+  s_c4c919f578d611::t_cce1e2d45794c3 1-27,29-154,159-176,178-179,181-326,332-423,426-464
+  s_c4c919f578d611::t_d9a0b73fb9d14c 424-425
+  s_c4c919f578d611::t_bf35a405ca16e8 28
+  s_c4c919f578d611::t_26b1a6b1b5f334 177,180
+  s_c4c919f578d611::t_94c59a5ba1236e 155-158
+  s_c4c919f578d611::t_07905264523457 327-331
+openspec/changes/add-plasma-blackout-corridor/tasks.md
+  s_c4c919f578d611::t_1cbbc512b7e419 81-92,97-99
+deep_causality_cfd/tests/types/flow/mod.rs
+  s_c4c919f578d611::t_192e95d4823e5d 26-27
+deep_causality_cfd/tests/types/flow/corridor_tests.rs
+  s_c4c919f578d611::t_e2cd6fa5c6e0a3 14
+  s_c4c919f578d611::t_19864e35101692 148
+  s_c4c919f578d611::t_94c59a5ba1236e 261-268
+  s_c4c919f578d611::t_918fe2dd6e2b78 165
+  s_c4c919f578d611::t_4fa58c91f29016 1-13,15-147,149-164,166-260,269
+deep_causality_cfd/tests/BUILD.bazel
+  s_c4c919f578d611::t_89d40bca385f60 30
+deep_causality_cfd/src/types/flow/coupling.rs
+  s_c4c919f578d611::t_e0b9f73797cef7 20,22
+  s_c4c919f578d611::t_eafcc66f5e0139 123-128,135-136,147-148
+  s_c4c919f578d611::t_dcce4408dd942a 208-228
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "bde183416501a7f7eeba6934c1dea189b9700e31",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
