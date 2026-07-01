@@ -34,7 +34,8 @@ pub use blackout::{
 };
 pub use cfd_flow::{CfdFlow, fail};
 pub use coupling::{
-    CoupledField, Coupling, PhysicsStage, StepContext, ThermalRelax, ViscosityArrhenius,
+    AeroBlackoutStub, CoupledField, Coupling, PhysicsStage, StepContext, ThermalRelax,
+    ViscosityArrhenius,
 };
 pub use frequency::{dominant_frequency, strouhal_number};
 #[cfg(feature = "std")]

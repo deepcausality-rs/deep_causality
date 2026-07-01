@@ -112,10 +112,18 @@ impl<'a, const D: usize, R: CfdScalar> StepContext<'a, D, R> {
 /// The owned auxiliary state threaded through the coupling between steps: named scalar fields
 /// (e.g. a temperature field over cells) and the per-step [`Ambient`] a stage writes back to the
 /// solver (e.g. `ν(T)`).
+///
+/// Two typed navigation channels ride alongside the scalar fields, carrying the ④ physics→navigation
+/// coupling (design: the plasma-blackout `blackout-coupling-interface`): the **aero force** (the
+/// integrated Cartesian force a trajectory stage reads as its perturbation kick) and the **control
+/// action** (the bounded command a corrective stage writes, e.g. a bank-angle correction). Both are
+/// `None` until a producing stage sets them, so existing couplings are unaffected.
 #[derive(Debug, Clone)]
 pub struct CoupledField<R: CfdScalar> {
     ambient: Ambient<R>,
     scalars: Vec<(String, Vec<R>)>,
+    aero_force: Option<[R; 3]>,
+    control_action: Option<R>,
 }
 
 impl<R: CfdScalar> CoupledField<R> {
@@ -124,6 +132,8 @@ impl<R: CfdScalar> CoupledField<R> {
         Self {
             ambient,
             scalars: Vec::new(),
+            aero_force: None,
+            control_action: None,
         }
     }
 
@@ -161,6 +171,27 @@ impl<R: CfdScalar> CoupledField<R> {
             .iter_mut()
             .find(|(n, _)| n == name)
             .map(|(_, d)| d)
+    }
+
+    /// The per-step aero force (the integrated Cartesian force a trajectory stage reads as its
+    /// perturbation kick), if a producing stage has set it.
+    pub fn aero_force(&self) -> Option<[R; 3]> {
+        self.aero_force
+    }
+
+    /// Publish the per-step aero force (a marcher / stub stage writes the ④ force channel here).
+    pub fn set_aero_force(&mut self, force: [R; 3]) {
+        self.aero_force = Some(force);
+    }
+
+    /// The bounded control action a corrective stage has written (e.g. a bank-angle command), if any.
+    pub fn control_action(&self) -> Option<R> {
+        self.control_action
+    }
+
+    /// Write the bounded control action (a corrective stage writes its clamped command here).
+    pub fn set_control_action(&mut self, action: R) {
+        self.control_action = Some(action);
     }
 }
 
@@ -330,6 +361,53 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for ViscosityArrhenius<R> 
         // ν(T) = ν_ref · exp(β·(T_ref/T − 1)).
         let nu = self.nu_ref * (self.beta * (self.t_ref / mean - R::one())).exp();
         field.ambient_mut().set_nu(nu);
+        Ok(())
+    }
+}
+
+/// A **stub** producer for the ④ blackout-coupling contract, standing in for the real Stage-1 marcher
+/// so downstream stages (trajectory, classifier, correction) can be built and validated before it
+/// lands. Each step it publishes a constant mock aero drag `[−drag, 0, 0]` into the field's aero-force
+/// channel and writes a single-cell `"n_e"` scalar that is `ne_blackout` inside the scheduled step
+/// window `[start, end)` and `ne_ambient` outside it — so a downstream `BlackoutTrigger` sees the
+/// denial window. Swapping this stub for the real marcher stage changes no consumer.
+#[derive(Debug, Clone, Copy)]
+pub struct AeroBlackoutStub<R: CfdScalar> {
+    drag: R,
+    ne_ambient: R,
+    ne_blackout: R,
+    window_start: usize,
+    window_end: usize,
+}
+
+impl<R: CfdScalar> AeroBlackoutStub<R> {
+    /// A stub with a constant mock drag magnitude and a scheduled blackout window `[start, end)` (in
+    /// step index) over which the published electron density rises from `ne_ambient` to `ne_blackout`.
+    pub fn new(drag: R, ne_ambient: R, ne_blackout: R, window_start: usize, window_end: usize) -> Self {
+        Self {
+            drag,
+            ne_ambient,
+            ne_blackout,
+            window_start,
+            window_end,
+        }
+    }
+}
+
+impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for AeroBlackoutStub<R> {
+    fn apply(
+        &self,
+        ctx: &StepContext<'_, D, R>,
+        field: &mut CoupledField<R>,
+    ) -> Result<(), PhysicsError> {
+        field.set_aero_force([-self.drag, R::zero(), R::zero()]);
+        let in_window = ctx.step() >= self.window_start && ctx.step() < self.window_end;
+        let ne = if in_window {
+            self.ne_blackout
+        } else {
+            self.ne_ambient
+        };
+        field.set_scalar("n_e", Vec::from([ne]));
         Ok(())
     }
 }

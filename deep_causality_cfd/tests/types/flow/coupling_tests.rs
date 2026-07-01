@@ -7,8 +7,8 @@
 //! end-to-end `ν(T)` feedback through the march (coupled physics changes the flow dynamics).
 
 use deep_causality_cfd::{
-    Ambient, CfdConfigBuilder, CoupledField, Coupling, Mesh, Observe, PhysicsError, PhysicsStage,
-    Seed, StepContext, ThermalRelax, ViscosityArrhenius,
+    AeroBlackoutStub, Ambient, CfdConfigBuilder, CoupledField, Coupling, Mesh, Observe, PhysicsError,
+    PhysicsStage, Seed, StepContext, ThermalRelax, ViscosityArrhenius,
 };
 use deep_causality_physics::{PhysicsErrorEnum, SolenoidalField, VelocityOneForm};
 use deep_causality_tensor::CausalTensor;
@@ -271,4 +271,40 @@ fn coupled_viscosity_feedback_changes_the_flow_dynamics() {
         e_coup.last().unwrap(),
         e_base.last().unwrap()
     );
+}
+
+#[test]
+fn coupled_field_nav_channels_default_none_and_roundtrip() {
+    let mut field = CoupledField::new(Ambient::new(0.01_f64, 0.0, None));
+    // The two navigation channels start empty (existing couplings are unaffected).
+    assert_eq!(field.aero_force(), None);
+    assert_eq!(field.control_action(), None);
+
+    field.set_aero_force([-2.0, 0.5, -0.25]);
+    field.set_control_action(0.13);
+    assert_eq!(field.aero_force(), Some([-2.0, 0.5, -0.25]));
+    assert_eq!(field.control_action(), Some(0.13));
+}
+
+#[test]
+fn aero_blackout_stub_publishes_force_and_windowed_ne() {
+    // The stub satisfies the ④ contract on a QTT-backed context (no manifold needed).
+    let stub = AeroBlackoutStub::new(3.0_f64, 1.0e17, 1.0e20, 2, 5);
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+
+    // Outside the window (step 1): mock drag published; n_e at ambient.
+    let ctx_out = StepContext::<2, f64>::qtt(0.1, 1);
+    stub.apply(&ctx_out, &mut field).expect("stub applies");
+    assert_eq!(field.aero_force(), Some([-3.0, 0.0, 0.0]));
+    assert_eq!(field.scalar("n_e"), Some([1.0e17].as_slice()));
+
+    // Inside the window (step 3 ∈ [2,5)): n_e rises to the blackout level.
+    let ctx_in = StepContext::<2, f64>::qtt(0.1, 3);
+    stub.apply(&ctx_in, &mut field).expect("stub applies");
+    assert_eq!(field.scalar("n_e"), Some([1.0e20].as_slice()));
+
+    // Past the window (step 5): back to ambient.
+    let ctx_past = StepContext::<2, f64>::qtt(0.1, 5);
+    stub.apply(&ctx_past, &mut field).expect("stub applies");
+    assert_eq!(field.scalar("n_e"), Some([1.0e17].as_slice()));
 }
