@@ -15,6 +15,8 @@ mod em_quantities;
 #[cfg(test)]
 mod fluids_quantities;
 #[cfg(test)]
+mod hypersonic_quantities;
+#[cfg(test)]
 mod materials_quantities;
 #[cfg(test)]
 mod mhd_quantities;

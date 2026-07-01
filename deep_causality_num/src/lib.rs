@@ -14,6 +14,7 @@ mod dual;
 mod float;
 mod float_106;
 mod float_option;
+mod identity;
 mod integer;
 pub mod iso;
 mod num;
@@ -27,7 +28,6 @@ pub use crate::algebra::algebra_div::DivisionAlgebra;
 pub use crate::algebra::associative::Associative;
 pub use crate::algebra::commutative::Commutative;
 pub use crate::algebra::distributive::Distributive;
-pub use crate::algebra::domain_euclidean::EuclideanDomain;
 pub use crate::algebra::field::Field;
 pub use crate::algebra::field_complex::ComplexField;
 pub use crate::algebra::field_real::RealField;
@@ -36,6 +36,7 @@ pub use crate::algebra::group_abelian::AbelianGroup;
 pub use crate::algebra::group_add::AddGroup;
 pub use crate::algebra::group_div::DivGroup;
 pub use crate::algebra::group_mul::MulGroup;
+pub use crate::algebra::group_semi::{AddSemigroup, MulSemigroup};
 pub use crate::algebra::magma::{AddMagma, MulMagma};
 pub use crate::algebra::module::Module;
 pub use crate::algebra::monoid::{AddMonoid, InvMonoid, MulMonoid};
@@ -46,7 +47,8 @@ pub use crate::algebra::ring_associative::AssociativeRing;
 pub use crate::algebra::ring_commutative::CommutativeRing;
 pub use crate::algebra::rotation::Rotation;
 pub use crate::algebra::scalar::Scalar;
-pub use crate::algebra::semigroup::{AddSemigroup, MulSemigroup};
+pub use crate::algebra::scalar_conjugate::ConjugateScalar;
+pub use crate::algebra::scalar_normed::NormedScalar;
 
 // Alias types
 pub use crate::alias::{Matrix3, Vector3};
@@ -76,6 +78,10 @@ pub use crate::float_106::Float106;
 // Float option number type
 pub use crate::float_option::FloatOption;
 
+// Identity types
+pub use crate::identity::one::{ConstOne, One};
+pub use crate::identity::zero::{ConstZero, Zero};
+
 // Integer types
 pub use crate::integer::{Integer, SignedInt, UnsignedInt};
 
@@ -84,6 +90,4 @@ pub use crate::iso::{AlgebraIso, DivisionAlgebraIso, FieldIso, GroupIso, RingIso
 
 // General numeric traits
 pub use crate::num::Num;
-pub use crate::num::identity::one::{ConstOne, One};
-pub use crate::num::identity::zero::{ConstZero, Zero};
-pub use crate::num::ops::num_ops::*;
+pub use crate::num::num_ops::*;

@@ -24,7 +24,10 @@
 
 extern crate alloc;
 
+mod coordinate;
+mod navigation;
 mod solvers;
+mod tensor_bridge;
 mod theories;
 mod traits;
 mod types;
@@ -39,18 +42,41 @@ pub use deep_causality_physics::quantities::*;
 pub use crate::traits::{FluidTheory, Marcher, Solver};
 pub use crate::types::{Ambient, CfdScalar};
 
+// The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
+pub use crate::coordinate::{
+    BlendedMap, BlendedMapConfig, BodyFittedCoordinate, BodyFittedCoordinate3d, CartesianIdentity,
+    CartesianIdentity3d, MetricProvider, MetricProvider3d, PhysicalGradient3d,
+};
+pub use crate::tensor_bridge::{
+    AcousticCoreInverse, AcousticCoreInverse2d, AcousticCoreInverse3d, QttProjector2d,
+    body_mask_2d, dequantize, dequantize_2d, dequantize_3d, divergence_3d, gradient, gradient_x,
+    gradient_x_3d, gradient_y, gradient_y_3d, gradient_z_3d, laplacian, laplacian_2d, laplacian_3d,
+    mask_from_fn, quantize, quantize_2d, quantize_3d, shift_minus, shift_plus,
+};
+
+// GNSS-denial navigation (aerospace-engineering estimation layer composing the physics kernels):
+// the error-state Kalman engine, synthetic INS sensors, and the Encke↔Cowell integrator regime switch.
+pub use crate::navigation::{
+    ImuModel, InsErrorState, IntegratorRegime, NAV_STATES, NavFilter, ReentryNavEngine,
+    RegimeSwitch, aero_gravity_ratio, nav_transition_matrix,
+};
+
 // The CfdFlow DSL facade (owned case descriptions materialized at run).
 // Workflow composition — the CfdFlow DSL (the "how").
 pub use crate::types::flow::{
-    CfdFlow, CoupledField, Coupling, MarchPipeline, MarchRun, MmsBuilder, Operator,
-    OperatorStudyBuilder, PhysicsStage, Regime, Report, StepContext, StepView, ThermalRelax,
-    VerifyRun, ViscosityArrhenius, dominant_frequency, fail, strouhal_number,
+    AeroBlackoutStub, AeroForceCoupling, BankCorrection, BlackoutState, BlackoutTrigger,
+    BranchAccumulator, BranchOutcome, CfdFlow, CoupledField, Coupling, CyberneticCorrect, EosStage,
+    GoverningModel, IonizationStage, MarchPipeline, MarchRun, MmsBuilder, Operator,
+    OperatorStudyBuilder, PhysicsStage, QttMarchRun, QttStepView, RecoveryTemperatureStage, Regime,
+    RegimeClass, RegimeClassify, Report, SafetyEnvelope, StepContext, StepView, ThermalRelax,
+    VerifyRun, ViscosityArrhenius, dominant_frequency, fail, ler_relax_scalar, ler_step,
+    strouhal_number,
 };
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
 pub use crate::types::flow_config::{
     Body, CfdConfigBuilder, Grading, Manufactured, ManufacturedSample, MarchConfig,
-    MarchConfigBuilder, MarchStop, Mesh, Observe, Seed, TaylorGreen, VerifyConfig,
-    VerifyConfigBuilder,
+    MarchConfigBuilder, MarchStop, Mesh, Observe, QttBody, QttMarchConfig, QttMarchConfigBuilder,
+    QttObserve, Seed, TaylorGreen, VerifyConfig, VerifyConfigBuilder,
 };
 // IO effect: the `IoAction` trait (from haft), the core `write_csv` file action, and the CFD CSV
 // helper, so a `CfdFlow` example can describe and run file output through one crate.
@@ -73,7 +99,17 @@ pub use crate::theories::*;
 
 // Solver configuration + type-state builder.
 pub use crate::solvers::{
-    DecNs, DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity, DecNsConfigReady,
+    AcousticImex1d, CompressibleEuler1d, CompressibleMarcher2d, CompressibleMarcher3d,
+    CompressibleMarcher3dFitted, DecNs, DecNsConfig, DecNsConfigNeedsTimeStep,
+    DecNsConfigNeedsViscosity, DecNsConfigReady, EulerState, EulerState2d, EulerState3d,
+    EulerStateTt2d, EulerStateTt3d, FittedNormalShock, Park2tClosure, PostShockState,
+    QttImmersed2d, QttIncompressible2d, QttLinear1d, StagnationOutcome, conservation_round,
+    ideal_gas_pressure, ideal_gas_pressure_2d, positivity_floor,
+};
+
+// QTT rollout observable extraction (tensor-train-native diagnostics + surface observables).
+pub use crate::solvers::{
+    divergence_residual, drag_lift, kinetic_energy, max_bond, max_speed, wall_heat_flux,
 };
 
 // Public API of the Navier–Stokes solver.

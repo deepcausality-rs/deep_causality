@@ -397,55 +397,59 @@ impl<R: deep_causality_num::RealField + deep_causality_num::FromPrimitive> Hadro
 ///
 /// where z is the lightcone momentum fraction and mT is the transverse mass.
 #[derive(Debug, Clone, PartialEq)]
-pub struct LundParameters {
+pub struct LundParameters<R: deep_causality_num::RealField> {
     /// String tension κ (GeV/fm) - energy per unit length of the color flux tube
-    kappa: f64,
+    kappa: R,
     /// Lund 'a' parameter - controls the shape of the fragmentation function
-    lund_a: f64,
+    lund_a: R,
     /// Lund 'b' parameter (GeV⁻²) - controls mass dependence
-    lund_b: f64,
+    lund_b: R,
     /// Transverse momentum width σ_pT (GeV) - Gaussian width for pT generation
-    sigma_pt: f64,
+    sigma_pt: R,
     /// Strange quark suppression factor s/u (typically 0.2-0.4)
-    strange_suppression: f64,
+    strange_suppression: R,
     /// Diquark suppression factor qq/q (typically 0.05-0.15)
-    diquark_suppression: f64,
+    diquark_suppression: R,
     /// Spin-1 meson suppression relative to spin-0 (vector/pseudoscalar ratio)
-    vector_meson_fraction: f64,
+    vector_meson_fraction: R,
     /// Minimum invariant mass to continue fragmentation (GeV)
-    min_invariant_mass: f64,
+    min_invariant_mass: R,
 }
 
-impl Default for LundParameters {
+impl<R: deep_causality_num::RealField + deep_causality_num::FromPrimitive> Default
+    for LundParameters<R>
+{
     /// Default parameters tuned to LEP e+e- data.
     ///
-    /// Based on PYTHIA 8 Monash tune.
+    /// Based on PYTHIA 8 Monash tune. The `f64`-defined tune values are cast into
+    /// the target real field `R` via [`crate::real_from_f64`].
     fn default() -> Self {
+        use crate::real_from_f64;
         Self {
-            kappa: 1.0,                  // GeV/fm
-            lund_a: 0.68,                // dimensionless
-            lund_b: 0.98,                // GeV⁻²
-            sigma_pt: 0.36,              // GeV
-            strange_suppression: 0.30,   // s/u ratio
-            diquark_suppression: 0.10,   // qq/q ratio
-            vector_meson_fraction: 0.50, // V/(V+PS)
-            min_invariant_mass: 0.5,     // GeV
+            kappa: real_from_f64(1.0),                  // GeV/fm
+            lund_a: real_from_f64(0.68),                // dimensionless
+            lund_b: real_from_f64(0.98),                // GeV⁻²
+            sigma_pt: real_from_f64(0.36),              // GeV
+            strange_suppression: real_from_f64(0.30),   // s/u ratio
+            diquark_suppression: real_from_f64(0.10),   // qq/q ratio
+            vector_meson_fraction: real_from_f64(0.50), // V/(V+PS)
+            min_invariant_mass: real_from_f64(0.5),     // GeV
         }
     }
 }
 
-impl LundParameters {
+impl<R: deep_causality_num::RealField> LundParameters<R> {
     /// Creates new Lund parameters.
     #[allow(clippy::too_many_arguments)]
     pub const fn new(
-        kappa: f64,
-        lund_a: f64,
-        lund_b: f64,
-        sigma_pt: f64,
-        strange_suppression: f64,
-        diquark_suppression: f64,
-        vector_meson_fraction: f64,
-        min_invariant_mass: f64,
+        kappa: R,
+        lund_a: R,
+        lund_b: R,
+        sigma_pt: R,
+        strange_suppression: R,
+        diquark_suppression: R,
+        vector_meson_fraction: R,
+        min_invariant_mass: R,
     ) -> Self {
         Self {
             kappa,
@@ -460,42 +464,42 @@ impl LundParameters {
     }
 
     /// String tension κ (GeV/fm).
-    pub const fn kappa(&self) -> f64 {
+    pub fn kappa(&self) -> R {
         self.kappa
     }
 
     /// Lund 'a' parameter.
-    pub const fn lund_a(&self) -> f64 {
+    pub fn lund_a(&self) -> R {
         self.lund_a
     }
 
     /// Lund 'b' parameter (GeV⁻²).
-    pub const fn lund_b(&self) -> f64 {
+    pub fn lund_b(&self) -> R {
         self.lund_b
     }
 
     /// Transverse momentum width σ_pT (GeV).
-    pub const fn sigma_pt(&self) -> f64 {
+    pub fn sigma_pt(&self) -> R {
         self.sigma_pt
     }
 
     /// Strange quark suppression factor s/u.
-    pub const fn strange_suppression(&self) -> f64 {
+    pub fn strange_suppression(&self) -> R {
         self.strange_suppression
     }
 
     /// Diquark suppression factor qq/q.
-    pub const fn diquark_suppression(&self) -> f64 {
+    pub fn diquark_suppression(&self) -> R {
         self.diquark_suppression
     }
 
     /// Vector meson fraction V/(V+PS).
-    pub const fn vector_meson_fraction(&self) -> f64 {
+    pub fn vector_meson_fraction(&self) -> R {
         self.vector_meson_fraction
     }
 
     /// Minimum invariant mass to continue fragmentation (GeV).
-    pub const fn min_invariant_mass(&self) -> f64 {
+    pub fn min_invariant_mass(&self) -> R {
         self.min_invariant_mass
     }
 }

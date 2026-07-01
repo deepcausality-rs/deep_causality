@@ -8,6 +8,7 @@ pub(crate) mod condensed;
 pub(crate) mod dynamics;
 pub(crate) mod em;
 pub(crate) mod fluids;
+pub(crate) mod hypersonic;
 pub(crate) mod materials;
 pub(crate) mod mhd;
 pub(crate) mod nuclear;

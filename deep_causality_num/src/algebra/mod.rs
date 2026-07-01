@@ -14,9 +14,8 @@
 //! 2. **Additive Hierarchy**: `AddMonoid` → `AddGroup` (inverses) → `AbelianGroup` (commutative)
 //! 3. **Multiplicative Hierarchy**: `MulMonoid` → `InvMonoid` (inverses) → `MulGroup`
 //! 4. **Ring structures**: `Ring` (AbelianGroup + MulMonoid + Distributive) → `CommutativeRing`
-//! 5. **Domain structures**: `EuclideanDomain` (division with remainder, GCD)
-//! 6. **Field structures**: `Field` (CommutativeRing + division) → `RealField` (calculus) → `ComplexField`
-//! 7. **Vector structures**: `Module` → `Algebra` → `DivisionAlgebra`
+//! 5. **Field structures**: `Field` (CommutativeRing + division) → `RealField` (calculus) → `ComplexField`
+//! 6. **Vector structures**: `Module` → `Algebra` → `DivisionAlgebra`
 //!
 //! ## Trait Reference
 //!
@@ -43,11 +42,10 @@
 //! * **AbelianGroup**: An `AddGroup` where addition is commutative.
 //! * **MulGroup**: A multiplicative monoid where non-zero elements have inverses (`1/a`).
 //!
-//! ### Rings and Domains
+//! ### Rings
 //!
 //! * **Ring**: An `AbelianGroup` under addition and a `MulMonoid` under multiplication, satisfying distributivity.
 //! * **CommutativeRing**: A ring where multiplication is commutative.
-//! * **EuclideanDomain**: A commutative ring with a Euclidean function enabling division with remainder and GCD algorithms.
 //!
 //! ### Fields
 //!
@@ -69,7 +67,6 @@ pub mod algebra_div;
 pub mod associative;
 pub mod commutative;
 pub mod distributive;
-pub mod domain_euclidean;
 pub mod field;
 pub mod field_complex;
 pub mod field_real;
@@ -78,6 +75,7 @@ pub mod group_abelian;
 pub mod group_add;
 pub mod group_div;
 pub mod group_mul;
+pub mod group_semi;
 pub mod magma;
 pub mod module;
 pub mod monoid;
@@ -88,4 +86,5 @@ pub mod ring_associative;
 pub mod ring_commutative;
 pub(crate) mod rotation;
 pub mod scalar;
-pub mod semigroup;
+pub mod scalar_conjugate;
+pub mod scalar_normed;

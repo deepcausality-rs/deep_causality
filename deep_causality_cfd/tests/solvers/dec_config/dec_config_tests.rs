@@ -9,7 +9,10 @@
 
 use deep_causality_cfd::DecNs;
 use deep_causality_physics::PhysicsErrorEnum;
-use deep_causality_topology::HodgeDecomposeOptions;
+use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::{
+    ChainComplex, CubicalReggeGeometry, HodgeDecomposeOptions, LatticeComplex, Manifold,
+};
 
 #[test]
 fn test_minimal_build_succeeds_and_getters_read_back() {
@@ -42,6 +45,32 @@ fn test_all_optional_knobs_build() {
     let cloned = config.clone();
     assert_eq!(cloned.dt(), 0.02);
     assert!(format!("{config:?}").contains("DecNsConfig"));
+}
+
+#[test]
+fn test_materialize_applies_warm_start_and_staircase_flags() {
+    // Materializing a config that opts into warm start and the staircase no-slip drives those
+    // application branches. On a periodic torus (no immersed body) staircase is a no-op, but the
+    // materialized solver still constructs and reports its configuration.
+    let lattice: LatticeComplex<2, f64> = LatticeComplex::square_torus(6);
+    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
+    let metric: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::unit();
+    let manifold = Manifold::from_cubical_with_metric(lattice, data, metric, 0);
+
+    let config = DecNs::config()
+        .viscosity(0.05_f64)
+        .time_step(0.02)
+        .warm_start()
+        .staircase_noslip()
+        .build()
+        .expect("valid config");
+
+    let solver = config
+        .materialize_with_zones(&manifold, ())
+        .expect("materialization must succeed");
+    assert_eq!(solver.nu(), 0.05);
+    assert_eq!(solver.dt(), 0.02);
 }
 
 #[test]

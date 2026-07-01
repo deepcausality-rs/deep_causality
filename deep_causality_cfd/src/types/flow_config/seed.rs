@@ -35,7 +35,17 @@ impl Seed {
         let n0 = manifold.complex().num_cells(0);
         let vertex = match self {
             Seed::Rest => vec![R::zero(); D * n0],
-            Seed::TaylorGreenVortex => taylor_green_vertex_field::<D, R>(manifold, n0),
+            Seed::TaylorGreenVortex => {
+                // The Taylor–Green vortex is a 3D field (it reads the z-position of every
+                // vertex). On a lower-dimensional mesh there is no z-axis, so reject it
+                // cleanly instead of indexing past the vertex position.
+                if D != 3 {
+                    return Err(PhysicsError::DimensionMismatch(format!(
+                        "Seed::TaylorGreenVortex requires a 3D periodic cube (D == 3), got D == {D}"
+                    )));
+                }
+                taylor_green_vertex_field::<D, R>(manifold, n0)
+            }
             Seed::UniformX { speed } => {
                 let s = R::from_f64(*speed).expect("the seed speed lifts into every real field");
                 let mut v = vec![R::zero(); D * n0];

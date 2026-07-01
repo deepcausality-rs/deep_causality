@@ -29,6 +29,8 @@ mod op_tensor_inverse_tests;
 #[cfg(test)]
 mod op_tensor_product_tests;
 #[cfg(test)]
+mod op_tensor_qtt_tests;
+#[cfg(test)]
 mod op_tensor_reduction_tests;
 #[cfg(test)]
 mod op_tensor_scalar_tests;

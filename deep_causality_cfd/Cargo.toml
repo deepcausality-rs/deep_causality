@@ -135,5 +135,81 @@ name = "dec_cylinder_verification"
 path = "verification/dec_cylinder_verification/main.rs"
 required-features = ["std"]
 
+[[example]]
+name = "qtt_taylor_green_verification"
+path = "verification/qtt_taylor_green_verification/main.rs"
+
+[[example]]
+name = "qtt_cylinder_verification"
+path = "verification/qtt_cylinder_verification/main.rs"
+
+[[example]]
+name = "qtt_park2t_blackout"
+path = "verification/qtt_park2t_blackout/main.rs"
+
+[[example]]
+name = "qtt_sod"
+path = "verification/qtt_sod/main.rs"
+
+[[example]]
+name = "qtt_ramc_stagline"
+path = "verification/qtt_ramc_stagline/main.rs"
+
+[[example]]
+name = "qtt_blunt_body_2d"
+path = "verification/qtt_blunt_body_2d/main.rs"
+
+[[example]]
+name = "qtt_reentry_3d"
+path = "verification/qtt_reentry_3d/main.rs"
+
+# Tier-B rank studies: empirical tests of the "flowfield is low tensor-train rank" thesis.
+[[example]]
+name = "qtt_rank_study"
+path = "studies/qtt_rank_study/main.rs"
+
+[[example]]
+name = "qtt_rank_dynamic"
+path = "studies/qtt_rank_dynamic/main.rs"
+
+[[example]]
+name = "qtt_rank_nonlinear"
+path = "studies/qtt_rank_nonlinear/main.rs"
+
+[[example]]
+name = "qtt_rank_3d"
+path = "studies/qtt_rank_3d/main.rs"
+
+# Round-2 studies: de-risk the resolution-4/5/6 design nodes before the compressible build.
+[[example]]
+name = "qtt_rank_fitted_dynamic"
+path = "studies/qtt_rank_fitted_dynamic/main.rs"
+
+[[example]]
+name = "qtt_acoustic_precond"
+path = "studies/qtt_acoustic_precond/main.rs"
+
+[[example]]
+name = "qtt_blend_metric"
+path = "studies/qtt_blend_metric/main.rs"
+
+[[example]]
+name = "qtt_repin_marcher"
+path = "studies/qtt_repin_marcher/main.rs"
+
+# Gap-3 trajectory-axis feasibility studies: de-risk Resolution-1's perturbed-conformal split (the
+# generator, the aero-coupling law, the relativistic clock) before specifying the trajectory propagator.
+[[example]]
+name = "traj_fs1_generator"
+path = "studies/traj_fs1_generator/main.rs"
+
+[[example]]
+name = "traj_fs2_coupling"
+path = "studies/traj_fs2_coupling/main.rs"
+
+[[example]]
+name = "traj_fs3_clock"
+path = "studies/traj_fs3_clock/main.rs"
+
 [lints]
 workspace = true

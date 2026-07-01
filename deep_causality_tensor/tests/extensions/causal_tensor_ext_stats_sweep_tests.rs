@@ -7,7 +7,7 @@
 //! and produces the same (precision-tolerant) result. This is the Tier A
 //! "no hardwired f64" guard — the generic body is instantiated once per type.
 
-use deep_causality_num::{Float106, FromPrimitive, RealField, ToPrimitive};
+use deep_causality_num::{ConjugateScalar, Float106, FromPrimitive, RealField, ToPrimitive};
 use deep_causality_tensor::{CausalTensor, CausalTensorStatsExt};
 use std::f64::consts::PI;
 
@@ -15,7 +15,7 @@ use std::f64::consts::PI;
 /// its closed form (converted back to `f64` for a precision-tolerant compare).
 fn run_sweep<T>()
 where
-    T: RealField + FromPrimitive + ToPrimitive,
+    T: RealField + FromPrimitive + ConjugateScalar<Real = T> + ToPrimitive,
 {
     let f = |v: f64| <T as FromPrimitive>::from_f64(v).expect("representable");
     let to_f64 = |x: T| x.to_f64().expect("convertible");

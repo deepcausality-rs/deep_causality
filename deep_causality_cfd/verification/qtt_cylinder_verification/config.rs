@@ -1,0 +1,95 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+//! Configuration layer for the QTT immersed-cylinder verification: every case parameter and the
+//! `QttMarchConfig` case builder. `main.rs` runs the CfdFlow march; `print_utils.rs` measures + verifies.
+//!
+//! A cylinder is immersed in a periodic free-stream by **Brinkman volume penalization** (a smoothed
+//! mask drives the velocity to zero inside the body). The drag falls out as a tensor-train contraction
+//! of the mask with the velocity deficit. The box is `[0, 2π]²`; precision enters once through [`ft`].
+
+use crate::FloatType;
+use deep_causality_cfd::{
+    MarchStop, PhysicsError, QttMarchConfig, QttMarchConfigBuilder, QttObserve, body_mask_2d,
+};
+use deep_causality_num::FromPrimitive;
+use deep_causality_tensor::{CausalTensorTrain, Truncation};
+
+/// Kinematic viscosity.
+pub const NU: f64 = 0.05;
+/// Explicit-Euler time step (`dt/η = 0.25`, explicit-stable).
+pub const DT: f64 = 0.004;
+/// Marched steps (a transient measurement — a periodic box has no momentum source to hold the
+/// free-stream, so drag is read at a fixed horizon, not a true steady state).
+pub const STEPS: usize = 40;
+/// Brinkman penalization parameter (small → hard wall).
+pub const ETA: f64 = 0.016;
+/// Free-stream speed (the seed and the drag reference speed).
+pub const U_INF: f64 = 1.0;
+/// Cylinder radius as a fraction of the box length `2π`.
+pub const RADIUS_FRAC: f64 = 0.15;
+/// Mask smoothing width in cells.
+pub const SMOOTH_CELLS: f64 = 2.0;
+
+/// Committed DEC isolated-cylinder drag at Re 100 (`dec_cylinder_verification`) — the **cross-reference**
+/// (disclaimed: the periodic penalized box is not the DEC inflow/outflow/far-field configuration).
+pub const DEC_CD_REF: f64 = 1.345;
+
+/// Lift an exact `f64` specification into the working precision.
+pub fn ft(x: f64) -> FloatType {
+    FromPrimitive::from_f64(x).expect("specification lifts into FloatType")
+}
+
+/// The grid spacing `Δx = 2π / 2^L`.
+pub fn spacing(l: usize) -> FloatType {
+    ft(2.0 * std::f64::consts::PI) / ft((1usize << l) as f64)
+}
+
+/// The cylinder diameter `2·RADIUS_FRAC·2π` (the drag reference length), at the working precision.
+pub fn diameter() -> FloatType {
+    ft(2.0 * RADIUS_FRAC * 2.0 * std::f64::consts::PI)
+}
+
+/// A round policy capping the bond dimension at `cap` — the accuracy-vs-bond knob.
+pub fn trunc_bond(cap: usize) -> Truncation<FloatType> {
+    Truncation::<FloatType>::by_bond(cap).expect("bond cap is valid")
+}
+
+/// The smoothed cylinder mask, centered in the box.
+///
+/// # Errors
+/// Propagates codec errors.
+pub fn cyl_mask(
+    l: usize,
+    trunc: &Truncation<FloatType>,
+) -> Result<CausalTensorTrain<FloatType>, PhysicsError> {
+    let dx = spacing(l);
+    let center = ft(std::f64::consts::PI); // 2π/2
+    let radius = ft(RADIUS_FRAC * 2.0 * std::f64::consts::PI);
+    let smoothing = ft(SMOOTH_CELLS) * dx;
+    body_mask_2d::<FloatType>(l, l, dx, dx, center, center, radius, smoothing, trunc)
+}
+
+/// The `QttMarchConfig` for an immersed cylinder in a uniform free-stream, marched `STEPS` steps at the
+/// bond cap `cap`, observing drag/lift and divergence — built through the configuration layer, to be run
+/// by `CfdFlow::qtt_march` in `main`.
+///
+/// # Errors
+/// Propagates builder / codec errors.
+pub fn build_config(l: usize, cap: usize) -> Result<QttMarchConfig<FloatType>, PhysicsError> {
+    let dx = spacing(l);
+    let trunc = trunc_bond(cap);
+    let mask = cyl_mask(l, &trunc)?;
+    let u_inf = ft(U_INF);
+    QttMarchConfigBuilder::<FloatType>::new()
+        .name("qtt-cylinder")
+        .grid(l, l, dx, dx)
+        .solver(ft(DT), ft(NU), trunc)
+        .seed_fn(|_, _| (u_inf, ft(0.0)))?
+        .body(mask, ft(0.0), ft(0.0), ft(ETA), u_inf, diameter())
+        .stop(MarchStop::Fixed(STEPS))
+        .observe(QttObserve::default().drag().divergence())
+        .build()
+}

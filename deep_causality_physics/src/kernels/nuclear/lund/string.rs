@@ -11,6 +11,7 @@
 //! the f64-bound RNG sampling is bridged into `R`.
 
 use crate::FourMomentum;
+use crate::real_from_f64;
 use deep_causality_num::{FromPrimitive, RealField};
 
 use super::kinematics::{LightconeEndpoint, StringSegment};
@@ -58,8 +59,8 @@ impl<R: RealField + FromPrimitive> LundString<R> {
 
     /// Take a momentum fraction z from the quark end.
     pub fn take_from_quark(&mut self, z: R, pt_x: R, pt_y: R, mass: R) -> FourMomentum<R> {
-        let two = R::from_f64(2.0).expect("R::from_f64(2.0) failed");
-        let eps = R::from_f64(1e-10).expect("R::from_f64(1e-10) failed");
+        let two = real_from_f64::<R>(2.0);
+        let eps = real_from_f64::<R>(1e-10);
 
         let w_plus = self.w_plus();
         let hadron_p_plus = z * w_plus;
@@ -91,8 +92,8 @@ impl<R: RealField + FromPrimitive> LundString<R> {
 
     /// Take a momentum fraction z from the antiquark end.
     pub fn take_from_antiquark(&mut self, z: R, pt_x: R, pt_y: R, mass: R) -> FourMomentum<R> {
-        let two = R::from_f64(2.0).expect("R::from_f64(2.0) failed");
-        let eps = R::from_f64(1e-10).expect("R::from_f64(1e-10) failed");
+        let two = real_from_f64::<R>(2.0);
+        let eps = real_from_f64::<R>(1e-10);
 
         let w_minus = self.w_minus();
         let hadron_p_minus = z * w_minus;
@@ -138,7 +139,7 @@ impl<R: RealField + FromPrimitive> LundString<R> {
     ///
     /// This is called when the string can't fragment further.
     pub fn final_hadron(&self, _mass: R) -> FourMomentum<R> {
-        let two = R::from_f64(2.0).expect("R::from_f64(2.0) failed");
+        let two = real_from_f64::<R>(2.0);
 
         let p_plus = self.w_plus();
         let p_minus = self.w_minus();

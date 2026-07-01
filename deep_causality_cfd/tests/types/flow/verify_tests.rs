@@ -7,10 +7,34 @@
 //! inputs to the incompressible kernel and confirm the residual against the exact `∂u/∂t`, plus the
 //! optional kernel-in-the-loop amplitude march against the analytic Taylor–Green decay.
 
-use deep_causality_cfd::{CfdConfigBuilder, CfdFlow, TaylorGreen};
+use deep_causality_cfd::{
+    CfdConfigBuilder, CfdFlow, Manufactured, ManufacturedSample, TaylorGreen,
+};
+use deep_causality_physics::PhysicsErrorEnum;
 
 const NU: f64 = 0.1;
 const RHO: f64 = 1.0;
+
+/// A degenerate manufactured spec: a finite (accepted) zero density that the pressure-gradient
+/// kernel later rejects — so the `incompressible_ns_rhs(...)?` inside `VerifyRun::run` returns Err.
+struct ZeroDensitySpec;
+impl Manufactured<f64> for ZeroDensitySpec {
+    fn sample(&self, _p: &[f64; 3], _t: f64) -> ManufacturedSample<f64> {
+        ManufacturedSample {
+            velocity: [1.0, 0.0, 0.0],
+            velocity_jacobian: [[0.0; 3]; 3],
+            velocity_laplacian: [0.0; 3],
+            pressure_gradient: [1.0, 0.0, 0.0],
+            exact_time_derivative: [0.0; 3],
+        }
+    }
+    fn density(&self) -> f64 {
+        0.0 // Density::new(0.0) is accepted, but the pressure-gradient kernel divides by ρ.
+    }
+    fn viscosity(&self) -> f64 {
+        NU
+    }
+}
 
 #[test]
 fn test_verify_residual_is_machine_zero() {
@@ -49,6 +73,23 @@ fn test_verify_residual_is_machine_zero() {
     assert!(report.series("amplitude_exact").is_none());
     // No DEC march, so there is no final edge cochain.
     assert!(report.final_field().is_none());
+}
+
+#[test]
+fn test_verify_propagates_a_kernel_error() {
+    // The kernel evaluation inside `run` short-circuits with `?`: a zero density passes the
+    // `Density::new` guard but the pressure-gradient kernel rejects it, surfacing the error.
+    let config = CfdConfigBuilder::verify::<f64, _>("zero-density", ZeroDensitySpec)
+        .sample_at([1.0, 0.5, 0.0], 0.0)
+        .build()
+        .expect("sample point set");
+    let err = CfdFlow::verify(&config)
+        .run()
+        .expect_err("the pressure-gradient kernel rejects a zero density");
+    assert!(matches!(
+        err.0,
+        PhysicsErrorEnum::PhysicalInvariantBroken(_)
+    ));
 }
 
 #[test]

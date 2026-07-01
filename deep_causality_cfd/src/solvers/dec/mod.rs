@@ -73,6 +73,8 @@ pub(crate) mod surface_force;
 #[cfg(feature = "std")]
 pub(crate) mod uncertain_inflow;
 pub(crate) mod wrappers;
+// Owned configuration + type-state builder for the DEC solver (design D2).
+pub mod dec_config;
 
 pub use boundary::{BodyForceZone, BoundaryZone, Inflow, MovingWall, Outflow, SlipWall};
 pub use dec_ns_rate::DecNsRate;

@@ -14,3 +14,5 @@ mod causal_tensor_ext_stats_f32_tests;
 mod causal_tensor_ext_stats_f64_tests;
 #[cfg(test)]
 mod causal_tensor_ext_stats_sweep_tests;
+#[cfg(test)]
+mod causal_tensor_train_ext_hkt_tests;

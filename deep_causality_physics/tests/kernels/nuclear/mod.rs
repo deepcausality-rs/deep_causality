@@ -4,6 +4,8 @@
  */
 
 #[cfg(test)]
+pub mod generic_real_field_tests;
+#[cfg(test)]
 pub mod pdg_tests;
 #[cfg(test)]
 pub mod physics_tests;

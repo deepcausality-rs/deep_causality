@@ -5,8 +5,33 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    Mass, PhysicalField, Speed, Temperature, debye_length_kernel, larmor_radius_kernel,
+    ElectronDensity, Mass, PhysicalField, Speed, Temperature, debye_length_kernel,
+    larmor_radius_kernel, plasma_frequency_kernel,
 };
+
+#[test]
+fn test_plasma_frequency_matches_reference() {
+    // ω_p = √(n_e e²/(ε₀ m_e)). For n_e = 1e18 m⁻³, ω_p ≈ 5.64e10 rad/s
+    // (f_p ≈ 8.98·√n_e ≈ 8.98e9 Hz).
+    let n_e = ElectronDensity::<f64>::new(1.0e18).unwrap();
+    let w = plasma_frequency_kernel(n_e).unwrap();
+    assert!((w.value() - 5.64e10).abs() / 5.64e10 < 0.01);
+}
+
+#[test]
+fn test_plasma_frequency_zero_density_errors() {
+    // PlasmaFrequency requires a strictly positive value, so n_e = 0 (no plasma)
+    // surfaces as an error; the blackout trigger treats that as link-available.
+    let n_e = ElectronDensity::<f64>::new(0.0).unwrap();
+    assert!(plasma_frequency_kernel(n_e).is_err());
+}
+
+#[test]
+fn test_plasma_frequency_monotonic() {
+    let lo = plasma_frequency_kernel(ElectronDensity::<f64>::new(1.0e17).unwrap()).unwrap();
+    let hi = plasma_frequency_kernel(ElectronDensity::<f64>::new(1.0e19).unwrap()).unwrap();
+    assert!(hi.value() > lo.value());
+}
 
 #[test]
 fn test_debye_length() {

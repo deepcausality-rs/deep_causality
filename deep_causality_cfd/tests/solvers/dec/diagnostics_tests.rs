@@ -10,6 +10,7 @@
 
 use deep_causality_cfd::{
     dec_divergence_residual, dec_enstrophy, dec_helicity, dec_kinetic_energy, dec_max_speed,
+    dec_sample_velocity,
 };
 use deep_causality_num::{Float106, FromPrimitive, RealField};
 use deep_causality_tensor::CausalTensor;
@@ -207,4 +208,22 @@ fn metric_free_manifold_is_rejected() {
 
     assert!(dec_kinetic_energy(&manifold, &u).is_err());
     assert!(dec_max_speed(&manifold, &u).is_err());
+}
+
+/// `dec_sample_velocity` needs a single per-axis spacing to place vertices in
+/// physical space; a per-edge (non-axis-aligned) geometry has no such spacing
+/// and is rejected with a `TopologyError` naming the requirement.
+#[test]
+fn sample_velocity_rejects_non_axis_aligned_geometry() {
+    let lattice: LatticeComplex<2, f64> = LatticeComplex::square_torus(6);
+    let n1 = lattice.num_cells(1);
+    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
+    // A per-edge geometry is a valid metric but not axis-aligned.
+    let metric = CubicalReggeGeometry::<2, f64>::from_edge_lengths(vec![1.0; n1]);
+    let manifold = Manifold::from_cubical_with_metric(lattice, data, metric, 0);
+
+    let u = CausalTensor::new(vec![0.1; n1], vec![n1]).unwrap();
+    let err = dec_sample_velocity(&manifold, &u, &[0.5, 0.5]).unwrap_err();
+    assert!(err.to_string().contains("axis-aligned"), "{err}");
 }
