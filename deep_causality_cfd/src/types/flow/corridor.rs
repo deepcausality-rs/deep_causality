@@ -82,7 +82,7 @@ impl<R: CfdScalar> RegimeClass<R> {
     }
 }
 
-/// The governing-model selector ([2]/[3]). Reads the peak mean free path from a `"mean_free_path"`
+/// The governing-model selector (\[2\]/\[3\]). Reads the peak mean free path from a `"mean_free_path"`
 /// field and forms `Kn = λ / L` against the configured characteristic length, reads the peak
 /// electron density from `"n_e"` and maps it through a [`BlackoutTrigger`] to the GNSS-denial flag,
 /// then records the [`RegimeClass`] on the field — logging a provenance entry whenever the regime
@@ -340,7 +340,7 @@ impl CyberneticLoop<GuidanceWitness> for GuidanceWitness {
     }
 }
 
-/// The bounded-correction gate ([6]) as a between-step [`PhysicsStage`]. It senses the coupled
+/// The bounded-correction gate (\[6\]) as a between-step [`PhysicsStage`]. It senses the coupled
 /// state (peak `"heat_flux"`, `"g_load"`), runs one [`CyberneticLoop::control_step`] against the
 /// [`SafetyEnvelope`], and either writes the clamped bank angle into the field's control channel or —
 /// on an unrecoverable breach — logs it and returns `Err`, short-circuiting the coupling (the design's

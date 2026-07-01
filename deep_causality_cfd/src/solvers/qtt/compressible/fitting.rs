@@ -155,7 +155,7 @@ where
     /// `τ_ion = 1 / (k_f · n₂)`, with `k_f` the **dominant associative-ionization rate** N + O → NO⁺ + e⁻
     /// (Park / Gupta), grounded — not a free fit. The closed-form LER relaxation gives
     /// `α = α_eq·(1 − e^{−t_res/τ_ion})`, so the peak `n_e` sits well below the Saha equilibrium of
-    /// [`stagnation_blackout`], toward the RAM-C flight value. `residence_time` is `t_res` (s).
+    /// [`Self::stagnation_blackout`], toward the RAM-C flight value. `residence_time` is `t_res` (s).
     ///
     /// # Errors
     /// Propagates the ionization / rate / electron-density / plasma-frequency kernels.
@@ -206,7 +206,7 @@ where
     ///
     /// `residence_time` is `t_res = standoff/u₂` (s); `closure` carries the gas properties the relaxation
     /// needs (free-stream `T_ve(0)`, post-shock pressure, reduced mass, `θ_v`). Returns the same outcome
-    /// shape as [`stagnation_line_blackout`], plus the controller is recorded in `ionization_fraction`.
+    /// shape as [`Self::stagnation_line_blackout`], plus the controller is recorded in `ionization_fraction`.
     ///
     /// # Errors
     /// Propagates the vibrational-relaxation / ionization / rate / electron-density / plasma-frequency kernels.

@@ -109,8 +109,9 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsSolver<'m, D, R> {
     /// Builds a solver from a **composable boundary-zone set** (CFD Stage-4
     /// `add-boundary-zone-abstraction`) — the canonical surface for the explicit boundary
     /// actuators. The static zone composition is folded into the solver at construction: every
-    /// zone's [`BoundaryZone::collect_rate_source`] forms the body force, and every zone's
-    /// [`BoundaryZone::collect_lift`] (at step 0) forms the prescribed lift. Structural boundaries
+    /// zone's [`crate::solvers::dec::boundary::BoundaryZone::collect_rate_source`] forms the body
+    /// force, and every zone's [`crate::solvers::dec::boundary::BoundaryZone::collect_lift`] (at
+    /// step 0) forms the prescribed lift. Structural boundaries
     /// — wall no-slip and immersed cut bodies — are still derived automatically from the lattice
     /// and metric. A `()` zone set is the plain closed-domain solver.
     ///
