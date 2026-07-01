@@ -7,3 +7,5 @@
 pub mod eskf_tests;
 #[cfg(test)]
 pub mod ins_error_state_tests;
+#[cfg(test)]
+pub mod reentry_nav_tests;

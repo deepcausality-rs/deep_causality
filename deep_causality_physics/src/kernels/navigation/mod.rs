@@ -8,6 +8,8 @@
 
 pub(crate) mod eskf;
 pub(crate) mod ins_error_state;
+pub(crate) mod reentry_nav;
 
 pub use eskf::*;
 pub use ins_error_state::*;
+pub use reentry_nav::*;

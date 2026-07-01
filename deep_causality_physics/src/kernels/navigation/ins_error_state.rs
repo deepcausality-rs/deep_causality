@@ -160,6 +160,18 @@ where
         }
     }
 
+    /// Zero the **navigation** error (position, velocity, attitude), keeping the estimated biases and
+    /// clock states — the ESKF feedback reset applied *after* the correction has been injected into the
+    /// nominal trajectory (the learned biases persist; the nav error restarts from zero).
+    pub fn reset_navigation(&self) -> Self {
+        Self {
+            position: [R::zero(); 3],
+            velocity: [R::zero(); 3],
+            attitude: [R::zero(); 3],
+            ..*self
+        }
+    }
+
     /// The Euclidean norm of the position error — the scalar drift the closed-loop gate reads.
     pub fn position_error_norm(&self) -> R {
         (self.position[0] * self.position[0]

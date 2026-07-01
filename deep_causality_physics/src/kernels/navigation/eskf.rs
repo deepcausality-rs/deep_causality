@@ -126,6 +126,13 @@ impl<R: RealField> NavFilter<R> {
         &self.state
     }
 
+    /// Apply the ESKF feedback reset: zero the navigation-error part of the estimate (position,
+    /// velocity, attitude) after it has been injected into the nominal trajectory. The learned bias and
+    /// clock states persist. (The covariance is unchanged — the reset moves the *mean*, not the spread.)
+    pub fn reset_navigation_error(&mut self) {
+        self.state = self.state.reset_navigation();
+    }
+
     /// The position-error variance (trace of the 3×3 position block) — the reacquisition witness.
     pub fn position_variance(&self) -> R {
         self.cov[0][0] + self.cov[1][1] + self.cov[2][2]
