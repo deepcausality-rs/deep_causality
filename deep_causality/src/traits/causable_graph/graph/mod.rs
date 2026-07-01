@@ -5,7 +5,7 @@
 
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
 use crate::traits::causable_graph::CausalGraph;
-use ultragraph::PathfindingGraphAlgorithms;
+use ultragraph::{PathfindingGraphAlgorithms, TopologicalGraphAlgorithms};
 
 pub trait CausableGraph<T>
 where
@@ -26,6 +26,43 @@ where
     /// converts the graph from a `Static` state in-place. This is an O(V + E)
     /// operation if a state change occurs and requires node and edge data to be `Clone`.
     fn unfreeze(&mut self);
+
+    /// Freezes the graph for reasoning **only if it is acyclic** (a directed acyclic graph).
+    ///
+    /// This is the opt-in, DAG-enforcing counterpart to [`freeze`](Self::freeze). Where
+    /// `freeze` transitions the graph to its static reasoning form *unconditionally* and
+    /// therefore accepts cyclic structures, `freeze_dag` additionally verifies that the
+    /// graph contains no directed cycle, providing a structural guarantee for callers that
+    /// require one.
+    ///
+    /// Cycle detection requires the static representation, so this method freezes first and
+    /// then checks. On success the graph is left frozen and ready for reasoning; on failure
+    /// it is rolled back to the dynamic state, so a graph is never left presented as a
+    /// frozen, cyclic graph.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` if the graph is acyclic. The graph is left frozen.
+    /// * `Err(CausalityGraphError)` if the graph contains a directed cycle. The graph is left unfrozen.
+    fn freeze_dag(&mut self) -> Result<(), CausalityGraphError> {
+        // `has_cycle` is only available on the static (frozen) representation, so freeze first.
+        self.freeze();
+
+        // After freezing, the static cycle check (Kahn's algorithm) is total: it returns
+        // `Ok(false)` for a DAG and `Ok(true)` for a cycle, and cannot report "not frozen".
+        // The `unwrap_or(true)` default for the (here unreachable) error variant keeps the
+        // contract simple — `Ok` always means "frozen DAG" — by never certifying a graph we
+        // could not verify.
+        if self.get_graph().has_cycle().unwrap_or(true) {
+            // Roll back so the graph is not left in a frozen, cyclic state.
+            self.unfreeze();
+            return Err(CausalityGraphError(
+                "Graph contains a directed cycle and cannot be frozen as a DAG".to_string(),
+            ));
+        }
+
+        Ok(())
+    }
 
     /// Returns a reference to the underlying `CausalGraph`.
     ///

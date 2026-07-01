@@ -12,8 +12,9 @@
 
 use crate::solvers::dec::BoundaryZone;
 use crate::types::CfdScalar;
-use crate::types::flow::{MarchPipeline, PhysicsStage};
-use crate::types::flow_config::MarchConfig;
+use crate::types::flow::{MarchPipeline, PhysicsStage, QttMarchRun};
+use crate::types::flow_config::{MarchConfig, QttMarchConfig};
+use deep_causality_num::ConjugateScalar;
 
 /// The CfdFlow DSL entry point.
 pub struct CfdFlow;
@@ -26,6 +27,16 @@ impl CfdFlow {
         config: &MarchConfig<D, R, Z, C>,
     ) -> MarchPipeline<'_, D, R, Z, C> {
         MarchPipeline::new(config)
+    }
+
+    /// Begin composing a **QTT 2-D incompressible march** from a
+    /// [`QttMarchConfig`](crate::QttMarchConfig) — the tensor-train sibling of [`march`](Self::march).
+    /// Borrows the config and yields a runnable [`QttMarchRun`]; there is no geometry stage (the QTT
+    /// solver carries no borrowed manifold).
+    pub fn qtt_march<R: CfdScalar + ConjugateScalar<Real = R>>(
+        config: &QttMarchConfig<R>,
+    ) -> QttMarchRun<'_, R> {
+        QttMarchRun::new(config)
     }
 
     /// Begin composing a **sensor-fed uncertain-inflow march** from an

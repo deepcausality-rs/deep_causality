@@ -1,5 +1,3 @@
 # Examples
 
-All deep causality examples are in the repo top level examples folder.
-
-Location: examples/avionics_examples
+@TODO

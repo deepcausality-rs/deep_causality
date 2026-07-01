@@ -384,6 +384,118 @@ fn projected_rate_spectral_path_ignores_cg_starvation() {
     assert!(result.is_ok(), "{result:?}");
 }
 
+// ---------------------------------------------------------------------------
+// Generic assembly with a body force (eval_unprojected None-engine + Some(g))
+// ---------------------------------------------------------------------------
+
+/// The generic (engine-off) `eval_unprojected` also adds the body force
+/// exactly: `generic_forced(u) − generic_plain(u) = g`. Drives the
+/// `body_force = Some` arm of the generic assembly path.
+#[test]
+fn generic_assembly_body_force_enters_additively() {
+    let n = 6usize;
+    let manifold = unit_manifold::<f64>(n);
+    let n1 = manifold.complex().num_cells(1);
+
+    let u_flat = tg_edge_form(&manifold, n);
+    let u = VelocityOneForm::new(u_flat, &manifold).unwrap();
+
+    let g_vals: Vec<f64> = (0..n1).map(|i| 0.5 - 0.02 * (i as f64)).collect();
+    let g = BodyForceOneForm::new(
+        CausalTensor::new(g_vals.clone(), vec![n1]).unwrap(),
+        &manifold,
+    )
+    .unwrap();
+
+    let plain = DecNsRate::new(&manifold, NU, None)
+        .unwrap()
+        .with_generic_assembly();
+    let forced = DecNsRate::new(&manifold, NU, Some(&g))
+        .unwrap()
+        .with_generic_assembly();
+
+    let rhs_plain = plain.eval_unprojected(&u);
+    let rhs_forced = forced.eval_unprojected(&u);
+
+    for (i, g_val) in g_vals.iter().enumerate().take(n1) {
+        let diff = rhs_forced.as_tensor().as_slice()[i] - rhs_plain.as_tensor().as_slice()[i];
+        assert!(
+            (diff - g_val).abs() <= 1e-12,
+            "generic body force must enter additively at edge {i}: {diff} vs {g_val}"
+        );
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Energy budget: body-force term and the spectral viscous path
+// ---------------------------------------------------------------------------
+
+/// The energy budget's `body_force` term is the M-inner product of the
+/// state against `g`; with a nonzero `g` it is nonzero, driving the
+/// `Some(g)` arm of `energy_budget`.
+#[test]
+fn energy_budget_reports_body_force_power() {
+    use deep_causality_topology::HodgeDecomposeOptions;
+
+    let n = 8usize;
+    let manifold = unit_manifold::<f64>(n);
+    let u_flat = tg_edge_form(&manifold, n);
+    let u = VelocityOneForm::new(u_flat, &manifold).unwrap();
+
+    // A body force aligned with the state guarantees strictly positive power.
+    let g = BodyForceOneForm::new(u.as_tensor().clone(), &manifold).unwrap();
+
+    let plain = DecNsRate::new(&manifold, NU, None).unwrap();
+    let forced = DecNsRate::new(&manifold, NU, Some(&g)).unwrap();
+
+    let opts = HodgeDecomposeOptions::default();
+    let b_plain = plain.energy_budget(&u, &opts).unwrap();
+    let b_forced = forced.energy_budget(&u, &opts).unwrap();
+
+    assert_eq!(b_plain.body_force(), 0.0);
+    assert!(
+        b_forced.body_force() > 0.0,
+        "body-force power must be positive when g = u: {}",
+        b_forced.body_force()
+    );
+}
+
+/// The energy budget through the spectral viscous assembly agrees with the
+/// operator assembly (rounding), driving the `spectral` arm of
+/// `energy_budget`.
+#[test]
+fn energy_budget_spectral_matches_operator() {
+    use deep_causality_topology::HodgeDecomposeOptions;
+
+    let n = 8usize;
+    let manifold = unit_manifold::<f64>(n);
+    let u_flat = tg_edge_form(&manifold, n);
+    let u = VelocityOneForm::new(u_flat, &manifold).unwrap();
+
+    let operator = DecNsRate::new(&manifold, NU, None).unwrap();
+    let spectral = DecNsRate::new(&manifold, NU, None)
+        .unwrap()
+        .with_spectral_diffusion()
+        .unwrap();
+
+    let opts = HodgeDecomposeOptions::default();
+    let b_op = operator.energy_budget(&u, &opts).unwrap();
+    let b_sp = spectral.energy_budget(&u, &opts).unwrap();
+
+    assert!(
+        (b_op.viscous() - b_sp.viscous()).abs() < 1e-9,
+        "spectral viscous power {} vs operator {}",
+        b_sp.viscous(),
+        b_op.viscous()
+    );
+    assert!(
+        (b_op.convective() - b_sp.convective()).abs() < 1e-9,
+        "convective power must match: {} vs {}",
+        b_sp.convective(),
+        b_op.convective()
+    );
+}
+
 /// The fused stencil assembly (the default) and the generic compositional
 /// assembly must agree to rounding on the same state — the physics-level
 /// pin of the dec-stencil-operators equivalence requirement.

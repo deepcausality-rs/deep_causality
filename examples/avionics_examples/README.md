@@ -14,13 +14,14 @@ cargo run -p avionics_examples --example <example_name>
 
 ## Examples Overview
 
-| Example | Domain | Description |
-|---------|--------|-------------|
-| [magnav](magnav/README.md) | Navigation | Magnetic Navigation using Causal Particle Filters (Bayesian estimation) |
-| [geometric_tcas](geometric_tcas/README.md) | Collision Avoidance | NextGen TCAS using Geometric Algebra collision detection and `Intervenable` safety interlocks |
-| [hypersonic_2t](hypersonic_2t/README.md) | Defense/Tracking | Tracking Hypersonic Glide Vehicles (HGV) using Dual-Time (2T) Physics in 6D phase space |
-| [flight_envelope_monitor](flight_envelope_monitor/README.md) | Health Monitoring | Three-stage stateful pipeline (sensor collection → bind chain → envelope hypergraph) demonstrating uniform composition through `PropagatingProcess<_, FlightState, AircraftConfig>` |
-| [turbulence_flow](turbulence_flow/README.md) | Turbulence / Chaos | Forecast horizon of a chaotic convective flow (Lorenz, the Rayleigh–Bénard 3-mode truncation): the same `Rk4` march at f32/f64/Float106 isolates roundoff growth and shows precision setting how far ahead a turbulent flow can be trusted |
+| Example | Domain | Description                                                                                                                                                                                                                                                                                                                                                                    |
+|---------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [magnav](magnav/README.md) | Navigation | Magnetic Navigation using Causal Particle Filters (Bayesian estimation)                                                                                                                                                                                                                                                                                                        |
+| [geometric_tcas](geometric_tcas/README.md) | Collision Avoidance | NextGen TCAS using Geometric Algebra collision detection and `Intervenable` safety interlocks                                                                                                                                                                                                                                                                                  |
+| [hypersonic_2t](hypersonic_2t/README.md) | Defense/Tracking | Tracking Hypersonic Glide Vehicles (HGV) using Dual-Time (2T) Physics in 6D phase space                                                                                                                                                                                                                                                                                        |
+| [flight_envelope_monitor](flight_envelope_monitor/README.md) | Health Monitoring | Three-stage stateful pipeline (sensor collection → bind chain → envelope hypergraph) demonstrating uniform composition through `PropagatingProcess<_, FlightState, AircraftConfig>`                                                                                                                                                                                            |
+| [turbulence_flow](turbulence_flow/README.md) | Turbulence / Chaos | Forecast horizon of a chaotic convective flow (Lorenz, the Rayleigh–Bénard 3-mode truncation): the same `Rk4` march at f32/f64/Float106 isolates roundoff growth and shows precision setting how far ahead a turbulent flow can be trusted                                                                                                                                     |
+| [ins_gnss_blackout](ins_gnss_blackout/README.md) | Navigation / Timing | INS clock holdover through a GPS-denial blackout (jamming / urban canyon / tunnel) on **real Galileo** data: a grmhd-style regime detector flips GNSS available↔denied, the `intervene` loop corrects the INS when up and is *withheld* through the dark, and the relativistic clock kernel is *carried* across the outage — the navigation/timing core of any GPS-denied flight, in one auditable `CausalFlow` |
 
 > **CFD/MMS verification examples moved.** The Taylor–Green MMS, Re-1600 DEC solver, lid-driven cavity, graded-MMS, and cylinder cases are now self-verifying examples of the `deep_causality_cfd` crate under `deep_causality_cfd/verification/`; run them with `cargo run -p deep_causality_cfd --example <name>_verification`.
 >
@@ -58,6 +59,8 @@ Both `geometric_tcas` and `hypersonic_2t` leverage **Geometric Algebra (`deep_ca
 | `deep_causality_multivector` | Geometric Algebra for kinematics and relativistic physics |
 | `deep_causality_tensor` | Tensor operations for map-based navigation |
 | `deep_causality_calculus` | Arrow calculus: the `Rk4` integration operator (the turbulence-forecast march) |
+| `deep_causality_physics` | The shipped relativistic-clock kernel carried through the GPS-denial blackout (`ins_gnss_blackout`) |
+| `deep_causality_file` | Real RINEX GNSS (SP3/CLK) ingestion over the haft IO monad (`ins_gnss_blackout`) |
 
 ---
 

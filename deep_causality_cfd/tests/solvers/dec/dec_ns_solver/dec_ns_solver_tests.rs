@@ -75,6 +75,59 @@ fn cfl_factor_builder_validates() {
     }
 }
 
+fn tg_vertex_tensor<R>(manifold: &Manifold<LatticeComplex<2, R>, R>, n: usize) -> CausalTensor<R>
+where
+    R: RealField + FromPrimitive,
+{
+    let k = 2.0 * std::f64::consts::PI / (n as f64);
+    let n0 = manifold.complex().num_cells(0);
+    let mut vertex = vec![R::zero(); 2 * n0];
+    for (vi, v) in manifold.complex().iter_cells(0).enumerate() {
+        let (x, y) = (v.position()[0] as f64, v.position()[1] as f64);
+        vertex[2 * vi] = R::from_f64((k * x).sin() * (k * y).cos()).unwrap();
+        vertex[2 * vi + 1] = R::from_f64(-(k * x).cos() * (k * y).sin()).unwrap();
+    }
+    CausalTensor::new(vertex, vec![2 * n0]).unwrap()
+}
+
+#[test]
+fn with_staircase_noslip_is_noop_without_immersed_body() {
+    // On a periodic torus there are no wall or cut edges, so flipping to the
+    // staircase no-slip mechanism is a no-op: construction succeeds, the
+    // getters are unchanged, and the solver still marches a divergence-free
+    // step.
+    let n = 6usize;
+    let manifold = unit_manifold::<f64>(n);
+    let solver = DecNsSolver::new(&manifold, 0.01, 0.1, None)
+        .unwrap()
+        .with_staircase_noslip();
+    assert_eq!(solver.nu(), 0.01);
+
+    let state = solver
+        .seed_from_vertex_vectors(&tg_vertex_tensor(&manifold, n))
+        .unwrap();
+    let output = solver.step(&state).unwrap();
+    assert!(output.divergence_residual() <= 1e-8);
+}
+
+#[test]
+fn with_warm_start_preserves_configuration() {
+    // Enabling warm start is a pure iteration-count optimization: the getters
+    // are unchanged and the marched step still lands divergence-free.
+    let n = 6usize;
+    let manifold = unit_manifold::<f64>(n);
+    let solver = DecNsSolver::new(&manifold, 0.01, 0.1, None)
+        .unwrap()
+        .with_warm_start();
+    assert_eq!(solver.nu(), 0.01);
+
+    let state = solver
+        .seed_from_vertex_vectors(&tg_vertex_tensor(&manifold, n))
+        .unwrap();
+    let output = solver.step(&state).unwrap();
+    assert!(output.divergence_residual() <= 1e-8);
+}
+
 #[test]
 fn debug_is_implemented() {
     let manifold = unit_manifold::<f64>(4);

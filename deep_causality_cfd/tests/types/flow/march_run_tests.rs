@@ -163,3 +163,60 @@ fn test_centerline_axis_out_of_range_errors() {
         .expect_err("axis 5 is out of range for D = 2");
     assert!(matches!(err.0, PhysicsErrorEnum::DimensionMismatch(_)));
 }
+
+/// A decaying 3-D Taylor–Green vortex on a periodic cube — the energy changes every step, so a
+/// steady march does *not* converge immediately (it iterates, updating `prev_e` each step). The
+/// TGV seed is 3-D only, and the steady/probe sampler branches under test are dimension-generic.
+fn decaying_tgv(observe: Observe<3, f64>) -> MarchConfig<3, f64, (), ()> {
+    CfdConfigBuilder::march::<3, f64>("steady-tgv")
+        .mesh(Mesh::periodic_cube(8))
+        .solver(
+            CfdConfigBuilder::dec_ns()
+                .viscosity(0.05)
+                .time_step(0.01)
+                .build()
+                .expect("valid solver config"),
+        )
+        .seed(Seed::TaylorGreenVortex)
+        .march_for(1)
+        .observe(observe)
+        .build()
+        .expect("valid march config")
+}
+
+#[test]
+fn test_steady_stop_iterates_until_max_steps() {
+    // A decaying TGV keeps changing energy, so with an unreachable tolerance the steady loop
+    // never breaks and runs the full max_steps — exercising the per-step advance + `prev_e = e`.
+    let config = decaying_tgv(Observe::default().kinetic_energy());
+    let manifold = config.materialize().expect("geometry");
+    let report = CfdFlow::march(&config)
+        .on(&manifold)
+        .march_with(MarchStop::Steady {
+            tol: 0.0, // never satisfied ⇒ the loop advances every step and updates prev_e
+            max_steps: 4,
+        })
+        .run()
+        .expect("march runs");
+    let energy = report.series("kinetic_energy").expect("energy");
+    // Seed sample + one per step for the full max_steps.
+    assert_eq!(energy.len(), 5, "seed + 4 steps: {}", energy.len());
+    // The TGV decays under viscosity, so the energy drops over the run.
+    assert!(*energy.last().unwrap() < energy[0], "the vortex decays");
+}
+
+#[test]
+fn test_probe_series_is_recorded() {
+    // An enabled probe samples the (edge-derived) velocity at a point each step, pushing into the
+    // probe series — the `if let Some(point) = self.observe.probe` sampler branch.
+    let config = decaying_tgv(Observe::default().probe([1.0, 1.0, 1.0]));
+    let manifold = config.materialize().expect("geometry");
+    let report = CfdFlow::march(&config)
+        .on(&manifold)
+        .run()
+        .expect("march runs");
+    let probe = report.series("probe").expect("probe recorded");
+    // Seed sample + one per step.
+    assert_eq!(probe.len(), 2);
+    assert!(probe.iter().all(|v| v.is_finite()));
+}
