@@ -25,12 +25,14 @@
 //! interior gradient is correct to scheme order).
 
 mod blended;
+mod body_fitted_3d;
 mod cartesian;
 mod cartesian_3d;
 mod metric_provider;
 mod metric_provider_3d;
 
 pub use blended::{BlendedMap, BlendedMapConfig};
+pub use body_fitted_3d::BodyFittedCoordinate3d;
 pub use cartesian::CartesianIdentity;
 pub use cartesian_3d::CartesianIdentity3d;
 pub use metric_provider::MetricProvider;

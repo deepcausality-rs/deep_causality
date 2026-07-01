@@ -6,6 +6,8 @@
 #[cfg(test)]
 pub mod blended_tests;
 #[cfg(test)]
+pub mod body_fitted_3d_tests;
+#[cfg(test)]
 pub mod body_fitted_tests;
 #[cfg(test)]
 pub mod cartesian_3d_tests;
