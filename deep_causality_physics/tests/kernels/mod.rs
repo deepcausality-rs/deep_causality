@@ -8,6 +8,7 @@ mod condensed;
 mod dynamics;
 mod em;
 mod fluids;
+mod hypersonic;
 mod materials;
 mod mhd;
 mod nuclear;

@@ -5,7 +5,7 @@
 
 #[test]
 fn test_vector_potential_default() {
-    let vp = deep_causality_physics::VectorPotential::default();
+    let vp = deep_causality_physics::VectorPotential::<f64>::default();
     // Default is a single-component zero multivector.
     assert_eq!(vp.inner().data().len(), 1);
     assert_eq!(vp.inner().data()[0], 0.0);

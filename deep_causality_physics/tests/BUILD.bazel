@@ -54,6 +54,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
+        "//deep_causality_num",
     ],
 )
 
@@ -171,6 +172,27 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "kernels_hypersonic",
+    srcs = glob([
+        "kernels/hypersonic/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_physics",
+        # Internal dependencies
+        "//deep_causality_core",
+    ],
+)
+
+rust_test_suite(
     name = "kernels_materials",
     srcs = glob([
         "kernels/materials/*_tests.rs",
@@ -233,6 +255,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
+        "//deep_causality_num",
     ],
 )
 

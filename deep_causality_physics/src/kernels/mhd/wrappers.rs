@@ -4,7 +4,10 @@
  */
 
 use crate::kernels::mhd::{grmhd, ideal, plasma, resistive};
-use crate::{AlfvenSpeed, DebyeLength, Diffusivity, LarmorRadius, MagneticPressure};
+use crate::{
+    AlfvenSpeed, DebyeLength, Diffusivity, ElectronDensity, LarmorRadius, MagneticPressure,
+    PlasmaFrequency,
+};
 use crate::{Density, Mass, PhysicalField, Speed, Temperature};
 use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
@@ -142,6 +145,16 @@ where
 {
     match plasma::larmor_radius_kernel(m, v, q, b) {
         Ok(r) => PropagatingEffect::pure(r),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+pub fn plasma_frequency<R>(n_e: ElectronDensity<R>) -> PropagatingEffect<PlasmaFrequency<R>>
+where
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
+{
+    match plasma::plasma_frequency_kernel(n_e) {
+        Ok(w) => PropagatingEffect::pure(w),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }

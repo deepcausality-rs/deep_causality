@@ -57,7 +57,7 @@ fn test_qgt_massive_dirac_k0() {
     let vy = QuantumVelocity::new(CausalTensor::new(vy_data, vec![2, 2]).unwrap());
 
     // Calculate Q_xy for band 0
-    let res = quantum_geometric_tensor_kernel(&energies, &u, &vx, &vy, 0, 1e-12);
+    let res = quantum_geometric_tensor_kernel::<f64>(&energies, &u, &vx, &vy, 0, 1e-12);
 
     assert!(res.is_ok());
     let q = res.unwrap();
@@ -85,8 +85,8 @@ fn test_quasi_qgt_kernel_identical_to_qgt() {
     let v_data = vec![Complex::new(0.1, 0.2); 4];
     let v = QuantumVelocity::new(CausalTensor::new(v_data.clone(), vec![2, 2]).unwrap());
 
-    let qgt_result = quantum_geometric_tensor_kernel(&energies, &u, &v, &v, 0, 1e-12);
-    let quasi_result = quasi_qgt_kernel(&energies, &u, &v, &v, 0, 1e-12);
+    let qgt_result = quantum_geometric_tensor_kernel::<f64>(&energies, &u, &v, &v, 0, 1e-12);
+    let quasi_result = quasi_qgt_kernel::<f64>(&energies, &u, &v, &v, 0, 1e-12);
 
     assert!(qgt_result.is_ok());
     assert!(quasi_result.is_ok());
@@ -109,7 +109,7 @@ fn test_qgt_band_1() {
         CausalTensor::new(vec![Complex::new(0.5, 0.0); 4], vec![2, 2]).unwrap(),
     );
 
-    let res = quantum_geometric_tensor_kernel(&energies, &u, &v, &v, 1, 1e-12);
+    let res = quantum_geometric_tensor_kernel::<f64>(&energies, &u, &v, &v, 1, 1e-12);
     assert!(res.is_ok());
 }
 
@@ -122,7 +122,8 @@ fn test_effective_band_drude_weight_kernel_physical() {
     let metric = QuantumMetric::new(2.0).unwrap(); // Physical units
     let lattice = Length::new(1.0).unwrap(); // a=1
 
-    let res = effective_band_drude_weight_kernel(energy_n, energy_0, curvature, metric, lattice);
+    let res =
+        effective_band_drude_weight_kernel::<f64>(energy_n, energy_0, curvature, metric, lattice);
 
     assert!(res.is_ok());
     let bdw = res.unwrap();
@@ -142,7 +143,8 @@ fn test_effective_band_drude_weight_kernel_dimensionless() {
     let metric = QuantumMetric::new(2.0).unwrap(); // Dimensionless
     let lattice = Length::new(2.0).unwrap(); // a=2
 
-    let res = effective_band_drude_weight_kernel(energy_n, energy_0, curvature, metric, lattice);
+    let res =
+        effective_band_drude_weight_kernel::<f64>(energy_n, energy_0, curvature, metric, lattice);
 
     assert!(res.is_ok());
     let bdw = res.unwrap();
@@ -169,7 +171,7 @@ fn test_qgt_error_eigenvector_not_rank2() {
         CausalTensor::new(vec![Complex::new(0.0, 0.0); 4], vec![2, 2]).unwrap(),
     );
 
-    let res = quantum_geometric_tensor_kernel(&energies, &u, &v, &v, 0, 1e-12);
+    let res = quantum_geometric_tensor_kernel::<f64>(&energies, &u, &v, &v, 0, 1e-12);
     assert!(res.is_err());
 }
 
@@ -184,7 +186,7 @@ fn test_qgt_error_band_index_out_of_bounds() {
     );
 
     // Band index 5 is out of bounds for 2 bands
-    let res = quantum_geometric_tensor_kernel(&energies, &u, &v, &v, 5, 1e-12);
+    let res = quantum_geometric_tensor_kernel::<f64>(&energies, &u, &v, &v, 5, 1e-12);
     assert!(res.is_err());
 }
 
@@ -199,7 +201,7 @@ fn test_qgt_error_eigenvalues_length_mismatch() {
         CausalTensor::new(vec![Complex::new(0.0, 0.0); 4], vec![2, 2]).unwrap(),
     );
 
-    let res = quantum_geometric_tensor_kernel(&energies, &u, &v, &v, 0, 1e-12);
+    let res = quantum_geometric_tensor_kernel::<f64>(&energies, &u, &v, &v, 0, 1e-12);
     assert!(res.is_err());
 }
 
@@ -211,7 +213,8 @@ fn test_effective_band_drude_weight_error_non_finite_curvature() {
     let metric = QuantumMetric::new(1.0).unwrap();
     let lattice = Length::new(1.0).unwrap();
 
-    let res = effective_band_drude_weight_kernel(energy_n, energy_0, curvature, metric, lattice);
+    let res =
+        effective_band_drude_weight_kernel::<f64>(energy_n, energy_0, curvature, metric, lattice);
     assert!(res.is_err());
 }
 
@@ -223,7 +226,8 @@ fn test_effective_band_drude_weight_error_nan_curvature() {
     let metric = QuantumMetric::new(1.0).unwrap();
     let lattice = Length::new(1.0).unwrap();
 
-    let res = effective_band_drude_weight_kernel(energy_n, energy_0, curvature, metric, lattice);
+    let res =
+        effective_band_drude_weight_kernel::<f64>(energy_n, energy_0, curvature, metric, lattice);
     assert!(res.is_err());
 }
 
@@ -237,7 +241,8 @@ fn test_effective_band_drude_weight_error_negative_lattice() {
     // Actually Length::new only validates >= 0, so 0 should fail in the kernel
     let lattice = Length::new(0.0).unwrap(); // Zero should fail
 
-    let res = effective_band_drude_weight_kernel(energy_n, energy_0, curvature, metric, lattice);
+    let res =
+        effective_band_drude_weight_kernel::<f64>(energy_n, energy_0, curvature, metric, lattice);
     assert!(res.is_err());
 }
 
@@ -254,7 +259,8 @@ fn test_effective_band_drude_weight_error_non_finite_result() {
     let metric = QuantumMetric::new(f64::MAX).unwrap();
     let lattice = Length::new(f64::MAX).unwrap();
 
-    let res = effective_band_drude_weight_kernel(energy_n, energy_0, curvature, metric, lattice);
+    let res =
+        effective_band_drude_weight_kernel::<f64>(energy_n, energy_0, curvature, metric, lattice);
     assert!(res.is_err());
 }
 
@@ -267,7 +273,8 @@ fn test_effective_band_drude_weight_zero_gap() {
     let metric = QuantumMetric::new(2.0).unwrap();
     let lattice = Length::new(1.0).unwrap();
 
-    let res = effective_band_drude_weight_kernel(energy_n, energy_0, curvature, metric, lattice);
+    let res =
+        effective_band_drude_weight_kernel::<f64>(energy_n, energy_0, curvature, metric, lattice);
     assert!(res.is_ok());
 
     // Gap = 0, Geom = 0, Total = 0.5 * 1 = 0.5

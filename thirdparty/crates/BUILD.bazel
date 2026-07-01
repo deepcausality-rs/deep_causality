@@ -11,6 +11,7 @@ package(default_visibility = ["//visibility:public"])
 exports_files(
     [
         "cargo-bazel.json",
+        "crates.bzl",
         "defs.bzl",
     ] + glob(
         include = ["*.bazel"],
@@ -30,6 +31,18 @@ filegroup(
 )
 
 # Workspace Member Dependencies
+alias(
+    name = "chrono-0.4.45",
+    actual = "//thirdparty/crates/chrono-0.4.45:chrono",
+    tags = ["manual"],
+)
+
+alias(
+    name = "chrono",
+    actual = "//thirdparty/crates/chrono-0.4.45:chrono",
+    tags = ["manual"],
+)
+
 alias(
     name = "csv-1.4.0",
     actual = "//thirdparty/crates/csv-1.4.0:csv",

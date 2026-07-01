@@ -26,6 +26,7 @@ pub use crate::kernels::condensed::*;
 pub use crate::kernels::dynamics::*;
 pub use crate::kernels::em::*;
 pub use crate::kernels::fluids::*;
+pub use crate::kernels::hypersonic::*;
 pub use crate::kernels::materials::*;
 pub use crate::kernels::mhd::*;
 pub use crate::kernels::nuclear::*;

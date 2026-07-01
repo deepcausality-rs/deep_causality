@@ -586,3 +586,66 @@ fn solid_cell_registry_keeps_a_convergent_divergence_free_march() {
     // The state is finite throughout.
     assert!(state.as_one_form().as_slice().iter().all(|v| v.is_finite()));
 }
+
+#[test]
+fn staircase_noslip_on_a_cut_cell_body_pins_the_solid_ring_and_marches() {
+    use deep_causality_topology::Primitive;
+    // `with_staircase_noslip` flips an aperture-resolved cut-cell body (genuine Cut cells) to the
+    // staircase mechanism: the weighted cut-face rows are dropped and the full solid-incident edge
+    // ring is pinned. The march must still converge and stay divergence-free, with the solid-interior
+    // edges pinned to zero.
+    let n = 12;
+    let h = 1.0;
+    let nu = 0.1;
+    let lattice = LatticeComplex::<2, f64>::square_torus(n);
+    let metric_base = CubicalReggeGeometry::<2, f64>::uniform(h);
+    let disk = Primitive::<2, f64>::ball([6.0, 6.0], 2.5);
+    let reg = CutCellRegistry::from_primitive(&lattice, &metric_base, &disk).unwrap();
+    let solid = reg.solid_incident_edges(&lattice);
+    assert!(!solid.is_empty(), "the disk must have a solid interior");
+
+    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
+    let metric = CubicalReggeGeometry::<2, f64>::uniform(h).with_cut_cells(reg);
+    let m = Manifold::from_cubical_with_metric(lattice, data, metric, 0);
+
+    let n1 = m.complex().num_cells(1);
+    let mut force = vec![0.0; n1];
+    for (idx, cell) in m.complex().iter_cells(1).enumerate() {
+        if cell.orientation().trailing_zeros() as usize == 0 {
+            force[idx] = 0.2 * h;
+        }
+    }
+    let force = BodyForceOneForm::new(CausalTensor::new(force, vec![n1]).unwrap(), &m).unwrap();
+    let dt = 0.2;
+    let solver = DecNsSolver::new(&m, nu, dt, Some(&force))
+        .unwrap()
+        .with_staircase_noslip();
+    let n0 = m.complex().num_cells(0);
+    let rest = CausalTensor::new(vec![0.0; 2 * n0], vec![2 * n0]).unwrap();
+    let mut state = solver.seed_from_vertex_vectors(&rest).unwrap();
+
+    for _ in 0..15 {
+        let out = solver
+            .step(&state)
+            .expect("staircase cut-cell march must converge");
+        assert!(
+            out.divergence_residual() < 1e-8,
+            "staircase projection lost divergence-freeness: {}",
+            out.divergence_residual()
+        );
+        state = out.into_state();
+    }
+
+    // The staircase set pins every solid-incident edge to zero on the state.
+    let u = state.as_one_form().as_slice();
+    for &e in &solid {
+        assert!(
+            u[e].abs() < 1e-9,
+            "staircase no-slip must pin solid edge {e} to zero, got {}",
+            u[e]
+        );
+    }
+    let max = u.iter().fold(0.0_f64, |mx, v| mx.max(v.abs()));
+    assert!(max > 1e-3, "the body force should drive a non-trivial flow");
+}

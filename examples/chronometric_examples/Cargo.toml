@@ -17,6 +17,7 @@ deep_causality_core = { path = "../../deep_causality_core" }
 deep_causality_physics = { path = "../../deep_causality_physics", features = [
     "os-random",
 ] }
+deep_causality_file = { path = "../../deep_causality_file" }
 
 [[example]]
 name = "gm_recovery"

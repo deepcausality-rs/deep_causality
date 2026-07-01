@@ -19,6 +19,7 @@
 //! does not lose meaningful entropy.
 
 use crate::kernels::nuclear::pdg::{pdg_mass, quark_masses};
+use crate::real_from_f64;
 use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_rand::{Distribution, Normal, Rng};
 
@@ -43,7 +44,7 @@ impl QuarkFlavor {
             QuarkFlavor::Charm => quark_masses::M_C,
             QuarkFlavor::Bottom => quark_masses::M_B,
         };
-        R::from_f64(m).expect("R::from_f64(quark mass) failed")
+        real_from_f64(m)
     }
 
     /// Electric charge in units of e, lifted into `R`.
@@ -52,7 +53,7 @@ impl QuarkFlavor {
             QuarkFlavor::Down | QuarkFlavor::Strange | QuarkFlavor::Bottom => -1.0 / 3.0,
             QuarkFlavor::Up | QuarkFlavor::Charm => 2.0 / 3.0,
         };
-        R::from_f64(q).expect("R::from_f64(quark charge) failed")
+        real_from_f64(q)
     }
 }
 
@@ -60,15 +61,20 @@ impl QuarkFlavor {
 ///
 /// Probabilities: u : d : s = 1 : 1 : strange_suppression.
 ///
-/// Sampling is done at f64 (RNG boundary); the threshold is also passed as f64
-/// because RNG sampling fundamentally produces f64.
-pub fn select_quark_flavor<RNG: Rng>(rng: &mut RNG, strange_suppression: f64) -> QuarkFlavor {
-    let total = 2.0 + strange_suppression;
-    let r: f64 = rng.random::<f64>() * total;
+/// The raw uniform draw is sampled at f64 (RNG boundary) and lifted into `R`;
+/// the threshold comparison is then done entirely in the target field.
+pub fn select_quark_flavor<R, RNG>(rng: &mut RNG, strange_suppression: R) -> QuarkFlavor
+where
+    R: RealField + FromPrimitive,
+    RNG: Rng,
+{
+    let two = real_from_f64::<R>(2.0);
+    let total = two + strange_suppression;
+    let r = real_from_f64::<R>(rng.random::<f64>()) * total;
 
-    if r < 1.0 {
+    if r < R::one() {
         QuarkFlavor::Up
-    } else if r < 2.0 {
+    } else if r < two {
         QuarkFlavor::Down
     } else {
         QuarkFlavor::Strange
@@ -103,7 +109,7 @@ impl MesonState {
         let pdg = self.pdg_id();
         let m_f64 = pdg_mass(pdg.abs());
         if m_f64 > 0.0 {
-            R::from_f64(m_f64).expect("R::from_f64(meson mass) failed")
+            real_from_f64(m_f64)
         } else {
             // Fallback to constituent quark model
             self.q1.mass::<R>() + self.q2.mass::<R>()
@@ -112,26 +118,32 @@ impl MesonState {
 }
 
 /// Select meson spin (vector vs pseudoscalar).
-pub fn select_meson_spin<RNG: Rng>(rng: &mut RNG, vector_fraction: f64) -> bool {
-    rng.random::<f64>() < vector_fraction
-}
-
-/// Generate transverse momentum according to Gaussian distribution.
 ///
-/// Returns (px, py) lifted into `R`. The Gaussian itself is sampled at f64 via
-/// `deep_causality_rand::Normal`, which only supports `f32` / `f64`.
-pub fn generate_transverse_momentum<R, RNG>(rng: &mut RNG, sigma: f64) -> (R, R)
+/// The uniform draw is sampled at f64 (RNG boundary) and lifted into `R` for the
+/// comparison against the (now field-typed) vector fraction.
+pub fn select_meson_spin<R, RNG>(rng: &mut RNG, vector_fraction: R) -> bool
 where
     R: RealField + FromPrimitive,
     RNG: Rng,
 {
-    let normal = Normal::new(0.0, sigma).unwrap();
-    let px_f64: f64 = normal.sample(rng);
-    let py_f64: f64 = normal.sample(rng);
-    (
-        R::from_f64(px_f64).expect("R::from_f64(px) failed"),
-        R::from_f64(py_f64).expect("R::from_f64(py) failed"),
-    )
+    real_from_f64::<R>(rng.random::<f64>()) < vector_fraction
+}
+
+/// Generate transverse momentum according to Gaussian distribution.
+///
+/// Returns (px, py) in the target field `R`. The Gaussian is sampled as a
+/// **unit** normal at f64 via `deep_causality_rand::Normal` (which only supports
+/// `f32` / `f64`), lifted into `R`, then scaled by the field-typed width `sigma`
+/// — so the physical width never leaves `R`.
+pub fn generate_transverse_momentum<R, RNG>(rng: &mut RNG, sigma: R) -> (R, R)
+where
+    R: RealField + FromPrimitive,
+    RNG: Rng,
+{
+    let normal = Normal::new(0.0, 1.0).unwrap();
+    let px = sigma * real_from_f64::<R>(normal.sample(rng));
+    let py = sigma * real_from_f64::<R>(normal.sample(rng));
+    (px, py)
 }
 
 #[cfg(test)]

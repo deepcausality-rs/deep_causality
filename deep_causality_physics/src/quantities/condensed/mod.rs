@@ -243,16 +243,16 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<TwistAngle<R>> for f64 {
 /// A complex scalar field describing the macroscopic condensate wavefunction.
 /// *   $|ψ|^2 ≠ n_s$ (superfluid density).
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub struct OrderParameter(Complex<f64>);
+pub struct OrderParameter<R: deep_causality_num::RealField>(Complex<R>);
 
-impl OrderParameter {
-    pub fn new(val: Complex<f64>) -> Self {
+impl<R: deep_causality_num::RealField> OrderParameter<R> {
+    pub fn new(val: Complex<R>) -> Self {
         Self(val)
     }
-    pub fn value(&self) -> Complex<f64> {
+    pub fn value(&self) -> Complex<R> {
         self.0
     }
-    pub fn magnitude_squared(&self) -> f64 {
+    pub fn magnitude_squared(&self) -> R {
         self.0.norm_sqr()
     }
 }
@@ -267,13 +267,13 @@ impl OrderParameter {
 /// *   **Rank 2 Tensor**: [basis_size, num_states].
 /// *   Columns correspond to different bands $n$.
 #[derive(Debug, Clone, PartialEq)]
-pub struct QuantumEigenvector(CausalTensor<Complex<f64>>);
+pub struct QuantumEigenvector<R: deep_causality_num::RealField>(CausalTensor<Complex<R>>);
 
-impl QuantumEigenvector {
-    pub fn new(tensor: CausalTensor<Complex<f64>>) -> Self {
+impl<R: deep_causality_num::RealField> QuantumEigenvector<R> {
+    pub fn new(tensor: CausalTensor<Complex<R>>) -> Self {
         Self(tensor)
     }
-    pub fn inner(&self) -> &CausalTensor<Complex<f64>> {
+    pub fn inner(&self) -> &CausalTensor<Complex<R>> {
         &self.0
     }
 }
@@ -284,13 +284,13 @@ impl QuantumEigenvector {
 /// like the QGT or Kub-Greenwood conductivity.
 /// *   **Rank 2 Tensor**: [basis_size, num_states].
 #[derive(Debug, Clone, PartialEq)]
-pub struct QuantumVelocity(CausalTensor<Complex<f64>>);
+pub struct QuantumVelocity<R: deep_causality_num::RealField>(CausalTensor<Complex<R>>);
 
-impl QuantumVelocity {
-    pub fn new(tensor: CausalTensor<Complex<f64>>) -> Self {
+impl<R: deep_causality_num::RealField> QuantumVelocity<R> {
+    pub fn new(tensor: CausalTensor<Complex<R>>) -> Self {
         Self(tensor)
     }
-    pub fn inner(&self) -> &CausalTensor<Complex<f64>> {
+    pub fn inner(&self) -> &CausalTensor<Complex<R>> {
         &self.0
     }
 }
@@ -299,19 +299,19 @@ impl QuantumVelocity {
 ///
 /// Represents a point in the Brillouin Zone.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Momentum(CausalMultiVector<f64>);
+pub struct Momentum<R: deep_causality_num::RealField>(CausalMultiVector<R>);
 
-impl Default for Momentum {
+impl<R: deep_causality_num::RealField> Default for Momentum<R> {
     fn default() -> Self {
-        Self(CausalMultiVector::new(vec![0.0], Metric::Euclidean(0)).unwrap())
+        Self(CausalMultiVector::new(vec![R::zero()], Metric::Euclidean(0)).unwrap())
     }
 }
 
-impl Momentum {
-    pub fn new(mv: CausalMultiVector<f64>) -> Self {
+impl<R: deep_causality_num::RealField> Momentum<R> {
+    pub fn new(mv: CausalMultiVector<R>) -> Self {
         Self(mv)
     }
-    pub fn inner(&self) -> &CausalMultiVector<f64> {
+    pub fn inner(&self) -> &CausalMultiVector<R> {
         &self.0
     }
 }
@@ -320,13 +320,13 @@ impl Momentum {
 ///
 /// Represents the mechanical displacement vector field or strain tensor components.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Displacement(CausalTensor<f64>);
+pub struct Displacement<R: deep_causality_num::RealField>(CausalTensor<R>);
 
-impl Displacement {
-    pub fn new(tensor: CausalTensor<f64>) -> Self {
+impl<R: deep_causality_num::RealField> Displacement<R> {
+    pub fn new(tensor: CausalTensor<R>) -> Self {
         Self(tensor)
     }
-    pub fn inner(&self) -> &CausalTensor<f64> {
+    pub fn inner(&self) -> &CausalTensor<R> {
         &self.0
     }
 }
@@ -336,13 +336,13 @@ impl Displacement {
 /// Represents the local concentration (mole fraction) of a species.
 /// *   **Values**: Must be non-negative.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Concentration(CausalTensor<f64>);
+pub struct Concentration<R: deep_causality_num::RealField>(CausalTensor<R>);
 
-impl Concentration {
-    pub fn new(tensor: CausalTensor<f64>) -> Result<Self, PhysicsError> {
+impl<R: deep_causality_num::RealField> Concentration<R> {
+    pub fn new(tensor: CausalTensor<R>) -> Result<Self, PhysicsError> {
         // Concentration cannot be negative
         for &val in tensor.as_slice() {
-            if val < 0.0 {
+            if val < R::zero() {
                 return Err(PhysicsError::PhysicalInvariantBroken(
                     "Negative Concentration detected".into(),
                 ));
@@ -352,10 +352,10 @@ impl Concentration {
     }
     /// Creates a new Concentration without validation.
     /// Use only if the tensor is guaranteed to be non-negative.
-    pub fn new_unchecked(tensor: CausalTensor<f64>) -> Self {
+    pub fn new_unchecked(tensor: CausalTensor<R>) -> Self {
         Self(tensor)
     }
-    pub fn inner(&self) -> &CausalTensor<f64> {
+    pub fn inner(&self) -> &CausalTensor<R> {
         &self.0
     }
 }
@@ -364,13 +364,13 @@ impl Concentration {
 ///
 /// Driving force for diffusion.
 #[derive(Debug, Clone, PartialEq)]
-pub struct ChemicalPotentialGradient(CausalTensor<f64>);
+pub struct ChemicalPotentialGradient<R: deep_causality_num::RealField>(CausalTensor<R>);
 
-impl ChemicalPotentialGradient {
-    pub fn new(tensor: CausalTensor<f64>) -> Self {
+impl<R: deep_causality_num::RealField> ChemicalPotentialGradient<R> {
+    pub fn new(tensor: CausalTensor<R>) -> Self {
         Self(tensor)
     }
-    pub fn inner(&self) -> &CausalTensor<f64> {
+    pub fn inner(&self) -> &CausalTensor<R> {
         &self.0
     }
 }
@@ -379,19 +379,19 @@ impl ChemicalPotentialGradient {
 ///
 /// Used in the covariant derivative $\nabla - i\mathbf{A}$.
 #[derive(Debug, Clone, PartialEq)]
-pub struct VectorPotential(CausalMultiVector<f64>);
+pub struct VectorPotential<R: deep_causality_num::RealField>(CausalMultiVector<R>);
 
-impl Default for VectorPotential {
+impl<R: deep_causality_num::RealField> Default for VectorPotential<R> {
     fn default() -> Self {
-        Self(CausalMultiVector::new(vec![0.0], Metric::Euclidean(0)).unwrap())
+        Self(CausalMultiVector::new(vec![R::zero()], Metric::Euclidean(0)).unwrap())
     }
 }
 
-impl VectorPotential {
-    pub fn new(mv: CausalMultiVector<f64>) -> Self {
+impl<R: deep_causality_num::RealField> VectorPotential<R> {
+    pub fn new(mv: CausalMultiVector<R>) -> Self {
         Self(mv)
     }
-    pub fn inner(&self) -> &CausalMultiVector<f64> {
+    pub fn inner(&self) -> &CausalMultiVector<R> {
         &self.0
     }
 }

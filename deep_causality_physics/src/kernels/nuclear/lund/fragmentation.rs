@@ -8,6 +8,7 @@
 //! Implements iterative fragmentation of QCD strings into hadrons.
 
 use crate::PhysicsError;
+use crate::real_from_f64;
 use crate::{FourMomentum, Hadron, LundParameters};
 
 use super::flavor::{
@@ -74,7 +75,7 @@ use deep_causality_rand::Rng;
 /// ```
 pub fn lund_string_fragmentation_kernel<R, RNG>(
     string_endpoints: &[(FourMomentum<R>, FourMomentum<R>)],
-    params: &LundParameters,
+    params: &LundParameters<R>,
     rng: &mut RNG,
 ) -> Result<Vec<Hadron<R>>, PhysicsError>
 where
@@ -95,7 +96,7 @@ where
 fn fragment_single_string<R, RNG>(
     quark_p: FourMomentum<R>,
     antiquark_p: FourMomentum<R>,
-    params: &LundParameters,
+    params: &LundParameters<R>,
     rng: &mut RNG,
 ) -> Result<Vec<Hadron<R>>, PhysicsError>
 where
@@ -114,12 +115,9 @@ where
     let max_iterations = 100;
     let mut iteration = 0;
 
-    let min_mass = R::from_f64(params.min_invariant_mass())
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(min_inv_mass)".into()))?;
-    let lund_a = R::from_f64(params.lund_a())
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(lund_a)".into()))?;
-    let lund_b = R::from_f64(params.lund_b())
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(lund_b)".into()))?;
+    let min_mass = params.min_invariant_mass();
+    let lund_a = params.lund_a();
+    let lund_b = params.lund_b();
 
     while string.can_fragment(min_mass) && iteration < max_iterations {
         iteration += 1;
@@ -177,8 +175,7 @@ where
     }
 
     // Final hadron from remaining string
-    let final_mass_threshold = R::from_f64(0.1)
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(0.1)".into()))?;
+    let final_mass_threshold = real_from_f64::<R>(0.1);
     if string.invariant_mass() > final_mass_threshold {
         let final_meson = MesonState {
             q1: quark_end,

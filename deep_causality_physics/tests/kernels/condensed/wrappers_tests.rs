@@ -30,7 +30,7 @@ fn test_wrapper_qgt() {
         CausalTensor::new(vec![Complex::new(0.0, 0.0); 4], vec![2, 2]).unwrap(),
     );
 
-    let effect = quantum_geometric_tensor(&energies, &u, &v, &v, 0, 1e-12);
+    let effect = quantum_geometric_tensor::<f64>(&energies, &u, &v, &v, 0, 1e-12);
     assert!(effect.is_ok());
 }
 
@@ -44,7 +44,7 @@ fn test_wrapper_quasi_qgt() {
         CausalTensor::new(vec![Complex::new(0.1, 0.0); 4], vec![2, 2]).unwrap(),
     );
 
-    let effect = quasi_qgt(&energies, &u, &v, &v, 0, 1e-12);
+    let effect = quasi_qgt::<f64>(&energies, &u, &v, &v, 0, 1e-12);
     assert!(effect.is_ok());
 
     if let EffectValue::Value(q) = effect.value() {
@@ -62,7 +62,7 @@ fn test_wrapper_effective_band_drude_weight() {
     let metric = QuantumMetric::new(2.0).unwrap();
     let lattice = Length::new(1.0).unwrap();
 
-    let effect = effective_band_drude_weight(energy_n, energy_0, curvature, metric, lattice);
+    let effect = effective_band_drude_weight::<f64>(energy_n, energy_0, curvature, metric, lattice);
     assert!(effect.is_ok());
 
     if let EffectValue::Value(bdw) = effect.value() {
@@ -79,7 +79,7 @@ fn test_wrapper_effective_band_drude_weight_error() {
     let metric = QuantumMetric::new(1.0).unwrap();
     let lattice = Length::new(1.0).unwrap();
 
-    let effect = effective_band_drude_weight(energy_n, energy_0, curvature, metric, lattice);
+    let effect = effective_band_drude_weight::<f64>(energy_n, energy_0, curvature, metric, lattice);
     assert!(effect.is_err());
 }
 
@@ -94,7 +94,7 @@ fn test_wrapper_moire() {
     let vf = Speed::new(1e5).unwrap();
     let k = Momentum::default();
 
-    let effect = bistritzer_macdonald(theta, w, vf, k, 1);
+    let effect = bistritzer_macdonald::<f64>(theta, w, vf, k, 1);
     assert!(effect.is_ok());
 }
 
@@ -107,7 +107,7 @@ fn test_wrapper_moire_magic_angle() {
     let vf = Speed::new(1e6).unwrap(); // Fermi velocity
     let k = Momentum::default();
 
-    let effect = bistritzer_macdonald(theta, w, vf, k, 2);
+    let effect = bistritzer_macdonald::<f64>(theta, w, vf, k, 2);
     // Test that wrapper handles result (success or error) without panic
     let _ = effect.is_ok() || effect.is_err();
 }
@@ -122,7 +122,7 @@ fn test_wrapper_strain_simple() {
     let e = Stiffness::<f64>::new(100.0).unwrap();
     let nu = Ratio::new(0.3).unwrap();
 
-    let effect = foppl_von_karman_strain_simple(&eps, e, nu);
+    let effect = foppl_von_karman_strain_simple::<f64>(&eps, e, nu);
     assert!(effect.is_ok());
 }
 
@@ -146,7 +146,7 @@ fn test_wrapper_strain_full() {
     let e = Stiffness::<f64>::new(100.0).unwrap();
     let nu = Ratio::new(0.3).unwrap();
 
-    let effect = foppl_von_karman_strain(&man, &man, e, nu);
+    let effect = foppl_von_karman_strain::<f64>(&man, &man, e, nu);
     assert!(effect.is_ok());
 }
 
@@ -161,7 +161,7 @@ fn test_wrapper_phase() {
     let grad_c =
         deep_causality_multivector::CausalMultiVectorWitness::fmap(grad, |x| Complex::new(x, 0.0));
 
-    let effect = ginzburg_landau_free_energy(psi, -1.0, 1.0, &grad_c, None);
+    let effect = ginzburg_landau_free_energy::<f64>(psi, -1.0, 1.0, &grad_c, None);
     assert!(effect.is_ok());
 }
 
@@ -171,7 +171,7 @@ fn test_wrapper_cahn_hilliard_flux() {
     let m = Mobility::new(2.0).unwrap();
     let grad = ChemicalPotentialGradient::new(CausalTensor::new(vec![10.0], vec![1]).unwrap());
 
-    let effect = cahn_hilliard_flux(&conc, m, &grad);
+    let effect = cahn_hilliard_flux::<f64>(&conc, m, &grad);
     assert!(effect.is_ok());
 
     if let EffectValue::Value(flux) = effect.value() {
@@ -188,7 +188,7 @@ fn test_wrapper_cahn_hilliard_flux_error() {
     let m = Mobility::new(1.0).unwrap();
     let grad = ChemicalPotentialGradient::new(CausalTensor::new(vec![1.0], vec![1]).unwrap());
 
-    let effect = cahn_hilliard_flux(&conc, m, &grad);
+    let effect = cahn_hilliard_flux::<f64>(&conc, m, &grad);
     assert!(effect.is_err());
 }
 
@@ -207,7 +207,7 @@ fn test_wrapper_qgt_error_propagation() {
         CausalTensor::new(vec![Complex::new(0.0, 0.0); 4], vec![2, 2]).unwrap(),
     );
 
-    let effect = quantum_geometric_tensor(&energies, &u, &v, &v, 0, 1e-12);
+    let effect = quantum_geometric_tensor::<f64>(&energies, &u, &v, &v, 0, 1e-12);
     assert!(effect.is_err());
 }
 
@@ -223,7 +223,7 @@ fn test_wrapper_quasi_qgt_error_propagation() {
         CausalTensor::new(vec![Complex::new(0.0, 0.0); 4], vec![2, 2]).unwrap(),
     );
 
-    let effect = quasi_qgt(&energies, &u, &v, &v, 0, 1e-12);
+    let effect = quasi_qgt::<f64>(&energies, &u, &v, &v, 0, 1e-12);
     assert!(effect.is_err());
 }
 
@@ -235,7 +235,7 @@ fn test_wrapper_strain_simple_error_propagation() {
     let e = Stiffness::<f64>::new(100.0).unwrap();
     let nu = Ratio::new(0.3).unwrap();
 
-    let effect = foppl_von_karman_strain_simple(&eps, e, nu);
+    let effect = foppl_von_karman_strain_simple::<f64>(&eps, e, nu);
     assert!(effect.is_err());
 }
 
@@ -262,7 +262,7 @@ fn test_wrapper_strain_full_error_propagation() {
     let e = Stiffness::<f64>::new(100.0).unwrap();
     let nu = Ratio::new(0.3).unwrap();
 
-    let effect = foppl_von_karman_strain(&u_man, &w_man, e, nu);
+    let effect = foppl_von_karman_strain::<f64>(&u_man, &w_man, e, nu);
     assert!(effect.is_err());
 }
 
@@ -280,6 +280,7 @@ fn test_wrapper_ginzburg_error_propagation() {
     let a_field = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
     let vector_potential = VectorPotential::new(a_field);
 
-    let effect = ginzburg_landau_free_energy(psi, -1.0, 1.0, &grad_c, Some(&vector_potential));
+    let effect =
+        ginzburg_landau_free_energy::<f64>(psi, -1.0, 1.0, &grad_c, Some(&vector_potential));
     assert!(effect.is_err());
 }

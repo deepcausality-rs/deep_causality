@@ -1,7 +1,7 @@
 # CFD Verification Examples
 
-Runnable **verification** programs for the DEC-native CFD stack, each driven through the `CfdFlow`
-DSL. *Verification* here is the broad sense: a run is checked against either an **internal
+Runnable **verification** programs for the CFD stack — the DEC-native solver and the
+quantized-tensor-train (QTT) solver — each driven through the `CfdFlow` DSL. *Verification* here is the broad sense: a run is checked against either an **internal
 consistency** invariant (a property the discretization must preserve at any grid/precision — energy
 decay, incompressibility, observed convergence order) **or** a **published reference** result
 (analytic solutions and benchmark papers).
@@ -34,6 +34,22 @@ difference. Measured at `f64` on an Apple M3 Max (release).
 | `dec_lid_cavity_re1000_verification` | primary vortex (x, y); centerline RMSE | (0.563, 0.594); RMSE 0.137 | Ghia (0.531, 0.563) | Δ ≈ (0.031, 0.031) ≈ **6 % of span** | 33², t=40 | ~28 s |
 | `dec_cylinder_wake_verification` | max divergence residual; log count | 3.3e-15; 80 | 0; 80 (= 2×40) | ≈ machine-ε; exact | 2000 steps, 93×32 | ~155 s |
 | `dec_cylinder_verification` | Strouhal St; drag C_d | 0.171; 1.345 | 0.164; 1.24–1.33 | **+4.3 %**; **+1.1 %** (over band top) | 96², Re=100, 1500 steps | ~510 s |
+| `qtt_taylor_green_verification` | TG decay error (32²); observed order; convection | 5.3e-5; 2.02–2.18; 3.2e-3 | 0 (analytic); 2.00; 0 (analytic) | converges 2nd-order; **+9 %** order; conv ≈ 0.6 % | 8²–32², t=0.2 | <1 s |
+| `qtt_cylinder_verification` | drag convergence vs bond; no-slip interior | ΔC_d 1.9e-11; max\|u\| 4.2e-2 | 0 (converged); 0 (no-slip) | converges to machine-ε; **4 %** of free-stream | 32², 4 bond caps | ~1 s |
+| `qtt_park2t_blackout` | 6 LER gates (stability, exactness, RH band, lag+Saha, path-dependence, n_e>0) | all 6 PASS; ω_p 5.6e12 ≫ band | all gates pass | Gap-2 Tier-A verified (cross-refs, Tier-A disclaimers) | 32², 40 steps | ~1 s |
+| `qtt_sod` | Sod shock tube vs exact Riemann (L1 of ρ/u/p) | 0.018 / 0.027 / 0.015 | < 0.03 (1st-order Rusanov) | p\*=0.303 (exact), fan+contact+shock correct | 512 cells, t=0.2 | ~1 s |
+| `qtt_ramc_stagline` | peak electron density `n_e` / blackout onset | `n_e` ≈ 1.2e20 | ~1e19 (RAM-C II, order-of-mag) | +1.1 decades (within ~2) | stagnation line | ~1 s |
+| `qtt_blunt_body_2d` | rank lever: bow-shock χ, fitted vs Cartesian capture | fitted 3→5; capture 16→61 | structural (no √side growth, fitted) | fitted bounded; capture ~√side | 2^5–2^7 | ~2 s |
+| `qtt_reentry_3d` | rank lever: 3-D forebody χ (wake out-of-scope) | fitted 2→4; Cartesian 10→59; wake 41 | structural (`qtt_rank_3d` bound) | fitted plateau; capture grows | 2^3–2^5 | ~3 s |
+
+**Validation scope labels.** The QTT compressible gates verify at three distinct tiers — read each gate for
+what it actually proves: **analytic** (`qtt_sod` vs the exact Riemann solution — rigorous, the only
+quantitative-accuracy gate); **flight-data, order-of-magnitude** (`qtt_ramc_stagline` peak `n_e` vs RAM-C II;
+the Apollo re-entry dwell window is the corridor-time anchor, not a per-point accuracy claim); and
+**structural / rank-lever** (`qtt_blunt_body_2d`, `qtt_reentry_3d` — the body-fitted coordinate *bounds* χ
+where the Cartesian capture grows ~√side; these gate **rank**, not physical accuracy). The **dynamic marched**
+rank growth (flux-through-front) and the **wake** are *reported, never asserted* — bounding the marched χ
+needs re-pinning + an exact-RH interface (design D9), the named open remainder.
 
 Reference papers per example are in the sections below and the [References](#references). The cavity
 centerline RMSE (0.137) is itself a deviation-from-Ghia measure (no single reference value), so its
@@ -164,10 +180,65 @@ default grid is below reference-grid quality (see below).
 
 ---
 
+## `qtt_taylor_green_verification` — quantized-tensor-train 2-D Taylor–Green
+
+**Verifies.** The `QttIncompressible2d` solver — a 2-D incompressible flowfield that evolves entirely
+as a **tensor train** — against the closed-form 2-D Taylor–Green vortex (Taylor & Green 1937),
+`u = −cos x sin y`, `v = sin x cos y`, decaying as `e^{−2νt}`. Four gates: (1) the final-field error
+vs. the analytic decay **strictly decreases under refinement** to a pinned bound at ~2nd order;
+(2) the nonlinear convection `u·∇u` matches the closed form `−½ sin 2x` — checked **directly**, because
+single-mode TG's convective term is a pure gradient the projection removes, so the marched decay alone
+cannot test it; (3) the post-projection divergence stays at the projection floor; (4) the MPS
+compression (bond vs. dense) is reported. Driven through `CfdFlow::qtt_march`.
+
+**Self-check.** `verify()` gates all four and **exits nonzero** on any break (error not converging,
+order < 1.8, convection wrong/zero, or divergence above 1e-6).
+
+**Measured (f64, 8²–32², t=0.2, <1 s).** Error `9.8e-4 → 2.4e-4 → 5.3e-5` (N=8→16→32), observed order
+**2.02 → 2.18** — clean 2nd-order convergence to the analytic decay; finest-grid error **5.3e-5**.
+Convection vs the closed form **3.2e-3** (≈ 0.6 % of the 0.5 signal) — the nonlinear term is real and
+correct. Divergence **~1e-14** (the spectral Leray projection is exact to machine precision). Bond `= N`
+on this smooth field → `N×` compression that grows with resolution.
+
+**Reference.** Taylor & Green (1937); the MPS-CFD method: Peddinti et al. (2024), Gourianov et al.
+(2022).
+
+---
+
+## `qtt_cylinder_verification` — immersed cylinder by Brinkman penalization (tensor-train)
+
+**Verifies.** The immersed-body QTT solver (`QttImmersed2d`): a cylinder in a periodic free-stream
+enforced by **Brinkman volume penalization** (a smoothed mask, no cut cells), with drag read as a
+**tensor-train contraction** of the mask with the velocity deficit. Closes Gap 1 of the plasma-blackout
+analysis (immersed body + surface observables). Driven through `CfdFlow::qtt_march`.
+
+**Self-check.** Three gates, **exit nonzero** on break: (a) no-slip — interior `max|u|` at the
+penalization floor; (b) accuracy-vs-bond — the drag coefficient **converges** as the round bond cap rises;
+(c) physical drag — positive and finite.
+
+**Measured (f64, 32², 4 bond caps, ~1 s).** `C_d` settles `24.05 → 23.76 → 23.7577 → 23.7577`, with the
+successive change collapsing `2.9e-1 → 7.2e-3 → 1.9e-11` and divergence dropping `3.8e-1 → 5.5e-14` as the
+bond cap rises — the headline accuracy-vs-bond trade-off. Interior `max|u| ≈ 4.2e-2` vs free-stream `1.0`
+(no-slip). The **absolute** `C_d ≈ 23.8` is *not* the isolated-cylinder value (DEC `≈ 1.345`): it is
+inflated by ~30 % blockage, the smoothing-skirt penalization-force definition, and the transient — so the
+**convergence trend** is the verification result, with the DEC `C_d` a disclaimed cross-reference.
+
+**Reference.** Angot, Bruneau & Fabrie (1999) — volume penalization; Peddinti et al. (2024) — MPS
+immersed objects; DEC cross-reference `dec_cylinder_verification`.
+
+---
+
 ## References
 
 - **Taylor, G. I. & Green, A. E.** (1937). *Mechanism of the production of small eddies from large
   ones.* Proc. R. Soc. Lond. A **158**, 499–521.
+- **Peddinti, R. D., Pisoni, S., Marini, A., Lott, P., Argentieri, H., Tiunov, E. & Aolita, L.** (2024).
+  *A quantum-inspired framework for computational fluid dynamics.* Commun. Phys. **7**, 135.
+- **Gourianov, N., Lubasch, M., Dolgov, S., van den Berg, Q. Y., Babaee, H., Givi, P., Kiffner, M. &
+  Jaksch, D.** (2022). *A quantum-inspired approach to exploit turbulence structures.* Nat. Comput.
+  Sci. **2**, 30–37.
+- **Angot, P., Bruneau, C.-H. & Fabrie, P.** (1999). *A penalization method to take into account obstacles
+  in incompressible viscous flows.* Numer. Math. **81**, 497–520.
 - **Brachet, M. E., Meiron, D. I., Orszag, S. A., Nickel, B. G., Morf, R. H. & Frisch, U.** (1983).
   *Small-scale structure of the Taylor–Green vortex.* J. Fluid Mech. **130**, 411–452.
 - **van Rees, W. M., Leonard, A., Pullin, D. I. & Koumoutsakos, P.** (2011). *A comparison of vortex

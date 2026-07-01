@@ -2,16 +2,16 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-pub(crate) mod errors;
-pub(crate) mod types;
 
-pub mod data_loader;
+//! Chronometric examples support. The GNSS data **types** (`ClockData`, `OrbitData`, `SatId`,
+//! `GnssDataResult`) and the RINEX **loaders** now live in the shared `deep_causality_file` crate and
+//! are re-exported here so the examples (and `gm_recovery`) keep one import path. The
+//! chronometric-specific processing — Lagrange space-time alignment, the MAD outlier filter, the
+//! gravity/GM types — stays local.
+
 pub mod data_manager;
 pub mod proces_utils;
+pub(crate) mod types;
 
-pub use errors::conversion_error;
-
-pub use types::clock_types::ClockData;
-pub use types::gnss_types::GnssDataResult;
-pub use types::orbit_types::OrbitData;
-pub use types::satelite_types::SatId;
+// Re-export the shared GNSS ingestion surface from `deep_causality_file`.
+pub use deep_causality_file::{ClockData, ConversionError, GnssDataResult, OrbitData, SatId};

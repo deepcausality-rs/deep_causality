@@ -20,5 +20,6 @@ Contributors  (sorted alphabetically)
 -------------------------------------
 
 - [micrypt](https://github.com/micrypt) Seyi Ogunyemi
+- [RowanTL](https://github.com/RowanTL) Rowan Torbitzky-Lane
 
 To contributors: please add your name to the list when you submit a patch to the project.

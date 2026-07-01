@@ -176,7 +176,7 @@ It uses three main components:
 
 ## Project Structure
 
-The project is a monorepo containing 20 library crates:
+The project is a monorepo containing 24 library crates:
 
 ### Core Crates
 * `deep_causality`: Computational causality library. Provides causality graph, collections, context and causal reasoning.
@@ -184,9 +184,11 @@ The project is a monorepo containing 20 library crates:
 * `deep_causality_ast`: AST data structure for the deep_causality crate.
 * `deep_causality_macros`: Custom code generation macros for DeepCausality (_deprecated_).
 * `deep_causality_metric`: Foundational metric signatures used acros tensor, multivector, and physics. 
+* `deep_causality_par`: Shared parallelism primitives (the `MaybeParallel` marker) used across the compute crates.
 
 ### Data Structure Crates
 * `deep_causality_data_structures`: Data structures for deep_causality (sliding-window, grid-array).
+* `deep_causality_file`: File and receiver-data (RINEX GNSS SP3/CLK) loaders over the haft IO monad.
 * `ultragraph`: Hypergraph data structure used as a backend in deep_causality.
 
 ### Algorithm and Discovery Crates
@@ -195,6 +197,7 @@ The project is a monorepo containing 20 library crates:
 
 ### Math and Numerics Crates
 * `deep_causality_calculus`: "Arrow-native differentiation and integration operators.
+* `deep_causality_fft`: Fast Fourier transform (FFT, rFFT, N-dimensional).
 * `deep_causality_num`: Numerical traits and utils used across all crates.
 * `deep_causality_rand`: Random number generator and statistical distributions.
 * `deep_causality_sparse`: Sparse matrix data structure (CSR format) for deep_causality.
@@ -209,13 +212,15 @@ The project is a monorepo containing 20 library crates:
 ### Topology and Physics Crates
 * `deep_causality_topology`: Topological data structures (complexes, manifolds, differential geometry).
 * `deep_causality_physics`: Standard library of physics formulas and engineering primitives.
+* `deep_causality_cfd`: Computational fluid dynamics solvers and the Flow DSL (`publish = false`).
 
 ## Project Dependencies
 
-Scope: the 20 library crates that are workspace members. Example crates (`examples/*`),
+Scope: the 24 library crates that are workspace members. Example crates (`examples/*`),
 vendored third-party crates (`thirdparty/crates/*`), and `yanked/*` are excluded.
 `deep_causality_effects` exists on disk but is **not** a workspace member, so it is omitted.
 `deep_causality_macros` is a member but deprecated and has no dependents.
+`deep_causality_cfd` is a member but marked `publish = false` (not released to crates.io).
 
 ### Internal Dependencies
 
@@ -229,12 +234,15 @@ Tier 0 — Foundational (no internal runtime dependencies)
   deep_causality_haft
   deep_causality_metric
   deep_causality_num
+  deep_causality_par
   deep_causality_data_structures
   ultragraph
 
 Tier 1
   deep_causality_core        → deep_causality_haft
   deep_causality_calculus    → deep_causality_haft, deep_causality_num
+  deep_causality_fft         → deep_causality_num, deep_causality_par
+  deep_causality_file        → deep_causality_haft, deep_causality_num
   deep_causality_rand        → deep_causality_num
   deep_causality_tensor      → deep_causality_ast, deep_causality_haft, deep_causality_num
 
@@ -247,24 +255,32 @@ Tier 2
 Tier 3
   deep_causality_topology    → deep_causality_num, deep_causality_haft, deep_causality_metric,
                                deep_causality_tensor, deep_causality_multivector,
-                               deep_causality_sparse, deep_causality_rand
+                               deep_causality_sparse, deep_causality_rand,
+                               deep_causality_par, deep_causality_fft
   deep_causality             → deep_causality_ast, deep_causality_core,
                                deep_causality_data_structures, deep_causality_haft,
                                deep_causality_uncertain, ultragraph
 
 Tier 4
   deep_causality_algorithms  → deep_causality_num, deep_causality_rand,
-                               deep_causality_tensor, deep_causality_topology
+                               deep_causality_tensor, deep_causality_topology,
+                               deep_causality_par
   deep_causality_physics     → deep_causality_calculus, deep_causality_core,
                                deep_causality_haft, deep_causality_metric,
                                deep_causality_multivector, deep_causality_num,
                                deep_causality_sparse, deep_causality_tensor,
-                               deep_causality_topology, deep_causality_rand (opt)
+                               deep_causality_topology, deep_causality_par,
+                               deep_causality_rand (opt)
   deep_causality_ethos       → deep_causality, ultragraph
 
 Tier 5
   deep_causality_discovery   → deep_causality_algorithms, deep_causality_haft,
                                deep_causality_num, deep_causality_tensor
+  deep_causality_cfd         → deep_causality_physics, deep_causality_topology,
+                               deep_causality_calculus, deep_causality_core,
+                               deep_causality_haft, deep_causality_num,
+                               deep_causality_tensor, deep_causality_par,
+                               deep_causality_fft, deep_causality_uncertain (opt)
 ```
 
 Internal dev-only dependency (tests/benches, not part of any published runtime):
@@ -274,18 +290,21 @@ Internal dev-only dependency (tests/benches, not part of any published runtime):
 ### External Dependencies
 
 Only crates with at least one external (crates.io) runtime dependency are listed.
-The other 16 library crates have no external runtime dependencies.
+The other 18 library crates have no external runtime dependencies.
 
 | Crate | External dependency | Status |
 |-------|---------------------|--------|
 | `deep_causality_num` | `libm` | optional — `libm_math` / `no-std` feature |
 | `deep_causality_rand` | `getrandom`, `chacha20poly1305`, `zeroize` | all optional — `aead-random` / `os-random` features |
 | `deep_causality_algorithms` | `rayon` | optional — `parallel` feature |
+| `deep_causality_fft` | `rayon` | optional — `parallel` feature |
 | `deep_causality_discovery` | `csv`, `parquet` | required (runtime) |
+| `deep_causality_file` | `chrono` | required (runtime) |
 
 External dev-only dependencies (tests/benches, not part of any published runtime):
 * `criterion` — benchmarks in `deep_causality`, `deep_causality_algorithms`,
-  `deep_causality_data_structures`, `deep_causality_multivector`, `deep_causality_sparse`,
+  `deep_causality_cfd`, `deep_causality_data_structures`, `deep_causality_fft`,
+  `deep_causality_multivector`, `deep_causality_sparse`,
   `deep_causality_tensor`, `deep_causality_uncertain`, `ultragraph`.
 * `tempfile` — `deep_causality_discovery` tests.
 * `rusty-fork` — `deep_causality_uncertain` tests.

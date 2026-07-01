@@ -145,6 +145,33 @@ fn inflow_lift_and_prescribed_edges_handle_periodic_and_metric_free() {
 }
 
 #[test]
+fn inflow_max_side_collects_the_far_face_column() {
+    // A max-side inflow anchors on the far normal-edge column (shape[axis] − 2), driving the
+    // `max_side` branch of the private edge_column selector.
+    let inflow = Inflow::<2, f64>::new(0, true, 1.0).unwrap();
+    let m = wall_manifold();
+
+    let mut lift = Vec::new();
+    inflow.collect_lift(&m, 0, &mut lift);
+    assert!(!lift.is_empty(), "the max-side face contributes a lift");
+
+    let mut prescribed = Vec::new();
+    inflow.collect_prescribed_edges(&m, &mut prescribed);
+    assert!(!prescribed.is_empty());
+
+    // The far-face normal edges sit at position column N − 2 on the wall axis.
+    let far_col = N - 2;
+    for &idx in &prescribed {
+        let cell = m.complex().iter_cells(1).nth(idx).unwrap();
+        assert_eq!(
+            cell.position()[0],
+            far_col,
+            "max-side prescribed edge {idx} is not on the far column"
+        );
+    }
+}
+
+#[test]
 fn outflow_collects_reference_vertices_and_slip_edges() {
     let outflow = Outflow::<2>::new(0, false).unwrap();
     let m = wall_manifold();

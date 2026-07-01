@@ -39,6 +39,7 @@ rust_test_suite(
     name = "types",
     srcs = glob([
         "types/causal_tensor/*_tests.rs",
+        "types/causal_tensor_network/*_tests.rs",
     ]),
     tags = [
         "unit-test",

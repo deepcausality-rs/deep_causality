@@ -17,21 +17,35 @@
 //! change to the DSL core.
 
 use crate::solvers::dec::diagnostics::dec_sample_velocity;
+use crate::types::flow::corridor::RegimeClass;
 use crate::types::{Ambient, CfdScalar};
+use deep_causality_core::EffectLog;
 use deep_causality_physics::{PhysicsError, SolenoidalField};
 use deep_causality_topology::{LatticeComplex, Manifold};
 
-/// The immutable per-step context a coupling stage reads: the manifold, the current fluid state
-/// (for advection / wall sampling), the time step, and the step index.
+/// The primary-state backing of a [`StepContext`]: a DEC marcher carries a metric-bearing manifold
+/// and the divergence-free velocity; the QTT marcher carries neither (it publishes the projections a
+/// coupling needs — e.g. a per-cell `"speed"` field — into the [`CoupledField`] instead).
+enum StepBacking<'a, const D: usize, R: CfdScalar> {
+    Dec {
+        manifold: &'a Manifold<LatticeComplex<D, R>, R>,
+        velocity: &'a SolenoidalField<R>,
+    },
+    Qtt,
+}
+
+/// The immutable per-step read-view a coupling stage consults: the time step and step index
+/// (universal), plus a DEC-only manifold/velocity for stages that sample the primary field. The
+/// backing sum type (design D8) lets the same `PhysicsStage` run under both the DEC and QTT marchers
+/// with no change to the stage trait.
 pub struct StepContext<'a, const D: usize, R: CfdScalar> {
-    manifold: &'a Manifold<LatticeComplex<D, R>, R>,
-    velocity: &'a SolenoidalField<R>,
+    backing: StepBacking<'a, D, R>,
     dt: R,
     step: usize,
 }
 
 impl<'a, const D: usize, R: CfdScalar> StepContext<'a, D, R> {
-    /// Build a step context (called by the marcher between steps).
+    /// Build a DEC-backed step context (the manifold + divergence-free fluid state).
     pub fn new(
         manifold: &'a Manifold<LatticeComplex<D, R>, R>,
         velocity: &'a SolenoidalField<R>,
@@ -39,21 +53,36 @@ impl<'a, const D: usize, R: CfdScalar> StepContext<'a, D, R> {
         step: usize,
     ) -> Self {
         Self {
-            manifold,
-            velocity,
+            backing: StepBacking::Dec { manifold, velocity },
             dt,
             step,
         }
     }
 
-    /// The metric-bearing manifold.
-    pub fn manifold(&self) -> &Manifold<LatticeComplex<D, R>, R> {
-        self.manifold
+    /// Build a QTT-backed step context (no manifold/velocity — the QTT marcher publishes the
+    /// primary-state projections a coupling needs as [`CoupledField`] scalars).
+    pub fn qtt(dt: R, step: usize) -> Self {
+        Self {
+            backing: StepBacking::Qtt,
+            dt,
+            step,
+        }
     }
 
-    /// The current divergence-free fluid state.
-    pub fn velocity(&self) -> &SolenoidalField<R> {
-        self.velocity
+    /// The metric-bearing manifold, if this is a DEC-backed context.
+    pub fn manifold(&self) -> Option<&Manifold<LatticeComplex<D, R>, R>> {
+        match &self.backing {
+            StepBacking::Dec { manifold, .. } => Some(manifold),
+            StepBacking::Qtt => None,
+        }
+    }
+
+    /// The current divergence-free fluid state, if this is a DEC-backed context.
+    pub fn velocity(&self) -> Option<&SolenoidalField<R>> {
+        match &self.backing {
+            StepBacking::Dec { velocity, .. } => Some(velocity),
+            StepBacking::Qtt => None,
+        }
     }
 
     /// The time step.
@@ -69,19 +98,42 @@ impl<'a, const D: usize, R: CfdScalar> StepContext<'a, D, R> {
     /// The fluid velocity vector at a physical point (in spacing units) — for an advecting stage.
     ///
     /// # Errors
-    /// As [`dec_sample_velocity`].
+    /// As [`dec_sample_velocity`]; `Err` on a QTT-backed context (no manifold to sample).
     pub fn sample_velocity(&self, point: &[R; D]) -> Result<[R; D], PhysicsError> {
-        dec_sample_velocity(self.manifold, self.velocity.as_one_form(), point)
+        match &self.backing {
+            StepBacking::Dec { manifold, velocity } => {
+                dec_sample_velocity(manifold, velocity.as_one_form(), point)
+            }
+            StepBacking::Qtt => Err(PhysicsError::PhysicalInvariantBroken(
+                "sample_velocity is unavailable on a QTT-backed StepContext".into(),
+            )),
+        }
     }
 }
 
 /// The owned auxiliary state threaded through the coupling between steps: named scalar fields
 /// (e.g. a temperature field over cells) and the per-step [`Ambient`] a stage writes back to the
 /// solver (e.g. `ν(T)`).
+///
+/// Two typed navigation channels ride alongside the scalar fields, carrying the ④ physics→navigation
+/// coupling (design: the plasma-blackout `blackout-coupling-interface`): the **aero force** (the
+/// integrated Cartesian force a trajectory stage reads as its perturbation kick) and the **control
+/// action** (the bounded command a corrective stage writes, e.g. a bank-angle correction). Both are
+/// `None` until a producing stage sets them, so existing couplings are unaffected.
+///
+/// Two further composition channels ride alongside, carrying the Stage-3 corridor state: the last
+/// [`RegimeClass`] the classifier selected (the governing-model + GNSS-denial decision downstream
+/// stages read, and against which a regime *change* is detected), and an [`EffectLog`] of provenance
+/// entries (regime transitions, bounded corrections, envelope breaches) — the auditable record the
+/// flagship surfaces. Both start empty, so existing couplings are unaffected.
 #[derive(Debug, Clone)]
 pub struct CoupledField<R: CfdScalar> {
     ambient: Ambient<R>,
     scalars: Vec<(String, Vec<R>)>,
+    aero_force: Option<[R; 3]>,
+    control_action: Option<R>,
+    regime: Option<RegimeClass<R>>,
+    log: EffectLog,
 }
 
 impl<R: CfdScalar> CoupledField<R> {
@@ -90,6 +142,10 @@ impl<R: CfdScalar> CoupledField<R> {
         Self {
             ambient,
             scalars: Vec::new(),
+            aero_force: None,
+            control_action: None,
+            regime: None,
+            log: EffectLog::new(),
         }
     }
 
@@ -127,6 +183,48 @@ impl<R: CfdScalar> CoupledField<R> {
             .iter_mut()
             .find(|(n, _)| n == name)
             .map(|(_, d)| d)
+    }
+
+    /// The per-step aero force (the integrated Cartesian force a trajectory stage reads as its
+    /// perturbation kick), if a producing stage has set it.
+    pub fn aero_force(&self) -> Option<[R; 3]> {
+        self.aero_force
+    }
+
+    /// Publish the per-step aero force (a marcher / stub stage writes the ④ force channel here).
+    pub fn set_aero_force(&mut self, force: [R; 3]) {
+        self.aero_force = Some(force);
+    }
+
+    /// The bounded control action a corrective stage has written (e.g. a bank-angle command), if any.
+    pub fn control_action(&self) -> Option<R> {
+        self.control_action
+    }
+
+    /// Write the bounded control action (a corrective stage writes its clamped command here).
+    pub fn set_control_action(&mut self, action: R) {
+        self.control_action = Some(action);
+    }
+
+    /// The last governing-model regime the classifier selected, if a classifier stage has run.
+    pub fn regime(&self) -> Option<RegimeClass<R>> {
+        self.regime
+    }
+
+    /// Record the currently-selected governing-model regime (the classifier writes it each step; a
+    /// downstream stage reads it to pick its governing model).
+    pub fn set_regime(&mut self, regime: RegimeClass<R>) {
+        self.regime = Some(regime);
+    }
+
+    /// The provenance log accumulated by the corridor stages (regime changes, corrections, breaches).
+    pub fn log(&self) -> &EffectLog {
+        &self.log
+    }
+
+    /// Mutable access to the provenance log — a stage appends an audit entry here.
+    pub fn log_mut(&mut self) -> &mut EffectLog {
+        &mut self.log
     }
 }
 
@@ -296,6 +394,107 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for ViscosityArrhenius<R> 
         // ν(T) = ν_ref · exp(β·(T_ref/T − 1)).
         let nu = self.nu_ref * (self.beta * (self.t_ref / mean - R::one())).exp();
         field.ambient_mut().set_nu(nu);
+        Ok(())
+    }
+}
+
+/// A **stub** producer for the ④ blackout-coupling contract, standing in for the real Stage-1 marcher
+/// so downstream stages (trajectory, classifier, correction) can be built and validated before it
+/// lands. Each step it publishes a constant mock aero drag `[−drag, 0, 0]` into the field's aero-force
+/// channel and writes a single-cell `"n_e"` scalar that is `ne_blackout` inside the scheduled step
+/// window `[start, end)` and `ne_ambient` outside it — so a downstream `BlackoutTrigger` sees the
+/// denial window. Swapping this stub for the real marcher stage changes no consumer.
+#[derive(Debug, Clone, Copy)]
+pub struct AeroBlackoutStub<R: CfdScalar> {
+    drag: R,
+    ne_ambient: R,
+    ne_blackout: R,
+    window_start: usize,
+    window_end: usize,
+}
+
+impl<R: CfdScalar> AeroBlackoutStub<R> {
+    /// A stub with a constant mock drag magnitude and a scheduled blackout window `[start, end)` (in
+    /// step index) over which the published electron density rises from `ne_ambient` to `ne_blackout`.
+    pub fn new(
+        drag: R,
+        ne_ambient: R,
+        ne_blackout: R,
+        window_start: usize,
+        window_end: usize,
+    ) -> Self {
+        Self {
+            drag,
+            ne_ambient,
+            ne_blackout,
+            window_start,
+            window_end,
+        }
+    }
+}
+
+impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for AeroBlackoutStub<R> {
+    fn apply(
+        &self,
+        ctx: &StepContext<'_, D, R>,
+        field: &mut CoupledField<R>,
+    ) -> Result<(), PhysicsError> {
+        field.set_aero_force([-self.drag, R::zero(), R::zero()]);
+        let in_window = ctx.step() >= self.window_start && ctx.step() < self.window_end;
+        let ne = if in_window {
+            self.ne_blackout
+        } else {
+            self.ne_ambient
+        };
+        field.set_scalar("n_e", Vec::from([ne]));
+        Ok(())
+    }
+}
+
+/// The **real** ④ aero-force producer (Stage 1.3): the marcher→trajectory adapter that closes the
+/// physics→navigation coupling with flow-derived data, replacing [`AeroBlackoutStub`]'s constant mock.
+/// It reads the per-cell `"speed"` field the marcher publishes each step, forms the peak dynamic pressure
+/// `q = ½·ρ_ref·U_max²`, and writes the aero *acceleration* `a = −(C_d·A/m)·q` into the aero-force channel
+/// the trajectory kick reads. The electron density / blackout side of ④ is produced upstream by the
+/// reacting stages ([`IonizationStage`](super::IonizationStage) writing `"n_e"`), so the real ④ producer
+/// stack is `RecoveryTemperature → Ionization → AeroForceCoupling`. A no-op if `"speed"` is absent.
+#[derive(Debug, Clone, Copy)]
+pub struct AeroForceCoupling<R: CfdScalar> {
+    speed_field: &'static str,
+    rho_ref: R,
+    cd_area_over_mass: R,
+}
+
+impl<R: CfdScalar> AeroForceCoupling<R> {
+    /// Drive the aero acceleration from a reference freestream density `rho_ref` and the vehicle
+    /// ballistic coefficient bundle `cd_area_over_mass = C_d·A/m` (so the channel carries an
+    /// acceleration the trajectory adds directly).
+    pub fn new(rho_ref: R, cd_area_over_mass: R) -> Self {
+        Self {
+            speed_field: "speed",
+            rho_ref,
+            cd_area_over_mass,
+        }
+    }
+}
+
+impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for AeroForceCoupling<R> {
+    fn apply(
+        &self,
+        _ctx: &StepContext<'_, D, R>,
+        field: &mut CoupledField<R>,
+    ) -> Result<(), PhysicsError> {
+        let Some(speed) = field.scalar(self.speed_field) else {
+            return Ok(());
+        };
+        let u_max = speed
+            .iter()
+            .copied()
+            .fold(R::zero(), |a, x| if x > a { x } else { a });
+        let half = R::from_f64(0.5).unwrap_or_else(R::one);
+        let q = half * self.rho_ref * u_max * u_max;
+        let a_drag = self.cd_area_over_mass * q;
+        field.set_aero_force([R::zero() - a_drag, R::zero(), R::zero()]);
         Ok(())
     }
 }
