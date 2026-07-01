@@ -128,3 +128,25 @@ rust_test(
         "//deep_causality_tensor",
     ],
 )
+
+rust_test(
+    name = "navigation",
+    srcs = glob([
+        "navigation/**/*.rs",
+    ]),
+    crate_features = [
+        "std",
+    ],
+    crate_root = "navigation/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_cfd",
+        # Internal dependencies — physics kernels the nav layer composes over
+        "//deep_causality_physics",
+        "//deep_causality_tensor",
+    ],
+)

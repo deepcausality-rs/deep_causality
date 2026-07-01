@@ -9,9 +9,8 @@
 //! blackout, (c) the returning GNSS fix reacquires — and the through-plasma optical aid bounds the
 //! blackout drift.
 
-use deep_causality_physics::{
-    EARTH_GM, ImuModel, InsErrorState, KsPropagator, NavFilter, ReentryNavEngine,
-};
+use deep_causality_cfd::{ImuModel, InsErrorState, NavFilter, ReentryNavEngine};
+use deep_causality_physics::{EARTH_GM, KsPropagator};
 
 fn setup() -> (ReentryNavEngine<f64>, KsPropagator<f64>, ImuModel<f64>) {
     let (r0, v0) = ([7.0e6, 1.0e6, 2.0e6], [-1.0e3, 6.5e3, 3.0e3]);

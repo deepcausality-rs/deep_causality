@@ -7,7 +7,7 @@
 //! accelerometer bias grows the position error as `t²`, a constant gyro bias as `t³`, and the carried
 //! clock error accumulates linearly. These are the growth rates the closed-loop navigation gate reads.
 
-use deep_causality_physics::InsErrorState;
+use deep_causality_cfd::InsErrorState;
 
 /// March the error state for `steps` of `dt` under a constant specific force; return the position-error
 /// norm at the end.

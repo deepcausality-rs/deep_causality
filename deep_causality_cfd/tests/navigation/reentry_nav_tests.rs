@@ -8,7 +8,8 @@
 //! accumulates a `τ`-offset distinct from coordinate time (the two-clock separation); and a returning
 //! position fix reacquires while the trajectory stays a valid bound orbit.
 
-use deep_causality_physics::{EARTH_GM, InsErrorState, KsPropagator, NavFilter, ReentryNavEngine};
+use deep_causality_cfd::{InsErrorState, NavFilter, ReentryNavEngine};
+use deep_causality_physics::{EARTH_GM, KsPropagator};
 
 fn state_3d() -> ([f64; 3], [f64; 3]) {
     ([7.0e6, 1.0e6, 2.0e6], [-1.0e3, 6.5e3, 3.0e3])

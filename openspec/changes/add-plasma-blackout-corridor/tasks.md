@@ -58,15 +58,22 @@ swapped (not rewritten) at Stage 1.
 
 ## Stage 2 — Trajectory/nav engine (built once, against ④)
 
-- [ ] 2.1 Engine: predict = KS propagate + aero kick from the ④ force channel; correct = 17-state tightly-coupled
+> **Crate placement:** the whole navigation layer (INS error-state, ESKF, synthetic IMU, re-entry nav
+> engine, integrator regime switch) lives in `deep_causality_cfd/src/navigation/`, **not** in
+> `deep_causality_physics`. Navigation/INS/guidance is aerospace *engineering*, not a force of nature; it
+> *composes* the physics kernels (KS conformal propagator, relativistic forward clock, KS constraint
+> projection) that stay in `deep_causality_physics`. CFD already depends on physics, so the nav layer
+> consumes the kernels cleanly.
+
+- [x] 2.1 Engine: predict = KS propagate + aero kick from the ④ force channel; correct = 17-state tightly-coupled
   ESKF (pos/vel/att-err/gyro-bias/accel-bias + clock bias/drift) + the B2 projection; two-clock carry. No
   mock/real split (stub and marcher interchangeable behind the contract).
-- [ ] 2.2 Synthetic sensors (⑥): strapdown IMU (primary), through-plasma optical (~50 m 1σ), GNSS (denied when
+- [x] 2.2 Synthetic sensors (⑥): strapdown IMU (primary), through-plasma optical (~50 m 1σ), GNSS (denied when
   the ④ blackout flag is set), carried clock. Q from a nav-grade IMU spec (gyro < 0.01 °/hr, accel < 10 µg); R
   from sensor accuracy.
-- [ ] 2.3 Encke↔Cowell `select_integrator` switch (B4): ε = a_aero/a_grav from the ④ force vs a config threshold,
+- [x] 2.3 Encke↔Cowell `select_integrator` switch (B4): ε = a_aero/a_grav from the ④ force vs a config threshold,
   with hysteresis. Consumes stub ε now, real ε after Stage 1.
-- [ ] 2.4 Validate engine logic against the Stage-0 stub: coast exactness, GPS clock split, closed-loop nav
+- [x] 2.4 Validate engine logic against the Stage-0 stub: coast exactness, GPS clock split, closed-loop nav
   (`t²`/`t³` drift → reacquire), overlap-band + hysteresis on the switch.
 
 ## Stage 3 — Composition (fill the Stage-0 seams)

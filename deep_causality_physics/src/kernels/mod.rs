@@ -11,7 +11,6 @@ pub(crate) mod fluids;
 pub(crate) mod hypersonic;
 pub(crate) mod materials;
 pub(crate) mod mhd;
-pub(crate) mod navigation;
 pub(crate) mod nuclear;
 pub(crate) mod photonics;
 pub(crate) mod quantum;

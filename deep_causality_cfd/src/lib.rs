@@ -25,6 +25,7 @@
 extern crate alloc;
 
 mod coordinate;
+mod navigation;
 mod solvers;
 mod tensor_bridge;
 mod theories;
@@ -51,6 +52,13 @@ pub use crate::tensor_bridge::{
     body_mask_2d, dequantize, dequantize_2d, dequantize_3d, divergence_3d, gradient, gradient_x,
     gradient_x_3d, gradient_y, gradient_y_3d, gradient_z_3d, laplacian, laplacian_2d, laplacian_3d,
     mask_from_fn, quantize, quantize_2d, quantize_3d, shift_minus, shift_plus,
+};
+
+// GNSS-denial navigation (aerospace-engineering estimation layer composing the physics kernels):
+// the error-state Kalman engine, synthetic INS sensors, and the Encke↔Cowell integrator regime switch.
+pub use crate::navigation::{
+    ImuModel, InsErrorState, IntegratorRegime, NAV_STATES, NavFilter, ReentryNavEngine,
+    RegimeSwitch, aero_gravity_ratio, nav_transition_matrix,
 };
 
 // The CfdFlow DSL facade (owned case descriptions materialized at run).

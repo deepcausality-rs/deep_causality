@@ -29,7 +29,6 @@ pub use crate::kernels::fluids::*;
 pub use crate::kernels::hypersonic::*;
 pub use crate::kernels::materials::*;
 pub use crate::kernels::mhd::*;
-pub use crate::kernels::navigation::*;
 pub use crate::kernels::nuclear::*;
 pub use crate::kernels::photonics::*;
 pub use crate::kernels::quantum::*;

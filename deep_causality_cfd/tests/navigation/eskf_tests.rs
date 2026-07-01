@@ -8,7 +8,7 @@
 //! shrinks it and pulls the estimate toward the fix, and the closed loop reacquires — the load-bearing
 //! filter behaviour the navigation gate rests on.
 
-use deep_causality_physics::{InsErrorState, NavFilter, nav_transition_matrix};
+use deep_causality_cfd::{InsErrorState, NavFilter, nav_transition_matrix};
 
 #[test]
 fn f_matrix_matches_propagate() {
