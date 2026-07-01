@@ -1,0 +1,48 @@
+deep_causality_cfd/tests/navigation/regime_switch_tests.rs
+  s_c4c919f578d611::t_f262a4953e6a05 1-18,23-68,74-75,78-100,105-120,125-127
+  s_c4c919f578d611::t_c0ff094b07f884 19-22,69-73,76-77,101-104,121-124
+deep_causality_cfd/src/navigation/regime_switch.rs
+  s_c4c919f578d611::t_d5ea78d564b138 1-19,21-44,49-99
+  s_c4c919f578d611::t_c0ff094b07f884 20,45-48
+deep_causality_cfd/tests/navigation/reentry_nav_tests.rs
+  s_c4c919f578d611::t_f262a4953e6a05 1-106
+deep_causality_cfd/src/navigation/mod.rs
+  s_c4c919f578d611::t_24680ceab3fafa 6-11,17,23
+deep_causality_cfd/tests/mod.rs
+  s_c4c919f578d611::t_40ce0beb42b844 7
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_7637786ecee682 28
+  s_c4c919f578d611::t_c0ff094b07f884 60-61
+  s_c4c919f578d611::t_69eb06261a48b1 57-59,62-63
+deep_causality_cfd/tests/BUILD.bazel
+  s_c4c919f578d611::t_29f0c417b620ae 131-152
+openspec/changes/add-plasma-blackout-corridor/tasks.md
+  s_c4c919f578d611::t_e028459f37451d 61-68,71,74,76
+deep_causality_cfd/tests/navigation/eskf_tests.rs
+  s_c4c919f578d611::t_f262a4953e6a05 1-94
+deep_causality_cfd/tests/navigation/ins_error_state_tests.rs
+  s_c4c919f578d611::t_f262a4953e6a05 1-95
+deep_causality_cfd/tests/navigation/mod.rs
+  s_c4c919f578d611::t_7c9446ee6600d7 6-10
+deep_causality_cfd/src/navigation/reentry_nav.rs
+  s_c4c919f578d611::t_d5ea78d564b138 1-24,26-137
+  s_c4c919f578d611::t_c0ff094b07f884 25
+deep_causality_cfd/tests/navigation/closed_loop_tests.rs
+  s_c4c919f578d611::t_f262a4953e6a05 1-108
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "88b74af3ea4aed4228cf747541708741726e6fac",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
