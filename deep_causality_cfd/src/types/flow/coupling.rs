@@ -383,7 +383,13 @@ pub struct AeroBlackoutStub<R: CfdScalar> {
 impl<R: CfdScalar> AeroBlackoutStub<R> {
     /// A stub with a constant mock drag magnitude and a scheduled blackout window `[start, end)` (in
     /// step index) over which the published electron density rises from `ne_ambient` to `ne_blackout`.
-    pub fn new(drag: R, ne_ambient: R, ne_blackout: R, window_start: usize, window_end: usize) -> Self {
+    pub fn new(
+        drag: R,
+        ne_ambient: R,
+        ne_blackout: R,
+        window_start: usize,
+        window_end: usize,
+    ) -> Self {
         Self {
             drag,
             ne_ambient,

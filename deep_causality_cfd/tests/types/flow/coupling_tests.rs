@@ -7,8 +7,8 @@
 //! end-to-end `ν(T)` feedback through the march (coupled physics changes the flow dynamics).
 
 use deep_causality_cfd::{
-    AeroBlackoutStub, Ambient, CfdConfigBuilder, CoupledField, Coupling, Mesh, Observe, PhysicsError,
-    PhysicsStage, Seed, StepContext, ThermalRelax, ViscosityArrhenius,
+    AeroBlackoutStub, Ambient, CfdConfigBuilder, CoupledField, Coupling, Mesh, Observe,
+    PhysicsError, PhysicsStage, Seed, StepContext, ThermalRelax, ViscosityArrhenius,
 };
 use deep_causality_physics::{PhysicsErrorEnum, SolenoidalField, VelocityOneForm};
 use deep_causality_tensor::CausalTensor;

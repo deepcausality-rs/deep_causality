@@ -56,11 +56,10 @@ pub use crate::tensor_bridge::{
 // Workflow composition — the CfdFlow DSL (the "how").
 pub use crate::types::flow::{
     AeroBlackoutStub, BlackoutState, BlackoutTrigger, CfdFlow, CoupledField, Coupling, EosStage,
-    IonizationStage,
-    MarchPipeline, MarchRun, MmsBuilder, Operator, OperatorStudyBuilder, PhysicsStage, QttMarchRun,
-    QttStepView, RecoveryTemperatureStage, Regime, Report, StepContext, StepView, ThermalRelax,
-    VerifyRun, ViscosityArrhenius, dominant_frequency, fail, ler_relax_scalar, ler_step,
-    strouhal_number,
+    IonizationStage, MarchPipeline, MarchRun, MmsBuilder, Operator, OperatorStudyBuilder,
+    PhysicsStage, QttMarchRun, QttStepView, RecoveryTemperatureStage, Regime, Report, StepContext,
+    StepView, ThermalRelax, VerifyRun, ViscosityArrhenius, dominant_frequency, fail,
+    ler_relax_scalar, ler_step, strouhal_number,
 };
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
 pub use crate::types::flow_config::{
