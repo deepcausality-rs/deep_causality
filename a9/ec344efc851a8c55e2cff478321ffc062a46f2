@@ -1,0 +1,44 @@
+deep_causality_physics/tests/kernels/astro/ks_propagator_tests.rs
+  s_c4c919f578d611::t_8479124d208463 171-173
+  s_c4c919f578d611::t_30b0e39ad3c3ac 1-113,117-130,136-138,141-170,174-205,210-214,216-224,229-230
+  s_c4c919f578d611::t_9b26c66b349827 215,225-226,228
+  s_c4c919f578d611::t_2ef55a30f15d28 114-116,131-135,139-140,206-209
+  s_c4c919f578d611::t_fece4a2232886b 227
+deep_causality_physics/tests/kernels/astro/mod.rs
+  s_c4c919f578d611::t_652c46956db65d 9
+  s_c4c919f578d611::t_c0c637a3a0c0b3 6-8
+deep_causality_physics/src/kernels/astro/ks_constraint.rs
+  s_c4c919f578d611::t_898f4bd4e4c8ae 1-53
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_2ef55a30f15d28 59-62
+deep_causality_cfd/tests/types/flow/coupling_tests.rs
+  s_c4c919f578d611::t_2ef55a30f15d28 10-11
+deep_causality_physics/src/kernels/astro/mod.rs
+  s_c4c919f578d611::t_b7f831bf4dbf1d 6
+  s_c4c919f578d611::t_030f46aa5d5ef2 7,13
+  s_c4c919f578d611::t_37c2f2857c441f 12
+deep_causality_physics/src/kernels/astro/ks_propagator.rs
+  s_c4c919f578d611::t_2ef55a30f15d28 67-69,175-176,236-237
+  s_c4c919f578d611::t_399396aaa06f51 1-66,70-174,177-235,238-285
+deep_causality_physics/tests/kernels/astro/ks_constraint_tests.rs
+  s_c4c919f578d611::t_7bd7f415f0271c 1-26,31,36-42,47-61,66-80,85-90
+  s_c4c919f578d611::t_2ef55a30f15d28 27-30,32-35,43-46,62-65,81-84
+deep_causality_cfd/src/types/flow/coupling.rs
+  s_c4c919f578d611::t_2ef55a30f15d28 386-392
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "a9ec344efc851a8c55e2cff478321ffc062a46f2",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
