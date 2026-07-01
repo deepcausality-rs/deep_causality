@@ -1,0 +1,39 @@
+deep_causality_cfd/tests/coordinate/cartesian_3d_tests.rs
+  s_c4c919f578d611::t_4ab3c73f44c33b 85-88
+  s_c4c919f578d611::t_31a4539d5dc314 1-84,89-114
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_f4320b1ab1b503 47
+  s_c4c919f578d611::t_8d174f45ae4382 46
+deep_causality_cfd/src/coordinate/cartesian_3d.rs
+  s_c4c919f578d611::t_665386938f20e6 92
+  s_c4c919f578d611::t_7110669f7c2c34 1-12,14-91,93-103
+  s_c4c919f578d611::t_13cafec2948f8f 13
+deep_causality_cfd/tests/coordinate/mod.rs
+  s_c4c919f578d611::t_3f1c1a3418e3f6 11-12
+deep_causality_cfd/src/coordinate/mod.rs
+  s_c4c919f578d611::t_31db44b652ddf8 37
+  s_c4c919f578d611::t_6b2653865656bb 101-133
+  s_c4c919f578d611::t_de493fa5252f20 29,31,35
+deep_causality_cfd/src/coordinate/metric_provider_3d.rs
+  s_c4c919f578d611::t_90e453d4ba07d7 22-28
+  s_c4c919f578d611::t_9c0b361fe72f96 56
+  s_c4c919f578d611::t_324cd8a779625d 1-21,29-55,57-60
+openspec/changes/add-plasma-blackout-corridor/tasks.md
+  s_c4c919f578d611::t_eeae223dbceff6 6-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "c9033b761476b67786d0448883bbe62ee5f9669e",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
