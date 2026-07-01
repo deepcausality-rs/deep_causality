@@ -1,0 +1,40 @@
+deep_causality_physics/src/kernels/navigation/ins_error_state.rs
+  s_c4c919f578d611::t_64cb209ea7eaab 1-86,91-130,132-133
+  s_c4c919f578d611::t_370afc089a63bb 87-90
+  s_c4c919f578d611::t_bfa7005477bd9e 131
+deep_causality_physics/src/kernels/navigation/mod.rs
+  s_c4c919f578d611::t_91b615bdffa215 1-11
+deep_causality_physics/src/lib.rs
+  s_c4c919f578d611::t_000036dd83b0c3 32
+deep_causality_physics/src/kernels/mod.rs
+  s_c4c919f578d611::t_b94883da6577a4 14
+deep_causality_physics/tests/kernels/navigation/mod.rs
+  s_c4c919f578d611::t_1ef93ddf9367e0 1-7
+deep_causality_physics/tests/kernels/navigation/ins_error_state_tests.rs
+  s_c4c919f578d611::t_3f028566cd45b1 1-65,71-78,83-95
+  s_c4c919f578d611::t_bfa7005477bd9e 66-70,79-82
+deep_causality_physics/tests/BUILD.bazel
+  s_c4c919f578d611::t_b4ad8b9297bce5 227,238,242-250
+  s_c4c919f578d611::t_8bd5d48d1fd284 226
+  s_c4c919f578d611::t_d29e5ba39f7c90 228-230,235-237
+  s_c4c919f578d611::t_6ac6888dc3f858 239-241
+  s_c4c919f578d611::t_c9417fe7b94957 231-234
+deep_causality_physics/tests/kernels/mod.rs
+  s_c4c919f578d611::t_90cec2513f191f 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "60f7664ceca3cb274090011ab8cffacada1b7a07",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
