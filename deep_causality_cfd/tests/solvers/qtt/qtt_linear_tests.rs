@@ -4,6 +4,7 @@
  */
 
 use deep_causality_cfd::{Marcher, QttLinear1d, quantize};
+use deep_causality_physics::PhysicsErrorEnum;
 use deep_causality_tensor::{CausalTensor, Truncation};
 
 const TAU: f64 = core::f64::consts::TAU;
@@ -61,6 +62,24 @@ fn bounded_rank_under_recompression() {
             .unwrap();
         assert!(bond <= 8, "bond grew under recompression: {bond}");
     }
+}
+
+#[test]
+fn run_rejects_wrong_length_field() {
+    // `run` guards `u0` against a length ≠ 2^L; a short buffer must surface a DimensionMismatch.
+    let l = 5usize;
+    let n = 1usize << l;
+    let dx = 1.0f64 / n as f64;
+    let trunc = Truncation::<f64>::by_tol(1e-10).unwrap();
+    let solver = QttLinear1d::new(l, dx, 0.001, 0.5, 0.01, trunc).unwrap();
+
+    // One cell short of 2^L.
+    let bad = field(vec![0.0f64; n - 1]);
+    let err = solver.run(&bad, 1).unwrap_err();
+    assert!(
+        matches!(err.0, PhysicsErrorEnum::DimensionMismatch(_)),
+        "wrong-length field must be a DimensionMismatch: {err:?}"
+    );
 }
 
 #[test]

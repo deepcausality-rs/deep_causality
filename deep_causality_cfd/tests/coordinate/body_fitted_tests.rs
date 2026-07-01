@@ -8,6 +8,7 @@
 //! resolution-independent vs Cartesian `χ ~ √side`).
 
 use deep_causality_cfd::{BodyFittedCoordinate, dequantize_2d, quantize_2d};
+use deep_causality_physics::PhysicsErrorEnum;
 use deep_causality_tensor::{CausalTensor, Truncation};
 
 const TAU: f64 = core::f64::consts::TAU;
@@ -80,6 +81,42 @@ fn free_stream_preserved() {
     for v in gx.as_slice().iter().chain(gy.as_slice()) {
         assert!(v.abs() < 1e-9, "free-stream gradient nonzero: {v}");
     }
+}
+
+#[test]
+fn position_maps_computational_to_physical_polar_point() {
+    // (x, y) = (r·cosθ, r·sinθ) with θ = θ0 + ξ·Δθ, r = r0 + η·Δr; |position| = r exactly.
+    let (r0, dr, th0, dth) = (0.6f64, 1.6, 0.2, TAU);
+    let coord = BodyFittedCoordinate::<f64>::new(5, 5, r0, dr, th0, dth, full()).unwrap();
+    for &(xi, eta) in &[(0.0, 0.0), (0.25, 0.5), (0.5, 1.0), (0.75, 0.3)] {
+        let (x, y) = coord.position(xi, eta);
+        let theta = th0 + xi * dth;
+        let r = r0 + eta * dr;
+        assert!((x - r * theta.cos()).abs() < 1e-12, "x at {xi},{eta}");
+        assert!((y - r * theta.sin()).abs() < 1e-12, "y at {xi},{eta}");
+        // Radius invariant: |position| = r regardless of the angle.
+        assert!(((x * x + y * y).sqrt() - r).abs() < 1e-12, "|position| = r");
+    }
+}
+
+#[test]
+fn rejects_nonpositive_geometry() {
+    let t = full();
+    let bad = |r0, dr, dth| BodyFittedCoordinate::<f64>::new(4, 4, r0, dr, 0.0, dth, t);
+    // r0 ≤ 0. (BodyFittedCoordinate is not Debug, so match the error without unwrap_err.)
+    match bad(0.0, 1.6, TAU) {
+        Err(e) => assert!(
+            matches!(e.0, PhysicsErrorEnum::PhysicalInvariantBroken(_)),
+            "r0 = 0 must be PhysicalInvariantBroken"
+        ),
+        Ok(_) => panic!("r0 = 0 must be rejected"),
+    }
+    // dr ≤ 0.
+    assert!(bad(0.6, 0.0, TAU).is_err(), "dr = 0");
+    assert!(bad(0.6, -1.0, TAU).is_err(), "dr < 0");
+    // dtheta ≤ 0.
+    assert!(bad(0.6, 1.6, 0.0).is_err(), "dtheta = 0");
+    assert!(bad(0.6, 1.6, -1.0).is_err(), "dtheta < 0");
 }
 
 #[test]

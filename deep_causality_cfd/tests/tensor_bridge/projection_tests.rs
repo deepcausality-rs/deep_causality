@@ -81,6 +81,28 @@ fn projection_is_idempotent() {
 }
 
 #[test]
+fn new_rejects_zero_modes() {
+    // The projector assembles gradient operators; a zero-mode axis propagates the shift-build guard.
+    let dx = TAU / N as f64;
+    assert!(QttProjector2d::<f64>::new(0, L, dx, dx, full()).is_err());
+    assert!(QttProjector2d::<f64>::new(L, 0, dx, dx, full()).is_err());
+}
+
+#[test]
+fn solve_poisson_zeroes_the_mean_of_the_solution() {
+    // The spectral solve pins the null (k=0) mode to zero, so the returned pressure has zero mean.
+    let p = proj();
+    let rhs = vel(|x, y| x.sin() * y.cos()); // a mean-zero smooth RHS
+    let sol = p.solve_poisson(&rhs).unwrap();
+    let dense = dequantize_2d(&sol, L, L).unwrap();
+    let mean: f64 = dense.as_slice().iter().sum::<f64>() / (N * N) as f64;
+    assert!(mean.abs() <= 1e-8, "solution mean not zeroed: {mean}");
+    for v in dense.as_slice() {
+        assert!(v.is_finite(), "non-finite pressure");
+    }
+}
+
+#[test]
 fn projected_field_is_finite() {
     let p = proj();
     let u = vel(|x, y| (x + y).sin());

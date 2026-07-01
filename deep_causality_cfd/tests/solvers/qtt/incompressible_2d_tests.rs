@@ -4,6 +4,7 @@
  */
 
 use deep_causality_cfd::{Marcher, QttIncompressible2d, dequantize_2d, quantize_2d};
+use deep_causality_physics::PhysicsErrorEnum;
 use deep_causality_tensor::{CausalTensor, CausalTensorTrain, Truncation};
 
 const TAU: f64 = core::f64::consts::TAU;
@@ -64,6 +65,64 @@ fn max_divergence(u: &CausalTensor<f64>, v: &CausalTensor<f64>, dx: f64) -> f64 
         }
     }
     m
+}
+
+#[test]
+fn scalar_rate_is_zero_for_a_uniform_field_at_rest() {
+    // rate = −(u·∇)s + κ·∇²s. With u = v = 0 (no advection) and s constant (∇²s = 0), the rate must
+    // vanish identically — exercising the passive-scalar transport seam the immersed marcher rides.
+    let dx = TAU / N as f64;
+    let (nu, dt) = (0.05f64, 0.02f64);
+    let trunc = Truncation::<f64>::by_bond(4096).unwrap();
+    let solver = QttIncompressible2d::new(L, L, dx, dx, dt, nu, trunc).unwrap();
+
+    let zero = quantize_2d(&field(dx, |_x, _y| 0.0), &trunc).unwrap();
+    let s = quantize_2d(&field(dx, |_x, _y| 3.3), &trunc).unwrap();
+    let rate = solver.scalar_rate(&s, &zero, &zero, 0.02).unwrap();
+    let rd = dequantize_2d(&rate, L, L).unwrap();
+    for v in rd.as_slice() {
+        assert!(
+            v.abs() < 1e-9,
+            "scalar rate of a uniform field at rest must vanish: {v}"
+        );
+    }
+}
+
+#[test]
+fn scalar_rate_diffuses_a_sinusoid() {
+    // With u = v = 0 the rate reduces to pure diffusion κ·∇²s. For s = sin(x) the Laplacian is −sin(x),
+    // so κ·∇²s ≈ −κ·s (up to O(dx²)): the rate has the opposite sign of s.
+    let dx = TAU / N as f64;
+    let (nu, dt, kappa) = (0.05f64, 0.02f64, 0.1f64);
+    let trunc = Truncation::<f64>::by_tol(1e-10).unwrap();
+    let solver = QttIncompressible2d::new(L, L, dx, dx, dt, nu, trunc).unwrap();
+
+    let zero = quantize_2d(&field(dx, |_x, _y| 0.0), &trunc).unwrap();
+    let s = quantize_2d(&field(dx, |x, _y| x.sin()), &trunc).unwrap();
+    let rate = solver.scalar_rate(&s, &zero, &zero, kappa).unwrap();
+    let rd = dequantize_2d(&rate, L, L).unwrap();
+    let sd = dequantize_2d(&s, L, L).unwrap();
+    let mut max_err = 0.0f64;
+    for (r, sv) in rd.as_slice().iter().zip(sd.as_slice()) {
+        max_err = max_err.max((r - (-kappa * sv)).abs());
+    }
+    assert!(max_err < 5e-3, "diffusion rate should be ≈ −κ·s: {max_err}");
+}
+
+#[test]
+fn run_rejects_wrong_shape_fields() {
+    let dx = TAU / N as f64;
+    let (nu, dt) = (0.05f64, 0.02f64);
+    let trunc = Truncation::<f64>::by_bond(4096).unwrap();
+    let solver = QttIncompressible2d::new(L, L, dx, dx, dt, nu, trunc).unwrap();
+
+    let bad = CausalTensor::new(vec![0.0f64; N * (N / 2)], vec![N, N / 2]).unwrap();
+    let good = field(dx, |_x, _y| 0.0);
+    let err = solver.run(&bad, &good, 1).unwrap_err();
+    assert!(
+        matches!(err.0, PhysicsErrorEnum::DimensionMismatch(_)),
+        "wrong-shape field must be a DimensionMismatch: {err:?}"
+    );
 }
 
 #[test]

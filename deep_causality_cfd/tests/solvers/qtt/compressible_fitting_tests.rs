@@ -7,6 +7,7 @@
 //! nonequilibrium ionization lag, and the `O(1)`-rank post-shock relaxation profile.
 
 use deep_causality_cfd::{FittedNormalShock, Park2tClosure, PostShockState};
+use deep_causality_physics::PhysicsErrorEnum;
 use deep_causality_tensor::Truncation;
 
 fn tr() -> Truncation<f64> {
@@ -188,4 +189,26 @@ fn relaxation_profile_is_low_rank() {
         "smooth post-shock profile should be O(1) rank, got {bond}"
     );
     assert!(peak > 0.0);
+}
+
+#[test]
+fn park2t_propagates_relaxation_kernel_error_on_non_positive_pressure() {
+    // The 2-T controller drives the vibrational-relaxation kernel, which requires a positive
+    // Millikan–White pressure. A closure with pressure_atm = 0 must make that kernel error and the
+    // `?` in `stagnation_line_blackout_2t` propagate a `Singularity`.
+    let shock = FittedNormalShock::<f64>::new(1.1).unwrap();
+    let post = shock.post_shock(250.0, 1.3e21, 25.0).unwrap();
+    let bad_closure = Park2tClosure {
+        t_ve_initial: 250.0,
+        pressure_atm: 0.0, // non-physical: trips the Millikan–White pressure guard
+        reduced_mass_amu: 7.0,
+        theta_vib: 3_393.0,
+    };
+    let err = shock
+        .stagnation_line_blackout_2t(&post, 2.0e-5, &bad_closure, 9.4e9)
+        .unwrap_err();
+    assert!(
+        matches!(err.0, PhysicsErrorEnum::Singularity(_)),
+        "non-positive relaxation pressure must propagate a Singularity: {err:?}"
+    );
 }

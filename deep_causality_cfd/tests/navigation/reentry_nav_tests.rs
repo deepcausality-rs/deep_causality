@@ -69,6 +69,35 @@ fn carried_clock_offset_is_relativistic_and_distinct_from_coordinate_time() {
 }
 
 #[test]
+fn velocity_and_filter_accessors_track_the_engine_state() {
+    // `velocity()` returns the nominal velocity (changed by the KS drift), `filter()` exposes the
+    // error-state filter whose position variance matches the engine's witness.
+    let (_r0, v0) = state_3d();
+    let mut eng = engine();
+    assert_eq!(eng.velocity(), v0, "initial velocity mirrors the seed");
+    // The filter accessor is consistent with the engine's variance witness.
+    assert!(
+        (eng.filter().position_variance() - eng.position_variance()).abs() < 1e-12,
+        "filter() variance matches the engine witness"
+    );
+
+    let dt = 2.0;
+    for _ in 0..10 {
+        eng.predict(dt, [0.0; 3], [0.0; 17]).unwrap();
+    }
+    // Coasting on the KS orbit changes the velocity away from the seed.
+    assert!(
+        n3(eng.velocity(), v0) > 0.0,
+        "the KS drift advanced the nominal velocity"
+    );
+    // After coasting, the two variance readings still agree (same underlying filter).
+    assert!(
+        (eng.filter().position_variance() - eng.position_variance()).abs() < 1e-12,
+        "filter() stays consistent after predict"
+    );
+}
+
+#[test]
 fn position_fix_reacquires_and_stays_on_orbit() {
     let mut eng = engine();
     let dt = 1.0;

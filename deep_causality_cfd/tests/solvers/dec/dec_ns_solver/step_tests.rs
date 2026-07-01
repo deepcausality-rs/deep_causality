@@ -128,6 +128,44 @@ fn spectral_path_ignores_cg_starvation_in_step() {
     assert!(result.is_ok(), "{result:?}");
 }
 
+/// On a mixed-periodicity (wall-bounded) lattice each RK4 stage runs the
+/// iterative constrained projection, which a one-iteration CG budget
+/// starves. The stage failure is parked in the deferred slot and surfaced
+/// at the step boundary as a `TopologyError`.
+#[test]
+fn wall_bounded_starved_cg_surfaces_stage_failure() {
+    let lattice = LatticeComplex::<2, f64>::new([8, 6], [true, false]);
+    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
+    let metric: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::unit();
+    let manifold = Manifold::from_cubical_with_metric(lattice, data, metric, 0);
+
+    let seeder = DecNsSolver::new(&manifold, 0.05, 0.05, None).unwrap();
+    let n0 = manifold.complex().num_cells(0);
+    let mut vertex = vec![0.0; 2 * n0];
+    for (vi, v) in manifold.complex().iter_cells(0).enumerate() {
+        let (x, y) = (v.position()[0] as f64, v.position()[1] as f64);
+        vertex[2 * vi] = (0.7 * x).sin() + 0.3 * y;
+        vertex[2 * vi + 1] = (0.5 * y).cos() * 0.2;
+    }
+    let seed = CausalTensor::new(vertex, vec![2 * n0]).unwrap();
+    let state = seeder.seed_from_vertex_vectors(&seed).unwrap();
+
+    let starved = DecNsSolver::new(&manifold, 0.05, 0.05, None)
+        .unwrap()
+        .with_cg_options(HodgeDecomposeOptions {
+            tolerance: Some(1e-14),
+            max_iterations: Some(1),
+        });
+    let err = starved.step(&state).unwrap_err();
+    assert!(
+        err.to_string().to_lowercase().contains("leray")
+            || err.to_string().to_lowercase().contains("projection")
+            || err.to_string().to_lowercase().contains("converge"),
+        "expected a projection CG failure, got: {err}"
+    );
+}
+
 /// An over-long `dt` against a unit-speed field trips the advective
 /// limit, and the message names both the limit and the actual `dt`.
 #[test]

@@ -6,6 +6,7 @@
 use deep_causality_cfd::{
     Marcher, QttImmersed2d, QttIncompressible2d, body_mask_2d, dequantize_2d, quantize_2d,
 };
+use deep_causality_physics::PhysicsErrorEnum;
 use deep_causality_tensor::{CausalTensor, CausalTensorTrain, Truncation};
 
 const TAU: f64 = core::f64::consts::TAU;
@@ -119,6 +120,128 @@ fn zero_mask_reduces_to_the_body_free_solver() {
             "v diverged from body-free: {a} vs {b}"
         );
     }
+}
+
+#[test]
+fn accessors_report_construction_parameters() {
+    let dx = TAU / N as f64;
+    let (nu, dt, eta) = (0.05f64, 0.005f64, 0.02f64);
+    let trunc = Truncation::<f64>::by_bond(4096).unwrap();
+    let mask = cyl_mask(dx, &trunc);
+    let solver =
+        QttImmersed2d::new(L, L, dx, dx, dt, nu, mask.clone(), 0.7, -0.3, eta, trunc).unwrap();
+
+    assert_eq!(solver.modes(), (L, L), "modes");
+    assert!((solver.eta() - eta).abs() < 1e-15, "eta getter");
+    let (ubx, uby) = solver.body_velocity();
+    assert!(
+        (ubx - 0.7).abs() < 1e-15 && (uby + 0.3).abs() < 1e-15,
+        "body velocity"
+    );
+    // The mask getter returns the same train the projector observables read.
+    let got = dequantize_2d(solver.mask(), L, L).unwrap();
+    let want = dequantize_2d(&mask, L, L).unwrap();
+    for (a, b) in got.as_slice().iter().zip(want.as_slice()) {
+        assert!((a - b).abs() < 1e-12, "mask getter mismatch: {a} vs {b}");
+    }
+    // The projector delegates to the base solver (present, usable).
+    let _ = solver.projector();
+}
+
+#[test]
+fn moving_body_penalization_drives_interior_to_body_velocity() {
+    // A moving wall (u_body = 1) exercises the `ub != 0` deficit branch of `penalize`: the interior
+    // velocity is driven toward the body velocity, not toward zero.
+    let dx = TAU / N as f64;
+    let (nu, dt, eta) = (0.05f64, 0.005f64, 0.02f64);
+    let trunc = Truncation::<f64>::by_bond(4096).unwrap();
+    let mask = cyl_mask(dx, &trunc);
+    let solver =
+        QttImmersed2d::new(L, L, dx, dx, dt, nu, mask.clone(), 1.0, 0.0, eta, trunc).unwrap();
+
+    // Seed a quiescent field u = 0; the moving body should pull the interior toward u_body = 1.
+    let (u, _v) = solver.run(&zeros(), &zeros(), 40).unwrap();
+    let md = dequantize_2d(&mask, L, L).unwrap();
+    let (us, ms) = (u.as_slice(), md.as_slice());
+    let (mut in_sum, mut in_n) = (0.0, 0);
+    for k in 0..N * N {
+        if ms[k] > 0.9 {
+            in_sum += us[k];
+            in_n += 1;
+        }
+    }
+    assert!(in_n > 0, "mask has no solid interior");
+    let inside = in_sum / in_n as f64;
+    assert!(
+        inside > 0.6,
+        "moving body did not drag the interior toward u_body = 1: {inside}"
+    );
+}
+
+#[test]
+fn advance_scalar_penalizes_temperature_to_the_wall() {
+    // A passive scalar advected on a quiescent rollout: inside the body the temperature relaxes toward
+    // the wall temperature t_wall; there is no projection (a scalar has no incompressibility constraint).
+    let dx = TAU / N as f64;
+    let (nu, dt, eta) = (0.05f64, 0.005f64, 0.02f64);
+    let trunc = Truncation::<f64>::by_bond(4096).unwrap();
+    let mask = cyl_mask(dx, &trunc);
+    let solver =
+        QttImmersed2d::new(L, L, dx, dx, dt, nu, mask.clone(), 0.0, 0.0, eta, trunc).unwrap();
+
+    // Quiescent velocity (u = v = 0) and a cold uniform field; wall is hot (t_wall = 1).
+    let u = quantize_2d(&zeros(), &trunc).unwrap();
+    let v = quantize_2d(&zeros(), &trunc).unwrap();
+    let mut temp = quantize_2d(&zeros(), &trunc).unwrap();
+    for _ in 0..40 {
+        temp = solver.advance_scalar(&temp, &u, &v, 1.0, 0.01).unwrap();
+    }
+    let td = dequantize_2d(&temp, L, L).unwrap();
+    let md = dequantize_2d(&mask, L, L).unwrap();
+    let (ts, ms) = (td.as_slice(), md.as_slice());
+    let (mut in_sum, mut in_n, mut out_sum, mut out_n) = (0.0, 0, 0.0, 0);
+    for k in 0..N * N {
+        if ms[k] > 0.9 {
+            in_sum += ts[k];
+            in_n += 1;
+        } else if ms[k] < 0.1 {
+            out_sum += ts[k];
+            out_n += 1;
+        }
+    }
+    assert!(
+        in_n > 0 && out_n > 0,
+        "mask did not separate interior/exterior"
+    );
+    let inside = in_sum / in_n as f64;
+    let outside = out_sum / out_n as f64;
+    // The wall (t_wall = 1) heats the solid interior toward 1; the far field stays cooler than the wall.
+    assert!(
+        inside > 0.6,
+        "wall did not heat the interior scalar: {inside}"
+    );
+    assert!(
+        inside > outside,
+        "interior should be hotter than the exterior: {inside} vs {outside}"
+    );
+}
+
+#[test]
+fn run_rejects_wrong_shape_fields() {
+    let dx = TAU / N as f64;
+    let (nu, dt, eta) = (0.05f64, 0.005f64, 0.02f64);
+    let trunc = Truncation::<f64>::by_bond(4096).unwrap();
+    let mask = cyl_mask(dx, &trunc);
+    let solver = QttImmersed2d::new(L, L, dx, dx, dt, nu, mask, 0.0, 0.0, eta, trunc).unwrap();
+
+    // A field of the wrong shape ([N, N/2] instead of [N, N]) must surface a DimensionMismatch.
+    let bad = CausalTensor::new(vec![0.0f64; N * (N / 2)], vec![N, N / 2]).unwrap();
+    let good = zeros();
+    let err = solver.run(&bad, &good, 1).unwrap_err();
+    assert!(
+        matches!(err.0, PhysicsErrorEnum::DimensionMismatch(_)),
+        "wrong-shape field must be a DimensionMismatch: {err:?}"
+    );
 }
 
 fn field(dx: f64, f: impl Fn(f64, f64) -> f64) -> CausalTensor<f64> {

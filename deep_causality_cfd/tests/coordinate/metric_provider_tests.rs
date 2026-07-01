@@ -96,6 +96,19 @@ fn body_fitted_reached_through_the_trait_matches_inherent() {
     // Jacobian is reachable and non-empty through the trait.
     let jac = dequantize_2d(MetricProvider::jacobian(&coord), l, l).unwrap();
     assert!(jac.as_slice().iter().all(|v| *v > 0.0));
+
+    // The trait's `sample` delegates to the inherent method (identical encoded field).
+    let g = |xi: f64, eta: f64| (TAU * xi).cos() + 0.5 * eta;
+    let via_trait = MetricProvider::sample(&coord, g).unwrap();
+    let via_inherent = coord.sample(g).unwrap();
+    let at = dequantize_2d(&via_trait, l, l).unwrap();
+    let ai = dequantize_2d(&via_inherent, l, l).unwrap();
+    for (p, q) in at.as_slice().iter().zip(ai.as_slice()) {
+        assert!(
+            (p - q).abs() < 1e-12,
+            "trait sample vs inherent: {p} vs {q}"
+        );
+    }
 }
 
 #[test]

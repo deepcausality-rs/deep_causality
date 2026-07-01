@@ -4,7 +4,8 @@
  */
 
 use deep_causality_cfd::{
-    CfdFlow, MarchStop, QttIncompressible2d, QttMarchConfigBuilder, QttObserve,
+    AeroBlackoutStub, Ambient, BlackoutTrigger, CfdFlow, CoupledField, MarchStop,
+    QttIncompressible2d, QttMarchConfigBuilder, QttObserve,
 };
 use deep_causality_tensor::{CausalTensor, Truncation};
 
@@ -221,4 +222,180 @@ fn pipeline_emits_a_drag_series_with_a_body() {
         "expected positive drag, got {}",
         drag[steps]
     );
+}
+
+#[test]
+fn run_with_hook_exposes_step_view_accessors() {
+    // Exercise the QttStepView accessors: `dt()`, `time()`, `u()`, `v()`, `divergence()`,
+    // `max_speed()`.
+    let (nu, dt, steps) = (0.05f64, 0.02f64, 4usize);
+    let observe = QttObserve::default().kinetic_energy();
+    let cfg = taylor_green_config(nu, dt, steps, observe);
+
+    let mut last_step = 0usize;
+    let _ = CfdFlow::qtt_march(&cfg)
+        .run_with(|view| {
+            // The time step is exactly the configured `dt` and `time() = step · dt`.
+            assert_eq!(view.dt(), dt, "dt accessor");
+            assert!((view.time() - view.step() as f64 * dt).abs() <= 1e-15);
+
+            // The velocity trains are the current state (non-empty, dequantizes to the grid).
+            let _u = view.u();
+            let _v = view.v();
+
+            // The tensor-train-native diagnostics are finite.
+            let div = view.divergence().unwrap();
+            assert!(div.is_finite(), "divergence finite");
+            assert!(
+                div.abs() <= 1e-4,
+                "divergence at the projection floor: {div}"
+            );
+            let vmax = view.max_speed().unwrap();
+            assert!(vmax.is_finite() && vmax >= 0.0, "max speed {vmax}");
+
+            last_step = view.step();
+        })
+        .unwrap();
+    assert_eq!(last_step, steps, "hook fired for the final step");
+}
+
+/// A body-free coupled run driven by the `AeroBlackoutStub`: publishes `n_e`, transports an
+/// `"alpha"` scalar, and samples the blackout observables into the report.
+fn coupled_free_config(steps: usize) -> deep_causality_cfd::QttMarchConfig<f64> {
+    let dx = TAU / N as f64;
+    let trunc = Truncation::<f64>::by_bond(4096).unwrap();
+    QttMarchConfigBuilder::<f64>::new()
+        .name("blackout_qtt")
+        .grid(L, L, dx, dx)
+        .solver(0.005, 0.05, trunc)
+        .seed_fn(|_, _| (1.0, 0.0))
+        .unwrap()
+        .stop(MarchStop::Fixed(steps))
+        .observe(
+            QttObserve::default()
+                .electron_density()
+                .plasma_frequency()
+                .blackout_dwell(),
+        )
+        .build()
+        .unwrap()
+}
+
+#[test]
+fn run_coupled_free_solver_samples_blackout_observables() {
+    let steps = 5usize;
+    let cfg = coupled_free_config(steps);
+
+    // The stub raises n_e into the blackout level over steps [2, 5); the trigger denies the link
+    // whenever the plasma frequency clears the comms band.
+    let stub = AeroBlackoutStub::new(3.0_f64, 1.0e17, 1.0e20, 2, 5);
+    let trigger = BlackoutTrigger::new(1.0e9); // rad/s comms band
+
+    // Seed an "alpha" reacting fraction to drive the transport branch (body-free ⇒ carried through).
+    let ncells = (1usize << L) * (1usize << L);
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    field.set_scalar("alpha", vec![0.5_f64; ncells]);
+
+    let report = CfdFlow::qtt_march(&cfg)
+        .run_coupled(stub, field, trigger, 0.01)
+        .unwrap();
+
+    // One n_e / plasma-frequency sample per step (the stub publishes n_e every step).
+    let ne = report.series("n_e").expect("n_e series");
+    let wp = report
+        .series("plasma_frequency")
+        .expect("plasma_frequency series");
+    assert_eq!(ne.len(), steps, "one n_e sample per step");
+    assert_eq!(wp.len(), steps, "one plasma-frequency sample per step");
+    // Inside the window (step 3) n_e reaches the blackout level.
+    assert!(
+        ne.iter().copied().fold(0.0, f64::max) >= 1.0e20,
+        "n_e peaks at the blackout level: {ne:?}"
+    );
+    assert!(wp.iter().all(|w| w.is_finite() && *w >= 0.0), "wp finite");
+
+    // Blackout dwell is a single value = denied_steps · dt, and non-negative.
+    let dwell = report.series("blackout_dwell").expect("dwell series");
+    assert_eq!(dwell.len(), 1, "dwell is a single accumulated value");
+    assert!(dwell[0] >= 0.0, "dwell non-negative: {}", dwell[0]);
+
+    // The final (u, v) fields are exposed on the coupled report too.
+    assert_eq!(report.final_field().unwrap().len(), N * N);
+    assert_eq!(report.series("final_v").unwrap().len(), N * N);
+}
+
+#[test]
+fn run_coupled_body_solver_transports_alpha() {
+    use deep_causality_cfd::body_mask_2d;
+
+    // A body config drives the immersed (Brinkman) solver path in run_coupled, including the
+    // penalized `advance_scalar` transport of the carried "alpha" fraction.
+    let dx = TAU / N as f64;
+    let trunc = Truncation::<f64>::by_bond(4096).unwrap();
+    let c = TAU * 0.5;
+    let mask = body_mask_2d::<f64>(L, L, dx, dx, c, c, TAU * 0.18, 2.0 * dx, &trunc).unwrap();
+
+    let steps = 4usize;
+    let cfg = QttMarchConfigBuilder::<f64>::new()
+        .name("blackout_body_qtt")
+        .grid(L, L, dx, dx)
+        .solver(0.005, 0.05, trunc)
+        .seed_fn(|_, _| (1.0, 0.0))
+        .unwrap()
+        .body(mask, 0.0, 0.0, 0.02, 1.0, 2.0 * TAU * 0.18)
+        .stop(MarchStop::Fixed(steps))
+        .observe(QttObserve::default().electron_density())
+        .build()
+        .unwrap();
+
+    let stub = AeroBlackoutStub::new(3.0_f64, 1.0e17, 1.0e20, 1, 4);
+    let trigger = BlackoutTrigger::new(1.0e9);
+
+    let ncells = (1usize << L) * (1usize << L);
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    field.set_scalar("alpha", vec![0.5_f64; ncells]);
+
+    let report = CfdFlow::qtt_march(&cfg)
+        .run_coupled(stub, field, trigger, 0.01)
+        .unwrap();
+
+    // electron_density opted in ⇒ the n_e series is present; the others are not.
+    let ne = report.series("n_e").expect("n_e series");
+    assert_eq!(ne.len(), steps);
+    assert!(report.series("plasma_frequency").is_none());
+    assert!(report.series("blackout_dwell").is_none());
+    assert_eq!(report.final_field().unwrap().len(), N * N);
+}
+
+#[test]
+fn run_coupled_honours_run_overrides() {
+    // seed_with / march_with / observe_with all feed run_coupled: shrink the horizon, swap the seed,
+    // and switch the observe set on the fly.
+    let cfg = coupled_free_config(10); // config says 10 steps + all three blackout series
+
+    let steps = 3usize;
+    let ncells = (1usize << L) * (1usize << L);
+    let u0 = CausalTensor::new(vec![1.0_f64; ncells], vec![N, N]).unwrap();
+    let v0 = CausalTensor::new(vec![0.0_f64; ncells], vec![N, N]).unwrap();
+
+    let stub = AeroBlackoutStub::new(3.0_f64, 1.0e17, 1.0e20, 1, 3);
+    let trigger = BlackoutTrigger::new(1.0e9);
+    let field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+
+    let report = CfdFlow::qtt_march(&cfg)
+        .seed_with(u0, v0)
+        .march_with(MarchStop::Fixed(steps))
+        .observe_with(QttObserve::default().electron_density())
+        .run_coupled(stub, field, trigger, 0.01)
+        .unwrap();
+
+    // The march_with override caps the run at `steps`, and observe_with keeps only n_e.
+    let ne = report.series("n_e").expect("n_e series");
+    assert_eq!(ne.len(), steps, "march_with shortened the horizon");
+    assert!(
+        report.series("plasma_frequency").is_none(),
+        "observe_with dropped plasma_frequency"
+    );
+    assert!(report.series("blackout_dwell").is_none());
+    assert_eq!(report.final_field().unwrap().len(), N * N);
 }

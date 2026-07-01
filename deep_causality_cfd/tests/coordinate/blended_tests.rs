@@ -157,3 +157,25 @@ fn rejects_invalid_geometry_and_lambda() {
     assert!(bad(1.0, 1.0, PI / 2.0, -0.1).is_err(), "lambda < 0");
     assert!(bad(1.0, 1.0, PI / 2.0, 1.1).is_err(), "lambda > 1");
 }
+
+#[test]
+fn metric_provider_physical_gradient_delegates_to_inherent() {
+    // The trait's `physical_gradient` forwards to the inherent method (identical result) — the static
+    // dispatch seam a marcher consumes.
+    let (lx, ly) = (5usize, 5usize);
+    let blend = BlendedMap::new(cfg(lx, 1.0, 1.0, PI / 2.0, 0.4), tr()).unwrap();
+    let u = blend.sample(|xi, eta| (xi * PI).cos() + 0.3 * eta).unwrap();
+
+    let (ax, ay) = MetricProvider::physical_gradient(&blend, &u).unwrap();
+    let (bx, by) = blend.physical_gradient(&u).unwrap();
+    let ax = dequantize_2d(&ax, lx, ly).unwrap();
+    let bx = dequantize_2d(&bx, lx, ly).unwrap();
+    let ay = dequantize_2d(&ay, lx, ly).unwrap();
+    let by = dequantize_2d(&by, lx, ly).unwrap();
+    for (p, q) in ax.as_slice().iter().zip(bx.as_slice()) {
+        assert!((p - q).abs() < 1e-12, "∂/∂x trait vs inherent: {p} vs {q}");
+    }
+    for (p, q) in ay.as_slice().iter().zip(by.as_slice()) {
+        assert!((p - q).abs() < 1e-12, "∂/∂y trait vs inherent: {p} vs {q}");
+    }
+}

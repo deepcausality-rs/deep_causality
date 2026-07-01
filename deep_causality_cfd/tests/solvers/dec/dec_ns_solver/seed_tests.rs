@@ -128,3 +128,39 @@ fn seed_projection_spectral_path_ignores_cg_starvation() {
     let result = starved.seed_from_vertex_vectors(&tg_vertex_tensor(&manifold, n));
     assert!(result.is_ok(), "{result:?}");
 }
+
+/// On a mixed-periodicity (wall-bounded) lattice the seed projection runs
+/// the iterative constrained CG, which a one-iteration budget starves: the
+/// seed fails and surfaces the projection error.
+#[test]
+fn seed_projection_reports_cg_failure_on_wall_bounded_lattice() {
+    use deep_causality_topology::HodgeDecomposeOptions;
+
+    let lattice = LatticeComplex::<2, f64>::new([8, 6], [true, false]);
+    let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
+    let data = CausalTensor::new(vec![0.0; total], vec![total]).unwrap();
+    let metric: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::unit();
+    let manifold = Manifold::from_cubical_with_metric(lattice, data, metric, 0);
+
+    let n0 = manifold.complex().num_cells(0);
+    let mut vertex = vec![0.0; 2 * n0];
+    for (vi, v) in manifold.complex().iter_cells(0).enumerate() {
+        let (x, y) = (v.position()[0] as f64, v.position()[1] as f64);
+        vertex[2 * vi] = (0.7 * x).sin() + 0.3 * y;
+        vertex[2 * vi + 1] = (0.5 * y).cos() * 0.2;
+    }
+    let seed = CausalTensor::new(vertex, vec![2 * n0]).unwrap();
+
+    let starved = DecNsSolver::new(&manifold, 0.01, 0.05, None)
+        .unwrap()
+        .with_cg_options(HodgeDecomposeOptions {
+            tolerance: Some(1e-14),
+            max_iterations: Some(1),
+        });
+    let err = starved.seed_from_vertex_vectors(&seed).unwrap_err();
+    let msg = err.to_string().to_lowercase();
+    assert!(
+        msg.contains("leray") || msg.contains("projection") || msg.contains("converge"),
+        "expected a projection CG failure, got: {err}"
+    );
+}

@@ -4,6 +4,7 @@
  */
 
 use deep_causality_cfd::{dequantize, gradient, laplacian, quantize, shift_minus, shift_plus};
+use deep_causality_physics::PhysicsErrorEnum;
 use deep_causality_tensor::{
     CausalTensor, CausalTensorTrainOperator, TensorTrainOperator, Truncation,
 };
@@ -70,6 +71,40 @@ fn laplacian_matches_dense_stencil() {
         let want = (u[(k + 1) % n] + u[(k + n - 1) % n] - 2.0 * u[k]) / (dx * dx);
         assert!((g - want).abs() <= 1e-9, "k={k}: {g} vs {want}");
     }
+}
+
+#[test]
+fn shift_plus_rejects_zero_modes() {
+    // l == 0 is the degenerate guard: a shift needs at least one mode.
+    let err = shift_plus::<f64>(0).unwrap_err();
+    assert!(matches!(err.0, PhysicsErrorEnum::DimensionMismatch(_)));
+    // shift_minus is the transpose of shift_plus, so it propagates the same guard.
+    assert!(shift_minus::<f64>(0).is_err());
+}
+
+#[test]
+fn shift_plus_single_mode_is_the_2_cycle_swap() {
+    // l == 1 is a distinct branch: the sole mode is both MSB and LSB, so S₊ = NOT (swap [a, b]).
+    let u = field(vec![3.0, 7.0]); // N = 2, L = 1
+    let got = apply_to_field(&shift_plus::<f64>(1).unwrap(), &u);
+    // (S₊·u)[k] = u[(k−1) mod 2] ⇒ [u[1], u[0]] = [7, 3].
+    assert!((got[0] - 7.0).abs() <= TOL, "got {got:?}");
+    assert!((got[1] - 3.0).abs() <= TOL, "got {got:?}");
+    // shift_minus(1) inverts it back to the original.
+    let sm = shift_minus::<f64>(1).unwrap();
+    let sp = shift_plus::<f64>(1).unwrap();
+    let q = quantize(&u, &full()).unwrap();
+    let back = dequantize(&sm.apply(&sp.apply(&q, &full()).unwrap(), &full()).unwrap()).unwrap();
+    for (a, b) in back.as_slice().iter().zip(u.as_slice()) {
+        assert!((a - b).abs() <= TOL, "S₋∘S₊ ≠ I at L=1: {a} vs {b}");
+    }
+}
+
+#[test]
+fn gradient_and_laplacian_reject_zero_modes() {
+    // gradient/laplacian build shifts internally, so l == 0 propagates the shift guard.
+    assert!(gradient::<f64>(0, 0.5, &full()).is_err());
+    assert!(laplacian::<f64>(0, 0.5, &full()).is_err());
 }
 
 #[test]

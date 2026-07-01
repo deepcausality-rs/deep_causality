@@ -11,9 +11,10 @@
 
 use deep_causality_cfd::{
     BodyFittedCoordinate3d, CartesianIdentity3d, CompressibleMarcher3d,
-    CompressibleMarcher3dFitted, EulerState3d,
+    CompressibleMarcher3dFitted, EulerState3d, EulerStateTt3d, Marcher, dequantize_3d, quantize_3d,
 };
-use deep_causality_tensor::Truncation;
+use deep_causality_physics::PhysicsErrorEnum;
+use deep_causality_tensor::{CausalTensor, Truncation};
 
 const TAU: f64 = core::f64::consts::TAU;
 const GAMMA: f64 = 1.4;
@@ -236,5 +237,170 @@ fn repin_engages_and_pins_the_radial_front_to_the_target_band() {
     assert!(
         peak <= 1usize << ((3 * l) / 2),
         "re-pinned bond stays within the full-rank ceiling: {peak}"
+    );
+}
+
+#[test]
+fn new_rejects_non_positive_reference_speed() {
+    // The fitted constructor rejects a non-finite / non-positive reference wave speed with a
+    // `NumericalInstability`.
+    let l = 3usize;
+    let dx = 1.0 / (1usize << l) as f64;
+    let ident = CartesianIdentity3d::<f64>::new(l, l, l, dx, dx, dx, tr()).unwrap();
+    match CompressibleMarcher3dFitted::new(ident, dx, GAMMA, 0.001, 0.0, tr()) {
+        Ok(_) => panic!("s_ref = 0 must error"),
+        Err(e) => assert!(
+            matches!(e.0, PhysicsErrorEnum::NumericalInstability(_)),
+            "s_ref = 0 must be a NumericalInstability: {e:?}"
+        ),
+    }
+    let ident2 = CartesianIdentity3d::<f64>::new(l, l, l, dx, dx, dx, tr()).unwrap();
+    assert!(
+        CompressibleMarcher3dFitted::new(ident2, dx, GAMMA, 0.001, -1.0, tr()).is_err(),
+        "negative s_ref must also error"
+    );
+}
+
+#[test]
+fn metric_getter_returns_the_coordinate() {
+    // The `metric()` accessor returns the coordinate the marcher runs over (here a body-fitted shell),
+    // whose parameters must round-trip.
+    let l = 3usize;
+    let dx = 1.0 / (1usize << l) as f64;
+    let shell =
+        BodyFittedCoordinate3d::<f64>::new(l, l, l, 0.5, 1.0, 0.4, 1.5, 0.0, TAU, tr()).unwrap();
+    let marcher = CompressibleMarcher3dFitted::new(shell, dx, GAMMA, 0.0005, 2.0, tr()).unwrap();
+    let m = marcher.metric();
+    assert!((m.r0() - 0.5).abs() < 1e-15, "metric r0 round-trips");
+    assert!((m.dr() - 1.0).abs() < 1e-15, "metric dr round-trips");
+}
+
+#[test]
+fn advance_matches_one_step_on_the_identity_chart() {
+    // The `Marcher` trait impl for the fitted marcher: `advance` is exactly one `step`, and a uniform
+    // state is a fixed point of it.
+    let l = 3usize;
+    let n = 1usize << (3 * l);
+    let dx = 1.0 / (1usize << l) as f64;
+    let q = |buf: Vec<f64>| {
+        quantize_3d(
+            &CausalTensor::new(buf, vec![1 << l, 1 << l, 1 << l]).unwrap(),
+            &tr(),
+        )
+        .unwrap()
+    };
+    let (rho, u, v, w, p) = (1.1, 0.2, 0.1, 0.05, 0.7);
+    let e = p / (GAMMA - 1.0) + 0.5 * rho * (u * u + v * v + w * w);
+    let state: EulerStateTt3d<f64> = [
+        q(vec![rho; n]),
+        q(vec![rho * u; n]),
+        q(vec![rho * v; n]),
+        q(vec![rho * w; n]),
+        q(vec![e; n]),
+    ];
+    let ident = CartesianIdentity3d::<f64>::new(l, l, l, dx, dx, dx, tr()).unwrap();
+    let marcher = CompressibleMarcher3dFitted::new(ident, dx, GAMMA, 0.001, 1.3, tr()).unwrap();
+
+    let advanced = Marcher::advance(&marcher, &state, &()).unwrap();
+    let stepped = marcher.step(&state).unwrap();
+    let a0 = dequantize_3d(&advanced[0], l, l, l).unwrap();
+    let s0 = dequantize_3d(&stepped[0], l, l, l).unwrap();
+    for (&a, &s) in a0.as_slice().iter().zip(s0.as_slice()) {
+        assert!((a - s).abs() < 1e-14, "advance must equal step");
+    }
+    for &d in a0.as_slice() {
+        assert!(
+            (d - rho).abs() < 1e-9,
+            "advance must preserve free-stream ρ: {d}"
+        );
+    }
+}
+
+#[test]
+fn run_rejects_wrong_length_state() {
+    // `run` guards each component buffer against a length ≠ 2^Lx·2^Ly·2^Lz.
+    let l = 3usize;
+    let dx = 1.0 / (1usize << l) as f64;
+    let ident = CartesianIdentity3d::<f64>::new(l, l, l, dx, dx, dx, tr()).unwrap();
+    let marcher = CompressibleMarcher3dFitted::new(ident, dx, GAMMA, 0.001, 1.3, tr()).unwrap();
+    let bad: EulerState3d<f64> = [
+        vec![1.0; 7],
+        vec![0.0; 7],
+        vec![0.0; 7],
+        vec![0.0; 7],
+        vec![2.5; 7],
+    ];
+    let err = marcher.run(&bad, 1).unwrap_err();
+    assert!(
+        matches!(err.0, PhysicsErrorEnum::DimensionMismatch(_)),
+        "wrong-length state must be a DimensionMismatch: {err:?}"
+    );
+}
+
+#[test]
+fn run_rejects_non_positive_density() {
+    // The fitted flux/EOS enforces positivity: a negative-density cell must surface a
+    // `PhysicalInvariantBroken`.
+    let l = 3usize;
+    let n = 1usize << (3 * l);
+    let dx = 1.0 / (1usize << l) as f64;
+    let ident = CartesianIdentity3d::<f64>::new(l, l, l, dx, dx, dx, tr()).unwrap();
+    let marcher = CompressibleMarcher3dFitted::new(ident, dx, GAMMA, 0.001, 1.3, tr()).unwrap();
+    let mut rho = vec![1.0; n];
+    rho[11] = -0.2; // non-physical density
+    let state: EulerState3d<f64> = [rho, vec![0.0; n], vec![0.0; n], vec![0.0; n], vec![2.5; n]];
+    let err = marcher.run(&state, 1).unwrap_err();
+    assert!(
+        matches!(err.0, PhysicsErrorEnum::PhysicalInvariantBroken(_)),
+        "non-positive density must break the positivity invariant: {err:?}"
+    );
+}
+
+#[test]
+fn run_repinned_rejects_wrong_length_state() {
+    // `run_repinned` (body-fitted shell only) guards the state length before marching.
+    let l = 3usize;
+    let dx = 1.0 / (1usize << l) as f64;
+    let shell =
+        BodyFittedCoordinate3d::<f64>::new(l, l, l, 0.5, 1.0, 0.4, 1.5, 0.0, TAU, tr()).unwrap();
+    let marcher = CompressibleMarcher3dFitted::new(shell, dx, GAMMA, 0.0005, 2.0, tr()).unwrap();
+    let bad: EulerState3d<f64> = [
+        vec![1.0; 7],
+        vec![0.0; 7],
+        vec![0.0; 7],
+        vec![0.0; 7],
+        vec![2.5; 7],
+    ];
+    let err = marcher.run_repinned(&bad, 2, 4).unwrap_err();
+    assert!(
+        matches!(err.0, PhysicsErrorEnum::DimensionMismatch(_)),
+        "wrong-length state must be a DimensionMismatch: {err:?}"
+    );
+}
+
+#[test]
+fn run_repinned_never_repins_on_a_thin_zeta_grid() {
+    // With Nz < 5 the front locator returns `None` (too thin to bracket a front), so `run_repinned`
+    // completes without ever re-pinning — exercising the thin-grid guard.
+    let (lx, ly, lz) = (3usize, 3usize, 2usize); // Nz = 4 < 5
+    let (nx, ny, nz) = (1usize << lx, 1usize << ly, 1usize << lz);
+    let n = nx * ny * nz;
+    let dx = 1.0 / nx as f64;
+    let shell =
+        BodyFittedCoordinate3d::<f64>::new(lx, ly, lz, 0.5, 1.0, 0.4, 1.5, 0.0, TAU, tr()).unwrap();
+    let marcher = CompressibleMarcher3dFitted::new(shell, dx, GAMMA, 0.0005, 2.0, tr()).unwrap();
+    let (p, w) = (1.0f64, 0.05f64);
+    let e = p / (GAMMA - 1.0) + 0.5 * 1.0 * w * w;
+    let state: EulerState3d<f64> = [
+        vec![1.0; n],
+        vec![0.0; n],
+        vec![0.0; n],
+        vec![1.0 * w; n],
+        vec![e; n],
+    ];
+    let (_out, _peak, n_repin) = marcher.run_repinned(&state, 3, 1).unwrap();
+    assert_eq!(
+        n_repin, 0,
+        "a thin ζ grid (Nz < 5) can never locate a front, so no re-pin: {n_repin}"
     );
 }

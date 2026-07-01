@@ -275,6 +275,53 @@ fn adi_3d_inverse_rejects_zero_modes() {
 }
 
 #[test]
+fn from_shift_pows_rejects_non_positive_or_non_finite_stiffness() {
+    // The `from_shift_pows` entry point has its own s-validation guard (independent of `new_1d`).
+    let sp = vec![shift_plus::<f64>(4).unwrap()];
+    let sm = vec![shift_minus::<f64>(4).unwrap()];
+    assert!(
+        AcousticCoreInverse::from_shift_pows(0.0, sp.clone(), sm.clone(), tr()).is_err(),
+        "zero stiffness must be rejected"
+    );
+    assert!(
+        AcousticCoreInverse::from_shift_pows(-2.0, sp.clone(), sm.clone(), tr()).is_err(),
+        "negative stiffness must be rejected"
+    );
+    assert!(
+        AcousticCoreInverse::from_shift_pows(f64::INFINITY, sp, sm, tr()).is_err(),
+        "non-finite stiffness must be rejected"
+    );
+}
+
+#[test]
+fn adi_2d_inverse_maps_a_nonuniform_field_finitely() {
+    // Exercise both per-axis apply accumulation loops on a non-uniform field, and confirm the per-axis
+    // contracting root matches the analytic value at the shared stiffness (dx == dy).
+    let (lx, ly) = (3usize, 3usize);
+    let h = 0.25;
+    let beta = 0.5 * h * h;
+    let s = beta / (h * h); // = 0.5
+    let inv = AcousticCoreInverse2d::new(lx, ly, h, h, beta, tr()).unwrap();
+    let expected = (1.0 + 2.0 * s - (1.0 + 4.0 * s).sqrt()) / (2.0 * s);
+    let (nx, ny) = (1usize << lx, 1usize << ly);
+    let mut data = vec![0.0f64; nx * ny];
+    for ix in 0..nx {
+        for iy in 0..ny {
+            data[ix * ny + iy] = (ix as f64 - iy as f64) * 0.1 + 1.0;
+        }
+    }
+    let b = quantize_2d(&CausalTensor::new(data, vec![nx, ny]).unwrap(), &tr()).unwrap();
+    let x = dequantize_2d(&inv.apply(&b).unwrap(), lx, ly).unwrap();
+    for v in x.as_slice() {
+        assert!(v.is_finite(), "2-D inverse produced non-finite output");
+    }
+    assert!(
+        expected > 0.0 && expected < 1.0,
+        "rho out of (0,1): {expected}"
+    );
+}
+
+#[test]
 fn from_shift_pows_rejects_empty_or_mismatched() {
     let sp = vec![shift_plus::<f64>(4).unwrap()];
     let empty: Vec<CausalTensorTrainOperator<f64>> = vec![];

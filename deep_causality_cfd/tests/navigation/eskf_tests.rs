@@ -67,6 +67,35 @@ fn measurement_reduces_uncertainty_and_pulls_the_estimate() {
 }
 
 #[test]
+fn covariance_trace_is_the_sum_of_the_diagonal_and_grows_under_predict() {
+    // The full-covariance trace witnesses total filter uncertainty: it starts as the sum of the initial
+    // diagonal and grows as predict adds process noise + propagates the covariance.
+    let init = [2.0f64; 17];
+    let mut filter = NavFilter::new(InsErrorState::<f64>::zero(), init);
+    let expected: f64 = init.iter().sum();
+    assert!(
+        (filter.covariance_trace() - expected).abs() < 1e-12,
+        "initial trace is the diagonal sum: {} vs {expected}",
+        filter.covariance_trace()
+    );
+    let before = filter.covariance_trace();
+    let q = [1e-3; 17];
+    for _ in 0..50 {
+        filter.predict(0.01, [9.81, 0.0, 0.0], q);
+    }
+    assert!(
+        filter.covariance_trace() > before,
+        "predict grows the total uncertainty: {before} -> {}",
+        filter.covariance_trace()
+    );
+    // The trace bounds the position-error variance (a subset of the diagonal).
+    assert!(
+        filter.covariance_trace() >= filter.position_variance(),
+        "trace must dominate the position-block variance"
+    );
+}
+
+#[test]
 fn closed_loop_reacquires_after_a_blackout_coast() {
     // Predict-only through a "blackout" (uncertainty accumulates), then a returning GNSS position fix
     // (three scalar updates) collapses the position variance — the reacquisition the flagship needs.

@@ -112,6 +112,18 @@ fn rejects_poles_and_nonpositive_parameters() {
 }
 
 #[test]
+fn geometry_getters_report_construction_parameters() {
+    // shell(l) is built with r ∈ [1, 2], θ ∈ [0.3, 2.3], φ ∈ [0, 2π): r0=1, dr=1, θ0=0.3, dθ=2, φ0=0, dφ=2π.
+    let coord = shell(4);
+    assert!((coord.r0() - 1.0).abs() < 1e-15, "r0");
+    assert!((coord.dr() - 1.0).abs() < 1e-15, "dr");
+    assert!((coord.theta0() - 0.3).abs() < 1e-15, "theta0");
+    assert!((coord.dtheta() - 2.0).abs() < 1e-15, "dtheta");
+    assert!((coord.phi0() - 0.0).abs() < 1e-15, "phi0");
+    assert!((coord.dphi() - TAU).abs() < 1e-15, "dphi");
+}
+
+#[test]
 fn usable_by_static_dispatch() {
     fn dims_of<M: MetricProvider3d<f64>>(m: &M) -> (usize, usize, usize) {
         m.dims()

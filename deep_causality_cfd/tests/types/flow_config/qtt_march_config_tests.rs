@@ -108,3 +108,72 @@ fn rejects_missing_grid_or_solver() {
         .build();
     assert!(r.is_err());
 }
+
+#[test]
+fn rejects_missing_seed() {
+    let trunc = Truncation::<f64>::by_tol(1e-9).unwrap();
+    // Grid + solver set, but no seed supplied.
+    let r = QttMarchConfigBuilder::<f64>::new()
+        .grid(2, 2, 0.1, 0.1)
+        .solver(0.01, 0.05, trunc)
+        .build();
+    assert!(r.is_err(), "a missing seed must be rejected");
+}
+
+#[test]
+fn config_accessors_report_name_and_modes() {
+    let lx = 3usize; // 8
+    let ly = 2usize; // 4
+    let (nx, ny) = (8usize, 4usize);
+    let dx = TAU / nx as f64;
+    let dy = TAU / ny as f64;
+    let trunc = Truncation::<f64>::by_tol(1e-9).unwrap();
+
+    let cfg = QttMarchConfigBuilder::<f64>::new()
+        .name("named_case")
+        .grid(lx, ly, dx, dy)
+        .solver(0.01, 0.05, trunc)
+        .seed_fn(|_, _| (0.0, 0.0))
+        .unwrap()
+        .build()
+        .unwrap();
+
+    // `name()` and `modes()` accessors.
+    assert_eq!(cfg.name(), "named_case");
+    assert_eq!(cfg.modes(), (lx, ly));
+    assert_eq!(cfg.seed_u().shape(), [nx, ny]);
+}
+
+#[test]
+fn default_name_when_unset() {
+    let trunc = Truncation::<f64>::by_tol(1e-9).unwrap();
+    let cfg = QttMarchConfigBuilder::<f64>::new()
+        .grid(2, 2, 0.1, 0.1)
+        .solver(0.01, 0.05, trunc)
+        .seed_fn(|_, _| (0.0, 0.0))
+        .unwrap()
+        .build()
+        .unwrap();
+    // No `.name(...)` call → the default case name.
+    assert_eq!(cfg.name(), "qtt_march");
+}
+
+#[test]
+fn blackout_observe_flags_chain_and_build() {
+    // The blackout observe builders (`electron_density`/`plasma_frequency`/`blackout_dwell`) each
+    // opt a series in; here we exercise the fluent chain and confirm the config still builds.
+    let trunc = Truncation::<f64>::by_tol(1e-9).unwrap();
+    let observe = QttObserve::default()
+        .electron_density()
+        .plasma_frequency()
+        .blackout_dwell();
+    let cfg = QttMarchConfigBuilder::<f64>::new()
+        .grid(2, 2, 0.1, 0.1)
+        .solver(0.01, 0.05, trunc)
+        .seed_fn(|_, _| (0.0, 0.0))
+        .unwrap()
+        .observe(observe)
+        .build()
+        .unwrap();
+    assert_eq!(cfg.modes(), (2, 2));
+}

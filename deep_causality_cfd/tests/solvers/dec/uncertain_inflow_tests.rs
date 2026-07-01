@@ -326,6 +326,50 @@ fn inflow_step_on_a_consumed_solver_short_circuits() {
 }
 
 #[test]
+fn inflow_step_short_circuits_when_sample_resolution_fails() {
+    // A QMC collapse of a branch-divergent conditional sample fails (the tree is not statically
+    // structured). The march step must short-circuit on the resolution error, keeping the solver
+    // live in the returned state.
+    use deep_causality_uncertain::Uncertain;
+
+    let m = wall_manifold();
+    let state = InflowMarchState::new(base_solver(&m), rest_seed(&m), U_IN);
+    let zone = UncertainInflowZone::new(1, true, 0, U_IN)
+        .with_presence_gate(0.5, 0.9, 0.1, 64)
+        .with_collapse_samples(8)
+        .with_qmc_collapse(0x0BAD_5EED);
+
+    let cond = Uncertain::<bool>::point(true);
+    let dynamic = Uncertain::<f64>::conditional(
+        cond,
+        Uncertain::normal(0.2, 0.01),
+        Uncertain::normal(0.9, 0.01),
+    );
+    let context = InflowContext::new(zone, vec![MaybeUncertain::<f64>::from_uncertain(dynamic)]);
+
+    let process = inflow_march_step(EffectValue::Value(U_IN), state, Some(context));
+    let err = process
+        .error()
+        .clone()
+        .expect("a resolution failure short-circuits the step");
+    assert!(
+        format!("{err:?}").contains("resolution"),
+        "expected the sample-resolution guard: {err:?}"
+    );
+    // The solver survives the resolution failure (it was never consumed), so the state is re-marchable.
+    assert!(
+        process
+            .state
+            .field()
+            .as_one_form()
+            .as_slice()
+            .iter()
+            .all(|v| v.is_finite()),
+        "the field is preserved through a resolution failure"
+    );
+}
+
+#[test]
 fn memory_cost_is_confined_to_the_tagged_patch() {
     let m = wall_manifold();
     let n0 = m.complex().num_cells(0);

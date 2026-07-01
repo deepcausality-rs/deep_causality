@@ -10,6 +10,7 @@
 use deep_causality_cfd::{
     CompressibleMarcher3d, EulerState3d, EulerStateTt3d, Marcher, dequantize_3d, quantize_3d,
 };
+use deep_causality_physics::PhysicsErrorEnum;
 use deep_causality_tensor::{CausalTensor, Truncation};
 
 const TAU: f64 = core::f64::consts::TAU;
@@ -148,4 +149,23 @@ fn run_rejects_wrong_length_state() {
         vec![1.0; 7],
     ];
     assert!(marcher.run(&bad, 1).is_err());
+}
+
+#[test]
+fn run_rejects_non_positive_density() {
+    // The pointwise 3-D flux/EOS enforces positivity: a negative-density cell must surface a
+    // `PhysicalInvariantBroken` on the first flux evaluation.
+    let l = 3usize;
+    let n = 1usize << (3 * l);
+    let dx = 1.0 / (1usize << l) as f64;
+    let marcher =
+        CompressibleMarcher3d::<f64>::new((l, l, l), dx, GAMMA, 0.001, 1.3, tr()).unwrap();
+    let mut rho = vec![1.0; n];
+    rho[9] = -0.4; // non-physical density
+    let state: EulerState3d<f64> = [rho, vec![0.0; n], vec![0.0; n], vec![0.0; n], vec![2.5; n]];
+    let err = marcher.run(&state, 1).unwrap_err();
+    assert!(
+        matches!(err.0, PhysicsErrorEnum::PhysicalInvariantBroken(_)),
+        "non-positive density must break the positivity invariant: {err:?}"
+    );
 }

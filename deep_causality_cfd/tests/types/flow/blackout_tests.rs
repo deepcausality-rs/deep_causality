@@ -220,3 +220,84 @@ fn test_blackout_trigger_classify_is_pure_effect() {
         panic!("expected Value");
     }
 }
+
+// ── No-op guard branches (prerequisite scalar absent) ────────────────────
+
+#[test]
+fn test_recovery_temperature_without_speed_is_a_noop() {
+    // No "speed" field present → the stage returns Ok without writing "T_tr".
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 1.0e-6, 1);
+    let stage = RecoveryTemperatureStage::new(25.0, 1.4, 200.0, 1004.0);
+    let mut field = CoupledField::new(Ambient::new(0.01_f64, 0.0, None));
+    stage.apply(&ctx, &mut field).expect("noop without speed");
+    assert!(field.scalar("T_tr").is_none());
+}
+
+#[test]
+fn test_ionization_without_t_tr_is_a_noop() {
+    // No "T_tr" field present → the ionization stage returns Ok without writing "alpha"/"n_e".
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 1.0e-6, 1);
+    let stage = IonizationStage::new(1.0e22_f64);
+    let mut field = CoupledField::new(Ambient::new(0.01_f64, 0.0, None));
+    stage.apply(&ctx, &mut field).expect("noop without T_tr");
+    assert!(field.scalar("alpha").is_none());
+    assert!(field.scalar("n_e").is_none());
+}
+
+#[test]
+fn test_eos_without_t_tr_is_a_noop() {
+    // No "T_tr" field present → the EOS stage returns Ok without writing "pressure".
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 1.0e-6, 1);
+    let stage = EosStage::new(1.0e22_f64);
+    let mut field = CoupledField::new(Ambient::new(0.01_f64, 0.0, None));
+    stage.apply(&ctx, &mut field).expect("noop without T_tr");
+    assert!(field.scalar("pressure").is_none());
+}
+
+// ── Frozen-chemistry timescale (vanishing forward rate) ──────────────────
+
+#[test]
+fn test_ionization_frozen_chemistry_leaves_alpha_unchanged() {
+    // At a very low temperature the Arrhenius forward rate exp(−T_a/T) underflows to zero,
+    // so the concentration-scaled denominator vanishes and τ falls to the frozen branch
+    // (τ ≫ dt). The LER step then leaves α essentially unchanged (no spurious equilibrium jump).
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 1.0e-6, 1);
+    let stage = IonizationStage::new(1.0e22_f64);
+    let mut field = CoupledField::new(Ambient::new(0.01_f64, 0.0, None));
+    field.set_scalar("T_tr", vec![1.0_f64]); // 1 K ⇒ exp(−32400) == 0.0 ⇒ frozen τ
+    stage
+        .apply(&ctx, &mut field)
+        .expect("frozen-chemistry step applies");
+    let alpha = field
+        .scalar("alpha")
+        .expect("alpha seeded on first contact");
+    // Cold start at α = 0; the frozen step keeps it at (essentially) zero.
+    assert!(alpha[0].abs() < 1e-12, "frozen α stayed put: {}", alpha[0]);
+    assert_eq!(field.scalar("n_e").expect("n_e written")[0], 0.0);
+}
+
+// ── classify error path (kernel overflow) ────────────────────────────────
+
+#[test]
+fn test_blackout_trigger_classify_propagates_kernel_error() {
+    use deep_causality_core::EffectValue;
+    // An enormous but finite electron density overflows the plasma-frequency kernel to a
+    // non-finite ω_p, which PlasmaFrequency::new rejects — classify carries the error effect.
+    let trigger = BlackoutTrigger::new(9.4e9_f64);
+    let effect = trigger.classify(ElectronDensity::<f64>::new(f64::MAX).unwrap());
+    assert!(
+        effect.is_err(),
+        "the kernel overflow surfaces as an error effect"
+    );
+    assert!(!matches!(effect.value(), EffectValue::Value(_)));
+    // The plain-Result form errors the same way.
+    assert!(
+        trigger
+            .evaluate(ElectronDensity::<f64>::new(f64::MAX).unwrap())
+            .is_err()
+    );
+}

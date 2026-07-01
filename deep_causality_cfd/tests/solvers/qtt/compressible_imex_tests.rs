@@ -10,6 +10,7 @@
 use deep_causality_cfd::{
     AcousticImex1d, conservation_round, dequantize, positivity_floor, quantize,
 };
+use deep_causality_physics::PhysicsErrorEnum;
 use deep_causality_tensor::{CausalTensor, CausalTensorTrain, Truncation};
 
 const TAU: f64 = core::f64::consts::TAU;
@@ -171,4 +172,29 @@ fn positivity_floor_holds_through_a_steep_front() {
         worst >= floor - 1e-9,
         "the positivity floor must hold through the steep front: min = {worst}"
     );
+}
+
+#[test]
+fn new_rejects_wrong_length_c2() {
+    // The constructor guards the sound-speed field against a length ≠ 2^l: a short `c2` must surface a
+    // `DimensionMismatch`.
+    let l = 6usize;
+    let n = 1usize << l;
+    let dx = 1.0 / n as f64;
+    let c2 = vec![1.0f64; n - 1]; // one cell short of 2^l
+    match AcousticImex1d::<f64>::new(l, dx, 1.0, 1.0, 1e-3, &c2, tr()) {
+        Ok(_) => panic!("wrong-length c2 must error"),
+        Err(e) => assert!(
+            matches!(e.0, PhysicsErrorEnum::DimensionMismatch(_)),
+            "wrong-length c2 must be a DimensionMismatch: {e:?}"
+        ),
+    }
+}
+
+#[test]
+fn grid_getter_returns_two_to_the_l() {
+    // The `grid()` accessor reports the grid size 2^l.
+    let (imex, n, _dx) = build(5, 1.0);
+    assert_eq!(imex.grid(), n, "grid() must report 2^l");
+    assert_eq!(imex.grid(), 1usize << 5);
 }

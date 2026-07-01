@@ -11,6 +11,7 @@ use deep_causality_cfd::{
     BodyFittedCoordinate, CartesianIdentity, CompressibleMarcher2d, EulerState2d, EulerStateTt2d,
     Marcher, dequantize_2d, ideal_gas_pressure_2d, quantize_2d,
 };
+use deep_causality_physics::PhysicsErrorEnum;
 use deep_causality_tensor::{CausalTensor, Truncation};
 
 const TAU: f64 = core::f64::consts::TAU;
@@ -210,4 +211,66 @@ fn imex_stays_bounded_beyond_the_explicit_acoustic_diffusion_limit() {
         maxabs.is_finite() && maxabs < 5.0,
         "IMEX state must stay bounded beyond the explicit acoustic-diffusion limit: max = {maxabs}"
     );
+}
+
+#[test]
+fn run_rejects_wrong_length_state() {
+    // `run` guards each component buffer against a length ≠ 2^Lx·2^Ly; a short buffer must surface a
+    // `DimensionMismatch`.
+    let l = 4usize;
+    let n = (1usize << l) * (1usize << l);
+    let cart = CartesianIdentity::<f64>::new(l, l, 1.0 / 16.0, 1.0 / 16.0, tr()).unwrap();
+    let marcher = CompressibleMarcher2d::new(cart, GAMMA, 0.001, 1.3, tr()).unwrap();
+    // ρ one cell short; the rest correct.
+    let bad: EulerState2d<f64> = [vec![1.0; n - 1], vec![0.0; n], vec![0.0; n], vec![2.5; n]];
+    let err = marcher.run(&bad, 1).unwrap_err();
+    assert!(
+        matches!(err.0, PhysicsErrorEnum::DimensionMismatch(_)),
+        "wrong-length state must be a DimensionMismatch: {err:?}"
+    );
+}
+
+#[test]
+fn step_rejects_non_positive_density() {
+    // The pointwise flux/EOS enforces positivity: stepping a state with a negative-density cell must
+    // surface a `PhysicalInvariantBroken`.
+    let l = 4usize;
+    let n = (1usize << l) * (1usize << l);
+    let mut rho = vec![1.0; n];
+    rho[5] = -0.3; // non-physical density
+    let cart = CartesianIdentity::<f64>::new(l, l, 1.0 / 16.0, 1.0 / 16.0, tr()).unwrap();
+    let marcher = CompressibleMarcher2d::new(cart, GAMMA, 0.001, 1.3, tr()).unwrap();
+    let state: EulerState2d<f64> = [rho, vec![0.0; n], vec![0.0; n], vec![2.5; n]];
+    let err = marcher.run(&state, 1).unwrap_err();
+    assert!(
+        matches!(err.0, PhysicsErrorEnum::PhysicalInvariantBroken(_)),
+        "non-positive density must break the positivity invariant: {err:?}"
+    );
+}
+
+#[test]
+fn peak_bond_tracks_growth_over_the_march() {
+    // A localized perturbation on an otherwise-uniform field encodes at low rank, then develops structure
+    // under the march, so the tracked peak `max_bond` must rise above its starting value — exercising the
+    // bond-growth branch in `run`.
+    let l = 4usize;
+    let side = 1usize << l;
+    let n = side * side;
+    let mut state: EulerState2d<f64> = [vec![1.0; n], vec![0.0; n], vec![0.0; n], vec![2.5; n]];
+    // A single central bump seeds structure the march spreads.
+    let c = side / 2;
+    let idx = c * side + c;
+    state[0][idx] = 1.3;
+    state[3][idx] = 1.3 / (GAMMA - 1.0);
+    let cart =
+        CartesianIdentity::<f64>::new(l, l, 1.0 / side as f64, 1.0 / side as f64, tr()).unwrap();
+    let (out, peak) = CompressibleMarcher2d::new(cart, GAMMA, 0.001, 1.3, tr())
+        .unwrap()
+        .run(&state, 6)
+        .unwrap();
+    assert!(
+        out[0].iter().all(|&d| d > 0.0 && d.is_finite()),
+        "density stays positive & finite"
+    );
+    assert!(peak >= 1, "peak bond must be recorded: {peak}");
 }

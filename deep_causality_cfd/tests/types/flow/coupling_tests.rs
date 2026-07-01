@@ -76,6 +76,35 @@ fn step_context_exposes_manifold_velocity_and_step() {
 }
 
 #[test]
+fn dec_context_exposes_manifold_and_velocity_some() {
+    // The DEC-backed context returns `Some(..)` from both the manifold and velocity accessors.
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.1, 2);
+    assert!(ctx.manifold().is_some(), "DEC context carries a manifold");
+    assert!(ctx.velocity().is_some(), "DEC context carries a velocity");
+    // And it can sample the (zero) velocity field.
+    let v = ctx.sample_velocity(&[1.0, 1.0]).expect("DEC sample");
+    assert!(v.iter().all(|c| c.abs() < 1e-12));
+}
+
+#[test]
+fn qtt_context_has_no_manifold_or_velocity_and_cannot_sample() {
+    // The QTT-backed context carries neither manifold nor velocity, and `sample_velocity` errors.
+    let ctx = StepContext::<2, f64>::qtt(0.1, 3);
+    assert_eq!(ctx.dt(), 0.1);
+    assert_eq!(ctx.step(), 3);
+    assert!(ctx.manifold().is_none(), "QTT context has no manifold");
+    assert!(ctx.velocity().is_none(), "QTT context has no velocity");
+    let err = ctx
+        .sample_velocity(&[0.0, 0.0])
+        .expect_err("no manifold to sample on a QTT context");
+    assert!(matches!(
+        err.0,
+        PhysicsErrorEnum::PhysicalInvariantBroken(_)
+    ));
+}
+
+#[test]
 fn coupled_field_scalar_set_replace_and_access() {
     let mut field = CoupledField::new(Ambient::new(0.01_f64, 0.0, None));
     field.set_scalar("temperature", vec![1.0, 2.0]);
