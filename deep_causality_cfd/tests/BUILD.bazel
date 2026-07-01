@@ -1,23 +1,31 @@
 load("@rules_rust//rust:defs.bzl", "rust_test")
 
 # =============================================================================
-# tests mirror the src tree: tests/types/, tests/theories/, tests/solvers/.
+# tests mirror the src tree: tests/coordinate/, tests/navigation/,
+# tests/solvers/, tests/tensor_bridge/, tests/theories/, tests/types/.
 #
 # Each subtree is registered through its own mod.rs aggregator and shares
 # parent-module helpers (e.g. `super::run_march` in types/flow/mod.rs), so it
-# is compiled as a single test binary rooted at that mod.rs rather than as
-# standalone per-file tests.
+# is compiled as a test binary rooted at that mod.rs rather than as standalone
+# per-file tests. The `*_tests.rs` glob does not match the mod.rs aggregators,
+# so each suite lists the mod.rs crate roots it needs explicitly.
+#
+# Subtrees that contain sub-folders are split into one suite per sub-folder,
+# named `<folder>_<subfolder>` (e.g. `solvers_dec`, `types_flow`). The suites
+# are kept in alphabetical order, matching the source tree.
 # =============================================================================
 
 rust_test(
-    name = "types",
+    name = "coordinate",
     srcs = glob([
-        "types/**/*.rs",
-    ]),
+        "coordinate/*_tests.rs",
+    ]) + [
+        "coordinate/mod.rs",
+    ],
     crate_features = [
         "std",
     ],
-    crate_root = "types/mod.rs",
+    crate_root = "coordinate/mod.rs",
     tags = [
         "unit-test",
     ],
@@ -26,8 +34,60 @@ rust_test(
         # Crate to test
         "//deep_causality_cfd",
         # Internal dependencies
+        "//deep_causality_physics",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test(
+    name = "navigation",
+    srcs = glob([
+        "navigation/*_tests.rs",
+    ]) + [
+        "navigation/mod.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "navigation/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_cfd",
+        # Internal dependencies — physics kernels the nav layer composes over
+        "//deep_causality_physics",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test(
+    name = "solvers_dec",
+    srcs = glob([
+        "solvers/dec/**/*_tests.rs",
+    ]) + [
+        "solvers/dec/dec_ns_solver/mod.rs",
+        "solvers/dec/mod.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "solvers/dec/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_cfd",
+        # Internal dependencies
+        "//deep_causality_calculus",
         "//deep_causality_core",
         "//deep_causality_haft",
+        "//deep_causality_num",
+        "//deep_causality_par",
         "//deep_causality_physics",
         "//deep_causality_tensor",
         "//deep_causality_topology",
@@ -36,14 +96,16 @@ rust_test(
 )
 
 rust_test(
-    name = "theories",
+    name = "solvers_dec_config",
     srcs = glob([
-        "theories/**/*.rs",
-    ]),
+        "solvers/dec_config/**/*_tests.rs",
+    ]) + [
+        "solvers/dec_config/mod.rs",
+    ],
     crate_features = [
         "std",
     ],
-    crate_root = "theories/mod.rs",
+    crate_root = "solvers/dec_config/mod.rs",
     tags = [
         "unit-test",
     ],
@@ -52,21 +114,29 @@ rust_test(
         # Crate to test
         "//deep_causality_cfd",
         # Internal dependencies
+        "//deep_causality_calculus",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+        "//deep_causality_num",
+        "//deep_causality_par",
         "//deep_causality_physics",
         "//deep_causality_tensor",
         "//deep_causality_topology",
+        "//deep_causality_uncertain",
     ],
 )
 
 rust_test(
-    name = "solvers",
+    name = "solvers_qtt",
     srcs = glob([
-        "solvers/**/*.rs",
-    ]),
+        "solvers/qtt/**/*_tests.rs",
+    ]) + [
+        "solvers/qtt/mod.rs",
+    ],
     crate_features = [
         "std",
     ],
-    crate_root = "solvers/mod.rs",
+    crate_root = "solvers/qtt/mod.rs",
     tags = [
         "unit-test",
     ],
@@ -90,8 +160,10 @@ rust_test(
 rust_test(
     name = "tensor_bridge",
     srcs = glob([
-        "tensor_bridge/**/*.rs",
-    ]),
+        "tensor_bridge/*_tests.rs",
+    ]) + [
+        "tensor_bridge/mod.rs",
+    ],
     crate_features = [
         "std",
     ],
@@ -110,14 +182,16 @@ rust_test(
 )
 
 rust_test(
-    name = "coordinate",
+    name = "theories",
     srcs = glob([
-        "coordinate/**/*.rs",
-    ]),
+        "theories/*_tests.rs",
+    ]) + [
+        "theories/mod.rs",
+    ],
     crate_features = [
         "std",
     ],
-    crate_root = "coordinate/mod.rs",
+    crate_root = "theories/mod.rs",
     tags = [
         "unit-test",
     ],
@@ -126,19 +200,21 @@ rust_test(
         # Crate to test
         "//deep_causality_cfd",
         # Internal dependencies
+        "//deep_causality_physics",
         "//deep_causality_tensor",
+        "//deep_causality_topology",
     ],
 )
 
 rust_test(
-    name = "navigation",
+    name = "types",
     srcs = glob([
-        "navigation/**/*.rs",
+        "types/*_tests.rs",
     ]),
     crate_features = [
         "std",
     ],
-    crate_root = "navigation/mod.rs",
+    crate_root = "types/ambient_tests.rs",
     tags = [
         "unit-test",
     ],
@@ -146,8 +222,61 @@ rust_test(
     deps = [
         # Crate to test
         "//deep_causality_cfd",
-        # Internal dependencies — physics kernels the nav layer composes over
+    ],
+)
+
+rust_test(
+    name = "types_flow",
+    srcs = glob([
+        "types/flow/**/*_tests.rs",
+    ]) + [
+        "types/flow/mod.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "types/flow/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_cfd",
+        # Internal dependencies
+        "//deep_causality_core",
+        "//deep_causality_haft",
         "//deep_causality_physics",
         "//deep_causality_tensor",
+        "//deep_causality_topology",
+        "//deep_causality_uncertain",
+    ],
+)
+
+rust_test(
+    name = "types_flow_config",
+    srcs = glob([
+        "types/flow_config/**/*_tests.rs",
+    ]) + [
+        "types/flow_config/mod.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "types/flow_config/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_cfd",
+        # Internal dependencies
+        "//deep_causality_core",
+        "//deep_causality_haft",
+        "//deep_causality_physics",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+        "//deep_causality_uncertain",
     ],
 )
