@@ -44,6 +44,7 @@
 
 mod constants;
 mod model;
+mod utils;
 mod utils_print;
 
 use deep_causality_cfd::CfdFlow;
@@ -61,30 +62,30 @@ fn main() {
     // run_until with a never-firing predicate marches the full leg and hands back the *paused*
     // state: the carried CoupledField (nav engine, reacting fraction, provenance log) the next
     // leg resumes from. A plain run would only return a Report and lose the carried state.
-    let approach = model::world(&constants::APPROACH).unwrap_or_else(|e| stop(&e));
+    let approach = model::world(&constants::APPROACH).unwrap_or_else(|e| utils::stop(&e));
     let pause1 = CfdFlow::qtt_march(&approach)
         .run_until(
             model::corridor_coupling(&constants::APPROACH),
             model::initial_field(&constants::APPROACH),
-            model::trigger(),
-            model::ft(constants::SCALAR_KAPPA),
+            utils::trigger(),
+            utils::ft(constants::SCALAR_KAPPA),
             |_, _| false,
         )
-        .unwrap_or_else(|e| stop(&e));
+        .unwrap_or_else(|e| utils::stop(&e));
     let leg1 = model::snapshot("approach ~90 km", &pause1);
     utils_print::print_leg(&leg1);
 
     // ── Leg 2a: peak heating (61 km). March *until blackout onset*, then pause.
-    let peak = model::world(&constants::PEAK).unwrap_or_else(|e| stop(&e));
+    let peak = model::world(&constants::PEAK).unwrap_or_else(|e| utils::stop(&e));
     let onset = CfdFlow::qtt_march(&peak)
         .run_until(
             model::corridor_coupling(&constants::PEAK),
             model::carry_field(&pause1, &constants::PEAK),
-            model::trigger(),
-            model::ft(constants::SCALAR_KAPPA),
+            utils::trigger(),
+            utils::ft(constants::SCALAR_KAPPA),
             |field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false),
         )
-        .unwrap_or_else(|e| stop(&e));
+        .unwrap_or_else(|e| utils::stop(&e));
     let leg2a = model::snapshot("peak 61 km (blackout onset)", &onset);
     utils_print::print_leg(&leg2a);
 
@@ -92,14 +93,14 @@ fn main() {
     // Each fork is O(1) through shared Arcs. Each branch resumes the *same* onset state in its
     // own alternated world (`!!ContextAlternation!!` in its log) and reports its continued
     // segment.
-    let bank_worlds = model::bank_worlds().unwrap_or_else(|e| stop(&e));
+    let bank_worlds = model::bank_worlds().unwrap_or_else(|e| utils::stop(&e));
     let mut branches = Vec::new();
     for (bank_deg, world) in &bank_worlds {
         let report = onset
             .fork()
             .alternate_context(world)
             .continue_march(constants::BRANCH_STEPS)
-            .unwrap_or_else(|e| stop(&e));
+            .unwrap_or_else(|e| utils::stop(&e));
         branches.push(model::score_branch(*bank_deg, &report));
     }
     let committed = model::pick_committed(&branches);
@@ -114,25 +115,25 @@ fn main() {
         .run_until(
             model::corridor_coupling(&constants::PEAK),
             model::carry_field(&onset, &constants::PEAK),
-            model::trigger(),
-            model::ft(constants::SCALAR_KAPPA),
+            utils::trigger(),
+            utils::ft(constants::SCALAR_KAPPA),
             |_, _| false,
         )
-        .unwrap_or_else(|e| stop(&e));
+        .unwrap_or_else(|e| utils::stop(&e));
     let leg2b = model::snapshot("peak 61 km (committed dwell)", &pause3);
     utils_print::print_leg(&leg2b);
 
     // ── Leg 3: exit (decelerated, sheath cleared). GNSS Reacquisition.
-    let exit_world = model::world(&constants::EXIT).unwrap_or_else(|e| stop(&e));
+    let exit_world = model::world(&constants::EXIT).unwrap_or_else(|e| utils::stop(&e));
     let pause4 = CfdFlow::qtt_march(&exit_world)
         .run_until(
             model::corridor_coupling(&constants::EXIT),
             model::carry_field(&pause3, &constants::EXIT),
-            model::trigger(),
-            model::ft(constants::SCALAR_KAPPA),
+            utils::trigger(),
+            utils::ft(constants::SCALAR_KAPPA),
             |_, _| false,
         )
-        .unwrap_or_else(|e| stop(&e));
+        .unwrap_or_else(|e| utils::stop(&e));
     let leg3 = model::snapshot("exit ~30 km", &pause4);
     utils_print::print_leg(&leg3);
 
@@ -143,9 +144,4 @@ fn main() {
     if !ok {
         exit(1);
     }
-}
-
-pub(crate) fn stop(e: &deep_causality_cfd::PhysicsError) -> ! {
-    eprintln!("corridor setup failed: {e}");
-    exit(2)
 }

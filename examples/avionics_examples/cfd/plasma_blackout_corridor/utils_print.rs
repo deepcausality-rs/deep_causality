@@ -10,7 +10,8 @@
 
 use crate::FloatType;
 use crate::constants::{CAP, COMMS_BAND_RAD_S, L, PEAK, RAMC_NE_REFERENCE};
-use crate::model::{BranchScore, LegSnapshot, ft};
+use crate::model::{BranchScore, LegSnapshot};
+use crate::utils::ft;
 use deep_causality_core::EffectLog;
 
 pub fn print_intro() {
