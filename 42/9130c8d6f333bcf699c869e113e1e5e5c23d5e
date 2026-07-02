@@ -1,0 +1,59 @@
+deep_causality_par/tests/mod.rs
+  s_c4c919f578d611::t_b9e0be577b924e 5
+deep_causality_par/tests/BUILD.bazel
+  s_c4c919f578d611::t_b432aaa3ad3831 4-17
+  s_c4c919f578d611::t_1d745a90bf08c5 3
+deep_causality_par/Cargo.toml
+  s_c4c919f578d611::t_9d259a72c3947d 10
+  s_c4c919f578d611::t_8c8a9b3505626d 35-37
+  s_c4c919f578d611::t_493adca0993351 28-30
+deep_causality_cfd/tests/types/flow/compressible_march_run_tests.rs
+  s_c4c919f578d611::t_958dae7ce7b46a 234-273
+  s_c4c919f578d611::t_0f6efdef6257b9 233
+examples/avionics_examples/Cargo.toml
+  s_c4c919f578d611::t_412e79c8385171 44
+examples/avionics_examples/cfd/plasma_blackout_corridor/utils_print.rs
+  s_c4c919f578d611::t_524799d3460c34 64
+deep_causality_par/src/functions/scoped_map.rs
+  s_c4c919f578d611::t_b21259487571ce 6,8-9,14-15,20,29-33
+  s_c4c919f578d611::t_0cca68e82a1fff 1-5,7,10-13,16-19,21-28,34-74
+deep_causality_par/README.md
+  s_c4c919f578d611::t_9d259a72c3947d 30-34,38-45
+deep_causality_par/tests/functions/scoped_map_tests.rs
+  s_c4c919f578d611::t_cc0ad63bba7729 1-67
+deep_causality_par/tests/functions/mod.rs
+  s_c4c919f578d611::t_0944b2cce82d6c 1-4
+  s_c4c919f578d611::t_f0e6d945a6b0bb 5-6
+openspec/changes/add-compressible-blackout-carrier/specs/blackout-coupling-interface/spec.md
+  s_c4c919f578d611::t_5996ccd34f6c4c 32-52
+openspec/changes/add-compressible-blackout-carrier/tasks.md
+  s_c4c919f578d611::t_424b4e8cbe9959 104-116
+deep_causality_par/src/functions/mod.rs
+  s_c4c919f578d611::t_76c37087052960 1-6
+deep_causality_par/src/lib.rs
+  s_c4c919f578d611::t_6fc2cf526c5453 10,13,16-17
+  s_c4c919f578d611::t_7ab60f2d8aa5bc 8,11-12,14-15,18-20,22,25
+examples/avionics_examples/cfd/plasma_blackout_corridor/main.rs
+  s_c4c919f578d611::t_93abd7c8fb3e67 84-92,94-95,97-98
+deep_causality_cfd/src/types/flow/carrier.rs
+  s_c4c919f578d611::t_7bc82d9e0b97ad 385-423
+  s_c4c919f578d611::t_04bbaa750b069d 26
+examples/avionics_examples/cfd/plasma_blackout_corridor/constants.rs
+  s_c4c919f578d611::t_5e817244228f18 209-210
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "429130c8d6f333bcf699c869e113e1e5e5c23d5e",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
