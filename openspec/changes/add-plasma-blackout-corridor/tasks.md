@@ -145,12 +145,30 @@ swapped (not rewritten) at Stage 1.
 
 ## Stage 5 — Flagship example
 
-- [ ] 5.1 `examples/avionics_examples/<flagship>/` wiring corridor §4 chain [1]–[7] in one `CausalFlow`, **written
+> **Landed in** `examples/avionics_examples/cfd/plasma_blackout_corridor/` (main.rs + model.rs +
+> utils_print.rs; README deferred to its own task per direction). Three legs over the RAM-C II
+> trajectory (approach ~90 km / peak 61 km / exit), state carried between legs through the paused
+> `CoupledField` (`run_until` per leg). All 8 gates pass; exits nonzero on regression. One small lib
+> addition: coupled runs now honor the `max_speed` observe flag (per-step peak of the published
+> `"speed"` projection) — the branch scorer's per-step heat fold needed it.
+
+- [x] 5.1 `examples/avionics_examples/<flagship>/` wiring corridor §4 chain [1]–[7] in one `CausalFlow`, **written
   in the Stage-4 DSL** — the central control loop within the ~10–30-line budget; over the RAM-C trajectory;
-  main-at-top, utils_print, single `FloatType`. Labels every simplification.
-- [ ] 5.2 **Coupled validation gate** (the milestone that needed Stage 1): real `n_e` → real blackout window →
+  main-at-top, utils_print, single `FloatType`. Labels every simplification. → The central loop is the
+  `corridor_coupling` stack (~12 lines: LER stages → AeroForceCoupling → RegimeClassify → loads → truth/GNSS →
+  TrajectoryNav → guidance → CyberneticCorrect) iterated by `run_until`; branch study = `fork()` +
+  `alternate_context` per bank world; the committed dwell is itself a loud pre-run `alternate_context`.
+  Tier-A labels enumerated in model.rs, including the largest one found while building: the LER surrogate has
+  **no recombination channel** (forward Park rate only + Saha `√n` scaling ⇒ no `(T, n_tot)` clears the GPS L1
+  cutoff chemically), so the exit station imposes the cleared sheath density (`1e16 m⁻³`) explicitly.
+- [x] 5.2 **Coupled validation gate** (the milestone that needed Stage 1): real `n_e` → real blackout window →
   real INS drift → reacquisition; ~2–3× honest bands; all four required elements (regime change, multiphysics,
-  counterfactuals, tensor compression) exercised; exits nonzero on regression.
+  counterfactuals, tensor compression) exercised; exits nonzero on regression. → 8 gates: corridor integrity,
+  real blackout window (available → onset at peak step 1 → denied dwell → exit clear), peak `n_e` 3× regression
+  band vs the Tier-A saturation baseline (RAM-C `1e19` cross-referenced with the over-prediction disclaimer),
+  drift→reacquisition (variance 11.5 → 483 → 6.7 m²; error 1.8 → 5.7 → 1.2 cm), regime change (slip→continuum
+  + denial transitions), multiphysics chain, 3 alternated branch worlds with nonzero thermal-load spread,
+  bond ≤ 16 compression witness. `exit(1)` on any FAIL, `exit(2)` on setup failure.
 
 ## Finalize (each stage)
 

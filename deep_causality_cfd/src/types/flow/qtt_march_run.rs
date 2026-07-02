@@ -163,12 +163,13 @@ where
     Ok(next)
 }
 
-/// The per-step blackout observables a coupled march accumulates (peak `n_e`, plasma frequency, and
-/// the count of link-denied steps).
+/// The per-step blackout observables a coupled march accumulates (peak `n_e`, plasma frequency, the
+/// count of link-denied steps, and the peak of the published `"speed"` projection).
 pub(in crate::types::flow) struct BlackoutSampler<R: CfdScalar> {
     trigger: BlackoutTrigger<R>,
     ne: Vec<R>,
     wp: Vec<R>,
+    speed: Vec<R>,
     denied_steps: usize,
 }
 
@@ -178,11 +179,13 @@ impl<R: CfdScalar> BlackoutSampler<R> {
             trigger,
             ne: Vec::new(),
             wp: Vec::new(),
+            speed: Vec::new(),
             denied_steps: 0,
         }
     }
 
-    /// Sample the field's peak electron density through the trigger (a no-op without `"n_e"`).
+    /// Sample the field's peak electron density through the trigger (a no-op without `"n_e"`), and
+    /// the peak of the `"speed"` projection the coupled step publishes (a no-op without it).
     pub(in crate::types::flow) fn sample(
         &mut self,
         field: &CoupledField<R>,
@@ -199,6 +202,13 @@ impl<R: CfdScalar> BlackoutSampler<R> {
                 self.denied_steps += 1;
             }
         }
+        if let Some(speed) = field.scalar("speed") {
+            let peak = speed
+                .iter()
+                .copied()
+                .fold(R::zero(), |acc, x| if x > acc { x } else { acc });
+            self.speed.push(peak);
+        }
         Ok(())
     }
 
@@ -214,6 +224,9 @@ impl<R: CfdScalar> BlackoutSampler<R> {
         }
         if observe.plasma_frequency {
             report.add_series("plasma_frequency", self.wp);
+        }
+        if observe.max_speed {
+            report.add_series("max_speed", self.speed);
         }
         if observe.blackout_dwell {
             let dwell = R::from_usize(self.denied_steps)

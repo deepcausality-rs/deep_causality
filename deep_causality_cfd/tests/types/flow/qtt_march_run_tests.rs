@@ -525,6 +525,29 @@ fn run_coupled_surfaces_the_provenance_log() {
     assert_eq!(report.log_entries(), Some(1));
 }
 
+#[test]
+fn run_coupled_samples_the_peak_speed_series() {
+    let steps = 3usize;
+    let cfg = coupled_free_config(steps);
+    let stub = AeroBlackoutStub::new(3.0_f64, 1.0e17, 1.0e20, 1, 3);
+    let trigger = BlackoutTrigger::new(1.0e9);
+
+    let report = CfdFlow::qtt_march(&cfg)
+        .observe_with(QttObserve::default().max_speed())
+        .run_coupled(
+            stub,
+            CoupledField::new(Ambient::new(0.01, 0.0, None)),
+            trigger,
+            0.01,
+        )
+        .unwrap();
+
+    // One peak-|u| sample per coupled step, from the published "speed" projection.
+    let speed = report.series("max_speed").expect("max_speed series");
+    assert_eq!(speed.len(), steps);
+    assert!(speed.iter().all(|s| s.is_finite() && *s > 0.0));
+}
+
 // ---------------------------------------------------------------------------
 // DSL equivalence (Stage 4.5): the composed stack IS the hand-written tuple
 // ---------------------------------------------------------------------------
