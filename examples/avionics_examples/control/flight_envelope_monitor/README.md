@@ -288,7 +288,7 @@ stage.
 
 - The Kalman step is **illustrative only** — a one-iteration scalar update on
   a diagonal covariance with fixed measurement noise. For a more developed
-  filter pattern, see [`magnav`](../magnav/README.md), which implements a
+  filter pattern, see [`magnav`](../../navigation/magnav/README.md), which implements a
   causal particle filter for magnetic navigation.
 - The six envelope nodes use **fixed analytical pressure functions** to
   derive each node's risk increment. A production implementation would

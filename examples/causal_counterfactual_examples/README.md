@@ -79,7 +79,7 @@ The codebase already has small demonstrations of `intervene` in:
 * [`core_examples/propagating_effect_counterfactual`](../core_examples/examples/propagating_effect_counterfactual.rs)
   and `propagating_process_counterfactual`, the smallest possible
   stateless and stateful demos.
-* [`avionics_examples/geometric_tcas`](../avionics_examples/geometric_tcas),
+* [`avionics_examples/geometric_tcas`](../avionics_examples/control/geometric_tcas),
   where pilot override is modelled as intervention.
 * [`material_examples/structural_health_monitor`](../material_examples/structural_health_monitor),
   which asks what would have happened without the observed crack.
