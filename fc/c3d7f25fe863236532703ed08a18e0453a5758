@@ -1,0 +1,33 @@
+openspec/changes/add-compressible-blackout-carrier/specs/bank-steered-lift/spec.md
+  s_c4c919f578d611::t_0a36590b5b62e2 1-35
+openspec/changes/add-compressible-blackout-carrier/.openspec.yaml
+  s_c4c919f578d611::t_b30f15602d4f8f 1-2
+openspec/changes/add-compressible-blackout-carrier/design.md
+  s_c4c919f578d611::t_c4eefe73ed0455 1-131
+openspec/changes/add-compressible-blackout-carrier/proposal.md
+  s_c4c919f578d611::t_6fef2d85052c6c 1-72
+openspec/changes/add-compressible-blackout-carrier/specs/plasma-blackout-flagship/spec.md
+  s_c4c919f578d611::t_6293e8ef657ec7 1-51
+openspec/changes/add-compressible-blackout-carrier/tasks.md
+  s_c4c919f578d611::t_9c3a5c1a4c710f 1-73
+openspec/changes/add-compressible-blackout-carrier/specs/compressible-flow-host/spec.md
+  s_c4c919f578d611::t_bec607489c5ee4 1-69
+openspec/changes/add-compressible-blackout-carrier/specs/blackout-coupling-interface/spec.md
+  s_c4c919f578d611::t_ee41e9e93184bf 1-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "fcc3d7f25fe863236532703ed08a18e0453a5758",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
