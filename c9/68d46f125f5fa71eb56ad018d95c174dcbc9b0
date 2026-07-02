@@ -1,0 +1,73 @@
+deep_causality_cfd/src/types/flow/blackout.rs
+  s_c4c919f578d611::t_7b1189c82975fe 224,236,245-255,257
+  s_c4c919f578d611::t_b59de6f508ed9f 124-212,216-217,239-244,256
+  s_c4c919f578d611::t_a0ea211f85e9f0 30-32
+  s_c4c919f578d611::t_c17ca7eaf8fd23 315-334
+deep_causality_cfd/src/types/flow/qtt_march_run.rs
+  s_c4c919f578d611::t_10460bccdfc653 22
+  s_c4c919f578d611::t_7bffa26daea337 179-181,187,198,203-205,229-231,251-253
+  s_c4c919f578d611::t_cb3cff19743c5d 167-168
+  s_c4c919f578d611::t_e9ec20b12a745a 148,161-166,169-171
+  s_c4c919f578d611::t_2d041c0ddb1adc 172-173
+deep_causality_cfd/tests/types/flow/blackout_tests.rs
+  s_c4c919f578d611::t_cb3cff19743c5d 423-426
+  s_c4c919f578d611::t_aa5b5bd3928780 11
+  s_c4c919f578d611::t_e5bfbd55044c2c 389-422,427-428
+  s_c4c919f578d611::t_8bd46657797017 304-388
+deep_causality_cfd/src/types/flow/mod.rs
+  s_c4c919f578d611::t_be836edbb8093d 35
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_dc38bef04eee07 72-73
+deep_causality_cfd/src/types/flow_config/qtt_march_config.rs
+  s_c4c919f578d611::t_57383264b5a1c2 34
+  s_c4c919f578d611::t_bd8b305432cea3 82-88
+deep_causality_cfd/src/types/flow/corridor.rs
+  s_c4c919f578d611::t_a0d07696adc653 214-217,223,228-229,235,238-244
+  s_c4c919f578d611::t_97a4c4e51016d6 265-266,268-272
+  s_c4c919f578d611::t_f112e26b1a2b57 29
+  s_c4c919f578d611::t_6a6d0bc0036b16 245
+deep_causality_cfd/tests/types/flow/qtt_march_run_tests.rs
+  s_c4c919f578d611::t_5d71af535ac3f3 528-608
+deep_causality_cfd/tests/types/flow/corridor_tests.rs
+  s_c4c919f578d611::t_8e41275cbc97b4 402-430
+  s_c4c919f578d611::t_786cb3e89555d2 401
+examples/avionics_examples/cfd/plasma_blackout_corridor/constants.rs
+  s_c4c919f578d611::t_59b092c20a8323 140-144,161,169-172,177-179
+  s_c4c919f578d611::t_54e7857572783c 185-190,196-197
+  s_c4c919f578d611::t_3a575ccfe181c7 76-77
+  s_c4c919f578d611::t_d4837e22565504 9,15-19,25-30,69,71-75,78-82,84-88,108-112,126,133,146-147,163
+  s_c4c919f578d611::t_c18fd1d4d2de5e 20-22,83,124
+  s_c4c919f578d611::t_77de083f05ecbe 123
+  s_c4c919f578d611::t_4ec4884acc91a1 195
+examples/avionics_examples/cfd/plasma_blackout_corridor/main.rs
+  s_c4c919f578d611::t_9b1ed03e8e0c64 19,37
+examples/avionics_examples/cfd/plasma_blackout_corridor/utils_print.rs
+  s_c4c919f578d611::t_cb3cff19743c5d 142-143
+  s_c4c919f578d611::t_7b66eee82eec81 145,148-149,151-152
+  s_c4c919f578d611::t_823f4089004abd 12
+examples/avionics_examples/cfd/plasma_blackout_corridor/model.rs
+  s_c4c919f578d611::t_2d74b64e5883c3 189-192,202-206,215-219,234
+  s_c4c919f578d611::t_af732e2a955acb 130-134
+  s_c4c919f578d611::t_d7d3f4629cb535 331-334,336,340,348-349
+  s_c4c919f578d611::t_d62db314d50bbb 14,119
+  s_c4c919f578d611::t_1ed2e58bd6ad14 74
+  s_c4c919f578d611::t_577dc8a1253f72 15-18,22,25-26
+  s_c4c919f578d611::t_a76ad163c982d8 105-109,111-115,123-129,140-143
+  s_c4c919f578d611::t_9b1ed03e8e0c64 10,81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "c968d46f125f5fa71eb56ad018d95c174dcbc9b0",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
