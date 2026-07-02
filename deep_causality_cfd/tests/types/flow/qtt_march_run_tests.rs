@@ -4,9 +4,10 @@
  */
 
 use deep_causality_cfd::{
-    AeroBlackoutStub, Ambient, BlackoutTrigger, CfdFlow, CoupledField, MarchStop,
-    QttIncompressible2d, QttMarchConfigBuilder, QttObserve,
+    AeroBlackoutStub, Ambient, BlackoutTrigger, CfdFlow, CoupledField, Coupling, MarchStop,
+    QttIncompressible2d, QttMarchConfigBuilder, QttObserve, ThermalRelax,
 };
+use deep_causality_core::{AlternatableContext, AlternatableState, AlternatableValue};
 use deep_causality_tensor::{CausalTensor, Truncation};
 
 const TAU: f64 = core::f64::consts::TAU;
@@ -398,4 +399,169 @@ fn run_coupled_honours_run_overrides() {
     );
     assert!(report.series("blackout_dwell").is_none());
     assert_eq!(report.final_field().unwrap().len(), N * N);
+}
+
+// ---------------------------------------------------------------------------
+// Counterfactual alternation — the pre-run attach point (Stage 4.6)
+// ---------------------------------------------------------------------------
+
+fn uniform_seed() -> (CausalTensor<f64>, CausalTensor<f64>) {
+    let ncells = N * N;
+    (
+        CausalTensor::new(vec![0.5_f64; ncells], vec![N, N]).unwrap(),
+        CausalTensor::new(vec![0.0_f64; ncells], vec![N, N]).unwrap(),
+    )
+}
+
+#[test]
+fn alternate_state_subsumes_seed_with() {
+    let cfg = taylor_green_config(0.05, 0.02, 4, QttObserve::default());
+    let (u0, v0) = uniform_seed();
+
+    let via_seed_with = CfdFlow::qtt_march(&cfg)
+        .seed_with(u0.clone(), v0.clone())
+        .run()
+        .unwrap();
+    let via_alternation = CfdFlow::qtt_march(&cfg)
+        .alternate_state((u0, v0))
+        .run()
+        .unwrap();
+
+    // Identical numerics; the alternation additionally leaves its audit marker.
+    assert_eq!(
+        via_seed_with.final_field().unwrap(),
+        via_alternation.final_field().unwrap()
+    );
+    assert!(via_seed_with.effect_log().is_none(), "seed_with is silent");
+    let log = via_alternation.effect_log().expect("alternation logged");
+    assert!(
+        format!("{log}").contains("!!StateAlternation!!"),
+        "verbatim marker: {log}"
+    );
+}
+
+#[test]
+fn alternate_context_swaps_the_whole_world() {
+    let dx = TAU / N as f64;
+    let trunc = Truncation::<f64>::by_bond(4096).unwrap();
+    let world = |name: &str, nu: f64| {
+        QttMarchConfigBuilder::<f64>::new()
+            .name(name)
+            .grid(L, L, dx, dx)
+            .solver(0.02, nu, trunc)
+            .seed_fn(|x, y| (tg_u(x, y), tg_v(x, y)))
+            .unwrap()
+            .stop(MarchStop::Fixed(4))
+            .observe(QttObserve::default())
+            .build()
+            .unwrap()
+    };
+    let nominal = world("nominal_reentry", 0.05);
+    let steep = world("steep_reentry", 0.09);
+
+    let direct = CfdFlow::qtt_march(&steep).run().unwrap();
+    let alternated = CfdFlow::qtt_march(&nominal)
+        .alternate_context(&steep)
+        .run()
+        .unwrap();
+
+    // The alternated run marches the *steep* world entirely: name, numerics, and the audit marker.
+    assert_eq!(alternated.name(), "steep_reentry");
+    assert_eq!(
+        direct.final_field().unwrap(),
+        alternated.final_field().unwrap()
+    );
+    let log = alternated.effect_log().expect("alternation logged");
+    let text = format!("{log}");
+    assert!(text.contains("!!ContextAlternation!!"), "marker: {text}");
+    assert!(
+        text.contains("nominal_reentry") && text.contains("steep_reentry"),
+        "the entry names both worlds: {text}"
+    );
+}
+
+#[test]
+fn alternate_value_injects_a_primary_snapshot() {
+    let cfg = taylor_green_config(0.05, 0.02, 4, QttObserve::default());
+    let (u0, v0) = uniform_seed();
+
+    let report = CfdFlow::qtt_march(&cfg)
+        .alternate_value((u0.clone(), v0.clone()))
+        .run()
+        .unwrap();
+    let reference = CfdFlow::qtt_march(&cfg).seed_with(u0, v0).run().unwrap();
+
+    assert_eq!(
+        report.final_field().unwrap(),
+        reference.final_field().unwrap()
+    );
+    let log = report.effect_log().expect("alternation logged");
+    assert!(
+        format!("{log}").contains("!!ValueAlternation!!"),
+        "verbatim marker: {log}"
+    );
+}
+
+#[test]
+fn run_coupled_surfaces_the_provenance_log() {
+    let cfg = coupled_free_config(3);
+    let stub = AeroBlackoutStub::new(3.0_f64, 1.0e17, 1.0e20, 1, 3);
+    let trigger = BlackoutTrigger::new(1.0e9);
+    let (u0, v0) = uniform_seed();
+
+    let report = CfdFlow::qtt_march(&cfg)
+        .alternate_state((u0, v0))
+        .run_coupled(
+            stub,
+            CoupledField::new(Ambient::new(0.01, 0.0, None)),
+            trigger,
+            0.01,
+        )
+        .unwrap();
+
+    // The pre-run alternation marker threads through the CoupledField log into the report ([7]).
+    let log = report.effect_log().expect("coupled run carries the log");
+    assert!(format!("{log}").contains("!!StateAlternation!!"));
+    assert_eq!(report.log_entries(), Some(1));
+}
+
+// ---------------------------------------------------------------------------
+// DSL equivalence (Stage 4.5): the composed stack IS the hand-written tuple
+// ---------------------------------------------------------------------------
+
+#[test]
+fn composed_coupling_stack_equals_the_hand_written_tuple() {
+    let cfg = coupled_free_config(4);
+    let trigger = BlackoutTrigger::new(1.0e9);
+    let stub = AeroBlackoutStub::new(3.0_f64, 1.0e17, 1.0e20, 1, 4);
+    let relax = ThermalRelax::new(0.5, 300.0);
+
+    let initial = || {
+        let mut f = CoupledField::new(Ambient::new(0.01, 0.0, None));
+        f.set_scalar("temperature", vec![250.0_f64; N * N]);
+        f
+    };
+
+    // The DSL naming layer over the cons-tuple...
+    let composed = Coupling::between_steps().then(stub).then(relax).build();
+    let dsl = CfdFlow::qtt_march(&cfg)
+        .run_coupled(composed, initial(), trigger, 0.01)
+        .unwrap();
+
+    // ...compiles to exactly the hand-nested tuple (no dyn, same monomorphized pipeline).
+    let manual = (((), stub), relax);
+    let hand = CfdFlow::qtt_march(&cfg)
+        .run_coupled(manual, initial(), trigger, 0.01)
+        .unwrap();
+
+    assert_eq!(dsl.series("n_e").unwrap(), hand.series("n_e").unwrap());
+    assert_eq!(
+        dsl.series("plasma_frequency").unwrap(),
+        hand.series("plasma_frequency").unwrap()
+    );
+    assert_eq!(dsl.final_field().unwrap(), hand.final_field().unwrap());
+    assert_eq!(
+        dsl.series("final_v").unwrap(),
+        hand.series("final_v").unwrap()
+    );
 }

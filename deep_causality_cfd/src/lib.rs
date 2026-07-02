@@ -66,11 +66,11 @@ pub use crate::navigation::{
 pub use crate::types::flow::{
     AeroBlackoutStub, AeroForceCoupling, BankCorrection, BlackoutState, BlackoutTrigger,
     BranchAccumulator, BranchOutcome, CfdFlow, CoupledField, Coupling, CyberneticCorrect, EosStage,
-    GoverningModel, IonizationStage, MarchPipeline, MarchRun, MmsBuilder, Operator,
-    OperatorStudyBuilder, PhysicsStage, QttMarchRun, QttStepView, RecoveryTemperatureStage, Regime,
-    RegimeClass, RegimeClassify, Report, SafetyEnvelope, StepContext, StepView, ThermalRelax,
-    VerifyRun, ViscosityArrhenius, dominant_frequency, fail, ler_relax_scalar, ler_step,
-    strouhal_number,
+    GoverningModel, IonizationStage, MarchFork, MarchPause, MarchPipeline, MarchRun, MmsBuilder,
+    Operator, OperatorStudyBuilder, PhysicsStage, QttMarchRun, QttStepView,
+    RecoveryTemperatureStage, Regime, RegimeClass, RegimeClassify, Report, SafetyEnvelope,
+    StepContext, StepView, ThermalRelax, TrajectoryNav, VerifyRun, ViscosityArrhenius,
+    dominant_frequency, fail, ler_relax_scalar, ler_step, strouhal_number,
 };
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
 pub use crate::types::flow_config::{

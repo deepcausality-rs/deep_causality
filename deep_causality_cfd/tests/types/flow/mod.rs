@@ -45,6 +45,9 @@ pub mod mms_tests;
 pub mod operator_study_tests;
 #[cfg(test)]
 #[cfg(not(miri))]
+pub mod qtt_march_pause_tests;
+#[cfg(test)]
+#[cfg(not(miri))]
 pub mod qtt_march_run_tests;
 #[cfg(test)]
 pub mod report_tests;

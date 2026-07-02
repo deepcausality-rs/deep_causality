@@ -100,34 +100,48 @@ swapped (not rewritten) at Stage 1.
 
 ## Stage 4 — CFD Flow DSL (re)design
 
-- [ ] 4.1 Design pass: reconcile the preliminary design (design.md) with what Stages 0–3 shipped. Confirm the
+> **Landed** across `types/flow/`: `corridor.rs` (+`TrajectoryNav`), `coupling.rs` (nav channel),
+> `qtt_march_run.rs` (alternation verbs, shared loop helpers, `run_until`), new `qtt_march_pause.rs`
+> (`MarchPause`/`MarchFork`), `report.rs` (`effect_log`). Tests: `corridor_tests.rs`,
+> `qtt_march_run_tests.rs`, new `qtt_march_pause_tests.rs`. cfd 550 green, clippy clean.
+
+- [x] 4.1 Design pass: reconcile the preliminary design (design.md) with what Stages 0–3 shipped. Confirm the
   approach is **compose the per-step coupling stack** (`Coupling::between_steps().then(..)`) run by
   `run_coupled` — **not** a new linear phase builder. Minor revision from the preliminary is expected.
-- [ ] 4.2 Implement the corridor stages as `PhysicsStage` impls in `deep_causality_cfd`: `RegimeClassify` [2],
+  → Confirmed; `RegimeClassify`/`CyberneticCorrect` had already landed in Stage 3 on the same seam.
+- [x] 4.2 Implement the corridor stages as `PhysicsStage` impls in `deep_causality_cfd`: `RegimeClassify` [2],
   `TrajectoryNav` [4] (KS predict + ESKF; reads the ④ force channel, GNSS gated by the blackout flag; nav state
   threads through `CoupledField`), `CyberneticCorrect` [6]. Evolve `fluiddynamics-dsl` / `qtt-flow`; keep the
   config→run split, the cons-tuple `.then()` composition, and the `seed_with`/`march_with` counterfactuals.
-- [ ] 4.3 `CyberneticCorrect` = a `PhysicsStage` wrapping a direct `CyberneticLoop::control_step`: clamp the
+  → `TrajectoryNav` consumes `"gnss_fix"` (gated by `RegimeClass::gnss_denied`) / `"optical_fix"` (ungated),
+  publishes `"nav_position"`/`"nav_position_variance"`, logs aided↔dead-reckoning transitions; the
+  `ReentryNavEngine` threads through a typed `CoupledField` nav channel.
+- [x] 4.3 `CyberneticCorrect` = a `PhysicsStage` wrapping a direct `CyberneticLoop::control_step`: clamp the
   Action into the envelope (mutate the control channel), return `Err(Entropy)` on an unrecoverable breach (reuse
-  the coupling's `?` short-circuit). No Effect-monad allocation on the hot path.
-- [ ] 4.4 Emit the provenance schema from the loop into `EffectLog` [7]; optional thin convenience over
-  `qtt_march`/`run_coupled` if it improves readability.
-- [ ] 4.5 Tests: a composed stack + `run_coupled` equals the hand-written `Coupling`/`run_coupled` (same result,
+  the coupling's `?` short-circuit). No Effect-monad allocation on the hot path. → Landed in Stage 3.
+- [x] 4.4 Emit the provenance schema from the loop into `EffectLog` [7]; optional thin convenience over
+  `qtt_march`/`run_coupled` if it improves readability. → `Report::effect_log()` carries the full field log
+  (count kept in `log_entries`); no extra convenience wrapper needed (the composed call already reads well).
+- [x] 4.5 Tests: a composed stack + `run_coupled` equals the hand-written `Coupling`/`run_coupled` (same result,
   no `dyn`, no extra hot-path allocation); the `CyberneticCorrect` breach short-circuits with `Err`; the marcher
   reuses its `EndoArrow` step unchanged. (100% coverage of the new stages / DSL surface.)
-- [ ] 4.6 **Counterfactual alternation (verbatim core vocabulary).** Add `alternate_context` / `alternate_state`
+- [x] 4.6 **Counterfactual alternation (verbatim core vocabulary).** Add `alternate_context` / `alternate_state`
   / `alternate_value` combinators to `QttMarchRun` (thin wrappers over the `Alternatable` ops; each appends the
   `!!*Alternation!!` audit entry; error channel never alternated). **Pre-run** attach point subsumes
   `seed_with`/`march_with`. Context alternation swaps a **whole** `QttMarchConfig`; alternate worlds are
   checked-in named configs (`config::nominal_reentry()`, `steep_reentry()`, …) — no delta builder.
-- [ ] 4.7 **Mid-march fork (resumable loop).** `run_until(predicate) -> MarchPause`, `MarchPause::fork()`,
+  → Implemented as the core traits themselves (`AlternatableContext<&QttMarchConfig>` /
+  `AlternatableState` / `AlternatableValue` on `QttMarchRun`), so the vocabulary is literally shared.
+- [x] 4.7 **Mid-march fork (resumable loop).** `run_until(predicate) -> MarchPause`, `MarchPause::fork()`,
   `MarchFork::alternate_*`, `continue_march(steps)` — rebuild the solver from the (alternated) context, resume
   from the branch state. Corridor [5] bank-angle branches = context alternations forked from one shared
-  blackout-onset state.
-- [ ] 4.8 **Arc + copy-on-write marching state.** Wrap the threaded state (`fluid`, `field`) in `Arc`; `fork` /
+  blackout-onset state. → Step errors are *captured into* the pause (error channel, with a provenance entry);
+  assembly failures fail fast.
+- [x] 4.8 **Arc + copy-on-write marching state.** Wrap the threaded state (`fluid`, `field`) in `Arc`; `fork` /
   `alternate_state` share by reference (O(1)); a writing stage clones via `Arc::make_mut` (cost only on
   divergence). Tests: read-only fork copies no tensor data; first write triggers exactly one CoW clone;
-  alternation on an errored run is a no-op with only the audit entry.
+  alternation on an errored run is a no-op with only the audit entry. → The march never mutates fluid trains in
+  place, so branches copy no tensor data at all; the field's single CoW clone happens at the first write.
 
 ## Stage 5 — Flagship example
 

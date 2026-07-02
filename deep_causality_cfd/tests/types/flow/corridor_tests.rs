@@ -9,9 +9,11 @@
 
 use deep_causality_cfd::{
     Ambient, BankCorrection, BlackoutTrigger, BranchAccumulator, CoupledField, CyberneticCorrect,
-    GoverningModel, PhysicsStage, RegimeClassify, SafetyEnvelope, StepContext,
+    GoverningModel, InsErrorState, NavFilter, PhysicsStage, ReentryNavEngine, RegimeClass,
+    RegimeClassify, SafetyEnvelope, StepContext, TrajectoryNav,
 };
 use deep_causality_haft::LogSize;
+use deep_causality_physics::EARTH_GM;
 
 fn field() -> CoupledField<f64> {
     CoupledField::new(Ambient::new(0.01_f64, 0.0, None))
@@ -265,5 +267,149 @@ fn bank_correction_value_equality() {
     assert_ne!(
         BankCorrection::Clamped(0.5_f64),
         BankCorrection::NoSafeAction
+    );
+}
+
+// ---------------------------------------------------------------------------
+// TrajectoryNav (4.2)
+// ---------------------------------------------------------------------------
+
+fn nav_engine() -> ReentryNavEngine<f64> {
+    // The bound LEO-ish state the nav module's own tests use.
+    let (r0, v0) = ([7.0e6, 1.0e6, 2.0e6], [-1.0e3, 6.5e3, 3.0e3]);
+    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]);
+    ReentryNavEngine::new(r0, v0, EARTH_GM, filter)
+}
+
+fn nav_stage() -> TrajectoryNav<f64> {
+    // Q diagonal, GNSS 5 m 1σ (25 m² variance), through-plasma optical 50 m 1σ.
+    TrajectoryNav::new([1.0e-6; 17], 25.0, 2500.0)
+}
+
+fn denied_regime() -> RegimeClass<f64> {
+    RegimeClass {
+        model: GoverningModel::Continuum,
+        knudsen: 1.0e-3,
+        plasma_frequency: 1.0e10,
+        gnss_denied: true,
+    }
+}
+
+#[test]
+fn trajectory_nav_is_a_noop_without_an_engine() {
+    let mut f = field();
+    nav_stage().apply(&ctx(1), &mut f).expect("applies");
+    assert!(f.scalar("nav_position").is_none());
+    assert!(f.log().is_empty());
+}
+
+#[test]
+fn trajectory_nav_dead_reckons_and_publishes_witnesses() {
+    let mut f = field();
+    f.set_nav(nav_engine());
+
+    nav_stage().apply(&ctx(1), &mut f).expect("applies");
+    assert_eq!(f.scalar("nav_position").unwrap().len(), 3);
+    assert_eq!(f.scalar("nav_position_variance").unwrap().len(), 1);
+    assert!(f.nav().is_some(), "the engine threads back into the field");
+    assert_eq!(f.log().len(), 1, "the dead-reckoning transition is logged");
+
+    // A second dead-reckoning step is not a transition: no new entry.
+    nav_stage().apply(&ctx(2), &mut f).expect("applies");
+    assert_eq!(f.log().len(), 1);
+}
+
+#[test]
+fn trajectory_nav_reads_the_aero_force_channel() {
+    let stage = nav_stage();
+
+    let mut coasting = field();
+    coasting.set_nav(nav_engine());
+    stage.apply(&ctx(1), &mut coasting).expect("applies");
+
+    let mut dragged = field();
+    dragged.set_nav(nav_engine());
+    dragged.set_aero_force([-1.0e3, 0.0, 0.0]);
+    stage.apply(&ctx(1), &mut dragged).expect("applies");
+
+    let a = coasting.scalar("nav_position").unwrap();
+    let b = dragged.scalar("nav_position").unwrap();
+    assert!(
+        (a[0] - b[0]).abs() > 1.0,
+        "the ④ aero kick perturbs the predicted position: {} vs {}",
+        a[0],
+        b[0]
+    );
+}
+
+#[test]
+fn gnss_fix_is_folded_when_available() {
+    let stage = nav_stage();
+
+    // Twin runs: one dead-reckons, one folds a GNSS fix at the propagated position.
+    let mut dead = field();
+    dead.set_nav(nav_engine());
+    stage.apply(&ctx(1), &mut dead).expect("applies");
+
+    let mut aided = field();
+    aided.set_nav(nav_engine());
+    let predicted = dead.scalar("nav_position").unwrap().to_vec();
+    aided.set_scalar("gnss_fix", predicted);
+    stage.apply(&ctx(1), &mut aided).expect("applies");
+
+    assert_eq!(aided.scalar("nav_mode").unwrap()[0], 1.0, "aided");
+    assert_eq!(dead.scalar("nav_mode").unwrap()[0], 0.0, "dead reckoning");
+    // The fix collapses the position variance below the predict-only twin.
+    let v_aided = aided.scalar("nav_position_variance").unwrap()[0];
+    let v_dead = dead.scalar("nav_position_variance").unwrap()[0];
+    assert!(
+        v_aided < v_dead,
+        "fix collapses variance: {v_aided} vs {v_dead}"
+    );
+}
+
+#[test]
+fn gnss_fix_is_gated_by_the_denial_flag() {
+    let mut f = field();
+    f.set_nav(nav_engine());
+    f.set_regime(denied_regime());
+    f.set_scalar("gnss_fix", vec![7.0e6, 1.0e6, 2.0e6]);
+
+    nav_stage().apply(&ctx(1), &mut f).expect("applies");
+    assert_eq!(
+        f.scalar("nav_mode").unwrap()[0],
+        0.0,
+        "a denied link never folds the GNSS fix"
+    );
+}
+
+#[test]
+fn optical_fix_rides_through_the_blackout() {
+    let mut f = field();
+    f.set_nav(nav_engine());
+    f.set_regime(denied_regime());
+    f.set_scalar("optical_fix", vec![7.0e6, 1.0e6, 2.0e6]);
+
+    nav_stage().apply(&ctx(1), &mut f).expect("applies");
+    assert_eq!(
+        f.scalar("nav_mode").unwrap()[0],
+        1.0,
+        "the through-plasma optical fix folds even when GNSS is denied"
+    );
+}
+
+#[test]
+fn nav_predict_failure_short_circuits_but_threads_the_engine_back() {
+    // An unbound (hyperbolic) state cannot re-lift onto the KS manifold: predict fails.
+    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]);
+    let unbound = ReentryNavEngine::new([7.0e6, 0.0, 0.0], [1.0e5, 0.0, 0.0], EARTH_GM, filter);
+
+    let mut f = field();
+    f.set_nav(unbound);
+    let result = nav_stage().apply(&ctx(1), &mut f);
+    assert!(result.is_err(), "an unbound predict short-circuits");
+    assert!(
+        f.nav().is_some(),
+        "the engine threads back so a pause captures a whole state"
     );
 }

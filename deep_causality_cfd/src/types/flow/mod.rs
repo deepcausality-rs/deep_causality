@@ -22,6 +22,7 @@ mod io;
 mod march_run;
 mod mms;
 mod operator_study;
+mod qtt_march_pause;
 mod qtt_march_run;
 mod report;
 #[cfg(feature = "std")]
@@ -36,7 +37,7 @@ pub use blackout::{
 pub use cfd_flow::{CfdFlow, fail};
 pub use corridor::{
     BankCorrection, BranchAccumulator, BranchOutcome, CyberneticCorrect, GoverningModel,
-    RegimeClass, RegimeClassify, SafetyEnvelope,
+    RegimeClass, RegimeClassify, SafetyEnvelope, TrajectoryNav,
 };
 pub use coupling::{
     AeroBlackoutStub, AeroForceCoupling, CoupledField, Coupling, PhysicsStage, StepContext,
@@ -48,6 +49,7 @@ pub use io::write_xy_csv;
 pub use march_run::{MarchPipeline, MarchRun, StepView};
 pub use mms::{MmsBuilder, Regime};
 pub use operator_study::{Operator, OperatorStudyBuilder};
+pub use qtt_march_pause::{MarchFork, MarchPause};
 pub use qtt_march_run::{QttMarchRun, QttStepView};
 pub use report::Report;
 #[cfg(feature = "std")]
