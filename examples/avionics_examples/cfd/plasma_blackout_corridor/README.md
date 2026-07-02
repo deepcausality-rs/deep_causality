@@ -95,10 +95,6 @@ wall-clock budget.
 
 ## What This Example Demonstrates
 
-Each element below was a named gap in the corridor's design notes
-([`openspec/notes/plasma-blackout/`](../../../../openspec/notes/plasma-blackout/)) and is now
-built, tested library code exercised by this one run.
-
 **Tensor-train compression as the mesh strategy.** The blackout problem's defining
 difficulty is scale separation: the vehicle is meters, the sheath structure far smaller. Instead
 of adaptive mesh refinement, the carrier marches on quantized tensor trains, where a `2^L` grid
@@ -161,7 +157,7 @@ it is the actuation. An unrecoverable envelope breach short-circuits the step.
 - **US Standard Atmosphere 1976** shape for the descent table, pinned to the RAM-C freestream at
   61 km.
 
-## Precision Is a Parameter, and What That Measured
+## Precision Is a Parameter
 
 Because every derived number is computed in `FloatType`, the alias is a one-line probe of the
 error budget. Three runs, same corridor:
