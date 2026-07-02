@@ -1,0 +1,46 @@
+examples/avionics_examples/cfd/plasma_blackout_corridor/constants.rs
+  s_c4c919f578d611::t_7a506018d67eb1 106-111
+  s_c4c919f578d611::t_6d201faee74add 197-199
+  s_c4c919f578d611::t_bc3d7bb4193549 31-33
+openspec/specs/blackout-coupling-interface/spec.md
+  s_c4c919f578d611::t_409274506bea34 1-47
+examples/avionics_examples/cfd/plasma_blackout_corridor/model.rs
+  s_c4c919f578d611::t_6d2421e4f9e9ea 215-227,229-232,253-256
+  s_c4c919f578d611::t_06aa07057cfced 257
+openspec/specs/blackout-flow-dsl/spec.md
+  s_c4c919f578d611::t_409274506bea34 1-136
+openspec/specs/blackout-marcher-coupling/spec.md
+  s_c4c919f578d611::t_409274506bea34 1-36
+openspec/specs/sp2r-constraint-projection/spec.md
+  s_c4c919f578d611::t_409274506bea34 1-28
+openspec/specs/plasma-blackout-flagship/spec.md
+  s_c4c919f578d611::t_409274506bea34 1-40
+deep_causality_cfd/src/types/flow/blackout.rs
+  s_c4c919f578d611::t_43d184ef5e2a65 218-230
+openspec/specs/blackout-composition/spec.md
+  s_c4c919f578d611::t_409274506bea34 1-62
+openspec/specs/ks-conformal-propagator/spec.md
+  s_c4c919f578d611::t_409274506bea34 1-47
+openspec/specs/trajectory-nav-engine/spec.md
+  s_c4c919f578d611::t_409274506bea34 1-45
+openspec/notes/plasma-blackout/gap-analysis.md
+  s_c4c919f578d611::t_549a801303d535 291-300
+openspec/changes/archive/2026-07-02-add-plasma-blackout-corridor/tasks.md
+  s_c4c919f578d611::t_49957573b02a32 175,177-203,207-209
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "8f7244f3437cd09da92d3e2a2167f182ce511a7b",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
