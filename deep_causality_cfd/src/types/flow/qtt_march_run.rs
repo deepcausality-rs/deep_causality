@@ -19,7 +19,7 @@ use super::coupling::{CoupledField, PhysicsStage, StepContext};
 use super::qtt_march_pause::MarchPause;
 use crate::solvers::{
     QttImmersed2d, QttIncompressible2d, divergence_residual, drag_lift, kinetic_energy, max_bond,
-    max_speed,
+    max_speed, wall_heat_flux,
 };
 use crate::tensor_bridge::{QttProjector2d, dequantize_2d, quantize_2d};
 use crate::traits::Marcher;
@@ -145,9 +145,9 @@ where
 
     // Transport the carried reacting fraction as a tensor train (advect + diffuse), then let the
     // coupling react (operator split: transport, then relax).
+    let shape = [1usize << cfg.lx, 1usize << cfg.ly];
     let carried = field.scalar("alpha").map(|s| s.to_vec());
     if let Some(alpha) = carried {
-        let shape = [1usize << cfg.lx, 1usize << cfg.ly];
         let alpha_ct = CausalTensor::new(alpha, shape.to_vec()).map_err(|e| {
             PhysicsError::DimensionMismatch(alloc::format!("alpha quantize: {e:?}"))
         })?;
@@ -158,18 +158,33 @@ where
         field.set_scalar("alpha", adv_ct.as_slice().to_vec());
     }
 
+    // Publish the integrated wall heat flux when a body is immersed and the coupling carries a
+    // temperature field (the Brinkman penalization integral over the body, T_w = 0 reference).
+    // The temperature is the *previous* coupling pass's — the standard one-step operator split.
+    if let Some(b) = &cfg.body
+        && let Some(t_tr) = field.scalar("T_tr")
+    {
+        let t_ct = CausalTensor::new(t_tr.to_vec(), shape.to_vec())
+            .map_err(|e| PhysicsError::DimensionMismatch(alloc::format!("T_tr quantize: {e:?}")))?;
+        let t_tt = quantize_2d(&t_ct, &cfg.trunc)?;
+        let q = wall_heat_flux(&b.mask, &t_tt, R::zero(), b.eta, cfg.dx, cfg.dy)?;
+        field.set_scalar("wall_heat_flux", Vec::from([q]));
+    }
+
     let ctx = StepContext::<2, R>::qtt(cfg.dt, step);
     coupling.apply(&ctx, field)?;
     Ok(next)
 }
 
-/// The per-step blackout observables a coupled march accumulates (peak `n_e`, plasma frequency, the
-/// count of link-denied steps, and the peak of the published `"speed"` projection).
+/// The per-step blackout observables a coupled march accumulates: peak `n_e`, plasma frequency,
+/// the count of link-denied steps, the peak of the published `"speed"` projection, and the sensed
+/// `"heat_flux"` a loads stage publishes.
 pub(in crate::types::flow) struct BlackoutSampler<R: CfdScalar> {
     trigger: BlackoutTrigger<R>,
     ne: Vec<R>,
     wp: Vec<R>,
     speed: Vec<R>,
+    heat: Vec<R>,
     denied_steps: usize,
 }
 
@@ -180,12 +195,14 @@ impl<R: CfdScalar> BlackoutSampler<R> {
             ne: Vec::new(),
             wp: Vec::new(),
             speed: Vec::new(),
+            heat: Vec::new(),
             denied_steps: 0,
         }
     }
 
-    /// Sample the field's peak electron density through the trigger (a no-op without `"n_e"`), and
-    /// the peak of the `"speed"` projection the coupled step publishes (a no-op without it).
+    /// Sample the field's peak electron density through the trigger, the peak of the published
+    /// `"speed"` projection, and the first cell of the sensed `"heat_flux"`. Each is a no-op when
+    /// its field is absent.
     pub(in crate::types::flow) fn sample(
         &mut self,
         field: &CoupledField<R>,
@@ -209,6 +226,9 @@ impl<R: CfdScalar> BlackoutSampler<R> {
                 .fold(R::zero(), |acc, x| if x > acc { x } else { acc });
             self.speed.push(peak);
         }
+        if let Some(q) = field.scalar("heat_flux").and_then(|q| q.first().copied()) {
+            self.heat.push(q);
+        }
         Ok(())
     }
 
@@ -227,6 +247,9 @@ impl<R: CfdScalar> BlackoutSampler<R> {
         }
         if observe.max_speed {
             report.add_series("max_speed", self.speed);
+        }
+        if observe.heat_flux {
+            report.add_series("heat_flux", self.heat);
         }
         if observe.blackout_dwell {
             let dwell = R::from_usize(self.denied_steps)

@@ -69,8 +69,8 @@ pub use crate::types::flow::{
     GoverningModel, IonizationStage, MarchFork, MarchPause, MarchPipeline, MarchRun, MmsBuilder,
     Operator, OperatorStudyBuilder, PhysicsStage, QttMarchRun, QttStepView,
     RecoveryTemperatureStage, Regime, RegimeClass, RegimeClassify, Report, SafetyEnvelope,
-    StepContext, StepView, ThermalRelax, TrajectoryNav, VerifyRun, ViscosityArrhenius,
-    dominant_frequency, fail, ler_relax_scalar, ler_step, strouhal_number,
+    StepContext, StepView, ThermalRelax, TrajectoryNav, VerifyRun, VibrationalLagStage,
+    ViscosityArrhenius, dominant_frequency, fail, ler_relax_scalar, ler_step, strouhal_number,
 };
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
 pub use crate::types::flow_config::{

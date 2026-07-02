@@ -7,21 +7,23 @@
 //! central control loop), the example-local stages (truth/GNSS, flight loads, guidance), the
 //! branch scoring, and the per-leg snapshots the gates read.
 //!
-//! Every tuned number, and every Tier-A simplification label, lives in [`crate::constants`].
+//! Every tuned number, and every simplification label, lives in [`crate::constants`].
 
 use crate::FloatType;
 use crate::constants::{
-    BANK_ANGLES_DEG, C_P, CAP, CDA_OVER_M, COMMS_BAND_RAD_S, DRAG_MODEL_ERROR, DT, ETA,
-    FlightCondition, G0, GAMMA, GNSS_VAR, GUIDANCE_GAIN, HEAT_COEFF, L, L_CHAR, MAX_BANK_RAD,
-    MAX_G_LOAD, MAX_HEAT_FLUX, NAV_INIT_ERR, NU, OPTICAL_VAR, P0_VAR, PEAK, PROCESS_NOISE, RHO_REF,
-    SMOOTH_CELLS, TRUTH_R0, TRUTH_V0, U_INF,
+    BANK_ANGLES_DEG, C_P, CAP, CDA_OVER_M, COMMS_BAND_RAD_S, DT, ETA, FlightCondition, G0,
+    GNSS_VAR, GUIDANCE_GAIN, IMU_ACCEL_BIAS, IMU_GYRO_BIAS, L, L_CHAR, MAX_BANK_RAD, MAX_G_LOAD,
+    MAX_HEAT_FLUX, NAV_INIT_ERR, NU, OPTICAL_VAR, P0_VAR, PEAK, PROCESS_NOISE, Q_CALIBRATION,
+    REDUCED_MASS_AMU, RESIDENCE_TIME_S, RHO_REF, SMOOTH_CELLS, THETA_VIB, TRUTH_R0, TRUTH_V0,
+    U_INF,
 };
 use deep_causality_cfd::{
     AeroForceCoupling, Ambient, BlackoutTrigger, BranchAccumulator, BranchOutcome, CfdScalar,
-    CoupledField, Coupling, CyberneticCorrect, EosStage, InsErrorState, IonizationStage,
+    CoupledField, Coupling, CyberneticCorrect, EosStage, ImuModel, InsErrorState, IonizationStage,
     MarchPause, MarchStop, NavFilter, PhysicsError, PhysicsStage, QttMarchConfig,
     QttMarchConfigBuilder, QttObserve, RecoveryTemperatureStage, ReentryNavEngine, RegimeClassify,
-    Report, SafetyEnvelope, StepContext, TrajectoryNav, body_mask_2d, max_bond, quantize_2d,
+    Report, SafetyEnvelope, StepContext, TrajectoryNav, VibrationalLagStage, body_mask_2d,
+    max_bond, quantize_2d,
 };
 use deep_causality_haft::LogSize;
 use deep_causality_num::FromPrimitive;
@@ -69,14 +71,14 @@ pub fn world(fc: &FlightCondition) -> Result<QttMarchConfig<FloatType>, PhysicsE
             QttObserve::default()
                 .electron_density()
                 .plasma_frequency()
-                .max_speed()
+                .heat_flux()
                 .blackout_dwell(),
         )
         .build()
 }
 
 /// The candidate bank worlds: the peak station with the forebody projected by each bank angle,
-/// `radius × (1 − 0.3·sin φ)`. This is the Tier-A expression of banking.
+/// `radius × (1 − 0.3·sin φ)`. This is how the 2-D carrier expresses banking.
 ///
 /// # Errors
 /// Propagates builder and codec failures.
@@ -100,28 +102,45 @@ pub fn bank_worlds() -> Result<Vec<(f64, QttMarchConfig<FloatType>)>, PhysicsErr
 // ── The central control loop: the corridor coupling stack (design §Stage 4) ───────────────────
 
 /// The per-step corridor coupling, the loop body that `run_coupled` and `run_until` iterate.
-/// Reads top to bottom: reacting plasma [3], the ④ aero force, the regime classifier [2], loads,
-/// truth/GNSS, navigation [4], guidance, and the cybernetic bounded-correction gate [6]. A static
-/// cons-tuple; no `dyn`. An `Err`, such as an envelope breach, short-circuits the whole step.
+/// Reads top to bottom: reacting plasma [3] (recovery temperature, the Park two-temperature
+/// vibrational lag, ionization driven at the controller `Tₐ`, pressure closure), the ④ aero
+/// force, the regime classifier [2], loads, truth/GNSS, navigation [4] with an IMU-sensed
+/// specific force, guidance, and the cybernetic bounded-correction gate [6]. A static cons-tuple;
+/// no `dyn`. An `Err`, such as an envelope breach, short-circuits the whole step.
 pub fn corridor_coupling(fc: &FlightCondition) -> impl PhysicsStage<2, FloatType> {
+    let imu = ImuModel::new(
+        core::array::from_fn(|i| ft(IMU_ACCEL_BIAS[i])),
+        core::array::from_fn(|i| ft(IMU_GYRO_BIAS[i])),
+        [ft(PROCESS_NOISE); 17],
+    );
     Coupling::between_steps()
         .then(RecoveryTemperatureStage::new(
             ft(fc.mach),
-            ft(GAMMA),
+            ft(fc.gamma_eff),
             ft(fc.t_inf),
             ft(C_P),
         ))
-        .then(IonizationStage::new(ft(fc.n_tot)))
+        .then(VibrationalLagStage::new(
+            ft(fc.t_inf),
+            ft(fc.pressure_atm),
+            ft(REDUCED_MASS_AMU),
+            ft(THETA_VIB),
+            ft(RESIDENCE_TIME_S),
+        ))
+        .then(
+            IonizationStage::new(ft(fc.n_tot))
+                .driven_by("T_a")
+                .with_sheath_renewal(ft(RESIDENCE_TIME_S)),
+        )
         .then(EosStage::new(ft(fc.n_tot)))
         .then(AeroForceCoupling::new(ft(RHO_REF), ft(CDA_OVER_M)))
         .then(RegimeClassify::new(ft(L_CHAR), trigger()))
         .then(FlightLoads)
         .then(TruthGnss)
-        .then(TrajectoryNav::new(
-            [ft(PROCESS_NOISE); 17],
-            ft(GNSS_VAR),
-            ft(OPTICAL_VAR),
-        ))
+        .then(
+            TrajectoryNav::new([ft(PROCESS_NOISE); 17], ft(GNSS_VAR), ft(OPTICAL_VAR))
+                .with_imu(imu),
+        )
         .then(BankGuidance)
         .then(CyberneticCorrect::new(SafetyEnvelope::new(
             ft(MAX_HEAT_FLUX),
@@ -167,8 +186,10 @@ fn state_vec(r: [f64; 3], v: [f64; 3]) -> Vec<FloatType> {
 
 // ── Example-local stages (corridor wiring, not library physics) ───────────────────────────────
 
-/// Publishes the sensed flight loads the envelope gate reads: the Sutton-Graves-form stagnation
-/// heating `q = K·u³` off the carrier's peak speed, and the g-load off the ④ aero channel.
+/// Publishes the sensed flight loads the envelope gate reads: the carrier's Brinkman wall
+/// heat-flux integral (published each step by the coupled loop, `T_w = 0` reference) rescaled to
+/// W·m⁻², and the g-load off the ④ aero channel. Zero heating until the first temperature field
+/// lands (the standard one-step operator split).
 #[derive(Debug, Clone, Copy)]
 pub struct FlightLoads;
 
@@ -178,8 +199,11 @@ impl PhysicsStage<2, FloatType> for FlightLoads {
         _ctx: &StepContext<'_, 2, FloatType>,
         field: &mut CoupledField<FloatType>,
     ) -> Result<(), PhysicsError> {
-        let u_peak = field.scalar("speed").map(peak).unwrap_or_else(|| ft(U_INF));
-        let q = ft(HEAT_COEFF) * u_peak * u_peak * u_peak;
+        let wall = field
+            .scalar("wall_heat_flux")
+            .and_then(|q| q.first().copied())
+            .unwrap_or_else(|| ft(0.0));
+        let q = ft(Q_CALIBRATION) * wall.abs();
         let a = field.aero_force().unwrap_or([ft(0.0); 3]);
         let g = norm3(a) / ft(G0);
         field.set_scalar("heat_flux", Vec::from([q]));
@@ -188,10 +212,11 @@ impl PhysicsStage<2, FloatType> for FlightLoads {
     }
 }
 
-/// The truth vehicle plus the GNSS constellation. Advances the true state with the ④ aero force
-/// *plus the 5% drag the navigation model does not know about*, then publishes the position fix.
-/// The fix is always broadcast; whether the receiver can use it is the corridor's denial gate,
-/// since `TrajectoryNav` folds it only when the classifier says the link is up.
+/// The truth vehicle plus the GNSS constellation. Advances the true state with the true ④ aero
+/// force, then publishes the position fix. The fix is always broadcast; whether the receiver can
+/// use it is the corridor's denial gate, since `TrajectoryNav` folds it only when the classifier
+/// says the link is up. The navigation drifts anyway: its IMU senses the same force through an
+/// accelerometer bias.
 #[derive(Debug, Clone, Copy)]
 pub struct TruthGnss;
 
@@ -206,9 +231,7 @@ impl PhysicsStage<2, FloatType> for TruthGnss {
         };
         let r = [state[0], state[1], state[2]];
         let v = [state[3], state[4], state[5]];
-        let aero = field.aero_force().unwrap_or([ft(0.0); 3]);
-        let scale = ft(1.0 + DRAG_MODEL_ERROR);
-        let kick: [FloatType; 3] = core::array::from_fn(|i| aero[i] * scale);
+        let kick = field.aero_force().unwrap_or([ft(0.0); 3]);
         let (r1, v1) = ks_strang_step(r, v, ft(EARTH_GM), ctx.dt(), |_r, _v| kick)?;
         field.set_scalar(
             "truth_state",
@@ -305,16 +328,16 @@ pub struct BranchScore {
     pub report_final: (Vec<FloatType>, Vec<FloatType>),
 }
 
-/// Score one branch report into a [`BranchOutcome`]. The per-step Sutton-Graves heating and link
-/// denial fold through the Stage-3 [`BranchAccumulator`]; the close is the t²-law miss over the
-/// branch's real blackout dwell, `miss = ½·a_err·dwell²` with `a_err` the unmodeled 5% drag.
+/// Score one branch report into a [`BranchOutcome`]. The per-step *sensed* heating (the wall
+/// heat-flux series the loads stage publishes) and the link denial fold through the Stage-3
+/// [`BranchAccumulator`]; the close is the t²-law miss over the branch's real blackout dwell,
+/// `miss = ½·|b|·dwell²` with `|b|` the accelerometer-bias magnitude the INS integrates unaided.
 pub fn score_branch(bank_deg: f64, report: &Report<FloatType>) -> BranchScore {
-    let speed = report.series("max_speed").unwrap_or(&[]);
+    let heat = report.series("heat_flux").unwrap_or(&[]);
     let wp = report.series("plasma_frequency").unwrap_or(&[]);
     let band = ft(COMMS_BAND_RAD_S);
     let mut acc = BranchAccumulator::new(ft(bank_deg.to_radians()));
-    for (i, &u) in speed.iter().enumerate() {
-        let q = ft(HEAT_COEFF) * u * u * u;
+    for (i, &q) in heat.iter().enumerate() {
         let denied = wp.get(i).is_some_and(|&w| w > band);
         acc.observe(q, denied, ft(DT));
     }
@@ -322,8 +345,8 @@ pub fn score_branch(bank_deg: f64, report: &Report<FloatType>) -> BranchScore {
         .series("blackout_dwell")
         .and_then(|d| d.first().copied())
         .unwrap_or_else(|| ft(0.0));
-    let a_err = ft(DRAG_MODEL_ERROR * CDA_OVER_M);
-    let miss = ft(0.5) * a_err * dwell * dwell;
+    let bias: [FloatType; 3] = core::array::from_fn(|i| ft(IMU_ACCEL_BIAS[i]));
+    let miss = ft(0.5) * norm3(bias) * dwell * dwell;
     let outcome = acc.finish(miss);
     BranchScore {
         bank_deg,

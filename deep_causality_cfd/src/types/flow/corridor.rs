@@ -26,6 +26,7 @@
 //!   Deterministic (identical inputs → identical action), no Effect-monad allocation on the hot path.
 
 use super::coupling::{CoupledField, PhysicsStage, StepContext};
+use crate::navigation::ImuModel;
 use crate::types::CfdScalar;
 use crate::types::flow::BlackoutTrigger;
 use alloc::format;
@@ -210,22 +211,37 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for RegimeClassify<R> {
 /// Each step it publishes `"nav_position"` (3 cells) and `"nav_position_variance"` (1 cell) — the
 /// dead-reckoning drift / reacquisition-collapse witnesses — and logs the transition between aided
 /// and dead-reckoning navigation to the provenance log (transitions only, not every step).
+///
+/// With [`with_imu`](Self::with_imu) the predict integrates the **IMU-sensed** specific force
+/// (the ④ aero plus the accelerometer bias) instead of the true value — the real INS
+/// dead-reckoning error mechanism — and the ESKF `Q` comes from the IMU's grade.
 #[derive(Debug, Clone, Copy)]
 pub struct TrajectoryNav<R: CfdScalar> {
     process_noise: [R; 17],
     gnss_variance: R,
     optical_variance: R,
+    imu: Option<ImuModel<R>>,
 }
 
 impl<R: CfdScalar> TrajectoryNav<R> {
     /// A trajectory stage with the ESKF `Q` diagonal `process_noise` and the per-axis measurement
-    /// variances of the GNSS and through-plasma optical fixes.
+    /// variances of the GNSS and through-plasma optical fixes. The predict integrates the true ④
+    /// specific force; use [`with_imu`](Self::with_imu) for a sensed one.
     pub fn new(process_noise: [R; 17], gnss_variance: R, optical_variance: R) -> Self {
         Self {
             process_noise,
             gnss_variance,
             optical_variance,
+            imu: None,
         }
+    }
+
+    /// Sense the ④ specific force through `imu` before the predict (accelerometer bias included),
+    /// and take the ESKF `Q` diagonal from the IMU's grade.
+    pub fn with_imu(mut self, imu: ImuModel<R>) -> Self {
+        self.process_noise = imu.process_noise();
+        self.imu = Some(imu);
+        self
     }
 }
 
@@ -246,9 +262,14 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for TrajectoryNav<R> {
         let Some(mut engine) = field.take_nav() else {
             return Ok(());
         };
-        // Predict: KS drift + the ④ aero acceleration as the Strang kick (zero if no producer ran).
+        // Predict: KS drift + the ④ aero acceleration as the Strang kick (zero if no producer
+        // ran), sensed through the IMU when one is configured.
         let aero = field.aero_force().unwrap_or([R::zero(); 3]);
-        if let Err(e) = engine.predict(ctx.dt(), aero, self.process_noise) {
+        let sensed = match &self.imu {
+            Some(imu) => imu.sense_specific_force(aero),
+            None => aero,
+        };
+        if let Err(e) = engine.predict(ctx.dt(), sensed, self.process_noise) {
             // Thread the engine back before short-circuiting, so the pause/fork state stays whole.
             field.set_nav(engine);
             return Err(e);

@@ -526,6 +526,87 @@ fn run_coupled_surfaces_the_provenance_log() {
 }
 
 #[test]
+fn coupled_body_march_publishes_the_wall_heat_flux() {
+    use deep_causality_cfd::{RecoveryTemperatureStage, body_mask_2d};
+
+    // An immersed body plus a coupling that writes "T_tr": the loop publishes the Brinkman wall
+    // heat-flux integral into the field each step.
+    let dx = TAU / N as f64;
+    let trunc = Truncation::<f64>::by_bond(4096).unwrap();
+    let c = TAU * 0.5;
+    let mask = body_mask_2d::<f64>(L, L, dx, dx, c, c, TAU * 0.18, 2.0 * dx, &trunc).unwrap();
+    let cfg = QttMarchConfigBuilder::<f64>::new()
+        .name("wall_flux")
+        .grid(L, L, dx, dx)
+        .solver(0.005, 0.05, trunc)
+        .seed_fn(|_, _| (1.0, 0.0))
+        .unwrap()
+        .body(mask, 0.0, 0.0, 0.02, 1.0, 2.0 * TAU * 0.18)
+        .stop(MarchStop::Fixed(4))
+        .observe(QttObserve::default())
+        .build()
+        .unwrap();
+
+    let recovery = RecoveryTemperatureStage::new(25.0_f64, 1.4, 250.0, 1004.0);
+    let pause = CfdFlow::qtt_march(&cfg)
+        .run_until(
+            recovery,
+            CoupledField::new(Ambient::new(0.01, 0.0, None)),
+            BlackoutTrigger::new(1.0e9),
+            0.01,
+            |_, _| false,
+        )
+        .unwrap();
+
+    let q = pause
+        .field()
+        .scalar("wall_heat_flux")
+        .expect("wall flux published");
+    assert_eq!(q.len(), 1);
+    assert!(q[0].is_finite());
+    assert!(
+        q[0] < 0.0,
+        "hot sheath vs the T_w = 0 reference gives a negative wall-side flux: {}",
+        q[0]
+    );
+}
+
+#[test]
+fn run_coupled_samples_the_sensed_heat_flux_series() {
+    use deep_causality_cfd::{PhysicsError, PhysicsStage, StepContext};
+
+    // A minimal loads producer: publishes a constant sensed heat flux each step.
+    #[derive(Clone, Copy)]
+    struct ConstLoads;
+    impl PhysicsStage<2, f64> for ConstLoads {
+        fn apply(
+            &self,
+            _ctx: &StepContext<'_, 2, f64>,
+            field: &mut CoupledField<f64>,
+        ) -> Result<(), PhysicsError> {
+            field.set_scalar("heat_flux", vec![2.5e6]);
+            Ok(())
+        }
+    }
+
+    let steps = 3usize;
+    let cfg = coupled_free_config(steps);
+    let report = CfdFlow::qtt_march(&cfg)
+        .observe_with(QttObserve::default().heat_flux())
+        .run_coupled(
+            ConstLoads,
+            CoupledField::new(Ambient::new(0.01, 0.0, None)),
+            BlackoutTrigger::new(1.0e9),
+            0.01,
+        )
+        .unwrap();
+
+    let heat = report.series("heat_flux").expect("heat_flux series");
+    assert_eq!(heat.len(), steps, "one sensed sample per coupled step");
+    assert!(heat.iter().all(|&q| q == 2.5e6));
+}
+
+#[test]
 fn run_coupled_samples_the_peak_speed_series() {
     let steps = 3usize;
     let cfg = coupled_free_config(steps);

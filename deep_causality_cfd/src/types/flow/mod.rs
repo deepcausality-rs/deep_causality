@@ -32,7 +32,7 @@ mod zones;
 
 pub use blackout::{
     BlackoutState, BlackoutTrigger, EosStage, IonizationStage, RecoveryTemperatureStage,
-    ler_relax_scalar, ler_step,
+    VibrationalLagStage, ler_relax_scalar, ler_step,
 };
 pub use cfd_flow::{CfdFlow, fail};
 pub use corridor::{

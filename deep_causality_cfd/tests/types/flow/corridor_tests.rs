@@ -399,6 +399,36 @@ fn optical_fix_rides_through_the_blackout() {
 }
 
 #[test]
+fn with_imu_senses_the_specific_force_through_the_bias() {
+    use deep_causality_cfd::ImuModel;
+
+    // Twin engines, same true aero force. The biased IMU's dead-reckoned position diverges from
+    // the unbiased twin: the real INS drift mechanism.
+    let aero = [-30.0_f64, 0.0, 0.0];
+    let imu = ImuModel::new([0.5, -0.3, 0.2], [0.0; 3], [1.0e-4; 17]);
+
+    let mut clean = field();
+    clean.set_nav(nav_engine());
+    clean.set_aero_force(aero);
+    nav_stage().apply(&ctx(1), &mut clean).expect("applies");
+
+    let mut biased = field();
+    biased.set_nav(nav_engine());
+    biased.set_aero_force(aero);
+    TrajectoryNav::new([1.0e-6; 17], 25.0, 2500.0)
+        .with_imu(imu)
+        .apply(&ctx(1), &mut biased)
+        .expect("applies");
+
+    let a = clean.scalar("nav_position").unwrap();
+    let b = biased.scalar("nav_position").unwrap();
+    assert!(
+        (a[0] - b[0]).abs() > 1e-6 || (a[1] - b[1]).abs() > 1e-6,
+        "the accelerometer bias drifts the dead-reckoned position"
+    );
+}
+
+#[test]
 fn nav_predict_failure_short_circuits_but_threads_the_engine_back() {
     // An unbound (hyperbolic) state cannot re-lift onto the KS manifold: predict fails.
     let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]);

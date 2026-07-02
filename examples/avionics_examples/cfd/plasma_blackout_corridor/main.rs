@@ -16,7 +16,7 @@
 //!   The entire march runs on compressed, bond-capped trains, never on the dense grid.
 //! * **[2] regime**: `RegimeClassify` turns the Knudsen number into the governing model and the
 //!   electron density into the GNSS-denial flag. Every regime change lands in the provenance log.
-//! * **[3] reacting plasma**: the Tier-A Park-2T LER stages. Rankine-Hugoniot post-shock
+//! * **[3] reacting plasma**: the Park-2T LER stages: Rankine-Hugoniot post-shock
 //!   temperature, lagging ionization, electron density, pressure closure.
 //! * **[4] navigation**: `TrajectoryNav` runs the KS-regularized orbit predict with the ④
 //!   aero-force channel as the kick; 17-state ESKF corrections are gated by the *real* blackout
@@ -34,7 +34,7 @@
 //! The corridor flies three legs over the RAM-C II trajectory: approach (thin air, chemistry
 //! frozen, GNSS aided), peak heating (the Mach-25 station: ionization saturates, blackout, dead
 //! reckoning, the branch study), and exit (decelerated, sheath cleared, reacquisition). Every
-//! Tier-A simplification is labeled in `constants.rs`. The carried `CoupledField` threads the
+//! simplification is labeled in `constants.rs`. The carried `CoupledField` threads the
 //! navigation state, the reacting fraction, and the provenance log through every leg. The example
 //! self-verifies and exits nonzero on regression.
 //!

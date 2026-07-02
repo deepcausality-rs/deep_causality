@@ -27,8 +27,9 @@ use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_physics::{
     AVOGADRO_CONSTANT, BOLTZMANN_CONSTANT, ElectronDensity, PARK_NO_IONIZATION_ACTIVATION_TEMP,
     PARK_NO_IONIZATION_EXPONENT, PARK_NO_IONIZATION_PREFACTOR, PhysicsError, Temperature,
-    arrhenius_rate_kernel, park2t_ionization_surrogate_kernel, plasma_frequency_kernel,
-    rankine_hugoniot_temperature_kernel, recovery_temperature_kernel,
+    VibrationalTemperature, arrhenius_rate_kernel, park2t_ionization_surrogate_kernel,
+    plasma_frequency_kernel, rankine_hugoniot_temperature_kernel, recovery_temperature_kernel,
+    vibrational_relaxation_kernel,
 };
 
 /// The closed-form Lagging-Equilibrium Relaxation step:
@@ -120,16 +121,107 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for RecoveryTemperatureSta
     }
 }
 
+/// The Park two-temperature vibrational lag: turns the per-cell translational `T_tr` into the
+/// **rate-controlling temperature** `Tₐ = √(T_tr·T_ve)` that actually governs ionization.
+///
+/// Behind the shock the heavy-particle translation jumps at once while the vibrational-electron
+/// bath is still frozen at the free-stream value; it relaxes up on the Millikan-White clock
+/// `τ_vt ∝ 1/p`. The sheath is continuously renewed by fresh free-stream parcels, so each step
+/// this stage evaluates the closed-form relaxation over one **residence time** (`t_res =
+/// standoff/u₂`, the parcel-renewal picture), per cell against that cell's `T_tr`. It writes the
+/// lagged `"T_ve"` and the controller `"T_a"`; feed the latter to
+/// [`IonizationStage::driven_by`]. A no-op if `"T_tr"` is absent.
+///
+/// This is the marched form of the calibrated stagnation-line closure
+/// (`Park2tClosure`/`stagnation_line_blackout_2t`), which lands the RAM-C II peak within the
+/// production chemistry spread.
+///
+/// # References
+/// * Park, "Nonequilibrium Hypersonic Aerothermodynamics," Wiley (1990) — the two-temperature
+///   model and the geometric-mean rate-controlling temperature.
+/// * Park, J. Thermophys. Heat Transfer 7(3):385 (1993).
+/// * Millikan & White, J. Chem. Phys. 39:3209 (1963) — the `τ_vt` correlation.
+#[derive(Debug, Clone, Copy)]
+pub struct VibrationalLagStage<R: CfdScalar> {
+    t_tr_field: &'static str,
+    t_ve_field: &'static str,
+    t_a_field: &'static str,
+    t_ve_initial: R,
+    pressure_atm: R,
+    reduced_mass_amu: R,
+    theta_vib: R,
+    residence_time: R,
+}
+
+impl<R: CfdScalar> VibrationalLagStage<R> {
+    /// A lag stage with the gas properties the Millikan-White relaxation needs: the frozen
+    /// initial bath temperature `t_ve_initial` (the free-stream value), the post-shock pressure
+    /// in atm, the reduced mass of the dominant colliding pair in amu (N₂-N₂ ≈ 7), the
+    /// characteristic vibrational temperature in K (N₂ ≈ 3393), and the sheath residence time
+    /// `t_res = standoff/u₂` in s.
+    pub fn new(
+        t_ve_initial: R,
+        pressure_atm: R,
+        reduced_mass_amu: R,
+        theta_vib: R,
+        residence_time: R,
+    ) -> Self {
+        Self {
+            t_tr_field: "T_tr",
+            t_ve_field: "T_ve",
+            t_a_field: "T_a",
+            t_ve_initial,
+            pressure_atm,
+            reduced_mass_amu,
+            theta_vib,
+            residence_time,
+        }
+    }
+}
+
+impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for VibrationalLagStage<R> {
+    fn apply(
+        &self,
+        _ctx: &StepContext<'_, D, R>,
+        field: &mut CoupledField<R>,
+    ) -> Result<(), PhysicsError> {
+        let Some(t_tr) = field.scalar(self.t_tr_field) else {
+            return Ok(());
+        };
+        let t_tr = t_tr.to_vec();
+        let mut t_ve = Vec::with_capacity(t_tr.len());
+        let mut t_a = Vec::with_capacity(t_tr.len());
+        for &t in &t_tr {
+            let relaxed = vibrational_relaxation_kernel(
+                VibrationalTemperature::new(self.t_ve_initial)?,
+                Temperature::new(t)?,
+                self.pressure_atm,
+                self.reduced_mass_amu,
+                self.theta_vib,
+                self.residence_time,
+            )?
+            .value();
+            t_ve.push(relaxed);
+            t_a.push((t * relaxed).sqrt());
+        }
+        field.set_scalar(self.t_ve_field, t_ve);
+        field.set_scalar(self.t_a_field, t_a);
+        Ok(())
+    }
+}
+
 /// Relaxes the carried ionization fraction `α` toward the Park-2T Saha surrogate
 /// `α_eq(T_tr)` with `τ_ion = 1/(k_f·[M])` (the dominant associative-ionization
 /// rate, computed from state), via the closed-form LER exponential, then writes the
-/// electron density `n_e = α · n_tot`. Reads `"T_tr"`, carries `"alpha"`, writes `"n_e"`.
+/// electron density `n_e = α · n_tot`. Reads `"T_tr"` by default (see
+/// [`driven_by`](Self::driven_by)), carries `"alpha"`, writes `"n_e"`.
 #[derive(Debug, Clone, Copy)]
 pub struct IonizationStage<R: CfdScalar> {
     t_tr_field: &'static str,
     alpha_field: &'static str,
     ne_field: &'static str,
     number_density: R,
+    sheath_renewal: Option<R>,
 }
 
 impl<R: CfdScalar> IonizationStage<R> {
@@ -141,7 +233,27 @@ impl<R: CfdScalar> IonizationStage<R> {
             alpha_field: "alpha",
             ne_field: "n_e",
             number_density,
+            sheath_renewal: None,
         }
+    }
+
+    /// Drive ionization off a different temperature field, e.g. the Park rate-controlling
+    /// `"T_a"` a [`VibrationalLagStage`] writes (both the Saha target and the associative
+    /// ionization rate then use the lagged controller instead of the hot translation).
+    pub fn driven_by(mut self, field: &'static str) -> Self {
+        self.t_tr_field = field;
+        self
+    }
+
+    /// Sheath renewal (the parcel picture): each step the sheath is refreshed by free-stream
+    /// parcels whose chemistry has run for one **residence time**, so `α` is the
+    /// residence-limited lag value `α_eq·(1 − e^{−t_res/τ_ion})` instead of an accumulating
+    /// relaxation. This is the marched form of the calibrated stagnation-line lag
+    /// (`stagnation_line_blackout_2t`); without it a carried parcel ionizes for the whole march
+    /// and reaches equilibrium regardless of the lag.
+    pub fn with_sheath_renewal(mut self, residence_time: R) -> Self {
+        self.sheath_renewal = Some(residence_time);
+        self
     }
 }
 
@@ -198,6 +310,26 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for IonizationStage<R> {
             };
             targets.push(alpha_eq);
             taus.push(tau);
+        }
+
+        // Sheath renewal: the residence-limited lag value replaces the accumulating relaxation
+        // (fresh parcels each step, each exposed for one t_res).
+        if let Some(t_res) = self.sheath_renewal {
+            let alpha: Vec<R> = targets
+                .iter()
+                .zip(&taus)
+                .map(|(&a_eq, &tau)| {
+                    if tau <= R::zero() {
+                        a_eq
+                    } else {
+                        a_eq * (R::one() - (-(t_res / tau)).exp())
+                    }
+                })
+                .collect();
+            let n_e: Vec<R> = alpha.iter().map(|&a| a * n_tot).collect();
+            field.set_scalar(self.alpha_field, alpha);
+            field.set_scalar(self.ne_field, n_e);
+            return Ok(());
         }
 
         // Seed the carried fraction on first contact (cold start at α = 0).

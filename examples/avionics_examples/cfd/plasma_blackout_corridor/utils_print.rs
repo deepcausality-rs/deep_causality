@@ -9,7 +9,7 @@
 //! [`report`] tells the caller whether to exit nonzero.
 
 use crate::FloatType;
-use crate::constants::{CAP, COMMS_BAND_RAD_S, L, NE_BASELINE, PEAK, RAMC_NE_REFERENCE};
+use crate::constants::{CAP, COMMS_BAND_RAD_S, L, PEAK, RAMC_NE_REFERENCE};
 use crate::model::{BranchScore, LegSnapshot, ft};
 use deep_causality_core::EffectLog;
 
@@ -139,16 +139,17 @@ pub fn report(
         ),
     );
 
-    let ne_ok = (ft(NE_BASELINE / 3.0)..=ft(NE_BASELINE * 3.0)).contains(&leg2b.ne_peak);
+    let ne_ok =
+        (ft(RAMC_NE_REFERENCE / 5.0)..=ft(RAMC_NE_REFERENCE * 5.0)).contains(&leg2b.ne_peak);
     gate(
-        "(2) peak n_e regression band",
+        "(2) peak n_e vs the RAM-C II anchor",
         ne_ok,
         format!(
-            "n_e = {:.3e} m^-3 in [{:.1e}, {:.1e}] (Tier-A saturation baseline; the RAM-C II \
-             anchor {:.0e} m^-3 is a cross-reference the frozen-RH Saha limit over-predicts)",
+            "n_e = {:.3e} m^-3 in [{:.1e}, {:.1e}] around the flight anchor {:.0e} m^-3 (the \
+             Park two-temperature controller suppresses the frozen-RH Saha saturation)",
             leg2b.ne_peak,
-            NE_BASELINE / 3.0,
-            NE_BASELINE * 3.0,
+            RAMC_NE_REFERENCE / 5.0,
+            RAMC_NE_REFERENCE * 5.0,
             RAMC_NE_REFERENCE,
         ),
     );
