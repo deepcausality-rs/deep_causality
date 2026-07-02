@@ -172,13 +172,38 @@ swapped (not rewritten) at Stage 1.
 
 ## Finalize (each stage)
 
-- [ ] F.1 `make format && make fix`; per-crate tests green; examples run their gates. No `unsafe`/`dyn`/lib-macros;
+- [x] F.1 `make format && make fix`; per-crate tests green; examples run their gates. No `unsafe`/`dyn`/lib-macros;
   float literals only in test code; `[lints] workspace = true`; Bazel registration updated.
-- [ ] F.2 `openspec validate add-plasma-blackout-corridor --strict` passes; update gap-analysis §5 + the Gap-3
-  resolutions to point at this reordered plan.
+- [x] F.2 `openspec validate add-plasma-blackout-corridor --strict` passes; update gap-analysis §5 + the Gap-3
+  resolutions to point at this reordered plan. → Validated; gap-analysis §5 carries the shipped-status pointer
+  to this archived change.
+
+## Post-Stage-5 fidelity upgrades (landed before archive)
+
+The flagship's three cheapest simplifications were replaced with simulations of the real effects, and two
+smaller ones addressed:
+
+1. **Park two-temperature drive.** `VibrationalLagStage` (Millikan-White `T_ve` over one sheath residence
+   time, parcel renewal) + `IonizationStage::driven_by("T_a")` + `IonizationStage::with_sheath_renewal(t_res)`
+   (residence-limited ionization exposure, the marched form of `stagnation_line_blackout_2t`). With the
+   calibrated recipe (`γ_eff = 1.1`, `T₂ = 8,044 K`, post-shock sheath density) the flagship's peak `n_e`
+   lands at `1.03e19 m⁻³` vs the RAM-C II `1e19` anchor — within 3%. Sheath renewal also makes the blackout
+   *exit* physical (renewed weak-shock air barely ionizes), removing the imposed exit density.
+2. **Real wall heat flux.** The coupled loop publishes the Brinkman wall heat-flux integral
+   (`"wall_heat_flux"`); `QttObserve::heat_flux()` samples the sensed series; the flagship's loads, envelope
+   gate, and branch scoring read it (one W/m² calibration constant).
+3. **IMU-driven drift.** `TrajectoryNav::with_imu(ImuModel)` senses the ④ force through the accelerometer
+   bias; the truth flies the true force. Dead reckoning drifts by the real INS mechanism (t² law).
+4. **Recombination channel: documented, deferred.** The LER carries the forward Park rate only; under sheath
+   renewal the impact is confined to the carried wake scalar. The extension
+   (`τ = 1/(k_f·[M] + β·n_e)`, dissociative recombination, Park 1990 ch. 10) is documented on
+   `IonizationStage` and the flagship's `EXIT` station; build it when a wake-mounted-antenna scenario needs a
+   decaying wake.
+5. **Noisy GNSS fixes.** The published fix carries deterministic low-discrepancy receiver noise with variance
+   exactly `R` (RTK-class 2 cm 1σ, no RNG dependency); the reacquisition collapse is now statistical.
 
 ## Out of scope
 
-- [ ] Bars `(4,2)` conformal packaging (optional per FS-1); geopotential harmonics > J2; IERS 2PN clock; full
-  6-DOF entry; GPU/parallel acceleration (gated behind the tensor-network acceleration survey); promoting the
-  ESKF to a library estimator (YAGNI until a second consumer).
+Bars `(4,2)` conformal packaging (optional per FS-1); geopotential harmonics > J2; IERS 2PN clock; full
+6-DOF entry; GPU/parallel acceleration (gated behind the tensor-network acceleration survey); promoting the
+ESKF to a library estimator (YAGNI until a second consumer).

@@ -28,6 +28,9 @@
 //!   20 s blackout.
 //! * The sensed heating is the carrier's Brinkman wall heat-flux integral, rescaled by one
 //!   calibration constant to a RAM-C-like MW/m² magnitude.
+//! * GNSS fixes carry receiver noise from a deterministic low-discrepancy sequence whose variance
+//!   equals the filter's `R` exactly (reproducible, no RNG dependency). The RTK-class 2 cm sigma
+//!   keeps the compressed-dwell drift visible above the noise floor; see [`GNSS_VAR`].
 //! * Leg time is carrier time (`dt = 4 ms` per step), so navigation drifts are small; the gates
 //!   compare them relatively, and the mechanism scales unchanged to a flight-length dwell.
 
@@ -100,8 +103,12 @@ pub const NAV_INIT_ERR: [f64; 3] = [50.0, -30.0, 20.0];
 pub const P0_VAR: f64 = 2500.0;
 /// ESKF process-noise diagonal.
 pub const PROCESS_NOISE: f64 = 1.0e-4;
-/// GNSS fix variance (5 m 1σ), m².
-pub const GNSS_VAR: f64 = 25.0;
+/// GNSS fix variance, m²: a carrier-phase (RTK-class) receiver at 2 cm 1σ. The published fixes
+/// carry deterministic receiver noise with exactly this variance (see `model::fix_noise`), so the
+/// filter's `R` matches the actual sensor. The precision class is chosen so the compressed-dwell
+/// drift stays visible above the noise floor; a 5 m code-phase receiver tells the same story over
+/// a flight-length blackout.
+pub const GNSS_VAR: f64 = 4.0e-4;
 /// Through-plasma optical fix variance (50 m 1σ), m². No optical fix is published in this
 /// corridor, so the budget is carried but unused.
 pub const OPTICAL_VAR: f64 = 2500.0;
@@ -187,7 +194,9 @@ pub const PEAK: FlightCondition = FlightCondition {
 /// time, so the electron density collapses and the first fix ends the blackout — the physical
 /// exit mechanism (the hot sheath convects away and nothing replenishes it). The *carried* wake
 /// fraction still has no recombination channel (the LER holds only the forward Park rate); the
-/// renewal makes that a wake property, not the signal path's.
+/// renewal makes that a wake property, not the signal path's. The documented follow-up, should a
+/// wake-mounted-antenna scenario ever need a decaying wake, is the dissociative-recombination
+/// reverse channel described on `IonizationStage` (`τ = 1/(k_f·[M] + β·n_e)`, Park 1990 ch. 10).
 pub const EXIT: FlightCondition = FlightCondition {
     name: "exit_30km",
     mach: 7.0,

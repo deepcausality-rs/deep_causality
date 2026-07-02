@@ -215,6 +215,19 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for VibrationalLagStage<R>
 /// rate, computed from state), via the closed-form LER exponential, then writes the
 /// electron density `n_e = α · n_tot`. Reads `"T_tr"` by default (see
 /// [`driven_by`](Self::driven_by)), carries `"alpha"`, writes `"n_e"`.
+///
+/// # Limitation: forward rate only (no recombination channel)
+///
+/// The relaxation clock carries only the *forward* Park associative-ionization rate, whose
+/// Arrhenius barrier freezes at low temperature. The reverse process, dissociative recombination
+/// (`e⁻ + NO⁺ → N + O`), is barrier-free and fast in cold dense air, so a *carried* fraction that
+/// ionized at a hot station never decays chemically in this stage — it advects frozen. Under
+/// [`with_sheath_renewal`](Self::with_sheath_renewal) the impact is confined to the carried wake
+/// scalar (the renewed sheath the signal path sees is computed fresh each step); without renewal
+/// the frozen fraction also holds the sheath `n_e` up. The documented extension is a reverse
+/// channel with the dissociative-recombination coefficient `β(T_e)` folded into the LER clock,
+/// `τ = 1/(k_f·[M] + β·n_e)` (Park 1990, ch. 10); it has not been needed while every consumer
+/// reads the renewed sheath.
 #[derive(Debug, Clone, Copy)]
 pub struct IonizationStage<R: CfdScalar> {
     t_tr_field: &'static str,

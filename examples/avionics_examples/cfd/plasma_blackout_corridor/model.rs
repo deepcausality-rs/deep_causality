@@ -212,11 +212,24 @@ impl PhysicsStage<2, FloatType> for FlightLoads {
     }
 }
 
+/// Deterministic receiver noise for the published fix: a golden-ratio low-discrepancy sequence
+/// per axis, scaled so the per-axis variance is exactly [`GNSS_VAR`] (uniform on `±σ√3`).
+/// Reproducible on every run, with no RNG dependency, and consistent with the filter's `R`.
+pub fn fix_noise(step: usize) -> [FloatType; 3] {
+    const PHI: f64 = 0.618_033_988_749_894_9;
+    let amplitude = (GNSS_VAR * 3.0).sqrt();
+    core::array::from_fn(|axis| {
+        let stride = PHI * (1.0 + 0.37 * axis as f64);
+        let u = ((step as f64 + 1.0) * stride).fract();
+        ft(amplitude * (2.0 * u - 1.0))
+    })
+}
+
 /// The truth vehicle plus the GNSS constellation. Advances the true state with the true ④ aero
-/// force, then publishes the position fix. The fix is always broadcast; whether the receiver can
-/// use it is the corridor's denial gate, since `TrajectoryNav` folds it only when the classifier
-/// says the link is up. The navigation drifts anyway: its IMU senses the same force through an
-/// accelerometer bias.
+/// force, then publishes the position fix with receiver noise ([`fix_noise`]). The fix is always
+/// broadcast; whether the receiver can use it is the corridor's denial gate, since
+/// `TrajectoryNav` folds it only when the classifier says the link is up. The navigation drifts
+/// anyway: its IMU senses the same force through an accelerometer bias.
 #[derive(Debug, Clone, Copy)]
 pub struct TruthGnss;
 
@@ -237,7 +250,11 @@ impl PhysicsStage<2, FloatType> for TruthGnss {
             "truth_state",
             Vec::from([r1[0], r1[1], r1[2], v1[0], v1[1], v1[2]]),
         );
-        field.set_scalar("gnss_fix", Vec::from([r1[0], r1[1], r1[2]]));
+        let noise = fix_noise(ctx.step());
+        field.set_scalar(
+            "gnss_fix",
+            Vec::from([r1[0] + noise[0], r1[1] + noise[1], r1[2] + noise[2]]),
+        );
         Ok(())
     }
 }
