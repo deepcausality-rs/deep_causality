@@ -108,6 +108,12 @@ impl<R: RealField> NavFilter<R> {
     /// Fold in one scalar measurement `z = h·δx + noise` with measurement variance `r` (a sequential
     /// scalar update; `S = h·P·hᵀ + r` is a scalar, so no inversion). Corrects the estimate and shrinks
     /// the covariance.
+    ///
+    /// The covariance update is the **Joseph form** `P ← (I−K·h)·P·(I−K·h)ᵀ + r·K⊗K`, followed by a
+    /// re-symmetrization. The simple form `P − K⊗(h·P)` loses symmetry and positive-definiteness
+    /// under long sequences of near-unity-gain folds (a precise receiver folded every step), after
+    /// which the cross-term gains change sign and the injected corrections diverge; Joseph is
+    /// PSD-preserving unconditionally (Groves 2013, §3.4.3).
     pub fn update_scalar(&mut self, h: [R; NAV_STATES], z: R, r: R) {
         let x = self.state.to_array();
         let ph = mat_vec(&self.cov, &h); // P·hᵀ
@@ -116,9 +122,23 @@ impl<R: RealField> NavFilter<R> {
         let k: [R; NAV_STATES] = core::array::from_fn(|i| ph[i] / s); // Kalman gain
         let x_new: [R; NAV_STATES] = core::array::from_fn(|i| x[i] + k[i] * innov);
         self.state = InsErrorState::from_array(x_new);
-        // P ← (I − K·h)·P = P − K⊗(h·P); h·P = ph for symmetric P.
-        self.cov =
-            core::array::from_fn(|i| core::array::from_fn(|j| self.cov[i][j] - k[i] * ph[j]));
+        // Joseph form: A = I − K⊗h; P ← A·P·Aᵀ + r·K⊗K, then symmetrize.
+        let a: [[R; NAV_STATES]; NAV_STATES] = core::array::from_fn(|i| {
+            core::array::from_fn(|j| {
+                let id = if i == j { R::one() } else { R::zero() };
+                id - k[i] * h[j]
+            })
+        });
+        let ap = mat_mul(&a, &self.cov);
+        let apat = mat_mul(&ap, &mat_transpose(&a));
+        let half = R::one() / (R::one() + R::one());
+        self.cov = core::array::from_fn(|i| {
+            core::array::from_fn(|j| {
+                let joseph = apat[i][j] + r * k[i] * k[j];
+                let joseph_t = apat[j][i] + r * k[j] * k[i];
+                (joseph + joseph_t) * half
+            })
+        });
     }
 
     /// The current error-state estimate.

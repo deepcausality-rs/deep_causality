@@ -64,8 +64,9 @@ pub use crate::navigation::{
 // The CfdFlow DSL facade (owned case descriptions materialized at run).
 // Workflow composition — the CfdFlow DSL (the "how").
 pub use crate::types::flow::{
-    AeroBlackoutStub, AeroForceCoupling, BankCorrection, BlackoutState, BlackoutTrigger,
-    BranchAccumulator, BranchOutcome, CfdFlow, CoupledField, Coupling, CyberneticCorrect, EosStage,
+    AeroBlackoutStub, AeroForceCoupling, BankCorrection, BankSteeredLift, BlackoutState,
+    BlackoutTrigger, BranchAccumulator, BranchOutcome, CfdFlow, CompressibleFork,
+    CompressibleMarchRun, CompressiblePause, CoupledField, Coupling, CyberneticCorrect, EosStage,
     GoverningModel, IonizationStage, MarchFork, MarchPause, MarchPipeline, MarchRun, MmsBuilder,
     Operator, OperatorStudyBuilder, PhysicsStage, QttMarchRun, QttStepView,
     RecoveryTemperatureStage, Regime, RegimeClass, RegimeClassify, Report, SafetyEnvelope,
@@ -74,9 +75,10 @@ pub use crate::types::flow::{
 };
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
 pub use crate::types::flow_config::{
-    Body, CfdConfigBuilder, Grading, Manufactured, ManufacturedSample, MarchConfig,
-    MarchConfigBuilder, MarchStop, Mesh, Observe, QttBody, QttMarchConfig, QttMarchConfigBuilder,
-    QttObserve, Seed, TaylorGreen, VerifyConfig, VerifyConfigBuilder,
+    AtmosphereRow, Body, CfdConfigBuilder, CompressibleMarchConfig, CompressibleMarchConfigBuilder,
+    DescentSchedule, Grading, Manufactured, ManufacturedSample, MarchConfig, MarchConfigBuilder,
+    MarchStop, Mesh, Observe, QttBody, QttMarchConfig, QttMarchConfigBuilder, QttObserve,
+    ReferenceScales, Seed, TaylorGreen, VerifyConfig, VerifyConfigBuilder,
 };
 // IO effect: the `IoAction` trait (from haft), the core `write_csv` file action, and the CFD CSV
 // helper, so a `CfdFlow` example can describe and run file output through one crate.

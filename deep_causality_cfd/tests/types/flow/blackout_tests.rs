@@ -426,3 +426,106 @@ fn sheath_renewal_limits_ionization_to_one_residence_time() {
     );
     assert!(ne_renewed > 0.0, "one residence time still ionizes");
 }
+
+// ── Evolved per-cell inputs (the compressible-carrier chemistry path) ─────
+
+#[test]
+fn vibrational_lag_reads_the_evolved_pressure_per_cell() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    // Identical translation, but the evolved pressure differs per cell: the
+    // Millikan-White clock runs faster at higher pressure, so the bath relaxes
+    // further there.
+    let stage =
+        VibrationalLagStage::new(250.0_f64, 1.0e-3, 7.0, 3393.0, 1.0e-5).with_pressure_field("p");
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    field.set_scalar("T_tr", vec![20_000.0_f64, 20_000.0]);
+    field.set_scalar("p", vec![1.0e-3_f64, 1.0]);
+    stage.apply(&ctx, &mut field).expect("applies");
+
+    let t_ve = field.scalar("T_ve").expect("T_ve written");
+    assert!(
+        t_ve[1] > t_ve[0],
+        "higher evolved pressure relaxes the bath further: {} > {}",
+        t_ve[1],
+        t_ve[0]
+    );
+}
+
+#[test]
+fn vibrational_lag_falls_back_to_the_config_pressure() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    let constant = VibrationalLagStage::new(250.0_f64, 0.04, 7.0, 3393.0, 1.0e-5);
+    // The named field is absent, so the per-cell reader falls back to the constant.
+    let evolved = constant.with_pressure_field("pressure_atm");
+
+    let mut a = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    a.set_scalar("T_tr", vec![20_000.0_f64]);
+    constant.apply(&ctx, &mut a).expect("applies");
+
+    let mut b = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    b.set_scalar("T_tr", vec![20_000.0_f64]);
+    evolved.apply(&ctx, &mut b).expect("applies");
+
+    assert_eq!(
+        a.scalar("T_ve").unwrap()[0],
+        b.scalar("T_ve").unwrap()[0],
+        "absent field means the config constant"
+    );
+}
+
+#[test]
+fn ionization_reads_the_evolved_density_per_cell() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    // Identical temperature, but the evolved density differs per cell: the dense
+    // cell both ionizes faster (shorter τ_ion) and carries more heavy particles,
+    // so its electron density comes out higher.
+    let stage = IonizationStage::new(1.0e22_f64)
+        .with_density_field("n_tot")
+        .with_sheath_renewal(2.0e-5);
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    field.set_scalar("T_tr", vec![8_000.0_f64, 8_000.0]);
+    field.set_scalar("n_tot", vec![1.0e20_f64, 1.0e22]);
+    stage.apply(&ctx, &mut field).expect("applies");
+
+    let n_e = field.scalar("n_e").expect("n_e written");
+    assert!(n_e.iter().all(|&x| x > 0.0), "both cells ionize");
+    assert!(
+        n_e[1] > n_e[0],
+        "the dense cell produces more electrons: {} > {}",
+        n_e[1],
+        n_e[0]
+    );
+}
+
+#[test]
+fn ionization_density_field_matches_the_scalar_config_when_equal() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    let n_tot = 1.0e22_f64;
+
+    let mut scalar_cfg = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    scalar_cfg.set_scalar("T_tr", vec![8_000.0_f64, 8_000.0]);
+    IonizationStage::new(n_tot)
+        .apply(&ctx, &mut scalar_cfg)
+        .expect("applies");
+
+    // A single-cell density field broadcasts the same value across the grid.
+    let mut evolved = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    evolved.set_scalar("T_tr", vec![8_000.0_f64, 8_000.0]);
+    evolved.set_scalar("n_tot", vec![n_tot]);
+    IonizationStage::new(1.0_f64)
+        .with_density_field("n_tot")
+        .apply(&ctx, &mut evolved)
+        .expect("applies");
+
+    for i in 0..2 {
+        assert_eq!(
+            scalar_cfg.scalar("n_e").unwrap()[i],
+            evolved.scalar("n_e").unwrap()[i],
+            "the broadcast field reproduces the scalar config"
+        );
+    }
+}

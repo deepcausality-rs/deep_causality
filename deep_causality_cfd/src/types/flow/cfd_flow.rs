@@ -12,8 +12,8 @@
 
 use crate::solvers::dec::BoundaryZone;
 use crate::types::CfdScalar;
-use crate::types::flow::{MarchPipeline, PhysicsStage, QttMarchRun};
-use crate::types::flow_config::{MarchConfig, QttMarchConfig};
+use crate::types::flow::{CompressibleMarchRun, MarchPipeline, PhysicsStage, QttMarchRun};
+use crate::types::flow_config::{CompressibleMarchConfig, MarchConfig, QttMarchConfig};
 use deep_causality_num::ConjugateScalar;
 
 /// The CfdFlow DSL entry point.
@@ -37,6 +37,16 @@ impl CfdFlow {
         config: &QttMarchConfig<R>,
     ) -> QttMarchRun<'_, R> {
         QttMarchRun::new(config)
+    }
+
+    /// Begin composing a **compressible coupled march** from a
+    /// [`CompressibleMarchConfig`](crate::CompressibleMarchConfig): the corridor's evolved-state
+    /// carrier, hosting the same coupled loop, pause/fork machinery, and counterfactual
+    /// vocabulary as the QTT host.
+    pub fn compressible_march<R: CfdScalar + ConjugateScalar<Real = R>>(
+        config: &CompressibleMarchConfig<R>,
+    ) -> CompressibleMarchRun<'_, R> {
+        CompressibleMarchRun::new(config)
     }
 
     /// Begin composing a **sensor-fed uncertain-inflow march** from an

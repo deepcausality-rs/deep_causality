@@ -23,6 +23,9 @@ where
 #[cfg(test)]
 pub mod blackout_tests;
 #[cfg(test)]
+#[cfg(not(miri))]
+pub mod compressible_march_run_tests;
+#[cfg(test)]
 pub mod corridor_tests;
 #[cfg(test)]
 pub mod coupling_tests;

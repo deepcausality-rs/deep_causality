@@ -148,6 +148,7 @@ pub struct VibrationalLagStage<R: CfdScalar> {
     t_a_field: &'static str,
     t_ve_initial: R,
     pressure_atm: R,
+    pressure_field: Option<&'static str>,
     reduced_mass_amu: R,
     theta_vib: R,
     residence_time: R,
@@ -172,10 +173,19 @@ impl<R: CfdScalar> VibrationalLagStage<R> {
             t_a_field: "T_a",
             t_ve_initial,
             pressure_atm,
+            pressure_field: None,
             reduced_mass_amu,
             theta_vib,
             residence_time,
         }
+    }
+
+    /// Read the Millikan-White pressure per cell from a named field (e.g. the evolved
+    /// `"pressure_atm"` the compressible carrier publishes) instead of the config constant. A
+    /// single-cell field broadcasts; the constant is the fallback when the field is absent.
+    pub fn with_pressure_field(mut self, field: &'static str) -> Self {
+        self.pressure_field = Some(field);
+        self
     }
 }
 
@@ -189,13 +199,22 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for VibrationalLagStage<R>
             return Ok(());
         };
         let t_tr = t_tr.to_vec();
+        let pressure = self
+            .pressure_field
+            .and_then(|name| field.scalar(name))
+            .map(|p| p.to_vec());
         let mut t_ve = Vec::with_capacity(t_tr.len());
         let mut t_a = Vec::with_capacity(t_tr.len());
-        for &t in &t_tr {
+        for (i, &t) in t_tr.iter().enumerate() {
+            let p_atm = match &pressure {
+                Some(p) if p.len() == t_tr.len() => p[i],
+                Some(p) if !p.is_empty() => p[0],
+                _ => self.pressure_atm,
+            };
             let relaxed = vibrational_relaxation_kernel(
                 VibrationalTemperature::new(self.t_ve_initial)?,
                 Temperature::new(t)?,
-                self.pressure_atm,
+                p_atm,
                 self.reduced_mass_amu,
                 self.theta_vib,
                 self.residence_time,
@@ -234,6 +253,7 @@ pub struct IonizationStage<R: CfdScalar> {
     alpha_field: &'static str,
     ne_field: &'static str,
     number_density: R,
+    density_field: Option<&'static str>,
     sheath_renewal: Option<R>,
 }
 
@@ -246,8 +266,17 @@ impl<R: CfdScalar> IonizationStage<R> {
             alpha_field: "alpha",
             ne_field: "n_e",
             number_density,
+            density_field: None,
             sheath_renewal: None,
         }
+    }
+
+    /// Read the heavy-particle density per cell from a named field (e.g. the evolved `"n_tot"`
+    /// the compressible carrier publishes) instead of the scalar config value. A single-cell
+    /// field broadcasts; the config value is the fallback when the field is absent.
+    pub fn with_density_field(mut self, field: &'static str) -> Self {
+        self.density_field = Some(field);
+        self
     }
 
     /// Drive ionization off a different temperature field, e.g. the Park rate-controlling
@@ -281,7 +310,10 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for IonizationStage<R> {
         };
         let t_tr = t_tr.to_vec();
         let n = t_tr.len();
-        let n_tot = self.number_density;
+        let density = self
+            .density_field
+            .and_then(|name| field.scalar(name))
+            .map(|d| d.to_vec());
 
         // [M] in mol·cm⁻³ for τ_ion = 1/(k_f·[M]); k_f is in cm³·mol⁻¹·s⁻¹ (RP-1232).
         let avogadro = R::from_f64(AVOGADRO_CONSTANT).ok_or_else(|| {
@@ -289,7 +321,6 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for IonizationStage<R> {
         })?;
         let cm3_per_m3 = R::from_f64(1.0e6)
             .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(1e6) failed".into()))?;
-        let conc_mol_cm3 = n_tot / (avogadro * cm3_per_m3);
         // A frozen-chemistry timescale ≫ dt: when the forward rate vanishes the LER
         // step leaves α effectively unchanged (no spurious jump to equilibrium).
         let huge = R::from_f64(1.0e30).unwrap_or_else(R::one);
@@ -297,7 +328,14 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for IonizationStage<R> {
 
         let mut targets = Vec::with_capacity(n);
         let mut taus = Vec::with_capacity(n);
-        for &t in &t_tr {
+        let mut n_cells = Vec::with_capacity(n);
+        for (i, &t) in t_tr.iter().enumerate() {
+            let n_tot = match &density {
+                Some(d) if d.len() == n => d[i],
+                Some(d) if !d.is_empty() => d[0],
+                _ => self.number_density,
+            };
+            let conc_mol_cm3 = n_tot / (avogadro * cm3_per_m3);
             let temp = Temperature::new(t)?;
             let alpha_eq = park2t_ionization_surrogate_kernel(temp, n_tot)?.value();
             let k_f = arrhenius_rate_kernel(
@@ -323,6 +361,7 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for IonizationStage<R> {
             };
             targets.push(alpha_eq);
             taus.push(tau);
+            n_cells.push(n_tot);
         }
 
         // Sheath renewal: the residence-limited lag value replaces the accumulating relaxation
@@ -339,7 +378,7 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for IonizationStage<R> {
                     }
                 })
                 .collect();
-            let n_e: Vec<R> = alpha.iter().map(|&a| a * n_tot).collect();
+            let n_e: Vec<R> = alpha.iter().zip(&n_cells).map(|(&a, &nc)| a * nc).collect();
             field.set_scalar(self.alpha_field, alpha);
             field.set_scalar(self.ne_field, n_e);
             return Ok(());
@@ -356,7 +395,7 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for IonizationStage<R> {
             .scalar(self.alpha_field)
             .map(|a| a.to_vec())
             .unwrap_or_default();
-        let n_e: Vec<R> = alpha.iter().map(|&a| a * n_tot).collect();
+        let n_e: Vec<R> = alpha.iter().zip(&n_cells).map(|(&a, &nc)| a * nc).collect();
         field.set_scalar(self.ne_field, n_e);
         Ok(())
     }

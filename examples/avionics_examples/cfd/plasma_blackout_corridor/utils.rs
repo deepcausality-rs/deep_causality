@@ -4,9 +4,9 @@
  */
 
 use crate::FloatType;
-use crate::constants::{CAP, COMMS_BAND_RAD_S, L};
+use crate::constants::{CAP, COMMS_BAND_RAD_S};
 use deep_causality_cfd::{BlackoutTrigger, CfdScalar, CoupledField};
-use deep_causality_num::{FromPrimitive, Zero};
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::Truncation;
 use std::process::exit;
 
@@ -18,10 +18,6 @@ pub(crate) fn stop(e: &deep_causality_cfd::PhysicsError) -> ! {
 /// Lift an exact `f64` specification constant into the working precision.
 pub fn ft(x: f64) -> FloatType {
     FromPrimitive::from_f64(x).expect("specification lifts into FloatType")
-}
-
-pub(crate) fn spacing() -> FloatType {
-    ft(2.0 * std::f64::consts::PI) / ft((1usize << L) as f64)
 }
 
 pub(crate) fn trunc() -> Truncation<FloatType> {

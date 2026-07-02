@@ -15,7 +15,8 @@
 //! horizon, and round policy.
 
 use super::blackout::BlackoutTrigger;
-use super::coupling::{CoupledField, PhysicsStage, StepContext};
+use super::carrier::{CoupledCarrier, CoupledLoopSpec, run_coupled_driver, run_until_driver};
+use super::coupling::{CoupledField, PhysicsStage};
 use super::qtt_march_pause::MarchPause;
 use crate::solvers::{
     QttImmersed2d, QttIncompressible2d, divergence_residual, drag_lift, kinetic_energy, max_bond,
@@ -26,13 +27,12 @@ use crate::traits::Marcher;
 use crate::types::CfdScalar;
 use crate::types::flow::Report;
 use crate::types::flow_config::{MarchStop, QttMarchConfig, QttObserve};
-use alloc::sync::Arc;
 use alloc::vec::Vec;
 use deep_causality_core::{AlternatableContext, AlternatableState, AlternatableValue, EffectLog};
 use deep_causality_haft::{LogAddEntry, LogAppend, LogSize};
 use deep_causality_num::ConjugateScalar;
-use deep_causality_physics::{ElectronDensity, PhysicsError};
-use deep_causality_tensor::{CausalTensor, CausalTensorTrain};
+use deep_causality_physics::PhysicsError;
+use deep_causality_tensor::{CausalTensor, CausalTensorTrain, Truncation};
 
 /// The `(u, v)` velocity train pair the QTT marcher carries.
 pub(in crate::types::flow) type QttState<R> = (CausalTensorTrain<R>, CausalTensorTrain<R>);
@@ -86,9 +86,7 @@ where
 /// Assemble the QTT solver a config describes (the immersed Brinkman solver with a body, the
 /// body-free solver without). Shared by every march entry point (`run`, `run_coupled`, `run_until`,
 /// and a fork's `continue_march` — which rebuilds from a possibly *alternated* config).
-pub(in crate::types::flow) fn build_solver<R>(
-    cfg: &QttMarchConfig<R>,
-) -> Result<QttSolver<R>, PhysicsError>
+fn build_solver<R>(cfg: &QttMarchConfig<R>) -> Result<QttSolver<R>, PhysicsError>
 where
     R: CfdScalar + ConjugateScalar<Real = R>,
 {
@@ -112,177 +110,128 @@ where
     }
 }
 
-/// One step of the **coupled** march loop, shared verbatim by `run_coupled`, `run_until`, and a
-/// fork's `continue_march`: advance the fluid, publish the per-cell `"speed"` projection, transport
-/// the carried `"alpha"` fraction as a tensor train, then apply the between-step coupling. Returns
-/// the advanced fluid state; an `Err` (solver or coupling) leaves `field` at its mid-step content
-/// for the caller to capture or propagate.
-pub(in crate::types::flow) fn coupled_step<R, S>(
-    solver: &QttSolver<R>,
-    cfg: &QttMarchConfig<R>,
-    state: &QttState<R>,
-    field: &mut CoupledField<R>,
-    coupling: &S,
-    scalar_kappa: R,
-    step: usize,
-) -> Result<QttState<R>, PhysicsError>
+/// The incompressible QTT carrier: the [`CoupledCarrier`] realization the Flow DSL's
+/// `qtt_march` host and its pause/fork machinery run over.
+pub struct QttCarrier<R>
 where
     R: CfdScalar + ConjugateScalar<Real = R>,
-    S: PhysicsStage<2, R>,
 {
-    let next = solver.advance(state)?;
-
-    // Publish the per-cell speed projection from the dequantized state.
-    let uf = dequantize_2d(&next.0, cfg.lx, cfg.ly)?;
-    let vf = dequantize_2d(&next.1, cfg.lx, cfg.ly)?;
-    let speed: Vec<R> = uf
-        .as_slice()
-        .iter()
-        .zip(vf.as_slice())
-        .map(|(&a, &b)| (a * a + b * b).sqrt())
-        .collect();
-    field.set_scalar("speed", speed);
-
-    // Transport the carried reacting fraction as a tensor train (advect + diffuse), then let the
-    // coupling react (operator split: transport, then relax).
-    let shape = [1usize << cfg.lx, 1usize << cfg.ly];
-    let carried = field.scalar("alpha").map(|s| s.to_vec());
-    if let Some(alpha) = carried {
-        let alpha_ct = CausalTensor::new(alpha, shape.to_vec()).map_err(|e| {
-            PhysicsError::DimensionMismatch(alloc::format!("alpha quantize: {e:?}"))
-        })?;
-        let alpha_tt = quantize_2d(&alpha_ct, &cfg.trunc)?;
-        let advected =
-            solver.advance_scalar(&alpha_tt, &next.0, &next.1, R::zero(), scalar_kappa)?;
-        let adv_ct = dequantize_2d(&advected, cfg.lx, cfg.ly)?;
-        field.set_scalar("alpha", adv_ct.as_slice().to_vec());
-    }
-
-    // Publish the integrated wall heat flux when a body is immersed and the coupling carries a
-    // temperature field (the Brinkman penalization integral over the body, T_w = 0 reference).
-    // The temperature is the *previous* coupling pass's — the standard one-step operator split.
-    if let Some(b) = &cfg.body
-        && let Some(t_tr) = field.scalar("T_tr")
-    {
-        let t_ct = CausalTensor::new(t_tr.to_vec(), shape.to_vec())
-            .map_err(|e| PhysicsError::DimensionMismatch(alloc::format!("T_tr quantize: {e:?}")))?;
-        let t_tt = quantize_2d(&t_ct, &cfg.trunc)?;
-        let q = wall_heat_flux(&b.mask, &t_tt, R::zero(), b.eta, cfg.dx, cfg.dy)?;
-        field.set_scalar("wall_heat_flux", Vec::from([q]));
-    }
-
-    let ctx = StepContext::<2, R>::qtt(cfg.dt, step);
-    coupling.apply(&ctx, field)?;
-    Ok(next)
+    solver: QttSolver<R>,
+    lx: usize,
+    ly: usize,
+    dx: R,
+    dy: R,
+    dt: R,
+    trunc: Truncation<R>,
+    /// The immersed body's mask + Brinkman `eta`, kept for the wall heat-flux integral.
+    wall: Option<(CausalTensorTrain<R>, R)>,
 }
 
-/// The per-step blackout observables a coupled march accumulates: peak `n_e`, plasma frequency,
-/// the count of link-denied steps, the peak of the published `"speed"` projection, and the sensed
-/// `"heat_flux"` a loads stage publishes.
-pub(in crate::types::flow) struct BlackoutSampler<R: CfdScalar> {
-    trigger: BlackoutTrigger<R>,
-    ne: Vec<R>,
-    wp: Vec<R>,
-    speed: Vec<R>,
-    heat: Vec<R>,
-    denied_steps: usize,
-}
+impl<R> CoupledCarrier<2, R> for QttCarrier<R>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    type Config = QttMarchConfig<R>;
+    type State = QttState<R>;
+    type Seed = (CausalTensor<R>, CausalTensor<R>);
 
-impl<R: CfdScalar> BlackoutSampler<R> {
-    pub(in crate::types::flow) fn new(trigger: BlackoutTrigger<R>) -> Self {
-        Self {
-            trigger,
-            ne: Vec::new(),
-            wp: Vec::new(),
-            speed: Vec::new(),
-            heat: Vec::new(),
-            denied_steps: 0,
-        }
+    fn build(cfg: &QttMarchConfig<R>) -> Result<Self, PhysicsError> {
+        Ok(Self {
+            solver: build_solver(cfg)?,
+            lx: cfg.lx,
+            ly: cfg.ly,
+            dx: cfg.dx,
+            dy: cfg.dy,
+            dt: cfg.dt,
+            trunc: cfg.trunc,
+            wall: cfg.body.as_ref().map(|b| (b.mask.clone(), b.eta)),
+        })
     }
 
-    /// Sample the field's peak electron density through the trigger, the peak of the published
-    /// `"speed"` projection, and the first cell of the sensed `"heat_flux"`. Each is a no-op when
-    /// its field is absent.
-    pub(in crate::types::flow) fn sample(
-        &mut self,
-        field: &CoupledField<R>,
+    fn seed_state(&self, cfg: &QttMarchConfig<R>) -> Result<QttState<R>, PhysicsError> {
+        Ok((
+            quantize_2d(&cfg.u0, &self.trunc)?,
+            quantize_2d(&cfg.v0, &self.trunc)?,
+        ))
+    }
+
+    fn encode_seed(&self, seed: &Self::Seed) -> Result<QttState<R>, PhysicsError> {
+        Ok((
+            quantize_2d(&seed.0, &self.trunc)?,
+            quantize_2d(&seed.1, &self.trunc)?,
+        ))
+    }
+
+    fn dt(&self) -> R {
+        self.dt
+    }
+
+    fn advance(&self, state: &QttState<R>) -> Result<QttState<R>, PhysicsError> {
+        self.solver.advance(state)
+    }
+
+    /// Publish the per-cell `"speed"` projection, transport the carried `"alpha"` fraction as a
+    /// tensor train, and publish the Brinkman wall heat-flux integral when a body is immersed and
+    /// the coupling carries a temperature field (`T_w = 0` reference; the temperature is the
+    /// *previous* coupling pass's — the standard one-step operator split).
+    fn publish_and_transport(
+        &self,
+        state: &QttState<R>,
+        field: &mut CoupledField<R>,
+        kappa: R,
     ) -> Result<(), PhysicsError> {
-        if let Some(ne) = field.scalar("n_e") {
-            let ne_max = ne
-                .iter()
-                .copied()
-                .fold(R::zero(), |acc, x| if x > acc { x } else { acc });
-            let decision = self.trigger.evaluate(ElectronDensity::new(ne_max)?)?;
-            self.ne.push(ne_max);
-            self.wp.push(decision.plasma_frequency);
-            if decision.denied {
-                self.denied_steps += 1;
-            }
+        let uf = dequantize_2d(&state.0, self.lx, self.ly)?;
+        let vf = dequantize_2d(&state.1, self.lx, self.ly)?;
+        let speed: Vec<R> = uf
+            .as_slice()
+            .iter()
+            .zip(vf.as_slice())
+            .map(|(&a, &b)| (a * a + b * b).sqrt())
+            .collect();
+        field.set_scalar("speed", speed);
+
+        let shape = [1usize << self.lx, 1usize << self.ly];
+        let carried = field.scalar("alpha").map(|s| s.to_vec());
+        if let Some(alpha) = carried {
+            let alpha_ct = CausalTensor::new(alpha, shape.to_vec()).map_err(|e| {
+                PhysicsError::DimensionMismatch(alloc::format!("alpha quantize: {e:?}"))
+            })?;
+            let alpha_tt = quantize_2d(&alpha_ct, &self.trunc)?;
+            let advected =
+                self.solver
+                    .advance_scalar(&alpha_tt, &state.0, &state.1, R::zero(), kappa)?;
+            let adv_ct = dequantize_2d(&advected, self.lx, self.ly)?;
+            field.set_scalar("alpha", adv_ct.as_slice().to_vec());
         }
-        if let Some(speed) = field.scalar("speed") {
-            let peak = speed
-                .iter()
-                .copied()
-                .fold(R::zero(), |acc, x| if x > acc { x } else { acc });
-            self.speed.push(peak);
-        }
-        if let Some(q) = field.scalar("heat_flux").and_then(|q| q.first().copied()) {
-            self.heat.push(q);
+
+        if let Some((mask, eta)) = &self.wall
+            && let Some(t_tr) = field.scalar("T_tr")
+        {
+            let t_ct = CausalTensor::new(t_tr.to_vec(), shape.to_vec()).map_err(|e| {
+                PhysicsError::DimensionMismatch(alloc::format!("T_tr quantize: {e:?}"))
+            })?;
+            let t_tt = quantize_2d(&t_ct, &self.trunc)?;
+            let q = wall_heat_flux(mask, &t_tt, R::zero(), *eta, self.dx, self.dy)?;
+            field.set_scalar("wall_heat_flux", Vec::from([q]));
         }
         Ok(())
     }
 
-    /// Fold the accumulated series into the report per the observe opt-ins.
-    pub(in crate::types::flow) fn into_report(
-        self,
-        observe: &QttObserve,
-        dt: R,
-        report: &mut Report<R>,
-    ) -> Result<(), PhysicsError> {
-        if observe.electron_density {
-            report.add_series("n_e", self.ne);
-        }
-        if observe.plasma_frequency {
-            report.add_series("plasma_frequency", self.wp);
-        }
-        if observe.max_speed {
-            report.add_series("max_speed", self.speed);
-        }
-        if observe.heat_flux {
-            report.add_series("heat_flux", self.heat);
-        }
-        if observe.blackout_dwell {
-            let dwell = R::from_usize(self.denied_steps)
-                .ok_or_else(|| PhysicsError::NumericalInstability("dwell count lift".into()))?
-                * dt;
-            report.add_series("blackout_dwell", Vec::from([dwell]));
-        }
+    fn finish(&self, state: &QttState<R>, report: &mut Report<R>) -> Result<(), PhysicsError> {
+        let uf = dequantize_2d(&state.0, self.lx, self.ly)?;
+        let vf = dequantize_2d(&state.1, self.lx, self.ly)?;
+        report.set_final_field(uf.as_slice().to_vec());
+        report.add_series("final_v", vf.as_slice().to_vec());
         Ok(())
     }
-}
 
-/// Close a coupled report: fold the blackout series, expose the final `(u, v)` fields, and attach
-/// the field's provenance log ([7]) when it carries entries.
-pub(in crate::types::flow) fn finish_coupled_report<R>(
-    cfg: &QttMarchConfig<R>,
-    observe: &QttObserve,
-    sampler: BlackoutSampler<R>,
-    state: &QttState<R>,
-    field: &CoupledField<R>,
-) -> Result<Report<R>, PhysicsError>
-where
-    R: CfdScalar + ConjugateScalar<Real = R>,
-{
-    let mut report = Report::new(cfg.name.clone());
-    sampler.into_report(observe, cfg.dt, &mut report)?;
-    let uf = dequantize_2d(&state.0, cfg.lx, cfg.ly)?;
-    let vf = dequantize_2d(&state.1, cfg.lx, cfg.ly)?;
-    report.set_final_field(uf.as_slice().to_vec());
-    report.add_series("final_v", vf.as_slice().to_vec());
-    if !field.log().is_empty() {
-        report.set_effect_log(field.log().clone());
+    fn config_name(cfg: &QttMarchConfig<R>) -> &str {
+        &cfg.name
     }
-    Ok(report)
+
+    fn config_observe(cfg: &QttMarchConfig<R>) -> QttObserve {
+        cfg.observe
+    }
 }
 
 /// A geometry-free, runnable QTT marching pipeline. The overrides (`seed_with` / `march_with` /
@@ -448,39 +397,36 @@ where
         let cfg = self.effective_config();
         let observe = self.observe_ov.unwrap_or(cfg.observe);
         let stop = self.stop_ov.unwrap_or(cfg.stop);
-        let (u0, v0) = match self.seed_ov {
-            Some(seed) => seed,
-            None => (cfg.u0.clone(), cfg.v0.clone()),
-        };
 
-        let solver = build_solver(cfg)?;
-        let mut state: QttState<R> = (quantize_2d(&u0, &cfg.trunc)?, quantize_2d(&v0, &cfg.trunc)?);
+        let mut carrier = QttCarrier::build(cfg)?;
+        let state = match self.seed_ov {
+            Some(seed) => carrier.encode_seed(&seed)?,
+            None => carrier.seed_state(cfg)?,
+        };
 
         let mut field = initial;
         // Thread the pre-run alternation markers into the field's provenance log.
         let mut pre_log = self.log;
         field.log_mut().append(&mut pre_log);
-        let mut sampler = BlackoutSampler::new(trigger);
 
         let steps = match stop {
             MarchStop::Fixed(n) => n,
             MarchStop::Steady { max_steps, .. } => max_steps,
         };
 
-        for s in 0..steps {
-            state = coupled_step(
-                &solver,
-                cfg,
-                &state,
-                &mut field,
-                &coupling,
-                scalar_kappa,
-                s + 1,
-            )?;
-            sampler.sample(&field)?;
-        }
-
-        finish_coupled_report(cfg, &observe, sampler, &state, &field)
+        run_coupled_driver(
+            &mut carrier,
+            cfg,
+            CoupledLoopSpec {
+                coupling,
+                trigger,
+                kappa: scalar_kappa,
+                steps,
+            },
+            field,
+            state,
+            &observe,
+        )
     }
 
     /// March the coupled loop **until a predicate pauses it** (or the stop horizon is exhausted),
@@ -511,13 +457,12 @@ where
     {
         let cfg = self.effective_config();
         let stop = self.stop_ov.unwrap_or(cfg.stop);
-        let (u0, v0) = match self.seed_ov {
-            Some(seed) => seed,
-            None => (cfg.u0.clone(), cfg.v0.clone()),
-        };
 
-        let solver = build_solver(cfg)?;
-        let mut state: QttState<R> = (quantize_2d(&u0, &cfg.trunc)?, quantize_2d(&v0, &cfg.trunc)?);
+        let carrier = QttCarrier::build(cfg)?;
+        let state = match self.seed_ov {
+            Some(seed) => carrier.encode_seed(&seed)?,
+            None => carrier.seed_state(cfg)?,
+        };
 
         let mut field = initial;
         let mut pre_log = self.log;
@@ -528,49 +473,19 @@ where
             MarchStop::Steady { max_steps, .. } => max_steps,
         };
 
-        let mut paused_at = 0usize;
-        let mut error = None;
-        for s in 0..steps {
-            match coupled_step(
-                &solver,
-                cfg,
-                &state,
-                &mut field,
-                &coupling,
-                scalar_kappa,
-                s + 1,
-            ) {
-                Ok(next) => {
-                    state = next;
-                    paused_at = s + 1;
-                }
-                Err(e) => {
-                    field.log_mut().add_entry(&alloc::format!(
-                        "march error captured at step {}: {e}",
-                        s + 1
-                    ));
-                    error = Some(e);
-                    break;
-                }
-            }
-            if predicate(&field, paused_at) {
-                field
-                    .log_mut()
-                    .add_entry(&alloc::format!("march paused at step {paused_at}"));
-                break;
-            }
-        }
-
-        Ok(MarchPause {
-            config: cfg,
-            coupling,
-            trigger,
-            scalar_kappa,
-            state: Arc::new(state),
-            field: Arc::new(field),
-            step: paused_at,
-            error,
-        })
+        Ok(run_until_driver(
+            carrier,
+            cfg,
+            CoupledLoopSpec {
+                coupling,
+                trigger,
+                kappa: scalar_kappa,
+                steps,
+            },
+            field,
+            predicate,
+            state,
+        ))
     }
 
     fn execute<H: FnMut(&QttStepView<'_, R>)>(

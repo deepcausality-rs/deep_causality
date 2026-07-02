@@ -297,6 +297,17 @@ provenance log are composition work — not missing primitives. **[holds under p
 > controller with sheath renewal; its coupled gates (blackout window, INS drift → reacquisition,
 > regime change, counterfactual branches, tensor compression) self-verify and exit nonzero on
 > regression. The remainder of this section is the pre-build analysis, kept for the record.
+>
+> **Status update (2026-07-02, second change): carrier upgraded from surrogate to compressible.**
+> `openspec/changes/add-compressible-blackout-carrier/` hosted the 2-D compressible marcher behind
+> the same coupled-loop machinery (a shared `CoupledCarrier` seam; the QTT host bit-identical):
+> the flagship now flies **one continuous descent** — the truth trajectory selects the freestream
+> through an atmosphere schedule, the exact Rankine-Hugoniot jump is the shock-fitted inflow
+> strip, `T_tr`/`n_tot`/pressure are evolved per-cell projections (the recovery-temperature
+> reconstruction and the per-station `FlightCondition` constants are gone), blackout onset and
+> exit are flow-resolved events, and the gate-clamped bank command actuates a 3-DOF
+> `BankSteeredLift` so branch misses are trajectory-derived. The peak `n_e` at the 61 km passage
+> holds the anchor band (`1.43e19` vs `1e19`, 5×) on the evolved state.
 
 - **Did the tensor train remove a gap?** Yes — the one that made step [4] aspirational. The
   flowfield-compression axis is now primitive-complete and the SOTA reacting-MPS method

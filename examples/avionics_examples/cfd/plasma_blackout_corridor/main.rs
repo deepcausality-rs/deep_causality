@@ -3,40 +3,42 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # The plasma-blackout corridor: flow, plasma, navigation, and control in one coupling
+//! # The plasma-blackout corridor: one continuous descent through flow, plasma, navigation, and control
 //!
 //! A reentry vehicle punches into the atmosphere at Mach 25. The shock layer ionizes, and past a
 //! critical electron density the plasma sheath cuts every GNSS link; RAM-C II measured exactly
 //! this blackout. Through the dark the vehicle dead-reckons on its INS while a bounded-correction
 //! gate keeps the bank command inside the certified envelope. When the sheath clears, one fix
-//! collapses the accumulated drift. This example marches that corridor as a single composed
-//! coupling in the `CfdFlow` DSL, wiring the corridor §4 chain [1] through [7]:
+//! collapses the accumulated drift. This example flies that corridor as **one continuous
+//! descent** on the compressible carrier, wiring the corridor §4 chain [1] through [7]:
 //!
-//! * **[1] flow**: the QTT (tensor-train) incompressible carrier over an immersed blunt forebody.
-//!   The entire march runs on compressed, bond-capped trains, never on the dense grid.
-//! * **[2] regime**: `RegimeClassify` turns the Knudsen number into the governing model and the
-//!   electron density into the GNSS-denial flag. Every regime change lands in the provenance log.
-//! * **[3] reacting plasma**: the Park-2T LER stages: Rankine-Hugoniot post-shock
-//!   temperature, lagging ionization, electron density, pressure closure.
+//! * **[1] flow**: the 2-D compressible marcher on tensor trains. The truth vehicle's altitude
+//!   and Mach number select the freestream from the atmosphere schedule each step; the exact
+//!   Rankine-Hugoniot jump is enforced on the inflow strip (the shock-fitted boundary), and the
+//!   layer behind it is evolved. `T_tr`, `n_tot`, and the pressure are marched projections; no
+//!   station constants, no reconstruction stages.
+//! * **[2] regime**: `RegimeClassify` turns the freestream Knudsen number into the governing
+//!   model and the evolved electron density into the GNSS-denial flag. Blackout onset and exit
+//!   are *events the run finds*, not station switches.
+//! * **[3] reacting plasma**: the Park two-temperature stages on the evolved state — the
+//!   Millikan-White clock on the evolved per-cell pressure, ionization at the controller `Tₐ` on
+//!   the evolved per-cell density, sheath renewal at one residence time.
 //! * **[4] navigation**: `TrajectoryNav` runs the KS-regularized orbit predict with the ④
 //!   aero-force channel as the kick; 17-state ESKF corrections are gated by the *real* blackout
 //!   flag.
-//! * **[5] counterfactuals**: at blackout onset the march pauses (`run_until`) and forks in O(1),
-//!   copy-on-write. Each candidate bank angle continues in its own alternated world
-//!   (`alternate_context`, the verbatim core vocabulary) and is scored into a `BranchOutcome`.
-//! * **[6] bounded correction**: `CyberneticCorrect` clamps the guidance bank command into the
-//!   `SafetyEnvelope` through a cybernetic `control_step`; an unrecoverable breach
-//!   short-circuits.
-//! * **[7] provenance**: the `EffectLog` rides the coupled field across all three legs and
-//!   surfaces on every report. Regime transitions, nav-mode changes, bounded corrections, and
-//!   alternation markers are all in one auditable record.
+//! * **[5] counterfactuals**: at the flow-resolved onset the march pauses (`run_until`) and forks
+//!   in O(1), copy-on-write. Each candidate bank command continues in its own alternated world
+//!   (`alternate_context`, the verbatim core vocabulary) and is scored by its **trajectory-derived
+//!   miss** to a shared aim point; the t²-law proxy is printed as a cross-check.
+//! * **[6] bounded correction**: `CyberneticCorrect` clamps the commanded bank into the
+//!   `SafetyEnvelope`, and `BankSteeredLift` *flies* the clamped command — steering truth and
+//!   navigation through the point-mass 3-DOF lift.
+//! * **[7] provenance**: the `EffectLog` rides the coupled field across the whole descent.
+//!   Regime transitions, nav-mode changes, carrier rebuilds, bounded corrections, and alternation
+//!   markers are all in one auditable record.
 //!
-//! The corridor flies three legs over the RAM-C II trajectory: approach (thin air, chemistry
-//! frozen, GNSS aided), peak heating (the Mach-25 station: ionization saturates, blackout, dead
-//! reckoning, the branch study), and exit (decelerated, sheath cleared, reacquisition). Every
-//! simplification is labeled in `constants.rs`. The carried `CoupledField` threads the
-//! navigation state, the reacting fraction, and the provenance log through every leg. The example
-//! self-verifies and exits nonzero on regression.
+//! Every simplification is labeled in `constants.rs`. The example self-verifies and exits
+//! nonzero on regression (`exit(1)`) or setup failure (`exit(2)`).
 //!
 //! ```bash
 //! cargo run --release -p avionics_examples --example plasma_blackout_corridor
@@ -47,100 +49,130 @@ mod model;
 mod utils;
 mod utils_print;
 
-use deep_causality_cfd::CfdFlow;
+use deep_causality_cfd::{CfdFlow, MarchStop};
 use deep_causality_core::AlternatableContext;
 use std::process::exit;
+use std::time::Instant;
 
 /// Switch this alias to `f32` for low precision or `f64` for standard precision. The whole
 /// corridor (flow, plasma, navigation, control) is generic over it.
 pub type FloatType = f64;
 
 fn main() {
+    let clock = Instant::now();
     utils_print::print_intro();
 
-    // ── Leg 1: approach (~90 km; chemistry frozen, GNSS aided)
-    // run_until with a never-firing predicate marches the full leg and hands back the *paused*
-    // state: the carried CoupledField (nav engine, reacting fraction, provenance log) the next
-    // leg resumes from. A plain run would only return a Report and lose the carried state.
-    let approach = model::world(&constants::APPROACH).unwrap_or_else(|e| utils::stop(&e));
-    let pause1 = CfdFlow::qtt_march(&approach)
-        .run_until(
-            model::corridor_coupling(&constants::APPROACH),
-            model::initial_field(&constants::APPROACH),
-            utils::trigger(),
-            utils::ft(constants::SCALAR_KAPPA),
-            |_, _| false,
-        )
-        .unwrap_or_else(|e| utils::stop(&e));
-    let leg1 = model::snapshot("approach ~90 km", &pause1);
-    utils_print::print_leg(&leg1);
+    // ── One descent world per commanded bank; the nominal descent is ballistic (zero bank).
+    let nominal = model::descent_world("nominal_descent", 0.0).unwrap_or_else(|e| utils::stop(&e));
+    let bank_worlds = model::bank_worlds().unwrap_or_else(|e| utils::stop(&e));
 
-    // ── Leg 2a: peak heating (61 km). March *until blackout onset*, then pause.
-    let peak = model::world(&constants::PEAK).unwrap_or_else(|e| utils::stop(&e));
-    let onset = CfdFlow::qtt_march(&peak)
+    // ── Leg 1: descend until the *flow-resolved* blackout onset.
+    // The predicate is the classifier's denial flag: it fires when the evolved sheath's electron
+    // density crosses the GPS L1 cutoff — an event the run finds, not a station switch.
+    let onset = CfdFlow::compressible_march(&nominal)
         .run_until(
-            model::corridor_coupling(&constants::PEAK),
-            model::carry_field(&pause1, &constants::PEAK),
+            model::corridor_coupling(),
+            model::initial_field(),
             utils::trigger(),
-            utils::ft(constants::SCALAR_KAPPA),
+            utils::ft(0.0),
             |field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false),
         )
         .unwrap_or_else(|e| utils::stop(&e));
-    let leg2a = model::snapshot("peak 61 km (blackout onset)", &onset);
-    utils_print::print_leg(&leg2a);
+    let leg1 = model::snapshot("descent to blackout onset", &onset);
+    utils_print::print_leg(&leg1);
 
-    // ── [5] The counterfactual study: fork the onset once per candidate bank angle
+    // ── [5] The counterfactual study: fork the onset once per candidate bank command.
     // Each fork is O(1) through shared Arcs. Each branch resumes the *same* onset state in its
-    // own alternated world (`!!ContextAlternation!!` in its log) and reports its continued
-    // segment.
-    let bank_worlds = model::bank_worlds().unwrap_or_else(|e| utils::stop(&e));
-    let mut branches = Vec::new();
+    // own alternated world (`!!ContextAlternation!!` in its log); the worlds differ only in the
+    // bank command they publish, so the branch trajectories diverge by steering alone.
+    let mut reports = Vec::new();
     for (bank_deg, world) in &bank_worlds {
         let report = onset
             .fork()
             .alternate_context(world)
             .continue_march(constants::BRANCH_STEPS)
             .unwrap_or_else(|e| utils::stop(&e));
-        branches.push(model::score_branch(*bank_deg, &report));
+        reports.push((*bank_deg, report));
     }
+    // The aim point: the ballistic terminal state offset cross-range, shared by every branch.
+    let aim = model::aim_point(model::terminal_position(&reports[0].1));
+    let branches: Vec<model::BranchScore> = reports
+        .iter()
+        .map(|(deg, report)| model::score_branch(*deg, report, aim))
+        .collect();
     let committed = model::pick_committed(&branches);
     utils_print::print_branches(&branches, committed);
 
-    // ── Leg 2b: the committed dwell. Fly the chosen world through the blackout.
-    // The committed continuation is itself a loud pre-run context alternation: the nominal peak
-    // world swapped for the winning bank world, resumed from the carried onset field.
+    // ── Leg 2: fly the committed world through the peak passage (the 61 km RAM-C II station).
+    // The world swap is a loud pre-run context alternation; the carried field brings the
+    // navigation state, the evolved projections, and the provenance log along. Pausing at the
+    // 61 km passage is diagnostic only — the world and its schedule never change.
     let committed_world = &bank_worlds[committed].1;
-    let pause3 = CfdFlow::qtt_march(&peak)
+    let peak = CfdFlow::compressible_march(&nominal)
         .alternate_context(committed_world)
         .run_until(
-            model::corridor_coupling(&constants::PEAK),
-            model::carry_field(&onset, &constants::PEAK),
+            model::corridor_coupling(),
+            model::carry_field(&onset),
             utils::trigger(),
-            utils::ft(constants::SCALAR_KAPPA),
-            |_, _| false,
+            utils::ft(0.0),
+            |field, _| {
+                field
+                    .scalar("flight_altitude")
+                    .and_then(|a| a.first().copied())
+                    .is_some_and(|a| a <= utils::ft(61_000.0))
+            },
         )
         .unwrap_or_else(|e| utils::stop(&e));
-    let leg2b = model::snapshot("peak 61 km (committed dwell)", &pause3);
-    utils_print::print_leg(&leg2b);
-
-    // ── Leg 3: exit (decelerated, sheath cleared). GNSS Reacquisition.
-    let exit_world = model::world(&constants::EXIT).unwrap_or_else(|e| utils::stop(&e));
-    let pause4 = CfdFlow::qtt_march(&exit_world)
+    let leg2 = model::snapshot("peak passage 61 km (committed dwell)", &peak);
+    utils_print::print_leg(&leg2);
+    // ── Leg 3: continue until the *flow-resolved* exit — the link comes back when the vehicle
+    // has decelerated enough that the renewed sheath no longer ionizes past the cutoff.
+    let exit_pause = CfdFlow::compressible_march(&nominal)
+        .alternate_context(committed_world)
         .run_until(
-            model::corridor_coupling(&constants::EXIT),
-            model::carry_field(&pause3, &constants::EXIT),
+            model::corridor_coupling(),
+            model::carry_field(&peak),
             utils::trigger(),
-            utils::ft(constants::SCALAR_KAPPA),
-            |_, _| false,
+            utils::ft(0.0),
+            |field, _| field.regime().map(|r| !r.gnss_denied).unwrap_or(false),
         )
         .unwrap_or_else(|e| utils::stop(&e));
-    let leg3 = model::snapshot("exit ~30 km", &pause4);
+    let leg3 = model::snapshot("flow-resolved exit", &exit_pause);
     utils_print::print_leg(&leg3);
 
-    // ── [7] Provenance, then the coupled validation gates
-    utils_print::print_provenance(pause4.field().log());
+    // ── Leg 4: reacquisition. A short fixed segment after the exit: the first folded fixes
+    // collapse the dead-reckoning drift.
+    let reacq = CfdFlow::compressible_march(&nominal)
+        .alternate_context(committed_world)
+        .march_with(MarchStop::Fixed(constants::REACQ_STEPS))
+        .run_until(
+            model::corridor_coupling(),
+            model::carry_field(&exit_pause),
+            utils::trigger(),
+            utils::ft(0.0),
+            |_, _| false,
+        )
+        .unwrap_or_else(|e| utils::stop(&e));
+    let leg4 = model::snapshot("reacquisition", &reacq);
+    utils_print::print_leg(&leg4);
+
+    // ── [7] Provenance, then the coupled validation gates.
+    utils_print::print_provenance(reacq.field().log());
     let compression = model::compression_witness(&branches[committed].report_final);
-    let ok = utils_print::report(&leg1, &leg2a, &leg2b, &leg3, &branches, compression);
+    let rendered_log = format!("{}", reacq.field().log());
+    let rebuilds = model::rebuild_count(&rendered_log);
+    let ok = utils_print::report(&utils_print::GateInputs {
+        leg1: &leg1,
+        leg2: &leg2,
+        leg3: &leg3,
+        leg4: &leg4,
+        branches: &branches,
+        committed,
+        compression,
+        rebuilds,
+        elapsed_s: clock.elapsed().as_secs_f64(),
+        regime_log: &rendered_log,
+    });
     if !ok {
         exit(1);
     }

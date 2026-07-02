@@ -93,6 +93,17 @@ wall-clock stays inside the minutes budget.
 of `CompressibleMarcher3dFitted` at candidate corridor grids/bond caps, with a go/no-go grid
 choice recorded in the study output. This is Task 0 because every later estimate hangs on it.
 
+> **D0 outcome (measured, `studies/compressible_carrier_timing`).** The 3-D fitted marcher is
+> over budget by 3.6× at the *smallest* candidate (10.7 s/step at 16³/cap-16, 35.6 min
+> projected), so the pre-declared fallback applies: **the corridor carrier is
+> `CompressibleMarcher2d`** (0.026–0.174 s/step across 32²–64², caps 16–32; the corridor stage
+> stack is already `PhysicsStage<2, _>`). The carrier marches the sheath layer in a 2-D chart
+> with the exact `FittedNormalShock` Rankine-Hugoniot state as its scheduled inflow — the shock
+> jump is the *boundary* of the marched layer (shock-fitted, not reconstructed), and the layer
+> structure, transport, and relaxation are evolved. Assembly is ~free (one rebuild ≈ 0.01 steps),
+> so the freestream-drift tolerance defaults tight. The 3-D fitted marcher remains the
+> stagnation-line/validation tool.
+
 ## Risks / Trade-offs
 
 - [3-D fitted marcher too slow for the corridor budget] → Task-0 study picks the grid/bond

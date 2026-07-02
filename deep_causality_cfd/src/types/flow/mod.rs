@@ -13,7 +13,9 @@
 //! MMS-verification and operator-accuracy solvers.
 
 mod blackout;
+mod carrier;
 mod cfd_flow;
+mod compressible_march_run;
 mod corridor;
 mod coupling;
 mod frequency;
@@ -35,9 +37,10 @@ pub use blackout::{
     VibrationalLagStage, ler_relax_scalar, ler_step,
 };
 pub use cfd_flow::{CfdFlow, fail};
+pub use compressible_march_run::{CompressibleFork, CompressibleMarchRun, CompressiblePause};
 pub use corridor::{
-    BankCorrection, BranchAccumulator, BranchOutcome, CyberneticCorrect, GoverningModel,
-    RegimeClass, RegimeClassify, SafetyEnvelope, TrajectoryNav,
+    BankCorrection, BankSteeredLift, BranchAccumulator, BranchOutcome, CyberneticCorrect,
+    GoverningModel, RegimeClass, RegimeClassify, SafetyEnvelope, TrajectoryNav,
 };
 pub use coupling::{
     AeroBlackoutStub, AeroForceCoupling, CoupledField, Coupling, PhysicsStage, StepContext,
