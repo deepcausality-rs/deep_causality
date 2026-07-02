@@ -174,7 +174,7 @@ closures and the grid, not by floating-point round-off. `f64` is load-bearing at
 
 ##  Limitations
 
-Every simplification is labeled where its number is defined, in [`constants.rs`](constants.rs).
+Every simplification is defined in [`constants.rs`](constants.rs).
 The largest ones: the chemistry is the calibrated Park-2T surrogate, not finite-rate CFD
 chemistry; time is compressed (each coupled step represents 0.1 s of flight, and the layer is
 quasi-steady per instant); the marched layer is 2-D with the 3-D fitted marcher reserved for
