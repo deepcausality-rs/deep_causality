@@ -53,8 +53,12 @@ use deep_causality_core::AlternatableContext;
 use std::process::exit;
 use std::time::Instant;
 
-/// Switch this alias to `f32` for low precision or `f64` for standard precision. The whole
-/// corridor (flow, plasma, navigation, control) is generic over it.
+/// The working precision of the whole corridor (flow, plasma, navigation, control). Switch this
+/// alias between `f32`, `f64,` and `Float106` (106-bit double-double) and every
+/// derived number is computed in this type, so the alias is the only line that changes.
+/// Note, Float106 increases compute time tenfold for no tangible gain in this case because 
+/// model fidelity is the limiting factor.
+/// f32, however, underflows in the Ionization kernel causing a division by zero error.
 pub type FloatType = f64;
 
 fn main() {

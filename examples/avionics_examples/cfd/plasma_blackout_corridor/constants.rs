@@ -34,6 +34,15 @@
 //!   existence.
 //! * GNSS fixes carry deterministic receiver noise whose variance equals the filter's `R`
 //!   exactly (RTK-class 2 cm; keeps the dead-reckoning drift visible above the noise floor).
+//!
+//! **Precision.** The constants below are exact `f64` specification literals; `utils::ft` lifts
+//! each one losslessly into `FloatType`, and every derived number (radians, norms, the noise
+//! sequence, the load closures) is computed in `FloatType`. A verification run with
+//! `FloatType = Float106` (106-bit double-double) reproduced every gate and every
+//! discrete event step exactly (onset 143, passage 84, exit 475), with the continuous witnesses
+//! agreeing to 15-16 significant digits, at roughly 11x the wall-clock. The corridor's error
+//! budget is set by the model closures and the grid, not by `f64` round-off, so `f64` stays the
+//! default.
 
 // ── Carrier (the timing study's fast GO configuration: 32^2, bond cap 16)
 
@@ -207,4 +216,4 @@ pub const DIVERGENCE_MIN_M: f64 = 1.0;
 /// Maximum solver rebuilds while following the schedule.
 pub const MAX_REBUILDS: usize = 3;
 /// Wall-clock budget for the whole example
-pub const WALL_CLOCK_BUDGET_S: f64 = 300.0;
+pub const WALL_CLOCK_BUDGET_S: f64 = 600.0;

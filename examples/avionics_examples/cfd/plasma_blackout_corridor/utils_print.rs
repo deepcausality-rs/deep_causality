@@ -29,10 +29,7 @@ pub fn print_intro() {
     println!(
         "Compressed time: one coupled step = {DT_FLIGHT} s of flight; one solver pseudo-time step per coupled step (quasi-steady layer)",
     );
-    println!(
-        "Precision: {} (the single alias to change)\n",
-        core::any::type_name::<FloatType>()
-    );
+    println!("Precision: {} \n", core::any::type_name::<FloatType>());
 }
 
 pub fn print_leg(leg: &LegSnapshot) {

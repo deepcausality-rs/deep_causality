@@ -1,0 +1,197 @@
+[//]: # (---)
+
+[//]: # (SPDX-License-Identifier: MIT)
+
+[//]: # (---)
+
+# The Plasma-Blackout Corridor
+
+A reentry vehicle punches into the atmosphere at Mach 25. The shock layer ionizes, and past a
+critical electron density the plasma sheath cuts every GNSS link; NASA's RAM-C II flight
+measured exactly this blackout in 1970. Through the dark the vehicle dead-reckons on its
+inertial navigation while a bounded-correction gate keeps the bank command inside the certified
+envelope. When the sheath clears, one position fix collapses the accumulated drift.
+
+This example flies that corridor as **one continuous descent** in a single composed coupling:
+compressed compressible flow, nonequilibrium plasma chemistry, regime classification,
+GNSS-denied navigation, counterfactual guidance, and a cybernetic safety gate, all stepping
+together and all writing into one auditable provenance log. No CFD code does counterfactuals; no
+GNC code does CFD. Here they are one process.
+
+The run self-verifies against the RAM-C II flight anchor and exits nonzero on any regression.
+Wall-clock is about 35 seconds.
+
+## How to Run
+
+From the repository root:
+
+```bash
+cargo run --release -p avionics_examples --example plasma_blackout_corridor
+```
+
+Precision is a parameter. `main.rs` carries a single alias, and the whole corridor (flow,
+plasma, navigation, control) is generic over it:
+
+```rust
+pub type FloatType = f64; // or deep_causality_num::Float106
+```
+
+The counterfactual branch study fans out over scoped threads through the workspace `parallel`
+feature (`deep_causality_par::scoped_map`; no external dependency). Results are bit-identical to
+the sequential run.
+
+## What Happens When You Run It
+
+The vehicle starts at 90 km, Mach 26, on a steep compressed trajectory. Four legs and one branch
+study follow, every boundary an *event the run finds*, not a scripted station switch:
+
+1. **Descent to blackout onset.** The evolved sheath's electron density climbs as the air
+   thickens; at 71.6 km it crosses the GPS L1 cutoff and the classifier flips the link to
+   DENIED. The march pauses on that flow-resolved event.
+2. **The counterfactual study.** The paused state forks once per candidate bank command (0, 20,
+   and 40 degrees), in O(1) through copy-on-write. Each branch flies the *same* onset state in
+   its own alternated world and is scored by its trajectory-derived miss to a shared aim point.
+   The 40-degree command exceeds the envelope's 0.5 rad cap, so the gate visibly bounds it every
+   step of that branch.
+3. **The committed dwell.** The winning world flies through the peak passage. At the 61 km
+   RAM-C II station the evolved peak electron density lands at 1.4e19 per cubic meter against
+   the 1e19 flight anchor, inside the 5x gate band. The INS dead-reckons; drift grows from
+   0.03 m to about 0.9 m.
+4. **Flow-resolved exit and reacquisition.** Drag decelerates the vehicle below the ionization
+   threshold; near 46 km the renewed sheath stops ionizing past the cutoff and the link returns.
+   The first folded fixes collapse the drift back to 0.2 m.
+
+Ten coupled validation gates then check the whole story: window ordering, the anchor band, drift
+and reacquisition, regime change, the multiphysics chain, real steering divergence, tensor
+compression under the bond cap, bounded solver rebuilds, and the wall-clock budget.
+
+## The Causal Chain
+
+```text
+[1] flow        CompressibleCarrier: 2-D compressible marcher on tensor trains; the truth
+                vehicle's altitude and Mach select the freestream from an atmosphere schedule;
+                the exact Rankine-Hugoniot jump is enforced on the inflow strip
+[2] regime      RegimeClassify: freestream Knudsen number -> governing model;
+                evolved n_e -> plasma frequency -> GNSS available / DENIED
+[3] plasma      Park two-temperature stages on the EVOLVED state: Millikan-White clock on the
+                evolved per-cell pressure, ionization at the controller T_a on the evolved
+                per-cell density, sheath renewal at one residence time
+[4] navigation  TrajectoryNav: KS-regularized orbit predict with the aero-force channel as the
+                kick; 17-state error-state Kalman filter; fixes gated by the REAL blackout flag;
+                relativistic clock offset carried through the outage
+[5] branches    run_until pauses at the flow-resolved onset; O(1) copy-on-write forks;
+                !!ContextAlternation!! per branch; trajectory-derived miss distances
+[6] control     CyberneticCorrect clamps the commanded bank into the SafetyEnvelope;
+                BankSteeredLift FLIES the clamped command (point-mass 3-DOF lift, one-step
+                actuation lag)
+[7] provenance  one EffectLog rides the coupled field end to end: regime transitions, nav-mode
+                changes, solver rebuilds, bounded corrections, alternation markers
+```
+
+## What This Example Packs In
+
+Each element below was a named gap in the corridor's design notes
+([`openspec/notes/plasma-blackout/`](../../../../openspec/notes/plasma-blackout/)) and is now
+built, tested library code exercised by this one run.
+
+**Tensor-train compression as the mesh strategy (Gap 1).** The blackout problem's defining
+difficulty is scale separation: the vehicle is meters, the sheath structure far smaller. Instead
+of adaptive mesh refinement, the carrier marches on quantized tensor trains, where a `2^L` grid
+costs order `chi^2 * L`: logarithmic in point count, with sharp structure paid for only in bond
+dimension. The rank studies in `deep_causality_cfd/studies/` measured the decisive caveat: the
+rank driver is *coordinate alignment*, not sharpness. A Cartesian-captured curved shock grows
+unboundedly in rank; a shock-aligned coordinate holds it at order 10. This example's answer is
+the **shock-fitted inflow strip**: the exact Rankine-Hugoniot state is the *boundary* of the
+marched layer, so the shock never has to be captured at all, and the final evolved state
+re-quantizes at peak bond 16 against a cap of 16.
+
+**Evolved-state Park two-temperature chemistry (Gaps 2 and 3).** Ionization at hypersonic
+conditions is rate-limited by the lagging vibrational-electron temperature, not the hot
+translational one. The stages compute the Park controller `T_a = sqrt(T_tr * T_ve)` with the
+Millikan-White relaxation clock running on the **evolved per-cell pressure**, and the Saha
+surrogate plus ionization rate on the **evolved per-cell density**. Nothing is reconstructed
+from station constants; the reconstruction stages of the first corridor build are gone. The
+sheath-renewal closure (fresh parcels, one residence time of chemistry) was kept after a
+measured A/B: without it the carried ionization fraction accumulates to equilibrium, the peak
+overshoots the flight anchor 268x, and the blackout never exits.
+
+**Two-way flow-navigation coupling.** Navigation feeds flow: the truth vehicle's position and
+speed select the freestream from a US-1976-shaped atmosphere table pinned to the RAM-C 61 km
+condition, and the resulting Rankine-Hugoniot jump drives the inflow strip each step. Flow feeds
+navigation: the evolved electron density gates which measurements the Kalman filter may fold.
+When the scheduled inflow outgrows the solver's acoustic envelope, the carrier rebuilds itself
+and logs the rebuild to provenance.
+
+**GNSS-denied navigation done honestly (Gap 3).** The trajectory axis is where relativity
+actually bites in this problem, and only there: the KS-regularized conformal propagator advances
+the orbit, a 17-state error-state Kalman filter (position, velocity, attitude, accelerometer and
+gyro bias, clock) folds fixes when the link is up, and the relativistic clock offset is carried
+internally through the outage with no satellite to reset it. The dead-reckoning drift comes from
+the real INS mechanism: a tactical-grade accelerometer bias corrupting the sensed specific
+force, growing as t^2 through the dwell.
+
+**Counterfactuals with the verbatim core vocabulary.** The branch study uses the same
+`fork` / `alternate_context` / `continue_march` machinery as every other DeepCausality
+counterfactual: forks share the paused tensor state by reference and clone copy-on-write at
+first write, each branch's log carries the `!!ContextAlternation!!` marker, and candidate
+commands ride as world-published constants so branches differ only in the world they fly.
+Branch misses are trajectory-derived: the distance from each branch's terminal truth state to a
+shared aim point, with the analytic t^2 drift law printed beside it as a cross-check.
+
+**A cybernetic safety gate that actually steers.** `CyberneticCorrect` runs a
+`CyberneticLoop::control_step` against the verified `SafetyEnvelope` each step and clamps the
+commanded bank into it; `BankSteeredLift` then flies the clamped command as a point-mass 3-DOF
+lift vector rotated about the velocity by the bank angle. The correction is not an audit entry;
+it is the actuation. An unrecoverable envelope breach short-circuits the step.
+
+## Validation Anchors
+
+- **RAM-C II (NASA Langley, 1970)**: the canonical ionized-reentry electron-density dataset.
+  The gate holds a 5x band around the 1e19 peak at the 61 km passage; this run lands at 1.4e19
+  on the evolved state.
+- **Park's two-temperature model**: the standard thermochemical-nonequilibrium reference for the
+  `T_tr` / `T_ve` split and the rate-controlling temperature.
+- **Millikan-White vibrational relaxation** and the **Saha equation** behind the ionization
+  surrogate; **Sutton-Graves** for stagnation-point heating.
+- **US Standard Atmosphere 1976** shape for the descent table, pinned to the RAM-C freestream at
+  61 km.
+
+## Precision Is a Parameter, and What That Measured
+
+Because every derived number is computed in `FloatType`, the alias is a one-line probe of the
+error budget. Three runs, same corridor:
+
+| Alias | Outcome |
+|---|---|
+| `f64` | All ten gates pass in about 35 s. The default. |
+| `Float106` (106-bit) | Every gate and every discrete event step identical; continuous witnesses agree to 15-16 significant digits; about 11x the wall-clock. |
+| `f32` | Crashes at step 1: `h^2` in the Saha kernel (4.4e-67) underflows the f32 exponent range, and the position ulp at Earth radius (0.5 m) would swallow the sub-meter navigation story regardless. |
+
+The conclusion is recorded in `constants.rs`: this corridor's error budget is set by the model
+closures and the grid, not by floating-point round-off. `f64` is load-bearing at the bottom
+(exponent range for SI-unit plasma constants) while wasting nothing at the top.
+
+##  Limitations
+
+Every simplification is labeled where its number is defined, in [`constants.rs`](constants.rs).
+The largest ones: the chemistry is the calibrated Park-2T surrogate, not finite-rate CFD
+chemistry; time is compressed (each coupled step represents 0.1 s of flight, and the layer is
+quasi-steady per instant); the marched layer is 2-D with the 3-D fitted marcher reserved for
+stagnation-line validation (a timing study showed it 3.6x over the minutes budget); the
+trajectory is point-mass 3-DOF with no 6-DOF attitude dynamics (no flight-data anchor exists to
+validate them); and the carried wake fraction has no dissociative-recombination channel, which
+matters only for a wake-mounted-antenna scenario this corridor does not model.
+
+## Where Things Live
+
+| File | Contents |
+|---|---|
+| [`main.rs`](main.rs) | The descent: four legs, the branch study, provenance, the gates |
+| [`model.rs`](model.rs) | The descent worlds, the coupling stack, example-local stages, branch scoring |
+| [`constants.rs`](constants.rs) | Every tuned number, every simplification label, the precision note |
+| [`utils.rs`](utils.rs) | The precision lift, the trigger, small helpers |
+| [`utils_print.rs`](utils_print.rs) | Console rendering and the ten validation gates |
+
+The library machinery this example exercises lives in `deep_causality_cfd` (the compressible
+carrier, the coupled-loop seam, the corridor stages, the navigation engine) and
+`deep_causality_par` (the scoped fork-join). 

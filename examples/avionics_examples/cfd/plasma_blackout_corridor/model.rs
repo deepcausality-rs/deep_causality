@@ -29,6 +29,7 @@ use deep_causality_cfd::{
     VibrationalLagStage, max_bond, quantize_2d,
 };
 use deep_causality_haft::LogSize;
+use deep_causality_num::Real;
 use deep_causality_physics::{EARTH_GM, EARTH_RADIUS, ks_strang_step};
 use deep_causality_tensor::CausalTensor;
 
@@ -85,7 +86,7 @@ pub fn descent_world(
             n_ref: utils::ft(N_REF),
             u_ref: utils::ft(U_REF),
         })
-        .publish_constant("commanded_bank", utils::ft(bank_deg.to_radians()))
+        .publish_constant("commanded_bank", utils::rad(bank_deg))
         .build()
 }
 
@@ -227,11 +228,11 @@ impl PhysicsStage<2, FloatType> for FreestreamFeeds {
             return Ok(());
         }
         let speed = utils::scalar0(field, "flight_speed");
-        let sigma = utils::ft(core::f64::consts::SQRT_2 * core::f64::consts::PI)
-            * utils::ft(AIR_MOLECULE_DIAMETER_M * AIR_MOLECULE_DIAMETER_M);
+        let d = utils::ft(AIR_MOLECULE_DIAMETER_M);
+        let sigma = Real::sqrt(utils::ft(2.0)) * FloatType::pi() * d * d;
         let mfp = utils::ft(1.0) / (sigma * n_inf);
         let rho_inf = n_inf * utils::ft(AIR_MEAN_MOLECULAR_MASS_KG);
-        let eas = speed * (rho_inf / utils::ft(RHO_REF)).sqrt();
+        let eas = speed * Real::sqrt(rho_inf / utils::ft(RHO_REF));
         field.set_scalar("mean_free_path", Vec::from([mfp]));
         field.set_scalar("equivalent_airspeed", Vec::from([eas]));
         Ok(())
@@ -254,7 +255,7 @@ impl PhysicsStage<2, FloatType> for SuttonGravesLoads {
         let speed = utils::scalar0(field, "flight_speed");
         let rho_inf = n_inf * utils::ft(AIR_MEAN_MOLECULAR_MASS_KG);
         let q = utils::ft(SUTTON_GRAVES_K)
-            * (rho_inf / utils::ft(NOSE_RADIUS_M)).sqrt()
+            * Real::sqrt(rho_inf / utils::ft(NOSE_RADIUS_M))
             * speed
             * speed
             * speed;
@@ -268,14 +269,17 @@ impl PhysicsStage<2, FloatType> for SuttonGravesLoads {
 
 /// Deterministic receiver noise for the published fix: a golden-ratio low-discrepancy sequence
 /// per axis, scaled so the per-axis variance is exactly [`GNSS_VAR`] (uniform on `±σ√3`).
-/// Reproducible on every run, with no RNG dependency, and consistent with the filter's `R`.
+/// Reproducible on every run, with no RNG dependency, and consistent with the filter's `R`. The
+/// whole sequence is computed in the working precision, so a higher-precision run changes the
+/// noise resolution along with everything else.
 pub fn fix_noise(step: usize) -> [FloatType; 3] {
     const PHI: f64 = 0.618_033_988_749_894_9;
-    let amplitude = (GNSS_VAR * 3.0).sqrt();
+    let amplitude = Real::sqrt(utils::ft(GNSS_VAR) * utils::ft(3.0));
     core::array::from_fn(|axis| {
-        let stride = PHI * (1.0 + 0.37 * axis as f64);
-        let u = ((step as f64 + 1.0) * stride).fract();
-        utils::ft(amplitude * (2.0 * u - 1.0))
+        let stride = utils::ft(PHI) * (utils::ft(1.0) + utils::ft(0.37) * utils::ft(axis as f64));
+        let x = (utils::ft(step as f64) + utils::ft(1.0)) * stride;
+        let u = x - x.floor();
+        amplitude * (utils::ft(2.0) * u - utils::ft(1.0))
     })
 }
 
@@ -438,7 +442,7 @@ pub fn score_branch(bank_deg: f64, report: &Report<FloatType>, aim: [FloatType; 
     let heat = report.series("heat_flux").unwrap_or(&[]);
     let wp = report.series("plasma_frequency").unwrap_or(&[]);
     let band = utils::ft(COMMS_BAND_RAD_S);
-    let mut acc = BranchAccumulator::new(utils::ft(bank_deg.to_radians()));
+    let mut acc = BranchAccumulator::new(utils::rad(bank_deg));
     for (i, &q) in heat.iter().enumerate() {
         let denied = wp.get(i).is_some_and(|&w| w > band);
         acc.observe(q, denied, utils::ft(DT_FLIGHT));
