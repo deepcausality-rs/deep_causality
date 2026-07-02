@@ -26,7 +26,7 @@
 //! * Leg time is carrier time (`dt = 4 ms` per step), so navigation drifts are small; the gates
 //!   compare them relatively, and the mechanism scales unchanged to a flight-length dwell.
 
-// ── Carrier (the Gap-1/Gap-2 verification setup, reused verbatim) ─────────────────────────────
+// ── Carrier (the Gap-1/Gap-2 verification setup, reused verbatim)
 
 /// Grid mode count; the box is `2^L × 2^L`.
 pub const L: usize = 5;
@@ -45,7 +45,7 @@ pub const SMOOTH_CELLS: f64 = 2.0;
 /// Diffusivity transporting the carried ionization fraction.
 pub const SCALAR_KAPPA: f64 = 0.05;
 
-// ── Flight physics ────────────────────────────────────────────────────────────────────────────
+// ── Flight physics
 
 /// Ratio of specific heats.
 pub const GAMMA: f64 = 1.4;
@@ -67,7 +67,7 @@ pub const HEAT_COEFF: f64 = 1.5e6;
 /// Standard gravity, m·s⁻².
 pub const G0: f64 = 9.80665;
 
-// ── Reference anchors (reported, with the Tier-A disclaimers) ─────────────────────────────────
+// ── Reference anchors (reported, with the Tier-A disclaimers)
 
 /// The Tier-A saturation baseline the peak-station electron density is regression-gated against
 /// (`n_e → n_tot` at the frozen Rankine-Hugoniot temperature).
@@ -76,7 +76,7 @@ pub const NE_BASELINE: f64 = 1.0e22;
 /// frozen-RH Saha limit over-predicts it.
 pub const RAMC_NE_REFERENCE: f64 = 1.0e19;
 
-// ── Navigation ────────────────────────────────────────────────────────────────────────────────
+// ── Navigation
 
 /// Initial true position (a bound LEO-class state, m).
 pub const TRUTH_R0: [f64; 3] = [7.0e6, 1.0e6, 2.0e6];
@@ -94,7 +94,7 @@ pub const GNSS_VAR: f64 = 25.0;
 /// corridor, so the budget is carried but unused.
 pub const OPTICAL_VAR: f64 = 2500.0;
 
-// ── Safety envelope + guidance ────────────────────────────────────────────────────────────────
+// ── Safety envelope + guidance
 
 /// Heat-flux certification ceiling, W·m⁻² (margin over the ~4 MW/m² peak).
 pub const MAX_HEAT_FLUX: f64 = 2.0e7;

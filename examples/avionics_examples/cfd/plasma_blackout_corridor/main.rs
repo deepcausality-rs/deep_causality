@@ -57,7 +57,7 @@ pub type FloatType = f64;
 fn main() {
     utils_print::print_intro();
 
-    // ── Leg 1: approach (~90 km; chemistry frozen, GNSS aided) ────────────────────────────────
+    // ── Leg 1: approach (~90 km; chemistry frozen, GNSS aided)
     // run_until with a never-firing predicate marches the full leg and hands back the *paused*
     // state: the carried CoupledField (nav engine, reacting fraction, provenance log) the next
     // leg resumes from. A plain run would only return a Report and lose the carried state.
@@ -74,7 +74,7 @@ fn main() {
     let leg1 = model::snapshot("approach ~90 km", &pause1);
     utils_print::print_leg(&leg1);
 
-    // ── Leg 2a: peak heating (61 km). March *until blackout onset*, then pause. ───────────────
+    // ── Leg 2a: peak heating (61 km). March *until blackout onset*, then pause.
     let peak = model::world(&constants::PEAK).unwrap_or_else(|e| stop(&e));
     let onset = CfdFlow::qtt_march(&peak)
         .run_until(
@@ -88,7 +88,7 @@ fn main() {
     let leg2a = model::snapshot("peak 61 km (blackout onset)", &onset);
     utils_print::print_leg(&leg2a);
 
-    // ── [5] The branch study: fork the onset once per candidate bank angle ────────────────────
+    // ── [5] The counterfactual study: fork the onset once per candidate bank angle
     // Each fork is O(1) through shared Arcs. Each branch resumes the *same* onset state in its
     // own alternated world (`!!ContextAlternation!!` in its log) and reports its continued
     // segment.
@@ -105,7 +105,7 @@ fn main() {
     let committed = model::pick_committed(&branches);
     utils_print::print_branches(&branches, committed);
 
-    // ── Leg 2b: the committed dwell. Fly the chosen world through the blackout. ───────────────
+    // ── Leg 2b: the committed dwell. Fly the chosen world through the blackout.
     // The committed continuation is itself a loud pre-run context alternation: the nominal peak
     // world swapped for the winning bank world, resumed from the carried onset field.
     let committed_world = &bank_worlds[committed].1;
@@ -122,7 +122,7 @@ fn main() {
     let leg2b = model::snapshot("peak 61 km (committed dwell)", &pause3);
     utils_print::print_leg(&leg2b);
 
-    // ── Leg 3: exit (decelerated, sheath cleared). Reacquisition. ─────────────────────────────
+    // ── Leg 3: exit (decelerated, sheath cleared). GNSS Reacquisition.
     let exit_world = model::world(&constants::EXIT).unwrap_or_else(|e| stop(&e));
     let pause4 = CfdFlow::qtt_march(&exit_world)
         .run_until(
@@ -136,7 +136,7 @@ fn main() {
     let leg3 = model::snapshot("exit ~30 km", &pause4);
     utils_print::print_leg(&leg3);
 
-    // ── [7] Provenance, then the coupled validation gates ─────────────────────────────────────
+    // ── [7] Provenance, then the coupled validation gates
     utils_print::print_provenance(pause4.field().log());
     let compression = model::compression_witness(&branches[committed].report_final);
     let ok = utils_print::report(&leg1, &leg2a, &leg2b, &leg3, &branches, compression);
@@ -145,7 +145,7 @@ fn main() {
     }
 }
 
-fn stop(e: &deep_causality_cfd::PhysicsError) -> ! {
+pub(crate) fn stop(e: &deep_causality_cfd::PhysicsError) -> ! {
     eprintln!("corridor setup failed: {e}");
     exit(2)
 }
