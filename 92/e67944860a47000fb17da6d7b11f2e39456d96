@@ -1,0 +1,73 @@
+deep_causality_cfd/src/types/flow/report.rs
+  s_c4c919f578d611::t_d0dedba6c994ef 7-8,24-27,37,53-58,65-69
+  s_c4c919f578d611::t_6ecd558ca3c3a5 70
+deep_causality_cfd/tests/types/flow/qtt_march_pause_tests.rs
+  s_c4c919f578d611::t_c7194ec3a76ee0 23-24,32
+  s_c4c919f578d611::t_4af7a7de237e98 88-92,106-109,128-132,141-144
+  s_c4c919f578d611::t_49bdd0c7121e54 1-9,11-22,25-31,33-87,93-105,110-127,133-140,145-248
+  s_c4c919f578d611::t_9c0b7098c1fd77 10
+deep_causality_cfd/src/types/flow/qtt_march_pause.rs
+  s_c4c919f578d611::t_718093d218de6c 50-57
+  s_c4c919f578d611::t_4a4921e5185834 1-49,58-258
+deep_causality_cfd/src/types/flow/corridor.rs
+  s_c4c919f578d611::t_fcda5886e9a69b 12,196
+  s_c4c919f578d611::t_eb5d7d825449ea 13-15
+  s_c4c919f578d611::t_e09fbbd3d5d38a 193-195,197-288,290-291,293
+  s_c4c919f578d611::t_b037bb9e2e0e9d 289,292
+deep_causality_cfd/tests/types/flow/corridor_tests.rs
+  s_c4c919f578d611::t_3a65197a8fac79 272-412
+  s_c4c919f578d611::t_843dd8cdf88bd2 12-13,16
+  s_c4c919f578d611::t_5f88d30351b3af 413-415
+deep_causality_cfd/tests/types/flow/qtt_march_run_tests.rs
+  s_c4c919f578d611::t_565ff4111b7d15 7-8,10
+  s_c4c919f578d611::t_7920b2eb8d1e6c 403-553
+  s_c4c919f578d611::t_53b52a092e4d1b 554-556
+  s_c4c919f578d611::t_a3a36759c8c875 557-567
+deep_causality_cfd/tests/types/flow/mod.rs
+  s_c4c919f578d611::t_5a33ae8d506cad 48-50
+deep_causality_cfd/src/types/flow/coupling.rs
+  s_c4c919f578d611::t_a3c7bb70581bb6 139,152
+  s_c4c919f578d611::t_1a331e543b4781 19
+  s_c4c919f578d611::t_9eef8481308f1a 214-228
+  s_c4c919f578d611::t_26f7898f9a9208 125,127-131
+  s_c4c919f578d611::t_a151ea80038008 213
+deep_causality_cfd/src/types/flow/qtt_march_run.rs
+  s_c4c919f578d611::t_868398fd24a6cd 255-268,274,281-324,335,339,343-347
+  s_c4c919f578d611::t_1d96ec1e8362ec 19,29,31-32,38,42,86-241,243-250
+  s_c4c919f578d611::t_2f5c4b4c196ad9 412,425-427,435-445,447-448,450-507,513-515,519,524
+  s_c4c919f578d611::t_b54d86a76b926a 511-512,516-518,520
+  s_c4c919f578d611::t_7d24c595200039 420,530-537
+  s_c4c919f578d611::t_2430ef2236ff30 242
+  s_c4c919f578d611::t_4b9cef6a96daae 251
+  s_c4c919f578d611::t_b556f1f6f21a90 254
+  s_c4c919f578d611::t_46fbbce94107db 348
+  s_c4c919f578d611::t_2f0c6f1010e6b0 424
+  s_c4c919f578d611::t_3c562499762f80 508-509
+  s_c4c919f578d611::t_38b7db56beeeba 521-523
+  s_c4c919f578d611::t_822e1553897be9 528-529
+  s_c4c919f578d611::t_abb1b852ef23b7 544,547,554,612-614
+openspec/changes/add-plasma-blackout-corridor/tasks.md
+  s_c4c919f578d611::t_ea615465ecdc31 103-108,111-112,116-119,121-125,128,133-135,138-140,143-144
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_9110a63aec3441 69-73
+deep_causality_cfd/src/types/flow/mod.rs
+  s_c4c919f578d611::t_506d5d0b348b2f 52
+  s_c4c919f578d611::t_a548063e2c43a2 25
+  s_c4c919f578d611::t_d37af00ebfe1cb 40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "92e67944860a47000fb17da6d7b11f2e39456d96",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
