@@ -7,7 +7,7 @@ license.workspace = true
 publish = false
 
 [lib]
-path = "no_lib.rs"
+path = "src/lib.rs"
 
 [[example]]
 name = "turbulence_flow"
@@ -37,11 +37,16 @@ path = "navigation/ins_gnss_blackout/main.rs"
 name = "plasma_blackout_corridor"
 path = "cfd/plasma_blackout_corridor/main.rs"
 
+[[example]]
+name = "plasma_blackout_weather"
+path = "cfd/plasma_blackout_weather/main.rs"
+
 [dependencies]
 deep_causality = { path = "../../deep_causality" }
 deep_causality_core = { path = "../../deep_causality_core" }
 deep_causality_calculus = { path = "../../deep_causality_calculus" }
 deep_causality_cfd = { path = "../../deep_causality_cfd", features = ["parallel"] }
+deep_causality_par = { path = "../../deep_causality_par" }
 deep_causality_num = { path = "../../deep_causality_num" }
 deep_causality_haft = { path = "../../deep_causality_haft" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }

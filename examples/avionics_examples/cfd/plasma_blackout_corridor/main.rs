@@ -45,9 +45,9 @@
 //! ```
 mod constants;
 mod model;
-mod utils;
 mod utils_print;
 
+use avionics_examples::blackout::{support, world};
 use deep_causality_cfd::{CfdFlow, MarchStop};
 use deep_causality_core::AlternatableContext;
 use std::process::exit;
@@ -56,31 +56,34 @@ use std::time::Instant;
 /// The working precision of the whole corridor (flow, plasma, navigation, control). Switch this
 /// alias between `f32`, `f64,` and `Float106` (106-bit double-double) and every
 /// derived number is computed in this type, so the alias is the only line that changes.
-/// Note, Float106 increases compute time tenfold for no tangible gain in this case because 
+/// Note, Float106 increases compute time tenfold for no tangible gain in this case because
 /// model fidelity is the limiting factor.
 /// f32, however, underflows in the Ionization kernel causing a division by zero error.
-pub type FloatType = f64;
+/// The alias itself is shared with the weather-dispersion example through
+/// `avionics_examples::blackout::FloatType`.
+pub type FloatType = avionics_examples::blackout::FloatType;
 
 fn main() {
     let clock = Instant::now();
     utils_print::print_intro();
 
     // ── One descent world per commanded bank; the nominal descent is ballistic (zero bank).
-    let nominal = model::descent_world("nominal_descent", 0.0).unwrap_or_else(|e| utils::stop(&e));
-    let bank_worlds = model::bank_worlds().unwrap_or_else(|e| utils::stop(&e));
+    let nominal =
+        model::descent_world("nominal_descent", 0.0).unwrap_or_else(|e| support::stop(&e));
+    let bank_worlds = model::bank_worlds().unwrap_or_else(|e| support::stop(&e));
 
     // ── Leg 1: descend until the *flow-resolved* blackout onset.
     // The predicate is the classifier's denial flag: it fires when the evolved sheath's electron
     // density crosses the GPS L1 cutoff — an event the run finds, not a station switch.
     let onset = CfdFlow::compressible_march(&nominal)
         .run_until(
-            model::corridor_coupling(),
-            model::initial_field(),
-            utils::trigger(),
-            utils::ft(0.0),
+            world::corridor_coupling(1.0),
+            world::initial_field(),
+            support::trigger(),
+            support::ft(0.0),
             |field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false),
         )
-        .unwrap_or_else(|e| utils::stop(&e));
+        .unwrap_or_else(|e| support::stop(&e));
     let leg1 = model::snapshot("descent to blackout onset", &onset);
     utils_print::print_leg(&leg1);
 
@@ -93,7 +96,7 @@ fn main() {
     let branch_configs: Vec<&_> = bank_worlds.iter().map(|(_, world)| world).collect();
     let reports = onset
         .continue_branches(&branch_configs, constants::BRANCH_STEPS)
-        .unwrap_or_else(|e| utils::stop(&e));
+        .unwrap_or_else(|e| support::stop(&e));
     // The aim point: the ballistic terminal state offset cross-range, shared by every branch.
     let aim = model::aim_point(model::terminal_position(&reports[0]));
     let branches: Vec<model::BranchScore> = bank_worlds
@@ -112,18 +115,18 @@ fn main() {
     let peak = CfdFlow::compressible_march(&nominal)
         .alternate_context(committed_world)
         .run_until(
-            model::corridor_coupling(),
+            world::corridor_coupling(1.0),
             model::carry_field(&onset),
-            utils::trigger(),
-            utils::ft(0.0),
+            support::trigger(),
+            support::ft(0.0),
             |field, _| {
                 field
                     .scalar("flight_altitude")
                     .and_then(|a| a.first().copied())
-                    .is_some_and(|a| a <= utils::ft(61_000.0))
+                    .is_some_and(|a| a <= support::ft(61_000.0))
             },
         )
-        .unwrap_or_else(|e| utils::stop(&e));
+        .unwrap_or_else(|e| support::stop(&e));
     let leg2 = model::snapshot("peak passage 61 km (committed dwell)", &peak);
     utils_print::print_leg(&leg2);
     // ── Leg 3: continue until the *flow-resolved* exit — the link comes back when the vehicle
@@ -131,13 +134,13 @@ fn main() {
     let exit_pause = CfdFlow::compressible_march(&nominal)
         .alternate_context(committed_world)
         .run_until(
-            model::corridor_coupling(),
+            world::corridor_coupling(1.0),
             model::carry_field(&peak),
-            utils::trigger(),
-            utils::ft(0.0),
+            support::trigger(),
+            support::ft(0.0),
             |field, _| field.regime().map(|r| !r.gnss_denied).unwrap_or(false),
         )
-        .unwrap_or_else(|e| utils::stop(&e));
+        .unwrap_or_else(|e| support::stop(&e));
     let leg3 = model::snapshot("flow-resolved exit", &exit_pause);
     utils_print::print_leg(&leg3);
 
@@ -147,13 +150,13 @@ fn main() {
         .alternate_context(committed_world)
         .march_with(MarchStop::Fixed(constants::REACQ_STEPS))
         .run_until(
-            model::corridor_coupling(),
+            world::corridor_coupling(1.0),
             model::carry_field(&exit_pause),
-            utils::trigger(),
-            utils::ft(0.0),
+            support::trigger(),
+            support::ft(0.0),
             |_, _| false,
         )
-        .unwrap_or_else(|e| utils::stop(&e));
+        .unwrap_or_else(|e| support::stop(&e));
     let leg4 = model::snapshot("reacquisition", &reacq);
     utils_print::print_leg(&leg4);
 

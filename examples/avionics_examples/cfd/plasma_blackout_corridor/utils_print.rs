@@ -11,11 +11,13 @@
 
 use crate::FloatType;
 use crate::constants::{
-    CAP, COMMS_BAND_RAD_S, DIVERGENCE_MIN_M, DT_FLIGHT, L, MAX_REBUILDS, RAMC_NE_REFERENCE,
-    WALL_CLOCK_BUDGET_S,
+    DIVERGENCE_MIN_M, MAX_REBUILDS, MISS_IMPROVEMENT_FACTOR, WALL_CLOCK_BUDGET_S,
 };
 use crate::model::{BranchScore, LegSnapshot};
-use crate::utils::ft;
+use avionics_examples::blackout::constants::{
+    CAP, COMMS_BAND_RAD_S, DT_FLIGHT, L, RAMC_NE_REFERENCE,
+};
+use avionics_examples::blackout::support::{ft, norm3};
 use deep_causality_core::EffectLog;
 
 pub fn print_intro() {
@@ -231,7 +233,7 @@ pub fn report(inputs: &GateInputs<'_>) -> bool {
     let zero_bank = branches.iter().position(|b| b.bank_deg == 0.0).unwrap_or(0);
     let sep: [FloatType; 3] =
         core::array::from_fn(|i| branches[committed].terminal[i] - branches[zero_bank].terminal[i]);
-    let divergence = crate::utils::norm3(sep);
+    let divergence = norm3(sep);
     let misses: Vec<FloatType> = branches.iter().map(|b| b.outcome.miss_distance).collect();
     let hi = misses
         .iter()
@@ -264,6 +266,23 @@ pub fn report(inputs: &GateInputs<'_>) -> bool {
         format!(
             "the committed branch's final evolved state re-quantizes at peak bond {bond} (cap \
              {CAP}) vs the dense {dense}-cell grid",
+        ),
+    );
+
+    // The value of the counterfactual sweep: the committed branch's trajectory-derived miss
+    // beats the ballistic branch's by the configured factor. This is what the bank sweep buys.
+    let ballistic_miss = branches[zero_bank].outcome.miss_distance;
+    let committed_miss = branches[committed].outcome.miss_distance;
+    gate(
+        "(4e) guidance precision from the sweep",
+        committed_miss * ft(MISS_IMPROVEMENT_FACTOR) <= ballistic_miss,
+        format!(
+            "committed {:.0} deg lands {:.2} m off the aim vs the ballistic {:.2} m \
+             ({:.1}x better; gate requires {MISS_IMPROVEMENT_FACTOR:.0}x)",
+            branches[committed].bank_deg,
+            committed_miss,
+            ballistic_miss,
+            ballistic_miss / committed_miss,
         ),
     );
 

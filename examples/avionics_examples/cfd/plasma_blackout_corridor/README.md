@@ -48,11 +48,14 @@ study follow, every boundary an *event the run finds*, not a scripted station sw
 1. **Descent to blackout onset.** The evolved sheath's electron density climbs as the air
    thickens; at 71.6 km it crosses the GPS L1 cutoff and the classifier flips the link to
    DENIED. The march pauses on that flow-resolved event.
-2. **The counterfactual study.** The paused state forks once per candidate bank command (0, 20,
-   and 40 degrees), in O(1) through copy-on-write. Each branch flies the *same* onset state in
-   its own alternated world and is scored by its trajectory-derived miss to a shared aim point.
-   The 40-degree command exceeds the envelope's 0.5 rad cap, so the gate visibly bounds it every
-   step of that branch.
+2. **The counterfactual study.** The paused state forks once per candidate bank command (a
+   six-candidate sweep: 0, 5, 10, 15, 20, and 40 degrees), in O(1) through copy-on-write, and
+   the scoped fan-out flies all six concurrently for one branch of wall-clock. Each branch flies
+   the *same* onset state in its own alternated world and is scored by its trajectory-derived
+   miss to a shared aim point. The miss landscape descends 45, 35, 25, 16, down to 9 m at
+   20 degrees, then rises again: the 40-degree command exceeds the envelope's 0.5 rad cap, the
+   gate visibly bounds it every step, and the clamped branch overshoots to 17 m. The sweep finds
+   the optimum; commanding more bank than the envelope allows buys a worse trajectory.
 3. **The committed dwell.** The winning world flies through the peak passage. At the 61 km
    RAM-C II station the evolved peak electron density lands at 1.4e19 per cubic meter against
    the 1e19 flight anchor, inside the 5x gate band. The INS dead-reckons; drift grows from
@@ -61,9 +64,11 @@ study follow, every boundary an *event the run finds*, not a scripted station sw
    threshold; near 46 km the renewed sheath stops ionizing past the cutoff and the link returns.
    The first folded fixes collapse the drift back to 0.2 m.
 
-Ten coupled validation gates then check the whole story: window ordering, the anchor band, drift
-and reacquisition, regime change, the multiphysics chain, real steering divergence, tensor
-compression under the bond cap, bounded solver rebuilds, and the wall-clock budget.
+Eleven coupled validation gates then check the whole story: window ordering, the anchor band,
+drift and reacquisition, regime change, the multiphysics chain, real steering divergence,
+guidance precision from the sweep (the committed branch must beat the ballistic miss at least
+3x; it lands 5x better), tensor compression under the bond cap, bounded solver rebuilds, and the
+wall-clock budget.
 
 ## The Causal Chain
 
@@ -88,13 +93,13 @@ compression under the bond cap, bounded solver rebuilds, and the wall-clock budg
                 changes, solver rebuilds, bounded corrections, alternation markers
 ```
 
-## What This Example Packs In
+## What This Example Demonstrates
 
 Each element below was a named gap in the corridor's design notes
 ([`openspec/notes/plasma-blackout/`](../../../../openspec/notes/plasma-blackout/)) and is now
 built, tested library code exercised by this one run.
 
-**Tensor-train compression as the mesh strategy (Gap 1).** The blackout problem's defining
+**Tensor-train compression as the mesh strategy.** The blackout problem's defining
 difficulty is scale separation: the vehicle is meters, the sheath structure far smaller. Instead
 of adaptive mesh refinement, the carrier marches on quantized tensor trains, where a `2^L` grid
 costs order `chi^2 * L`: logarithmic in point count, with sharp structure paid for only in bond
@@ -105,7 +110,7 @@ the **shock-fitted inflow strip**: the exact Rankine-Hugoniot state is the *boun
 marched layer, so the shock never has to be captured at all, and the final evolved state
 re-quantizes at peak bond 16 against a cap of 16.
 
-**Evolved-state Park two-temperature chemistry (Gaps 2 and 3).** Ionization at hypersonic
+**Evolved-state Park two-temperature chemistry.** Ionization at hypersonic
 conditions is rate-limited by the lagging vibrational-electron temperature, not the hot
 translational one. The stages compute the Park controller `T_a = sqrt(T_tr * T_ve)` with the
 Millikan-White relaxation clock running on the **evolved per-cell pressure**, and the Saha
@@ -122,7 +127,7 @@ navigation: the evolved electron density gates which measurements the Kalman fil
 When the scheduled inflow outgrows the solver's acoustic envelope, the carrier rebuilds itself
 and logs the rebuild to provenance.
 
-**GNSS-denied navigation done honestly (Gap 3).** The trajectory axis is where relativity
+**GNSS-denied navigation.** The trajectory axis is where relativity
 actually bites in this problem, and only there: the KS-regularized conformal propagator advances
 the orbit, a 17-state error-state Kalman filter (position, velocity, attitude, accelerometer and
 gyro bias, clock) folds fixes when the link is up, and the relativistic clock offset is carried
@@ -188,9 +193,13 @@ matters only for a wake-mounted-antenna scenario this corridor does not model.
 |---|---|
 | [`main.rs`](main.rs) | The descent: four legs, the branch study, provenance, the gates |
 | [`model.rs`](model.rs) | The descent worlds, the coupling stack, example-local stages, branch scoring |
-| [`constants.rs`](constants.rs) | Every tuned number, every simplification label, the precision note |
-| [`utils.rs`](utils.rs) | The precision lift, the trigger, small helpers |
-| [`utils_print.rs`](utils_print.rs) | Console rendering and the ten validation gates |
+| [`constants.rs`](constants.rs) | The corridor's own knobs: the horizon, the bank sweep, the gate thresholds |
+| [`utils_print.rs`](utils_print.rs) | Console rendering and the eleven validation gates |
+
+The physics constants, the numeric helpers, the example-local stages, and the coupling stack are
+shared with the [weather-dispersion example](../plasma_blackout_weather/README.md) through the
+crate library module `avionics_examples::blackout` (under `examples/avionics_examples/src/`),
+which also carries the precision notes and the `FloatType` switch.
 
 The library machinery this example exercises lives in `deep_causality_cfd` (the compressible
 carrier, the coupled-loop seam, the corridor stages, the navigation engine) and
