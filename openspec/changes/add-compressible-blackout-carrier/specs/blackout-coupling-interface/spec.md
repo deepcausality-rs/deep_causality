@@ -29,3 +29,24 @@ its per-step projections into the field, and `BlackoutTrigger` continues to deri
 - **WHEN** the correction stage writes a clamped bank command and the lift stage runs on the next step
 - **THEN** the ④ aero vector carries the lift component rotated by that clamped command, and both the truth
   propagation and the navigation predict consume the same steered vector
+
+### Requirement: Parallel counterfactual fan-out
+
+The paused coupled march SHALL offer a branch fan-out, `continue_branches(worlds, steps)`, that forks once per
+world, alternates each fork into its world, and continues every branch. Branches are data-independent by
+construction (the fork shares state through `Arc` and takes one copy-on-write clone at its first write), so with
+the `parallel` feature the fan-out SHALL run the branches concurrently on scoped fork-join threads
+(`deep_causality_par::scoped_map`, `std::thread::scope`; no Rayon, no thread pool). Reports SHALL come back in
+world order, each carrying the same `!!ContextAlternation!!` audit entry a manual fork chain produces, and the
+results SHALL be identical to the sequential fan-out. Without the feature the fan-out runs inline; the
+`MaybeParallel` bounds are vacuous, so serial builds carry no `Send + Sync` requirements.
+
+#### Scenario: The fan-out matches the manual fork chain
+- **WHEN** a paused march fans out over N worlds via `continue_branches`
+- **THEN** N reports come back in world order, each with its alternation marker, and every report is
+  bit-identical to the one a sequential `fork().alternate_context(world).continue_march(steps)` produces
+
+#### Scenario: Serial builds see no thread-safety bounds
+- **WHEN** the crate is built without the `parallel` feature
+- **THEN** `continue_branches` compiles and runs inline with no `Send + Sync` obligations on the carrier state,
+  the coupling stack, or the reports

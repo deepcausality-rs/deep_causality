@@ -101,6 +101,19 @@
   trajectory-derived miss; the t²-law close (`finish`) remains for the printed cross-check.
   Suite green: 580 passed, clippy clean.
 
+## 4b. Parallel counterfactual fan-out (addendum, user-requested)
+
+- [x] 4.3 Scoped fork-join over slices in `deep_causality_par` (`scoped_map`: order-preserving
+  map on `std::thread::scope` threads under `parallel`, inline map without; no Rayon, no thread
+  pool, no new dependency) + `CarrierPause::continue_branches(worlds, steps)` on the seam, with
+  `MaybeParallel` bounds so serial builds carry no `Send + Sync` obligations. The flagship's
+  branch study now fans out through it (avionics examples enable `cfd/parallel`).
+  → Tests: `scoped_map` suite green in both feature modes; `continue_branches` matches the
+  manual fork chain bit-identically in both modes. Flagship gates unchanged and bit-identical
+  (peak `n_e` 1.427e19, separation 56.52 m, spread [20.63, 70.00] m); wall-clock 42.2 s → 34.2 s.
+  Spec delta: "Parallel counterfactual fan-out" requirement added to
+  `blackout-coupling-interface`; validated strict.
+
 ## 5. Flagship: one continuous descent
 
 - [x] 5.1 Rewire `examples/avionics_examples/cfd/plasma_blackout_corridor/` onto the compressible

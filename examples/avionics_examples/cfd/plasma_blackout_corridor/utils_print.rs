@@ -61,9 +61,7 @@ pub fn print_leg(leg: &LegSnapshot) {
 }
 
 pub fn print_branches(branches: &[BranchScore], committed: usize) {
-    println!(
-        "--- Counterfactual bank commands (forked from the shared flow-resolved onset) ---"
-    );
+    println!("--- Counterfactual bank commands (forked from the shared flow-resolved onset) ---");
     println!(
         "  bank    peak heat      thermal load   dwell      miss (traj)   miss (t2 x-check)  peak n_e      alternation"
     );

@@ -231,6 +231,47 @@ fn fork_shares_and_context_alternation_marks_the_branch() {
 }
 
 #[test]
+fn continue_branches_matches_the_manual_fork_chain_in_world_order() {
+    let nominal = world("nominal_descent", 3.0, 8);
+    let shallow = world("shallow_branch", 3.0, 8);
+    let steep = world("steep_branch", 3.0, 8);
+
+    let pause = CfdFlow::compressible_march(&nominal)
+        .run_until(
+            (),
+            field_at_61km(),
+            BlackoutTrigger::new(1.0e9),
+            0.0,
+            |_, s| s >= 2,
+        )
+        .unwrap();
+
+    // The fan-out: one report per world, in world order, each with its alternation marker.
+    let reports = pause
+        .continue_branches(&[&shallow, &steep], 3)
+        .expect("both branches complete");
+    assert_eq!(reports.len(), 2);
+    assert_eq!(reports[0].name(), "shallow_branch");
+    assert_eq!(reports[1].name(), "steep_branch");
+    for report in &reports {
+        let log = format!("{}", report.effect_log().unwrap());
+        assert!(log.contains("!!ContextAlternation!!"), "marker: {log}");
+    }
+
+    // Bit-identical to the manual sequential fork of the same pause.
+    let manual = pause
+        .fork()
+        .alternate_context(&steep)
+        .continue_march(3)
+        .unwrap();
+    assert_eq!(reports[1].final_field(), manual.final_field());
+    assert_eq!(
+        reports[1].series("final_n_tot"),
+        manual.series("final_n_tot")
+    );
+}
+
+#[test]
 fn run_coupled_returns_the_evolved_report() {
     let cfg = world("report", 3.0, 3);
     let report = CfdFlow::compressible_march(&cfg)

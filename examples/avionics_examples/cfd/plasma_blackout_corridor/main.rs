@@ -43,7 +43,6 @@
 //! ```bash
 //! cargo run --release -p avionics_examples --example plasma_blackout_corridor
 //! ```
-
 mod constants;
 mod model;
 mod utils;
@@ -82,23 +81,21 @@ fn main() {
     utils_print::print_leg(&leg1);
 
     // ── [5] The counterfactual study: fork the onset once per candidate bank command.
-    // Each fork is O(1) through shared Arcs. Each branch resumes the *same* onset state in its
-    // own alternated world (`!!ContextAlternation!!` in its log); the worlds differ only in the
-    // bank command they publish, so the branch trajectories diverge by steering alone.
-    let mut reports = Vec::new();
-    for (bank_deg, world) in &bank_worlds {
-        let report = onset
-            .fork()
-            .alternate_context(world)
-            .continue_march(constants::BRANCH_STEPS)
-            .unwrap_or_else(|e| utils::stop(&e));
-        reports.push((*bank_deg, report));
-    }
+    // Each fork is O(1) through shared Arcs, and each branch resumes the *same* onset state in
+    // its own alternated world (`!!ContextAlternation!!` in its log); the worlds differ only in
+    // the bank command they publish, so the branch trajectories diverge by steering alone. The
+    // branches are data-independent, so `continue_branches` flies them concurrently on scoped
+    // threads (the `parallel` feature); the reports come back in world order either way.
+    let branch_configs: Vec<&_> = bank_worlds.iter().map(|(_, world)| world).collect();
+    let reports = onset
+        .continue_branches(&branch_configs, constants::BRANCH_STEPS)
+        .unwrap_or_else(|e| utils::stop(&e));
     // The aim point: the ballistic terminal state offset cross-range, shared by every branch.
-    let aim = model::aim_point(model::terminal_position(&reports[0].1));
-    let branches: Vec<model::BranchScore> = reports
+    let aim = model::aim_point(model::terminal_position(&reports[0]));
+    let branches: Vec<model::BranchScore> = bank_worlds
         .iter()
-        .map(|(deg, report)| model::score_branch(*deg, report, aim))
+        .zip(&reports)
+        .map(|((deg, _), report)| model::score_branch(*deg, report, aim))
         .collect();
     let committed = model::pick_committed(&branches);
     utils_print::print_branches(&branches, committed);

@@ -23,6 +23,7 @@ use crate::types::flow_config::QttObserve;
 use alloc::sync::Arc;
 use deep_causality_core::{AlternatableContext, AlternatableState, AlternatableValue, EffectLog};
 use deep_causality_haft::{LogAddEntry, LogAppend, LogSize};
+use deep_causality_par::{MaybeParallel, scoped_map};
 use deep_causality_physics::{ElectronDensity, PhysicsError};
 
 /// One marcher hosted in the coupled Flow-DSL loop. `D` is the spatial dimension its
@@ -378,6 +379,45 @@ where
             log: EffectLog::new(),
             error: self.error.clone(),
         }
+    }
+}
+
+impl<'c, R, S, M, const D: usize> CarrierPause<'c, R, S, M, D>
+where
+    R: CfdScalar,
+    S: PhysicsStage<D, R>,
+    M: CoupledCarrier<D, R>,
+{
+    /// The counterfactual fan-out: fork once per world, alternate each fork into its world, and
+    /// continue every branch for `steps` coupled steps. Reports come back in world order, and
+    /// each branch carries the same `!!ContextAlternation!!` audit entry a manual
+    /// [`fork`](Self::fork) chain would produce.
+    ///
+    /// Branches are data-independent by construction. A fork shares the paused state and field
+    /// through `Arc` and takes its single copy-on-write clone at the first write, so with the
+    /// `parallel` feature the branches run concurrently on scoped threads
+    /// ([`deep_causality_par::scoped_map`]) and the results are bit-identical to the sequential
+    /// order; without the feature the fan-out runs inline. The `MaybeParallel` bounds are vacuous
+    /// on serial builds.
+    ///
+    /// # Errors
+    /// The first failing branch's error, in world order. Every branch runs to completion first;
+    /// a failure does not cancel its siblings.
+    pub fn continue_branches(
+        &self,
+        worlds: &[&'c M::Config],
+        steps: usize,
+    ) -> Result<Vec<Report<R>>, PhysicsError>
+    where
+        Self: MaybeParallel,
+        M::Config: MaybeParallel,
+        Report<R>: MaybeParallel,
+    {
+        scoped_map(worlds, |world| {
+            self.fork().alternate_context(*world).continue_march(steps)
+        })
+        .into_iter()
+        .collect()
     }
 }
 

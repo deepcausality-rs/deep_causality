@@ -206,5 +206,5 @@ pub const REACQ_STEPS: usize = 30;
 pub const DIVERGENCE_MIN_M: f64 = 1.0;
 /// Maximum solver rebuilds while following the schedule.
 pub const MAX_REBUILDS: usize = 3;
-/// Wall-clock budget for the whole example, s (the minutes-not-hours pin).
-pub const WALL_CLOCK_BUDGET_S: f64 = 600.0;
+/// Wall-clock budget for the whole example
+pub const WALL_CLOCK_BUDGET_S: f64 = 300.0;
