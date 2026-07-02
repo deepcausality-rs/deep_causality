@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.4.4...deep_causality_tensor-v0.5.0) - 2026-07-02
+
+### Added
+
+- *(deep_causality_tensor)* complete the tensor-train operator algebra
+- *(deep_causality_tensor)* randomize-then-orthogonalize TT round + precision-generic RNG
+- *(deep_causality_tensor)* adaptive randomized TT-rounding
+- *(deep_causality_tensor)* tensor-network benchmarks (group 7) + spec sync
+- *(deep_causality_tensor)* complex Hermitian eigensolver — solve::eigen at Complex
+- *(deep_causality_tensor)* complex TT solvers — AMEn linear, ALS fit, TDVP
+- *(deep_causality_tensor)* complex TT-cross (ConjugateScalar)
+- *(deep_causality_tensor)* complex matrix-product operators (ConjugateScalar)
+- *(deep_causality_tensor)* complex tensor-train state layer (ConjugateScalar)
+- *(deep_causality_num,deep_causality_tensor)* complex-capable SVD/QR kernels via ConjugateScalar
+- *(deep_causality_tensor)* tensor-network Stage 3 — two-site TDVP2 time step
+- *(deep_causality_tensor)* tensor-network Stage 3 — DMRG3S eigensolver
+- *(deep_causality_tensor)* tensor-network Stage 2c — ALS solve engine + integrate
+- *(deep_causality_tensor)* tensor-network Stage 2b — TT-cross + apply_nonlinear
+- *(deep_causality_tensor)* tensor-network Stage 2a — CausalTensorTrainOperator (MPO)
+- *(deep_causality_tensor)* tensor-network Stage 1 — CausalTensorTrain (MPS) state
+- *(deep_causality_tensor)* tensor-network Stage 0 — truncated SVD, QR, Truncation
+
+### Other
+
+- *(deep_causality_tensor)* fused Hadamard-round, inner buffer reuse, crossover study
+- *(deep_causality_tensor)* Updated README.md
+- *(deep_causality_tensor)* tensor-network — document Stage-4 scalar generality
+- *(deep_causality_tensor)* tensor-network Stage 4 — Dual<f64> forward-mode AD
+- *(deep_causality_tensor)* tensor-network — AMEn linear solve + algorithm citations
+- *(openspec)* Added specs for tensor network.
+- *(deep_causality_tensor)* Improve test coverage
+- Generated new SBOM for all crates.
+- Updated README file across multiple crates to meet project standard.
+
 ## [0.4.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.4.3...deep_causality_tensor-v0.4.4) - 2026-06-09
 
 ### Added

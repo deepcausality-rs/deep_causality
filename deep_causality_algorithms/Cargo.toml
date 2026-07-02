@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_algorithms"
-version = "0.3.0"
+version = "0.4.0"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -18,11 +18,11 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
-version = "0.4"
+version = "0.5"
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.3"
+version = "0.4"
 
 [dependencies.deep_causality_topology]
 path = "../deep_causality_topology"
@@ -30,7 +30,7 @@ version = "0.6"
 
 [dependencies.deep_causality_rand]
 path = "../deep_causality_rand"
-version = "0.1"
+version = "0.2"
 
 # Feature-conditional thread-safety marker (`MaybeParallel`): vacuous on serial
 # builds, `Send + Sync` when `parallel` is forwarded below. 
