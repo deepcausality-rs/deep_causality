@@ -1,0 +1,162 @@
+openspec/changes/add-compressible-blackout-carrier/design.md
+  s_c4c919f578d611::t_ba01316f28c6eb 96-106
+deep_causality_cfd/src/types/flow/cfd_flow.rs
+  s_c4c919f578d611::t_55a880596e46e2 15-16
+  s_c4c919f578d611::t_6eea0971225c60 42-51
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_c771a3a45b4dfe 79-81
+  s_c4c919f578d611::t_08c7f9aa083d61 69
+  s_c4c919f578d611::t_ef3640b7bbcc4b 67-68
+  s_c4c919f578d611::t_55a880596e46e2 78
+examples/avionics_examples/cfd/plasma_blackout_corridor/utils.rs
+  s_c4c919f578d611::t_a5bce176dd7f40 7
+  s_c4c919f578d611::t_0eeb16088e2090 9
+deep_causality_cfd/tests/types/flow_config/compressible_march_config_tests.rs
+  s_c4c919f578d611::t_f1f3c25df0aef0 1-111
+deep_causality_cfd/src/types/flow_config/compressible_march_config.rs
+  s_c4c919f578d611::t_6f9d2d70f74636 265
+  s_c4c919f578d611::t_12e8cfd2b1f974 217-221
+  s_c4c919f578d611::t_082f19b2160d1f 1-71,74-181,187-216,222-237,239-264,266-299,301-367,378-402,404-406
+  s_c4c919f578d611::t_2dc818f1cbbf3b 182-186
+  s_c4c919f578d611::t_83d02b482f52c3 403
+  s_c4c919f578d611::t_3450194700fc20 72-73
+  s_c4c919f578d611::t_41ac6509b9c960 238
+  s_c4c919f578d611::t_497174122b877a 368-377
+  s_c4c919f578d611::t_c771a3a45b4dfe 300
+examples/avionics_examples/cfd/plasma_blackout_corridor/main.rs
+  s_c4c919f578d611::t_50b59f1844f463 6,12-13,15-25,29-38,40-41,52,55,62,65-67,69-72,74-75,77,81-82,84,86-88,95,97-102,106-109,111,114-115,117-123,126-141,143-147,149-150,152,156-157,159-160,170-172
+  s_c4c919f578d611::t_e87902fe1a1cde 174
+  s_c4c919f578d611::t_3da6dd03a2446f 164-169,173,175
+  s_c4c919f578d611::t_29d0f73c2ab110 162-163
+deep_causality_cfd/tests/types/flow/blackout_tests.rs
+  s_c4c919f578d611::t_ec9702c094db13 429-531
+deep_causality_cfd/src/navigation/eskf.rs
+  s_c4c919f578d611::t_0cb3c0c7beb164 111-116,125-141
+deep_causality_cfd/tests/types/flow/corridor_tests.rs
+  s_c4c919f578d611::t_4482569c9eb9a6 542-558
+  s_c4c919f578d611::t_5594d5f5b12c20 11-13
+  s_c4c919f578d611::t_51abb7d23d3e41 446-541
+deep_causality_cfd/src/types/flow/qtt_march_pause.rs
+  s_c4c919f578d611::t_85dc32072c7758 6-8,10-18,21-24,27-29,31-32,34-36,39-41
+deep_causality_cfd/studies/compressible_carrier_timing/main.rs
+  s_c4c919f578d611::t_4d0ce95091fd77 1-23,26-40,44-50,62-67,69-70,72-78,80-81,84,86,88-93,126,129-139,197-198,200-271
+  s_c4c919f578d611::t_94b5cf7bfce230 56
+  s_c4c919f578d611::t_20d2044682d35b 24-25,41-43,51-55,57-61,68,71,79,82-83,85,87,94-125,127-128
+  s_c4c919f578d611::t_be4dde14a8c8cf 140-196,199
+deep_causality_cfd/src/types/flow/corridor.rs
+  s_c4c919f578d611::t_356317f5e9e7ff 381-389
+  s_c4c919f578d611::t_952b5c4926719c 390,711-734
+  s_c4c919f578d611::t_8aa1aca5d3f180 392-505,508-510
+  s_c4c919f578d611::t_08c7f9aa083d61 506-507
+  s_c4c919f578d611::t_9cf8711cce5fff 391
+deep_causality_cfd/src/types/flow_config/mod.rs
+  s_c4c919f578d611::t_adf46bee22b750 15,28-31
+examples/avionics_examples/cfd/plasma_blackout_corridor/utils_print.rs
+  s_c4c919f578d611::t_53494b55915c39 65
+  s_c4c919f578d611::t_92cd2b470d4a10 66-67,182,236-238
+  s_c4c919f578d611::t_bd1ad9be802f2e 118-129,132-133,135-145,147
+  s_c4c919f578d611::t_dd183927aee045 68,73
+  s_c4c919f578d611::t_eb0d19793a6746 6-10,13-16,22,24,29-31,41,43-44,54,79,89,94-95,158,165-169,171-172,174-178,187-190,209-210,212,225-230,234-235,239-241,245,250,252-254,256-257,259-261,270-271,275-285
+  s_c4c919f578d611::t_7875608cdc5a8c 146
+  s_c4c919f578d611::t_b58dc1004c3a89 197-200,205-206,208,211,218-220
+  s_c4c919f578d611::t_11f22eab726405 130-131
+  s_c4c919f578d611::t_d85a2c4a7557d0 93
+  s_c4c919f578d611::t_ce68c3d39e4c7d 286
+deep_causality_cfd/src/types/flow/carrier.rs
+  s_c4c919f578d611::t_218be59542ba3c 1-89,94-95,108,110-115,117-212,216-230,239-244,254-258,260,262-270,274-282,284,286-297,300-321,325-509,511-557
+  s_c4c919f578d611::t_acab1a2a52d937 90-93,96,98-107,109,116
+  s_c4c919f578d611::t_c771a3a45b4dfe 97
+  s_c4c919f578d611::t_879e1b35d39cc9 213-215,231-238
+  s_c4c919f578d611::t_9dc9ee5b8448fb 245-246,248-253,261,271-273,285,298-299,322-324
+  s_c4c919f578d611::t_c505ad839bf953 247
+  s_c4c919f578d611::t_ed8c54a73271ea 259,283,510
+deep_causality_cfd/src/types/flow/qtt_march_run.rs
+  s_c4c919f578d611::t_8424c232d1e700 122-123
+  s_c4c919f578d611::t_6cdbd44b54d249 143-144
+  s_c4c919f578d611::t_a83d67a3e86118 214
+  s_c4c919f578d611::t_ed8c54a73271ea 401,418
+  s_c4c919f578d611::t_e47c680a226f57 34-35
+  s_c4c919f578d611::t_7ef47bb5817906 402-405,417,419,426-429
+  s_c4c919f578d611::t_5390af1cc9d87c 461-465,476-478,485-488
+  s_c4c919f578d611::t_c9392b41e339b2 19
+  s_c4c919f578d611::t_d629b343ad3972 18,420-425,479-484
+  s_c4c919f578d611::t_8f40bf649136f1 89,113-115,119-121,124-142,145-148,151-155,158-163,165-167,169-170,173-181,183-204,206-213,215,220-224,228-233
+deep_causality_cfd/tests/types/flow/mod.rs
+  s_c4c919f578d611::t_445c1fa569c5a0 26-28
+examples/avionics_examples/cfd/plasma_blackout_corridor/model.rs
+  s_c4c919f578d611::t_7c27c47e1eca67 151
+  s_c4c919f578d611::t_92cd2b470d4a10 437
+  s_c4c919f578d611::t_65b4efe1bfb265 118
+  s_c4c919f578d611::t_6bba7f4c502ce3 6-9,14,24-29,35-36,40-57,59-63,65-74,82-84,86-88,92,96-97,101,105,107-114,122-133,137,139-147,157,166-173,188-192,208-243,245,247,253-260,283-287,317-320,322,324,330-331,343-344,357-359,376-377,404-408,412-413,417-436,444,451-453,457-458,469,474-475,482-484,490-491,498-499,503-510
+  s_c4c919f578d611::t_5fce8368f9bb72 18-19
+  s_c4c919f578d611::t_63bb9ff28cc9f5 32
+  s_c4c919f578d611::t_b7e91b7afc43f2 175-178
+  s_c4c919f578d611::t_a09f2f4112f509 410
+  s_c4c919f578d611::t_ac0d78f13aee28 15-17,20
+  s_c4c919f578d611::t_f94d70b3e99823 85
+deep_causality_cfd/tests/types/flow_config/mod.rs
+  s_c4c919f578d611::t_75900336cace45 9-10
+deep_causality_cfd/src/types/flow/mod.rs
+  s_c4c919f578d611::t_fd12550cc8eacb 18,40
+  s_c4c919f578d611::t_ae0ff145d5e9f0 16
+  s_c4c919f578d611::t_ec6b91ec6f1a0a 42-43
+deep_causality_cfd/src/types/flow/blackout.rs
+  s_c4c919f578d611::t_7feb41ff616f60 269,274-279
+  s_c4c919f578d611::t_9123d758dabd95 151,176,182-189,202-205,208-213,217,280
+  s_c4c919f578d611::t_65806a8a5f8299 381
+  s_c4c919f578d611::t_b8c42a8638a781 313-316,331-338
+  s_c4c919f578d611::t_d2403681bcb304 398
+  s_c4c919f578d611::t_162a90e9379787 256
+  s_c4c919f578d611::t_1636134b87cb17 364
+  s_c4c919f578d611::t_1fcfa483a68f06 281
+examples/avionics_examples/cfd/plasma_blackout_corridor/constants.rs
+  s_c4c919f578d611::t_0eb54a38d2ed88 140-162
+  s_c4c919f578d611::t_68f6cc9ffa8c38 163-167,171-173
+  s_c4c919f578d611::t_3977b53f01c248 134-137
+  s_c4c919f578d611::t_a6bb3e66f8bcdf 6-8,13-23,29-40,44-85,93-105,109-112,120-121,123-128,132-133,179,181-185,191-195,199-210
+  s_c4c919f578d611::t_6226c119c1db1b 196-198
+  s_c4c919f578d611::t_fea7ddac714609 24-28
+deep_causality_cfd/Cargo.toml
+  s_c4c919f578d611::t_23c9924ea569c0 183-187
+deep_causality_cfd/src/types/flow/compressible_march_run.rs
+  s_c4c919f578d611::t_8693f7543bf5bb 1-23,28-69,73-83,85-89,102-108,111,118-162,164-194,201-210,212-284,287-319,322-472,479-523,530-535
+  s_c4c919f578d611::t_e1a8054e5b73d8 163
+  s_c4c919f578d611::t_d629b343ad3972 24-27,473-478,524-529
+  s_c4c919f578d611::t_f5c1ed4da38fd0 70-72
+  s_c4c919f578d611::t_94b5cf7bfce230 109-110,286,321
+  s_c4c919f578d611::t_c771a3a45b4dfe 84,90-101,112-117,195,211,285,320
+  s_c4c919f578d611::t_2f14e0d06aa9c3 196-200
+openspec/notes/plasma-blackout/gap-analysis.md
+  s_c4c919f578d611::t_328c2beba28b00 300-310
+openspec/changes/add-compressible-blackout-carrier/tasks.md
+  s_c4c919f578d611::t_c9e5cf9d531abd 32,35-57,62-64,75
+  s_c4c919f578d611::t_72b9d57d1d30c5 73,76-81
+  s_c4c919f578d611::t_c565320a4daae3 134,137-140,143-144
+  s_c4c919f578d611::t_0a17250f3ea88a 3,7-14,18,21-26,28
+  s_c4c919f578d611::t_38d0666015e710 95,98-102
+  s_c4c919f578d611::t_a87f566572c21d 85,91-94
+  s_c4c919f578d611::t_af60d44c43ab9e 106,112-122,126-130
+  s_c4c919f578d611::t_e62f408835ebd7 61,65-67,69-72
+deep_causality_cfd/tests/types/flow/compressible_march_run_tests.rs
+  s_c4c919f578d611::t_c771a3a45b4dfe 87-93,100-102,117-123,142-148,209-215
+  s_c4c919f578d611::t_85ab7d384374a8 246-274
+  s_c4c919f578d611::t_455ed516c41b5c 1-86,94-99,103-116,124-141,149-156,188-208,216-245
+  s_c4c919f578d611::t_e360f5f1cf5031 157-167,169-187
+  s_c4c919f578d611::t_6efb3b06df77a9 168
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "6598d177dc26a833cb7de3dbc944834febfcbc61",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
