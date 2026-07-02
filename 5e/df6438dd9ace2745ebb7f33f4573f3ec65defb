@@ -1,0 +1,44 @@
+examples/avionics_examples/src/blackout/stages.rs
+  s_c4c919f578d611::t_4db331fedd05a7 85-88,90,95-97,108-112,131
+examples/avionics_examples/cfd/plasma_blackout_weather/constants.rs
+  s_c4c919f578d611::t_8b85fc57e1478f 48-61
+examples/avionics_examples/cfd/plasma_blackout_weather/model.rs
+  s_c4c919f578d611::t_9796713c0ec9db 42-44,59-65,68-69,72,79-117,123,130-133
+examples/avionics_examples/cfd/plasma_blackout_weather/README.md
+  s_c4c919f578d611::t_01ac48e64f0bbe 81-82,84,86-89,92-99
+  s_c4c919f578d611::t_e8df505656e60c 19,21-34,38
+  s_c4c919f578d611::t_08dd0824f6bf51 45-47,68-78,100-108,112,114-117
+  s_c4c919f578d611::t_7990dabe19c5cf 18
+  s_c4c919f578d611::t_e0d495ced3473c 20
+  s_c4c919f578d611::t_cde696ac637fbc 35-37
+  s_c4c919f578d611::t_0f796897aaf18b 79-80
+  s_c4c919f578d611::t_f82ed9ed2dce8d 83
+  s_c4c919f578d611::t_73e75af04ca225 85
+  s_c4c919f578d611::t_a30a486036fe3d 90-91
+examples/avionics_examples/cfd/plasma_blackout_weather/main.rs
+  s_c4c919f578d611::t_9c58d457b94d8a 58,61-65,76-84,93,104,107-111,114-115,117,121,131-134,210,212-216,221-239,241,243,245,247
+examples/avionics_examples/cfd/plasma_blackout_corridor/main.rs
+  s_c4c919f578d611::t_4db331fedd05a7 80,118,137,153
+examples/avionics_examples/src/blackout/world.rs
+  s_c4c919f578d611::t_4db331fedd05a7 117-123,157
+openspec/notes/plasma-blackout/finite-rate-cfd-chemistry.md
+  s_c4c919f578d611::t_153522984b8944 111,134
+examples/avionics_examples/cfd/plasma_blackout_weather/output.txt
+  s_c4c919f578d611::t_108497bf7e38ec 7,9-15,22-25,28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "5edf6438dd9ace2745ebb7f33f4573f3ec65defb",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
