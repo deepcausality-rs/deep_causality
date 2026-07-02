@@ -1,0 +1,57 @@
+openspec/specs/blackout-coupling-interface/spec.md
+  s_c4c919f578d611::t_fd4730c798ca2f 11,14-15
+  s_c4c919f578d611::t_fbc0f44d877cce 13,16-20,32-36,58-78
+examples/avionics_examples/README.md
+  s_c4c919f578d611::t_548aa8eedbc288 24
+examples/avionics_examples/cfd/plasma_blackout_corridor/constants.rs
+  s_c4c919f578d611::t_b6c622e034233b 37-45
+  s_c4c919f578d611::t_d285c8e3d481ca 219
+openspec/specs/bank-steered-lift/spec.md
+  s_c4c919f578d611::t_fbc0f44d877cce 1-11,13-32,34-39
+  s_c4c919f578d611::t_510db43a6617e1 12,33
+openspec/specs/compressible-flow-host/spec.md
+  s_c4c919f578d611::t_fbc0f44d877cce 1-25,27-46,48-63,65-73
+  s_c4c919f578d611::t_510db43a6617e1 26,47,64
+examples/avionics_examples/cfd/plasma_blackout_corridor/utils_print.rs
+  s_c4c919f578d611::t_afff839e298a79 32
+examples/avionics_examples/cfd/plasma_blackout_corridor/README.md
+  s_c4c919f578d611::t_7ebeab121f1607 1-197
+examples/avionics_examples/cfd/plasma_blackout_corridor/utils.rs
+  s_c4c919f578d611::t_d1ee2d439ec1ad 49
+  s_c4c919f578d611::t_956db32ba281e2 18-22,27-30
+  s_c4c919f578d611::t_9fae0576d99dac 31-32
+  s_c4c919f578d611::t_5987420c510928 9
+examples/avionics_examples/cfd/plasma_blackout_corridor/main.rs
+  s_c4c919f578d611::t_d15486dab5c02e 56,58
+  s_c4c919f578d611::t_98e920f739a51b 57
+  s_c4c919f578d611::t_b0cf617ea0d895 60
+  s_c4c919f578d611::t_de39c0f6e544da 59
+  s_c4c919f578d611::t_c1ed81495ee666 61
+examples/avionics_examples/cfd/plasma_blackout_corridor/model.rs
+  s_c4c919f578d611::t_8b86d239a4d125 272-274,277,279-282
+  s_c4c919f578d611::t_0dfb0340281829 445
+  s_c4c919f578d611::t_9e6c6da2e94337 231-232,235
+  s_c4c919f578d611::t_1389b23cabd131 258
+  s_c4c919f578d611::t_7a7453ded8069b 89
+  s_c4c919f578d611::t_209d0f7c8e14bf 32
+openspec/specs/plasma-blackout-flagship/spec.md
+  s_c4c919f578d611::t_fd4730c798ca2f 15,27,36-37
+  s_c4c919f578d611::t_fbc0f44d877cce 11-14,16-20,25-26,29-32,38-43,46-49,53-55
+  s_c4c919f578d611::t_1b6f9a89311d36 28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "151ebf3dcf08e8959a7f98692137c0757136ad30",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
