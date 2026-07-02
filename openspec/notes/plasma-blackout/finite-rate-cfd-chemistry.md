@@ -108,7 +108,7 @@ vibrational-electronic energy `E_ve` and partial densities for a 7-species air m
 NO, N, O, NO+, e-). This is the production-CFD architecture, and it is the road to
 off-calibration credibility claims, catalytic-wall work, and publication-grade comparisons.
 
-**Option A is the first third of Option B, not a detour.** The rate kernels, the equilibrium
+**Option A is the first third of Option B.** The rate kernels, the equilibrium
 constants, the detailed-balance tests, and the reactor unit tests transfer verbatim: in Option
 B they stop being an LER fixed point and become the source terms of the species continuity
 equations. Nothing in Option A is throwaway work.
@@ -131,8 +131,7 @@ equations. Nothing in Option A is throwaway work.
 
 **Sequencing.** Option B belongs to the stagnation-line and 3-D fitted validation path first,
 where its fidelity is cleanly measurable against published RAM-C profiles, and enters the
-corridor only after the timing study re-verifies the minutes budget. Do not propose it directly
-against the flagship.
+corridor only after the timing study re-verifies the minutes budget. 
 
 **Triggers that would justify it:** a consumer needing predictions away from the RAM-C
 calibration point; boundary-layer or catalytic-wall electron-density work (where the reflectometer

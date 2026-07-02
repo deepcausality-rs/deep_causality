@@ -77,7 +77,7 @@ fn main() {
     // density crosses the GPS L1 cutoff — an event the run finds, not a station switch.
     let onset = CfdFlow::compressible_march(&nominal)
         .run_until(
-            world::corridor_coupling(1.0),
+            world::corridor_coupling(1.0, 0),
             world::initial_field(),
             support::trigger(),
             support::ft(0.0),
@@ -115,7 +115,7 @@ fn main() {
     let peak = CfdFlow::compressible_march(&nominal)
         .alternate_context(committed_world)
         .run_until(
-            world::corridor_coupling(1.0),
+            world::corridor_coupling(1.0, 0),
             model::carry_field(&onset),
             support::trigger(),
             support::ft(0.0),
@@ -134,7 +134,7 @@ fn main() {
     let exit_pause = CfdFlow::compressible_march(&nominal)
         .alternate_context(committed_world)
         .run_until(
-            world::corridor_coupling(1.0),
+            world::corridor_coupling(1.0, 0),
             model::carry_field(&peak),
             support::trigger(),
             support::ft(0.0),
@@ -150,7 +150,7 @@ fn main() {
         .alternate_context(committed_world)
         .march_with(MarchStop::Fixed(constants::REACQ_STEPS))
         .run_until(
-            world::corridor_coupling(1.0),
+            world::corridor_coupling(1.0, 0),
             model::carry_field(&exit_pause),
             support::trigger(),
             support::ft(0.0),

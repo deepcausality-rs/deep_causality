@@ -114,8 +114,13 @@ pub fn descent_world(
 ///
 /// `imu_bias_departure` scales the accelerometer bias away from its calibration point (1.0 at
 /// standard conditions) while the filter's priors stay standard-day: the weather study's INS
-/// thermal model. The corridor flies 1.0.
-pub fn corridor_coupling(imu_bias_departure: f64) -> impl PhysicsStage<2, FloatType> {
+/// thermal model. The corridor flies 1.0. `noise_draw` selects the deterministic receiver-noise
+/// realization (0 reproduces the original sequence); it is the Monte Carlo dimension of the
+/// weather table's error bars.
+pub fn corridor_coupling(
+    imu_bias_departure: f64,
+    noise_draw: usize,
+) -> impl PhysicsStage<2, FloatType> {
     let imu = ImuModel::new(
         core::array::from_fn(|i| support::ft(IMU_ACCEL_BIAS[i] * imu_bias_departure)),
         core::array::from_fn(|i| support::ft(IMU_GYRO_BIAS[i])),
@@ -149,7 +154,7 @@ pub fn corridor_coupling(imu_bias_departure: f64) -> impl PhysicsStage<2, FloatT
             .with_speed_field("equivalent_airspeed"),
         )
         .then(SuttonGravesLoads)
-        .then(TruthGnss)
+        .then(TruthGnss { noise_draw })
         .then(
             TrajectoryNav::new(
                 core::array::from_fn(|i| support::ft(Q_DIAG[i])),

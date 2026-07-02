@@ -39,7 +39,9 @@ pub fn bias_departure(d_temp: f64) -> f64 {
     1.0 + IMU_THERMAL_COEFF_PER_K * d_temp.abs()
 }
 
-/// One row of the dispersion table, extracted from a finished world's carried field.
+/// One row of the dispersion table: the flow and window metrics from the reference draw (the
+/// receiver noise does not touch the flow, chemistry, or truth trajectory, so those columns are
+/// draw-invariant), plus Monte Carlo statistics of the navigation metrics over all draws.
 pub struct WorldRow {
     pub name: &'static str,
     pub d_temp: f64,
@@ -54,42 +56,80 @@ pub struct WorldRow {
     pub dwell_s: FloatType,
     pub ne_max: FloatType,
     pub q_max: FloatType,
-    /// Maximum dead-reckoning drift while the link was denied, m.
-    pub drift_denied_max_m: FloatType,
-    /// Terminal navigation error after reacquisition, m.
-    pub terminal_err_m: FloatType,
+    /// Maximum dead-reckoning drift while denied: mean and sample standard deviation over the
+    /// receiver-noise draws, m.
+    pub drift_mean_m: FloatType,
+    pub drift_sd_m: FloatType,
+    /// Terminal navigation error after reacquisition: mean over the draws and the worst draw, m.
+    pub terminal_mean_m: FloatType,
+    pub terminal_max_m: FloatType,
 }
 
-/// Extract the table row from a paused (finished) world.
-pub fn world_row<S>(
-    name: &'static str,
-    d_temp: f64,
-    rho_scale: f64,
-    pause: &CompressiblePause<'_, FloatType, S>,
-) -> WorldRow {
+/// The navigation metrics of one draw: (maximum drift while denied, terminal error).
+pub fn draw_metrics<S>(pause: &CompressiblePause<'_, FloatType, S>) -> (FloatType, FloatType) {
     let field = pause.field();
-    let step_s = |scalar: &str| support::scalar0(field, scalar) * support::ft(DT_FLIGHT);
     let truth = field.scalar("truth_state").unwrap_or(&[]);
-    let terminal_err_m = match (field.nav(), truth.len() >= 3) {
+    let terminal = match (field.nav(), truth.len() >= 3) {
         (Some(engine), true) => {
             let p = engine.position();
             support::norm3(core::array::from_fn(|i| p[i] - truth[i]))
         }
         _ => support::ft(f64::NAN),
     };
+    (support::scalar0(field, "wx_drift_denied_max"), terminal)
+}
+
+/// Mean and sample standard deviation of a slice.
+pub fn mean_sd(xs: &[FloatType]) -> (FloatType, FloatType) {
+    let n = support::ft(xs.len() as f64);
+    let mean = xs.iter().copied().sum::<FloatType>() / n;
+    if xs.len() < 2 {
+        return (mean, support::ft(0.0));
+    }
+    let var = xs
+        .iter()
+        .map(|&x| (x - mean) * (x - mean))
+        .sum::<FloatType>()
+        / (n - support::ft(1.0));
+    (mean, deep_causality_num::Real::sqrt(var))
+}
+
+/// Extract the table row from one condition's finished draws (the reference draw first).
+pub fn world_row<S>(
+    name: &'static str,
+    d_temp: f64,
+    rho_scale: f64,
+    draws: &[CompressiblePause<'_, FloatType, S>],
+) -> WorldRow {
+    let reference = &draws[0];
+    let field = reference.field();
+    let step_s = |scalar: &str| support::scalar0(field, scalar) * support::ft(DT_FLIGHT);
+
+    let metrics: Vec<(FloatType, FloatType)> = draws.iter().map(draw_metrics).collect();
+    let drifts: Vec<FloatType> = metrics.iter().map(|&(d, _)| d).collect();
+    let terminals: Vec<FloatType> = metrics.iter().map(|&(_, t)| t).collect();
+    let (drift_mean_m, drift_sd_m) = mean_sd(&drifts);
+    let (terminal_mean_m, _) = mean_sd(&terminals);
+    let terminal_max_m = terminals
+        .iter()
+        .copied()
+        .fold(support::ft(0.0), |a, x| if x > a { x } else { a });
+
     WorldRow {
         name,
         d_temp,
         rho_scale,
         bias_departure: bias_departure(d_temp),
-        errored: pause.error().is_some(),
+        errored: draws.iter().any(|p| p.error().is_some()),
         has_alternation_marker: format!("{}", field.log()).contains("!!ContextAlternation!!"),
         onset_s: step_s("wx_onset_step"),
         exit_s: step_s("wx_last_denied_step"),
         dwell_s: support::scalar0(field, "wx_dwell_s"),
         ne_max: support::scalar0(field, "wx_ne_max"),
         q_max: support::scalar0(field, "wx_q_max"),
-        drift_denied_max_m: support::scalar0(field, "wx_drift_denied_max"),
-        terminal_err_m,
+        drift_mean_m,
+        drift_sd_m,
+        terminal_mean_m,
+        terminal_max_m,
     }
 }

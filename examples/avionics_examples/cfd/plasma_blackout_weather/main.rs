@@ -55,8 +55,13 @@ fn main() {
         constants::STEPS as f64 * avionics_examples::blackout::constants::DT_FLIGHT,
     );
     println!(
-        "IMU thermal model: bias departure 1 + {:.3}/K away from the calibration point; filter priors stay standard-day\n",
+        "IMU thermal model: bias departure 1 + {:.3}/K away from the calibration point; filter priors stay standard-day",
         constants::IMU_THERMAL_COEFF_PER_K,
+    );
+    println!(
+        "Monte Carlo: {} deterministic receiver-noise draws per condition ({} descents total)\n",
+        constants::MC_DRAWS,
+        constants::WEATHER.len() * constants::MC_DRAWS,
     );
 
     // One world per condition. The first is the baseline; the five dispersions are alternated
@@ -68,11 +73,15 @@ fn main() {
         })
         .collect();
 
-    // Fly all six concurrently: the scoped fan-out gives the whole table one descent of
-    // wall-clock. Each world gets its own coupling because the IMU it flies is part of the
-    // condition (the thermal bias departure), and each run is data-independent.
-    let indices: Vec<usize> = (0..constants::WEATHER.len()).collect();
-    let pauses: Vec<_> = scoped_map(&indices, |&i| {
+    // Fly the whole campaign concurrently: six conditions times MC_DRAWS receiver-noise
+    // realizations, one flat fan-out over (condition, draw). Each run gets its own coupling
+    // because both the IMU it flies (the thermal bias departure) and the noise realization are
+    // part of the case, and every run is data-independent. Draw 0 of each condition is the
+    // reference realization the window columns come from.
+    let cases: Vec<(usize, usize)> = (0..constants::WEATHER.len())
+        .flat_map(|i| (0..constants::MC_DRAWS).map(move |draw| (i, draw)))
+        .collect();
+    let pauses: Vec<_> = scoped_map(&cases, |&(i, draw)| {
         let (_, d_temp, _) = constants::WEATHER[i];
         let run = CfdFlow::compressible_march(&worlds[0]);
         let run = if i == 0 {
@@ -81,7 +90,7 @@ fn main() {
             run.alternate_context(&worlds[i])
         };
         run.run_until(
-            world::corridor_coupling(model::bias_departure(d_temp)),
+            world::corridor_coupling(model::bias_departure(d_temp), draw),
             world::initial_field(),
             support::trigger(),
             support::ft(0.0),
@@ -92,19 +101,24 @@ fn main() {
     .collect::<Result<Vec<_>, _>>()
     .unwrap_or_else(|e| support::stop(&e));
 
+    // Group the flat results back into per-condition draw sets (cases are condition-major).
     let rows: Vec<model::WorldRow> = constants::WEATHER
         .iter()
-        .zip(&pauses)
-        .map(|(&(name, d_temp, rho_scale), pause)| model::world_row(name, d_temp, rho_scale, pause))
+        .enumerate()
+        .map(|(i, &(name, d_temp, rho_scale))| {
+            let draws = &pauses[i * constants::MC_DRAWS..(i + 1) * constants::MC_DRAWS];
+            model::world_row(name, d_temp, rho_scale, draws)
+        })
         .collect();
 
-    // ── The dispersion table (the digital-twin deliverable).
+    // ── The dispersion table (the digital-twin deliverable): navigation cells carry error
+    // bars over the receiver-noise draws.
     println!(
-        "  world          dT K   rho    IMU dep  onset s  exit s  dwell s   peak n_e     peak q      drift(dark) m  terminal m"
+        "  world          dT K   rho    IMU dep  onset s  exit s  dwell s   peak n_e     peak q      drift(dark) m     terminal m"
     );
     for r in &rows {
         println!(
-            "  {:<13} {:>5.0}  {:>5.2}  {:>7.2}  {:>7.1}  {:>6.1}  {:>7.1}  {:>10.3e}  {:>10.3e}  {:>13.4}  {:>10.4}",
+            "  {:<13} {:>5.0}  {:>5.2}  {:>7.2}  {:>7.1}  {:>6.1}  {:>7.1}  {:>10.3e}  {:>10.3e}  {:>7.2} +- {:>4.2}  {:>6.3} (max {:.3})",
             r.name,
             r.d_temp,
             r.rho_scale,
@@ -114,8 +128,10 @@ fn main() {
             r.dwell_s,
             r.ne_max,
             r.q_max,
-            r.drift_denied_max_m,
-            r.terminal_err_m,
+            r.drift_mean_m,
+            r.drift_sd_m,
+            r.terminal_mean_m,
+            r.terminal_max_m,
         );
     }
     println!();
@@ -191,25 +207,44 @@ fn main() {
         .expect("polar_winter row");
     gate(
         "(4) the INS does not behave as assumed in the cold",
-        polar.drift_denied_max_m
-            >= standard.drift_denied_max_m * support::ft(constants::COLD_DRIFT_FACTOR_MIN),
+        polar.drift_mean_m >= standard.drift_mean_m * support::ft(constants::COLD_DRIFT_FACTOR_MIN),
         format!(
-            "polar-winter blackout drift {:.4} m vs standard-day {:.4} m ({:.2}x; gate requires \
-             {:.1}x from the thermal bias departure and the widened window)",
-            polar.drift_denied_max_m,
-            standard.drift_denied_max_m,
-            polar.drift_denied_max_m / standard.drift_denied_max_m,
+            "polar-winter mean blackout drift {:.2} m vs standard-day {:.2} m ({:.2}x; gate \
+             requires {:.1}x from the thermal bias departure and the widened window)",
+            polar.drift_mean_m,
+            standard.drift_mean_m,
+            polar.drift_mean_m / standard.drift_mean_m,
             constants::COLD_DRIFT_FACTOR_MIN,
         ),
     );
 
+    // The certification-grade form of gate (4): the cold effect must be resolved above the
+    // receiver-noise scatter, not within it.
+    let combined_sd = deep_causality_num::Real::sqrt(
+        polar.drift_sd_m * polar.drift_sd_m + standard.drift_sd_m * standard.drift_sd_m,
+    );
+    let separation = polar.drift_mean_m - standard.drift_mean_m;
     gate(
-        "(5) every weather reacquires",
-        rows.iter()
-            .all(|r| r.terminal_err_m < support::ft(constants::REACQ_ERR_MAX_M)),
+        "(4b) the cold effect is statistically resolved",
+        separation >= combined_sd * support::ft(constants::DRIFT_SIGNIFICANCE_SIGMA),
         format!(
-            "terminal navigation error under {:.1} m in all six worlds",
+            "polar-standard separation {:.2} m vs combined sigma {:.2} m ({:.1} sigma; gate \
+             requires {:.0})",
+            separation,
+            combined_sd,
+            separation / combined_sd,
+            constants::DRIFT_SIGNIFICANCE_SIGMA,
+        ),
+    );
+
+    gate(
+        "(5) every weather reacquires, in every draw",
+        rows.iter()
+            .all(|r| r.terminal_max_m < support::ft(constants::REACQ_ERR_MAX_M)),
+        format!(
+            "worst-draw terminal navigation error under {:.1} m across all {} descents",
             constants::REACQ_ERR_MAX_M,
+            constants::WEATHER.len() * constants::MC_DRAWS,
         ),
     );
 

@@ -45,6 +45,20 @@ pub const WEATHER: [(&str, f64, f64); 6] = [
 /// Tactical-grade class: a 40 K departure grows the uncompensated bias by 40 percent.
 pub const IMU_THERMAL_COEFF_PER_K: f64 = 0.01;
 
+// ── Monte Carlo
+
+/// Receiver-noise realizations flown per weather condition. Each draw is a deterministic
+/// phase-shifted low-discrepancy sequence (no RNG dependency; draw 0 is the corridor's
+/// sequence), so the whole campaign remains bit-reproducible while the drift cells gain error
+/// bars. Six conditions times eight draws is 48 full descents; the scoped fan-out packs them
+/// onto the available cores.
+pub const MC_DRAWS: usize = 8;
+
+/// The significance requirement on the headline effect: the polar-winter mean drift must exceed
+/// the standard-day mean by at least this many combined standard deviations, so the cold effect
+/// is resolved above the receiver-noise scatter rather than within it.
+pub const DRIFT_SIGNIFICANCE_SIGMA: f64 = 2.0;
+
 // ── Gate thresholds (pinned from the measured dispersion; honest bands, not tuned fits)
 
 /// Weather must move the blackout window: max onset minus min onset across the table, s. The

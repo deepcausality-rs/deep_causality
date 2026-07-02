@@ -82,14 +82,19 @@ impl PhysicsStage<2, FloatType> for SuttonGravesLoads {
 /// Deterministic receiver noise for the published fix: a golden-ratio low-discrepancy sequence
 /// per axis, scaled so the per-axis variance is exactly `GNSS_VAR` (uniform on `±σ√3`).
 /// Reproducible on every run, with no RNG dependency, consistent with the filter's `R`, and
-/// computed in the working precision.
-pub fn fix_noise(step: usize) -> [FloatType; 3] {
+/// computed in the working precision. `draw` selects one of infinitely many equally distributed
+/// realizations by phase-shifting the sequence with the plastic constant; draw 0 is the
+/// original sequence, and distinct draws are the Monte Carlo dimension of the dispersion table.
+pub fn fix_noise(step: usize, draw: usize) -> [FloatType; 3] {
     const PHI: f64 = 0.618_033_988_749_894_9;
+    const PLASTIC: f64 = 0.754_877_666_246_692_7;
     let amplitude = Real::sqrt(support::ft(GNSS_VAR) * support::ft(3.0));
     core::array::from_fn(|axis| {
         let stride =
             support::ft(PHI) * (support::ft(1.0) + support::ft(0.37) * support::ft(axis as f64));
-        let x = (support::ft(step as f64) + support::ft(1.0)) * stride;
+        let phase = support::ft(PLASTIC) * support::ft(draw as f64)
+            + support::ft(0.29) * support::ft((draw * axis) as f64);
+        let x = (support::ft(step as f64) + support::ft(1.0)) * stride + phase;
         let u = x - x.floor();
         amplitude * (support::ft(2.0) * u - support::ft(1.0))
     })
@@ -100,9 +105,11 @@ pub fn fix_noise(step: usize) -> [FloatType; 3] {
 /// ([`fix_noise`]). The fix is always broadcast; whether the receiver can use it is the
 /// corridor's denial gate, since the navigation stage folds it only when the classifier says
 /// the link is up. The navigation drifts anyway: its IMU senses the same force through an
-/// accelerometer bias.
-#[derive(Debug, Clone, Copy)]
-pub struct TruthGnss;
+/// accelerometer bias. `noise_draw` selects the receiver-noise realization (0 by default).
+#[derive(Debug, Clone, Copy, Default)]
+pub struct TruthGnss {
+    pub noise_draw: usize,
+}
 
 impl PhysicsStage<2, FloatType> for TruthGnss {
     fn apply(
@@ -121,7 +128,7 @@ impl PhysicsStage<2, FloatType> for TruthGnss {
             "truth_state",
             Vec::from([r1[0], r1[1], r1[2], v1[0], v1[1], v1[2]]),
         );
-        let noise = fix_noise(ctx.step());
+        let noise = fix_noise(ctx.step(), self.noise_draw);
         field.set_scalar(
             "gnss_fix",
             Vec::from([r1[0] + noise[0], r1[1] + noise[1], r1[2] + noise[2]]),
