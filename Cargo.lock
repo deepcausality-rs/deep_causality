@@ -618,7 +618,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_file"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "deep_causality_haft",
