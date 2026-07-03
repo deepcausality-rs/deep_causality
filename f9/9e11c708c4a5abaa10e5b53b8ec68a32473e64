@@ -1,0 +1,35 @@
+openspec/changes/add-cfd-file-io/specs/typed-table-io/spec.md
+  s_c4c919f578d611::t_22adf24e796ad3 1-39
+openspec/changes/add-cfd-file-io/.openspec.yaml
+  s_c4c919f578d611::t_5b8a85dc09329b 1-2
+openspec/notes/cfd-examples/common-examples.md
+  s_c4c919f578d611::t_52d79a13247c40 38-68,143-144
+  s_c4c919f578d611::t_a552b17f47048b 111-140,145-147
+  s_c4c919f578d611::t_5e83842efe0355 1-37,69-110,141-142
+openspec/changes/add-cfd-file-io/proposal.md
+  s_c4c919f578d611::t_4d3e93e68a86ef 1-65
+openspec/changes/add-cfd-file-io/design.md
+  s_c4c919f578d611::t_3c62be31470889 1-103
+openspec/changes/add-cfd-file-io/tasks.md
+  s_c4c919f578d611::t_baf1abec4977f2 1-56
+openspec/changes/add-cfd-file-io/specs/sensor-trace-io/spec.md
+  s_c4c919f578d611::t_91d18d4439c43b 1-22
+openspec/changes/add-cfd-file-io/specs/cfd-state-snapshot/spec.md
+  s_c4c919f578d611::t_1b237050afc761 1-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f99e11c708c4a5abaa10e5b53b8ec68a32473e64",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
