@@ -1,0 +1,59 @@
+examples/avionics_examples/cfd/plasma_blackout_corridor/output.txt
+  s_c4c919f578d611::t_b7cab158a708dd 1-2,15-37,41-43,46-47,51-53,62-63,65-66,69,73-76,79,81-82,84
+examples/avionics_examples/cfd/plasma_blackout_corridor/constants.rs
+  s_c4c919f578d611::t_7f4509f54c4d20 25-31
+examples/avionics_examples/cfd/plasma_blackout_corridor/model.rs
+  s_c4c919f578d611::t_d48bbca7bb3dc9 14
+  s_c4c919f578d611::t_8b9d4e4d2e0d04 61-97
+  s_c4c919f578d611::t_08d54e19c60858 16,37,137,139,145-146,150,154-155,158-160,164,192,203,214-215,218,223-225,239-240,268
+examples/avionics_examples/cfd/plasma_blackout_corridor/README.md
+  s_c4c919f578d611::t_2303fe5de6d624 21
+  s_c4c919f578d611::t_74e531d587c487 62
+  s_c4c919f578d611::t_ac95cee7821a9d 96-97
+  s_c4c919f578d611::t_323c462710c7ca 51-60
+  s_c4c919f578d611::t_713678b8b0bb20 161-167,169-170,172
+  s_c4c919f578d611::t_3d800891c7d2bd 73,77-78
+  s_c4c919f578d611::t_a2fee7678399f2 61
+  s_c4c919f578d611::t_3ed4019ec57de2 168
+  s_c4c919f578d611::t_f04da63dfc7d92 171
+  s_c4c919f578d611::t_a48416c3b7a4fe 16,18,213-215,217-226,235
+examples/avionics_examples/cfd/plasma_blackout_corridor/main.rs
+  s_c4c919f578d611::t_33c6e446fc4e9f 88,101,110-119,122-136,142,157,171,187
+  s_c4c919f578d611::t_b7cab158a708dd 120-121
+  s_c4c919f578d611::t_d39e0818f224c4 193,203-204
+  s_c4c919f578d611::t_2baf6e23ead11e 52,74-75,84-85,148-149,154,167-168,183-184
+examples/avionics_examples/cfd/plasma_blackout_corridor/utils_print.rs
+  s_c4c919f578d611::t_03d0c63e9e7a5f 124-126
+  s_c4c919f578d611::t_817de37820bf49 62-63,65,70
+  s_c4c919f578d611::t_1b09700812c366 301-302,304-305,310,312,319-331
+  s_c4c919f578d611::t_778b56848f7ad7 275,279-282,284
+  s_c4c919f578d611::t_d7442a9c4747f2 143-144
+  s_c4c919f578d611::t_24f7de3945fa27 332-334
+  s_c4c919f578d611::t_2634fa26ed5a32 20
+examples/avionics_examples/cfd/plasma_blackout_weather/main.rs
+  s_c4c919f578d611::t_7628587145fd8d 39,72,95-96,102,164,168-169,179,183,187,191,194,210,229,243
+examples/avionics_examples/cfd/plasma_blackout_weather/model.rs
+  s_c4c919f578d611::t_e0d0dabd7d5f40 13,31,75,77,79,84,87,93,106,116,127-129
+examples/avionics_examples/src/blackout/mod.rs
+  s_c4c919f578d611::t_87ab25df3e38fb 17
+examples/avionics_examples/src/blackout/stages.rs
+  s_c4c919f578d611::t_209e7dd04a1cdd 17,38-39,42-47,66-70,74-75,91,94-97,99,125-126,153,175-176,185,187,189,195-197,200-201
+examples/avionics_examples/src/blackout/world.rs
+  s_c4c919f578d611::t_b40cce8d1ec85e 20,44-47,66,68,73-76,78,81-84,97-99,126-128,133-137,149,151,154,157-159,167-169,176-178,187,192-197,200-201,204,209
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "e67a3076540c0ea1d926e49c0ae82e35b44ae29c",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
