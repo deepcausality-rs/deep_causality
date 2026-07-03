@@ -1,6 +1,8 @@
 # Common CFD examples
 
 Date: 2026-07-03. Status: **planning note, nothing proposed or built.** Related:
+[dsl-review](dsl-review.md) (the five examples drafted in today's DSL, and the five additive
+syntax pieces S1 to S5 they justify; group 2/3 specs should reference it),
 [cfd-roadmap](../cfd-roadmap/cfd-roadmap.md),
 [qmc-presence-gate-followup](../cfd/qmc-presence-gate-followup.md).
 
@@ -67,6 +69,15 @@ only `write_csv` / `write_xy_csv` for output. What the everyday set needs from t
    described above. The field tier is also the payload convention the roadmap's ROM
    export (item 4) and self-describing archive (item 5) both need, so building it here
    back-fills their foundation.
+
+5. **Practitioner-grade errors (open; added 2026-07-03).** The seams above return good
+   errors for bad *files*; this item audits what a bad *usage* produces, across the group-1
+   surfaces and the DSL pieces the examples use (S1 to S5 of the [dsl-review](dsl-review.md)).
+   The standard: every error a practitioner can reach speaks engineering, names the file,
+   column, row, field, or gate involved, and says what to do next; no trait-bound or
+   generic-parameter language ever reaches an example user. Each everyday example's tests
+   include at least one wrong-usage case asserting the message quality, the way the group-1
+   loaders already assert theirs.
 
 This group also connects to the roadmap's self-describing-results item: the reader and
 writer are the file half of the config-as-data story, the snapshot package is the field

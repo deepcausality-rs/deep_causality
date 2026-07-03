@@ -243,6 +243,35 @@ as observables, which is item 2 on the ranked list. Sequencing therefore falls o
 item 2 first, then the SGS closure with its verification ladder as a dedicated OpenSpec change
 series.
 
+## Adoption preconditions (release-gating, added 2026-07-03)
+
+What must be true for a practitioner to use the toolbox, independent of language preference.
+The release criterion, stated once: **a reasonable toolbox that works for a clearly named
+category of problems, well documented, with an explicit line between what works today and
+what is aspirational on this roadmap.** The everyday-examples note defines today's category
+(the five desks); this section carries the adoption items not otherwise owned.
+
+- **One-command start.** The crates are `publish = false` today, so a practitioner must clone
+  the monorepo. Either publish the crate stack or ship a study-template repository whose
+  `cargo run --release` works on the first try. Small; unblocks the study-as-script tier.
+- **Dense-field export for visualization (VTK/Tecplot).** Practitioners judge a flow by
+  looking at it before they believe a gate; `dequantize` already produces the dense field, so
+  the export is a small writer in `deep_causality_file` beside the result table. Load-bearing
+  for trust; small.
+- **The config runner (the no-Rust tier).** A thin prebuilt binary that loads a serialized
+  config for a registered process and runs it: item 5's config seam plus the process-registry
+  and runner from the enterprise elaboration above. The largest adoption prize; moderate, and
+  already scoped by item 5.
+- **A stability promise.** Engineers re-run deliverables at audit time, sometimes years
+  later: versioned processes, the snapshot format's version field (shipped), and a stated
+  compatibility policy. Mostly writing, but it must be written before a release claims it.
+- **Practitioner-grade errors** are owned by the everyday-examples note (Group 1, item 5):
+  every reachable error speaks engineering and names the artifact involved.
+- **Documentation as a cookbook, plus a validation-and-verification page** (one table of all
+  deviations from reference results, per solver, on the project website): noted and owned by
+  the user, to be specified at a later stage; recorded here only so the release checklist is
+  complete in one place.
+
 ## Out of scope at any effort tier
 
 Named for honesty, so this note is not mistaken for a claim of coverage: million-core and
