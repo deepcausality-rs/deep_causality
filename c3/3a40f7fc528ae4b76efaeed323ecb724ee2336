@@ -1,0 +1,53 @@
+openspec/changes/add-cfd-study-dsl-and-examples/specs/duct-march/spec.md
+  s_c4c919f578d611::t_48fe21b59df4f9 1-38
+openspec/specs/typed-table-io/spec.md
+  s_c4c919f578d611::t_0e2d5d259217af 1-43
+openspec/specs/cfd-state-snapshot/spec.md
+  s_c4c919f578d611::t_0e2d5d259217af 1-76
+openspec/changes/add-cfd-study-dsl-and-examples/specs/flight-envelope-placard/spec.md
+  s_c4c919f578d611::t_744ccbc2c33f67 1-25
+openspec/changes/add-cfd-study-dsl-and-examples/specs/typed-table-io/spec.md
+  s_c4c919f578d611::t_744ccbc2c33f67 1-13
+openspec/changes/add-cfd-study-dsl-and-examples/specs/viv-resonance-margin/spec.md
+  s_c4c919f578d611::t_744ccbc2c33f67 1-20
+openspec/changes/add-cfd-study-dsl-and-examples/tasks.md
+  s_c4c919f578d611::t_9d7ea247faa086 1-62
+openspec/notes/cfd-examples/dsl-review.md
+  s_c4c919f578d611::t_d3270a83a646ba 16-19,26,64,84,101,136
+  s_c4c919f578d611::t_e77bf3d2a2a8c3 1-15,20-25,27-63,65-83,85-100,102-135,137-228
+openspec/changes/add-cfd-study-dsl-and-examples/proposal.md
+  s_c4c919f578d611::t_b4a77b5efb4cd8 1-77
+openspec/changes/add-cfd-study-dsl-and-examples/specs/cfd-study-dsl/spec.md
+  s_c4c919f578d611::t_193ba0529bfe45 1-48
+openspec/notes/cfd-roadmap/cfd-roadmap.md
+  s_c4c919f578d611::t_b3d055c41e8e82 246-274
+openspec/specs/sensor-trace-io/spec.md
+  s_c4c919f578d611::t_0e2d5d259217af 1-26
+openspec/changes/add-cfd-study-dsl-and-examples/specs/nozzle-operating-map/spec.md
+  s_c4c919f578d611::t_744ccbc2c33f67 1-26
+openspec/changes/add-cfd-study-dsl-and-examples/.openspec.yaml
+  s_c4c919f578d611::t_9c47aa42a30419 1-2
+openspec/changes/add-cfd-study-dsl-and-examples/design.md
+  s_c4c919f578d611::t_6bbe613909c0c2 1-112
+openspec/notes/cfd-examples/common-examples.md
+  s_c4c919f578d611::t_506b47c1e4450f 4-5
+  s_c4c919f578d611::t_d3270a83a646ba 73-81
+openspec/changes/archive/2026-07-03-add-cfd-file-io/.openspec.yaml
+  s_c4c919f578d611::t_45c8613ae07b62 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c33a40f7fc528ae4b76efaeed323ecb724ee2336",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
