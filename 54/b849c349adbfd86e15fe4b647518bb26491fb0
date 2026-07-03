@@ -1,0 +1,26 @@
+openspec/notes/cfd-roadmap/cfd-roadmap.md
+  s_c4c919f578d611::t_f2ca09c15b5304 1-9,36-37,43-66,68-72,91-119,126-138,161-166
+  s_c4c919f578d611::t_986e5673bbb57b 10-35,38-42
+  s_c4c919f578d611::t_21b483aac263bb 67,73-90
+  s_c4c919f578d611::t_659a09082ddd03 120-125
+  s_c4c919f578d611::t_10f3443980f9b2 140-160,167-171
+  s_c4c919f578d611::t_2dc33be1dacb7d 139
+openspec/notes/cfd-roadmap/CFD_MDAO_PRESENTATION.md
+  s_c4c919f578d611::t_79b78a53c24e49 1-201
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "54b849c349adbfd86e15fe4b647518bb26491fb0",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
