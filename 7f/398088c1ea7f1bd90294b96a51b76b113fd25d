@@ -1,0 +1,238 @@
+examples/avionics_examples/cfd/nozzle_operating_map/main.rs
+  s_c4c919f578d611::t_d45b27e6ac2914 50-56
+  s_c4c919f578d611::t_b240f9868e7aa8 9,19-21,30,61,66,68,71-74,76-77,101-102,106-110,113-118
+  s_c4c919f578d611::t_8670376d7e545b 13-17,28-29,33-34,36,41-44,64,69-70,75
+  s_c4c919f578d611::t_28deeaa99f70c0 1-8,10-12,18,22-27,31,35,37-40,45-49,57-60,62-63,65,67,78-100,103-105,111-112,119-122
+  s_c4c919f578d611::t_c08ad367681a3c 32
+examples/avionics_examples/cfd/nozzle_operating_map/back_pressures.csv
+  s_c4c919f578d611::t_ba05b5c2bb4142 1-8
+examples/avionics_examples/cfd/viv_resonance_margin/constants.rs
+  s_c4c919f578d611::t_5a38efbb216282 1-64,72-75
+  s_c4c919f578d611::t_8014307e843e83 65-71
+openspec/changes/add-cfd-study-dsl-and-examples/specs/cfd-study-dsl/spec.md
+  s_c4c919f578d611::t_c5150be7ec691d 37,39
+deep_causality_cfd/tests/types/flow/gates_tests.rs
+  s_c4c919f578d611::t_b582a593ba0609 1-32
+deep_causality_physics/tests/kernels/fluids/compressible_tests.rs
+  s_c4c919f578d611::t_0752997f8ad13c 238-340,345-364
+  s_c4c919f578d611::t_dafa1924abd1b1 8-11
+  s_c4c919f578d611::t_485342a2a09b8a 341-344
+examples/avionics_examples/cfd/viv_resonance_margin/output.txt
+  s_c4c919f578d611::t_8014307e843e83 4-20
+  s_c4c919f578d611::t_40ad4ea361c7b7 1,3
+  s_c4c919f578d611::t_7be015257e36bd 2,21
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_66144b068302ef 82-86
+  s_c4c919f578d611::t_9cd7c06c355d0e 80-81
+  s_c4c919f578d611::t_94ec129901e419 91-94
+examples/avionics_examples/cfd/nozzle_operating_map/model_config.rs
+  s_c4c919f578d611::t_8670376d7e545b 1-38
+deep_causality_cfd/tests/types/flow/mod.rs
+  s_c4c919f578d611::t_b582a593ba0609 38-39,63-64
+  s_c4c919f578d611::t_66144b068302ef 32-33
+deep_causality_cfd/src/types/flow_config/duct_config.rs
+  s_c4c919f578d611::t_d297bf8eca5d7a 120-139
+  s_c4c919f578d611::t_0f1fcf225f54d4 164-166,179,183,185-189
+  s_c4c919f578d611::t_2ebdb392c13b38 1-119,140-163,167-178,180-182,184,190-319
+deep_causality_cfd/tests/types/flow_config/mod.rs
+  s_c4c919f578d611::t_5ff5c80f26a496 11-12
+examples/avionics_examples/cfd/nozzle_operating_map/README.md
+  s_c4c919f578d611::t_7be015257e36bd 85-86
+  s_c4c919f578d611::t_fafbb3d031fb86 1-83,87-99
+  s_c4c919f578d611::t_8b0c8a6df052c8 84
+examples/avionics_examples/cfd/viv_resonance_margin/airspeeds.csv
+  s_c4c919f578d611::t_4597afcd5d300f 1-6
+examples/avionics_examples/cfd/viv_resonance_margin/utils_print.rs
+  s_c4c919f578d611::t_46295389f653bd 1-9,13-84,89-93
+  s_c4c919f578d611::t_d45b27e6ac2914 85-88
+  s_c4c919f578d611::t_91609af3a6c480 10-11
+  s_c4c919f578d611::t_67894b0b8d6a91 12
+examples/avionics_examples/cfd/flight_envelope_placard/placard_table.csv
+  s_c4c919f578d611::t_40c6d6a0efcf0c 1-18
+examples/avionics_examples/cfd/nozzle_operating_map/utils_print.rs
+  s_c4c919f578d611::t_d45b27e6ac2914 20,96-99,121-130,149-158
+  s_c4c919f578d611::t_91609af3a6c480 9
+  s_c4c919f578d611::t_8670376d7e545b 14
+  s_c4c919f578d611::t_4383b89c1d8973 1-8,10-13,16-19,21-95,100-120,131-148,159-167
+  s_c4c919f578d611::t_339566459106a0 15
+deep_causality_physics/src/kernels/fluids/compressible.rs
+  s_c4c919f578d611::t_f94e3fc65808ed 118-230
+examples/avionics_examples/Cargo.toml
+  s_c4c919f578d611::t_cbd749a67735ff 68
+  s_c4c919f578d611::t_ba05b5c2bb4142 49-52
+  s_c4c919f578d611::t_e1eeb4bd731e82 48,53-55
+  s_c4c919f578d611::t_087b2c1f2f68f5 44-47
+deep_causality_cfd/src/types/flow/gates.rs
+  s_c4c919f578d611::t_0f18844edc35cc 1-61
+deep_causality_physics/src/kernels/fluids/wrappers.rs
+  s_c4c919f578d611::t_fe7fe3253cbc38 810-853
+examples/avionics_examples/cfd/flight_envelope_placard/README.md
+  s_c4c919f578d611::t_b64afe3a253c47 16-18,90
+  s_c4c919f578d611::t_8b0c8a6df052c8 111-112
+  s_c4c919f578d611::t_9673a009072892 1-15,19-89,91-110,113-129
+examples/avionics_examples/cfd/flight_envelope_placard/model.rs
+  s_c4c919f578d611::t_ce125b5c2a058c 1-94
+examples/avionics_examples/cfd/nozzle_operating_map/constants.rs
+  s_c4c919f578d611::t_858e8636632dd9 1-53
+openspec/notes/cfd-examples/dsl-review.md
+  s_c4c919f578d611::t_cc04e554daadaf 3-6
+deep_causality_physics/tests/kernels/fluids/wrappers_tests.rs
+  s_c4c919f578d611::t_8a6938d9d5b708 9-10
+  s_c4c919f578d611::t_485342a2a09b8a 11,13-14
+  s_c4c919f578d611::t_01d0aaffc7fd25 988-1043
+examples/avionics_examples/cfd/nozzle_operating_map/output.txt
+  s_c4c919f578d611::t_7be015257e36bd 1
+  s_c4c919f578d611::t_6d6ba9b58bf638 2-16,18-25
+  s_c4c919f578d611::t_40ad4ea361c7b7 17
+examples/avionics_examples/cfd/flight_envelope_placard/mach_alt_matrix.csv
+  s_c4c919f578d611::t_2f055fa7393f95 1-18
+examples/avionics_examples/cfd/nozzle_operating_map/operating_map.csv
+  s_c4c919f578d611::t_ba05b5c2bb4142 1-8
+deep_causality_cfd/tests/types/flow/duct_march_tests.rs
+  s_c4c919f578d611::t_d45b27e6ac2914 27,41-45,50-54
+  s_c4c919f578d611::t_79fd585fa56817 1-26,28-40,46-49,55-95,98,104,107-138,140-155,159-160,163-179
+  s_c4c919f578d611::t_1a04c2350ebfc0 96-97,99-103,105-106,139,156-158,161-162
+deep_causality_cfd/src/types/flow/march_run.rs
+  s_c4c919f578d611::t_a9a13bd55a018e 56-70
+examples/avionics_examples/cfd/flight_envelope_placard/mach_alt_matrix_exceeds.csv
+  s_c4c919f578d611::t_b968e5e8c93058 1-19
+examples/avionics_examples/cfd/viv_resonance_margin/README.md
+  s_c4c919f578d611::t_fff6cb21563346 1-72,77-87
+  s_c4c919f578d611::t_d0c20e95d3a42d 76
+  s_c4c919f578d611::t_7be015257e36bd 74-75
+  s_c4c919f578d611::t_8b0c8a6df052c8 73
+deep_causality_cfd/src/types/flow/cfd_flow.rs
+  s_c4c919f578d611::t_35f12e2511323e 52-62
+examples/avionics_examples/cfd/nozzle_operating_map/back_pressures_bad.csv
+  s_c4c919f578d611::t_ba05b5c2bb4142 1-5
+examples/avionics_examples/cfd/flight_envelope_placard/output.txt
+  s_c4c919f578d611::t_40ad4ea361c7b7 1
+  s_c4c919f578d611::t_7be015257e36bd 2,35
+  s_c4c919f578d611::t_b5492a233c94d9 3-34
+deep_causality_cfd/tests/types/flow/march_run_tests.rs
+  s_c4c919f578d611::t_b582a593ba0609 223-240
+examples/avionics_examples/cfd/viv_resonance_margin/viv_resonance_margin.csv
+  s_c4c919f578d611::t_31959218e88a93 1-6
+openspec/notes/cfd-examples/common-examples.md
+  s_c4c919f578d611::t_cc04e554daadaf 89-95
+openspec/changes/add-cfd-study-dsl-and-examples/tasks.md
+  s_c4c919f578d611::t_cc04e554daadaf 91,95-98,101
+  s_c4c919f578d611::t_d0c20e95d3a42d 56,61-66,82
+  s_c4c919f578d611::t_2460058a16b58f 24,28-31,34-37,41-44,47-52
+  s_c4c919f578d611::t_1b3a95741f4682 67,70-74
+  s_c4c919f578d611::t_a9e767a3256158 75,78-81
+  s_c4c919f578d611::t_c5150be7ec691d 10-11
+  s_c4c919f578d611::t_2defaa348c231c 3,7,9,12
+  s_c4c919f578d611::t_8b0c8a6df052c8 83-87
+examples/avionics_examples/cfd/nozzle_operating_map/model.rs
+  s_c4c919f578d611::t_8670376d7e545b 1-178
+openspec/changes/add-cfd-study-dsl-and-examples/design.md
+  s_c4c919f578d611::t_c5150be7ec691d 54-60
+examples/avionics_examples/cfd/flight_envelope_placard/constants.rs
+  s_c4c919f578d611::t_60a2c2d4c82c54 1-70
+deep_causality_cfd/tests/types/flow/sweep_tests.rs
+  s_c4c919f578d611::t_b582a593ba0609 1-55
+  s_c4c919f578d611::t_a8397559448017 56-58
+  s_c4c919f578d611::t_7efd704be71217 59
+deep_causality_file/tests/types/table_types_tests.rs
+  s_c4c919f578d611::t_b582a593ba0609 31-44
+deep_causality_file/src/types/table_types.rs
+  s_c4c919f578d611::t_f6b45e7f458a6b 60-74
+deep_causality_cfd/tests/types/flow_config/duct_config_tests.rs
+  s_c4c919f578d611::t_715ffa3a2c6b04 1-100,102-145
+  s_c4c919f578d611::t_66144b068302ef 101
+examples/avionics_examples/cfd/viv_resonance_margin/main.rs
+  s_c4c919f578d611::t_6d94edb6ac456d 1-28,32,36-38,44-48,50-56,58-61,65-90,92-95,102-105
+  s_c4c919f578d611::t_c2e8975875e464 33
+  s_c4c919f578d611::t_d45b27e6ac2914 96-101
+  s_c4c919f578d611::t_46295389f653bd 57,64
+  s_c4c919f578d611::t_91609af3a6c480 31,34-35,62-63
+  s_c4c919f578d611::t_987eba31d15046 30
+  s_c4c919f578d611::t_3859d5fb23a5f8 29,39-43,49,91
+examples/avionics_examples/cfd/viv_resonance_margin/model.rs
+  s_c4c919f578d611::t_987eba31d15046 6-69
+  s_c4c919f578d611::t_1186ac5a6fe7de 1-5
+deep_causality_cfd/src/types/flow/mod.rs
+  s_c4c919f578d611::t_65a4e180cca436 21
+  s_c4c919f578d611::t_0f18844edc35cc 24,57,66
+  s_c4c919f578d611::t_ccc5ef8198d995 54
+  s_b5828d0ea79ac8::t_6992d710c27dee 34
+examples/avionics_examples/cfd/flight_envelope_placard/main.rs
+  s_c4c919f578d611::t_91609af3a6c480 93-94
+  s_c4c919f578d611::t_822c7ef8cb8ab3 1-29,33,35,37-39,45-49,136
+  s_c4c919f578d611::t_c2e8975875e464 36
+  s_c4c919f578d611::t_ce125b5c2a058c 30-31,34,56,96,122
+  s_c4c919f578d611::t_b64afe3a253c47 32,50-55,57-92,95,97-121,123-135
+  s_c4c919f578d611::t_46a684c04a722d 40-44
+deep_causality_cfd/src/types/flow/sweep.rs
+  s_c4c919f578d611::t_0f18844edc35cc 1-29
+deep_causality_cfd/src/types/flow_config/mod.rs
+  s_c4c919f578d611::t_2e090d60c93888 33
+  s_c4c919f578d611::t_eb3e9de99f7a54 16
+deep_causality_cfd/src/types/flow/duct_march_run.rs
+  s_c4c919f578d611::t_86e89681130cb2 1-175,180-183,185-187,191-204,206-231,233-235,237-279,284-340,342-343,345-350,355,357-377,385-401
+  s_c4c919f578d611::t_2bcd272356e2d8 232
+  s_c4c919f578d611::t_66144b068302ef 236,378-384
+  s_c4c919f578d611::t_1399d27f4ab548 280-283
+  s_c4c919f578d611::t_b37b1b661c494c 205
+  s_c4c919f578d611::t_7ff61804ed89d1 341,344,351-354,356
+  s_c4c919f578d611::t_29f5cca15633d3 176-179,184,188-190
+examples/avionics_examples/cfd/viv_resonance_margin/model_config.rs
+  s_c4c919f578d611::t_987eba31d15046 1-77
+examples/avionics_examples/cfd/flight_envelope_placard/utils_print.rs
+  s_c4c919f578d611::t_b64afe3a253c47 1-9,12-101
+  s_c4c919f578d611::t_d45b27e6ac2914 10
+  s_c4c919f578d611::t_b65e6f20767362 11
+examples/avionics_examples/cfd/flight_envelope_placard/model_config.rs
+  s_c4c919f578d611::t_ce125b5c2a058c 1-36
+Cargo.lock
+  s_263664703a01fd::t_a07203728df4c3 87
+examples/avionics_examples/cfd/plasma_blackout_corridor/model.rs
+  s_c4c919f578d611::t_8d001962458a69 15-16
+examples/avionics_examples/cfd/plasma_blackout_corridor/utils_print.rs
+  s_c4c919f578d611::t_ded072d42a1d35 17,20
+examples/avionics_examples/cfd/plasma_blackout_weather/model.rs
+  s_c4c919f578d611::t_d05600006c39b4 12-13
+examples/avionics_examples/src/lib.rs
+  s_c4c919f578d611::t_c7ad5112ba70e0 9
+.bazelversion
+  s_c4c919f578d611::t_29b8afa1326f25 1
+examples/avionics_examples/cfd/plasma_blackout_corridor/main.rs
+  s_c4c919f578d611::t_648d0dff93d67b 52,58-62
+examples/avionics_examples/cfd/plasma_blackout_weather/main.rs
+  s_c4c919f578d611::t_534c11a2377d54 39,46-50,58,166
+examples/avionics_examples/src/shared/mod.rs
+  s_c4c919f578d611::t_bc65cd6e3204d0 20,23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "7f398088c1ea7f1bd90294b96a51b76b113fd25d",
+  "prompts": {},
+  "sessions": {
+    "s_263664703a01fd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-ac9030743f9296656",
+        "model": "unknown"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_b5828d0ea79ac8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a969426663b1e12f3",
+        "model": "unknown"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
