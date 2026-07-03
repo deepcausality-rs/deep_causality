@@ -16,8 +16,12 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 >   in the post-shock bath, so `T_e(0) = T_ve`, not the frozen-cold free-stream) is recorded; the code is not
 >   kept. A *faithful* 3-T would need e–ion Coulomb heating + the ionization-energy sink, not less.
 >
-> Lever 3 (finite-rate ionization network) remains **[open]**, as does the trajectory/timing half of the
-> bundle ([Resolution 1](gap-three-resolution-1-perturbed-conformal-trajectory.md), preliminary).
+> Lever 3 (finite-rate ionization network) is **proposed and design-reviewed, not yet built**: the change
+> `openspec/changes/add-finite-rate-ionization-network/` carries the full specification, amended by the ARIZ
+> re-evaluation in [Resolution 3](gap-three-resolution-3-chemistry-fidelity.md) (lagged atom pool from day
+> one; detailed balance pinned in the thermal-equilibrium limit; channel-by-channel measurement). The
+> trajectory/timing half of the bundle remains open
+> ([Resolution 1](gap-three-resolution-1-perturbed-conformal-trajectory.md), preliminary).
 
 **Scheduling.** This is a precision upgrade for the Gap-2 ionization physics, **deferred and lumped with
 [Gap 3 (the trajectory axis)](gap-three-resolution-1-perturbed-conformal-trajectory.md)**, to be
