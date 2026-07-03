@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.11](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.13.10...deep_causality-v0.13.11) - 2026-07-03
+
+### Added
+
+- *(deep_causality)* add opt-in freeze_dag() to enforce DAG structure
+- *(examples)* add example_ml_rca
+
+### Other
+
+- Restructured the avionics example folder.
+- *(deep_causality)* close coverage gaps in core crate (tests only)
+- raise test coverage across 8 crates.
+- Generated new SBOM for all crates.
+- *(papers)* Reorganized publication by moving each paper into the crate where it is actually implemented.
+
 ## [0.13.10](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.13.9...deep_causality-v0.13.10) - 2026-06-12
 
 ### Other
