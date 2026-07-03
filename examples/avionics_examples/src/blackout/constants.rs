@@ -16,11 +16,18 @@
 //!   enforced on the inflow strip, and the layer behind it is *evolved*. One coupled step marches
 //!   one solver pseudo-time step toward the quasi-steady layer at that flight instant.
 //! * Time is compressed: each coupled step represents [`DT_FLIGHT`] seconds of flight.
-//! * Ionization runs at the Park two-temperature controller `Tₐ = √(T_tr·T_ve)` with the
-//!   Millikan-White clock on the **evolved per-cell pressure** and the Saha surrogate on the
-//!   **evolved per-cell density**. The sheath is renewed each step; without the explicit mode the
-//!   carried fraction accumulates to equilibrium (measured: 268x over the flight anchor, no
-//!   blackout exit).
+//! * Ionization is the **uncalibrated finite-rate network** (RP-1232 Table II pairs, no Saha
+//!   target): associative ionization `N + O -> NO⁺ + e⁻` with its dissociative-recombination
+//!   reverse (the physical blackout-exit mechanism), thresholded electron impact, and a lagged
+//!   atom pool whose N clock carries the Zeldovich exchange. Each rate runs at its controlling
+//!   temperature — ionization at the calibrated geometric mean `√(T_tr·T_ve)`, dissociation at
+//!   Park's published `T_tr^0.7·T_ve^0.3`, electron channels at `T_e = T_ve` — with the
+//!   Millikan-White vibrational clock on the **evolved per-cell pressure** and the network on
+//!   the **evolved per-cell density**. The sheath is renewed each step: the stagnation-line A/B
+//!   under recombination measured renewal at +0.48 and carried at -0.33 decades of the flight
+//!   anchor and kept renewal, whose fixed-point clock is the network's true Riccati timescale
+//!   (the old forward-only surrogate *needed* renewal against runaway, measured 268x; the
+//!   network self-limits either way).
 //! * The trajectory is point-mass 3-DOF: drag along the velocity, lift `L = (L/D)·D` rotated by
 //!   the clamped bank command (one-step actuation lag). 6-DOF is out of scope (no flight anchor).
 //! * The descent is steep and compressed, so the peak deceleration is ballistic-probe class; the
@@ -112,6 +119,14 @@ pub const THETA_VIB: f64 = 3393.0;
 /// Sheath residence time `t_res = standoff/u₂` at the peak station, s. Held constant over the
 /// descent (the standoff-to-speed ratio varies less than the chemistry it clocks).
 pub const RESIDENCE_TIME_S: f64 = 2.0e-5;
+/// The sheath exposure at the transit-age profile's observable peak, s. On the stagnation line
+/// the flow decelerates linearly to zero at the body, so a parcel's age at fractional depth ξ is
+/// `age(ξ) = t_res·ln(1/(1−ξ))` (geometry and the Rankine-Hugoniot state only, no free
+/// parameter), and the `qtt_ramc_stagline` gate reads the oldest sampled parcel (ξ = 64/65):
+/// the reflectometer-visible near-body gas has aged `ln(65) ≈ 4.174` residence times. Both
+/// sheath clocks (the vibrational bath and the network renewal) run at this exposure, mirroring
+/// the stagnation-line measurement that pinned the corridor's anchor band.
+pub const SHEATH_PEAK_AGE_S: f64 = RESIDENCE_TIME_S * 4.174;
 /// Freestream vibrational temperature the bath relaxes up from, K.
 pub const T_VE_INITIAL: f64 = 250.0;
 /// Fallback Millikan-White pressure (atm) when the evolved field is absent (first-step guard).

@@ -18,6 +18,7 @@ mod cfd_flow;
 mod compressible_march_run;
 mod corridor;
 mod coupling;
+mod finite_rate_ionization;
 mod frequency;
 #[cfg(feature = "std")]
 mod io;
@@ -46,6 +47,7 @@ pub use coupling::{
     AeroBlackoutStub, AeroForceCoupling, CoupledField, Coupling, PhysicsStage, StepContext,
     ThermalRelax, ViscosityArrhenius,
 };
+pub use finite_rate_ionization::FiniteRateIonizationStage;
 pub use frequency::{dominant_frequency, strouhal_number};
 #[cfg(feature = "std")]
 pub use io::write_xy_csv;

@@ -4,9 +4,10 @@
  */
 
 //! The weather-dispersion knobs. Everything the study shares with the corridor (the carrier,
-//! the anchors, the baseline atmosphere, the flight physics, the Park closure, the navigation
-//! budget, the envelope) lives in `avionics_examples::blackout::constants`, with its model
-//! labels; this file adds only what the dispersion table itself varies and gates.
+//! the anchors, the baseline atmosphere, the flight physics, the finite-rate ionization
+//! network, the navigation budget, the envelope) lives in
+//! `avionics_examples::blackout::constants`, with its model labels; this file adds only what
+//! the dispersion table itself varies and gates.
 //!
 //! **Model labels:**
 //!
@@ -63,7 +64,8 @@ pub const DRIFT_SIGNIFICANCE_SIGMA: f64 = 2.0;
 
 /// Weather must move the blackout window: max onset minus min onset across the table, s. The
 /// onset carries the weather signal (denser air ionizes earlier); the dwell is more robust
-/// (measured spread 1.7 s), so the window gate pins the onset.
+/// (measured spread 3.1 s vs the onset's 4.2 s under the finite-rate network), so the window
+/// gate pins the onset.
 pub const MIN_ONSET_SPREAD_S: f64 = 2.0;
 /// The polar-winter blackout drift must exceed the standard day's by at least this factor
 /// (the INS-does-not-behave-as-assumed gate).

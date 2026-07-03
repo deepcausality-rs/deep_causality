@@ -20,9 +20,11 @@
 //! * **[2] regime**: `RegimeClassify` turns the freestream Knudsen number into the governing
 //!   model and the evolved electron density into the GNSS-denial flag. Blackout onset and exit
 //!   are *events the run finds*, not station switches.
-//! * **[3] reacting plasma**: the Park two-temperature stages on the evolved state — the
-//!   Millikan-White clock on the evolved per-cell pressure, ionization at the controller `Tₐ` on
-//!   the evolved per-cell density, sheath renewal at one residence time.
+//! * **[3] reacting plasma**: the uncalibrated finite-rate ionization network on the evolved
+//!   state — the Millikan-White clock on the evolved per-cell pressure, the three-channel
+//!   RP-1232 network (associative ionization + dissociative recombination, electron impact,
+//!   lagged atom pool with the Zeldovich exchange) on the evolved per-cell density, each rate at
+//!   its controlling temperature, sheath renewal at the transit-age profile's peak.
 //! * **[4] navigation**: `TrajectoryNav` runs the KS-regularized orbit predict with the ④
 //!   aero-force channel as the kick; 17-state ESKF corrections are gated by the *real* blackout
 //!   flag.

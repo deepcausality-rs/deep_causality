@@ -29,6 +29,8 @@ pub mod compressible_march_run_tests;
 pub mod corridor_tests;
 #[cfg(test)]
 pub mod coupling_tests;
+#[cfg(not(miri))]
+mod finite_rate_ionization_tests;
 #[cfg(test)]
 pub mod frequency_tests;
 // IO operations are unsupported under MIRI.

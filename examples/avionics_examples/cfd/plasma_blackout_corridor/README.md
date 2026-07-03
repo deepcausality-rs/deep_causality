@@ -46,29 +46,33 @@ The vehicle starts at 90 km, Mach 26, on a steep compressed trajectory. Four leg
 study follow, every boundary an *event the run finds*, not a scripted station switch:
 
 1. **Descent to blackout onset.** The evolved sheath's electron density climbs as the air
-   thickens; at 71.6 km it crosses the GPS L1 cutoff and the classifier flips the link to
-   DENIED. The march pauses on that flow-resolved event.
+   thickens; at 74.7 km it crosses the GPS L1 cutoff and the classifier flips the link to
+   DENIED. The march pauses on that flow-resolved event. The onset altitude is a pure
+   prediction: no onset constant exists anywhere in the corridor.
 2. **The counterfactual study.** The paused state forks once per candidate bank command (a
    six-candidate sweep: 0, 5, 10, 15, 20, and 40 degrees), in O(1) through copy-on-write, and
    the scoped fan-out flies all six concurrently for one branch of wall-clock. Each branch flies
    the *same* onset state in its own alternated world and is scored by its trajectory-derived
-   miss to a shared aim point. The miss landscape descends 45, 35, 25, 16, down to 9 m at
-   20 degrees, then rises again: the 40-degree command exceeds the envelope's 0.5 rad cap, the
-   gate visibly bounds it every step, and the clamped branch overshoots to 17 m. The sweep finds
+   miss to a shared aim point. The miss landscape descends 20.0, 12.8, 5.8, down to 3.1 m at
+   15 degrees, then rises again: the 40-degree command exceeds the envelope's 0.5 rad cap, the
+   gate visibly bounds it every step, and the clamped branch overshoots to 22 m. The sweep finds
    the optimum; commanding more bank than the envelope allows buys a worse trajectory.
 3. **The committed dwell.** The winning world flies through the peak passage. At the 61 km
-   RAM-C II station the evolved peak electron density lands at 1.4e19 per cubic meter against
-   the 1e19 flight anchor, inside the 5x gate band. The INS dead-reckons; drift grows from
-   0.03 m to about 0.9 m.
+   RAM-C II station the evolved peak electron density lands at 3.4e19 per cubic meter against
+   the 1e19 flight anchor, inside the earned 5x band, with **no calibration target anywhere in
+   the chemistry**. The INS dead-reckons; drift grows from 0.35 m to about 2.5 m.
 4. **Flow-resolved exit and reacquisition.** Drag decelerates the vehicle below the ionization
-   threshold; near 46 km the renewed sheath stops ionizing past the cutoff and the link returns.
-   The first folded fixes collapse the drift back to 0.2 m.
+   threshold; at 46.9 km the renewed sheath stops ionizing past the cutoff and the link returns.
+   The exit is now carried by the physical mechanism: dissociative recombination
+   `NO+ + e- -> N + O` drains the sheath the forward-only surrogate could never empty. The
+   first folded fixes collapse the drift back to 0.28 m.
 
-Eleven coupled validation gates then check the whole story: window ordering, the anchor band,
-drift and reacquisition, regime change, the multiphysics chain, real steering divergence,
-guidance precision from the sweep (the committed branch must beat the ballistic miss at least
-3x; it lands 5x better), tensor compression under the bond cap, bounded solver rebuilds, and the
-wall-clock budget.
+Twelve coupled validation gates then check the whole story: window ordering, the anchor band,
+the window altitudes (exit inside its pinned band, reported against the RAM-C II 25-30 km
+flight window), drift and reacquisition, regime change, the multiphysics chain, real steering
+divergence, guidance precision from the sweep (the committed branch must beat the ballistic
+miss at least 3x; it lands 6.4x better), tensor compression under the bond cap, bounded solver
+rebuilds, and the wall-clock budget.
 
 ## The Causal Chain
 
@@ -78,9 +82,11 @@ wall-clock budget.
                 the exact Rankine-Hugoniot jump is enforced on the inflow strip
 [2] regime      RegimeClassify: freestream Knudsen number -> governing model;
                 evolved n_e -> plasma frequency -> GNSS available / DENIED
-[3] plasma      Park two-temperature stages on the EVOLVED state: Millikan-White clock on the
-                evolved per-cell pressure, ionization at the controller T_a on the evolved
-                per-cell density, sheath renewal at one residence time
+[3] plasma      finite-rate ionization network on the EVOLVED state: Millikan-White clock on
+                the evolved per-cell pressure, the three-channel RP-1232 network (associative
+                ionization + dissociative recombination, electron impact, lagged atom pool with
+                the Zeldovich exchange) on the evolved per-cell density, each rate at its
+                controlling temperature, sheath renewal at the transit-age profile's peak
 [4] navigation  TrajectoryNav: KS-regularized orbit predict with the aero-force channel as the
                 kick; 17-state error-state Kalman filter; fixes gated by the REAL blackout flag;
                 relativistic clock offset carried through the outage
@@ -106,15 +112,24 @@ the **shock-fitted inflow strip**: the exact Rankine-Hugoniot state is the *boun
 marched layer, so the shock never has to be captured at all, and the final evolved state
 re-quantizes at peak bond 16 against a cap of 16.
 
-**Evolved-state Park two-temperature chemistry.** Ionization at hypersonic
-conditions is rate-limited by the lagging vibrational-electron temperature, not the hot
-translational one. The stages compute the Park controller `T_a = sqrt(T_tr * T_ve)` with the
-Millikan-White relaxation clock running on the **evolved per-cell pressure**, and the Saha
-surrogate plus ionization rate on the **evolved per-cell density**. Nothing is reconstructed
-from station constants; the reconstruction stages of the first corridor build are gone. The
-sheath-renewal closure (fresh parcels, one residence time of chemistry) was kept after a
-measured A/B: without it the carried ionization fraction accumulates to equilibrium, the peak
-overshoots the flight anchor 268x, and the blackout never exits.
+**Uncalibrated finite-rate ionization chemistry.** The sheath chemistry is the three-channel
+RP-1232 (Gupta et al., NASA 1990) network with **no calibration target anywhere**: associative
+ionization `N + O -> NO+ + e-` with its dissociative-recombination reverse (the physical
+blackout-exit mechanism), thresholded electron-impact ionization, and a lagged neutral atom
+pool whose nitrogen clock carries the low-activation Zeldovich exchange `N2 + O -> NO + N`.
+Every rate runs at its controlling temperature: ionization at the geometric mean
+`sqrt(T_tr * T_ve)`, dissociation at Park's published `T_tr^0.7 * T_ve^0.3`, electron channels
+at `T_e = T_ve`, with the Millikan-White relaxation clock on the **evolved per-cell pressure**
+and the network on the **evolved per-cell density**. This is the calibration-to-validation
+story: the earlier Park-2T controller was *calibrated* to the RAM-C II anchor (it lands ~1.1x);
+the network *predicts* it from cited rate pairs and geometry alone and lands 3.0x on the
+stagnation line, inside the band production codes (DPLR, LAURA, US3D) achieve on the same peak.
+The sheath exposure is the transit-age profile's observable peak (`age(xi) =
+t_res * ln(1/(1-xi))` from the linear stagnation-line deceleration; the reflectometer-visible
+near-body gas has aged ~4.2 residence times), and sheath renewal was kept after a second
+measured A/B: under recombination the carried mode self-limits instead of running away (the
+forward-only surrogate overshot 268x without renewal), but the renewal arm's fixed-point clock
+is the network's true Riccati timescale, so it stays the flown closure.
 
 **Two-way flow-navigation coupling.** Navigation feeds flow: the truth vehicle's position and
 speed select the freestream from a US-1976-shaped atmosphere table pinned to the RAM-C 61 km
@@ -148,25 +163,30 @@ it is the actuation. An unrecoverable envelope breach short-circuits the step.
 ## Validation Anchors
 
 - **RAM-C II (NASA Langley, 1970)**: the canonical ionized-reentry electron-density dataset.
-  The gate holds a 5x band around the 1e19 peak at the 61 km passage; this run lands at 1.4e19
-  on the evolved state.
-- **Park's two-temperature model**: the standard thermochemical-nonequilibrium reference for the
-  `T_tr` / `T_ve` split and the rate-controlling temperature.
-- **Millikan-White vibrational relaxation** and the **Saha equation** behind the ionization
-  surrogate; **Sutton-Graves** for stagnation-point heating.
+  The gate holds the earned 5x (±0.7 decade) band around the 1e19 peak at the 61 km passage;
+  this run lands at 3.4e19 on the evolved state with no calibration target. The exit altitude
+  (46.9 km) is gated in its own pinned band and reported against the flight's 25-30 km recovery
+  window; the offset is the probe's deliberately light ballistic bundle, not chemistry.
+- **Gupta-Yos-Thompson-Lee, NASA RP-1232 (1990)**: the Table II rate pairs behind every network
+  channel (forward and backward tabulated together, detailed balance by construction).
+- **Park's two-temperature model**: the `T_tr` / `T_ve` split and the controlling-temperature
+  closures, including the published `q = 0.7` dissociation exponent.
+- **Millikan-White vibrational relaxation** for the lagging bath; **Sutton-Graves** for
+  stagnation-point heating.
 - **US Standard Atmosphere 1976** shape for the descent table, pinned to the RAM-C freestream at
   61 km.
 
 ## Precision Is a Parameter
 
 Because every derived number is computed in `FloatType`, the alias is a one-line probe of the
-error budget. Three runs, same corridor:
+error budget. Three runs, same corridor (the precision study was recorded on the surrogate-era
+build; the network keeps the same SI-unit exponent ranges that set its conclusion):
 
 | Alias | Outcome |
 |---|---|
-| `f64` | All ten gates pass in about 35 s. The default. |
+| `f64` | All gates pass in about 35 s. The default. |
 | `Float106` (106-bit) | Every gate and every discrete event step identical; continuous witnesses agree to 15-16 significant digits; about 11x the wall-clock. |
-| `f32` | Crashes at step 1: `h^2` in the Saha kernel (4.4e-67) underflows the f32 exponent range, and the position ulp at Earth radius (0.5 m) would swallow the sub-meter navigation story regardless. |
+| `f32` | Crashes at step 1: `h^2` in the then-flown Saha kernel (4.4e-67) underflows the f32 exponent range, and the position ulp at Earth radius (0.5 m) would swallow the sub-meter navigation story regardless. |
 
 The conclusion is recorded in `constants.rs`: this corridor's error budget is set by the model
 closures and the grid, not by floating-point round-off. `f64` is load-bearing at the bottom
@@ -175,13 +195,13 @@ closures and the grid, not by floating-point round-off. `f64` is load-bearing at
 ##  Limitations
 
 Every simplification is defined in [`constants.rs`](constants.rs).
-The largest ones: the chemistry is the calibrated Park-2T surrogate, not finite-rate CFD
-chemistry; time is compressed (each coupled step represents 0.1 s of flight, and the layer is
-quasi-steady per instant); the marched layer is 2-D with the 3-D fitted marcher reserved for
-stagnation-line validation (a timing study showed it 3.6x over the minutes budget); the
-trajectory is point-mass 3-DOF with no 6-DOF attitude dynamics (no flight-data anchor exists to
-validate them); and the carried wake fraction has no dissociative-recombination channel, which
-matters only for a wake-mounted-antenna scenario this corridor does not model.
+The largest ones: the chemistry is the finite-rate three-channel network as a single-point
+sheath closure (rates from RP-1232 Table II, valid to ~8 km/s; `T_e = T_ve` lumped; NO treated
+as transient; no spatially resolved reacting layer); time is compressed (each coupled step
+represents 0.1 s of flight, and the layer is quasi-steady per instant); the marched layer is
+2-D with the 3-D fitted marcher reserved for stagnation-line validation (a timing study showed
+it 3.6x over the minutes budget); and the trajectory is point-mass 3-DOF with no 6-DOF attitude
+dynamics (no flight-data anchor exists to validate them).
 
 ## Where Things Live
 
@@ -190,7 +210,7 @@ matters only for a wake-mounted-antenna scenario this corridor does not model.
 | [`main.rs`](main.rs) | The descent: four legs, the branch study, provenance, the gates |
 | [`model.rs`](model.rs) | The descent worlds, the coupling stack, example-local stages, branch scoring |
 | [`constants.rs`](constants.rs) | The corridor's own knobs: the horizon, the bank sweep, the gate thresholds |
-| [`utils_print.rs`](utils_print.rs) | Console rendering and the eleven validation gates |
+| [`utils_print.rs`](utils_print.rs) | Console rendering and the twelve validation gates |
 
 The physics constants, the numeric helpers, the example-local stages, and the coupling stack are
 shared with the [weather-dispersion example](../plasma_blackout_weather/README.md) through the

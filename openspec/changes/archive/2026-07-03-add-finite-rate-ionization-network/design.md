@@ -72,9 +72,16 @@ Partial equilibrium remains as the limit the lagged pool relaxes toward, and as 
 behavior wherever the dissociation clock beats the residence clock. Zeldovich exchange stays
 out unless the stagnation-line comparison demands it.
 
-**D4 — Detailed balance by construction, from one data source.** All forward rates and all
-equilibrium constants come from Park (1990); backward rates are `k_f / K_eq` inside the kernels,
-never separate fits. This makes equilibrium recovery a mathematical identity rather than a tuned
+**D4 — Detailed balance by construction, from one data source.** All rates come from the
+crate's verified primary source, Gupta et al. NASA RP-1232 (1990) Table II (the PDF is in
+`papers/`; the shipped associative-ionization constants are already its reaction 7). Table II
+tabulates the **backward rates paired with the forwards** by the source itself (its eq. 5a,
+`k_b = k_f / K_eq`), and states the pairs are valid for flight velocities up to about 8 km/s,
+which is this corridor's regime; the equilibrium constant used by the tests is therefore
+`K_eq = k_f / k_b` from the same table row. (Implementation note, verified from the source
+pages: the alternative Table III `K_eq` curve fits are number-density dependent and locked in
+scanned pages; the paired Table II rates are the source's own recommendation in this velocity
+range.) This makes equilibrium recovery a mathematical identity rather than a tuned
 coincidence, and it is the property the per-reaction unit tests pin (approach equilibrium from
 above and below, land on the same fixed point). One precision the two-temperature rating (D2)
 forces: the identity closes only where all temperatures coincide, so the detailed-balance tests
@@ -112,6 +119,21 @@ network and no Saha target; only after that number is pinned do the flagship and
 examples re-pin (anchor band toward 3x, exit altitude gated against the flight's 25 to 30 km
 window, onset recorded as a prediction). Pinning order matters: the corridor's gates must
 inherit a measured stagnation-line result, not the other way around.
+
+> **D3/D7 measured outcome (2026-07-02).** The first uncalibrated measurement landed 4.26
+> decades *low* with unambiguous attribution: the single-parcel pool age (`t_res = standoff/u2`
+> with u2 constant) starved channel 1 (x_N = 6.2e-5), while a hand-check showed the rate pairs
+> reproduce the anchor at realistic dissociation. The second ARIZ pass
+> ([Resolution 3, second pass](../../notes/plasma-blackout/gap-3/gap-three-resolution-3-chemistry-fidelity.md))
+> resolved it by separation in space, with no free parameter: (1) the **stagnation-line
+> transit-age profile** `age(xi) = t_res * ln(1/(1-xi))` from the linear deceleration to the
+> body, gated at the profile peak (what the reflectometers measured); (2) **Zeldovich exchange**
+> (`N2 + O -> NO + N`, Table II reaction 6) in the N-pool clock; (3) dissociation rated at
+> **Park's classic q = 0.7 controlling temperature** (the published Park-lineage exponent; the
+> ionization controller keeps the calibrated geometric mean). Measured result: channel 1 + pool
+> 2.60e19 (+0.41 dec), full network **2.99e19 (+0.48 dec, 3.0x)** against the 1e19 anchor,
+> inside the pinned ±0.7-decade band and the production-code 2x-3x context. Electron impact
+> confirmed as a refinement (+15 percent), not the driver.
 
 ## Risks / Trade-offs
 

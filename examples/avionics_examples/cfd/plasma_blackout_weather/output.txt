@@ -1,5 +1,6 @@
-cargo run --release -p avionics_examples --example plasma_blackout_weather
-
+   Compiling avionics_examples v0.1.0 (/Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples)
+    Finished `release` profile [optimized] target(s) in 4.24s
+     Running `target/release/examples/plasma_blackout_weather`
 === Plasma-blackout weather-dispersion table: six counterfactual atmospheres ===
 
 Baseline: the corridor's validated descent | 850 coupled steps per world, 85 s of flight each
@@ -7,22 +8,21 @@ IMU thermal model: bias departure 1 + 0.010/K away from the calibration point; f
 Monte Carlo: 8 deterministic receiver-noise draws per condition (48 descents total)
 
   world          dT K   rho    IMU dep  onset s  exit s  dwell s   peak n_e     peak q      drift(dark) m     terminal m
-  standard_day      0   1.00     1.00     14.3    69.8     55.6    5.128e21     4.775e6    40.79 +- 2.06   0.138 (max 0.201)
-  hot_day          20   0.90     1.20     14.8    70.1     55.4    5.063e21     4.773e6    47.96 +- 2.44   0.143 (max 0.216)
-  cold_day        -25   1.10     1.25     13.8    69.7     56.0    5.117e21     4.870e6    51.95 +- 2.75   0.146 (max 0.211)
-  polar_winter    -40   1.20     1.40     13.4    69.5     56.2    5.248e21     4.956e6    57.50 +- 1.50   0.141 (max 0.199)
-  thin_day         -5   0.75     1.05     16.1    70.7     54.7    4.438e21     5.215e6    40.91 +- 1.61   0.135 (max 0.197)
-  dense_day         5   1.30     1.05     13.0    69.3     56.4    5.682e21     5.036e6    43.82 +- 1.71   0.127 (max 0.201)
+  standard_day      0   1.00     1.00     11.9    70.0     58.2    4.734e20     4.775e6    45.93 +- 2.35   0.149 (max 0.204)
+  hot_day          20   0.90     1.20     12.2    70.2     58.1    4.720e20     4.773e6    53.16 +- 2.38   0.152 (max 0.224)
+  cold_day        -25   1.10     1.25     11.1    69.9     58.9    4.734e20     4.870e6    57.72 +- 2.05   0.153 (max 0.221)
+  polar_winter    -40   1.20     1.40      9.9    69.8     60.0    4.765e20     4.956e6    68.75 +- 5.19   0.156 (max 0.235)
+  thin_day         -5   0.75     1.05     12.9    70.8     58.0    4.539e20     5.215e6    45.72 +- 1.96   0.127 (max 0.203)
+  dense_day         5   1.30     1.05      8.7    69.7     61.1    4.947e20     5.036e6    52.03 +- 5.73   0.147 (max 0.211)
 
 --- Weather-table validation gates ---
   [PASS] (0) table integrity: all six worlds completed without a captured step error
   [PASS] (1) counterfactual audit trail: every dispersion world carries the !!ContextAlternation!! marker naming its baseline
   [PASS] (2) flow-resolved windows in every weather: each world found onset, a nonzero dwell, and a recovered link before the horizon
-  [PASS] (3) weather moves the blackout window: onset spread 3.1 s across the table (gate requires 2 s); dwell spread 1.7 s
-  [PASS] (4) the INS does not behave as assumed in the cold: polar-winter mean blackout drift 57.50 m vs standard-day 40.79 m (1.41x; gate requires 1.2x from the thermal bias departure and the widened window)
-  [PASS] (4b) the cold effect is statistically resolved: polar-standard separation 16.71 m vs combined sigma 2.54 m (6.6 sigma; gate requires 2)
+  [PASS] (3) weather moves the blackout window: onset spread 4.2 s across the table (gate requires 2 s); dwell spread 3.1 s
+  [PASS] (4) the INS does not behave as assumed in the cold: polar-winter mean blackout drift 68.75 m vs standard-day 45.93 m (1.50x; gate requires 1.2x from the thermal bias departure and the widened window)
+  [PASS] (4b) the cold effect is statistically resolved: polar-standard separation 22.81 m vs combined sigma 5.69 m (4.0 sigma; gate requires 2)
   [PASS] (5) every weather reacquires, in every draw: worst-draw terminal navigation error under 1.0 m across all 48 descents
-  [PASS] (6) wall-clock budget: 229.8 s for the whole six-world table (budget 600 s)
+  [PASS] (6) wall-clock budget: 190.6 s for the whole six-world table (budget 600 s)
 
 === Weather-dispersion table complete. All gates passed. ===
-EXIT: 0

@@ -67,11 +67,12 @@ pub use crate::types::flow::{
     AeroBlackoutStub, AeroForceCoupling, BankCorrection, BankSteeredLift, BlackoutState,
     BlackoutTrigger, BranchAccumulator, BranchOutcome, CfdFlow, CompressibleFork,
     CompressibleMarchRun, CompressiblePause, CoupledField, Coupling, CyberneticCorrect, EosStage,
-    GoverningModel, IonizationStage, MarchFork, MarchPause, MarchPipeline, MarchRun, MmsBuilder,
-    Operator, OperatorStudyBuilder, PhysicsStage, QttMarchRun, QttStepView,
-    RecoveryTemperatureStage, Regime, RegimeClass, RegimeClassify, Report, SafetyEnvelope,
-    StepContext, StepView, ThermalRelax, TrajectoryNav, VerifyRun, VibrationalLagStage,
-    ViscosityArrhenius, dominant_frequency, fail, ler_relax_scalar, ler_step, strouhal_number,
+    FiniteRateIonizationStage, GoverningModel, IonizationStage, MarchFork, MarchPause,
+    MarchPipeline, MarchRun, MmsBuilder, Operator, OperatorStudyBuilder, PhysicsStage, QttMarchRun,
+    QttStepView, RecoveryTemperatureStage, Regime, RegimeClass, RegimeClassify, Report,
+    SafetyEnvelope, StepContext, StepView, ThermalRelax, TrajectoryNav, VerifyRun,
+    VibrationalLagStage, ViscosityArrhenius, dominant_frequency, fail, ler_relax_scalar, ler_step,
+    strouhal_number,
 };
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
 pub use crate::types::flow_config::{

@@ -9,12 +9,14 @@
 //! reconstruction. Pure pointwise kernels; the LER between-step stages that drive
 //! them live in `deep_causality_cfd`.
 
+pub mod finite_rate;
 pub mod ionization;
 pub mod shock;
 pub mod thermochemistry;
 pub mod wrappers;
 
 pub use crate::quantities::hypersonic::*;
+pub use finite_rate::*;
 pub use ionization::*;
 pub use shock::*;
 pub use thermochemistry::*;

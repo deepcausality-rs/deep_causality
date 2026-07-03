@@ -6,15 +6,17 @@
 pointwise kernels in the existing `kernels/hypersonic/` domain: (1) associative ionization
 `N + O -> NO+ + e-` forward and its **dissociative-recombination** reverse, (2) thresholded electron-impact
 ionization of N and O rated at the electron temperature, and (3) a **lagged** neutral atom pool (`N`, `O`) closing the reactant concentrations: atom
-fractions relax toward their dissociation equilibrium at the controller temperature with the
-dissociation-rate clock `tau_pool = 1/(k_d[M])`, so the pool inherits the same
-rate-versus-residence honesty as the electrons (an equilibrium pool would over-predict the
-reactants behind the shock, where dissociation is the slowest relaxing process). All forward rates and all
-equilibrium constants SHALL come from the Park (1990) rate tables and curve fits, with the backward rates
-derived inside the kernels as `k_b = k_f / K_eq`, never independently fitted, so the network's fixed point is
-the thermodynamic equilibrium at every temperature by construction. Heavy-particle channels SHALL be rated at
-the Park controller `T_a = sqrt(T_tr * T_ve)`; electron-involving channels SHALL be rated at `T_e = T_ve`
-(the recorded lever-2 insight). Citations SHALL appear in the kernel docstrings with the source PDF in
+fractions relax toward their dissociation equilibria with rate clocks built from the same table
+(`tau_O = 1/(k_d_O2[M])`; `tau_N = 1/(k_d_N2[M] + k_z[O])`, where `k_z` is the Zeldovich exchange
+`N2 + O -> NO + N`, Table II reaction 6, the low-activation N-production path), so the pool
+inherits the same rate-versus-residence honesty as the electrons. All rates SHALL come from the
+verified RP-1232 Table II pairs (the source tabulates the backward rate of each forward rate
+through its own detailed-balance relation, eq. 5a, valid in this velocity range), so the
+network's fixed point recovers the source-consistent equilibrium in the thermal-equilibrium
+limit by construction. Every rate SHALL run at its controlling temperature: ionization at the
+calibrated geometric mean `sqrt(T_tr * T_ve)`, **dissociation at Park's classic
+`T_tr^0.7 * T_ve^0.3`** (the published Park-lineage exponent for the Park rate set, a citation
+rather than a fit), electron-involving channels at `T_e = T_ve` (the recorded lever-2 insight). Citations SHALL appear in the kernel docstrings with the source PDF in
 `deep_causality_physics/papers/`; the only float literals are constants of nature and the cited Park
 coefficients in `constants/`.
 
@@ -57,6 +59,13 @@ configuration toggle, and the same per-cell/broadcast/config-fallback input reso
 - **THEN** every rate and every equilibrium target is evaluated from the per-cell evolved state
   (`T_a`, `T_ve`, `n_tot`), and removing those fields falls back to the configured constants exactly as the
   surrogate stage does
+
+#### Scenario: The stagnation-line age is a field, not a number
+- **WHEN** the network is validated on the stagnation line
+- **THEN** the parcel age is the transit-age profile `age(xi) = t_res * ln(1/(1-xi))` implied by
+  the linear stagnation-line deceleration (geometry and the Rankine-Hugoniot state only, no free
+  parameter), and the anchor gate reads the profile's **peak**, matching what the flight
+  reflectometers measured
 
 #### Scenario: The surrogate path is untouched
 - **WHEN** the existing QTT corridor and the archived examples run

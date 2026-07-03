@@ -176,18 +176,38 @@ pub fn report(inputs: &GateInputs<'_>) -> bool {
         ),
     );
 
+    // The ±0.7-decade band the stagnation-line verification earned for the uncalibrated
+    // network (10^0.7 ≈ 5.0; production codes land 2x to 3x on this peak).
     let ne_ok = (ft(RAMC_NE_REFERENCE / 5.0)..=ft(RAMC_NE_REFERENCE * 5.0)).contains(&leg2.ne_peak);
     gate(
         "(2) peak n_e vs the RAM-C II anchor",
         ne_ok,
         format!(
             "n_e = {:.3e} m^-3 at the {:.1} km passage, in [{:.1e}, {:.1e}] around the flight \
-             anchor {:.0e} m^-3 (evolved state, Park two-temperature controller)",
+             anchor {:.0e} m^-3 (evolved state, uncalibrated finite-rate network; the \
+             stagline-earned ±0.7-decade band)",
             leg2.ne_peak,
             leg2.altitude_km,
             RAMC_NE_REFERENCE / 5.0,
             RAMC_NE_REFERENCE * 5.0,
             RAMC_NE_REFERENCE,
+        ),
+    );
+
+    // The blackout window's edges as altitudes: the exit inside its pinned band, reported
+    // against the RAM-C II flight window; the onset is a pure prediction (no onset constant
+    // exists anywhere in the corridor), printed for the record.
+    let (exit_lo, exit_hi) = crate::constants::EXIT_ALTITUDE_BAND_KM;
+    let (ramc_lo, ramc_hi) = crate::constants::RAMC_EXIT_WINDOW_KM;
+    gate(
+        "(2b) blackout window altitudes",
+        (ft(exit_lo)..=ft(exit_hi)).contains(&leg3.altitude_km),
+        format!(
+            "flow-resolved exit at {:.1} km (pinned band [{exit_lo:.0}, {exit_hi:.0}] km) vs the \
+             RAM-C II {ramc_lo:.0}-{ramc_hi:.0} km flight window: the probe's light ballistic \
+             bundle decelerates it below the ionization threshold higher, so the offset is \
+             ballistics, not chemistry; onset predicted at {:.1} km",
+            leg3.altitude_km, leg1.altitude_km,
         ),
     );
 

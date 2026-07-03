@@ -10,9 +10,9 @@ use super::FloatType;
 use super::constants::{
     ATMOSPHERE, CDA_OVER_M, DT_FLIGHT, DT_SOLVER, FALLBACK_N_TOT, FALLBACK_PRESSURE_ATM, GAMMA_EFF,
     GNSS_VAR, IMU_ACCEL_BIAS, IMU_GYRO_BIAS, L, L_CHAR, L_OVER_D, MAX_BANK_RAD, MAX_G_LOAD,
-    MAX_HEAT_FLUX, N_REF, NAV_INIT_ERR, OPTICAL_VAR, P0_DIAG, Q_DIAG, REDUCED_MASS_AMU,
-    RESIDENCE_TIME_S, RHO_REF, S_REF, SEED_P_HAT, SEED_RHO_HAT, SEED_U_HAT, T_REF, T_VE_INITIAL,
-    THETA_VIB, TRUTH_ALTITUDE_0, TRUTH_V0, U_REF,
+    MAX_HEAT_FLUX, N_REF, NAV_INIT_ERR, OPTICAL_VAR, P0_DIAG, Q_DIAG, REDUCED_MASS_AMU, RHO_REF,
+    S_REF, SEED_P_HAT, SEED_RHO_HAT, SEED_U_HAT, SHEATH_PEAK_AGE_S, T_REF, T_VE_INITIAL, THETA_VIB,
+    TRUTH_ALTITUDE_0, TRUTH_V0, U_REF,
 };
 use super::stages::{
     CommandedBank, FreestreamFeeds, SuttonGravesLoads, TruthGnss, WeatherTelemetry,
@@ -21,9 +21,9 @@ use super::support;
 use deep_causality_cfd::{
     Ambient, AtmosphereRow, BankSteeredLift, CompressibleMarchConfig,
     CompressibleMarchConfigBuilder, CoupledField, Coupling, CyberneticCorrect, DescentSchedule,
-    ImuModel, InsErrorState, IonizationStage, MarchStop, NavFilter, PhysicsError, PhysicsStage,
-    QttObserve, ReentryNavEngine, ReferenceScales, RegimeClassify, SafetyEnvelope, TrajectoryNav,
-    VibrationalLagStage,
+    FiniteRateIonizationStage, ImuModel, InsErrorState, MarchStop, NavFilter, PhysicsError,
+    PhysicsStage, QttObserve, ReentryNavEngine, ReferenceScales, RegimeClassify, SafetyEnvelope,
+    TrajectoryNav, VibrationalLagStage,
 };
 use deep_causality_num::Real;
 use deep_causality_physics::{EARTH_GM, EARTH_RADIUS};
@@ -105,8 +105,9 @@ pub fn descent_world(
 }
 
 /// The per-step coupling stack, the loop body every leg, branch, and weather world iterates.
-/// Reads top to bottom: the Park two-temperature chemistry on the **evolved** marched state,
-/// the freestream feeds, the regime classifier, the 3-DOF bank-steered aero force, the
+/// Reads top to bottom: the vibrational bath and the finite-rate ionization network on the
+/// **evolved** marched state, the freestream feeds, the regime classifier, the 3-DOF
+/// bank-steered aero force, the
 /// Sutton-Graves loads, truth/GNSS, navigation with an IMU-sensed specific force, the
 /// commanded-bank guidance, the telemetry accumulator, and the cybernetic bounded-correction
 /// gate. A static cons-tuple; no `dyn`. An `Err`, such as an envelope breach, short-circuits
@@ -133,15 +134,21 @@ pub fn corridor_coupling(
                 support::ft(FALLBACK_PRESSURE_ATM),
                 support::ft(REDUCED_MASS_AMU),
                 support::ft(THETA_VIB),
-                support::ft(RESIDENCE_TIME_S),
+                support::ft(SHEATH_PEAK_AGE_S),
             )
             .with_pressure_field("pressure_atm"),
         )
         .then(
-            IonizationStage::new(support::ft(FALLBACK_N_TOT))
+            // The finite-rate network reads "T_tr" and "T_ve" directly and
+            // builds each channel's controlling temperature internally; there
+            // is no Saha calibration target anywhere in this stage. Renewal
+            // mode is kept per the stagnation-line A/B: its fixed-point clock
+            // is the network's true Riccati timescale, and the carried arm
+            // under-relaxes young sheath gas. The exposure is the transit-age
+            // profile's observable peak, the same age the stagline gate reads.
+            FiniteRateIonizationStage::new(support::ft(FALLBACK_N_TOT))
                 .with_density_field("n_tot")
-                .driven_by("T_a")
-                .with_sheath_renewal(support::ft(RESIDENCE_TIME_S)),
+                .with_sheath_renewal(support::ft(SHEATH_PEAK_AGE_S)),
         )
         .then(FreestreamFeeds)
         .then(RegimeClassify::new(support::ft(L_CHAR), support::trigger()))

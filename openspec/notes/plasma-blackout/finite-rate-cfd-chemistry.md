@@ -5,11 +5,17 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # Finite-rate CFD chemistry: preparation for Option A, transition commentary for Option B
 
-> **STATUS: preparation note (2026-07-02).** Nothing here is proposed or built. This note scopes
-> the finite-rate ionization network (Option A, the open "lever 3" of
-> [`gap-3/chemistry-fidelity-gap.md`](gap-3/chemistry-fidelity-gap.md)) so a future
-> `/opsx:propose` can start from a settled design, and records how that work transitions into
-> full species-transported reacting CFD (Option B) if the occasion arises.
+> **STATUS: Option A shipped (2026-07-03).** The finite-rate ionization network landed through
+> `openspec/changes/add-finite-rate-ionization-network/` with two design revisions this note did
+> not anticipate, both recorded in
+> [Resolution 3](gap-3/gap-three-resolution-3-chemistry-fidelity.md): the atom pool ships
+> *lagged* (not partial-equilibrium), and the stagnation-line parcel age is the transit-age
+> profile `age(ξ) = t_res·ln(1/(1−ξ))`, whose peak the anchor gate reads. Measured uncalibrated:
+> **+0.48 decades (3.0×)** of the RAM-C II anchor on the stagnation line; the corridor flagship
+> and weather table fly the network with all gates green. The Option B commentary below stands
+> unchanged as the transition path.
+>
+> *(Original preparation note, 2026-07-02, follows.)*
 
 ## 1. Where the chemistry stands
 
@@ -22,7 +28,8 @@ The lever ladder of the chemistry-fidelity gap is two-thirds discharged:
   spread instead of improving the calibrated result; the durable insight (electrons are created
   in the post-shock bath, so `T_e(0) = T_ve`) is recorded in
   [Resolution 2](gap-3/gap-three-resolution-2-tve-controlled-ionization.md).
-- **Lever 3, the finite-rate network: open.** That is Option A below.
+- **Lever 3, the finite-rate network: shipped (see STATUS above).** Option A below is the
+  design it started from.
 
 The prerequisite the gap note named is now satisfied: since
 `2026-07-02-add-compressible-blackout-carrier`, the corridor consumes **evolved** per-cell
