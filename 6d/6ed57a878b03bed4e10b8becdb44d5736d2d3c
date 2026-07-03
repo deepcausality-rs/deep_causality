@@ -1,0 +1,150 @@
+deep_causality_physics/src/kernels/hypersonic/finite_rate.rs
+  s_c4c919f578d611::t_32a9858bc81e3e 245-268
+  s_c4c919f578d611::t_02562822829f7f 1-23,31-38,41-62,66-85,89-106,110-128,132-134,137-156,160-162,165-244
+  s_c4c919f578d611::t_39b762f0cb0e4a 269-321
+  s_c4c919f578d611::t_9fda6a2e817a8b 24-30,39-40,63-65,86-88,107-109,129-131,135-136,157-159,163-164
+deep_causality_physics/src/kernels/hypersonic/wrappers.rs
+  s_c4c919f578d611::t_32a9858bc81e3e 223-234
+  s_c4c919f578d611::t_2036b3a2243003 219-222,235-258
+  s_c4c919f578d611::t_b887660d237dbd 9,11-12,132-218
+deep_causality_physics/src/quantities/hypersonic/mod.rs
+  s_c4c919f578d611::t_208f362f09c8f7 253-337
+deep_causality_physics/src/kernels/hypersonic/mod.rs
+  s_c4c919f578d611::t_b887660d237dbd 12,19
+deep_causality_cfd/tests/types/flow/mod.rs
+  s_c4c919f578d611::t_33a0bd415997a2 32-33
+openspec/notes/plasma-blackout/gap-3/gap-three-resolution-3-chemistry-fidelity.md
+  s_c4c919f578d611::t_84d336f438050d 1
+  s_c4c919f578d611::t_b56e45a8ac9ae6 2-54
+deep_causality_physics/src/constants/hypersonic.rs
+  s_c4c919f578d611::t_91659d429fe8ed 95-139,144-195
+  s_c4c919f578d611::t_1af36e7c27533f 140-143
+  s_c4c919f578d611::t_32a9858bc81e3e 330-347
+  s_c4c919f578d611::t_39b762f0cb0e4a 348-393
+  s_c4c919f578d611::t_42642dc92652ef 196-329
+examples/avionics_examples/cfd/plasma_blackout_weather/constants.rs
+  s_c4c919f578d611::t_2b299d058df58b 7-10
+  s_c4c919f578d611::t_ecaa0082f0d081 67-68
+deep_causality_cfd/src/types/flow/finite_rate_ionization.rs
+  s_c4c919f578d611::t_6daa0d65989907 244-246,248-252
+  s_c4c919f578d611::t_c3b56075c7fcce 1-13,23-34,44-45,50,53-79,84-170,182,187-188,191-193,195-200,205-206,211-214,219-220,227-228,230-243,247,253-275
+  s_c4c919f578d611::t_4c2ee9175ce89f 14-22,40-43,46-49,51-52,80-83,171-181,183-186,189-190,194,201,207-210,215-218,221-226,229
+  s_c4c919f578d611::t_3492b160a7c00e 35-39,202-204
+examples/avionics_examples/cfd/plasma_blackout_weather/output.txt
+  s_c4c919f578d611::t_8b3e5930d9fa1f 1-3,11-16,22-24,26
+deep_causality_cfd/verification/qtt_ramc_stagline/config.rs
+  s_c4c919f578d611::t_0f6ebee76cf692 64
+  s_c4c919f578d611::t_974262f7e72ac9 56-63
+  s_c4c919f578d611::t_3326422f9ae296 51-55
+openspec/specs/finite-rate-ionization-network/spec.md
+  s_c4c919f578d611::t_867480008e7da6 1-76
+deep_causality_physics/tests/kernels/hypersonic/mod.rs
+  s_c4c919f578d611::t_b73437c080d271 7
+  s_c4c919f578d611::t_142927afc46401 6
+deep_causality_cfd/verification/qtt_ramc_stagline/print_utils.rs
+  s_c4c919f578d611::t_d72ee8f1e536cd 137-147,149-150,152-154
+  s_c4c919f578d611::t_3326422f9ae296 98-113,115-135
+  s_c4c919f578d611::t_ba041f7d36d312 8
+  s_c4c919f578d611::t_b4388feb1c70e9 9,114
+  s_c4c919f578d611::t_1fde2b7f1aec4a 136,148,151,155-158
+examples/avionics_examples/src/blackout/world.rs
+  s_c4c919f578d611::t_fa2f9792c85355 13-15,25-26
+  s_c4c919f578d611::t_a72f541a99a3fa 147-148,151
+  s_c4c919f578d611::t_cf1dfe166151ef 24
+  s_c4c919f578d611::t_e973c5d287c7f0 137
+  s_c4c919f578d611::t_de42a966d31d68 108-110
+  s_c4c919f578d611::t_98c8b1d3858c9c 142-146,149
+deep_causality_cfd/verification/qtt_ramc_stagline/README.md
+  s_c4c919f578d611::t_c33bc1f895755a 67-71
+  s_c4c919f578d611::t_10eaf152e2d566 22-23,26-54
+openspec/specs/plasma-blackout-flagship/spec.md
+  s_c4c919f578d611::t_867480008e7da6 39-47,50-51,53-54
+openspec/specs/park2t-blackout-validation/spec.md
+  s_c4c919f578d611::t_867480008e7da6 68-88
+deep_causality_physics/tests/kernels/hypersonic/wrappers_tests.rs
+  s_c4c919f578d611::t_98a92b6914d299 101-119
+  s_c4c919f578d611::t_917adefb68a8da 8-13
+  s_c4c919f578d611::t_036ad6b94fc063 14
+examples/avionics_examples/cfd/plasma_blackout_weather/README.md
+  s_c4c919f578d611::t_fd74e2b00cb46d 33-35
+  s_c4c919f578d611::t_f642c968f432b5 81,84-103,105-108
+  s_c4c919f578d611::t_4d617f54afda83 59
+  s_c4c919f578d611::t_95ec993294228c 69-74
+  s_c4c919f578d611::t_cb89c8a4c2b244 117
+deep_causality_cfd/src/types/flow/mod.rs
+  s_c4c919f578d611::t_33a0bd415997a2 21,50
+deep_causality_cfd/verification/qtt_ramc_stagline/baseline.txt
+  s_c4c919f578d611::t_fa29248ef7b208 1-2,10-18,38-40
+openspec/notes/plasma-blackout/finite-rate-cfd-chemistry.md
+  s_c4c919f578d611::t_ae6443b41b7f42 31-32
+  s_c4c919f578d611::t_b2c3ce72e70bea 8-18
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_33a0bd415997a2 70-75
+examples/avionics_examples/cfd/plasma_blackout_corridor/constants.rs
+  s_c4c919f578d611::t_5d028114d8da33 8-10
+  s_c4c919f578d611::t_dc5cb207bc9a6c 20,28-31
+  s_c4c919f578d611::t_bec73c2f90f188 40-50
+deep_causality_physics/tests/kernels/hypersonic/finite_rate_tests.rs
+  s_c4c919f578d611::t_91eb6810c47c6b 1-10,12-66,72-138,140-217
+  s_c4c919f578d611::t_e01bf4e4c0c8a6 67-71
+  s_c4c919f578d611::t_2036b3a2243003 218-253,258-260
+  s_c4c919f578d611::t_9f2d83794ad5e4 254-257
+  s_c4c919f578d611::t_b896820ba814f7 11,139
+examples/avionics_examples/cfd/plasma_blackout_corridor/README.md
+  s_c4c919f578d611::t_4093cae8d18a2d 115-132
+  s_c4c919f578d611::t_e8b97153ffbcf0 166-175
+  s_c4c919f578d611::t_3ce7bb88043df9 182-183,187,189
+  s_c4c919f578d611::t_c65a18e6054cfe 213
+  s_c4c919f578d611::t_4ea15c4ef6beab 198-204
+  s_c4c919f578d611::t_f73e984f59e90f 49-51,56-58,61-63,65-75
+  s_c4c919f578d611::t_7cb38472eb4a3f 85-89
+examples/avionics_examples/cfd/plasma_blackout_corridor/main.rs
+  s_c4c919f578d611::t_53695d7befee0c 23-27
+openspec/specs/park2t-ionization-kernels/spec.md
+  s_c4c919f578d611::t_867480008e7da6 77-103
+examples/avionics_examples/cfd/plasma_blackout_corridor/output.txt
+  s_c4c919f578d611::t_05f88d2f1a3036 1-2,10-12,16-21,25-27,30-32,35-37,43,45-50,52-53,57-60,63,65,67
+openspec/notes/plasma-blackout/gap-3/chemistry-fidelity-gap.md
+  s_c4c919f578d611::t_c4c26e087e392d 19-32
+deep_causality_cfd/verification/qtt_ramc_stagline/main.rs
+  s_c4c919f578d611::t_ac37eceef7c899 129,132,147-149,168-187
+  s_c4c919f578d611::t_45bf1010704ecc 230
+  s_c4c919f578d611::t_9f9ad4d784aae1 228-229,231-236,241
+  s_c4c919f578d611::t_c4cd1ab336faf0 24-33,191-208,212-227,237,239-240,242
+  s_c4c919f578d611::t_9f2d83794ad5e4 138,150-152,209-211
+  s_c4c919f578d611::t_90bb0ff6452704 118-128,130-131,133-137,139-146,153-167,188-190
+deep_causality_cfd/tests/types/flow/finite_rate_ionization_tests.rs
+  s_c4c919f578d611::t_2eea9e35eeac9e 18,20,29,39,65,80,95,120,134
+  s_c4c919f578d611::t_09b36def38cb1e 1-17,19,21-28,30-38,40-64,66-79,81-94,96-100,113-119,121-124,126-133,135-143,148-171
+  s_c4c919f578d611::t_33a0bd415997a2 101-112,125,144-147
+examples/avionics_examples/cfd/plasma_blackout_corridor/utils_print.rs
+  s_c4c919f578d611::t_995e6853b413eb 179-180,187-188,197-210
+  s_c4c919f578d611::t_4b6af19ec633f9 211-213
+examples/avionics_examples/src/blackout/constants.rs
+  s_c4c919f578d611::t_ef587410565879 19-30
+  s_c4c919f578d611::t_b6facc2627201b 122-129
+openspec/changes/archive/2026-07-03-add-finite-rate-ionization-network/design.md
+  s_c4c919f578d611::t_efd4bad9dbaef2 75-84,123-137
+openspec/changes/archive/2026-07-03-add-finite-rate-ionization-network/specs/finite-rate-ionization-network/spec.md
+  s_c4c919f578d611::t_993a63ed8580fe 9-19,63-69
+openspec/changes/archive/2026-07-03-add-finite-rate-ionization-network/tasks.md
+  s_c4c919f578d611::t_d25502daf5a6d5 3,9,13-20,22,26,30-31,35,41-46,51-53,57,65-72,75-81,85,89-95,99-107,110-114,116-120,124,127-131,134-137
+openspec/notes/plasma-blackout/finite-rate-ionization-chemistry.md
+  s_c4c919f578d611::t_108e5b74b0c12d 1-150
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "6d6ed57a878b03bed4e10b8becdb44d5736d2d3c",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
