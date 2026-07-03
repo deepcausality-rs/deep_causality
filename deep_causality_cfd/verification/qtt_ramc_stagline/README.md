@@ -19,10 +19,39 @@ cargo run --release -p deep_causality_cfd --example qtt_ramc_stagline
 ## What it gates (self-verifying, exit nonzero on regression)
 
 1. **Post-shock temperature band** — `T₂` in the realistic ≈10⁴ K band.
-2. **Peak electron density vs RAM-C II** — within ~2 decades of the `1e19 m⁻³` flight anchor (order of
-   magnitude).
+2. **Peak electron density vs RAM-C II** — the calibrated Park-2T controller within ~3x of the
+   `1e19 m⁻³` flight anchor.
 3. **Blackout onset** — the plasma frequency exceeds the comms band.
 4. **`O(1)` rank** — the smooth post-shock relaxation profile stays low tensor-train rank.
+5. **The uncalibrated network inside its earned band** — the finite-rate prediction within
+   ±0.7 decades of the anchor, with no Saha calibration target anywhere in the path.
+6. **Electron impact is a refinement** — the associative channel carries the prediction; the
+   thresholded impact channels add at most one decade (measured: +15 percent).
+7. **The carried arm self-limits** — the sheath-renewal A/B under recombination (see below).
+
+## The uncalibrated finite-rate network
+
+The `FiniteRateIonizationStage` evaluates the three-channel RP-1232 network with no calibration
+knob: associative ionization `N + O -> NO+ + e-` with its dissociative-recombination reverse,
+thresholded electron-impact ionization at `T_e = T_ve`, and a lagged neutral atom pool whose
+N clock carries both direct dissociation and the low-activation Zeldovich exchange
+`N2 + O -> NO + N`. Each rate runs at its controlling temperature: ionization at the calibrated
+geometric mean, dissociation at Park's published `T_tr^0.7 T_ve^0.3`, electron channels at
+`T_e = T_ve`. The parcel age on the stagnation line is the knob-free transit-age profile
+`age(ξ) = t_res·ln(1/(1−ξ))` from the linear stagnation-line deceleration, and the gate reads
+the profile's peak, which is what the flight reflectometers measured. Measured: channel 1 plus
+the pool `2.60e19` (+0.41 dec), full network `2.99e19` (+0.48 dec, 3.0x) against the `1e19`
+anchor, inside the production-code context (DPLR, LAURA, and US3D land 2x to 3x on this peak).
+
+**Sheath-renewal A/B under recombination.** Both integration modes are measured over the same
+transit-age profile: the renewal arm peaks at `2.99e19` (+0.48 dec) and the carried arm at
+`4.70e18` (−0.33 dec). Renewal is kept. Its clock is evaluated at the network fixed point,
+which equals the true Riccati relaxation rate `sqrt(production·β)` of the two-way balance near
+equilibrium, and it realizes the transit-age closure the anchor gate is pinned on. The carried
+arm rates its clock at the young carried population and under-relaxes young parcels, but it
+self-limits at or below the closed-form arm — the property the recombination channel was added
+for, and the reason explicit renewal is no longer load-bearing against runaway (the forward-only
+surrogate diverged without it). This supersedes the first A/B's record.
 
 ## The physics, honestly
 
@@ -35,10 +64,11 @@ cargo run --release -p deep_causality_cfd --example qtt_ramc_stagline
   `t_res = standoff/u₂` is short against the ionization time `τ_ion = 1/(k_f·n₂)`, with `k_f` the **dominant
   associative-ionization rate** N + O → NO⁺ + e⁻ (Park / Gupta), grounded — not a free fit. The closed-form
   LER relaxation `α = α_eq·(1 − e^{−t_res/τ_ion})` pulls the peak below equilibrium toward the flight value.
-- **Order-of-magnitude anchor, not a calibrated match.** The Park-2T `T_e = T_ve` lumping over-predicts peak
-  `n_e` ~2× vs a 3-T closure; the single-rate lag is a surrogate for the full nonequilibrium kinetics. The
-  result lands ~1 decade above the RAM-C anchor — a legitimate order-of-magnitude match for the Tier-A
-  surrogate, with the exact value requiring the full reacting-plasma kinetics.
+- **Calibration and prediction, kept separate.** The Park-2T controller path is the *calibrated*
+  closure (its geometric-mean controlling temperature was tuned to the anchor; it lands ~1.1x).
+  The finite-rate network path is the *prediction*: the same anchor, approached with no
+  calibration target, lands at 3.0x. Both numbers are printed and gated, so the distinction
+  stays measurable.
 
 ## References
 

@@ -30,7 +30,7 @@ The three examples have genuinely different shapes:
   one-to-one onto `PropagatingProcess`'s `State` and `Context` channels.
   Per-stage observability is routed through `EffectLog`, printed once at the
   end — same shape as the avionics
-  [`flight_envelope_monitor`](../avionics_examples/flight_envelope_monitor)
+  [`flight_envelope_monitor`](../avionics_examples/control/flight_envelope_monitor)
   pipeline.
 - **clinical_trial** uses `MaybeUncertain<f64>` because data presence is
   itself uncertain. The chain's short-circuit semantics

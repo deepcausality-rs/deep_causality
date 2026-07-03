@@ -4,7 +4,6 @@ version = "0.1.1"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
-
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 description = "File and receiver-data (RINEX GNSS SP3/CLK) loaders over the haft IO monad for DeepCausality"
@@ -23,6 +22,9 @@ exclude = [
     ".bazelrc",
     "tests/**/*",
 ]
+
+# Do not publish the crate;
+publish = false
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"

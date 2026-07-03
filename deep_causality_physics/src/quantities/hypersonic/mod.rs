@@ -250,3 +250,88 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<ReactionRate<R>> for f64
         val.0.into()
     }
 }
+
+/// Concentration-basis equilibrium constant of a reversible reaction,
+/// `K_eq = k_f / k_b` (RP-1232 eq. 5a). Unit: model-dependent (dimensionless
+/// for two-body/two-body reactions; a concentration for dissociation).
+/// Constraint: finite, $\geq 0$.
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct EquilibriumConstant<R: deep_causality_num::RealField>(R);
+
+impl<R: deep_causality_num::RealField> Default for EquilibriumConstant<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> EquilibriumConstant<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Equilibrium constant must be finite".into(),
+            ));
+        }
+        if val < R::zero() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Equilibrium constant cannot be negative".into(),
+            ));
+        }
+        Ok(Self(val))
+    }
+    /// Creates a new `EquilibriumConstant` without validation.
+    /// Use only if the value is guaranteed finite and non-negative.
+    pub fn new_unchecked(val: R) -> Self {
+        Self(val)
+    }
+    pub fn value(&self) -> R {
+        self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<EquilibriumConstant<R>> for f64 {
+    fn from(val: EquilibriumConstant<R>) -> Self {
+        val.0.into()
+    }
+}
+
+/// Dissociation fraction of a diatomic pool: the share of a species' nuclei
+/// bound in atoms rather than the parent molecule. Constraint: finite, in
+/// $[0, 1]$.
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct DissociationFraction<R: deep_causality_num::RealField>(R);
+
+impl<R: deep_causality_num::RealField> Default for DissociationFraction<R> {
+    fn default() -> Self {
+        Self(R::zero())
+    }
+}
+
+impl<R: deep_causality_num::RealField> DissociationFraction<R> {
+    pub fn new(val: R) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::NormalizationError(
+                "Dissociation fraction must be finite".into(),
+            ));
+        }
+        if val < R::zero() || val > R::one() {
+            return Err(PhysicsError::NormalizationError(
+                "Dissociation fraction must lie in [0, 1]".into(),
+            ));
+        }
+        Ok(Self(val))
+    }
+    /// Creates a new `DissociationFraction` without validation.
+    /// Use only if the value is guaranteed finite and in `[0, 1]`.
+    pub fn new_unchecked(val: R) -> Self {
+        Self(val)
+    }
+    pub fn value(&self) -> R {
+        self.0
+    }
+}
+
+impl<R: deep_causality_num::RealField + Into<f64>> From<DissociationFraction<R>> for f64 {
+    fn from(val: DissociationFraction<R>) -> Self {
+        val.0.into()
+    }
+}

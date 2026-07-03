@@ -5,6 +5,8 @@
 
 //! Measurement + gates for the RAM-C stagnation-line verification.
 
+use crate::FloatType;
+use crate::config;
 use crate::config::{COMMS_BAND_RAD_S, RAMC_NE_REFERENCE, T_INF};
 use deep_causality_cfd::{PostShockState, StagnationOutcome};
 
@@ -92,4 +94,65 @@ pub fn summary(out: &StagnationOutcome<f64>) {
          lands T2 in the realistic ~8000 K reacting-air band. The post-shock T2 is the exact-RH transported\n\
          energy, retiring the Tier-A recovery-temperature reconstruction."
     );
+}
+
+/// Gate the uncalibrated network prediction. The band is pinned from the
+/// measurement (see `baseline.txt`), justified against the production-code
+/// context: DPLR, LAURA, and US3D land 2x to 3x on the RAM-C peak `n_e`,
+/// with a 2x to 5x chemistry-model spread between rate sets. The channel-1
+/// measurement exists for attribution (design D7): if the full network ever
+/// leaves its band, the two numbers say which channel moved.
+pub fn verify_network(ne_channel1: FloatType, ne_network: FloatType) -> bool {
+    let mut ok = true;
+    let mut gate = |label: &str, pass: bool, detail: String| {
+        println!(
+            "  [{}] {label}: {detail}",
+            if pass { "PASS" } else { "FAIL" }
+        );
+        ok &= pass;
+    };
+    let dec_network = (ne_network / RAMC_NE_REFERENCE).log10();
+    gate(
+        "network prediction inside the earned band",
+        dec_network.abs() <= config::NETWORK_BAND_DECADES,
+        format!(
+            "full network {:+.2} dec vs the flight anchor (band +-{:.2} dec, pinned from the \
+             measurement; production codes sit at 2x to 3x)",
+            dec_network,
+            config::NETWORK_BAND_DECADES,
+        ),
+    );
+    gate(
+        "electron impact is a refinement, not the driver",
+        ne_network >= ne_channel1 && ne_network < ne_channel1 * 10.0,
+        format!(
+            "channel 1 + pool {:.3e} vs full network {:.3e} m^-3 (the associative channel \
+             carries the prediction at RAM-C speeds)",
+            ne_channel1, ne_network,
+        ),
+    );
+    ok
+}
+
+/// The sheath-renewal A/B under recombination, superseding the forward-only
+/// surrogate's A/B where renewal was load-bearing against runaway. Renewal
+/// is kept: its clock is evaluated at the network fixed point, which is the
+/// true Riccati relaxation rate `sqrt(production*beta)` of the two-way
+/// balance near equilibrium, and it realizes the transit-age closure the
+/// anchor gate is pinned on (each depth an independent parcel). The carried
+/// arm rates its clock at the young carried population, so it approaches the
+/// same fixed point more slowly. The gate asserts the property the
+/// recombination channel was added for: the carried march self-limits at or
+/// below the closed-form arm (the forward-only surrogate ran away) and
+/// still lands inside the earned band.
+pub fn verify_renewal_ab(ne_renewal: FloatType, ne_carried: FloatType) -> bool {
+    let dec_carried = (ne_carried / RAMC_NE_REFERENCE).log10();
+    let pass = ne_carried <= ne_renewal && dec_carried.abs() <= config::CARRIED_ARM_BAND_DECADES;
+    println!(
+        "  [{}] carried mode self-limits inside the earned band: {dec_carried:+.2} dec vs the \
+         anchor, at or below the renewal arm (renewal kept: its fixed-point clock is the \
+         network's Riccati timescale)",
+        if pass { "PASS" } else { "FAIL" },
+    );
+    pass
 }

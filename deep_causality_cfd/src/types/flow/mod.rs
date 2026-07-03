@@ -13,15 +13,19 @@
 //! MMS-verification and operator-accuracy solvers.
 
 mod blackout;
+mod carrier;
 mod cfd_flow;
+mod compressible_march_run;
 mod corridor;
 mod coupling;
+mod finite_rate_ionization;
 mod frequency;
 #[cfg(feature = "std")]
 mod io;
 mod march_run;
 mod mms;
 mod operator_study;
+mod qtt_march_pause;
 mod qtt_march_run;
 mod report;
 #[cfg(feature = "std")]
@@ -31,23 +35,26 @@ mod zones;
 
 pub use blackout::{
     BlackoutState, BlackoutTrigger, EosStage, IonizationStage, RecoveryTemperatureStage,
-    ler_relax_scalar, ler_step,
+    VibrationalLagStage, ler_relax_scalar, ler_step,
 };
 pub use cfd_flow::{CfdFlow, fail};
+pub use compressible_march_run::{CompressibleFork, CompressibleMarchRun, CompressiblePause};
 pub use corridor::{
-    BankCorrection, BranchAccumulator, BranchOutcome, CyberneticCorrect, GoverningModel,
-    RegimeClass, RegimeClassify, SafetyEnvelope,
+    BankCorrection, BankSteeredLift, BranchAccumulator, BranchOutcome, CyberneticCorrect,
+    GoverningModel, RegimeClass, RegimeClassify, SafetyEnvelope, TrajectoryNav,
 };
 pub use coupling::{
     AeroBlackoutStub, AeroForceCoupling, CoupledField, Coupling, PhysicsStage, StepContext,
     ThermalRelax, ViscosityArrhenius,
 };
+pub use finite_rate_ionization::FiniteRateIonizationStage;
 pub use frequency::{dominant_frequency, strouhal_number};
 #[cfg(feature = "std")]
 pub use io::write_xy_csv;
 pub use march_run::{MarchPipeline, MarchRun, StepView};
 pub use mms::{MmsBuilder, Regime};
 pub use operator_study::{Operator, OperatorStudyBuilder};
+pub use qtt_march_pause::{MarchFork, MarchPause};
 pub use qtt_march_run::{QttMarchRun, QttStepView};
 pub use report::Report;
 #[cfg(feature = "std")]

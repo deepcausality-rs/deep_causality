@@ -92,3 +92,302 @@ pub const THETA_VIB_O2: f64 = 2_273.0;
 
 /// Characteristic vibrational temperature of NO. Unit: K.
 pub const THETA_VIB_NO: f64 = 2_739.0;
+
+// ─────────────────────────────────────────────────────────────────────────
+// Finite-rate ionization network (RP-1232 Table II, page 46). Table II pairs
+// each forward rate with its backward rate; the source's eq. (5a) is the
+// detailed-balance relation k_b = k_f / K_eq, so K_eq = k_f / k_b from one
+// table row. The source states the pairs are valid for flight velocities up
+// to about 8 km/s. All rates are Arrhenius forms k = Cf · T^η · exp(−θ/T) in
+// cm³·mol⁻¹·s⁻¹ (two-body) or cm⁶·mol⁻²·s⁻¹ (three-body); the third-body
+// concentration multiplies the three-body forms at the call site.
+// Source: Gupta, Yos, Thompson & Lee, NASA RP-1232 (1990), Table II,
+// verified from `papers/gupta_1990_nasa_rp1232.pdf` (rendered page 46).
+// ─────────────────────────────────────────────────────────────────────────
+
+// Reaction 7 backward: NO⁺ + e⁻ → N + O (dissociative recombination), the
+// two-body reverse of the shipped associative-ionization channel. Rated at
+// the electron temperature in the two-temperature model.
+
+/// Pre-exponential factor for NO⁺ + e⁻ → N + O. Unit: cm³·mol⁻¹·s⁻¹.
+pub const RP1232_NO_DR_PREFACTOR: f64 = 1.80e19;
+
+/// Temperature exponent for NO⁺ + e⁻ → N + O (dimensionless).
+pub const RP1232_NO_DR_EXPONENT: f64 = -1.0;
+
+/// Activation temperature for NO⁺ + e⁻ → N + O (barrier-free). Unit: K.
+pub const RP1232_NO_DR_ACTIVATION_TEMP: f64 = 0.0;
+
+// Reaction 8 forward: O + e⁻ → O⁺ + e⁻ + e⁻ (electron-impact ionization).
+// Table II states the central value with a ±33 percent spread; the source
+// notes (page 10) these rates come from expansion-flow data and tend to be
+// lower than compressive-flow data. Both are absorbed by the validation band.
+
+/// Pre-exponential factor for O + e⁻ → O⁺ + 2e⁻. Unit: cm³·mol⁻¹·s⁻¹.
+pub const RP1232_EI_O_PREFACTOR: f64 = 3.6e31;
+
+/// Temperature exponent for O + e⁻ → O⁺ + 2e⁻ (dimensionless).
+pub const RP1232_EI_O_EXPONENT: f64 = -2.91;
+
+/// Activation temperature for O + e⁻ → O⁺ + 2e⁻. Unit: K.
+pub const RP1232_EI_O_ACTIVATION_TEMP: f64 = 1.58e5;
+
+// Reaction 9 forward: N + e⁻ → N⁺ + e⁻ + e⁻ (electron-impact ionization).
+
+/// Pre-exponential factor for N + e⁻ → N⁺ + 2e⁻. Unit: cm³·mol⁻¹·s⁻¹.
+pub const RP1232_EI_N_PREFACTOR: f64 = 1.1e32;
+
+/// Temperature exponent for N + e⁻ → N⁺ + 2e⁻ (dimensionless). Table II
+/// states −3.14; written as a quotient because the raw literal trips
+/// `clippy::approx_constant` (it is a temperature exponent, not π).
+pub const RP1232_EI_N_EXPONENT: f64 = -314.0 / 100.0;
+
+/// Activation temperature for N + e⁻ → N⁺ + 2e⁻. Unit: K.
+pub const RP1232_EI_N_ACTIVATION_TEMP: f64 = 1.69e5;
+
+// Reaction 1: O₂ + M ⇌ 2O + M (dissociation forward, three-body
+// recombination backward). Forward in cm³·mol⁻¹·s⁻¹ (after the third-body
+// concentration multiplies once), backward in cm⁶·mol⁻²·s⁻¹.
+
+/// Pre-exponential factor for O₂ + M → 2O + M. Unit: cm³·mol⁻¹·s⁻¹.
+pub const RP1232_O2_DISS_PREFACTOR: f64 = 3.61e18;
+
+/// Temperature exponent for O₂ + M → 2O + M (dimensionless).
+pub const RP1232_O2_DISS_EXPONENT: f64 = -1.0;
+
+/// Activation temperature for O₂ + M → 2O + M. Unit: K.
+pub const RP1232_O2_DISS_ACTIVATION_TEMP: f64 = 5.94e4;
+
+/// Pre-exponential factor for 2O + M → O₂ + M. Unit: cm⁶·mol⁻²·s⁻¹.
+pub const RP1232_O2_RECOMB_PREFACTOR: f64 = 3.01e15;
+
+/// Temperature exponent for 2O + M → O₂ + M (dimensionless).
+pub const RP1232_O2_RECOMB_EXPONENT: f64 = -0.5;
+
+// Reaction 2: N₂ + M ⇌ 2N + M.
+
+/// Pre-exponential factor for N₂ + M → 2N + M. Unit: cm³·mol⁻¹·s⁻¹.
+pub const RP1232_N2_DISS_PREFACTOR: f64 = 1.92e17;
+
+/// Temperature exponent for N₂ + M → 2N + M (dimensionless).
+pub const RP1232_N2_DISS_EXPONENT: f64 = -0.5;
+
+/// Activation temperature for N₂ + M → 2N + M. Unit: K.
+pub const RP1232_N2_DISS_ACTIVATION_TEMP: f64 = 1.131e5;
+
+/// Pre-exponential factor for 2N + M → N₂ + M. Unit: cm⁶·mol⁻²·s⁻¹.
+pub const RP1232_N2_RECOMB_PREFACTOR: f64 = 1.09e16;
+
+/// Temperature exponent for 2N + M → N₂ + M (dimensionless).
+pub const RP1232_N2_RECOMB_EXPONENT: f64 = -0.5;
+
+// ─────────────────────────────────────────────────────────────────────────
+// Standard-air elemental composition for the atom-pool closure (mole
+// fractions of the undissociated diatomics; trace species folded into N₂).
+// Source: U.S. Standard Atmosphere 1976 (N₂ 0.78084, O₂ 0.20946; the ~1
+// percent Ar and trace gases are folded into the inert N₂ share here).
+// ─────────────────────────────────────────────────────────────────────────
+
+/// Mole fraction of N₂ in undissociated standard air (traces folded in).
+pub const AIR_N2_MOLE_FRACTION: f64 = 0.79;
+
+/// Mole fraction of O₂ in undissociated standard air.
+pub const AIR_O2_MOLE_FRACTION: f64 = 0.21;
+
+// ─────────────────────────────────────────────────────────────────────────
+// Real-field accessors for the finite-rate network coefficients, following
+// the house mechanism (see `constants/condensed.rs`): each `f64` constant
+// has a companion function returning it at the target precision `R`.
+// ─────────────────────────────────────────────────────────────────────────
+
+use deep_causality_num::{FromPrimitive, RealField};
+
+/// Returns [`RP1232_NO_DR_PREFACTOR`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_no_dr_prefactor<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_NO_DR_PREFACTOR)
+}
+
+/// Returns [`RP1232_NO_DR_EXPONENT`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_no_dr_exponent<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_NO_DR_EXPONENT)
+}
+
+/// Returns [`RP1232_NO_DR_ACTIVATION_TEMP`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_no_dr_activation_temp<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_NO_DR_ACTIVATION_TEMP)
+}
+
+/// Returns [`RP1232_EI_O_PREFACTOR`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_ei_o_prefactor<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_EI_O_PREFACTOR)
+}
+
+/// Returns [`RP1232_EI_O_EXPONENT`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_ei_o_exponent<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_EI_O_EXPONENT)
+}
+
+/// Returns [`RP1232_EI_O_ACTIVATION_TEMP`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_ei_o_activation_temp<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_EI_O_ACTIVATION_TEMP)
+}
+
+/// Returns [`RP1232_EI_N_PREFACTOR`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_ei_n_prefactor<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_EI_N_PREFACTOR)
+}
+
+/// Returns [`RP1232_EI_N_EXPONENT`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_ei_n_exponent<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_EI_N_EXPONENT)
+}
+
+/// Returns [`RP1232_EI_N_ACTIVATION_TEMP`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_ei_n_activation_temp<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_EI_N_ACTIVATION_TEMP)
+}
+
+/// Returns [`RP1232_O2_DISS_PREFACTOR`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_o2_diss_prefactor<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_O2_DISS_PREFACTOR)
+}
+
+/// Returns [`RP1232_O2_DISS_EXPONENT`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_o2_diss_exponent<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_O2_DISS_EXPONENT)
+}
+
+/// Returns [`RP1232_O2_DISS_ACTIVATION_TEMP`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_o2_diss_activation_temp<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_O2_DISS_ACTIVATION_TEMP)
+}
+
+/// Returns [`RP1232_O2_RECOMB_PREFACTOR`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_o2_recomb_prefactor<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_O2_RECOMB_PREFACTOR)
+}
+
+/// Returns [`RP1232_O2_RECOMB_EXPONENT`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_o2_recomb_exponent<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_O2_RECOMB_EXPONENT)
+}
+
+/// Returns [`RP1232_N2_DISS_PREFACTOR`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_n2_diss_prefactor<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_N2_DISS_PREFACTOR)
+}
+
+/// Returns [`RP1232_N2_DISS_EXPONENT`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_n2_diss_exponent<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_N2_DISS_EXPONENT)
+}
+
+/// Returns [`RP1232_N2_DISS_ACTIVATION_TEMP`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_n2_diss_activation_temp<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_N2_DISS_ACTIVATION_TEMP)
+}
+
+/// Returns [`RP1232_N2_RECOMB_PREFACTOR`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_n2_recomb_prefactor<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_N2_RECOMB_PREFACTOR)
+}
+
+/// Returns [`RP1232_N2_RECOMB_EXPONENT`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_n2_recomb_exponent<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_N2_RECOMB_EXPONENT)
+}
+
+/// Returns [`AIR_N2_MOLE_FRACTION`] at the target real-field precision `R`.
+#[inline]
+pub fn air_n2_mole_fraction<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(AIR_N2_MOLE_FRACTION)
+}
+
+/// Returns [`AIR_O2_MOLE_FRACTION`] at the target real-field precision `R`.
+#[inline]
+pub fn air_o2_mole_fraction<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(AIR_O2_MOLE_FRACTION)
+}
+
+/// Returns [`PARK_NO_IONIZATION_PREFACTOR`] at the target real-field precision `R`.
+#[inline]
+pub fn park_no_ionization_prefactor<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(PARK_NO_IONIZATION_PREFACTOR)
+}
+
+/// Returns [`PARK_NO_IONIZATION_EXPONENT`] at the target real-field precision `R`.
+#[inline]
+pub fn park_no_ionization_exponent<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(PARK_NO_IONIZATION_EXPONENT)
+}
+
+/// Returns [`PARK_NO_IONIZATION_ACTIVATION_TEMP`] at the target real-field precision `R`.
+#[inline]
+pub fn park_no_ionization_activation_temp<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(PARK_NO_IONIZATION_ACTIVATION_TEMP)
+}
+
+// Reaction 6: N₂ + O ⇌ NO + N (Zeldovich exchange), the low-activation
+// N-atom production path that feeds associative ionization before direct
+// N₂ dissociation wakes up. Source: RP-1232 Table II, reaction 6 (verified
+// from the rendered page 46).
+
+/// Pre-exponential factor for N₂ + O → NO + N. Unit: cm³·mol⁻¹·s⁻¹.
+pub const RP1232_ZELDOVICH_PREFACTOR: f64 = 6.75e13;
+
+/// Temperature exponent for N₂ + O → NO + N (dimensionless).
+pub const RP1232_ZELDOVICH_EXPONENT: f64 = 0.0;
+
+/// Activation temperature for N₂ + O → NO + N. Unit: K.
+pub const RP1232_ZELDOVICH_ACTIVATION_TEMP: f64 = 3.75e4;
+
+/// Park's classic controlling-temperature exponent for **dissociation**,
+/// `T_q = T^q · T_v^(1−q)` with `q = 0.7` (Park 1990; the geometric mean
+/// `q = 0.5` is the alternative). The controlling-temperature choice is the
+/// largest closure divergence among production codes (DPLR/LAURA/US3D); this
+/// model adopts the Park lineage's own published exponent for the Park rate
+/// set. The *ionization* controller keeps the calibrated geometric mean.
+pub const PARK_DISSOCIATION_Q: f64 = 0.7;
+
+/// Returns [`RP1232_ZELDOVICH_PREFACTOR`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_zeldovich_prefactor<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_ZELDOVICH_PREFACTOR)
+}
+
+/// Returns [`RP1232_ZELDOVICH_EXPONENT`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_zeldovich_exponent<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_ZELDOVICH_EXPONENT)
+}
+
+/// Returns [`RP1232_ZELDOVICH_ACTIVATION_TEMP`] at the target real-field precision `R`.
+#[inline]
+pub fn rp1232_zeldovich_activation_temp<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(RP1232_ZELDOVICH_ACTIVATION_TEMP)
+}
+
+/// Returns [`PARK_DISSOCIATION_Q`] at the target real-field precision `R`.
+#[inline]
+pub fn park_dissociation_q<R: RealField + FromPrimitive>() -> R {
+    crate::constants::real_from_f64(PARK_DISSOCIATION_Q)
+}

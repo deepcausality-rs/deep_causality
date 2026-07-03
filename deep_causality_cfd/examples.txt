@@ -1,3 +1,5 @@
 # Examples
 
-@TODO
+All CFD examples are located in:
+
+examples/avionics_examples/cfd

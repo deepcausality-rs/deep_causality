@@ -288,6 +288,27 @@ provenance log are composition work — not missing primitives. **[holds under p
 
 ## 5. Bottom line and smallest next step
 
+> **Status (2026-07-02): shipped.** The corridor was built and archived as
+> `openspec/changes/archive/2026-07-02-add-plasma-blackout-corridor/` (the contract-first, reordered
+> plan: Stage 0 contracts → 3-D metric/marcher → nav engine in `deep_causality_cfd` → composition
+> stages → the Flow-DSL alternation/fork machinery → the flagship
+> `examples/avionics_examples/cfd/plasma_blackout_corridor`). The flagship's peak electron density
+> lands at `1.03e19 m⁻³` against the RAM-C II `1e19` anchor via the marched Park two-temperature
+> controller with sheath renewal; its coupled gates (blackout window, INS drift → reacquisition,
+> regime change, counterfactual branches, tensor compression) self-verify and exit nonzero on
+> regression. The remainder of this section is the pre-build analysis, kept for the record.
+>
+> **Status update (2026-07-02, second change): carrier upgraded from surrogate to compressible.**
+> `openspec/changes/add-compressible-blackout-carrier/` hosted the 2-D compressible marcher behind
+> the same coupled-loop machinery (a shared `CoupledCarrier` seam; the QTT host bit-identical):
+> the flagship now flies **one continuous descent** — the truth trajectory selects the freestream
+> through an atmosphere schedule, the exact Rankine-Hugoniot jump is the shock-fitted inflow
+> strip, `T_tr`/`n_tot`/pressure are evolved per-cell projections (the recovery-temperature
+> reconstruction and the per-station `FlightCondition` constants are gone), blackout onset and
+> exit are flow-resolved events, and the gate-clamped bank command actuates a 3-DOF
+> `BankSteeredLift` so branch misses are trajectory-derived. The peak `n_e` at the 61 km passage
+> holds the anchor band (measured `1.43e19` vs the `1e19` anchor, 1.43×, inside the 5× band) on the evolved state.
+
 - **Did the tensor train remove a gap?** Yes — the one that made step [4] aspirational. The
   flowfield-compression axis is now primitive-complete and the SOTA reacting-MPS method
   (arXiv:2512.13661) maps cleanly onto what we have.

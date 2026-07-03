@@ -48,6 +48,20 @@ pub const RELAX_LENGTH: f64 = 0.2;
 /// RAM-C II peak electron density near the 71 km station, m⁻³ (order-of-magnitude anchor).
 pub const RAMC_NE_REFERENCE: f64 = 1.0e19;
 
+/// Acceptance band of the uncalibrated finite-rate network prediction, in decades around the
+/// flight anchor. Pinned from the measurement recorded in baseline.txt; the production-code
+/// context (DPLR/LAURA/US3D at 2x to 3x, rate-set spread 2x to 5x) justifies the width.
+pub const NETWORK_BAND_DECADES: f64 = 0.7;
+
+/// The sheath-renewal A/B record (measured, both modes over the transit-age profile): renewal
+/// peaks at +0.48 dec and carried at -0.33 dec versus the flight anchor. Renewal is kept: its
+/// fixed-point clock `1/(k_f[M] + beta*n_e*)` equals the true Riccati relaxation rate
+/// `sqrt(production*beta)` of `dn_e/dt = P - beta*n_e^2` near equilibrium, while the carried
+/// clock rates young parcels at their small carried population and under-relaxes them. The gate
+/// asserts what recombination earned over the forward-only surrogate: the carried march
+/// self-limits at or below the closed-form arm (no runaway) and inside the earned band.
+pub const CARRIED_ARM_BAND_DECADES: f64 = NETWORK_BAND_DECADES;
+
 /// Lift an exact `f64` specification into the working precision.
 pub fn ft(x: f64) -> FloatType {
     FromPrimitive::from_f64(x).expect("specification lifts into FloatType")

@@ -1,4 +1,4 @@
-# CFD Verification Examples
+# CFD Verification 
 
 Runnable **verification** programs for the CFD stack — the DEC-native solver and the
 quantized-tensor-train (QTT) solver — each driven through the `CfdFlow` DSL. *Verification* here is the broad sense: a run is checked against either an **internal

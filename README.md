@@ -186,7 +186,7 @@ mix structural and sequential reasoning, picking the right shape at each stage:
 * **Parallel aggregation** belongs in a Causaloid collection.
 * **Cross-influencing dependencies** belong in a Causaloid graph.
 
-The [flight envelope monitor](examples/avionics_examples/flight_envelope_monitor/) shows all three: a Causaloid
+The [flight envelope monitor](examples/avionics_examples/control/flight_envelope_monitor/) shows all three: a Causaloid
 collection over five sensor-health checks, a three-step CausalMonad bind-chain for state estimation, and a Causaloid
 hypergraph of six envelope protections, all running through one `PropagatingProcess<T, FlightState, AircraftConfig>`
 with state and audit log threaded across every stage.

@@ -120,6 +120,22 @@ fn coupled_field_scalar_set_replace_and_access() {
 }
 
 #[test]
+fn coupled_field_take_scalar_consumes_the_field() {
+    let mut field = CoupledField::new(Ambient::new(0.01_f64, 0.0, None));
+    field.set_scalar("gnss_fix", vec![1.0, 2.0, 3.0]);
+    field.set_scalar("temperature", vec![300.0]);
+
+    // Taking removes the field and hands its data back; other fields are untouched.
+    assert_eq!(field.take_scalar("gnss_fix"), Some(vec![1.0, 2.0, 3.0]));
+    assert!(field.scalar("gnss_fix").is_none(), "consumed, not latched");
+    assert_eq!(field.scalar("temperature"), Some(&[300.0][..]));
+
+    // Taking again (or taking a name that never existed) yields nothing.
+    assert!(field.take_scalar("gnss_fix").is_none());
+    assert!(field.take_scalar("missing").is_none());
+}
+
+#[test]
 fn coupling_is_itself_a_physics_stage() {
     // Passing the `Coupling` (not its `.build()` tuple) as a stage delegates through its wrapper.
     let (manifold, state) = empty_context();

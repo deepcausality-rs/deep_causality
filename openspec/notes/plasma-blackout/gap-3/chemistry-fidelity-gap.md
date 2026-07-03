@@ -16,8 +16,21 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 >   in the post-shock bath, so `T_e(0) = T_ve`, not the frozen-cold free-stream) is recorded; the code is not
 >   kept. A *faithful* 3-T would need e–ion Coulomb heating + the ionization-energy sink, not less.
 >
-> Lever 3 (finite-rate ionization network) remains **[open]**, as does the trajectory/timing half of the
-> bundle ([Resolution 1](gap-three-resolution-1-perturbed-conformal-trajectory.md), preliminary).
+> - **Lever 3 — finite-rate ionization network: ✅ shipped (2026-07-02/03).** The three-channel RP-1232
+>   network (associative ionization + dissociative recombination, thresholded electron impact, lagged atom
+>   pool with the Zeldovich exchange) with **no Saha calibration target anywhere**. Measured twice on the
+>   stagnation line, channel by channel: the first pass landed 4.26 decades low (the pool clock), and the
+>   second ARIZ pass ([Resolution 3, both passes](gap-three-resolution-3-chemistry-fidelity.md)) closed it
+>   knob-free — transit-age profile `age(ξ) = t_res·ln(1/(1−ξ))`, Zeldovich in the N-pool clock, Park's
+>   published `q = 0.7` for dissociation. Final: **+0.48 decades (3.0×)** vs the RAM-C II anchor, inside
+>   the production-code 2–3× context; the sheath-renewal A/B under recombination kept renewal (its
+>   fixed-point clock is the network's Riccati timescale) and confirmed the carried arm self-limits. The
+>   corridor and weather examples now fly the network (calibration → validation: lever 1's ~1.1× was
+>   calibrated, the network's 3.0× is predicted).
+>
+> The change `openspec/changes/archive/2026-07-03-add-finite-rate-ionization-network/` carries the full specification and the
+> per-task landing notes. The trajectory/timing half of the bundle remains open
+> ([Resolution 1](gap-three-resolution-1-perturbed-conformal-trajectory.md), preliminary).
 
 **Scheduling.** This is a precision upgrade for the Gap-2 ionization physics, **deferred and lumped with
 [Gap 3 (the trajectory axis)](gap-three-resolution-1-perturbed-conformal-trajectory.md)**, to be

@@ -4,6 +4,8 @@
  */
 
 use crate::types::CfdScalar;
+use deep_causality_core::EffectLog;
+use deep_causality_haft::LogSize;
 
 /// The owned result of a CfdFlow solver run: labeled observation series. The borrows
 /// that produced it (manifold, solver) never escape `run`; only this owned `Report`
@@ -19,6 +21,10 @@ pub struct Report<R: CfdScalar> {
     /// The number of `EffectLog` entries the run accumulated (e.g. an uncertain-inflow march records
     /// dropout/intervention entries). `None` for runs with no effect log.
     log_entries: Option<usize>,
+    /// The full provenance log a coupled run accumulated (regime transitions, nav-mode changes,
+    /// bounded corrections, alternation markers) — the corridor [7] audit record. `None` for runs
+    /// that carried no effect log.
+    effect_log: Option<EffectLog>,
 }
 
 impl<R: CfdScalar> Report<R> {
@@ -28,6 +34,7 @@ impl<R: CfdScalar> Report<R> {
             series: Vec::new(),
             final_field: None,
             log_entries: None,
+            effect_log: None,
         }
     }
 
@@ -43,10 +50,22 @@ impl<R: CfdScalar> Report<R> {
         self.log_entries = Some(count);
     }
 
+    /// Attach the run's full provenance log (also sets the entry count).
+    pub(crate) fn set_effect_log(&mut self, log: EffectLog) {
+        self.log_entries = Some(log.len());
+        self.effect_log = Some(log);
+    }
+
     /// The number of `EffectLog` entries the run accumulated (uncertain-inflow dropout/intervention
     /// records), if the run carried an effect log.
     pub fn log_entries(&self) -> Option<usize> {
         self.log_entries
+    }
+
+    /// The full provenance log the run accumulated — regime transitions, nav-mode changes, bounded
+    /// corrections, and counterfactual alternation markers — if the run carried one.
+    pub fn effect_log(&self) -> Option<&EffectLog> {
+        self.effect_log.as_ref()
     }
 
     /// The final marched edge cochain (velocity 1-form coefficients), if the run produced one.

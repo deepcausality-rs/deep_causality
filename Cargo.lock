@@ -75,11 +75,13 @@ dependencies = [
  "chrono",
  "deep_causality",
  "deep_causality_calculus",
+ "deep_causality_cfd",
  "deep_causality_core",
  "deep_causality_file",
  "deep_causality_haft",
  "deep_causality_multivector",
  "deep_causality_num",
+ "deep_causality_par",
  "deep_causality_physics",
  "deep_causality_tensor",
 ]

@@ -5,9 +5,13 @@
 
 use deep_causality_core::EffectValue;
 use deep_causality_physics::{
-    IonizationFraction, NO_IONIZATION_ENERGY_EV, THETA_VIB_N2, Temperature, VibrationalTemperature,
-    arrhenius_rate, electron_density, park2t_ionization_surrogate, rankine_hugoniot_temperature,
-    recovery_temperature, saha_ionization_fraction, vibrational_relaxation,
+    ElectronTemperature, EquilibriumConstant, IonizationFraction, NO_IONIZATION_ENERGY_EV,
+    THETA_VIB_N2, Temperature, VibrationalTemperature, arrhenius_rate,
+    dissociation_equilibrium_fraction, electron_density, electron_impact_ionization_n_rate,
+    electron_impact_ionization_o_rate, finite_rate_ionization_fixed_point,
+    n2_dissociation_equilibrium, no_dissociative_recombination_rate, o2_dissociation_equilibrium,
+    park2t_ionization_surrogate, rankine_hugoniot_temperature, recovery_temperature,
+    saha_ionization_fraction, vibrational_relaxation,
 };
 
 #[test]
@@ -93,4 +97,23 @@ fn test_recovery_temperature_wrapper() {
     assert!(ok.is_ok());
     let err = recovery_temperature(Temperature::<f64>::new(300.0).unwrap(), 2000.0, 1004.0);
     assert!(!err.is_ok());
+}
+
+#[test]
+fn test_finite_rate_network_wrappers() {
+    let te = ElectronTemperature::<f64>::new(6_000.0).unwrap();
+    assert!(no_dissociative_recombination_rate(te).is_ok());
+    assert!(electron_impact_ionization_n_rate(te).is_ok());
+    assert!(electron_impact_ionization_o_rate(te).is_ok());
+
+    let t = Temperature::<f64>::new(6_000.0).unwrap();
+    assert!(n2_dissociation_equilibrium(t).is_ok());
+    assert!(o2_dissociation_equilibrium(t).is_ok());
+
+    let k = EquilibriumConstant::<f64>::new(1.0e-8).unwrap();
+    assert!(dissociation_equilibrium_fraction(k, 1.0e-6).is_ok());
+    assert!(!dissociation_equilibrium_fraction(k, 0.0).is_ok());
+
+    assert!(finite_rate_ionization_fixed_point(1.0e-10_f64, 0.0, 1.0e12).is_ok());
+    assert!(!finite_rate_ionization_fixed_point(1.0e-10_f64, 0.0, 0.0).is_ok());
 }

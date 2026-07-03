@@ -16,6 +16,7 @@
 //! whole holistic coupling via `?`). Adding a coupled physics is a small `PhysicsStage` impl, not a
 //! change to the DSL core.
 
+use crate::navigation::ReentryNavEngine;
 use crate::solvers::dec::diagnostics::dec_sample_velocity;
 use crate::types::flow::corridor::RegimeClass;
 use crate::types::{Ambient, CfdScalar};
@@ -121,11 +122,13 @@ impl<'a, const D: usize, R: CfdScalar> StepContext<'a, D, R> {
 /// action** (the bounded command a corrective stage writes, e.g. a bank-angle correction). Both are
 /// `None` until a producing stage sets them, so existing couplings are unaffected.
 ///
-/// Two further composition channels ride alongside, carrying the Stage-3 corridor state: the last
+/// Three further composition channels ride alongside, carrying the corridor state: the last
 /// [`RegimeClass`] the classifier selected (the governing-model + GNSS-denial decision downstream
-/// stages read, and against which a regime *change* is detected), and an [`EffectLog`] of provenance
-/// entries (regime transitions, bounded corrections, envelope breaches) — the auditable record the
-/// flagship surfaces. Both start empty, so existing couplings are unaffected.
+/// stages read, and against which a regime *change* is detected), the onboard
+/// [`ReentryNavEngine`] a trajectory stage threads through the field (the nav *state* lives here,
+/// not in the stage — stages stay immutable), and an [`EffectLog`] of provenance entries (regime
+/// transitions, bounded corrections, envelope breaches) — the auditable record the flagship
+/// surfaces. All start empty, so existing couplings are unaffected.
 #[derive(Debug, Clone)]
 pub struct CoupledField<R: CfdScalar> {
     ambient: Ambient<R>,
@@ -133,6 +136,7 @@ pub struct CoupledField<R: CfdScalar> {
     aero_force: Option<[R; 3]>,
     control_action: Option<R>,
     regime: Option<RegimeClass<R>>,
+    nav: Option<ReentryNavEngine<R>>,
     log: EffectLog,
 }
 
@@ -145,6 +149,7 @@ impl<R: CfdScalar> CoupledField<R> {
             aero_force: None,
             control_action: None,
             regime: None,
+            nav: None,
             log: EffectLog::new(),
         }
     }
@@ -177,6 +182,14 @@ impl<R: CfdScalar> CoupledField<R> {
             .map(|(_, d)| d.as_slice())
     }
 
+    /// Remove a named scalar field, returning its data if it was present. A consuming stage
+    /// takes a one-shot input (e.g. a published position fix) out of the field with this, so a
+    /// stale copy cannot be re-read on a later step if its publisher goes quiet.
+    pub fn take_scalar(&mut self, name: &str) -> Option<Vec<R>> {
+        let idx = self.scalars.iter().position(|(n, _)| n == name)?;
+        Some(self.scalars.remove(idx).1)
+    }
+
     /// Mutable access to a named scalar field, if present.
     pub fn scalar_mut(&mut self, name: &str) -> Option<&mut Vec<R>> {
         self.scalars
@@ -204,6 +217,22 @@ impl<R: CfdScalar> CoupledField<R> {
     /// Write the bounded control action (a corrective stage writes its clamped command here).
     pub fn set_control_action(&mut self, action: R) {
         self.control_action = Some(action);
+    }
+
+    /// The onboard navigation engine threaded through the coupling, if a nav stage has seeded it.
+    pub fn nav(&self) -> Option<&ReentryNavEngine<R>> {
+        self.nav.as_ref()
+    }
+
+    /// Take the navigation engine out of the field (a nav stage takes it, advances it, and puts it
+    /// back — the state threads through the `CoupledField`, not through the stage).
+    pub fn take_nav(&mut self) -> Option<ReentryNavEngine<R>> {
+        self.nav.take()
+    }
+
+    /// Thread the navigation engine (back) into the field.
+    pub fn set_nav(&mut self, nav: ReentryNavEngine<R>) {
+        self.nav = Some(nav);
     }
 
     /// The last governing-model regime the classifier selected, if a classifier stage has run.

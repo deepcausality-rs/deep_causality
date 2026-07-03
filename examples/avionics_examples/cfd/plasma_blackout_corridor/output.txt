@@ -1,0 +1,86 @@
+   Compiling avionics_examples v0.1.0 (/Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples)
+    Finished `release` profile [optimized] target(s) in 4.62s
+     Running `target/release/examples/plasma_blackout_corridor`
+=== Plasma-blackout corridor: one continuous descent ===
+
+Carrier: 32x32 compressible tensor-train layer (bond cap 16) | comms band: GPS L1 (w = 9.899e9 rad/s)
+Compressed time: one coupled step = 0.1 s of flight; one solver pseudo-time step per coupled step (quasi-steady layer)
+Precision: f64 
+
+--- Leg: descent to blackout onset ---
+  marched 119 steps to 74.7 km, Mach 27.5 | regime: slip (Kn = 1.71e-2) | link: GNSS DENIED
+  n_e peak = 3.981e16 m^-3 | w_p = 1.126e10 rad/s | q = 8.863e5 W/m^2 | 0.3 g
+  nav error vs truth = 0.3467 m | position variance = 2.4565e-1 m^2 | log entries: 5
+
+--- Counterfactual bank commands (coarse sweep, forked from the shared flow-resolved onset) ---
+  bank     peak heat      thermal load   dwell      miss (traj)   miss (t2 x-check)  peak n_e      alternation
+    0.0deg     1.703e6       1.352e7    10.00 s     20.000 m         1.3191 m    2.524e19   !!ContextAlternation!!
+    5.0deg     1.703e6       1.352e7    10.00 s     12.812 m         1.3191 m    2.524e19   !!ContextAlternation!!
+   10.0deg     1.703e6       1.352e7    10.00 s      5.807 m         1.3191 m    2.524e19   !!ContextAlternation!!
+   15.0deg     1.703e6       1.352e7    10.00 s      3.120 m         1.3191 m    2.525e19   !!ContextAlternation!! <- committed
+   20.0deg     1.703e6       1.352e7    10.00 s      9.612 m         1.3191 m    2.525e19   !!ContextAlternation!!
+   40.0deg     1.704e6       1.352e7    10.00 s     22.018 m         1.3191 m    2.527e19   !!ContextAlternation!!
+  committed rule: minimum trajectory-derived miss to the shared aim point
+
+--- Fine sweep (0.5-deg candidates around the coarse winner, same onset fork) ---
+  bank     peak heat      thermal load   dwell      miss (traj)   miss (t2 x-check)  peak n_e      alternation
+   12.5deg     1.703e6       1.352e7    10.00 s      2.897 m         1.3191 m    2.524e19   !!ContextAlternation!!
+   13.0deg     1.703e6       1.352e7    10.00 s      2.555 m         1.3191 m    2.524e19   !!ContextAlternation!!
+   13.5deg     1.703e6       1.352e7    10.00 s      2.393 m         1.3191 m    2.524e19   !!ContextAlternation!! <- committed
+   14.0deg     1.703e6       1.352e7    10.00 s      2.449 m         1.3191 m    2.524e19   !!ContextAlternation!!
+   14.5deg     1.703e6       1.352e7    10.00 s      2.708 m         1.3191 m    2.525e19   !!ContextAlternation!!
+   15.0deg     1.703e6       1.352e7    10.00 s      3.120 m         1.3191 m    2.525e19   !!ContextAlternation!!
+   15.5deg     1.703e6       1.352e7    10.00 s      3.634 m         1.3191 m    2.525e19   !!ContextAlternation!!
+   16.0deg     1.703e6       1.352e7    10.00 s      4.212 m         1.3191 m    2.525e19   !!ContextAlternation!!
+   16.5deg     1.703e6       1.352e7    10.00 s      4.832 m         1.3191 m    2.525e19   !!ContextAlternation!!
+   17.0deg     1.703e6       1.352e7    10.00 s      5.479 m         1.3191 m    2.525e19   !!ContextAlternation!!
+   17.5deg     1.703e6       1.352e7    10.00 s      6.144 m         1.3191 m    2.525e19   !!ContextAlternation!!
+  committed rule: minimum trajectory-derived miss to the shared aim point
+
+--- Leg: peak passage 61 km (committed dwell) ---
+  marched 108 steps to 60.9 km, Mach 24.9 | regime: continuum (Kn = 3.83e-3) | link: GNSS DENIED
+  n_e peak = 3.349e19 m^-3 | w_p = 3.265e11 rad/s | q = 1.829e6 W/m^2 | 1.3 g
+  nav error vs truth = 2.5448 m | position variance = 3.8601e1 m^2 | log entries: 8
+
+--- Leg: flow-resolved exit ---
+  marched 476 steps to 47.0 km, Mach 8.5 | regime: continuum (Kn = 2.58e-4) | link: GNSS available
+  n_e peak = 2.781e16 m^-3 | w_p = 9.408e9 rad/s | q = 2.959e5 W/m^2 | 2.4 g
+  nav error vs truth = 2.3056 m | position variance = 2.9995e0 m^2 | log entries: 12
+
+--- Leg: reacquisition ---
+  marched 30 steps to 47.6 km, Mach 8.3 | regime: continuum (Kn = 2.70e-4) | link: GNSS available
+  n_e peak = 2.259e-3 m^-3 | w_p = 2.681e0 rad/s | q = 2.691e5 W/m^2 | 2.2 g
+  nav error vs truth = 0.2775 m | position variance = 3.1945e-1 m^2 | log entries: 13
+
+--- Provenance (the carried EffectLog, the whole descent) ---
+  13 entries total (0 bank-correction boundings by the cybernetic gate, omitted below):
+    regime -> slip (GNSS-available), Kn=0.07829109848665225
+    nav: aided (position fix folded)
+    regime -> slip (GNSS-denied), Kn=0.01705925949914955
+    nav: dead reckoning (no usable fix)
+    march paused at step 119
+    !!ContextAlternation!!: world 'nominal_descent' replaced with 'fine_bank_02'
+    regime -> continuum (GNSS-denied), Kn=0.009938308574526865
+    march paused at step 108
+    !!ContextAlternation!!: world 'nominal_descent' replaced with 'fine_bank_02'
+    regime -> continuum (GNSS-available), Kn=0.00025839060489290773
+    nav: aided (position fix folded)
+    march paused at step 476
+    !!ContextAlternation!!: world 'nominal_descent' replaced with 'fine_bank_02'
+
+--- Coupled validation gates ---
+  [PASS] (0) corridor integrity: no leg captured a step error (the envelope held)
+  [PASS] (1) flow-resolved blackout window: onset at step 119 (74.7 km), denied through the peak, exit at 47.0 km after a 58.4 s dwell
+  [PASS] (2) peak n_e vs the RAM-C II anchor: n_e = 3.349e19 m^-3 at the 60.9 km passage, in [2.0e18, 5.0e19] around the flight anchor 1e19 m^-3 (evolved state, uncalibrated finite-rate network; the stagline-earned ±0.7-decade band)
+  [PASS] (2b) blackout window altitudes: flow-resolved exit at 47.0 km (pinned band [40, 50] km) vs the RAM-C II 25-30 km flight window: the probe's light ballistic bundle decelerates it below the ionization threshold higher, so the offset is ballistics, not chemistry; onset predicted at 74.7 km
+  [PASS] (3) real INS drift -> reacquisition: err 0.3467 m -> 2.5448 m dead-reckoning to the peak passage, 0.2775 m after reacquisition; variance 2.457e-1 -> 3.860e1 -> 3.194e-1 m^2
+  [PASS] (4a) regime change: the descent crossed a Knudsen band (slip -> continuum), logged as provenance events
+  [PASS] (4b) multiphysics chain: evolved flow -> reacting plasma -> steered aero force -> loads -> navigation all live in one coupling
+  [PASS] (4c) counterfactual steering: 17 alternated worlds (6 coarse + 11 fine) from one shared onset; coarse-winner-vs-ballistic terminal separation 21.54 m; coarse miss spread [3.12, 22.02] m
+  [PASS] (4d) tensor compression: the committed branch's final evolved state re-quantizes at peak bond 16 (cap 16) vs the dense 1024-cell grid
+  [PASS] (4e) guidance precision from the sweep: committed 13.5 deg lands 2.39 m off the aim vs the ballistic 20.00 m (8.4x better; gate requires 3x)
+  [PASS] (4f) fine sweep refines the coarse winner: fine 13.5 deg at 2.39 m vs coarse 15 deg at 3.12 m (0.5-deg resolution around the coarse winner, same onset fork, same aim)
+  [PASS] (5a) bounded schedule rebuilds: 0 carrier rebuild(s) while following the descent (cap 3)
+  [PASS] (5b) wall-clock budget: 40.5 s elapsed (budget 600 s)
+
+=== All corridor gates passed. ===

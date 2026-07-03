@@ -27,21 +27,25 @@
 
 Shared parallelism primitives for the DeepCausality workspace.
 
-The crate currently carries one item: `MaybeParallel`, the
-feature-conditional thread-safety marker used by the `parallel` features of
-`deep_causality_topology` and `deep_causality_fft`. With
-`--features parallel` the trait is a `Send + Sync` alias
+The crate carries two items.
+
+`MaybeParallel` is the feature-conditional thread-safety marker used by the
+`parallel` features of `deep_causality_topology` and `deep_causality_fft`.
+With `--features parallel` the trait is a `Send + Sync` alias
 (blanket-implemented); without it the trait is vacuous, so serial builds
 carry no extra bounds.
 
-Hosting the marker in one Tier-0 crate guarantees a single definition:
+`scoped_map` is the minimal in-house fork-join surface: an order-preserving
+map over a slice that fans out on `std::thread::scope` threads under the
+`parallel` feature (one contiguous chunk per available core) and runs
+inline without it. It targets few, long, data-independent tasks such as
+counterfactual branch fan-outs; it is not a work-stealing scheduler and
+adds no external dependency.
+
+Hosting both in one Tier-0 crate guarantees a single definition:
 downstream crates forward their own `parallel` feature to
 `deep_causality_par/parallel`, and Cargo feature unification keeps every
 crate in a build agreeing on what the bound means.
-
-Forward-looking: this crate is the designated home for a minimal in-house
-replacement of the Rayon surface the workspace actually uses (scoped
-fork-join over slices), should the external dependency ever need to go.
 
 No `unsafe` — the crate opts into the workspace-wide
 `unsafe_code = "forbid"` lint policy.

@@ -3,7 +3,7 @@ SPDX-License-Identifier: MIT
 Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
 -->
 
-# Gap 3, Resolution 3 — trajectory axis: spec-readiness assessment + de-risking feasibility studies
+# Gap 3, Resolution 4 — trajectory axis: spec-readiness assessment + de-risking feasibility studies
 
 **What this is.** A **spec-readiness / feasibility-gap analysis** of the Gap-3 trajectory-timing axis, sitting
 between [Resolution 1](gap-three-resolution-1-perturbed-conformal-trajectory.md) (the `[preliminary]`

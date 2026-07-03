@@ -12,6 +12,7 @@
 
 mod body;
 mod cfd_config_builder;
+pub(crate) mod compressible_march_config;
 pub(crate) mod manufactured;
 mod march_builder;
 pub(crate) mod march_config;
@@ -24,6 +25,10 @@ pub(crate) mod uncertain_march_config;
 
 pub use body::Body;
 pub use cfd_config_builder::CfdConfigBuilder;
+pub use compressible_march_config::{
+    AtmosphereRow, CompressibleMarchConfig, CompressibleMarchConfigBuilder, DescentSchedule,
+    ReferenceScales,
+};
 pub use manufactured::{
     Manufactured, ManufacturedSample, TaylorGreen, VerifyConfig, VerifyConfigBuilder,
 };
