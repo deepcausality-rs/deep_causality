@@ -2,7 +2,7 @@
 
 > **STATUS: exploratory note (2026-07-03).** Nothing here is proposed or built. This note mines
 > CFD University's survey of the six biggest unsolved challenges in CFD
-> ([source](https://cfd.university/blog/the-6-biggest-and-unoslved-challenges-in-cfd); the slug's spelling is the site's own) for the
+> ([source](https://cfd.university/blog/the-6-biggest-and-unoslved-challenges-in-cfd)) for the
 > sub-problems `deep_causality_cfd` could answer with minor updates or additions, and ranks
 > them from least to most effort. The crate README records what is answered *today*; this note
 > records what one small step would add.
@@ -109,6 +109,38 @@ provenance `EffectLog`, so a result names its own inputs and audit trail. CSV ou
 `IoAction` seam exist; the work is schema design and round-trip tests. **Effort: moderate.**
 Design-heavy rather than code-heavy, and worth a short spec before building.
 
+**Elaboration: how a serialized config relates to the missing CGNS-equivalent.** CGNS
+standardizes the answer (fields on a grid); a serialized CfdFlow configuration standardizes
+the question (world, solver, coupling, schedule, gates). For multidisciplinary results the
+question half is the load-bearing half: a single-discipline field is self-interpreting, but a
+coupled result ("polar-winter drift 68.75 m") carries no meaning without the IMU model, the
+atmosphere, the coupling order, and the closures that produced it, and that description layer
+is what the community never standardized. Because configuration and execution are separated in
+this crate, the serialized description also *executes*: same config plus deterministic
+execution reproduces the same bits, so the format is a reproducibility contract rather than
+metadata that can rot. The full CGNS-equivalent for this ecosystem is then the triple this
+item already names: description (config), result (`Report`), provenance (`EffectLog`), with
+two properties CGNS never had (executability, and acceptance criteria that travel with the
+result) and one it cannot claim (multi-implementation adoption; the format is executable only
+by this engine, though third parties can read and validate it from an open schema).
+
+**Elaboration: the enterprise process model this enables.** With an open config schema, third
+parties generate configs for a catalog of standardized pipelines: import a watertight CAD
+surface, emit a config for "process 42", load it, run it. The design splits along the line
+that model needs. The *process definition* stays a versioned, typed Rust artifact with its
+gates compiled in (a qualified process should be frozen; it cannot be mis-assembled from a
+file), while the *parameter surface* is open data the config selects and fills
+(`process = "plasma-blackout-corridor@1"` plus values). The weather table already runs this
+shape today: one process, six parameter sets, 48 runs, one gated table. Every third-party
+parameterization self-verifies against the process's own pinned bands, with the exit code and
+provenance log as the QA record. Additions this implies beyond the archive itself: a process
+registry (named, versioned flow definitions addressable from a config), schema-validated
+untrusted input (the `DescentSchedule::new` validation is the seed of that posture, applied to
+every config field), a thin runner (load config, run, emit the archive, exit code from the
+gates), and the item-7 rasterizer as the CAD entry point. This is the simulation-process-and-
+data-management (SPDM) layer enterprises currently build as scripting glue around closed
+solvers, expressed as typed artifacts instead.
+
 ### 6. Experimental data fusion into states and gates
 
 **Challenge 5 (knowledge extraction, data fusion).** The survey flags fusing simulation with
@@ -134,7 +166,61 @@ closed surface (an STL or an implicit function) to a signed-distance mask on the
 grid, which would extend "no meshing" from analytic bodies to arbitrary closed geometry.
 **Effort: largest on this list.** A 3-D mask path, geometry robustness work, and a fresh
 verification ladder (a benchmark body with published references); still bounded, because it
-bypasses mesh generation rather than solving it.
+bypasses mesh generation rather than solving it. The section below elaborates what the QTT
+representation changes about this challenge as a whole.
+
+## What QTT changes about geometry and grid generation (challenge 4, elaborated)
+
+The QTT representation contributes three structural things to the meshing problem, bounded by
+two measured limits.
+
+**The grid is never generated.** A QTT field lives on a uniform `2^L` grid addressed by the
+binary digits of the coordinates. There is no meshing step: no cell-quality metrics, no
+skewness bounds, no smoothing pass, no human in the loop. Refinement is `L -> L+1`, one more
+tensor core, and the cost grows as `chi^2 * L` rather than by a factor of eight per octave.
+The automation sub-problem the survey names has nothing left to automate, because nothing is
+generated.
+
+**Compression removes the economic reason graded meshes exist.** Meshes are graded (boundary
+layer stacks, wake refinement, shock adaption) because a dense uniform fine grid is
+unaffordable, so a human decides where the resolution budget goes. QTT charges by field
+structure instead of point count: a smooth region costs rank near 1 no matter how many grid
+points cover it, so global fineness is bought at logarithmic storage cost and structure is paid
+for only in bond dimension, where the field actually has it. The trade-off that mesh grading
+negotiates is the thing the representation deletes.
+
+**Geometry becomes data with a minimal CAD contract.** The immersed path (`mask_from_fn`,
+`body_mask_2d`, the immersed QTT solver) rasterizes the body as an indicator or signed-distance
+field on the uniform grid, and that mask is itself a QTT with the same codec and rounding as
+the flow fields. The only property this asks of the upstream CAD is that inside/outside is
+well defined, which is watertightness, exactly the guarantee the survey asks CAD formats to
+provide. Surface meshing, boundary-layer extrusion, and mesh-ready topology drop out of the
+contract entirely. Item 7 above (the watertight-surface rasterizer) is the bridge that extends
+this from analytic shapes to arbitrary closed geometry.
+
+**Measured limit one: alignment sets rank.** The crate's own rank studies are the fence. A
+captured curved shock on a misaligned Cartesian grid grows rank without bound (`qtt_rank_3d`
+measured chi ~ sqrt(side), 45 to 135 over 16³ to 128³), while shock-aligned and body-fitted
+coordinates hold chi ~ 6 constant. Discontinuities therefore still need shock fitting (the
+compressible carrier's answer: the Rankine-Hugoniot state as the boundary of the marched
+layer) or an analytic coordinate map (`src/coordinate/`). A map is a handful of analytic
+functions, closer to choosing a conformal transformation than to generating a mesh, but for a
+complex assembly a good global map may not exist; that remainder of challenge 4 stays out of
+scope, as recorded below.
+
+**Measured limit two: the wall, not the grid.** Storage says a `2^L` grid can resolve a
+boundary layer at log cost (a laminar profile is smooth, hence low rank); the working
+constraints sit in the solver, not the representation: near-wall accuracy at an immersed
+boundary needs the cut-cell no-slip treatment (the proposed `add-aperture-resolved-noslip`
+design), and fine grids tighten the explicit time step, which is what the acoustic IMEX and
+preconditioner studies address. High-Reynolds wall-bounded claims wait on both.
+
+One cheap study would pin the open empirical question here: the rank of SDF masks as body
+complexity grows (the geometric analog of the existing rank studies). Smooth boundaries should
+stay low rank with structure concentrated near the surface; measuring where that stops holding
+would size item 7's verification ladder before it is built. Net effect of the whole section:
+QTT shrinks what must be generated from a volume mesh to an inside/outside query plus at most
+one analytic coordinate map.
 
 ## Turbulence modelling (challenge 2)
 
