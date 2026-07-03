@@ -1,0 +1,41 @@
+openspec/changes/add-finite-rate-ionization-network/tasks.md
+  s_c4c919f578d611::t_dff696a07f78c5 1-14,19-39,48-75
+  s_c4c919f578d611::t_812b74c8ccb7fa 15-18,40-47
+openspec/changes/add-finite-rate-ionization-network/specs/park2t-blackout-validation/spec.md
+  s_c4c919f578d611::t_8c70e53bdd28bd 1-23
+openspec/changes/add-finite-rate-ionization-network/specs/finite-rate-ionization-network/spec.md
+  s_c4c919f578d611::t_93c24e626a0ea4 1-7,13-20,22,25-26,33-63
+  s_c4c919f578d611::t_8501a0ffc260cd 8-12,21,23-24,27-32
+openspec/changes/add-finite-rate-ionization-network/.openspec.yaml
+  s_c4c919f578d611::t_4c97f552a28355 1-2
+openspec/changes/add-finite-rate-ionization-network/design.md
+  s_c4c919f578d611::t_8501a0ffc260cd 37-38,109,119-121
+  s_c4c919f578d611::t_1aeead4c22b640 63-73,79-84,106-108,152-154
+  s_c4c919f578d611::t_462605656ea5b4 1-36,39-62,74-78,85-105,110-118,122-151
+openspec/changes/add-finite-rate-ionization-network/specs/park2t-ionization-kernels/spec.md
+  s_c4c919f578d611::t_8c70e53bdd28bd 1-29
+openspec/changes/add-finite-rate-ionization-network/proposal.md
+  s_c4c919f578d611::t_872dd4e0fe72c3 1-69
+openspec/changes/add-finite-rate-ionization-network/specs/plasma-blackout-flagship/spec.md
+  s_c4c919f578d611::t_56c5ac7518df9c 1-29
+openspec/notes/plasma-blackout/gap-3/chemistry-fidelity-gap.md
+  s_c4c919f578d611::t_b4a7c56aa5de35 19-24
+openspec/notes/plasma-blackout/gap-3/gap-three-resolution-4-chemistry-fidelity.md
+  s_c4c919f578d611::t_3d0b22e777978c 1-193
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "554d4808777564eccbfddf59587d40fa4a5ab0d4",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
