@@ -18,6 +18,12 @@ aerodynamics over a real component stays out of this set.
 
 ## Group 1: precondition, the `deep_causality_file` crate
 
+> **STATUS: shipped (2026-07-03)** through `openspec/changes/add-cfd-file-io/`: the typed
+> table reader, the units-aware result-table writer, the sensor-trace loader, and the two-tier
+> snapshot/resume (checksummed container, `force_load` with reported warnings, world
+> fingerprint, bit-exact scalars, one-line `save_state_snapshot` on a paused march and
+> `load_resume_state` for the continuing workflow). Groups 2 and 3 are unblocked.
+
 Every example below reads an input table and writes a result table, so the file seam
 comes first. `deep_causality_file` today provides IO-monad loaders
 (`deep_causality_haft::IoAction`, lazy until `.run()`) for RINEX GNSS precise products

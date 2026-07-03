@@ -8,3 +8,7 @@ mod read_clk_tests;
 mod read_gnss_tests;
 #[cfg(test)]
 mod read_sp3_tests;
+#[cfg(test)]
+mod read_table_tests;
+#[cfg(test)]
+mod read_trace_tests;

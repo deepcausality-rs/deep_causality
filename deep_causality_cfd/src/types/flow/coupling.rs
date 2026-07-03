@@ -175,6 +175,12 @@ impl<R: CfdScalar> CoupledField<R> {
     }
 
     /// A named scalar field, if present.
+    /// Every named scalar field in insertion order (snapshot access: the resume package
+    /// serializes the whole carried state, not a known subset).
+    pub fn scalars(&self) -> &[(String, Vec<R>)] {
+        &self.scalars
+    }
+
     pub fn scalar(&self, name: &str) -> Option<&[R]> {
         self.scalars
             .iter()

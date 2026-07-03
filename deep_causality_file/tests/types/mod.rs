@@ -10,3 +10,9 @@ mod gnss_types_tests;
 mod orbit_types_tests;
 #[cfg(test)]
 mod satelite_types_tests;
+#[cfg(test)]
+mod snapshot_types_tests;
+#[cfg(test)]
+mod table_types_tests;
+#[cfg(test)]
+mod trace_types_tests;

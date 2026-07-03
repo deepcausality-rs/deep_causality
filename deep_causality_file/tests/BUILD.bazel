@@ -27,8 +27,12 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality_file",
+        # Internal dependencies
+        "//deep_causality_haft",
+        "//deep_causality_num",
         # External dependencies
         "//thirdparty/crates:chrono",
+        "//thirdparty/crates:tempfile",
     ],
 )
 
@@ -64,5 +68,43 @@ rust_test_suite(
         "//deep_causality_file",
         # Internal dependencies
         "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
+    name = "writers",
+    srcs = glob([
+        "writers/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_file",
+        # Internal dependencies
+        "//deep_causality_haft",
+        # External dependencies
+        "//thirdparty/crates:tempfile",
+    ],
+)
+
+rust_test_suite(
+    name = "snapshot",
+    srcs = glob([
+        "snapshot/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_file",
+        # Internal dependencies
+        "//deep_causality_haft",
+        # External dependencies
+        "//thirdparty/crates:tempfile",
     ],
 )

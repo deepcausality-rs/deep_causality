@@ -27,15 +27,27 @@
 
 pub mod errors;
 pub mod loaders;
+pub mod snapshot;
 pub mod types;
+pub mod writers;
 
 pub use errors::conversion_error::ConversionError;
 pub use errors::data_loading_error::DataLoadingError;
 pub use loaders::{
-    DataManager, ReadClockData, ReadOrbitData, read_clock_data, read_gnss_single_satellite,
-    read_orbit_data,
+    DataManager, ReadClockData, ReadOrbitData, ReadSensorTrace, ReadTable, read_clock_data,
+    read_gnss_single_satellite, read_orbit_data, read_sensor_trace, read_table,
+};
+pub use snapshot::{
+    ForceLoadSnapshot, LoadSnapshot, SaveSnapshot, fingerprint64, fnv1a64, force_load_snapshot,
+    load_snapshot, save_snapshot,
 };
 pub use types::clock_types::ClockData;
 pub use types::gnss_types::GnssDataResult;
 pub use types::orbit_types::OrbitData;
 pub use types::satelite_types::SatId;
+pub use types::snapshot_types::{
+    BitCodec, ScalarTypeTag, SnapshotPackage, SnapshotSection, SnapshotTier,
+};
+pub use types::table_types::{NumericTable, TableColumn};
+pub use types::trace_types::{SensorChannel, SensorTraceSet};
+pub use writers::{WriteTable, write_table};

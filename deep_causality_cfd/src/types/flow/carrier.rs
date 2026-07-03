@@ -349,6 +349,32 @@ where
 
 impl<'c, R, S, M, const D: usize> CarrierPause<'c, R, S, M, D>
 where
+    R: CfdScalar + deep_causality_file::BitCodec,
+    M: CoupledCarrier<D, R>,
+{
+    /// Suspend this paused march to disk in one line: the carried field and the step index are
+    /// packed into a full resume package (checksummed, fingerprinted) and written to `path`. A
+    /// different workflow continues later via
+    /// [`load_resume_state`](crate::types::flow::state_snapshot::load_resume_state).
+    ///
+    /// # Errors
+    /// Packing and file failures surface as physics errors naming the cause.
+    pub fn save_state_snapshot(
+        &self,
+        path: impl AsRef<std::path::Path>,
+        world_fingerprint: &[u8],
+    ) -> Result<(), PhysicsError> {
+        crate::types::flow::state_snapshot::save_resume_state(
+            path,
+            self.field(),
+            self.step(),
+            world_fingerprint,
+        )
+    }
+}
+
+impl<'c, R, S, M, const D: usize> CarrierPause<'c, R, S, M, D>
+where
     R: CfdScalar,
     M: CoupledCarrier<D, R>,
 {

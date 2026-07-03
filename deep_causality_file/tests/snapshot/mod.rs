@@ -2,8 +2,5 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-mod errors;
-mod loaders;
-mod snapshot;
-mod types;
-mod writers;
+#[cfg(test)]
+mod snapshot_io_tests;

@@ -97,7 +97,9 @@ reduced-order model with a tunable error knob. The addition is an API that round
 solution states to a target tolerance or bond cap, re-evaluates the registered observables on
 the rounded states, and reports the observable error alongside the compression ratio. The
 pieces (`Truncation`, `quantize`/`dequantize`, `max_bond`, the observable extractors) all
-exist. **Effort: moderate.** New API surface and a verification example, but no new numerics.
+exist, and the field-tier snapshot container from `add-cfd-file-io` (shipped 2026-07-03) is
+the export's payload format. **Effort: moderate.** New API surface and a verification example,
+but no new numerics.
 
 ### 5. Self-describing multidisciplinary results
 
@@ -106,7 +108,9 @@ multidisciplinary results, which makes cross-domain collaboration inefficient. T
 declare a community standard, but it can ship a self-describing artifact: one serialized
 archive holding the world description (the owned config), the `Report` series, and the
 provenance `EffectLog`, so a result names its own inputs and audit trail. CSV output and the
-`IoAction` seam exist; the work is schema design and round-trip tests. **Effort: moderate.**
+`IoAction` seam exist; the work is schema design and round-trip tests, and two payload pieces
+shipped with `add-cfd-file-io` (2026-07-03): the units-aware result table and the checksummed,
+fingerprinted snapshot container the archive can adopt unchanged. **Effort: moderate.**
 Design-heavy rather than code-heavy, and worth a short spec before building.
 
 **Elaboration: how a serialized config relates to the missing CGNS-equivalent.** CGNS

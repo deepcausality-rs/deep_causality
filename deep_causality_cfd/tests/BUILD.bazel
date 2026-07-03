@@ -245,11 +245,14 @@ rust_test(
         "//deep_causality_cfd",
         # Internal dependencies
         "//deep_causality_core",
+        "//deep_causality_file",
         "//deep_causality_haft",
         "//deep_causality_physics",
         "//deep_causality_tensor",
         "//deep_causality_topology",
         "//deep_causality_uncertain",
+        # External dependencies
+        "//thirdparty/crates:tempfile",
     ],
 )
 

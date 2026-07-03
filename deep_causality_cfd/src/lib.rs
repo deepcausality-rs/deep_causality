@@ -63,6 +63,17 @@ pub use crate::navigation::{
 
 // The CfdFlow DSL facade (owned case descriptions materialized at run).
 // Workflow composition — the CfdFlow DSL (the "how").
+// State snapshot and resume: pack/unpack a running state, one-line save and cross-workflow
+// load, plus the file-crate container types a consumer needs.
+pub use crate::types::flow::state_snapshot::{
+    NamedTtFields, load_resume_state, pack_resume, pack_tt_fields, save_resume_state,
+    unpack_resume, unpack_tt_fields,
+};
+pub use deep_causality_file::{
+    BitCodec, ScalarTypeTag, SnapshotPackage, SnapshotSection, SnapshotTier, fingerprint64,
+    force_load_snapshot, load_snapshot, save_snapshot,
+};
+
 pub use crate::types::flow::{
     AeroBlackoutStub, AeroForceCoupling, BankCorrection, BankSteeredLift, BlackoutState,
     BlackoutTrigger, BranchAccumulator, BranchOutcome, CfdFlow, CompressibleFork,

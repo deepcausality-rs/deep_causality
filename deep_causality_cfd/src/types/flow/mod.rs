@@ -28,6 +28,7 @@ mod operator_study;
 mod qtt_march_pause;
 mod qtt_march_run;
 mod report;
+pub mod state_snapshot;
 #[cfg(feature = "std")]
 mod uncertain_march_run;
 mod verify;
