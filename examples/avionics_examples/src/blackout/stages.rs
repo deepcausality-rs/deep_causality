@@ -90,8 +90,7 @@ pub fn fix_noise(step: usize, draw: usize) -> [FloatType; 3] {
     const PLASTIC: f64 = 0.754_877_666_246_692_7;
     let amplitude = Real::sqrt(utils::ft(GNSS_VAR) * utils::ft(3.0));
     core::array::from_fn(|axis| {
-        let stride =
-            utils::ft(PHI) * (utils::ft(1.0) + utils::ft(0.37) * utils::ft(axis as f64));
+        let stride = utils::ft(PHI) * (utils::ft(1.0) + utils::ft(0.37) * utils::ft(axis as f64));
         let phase = utils::ft(PLASTIC) * utils::ft(draw as f64)
             + utils::ft(0.29) * utils::ft((draw * axis) as f64);
         let x = (utils::ft(step as f64) + utils::ft(1.0)) * stride + phase;

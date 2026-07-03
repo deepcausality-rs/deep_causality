@@ -70,8 +70,7 @@ fn main() {
     utils_print::print_intro();
 
     // ── One descent world per commanded bank; the nominal descent is ballistic (zero bank).
-    let nominal =
-        model::descent_world("nominal_descent", 0.0).unwrap_or_else(|e| utils::stop(&e));
+    let nominal = model::descent_world("nominal_descent", 0.0).unwrap_or_else(|e| utils::stop(&e));
     let bank_worlds = model::bank_worlds().unwrap_or_else(|e| utils::stop(&e));
 
     // ── Leg 1: descend until the *flow-resolved* blackout onset.

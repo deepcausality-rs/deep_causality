@@ -196,12 +196,7 @@ pub fn aim_point(ballistic_terminal: [FloatType; 3]) -> [FloatType; 3] {
 /// The terminal truth position on a branch report.
 pub fn terminal_position(report: &Report<FloatType>) -> [FloatType; 3] {
     let truth = report.series("final_truth_state").unwrap_or(&[]);
-    core::array::from_fn(|i| {
-        truth
-            .get(i)
-            .copied()
-            .unwrap_or_else(|| utils::ft(f64::NAN))
-    })
+    core::array::from_fn(|i| truth.get(i).copied().unwrap_or_else(|| utils::ft(f64::NAN)))
 }
 
 /// Score one branch report into a [`BranchOutcome`]. The per-step sensed heating and link
