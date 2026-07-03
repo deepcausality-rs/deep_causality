@@ -51,10 +51,13 @@ a mechanical substitution. Details are `String`s the caller formats; the builder
 formats numbers itself, which keeps precision display at the caller's boundary.
 
 **D3: `run_owned` materializes internally and drops the geometry after the run.**
-On `MarchPipeline` (and the uncertain pipeline): `run_owned(self) -> Result<Report<R>, PhysicsError>`
-is `let m = case.materialize()?; self.on(&m).run()`. The B1 borrow form stays the primary
-API; `run_owned` exists for sweep bodies where each case owns a fresh grid, and its
-docstring says when NOT to use it (geometry reuse across runs).
+On `MarchPipeline`: `run_owned(self) -> Result<Report<R>, PhysicsError>` is
+`let m = case.materialize()?; self.on(&m).run()`. The B1 borrow form stays the primary API;
+`run_owned` exists for sweep bodies where each case owns a fresh grid, and its docstring says
+when NOT to use it (geometry reuse across runs). Implementation finding, recorded here: the
+uncertain pipeline gets no `run_owned`, because `UncertainMarchConfig` deliberately carries no
+mesh (the caller always owns the geometry there), so a one-shot form has nothing to own; the
+proposal's mention of the uncertain twin is corrected by this decision.
 
 **D4: the duct march follows the established config-then-flow shape.**
 `DuctConfig` is an owned description: an area profile (a `NumericTable` of x versus area or

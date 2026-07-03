@@ -18,8 +18,10 @@ mod cfd_flow;
 mod compressible_march_run;
 mod corridor;
 mod coupling;
+mod duct_march_run;
 mod finite_rate_ionization;
 mod frequency;
+mod gates;
 #[cfg(feature = "std")]
 mod io;
 mod march_run;
@@ -29,6 +31,7 @@ mod qtt_march_pause;
 mod qtt_march_run;
 mod report;
 pub mod state_snapshot;
+mod sweep;
 #[cfg(feature = "std")]
 mod uncertain_march_run;
 mod verify;
@@ -48,8 +51,10 @@ pub use coupling::{
     AeroBlackoutStub, AeroForceCoupling, CoupledField, Coupling, PhysicsStage, StepContext,
     ThermalRelax, ViscosityArrhenius,
 };
+pub use duct_march_run::DuctMarchRun;
 pub use finite_rate_ionization::FiniteRateIonizationStage;
 pub use frequency::{dominant_frequency, strouhal_number};
+pub use gates::Gates;
 #[cfg(feature = "std")]
 pub use io::write_xy_csv;
 pub use march_run::{MarchPipeline, MarchRun, StepView};
@@ -58,6 +63,7 @@ pub use operator_study::{Operator, OperatorStudyBuilder};
 pub use qtt_march_pause::{MarchFork, MarchPause};
 pub use qtt_march_run::{QttMarchRun, QttStepView};
 pub use report::Report;
+pub use sweep::sweep;
 #[cfg(feature = "std")]
 pub use uncertain_march_run::{UncertainMarchPipeline, UncertainMarchRun, UncertainStepView};
 pub use verify::VerifyRun;

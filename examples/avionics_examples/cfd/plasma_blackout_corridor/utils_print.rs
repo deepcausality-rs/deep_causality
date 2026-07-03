@@ -14,10 +14,10 @@ use crate::constants::{
     DIVERGENCE_MIN_M, MAX_REBUILDS, MISS_IMPROVEMENT_FACTOR, WALL_CLOCK_BUDGET_S,
 };
 use crate::model::{BranchScore, LegSnapshot};
-use avionics_examples::blackout::constants::{
+use avionics_examples::shared::constants::{
     CAP, COMMS_BAND_RAD_S, DT_FLIGHT, L, RAMC_NE_REFERENCE,
 };
-use avionics_examples::blackout::utils::{ft, norm3};
+use avionics_examples::shared::utils::{ft, norm3};
 use deep_causality_core::EffectLog;
 
 pub fn print_intro() {

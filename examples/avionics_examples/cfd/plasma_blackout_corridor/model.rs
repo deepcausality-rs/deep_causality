@@ -12,8 +12,8 @@
 
 use crate::FloatType;
 use crate::constants::{AIM_CROSS_RANGE_M, BANK_ANGLES_DEG, FINE_SPAN_STEPS, FINE_STEP_DEG, STEPS};
-use avionics_examples::blackout::constants::{COMMS_BAND_RAD_S, DT_FLIGHT, IMU_ACCEL_BIAS, L};
-use avionics_examples::blackout::{utils, world};
+use avionics_examples::shared::constants::{COMMS_BAND_RAD_S, DT_FLIGHT, IMU_ACCEL_BIAS, L};
+use avionics_examples::shared::{utils, world};
 use deep_causality_cfd::{
     BranchAccumulator, BranchOutcome, CompressibleMarchConfig, CompressiblePause, CoupledField,
     PhysicsError, Report, max_bond, quantize_2d,

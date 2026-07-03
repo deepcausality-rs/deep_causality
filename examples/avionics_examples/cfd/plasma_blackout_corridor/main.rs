@@ -49,21 +49,17 @@ mod constants;
 mod model;
 mod utils_print;
 
-use avionics_examples::blackout::{utils, world};
+use avionics_examples::shared::{utils, world};
 use deep_causality_cfd::{CfdFlow, MarchStop};
 use deep_causality_core::AlternatableContext;
 use std::process::exit;
 use std::time::Instant;
 
-/// The working precision of the whole corridor (flow, plasma, navigation, control). Switch this
-/// alias between `f32`, `f64,` and `Float106` (106-bit double-double) and every
-/// derived number is computed in this type, so the alias is the only line that changes.
-/// Note, Float106 increases compute time tenfold for no tangible gain in this case because
-/// model fidelity is the limiting factor.
-/// f32, however, underflows in the Ionization kernel causing a division by zero error.
-/// The alias itself is shared with the weather-dispersion example through
-/// `avionics_examples::blackout::FloatType`.
-pub type FloatType = avionics_examples::blackout::FloatType;
+/// The working precision. Switch between `f64` and `deep_causality_num::Float106`
+/// (106-bit double-double); the specification constants stay `f64` literals, which either type
+/// represents exactly, and every derived number is computed in this type, so this alias is the
+/// only line that changes.
+pub type FloatType = f64;
 
 fn main() {
     let clock = Instant::now();

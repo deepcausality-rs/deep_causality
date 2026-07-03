@@ -29,10 +29,14 @@ pub mod compressible_march_run_tests;
 pub mod corridor_tests;
 #[cfg(test)]
 pub mod coupling_tests;
+#[cfg(test)]
+pub mod duct_march_tests;
 #[cfg(not(miri))]
 mod finite_rate_ionization_tests;
 #[cfg(test)]
 pub mod frequency_tests;
+#[cfg(test)]
+pub mod gates_tests;
 // IO operations are unsupported under MIRI.
 #[cfg(test)]
 #[cfg(not(miri))]
@@ -56,6 +60,8 @@ pub mod qtt_march_pause_tests;
 pub mod qtt_march_run_tests;
 #[cfg(test)]
 pub mod report_tests;
+#[cfg(test)]
+pub mod sweep_tests;
 // Filesystem round trips are unsupported under MIRI.
 #[cfg(test)]
 #[cfg(not(miri))]

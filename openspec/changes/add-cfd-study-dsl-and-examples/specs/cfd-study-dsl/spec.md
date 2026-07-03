@@ -34,9 +34,9 @@ substitution.
 - **THEN** that entry prints as `[FAIL]` with its label and detail, the verdict line reports
   the regression, and `finish` returns false
 
-### Requirement: One-shot geometry on the march pipelines
+### Requirement: One-shot geometry on the march pipeline
 
-The march pipeline (and its uncertain twin) SHALL offer `run_owned`, which materializes the
+The march pipeline SHALL offer `run_owned`, which materializes the
 case's geometry internally, runs, and returns the report, for sweep bodies where each case
 owns a fresh grid. The caller-owned-geometry form (`materialize` plus `.on`) SHALL remain
 unchanged as the primary API for geometry reuse.

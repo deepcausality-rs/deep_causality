@@ -1,0 +1,35 @@
+   Compiling avionics_examples v0.1.0 (/Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples)
+    Finished `release` profile [optimized] target(s) in 2.55s
+     Running `target/release/examples/flight_envelope_placard`
+=== Flight-envelope placard table: pointwise study over a Mach-altitude matrix ===
+
+Matrix: /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/flight_envelope_placard/mach_alt_matrix.csv
+
+16 grid points computed:
+
+     M    alt(km)    q(kPa)    T0(K)    qdot(W/cm2)
+  0.50      5.0       9.5    268.5         0.09
+  0.80      8.0      16.5    266.5         0.27
+  0.80     11.0      10.6    250.3         0.20
+  1.20     11.0      23.7    285.8         0.69
+  1.20     15.0      12.2    279.0         0.48
+  1.60     15.0      21.7    327.6         1.14
+  2.00     18.0      22.9    390.0         1.83
+  2.00     21.0      13.8    391.7         1.43
+  2.50     21.0      21.6    489.7         2.80
+  3.00     24.0      19.9    617.6         3.92
+  3.00     27.0      12.7    625.9         3.17
+  3.50     27.0      17.3    771.2         5.04
+  4.00     30.0      13.4    951.3         5.87
+  4.50     33.0      13.4   1180.0         7.66
+  5.00     36.0      11.8   1444.9         9.15
+  5.00     40.0       5.0   1502.1         6.21
+
+--- flight-envelope placard gates ---
+  [PASS] q-max placard: max q = 23.7 kPa at M 1.20 / 11.0 km, inside the 60 kPa placard
+  [PASS] stagnation-temperature placard: max T0 = 1502.1 K at M 5.00 / 40.0 km, inside the 1700 K placard
+  [PASS] matrix integrity: 16 of 16 matrix rows computed
+=== All gates passed: flight-envelope placard gates. ===
+
+Placard table written: /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/flight_envelope_placard/placard_table.csv
+Wall clock: 0.001 s

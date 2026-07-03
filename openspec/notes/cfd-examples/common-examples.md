@@ -86,6 +86,13 @@ each example.
 
 ## Group 2: examples 1 to 3 (analytic anchors, existing solvers, small effort)
 
+> **STATUS: shipped (2026-07-03)** through `openspec/changes/add-cfd-study-dsl-and-examples/`,
+> together with the DSL review's S1 to S5 (sweep, Gates, run_owned, from_columns, duct_march).
+> Measured: the nozzle map's shocks land within 12 cells of the closed form and the supersonic
+> rows exit at M 2.12 vs design 2.197; the VIV sweep reads St 0.182 to 0.191 at Re 100 to 160
+> on the Williamson laminar reference; the placard grid peaks at q 23.7 kPa (M 1.20 / 11 km)
+> inside its stated placards. Examples 4 and 5 remain open (example 5 waits on roadmap item 3).
+
 **Example 1: nozzle operating map (propulsion desk).** Sweep back pressure on a
 converging-diverging duct; find choking, the normal-shock position, and the thrust
 coefficient per point. Machinery: the 1-D compressible Euler solver, exact

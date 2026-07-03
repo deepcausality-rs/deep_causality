@@ -57,6 +57,21 @@ impl<R> NumericTable<R> {
         Some(Self { columns, rows })
     }
 
+    /// Build a table in one call from `(name, unit)` pairs and rows, with the same
+    /// rectangularity validation as [`new`](Self::new).
+    pub fn from_columns<const N: usize>(
+        columns: [(&str, &str); N],
+        rows: Vec<Vec<R>>,
+    ) -> Option<Self> {
+        Self::new(
+            columns
+                .into_iter()
+                .map(|(n, u)| TableColumn::new(n, u))
+                .collect(),
+            rows,
+        )
+    }
+
     /// The column descriptors, in file order.
     pub fn columns(&self) -> &[TableColumn] {
         &self.columns

@@ -77,20 +77,21 @@ pub use deep_causality_file::{
 pub use crate::types::flow::{
     AeroBlackoutStub, AeroForceCoupling, BankCorrection, BankSteeredLift, BlackoutState,
     BlackoutTrigger, BranchAccumulator, BranchOutcome, CfdFlow, CompressibleFork,
-    CompressibleMarchRun, CompressiblePause, CoupledField, Coupling, CyberneticCorrect, EosStage,
-    FiniteRateIonizationStage, GoverningModel, IonizationStage, MarchFork, MarchPause,
-    MarchPipeline, MarchRun, MmsBuilder, Operator, OperatorStudyBuilder, PhysicsStage, QttMarchRun,
-    QttStepView, RecoveryTemperatureStage, Regime, RegimeClass, RegimeClassify, Report,
-    SafetyEnvelope, StepContext, StepView, ThermalRelax, TrajectoryNav, VerifyRun,
-    VibrationalLagStage, ViscosityArrhenius, dominant_frequency, fail, ler_relax_scalar, ler_step,
-    strouhal_number,
+    CompressibleMarchRun, CompressiblePause, CoupledField, Coupling, CyberneticCorrect,
+    DuctMarchRun, EosStage, FiniteRateIonizationStage, Gates, GoverningModel, IonizationStage,
+    MarchFork, MarchPause, MarchPipeline, MarchRun, MmsBuilder, Operator, OperatorStudyBuilder,
+    PhysicsStage, QttMarchRun, QttStepView, RecoveryTemperatureStage, Regime, RegimeClass,
+    RegimeClassify, Report, SafetyEnvelope, StepContext, StepView, ThermalRelax, TrajectoryNav,
+    VerifyRun, VibrationalLagStage, ViscosityArrhenius, dominant_frequency, fail, ler_relax_scalar,
+    ler_step, strouhal_number, sweep,
 };
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
 pub use crate::types::flow_config::{
     AtmosphereRow, Body, CfdConfigBuilder, CompressibleMarchConfig, CompressibleMarchConfigBuilder,
-    DescentSchedule, Grading, Manufactured, ManufacturedSample, MarchConfig, MarchConfigBuilder,
-    MarchStop, Mesh, Observe, QttBody, QttMarchConfig, QttMarchConfigBuilder, QttObserve,
-    ReferenceScales, Seed, TaylorGreen, VerifyConfig, VerifyConfigBuilder,
+    DescentSchedule, DuctAreaProfile, DuctConfig, DuctInlet, DuctStop, Grading, Manufactured,
+    ManufacturedSample, MarchConfig, MarchConfigBuilder, MarchStop, Mesh, Observe, QttBody,
+    QttMarchConfig, QttMarchConfigBuilder, QttObserve, ReferenceScales, Seed, TaylorGreen,
+    VerifyConfig, VerifyConfigBuilder,
 };
 // IO effect: the `IoAction` trait (from haft), the core `write_csv` file action, and the CFD CSV
 // helper, so a `CfdFlow` example can describe and run file output through one crate.

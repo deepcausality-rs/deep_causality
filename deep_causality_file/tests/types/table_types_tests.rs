@@ -28,3 +28,17 @@ fn column_lookup_by_name() {
     assert_eq!(t.column_index("missing"), None);
     assert_eq!(t.columns()[1].unit(), "km");
 }
+
+#[test]
+fn from_columns_equals_the_explicit_constructor_and_validates() {
+    let rows = vec![vec![25.0_f64, 61.0], vec![8.5, 47.0]];
+    let a = NumericTable::from_columns([("mach", "-"), ("alt", "km")], rows.clone())
+        .expect("rectangular");
+    let b = NumericTable::new(
+        vec![TableColumn::new("mach", "-"), TableColumn::new("alt", "km")],
+        rows,
+    )
+    .expect("rectangular");
+    assert_eq!(a, b);
+    assert!(NumericTable::from_columns([("a", ""), ("b", "")], vec![vec![1.0_f64]]).is_none());
+}

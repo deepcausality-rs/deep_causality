@@ -8,6 +8,8 @@ pub mod cfd_config_builder_tests;
 #[cfg(test)]
 pub mod compressible_march_config_tests;
 #[cfg(test)]
+pub mod duct_config_tests;
+#[cfg(test)]
 pub mod manufactured_tests;
 #[cfg(test)]
 pub mod march_builder_tests;

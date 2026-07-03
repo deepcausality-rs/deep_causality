@@ -84,6 +84,7 @@ dependencies = [
  "deep_causality_par",
  "deep_causality_physics",
  "deep_causality_tensor",
+ "deep_causality_topology",
 ]
 
 [[package]]

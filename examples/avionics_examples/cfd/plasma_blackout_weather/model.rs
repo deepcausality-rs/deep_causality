@@ -9,8 +9,8 @@
 
 use crate::FloatType;
 use crate::constants::{IMU_THERMAL_COEFF_PER_K, STEPS};
-use avionics_examples::blackout::constants::DT_FLIGHT;
-use avionics_examples::blackout::{utils, world};
+use avionics_examples::shared::constants::DT_FLIGHT;
+use avionics_examples::shared::{utils, world};
 use deep_causality_cfd::{CompressibleMarchConfig, CompressiblePause, PhysicsError};
 
 /// A weather world: the baseline descent with the condition's temperature offset and density

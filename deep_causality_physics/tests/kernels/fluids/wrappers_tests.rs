@@ -6,11 +6,12 @@
 use deep_causality_physics::{
     Density, KinematicViscosity, Length, Pressure, ReynoldsStress, SpecificEnthalpy, Speed,
     StrainRateTensor, Temperature, Velocity3, VelocityGradient, Viscosity, ViscousStress,
-    VorticityVector, WallShearStress, bernoulli_pressure, bernoulli_total_head, bond_number,
-    capillary_number, circulation, continuity_rhs, convective_acceleration, delta_criterion,
-    dissipation_rate, dynamic_pressure, eckert_number, eddy_viscosity_boussinesq,
+    VorticityVector, WallShearStress, area_mach_ratio, bernoulli_pressure, bernoulli_total_head,
+    bond_number, capillary_number, circulation, continuity_rhs, convective_acceleration,
+    delta_criterion, dissipation_rate, dynamic_pressure, eckert_number, eddy_viscosity_boussinesq,
     enstrophy_density, entropy_production_rate, friction_velocity, froude_number, grashof_number,
-    helicity_density, hydrostatic_pressure, integral_length_scale, kinetic_energy_density,
+    helicity_density, hydrostatic_pressure, integral_length_scale, isentropic_density_ratio,
+    isentropic_pressure_ratio, isentropic_temperature_ratio, kinetic_energy_density,
     knudsen_number, kolmogorov_length, kolmogorov_time, kolmogorov_velocity, kutta_joukowski_lift,
     lambda2, lewis_number, log_law_velocity, mach_number, newtonian_viscous_stress,
     newtonian_viscous_stress_with_bulk, nusselt_number, particle_stokes_number, peclet_number,
@@ -983,4 +984,60 @@ fn test_newtonian_viscous_stress_with_bulk_wrapper_error_path() {
     let s = StrainRateTensor::<f64>::default();
     let effect = newtonian_viscous_stress_with_bulk(&mu, &zeta, &s, f64::INFINITY);
     assert!(!effect.is_ok());
+}
+
+// =============================================================================
+// isentropic ratio + area–Mach wrapper tests
+// =============================================================================
+
+#[test]
+fn test_isentropic_pressure_ratio_wrapper() {
+    let effect = isentropic_pressure_ratio(2.0_f64, 1.4);
+    assert!(effect.is_ok());
+    let v = effect.value().clone().into_value().unwrap();
+    assert!((v - 1.8_f64.powf(3.5)).abs() < 1e-9);
+}
+
+#[test]
+fn test_isentropic_pressure_ratio_wrapper_error_path() {
+    assert!(isentropic_pressure_ratio(f64::NAN, 1.4).is_err());
+}
+
+#[test]
+fn test_isentropic_temperature_ratio_wrapper() {
+    let effect = isentropic_temperature_ratio(2.0_f64, 1.4);
+    assert!(effect.is_ok());
+    let v = effect.value().clone().into_value().unwrap();
+    assert!((v - 1.8).abs() < 1e-12);
+}
+
+#[test]
+fn test_isentropic_temperature_ratio_wrapper_error_path() {
+    assert!(isentropic_temperature_ratio(2.0_f64, 1.0).is_err());
+}
+
+#[test]
+fn test_isentropic_density_ratio_wrapper() {
+    let effect = isentropic_density_ratio(1.0_f64, 1.4);
+    assert!(effect.is_ok());
+    let v = effect.value().clone().into_value().unwrap();
+    assert!((v - 1.2_f64.powf(2.5)).abs() < 1e-9);
+}
+
+#[test]
+fn test_isentropic_density_ratio_wrapper_error_path() {
+    assert!(isentropic_density_ratio(-1.0_f64, 1.4).is_err());
+}
+
+#[test]
+fn test_area_mach_ratio_wrapper() {
+    let effect = area_mach_ratio(2.0_f64, 1.4);
+    assert!(effect.is_ok());
+    let v = effect.value().clone().into_value().unwrap();
+    assert!((v - 1.6875).abs() < 1e-9);
+}
+
+#[test]
+fn test_area_mach_ratio_wrapper_error_path() {
+    assert!(area_mach_ratio(0.0_f64, 1.4).is_err());
 }

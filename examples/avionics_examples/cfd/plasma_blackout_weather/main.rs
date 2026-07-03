@@ -36,15 +36,18 @@
 mod constants;
 mod model;
 
-use avionics_examples::blackout::{utils, world};
+use avionics_examples::shared::{utils, world};
 use deep_causality_cfd::CfdFlow;
 use deep_causality_core::AlternatableContext;
 use deep_causality_par::scoped_map;
 use std::process::exit;
 use std::time::Instant;
 
-/// The working precision, shared with the corridor (see `avionics_examples::blackout`).
-pub type FloatType = avionics_examples::blackout::FloatType;
+/// The working precision. Switch between `f64` and `deep_causality_num::Float106`
+/// (106-bit double-double); the specification constants stay `f64` literals, which either type
+/// represents exactly, and every derived number is computed in this type, so this alias is the
+/// only line that changes.
+pub type FloatType = f64;
 
 fn main() {
     let clock = Instant::now();
@@ -52,7 +55,7 @@ fn main() {
     println!(
         "Baseline: the corridor's validated descent | {} coupled steps per world, {} s of flight each",
         constants::STEPS,
-        constants::STEPS as f64 * avionics_examples::blackout::constants::DT_FLIGHT,
+        constants::STEPS as f64 * avionics_examples::shared::constants::DT_FLIGHT,
     );
     println!(
         "IMU thermal model: bias departure 1 + {:.3}/K away from the calibration point; filter priors stay standard-day",
@@ -160,7 +163,7 @@ fn main() {
             .into(),
     );
 
-    let dt = avionics_examples::blackout::constants::DT_FLIGHT;
+    let dt = avionics_examples::shared::constants::DT_FLIGHT;
     let horizon_s = utils::ft((constants::STEPS - 1) as f64 * dt);
     gate(
         "(2) flow-resolved windows in every weather",

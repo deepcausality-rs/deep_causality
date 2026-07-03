@@ -5,8 +5,10 @@
 
 use deep_causality_physics::{
     Pressure, SpecificEnthalpy, Temperature, Velocity3, VelocityGradient, ViscousStress,
-    entropy_production_rate_kernel, specific_enthalpy_kernel, speed_of_sound_ideal_gas_kernel,
-    total_enthalpy_kernel, total_pressure_isentropic_kernel, total_temperature_isentropic_kernel,
+    area_mach_ratio_kernel, entropy_production_rate_kernel, isentropic_density_ratio_kernel,
+    isentropic_pressure_ratio_kernel, isentropic_temperature_ratio_kernel,
+    specific_enthalpy_kernel, speed_of_sound_ideal_gas_kernel, total_enthalpy_kernel,
+    total_pressure_isentropic_kernel, total_temperature_isentropic_kernel,
 };
 
 const TOL: f64 = 1e-6;
@@ -233,3 +235,130 @@ fn test_total_temperature_f32() {
 // `1 + (gamma - 1)/2 · mach²`; with `gamma > 1` the coefficient `(gamma-1)/2`
 // is positive and `mach²` is non-negative for any real `mach`, so `base >= 1`
 // always. `base <= 0` is therefore unreachable for any real-valued input.
+
+// =============================================================================
+// isentropic ratio kernels (Anderson, Modern Compressible Flow, Ch. 3)
+// =============================================================================
+
+#[test]
+fn test_isentropic_ratios_at_rest_are_unity() {
+    assert!((isentropic_pressure_ratio_kernel(0.0_f64, 1.4).unwrap() - 1.0).abs() < TOL);
+    assert!((isentropic_temperature_ratio_kernel(0.0_f64, 1.4).unwrap() - 1.0).abs() < TOL);
+    assert!((isentropic_density_ratio_kernel(0.0_f64, 1.4).unwrap() - 1.0).abs() < TOL);
+}
+
+#[test]
+fn test_isentropic_temperature_ratio_known_values() {
+    // T0/T = 1 + 0.2·M²: M = 1 → 1.2; M = 2 → 1.8 (γ = 1.4).
+    assert!((isentropic_temperature_ratio_kernel(1.0_f64, 1.4).unwrap() - 1.2).abs() < TOL);
+    assert!((isentropic_temperature_ratio_kernel(2.0_f64, 1.4).unwrap() - 1.8).abs() < TOL);
+}
+
+#[test]
+fn test_isentropic_pressure_ratio_known_values() {
+    // p0/p = (1 + 0.2·M²)^3.5: M = 1 → 1.2^3.5 ≈ 1.892929; M = 2 → 1.8^3.5 ≈ 7.824449.
+    let p_m1 = isentropic_pressure_ratio_kernel(1.0_f64, 1.4).unwrap();
+    assert!((p_m1 - 1.2_f64.powf(3.5)).abs() < TOL);
+    let p_m2 = isentropic_pressure_ratio_kernel(2.0_f64, 1.4).unwrap();
+    assert!((p_m2 - 1.8_f64.powf(3.5)).abs() < TOL);
+    assert!((p_m2 - 7.824449).abs() < 1e-5);
+}
+
+#[test]
+fn test_isentropic_density_ratio_known_value() {
+    // ρ0/ρ = (1 + 0.2·M²)^2.5: M = 1 → 1.2^2.5 ≈ 1.577441.
+    let d = isentropic_density_ratio_kernel(1.0_f64, 1.4).unwrap();
+    assert!((d - 1.2_f64.powf(2.5)).abs() < TOL);
+}
+
+#[test]
+fn test_isentropic_ratio_identity_p_equals_rho_times_t() {
+    // Ideal gas: p0/p = (ρ0/ρ)·(T0/T) at every Mach.
+    for &m in &[0.3_f64, 0.9, 1.0, 1.7, 3.2] {
+        let p = isentropic_pressure_ratio_kernel(m, 1.4_f64).unwrap();
+        let d = isentropic_density_ratio_kernel(m, 1.4_f64).unwrap();
+        let t = isentropic_temperature_ratio_kernel(m, 1.4_f64).unwrap();
+        assert!((p - d * t).abs() < 1e-9 * p);
+    }
+}
+
+#[test]
+fn test_isentropic_ratio_guards() {
+    // NaN and negative Mach; γ ≤ 1 and NaN γ — all rejected on every kernel.
+    assert!(isentropic_pressure_ratio_kernel(f64::NAN, 1.4).is_err());
+    assert!(isentropic_pressure_ratio_kernel(-0.5_f64, 1.4).is_err());
+    assert!(isentropic_pressure_ratio_kernel(1.0_f64, 1.0).is_err());
+    assert!(isentropic_pressure_ratio_kernel(1.0_f64, f64::NAN).is_err());
+    assert!(isentropic_temperature_ratio_kernel(f64::NAN, 1.4).is_err());
+    assert!(isentropic_temperature_ratio_kernel(1.0_f64, 0.9).is_err());
+    assert!(isentropic_density_ratio_kernel(f64::INFINITY, 1.4).is_err());
+    assert!(isentropic_density_ratio_kernel(1.0_f64, f64::INFINITY).is_err());
+}
+
+#[test]
+fn test_isentropic_ratio_purity() {
+    // Pure free functions: identical inputs give bit-identical outputs.
+    let a = isentropic_pressure_ratio_kernel(1.37_f64, 1.4).unwrap();
+    let b = isentropic_pressure_ratio_kernel(1.37_f64, 1.4).unwrap();
+    assert_eq!(a.to_bits(), b.to_bits());
+}
+
+// =============================================================================
+// area_mach_ratio_kernel (Anderson, Modern Compressible Flow, Ch. 5)
+// =============================================================================
+
+#[test]
+fn test_area_mach_ratio_is_unity_at_throat() {
+    // A/A* = 1 exactly at M = 1.
+    let r = area_mach_ratio_kernel(1.0_f64, 1.4).unwrap();
+    assert!((r - 1.0).abs() < TOL);
+}
+
+#[test]
+fn test_area_mach_ratio_known_values() {
+    // γ = 1.4 closed-form checks: M = 0.5 → 1.339844; M = 2 → 1.6875 (exact: 27/16).
+    let sub = area_mach_ratio_kernel(0.5_f64, 1.4).unwrap();
+    assert!((sub - 1.339_844).abs() < 1e-5);
+    let sup = area_mach_ratio_kernel(2.0_f64, 1.4).unwrap();
+    assert!((sup - 1.6875).abs() < 1e-9);
+}
+
+#[test]
+fn test_area_mach_ratio_monotone_on_each_branch() {
+    // Strictly decreasing on the subsonic branch, strictly increasing on the
+    // supersonic branch, with the minimum A/A* = 1 at the throat.
+    let subsonic = [0.1_f64, 0.3, 0.5, 0.7, 0.9];
+    for w in subsonic.windows(2) {
+        let a = area_mach_ratio_kernel(w[0], 1.4_f64).unwrap();
+        let b = area_mach_ratio_kernel(w[1], 1.4_f64).unwrap();
+        assert!(a > b, "subsonic branch must decrease toward the throat");
+        assert!(b > 1.0);
+    }
+    let supersonic = [1.1_f64, 1.5, 2.0, 3.0, 4.0];
+    for w in supersonic.windows(2) {
+        let a = area_mach_ratio_kernel(w[0], 1.4_f64).unwrap();
+        let b = area_mach_ratio_kernel(w[1], 1.4_f64).unwrap();
+        assert!(
+            b > a,
+            "supersonic branch must increase away from the throat"
+        );
+        assert!(a > 1.0);
+    }
+}
+
+#[test]
+fn test_area_mach_ratio_guards() {
+    // M = 0 diverges (division by M); NaN/negative M and γ ≤ 1 are rejected.
+    assert!(area_mach_ratio_kernel(0.0_f64, 1.4).is_err());
+    assert!(area_mach_ratio_kernel(-1.0_f64, 1.4).is_err());
+    assert!(area_mach_ratio_kernel(f64::NAN, 1.4).is_err());
+    assert!(area_mach_ratio_kernel(2.0_f64, 1.0).is_err());
+    assert!(area_mach_ratio_kernel(2.0_f64, f64::NAN).is_err());
+}
+
+#[test]
+fn test_area_mach_ratio_purity() {
+    let a = area_mach_ratio_kernel(2.5_f64, 1.4).unwrap();
+    let b = area_mach_ratio_kernel(2.5_f64, 1.4).unwrap();
+    assert_eq!(a.to_bits(), b.to_bits());
+}

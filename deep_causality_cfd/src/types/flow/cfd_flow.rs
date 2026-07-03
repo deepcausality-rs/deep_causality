@@ -49,6 +49,17 @@ impl CfdFlow {
         CompressibleMarchRun::new(config)
     }
 
+    /// Begin composing a **quasi-1-D duct march** from a
+    /// [`DuctConfig`](crate::DuctConfig): the compressible nozzle path.
+    /// Borrows the config and yields a runnable
+    /// [`DuctMarchRun`](crate::DuctMarchRun); there is no geometry stage (the
+    /// duct carries its own area profile).
+    pub fn duct_march<R: CfdScalar>(
+        config: &crate::types::flow_config::DuctConfig<R>,
+    ) -> crate::types::flow::DuctMarchRun<'_, R> {
+        crate::types::flow::DuctMarchRun::new(config)
+    }
+
     /// Begin composing a **sensor-fed uncertain-inflow march** from an
     /// [`UncertainMarchConfig`](crate::UncertainMarchConfig). Borrows the config; the geometry is
     /// lent next via [`UncertainMarchPipeline::on`](crate::UncertainMarchPipeline::on).
