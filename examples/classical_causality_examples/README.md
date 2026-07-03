@@ -82,7 +82,7 @@ Pick **`via_monad`** when **all** of these are true:
 
 ### Hybrid is a real option
 
-The two approaches share the carrier (`PropagatingEffect` / `PropagatingProcess`), so a single system can mix them per stage. A Causaloid graph emits a `PropagatingEffect` that a `bind` chain consumes; a `bind` chain produces input for a Causaloid evaluation. The [flight envelope monitor](../avionics_examples/flight_envelope_monitor/) demonstrates this: a Causaloid collection over five sensor checks, a three-step `bind` chain for state estimation, and a Causaloid hypergraph of six envelope protections, all running through one `PropagatingProcess<T, FlightState, AircraftConfig>` with state and audit log threaded across every stage.
+The two approaches share the carrier (`PropagatingEffect` / `PropagatingProcess`), so a single system can mix them per stage. A Causaloid graph emits a `PropagatingEffect` that a `bind` chain consumes; a `bind` chain produces input for a Causaloid evaluation. The [flight envelope monitor](../avionics_examples/control/flight_envelope_monitor/) demonstrates this: a Causaloid collection over five sensor checks, a three-step `bind` chain for state estimation, and a Causaloid hypergraph of six envelope protections, all running through one `PropagatingProcess<T, FlightState, AircraftConfig>` with state and audit log threaded across every stage.
 
 If a system's high-level structure is a graph but its individual nodes contain sequential reasoning, the hybrid is often the right shape: graph at the top, `bind` chains inside. Each approach is at its best where it is structurally most natural.
 

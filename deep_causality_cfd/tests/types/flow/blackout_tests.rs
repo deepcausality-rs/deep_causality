@@ -8,7 +8,7 @@
 
 use deep_causality_cfd::{
     Ambient, BlackoutTrigger, CoupledField, Coupling, EosStage, IonizationStage, PhysicsStage,
-    RecoveryTemperatureStage, StepContext, ler_relax_scalar, ler_step,
+    RecoveryTemperatureStage, StepContext, VibrationalLagStage, ler_relax_scalar, ler_step,
 };
 use deep_causality_physics::ElectronDensity;
 use deep_causality_physics::{
@@ -300,4 +300,265 @@ fn test_blackout_trigger_classify_propagates_kernel_error() {
             .evaluate(ElectronDensity::<f64>::new(f64::MAX).unwrap())
             .is_err()
     );
+}
+
+// ── VibrationalLagStage (the Park-2T rate-controlling temperature) ───────
+
+#[test]
+fn vibrational_lag_is_a_noop_without_t_tr() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    let stage = VibrationalLagStage::new(250.0_f64, 0.04, 7.0, 3393.0, 5.0e-6);
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    stage.apply(&ctx, &mut field).expect("applies");
+    assert!(field.scalar("T_ve").is_none());
+    assert!(field.scalar("T_a").is_none());
+}
+
+#[test]
+fn vibrational_lag_suppresses_the_controller_at_short_residence() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    // A short residence at low pressure leaves the bath cold: T_ve << T_tr, so T_a << T_tr.
+    let stage = VibrationalLagStage::new(250.0_f64, 1.0e-3, 7.0, 3393.0, 1.0e-7);
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    field.set_scalar("T_tr", vec![30_000.0_f64, 25_000.0]);
+    stage.apply(&ctx, &mut field).expect("applies");
+
+    let t_ve = field.scalar("T_ve").expect("T_ve written");
+    let t_a = field.scalar("T_a").expect("T_a written");
+    assert_eq!(t_ve.len(), 2);
+    for (i, &t_tr) in [30_000.0_f64, 25_000.0].iter().enumerate() {
+        assert!(t_ve[i] < t_tr, "the bath lags: {} < {t_tr}", t_ve[i]);
+        assert!(
+            t_a[i] < t_tr && t_a[i] > t_ve[i],
+            "geometric mean sits between: {} in ({}, {t_tr})",
+            t_a[i],
+            t_ve[i]
+        );
+        let expected = (t_tr * t_ve[i]).sqrt();
+        assert!((t_a[i] - expected).abs() < 1e-9, "T_a = sqrt(T_tr*T_ve)");
+    }
+}
+
+#[test]
+fn vibrational_lag_saturates_at_long_residence() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    // A long residence at high pressure fully relaxes the bath: T_a -> T_tr.
+    let stage = VibrationalLagStage::new(250.0_f64, 1.0, 7.0, 3393.0, 10.0);
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    field.set_scalar("T_tr", vec![20_000.0_f64]);
+    stage.apply(&ctx, &mut field).expect("applies");
+    let t_a = field.scalar("T_a").expect("T_a written")[0];
+    assert!(
+        (t_a - 20_000.0).abs() / 20_000.0 < 1e-3,
+        "saturated controller approaches T_tr: {t_a}"
+    );
+}
+
+#[test]
+fn ionization_driven_by_the_lagged_controller_produces_fewer_electrons() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    let n_tot = 1.0e22_f64;
+
+    // Hot translation drives near-saturation.
+    let mut hot = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    hot.set_scalar("T_tr", vec![30_000.0_f64]);
+    IonizationStage::new(n_tot)
+        .apply(&ctx, &mut hot)
+        .expect("applies");
+    let ne_hot = hot.scalar("n_e").expect("n_e")[0];
+
+    // The lagged controller suppresses both the Saha target and the rate.
+    let mut lagged = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    lagged.set_scalar("T_tr", vec![30_000.0_f64]);
+    lagged.set_scalar("T_a", vec![4_000.0_f64]);
+    IonizationStage::new(n_tot)
+        .driven_by("T_a")
+        .apply(&ctx, &mut lagged)
+        .expect("applies");
+    let ne_lagged = lagged.scalar("n_e").expect("n_e")[0];
+
+    assert!(
+        ne_lagged < ne_hot,
+        "the controller suppresses ionization: {ne_lagged} < {ne_hot}"
+    );
+}
+
+#[test]
+fn sheath_renewal_limits_ionization_to_one_residence_time() {
+    let (manifold, state) = empty_context();
+    let n_tot = 1.0e22_f64;
+
+    // Accumulating relaxation: many steps drive the carried fraction to equilibrium.
+    let carried = IonizationStage::new(n_tot);
+    let mut accumulated = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    accumulated.set_scalar("T_tr", vec![8_000.0_f64]);
+    for s in 0..200 {
+        let ctx = StepContext::new(&manifold, &state, 0.004, s + 1);
+        carried.apply(&ctx, &mut accumulated).expect("applies");
+    }
+    let ne_accumulated = accumulated.scalar("n_e").expect("n_e")[0];
+
+    // Sheath renewal: the exposure stays one residence time however long the march runs.
+    let renewed = IonizationStage::new(n_tot).with_sheath_renewal(2.0e-5);
+    let mut sheath = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    sheath.set_scalar("T_tr", vec![8_000.0_f64]);
+    let mut first = 0.0;
+    for s in 0..200 {
+        let ctx = StepContext::new(&manifold, &state, 0.004, s + 1);
+        renewed.apply(&ctx, &mut sheath).expect("applies");
+        if s == 0 {
+            first = sheath.scalar("n_e").expect("n_e")[0];
+        }
+    }
+    let ne_renewed = sheath.scalar("n_e").expect("n_e")[0];
+
+    assert!(
+        ne_renewed < ne_accumulated,
+        "renewal caps the exposure: {ne_renewed} < {ne_accumulated}"
+    );
+    assert_eq!(
+        ne_renewed, first,
+        "the renewed sheath is stateless per step"
+    );
+    assert!(ne_renewed > 0.0, "one residence time still ionizes");
+}
+
+// ── Evolved per-cell inputs (the compressible-carrier chemistry path) ─────
+
+#[test]
+fn vibrational_lag_reads_the_evolved_pressure_per_cell() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    // Identical translation, but the evolved pressure differs per cell: the
+    // Millikan-White clock runs faster at higher pressure, so the bath relaxes
+    // further there.
+    let stage =
+        VibrationalLagStage::new(250.0_f64, 1.0e-3, 7.0, 3393.0, 1.0e-5).with_pressure_field("p");
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    field.set_scalar("T_tr", vec![20_000.0_f64, 20_000.0]);
+    field.set_scalar("p", vec![1.0e-3_f64, 1.0]);
+    stage.apply(&ctx, &mut field).expect("applies");
+
+    let t_ve = field.scalar("T_ve").expect("T_ve written");
+    assert!(
+        t_ve[1] > t_ve[0],
+        "higher evolved pressure relaxes the bath further: {} > {}",
+        t_ve[1],
+        t_ve[0]
+    );
+}
+
+#[test]
+fn vibrational_lag_falls_back_to_the_config_pressure() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    let constant = VibrationalLagStage::new(250.0_f64, 0.04, 7.0, 3393.0, 1.0e-5);
+    // The named field is absent, so the per-cell reader falls back to the constant.
+    let evolved = constant.with_pressure_field("pressure_atm");
+
+    let mut a = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    a.set_scalar("T_tr", vec![20_000.0_f64]);
+    constant.apply(&ctx, &mut a).expect("applies");
+
+    let mut b = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    b.set_scalar("T_tr", vec![20_000.0_f64]);
+    evolved.apply(&ctx, &mut b).expect("applies");
+
+    assert_eq!(
+        a.scalar("T_ve").unwrap()[0],
+        b.scalar("T_ve").unwrap()[0],
+        "absent field means the config constant"
+    );
+}
+
+#[test]
+fn ionization_reads_the_evolved_density_per_cell() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    // Identical temperature, but the evolved density differs per cell: the dense
+    // cell both ionizes faster (shorter τ_ion) and carries more heavy particles,
+    // so its electron density comes out higher.
+    let stage = IonizationStage::new(1.0e22_f64)
+        .with_density_field("n_tot")
+        .with_sheath_renewal(2.0e-5);
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    field.set_scalar("T_tr", vec![8_000.0_f64, 8_000.0]);
+    field.set_scalar("n_tot", vec![1.0e20_f64, 1.0e22]);
+    stage.apply(&ctx, &mut field).expect("applies");
+
+    let n_e = field.scalar("n_e").expect("n_e written");
+    assert!(n_e.iter().all(|&x| x > 0.0), "both cells ionize");
+    assert!(
+        n_e[1] > n_e[0],
+        "the dense cell produces more electrons: {} > {}",
+        n_e[1],
+        n_e[0]
+    );
+}
+
+#[test]
+fn vibrational_lag_rejects_a_mismatched_pressure_field_length() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    // Length n is per-cell, length 1 broadcasts; a length-3 field against a
+    // 2-cell grid is a shape bug that must surface, not silently read cell 0.
+    let stage =
+        VibrationalLagStage::new(250.0_f64, 1.0e-3, 7.0, 3393.0, 1.0e-5).with_pressure_field("p");
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    field.set_scalar("T_tr", vec![20_000.0_f64, 20_000.0]);
+    field.set_scalar("p", vec![1.0e-3_f64, 1.0, 0.5]);
+    let err = stage
+        .apply(&ctx, &mut field)
+        .expect_err("a length-3 pressure field against 2 cells is a shape bug");
+    let msg = err.to_string();
+    assert!(msg.contains("'p'"), "the error names the field: {msg}");
+}
+
+#[test]
+fn ionization_rejects_a_mismatched_density_field_length() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    let stage = IonizationStage::new(1.0e22_f64).with_density_field("n_tot");
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    field.set_scalar("T_tr", vec![8_000.0_f64, 8_000.0]);
+    field.set_scalar("n_tot", vec![1.0e20_f64, 1.0e22, 1.0e21]);
+    let err = stage
+        .apply(&ctx, &mut field)
+        .expect_err("a length-3 density field against 2 cells is a shape bug");
+    let msg = err.to_string();
+    assert!(msg.contains("n_tot"), "the error names the field: {msg}");
+}
+
+#[test]
+fn ionization_density_field_matches_the_scalar_config_when_equal() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    let n_tot = 1.0e22_f64;
+
+    let mut scalar_cfg = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    scalar_cfg.set_scalar("T_tr", vec![8_000.0_f64, 8_000.0]);
+    IonizationStage::new(n_tot)
+        .apply(&ctx, &mut scalar_cfg)
+        .expect("applies");
+
+    // A single-cell density field broadcasts the same value across the grid.
+    let mut evolved = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    evolved.set_scalar("T_tr", vec![8_000.0_f64, 8_000.0]);
+    evolved.set_scalar("n_tot", vec![n_tot]);
+    IonizationStage::new(1.0_f64)
+        .with_density_field("n_tot")
+        .apply(&ctx, &mut evolved)
+        .expect("applies");
+
+    for i in 0..2 {
+        assert_eq!(
+            scalar_cfg.scalar("n_e").unwrap()[i],
+            evolved.scalar("n_e").unwrap()[i],
+            "the broadcast field reproduces the scalar config"
+        );
+    }
 }

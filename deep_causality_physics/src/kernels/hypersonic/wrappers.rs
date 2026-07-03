@@ -6,9 +6,10 @@
 //! `PropagatingEffect` wrappers for the hypersonic Park-2T kernels — each maps a
 //! `Result<Quantity, PhysicsError>` into the causal effect monad.
 
-use crate::kernels::hypersonic::{ionization, shock, thermochemistry};
+use crate::kernels::hypersonic::{finite_rate, ionization, shock, thermochemistry};
 use crate::{
-    ElectronDensity, IonizationFraction, ReactionRate, Temperature, VibrationalTemperature,
+    DissociationFraction, ElectronDensity, ElectronTemperature, EquilibriumConstant,
+    IonizationFraction, ReactionRate, Temperature, VibrationalTemperature,
 };
 use core::fmt::Debug;
 use deep_causality_core::{CausalityError, PropagatingEffect};
@@ -124,6 +125,133 @@ where
     R: RealField + MaybeParallel + FromPrimitive + Debug,
 {
     match shock::recovery_temperature_kernel(t_post, speed, c_p) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+pub fn no_dissociative_recombination_rate<R>(
+    electron_temperature: ElectronTemperature<R>,
+) -> PropagatingEffect<ReactionRate<R>>
+where
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
+{
+    match finite_rate::no_dissociative_recombination_rate_kernel(electron_temperature) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+pub fn electron_impact_ionization_n_rate<R>(
+    electron_temperature: ElectronTemperature<R>,
+) -> PropagatingEffect<ReactionRate<R>>
+where
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
+{
+    match finite_rate::electron_impact_ionization_n_rate_kernel(electron_temperature) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+pub fn electron_impact_ionization_o_rate<R>(
+    electron_temperature: ElectronTemperature<R>,
+) -> PropagatingEffect<ReactionRate<R>>
+where
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
+{
+    match finite_rate::electron_impact_ionization_o_rate_kernel(electron_temperature) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+pub fn n2_dissociation_equilibrium<R>(
+    temperature: Temperature<R>,
+) -> PropagatingEffect<EquilibriumConstant<R>>
+where
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
+{
+    match finite_rate::n2_dissociation_equilibrium_kernel(temperature) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+pub fn o2_dissociation_equilibrium<R>(
+    temperature: Temperature<R>,
+) -> PropagatingEffect<EquilibriumConstant<R>>
+where
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
+{
+    match finite_rate::o2_dissociation_equilibrium_kernel(temperature) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+pub fn dissociation_equilibrium_fraction<R>(
+    k_eq: EquilibriumConstant<R>,
+    nuclei_density: R,
+) -> PropagatingEffect<DissociationFraction<R>>
+where
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
+{
+    match finite_rate::dissociation_equilibrium_fraction_kernel(k_eq, nuclei_density) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+pub fn finite_rate_ionization_fixed_point<R>(
+    production: R,
+    linear_coefficient: R,
+    loss_coefficient: R,
+) -> PropagatingEffect<ElectronDensity<R>>
+where
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
+{
+    match finite_rate::finite_rate_ionization_fixed_point_kernel(
+        production,
+        linear_coefficient,
+        loss_coefficient,
+    ) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+pub fn no_associative_ionization_rate<R>(
+    temperature: Temperature<R>,
+) -> PropagatingEffect<ReactionRate<R>>
+where
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
+{
+    match finite_rate::no_associative_ionization_rate_kernel(temperature) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+pub fn zeldovich_exchange_rate<R>(temperature: Temperature<R>) -> PropagatingEffect<ReactionRate<R>>
+where
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
+{
+    match finite_rate::zeldovich_exchange_rate_kernel(temperature) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+pub fn park_controlling_temperature<R>(
+    t_translational: Temperature<R>,
+    t_vibrational: Temperature<R>,
+    q: R,
+) -> PropagatingEffect<Temperature<R>>
+where
+    R: RealField + MaybeParallel + FromPrimitive + Debug,
+{
+    match finite_rate::park_controlling_temperature_kernel(t_translational, t_vibrational, q) {
         Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }

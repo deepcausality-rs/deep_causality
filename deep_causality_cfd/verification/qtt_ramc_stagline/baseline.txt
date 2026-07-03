@@ -1,9 +1,20 @@
+    Finished `release` profile [optimized] target(s) in 0.04s
+     Running `target/release/examples/qtt_ramc_stagline`
 === RAM-C stagnation line: exact Rankine–Hugoniot fit + reused Tier-A ionization ===
 
 Flight: M = 25, γ = 1.1, T_inf = 250 K, n_inf = 1e21 m^-3 (RAM-C II ~71 km)
 
 Residence time t_res = standoff/u2 = 2.022e-5 s  (Saha-equilibrium upper bound n_e = 9.620e21 m^-3)
 Single-T surrogate (ionizes at T₂, over-predicts): α = 4.628e-3, n_e = 1.224e20 m^-3 (+1.1 dec vs RAM-C)
+
+Uncalibrated finite-rate network (RP-1232 Table II pairs; no Saha target):
+  lagged atom pool: x_N = 4.617e-1, x_O = 6.364e-1
+  channel 1 + pool: n_e = 2.599e19 m^-3 (+0.41 dec vs RAM-C)
+  full network:     n_e = 2.991e19 m^-3 (+0.48 dec vs RAM-C)
+
+Sheath-renewal A/B under recombination (peak over the transit-age profile):
+  renewal (kept):    n_e = 2.991e19 m^-3 (+0.48 dec vs RAM-C)
+  carried (marched): n_e = 4.699e18 m^-3 (-0.33 dec vs RAM-C)
 
 Exact Rankine–Hugoniot post-shock state (the transported energy, no reconstruction):
   T_inf -> T2 ............ 250 K -> 8044 K
@@ -24,6 +35,9 @@ Stagnation-line blackout (Saha/Park-2T at the post-shock state):
   [PASS] peak n_e within ~3× of RAM-C II (Park-2T controller)
   [PASS] blackout onset (ω_p > comms band)
   [PASS] relaxation profile O(1) rank
+  [PASS] network prediction inside the earned band: full network +0.48 dec vs the flight anchor (band +-0.70 dec, pinned from the measurement; production codes sit at 2x to 3x)
+  [PASS] electron impact is a refinement, not the driver: channel 1 + pool 2.599e19 vs full network 2.991e19 m^-3 (the associative channel carries the prediction at RAM-C speeds)
+  [PASS] carried mode self-limits inside the earned band: -0.33 dec vs the anchor, at or below the renewal arm (renewal kept: its fixed-point clock is the network's Riccati timescale)
 
 === RAM-C stagnation line: peak n_e = 1.08e19 m^-3, +0.0 decades vs the RAM-C II anchor 1e19. ===
 Ionization is driven off the Park rate-controlling temperature Tₐ = √(T_tr·T_ve), with the lagging

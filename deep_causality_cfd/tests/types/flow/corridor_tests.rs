@@ -8,10 +8,12 @@
 //! [`CyberneticCorrect`] bounded-correction gate.
 
 use deep_causality_cfd::{
-    Ambient, BankCorrection, BlackoutTrigger, BranchAccumulator, CoupledField, CyberneticCorrect,
-    GoverningModel, PhysicsStage, RegimeClassify, SafetyEnvelope, StepContext,
+    Ambient, BankCorrection, BankSteeredLift, BlackoutTrigger, BranchAccumulator, CoupledField,
+    CyberneticCorrect, GoverningModel, InsErrorState, NavFilter, PhysicsStage, ReentryNavEngine,
+    RegimeClass, RegimeClassify, SafetyEnvelope, StepContext, TrajectoryNav,
 };
 use deep_causality_haft::LogSize;
+use deep_causality_physics::EARTH_GM;
 
 fn field() -> CoupledField<f64> {
     CoupledField::new(Ambient::new(0.01_f64, 0.0, None))
@@ -266,4 +268,344 @@ fn bank_correction_value_equality() {
         BankCorrection::Clamped(0.5_f64),
         BankCorrection::NoSafeAction
     );
+}
+
+// ---------------------------------------------------------------------------
+// TrajectoryNav (4.2)
+// ---------------------------------------------------------------------------
+
+fn nav_engine() -> ReentryNavEngine<f64> {
+    // The bound LEO-ish state the nav module's own tests use.
+    let (r0, v0) = ([7.0e6, 1.0e6, 2.0e6], [-1.0e3, 6.5e3, 3.0e3]);
+    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]);
+    ReentryNavEngine::new(r0, v0, EARTH_GM, filter)
+}
+
+fn nav_stage() -> TrajectoryNav<f64> {
+    // Q diagonal, GNSS 5 m 1σ (25 m² variance), through-plasma optical 50 m 1σ.
+    TrajectoryNav::new([1.0e-6; 17], 25.0, 2500.0)
+}
+
+fn denied_regime() -> RegimeClass<f64> {
+    RegimeClass {
+        model: GoverningModel::Continuum,
+        knudsen: 1.0e-3,
+        plasma_frequency: 1.0e10,
+        gnss_denied: true,
+    }
+}
+
+#[test]
+fn trajectory_nav_is_a_noop_without_an_engine() {
+    let mut f = field();
+    nav_stage().apply(&ctx(1), &mut f).expect("applies");
+    assert!(f.scalar("nav_position").is_none());
+    assert!(f.log().is_empty());
+}
+
+#[test]
+fn trajectory_nav_dead_reckons_and_publishes_witnesses() {
+    let mut f = field();
+    f.set_nav(nav_engine());
+
+    nav_stage().apply(&ctx(1), &mut f).expect("applies");
+    assert_eq!(f.scalar("nav_position").unwrap().len(), 3);
+    assert_eq!(f.scalar("nav_position_variance").unwrap().len(), 1);
+    assert!(f.nav().is_some(), "the engine threads back into the field");
+    assert_eq!(f.log().len(), 1, "the dead-reckoning transition is logged");
+
+    // A second dead-reckoning step is not a transition: no new entry.
+    nav_stage().apply(&ctx(2), &mut f).expect("applies");
+    assert_eq!(f.log().len(), 1);
+}
+
+#[test]
+fn trajectory_nav_reads_the_aero_force_channel() {
+    let stage = nav_stage();
+
+    let mut coasting = field();
+    coasting.set_nav(nav_engine());
+    stage.apply(&ctx(1), &mut coasting).expect("applies");
+
+    let mut dragged = field();
+    dragged.set_nav(nav_engine());
+    dragged.set_aero_force([-1.0e3, 0.0, 0.0]);
+    stage.apply(&ctx(1), &mut dragged).expect("applies");
+
+    let a = coasting.scalar("nav_position").unwrap();
+    let b = dragged.scalar("nav_position").unwrap();
+    assert!(
+        (a[0] - b[0]).abs() > 1.0,
+        "the ④ aero kick perturbs the predicted position: {} vs {}",
+        a[0],
+        b[0]
+    );
+}
+
+#[test]
+fn gnss_fix_is_folded_when_available() {
+    let stage = nav_stage();
+
+    // Twin runs: one dead-reckons, one folds a GNSS fix at the propagated position.
+    let mut dead = field();
+    dead.set_nav(nav_engine());
+    stage.apply(&ctx(1), &mut dead).expect("applies");
+
+    let mut aided = field();
+    aided.set_nav(nav_engine());
+    let predicted = dead.scalar("nav_position").unwrap().to_vec();
+    aided.set_scalar("gnss_fix", predicted);
+    stage.apply(&ctx(1), &mut aided).expect("applies");
+
+    assert_eq!(aided.scalar("nav_mode").unwrap()[0], 1.0, "aided");
+    assert_eq!(dead.scalar("nav_mode").unwrap()[0], 0.0, "dead reckoning");
+    // The fix collapses the position variance below the predict-only twin.
+    let v_aided = aided.scalar("nav_position_variance").unwrap()[0];
+    let v_dead = dead.scalar("nav_position_variance").unwrap()[0];
+    assert!(
+        v_aided < v_dead,
+        "fix collapses variance: {v_aided} vs {v_dead}"
+    );
+}
+
+#[test]
+fn gnss_fix_is_gated_by_the_denial_flag() {
+    let mut f = field();
+    f.set_nav(nav_engine());
+    f.set_regime(denied_regime());
+    f.set_scalar("gnss_fix", vec![7.0e6, 1.0e6, 2.0e6]);
+
+    nav_stage().apply(&ctx(1), &mut f).expect("applies");
+    assert_eq!(
+        f.scalar("nav_mode").unwrap()[0],
+        0.0,
+        "a denied link never folds the GNSS fix"
+    );
+    assert!(
+        f.scalar("gnss_fix").is_none(),
+        "the denied-step broadcast is consumed unread, not latched for reacquisition"
+    );
+}
+
+#[test]
+fn optical_fix_rides_through_the_blackout() {
+    let mut f = field();
+    f.set_nav(nav_engine());
+    f.set_regime(denied_regime());
+    f.set_scalar("optical_fix", vec![7.0e6, 1.0e6, 2.0e6]);
+
+    nav_stage().apply(&ctx(1), &mut f).expect("applies");
+    assert_eq!(
+        f.scalar("nav_mode").unwrap()[0],
+        1.0,
+        "the through-plasma optical fix folds even when GNSS is denied"
+    );
+    assert!(
+        f.scalar("optical_fix").is_none(),
+        "the folded optical fix is consumed"
+    );
+}
+
+#[test]
+fn a_fix_is_consumed_and_not_refolded_when_the_publisher_goes_quiet() {
+    let stage = nav_stage();
+    let mut f = field();
+    f.set_nav(nav_engine());
+
+    // Step 1: a published fix is folded (aided) and consumed off the field.
+    f.set_scalar("gnss_fix", vec![7.0e6, 1.0e6, 2.0e6]);
+    stage.apply(&ctx(1), &mut f).expect("applies");
+    assert_eq!(f.scalar("nav_mode").unwrap()[0], 1.0, "aided");
+    assert!(f.scalar("gnss_fix").is_none(), "the fix is consumed");
+    let v_folded = f.scalar("nav_position_variance").unwrap()[0];
+
+    // Step 2: the publisher goes quiet. The old fix must not be re-folded as fresh — the
+    // filter drops to dead reckoning and the position variance grows instead of collapsing.
+    stage.apply(&ctx(2), &mut f).expect("applies");
+    assert_eq!(f.scalar("nav_mode").unwrap()[0], 0.0, "dead reckoning");
+    let v_quiet = f.scalar("nav_position_variance").unwrap()[0];
+    assert!(
+        v_quiet > v_folded,
+        "a quiet publisher grows the variance: {v_quiet} vs {v_folded}"
+    );
+}
+
+#[test]
+fn with_imu_senses_the_specific_force_through_the_bias() {
+    use deep_causality_cfd::ImuModel;
+
+    // Twin engines, same true aero force. The biased IMU's dead-reckoned position diverges from
+    // the unbiased twin: the real INS drift mechanism.
+    let aero = [-30.0_f64, 0.0, 0.0];
+    let imu = ImuModel::new([0.5, -0.3, 0.2], [0.0; 3], [1.0e-4; 17]);
+
+    let mut clean = field();
+    clean.set_nav(nav_engine());
+    clean.set_aero_force(aero);
+    nav_stage().apply(&ctx(1), &mut clean).expect("applies");
+
+    let mut biased = field();
+    biased.set_nav(nav_engine());
+    biased.set_aero_force(aero);
+    TrajectoryNav::new([1.0e-6; 17], 25.0, 2500.0)
+        .with_imu(imu)
+        .apply(&ctx(1), &mut biased)
+        .expect("applies");
+
+    let a = clean.scalar("nav_position").unwrap();
+    let b = biased.scalar("nav_position").unwrap();
+    assert!(
+        (a[0] - b[0]).abs() > 1e-6 || (a[1] - b[1]).abs() > 1e-6,
+        "the accelerometer bias drifts the dead-reckoned position"
+    );
+}
+
+#[test]
+fn nav_predict_failure_short_circuits_but_threads_the_engine_back() {
+    // An unbound (hyperbolic) state cannot re-lift onto the KS manifold: predict fails.
+    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]);
+    let unbound = ReentryNavEngine::new([7.0e6, 0.0, 0.0], [1.0e5, 0.0, 0.0], EARTH_GM, filter);
+
+    let mut f = field();
+    f.set_nav(unbound);
+    let result = nav_stage().apply(&ctx(1), &mut f);
+    assert!(result.is_err(), "an unbound predict short-circuits");
+    assert!(
+        f.nav().is_some(),
+        "the engine threads back so a pause captures a whole state"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// BankSteeredLift (the 3-DOF ④ producer)
+// ---------------------------------------------------------------------------
+
+// A truth vehicle on the +x radial flying tangentially along +y: the lift plane's
+// in-plane "up" is +x and the side direction v̂ × n̂ is −z.
+fn steered_field(bank: Option<f64>) -> CoupledField<f64> {
+    let mut f = field();
+    f.set_scalar("speed", vec![100.0]);
+    f.set_scalar("truth_state", vec![7.0e6, 0.0, 0.0, 0.0, 7.5e3, 0.0]);
+    if let Some(b) = bank {
+        f.set_control_action(b);
+    }
+    f
+}
+
+// rho_ref = 1, C_d·A/m = 1, L/D = 1 over U_max = 100: a_drag = a_lift = q = 5000.
+fn steered_stage() -> BankSteeredLift<f64> {
+    BankSteeredLift::new(1.0, 1.0, 1.0)
+}
+
+#[test]
+fn bank_steered_lift_writes_zero_force_without_speed() {
+    let mut f = field();
+    f.set_scalar("truth_state", vec![7.0e6, 0.0, 0.0, 0.0, 7.5e3, 0.0]);
+    steered_stage().apply(&ctx(1), &mut f).expect("applies");
+    assert_eq!(
+        f.aero_force(),
+        Some([0.0, 0.0, 0.0]),
+        "no dynamic pressure, zero force"
+    );
+}
+
+#[test]
+fn missing_speed_zeroes_a_previously_written_force() {
+    // Step 1 writes a real aero force; step 2's speed field is gone. The stale force must not
+    // stay latched and keep kicking the trajectory: the stage zeroes the ④ channel.
+    let mut f = steered_field(None);
+    steered_stage().apply(&ctx(1), &mut f).expect("applies");
+    assert_ne!(f.aero_force(), Some([0.0, 0.0, 0.0]), "a real force landed");
+
+    assert!(f.take_scalar("speed").is_some(), "the publisher goes quiet");
+    steered_stage().apply(&ctx(2), &mut f).expect("applies");
+    assert_eq!(
+        f.aero_force(),
+        Some([0.0, 0.0, 0.0]),
+        "no force this step, not the latched one"
+    );
+}
+
+#[test]
+fn bank_steered_lift_falls_back_to_axis_drag_without_a_truth_state() {
+    let mut f = field();
+    f.set_scalar("speed", vec![100.0]);
+    steered_stage().apply(&ctx(1), &mut f).expect("applies");
+    let a = f.aero_force().expect("force written");
+    assert_eq!(a, [-5000.0, 0.0, 0.0], "the AeroForceCoupling behavior");
+}
+
+#[test]
+fn zero_bank_keeps_the_lift_in_plane() {
+    let mut f = steered_field(None);
+    steered_stage().apply(&ctx(1), &mut f).expect("applies");
+    let a = f.aero_force().expect("force written");
+    // Drag opposes +y; the zero-bank lift points up the local radial (+x); nothing leaves
+    // the orbital plane.
+    assert!((a[0] - 5000.0).abs() < 1e-9, "lift up the radial: {}", a[0]);
+    assert!((a[1] + 5000.0).abs() < 1e-9, "drag against v: {}", a[1]);
+    assert!(a[2].abs() < 1e-9, "in-plane at zero bank: {}", a[2]);
+}
+
+#[test]
+fn opposite_banks_curve_the_trajectory_oppositely() {
+    let bank = 0.5_f64;
+    let mut left = steered_field(Some(bank));
+    steered_stage().apply(&ctx(1), &mut left).expect("applies");
+    let mut right = steered_field(Some(-bank));
+    steered_stage().apply(&ctx(1), &mut right).expect("applies");
+
+    let al = left.aero_force().expect("force");
+    let ar = right.aero_force().expect("force");
+    assert!(al[2] != 0.0, "banking leaves the plane");
+    assert!(
+        (al[2] + ar[2]).abs() < 1e-9,
+        "mirror banks push out-of-plane oppositely: {} vs {}",
+        al[2],
+        ar[2]
+    );
+    // The in-plane lift shrinks by cos φ identically on both.
+    assert!((al[0] - ar[0]).abs() < 1e-9);
+    assert!((al[0] - 5000.0 * bank.cos()).abs() < 1e-6);
+}
+
+#[test]
+fn the_clamped_command_actuates_not_the_raw_one() {
+    // A raw guidance command far beyond the envelope's bank cap: the gate clamps the channel,
+    // and the next step's lift flies the clamped value (the one-step actuation lag).
+    let cap = 0.2_f64;
+    let gate = CyberneticCorrect::new(SafetyEnvelope::new(1.0e9, 100.0, cap));
+
+    let mut f = steered_field(Some(10.0));
+    gate.apply(&ctx(1), &mut f).expect("gate clamps");
+    steered_stage().apply(&ctx(2), &mut f).expect("applies");
+    let clamped = f.aero_force().expect("force");
+
+    let mut reference = steered_field(Some(cap));
+    steered_stage()
+        .apply(&ctx(2), &mut reference)
+        .expect("applies");
+    let expected = reference.aero_force().expect("force");
+
+    assert_eq!(
+        clamped, expected,
+        "the actuated bank is the gate's clamp, not the raw command"
+    );
+}
+
+#[test]
+fn finish_at_derives_the_miss_from_the_terminal_state() {
+    let aim = [6.4e6_f64, 0.0, 0.0];
+
+    // On the aim point: zero miss.
+    let on_target = BranchAccumulator::new(0.0).finish_at(aim, aim);
+    assert_eq!(on_target.miss_distance, 0.0);
+
+    // Distinct terminal states (distinct banks steer distinct trajectories) yield
+    // distinct, dynamics-derived misses.
+    let short = BranchAccumulator::new(0.3).finish_at([6.4e6, 3.0e3, -4.0e3], aim);
+    let wide = BranchAccumulator::new(-0.3).finish_at([6.4e6, 9.0e3, -1.2e4], aim);
+    assert_eq!(short.miss_distance, 5.0e3);
+    assert_eq!(wide.miss_distance, 1.5e4);
+    assert!(short.miss_distance != wide.miss_distance);
 }

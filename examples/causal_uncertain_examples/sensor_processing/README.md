@@ -30,7 +30,7 @@ PropagatingProcess { value: RawReadings, state: FleetState::default(), context: 
 
 - **`PropagatingProcess` with non-trivial state and context** — the canonical
   multi-stage pattern from the avionics
-  [`flight_envelope_monitor`](../../avionics_examples/flight_envelope_monitor)
+  [`flight_envelope_monitor`](../../avionics_examples/control/flight_envelope_monitor)
   example, applied to a sensor fleet.
 - **Configuration in the `Context` channel** — physical-plausibility ranges,
   calibration offsets, and anomaly thresholds live in `FleetConfig`, not in

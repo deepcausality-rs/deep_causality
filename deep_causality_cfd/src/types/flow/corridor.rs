@@ -9,6 +9,10 @@
 //!   (Knudsen number, from a `"mean_free_path"` field and a configured characteristic length) and the
 //!   plasma state (`"n_e"` → [`BlackoutTrigger`] → GNSS-denied), selects the [`GoverningModel`], and
 //!   **logs every regime change** into the [`CoupledField`] provenance log.
+//! * [`TrajectoryNav`] — the trajectory/navigation stage ([4]): one [`ReentryNavEngine`](crate::ReentryNavEngine) step per
+//!   coupling step (KS predict with the ④ aero force as the kick, ESKF correct with GNSS gated by
+//!   the classifier's denial flag, through-plasma optical ungated); the nav *state* threads through
+//!   the [`CoupledField`], so the stage itself stays immutable.
 //! * [`BranchOutcome`] / [`BranchAccumulator`] — the counterfactual bank-angle branch vocabulary
 //!   ([5]): a predict-only rollout folds per-step `(heat flux, comms-denied, dt)` samples into the
 //!   `(peak heat, thermal load, blackout dwell)` triple and closes with the terminal miss distance.
@@ -22,6 +26,7 @@
 //!   Deterministic (identical inputs → identical action), no Effect-monad allocation on the hot path.
 
 use super::coupling::{CoupledField, PhysicsStage, StepContext};
+use crate::navigation::ImuModel;
 use crate::types::CfdScalar;
 use crate::types::flow::BlackoutTrigger;
 use alloc::format;
@@ -186,6 +191,137 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for RegimeClassify<R> {
 }
 
 // ---------------------------------------------------------------------------
+// [4] Trajectory / navigation stage
+// ---------------------------------------------------------------------------
+
+/// The trajectory/navigation stage ([4]): one [`ReentryNavEngine`](crate::ReentryNavEngine) step per coupling step — KS
+/// predict with the ④ aero-force channel as the perturbation kick, then the ESKF measurement fold.
+///
+/// The nav *state* threads through the [`CoupledField`] (the stage takes the engine out, advances
+/// it, and puts it back — stages stay immutable, so the same stage value drives every step and a
+/// forked field carries its own engine). A no-op if no engine has been seeded with
+/// [`CoupledField::set_nav`].
+///
+/// Measurements are **consumed** (taken out of the field, one-shot) from named scalar fields a
+/// sensor stage publishes each step — a publisher that goes quiet leaves no stale fix behind to
+/// be re-folded as fresh:
+/// * `"gnss_fix"` (3 cells, a measured Cartesian position) — folded **only when GNSS is available**;
+///   the gate is the classifier's [`RegimeClass::gnss_denied`] flag on the field (no classifier ⇒
+///   available). This is the ④ blackout gating of the corridor. A denied-step fix is consumed
+///   unread.
+/// * `"optical_fix"` (3 cells) — the through-plasma optical fix, folded regardless of denial.
+///
+/// Each step it publishes `"nav_position"` (3 cells) and `"nav_position_variance"` (1 cell) — the
+/// dead-reckoning drift / reacquisition-collapse witnesses — and logs the transition between aided
+/// and dead-reckoning navigation to the provenance log (transitions only, not every step).
+///
+/// With [`with_imu`](Self::with_imu) the predict integrates the **IMU-sensed** specific force
+/// (the ④ aero plus the accelerometer bias) instead of the true value — the real INS
+/// dead-reckoning error mechanism — and the ESKF `Q` comes from the IMU's grade.
+#[derive(Debug, Clone, Copy)]
+pub struct TrajectoryNav<R: CfdScalar> {
+    process_noise: [R; 17],
+    gnss_variance: R,
+    optical_variance: R,
+    imu: Option<ImuModel<R>>,
+}
+
+impl<R: CfdScalar> TrajectoryNav<R> {
+    /// A trajectory stage with the ESKF `Q` diagonal `process_noise` and the per-axis measurement
+    /// variances of the GNSS and through-plasma optical fixes. The predict integrates the true ④
+    /// specific force; use [`with_imu`](Self::with_imu) for a sensed one.
+    pub fn new(process_noise: [R; 17], gnss_variance: R, optical_variance: R) -> Self {
+        Self {
+            process_noise,
+            gnss_variance,
+            optical_variance,
+            imu: None,
+        }
+    }
+
+    /// Sense the ④ specific force through `imu` before the predict (accelerometer bias included),
+    /// and take the ESKF `Q` diagonal from the IMU's grade.
+    pub fn with_imu(mut self, imu: ImuModel<R>) -> Self {
+        self.process_noise = imu.process_noise();
+        self.imu = Some(imu);
+        self
+    }
+}
+
+/// Read a 3-cell fix field, if present and well-formed.
+fn fix3<R: CfdScalar>(xs: Option<&[R]>) -> Option<[R; 3]> {
+    match xs {
+        Some([x, y, z]) => Some([*x, *y, *z]),
+        _ => None,
+    }
+}
+
+impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for TrajectoryNav<R> {
+    fn apply(
+        &self,
+        ctx: &StepContext<'_, D, R>,
+        field: &mut CoupledField<R>,
+    ) -> Result<(), PhysicsError> {
+        let Some(mut engine) = field.take_nav() else {
+            return Ok(());
+        };
+        // Predict: KS drift + the ④ aero acceleration as the Strang kick (zero if no producer
+        // ran), sensed through the IMU when one is configured.
+        let aero = field.aero_force().unwrap_or([R::zero(); 3]);
+        let sensed = match &self.imu {
+            Some(imu) => imu.sense_specific_force(aero),
+            None => aero,
+        };
+        if let Err(e) = engine.predict(ctx.dt(), sensed, self.process_noise) {
+            // Thread the engine back before short-circuiting, so the pause/fork state stays whole.
+            field.set_nav(engine);
+            return Err(e);
+        }
+
+        // Correct: GNSS gated by the classifier's denial flag; optical rides through the plasma.
+        // Each fix is a **consumed, one-shot** measurement: taking it out of the field means a
+        // publisher that goes quiet leaves nothing behind, so a stale fix is never re-folded as
+        // fresh on a later step (which would hold the filter in aided mode and over-collapse the
+        // covariance). A denied-step GNSS fix is consumed unread — the broadcast the receiver
+        // could not use is gone, not latched for reacquisition.
+        let gnss = field.take_scalar("gnss_fix");
+        let optical = field.take_scalar("optical_fix");
+        let denied = field.regime().map(|r| r.gnss_denied).unwrap_or(false);
+        let mut aided = false;
+        if !denied && let Some(fix) = fix3(gnss.as_deref()) {
+            engine.correct_position(fix, self.gnss_variance);
+            aided = true;
+        }
+        if let Some(fix) = fix3(optical.as_deref()) {
+            engine.correct_position(fix, self.optical_variance);
+            aided = true;
+        }
+
+        // Log aided <-> dead-reckoning transitions only (the mode is carried on the field).
+        let mode = if aided { R::one() } else { R::zero() };
+        let prev = field.scalar("nav_mode").and_then(|m| m.first().copied());
+        if prev != Some(mode) {
+            let label = if aided {
+                "nav: aided (position fix folded)"
+            } else {
+                "nav: dead reckoning (no usable fix)"
+            };
+            field.log_mut().add_entry(label);
+        }
+        field.set_scalar("nav_mode", Vec::from([mode]));
+
+        // Publish the drift / reacquisition witnesses and thread the engine back.
+        field.set_scalar("nav_position", engine.position().to_vec());
+        field.set_scalar(
+            "nav_position_variance",
+            Vec::from([engine.position_variance()]),
+        );
+        field.set_nav(engine);
+        Ok(())
+    }
+}
+
+// ---------------------------------------------------------------------------
 // [5] Counterfactual bank-angle branch outcome
 // ---------------------------------------------------------------------------
 
@@ -251,6 +387,140 @@ impl<R: CfdScalar> BranchAccumulator<R> {
             miss_distance,
             blackout_dwell: self.blackout_dwell,
         }
+    }
+
+    /// Close the branch with a **trajectory-derived** miss: the Euclidean distance from the
+    /// branch's terminal position (the report's `"final_truth_state"` leading triple) to the
+    /// configured aim point. This replaces modeled miss laws once the branch actually flies —
+    /// distinct banks steer distinct terminal states, so their misses separate by dynamics.
+    pub fn finish_at(self, terminal_position: [R; 3], aim_point: [R; 3]) -> BranchOutcome<R> {
+        let d: [R; 3] = core::array::from_fn(|i| terminal_position[i] - aim_point[i]);
+        self.finish(norm3(d))
+    }
+}
+
+// ---------------------------------------------------------------------------
+// [5b] 3-DOF bank-steered lift
+// ---------------------------------------------------------------------------
+
+/// The 3-DOF bank-steered ④ aero producer: point-mass drag **and lift**, so the clamped guidance
+/// command actually steers the trajectory instead of only reshaping the carrier world.
+///
+/// Each step it forms the peak dynamic pressure `q = ½·ρ_ref·U_max²` from the marcher's `"speed"`
+/// field (override with [`with_speed_field`](Self::with_speed_field)), takes the drag acceleration
+/// `D = (C_d·A/m)·q` **anti-parallel to the truth velocity**, and adds the lift `L = (L/D)·D`
+/// rotated about the velocity vector by the bank angle read from the field's control channel —
+/// the value [`CyberneticCorrect`] clamped at the **previous** step, so the actuation carries a
+/// one-step lag by construction (command at step `k` flies at step `k+1`). The lift-plane basis
+/// comes from the local radial at the truth position: zero bank puts the lift in the
+/// radial-velocity plane (pure in-plane lift-up); positive bank rotates it toward `v̂ × n̂`.
+/// The full 3-vector lands in the aero-force channel the trajectory kick reads.
+///
+/// Degenerate geometry falls back conservatively: without a `"speed"` field the stage writes a
+/// **zero** aero force (no dynamic pressure this step — an earlier step's force must not latch);
+/// without a 6-cell `"truth_state"` it writes the axis-aligned drag `[−D, 0, 0]` (the
+/// [`AeroForceCoupling`](super::AeroForceCoupling) behavior); with a vanishing velocity or a
+/// velocity parallel to the radial (no lift plane) it writes pure drag. This is deliberately
+/// 3-DOF: attitude dynamics, trim, and control surfaces (6-DOF) are out of scope — there is no
+/// flight-data anchor to validate them against.
+#[derive(Debug, Clone, Copy)]
+pub struct BankSteeredLift<R: CfdScalar> {
+    speed_field: &'static str,
+    truth_field: &'static str,
+    rho_ref: R,
+    cd_area_over_mass: R,
+    lift_over_drag: R,
+}
+
+impl<R: CfdScalar> BankSteeredLift<R> {
+    /// A 3-DOF aero producer with freestream reference density `rho_ref`, ballistic-coefficient
+    /// bundle `cd_area_over_mass = C_d·A/m`, and lift-to-drag ratio `lift_over_drag`.
+    pub fn new(rho_ref: R, cd_area_over_mass: R, lift_over_drag: R) -> Self {
+        Self {
+            speed_field: "speed",
+            truth_field: "truth_state",
+            rho_ref,
+            cd_area_over_mass,
+            lift_over_drag,
+        }
+    }
+
+    /// Form the dynamic pressure from a different speed field, e.g. the compressible carrier's
+    /// single-cell `"flight_speed"` when the trajectory should feel the freestream rather than
+    /// the post-shock layer.
+    pub fn with_speed_field(mut self, field: &'static str) -> Self {
+        self.speed_field = field;
+        self
+    }
+}
+
+impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for BankSteeredLift<R> {
+    fn apply(
+        &self,
+        _ctx: &StepContext<'_, D, R>,
+        field: &mut CoupledField<R>,
+    ) -> Result<(), PhysicsError> {
+        let Some(speed) = field.scalar(self.speed_field) else {
+            // No dynamic pressure this step: zero the ④ channel, so an aero force written on an
+            // earlier step does not stay latched and keep kicking the trajectory.
+            field.set_aero_force([R::zero(); 3]);
+            return Ok(());
+        };
+        let u_max = peak(speed);
+        let half = R::from_f64(0.5).unwrap_or_else(R::one);
+        let q = half * self.rho_ref * u_max * u_max;
+        let a_drag = self.cd_area_over_mass * q;
+
+        let truth = field.scalar(self.truth_field);
+        let Some([rx, ry, rz, vx, vy, vz]) = (match truth {
+            Some([a, b, c, d, e, f]) => Some([*a, *b, *c, *d, *e, *f]),
+            _ => None,
+        }) else {
+            field.set_aero_force([R::zero() - a_drag, R::zero(), R::zero()]);
+            return Ok(());
+        };
+
+        let eps = R::from_f64(1.0e-12).unwrap_or_else(R::zero);
+        let v = [vx, vy, vz];
+        let v_norm = norm3(v);
+        if v_norm <= eps {
+            field.set_aero_force([R::zero() - a_drag, R::zero(), R::zero()]);
+            return Ok(());
+        }
+        let v_hat = scale3(v, R::one() / v_norm);
+        let drag = scale3(v_hat, R::zero() - a_drag);
+
+        // The lift plane: the local radial at the truth position, projected off the velocity.
+        let r = [rx, ry, rz];
+        let r_norm = norm3(r);
+        let n_raw = if r_norm > eps {
+            let r_hat = scale3(r, R::one() / r_norm);
+            let along = dot3(r_hat, v_hat);
+            [
+                r_hat[0] - along * v_hat[0],
+                r_hat[1] - along * v_hat[1],
+                r_hat[2] - along * v_hat[2],
+            ]
+        } else {
+            [R::zero(); 3]
+        };
+        let n_norm = norm3(n_raw);
+        if n_norm <= eps {
+            // Velocity along the radial: no lift plane, pure drag.
+            field.set_aero_force(drag);
+            return Ok(());
+        }
+        let n_hat = scale3(n_raw, R::one() / n_norm);
+        let b_hat = cross3(v_hat, n_hat);
+
+        // The clamped bank from the control channel (the previous step's gate output).
+        let bank = field.control_action().unwrap_or_else(R::zero);
+        let a_lift = self.lift_over_drag * a_drag;
+        let (sin_b, cos_b) = (bank.sin(), bank.cos());
+        let aero: [R; 3] =
+            core::array::from_fn(|i| drag[i] + a_lift * (cos_b * n_hat[i] + sin_b * b_hat[i]));
+        field.set_aero_force(aero);
+        Ok(())
     }
 }
 
@@ -450,6 +720,30 @@ fn peak<R: CfdScalar>(xs: &[R]) -> R {
     xs.iter()
         .copied()
         .fold(R::zero(), |a, x| if x > a { x } else { a })
+}
+
+/// The Euclidean norm of a 3-vector.
+fn norm3<R: CfdScalar>(x: [R; 3]) -> R {
+    dot3(x, x).sqrt()
+}
+
+/// The dot product of two 3-vectors.
+fn dot3<R: CfdScalar>(a: [R; 3], b: [R; 3]) -> R {
+    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+}
+
+/// A 3-vector scaled by `s`.
+fn scale3<R: CfdScalar>(x: [R; 3], s: R) -> [R; 3] {
+    [x[0] * s, x[1] * s, x[2] * s]
+}
+
+/// The cross product `a × b`.
+fn cross3<R: CfdScalar>(a: [R; 3], b: [R; 3]) -> [R; 3] {
+    [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ]
 }
 
 /// Clamp `x` into `[lo, hi]`.

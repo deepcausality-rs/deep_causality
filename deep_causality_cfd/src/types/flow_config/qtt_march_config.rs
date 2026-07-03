@@ -31,6 +31,7 @@ pub struct QttObserve {
     pub(crate) drag: bool,
     pub(crate) electron_density: bool,
     pub(crate) plasma_frequency: bool,
+    pub(crate) heat_flux: bool,
     pub(crate) blackout_dwell: bool,
 }
 
@@ -75,6 +76,13 @@ impl QttObserve {
     /// Collect the (angular) plasma-frequency series `ω_p` (the blackout coupling host).
     pub fn plasma_frequency(mut self) -> Self {
         self.plasma_frequency = true;
+        self
+    }
+
+    /// Collect the sensed heat-flux series — the first cell of the `"heat_flux"` scalar a loads
+    /// stage publishes each coupled step (the blackout coupling host). No-op without a producer.
+    pub fn heat_flux(mut self) -> Self {
+        self.heat_flux = true;
         self
     }
 
