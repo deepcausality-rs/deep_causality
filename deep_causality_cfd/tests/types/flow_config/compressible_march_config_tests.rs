@@ -53,6 +53,39 @@ fn schedule_rejects_short_or_unsorted_tables() {
 }
 
 #[test]
+fn schedule_rejects_a_non_physical_gamma() {
+    // The shock jump divides by gamma_eff - 1, so gamma at or below 1 must fail at build
+    // time, not mid-run when the shock model is first evaluated.
+    assert!(DescentSchedule::new(rows(), 1.0).is_err());
+    assert!(DescentSchedule::new(rows(), 0.9).is_err());
+    assert!(DescentSchedule::new(rows(), f64::NAN).is_err());
+    assert!(DescentSchedule::new(rows(), f64::INFINITY).is_err());
+    assert!(DescentSchedule::new(rows(), 1.1).is_ok(), "a valid gamma");
+}
+
+#[test]
+fn schedule_rejects_non_positive_or_non_finite_rows() {
+    // A zero temperature row later divides to an invalid Mach input.
+    let mut zero_temperature = rows();
+    zero_temperature[1].temperature = 0.0;
+    assert!(DescentSchedule::new(zero_temperature, 1.1).is_err());
+
+    let mut negative_density = rows();
+    negative_density[0].n_tot = -1.0e20;
+    assert!(DescentSchedule::new(negative_density, 1.1).is_err());
+
+    let mut zero_sound_speed = rows();
+    zero_sound_speed[2].sound_speed = 0.0;
+    assert!(DescentSchedule::new(zero_sound_speed, 1.1).is_err());
+
+    let mut nan_altitude = rows();
+    nan_altitude[2].altitude_m = f64::NAN;
+    assert!(DescentSchedule::new(nan_altitude, 1.1).is_err());
+
+    assert!(DescentSchedule::new(rows(), 1.1).is_ok(), "a valid table");
+}
+
+#[test]
 fn schedule_interpolates_and_clamps() {
     let s = DescentSchedule::new(rows(), 1.1).unwrap();
 

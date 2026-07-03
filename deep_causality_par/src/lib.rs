@@ -19,7 +19,7 @@
 //!   [`std::thread::scope`] threads under the `parallel` feature, a plain
 //!   inline map without it. No thread pool, no external dependency.
 
-pub mod functions;
+mod functions;
 pub mod traits;
 
 pub use crate::functions::scoped_map::scoped_map;

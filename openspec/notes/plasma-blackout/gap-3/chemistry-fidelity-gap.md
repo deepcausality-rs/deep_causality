@@ -28,7 +28,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 >   corridor and weather examples now fly the network (calibration → validation: lever 1's ~1.1× was
 >   calibrated, the network's 3.0× is predicted).
 >
-> The change `openspec/changes/add-finite-rate-ionization-network/` carries the full specification and the
+> The change `openspec/changes/archive/2026-07-03-add-finite-rate-ionization-network/` carries the full specification and the
 > per-task landing notes. The trajectory/timing half of the bundle remains open
 > ([Resolution 1](gap-three-resolution-1-perturbed-conformal-trajectory.md), preliminary).
 

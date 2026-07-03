@@ -2,7 +2,7 @@
 
 > **STATUS: exploratory note (2026-07-03).** Nothing here is proposed or built. This note mines
 > CFD University's survey of the six biggest unsolved challenges in CFD
-> ([source](https://cfd.university/blog//the-6-biggest-and-unoslved-challenges-in-cfd)) for the
+> ([source](https://cfd.university/blog/the-6-biggest-and-unoslved-challenges-in-cfd); the slug's spelling is the site's own) for the
 > sub-problems `deep_causality_cfd` could answer with minor updates or additions, and ranks
 > them from least to most effort. The crate README records what is answered *today*; this note
 > records what one small step would add.

@@ -182,6 +182,14 @@ impl<R: CfdScalar> CoupledField<R> {
             .map(|(_, d)| d.as_slice())
     }
 
+    /// Remove a named scalar field, returning its data if it was present. A consuming stage
+    /// takes a one-shot input (e.g. a published position fix) out of the field with this, so a
+    /// stale copy cannot be re-read on a later step if its publisher goes quiet.
+    pub fn take_scalar(&mut self, name: &str) -> Option<Vec<R>> {
+        let idx = self.scalars.iter().position(|(n, _)| n == name)?;
+        Some(self.scalars.remove(idx).1)
+    }
+
     /// Mutable access to a named scalar field, if present.
     pub fn scalar_mut(&mut self, name: &str) -> Option<&mut Vec<R>> {
         self.scalars

@@ -49,7 +49,7 @@ pub const REACQ_STEPS: usize = 30;
 /// [`EXIT_ALTITUDE_BAND_KM`], because the two vehicles differ by design (see there).
 pub const RAMC_EXIT_WINDOW_KM: (f64, f64) = (25.0, 30.0);
 /// Pinned acceptance band for the corridor's flow-resolved blackout-exit altitude, km.
-/// Measured 45.6 km with the uncalibrated finite-rate network. The corridor's probe flies a
+/// Measured 47.0 km with the uncalibrated finite-rate network (see output.txt). The corridor's probe flies a
 /// deliberately light ballistic bundle (`CDA_OVER_M`, β ≈ 170 kg/m²) so the compressed descent
 /// decelerates below the ionization threshold before the atmosphere-table floor; it therefore
 /// exits well above the RAM-C II window, and the offset is ballistics, not chemistry. The band

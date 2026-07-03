@@ -273,7 +273,7 @@ pub fn report(inputs: &GateInputs<'_>) -> bool {
         branches.len() >= 2
             && branches.iter().all(|b| b.has_alternation_marker)
             && fine_branches.iter().all(|b| b.has_alternation_marker)
-            && (committed == zero_bank || divergence > ft(DIVERGENCE_MIN_M))
+            && divergence > ft(DIVERGENCE_MIN_M)
             && hi > lo,
         format!(
             "{} alternated worlds ({} coarse + {} fine) from one shared onset; \

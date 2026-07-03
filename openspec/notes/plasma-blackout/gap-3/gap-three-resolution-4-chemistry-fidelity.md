@@ -7,7 +7,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 > **STATUS (2026-07-02): analysis complete; proposal amended, not yet implemented.** This note
 > is the full ARIZ/TRIZ re-evaluation of the Option A design proposed in
-> `openspec/changes/add-finite-rate-ionization-network/` (scoped from
+> `openspec/changes/archive/2026-07-03-add-finite-rate-ionization-network/` (scoped from
 > [`../finite-rate-cfd-chemistry.md`](../finite-rate-cfd-chemistry.md)). Verdict: the
 > architecture is **confirmed** at the right knee of the fidelity curve, and the analysis caught
 > one substantive design flaw (the partial-equilibrium atom pool) plus one spec-level trap
@@ -189,5 +189,5 @@ per cell."
 - [`gap-three-resolution-2-tve-controlled-ionization.md`](gap-three-resolution-2-tve-controlled-ionization.md):
   lever 1 shipped and lever 2 closed; the `T_e = T_ve` insight the network's electron channels
   reuse.
-- `openspec/changes/add-finite-rate-ionization-network/`: the amended proposal, design, specs,
+- `openspec/changes/archive/2026-07-03-add-finite-rate-ionization-network/`: the amended proposal, design, specs,
   and tasks this analysis modified.

@@ -6,12 +6,12 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 # Finite-rate CFD chemistry: preparation for Option A, transition commentary for Option B
 
 > **STATUS: Option A shipped (2026-07-03).** The finite-rate ionization network landed through
-> `openspec/changes/add-finite-rate-ionization-network/` with two design revisions this note did
+> `openspec/changes/archive/2026-07-03-add-finite-rate-ionization-network/` with two design revisions this note did
 > not anticipate, both recorded in
 > [Resolution 3](gap-3/gap-three-resolution-3-chemistry-fidelity.md): the atom pool ships
 > *lagged* (not partial-equilibrium), and the stagnation-line parcel age is the transit-age
 > profile `age(ξ) = t_res·ln(1/(1−ξ))`, whose peak the anchor gate reads. Measured uncalibrated:
-> **+0.48 decades (3.0×)** of the RAM-C II anchor on the stagnation line; the corridor flagship
+> **+0.48 decades (3.0×)** of the RAM-C II anchor on the stagnation line; the plasma-blackout corridor
 > and weather table fly the network with all gates green. The Option B commentary below stands
 > unchanged as the transition path.
 >
@@ -23,7 +23,7 @@ The lever ladder of the chemistry-fidelity gap is two-thirds discharged:
 
 - **Lever 1, T_ve-controlled ionization: shipped.** Saha target and rate driven off
   `T_a = sqrt(T_tr * T_ve)`; the single-temperature 12x over-prediction fell to ~1.1x on the
-  stagnation line, and the continuous-descent flagship holds 1.43x on the RAM-C II anchor.
+  stagnation line, and the continuous-descent corridor holds 1.43x on the RAM-C II anchor.
 - **Lever 2, explicit 3-T electron energy: investigated and closed.** It brackets the model
   spread instead of improving the calibrated result; the durable insight (electrons are created
   in the post-shock bath, so `T_e(0) = T_ve`) is recorded in
@@ -91,7 +91,7 @@ the reasoning must be recorded the way the first A/B was.
    limits at low temperature.
 2. The stagnation-line verification (`qtt_ramc_stagline`), where the 12x-to-1.1x history lives,
    re-measured against the network with **no Saha calibration target**.
-3. The flagship re-pin: anchor band tightened toward 3x; blackout exit altitude compared against
+3. The corridor re-pin: anchor band tightened toward 3x; blackout exit altitude compared against
    the RAM-C II window (the flight stayed dark to roughly 25 to 30 km; the surrogate exits at
    46 km, and the network should move that boundary toward flight); onset altitude recorded as a
    prediction.
@@ -104,7 +104,7 @@ carrier change, not to the carrier change itself.
 and is a minor fraction of the ~40 ms coupled step; the tensor-train advance and the
 decode/publish round trip dominate. The network multiplies the chemistry arithmetic by roughly
 3x to 5x (three channels, equilibrium constants, a coupled two-or-three-scalar update), which
-lands at **+5 to +15 percent wall-clock** on the flagship: about 35 s today, at most ~40 s
+lands at **+5 to +15 percent wall-clock** on the corridor example: about 35 s today, at most ~40 s
 after. The 300 s budget gate does not move.
 
 ## 3. Option B commentary: the transition to species-transported reacting CFD
@@ -148,7 +148,7 @@ tool.
 
 **Runtime impact.** Roughly 4x to 8x on the coupled step: ~3x from marching 12 trains instead
 of 4, the remainder from the per-step dense react-and-re-encode round trip and modest source
-sub-cycling. On the current flagship that is 2.5 to 5 minutes of wall-clock against the 300 s
+sub-cycling. On the current corridor example that is 2.5 to 5 minutes of wall-clock against the 300 s
 budget gate, so Option B in the corridor implies either the study-verified fast configuration
 or a renegotiated budget. This is the concrete reason B rides the validation path first.
 
@@ -179,5 +179,5 @@ runtime.
   the LER `(target, tau)` pattern the network extends.
 - `openspec/changes/archive/2026-07-02-add-compressible-blackout-carrier/`: the evolved-state
   carrier this work rides on, including the sheath-renewal A/B that recombination re-opens.
-- `examples/avionics_examples/cfd/plasma_blackout_corridor/`: the flagship whose gates get
+- `examples/avionics_examples/cfd/plasma_blackout_corridor/`: the corridor example whose gates get
   re-pinned, and whose `constants.rs` labels the forward-only limitation this removes.

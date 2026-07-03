@@ -56,7 +56,10 @@ impl<R: CfdScalar> DescentSchedule<R> {
     /// a 20% rebuild tolerance.
     ///
     /// # Errors
-    /// [`PhysicsError::PhysicalInvariantBroken`] on a short or unsorted table.
+    /// [`PhysicsError::PhysicalInvariantBroken`] on a short or unsorted table, on a
+    /// `gamma_eff` that is not finite and `> 1` (the Rankine-Hugoniot jump divides by
+    /// `gamma_eff − 1`), or on a row whose `n_tot`, `temperature`, or `sound_speed` is not
+    /// finite and positive (each later feeds a division or a Mach/post-shock input).
     pub fn new(table: Vec<AtmosphereRow<R>>, gamma_eff: R) -> Result<Self, PhysicsError> {
         if table.len() < 2 {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -66,6 +69,24 @@ impl<R: CfdScalar> DescentSchedule<R> {
         if table.windows(2).any(|w| w[1].altitude_m <= w[0].altitude_m) {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "DescentSchedule table must be sorted by ascending altitude".into(),
+            ));
+        }
+        if !gamma_eff.is_finite() || gamma_eff <= R::one() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "DescentSchedule gamma_eff must be finite and > 1".into(),
+            ));
+        }
+        let positive = |x: R| x.is_finite() && x > R::zero();
+        if table.iter().any(|row| {
+            !row.altitude_m.is_finite()
+                || !positive(row.n_tot)
+                || !positive(row.temperature)
+                || !positive(row.sound_speed)
+        }) {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "DescentSchedule rows need a finite altitude and finite, positive n_tot, \
+                 temperature, and sound_speed"
+                    .into(),
             ));
         }
         let radius = R::from_f64(EARTH_RADIUS).ok_or_else(|| {

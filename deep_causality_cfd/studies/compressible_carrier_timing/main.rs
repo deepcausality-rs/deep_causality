@@ -14,11 +14,13 @@
 //!    rebuilds the solver when the scheduled freestream drifts, so the rebuild budget in
 //!    "equivalent steps" sets the freestream-drift tolerance.
 //!
-//! The study sweeps the shell at two resolutions and two bond caps, prints projections against
-//! the budget, and self-verifies: at least one configuration must fit, and the recommended
-//! configuration (the largest one inside the budget) is printed as the go/no-go record. A
-//! regression (no configuration fits) exits nonzero, which is the documented trigger for the
-//! `CompressibleMarcher2d` fallback decision.
+//! The study measures the 3-D fitted shell at the smallest candidate only (16³ with bond cap
+//! 16; those numbers already put the family over budget by more than 3x, so larger 3-D grids
+//! are a foregone conclusion) and sweeps the 2-D fallback at two resolutions and two bond caps.
+//! It prints projections against the budget and self-verifies: at least one configuration must
+//! fit, and the recommended configuration (the largest one inside the budget) is printed as the
+//! go/no-go record. A regression (no configuration fits) exits nonzero, which is the documented
+//! trigger for the `CompressibleMarcher2d` fallback decision.
 
 use deep_causality_cfd::{
     BodyFittedCoordinate3d, CartesianIdentity, CompressibleMarcher2d, CompressibleMarcher3dFitted,

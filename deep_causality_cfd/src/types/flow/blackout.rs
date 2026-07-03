@@ -203,12 +203,27 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for VibrationalLagStage<R>
             .pressure_field
             .and_then(|name| field.scalar(name))
             .map(|p| p.to_vec());
+        // Shape contract: length n is per-cell, length 1 broadcasts, anything
+        // else is a shape bug that must surface, not silently read cell 0.
+        if let (Some(name), Some(p)) = (self.pressure_field, &pressure)
+            && p.len() != t_tr.len()
+            && p.len() != 1
+        {
+            return Err(PhysicsError::DimensionMismatch(format!(
+                "the per-cell pressure field '{}' has length {} but '{}' has length {} (expected {} or 1)",
+                name,
+                p.len(),
+                self.t_tr_field,
+                t_tr.len(),
+                t_tr.len()
+            )));
+        }
         let mut t_ve = Vec::with_capacity(t_tr.len());
         let mut t_a = Vec::with_capacity(t_tr.len());
         for (i, &t) in t_tr.iter().enumerate() {
             let p_atm = match &pressure {
                 Some(p) if p.len() == t_tr.len() => p[i],
-                Some(p) if !p.is_empty() => p[0],
+                Some(p) if p.len() == 1 => p[0],
                 _ => self.pressure_atm,
             };
             let relaxed = vibrational_relaxation_kernel(
@@ -314,6 +329,21 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for IonizationStage<R> {
             .density_field
             .and_then(|name| field.scalar(name))
             .map(|d| d.to_vec());
+        // Shape contract: length n is per-cell, length 1 broadcasts, anything
+        // else is a shape bug that must surface, not silently read cell 0.
+        if let (Some(name), Some(d)) = (self.density_field, &density)
+            && d.len() != n
+            && d.len() != 1
+        {
+            return Err(PhysicsError::DimensionMismatch(format!(
+                "the per-cell density field '{}' has length {} but '{}' has length {} (expected {} or 1)",
+                name,
+                d.len(),
+                self.t_tr_field,
+                n,
+                n
+            )));
+        }
 
         // [M] in mol·cm⁻³ for τ_ion = 1/(k_f·[M]); k_f is in cm³·mol⁻¹·s⁻¹ (RP-1232).
         let avogadro = R::from_f64(AVOGADRO_CONSTANT).ok_or_else(|| {
@@ -332,7 +362,7 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for IonizationStage<R> {
         for (i, &t) in t_tr.iter().enumerate() {
             let n_tot = match &density {
                 Some(d) if d.len() == n => d[i],
-                Some(d) if !d.is_empty() => d[0],
+                Some(d) if d.len() == 1 => d[0],
                 _ => self.number_density,
             };
             let conc_mol_cm3 = n_tot / (avogadro * cm3_per_m3);

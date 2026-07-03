@@ -226,7 +226,9 @@ fn main() {
     let separation = polar.drift_mean_m - standard.drift_mean_m;
     gate(
         "(4b) the cold effect is statistically resolved",
-        separation >= combined_sd * utils::ft(constants::DRIFT_SIGNIFICANCE_SIGMA),
+        combined_sd.is_finite()
+            && combined_sd > utils::ft(0.0)
+            && separation > combined_sd * utils::ft(constants::DRIFT_SIGNIFICANCE_SIGMA),
         format!(
             "polar-standard separation {:.2} m vs combined sigma {:.2} m ({:.1} sigma; gate \
              requires {:.0})",

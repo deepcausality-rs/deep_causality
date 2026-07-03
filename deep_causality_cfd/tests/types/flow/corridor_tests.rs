@@ -381,6 +381,10 @@ fn gnss_fix_is_gated_by_the_denial_flag() {
         0.0,
         "a denied link never folds the GNSS fix"
     );
+    assert!(
+        f.scalar("gnss_fix").is_none(),
+        "the denied-step broadcast is consumed unread, not latched for reacquisition"
+    );
 }
 
 #[test]
@@ -395,6 +399,34 @@ fn optical_fix_rides_through_the_blackout() {
         f.scalar("nav_mode").unwrap()[0],
         1.0,
         "the through-plasma optical fix folds even when GNSS is denied"
+    );
+    assert!(
+        f.scalar("optical_fix").is_none(),
+        "the folded optical fix is consumed"
+    );
+}
+
+#[test]
+fn a_fix_is_consumed_and_not_refolded_when_the_publisher_goes_quiet() {
+    let stage = nav_stage();
+    let mut f = field();
+    f.set_nav(nav_engine());
+
+    // Step 1: a published fix is folded (aided) and consumed off the field.
+    f.set_scalar("gnss_fix", vec![7.0e6, 1.0e6, 2.0e6]);
+    stage.apply(&ctx(1), &mut f).expect("applies");
+    assert_eq!(f.scalar("nav_mode").unwrap()[0], 1.0, "aided");
+    assert!(f.scalar("gnss_fix").is_none(), "the fix is consumed");
+    let v_folded = f.scalar("nav_position_variance").unwrap()[0];
+
+    // Step 2: the publisher goes quiet. The old fix must not be re-folded as fresh — the
+    // filter drops to dead reckoning and the position variance grows instead of collapsing.
+    stage.apply(&ctx(2), &mut f).expect("applies");
+    assert_eq!(f.scalar("nav_mode").unwrap()[0], 0.0, "dead reckoning");
+    let v_quiet = f.scalar("nav_position_variance").unwrap()[0];
+    assert!(
+        v_quiet > v_folded,
+        "a quiet publisher grows the variance: {v_quiet} vs {v_folded}"
     );
 }
 
@@ -466,11 +498,32 @@ fn steered_stage() -> BankSteeredLift<f64> {
 }
 
 #[test]
-fn bank_steered_lift_is_a_noop_without_speed() {
+fn bank_steered_lift_writes_zero_force_without_speed() {
     let mut f = field();
     f.set_scalar("truth_state", vec![7.0e6, 0.0, 0.0, 0.0, 7.5e3, 0.0]);
     steered_stage().apply(&ctx(1), &mut f).expect("applies");
-    assert!(f.aero_force().is_none(), "no dynamic pressure, no force");
+    assert_eq!(
+        f.aero_force(),
+        Some([0.0, 0.0, 0.0]),
+        "no dynamic pressure, zero force"
+    );
+}
+
+#[test]
+fn missing_speed_zeroes_a_previously_written_force() {
+    // Step 1 writes a real aero force; step 2's speed field is gone. The stale force must not
+    // stay latched and keep kicking the trajectory: the stage zeroes the ④ channel.
+    let mut f = steered_field(None);
+    steered_stage().apply(&ctx(1), &mut f).expect("applies");
+    assert_ne!(f.aero_force(), Some([0.0, 0.0, 0.0]), "a real force landed");
+
+    assert!(f.take_scalar("speed").is_some(), "the publisher goes quiet");
+    steered_stage().apply(&ctx(2), &mut f).expect("applies");
+    assert_eq!(
+        f.aero_force(),
+        Some([0.0, 0.0, 0.0]),
+        "no force this step, not the latched one"
+    );
 }
 
 #[test]

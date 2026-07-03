@@ -110,10 +110,13 @@ pub fn world_row<S>(
     let terminals: Vec<FloatType> = metrics.iter().map(|&(_, t)| t).collect();
     let (drift_mean_m, drift_sd_m) = mean_sd(&drifts);
     let (terminal_mean_m, _) = mean_sd(&terminals);
+    // NaN-honest maximum: a draw with a missing truth state reports NaN, and the row's
+    // aggregate must stay NaN so the reacquisition gate fails instead of scoring a perfect 0.
     let terminal_max_m = terminals
         .iter()
         .copied()
-        .fold(utils::ft(0.0), |a, x| if x > a { x } else { a });
+        .reduce(|a, x| if x.is_nan() || x > a { x } else { a })
+        .unwrap_or_else(|| utils::ft(f64::NAN));
 
     WorldRow {
         name,

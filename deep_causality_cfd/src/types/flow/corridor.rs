@@ -202,10 +202,13 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for RegimeClassify<R> {
 /// forked field carries its own engine). A no-op if no engine has been seeded with
 /// [`CoupledField::set_nav`].
 ///
-/// Measurements are consumed from named scalar fields a sensor stage publishes:
+/// Measurements are **consumed** (taken out of the field, one-shot) from named scalar fields a
+/// sensor stage publishes each step — a publisher that goes quiet leaves no stale fix behind to
+/// be re-folded as fresh:
 /// * `"gnss_fix"` (3 cells, a measured Cartesian position) — folded **only when GNSS is available**;
 ///   the gate is the classifier's [`RegimeClass::gnss_denied`] flag on the field (no classifier ⇒
-///   available). This is the ④ blackout gating of the corridor.
+///   available). This is the ④ blackout gating of the corridor. A denied-step fix is consumed
+///   unread.
 /// * `"optical_fix"` (3 cells) — the through-plasma optical fix, folded regardless of denial.
 ///
 /// Each step it publishes `"nav_position"` (3 cells) and `"nav_position_variance"` (1 cell) — the
@@ -276,13 +279,20 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for TrajectoryNav<R> {
         }
 
         // Correct: GNSS gated by the classifier's denial flag; optical rides through the plasma.
+        // Each fix is a **consumed, one-shot** measurement: taking it out of the field means a
+        // publisher that goes quiet leaves nothing behind, so a stale fix is never re-folded as
+        // fresh on a later step (which would hold the filter in aided mode and over-collapse the
+        // covariance). A denied-step GNSS fix is consumed unread — the broadcast the receiver
+        // could not use is gone, not latched for reacquisition.
+        let gnss = field.take_scalar("gnss_fix");
+        let optical = field.take_scalar("optical_fix");
         let denied = field.regime().map(|r| r.gnss_denied).unwrap_or(false);
         let mut aided = false;
-        if !denied && let Some(fix) = fix3(field.scalar("gnss_fix")) {
+        if !denied && let Some(fix) = fix3(gnss.as_deref()) {
             engine.correct_position(fix, self.gnss_variance);
             aided = true;
         }
-        if let Some(fix) = fix3(field.scalar("optical_fix")) {
+        if let Some(fix) = fix3(optical.as_deref()) {
             engine.correct_position(fix, self.optical_variance);
             aided = true;
         }
@@ -406,7 +416,8 @@ impl<R: CfdScalar> BranchAccumulator<R> {
 /// radial-velocity plane (pure in-plane lift-up); positive bank rotates it toward `v̂ × n̂`.
 /// The full 3-vector lands in the aero-force channel the trajectory kick reads.
 ///
-/// Degenerate geometry falls back conservatively: without a `"speed"` field the stage is a no-op;
+/// Degenerate geometry falls back conservatively: without a `"speed"` field the stage writes a
+/// **zero** aero force (no dynamic pressure this step — an earlier step's force must not latch);
 /// without a 6-cell `"truth_state"` it writes the axis-aligned drag `[−D, 0, 0]` (the
 /// [`AeroForceCoupling`](super::AeroForceCoupling) behavior); with a vanishing velocity or a
 /// velocity parallel to the radial (no lift plane) it writes pure drag. This is deliberately
@@ -450,6 +461,9 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for BankSteeredLift<R> {
         field: &mut CoupledField<R>,
     ) -> Result<(), PhysicsError> {
         let Some(speed) = field.scalar(self.speed_field) else {
+            // No dynamic pressure this step: zero the ④ channel, so an aero force written on an
+            // earlier step does not stay latched and keep kicking the trajectory.
+            field.set_aero_force([R::zero(); 3]);
             return Ok(());
         };
         let u_max = peak(speed);

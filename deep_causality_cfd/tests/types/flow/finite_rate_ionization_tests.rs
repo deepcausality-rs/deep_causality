@@ -113,6 +113,53 @@ fn per_cell_density_and_temperature_drive_per_cell_electrons() {
 }
 
 #[test]
+fn a_mismatched_density_field_length_is_a_dimension_error() {
+    // Length n is per-cell, length 1 broadcasts; anything else is a shape
+    // bug that must surface instead of silently reading cell 0.
+    let stage = FiniteRateIonizationStage::new(1.0_f64).with_density_field("n_tot");
+    let mut f = CoupledField::new(Ambient::new(0.01_f64, 0.0, None));
+    f.set_scalar("T_tr", vec![6_000.0_f64, 6_000.0, 3_000.0]);
+    f.set_scalar("T_ve", vec![6_000.0_f64, 6_000.0, 3_000.0]);
+    f.set_scalar("n_tot", vec![1.0e20_f64, N_PEAK]);
+    let result = stage.apply(&ctx(1), &mut f);
+    let err = result.expect_err("a length-2 field against 3 cells is a shape bug");
+    let msg = err.to_string();
+    assert!(msg.contains("n_tot"), "the error names the field: {msg}");
+}
+
+#[test]
+fn a_single_cell_density_field_broadcasts() {
+    // A length-1 field is the documented broadcast form: it must match the
+    // scalar config value cell for cell.
+    let broadcast_stage = FiniteRateIonizationStage::new(1.0_f64)
+        .with_density_field("n_tot")
+        .with_sheath_renewal(2.0e-5);
+    let mut broadcast = CoupledField::new(Ambient::new(0.01_f64, 0.0, None));
+    broadcast.set_scalar("T_tr", vec![6_000.0_f64, 6_000.0]);
+    broadcast.set_scalar("T_ve", vec![6_000.0_f64, 6_000.0]);
+    broadcast.set_scalar("n_tot", vec![N_PEAK]);
+    broadcast_stage
+        .apply(&ctx(1), &mut broadcast)
+        .expect("applies");
+
+    let config_stage = FiniteRateIonizationStage::new(N_PEAK).with_sheath_renewal(2.0e-5);
+    let mut config = CoupledField::new(Ambient::new(0.01_f64, 0.0, None));
+    config.set_scalar("T_tr", vec![6_000.0_f64, 6_000.0]);
+    config.set_scalar("T_ve", vec![6_000.0_f64, 6_000.0]);
+    config_stage.apply(&ctx(1), &mut config).expect("applies");
+
+    let ne_broadcast = broadcast.scalar("n_e").unwrap();
+    let ne_config = config.scalar("n_e").unwrap();
+    assert!(ne_broadcast[0] > 0.0, "the broadcast field still ionizes");
+    for i in 0..2 {
+        assert_eq!(
+            ne_broadcast[i], ne_config[i],
+            "the broadcast field reproduces the scalar config"
+        );
+    }
+}
+
+#[test]
 fn the_lagged_pool_sits_below_its_equilibrium() {
     // The atom pool must lag its dissociation equilibrium over one residence
     // time (the D3 amendment): the pool fractions are far below equilibrium

@@ -310,7 +310,10 @@ pub fn park_controlling_temperature_kernel<R>(
 where
     R: RealField + FromPrimitive,
 {
-    if q < R::zero() || q > R::one() {
+    // An inclusion test rather than an exclusion test: NaN fails `>=`, so a
+    // NaN exponent is rejected here instead of propagating as Ok(NaN).
+    let q_in_unit_interval = q >= R::zero() && q <= R::one();
+    if !q_in_unit_interval {
         return Err(PhysicsError::PhysicalInvariantBroken(
             "The controlling-temperature exponent q must lie in [0, 1]".into(),
         ));

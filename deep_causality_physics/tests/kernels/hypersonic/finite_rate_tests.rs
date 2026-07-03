@@ -258,3 +258,14 @@ fn the_dissociation_controller_sits_between_its_temperatures() {
     // Domain guard.
     assert!(park_controlling_temperature_kernel(t_tr, t_ve, 1.5).is_err());
 }
+
+#[test]
+fn a_nan_controlling_exponent_is_rejected() {
+    use deep_causality_physics::park_controlling_temperature_kernel;
+    let t_tr = Temperature::new(8_044.0_f64).unwrap();
+    let t_ve = Temperature::new(4_000.0_f64).unwrap();
+    // NaN fails both sides of an exclusion test (`q < 0 || q > 1`), so the
+    // guard must be an inclusion test: a NaN exponent is an error, never an
+    // Ok(NaN) controlling temperature.
+    assert!(park_controlling_temperature_kernel(t_tr, t_ve, f64::NAN).is_err());
+}

@@ -501,6 +501,39 @@ fn ionization_reads_the_evolved_density_per_cell() {
 }
 
 #[test]
+fn vibrational_lag_rejects_a_mismatched_pressure_field_length() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    // Length n is per-cell, length 1 broadcasts; a length-3 field against a
+    // 2-cell grid is a shape bug that must surface, not silently read cell 0.
+    let stage =
+        VibrationalLagStage::new(250.0_f64, 1.0e-3, 7.0, 3393.0, 1.0e-5).with_pressure_field("p");
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    field.set_scalar("T_tr", vec![20_000.0_f64, 20_000.0]);
+    field.set_scalar("p", vec![1.0e-3_f64, 1.0, 0.5]);
+    let err = stage
+        .apply(&ctx, &mut field)
+        .expect_err("a length-3 pressure field against 2 cells is a shape bug");
+    let msg = err.to_string();
+    assert!(msg.contains("'p'"), "the error names the field: {msg}");
+}
+
+#[test]
+fn ionization_rejects_a_mismatched_density_field_length() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, 0.004, 1);
+    let stage = IonizationStage::new(1.0e22_f64).with_density_field("n_tot");
+    let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    field.set_scalar("T_tr", vec![8_000.0_f64, 8_000.0]);
+    field.set_scalar("n_tot", vec![1.0e20_f64, 1.0e22, 1.0e21]);
+    let err = stage
+        .apply(&ctx, &mut field)
+        .expect_err("a length-3 density field against 2 cells is a shape bug");
+    let msg = err.to_string();
+    assert!(msg.contains("n_tot"), "the error names the field: {msg}");
+}
+
+#[test]
 fn ionization_density_field_matches_the_scalar_config_when_equal() {
     let (manifold, state) = empty_context();
     let ctx = StepContext::new(&manifold, &state, 0.004, 1);

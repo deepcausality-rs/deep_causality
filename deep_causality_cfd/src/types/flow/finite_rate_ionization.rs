@@ -159,9 +159,35 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for FiniteRateIonizationSt
         let mut pool_n_out = Vec::with_capacity(n);
         let mut pool_o_out = Vec::with_capacity(n);
 
+        // Shape contract for every optional per-cell input: length n is
+        // per-cell, length 1 broadcasts, anything else is a shape bug that
+        // must surface, not silently read cell 0.
+        let validate = |name: &str, cells: &Option<Vec<R>>| -> Result<(), PhysicsError> {
+            match cells {
+                Some(c) if c.len() != n && c.len() != 1 => {
+                    Err(PhysicsError::DimensionMismatch(format!(
+                        "the per-cell field '{}' has length {} but the controller field '{}' has length {} (expected {} or 1)",
+                        name,
+                        c.len(),
+                        self.t_ctrl_field,
+                        n,
+                        n
+                    )))
+                }
+                _ => Ok(()),
+            }
+        };
+        validate(self.t_e_field, &t_e)?;
+        if let Some(name) = self.density_field {
+            validate(name, &density)?;
+        }
+        validate(self.alpha_field, &alpha_carried)?;
+        validate("atom_frac_n", &pool_n_carried)?;
+        validate("atom_frac_o", &pool_o_carried)?;
+
         let per_cell = |cells: &Option<Vec<R>>, i: usize, fallback: R| match cells {
             Some(c) if c.len() == n => c[i],
-            Some(c) if !c.is_empty() => c[0],
+            Some(c) if c.len() == 1 => c[0],
             _ => fallback,
         };
 
@@ -246,7 +272,16 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for FiniteRateIonizationSt
             // is stateless per step) and at the carried population otherwise.
             let alpha_prev = per_cell(&alpha_carried, i, R::zero());
             let e_for_tau = match self.sheath_renewal {
-                Some(_) => target_conc,
+                // The clock's electron concentration is capped like the
+                // target itself: alpha_target <= 1 means the electrons can
+                // never exceed the heavy-particle concentration.
+                Some(_) => {
+                    if target_conc < conc {
+                        target_conc
+                    } else {
+                        conc
+                    }
+                }
                 None => alpha_prev * conc,
             };
             let denom = k_f * conc + beta * e_for_tau;

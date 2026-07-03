@@ -46,7 +46,8 @@ pub fn trigger() -> BlackoutTrigger<FloatType> {
 pub fn peak<R: CfdScalar>(xs: &[R]) -> R {
     xs.iter()
         .copied()
-        .fold(R::zero(), |a, x| if x > a { x } else { a })
+        .reduce(|a, x| if x > a { x } else { a })
+        .unwrap_or_else(R::zero)
 }
 
 /// The Euclidean norm of a 3-vector in the working precision.

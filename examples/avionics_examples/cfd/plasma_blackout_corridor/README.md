@@ -41,7 +41,8 @@ the sequential run.
 
 ## What Happens When You Run It
 
-The vehicle starts at 90 km, Mach 26, on a steep compressed trajectory. Four legs and one branch
+The vehicle starts at 90 km at Mach 29, on a steep compressed trajectory sized so the
+61 km passage is the calibrated Mach-25 station. Four legs and one branch
 study follow, every boundary an *event the run finds*, not a scripted station switch:
 
 1. **Descent to blackout onset.** The evolved sheath's electron density climbs as the air
@@ -65,7 +66,7 @@ study follow, every boundary an *event the run finds*, not a scripted station sw
    the 1e19 flight anchor, inside the earned 5x band, with **no calibration target anywhere in
    the chemistry**. The INS dead-reckons; drift grows from 0.35 m to about 2.5 m.
 4. **Flow-resolved exit and reacquisition.** Drag decelerates the vehicle below the ionization
-   threshold; at 46.9 km the renewed sheath stops ionizing past the cutoff and the link returns.
+   threshold; at 47.0 km the renewed sheath stops ionizing past the cutoff and the link returns.
    The exit is now carried by the physical mechanism: dissociative recombination
    `NO+ + e- -> N + O` drains the sheath the forward-only surrogate could never empty. The
    first folded fixes collapse the drift back to 0.28 m.
@@ -223,7 +224,7 @@ as transient; no spatially resolved reacting layer);
 4) The flight corridor is a deterministic point-mass 3-DOF world with a fixed atmosphere. There are no winds, no aero-coefficient dispersions, and no density perturbations
 
 The demonstrated counterfactual branches are exact because the world is deterministic partially
-because of those chosen limitations. For higher fidelity of the simulation, any step can be replaced with a different physics kernel, marchrer, or coupling mechanism. For the ionized chemistry, the limitation has been [documeted in a companion note](../../../../openspec/notes/plasma-blackout/finite-rate-ionization-chemistry.md).
+because of those chosen limitations. For higher fidelity of the simulation, any step can be replaced with a different physics kernel, marcher, or coupling mechanism. For the ionized chemistry, the limitation has been [documented in a companion note](../../../../openspec/notes/plasma-blackout/finite-rate-ionization-chemistry.md).
 
 ## Where Things Live
 
