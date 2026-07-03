@@ -22,6 +22,13 @@ pub const BRANCH_STEPS: usize = 100;
 /// that commanding more bank than the certified envelope allows buys a worse trajectory. The
 /// scoped fan-out flies all six concurrently, so the sweep costs one branch of wall-clock.
 pub const BANK_ANGLES_DEG: [f64; 6] = [0.0, 5.0, 10.0, 15.0, 20.0, 40.0];
+/// Fine-sweep half-width around the coarse winner, in fine steps. Five steps up and five down
+/// at [`FINE_STEP_DEG`] brackets the coarse winner by half a coarse interval on each side, so
+/// together the two rounds resolve the miss landscape at 0.5 deg for the cost of one extra
+/// branch fan-out from the same paused onset state.
+pub const FINE_SPAN_STEPS: usize = 5;
+/// Fine-sweep resolution, degrees.
+pub const FINE_STEP_DEG: f64 = 0.5;
 /// Cross-range offset of the aim point from the ballistic terminal state, m (in the lift-plane
 /// side direction a positive bank pushes toward). Sized so the optimum bank sits *inside* the
 /// envelope cap and between sweep candidates: the sweep has to find it, and a finer sweep finds

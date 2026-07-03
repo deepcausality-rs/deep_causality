@@ -14,7 +14,7 @@
 
 pub mod constants;
 pub mod stages;
-pub mod support;
+pub mod utils;
 pub mod world;
 
 /// The working precision of the corridor and the weather table (flow, plasma, navigation,

@@ -17,7 +17,7 @@ use crate::model::{BranchScore, LegSnapshot};
 use avionics_examples::blackout::constants::{
     CAP, COMMS_BAND_RAD_S, DT_FLIGHT, L, RAMC_NE_REFERENCE,
 };
-use avionics_examples::blackout::support::{ft, norm3};
+use avionics_examples::blackout::utils::{ft, norm3};
 use deep_causality_core::EffectLog;
 
 pub fn print_intro() {
@@ -59,15 +59,15 @@ pub fn print_leg(leg: &LegSnapshot) {
     );
 }
 
-pub fn print_branches(branches: &[BranchScore], committed: usize) {
-    println!("--- Counterfactual bank commands (forked from the shared flow-resolved onset) ---");
+pub fn print_branches(title: &str, branches: &[BranchScore], committed: usize) {
+    println!("--- {title} ---");
     println!(
-        "  bank    peak heat      thermal load   dwell      miss (traj)   miss (t2 x-check)  peak n_e      alternation"
+        "  bank     peak heat      thermal load   dwell      miss (traj)   miss (t2 x-check)  peak n_e      alternation"
     );
     for (i, b) in branches.iter().enumerate() {
         let mark = if i == committed { " <- committed" } else { "" };
         println!(
-            "  {:>3.0}deg  {:>10.3e}  {:>12.3e}  {:>7.2} s  {:>9.3} m  {:>13.4} m  {:>10.3e}   {}{}",
+            "  {:>5.1}deg  {:>10.3e}  {:>12.3e}  {:>7.2} s  {:>9.3} m  {:>13.4} m  {:>10.3e}   {}{}",
             b.bank_deg,
             b.outcome.peak_heat_flux,
             b.outcome.thermal_load,
@@ -121,6 +121,9 @@ pub struct GateInputs<'a> {
     pub leg4: &'a LegSnapshot,
     pub branches: &'a [BranchScore],
     pub committed: usize,
+    /// The refinement round: 0.5-deg candidates around the coarse winner, same onset fork.
+    pub fine_branches: &'a [BranchScore],
+    pub fine_committed: usize,
     pub compression: (usize, usize),
     pub rebuilds: usize,
     pub elapsed_s: f64,
@@ -137,6 +140,8 @@ pub fn report(inputs: &GateInputs<'_>) -> bool {
         leg4,
         branches,
         committed,
+        fine_branches,
+        fine_committed,
         compression,
         rebuilds,
         elapsed_s,
@@ -267,12 +272,16 @@ pub fn report(inputs: &GateInputs<'_>) -> bool {
         "(4c) counterfactual steering",
         branches.len() >= 2
             && branches.iter().all(|b| b.has_alternation_marker)
+            && fine_branches.iter().all(|b| b.has_alternation_marker)
             && (committed == zero_bank || divergence > ft(DIVERGENCE_MIN_M))
             && hi > lo,
         format!(
-            "{} alternated worlds from one shared onset; committed-vs-ballistic terminal \
-             separation {:.2} m; trajectory-derived miss spread [{:.2}, {:.2}] m",
+            "{} alternated worlds ({} coarse + {} fine) from one shared onset; \
+             coarse-winner-vs-ballistic terminal separation {:.2} m; coarse miss spread \
+             [{:.2}, {:.2}] m",
+            branches.len() + fine_branches.len(),
             branches.len(),
+            fine_branches.len(),
             divergence,
             lo,
             hi
@@ -289,20 +298,37 @@ pub fn report(inputs: &GateInputs<'_>) -> bool {
         ),
     );
 
-    // The value of the counterfactual sweep: the committed branch's trajectory-derived miss
-    // beats the ballistic branch's by the configured factor. This is what the bank sweep buys.
+    // The value of the two-stage sweep: the committed (fine-round) branch's trajectory-derived
+    // miss beats the ballistic branch's by the configured factor.
     let ballistic_miss = branches[zero_bank].outcome.miss_distance;
-    let committed_miss = branches[committed].outcome.miss_distance;
+    let coarse_miss = branches[committed].outcome.miss_distance;
+    let committed_miss = fine_branches[fine_committed].outcome.miss_distance;
     gate(
         "(4e) guidance precision from the sweep",
         committed_miss * ft(MISS_IMPROVEMENT_FACTOR) <= ballistic_miss,
         format!(
-            "committed {:.0} deg lands {:.2} m off the aim vs the ballistic {:.2} m \
+            "committed {:.1} deg lands {:.2} m off the aim vs the ballistic {:.2} m \
              ({:.1}x better; gate requires {MISS_IMPROVEMENT_FACTOR:.0}x)",
-            branches[committed].bank_deg,
+            fine_branches[fine_committed].bank_deg,
             committed_miss,
             ballistic_miss,
             ballistic_miss / committed_miss,
+        ),
+    );
+
+    // The refinement round can only confirm or improve the coarse winner: the coarse winner
+    // flies again in the middle of the fine sweep, so a regression here means the rounds are
+    // not scoring against the same aim (or the fork is not sharing the onset state).
+    gate(
+        "(4f) fine sweep refines the coarse winner",
+        committed_miss <= coarse_miss,
+        format!(
+            "fine {:.1} deg at {:.2} m vs coarse {:.0} deg at {:.2} m (0.5-deg resolution \
+             around the coarse winner, same onset fork, same aim)",
+            fine_branches[fine_committed].bank_deg,
+            committed_miss,
+            branches[committed].bank_deg,
+            coarse_miss,
         ),
     );
 

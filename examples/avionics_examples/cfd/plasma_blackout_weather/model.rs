@@ -10,7 +10,7 @@
 use crate::FloatType;
 use crate::constants::{IMU_THERMAL_COEFF_PER_K, STEPS};
 use avionics_examples::blackout::constants::DT_FLIGHT;
-use avionics_examples::blackout::{support, world};
+use avionics_examples::blackout::{utils, world};
 use deep_causality_cfd::{CompressibleMarchConfig, CompressiblePause, PhysicsError};
 
 /// A weather world: the baseline descent with the condition's temperature offset and density
@@ -28,7 +28,7 @@ pub fn weather_world(
         name,
         world::weather_atmosphere(d_temp, rho_scale),
         STEPS,
-        &[("wx_bias_departure", support::ft(bias_departure(d_temp)))],
+        &[("wx_bias_departure", utils::ft(bias_departure(d_temp)))],
     )
 }
 
@@ -72,25 +72,25 @@ pub fn draw_metrics<S>(pause: &CompressiblePause<'_, FloatType, S>) -> (FloatTyp
     let terminal = match (field.nav(), truth.len() >= 3) {
         (Some(engine), true) => {
             let p = engine.position();
-            support::norm3(core::array::from_fn(|i| p[i] - truth[i]))
+            utils::norm3(core::array::from_fn(|i| p[i] - truth[i]))
         }
-        _ => support::ft(f64::NAN),
+        _ => utils::ft(f64::NAN),
     };
-    (support::scalar0(field, "wx_drift_denied_max"), terminal)
+    (utils::scalar0(field, "wx_drift_denied_max"), terminal)
 }
 
 /// Mean and sample standard deviation of a slice.
 pub fn mean_sd(xs: &[FloatType]) -> (FloatType, FloatType) {
-    let n = support::ft(xs.len() as f64);
+    let n = utils::ft(xs.len() as f64);
     let mean = xs.iter().copied().sum::<FloatType>() / n;
     if xs.len() < 2 {
-        return (mean, support::ft(0.0));
+        return (mean, utils::ft(0.0));
     }
     let var = xs
         .iter()
         .map(|&x| (x - mean) * (x - mean))
         .sum::<FloatType>()
-        / (n - support::ft(1.0));
+        / (n - utils::ft(1.0));
     (mean, deep_causality_num::Real::sqrt(var))
 }
 
@@ -103,7 +103,7 @@ pub fn world_row<S>(
 ) -> WorldRow {
     let reference = &draws[0];
     let field = reference.field();
-    let step_s = |scalar: &str| support::scalar0(field, scalar) * support::ft(DT_FLIGHT);
+    let step_s = |scalar: &str| utils::scalar0(field, scalar) * utils::ft(DT_FLIGHT);
 
     let metrics: Vec<(FloatType, FloatType)> = draws.iter().map(draw_metrics).collect();
     let drifts: Vec<FloatType> = metrics.iter().map(|&(d, _)| d).collect();
@@ -113,7 +113,7 @@ pub fn world_row<S>(
     let terminal_max_m = terminals
         .iter()
         .copied()
-        .fold(support::ft(0.0), |a, x| if x > a { x } else { a });
+        .fold(utils::ft(0.0), |a, x| if x > a { x } else { a });
 
     WorldRow {
         name,
@@ -124,9 +124,9 @@ pub fn world_row<S>(
         has_alternation_marker: format!("{}", field.log()).contains("!!ContextAlternation!!"),
         onset_s: step_s("wx_onset_step"),
         exit_s: step_s("wx_last_denied_step"),
-        dwell_s: support::scalar0(field, "wx_dwell_s"),
-        ne_max: support::scalar0(field, "wx_ne_max"),
-        q_max: support::scalar0(field, "wx_q_max"),
+        dwell_s: utils::scalar0(field, "wx_dwell_s"),
+        ne_max: utils::scalar0(field, "wx_ne_max"),
+        q_max: utils::scalar0(field, "wx_q_max"),
         drift_mean_m,
         drift_sd_m,
         terminal_mean_m,

@@ -36,7 +36,7 @@
 mod constants;
 mod model;
 
-use avionics_examples::blackout::{support, world};
+use avionics_examples::blackout::{utils, world};
 use deep_causality_cfd::CfdFlow;
 use deep_causality_core::AlternatableContext;
 use deep_causality_par::scoped_map;
@@ -69,7 +69,7 @@ fn main() {
     let worlds: Vec<_> = constants::WEATHER
         .iter()
         .map(|&(name, d_temp, rho_scale)| {
-            model::weather_world(name, d_temp, rho_scale).unwrap_or_else(|e| support::stop(&e))
+            model::weather_world(name, d_temp, rho_scale).unwrap_or_else(|e| utils::stop(&e))
         })
         .collect();
 
@@ -92,14 +92,14 @@ fn main() {
         run.run_until(
             world::corridor_coupling(model::bias_departure(d_temp), draw),
             world::initial_field(),
-            support::trigger(),
-            support::ft(0.0),
+            utils::trigger(),
+            utils::ft(0.0),
             |_, _| false,
         )
     })
     .into_iter()
     .collect::<Result<Vec<_>, _>>()
-    .unwrap_or_else(|e| support::stop(&e));
+    .unwrap_or_else(|e| utils::stop(&e));
 
     // Group the flat results back into per-condition draw sets (cases are condition-major).
     let rows: Vec<model::WorldRow> = constants::WEATHER
@@ -161,12 +161,12 @@ fn main() {
     );
 
     let dt = avionics_examples::blackout::constants::DT_FLIGHT;
-    let horizon_s = support::ft((constants::STEPS - 1) as f64 * dt);
+    let horizon_s = utils::ft((constants::STEPS - 1) as f64 * dt);
     gate(
         "(2) flow-resolved windows in every weather",
         rows.iter().all(|r| {
-            r.onset_s > support::ft(0.0)
-                && r.dwell_s > support::ft(0.0)
+            r.onset_s > utils::ft(0.0)
+                && r.dwell_s > utils::ft(0.0)
                 && r.exit_s >= r.onset_s
                 && r.exit_s < horizon_s
         }),
@@ -176,22 +176,22 @@ fn main() {
     let onset_hi = rows
         .iter()
         .map(|r| r.onset_s)
-        .fold(support::ft(f64::MIN), |a, x| if x > a { x } else { a });
+        .fold(utils::ft(f64::MIN), |a, x| if x > a { x } else { a });
     let onset_lo = rows
         .iter()
         .map(|r| r.onset_s)
-        .fold(support::ft(f64::MAX), |a, x| if x < a { x } else { a });
+        .fold(utils::ft(f64::MAX), |a, x| if x < a { x } else { a });
     let dwell_hi = rows
         .iter()
         .map(|r| r.dwell_s)
-        .fold(support::ft(f64::MIN), |a, x| if x > a { x } else { a });
+        .fold(utils::ft(f64::MIN), |a, x| if x > a { x } else { a });
     let dwell_lo = rows
         .iter()
         .map(|r| r.dwell_s)
-        .fold(support::ft(f64::MAX), |a, x| if x < a { x } else { a });
+        .fold(utils::ft(f64::MAX), |a, x| if x < a { x } else { a });
     gate(
         "(3) weather moves the blackout window",
-        onset_hi - onset_lo >= support::ft(constants::MIN_ONSET_SPREAD_S),
+        onset_hi - onset_lo >= utils::ft(constants::MIN_ONSET_SPREAD_S),
         format!(
             "onset spread {:.1} s across the table (gate requires {:.0} s); dwell spread {:.1} s",
             onset_hi - onset_lo,
@@ -207,7 +207,7 @@ fn main() {
         .expect("polar_winter row");
     gate(
         "(4) the INS does not behave as assumed in the cold",
-        polar.drift_mean_m >= standard.drift_mean_m * support::ft(constants::COLD_DRIFT_FACTOR_MIN),
+        polar.drift_mean_m >= standard.drift_mean_m * utils::ft(constants::COLD_DRIFT_FACTOR_MIN),
         format!(
             "polar-winter mean blackout drift {:.2} m vs standard-day {:.2} m ({:.2}x; gate \
              requires {:.1}x from the thermal bias departure and the widened window)",
@@ -226,7 +226,7 @@ fn main() {
     let separation = polar.drift_mean_m - standard.drift_mean_m;
     gate(
         "(4b) the cold effect is statistically resolved",
-        separation >= combined_sd * support::ft(constants::DRIFT_SIGNIFICANCE_SIGMA),
+        separation >= combined_sd * utils::ft(constants::DRIFT_SIGNIFICANCE_SIGMA),
         format!(
             "polar-standard separation {:.2} m vs combined sigma {:.2} m ({:.1} sigma; gate \
              requires {:.0})",
@@ -240,7 +240,7 @@ fn main() {
     gate(
         "(5) every weather reacquires, in every draw",
         rows.iter()
-            .all(|r| r.terminal_max_m < support::ft(constants::REACQ_ERR_MAX_M)),
+            .all(|r| r.terminal_max_m < utils::ft(constants::REACQ_ERR_MAX_M)),
         format!(
             "worst-draw terminal navigation error under {:.1} m across all {} descents",
             constants::REACQ_ERR_MAX_M,

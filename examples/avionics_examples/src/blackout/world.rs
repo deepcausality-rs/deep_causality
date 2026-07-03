@@ -17,7 +17,7 @@ use super::constants::{
 use super::stages::{
     CommandedBank, FreestreamFeeds, SuttonGravesLoads, TruthGnss, WeatherTelemetry,
 };
-use super::support;
+use super::utils;
 use deep_causality_cfd::{
     Ambient, AtmosphereRow, BankSteeredLift, CompressibleMarchConfig,
     CompressibleMarchConfigBuilder, CoupledField, Coupling, CyberneticCorrect, DescentSchedule,
@@ -41,10 +41,10 @@ pub fn weather_atmosphere(d_temp: f64, rho_scale: f64) -> Vec<AtmosphereRow<Floa
         .map(|&(alt, n, t, a)| {
             let t_new = t + d_temp;
             AtmosphereRow {
-                altitude_m: support::ft(alt),
-                n_tot: support::ft(n * rho_scale),
-                temperature: support::ft(t_new),
-                sound_speed: support::ft(a) * Real::sqrt(support::ft(t_new / t)),
+                altitude_m: utils::ft(alt),
+                n_tot: utils::ft(n * rho_scale),
+                temperature: utils::ft(t_new),
+                sound_speed: utils::ft(a) * Real::sqrt(utils::ft(t_new / t)),
             }
         })
         .collect()
@@ -63,25 +63,25 @@ pub fn descent_world(
     steps: usize,
     constants: &[(&'static str, FloatType)],
 ) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
-    let schedule = DescentSchedule::new(rows, support::ft(GAMMA_EFF))?;
+    let schedule = DescentSchedule::new(rows, utils::ft(GAMMA_EFF))?;
     let n = 1usize << L;
-    let dx = support::ft(1.0) / support::ft(n as f64);
+    let dx = utils::ft(1.0) / utils::ft(n as f64);
     let mut builder = CompressibleMarchConfigBuilder::<FloatType>::new()
         .name(name)
         .grid(L, L, dx, dx)
         .solver(
-            support::ft(DT_SOLVER),
-            support::ft(S_REF),
-            support::ft(GAMMA_EFF),
-            support::trunc(),
+            utils::ft(DT_SOLVER),
+            utils::ft(S_REF),
+            utils::ft(GAMMA_EFF),
+            utils::trunc(),
         )
-        .flight_dt(support::ft(DT_FLIGHT))
+        .flight_dt(utils::ft(DT_FLIGHT))
         .seed_fn(|_, _| {
             (
-                support::ft(SEED_RHO_HAT),
-                support::ft(SEED_U_HAT),
-                support::ft(0.0),
-                support::ft(SEED_P_HAT),
+                utils::ft(SEED_RHO_HAT),
+                utils::ft(SEED_U_HAT),
+                utils::ft(0.0),
+                utils::ft(SEED_P_HAT),
             )
         })?
         .stop(MarchStop::Fixed(steps))
@@ -94,9 +94,9 @@ pub fn descent_world(
         )
         .schedule(schedule)
         .reference(ReferenceScales {
-            t_ref: support::ft(T_REF),
-            n_ref: support::ft(N_REF),
-            u_ref: support::ft(U_REF),
+            t_ref: utils::ft(T_REF),
+            n_ref: utils::ft(N_REF),
+            u_ref: utils::ft(U_REF),
         });
     for &(cname, value) in constants {
         builder = builder.publish_constant(cname, value);
@@ -123,18 +123,18 @@ pub fn corridor_coupling(
     noise_draw: usize,
 ) -> impl PhysicsStage<2, FloatType> {
     let imu = ImuModel::new(
-        core::array::from_fn(|i| support::ft(IMU_ACCEL_BIAS[i] * imu_bias_departure)),
-        core::array::from_fn(|i| support::ft(IMU_GYRO_BIAS[i])),
-        core::array::from_fn(|i| support::ft(Q_DIAG[i])),
+        core::array::from_fn(|i| utils::ft(IMU_ACCEL_BIAS[i] * imu_bias_departure)),
+        core::array::from_fn(|i| utils::ft(IMU_GYRO_BIAS[i])),
+        core::array::from_fn(|i| utils::ft(Q_DIAG[i])),
     );
     Coupling::between_steps()
         .then(
             VibrationalLagStage::new(
-                support::ft(T_VE_INITIAL),
-                support::ft(FALLBACK_PRESSURE_ATM),
-                support::ft(REDUCED_MASS_AMU),
-                support::ft(THETA_VIB),
-                support::ft(SHEATH_PEAK_AGE_S),
+                utils::ft(T_VE_INITIAL),
+                utils::ft(FALLBACK_PRESSURE_ATM),
+                utils::ft(REDUCED_MASS_AMU),
+                utils::ft(THETA_VIB),
+                utils::ft(SHEATH_PEAK_AGE_S),
             )
             .with_pressure_field("pressure_atm"),
         )
@@ -146,17 +146,17 @@ pub fn corridor_coupling(
             // is the network's true Riccati timescale, and the carried arm
             // under-relaxes young sheath gas. The exposure is the transit-age
             // profile's observable peak, the same age the stagline gate reads.
-            FiniteRateIonizationStage::new(support::ft(FALLBACK_N_TOT))
+            FiniteRateIonizationStage::new(utils::ft(FALLBACK_N_TOT))
                 .with_density_field("n_tot")
-                .with_sheath_renewal(support::ft(SHEATH_PEAK_AGE_S)),
+                .with_sheath_renewal(utils::ft(SHEATH_PEAK_AGE_S)),
         )
         .then(FreestreamFeeds)
-        .then(RegimeClassify::new(support::ft(L_CHAR), support::trigger()))
+        .then(RegimeClassify::new(utils::ft(L_CHAR), utils::trigger()))
         .then(
             BankSteeredLift::new(
-                support::ft(RHO_REF),
-                support::ft(CDA_OVER_M),
-                support::ft(L_OVER_D),
+                utils::ft(RHO_REF),
+                utils::ft(CDA_OVER_M),
+                utils::ft(L_OVER_D),
             )
             .with_speed_field("equivalent_airspeed"),
         )
@@ -164,18 +164,18 @@ pub fn corridor_coupling(
         .then(TruthGnss { noise_draw })
         .then(
             TrajectoryNav::new(
-                core::array::from_fn(|i| support::ft(Q_DIAG[i])),
-                support::ft(GNSS_VAR),
-                support::ft(OPTICAL_VAR),
+                core::array::from_fn(|i| utils::ft(Q_DIAG[i])),
+                utils::ft(GNSS_VAR),
+                utils::ft(OPTICAL_VAR),
             )
             .with_imu(imu),
         )
         .then(CommandedBank)
         .then(WeatherTelemetry)
         .then(CyberneticCorrect::new(SafetyEnvelope::new(
-            support::ft(MAX_HEAT_FLUX),
-            support::ft(MAX_G_LOAD),
-            support::ft(MAX_BANK_RAD),
+            utils::ft(MAX_HEAT_FLUX),
+            utils::ft(MAX_G_LOAD),
+            utils::ft(MAX_BANK_RAD),
         )))
         .build()
 }
@@ -184,29 +184,29 @@ pub fn corridor_coupling(
 /// seeded with the standard-day priors and a 50-m-class initial INS error. Everything else is
 /// evolved from here; no station constants.
 pub fn initial_field() -> CoupledField<FloatType> {
-    let mut field = CoupledField::new(Ambient::new(support::ft(0.01), support::ft(0.0), None));
+    let mut field = CoupledField::new(Ambient::new(utils::ft(0.01), utils::ft(0.0), None));
     let r0 = [EARTH_RADIUS + TRUTH_ALTITUDE_0, 0.0, 0.0];
     field.set_scalar(
         "truth_state",
         Vec::from([
-            support::ft(r0[0]),
-            support::ft(r0[1]),
-            support::ft(r0[2]),
-            support::ft(TRUTH_V0[0]),
-            support::ft(TRUTH_V0[1]),
-            support::ft(TRUTH_V0[2]),
+            utils::ft(r0[0]),
+            utils::ft(r0[1]),
+            utils::ft(r0[2]),
+            utils::ft(TRUTH_V0[0]),
+            utils::ft(TRUTH_V0[1]),
+            utils::ft(TRUTH_V0[2]),
         ]),
     );
-    let nav_r0: [FloatType; 3] = core::array::from_fn(|i| support::ft(r0[i] + NAV_INIT_ERR[i]));
-    let nav_v0: [FloatType; 3] = core::array::from_fn(|i| support::ft(TRUTH_V0[i]));
+    let nav_r0: [FloatType; 3] = core::array::from_fn(|i| utils::ft(r0[i] + NAV_INIT_ERR[i]));
+    let nav_v0: [FloatType; 3] = core::array::from_fn(|i| utils::ft(TRUTH_V0[i]));
     let filter = NavFilter::new(
         InsErrorState::<FloatType>::zero(),
-        core::array::from_fn(|i| support::ft(P0_DIAG[i])),
+        core::array::from_fn(|i| utils::ft(P0_DIAG[i])),
     );
     field.set_nav(ReentryNavEngine::new(
         nav_r0,
         nav_v0,
-        support::ft(EARTH_GM),
+        utils::ft(EARTH_GM),
         filter,
     ));
     field

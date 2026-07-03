@@ -13,13 +13,12 @@ inertial navigation while a bounded-correction gate keeps the bank command insid
 envelope. When the sheath clears, one position fix collapses the accumulated drift.
 
 This example flies that corridor as **one continuous descent** in a single composed coupling:
-compressed compressible flow, nonequilibrium plasma chemistry, regime classification,
+ compressible flow, nonequilibrium plasma chemistry, regime classification,
 GNSS-denied navigation, counterfactual guidance, and a cybernetic safety gate, all stepping
-together and all writing into one auditable provenance log. No CFD code does counterfactuals; no
-GNC code does CFD. Here they are one process.
+together and all writing into one auditable provenance log. Here they are one dynamic process.
 
 The run self-verifies against the RAM-C II flight anchor and exits nonzero on any regression.
-Wall-clock is about 35 seconds.
+Wall-clock is about 40 seconds.
 
 ## How to Run
 
@@ -49,14 +48,18 @@ study follow, every boundary an *event the run finds*, not a scripted station sw
    thickens; at 74.7 km it crosses the GPS L1 cutoff and the classifier flips the link to
    DENIED. The march pauses on that flow-resolved event. The onset altitude is a pure
    prediction: no onset constant exists anywhere in the corridor.
-2. **The counterfactual study.** The paused state forks once per candidate bank command (a
-   six-candidate sweep: 0, 5, 10, 15, 20, and 40 degrees), in O(1) through copy-on-write, and
-   the scoped fan-out flies all six concurrently for one branch of wall-clock. Each branch flies
-   the *same* onset state in its own alternated world and is scored by its trajectory-derived
-   miss to a shared aim point. The miss landscape descends 20.0, 12.8, 5.8, down to 3.1 m at
-   15 degrees, then rises again: the 40-degree command exceeds the envelope's 0.5 rad cap, the
-   gate visibly bounds it every step, and the clamped branch overshoots to 22 m. The sweep finds
-   the optimum; commanding more bank than the envelope allows buys a worse trajectory.
+2. **The counterfactual study, in two rounds.** The paused state forks once per candidate bank
+   command (a six-candidate coarse sweep: 0, 5, 10, 15, 20, and 40 degrees), in O(1) through
+   copy-on-write, and the scoped fan-out flies all six concurrently for one branch of
+   wall-clock. Each branch flies the *same* onset state in its own alternated world and is
+   scored by its trajectory-derived miss to a shared aim point. The coarse landscape descends
+   20.0, 12.8, 5.8, down to 3.1 m at 15 degrees, then rises again: the 40-degree command
+   exceeds the envelope's 0.5 rad cap, the gate visibly bounds it every step, and the clamped
+   branch overshoots to 22 m. A **fine round** then forks the same paused onset a second time,
+   eleven 0.5-degree candidates bracketing the coarse winner, scored against the same aim: the
+   landscape bottoms at 13.5 degrees with a 2.39 m miss. Two fork rounds resolve the optimum at
+   0.5-degree resolution for seventeen branches total. The 2.39 m residual matches the INS drift at the blackout peak, the vehicle's knowledge floor (see "Why the
+   sweep stops at 0.5 degrees and 2.39 m" below).
 3. **The committed dwell.** The winning world flies through the peak passage. At the 61 km
    RAM-C II station the evolved peak electron density lands at 3.4e19 per cubic meter against
    the 1e19 flight anchor, inside the earned 5x band, with **no calibration target anywhere in
@@ -67,12 +70,12 @@ study follow, every boundary an *event the run finds*, not a scripted station sw
    `NO+ + e- -> N + O` drains the sheath the forward-only surrogate could never empty. The
    first folded fixes collapse the drift back to 0.28 m.
 
-Twelve coupled validation gates then check the whole story: window ordering, the anchor band,
+Thirteen coupled validation gates then check the whole story: window ordering, the anchor band,
 the window altitudes (exit inside its pinned band, reported against the RAM-C II 25-30 km
 flight window), drift and reacquisition, regime change, the multiphysics chain, real steering
 divergence, guidance precision from the sweep (the committed branch must beat the ballistic
-miss at least 3x; it lands 6.4x better), tensor compression under the bond cap, bounded solver
-rebuilds, and the wall-clock budget.
+miss at least 3x; it lands 8.4x better), the fine round refining the coarse winner, tensor
+compression under the bond cap, bounded solver rebuilds, and the wall-clock budget.
 
 ## The Causal Chain
 
@@ -90,7 +93,8 @@ rebuilds, and the wall-clock budget.
 [4] navigation  TrajectoryNav: KS-regularized orbit predict with the aero-force channel as the
                 kick; 17-state error-state Kalman filter; fixes gated by the REAL blackout flag;
                 relativistic clock offset carried through the outage
-[5] branches    run_until pauses at the flow-resolved onset; O(1) copy-on-write forks;
+[5] branches    run_until pauses at the flow-resolved onset; O(1) copy-on-write forks in
+                two rounds (coarse sweep, then a 0.5-deg fine sweep around its winner);
                 !!ContextAlternation!! per branch; trajectory-derived miss distances
 [6] control     CyberneticCorrect clamps the commanded bank into the SafetyEnvelope;
                 BankSteeredLift FLIES the clamped command (point-mass 3-DOF lift, one-step
@@ -154,6 +158,18 @@ commands ride as world-published constants so branches differ only in the world 
 Branch misses are trajectory-derived: the distance from each branch's terminal truth state to a
 shared aim point, with the analytic t^2 drift law printed beside it as a cross-check.
 
+**Why the sweep stops at 0.5 degrees and 2.39 m.** The residual miss is not a resolution
+problem, and driving it lower would be optimizing below the vehicle's knowledge floor. The INS
+dead-reckoning error at the blackout peak is about 2.5 m in this same run; the guidance
+residual (2.39 m) and the navigation uncertainty are the same size, and that is the principled
+stopping point: steering more precisely than you can navigate buys nothing, because a real
+vehicle commands off the navigated state, not truth. (The sweep here scores against truth
+terminal states, which a flight system cannot see, so 2.39 m is if anything optimistic.) The
+residual itself is geometric: near the minimum, neighboring 0.5-degree
+candidates differ by 0.05 to 0.3 m, but a single constant bank command traces a one-dimensional
+curve of reachable terminal states through a 3-D miss space, and 2.39 m is that curve's closest
+approach to the aim. 
+
 **A cybernetic safety gate that actually steers.** `CyberneticCorrect` runs a
 `CyberneticLoop::control_step` against the verified `SafetyEnvelope` each step and clamps the
 commanded bank into it; `BankSteeredLift` then flies the clamped command as a point-mass 3-DOF
@@ -194,14 +210,20 @@ closures and the grid, not by floating-point round-off. `f64` is load-bearing at
 
 ##  Limitations
 
-Every simplification is defined in [`constants.rs`](constants.rs).
-The largest ones: the chemistry is the finite-rate three-channel network as a single-point
+Every simplification is documented in [`constants.rs`](constants.rs).
+
+1) The chemistry is the finite-rate three-channel network as a single-point
 sheath closure (rates from RP-1232 Table II, valid to ~8 km/s; `T_e = T_ve` lumped; NO treated
-as transient; no spatially resolved reacting layer); time is compressed (each coupled step
-represents 0.1 s of flight, and the layer is quasi-steady per instant); the marched layer is
-2-D with the 3-D fitted marcher reserved for stagnation-line validation (a timing study showed
-it 3.6x over the minutes budget); and the trajectory is point-mass 3-DOF with no 6-DOF attitude
-dynamics (no flight-data anchor exists to validate them).
+as transient; no spatially resolved reacting layer); 
+
+2) Time is compressed (each coupled step represents 0.1 s of flight, and the layer is quasi-steady per instant); 
+
+3) The marched layer is 2-D with the 3-D fitted marcher reserved for stagnation-line validation (a timing study showed it 3.6x over the minutes budget);
+
+4) The flight corridor is a deterministic point-mass 3-DOF world with a fixed atmosphere. There are no winds, no aero-coefficient dispersions, and no density perturbations
+
+The demonstrated counterfactual branches are exact because the world is deterministic partially
+because of those chosen limitations. For higher fidelity of the simulation, any step can be replaced with a different physics kernel, marchrer, or coupling mechanism. For the ionized chemistry, the limitation has been [documeted in a companion note](../../../../openspec/notes/plasma-blackout/finite-rate-ionization-chemistry.md).
 
 ## Where Things Live
 
@@ -210,7 +232,7 @@ dynamics (no flight-data anchor exists to validate them).
 | [`main.rs`](main.rs) | The descent: four legs, the branch study, provenance, the gates |
 | [`model.rs`](model.rs) | The descent worlds, the coupling stack, example-local stages, branch scoring |
 | [`constants.rs`](constants.rs) | The corridor's own knobs: the horizon, the bank sweep, the gate thresholds |
-| [`utils_print.rs`](utils_print.rs) | Console rendering and the twelve validation gates |
+| [`utils_print.rs`](utils_print.rs) | Console rendering and the thirteen validation gates |
 
 The physics constants, the numeric helpers, the example-local stages, and the coupling stack are
 shared with the [weather-dispersion example](../plasma_blackout_weather/README.md) through the

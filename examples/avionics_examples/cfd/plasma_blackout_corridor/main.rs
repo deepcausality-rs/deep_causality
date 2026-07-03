@@ -49,7 +49,7 @@ mod constants;
 mod model;
 mod utils_print;
 
-use avionics_examples::blackout::{support, world};
+use avionics_examples::blackout::{utils, world};
 use deep_causality_cfd::{CfdFlow, MarchStop};
 use deep_causality_core::AlternatableContext;
 use std::process::exit;
@@ -71,8 +71,8 @@ fn main() {
 
     // ── One descent world per commanded bank; the nominal descent is ballistic (zero bank).
     let nominal =
-        model::descent_world("nominal_descent", 0.0).unwrap_or_else(|e| support::stop(&e));
-    let bank_worlds = model::bank_worlds().unwrap_or_else(|e| support::stop(&e));
+        model::descent_world("nominal_descent", 0.0).unwrap_or_else(|e| utils::stop(&e));
+    let bank_worlds = model::bank_worlds().unwrap_or_else(|e| utils::stop(&e));
 
     // ── Leg 1: descend until the *flow-resolved* blackout onset.
     // The predicate is the classifier's denial flag: it fires when the evolved sheath's electron
@@ -81,11 +81,11 @@ fn main() {
         .run_until(
             world::corridor_coupling(1.0, 0),
             world::initial_field(),
-            support::trigger(),
-            support::ft(0.0),
+            utils::trigger(),
+            utils::ft(0.0),
             |field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false),
         )
-        .unwrap_or_else(|e| support::stop(&e));
+        .unwrap_or_else(|e| utils::stop(&e));
     let leg1 = model::snapshot("descent to blackout onset", &onset);
     utils_print::print_leg(&leg1);
 
@@ -98,7 +98,7 @@ fn main() {
     let branch_configs: Vec<&_> = bank_worlds.iter().map(|(_, world)| world).collect();
     let reports = onset
         .continue_branches(&branch_configs, constants::BRANCH_STEPS)
-        .unwrap_or_else(|e| support::stop(&e));
+        .unwrap_or_else(|e| utils::stop(&e));
     // The aim point: the ballistic terminal state offset cross-range, shared by every branch.
     let aim = model::aim_point(model::terminal_position(&reports[0]));
     let branches: Vec<model::BranchScore> = bank_worlds
@@ -107,28 +107,54 @@ fn main() {
         .map(|((deg, _), report)| model::score_branch(*deg, report, aim))
         .collect();
     let committed = model::pick_committed(&branches);
-    utils_print::print_branches(&branches, committed);
+    utils_print::print_branches(
+        "Counterfactual bank commands (coarse sweep, forked from the shared flow-resolved onset)",
+        &branches,
+        committed,
+    );
+
+    // ── The refinement round: fork the *same* paused onset a second time, 0.5-deg candidates
+    // bracketing the coarse winner. The onset state is shared copy-on-write, so the fine round
+    // costs one more concurrent fan-out; the aim point stays the coarse round's, so the two
+    // rounds score against the same target and the fine winner is directly comparable.
+    let fine_worlds =
+        model::fine_bank_worlds(branches[committed].bank_deg).unwrap_or_else(|e| utils::stop(&e));
+    let fine_configs: Vec<&_> = fine_worlds.iter().map(|(_, world)| world).collect();
+    let fine_reports = onset
+        .continue_branches(&fine_configs, constants::BRANCH_STEPS)
+        .unwrap_or_else(|e| utils::stop(&e));
+    let fine_branches: Vec<model::BranchScore> = fine_worlds
+        .iter()
+        .zip(&fine_reports)
+        .map(|((deg, _), report)| model::score_branch(*deg, report, aim))
+        .collect();
+    let fine_committed = model::pick_committed(&fine_branches);
+    utils_print::print_branches(
+        "Fine sweep (0.5-deg candidates around the coarse winner, same onset fork)",
+        &fine_branches,
+        fine_committed,
+    );
 
     // ── Leg 2: fly the committed world through the peak passage (the 61 km RAM-C II station).
     // The world swap is a loud pre-run context alternation; the carried field brings the
     // navigation state, the evolved projections, and the provenance log along. Pausing at the
     // 61 km passage is diagnostic only — the world and its schedule never change.
-    let committed_world = &bank_worlds[committed].1;
+    let committed_world = &fine_worlds[fine_committed].1;
     let peak = CfdFlow::compressible_march(&nominal)
         .alternate_context(committed_world)
         .run_until(
             world::corridor_coupling(1.0, 0),
             model::carry_field(&onset),
-            support::trigger(),
-            support::ft(0.0),
+            utils::trigger(),
+            utils::ft(0.0),
             |field, _| {
                 field
                     .scalar("flight_altitude")
                     .and_then(|a| a.first().copied())
-                    .is_some_and(|a| a <= support::ft(61_000.0))
+                    .is_some_and(|a| a <= utils::ft(61_000.0))
             },
         )
-        .unwrap_or_else(|e| support::stop(&e));
+        .unwrap_or_else(|e| utils::stop(&e));
     let leg2 = model::snapshot("peak passage 61 km (committed dwell)", &peak);
     utils_print::print_leg(&leg2);
     // ── Leg 3: continue until the *flow-resolved* exit — the link comes back when the vehicle
@@ -138,11 +164,11 @@ fn main() {
         .run_until(
             world::corridor_coupling(1.0, 0),
             model::carry_field(&peak),
-            support::trigger(),
-            support::ft(0.0),
+            utils::trigger(),
+            utils::ft(0.0),
             |field, _| field.regime().map(|r| !r.gnss_denied).unwrap_or(false),
         )
-        .unwrap_or_else(|e| support::stop(&e));
+        .unwrap_or_else(|e| utils::stop(&e));
     let leg3 = model::snapshot("flow-resolved exit", &exit_pause);
     utils_print::print_leg(&leg3);
 
@@ -154,17 +180,17 @@ fn main() {
         .run_until(
             world::corridor_coupling(1.0, 0),
             model::carry_field(&exit_pause),
-            support::trigger(),
-            support::ft(0.0),
+            utils::trigger(),
+            utils::ft(0.0),
             |_, _| false,
         )
-        .unwrap_or_else(|e| support::stop(&e));
+        .unwrap_or_else(|e| utils::stop(&e));
     let leg4 = model::snapshot("reacquisition", &reacq);
     utils_print::print_leg(&leg4);
 
     // ── [7] Provenance, then the coupled validation gates.
     utils_print::print_provenance(reacq.field().log());
-    let compression = model::compression_witness(&branches[committed].report_final);
+    let compression = model::compression_witness(&fine_branches[fine_committed].report_final);
     let rendered_log = format!("{}", reacq.field().log());
     let rebuilds = model::rebuild_count(&rendered_log);
     let ok = utils_print::report(&utils_print::GateInputs {
@@ -174,6 +200,8 @@ fn main() {
         leg4: &leg4,
         branches: &branches,
         committed,
+        fine_branches: &fine_branches,
+        fine_committed,
         compression,
         rebuilds,
         elapsed_s: clock.elapsed().as_secs_f64(),

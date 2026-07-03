@@ -11,9 +11,9 @@
 //! shared `blackout::constants`.
 
 use crate::FloatType;
-use crate::constants::{AIM_CROSS_RANGE_M, BANK_ANGLES_DEG, STEPS};
+use crate::constants::{AIM_CROSS_RANGE_M, BANK_ANGLES_DEG, FINE_SPAN_STEPS, FINE_STEP_DEG, STEPS};
 use avionics_examples::blackout::constants::{COMMS_BAND_RAD_S, DT_FLIGHT, IMU_ACCEL_BIAS, L};
-use avionics_examples::blackout::{support, world};
+use avionics_examples::blackout::{utils, world};
 use deep_causality_cfd::{
     BranchAccumulator, BranchOutcome, CompressibleMarchConfig, CompressiblePause, CoupledField,
     PhysicsError, Report, max_bond, quantize_2d,
@@ -34,7 +34,7 @@ pub fn descent_world(
         name,
         world::standard_atmosphere(),
         STEPS,
-        &[("commanded_bank", support::rad(bank_deg))],
+        &[("commanded_bank", utils::rad(bank_deg))],
     )
 }
 
@@ -55,6 +55,43 @@ pub fn bank_worlds() -> Result<Vec<(f64, CompressibleMarchConfig<FloatType>)>, P
         .iter()
         .zip(names)
         .map(|(&deg, name)| Ok((deg, descent_world(name, deg)?)))
+        .collect()
+}
+
+/// The fine-sweep candidate worlds: [`FINE_SPAN_STEPS`] steps up and down from the coarse
+/// winner at [`FINE_STEP_DEG`] resolution, clamped into the coarse sweep's span. The coarse
+/// winner itself flies again in the middle, so the refinement can only confirm or improve it.
+/// Clamping at the span edges can duplicate a candidate; a duplicate branch flies the same
+/// command and scores identically, which is wasteful but harmless.
+///
+/// # Errors
+/// Propagates builder and codec failures.
+pub fn fine_bank_worlds(
+    winner_deg: f64,
+) -> Result<Vec<(f64, CompressibleMarchConfig<FloatType>)>, PhysicsError> {
+    const NAMES: [&str; 2 * FINE_SPAN_STEPS + 1] = [
+        "fine_bank_00",
+        "fine_bank_01",
+        "fine_bank_02",
+        "fine_bank_03",
+        "fine_bank_04",
+        "fine_bank_05",
+        "fine_bank_06",
+        "fine_bank_07",
+        "fine_bank_08",
+        "fine_bank_09",
+        "fine_bank_10",
+    ];
+    let lo = BANK_ANGLES_DEG[0];
+    let hi = BANK_ANGLES_DEG[BANK_ANGLES_DEG.len() - 1];
+    NAMES
+        .iter()
+        .enumerate()
+        .map(|(k, name)| {
+            let offset = (k as f64 - FINE_SPAN_STEPS as f64) * FINE_STEP_DEG;
+            let deg = (winner_deg + offset).clamp(lo, hi);
+            Ok((deg, descent_world(name, deg)?))
+        })
         .collect()
 }
 
@@ -97,34 +134,34 @@ pub fn snapshot<S>(name: &str, pause: &CompressiblePause<'_, FloatType, S>) -> L
         (Some(engine), true) => {
             let p = engine.position();
             let d: [FloatType; 3] = core::array::from_fn(|i| p[i] - truth[i]);
-            support::norm3(d)
+            utils::norm3(d)
         }
-        _ => support::ft(f64::NAN),
+        _ => utils::ft(f64::NAN),
     };
     LegSnapshot {
         name: name.to_string(),
         steps: pause.step(),
         errored: pause.error().is_some(),
-        altitude_km: support::scalar0(field, "flight_altitude") / support::ft(1000.0),
-        mach: support::scalar0(field, "flight_mach"),
+        altitude_km: utils::scalar0(field, "flight_altitude") / utils::ft(1000.0),
+        mach: utils::scalar0(field, "flight_mach"),
         regime_model: regime.map(|r| r.model.name()).unwrap_or("unclassified"),
         knudsen: regime
             .map(|r| r.knudsen)
-            .unwrap_or_else(|| support::ft(f64::NAN)),
+            .unwrap_or_else(|| utils::ft(f64::NAN)),
         gnss_denied: regime.map(|r| r.gnss_denied).unwrap_or(false),
         ne_peak: field
             .scalar("n_e")
-            .map(support::peak)
-            .unwrap_or_else(|| support::ft(0.0)),
+            .map(utils::peak)
+            .unwrap_or_else(|| utils::ft(0.0)),
         plasma_frequency: regime
             .map(|r| r.plasma_frequency)
-            .unwrap_or_else(|| support::ft(0.0)),
-        heat_flux: support::scalar0(field, "heat_flux"),
-        g_load: support::scalar0(field, "g_load"),
+            .unwrap_or_else(|| utils::ft(0.0)),
+        heat_flux: utils::scalar0(field, "heat_flux"),
+        g_load: utils::scalar0(field, "g_load"),
         nav_err_m,
         nav_var: nav
             .map(|e| e.position_variance())
-            .unwrap_or_else(|| support::ft(0.0)),
+            .unwrap_or_else(|| utils::ft(0.0)),
         log_entries: field.log().len(),
     }
 }
@@ -152,7 +189,7 @@ pub fn aim_point(ballistic_terminal: [FloatType; 3]) -> [FloatType; 3] {
     [
         ballistic_terminal[0],
         ballistic_terminal[1],
-        ballistic_terminal[2] - support::ft(AIM_CROSS_RANGE_M),
+        ballistic_terminal[2] - utils::ft(AIM_CROSS_RANGE_M),
     ]
 }
 
@@ -163,7 +200,7 @@ pub fn terminal_position(report: &Report<FloatType>) -> [FloatType; 3] {
         truth
             .get(i)
             .copied()
-            .unwrap_or_else(|| support::ft(f64::NAN))
+            .unwrap_or_else(|| utils::ft(f64::NAN))
     })
 }
 
@@ -174,18 +211,18 @@ pub fn terminal_position(report: &Report<FloatType>) -> [FloatType; 3] {
 pub fn score_branch(bank_deg: f64, report: &Report<FloatType>, aim: [FloatType; 3]) -> BranchScore {
     let heat = report.series("heat_flux").unwrap_or(&[]);
     let wp = report.series("plasma_frequency").unwrap_or(&[]);
-    let band = support::ft(COMMS_BAND_RAD_S);
-    let mut acc = BranchAccumulator::new(support::rad(bank_deg));
+    let band = utils::ft(COMMS_BAND_RAD_S);
+    let mut acc = BranchAccumulator::new(utils::rad(bank_deg));
     for (i, &q) in heat.iter().enumerate() {
         let denied = wp.get(i).is_some_and(|&w| w > band);
-        acc.observe(q, denied, support::ft(DT_FLIGHT));
+        acc.observe(q, denied, utils::ft(DT_FLIGHT));
     }
     let dwell = report
         .series("blackout_dwell")
         .and_then(|d| d.first().copied())
-        .unwrap_or_else(|| support::ft(0.0));
-    let bias: [FloatType; 3] = core::array::from_fn(|i| support::ft(IMU_ACCEL_BIAS[i]));
-    let t2_miss_m = support::ft(0.5) * support::norm3(bias) * dwell * dwell;
+        .unwrap_or_else(|| utils::ft(0.0));
+    let bias: [FloatType; 3] = core::array::from_fn(|i| utils::ft(IMU_ACCEL_BIAS[i]));
+    let t2_miss_m = utils::ft(0.5) * utils::norm3(bias) * dwell * dwell;
     let terminal = terminal_position(report);
     let outcome = acc.finish_at(terminal, aim);
     BranchScore {
@@ -199,8 +236,8 @@ pub fn score_branch(bank_deg: f64, report: &Report<FloatType>, aim: [FloatType; 
             .unwrap_or(false),
         ne_peak: report
             .series("n_e")
-            .map(support::peak)
-            .unwrap_or_else(|| support::ft(0.0)),
+            .map(utils::peak)
+            .unwrap_or_else(|| utils::ft(0.0)),
         report_final: (
             report.final_field().unwrap_or(&[]).to_vec(),
             report.series("final_n_tot").unwrap_or(&[]).to_vec(),
@@ -228,7 +265,7 @@ pub fn pick_committed(branches: &[BranchScore]) -> usize {
 /// under the corridor's round policy and read the peak bond dimension against the dense grid.
 pub fn compression_witness(final_fields: &(Vec<FloatType>, Vec<FloatType>)) -> (usize, usize) {
     let n = 1usize << L;
-    let tr = support::trunc();
+    let tr = utils::trunc();
     let bond = CausalTensor::new(final_fields.0.clone(), vec![n, n])
         .ok()
         .zip(CausalTensor::new(final_fields.1.clone(), vec![n, n]).ok())

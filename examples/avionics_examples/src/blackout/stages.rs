@@ -14,7 +14,7 @@ use super::constants::{
     AIR_MEAN_MOLECULAR_MASS_KG, AIR_MOLECULE_DIAMETER_M, G0, GNSS_VAR, NOSE_RADIUS_M, RHO_REF,
     SUTTON_GRAVES_K,
 };
-use super::support;
+use super::utils;
 use deep_causality_cfd::{CoupledField, PhysicsError, PhysicsStage, StepContext};
 use deep_causality_num::Real;
 use deep_causality_physics::{EARTH_GM, ks_strang_step};
@@ -35,16 +35,16 @@ impl PhysicsStage<2, FloatType> for FreestreamFeeds {
         _ctx: &StepContext<'_, 2, FloatType>,
         field: &mut CoupledField<FloatType>,
     ) -> Result<(), PhysicsError> {
-        let n_inf = support::scalar0(field, "freestream_n");
-        if n_inf <= support::ft(0.0) {
+        let n_inf = utils::scalar0(field, "freestream_n");
+        if n_inf <= utils::ft(0.0) {
             return Ok(());
         }
-        let speed = support::scalar0(field, "flight_speed");
-        let d = support::ft(AIR_MOLECULE_DIAMETER_M);
-        let sigma = Real::sqrt(support::ft(2.0)) * FloatType::pi() * d * d;
-        let mfp = support::ft(1.0) / (sigma * n_inf);
-        let rho_inf = n_inf * support::ft(AIR_MEAN_MOLECULAR_MASS_KG);
-        let eas = speed * Real::sqrt(rho_inf / support::ft(RHO_REF));
+        let speed = utils::scalar0(field, "flight_speed");
+        let d = utils::ft(AIR_MOLECULE_DIAMETER_M);
+        let sigma = Real::sqrt(utils::ft(2.0)) * FloatType::pi() * d * d;
+        let mfp = utils::ft(1.0) / (sigma * n_inf);
+        let rho_inf = n_inf * utils::ft(AIR_MEAN_MOLECULAR_MASS_KG);
+        let eas = speed * Real::sqrt(rho_inf / utils::ft(RHO_REF));
         field.set_scalar("mean_free_path", Vec::from([mfp]));
         field.set_scalar("equivalent_airspeed", Vec::from([eas]));
         Ok(())
@@ -63,16 +63,16 @@ impl PhysicsStage<2, FloatType> for SuttonGravesLoads {
         _ctx: &StepContext<'_, 2, FloatType>,
         field: &mut CoupledField<FloatType>,
     ) -> Result<(), PhysicsError> {
-        let n_inf = support::scalar0(field, "freestream_n");
-        let speed = support::scalar0(field, "flight_speed");
-        let rho_inf = n_inf * support::ft(AIR_MEAN_MOLECULAR_MASS_KG);
-        let q = support::ft(SUTTON_GRAVES_K)
-            * Real::sqrt(rho_inf / support::ft(NOSE_RADIUS_M))
+        let n_inf = utils::scalar0(field, "freestream_n");
+        let speed = utils::scalar0(field, "flight_speed");
+        let rho_inf = n_inf * utils::ft(AIR_MEAN_MOLECULAR_MASS_KG);
+        let q = utils::ft(SUTTON_GRAVES_K)
+            * Real::sqrt(rho_inf / utils::ft(NOSE_RADIUS_M))
             * speed
             * speed
             * speed;
-        let a = field.aero_force().unwrap_or([support::ft(0.0); 3]);
-        let g = support::norm3(a) / support::ft(G0);
+        let a = field.aero_force().unwrap_or([utils::ft(0.0); 3]);
+        let g = utils::norm3(a) / utils::ft(G0);
         field.set_scalar("heat_flux", Vec::from([q]));
         field.set_scalar("g_load", Vec::from([g]));
         Ok(())
@@ -88,15 +88,15 @@ impl PhysicsStage<2, FloatType> for SuttonGravesLoads {
 pub fn fix_noise(step: usize, draw: usize) -> [FloatType; 3] {
     const PHI: f64 = 0.618_033_988_749_894_9;
     const PLASTIC: f64 = 0.754_877_666_246_692_7;
-    let amplitude = Real::sqrt(support::ft(GNSS_VAR) * support::ft(3.0));
+    let amplitude = Real::sqrt(utils::ft(GNSS_VAR) * utils::ft(3.0));
     core::array::from_fn(|axis| {
         let stride =
-            support::ft(PHI) * (support::ft(1.0) + support::ft(0.37) * support::ft(axis as f64));
-        let phase = support::ft(PLASTIC) * support::ft(draw as f64)
-            + support::ft(0.29) * support::ft((draw * axis) as f64);
-        let x = (support::ft(step as f64) + support::ft(1.0)) * stride + phase;
+            utils::ft(PHI) * (utils::ft(1.0) + utils::ft(0.37) * utils::ft(axis as f64));
+        let phase = utils::ft(PLASTIC) * utils::ft(draw as f64)
+            + utils::ft(0.29) * utils::ft((draw * axis) as f64);
+        let x = (utils::ft(step as f64) + utils::ft(1.0)) * stride + phase;
         let u = x - x.floor();
-        amplitude * (support::ft(2.0) * u - support::ft(1.0))
+        amplitude * (utils::ft(2.0) * u - utils::ft(1.0))
     })
 }
 
@@ -122,8 +122,8 @@ impl PhysicsStage<2, FloatType> for TruthGnss {
         };
         let r = [state[0], state[1], state[2]];
         let v = [state[3], state[4], state[5]];
-        let kick = field.aero_force().unwrap_or([support::ft(0.0); 3]);
-        let (r1, v1) = ks_strang_step(r, v, support::ft(EARTH_GM), ctx.dt(), |_r, _v| kick)?;
+        let kick = field.aero_force().unwrap_or([utils::ft(0.0); 3]);
+        let (r1, v1) = ks_strang_step(r, v, utils::ft(EARTH_GM), ctx.dt(), |_r, _v| kick)?;
         field.set_scalar(
             "truth_state",
             Vec::from([r1[0], r1[1], r1[2], v1[0], v1[1], v1[2]]),
@@ -150,7 +150,7 @@ impl PhysicsStage<2, FloatType> for CommandedBank {
         _ctx: &StepContext<'_, 2, FloatType>,
         field: &mut CoupledField<FloatType>,
     ) -> Result<(), PhysicsError> {
-        let bank = support::scalar0(field, "commanded_bank");
+        let bank = utils::scalar0(field, "commanded_bank");
         field.set_control_action(bank);
         Ok(())
     }
@@ -172,8 +172,8 @@ impl PhysicsStage<2, FloatType> for WeatherTelemetry {
     ) -> Result<(), PhysicsError> {
         let denied = field.regime().map(|r| r.gnss_denied).unwrap_or(false);
         if denied {
-            let step = support::ft(ctx.step() as f64);
-            let dwell = support::scalar0(field, "wx_dwell_s") + ctx.dt();
+            let step = utils::ft(ctx.step() as f64);
+            let dwell = utils::scalar0(field, "wx_dwell_s") + ctx.dt();
             if field.scalar("wx_onset_step").is_none() {
                 field.set_scalar("wx_onset_step", Vec::from([step]));
             }
@@ -182,23 +182,23 @@ impl PhysicsStage<2, FloatType> for WeatherTelemetry {
 
             let drift = match (field.scalar("nav_position"), field.scalar("truth_state")) {
                 (Some(nav), Some(truth)) if nav.len() >= 3 && truth.len() >= 3 => {
-                    support::norm3(core::array::from_fn(|i| nav[i] - truth[i]))
+                    utils::norm3(core::array::from_fn(|i| nav[i] - truth[i]))
                 }
-                _ => support::ft(0.0),
+                _ => utils::ft(0.0),
             };
-            if drift > support::scalar0(field, "wx_drift_denied_max") {
+            if drift > utils::scalar0(field, "wx_drift_denied_max") {
                 field.set_scalar("wx_drift_denied_max", Vec::from([drift]));
             }
         }
         let ne = field
             .scalar("n_e")
-            .map(support::peak)
-            .unwrap_or_else(|| support::ft(0.0));
-        if ne > support::scalar0(field, "wx_ne_max") {
+            .map(utils::peak)
+            .unwrap_or_else(|| utils::ft(0.0));
+        if ne > utils::scalar0(field, "wx_ne_max") {
             field.set_scalar("wx_ne_max", Vec::from([ne]));
         }
-        let q = support::scalar0(field, "heat_flux");
-        if q > support::scalar0(field, "wx_q_max") {
+        let q = utils::scalar0(field, "heat_flux");
+        if q > utils::scalar0(field, "wx_q_max") {
             field.set_scalar("wx_q_max", Vec::from([q]));
         }
         Ok(())
