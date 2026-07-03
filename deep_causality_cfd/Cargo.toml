@@ -28,6 +28,9 @@ exclude = [
     "tests/**/*",
 ]
 
+[package.metadata.docs.rs]
+all-features = true
+
 [features]
 default = ["std"]
 
