@@ -1,0 +1,21 @@
+openspec/notes/cfd-roadmap/cfd-roadmap.md
+  s_c4c919f578d611::t_bae2f05046dcfc 112-143
+  s_c4c919f578d611::t_d2ef1d8b35610d 5
+  s_c4c919f578d611::t_4aff632b50b545 169-223
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "aa65ef254549e0383d6fa8e69de9d558242b7b15",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
