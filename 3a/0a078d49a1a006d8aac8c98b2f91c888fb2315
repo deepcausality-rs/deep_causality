@@ -1,0 +1,77 @@
+examples/avionics_examples/cfd/plasma_blackout_corridor/constants.rs
+  s_c4c919f578d611::t_927ef4af8953ca 52
+deep_causality_cfd/tests/types/flow/blackout_tests.rs
+  s_c4c919f578d611::t_685466f8940591 503-535
+examples/avionics_examples/src/blackout/utils.rs
+  s_c4c919f578d611::t_cf39a64be45be9 49-50
+deep_causality_cfd/tests/types/flow/coupling_tests.rs
+  s_c4c919f578d611::t_2ab66642b8ef5f 123-137
+  s_c4c919f578d611::t_c9a76abca0bd6d 122
+examples/avionics_examples/cfd/plasma_blackout_corridor/README.md
+  s_c4c919f578d611::t_927ef4af8953ca 44-45,69,227
+examples/avionics_examples/cfd/plasma_blackout_corridor/utils_print.rs
+  s_c4c919f578d611::t_334c1054398c30 276
+openspec/notes/plasma-blackout/gap-analysis.md
+  s_c4c919f578d611::t_927ef4af8953ca 310
+deep_causality_cfd/src/types/flow/corridor.rs
+  s_c4c919f578d611::t_2deb489fd3d7af 205-207,210-211
+  s_c4c919f578d611::t_3293830078f0aa 282-288,291,295
+  s_c4c919f578d611::t_28fc2125caf561 464-466
+  s_c4c919f578d611::t_315519c9fae802 419-420
+deep_causality_cfd/src/types/flow_config/compressible_march_config.rs
+  s_c4c919f578d611::t_a60a91b9514c1f 59-62,74-91
+deep_causality_physics/src/kernels/hypersonic/finite_rate.rs
+  s_c4c919f578d611::t_3d288f39b26c88 313-316
+deep_causality_physics/tests/kernels/hypersonic/finite_rate_tests.rs
+  s_c4c919f578d611::t_7eef4785285a91 261-271
+deep_causality_par/src/lib.rs
+  s_c4c919f578d611::t_c5875bd246e928 22
+examples/avionics_examples/cfd/plasma_blackout_weather/main.rs
+  s_c4c919f578d611::t_fab858c53245eb 229-231
+deep_causality_cfd/studies/compressible_carrier_timing/main.rs
+  s_c4c919f578d611::t_5128208c018932 17-23
+examples/avionics_examples/cfd/plasma_blackout_weather/model.rs
+  s_c4c919f578d611::t_2a51b3c90a9698 113-114,118-119
+openspec/notes/plasma-blackout/finite-rate-cfd-chemistry.md
+  s_c4c919f578d611::t_c5875bd246e928 14,26,94,107
+  s_c4c919f578d611::t_927ef4af8953ca 9
+  s_c4c919f578d611::t_226e5037887193 151,182
+deep_causality_cfd/src/types/flow/blackout.rs
+  s_c4c919f578d611::t_6dcf3a27cd9004 206-220,226
+  s_c4c919f578d611::t_f75c5450226a62 332-346
+  s_c4c919f578d611::t_dbe6829e25875a 365
+deep_causality_cfd/tests/types/flow/finite_rate_ionization_tests.rs
+  s_c4c919f578d611::t_fd9114015fd29c 115-161
+openspec/notes/plasma-blackout/gap-3/chemistry-fidelity-gap.md
+  s_c4c919f578d611::t_927ef4af8953ca 31
+openspec/notes/plasma-blackout/gap-3/gap-three-resolution-4-chemistry-fidelity.md
+  s_c4c919f578d611::t_927ef4af8953ca 10,192
+deep_causality_cfd/src/types/flow/finite_rate_ionization.rs
+  s_c4c919f578d611::t_47b7c23283ace4 162-187,190
+  s_c4c919f578d611::t_d46ba408c4db77 275-284
+deep_causality_cfd/src/types/flow/coupling.rs
+  s_c4c919f578d611::t_72bf99c273f397 185-192
+deep_causality_cfd/tests/types/flow/corridor_tests.rs
+  s_c4c919f578d611::t_5e86439671ea4d 384-387,403-429
+  s_c4c919f578d611::t_182437528a9548 430,501,505-526
+deep_causality_cfd/tests/types/flow_config/compressible_march_config_tests.rs
+  s_c4c919f578d611::t_368045c8db7209 55-87
+openspec/notes/cfd-roadmap/cfd-roadmap.md
+  s_c4c919f578d611::t_c36d507303a4c4 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "3a0a078d49a1a006d8aac8c98b2f91c888fb2315",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
