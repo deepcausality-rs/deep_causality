@@ -62,7 +62,13 @@ impl TableRow for PlacardRow {
         ("qdot", "W/cm2"),
     ];
     fn cells(&self) -> Vec<FloatType> {
-        vec![self.mach, self.alt_km, self.q_kpa, self.t0_k, self.qdot_w_cm2]
+        vec![
+            self.mach,
+            self.alt_km,
+            self.q_kpa,
+            self.t0_k,
+            self.qdot_w_cm2,
+        ]
     }
 }
 
@@ -121,7 +127,9 @@ pub fn placard_point(
     let half_gm1 = ft(0.5) * (ft(constants::GAMMA) - ft(1.0));
     let t0_k = if mach >= ft(1.0) {
         let post = shock.post_shock(t_inf, n_inf, mach).map_err(|e| {
-            PhysicsError::CalculationError(format!("grid point {here}: post-shock state failed: {e}"))
+            PhysicsError::CalculationError(format!(
+                "grid point {here}: post-shock state failed: {e}"
+            ))
         })?;
         let m2 = mach * post.u_ratio * Real::sqrt(t_inf / post.t2);
         post.t2 * (ft(1.0) + half_gm1 * m2 * m2)
@@ -140,7 +148,7 @@ pub fn placard_point(
     Ok(PlacardRow {
         mach,
         alt_km,
-        q_kpa: q_pa / ft(1000.0),          // Pa -> kPa
+        q_kpa: q_pa / ft(1000.0), // Pa -> kPa
         t0_k,
         qdot_w_cm2: qdot_w_m2 / ft(1.0e4), // W/m² -> W/cm²
     })
@@ -164,7 +172,12 @@ pub fn gate_q_max(view: &StudyView<'_, PlacardRow>) -> (bool, String) {
         .rows()
         .iter()
         .filter(|r| r.q_kpa > q_max)
-        .map(|r| format!("q = {:.1} kPa at M {:.2} / {:.1} km", r.q_kpa, r.mach, r.alt_km))
+        .map(|r| {
+            format!(
+                "q = {:.1} kPa at M {:.2} / {:.1} km",
+                r.q_kpa, r.mach, r.alt_km
+            )
+        })
         .collect();
     if offenders.is_empty() {
         let peak = peak_by(view.rows(), |r| r.q_kpa);
@@ -178,7 +191,10 @@ pub fn gate_q_max(view: &StudyView<'_, PlacardRow>) -> (bool, String) {
     } else {
         (
             false,
-            format!("{} exceeds the {Q_MAX_PLACARD_KPA:.0} kPa placard", offenders.join("; ")),
+            format!(
+                "{} exceeds the {Q_MAX_PLACARD_KPA:.0} kPa placard",
+                offenders.join("; ")
+            ),
         )
     }
 }
@@ -191,7 +207,12 @@ pub fn gate_stagnation_temperature(view: &StudyView<'_, PlacardRow>) -> (bool, S
         .rows()
         .iter()
         .filter(|r| r.t0_k > t0_max)
-        .map(|r| format!("T0 = {:.1} K at M {:.2} / {:.1} km", r.t0_k, r.mach, r.alt_km))
+        .map(|r| {
+            format!(
+                "T0 = {:.1} K at M {:.2} / {:.1} km",
+                r.t0_k, r.mach, r.alt_km
+            )
+        })
         .collect();
     if offenders.is_empty() {
         let peak = peak_by(view.rows(), |r| r.t0_k);
@@ -205,13 +226,18 @@ pub fn gate_stagnation_temperature(view: &StudyView<'_, PlacardRow>) -> (bool, S
     } else {
         (
             false,
-            format!("{} exceeds the {T0_MAX_PLACARD_K:.0} K placard", offenders.join("; ")),
+            format!(
+                "{} exceeds the {T0_MAX_PLACARD_K:.0} K placard",
+                offenders.join("; ")
+            ),
         )
     }
 }
 
 /// The row maximizing `key` (rows are non-empty whenever a gate runs — the sweep produced them).
 fn peak_by(rows: &[PlacardRow], key: impl Fn(&PlacardRow) -> FloatType) -> &PlacardRow {
-    rows.iter()
-        .fold(&rows[0], |best, r| if key(r) > key(best) { r } else { best })
+    rows.iter().fold(
+        &rows[0],
+        |best, r| if key(r) > key(best) { r } else { best },
+    )
 }

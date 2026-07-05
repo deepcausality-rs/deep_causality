@@ -30,7 +30,7 @@ mod model;
 mod model_config;
 mod utils_print;
 
-use deep_causality_cfd::{CfdFlow, StudyError, Verdict};
+use deep_causality_cfd::CfdFlow;
 use std::process::ExitCode;
 
 /// The working precision. Switch between `f64` and `deep_causality_num::Float106`
@@ -39,11 +39,12 @@ use std::process::ExitCode;
 /// only line that changes.
 pub type FloatType = f64;
 
-/// The resonance-margin study, as one grammar expression: airspeeds in, one wake case per
-/// airspeed, march, reduce to margin rows, record, gate, verdict.
-fn viv_study() -> Result<Verdict, StudyError> {
+fn main() -> ExitCode {
     let schedule = model::example_file("airspeeds.csv");
-    CfdFlow::study("vortex-shedding resonance margin")
+
+    // The resonance-margin study, as one grammar expression: airspeeds in, one wake case per
+    // airspeed, march, reduce to margin rows, record, gate, verdict.
+    match CfdFlow::study("vortex-shedding resonance margin")
         .read::<FloatType>(&schedule, "airspeed")
         .inspect(|airspeeds| utils_print::print_intro(airspeeds.len(), &schedule))
         .case(model_config::wake_case)
@@ -54,10 +55,7 @@ fn viv_study() -> Result<Verdict, StudyError> {
         .inspect(|_| utils_print::print_footer(&model::example_file("viv_resonance_margin.csv")))
         .gates(model::viv_gates())
         .verdict()
-}
-
-fn main() -> ExitCode {
-    match viv_study() {
+    {
         Ok(verdict) => {
             print!("{verdict}");
             if verdict.passed() {

@@ -12,7 +12,9 @@ use crate::constants::{
     THROAT_AREA_M2,
 };
 use avionics_examples::shared::utils::ft;
-use deep_causality_cfd::{CaseRun, DuctConfig, FittedNormalShock, GateSeq, PhysicsError, StudyView, TableRow};
+use deep_causality_cfd::{
+    CaseRun, DuctConfig, FittedNormalShock, GateSeq, PhysicsError, StudyView, TableRow,
+};
 use deep_causality_physics::area_mach_ratio_kernel;
 
 /// One swept back pressure's reduced result, all in the working precision.
@@ -54,7 +56,9 @@ impl TableRow for MapRow {
 /// from the case, the exit Mach / shock station / thrust coefficient from the report. The march
 /// itself is the grammar's `.march()`; the case description is
 /// [`model_config::duct_case`](crate::model_config::duct_case).
-pub fn map_row(run: &CaseRun<'_, FloatType, DuctConfig<FloatType>, FloatType>) -> Result<MapRow, PhysicsError> {
+pub fn map_row(
+    run: &CaseRun<'_, FloatType, DuctConfig<FloatType>, FloatType>,
+) -> Result<MapRow, PhysicsError> {
     let p_ratio = *run.case();
     let report = run.report();
 
@@ -237,13 +241,19 @@ pub fn gate_choking(view: &StudyView<'_, MapRow>) -> (bool, String) {
                 None => {
                     return (
                         false,
-                        format!("p_ratio {:.2}: choked row never reaches Mach 1", row.p_ratio),
+                        format!(
+                            "p_ratio {:.2}: choked row never reaches Mach 1",
+                            row.p_ratio
+                        ),
                     );
                 }
             }
         }
     }
-    (true, "every choked row crosses Mach 1 at the throat".to_string())
+    (
+        true,
+        "every choked row crosses Mach 1 at the throat".to_string(),
+    )
 }
 
 /// Every internal-shock row lands within the measured band of the closed-form shock position.
@@ -280,7 +290,10 @@ pub fn gate_shock_position(view: &StudyView<'_, MapRow>) -> (bool, String) {
             }
         }
     }
-    (true, "every internal-shock row matches the closed form".to_string())
+    (
+        true,
+        "every internal-shock row matches the closed form".to_string(),
+    )
 }
 
 /// Shock-free rows track the area-Mach relation within the measured band.
@@ -299,15 +312,24 @@ pub fn gate_area_mach(view: &StudyView<'_, MapRow>) -> (bool, String) {
             );
         }
     }
-    (true, "every shock-free row tracks the area-Mach relation".to_string())
+    (
+        true,
+        "every shock-free row tracks the area-Mach relation".to_string(),
+    )
 }
 
 /// The thrust coefficient is finite and positive on every row.
 pub fn gate_thrust(view: &StudyView<'_, MapRow>) -> (bool, String) {
     for row in view.rows() {
         if !(row.cf.is_finite() && row.cf > ft(0.0)) {
-            return (false, format!("p_ratio {:.2}: Cf = {}", row.p_ratio, row.cf));
+            return (
+                false,
+                format!("p_ratio {:.2}: Cf = {}", row.p_ratio, row.cf),
+            );
         }
     }
-    (true, "thrust coefficient finite and positive on every row".to_string())
+    (
+        true,
+        "thrust coefficient finite and positive on every row".to_string(),
+    )
 }

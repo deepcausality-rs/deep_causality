@@ -29,7 +29,7 @@ mod model;
 mod model_config;
 mod utils_print;
 
-use deep_causality_cfd::{CfdFlow, StudyError, Verdict};
+use deep_causality_cfd::CfdFlow;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -38,21 +38,10 @@ use std::process::ExitCode;
 /// only at the display boundary.
 pub type FloatType = avionics_examples::shared::FloatType;
 
-fn schedule_path() -> PathBuf {
-    std::env::args().nth(1).map(PathBuf::from).unwrap_or_else(|| {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("cfd/nozzle_operating_map/back_pressures.csv")
-    })
-}
+fn main() -> ExitCode {
+    let path = in_path();
 
-fn out_path() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("cfd/nozzle_operating_map/operating_map.csv")
-}
-
-/// The operating-map study, as one grammar expression: schedule in, one duct case per back
-/// pressure, march, reduce to rows, record, gate, verdict.
-fn nozzle_study() -> Result<Verdict, StudyError> {
-    let path = schedule_path();
-    CfdFlow::study("nozzle operating map")
+    match CfdFlow::study("nozzle operating map")
         .read::<FloatType>(&path, "p_back_over_p0")
         .inspect(|ratios| utils_print::print_intro(ratios.len(), &path))
         .case(model_config::duct_case)
@@ -63,10 +52,7 @@ fn nozzle_study() -> Result<Verdict, StudyError> {
         .inspect(|_| utils_print::print_footer(&out_path()))
         .gates(model::nozzle_gates())
         .verdict()
-}
-
-fn main() -> ExitCode {
-    match nozzle_study() {
+    {
         Ok(verdict) => {
             print!("{verdict}");
             if verdict.passed() {
@@ -80,4 +66,18 @@ fn main() -> ExitCode {
             ExitCode::from(2)
         }
     }
+}
+
+fn in_path() -> PathBuf {
+    std::env::args()
+        .nth(1)
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("cfd/nozzle_operating_map/back_pressures.csv")
+        })
+}
+
+fn out_path() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("cfd/nozzle_operating_map/operating_map.csv")
 }
