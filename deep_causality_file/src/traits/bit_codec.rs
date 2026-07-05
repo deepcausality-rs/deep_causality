@@ -4,7 +4,7 @@
  */
 
 //! The [`BitCodec`] trait: bit-exact encoding of a working scalar into a snapshot section
-//! payload. The blanket implementations for `f32`, `f64`, and `Float106` live beside the
+//! payload. The concrete implementations for `f32`, `f64`, and `Float106` live beside the
 //! snapshot payload types in [`crate::types::snapshot_types`].
 
 use crate::types::snapshot_types::ScalarTypeTag;

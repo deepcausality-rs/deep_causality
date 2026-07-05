@@ -15,10 +15,13 @@ pub fn print_intro(schedule_len: usize, schedule_path: &Path) {
     println!(
         "geometry: inlet {INLET_AREA_M2} / throat {THROAT_AREA_M2} / exit {EXIT_AREA_M2} m^2 over {LENGTH_M} m; reservoir {P0_PA} Pa, {T0_K} K"
     );
-    println!(
-        "schedule: {schedule_len} back pressures from {}\n",
-        schedule_path.display()
-    );
+    // The file name only, not the absolute manifest path, so the recorded reference output is
+    // portable across machines and checkouts.
+    let schedule_name = schedule_path
+        .file_name()
+        .map(|n| n.to_string_lossy())
+        .unwrap_or_default();
+    println!("schedule: {schedule_len} back pressures from {schedule_name}\n");
 }
 
 pub fn print_rows(rows: &[MapRow]) {

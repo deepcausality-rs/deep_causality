@@ -45,6 +45,19 @@ fn write_read_round_trip_preserves_semantics_and_bits() {
 }
 
 #[test]
+fn a_column_name_with_a_delimiter_is_rejected_before_writing() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let path = dir.path().join("bad.csv");
+    let table = NumericTable::new(vec![TableColumn::new("a,b", "")], vec![vec![1.0_f64]])
+        .expect("rectangular");
+    let err = write_table(&path, table)
+        .run()
+        .expect_err("delimiter in name");
+    assert!(err.to_string().contains("comma or newline"), "{err}");
+    assert!(!path.exists(), "no corrupt file is written");
+}
+
+#[test]
 fn the_write_is_lazy_until_run() {
     let dir = tempfile::tempdir().expect("tempdir");
     let path = dir.path().join("lazy.csv");

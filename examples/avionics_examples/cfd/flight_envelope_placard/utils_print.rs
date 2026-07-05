@@ -13,7 +13,7 @@ pub fn print_intro(matrix_path: &Path) {
     println!(
         "=== Flight-envelope placard table: pointwise study over a Mach-altitude matrix ===\n"
     );
-    println!("Matrix: {}", matrix_path.display());
+    println!("Matrix: {}", file_name(matrix_path));
 }
 
 pub fn print_rows(rows: &[PlacardRow]) {
@@ -29,5 +29,11 @@ pub fn print_rows(rows: &[PlacardRow]) {
 }
 
 pub fn print_footer(out_path: &Path) {
-    println!("\nPlacard table written: {}", out_path.display());
+    println!("\nPlacard table written: {}", file_name(out_path));
+}
+
+/// The file name of a path (not the absolute manifest path), so the recorded reference output is
+/// portable across machines and checkouts.
+fn file_name(p: &Path) -> std::borrow::Cow<'_, str> {
+    p.file_name().map(|n| n.to_string_lossy()).unwrap_or_default()
 }

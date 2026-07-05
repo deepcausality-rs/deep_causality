@@ -96,6 +96,26 @@ fn a_malformed_units_row_is_an_error() {
 }
 
 #[test]
+fn a_units_lookalike_comment_stays_a_comment() {
+    // `#units-note` merely starts with `#units`; its first cell is not the exact marker, so it
+    // is an ordinary comment and must not be mistaken for the units row.
+    let (_d, path) = write_temp("a,b\n#units,K,K\n#units-note, ignore me\n1,2\n");
+    let table = read_table::<f64>(&path).run().expect("parses");
+    assert_eq!(table.columns()[0].unit(), "K");
+    assert_eq!(table.len(), 1);
+    assert_eq!(table.rows()[0], vec![1.0, 2.0]);
+}
+
+#[test]
+fn a_duplicate_column_name_is_an_error() {
+    let (_d, path) = write_temp("a,a\n1,2\n");
+    let err = read_table::<f64>(&path).run().expect_err("duplicate name");
+    let msg = err.to_string();
+    assert!(msg.contains("duplicate column name"), "{msg}");
+    assert!(msg.contains("'a'"), "{msg}");
+}
+
+#[test]
 fn a_single_column_table_parses() {
     let (_d, path) = write_temp("q\n#units,Pa\n101325\n");
     let table = read_table::<f64>(&path).run().expect("parses");

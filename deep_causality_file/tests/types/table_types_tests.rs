@@ -18,6 +18,22 @@ fn construction_validates_rectangularity() {
 }
 
 #[test]
+fn construction_rejects_duplicate_column_names() {
+    // First-match name lookups make a repeated name silently ambiguous, so it is rejected.
+    let cols = vec![TableColumn::new("a", ""), TableColumn::new("a", "K")];
+    assert!(NumericTable::<f64>::new(cols, vec![vec![1.0, 2.0]]).is_none());
+    assert!(NumericTable::from_columns([("x", ""), ("x", "")], vec![vec![1.0_f64, 2.0]]).is_none());
+}
+
+#[test]
+fn a_column_with_a_delimiter_is_not_serialization_safe() {
+    assert!(TableColumn::new("ok", "Pa").is_delimiter_safe());
+    assert!(!TableColumn::new("a,b", "").is_delimiter_safe());
+    assert!(!TableColumn::new("x", "m,s").is_delimiter_safe());
+    assert!(!TableColumn::new("x\n", "").is_delimiter_safe());
+}
+
+#[test]
 fn column_lookup_by_name() {
     let t = NumericTable::new(
         vec![TableColumn::new("mach", "-"), TableColumn::new("alt", "km")],

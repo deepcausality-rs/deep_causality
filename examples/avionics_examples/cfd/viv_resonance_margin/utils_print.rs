@@ -18,7 +18,7 @@ pub fn print_intro(schedule_len: usize, schedule_path: &Path) {
     );
     println!(
         "schedule: {schedule_len} airspeeds from {}\n",
-        schedule_path.display()
+        file_name(schedule_path)
     );
 }
 
@@ -38,5 +38,11 @@ pub fn print_rows(rows: &[MarginRow]) {
 }
 
 pub fn print_footer(table_path: &Path) {
-    println!("margin table written to {}\n", table_path.display());
+    println!("margin table written to {}\n", file_name(table_path));
+}
+
+/// The file name of a path (not the absolute manifest path), so the recorded reference output is
+/// portable across machines and checkouts.
+fn file_name(p: &Path) -> std::borrow::Cow<'_, str> {
+    p.file_name().map(|n| n.to_string_lossy()).unwrap_or_default()
 }

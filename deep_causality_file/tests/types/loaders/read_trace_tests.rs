@@ -57,6 +57,29 @@ fn a_non_numeric_sample_is_an_error_not_a_gap() {
 }
 
 #[test]
+fn a_duplicate_channel_name_is_an_error() {
+    let (_d, path) = write_temp("t,a,a\n0.0,1.0,2.0\n");
+    let err = read_sensor_trace::<f64>(&path)
+        .run()
+        .expect_err("duplicate channel");
+    let msg = err.to_string();
+    assert!(msg.contains("duplicate column name"), "{msg}");
+    assert!(msg.contains("'a'"), "{msg}");
+}
+
+#[test]
+fn a_units_lookalike_comment_stays_a_comment() {
+    // `#units-note` starts with `#units` but its first cell is not the exact marker, so it is
+    // a comment, not the units row.
+    let (_d, path) = write_temp("t,a\n#units,s,V\n#units-note, skip\n0.0,1.0\n");
+    let trace = read_sensor_trace::<f64>(&path).run().expect("parses");
+    assert_eq!(trace.timestamps(), &[0.0]);
+    let a = trace.channel("a").expect("channel");
+    assert_eq!(a.unit(), "V");
+    assert_eq!(a.samples(), &[Some(1.0)]);
+}
+
+#[test]
 fn a_trace_needs_at_least_one_channel() {
     let (_d, path) = write_temp("t\n0.0\n");
     let err = read_sensor_trace::<f64>(&path)

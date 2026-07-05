@@ -240,10 +240,13 @@ pub fn gate_stagnation_temperature(view: &StudyView<'_, PlacardRow>) -> (bool, S
     }
 }
 
-/// The row maximizing `key` (rows are non-empty whenever a gate runs — the sweep produced them).
+/// The row maximizing `key`. The gates guard against an empty row set before calling this (an
+/// empty study fails visibly rather than reaching here), and the `split_first` seed makes that
+/// invariant explicit instead of an opaque `rows[0]` index panic.
 fn peak_by(rows: &[PlacardRow], key: impl Fn(&PlacardRow) -> FloatType) -> &PlacardRow {
-    rows.iter().fold(
-        &rows[0],
-        |best, r| if key(r) > key(best) { r } else { best },
-    )
+    let (first, rest) = rows
+        .split_first()
+        .expect("peak_by requires a non-empty row set; the gates guard this");
+    rest.iter()
+        .fold(first, |best, r| if key(r) > key(best) { r } else { best })
 }
