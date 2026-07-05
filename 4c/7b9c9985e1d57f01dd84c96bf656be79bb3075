@@ -1,0 +1,32 @@
+deep_causality_file/tests/types/loaders/read_rows_tests.rs
+  s_c4c919f578d611::t_88c66aa260a070 71-104
+deep_causality_cfd/tests/types/flow/study_grammar_tests.rs
+  s_c4c919f578d611::t_8641c72597fdcb 293-332
+examples/avionics_examples/cfd/plasma_blackout_weather/main.rs
+  s_c4c919f578d611::t_20c622aa7f4d54 56,60
+examples/avionics_examples/cfd/plasma_blackout_weather/model.rs
+  s_c4c919f578d611::t_b0f5af43012c4d 401,405
+  s_c4c919f578d611::t_20c622aa7f4d54 12,399-400,402-404,406
+deep_causality_file/tests/types/writers/write_rows_tests.rs
+  s_c4c919f578d611::t_cbcbaa39ee8e83 89-101
+  s_c4c919f578d611::t_a21349703d1e66 62-88
+deep_causality_cfd/tests/types/flow/compressible_march_run_tests.rs
+  s_c4c919f578d611::t_8641c72597fdcb 672-701
+  s_c4c919f578d611::t_20c622aa7f4d54 702-740
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "4c7b9c9985e1d57f01dd84c96bf656be79bb3075",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
