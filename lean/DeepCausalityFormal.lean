@@ -18,3 +18,24 @@ core bind left-identity). The full program is described in
 
 import DeepCausalityFormal.Num.Monoid
 import DeepCausalityFormal.Core.CausalMonad
+import DeepCausalityFormal.Haft.Hkt
+import DeepCausalityFormal.Haft.Functor
+import DeepCausalityFormal.Haft.Pure
+import DeepCausalityFormal.Haft.Applicative
+import DeepCausalityFormal.Haft.Monad
+import DeepCausalityFormal.Haft.Comonad
+import DeepCausalityFormal.Haft.Bifunctor
+import DeepCausalityFormal.Haft.Profunctor
+import DeepCausalityFormal.Haft.ParametricMonad
+import DeepCausalityFormal.Haft.Promonad
+import DeepCausalityFormal.Haft.Arrow
+import DeepCausalityFormal.Haft.Morphism
+import DeepCausalityFormal.Haft.Endomorphism
+import DeepCausalityFormal.Haft.Adjunction
+import DeepCausalityFormal.Haft.Foldable
+import DeepCausalityFormal.Haft.Traversable
+import DeepCausalityFormal.Haft.NaturalIso
+import DeepCausalityFormal.Haft.Either
+import DeepCausalityFormal.Haft.EffectSystem
+import DeepCausalityFormal.Haft.Io
+import DeepCausalityFormal.Haft.Signatures

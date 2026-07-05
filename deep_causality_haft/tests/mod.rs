@@ -8,5 +8,6 @@ mod alias;
 mod effect_system;
 mod either;
 mod extensions;
+mod formalization_lean;
 mod hkt;
 mod iso;
