@@ -686,10 +686,12 @@ fn campaign_save_log_to_an_unwritable_path_fails_the_run() {
         .ensemble(1)
         .couple(|_c: &String, _d: usize| ())
         .march_for(2, field_at_61km)
-        .reduce_ensemble(|_c: &String, _d: &[Report<f64>]| Ok(EnsRow {
-            marked: false,
-            draws: 1,
-        }))
+        .reduce_ensemble(|_c: &String, _d: &[Report<f64>]| {
+            Ok(EnsRow {
+                marked: false,
+                draws: 1,
+            })
+        })
         .gates(GateSeq::new("x").gate("two rows", two_rows))
         .verdict();
 
@@ -708,15 +710,20 @@ fn origin_campaign_verb_errors_short_circuit_and_name_their_verb() {
     let e = CfdFlow::study("x")
         .cases(vec!["a".to_string()])
         .baseline(|| {
-            Err::<CompressibleMarchConfig<f64>, _>(deep_causality_physics::PhysicsError::CalculationError(
-                "no origin".into(),
-            ))
+            Err::<CompressibleMarchConfig<f64>, _>(
+                deep_causality_physics::PhysicsError::CalculationError("no origin".into()),
+            )
         })
         .alternate(|n| Ok(world(n, 3.0, 3)))
         .ensemble(1)
         .couple(|_: &String, _: usize| ())
         .march_for(2, field_at_61km)
-        .reduce_ensemble(|_: &String, _: &[Report<f64>]| Ok(EnsRow { marked: false, draws: 1 }))
+        .reduce_ensemble(|_: &String, _: &[Report<f64>]| {
+            Ok(EnsRow {
+                marked: false,
+                draws: 1,
+            })
+        })
         .gates(GateSeq::new("x").gate("two rows", two_rows))
         .verdict()
         .expect_err("a failed baseline short-circuits");
@@ -731,10 +738,15 @@ fn origin_campaign_verb_errors_short_circuit_and_name_their_verb() {
         .couple(|_: &String, _: usize| ())
         .march_for(2, field_at_61km)
         .reduce_ensemble(|_: &String, _: &[Report<f64>]| {
-            Err::<EnsRow, _>(deep_causality_physics::PhysicsError::CalculationError("bad row".into()))
+            Err::<EnsRow, _>(deep_causality_physics::PhysicsError::CalculationError(
+                "bad row".into(),
+            ))
         })
         .gates(GateSeq::new("x").gate("two rows", two_rows))
         .verdict()
         .expect_err("a failed reduction short-circuits");
-    assert!(format!("{e}").contains("reduce_ensemble"), "names the verb: {e}");
+    assert!(
+        format!("{e}").contains("reduce_ensemble"),
+        "names the verb: {e}"
+    );
 }

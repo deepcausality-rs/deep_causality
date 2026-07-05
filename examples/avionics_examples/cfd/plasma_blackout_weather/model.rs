@@ -9,7 +9,6 @@
 //! wall-clock budget). The shared stages, constants, and world builder live in
 //! `avionics_examples::shared`.
 
-use std::path::PathBuf;
 use crate::FloatType;
 use crate::constants::{
     COLD_DRIFT_FACTOR_MIN, DRIFT_SIGNIFICANCE_SIGMA, IMU_THERMAL_COEFF_PER_K, MC_DRAWS,
@@ -21,6 +20,7 @@ use avionics_examples::shared::world;
 use deep_causality_cfd::{
     CompressibleMarchConfig, GateSeq, PhysicsError, Report, StudyView, TableRow,
 };
+use std::path::PathBuf;
 
 // ── The case axis: weather conditions ─────────────────────────────────────────────────────────
 
@@ -402,5 +402,8 @@ pub fn get_audit_dir() -> PathBuf {
 }
 
 pub fn get_tabe_path() -> fn() -> PathBuf {
-    || PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("cfd/plasma_blackout_weather/weather_table.csv")
+    || {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("cfd/plasma_blackout_weather/weather_table.csv")
+    }
 }
