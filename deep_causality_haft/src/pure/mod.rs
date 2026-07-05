@@ -9,6 +9,13 @@ use crate::{HKT, Satisfies};
 /// This is the fundamental "return" or "unit" operation in category theory,
 /// representing the natural transformation η: Id → F.
 ///
+/// # Law (Informal)
+///
+/// **Naturality**: `fmap(pure(a), f) == pure(f(a))` — the square `fmap f ∘ η = η ∘ f`
+/// commutes for every pure `f`. This is what makes `pure` a *natural* transformation rather
+/// than an arbitrary family of injections (Mac Lane, CWM §I.4). Machine-checked in
+/// `lean/DeepCausalityFormal/Haft/Pure.lean`.
+///
 /// # Design Rationale
 ///
 /// `Pure` is extracted as a separate trait to enable:

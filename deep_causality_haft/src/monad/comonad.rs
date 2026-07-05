@@ -37,6 +37,10 @@ use crate::{Functor, HKT, Satisfies};
 /// 3.  **Associativity**: `extend(extend(w, f), g) = extend(w, |w_prime| g(extend(w_prime, f)))`
 ///     (Extending twice is equivalent to extending once with a composed function).
 ///
+/// Laws are stated for pure functions; a stateful `FnMut` closure voids them.
+/// Machine-checked in `lean/DeepCausalityFormal/Haft/Comonad.lean` (Uustalu & Vene,
+/// *Comonadic Notions of Computation*, 2008).
+///
 /// # Type Parameters
 ///
 /// *   `F`: A Higher-Kinded Type (HKT) witness that represents the type constructor

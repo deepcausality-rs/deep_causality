@@ -27,9 +27,15 @@ use crate::{HKT, HKT3, HKT4, HKT5, Placeholder};
 ///
 /// This struct demonstrates how to combine a primary `value`, an optional `error`,
 /// and a list of `warnings` within a single effectful context.
+///
+/// The value slot is an `Option<T>` so an errored (or empty) carrier can represent the
+/// absence of a value. This is what lets `bind`/`apply` short-circuit on error *without*
+/// running the continuation — the algebraic requirement that raise be a left zero
+/// (`lean/DeepCausalityFormal/Haft/EffectSystem.lean`). Well-formed carriers uphold the
+/// invariant `error.is_some() ⇒ value.is_none()`.
 #[derive(Debug, PartialEq)]
 pub struct MyCustomEffectType<T, E, W> {
-    pub value: T,
+    pub value: Option<T>,
     pub error: Option<E>,
     pub warnings: Vec<W>,
 }
@@ -71,7 +77,7 @@ impl Functor<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, 
         Func: FnOnce(A) -> B,
     {
         MyCustomEffectType {
-            value: f(m_a.value),
+            value: m_a.value.map(f),
             error: m_a.error,
             warnings: m_a.warnings,
         }
@@ -81,7 +87,7 @@ impl Functor<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, 
 impl Pure<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, String> {
     fn pure<T>(value: T) -> MyCustomEffectType<T, String, String> {
         MyCustomEffectType {
-            value,
+            value: Some(value),
             error: None,
             warnings: Vec::new(),
         }
@@ -90,22 +96,23 @@ impl Pure<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, Str
 
 impl Applicative<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, String> {
     fn apply<A, B, Func>(
-        mut f_ab: MyCustomEffectType<Func, String, String>,
+        f_ab: MyCustomEffectType<Func, String, String>,
         f_a: MyCustomEffectType<A, String, String>,
     ) -> MyCustomEffectType<B, String, String>
     where
         Func: FnMut(A) -> B,
     {
+        // Error short-circuits: no value is produced and the function is NOT run.
         if f_ab.error.is_some() {
             return MyCustomEffectType {
-                value: (f_ab.value)(f_a.value),
+                value: None,
                 error: f_ab.error,
                 warnings: f_ab.warnings,
             };
         }
         if f_a.error.is_some() {
             return MyCustomEffectType {
-                value: (f_ab.value)(f_a.value),
+                value: None,
                 error: f_a.error,
                 warnings: f_a.warnings,
             };
@@ -114,8 +121,13 @@ impl Applicative<MyEffectHktWitness<String, String>> for MyEffectHktWitness<Stri
         let mut combined_warnings = f_ab.warnings;
         combined_warnings.extend(f_a.warnings);
 
+        let value = match (f_ab.value, f_a.value) {
+            (Some(mut f), Some(a)) => Some(f(a)),
+            _ => None,
+        };
+
         MyCustomEffectType {
-            value: (f_ab.value)(f_a.value),
+            value,
             error: None,
             warnings: combined_warnings,
         }
@@ -130,14 +142,24 @@ impl Monad<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, St
     where
         Func: FnOnce(A) -> MyCustomEffectType<B, String, String>,
     {
+        // Raise is a left zero: the continuation is NOT run on an errored carrier
+        // (lean/DeepCausalityFormal/Haft/EffectSystem.lean :: bind3_raise_left_zero).
         if m_a.error.is_some() {
             return MyCustomEffectType {
-                value: f(m_a.value).value,
+                value: None,
                 error: m_a.error,
                 warnings: m_a.warnings,
             };
         }
-        let mut next_effect = f(m_a.value);
+        let Some(a) = m_a.value else {
+            // Absence propagates: no value, no error, warnings preserved.
+            return MyCustomEffectType {
+                value: None,
+                error: None,
+                warnings: m_a.warnings,
+            };
+        };
+        let mut next_effect = f(a);
         let mut combined_warnings = m_a.warnings;
         combined_warnings.extend(next_effect.warnings);
         next_effect.warnings = combined_warnings;
@@ -230,9 +252,11 @@ impl LoggableEffect3<MyEffect> for MyMonadEffect3 {
 /// This struct extends `MyCustomEffectType` by adding a third fixed field `f3`,
 /// demonstrating how to combine a primary `value`, an optional `f1` (error),
 /// a list of `f2` (logs), and a list of `f3` (counters) within a single effectful context.
+/// The value slot is an `Option<T>` for the same reason as `MyCustomEffectType`: an errored
+/// carrier holds no value, so error short-circuit never runs the continuation.
 #[derive(Debug, PartialEq)]
 pub struct MyCustomEffectType4<T, F1, F2, F3> {
-    pub value: T,
+    pub value: Option<T>,
     pub f1: Option<F1>,
     pub f2: Vec<F2>,
     pub f3: Vec<F3>,
@@ -277,7 +301,7 @@ impl Functor<MyEffectHktWitness4<String, String, u64>>
         Func: FnOnce(A) -> B,
     {
         MyCustomEffectType4 {
-            value: f(m_a.value),
+            value: m_a.value.map(f),
             f1: m_a.f1,
             f2: m_a.f2,
             f3: m_a.f3,
@@ -288,7 +312,7 @@ impl Functor<MyEffectHktWitness4<String, String, u64>>
 impl Pure<MyEffectHktWitness4<String, String, u64>> for MyEffectHktWitness4<String, String, u64> {
     fn pure<T>(value: T) -> MyCustomEffectType4<T, String, String, u64> {
         MyCustomEffectType4 {
-            value,
+            value: Some(value),
             f1: None,
             f2: Vec::new(),
             f3: Vec::new(),
@@ -300,15 +324,16 @@ impl Applicative<MyEffectHktWitness4<String, String, u64>>
     for MyEffectHktWitness4<String, String, u64>
 {
     fn apply<A, B, Func>(
-        mut f_ab: MyCustomEffectType4<Func, String, String, u64>,
+        f_ab: MyCustomEffectType4<Func, String, String, u64>,
         f_a: MyCustomEffectType4<A, String, String, u64>,
     ) -> MyCustomEffectType4<B, String, String, u64>
     where
         Func: FnMut(A) -> B,
     {
+        // Error short-circuits: no value is produced and the function is NOT run.
         if f_ab.f1.is_some() {
             return MyCustomEffectType4 {
-                value: (f_ab.value)(f_a.value),
+                value: None,
                 f1: f_ab.f1,
                 f2: f_ab.f2,
                 f3: f_ab.f3,
@@ -316,7 +341,7 @@ impl Applicative<MyEffectHktWitness4<String, String, u64>>
         }
         if f_a.f1.is_some() {
             return MyCustomEffectType4 {
-                value: (f_ab.value)(f_a.value),
+                value: None,
                 f1: f_a.f1,
                 f2: f_a.f2,
                 f3: f_a.f3,
@@ -329,8 +354,13 @@ impl Applicative<MyEffectHktWitness4<String, String, u64>>
         let mut combined_f3 = f_ab.f3;
         combined_f3.extend(f_a.f3);
 
+        let value = match (f_ab.value, f_a.value) {
+            (Some(mut f), Some(a)) => Some(f(a)),
+            _ => None,
+        };
+
         MyCustomEffectType4 {
-            value: (f_ab.value)(f_a.value),
+            value,
             f1: None,
             f2: combined_f2,
             f3: combined_f3,
@@ -346,15 +376,25 @@ impl Monad<MyEffectHktWitness4<String, String, u64>> for MyEffectHktWitness4<Str
     where
         Func: FnOnce(A) -> MyCustomEffectType4<B, String, String, u64>,
     {
+        // Raise is a left zero: the continuation is NOT run on an errored carrier.
         if m_a.f1.is_some() {
             return MyCustomEffectType4 {
-                value: f(m_a.value).value, // Need a value of type B
+                value: None,
                 f1: m_a.f1,
                 f2: m_a.f2,
                 f3: m_a.f3,
             };
         }
-        let mut next_effect = f(m_a.value);
+        let Some(a) = m_a.value else {
+            // Absence propagates: no value, no error, effect channels preserved.
+            return MyCustomEffectType4 {
+                value: None,
+                f1: None,
+                f2: m_a.f2,
+                f3: m_a.f3,
+            };
+        };
+        let mut next_effect = f(a);
         let mut combined_f2 = m_a.f2;
         combined_f2.extend(next_effect.f2);
         next_effect.f2 = combined_f2;
@@ -459,9 +499,11 @@ impl LoggableEffect4<MyEffect4> for MyMonadEffect4 {
 /// demonstrating how to combine a primary `value`, an optional `f1` (error),
 /// a list of `f2` (logs), a list of `f3` (counters), and a list of `f4` (traces)
 /// within a single effectful context.
+/// The value slot is an `Option<T>` for the same reason as `MyCustomEffectType`: an errored
+/// carrier holds no value, so error short-circuit never runs the continuation.
 #[derive(Debug, PartialEq)]
 pub struct MyCustomEffectType5<T, F1, F2, F3, F4> {
-    pub value: T,
+    pub value: Option<T>,
     pub f1: Option<F1>,
     pub f2: Vec<F2>,
     pub f3: Vec<F3>,
@@ -508,7 +550,7 @@ impl Functor<MyEffectHktWitness5<String, String, u64, String>>
         Func: FnOnce(A) -> B,
     {
         MyCustomEffectType5 {
-            value: f(m_a.value),
+            value: m_a.value.map(f),
             f1: m_a.f1,
             f2: m_a.f2,
             f3: m_a.f3,
@@ -522,7 +564,7 @@ impl Pure<MyEffectHktWitness5<String, String, u64, String>>
 {
     fn pure<T>(value: T) -> MyCustomEffectType5<T, String, String, u64, String> {
         MyCustomEffectType5 {
-            value,
+            value: Some(value),
             f1: None,
             f2: Vec::new(),
             f3: Vec::new(),
@@ -535,15 +577,16 @@ impl Applicative<MyEffectHktWitness5<String, String, u64, String>>
     for MyEffectHktWitness5<String, String, u64, String>
 {
     fn apply<A, B, Func>(
-        mut f_ab: MyCustomEffectType5<Func, String, String, u64, String>,
+        f_ab: MyCustomEffectType5<Func, String, String, u64, String>,
         f_a: MyCustomEffectType5<A, String, String, u64, String>,
     ) -> MyCustomEffectType5<B, String, String, u64, String>
     where
         Func: FnMut(A) -> B,
     {
+        // Error short-circuits: no value is produced and the function is NOT run.
         if f_ab.f1.is_some() {
             return MyCustomEffectType5 {
-                value: (f_ab.value)(f_a.value),
+                value: None,
                 f1: f_ab.f1,
                 f2: f_ab.f2,
                 f3: f_ab.f3,
@@ -552,7 +595,7 @@ impl Applicative<MyEffectHktWitness5<String, String, u64, String>>
         }
         if f_a.f1.is_some() {
             return MyCustomEffectType5 {
-                value: (f_ab.value)(f_a.value),
+                value: None,
                 f1: f_a.f1,
                 f2: f_a.f2,
                 f3: f_a.f3,
@@ -569,8 +612,13 @@ impl Applicative<MyEffectHktWitness5<String, String, u64, String>>
         let mut combined_f4 = f_ab.f4;
         combined_f4.extend(f_a.f4);
 
+        let value = match (f_ab.value, f_a.value) {
+            (Some(mut f), Some(a)) => Some(f(a)),
+            _ => None,
+        };
+
         MyCustomEffectType5 {
-            value: (f_ab.value)(f_a.value),
+            value,
             f1: None,
             f2: combined_f2,
             f3: combined_f3,
@@ -589,16 +637,27 @@ impl Monad<MyEffectHktWitness5<String, String, u64, String>>
     where
         Func: FnOnce(A) -> MyCustomEffectType5<B, String, String, u64, String>,
     {
+        // Raise is a left zero: the continuation is NOT run on an errored carrier.
         if m_a.f1.is_some() {
             return MyCustomEffectType5 {
-                value: f(m_a.value).value, // Need a value of type B
+                value: None,
                 f1: m_a.f1,
                 f2: m_a.f2,
                 f3: m_a.f3,
                 f4: m_a.f4,
             };
         }
-        let mut next_effect = f(m_a.value);
+        let Some(a) = m_a.value else {
+            // Absence propagates: no value, no error, effect channels preserved.
+            return MyCustomEffectType5 {
+                value: None,
+                f1: None,
+                f2: m_a.f2,
+                f3: m_a.f3,
+                f4: m_a.f4,
+            };
+        };
+        let mut next_effect = f(a);
 
         let mut combined_f2 = m_a.f2;
         combined_f2.extend(next_effect.f2);

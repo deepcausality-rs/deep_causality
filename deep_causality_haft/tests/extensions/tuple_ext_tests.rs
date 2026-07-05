@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Bifunctor, Promonad};
+use deep_causality_haft::{Bifunctor, MonoidalMerge};
 use deep_causality_haft::{Tuple2Witness, Tuple3Witness};
 
 #[test]
@@ -33,10 +33,4 @@ fn test_tuple3_merge() {
     let t2 = (10, 20, 30);
     let res = Tuple3Witness::merge(t1, t2, |a, b| a + b);
     assert_eq!(res, (11, 22, 33));
-}
-
-#[test]
-#[should_panic(expected = "Tuple3Witness::fuse is not supported")]
-fn test_tuple3_fuse_panic() {
-    let _: (i32, i32, i32) = Tuple3Witness::fuse(1, 2);
 }

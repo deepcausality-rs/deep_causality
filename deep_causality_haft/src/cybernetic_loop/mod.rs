@@ -11,6 +11,12 @@ use crate::{HKT5Unbound, Satisfies};
 /// This models a **Feedback Loop** in a Monoidal Category, often represented using **String Diagrams**.
 /// It closes the loop between Sensing, Processing, and Actuation, accounting for Entropy.
 ///
+/// The trait is a typed interface; its one provable structural fact is that `control_step`
+/// factors as a Kleisli composite in the error monad —
+/// `(pure ∘ observe) >=> (pure ∘ decide)` — i.e. the Observe→Decide chaining is monadic
+/// sequencing, not a new primitive. Machine-checked in
+/// `lean/DeepCausalityFormal/Haft/Signatures.lean`.
+///
 /// # Components
 /// 1.  **Sensor ($S$)**: The raw input data.
 /// 2.  **Belief ($B$)**: The internal model or state estimate.

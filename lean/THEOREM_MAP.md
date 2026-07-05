@@ -52,7 +52,7 @@ deviations recorded in `../openspec/notes/causal-algebra/haft-formalization-devi
 | `haft.bifunctor.laws` | `bimap id id = id`; composition; first/second decomposition | proved | `Haft/Bifunctor.lean` | ✓ | n/a | — |
 | `haft.profunctor.laws` | `dimap id id = id`; contravariant-twist composition | proved | `Haft/Profunctor.lean` | ✓ | n/a | — |
 | `haft.parametric_monad.laws` | Atkey indexed monad laws (IxState carrier) | proved | `Haft/ParametricMonad.lean` | ✓ | n/a | — |
-| `haft.promonad.merge_naturality` | `merge` is binatural (lax-monoidal structure map) | proved | `Haft/Promonad.lean` | ✓ | n/a | — |
+| `haft.monoidal_merge.merge_naturality` | `merge` is binatural (lax-monoidal structure map; trait renamed from `Promonad`, D3/P-1) | proved | `Haft/MonoidalMerge.lean` | ✓ | n/a | — |
 | `haft.arrow.category_laws` | `id>>>f = f`; `f>>>id = f`; `>>>` associative | proved | `Haft/Arrow.lean` | ✓ | n/a | — |
 | `haft.arrow.arr_functor` | `arr id = id`; `arr (g∘f) = arr f >>> arr g` | proved | `Haft/Arrow.lean` | ✓ | n/a | — |
 | `haft.arrow.strength_laws` | Hughes' five `first` laws | proved | `Haft/Arrow.lean` | ✓ | n/a | — |
@@ -70,6 +70,21 @@ deviations recorded in `../openspec/notes/causal-algebra/haft-formalization-devi
 | `haft.effect3.monad_laws` | monad laws + raise-left-zero (sum carrier) | proved | `Haft/EffectSystem.lean` | ✓ | n/a | — |
 | `haft.io.monad_laws` | monad laws on the `run` denotation | proved | `Haft/Io.lean` | ✓ | n/a | — |
 | `haft.cybernetic.kleisli_factorization` | `control_step` = Kleisli composite | proved | `Haft/Signatures.lean` | ✓ | n/a | — |
+
+### Topology layer (`deep_causality_topology`)
+
+Opened by proposal P-3 of the haft deviations note: the `RiemannMap` trait is a bare
+signature; the curvature laws live at the concrete `CurvatureTensor`
+(`deep_causality_topology/src/types/curvature_tensor/`). Lean files under
+`DeepCausalityFormal/Topology/`; Rust witnesses in
+`deep_causality_topology/tests/types/curvature_tensor/curvature_tensor_law_tests.rs`.
+Reference: do Carmo, *Riemannian Geometry*, Ch. 4.
+
+| id | statement | Lean | Lean location | Test | Kani | Aeneas |
+|---|---|---|---|---|---|---|
+| `topology.curvature.antisymmetry` | `R(u,v)w = −R(v,u)w` | proved | `Topology/RiemannCurvature.lean` | ✓ | n/a | — |
+| `topology.curvature.bianchi_first` | `R(u,v)w + R(v,w)u + R(w,u)v = 0` (needs `g` symmetric) | proved | `Topology/RiemannCurvature.lean` | ✓ | n/a | — |
+| `topology.curvature.linearity` | additivity + homogeneity in the transported slot | proved | `Topology/RiemannCurvature.lean` | ✓ | n/a | — |
 
 ## Not yet on the map (blocked / scaling — see Formalization.md work plan)
 

@@ -5,8 +5,8 @@
 use crate::{Functor, HKT, Pure, Satisfies};
 
 pub(crate) mod comonad;
+pub(crate) mod monoidal_merge;
 pub(crate) mod parametric_monad;
-pub(crate) mod promonad;
 
 /// The `Monad` trait extends `Functor` and `Pure` by providing the `bind` operation
 /// for sequencing computations that produce effectful values.
@@ -26,9 +26,18 @@ pub(crate) mod promonad;
 ///
 /// # Laws (Informal)
 ///
+/// The Kleisli-triple laws (Moggi, *Notions of computation and monads*, 1991):
+///
 /// 1.  **Left Identity**: `bind(pure(a), f) == f(a)`
 /// 2.  **Right Identity**: `bind(m, pure) == m`
 /// 3.  **Associativity**: `bind(bind(m, f), g) == bind(m, |x| bind(f(x), g))`
+/// 4.  **Applicative coherence** (only for witnesses that also implement `Applicative`):
+///     `apply(f_ab, f_a) == bind(f_ab, |f| fmap(f_a, f))` — the applicative that the monad
+///     induces must agree with the hand-written `apply`. This obligation is the price of the
+///     `Monad: Functor + Pure` hierarchy (in place of Haskell's `Monad: Applicative`).
+///
+/// Laws are stated for pure functions; a stateful `FnMut` closure voids them.
+/// Machine-checked in `lean/DeepCausalityFormal/Haft/Monad.lean`.
 ///
 /// # Type Parameters
 ///

@@ -26,7 +26,7 @@ lean/
   README.md
 ```
 
-The module tree mirrors the Rust crate tiers: `Num` → `Haft` → `Core`.
+The module tree mirrors the Rust crate tiers: `Num` → `Haft` → `Core` → `Topology`.
 
 ## Build
 

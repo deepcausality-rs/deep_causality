@@ -38,6 +38,8 @@ mod io_tests;
 #[cfg(test)]
 mod monad_tests;
 #[cfg(test)]
+mod monoidal_merge_tests;
+#[cfg(test)]
 mod morphism_tests;
 #[cfg(test)]
 mod natural_iso_tests;
@@ -45,8 +47,6 @@ mod natural_iso_tests;
 mod parametric_monad_tests;
 #[cfg(test)]
 mod profunctor_tests;
-#[cfg(test)]
-mod promonad_tests;
 #[cfg(test)]
 mod pure_tests;
 #[cfg(test)]

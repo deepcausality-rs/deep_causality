@@ -16,17 +16,16 @@ with bind semantics matching the docstring: "If effect contains an error, the er
 propagated. Otherwise f is applied and warnings are combined." The monad laws hold
 (Moggi 1991; the Writer monoid is `List` under append, Wadler 1995 §2.7).
 
-TWO DEVIATION NOTES against this model:
-1. The trait bounds `bind` with `U: Default` — the mathematical bind needs no such constraint.
-   The bound exists because implementors carry `value` and `error` in PRODUCT position (a `U`
-   must be manufactured in the error branch). In the sum encoding below (`Except`), no default
-   is needed. This is the same value/error-product defect as the core carrier's W-invariant
-   (Formalization.md, precondition P2).
-2. The crate's reference implementation (`src/utils_tests.rs`, `MyCustomEffectType::bind`)
-   RUNS THE CONTINUATION when an error is present (`value: f(m_a.value).value`), keeping its
-   value and dropping its warnings — violating the documented error-propagation semantics
-   (raise must be a left zero: `bind (raise e) f = raise e`, with `f` not invoked). The model
-   below has the lawful semantics; the recommendation is to fix the reference implementation.
+DEVIATION NOTES against this model:
+1. RESOLVED — the trait previously bounded `bind` with `U: Default`, which the mathematical
+   bind does not have; the bound existed only so product-encoded carriers could manufacture a
+   `U` in the error branch (the same value/error-product defect as the core carrier's
+   W-invariant, Formalization.md precondition P2). The bound has been removed from
+   `MonadEffect3/4/5` (deviations note, D6/P-2); the sum encoding below never needed it.
+2. RESOLVED — the crate's reference implementation (`src/utils_tests.rs`) previously RAN THE
+   CONTINUATION when an error was present, violating raise-as-left-zero
+   (`bind (raise e) f = raise e`, `f` not invoked). The carriers now hold `value: Option<T>`
+   and short-circuit lawfully; `bind3_raise_left_zero` below is the law they implement.
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
@@ -87,8 +86,8 @@ theorem bind3_assoc (m : Eff3 E Λ T) (f : T → Eff3 E Λ U) (g : U → Eff3 E 
       | ok u => simp [bind3, h, List.append_assoc]
 
 /-- Raise is a left zero: an errored carrier short-circuits — `f` is never consulted, its
-    effects cannot leak. This is the law the reference implementation in `utils_tests.rs`
-    violates (deviation note 2 above). -/
+    effects cannot leak. The reference implementation in `utils_tests.rs` now implements
+    exactly this semantics (deviation note 2 above, resolved). -/
 theorem bind3_raise_left_zero (e : E) (l : List Λ) (f : T → Eff3 E Λ U) :
     bind3 ⟨.error e, l⟩ f = ⟨.error e, l⟩ := rfl
 

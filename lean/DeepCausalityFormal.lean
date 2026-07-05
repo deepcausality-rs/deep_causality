@@ -5,9 +5,10 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 Root module of the DeepCausality formalization (Lean 4 + Mathlib).
 
 Layered to mirror the Rust crate tiers:
-  * `Num`  — foundational algebraic laws (monoid/group/ring/field), mirroring `deep_causality_num`.
-  * `Haft` — HKT / functor / monad laws, mirroring `deep_causality_haft`  (scaling work).
-  * `Core` — the Causal Monad `pure`/`bind` laws, mirroring `deep_causality_core`.
+  * `Num`      — foundational algebraic laws (monoid/group/ring/field), mirroring `deep_causality_num`.
+  * `Haft`     — HKT / functor / monad / arrow laws, mirroring `deep_causality_haft`.
+  * `Core`     — the Causal Monad `pure`/`bind` laws, mirroring `deep_causality_core`.
+  * `Topology` — curvature-tensor laws at the concrete carriers, mirroring `deep_causality_topology`.
 
 Each theorem is bound to a Rust witness via `lean/THEOREM_MAP.md`. See `lean/README.md`.
 
@@ -26,8 +27,8 @@ import DeepCausalityFormal.Haft.Monad
 import DeepCausalityFormal.Haft.Comonad
 import DeepCausalityFormal.Haft.Bifunctor
 import DeepCausalityFormal.Haft.Profunctor
+import DeepCausalityFormal.Haft.MonoidalMerge
 import DeepCausalityFormal.Haft.ParametricMonad
-import DeepCausalityFormal.Haft.Promonad
 import DeepCausalityFormal.Haft.Arrow
 import DeepCausalityFormal.Haft.Morphism
 import DeepCausalityFormal.Haft.Endomorphism
@@ -39,3 +40,4 @@ import DeepCausalityFormal.Haft.Either
 import DeepCausalityFormal.Haft.EffectSystem
 import DeepCausalityFormal.Haft.Io
 import DeepCausalityFormal.Haft.Signatures
+import DeepCausalityFormal.Topology.RiemannCurvature

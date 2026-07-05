@@ -58,7 +58,6 @@ impl MonadEffect3<LawfulEffect> for LawfulMonadEffect3 {
     fn bind<T, U, Func>(effect: LawfulEff<T>, mut f: Func) -> LawfulEff<U>
     where
         Func: FnMut(T) -> LawfulEff<U>,
-        U: Default, // required by the trait; UNUSED here — the sum carrier needs no default
     {
         match effect.result {
             Err(e) => LawfulEff {
@@ -129,7 +128,7 @@ fn test_effect3_monad_laws() {
     );
 
     // Raise is a left zero: f must NOT run on an errored carrier
-    // (the property the reference impl in utils_tests.rs violates — deviation D7)
+    // (deviation D7, now also implemented by the reference carriers in utils_tests.rs)
     let mut ran = false;
     let errored = LawfulEff::<i32> {
         result: Err("e".to_string()),

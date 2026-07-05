@@ -30,14 +30,21 @@ use crate::{Applicative, Foldable, Functor, HKT, Satisfies};
 /// # Laws (Informal)
 ///
 /// `Traversable` laws are typically expressed in terms of `sequence` and `traverse`
-/// (which can be defined in terms of `sequence` and `fmap`, or vice-versa).
+/// (which can be defined in terms of `sequence` and `fmap`, or vice-versa). References:
+/// McBride & Paterson, JFP 18(1) 2008 §3; Jaskelioff & Rypacek, MSFP 2012.
 ///
-/// 1.  **Naturality**: `t.sequence.map(f) == t.map(m.map(f)).sequence`
-///     (Mapping over the result is the same as mapping inside the monadic value then sequencing).
-/// 2.  **Identity**: `t.sequence == t.map(id).sequence`
-///     (Sequencing a structure of identity monads is the structure itself).
+/// 1.  **Naturality**: for every applicative morphism `phi: M -> N` (preserving `pure` and
+///     `apply`), `phi(t.sequence::<M>()) == t.map(phi).sequence::<N>()`
+///     (post-processing the result equals pre-processing each element).
+/// 2.  **Identity**: `t.map(Identity::new).sequence::<Identity>() == Identity::new(t)`
+///     (sequencing at the *Identity applicative* is the identity — note: the weaker phrasing
+///     `t.sequence == t.map(id).sequence` is vacuously true by the Functor law and
+///     constrains nothing).
 /// 3.  **Composition**: `t.map(compose).sequence == t.sequence.sequence`
 ///     (Sequencing over a composite structure is equivalent to composing the sequenced results).
+///
+/// Laws are stated for pure functions; a stateful `FnMut` closure voids them.
+/// Laws 1–2 are machine-checked in `lean/DeepCausalityFormal/Haft/Traversable.lean`.
 ///
 /// # Type Parameters
 ///

@@ -9,8 +9,13 @@ use crate::{HKT4Unbound, Satisfies};
 /// Riemann Curvature Tensor and Scattering Matrices.
 ///
 /// # Category Theory
-/// This corresponds to a **Multilinear Map** in a Tensor Category.
-/// Specifically, the Curvature Tensor is a map $R: V \otimes V \otimes V \to V$.
+/// This is a **typed interface** (a signature) for rank-4 interactions shaped like a
+/// multilinear map $R: V \otimes V \otimes V \to V$. The trait itself carries no equational
+/// theory: multilinearity (additivity/homogeneity per argument) and the curvature symmetries
+/// (antisymmetry $R(u,v)w = -R(v,u)w$, first Bianchi identity — do Carmo, *Riemannian
+/// Geometry*, Ch. 4) are properties of concrete implementations whose types carry algebra
+/// (`deep_causality_topology` / `deep_causality_physics`), and are to be stated and tested
+/// there.
 ///
 /// # Mathematical Definition
 /// The Riemann Curvature Tensor $R$ is defined in terms of the covariant derivative $\nabla$:
