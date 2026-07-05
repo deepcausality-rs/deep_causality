@@ -1,0 +1,151 @@
+deep_causality_haft/src/riemann_map/mod.rs
+  s_cefbd789296ae8::t_b66a461981ea8f 12-18
+deep_causality_haft/src/pure/mod.rs
+  s_cefbd789296ae8::t_3a88edd67a0989 12-18
+deep_causality_topology/src/extensions/hkt_gauge/mod.rs
+  s_cefbd789296ae8::t_2cbd6d49ab30b3 8
+deep_causality_topology/src/extensions/hkt_gauge/hkt_gauge_witness.rs
+  s_cefbd789296ae8::t_8d62e8c682fa9b 15
+  s_cefbd789296ae8::t_205c6cca271648 6
+  s_cefbd789296ae8::t_eef59cdbe72fef 159,169
+  s_cefbd789296ae8::t_a5226a5ff4669d 130,133
+  s_cefbd789296ae8::t_af8ad3b62ed7a6 146
+deep_causality_haft/tests/algebra/monoidal_merge_tests.rs
+  s_cefbd789296ae8::t_fa40c200e83ca6 6-34
+deep_causality_haft/tests/hkt/hkt_unbound_tests.rs
+  s_cefbd789296ae8::t_acadadede0b16d 100,109,122
+deep_causality_haft/src/lib.rs
+  s_cefbd789296ae8::t_2cbd6d49ab30b3 107
+deep_causality_topology/tests/types/curvature_tensor/mod.rs
+  s_cefbd789296ae8::t_f55864251053fd 7
+  s_cefbd789296ae8::t_d533cd14b53290 6
+deep_causality_haft/src/monad/mod.rs
+  s_cefbd789296ae8::t_15ef887f87faf5 8
+  s_cefbd789296ae8::t_80eb181064fb38 29-30,34-40
+deep_causality_haft/src/foldable/mod.rs
+  s_cefbd789296ae8::t_5ece35f04ff95e 16-20
+deep_causality_haft/examples/effect_system.rs
+  s_cefbd789296ae8::t_c7984af5c5869e 56,58,67
+  s_cefbd789296ae8::t_40ec07b7cb9b24 121
+  s_cefbd789296ae8::t_720d96343a1cca 133,141-143,154,158-160
+  s_cefbd789296ae8::t_d1c94b517c61bf 116
+  s_cefbd789296ae8::t_6a76e16e87414a 93
+  s_cefbd789296ae8::t_a8a55bdcffa450 45-48
+  s_cefbd789296ae8::t_fd4cad0cb6e78a 81
+deep_causality_haft/src/effect_system/monad_effect.rs
+  s_cefbd789296ae8::t_65205251bec3cd 192
+  s_cefbd789296ae8::t_bb1d6e724e4b1f 65
+  s_cefbd789296ae8::t_3458cf0cee17e1 125
+deep_causality_haft/src/functor/functor_base.rs
+  s_cefbd789296ae8::t_00ef4e8e0f619b 26-29
+lean/DeepCausalityFormal/Topology/RiemannCurvature.lean
+  s_cefbd789296ae8::t_f2752c4803dae6 1-106
+lean/DeepCausalityFormal.lean
+  s_cefbd789296ae8::t_edffa9fa7b0034 8-11
+  s_cefbd789296ae8::t_7cc1ae59f47138 43
+  s_cefbd789296ae8::t_6e2380b701b77b 30
+deep_causality_topology/tests/types/curvature_tensor/curvature_tensor_law_tests.rs
+  s_cefbd789296ae8::t_9b462ce54ae3db 1-143
+lean/README.md
+  s_cefbd789296ae8::t_778e67606d4971 29
+deep_causality_haft/src/functor/bifunctor.rs
+  s_cefbd789296ae8::t_17421dd4214912 23-25
+deep_causality_haft/tests/formalization_lean/monoidal_merge_tests.rs
+  s_cefbd789296ae8::t_455b306b93cf59 6-34
+deep_causality_haft/src/applicative/mod.rs
+  s_cefbd789296ae8::t_f73df8d10297f2 27-29,31-42
+deep_causality_haft/tests/utils_tests.rs
+  s_cefbd789296ae8::t_71b109ef75de15 17,21,28-30,34,45,49,56,60,68,73,80-83,88,98,106,111,116,126-127,132,137,145,149-150,155,162-163,167-168,173,183,188,192,199-201,205-212,214-215,223,228,232-233,238-260,266,276,280,291,302,307,315-317,322,334,339,347,352,360,366,374-376,382,393,402,408,414,422-423,429,435,444,449-450,456,464-465,470-471,477,488,494,499,507-509,514-522,524-525,534,540,545,556,568,573,585,597,603,612-614,620,633,639,651,657,665,672,681-683,690,702,712,719,726,735-742,744,751,761,767-768,775,784-793,800,812,819,825,834-836,842-851,853-854,864,871,877,889,903,909,922
+deep_causality_haft/tests/extensions/tuple_ext_tests.rs
+  s_cefbd789296ae8::t_68214ef0a66cb3 6
+lean/DeepCausalityFormal/Haft/MonoidalMerge.lean
+  s_cefbd789296ae8::t_1f028d6f641a9b 5-54
+deep_causality_haft/src/functor/profunctor.rs
+  s_cefbd789296ae8::t_af0a1db70f4b5c 22-33
+deep_causality_haft/tests/effect_system/monad_effect_tests.rs
+  s_cefbd789296ae8::t_aefac8b50c9f74 18,23,29,34,41-43,49,59-72,87,95,105,116,123,137,158,167,178,190
+  s_cefbd789296ae8::t_f2b56a08e5d884 124-130
+deep_causality_haft/src/monad/monoidal_merge.rs
+  s_cefbd789296ae8::t_fa08c5ba87a0fa 8-9,12-15,17-31,37
+deep_causality_haft/src/traversable/mod.rs
+  s_cefbd789296ae8::t_4b35ce0e421ec5 33-42,46-47
+  s_cefbd789296ae8::t_e50a9d2932d1be 48
+examples/mathematics_examples/tensor/effect_system_causal_tensor.rs
+  s_cefbd789296ae8::t_6ac850383fa460 52
+  s_cefbd789296ae8::t_40ec07b7cb9b24 82-84
+  s_cefbd789296ae8::t_d22958eeb1d8dd 118-121
+  s_cefbd789296ae8::t_88766bd189cff1 68,85-91,93-94,100-101
+deep_causality_topology/tests/extensions/hkt_gauge_field_tests.rs
+  s_cefbd789296ae8::t_ee614bed00d421 163
+  s_cefbd789296ae8::t_d177527e24901d 6
+  s_cefbd789296ae8::t_62fe6fd5547a0e 133
+deep_causality_haft/examples/unbound_haft.rs
+  s_cefbd789296ae8::t_2cbd6d49ab30b3 8,100,106
+  s_cefbd789296ae8::t_613a0e7a5049a1 7
+deep_causality_haft/src/cybernetic_loop/mod.rs
+  s_cefbd789296ae8::t_51cfeb572b8e0a 14-19
+deep_causality_haft/tests/formalization_lean/effect_system_tests.rs
+  s_cefbd789296ae8::t_e23935689789b5 131
+deep_causality_haft/LEAN_HAFT.md
+  s_cefbd789296ae8::t_2eba1d0477d8f5 1-16,18-113
+  s_cefbd789296ae8::t_8d9accb0f8bd19 17
+lean/THEOREM_MAP.md
+  s_cefbd789296ae8::t_18e0d3444158a1 74-88
+  s_cefbd789296ae8::t_70cafbbc96cac7 55
+deep_causality_haft/src/utils_tests.rs
+  s_cefbd789296ae8::t_04af9f59077b6a 580,586,589,598,615-619,621
+  s_cefbd789296ae8::t_61d190a03a1732 640,643,650-660
+  s_cefbd789296ae8::t_9187bc1450b017 553
+  s_cefbd789296ae8::t_097e60c1225b16 30-35,38
+  s_cefbd789296ae8::t_c09b1e880d6977 304
+  s_cefbd789296ae8::t_5c87da6165c9f0 502-503,506
+  s_cefbd789296ae8::t_49919b3ec90e62 80
+  s_cefbd789296ae8::t_575471e8df6bc7 567
+  s_cefbd789296ae8::t_6d1b88c9ebf4ef 90
+  s_cefbd789296ae8::t_784d994e70d069 327,333,336,344,357-361,363
+  s_cefbd789296ae8::t_4e45dca2490580 99,105,108,115,124-128,130
+  s_cefbd789296ae8::t_9a753d55a961f8 145-146,149,154-162
+  s_cefbd789296ae8::t_33f1db0df3f574 315
+  s_cefbd789296ae8::t_653d4d480ec4e9 255-256,259
+  s_cefbd789296ae8::t_d820c80e87872c 379,382,388-397
+.github/workflows/formalization.yml
+  s_cefbd789296ae8::t_bc0c5c689174cf 68
+lean/DeepCausalityFormal/Haft/EffectSystem.lean
+  s_cefbd789296ae8::t_b14cb07e3033ff 19,25-28
+  s_cefbd789296ae8::t_c82a436b57acf0 20-24
+  s_cefbd789296ae8::t_b20a8815d707d1 89-90
+openspec/notes/causal-algebra/haft-formalization-deviations.md
+  s_cefbd789296ae8::t_91e99dfa340039 22-26
+  s_cefbd789296ae8::t_281760093ca28e 66,69-74
+  s_cefbd789296ae8::t_fb82496586e5bd 149-153
+  s_cefbd789296ae8::t_0aae1ef03d004b 122,124-136
+  s_cefbd789296ae8::t_af7b691cb89378 36,51-65,67-68,75-86,88,94-121,123,137-148,154-190
+  s_cefbd789296ae8::t_c78c8dc4697cc3 87,89-93
+deep_causality_haft/tests/formalization_lean/mod.rs
+  s_cefbd789296ae8::t_df1430af8e50dd 41-42
+deep_causality_haft/src/extensions/hkt_tuple_ext.rs
+  s_cefbd789296ae8::t_d1d12c38427a58 6
+  s_cefbd789296ae8::t_6f46a54ca0659c 42
+deep_causality_physics/src/theories/mod.rs
+  s_cefbd789296ae8::t_2cbd6d49ab30b3 45
+deep_causality_haft/src/monad/comonad.rs
+  s_cefbd789296ae8::t_aeadf86db7f64d 40-43
+deep_causality_haft/tests/algebra/mod.rs
+  s_cefbd789296ae8::t_40461665712a26 29-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5eebc07e3b947aaea0ca6975fa6e764820acb753",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
