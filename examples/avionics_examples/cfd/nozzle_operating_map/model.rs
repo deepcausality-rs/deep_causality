@@ -7,12 +7,16 @@
 //! gas-dynamics references every gate compares against, and the one reduced-row struct.
 
 use crate::FloatType;
-use crate::constants::{EXIT_AREA_M2, GAMMA, INLET_AREA_M2, LENGTH_M, T0_K, THROAT_AREA_M2};
+use crate::constants::{
+    AREA_MACH_BAND, CELLS, EXIT_AREA_M2, GAMMA, INLET_AREA_M2, LENGTH_M, NO_SHOCK_SENTINEL_M, T0_K,
+    THROAT_AREA_M2,
+};
 use avionics_examples::shared::utils::ft;
-use deep_causality_cfd::{CfdFlow, FittedNormalShock, PhysicsError};
+use deep_causality_cfd::{CaseRun, DuctConfig, FittedNormalShock, GateSeq, PhysicsError, StudyView, TableRow};
 use deep_causality_physics::area_mach_ratio_kernel;
 
 /// One swept back pressure's reduced result, all in the working precision.
+#[derive(Clone)]
 pub struct MapRow {
     /// The swept ratio `p_back / p0`.
     pub p_ratio: FloatType,
@@ -28,11 +32,31 @@ pub struct MapRow {
     pub area_mach_dev: Option<FloatType>,
 }
 
-/// March one back pressure and reduce the report to a [`MapRow`] (execution; the case
-/// description comes from [`model_config`](crate::model_config)).
-pub fn map_row(p_ratio: FloatType) -> Result<MapRow, PhysicsError> {
-    let config = crate::model_config::duct_case(p_ratio)?;
-    let report = CfdFlow::duct_march(&config).run()?;
+impl TableRow for MapRow {
+    type Scalar = FloatType;
+    const SCHEMA: &'static [(&'static str, &'static str)] = &[
+        ("p_back_over_p0", "-"),
+        ("mach_exit", "-"),
+        ("shock_x", "m; -1 = none"),
+        ("thrust_coefficient", "-"),
+    ];
+    fn cells(&self) -> Vec<FloatType> {
+        vec![
+            self.p_ratio,
+            self.mach_exit,
+            self.shock_x.unwrap_or(ft(NO_SHOCK_SENTINEL_M)),
+            self.cf,
+        ]
+    }
+}
+
+/// Reduce one duct march to a [`MapRow`] (the grammar's `reduce` step): the swept ratio comes
+/// from the case, the exit Mach / shock station / thrust coefficient from the report. The march
+/// itself is the grammar's `.march()`; the case description is
+/// [`model_config::duct_case`](crate::model_config::duct_case).
+pub fn map_row(run: &CaseRun<'_, FloatType, DuctConfig<FloatType>, FloatType>) -> Result<MapRow, PhysicsError> {
+    let p_ratio = *run.case();
+    let report = run.report();
 
     let x = report
         .series("x")
@@ -175,4 +199,115 @@ pub fn analytic_shock_position(back_pressure_ratio: FloatType) -> FloatType {
         }
     }
     (lo + hi) * ft(0.5)
+}
+
+// ── The operating-map gating sequence ─────────────────────────────────────────────────────────
+
+/// The nozzle's gating sequence: what the operating map must satisfy, each gate a closed-form
+/// check the solver never sees. Schedule integrity is not gated — the sweep guarantees a row per
+/// case by construction.
+pub fn nozzle_gates() -> GateSeq<MapRow> {
+    GateSeq::new("nozzle operating map")
+        .gate("choking", gate_choking)
+        .gate("shock position", gate_shock_position)
+        .gate("shock-free profiles", gate_area_mach)
+        .gate("physical thrust", gate_thrust)
+}
+
+/// Every choked row crosses Mach 1 within the stated band of the throat.
+pub fn gate_choking(view: &StudyView<'_, MapRow>) -> (bool, String) {
+    use crate::constants::SONIC_AT_THROAT_BAND_CELLS;
+    let h = ft(LENGTH_M) / ft(CELLS as f64);
+    let throat_x = ft(LENGTH_M) * ft(0.5);
+    let first_critical = subsonic_exit_pressure_ratio();
+    let band = ft(SONIC_AT_THROAT_BAND_CELLS) * h;
+    for row in view.rows() {
+        if row.p_ratio < first_critical {
+            match row.sonic_x {
+                Some(x) if (x - throat_x).abs() <= band => {}
+                Some(x) => {
+                    return (
+                        false,
+                        format!(
+                            "p_ratio {:.2}: sonic crossing at x = {x:.4} m, throat {throat_x:.4} m, band {band:.4} m",
+                            row.p_ratio
+                        ),
+                    );
+                }
+                None => {
+                    return (
+                        false,
+                        format!("p_ratio {:.2}: choked row never reaches Mach 1", row.p_ratio),
+                    );
+                }
+            }
+        }
+    }
+    (true, "every choked row crosses Mach 1 at the throat".to_string())
+}
+
+/// Every internal-shock row lands within the measured band of the closed-form shock position.
+pub fn gate_shock_position(view: &StudyView<'_, MapRow>) -> (bool, String) {
+    use crate::constants::SHOCK_BAND_CELLS;
+    let h = ft(LENGTH_M) / ft(CELLS as f64);
+    let first_critical = subsonic_exit_pressure_ratio();
+    let shock_at_exit = exit_shock_back_pressure_ratio();
+    let band = ft(SHOCK_BAND_CELLS) * h;
+    for row in view.rows() {
+        let has_analytic_shock = row.p_ratio > shock_at_exit && row.p_ratio < first_critical;
+        if has_analytic_shock {
+            let a = analytic_shock_position(row.p_ratio);
+            match row.shock_x {
+                Some(x) if (x - a).abs() <= band => {}
+                Some(x) => {
+                    return (
+                        false,
+                        format!(
+                            "p_ratio {:.2}: shock at {x:.4} m, closed form {a:.4} m, band {band:.4} m",
+                            row.p_ratio
+                        ),
+                    );
+                }
+                None => {
+                    return (
+                        false,
+                        format!(
+                            "p_ratio {:.2}: closed form places a shock at {a:.4} m, none reported",
+                            row.p_ratio
+                        ),
+                    );
+                }
+            }
+        }
+    }
+    (true, "every internal-shock row matches the closed form".to_string())
+}
+
+/// Shock-free rows track the area-Mach relation within the measured band.
+pub fn gate_area_mach(view: &StudyView<'_, MapRow>) -> (bool, String) {
+    for row in view.rows() {
+        if row.shock_x.is_none()
+            && let Some(dev) = row.area_mach_dev
+            && dev > ft(AREA_MACH_BAND)
+        {
+            return (
+                false,
+                format!(
+                    "p_ratio {:.2}: worst interior deviation {dev:.4} exceeds the {AREA_MACH_BAND} band",
+                    row.p_ratio
+                ),
+            );
+        }
+    }
+    (true, "every shock-free row tracks the area-Mach relation".to_string())
+}
+
+/// The thrust coefficient is finite and positive on every row.
+pub fn gate_thrust(view: &StudyView<'_, MapRow>) -> (bool, String) {
+    for row in view.rows() {
+        if !(row.cf.is_finite() && row.cf > ft(0.0)) {
+            return (false, format!("p_ratio {:.2}: Cf = {}", row.p_ratio, row.cf));
+        }
+    }
+    (true, "thrust coefficient finite and positive on every row".to_string())
 }

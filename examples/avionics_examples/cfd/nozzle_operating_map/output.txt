@@ -1,5 +1,3 @@
-    Finished `release` profile [optimized] target(s) in 0.06s
-     Running `target/release/examples/nozzle_operating_map`
 === Nozzle operating map: back-pressure sweep over a converging-diverging duct ===
 geometry: inlet 2 / throat 1 / exit 2 m^2 over 1 m; reservoir 300000 Pa, 500 K
 schedule: 6 back pressures from /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/nozzle_operating_map/back_pressures.csv
@@ -14,12 +12,10 @@ schedule: 6 back pressures from /Users/marvin/RustroverProjects/dcl/deep_causali
 
 operating map written to /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/nozzle_operating_map/operating_map.csv
 analytic references: first critical p/p0 = 0.9372, exit-plane shock at p/p0 = 0.5134
-wall-clock: 0.1 s
 
---- nozzle_operating_map ---
-  [PASS] schedule integrity: 6 of 6 scheduled back pressures produced a converged march
-  [PASS] choked rows reach Mach 1 at the throat: every choked row crosses Mach 1 at the throat
-  [PASS] internal shocks match the closed form: every internal-shock row matches the closed form
-  [PASS] shock-free profiles track the area-Mach relation: every shock-free row tracks the area-Mach relation
-  [PASS] thrust coefficient is physical: thrust coefficient finite and positive on every row
-=== All gates passed: nozzle_operating_map. ===
+--- nozzle operating map ---
+  [PASS] choking: every choked row crosses Mach 1 at the throat
+  [PASS] shock position: every internal-shock row matches the closed form
+  [PASS] shock-free profiles: every shock-free row tracks the area-Mach relation
+  [PASS] physical thrust: thrust coefficient finite and positive on every row
+=== All gates passed: nozzle operating map. ===

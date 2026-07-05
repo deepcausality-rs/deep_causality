@@ -32,10 +32,6 @@ members = [
     "examples/*",
 ]
 
-exclude = [
-    "examples/avionics_examples"
-]
-
 [workspace.package]
 edition = "2024"
 rust-version = "1.96.0"

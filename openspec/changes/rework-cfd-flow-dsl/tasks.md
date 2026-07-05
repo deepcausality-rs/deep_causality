@@ -62,10 +62,10 @@ design decision that cannot be resolved without its concrete consumer:
 
 ## 7. Migrate the examples
 
-- [ ] 7.1 Remove the `examples/avionics_examples` exclusion in root `Cargo.toml`; move it back into workspace members
-- [ ] 7.2 Migrate nozzle_operating_map to the grammar; diff against recorded output.txt
-- [ ] 7.3 Migrate viv_resonance_margin (example-local `WakeCase: Marchable`); diff against recorded output.txt
-- [ ] 7.4 Migrate flight_envelope_placard (matrix/FromTableRow/prepare); diff against recorded output.txt
+- [x] 7.1 Removed the `examples/avionics_examples` exclusion in root `Cargo.toml`; the shared lib builds green in the workspace again.
+- [x] 7.2 Migrated nozzle_operating_map to the grammar (the exemplar): `CfdFlow::study.read.case.march.reduce.record.gates.verdict`; config in `model_config::duct_case(&FloatType)`, reduce `model::map_row(&CaseRun)`, `MapRow: TableRow`, gating sequence `model::nozzle_gates()`, `main -> ExitCode` mapping the `Verdict`. Runs green (4/4 gates, exit 0); numbers match the recorded map (shock 0.656→0.930, M_exit 2.12, first critical 0.937, exit shock 0.513); output.txt re-recorded; clippy clean.
+- [x] 7.3 Migrated viv_resonance_margin: example-local `WakeCase: Marchable` (carries config + dt), `.case.march.reduce`, `MarginRow: TableRow`, gating sequence `model::viv_gates()`. Green — St 0.1818–0.1909 in band, margin 0.236, 3/3 gates pass, exit 0; output.txt re-recorded; clippy clean.
+- [x] 7.4 Migrated flight_envelope_placard: the pointwise path — `.matrix::<FlightPoint>` (FromTableRow) + `.prepare(shock).sweep(placard_point)` (no march), `PlacardRow: TableRow`, gating sequence `model::placard_gates()`. Default green (max q 23.7 kPa, max T0 1502 K, 2/2 pass, exit 0); the exceeds-matrix correctly FAILs naming the offender (q 85.1 kPa) and exits 1; output.txt re-recorded; clippy clean.
 - [ ] 7.5 Migrate plasma_blackout_weather (baseline/alternate/ensemble/couple/reduce_ensemble); diff against recorded output.txt
 - [ ] 7.6 Migrate plasma_blackout_corridor (fork/branch/continue_for/reduce_all/refine + leg gates via GateSeq::check + Verdict::merge); diff against recorded output.txt — the acid test
 - [ ] 7.7 Migrate the stagnation-line study and compressible_carrier_timing; diff against recorded outputs

@@ -3,14 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Console rendering and the margin gates. The boolean from [`report`] tells the caller
-//! whether to exit nonzero; all printing lives here, main.rs stays logic.
+//! Console rendering (the `inspect` seam). The gating sequence lives in `model`; all printing
+//! lives here, main.rs stays the study expression.
 
-use crate::FloatType;
-use crate::constants::{DIAMETER_M, F_STRUCT_HZ, MARGIN_MIN, ST_BAND};
+use crate::constants::{DIAMETER_M, F_STRUCT_HZ};
 use crate::model::MarginRow;
-use avionics_examples::shared::utils::ft;
-use deep_causality_cfd::Gates;
 use std::path::Path;
 
 pub fn print_intro(schedule_len: usize, schedule_path: &Path) {
@@ -40,54 +37,6 @@ pub fn print_rows(rows: &[MarginRow]) {
     println!();
 }
 
-/// The margin gates. Returns false on any regression; the caller exits nonzero.
-pub fn report(rows: &[MarginRow], scheduled: usize, table_path: &Path, elapsed_s: f64) -> bool {
+pub fn print_footer(table_path: &Path) {
     println!("margin table written to {}\n", table_path.display());
-
-    let st_ok = rows
-        .iter()
-        .all(|r| r.strouhal >= ft(ST_BAND.0) && r.strouhal <= ft(ST_BAND.1));
-    let (st_lo, st_hi) = rows.iter().fold(
-        (FloatType::INFINITY, -FloatType::INFINITY),
-        |(lo, hi), r| (lo.min(r.strouhal), hi.max(r.strouhal)),
-    );
-    let min_margin = rows
-        .iter()
-        .fold(FloatType::INFINITY, |m, r| m.min(r.margin));
-    let intact = rows.len() == scheduled
-        && rows
-            .iter()
-            .all(|r| r.f_shed_hz.is_finite() && r.strouhal > ft(0.0));
-
-    let ok = Gates::new("viv_resonance_margin")
-        .gate(
-            "strouhal band",
-            st_ok,
-            format!(
-                "extracted St in [{:.4}, {:.4}], validated band [{}, {}] for this grid",
-                Into::<f64>::into(st_lo),
-                Into::<f64>::into(st_hi),
-                ST_BAND.0,
-                ST_BAND.1
-            ),
-        )
-        .gate(
-            "resonance margin",
-            min_margin >= ft(MARGIN_MIN),
-            format!(
-                "min |f_struct - f_shed| / f_struct = {:.3}, placard minimum {MARGIN_MIN}",
-                Into::<f64>::into(min_margin)
-            ),
-        )
-        .gate(
-            "run integrity",
-            intact,
-            format!(
-                "{} of {scheduled} sweeps returned a finite, oscillating wake",
-                rows.len()
-            ),
-        )
-        .finish();
-    println!("wall-clock: {elapsed_s:.1} s");
-    ok
 }

@@ -1,6 +1,3 @@
-   Compiling avionics_examples v0.1.0 (/Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples)
-    Finished `release` profile [optimized] target(s) in 7.72s
-     Running `target/release/examples/viv_resonance_margin`
 === Vortex-shedding resonance margin: airspeed sweep over a circular member ===
 member D = 2.0 mm, structural mode f_struct = 150 Hz (stated demonstration value)
 schedule: 4 airspeeds from /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/viv_resonance_margin/airspeeds.csv
@@ -13,9 +10,8 @@ airspeed [m/s]   Re      St      f_shed [Hz]   margin
 
 margin table written to /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/viv_resonance_margin/viv_resonance_margin.csv
 
---- viv_resonance_margin ---
+--- vortex-shedding resonance margin ---
   [PASS] strouhal band: extracted St in [0.1818, 0.1909], validated band [0.16, 0.21] for this grid
   [PASS] resonance margin: min |f_struct - f_shed| / f_struct = 0.236, placard minimum 0.15
-  [PASS] run integrity: 4 of 4 sweeps returned a finite, oscillating wake
-=== All gates passed: viv_resonance_margin. ===
-wall-clock: 129.3 s
+  [PASS] finite wake: 4 sweeps returned a finite, oscillating wake
+=== All gates passed: vortex-shedding resonance margin. ===

@@ -7,13 +7,14 @@
 //! struct. Case configuration lives in `model_config`; tuned values in `constants`.
 
 use crate::FloatType;
-use crate::constants::{DIAMETER_M, F_STRUCT_HZ, NU_AIR_M2_S};
+use crate::constants::{DIAMETER_M, F_STRUCT_HZ, MARGIN_MIN, NU_AIR_M2_S, ST_BAND};
+use crate::model_config::WakeCase;
 use avionics_examples::shared::utils::ft;
-use deep_causality_cfd::{CfdFlow, strouhal_number};
-use deep_causality_physics::PhysicsError;
+use deep_causality_cfd::{CaseRun, GateSeq, PhysicsError, StudyView, TableRow, strouhal_number};
 use std::path::{Path, PathBuf};
 
 /// One swept airspeed's reduced result, all in the working precision.
+#[derive(Clone)]
 pub struct MarginRow {
     /// Airspeed, m/s (the swept input).
     pub airspeed: FloatType,
@@ -27,16 +28,39 @@ pub struct MarginRow {
     pub margin: FloatType,
 }
 
-/// One airspeed's wake march and reduction (execution): march the case described by
-/// [`model_config::wake_case`](crate::model_config::wake_case), extract the Strouhal number
-/// from the probe tail, and dimensionalize the shedding frequency and margin.
-pub fn margin_row(airspeed: FloatType) -> Result<MarginRow, PhysicsError> {
-    let reynolds = airspeed * ft(DIAMETER_M) / ft(NU_AIR_M2_S);
-    let (case, dt) = crate::model_config::wake_case(reynolds)?;
+impl TableRow for MarginRow {
+    type Scalar = FloatType;
+    const SCHEMA: &'static [(&'static str, &'static str)] = &[
+        ("airspeed", "m/s"),
+        ("reynolds", "-"),
+        ("strouhal", "-"),
+        ("shedding_frequency", "Hz"),
+        ("margin", "-"),
+    ];
+    fn cells(&self) -> Vec<FloatType> {
+        vec![
+            self.airspeed,
+            self.reynolds,
+            self.strouhal,
+            self.f_shed_hz,
+            self.margin,
+        ]
+    }
+}
 
-    // One-shot geometry: each swept case owns a fresh grid, so `run_owned` materializes
-    // internally and drops it with the run.
-    let report = CfdFlow::march(&case).run_owned()?;
+/// Reduce one airspeed's wake march to a [`MarginRow`] (the grammar's `reduce` step): the
+/// airspeed comes from the case, the sampling `dt` from the [`WakeCase`], the probe series from
+/// the report. Extract the Strouhal number from the probe's developed tail, then dimensionalize
+/// the shedding frequency and margin. The march itself is the grammar's `.march()` over the
+/// example-local `WakeCase: Marchable`.
+pub fn margin_row(
+    run: &CaseRun<'_, FloatType, WakeCase, FloatType>,
+) -> Result<MarginRow, PhysicsError> {
+    let airspeed = *run.case();
+    let dt = run.config().dt();
+    let report = run.report();
+
+    let reynolds = airspeed * ft(DIAMETER_M) / ft(NU_AIR_M2_S);
     let probe = report.series("probe").ok_or_else(|| {
         PhysicsError::PhysicalInvariantBroken("viv-wake: no probe series in the report".into())
     })?;
@@ -58,6 +82,69 @@ pub fn margin_row(airspeed: FloatType) -> Result<MarginRow, PhysicsError> {
         f_shed_hz,
         margin,
     })
+}
+
+// ── The resonance-margin gating sequence ──────────────────────────────────────────────────────
+
+/// The margin study's gating sequence: the extracted Strouhal numbers sit in the validated band,
+/// the resonance margin clears the placard, and every swept wake is a finite oscillation.
+pub fn viv_gates() -> GateSeq<MarginRow> {
+    GateSeq::new("vortex-shedding resonance margin")
+        .gate("strouhal band", gate_strouhal_band)
+        .gate("resonance margin", gate_resonance_margin)
+        .gate("finite wake", gate_finite_wake)
+}
+
+/// Every extracted Strouhal number sits in the validated band for this grid.
+pub fn gate_strouhal_band(view: &StudyView<'_, MarginRow>) -> (bool, String) {
+    let ok = view
+        .rows()
+        .iter()
+        .all(|r| r.strouhal >= ft(ST_BAND.0) && r.strouhal <= ft(ST_BAND.1));
+    let (st_lo, st_hi) = view.rows().iter().fold(
+        (FloatType::INFINITY, -FloatType::INFINITY),
+        |(lo, hi), r| (lo.min(r.strouhal), hi.max(r.strouhal)),
+    );
+    (
+        ok,
+        format!(
+            "extracted St in [{:.4}, {:.4}], validated band [{}, {}] for this grid",
+            Into::<f64>::into(st_lo),
+            Into::<f64>::into(st_hi),
+            ST_BAND.0,
+            ST_BAND.1
+        ),
+    )
+}
+
+/// The minimum resonance margin clears the placard.
+pub fn gate_resonance_margin(view: &StudyView<'_, MarginRow>) -> (bool, String) {
+    let min_margin = view
+        .rows()
+        .iter()
+        .fold(FloatType::INFINITY, |m, r| m.min(r.margin));
+    (
+        min_margin >= ft(MARGIN_MIN),
+        format!(
+            "min |f_struct - f_shed| / f_struct = {:.3}, placard minimum {MARGIN_MIN}",
+            Into::<f64>::into(min_margin)
+        ),
+    )
+}
+
+/// Every swept wake returned a finite, oscillating result.
+pub fn gate_finite_wake(view: &StudyView<'_, MarginRow>) -> (bool, String) {
+    let ok = view
+        .rows()
+        .iter()
+        .all(|r| r.f_shed_hz.is_finite() && r.strouhal > ft(0.0));
+    (
+        ok,
+        format!(
+            "{} sweeps returned a finite, oscillating wake",
+            view.rows().len()
+        ),
+    )
 }
 
 /// A file next to this example's sources, resolved from the crate manifest so the example runs

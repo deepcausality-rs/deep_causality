@@ -3,18 +3,19 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Configuration construction (the "what"): the nondimensional validated cylinder-wake case
-//! at one Reynolds number. Execution stays in `model`; tuned values stay in `constants`.
+//! Configuration construction (the "what"): one nondimensional validated cylinder-wake case per
+//! swept airspeed. Execution stays in `model`; tuned values stay in `constants`.
 
 use crate::FloatType;
 use crate::constants::{
-    CELLS_PER_D, CENTER_OFFSET_D, CENTER_X_D, CFL, CG_TOL, LX_D, LY_D, MERGE_FLOOR, STEPS,
+    CELLS_PER_D, CENTER_OFFSET_D, CENTER_X_D, CFL, CG_TOL, DIAMETER_M, LX_D, LY_D, MERGE_FLOOR,
+    NU_AIR_M2_S, STEPS,
 };
 use avionics_examples::shared::utils::ft;
 use deep_causality_cfd::{
-    Body, CfdConfigBuilder, Inflow, MarchConfig, Mesh, Observe, Outflow, Seed, SlipWall,
+    Body, CfdConfigBuilder, CfdFlow, Inflow, MarchConfig, Marchable, Mesh, Observe, Outflow,
+    PhysicsError, Report, Seed, SlipWall,
 };
-use deep_causality_physics::PhysicsError;
 use deep_causality_topology::HodgeDecomposeOptions;
 
 /// The wake-zone tuple of the validated isolated-cylinder setup: west inflow, east outflow,
@@ -24,14 +25,39 @@ pub type WakeZones = (
     (Outflow<2>, (SlipWall<2>, SlipWall<2>)),
 );
 
-/// The nondimensional case at `reynolds`: D = 1, U = 1, nu = 1/Re, dt = CFL * h, the
-/// validated zone set, and the wake probe 1.5 D downstream on the centerline. Returns the
-/// case and its time step (the Strouhal reduction needs `dt`). Counts and grid sizing are
-/// exact `f64` specifications; everything the march computes with lifts into `FloatType`
-/// once, through `ft`.
-pub fn wake_case(
-    reynolds: FloatType,
-) -> Result<(MarchConfig<2, FloatType, WakeZones, ()>, FloatType), PhysicsError> {
+/// One swept airspeed's wake case: the solver config and its time step, packaged as a single
+/// marchable value. The grammar's `.case()` produces one config, and `.march()` needs
+/// `C: Marchable`; the wake reduction additionally needs `dt` (the probe series is sampled every
+/// `dt`), so the case carries both and exposes the step to the reduction.
+pub struct WakeCase {
+    config: MarchConfig<2, FloatType, WakeZones, ()>,
+    dt: FloatType,
+}
+
+impl WakeCase {
+    /// The time step the wake was marched at; the Strouhal reduction reads the probe series at
+    /// this sampling interval.
+    pub fn dt(&self) -> FloatType {
+        self.dt
+    }
+}
+
+/// One-shot geometry: each swept case owns a fresh grid, so `run_owned` materializes it
+/// internally and drops it with the run. This is the campaign's one-case-one-report seam.
+impl Marchable<FloatType> for WakeCase {
+    fn march(&self) -> Result<Report<FloatType>, PhysicsError> {
+        CfdFlow::march(&self.config).run_owned()
+    }
+}
+
+/// The nondimensional case at `airspeed`: D = 1, U = 1, nu = 1/Re with Re = V·D/nu_air, dt =
+/// CFL·h, the validated zone set, and the wake probe 1.5 D downstream on the centerline. Takes
+/// the airspeed by reference so it plugs directly into the grammar's `.case(model_config::wake_case)`.
+/// Counts and grid sizing are exact `f64` specifications; everything the march computes with lifts
+/// into `FloatType` once, through `ft`.
+pub fn wake_case(airspeed: &FloatType) -> Result<WakeCase, PhysicsError> {
+    let reynolds = *airspeed * ft(DIAMETER_M) / ft(NU_AIR_M2_S);
+
     let h_spec = 1.0 / CELLS_PER_D as f64;
     let nx = (LX_D / h_spec).round() as usize;
     let ny = (LY_D / h_spec).round() as usize;
@@ -59,7 +85,7 @@ pub fn wake_case(
         .warm_start()
         .build()?;
 
-    let case = CfdConfigBuilder::march::<2, FloatType>("viv-wake")
+    let config = CfdConfigBuilder::march::<2, FloatType>("viv-wake")
         .mesh(
             Mesh::box_domain([nx, ny])
                 .spacing(ft(h_spec))
@@ -73,5 +99,5 @@ pub fn wake_case(
         .observe(Observe::default().probe([center[0] + ft(1.5), center[1]]))
         .build()?;
 
-    Ok((case, dt))
+    Ok(WakeCase { config, dt })
 }

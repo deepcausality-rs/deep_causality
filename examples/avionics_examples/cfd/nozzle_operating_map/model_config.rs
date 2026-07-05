@@ -14,8 +14,10 @@ use crate::constants::{
 use avionics_examples::shared::utils::ft;
 use deep_causality_cfd::{DuctAreaProfile, DuctConfig, DuctInlet, DuctStop, PhysicsError};
 
-/// The 2:1:2 parabolic demonstration nozzle at one back-pressure ratio.
-pub fn duct_case(p_ratio: FloatType) -> Result<DuctConfig<FloatType>, PhysicsError> {
+/// The 2:1:2 parabolic demonstration nozzle at one back-pressure ratio. Takes the ratio by
+/// reference so it plugs directly into the grammar's `.case(model_config::duct_case)`.
+pub fn duct_case(p_ratio: &FloatType) -> Result<DuctConfig<FloatType>, PhysicsError> {
+    let p_ratio = *p_ratio;
     DuctConfig::new(
         DuctAreaProfile::ConvergingDiverging {
             inlet_area: ft(INLET_AREA_M2),
