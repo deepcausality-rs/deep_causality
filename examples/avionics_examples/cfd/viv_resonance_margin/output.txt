@@ -1,6 +1,6 @@
 === Vortex-shedding resonance margin: airspeed sweep over a circular member ===
 member D = 2.0 mm, structural mode f_struct = 150 Hz (stated demonstration value)
-schedule: 4 airspeeds from /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/viv_resonance_margin/airspeeds.csv
+schedule: 4 airspeeds from airspeeds.csv
 
 airspeed [m/s]   Re      St      f_shed [Hz]   margin
       0.75       100  0.1818        68.2     0.545
@@ -8,7 +8,7 @@ airspeed [m/s]   Re      St      f_shed [Hz]   margin
       1.05       140  0.1909       100.2     0.332
       1.20       160  0.1909       114.5     0.236
 
-margin table written to /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/viv_resonance_margin/viv_resonance_margin.csv
+margin table written to viv_resonance_margin.csv
 
 --- vortex-shedding resonance margin ---
   [PASS] strouhal band: extracted St in [0.1818, 0.1909], validated band [0.16, 0.21] for this grid

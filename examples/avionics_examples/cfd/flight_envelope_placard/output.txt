@@ -1,6 +1,6 @@
 === Flight-envelope placard table: pointwise study over a Mach-altitude matrix ===
 
-Matrix: /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/flight_envelope_placard/mach_alt_matrix.csv
+Matrix: mach_alt_matrix.csv
 
 16 grid points computed:
 
@@ -23,7 +23,7 @@ Matrix: /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_exa
   5.00     40.0       5.0   1502.1         6.21
 
 
-Placard table written: /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/flight_envelope_placard/placard_table.csv
+Placard table written: placard_table.csv
 --- flight envelope placard ---
   [PASS] q-max placard: max q = 23.7 kPa at M 1.20 / 11.0 km, inside the 60 kPa placard
   [PASS] stagnation temperature: max T0 = 1502.1 K at M 5.00 / 40.0 km, inside the 1700 K placard

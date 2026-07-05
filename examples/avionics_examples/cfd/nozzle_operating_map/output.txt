@@ -1,6 +1,6 @@
 === Nozzle operating map: back-pressure sweep over a converging-diverging duct ===
 geometry: inlet 2 / throat 1 / exit 2 m^2 over 1 m; reservoir 300000 Pa, 500 K
-schedule: 6 back pressures from /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/nozzle_operating_map/back_pressures.csv
+schedule: 6 back pressures from back_pressures.csv
 
   p_back/p0   M_exit   shock x [m]      Cf
       0.90    0.325       0.6562    0.242
