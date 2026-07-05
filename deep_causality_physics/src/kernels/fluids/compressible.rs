@@ -115,6 +115,119 @@ where
     Temperature::new(t.value() * factor)
 }
 
+/// Shared guard + stagnation factor `1 + (γ−1)/2 · M²` for the isentropic
+/// ratio kernels. Inclusion-style checks (`!(x >= lo && ...)`) reject NaN.
+fn isentropic_stagnation_factor<R>(mach: R, gamma: R, ctx: &str) -> Result<R, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
+    if !(mach >= R::zero() && mach.is_finite()) {
+        return Err(PhysicsError::PhysicalInvariantBroken(format!(
+            "{ctx}: Mach number must be finite and >= 0"
+        )));
+    }
+    if !(gamma > R::one() && gamma.is_finite()) {
+        return Err(PhysicsError::PhysicalInvariantBroken(format!(
+            "{ctx}: γ must be finite and > 1"
+        )));
+    }
+    let half = R::from_f64(0.5)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(0.5) failed".into()))?;
+    Ok(R::one() + (gamma - R::one()) * half * mach * mach)
+}
+
+/// Isentropic stagnation-to-static pressure ratio
+/// `p₀/p = (1 + (γ−1)/2 · M²)^(γ/(γ−1))`.
+///
+/// Dimensionless; valid for a calorically perfect gas along an isentrope.
+///
+/// # Errors
+/// [`PhysicsError::PhysicalInvariantBroken`] unless `M` is finite and `≥ 0`
+/// and `γ` is finite and `> 1` (NaN inputs are rejected).
+///
+/// # References
+/// * Anderson, "Modern Compressible Flow: With Historical Perspective,"
+///   McGraw-Hill — isentropic flow relations (Ch. 3).
+pub fn isentropic_pressure_ratio_kernel<R>(mach: R, gamma: R) -> Result<R, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
+    let factor = isentropic_stagnation_factor(mach, gamma, "isentropic_pressure_ratio_kernel")?;
+    Ok(factor.powf(gamma / (gamma - R::one())))
+}
+
+/// Isentropic stagnation-to-static temperature ratio
+/// `T₀/T = 1 + (γ−1)/2 · M²`.
+///
+/// Dimensionless; valid for a calorically perfect gas (adiabatic — no
+/// isentropy needed for the temperature ratio itself).
+///
+/// # Errors
+/// [`PhysicsError::PhysicalInvariantBroken`] unless `M` is finite and `≥ 0`
+/// and `γ` is finite and `> 1` (NaN inputs are rejected).
+///
+/// # References
+/// * Anderson, "Modern Compressible Flow: With Historical Perspective,"
+///   McGraw-Hill — isentropic flow relations (Ch. 3).
+pub fn isentropic_temperature_ratio_kernel<R>(mach: R, gamma: R) -> Result<R, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
+    isentropic_stagnation_factor(mach, gamma, "isentropic_temperature_ratio_kernel")
+}
+
+/// Isentropic stagnation-to-static density ratio
+/// `ρ₀/ρ = (1 + (γ−1)/2 · M²)^(1/(γ−1))`.
+///
+/// Dimensionless; valid for a calorically perfect gas along an isentrope.
+///
+/// # Errors
+/// [`PhysicsError::PhysicalInvariantBroken`] unless `M` is finite and `≥ 0`
+/// and `γ` is finite and `> 1` (NaN inputs are rejected).
+///
+/// # References
+/// * Anderson, "Modern Compressible Flow: With Historical Perspective,"
+///   McGraw-Hill — isentropic flow relations (Ch. 3).
+pub fn isentropic_density_ratio_kernel<R>(mach: R, gamma: R) -> Result<R, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
+    let factor = isentropic_stagnation_factor(mach, gamma, "isentropic_density_ratio_kernel")?;
+    Ok(factor.powf(R::one() / (gamma - R::one())))
+}
+
+/// Area–Mach relation for quasi-one-dimensional isentropic duct flow:
+/// `A/A* = (1/M) · [ 2/(γ+1) · (1 + (γ−1)/2 · M²) ]^((γ+1)/(2(γ−1)))`,
+/// where `A*` is the sonic-throat area.
+///
+/// Dimensionless. `A/A* = 1` exactly at `M = 1`; the relation is
+/// double-valued in `M` for `A/A* > 1` (one subsonic, one supersonic branch).
+///
+/// # Errors
+/// [`PhysicsError::PhysicalInvariantBroken`] unless `M` is finite and `> 0`
+/// (the relation divides by `M`, and `A/A*` diverges at rest) and `γ` is
+/// finite and `> 1` (NaN inputs are rejected).
+///
+/// # References
+/// * Anderson, "Modern Compressible Flow: With Historical Perspective,"
+///   McGraw-Hill — area–Mach relation, quasi-one-dimensional flow (Ch. 5).
+pub fn area_mach_ratio_kernel<R>(mach: R, gamma: R) -> Result<R, PhysicsError>
+where
+    R: RealField + FromPrimitive,
+{
+    if !(mach > R::zero() && mach.is_finite()) {
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "area_mach_ratio_kernel: Mach number must be finite and > 0".into(),
+        ));
+    }
+    let factor = isentropic_stagnation_factor(mach, gamma, "area_mach_ratio_kernel")?;
+    let two = R::from_f64(2.0)
+        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(2.0) failed".into()))?;
+    let gp1 = gamma + R::one();
+    let exponent = gp1 / (two * (gamma - R::one()));
+    Ok((two / gp1 * factor).powf(exponent) / mach)
+}
+
 /// Local entropy-production rate density (W/(m³·K)) for a Newtonian fluid:
 /// `σ = Φ/T + κ · ‖∇T‖² / T²`
 /// where `Φ = τ : ∇u` is viscous dissipation and `κ` is thermal conductivity.

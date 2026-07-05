@@ -23,7 +23,7 @@ mod print_utils;
 
 use deep_causality_cfd::{
     Ambient, CoupledField, FiniteRateIonizationStage, FittedNormalShock, Park2tClosure,
-    PhysicsStage, StepContext, fail,
+    PhysicsStage, StepContext,
 };
 use deep_causality_physics::{
     AVOGADRO_CONSTANT, ElectronTemperature, THETA_VIB_N2, Temperature, VibrationalTemperature,
@@ -244,4 +244,10 @@ fn main() {
     } else {
         std::process::exit(1);
     }
+}
+
+/// Print a stage-failure context and its error on stderr, then exit the process non-zero.
+fn fail(context: &str, error: impl core::fmt::Debug) -> ! {
+    eprintln!("{context} failed: {error:?}");
+    std::process::exit(1);
 }

@@ -39,7 +39,7 @@ pub use deep_causality_physics::PhysicsError;
 pub use deep_causality_physics::quantities::*;
 
 // Core CFD trait seams and value types.
-pub use crate::traits::{FluidTheory, Marcher, Solver};
+pub use crate::traits::{FluidTheory, MarchDispatch, Marchable, Marcher, Solver};
 pub use crate::types::{Ambient, CfdScalar};
 
 // The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
@@ -63,30 +63,54 @@ pub use crate::navigation::{
 
 // The CfdFlow DSL facade (owned case descriptions materialized at run).
 // Workflow composition — the CfdFlow DSL (the "how").
+// State snapshot and resume: pack/unpack a running state, one-line save and cross-workflow
+// load, plus the file-crate container types a consumer needs.
+pub use crate::types::flow::state_snapshot::{
+    NamedTtFields, load_resume_state, pack_resume, pack_tt_fields, save_resume_state,
+    unpack_resume, unpack_tt_fields,
+};
+pub use deep_causality_file::{
+    BitCodec, ScalarTypeTag, SnapshotPackage, SnapshotSection, SnapshotTier, fingerprint64,
+    force_load_snapshot, load_snapshot, save_snapshot,
+};
+// Typed table IO: the study grammar's `read`/`matrix`/`record` lower onto these, and a
+// verification harness or example writing a probe trace uses `write_rows` directly. Re-exported
+// so a CfdFlow program imports table IO from one crate.
+pub use deep_causality_file::{
+    FromTableRow, NumericTable, TableColumn, TableRow, TableScalar, read_rows, read_table,
+    write_rows, write_table,
+};
+
 pub use crate::types::flow::{
     AeroBlackoutStub, AeroForceCoupling, BankCorrection, BankSteeredLift, BlackoutState,
     BlackoutTrigger, BranchAccumulator, BranchOutcome, CfdFlow, CompressibleFork,
-    CompressibleMarchRun, CompressiblePause, CoupledField, Coupling, CyberneticCorrect, EosStage,
-    FiniteRateIonizationStage, GoverningModel, IonizationStage, MarchFork, MarchPause,
-    MarchPipeline, MarchRun, MmsBuilder, Operator, OperatorStudyBuilder, PhysicsStage, QttMarchRun,
-    QttStepView, RecoveryTemperatureStage, Regime, RegimeClass, RegimeClassify, Report,
-    SafetyEnvelope, StepContext, StepView, ThermalRelax, TrajectoryNav, VerifyRun,
-    VibrationalLagStage, ViscosityArrhenius, dominant_frequency, fail, ler_relax_scalar, ler_step,
-    strouhal_number,
+    CompressibleMarchRun, CompressiblePause, CoupledField, CoupledMarch, Coupling,
+    CyberneticCorrect, DuctMarchRun, EosStage, FiniteRateIonizationStage, Gates, GoverningModel,
+    IonizationStage, MarchFork, MarchPause, MarchPipeline, MarchRun, MarchState, MmsBuilder,
+    Operator, OperatorStudyBuilder, PhysicsStage, QttMarchRun, QttStepView, ReadyMarch,
+    RecoveryTemperatureStage, Regime, RegimeClass, RegimeClassify, Report, SafetyEnvelope,
+    StepContext, StepView, StudyEffect, StudyEffectWitness, StudyError, StudyWarning,
+    StudyWarningLog, ThermalRelax, TrajectoryNav,
+};
+pub use crate::types::flow::{
+    Alternated, Branched, CaseRun, Cases, Configured, Counterfactual, CoupledCampaign,
+    EnsembleMarched, ForkStudy, GateFn, GateOutcome, GateSeq, Judged, Marched, Prepared,
+    RefineBranched, RefineMarched, Refining, StudyDef, StudyView, Swept, Verdict, VerifyRun,
+    VibrationalLagStage, ViscosityArrhenius, dominant_frequency, ler_relax_scalar, ler_step,
+    strouhal_number, sweep,
 };
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
 pub use crate::types::flow_config::{
     AtmosphereRow, Body, CfdConfigBuilder, CompressibleMarchConfig, CompressibleMarchConfigBuilder,
-    DescentSchedule, Grading, Manufactured, ManufacturedSample, MarchConfig, MarchConfigBuilder,
-    MarchStop, Mesh, Observe, QttBody, QttMarchConfig, QttMarchConfigBuilder, QttObserve,
-    ReferenceScales, Seed, TaylorGreen, VerifyConfig, VerifyConfigBuilder,
+    DescentSchedule, DuctAreaProfile, DuctConfig, DuctInlet, DuctStop, Grading, Manufactured,
+    ManufacturedSample, MarchConfig, MarchConfigBuilder, MarchStop, Mesh, Observe, QttBody,
+    QttMarchConfig, QttMarchConfigBuilder, QttObserve, ReferenceScales, Seed, TaylorGreen,
+    VerifyConfig, VerifyConfigBuilder,
 };
-// IO effect: the `IoAction` trait (from haft), the core `write_csv` file action, and the CFD CSV
-// helper, so a `CfdFlow` example can describe and run file output through one crate.
-#[cfg(feature = "std")]
-pub use crate::types::flow::write_xy_csv;
-#[cfg(feature = "std")]
-pub use deep_causality_core::write_csv;
+// IO effect: the `IoAction` trait (from haft), so a `CfdFlow` program can describe and run file
+// output through one crate. The typed table writers (`write_rows` / `record`) are the language's
+// write surface; the retired `write_xy_csv` and the `write_csv` re-export are gone (a formatted
+// string dump imports core's `write_csv` directly).
 #[cfg(feature = "std")]
 pub use deep_causality_haft::IoAction;
 

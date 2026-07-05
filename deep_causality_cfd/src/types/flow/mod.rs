@@ -12,51 +12,74 @@
 //! facade spans three solver kinds sharing one `Report`: the marching solver (here), and the
 //! MMS-verification and operator-accuracy solvers.
 
+#[cfg(feature = "std")]
+mod audit;
 mod blackout;
 mod carrier;
 mod cfd_flow;
 mod compressible_march_run;
 mod corridor;
+mod coupled_march;
 mod coupling;
+mod duct_march_run;
 mod finite_rate_ionization;
 mod frequency;
-#[cfg(feature = "std")]
-mod io;
+mod gates;
 mod march_run;
+mod march_state;
 mod mms;
 mod operator_study;
 mod qtt_march_pause;
 mod qtt_march_run;
 mod report;
+pub mod state_snapshot;
+mod study;
+mod study_effect;
+mod study_error;
+mod study_warning;
+mod sweep;
 #[cfg(feature = "std")]
 mod uncertain_march_run;
 mod verify;
 mod zones;
 
+#[cfg(feature = "std")]
+pub use audit::LogSink;
 pub use blackout::{
     BlackoutState, BlackoutTrigger, EosStage, IonizationStage, RecoveryTemperatureStage,
     VibrationalLagStage, ler_relax_scalar, ler_step,
 };
-pub use cfd_flow::{CfdFlow, fail};
+pub use cfd_flow::CfdFlow;
 pub use compressible_march_run::{CompressibleFork, CompressibleMarchRun, CompressiblePause};
 pub use corridor::{
     BankCorrection, BankSteeredLift, BranchAccumulator, BranchOutcome, CyberneticCorrect,
     GoverningModel, RegimeClass, RegimeClassify, SafetyEnvelope, TrajectoryNav,
 };
+pub use coupled_march::{CoupledMarch, ReadyMarch};
 pub use coupling::{
     AeroBlackoutStub, AeroForceCoupling, CoupledField, Coupling, PhysicsStage, StepContext,
     ThermalRelax, ViscosityArrhenius,
 };
+pub use duct_march_run::DuctMarchRun;
 pub use finite_rate_ionization::FiniteRateIonizationStage;
 pub use frequency::{dominant_frequency, strouhal_number};
-#[cfg(feature = "std")]
-pub use io::write_xy_csv;
+pub use gates::Gates;
 pub use march_run::{MarchPipeline, MarchRun, StepView};
+pub use march_state::MarchState;
 pub use mms::{MmsBuilder, Regime};
 pub use operator_study::{Operator, OperatorStudyBuilder};
 pub use qtt_march_pause::{MarchFork, MarchPause};
 pub use qtt_march_run::{QttMarchRun, QttStepView};
 pub use report::Report;
+pub use study::{
+    Alternated, Branched, CaseRun, Cases, Configured, Counterfactual, CoupledCampaign,
+    EnsembleMarched, ForkStudy, GateFn, GateOutcome, GateSeq, Judged, Marched, Prepared,
+    RefineBranched, RefineMarched, Refining, StudyDef, StudyView, Swept, Verdict,
+};
+pub use study_effect::{StudyEffect, StudyEffectWitness};
+pub use study_error::StudyError;
+pub use study_warning::{StudyWarning, StudyWarningLog};
+pub use sweep::sweep;
 #[cfg(feature = "std")]
 pub use uncertain_march_run::{UncertainMarchPipeline, UncertainMarchRun, UncertainStepView};
 pub use verify::VerifyRun;

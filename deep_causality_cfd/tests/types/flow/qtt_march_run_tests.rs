@@ -61,7 +61,7 @@ fn runs_and_reports_observables() {
         .bond();
     let cfg = taylor_green_config(nu, dt, steps, observe);
 
-    let report = CfdFlow::qtt_march(&cfg).run().unwrap();
+    let report = CfdFlow::march(&cfg).run().unwrap();
     assert_eq!(report.name(), "taylor_green_qtt");
 
     // One series per enabled observable, each with steps + 1 samples (seed + each step).
@@ -96,7 +96,7 @@ fn matches_the_direct_driver() {
     let cfg = taylor_green_config(nu, dt, steps, QttObserve::default());
 
     // DSL path.
-    let report = CfdFlow::qtt_march(&cfg).run().unwrap();
+    let report = CfdFlow::march(&cfg).run().unwrap();
     let dsl_u = report.final_field().unwrap();
     let dsl_v = report.series("final_v").unwrap();
 
@@ -139,7 +139,7 @@ fn steady_stop_terminates_on_the_plateau() {
         .build()
         .unwrap();
 
-    let report = CfdFlow::qtt_march(&cfg).run().unwrap();
+    let report = CfdFlow::march(&cfg).run().unwrap();
     let n = report.series("kinetic_energy").unwrap().len();
     assert!(n < 151, "steady stop did not terminate early (n = {n})");
     assert!(n > 2, "steady stop terminated immediately (n = {n})");
@@ -151,11 +151,11 @@ fn per_step_hook_fires_each_step_and_leaves_report_identical() {
     let observe = QttObserve::default().kinetic_energy();
 
     let cfg = taylor_green_config(nu, dt, steps, observe);
-    let baseline = CfdFlow::qtt_march(&cfg).run().unwrap();
+    let baseline = CfdFlow::march(&cfg).run().unwrap();
 
     let cfg2 = taylor_green_config(nu, dt, steps, observe);
     let mut seen = Vec::new();
-    let hooked = CfdFlow::qtt_march(&cfg2)
+    let hooked = CfdFlow::march(&cfg2)
         .run_with(|view| {
             // Each call exposes a monotonically increasing step and a finite energy.
             let e = view.kinetic_energy().unwrap();
@@ -178,7 +178,7 @@ fn observe_override_swaps_the_series() {
     let (nu, dt, steps) = (0.05f64, 0.02f64, 4usize);
     // Config collects nothing; the override turns on energy + bond.
     let cfg = taylor_green_config(nu, dt, steps, QttObserve::default());
-    let report = CfdFlow::qtt_march(&cfg)
+    let report = CfdFlow::march(&cfg)
         .observe_with(QttObserve::default().kinetic_energy().bond())
         .run()
         .unwrap();
@@ -211,7 +211,7 @@ fn pipeline_emits_a_drag_series_with_a_body() {
         .build()
         .unwrap();
 
-    let report = CfdFlow::qtt_march(&cfg).run().unwrap();
+    let report = CfdFlow::march(&cfg).run().unwrap();
     let drag = report.series("drag").expect("drag series");
     let lift = report.series("lift").expect("lift series");
     assert_eq!(drag.len(), steps + 1, "one drag sample per step + seed");
@@ -234,7 +234,7 @@ fn run_with_hook_exposes_step_view_accessors() {
     let cfg = taylor_green_config(nu, dt, steps, observe);
 
     let mut last_step = 0usize;
-    let _ = CfdFlow::qtt_march(&cfg)
+    let _ = CfdFlow::march(&cfg)
         .run_with(|view| {
             // The time step is exactly the configured `dt` and `time() = step · dt`.
             assert_eq!(view.dt(), dt, "dt accessor");
@@ -297,7 +297,7 @@ fn run_coupled_free_solver_samples_blackout_observables() {
     let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
     field.set_scalar("alpha", vec![0.5_f64; ncells]);
 
-    let report = CfdFlow::qtt_march(&cfg)
+    let report = CfdFlow::march(&cfg)
         .run_coupled(stub, field, trigger, 0.01)
         .unwrap();
 
@@ -356,7 +356,7 @@ fn run_coupled_body_solver_transports_alpha() {
     let mut field = CoupledField::new(Ambient::new(0.01, 0.0, None));
     field.set_scalar("alpha", vec![0.5_f64; ncells]);
 
-    let report = CfdFlow::qtt_march(&cfg)
+    let report = CfdFlow::march(&cfg)
         .run_coupled(stub, field, trigger, 0.01)
         .unwrap();
 
@@ -383,7 +383,7 @@ fn run_coupled_honours_run_overrides() {
     let trigger = BlackoutTrigger::new(1.0e9);
     let field = CoupledField::new(Ambient::new(0.01, 0.0, None));
 
-    let report = CfdFlow::qtt_march(&cfg)
+    let report = CfdFlow::march(&cfg)
         .seed_with(u0, v0)
         .march_with(MarchStop::Fixed(steps))
         .observe_with(QttObserve::default().electron_density())
@@ -418,11 +418,11 @@ fn alternate_state_subsumes_seed_with() {
     let cfg = taylor_green_config(0.05, 0.02, 4, QttObserve::default());
     let (u0, v0) = uniform_seed();
 
-    let via_seed_with = CfdFlow::qtt_march(&cfg)
+    let via_seed_with = CfdFlow::march(&cfg)
         .seed_with(u0.clone(), v0.clone())
         .run()
         .unwrap();
-    let via_alternation = CfdFlow::qtt_march(&cfg)
+    let via_alternation = CfdFlow::march(&cfg)
         .alternate_state((u0, v0))
         .run()
         .unwrap();
@@ -459,8 +459,8 @@ fn alternate_context_swaps_the_whole_world() {
     let nominal = world("nominal_reentry", 0.05);
     let steep = world("steep_reentry", 0.09);
 
-    let direct = CfdFlow::qtt_march(&steep).run().unwrap();
-    let alternated = CfdFlow::qtt_march(&nominal)
+    let direct = CfdFlow::march(&steep).run().unwrap();
+    let alternated = CfdFlow::march(&nominal)
         .alternate_context(&steep)
         .run()
         .unwrap();
@@ -485,11 +485,11 @@ fn alternate_value_injects_a_primary_snapshot() {
     let cfg = taylor_green_config(0.05, 0.02, 4, QttObserve::default());
     let (u0, v0) = uniform_seed();
 
-    let report = CfdFlow::qtt_march(&cfg)
+    let report = CfdFlow::march(&cfg)
         .alternate_value((u0.clone(), v0.clone()))
         .run()
         .unwrap();
-    let reference = CfdFlow::qtt_march(&cfg).seed_with(u0, v0).run().unwrap();
+    let reference = CfdFlow::march(&cfg).seed_with(u0, v0).run().unwrap();
 
     assert_eq!(
         report.final_field().unwrap(),
@@ -509,7 +509,7 @@ fn run_coupled_surfaces_the_provenance_log() {
     let trigger = BlackoutTrigger::new(1.0e9);
     let (u0, v0) = uniform_seed();
 
-    let report = CfdFlow::qtt_march(&cfg)
+    let report = CfdFlow::march(&cfg)
         .alternate_state((u0, v0))
         .run_coupled(
             stub,
@@ -548,7 +548,7 @@ fn coupled_body_march_publishes_the_wall_heat_flux() {
         .unwrap();
 
     let recovery = RecoveryTemperatureStage::new(25.0_f64, 1.4, 250.0, 1004.0);
-    let pause = CfdFlow::qtt_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(
             recovery,
             CoupledField::new(Ambient::new(0.01, 0.0, None)),
@@ -591,7 +591,7 @@ fn run_coupled_samples_the_sensed_heat_flux_series() {
 
     let steps = 3usize;
     let cfg = coupled_free_config(steps);
-    let report = CfdFlow::qtt_march(&cfg)
+    let report = CfdFlow::march(&cfg)
         .observe_with(QttObserve::default().heat_flux())
         .run_coupled(
             ConstLoads,
@@ -613,7 +613,7 @@ fn run_coupled_samples_the_peak_speed_series() {
     let stub = AeroBlackoutStub::new(3.0_f64, 1.0e17, 1.0e20, 1, 3);
     let trigger = BlackoutTrigger::new(1.0e9);
 
-    let report = CfdFlow::qtt_march(&cfg)
+    let report = CfdFlow::march(&cfg)
         .observe_with(QttObserve::default().max_speed())
         .run_coupled(
             stub,
@@ -648,13 +648,13 @@ fn composed_coupling_stack_equals_the_hand_written_tuple() {
 
     // The DSL naming layer over the cons-tuple...
     let composed = Coupling::between_steps().then(stub).then(relax).build();
-    let dsl = CfdFlow::qtt_march(&cfg)
+    let dsl = CfdFlow::march(&cfg)
         .run_coupled(composed, initial(), trigger, 0.01)
         .unwrap();
 
     // ...compiles to exactly the hand-nested tuple (no dyn, same monomorphized pipeline).
     let manual = (((), stub), relax);
-    let hand = CfdFlow::qtt_march(&cfg)
+    let hand = CfdFlow::march(&cfg)
         .run_coupled(manual, initial(), trigger, 0.01)
         .unwrap();
 

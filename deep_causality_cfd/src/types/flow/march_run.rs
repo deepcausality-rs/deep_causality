@@ -53,6 +53,21 @@ impl<'c, const D: usize, R: CfdScalar, Z: BoundaryZone<D, R>, C: PhysicsStage<D,
         Self { config }
     }
 
+    /// Materialize the case's geometry internally, run, and return the report: the one-shot
+    /// form for sweep bodies where each case owns a fresh grid. When several runs share one
+    /// geometry (a refinement trend, a transposed solve), keep the caller-owned
+    /// [`on`](Self::on) form instead, which materializes once.
+    ///
+    /// # Errors
+    /// Any materialization, seeding, coupling, or marching failure.
+    pub fn run_owned(self) -> Result<Report<R>, PhysicsError>
+    where
+        Z: Clone,
+    {
+        let manifold = self.config.materialize()?;
+        self.on(&manifold).run()
+    }
+
     /// Lend the **caller-owned geometry** the marcher borrows for the run (B1). The same config can
     /// be `.on(&other_geometry)` to transpose a proven solve to another mesh/field.
     pub fn on<'m>(

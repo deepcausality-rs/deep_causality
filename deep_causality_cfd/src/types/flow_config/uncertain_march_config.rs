@@ -7,7 +7,7 @@
 //! bundle of the solver config, the [`UncertainInflowZone`], the per-step `MaybeUncertain` sensor
 //! stream, the seed, and the horizon. The geometry is **not** held here — the caller owns it and
 //! lends it at run time via `.on(&manifold)` (B1), exactly like [`MarchConfig`](crate::MarchConfig).
-//! Run by [`CfdFlow::uncertain_march`](crate::CfdFlow).
+//! Run by [`CfdFlow::march`](crate::CfdFlow).
 
 use crate::solvers::DecNsConfig;
 use crate::solvers::dec::uncertain_inflow::UncertainInflowZone;

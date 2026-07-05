@@ -13,6 +13,7 @@
 mod body;
 mod cfd_config_builder;
 pub(crate) mod compressible_march_config;
+pub(crate) mod duct_config;
 pub(crate) mod manufactured;
 mod march_builder;
 pub(crate) mod march_config;
@@ -29,6 +30,7 @@ pub use compressible_march_config::{
     AtmosphereRow, CompressibleMarchConfig, CompressibleMarchConfigBuilder, DescentSchedule,
     ReferenceScales,
 };
+pub use duct_config::{DuctAreaProfile, DuctConfig, DuctInlet, DuctStop};
 pub use manufactured::{
     Manufactured, ManufacturedSample, TaylorGreen, VerifyConfig, VerifyConfigBuilder,
 };

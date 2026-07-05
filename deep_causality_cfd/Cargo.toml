@@ -28,6 +28,9 @@ exclude = [
     "tests/**/*",
 ]
 
+[package.metadata.docs.rs]
+all-features = true
+
 [features]
 default = ["std"]
 
@@ -59,6 +62,10 @@ version = "0.1"
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
 version = "0.10"
+
+[dependencies.deep_causality_file]
+path = "../deep_causality_file"
+version = "0.1"
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
@@ -94,6 +101,7 @@ default-features = false
 
 [dev-dependencies]
 criterion = { version = "0.8" }
+tempfile = { version = "3", default-features = false }
 
 [[bench]]
 name = "bench_dec_ns_march"

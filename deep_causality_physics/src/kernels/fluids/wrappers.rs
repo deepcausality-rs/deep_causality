@@ -807,6 +807,50 @@ where
     }
 }
 
+/// Causal wrapper for [`compressible::isentropic_pressure_ratio_kernel`].
+pub fn isentropic_pressure_ratio<R>(mach: R, gamma: R) -> PropagatingEffect<R>
+where
+    R: RealField + FromPrimitive + Debug + Default + 'static,
+{
+    match compressible::isentropic_pressure_ratio_kernel(mach, gamma) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`compressible::isentropic_temperature_ratio_kernel`].
+pub fn isentropic_temperature_ratio<R>(mach: R, gamma: R) -> PropagatingEffect<R>
+where
+    R: RealField + FromPrimitive + Debug + Default + 'static,
+{
+    match compressible::isentropic_temperature_ratio_kernel(mach, gamma) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`compressible::isentropic_density_ratio_kernel`].
+pub fn isentropic_density_ratio<R>(mach: R, gamma: R) -> PropagatingEffect<R>
+where
+    R: RealField + FromPrimitive + Debug + Default + 'static,
+{
+    match compressible::isentropic_density_ratio_kernel(mach, gamma) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`compressible::area_mach_ratio_kernel`].
+pub fn area_mach_ratio<R>(mach: R, gamma: R) -> PropagatingEffect<R>
+where
+    R: RealField + FromPrimitive + Debug + Default + 'static,
+{
+    match compressible::area_mach_ratio_kernel(mach, gamma) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
 /// Causal wrapper for [`compressible::entropy_production_rate_kernel`].
 pub fn entropy_production_rate<R>(
     temperature: &Temperature<R>,

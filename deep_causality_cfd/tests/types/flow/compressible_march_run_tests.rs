@@ -83,7 +83,7 @@ fn field_at_61km() -> CoupledField<f64> {
 #[test]
 fn coupled_run_publishes_evolved_projections() {
     let cfg = world("evolved", 3.0, 3);
-    let pause = CfdFlow::compressible_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(
             (),
             field_at_61km(),
@@ -113,7 +113,7 @@ fn coupled_run_publishes_evolved_projections() {
 #[test]
 fn inflow_strip_holds_the_rh_post_shock_state() {
     let cfg = world("strip", 3.0, 4);
-    let pause = CfdFlow::compressible_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(
             (),
             field_at_61km(),
@@ -138,7 +138,7 @@ fn wave_speed_drift_rebuilds_the_solver_and_logs_it() {
     // A deliberately undersized s_ref: the scheduled inflow's wave speed exceeds it, so the
     // carrier rebuilds and records the rebuild in the provenance log.
     let cfg = world("rebuild", 1.0, 2);
-    let pause = CfdFlow::compressible_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(
             (),
             field_at_61km(),
@@ -172,7 +172,7 @@ fn world_published_constants_land_on_the_field_each_step() {
     assert_eq!(cfg.published_constants(), &[("commanded_bank", 0.35)]);
 
     // No schedule and no truth state: the constant still lands (pre_step publishes it first).
-    let pause = CfdFlow::compressible_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(
             (),
             CoupledField::new(Ambient::new(0.01, 0.0, None)),
@@ -187,7 +187,7 @@ fn world_published_constants_land_on_the_field_each_step() {
 #[test]
 fn without_a_truth_state_the_schedule_is_inert() {
     let cfg = world("inert", 3.0, 2);
-    let pause = CfdFlow::compressible_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(
             (),
             CoupledField::new(Ambient::new(0.01, 0.0, None)),
@@ -205,7 +205,7 @@ fn fork_shares_and_context_alternation_marks_the_branch() {
     let nominal = world("nominal_descent", 3.0, 6);
     let steep = world("steep_descent", 3.0, 6);
 
-    let pause = CfdFlow::compressible_march(&nominal)
+    let pause = CfdFlow::march(&nominal)
         .run_until(
             (),
             field_at_61km(),
@@ -236,7 +236,7 @@ fn continue_branches_matches_the_manual_fork_chain_in_world_order() {
     let shallow = world("shallow_branch", 3.0, 8);
     let steep = world("steep_branch", 3.0, 8);
 
-    let pause = CfdFlow::compressible_march(&nominal)
+    let pause = CfdFlow::march(&nominal)
         .run_until(
             (),
             field_at_61km(),
@@ -272,9 +272,36 @@ fn continue_branches_matches_the_manual_fork_chain_in_world_order() {
 }
 
 #[test]
+fn continue_with_matches_the_single_world_batch_and_carries_the_marker() {
+    let nominal = world("nominal_descent", 3.0, 8);
+    let steep = world("steep_branch", 3.0, 8);
+
+    let pause = CfdFlow::march(&nominal)
+        .run_until(
+            (),
+            field_at_61km(),
+            BlackoutTrigger::new(1.0e9),
+            0.0,
+            |_, s| s >= 2,
+        )
+        .unwrap();
+
+    // The singular verb: one world, one continued report, marked.
+    let single = pause.continue_with(&steep, 3).expect("branch completes");
+    assert_eq!(single.name(), "steep_branch");
+    let log = format!("{}", single.effect_log().unwrap());
+    assert!(log.contains("!!ContextAlternation!!"), "marker: {log}");
+
+    // Bit-identical to the one-world batch fan-out of the same pause.
+    let batch = pause.continue_branches(&[&steep], 3).unwrap();
+    assert_eq!(single.final_field(), batch[0].final_field());
+    assert_eq!(single.series("final_n_tot"), batch[0].series("final_n_tot"));
+}
+
+#[test]
 fn run_coupled_returns_the_evolved_report() {
     let cfg = world("report", 3.0, 3);
-    let report = CfdFlow::compressible_march(&cfg)
+    let report = CfdFlow::march(&cfg)
         .run_coupled((), field_at_61km(), BlackoutTrigger::new(1.0e9), 0.0)
         .unwrap();
 
@@ -291,7 +318,7 @@ fn coupled_report_carries_the_terminal_trajectory_states() {
     let mut field = field_at_61km();
     // A navigation stage would publish this each step; here it is seeded once and carried.
     field.set_scalar("nav_position", vec![6.4e6, 1.0e3, -2.0e3]);
-    let report = CfdFlow::compressible_march(&cfg)
+    let report = CfdFlow::march(&cfg)
         .run_coupled((), field, BlackoutTrigger::new(1.0e9), 0.0)
         .unwrap();
 
@@ -302,7 +329,7 @@ fn coupled_report_carries_the_terminal_trajectory_states() {
     assert_eq!(nav.len(), 3);
 
     // Without either witness on the field, the report stays clean.
-    let bare = CfdFlow::compressible_march(&world("bare", 3.0, 2))
+    let bare = CfdFlow::march(&world("bare", 3.0, 2))
         .run_coupled(
             (),
             CoupledField::new(Ambient::new(0.01, 0.0, None)),
@@ -312,4 +339,417 @@ fn coupled_report_carries_the_terminal_trajectory_states() {
         .unwrap();
     assert!(bare.series("final_truth_state").is_none());
     assert!(bare.series("final_nav_position").is_none());
+}
+
+// ── The campaign event-fork path: `study.fork(&pause).branch(f).continue_for(n)` lowers onto the
+// carrier fan-out above, landing on `Marched` so `reduce` reads each branch through a `CaseRun`.
+
+#[derive(Clone)]
+struct BranchRow {
+    n_tot: f64,
+}
+
+impl deep_causality_cfd::TableRow for BranchRow {
+    type Scalar = f64;
+    const SCHEMA: &'static [(&'static str, &'static str)] = &[("final_n_tot", "-")];
+    fn cells(&self) -> Vec<f64> {
+        vec![self.n_tot]
+    }
+}
+
+fn both_branches_reduced(v: &deep_causality_cfd::StudyView<'_, BranchRow>) -> (bool, String) {
+    (
+        v.rows().len() == 2,
+        format!("{} branches reduced", v.rows().len()),
+    )
+}
+
+#[test]
+fn campaign_fork_branch_continue_for_reduces_branches_in_case_order() {
+    use deep_causality_cfd::{CaseRun, GateSeq};
+
+    // One shared onset pause; the case axis is the branch command that names each world.
+    let nominal = world("nominal_descent", 3.0, 8);
+    let pause = CfdFlow::march(&nominal)
+        .run_until(
+            (),
+            field_at_61km(),
+            BlackoutTrigger::new(1.0e9),
+            0.0,
+            |_, s| s >= 2,
+        )
+        .unwrap();
+
+    let verdict = CfdFlow::study("corridor branches")
+        .cases(vec![
+            "shallow_branch".to_string(),
+            "steep_branch".to_string(),
+        ])
+        .fork(&pause)
+        // `branch` lowers each case onto its own world, built fresh here — a world the study owns,
+        // living only in this phase, which the relaxed carrier lifetime now permits.
+        .branch(|name| Ok(world(name, 3.0, 8)))
+        .continue_for(3)
+        .reduce(
+            |run: &CaseRun<'_, String, CompressibleMarchConfig<f64>, f64>| {
+                // Reports come back in case order: the branch world resumed the case's command.
+                assert_eq!(run.report().name(), run.case());
+                // Every branch carries the alternation marker the manual fork chain produces.
+                let log = format!("{}", run.report().effect_log().unwrap());
+                assert!(log.contains("!!ContextAlternation!!"), "marker: {log}");
+                let n_tot = run
+                    .report()
+                    .series("final_n_tot")
+                    .map(|s| s[0])
+                    .unwrap_or(0.0);
+                Ok(BranchRow { n_tot })
+            },
+        )
+        .gates(GateSeq::new("branches").gate("both reduced", both_branches_reduced))
+        .verdict()
+        .expect("the fork campaign runs to a verdict");
+
+    assert!(verdict.passed(), "{verdict}");
+}
+
+fn coarse_round_is_carried(v: &deep_causality_cfd::StudyView<'_, BranchRow>) -> (bool, String) {
+    let coarse_ok = v.rounds().len() == 1 && v.rounds()[0].len() == 2;
+    let fine_ok = v.rows().len() == 3;
+    (
+        coarse_ok && fine_ok,
+        format!(
+            "fine round {} rows over {} prior round(s)",
+            v.rows().len(),
+            v.rounds().len()
+        ),
+    )
+}
+
+#[test]
+fn refine_reforks_the_same_onset_and_carries_the_prior_round() {
+    use deep_causality_cfd::{CaseRun, CompressibleMarchConfig, GateSeq};
+
+    let nominal = world("nominal_descent", 3.0, 8);
+    let pause = CfdFlow::march(&nominal)
+        .run_until(
+            (),
+            field_at_61km(),
+            BlackoutTrigger::new(1.0e9),
+            0.0,
+            |_, s| s >= 2,
+        )
+        .unwrap();
+
+    // Reduce each branch to its peak final density (the actual value is immaterial to the test —
+    // what matters is that both rounds fork the same onset and the coarse round is retained).
+    fn score(
+        runs: &[CaseRun<'_, String, CompressibleMarchConfig<f64>, f64>],
+    ) -> Result<Vec<BranchRow>, deep_causality_physics::PhysicsError> {
+        Ok(runs
+            .iter()
+            .map(|r| BranchRow {
+                n_tot: r
+                    .report()
+                    .series("final_n_tot")
+                    .map(|s| s[0])
+                    .unwrap_or(0.0),
+            })
+            .collect())
+    }
+
+    let verdict = CfdFlow::study("two-round corridor")
+        .cases(vec!["coarse_a".to_string(), "coarse_b".to_string()])
+        .fork(&pause)
+        .branch(|name| Ok(world(name, 3.0, 8)))
+        .continue_for(3)
+        .reduce_all(score)
+        // The refinement round re-forks the *same* onset; its three fine cases are derived from
+        // the two coarse rows (here just fixed names), and the coarse round is retained.
+        .refine(&pause, |coarse: &[BranchRow]| {
+            assert_eq!(coarse.len(), 2);
+            Ok(vec![
+                "fine_a".to_string(),
+                "fine_b".to_string(),
+                "fine_c".to_string(),
+            ])
+        })
+        .branch(|name| Ok(world(name, 3.0, 8)))
+        .continue_for(3)
+        .reduce_all(score)
+        .gates(GateSeq::new("rounds").gate("coarse carried", coarse_round_is_carried))
+        .verdict()
+        .expect("the two-round study runs");
+
+    assert!(verdict.passed(), "{verdict}");
+}
+
+// ── The origin-fork counterfactual + ensemble path: baseline → alternate → ensemble → couple →
+// march_for → reduce_ensemble (the weather campaign's machinery).
+
+struct EnsRow {
+    marked: bool,
+    draws: usize,
+}
+
+fn origin_campaign_is_well_formed(v: &deep_causality_cfd::StudyView<'_, EnsRow>) -> (bool, String) {
+    let rows = v.rows();
+    // Two cases; the baseline case is unmarked, the alternated case carries the marker; each case
+    // flew its full ensemble of draws.
+    let ok =
+        rows.len() == 2 && !rows[0].marked && rows[1].marked && rows.iter().all(|r| r.draws == 2);
+    (
+        ok,
+        format!(
+            "{} cases; baseline marked={}, alternate marked={}; draws {:?}",
+            rows.len(),
+            rows[0].marked,
+            rows[1].marked,
+            rows.iter().map(|r| r.draws).collect::<Vec<_>>(),
+        ),
+    )
+}
+
+#[test]
+fn origin_campaign_alternates_from_baseline_and_ensembles_the_draws() {
+    use deep_causality_cfd::{GateSeq, Report};
+
+    let verdict = CfdFlow::study("origin campaign")
+        .cases(vec!["standard".to_string(), "hot".to_string()])
+        // The declared baseline built once; `alternate` binds one world per case. The case whose
+        // world name matches the baseline ("standard") flies unmarked; "hot" is alternated + marked.
+        .baseline(|| Ok(world("standard", 3.0, 4)))
+        .alternate(|name| Ok(world(name, 3.0, 4)))
+        .ensemble(2) // two receiver-noise draws per case
+        .couple(|_case: &String, _draw: usize| ()) // the trivial no-op stack
+        .march_for(3, field_at_61km)
+        .reduce_ensemble(|_case: &String, draws: &[Report<f64>]| {
+            // The ensemble reduction sees the whole draw set per case.
+            let marked = draws[0]
+                .effect_log()
+                .map(|l| format!("{l}").contains("!!ContextAlternation!!"))
+                .unwrap_or(false);
+            Ok(EnsRow {
+                marked,
+                draws: draws.len(),
+            })
+        })
+        .gates(GateSeq::new("origin").gate("well formed", origin_campaign_is_well_formed))
+        .verdict()
+        .expect("the origin campaign runs to a verdict");
+
+    assert!(verdict.passed(), "{verdict}");
+}
+
+// ── The save_log audit sink: stepwise flush, completed-run == in-memory log, one file per branch.
+
+#[test]
+fn save_log_writes_provenance_that_matches_the_in_memory_log() {
+    use std::io::Read;
+
+    let dir = std::env::temp_dir().join("dcl_audit_traj");
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("traj.log");
+    let _ = std::fs::remove_file(&path);
+
+    // s_ref = 1.0 forces a carrier rebuild each step, so the field's provenance log accrues entries
+    // the sink can flush stepwise.
+    let cfg = world("audited", 1.0, 4);
+    let report = CfdFlow::march(&cfg)
+        .save_log(&path)
+        .couple(())
+        .trigger(BlackoutTrigger::new(1.0e9))
+        .from_field(field_at_61km())
+        .run_for(4)
+        .expect("audited run completes");
+
+    let in_memory: Vec<String> = report
+        .effect_log()
+        .map(|l| l.messages().map(str::to_string).collect())
+        .unwrap_or_default();
+    assert!(!in_memory.is_empty(), "the rebuild world logs provenance");
+
+    let mut contents = String::new();
+    std::fs::File::open(&path)
+        .expect("the audit file exists")
+        .read_to_string(&mut contents)
+        .unwrap();
+    let file_lines: Vec<String> = contents.lines().map(str::to_string).collect();
+    assert_eq!(
+        file_lines, in_memory,
+        "the completed run's file equals its in-memory log"
+    );
+}
+
+#[test]
+fn a_run_without_save_log_is_unchanged() {
+    // The same run with and without the sink produces the identical in-memory log and report.
+    let cfg = world("plain", 1.0, 4);
+    let plain = CfdFlow::march(&cfg)
+        .couple(())
+        .trigger(BlackoutTrigger::new(1.0e9))
+        .from_field(field_at_61km())
+        .run_for(4)
+        .unwrap();
+
+    let dir = std::env::temp_dir().join("dcl_audit_unchanged");
+    std::fs::create_dir_all(&dir).unwrap();
+    let audited = CfdFlow::march(&cfg)
+        .save_log(dir.join("p.log"))
+        .couple(())
+        .trigger(BlackoutTrigger::new(1.0e9))
+        .from_field(field_at_61km())
+        .run_for(4)
+        .unwrap();
+
+    let msgs = |r: &deep_causality_cfd::Report<f64>| -> Vec<String> {
+        r.effect_log()
+            .map(|l| l.messages().map(str::to_string).collect())
+            .unwrap_or_default()
+    };
+    assert_eq!(
+        msgs(&plain),
+        msgs(&audited),
+        "save_log changes nothing about the run"
+    );
+    assert_eq!(plain.final_field(), audited.final_field());
+}
+
+fn two_rows(v: &deep_causality_cfd::StudyView<'_, EnsRow>) -> (bool, String) {
+    (v.rows().len() == 2, format!("{} rows", v.rows().len()))
+}
+
+#[test]
+fn campaign_save_log_writes_one_file_per_branch_and_a_main_file() {
+    use deep_causality_cfd::{GateSeq, Report};
+
+    let dir = std::env::temp_dir().join("dcl_audit_campaign");
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let base = dir.join("wx.audit");
+
+    let verdict = CfdFlow::study("audited weather")
+        .save_log(&base)
+        .cases(vec!["standard".to_string(), "hot".to_string()])
+        .baseline(|| Ok(world("standard", 1.0, 4)))
+        .alternate(|name| Ok(world(name, 1.0, 4)))
+        .ensemble(2)
+        .couple(|_c: &String, _d: usize| ())
+        .march_for(3, field_at_61km)
+        .reduce_ensemble(|_c: &String, draws: &[Report<f64>]| {
+            Ok(EnsRow {
+                marked: false,
+                draws: draws.len(),
+            })
+        })
+        .gates(GateSeq::new("audited").gate("two rows", two_rows))
+        .verdict()
+        .expect("the audited campaign runs");
+    assert!(verdict.passed());
+
+    // 2 cases x 2 draws = 4 per-branch files, each named by case index + world + draw (the case
+    // index keeps files unique even if two cases shared a world name), exclusively written.
+    for (i, world_name) in ["standard", "hot"].iter().enumerate() {
+        for d in 0..2 {
+            let p = dir.join(format!(
+                "wx.audit.sweep-1.case-{i:02}-{world_name}.draw-{d}.log"
+            ));
+            assert!(p.exists(), "per-branch file {} exists", p.display());
+        }
+    }
+    // The main file names every spawn and every rejoin outcome.
+    let main = std::fs::read_to_string(dir.join("wx.audit.main.log")).expect("main file exists");
+    assert!(
+        main.contains("fan-out sweep-1"),
+        "main names the spawn: {main}"
+    );
+    assert!(
+        main.contains("rejoin sweep-1"),
+        "main names the rejoin: {main}"
+    );
+    assert!(
+        main.contains("standard.draw-0"),
+        "main names a branch: {main}"
+    );
+    assert!(main.contains("hot.draw-1"), "main names a branch: {main}");
+}
+
+#[test]
+fn campaign_save_log_to_an_unwritable_path_fails_the_run() {
+    use deep_causality_cfd::{GateSeq, Report};
+
+    // A base whose parent directory does not exist: opening the main audit file fails, and an
+    // audited run that can no longer be audited must fail rather than continue silently. The
+    // failure surfaces before any marching, so the test is cheap.
+    let base = std::path::Path::new("/dcl_no_such_dir_xyz/wx.audit");
+    let outcome = CfdFlow::study("bad audit")
+        .save_log(base)
+        .cases(vec!["a".to_string()])
+        .baseline(|| Ok(world("a", 3.0, 3)))
+        .alternate(|n| Ok(world(n, 3.0, 3)))
+        .ensemble(1)
+        .couple(|_c: &String, _d: usize| ())
+        .march_for(2, field_at_61km)
+        .reduce_ensemble(|_c: &String, _d: &[Report<f64>]| {
+            Ok(EnsRow {
+                marked: false,
+                draws: 1,
+            })
+        })
+        .gates(GateSeq::new("x").gate("two rows", two_rows))
+        .verdict();
+
+    let err = outcome.expect_err("an unwritable audit path fails the run");
+    assert!(
+        format!("{err}").contains("save_log"),
+        "the error names the save_log stage: {err}"
+    );
+}
+
+#[test]
+fn origin_campaign_verb_errors_short_circuit_and_name_their_verb() {
+    use deep_causality_cfd::{CompressibleMarchConfig, GateSeq, Report};
+
+    // baseline() fails: the whole study short-circuits, tagged with the failing verb.
+    let e = CfdFlow::study("x")
+        .cases(vec!["a".to_string()])
+        .baseline(|| {
+            Err::<CompressibleMarchConfig<f64>, _>(
+                deep_causality_physics::PhysicsError::CalculationError("no origin".into()),
+            )
+        })
+        .alternate(|n| Ok(world(n, 3.0, 3)))
+        .ensemble(1)
+        .couple(|_: &String, _: usize| ())
+        .march_for(2, field_at_61km)
+        .reduce_ensemble(|_: &String, _: &[Report<f64>]| {
+            Ok(EnsRow {
+                marked: false,
+                draws: 1,
+            })
+        })
+        .gates(GateSeq::new("x").gate("two rows", two_rows))
+        .verdict()
+        .expect_err("a failed baseline short-circuits");
+    assert!(format!("{e}").contains("baseline"), "names the verb: {e}");
+
+    // reduce_ensemble() fails after a real march: the error is tagged with reduce_ensemble.
+    let e = CfdFlow::study("x")
+        .cases(vec!["a".to_string()])
+        .baseline(|| Ok(world("a", 3.0, 3)))
+        .alternate(|n| Ok(world(n, 3.0, 3)))
+        .ensemble(1)
+        .couple(|_: &String, _: usize| ())
+        .march_for(2, field_at_61km)
+        .reduce_ensemble(|_: &String, _: &[Report<f64>]| {
+            Err::<EnsRow, _>(deep_causality_physics::PhysicsError::CalculationError(
+                "bad row".into(),
+            ))
+        })
+        .gates(GateSeq::new("x").gate("two rows", two_rows))
+        .verdict()
+        .expect_err("a failed reduction short-circuits");
+    assert!(
+        format!("{e}").contains("reduce_ensemble"),
+        "names the verb: {e}"
+    );
 }

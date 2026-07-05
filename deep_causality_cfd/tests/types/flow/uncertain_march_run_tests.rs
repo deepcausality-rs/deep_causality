@@ -78,10 +78,7 @@ fn present_config(name: &str) -> UncertainMarchConfig<f64> {
 fn run_returns_a_report_with_a_final_field_and_a_log_count() {
     let manifold = wall_manifold();
     let config = present_config("present-run");
-    let report = CfdFlow::uncertain_march(&config)
-        .on(&manifold)
-        .run()
-        .unwrap();
+    let report = CfdFlow::march(&config).on(&manifold).run().unwrap();
 
     assert_eq!(report.name(), "present-run");
     let field = report
@@ -118,7 +115,7 @@ fn run_with_hook_observes_every_step_view_accessor() {
         assert!(view.kinetic_energy().unwrap() >= 0.0);
     };
 
-    let report = CfdFlow::uncertain_march(&config)
+    let report = CfdFlow::march(&config)
         .on(&manifold)
         .run_with(hook)
         .unwrap();
@@ -149,7 +146,7 @@ fn run_with_a_dropout_stream_flags_dropout_and_logs_entries() {
         .unwrap();
 
     let mut dropout_steps = Vec::new();
-    let report = CfdFlow::uncertain_march(&config)
+    let report = CfdFlow::march(&config)
         .on(&manifold)
         .run_with(|view: &UncertainStepView<'_, 2, f64>| {
             if view.in_dropout() {
@@ -182,9 +179,6 @@ fn run_rejects_a_flow_axis_out_of_range_for_the_geometry() {
         .build()
         .unwrap();
 
-    let err = CfdFlow::uncertain_march(&config)
-        .on(&manifold)
-        .run()
-        .unwrap_err();
+    let err = CfdFlow::march(&config).on(&manifold).run().unwrap_err();
     assert!(matches!(err.0, PhysicsErrorEnum::DimensionMismatch(_)));
 }

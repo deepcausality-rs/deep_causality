@@ -74,7 +74,7 @@ pub fn cyl_mask(
 
 /// The `QttMarchConfig` for an immersed cylinder in a uniform free-stream, marched `STEPS` steps at the
 /// bond cap `cap`, observing drag/lift and divergence — built through the configuration layer, to be run
-/// by `CfdFlow::qtt_march` in `main`.
+/// by `CfdFlow::march` in `main`.
 ///
 /// # Errors
 /// Propagates builder / codec errors.

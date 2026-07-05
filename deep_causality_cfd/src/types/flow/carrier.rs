@@ -18,7 +18,7 @@
 use super::blackout::BlackoutTrigger;
 use super::coupling::{CoupledField, PhysicsStage, StepContext};
 use crate::types::CfdScalar;
-use crate::types::flow::Report;
+use crate::types::flow::{MarchState, Report};
 use crate::types::flow_config::QttObserve;
 use alloc::sync::Arc;
 use deep_causality_core::{AlternatableContext, AlternatableState, AlternatableValue, EffectLog};
@@ -229,13 +229,16 @@ where
     let mut report = Report::new(M::config_name(cfg));
     sampler.into_report(observe, carrier.dt(), &mut report)?;
     carrier.finish(state, &mut report)?;
-    // The terminal trajectory witnesses: the carried truth state and the last published
-    // navigation solution, so a branch's miss distance is trajectory-derived, not modeled.
-    if let Some(truth) = field.scalar("truth_state") {
-        report.add_series("final_truth_state", truth.to_vec());
-    }
-    if let Some(nav) = field.scalar("nav_position") {
-        report.add_series("final_nav_position", nav.to_vec());
+    // Expose the final field's scalars as `final_<name>` so a reduction reads any carried quantity
+    // off the report — the terminal trajectory witnesses (the carried truth state and the last
+    // published navigation solution, so a branch's miss is trajectory-derived, not modeled) and the
+    // coupling's own telemetry (the weather table's blackout-window and drift scalars). The
+    // carrier's finish-series (from the decoded state) take precedence on a name clash.
+    for (name, data) in field.scalars() {
+        let key = alloc::format!("final_{name}");
+        if report.series(&key).is_none() {
+            report.add_series(key, data.clone());
+        }
     }
     if !field.log().is_empty() {
         report.set_effect_log(field.log().clone());
@@ -252,6 +255,28 @@ pub struct CoupledLoopSpec<R: CfdScalar, S> {
     pub steps: usize,
 }
 
+/// The audit-log sink seam: after each coupled step the driver flushes the field's newly appended
+/// provenance entries here. The no-op [`NoAudit`] is the default — an unaudited run pays nothing
+/// and behaves exactly as before; the std `LogSink` (the `save_log` verb) writes each new entry to
+/// disk the moment it is recorded, so a killed run's file ends at the last step it completed.
+pub trait AuditFlush {
+    /// Flush every log entry not yet written. A write failure fails the run: an audited run that
+    /// can no longer be audited must not continue silently.
+    ///
+    /// # Errors
+    /// IO failures from the underlying sink.
+    fn flush(&mut self, log: &EffectLog) -> Result<(), PhysicsError>;
+}
+
+/// The default no-op sink: an unaudited run flushes nothing.
+pub struct NoAudit;
+
+impl AuditFlush for NoAudit {
+    fn flush(&mut self, _log: &EffectLog) -> Result<(), PhysicsError> {
+        Ok(())
+    }
+}
+
 /// Drive a coupled march to completion: the loop body every host's `run_coupled` delegates to.
 ///
 /// # Errors
@@ -263,6 +288,7 @@ pub fn run_coupled_driver<const D: usize, R, S, M>(
     mut field: CoupledField<R>,
     mut state: M::State,
     observe: &QttObserve,
+    audit: &mut impl AuditFlush,
 ) -> Result<Report<R>, PhysicsError>
 where
     R: CfdScalar,
@@ -273,6 +299,9 @@ where
     for s in 0..spec.steps {
         state = carrier.coupled_step(&state, &mut field, &spec.coupling, spec.kappa, s + 1)?;
         sampler.sample(&field)?;
+        // Stepwise flush: the field's provenance entries this step land on disk before the next
+        // step begins, so a killed run's audit file ends at the last completed step.
+        audit.flush(field.log())?;
     }
     finish_report(carrier, cfg, observe, sampler, &state, &field)
 }
@@ -287,7 +316,8 @@ pub fn run_until_driver<'c, const D: usize, R, S, M, P>(
     mut field: CoupledField<R>,
     predicate: P,
     mut state: M::State,
-) -> CarrierPause<'c, R, S, M, D>
+    audit: &mut impl AuditFlush,
+) -> Result<CarrierPause<'c, R, S, M, D>, PhysicsError>
 where
     R: CfdScalar,
     S: PhysicsStage<D, R>,
@@ -308,17 +338,22 @@ where
                     s + 1
                 ));
                 error = Some(e);
+                // Flush the captured-error entry before returning the errored pause.
+                audit.flush(field.log())?;
                 break;
             }
         }
+        // Stepwise flush: this step's provenance (regime transitions, rebuilds, nav) hits disk now.
+        audit.flush(field.log())?;
         if predicate(&field, paused_at) {
             field
                 .log_mut()
                 .add_entry(&alloc::format!("march paused at step {paused_at}"));
+            audit.flush(field.log())?;
             break;
         }
     }
-    CarrierPause {
+    Ok(CarrierPause {
         config: cfg,
         coupling: spec.coupling,
         trigger: spec.trigger,
@@ -327,7 +362,7 @@ where
         field: Arc::new(field),
         step: paused_at,
         error,
-    }
+    })
 }
 
 /// A coupled march paused mid-flight: the shared branch state every counterfactual fork resumes
@@ -349,6 +384,32 @@ where
 
 impl<'c, R, S, M, const D: usize> CarrierPause<'c, R, S, M, D>
 where
+    R: CfdScalar + deep_causality_file::BitCodec,
+    M: CoupledCarrier<D, R>,
+{
+    /// Suspend this paused march to disk in one line: the carried field and the step index are
+    /// packed into a full resume package (checksummed, fingerprinted) and written to `path`. A
+    /// different workflow continues later via
+    /// [`load_resume_state`](crate::types::flow::state_snapshot::load_resume_state).
+    ///
+    /// # Errors
+    /// Packing and file failures surface as physics errors naming the cause.
+    pub fn save_state_snapshot(
+        &self,
+        path: impl AsRef<std::path::Path>,
+        world_fingerprint: &[u8],
+    ) -> Result<(), PhysicsError> {
+        crate::types::flow::state_snapshot::save_resume_state(
+            path,
+            self.field(),
+            self.step(),
+            world_fingerprint,
+        )
+    }
+}
+
+impl<'c, R, S, M, const D: usize> CarrierPause<'c, R, S, M, D>
+where
     R: CfdScalar,
     M: CoupledCarrier<D, R>,
 {
@@ -365,6 +426,13 @@ where
     /// The coupled field at the pause (carried scalars, nav state, regime, provenance log).
     pub fn field(&self) -> &CoupledField<R> {
         &self.field
+    }
+
+    /// Export this pause as a resumable [`MarchState`]: the carried field plus the step reached.
+    /// The state resumes a continued march (in memory now, or from disk later after
+    /// [`save`](MarchState::save)) bit-identically to continuing this pause directly.
+    pub fn state(&self) -> MarchState<R> {
+        MarchState::at((*self.field).clone(), self.step)
     }
 
     /// Fork the pause: an **O(1)** branch sharing the paused state and field by `Arc` — no tensor
@@ -405,7 +473,7 @@ where
     /// a failure does not cancel its siblings.
     pub fn continue_branches(
         &self,
-        worlds: &[&'c M::Config],
+        worlds: &[&M::Config],
         steps: usize,
     ) -> Result<Vec<Report<R>>, PhysicsError>
     where
@@ -413,11 +481,54 @@ where
         M::Config: MaybeParallel,
         Report<R>: MaybeParallel,
     {
-        scoped_map(worlds, |world| {
-            self.fork().alternate_context(*world).continue_march(steps)
-        })
-        .into_iter()
-        .collect()
+        scoped_map(worlds, |world| self.continue_with(*world, steps))
+            .into_iter()
+            .collect()
+    }
+
+    /// Fly **one** branch world from this pause: fork (O(1), copy-on-write), alternate into the
+    /// world, and continue for `steps`. The singular sibling of [`continue_branches`] — one
+    /// world, one continued report, carrying the same `!!ContextAlternation!!` audit entry — for
+    /// a study that scores branch worlds one at a time (the campaign's event-fork `branch`
+    /// lowers each case onto this).
+    ///
+    /// The world is borrowed only for the duration of this call: it is consumed to rebuild the
+    /// carrier and never escapes into the returned report, so it need **not** outlive the pause's
+    /// own config (`'c`). This is what lets a campaign bind branch worlds it owns — one per case,
+    /// living only in the study phase — and continue each one without pinning it to wherever the
+    /// pause was created.
+    ///
+    /// # Errors
+    /// The captured pause error, or any carrier-assembly / marching / coupling failure in the
+    /// continued segment.
+    pub fn continue_with(
+        &self,
+        world: &M::Config,
+        steps: usize,
+    ) -> Result<Report<R>, PhysicsError> {
+        // Mirror `fork().alternate_context(world).continue_march(steps)` exactly, but with `world`
+        // as a short-lived borrow: an errored pause returns its captured error untouched, and a
+        // healthy one accumulates the same `!!ContextAlternation!!` marker into a fresh branch log
+        // before the continued segment merges it into the branch's copy-on-write field.
+        if let Some(e) = &self.error {
+            return Err(e.clone());
+        }
+        let mut branch_log = EffectLog::new();
+        branch_log.add_entry(&alloc::format!(
+            "!!ContextAlternation!!: world '{}' replaced with '{}' at step {}",
+            M::config_name(self.config),
+            M::config_name(world),
+            self.step,
+        ));
+        run_continued_segment(
+            self,
+            world,
+            None,
+            Arc::clone(&self.state),
+            Arc::clone(&self.field),
+            branch_log,
+            steps,
+        )
     }
 }
 
@@ -546,52 +657,84 @@ where
         if let Some(e) = self.error {
             return Err(e);
         }
+        // Both the alternated override and the pause's own config share `'c`, so this `unwrap_or`
+        // unifies cleanly; the borrowed-world `continue_with` path relaxes that lifetime by calling
+        // `run_continued_segment` with a short-lived world directly.
         let cfg = self.context_ov.unwrap_or(self.pause.config);
-        let mut carrier = M::build(cfg)?;
-
-        // Marched state: an alternated snapshot re-encodes; otherwise resume the shared state. The
-        // loop below only ever *reads* the current state and replaces the Arc with the freshly
-        // produced next state, so the shared paused data is never cloned.
-        let mut state: Arc<M::State> = match self.seed_ov {
-            Some(seed) => Arc::new(carrier.encode_seed(&seed)?),
-            None => self.state,
-        };
-
-        // Field: the branch's one CoW clone happens at the first write (merging the audit log).
-        let mut field_arc = self.field;
-        let mut branch_log = self.log;
-        {
-            let field = Arc::make_mut(&mut field_arc);
-            field.log_mut().append(&mut branch_log);
-            field.log_mut().add_entry(&alloc::format!(
-                "march resumed at step {} for {} steps in world '{}'",
-                self.pause.step,
-                steps,
-                M::config_name(cfg),
-            ));
-        }
-
-        let mut sampler = BlackoutSampler::new(self.pause.trigger);
-        for s in 0..steps {
-            let field = Arc::make_mut(&mut field_arc);
-            let next = carrier.coupled_step(
-                &state,
-                field,
-                &self.pause.coupling,
-                self.pause.scalar_kappa,
-                self.pause.step + s + 1,
-            )?;
-            state = Arc::new(next);
-            sampler.sample(field)?;
-        }
-
-        finish_report(
-            &carrier,
+        run_continued_segment(
+            self.pause,
             cfg,
-            &M::config_observe(cfg),
-            sampler,
-            &state,
-            &field_arc,
+            self.seed_ov,
+            self.state,
+            self.field,
+            self.log,
+            steps,
         )
     }
+}
+
+/// The continued-march segment shared by [`CarrierFork::continue_march`] (borrowed override world)
+/// and [`CarrierPause::continue_with`] (short-lived owned world). Taking `cfg` as a plain borrow —
+/// decoupled from the pause's `'c` — is exactly what lets a study continue in a world it owns: the
+/// world is consumed to rebuild the carrier and to name the world in the audit trail, and never
+/// escapes into the returned report.
+fn run_continued_segment<const D: usize, R, S, M>(
+    pause: &CarrierPause<'_, R, S, M, D>,
+    cfg: &M::Config,
+    seed_ov: Option<M::Seed>,
+    state: Arc<M::State>,
+    field: Arc<CoupledField<R>>,
+    mut branch_log: EffectLog,
+    steps: usize,
+) -> Result<Report<R>, PhysicsError>
+where
+    R: CfdScalar,
+    S: PhysicsStage<D, R>,
+    M: CoupledCarrier<D, R>,
+{
+    let mut carrier = M::build(cfg)?;
+
+    // Marched state: an alternated snapshot re-encodes; otherwise resume the shared state. The
+    // loop below only ever *reads* the current state and replaces the Arc with the freshly
+    // produced next state, so the shared paused data is never cloned.
+    let mut state: Arc<M::State> = match seed_ov {
+        Some(seed) => Arc::new(carrier.encode_seed(&seed)?),
+        None => state,
+    };
+
+    // Field: the branch's one CoW clone happens at the first write (merging the audit log).
+    let mut field_arc = field;
+    {
+        let field = Arc::make_mut(&mut field_arc);
+        field.log_mut().append(&mut branch_log);
+        field.log_mut().add_entry(&alloc::format!(
+            "march resumed at step {} for {} steps in world '{}'",
+            pause.step,
+            steps,
+            M::config_name(cfg),
+        ));
+    }
+
+    let mut sampler = BlackoutSampler::new(pause.trigger);
+    for s in 0..steps {
+        let field = Arc::make_mut(&mut field_arc);
+        let next = carrier.coupled_step(
+            &state,
+            field,
+            &pause.coupling,
+            pause.scalar_kappa,
+            pause.step + s + 1,
+        )?;
+        state = Arc::new(next);
+        sampler.sample(field)?;
+    }
+
+    finish_report(
+        &carrier,
+        cfg,
+        &M::config_observe(cfg),
+        sampler,
+        &state,
+        &field_arc,
+    )
 }

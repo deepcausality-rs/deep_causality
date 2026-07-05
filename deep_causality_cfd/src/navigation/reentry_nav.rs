@@ -120,6 +120,34 @@ impl<R: RealField + FromPrimitive> ReentryNavEngine<R> {
     pub fn position_variance(&self) -> R {
         self.filter.position_variance()
     }
+    /// The primary gravitational parameter the engine propagates against.
+    pub fn gm(&self) -> R {
+        self.gm
+    }
+
+    /// Rebuild an engine from snapshotted state: the exact inverse of reading
+    /// [`position`](Self::position), [`velocity`](Self::velocity), [`gm`](Self::gm),
+    /// [`filter`](Self::filter), [`carried_clock_offset`](Self::carried_clock_offset), and
+    /// [`elapsed_time`](Self::elapsed_time). Exists for the state-snapshot resume path, so a
+    /// restored engine is bit-identical to the suspended one.
+    pub fn restore(
+        position: [R; 3],
+        velocity: [R; 3],
+        gm: R,
+        filter: NavFilter<R>,
+        tau_offset: R,
+        elapsed: R,
+    ) -> Self {
+        Self {
+            gm,
+            position,
+            velocity,
+            filter,
+            tau_offset,
+            elapsed,
+        }
+    }
+
     /// The error-state filter.
     pub fn filter(&self) -> &NavFilter<R> {
         &self.filter
