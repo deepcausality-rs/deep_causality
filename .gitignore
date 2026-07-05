@@ -65,3 +65,7 @@ papers/**/*.ind
 papers/**/*.run.xml
 papers/**/*.bcf
 papers/**/.texpadtmp/
+
+# Lean / lake build artifacts and vendored dependency clones (Mathlib etc.).
+# lake-manifest.json IS committed (like Cargo.lock: pins dependency revisions).
+/lean/.lake/

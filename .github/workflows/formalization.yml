@@ -1,0 +1,72 @@
+#SPDX-License-Identifier: MIT
+#Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+# Formalization CI — the L1 (Lean) gate, the L3 (Kani) gate, and the Lean<->Rust
+# traceability check. See lean/README.md and openspec/notes/causal-algebra/Formalization.md.
+
+name: Formalization
+
+on: [ pull_request, push ]
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # L1 — the mathematical truth. A broken law fails `lake build`.
+  lean:
+    name: lean (lake build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lean
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install elan (Lean toolchain manager)
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain "$(cat lean-toolchain)"
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: lake exe cache get
+        run: lake exe cache get || true
+      - name: lake build
+        run: lake build
+
+  # L3 — bounded model checking of the concrete Rust bind/evaluate. First-order, minutes.
+  kani:
+    name: cargo kani (core)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Kani
+        run: |
+          cargo install --locked kani-verifier
+          cargo kani setup
+      - name: cargo kani (core harnesses)
+        run: cargo kani --tests -p deep_causality_core
+
+  # The bridge — every THEOREM_MAP id must appear in both a Lean file and a Rust file.
+  theorem-map:
+    name: theorem-map consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Every proved Lean theorem needs a Rust witness and a manifest entry
+        run: |
+          set -euo pipefail
+          # Source of truth: the `THEOREM_MAP: `id`` tags in the Lean proofs.
+          ids=$(grep -rhoE 'THEOREM_MAP: `[a-z0-9_.]+`' lean --include='*.lean' \
+                | sed -E 's/.*`([a-z0-9_.]+)`.*/\1/' | sort -u || true)
+          if [ -z "$ids" ]; then echo "no THEOREM_MAP ids found in lean/**/*.lean"; exit 1; fi
+          fail=0
+          for id in $ids; do
+            rust_hit=$(grep -Frl "THEOREM_MAP: $id" deep_causality_num deep_causality_core \
+                       --include='*.rs' || true)
+            map_hit=$(grep -Fl "$id" lean/THEOREM_MAP.md || true)
+            if [ -z "$rust_hit" ]; then echo "MISSING Rust witness for id: $id"; fail=1; fi
+            if [ -z "$map_hit" ]; then echo "MISSING THEOREM_MAP.md entry for id: $id"; fail=1; fi
+          done
+          exit $fail
