@@ -1,0 +1,60 @@
+openspec/notes/cfd-dsl/02-dsl-study-io.md
+  s_c4c919f578d611::t_270c58dce6657a 290,295
+  s_c4c919f578d611::t_071d6b940cad0c 259-265
+  s_c4c919f578d611::t_684458d3e1f20f 446-453
+  s_c4c919f578d611::t_fbb622c52d5e46 476,505,533,575,598
+  s_c4c919f578d611::t_e350700f52e806 412-421
+openspec/changes/rework-cfd-flow-dsl/specs/cfd-study-grammar/spec.md
+  s_c4c919f578d611::t_c2fa803d3ba107 1-123
+openspec/changes/rework-cfd-flow-dsl/specs/cfd-trajectory-march/spec.md
+  s_c4c919f578d611::t_b3c99431c783ab 1-63
+openspec/specs/cfd-study-dsl/spec.md
+  s_c4c919f578d611::t_b18b231cdc0604 1-52
+openspec/changes/rework-cfd-flow-dsl/tasks.md
+  s_c4c919f578d611::t_1d0fc7a34b5ddb 1-68
+openspec/changes/rework-cfd-flow-dsl/proposal.md
+  s_c4c919f578d611::t_83f80c13401eee 1-84
+openspec/changes/rework-cfd-flow-dsl/.openspec.yaml
+  s_c4c919f578d611::t_1e98d34f0304f5 1-2
+openspec/changes/rework-cfd-flow-dsl/specs/typed-table-io/spec.md
+  s_c4c919f578d611::t_6deeef252ec0b0 1-96
+openspec/specs/duct-march/spec.md
+  s_c4c919f578d611::t_b18b231cdc0604 1-42
+openspec/specs/nozzle-operating-map/spec.md
+  s_c4c919f578d611::t_b18b231cdc0604 1-30
+openspec/changes/rework-cfd-flow-dsl/specs/cfd-audit-log/spec.md
+  s_c4c919f578d611::t_016b08a4b7dfab 1-55
+openspec/changes/rework-cfd-flow-dsl/design.md
+  s_c4c919f578d611::t_e57dc89ae123af 1-133
+openspec/specs/flight-envelope-placard/spec.md
+  s_c4c919f578d611::t_b18b231cdc0604 1-29
+openspec/changes/rework-cfd-flow-dsl/specs/cfd-counterfactual/spec.md
+  s_c4c919f578d611::t_353986f2df30db 52-55
+  s_c4c919f578d611::t_ee413d72e0ffd3 1-51,56-61
+openspec/specs/typed-table-io/spec.md
+  s_c4c919f578d611::t_b18b231cdc0604 43-55
+openspec/notes/cfd-dsl/03-dsl-acceptance.md
+  s_c4c919f578d611::t_92b698ea90e3c3 21-28
+openspec/specs/viv-resonance-margin/spec.md
+  s_c4c919f578d611::t_b18b231cdc0604 1-24
+openspec/notes/cfd-dsl/04-dsl-feasibility.md
+  s_c4c919f578d611::t_9a7f91fdde58cd 1-92
+openspec/changes/archive/2026-07-05-add-cfd-study-dsl-and-examples/tasks.md
+  s_c4c919f578d611::t_373d7db58d51de 18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "9b008e6759a12df51371936f40799b6b357cf95b",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
