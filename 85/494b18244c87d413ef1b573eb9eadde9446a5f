@@ -1,0 +1,25 @@
+examples/avionics_examples/cfd/viv_resonance_margin/main.rs
+  s_c4c919f578d611::t_964e353dc9e84e 44-47
+examples/avionics_examples/cfd/flight_envelope_placard/model.rs
+  s_c4c919f578d611::t_2a4619169d0629 65-71,130-132,151,175-180,194-197,210-215,229-232,239-242
+examples/avionics_examples/cfd/nozzle_operating_map/main.rs
+  s_c4c919f578d611::t_f275e04a3d0aa7 32,41-42,44,55,70-83
+examples/avionics_examples/cfd/nozzle_operating_map/model.rs
+  s_c4c919f578d611::t_05a1891d8281ca 15-17,59-61,244-247,253-256,293-296,315-318,325-328,331-334
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "85494b18244c87d413ef1b573eb9eadde9446a5f",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
