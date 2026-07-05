@@ -482,3 +482,64 @@ fn refine_reforks_the_same_onset_and_carries_the_prior_round() {
 
     assert!(verdict.passed(), "{verdict}");
 }
+
+// ── The origin-fork counterfactual + ensemble path: baseline → alternate → ensemble → couple →
+// march_for → reduce_ensemble (the weather campaign's machinery).
+
+struct EnsRow {
+    marked: bool,
+    draws: usize,
+}
+
+fn origin_campaign_is_well_formed(
+    v: &deep_causality_cfd::StudyView<'_, EnsRow>,
+) -> (bool, String) {
+    let rows = v.rows();
+    // Two cases; the baseline case is unmarked, the alternated case carries the marker; each case
+    // flew its full ensemble of draws.
+    let ok = rows.len() == 2
+        && !rows[0].marked
+        && rows[1].marked
+        && rows.iter().all(|r| r.draws == 2);
+    (
+        ok,
+        format!(
+            "{} cases; baseline marked={}, alternate marked={}; draws {:?}",
+            rows.len(),
+            rows[0].marked,
+            rows[1].marked,
+            rows.iter().map(|r| r.draws).collect::<Vec<_>>(),
+        ),
+    )
+}
+
+#[test]
+fn origin_campaign_alternates_from_baseline_and_ensembles_the_draws() {
+    use deep_causality_cfd::{GateSeq, Report};
+
+    let verdict = CfdFlow::study("origin campaign")
+        .cases(vec!["standard".to_string(), "hot".to_string()])
+        // The declared baseline built once; `alternate` binds one world per case. The case whose
+        // world name matches the baseline ("standard") flies unmarked; "hot" is alternated + marked.
+        .baseline(|| Ok(world("standard", 3.0, 4)))
+        .alternate(|name| Ok(world(name, 3.0, 4)))
+        .ensemble(2) // two receiver-noise draws per case
+        .couple(|_case: &String, _draw: usize| ()) // the trivial no-op stack
+        .march_for(3, field_at_61km)
+        .reduce_ensemble(|_case: &String, draws: &[Report<f64>]| {
+            // The ensemble reduction sees the whole draw set per case.
+            let marked = draws[0]
+                .effect_log()
+                .map(|l| format!("{l}").contains("!!ContextAlternation!!"))
+                .unwrap_or(false);
+            Ok(EnsRow {
+                marked,
+                draws: draws.len(),
+            })
+        })
+        .gates(GateSeq::new("origin").gate("well formed", origin_campaign_is_well_formed))
+        .verdict()
+        .expect("the origin campaign runs to a verdict");
+
+    assert!(verdict.passed(), "{verdict}");
+}

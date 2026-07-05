@@ -1,6 +1,3 @@
-   Compiling avionics_examples v0.1.0 (/Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples)
-    Finished `release` profile [optimized] target(s) in 4.24s
-     Running `target/release/examples/plasma_blackout_weather`
 === Plasma-blackout weather-dispersion table: six counterfactual atmospheres ===
 
 Baseline: the corridor's validated descent | 850 coupled steps per world, 85 s of flight each
@@ -15,7 +12,8 @@ Monte Carlo: 8 deterministic receiver-noise draws per condition (48 descents tot
   thin_day         -5   0.75     1.05     12.9    70.8     58.0    4.539e20     5.215e6    45.72 +- 1.96   0.127 (max 0.203)
   dense_day         5   1.30     1.05      8.7    69.7     61.1    4.947e20     5.036e6    52.03 +- 5.73   0.147 (max 0.211)
 
---- Weather-table validation gates ---
+
+--- weather-dispersion table + weather runtime ---
   [PASS] (0) table integrity: all six worlds completed without a captured step error
   [PASS] (1) counterfactual audit trail: every dispersion world carries the !!ContextAlternation!! marker naming its baseline
   [PASS] (2) flow-resolved windows in every weather: each world found onset, a nonzero dwell, and a recovered link before the horizon
@@ -23,6 +21,5 @@ Monte Carlo: 8 deterministic receiver-noise draws per condition (48 descents tot
   [PASS] (4) the INS does not behave as assumed in the cold: polar-winter mean blackout drift 68.75 m vs standard-day 45.93 m (1.50x; gate requires 1.2x from the thermal bias departure and the widened window)
   [PASS] (4b) the cold effect is statistically resolved: polar-standard separation 22.81 m vs combined sigma 5.69 m (4.0 sigma; gate requires 2)
   [PASS] (5) every weather reacquires, in every draw: worst-draw terminal navigation error under 1.0 m across all 48 descents
-  [PASS] (6) wall-clock budget: 190.6 s for the whole six-world table (budget 600 s)
-
-=== Weather-dispersion table complete. All gates passed. ===
+  [PASS] (6) wall-clock budget: 197.3 s for the whole six-world table (budget 600 s)
+=== All gates passed: weather-dispersion table + weather runtime. ===

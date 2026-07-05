@@ -229,13 +229,16 @@ where
     let mut report = Report::new(M::config_name(cfg));
     sampler.into_report(observe, carrier.dt(), &mut report)?;
     carrier.finish(state, &mut report)?;
-    // The terminal trajectory witnesses: the carried truth state and the last published
-    // navigation solution, so a branch's miss distance is trajectory-derived, not modeled.
-    if let Some(truth) = field.scalar("truth_state") {
-        report.add_series("final_truth_state", truth.to_vec());
-    }
-    if let Some(nav) = field.scalar("nav_position") {
-        report.add_series("final_nav_position", nav.to_vec());
+    // Expose the final field's scalars as `final_<name>` so a reduction reads any carried quantity
+    // off the report — the terminal trajectory witnesses (the carried truth state and the last
+    // published navigation solution, so a branch's miss is trajectory-derived, not modeled) and the
+    // coupling's own telemetry (the weather table's blackout-window and drift scalars). The
+    // carrier's finish-series (from the decoded state) take precedence on a name clash.
+    for (name, data) in field.scalars() {
+        let key = alloc::format!("final_{name}");
+        if report.series(&key).is_none() {
+            report.add_series(key, data.clone());
+        }
     }
     if !field.log().is_empty() {
         report.set_effect_log(field.log().clone());
