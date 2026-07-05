@@ -44,5 +44,7 @@ pub fn print_footer(table_path: &Path) {
 /// The file name of a path (not the absolute manifest path), so the recorded reference output is
 /// portable across machines and checkouts.
 fn file_name(p: &Path) -> std::borrow::Cow<'_, str> {
-    p.file_name().map(|n| n.to_string_lossy()).unwrap_or_default()
+    p.file_name()
+        .map(|n| n.to_string_lossy())
+        .unwrap_or_default()
 }
