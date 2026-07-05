@@ -42,9 +42,6 @@ pub mod gates_tests;
 // IO operations are unsupported under MIRI.
 #[cfg(test)]
 #[cfg(not(miri))]
-pub mod io_tests;
-#[cfg(test)]
-#[cfg(not(miri))]
 pub mod march_case_tests;
 #[cfg(test)]
 #[cfg(not(miri))]

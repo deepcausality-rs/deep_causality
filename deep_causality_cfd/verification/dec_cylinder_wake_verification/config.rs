@@ -4,11 +4,11 @@
  */
 
 //! Configuration layer for the cut-cell cylinder wake: the case + sensor parameters, the immersed
-//! cut-cell geometry, the sensor stream, and the `CfdFlow::uncertain_march` config container.
+//! cut-cell geometry, the sensor stream, and the `CfdFlow::march` config container.
 //!
 //! The deterministic CFD scalar is the working precision [`FloatType`]; exact `f64` specifications
 //! enter through [`ft`]. The geometry (cut-cell disk in a periodic-x channel) and the
-//! `UncertainMarchConfig` are built here; `main.rs` lends the geometry to `CfdFlow::uncertain_march`
+//! `UncertainMarchConfig` are built here; `main.rs` lends the geometry to `CfdFlow::march`
 //! and streams the wake probe, and `print_utils` renders the diagnostics. Presence-gate probabilities
 //! and the wake-probe analysis stay in `f64` (they are not working-precision quantities).
 
@@ -162,7 +162,7 @@ pub fn build_geometry() -> CaseGeometry {
 
 /// The sensor-fed uncertain-inflow march config: the DEC solver at `ν`/`dt`, the presence-gated +
 /// QMC-collapsed inflow zone, the sensor stream, and the step horizon — built through
-/// `CfdConfigBuilder`, run by `CfdFlow::uncertain_march`.
+/// `CfdConfigBuilder`, run by `CfdFlow::march`.
 ///
 /// # Errors
 /// Any solver-config or container validation failure.

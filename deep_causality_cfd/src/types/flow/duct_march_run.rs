@@ -4,7 +4,7 @@
  */
 
 //! The quasi-one-dimensional duct driver behind
-//! [`CfdFlow::duct_march`](crate::CfdFlow::duct_march) (design D4).
+//! [`CfdFlow::march`](crate::CfdFlow::march) (design D4).
 //!
 //! **Solver-composition choice, recorded per D4:** the crate's 1-D
 //! compressible Euler solver ([`CompressibleEuler1d`](crate::CompressibleEuler1d))
@@ -50,7 +50,7 @@ struct Prim<R> {
 }
 
 /// The runnable duct march composed by
-/// [`CfdFlow::duct_march`](crate::CfdFlow::duct_march). Borrows the owned
+/// [`CfdFlow::march`](crate::CfdFlow::march). Borrows the owned
 /// [`DuctConfig`]; [`run`](Self::run) returns the owned
 /// [`Report`](crate::Report) and the borrow never escapes it.
 pub struct DuctMarchRun<'a, R: CfdScalar> {

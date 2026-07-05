@@ -73,7 +73,7 @@ fn taylor_green() -> QttMarchConfig<f64> {
 fn duct_config_marchable_matches_the_entry() {
     let cfg = nozzle();
     let via_trait = cfg.march().expect("marchable duct");
-    let via_entry = CfdFlow::duct_march(&cfg).run().expect("duct entry");
+    let via_entry = CfdFlow::march(&cfg).run().expect("duct entry");
     assert_eq!(
         via_trait.series("mach_profile"),
         via_entry.series("mach_profile"),
@@ -97,10 +97,10 @@ fn march_config_marchable_matches_run_owned() {
 fn qtt_config_marchable_matches_the_entry() {
     let cfg = taylor_green();
     let via_trait = cfg.march().expect("marchable QTT");
-    let via_entry = CfdFlow::qtt_march(&cfg).run().expect("QTT entry");
+    let via_entry = CfdFlow::march(&cfg).run().expect("QTT entry");
     assert_eq!(
         via_trait.series("kinetic_energy"),
         via_entry.series("kinetic_energy"),
-        "Marchable::march equals CfdFlow::qtt_march(..).run()"
+        "Marchable::march equals CfdFlow::march(..).run()"
     );
 }

@@ -5,7 +5,7 @@
 
 //! The **CfdFlow** uncertain-inflow marching pipeline (the sensor-fed causal-monad march).
 //!
-//! `CfdFlow::uncertain_march(&config)` injects an [`UncertainMarchConfig`]; `.on(&manifold)` lends
+//! `CfdFlow::march(&config)` injects an [`UncertainMarchConfig`]; `.on(&manifold)` lends
 //! the caller-owned geometry (B1); `run` / `run_with` materialize the solver, install the moving
 //! wall from the zone, seed, and drive the [`inflow_march_step`] bind loop (the same kernel
 //! [`march_inflow`](crate::march_inflow) packages) — surfacing an [`UncertainStepView`] per step for

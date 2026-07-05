@@ -9,7 +9,7 @@
 //! A coupled leg reads as named stages instead of a five-argument call:
 //!
 //! ```ignore
-//! let pause = CfdFlow::compressible_march(&world)
+//! let pause = CfdFlow::march(&world)
 //!     .couple(stack)        // the multiphysics stack (the "what happens each step")
 //!     .from(state)          // the MarchState to resume from (its coupled field)
 //!     .until(event)?;       // -> CompressiblePause at the event

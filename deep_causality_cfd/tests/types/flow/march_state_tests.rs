@@ -72,7 +72,7 @@ fn field_at_61km() -> CoupledField<f64> {
 /// Pause a march, export its `MarchState`.
 fn paused_state() -> MarchState<f64> {
     let cfg = world("nominal_descent", 8);
-    let pause = CfdFlow::compressible_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(
             (),
             field_at_61km(),
@@ -121,10 +121,10 @@ fn disk_resume_equals_in_memory_resume() {
 
     // Continue the same descent from each transport's field.
     let cfg = world("nominal_descent", 8);
-    let from_memory = CfdFlow::compressible_march(&cfg)
+    let from_memory = CfdFlow::march(&cfg)
         .run_coupled((), state.into_field(), BlackoutTrigger::new(1.0e9), 0.0)
         .unwrap();
-    let from_disk = CfdFlow::compressible_march(&cfg)
+    let from_disk = CfdFlow::march(&cfg)
         .run_coupled((), loaded.into_field(), BlackoutTrigger::new(1.0e9), 0.0)
         .unwrap();
 

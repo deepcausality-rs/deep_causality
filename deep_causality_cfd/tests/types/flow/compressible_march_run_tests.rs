@@ -83,7 +83,7 @@ fn field_at_61km() -> CoupledField<f64> {
 #[test]
 fn coupled_run_publishes_evolved_projections() {
     let cfg = world("evolved", 3.0, 3);
-    let pause = CfdFlow::compressible_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(
             (),
             field_at_61km(),
@@ -113,7 +113,7 @@ fn coupled_run_publishes_evolved_projections() {
 #[test]
 fn inflow_strip_holds_the_rh_post_shock_state() {
     let cfg = world("strip", 3.0, 4);
-    let pause = CfdFlow::compressible_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(
             (),
             field_at_61km(),
@@ -138,7 +138,7 @@ fn wave_speed_drift_rebuilds_the_solver_and_logs_it() {
     // A deliberately undersized s_ref: the scheduled inflow's wave speed exceeds it, so the
     // carrier rebuilds and records the rebuild in the provenance log.
     let cfg = world("rebuild", 1.0, 2);
-    let pause = CfdFlow::compressible_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(
             (),
             field_at_61km(),
@@ -172,7 +172,7 @@ fn world_published_constants_land_on_the_field_each_step() {
     assert_eq!(cfg.published_constants(), &[("commanded_bank", 0.35)]);
 
     // No schedule and no truth state: the constant still lands (pre_step publishes it first).
-    let pause = CfdFlow::compressible_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(
             (),
             CoupledField::new(Ambient::new(0.01, 0.0, None)),
@@ -187,7 +187,7 @@ fn world_published_constants_land_on_the_field_each_step() {
 #[test]
 fn without_a_truth_state_the_schedule_is_inert() {
     let cfg = world("inert", 3.0, 2);
-    let pause = CfdFlow::compressible_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(
             (),
             CoupledField::new(Ambient::new(0.01, 0.0, None)),
@@ -205,7 +205,7 @@ fn fork_shares_and_context_alternation_marks_the_branch() {
     let nominal = world("nominal_descent", 3.0, 6);
     let steep = world("steep_descent", 3.0, 6);
 
-    let pause = CfdFlow::compressible_march(&nominal)
+    let pause = CfdFlow::march(&nominal)
         .run_until(
             (),
             field_at_61km(),
@@ -236,7 +236,7 @@ fn continue_branches_matches_the_manual_fork_chain_in_world_order() {
     let shallow = world("shallow_branch", 3.0, 8);
     let steep = world("steep_branch", 3.0, 8);
 
-    let pause = CfdFlow::compressible_march(&nominal)
+    let pause = CfdFlow::march(&nominal)
         .run_until(
             (),
             field_at_61km(),
@@ -276,7 +276,7 @@ fn continue_with_matches_the_single_world_batch_and_carries_the_marker() {
     let nominal = world("nominal_descent", 3.0, 8);
     let steep = world("steep_branch", 3.0, 8);
 
-    let pause = CfdFlow::compressible_march(&nominal)
+    let pause = CfdFlow::march(&nominal)
         .run_until(
             (),
             field_at_61km(),
@@ -301,7 +301,7 @@ fn continue_with_matches_the_single_world_batch_and_carries_the_marker() {
 #[test]
 fn run_coupled_returns_the_evolved_report() {
     let cfg = world("report", 3.0, 3);
-    let report = CfdFlow::compressible_march(&cfg)
+    let report = CfdFlow::march(&cfg)
         .run_coupled((), field_at_61km(), BlackoutTrigger::new(1.0e9), 0.0)
         .unwrap();
 
@@ -318,7 +318,7 @@ fn coupled_report_carries_the_terminal_trajectory_states() {
     let mut field = field_at_61km();
     // A navigation stage would publish this each step; here it is seeded once and carried.
     field.set_scalar("nav_position", vec![6.4e6, 1.0e3, -2.0e3]);
-    let report = CfdFlow::compressible_march(&cfg)
+    let report = CfdFlow::march(&cfg)
         .run_coupled((), field, BlackoutTrigger::new(1.0e9), 0.0)
         .unwrap();
 
@@ -329,7 +329,7 @@ fn coupled_report_carries_the_terminal_trajectory_states() {
     assert_eq!(nav.len(), 3);
 
     // Without either witness on the field, the report stays clean.
-    let bare = CfdFlow::compressible_march(&world("bare", 3.0, 2))
+    let bare = CfdFlow::march(&world("bare", 3.0, 2))
         .run_coupled(
             (),
             CoupledField::new(Ambient::new(0.01, 0.0, None)),

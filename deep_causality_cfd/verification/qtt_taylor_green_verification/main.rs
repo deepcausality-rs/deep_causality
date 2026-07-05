@@ -11,7 +11,7 @@
 //! nonlinear convection is a pure gradient, removed by the pressure projection).
 //!
 //! This `main` orchestrates the run: it builds each case through the configuration layer
-//! ([`config::build_config`]) and **marches it through the CfdFlow DSL** (`CfdFlow::qtt_march`) over a
+//! ([`config::build_config`]) and **marches it through the CfdFlow DSL** (`CfdFlow::march`) over a
 //! `2^L × 2^L` refinement ladder, then computes the convection-operator check. [`print_utils`] measures
 //! the reports against the analytic reference and self-verifies four things, exiting nonzero on break:
 //!
@@ -36,7 +36,7 @@ mod config;
 mod print_utils;
 
 use deep_causality_cfd::{
-    CfdFlow, PhysicsError, Report, dequantize_2d, fail, gradient_x, gradient_y, quantize_2d,
+    CfdFlow, PhysicsError, Report, dequantize_2d, gradient_x, gradient_y, quantize_2d,
 };
 use deep_causality_tensor::{CausalTensor, TensorTrain, TensorTrainOperator};
 
@@ -66,7 +66,7 @@ fn main() {
     );
 
     // ── Run the refinement ladder through the CfdFlow DSL ────────────────
-    //   config::build_config (configuration) ──► CfdFlow::qtt_march run ──► owned Report
+    //   config::build_config (configuration) ──► CfdFlow::march run ──► owned Report
     // Configuration and workflow composition are separated: the container is built by the config
     // layer, and `CfdFlow` composes + runs here in `main`.
     // ─────────────────────────────────────────────────────────────────────
@@ -74,7 +74,7 @@ fn main() {
     for &l in &levels {
         let case_config =
             config::build_config(l).unwrap_or_else(|e| fail("QTT Taylor-Green config", e));
-        let report = CfdFlow::qtt_march(&case_config)
+        let report = CfdFlow::march(&case_config)
             .run()
             .unwrap_or_else(|e| fail("QTT Taylor-Green pipeline", e));
         runs.push((l, report));
@@ -142,4 +142,10 @@ fn convection_operator_error(l: usize) -> Result<(f64, f64), PhysicsError> {
         }
     }
     Ok((max_err, amp))
+}
+
+/// Print a stage-failure context and its error on stderr, then exit the process non-zero.
+fn fail(context: &str, error: impl core::fmt::Debug) -> ! {
+    eprintln!("{context} failed: {error:?}");
+    std::process::exit(1);
 }

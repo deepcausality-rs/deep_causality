@@ -23,8 +23,6 @@ mod duct_march_run;
 mod finite_rate_ionization;
 mod frequency;
 mod gates;
-#[cfg(feature = "std")]
-mod io;
 mod march_run;
 mod march_state;
 mod mms;
@@ -47,7 +45,7 @@ pub use blackout::{
     BlackoutState, BlackoutTrigger, EosStage, IonizationStage, RecoveryTemperatureStage,
     VibrationalLagStage, ler_relax_scalar, ler_step,
 };
-pub use cfd_flow::{CfdFlow, fail};
+pub use cfd_flow::CfdFlow;
 pub use compressible_march_run::{CompressibleFork, CompressibleMarchRun, CompressiblePause};
 pub use corridor::{
     BankCorrection, BankSteeredLift, BranchAccumulator, BranchOutcome, CyberneticCorrect,
@@ -62,8 +60,6 @@ pub use duct_march_run::DuctMarchRun;
 pub use finite_rate_ionization::FiniteRateIonizationStage;
 pub use frequency::{dominant_frequency, strouhal_number};
 pub use gates::Gates;
-#[cfg(feature = "std")]
-pub use io::write_xy_csv;
 pub use march_run::{MarchPipeline, MarchRun, StepView};
 pub use march_state::MarchState;
 pub use mms::{MmsBuilder, Regime};

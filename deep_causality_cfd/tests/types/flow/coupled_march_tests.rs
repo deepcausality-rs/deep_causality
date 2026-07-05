@@ -73,14 +73,14 @@ fn builder_run_matches_run_coupled() {
     let cfg = world(4);
     let trigger = BlackoutTrigger::new(1.0e9);
 
-    let via_builder = CfdFlow::compressible_march(&cfg)
+    let via_builder = CfdFlow::march(&cfg)
         .couple(())
         .trigger(BlackoutTrigger::new(1.0e9))
         .from(MarchState::new(field_at_61km()))
         .run()
         .unwrap();
 
-    let via_positional = CfdFlow::compressible_march(&cfg)
+    let via_positional = CfdFlow::march(&cfg)
         .run_coupled((), field_at_61km(), trigger, 0.0)
         .unwrap();
 
@@ -97,14 +97,14 @@ fn builder_run_for_overrides_the_horizon_and_matches_march_with() {
     let cfg = world(4);
     let trigger = BlackoutTrigger::new(1.0e9);
 
-    let via_builder = CfdFlow::compressible_march(&cfg)
+    let via_builder = CfdFlow::march(&cfg)
         .couple(())
         .trigger(BlackoutTrigger::new(1.0e9))
         .from(MarchState::new(field_at_61km()))
         .run_for(2)
         .unwrap();
 
-    let via_positional = CfdFlow::compressible_march(&cfg)
+    let via_positional = CfdFlow::march(&cfg)
         .march_with(MarchStop::Fixed(2))
         .run_coupled((), field_at_61km(), trigger, 0.0)
         .unwrap();
@@ -115,7 +115,7 @@ fn builder_run_for_overrides_the_horizon_and_matches_march_with() {
 #[test]
 fn builder_until_pauses_at_the_event() {
     let cfg = world(8);
-    let pause = CfdFlow::compressible_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .couple(())
         .trigger(BlackoutTrigger::new(1.0e9))
         .from(MarchState::new(field_at_61km()))

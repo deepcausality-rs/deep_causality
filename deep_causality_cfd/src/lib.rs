@@ -39,7 +39,7 @@ pub use deep_causality_physics::PhysicsError;
 pub use deep_causality_physics::quantities::*;
 
 // Core CFD trait seams and value types.
-pub use crate::traits::{FluidTheory, Marchable, Marcher, Solver};
+pub use crate::traits::{FluidTheory, MarchDispatch, Marchable, Marcher, Solver};
 pub use crate::types::{Ambient, CfdScalar};
 
 // The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
@@ -73,6 +73,13 @@ pub use deep_causality_file::{
     BitCodec, ScalarTypeTag, SnapshotPackage, SnapshotSection, SnapshotTier, fingerprint64,
     force_load_snapshot, load_snapshot, save_snapshot,
 };
+// Typed table IO: the study grammar's `read`/`matrix`/`record` lower onto these, and a
+// verification harness or example writing a probe trace uses `write_rows` directly. Re-exported
+// so a CfdFlow program imports table IO from one crate.
+pub use deep_causality_file::{
+    FromTableRow, NumericTable, TableColumn, TableRow, TableScalar, read_rows, read_table,
+    write_rows, write_table,
+};
 
 pub use crate::types::flow::{
     AeroBlackoutStub, AeroForceCoupling, BankCorrection, BankSteeredLift, BlackoutState,
@@ -88,7 +95,7 @@ pub use crate::types::flow::{
 pub use crate::types::flow::{
     CaseRun, Cases, Configured, GateFn, GateOutcome, GateSeq, Judged, Marched, Prepared, StudyDef,
     StudyView, Swept, Verdict, VerifyRun, VibrationalLagStage, ViscosityArrhenius,
-    dominant_frequency, fail, ler_relax_scalar, ler_step, strouhal_number, sweep,
+    dominant_frequency, ler_relax_scalar, ler_step, strouhal_number, sweep,
 };
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
 pub use crate::types::flow_config::{
@@ -98,12 +105,10 @@ pub use crate::types::flow_config::{
     QttMarchConfig, QttMarchConfigBuilder, QttObserve, ReferenceScales, Seed, TaylorGreen,
     VerifyConfig, VerifyConfigBuilder,
 };
-// IO effect: the `IoAction` trait (from haft), the core `write_csv` file action, and the CFD CSV
-// helper, so a `CfdFlow` example can describe and run file output through one crate.
-#[cfg(feature = "std")]
-pub use crate::types::flow::write_xy_csv;
-#[cfg(feature = "std")]
-pub use deep_causality_core::write_csv;
+// IO effect: the `IoAction` trait (from haft), so a `CfdFlow` program can describe and run file
+// output through one crate. The typed table writers (`write_rows` / `record`) are the language's
+// write surface; the retired `write_xy_csv` and the `write_csv` re-export are gone (a formatted
+// string dump imports core's `write_csv` directly).
 #[cfg(feature = "std")]
 pub use deep_causality_haft::IoAction;
 

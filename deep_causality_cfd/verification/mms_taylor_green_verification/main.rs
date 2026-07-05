@@ -19,7 +19,7 @@
 mod config;
 mod print_utils;
 
-use deep_causality_cfd::{CfdFlow, fail};
+use deep_causality_cfd::CfdFlow;
 
 /// The working precision for the whole CFD computation. **This is the single alias to change**:
 /// the autodiff scalar, the Navier-Stokes kernel arithmetic, and the `Rk4` march all run at this
@@ -38,4 +38,10 @@ fn main() {
         .unwrap_or_else(|e| fail("CFD MMS pipeline", e));
 
     print_utils::render(&report);
+}
+
+/// Print a stage-failure context and its error on stderr, then exit the process non-zero.
+fn fail(context: &str, error: impl core::fmt::Debug) -> ! {
+    eprintln!("{context} failed: {error:?}");
+    std::process::exit(1);
 }

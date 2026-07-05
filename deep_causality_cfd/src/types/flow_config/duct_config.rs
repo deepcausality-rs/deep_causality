@@ -5,7 +5,7 @@
 
 //! The owned configuration for the quasi-one-dimensional duct march: an area
 //! profile, the inlet stagnation state, the back pressure, the grid
-//! resolution, and a stop condition. [`CfdFlow::duct_march`](crate::CfdFlow::duct_march)
+//! resolution, and a stop condition. [`CfdFlow::march`](crate::CfdFlow::march)
 //! lowers it onto the duct driver and returns the standard
 //! [`Report`](crate::Report) (design D4).
 

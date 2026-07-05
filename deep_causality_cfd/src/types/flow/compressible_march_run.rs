@@ -6,7 +6,7 @@
 //! The **CfdFlow** host for the compressible carrier: the corridor's evolved-state marcher in the
 //! same coupled loop, pause/fork machinery, and alternation vocabulary as the QTT host.
 //!
-//! `CfdFlow::compressible_march(&config)` borrows a [`CompressibleMarchConfig`] and yields a
+//! `CfdFlow::march(&config)` borrows a [`CompressibleMarchConfig`] and yields a
 //! runnable [`CompressibleMarchRun`]. The carrier marches the nondimensional conserved state
 //! `[ρ̂, m̂x, m̂y, Ê]` with the 2-D compressible marcher and publishes **evolved** physical
 //! projections each step — `"T_tr"` and `"pressure_atm"` from the equation of state, `"n_tot"`
@@ -403,7 +403,7 @@ where
     R: CfdScalar + ConjugateScalar<Real = R>,
 {
     /// Inject a compressible marching container (called by
-    /// [`CfdFlow::compressible_march`](crate::CfdFlow::compressible_march)).
+    /// [`CfdFlow::march`](crate::CfdFlow::march)).
     pub(crate) fn new(config: &'c CompressibleMarchConfig<R>) -> Self {
         Self {
             config,

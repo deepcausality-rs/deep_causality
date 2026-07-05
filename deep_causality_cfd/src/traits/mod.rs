@@ -12,6 +12,6 @@ mod marcher;
 mod solver;
 
 pub use fluid_theory::FluidTheory;
-pub use marchable::Marchable;
+pub use marchable::{MarchDispatch, Marchable};
 pub use marcher::Marcher;
 pub use solver::Solver;

@@ -6,7 +6,7 @@
 //! The **CfdFlow** DSL marching pipeline for the QTT 2-D incompressible solver — the tensor-train
 //! sibling of [`MarchRun`](crate::MarchRun).
 //!
-//! `CfdFlow::qtt_march(&config)` borrows a [`QttMarchConfig`] and yields a runnable [`QttMarchRun`].
+//! `CfdFlow::march(&config)` borrows a [`QttMarchConfig`] and yields a runnable [`QttMarchRun`].
 //! There is no `.on(geometry)` stage — the QTT solver carries no borrowed manifold; the power-of-two
 //! grid lives in the config. The terminal `run` / `run_with` quantizes the seed, marches
 //! [`QttIncompressible2d`] under the configured stop, samples the enabled tensor-train-native
@@ -313,7 +313,7 @@ impl<'c, R> QttMarchRun<'c, R>
 where
     R: CfdScalar + ConjugateScalar<Real = R>,
 {
-    /// Inject a QTT marching container (called by [`CfdFlow::qtt_march`](crate::CfdFlow)).
+    /// Inject a QTT marching container (called by [`CfdFlow::march`](crate::CfdFlow)).
     pub(crate) fn new(config: &'c QttMarchConfig<R>) -> Self {
         Self {
             config,

@@ -9,7 +9,7 @@
 //! **sensor-fed uncertain inflow** through the **causal-monad march**. The case is declared
 //! through the `deep_causality_cfd` configuration layer ([`config`]) — the cut-cell geometry, the
 //! presence-gated + QMC-collapsed inflow zone, and the sensor stream — and run through the **CfdFlow**
-//! DSL: `CfdFlow::uncertain_march(&config).on(&manifold).run_with(...)` drives the per-step
+//! DSL: `CfdFlow::march(&config).on(&manifold).run_with(...)` drives the per-step
 //! `inflow_march_step` bind and streams an `UncertainStepView` so the wake probe can be sampled.
 //! [`print_utils`] renders the diagnostics and writes the wake CSV through the IO effect.
 //!
@@ -41,7 +41,7 @@ mod config;
 mod print_utils;
 
 use config::{DROPOUT_EVERY, STEPS, U_BULK, ft};
-use deep_causality_cfd::{CfdFlow, fail};
+use deep_causality_cfd::CfdFlow;
 use deep_causality_uncertain::seed_sampler;
 
 /// The working precision for the whole computation (geometry, projection CG, DEC march, the uncertain
@@ -67,7 +67,7 @@ fn main() {
     let (dt, h, probe_edge) = (geom.dt, geom.h, geom.probe_edge);
     let mut probe_series: Vec<(FloatType, FloatType)> = Vec::with_capacity(STEPS);
     let mut max_div = 0.0f64; // incompressibility residual, sampled at the report cadence
-    let report = CfdFlow::uncertain_march(&case)
+    let report = CfdFlow::march(&case)
         .on(&geom.manifold)
         .run_with(|sv| {
             let t = ft(sv.step() as f64) * dt;
@@ -130,4 +130,10 @@ fn main() {
     eprintln!(
         "verified: incompressibility held (max div {max_div:.3e}) and the dropout/intervention log accounting is exact"
     );
+}
+
+/// Print a stage-failure context and its error on stderr, then exit the process non-zero.
+pub(crate) fn fail(context: &str, error: impl core::fmt::Debug) -> ! {
+    eprintln!("{context} failed: {error:?}");
+    std::process::exit(1);
 }

@@ -16,10 +16,96 @@
 
 use crate::solvers::dec::BoundaryZone;
 use crate::types::CfdScalar;
-use crate::types::flow::{DuctMarchRun, MarchPipeline, PhysicsStage, QttMarchRun, Report};
-use crate::types::flow_config::{DuctConfig, MarchConfig, QttMarchConfig};
+use crate::types::flow::{
+    CompressibleMarchRun, DuctMarchRun, MarchPipeline, PhysicsStage, QttMarchRun, Report,
+};
+use crate::types::flow_config::{CompressibleMarchConfig, DuctConfig, MarchConfig, QttMarchConfig};
 use deep_causality_num::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
+
+/// A configuration [`CfdFlow::march`](crate::CfdFlow::march) accepts: it opens the family's
+/// runnable pipeline, hidden behind the facade by the GAT, so one `march` verb serves every
+/// solver family (the DEC, QTT, duct, compressible, and uncertain marches) instead of five
+/// family-specific entries.
+///
+/// Implemented by all five config families. The uncoupled families additionally implement
+/// [`Marchable`] (the one-shot to a [`Report`]); the coupled families reach a report through
+/// their pipeline's coupled run (the named-stage builder), which needs a field the config alone
+/// does not carry.
+pub trait MarchDispatch<R: CfdScalar> {
+    /// The runnable pipeline this config opens (the family-specific type).
+    type Pipeline<'c>
+    where
+        Self: 'c;
+
+    /// Open the pipeline, borrowing the config for the run.
+    fn pipeline(&self) -> Self::Pipeline<'_>;
+}
+
+impl<const D: usize, R, Z, C> MarchDispatch<R> for MarchConfig<D, R, Z, C>
+where
+    R: CfdScalar,
+    Z: BoundaryZone<D, R>,
+    C: PhysicsStage<D, R>,
+{
+    type Pipeline<'c>
+        = MarchPipeline<'c, D, R, Z, C>
+    where
+        Self: 'c;
+    fn pipeline(&self) -> Self::Pipeline<'_> {
+        MarchPipeline::new(self)
+    }
+}
+
+impl<R: CfdScalar> MarchDispatch<R> for DuctConfig<R> {
+    type Pipeline<'c>
+        = DuctMarchRun<'c, R>
+    where
+        Self: 'c;
+    fn pipeline(&self) -> Self::Pipeline<'_> {
+        DuctMarchRun::new(self)
+    }
+}
+
+impl<R> MarchDispatch<R> for QttMarchConfig<R>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    type Pipeline<'c>
+        = QttMarchRun<'c, R>
+    where
+        Self: 'c;
+    fn pipeline(&self) -> Self::Pipeline<'_> {
+        QttMarchRun::new(self)
+    }
+}
+
+impl<R> MarchDispatch<R> for CompressibleMarchConfig<R>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    type Pipeline<'c>
+        = CompressibleMarchRun<'c, R>
+    where
+        Self: 'c;
+    fn pipeline(&self) -> Self::Pipeline<'_> {
+        CompressibleMarchRun::new(self)
+    }
+}
+
+#[cfg(feature = "std")]
+impl<R> MarchDispatch<R> for crate::types::flow_config::UncertainMarchConfig<R>
+where
+    R: CfdScalar + deep_causality_uncertain::ProbabilisticType,
+{
+    type Pipeline<'c>
+        = crate::types::flow::UncertainMarchPipeline<'c, R>
+    where
+        Self: 'c;
+    fn pipeline(&self) -> Self::Pipeline<'_> {
+        crate::types::flow::UncertainMarchPipeline::new(self)
+    }
+}
 
 /// A configuration that marches itself to a [`Report`] in one shot.
 ///

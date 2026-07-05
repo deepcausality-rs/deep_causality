@@ -65,7 +65,7 @@ fn mach_from_area_ratio(area_ratio: f64, supersonic: bool) -> f64 {
 fn a_shock_free_expansion_matches_the_area_mach_relation() {
     // Deep expansion: supersonic exit, no shock anywhere in the duct.
     let config = nozzle(0.02, 128, 200_000);
-    let report = CfdFlow::duct_march(&config).run().expect("marches");
+    let report = CfdFlow::march(&config).run().expect("marches");
     assert!(
         report.series("shock_position").is_none(),
         "a shock-free run omits the shock series"
@@ -111,7 +111,7 @@ fn area_of(x: f64) -> f64 {
 fn a_shocked_case_places_the_shock_near_the_analytic_position() {
     // Moderate back pressure: normal shock in the diverging section.
     let config = nozzle(0.7, 128, 200_000);
-    let report = CfdFlow::duct_march(&config).run().expect("marches");
+    let report = CfdFlow::march(&config).run().expect("marches");
     let shock = report.series("shock_position").expect("shocked run")[0];
 
     let analytic = analytic_shock_position(0.7);
@@ -168,7 +168,7 @@ fn analytic_shock_position(back_pressure_ratio: f64) -> f64 {
 #[test]
 fn an_expired_step_budget_is_a_loud_error() {
     let config = nozzle(0.7, 64, 3);
-    let err = CfdFlow::duct_march(&config)
+    let err = CfdFlow::march(&config)
         .run()
         .expect_err("three steps cannot converge");
     let msg = err.to_string();

@@ -54,8 +54,11 @@ design decision that cannot be resolved without its concrete consumer:
 
 ## 6. Retire the legacy IO surface
 
-- [ ] 6.1 Make `record`/`write_rows` the only write; retire `write_xy_csv`, `Report::write_series_csv`, the `write_csv` re-export, and `fail`
-- [ ] 6.2 Migrate the two verification harness probe traces (cylinder wake, lid cavity) to `write_rows` over two-column TableRow types
+- [x] 6.1a IO writers retired: `write_xy_csv`, `Report::write_series_csv`, the `write_csv` re-export gone; `io.rs`/`io_tests.rs` deleted; cfd now re-exports the file-crate typed table surface (`write_rows`/`read_rows`/`NumericTable`/`TableRow`/etc.) so a program imports table IO from one crate.
+- [x] 6.2 Verification probe traces migrated: cylinder-wake → `write_rows` over a two-column `ProbeRow`; lid-cavity centerline (a heterogeneous formatted report, not a typed numeric table) imports core's `write_csv` directly per design D7.
+- [x] 6.3a `MarchDispatch` GAT trait added (all 5 config families open their pipeline); `CfdFlow::march` unified to dispatch over it — one trajectory entry for every family. Existing `CfdFlow::march(&march_config)` sites source-compatible.
+- [x] 6.3b Migrated 64 march-entry call sites (60 cfd tests + 4 harnesses) to `CfdFlow::march`; localized `fail` into each of 11 harnesses (9 single-file `fn fail`, 2 multi-file `pub(crate) fn fail` + `crate::fail`) — via two subagents over disjoint file sets, both green.
+- [x] 6.4 Removed the 4 old march entries (`qtt_march`/`compressible_march`/`duct_march`/`uncertain_march`) and `pub fn fail` from the cfd public surface; repointed the removed-method doc links to `CfdFlow::march`. Final gate: cfd clippy clean (all targets), 654 tests + 6 doctests pass, all verification harnesses build. (`CfdConfigBuilder::uncertain_march` — a config builder, not a march entry — correctly kept.)
 
 ## 7. Migrate the examples
 

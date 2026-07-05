@@ -24,7 +24,7 @@
 //! cargo run --release -p deep_causality_cfd --example qtt_reentry_3d
 //! ```
 
-use deep_causality_cfd::{CompressibleMarcher3d, EulerState3d, fail, quantize_3d};
+use deep_causality_cfd::{CompressibleMarcher3d, EulerState3d, quantize_3d};
 use deep_causality_tensor::{CausalTensor, Truncation};
 
 const GAMMA: f64 = 1.4;
@@ -212,4 +212,10 @@ fn main() {
         }
         std::process::exit(1);
     }
+}
+
+/// Print a stage-failure context and its error on stderr, then exit the process non-zero.
+fn fail(context: &str, error: impl core::fmt::Debug) -> ! {
+    eprintln!("{context} failed: {error:?}");
+    std::process::exit(1);
 }
