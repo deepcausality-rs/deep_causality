@@ -58,7 +58,6 @@ deep_causality = { path = "../../deep_causality" }
 deep_causality_core = { path = "../../deep_causality_core" }
 deep_causality_calculus = { path = "../../deep_causality_calculus" }
 deep_causality_cfd = { path = "../../deep_causality_cfd", features = ["parallel"] }
-deep_causality_par = { path = "../../deep_causality_par" }
 deep_causality_num = { path = "../../deep_causality_num" }
 deep_causality_haft = { path = "../../deep_causality_haft" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
