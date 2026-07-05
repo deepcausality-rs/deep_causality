@@ -18,6 +18,14 @@ same requirement seen from two sides, and the closing section makes the join exp
 
 ### 1.1 The type system is proven to compose before the spec freezes
 
+STATUS: PASS. The compile spike ran before the spec (see `04-dsl-feasibility.md`). All
+three novel constructs compose against the real generic arities; the three forbidden
+programs are rejected by the type system. The spike forced three refinements (F1
+`GateSeq<Row>` with HRTB gate fns, not a `'static` view; F2 `Marchable` spans the
+uncoupled families plus the `Coupled<C, S>` wrapper; F3 `ForkStudy` threads the pause's
+`'c, R, S, M`), all folded back into `02-dsl-study-io.md`. The record below states the
+gate the spike satisfied.
+
 The substrate itself carries no risk: the phase-chain-inside-one-effect construction
 (plain typestate structs wrapped in an effect carrier whose haft HKT witness supplies
 `Functor`/`Applicative`/`Monad`, double-impl fluent verbs, witness types hidden behind

@@ -256,6 +256,13 @@ sequence for a later stage is a second value:
 /// A named, ordered gating sequence over a subject `S`: what one judgment pass checks.
 /// Checks are plain `fn` pointers (static dispatch, no boxing); gate checks are free
 /// functions in `model.rs` by convention, so the sequence is a list of named functions.
+///
+/// Feasibility note F1: at the campaign level the subject is a *borrowed* view of the
+/// rows, so the sequence is parameterized by the row and each check is higher-ranked in
+/// the view lifetime, `GateSeq<Row>` with `for<'a> fn(&StudyView<'a, Row>) -> (bool, String)`.
+/// A `GateSeq<StudyView<'static, Row>>` (the earlier sketch) cannot borrow the run's rows
+/// and does not compile. Trajectory-level sequences over an owned subject (`LegSet`) use
+/// the plain `GateSeq<S>` form.
 pub struct GateSeq<S> { /* title, Vec<(&'static str, fn(&S) -> (bool, String))> */ }
 
 impl<S> GateSeq<S> {
@@ -280,12 +287,12 @@ impl<Row, Rig> Swept<Row, Rig> {
     pub fn refine<T2>(self, f: impl FnOnce(&[Row]) -> Result<Vec<T2>, PhysicsError>) -> /* re-bind phase */;
     /// Insert a whole gating sequence. The sequence is typed by the row, so a
     /// sequence built for another study's rows does not compile here.
-    pub fn gates(self, seq: GateSeq<StudyView<'static, Row>>) -> Judged<Row, Rig>;
+    pub fn gates(self, seq: GateSeq<Row>) -> Judged<Row, Rig>;
 }
 
 impl<Row, Rig> Judged<Row, Rig> {
     /// A complex workflow inserts its later gating sequences the same way.
-    pub fn gates(self, seq: GateSeq<StudyView<'static, Row>>) -> Self;
+    pub fn gates(self, seq: GateSeq<Row>) -> Self;
     /// Terminal. No printing, no exit. A carried error names the verb that failed.
     pub fn verdict(self) -> Result<Verdict, StudyError>;
 }
@@ -402,8 +409,16 @@ CfdFlow::march(&world)                  // C: Marchable picks the solver family
     // or .run()? / .run_for(steps)?    // -> Report: terminal forms
 ```
 
-`Marchable` (unchanged from rev 3) collapses the five named entries into `march`;
-example-local case types implement it by delegation.
+`Marchable` collapses the five named entries into `march`; example-local case types
+implement it by delegation.
+
+Feasibility note F2: `Marchable` is implemented directly by the three **uncoupled**
+config families (`DuctConfig`, `MarchConfig`, `QttMarchConfig`), whose report comes from
+`run()`/`run_owned()`. The two **coupled** families take their coupling stage `S` as a
+run-time argument to `run_until`, absent from the config type; so `.couple(stack)`
+produces a `Coupled<C, S>` wrapper and `Coupled<C, S>: Marchable` runs the fixed-horizon
+`run_until` path and reduces to a report. `.couple(stack).march()` composes onto the one
+trait; there is no second march verb. Confirmed to compile in the spike.
 
 ### One state, two transports
 
@@ -428,6 +443,14 @@ impl CompressibleFork<'_, R> {
 
 The campaign's `fork`/`branch`/`continue_for` lowers onto exactly this.
 
+Feasibility note F3: the real pause is `CarrierPause<'c, R, S, M, D>` and its fork carries
+two lifetimes (`CarrierFork<'p, 'c, R, S, M, D>`) plus the coupling stage `S`, so the
+campaign's `ForkStudy<'p, …>` must thread `'c, R, S, M` (or hide them behind a `Forkable`
+bound). The borrow itself is not at risk: the shipped `CarrierPause::continue_branches`
+already borrows `&self` across `scoped_map` with the bounds
+`Self: MaybeParallel, M::Config: MaybeParallel, Report<R>: MaybeParallel`, and the spike
+reproduces the campaign delta (mapping over cases rather than worlds) unchanged.
+
 ## 5. The Foundation (accepted in review, restated)
 
 - **P1** `TableScalar`: one codec bounding reader and writer; `f64`/`f32` shortest
@@ -450,7 +473,7 @@ this study must satisfy:
 
 ```rust
 // model.rs
-pub fn nozzle_gates() -> GateSeq<StudyView<'static, MapRow>> {
+pub fn nozzle_gates() -> GateSeq<MapRow> {
     GateSeq::new("nozzle operating map")
         .gate("choking", gate_choking)
         .gate("shock position", gate_shock_position)
@@ -479,7 +502,7 @@ CfdFlow::study("nozzle operating map")
 The gating sequence in `model.rs`:
 
 ```rust
-pub fn viv_gates() -> GateSeq<StudyView<'static, MarginRow>> {
+pub fn viv_gates() -> GateSeq<MarginRow> {
     GateSeq::new("vortex-shedding resonance margin")
         .gate("strouhal band", gate_strouhal_band)
         .gate("finite margins", gate_finite_margins)
@@ -507,7 +530,7 @@ CfdFlow::study("vortex-shedding resonance margin")
 The gating sequence in `model.rs`:
 
 ```rust
-pub fn placard_gates() -> GateSeq<StudyView<'static, PlacardRow>> {
+pub fn placard_gates() -> GateSeq<PlacardRow> {
     GateSeq::new("flight envelope placard")
         .gate("q-max placard", gate_q_max)
         .gate("stagnation temperature", gate_stagnation_temperature)
@@ -549,7 +572,7 @@ The gating sequence in `model.rs`, the certification checklist of the table as o
 reviewable value:
 
 ```rust
-pub fn weather_gates() -> GateSeq<StudyView<'static, WorldRow>> {
+pub fn weather_gates() -> GateSeq<WorldRow> {
     GateSeq::new("weather-dispersion table")
         .gate("counterfactual audit trail", gate_markers)              // law 3, checked
         .gate("flow-resolved windows everywhere", gate_windows)
@@ -572,7 +595,7 @@ judges the branch study, the leg sequence judges the flown trajectory, and each 
 named value in `model.rs`:
 
 ```rust
-pub fn corridor_gates() -> GateSeq<StudyView<'static, BranchRow>> {
+pub fn corridor_gates() -> GateSeq<BranchRow> {
     GateSeq::new("bank-angle corridor")
         .gate("steering beats ballistic", gate_steering)
         .gate("fine at least coarse", gate_refinement)     // reads view.rounds()

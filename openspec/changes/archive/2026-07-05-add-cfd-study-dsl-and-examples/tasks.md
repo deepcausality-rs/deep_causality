@@ -15,7 +15,7 @@
 
 ## 2. Table construction (deep_causality_file)
 
-- [ ] 2.1 `NumericTable::from_columns((name, unit) pairs, rows)` with the existing
+- [x] 2.1 `NumericTable::from_columns((name, unit) pairs, rows)` with the existing
   rectangularity validation; mirrored test proving equality with the explicit constructor and
   rejection of ragged rows.
 

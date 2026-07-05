@@ -2,7 +2,6 @@
 
 ## Purpose
 Reading delimited numeric tables into typed, precision-generic rows and writing result tables with headers and units, both as lazy IoAction values in deep_causality_file: the input and output seam of the everyday CFD examples and the table payload of the future self-describing results archive.
-
 ## Requirements
 ### Requirement: Typed table reading as a lazy IO action
 
@@ -41,3 +40,16 @@ self-describing results archive adopts unchanged.
 - **WHEN** a result table with named, unit-annotated columns is written and read back
 - **THEN** the recovered names, units, and values are identical, with `f64` values equal
   bit-for-bit
+
+### Requirement: One-call table construction from columns and rows
+
+`NumericTable` SHALL offer `from_columns`, constructing a table from an array of
+`(name, unit)` pairs and a row collection in one call, with the same rectangularity
+validation and round-trip guarantees as the existing constructor.
+
+#### Scenario: Columns and rows assemble in one call
+
+- **WHEN** a table is built with `from_columns([("mach", "-"), ("q", "kPa")], rows)`
+- **THEN** it equals the table built through explicit `TableColumn` construction, and a
+  ragged row collection is rejected the same way
+
