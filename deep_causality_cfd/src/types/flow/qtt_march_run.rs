@@ -426,6 +426,7 @@ where
             field,
             state,
             &observe,
+            &mut crate::types::flow::carrier::NoAudit,
         )
     }
 
@@ -473,7 +474,7 @@ where
             MarchStop::Steady { max_steps, .. } => max_steps,
         };
 
-        Ok(run_until_driver(
+        run_until_driver(
             carrier,
             cfg,
             CoupledLoopSpec {
@@ -485,7 +486,8 @@ where
             field,
             predicate,
             state,
-        ))
+            &mut crate::types::flow::carrier::NoAudit,
+        )
     }
 
     fn execute<H: FnMut(&QttStepView<'_, R>)>(

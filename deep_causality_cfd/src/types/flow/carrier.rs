@@ -255,6 +255,28 @@ pub struct CoupledLoopSpec<R: CfdScalar, S> {
     pub steps: usize,
 }
 
+/// The audit-log sink seam: after each coupled step the driver flushes the field's newly appended
+/// provenance entries here. The no-op [`NoAudit`] is the default — an unaudited run pays nothing
+/// and behaves exactly as before; the std `LogSink` (the `save_log` verb) writes each new entry to
+/// disk the moment it is recorded, so a killed run's file ends at the last step it completed.
+pub trait AuditFlush {
+    /// Flush every log entry not yet written. A write failure fails the run: an audited run that
+    /// can no longer be audited must not continue silently.
+    ///
+    /// # Errors
+    /// IO failures from the underlying sink.
+    fn flush(&mut self, log: &EffectLog) -> Result<(), PhysicsError>;
+}
+
+/// The default no-op sink: an unaudited run flushes nothing.
+pub struct NoAudit;
+
+impl AuditFlush for NoAudit {
+    fn flush(&mut self, _log: &EffectLog) -> Result<(), PhysicsError> {
+        Ok(())
+    }
+}
+
 /// Drive a coupled march to completion: the loop body every host's `run_coupled` delegates to.
 ///
 /// # Errors
@@ -266,6 +288,7 @@ pub fn run_coupled_driver<const D: usize, R, S, M>(
     mut field: CoupledField<R>,
     mut state: M::State,
     observe: &QttObserve,
+    audit: &mut impl AuditFlush,
 ) -> Result<Report<R>, PhysicsError>
 where
     R: CfdScalar,
@@ -276,6 +299,9 @@ where
     for s in 0..spec.steps {
         state = carrier.coupled_step(&state, &mut field, &spec.coupling, spec.kappa, s + 1)?;
         sampler.sample(&field)?;
+        // Stepwise flush: the field's provenance entries this step land on disk before the next
+        // step begins, so a killed run's audit file ends at the last completed step.
+        audit.flush(field.log())?;
     }
     finish_report(carrier, cfg, observe, sampler, &state, &field)
 }
@@ -290,7 +316,8 @@ pub fn run_until_driver<'c, const D: usize, R, S, M, P>(
     mut field: CoupledField<R>,
     predicate: P,
     mut state: M::State,
-) -> CarrierPause<'c, R, S, M, D>
+    audit: &mut impl AuditFlush,
+) -> Result<CarrierPause<'c, R, S, M, D>, PhysicsError>
 where
     R: CfdScalar,
     S: PhysicsStage<D, R>,
@@ -311,17 +338,22 @@ where
                     s + 1
                 ));
                 error = Some(e);
+                // Flush the captured-error entry before returning the errored pause.
+                audit.flush(field.log())?;
                 break;
             }
         }
+        // Stepwise flush: this step's provenance (regime transitions, rebuilds, nav) hits disk now.
+        audit.flush(field.log())?;
         if predicate(&field, paused_at) {
             field
                 .log_mut()
                 .add_entry(&alloc::format!("march paused at step {paused_at}"));
+            audit.flush(field.log())?;
             break;
         }
     }
-    CarrierPause {
+    Ok(CarrierPause {
         config: cfg,
         coupling: spec.coupling,
         trigger: spec.trigger,
@@ -330,7 +362,7 @@ where
         field: Arc::new(field),
         step: paused_at,
         error,
-    }
+    })
 }
 
 /// A coupled march paused mid-flight: the shared branch state every counterfactual fork resumes
@@ -646,7 +678,6 @@ where
 /// decoupled from the pause's `'c` — is exactly what lets a study continue in a world it owns: the
 /// world is consumed to rebuild the carrier and to name the world in the audit trail, and never
 /// escapes into the returned report.
-#[allow(clippy::too_many_arguments)]
 fn run_continued_segment<const D: usize, R, S, M>(
     pause: &CarrierPause<'_, R, S, M, D>,
     cfg: &M::Config,

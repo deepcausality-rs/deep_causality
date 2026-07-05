@@ -12,6 +12,8 @@
 //! facade spans three solver kinds sharing one `Report`: the marching solver (here), and the
 //! MMS-verification and operator-accuracy solvers.
 
+#[cfg(feature = "std")]
+mod audit;
 mod blackout;
 mod carrier;
 mod cfd_flow;
@@ -41,6 +43,8 @@ mod uncertain_march_run;
 mod verify;
 mod zones;
 
+#[cfg(feature = "std")]
+pub use audit::LogSink;
 pub use blackout::{
     BlackoutState, BlackoutTrigger, EosStage, IonizationStage, RecoveryTemperatureStage,
     VibrationalLagStage, ler_relax_scalar, ler_step,

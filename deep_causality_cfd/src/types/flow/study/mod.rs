@@ -38,18 +38,20 @@ use deep_causality_file::{FromTableRow, TableRow, TableScalar, read_rows, read_t
 use deep_causality_haft::IoAction;
 use deep_causality_par::MaybeParallel;
 use deep_causality_physics::PhysicsError;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// The study entry: a titled campaign awaiting its case axis. Opened by
 /// [`CfdFlow::study`](crate::CfdFlow::study).
 pub struct StudyDef {
     title: String,
+    audit: Option<PathBuf>,
 }
 
 impl StudyDef {
     pub(crate) fn new(title: &str) -> Self {
         Self {
             title: title.to_string(),
+            audit: None,
         }
     }
 
@@ -58,11 +60,22 @@ impl StudyDef {
         &self.title
     }
 
+    /// Attach a disk audit-log base path (the campaign-level `save_log` verb, before the cases).
+    /// The coupled campaign (`march_for`) writes one file per branch under a concurrent fan-out —
+    /// `<base>.sweep-N.<world>.draw-D.log`, each by one thread, flushed stepwise — plus a
+    /// `<base>.main.log` naming every spawn and rejoin. Without it the run is unchanged.
+    #[must_use]
+    pub fn save_log(mut self, base_path: impl AsRef<Path>) -> Self {
+        self.audit = Some(base_path.as_ref().to_path_buf());
+        self
+    }
+
     /// An in-memory case list as the study's case axis.
     pub fn cases<T>(self, cases: Vec<T>) -> StudyEffect<Cases<T>> {
         StudyEffect::pure(Cases {
             title: self.title,
             cases,
+            audit: self.audit,
         })
     }
 
@@ -73,9 +86,14 @@ impl StudyDef {
         column: &str,
     ) -> StudyEffect<Cases<R>> {
         let title = self.title;
+        let audit = self.audit;
         let loaded = read_table::<R>(path).run().and_then(|t| t.column(column));
         match loaded {
-            Ok(cases) => StudyEffect::pure(Cases { title, cases }),
+            Ok(cases) => StudyEffect::pure(Cases {
+                title,
+                cases,
+                audit,
+            }),
             Err(e) => StudyEffect::from_result(Err(StudyError::in_stage("read", e))),
         }
     }
@@ -84,8 +102,13 @@ impl StudyDef {
     /// row type's schema by name).
     pub fn matrix<T: FromTableRow>(self, path: impl AsRef<Path>) -> StudyEffect<Cases<T>> {
         let title = self.title;
+        let audit = self.audit;
         match read_rows::<T>(path).run() {
-            Ok(cases) => StudyEffect::pure(Cases { title, cases }),
+            Ok(cases) => StudyEffect::pure(Cases {
+                title,
+                cases,
+                audit,
+            }),
             Err(e) => StudyEffect::from_result(Err(StudyError::in_stage("matrix", e))),
         }
     }
@@ -97,6 +120,9 @@ impl StudyDef {
 pub struct Cases<T> {
     title: String,
     cases: Vec<T>,
+    /// The campaign-level audit base path (`save_log`), carried to the coupled `march_for`. Only
+    /// the origin-counterfactual coupled path consumes it; the other binders drop it.
+    audit: Option<PathBuf>,
 }
 
 /// The reduced result rows (with any prior refinement rounds), awaiting record / gates.
@@ -616,6 +642,7 @@ pub struct Counterfactual<T, R: CfdScalar> {
     title: String,
     cases: Vec<T>,
     baseline: CompressibleMarchConfig<R>,
+    audit: Option<PathBuf>,
 }
 
 /// One world per case, each alternated from the baseline, plus the ensemble draw multiplicity.
@@ -627,6 +654,7 @@ pub struct Alternated<T, R: CfdScalar> {
     baseline: CompressibleMarchConfig<R>,
     worlds: Vec<CompressibleMarchConfig<R>>,
     draws: usize,
+    audit: Option<PathBuf>,
 }
 
 /// The alternated campaign with its coupling stack factory attached. Produced by
@@ -638,6 +666,7 @@ pub struct CoupledCampaign<T, R: CfdScalar, S, FC> {
     worlds: Vec<CompressibleMarchConfig<R>>,
     draws: usize,
     coupling: FC,
+    audit: Option<PathBuf>,
     _stack: core::marker::PhantomData<fn() -> S>,
 }
 
@@ -667,6 +696,7 @@ impl<T> StudyEffect<Cases<T>> {
                 title: c.title,
                 cases: c.cases,
                 baseline,
+                audit: c.audit,
             }),
             Err(e) => StudyEffect::from_result(Err(StudyError::in_stage("baseline", e))),
         })
@@ -700,6 +730,7 @@ where
                 baseline: cf.baseline,
                 worlds,
                 draws: 1,
+                audit: cf.audit,
             })
         })
     }
@@ -733,6 +764,7 @@ where
             worlds: a.worlds,
             draws: a.draws,
             coupling: f,
+            audit: a.audit,
             _stack: core::marker::PhantomData,
         })
     }
@@ -759,30 +791,87 @@ where
     ) -> StudyEffect<EnsembleMarched<T, R>> {
         self.and_then(|c| {
             let draws = c.draws;
+            // Audit fan-out: the main file names every branch file it spawns before the concurrent
+            // round; each branch writes its own file, exclusively, flushed stepwise inside the run.
+            if let Some(base) = &c.audit {
+                let mut spawn = String::from("fan-out sweep-1: branches spawned");
+                for i in 0..c.cases.len() {
+                    for d in 0..draws {
+                        spawn.push_str(&alloc::format!(
+                            "\n  spawn {}",
+                            audit_branch_path(base, c.worlds[i].name(), d).display()
+                        ));
+                    }
+                }
+                if let Err(e) =
+                    crate::types::flow::audit::append_line(audit_main_path(base), &spawn)
+                {
+                    return StudyEffect::from_result(Err(StudyError::in_stage("save_log", e)));
+                }
+            }
             let idx: Vec<usize> = (0..c.cases.len() * draws).collect();
             let out = sweep(&idx, |&k| {
                 let (i, draw) = (k / draws, k % draws);
                 let world = &c.worlds[i];
                 let stack = (c.coupling)(&c.cases[i], draw);
-                let run = CfdFlow::march(&c.baseline);
-                let run = if world.name() != c.baseline.name() {
-                    run.alternate_context(world)
-                } else {
-                    run
-                };
+                let mut run = CfdFlow::march(&c.baseline);
+                if world.name() != c.baseline.name() {
+                    run = run.alternate_context(world);
+                }
+                // One thread, one file: this branch flushes its own audit file, named by world+draw.
+                if let Some(base) = &c.audit {
+                    run = run.save_log(audit_branch_path(base, world.name(), draw));
+                }
                 run.couple(stack).from_field(field()).run_for(steps)
             });
             match out {
-                Ok(reports) => StudyEffect::pure(EnsembleMarched {
-                    title: c.title,
-                    cases: c.cases,
-                    draws,
-                    reports,
-                }),
+                Ok(reports) => {
+                    if let Some(base) = &c.audit {
+                        let mut rejoin = String::from("rejoin sweep-1: branch outcomes");
+                        for (k, report) in reports.iter().enumerate() {
+                            let (i, d) = (k / draws, k % draws);
+                            let marked = report
+                                .effect_log()
+                                .map(|l| alloc::format!("{l}").contains("!!ContextAlternation!!"))
+                                .unwrap_or(false);
+                            rejoin.push_str(&alloc::format!(
+                                "\n  rejoin {}.draw-{d}: complete ({})",
+                                c.worlds[i].name(),
+                                if marked { "alternated" } else { "baseline" },
+                            ));
+                        }
+                        if let Err(e) =
+                            crate::types::flow::audit::append_line(audit_main_path(base), &rejoin)
+                        {
+                            return StudyEffect::from_result(Err(StudyError::in_stage(
+                                "save_log", e,
+                            )));
+                        }
+                    }
+                    StudyEffect::pure(EnsembleMarched {
+                        title: c.title,
+                        cases: c.cases,
+                        draws,
+                        reports,
+                    })
+                }
                 Err(e) => StudyEffect::from_result(Err(StudyError::in_stage("march_for", e))),
             }
         })
     }
+}
+
+/// The per-branch audit file path: `<base>.sweep-1.<world>.draw-<draw>.log`.
+fn audit_branch_path(base: &Path, world: &str, draw: usize) -> PathBuf {
+    PathBuf::from(alloc::format!(
+        "{}.sweep-1.{world}.draw-{draw}.log",
+        base.to_string_lossy()
+    ))
+}
+
+/// The main audit file path: `<base>.main.log` (the fan-out spawn/rejoin narration).
+fn audit_main_path(base: &Path) -> PathBuf {
+    PathBuf::from(alloc::format!("{}.main.log", base.to_string_lossy()))
 }
 
 impl<T, R> StudyEffect<EnsembleMarched<T, R>>

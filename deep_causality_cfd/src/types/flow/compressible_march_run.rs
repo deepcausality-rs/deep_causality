@@ -353,6 +353,10 @@ where
     stop_ov: Option<MarchStop<R>>,
     observe_ov: Option<QttObserve>,
     log: EffectLog,
+    /// The audit-log file this run flushes to (the `save_log` verb), as a path string. `None` is
+    /// the default: no sink, in-memory log only. Stored as a string so the field stays present in
+    /// `no_std` builds; the `save_log` verb and the disk sink are `std`-only.
+    sink_path: Option<alloc::string::String>,
 }
 
 /// `!!ContextAlternation!!` — swap the whole world (a different borrowed config) before marching.
@@ -412,7 +416,19 @@ where
             stop_ov: None,
             observe_ov: None,
             log: EffectLog::new(),
+            sink_path: None,
         }
+    }
+
+    /// Attach a disk audit-log sink at `path` (the trajectory-level `save_log` verb). Every
+    /// provenance entry is flushed to the file the moment it is recorded; without it the run is
+    /// unchanged (in-memory log, console rendering). Set before `.couple(..)` so the sink rides
+    /// into the coupled march.
+    #[cfg(feature = "std")]
+    #[must_use]
+    pub fn save_log(mut self, path: impl AsRef<std::path::Path>) -> Self {
+        self.sink_path = Some(path.as_ref().to_string_lossy().into_owned());
+        self
     }
 
     /// The world this run marches in: the alternated context if one was swapped in, else the
@@ -477,18 +493,27 @@ where
             MarchStop::Steady { max_steps, .. } => max_steps,
         };
 
+        let spec = CoupledLoopSpec {
+            coupling,
+            trigger,
+            kappa: scalar_kappa,
+            steps,
+        };
+        // With a `save_log` sink attached, the driver flushes each step's provenance to disk; the
+        // default `NoAudit` is a zero-cost no-op that keeps an unaudited run byte-for-byte unchanged.
+        #[cfg(feature = "std")]
+        if let Some(path) = self.sink_path {
+            let mut sink = crate::types::flow::LogSink::create(path)?;
+            return run_coupled_driver(&mut carrier, cfg, spec, field, state, &observe, &mut sink);
+        }
         run_coupled_driver(
             &mut carrier,
             cfg,
-            CoupledLoopSpec {
-                coupling,
-                trigger,
-                kappa: scalar_kappa,
-                steps,
-            },
+            spec,
             field,
             state,
             &observe,
+            &mut crate::types::flow::carrier::NoAudit,
         )
     }
 
@@ -528,18 +553,25 @@ where
             MarchStop::Steady { max_steps, .. } => max_steps,
         };
 
-        Ok(run_until_driver(
+        let spec = CoupledLoopSpec {
+            coupling,
+            trigger,
+            kappa: scalar_kappa,
+            steps,
+        };
+        #[cfg(feature = "std")]
+        if let Some(path) = self.sink_path {
+            let mut sink = crate::types::flow::LogSink::create(path)?;
+            return run_until_driver(carrier, cfg, spec, field, predicate, state, &mut sink);
+        }
+        run_until_driver(
             carrier,
             cfg,
-            CoupledLoopSpec {
-                coupling,
-                trigger,
-                kappa: scalar_kappa,
-                steps,
-            },
+            spec,
             field,
             predicate,
             state,
-        ))
+            &mut crate::types::flow::carrier::NoAudit,
+        )
     }
 }

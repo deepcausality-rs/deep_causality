@@ -38,7 +38,7 @@ mod model;
 mod utils_print;
 
 use avionics_examples::shared::{utils, world};
-use deep_causality_cfd::{CfdFlow, StudyError, StudyView, Verdict};
+use deep_causality_cfd::{CfdFlow, PhysicsError, StudyError, StudyView, Verdict};
 use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time::Instant;
@@ -59,18 +59,28 @@ fn main() -> ExitCode {
             .join("cfd/plasma_blackout_weather/weather_table.csv")
     };
 
+    // The audit-log base path: one file per (condition, draw) plus a main spawn/rejoin file land
+    // under this directory (the campaign-level `save_log` verb). Run artifacts, git-ignored.
+    let audit_dir =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("cfd/plasma_blackout_weather/audit");
+
     let outcome: Result<Verdict, StudyError> = (|| {
         let clock = Instant::now();
         utils_print::print_intro();
+        std::fs::create_dir_all(&audit_dir).map_err(|e| {
+            StudyError::in_stage(
+                "save_log setup",
+                PhysicsError::CalculationError(format!("audit dir: {e}")),
+            )
+        })?;
 
         let table = CfdFlow::study("weather-dispersion table")
+            .save_log(audit_dir.join("weather.audit")) // one stepwise-flushed log per branch
             .cases(model::weather_cases())
             .baseline(model::standard_day) // the validated origin, built once
             .alternate(model::weather_world) // six counterfactual atmospheres, each marked
             .ensemble(constants::MC_DRAWS) // deterministic receiver-noise draws
-            .couple(|case, draw| {
-                world::corridor_coupling(model::bias_departure(case.d_temp), draw)
-            })
+            .couple(|case, draw| world::corridor_coupling(model::bias_departure(case.d_temp), draw))
             .march_for(constants::STEPS, world::initial_field) // fixed horizon, concurrent over (case, draw)
             .reduce_ensemble(model::world_row) // draw sets collapse to mean / scatter / worst
             .inspect(utils_print::print_rows)
