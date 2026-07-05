@@ -26,6 +26,8 @@ pub mod blackout_tests;
 #[cfg(not(miri))]
 pub mod compressible_march_run_tests;
 #[cfg(test)]
+pub mod coupled_march_tests;
+#[cfg(test)]
 pub mod corridor_tests;
 #[cfg(test)]
 pub mod coupling_tests;
@@ -47,6 +49,8 @@ pub mod march_case_tests;
 #[cfg(test)]
 #[cfg(not(miri))]
 pub mod march_run_tests;
+#[cfg(test)]
+pub mod march_state_tests;
 #[cfg(test)]
 pub mod mms_tests;
 #[cfg(test)]

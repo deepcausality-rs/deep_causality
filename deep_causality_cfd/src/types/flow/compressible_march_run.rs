@@ -427,6 +427,16 @@ where
         self
     }
 
+    /// Attach the multiphysics coupling stack and open the named-stage march builder: the
+    /// readable form of [`run_until`](Self::run_until) / [`run_coupled`](Self::run_coupled),
+    /// reading `.couple(stack).from(state).until(event)` instead of a positional argument list.
+    pub fn couple<S>(self, coupling: S) -> crate::types::flow::CoupledMarch<'c, R, S>
+    where
+        S: PhysicsStage<2, R>,
+    {
+        crate::types::flow::CoupledMarch::new(self, coupling)
+    }
+
     /// Override the observe set for this run.
     pub fn observe_with(mut self, observe: QttObserve) -> Self {
         self.observe_ov = Some(observe);

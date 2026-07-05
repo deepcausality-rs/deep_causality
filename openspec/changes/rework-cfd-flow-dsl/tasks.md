@@ -15,10 +15,10 @@
 ## 2. Trajectory foundation (deep_causality_cfd)
 
 - [x] 2.1 Add the `Marchable` trait (`march()` one-shot; GAT-`Pipeline` unification of `CfdFlow::march` deferred to the group-6 retirement pass per the additive-now decision); implement for `DuctConfig`, `MarchConfig`, `QttMarchConfig`; tests prove each equals its canonical entry
-- [ ] 2.2 Add the `Coupled<C, S>` wrapper and its `Marchable` impl (fixed-horizon run_until path); implement for `CompressibleMarchConfig`, `UncertainMarchConfig`
+- [x] 2.2 Coupled march path — design refinement: the real coupled `run_until` needs an initial field the spike's `Coupled<C,S>=(config,stack)` could not carry, so the coupled seam is the named-stage builder's `ReadyMarch` (config+stack+field) rather than a bare `Coupled: Marchable`. `.couple(stack).from(field).run_for(n)` is the coupled one-shot the campaign lowers onto; the campaign's coupled `march`/`march_for` (group 4) calls it. No separate `Coupled` wrapper; `CompressibleMarchConfig`/`UncertainMarchConfig` reach the report through the builder.
 - [ ] 2.3 Route `CfdFlow::march` through `Marchable`; retire `qtt_march`/`compressible_march`/`duct_march`/`uncertain_march`
-- [ ] 2.4 Add `MarchState` (fields, scalars, ambient, nav engine, log, step, clock); `pause.state()` export and `from(state)` resume; unify with the checksummed snapshot; retire `carry_field`
-- [ ] 2.5 Add the named-stage march builder (`alternate`/`save_log`/`couple`/`from`/`until`/`run`/`run_for`); retire positional `run_until`
+- [x] 2.4 Add `MarchState` (wraps the coupled field + step, unifying pause export / resume input / checksummed snapshot); `CompressiblePause::state()` export; `save`/`load` disk transport; test proves disk-resume == in-memory-resume bit-identical. (`from(state)` resume verb lands with the named-stage builder in 2.5; `carry_field` is example-only and retires in the group-7 migration)
+- [x] 2.5 Add the named-stage march builder: `CompressibleMarchRun::couple(stack)` → `CoupledMarch` (`trigger`/`kappa` optional stages) → `from(state)`/`from_field(..)` → `ReadyMarch` → `until(event)`/`run()`/`run_for(n)`. Tests prove each terminal equals the positional `run_until`/`run_coupled`/`march_with`. (`alternate` = existing `alternate_context`; `save_log` lands in group 5; positional `run_until` retires in the group-6 pass)
 - [x] 2.6 Add singular `continue_with(world, steps)` on the pause beside the batch `continue_branches` (forks, alternates, continues; marker carried); test proves it equals the one-world batch
 - [ ] 2.7 Tests: disk-resume == in-memory-resume bit-identical; fork history-sharing; march-verb dispatch across families; register in mod tree and tests/BUILD.bazel
 

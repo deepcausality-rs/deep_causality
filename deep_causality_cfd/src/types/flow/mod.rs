@@ -17,6 +17,7 @@ mod carrier;
 mod cfd_flow;
 mod compressible_march_run;
 mod corridor;
+mod coupled_march;
 mod coupling;
 mod duct_march_run;
 mod finite_rate_ionization;
@@ -25,6 +26,7 @@ mod gates;
 #[cfg(feature = "std")]
 mod io;
 mod march_run;
+mod march_state;
 mod mms;
 mod operator_study;
 mod qtt_march_pause;
@@ -43,6 +45,7 @@ pub use blackout::{
 };
 pub use cfd_flow::{CfdFlow, fail};
 pub use compressible_march_run::{CompressibleFork, CompressibleMarchRun, CompressiblePause};
+pub use coupled_march::{CoupledMarch, ReadyMarch};
 pub use corridor::{
     BankCorrection, BankSteeredLift, BranchAccumulator, BranchOutcome, CyberneticCorrect,
     GoverningModel, RegimeClass, RegimeClassify, SafetyEnvelope, TrajectoryNav,
@@ -58,6 +61,7 @@ pub use gates::Gates;
 #[cfg(feature = "std")]
 pub use io::write_xy_csv;
 pub use march_run::{MarchPipeline, MarchRun, StepView};
+pub use march_state::MarchState;
 pub use mms::{MmsBuilder, Regime};
 pub use operator_study::{Operator, OperatorStudyBuilder};
 pub use qtt_march_pause::{MarchFork, MarchPause};

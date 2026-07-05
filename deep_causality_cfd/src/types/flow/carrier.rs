@@ -18,7 +18,7 @@
 use super::blackout::BlackoutTrigger;
 use super::coupling::{CoupledField, PhysicsStage, StepContext};
 use crate::types::CfdScalar;
-use crate::types::flow::Report;
+use crate::types::flow::{MarchState, Report};
 use crate::types::flow_config::QttObserve;
 use alloc::sync::Arc;
 use deep_causality_core::{AlternatableContext, AlternatableState, AlternatableValue, EffectLog};
@@ -391,6 +391,13 @@ where
     /// The coupled field at the pause (carried scalars, nav state, regime, provenance log).
     pub fn field(&self) -> &CoupledField<R> {
         &self.field
+    }
+
+    /// Export this pause as a resumable [`MarchState`]: the carried field plus the step reached.
+    /// The state resumes a continued march (in memory now, or from disk later after
+    /// [`save`](MarchState::save)) bit-identically to continuing this pause directly.
+    pub fn state(&self) -> MarchState<R> {
+        MarchState::at((*self.field).clone(), self.step)
     }
 
     /// Fork the pause: an **O(1)** branch sharing the paused state and field by `Arc` — no tensor
