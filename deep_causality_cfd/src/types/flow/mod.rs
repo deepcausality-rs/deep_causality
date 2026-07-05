@@ -33,6 +33,9 @@ mod qtt_march_pause;
 mod qtt_march_run;
 mod report;
 pub mod state_snapshot;
+mod study_effect;
+mod study_error;
+mod study_warning;
 mod sweep;
 #[cfg(feature = "std")]
 mod uncertain_march_run;
@@ -67,6 +70,9 @@ pub use operator_study::{Operator, OperatorStudyBuilder};
 pub use qtt_march_pause::{MarchFork, MarchPause};
 pub use qtt_march_run::{QttMarchRun, QttStepView};
 pub use report::Report;
+pub use study_effect::{StudyEffect, StudyEffectWitness};
+pub use study_error::StudyError;
+pub use study_warning::{StudyWarning, StudyWarningLog};
 pub use sweep::sweep;
 #[cfg(feature = "std")]
 pub use uncertain_march_run::{UncertainMarchPipeline, UncertainMarchRun, UncertainStepView};

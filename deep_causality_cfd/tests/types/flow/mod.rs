@@ -52,6 +52,12 @@ pub mod march_run_tests;
 #[cfg(test)]
 pub mod march_state_tests;
 #[cfg(test)]
+pub mod study_effect_tests;
+#[cfg(test)]
+pub mod study_error_tests;
+#[cfg(test)]
+pub mod study_warning_tests;
+#[cfg(test)]
 pub mod mms_tests;
 #[cfg(test)]
 #[cfg(not(miri))]

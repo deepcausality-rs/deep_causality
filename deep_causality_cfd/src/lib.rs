@@ -83,7 +83,8 @@ pub use crate::types::flow::{
     MarchFork, MarchPause, MarchPipeline, MarchRun, MarchState, MmsBuilder, Operator,
     OperatorStudyBuilder, PhysicsStage, QttMarchRun, QttStepView, ReadyMarch,
     RecoveryTemperatureStage, Regime, RegimeClass, RegimeClassify, Report, SafetyEnvelope,
-    StepContext, StepView, ThermalRelax, TrajectoryNav,
+    StepContext, StepView, StudyEffect, StudyEffectWitness, StudyError, StudyWarning,
+    StudyWarningLog, ThermalRelax, TrajectoryNav,
     VerifyRun, VibrationalLagStage, ViscosityArrhenius, dominant_frequency, fail, ler_relax_scalar,
     ler_step, strouhal_number, sweep,
 };

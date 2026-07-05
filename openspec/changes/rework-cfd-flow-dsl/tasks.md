@@ -24,10 +24,10 @@
 
 ## 3. Study effect carrier (deep_causality_cfd)
 
-- [ ] 3.1 Add `StudyError` (verb-tagged) wrapping `PhysicsError` and `DataLoadingError` with `From` impls
-- [ ] 3.2 Add the `StudyEffect<T>` carrier and its hidden `StudyEffectWitness` (haft Functor/Applicative/Monad, CDL pattern); error short-circuit + warning accumulation
-- [ ] 3.3 Add `StudyWarning` and the warning channel plumbing (force_load overrides, clamped candidates, solver fallbacks)
-- [ ] 3.4 Tests: monad-law smoke, error short-circuit tags the verb, warning accumulation reaches the effect; register in mod tree and tests/BUILD.bazel
+- [x] 3.1 Add `StudyError` (verb-tagged via `in_stage`) wrapping `PhysicsError` and `DataLoadingError` with `From` impls; Display names the verb, `source()` chains the data cause
+- [x] 3.2 Add the `StudyEffect<T>` carrier and its `StudyEffectWitness` (haft Functor/Applicative/Monad/Pure in sibling modules, CDL pattern); error short-circuit + warning accumulation; ergonomic `pure`/`and_then`/`map`/`warn`/`from_result`/`into_parts`
+- [x] 3.3 Add `StudyWarning` (Data/Case/Generic) + `StudyWarningLog` (LogAddEntry/LogAppend/LogSize/LogEffect) — the non-fatal channel for force_load overrides, clamped candidates, solver fallbacks
+- [x] 3.4 Tests: monad laws (identity/associativity + witness Functor/Applicative/Monad), error short-circuit keeps its verb tag, warnings accumulate in order; registered in mod tree (types_flow Bazel suite auto-globs)
 
 ## 4. Campaign phase family (deep_causality_cfd)
 
