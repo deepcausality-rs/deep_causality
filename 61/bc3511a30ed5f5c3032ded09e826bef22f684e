@@ -1,0 +1,29 @@
+deep_causality_cfd/tests/types/flow/compressible_march_run_tests.rs
+  s_c4c919f578d611::t_329c99137116d7 412-480
+deep_causality_cfd/src/types/flow/study/view.rs
+  s_c4c919f578d611::t_f9162f07a619cf 33-45
+deep_causality_cfd/src/types/flow/mod.rs
+  s_c4c919f578d611::t_6c96be888d4a71 72
+deep_causality_cfd/src/types/flow/study/mod.rs
+  s_c4c919f578d611::t_fb4a62118ab7db 430-602
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_55421807f12fe8 97-99
+openspec/changes/rework-cfd-flow-dsl/tasks.md
+  s_c4c919f578d611::t_983b9d00f8e4d6 48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "61bc3511a30ed5f5c3032ded09e826bef22f684e",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
