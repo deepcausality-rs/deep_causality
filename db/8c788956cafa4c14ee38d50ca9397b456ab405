@@ -1,0 +1,120 @@
+deep_causality_cfd/src/types/flow_config/duct_config.rs
+  s_c4c919f578d611::t_ecb3dada94cf82 8
+openspec/changes/rework-cfd-flow-dsl/tasks.md
+  s_c4c919f578d611::t_f2523e4be4a5a1 60-61
+  s_c4c919f578d611::t_aceb23031c02fc 57-59
+deep_causality_cfd/src/types/flow_config/uncertain_march_config.rs
+  s_c4c919f578d611::t_ecb3dada94cf82 10
+deep_causality_cfd/verification/qtt_taylor_green_verification/main.rs
+  s_c4c919f578d611::t_ecabbdd8c654d0 14,69,77
+  s_c4c919f578d611::t_b1a1e1684fc627 39
+  s_c4c919f578d611::t_1999a29ea3b87a 146-151
+deep_causality_cfd/tests/types/flow/coupled_march_tests.rs
+  s_c4c919f578d611::t_202551fccd691d 76,83,100,107,118
+deep_causality_cfd/src/traits/mod.rs
+  s_c4c919f578d611::t_e17dc9b1cdcacc 15
+deep_causality_cfd/src/traits/marchable.rs
+  s_c4c919f578d611::t_51f05c18f89e92 19-21,26-108
+  s_c4c919f578d611::t_826ea5c22c412c 22
+  s_c4c919f578d611::t_5241e3e00ffeff 109
+deep_causality_cfd/verification/dec_cylinder_wake_verification/print_utils.rs
+  s_c4c919f578d611::t_fac4647e897585 105-107,109-113
+  s_c4c919f578d611::t_6e18e4bc9fa524 10-11,21-33
+  s_c4c919f578d611::t_f88c3104312d2b 17
+  s_c4c919f578d611::t_58a595fa2859fc 18
+  s_c4c919f578d611::t_a62050cff59a91 34
+deep_causality_cfd/tests/types/flow/march_state_tests.rs
+  s_c4c919f578d611::t_202551fccd691d 75,124,127
+deep_causality_cfd/tests/types/flow/qtt_march_pause_tests.rs
+  s_c4c919f578d611::t_202551fccd691d 68,85,99,115,152,181,214,232
+deep_causality_cfd/tests/types/flow/uncertain_march_run_tests.rs
+  s_c4c919f578d611::t_202551fccd691d 81,118,149,182
+deep_causality_cfd/verification/dec_cylinder_wake_verification/config.rs
+  s_c4c919f578d611::t_ecabbdd8c654d0 7,11,165
+deep_causality_cfd/verification/qtt_cylinder_verification/config.rs
+  s_c4c919f578d611::t_ecabbdd8c654d0 77
+deep_causality_cfd/verification/qtt_ramc_stagline/main.rs
+  s_c4c919f578d611::t_b1a1e1684fc627 26
+  s_c4c919f578d611::t_1999a29ea3b87a 248-253
+deep_causality_cfd/verification/qtt_blunt_body_2d/main.rs
+  s_c4c919f578d611::t_1999a29ea3b87a 183-188
+  s_c4c919f578d611::t_b1a1e1684fc627 25
+deep_causality_cfd/tests/types/flow/qtt_march_run_tests.rs
+  s_c4c919f578d611::t_202551fccd691d 64,99,142,154,158,181,214,237,300,359,386,421,425,462-463,488,492,512,551,594,616,651,657
+deep_causality_cfd/verification/mms_taylor_green_verification/main.rs
+  s_c4c919f578d611::t_b1a1e1684fc627 22
+  s_c4c919f578d611::t_1999a29ea3b87a 42-47
+deep_causality_cfd/tests/types/flow/compressible_march_run_tests.rs
+  s_c4c919f578d611::t_202551fccd691d 86,116,141,175,190,208,239,279,304,321,332
+deep_causality_cfd/verification/dec_cylinder_wake_verification/main.rs
+  s_c4c919f578d611::t_ecabbdd8c654d0 12,70
+  s_c4c919f578d611::t_b1a1e1684fc627 44
+  s_c4c919f578d611::t_1999a29ea3b87a 134-139
+deep_causality_cfd/tests/types/flow/duct_march_tests.rs
+  s_c4c919f578d611::t_202551fccd691d 68,114,171
+deep_causality_cfd/src/types/flow/coupled_march.rs
+  s_c4c919f578d611::t_ecb3dada94cf82 12
+deep_causality_cfd/verification/qtt_park2t_blackout/main.rs
+  s_c4c919f578d611::t_1999a29ea3b87a 73-78
+  s_c4c919f578d611::t_b1a1e1684fc627 29
+  s_c4c919f578d611::t_ecabbdd8c654d0 57
+deep_causality_cfd/src/types/flow/duct_march_run.rs
+  s_c4c919f578d611::t_ecb3dada94cf82 7,53
+deep_causality_cfd/verification/dec_lid_cavity_re1000_verification/main.rs
+  s_c4c919f578d611::t_b1a1e1684fc627 41
+  s_c4c919f578d611::t_1999a29ea3b87a 153-158
+deep_causality_cfd/src/types/flow_config/cfd_config_builder.rs
+  s_c4c919f578d611::t_ecb3dada94cf82 50
+deep_causality_cfd/src/types/flow_config/qtt_march_config.rs
+  s_c4c919f578d611::t_ecb3dada94cf82 13
+deep_causality_cfd/src/types/flow/compressible_march_run.rs
+  s_c4c919f578d611::t_ecb3dada94cf82 9,406
+deep_causality_cfd/tests/traits/marchable_tests.rs
+  s_c4c919f578d611::t_202551fccd691d 76,100,104
+deep_causality_cfd/verification/dec_lid_cavity_re1000_verification/print_utils.rs
+  s_c4c919f578d611::t_f88c3104312d2b 16
+  s_c4c919f578d611::t_5ec069c862b8d0 18-21
+  s_c4c919f578d611::t_f9cc5bdd39b93d 17
+deep_causality_cfd/verification/qtt_reentry_3d/main.rs
+  s_c4c919f578d611::t_1999a29ea3b87a 216-221
+  s_c4c919f578d611::t_b1a1e1684fc627 27
+deep_causality_cfd/src/types/flow/uncertain_march_run.rs
+  s_c4c919f578d611::t_ecb3dada94cf82 8
+deep_causality_cfd/src/types/flow/cfd_flow.rs
+  s_c4c919f578d611::t_97c8a09f0241e0 107-120
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_917b5ff809d944 42
+  s_c4c919f578d611::t_582442e110fbbf 76-82
+  s_c4c919f578d611::t_10721501778f06 98
+  s_c4c919f578d611::t_dbdb8a1fc2eb14 108-111
+deep_causality_cfd/verification/qtt_sod/main.rs
+  s_c4c919f578d611::t_1999a29ea3b87a 88-93
+  s_c4c919f578d611::t_b1a1e1684fc627 26
+deep_causality_cfd/src/types/flow/mod.rs
+  s_c4c919f578d611::t_9b1135710ce4f9 48
+deep_causality_cfd/src/types/flow/qtt_march_run.rs
+  s_c4c919f578d611::t_ecb3dada94cf82 9,316
+deep_causality_cfd/verification/qtt_cylinder_verification/main.rs
+  s_c4c919f578d611::t_b1a1e1684fc627 34
+  s_c4c919f578d611::t_ecabbdd8c654d0 13,61
+  s_c4c919f578d611::t_1999a29ea3b87a 88-93
+deep_causality_cfd/verification/dec_taylor_green_re1600_verification/main.rs
+  s_c4c919f578d611::t_b1a1e1684fc627 31
+  s_c4c919f578d611::t_1999a29ea3b87a 83-88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "db8c788956cafa4c14ee38d50ca9397b456ab405",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
