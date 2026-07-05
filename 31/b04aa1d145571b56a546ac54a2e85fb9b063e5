@@ -1,0 +1,42 @@
+deep_causality_num/tests/algebra/mod.rs
+  s_cefbd789296ae8::t_dccf7b4dfb68b8 28-29
+deep_causality_core/tests/kani_proofs.rs
+  s_cefbd789296ae8::t_3f43bae4ff6419 1-58
+deep_causality_num/tests/algebra/monoid_tests.rs
+  s_cefbd789296ae8::t_7be7564b84e818 1-36
+lean/DeepCausalityFormal/Num/Monoid.lean
+  s_cefbd789296ae8::t_02ce20f3413c4c 1-34
+lean/lakefile.toml
+  s_cefbd789296ae8::t_9c40d722a56096 1-17
+lean/DeepCausalityFormal/Core/CausalMonad.lean
+  s_cefbd789296ae8::t_ed338f60b46fd8 1-55
+Cargo.toml
+  s_cefbd789296ae8::t_86488d79e4a0cc 48-50
+lean/THEOREM_MAP.md
+  s_cefbd789296ae8::t_0008f3be1351ae 1-41
+lean/lean-toolchain
+  s_cefbd789296ae8::t_3a6edb2c0f5ad9 1
+.github/workflows/formalization.yml
+  s_cefbd789296ae8::t_e9525c1983175f 1-59,61-62,65,67-70,72,74-75
+  s_cefbd789296ae8::t_e6154712d2e25b 60,63-64,66,71,73
+lean/README.md
+  s_cefbd789296ae8::t_6c0389fb8324f1 1-61
+lean/DeepCausalityFormal.lean
+  s_cefbd789296ae8::t_c5ffaf6bf2eb60 1-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "31b04aa1d145571b56a546ac54a2e85fb9b063e5",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
