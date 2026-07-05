@@ -27,9 +27,9 @@ same **id**. CI (`.github/workflows/formalization.yml`) fails if an id lacks eit
 
 | id | statement | Lean | Lean location | Rust witness | Test | Kani | Aeneas |
 |---|---|---|---|---|---|---|---|
-| `num.add_monoid.assoc` | `(a+b)+c = a+(b+c)` for `AddMonoid` | proved | `Num/Monoid.lean :: add_monoid_assoc` | `deep_causality_num/tests/algebra/monoid_tests.rs :: test_add_monoid_associativity` | ✓ | n/a | — |
-| `num.add_monoid.identity` | `a+0 = a ∧ 0+a = a` for `AddMonoid` | proved | `Num/Monoid.lean :: add_monoid_identity` | `deep_causality_num/tests/algebra/monoid_tests.rs :: test_add_monoid_identity` | ✓ | n/a | — |
-| `core.causal_monad.left_id` | `pure a >>= f = f a` | proved | `Core/CausalMonad.lean :: bind_left_id` | `deep_causality_core/tests/kani_proofs.rs :: causal_monad_left_identity` | n/a | ✓ | — |
+| `num.add_monoid.assoc` | `(a+b)+c = a+(b+c)` for `AddMonoid` | proved | `DeepCausalityFormal/Num/Monoid.lean :: add_monoid_assoc` | `deep_causality_num/tests/algebra/monoid_tests.rs :: test_add_monoid_associativity` | ✓ | n/a | — |
+| `num.add_monoid.identity` | `a+0 = a ∧ 0+a = a` for `AddMonoid` | proved | `DeepCausalityFormal/Num/Monoid.lean :: add_monoid_identity` | `deep_causality_num/tests/algebra/monoid_tests.rs :: test_add_monoid_identity` | ✓ | n/a | — |
+| `core.causal_monad.left_id` | `pure a >>= f = f a` | proved | `DeepCausalityFormal/Core/CausalMonad.lean :: bind_left_id` | `deep_causality_core/tests/kani_proofs.rs :: causal_monad_left_identity` | n/a | ✓ | — |
 
 ## Not yet on the map (blocked / scaling — see Formalization.md work plan)
 

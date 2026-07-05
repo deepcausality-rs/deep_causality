@@ -40,10 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
+      - uses: dtolnay/rust-toolchain@stable
       - name: Install Kani
         run: |
           cargo install --locked kani-verifier
@@ -66,9 +63,9 @@ jobs:
           if [ -z "$ids" ]; then echo "no THEOREM_MAP ids found in lean/**/*.lean"; exit 1; fi
           fail=0
           for id in $ids; do
-            rust_hit=$(grep -rl "THEOREM_MAP: $id" deep_causality_num deep_causality_core \
+            rust_hit=$(grep -Frl "THEOREM_MAP: $id" deep_causality_num deep_causality_core \
                        --include='*.rs' || true)
-            map_hit=$(grep -l "$id" lean/THEOREM_MAP.md || true)
+            map_hit=$(grep -Fl "$id" lean/THEOREM_MAP.md || true)
             if [ -z "$rust_hit" ]; then echo "MISSING Rust witness for id: $id"; fail=1; fi
             if [ -z "$map_hit" ]; then echo "MISSING THEOREM_MAP.md entry for id: $id"; fail=1; fi
           done
