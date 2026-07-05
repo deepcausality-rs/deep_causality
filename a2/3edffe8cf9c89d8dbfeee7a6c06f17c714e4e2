@@ -1,0 +1,125 @@
+lean/DeepCausalityFormal/Haft/Functor.lean
+  s_cefbd789296ae8::t_5e3a138807e68b 1-46
+deep_causality_haft/tests/formalization_lean/comonad_tests.rs
+  s_cefbd789296ae8::t_344e8c7e3b43ce 1-34
+lean/DeepCausalityFormal/Haft/Signatures.lean
+  s_cefbd789296ae8::t_05a9b788d83492 1-62
+lean/DeepCausalityFormal/Haft/Applicative.lean
+  s_cefbd789296ae8::t_785d2f52c26af1 1-80
+deep_causality_haft/tests/formalization_lean/monad_tests.rs
+  s_cefbd789296ae8::t_283d07e38158c7 1-47
+deep_causality_haft/tests/formalization_lean/parametric_monad_tests.rs
+  s_cefbd789296ae8::t_a873195fc5b4bf 1-77
+lean/DeepCausalityFormal/Haft/Comonad.lean
+  s_cefbd789296ae8::t_dab042ab9b41ba 1-65
+lean/DeepCausalityFormal/Haft/Bifunctor.lean
+  s_cefbd789296ae8::t_be43f6c9daf330 1-59
+deep_causality_haft/tests/formalization_lean/signatures_tests.rs
+  s_cefbd789296ae8::t_a73558ffba816d 1-59
+deep_causality_haft/tests/formalization_lean/profunctor_tests.rs
+  s_cefbd789296ae8::t_c408d36b178d65 1-69
+lean/DeepCausalityFormal/Haft/Traversable.lean
+  s_cefbd789296ae8::t_8e388fa4b7935d 1-86
+deep_causality_haft/tests/formalization_lean/functor_tests.rs
+  s_cefbd789296ae8::t_c9ab11a667811b 1-26
+lean/DeepCausalityFormal/Haft/EffectSystem.lean
+  s_cefbd789296ae8::t_60cf2739ec915f 1-95
+lean/DeepCausalityFormal/Haft/Hkt.lean
+  s_cefbd789296ae8::t_a4a604bd3c991f 1-62
+deep_causality_haft/tests/formalization_lean/endomorphism_tests.rs
+  s_cefbd789296ae8::t_36ab30aaf03ea8 1-57
+lean/DeepCausalityFormal/Haft/Arrow.lean
+  s_cefbd789296ae8::t_bbdba8c0fc890e 1-154
+deep_causality_haft/tests/formalization_lean/either_tests.rs
+  s_cefbd789296ae8::t_b212e26929b46d 1-26
+deep_causality_haft/tests/formalization_lean/applicative_tests.rs
+  s_cefbd789296ae8::t_185cf9ea4f6591 1-75
+deep_causality_haft/tests/formalization_lean/adjunction_tests.rs
+  s_cefbd789296ae8::t_6a8d7fccf66617 1-99
+lean/DeepCausalityFormal.lean
+  s_cefbd789296ae8::t_471ccbd714680f 21-41
+lean/DeepCausalityFormal/Haft/Foldable.lean
+  s_cefbd789296ae8::t_666235e65cce4b 1-49
+lean/DeepCausalityFormal/Haft/Profunctor.lean
+  s_cefbd789296ae8::t_568e2656a02104 1-50
+deep_causality_haft/tests/formalization_lean/arrow_tests.rs
+  s_cefbd789296ae8::t_e9004b0ef0c435 1-145
+deep_causality_haft/tests/formalization_lean/morphism_tests.rs
+  s_cefbd789296ae8::t_35f122e5a53fce 1-18
+deep_causality_haft/tests/formalization_lean/io_tests.rs
+  s_cefbd789296ae8::t_ea5085d7483be7 1-37
+.github/workflows/formalization.yml
+  s_cefbd789296ae8::t_89d414496acb46 66-67
+lean/DeepCausalityFormal/Haft/Morphism.lean
+  s_cefbd789296ae8::t_85b1e6832878ce 1-37
+deep_causality_haft/tests/formalization_lean/foldable_tests.rs
+  s_cefbd789296ae8::t_d802c1d8f3aac9 1-18
+lean/DeepCausalityFormal/Haft/NaturalIso.lean
+  s_cefbd789296ae8::t_4e5cce959b2bbe 1-69
+deep_causality_haft/tests/formalization_lean/natural_iso_tests.rs
+  s_cefbd789296ae8::t_33c4cc8e7741c3 1-7,11-67
+  s_cefbd789296ae8::t_faeb957cbee826 8-10
+deep_causality_haft/tests/formalization_lean/mod.rs
+  s_cefbd789296ae8::t_69646b2aefe4e0 8-55
+  s_cefbd789296ae8::t_e5216675b44691 5-7
+  s_cefbd789296ae8::t_7a9b7ea422ddea 1-4
+lean/DeepCausalityFormal/Haft/Io.lean
+  s_cefbd789296ae8::t_0bafedcbe0c2d6 1-58,62-68,72-73
+  s_cefbd789296ae8::t_f9795c9c7129b5 59-61
+  s_cefbd789296ae8::t_7f8bea4f278644 69-71
+openspec/notes/causal-algebra/haft-formalization-deviations.md
+  s_cefbd789296ae8::t_461e5baf9d601f 1-140
+lean/DeepCausalityFormal/Haft/Endomorphism.lean
+  s_cefbd789296ae8::t_00a36963c5d637 1-32,35-36,38-54,58-59
+  s_cefbd789296ae8::t_ffe2dc436e3060 33-34,37
+  s_cefbd789296ae8::t_c26ba715930b2f 55-57
+lean/DeepCausalityFormal/Haft/Either.lean
+  s_cefbd789296ae8::t_a7c658fbdeab27 1-53
+deep_causality_haft/tests/formalization_lean/promonad_tests.rs
+  s_cefbd789296ae8::t_7230e81714c0df 1-58
+deep_causality_haft/tests/formalization_lean/bifunctor_tests.rs
+  s_cefbd789296ae8::t_d17c5917e95a9c 1-32
+deep_causality_haft/tests/formalization_lean/traversable_tests.rs
+  s_cefbd789296ae8::t_60b39cc9ccf69a 1-80
+deep_causality_haft/tests/formalization_lean/pure_tests.rs
+  s_cefbd789296ae8::t_e076b9cbd278b3 1-19
+lean/DeepCausalityFormal/Haft/Pure.lean
+  s_cefbd789296ae8::t_27bf9546abf33b 1-41
+lean/DeepCausalityFormal/Haft/ParametricMonad.lean
+  s_cefbd789296ae8::t_7224e3188d1378 1-59
+lean/DeepCausalityFormal/Haft/Promonad.lean
+  s_cefbd789296ae8::t_78c72be6529dd8 1-57
+deep_causality_haft/tests/formalization_lean/effect_system_tests.rs
+  s_cefbd789296ae8::t_e96c3581bf3027 1-150
+lean/THEOREM_MAP.md
+  s_cefbd789296ae8::t_1583a72cbef859 81-82
+  s_cefbd789296ae8::t_81a2d0257eb631 36-41
+  s_cefbd789296ae8::t_cf58ad0c21def1 34-35,42-73
+lean/DeepCausalityFormal/Haft/Monad.lean
+  s_cefbd789296ae8::t_de971db9e21dca 1-91
+lean/DeepCausalityFormal/Haft/Adjunction.lean
+  s_cefbd789296ae8::t_988672bc118420 56
+  s_cefbd789296ae8::t_971117d9045d9d 1-55,57-78
+deep_causality_haft/tests/BUILD.bazel
+  s_cefbd789296ae8::t_94ea1191697dde 19,21,34,36,49,51-66
+deep_causality_haft/tests/mod.rs
+  s_cefbd789296ae8::t_e3e8dd3954f84d 11
+deep_causality_haft/tests/algebra/mod.rs
+  s_cefbd789296ae8::t_bc58209143b3fc 6,8,10,12,14,16,18,20,22,24,26,28,30,33,37,39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a23edffe8cf9c89d8dbfeee7a6c06f17c714e4e2",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
