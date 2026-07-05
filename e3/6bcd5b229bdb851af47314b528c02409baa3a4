@@ -1,0 +1,46 @@
+deep_causality_cfd/src/types/flow/study/mod.rs
+  s_c4c919f578d611::t_ba5dce56d951a4 26,31,36
+  s_c4c919f578d611::t_ed2650ef36ba72 606-830
+examples/avionics_examples/cfd/plasma_blackout_weather/main.rs
+  s_c4c919f578d611::t_2c5022bf8692ff 72
+  s_c4c919f578d611::t_21ae08af02c4b1 17,19-26,28-30,38,41-43,52-59,62-71,73-99
+deep_causality_cfd/tests/types/flow/compressible_march_run_tests.rs
+  s_c4c919f578d611::t_acdec03c66a0db 485-545
+examples/avionics_examples/cfd/plasma_blackout_weather/utils_print.rs
+  s_c4c919f578d611::t_1e26f7b1bd6fec 1-56
+openspec/changes/rework-cfd-flow-dsl/tasks.md
+  s_c4c919f578d611::t_0c31bfbc3313f3 71
+deep_causality_cfd/src/lib.rs
+  s_c4c919f578d611::t_8a525d336ae3c2 96-100
+examples/avionics_examples/cfd/plasma_blackout_weather/model.rs
+  s_c4c919f578d611::t_6e0628aeb96319 136-138
+  s_c4c919f578d611::t_bc901b1de4d149 27-28,32-33,42-43,54
+  s_c4c919f578d611::t_149f1a401a917d 6-10,13-16,18,20-22,24-26,29-31,34-41,44-53,55-59,64-69,78,82-84,89-90,94,118-135,139-169,171,173,177-178,181,187,191-200,202,209-210,215,217-231,236-251,253-255,257-396
+  s_c4c919f578d611::t_13d0e3077da286 19
+  s_c4c919f578d611::t_c3748ba8733bd8 252
+  s_c4c919f578d611::t_615c87a5709481 256
+deep_causality_cfd/src/types/flow/mod.rs
+  s_c4c919f578d611::t_9675bc099bc665 71-73
+examples/avionics_examples/cfd/plasma_blackout_weather/output.txt
+  s_c4c919f578d611::t_ff441c704d9707 15-16,24-25
+deep_causality_cfd/src/types/flow/carrier.rs
+  s_c4c919f578d611::t_f527fd1de14d15 232-241
+examples/avionics_examples/cfd/plasma_blackout_weather/weather_table.csv
+  s_c4c919f578d611::t_98ac1ccb7647b3 1-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e36bcd5b229bdb851af47314b528c02409baa3a4",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
