@@ -357,9 +357,7 @@ impl deep_causality_cfd::TableRow for BranchRow {
     }
 }
 
-fn both_branches_reduced(
-    v: &deep_causality_cfd::StudyView<'_, BranchRow>,
-) -> (bool, String) {
+fn both_branches_reduced(v: &deep_causality_cfd::StudyView<'_, BranchRow>) -> (bool, String) {
     (
         v.rows().len() == 2,
         format!("{} branches reduced", v.rows().len()),
@@ -399,7 +397,11 @@ fn campaign_fork_branch_continue_for_reduces_branches_in_case_order() {
                 // Every branch carries the alternation marker the manual fork chain produces.
                 let log = format!("{}", run.report().effect_log().unwrap());
                 assert!(log.contains("!!ContextAlternation!!"), "marker: {log}");
-                let n_tot = run.report().series("final_n_tot").map(|s| s[0]).unwrap_or(0.0);
+                let n_tot = run
+                    .report()
+                    .series("final_n_tot")
+                    .map(|s| s[0])
+                    .unwrap_or(0.0);
                 Ok(BranchRow { n_tot })
             },
         )
@@ -410,9 +412,7 @@ fn campaign_fork_branch_continue_for_reduces_branches_in_case_order() {
     assert!(verdict.passed(), "{verdict}");
 }
 
-fn coarse_round_is_carried(
-    v: &deep_causality_cfd::StudyView<'_, BranchRow>,
-) -> (bool, String) {
+fn coarse_round_is_carried(v: &deep_causality_cfd::StudyView<'_, BranchRow>) -> (bool, String) {
     let coarse_ok = v.rounds().len() == 1 && v.rounds()[0].len() == 2;
     let fine_ok = v.rows().len() == 3;
     (
@@ -448,7 +448,11 @@ fn refine_reforks_the_same_onset_and_carries_the_prior_round() {
         Ok(runs
             .iter()
             .map(|r| BranchRow {
-                n_tot: r.report().series("final_n_tot").map(|s| s[0]).unwrap_or(0.0),
+                n_tot: r
+                    .report()
+                    .series("final_n_tot")
+                    .map(|s| s[0])
+                    .unwrap_or(0.0),
             })
             .collect())
     }

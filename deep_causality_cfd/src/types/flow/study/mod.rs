@@ -570,13 +570,14 @@ where
     {
         self.and_then(|m| {
             let result = {
-                let runs: Vec<CaseRun<'_, T2, CompressibleMarchConfig<R>, R>> = (0..m.reports.len())
-                    .map(|i| CaseRun {
-                        case: &m.cases[i],
-                        config: &m.configs[i],
-                        report: &m.reports[i],
-                    })
-                    .collect();
+                let runs: Vec<CaseRun<'_, T2, CompressibleMarchConfig<R>, R>> =
+                    (0..m.reports.len())
+                        .map(|i| CaseRun {
+                            case: &m.cases[i],
+                            config: &m.configs[i],
+                            report: &m.reports[i],
+                        })
+                        .collect();
                 f(&runs)
             };
             match result {
