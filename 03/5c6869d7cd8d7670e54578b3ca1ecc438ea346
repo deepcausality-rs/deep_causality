@@ -1,0 +1,76 @@
+deep_causality_cfd/src/types/flow/compressible_march_run.rs
+  s_c4c919f578d611::t_7c8119a7dd57b5 556-567,570,574-575
+  s_c4c919f578d611::t_ee04e52f8096bd 419,423-431
+  s_c4c919f578d611::t_3245e68dc0e1dd 496-508,512,516
+  s_c4c919f578d611::t_f4b4324227a910 356-359
+  s_c4c919f578d611::t_d10b8174b3b827 432-433
+openspec/specs/cfd-trajectory-march/spec.md
+  s_c4c919f578d611::t_72a382ba7646aa 1-67
+deep_causality_cfd/src/types/flow/study/mod.rs
+  s_c4c919f578d611::t_fe9b092004d410 645
+  s_c4c919f578d611::t_41e4598071405d 767
+  s_c4c919f578d611::t_2f68173697dd16 844
+  s_c4c919f578d611::t_ee4ec152e57cc0 669
+  s_c4c919f578d611::t_64e67c4840cd0e 699
+  s_c4c919f578d611::t_6c62f694e9949f 733
+  s_c4c919f578d611::t_a581124be855c7 47,54,63-72,78,89,92-96,105,107-111
+  s_c4c919f578d611::t_cdec67d3b525e3 123-125
+  s_c4c919f578d611::t_3bd219079c989e 794-805,808-811,817-824,828-843,845-857,864-875
+  s_c4c919f578d611::t_3adcc55b797c64 806-807
+  s_c4c919f578d611::t_108d79c36968bd 657
+  s_c4c919f578d611::t_972e1691de822f 41
+  s_c4c919f578d611::t_6ec0b6ec76101e 876
+examples/avionics_examples/cfd/plasma_blackout_weather/main.rs
+  s_c4c919f578d611::t_71c03a62b2ba2b 62-63,66,70-75,78
+  s_c4c919f578d611::t_9329b6d463e883 41
+  s_c4c919f578d611::t_f60e55e7a98479 83
+  s_c4c919f578d611::t_3adcc55b797c64 64-65
+deep_causality_cfd/src/types/flow/carrier.rs
+  s_c4c919f578d611::t_35daa092b1ee84 291,302-304
+  s_c4c919f578d611::t_4582c94b6ecf86 356,365
+  s_c4c919f578d611::t_125d8158e5d05e 319-320,341-342,346-347,352
+  s_c4c919f578d611::t_965417ec689b98 258-279
+deep_causality_cfd/src/types/flow/audit.rs
+  s_c4c919f578d611::t_9e2cef305b11ba 26-29,55
+  s_c4c919f578d611::t_b59f799e74d710 1-18,20-25,30-54,56-77
+  s_c4c919f578d611::t_8a42d9eebd1c5b 19
+deep_causality_cfd/tests/types/flow/compressible_march_run_tests.rs
+  s_c4c919f578d611::t_3adcc55b797c64 577-580,609-613,658-669
+  s_c4c919f578d611::t_d1d63c2413ce92 542-576,581-608,614-657,670-671
+  s_c4c919f578d611::t_f60e55e7a98479 494,498-499
+openspec/specs/cfd-audit-log/spec.md
+  s_c4c919f578d611::t_72a382ba7646aa 1-59
+openspec/specs/cfd-counterfactual/spec.md
+  s_c4c919f578d611::t_72a382ba7646aa 1-65
+openspec/specs/cfd-study-grammar/spec.md
+  s_c4c919f578d611::t_72a382ba7646aa 1-127
+openspec/specs/typed-table-io/spec.md
+  s_c4c919f578d611::t_72a382ba7646aa 12-16,22,32-37,39,41-44,58-109
+  s_c4c919f578d611::t_2dc476583f2d6a 110
+deep_causality_cfd/src/types/flow/qtt_march_run.rs
+  s_c4c919f578d611::t_8b7c3d830655b3 429
+  s_c4c919f578d611::t_86c1cfb783e354 477,489-490
+examples/avionics_examples/cfd/plasma_blackout_weather/output.txt
+  s_c4c919f578d611::t_0863fe2bec0cef 7-8,26
+deep_causality_cfd/src/types/flow/mod.rs
+  s_c4c919f578d611::t_b18851a211ac65 15-16
+  s_c4c919f578d611::t_3adcc55b797c64 46-47
+openspec/changes/archive/2026-07-05-rework-cfd-flow-dsl/tasks.md
+  s_c4c919f578d611::t_0857babf4f230f 19,23,46-47,54-55,73,77-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "035c6869d7cd8d7670e54578b3ca1ecc438ea346",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
