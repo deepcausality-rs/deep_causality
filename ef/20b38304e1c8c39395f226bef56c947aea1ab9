@@ -1,0 +1,21 @@
+deep_causality_cfd/tests/types/flow/compressible_march_run_tests.rs
+  s_c4c919f578d611::t_c9b7e08aa7c750 649-651,653-655
+deep_causality_cfd/src/types/flow/study/mod.rs
+  s_c4c919f578d611::t_6dbdbeb4162de2 823
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "ef20b38304e1c8c39395f226bef56c947aea1ab9",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
