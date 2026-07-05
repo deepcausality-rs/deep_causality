@@ -192,7 +192,9 @@ let table = CfdFlow::study("weather-dispersion table")
     .reduce_ensemble(model::world_row)
     .gates(model::weather_gates())
     .verdict()?;
-``` The evolved electron
+```
+
+The evolved electron
 density gates which measurements the Kalman filter may fold, the Knudsen number selects the
 governing model, and the safety gate's clamped bank command is flown by the aero stage,
 steering the trajectory that feeds the next step's freestream. CFD, estimation, and control

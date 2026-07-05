@@ -28,14 +28,18 @@ impl Gates {
         }
     }
 
-    /// Add one gate: a label, whether it passed, and the pre-formatted detail line.
+    /// Add one gate: a label, whether it passed, and the pre-formatted detail line. Consumes and
+    /// returns the builder, so the result must be kept — a bare `.gate(..);` would drop the entry.
+    #[must_use]
     pub fn gate(mut self, label: impl Into<String>, pass: bool, detail: impl Into<String>) -> Self {
         self.entries.push((label.into(), pass, detail.into()));
         self
     }
 
     /// Print the gate lines and the verdict; return true when every gate passed. An empty
-    /// gate set passes vacuously and says so in its verdict line.
+    /// gate set passes vacuously and says so in its verdict line. The returned pass/fail is the
+    /// block's primary outcome (the caller maps it to an exit code), so it must not be discarded.
+    #[must_use]
     pub fn finish(self) -> bool {
         println!("--- {} ---", self.title);
         let mut all = true;

@@ -55,15 +55,16 @@ The run exits nonzero and writes no table.
 
 ## Gates
 
-Five gates, exit nonzero on any regression:
+Four gates, exit nonzero on any regression. (Schedule integrity — every scheduled ratio producing
+a converged march — is not a separate gate: it is guaranteed by the sweep construction, which
+produces one row per case and short-circuits on the first march failure.)
 
-1. **Schedule integrity.** Every scheduled ratio produced a converged march.
-2. **Choking.** Every choked row crosses Mach 1 within the stated band of the throat.
-3. **Shock position.** Every internal-shock row lands within the measured band (twelve cell
+1. **Choking.** Every choked row crosses Mach 1 within the stated band of the throat.
+2. **Shock position.** Every internal-shock row lands within the measured band (twelve cell
    widths at 128 cells) of the closed-form position.
-4. **Shock-free profiles.** Interior stations track the area-Mach relation within the
+3. **Shock-free profiles.** Interior stations track the area-Mach relation within the
    measured 5 percent band.
-5. **Physical thrust.** The thrust coefficient is finite and positive on every row.
+4. **Physical thrust.** The thrust coefficient is finite and positive on every row.
 
 The bands live in [`constants.rs`](constants.rs) with their derivations; they were measured by
 the duct-march verification tests at this resolution, not chosen.
@@ -84,7 +85,7 @@ first critical ratio is not swept.
 | [`main.rs`](main.rs) | Orchestration: schedule in, sweep, table out, gate verdict |
 | [`model.rs`](model.rs) | Domain logic: the march-and-reduce step and the closed-form references |
 | [`model_config.rs`](model_config.rs) | Configuration: the duct case description per back pressure |
-| [`utils_print.rs`](utils_print.rs) | Console rendering and the five gates |
+| [`utils_print.rs`](utils_print.rs) | Console rendering; the gating sequence lives in `model.rs` |
 | [`constants.rs`](constants.rs) | Geometry, reservoir state, and the measured gate bands |
 | [`back_pressures.csv`](back_pressures.csv) | The swept schedule |
 | [`back_pressures_bad.csv`](back_pressures_bad.csv) | The wrong-usage demonstration input |

@@ -53,7 +53,7 @@ pub type FloatType = f64;
 /// mapped to an exit code.
 fn main() -> ExitCode {
     // Where the dispersion table is recorded (the campaign's `record` seam).
-    let table_path = model::get_tabe_path();
+    let table_path = model::get_table_path();
 
     // The audit-log base path: one file per (condition, draw) plus a main spawn/rejoin file land
     // under this directory (the campaign-level `save_log` verb). Run artifacts, git-ignored.
@@ -79,7 +79,7 @@ fn main() -> ExitCode {
             .march_for(constants::STEPS, world::initial_field) // fixed horizon, concurrent over (case, draw)
             .reduce_ensemble(model::world_row) // draw sets collapse to mean / scatter / worst
             .inspect(utils_print::print_rows)
-            .record(table_path())
+            .record(&table_path)
             .gates(model::weather_gates())
             .verdict()?;
 

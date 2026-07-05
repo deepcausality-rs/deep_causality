@@ -401,9 +401,7 @@ pub fn get_audit_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("cfd/plasma_blackout_weather/audit")
 }
 
-pub fn get_tabe_path() -> fn() -> PathBuf {
-    || {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("cfd/plasma_blackout_weather/weather_table.csv")
-    }
+/// Where the dispersion table is recorded (the campaign's `record` seam).
+pub fn get_table_path() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("cfd/plasma_blackout_weather/weather_table.csv")
 }

@@ -96,7 +96,17 @@ fn write_rows_surfaces_a_filesystem_write_error() {
         cf: 1.2,
     }];
     let err = write_rows(path, rows).run().unwrap_err();
-    assert!(!format!("{err}").is_empty(), "the write error is reported");
+    // It must be the filesystem write that failed, not a parse/schema error: the IO variant is the
+    // only one that renders as an I/O error and carries the underlying `std::io::Error` as its
+    // `source()`.
+    assert!(
+        format!("{err}").contains("I/O error"),
+        "the failure is an I/O error: {err}"
+    );
+    assert!(
+        std::error::Error::source(&err).is_some(),
+        "the underlying io::Error is chained as the source"
+    );
 }
 
 #[test]

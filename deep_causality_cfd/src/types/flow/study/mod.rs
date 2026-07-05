@@ -799,7 +799,7 @@ where
                     for d in 0..draws {
                         spawn.push_str(&alloc::format!(
                             "\n  spawn {}",
-                            audit_branch_path(base, c.worlds[i].name(), d).display()
+                            audit_branch_path(base, i, c.worlds[i].name(), d).display()
                         ));
                     }
                 }
@@ -861,10 +861,23 @@ where
     }
 }
 
-/// The per-branch audit file path: `<base>.sweep-1.<world>.draw-<draw>.log`.
-fn audit_branch_path(base: &Path, world: &str, draw: usize) -> PathBuf {
+/// The per-branch audit file path: `<base>.sweep-1.case-<NN>-<world>.draw-<draw>.log`. The case
+/// index makes the file unique per branch even when two cases share a world name (so one branch
+/// can never truncate another's log), and the world token is reduced to a filesystem-safe form so
+/// a name carrying path separators cannot redirect the write outside the base directory.
+fn audit_branch_path(base: &Path, case: usize, world: &str, draw: usize) -> PathBuf {
+    let token: String = world
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '-' || c == '_' {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect();
     PathBuf::from(alloc::format!(
-        "{}.sweep-1.{world}.draw-{draw}.log",
+        "{}.sweep-1.case-{case:02}-{token}.draw-{draw}.log",
         base.to_string_lossy()
     ))
 }
