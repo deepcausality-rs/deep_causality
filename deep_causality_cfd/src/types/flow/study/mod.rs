@@ -820,7 +820,7 @@ where
                 }
                 // One thread, one file: this branch flushes its own audit file, named by world+draw.
                 if let Some(base) = &c.audit {
-                    run = run.save_log(audit_branch_path(base, world.name(), draw));
+                    run = run.save_log(audit_branch_path(base, i, world.name(), draw));
                 }
                 run.couple(stack).from_field(field()).run_for(steps)
             });

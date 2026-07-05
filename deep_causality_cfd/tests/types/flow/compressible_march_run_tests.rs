@@ -646,10 +646,13 @@ fn campaign_save_log_writes_one_file_per_branch_and_a_main_file() {
         .expect("the audited campaign runs");
     assert!(verdict.passed());
 
-    // 2 cases x 2 draws = 4 per-branch files, each named by world + draw, exclusively written.
-    for world_name in ["standard", "hot"] {
+    // 2 cases x 2 draws = 4 per-branch files, each named by case index + world + draw (the case
+    // index keeps files unique even if two cases shared a world name), exclusively written.
+    for (i, world_name) in ["standard", "hot"].iter().enumerate() {
         for d in 0..2 {
-            let p = dir.join(format!("wx.audit.sweep-1.{world_name}.draw-{d}.log"));
+            let p = dir.join(format!(
+                "wx.audit.sweep-1.case-{i:02}-{world_name}.draw-{d}.log"
+            ));
             assert!(p.exists(), "per-branch file {} exists", p.display());
         }
     }
