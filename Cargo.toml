@@ -45,6 +45,9 @@ license = "MIT"
 # `[lints.rust] unsafe_code = "allow"` with a documented reason.
 [workspace.lints.rust]
 unsafe_code = "forbid"
+# `cfg(kani)` is set only by the Kani driver (`cargo kani`); register it so the
+# `#![cfg(kani)]`-gated proof harnesses do not trip the `unexpected_cfgs` lint.
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
 
 # Optimize all crates
 [profile.release]

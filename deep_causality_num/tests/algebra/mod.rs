@@ -25,6 +25,8 @@ pub(crate) mod field_real_f64_tests;
 // results for transcendental ops, so exact equality cannot hold. The test
 // itself is correct and runs under normal CI.
 #[cfg(test)]
+mod monoid_tests;
+#[cfg(test)]
 #[cfg(not(miri))]
 mod real_tests;
 #[cfg(test)]

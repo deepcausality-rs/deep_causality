@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+#
+# Lean 4 + Mathlib formalization of the DeepCausality Causal Algebra.
+# This is a SEPARATE toolchain from the Rust workspace (see lean/README.md).
+# The Lean version in `lean-toolchain` must match the Mathlib `rev` below; bump both together.
+
+name = "DeepCausalityFormal"
+defaultTargets = ["DeepCausalityFormal"]
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4.git"
+rev = "v4.15.0"
+
+[[lean_lib]]
+name = "DeepCausalityFormal"
