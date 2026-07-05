@@ -1,0 +1,24 @@
+examples/avionics_examples/cfd/nozzle_operating_map/output.txt
+  s_c4c919f578d611::t_1f61ce45aa9ecf 3,21
+examples/avionics_examples/cfd/flight_envelope_placard/output.txt
+  s_c4c919f578d611::t_1f61ce45aa9ecf 3,26,30
+examples/avionics_examples/cfd/viv_resonance_margin/output.txt
+  s_c4c919f578d611::t_c442ab176a6837 3
+  s_c4c919f578d611::t_a0196e583975e4 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "9f7a018afbbcc0173d39e8b06da5f5a9fc75bba0",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
