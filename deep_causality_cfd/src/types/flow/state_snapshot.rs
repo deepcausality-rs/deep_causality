@@ -61,6 +61,18 @@ fn short(section: &str) -> PhysicsError {
     PhysicsError::CalculationError(format!("snapshot section '{section}' is truncated"))
 }
 
+/// Read a presence flag written as exactly `0` (absent) or `1` (present). Any other byte is a
+/// corrupt section, refused loudly rather than silently treated as absent.
+fn presence_flag(byte: u8, section: &str) -> Result<bool, PhysicsError> {
+    match byte {
+        0 => Ok(false),
+        1 => Ok(true),
+        other => Err(PhysicsError::CalculationError(format!(
+            "snapshot section '{section}': invalid presence flag {other} (expected 0 or 1)"
+        ))),
+    }
+}
+
 fn read_u32(bytes: &[u8], o: &mut usize, section: &str) -> Result<u32, PhysicsError> {
     let s = bytes.get(*o..*o + 4).ok_or_else(|| short(section))?;
     *o += 4;
@@ -98,7 +110,19 @@ fn read_values<R: BitCodec>(
     n: usize,
     section: &str,
 ) -> Result<Vec<R>, PhysicsError> {
-    let mut out = Vec::with_capacity(n);
+    // Guard the preallocation against a malformed count read from the file: every encoded value
+    // occupies at least one byte, so a count exceeding the section's remaining bytes cannot be
+    // satisfied and would otherwise demand an unbounded allocation before any byte is read.
+    let remaining = bytes.len().saturating_sub(*o);
+    if n > remaining {
+        return Err(short(section));
+    }
+    let mut out = Vec::new();
+    out.try_reserve(n).map_err(|_| {
+        PhysicsError::CalculationError(format!(
+            "snapshot section '{section}': value count {n} exceeds available memory"
+        ))
+    })?;
     for _ in 0..n {
         out.push(read_value::<R>(bytes, o, section)?);
     }
@@ -266,15 +290,16 @@ where
     // "channels".
     let bytes = section(package, "channels")?;
     let mut o = 0;
-    let aero_present = *bytes.first().ok_or_else(|| short("channels"))?;
+    let aero_present = presence_flag(*bytes.first().ok_or_else(|| short("channels"))?, "channels")?;
     o += 1;
-    if aero_present == 1 {
+    if aero_present {
         let f: Vec<R> = read_values(bytes, &mut o, 3, "channels")?;
         field.set_aero_force([f[0], f[1], f[2]]);
     }
-    let control_present = *bytes.get(o).ok_or_else(|| short("channels"))?;
+    let control_present =
+        presence_flag(*bytes.get(o).ok_or_else(|| short("channels"))?, "channels")?;
     o += 1;
-    if control_present == 1 {
+    if control_present {
         let a: R = read_value(bytes, &mut o, "channels")?;
         field.set_control_action(a);
     }
@@ -282,9 +307,9 @@ where
     // "nav".
     let bytes = section(package, "nav")?;
     let mut o = 0;
-    let nav_present = *bytes.first().ok_or_else(|| short("nav"))?;
+    let nav_present = presence_flag(*bytes.first().ok_or_else(|| short("nav"))?, "nav")?;
     o += 1;
-    if nav_present == 1 {
+    if nav_present {
         let p: Vec<R> = read_values(bytes, &mut o, 3, "nav")?;
         let v: Vec<R> = read_values(bytes, &mut o, 3, "nav")?;
         let gm: R = read_value(bytes, &mut o, "nav")?;
@@ -323,7 +348,14 @@ where
     // "step".
     let bytes = section(package, "step")?;
     let mut o = 0;
-    let step = read_u64(bytes, &mut o, "step")? as usize;
+    let step_u64 = read_u64(bytes, &mut o, "step")?;
+    // Checked conversion: a `u64` step index that does not fit this platform's `usize` (e.g. on
+    // a 32-bit target) is refused rather than silently truncated to a wrong resume point.
+    let step = usize::try_from(step_u64).map_err(|_| {
+        PhysicsError::CalculationError(format!(
+            "snapshot section 'step': step index {step_u64} exceeds this platform's usize"
+        ))
+    })?;
 
     Ok((field, step))
 }

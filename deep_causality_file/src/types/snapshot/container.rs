@@ -31,6 +31,11 @@ pub(crate) const MAGIC: &[u8; 8] = b"DCFSNP01";
 /// The container format version this build writes and understands.
 pub(crate) const FORMAT_VERSION: u16 = 1;
 
+/// The smallest number of body bytes any section can occupy: its fixed metadata, a `u32`
+/// name length (4) + a `u8` version (1) + a `u64` data length (8), before any name or data
+/// bytes. Used to reject an implausible section count before allocating for it.
+const MIN_SECTION_BYTES: usize = 4 + 1 + 8;
+
 /// Serialize a package to the container bytes, checksum included.
 pub(crate) fn encode(package: &SnapshotPackage) -> Vec<u8> {
     let mut body: Vec<u8> = Vec::new();
@@ -94,7 +99,16 @@ fn read_u8(bytes: &[u8], offset: &mut usize) -> Option<u8> {
 /// Decode container bytes. Structural damage (bad magic, truncation, invalid tags) is always
 /// a corrupt-file error; the checksum verdict is returned for the caller's policy. The format
 /// version is checked here and an unknown version is refused regardless of load mode.
-pub(crate) fn decode(bytes: &[u8], shown_path: &str) -> Result<Decoded, DataLoadingError> {
+///
+/// When `checksum_fatal` is set (the strict load path), a checksum mismatch refuses immediately,
+/// before any section is interpreted or allocated for — so a corrupt file cannot drive the
+/// section parse the strict path means to avoid. The force-load path passes `false` so it can
+/// still parse and salvage, downgrading the mismatch to a reported warning.
+pub(crate) fn decode(
+    bytes: &[u8],
+    shown_path: &str,
+    checksum_fatal: bool,
+) -> Result<Decoded, DataLoadingError> {
     let corrupt = |detail: &str| DataLoadingError::corrupt(shown_path, detail);
 
     if bytes.len() < MAGIC.len() + 8 {
@@ -108,6 +122,11 @@ pub(crate) fn decode(bytes: &[u8], shown_path: &str) -> Result<Decoded, DataLoad
         read_u64(bytes, &mut offset).ok_or_else(|| corrupt("truncated checksum"))?;
     let body = &bytes[offset..];
     let checksum_ok = fnv1a64(body) == stored_checksum;
+    if checksum_fatal && !checksum_ok {
+        return Err(corrupt(
+            "checksum mismatch: the file content does not match its recorded checksum",
+        ));
+    }
 
     let mut o = 0usize;
     let version = read_u16(body, &mut o).ok_or_else(|| corrupt("truncated version"))?;
@@ -123,7 +142,18 @@ pub(crate) fn decode(bytes: &[u8], shown_path: &str) -> Result<Decoded, DataLoad
     let fingerprint = read_u64(body, &mut o).ok_or_else(|| corrupt("truncated fingerprint"))?;
     let count = read_u32(body, &mut o).ok_or_else(|| corrupt("truncated section count"))?;
 
-    let mut sections = Vec::with_capacity(count as usize);
+    // Reject an implausible section count before allocating for it: each section occupies at
+    // least its fixed metadata (`MIN_SECTION_BYTES`) in the remaining body, so a count that
+    // cannot possibly fit is a malformed header, not a huge-but-valid file.
+    let count = count as usize;
+    let remaining = body.len() - o;
+    if count > remaining / MIN_SECTION_BYTES {
+        return Err(corrupt(&format!(
+            "section count {count} exceeds what the remaining {remaining} body bytes can hold"
+        )));
+    }
+
+    let mut sections = Vec::with_capacity(count);
     for i in 0..count {
         let name_len = read_u32(body, &mut o)
             .ok_or_else(|| corrupt(&format!("section {i}: name len")))?

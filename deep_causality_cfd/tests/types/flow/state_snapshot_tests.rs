@@ -60,6 +60,11 @@ fn a_resume_package_round_trips_through_disk_bit_exact() {
     assert_eq!(nav_a.position(), nav_b.position());
     assert_eq!(nav_a.velocity(), nav_b.velocity());
     assert_eq!(nav_a.gm(), nav_b.gm());
+    // The KS clock fields are serialized by `pack_resume` and restored by `ReentryNavEngine::
+    // restore`; assert them so a regression that drops either is caught (a future non-zero nav
+    // state would then fail here rather than pass silently).
+    assert_eq!(nav_a.carried_clock_offset(), nav_b.carried_clock_offset());
+    assert_eq!(nav_a.elapsed_time(), nav_b.elapsed_time());
     assert_eq!(
         nav_a.filter().state().to_array(),
         nav_b.filter().state().to_array()

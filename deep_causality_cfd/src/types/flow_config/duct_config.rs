@@ -94,7 +94,11 @@ impl<R: CfdScalar> DuctAreaProfile<R> {
                 exit_area,
                 length,
             } => {
-                let half = R::from_f64(0.5).unwrap_or_else(R::one);
+                // 0.5 is exactly representable in every supported scalar (f32/f64/Float106); a
+                // silent `R::one()` fallback would move the throat to `x = length` and disable the
+                // diverging half, so a scalar that cannot represent it is a hard error rather than
+                // a wrong geometry.
+                let half = R::from_f64(0.5).expect("0.5 must be representable in the CFD scalar");
                 let x_t = half * *length;
                 let clamped = if x < R::zero() {
                     R::zero()

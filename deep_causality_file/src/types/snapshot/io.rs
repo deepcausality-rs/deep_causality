@@ -59,13 +59,9 @@ impl IoAction for LoadSnapshot {
     fn run(self) -> Result<SnapshotPackage, DataLoadingError> {
         let shown = self.path.display().to_string();
         let bytes = fs::read(&self.path)?;
-        let decoded = decode(&bytes, &shown)?;
-        if !decoded.checksum_ok {
-            return Err(DataLoadingError::corrupt(
-                &shown,
-                "checksum mismatch: the file content does not match its recorded checksum",
-            ));
-        }
+        // Strict load: a checksum mismatch refuses inside `decode`, before any section is
+        // interpreted or allocated for.
+        let decoded = decode(&bytes, &shown, true)?;
         check_scalar(&decoded.package, self.expected_scalar, &shown)?;
         if self
             .current_fingerprint
@@ -108,7 +104,9 @@ impl IoAction for ForceLoadSnapshot {
     fn run(self) -> Result<(SnapshotPackage, Vec<String>), DataLoadingError> {
         let shown = self.path.display().to_string();
         let bytes = fs::read(&self.path)?;
-        let decoded = decode(&bytes, &shown)?;
+        // Force load: a checksum mismatch is non-fatal, downgraded to a reported warning below,
+        // so the parse must still run to salvage what it can.
+        let decoded = decode(&bytes, &shown, false)?;
         let mut warnings = Vec::new();
         if !decoded.checksum_ok {
             warnings.push(format!(

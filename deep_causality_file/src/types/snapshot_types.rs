@@ -217,6 +217,9 @@ impl BitCodec for Float106 {
     fn read_bits(bytes: &[u8], offset: &mut usize) -> Option<Self> {
         let hi = take::<8>(bytes, offset).map(|b| f64::from_bits(u64::from_le_bytes(b)))?;
         let lo = take::<8>(bytes, offset).map(|b| f64::from_bits(u64::from_le_bytes(b)))?;
-        Some(Float106::new(hi, lo))
+        // Reconstruct from the exact stored (hi, lo) bits without renormalizing, so the
+        // decoded value is bit-identical to the encoded one (`new` would re-run quick_two_sum
+        // and could perturb the stored representation), honouring the BitCodec bit-exact contract.
+        Some(Float106::from_raw(hi, lo))
     }
 }
