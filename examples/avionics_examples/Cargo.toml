@@ -41,18 +41,30 @@ path = "cfd/plasma_blackout_corridor/main.rs"
 name = "plasma_blackout_weather"
 path = "cfd/plasma_blackout_weather/main.rs"
 
+[[example]]
+name = "flight_envelope_placard"
+path = "cfd/flight_envelope_placard/main.rs"
+
+[[example]]
+name = "nozzle_operating_map"
+path = "cfd/nozzle_operating_map/main.rs"
+
+[[example]]
+name = "viv_resonance_margin"
+path = "cfd/viv_resonance_margin/main.rs"
+
 [dependencies]
 deep_causality = { path = "../../deep_causality" }
 deep_causality_core = { path = "../../deep_causality_core" }
 deep_causality_calculus = { path = "../../deep_causality_calculus" }
 deep_causality_cfd = { path = "../../deep_causality_cfd", features = ["parallel"] }
-deep_causality_par = { path = "../../deep_causality_par" }
 deep_causality_num = { path = "../../deep_causality_num" }
 deep_causality_haft = { path = "../../deep_causality_haft" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
 deep_causality_multivector = { path = "../../deep_causality_multivector" }
 deep_causality_physics = { path = "../../deep_causality_physics" }
 deep_causality_file = { path = "../../deep_causality_file" }
+deep_causality_topology = { path = "../../deep_causality_topology" }
 chrono = { version = "0.4" }
 
 [lints]

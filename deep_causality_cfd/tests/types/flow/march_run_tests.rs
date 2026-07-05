@@ -220,3 +220,21 @@ fn test_probe_series_is_recorded() {
     assert_eq!(probe.len(), 2);
     assert!(probe.iter().all(|v| v.is_finite()));
 }
+
+#[test]
+fn test_run_owned_equals_the_explicit_geometry_form() {
+    let config = cavity(3, Observe::default());
+    let manifold = config.materialize().expect("geometry");
+    let explicit = CfdFlow::march(&config)
+        .on(&manifold)
+        .run()
+        .expect("explicit form runs");
+    let owned = CfdFlow::march(&config)
+        .run_owned()
+        .expect("one-shot form runs");
+    assert_eq!(
+        explicit.final_field(),
+        owned.final_field(),
+        "run_owned reproduces the explicit materialize-and-on form"
+    );
+}

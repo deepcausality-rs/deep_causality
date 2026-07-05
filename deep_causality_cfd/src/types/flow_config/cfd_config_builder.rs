@@ -47,7 +47,7 @@ impl CfdConfigBuilder {
 
     /// Start an **uncertain-inflow march** configuration (the sensor-fed causal-monad march):
     /// `solver` + `inflow_zone` + `sensor_stream` + `march_for`, then `build()` →
-    /// `UncertainMarchConfig`, run by [`CfdFlow::uncertain_march`](crate::CfdFlow). The geometry is
+    /// `UncertainMarchConfig`, run by [`CfdFlow::march`](crate::CfdFlow). The geometry is
     /// lent at run time (`.on(&manifold)`), so the dimension is not pinned here.
     #[cfg(feature = "std")]
     pub fn uncertain_march<R: CfdScalar + deep_causality_uncertain::ProbabilisticType>(

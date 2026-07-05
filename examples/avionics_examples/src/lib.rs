@@ -6,4 +6,4 @@
 //! Shared example support for the avionics examples. Currently one module: the machinery the
 //! two plasma-blackout CFD examples have in common.
 
-pub mod blackout;
+pub mod shared;

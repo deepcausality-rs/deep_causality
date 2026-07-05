@@ -10,7 +10,7 @@
 //! body — no cut cells), with drag read as a **tensor-train contraction** of the mask with the velocity
 //! deficit. This closes Gap 1 of the plasma-blackout analysis (the immersed body + surface observables).
 //!
-//! `main` runs the case through `CfdFlow::qtt_march` at a ladder of **bond caps** and self-verifies
+//! `main` runs the case through `CfdFlow::march` at a ladder of **bond caps** and self-verifies
 //! (exit nonzero on break):
 //!
 //! 1. **No-slip** — the velocity inside the body falls to the penalization floor.
@@ -31,7 +31,7 @@
 mod config;
 mod print_utils;
 
-use deep_causality_cfd::{CfdFlow, fail};
+use deep_causality_cfd::CfdFlow;
 use print_utils::BondRow;
 
 /// The working precision for the whole computation (the single alias to change).
@@ -58,7 +58,7 @@ fn main() {
     let mut rows = Vec::new();
     for &cap in &caps {
         let case = config::build_config(L, cap).unwrap_or_else(|e| fail("QTT cylinder config", e));
-        let report = CfdFlow::qtt_march(&case)
+        let report = CfdFlow::march(&case)
             .run()
             .unwrap_or_else(|e| fail("QTT cylinder pipeline", e));
         let drag = Into::<f64>::into(*report.series("drag").expect("drag series").last().unwrap());
@@ -84,4 +84,10 @@ fn main() {
     } else {
         std::process::exit(1);
     }
+}
+
+/// Print a stage-failure context and its error on stderr, then exit the process non-zero.
+fn fail(context: &str, error: impl core::fmt::Debug) -> ! {
+    eprintln!("{context} failed: {error:?}");
+    std::process::exit(1);
 }

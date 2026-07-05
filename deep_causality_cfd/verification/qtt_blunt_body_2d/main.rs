@@ -22,7 +22,7 @@
 //! ```
 
 use deep_causality_cfd::{
-    BlendedMap, BlendedMapConfig, CompressibleMarcher2d, EulerState2d, fail, quantize_2d,
+    BlendedMap, BlendedMapConfig, CompressibleMarcher2d, EulerState2d, quantize_2d,
 };
 use deep_causality_tensor::{CausalTensor, Truncation};
 
@@ -179,4 +179,10 @@ fn main() {
         }
         std::process::exit(1);
     }
+}
+
+/// Print a stage-failure context and its error on stderr, then exit the process non-zero.
+fn fail(context: &str, error: impl core::fmt::Debug) -> ! {
+    eprintln!("{context} failed: {error:?}");
+    std::process::exit(1);
 }

@@ -7,15 +7,30 @@
 //! Strouhal estimate, and the wake-probe CSV write (through the IO effect).
 //!
 //! All arithmetic runs at the working precision [`FloatType`]; values are cast to `f64` only at the
-//! `eprintln!` display boundary (the `{:.*e}` formats need `f64`). The CSV is written at native
-//! precision through the generic [`write_xy_csv`].
+//! `eprintln!` display boundary (the `{:.*e}` formats need `f64`). The wake-probe trace is written
+//! at native precision through the typed [`write_rows`], a two-column [`TableRow`].
 
 use crate::FloatType;
 use crate::config::{
     BLOCKAGE, CaseGeometry, DROPOUT_EVERY, MERGE_FRACTION, NY, RE_D, SENSOR_SIGMA, U_BULK, ft,
 };
-use deep_causality_cfd::{IoAction, fail, write_xy_csv};
+use crate::fail;
+use deep_causality_cfd::{IoAction, TableRow, write_rows};
 use deep_causality_num::{One, Zero};
+
+/// One wake-probe sample: time and probe velocity, at the working precision.
+struct ProbeRow {
+    t: FloatType,
+    v_probe: FloatType,
+}
+
+impl TableRow for ProbeRow {
+    type Scalar = FloatType;
+    const SCHEMA: &'static [(&'static str, &'static str)] = &[("t", "s"), ("v_probe", "m/s")];
+    fn cells(&self) -> Vec<FloatType> {
+        vec![self.t, self.v_probe]
+    }
+}
 
 /// Print the run header: the case / cell / sensor lines on stderr, then the CSV column header on
 /// stdout. Working-precision quantities downcast to `f64` for the `{:.*e}`/`{:.*}` formats.
@@ -87,11 +102,15 @@ pub fn report_strouhal(series: &[(FloatType, FloatType)], diameter: FloatType, u
     );
 }
 
-/// Persist the full wake-probe time series to CSV through the IO effect, at native precision:
-/// `write_xy_csv` builds a deferred `IoAction`; `run` executes the write once, at the edge (an IO
-/// failure surfaces as a `CausalityError`).
+/// Persist the full wake-probe time series to CSV through the typed writer, at native precision:
+/// `write_rows` builds a deferred `IoAction`; `run` executes the write once, at the edge. The
+/// two-column `ProbeRow` schema carries the column names and units.
 pub fn write_probe_csv(path: &str, series: &[(FloatType, FloatType)]) {
-    write_xy_csv(path, ["t", "v_probe"], series)
+    let rows: Vec<ProbeRow> = series
+        .iter()
+        .map(|&(t, v_probe)| ProbeRow { t, v_probe })
+        .collect();
+    write_rows(path, rows)
         .run()
         .unwrap_or_else(|e| fail("wake-probe csv", e));
     eprintln!("# wrote {} wake-probe samples to {path}", series.len());

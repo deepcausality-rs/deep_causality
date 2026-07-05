@@ -31,8 +31,27 @@ enum DataLoadingErrorKind {
     Parse { context: String, detail: String },
     /// An identifier (e.g. a satellite code) was not recognised.
     Unknown(String),
-    // Future formats add variants here (e.g. `Csv { line, detail }`, `Parquet(...)`,
-    // `SchemaMismatch { expected, found }`) without changing the public `DataLoadingError` type.
+    /// A delimited numeric table violated its shape or a cell failed to parse. `row` is
+    /// one-based over significant (non-comment, non-empty) lines.
+    Table {
+        path: String,
+        row: usize,
+        detail: String,
+    },
+    /// A snapshot package failed its whole-package integrity checksum: the file is corrupt.
+    Corrupt { path: String, detail: String },
+    /// A snapshot package belongs to a different world description than the one loading it.
+    FingerprintMismatch { path: String },
+    /// A snapshot package was saved at a different working scalar than the loader expects.
+    ScalarMismatch {
+        path: String,
+        expected: String,
+        found: String,
+    },
+    /// A snapshot package carries a format version this build does not understand.
+    UnknownVersion { path: String, found: u16 },
+    /// A named column was requested from a table that does not carry it.
+    MissingColumn { name: String },
 }
 
 impl DataLoadingError {
@@ -52,6 +71,66 @@ impl DataLoadingError {
             kind: DataLoadingErrorKind::Unknown(detail.into()),
         }
     }
+
+    /// A table shape or cell failure at a one-based significant row.
+    pub(crate) fn table(path: impl Into<String>, row: usize, detail: impl Into<String>) -> Self {
+        Self {
+            kind: DataLoadingErrorKind::Table {
+                path: path.into(),
+                row,
+                detail: detail.into(),
+            },
+        }
+    }
+
+    /// A snapshot whose checksum did not match its content.
+    pub(crate) fn corrupt(path: impl Into<String>, detail: impl Into<String>) -> Self {
+        Self {
+            kind: DataLoadingErrorKind::Corrupt {
+                path: path.into(),
+                detail: detail.into(),
+            },
+        }
+    }
+
+    /// A snapshot saved under a different world description.
+    pub(crate) fn fingerprint_mismatch(path: impl Into<String>) -> Self {
+        Self {
+            kind: DataLoadingErrorKind::FingerprintMismatch { path: path.into() },
+        }
+    }
+
+    /// A snapshot saved at a different working scalar.
+    pub(crate) fn scalar_mismatch(
+        path: impl Into<String>,
+        expected: impl Into<String>,
+        found: impl Into<String>,
+    ) -> Self {
+        Self {
+            kind: DataLoadingErrorKind::ScalarMismatch {
+                path: path.into(),
+                expected: expected.into(),
+                found: found.into(),
+            },
+        }
+    }
+
+    /// A snapshot with an unknown format version.
+    pub(crate) fn unknown_version(path: impl Into<String>, found: u16) -> Self {
+        Self {
+            kind: DataLoadingErrorKind::UnknownVersion {
+                path: path.into(),
+                found,
+            },
+        }
+    }
+
+    /// A named column absent from a table.
+    pub(crate) fn missing_column(name: impl Into<String>) -> Self {
+        Self {
+            kind: DataLoadingErrorKind::MissingColumn { name: name.into() },
+        }
+    }
 }
 
 impl fmt::Display for DataLoadingError {
@@ -62,6 +141,42 @@ impl fmt::Display for DataLoadingError {
                 write!(f, "data loading: parse error in {context}: {detail}")
             }
             DataLoadingErrorKind::Unknown(d) => write!(f, "data loading: unknown identifier: {d}"),
+            DataLoadingErrorKind::Table { path, row, detail } => {
+                write!(
+                    f,
+                    "data loading: table error in {path} at row {row}: {detail}"
+                )
+            }
+            DataLoadingErrorKind::Corrupt { path, detail } => {
+                write!(f, "data loading: corrupt file {path}: {detail}")
+            }
+            DataLoadingErrorKind::FingerprintMismatch { path } => {
+                write!(
+                    f,
+                    "data loading: snapshot {path} belongs to a different world description \
+                     (fingerprint mismatch)"
+                )
+            }
+            DataLoadingErrorKind::ScalarMismatch {
+                path,
+                expected,
+                found,
+            } => {
+                write!(
+                    f,
+                    "data loading: snapshot {path} was saved at scalar {found}, this program \
+                     runs at {expected}"
+                )
+            }
+            DataLoadingErrorKind::UnknownVersion { path, found } => {
+                write!(
+                    f,
+                    "data loading: snapshot {path} has unknown format version {found}"
+                )
+            }
+            DataLoadingErrorKind::MissingColumn { name } => {
+                write!(f, "data loading: table has no column named '{name}'")
+            }
         }
     }
 }

@@ -26,7 +26,7 @@
 mod config;
 mod print_utils;
 
-use deep_causality_cfd::{Ambient, CfdFlow, CoupledField, fail};
+use deep_causality_cfd::{Ambient, CfdFlow, CoupledField};
 
 /// The working precision for the whole computation (the single alias to change).
 pub type FloatType = f64;
@@ -54,7 +54,7 @@ fn main() {
         config::ft(config::U_INF),
         None,
     ));
-    let report = CfdFlow::qtt_march(&cfg)
+    let report = CfdFlow::march(&cfg)
         .run_coupled(
             config::coupling(),
             field,
@@ -69,4 +69,10 @@ fn main() {
     } else {
         std::process::exit(1);
     }
+}
+
+/// Print a stage-failure context and its error on stderr, then exit the process non-zero.
+fn fail(context: &str, error: impl core::fmt::Debug) -> ! {
+    eprintln!("{context} failed: {error:?}");
+    std::process::exit(1);
 }

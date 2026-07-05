@@ -13,7 +13,12 @@
 
 use crate::FloatType;
 use crate::config::{GHIA_U, GHIA_V, GHIA_VORTICES, ft};
-use deep_causality_cfd::{IoAction, fail, write_csv};
+use crate::fail;
+use deep_causality_cfd::IoAction;
+// The centerline dump is a formatted string report (custom precision, empty reference cells for
+// the profile rows), not a typed numeric table, so it uses core's low-level string writer
+// directly rather than the DSL's typed `write_rows`.
+use deep_causality_core::write_csv;
 use deep_causality_num::{One, Zero};
 
 /// The centerline velocity profiles `(u(0.5, y_j), v(x_i, 0.5))` at the vertex stations, from the

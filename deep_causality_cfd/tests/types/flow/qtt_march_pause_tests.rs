@@ -65,7 +65,7 @@ fn at_blackout_onset(field: &CoupledField<f64>, _step: usize) -> bool {
 #[test]
 fn run_until_pauses_at_the_predicate() {
     let cfg = world("nominal_reentry", 0.05, 10);
-    let pause = CfdFlow::qtt_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(stub(), initial(), trigger(), 0.01, at_blackout_onset)
         .unwrap();
 
@@ -82,7 +82,7 @@ fn run_until_pauses_at_the_predicate() {
 #[test]
 fn run_until_exhausts_the_horizon_when_the_predicate_never_fires() {
     let cfg = world("nominal_reentry", 0.05, 6);
-    let pause = CfdFlow::qtt_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(stub(), initial(), trigger(), 0.01, |_, _| false)
         .unwrap();
     assert_eq!(
@@ -96,7 +96,7 @@ fn run_until_exhausts_the_horizon_when_the_predicate_never_fires() {
 #[test]
 fn fork_is_o1_and_shares_the_onset_by_reference() {
     let cfg = world("nominal_reentry", 0.05, 10);
-    let pause = CfdFlow::qtt_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(stub(), initial(), trigger(), 0.01, at_blackout_onset)
         .unwrap();
 
@@ -112,7 +112,7 @@ fn fork_is_o1_and_shares_the_onset_by_reference() {
 #[test]
 fn continued_branches_are_isolated_and_deterministic() {
     let cfg = world("nominal_reentry", 0.05, 10);
-    let pause = CfdFlow::qtt_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(stub(), initial(), trigger(), 0.01, at_blackout_onset)
         .unwrap();
     let onset_ne = pause.field().scalar("n_e").unwrap().to_vec();
@@ -149,7 +149,7 @@ fn alternate_context_forks_into_a_different_world() {
     let nominal = world("nominal_reentry", 0.05, 10);
     let steep = world("steep_reentry", 0.09, 10);
 
-    let pause = CfdFlow::qtt_march(&nominal)
+    let pause = CfdFlow::march(&nominal)
         .run_until(stub(), initial(), trigger(), 0.01, at_blackout_onset)
         .unwrap();
 
@@ -178,7 +178,7 @@ fn alternate_context_forks_into_a_different_world() {
 #[test]
 fn alternate_state_reseeds_the_branch_fluid() {
     let cfg = world("nominal_reentry", 0.05, 10);
-    let pause = CfdFlow::qtt_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(stub(), initial(), trigger(), 0.01, at_blackout_onset)
         .unwrap();
 
@@ -211,7 +211,7 @@ fn a_step_error_is_captured_into_the_pause() {
     let mut field = initial();
     field.set_scalar("heat_flux", vec![2.0e6]); // above the ceiling from the start
 
-    let pause = CfdFlow::qtt_march(&cfg)
+    let pause = CfdFlow::march(&cfg)
         .run_until(gate, field, trigger(), 0.01, |_, _| false)
         .unwrap();
 
@@ -229,7 +229,7 @@ fn alternation_on_an_errored_fork_is_a_noop_with_only_the_audit_entry() {
     let mut field = initial();
     field.set_scalar("heat_flux", vec![2.0e6]);
 
-    let pause = CfdFlow::qtt_march(&nominal)
+    let pause = CfdFlow::march(&nominal)
         .run_until(gate, field, trigger(), 0.01, |_, _| false)
         .unwrap();
     assert!(pause.error().is_some());

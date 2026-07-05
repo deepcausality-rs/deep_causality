@@ -28,7 +28,7 @@ mod config;
 mod print_utils;
 
 use config::RE;
-use deep_causality_cfd::{CfdFlow, fail};
+use deep_causality_cfd::CfdFlow;
 
 /// The working precision for the whole computation. **This is the single alias to change**: the
 /// manifold metric, the projection CG, the RK4 march, and the energy series all run at this
@@ -79,4 +79,10 @@ fn main() {
     if !print_utils::verify(&results, n) {
         std::process::exit(1);
     }
+}
+
+/// Print a stage-failure context and its error on stderr, then exit the process non-zero.
+fn fail(context: &str, error: impl core::fmt::Debug) -> ! {
+    eprintln!("{context} failed: {error:?}");
+    std::process::exit(1);
 }

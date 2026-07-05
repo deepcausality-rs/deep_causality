@@ -75,6 +75,13 @@ impl EffectLog {
     pub fn eq_with_timestamps(&self, other: &Self) -> bool {
         self.entries == other.entries
     }
+
+    /// Iterate the entry messages in order. Timestamps are entry metadata (value equality
+    /// already ignores them), so the message sequence is the log's persistent content, e.g.
+    /// for serializing a provenance log into a state snapshot.
+    pub fn messages(&self) -> impl Iterator<Item = &str> {
+        self.entries.iter().map(|e| e.message())
+    }
 }
 
 impl LogAddEntry for EffectLog {

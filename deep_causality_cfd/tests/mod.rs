@@ -8,4 +8,5 @@ mod navigation;
 mod solvers;
 mod tensor_bridge;
 mod theories;
+mod traits;
 mod types;

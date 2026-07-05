@@ -10,7 +10,7 @@
 //! power-of-two periodic grid, holding the grid metadata, the solver parameters, the **owned seed
 //! velocity fields** (materialized from a closure over the grid at build time — a velocity field is
 //! data, not an analytic tag), the march-stop, and the observe set. Built by
-//! [`QttMarchConfigBuilder`]; composed and run by [`CfdFlow::qtt_march`](crate::CfdFlow).
+//! [`QttMarchConfigBuilder`]; composed and run by [`CfdFlow::march`](crate::CfdFlow).
 
 use crate::types::CfdScalar;
 use crate::types::flow_config::MarchStop;

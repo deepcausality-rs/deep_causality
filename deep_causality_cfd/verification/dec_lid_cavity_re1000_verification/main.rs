@@ -38,7 +38,7 @@ mod config;
 mod print_utils;
 
 use config::RE;
-use deep_causality_cfd::{CfdFlow, StepView, fail};
+use deep_causality_cfd::{CfdFlow, StepView};
 use std::env;
 
 /// The working precision for the whole CFD computation. **This is the single alias to change**: the
@@ -149,4 +149,10 @@ fn run_trend() {
         std::process::exit(1);
     }
     println!("# trend holds: RMSE decreases under refinement");
+}
+
+/// Print a stage-failure context and its error on stderr, then exit the process non-zero.
+pub(crate) fn fail(context: &str, error: impl core::fmt::Debug) -> ! {
+    eprintln!("{context} failed: {error:?}");
+    std::process::exit(1);
 }
