@@ -1,0 +1,30 @@
+deep_causality_num/tests/algebra/mod.rs
+  s_cefbd789296ae8::t_9a6a6b8ab79c6c 24-25
+.github/workflows/formalization.yml
+  s_cefbd789296ae8::t_4be81ead359eb8 43
+  s_cefbd789296ae8::t_24c609c4c81d1a 66,68
+.gitignore
+  s_cefbd789296ae8::t_fe036ff82795ea 68-71
+lean/DeepCausalityFormal/Core/CausalMonad.lean
+  s_cefbd789296ae8::t_7ba74e0f649e85 12,19-21,28,33,48-50,55-56
+lean/THEOREM_MAP.md
+  s_cefbd789296ae8::t_a822575b6c363b 30-32
+lean/lake-manifest.json
+  s_cefbd789296ae8::t_17909fb6a6bf29 1-95
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "de57dc7ee344600281f69fbd0145e3f3e07d6bf3",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
