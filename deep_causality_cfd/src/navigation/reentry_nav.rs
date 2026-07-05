@@ -120,7 +120,6 @@ impl<R: RealField + FromPrimitive> ReentryNavEngine<R> {
     pub fn position_variance(&self) -> R {
         self.filter.position_variance()
     }
-    /// The error-state filter.
     /// The primary gravitational parameter the engine propagates against.
     pub fn gm(&self) -> R {
         self.gm
@@ -149,6 +148,7 @@ impl<R: RealField + FromPrimitive> ReentryNavEngine<R> {
         }
     }
 
+    /// The error-state filter.
     pub fn filter(&self) -> &NavFilter<R> {
         &self.filter
     }

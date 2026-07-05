@@ -31,6 +31,18 @@ impl<R: TableScalar> IoAction for WriteTable<R> {
     type Error = DataLoadingError;
 
     fn run(self) -> Result<(), DataLoadingError> {
+        // A comma or newline in a name or unit would corrupt the unescaped CSV round-trip;
+        // reject before writing rather than emit a file the reader cannot recover.
+        for c in self.table.columns() {
+            if !c.is_delimiter_safe() {
+                return Err(DataLoadingError::parse(
+                    c.name(),
+                    "column name or unit contains a comma or newline, \
+                     which would corrupt the CSV serialization",
+                ));
+            }
+        }
+
         let mut out = String::new();
         let names: Vec<&str> = self.table.columns().iter().map(|c| c.name()).collect();
         out.push_str(&names.join(","));

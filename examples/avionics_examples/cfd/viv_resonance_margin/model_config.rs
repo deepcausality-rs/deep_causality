@@ -56,6 +56,15 @@ impl Marchable<FloatType> for WakeCase {
 /// Counts and grid sizing are exact `f64` specifications; everything the march computes with lifts
 /// into `FloatType` once, through `ft`.
 pub fn wake_case(airspeed: &FloatType) -> Result<WakeCase, PhysicsError> {
+    // Fail fast on a non-physical airspeed row: `Re` is a divisor below (`nu = 1/Re`), so a zero,
+    // negative, or non-finite airspeed would feed infinite/NaN viscosity into the solver instead
+    // of a clear setup error.
+    let v: f64 = Into::into(*airspeed);
+    if !v.is_finite() || v <= 0.0 {
+        return Err(PhysicsError::CalculationError(format!(
+            "airspeed must be finite and positive, got {v}"
+        )));
+    }
     let reynolds = *airspeed * ft(DIAMETER_M) / ft(NU_AIR_M2_S);
 
     let h_spec = 1.0 / CELLS_PER_D as f64;

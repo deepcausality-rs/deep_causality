@@ -97,10 +97,13 @@ pub fn viv_gates() -> GateSeq<MarginRow> {
 
 /// Every extracted Strouhal number sits in the validated band for this grid.
 pub fn gate_strouhal_band(view: &StudyView<'_, MarginRow>) -> (bool, String) {
-    let ok = view
-        .rows()
-        .iter()
-        .all(|r| r.strouhal >= ft(ST_BAND.0) && r.strouhal <= ft(ST_BAND.1));
+    // A non-empty guard: an empty sweep must not pass a safety gate vacuously (`all` is true and
+    // the `INFINITY` fold clears the placard on zero rows), which would mask a failed sweep.
+    let ok = !view.rows().is_empty()
+        && view
+            .rows()
+            .iter()
+            .all(|r| r.strouhal >= ft(ST_BAND.0) && r.strouhal <= ft(ST_BAND.1));
     let (st_lo, st_hi) = view.rows().iter().fold(
         (FloatType::INFINITY, -FloatType::INFINITY),
         |(lo, hi), r| (lo.min(r.strouhal), hi.max(r.strouhal)),
@@ -124,7 +127,7 @@ pub fn gate_resonance_margin(view: &StudyView<'_, MarginRow>) -> (bool, String) 
         .iter()
         .fold(FloatType::INFINITY, |m, r| m.min(r.margin));
     (
-        min_margin >= ft(MARGIN_MIN),
+        !view.rows().is_empty() && min_margin >= ft(MARGIN_MIN),
         format!(
             "min |f_struct - f_shed| / f_struct = {:.3}, placard minimum {MARGIN_MIN}",
             Into::<f64>::into(min_margin)
@@ -134,10 +137,11 @@ pub fn gate_resonance_margin(view: &StudyView<'_, MarginRow>) -> (bool, String) 
 
 /// Every swept wake returned a finite, oscillating result.
 pub fn gate_finite_wake(view: &StudyView<'_, MarginRow>) -> (bool, String) {
-    let ok = view
-        .rows()
-        .iter()
-        .all(|r| r.f_shed_hz.is_finite() && r.strouhal > ft(0.0));
+    let ok = !view.rows().is_empty()
+        && view
+            .rows()
+            .iter()
+            .all(|r| r.f_shed_hz.is_finite() && r.strouhal > ft(0.0));
     (
         ok,
         format!(

@@ -167,6 +167,9 @@ pub fn placard_gates() -> GateSeq<PlacardRow> {
 /// Every point sits inside the dynamic-pressure placard; exceeding points are named.
 pub fn gate_q_max(view: &StudyView<'_, PlacardRow>) -> (bool, String) {
     use crate::constants::Q_MAX_PLACARD_KPA;
+    if view.rows().is_empty() {
+        return (false, "no grid points computed (empty matrix)".into());
+    }
     let q_max = ft(Q_MAX_PLACARD_KPA);
     let offenders: Vec<String> = view
         .rows()
@@ -202,6 +205,9 @@ pub fn gate_q_max(view: &StudyView<'_, PlacardRow>) -> (bool, String) {
 /// Every point sits inside the stagnation-temperature placard; exceeding points are named.
 pub fn gate_stagnation_temperature(view: &StudyView<'_, PlacardRow>) -> (bool, String) {
     use crate::constants::T0_MAX_PLACARD_K;
+    if view.rows().is_empty() {
+        return (false, "no grid points computed (empty matrix)".into());
+    }
     let t0_max = ft(T0_MAX_PLACARD_K);
     let offenders: Vec<String> = view
         .rows()

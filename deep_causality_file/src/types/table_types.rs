@@ -35,6 +35,18 @@ impl TableColumn {
     pub fn unit(&self) -> &str {
         &self.unit
     }
+
+    /// True when neither the name nor the unit contains the CSV delimiter (comma) or a newline,
+    /// so this column serializes into the unescaped two-row-header shape and reads back
+    /// unchanged. A column that fails this check would corrupt the round-trip; the table writer
+    /// rejects such columns rather than emit a malformed file.
+    pub fn is_delimiter_safe(&self) -> bool {
+        !Self::has_delimiter(&self.name) && !Self::has_delimiter(&self.unit)
+    }
+
+    fn has_delimiter(s: &str) -> bool {
+        s.contains(',') || s.contains('\n') || s.contains('\r')
+    }
 }
 
 /// A typed numeric table: columns with semantics plus rectangular numeric rows in the working
@@ -47,12 +59,19 @@ pub struct NumericTable<R> {
 }
 
 impl<R> NumericTable<R> {
-    /// Build a table, validating that every row has exactly one value per column.
-    /// Returns `None` on a ragged shape.
+    /// Build a table, validating that every row has exactly one value per column and that no
+    /// two columns share a name. Returns `None` on a ragged shape or a duplicate column name,
+    /// so a `NumericTable` in hand is always well-shaped and unambiguously addressable by name.
     pub fn new(columns: Vec<TableColumn>, rows: Vec<Vec<R>>) -> Option<Self> {
         let width = columns.len();
         if rows.iter().any(|r| r.len() != width) {
             return None;
+        }
+        // Name->index lookups are first-match, so duplicate names are silently ambiguous; reject.
+        for (i, c) in columns.iter().enumerate() {
+            if columns[i + 1..].iter().any(|other| other.name == c.name) {
+                return None;
+            }
         }
         Some(Self { columns, rows })
     }

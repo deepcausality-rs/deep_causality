@@ -20,8 +20,15 @@ use std::fs;
 use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
 
-/// The `#units` row prefix, shared with the table shape.
+/// The `#units` row marker (the exact first cell), shared with the table shape.
 const UNITS_PREFIX: &str = "#units";
+
+/// True when `line`'s first comma-separated cell is exactly the `#units` marker. An ordinary
+/// comment whose first token merely starts with `#units` (e.g. `#units-note,...`) is not a
+/// units row and stays a comment.
+fn is_units_row(line: &str) -> bool {
+    line.trim().split(',').next().map(str::trim) == Some(UNITS_PREFIX)
+}
 
 /// A lazy IO description that, when [`run`](IoAction::run), parses a per-channel sensor trace
 /// into a [`SensorTraceSet`]. Construct with [`read_sensor_trace`]; nothing touches the
@@ -60,7 +67,7 @@ where
 
     let mut significant = content.lines().filter(|l| {
         let t = l.trim();
-        !t.is_empty() && (!t.starts_with('#') || t.starts_with(UNITS_PREFIX))
+        !t.is_empty() && (!t.starts_with('#') || is_units_row(t))
     });
 
     let header = significant
@@ -77,6 +84,17 @@ where
     if names.iter().any(|n| n.is_empty()) {
         return Err(DataLoadingError::table(&shown, 1, "empty column name"));
     }
+    // Reject duplicate column/channel names: channel lookup is first-match, so a repeated name
+    // makes later channels unaddressable and can silently return the wrong series.
+    for (i, n) in names.iter().enumerate() {
+        if names[..i].contains(n) {
+            return Err(DataLoadingError::table(
+                &shown,
+                1,
+                format!("duplicate column name '{n}'"),
+            ));
+        }
+    }
 
     let mut units: Vec<String> = vec![String::new(); names.len()];
     let mut timestamps: Vec<f64> = Vec::new();
@@ -86,7 +104,7 @@ where
     for line in significant {
         row_no += 1;
         let trimmed = line.trim();
-        if trimmed.starts_with(UNITS_PREFIX) {
+        if is_units_row(trimmed) {
             if row_no != 2 {
                 return Err(DataLoadingError::table(
                     &shown,

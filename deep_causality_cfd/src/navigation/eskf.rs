@@ -141,7 +141,6 @@ impl<R: RealField> NavFilter<R> {
         });
     }
 
-    /// The current error-state estimate.
     /// The full error-state covariance matrix (snapshot access; diagnostics use
     /// [`position_variance`](Self::position_variance) / [`covariance_trace`](Self::covariance_trace)).
     pub fn covariance(&self) -> &[[R; NAV_STATES]; NAV_STATES] {
@@ -155,6 +154,7 @@ impl<R: RealField> NavFilter<R> {
         Self { state, cov }
     }
 
+    /// The current error-state estimate.
     pub fn state(&self) -> &InsErrorState<R> {
         &self.state
     }

@@ -21,8 +21,15 @@ use std::fs;
 use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
 
-/// The `#units` row prefix (first cell of the optional second header row).
+/// The `#units` row marker (the exact first cell of the optional second header row).
 const UNITS_PREFIX: &str = "#units";
+
+/// True when `line`'s first comma-separated cell is exactly the `#units` marker. An ordinary
+/// comment whose first token merely starts with `#units` (e.g. `#units-note,...`) is not a
+/// units row and stays a comment.
+fn is_units_row(line: &str) -> bool {
+    line.trim().split(',').next().map(str::trim) == Some(UNITS_PREFIX)
+}
 
 /// A lazy IO description that, when [`run`](IoAction::run), parses a delimited numeric table
 /// into a typed [`NumericTable`]. Construct with [`read_table`]; nothing touches the
@@ -63,7 +70,7 @@ where
     // ordinary comments vanish before row counting, so error rows are stable under formatting.
     let mut significant = content.lines().enumerate().filter(|(_, l)| {
         let t = l.trim();
-        !t.is_empty() && (!t.starts_with('#') || t.starts_with(UNITS_PREFIX))
+        !t.is_empty() && (!t.starts_with('#') || is_units_row(t))
     });
 
     let (_, header) = significant
@@ -73,6 +80,17 @@ where
     if names.iter().any(|n| n.is_empty()) {
         return Err(DataLoadingError::table(&shown, 1, "empty column name"));
     }
+    // Reject duplicate column names: every name->index lookup is first-match, so a repeated
+    // name would make later columns silently unaddressable.
+    for (i, n) in names.iter().enumerate() {
+        if names[..i].contains(n) {
+            return Err(DataLoadingError::table(
+                &shown,
+                1,
+                format!("duplicate column name '{n}'"),
+            ));
+        }
+    }
 
     let mut columns: Vec<TableColumn> = names.iter().map(|n| TableColumn::new(*n, "")).collect();
 
@@ -81,7 +99,7 @@ where
     for (_, line) in significant {
         row_no += 1;
         let trimmed = line.trim();
-        if trimmed.starts_with(UNITS_PREFIX) {
+        if is_units_row(trimmed) {
             if row_no != 2 {
                 return Err(DataLoadingError::table(
                     &shown,
