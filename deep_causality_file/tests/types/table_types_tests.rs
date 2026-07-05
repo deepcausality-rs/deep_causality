@@ -30,6 +30,23 @@ fn column_lookup_by_name() {
 }
 
 #[test]
+fn column_returns_values_or_names_the_absent_column() {
+    let t = NumericTable::from_columns(
+        [("mach", "-"), ("alt", "km")],
+        vec![vec![25.0_f64, 61.0], vec![8.5, 47.0]],
+    )
+    .expect("rectangular");
+
+    assert_eq!(t.column("alt").expect("present"), vec![61.0, 47.0]);
+
+    let err = t.column("airspeed").expect_err("absent");
+    assert!(
+        format!("{err}").contains("airspeed"),
+        "error names the missing column: {err}"
+    );
+}
+
+#[test]
 fn from_columns_equals_the_explicit_constructor_and_validates() {
     let rows = vec![vec![25.0_f64, 61.0], vec![8.5, 47.0]];
     let a = NumericTable::from_columns([("mach", "-"), ("alt", "km")], rows.clone())

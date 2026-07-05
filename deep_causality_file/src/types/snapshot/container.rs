@@ -23,7 +23,7 @@
 //! ```
 
 use crate::DataLoadingError;
-use crate::snapshot::checksum::fnv1a64;
+use crate::types::snapshot::checksum::fnv1a64;
 use crate::types::snapshot_types::{ScalarTypeTag, SnapshotPackage, SnapshotSection, SnapshotTier};
 
 /// The container magic: identifies a DeepCausality file snapshot, format family 01.

@@ -6,8 +6,8 @@
 //! Composed GNSS loader (clock + orbit) over the haft IO monad, plus an ergonomic [`DataManager`]
 //! facade that performs the read for consumers that just want the data.
 
-use crate::loaders::read_clk::read_clock_data;
-use crate::loaders::read_sp3::read_orbit_data;
+use crate::types::loaders::read_clk::read_clock_data;
+use crate::types::loaders::read_sp3::read_orbit_data;
 use crate::{ClockData, DataLoadingError, GnssDataResult, OrbitData};
 use deep_causality_haft::IoAction;
 use deep_causality_num::RealField;

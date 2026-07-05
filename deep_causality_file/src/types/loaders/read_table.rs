@@ -7,15 +7,16 @@
 //!
 //! The on-disk shape: a column-name row, an optional `#units` row, then numeric rows,
 //! comma-delimited. Lines that are empty or start with `#` (other than the `#units` row
-//! directly after the header) are comments and are skipped. Values parse as exact `f64` and
-//! lift into the caller's scalar `R` at the boundary, preserving the house convention that
-//! specification tables keep exact `f64` literals. Malformed input is an error naming the
-//! path and the offending significant row, never a default value.
+//! directly after the header) are comments and are skipped. Each cell parses through the
+//! [`TableScalar`] codec into the caller's scalar `R`, so a table written by the result-table
+//! writer reads back with identical bits at the written precision, and a hand-authored
+//! specification table of plain decimals loads at any precision. Malformed input is an error
+//! naming the path and the offending significant row, never a default value.
 
 use crate::DataLoadingError;
+use crate::traits::table_scalar::TableScalar;
 use crate::types::table_types::{NumericTable, TableColumn};
 use deep_causality_haft::IoAction;
-use deep_causality_num::RealField;
 use std::fs;
 use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
@@ -33,7 +34,7 @@ pub struct ReadTable<R> {
 
 impl<R> IoAction for ReadTable<R>
 where
-    R: RealField + From<f64>,
+    R: TableScalar,
 {
     type Output = NumericTable<R>;
     type Error = DataLoadingError;
@@ -53,7 +54,7 @@ pub fn read_table<R>(path: impl AsRef<Path>) -> ReadTable<R> {
 
 fn parse_table<R>(path: &Path) -> Result<NumericTable<R>, DataLoadingError>
 where
-    R: RealField + From<f64>,
+    R: TableScalar,
 {
     let content = fs::read_to_string(path)?;
     let shown = path.display().to_string();
@@ -124,14 +125,14 @@ where
         }
         let mut row = Vec::with_capacity(cells.len());
         for (cell, name) in cells.iter().zip(&names) {
-            let value = cell.parse::<f64>().map_err(|e| {
+            let value = R::parse_cell(cell).ok_or_else(|| {
                 DataLoadingError::table(
                     &shown,
                     row_no,
-                    format!("column '{name}': cannot parse '{cell}' as a number: {e}"),
+                    format!("column '{name}': cannot parse '{cell}' as a number"),
                 )
             })?;
-            row.push(R::from(value));
+            row.push(value);
         }
         rows.push(row);
     }

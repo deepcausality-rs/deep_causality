@@ -17,6 +17,8 @@ Tone: Be respectful regardless of agreement. Its okay to disagree, correct, and 
 1) Never ever git commit. Prepare a commit message and ask the user t0 commit.
 2) Never ever delete files or folders. Ask the user for permission.
 
+file mv and git mv (preserves history) is generally authorized.
+
 ## Behavioral Guidelines
 
 These guidelines favor correctness, clarity, and minimal diffs over speed. For trivial tasks, use judgment.

@@ -50,6 +50,8 @@ enum DataLoadingErrorKind {
     },
     /// A snapshot package carries a format version this build does not understand.
     UnknownVersion { path: String, found: u16 },
+    /// A named column was requested from a table that does not carry it.
+    MissingColumn { name: String },
 }
 
 impl DataLoadingError {
@@ -122,6 +124,13 @@ impl DataLoadingError {
             },
         }
     }
+
+    /// A named column absent from a table.
+    pub(crate) fn missing_column(name: impl Into<String>) -> Self {
+        Self {
+            kind: DataLoadingErrorKind::MissingColumn { name: name.into() },
+        }
+    }
 }
 
 impl fmt::Display for DataLoadingError {
@@ -164,6 +173,9 @@ impl fmt::Display for DataLoadingError {
                     f,
                     "data loading: snapshot {path} has unknown format version {found}"
                 )
+            }
+            DataLoadingErrorKind::MissingColumn { name } => {
+                write!(f, "data loading: table has no column named '{name}'")
             }
         }
     }

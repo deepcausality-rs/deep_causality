@@ -87,6 +87,18 @@ impl<R> NumericTable<R> {
         self.columns.iter().position(|c| c.name == name)
     }
 
+    /// The named column's values in row order, or an error naming the column when it is absent.
+    /// Access by name, replacing positional row indexing.
+    pub fn column(&self, name: &str) -> Result<Vec<R>, crate::DataLoadingError>
+    where
+        R: Clone,
+    {
+        let idx = self
+            .column_index(name)
+            .ok_or_else(|| crate::DataLoadingError::missing_column(name))?;
+        Ok(self.rows.iter().map(|r| r[idx].clone()).collect())
+    }
+
     /// Number of data rows.
     pub fn len(&self) -> usize {
         self.rows.len()

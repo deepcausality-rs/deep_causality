@@ -7,6 +7,8 @@ mod read_clk_tests;
 #[cfg(test)]
 mod read_gnss_tests;
 #[cfg(test)]
+mod read_rows_tests;
+#[cfg(test)]
 mod read_sp3_tests;
 #[cfg(test)]
 mod read_table_tests;

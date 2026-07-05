@@ -26,28 +26,28 @@
 //! ```
 
 pub mod errors;
-pub mod loaders;
-pub mod snapshot;
+pub mod traits;
 pub mod types;
-pub mod writers;
 
 pub use errors::conversion_error::ConversionError;
 pub use errors::data_loading_error::DataLoadingError;
-pub use loaders::{
-    DataManager, ReadClockData, ReadOrbitData, ReadSensorTrace, ReadTable, read_clock_data,
-    read_gnss_single_satellite, read_orbit_data, read_sensor_trace, read_table,
+pub use traits::bit_codec::BitCodec;
+pub use traits::table_row::{FromTableRow, TableRow};
+pub use traits::table_scalar::TableScalar;
+pub use types::clock_types::ClockData;
+pub use types::gnss_types::GnssDataResult;
+pub use types::loaders::{
+    DataManager, ReadClockData, ReadOrbitData, ReadRows, ReadSensorTrace, ReadTable,
+    read_clock_data, read_gnss_single_satellite, read_orbit_data, read_rows, read_sensor_trace,
+    read_table,
 };
-pub use snapshot::{
+pub use types::orbit_types::OrbitData;
+pub use types::satelite_types::SatId;
+pub use types::snapshot::{
     ForceLoadSnapshot, LoadSnapshot, SaveSnapshot, fingerprint64, fnv1a64, force_load_snapshot,
     load_snapshot, save_snapshot,
 };
-pub use types::clock_types::ClockData;
-pub use types::gnss_types::GnssDataResult;
-pub use types::orbit_types::OrbitData;
-pub use types::satelite_types::SatId;
-pub use types::snapshot_types::{
-    BitCodec, ScalarTypeTag, SnapshotPackage, SnapshotSection, SnapshotTier,
-};
+pub use types::snapshot_types::{ScalarTypeTag, SnapshotPackage, SnapshotSection, SnapshotTier};
 pub use types::table_types::{NumericTable, TableColumn};
 pub use types::trace_types::{SensorChannel, SensorTraceSet};
-pub use writers::{WriteTable, write_table};
+pub use types::writers::{WriteRows, WriteTable, write_rows, write_table};

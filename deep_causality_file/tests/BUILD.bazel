@@ -16,6 +16,23 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "traits",
+    srcs = glob([
+        "traits/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_file",
+        # Internal dependencies
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
     name = "types",
     srcs = glob([
         "types/*_tests.rs",
@@ -37,9 +54,9 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "loaders",
+    name = "types_loaders",
     srcs = glob([
-        "loaders/*_tests.rs",
+        "types/loaders/*_tests.rs",
     ]),
     tags = [
         "unit-test",
@@ -72,9 +89,9 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "writers",
+    name = "types_writers",
     srcs = glob([
-        "writers/*_tests.rs",
+        "types/writers/*_tests.rs",
     ]),
     tags = [
         "unit-test",
@@ -85,15 +102,16 @@ rust_test_suite(
         "//deep_causality_file",
         # Internal dependencies
         "//deep_causality_haft",
+        "//deep_causality_num",
         # External dependencies
         "//thirdparty/crates:tempfile",
     ],
 )
 
 rust_test_suite(
-    name = "snapshot",
+    name = "types_snapshot",
     srcs = glob([
-        "snapshot/*_tests.rs",
+        "types/snapshot/*_tests.rs",
     ]),
     tags = [
         "unit-test",

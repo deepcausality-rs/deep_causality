@@ -12,7 +12,7 @@
 //! reinterpreted, only refused.
 
 use crate::DataLoadingError;
-use crate::snapshot::container::{decode, encode};
+use crate::types::snapshot::container::{decode, encode};
 use crate::types::snapshot_types::{ScalarTypeTag, SnapshotPackage};
 use deep_causality_haft::IoAction;
 use std::fs;
