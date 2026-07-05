@@ -1,0 +1,59 @@
+examples/avionics_examples/cfd/viv_resonance_margin/model_config.rs
+  s_c4c919f578d611::t_1ee77f7a2d9d45 6-7,11-12,16-17,28-60,88,102
+examples/avionics_examples/cfd/viv_resonance_margin/main.rs
+  s_c4c919f578d611::t_7fa8d10979bf23 14-18,20-22,33-34,42-57,59-72
+examples/avionics_examples/cfd/viv_resonance_margin/utils_print.rs
+  s_c4c919f578d611::t_1a8c002a23b16c 6-7,9
+  s_c4c919f578d611::t_6f767c673f8b5f 40
+examples/avionics_examples/cfd/flight_envelope_placard/model.rs
+  s_c4c919f578d611::t_3c2b76948b46b5 13-15,18-67
+  s_c4c919f578d611::t_8bf999ba3691bc 111-113,115-116,123-125,140,143,145-216
+  s_c4c919f578d611::t_46c03add18e573 68
+examples/avionics_examples/cfd/viv_resonance_margin/model.rs
+  s_c4c919f578d611::t_deef22b90c167b 10-11,13,17,31-49,51-63,87-148
+  s_c4c919f578d611::t_bd755a86ddc29c 149
+examples/avionics_examples/cfd/nozzle_operating_map/utils_print.rs
+  s_c4c919f578d611::t_d5142a2a843dab 6-7,9-10
+  s_c4c919f578d611::t_d280a008cb7a30 38-40,43
+examples/avionics_examples/cfd/flight_envelope_placard/output.txt
+  s_c4c919f578d611::t_14a84becd0492f 27-30
+examples/avionics_examples/cfd/nozzle_operating_map/main.rs
+  s_c4c919f578d611::t_6e6f4b007cb176 13-17,19-21,32,34,38,41-45,47-49,51-61,63-66,68-81
+  s_c4c919f578d611::t_fc3f3a9dbbc63d 62
+examples/avionics_examples/cfd/flight_envelope_placard/main.rs
+  s_c4c919f578d611::t_7845d968c2fcb5 16-19,35-37,45-59,62-75
+examples/avionics_examples/cfd/flight_envelope_placard/placard_table.csv
+  s_c4c919f578d611::t_14a84becd0492f 19
+examples/avionics_examples/cfd/flight_envelope_placard/utils_print.rs
+  s_c4c919f578d611::t_e76830782a8c6a 6-7,9,19,25,31
+openspec/changes/rework-cfd-flow-dsl/tasks.md
+  s_c4c919f578d611::t_9641523972ea85 65-66
+  s_c4c919f578d611::t_c256dedf99b7e9 67-68
+examples/avionics_examples/cfd/nozzle_operating_map/model_config.rs
+  s_c4c919f578d611::t_8d34345ce5e5ea 17-20
+examples/avionics_examples/cfd/nozzle_operating_map/output.txt
+  s_c4c919f578d611::t_a5c15f529756c6 16-21
+examples/avionics_examples/cfd/nozzle_operating_map/model.rs
+  s_c4c919f578d611::t_d51bb1373bf155 203-313
+  s_c4c919f578d611::t_9d56546859d959 10-13,15,19,35-59
+Cargo.lock
+  s_c4c919f578d611::t_da32663330e0eb 71-89
+examples/avionics_examples/cfd/viv_resonance_margin/output.txt
+  s_c4c919f578d611::t_c1a5cb04d5355c 13,16-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "fd1cd974b1023af5cd1b5eae1838a6da12a6315e",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
