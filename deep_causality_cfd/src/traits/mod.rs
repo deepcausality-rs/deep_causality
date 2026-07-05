@@ -7,9 +7,11 @@
 //! (a per-step advance), and the solver/coupling traits the CfdFlow DSL composes.
 
 mod fluid_theory;
+mod marchable;
 mod marcher;
 mod solver;
 
 pub use fluid_theory::FluidTheory;
+pub use marchable::Marchable;
 pub use marcher::Marcher;
 pub use solver::Solver;

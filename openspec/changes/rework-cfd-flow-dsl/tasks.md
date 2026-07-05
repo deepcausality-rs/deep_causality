@@ -6,20 +6,20 @@
 
 ## 1. Table IO precision codec (deep_causality_file)
 
-- [ ] 1.1 Add the `TableScalar` trait with cell encode/parse; implement for `f64`, `f32`, `Float106` (hi|lo pair cell); plain-decimal fallback via exact `f64`
-- [ ] 1.2 Make the writer precision-generic (`WriteTable<R: TableScalar>`), retiring the `NumericTable<f64>` hardcoding; swap the reader bound to `TableScalar`
-- [ ] 1.3 Add `TableRow` / `FromTableRow` traits (SCHEMA, cells, from_cells) and the `read_rows` / `write_rows` verbs, with header-name matching and schema-order delivery
-- [ ] 1.4 Add `NumericTable::column(name) -> Result`, naming absent columns
-- [ ] 1.5 Tests: `read(write(t)) == t` per scalar (f64/f32/Float106); read_rows column reorder + missing-column error; column() absent-name error; register in mod tree and tests/BUILD.bazel
+- [x] 1.1 Add the `TableScalar` trait with cell encode/parse; implement for `f64`, `f32`, `Float106` (hi|lo pair cell); plain-decimal fallback via exact `f64`
+- [x] 1.2 Make the writer precision-generic (`WriteTable<R: TableScalar>`), retiring the `NumericTable<f64>` hardcoding; swap the reader bound to `TableScalar`
+- [x] 1.3 Add `TableRow` / `FromTableRow` traits (SCHEMA, cells, from_cells) and the `read_rows` / `write_rows` verbs, with header-name matching and schema-order delivery
+- [x] 1.4 Add `NumericTable::column(name) -> Result`, naming absent columns
+- [x] 1.5 Tests: `read(write(t)) == t` per scalar (f64/f32/Float106); read_rows column reorder + missing-column error; column() absent-name error; register in mod tree and tests/BUILD.bazel
 
 ## 2. Trajectory foundation (deep_causality_cfd)
 
-- [ ] 2.1 Add the `Marchable` trait (GAT `Pipeline<'c>`, `march()`); implement for `DuctConfig`, `MarchConfig`, `QttMarchConfig`
+- [x] 2.1 Add the `Marchable` trait (`march()` one-shot; GAT-`Pipeline` unification of `CfdFlow::march` deferred to the group-6 retirement pass per the additive-now decision); implement for `DuctConfig`, `MarchConfig`, `QttMarchConfig`; tests prove each equals its canonical entry
 - [ ] 2.2 Add the `Coupled<C, S>` wrapper and its `Marchable` impl (fixed-horizon run_until path); implement for `CompressibleMarchConfig`, `UncertainMarchConfig`
 - [ ] 2.3 Route `CfdFlow::march` through `Marchable`; retire `qtt_march`/`compressible_march`/`duct_march`/`uncertain_march`
 - [ ] 2.4 Add `MarchState` (fields, scalars, ambient, nav engine, log, step, clock); `pause.state()` export and `from(state)` resume; unify with the checksummed snapshot; retire `carry_field`
 - [ ] 2.5 Add the named-stage march builder (`alternate`/`save_log`/`couple`/`from`/`until`/`run`/`run_for`); retire positional `run_until`
-- [ ] 2.6 Add singular `fork().continue_with(world, steps)` beside the batch `continue_branches`
+- [x] 2.6 Add singular `continue_with(world, steps)` on the pause beside the batch `continue_branches` (forks, alternates, continues; marker carried); test proves it equals the one-world batch
 - [ ] 2.7 Tests: disk-resume == in-memory-resume bit-identical; fork history-sharing; march-verb dispatch across families; register in mod tree and tests/BUILD.bazel
 
 ## 3. Study effect carrier (deep_causality_cfd)

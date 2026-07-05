@@ -3,11 +3,10 @@ SPDX-License-Identifier: MIT
 Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
 -->
 
-# DeepCausality CFD 
+# DeepCausality CFD: Counterfactual Fluid Dynamics
 
-DeepCausality CFD provides Multidisciplinary analysis and optimization (MDAO) by coupling fluid dynamics, 
-multiple physics, navigation, and control, in one typed dynamic process. DeepCausality CFD couples 
-several disciplines' analyses, optimizes over the coupled result, 
+DeepCausality CFD provides Counterfactual Fluid Dynamics and Multidisciplinary analysis and optimization (MDAO) by coupling fluid dynamics, multiple physics, navigation, and control, in one typed dynamic process. 
+DeepCausality CFD couples several disciplines' analyses, optimizes over the coupled result, 
 and keeps track of the uncertainty along the way: the plasma-blackout
 example marches a compressible flow, reacts its plasma chemistry, gates a Kalman filter on the
 result, flies the control command it selects, and picks that command by forking the running

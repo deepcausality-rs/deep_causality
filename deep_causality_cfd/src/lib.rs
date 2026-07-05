@@ -39,7 +39,7 @@ pub use deep_causality_physics::PhysicsError;
 pub use deep_causality_physics::quantities::*;
 
 // Core CFD trait seams and value types.
-pub use crate::traits::{FluidTheory, Marcher, Solver};
+pub use crate::traits::{FluidTheory, Marchable, Marcher, Solver};
 pub use crate::types::{Ambient, CfdScalar};
 
 // The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.

@@ -272,6 +272,33 @@ fn continue_branches_matches_the_manual_fork_chain_in_world_order() {
 }
 
 #[test]
+fn continue_with_matches_the_single_world_batch_and_carries_the_marker() {
+    let nominal = world("nominal_descent", 3.0, 8);
+    let steep = world("steep_branch", 3.0, 8);
+
+    let pause = CfdFlow::compressible_march(&nominal)
+        .run_until(
+            (),
+            field_at_61km(),
+            BlackoutTrigger::new(1.0e9),
+            0.0,
+            |_, s| s >= 2,
+        )
+        .unwrap();
+
+    // The singular verb: one world, one continued report, marked.
+    let single = pause.continue_with(&steep, 3).expect("branch completes");
+    assert_eq!(single.name(), "steep_branch");
+    let log = format!("{}", single.effect_log().unwrap());
+    assert!(log.contains("!!ContextAlternation!!"), "marker: {log}");
+
+    // Bit-identical to the one-world batch fan-out of the same pause.
+    let batch = pause.continue_branches(&[&steep], 3).unwrap();
+    assert_eq!(single.final_field(), batch[0].final_field());
+    assert_eq!(single.series("final_n_tot"), batch[0].series("final_n_tot"));
+}
+
+#[test]
 fn run_coupled_returns_the_evolved_report() {
     let cfg = world("report", 3.0, 3);
     let report = CfdFlow::compressible_march(&cfg)

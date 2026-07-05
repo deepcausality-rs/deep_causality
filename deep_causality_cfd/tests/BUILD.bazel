@@ -207,6 +207,29 @@ rust_test(
 )
 
 rust_test(
+    name = "traits",
+    srcs = glob([
+        "traits/*_tests.rs",
+    ]) + [
+        "traits/mod.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "traits/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_cfd",
+        # Internal dependencies
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test(
     name = "types",
     srcs = glob([
         "types/*_tests.rs",

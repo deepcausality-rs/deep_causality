@@ -445,6 +445,23 @@ where
         .into_iter()
         .collect()
     }
+
+    /// Fly **one** branch world from this pause: fork (O(1), copy-on-write), alternate into the
+    /// world, and continue for `steps`. The singular sibling of [`continue_branches`] — one
+    /// world, one continued report, carrying the same `!!ContextAlternation!!` audit entry — for
+    /// a study that scores branch worlds one at a time (the campaign's event-fork `branch`
+    /// lowers each case onto this).
+    ///
+    /// # Errors
+    /// The captured pause error, or any carrier-assembly / marching / coupling failure in the
+    /// continued segment.
+    pub fn continue_with(
+        &self,
+        world: &'c M::Config,
+        steps: usize,
+    ) -> Result<Report<R>, PhysicsError> {
+        self.fork().alternate_context(world).continue_march(steps)
+    }
 }
 
 /// One counterfactual branch forked from a [`CarrierPause`]: alternate its world or state, then
