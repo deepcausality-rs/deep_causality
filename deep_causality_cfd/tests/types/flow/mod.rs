@@ -56,6 +56,8 @@ pub mod study_effect_tests;
 #[cfg(test)]
 pub mod study_error_tests;
 #[cfg(test)]
+pub mod study_grammar_tests;
+#[cfg(test)]
 pub mod study_warning_tests;
 #[cfg(test)]
 pub mod mms_tests;

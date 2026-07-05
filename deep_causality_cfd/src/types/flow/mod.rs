@@ -33,6 +33,7 @@ mod qtt_march_pause;
 mod qtt_march_run;
 mod report;
 pub mod state_snapshot;
+mod study;
 mod study_effect;
 mod study_error;
 mod study_warning;
@@ -70,6 +71,10 @@ pub use operator_study::{Operator, OperatorStudyBuilder};
 pub use qtt_march_pause::{MarchFork, MarchPause};
 pub use qtt_march_run::{QttMarchRun, QttStepView};
 pub use report::Report;
+pub use study::{
+    CaseRun, Cases, Configured, GateFn, GateOutcome, GateSeq, Judged, Marched, Prepared, StudyDef,
+    StudyView, Swept, Verdict,
+};
 pub use study_effect::{StudyEffect, StudyEffectWitness};
 pub use study_error::StudyError;
 pub use study_warning::{StudyWarning, StudyWarningLog};

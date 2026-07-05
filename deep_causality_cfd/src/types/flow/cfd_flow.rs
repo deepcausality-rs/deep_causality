@@ -20,6 +20,13 @@ use deep_causality_num::ConjugateScalar;
 pub struct CfdFlow;
 
 impl CfdFlow {
+    /// Open a named **study** — the campaign level of the language, a family of cases run to a
+    /// verdict. The name titles the verdict report. The returned [`StudyDef`](crate::StudyDef)
+    /// takes the case axis (`cases`, and later `read` / `matrix`).
+    pub fn study(title: &str) -> crate::types::flow::StudyDef {
+        crate::types::flow::StudyDef::new(title)
+    }
+
     /// Begin composing a marching workflow from a [`MarchConfig`](crate::MarchConfig) container.
     /// Borrows the config; the geometry is lent next via
     /// [`MarchPipeline::on`](crate::MarchPipeline::on).

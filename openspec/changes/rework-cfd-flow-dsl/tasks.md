@@ -31,12 +31,19 @@
 
 ## 4. Campaign phase family (deep_causality_cfd)
 
-- [ ] 4.1 Add the phase types (`StudyDef`, `Cases`, `Prepared`, `Counterfactual`, `ForkStudy`, `Configured`, `Branched`, `Marched`, `Swept`, `Judged`) and the `CfdFlow::study` entry
-- [ ] 4.2 Add the case-axis verbs (`read`/`matrix`/`cases`) and the binders (`prepare`/`case`/`baseline`/`fork`/`ensemble`)
-- [ ] 4.3 Add `couple`/`march`/`march_for`/`continue_for` and the sweep (`sweep`, order-preserving, first-error-wins over scoped_map)
-- [ ] 4.4 Add the reductions (`reduce`/`reduce_all`/`reduce_ensemble`), `record`, `refine`, and `inspect`
-- [ ] 4.5 Add `StudyView`, `CaseRun`, `Verdict` (`passed`/`Display`/`warnings`/`merge`)
-- [ ] 4.6 Tests: sweep order + first-error; reduce_all cross-case; ensemble draw-set reduction; parallel==serial results; register in mod tree and tests/BUILD.bazel
+- [x] 4.1a Uncoupled phase types (`StudyDef`, `Cases`, `Prepared`, `Configured`, `Marched`, `Swept`, `Judged`) + `CfdFlow::study` entry — done (src/types/flow/study/)
+- [x] 4.2a Case-axis verbs (`read`/`matrix`/`cases`) + uncoupled binders (`prepare`/`case`) — done
+- [x] 4.3a Uncoupled `march` + the `sweep` (Cases::sweep, Prepared::sweep; order-preserving, first-error-wins over scoped_map) — done
+- [x] 4.4a `reduce` (per-case via `CaseRun`), `reduce_all` (cross-case, sequential), `record`, `inspect` (all phases) — done
+- [x] 4.5 Add `StudyView`, `CaseRun`, `Verdict` (`passed`/`Display`/`warnings`/`merge`, `GateOutcome`) — done
+- [x] 4.6a Uncoupled grammar tests: pointwise happy path, gate-fail preserves table, sweep short-circuit names the verb, sequence merge, march path reduce, read/matrix/prepare, reduce_all cross-case — done (8 tests, parallel==serial via sweep)
+
+**SEQUENCING DECISION (recorded):** the campaign counterfactual verbs are moved into group 7,
+built alongside the examples that drive their exact shape. Each is welded to a migration-time
+design decision that cannot be resolved without its concrete consumer:
+- [ ] 4.7 (→ group 7, plasma-blackout-corridor) `Counterfactual`/`ForkStudy`/`Branched` phases + `baseline`/`fork`/`branch`/`continue_for`. Requires relaxing the carrier's context lifetime (`continue_with(&self, world: &'c M::Config)` ties alternated worlds to the pause's config `'c`; a campaign `branch` building fresh worlds cannot satisfy `&'c`). The carrier refinement lands with the corridor as its validating driver.
+- [ ] 4.8 (→ group 7, plasma-blackout-weather) `alternate`/`couple`(campaign)/`march_for`/`ensemble`/`reduce_ensemble`. Requires the coupled-campaign initial-field source (F2: the fresh `CoupledField` lives in neither config nor stack) and the draw-index threading, both defined by the weather example.
+- [ ] 4.9 `refine` — needs a `Refining<T2, Row>` phase to carry prior Row-typed rounds across a case-type change; built with the corridor's two-stage sweep (its only consumer).
 
 ## 5. Gate builder and audit log (deep_causality_cfd)
 

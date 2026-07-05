@@ -85,6 +85,10 @@ pub use crate::types::flow::{
     RecoveryTemperatureStage, Regime, RegimeClass, RegimeClassify, Report, SafetyEnvelope,
     StepContext, StepView, StudyEffect, StudyEffectWitness, StudyError, StudyWarning,
     StudyWarningLog, ThermalRelax, TrajectoryNav,
+};
+pub use crate::types::flow::{
+    CaseRun, Cases, Configured, GateFn, GateOutcome, GateSeq, Judged, Marched, Prepared, StudyDef,
+    StudyView, Swept, Verdict,
     VerifyRun, VibrationalLagStage, ViscosityArrhenius, dominant_frequency, fail, ler_relax_scalar,
     ler_step, strouhal_number, sweep,
 };
