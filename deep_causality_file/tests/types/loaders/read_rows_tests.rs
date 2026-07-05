@@ -68,6 +68,40 @@ fn read_rows_reorders_file_columns_to_schema_order() {
     );
 }
 
+/// A row whose `from_cells` validates its input and rejects a negative Mach — the reader must
+/// surface that rejection as an error rather than pushing a malformed row.
+#[derive(Debug, Clone, PartialEq)]
+struct ValidatedPoint {
+    mach: f64,
+}
+
+impl TableRow for ValidatedPoint {
+    type Scalar = f64;
+    const SCHEMA: &'static [(&'static str, &'static str)] = &[("mach", "-")];
+    fn cells(&self) -> Vec<f64> {
+        vec![self.mach]
+    }
+}
+
+impl FromTableRow for ValidatedPoint {
+    fn from_cells(cells: &[f64]) -> Option<Self> {
+        (cells[0] >= 0.0).then_some(Self { mach: cells[0] })
+    }
+}
+
+#[test]
+fn read_rows_errors_when_a_row_does_not_form_a_valid_typed_row() {
+    let dir = tempdir().unwrap();
+    // A negative Mach: `from_cells` returns `None`, which the reader reports as a parse error.
+    let path = write_file(dir.path(), "invalid.csv", "mach\n#units,-\n-1.0\n");
+    let err = read_rows::<ValidatedPoint>(&path).run().unwrap_err();
+    let msg = format!("{err}");
+    assert!(
+        msg.contains("did not form a valid typed row"),
+        "the error explains the rejected row: {msg}"
+    );
+}
+
 #[test]
 fn read_rows_names_a_missing_required_column() {
     let dir = tempdir().unwrap();

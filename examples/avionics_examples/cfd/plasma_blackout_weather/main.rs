@@ -39,7 +39,6 @@ mod utils_print;
 
 use avionics_examples::shared::{utils, world};
 use deep_causality_cfd::{CfdFlow, PhysicsError, StudyError, StudyView, Verdict};
-use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time::Instant;
 
@@ -54,15 +53,11 @@ pub type FloatType = f64;
 /// mapped to an exit code.
 fn main() -> ExitCode {
     // Where the dispersion table is recorded (the campaign's `record` seam).
-    let table_path = || {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("cfd/plasma_blackout_weather/weather_table.csv")
-    };
+    let table_path = model::get_tabe_path();
 
     // The audit-log base path: one file per (condition, draw) plus a main spawn/rejoin file land
     // under this directory (the campaign-level `save_log` verb). Run artifacts, git-ignored.
-    let audit_dir =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("cfd/plasma_blackout_weather/audit");
+    let audit_dir = model::get_audit_dir();
 
     let outcome: Result<Verdict, StudyError> = (|| {
         let clock = Instant::now();

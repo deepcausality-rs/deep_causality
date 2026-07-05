@@ -669,3 +669,72 @@ fn campaign_save_log_writes_one_file_per_branch_and_a_main_file() {
     );
     assert!(main.contains("hot.draw-1"), "main names a branch: {main}");
 }
+
+#[test]
+fn campaign_save_log_to_an_unwritable_path_fails_the_run() {
+    use deep_causality_cfd::{GateSeq, Report};
+
+    // A base whose parent directory does not exist: opening the main audit file fails, and an
+    // audited run that can no longer be audited must fail rather than continue silently. The
+    // failure surfaces before any marching, so the test is cheap.
+    let base = std::path::Path::new("/dcl_no_such_dir_xyz/wx.audit");
+    let outcome = CfdFlow::study("bad audit")
+        .save_log(base)
+        .cases(vec!["a".to_string()])
+        .baseline(|| Ok(world("a", 3.0, 3)))
+        .alternate(|n| Ok(world(n, 3.0, 3)))
+        .ensemble(1)
+        .couple(|_c: &String, _d: usize| ())
+        .march_for(2, field_at_61km)
+        .reduce_ensemble(|_c: &String, _d: &[Report<f64>]| Ok(EnsRow {
+            marked: false,
+            draws: 1,
+        }))
+        .gates(GateSeq::new("x").gate("two rows", two_rows))
+        .verdict();
+
+    let err = outcome.expect_err("an unwritable audit path fails the run");
+    assert!(
+        format!("{err}").contains("save_log"),
+        "the error names the save_log stage: {err}"
+    );
+}
+
+#[test]
+fn origin_campaign_verb_errors_short_circuit_and_name_their_verb() {
+    use deep_causality_cfd::{CompressibleMarchConfig, GateSeq, Report};
+
+    // baseline() fails: the whole study short-circuits, tagged with the failing verb.
+    let e = CfdFlow::study("x")
+        .cases(vec!["a".to_string()])
+        .baseline(|| {
+            Err::<CompressibleMarchConfig<f64>, _>(deep_causality_physics::PhysicsError::CalculationError(
+                "no origin".into(),
+            ))
+        })
+        .alternate(|n| Ok(world(n, 3.0, 3)))
+        .ensemble(1)
+        .couple(|_: &String, _: usize| ())
+        .march_for(2, field_at_61km)
+        .reduce_ensemble(|_: &String, _: &[Report<f64>]| Ok(EnsRow { marked: false, draws: 1 }))
+        .gates(GateSeq::new("x").gate("two rows", two_rows))
+        .verdict()
+        .expect_err("a failed baseline short-circuits");
+    assert!(format!("{e}").contains("baseline"), "names the verb: {e}");
+
+    // reduce_ensemble() fails after a real march: the error is tagged with reduce_ensemble.
+    let e = CfdFlow::study("x")
+        .cases(vec!["a".to_string()])
+        .baseline(|| Ok(world("a", 3.0, 3)))
+        .alternate(|n| Ok(world(n, 3.0, 3)))
+        .ensemble(1)
+        .couple(|_: &String, _: usize| ())
+        .march_for(2, field_at_61km)
+        .reduce_ensemble(|_: &String, _: &[Report<f64>]| {
+            Err::<EnsRow, _>(deep_causality_physics::PhysicsError::CalculationError("bad row".into()))
+        })
+        .gates(GateSeq::new("x").gate("two rows", two_rows))
+        .verdict()
+        .expect_err("a failed reduction short-circuits");
+    assert!(format!("{e}").contains("reduce_ensemble"), "names the verb: {e}");
+}

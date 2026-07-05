@@ -290,3 +290,43 @@ fn a_second_gating_sequence_merges_into_one_verdict() {
         "both sequences' gates are present"
     );
 }
+
+#[test]
+fn verdict_renders_merges_and_exposes_outcomes_via_studyview_of() {
+    // A bespoke row set checked outside a campaign phase — the trajectory-gate pattern
+    // (StudyView::of), exercising the Verdict's rendering, merge, and accessors directly.
+    let rows = vec![MapRow { p: 0.5, cf: 1.5 }, MapRow { p: 0.9, cf: 1.9 }];
+    let view = StudyView::of(&rows);
+    assert_eq!(view.rows().len(), 2);
+    assert_eq!(view.cases_len(), 2);
+    assert!(view.rounds().is_empty());
+    assert_eq!(view.title(), "");
+
+    // A passing verdict: title, outcomes, GateOutcome accessors, no warnings, PASS rendering.
+    let pass = map_gates().check(&view);
+    assert!(pass.passed());
+    assert_eq!(pass.title(), "nozzle map");
+    assert_eq!(pass.outcomes().len(), 2);
+    assert_eq!(pass.outcomes()[0].label(), "physical thrust");
+    assert!(pass.outcomes()[0].passed());
+    assert!(pass.outcomes()[0].detail().contains("cf > 0"));
+    assert!(pass.warnings().is_empty());
+    let rendered = format!("{pass}");
+    assert!(rendered.contains("[PASS] physical thrust:"), "{rendered}");
+    assert!(rendered.contains("=== All gates passed"), "{rendered}");
+
+    // A failing verdict renders the FAIL line and the regression footer.
+    let fail = GateSeq::new("regression")
+        .gate("boom", gate_always_fails)
+        .check(&view);
+    assert!(!fail.passed());
+    let fr = format!("{fail}");
+    assert!(fr.contains("[FAIL] boom: forced regression"), "{fr}");
+    assert!(fr.contains("REGRESSION"), "{fr}");
+
+    // merge: titles join, outcomes concatenate, passed is the conjunction.
+    let merged = pass.merge(fail);
+    assert!(!merged.passed());
+    assert_eq!(merged.outcomes().len(), 3);
+    assert_eq!(merged.title(), "nozzle map + regression");
+}

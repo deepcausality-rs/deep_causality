@@ -59,6 +59,46 @@ fn write_rows_emits_schema_header_and_units() {
     assert_eq!(lines.next().unwrap(), "#units,-,-,-");
 }
 
+/// A row whose `cells()` disagrees with its `SCHEMA` width — the writer must reject it.
+#[derive(Debug, Clone)]
+struct WrongWidthRow;
+
+impl TableRow for WrongWidthRow {
+    type Scalar = f64;
+    const SCHEMA: &'static [(&'static str, &'static str)] = &[("a", "-"), ("b", "-")];
+    fn cells(&self) -> Vec<f64> {
+        vec![1.0] // one cell for a two-column schema
+    }
+}
+
+#[test]
+fn write_rows_rejects_a_row_whose_cell_count_disagrees_with_the_schema() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("bad.csv");
+    let err = write_rows(&path, vec![WrongWidthRow]).run().unwrap_err();
+    let msg = format!("{err}");
+    assert!(
+        msg.contains("1 cells") && msg.contains("2 columns"),
+        "the error names the width mismatch: {msg}"
+    );
+    // Nothing is written when a row is rejected.
+    assert!(!path.exists(), "no file is produced on a rejected row");
+}
+
+#[test]
+fn write_rows_surfaces_a_filesystem_write_error() {
+    // A path whose parent directory does not exist: the underlying `fs::write` fails and the IO
+    // error propagates rather than being swallowed.
+    let path = std::path::Path::new("/dcl_no_such_dir_xyz/map.csv");
+    let rows = vec![MapRow {
+        p_ratio: 0.9,
+        mach_exit: 0.4,
+        cf: 1.2,
+    }];
+    let err = write_rows(path, rows).run().unwrap_err();
+    assert!(!format!("{err}").is_empty(), "the write error is reported");
+}
+
 #[test]
 fn write_then_read_rows_round_trips() {
     let dir = tempdir().unwrap();

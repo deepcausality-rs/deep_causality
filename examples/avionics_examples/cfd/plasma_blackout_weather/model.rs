@@ -9,6 +9,7 @@
 //! wall-clock budget). The shared stages, constants, and world builder live in
 //! `avionics_examples::shared`.
 
+use std::path::PathBuf;
 use crate::FloatType;
 use crate::constants::{
     COLD_DRIFT_FACTOR_MIN, DRIFT_SIGNIFICANCE_SIGMA, IMU_THERMAL_COEFF_PER_K, MC_DRAWS,
@@ -394,4 +395,12 @@ fn gate_wall_clock(v: &StudyView<'_, FloatType>) -> (bool, String) {
             WALL_CLOCK_BUDGET_S,
         ),
     )
+}
+
+pub fn get_audit_dir() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("cfd/plasma_blackout_weather/audit")
+}
+
+pub fn get_tabe_path() -> fn() -> PathBuf {
+    || PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("cfd/plasma_blackout_weather/weather_table.csv")
 }
