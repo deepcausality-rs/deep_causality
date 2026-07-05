@@ -68,8 +68,8 @@ pub use qtt_march_pause::{MarchFork, MarchPause};
 pub use qtt_march_run::{QttMarchRun, QttStepView};
 pub use report::Report;
 pub use study::{
-    CaseRun, Cases, Configured, GateFn, GateOutcome, GateSeq, Judged, Marched, Prepared, StudyDef,
-    StudyView, Swept, Verdict,
+    Branched, CaseRun, Cases, Configured, ForkStudy, GateFn, GateOutcome, GateSeq, Judged, Marched,
+    Prepared, StudyDef, StudyView, Swept, Verdict,
 };
 pub use study_effect::{StudyEffect, StudyEffectWitness};
 pub use study_error::StudyError;

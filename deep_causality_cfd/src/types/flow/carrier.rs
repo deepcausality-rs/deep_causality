@@ -438,7 +438,7 @@ where
     /// a failure does not cancel its siblings.
     pub fn continue_branches(
         &self,
-        worlds: &[&'c M::Config],
+        worlds: &[&M::Config],
         steps: usize,
     ) -> Result<Vec<Report<R>>, PhysicsError>
     where
@@ -446,11 +446,9 @@ where
         M::Config: MaybeParallel,
         Report<R>: MaybeParallel,
     {
-        scoped_map(worlds, |world| {
-            self.fork().alternate_context(*world).continue_march(steps)
-        })
-        .into_iter()
-        .collect()
+        scoped_map(worlds, |world| self.continue_with(*world, steps))
+            .into_iter()
+            .collect()
     }
 
     /// Fly **one** branch world from this pause: fork (O(1), copy-on-write), alternate into the
@@ -459,15 +457,43 @@ where
     /// a study that scores branch worlds one at a time (the campaign's event-fork `branch`
     /// lowers each case onto this).
     ///
+    /// The world is borrowed only for the duration of this call: it is consumed to rebuild the
+    /// carrier and never escapes into the returned report, so it need **not** outlive the pause's
+    /// own config (`'c`). This is what lets a campaign bind branch worlds it owns — one per case,
+    /// living only in the study phase — and continue each one without pinning it to wherever the
+    /// pause was created.
+    ///
     /// # Errors
     /// The captured pause error, or any carrier-assembly / marching / coupling failure in the
     /// continued segment.
     pub fn continue_with(
         &self,
-        world: &'c M::Config,
+        world: &M::Config,
         steps: usize,
     ) -> Result<Report<R>, PhysicsError> {
-        self.fork().alternate_context(world).continue_march(steps)
+        // Mirror `fork().alternate_context(world).continue_march(steps)` exactly, but with `world`
+        // as a short-lived borrow: an errored pause returns its captured error untouched, and a
+        // healthy one accumulates the same `!!ContextAlternation!!` marker into a fresh branch log
+        // before the continued segment merges it into the branch's copy-on-write field.
+        if let Some(e) = &self.error {
+            return Err(e.clone());
+        }
+        let mut branch_log = EffectLog::new();
+        branch_log.add_entry(&alloc::format!(
+            "!!ContextAlternation!!: world '{}' replaced with '{}' at step {}",
+            M::config_name(self.config),
+            M::config_name(world),
+            self.step,
+        ));
+        run_continued_segment(
+            self,
+            world,
+            None,
+            Arc::clone(&self.state),
+            Arc::clone(&self.field),
+            branch_log,
+            steps,
+        )
     }
 }
 
@@ -596,52 +622,85 @@ where
         if let Some(e) = self.error {
             return Err(e);
         }
+        // Both the alternated override and the pause's own config share `'c`, so this `unwrap_or`
+        // unifies cleanly; the borrowed-world `continue_with` path relaxes that lifetime by calling
+        // `run_continued_segment` with a short-lived world directly.
         let cfg = self.context_ov.unwrap_or(self.pause.config);
-        let mut carrier = M::build(cfg)?;
-
-        // Marched state: an alternated snapshot re-encodes; otherwise resume the shared state. The
-        // loop below only ever *reads* the current state and replaces the Arc with the freshly
-        // produced next state, so the shared paused data is never cloned.
-        let mut state: Arc<M::State> = match self.seed_ov {
-            Some(seed) => Arc::new(carrier.encode_seed(&seed)?),
-            None => self.state,
-        };
-
-        // Field: the branch's one CoW clone happens at the first write (merging the audit log).
-        let mut field_arc = self.field;
-        let mut branch_log = self.log;
-        {
-            let field = Arc::make_mut(&mut field_arc);
-            field.log_mut().append(&mut branch_log);
-            field.log_mut().add_entry(&alloc::format!(
-                "march resumed at step {} for {} steps in world '{}'",
-                self.pause.step,
-                steps,
-                M::config_name(cfg),
-            ));
-        }
-
-        let mut sampler = BlackoutSampler::new(self.pause.trigger);
-        for s in 0..steps {
-            let field = Arc::make_mut(&mut field_arc);
-            let next = carrier.coupled_step(
-                &state,
-                field,
-                &self.pause.coupling,
-                self.pause.scalar_kappa,
-                self.pause.step + s + 1,
-            )?;
-            state = Arc::new(next);
-            sampler.sample(field)?;
-        }
-
-        finish_report(
-            &carrier,
+        run_continued_segment(
+            self.pause,
             cfg,
-            &M::config_observe(cfg),
-            sampler,
-            &state,
-            &field_arc,
+            self.seed_ov,
+            self.state,
+            self.field,
+            self.log,
+            steps,
         )
     }
+}
+
+/// The continued-march segment shared by [`CarrierFork::continue_march`] (borrowed override world)
+/// and [`CarrierPause::continue_with`] (short-lived owned world). Taking `cfg` as a plain borrow —
+/// decoupled from the pause's `'c` — is exactly what lets a study continue in a world it owns: the
+/// world is consumed to rebuild the carrier and to name the world in the audit trail, and never
+/// escapes into the returned report.
+#[allow(clippy::too_many_arguments)]
+fn run_continued_segment<const D: usize, R, S, M>(
+    pause: &CarrierPause<'_, R, S, M, D>,
+    cfg: &M::Config,
+    seed_ov: Option<M::Seed>,
+    state: Arc<M::State>,
+    field: Arc<CoupledField<R>>,
+    mut branch_log: EffectLog,
+    steps: usize,
+) -> Result<Report<R>, PhysicsError>
+where
+    R: CfdScalar,
+    S: PhysicsStage<D, R>,
+    M: CoupledCarrier<D, R>,
+{
+    let mut carrier = M::build(cfg)?;
+
+    // Marched state: an alternated snapshot re-encodes; otherwise resume the shared state. The
+    // loop below only ever *reads* the current state and replaces the Arc with the freshly
+    // produced next state, so the shared paused data is never cloned.
+    let mut state: Arc<M::State> = match seed_ov {
+        Some(seed) => Arc::new(carrier.encode_seed(&seed)?),
+        None => state,
+    };
+
+    // Field: the branch's one CoW clone happens at the first write (merging the audit log).
+    let mut field_arc = field;
+    {
+        let field = Arc::make_mut(&mut field_arc);
+        field.log_mut().append(&mut branch_log);
+        field.log_mut().add_entry(&alloc::format!(
+            "march resumed at step {} for {} steps in world '{}'",
+            pause.step,
+            steps,
+            M::config_name(cfg),
+        ));
+    }
+
+    let mut sampler = BlackoutSampler::new(pause.trigger);
+    for s in 0..steps {
+        let field = Arc::make_mut(&mut field_arc);
+        let next = carrier.coupled_step(
+            &state,
+            field,
+            &pause.coupling,
+            pause.scalar_kappa,
+            pause.step + s + 1,
+        )?;
+        state = Arc::new(next);
+        sampler.sample(field)?;
+    }
+
+    finish_report(
+        &carrier,
+        cfg,
+        &M::config_observe(cfg),
+        sampler,
+        &state,
+        &field_arc,
+    )
 }

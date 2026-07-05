@@ -93,9 +93,9 @@ pub use crate::types::flow::{
     StudyWarningLog, ThermalRelax, TrajectoryNav,
 };
 pub use crate::types::flow::{
-    CaseRun, Cases, Configured, GateFn, GateOutcome, GateSeq, Judged, Marched, Prepared, StudyDef,
-    StudyView, Swept, Verdict, VerifyRun, VibrationalLagStage, ViscosityArrhenius,
-    dominant_frequency, ler_relax_scalar, ler_step, strouhal_number, sweep,
+    Branched, CaseRun, Cases, Configured, ForkStudy, GateFn, GateOutcome, GateSeq, Judged, Marched,
+    Prepared, StudyDef, StudyView, Swept, Verdict, VerifyRun, VibrationalLagStage,
+    ViscosityArrhenius, dominant_frequency, ler_relax_scalar, ler_step, strouhal_number, sweep,
 };
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
 pub use crate::types::flow_config::{
