@@ -1,0 +1,36 @@
+deep_causality_cfd/src/types/flow/gates.rs
+  s_c4c919f578d611::t_bdbdad0a912060 31-33,40-42
+examples/avionics_examples/cfd/plasma_blackout_weather/model.rs
+  s_c4c919f578d611::t_e6b8f4566e2d9f 404-406
+deep_causality_cfd/src/types/flow/study/mod.rs
+  s_c4c919f578d611::t_f56da3ff03afa3 802
+  s_c4c919f578d611::t_62c48a5f0a7d54 864-878,880
+examples/avionics_examples/cfd/nozzle_operating_map/README.md
+  s_c4c919f578d611::t_905d1c5b3ebcee 88
+  s_c4c919f578d611::t_b3031832c605f3 58-60,62-63,65,67
+deep_causality_cfd/src/types/flow/coupling.rs
+  s_c4c919f578d611::t_6ce1d9a1371aa1 183
+deep_causality_cfd/README.md
+  s_c4c919f578d611::t_22c2c8b36a9c43 195-197
+examples/avionics_examples/cfd/plasma_blackout_weather/main.rs
+  s_c4c919f578d611::t_66cd64a4be8c31 82
+  s_c4c919f578d611::t_eddce1d0a12961 56
+deep_causality_file/tests/types/writers/write_rows_tests.rs
+  s_c4c919f578d611::t_93bd3b5e657673 99-109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5e8ddb1c4b0add532c2c22dfb672b4cbd4f2c5a0",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
