@@ -1,0 +1,99 @@
+deep_causality_file/src/lib.rs
+  s_c4c919f578d611::t_894b2971afd888 29,34,39,46
+  s_c4c919f578d611::t_1cad84e1de7474 35-36,40-42,50,53
+  s_c4c919f578d611::t_8ae7cda0f96896 43
+  s_c4c919f578d611::t_410321fd835f5d 47-48
+deep_causality_file/src/types/writers/write_table.rs
+  s_c4c919f578d611::t_a3f7f2332c79cd 6-69
+deep_causality_file/src/types/snapshot_types.rs
+  s_c4c919f578d611::t_967dfb337f608f 17
+deep_causality_file/src/types/snapshot/container.rs
+  s_c4c919f578d611::t_4bf23e813cd395 1-158
+deep_causality_file/src/errors/data_loading_error.rs
+  s_c4c919f578d611::t_ca2d18ae022c0b 53-54
+  s_c4c919f578d611::t_5c628c8cf8a786 127-133
+  s_c4c919f578d611::t_f0ab5f8773353e 177-179
+deep_causality_file/tests/types/loaders/read_rows_tests.rs
+  s_c4c919f578d611::t_eebf2bdd86efdf 1-9,12-46,48-51,53-54,56-73
+  s_c4c919f578d611::t_6c248532ad8551 10-11
+  s_c4c919f578d611::t_a0e6f0af6d48ea 47,52,55
+deep_causality_file/tests/BUILD.bazel
+  s_c4c919f578d611::t_bab9df81e9ff23 19-34
+  s_c4c919f578d611::t_86f33b8bcf3a9f 57,59,92,94,112,114
+  s_c4c919f578d611::t_2e19b0a0ccfa6e 105
+  s_c4c919f578d611::t_8b53eae23419db 18
+deep_causality_file/src/types/loaders/read_rows.rs
+  s_c4c919f578d611::t_72768d5e965934 51
+  s_c4c919f578d611::t_1e49bb5fae5b91 1-50,52-67
+deep_causality_file/src/types/mod.rs
+  s_c4c919f578d611::t_3eba1c764ef34c 7,10,14
+deep_causality_file/tests/types/writers/mod.rs
+  s_c4c919f578d611::t_338585030a6ecc 5-7
+  s_c4c919f578d611::t_f2d820f4c4b310 2-4
+  s_c4c919f578d611::t_a1d1a97870ea6c 8
+  s_c4c919f578d611::t_0c12775aea20a2 1
+deep_causality_file/src/traits/bit_codec.rs
+  s_c4c919f578d611::t_96b729b83013e6 1-23
+deep_causality_file/src/types/writers/mod.rs
+  s_c4c919f578d611::t_3eac6459ab6331 8-11
+deep_causality_file/tests/traits/mod.rs
+  s_c4c919f578d611::t_ccba2ceb28a7a2 1-6
+deep_causality_file/src/traits/mod.rs
+  s_c4c919f578d611::t_b6bd312f7ceb99 1-6
+  s_c4c919f578d611::t_cc08036d83e1a3 7-8
+deep_causality_file/src/types/writers/write_rows.rs
+  s_c4c919f578d611::t_981cd8dd18496b 1-81
+deep_causality_file/src/types/loaders/mod.rs
+  s_c4c919f578d611::t_f306f5cda8c702 6-18
+deep_causality_file/src/types/snapshot/io.rs
+  s_c4c919f578d611::t_4bf23e813cd395 1-159
+deep_causality_file/src/types/loaders/read_table.rs
+  s_c4c919f578d611::t_9dfcb90cd1d004 10-17
+  s_c4c919f578d611::t_f1a1169cdfb45d 37
+  s_c4c919f578d611::t_bba5ac6c61de5d 128-135
+  s_c4c919f578d611::t_6615772a1b8799 57
+deep_causality_file/tests/types/table_types_tests.rs
+  s_c4c919f578d611::t_5e79399f4e9407 33-48
+  s_c4c919f578d611::t_11620cb17bc3b4 32
+deep_causality_file/src/types/loaders/read_gnss.rs
+  s_c4c919f578d611::t_4bf23e813cd395 1-87
+deep_causality_file/src/traits/table_scalar.rs
+  s_c4c919f578d611::t_f2e32a3666a63f 26-28
+  s_c4c919f578d611::t_519b4653b6fc24 1-25,29-79
+deep_causality_file/src/traits/table_row.rs
+  s_c4c919f578d611::t_d62f52bc7646ab 1-40
+deep_causality_file/tests/traits/table_scalar_tests.rs
+  s_c4c919f578d611::t_351fc3cde37cda 1-61
+deep_causality_file/tests/types/writers/write_table_tests.rs
+  s_c4c919f578d611::t_4f58eda95b3077 13,15,33,44-45,47,49,57,59,61,66-103
+  s_c4c919f578d611::t_690e8e17817727 6-11
+deep_causality_file/tests/types/mod.rs
+  s_c4c919f578d611::t_a683b54512d857 9,14,21
+deep_causality_file/tests/types/writers/write_rows_tests.rs
+  s_c4c919f578d611::t_98256feba48cf5 1-8,11-78
+  s_c4c919f578d611::t_5cf2f50c872c79 9-10
+AGENTS.md
+  s_c4c919f578d611::t_4bf23e813cd395 20-21
+deep_causality_file/src/types/table_types.rs
+  s_c4c919f578d611::t_e02076c8fe43b2 90-101
+deep_causality_file/tests/mod.rs
+  s_c4c919f578d611::t_b3518a18b4286c 6
+deep_causality_file/tests/types/loaders/mod.rs
+  s_c4c919f578d611::t_e954f194dd3c86 5,7,9-11,13,15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0f1b5bb60ea013c304c52b31b03340b18cd9712c",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
