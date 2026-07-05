@@ -1,0 +1,48 @@
+examples/avionics_examples/cfd/viv_resonance_margin/model_config.rs
+  s_c4c919f578d611::t_3a87a8d43600d1 59-67
+examples/avionics_examples/cfd/viv_resonance_margin/model.rs
+  s_c4c919f578d611::t_5020586bef00f5 130
+  s_c4c919f578d611::t_fa920e05f68529 100-106
+  s_c4c919f578d611::t_0d5e3601751f15 140-144
+examples/avionics_examples/cfd/flight_envelope_placard/model.rs
+  s_c4c919f578d611::t_83d83a0003a6b2 170-172
+  s_c4c919f578d611::t_c528a755244c63 208-210
+deep_causality_cfd/src/navigation/reentry_nav.rs
+  s_c4c919f578d611::t_15c80cfa124bfd 151
+deep_causality_file/src/types/loaders/read_table.rs
+  s_c4c919f578d611::t_cc293880c00608 73
+  s_c4c919f578d611::t_6ec0a9f75e9850 102
+  s_c4c919f578d611::t_b81156eba086c7 83-93
+  s_c4c919f578d611::t_e34f5b120c1e9e 24,27-32
+  s_c4c919f578d611::t_32f87cb065ed39 33
+deep_causality_cfd/src/navigation/eskf.rs
+  s_c4c919f578d611::t_4eeadd448cdbfb 157
+deep_causality_file/src/types/loaders/read_trace.rs
+  s_c4c919f578d611::t_a688829ea9ffd6 23,26-31
+  s_c4c919f578d611::t_2d7359466ca582 107
+  s_c4c919f578d611::t_82b3781dac8357 70
+  s_c4c919f578d611::t_eb6f87295502f3 87-97
+  s_c4c919f578d611::t_e85fda74af0df8 32
+deep_causality_file/src/types/writers/write_table.rs
+  s_c4c919f578d611::t_12661477258a23 34-45
+deep_causality_file/src/types/table_types.rs
+  s_c4c919f578d611::t_e714b4ffc12edc 62-64,70-74
+  s_c4c919f578d611::t_7e492435d34f03 38-49
+  s_c4c919f578d611::t_7a10dee60b2ca1 75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "d2fa43df2094ee31bfcfb5e3df74a72d5d5ef638",
+  "prompts": {},
+  "sessions": {
+    "s_c4c919f578d611": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fb81a8d9-7a70-44d4-86de-ecdc74437012",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
