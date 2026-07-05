@@ -30,15 +30,23 @@ impl TableRow for MapRow {
 
 /// One case, one row: cf grows with the back-pressure ratio.
 fn map_row(p: &f64) -> Result<MapRow, PhysicsError> {
-    Ok(MapRow { p: *p, cf: 1.0 + *p })
+    Ok(MapRow {
+        p: *p,
+        cf: 1.0 + *p,
+    })
 }
 
 /// A case body that diverges on a sentinel value.
 fn map_row_or_fail(p: &f64) -> Result<MapRow, PhysicsError> {
     if *p < 0.0 {
-        Err(PhysicsError::CalculationError("negative back pressure".into()))
+        Err(PhysicsError::CalculationError(
+            "negative back pressure".into(),
+        ))
     } else {
-        Ok(MapRow { p: *p, cf: 1.0 + *p })
+        Ok(MapRow {
+            p: *p,
+            cf: 1.0 + *p,
+        })
     }
 }
 
@@ -49,7 +57,10 @@ fn gate_positive_cf(v: &StudyView<'_, MapRow>) -> (bool, String) {
 
 fn gate_every_case_reduced(v: &StudyView<'_, MapRow>) -> (bool, String) {
     let ok = v.rows().len() == v.cases_len();
-    (ok, format!("{} rows for {} cases", v.rows().len(), v.cases_len()))
+    (
+        ok,
+        format!("{} rows for {} cases", v.rows().len(), v.cases_len()),
+    )
 }
 
 fn gate_always_fails(_: &StudyView<'_, MapRow>) -> (bool, String) {
@@ -78,7 +89,10 @@ fn pointwise_study_passes_all_gates_and_records_the_table() {
     assert!(verdict.passed(), "{verdict}");
     assert!(path.exists(), "the table was recorded");
     let text = std::fs::read_to_string(&path).unwrap();
-    assert!(text.starts_with("p,cf\n#units,-,-\n"), "schema header: {text}");
+    assert!(
+        text.starts_with("p,cf\n#units,-,-\n"),
+        "schema header: {text}"
+    );
 }
 
 #[test]
@@ -95,7 +109,10 @@ fn a_failing_gate_fails_the_verdict_but_keeps_the_recorded_table() {
         .expect("no setup error");
 
     assert!(!verdict.passed(), "the forced gate fails the verdict");
-    assert!(path.exists(), "recording precedes judgment, so the table survives");
+    assert!(
+        path.exists(),
+        "recording precedes judgment, so the table survives"
+    );
 }
 
 #[test]
@@ -145,10 +162,7 @@ fn map_row_from_run(run: &CaseRun<'_, f64, DuctConfig<f64>, f64>) -> Result<MapR
         .series("thrust_coefficient")
         .and_then(|s| s.first().copied())
         .ok_or_else(|| PhysicsError::CalculationError("no thrust coefficient".into()))?;
-    Ok(MapRow {
-        p: *run.case(),
-        cf,
-    })
+    Ok(MapRow { p: *run.case(), cf })
 }
 
 // ── Entry verbs: read a schedule, read a matrix + prepare a rig ────────────────────────────────
@@ -270,5 +284,9 @@ fn a_second_gating_sequence_merges_into_one_verdict() {
         .expect("no setup error");
 
     assert!(verdict.passed());
-    assert_eq!(verdict.outcomes().len(), 2, "both sequences' gates are present");
+    assert_eq!(
+        verdict.outcomes().len(),
+        2,
+        "both sequences' gates are present"
+    );
 }

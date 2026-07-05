@@ -26,9 +26,9 @@ pub mod blackout_tests;
 #[cfg(not(miri))]
 pub mod compressible_march_run_tests;
 #[cfg(test)]
-pub mod coupled_march_tests;
-#[cfg(test)]
 pub mod corridor_tests;
+#[cfg(test)]
+pub mod coupled_march_tests;
 #[cfg(test)]
 pub mod coupling_tests;
 #[cfg(test)]
@@ -52,14 +52,6 @@ pub mod march_run_tests;
 #[cfg(test)]
 pub mod march_state_tests;
 #[cfg(test)]
-pub mod study_effect_tests;
-#[cfg(test)]
-pub mod study_error_tests;
-#[cfg(test)]
-pub mod study_grammar_tests;
-#[cfg(test)]
-pub mod study_warning_tests;
-#[cfg(test)]
 pub mod mms_tests;
 #[cfg(test)]
 #[cfg(not(miri))]
@@ -72,6 +64,14 @@ pub mod qtt_march_pause_tests;
 pub mod qtt_march_run_tests;
 #[cfg(test)]
 pub mod report_tests;
+#[cfg(test)]
+pub mod study_effect_tests;
+#[cfg(test)]
+pub mod study_error_tests;
+#[cfg(test)]
+pub mod study_grammar_tests;
+#[cfg(test)]
+pub mod study_warning_tests;
 #[cfg(test)]
 pub mod sweep_tests;
 // Filesystem round trips are unsupported under MIRI.

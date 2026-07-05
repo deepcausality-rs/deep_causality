@@ -62,7 +62,11 @@ impl StudyDef {
     }
 
     /// Read one named column from a table as the case axis (a schedule of scalars).
-    pub fn read<R: TableScalar>(self, path: impl AsRef<Path>, column: &str) -> StudyEffect<Cases<R>> {
+    pub fn read<R: TableScalar>(
+        self,
+        path: impl AsRef<Path>,
+        column: &str,
+    ) -> StudyEffect<Cases<R>> {
         let title = self.title;
         let loaded = read_table::<R>(path).run().and_then(|t| t.column(column));
         match loaded {

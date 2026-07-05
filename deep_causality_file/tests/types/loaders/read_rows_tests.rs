@@ -56,8 +56,14 @@ fn read_rows_reorders_file_columns_to_schema_order() {
     assert_eq!(
         rows,
         vec![
-            FlightPoint { mach: 1.2, alt_km: 11.0 },
-            FlightPoint { mach: 0.0, alt_km: 0.0 },
+            FlightPoint {
+                mach: 1.2,
+                alt_km: 11.0
+            },
+            FlightPoint {
+                mach: 0.0,
+                alt_km: 0.0
+            },
         ]
     );
 }

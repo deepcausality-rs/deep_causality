@@ -8,8 +8,8 @@
 //! and the trajectory entry never diverge.
 
 use deep_causality_cfd::{
-    CfdConfigBuilder, CfdFlow, DuctAreaProfile, DuctConfig, DuctInlet, DuctStop, Marchable,
-    MarchStop, Mesh, Observe, QttMarchConfig, QttMarchConfigBuilder, QttObserve, Seed,
+    CfdConfigBuilder, CfdFlow, DuctAreaProfile, DuctConfig, DuctInlet, DuctStop, MarchStop,
+    Marchable, Mesh, Observe, QttMarchConfig, QttMarchConfigBuilder, QttObserve, Seed,
 };
 use deep_causality_tensor::Truncation;
 

@@ -20,7 +20,11 @@ type Witness = StudyEffectWitness<StudyError, StudyWarningLog>;
 fn ok_parts<T>(e: StudyEffect<T>) -> (T, Vec<String>) {
     let (inner, warnings) = e.into_parts();
     let value = inner.unwrap_or_else(|err| panic!("expected Ok, got {err}"));
-    let msgs = warnings.entries().iter().map(|w| w.message().to_string()).collect();
+    let msgs = warnings
+        .entries()
+        .iter()
+        .map(|w| w.message().to_string())
+        .collect();
     (value, msgs)
 }
 

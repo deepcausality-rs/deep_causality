@@ -17,7 +17,10 @@ fn an_untagged_physics_cause_renders_without_a_stage() {
     assert_eq!(e.stage(), "");
     let msg = format!("{e}");
     assert!(msg.contains("diverged"), "{msg}");
-    assert!(!msg.contains("in '"), "no stage clause when untagged: {msg}");
+    assert!(
+        !msg.contains("in '"),
+        "no stage clause when untagged: {msg}"
+    );
     assert!(e.source().is_none(), "physics cause is not chained");
 }
 

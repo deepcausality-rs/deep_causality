@@ -49,11 +49,11 @@ pub use blackout::{
 };
 pub use cfd_flow::{CfdFlow, fail};
 pub use compressible_march_run::{CompressibleFork, CompressibleMarchRun, CompressiblePause};
-pub use coupled_march::{CoupledMarch, ReadyMarch};
 pub use corridor::{
     BankCorrection, BankSteeredLift, BranchAccumulator, BranchOutcome, CyberneticCorrect,
     GoverningModel, RegimeClass, RegimeClassify, SafetyEnvelope, TrajectoryNav,
 };
+pub use coupled_march::{CoupledMarch, ReadyMarch};
 pub use coupling::{
     AeroBlackoutStub, AeroForceCoupling, CoupledField, Coupling, PhysicsStage, StepContext,
     ThermalRelax, ViscosityArrhenius,

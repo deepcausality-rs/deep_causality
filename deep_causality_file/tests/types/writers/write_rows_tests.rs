@@ -52,7 +52,10 @@ fn write_rows_emits_schema_header_and_units() {
 
     let text = std::fs::read_to_string(&path).unwrap();
     let mut lines = text.lines();
-    assert_eq!(lines.next().unwrap(), "p_back_over_p0,mach_exit,thrust_coefficient");
+    assert_eq!(
+        lines.next().unwrap(),
+        "p_back_over_p0,mach_exit,thrust_coefficient"
+    );
     assert_eq!(lines.next().unwrap(), "#units,-,-,-");
 }
 

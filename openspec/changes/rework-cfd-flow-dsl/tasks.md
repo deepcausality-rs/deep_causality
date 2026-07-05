@@ -47,10 +47,10 @@ design decision that cannot be resolved without its concrete consumer:
 
 ## 5. Gate builder and audit log (deep_causality_cfd)
 
-- [ ] 5.1 Add `GateSeq<Row>` (HRTB gate fns), `new`/`gate`/`check`; wire `Swept::gates` and `Judged::gates`; retire the eager `Gates` builder
-- [ ] 5.2 Add `AuditLog`/`LogSink` and the `save_log` verb (both levels); stepwise flush; loud on sink failure; optional fsync flag
-- [ ] 5.3 Implement the one-thread-one-file fan-out policy (per-branch files named by round+case; main file records spawn/rejoin)
-- [ ] 5.4 Tests: verdict-before-gates / gates-before-sweep / wrong-row GateSeq as `compile_fail` doctests; disk==memory; abort-tail via killed child process; one-file-per-branch; register in mod tree and tests/BUILD.bazel
+- [x] 5.1 `GateSeq<Row>` (HRTB gate fns), `new`/`gate`/`check`; `Swept::gates` and `Judged::gates` wired — done in group 4. (The eager `Gates` builder retires in the group-6 pass.)
+- [x] 5.4 `compile_fail` doctests on `CfdFlow::study` for the phase discipline: verdict-before-gates, gates-before-sweep, record-before-sweep, reduce-before-march, wrong-row GateSeq — all correctly refuse to compile; plus the happy-path doctest.
+- [ ] 5.2 (→ group 7) `AuditLog`/`LogSink` + `save_log` verb — sequenced with the coupled examples. Its stepwise flush hooks the coupled march loop's per-step `EffectLog`, and its value (rich provenance) exists only on the corridor/weather coupled runs; a skeleton without that integration is non-functional.
+- [ ] 5.3 (→ group 7) the one-thread-one-file fan-out policy — inseparable from the counterfactual fan-out (corridor fork, weather ensemble), which itself lands in group 7 (tasks 4.7/4.8). Abort-tail + one-file-per-branch tests land with it.
 
 ## 6. Retire the legacy IO surface
 

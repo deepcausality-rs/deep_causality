@@ -124,8 +124,13 @@ where
     where
         P: Fn(&CoupledField<R>, usize) -> bool,
     {
-        self.run
-            .run_until(self.coupling, self.field, self.trigger, self.kappa, predicate)
+        self.run.run_until(
+            self.coupling,
+            self.field,
+            self.trigger,
+            self.kappa,
+            predicate,
+        )
     }
 
     /// March to the config's horizon and report (no pause).
@@ -142,8 +147,11 @@ where
     /// # Errors
     /// Any assembly, marching, coupling, or reporting failure.
     pub fn run_for(self, steps: usize) -> Result<Report<R>, PhysicsError> {
-        self.run
-            .march_with(MarchStop::Fixed(steps))
-            .run_coupled(self.coupling, self.field, self.trigger, self.kappa)
+        self.run.march_with(MarchStop::Fixed(steps)).run_coupled(
+            self.coupling,
+            self.field,
+            self.trigger,
+            self.kappa,
+        )
     }
 }

@@ -113,7 +113,11 @@ impl fmt::Display for Verdict {
         if self.passed() {
             write!(f, "=== All gates passed: {}. ===", self.title)
         } else {
-            write!(f, "=== Gate REGRESSION in {}: see the FAIL lines. ===", self.title)
+            write!(
+                f,
+                "=== Gate REGRESSION in {}: see the FAIL lines. ===",
+                self.title
+            )
         }
     }
 }

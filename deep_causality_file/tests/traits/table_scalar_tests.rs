@@ -17,7 +17,14 @@ fn encode<R: TableScalar>(x: R) -> String {
 
 #[test]
 fn f64_round_trips_bit_for_bit() {
-    for &x in &[0.0_f64, 1.0, -0.9, 300_000.0, 1.234_567_890_123_45e-17, f64::MAX] {
+    for &x in &[
+        0.0_f64,
+        1.0,
+        -0.9,
+        300_000.0,
+        1.234_567_890_123_45e-17,
+        f64::MAX,
+    ] {
         let cell = encode(x);
         let back = f64::parse_cell(&cell).expect("parses");
         assert_eq!(back.to_bits(), x.to_bits(), "cell '{cell}' for {x}");
@@ -38,7 +45,10 @@ fn float106_pair_cell_round_trips_both_components() {
     // A value whose lo component is nonzero: only the pair encoding preserves it.
     let x = Float106::new(1.0, 0.0) / Float106::new(3.0, 0.0);
     let cell = encode(x);
-    assert!(cell.contains('|'), "pair cell carries the separator: '{cell}'");
+    assert!(
+        cell.contains('|'),
+        "pair cell carries the separator: '{cell}'"
+    );
     let back = Float106::parse_cell(&cell).expect("parses");
     assert_eq!(back.hi().to_bits(), x.hi().to_bits(), "hi component");
     assert_eq!(back.lo().to_bits(), x.lo().to_bits(), "lo component");
