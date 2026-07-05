@@ -409,3 +409,72 @@ fn campaign_fork_branch_continue_for_reduces_branches_in_case_order() {
 
     assert!(verdict.passed(), "{verdict}");
 }
+
+fn coarse_round_is_carried(
+    v: &deep_causality_cfd::StudyView<'_, BranchRow>,
+) -> (bool, String) {
+    let coarse_ok = v.rounds().len() == 1 && v.rounds()[0].len() == 2;
+    let fine_ok = v.rows().len() == 3;
+    (
+        coarse_ok && fine_ok,
+        format!(
+            "fine round {} rows over {} prior round(s)",
+            v.rows().len(),
+            v.rounds().len()
+        ),
+    )
+}
+
+#[test]
+fn refine_reforks_the_same_onset_and_carries_the_prior_round() {
+    use deep_causality_cfd::{CaseRun, CompressibleMarchConfig, GateSeq};
+
+    let nominal = world("nominal_descent", 3.0, 8);
+    let pause = CfdFlow::march(&nominal)
+        .run_until(
+            (),
+            field_at_61km(),
+            BlackoutTrigger::new(1.0e9),
+            0.0,
+            |_, s| s >= 2,
+        )
+        .unwrap();
+
+    // Reduce each branch to its peak final density (the actual value is immaterial to the test —
+    // what matters is that both rounds fork the same onset and the coarse round is retained).
+    fn score(
+        runs: &[CaseRun<'_, String, CompressibleMarchConfig<f64>, f64>],
+    ) -> Result<Vec<BranchRow>, deep_causality_physics::PhysicsError> {
+        Ok(runs
+            .iter()
+            .map(|r| BranchRow {
+                n_tot: r.report().series("final_n_tot").map(|s| s[0]).unwrap_or(0.0),
+            })
+            .collect())
+    }
+
+    let verdict = CfdFlow::study("two-round corridor")
+        .cases(vec!["coarse_a".to_string(), "coarse_b".to_string()])
+        .fork(&pause)
+        .branch(|name| Ok(world(name, 3.0, 8)))
+        .continue_for(3)
+        .reduce_all(score)
+        // The refinement round re-forks the *same* onset; its three fine cases are derived from
+        // the two coarse rows (here just fixed names), and the coarse round is retained.
+        .refine(&pause, |coarse: &[BranchRow]| {
+            assert_eq!(coarse.len(), 2);
+            Ok(vec![
+                "fine_a".to_string(),
+                "fine_b".to_string(),
+                "fine_c".to_string(),
+            ])
+        })
+        .branch(|name| Ok(world(name, 3.0, 8)))
+        .continue_for(3)
+        .reduce_all(score)
+        .gates(GateSeq::new("rounds").gate("coarse carried", coarse_round_is_carried))
+        .verdict()
+        .expect("the two-round study runs");
+
+    assert!(verdict.passed(), "{verdict}");
+}

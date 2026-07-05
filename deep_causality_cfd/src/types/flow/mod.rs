@@ -69,7 +69,7 @@ pub use qtt_march_run::{QttMarchRun, QttStepView};
 pub use report::Report;
 pub use study::{
     Branched, CaseRun, Cases, Configured, ForkStudy, GateFn, GateOutcome, GateSeq, Judged, Marched,
-    Prepared, StudyDef, StudyView, Swept, Verdict,
+    Prepared, RefineBranched, RefineMarched, Refining, StudyDef, StudyView, Swept, Verdict,
 };
 pub use study_effect::{StudyEffect, StudyEffectWitness};
 pub use study_error::StudyError;

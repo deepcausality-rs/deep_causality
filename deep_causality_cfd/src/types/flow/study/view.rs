@@ -30,6 +30,19 @@ impl<'s, Row> StudyView<'s, Row> {
         }
     }
 
+    /// A view over a bespoke row set for **trajectory-level** gates checked outside a campaign
+    /// phase — the corridor's leg gates, `leg_gates().check(&StudyView::of(&legs))`, where the
+    /// "rows" are the flown legs and each gate reads `view.rows()`. `rounds` is empty and
+    /// `cases_len` is the row count; the campaign builds richer views internally.
+    pub fn of(rows: &'s [Row]) -> Self {
+        Self {
+            rows,
+            rounds: &[],
+            cases_len: rows.len(),
+            title: "",
+        }
+    }
+
     /// The current (final-round) reduced rows.
     pub fn rows(&self) -> &[Row] {
         self.rows
