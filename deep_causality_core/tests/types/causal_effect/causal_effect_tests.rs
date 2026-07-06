@@ -95,7 +95,10 @@ fn into_command_yields_target_and_sub_program() {
 
 #[test]
 fn map_transforms_a_value() {
-    assert_eq!(CausalEffect::value(4_i32).map(|x| x + 1).into_value(), Some(5));
+    assert_eq!(
+        CausalEffect::value(4_i32).map(|x| x + 1).into_value(),
+        Some(5)
+    );
 }
 
 #[test]
@@ -165,7 +168,10 @@ fn debug_renders_each_shape() {
     assert_eq!(format!("{:?}", CausalEffect::value(5_i32)), "Value(5)");
     assert_eq!(format!("{:?}", CausalEffect::<i32>::none()), "None");
     assert_eq!(
-        format!("{:?}", CausalEffect::relay_to(2, CausalEffect::value(1_i32))),
+        format!(
+            "{:?}",
+            CausalEffect::relay_to(2, CausalEffect::value(1_i32))
+        ),
         "RelayTo(2, Value(1))"
     );
 }
