@@ -73,7 +73,8 @@ fn main() {
     let effect_a: PropagatingEffect<i32> = PropagatingEffect::from_value_with_log(a_factual, log_a); // Actually 10
 
     // Substitute the value immediately to change it from 10 to 5
-    // The alternate_value method automatically adds a log entry "Intervened: value set to 5"
+    // The alternate_value method automatically adds a log entry of the form
+    // "!!ValueAlternation!!: <old value> replaced with <new value>"
     let effect_a_intervened = effect_a.alternate_value(5);
 
     // Run the SAME logic

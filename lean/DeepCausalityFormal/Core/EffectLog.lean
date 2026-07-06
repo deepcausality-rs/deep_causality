@@ -63,7 +63,7 @@ theorem append_assoc (x y z : Log Λ) :
     so no audit history is ever lost. Witnessed by the existence of the remaining suffix.
 
     THEOREM_MAP (staged — bridged in the core-formalization phase): `core.effect_log.monotone` -/
-theorem append_monotone (x y : Log Λ) : ∃ z, append x z = x ++ y :=
+theorem append_monotone (x y : Log Λ) : ∃ z, x ++ z = append x y :=
   ⟨y, rfl⟩
 
 end DeepCausalityFormal.Core.EffectLog

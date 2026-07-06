@@ -24,7 +24,7 @@
 //! potential outcomes. Per-patient differences are individual treatment
 //! effects; their subgroup mean is the CATE.
 //!
-//! ## What `intervene` adds over `bind`
+//! ## What `alternate_value` adds over `bind`
 //!
 //! Without it, you would build two separate computations, one per arm, and
 //! trust by reading them that they are the same model on different inputs.
