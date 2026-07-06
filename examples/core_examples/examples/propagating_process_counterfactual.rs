@@ -4,7 +4,7 @@
  */
 
 use deep_causality_core::{
-    EffectLog, EffectValue, Intervenable, PropagatingEffect, PropagatingProcess,
+    AlternatableValue, EffectLog, EffectValue, PropagatingEffect, PropagatingProcess,
 };
 use deep_causality_haft::LogAddEntry;
 
@@ -21,13 +21,13 @@ fn main() {
     // ENGINEERING VALUE: State-Aware Logic Testing
     //
     // Complex logic often fails because of state accumulation (e.g., a battery draining).
-    // This example demonstrates how to simulate a "Counterfactual World" where we intervene
-    // on a sensor reading to see if it saves the mission.
+    // This example demonstrates how to simulate a "Counterfactual World" where we substitute
+    // a sensor reading to see if it saves the mission.
     //
     // By keeping the State (`SystemState`) separate from the computation steps, we can:
     // 1. Run the Factual path (Battery dies, Mission fails).
     // 2. Fork the process.
-    // 3. Intervene on the input (Battery reading = 100).
+    // 3. Substitute the input value (Battery reading = 100).
     // 4. Verify that logic correctly identifies "Mission Approved" in the new timeline.
     // --------------------------------------------------------------------------------------------
 
@@ -84,9 +84,9 @@ fn main() {
         None::<()>,
     );
 
-    // Intervention! Force reading to 100
-    // .intervene() adds the log entry automatically
-    let intervened_process = sensor_reading.intervene(100);
+    // Value substitution! Force reading to 100
+    // .alternate_value() adds the log entry automatically
+    let intervened_process = sensor_reading.alternate_value(100);
 
     let outcome = intervened_process.bind(|battery_level, mut state: SystemState, _ctx| {
         let battery_val = battery_level.into_value().unwrap();

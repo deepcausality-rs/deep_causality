@@ -33,6 +33,8 @@ same **id**. CI (`.github/workflows/formalization.yml`) fails if an id lacks eit
 | `core.causal_monad.right_id` | `m >>= pure = m` (unconditional — holds on errored carriers) | proved | `DeepCausalityFormal/Core/CausalMonad.lean :: bind_right_id` | `deep_causality_core/tests/types/causal_monad/causal_monad_tests.rs :: test_right_identity_unconditional` | ✓ | ✓ | — |
 | `core.causal_monad.assoc` | `(m >>= f) >>= g = m >>= (λx. f x >>= g)` | proved | `DeepCausalityFormal/Core/CausalMonad.lean :: bind_assoc` | `deep_causality_core/tests/types/causal_monad/causal_monad_tests.rs :: test_associativity_across_erroring_continuation` | ✓ | ✓ | — |
 | `core.causal_monad.left_zero` | `raise e >>= f = raise e` (error short-circuit) | proved | `DeepCausalityFormal/Core/CausalMonad.lean :: bind_raise_left_zero` | `deep_causality_core/tests/kani_proofs.rs :: causal_monad_short_circuit` | n/a | ✓ | — |
+| `core.causal_arrow.category_laws` | Kleisli category laws (left/right identity, associativity) threading state/context over arbitrary `S`, `C` | proved | `DeepCausalityFormal/Core/CausalArrow.lean :: kcomp_left_id / kcomp_right_id / kcomp_assoc` | `deep_causality_core/tests/types/causal_arrow/causal_arrow_tests.rs :: arrow_threads_accumulated_state` | ✓ | — | — |
+| `core.causal_arrow.left_zero` | errored stage short-circuits composition; state preserved, downstream not run | proved | `DeepCausalityFormal/Core/CausalArrow.lean :: kcomp_left_zero` | `deep_causality_core/tests/types/causal_arrow/causal_arrow_tests.rs :: arrow_error_short_circuit_preserves_state` | ✓ | — | — |
 
 ### Haft layer (`deep_causality_haft`)
 
@@ -56,6 +58,11 @@ deviations recorded in `../openspec/notes/causal-algebra/haft-formalization-devi
 | `haft.profunctor.laws` | `dimap id id = id`; contravariant-twist composition | proved | `Haft/Profunctor.lean` | ✓ | n/a | — |
 | `haft.parametric_monad.laws` | Atkey indexed monad laws (IxState carrier) | proved | `Haft/ParametricMonad.lean` | ✓ | n/a | — |
 | `haft.monoidal_merge.merge_naturality` | `merge` is binatural (lax-monoidal structure map; trait renamed from `Promonad`, D3/P-1) | proved | `Haft/MonoidalMerge.lean` | ✓ | n/a | — |
+| `haft.free_monad.left_id` | `bind (pure a) k = k a` (free monad on a functor) | proved | `Haft/FreeMonad.lean` | ✓ | n/a | — |
+| `haft.free_monad.right_id` | `bind m pure = m` | proved | `Haft/FreeMonad.lean` | ✓ | n/a | — |
+| `haft.free_monad.assoc` | `bind (bind m f) g = bind m (λx. bind (f x) g)` | proved | `Haft/FreeMonad.lean` | ✓ | n/a | — |
+| `haft.free_monad.lift_bind` | `bind (lift op) k` runs `k` under the operation node | proved | `Haft/FreeMonad.lean` | ✓ | n/a | — |
+| `haft.free_monad.map_id` | `map id = id` (functor identity via right id) | proved | `Haft/FreeMonad.lean` | ✓ | n/a | — |
 | `haft.arrow.category_laws` | `id>>>f = f`; `f>>>id = f`; `>>>` associative | proved | `Haft/Arrow.lean` | ✓ | n/a | — |
 | `haft.arrow.arr_functor` | `arr id = id`; `arr (g∘f) = arr f >>> arr g` | proved | `Haft/Arrow.lean` | ✓ | n/a | — |
 | `haft.arrow.strength_laws` | Hughes' five `first` laws | proved | `Haft/Arrow.lean` | ✓ | n/a | — |

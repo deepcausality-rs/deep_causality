@@ -4,8 +4,8 @@
  */
 
 use deep_causality_core::{
-    CausalEffectPropagationProcess, CausalMonad, CausalityError, CausalityErrorEnum, EffectLog,
-    EffectValue, Intervenable, PropagatingProcess,
+    AlternatableValue, CausalEffectPropagationProcess, CausalMonad, CausalityError,
+    CausalityErrorEnum, EffectLog, EffectValue, PropagatingProcess,
 };
 use deep_causality_haft::{LogAddEntry, LogSize};
 
@@ -132,13 +132,13 @@ fn test_bind_error_preserves_state_context_and_logs() {
 }
 
 #[test]
-fn test_intervene() {
+fn test_alternate_value() {
     let initial: P<i32> = PropagatingProcess::pure(10);
 
-    let intervened = initial.intervene(99);
+    let alternated = initial.alternate_value(99);
 
-    assert!(matches!(intervened.value(), Some(&99)));
-    assert_eq!(intervened.logs().len(), 1); // "Intervention occurred"
+    assert!(matches!(alternated.value(), Some(&99)));
+    assert_eq!(alternated.logs().len(), 1); // value alternation occurred
 }
 
 #[test]

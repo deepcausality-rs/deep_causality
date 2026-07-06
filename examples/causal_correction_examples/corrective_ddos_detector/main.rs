@@ -12,7 +12,7 @@
 //! z-score (how many standard deviations above the mean). When the score
 //! crosses the parametric `sigma_threshold` for `trigger_slots` consecutive
 //! seconds, a volumetric denial-of-service attack is declared and the loop
-//! `.intervene(THROTTLE_ON)`s the value channel. The virtual NIC's regulator
+//! `.alternate_value(THROTTLE_ON)`s the value channel. The virtual NIC's regulator
 //! reads that command and rate-limits the interface to the throttle ceiling,
 //! mitigating the flood from the very next tick.
 //!
@@ -74,7 +74,7 @@ fn main() {
                             }
                             state
                         })
-                        .intervene(THROTTLE_ON)
+                        .alternate_value(THROTTLE_ON)
                 },
                 // No detection. Business as usual.
                 |normal| normal,

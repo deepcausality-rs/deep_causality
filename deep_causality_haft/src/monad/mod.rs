@@ -7,6 +7,10 @@ use crate::{Functor, HKT, Pure, Satisfies};
 pub(crate) mod comonad;
 pub(crate) mod monoidal_merge;
 pub(crate) mod parametric_monad;
+// The free monad is a heap-recursive type (`Suspend(f (Box<Free>))`), so it requires `alloc`
+// — gated exactly like `BoxWitness` / the `Vec` extensions.
+#[cfg(feature = "alloc")]
+pub(crate) mod free_monad;
 
 /// The `Monad` trait extends `Functor` and `Pure` by providing the `bind` operation
 /// for sequencing computations that produce effectful values.

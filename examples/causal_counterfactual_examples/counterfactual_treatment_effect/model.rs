@@ -22,9 +22,9 @@ pub struct Patient {
 
 /// Post-treatment blood pressure under `do(T = treatment)`.
 ///
-/// The flow begins with a NaN treatment value; `.intervene(treatment)` fires
+/// The flow begins with a NaN treatment value; `.alternate_value(treatment)` fires
 /// before the `map` that consumes it. Inside the `map` closure, `t` holds the
-/// intervened value, and the body computes the resulting post-treatment blood
+/// alternate value, and the body computes the resulting post-treatment blood
 /// pressure. `into_effect` hands the underlying effect back so the caller can
 /// read both its value and its audit log.
 pub fn evaluate_under(patient: &Patient, treatment: FloatType) -> PropagatingEffect<FloatType> {
@@ -32,7 +32,7 @@ pub fn evaluate_under(patient: &Patient, treatment: FloatType) -> PropagatingEff
     let age = patient.age;
 
     CausalFlow::value(FloatType::NAN)
-        .intervene(treatment)
+        .alternate_value(treatment)
         .map(move |t| {
             // Stronger reduction for older patients. That heterogeneity is
             // what makes the CATE non-trivial. Pharmacology is deliberately

@@ -7,4 +7,3 @@ mod alternatable_context_tests;
 mod alternatable_state_tests;
 mod alternatable_tests;
 mod alternatable_value_tests;
-mod intervenable_tests;

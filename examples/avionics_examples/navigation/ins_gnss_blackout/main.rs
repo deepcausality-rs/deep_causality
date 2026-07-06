@@ -16,12 +16,12 @@
 //!    real orbit geometry; this is the model **carried** across the outage.
 //! 3. **`select_metric` regime detector** — a GNSS-denial indicator (interference / jamming /
 //!    shadowing level) vs a critical threshold flips GNSS available ↔ denied: the two regime changes.
-//! 4. **`intervene` / `branch_with`** — the GNSS fix corrects the INS error when available and is
+//! 4. **`alternate_value_if` / `branch_with`** — the GNSS fix corrects the INS error when available and is
 //!    **withheld** during the blackout; the chain runs open-loop through the dark, then snaps back.
 //!    `EffectLog` records every regime change and every intervention.
 //!
 //! Two runs side by side (the airplane-INS insight: a recalibrated INS survives a short gap; a pure
-//! INS drifts away): **open loop** (no GNSS coupling) vs **closed loop** (regime-gated `intervene`).
+//! INS drifts away): **open loop** (no GNSS coupling) vs **closed loop** (regime-gated `alternate_value_if`).
 //! The data cadence is GNSS-native (~5 min epochs), so the modelled outage is an *extended* GNSS gap;
 //! the same holdover mechanism scales down to a brief denial and up to a long one.
 //!
@@ -83,7 +83,7 @@ fn main() {
     };
     utils_print::print_stream_summary(&cfg.stream, cfg.blackout_threshold);
 
-    // 3. Run open loop (no GNSS coupling) and closed loop (regime-gated intervene); 4. report + gate.
+    // 3. Run open loop (no GNSS coupling) and closed loop (regime-gated alternate_value_if); 4. report + gate.
     let open = run(cfg.clone(), false);
     let closed = run(cfg, true);
     if !utils_print::report(SAT_ID, &open, &closed) {
@@ -98,7 +98,7 @@ fn data_path(file: &str) -> PathBuf {
         .join(file)
 }
 
-/// Run the full stream once; `closed` wires the corrective `intervene` loop in (closed loop) or leaves
+/// Run the full stream once; `closed` wires the corrective `alternate_value_if` loop in (closed loop) or leaves
 /// it out (open loop). Pipeline: `advance → detect_regime → [branch_with: gps_fix | dead-reckon] →
 /// record_metrics`, iterated over every epoch.
 fn run(cfg: NavConfig, closed: bool) -> NavProcess {
@@ -114,7 +114,7 @@ fn run(cfg: NavConfig, closed: bool) -> NavProcess {
                     |avail| {
                         avail
                             .update_state(|s, _v| apply_fix(s, &cfg_ref))
-                            .intervene_if(|_| true, |e| gps_fix(e, &cfg_ref))
+                            .alternate_value_if(|_| true, |e| gps_fix(e, &cfg_ref))
                     },
                 )
             } else {

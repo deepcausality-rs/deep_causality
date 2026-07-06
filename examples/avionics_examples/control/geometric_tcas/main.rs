@@ -6,11 +6,11 @@
 //! # Geometric TCAS
 //!
 //! **Scenario**: Two aircraft on a converging course with potential pilot incapacitation.
-//! **System**: 'GeometricTCAS' monitors tracked entities, issues advisories, and executes **Autonomous Safety Interventions** via the `Intervenable` trait if cues are ignored.
+//! **System**: 'GeometricTCAS' monitors tracked entities, issues advisories, and executes **Autonomous Safety Interventions** via counterfactual value substitution if cues are ignored.
 //!
 //! **Key Concepts**:
 //! *   **Geometric Algebra**: Uses Bivector magnitude for singularity-free collision detection.
-//! *   **Causal Intervention**: Demonstrates the `Intervenable` trait.
+//! *   **Causal Intervention**: Demonstrates counterfactual value substitution.
 //!
 //! Each tick of the safety loop is one `CausalFlow`: `assess -> intervene? -> output -> integrate`.
 //! The auto-pilot takeover is a `branch` on the value, so the override runs only when the interlock

@@ -31,6 +31,8 @@ mod either_tests;
 mod endomorphism_tests;
 #[cfg(test)]
 mod foldable_tests;
+#[cfg(all(test, feature = "alloc"))]
+mod free_monad_tests;
 #[cfg(test)]
 mod functor_tests;
 #[cfg(test)]
