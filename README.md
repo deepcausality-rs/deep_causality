@@ -47,7 +47,7 @@
 
 <div align="center">
 
-[<img src="img/logo_background.jpg" width="900">](https://deepcausality.com)
+[<img src="https://raw.githubusercontent.com/deepcausality-rs/deep_causality/main/img/logo_background.jpg" width="900">](https://deepcausality.com)
 
 </div>
 
@@ -393,8 +393,8 @@ See [SECURITY.md](SECURITY.md) for security policies.
 
 <a href="https://www.causalcenter.com">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="img/causal_center_logo_dark.svg">
-    <img src="img/causal_center_logo.svg" alt="Center for Dynamic Causality" width="140">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/deepcausality-rs/deep_causality/main/img/causal_center_logo_dark.svg">
+    <img src="https://raw.githubusercontent.com/deepcausality-rs/deep_causality/main/img/causal_center_logo.svg" alt="Center for Dynamic Causality" width="140">
   </picture>
 </a>
 
