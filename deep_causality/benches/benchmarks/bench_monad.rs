@@ -7,7 +7,7 @@ use std::hint::black_box;
 
 use deep_causality::PropagatingEffect;
 use deep_causality::utils_test::test_utils_monad::*;
-use deep_causality_core::Intervenable;
+use deep_causality_core::AlternatableValue;
 
 fn bench_monad_pure(criterion: &mut Criterion) {
     criterion.bench_function("monad_pure_boolean", |bencher| {
@@ -39,22 +39,22 @@ fn bench_monad_bind_error_propagation(criterion: &mut Criterion) {
     });
 }
 
-fn bench_monad_intervene(criterion: &mut Criterion) {
+fn bench_monad_alternate_value(criterion: &mut Criterion) {
     let initial_effect = PropagatingEffect::pure(0.9);
-    criterion.bench_function("monad_intervene_value_replacement", |bencher| {
+    criterion.bench_function("monad_alternate_value_replacement", |bencher| {
         bencher.iter(|| {
             let effect = black_box(initial_effect.clone());
-            effect.intervene(0.1) // Intervene takes T, not EffectValue<T>
+            effect.alternate_value(0.1) // alternate_value takes T, not EffectValue<T>
         })
     });
 }
 
-fn bench_monad_chain_with_intervene(criterion: &mut Criterion) {
+fn bench_monad_chain_with_alternate_value(criterion: &mut Criterion) {
     let initial_effect = PropagatingEffect::pure(0.9);
-    criterion.bench_function("monad_chain_with_intervene", |bencher| {
+    criterion.bench_function("monad_chain_with_alternate_value", |bencher| {
         bencher.iter(|| {
             let effect = black_box(initial_effect.clone());
-            effect.bind(smoking_logic).intervene(false).bind(tar_logic)
+            effect.bind(smoking_logic).alternate_value(false).bind(tar_logic)
         })
     });
 }
@@ -66,6 +66,6 @@ criterion_group! {
         bench_monad_pure,
         bench_monad_bind_success,
         bench_monad_bind_error_propagation,
-        bench_monad_intervene,
-        bench_monad_chain_with_intervene,
+        bench_monad_alternate_value,
+        bench_monad_chain_with_alternate_value,
 }
