@@ -1,0 +1,21 @@
+deep_causality/benches/benchmarks/bench_monad.rs
+  s_cefbd789296ae8::t_bbbf21b83e073d 42,44,52,54,69-70
+  s_cefbd789296ae8::t_015a6b5534f41f 47
+  s_cefbd789296ae8::t_e259ee3a8bf8a5 10,57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "1a31c178b3d30de6320578d78ed026536a529e33",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
