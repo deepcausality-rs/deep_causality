@@ -1,0 +1,29 @@
+openspec/specs/lawful-effect-channel/spec.md
+  s_cefbd789296ae8::t_3a056211e86c0f 1-112
+openspec/changes/archive/2026-07-06-enforce-w-invariant/.openspec.yaml
+  s_cefbd789296ae8::t_78838f8346a52c 1-2
+openspec/changes/archive/2026-07-06-enforce-w-invariant/design.md
+  s_cefbd789296ae8::t_cc26d56149dea0 1-148
+openspec/changes/archive/2026-07-06-enforce-w-invariant/proposal.md
+  s_cefbd789296ae8::t_a2325830e7af94 1-70
+openspec/changes/archive/2026-07-06-enforce-w-invariant/specs/lawful-effect-channel/spec.md
+  s_cefbd789296ae8::t_71f22a1018f354 1-108
+openspec/changes/archive/2026-07-06-enforce-w-invariant/tasks.md
+  s_cefbd789296ae8::t_6f9a2741bef704 1-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "3f7bc7c33383e1e922cd4ec02f8e27af2ff56f6e",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
