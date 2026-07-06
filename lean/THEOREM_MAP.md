@@ -56,6 +56,11 @@ deviations recorded in `../openspec/notes/causal-algebra/haft-formalization-devi
 | `haft.profunctor.laws` | `dimap id id = id`; contravariant-twist composition | proved | `Haft/Profunctor.lean` | ✓ | n/a | — |
 | `haft.parametric_monad.laws` | Atkey indexed monad laws (IxState carrier) | proved | `Haft/ParametricMonad.lean` | ✓ | n/a | — |
 | `haft.monoidal_merge.merge_naturality` | `merge` is binatural (lax-monoidal structure map; trait renamed from `Promonad`, D3/P-1) | proved | `Haft/MonoidalMerge.lean` | ✓ | n/a | — |
+| `haft.free_monad.left_id` | `bind (pure a) k = k a` (free monad on a functor) | proved | `Haft/FreeMonad.lean` | ✓ | n/a | — |
+| `haft.free_monad.right_id` | `bind m pure = m` | proved | `Haft/FreeMonad.lean` | ✓ | n/a | — |
+| `haft.free_monad.assoc` | `bind (bind m f) g = bind m (λx. bind (f x) g)` | proved | `Haft/FreeMonad.lean` | ✓ | n/a | — |
+| `haft.free_monad.lift_bind` | `bind (lift op) k` runs `k` under the operation node | proved | `Haft/FreeMonad.lean` | ✓ | n/a | — |
+| `haft.free_monad.map_id` | `map id = id` (functor identity via right id) | proved | `Haft/FreeMonad.lean` | ✓ | n/a | — |
 | `haft.arrow.category_laws` | `id>>>f = f`; `f>>>id = f`; `>>>` associative | proved | `Haft/Arrow.lean` | ✓ | n/a | — |
 | `haft.arrow.arr_functor` | `arr id = id`; `arr (g∘f) = arr f >>> arr g` | proved | `Haft/Arrow.lean` | ✓ | n/a | — |
 | `haft.arrow.strength_laws` | Hughes' five `first` laws | proved | `Haft/Arrow.lean` | ✓ | n/a | — |
