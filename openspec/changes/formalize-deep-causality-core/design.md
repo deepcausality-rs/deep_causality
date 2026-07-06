@@ -3,13 +3,15 @@
 `deep_causality_core` sits one tier above `deep_causality_haft` (AGENTS.md dependency graph, Tier 1 →
 Tier 0). Haft is fully formalized (21 Lean files, 28 witnessed ids, deviations audit); core is not.
 The survey in `openspec/notes/causal-algebra/core-formalization-plan.md` enumerates the base→extension
-layering (§0), the 8-file Lean plan (§1), 17 deviations D1–D17 (§2), the Option-B control-channel
-decision (§2A), and a per-deviation resolution ledger (§2B). Two Core Lean files already exist:
-`CausalMonad.lean` (proved, 5 ids) and `EffectLog.lean` (proved but staged/un-bridged, 4 ids).
+layering (§0), the Lean file plan (§1), 17 deviations D1–D17 (§2), the control-channel decision (§2A,
+LANDED as `separate-control-channel`), and a per-deviation resolution ledger (§2B). Three Core Lean
+files already exist: `CausalMonad.lean` (proved, 5 ids, congruence-noted), `CausalArrow.lean` (proved,
+landed in `causal-arrow-state-threading`), and `EffectLog.lean` (proved but staged/un-bridged, 4 ids).
 
 The author's controlling decision (2026-07-06): **prove the clean, unconditional laws over corrected
 code**, not fragments with negative lemmas. This makes the formalization the *capstone* of the causal-
-algebra program — it targets code that two prior corrective changes have already fixed. The bridge
+algebra program — it targets code that two prior corrective changes have already fixed (both landed).
+The bridge
 mechanism is fixed by the existing infrastructure: a shared `THEOREM_MAP` id per statement, a bare-
 `lean`-checkable proof, an independent Rust witness, and a CI consistency gate
 (`.github/workflows/formalization.yml`). This design does not re-invent that; it applies it to core.
@@ -28,39 +30,41 @@ mechanism is fixed by the existing infrastructure: a shared `THEOREM_MAP` id per
 **Non-Goals:**
 - No runtime or public-API change in `deep_causality_core` (this change is additive verification).
 - Not implementing the two prerequisite corrections (`separate-control-channel`,
-  `causal-arrow-state-threading`) — they are separate changes, per the "depend on Option B first"
-  decision. This change is *blocked on them* and encodes their post-state.
+  `causal-arrow-state-threading`) — they are separate changes that have **already landed**. This change
+  encodes their post-state and neither re-implements nor folds them in.
 - Not the Pearl do-operator (deferred to the `deep_causality` hypergraph layer, D8) and not RFC-4180
   CSV quoting (D16 accepted as conditional).
 - No Mathlib dependency; no `sorry`; no change to the CI gate's rules.
 
 ## Decisions
 
-### D1. Depend on Option B first; prove clean laws (author decision)
+### D1. Prerequisites landed first; prove clean laws (author decision)
 The alternative — formalize current code with `{None,Value,ContextualLink}` fragment models and
-machine-checked negative lemmas for `RelayTo`/`Map`/panic (plan §1 as literally written) — was
+machine-checked negative lemmas for `RelayTo`/`Map`/panic (an earlier reading of plan §1) — was
 rejected. Rationale: the causal-algebra philosophy is "correct the implementation, don't just document
 deviations." Fragment+negative-lemma formalization *documents* D5/D6/D14/D15 permanently; proving clean
-laws over corrected code *retires* them. Cost: this change cannot start until both prerequisites land.
-Accepted, because it yields a formalization that describes the faithful implementation and unblocks
-`core.causal_monad.lawful`, the one claim blocked since the walking-skeleton era.
+laws over corrected code *retires* them. The two corrective changes have since landed, so this change
+now proceeds directly. It yields a formalization that describes the faithful implementation and
+unblocks `core.causal_monad.lawful`, the one claim blocked since the walking-skeleton era.
 
-### D2. Two hard prerequisites, not one
-The question posed named the control channel (Option B). But the clean-laws goal also requires the
-arrow to thread state, which is a *separate* pending correction (D2-full,
-`causal-arrow-state-threading-plan.md`). Both are prerequisites:
-- `separate-control-channel` → `EffectValue.lean`, `CausalCommand.lean`, `Consistency.lean`,
-  `CausalMonad.lean`'s `lawful`, `CausalFlow.lean`'s corrected `map` law.
-- `causal-arrow-state-threading` → `CausalArrow.lean`'s state-threading category laws.
-`CausalMonad.lean` (base 5 ids) and `EffectLog.lean` (4 ids) depend on *neither* — they can be
-finalized independently and are the natural first slice.
+### D2. Two prerequisites, both landed
+The control-channel correction (`separate-control-channel`) and the arrow state-threading correction
+(`causal-arrow-state-threading`) both landed. Their formalization footprint here:
+- `separate-control-channel` (deleted `EffectValue`; success channel is `CausalEffect<V> =
+  Free<CausalCommandWitness, Option<V>>`) → `CausalEffect.lean` (value functor = `Option`, cite haft),
+  `CausalCommand.lean`, `Consistency.lean`, `CausalMonad.lean`'s `lawful`, `CausalFlow.lean`'s corrected
+  `map` law.
+- `causal-arrow-state-threading` → `CausalArrow.lean`'s state-threading category laws (**already
+  authored and landed**; this change only verifies its registration).
+`CausalMonad.lean` (base 5 ids) and `EffectLog.lean` (4 ids) depend on the value-level laws only — they
+are the natural first slice.
 
-### D3. Nine Lean files, base→dependent order
-Execution order (each verified with bare `lean` before the next), extending plan §3 with the new
-`CausalCommand.lean`: `EffectLog` → `EffectValue` → `CausalCommand` → (`CausalMonad` reframe + add
-`lawful`) → `CausalArrow` → `Alternatable` → `CausalFlow` → `Consistency` → `Csv`. Each file is self-
-contained (no imports), transcribes the Rust carrier channel-for-channel (as `CausalMonad.lean`
-already does), cites the haft base id it extends, and proves only the delta.
+### D3. Eight Lean files, base→dependent order
+Execution order (each verified with bare `lean` before the next): `EffectLog` → `CausalEffect` →
+`CausalCommand` → (`CausalMonad` reframe + add `lawful`) → [`CausalArrow` already landed] →
+`Alternatable` → `CausalFlow` → `Consistency` → `Csv`. Each file is self-contained (no imports),
+transcribes the Rust carrier channel-for-channel (as `CausalMonad.lean` already does), cites the haft
+base id it extends, and proves only the delta.
 
 ### D4. Model fidelity via representative concrete carriers (haft house style)
 Lean cannot take an arbitrary Rust generic, so each proof uses the crate's own canonical instance with
@@ -91,19 +95,17 @@ witnesses are in place.
 
 ### D7. Deviation ledger finalized into an audit
 `core-formalization-plan.md` graduates to `core-formalization-deviations.md` (mirroring
-`haft-formalization-deviations.md`): every D1–D17 carries a terminal disposition. Post-prerequisite,
-the **Fix-planned** entries (D2, D5, D6, D14, D15) become **Fixed**; D9/D13/D16/D17 stay **Accepted
-property**; D11/D12 stay **Documented extension**; D8 stays **Deferred**. No open item remains.
+`haft-formalization-deviations.md`): every D1–D17 carries a terminal disposition. With the
+prerequisites landed, the former **Fix-planned** entries (D1, D2, D5, D6, D14, D15) are now **Fixed**;
+D9/D13/D16/D17 stay **Accepted property**; D11/D12 stay **Documented extension**; D8 stays
+**Deferred**. No open item remains.
 
 ## Risks / Trade-offs
 
-- **[Ordering: proofs written before prerequisites land would encode the deviations]** → This change is
-  explicitly gated. `tasks.md` puts the prerequisite-agnostic slice first (`EffectLog`, base
-  `CausalMonad`) and blocks the B-dependent files on a checked precondition (control channel separated;
-  arrow threads state). Apply MUST NOT proceed on a B-dependent file until its prerequisite is merged.
-- **[The two prerequisite changes are not yet OpenSpec changes (only notes)]** → Flagged in the
-  proposal Impact. They must be authored and landed first; this change references them by working name.
-  If the author wants them created now, that is a separate `propose` invocation.
+- **[Ordering: proofs written before prerequisites land would encode the deviations]** → Retired: both
+  prerequisites have landed and the workspace is green, so every Lean file targets the corrected code.
+  `tasks.md` still sequences the value-level slice (`EffectLog`, base `CausalMonad`) ahead of the
+  dependent files for clean incremental `lean` checks.
 - **[Lean positivity / trait-solver limits on the free monad]** → Mitigated by the proven haft
   technique (representative functor + `fold`-canonicalization); no new Lean capability required.
 - **[Witness drift: a Rust refactor silently breaks a law the point-witness doesn't catch]** → The
@@ -116,18 +118,17 @@ property**; D11/D12 stay **Documented extension**; D8 stays **Deferred**. No ope
 ## Migration Plan
 
 Not a runtime change — no deploy/rollback. Sequencing:
-1. Land `separate-control-channel` and `causal-arrow-state-threading` (prerequisites, separate changes).
-2. Finalize the prerequisite-independent slice: `EffectLog.lean` (bridge), `CausalMonad.lean` (reframe;
+1. Prerequisites `separate-control-channel` and `causal-arrow-state-threading` — **landed** (both
+   archived).
+2. Finalize the value-level slice: `EffectLog.lean` (bridge), `CausalMonad.lean` (reframe;
    `lawful` deferred to step 4). Witnesses + `THEOREM_MAP` rows.
-3. Author the B-dependent Lean files in the D3 order, each bare-`lean`-checked, each witnessed.
+3. Author the remaining Lean files in the D3 order, each bare-`lean`-checked, each witnessed
+   (`CausalArrow.lean` already exists — verify only).
 4. Add `core.causal_monad.lawful`; flip its `THEOREM_MAP` row to `proved`.
 5. `LEAN_CORE.md`, finalize the deviations audit, wire `lake build` + BUILD.bazel; run the full gate
    (`lake build`, `cargo test -p deep_causality_core`, `bazel test //...`).
 
 ## Open Questions
 
-- Should the two prerequisite changes be authored as OpenSpec changes now (so this change has concrete
-  dependency ids to reference), or left as design notes until scheduled? (Recommendation: author them
-  next, since this change is inert until they land.)
 - Kani breadth: which additional core ids (beyond the monad) warrant a bounded Kani harness vs. a
   point-witness — the arrow category laws are the strongest candidate. Resolve during apply.

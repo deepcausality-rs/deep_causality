@@ -24,7 +24,7 @@ the Haft layer. Core cites the base theorem and proves only the *causal extensio
 | Monad (Kleisli triple: left/right id, assoc) | `haft.monad.laws` | state threading + Writer log + `Except` error channel + W-invariant → laws preserved, **+ error left-zero** |
 | Arrow / Category (`arr`, `>>>`, id, assoc) | `haft.arrow.category_laws` | Kleisli category of the causal monad (`arr`=lift, `>>>`=`bind_or_error`) → category laws on the `Value | Err` fragment |
 | IO monad (`Io E A = Unit → Except E A`, triple laws) | `haft.io.laws` | core `IoAction` leaves add only concrete `run` bodies → **no new monad file**; only a conditional CSV round-trip lemma |
-| Maybe / Option functor | (implicit in `haft.functor.laws`) | `EffectValue`'s `{None, Value}` fragment ≅ `Option`; `ContextualLink` a trivial leaf; `RelayTo`/`Map` are the **P1 seam** |
+| Maybe / Option functor | (implicit in `haft.functor.laws`) | the success channel's value content **is** `Option<V>` (post `separate-control-channel`; `EffectValue` deleted); control is lifted out into `CausalEffect<V> = Free<CausalCommandWitness, Option<V>>` (`haft.free_monad.*`), so there is no P1 seam left to prove around |
 | Monoid | `num.add_monoid.*` (shape) | `EffectLog` = free monoid on messages (`List Λ`, `++`, `[]`), + append-only/monotone |
 
 The base laws are **reused, not restated**; the Core files reference the Haft id in their docstrings
@@ -40,29 +40,35 @@ new `deep_causality_core/tests/formalization_lean/` mirror (matching the haft co
    it already proves `left_id`, `right_id` (unconditional), `assoc`, `left_zero`. No new theorems.
 2. **`Core/EffectLog.lean`** — Writer monoid: `left_id`, `right_id`, `assoc`, `monotone_prefix`.
    ids `core.effect_log.{left_id,right_id,assoc,monotone}`.
-3. **`Core/EffectValue.lean`** — `into_from_roundtrip`, `maybe_section` (fragment ≅ Option),
-   `fmap_id`/`fmap_comp` (fragment functor), `relay_eq_target_only` (deviation, machine-checked).
-   ids `core.effect_value.*`.
-4. **`Core/CausalArrow.lean`** — Kleisli category of the causal monad: `category_laws`
-   (left/right id + assoc on the `Value|Err` fragment), `left_zero`; **plus** a machine-checked
-   refutation that right-identity fails once a stage emits `None` (deviation D1). ids
-   `core.causal_arrow.{category_laws,left_zero,right_id_conditional}`.
-5. **`Core/Alternatable.lean`** — the lens-setter family (value/state/context) + the `intervene`
-   alias: `set_get`, `set_set_proj` (idempotence up-to-log), `channel_independence`,
-   `error_noop`, `override`, and the honest refutation `not_setset_with_logs`. ids
-   `core.alternatable.*`, `core.intervene.*`.
+3. **`Core/CausalEffect.lean`** — the success channel `CausalEffect<V> = Free CausalCommand (Maybe V)`
+   (post `separate-control-channel`; `EffectValue` is deleted). The value functor is `Option`, so
+   `fmap_id`/`fmap_comp` cite haft's `Option` functor rather than a bespoke type; the free-monad laws
+   over `CausalCommand` cite `haft.free_monad.*`. Prove the single-hole **`CausalCommand` functor
+   laws** (identity + composition on the one hole) and `into_value = Maybe` projection. ids
+   `core.causal_command.functor_laws`, `core.causal_effect.into_value`. (Replaces the old
+   `EffectValue.lean`; no fragment/`relay_eq_target_only` refutation — the deviations are fixed, not
+   documented.)
+4. **`Core/CausalArrow.lean`** — *exists (landed in `causal-arrow-state-threading`).* Kleisli category
+   of the state-threading causal monad: `category_laws` (left/right id + assoc, threading state) and
+   `left_zero`, **unconditional** (no D1 `None`-collapse refutation — D1/D2 are fixed). ids
+   `core.causal_arrow.{category_laws,left_zero}`.
+5. **`Core/Alternatable.lean`** — the lens-setter family (value/state/context + `clear_context`):
+   `set_get`, `set_set_proj` (idempotence up-to-log), `channel_independence`, `error_noop`, and the
+   honest `not_setset_with_logs`. (No `intervene` alias — `Intervenable` was removed from core.) ids
+   `core.alternatable.*`.
 6. **`Core/CausalFlow.lean`** — facade lowering: `flow_iso` (≅ Process, `rfl`), `map_id`/`map_comp`,
-   `map_eq_andThen_on_value` (the seam), `iterate_n_zero`/`iterate_n_succ`, `branch_noop_on_error`/
+   `map_eq_andThen` on the value fragment, `iterate_n_zero`/`iterate_n_succ`, `branch_noop_on_error`/
    `branch_selects`, `recover_escapes_kleisli` (deviation D11, refutation), `finish_*` (projection,
    note log-drop). ids `core.causal_flow.*`.
 7. **`Core/Csv.lean`** — conditional codec round-trip `parse (render h rows) = h :: rows` under the
    comma/newline-free precondition (deviation D16). id `core.io.csv_roundtrip`.
-8. **`Core/Consistency.lean`** *(small)* — witness `pure`/`fmap` agreement (`rfl`), and the
-   machine-checked *disagreement* of the four `fmap`s off the `Value` carrier (deviation D15). ids
-   `core.witness.{agree,fmap_seam}`.
+8. **`Core/Consistency.lean`** *(small)* — witness `pure`/`fmap` **agreement** (`rfl`): post
+   `separate-control-channel` the witness `fmap`s are total and uniform (no panic, no seam), so this
+   proves agreement rather than the former disagreement (D15 fixed). id `core.witness.agree`.
 
-`LawfulMonad`/full-functor over the *complete* `EffectValue` (with `RelayTo`/`Map`) stays **blocked
-on P1** — not stated as a total theorem, consistent with `core.causal_monad.lawful`.
+`core.causal_monad.lawful` is now **provable** — P1 is resolved (control separated into
+`CausalCommand`/`CausalEffect`), so the carrier is the transformer stack `Except ∘ Free ∘ Maybe` of
+already-proven monads and the value-level `LawfulMonad` instance no longer waits on a fused type.
 
 ## 2. Deviations found (for review)
 
@@ -86,15 +92,17 @@ Severity: **[H]** shapes a law statement / correctness claim · **[M]** modeling
 - **D4 [L] — Vestigial `Clone` bounds.** `KleisliCompose` requires `State: Clone`, `Context: Clone`
   (`compose.rs:33-34`) that the lowering never uses. Harmless; note only.
 
-### EffectValue
+### EffectValue *(type deleted by `separate-control-channel`; D5/D6 resolved — see §2B ledger)*
 - **D5 [H] — `PartialEq` is a partial equivalence relation, not an equivalence.** `Map(_)==Map(_)`
   is always `false` (non-reflexive; `partial_eq.rs:16`) and `RelayTo` equality ignores its payload
   (target-only, not a congruence; `partial_eq.rs:14`). This is *why* `Map`/`RelayTo` are excluded
-  from the algebra (the P1 seam). *Recommend:* model the `{None, Value, ContextualLink}` fragment;
-  machine-check `relay_eq_target_only` to document the payload-drop.
+  from the algebra (the P1 seam). **Resolved:** `EffectValue` is deleted; the value functor is
+  `Option<V>` (a lawful congruence) and control (`RelayTo`) moved to `CausalEffect<V> =
+  Free<CausalCommandWitness, Option<V>>` with a structural congruent `PartialEq`. `Map` is gone.
 - **D6 [M] — `into_value` is lossy/partial.** Collapses `None`/`ContextualLink`/`RelayTo`/`Map` all
   to `Option::None` (`predicates.rs:37-42`), conflating "absent" with "dispatch/link". Faithful to
-  Maybe only on `{None, Value}`.
+  Maybe only on `{None, Value}`. **Resolved:** `CausalEffect::into_value` is the honest `Maybe`
+  projection — a command genuinely has no scalar value, so mapping it to `None` is faithful, not lossy.
 
 ### Intervenable / Alternatable
 - **D7 [M] — do-operator ≡ counterfactual substitution.** `Intervenable::intervene` is literally
@@ -115,8 +123,9 @@ Severity: **[H]** shapes a law statement / correctness claim · **[M]** modeling
   the lens/substitution laws for `intervene`; the semantic do-operator is a **deferred future item
   at the hypergraph layer** — architecturally supported, not yet built or formalized. The Lean
   `Alternatable`/`intervene` docstring states this scope explicitly and points forward to the
-  hypergraph layer. (Companion: the `RelayTo` P1 seam and this do-operator deferral are the two
-  places where the algebra intentionally stops at the core boundary and continues in
+  hypergraph layer. (Companion: with the `RelayTo` P1 seam now resolved — control lifted into
+  `CausalEffect`/`CausalCommand` by `separate-control-channel` — this do-operator deferral is the one
+  remaining place where the algebra intentionally stops at the core boundary and continues in
   `deep_causality`.)
 - **D9 [H] — Idempotence / set-set / absorption / commutation hold ONLY up-to-log.** Every setter
   unconditionally appends a marker on the success path (`alternatable_value.rs:27`,
@@ -158,36 +167,42 @@ Severity: **[H]** shapes a law statement / correctness claim · **[M]** modeling
   derived while `PartialEq` is hand-written; `add_entry` is nondeterministic (`SystemTime::now`).
   Sound and deliberate; note only.
 
-## 2A. Decision — separate the control channel from the value functor (Option B)
+## 2A. Decision — separate the control channel from the value functor (LANDED)
 
-**Decided (author): Option B.** `RelayTo` and `Map` are *control operations* (a computed jump; a
-dispatch table), not values, and their presence inside `EffectValue<T>` is the root conflation
-behind D5/D6/D14/D15 and the P1 block. Rather than making the conflation lawful in place (Option A:
-recursive `fmap` + structural eq on the fused type), we **end the conflation**: the value variants
-stay in `EffectValue`, the control operations move to a separate operation type consumed by a
-handler.
+**Decided (author) and landed as change `separate-control-channel`.** `RelayTo` and `Map` were
+*control operations* (a computed jump; a dispatch table), not values, and their presence inside
+`EffectValue<T>` was the root conflation behind D5/D6/D14/D15 and the P1 block. Rather than making the
+conflation lawful in place (Option A: recursive `fmap` + structural eq on the fused type), we **ended
+the conflation** — and the simplification went one step further than the original Option-B sketch:
+`EffectValue` was **deleted entirely** and its value content collapsed to `Option<V>`, while the two
+control operations were folded into a single-hole command functor lifted into a free monad.
 
 ```rust
-enum EffectValue<T> { None, Value(T), ContextualLink(ContextoidId, ContextoidId) }  // pure value functor
-enum CausalCommand<T> {                                                              // the operation functor `f`
-    RelayTo(usize, Box<PropagatingEffect<T>>),
-    Dispatch(HashMap<IdentificationValue, Box<PropagatingEffect<T>>>),               // was `Map`
-}
+// The success channel: value / none / command, unified in one free-monad newtype.
+pub struct CausalEffect<V>(Free<CausalCommandWitness, Option<V>>);
+//   Pure(Some v)                         = a value
+//   Pure(None)                           = the `None` effect (absence)
+//   Suspend(CausalCommand::RelayTo(t,k)) = a command (computed jump)
+
+pub enum CausalCommand<K> { RelayTo(usize, K) }   // single-hole operation functor; `Map`/`Dispatch` dropped (unused)
 ```
 
 This is the textbook **algebraic-effects / free-monad** shape (`Free f a = Pure a | Op (f (Free f a))`,
-Plotkin & Power 2003; Swierstra 2008): `EffectValue` = the value/`Pure` part, `CausalCommand` = the
-operation functor `f`, and the graph-reasoning BFS is the **handler** that interprets the jump. It
-makes `EffectValue` a lawful pointed functor *unconditionally* (total `fmap`, derivable congruent
-`PartialEq`, honest `into_value`, no fragment caveat) and **unblocks `core.causal_monad.lawful`**.
+Plotkin & Power 2003; Swierstra 2008): `Option<V>` = the value/`Pure` part, `CausalCommand` = the
+operation functor `f`, and the graph-reasoning traversal is the **handler** (`Free::fold`) that
+interprets the jump. `Option<V>` is a lawful functor already (cite `haft.functor.laws`), and
+`CausalEffect` gets a total `map`, a derivable congruent `PartialEq` (structural over the `RelayTo`
+tree), and an honest `into_value` — **unblocking `core.causal_monad.lawful`**.
 
-**Structuring:** the process outcome becomes a 3-way sum — `Value(EffectValue<V>) | Error(E) |
-Control(CausalCommand<V>)` — keeping the W-invariant on value/error and giving control its own arm
-(no re-widening of the carrier). **Scope:** this is a **breaking public-API change** to the adaptive-
-reasoning surface (causaloids emit a control-carrier instead of `EffectValue::RelayTo(..)`; ~4
-graph/CSM src consumers + ~7 test files move to the control arm). It is its **own OpenSpec change**
-(working name `separate-control-channel`, the proper resolution of P1), a sibling to
-`enforce-w-invariant` — not folded into the causal-arrow pass.
+**Structuring (as landed):** the process outcome is `Result<CausalEffect<V>, Error>` =
+`Except E (Free CausalCommand (Maybe V))` — the value-XOR-error W-invariant is preserved (the `Except`
+layer) and control lives inside the success channel as the `Free`'s `Suspend` layer, a **second left
+zero** of bind that the engine folds *before* any value-level bind. `EPP = CausalMonad ⊕ CausalEffect`.
+**Scope (as delivered):** a breaking change to the adaptive-reasoning surface — user `causal_fn`
+closures emit `CausalEffect::relay_to(..)` instead of `EffectValue::RelayTo(..)`, and the ~6
+reasoning-engine sites interpret the command via `command_target()` / `into_command()`. Landed as its
+own OpenSpec change `separate-control-channel` (the resolution of P1), archived
+`2026-07-06-separate-control-channel`; workspace + `bazel test //...` green.
 
 ## 2B. Resolution ledger (every deviation gets a disposition — the spec derives from this)
 
@@ -197,12 +212,12 @@ behavior; state precisely) · **Deferred** (correct home is another layer).
 
 | # | Disposition | Resolution |
 |---|---|---|
-| D1 right-id conditional | **Fixed** | `and_then` now propagates `None` lawfully (right identity holds); `RelayTo`/`Map` leave the value type under B, so the collapse cases vanish. |
+| D1 right-id conditional | **Fixed** | `and_then` now propagates `None` lawfully (right identity holds); with `separate-control-channel` landed, `RelayTo` left the value type into `CausalCommand`/`CausalEffect` and `Map` was deleted, so the collapse cases vanish. |
 | D2 state/ctx not threaded | **Fixed** | Landed as change `causal-arrow-state-threading` (Option B). There is now **one** Kleisli bind `CausalFlow::and_then : Fn(Value, State, Option<Context>) -> CausalFlow<U,S,C>` threading state exactly as the monad's `bind`, and **one** reified arrow stage `(A,S,Option<C>) -> CausalFlow<B,S,C>`; the stateless case is the specialization (`next` = value-only sugar `and_then(|v,_,_| p(v))`; `|a,_,_|` stages; `run_value`). The former state-discarding value-only `and_then` (the bug) is removed. Proved in `Core/CausalArrow.lean` (`core.causal_arrow.{category_laws,left_zero}`, reducing to the monad theorems) and witnessed by `arrow_threads_accumulated_state` / `arrow_error_short_circuit_preserves_state`. 960 bazel tests + lake build green. |
 | D3 arrow bind ≠ monad bind | **Fixed** | `and_then` preserves `None → None` (chosen policy), matching the lawful Maybe-Kleisli bind. |
 | D4 vestigial `Clone` bounds | **Fixed** | Removed from `KleisliCompose`; workspace builds + tests green. |
-| D5 `PartialEq` is a PER | **Fix-planned (B) — fully resolved** | Both offenders leave `EffectValue`: `Map`/`Dispatch` (non-reflexive) and `RelayTo` (target-only) move to `CausalCommand`. The residual `EffectValue = {None, Value, ContextualLink}` has a genuine equivalence/congruence — now plain `#[derive(PartialEq)]`. **Requirement:** `CausalCommand` gets a *structural* eq (`RelayTo` payload + `Dispatch` map compared recursively) — a lawful congruence replacing the broken one; for the free monad over `CausalCommand`, program equality is by `fold`-canonicalization (as in the haft free-monad witnesses), so a derived eq isn't even required. The PER is eliminated, not relocated. |
-| D6 `into_value` lossy | **Fix-planned (B) — resolved** | The defect was conflating "absent" with "dispatch" (`RelayTo`/`Map` → `None`); those leave. On the clean functor `into_value` is the faithful `Maybe` projection — `Value → Some`, `None`/`ContextualLink → None`. Total and honest: a `ContextualLink` genuinely has no scalar `T`. Distinguishing the two `None` reasons is `effect()`'s job, not `into_value`'s. |
+| D5 `PartialEq` is a PER | **Fixed** (landed in `separate-control-channel`) | `EffectValue` is deleted; the value functor is `Option<V>` (already a lawful congruence). Control (`RelayTo`) lives in `CausalEffect<V> = Free<CausalCommandWitness, Option<V>>` with a **structural** congruent `PartialEq` (walks the `RelayTo` tree recursively). The PER (`Map(_)==Map(_)=false`, target-only `RelayTo`) is eliminated. |
+| D6 `into_value` lossy | **Fixed** (landed) | `EffectValue` deleted; `CausalEffect::into_value` is the faithful `Maybe` projection (`Pure(Some v) → Some`, `Pure(None)`/command → `None`). Total and honest — a command genuinely has no scalar. |
 | D7 do ≡ counterfactual | **Fixed** | `Intervenable::intervene` **removed from core** (trait + blanket impl + files); the value-substitution operation is now spelled `alternate_value` everywhere (`CausalFlow::intervene`→`alternate_value`, `intervene_if`→`alternate_value_if`; all callers in core/cfd/examples/benches migrated). The name "intervene"/`do()` is reserved for the graph layer where the real operator lives — no value-level over-claim remains. |
 | D8 no graph mutilation | **Deferred** | True Pearl do-operator (graph surgery / variable isolation) belongs at the `deep_causality` Causaloid + hypergraph layer; core proves only the lens laws. |
 | D9 idempotence up-to-log | **Accepted property** | The success-path audit entry is deliberate (Writer). Lens laws hold on the value projection `proj`; state the projected laws + machine-check the full-carrier log growth. Not a bug. |
@@ -210,8 +225,8 @@ behavior; state precisely) · **Deferred** (correct home is another layer).
 | D11 `recover` = catch | **Documented extension** | `MonadError.catch`; a lawful extension beyond the Kleisli fragment (bind is left-zero on error). State its catch laws separately; keep. |
 | D12 `iterate_until`/`iterate_to_fixpoint` inject `MaxStepsExceeded` | **Documented extension** | Bounded-search / fixpoint combinators with an intended failure mode; document their own contracts; keep. |
 | D13 `finish` drops state/ctx/log | **Accepted property** | `finish` is the value-observation terminal (`Result<Value,Error>`); full extraction is via `into_process`/`into_parts`. Document the boundary. |
-| D14 `map` ≠ `bind(pure∘f)` off `Value` | **Fixed (via D3)** | Now that `and_then` preserves `None`, `map f = and_then(pure∘f)` holds on the full `EffectValue`. *(To verify with a witness test.)* |
-| D15 four disagreeing `fmap`s (one panics) | **Fix-planned (B) + must-fix bug** | Under B, `fmap` over the clean value functor is total/uniform and the `.expect` **panic** disappears; align the witness `fmap`s to the inherent one. The panic + non-reflexive `Map` eq are unconditional safety/soundness bugs to fix. |
+| D14 `map` ≠ `bind(pure∘f)` off `Value` | **Fixed** (landed) | The value functor is `Option`; `CausalEffect::map` is a **total** functor (maps `Option` leaves through the `Free`, including command sub-programs). `map f = bind(pure∘f)` holds on the value fragment (the monad-law surface). |
+| D15 four disagreeing `fmap`s (one panics) | **Fixed** (landed) | `CausalEffect::map` and the witness `fmap`s are total and uniform; the arity-5 `.expect` **panic is removed** (a value-less carrier maps to `None`, no manufactured error). The non-reflexive `Map` eq is gone with `Map`. |
 | D16 CSV round-trip conditional | **Accepted property** *(confirm)* | The round-trip theorem is conditional on comma/newline-free fields (no escaping). Document the precondition as a hypothesis; RFC-4180 quoting is a possible future hardening. (Flag for author.) |
 | D17 EffectLog timestamp/`PartialEq` | **Accepted property** | The timestamp-quotient in `PartialEq` is what makes the `List Λ` abstraction faithful; deliberate and sound. Document; not a bug. |
 
@@ -219,10 +234,13 @@ behavior; state precisely) · **Deferred** (correct home is another layer).
 vs add `clear_context`) and **D16** (document the CSV precondition vs implement RFC-4180 quoting).
 Once these two are settled, every deviation is resolved and the specification can be derived.
 
-**Order of changes:** the causal-arrow corrections (D2/D3/D4) are **done**. `separate-control-channel`
-(B — resolves D5/D6/D15 and completes D1) is the next change and should land the two must-fix bugs
-(the `fmap` panic, the `Map` reflexivity) as part of it. The Lean/witness formalization then targets
-the corrected code, so the proofs describe the faithful implementation rather than the deviations.
+**Order of changes:** both code prerequisites are now **landed**. The causal-arrow corrections
+(D2/D3/D4/D1) shipped in `causal-arrow-state-threading`; `separate-control-channel` (B) then deleted
+`EffectValue`, made the success channel `CausalEffect<V> = Free<CausalCommandWitness, Option<V>>`, and
+resolved D5/D6/D14/D15 — including the two must-fix bugs (the `fmap` panic and the `Map` reflexivity),
+both of which are gone with `EffectValue`. This formalization change therefore targets the corrected
+code directly: the Lean/witness proofs describe the faithful implementation, and no deviation remains
+to be documented as an accepted gap in the value/control channels.
 
 ## 3. Execution order
 

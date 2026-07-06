@@ -28,9 +28,10 @@ re-proving it. Every Lean theorem SHALL be closed with **zero `sorry`**.
 ### Requirement: The causal monad is verified as a lawful monad
 The `CausalEffectPropagationProcess` carrier SHALL be proven a lawful monad: left identity, right
 identity (unconditional, including errored carriers), associativity, and error left-zero, citing
-`haft.monad.laws` as the base and proving only the state/context/log/error extension. Once the control
-channel is separated (prerequisite `separate-control-channel`), the full `LawfulMonad`-with-effect
-claim `core.causal_monad.lawful` SHALL be stated and closed — it SHALL NOT remain blocked on P1.
+`haft.monad.laws` as the base and proving only the state/context/log/error extension. With the control
+channel separated (`separate-control-channel`, landed), the full `LawfulMonad`-with-effect claim
+`core.causal_monad.lawful` SHALL be stated and closed — it SHALL NOT remain blocked on P1 (the carrier
+is now the transformer stack `Except ∘ Free ∘ Maybe` of already-proven monads).
 
 #### Scenario: The four base monad laws hold
 - **WHEN** `Core/CausalMonad.lean` is checked
@@ -38,7 +39,7 @@ claim `core.causal_monad.lawful` SHALL be stated and closed — it SHALL NOT rem
   their ids (`core.causal_monad.{left_id,right_id,assoc,left_zero}`) are witnessed
 
 #### Scenario: The lawful-monad claim is unblocked
-- **WHEN** the control channel has been separated and `Core/CausalMonad.lean` is checked
+- **WHEN** `Core/CausalMonad.lean` is checked (the control channel is separated)
 - **THEN** `core.causal_monad.lawful` is a closed theorem (not a `— blocked on P1` entry) with a Rust
   witness
 
@@ -53,43 +54,40 @@ the "staged — bridged in the core-formalization phase" tag removed).
 - **THEN** `core.effect_log.{left_id,right_id,assoc,monotone}` are closed, each has a passing Rust
   witness, and each has a `THEOREM_MAP.md` row with no "staged" qualifier
 
-### Requirement: The effect value is a lawful pointed functor
-Post `separate-control-channel`, `EffectValue = {None, Value, ContextualLink}` SHALL be proven a lawful
-pointed functor with **total** `fmap` (identity and composition holding on every constructor, no
-fragment restriction), a congruent structural equality, and an honest `into_value`/`from` round-trip
-that is the faithful `Maybe` projection (`Value → Some`, `None`/`ContextualLink → None`). No negative
-lemma about `RelayTo` payload-drop or `Map` non-reflexivity SHALL be required, because those variants
-no longer inhabit the type.
+### Requirement: The success channel is CausalEffect over a lawful Option value functor
+The success channel SHALL be proven to be `CausalEffect<V> = Free<CausalCommandWitness, Option<V>>`
+(landed in `separate-control-channel`, which deleted `EffectValue`), whose value content is `Option<V>`
+— a functor already proven lawful in haft. The formalization SHALL cite `haft.functor.laws` for the
+`Option` functor identity/composition rather than re-proving a bespoke type, and SHALL prove `into_value`
+is the honest `Maybe` projection (`Pure(Some v) → Some v`, `Pure(None) → None`, command → `None`). No
+negative lemma about `RelayTo` payload-drop or `Map` non-reflexivity SHALL be required, because those
+variants no longer inhabit the type.
 
-#### Scenario: Total functor laws
-- **WHEN** `Core/EffectValue.lean` is checked
-- **THEN** `core.effect_value.{fmap_id,fmap_comp}` are closed as total laws over all three
-  constructors, and are witnessed
+#### Scenario: Value functor cites the proven Option laws
+- **WHEN** `Core/CausalEffect.lean` is checked
+- **THEN** the value functor identity/composition are discharged by citing `haft.functor.laws`
+  (`Option`), with no bespoke value-type functor re-proof
 
 #### Scenario: Faithful Maybe projection
-- **WHEN** `into_value`/`from` and the `≅ Option` section are checked
-- **THEN** `core.effect_value.{into_from_roundtrip,maybe_section}` are closed and witnessed, with
-  `Value(v) ↦ Some v` and `None`/`ContextualLink ↦ None`
+- **WHEN** `into_value` is checked
+- **THEN** `core.causal_effect.into_value` is closed and witnessed, with `Pure(Some v) ↦ Some v` and
+  `Pure(None)`/command ↦ `None`
 
 ### Requirement: The control channel is a free monad over CausalCommand
-Post `separate-control-channel`, the control operations `CausalCommand` (`RelayTo`, `Dispatch`) SHALL
-be proven a functor, and the adaptive-reasoning program SHALL be the **free monad** on that functor,
-citing `haft.free_monad.*` for the monad laws. Program equality SHALL be by `fold`-canonicalization (as
-in the haft free-monad witnesses); a lawful congruent equality (structural over `RelayTo` payload and
-the `Dispatch` map) SHALL replace the former partial-equivalence relation.
+The control operation `CausalCommand { RelayTo }` SHALL be proven a single-hole functor, and the adaptive-reasoning program SHALL be the **free monad** on that functor, citing `haft.free_monad.*` for the monad laws (landed in `separate-control-channel`; the unused `Map`/`Dispatch` were deleted). Program equality SHALL be a lawful congruent structural equality over the `RelayTo` tree (walking target and payload recursively), replacing the former partial-equivalence relation.
 
 #### Scenario: CausalCommand is a lawful free-monad operation functor
 - **WHEN** `Core/CausalCommand.lean` is checked
-- **THEN** the `CausalCommand` functor laws are closed, and the free-monad laws over it hold (citing
-  `haft.free_monad.left_id`/`right_id`/`assoc`), with ids `core.causal_command.*` witnessed by
-  `fold`-canonicalization
+- **THEN** the single-hole `CausalCommand` functor laws are closed, and the free-monad laws over it hold
+  (citing `haft.free_monad.left_id`/`right_id`/`assoc`), with id `core.causal_command.functor_laws`
+  witnessed
 
 ### Requirement: The causal arrow is a lawful Kleisli category with state threading
-Post `causal-arrow-state-threading`, the causal arrow SHALL be proven the Kleisli category of the
-causal monad with **full state/context threading**: left identity, right identity, and associativity
-of `>>>`, plus the error `left_zero`, threading `(value, state, context)` exactly as the monad's
-`bind`. The proofs SHALL NOT carry an "the model erases `S,C`" caveat, and right identity SHALL hold
-unconditionally (the `and_then` `None`-collapse is corrected).
+The causal arrow SHALL be proven the Kleisli category of the causal monad with **full state/context
+threading** (`Core/CausalArrow.lean`, already landed in `causal-arrow-state-threading`): left identity,
+right identity, and associativity of `>>>`, plus the error `left_zero`, threading `(value, state,
+context)` exactly as the monad's `bind`. The proofs SHALL NOT carry an "the model erases `S,C`" caveat,
+and right identity SHALL hold unconditionally (the `and_then` `None`-collapse is corrected).
 
 #### Scenario: Category laws thread state and context
 - **WHEN** `Core/CausalArrow.lean` is checked
@@ -121,8 +119,9 @@ SHALL NOT appear (removed from core); `clear_context` SHALL be proven the `None`
 
 ### Requirement: The causal-flow facade laws hold and extensions are documented
 The `CausalFlow` facade SHALL be proven to lower faithfully: the `≅ Process` iso (`rfl`), functor
-identity/composition, and `map f = and_then(pure ∘ f)` holding on the **full** effect value (D14
-corrected). Operations that exceed the base monad — `recover` (`MonadError.catch`), `iterate_until` /
+identity/composition, and `map f = and_then(pure ∘ f)` on the value fragment (D14 corrected — `map` is
+a total functor over the `Option` leaves, including command sub-programs). Operations that exceed the
+base monad — `recover` (`MonadError.catch`), `iterate_until` /
 `iterate_to_fixpoint` (bounded search injecting `MaxStepsExceeded`), and `finish` (value-observation
 terminal that drops state/context/log) — SHALL be formalized as **documented extensions** with their
 own stated laws, not as monad sugar.
@@ -130,7 +129,7 @@ own stated laws, not as monad sugar.
 #### Scenario: Facade lowering and corrected map law
 - **WHEN** `Core/CausalFlow.lean` is checked
 - **THEN** `core.causal_flow.{flow_iso,map_id,map_comp,map_eq_andThen}` are closed and witnessed, with
-  `map_eq_andThen` holding on `None`/`ContextualLink` as well as `Value`
+  `map_eq_andThen` holding on the `None` effect as well as a `Value`
 
 #### Scenario: Extensions carry their own contracts
 - **WHEN** `recover`, the iterate combinators, and `finish` are formalized
@@ -149,9 +148,9 @@ not assumed away.
 
 ### Requirement: Witness functors agree with the inherent functor
 The HKT witness `fmap` implementations SHALL be proven to agree with the inherent `fmap` that
-`CausalFlow::map` uses, over the clean value functor (post `separate-control-channel`), for both the
+`CausalFlow::map` uses, over the clean value functor (`separate-control-channel`, landed), for both the
 effect and process witnesses. The former disagreement (deviation D15 — four `fmap`s diverging, one panicking via `.expect`)
-SHALL be gone: there SHALL be no panic path and no fragment on which the witnesses diverge.
+SHALL be gone: there SHALL be no panic path and no fragment on which the witnesses diverge (`CausalEffect::map` is total and uniform).
 
 #### Scenario: The functors coincide
 - **WHEN** `Core/Consistency.lean` is checked
@@ -165,7 +164,7 @@ D1–D17 SHALL carry a terminal disposition — **Fixed**, **Documented extensio
 or **Deferred** — with no item left as an open **Fix-planned** once its prerequisite change has landed.
 
 #### Scenario: No unresolved deviation remains
-- **WHEN** the finalized audit is reviewed after both prerequisite changes have landed
+- **WHEN** the finalized audit is reviewed (both prerequisite changes have landed)
 - **THEN** each of D1–D17 has a terminal disposition, and the two prior soft-flagged items (D10, D16)
   are settled
 

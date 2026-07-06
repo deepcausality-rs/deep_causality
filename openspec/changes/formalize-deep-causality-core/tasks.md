@@ -1,8 +1,8 @@
-## 1. Prerequisites (separate changes — must land before groups 4+)
+## 1. Prerequisites (separate changes — LANDED)
 
-- [ ] 1.1 Confirm `separate-control-channel` (control Option B) is merged: `RelayTo`/`Map` moved out of `EffectValue` into `CausalCommand`; the arity-5 `fmap` panic and non-reflexive `Map` equality gone
-- [ ] 1.2 Confirm `causal-arrow-state-threading` (arrow Option B) is merged: the arrow stage threads `(value, state, context)`; `and_then` preserves `None` lawfully
-- [ ] 1.3 Verify the corrected code is green (`bazel test //...`, `cargo test -p deep_causality_core`) before writing any B-dependent proof
+- [x] 1.1 `separate-control-channel` landed (archived `2026-07-06-separate-control-channel`): `EffectValue` **deleted**; the success channel is `CausalEffect<V> = Free<CausalCommandWitness, Option<V>>`; `RelayTo` moved into `CausalCommand`; `Map`/`Dispatch` deleted; the arity-5 `fmap` panic and non-reflexive `Map` equality gone
+- [x] 1.2 `causal-arrow-state-threading` landed (archived): the arrow stage threads `(value, state, context)`; `and_then` preserves `None` lawfully
+- [x] 1.3 Corrected code green (`bazel test //...`, workspace `cargo test`) — confirmed before writing any dependent proof
 
 ## 2. Witness mirror scaffolding
 
@@ -10,28 +10,28 @@
 - [ ] 2.2 Register the mirror in `deep_causality_core/tests/BUILD.bazel` (new `rust_test_suite` or existing suite entry; list `crate_features` explicitly — Bazel does not resolve Cargo feature transitivity)
 - [ ] 2.3 Wire the module into the crate's test tree so `cargo test -p deep_causality_core` discovers it
 
-## 3. Prerequisite-independent slice (no dependency on Option B)
+## 3. Prerequisite-independent slice
 
 - [ ] 3.1 `EffectLog.lean`: remove the "staged" qualifier from the four `THEOREM_MAP` tags; verify it typechecks with bare `lean`
 - [ ] 3.2 Add `effect_log_tests.rs` witnesses for `core.effect_log.{left_id,right_id,assoc,monotone}` (one `#[test]` per id) against the real `EffectLog`/`LogAppend`
 - [ ] 3.3 Add the four `core.effect_log.*` rows to `lean/THEOREM_MAP.md` (drop "staged"); register the file in `lean/DeepCausalityFormal.lean`
 - [ ] 3.4 `CausalMonad.lean`: reframe the docstring to cite `haft.monad.laws` as the base (delta-only framing); confirm the 5 existing ids still typecheck and are witnessed. Leave `lawful` for group 5.5
 
-## 4. Clean value functor + control channel (post `separate-control-channel`)
+## 4. Success channel: value functor + command functor (post `separate-control-channel`)
 
-- [ ] 4.1 `EffectValue.lean` (new): total `fmap_id`/`fmap_comp` over `{None, Value, ContextualLink}`; `into_from_roundtrip`; `maybe_section` (`≅ Option`). Bare-`lean` check
-- [ ] 4.2 `effect_value_tests.rs`: witnesses for `core.effect_value.{fmap_id,fmap_comp,into_from_roundtrip,maybe_section}`; `THEOREM_MAP` rows; add to `DeepCausalityFormal.lean`
-- [ ] 4.3 `CausalCommand.lean` (new): `CausalCommand` functor laws + the free monad over it, citing `haft.free_monad.*`; equality by `fold`-canonicalization; prove over a representative functor (positivity). Bare-`lean` check
-- [ ] 4.4 `causal_command_tests.rs`: witnesses for `core.causal_command.*` via `fold`-canonicalization; `THEOREM_MAP` rows; add to `DeepCausalityFormal.lean`
-- [ ] 4.5 `Consistency.lean` (new): `core.witness.agree` — witness `fmap` = inherent `fmap` on every carrier, no reachable panic. Bare-`lean` check
+- [ ] 4.1 `CausalEffect.lean` (new): the value content is `Option<V>`, so cite `haft.functor.laws` for `fmap_id`/`fmap_comp` rather than re-proving a bespoke type; prove `into_value` = the `Maybe` projection (`Pure(Some v) → Some`, `Pure(None)`/command → `None`). Bare-`lean` check. (Replaces the deleted `EffectValue.lean`.)
+- [ ] 4.2 `causal_effect_tests.rs`: witnesses for `core.causal_effect.into_value` and the `Option` functor citation; `THEOREM_MAP` rows; add to `DeepCausalityFormal.lean`. (18 unit tests already exist in `tests/types/causal_effect/`; add the theorem-mapped subset.)
+- [ ] 4.3 `CausalCommand.lean` (new): the single-hole `CausalCommand` functor laws (`fmap_id`/`fmap_comp` on the one hole) + the free monad over it, citing `haft.free_monad.*`; structural `RelayTo`-tree equality. Bare-`lean` check
+- [ ] 4.4 `causal_command_tests.rs`: witnesses for `core.causal_command.functor_laws`; `THEOREM_MAP` rows; add to `DeepCausalityFormal.lean`
+- [ ] 4.5 `Consistency.lean` (new): `core.witness.agree` — witness `fmap` = inherent `fmap` on every carrier; `CausalEffect::map` is total and uniform (no reachable panic, no `Map`-seam). Bare-`lean` check
 - [ ] 4.6 `consistency_tests.rs`: witness for `core.witness.agree`; `THEOREM_MAP` row; add to `DeepCausalityFormal.lean`
 
-## 5. Causal monad lawful + causal arrow (post both prerequisites)
+## 5. Causal monad lawful + causal arrow (P1 resolved; arrow file already landed)
 
-- [ ] 5.1 `CausalMonad.lean`: add `core.causal_monad.lawful` (now unblocked); bare-`lean` check
+- [ ] 5.1 `CausalMonad.lean`: add `core.causal_monad.lawful` (now unblocked — P1 resolved, carrier is `Except ∘ Free ∘ Maybe` of proven monads); bare-`lean` check. (The congruence docstring is already in place from `separate-control-channel`.)
 - [ ] 5.2 Witness `core.causal_monad.lawful`; flip its `THEOREM_MAP` row from "blocked on P1" to `proved`
-- [ ] 5.3 `CausalArrow.lean` (new): Kleisli `category_laws` + `left_zero` threading state/context; unconditional right identity (no `None → Err`, no `S,C`-erasure caveat). Bare-`lean` check
-- [ ] 5.4 `causal_arrow_tests.rs`: witnesses for `core.causal_arrow.{category_laws,left_zero}`, including the `f >>> arr id = f` case for a `None`-emitting stage; `THEOREM_MAP` rows; add to `DeepCausalityFormal.lean`
+- [ ] 5.3 `CausalArrow.lean` **already exists** (landed in `causal-arrow-state-threading`): Kleisli `category_laws` + `left_zero` threading state/context; unconditional right identity. Verify it is registered and its `THEOREM_MAP` rows are present — no new authoring needed
+- [ ] 5.4 `causal_arrow_tests.rs`: confirm witnesses for `core.causal_arrow.{category_laws,left_zero}` exist (`arrow_threads_accumulated_state` / `arrow_error_short_circuit_preserves_state`); add the `f >>> arr id = f` case for a `None`-emitting stage if not already covered
 - [ ] 5.5 Add a Kani harness for the arrow category laws (bounded, beyond point-witness) per design open question; record in the `THEOREM_MAP` `Kani` column
 
 ## 6. Lens family + flow facade + IO codec

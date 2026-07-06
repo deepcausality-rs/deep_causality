@@ -42,6 +42,45 @@ Design source: `core-formalization-plan.md §2A`; the reused machinery is `deep_
 
 ## Decisions
 
+### D0. FINAL SHAPE — the carrier's success channel *is* a free-monad effect (`CausalEffect`)
+After downstream investigation and the `invent` refinement, the design collapses to a **monad
+transformer stack of already-proven monads**, deleting the bespoke `EffectValue` entirely:
+
+```rust
+/// The effect of the effect-propagation process: a value or a command. A free-monad program over
+/// the control operation functor `CausalCommand`, with `Option<V>` (Maybe) value leaves.
+///   Pure(None)          = no value        Pure(Some(v))       = a value
+///   Suspend(RelayTo(..)) = an adaptive-reasoning jump (a command)
+struct CausalEffect<V>(Free<CausalCommandWitness, Option<V>>);
+
+outcome: Result<CausalEffect<V>, Error>     // = Except E (Free CausalCommand (Maybe V))
+```
+
+Rationale (author): "the effect is either a value, a command, or an error, but in any case it is an
+effect of the effect-propagation process." Value/none/command are unified as `Pure`/`Suspend` of one
+`Free`; error is the `Result`/`Except` channel. Consequences that supersede the earlier drafts below
+(D1–D6, which described an `EffectValue`-variant / `EffectPayload`-enum intermediate):
+- **`EffectValue` is deleted** (module + type + public export). Its `{None, Value}` become the
+  `Option<V>` leaf of the `Free`.
+- **No `EffectPayload` enum.** The success channel is the single newtype `CausalEffect<V>`.
+- **`CausalCommand<K> = { RelayTo(usize, K) }`** stays the single-hole operation functor;
+  `CausalCommandWitness: HKT + Functor` is its witness. `Map`/`Dispatch` and `ContextualLink` are
+  already deleted (dead).
+- **`fmap` is total** — maps the `Option` leaves through the `Free` (no `ValueNotAvailable` arm, no
+  panic); D14/D15 dissolve.
+- **`CausalEffect` needs manual `Debug`/`Clone`/`PartialEq`** (`Free` has none — recursive-GAT
+  limit); they walk the finite `RelayTo` tree. The carrier then `#[derive]`s as before.
+- **W-invariant** holds on `Result` (error XOR effect); **`Causable::evaluate` is unchanged**
+  (control still rides the success channel); the value-level monad errors defensively on a command
+  (unreachable — the engine folds control at the `evaluate` boundary).
+- **Formalization win:** `core.effect_value.*` theorems vanish into haft's `Option` functor +
+  `haft.free_monad.*` + the `Except`/effect-system laws; the causal monad is a composition of proven
+  monads, not a bespoke type.
+
+The decisions below (D1–D6) are retained as the derivation history; D0 is what gets built.
+
+### Superseded derivation (D1–D6)
+
 ### D1. Option B (separate) over Option A (make the fusion lawful)
 Option A — recursive `fmap` + structural eq on the fused `EffectValue` — keeps control inside the value
 functor, so `into_value` stays muddled ("a jump is not a value"). Option B matches the algebraic-effects

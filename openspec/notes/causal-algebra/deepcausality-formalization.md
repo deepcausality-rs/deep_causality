@@ -1,0 +1,23 @@
+Non-obvious gains
+1. The reasoning engine becomes a fold — a catamorphism with a universal property. Today the graph BFS discovers EffectValue::RelayTo by an ad-hoc match buried in a loop. Once a causaloid emits Free<CausalCommand, Maybe O>, the engine is Free::fold(pure_case, algebra). A catamorphism is the single most formalizable recursion scheme (fusion law, uniqueness), and haft already proves the fold/monad laws. So the engine's correctness factors into (i) the fold laws — done in haft — and (ii) the local correctness of one algebra step (jump to target, thread state/logs). That's a tractable proof obligation instead of "reason about a whole BFS."
+
+2. Program ≠ interpreter — the algebraic-effects superpower. A Free<CausalCommand, …> is inert data (a jump tree) until a handler runs it. That gives you multiple interpreters over the same program: the real graph BFS, a mock/no-graph test interpreter, a tracing interpreter, a counterfactual interpreter. You can test and reason about reasoning without a graph.
+
+3. Reasoning programs become statically inspectable. As data, a program's RelayTo targets can be validated before execution (all targets exist, no cycles, depth bounds) — today that's a runtime discovery. Static verification of causal models becomes possible.
+
+4. The formalization surface shrinks. Deleting EffectValue removes obligations rather than adding them: no bespoke core.effect_value.* functor theorems — you cite haft's Option functor + haft.free_monad.* + the Except laws. Fewer theorems, and they're compositions of proven ones.
+
+5. One uniform "terminal signal" law. Error and command are both left-zeros of bind (both short-circuit). The monad's halt story is one equation, not two special cases.
+
+Does it help formalize deep_causality? — Strongly, yes. This is the real prize.
+The crown jewel of deep_causality is the graph-reasoning engine, and it has been the hardest thing to formalize because it's entangled operational control flow. CausalEffect untangles it structurally:
+
+The causaloid gets a clean algebraic type: I → CausalEffect<O> = a Kleisli arrow into the free monad. That aligns exactly with the CausalArrow.lean I already proved (the Kleisli category of the causal monad) — the arrow and the effect now speak the same language. The causaloid graph is a composition of these arrows, interpreted by the fold. This is the substrate the causal-arrow generalization thesis (Arrow ⊋ causal monad) needs: the "dynamic/Kleisli" reasoning is the CausalEffect monad; the "static/non-Kleisli" structure (SURD, BRCD) operates on the data — the boundary becomes crisp instead of blurred.
+
+Adaptive reasoning gets a denotational semantics. RelayTo's meaning stops being "reset visited, clear the queue, enqueue target" (operational) and becomes a recursive equation: fold(Suspend(RelayTo(t,k))) = jump(t, fold(k)). That's something you can state and prove in Lean — the current code cannot be formalized as-is.
+
+It's the right home for the deferred do-operator / counterfactuals. The memory records that Pearl's do() (graph surgery) is deferred to the hypergraph layer, and that counterfactuals/composite-RCA are the eventual goal. Algebraic effects are precisely the substrate for that: an intervention is a program transformation or an alternate handler over the same Free program. The CausalEffect design is what makes "intervention as a handler" expressible later.
+
+So the honest answer to "is the extra churn worth it": beyond core cleanliness, this is the change that makes the downstream reasoning engine formalizable at all — it converts the one genuinely hard-to-verify part of deep_causality (adaptive graph reasoning) into a standard algebraic-effects fold, and it gives causaloids a type that plugs directly into the arrow/monad theorems already proven. That's a strategic unlock, not just a tidy-up.
+
+One caveat I won't hide: these are enablers, not the proofs themselves. The reasoning-engine formalization is still future work (its own OpenSpec change); CausalEffect makes it possible and clean rather than doing it. And the enablers are equally available in spirit from the cheaper EffectValue={None,Value} design if control still moves to CausalCommand — but only the full CausalEffect unification makes the causaloid output literally a free-monad program (rather than a value-or-a-separate-control-arm), which is what item 1/2/3 above actually require.
