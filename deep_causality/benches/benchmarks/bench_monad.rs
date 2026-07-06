@@ -54,7 +54,10 @@ fn bench_monad_chain_with_alternate_value(criterion: &mut Criterion) {
     criterion.bench_function("monad_chain_with_alternate_value", |bencher| {
         bencher.iter(|| {
             let effect = black_box(initial_effect.clone());
-            effect.bind(smoking_logic).alternate_value(false).bind(tar_logic)
+            effect
+                .bind(smoking_logic)
+                .alternate_value(false)
+                .bind(tar_logic)
         })
     });
 }

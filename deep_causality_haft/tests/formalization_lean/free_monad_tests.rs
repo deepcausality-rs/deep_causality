@@ -60,7 +60,7 @@ fn test_free_monad_left_identity() {
 #[test]
 fn test_free_monad_right_identity_single_hole() {
     let build = || opt_op(opt_op(Free::pure(7)));
-    let bound = build().bind(|a| Free::<OptionWitness, i32>::pure(a));
+    let bound = build().bind(Free::<OptionWitness, i32>::pure);
     assert_eq!(canon_opt(bound), canon_opt(build()));
 }
 
@@ -73,7 +73,7 @@ fn test_free_monad_right_identity_multi_hole() {
             vec_op(vec![Free::pure(2), Free::pure(3)]),
         ])
     };
-    let bound = build().bind(|a| Free::<VecWitness, i32>::pure(a));
+    let bound = build().bind(Free::<VecWitness, i32>::pure);
     assert_eq!(canon_vec(bound), canon_vec(build()));
 }
 
