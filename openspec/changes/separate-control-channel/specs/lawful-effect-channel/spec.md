@@ -5,11 +5,12 @@
 ### Requirement: Value-XOR-error is structurally unrepresentable as anything else
 The carrier `CausalEffectPropagationProcess<Value, State, Context, Error, Log>` SHALL encode its
 outcome as a single field of a **3-way sum** — `Value(EffectValue<Value>) | Error(Error) |
-Control(CausalCommand<Value>)` — where `EffectValue` is the pure value functor `{ None, Value,
-ContextualLink }` and `CausalCommand` is the control operation functor. The W-invariant SHALL hold on
-the value/error arms (a carrier holding both a value and an error SHALL NOT be constructible), and the
-control operation SHALL occupy its own arm rather than re-widening the value carrier. All fields SHALL
-be private, and every constructor SHALL be total over this representation.
+Control(Free<CausalCommandWitness, EffectValue<Value>>)` — where `EffectValue` is the pure value
+functor `{ None, Value, ContextualLink }` and the `Control` arm holds the adaptive-reasoning program
+as a `deep_causality_haft::Free` over the control operation functor `CausalCommand`. The W-invariant
+SHALL hold on the value/error arms (a carrier holding both a value and an error SHALL NOT be
+constructible), and the control program SHALL occupy its own arm rather than re-widening the value
+carrier. All fields SHALL be private, and every constructor SHALL be total over this representation.
 
 #### Scenario: Invalid state cannot be constructed
 - **WHEN** any code outside `deep_causality_core`'s carrier module attempts to construct a carrier
@@ -23,9 +24,9 @@ be private, and every constructor SHALL be total over this representation.
   cannot fail)
 
 #### Scenario: Control is a distinct arm
-- **WHEN** a causaloid emits a `RelayTo` or `Dispatch` control operation
-- **THEN** the carrier holds `Control(CausalCommand::RelayTo(..))` / `Control(CausalCommand::Dispatch(..))`,
-  `value()` returns `None`, and `error()` returns `None`
+- **WHEN** a causaloid emits a `RelayTo` control operation
+- **THEN** the carrier holds `Control(Free::Suspend(CausalCommand::RelayTo(..)))`, `value()` returns
+  `None`, and `error()` returns `None`
 
 ### Requirement: Accessor surface
 The carrier SHALL expose read access exclusively through getters:
@@ -36,8 +37,8 @@ errored, `None`-effect, `ContextualLink`, or control carrier),
 (the owned, borrowing/consuming counterparts of `value()`),
 `effect() -> Option<&EffectValue<Value>>` (the value wrapper, for discriminating the `None` /
 `Value` / `ContextualLink` variants only),
-`control() -> Option<&CausalCommand<Value>>` (the control operation, `Some` only on a `Control`
-carrier — for the reasoning handler to dispatch `RelayTo`/`Dispatch`),
+`control() -> Option<&Free<CausalCommandWitness, EffectValue<Value>>>` (the control program, `Some`
+only on a `Control` carrier — the `Free` the reasoning engine folds to resolve `RelayTo`),
 `error() -> Option<&Error>`, `state() -> &State`, `context() -> &Option<Context>`,
 `logs() -> &Log`, and the predicates `is_ok()` / `is_err()` generalized to all `State` and `Context`
 parameters.
@@ -52,6 +53,6 @@ parameters.
   `None`, and `control()` returns `None`
 
 #### Scenario: Control carrier exposes its operation
-- **WHEN** `control()` is called on a carrier holding `Control(CausalCommand::RelayTo(target, inner))`
-- **THEN** it returns `Some(&CausalCommand::RelayTo(target, inner))`, while `value()`, `effect()`, and
+- **WHEN** `control()` is called on a carrier holding a `Control` program `RelayTo(target, sub)`
+- **THEN** it returns `Some(&Free<CausalCommandWitness, EffectValue<Value>>)`, while `value()`, `effect()`, and
   `error()` all return `None`

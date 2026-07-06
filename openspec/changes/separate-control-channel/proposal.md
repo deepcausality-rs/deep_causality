@@ -17,32 +17,35 @@ operation functor `f`, and the existing graph-reasoning BFS is the handler that 
 
 ## What Changes
 
-- **BREAKING** Remove `RelayTo` and `Map` from `EffectValue<T>`, leaving the pure value functor
-  `EffectValue<T> = { None, Value(T), ContextualLink(id, id) }`. This makes `EffectValue` a lawful
-  pointed functor unconditionally: total `fmap`, a derivable **congruent** `PartialEq`
-  (`#[derive]`-able), and an honest `into_value`.
-- **BREAKING** Add the control operation functor
-  `CausalCommand<T> = { RelayTo(usize, Box<PropagatingEffect<T>>), Dispatch(HashMap<IdentificationValue, Box<PropagatingEffect<T>>>) }`
-  (`Map` renamed to `Dispatch`), with a `Functor` instance and a **structural** congruent equality
-  (compare `RelayTo` payload and the `Dispatch` map recursively) replacing the broken PER.
+- **BREAKING** Remove the **dead** `Map` variant of `EffectValue` entirely (verified: constructed only
+  in its own unit tests) — not renamed, deleted with `is_map` and its tests.
+- **BREAKING** Remove `RelayTo` from `EffectValue<T>`, leaving the pure value functor
+  `EffectValue<T> = { None, Value(T), ContextualLink(id, id) }` — a lawful pointed functor
+  unconditionally: total `fmap`, a **derived** congruent `PartialEq`, and an honest `into_value`.
+- **BREAKING** Add the control operation functor `CausalCommand<K> = { RelayTo(usize, K) }` (single
+  hole `K`) with `CausalCommandWitness: HKT + Functor`, and make the adaptive-reasoning program a
+  **`deep_causality_haft::Free<CausalCommandWitness, EffectValue<V>>`** — reusing the haft free monad:
+  `EffectValue` is the `Pure` part, `CausalCommand` is the operation functor `f`, and the graph BFS is
+  `Free::fold` (the F-algebra handler). The free-monad laws come from `haft.free_monad.*`; this change
+  proves only that `CausalCommandWitness` is a lawful functor.
 - **BREAKING** Widen the carrier outcome to a 3-way sum: `Value(EffectValue<V>) | Error(E) |
-  Control(CausalCommand<V>)` — keeping the W-invariant on the value/error arms and giving control its
-  own arm (no re-widening of the value carrier). Add a `control() -> Option<&CausalCommand<Value>>`
-  accessor; `effect()` now discriminates only `{None, Value, ContextualLink}`.
-- Fix the two must-fix bugs that fall out for free: the arity-5 `fmap` **panic** disappears (uniform
-  total `fmap` over the clean functor), and the non-reflexive `Map` equality is gone.
-- Migrate the adaptive-reasoning consumers to the control arm: the graph-reasoning handlers
-  (`graph_reasoning/mod.rs`, `graph_reasoning/stateful.rs`), the CSM evaluator (`csm/eval.rs`), and the
-  stateful causaloid path (`causable_stateful.rs`) read `Control(CausalCommand::RelayTo/Dispatch)`
-  instead of `EffectValue::RelayTo/Map`.
+  Control(Free<CausalCommandWitness, EffectValue<V>>)` — W-invariant on the value/error arms, control
+  its own arm. Add `control() -> Option<&Free<CausalCommandWitness, EffectValue<Value>>>`; `effect()`
+  discriminates only `{None, Value, ContextualLink}`.
+- Fix the two must-fix bugs that fall out for free: the arity-5 `fmap` **panic** disappears, and the
+  non-reflexive `Map` equality is gone.
+- Rewrite the adaptive-reasoning handlers (`graph_reasoning/mod.rs`, `graph_reasoning/stateful.rs`) as
+  a `Free::fold` over the control program; migrate the CSM evaluator (`csm/eval.rs`) and stateful
+  causaloid path (`causable_stateful.rs`) to the `Control` arm — behavior preserved.
 
 ## Capabilities
 
 ### New Capabilities
-- `control-channel`: The separated control operation functor `CausalCommand` and its role as the
-  operation functor of the adaptive-reasoning free monad — its `Functor` instance, its structural
-  congruent equality, and the carrier's `Control` arm and `control()` accessor. Defines the value/
-  control separation and the handler seam.
+- `control-channel`: The removal of the dead `Map`; the separated single-operation control functor
+  `CausalCommand<K> { RelayTo(usize, K) }` and its `CausalCommandWitness: HKT + Functor`; the
+  adaptive-reasoning program as `haft::Free<CausalCommandWitness, EffectValue<V>>`; the carrier's
+  `Control` arm + `control()` accessor; and the reasoning handler as `Free::fold`. Defines the
+  value/control separation and the free-monad handler seam.
 
 ### Modified Capabilities
 - `lawful-effect-channel`: The carrier outcome changes from `Result<EffectValue<Value>, Error>` to the
@@ -56,10 +59,14 @@ operation functor `f`, and the existing graph-reasoning BFS is the handler that 
 - **BREAKING public API** (`deep_causality_core`): `EffectValue` variants removed; the carrier outcome
   type; `predicates.rs` (`is_relay_to`/`is_map`), `partial_eq.rs`, `from.rs`, `display.rs`, `hkt.rs`,
   and the process getters. `deep_causality_core` version bump.
-- **Consumers** (`deep_causality`): ~4 src sites (graph reasoning ×2, CSM eval, stateful causaloid) +
-  ~7 test files move to the `Control` arm. Causaloids emit a control carrier instead of
-  `EffectValue::RelayTo(..)`.
-- **Formalization unblocked:** `core.causal_monad.lawful`, plus clean `EffectValue.lean`,
-  `CausalCommand.lean`, and `Consistency.lean` (no panic, functors agree) in the downstream change.
-- **Risk:** medium — a breaking change across a crate boundary. Mitigated by the small, enumerated
-  consumer set and full `bazel test //...` coverage.
+- **New dependency use:** `deep_causality_core` now uses `deep_causality_haft::Free`/`FreeWitness`
+  (already a dependency); the control arm and `CausalCommand` are `alloc`-gated exactly as the haft
+  `Free` is.
+- **Consumers** (`deep_causality`): the graph-reasoning handlers (×2) are **rewritten as a `Free::fold`**
+  (larger than a match-arm swap); CSM eval + stateful causaloid + ~7 test files move to the `Control`
+  arm. Causaloids emit a control program instead of `EffectValue::RelayTo(..)`.
+- **Formalization:** proves `CausalCommandWitness` functor laws here (citing `haft.free_monad.*`);
+  unblocks `core.causal_monad.lawful` plus clean `EffectValue.lean` / `Consistency.lean` downstream.
+- **Risk:** medium-high — a breaking change across a crate boundary **and** a reasoning-engine refactor
+  to a fold. Mitigated by the single-hole operation functor (simplest case), the fold algebra
+  transcribing the current BFS, and full `bazel test //...` + graph-reasoning regression coverage.
