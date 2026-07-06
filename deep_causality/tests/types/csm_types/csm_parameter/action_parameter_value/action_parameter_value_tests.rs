@@ -53,20 +53,6 @@ fn test_action_parameter_value_boolean_false() {
     }
 }
 
-#[test]
-fn test_action_parameter_value_contextual_link() {
-    let context_id = 100u64;
-    let contextoid_id = 200u64;
-    let value = ActionParameterValue::ContextualLink(context_id, contextoid_id);
-    match value {
-        ActionParameterValue::ContextualLink(cid, ctxoid) => {
-            assert_eq!(cid, 100);
-            assert_eq!(ctxoid, 200);
-        }
-        _ => panic!("Expected ContextualLink variant"),
-    }
-}
-
 // ============================================================================
 // Display Trait Tests
 // ============================================================================
@@ -97,13 +83,6 @@ fn test_display_boolean() {
     let value = ActionParameterValue::Boolean(true);
     let display = format!("{}", value);
     assert_eq!(display, "ActionParameterValue::Boolean: true");
-}
-
-#[test]
-fn test_display_contextual_link() {
-    let value = ActionParameterValue::ContextualLink(1, 2);
-    let display = format!("{}", value);
-    assert_eq!(display, "ActionParameterValue::ContextualLink(1, 2)");
 }
 
 // ============================================================================

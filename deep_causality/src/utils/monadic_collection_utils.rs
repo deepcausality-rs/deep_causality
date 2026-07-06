@@ -3,24 +3,24 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{AggregateLogic, CausalityError, CausalityErrorEnum};
-use deep_causality_core::EffectValue;
+use deep_causality_core::CausalEffect;
 use deep_causality_uncertain::{Uncertain, UncertainBool, UncertainF64};
 
 /// Defines how to aggregate a collection of effects of type T.
 pub trait Aggregatable: Sized {
     fn aggregate(
-        effects: &[EffectValue<Self>],
+        effects: &[CausalEffect<Self>],
         logic: &AggregateLogic,
         threshold: Option<f64>,
-    ) -> Result<EffectValue<Self>, CausalityError>;
+    ) -> Result<CausalEffect<Self>, CausalityError>;
 }
 
 /// Main dispatcher function for aggregation.
 pub fn aggregate_effects<T: Aggregatable>(
-    effects: &[EffectValue<T>],
+    effects: &[CausalEffect<T>],
     logic: &AggregateLogic,
     threshold_value: Option<f64>,
-) -> Result<EffectValue<T>, CausalityError> {
+) -> Result<CausalEffect<T>, CausalityError> {
     if effects.is_empty() {
         return Err(CausalityError::new(CausalityErrorEnum::Custom(
             "Cannot aggregate empty collection".to_string(),
@@ -31,18 +31,19 @@ pub fn aggregate_effects<T: Aggregatable>(
 
 impl Aggregatable for bool {
     fn aggregate(
-        effects: &[EffectValue<bool>],
+        effects: &[CausalEffect<bool>],
         logic: &AggregateLogic,
         _threshold: Option<f64>,
-    ) -> Result<EffectValue<bool>, CausalityError> {
+    ) -> Result<CausalEffect<bool>, CausalityError> {
         let bools: Result<Vec<bool>, _> = effects
             .iter()
-            .map(|e| match e {
-                EffectValue::Value(b) => Ok(*b),
-                _ => Err(CausalityError::new(CausalityErrorEnum::Custom(format!(
-                    "Expected Value(bool), found {:?}",
-                    e
-                )))),
+            .map(|e| {
+                e.as_value().copied().ok_or_else(|| {
+                    CausalityError::new(CausalityErrorEnum::Custom(format!(
+                        "Expected Value(bool), found {:?}",
+                        e
+                    )))
+                })
             })
             .collect();
 
@@ -53,24 +54,25 @@ impl Aggregatable for bool {
             AggregateLogic::None => bools.iter().all(|&b| !b),
             AggregateLogic::Some(k) => bools.iter().filter(|&&b| b).count() >= *k,
         };
-        Ok(EffectValue::Value(final_bool))
+        Ok(CausalEffect::value(final_bool))
     }
 }
 
 impl Aggregatable for f64 {
     fn aggregate(
-        effects: &[EffectValue<f64>],
+        effects: &[CausalEffect<f64>],
         logic: &AggregateLogic,
         _threshold: Option<f64>,
-    ) -> Result<EffectValue<f64>, CausalityError> {
+    ) -> Result<CausalEffect<f64>, CausalityError> {
         let probs: Result<Vec<f64>, _> = effects
             .iter()
-            .map(|e| match e {
-                EffectValue::Value(p) => Ok(*p),
-                _ => Err(CausalityError::new(CausalityErrorEnum::Custom(format!(
-                    "Expected Value(f64), found {:?}",
-                    e
-                )))),
+            .map(|e| {
+                e.as_value().copied().ok_or_else(|| {
+                    CausalityError::new(CausalityErrorEnum::Custom(format!(
+                        "Expected Value(f64), found {:?}",
+                        e
+                    )))
+                })
             })
             .collect();
 
@@ -84,16 +86,16 @@ impl Aggregatable for f64 {
                 if count >= *k { 1.0 } else { 0.0 }
             }
         };
-        Ok(EffectValue::Value(final_prob))
+        Ok(CausalEffect::value(final_prob))
     }
 }
 
 impl Aggregatable for UncertainBool {
     fn aggregate(
-        effects: &[EffectValue<UncertainBool>],
+        effects: &[CausalEffect<UncertainBool>],
         logic: &AggregateLogic,
         threshold: Option<f64>,
-    ) -> Result<EffectValue<UncertainBool>, CausalityError> {
+    ) -> Result<CausalEffect<UncertainBool>, CausalityError> {
         let threshold = threshold.ok_or_else(|| {
             CausalityError::new(CausalityErrorEnum::Custom(
                 "Threshold is required for uncertain aggregation".to_string(),
@@ -102,12 +104,13 @@ impl Aggregatable for UncertainBool {
 
         let u_bools: Result<Vec<UncertainBool>, _> = effects
             .iter()
-            .map(|e| match e {
-                EffectValue::Value(ub) => Ok(ub.clone()),
-                _ => Err(CausalityError::new(CausalityErrorEnum::Custom(format!(
-                    "Expected Value(UncertainBool), found {:?}",
-                    e
-                )))),
+            .map(|e| {
+                e.as_value().cloned().ok_or_else(|| {
+                    CausalityError::new(CausalityErrorEnum::Custom(format!(
+                        "Expected Value(UncertainBool), found {:?}",
+                        e
+                    )))
+                })
             })
             .collect();
 
@@ -151,16 +154,16 @@ impl Aggregatable for UncertainBool {
                 Uncertain::<bool>::point(true_count >= *k)
             }
         };
-        Ok(EffectValue::Value(final_ubool))
+        Ok(CausalEffect::value(final_ubool))
     }
 }
 
 impl Aggregatable for UncertainF64 {
     fn aggregate(
-        _effects: &[EffectValue<UncertainF64>],
+        _effects: &[CausalEffect<UncertainF64>],
         _logic: &AggregateLogic,
         _threshold: Option<f64>,
-    ) -> Result<EffectValue<UncertainF64>, CausalityError> {
+    ) -> Result<CausalEffect<UncertainF64>, CausalityError> {
         Err(CausalityError::new(CausalityErrorEnum::Custom(
             "Direct aggregation of UncertainF64 is not supported. Convert to UncertainBool first."
                 .to_string(),

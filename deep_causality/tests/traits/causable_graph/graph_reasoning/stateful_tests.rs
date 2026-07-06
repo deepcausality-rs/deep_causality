@@ -23,7 +23,7 @@ struct CounterState {
 struct ConfigCtx {}
 
 fn node_increment(
-    obs: EffectValue<u64>,
+    obs: CausalEffect<u64>,
     mut state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
@@ -31,11 +31,11 @@ fn node_increment(
     state.count += 1;
     let mut logs = EffectLog::new();
     logs.add_entry(&format!("node_increment count={}", state.count));
-    PropagatingProcess::new(Ok(EffectValue::Value(val)), state, ctx, logs)
+    PropagatingProcess::new(Ok(CausalEffect::value(val)), state, ctx, logs)
 }
 
 fn node_failing(
-    _obs: EffectValue<u64>,
+    _obs: CausalEffect<u64>,
     state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
@@ -52,17 +52,17 @@ fn node_failing(
 }
 
 fn node_relay_to_two(
-    _obs: EffectValue<u64>,
+    _obs: CausalEffect<u64>,
     mut state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
     state.count += 1;
     // Emit a RelayTo pointing at index 2 with an inner stateless effect.
-    let inner = PropagatingEffect::from_value(99u64);
+
     let mut logs = EffectLog::new();
     logs.add_entry("node_relay_to_two: emitted RelayTo(2)");
     PropagatingProcess::new(
-        Ok(EffectValue::RelayTo(2, Box::new(inner))),
+        Ok(CausalEffect::relay_to(2, CausalEffect::value(99u64))),
         state,
         ctx,
         logs,
@@ -93,7 +93,7 @@ fn build_three_node_path() -> CausaloidGraph<Causaloid<u64, u64, CounterState, C
 
 fn build_initial() -> PropagatingProcess<u64, CounterState, ConfigCtx> {
     PropagatingProcess::new(
-        Ok(EffectValue::Value(7)),
+        Ok(CausalEffect::value(7)),
         CounterState::default(),
         Some(ConfigCtx {}),
         EffectLog::new(),
@@ -374,7 +374,7 @@ fn evaluate_shortest_path_stateful_returns_on_a_relay() {
     let out = g.evaluate_shortest_path_between_causes_stateful(0, 2, &build_initial());
     assert!(out.is_ok(), "got {:?}", out.error());
     assert!(
-        matches!(out.effect(), Some(EffectValue::RelayTo(2, _))),
+        out.command_target() == Some(2),
         "the walk returns the relaying node's process"
     );
 }

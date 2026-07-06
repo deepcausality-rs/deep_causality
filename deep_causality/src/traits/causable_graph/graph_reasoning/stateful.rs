@@ -9,7 +9,7 @@
 //! invokes [`crate::StatefulMonadicCausable::evaluate_stateful`] on each node,
 //! threading the per-node `state` and `context` into the next node's incoming
 //! process. The `RelayTo` adaptive-jump branch is preserved: when a node
-//! returns `EffectValue::RelayTo(target, inner)` the relayed-to node receives
+//! returns a `RelayTo` command the relayed-to node receives
 //! a `PropagatingProcess` whose `state` and `context` are the ones the
 //! relaying node carried at the moment of relay.
 //!
@@ -18,7 +18,6 @@
 //! [`crate::Causaloid::from_causal_graph_with_context`].
 
 use crate::*;
-use deep_causality_haft::LogAppend;
 use std::collections::VecDeque;
 use std::fmt::Debug;
 use ultragraph::GraphTraversal;
@@ -144,12 +143,11 @@ where
                 return result;
             }
 
-            match result.effect() {
-                Some(EffectValue::RelayTo(target_index, inner_effect)) => {
+            // Interpret the output effect (the `Free::fold` handler, inlined for `RelayTo`).
+            match result.command_target() {
+                Some(target_idx) => {
                     visited.fill(false);
                     queue.clear();
-
-                    let target_idx = *target_index;
 
                     if !self.contains_causaloid(target_idx) {
                         return raise_from(
@@ -162,21 +160,23 @@ where
 
                     visited[target_idx] = true;
 
-                    // Lift the stateless inner effect into a stateful process,
-                    // preserving the state and context the relaying node carried.
-                    let inner = (**inner_effect).clone();
-                    let (inner_outcome, _unit_state, _no_context, inner_logs) = inner.into_parts();
-                    let mut combined_logs = inner_logs;
-                    combined_logs.append(&mut last_propagated.logs().clone());
+                    // The relayed input is the command's sub-program folded to its value, lifted into
+                    // a stateful process with the state, context, and logs the relaying node carried.
+                    let sub_value = result
+                        .into_parts()
+                        .0
+                        .ok()
+                        .and_then(CausalEffect::into_command)
+                        .and_then(|(_, sub)| sub.into_value());
                     let relayed: PropagatingProcess<V, S, C> = PropagatingProcess::new(
-                        inner_outcome,
+                        Ok(CausalEffect::from_option(sub_value)),
                         last_propagated.state().clone(),
                         last_propagated.context().clone(),
-                        combined_logs,
+                        last_propagated.logs().clone(),
                     );
                     queue.push_back((target_idx, relayed));
                 }
-                _ => {
+                None => {
                     let children = match self.get_graph().outbound_edges(current_index) {
                         Ok(c) => c,
                         Err(e) => {
@@ -267,7 +267,7 @@ where
                 return current;
             }
 
-            if let Some(EffectValue::RelayTo(_, _)) = current.effect() {
+            if current.command_target().is_some() {
                 return current;
             }
         }

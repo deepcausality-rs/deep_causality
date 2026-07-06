@@ -6,7 +6,7 @@
 use deep_causality::{
     CausableGraph, Causaloid, CausaloidGraph, MonadicCausableGraphReasoning, PropagatingEffect,
 };
-use deep_causality_core::EffectValue;
+use deep_causality_core::CausalEffect;
 
 type TestGraph = CausaloidGraph<Causaloid<bool, bool, (), ()>>;
 
@@ -33,10 +33,7 @@ fn inverter(obs: bool) -> PropagatingEffect<bool> {
 
 fn relayer(_: bool) -> PropagatingEffect<bool> {
     // Relay to node 2 with value false
-    PropagatingEffect::from_effect_value(EffectValue::RelayTo(
-        2,
-        Box::new(PropagatingEffect::pure(false)),
-    ))
+    PropagatingEffect::from_effect(CausalEffect::relay_to(2, CausalEffect::value(false)))
 }
 
 #[test]

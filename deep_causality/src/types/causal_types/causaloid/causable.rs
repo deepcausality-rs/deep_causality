@@ -13,7 +13,6 @@ use crate::types::causal_types::causaloid::causable_utils;
 use crate::{
     Causable, CausalityError, Causaloid, CausaloidType, MonadicCausable, PropagatingEffect,
 };
-use deep_causality_core::EffectValue;
 use std::fmt::Debug;
 
 /// Implements the `Causable` trait for `Causaloid`.
@@ -89,14 +88,19 @@ where
                         |input, _, _| causable_utils::execute_causal_logic(input, self),
                         "Cannot evaluate: input value after logging is None",
                     )
-                    .bind(|output_effect_val, _, _| match output_effect_val {
-                        EffectValue::Value(v) => causable_utils::log_output(v, self.id),
-                        EffectValue::None => PropagatingEffect::from_error(CausalityError(
-                            deep_causality_core::CausalityErrorEnum::Custom(
-                                "Causaloid::evaluate: causal_fn returned None output".into(),
-                            ),
-                        )),
-                        _ => PropagatingEffect::from_effect_value(output_effect_val),
+                    .bind(|output_effect_val, _, _| {
+                        // A command output passes through unchanged for the reasoning engine to fold.
+                        if output_effect_val.is_command() {
+                            return PropagatingEffect::from_effect(output_effect_val);
+                        }
+                        match output_effect_val.into_value() {
+                            Some(v) => causable_utils::log_output(v, self.id),
+                            None => PropagatingEffect::from_error(CausalityError(
+                                deep_causality_core::CausalityErrorEnum::Custom(
+                                    "Causaloid::evaluate: causal_fn returned None output".into(),
+                                ),
+                            )),
+                        }
                     })
             }
 
