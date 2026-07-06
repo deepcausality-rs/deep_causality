@@ -6,13 +6,13 @@
 //! # DeepCausality Starter Example: Pearl's Ladder of Causation
 //!
 //! This example demonstrates the three rungs of Pearl's Ladder using
-//! `PropagatingEffect` and the `Intervenable` trait from `deep_causality_core`.
+//! `PropagatingEffect` and the `AlternatableValue` trait from `deep_causality_core`.
 //!
 //! **Causal Model:** Smoking (Nicotine) → Tar → Cancer
 //!
 //! Run with: `cargo run -p starter_example`
 
-use deep_causality_core::{Intervenable, PropagatingEffect};
+use deep_causality_core::{AlternatableValue, PropagatingEffect};
 
 fn main() {
     println!();
@@ -73,7 +73,7 @@ fn rung1_association() {
 /// "What happens if I intervene and MAKE someone stop smoking?"
 /// do(Tar := 0.1)
 ///
-/// This uses `intervene()` to force a value mid-chain, breaking natural flow.
+/// This uses `alternate_value()` to force a value mid-chain, breaking natural flow.
 fn rung2_intervention() {
     println!("═══ RUNG 2: INTERVENTION (Doing) ═══");
     println!("Question: What if we intervene and force tar removal mid-chain?");
@@ -97,7 +97,7 @@ fn rung2_intervention() {
             let n = nic.into_value().unwrap_or_default();
             PropagatingEffect::pure(nicotine_to_tar(n)) // Tar would be 0.8
         })
-        .intervene(0.1) // ← INTERVENTION: Force tar to 0.1 (medical treatment)
+        .alternate_value(0.1) // ← INTERVENTION: Force tar to 0.1 (medical treatment)
         .bind(|tar, _, _| {
             let t = tar.into_value().unwrap_or_default();
             PropagatingEffect::pure(tar_to_cancer(t))
@@ -133,7 +133,7 @@ fn rung2_intervention() {
 /// "Given that a patient has cancer and was a smoker, would they still have
 ///  gotten cancer if they had never smoked?"
 ///
-/// We use `intervene()` at the START of the chain to simulate "never smoked".
+/// We use `alternate_value()` at the START of the chain to simulate "never smoked".
 fn rung3_counterfactual() {
     println!("═══ RUNG 3: COUNTERFACTUAL (Imagining) ═══");
     println!("Question: Would this cancer patient have gotten cancer if they never smoked?");
@@ -153,7 +153,7 @@ fn rung3_counterfactual() {
     // COUNTERFACTUAL: Same chain, but intervene at the START
     // "What if nicotine had been 0 from the beginning?"
     let counterfactual = PropagatingEffect::pure(0.8_f64)
-        .intervene(0.0) // ← Counterfactual: "Had they never smoked"
+        .alternate_value(0.0) // ← Counterfactual: "Had they never smoked"
         .bind(|nic, _, _| {
             let n = nic.into_value().unwrap_or_default();
             PropagatingEffect::pure(nicotine_to_tar(n))

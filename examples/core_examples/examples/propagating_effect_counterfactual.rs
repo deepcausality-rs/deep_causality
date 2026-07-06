@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{EffectLog, Intervenable, PropagatingEffect};
+use deep_causality_core::{AlternatableValue, EffectLog, PropagatingEffect};
 use deep_causality_haft::LogAddEntry;
 
 fn main() {
@@ -15,9 +15,9 @@ fn main() {
     // In complex systems, we often need to understand NOT just what happened, but what *would*
     // have happened if conditions were different.
     //
-    // The `Intervenable` trait allows you to take an existing causal chain (process) and
-    // computationally "intervene" to override a value, then observe the downstream effects
-    // WITHOUT mutating source data or restarting the entire application.
+    // The `AlternatableValue` trait allows you to take an existing causal chain (process) and
+    // computationally substitute a value (counterfactual value substitution), then observe the
+    // downstream effects WITHOUT mutating source data or restarting the entire application.
     //
     // This is fundamental for:
     // - **Explainable AI**: "Why did the drone crash? Because sensor A was 0. If it were 1..."
@@ -72,9 +72,9 @@ fn main() {
     log_a.add_entry(&format!("Initialized A with value: {}", a_factual));
     let effect_a: PropagatingEffect<i32> = PropagatingEffect::from_value_with_log(a_factual, log_a); // Actually 10
 
-    // INTERVENE immediately to change the value from 10 to 5
-    // The intervene method automatically adds a log entry "Intervened: value set to 5"
-    let effect_a_intervened = effect_a.intervene(5);
+    // Substitute the value immediately to change it from 10 to 5
+    // The alternate_value method automatically adds a log entry "Intervened: value set to 5"
+    let effect_a_intervened = effect_a.alternate_value(5);
 
     // Run the SAME logic
     let effect_c_counterfactual = effect_a_intervened.bind(|val_a, _state, _ctx| {

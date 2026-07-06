@@ -20,7 +20,7 @@
 //! Each patient's two potential outcomes come from the same data-generating
 //! process under two different `do`-operators. One `PropagatingEffect`
 //! chain models the blood-pressure response to an (unknown) treatment
-//! indicator; `.intervene(1.0)` and `.intervene(0.0)` produce the two
+//! indicator; `.alternate_value(1.0)` and `.alternate_value(0.0)` produce the two
 //! potential outcomes. Per-patient differences are individual treatment
 //! effects; their subgroup mean is the CATE.
 //!
@@ -29,7 +29,7 @@
 //! Without it, you would build two separate computations, one per arm, and
 //! trust by reading them that they are the same model on different inputs.
 //! With it, one chain runs twice. Any difference in the output is
-//! attributable to the intervened value alone, because nothing else
+//! attributable to the alternate value alone, because nothing else
 //! changed between the two runs.
 
 mod model;

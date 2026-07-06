@@ -10,7 +10,7 @@
 //! monitor watches the offset after every simulation tick. When the
 //! drift exceeds the anomaly threshold, a P-controller produces the
 //! corrected offset and feeds it back into the chain via
-//! `.intervene(corrected)`. The next bind sees the corrected value, not
+//! `.alternate_value(corrected)`. The next bind sees the corrected value, not
 //! the drifted one. The loop continues from the corrected state.
 //!
 //! Two trajectories run side by side.
@@ -23,7 +23,7 @@
 //!   value.
 //!
 //! Same chain, same simulation stage, same drift schedule. The only
-//! difference is whether `.intervene` is wired into the loop. The
+//! difference is whether `.alternate_value` is wired into the loop. The
 //! catastrophic outcome of the open-loop run is the failure the
 //! corrective interventions prevent.
 
@@ -51,7 +51,7 @@ fn main() {
     println!(
         "\nThe open-loop trajectory exceeds the lane half-width and is\n\
          marked off-road. The closed-loop trajectory uses the same drift\n\
-         schedule, but each anomaly triggers an `.intervene(corrected)`\n\
+         schedule, but each anomaly triggers an `.alternate_value(corrected)`\n\
          call that snaps most of the deviation away. The vehicle stays\n\
          inside the lane for the full run."
     );
@@ -84,7 +84,7 @@ fn run_closed_loop() -> LaneProcess<FloatType> {
                         state.correction_count += 1;
                         state
                     })
-                    .intervene_if(|_| true, |offset| model::correction(offset, &cfg))
+                    .alternate_value_if(|_| true, |offset| model::correction(offset, &cfg))
                 },
                 |cold| cold,
             )
