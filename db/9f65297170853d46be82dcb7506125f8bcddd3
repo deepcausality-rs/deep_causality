@@ -1,0 +1,129 @@
+examples/causal_uncertain_examples/sensor_processing/model.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 17
+  s_cefbd789296ae8::t_01996344f12f6b 8,10,69,113,122,167,172,236,241,269,274,308,313,344
+examples/quantum_examples/quantum_counterfactual/main.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 19
+  s_cefbd789296ae8::t_01996344f12f6b 76,94,117
+examples/classical_causality_examples/classical_via_causal_monad/cate/main.rs
+  s_cefbd789296ae8::t_01996344f12f6b 31,123,139
+examples/csm_examples/csm_effect_ethos/model.rs
+  s_cefbd789296ae8::t_01996344f12f6b 47,49
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 6-7
+examples/classical_causality_examples/classical_via_causal_monad/dbn/main.rs
+  s_cefbd789296ae8::t_01996344f12f6b 36,153
+examples/classical_causality_examples/classical_via_causaloid/granger/model.rs
+  s_cefbd789296ae8::t_01996344f12f6b 45,47
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 7-8
+examples/causal_counterfactual_examples/counterfactual_cascade_failure/model.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 13
+  s_cefbd789296ae8::t_01996344f12f6b 79,103,115,143
+examples/physics_examples/laser_resonator_stability/main.rs
+  s_cefbd789296ae8::t_01996344f12f6b 74,95,122,144
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 13
+examples/classical_causality_examples/classical_via_causaloid/cate/main.rs
+  s_cefbd789296ae8::t_01996344f12f6b 72
+examples/causal_correction_examples/corrective_network_failover/model.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 11
+  s_cefbd789296ae8::t_01996344f12f6b 32,69,74
+examples/causal_counterfactual_examples/counterfactual_cascade_failure/main.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 42
+  s_cefbd789296ae8::t_01996344f12f6b 69
+examples/core_examples/examples/propagating_process.rs
+  s_cefbd789296ae8::t_01996344f12f6b 6,69,90
+examples/classical_causality_examples/classical_via_causaloid/scm/model.rs
+  s_cefbd789296ae8::t_01996344f12f6b 10,100
+examples/causal_uncertain_examples/sensor_processing/main.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 30
+  s_cefbd789296ae8::t_01996344f12f6b 42
+examples/avionics_examples/control/flight_envelope_monitor/model.rs
+  s_cefbd789296ae8::t_01996344f12f6b 15,147,155,177,204,210,239,245,280,292,296,307,311,322,326,346,350,364,368,379,436
+examples/classical_causality_examples/classical_via_causal_monad/rcm/model.rs
+  s_cefbd789296ae8::t_01996344f12f6b 6,31,47
+examples/classical_causality_examples/classical_via_causal_monad/granger/main.rs
+  s_cefbd789296ae8::t_01996344f12f6b 26,94
+examples/causal_uncertain_examples/gps_navigation/model.rs
+  s_cefbd789296ae8::t_01996344f12f6b 10
+examples/causal_correction_examples/corrective_ddos_detector/model.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 13
+  s_cefbd789296ae8::t_01996344f12f6b 118,182,187
+examples/medicine_examples/aneurysm_risk/main.rs
+  s_cefbd789296ae8::t_79f08574a5a14d 16
+  s_cefbd789296ae8::t_a31cf1c92e06f7 60
+examples/causal_uncertain_examples/gps_navigation/main.rs
+  s_cefbd789296ae8::t_01996344f12f6b 11
+examples/avionics_examples/navigation/ins_gnss_blackout/model.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 18
+  s_cefbd789296ae8::t_01996344f12f6b 164,193,199,293
+examples/causal_uncertain_examples/clinical_trial/README.md
+  s_cefbd789296ae8::t_01996344f12f6b 29,47
+examples/physics_examples/carnot_cycle_engine/main.rs
+  s_cefbd789296ae8::t_01996344f12f6b 96,128,162,193
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 12
+examples/causal_discovery_examples/ml/ml_rca/model.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 11
+  s_cefbd789296ae8::t_01996344f12f6b 209,227,252,287
+examples/causal_uncertain_examples/gps_navigation/README.md
+  s_cefbd789296ae8::t_01996344f12f6b 16,32
+examples/causal_correction_examples/corrective_glucose_pump/model.rs
+  s_cefbd789296ae8::t_01996344f12f6b 19,52,68
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 11
+examples/avionics_examples/navigation/magnav/model.rs
+  s_cefbd789296ae8::t_6d8260d8df24c1 172
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 7
+examples/mathematics_examples/composable_multi_math/effect_tensor_algebra_roundtrip/main.rs
+  s_cefbd789296ae8::t_01996344f12f6b 55
+examples/classical_causality_examples/classical_via_causaloid/cate/model.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 8-9
+  s_cefbd789296ae8::t_01996344f12f6b 16,18
+examples/physics_examples/bernoulli_flow_network/main.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 12
+  s_cefbd789296ae8::t_01996344f12f6b 116,134,152
+examples/csm_examples/csm_context/model.rs
+  s_cefbd789296ae8::t_01996344f12f6b 6,117,119
+examples/chronometric_examples/gm_recovery/pipeline.rs
+  s_cefbd789296ae8::t_01996344f12f6b 26
+  s_cefbd789296ae8::t_79f08574a5a14d 30
+  s_cefbd789296ae8::t_a31cf1c92e06f7 232
+examples/avionics_examples/control/flight_envelope_monitor/main.rs
+  s_cefbd789296ae8::t_01996344f12f6b 70
+examples/classical_causality_examples/classical_via_causal_monad/scm/main.rs
+  s_cefbd789296ae8::t_01996344f12f6b 28,154,171
+examples/causal_uncertain_examples/clinical_trial/model.rs
+  s_cefbd789296ae8::t_01996344f12f6b 11
+examples/causal_counterfactual_examples/counterfactual_envelope_fault/model.rs
+  s_cefbd789296ae8::t_01996344f12f6b 18,28,39,48,83,88,98
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 11
+examples/causal_correction_examples/corrective_decompression_stops/model.rs
+  s_cefbd789296ae8::t_01996344f12f6b 22,64,79
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 12
+examples/mathematics_examples/effect_helpers.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 21-22
+  s_cefbd789296ae8::t_01996344f12f6b 69
+examples/causal_correction_examples/corrective_lane_keeping/model.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 11
+  s_cefbd789296ae8::t_01996344f12f6b 19,49,62
+examples/avionics_examples/control/geometric_tcas/model.rs
+  s_cefbd789296ae8::t_79f08574a5a14d 13
+  s_cefbd789296ae8::t_6d8260d8df24c1 92
+examples/core_examples/examples/propagating_process_counterfactual.rs
+  s_cefbd789296ae8::t_01996344f12f6b 66,109
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 7
+examples/causal_uncertain_examples/README.md
+  s_cefbd789296ae8::t_01996344f12f6b 25,37,39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "db9f65297170853d46be82dcb7506125f8bcddd3",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
