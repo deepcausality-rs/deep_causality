@@ -72,7 +72,7 @@ fn try_step_err_short_circuits() {
 #[test]
 fn and_then_chains_flows() {
     let out = CausalFlow::value(2i64)
-        .and_then(|x| CausalFlow::value(x * 5))
+        .next(|x| CausalFlow::value(x * 5))
         .finish();
     assert_eq!(out, Ok(10));
 }
@@ -352,7 +352,7 @@ fn finish_on_none_value_yields_error() {
 
 #[test]
 fn next_composes_whole_pipelines() {
-    // Each pipeline is a Value -> CausalFlow function; `next` wires them like stages.
+    // Each pipeline is a `Value -> CausalFlow` function; `next` wires them like stages.
     fn add_one(x: i64) -> CausalFlow<i64> {
         CausalFlow::value(x).map(|v| v + 1)
     }

@@ -54,23 +54,23 @@ fn main() {
     // returns a `PropagatingEffect`, adapted with `.into()`; the flow hands the raw state to each
     // step and short-circuits on error rather than swallowing it with `unwrap_or_default`.
     CausalFlow::value(GrmhdState::new(&config))
-        .and_then(|s| {
+        .next(|s| {
             println!("\n[Step 1] GR Solver: Calculating Spacetime Curvature...");
             model::calculate_curvature(s).into()
         })
-        .and_then(|s| {
+        .next(|s| {
             println!("\n[Step 2] Causal Coupling: Configuring MHD Solver...");
             model::select_metric(s).into()
         })
-        .and_then(|s| {
+        .next(|s| {
             println!("\n[Step 3] MHD Solver: Calculating Plasma Confinement...");
             model::calculate_lorentz_force(s).into()
         })
-        .and_then(|s| {
+        .next(|s| {
             println!("\n[Step 4] GRMHD Coupling: Calculating EM Stress-Energy...");
             model::calculate_energy_momentum(s).into()
         })
-        .and_then(|s| {
+        .next(|s| {
             println!("\n[Step 5] Stability Analysis...");
             model::analyze_stability(s).into()
         })
