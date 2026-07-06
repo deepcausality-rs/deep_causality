@@ -130,7 +130,7 @@ fn analyze_with_monad(label: &str, points: Vec<f64>) -> Result<(), Box<dyn std::
         .into_effect();
 
     // Extract and display the final result
-    if let Some(analysis) = result.value.into_value() {
+    if let Some(analysis) = result.value_cloned() {
         println!("\n=== {} Results ===", analysis.label);
         println!(
             "  Simplices: {} vertices, {} edges, {} faces",

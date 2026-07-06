@@ -42,7 +42,10 @@ fn main() {
 
     // Initial State: Account Balance $1000
     let initial_balance: TransactionEffect<i32> = MyMonadEffect5::pure(1000);
-    println!("Initial Balance: ${}", initial_balance.value);
+    println!(
+        "Initial Balance: ${}",
+        initial_balance.value.unwrap_or_default()
+    );
 
     // Define Transaction Steps
     // Each step returns a TransactionEffect that modifies the balance AND emits effects.
@@ -50,9 +53,9 @@ fn main() {
     let debit_step = |amount: i32| {
         Box::new(move |balance: i32| -> TransactionEffect<i32> {
             if balance < amount {
-                // Failure Case
+                // Failure Case: a well-formed errored carrier holds no value.
                 MyCustomEffectType5 {
-                    value: balance,
+                    value: None,
                     f1: Some("Insufficient Funds".to_string()),
                     f2: vec!["Failed Debit".to_string()],
                     f3: vec![10], // Cost of check
@@ -61,7 +64,7 @@ fn main() {
             } else {
                 // Success Case
                 MyCustomEffectType5 {
-                    value: balance - amount,
+                    value: Some(balance - amount),
                     f1: None,
                     f2: vec![format!("Debited ${}", amount)],
                     f3: vec![50], // Cost of transaction
@@ -75,7 +78,7 @@ fn main() {
         Box::new(move |balance: i32| -> TransactionEffect<i32> {
             let tax = balance * rate_percent / 100;
             MyCustomEffectType5 {
-                value: balance - tax,
+                value: Some(balance - tax),
                 f1: None,
                 f2: vec![format!("Applied Tax ${} ({}%)", tax, rate_percent)],
                 f3: vec![5], // Cost of calculation
@@ -87,7 +90,7 @@ fn main() {
     let credit_bonus = |bonus: i32| {
         Box::new(move |balance: i32| -> TransactionEffect<i32> {
             MyCustomEffectType5 {
-                value: balance + bonus,
+                value: Some(balance + bonus),
                 f1: None,
                 f2: vec![format!("Credited Bonus ${}", bonus)],
                 f3: vec![20],
@@ -110,12 +113,12 @@ fn main() {
         println!(
             "Step {} complete. Current Balance: ${}",
             i + 1,
-            current_tx.value
+            current_tx.value.unwrap_or_default()
         );
     }
 
     println!("\n--- Final Transaction Report ---");
-    println!("Final Balance: ${}", current_tx.value);
+    println!("Final Balance: ${}", current_tx.value.unwrap_or_default());
     println!(
         "Status:        {:?}",
         current_tx.f1.unwrap_or("Success".to_string())
@@ -127,7 +130,7 @@ fn main() {
     );
     println!("System Trace:  {:?}", current_tx.f4);
 
-    assert_eq!(current_tx.value, 770); // (1000 - 200) * 0.9 + 50 = 800 * 0.9 + 50 = 720 + 50 = 770
+    assert_eq!(current_tx.value, Some(770)); // (1000 - 200) * 0.9 + 50 = 720 + 50 = 770
     assert_eq!(current_tx.f3.iter().sum::<u64>(), 75); // 50 + 5 + 20
 
     println!("\n--- 2. Failed Transaction Pipeline ---");
@@ -135,10 +138,9 @@ fn main() {
     // Re-initialize for the second run since the previous one was moved
     let initial_balance_2: TransactionEffect<i32> = MyMonadEffect5::pure(1000);
 
-    // Pipeline: Debit $2000 (Overdraft) -> Apply Tax (Should happen but context is failed)
-    // Note: In this simple implementation, bind continues execution but carries the error.
-    // A robust implementation would short-circuit on error (like Result).
-    // Here we show how the error state is preserved.
+    // Pipeline: Debit $2000 (Overdraft) -> Apply Tax.
+    // Bind short-circuits on error (raise is a left zero): the tax step never runs, the
+    // error and the audit trail accumulated so far are preserved, and no value remains.
 
     let steps_fail: Vec<Box<dyn Fn(i32) -> TransactionEffect<i32>>> =
         vec![debit_step(2000), apply_tax(10)];
@@ -149,11 +151,13 @@ fn main() {
         fail_tx = MyMonadEffect5::bind(fail_tx, step);
     }
 
-    println!("Final Balance: ${}", fail_tx.value);
+    println!("Final Balance: {:?}", fail_tx.value);
     println!("Status:        {:?}", fail_tx.f1);
     println!("Audit Log:     {:?}", fail_tx.f2);
 
-    // Verify error is captured
+    // Verify error is captured, no value survives, and the tax step did not run.
+    assert_eq!(fail_tx.value, None);
+    assert_eq!(fail_tx.f2, vec!["Failed Debit".to_string()]); // no "Applied Tax" entry
     assert!(fail_tx.f1.is_some());
     assert_eq!(fail_tx.f1.unwrap(), "Insufficient Funds");
 }

@@ -53,12 +53,10 @@ pub fn evaluate_under(patient: &Patient, treatment: FloatType) -> PropagatingEff
 
 pub fn potential_outcomes(patient: &Patient) -> (FloatType, FloatType) {
     let y1 = evaluate_under(patient, 1.0)
-        .value
-        .into_value()
+        .value_cloned()
         .unwrap_or(FloatType::NAN);
     let y0 = evaluate_under(patient, 0.0)
-        .value
-        .into_value()
+        .value_cloned()
         .unwrap_or(FloatType::NAN);
     (y1, y0)
 }

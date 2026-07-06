@@ -76,13 +76,13 @@ fn main() -> Result<(), PhysicsError> {
         .into_process();
 
     // Final Analysis
-    if let EffectValue::Value(final_state) = process.value() {
+    if let Some(final_state) = process.value() {
         println!("\n=== Cycle Complete ===");
         println!("Total Work Done: {:.2} J", final_state.work_done);
 
         // Theoretical Efficiency
         let eff_effect = carnot_efficiency(temp_hot(), temp_cold());
-        let eff_max = eff_effect.value().clone().into_value().unwrap().value();
+        let eff_max = eff_effect.value_cloned().unwrap().value();
 
         println!("Carnot Efficiency Limit: {:.1}%", eff_max * 100.0);
     }

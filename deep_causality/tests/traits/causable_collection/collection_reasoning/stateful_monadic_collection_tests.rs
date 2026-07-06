@@ -26,15 +26,9 @@ fn item_true_increment(
 ) -> PropagatingProcess<bool, CounterState, ConfigCtx> {
     let val = obs.into_value().unwrap_or(0);
     state.count += 1;
-    let mut p = PropagatingProcess {
-        value: EffectValue::Value(val > 0),
-        state,
-        context: ctx,
-        error: None,
-        logs: EffectLog::new(),
-    };
-    p.logs.add_entry("item_true_increment");
-    p
+    let mut logs = EffectLog::new();
+    logs.add_entry("item_true_increment");
+    PropagatingProcess::new(Ok(EffectValue::Value(val > 0)), state, ctx, logs)
 }
 
 fn item_false_increment(
@@ -43,15 +37,9 @@ fn item_false_increment(
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<bool, CounterState, ConfigCtx> {
     state.count += 1;
-    let mut p = PropagatingProcess {
-        value: EffectValue::Value(false),
-        state,
-        context: ctx,
-        error: None,
-        logs: EffectLog::new(),
-    };
-    p.logs.add_entry("item_false_increment");
-    p
+    let mut logs = EffectLog::new();
+    logs.add_entry("item_false_increment");
+    PropagatingProcess::new(Ok(EffectValue::Value(false)), state, ctx, logs)
 }
 
 fn item_failing(
@@ -59,27 +47,25 @@ fn item_failing(
     state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<bool, CounterState, ConfigCtx> {
-    let mut p = PropagatingProcess {
-        value: EffectValue::None,
-        state,
-        context: ctx,
-        error: Some(CausalityError::new(CausalityErrorEnum::Custom(
+    let mut logs = EffectLog::new();
+    logs.add_entry("item_failing: invoked");
+    PropagatingProcess::new(
+        Err(CausalityError::new(CausalityErrorEnum::Custom(
             "item_failing: deliberate".into(),
         ))),
-        logs: EffectLog::new(),
-    };
-    p.logs.add_entry("item_failing: invoked");
-    p
+        state,
+        ctx,
+        logs,
+    )
 }
 
 fn build_incoming() -> PropagatingProcess<u64, CounterState, ConfigCtx> {
-    PropagatingProcess {
-        value: EffectValue::Value(7),
-        state: CounterState::default(),
-        context: Some(ConfigCtx { threshold: 1 }),
-        error: None,
-        logs: EffectLog::new(),
-    }
+    PropagatingProcess::new(
+        Ok(EffectValue::Value(7)),
+        CounterState::default(),
+        Some(ConfigCtx { threshold: 1 }),
+        EffectLog::new(),
+    )
 }
 
 fn item_uncertain_float(
@@ -87,13 +73,14 @@ fn item_uncertain_float(
     state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<deep_causality_uncertain::UncertainF64, CounterState, ConfigCtx> {
-    PropagatingProcess {
-        value: EffectValue::Value(deep_causality_uncertain::Uncertain::<f64>::point(1.0)),
+    PropagatingProcess::new(
+        Ok(EffectValue::Value(
+            deep_causality_uncertain::Uncertain::<f64>::point(1.0),
+        )),
         state,
-        context: ctx,
-        error: None,
-        logs: EffectLog::new(),
-    }
+        ctx,
+        EffectLog::new(),
+    )
 }
 
 #[test]
@@ -108,23 +95,27 @@ fn evaluate_collection_stateful_short_circuits_on_incoming_error() {
             "a",
         )];
 
-    let incoming = PropagatingProcess {
-        value: EffectValue::Value(7u64),
-        state: CounterState { count: 9 },
-        context: Some(ConfigCtx { threshold: 1 }),
-        error: Some(CausalityError::new(CausalityErrorEnum::Custom(
+    let incoming: PropagatingProcess<u64, CounterState, ConfigCtx> = PropagatingProcess::new(
+        Err(CausalityError::new(CausalityErrorEnum::Custom(
             "pre-existing".into(),
         ))),
-        logs: EffectLog::new(),
-    };
+        CounterState { count: 9 },
+        Some(ConfigCtx { threshold: 1 }),
+        EffectLog::new(),
+    );
 
     let out =
         items
             .as_slice()
             .evaluate_collection_stateful(&incoming, &AggregateLogic::All, Some(0.5));
 
-    assert!(out.error.is_some());
-    assert_eq!(out.state.count, 9, "incoming state preserved, no item ran");
+    assert!(out.is_err());
+    assert!(out.value().is_none(), "an errored carrier holds no value");
+    assert_eq!(
+        out.state().count,
+        9,
+        "incoming state preserved, no item ran"
+    );
 }
 
 #[test]
@@ -137,8 +128,8 @@ fn evaluate_collection_stateful_empty_collection_errors() {
         Some(0.5),
     );
 
-    assert!(out.error.is_some());
-    assert!(format!("{:?}", out.error).contains("Cannot evaluate an empty collection"));
+    assert!(out.is_err());
+    assert!(format!("{:?}", out.error()).contains("Cannot evaluate an empty collection"));
 }
 
 #[test]
@@ -152,21 +143,20 @@ fn evaluate_collection_stateful_aggregation_error() {
         Causaloid::new_with_context(2, item_uncertain_float, ConfigCtx { threshold: 1 }, "b"),
     ];
 
-    let incoming = PropagatingProcess {
-        value: EffectValue::Value(7u64),
-        state: CounterState::default(),
-        context: Some(ConfigCtx { threshold: 1 }),
-        error: None,
-        logs: EffectLog::new(),
-    };
+    let incoming = PropagatingProcess::new(
+        Ok(EffectValue::Value(7u64)),
+        CounterState::default(),
+        Some(ConfigCtx { threshold: 1 }),
+        EffectLog::new(),
+    );
 
     let out =
         items
             .as_slice()
             .evaluate_collection_stateful(&incoming, &AggregateLogic::All, Some(0.5));
 
-    assert!(out.error.is_some());
-    assert!(format!("{:?}", out.error).contains("not supported"));
+    assert!(out.error().is_some());
+    assert!(format!("{:?}", out.error()).contains("not supported"));
 }
 
 #[test]
@@ -185,12 +175,17 @@ fn evaluate_collection_stateful_aggregates_and_threads_state() {
         Some(0.5),
     );
 
-    assert!(out.error.is_none(), "expected success, got {:?}", out.error);
+    assert!(
+        out.error().is_none(),
+        "expected success, got {:?}",
+        out.error()
+    );
     assert_eq!(
-        out.state.count, 3,
+        out.state().count,
+        3,
         "state must reflect three counter increments threaded across items"
     );
-    assert_eq!(out.value, EffectValue::Value(true));
+    assert_eq!(out.value(), Some(&true));
 }
 
 #[test]
@@ -209,13 +204,14 @@ fn evaluate_collection_stateful_short_circuits_with_state_at_failure_point() {
         Some(0.5),
     );
 
-    assert!(out.error.is_some(), "expected error from item 2");
+    assert!(out.error().is_some(), "expected error from item 2");
     assert_eq!(
-        out.state.count, 1,
+        out.state().count,
+        1,
         "state must reflect item 1 only (the state item 2 received as input)"
     );
     // Logs must include the "item_failing: invoked" entry but no item_3 log.
-    let log_text = format!("{:?}", out.logs);
+    let log_text = format!("{:?}", out.logs());
     assert!(
         log_text.contains("item_failing"),
         "expected log entry from failing item: {}",

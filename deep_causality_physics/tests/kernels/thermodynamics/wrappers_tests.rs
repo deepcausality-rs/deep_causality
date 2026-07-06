@@ -69,7 +69,7 @@ fn test_carnot_efficiency_wrapper_success() {
     let effect = carnot_efficiency(th, tc);
     assert!(effect.is_ok());
 
-    let eff = effect.value().clone().into_value().unwrap();
+    let eff = effect.value_cloned().unwrap();
     assert!((eff.value() - 0.4).abs() < 1e-10);
 }
 
@@ -122,7 +122,7 @@ fn test_heat_capacity_wrapper_success() {
     let effect = heat_capacity(de, dt);
     assert!(effect.is_ok());
 
-    let c = effect.value().clone().into_value().unwrap();
+    let c = effect.value_cloned().unwrap();
     assert!((c - 10.0).abs() < 1e-10);
 }
 

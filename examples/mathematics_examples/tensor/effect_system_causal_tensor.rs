@@ -49,7 +49,7 @@ fn main() {
         let len = new_data.len();
         warnings.push("Trace: Executing Step 1 (Filter & Double Evens)".to_string());
         MyCustomEffectType {
-            value: CausalTensor::new(new_data, vec![len]).unwrap(), // Result is 1D after filtering/flattening
+            value: Some(CausalTensor::new(new_data, vec![len]).unwrap()), // Result is 1D after filtering/flattening
             error: None,
             warnings,
         }
@@ -65,7 +65,7 @@ fn main() {
         ]);
 
         MyCustomEffectType {
-            value: CausalTensor::new(new_data, vec![len]).unwrap(),
+            value: Some(CausalTensor::new(new_data, vec![len]).unwrap()),
             error: None,
             warnings,
         }
@@ -73,28 +73,32 @@ fn main() {
 
     // Step 3: Conditional Error, Multiply by 3
     let step3 = |input_tensor: CausalTensor<i32>| {
-        let mut error = None;
         let mut new_data: Vec<i32> = Vec::new();
         let mut warnings = Vec::new();
 
         for val in input_tensor.data().iter() {
             if *val > 20 {
-                error = Some(format!("Error: Value {} exceeded threshold 20.", val));
                 warnings.push(format!("Error condition met for value: {}", val));
-                // If an error occurs, we might want to stop processing or return a default/empty tensor
-                // For this example, we'll still process other values but set the error flag.
-                new_data.push(*val); // Keep original value if error, or some default
-            } else {
-                new_data.push(val * 3);
-                warnings.push(format!("Multiplied by 3: {}", val));
+                warnings.push(
+                    "Trace: Executing Step 3 (Conditional Error & Multiply by 3)".to_string(),
+                );
+                // A failing step returns a well-formed errored carrier: an error and no
+                // value. Any bind chained after this one short-circuits.
+                return MyCustomEffectType {
+                    value: None,
+                    error: Some(format!("Error: Value {} exceeded threshold 20.", val)),
+                    warnings,
+                };
             }
+            new_data.push(val * 3);
+            warnings.push(format!("Multiplied by 3: {}", val));
         }
 
         let len = new_data.len();
         warnings.push("Trace: Executing Step 3 (Conditional Error & Multiply by 3)".to_string());
         MyCustomEffectType {
-            value: CausalTensor::new(new_data, vec![len]).unwrap(),
-            error,
+            value: Some(CausalTensor::new(new_data, vec![len]).unwrap()),
+            error: None,
             warnings,
         }
     };
@@ -111,7 +115,10 @@ fn main() {
     println!("Error: {:?}", final_effect.error);
     println!("Warnings: {:?}", final_effect.warnings);
 
-    assert_eq!(final_effect.value.as_slice(), &[27, 39, 51]);
+    assert_eq!(
+        final_effect.value.as_ref().unwrap().as_slice(),
+        &[27, 39, 51]
+    );
     assert!(final_effect.error.is_none());
     assert!(!final_effect.warnings.is_empty());
 

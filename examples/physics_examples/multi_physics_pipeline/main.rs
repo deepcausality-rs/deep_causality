@@ -27,7 +27,7 @@
 //! This is the power of the Causal Monad: **decoupled physics modules**
 //! that compose seamlessly with automatic error propagation.
 use deep_causality_core::{
-    CausalEffectPropagationProcess, CausalFlow, CausalityError, EffectValue, PropagatingEffect,
+    CausalEffectPropagationProcess, CausalFlow, CausalityError, PropagatingEffect,
 };
 use deep_causality_multivector::{HilbertState, Metric};
 use deep_causality_num::Complex;
@@ -198,7 +198,7 @@ fn stage_thermalization(
 
     // Use diffused result if valid, otherwise use initial average
     let avg_temp = match heat_result.value() {
-        EffectValue::Value(final_temp) => {
+        Some(final_temp) => {
             let avg = final_temp.data().iter().sum::<FloatType>() / 10.0;
             if avg.abs() > 1.0 {
                 avg.abs()
@@ -256,7 +256,7 @@ fn stage_quantum_detection(
 
     let detection = born_probability(&state, &basis);
     let prob = match detection.value() {
-        EffectValue::Value(p) => p.value(),
+        Some(p) => p.value(),
         _ => 0.0,
     };
 

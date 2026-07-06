@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **[BREAKING]** *(deep_causality_core)* `CausalEffectPropagationProcess` now encodes value-XOR-error
+  as a single **private** channel `outcome: Result<EffectValue<Value>, Error>` instead of the two
+  public fields `value: EffectValue<Value>` and `error: Option<Error>`. This enforces the W-invariant
+  (`error present ⇒ no value`) structurally — the "value AND error" state is no longer representable —
+  so the monad's **right-identity law now holds unconditionally** (it previously discarded data on
+  errored carriers). Machine-checked in `lean/DeepCausalityFormal/Core/CausalMonad.lean` + Kani.
+  All fields (`outcome`, `state`, `context`, `logs`) are private. Migration:
+  - **Construct** via `CausalEffectPropagationProcess::new(outcome, state, context, logs)` (or the
+    `PropagatingEffect` / `PropagatingProcess` aliases), or the named constructors (`pure`,
+    `from_value`, `from_effect_value`, `from_error`, `none`, `with_state`, …) — struct literals no
+    longer compile. `outcome` is `Ok(EffectValue::…)` or `Err(err)`.
+  - **Decompose** by value via `into_parts() -> (Result<EffectValue<Value>, Error>, State, Option<Context>, Log)`.
+  - **Read** via getters: `value() -> Option<&Value>` (the carried scalar — `Some` only for
+    `EffectValue::Value`), `value_cloned()` / `into_value()` (owned scalar, borrowing / consuming),
+    `effect() -> Option<&EffectValue<Value>>` (the full wrapper, for `RelayTo` / `None` /
+    `ContextualLink` / `Map` discrimination), `error() -> Option<&Error>`, `outcome()`, `state()`,
+    `context()`, `logs()`. (`is_ok()` / `is_err()` are unchanged and generalized to all `State` /
+    `Context`.)
+
 ## [0.0.9](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.0.8...deep_causality_core-v0.0.9) - 2026-06-09
 
 ### Added

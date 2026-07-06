@@ -25,9 +25,7 @@
 //! - **Decoupled physics modules** that compose seamlessly
 //! - **Classical EM via gauge field formalism** using deep_causality_physics
 
-use deep_causality_core::{
-    CausalEffectPropagationProcess, CausalFlow, EffectValue, PropagatingEffect,
-};
+use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow, PropagatingEffect};
 use deep_causality_num::{Float, Float106, Zero};
 use deep_causality_physics::{EM, GaugeEmOps};
 
@@ -410,7 +408,7 @@ fn print_summary(result: &PropagatingEffect<GaugeEMState>) {
     println!("═══════════════════════════════════════════════════════════════");
 
     match result.value() {
-        EffectValue::Value(state) => {
+        Some(state) => {
             println!("\n  ┌─────────────────────────────────────────────────────────┐");
             println!("  │  Lorentz Invariants                                     │");
             println!("  ├─────────────────────────────────────────────────────────┤");

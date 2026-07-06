@@ -19,7 +19,7 @@ fn test_orbital_velocity_wrapper_success() {
     let effect = orbital_velocity(&mass, &radius);
     assert!(effect.is_ok(), "Expected successful PropagatingEffect");
 
-    let speed = effect.value().clone().into_value().unwrap();
+    let speed = effect.value_cloned().unwrap();
     assert!(speed.value() > 0.0);
 }
 
@@ -47,7 +47,7 @@ fn test_escape_velocity_wrapper_success() {
     let effect = escape_velocity(&mass, &radius);
     assert!(effect.is_ok());
 
-    let speed = effect.value().clone().into_value().unwrap();
+    let speed = effect.value_cloned().unwrap();
     assert!(speed.value() > 0.0);
 }
 
@@ -71,7 +71,7 @@ fn test_schwarzschild_radius_wrapper_success() {
     let effect = schwarzschild_radius(&mass);
     assert!(effect.is_ok());
 
-    let r_s = effect.value().clone().into_value().unwrap();
+    let r_s = effect.value_cloned().unwrap();
     assert!(r_s.value() > 0.0);
 }
 
@@ -82,7 +82,7 @@ fn test_schwarzschild_radius_wrapper_zero_mass() {
     let effect = schwarzschild_radius(&mass);
     assert!(effect.is_ok());
 
-    let r_s = effect.value().clone().into_value().unwrap();
+    let r_s = effect.value_cloned().unwrap();
     assert!((r_s.value() - 0.0).abs() < 1e-10);
 }
 

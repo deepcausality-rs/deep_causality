@@ -27,11 +27,11 @@ pub fn run_rung2_intervention() {
         graph.evaluate_shortest_path_between_causes(smoke_idx, cancer_idx, &initial_effect);
 
     if final_effect.is_err() {
-        eprintln!("Evaluation failed: {:?}", final_effect.error);
+        eprintln!("Evaluation failed: {:?}", final_effect.error());
         return;
     }
 
-    let result = final_effect.value.into_value().unwrap_or(initial_state);
+    let result = final_effect.value_cloned().unwrap_or(initial_state);
 
     // 3. Intervention: If high cancer risk, prescribe therapy
     if result.cancer_risk {

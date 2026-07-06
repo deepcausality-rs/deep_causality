@@ -8,7 +8,7 @@
 
 use crate::model_types::{COUPLING_STRENGTH, Connectome, DT, N_REGIONS, SeizureResult, TIME_STEPS};
 use causal_counterfactual_examples::print_utils;
-use deep_causality_core::{EffectValue, PropagatingEffect};
+use deep_causality_core::PropagatingEffect;
 
 pub fn print_connectome_header() {
     println!(
@@ -23,9 +23,9 @@ pub fn print_process(
     effect: &PropagatingEffect<SeizureResult>,
     resected: Option<usize>,
 ) {
-    let r = match &effect.value {
-        EffectValue::Value(r) => r,
-        _ => return println!("  {label}: <no value>"),
+    let r = match effect.value() {
+        Some(r) => r,
+        None => return println!("  {label}: <no value>"),
     };
     let status = if r.seizing { "SEIZURE" } else { "stable" };
     let curative = match resected {
@@ -61,5 +61,5 @@ where
          substituted into the chain at the moment of intervention.\n"
     );
     let audit = runner(factual.clone(), factual.resected(0));
-    print_utils::print_effect_log(&audit.logs);
+    print_utils::print_effect_log(audit.logs());
 }

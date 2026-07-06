@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{ParametricMonad, Promonad};
+use deep_causality_haft::{MonoidalMerge, ParametricMonad};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     GaugeField, GaugeFieldHKT, GaugeFieldWitness, Manifold, SU2, Simplex, SimplicialComplexBuilder,
@@ -130,7 +130,7 @@ fn test_gauge_field_hkt_from_data() {
 }
 
 #[test]
-fn test_promonad_merge() {
+fn test_monoidal_merge() {
     // Create two HKT wrappers with data
     let pa: GaugeFieldHKT<f64, f64, f64, f64> = GaugeFieldHKT::from_data(
         vec![1.0, 2.0],
@@ -160,7 +160,7 @@ fn test_promonad_merge() {
 }
 
 #[test]
-fn test_promonad_merge_empty() {
+fn test_monoidal_merge_empty() {
     let empty: GaugeFieldHKT<f64, f64, f64, f64> = GaugeFieldHKT::empty();
     let with_data: GaugeFieldHKT<f64, f64, f64, f64> =
         GaugeFieldHKT::from_data(vec![1.0], vec![2.0], vec![1, 1, 1], vec![1, 1, 1, 1]);
@@ -168,13 +168,6 @@ fn test_promonad_merge_empty() {
     // Merge with empty returns empty
     let result: GaugeFieldHKT<f64, f64, f64, f64> =
         GaugeFieldWitness::merge(empty, with_data, |a: f64, b: f64| a + b);
-    assert!(!result.has_data());
-}
-
-#[test]
-fn test_promonad_fuse() {
-    // Fuse creates an empty wrapper (type erasure limitation)
-    let result: GaugeFieldHKT<i32, f64, String, f64> = GaugeFieldWitness::fuse(42i32, 3.0f64);
     assert!(!result.has_data());
 }
 

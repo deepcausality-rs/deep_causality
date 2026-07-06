@@ -42,7 +42,7 @@
 //! │  deep_causality_topology                                                │
 //! │  ┌────────────────────────────────────────────────────────────────────┐ │
 //! │  │  GaugeField<G, A, F>  │  CurvatureTensor  │  HKT Witnesses         │ │
-//! │  │  GaugeGroup trait     │  Adjunction d⊣∂   │  Promonad, RiemannMap  │ │
+//! │  │  GaugeGroup trait     │  Adjunction d⊣∂   │  MonoidalMerge, RiemannMap  │ │
 //! │  └────────────────────────────────────────────────────────────────────┘ │
 //! │                                                                         │
 //! └─────────────────────────────────────────────────────────────────────────┘

@@ -58,15 +58,14 @@ pub fn simulate_step(
         state.tick, state.depth_m, state.tissue_n2_bar, ratio, marker
     ));
 
-    DiveProcess::<FloatType> {
+    DiveProcess::<FloatType>::new(
         // Carry the normal ascent rate forward. The closed-loop driver
         // overwrites this with 0.0 whenever a stop is needed.
-        value: EffectValue::Value(cfg.normal_ascent_m_per_tick),
+        Ok(EffectValue::Value(cfg.normal_ascent_m_per_tick)),
         state,
-        context: ctx,
-        error: None,
+        ctx,
         logs,
-    }
+    )
 }
 
 pub fn initial_process() -> DiveProcess<FloatType> {
@@ -76,11 +75,10 @@ pub fn initial_process() -> DiveProcess<FloatType> {
         tissue_n2_bar: cfg.starting_tissue_n2_bar,
         ..Default::default()
     };
-    DiveProcess::<FloatType> {
-        value: EffectValue::Value(cfg.normal_ascent_m_per_tick),
+    DiveProcess::<FloatType>::new(
+        Ok(EffectValue::Value(cfg.normal_ascent_m_per_tick)),
         state,
-        context: Some(cfg),
-        error: None,
-        logs: EffectLog::new(),
-    }
+        Some(cfg),
+        EffectLog::new(),
+    )
 }

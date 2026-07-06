@@ -8,10 +8,9 @@
 
 use crate::model_types::{DiveProcess, FloatType};
 use causal_correction_examples::print_utils;
-use deep_causality_core::EffectValue;
 
 pub fn summary_line(label: &str, process: &DiveProcess<FloatType>) {
-    let st = &process.state;
+    let st = process.state();
     let outcome = match st.dcs_at {
         Some(t) => format!("DCS RISK at tick {t}"),
         None => "surfaced safely".to_string(),
@@ -24,8 +23,8 @@ pub fn summary_line(label: &str, process: &DiveProcess<FloatType>) {
 
 pub fn print_section(label: &str, process: &DiveProcess<FloatType>) {
     print_utils::print_section_header(label);
-    let st = &process.state;
-    let cfg = process.context.as_ref().unwrap();
+    let st = process.state();
+    let cfg = process.context().as_ref().unwrap();
     println!(
         "  ticks={}  stops={}  final_depth={:.1} m  max_ratio={:.2}  dcs_threshold={:.2}",
         st.tick, st.stop_count, st.depth_m, st.max_ratio_observed, cfg.dcs_ratio_threshold
@@ -36,7 +35,7 @@ pub fn print_section(label: &str, process: &DiveProcess<FloatType>) {
         Some(t) => println!("  result: DCS RISK at tick {t}"),
         None => println!("  result: surfaced safely"),
     }
-    if let EffectValue::Value(v) = process.value {
+    if let Some(v) = process.value() {
         println!("  next ascent command: {v:.1} m");
     }
     print_utils::print_section_footer();

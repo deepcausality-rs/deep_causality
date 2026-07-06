@@ -18,7 +18,7 @@ fn test_evaluate_shortest_path_between_causes() {
     dbg!(&res);
     assert!(res.is_ok());
 
-    assert_eq!(res.value, EffectValue::Value(1.0));
+    assert_eq!(res.value(), Some(&1.0));
 }
 
 #[test]
@@ -31,7 +31,7 @@ fn test_shortest_path_on_single_node() {
     dbg!(&res);
     assert!(res.is_ok());
 
-    assert_eq!(res.value, EffectValue::Value(1.0));
+    assert_eq!(res.value(), Some(&1.0));
 }
 
 #[test]
@@ -53,7 +53,7 @@ fn test_shortest_path_short_circuits_on_a_failing_node() {
 
     let res = g.evaluate_shortest_path_between_causes(i0, i2, &PropagatingEffect::from_value(true));
     assert!(res.is_err());
-    assert!(res.error.unwrap().to_string().contains("Test error"));
+    assert!(res.error().unwrap().to_string().contains("Test error"));
 }
 
 fn relay_to_9(_obs: bool) -> PropagatingEffect<bool> {
@@ -81,8 +81,8 @@ fn test_shortest_path_returns_on_a_relay() {
     g.freeze();
 
     let res = g.evaluate_shortest_path_between_causes(i0, i2, &PropagatingEffect::from_value(true));
-    assert!(res.is_ok(), "got {:?}", res.error);
-    assert!(matches!(res.value, EffectValue::RelayTo(9, _)));
+    assert!(res.is_ok(), "got {:?}", res.error());
+    assert!(matches!(res.effect(), Some(EffectValue::RelayTo(9, _))));
 }
 
 #[test]
@@ -95,7 +95,7 @@ fn test_shortest_path_error_conditions() {
     let res = g.evaluate_shortest_path_between_causes(0, 1, &effect);
     assert!(res.is_err());
     assert!(
-        res.error
+        res.error()
             .unwrap()
             .to_string()
             .contains("Graph is not frozen. Call freeze() first")
@@ -109,5 +109,5 @@ fn test_shortest_path_error_conditions() {
     assert!(res.is_err());
 
     dbg!(&res);
-    assert!(res.error.unwrap().to_string().contains("No path found"));
+    assert!(res.error().unwrap().to_string().contains("No path found"));
 }

@@ -19,6 +19,18 @@ use crate::{HKT2Unbound, Satisfies};
 /// Let $P$ be a profunctor. For morphisms $f: C \to A$ (pre-composition) and $g: B \to D$ (post-composition),
 /// `dimap` yields a morphism $P(A, B) \to P(C, D)$.
 ///
+/// # Laws (Informal)
+///
+/// The functor laws of $P: \mathcal{C}^{op} \times \mathcal{D} \to \text{Set}$:
+///
+/// 1.  **Identity**: `dimap(p, id, id) == p`
+/// 2.  **Composition** (note the contravariant twist on the first argument):
+///     `dimap(dimap(p, pre, post), pre2, post2) == dimap(p, |a| pre(pre2(a)), |b| post2(post(b)))`
+///     — pre-processors compose in reversed order, post-processors compose forward.
+///
+/// Laws are stated for pure functions; a stateful `FnMut` closure voids them.
+/// Machine-checked in `lean/DeepCausalityFormal/Haft/Profunctor.lean`.
+///
 /// # Use Cases
 /// *   **Adapters**: Wrapping a core logic kernel with input decoders and output encoders.
 /// *   **Optics**: Used heavily in Lens libraries to access and modify nested data structures.

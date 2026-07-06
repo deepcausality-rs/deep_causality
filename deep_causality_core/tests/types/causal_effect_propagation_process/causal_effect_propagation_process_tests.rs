@@ -31,69 +31,70 @@ fn unwrap_value<T: Copy>(val: EffectValue<T>) -> T {
 
 #[test]
 fn test_bind_propagation() {
-    let initial_process = CausalEffectPropagationProcess {
-        value: EffectValue::Value(10),
-        state: 0,
-        context: None::<()>,
-        error: None::<String>,
-        logs: TestLog::default(),
-    };
+    let initial_process: CausalEffectPropagationProcess<i32, i32, (), String, TestLog> =
+        CausalEffectPropagationProcess::new(
+            Ok(EffectValue::Value(10)),
+            0,
+            None,
+            TestLog::default(),
+        );
 
     let next_process = initial_process.bind(|val, state, _ctx| {
         let new_val = unwrap_value(val) + 1;
         let new_state = state + 1;
-        CausalEffectPropagationProcess {
-            value: EffectValue::Value(new_val),
-            state: new_state,
-            context: None,
-            error: None,
-            logs: TestLog(vec!["step1".to_string()]),
-        }
+        CausalEffectPropagationProcess::new(
+            Ok(EffectValue::Value(new_val)),
+            new_state,
+            None,
+            TestLog(vec!["step1".to_string()]),
+        )
     });
 
-    assert_eq!(unwrap_value(next_process.value), 11);
-    assert_eq!(next_process.state, 1);
-    assert_eq!(next_process.logs.0, vec!["step1".to_string()]);
+    let (outcome, state, _context, logs) = next_process.into_parts();
+    assert_eq!(unwrap_value(outcome.unwrap()), 11);
+    assert_eq!(state, 1);
+    assert_eq!(logs.0, vec!["step1".to_string()]);
 }
 
 #[test]
 fn test_bind_error_propagation() {
-    let error_process = CausalEffectPropagationProcess {
-        value: EffectValue::Value(10),
-        state: 0,
-        context: None::<()>,
-        error: Some(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
-        logs: TestLog::default(),
-    };
+    // Value and error are one channel: an errored process is constructed as `Err`
+    // and can no longer also carry a value.
+    let error_process: CausalEffectPropagationProcess<i32, i32, (), CausalityError, TestLog> =
+        CausalEffectPropagationProcess::new(
+            Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+            0,
+            None,
+            TestLog::default(),
+        );
 
     let next_process = error_process.bind(|val, state, _ctx| {
         // This closure should not be executed
-        CausalEffectPropagationProcess {
-            value: EffectValue::from(unwrap_value(val) + 1),
-            state: state + 1,
-            context: None,
-            error: None,
-            logs: TestLog::default(),
-        }
+        CausalEffectPropagationProcess::new(
+            Ok(EffectValue::from(unwrap_value(val) + 1)),
+            state + 1,
+            None,
+            TestLog::default(),
+        )
     });
 
-    assert!(next_process.error.is_some());
+    assert!(next_process.error().is_some());
     assert_eq!(
-        next_process.error.unwrap().0,
+        next_process.error().unwrap().0,
         CausalityErrorEnum::InternalLogicError
     );
-    assert!(matches!(next_process.value, EffectValue::None)); // Default value is None
+    assert!(next_process.value().is_none()); // An errored carrier holds no value
 }
 
 #[test]
 fn test_with_state() {
-    let stateless_effect = CausalEffectPropagationProcess {
-        value: EffectValue::Value(42),
-        state: (),
-        context: None::<()>,
-        error: None::<String>,
-        logs: TestLog(vec!["init".to_string()]),
-    };
+    let stateless_effect: CausalEffectPropagationProcess<i32, (), (), String, TestLog> =
+        CausalEffectPropagationProcess::new(
+            Ok(EffectValue::Value(42)),
+            (),
+            None,
+            TestLog(vec!["init".to_string()]),
+        );
 
     let stateful_process = CausalEffectPropagationProcess::with_state(
         stateless_effect,
@@ -101,10 +102,11 @@ fn test_with_state() {
         Some("Context".to_string()),
     );
 
-    assert_eq!(unwrap_value(stateful_process.value), 42);
-    assert_eq!(stateful_process.state, 100);
-    assert_eq!(stateful_process.context, Some("Context".to_string()));
-    assert_eq!(stateful_process.logs.0, vec!["init".to_string()]);
+    let (outcome, state, context, logs) = stateful_process.into_parts();
+    assert_eq!(unwrap_value(outcome.unwrap()), 42);
+    assert_eq!(state, 100);
+    assert_eq!(context, Some("Context".to_string()));
+    assert_eq!(logs.0, vec!["init".to_string()]);
 }
 
 #[test]
@@ -118,14 +120,14 @@ fn test_from_error() {
         deep_causality_core::EffectLog,
     >::from_error(error);
 
-    assert!(process.error.is_some());
+    assert!(process.error().is_some());
     assert_eq!(
-        process.error.unwrap().0,
+        process.error().unwrap().0,
         CausalityErrorEnum::InternalLogicError
     );
-    assert!(matches!(process.value, EffectValue::None));
-    assert_eq!(process.state, 0);
-    assert!(process.context.is_none());
+    assert!(process.value().is_none()); // An errored carrier holds no value
+    assert_eq!(*process.state(), 0);
+    assert!(process.context().is_none());
 }
 
 #[test]
@@ -138,10 +140,10 @@ fn test_none() {
         deep_causality_core::EffectLog,
     >::none();
 
-    assert!(matches!(process.value, EffectValue::None));
-    assert_eq!(process.state, 0);
-    assert!(process.context.is_none());
-    assert!(process.error.is_none());
+    assert!(matches!(process.effect(), Some(EffectValue::None)));
+    assert_eq!(*process.state(), 0);
+    assert!(process.context().is_none());
+    assert!(process.error().is_none());
 }
 
 #[test]
@@ -154,10 +156,10 @@ fn test_pure() {
         deep_causality_core::EffectLog,
     >::pure(99);
 
-    assert_eq!(unwrap_value(process.value), 99);
-    assert_eq!(process.state, 0);
-    assert!(process.context.is_none());
-    assert!(process.error.is_none());
+    assert!(matches!(process.value(), Some(&99)));
+    assert_eq!(*process.state(), 0);
+    assert!(process.context().is_none());
+    assert!(process.error().is_none());
 }
 
 #[test]
@@ -171,10 +173,10 @@ fn test_from_effect_value() {
         deep_causality_core::EffectLog,
     >::from_effect_value(val);
 
-    assert_eq!(unwrap_value(process.value), 123);
-    assert_eq!(process.state, 0);
-    assert!(process.context.is_none());
-    assert!(process.error.is_none());
+    assert!(matches!(process.value(), Some(&123)));
+    assert_eq!(*process.state(), 0);
+    assert!(process.context().is_none());
+    assert!(process.error().is_none());
 }
 
 #[test]
@@ -189,8 +191,8 @@ fn test_from_effect_value_with_log() {
         deep_causality_core::EffectLog,
     >::from_effect_value_with_log(val, logs);
 
-    assert_eq!(unwrap_value(process.value), 456);
-    assert_eq!(process.state, 0);
-    assert!(process.context.is_none());
-    assert!(process.error.is_none());
+    assert!(matches!(process.value(), Some(&456)));
+    assert_eq!(*process.state(), 0);
+    assert!(process.context().is_none());
+    assert!(process.error().is_none());
 }

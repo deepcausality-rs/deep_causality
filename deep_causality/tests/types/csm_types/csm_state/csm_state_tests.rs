@@ -42,7 +42,7 @@ fn test_eval() {
     assert!(res.is_ok());
     // The result is a PropagatingEffect, not a bool.
     let res = res.unwrap();
-    assert!(!res.value.into_value().unwrap());
+    assert!(!res.value_cloned().unwrap());
 
     // Case 2: Evaluation results in Boolean(true)
     let data_success = PropagatingEffect::from_value(0.93f64);
@@ -51,7 +51,7 @@ fn test_eval() {
     let res = cs2.eval();
     assert!(res.is_ok());
     let res = res.unwrap();
-    assert!(res.value.into_value().unwrap());
+    assert!(res.value_cloned().unwrap());
 }
 
 #[test]
@@ -67,7 +67,7 @@ fn eval_with_data() {
     let res = cs.eval();
     dbg!(&res);
     assert!(res.is_ok());
-    assert!(res.unwrap().error.is_some());
+    assert!(res.unwrap().error().is_some());
 
     // Now evaluate with external data.
     // Case 1: Fails evaluation
@@ -75,14 +75,14 @@ fn eval_with_data() {
     let res = cs.eval_with_data(&external_data_fail);
     assert!(res.is_ok());
     let res = res.unwrap();
-    assert!(!res.value.into_value().unwrap());
+    assert!(!res.value_cloned().unwrap());
 
     // Case 2: Succeeds evaluation
     let external_data_success = PropagatingEffect::from_value(0.89f64);
     let res = cs.eval_with_data(&external_data_success);
     assert!(res.is_ok());
     let res = res.unwrap();
-    assert!(res.value.into_value().unwrap());
+    assert!(res.value_cloned().unwrap());
 }
 
 #[test]
@@ -177,5 +177,5 @@ fn test_data_getter() {
     // But data is cloned...
     // Let's assume standard equality works.
     // But failing that, we check value.
-    assert!(get_data.value.clone().into_value().unwrap());
+    assert!(get_data.value_cloned().unwrap());
 }

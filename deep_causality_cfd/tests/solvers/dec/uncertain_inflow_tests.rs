@@ -314,11 +314,12 @@ fn inflow_step_on_a_consumed_solver_short_circuits() {
     );
 
     // Re-bind the errored state (its solver was consumed).
-    let again = inflow_march_step(EffectValue::Value(U_IN), failed.state, Some(context));
-    let err = again
-        .error()
-        .clone()
-        .expect("the consumed-solver guard must fire");
+    let again = inflow_march_step(
+        EffectValue::Value(U_IN),
+        failed.into_parts().1,
+        Some(context),
+    );
+    let err = again.error().expect("the consumed-solver guard must fire");
     assert!(
         format!("{err:?}").contains("consumed"),
         "expected the consumed-solver guard: {err:?}"
@@ -350,7 +351,6 @@ fn inflow_step_short_circuits_when_sample_resolution_fails() {
     let process = inflow_march_step(EffectValue::Value(U_IN), state, Some(context));
     let err = process
         .error()
-        .clone()
         .expect("a resolution failure short-circuits the step");
     assert!(
         format!("{err:?}").contains("resolution"),
@@ -359,7 +359,7 @@ fn inflow_step_short_circuits_when_sample_resolution_fails() {
     // The solver survives the resolution failure (it was never consumed), so the state is re-marchable.
     assert!(
         process
-            .state
+            .state()
             .field()
             .as_one_form()
             .as_slice()

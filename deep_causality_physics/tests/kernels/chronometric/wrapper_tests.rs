@@ -7,10 +7,9 @@
 //!
 //! The wrapper lifts the kernel's `Result<R, PhysicsError>` into a
 //! `PropagatingEffect<R>`. These tests verify both the success branch
-//! (kernel result becomes `EffectValue::Value(gm)`) and the error branch
+//! (kernel result becomes `gm`) and the error branch
 //! (kernel error becomes a `PropagatingEffect::from_error` variant).
 
-use deep_causality_core::EffectValue;
 use deep_causality_physics::{
     CentralBody, EARTH_GM, EARTH_RADIUS_EQUATORIAL, SPEED_OF_LIGHT, SpaceTimeCoordinate,
     solve_gm_analytical,
@@ -79,12 +78,12 @@ fn test_wrapper_success_returns_value() {
 
     let effect = solve_gm_analytical(&coord_a, &coord_b, &body);
     assert!(
-        effect.error.is_none(),
+        effect.error().is_none(),
         "expected no error, got {:?}",
-        effect.error
+        effect.error()
     );
-    match effect.value {
-        EffectValue::Value(gm) => {
+    match effect.value() {
+        Some(gm) => {
             let rel = (gm - EARTH_GM).abs() / EARTH_GM;
             assert!(
                 rel < RELATIVE_TOLERANCE,
@@ -118,9 +117,9 @@ fn test_wrapper_success_with_j2() {
     );
 
     let effect = solve_gm_analytical(&coord_a, &coord_b, &body);
-    assert!(effect.error.is_none());
-    match effect.value {
-        EffectValue::Value(gm) => {
+    assert!(effect.error().is_none());
+    match effect.value() {
+        Some(gm) => {
             let rel = (gm - EARTH_GM).abs() / EARTH_GM;
             assert!(rel < RELATIVE_TOLERANCE);
         }
@@ -155,16 +154,9 @@ fn test_wrapper_error_on_zero_radius() {
     );
 
     let effect = solve_gm_analytical(&coord_a, &coord_b, &body);
-    assert!(
-        effect.error.is_some(),
-        "expected error, got effect={:?}",
-        effect
-    );
-    // Value should be the default for the f64 success type — which is 0.0.
-    match effect.value {
-        EffectValue::None => {}
-        other => panic!("expected EffectValue::None on error, got {:?}", other),
-    }
+    assert!(effect.is_err(), "expected error, got effect={:?}", effect);
+    // Value and error are one channel: an errored effect provably carries no value.
+    assert!(effect.value().is_none(), "errored effect carries no value");
 }
 
 #[test]
@@ -190,7 +182,7 @@ fn test_wrapper_error_on_negative_radius() {
     );
 
     let effect = solve_gm_analytical(&coord_a, &coord_b, &body);
-    assert!(effect.error.is_some());
+    assert!(effect.is_err());
 }
 
 #[test]
@@ -206,11 +198,7 @@ fn test_wrapper_error_on_insufficient_separation() {
         &body,
     );
     let effect = solve_gm_analytical(&coord, &coord, &body);
-    assert!(
-        effect.error.is_some(),
-        "expected error, got effect={:?}",
-        effect
-    );
+    assert!(effect.is_err(), "expected error, got effect={:?}", effect);
 }
 
 // =============================================================================
@@ -238,10 +226,7 @@ fn test_wrapper_value_can_be_extracted() {
     );
 
     let effect = solve_gm_analytical(&coord_a, &coord_b, &body);
-    let extracted: Option<f64> = match effect.value {
-        EffectValue::Value(gm) => Some(gm),
-        _ => None,
-    };
+    let extracted: Option<f64> = effect.value().copied();
     assert!(extracted.is_some());
     let gm = extracted.unwrap();
     assert!(gm > 0.0);
@@ -273,5 +258,5 @@ fn test_wrapper_logs_field_present() {
 
     let effect = solve_gm_analytical(&coord_a, &coord_b, &body);
     // Just confirm the effect is well-formed (no panics, fields accessible).
-    let _ = format!("{:?}", effect.logs);
+    let _ = format!("{:?}", effect.logs());
 }

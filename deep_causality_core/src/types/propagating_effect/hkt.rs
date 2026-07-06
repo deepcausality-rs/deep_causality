@@ -37,32 +37,16 @@ impl Functor<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
         B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnOnce(A) -> B,
     {
-        if m_a.is_err() {
-            return CausalEffectPropagationProcess {
-                value: EffectValue::None,
-                state: (),
-                context: None,
-                error: m_a.error,
-                logs: m_a.logs,
-            };
-        }
+        // Error short-circuits: `f` is not invoked (left zero); logs are preserved.
+        let outcome = match m_a.outcome {
+            Err(error) => Err(error),
+            Ok(value) => match value.into_value() {
+                Some(a) => Ok(EffectValue::Value(f(a))),
+                None => Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+            },
+        };
 
-        match m_a.value.into_value() {
-            Some(a) => CausalEffectPropagationProcess {
-                value: EffectValue::Value(f(a)),
-                state: (),
-                context: None,
-                error: None,
-                logs: m_a.logs,
-            },
-            None => CausalEffectPropagationProcess {
-                value: EffectValue::None,
-                state: (),
-                context: None,
-                error: Some(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
-                logs: m_a.logs,
-            },
-        }
+        CausalEffectPropagationProcess::new(outcome, (), None, m_a.logs)
     }
 }
 
@@ -71,13 +55,12 @@ impl Pure<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
     where
         T: Satisfies<<Self as HKT>::Constraint>,
     {
-        CausalEffectPropagationProcess {
-            value: EffectValue::Value(value),
-            state: (),
-            context: None,
-            error: None,
-            logs: EffectLog::new(),
-        }
+        CausalEffectPropagationProcess::new(
+            Ok(EffectValue::Value(value)),
+            (),
+            None,
+            EffectLog::new(),
+        )
     }
 }
 
@@ -94,32 +77,16 @@ impl Applicative<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
         let mut combined_logs = f_ab.logs;
         combined_logs.append(&mut f_a.logs);
 
-        if f_ab.error.is_some() || f_a.error.is_some() {
-            return CausalEffectPropagationProcess {
-                value: EffectValue::None,
-                state: (),
-                context: None,
-                error: f_ab.error.or(f_a.error),
-                logs: combined_logs,
-            };
-        }
+        // Error short-circuits: the function is not invoked; the first error propagates.
+        let outcome = match (f_ab.outcome, f_a.outcome) {
+            (Err(error), _) | (_, Err(error)) => Err(error),
+            (Ok(func), Ok(arg)) => match (func.into_value(), arg.into_value()) {
+                (Some(mut f), Some(a)) => Ok(EffectValue::Value(f(a))),
+                _ => Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+            },
+        };
 
-        match (f_ab.value.into_value(), f_a.value.into_value()) {
-            (Some(mut f), Some(a)) => CausalEffectPropagationProcess {
-                value: EffectValue::Value(f(a)),
-                state: (),
-                context: None,
-                error: None,
-                logs: combined_logs,
-            },
-            _ => CausalEffectPropagationProcess {
-                value: EffectValue::None,
-                state: (),
-                context: None,
-                error: Some(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
-                logs: combined_logs,
-            },
-        }
+        CausalEffectPropagationProcess::new(outcome, (), None, combined_logs)
     }
 }
 
@@ -130,30 +97,23 @@ impl Monad<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
         B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnOnce(A) -> <Self as HKT>::Type<B>,
     {
-        if m_a.error.is_some() {
-            return CausalEffectPropagationProcess {
-                value: EffectValue::None,
-                state: (),
-                context: None,
-                error: m_a.error,
-                logs: m_a.logs,
-            };
-        }
-
-        match m_a.value.into_value() {
-            Some(a) => {
-                let mut next_effect = f(a);
-                let mut combined_logs = m_a.logs;
-                combined_logs.append(&mut next_effect.logs);
-                next_effect.logs = combined_logs;
-                next_effect
-            }
-            None => CausalEffectPropagationProcess {
-                value: EffectValue::None,
-                state: (),
-                context: None,
-                error: Some(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
-                logs: m_a.logs,
+        match m_a.outcome {
+            // Error short-circuits: the continuation is not invoked (left zero).
+            Err(error) => CausalEffectPropagationProcess::new(Err(error), (), None, m_a.logs),
+            Ok(value) => match value.into_value() {
+                Some(a) => {
+                    let mut next_effect = f(a);
+                    let mut combined_logs = m_a.logs;
+                    combined_logs.append(&mut next_effect.logs);
+                    next_effect.logs = combined_logs;
+                    next_effect
+                }
+                None => CausalEffectPropagationProcess::new(
+                    Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+                    (),
+                    None,
+                    m_a.logs,
+                ),
             },
         }
     }

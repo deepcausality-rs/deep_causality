@@ -25,10 +25,9 @@ impl<Value: Debug, Error: Debug, Log: Debug + Display + LogSize>
     pub fn explain(&self) -> String {
         let mut explanation = String::new();
 
-        explanation.push_str(&format!("Final Value: {:?}\n", self.value));
-
-        if let Some(ref error) = self.error {
-            explanation.push_str(&format!("Error: {:?}\n", error));
+        match &self.outcome {
+            Ok(value) => explanation.push_str(&format!("Final Value: {:?}\n", value)),
+            Err(error) => explanation.push_str(&format!("Error: {:?}\n", error)),
         }
 
         if !self.logs.is_empty() {

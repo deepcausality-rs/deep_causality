@@ -69,11 +69,11 @@ fn main() {
     // Part 3: Extract and Display Results
     // =========================================================================
     if result.is_err() {
-        eprintln!("Causal chain failed: {:?}", result.error);
+        eprintln!("Causal chain failed: {:?}", result.error());
         return;
     }
 
-    let final_state = result.value.into_value().unwrap_or_default();
+    let final_state = result.into_value().unwrap_or_default();
 
     println!("\n--- Results ---\n");
     println!("Vector Potential A_x: {:.4}", final_state.potential_ax);

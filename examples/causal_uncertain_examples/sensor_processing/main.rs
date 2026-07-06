@@ -38,13 +38,12 @@ fn main() {
     println!("Sensor Processing — Stateful Six-Stage `CausalFlow` Pipeline");
     println!("=======================================================================\n");
 
-    let initial: FleetProcess<RawReadings> = PropagatingProcess {
-        value: EffectValue::Value(seed_readings()),
-        state: FleetState::default(),
-        context: Some(nominal_fleet_config()),
-        error: None,
-        logs: EffectLog::new(),
-    };
+    let initial: FleetProcess<RawReadings> = PropagatingProcess::new(
+        Ok(EffectValue::Value(seed_readings())),
+        FleetState::default(),
+        Some(nominal_fleet_config()),
+        EffectLog::new(),
+    );
 
     let final_process = CausalFlow::from(initial)
         .bind(process_stage)

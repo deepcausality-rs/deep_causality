@@ -33,7 +33,7 @@
 
 mod model;
 
-use deep_causality_core::{AlternatableContext, EffectValue};
+use deep_causality_core::AlternatableContext;
 use model::{PATIENT_INITIAL_BP, TreatmentContext, apply_drug_effect, compute_final_bp, start};
 
 fn main() {
@@ -54,7 +54,7 @@ fn main() {
     let treated = start(treatment_ctx.clone())
         .bind(apply_drug_effect)
         .bind(compute_final_bp);
-    let y1 = unwrap_value("treated", &treated.value);
+    let y1 = treated.value_cloned().unwrap();
     println!("Y(1) = {y1:.1}");
 
     // Counterfactual run: same seed, swap the Context before the binds
@@ -67,7 +67,7 @@ fn main() {
         .alternate_context(control_ctx)
         .bind(apply_drug_effect)
         .bind(compute_final_bp);
-    let y0 = unwrap_value("control", &control.value);
+    let y0 = control.value_cloned().unwrap();
     println!("Y(0) = {y0:.1}");
 
     let ite = y1 - y0;
@@ -81,12 +81,5 @@ fn main() {
     );
 
     println!("\n--- Audit log (counterfactual run) ---");
-    println!("{}", control.logs);
-}
-
-fn unwrap_value(label: &str, value: &EffectValue<f64>) -> f64 {
-    match value {
-        EffectValue::Value(v) => *v,
-        other => panic!("{label} chain produced non-Value effect: {other:?}"),
-    }
+    println!("{}", control.logs());
 }

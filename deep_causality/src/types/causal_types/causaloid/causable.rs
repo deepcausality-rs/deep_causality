@@ -102,27 +102,33 @@ where
 
             CausaloidType::Collection => {
                 // Preserve incoming logs and include a precise error message.
-                let mut effect = PropagatingEffect::from_error(CausalityError(
-                    deep_causality_core::CausalityErrorEnum::Custom(
-                        "Collection evaluation is not available in this build; \
-                         use specialized collection evaluation APIs."
-                            .into(),
-                    ),
-                ));
-                effect.logs = incoming_effect.logs.clone();
-                effect
+                PropagatingEffect::new(
+                    Err(CausalityError(
+                        deep_causality_core::CausalityErrorEnum::Custom(
+                            "Collection evaluation is not available in this build; \
+                             use specialized collection evaluation APIs."
+                                .into(),
+                        ),
+                    )),
+                    (),
+                    None,
+                    incoming_effect.logs().clone(),
+                )
             }
             CausaloidType::Graph => {
                 // Preserve incoming logs and include a precise error message.
-                let mut effect = PropagatingEffect::from_error(CausalityError(
-                    deep_causality_core::CausalityErrorEnum::Custom(
-                        "Graph evaluation is not available in this build; \
-                         use specialized graph evaluation APIs."
-                            .into(),
-                    ),
-                ));
-                effect.logs = incoming_effect.logs.clone();
-                effect
+                PropagatingEffect::new(
+                    Err(CausalityError(
+                        deep_causality_core::CausalityErrorEnum::Custom(
+                            "Graph evaluation is not available in this build; \
+                             use specialized graph evaluation APIs."
+                                .into(),
+                        ),
+                    )),
+                    (),
+                    None,
+                    incoming_effect.logs().clone(),
+                )
             }
         }
     }

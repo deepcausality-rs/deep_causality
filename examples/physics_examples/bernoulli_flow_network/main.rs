@@ -64,7 +64,7 @@ fn main() -> Result<(), PhysicsError> {
 
     // Print summary
     println!("\n=== Simulation Complete ===");
-    if let EffectValue::Value(final_state) = process.value() {
+    if let Some(final_state) = process.value() {
         println!(
             "Final State: {} at P={:.1} Pa, v={:.2} m/s, h={:.1} m",
             final_state.description,
@@ -101,7 +101,7 @@ fn flow_segment(
         &new_height,
         &density,
     );
-    let new_pressure = p_effect.value().clone().into_value().unwrap();
+    let new_pressure = p_effect.value_cloned().unwrap();
 
     FluidState {
         pressure: new_pressure,

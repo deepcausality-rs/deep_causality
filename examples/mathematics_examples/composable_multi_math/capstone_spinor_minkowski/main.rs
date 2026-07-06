@@ -35,9 +35,7 @@ use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
 };
-use mathematics_examples::effect_helpers::{
-    Process, ProcessWitness, expect_value, fail, ok, print_log,
-};
+use mathematics_examples::effect_helpers::{Process, ProcessWitness, fail, ok, print_log};
 
 const N_VERTICES: usize = 5;
 const N_EDGES: usize = N_VERTICES - 1;
@@ -102,7 +100,7 @@ fn main() {
     for e in 0..N_EDGES {
         process = process
             .bind(|p, _, _| transport_across_edge(p.into_value().expect("spinor"), &manifold, e));
-        if process.error.is_some() {
+        if process.error().is_some() {
             break;
         }
     }
@@ -209,12 +207,12 @@ fn transport_across_edge(
 
 fn print_result(theta_total: FloatType, process: &Process<CausalMultiVector<FloatType>>) {
     println!("Per-edge log:");
-    print_log(&process.logs);
+    print_log(process.logs());
 
-    match &process.error {
+    match process.error() {
         Some(err) => println!("\nTransport errored: {}", err),
         None => {
-            let final_psi = expect_value(&process.value);
+            let final_psi = process.value_cloned().unwrap();
             let d = final_psi.data();
             let observed_e0 = d[I_E0];
             let observed_e1 = d[I_E1];

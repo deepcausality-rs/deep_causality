@@ -66,21 +66,14 @@ pub fn forward_traffic(
         state.tick, active, delivered, dropped, marker
     ));
 
-    NetworkProcess::<SwitchId> {
-        value: EffectValue::Value(active),
-        state,
-        context: ctx,
-        error: None,
-        logs,
-    }
+    NetworkProcess::<SwitchId>::new(Ok(EffectValue::Value(active)), state, ctx, logs)
 }
 
 pub fn initial_process() -> NetworkProcess<SwitchId> {
-    NetworkProcess::<SwitchId> {
-        value: EffectValue::Value(PRIMARY_SWITCH),
-        state: NetworkState::default(),
-        context: Some(nominal_network_plan()),
-        error: None,
-        logs: EffectLog::new(),
-    }
+    NetworkProcess::<SwitchId>::new(
+        Ok(EffectValue::Value(PRIMARY_SWITCH)),
+        NetworkState::default(),
+        Some(nominal_network_plan()),
+        EffectLog::new(),
+    )
 }

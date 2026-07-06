@@ -20,6 +20,9 @@ use crate::{HKT2Unbound, Satisfies};
 /// 1.  $B(id_A, id_B) = id_{B(A, B)}$
 /// 2.  $B(f' \circ f, g' \circ g) = B(f', g') \circ B(f, g)$
 ///
+/// Laws are stated for pure functions; a stateful `FnMut` closure voids them.
+/// Machine-checked in `lean/DeepCausalityFormal/Haft/Bifunctor.lean`.
+///
 /// # Use Cases
 /// *   **Result Handling**: Mapping both `Ok` and `Err` variants of a `Result<T, E>`.
 /// *   **Systems Evolution**: Evolving a `System<Topology, Algebra>` where both components change type.

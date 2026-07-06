@@ -40,11 +40,11 @@ fn main() {
     let y1_res = causaloid_graph_arc.evaluate_subgraph_from_cause(drug_effect_idx, &treated_effect);
 
     if y1_res.is_err() {
-        eprintln!("Treatment evaluation failed: {:?}", y1_res.error);
+        eprintln!("Treatment evaluation failed: {:?}", y1_res.error());
         return;
     }
 
-    let y1_state = y1_res.value.into_value().unwrap_or(treatment_state);
+    let y1_state = y1_res.value_cloned().unwrap_or(treatment_state);
     println!("Y(1) (Treated Outcome): {:.1}", y1_state.final_bp);
 
     println!("\nSimulating Control Outcome (Y(0))...");
@@ -52,11 +52,11 @@ fn main() {
     let y0_res = causaloid_graph_arc.evaluate_subgraph_from_cause(drug_effect_idx, &control_effect);
 
     if y0_res.is_err() {
-        eprintln!("Control evaluation failed: {:?}", y0_res.error);
+        eprintln!("Control evaluation failed: {:?}", y0_res.error());
         return;
     }
 
-    let y0_state = y0_res.value.into_value().unwrap_or(control_state);
+    let y0_state = y0_res.value_cloned().unwrap_or(control_state);
     println!("Y(0) (Control Outcome): {:.1}", y0_state.final_bp);
 
     // 5. Calculate and Report the Causal Effect

@@ -7,7 +7,6 @@
 //! and presentation here leaves `main` a lean orchestration of the model stages.
 
 use crate::model::{N_FEATURES, RcaProcess, RcaSignal};
-use deep_causality_core::EffectValue;
 use std::fs;
 
 // ---------------------------------------------------------------------------
@@ -137,16 +136,16 @@ pub fn print_threshold(threshold: f64) {
 /// Print one window's verdict (healthy / root cause) and its `EffectLog`.
 pub fn print_window_result(label: &str, result: &RcaProcess) {
     println!("--- Window: {label} ---");
-    if let Some(err) = &result.error {
+    if let Some(err) = result.error() {
         println!("  verdict: ERROR (causal stage failed): {err}");
-        println!("  {}", result.logs);
+        println!("  {}", result.logs());
         return;
     }
-    match &result.value {
-        EffectValue::Value(RcaSignal::Healthy { score }) => {
+    match result.value() {
+        Some(RcaSignal::Healthy { score }) => {
             println!("  verdict: HEALTHY (score {score:.3}); causal stage not run.");
         }
-        EffectValue::Value(RcaSignal::RootCause {
+        Some(RcaSignal::RootCause {
             metric,
             index,
             posterior,
@@ -165,5 +164,5 @@ pub fn print_window_result(label: &str, result: &RcaProcess) {
         }
         other => println!("  verdict: {other:?}"),
     }
-    println!("  {}", result.logs);
+    println!("  {}", result.logs());
 }

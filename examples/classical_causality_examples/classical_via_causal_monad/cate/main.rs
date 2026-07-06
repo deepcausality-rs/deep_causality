@@ -80,8 +80,8 @@ fn individual_treatment_effect(patient: &PatientContext) -> f64 {
     let y1 = run_binds(start(treatment.clone()));
     let y0 = run_binds(start(treatment).alternate_context(control));
 
-    let y1_bp = unwrap_bp(&y1.value);
-    let y0_bp = unwrap_bp(&y0.value);
+    let y1_bp = y1.value_cloned().unwrap();
+    let y0_bp = y0.value_cloned().unwrap();
     let ite = y1_bp - y0_bp;
 
     println!(
@@ -90,13 +90,6 @@ fn individual_treatment_effect(patient: &PatientContext) -> f64 {
     );
 
     ite
-}
-
-fn unwrap_bp(value: &EffectValue<f64>) -> f64 {
-    match value {
-        EffectValue::Value(v) => *v,
-        other => panic!("chain produced non-Value effect: {other:?}"),
-    }
 }
 
 // --- Model: patient context, chain seed, bind stages, population ---

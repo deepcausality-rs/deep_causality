@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Bifunctor, HKT2Unbound, HKT3Unbound, NoConstraint, Promonad};
+use crate::{Bifunctor, HKT2Unbound, HKT3Unbound, MonoidalMerge, NoConstraint};
 
 // -----------------------------------------------------------------------------
 // Tuple 2 (Pair) Extensions
@@ -39,23 +39,11 @@ impl HKT3Unbound for Tuple3Witness {
     type Type<A, B, C> = (A, B, C);
 }
 
-impl Promonad<Tuple3Witness> for Tuple3Witness {
+impl MonoidalMerge<Tuple3Witness> for Tuple3Witness {
     fn merge<A, B, C, F>(pa: (A, A, A), pb: (B, B, B), mut f: F) -> (C, C, C)
     where
         F: FnMut(A, B) -> C,
     {
         (f(pa.0, pb.0), f(pa.1, pb.1), f(pa.2, pb.2))
-    }
-
-    /// # Panics
-    ///
-    /// This method always panics. For a tuple `(A, B, C)`, "fusion" without a merge
-    /// function isn't well-defined because we cannot produce a `C` from just `A` and `B`.
-    ///
-    /// `Promonad::fuse` is designed for types like `Interaction<A, B, C>` where the
-    /// third parameter represents an output that can be derived from the fusion process.
-    /// For a plain tuple, this operation is not meaningful.
-    fn fuse<A, B, C>(_input_a: A, _input_b: B) -> (A, B, C) {
-        panic!("Tuple3Witness::fuse is not supported: C cannot be derived from A and B alone.")
     }
 }

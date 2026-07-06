@@ -7,7 +7,6 @@ use crate::{
     NumericalValue, PropagatingEffect, monadic_collection_utils,
 };
 use deep_causality_core::{CausalityErrorEnum, EffectValue};
-use deep_causality_haft::*;
 
 pub trait MonadicCausableCollection<I, O, T>: CausableCollectionAccessor<I, O, T>
 where
@@ -73,29 +72,24 @@ where
                         return PropagatingEffect::from_error(err);
                     }
                 };
-                let mut item_effect = item.evaluate(incoming_effect); // PropagatingEffect<O>
+                let item_effect = item.evaluate(incoming_effect); // PropagatingEffect<O>
+                let (item_outcome, _unit_state, _no_context, item_logs) = item_effect.into_parts();
 
-                // If the item effect is an error, append its logs to the accumulator logs before returning.
-                if item_effect.is_err() {
-                    let mut combined: PropagatingEffect<Vec<EffectValue<O>>> =
-                        PropagatingEffect::pure(Vec::new());
-                    combined.state = acc_state;
-                    combined.context = acc_ctx;
-                    // Note: acc_effect.logs are already merged by bind, but we capture for explicit safety
-                    combined.logs.append(&mut item_effect.logs);
-                    return PropagatingEffect {
-                        value: Default::default(),
-                        state: combined.state,
-                        context: combined.context,
-                        error: item_effect.error.take(),
-                        logs: combined.logs,
-                    };
+                match item_outcome {
+                    // If the item effect is an error, carry its logs forward (the accumulator
+                    // logs are already merged by the outer `bind`).
+                    Err(err) => PropagatingEffect::new(Err(err), acc_state, acc_ctx, item_logs),
+                    Ok(item_value) => {
+                        acc_values.push(item_value);
+                        // Carry the item's logs forward alongside the grown accumulator.
+                        PropagatingEffect::new(
+                            Ok(EffectValue::Value(acc_values)),
+                            (),
+                            None,
+                            item_logs,
+                        )
+                    }
                 }
-
-                item_effect.bind(|item_value, _, _| {
-                    acc_values.push(item_value);
-                    PropagatingEffect::pure(acc_values)
-                })
             })
         });
 
@@ -103,9 +97,9 @@ where
         // Note: `bind` passes logs from `final_effect` to the returned effect automatically
         // via log aggregation in `bind` implementation. We capture carried_logs explicitly
         // to ensure they are preserved even when we create new effects.
-        let mut carried_logs = final_effect.logs.clone();
+        let carried_logs = final_effect.logs().clone();
 
-        final_effect.bind(|effect_values_effect_value, _, _| {
+        final_effect.bind(move |effect_values_effect_value, _, _| {
             // effect_values_effect_value is EffectValue<Vec<EffectValue<O>>>
             // We need to extract the Vec from it
             let effect_values = match effect_values_effect_value.into_value() {
@@ -114,9 +108,7 @@ where
                     let err = CausalityError(CausalityErrorEnum::Custom(
                         "No effect values collected".to_string(),
                     ));
-                    let mut err_eff = PropagatingEffect::from_error(err);
-                    err_eff.logs.append(&mut carried_logs);
-                    return err_eff;
+                    return PropagatingEffect::new(Err(err), (), None, carried_logs);
                 }
             };
             // 3. Delegate to the robust aggregation helper.
@@ -125,26 +117,11 @@ where
                 logic,
                 threshold_value,
             ) {
+                // Preserve previously accumulated logs on both arms.
                 Ok(aggregated_value) => {
-                    // Preserve logs from the aggregation pipeline
-                    let mut out = match aggregated_value {
-                        EffectValue::Value(v) => PropagatingEffect::pure(v),
-                        _ => {
-                            let mut eff = PropagatingEffect::pure(O::default());
-                            eff.value = aggregated_value;
-                            eff
-                        }
-                    };
-                    // Append previously accumulated logs
-                    out.logs.append(&mut carried_logs);
-                    out
+                    PropagatingEffect::new(Ok(aggregated_value), (), None, carried_logs)
                 }
-                Err(e) => {
-                    // Preserve logs on error as well
-                    let mut err_eff = PropagatingEffect::from_error(e);
-                    err_eff.logs.append(&mut carried_logs);
-                    err_eff
-                }
+                Err(e) => PropagatingEffect::new(Err(e), (), None, carried_logs),
             }
         })
     }

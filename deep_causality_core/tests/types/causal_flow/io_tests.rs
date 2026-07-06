@@ -93,7 +93,7 @@ fn test_commit_appends_audit_log_entry() {
     let flow = CausalFlow::value(1_i32).write_text_to(&path, |v| v.to_string());
     let process = flow.into_process();
     assert_eq!(
-        process.logs.len(),
+        process.logs().len(),
         1,
         "a committed write records one audit entry"
     );

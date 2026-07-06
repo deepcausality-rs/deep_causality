@@ -82,13 +82,13 @@ fn test_evaluate_deterministic_propagation() {
     let effect_success = PropagatingEffect::from_value(0.99);
     let res = map.evaluate_collection(&effect_success, &AggregateLogic::All, None);
     assert!(!res.is_err());
-    assert_eq!(res.value, EffectValue::Value(true));
+    assert_eq!(res.value(), Some(&true));
 
     // Case 2: One fails, chain should be deterministically false.
     let effect_fail = PropagatingEffect::from_value(0.1);
     let res = map.evaluate_collection(&effect_fail, &AggregateLogic::All, None);
     assert!(!res.is_err());
-    assert_eq!(res.value, EffectValue::Value(false));
+    assert_eq!(res.value(), Some(&false));
 }
 
 #[test]
@@ -100,14 +100,14 @@ fn test_evaluate_probabilistic_propagation() {
     let effect_success = PropagatingEffect::from_value(0.99);
     let res = map.evaluate_collection(&effect_success, &AggregateLogic::All, Some(0.5));
     assert!(!res.is_err());
-    assert_eq!(res.value, EffectValue::Value(1.0));
+    assert_eq!(res.value(), Some(&1.0));
 
     // Case 2: One fails (Boolean(false) is treated as probability 0.0).
     // The chain should short-circuit and return a cumulative probability of 0.0.
     let effect_fail = PropagatingEffect::from_value(0.1);
     let res = map.evaluate_collection(&effect_fail, &AggregateLogic::All, Some(0.5));
     assert!(!res.is_err());
-    assert_eq!(res.value, EffectValue::Value(0.0));
+    assert_eq!(res.value(), Some(&0.0));
 }
 
 #[test]

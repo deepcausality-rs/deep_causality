@@ -5,7 +5,7 @@
 use deep_causality::utils_test::test_utils;
 use deep_causality::utils_test::test_utils::get_base_context;
 use deep_causality::{
-    AggregateLogic, BaseCausaloid, Causable, Causaloid, EffectValue, IdentificationValue,
+    AggregateLogic, BaseCausaloid, Causable, Causaloid, IdentificationValue,
     MonadicCausableCollection, PropagatingEffect,
 };
 use std::sync::{Arc, RwLock};
@@ -85,7 +85,7 @@ fn test_collection_causaloid_evaluation() {
     dbg!(&res);
 
     // The default aggregation for a collection is "true".
-    assert_eq!(res.value, EffectValue::Value(true));
+    assert_eq!(res.value(), Some(&true));
 }
 
 #[test]
@@ -139,8 +139,8 @@ fn test_evaluate_collection_with_sub_evaluation_error() {
     dbg!(&res);
 
     // Assert: The error from the sub-causaloid should now be propagated up.
-    assert!(res.error.is_some());
-    let err = res.error.unwrap();
+    assert!(res.is_err());
+    let err = res.error().unwrap();
     assert!(err.to_string().contains("Test error"));
 }
 
@@ -158,8 +158,8 @@ fn test_evaluate_collection_aggregation_error() {
     let effect = PropagatingEffect::from_value(0.99_f64);
     let res = causal_coll.evaluate_collection(&effect, &AggregateLogic::All, Some(0.5));
 
-    assert!(res.error.is_some());
-    assert!(res.error.unwrap().to_string().contains("not supported"));
+    assert!(res.is_err());
+    assert!(res.error().unwrap().to_string().contains("not supported"));
 }
 
 #[test]
@@ -184,5 +184,5 @@ fn test_evaluate_collection_without_true_effect() {
     dbg!(&res);
 
     // Assert: Since no causaloid is true, the aggregated effect should be false.
-    assert_eq!(res.value, EffectValue::Value(false));
+    assert_eq!(res.value(), Some(&false));
 }

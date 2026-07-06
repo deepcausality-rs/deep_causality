@@ -71,9 +71,9 @@ pub fn get_test_single_data(val: NumericalValue) -> PropagatingEffect<NumericalV
 pub fn get_test_causaloid_deterministic_true() -> BaseCausaloid<bool, bool> {
     let description = "tests nothing; always returns true";
     fn causal_fn(_: bool) -> PropagatingEffect<bool> {
-        let mut effect = PropagatingEffect::pure(true);
-        effect.logs.add_entry("Just return true");
-        effect
+        let mut log = EffectLog::new();
+        log.add_entry("Just return true");
+        PropagatingEffect::from_value_with_log(true, log)
     }
     Causaloid::new(3, causal_fn, description)
 }
@@ -333,11 +333,14 @@ pub fn get_test_causaloid(id: IdentificationValue) -> BaseCausaloid<f64, bool> {
 
         if evidence.is_sign_negative() {
             log.add_entry("Observation is negative, returning error.");
-            let mut effect = PropagatingEffect::from_error(CausalityError::new(
-                CausalityErrorEnum::Custom("Observation is negative".into()),
-            ));
-            effect.logs = log;
-            return effect;
+            return PropagatingEffect::new(
+                Err(CausalityError::new(CausalityErrorEnum::Custom(
+                    "Observation is negative".into(),
+                ))),
+                (),
+                None,
+                log,
+            );
         }
 
         let threshold: NumericalValue = 0.55;
@@ -347,9 +350,7 @@ pub fn get_test_causaloid(id: IdentificationValue) -> BaseCausaloid<f64, bool> {
             evidence, threshold, is_active
         ));
 
-        let mut effect = PropagatingEffect::pure(is_active);
-        effect.logs = log;
-        effect
+        PropagatingEffect::from_value_with_log(is_active, log)
     }
 
     Causaloid::new(id, causal_fn, description)
@@ -364,11 +365,14 @@ pub fn get_test_causaloid_num_input_output(id: IdentificationValue) -> BaseCausa
 
         if evidence.is_sign_negative() {
             log.add_entry("Observation is negative, returning error.");
-            let mut effect = PropagatingEffect::from_error(CausalityError::new(
-                CausalityErrorEnum::Custom("Observation is negative".into()),
-            ));
-            effect.logs = log;
-            return effect;
+            return PropagatingEffect::new(
+                Err(CausalityError::new(CausalityErrorEnum::Custom(
+                    "Observation is negative".into(),
+                ))),
+                (),
+                None,
+                log,
+            );
         }
 
         let threshold: NumericalValue = 0.55;
@@ -378,9 +382,7 @@ pub fn get_test_causaloid_num_input_output(id: IdentificationValue) -> BaseCausa
             evidence, threshold, is_active
         ));
 
-        let mut effect = PropagatingEffect::pure(is_active);
-        effect.logs = log;
-        effect
+        PropagatingEffect::from_value_with_log(is_active, log)
     }
 
     Causaloid::new(id, causal_fn, description)

@@ -26,13 +26,12 @@ fn process_failure(
     ctx: Option<FleetConfig>,
     msg: &str,
 ) -> FleetProcess<ProcessedReadings> {
-    FleetProcess {
-        value: EffectValue::None,
+    FleetProcess::new(
+        Err(CausalityError::new(CausalityErrorEnum::Custom(msg.into()))),
         state,
-        context: ctx,
-        error: Some(CausalityError::new(CausalityErrorEnum::Custom(msg.into()))),
-        logs: EffectLog::new(),
-    }
+        ctx,
+        EffectLog::new(),
+    )
 }
 
 fn band_for<'a>(sensor_id: &str, config: &'a FleetConfig) -> Option<&'a Bands> {
@@ -110,13 +109,12 @@ pub fn process_stage(
         processed.len()
     ));
 
-    FleetProcess {
-        value: EffectValue::Value(ProcessedReadings(processed)),
+    FleetProcess::new(
+        Ok(EffectValue::Value(ProcessedReadings(processed))),
         state,
-        context: ctx,
-        error: None,
+        ctx,
         logs,
-    }
+    )
 }
 
 /// Stage 2 — accumulate per-sensor health counts and total uncertainty into state.
@@ -166,13 +164,7 @@ pub fn validate_stage(
         ));
     }
 
-    FleetProcess {
-        value: EffectValue::Value(processed),
-        state,
-        context: ctx,
-        error: None,
-        logs,
-    }
+    FleetProcess::new(Ok(EffectValue::Value(processed)), state, ctx, logs)
 }
 
 /// Stage 3 — inverse-variance fuse the temperature sensors; write fused mean into state.
@@ -241,13 +233,7 @@ pub fn fusion_stage(
         }
     }
 
-    FleetProcess {
-        value: EffectValue::Value(processed),
-        state,
-        context: ctx,
-        error: None,
-        logs,
-    }
+    FleetProcess::new(Ok(EffectValue::Value(processed)), state, ctx, logs)
 }
 
 /// Stage 4 — detect per-sensor anomalies against nominal bands.
@@ -280,13 +266,7 @@ pub fn anomaly_stage(
         logs.add_entry("stage4.anomaly: no anomalies detected");
     }
 
-    FleetProcess {
-        value: EffectValue::Value(processed),
-        state,
-        context: ctx,
-        error: None,
-        logs,
-    }
+    FleetProcess::new(Ok(EffectValue::Value(processed)), state, ctx, logs)
 }
 
 /// Stage 5 — cross-validate temperature against pressure (physics check).
@@ -325,13 +305,7 @@ pub fn fallback_stage(
         }
     }
 
-    FleetProcess {
-        value: EffectValue::Value(processed),
-        state,
-        context: ctx,
-        error: None,
-        logs,
-    }
+    FleetProcess::new(Ok(EffectValue::Value(processed)), state, ctx, logs)
 }
 
 /// Stage 6 — derive a final risk verdict from accumulated state.
@@ -367,11 +341,5 @@ pub fn reliability_stage(
         "stage6.reliability: health={health_pct:.1}% verdict={verdict:?}"
     ));
 
-    FleetProcess {
-        value: EffectValue::Value(processed),
-        state,
-        context: ctx,
-        error: None,
-        logs,
-    }
+    FleetProcess::new(Ok(EffectValue::Value(processed)), state, ctx, logs)
 }

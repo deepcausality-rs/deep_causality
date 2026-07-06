@@ -8,10 +8,9 @@
 
 use crate::model_types::{NetworkProcess, SwitchId};
 use causal_correction_examples::print_utils;
-use deep_causality_core::EffectValue;
 
 pub fn summary_line(label: &str, process: &NetworkProcess<SwitchId>) {
-    let st = &process.state;
+    let st = process.state();
     let outcome = match st.outage_threshold_reached_at {
         Some(t) => format!("OUTAGE breached at tick {t}"),
         None => "within service objective".to_string(),
@@ -28,8 +27,8 @@ pub fn summary_line(label: &str, process: &NetworkProcess<SwitchId>) {
 
 pub fn print_section(label: &str, process: &NetworkProcess<SwitchId>) {
     print_utils::print_section_header(label);
-    let st = &process.state;
-    let plan = process.context.as_ref().unwrap();
+    let st = process.state();
+    let plan = process.context().as_ref().unwrap();
     println!(
         "  ticks={}  delivered={}  dropped={}  failover_count={}  outage_threshold={}",
         st.tick,
@@ -57,7 +56,7 @@ pub fn print_section(label: &str, process: &NetworkProcess<SwitchId>) {
         Some(t) => println!("  result: OUTAGE breached at tick {t}"),
         None => println!("  result: within service objective"),
     }
-    if let EffectValue::Value(v) = process.value {
+    if let Some(v) = process.value() {
         println!("  active switch at end: sw{v}");
     }
     print_utils::print_section_footer();

@@ -138,9 +138,9 @@ where
                 return result_effect;
             }
 
-            match &result_effect.value {
+            match result_effect.effect() {
                 // Adaptive reasoning:
-                EffectValue::RelayTo(target_index, inner_effect) => {
+                Some(EffectValue::RelayTo(target_index, inner_effect)) => {
                     // Reset traversal state to follow the relayed path exclusively.
                     visited.fill(false);
                     queue.clear();
@@ -148,30 +148,41 @@ where
                     let target_idx = *target_index;
 
                     if !self.contains_causaloid(target_idx) {
-                        let mut err_effect = last_propagated_effect.clone();
-
-                        err_effect.error = Some(CausalityError(CausalityErrorEnum::Custom(
-                            format!(
+                        // Raising discards the value channel: value and error are one channel.
+                        let (_, state, context, logs) = last_propagated_effect.into_parts();
+                        return PropagatingEffect::new(
+                            Err(CausalityError(CausalityErrorEnum::Custom(format!(
                                 "RelayTo target causaloid with index {target_idx} not found in graph."
-                            ),
-                        )));
-                        return err_effect;
+                            )))),
+                            state,
+                            context,
+                            logs,
+                        );
                     }
 
                     visited[target_idx] = true;
 
-                    let mut relayed = *inner_effect.clone();
-                    relayed.logs.append(&mut last_propagated_effect.logs);
+                    let relayed_inner = (**inner_effect).clone();
+                    let (relayed_outcome, state, context, relayed_logs) =
+                        relayed_inner.into_parts();
+                    let mut combined_logs = relayed_logs;
+                    combined_logs.append(&mut last_propagated_effect.logs().clone());
+                    let relayed =
+                        PropagatingEffect::new(relayed_outcome, state, context, combined_logs);
                     queue.push_back((target_idx, relayed));
                 }
                 _ => {
                     let children = match self.get_graph().outbound_edges(current_index) {
                         Ok(c) => c,
                         Err(e) => {
-                            let mut err_effect = last_propagated_effect.clone();
-                            err_effect.error =
-                                Some(CausalityError(CausalityErrorEnum::Custom(format!("{e}"))));
-                            return err_effect;
+                            // Raising discards the value channel: value and error are one channel.
+                            let (_, state, context, logs) = last_propagated_effect.into_parts();
+                            return PropagatingEffect::new(
+                                Err(CausalityError(CausalityErrorEnum::Custom(format!("{e}")))),
+                                state,
+                                context,
+                                logs,
+                            );
                         }
                     };
                     for child_index in children {
@@ -264,7 +275,7 @@ where
             }
 
             // If a RelayTo effect is returned, stop the shortest path traversal and return it
-            if let EffectValue::RelayTo(_, _) = current_effect.value {
+            if let Some(EffectValue::RelayTo(_, _)) = current_effect.effect() {
                 return current_effect;
             }
         }

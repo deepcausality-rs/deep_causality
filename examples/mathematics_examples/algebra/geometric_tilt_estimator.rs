@@ -348,7 +348,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .into_effect();
 
     // 6. Output Results
-    let final_value = final_process.value.into_value().unwrap();
+    let final_value = final_process.into_parts().0.unwrap().into_value().unwrap();
     let (_, final_state) = final_value;
 
     println!("Final State:");

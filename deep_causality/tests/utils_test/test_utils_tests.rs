@@ -82,7 +82,7 @@ fn test_observations_inferences() {
 #[test]
 fn test_data_generators() {
     let eff = get_test_single_data(42.0);
-    assert_eq!(eff.value.into_value().unwrap(), 42.0);
+    assert_eq!(eff.value_cloned().unwrap(), 42.0);
 
     let arr = get_test_num_array();
     assert_eq!(arr.len(), 10);
@@ -112,16 +112,16 @@ fn test_causaloid_vectors() {
 fn test_deterministic_booleans() {
     let c_true = get_test_causaloid_deterministic_true();
     let res = c_true.evaluate(&PropagatingEffect::pure(false)); // input ignored
-    assert!(res.value.into_value().unwrap());
-    assert!(!res.logs.is_empty());
+    assert!(res.value_cloned().unwrap());
+    assert!(!res.logs().is_empty());
 
     let c_false = get_test_causaloid_deterministic_false();
     let res = c_false.evaluate(&PropagatingEffect::pure(true));
-    assert!(!res.value.into_value().unwrap());
+    assert!(!res.value_cloned().unwrap());
 
     let c_inv = get_test_causaloid_deterministic_input_output();
     let res = c_inv.evaluate(&PropagatingEffect::pure(true));
-    assert!(!res.value.into_value().unwrap()); // !true = false
+    assert!(!res.value_cloned().unwrap()); // !true = false
 }
 
 #[test]
@@ -129,18 +129,17 @@ fn test_probabilistic_causaloids() {
     let c_prob = get_test_causaloid_probabilistic();
     // Threshold 0.55
     let res = c_prob.evaluate(&PropagatingEffect::pure(0.6));
-    assert_eq!(res.value.into_value().unwrap(), 1.0);
+    assert_eq!(res.value_cloned().unwrap(), 1.0);
 
     let res = c_prob.evaluate(&PropagatingEffect::pure(0.5));
-    assert_eq!(res.value.into_value().unwrap(), 0.0);
+    assert_eq!(res.value_cloned().unwrap(), 0.0);
 
     let c_prob_bool = get_test_causaloid_probabilistic_bool_output();
     // Same logic 0.55
     assert_eq!(
         c_prob_bool
             .evaluate(&PropagatingEffect::pure(0.6))
-            .value
-            .into_value()
+            .value_cloned()
             .unwrap(),
         1.0
     );
@@ -151,17 +150,17 @@ fn test_uncertain_causaloids() {
     let c_ub = get_test_causaloid_uncertain_bool();
     // > 0.55 -> true
     let res = c_ub.evaluate(&PropagatingEffect::pure(0.6));
-    let ub = res.value.into_value().unwrap();
+    let ub = res.value_cloned().unwrap();
     // Point uncertain bool has prob 1.0 if true
     assert!(ub.to_bool(0.5, 0.95, 0.05, 100).unwrap());
 
     let res = c_ub.evaluate(&PropagatingEffect::pure(0.5));
-    let ub = res.value.into_value().unwrap();
+    let ub = res.value_cloned().unwrap();
     assert!(!ub.to_bool(0.5, 0.95, 0.05, 100).unwrap());
 
     let c_uf = get_test_causaloid_uncertain_float();
     let res = c_uf.evaluate(&PropagatingEffect::pure(0.6));
-    let uf = res.value.into_value().unwrap();
+    let uf = res.value_cloned().unwrap();
     // Point(1.0)
     assert!((uf.value() - 1.0).abs() < 1e-6);
 }
@@ -172,14 +171,12 @@ fn test_deterministic_comparisons() {
     // > 0.55 -> true
     assert!(
         c.evaluate(&PropagatingEffect::pure(0.6))
-            .value
-            .into_value()
+            .value_cloned()
             .unwrap()
     );
     assert!(
         !c.evaluate(&PropagatingEffect::pure(0.5))
-            .value
-            .into_value()
+            .value_cloned()
             .unwrap()
     );
 }
@@ -192,7 +189,7 @@ fn test_context_causaloid() {
     let c = get_test_causaloid_deterministic_with_context(ctx);
     // Should return input (id 1 matches)
     let res = c.evaluate(&PropagatingEffect::pure(true));
-    assert!(res.value.into_value().unwrap());
+    assert!(res.value_cloned().unwrap());
 
     // Test with missing context (difficult to trigger via public evaluate if context is baked in,
     // but the closure handles it. The Causaloid created has context wrapped).
@@ -207,7 +204,7 @@ fn test_context_causaloid() {
 
     // ID 2 -> should invert
     let res2 = c2.evaluate(&PropagatingEffect::pure(true));
-    assert!(!res2.value.into_value().unwrap());
+    assert!(!res2.value_cloned().unwrap());
 }
 
 #[test]
@@ -216,7 +213,7 @@ fn test_error_and_logging_causaloids() {
     let c_err = get_test_error_causaloid();
     let res = c_err.evaluate(&PropagatingEffect::pure(true));
     assert!(res.is_err());
-    assert!(res.error.unwrap().to_string().contains("Test error"));
+    assert!(res.error().unwrap().to_string().contains("Test error"));
 
     // Logging/Logic Causaloid (bool output)
     let c_log = get_test_causaloid(5);
@@ -225,17 +222,17 @@ fn test_error_and_logging_causaloids() {
     assert!(res_neg.is_err());
     assert!(
         res_neg
-            .error
+            .error()
             .unwrap()
             .to_string()
             .contains("Observation is negative")
     );
-    assert!(!res_neg.logs.is_empty());
+    assert!(!res_neg.logs().is_empty());
 
     // Positive > 0.55
     let res_pos = c_log.evaluate(&PropagatingEffect::pure(0.6));
-    assert!(res_pos.value.into_value().unwrap());
-    assert!(!res_pos.logs.is_empty());
+    assert!(res_pos.value_cloned().unwrap());
+    assert!(!res_pos.logs().is_empty());
 
     // Logging/Logic Causaloid (f64 output)
     let c_log_num = get_test_causaloid_num_input_output(6);
@@ -244,5 +241,5 @@ fn test_error_and_logging_causaloids() {
     assert!(res_neg.is_err());
     // Positive
     let res_pos = c_log_num.evaluate(&PropagatingEffect::pure(0.6));
-    assert_eq!(res_pos.value.into_value().unwrap(), 1.0);
+    assert_eq!(res_pos.value_cloned().unwrap(), 1.0);
 }

@@ -22,24 +22,24 @@ fn test_multi_cause_graph() {
     // 2. Single reasoning: Activate node B (index 2).
     let res = g.evaluate_single_cause(2, &effect);
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Value(1.0));
+    assert_eq!(res.value(), Some(&1.0));
 
     // 3. Partial reasoning from B (index 2). This will also activate its descendant C (index 3).
     let res = g.evaluate_subgraph_from_cause(2, &effect);
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Value(1.0));
+    assert_eq!(res.value(), Some(&1.0));
 
     // 4. Single reasoning: Deactivate node C (index 3).
     let deactivating_effect = PropagatingEffect::from_value(0.02);
     let res = g.evaluate_single_cause(3, &deactivating_effect);
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Value(0.0));
+    assert_eq!(res.value(), Some(&0.0));
 
     // 5. Shortest path from root to C
     let res = g.evaluate_shortest_path_between_causes(0, 3, &effect);
     assert!(res.is_ok());
     // The graph's evaluate() returns true if any sink node is active.
-    assert_eq!(res.value, EffectValue::Value(1.0));
+    assert_eq!(res.value(), Some(&1.0));
 }
 
 #[test]
@@ -57,21 +57,21 @@ fn test_multi_layer_cause_graph() {
     // 2. Single reasoning: Activate node C (index 3).
     let res = g.evaluate_single_cause(3, &effect);
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Value(1.0));
+    assert_eq!(res.value(), Some(&1.0));
 
     // 3. Partial reasoning from C (index 3). This will also activate its descendants F and G.
     let res = g.evaluate_subgraph_from_cause(3, &effect);
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Value(1.0));
+    assert_eq!(res.value(), Some(&1.0));
 
     // 4. Partial reasoning from B (index 2). This will also activate its descendants E and F.
     let res = g.evaluate_subgraph_from_cause(2, &effect);
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Value(1.0));
+    assert_eq!(res.value(), Some(&1.0));
 
     // 5. Single reasoning: Deactivate node G (index 7).
     let deactivating_effect = PropagatingEffect::from_value(0.02);
     let res = g.evaluate_single_cause(7, &deactivating_effect);
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Value(0.0));
+    assert_eq!(res.value(), Some(&0.0));
 }

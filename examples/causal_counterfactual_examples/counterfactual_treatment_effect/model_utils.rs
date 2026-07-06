@@ -72,5 +72,5 @@ pub fn print_cate_summary(all: &[FloatType], over_65: &[FloatType], under_65: &[
 pub fn print_audit_trail(patient: &Patient) {
     println!("--- Audit trail for patient #1 (under intervention do(T=1)) ---");
     let one = evaluate_under(patient, 1.0);
-    print_utils::print_effect_log(&one.logs);
+    print_utils::print_effect_log(one.logs());
 }

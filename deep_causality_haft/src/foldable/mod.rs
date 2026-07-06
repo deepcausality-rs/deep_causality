@@ -13,8 +13,11 @@ use crate::{HKT, Satisfies};
 ///
 /// # Laws (Informal)
 ///
-/// 1.  **Fold right equivalence**: `foldr f z t = foldl (flip f) z (reverse t)` (if `reverse` is defined)
-/// 2.  **Fold identity**: `fold f z (pure x) = f z x` (if `pure` is defined)
+/// 1.  **Fold identity**: `fold(pure(x), z, f) == f(z, x)` (for witnesses that also
+///     implement `Pure`) — folding a singleton applies `f` exactly once.
+///
+/// Laws are stated for pure functions; a stateful `FnMut` closure voids them.
+/// Machine-checked in `lean/DeepCausalityFormal/Haft/Foldable.lean`.
 ///
 /// # Type Parameters
 ///

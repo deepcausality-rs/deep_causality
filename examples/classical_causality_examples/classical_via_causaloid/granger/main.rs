@@ -27,11 +27,11 @@ fn main() {
 
     let res_factual = factual_causaloid.evaluate(&input_effect);
     if res_factual.is_err() {
-        eprintln!("Factual evaluation failed: {:?}", res_factual.error);
+        eprintln!("Factual evaluation failed: {:?}", res_factual.error());
         return;
     }
 
-    let factual_prediction = res_factual.value.into_value().unwrap_or(0.0);
+    let factual_prediction = res_factual.value_cloned().unwrap_or(0.0);
     println!(
         "Factual Prediction for Q5 Shipping Activity: {:.2}",
         factual_prediction
@@ -42,12 +42,12 @@ fn main() {
     if res_counter_factual.is_err() {
         eprintln!(
             "Counterfactual evaluation failed: {:?}",
-            res_counter_factual.error
+            res_counter_factual.error()
         );
         return;
     }
 
-    let counterfactual_prediction = res_counter_factual.value.into_value().unwrap_or(0.0);
+    let counterfactual_prediction = res_counter_factual.value_cloned().unwrap_or(0.0);
     println!(
         "Counterfactual Prediction for Q5 Shipping Activity: {:.2}",
         counterfactual_prediction

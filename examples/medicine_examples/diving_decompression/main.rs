@@ -21,7 +21,7 @@ mod model;
 mod print_utils;
 
 use deep_causality_calculus::DifferentiateExt;
-use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow, EffectValue};
+use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow};
 use model::{
     ASCENT_RATE, DESCENT_RATE, DiveProfile, DiverState, GF_HIGH, GF_LOW, SchreinerLoading,
     cns_accumulation, find_ceiling, update_tissues,
@@ -129,8 +129,8 @@ fn simulate_dive(max_depth: FloatType, bottom_time: FloatType) -> DiveProfile {
 
     // Extract results
     let final_state = match process.value() {
-        EffectValue::Value(s) => s.clone(),
-        _ => DiverState::default(),
+        Some(s) => s.clone(),
+        None => DiverState::default(),
     };
 
     // Parse deco stops from phase string

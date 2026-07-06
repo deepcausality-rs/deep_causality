@@ -88,16 +88,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Handle result
         match effect.value() {
-            EffectValue::Value(f) => {
+            Some(f) => {
                 current_fatigue = *f;
                 // Clamp for display
                 let disp = current_fatigue.clamp(0.0, 1.0);
                 println!("           Accumulated Wall Fatigue: {:.1}%", disp * 100.0);
             }
-            _ => {
-                // If it's not Value, it might be failure or None.
+            None => {
+                // If there is no value, it might be failure or None.
                 // Check error
-                if let Some(err) = &effect.error {
+                if let Some(err) = effect.error() {
                     println!("           [CRITICAL] {}", err);
                     println!("           !!! EMERGENCY INTERVENTION REQUIRED !!!");
                     break;

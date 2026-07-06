@@ -3,7 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{Intervenable, PropagatingEffect, PropagatingProcess};
+use deep_causality_core::{
+    EffectLog, EffectValue, Intervenable, PropagatingEffect, PropagatingProcess,
+};
 use deep_causality_haft::LogAddEntry;
 
 #[derive(Debug, Clone, Default)]
@@ -33,8 +35,10 @@ fn main() {
     println!("\n1. Factual World (Low Battery: {})", initial_energy);
 
     // Initial Process
-    let initial_effect = PropagatingEffect::pure(0);
-    let mut process = PropagatingProcess::with_state(
+    let mut init_log = EffectLog::new();
+    init_log.add_entry(&format!("System initialized. Energy: {}", initial_energy));
+    let initial_effect = PropagatingEffect::from_value_with_log(0, init_log);
+    let process = PropagatingProcess::with_state(
         initial_effect,
         SystemState {
             energy: initial_energy,
@@ -42,9 +46,6 @@ fn main() {
         },
         None::<()>,
     );
-    process
-        .logs
-        .add_entry(&format!("System initialized. Energy: {}", initial_energy));
 
     // Operation 1: Heavy Lift
     let final_process = process.bind(|_, mut state: SystemState, _ctx| {
@@ -60,31 +61,28 @@ fn main() {
             (false, "Operation Failed. Battery Depleted.".to_string())
         };
 
-        let mut p = PropagatingProcess::pure(success);
-        p.state = state;
-        p.logs
-            .add_entry(&format!("Operation 1 Executed. Result: {}", msg));
-        p
+        let mut log = EffectLog::new();
+        log.add_entry(&format!("Operation 1 Executed. Result: {}", msg));
+        PropagatingProcess::new(Ok(EffectValue::Value(success)), state, None, log)
     });
 
     println!(
         "  Factual Outcome: {:?}",
-        final_process.value.into_value().unwrap()
+        final_process.value_cloned().unwrap()
     );
-    println!("  Factual Logs:\n{}", final_process.logs);
+    println!("  Factual Logs:\n{}", final_process.logs());
 
     // Counterfactual World
     println!("\n2. Counterfactual World (Intervention: Sensor Battery Reading = 100)");
 
     // Sensor reading process
-    let mut sensor_reading = PropagatingProcess::with_state(
-        PropagatingEffect::pure(20), // Reading 20
+    let mut sensor_log = EffectLog::new();
+    sensor_log.add_entry("Sensor initialized. Reading: 20");
+    let sensor_reading = PropagatingProcess::with_state(
+        PropagatingEffect::from_value_with_log(20, sensor_log), // Reading 20
         SystemState::default(),
         None::<()>,
     );
-    sensor_reading
-        .logs
-        .add_entry("Sensor initialized. Reading: 20");
 
     // Intervention! Force reading to 100
     // .intervene() adds the log entry automatically
@@ -106,16 +104,15 @@ fn main() {
             )
         };
 
-        let mut p = PropagatingProcess::pure(status);
-        p.state = state;
-        p.logs.add_entry(&msg);
-        p
+        let mut log = EffectLog::new();
+        log.add_entry(&msg);
+        PropagatingProcess::new(Ok(EffectValue::Value(status)), state, None, log)
     });
 
     println!(
         "  Counterfactual Outcome: {:?}",
-        outcome.value.into_value().unwrap()
+        outcome.value_cloned().unwrap()
     );
     println!("\n3. Full Audit Trail (Counterfactual):");
-    println!("{}", outcome.logs);
+    println!("{}", outcome.logs());
 }

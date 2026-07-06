@@ -12,7 +12,6 @@
 //! - **Quantum Metric** (real part): "distance" between quantum states
 //! - **Berry Curvature** (imaginary part): "magnetic field" in momentum space
 
-use deep_causality_core::EffectValue;
 use deep_causality_num::Complex;
 use deep_causality_physics::{
     Energy, Length, PhysicsError, QuantumEigenvector, QuantumMetric, QuantumVelocity,
@@ -102,7 +101,7 @@ fn main() -> Result<(), PhysicsError> {
         regularization,
     );
 
-    if let EffectValue::Value(qxx) = qxx_effect.value() {
+    if let Some(qxx) = qxx_effect.value() {
         // Extract quantum metric (real part) and Berry curvature (imaginary part)
         println!("\nQ_xx = {:.6} + {:.6}i", qxx.re, qxx.im);
         println!("  → Quantum Metric g_xx = Re(Q_xx) = {:.6}", qxx.re);
@@ -112,7 +111,7 @@ fn main() -> Result<(), PhysicsError> {
         );
     }
 
-    if let EffectValue::Value(qxy) = qxy_effect.value() {
+    if let Some(qxy) = qxy_effect.value() {
         println!("\nQ_xy = {:.6} + {:.6}i", qxy.re, qxy.im);
         println!("  → Quantum Metric g_xy = Re(Q_xy) = {:.6}", qxy.re);
         println!(
@@ -143,7 +142,7 @@ fn main() -> Result<(), PhysicsError> {
         lattice_const,
     );
 
-    if let EffectValue::Value(drude_weight) = drude_effect.value() {
+    if let Some(drude_weight) = drude_effect.value() {
         println!(
             "Band Drude Weight D = {:.4e} eV·nm²",
             drude_weight.value() * 1e18

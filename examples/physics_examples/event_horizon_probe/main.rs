@@ -39,7 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let black_hole_mass =
         Mass::<FloatType>::new(ft(M_KG)).map_err(|e: PhysicsError| e.to_string())?;
     let rs_effect = schwarzschild_radius(&black_hole_mass);
-    let r_s = rs_effect.value().clone().into_value().unwrap().value();
+    let r_s = rs_effect.value_cloned().unwrap().value();
 
     // Φ(r) = −GM/r; the gravitational acceleration and tidal force are its derivatives.
     let potential = NewtonianPotential {
@@ -96,7 +96,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                     // A. Calculate expected orbital/escape velocities (Context assessment)
                     let v_esc_effect = escape_velocity(&bh_mass, &r);
-                    let v_esc = v_esc_effect.value().clone().into_value().unwrap().value();
+                    let v_esc = v_esc_effect.value_cloned().unwrap().value();
 
                     println!("  Escape Velocity required: {:.2e} m/s", v_esc);
 
@@ -136,12 +136,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let t_probe = CausalMultiVector::new(probe_vec, metric).unwrap();
 
                         let dilation_effect = time_dilation_angle(&t_static, &t_probe);
-                        let rapidity = dilation_effect
-                            .value()
-                            .clone()
-                            .into_value()
-                            .unwrap()
-                            .value();
+                        let rapidity = dilation_effect.value_cloned().unwrap().value();
 
                         println!("  [GR] Relativistic Rapidity: {:.4}", rapidity);
                         println!("  [GR] Time Dilation Factor: {:.2}", fcosh(rapidity));

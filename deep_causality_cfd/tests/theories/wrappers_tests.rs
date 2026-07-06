@@ -24,7 +24,7 @@ fn test_incompressible_ns_rhs_effect_wrapper() {
     let b = AccelerationVector::<f64>::new([0.0, -9.81, 0.0]).unwrap();
     let effect = incompressible_ns_rhs_effect(&u, &g, &lap, &gp, &r, &n, &b);
     assert!(effect.is_ok());
-    let v = effect.value().clone().into_value().unwrap().into_inner();
+    let v = effect.value_cloned().unwrap().into_inner();
     assert!((v[0] - (-5.0)).abs() < 1e-12);
     assert!((v[1] - (-9.81)).abs() < 1e-12);
     assert!(v[2].abs() < 1e-12);
@@ -39,7 +39,7 @@ fn test_euler_momentum_rhs_effect_wrapper() {
     let b = AccelerationVector::<f64>::new([0.0, -9.81, 0.0]).unwrap();
     let effect = euler_momentum_rhs_effect(&u, &g, &gp, &r, &b);
     assert!(effect.is_ok());
-    let v = effect.value().clone().into_value().unwrap().into_inner();
+    let v = effect.value_cloned().unwrap().into_inner();
     assert!((v[0] - (-5.0)).abs() < 1e-12);
     assert!((v[1] - (-9.81)).abs() < 1e-12);
 }
@@ -61,7 +61,7 @@ fn test_compressible_ns_continuity_rhs_effect_wrapper() {
     let u = Velocity3::<f64>::new([1.0, 0.0, 0.0]).unwrap();
     let effect = compressible_ns_continuity_rhs_effect(&rho, &u, &[3.0, 0.0, 0.0], 0.5);
     assert!(effect.is_ok());
-    assert!((effect.value().clone().into_value().unwrap() - (-4.0)).abs() < 1e-12);
+    assert!((effect.value_cloned().unwrap() - (-4.0)).abs() < 1e-12);
 }
 
 #[test]
@@ -95,7 +95,7 @@ fn test_compressible_ns_energy_rhs_effect_wrapper() {
     let b = AccelerationVector::<f64>::new([6.0, 0.0, 0.0]).unwrap();
     let effect = compressible_ns_energy_rhs_effect(&rho, &u, 2.0, 3.0, 4.0, 5.0, &b);
     assert!(effect.is_ok());
-    assert!(effect.value().clone().into_value().unwrap().abs() < 1e-12);
+    assert!(effect.value_cloned().unwrap().abs() < 1e-12);
 }
 
 #[test]
@@ -107,7 +107,7 @@ fn test_stokes_momentum_rhs_effect_wrapper() {
     let b = AccelerationVector::<f64>::new([0.0, -9.81, 0.0]).unwrap();
     let effect = stokes_momentum_rhs_effect(&lap, &gp, &r, &n, &b);
     assert!(effect.is_ok());
-    let v = effect.value().clone().into_value().unwrap().into_inner();
+    let v = effect.value_cloned().unwrap().into_inner();
     assert!((v[0] - (-3.0)).abs() < 1e-12);
     assert!((v[1] - (-9.81)).abs() < 1e-12);
 }

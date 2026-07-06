@@ -61,7 +61,7 @@ fn main() {
     );
 
     println!("\n--- Closed-loop EffectLog (per-tick forwarding + failover event) ---");
-    print_utils::print_effect_log(&closed.logs);
+    print_utils::print_effect_log(closed.logs());
 }
 
 /// Open loop: each tick is just `forward_traffic`, run `N_TICKS` times. No monitor, no failover.

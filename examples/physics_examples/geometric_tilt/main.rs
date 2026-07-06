@@ -110,10 +110,10 @@ fn main() {
 
                 // Print progress at key frames
                 if i == 0 || i == 15 || i == 35 || i == 49 {
-                    print_state_summary(i, &result.value.clone().into_value().unwrap_or_default());
+                    print_state_summary(i, &result.value_cloned().unwrap_or_default());
                 }
 
-                result.value.into_value().unwrap_or_default()
+                result.into_value().unwrap_or_default()
             });
 
     // =========================================================================

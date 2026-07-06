@@ -8,10 +8,9 @@
 
 use crate::model_types::{FloatType, PumpProcess};
 use causal_correction_examples::print_utils;
-use deep_causality_core::EffectValue;
 
 pub fn summary_line(label: &str, process: &PumpProcess<FloatType>) {
-    let st = &process.state;
+    let st = process.state();
     let outcome = match st.ketoacidosis_at {
         Some(t) => format!("KETOACIDOSIS at tick {t} (t = {} min)", t * 15),
         None => "stayed in safe range".to_string(),
@@ -24,8 +23,8 @@ pub fn summary_line(label: &str, process: &PumpProcess<FloatType>) {
 
 pub fn print_section(label: &str, process: &PumpProcess<FloatType>) {
     print_utils::print_section_header(label);
-    let st = &process.state;
-    let cfg = process.context.as_ref().unwrap();
+    let st = process.state();
+    let cfg = process.context().as_ref().unwrap();
     println!(
         "  ticks={}  boluses={}  total_insulin={:.1} U  max_glucose={:.1} mg/dL  ketoacidosis_threshold={:.0} mg/dL",
         st.tick,
@@ -39,7 +38,7 @@ pub fn print_section(label: &str, process: &PumpProcess<FloatType>) {
         Some(t) => println!("  result: KETOACIDOSIS at tick {t}"),
         None => println!("  result: stayed in safe range"),
     }
-    if let EffectValue::Value(v) = process.value {
+    if let Some(v) = process.value() {
         println!("  final glucose: {v:.1} mg/dL");
     }
     print_utils::print_section_footer();

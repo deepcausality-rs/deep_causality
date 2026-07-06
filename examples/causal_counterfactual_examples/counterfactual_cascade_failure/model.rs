@@ -100,13 +100,7 @@ pub fn resolve_stage(
         solution.overloaded,
     ));
 
-    NetworkProcess::<FlowSolution> {
-        value: EffectValue::Value(solution),
-        state,
-        context: ctx,
-        error: None,
-        logs,
-    }
+    NetworkProcess::<FlowSolution>::new(Ok(EffectValue::Value(solution)), state, ctx, logs)
 }
 
 /// Run a cascade starting from the given trigger pipe.
@@ -117,20 +111,19 @@ pub fn resolve_stage(
 /// Everything substantive lives in `resolve_stage`. The loop only
 /// decides what to intervene on next.
 pub fn run_cascade(trigger_edge: u32, cfg: NetworkConfig) -> NetworkProcess<FlowSolution> {
-    let mut process: NetworkProcess<Vec<u32>> = NetworkProcess::<Vec<u32>> {
-        value: EffectValue::Value(vec![trigger_edge]),
-        state: NetworkState::default(),
-        context: Some(cfg),
-        error: None,
-        logs: EffectLog::new(),
-    };
+    let process: NetworkProcess<Vec<u32>> = NetworkProcess::<Vec<u32>>::new(
+        Ok(EffectValue::Value(vec![trigger_edge])),
+        NetworkState::default(),
+        Some(cfg),
+        EffectLog::new(),
+    );
 
     let mut result: NetworkProcess<FlowSolution> = process.bind(resolve_stage);
 
     for _ in 0..CASCADE_MAX_ITERATIONS {
-        let overloaded = match &result.value {
-            EffectValue::Value(s) => s.overloaded.clone(),
-            _ => break,
+        let overloaded = match result.value() {
+            Some(s) => s.overloaded.clone(),
+            None => break,
         };
         if overloaded.is_empty() {
             // Stable footprint reached.
@@ -139,18 +132,19 @@ pub fn run_cascade(trigger_edge: u32, cfg: NetworkConfig) -> NetworkProcess<Flow
 
         // Pick the highest-overload pipe to fail next (deterministic tie-break by id).
         let next_failure = overloaded[0];
-        result.state.cascade_step += 1;
 
         // Re-bind: feed the previous solve's `cascade_step` forward by
         // rebuilding a Vec<u32>-valued process from the existing state/ctx
         // and intervening with the next failure on it.
-        process = NetworkProcess::<Vec<u32>> {
-            value: EffectValue::Value(Vec::new()),
-            state: result.state.clone(),
-            context: result.context.clone(),
-            error: result.error.clone(),
-            logs: result.logs.clone(),
-        }
+        let (_prev_outcome, mut state, context, logs) = result.into_parts();
+        state.cascade_step += 1;
+
+        let process = NetworkProcess::<Vec<u32>>::new(
+            Ok(EffectValue::Value(Vec::new())),
+            state,
+            context,
+            logs,
+        )
         .intervene(vec![next_failure]);
 
         result = process.bind(resolve_stage);

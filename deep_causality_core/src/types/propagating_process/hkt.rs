@@ -27,32 +27,16 @@ where
         B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnOnce(A) -> B,
     {
-        if m_a.error.is_some() {
-            return PropagatingProcess {
-                value: EffectValue::None,
-                state: m_a.state,
-                context: m_a.context,
-                error: m_a.error,
-                logs: m_a.logs,
-            };
-        }
+        // Error short-circuits: `f` is not invoked (left zero); state/context/logs preserved.
+        let outcome = match m_a.outcome {
+            Err(error) => Err(error),
+            Ok(value) => match value.into_value() {
+                Some(a) => Ok(EffectValue::Value(f(a))),
+                None => Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+            },
+        };
 
-        match m_a.value.into_value() {
-            Some(a) => PropagatingProcess {
-                value: EffectValue::Value(f(a)),
-                state: m_a.state,
-                context: m_a.context,
-                error: m_a.error,
-                logs: m_a.logs,
-            },
-            None => PropagatingProcess {
-                value: EffectValue::None,
-                state: m_a.state,
-                context: m_a.context,
-                error: Some(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
-                logs: m_a.logs,
-            },
-        }
+        PropagatingProcess::new(outcome, m_a.state, m_a.context, m_a.logs)
     }
 }
 
@@ -65,13 +49,12 @@ where
     where
         T: Satisfies<<Self as HKT>::Constraint>,
     {
-        PropagatingProcess {
-            value: EffectValue::Value(value),
-            state: S::default(),
-            context: None,
-            error: None,
-            logs: EffectLog::default(),
-        }
+        PropagatingProcess::new(
+            Ok(EffectValue::Value(value)),
+            S::default(),
+            None,
+            EffectLog::default(),
+        )
     }
 }
 
@@ -91,34 +74,18 @@ where
     {
         let mut combined_logs = f_ab.logs;
         combined_logs.append(&mut f_a.logs);
+        let context = f_ab.context.or(f_a.context);
 
-        let error = f_ab.error.or(f_a.error);
-        if error.is_some() {
-            return PropagatingProcess {
-                value: EffectValue::None,
-                state: f_ab.state,
-                context: f_ab.context.or(f_a.context),
-                error,
-                logs: combined_logs,
-            };
-        }
+        // Error short-circuits: the function is not invoked; the first error propagates.
+        let outcome = match (f_ab.outcome, f_a.outcome) {
+            (Err(error), _) | (_, Err(error)) => Err(error),
+            (Ok(func), Ok(arg)) => match (func.into_value(), arg.into_value()) {
+                (Some(mut f), Some(a)) => Ok(EffectValue::Value(f(a))),
+                _ => Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+            },
+        };
 
-        match (f_ab.value.into_value(), f_a.value.into_value()) {
-            (Some(mut f), Some(a)) => PropagatingProcess {
-                value: EffectValue::Value(f(a)),
-                state: f_ab.state,
-                context: f_ab.context.or(f_a.context),
-                error,
-                logs: combined_logs,
-            },
-            _ => PropagatingProcess {
-                value: EffectValue::None,
-                state: f_ab.state,
-                context: f_ab.context.or(f_a.context),
-                error: Some(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
-                logs: combined_logs,
-            },
-        }
+        PropagatingProcess::new(outcome, f_ab.state, context, combined_logs)
     }
 }
 

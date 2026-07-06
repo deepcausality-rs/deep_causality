@@ -60,13 +60,18 @@ The whole program is sound only on a cleaned base. Both are currently **unmet** 
 
 - **(P1) Control‑free.** Remove `RelayTo` (a computed jump = a control effect; not algebraic, needs
   handlers) and `Map` from the core. Relocate to a separate handler layer / future work.
-- **(P2) Lawful carrier.** Enforce the invariant **W: `error = Some ⇒ value = None`** structurally
-  (encode the value/error channel as `Either E (Maybe T)`, or a smart constructor — not `pub`
-  fields). Under W the monad's **right‑identity law holds unconditionally**; without W it fails
-  (documented in `CausalMonadProptest`, assumptions tracker #7).
+- **(P2) Lawful carrier.** ✅ **Landed** (`openspec/changes/enforce-w-invariant`). The invariant
+  **W: `error = Some ⇒ value = None`** is now enforced structurally: the carrier holds one private
+  channel `outcome: Result<EffectValue<T>, Error>` (the `Either E (Maybe T)` encoding), with all
+  fields private and construction through total constructors — the value‑AND‑error state is no
+  longer representable. Under W the monad's **right‑identity law holds unconditionally** (it failed
+  before, on errored carriers); right identity, associativity, and the error left‑zero are proved in
+  `lean/DeepCausalityFormal/Core/CausalMonad.lean`, machine‑checked by the Kani harnesses in
+  `deep_causality_core/tests/kani_proofs.rs`, and witnessed in `causal_monad_tests.rs`.
 
-> P2 is the single load‑bearing fix: until it lands, "Causal Monad" is a lax monad and nothing
-> downstream (algebra, Lean proof, parity) is sound.
+> P2 was the single load‑bearing fix; with it landed, the singleton Causal Monad is a genuine monad
+> and the downstream algebra / Lean proof / parity work is sound. (P1 — removing `RelayTo`/`Map` —
+> remains gating for the full `LawfulMonad` instance.)
 
 ---
 
@@ -155,7 +160,7 @@ trivial property). If it works, this is the strongest possible claim; if not, L1
 
 | # | Item | Layer | Status |
 |---|---|---|---|
-| 1 | **Enforce W (P2)** — `Either E (Maybe T)` encoding / smart constructor; remove the representable‑invalid state | Rust | **gating** |
+| 1 | **Enforce W (P2)** — `Either E (Maybe T)` encoding / smart constructor; remove the representable‑invalid state | Rust | ✅ **done** (`openspec/changes/enforce-w-invariant`: carrier is `outcome: Result<EffectValue<T>, Error>`, all fields private; right‑identity/associativity/left‑zero now proved in `Core/CausalMonad.lean` + Kani + witnesses) |
 | 2 | **Remove `RelayTo`/`Map` (P1)** from the core; isolate as handler/future work | Rust | gating |
 | 3 | Decide **context = Reader or State**; enforce it | Rust + math | open |
 | 4 | Lean model of cleaned `M`; `LawfulMonad` instance | L1 | not started |

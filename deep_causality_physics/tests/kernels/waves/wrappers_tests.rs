@@ -13,7 +13,7 @@ fn test_wave_speed_wrapper_success() {
     let effect = wave_speed(&f, &lambda);
     assert!(effect.is_ok());
 
-    let v = effect.value().clone().into_value().unwrap();
+    let v = effect.value_cloned().unwrap();
     assert!((v.value() - 341.0).abs() < 1.0);
 }
 
@@ -27,7 +27,7 @@ fn test_doppler_effect_approaching_wrapper_success() {
     let effect = doppler_effect_approaching(&f_src, &v, &vo, &vs);
     assert!(effect.is_ok());
 
-    let f_obs = effect.value().clone().into_value().unwrap();
+    let f_obs = effect.value_cloned().unwrap();
     assert!(f_obs.value() > 1000.0);
 }
 
@@ -41,7 +41,7 @@ fn test_doppler_effect_approaching_wrapper_stationary() {
     let effect = doppler_effect_approaching(&f_src, &v, &vo, &vs);
     assert!(effect.is_ok());
 
-    let f_obs = effect.value().clone().into_value().unwrap();
+    let f_obs = effect.value_cloned().unwrap();
     assert!((f_obs.value() - 1000.0).abs() < 1e-10);
 }
 

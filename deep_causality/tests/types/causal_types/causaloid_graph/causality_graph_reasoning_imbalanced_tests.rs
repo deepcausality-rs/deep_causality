@@ -18,13 +18,13 @@ fn test_left_imbalanced_cause_graph() {
     let res = g.evaluate_single_cause(index_c, &effect);
     dbg!(&res);
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Value(1.0));
+    assert_eq!(res.value(), Some(&1.0));
 
     // 3. Partial reasoning from A (index 1). This will also activate its descendants D and E.
     let res = g.evaluate_subgraph_from_cause(1, &effect);
     assert!(res.is_ok());
     dbg!(&res);
-    assert_eq!(res.value, EffectValue::Value(1.0));
+    assert_eq!(res.value(), Some(&1.0));
 
     // 4. Selective sub-graph reasoning from A(1) to D(4).
     // The path is [1, 4]. Re-evaluating them is idempotent.
@@ -32,7 +32,7 @@ fn test_left_imbalanced_cause_graph() {
     dbg!(&res);
 
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Value(1.0));
+    assert_eq!(res.value(), Some(&1.0));
 
     // 5. Single reasoning: Deactivate node A (index 1).
     let index_c = 1;
@@ -41,7 +41,7 @@ fn test_left_imbalanced_cause_graph() {
     dbg!(&res);
 
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Value(0.0));
+    assert_eq!(res.value(), Some(&0.0));
 }
 
 #[test]
@@ -57,14 +57,14 @@ fn test_right_imbalanced_cause_graph() {
     dbg!(&res);
 
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Value(1.0));
+    assert_eq!(res.value(), Some(&1.0));
 
     // 3. Partial reasoning from C (index 3). This includes descendants D and E.
     let res = g.evaluate_subgraph_from_cause(3, &effect);
     dbg!(&res);
 
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Value(1.0));
+    assert_eq!(res.value(), Some(&1.0));
 
     // 4. Single reasoning: Deactivate node A (index 1).
     let index_c = 1;
@@ -73,5 +73,5 @@ fn test_right_imbalanced_cause_graph() {
     dbg!(&res);
 
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Value(0.0));
+    assert_eq!(res.value(), Some(&0.0));
 }

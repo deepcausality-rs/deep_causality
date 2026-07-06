@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{GaugeField, GaugeGroup, TopologyError};
-use deep_causality_haft::{HKT3Unbound, NoConstraint, ParametricMonad, Promonad, Satisfies};
+use deep_causality_haft::{HKT3Unbound, MonoidalMerge, NoConstraint, ParametricMonad, Satisfies};
 use deep_causality_num::Field;
 use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
@@ -12,7 +12,7 @@ use std::marker::PhantomData;
 /// HKT3 witness for GaugeField<G, A, F>.
 ///
 /// This witness enables GaugeField to participate in HKT3 operations
-/// like Promonad (merging contexts) and ParametricMonad (indexed state transitions).
+/// like MonoidalMerge (merging contexts) and ParametricMonad (indexed state transitions).
 ///
 /// # Type Structure
 ///
@@ -127,10 +127,10 @@ where
 }
 
 // ============================================================================
-// Promonad Implementation
+// MonoidalMerge Implementation
 // ============================================================================
 
-/// Promonad for GaugeField models current-field coupling.
+/// MonoidalMerge for GaugeField models current-field coupling.
 ///
 /// # Physics Interpretation
 ///
@@ -143,7 +143,7 @@ where
 /// The HKT trait methods operate on the type-erased `GaugeFieldData`.
 /// For strongly-typed operations with proper `GaugeGroup` constraints,
 /// use the `merge_fields()` method on `GaugeFieldWitness` instead.
-impl<T> Promonad<GaugeFieldWitness<T>> for GaugeFieldWitness<T>
+impl<T> MonoidalMerge<GaugeFieldWitness<T>> for GaugeFieldWitness<T>
 where
     T: Field + From<f64> + Copy + Satisfies<NoConstraint>,
 {
@@ -156,7 +156,7 @@ where
     ///
     /// # Implementation — ACKNOWLEDGED HKT Limitation
     ///
-    /// **Rust Trait Limitation:** The Promonad trait from deep_causality_haft does not
+    /// **Rust Trait Limitation:** The MonoidalMerge trait from deep_causality_haft does not
     /// include `'static` bounds on type parameters. TypeId-based runtime type checking
     /// requires `'static` bounds. Therefore, we cannot safely invoke the user-provided
     /// function `f` without potentially unsound transmutation.
@@ -166,7 +166,7 @@ where
     /// method which enforces `GaugeGroup` bounds and properly invokes the coupling function.
     ///
     /// **Status:** ACKNOWLEDGED. Resolution requires either:
-    /// 1. Upstream trait changes to add `'static` bounds to Promonad
+    /// 1. Upstream trait changes to add `'static` bounds to MonoidalMerge
     /// 2. New trait solver (`-Ztrait-solver=next`) for better GAT support
     fn merge<A, B, C, Func>(
         pa: GaugeFieldHKT<A, A, A, T>,
@@ -218,25 +218,6 @@ where
             data_a.connection_shape.clone(),
             data_a.field_strength_shape.clone(),
         )
-    }
-
-    /// Fuses two raw inputs into an interaction context.
-    ///
-    /// # Implementation
-    ///
-    /// Creates a new HKT wrapper that conceptually contains both inputs.
-    /// The actual data representation stores the inputs' type information
-    /// for later use in merge operations.
-    fn fuse<A, B, C>(input_a: A, input_b: B) -> GaugeFieldHKT<A, B, C, T>
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
-    {
-        // Type-erase the inputs. Since we don't know their concrete structure,
-        // we create an empty wrapper that tracks the type relationship.
-        let _ = (input_a, input_b);
-        GaugeFieldHKT::empty()
     }
 }
 

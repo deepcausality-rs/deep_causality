@@ -15,13 +15,12 @@ fn errored() -> CausalFlow<i64> {
 }
 
 fn none_valued() -> CausalFlow<i64> {
-    CausalFlow::from(CausalEffectPropagationProcess {
-        value: EffectValue::None,
-        state: (),
-        context: None,
-        error: None,
-        logs: EffectLog::new(),
-    })
+    CausalFlow::from(CausalEffectPropagationProcess::new(
+        Ok(EffectValue::None),
+        (),
+        None,
+        EffectLog::new(),
+    ))
 }
 
 // ---- iterate_n -------------------------------------------------------------
@@ -188,6 +187,6 @@ fn loops_thread_state_through_each_step() {
             })
         })
         .into_process();
-    assert_eq!(proc.state.ticks, 3);
-    assert_eq!(proc.value, EffectValue::Value(3));
+    assert_eq!(proc.state().ticks, 3);
+    assert_eq!(proc.value(), Some(&3));
 }

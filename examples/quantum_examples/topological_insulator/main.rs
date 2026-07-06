@@ -41,9 +41,9 @@ fn main() {
     // The analysis runs as a CausalFlow stage; a non-finite integral short-circuits the chain.
     let pipeline = CausalFlow::effect().bind(|_, _, _| analyze()).into_effect();
 
-    match pipeline.value.into_value() {
+    match pipeline.value_cloned() {
         Some(report) => print_report(&report),
-        None => eprintln!("Chern analysis failed: {:?}", pipeline.error),
+        None => eprintln!("Chern analysis failed: {:?}", pipeline.error()),
     }
 }
 

@@ -23,6 +23,10 @@ use crate::{HKT, Satisfies};
 /// 1.  **Identity**: `fmap(id, fa) == fa`
 /// 2.  **Composition**: `fmap(f.compose(g), fa) == fmap(f, fmap(g, fa))`
 ///
+/// Laws are stated for pure functions; a stateful `FnMut` closure (one whose result depends
+/// on prior calls) voids them — purity cannot be enforced by the type system.
+/// Machine-checked in `lean/DeepCausalityFormal/Haft/Functor.lean`.
+///
 /// # Type Parameters
 ///
 /// *   `F`: A Higher-Kinded Type (HKT) witness that represents the type constructor

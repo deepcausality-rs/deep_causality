@@ -179,21 +179,14 @@ pub fn analyze_tick(
         marker
     ));
 
-    DetectorProcess::<ThrottleState> {
-        value: EffectValue::Value(throttle),
-        state,
-        context: ctx,
-        error: None,
-        logs,
-    }
+    DetectorProcess::<ThrottleState>::new(Ok(EffectValue::Value(throttle)), state, ctx, logs)
 }
 
 pub fn initial_process() -> DetectorProcess<ThrottleState> {
-    DetectorProcess::<ThrottleState> {
-        value: EffectValue::Value(THROTTLE_OFF),
-        state: DetectorState::new(),
-        context: Some(nominal_detector_config()),
-        error: None,
-        logs: EffectLog::new(),
-    }
+    DetectorProcess::<ThrottleState>::new(
+        Ok(EffectValue::Value(THROTTLE_OFF)),
+        DetectorState::new(),
+        Some(nominal_detector_config()),
+        EffectLog::new(),
+    )
 }

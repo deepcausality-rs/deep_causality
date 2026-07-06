@@ -15,37 +15,38 @@ fn test_monad_effect3() {
     >>::Type<T>;
 
     let initial_effect: MyEffectType<i32> = MyMonadEffect3::pure(10);
-    assert_eq!(initial_effect.value, 10);
+    assert_eq!(initial_effect.value, Some(10));
     assert!(initial_effect.error.is_none());
     assert!(initial_effect.warnings.is_empty());
 
     let f1 = |x| MyEffectType {
-        value: x * 2,
+        value: Some(x * 2),
         error: None,
         warnings: vec!["Warning 1".to_string()],
     };
 
     let effect_after_bind = MyMonadEffect3::bind(initial_effect, f1);
-    assert_eq!(effect_after_bind.value, 20);
+    assert_eq!(effect_after_bind.value, Some(20));
     assert!(effect_after_bind.error.is_none());
     assert_eq!(effect_after_bind.warnings, vec!["Warning 1".to_string()]);
 
     let effect_with_log = MyMonadEffect3::log(effect_after_bind, "Warning 2".to_string());
-    assert_eq!(effect_with_log.value, 20);
+    assert_eq!(effect_with_log.value, Some(20));
     assert!(effect_with_log.error.is_none());
     assert_eq!(
         effect_with_log.warnings,
         vec!["Warning 1".to_string(), "Warning 2".to_string()]
     );
 
-    let f2 = |x| MyEffectType {
-        value: x + 1,
+    // A failing step returns a well-formed errored carrier: no value, an error, its warnings.
+    let f2 = |_x| MyEffectType {
+        value: None,
         error: Some("Error occurred".to_string()),
         warnings: vec!["Warning 3".to_string()],
     };
 
     let final_effect = MyMonadEffect3::bind(effect_with_log, f2);
-    assert_eq!(final_effect.value, 21);
+    assert_eq!(final_effect.value, None);
     assert_eq!(final_effect.error, Some("Error occurred".to_string()));
     assert_eq!(
         final_effect.warnings,
@@ -55,6 +56,20 @@ fn test_monad_effect3() {
             "Warning 3".to_string()
         ]
     );
+
+    // Error short-circuits: a further bind must NOT run its continuation.
+    let mut ran = false;
+    let after_error = MyMonadEffect3::bind(final_effect, |x: i32| {
+        ran = true;
+        MyEffectType {
+            value: Some(x),
+            error: None,
+            warnings: vec![],
+        }
+    });
+    assert!(!ran, "continuation must not run on an errored carrier");
+    assert_eq!(after_error.value, None);
+    assert_eq!(after_error.error, Some("Error occurred".to_string()));
 }
 
 #[test]
@@ -69,7 +84,7 @@ fn test_monad_effect4() {
     assert_eq!(
         initial_effect,
         MyCustomEffectType4 {
-            value: 10,
+            value: Some(10),
             f1: None,
             f2: vec![],
             f3: vec![]
@@ -77,7 +92,7 @@ fn test_monad_effect4() {
     );
 
     let f1 = |x| MyEffectType {
-        value: x * 2,
+        value: Some(x * 2),
         f1: None,
         f2: vec!["Log 1".to_string()],
         f3: vec![100],
@@ -87,7 +102,7 @@ fn test_monad_effect4() {
     assert_eq!(
         effect1,
         MyCustomEffectType4 {
-            value: 20,
+            value: Some(20),
             f1: None,
             f2: vec!["Log 1".to_string()],
             f3: vec![100]
@@ -98,25 +113,28 @@ fn test_monad_effect4() {
     assert_eq!(
         effect2,
         MyCustomEffectType4 {
-            value: 20,
+            value: Some(20),
             f1: None,
             f2: vec!["Log 1".to_string()],
             f3: vec![100, 200]
         }
     );
 
-    let f2 = |x| MyEffectType {
-        value: x + 5,
-        f1: Some("Error Occurred".to_string()),
-        f2: vec!["Log 2".to_string()],
-        f3: vec![300],
+    // A failing step returns a well-formed errored carrier.
+    let f2 = |_x: i32| -> MyEffectType<i32> {
+        MyEffectType {
+            value: None,
+            f1: Some("Error Occurred".to_string()),
+            f2: vec!["Log 2".to_string()],
+            f3: vec![300],
+        }
     };
 
     let final_effect = MyMonadEffect4::bind(effect2, f2);
     assert_eq!(
         final_effect,
         MyCustomEffectType4 {
-            value: 25,
+            value: None,
             f1: Some("Error Occurred".to_string()),
             f2: vec!["Log 1".to_string(), "Log 2".to_string()],
             f3: vec![100, 200, 300],
@@ -137,7 +155,7 @@ fn test_monad_effect5() {
     assert_eq!(
         initial_effect,
         MyCustomEffectType5 {
-            value: 10,
+            value: Some(10),
             f1: None,
             f2: vec![],
             f3: vec![],
@@ -146,7 +164,7 @@ fn test_monad_effect5() {
     );
 
     let f1 = |x| MyEffectType {
-        value: x * 2,
+        value: Some(x * 2),
         f1: None,
         f2: vec!["Log 1".to_string()],
         f3: vec![100],
@@ -157,7 +175,7 @@ fn test_monad_effect5() {
     assert_eq!(
         effect1,
         MyCustomEffectType5 {
-            value: 20,
+            value: Some(20),
             f1: None,
             f2: vec!["Log 1".to_string()],
             f3: vec![100],
@@ -169,7 +187,7 @@ fn test_monad_effect5() {
     assert_eq!(
         effect2,
         MyCustomEffectType5 {
-            value: 20,
+            value: Some(20),
             f1: None,
             f2: vec!["Log 1".to_string()],
             f3: vec![100],

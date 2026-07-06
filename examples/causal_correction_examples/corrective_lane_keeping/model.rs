@@ -46,13 +46,7 @@ pub fn simulate_step(
         state.tick, next_offset, marker
     ));
 
-    LaneProcess::<FloatType> {
-        value: EffectValue::Value(next_offset),
-        state,
-        context: ctx,
-        error: None,
-        logs,
-    }
+    LaneProcess::<FloatType>::new(Ok(EffectValue::Value(next_offset)), state, ctx, logs)
 }
 
 /// The corrective P-controller. Given the post-step offset, return the
@@ -64,11 +58,10 @@ pub fn correction(offset: FloatType, cfg: &LaneConfig) -> FloatType {
 
 /// Initial process at offset 0 (vehicle centred at the start).
 pub fn initial_process() -> LaneProcess<FloatType> {
-    LaneProcess::<FloatType> {
-        value: EffectValue::Value(0.0),
-        state: VehicleState::default(),
-        context: Some(nominal_lane_config()),
-        error: None,
-        logs: EffectLog::new(),
-    }
+    LaneProcess::<FloatType>::new(
+        Ok(EffectValue::Value(0.0)),
+        VehicleState::default(),
+        Some(nominal_lane_config()),
+        EffectLog::new(),
+    )
 }

@@ -40,7 +40,7 @@ fn test_hydrostatic_pressure_wrapper_success() {
     let effect = hydrostatic_pressure(&p0, &density, &depth);
     assert!(effect.is_ok());
 
-    let p = effect.value().clone().into_value().unwrap();
+    let p = effect.value_cloned().unwrap();
     assert!(p.value() > p0.value());
 }
 
@@ -71,7 +71,7 @@ fn test_strain_rate_tensor_wrapper_success() {
         VelocityGradient::<f64>::new([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]).unwrap();
     let effect = strain_rate_tensor(&g);
     assert!(effect.is_ok());
-    let s = effect.value().clone().into_value().unwrap();
+    let s = effect.value_cloned().unwrap();
     let raw = s.value();
     // Symmetric by construction
     assert!((raw[0][1] - raw[1][0]).abs() < 1e-12);
@@ -83,7 +83,7 @@ fn test_rotation_rate_tensor_wrapper_success() {
         VelocityGradient::<f64>::new([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]).unwrap();
     let effect = rotation_rate_tensor(&g);
     assert!(effect.is_ok());
-    let o = effect.value().clone().into_value().unwrap();
+    let o = effect.value_cloned().unwrap();
     // Antisymmetric: diagonal vanishes
     assert!(o.value()[0][0].abs() < 1e-12);
 }
@@ -94,7 +94,7 @@ fn test_vorticity_from_gradient_wrapper_success() {
         VelocityGradient::<f64>::new([[0.0, 0.0, 0.0], [0.0, 0.0, -0.5], [0.0, 0.5, 0.0]]).unwrap();
     let effect = vorticity_from_gradient(&g);
     assert!(effect.is_ok());
-    let w = effect.value().clone().into_value().unwrap();
+    let w = effect.value_cloned().unwrap();
     assert!((w.value()[0] - 1.0).abs() < 1e-12);
 }
 
@@ -104,7 +104,7 @@ fn test_velocity_gradient_invariants_wrapper_success() {
         VelocityGradient::<f64>::new([[2.0, 0.0, 0.0], [0.0, 3.0, 0.0], [0.0, 0.0, 5.0]]).unwrap();
     let effect = velocity_gradient_invariants(&g);
     assert!(effect.is_ok());
-    let (p, _q, _r) = effect.value().clone().into_value().unwrap();
+    let (p, _q, _r) = effect.value_cloned().unwrap();
     assert!((p - (-10.0)).abs() < 1e-12);
 }
 
@@ -114,7 +114,7 @@ fn test_helicity_density_wrapper_success() {
     let w = VorticityVector::<f64>::new([4.0, 5.0, 6.0]).unwrap();
     let effect = helicity_density(&u, &w);
     assert!(effect.is_ok());
-    let h = effect.value().clone().into_value().unwrap();
+    let h = effect.value_cloned().unwrap();
     assert!((h - 32.0).abs() < 1e-12);
 }
 
@@ -123,7 +123,7 @@ fn test_enstrophy_density_wrapper_success() {
     let w = VorticityVector::<f64>::new([3.0, 4.0, 0.0]).unwrap();
     let effect = enstrophy_density(&w);
     assert!(effect.is_ok());
-    let e = effect.value().clone().into_value().unwrap();
+    let e = effect.value_cloned().unwrap();
     assert!((e - 12.5).abs() < 1e-12);
 }
 
@@ -138,7 +138,7 @@ fn test_convective_acceleration_wrapper_success() {
         VelocityGradient::<f64>::new([[1.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
     let effect = convective_acceleration(&u, &g);
     assert!(effect.is_ok());
-    let a = effect.value().clone().into_value().unwrap();
+    let a = effect.value_cloned().unwrap();
     assert!((a.value()[0] - 1.0).abs() < 1e-12);
 }
 
@@ -147,7 +147,7 @@ fn test_viscous_diffusion_wrapper_success() {
     let nu = KinematicViscosity::<f64>::new(0.5).unwrap();
     let effect = viscous_diffusion(&nu, &[2.0, 0.0, 0.0]);
     assert!(effect.is_ok());
-    let a = effect.value().clone().into_value().unwrap();
+    let a = effect.value_cloned().unwrap();
     assert!((a.value()[0] - 1.0).abs() < 1e-12);
 }
 
@@ -171,7 +171,7 @@ fn test_continuity_rhs_wrapper_success() {
     let u = Velocity3::<f64>::new([0.0; 3]).unwrap();
     let effect = continuity_rhs(&rho, &u, &[0.0; 3], 0.0);
     assert!(effect.is_ok());
-    assert_eq!(effect.value().clone().into_value().unwrap(), 0.0);
+    assert_eq!(effect.value_cloned().unwrap(), 0.0);
 }
 
 #[test]
@@ -184,7 +184,7 @@ fn test_vorticity_transport_wrapper_success() {
     let nu = KinematicViscosity::<f64>::new(0.5).unwrap();
     let effect = vorticity_transport(&omega, &u, &grad_u, &grad_omega, &lap_omega, &nu);
     assert!(effect.is_ok());
-    let a = effect.value().clone().into_value().unwrap();
+    let a = effect.value_cloned().unwrap();
     assert!((a.value()[0] - 2.0).abs() < 1e-12);
 }
 
@@ -193,7 +193,7 @@ fn test_scalar_advection_diffusion_wrapper_success() {
     let u = Velocity3::<f64>::default();
     let effect = scalar_advection_diffusion(&u, &[0.0; 3], 0.0, 0.0, 7.5);
     assert!(effect.is_ok());
-    assert_eq!(effect.value().clone().into_value().unwrap(), 7.5);
+    assert_eq!(effect.value_cloned().unwrap(), 7.5);
 }
 
 #[test]
@@ -202,7 +202,7 @@ fn test_kinetic_energy_density_wrapper_success() {
     let u = Velocity3::<f64>::new([3.0, 4.0, 0.0]).unwrap();
     let effect = kinetic_energy_density(&rho, &u);
     assert!(effect.is_ok());
-    let e = effect.value().clone().into_value().unwrap();
+    let e = effect.value_cloned().unwrap();
     assert!((e - 25.0).abs() < 1e-12);
 }
 
@@ -214,7 +214,7 @@ fn test_viscous_dissipation_rate_wrapper_success() {
         VelocityGradient::<f64>::new([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]).unwrap();
     let effect = viscous_dissipation_rate(&tau, &g);
     assert!(effect.is_ok());
-    let phi = effect.value().clone().into_value().unwrap();
+    let phi = effect.value_cloned().unwrap();
     assert!((phi - 10.0).abs() < 1e-12);
 }
 
@@ -223,7 +223,7 @@ fn test_pressure_work_wrapper_success() {
     let p = Pressure::<f64>::new(2.0).unwrap();
     let effect = pressure_work(&p, 3.0);
     assert!(effect.is_ok());
-    assert_eq!(effect.value().clone().into_value().unwrap(), 6.0);
+    assert_eq!(effect.value_cloned().unwrap(), 6.0);
 }
 
 // =============================================================================
@@ -237,7 +237,7 @@ fn test_newtonian_viscous_stress_wrapper_success() {
         StrainRateTensor::<f64>::new([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]).unwrap();
     let effect = newtonian_viscous_stress(&mu, &s, 0.0);
     assert!(effect.is_ok());
-    let tau = effect.value().clone().into_value().unwrap();
+    let tau = effect.value_cloned().unwrap();
     // τ_00 = 2 * 0.5 * 1 = 1
     assert!((tau.value()[0][0] - 1.0).abs() < 1e-12);
 }
@@ -249,7 +249,7 @@ fn test_newtonian_viscous_stress_with_bulk_wrapper_success() {
     let s = StrainRateTensor::<f64>::default();
     let effect = newtonian_viscous_stress_with_bulk(&mu, &zeta, &s, 5.0);
     assert!(effect.is_ok());
-    let tau = effect.value().clone().into_value().unwrap();
+    let tau = effect.value_cloned().unwrap();
     // Diagonal: (-0 + 1) * 5 = 5
     assert!((tau.value()[0][0] - 5.0).abs() < 1e-12);
 }
@@ -258,7 +258,7 @@ fn test_newtonian_viscous_stress_with_bulk_wrapper_success() {
 fn test_power_law_apparent_viscosity_wrapper_success() {
     let effect = power_law_apparent_viscosity(2.0_f64, 0.5, 4.0);
     assert!(effect.is_ok());
-    let mu_eff = effect.value().clone().into_value().unwrap();
+    let mu_eff = effect.value_cloned().unwrap();
     assert!((mu_eff.value() - 1.0).abs() < 1e-12);
 }
 
@@ -279,7 +279,7 @@ fn test_reynolds_number_wrapper() {
     let nu = KinematicViscosity::<f64>::new(1.0e-3).unwrap();
     let effect = reynolds_number(&u, &l, &nu);
     assert!(effect.is_ok());
-    assert!((effect.value().clone().into_value().unwrap() - 200.0).abs() < 1e-10);
+    assert!((effect.value_cloned().unwrap() - 200.0).abs() < 1e-10);
 }
 
 #[test]
@@ -413,7 +413,7 @@ fn test_turbulent_kinetic_energy_wrapper() {
     let u = Velocity3::<f64>::new([3.0, 4.0, 0.0]).unwrap();
     let effect = turbulent_kinetic_energy(&u);
     assert!(effect.is_ok());
-    assert!((effect.value().clone().into_value().unwrap() - 12.5).abs() < 1e-12);
+    assert!((effect.value_cloned().unwrap() - 12.5).abs() < 1e-12);
 }
 
 #[test]
@@ -531,7 +531,7 @@ fn test_q_criterion_wrapper() {
         VelocityGradient::<f64>::new([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
     let effect = q_criterion(&g);
     assert!(effect.is_ok());
-    assert!((effect.value().clone().into_value().unwrap() - 1.0).abs() < 1e-12);
+    assert!((effect.value_cloned().unwrap() - 1.0).abs() < 1e-12);
 }
 
 #[test]
@@ -547,7 +547,7 @@ fn test_lambda2_wrapper() {
         VelocityGradient::<f64>::new([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
     let effect = lambda2(&g);
     assert!(effect.is_ok());
-    let v = effect.value().clone().into_value().unwrap();
+    let v = effect.value_cloned().unwrap();
     assert!(v < 0.0);
 }
 
@@ -557,7 +557,7 @@ fn test_swirling_strength_wrapper() {
         VelocityGradient::<f64>::new([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
     let effect = swirling_strength(&g);
     assert!(effect.is_ok());
-    let v = effect.value().clone().into_value().unwrap();
+    let v = effect.value_cloned().unwrap();
     assert!((v - 1.0).abs() < 1e-12);
 }
 
@@ -601,7 +601,7 @@ fn test_total_temperature_isentropic_wrapper() {
     let t = Temperature::<f64>::new(300.0).unwrap();
     let effect = total_temperature_isentropic(&t, 1.0_f64, 1.4);
     assert!(effect.is_ok());
-    let v = effect.value().clone().into_value().unwrap();
+    let v = effect.value_cloned().unwrap();
     assert!((v.value() - 360.0).abs() < 1e-6);
 }
 
@@ -630,7 +630,7 @@ fn test_wall_shear_stress_newtonian_wrapper() {
     let mu = Viscosity::<f64>::new(1.0e-3).unwrap();
     let effect = wall_shear_stress_newtonian(&mu, 100.0_f64);
     assert!(effect.is_ok());
-    let v = effect.value().clone().into_value().unwrap();
+    let v = effect.value_cloned().unwrap();
     assert!((v.value() - 0.1).abs() < 1e-12);
 }
 
@@ -684,7 +684,7 @@ fn test_y_plus_wrapper_error_path() {
 fn test_viscous_sublayer_velocity_wrapper() {
     let effect = viscous_sublayer_velocity(3.0_f64);
     assert!(effect.is_ok());
-    assert_eq!(effect.value().clone().into_value().unwrap(), 3.0);
+    assert_eq!(effect.value_cloned().unwrap(), 3.0);
 }
 
 #[test]
@@ -704,7 +704,7 @@ fn test_skin_friction_coefficient_wrapper() {
     let u_inf = Speed::<f64>::new(10.0).unwrap();
     let effect = skin_friction_coefficient(&tau, &rho, &u_inf);
     assert!(effect.is_ok());
-    assert!((effect.value().clone().into_value().unwrap() - 0.01).abs() < 1e-12);
+    assert!((effect.value_cloned().unwrap() - 0.01).abs() < 1e-12);
 }
 
 #[test]
@@ -726,7 +726,7 @@ fn test_dynamic_pressure_wrapper() {
     let u = Speed::<f64>::new(20.0).unwrap();
     let effect = dynamic_pressure(&rho, &u);
     assert!(effect.is_ok());
-    assert!((effect.value().clone().into_value().unwrap().value() - 245.0).abs() < 1e-12);
+    assert!((effect.value_cloned().unwrap().value() - 245.0).abs() < 1e-12);
 }
 
 #[test]
@@ -751,14 +751,14 @@ fn test_bernoulli_total_head_wrapper_error_path() {
 fn test_stream_function_2d_wrapper() {
     let effect = stream_function_2d(1.0_f64, 0.0, 0.5, 0.3);
     assert!(effect.is_ok());
-    assert_eq!(effect.value().clone().into_value().unwrap(), 0.3);
+    assert_eq!(effect.value_cloned().unwrap(), 0.3);
 }
 
 #[test]
 fn test_velocity_potential_2d_wrapper() {
     let effect = velocity_potential_2d(2.0_f64, 3.0, 1.0, 1.0);
     assert!(effect.is_ok());
-    assert_eq!(effect.value().clone().into_value().unwrap(), 5.0);
+    assert_eq!(effect.value_cloned().unwrap(), 5.0);
 }
 
 #[test]
@@ -781,7 +781,7 @@ fn test_kutta_joukowski_lift_wrapper() {
     let u_inf = Speed::<f64>::new(50.0).unwrap();
     let effect = kutta_joukowski_lift(&rho, &u_inf, 10.0_f64);
     assert!(effect.is_ok());
-    assert!((effect.value().clone().into_value().unwrap() - 612.5).abs() < 1e-12);
+    assert!((effect.value_cloned().unwrap() - 612.5).abs() < 1e-12);
 }
 
 // =============================================================================
@@ -994,7 +994,7 @@ fn test_newtonian_viscous_stress_with_bulk_wrapper_error_path() {
 fn test_isentropic_pressure_ratio_wrapper() {
     let effect = isentropic_pressure_ratio(2.0_f64, 1.4);
     assert!(effect.is_ok());
-    let v = effect.value().clone().into_value().unwrap();
+    let v = effect.value_cloned().unwrap();
     assert!((v - 1.8_f64.powf(3.5)).abs() < 1e-9);
 }
 
@@ -1007,7 +1007,7 @@ fn test_isentropic_pressure_ratio_wrapper_error_path() {
 fn test_isentropic_temperature_ratio_wrapper() {
     let effect = isentropic_temperature_ratio(2.0_f64, 1.4);
     assert!(effect.is_ok());
-    let v = effect.value().clone().into_value().unwrap();
+    let v = effect.value_cloned().unwrap();
     assert!((v - 1.8).abs() < 1e-12);
 }
 
@@ -1020,7 +1020,7 @@ fn test_isentropic_temperature_ratio_wrapper_error_path() {
 fn test_isentropic_density_ratio_wrapper() {
     let effect = isentropic_density_ratio(1.0_f64, 1.4);
     assert!(effect.is_ok());
-    let v = effect.value().clone().into_value().unwrap();
+    let v = effect.value_cloned().unwrap();
     assert!((v - 1.2_f64.powf(2.5)).abs() < 1e-9);
 }
 
@@ -1033,7 +1033,7 @@ fn test_isentropic_density_ratio_wrapper_error_path() {
 fn test_area_mach_ratio_wrapper() {
     let effect = area_mach_ratio(2.0_f64, 1.4);
     assert!(effect.is_ok());
-    let v = effect.value().clone().into_value().unwrap();
+    let v = effect.value_cloned().unwrap();
     assert!((v - 1.6875).abs() < 1e-9);
 }
 

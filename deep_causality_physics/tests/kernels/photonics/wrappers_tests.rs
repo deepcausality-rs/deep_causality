@@ -3,7 +3,6 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::EffectValue;
 use deep_causality_num::Complex;
 use deep_causality_physics::{
     AbcdMatrix, ComplexBeamParameter, IndexOfRefraction, JonesVector, Length, RayAngle, RayHeight,
@@ -48,7 +47,7 @@ fn test_wrapper_ray_transfer_free_space() {
     let result = ray_transfer(&m, h, a);
     assert!(result.is_ok());
 
-    if let EffectValue::Value((h_out, _a_out)) = result.value() {
+    if let Some((h_out, _a_out)) = result.value() {
         // h' = h + d*a = 0.01 + 0.1*0.1 = 0.02
         assert!((h_out.value() - 0.02).abs() < 1e-10);
     }
@@ -63,7 +62,7 @@ fn test_wrapper_snells_law() {
     let result = snells_law(n1, n2, theta1);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(theta2) = result.value() {
+    if let Some(theta2) = result.value() {
         // n1*sin(theta1) = n2*sin(theta2)
         // sin(theta2) = 1.0*sin(0.3) / 1.5 = 0.1973
         // theta2 ≈ 0.198 rad
@@ -92,7 +91,7 @@ fn test_wrapper_lens_maker() {
     let result = lens_maker(n, r1, r2);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(power) = result.value() {
+    if let Some(power) = result.value() {
         // P = (n-1)(1/r1 - 1/r2) = 0.5 * (10 - (-10)) = 10 diopters
         assert!(power.value() > 0.0);
     }
@@ -123,7 +122,7 @@ fn test_wrapper_stokes_from_jones() {
     let result = stokes_from_jones(&j);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(stokes) = result.value() {
+    if let Some(stokes) = result.value() {
         let s = stokes.inner();
         // S0 = |Ex|² + |Ey|² = 1
         // S1 = |Ex|² - |Ey|² = 1
@@ -160,7 +159,7 @@ fn test_wrapper_jones_rotation() {
     let result = jones_rotation(&jones, angle);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(rotated) = result.value() {
+    if let Some(rotated) = result.value() {
         assert_eq!(rotated.shape(), &[2, 2]);
     }
 }
@@ -183,7 +182,7 @@ fn test_wrapper_degree_of_polarization() {
     let result = degree_of_polarization(&stokes);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(dop) = result.value() {
+    if let Some(dop) = result.value() {
         // DOP = sqrt(S1² + S2² + S3²) / S0 = 1.0 for fully polarized
         assert!((dop.value() - 1.0).abs() < 1e-10);
     }
@@ -199,7 +198,7 @@ fn test_wrapper_degree_of_polarization_partial() {
     let result = degree_of_polarization(&stokes);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(dop) = result.value() {
+    if let Some(dop) = result.value() {
         // DOP = 0.5 / 1.0 = 0.5
         assert!((dop.value() - 0.5).abs() < 1e-10);
     }
@@ -229,7 +228,7 @@ fn test_wrapper_gaussian_q_propagation() {
     let result = gaussian_q_propagation(q_in, &m);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(q_out) = result.value() {
+    if let Some(q_out) = result.value() {
         // q' = (A*q + B) / (C*q + D) = (1*i + 0.5) / (0*i + 1) = 0.5 + i
         assert!((q_out.value().re - 0.5).abs() < 1e-10);
         assert!((q_out.value().im - 1.0).abs() < 1e-10);
@@ -252,7 +251,7 @@ fn test_wrapper_beam_spot_size() {
     let result = beam_spot_size(q, w);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(spot) = result.value() {
+    if let Some(spot) = result.value() {
         // At waist: w0 = sqrt(λ * z_R / π)
         assert!(spot.value() > 0.0);
     }
@@ -280,7 +279,7 @@ fn test_wrapper_single_slit_irradiance() {
     let result = single_slit_irradiance(i0, slit_width, theta, wavelength);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(intensity) = result.value() {
+    if let Some(intensity) = result.value() {
         // Should be less than I0 for non-zero angle
         assert!(*intensity < i0);
         assert!(*intensity >= 0.0);
@@ -297,7 +296,7 @@ fn test_wrapper_single_slit_irradiance_center() {
     let result = single_slit_irradiance(i0, slit_width, theta, wavelength);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(intensity) = result.value() {
+    if let Some(intensity) = result.value() {
         // At center, I = I0
         assert!((intensity - i0).abs() < 1e-10);
     }
@@ -323,7 +322,7 @@ fn test_wrapper_grating_equation() {
     let result = grating_equation(pitch, order, incidence, wavelength);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(angle) = result.value() {
+    if let Some(angle) = result.value() {
         // sin(θ) = m * λ / d = 1 * 500e-9 / 1e-6 = 0.5
         // θ ≈ 0.524 rad
         assert!((angle.value().sin() - 0.5).abs() < 1e-6);
@@ -340,7 +339,7 @@ fn test_wrapper_grating_equation_zero_order() {
     let result = grating_equation(pitch, order, incidence, wavelength);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(angle) = result.value() {
+    if let Some(angle) = result.value() {
         // m=0: sin(θ_out) = sin(θ_in)
         assert!((angle.value() - 0.3).abs() < 1e-10);
     }

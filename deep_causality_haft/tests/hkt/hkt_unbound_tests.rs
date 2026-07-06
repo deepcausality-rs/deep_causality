@@ -97,7 +97,7 @@ fn test_profunctor_func() {
 }
 
 // ----------------------------------------------------
-// 3. Promonad Test (Tuple Merge)
+// 3. MonoidalMerge Test (Tuple Merge)
 // ----------------------------------------------------
 
 struct TripleWitness;
@@ -106,7 +106,7 @@ impl HKT3Unbound for TripleWitness {
     type Type<A, B, C> = (A, B, C);
 }
 
-impl Promonad<TripleWitness> for TripleWitness {
+impl MonoidalMerge<TripleWitness> for TripleWitness {
     fn merge<A, B, C, F>(pa: (A, A, A), pb: (B, B, B), mut f: F) -> (C, C, C)
     where
         A: Satisfies<NoConstraint>,
@@ -116,29 +116,10 @@ impl Promonad<TripleWitness> for TripleWitness {
     {
         (f(pa.0, pb.0), f(pa.1, pb.1), f(pa.2, pb.2))
     }
-
-    fn fuse<A, B, C>(input_a: A, input_b: B) -> (A, B, C)
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
-    {
-        // This implementation is a dummy for Tuple, as we can't invent C.
-        // But for Promonad generally, it might construct an interaction context.
-        // Here we just panic or use unsafe, but for test we won't call fuse directly
-        // in a way that requires C to be meaningful without a merge function.
-        // A better example would be an Interaction struct.
-        // For the sake of compilation, we just panic.
-        panic!(
-            "Tuple fusion requires a merge function, inputs: {:?}, {:?}",
-            std::mem::size_of_val(&input_a),
-            std::mem::size_of_val(&input_b)
-        )
-    }
 }
 
 #[test]
-fn test_promonad_tuple() {
+fn test_monoidal_merge_tuple() {
     let t1 = (1, 2, 3);
     let t2 = (10, 20, 30);
 

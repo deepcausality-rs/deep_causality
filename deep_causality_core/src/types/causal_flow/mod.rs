@@ -64,13 +64,12 @@ fn ok_leaf<U, State, Context>(
     state: State,
     context: Option<Context>,
 ) -> PropagatingProcess<U, State, Context> {
-    CausalEffectPropagationProcess {
-        value: EffectValue::Value(value),
+    CausalEffectPropagationProcess::new(
+        Ok(EffectValue::Value(value)),
         state,
         context,
-        error: None,
-        logs: EffectLog::new(),
-    }
+        EffectLog::new(),
+    )
 }
 
 #[inline]
@@ -79,11 +78,5 @@ fn err_leaf<U, State, Context>(
     state: State,
     context: Option<Context>,
 ) -> PropagatingProcess<U, State, Context> {
-    CausalEffectPropagationProcess {
-        value: EffectValue::None,
-        state,
-        context,
-        error: Some(err),
-        logs: EffectLog::new(),
-    }
+    CausalEffectPropagationProcess::new(Err(err), state, context, EffectLog::new())
 }

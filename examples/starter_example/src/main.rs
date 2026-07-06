@@ -103,8 +103,9 @@ fn rung2_intervention() {
             PropagatingEffect::pure(tar_to_cancer(t))
         });
 
-    let before_risk = before.value.into_value().unwrap_or_default();
-    let after_risk = after.value.into_value().unwrap_or_default();
+    let before_risk = before.into_value().unwrap_or_default();
+
+    let after_risk = after.into_value().unwrap_or_default();
 
     println!("Before intervention (natural chain):");
     println!(
@@ -162,8 +163,8 @@ fn rung3_counterfactual() {
             PropagatingEffect::pure(tar_to_cancer(t))
         });
 
-    let factual_risk = factual.value.into_value().unwrap_or_default();
-    let counterfactual_risk = counterfactual.value.into_value().unwrap_or_default();
+    let factual_risk = factual.into_value().unwrap_or_default();
+    let counterfactual_risk = counterfactual.into_value().unwrap_or_default();
 
     println!("Factual world (was a heavy smoker):");
     println!(
@@ -202,7 +203,7 @@ fn causal_chain(nicotine: f64) -> f64 {
             PropagatingEffect::pure(tar_to_cancer(t))
         });
 
-    result.value.into_value().unwrap_or_default()
+    result.into_value().unwrap_or_default()
 }
 
 /// Causal mechanism: Nicotine → Tar accumulation

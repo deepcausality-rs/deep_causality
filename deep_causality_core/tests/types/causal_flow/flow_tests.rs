@@ -20,9 +20,9 @@ fn err(msg: &str) -> CausalityError {
 #[test]
 fn effect_seeds_unit_value() {
     let e = CausalFlow::effect().into_effect();
-    assert_eq!(e.value, EffectValue::Value(()));
-    assert!(e.error.is_none());
-    assert!(e.context.is_none());
+    assert_eq!(e.value(), Some(&()));
+    assert!(e.is_ok());
+    assert!(e.context().is_none());
 }
 
 #[test]
@@ -43,9 +43,9 @@ fn fail_seeds_error() {
 #[test]
 fn process_context_seeds_state_and_context() {
     let p = CausalFlow::process(5i64).context("cfg").into_process();
-    assert_eq!(p.state, 5);
-    assert_eq!(p.context, Some("cfg"));
-    assert_eq!(p.value, EffectValue::Value(()));
+    assert_eq!(*p.state(), 5);
+    assert_eq!(*p.context(), Some("cfg"));
+    assert_eq!(p.value(), Some(&()));
 }
 
 // -----------------------------------------------------------------------------
@@ -126,8 +126,8 @@ fn step_mut_mutates_state_while_transforming_value() {
             Ok("done")
         })
         .into_process();
-    assert_eq!(p.state, 10);
-    assert_eq!(p.value, EffectValue::Value("done"));
+    assert_eq!(*p.state(), 10);
+    assert_eq!(p.value(), Some(&"done"));
 }
 
 #[test]
@@ -135,7 +135,7 @@ fn update_value_updates_value_in_place() {
     let p = CausalFlow::value(5i64)
         .update_value(|v| v * 2)
         .into_effect();
-    assert_eq!(p.value, EffectValue::Value(10));
+    assert_eq!(p.value(), Some(&10));
 }
 
 #[test]
@@ -143,7 +143,7 @@ fn update_state_evolves_state() {
     let p = CausalFlow::process(1i64)
         .update_state(|s, _v| s + 100)
         .into_process();
-    assert_eq!(p.state, 101);
+    assert_eq!(*p.state(), 101);
 }
 
 #[test]
@@ -153,9 +153,9 @@ fn update_context_evolves_context_from_value() {
         .map(|_unit| 5i64) // value = 5
         .update_context(|c, v| Some(c.unwrap_or(0) + v))
         .into_process();
-    assert_eq!(p.context, Some(15)); // 10 + 5
-    assert_eq!(p.value, EffectValue::Value(5)); // unchanged
-    assert_eq!(p.state, 0); // unchanged
+    assert_eq!(*p.context(), Some(15)); // 10 + 5
+    assert_eq!(p.value(), Some(&5)); // unchanged
+    assert_eq!(*p.state(), 0); // unchanged
 }
 
 #[test]
@@ -168,16 +168,16 @@ fn update_value_state_context_rewrites_all_three() {
             (v + 10, s + ctx, Some(ctx + 100))
         })
         .into_process();
-    assert_eq!(p.value, EffectValue::Value(13)); // 3 + 10
-    assert_eq!(p.state, 3); // 1 + 2
-    assert_eq!(p.context, Some(102)); // 2 + 100
+    assert_eq!(p.value(), Some(&13)); // 3 + 10
+    assert_eq!(*p.state(), 3); // 1 + 2
+    assert_eq!(*p.context(), Some(102)); // 2 + 100
 }
 
 #[test]
 fn intervene_substitutes_value_and_logs_override() {
     let p = CausalFlow::value(1i64).intervene(99).into_effect();
-    assert_eq!(p.value, EffectValue::Value(99));
-    assert!(format!("{:?}", p.logs).contains("ValueAlternation"));
+    assert_eq!(p.value(), Some(&99));
+    assert!(format!("{:?}", p.logs()).contains("ValueAlternation"));
 }
 
 #[test]
@@ -194,15 +194,11 @@ fn intervene_if_fires_only_on_condition() {
 
 #[test]
 fn intervene_if_skips_errored_flow() {
-    // A carrier holding BOTH a value and an error (reachable via `from`): the error must take
-    // precedence so neither closure runs (they panic if invoked).
-    let errored: PropagatingEffect<i64> = CausalEffectPropagationProcess {
-        value: EffectValue::Value(10),
-        state: (),
-        context: None,
-        error: Some(err("boom")),
-        logs: EffectLog::new(),
-    };
+    // An errored carrier: the error takes precedence so neither closure runs (they panic if
+    // invoked). Value AND error is unrepresentable now; the lawful errored carrier holds only
+    // the error in the single outcome channel.
+    let errored: PropagatingEffect<i64> =
+        CausalEffectPropagationProcess::new(Err(err("boom")), (), None, EffectLog::new());
     let out = CausalFlow::from(errored)
         .intervene_if(
             |_| panic!("cond ran on an errored flow"),
@@ -215,29 +211,33 @@ fn intervene_if_skips_errored_flow() {
 #[test]
 fn map_preserves_contextual_link_carrier() {
     // `ContextualLink` is not a plain value; `map` must pass it through, not drop it to `None`.
-    let linked: PropagatingEffect<i64> = CausalEffectPropagationProcess {
-        value: EffectValue::ContextualLink(7, 9),
-        state: (),
-        context: None,
-        error: None,
-        logs: EffectLog::new(),
-    };
+    let linked: PropagatingEffect<i64> = CausalEffectPropagationProcess::new(
+        Ok(EffectValue::ContextualLink(7, 9)),
+        (),
+        None,
+        EffectLog::new(),
+    );
     let out = CausalFlow::from(linked).map(|x: i64| x + 1).into_effect();
-    assert!(matches!(out.value, EffectValue::ContextualLink(7, 9)));
-    assert!(out.error.is_none());
+    assert!(matches!(
+        out.effect(),
+        Some(EffectValue::ContextualLink(7, 9))
+    ));
+    assert!(out.is_ok());
 }
 
 #[test]
 fn map_surfaces_error_on_dispatch_variant() {
     // `RelayTo` embeds a `PropagatingEffect` a value-level map cannot retype; `map` must surface
     // `ValueNotAvailable` rather than silently dropping the dispatch command.
-    let dispatch: PropagatingEffect<i64> = CausalEffectPropagationProcess {
-        value: EffectValue::RelayTo(3, Box::new(PropagatingEffect::from_value(42))),
-        state: (),
-        context: None,
-        error: None,
-        logs: EffectLog::new(),
-    };
+    let dispatch: PropagatingEffect<i64> = CausalEffectPropagationProcess::new(
+        Ok(EffectValue::RelayTo(
+            3,
+            Box::new(PropagatingEffect::from_value(42)),
+        )),
+        (),
+        None,
+        EffectLog::new(),
+    );
     let out = CausalFlow::from(dispatch).map(|x: i64| x + 1).finish();
     assert!(out.is_err());
     assert!(format!("{:?}", out.unwrap_err()).contains("ValueNotAvailable"));
@@ -246,13 +246,7 @@ fn map_surfaces_error_on_dispatch_variant() {
 #[test]
 fn bind_or_error_passthrough_runs_existing_stage() {
     fn stage(x: i64, s: (), c: Option<()>) -> PropagatingProcess<i64, (), ()> {
-        CausalEffectPropagationProcess {
-            value: EffectValue::Value(x * 2),
-            state: s,
-            context: c,
-            error: None,
-            logs: EffectLog::new(),
-        }
+        CausalEffectPropagationProcess::new(Ok(EffectValue::Value(x * 2)), s, c, EffectLog::new())
     }
     let out = CausalFlow::value(21i64)
         .bind_or_error(stage, "fail")
@@ -265,13 +259,12 @@ fn bind_passthrough_runs_existing_stage() {
     let out = CausalFlow::value(5i64)
         .bind(|ev, s, c| {
             let v = ev.into_value().unwrap_or_default();
-            CausalEffectPropagationProcess {
-                value: EffectValue::Value(v + 1),
-                state: s,
-                context: c,
-                error: None,
-                logs: EffectLog::new(),
-            }
+            CausalEffectPropagationProcess::new(
+                Ok(EffectValue::Value(v + 1)),
+                s,
+                c,
+                EffectLog::new(),
+            )
         })
         .finish();
     assert_eq!(out, Ok(6));
@@ -296,7 +289,7 @@ fn run_dispatches_to_handler_by_outcome() {
 fn from_and_into_round_trip_losslessly() {
     let eff = PropagatingEffect::from_value(42i64);
     let flow: CausalFlow<i64> = CausalFlow::from(eff);
-    assert_eq!(flow.into_effect().value, EffectValue::Value(42));
+    assert_eq!(flow.into_effect().value(), Some(&42));
 }
 
 #[test]
@@ -318,17 +311,18 @@ fn flow_chain_matches_raw_bind_chain() {
         .try_step(|x| Ok(x + 3))
         .into_effect();
     let via_raw: PropagatingEffect<i64> = PropagatingEffect::from_value(2i64).bind_or_error(
-        |x, s, c| CausalEffectPropagationProcess {
-            value: EffectValue::Value(x + 3),
-            state: s,
-            context: c,
-            error: None,
-            logs: EffectLog::new(),
+        |x, s, c| {
+            CausalEffectPropagationProcess::new(
+                Ok(EffectValue::Value(x + 3)),
+                s,
+                c,
+                EffectLog::new(),
+            )
         },
         "msg",
     );
-    assert_eq!(via_flow.value, via_raw.value);
-    assert_eq!(via_flow.error.is_some(), via_raw.error.is_some());
+    assert_eq!(via_flow.value(), via_raw.value());
+    assert_eq!(via_flow.is_err(), via_raw.is_err());
 }
 
 // -----------------------------------------------------------------------------

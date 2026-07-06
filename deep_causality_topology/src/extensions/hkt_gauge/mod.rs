@@ -5,7 +5,7 @@
 
 //! HKT3 witness and trait implementations for GaugeField.
 //!
-//! This module provides Promonad and ParametricMonad implementations for GaugeField,
+//! This module provides MonoidalMerge and ParametricMonad implementations for GaugeField,
 //! enabling current-field coupling and gauge transformation operations.
 //!
 //! # Architectural Note

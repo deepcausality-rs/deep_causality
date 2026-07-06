@@ -4,8 +4,8 @@
  */
 
 use deep_causality_haft::{
-    Bifunctor, HKT2Unbound, NoConstraint, Profunctor, Promonad, ResultUnboundWitness, Satisfies,
-    Tuple3Witness,
+    Bifunctor, HKT2Unbound, MonoidalMerge, NoConstraint, Profunctor, ResultUnboundWitness,
+    Satisfies, Tuple3Witness,
 };
 
 fn main() {
@@ -97,13 +97,13 @@ fn main() {
     assert_eq!(output.value, 20.0); // 10.0 * 2.0
 
     // ------------------------------------------------------------------------
-    // Step 3: Multi-Stream Fusion (Promonad)
+    // Step 3: Multi-Stream Fusion (MonoidalMerge)
     //
     // ENGINEERING VALUE:
     // In avionics and robotics, you rarely rely on a single sensor. You need to
     // "fuse" data from multiple sources (e.g., 3-axis accelerometer) to get the truth.
     //
-    // The Promonad pattern provides a structured way to merge multiple independent
+    // The MonoidalMerge pattern provides a structured way to merge multiple independent
     // data streams. It handles the complexity of combining inputs (like zipping streams)
     // so you can focus purely on the fusion logic (how to combine X, Y, and Z).
     //

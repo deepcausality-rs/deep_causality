@@ -24,9 +24,22 @@ use crate::{Functor, HKT, Pure, Satisfies};
 ///
 /// # Laws (Informal)
 ///
+/// The four laws of McBride & Paterson, *Applicative programming with effects*,
+/// JFP 18(1), 2008:
+///
 /// 1.  **Identity**: `apply(pure(id), v) == v`
-/// 2.  **Homomorphism**: `apply(pure(f), pure(x)) == pure(f(x))`
-/// 3.  **Interchange**: `apply(u, pure(y)) == apply(pure(|f| f(y)), u)`
+/// 2.  **Composition**: `apply(apply(apply(pure(compose), u), v), w) == apply(u, apply(v, w))`
+///     where `compose = |f| |g| |a| f(g(a))`
+/// 3.  **Homomorphism**: `apply(pure(f), pure(x)) == pure(f(x))`
+/// 4.  **Interchange**: `apply(u, pure(y)) == apply(pure(|f| f(y)), u)`
+///
+/// Functor compatibility: `fmap(x, f) == apply(pure(f), x)` — `apply` and `fmap` must
+/// present one and the same functor. For witnesses that also implement `Monad`, see the
+/// applicative-coherence law documented on `Monad`.
+///
+/// Laws are stated for pure functions; a stateful `FnMut` closure (one whose result depends
+/// on prior calls) voids them. Machine-checked in
+/// `lean/DeepCausalityFormal/Haft/Applicative.lean`.
 ///
 /// # Type Parameters
 ///

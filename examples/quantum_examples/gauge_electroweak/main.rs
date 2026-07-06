@@ -14,9 +14,7 @@
 //! 3. **Gauge Mixing**: Confirm W/Z mass ratio and ρ parameter
 //! 4. **Resonance**: Compute Z pole cross-section
 
-use deep_causality_core::{
-    CausalEffectPropagationProcess, CausalFlow, EffectValue, PropagatingEffect,
-};
+use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow, PropagatingEffect};
 use deep_causality_num::{Float106, Real};
 use deep_causality_physics::ElectroweakParams;
 
@@ -223,13 +221,13 @@ fn stage_z_resonance(mut state: EwState, _: (), _: Option<()>) -> PropagatingEff
 
 fn print_summary(result: &PropagatingEffect<EwState>) {
     match result.value() {
-        EffectValue::Value(state) => {
+        Some(state) => {
             println!("[SUCCESS] One-Loop Radiative Corrections Verified.");
             println!("  Generated W Mass:   {} GeV", state.w_mass_calc);
             println!("  Precision Level:    < 20 MeV deviation (Correct for 1-Loop)");
             println!("  Top Yukawa:         {}", state.top_yukawa);
         }
 
-        _ => println!("[ERROR] Pipeline failed"),
+        None => println!("[ERROR] Pipeline failed"),
     }
 }
