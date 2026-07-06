@@ -1,0 +1,30 @@
+openspec/specs/stateful-causal-arrow/spec.md
+  s_cefbd789296ae8::t_f1a9504e385011 3-12,14-18,25-31,33-36,38-44,46-48,50-52,54-59,64,68-71
+  s_cefbd789296ae8::t_f27af36a41e4d0 1-2,13,19-24,32,37,45,49,53,60-63,65-67
+openspec/changes/formalize-deep-causality-core/core-formalization-plan.md
+  s_cefbd789296ae8::t_bc80e600b52fd2 201
+openspec/changes/archive/2026-07-06-causal-arrow-state-threading/design.md
+  s_cefbd789296ae8::t_35bb92fb4fd6e1 3-9,14-17,20-22,26-60,64-70,74-80,86
+openspec/changes/archive/2026-07-06-causal-arrow-state-threading/proposal.md
+  s_cefbd789296ae8::t_892f9e6ea44cae 16-32
+openspec/changes/archive/2026-07-06-causal-arrow-state-threading/specs/stateful-causal-arrow/spec.md
+  s_cefbd789296ae8::t_31cd893ed3c4c5 5-11,13-17,24-30,32-35,37-43,45-47,49-51,53-58,63,67-69
+openspec/changes/archive/2026-07-06-causal-arrow-state-threading/tasks.md
+  s_cefbd789296ae8::t_04272e9f68c8fe 1,3-6,8,10-14,16,18-21,23,25-27,31-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c23957fa21c905f3aed991d0399751af938162ed",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
