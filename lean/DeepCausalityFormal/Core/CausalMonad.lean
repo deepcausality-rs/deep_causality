@@ -116,7 +116,9 @@ theorem bind_assoc (m : Process V S C E Λ)
 /-- Raise is a left zero: an errored carrier short-circuits `bind` — the continuation is
     never consulted and error, state, context, and logs survive verbatim. In Rust this is
     the `Err` arm returning `self` reassembled; pinned by the Kani harness
-    `causal_monad_short_circuit` and the witness tests. -/
+    `causal_monad_short_circuit` and the witness tests.
+
+    THEOREM_MAP: `core.causal_monad.left_zero` -/
 theorem bind_raise_left_zero (e : E) (s : S) (c : Option C) (l : List Λ)
     (f : Option V → S → Option C → Process W S C E Λ) :
     bind' { outcome := .error e, state := s, ctx := c, logs := l } f

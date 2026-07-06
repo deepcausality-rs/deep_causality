@@ -13,22 +13,30 @@ This report provides a comprehensive analysis of the core type system in `deep_c
 **Definition**:
 ```rust
 pub struct CausalEffectPropagationProcess<Value, State, Context, Error, Log> {
-    pub value: EffectValue<Value>,
-    pub state: State,
-    pub context: Option<Context>,
-    pub error: Option<Error>,
-    pub logs: Log,
+    // value-XOR-error as ONE channel: an effect value, or the error that ended the
+    // computation — never both (the W-invariant, by construction).
+    pub(crate) outcome: Result<EffectValue<Value>, Error>,
+    pub(crate) state: State,
+    pub(crate) context: Option<Context>,
+    pub(crate) logs: Log,
 }
 ```
 
 **Purpose**: This is the **foundational container type** for all monadic effects in the Deep Causality framework. It represents the complete state of a causal computation at any point in time.
 
+All fields are private; construct via `new(outcome, state, context, logs)` or the named
+constructors (`pure`, `from_value`, `from_error`, `none`, …), decompose via `into_parts()`, and
+read via the getters (`value() -> Option<&Value>`, `effect() -> Option<&EffectValue<Value>>`,
+`error() -> Option<&Error>`, `state()`, `context()`, `logs()`, plus `value_cloned()` / `into_value()`).
+
 **Key Features**:
 - **Arity-5 Generic Structure**: Five independent type parameters allow maximum flexibility
-- **Value Container**: Holds the current computation value via `EffectValue<Value>`
+- **One value-XOR-error channel**: `outcome: Result<EffectValue<Value>, Error>` — a process either
+  carries an effect value or an error, never both, so the invalid "value AND error" state is
+  unrepresentable (precondition P2, the W-invariant). This makes the monad's right-identity law
+  hold unconditionally.
 - **Stateful**: Carries mutable state `State` through computation chains
 - **Context-Aware**: Optional `Context` for additional environmental information
-- **Error Handling**: Optional `Error` for failure propagation
 - **Audit Trail**: `Log` accumulates a complete history of operations
 
 **Core Methods**:

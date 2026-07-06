@@ -74,7 +74,7 @@ fn main() {
     // Transform value (Functor)
     let mapped = PropagatingEffectWitness::fmap(effect, |x| x * 2);
     
-    println!("Result: {:?}", mapped.value); // Value(20)
+    println!("Result: {:?}", mapped.value()); // Some(20)
 }
 ```
 
@@ -94,19 +94,19 @@ fn main() {
     let effect = PropagatingEffectWitness::pure(10);
     let process = PropagatingProcess::with_state(effect, State::default(), None);
 
-    // Chain stateful computation
+    // Chain stateful computation. Value and error are one channel (`outcome`), so a step
+    // builds the process with `new(Ok(..)/Err(..), state, context, logs)`.
     let next = process.bind(|val, mut state, ctx| {
         state.count += 1;
-        deep_causality_core::CausalEffectPropagationProcess {
-            value: EffectValue::Value(val.into_value().unwrap() + 1),
+        deep_causality_core::CausalEffectPropagationProcess::new(
+            Ok(EffectValue::Value(val.into_value().unwrap() + 1)),
             state,
-            context: ctx,
-            error: None,
-            logs: Default::default(),
-        }
+            ctx,
+            Default::default(),
+        )
     });
 
-    println!("State: {:?}", next.state); // State { count: 1 }
+    println!("State: {:?}", next.state()); // State { count: 1 }
 }
 ```
 

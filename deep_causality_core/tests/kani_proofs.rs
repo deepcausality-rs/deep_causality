@@ -123,6 +123,8 @@ fn causal_monad_associativity() {
 
 /// Raise is a left zero: on an errored carrier, `bind` must NOT invoke the continuation, and
 /// error, state, context, and logs survive verbatim (Lean: `bind_raise_left_zero`).
+///
+/// Witness for `THEOREM_MAP: core.causal_monad.left_zero`.
 #[kani::proof]
 fn causal_monad_short_circuit() {
     let state: i32 = kani::any();

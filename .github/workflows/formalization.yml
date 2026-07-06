@@ -3,10 +3,21 @@
 
 # Formalization CI — the L1 (Lean) gate, the L3 (Kani) gate, and the Lean<->Rust
 # traceability check. See lean/README.md and openspec/notes/causal-algebra/Formalization.md.
+#
+# The Lean and theorem-map gates run on every PR/push (fast). The Kani gate (bounded model
+# checking) takes many minutes, so it does NOT block PRs — it runs on a nightly schedule and
+# on demand (see the `kani` job's `if:` guard).
 
 name: Formalization
 
-on: [ pull_request, push ]
+on:
+  pull_request:
+  push:
+  # Nightly Kani run at 00:00 UTC — too slow to gate PRs, so it runs on its own cadence.
+  schedule:
+    - cron: '0 0 * * *'
+  # Allow triggering the (Kani-inclusive) run by hand, e.g. before a release.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -34,9 +45,12 @@ jobs:
       - name: lake build
         run: lake build
 
-  # L3 — bounded model checking of the concrete Rust bind/evaluate. First-order, minutes.
+  # L3 — bounded model checking of the concrete Rust bind/evaluate. First-order, but many
+  # minutes to build + solve, so it must NOT block PRs. Runs nightly (schedule) and on demand
+  # (workflow_dispatch) only — never on pull_request/push.
   kani:
     name: cargo kani (core)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

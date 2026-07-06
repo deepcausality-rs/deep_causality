@@ -30,6 +30,9 @@ same **id**. CI (`.github/workflows/formalization.yml`) fails if an id lacks eit
 | `num.add_monoid.assoc` | `(a+b)+c = a+(b+c)` for `AddMonoid` | proved | `DeepCausalityFormal/Num/Monoid.lean :: add_monoid_assoc` | `deep_causality_num/tests/algebra/monoid_tests.rs :: test_add_monoid_associativity` | ✓ | n/a | — |
 | `num.add_monoid.identity` | `a+0 = a ∧ 0+a = a` for `AddMonoid` | proved | `DeepCausalityFormal/Num/Monoid.lean :: add_monoid_identity` | `deep_causality_num/tests/algebra/monoid_tests.rs :: test_add_monoid_identity` | ✓ | n/a | — |
 | `core.causal_monad.left_id` | `pure a >>= f = f a` | proved | `DeepCausalityFormal/Core/CausalMonad.lean :: bind_left_id` | `deep_causality_core/tests/kani_proofs.rs :: causal_monad_left_identity` | n/a | ✓ | — |
+| `core.causal_monad.right_id` | `m >>= pure = m` (unconditional — holds on errored carriers) | proved | `DeepCausalityFormal/Core/CausalMonad.lean :: bind_right_id` | `deep_causality_core/tests/types/causal_monad/causal_monad_tests.rs :: test_right_identity_unconditional` | ✓ | ✓ | — |
+| `core.causal_monad.assoc` | `(m >>= f) >>= g = m >>= (λx. f x >>= g)` | proved | `DeepCausalityFormal/Core/CausalMonad.lean :: bind_assoc` | `deep_causality_core/tests/types/causal_monad/causal_monad_tests.rs :: test_associativity_across_erroring_continuation` | ✓ | ✓ | — |
+| `core.causal_monad.left_zero` | `raise e >>= f = raise e` (error short-circuit) | proved | `DeepCausalityFormal/Core/CausalMonad.lean :: bind_raise_left_zero` | `deep_causality_core/tests/kani_proofs.rs :: causal_monad_short_circuit` | n/a | ✓ | — |
 
 ### Haft layer (`deep_causality_haft`)
 
@@ -90,8 +93,6 @@ Reference: do Carmo, *Riemannian Geometry*, Ch. 4.
 
 | id (planned) | statement | blocked on |
 |---|---|---|
-| `core.causal_monad.right_id` | `m >>= pure = m` | **P2** (W-invariant: `error = Some ⇒ value = None`) |
-| `core.causal_monad.assoc` | `(m >>= f) >>= g = m >>= (λx. f x >>= g)` | P1 (remove `RelayTo`/`Map`) + P2 |
-| `core.causal_monad.lawful` | `LawfulMonad` instance | P1 + P2 |
+| `core.causal_monad.lawful` | `LawfulMonad` instance | P1 (remove `RelayTo`/`Map`) — P2 (W-invariant) landed via `enforce-w-invariant`; `right_id`/`assoc`/`left_zero` are now proved above |
 | `haft.traversable.composition` | `sequence` at a composite applicative `M ∘ N` | needs lawful-applicative hypotheses for `M`, `N` (scaling) |
 | `haft.effect_unbound.laws` | indexed-monad laws for `MonadEffect3/4/5Unbound` | same shape as `haft.parametric_monad.laws`; a dedicated carrier model is scaling work |
