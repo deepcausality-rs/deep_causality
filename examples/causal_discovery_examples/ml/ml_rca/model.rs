@@ -223,13 +223,12 @@ fn gate_stage(
             "[{}] anomaly score {:.3} < {:.3} → healthy, no escalation (causal stage skipped)",
             state.window_label, score, threshold
         ));
-        return RcaProcess {
-            value: EffectValue::Value(RcaSignal::Healthy { score }),
+        return RcaProcess::new(
+            Ok(EffectValue::Value(RcaSignal::Healthy { score })),
             state,
-            context: ctx,
-            error: None,
+            ctx,
             logs,
-        };
+        );
     }
 
     logs.add_entry(&format!(
@@ -249,18 +248,17 @@ fn gate_stage(
                 "[{}] causal verdict: root cause = {} (col {}, posterior {:.4}); ground-truth match = {}",
                 state.window_label, metric, index, posterior, matches_truth
             ));
-            RcaProcess {
-                value: EffectValue::Value(RcaSignal::RootCause {
+            RcaProcess::new(
+                Ok(EffectValue::Value(RcaSignal::RootCause {
                     metric,
                     index,
                     posterior,
                     matches_truth,
-                }),
+                })),
                 state,
-                context: ctx,
-                error: None,
+                ctx,
                 logs,
-            }
+            )
         }
         Err(e) => {
             // Propagate the causal-stage failure into the process error channel so the chain
@@ -270,15 +268,14 @@ fn gate_stage(
                 "[{}] causal stage failed: {e}",
                 state.window_label
             ));
-            RcaProcess {
-                value: EffectValue::None,
-                state,
-                context: ctx,
-                error: Some(CausalityError::new(CausalityErrorEnum::Custom(format!(
+            RcaProcess::new(
+                Err(CausalityError::new(CausalityErrorEnum::Custom(format!(
                     "causal root-cause analysis failed: {e}"
                 )))),
+                state,
+                ctx,
                 logs,
-            }
+            )
         }
     }
 }
@@ -286,14 +283,13 @@ fn gate_stage(
 /// Run one window through the causal-monad bridge: seed the process with the detector score, then
 /// `bind` the gate (which escalates to the explainer or short-circuits to healthy).
 pub fn run_window(label: &str, score: f64, cfg: &RcaConfig) -> RcaProcess {
-    let start = RcaProcess {
-        value: EffectValue::Value(RcaSignal::Score(score)),
-        state: RcaState {
+    let start = RcaProcess::new(
+        Ok(EffectValue::Value(RcaSignal::Score(score))),
+        RcaState {
             window_label: label.to_string(),
         },
-        context: Some(cfg.clone()),
-        error: None,
-        logs: EffectLog::new(),
-    };
+        Some(cfg.clone()),
+        EffectLog::new(),
+    );
     start.bind(gate_stage)
 }

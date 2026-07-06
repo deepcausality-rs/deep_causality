@@ -223,7 +223,7 @@ pub fn kalman_update(state: TiltState, sensor: &SensorData) -> PropagatingEffect
     // Bind result back to State
     // PropagatingEffect is a wrapper around CausalEffectPropagationProcess.
     // We can map over the value if it implements Functor, or just access value.
-    match kf_effect.value.into_value() {
+    match kf_effect.value_cloned() {
         Some((x_upd, p_upd)) => {
             let metric = Metric::Euclidean(3);
             let g_new = create_vector(x_upd.as_slice(), &metric).unwrap_or_else(|_| {

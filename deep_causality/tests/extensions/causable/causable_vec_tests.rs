@@ -37,7 +37,7 @@ fn test_explain() {
     let actual_explanation = res.explain();
     dbg!(&actual_explanation);
 
-    let expected_final_value = format!("Final Value: {:?}\n", res.value);
+    let expected_final_value = format!("Final Value: {:?}\n", res.effect().unwrap());
     assert!(actual_explanation.contains(&expected_final_value));
     assert!(actual_explanation.contains("--- Logs ---\n"));
 

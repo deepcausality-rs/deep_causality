@@ -44,13 +44,12 @@ fn branch_is_noop_on_errored_flow() {
 
 #[test]
 fn branch_passes_through_value_less_flow() {
-    let none: CausalFlow<i64> = CausalFlow::from(CausalEffectPropagationProcess {
-        value: EffectValue::None,
-        state: (),
-        context: None,
-        error: None,
-        logs: EffectLog::new(),
-    });
+    let none: CausalFlow<i64> = CausalFlow::from(CausalEffectPropagationProcess::new(
+        Ok(EffectValue::None),
+        (),
+        None,
+        EffectLog::new(),
+    ));
     let out = none.branch(
         |_| panic!("predicate ran on a value-less flow"),
         |_| panic!("on_true ran"),
@@ -96,8 +95,8 @@ fn branch_with_threads_state_through_the_arm() {
             |cold| cold,
         )
         .into_process();
-    assert_eq!(proc.state.corrections, 1);
-    assert_eq!(proc.value, EffectValue::Value(10));
+    assert_eq!(proc.state().corrections, 1);
+    assert_eq!(proc.value(), Some(&10));
 }
 
 #[test]
@@ -112,13 +111,12 @@ fn branch_with_is_noop_on_errored_flow() {
 
 #[test]
 fn branch_with_passes_through_value_less_flow() {
-    let none: CausalFlow<i64> = CausalFlow::from(CausalEffectPropagationProcess {
-        value: EffectValue::None,
-        state: (),
-        context: None,
-        error: None,
-        logs: EffectLog::new(),
-    });
+    let none: CausalFlow<i64> = CausalFlow::from(CausalEffectPropagationProcess::new(
+        Ok(EffectValue::None),
+        (),
+        None,
+        EffectLog::new(),
+    ));
     let out = none.branch_with(
         |_, _, _| panic!("predicate ran"),
         |_| panic!("on_true ran"),
@@ -159,13 +157,9 @@ fn either_is_noop_on_errored_flow() {
 
 #[test]
 fn either_passes_through_value_less_flow() {
-    let none: CausalFlow<Either<i64, String>> = CausalFlow::from(CausalEffectPropagationProcess {
-        value: EffectValue::None,
-        state: (),
-        context: None,
-        error: None,
-        logs: EffectLog::new(),
-    });
+    let none: CausalFlow<Either<i64, String>> = CausalFlow::from(
+        CausalEffectPropagationProcess::new(Ok(EffectValue::None), (), None, EffectLog::new()),
+    );
     let out: CausalFlow<i64> = none.either(
         |_l| panic!("left arm ran on a value-less flow"),
         |_r| panic!("right arm ran on a value-less flow"),
@@ -177,42 +171,41 @@ fn either_passes_through_value_less_flow() {
 fn either_preserves_contextual_link() {
     // A `ContextualLink` carries routing metadata (contextoid ids), not an `Either`, so `either`
     // threads it through unchanged rather than collapsing it to `None`.
-    let link: CausalFlow<Either<i64, String>> = CausalFlow::from(CausalEffectPropagationProcess {
-        value: EffectValue::ContextualLink(7, 9),
-        state: (),
-        context: None,
-        error: None,
-        logs: EffectLog::new(),
-    });
+    let link: CausalFlow<Either<i64, String>> =
+        CausalFlow::from(CausalEffectPropagationProcess::new(
+            Ok(EffectValue::ContextualLink(7, 9)),
+            (),
+            None,
+            EffectLog::new(),
+        ));
     let out: CausalFlow<i64> = link.either(
         |_l| panic!("left arm ran on a contextual link"),
         |_r| panic!("right arm ran on a contextual link"),
     );
     let proc = out.into_process();
-    assert!(proc.error.is_none());
-    assert_eq!(proc.value, EffectValue::ContextualLink(7, 9));
+    assert!(proc.is_ok());
+    assert_eq!(proc.effect(), Some(&EffectValue::ContextualLink(7, 9)));
 }
 
 #[test]
 fn either_errors_on_dispatch_carrier() {
     // A `RelayTo` dispatch carrier wraps a `PropagatingEffect<Either<L, R>>` a value-level route
     // cannot retype; `either` surfaces a `ValueNotAvailable` error instead of dropping it to `None`.
-    let relay: CausalFlow<Either<i64, String>> = CausalFlow::from(CausalEffectPropagationProcess {
-        value: EffectValue::RelayTo(
-            0,
-            Box::new(CausalEffectPropagationProcess {
-                value: EffectValue::None,
-                state: (),
-                context: None,
-                error: None,
-                logs: EffectLog::new(),
-            }),
-        ),
-        state: (),
-        context: None,
-        error: None,
-        logs: EffectLog::new(),
-    });
+    let relay: CausalFlow<Either<i64, String>> =
+        CausalFlow::from(CausalEffectPropagationProcess::new(
+            Ok(EffectValue::RelayTo(
+                0,
+                Box::new(CausalEffectPropagationProcess::new(
+                    Ok(EffectValue::None),
+                    (),
+                    None,
+                    EffectLog::new(),
+                )),
+            )),
+            (),
+            None,
+            EffectLog::new(),
+        ));
     let out: CausalFlow<i64> = relay.either(
         |_l| panic!("left arm ran on a dispatch carrier"),
         |_r| panic!("right arm ran on a dispatch carrier"),
@@ -228,15 +221,14 @@ struct NoCloneState(i64);
 #[test]
 fn iterate_and_branch_accept_non_clone_state() {
     let flow: CausalFlow<i64, NoCloneState, ()> =
-        CausalFlow::from(CausalEffectPropagationProcess {
-            value: EffectValue::Value(0_i64),
-            state: NoCloneState(7),
-            context: None,
-            error: None,
-            logs: EffectLog::new(),
-        });
+        CausalFlow::from(CausalEffectPropagationProcess::new(
+            Ok(EffectValue::Value(0_i64)),
+            NoCloneState(7),
+            None,
+            EffectLog::new(),
+        ));
     let out = flow.iterate_n(3, |tick| tick.branch(|v| *v >= 0, |hot| hot, |cold| cold));
     let proc = out.into_process();
-    assert_eq!(proc.value, EffectValue::Value(0));
-    assert_eq!(proc.state.0, 7); // state threaded through untouched, never cloned
+    assert_eq!(proc.value(), Some(&0));
+    assert_eq!(proc.state().0, 7); // state threaded through untouched, never cloned
 }

@@ -49,13 +49,12 @@ impl<Value, State> CausalFlow<Value, State, ()> {
     pub fn context<Context>(self, context: Context) -> CausalFlow<Value, State, Context> {
         let inner = self.inner;
         CausalFlow {
-            inner: CausalEffectPropagationProcess {
-                value: inner.value,
-                state: inner.state,
-                context: Some(context),
-                error: inner.error,
-                logs: inner.logs,
-            },
+            inner: CausalEffectPropagationProcess::new(
+                inner.outcome,
+                inner.state,
+                Some(context),
+                inner.logs,
+            ),
         }
     }
 }

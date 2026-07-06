@@ -190,13 +190,7 @@ pub fn advance(
     ));
 
     state.idx += 1;
-    NavProcess {
-        value: EffectValue::Value(pos_err),
-        state,
-        context: ctx,
-        error: None,
-        logs,
-    }
+    NavProcess::new(Ok(EffectValue::Value(pos_err)), state, ctx, logs)
 }
 
 /// The grmhd `select_metric` pattern: compute the regime from a state indicator (the GNSS-denial
@@ -231,13 +225,7 @@ pub fn detect_regime(
     state.gnss_denied = denied;
     state.prev_denied = denied;
 
-    NavProcess {
-        value,
-        state,
-        context: ctx,
-        error: None,
-        logs,
-    }
+    NavProcess::new(Ok(value), state, ctx, logs)
 }
 
 /// The corrective GNSS fix (closed loop, GNSS available): snap the INS position error toward zero with
@@ -301,17 +289,16 @@ pub fn initial_process(cfg: NavConfig, true_bias: FloatType) -> NavProcess {
         .first()
         .map(|e| e.relativistic_rate * 1.0e9)
         .unwrap_or(0.0);
-    NavProcess {
-        value: EffectValue::Value(0.0),
-        state: NavState {
+    NavProcess::new(
+        Ok(EffectValue::Value(0.0)),
+        NavState {
             ins_residual_bias: true_bias,
             carried_clock_ns: first_clock,
             naive_clock_ns: first_clock,
             last_rate_ns_per_s: first_rate,
             ..NavState::default()
         },
-        context: Some(cfg),
-        error: None,
-        logs: EffectLog::new(),
-    }
+        Some(cfg),
+        EffectLog::new(),
+    )
 }

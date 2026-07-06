@@ -101,13 +101,12 @@ impl<'c, 'm, const D: usize, R: CfdScalar + ProbabilisticType> UncertainMarchRun
         let initial = InflowMarchState::new(solver, field, zone.default_inflow());
         let context = InflowContext::new(*zone, config.stream.clone());
         let mut process: PropagatingProcess<R, InflowMarchState<'m, D, R>, InflowContext<R>> =
-            PropagatingProcess {
-                value: EffectValue::Value(zone.default_inflow()),
-                state: initial,
-                context: Some(context),
-                error: None,
-                logs: EffectLog::new(),
-            };
+            PropagatingProcess::new(
+                Ok(EffectValue::Value(zone.default_inflow())),
+                initial,
+                Some(context),
+                EffectLog::new(),
+            );
 
         for s in 0..config.steps {
             process = process.bind(inflow_march_step);

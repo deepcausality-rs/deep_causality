@@ -210,11 +210,10 @@ fn test_blackout_trigger_below_band_keeps_link() {
 
 #[test]
 fn test_blackout_trigger_classify_is_pure_effect() {
-    use deep_causality_core::EffectValue;
     let trigger = BlackoutTrigger::new(9.4e9_f64);
     let effect = trigger.classify(ElectronDensity::<f64>::new(1.0e18).unwrap());
     assert!(effect.is_ok());
-    if let EffectValue::Value(state) = effect.value() {
+    if let Some(state) = effect.value() {
         assert!(state.denied);
     } else {
         panic!("expected Value");
@@ -284,7 +283,6 @@ fn test_ionization_frozen_chemistry_leaves_alpha_unchanged() {
 
 #[test]
 fn test_blackout_trigger_classify_propagates_kernel_error() {
-    use deep_causality_core::EffectValue;
     // An enormous but finite electron density overflows the plasma-frequency kernel to a
     // non-finite ω_p, which PlasmaFrequency::new rejects — classify carries the error effect.
     let trigger = BlackoutTrigger::new(9.4e9_f64);
@@ -293,7 +291,7 @@ fn test_blackout_trigger_classify_propagates_kernel_error() {
         effect.is_err(),
         "the kernel overflow surfaces as an error effect"
     );
-    assert!(!matches!(effect.value(), EffectValue::Value(_)));
+    assert!(effect.value().is_none());
     // The plain-Result form errors the same way.
     assert!(
         trigger

@@ -10,14 +10,14 @@ use deep_causality_haft::LogSize;
 fn test_pure() {
     let effect = PropagatingEffect::pure(42);
 
-    if let EffectValue::Value(v) = effect.value {
-        assert_eq!(v, 42);
+    if let Some(v) = effect.value() {
+        assert_eq!(*v, 42);
     } else {
         panic!("Expected Value(42)");
     }
 
-    assert!(effect.error.is_none());
-    assert!(effect.logs.is_empty());
+    assert!(effect.error().is_none());
+    assert!(effect.logs().is_empty());
 }
 
 #[test]
@@ -32,8 +32,8 @@ fn test_bind() {
         }
     });
 
-    if let EffectValue::Value(v) = next.value {
-        assert_eq!(v, 11);
+    if let Some(v) = next.value() {
+        assert_eq!(*v, 11);
     } else {
         panic!("Expected Value(11)");
     }
@@ -41,9 +41,10 @@ fn test_bind() {
 
 #[test]
 fn test_bind_with_error() {
-    let mut effect = PropagatingEffect::pure(10);
-    effect.error = Some(CausalityError::new(CausalityErrorEnum::InternalLogicError));
+    let effect: PropagatingEffect<i32> =
+        PropagatingEffect::from_error(CausalityError::new(CausalityErrorEnum::InternalLogicError));
 
+    // The continuation is not invoked on an errored effect (left zero).
     let next = PropagatingEffect::bind(effect, |val, _state, _ctx| {
         if let EffectValue::Value(v) = val {
             PropagatingEffect::pure(v + 1)
@@ -52,12 +53,16 @@ fn test_bind_with_error() {
         }
     });
 
-    assert!(next.error.is_some());
+    assert!(next.is_err());
+    assert_eq!(
+        next.error(),
+        Some(&CausalityError::new(CausalityErrorEnum::InternalLogicError))
+    );
 }
 
 #[test]
 fn test_stateless_nature() {
     let effect = PropagatingEffect::pure(42);
-    assert_eq!(effect.state, ());
-    assert_eq!(effect.context, None);
+    assert_eq!(*effect.state(), ());
+    assert_eq!(*effect.context(), None);
 }

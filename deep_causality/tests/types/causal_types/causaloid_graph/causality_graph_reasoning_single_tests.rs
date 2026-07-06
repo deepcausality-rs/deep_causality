@@ -5,7 +5,7 @@
 
 use deep_causality::utils_test::test_utils;
 use deep_causality::{
-    BaseCausalGraph, CausableGraph, CausaloidGraph, EffectValue, MonadicCausableGraphReasoning,
+    BaseCausalGraph, CausableGraph, CausaloidGraph, MonadicCausableGraphReasoning,
     PropagatingEffect,
 };
 
@@ -22,7 +22,7 @@ fn test_evaluate_single_cause_success() {
     let res = g.evaluate_single_cause(index, &effect);
     dbg!(&res);
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Value(false)); // Inverts input
+    assert_eq!(res.value(), Some(&false)); // Inverts input
 }
 
 #[test]
@@ -39,7 +39,7 @@ fn test_evaluate_single_causaloid_not_found_error() {
     assert!(res.is_err());
     assert!(res.is_err());
     assert!(
-        res.error
+        res.error()
             .unwrap()
             .to_string()
             .contains("Causaloid with index 99 not found in graph"),
@@ -56,7 +56,7 @@ fn test_evaluate_single_cause_requires_a_frozen_graph() {
     let effect = PropagatingEffect::from_value(true);
     let res = g.evaluate_single_cause(index, &effect);
     assert!(res.is_err());
-    assert!(res.error.unwrap().to_string().contains("not frozen"));
+    assert!(res.error().unwrap().to_string().contains("not frozen"));
 }
 
 #[test]
@@ -74,5 +74,5 @@ fn test_evaluate_single_eval_error() {
     dbg!(&res);
 
     assert!(res.is_err());
-    assert!(res.error.unwrap().to_string().contains("Test error"));
+    assert!(res.error().unwrap().to_string().contains("Test error"));
 }

@@ -29,16 +29,9 @@ fn node_increment(
 ) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
     let val = obs.into_value().unwrap_or(0);
     state.count += 1;
-    let mut p = PropagatingProcess {
-        value: EffectValue::Value(val),
-        state,
-        context: ctx,
-        error: None,
-        logs: EffectLog::new(),
-    };
-    p.logs
-        .add_entry(&format!("node_increment count={}", p.state.count));
-    p
+    let mut logs = EffectLog::new();
+    logs.add_entry(&format!("node_increment count={}", state.count));
+    PropagatingProcess::new(Ok(EffectValue::Value(val)), state, ctx, logs)
 }
 
 fn node_failing(
@@ -46,17 +39,16 @@ fn node_failing(
     state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
-    let mut p = PropagatingProcess {
-        value: EffectValue::None,
-        state,
-        context: ctx,
-        error: Some(CausalityError::new(CausalityErrorEnum::Custom(
+    let mut logs = EffectLog::new();
+    logs.add_entry("node_failing: invoked");
+    PropagatingProcess::new(
+        Err(CausalityError::new(CausalityErrorEnum::Custom(
             "node_failing: deliberate".into(),
         ))),
-        logs: EffectLog::new(),
-    };
-    p.logs.add_entry("node_failing: invoked");
-    p
+        state,
+        ctx,
+        logs,
+    )
 }
 
 fn node_relay_to_two(
@@ -67,15 +59,14 @@ fn node_relay_to_two(
     state.count += 1;
     // Emit a RelayTo pointing at index 2 with an inner stateless effect.
     let inner = PropagatingEffect::from_value(99u64);
-    let mut p = PropagatingProcess {
-        value: EffectValue::RelayTo(2, Box::new(inner)),
+    let mut logs = EffectLog::new();
+    logs.add_entry("node_relay_to_two: emitted RelayTo(2)");
+    PropagatingProcess::new(
+        Ok(EffectValue::RelayTo(2, Box::new(inner))),
         state,
-        context: ctx,
-        error: None,
-        logs: EffectLog::new(),
-    };
-    p.logs.add_entry("node_relay_to_two: emitted RelayTo(2)");
-    p
+        ctx,
+        logs,
+    )
 }
 
 fn build_three_node_path() -> CausaloidGraph<Causaloid<u64, u64, CounterState, ConfigCtx>> {
@@ -101,13 +92,12 @@ fn build_three_node_path() -> CausaloidGraph<Causaloid<u64, u64, CounterState, C
 }
 
 fn build_initial() -> PropagatingProcess<u64, CounterState, ConfigCtx> {
-    PropagatingProcess {
-        value: EffectValue::Value(7),
-        state: CounterState::default(),
-        context: Some(ConfigCtx {}),
-        error: None,
-        logs: EffectLog::new(),
-    }
+    PropagatingProcess::new(
+        Ok(EffectValue::Value(7)),
+        CounterState::default(),
+        Some(ConfigCtx {}),
+        EffectLog::new(),
+    )
 }
 
 #[test]
@@ -117,13 +107,14 @@ fn evaluate_subgraph_from_cause_stateful_threads_state_across_three_nodes() {
 
     let out = g.evaluate_subgraph_from_cause_stateful(0, &initial);
 
-    assert!(out.error.is_none(), "expected success, got {:?}", out.error);
+    assert!(out.is_ok(), "expected success, got {:?}", out.error());
     assert_eq!(
-        out.state.count, 3,
+        out.state().count,
+        3,
         "state must reflect three counter increments across the BFS path"
     );
 
-    let log_text = format!("{:?}", out.logs);
+    let log_text = format!("{:?}", out.logs());
     assert!(log_text.contains("count=1"));
     assert!(log_text.contains("count=2"));
     assert!(log_text.contains("count=3"));
@@ -151,11 +142,12 @@ fn evaluate_subgraph_stateful_short_circuits_on_node_error() {
     let initial = build_initial();
     let out = g.evaluate_subgraph_from_cause_stateful(0, &initial);
 
-    assert!(out.error.is_some());
+    assert!(out.is_err());
+    assert!(out.value().is_none(), "an errored carrier holds no value");
     // State must reflect node 0's increment only — node 1 failed before
     // mutating state, node 2 must not execute.
-    assert_eq!(out.state.count, 1);
-    let log_text = format!("{:?}", out.logs);
+    assert_eq!(out.state().count, 1);
+    let log_text = format!("{:?}", out.logs());
     assert!(log_text.contains("node_failing"));
     assert!(
         !log_text.contains("count=2"),
@@ -187,11 +179,11 @@ fn evaluate_subgraph_stateful_relayto_preserves_state() {
     let initial = build_initial();
     let out = g.evaluate_subgraph_from_cause_stateful(0, &initial);
 
-    assert!(out.error.is_none(), "got {:?}", out.error);
+    assert!(out.is_ok(), "got {:?}", out.error());
     // Node 0 increments to 1; relays to node 2 which increments to 2.
     // Node 1 must not execute.
-    assert_eq!(out.state.count, 2);
-    let log_text = format!("{:?}", out.logs);
+    assert_eq!(out.state().count, 2);
+    let log_text = format!("{:?}", out.logs());
     assert!(
         log_text.contains("RelayTo(2)"),
         "expected relayer log entry: {log_text}"
@@ -210,8 +202,8 @@ fn evaluate_single_cause_stateful_works() {
 
     let out = g.evaluate_single_cause_stateful(1, &initial);
 
-    assert!(out.error.is_none());
-    assert_eq!(out.state.count, 1);
+    assert!(out.is_ok());
+    assert_eq!(out.state().count, 1);
 }
 
 #[test]
@@ -221,21 +213,20 @@ fn evaluate_shortest_path_between_causes_stateful_works() {
 
     let out = g.evaluate_shortest_path_between_causes_stateful(0, 2, &initial);
 
-    assert!(out.error.is_none(), "got {:?}", out.error);
-    assert_eq!(out.state.count, 3);
+    assert!(out.is_ok(), "got {:?}", out.error());
+    assert_eq!(out.state().count, 3);
 }
 
 /// A `PropagatingProcess` that already carries an error (drives the short-circuit arms).
 fn build_errored() -> PropagatingProcess<u64, CounterState, ConfigCtx> {
-    PropagatingProcess {
-        value: EffectValue::None,
-        state: CounterState { count: 5 },
-        context: Some(ConfigCtx {}),
-        error: Some(CausalityError::new(CausalityErrorEnum::Custom(
+    PropagatingProcess::new(
+        Err(CausalityError::new(CausalityErrorEnum::Custom(
             "pre-existing".into(),
         ))),
-        logs: EffectLog::new(),
-    }
+        CounterState { count: 5 },
+        Some(ConfigCtx {}),
+        EffectLog::new(),
+    )
 }
 
 /// A frozen graph with two unconnected nodes (no edge), so there is no path between them.
@@ -258,14 +249,15 @@ fn stateful_methods_short_circuit_on_incoming_error() {
     let errored = build_errored();
 
     let single = g.evaluate_single_cause_stateful(0, &errored);
-    assert!(single.error.is_some());
-    assert_eq!(single.state.count, 5, "incoming state is preserved");
+    assert!(single.is_err());
+    assert!(single.value().is_none());
+    assert_eq!(single.state().count, 5, "incoming state is preserved");
 
     let subgraph = g.evaluate_subgraph_from_cause_stateful(0, &errored);
-    assert!(subgraph.error.is_some());
+    assert!(subgraph.is_err());
 
     let path = g.evaluate_shortest_path_between_causes_stateful(0, 2, &errored);
-    assert!(path.error.is_some());
+    assert!(path.is_err());
 }
 
 // --- not-frozen guard (all three methods) ---
@@ -284,7 +276,7 @@ fn stateful_methods_require_a_frozen_graph() {
         g.evaluate_subgraph_from_cause_stateful(0, &initial),
         g.evaluate_shortest_path_between_causes_stateful(0, 0, &initial),
     ] {
-        let err = out.error.expect("must reject an unfrozen graph");
+        let err = out.error().expect("must reject an unfrozen graph");
         assert!(format!("{err:?}").contains("frozen"));
     }
 }
@@ -296,7 +288,7 @@ fn evaluate_single_cause_stateful_rejects_a_missing_index() {
     let g = build_three_node_path();
     let initial = build_initial();
     let out = g.evaluate_single_cause_stateful(99, &initial);
-    let err = out.error.expect("missing index errors");
+    let err = out.error().expect("missing index errors");
     assert!(format!("{err:?}").contains("not found"));
 }
 
@@ -305,7 +297,7 @@ fn evaluate_subgraph_stateful_rejects_a_start_index_not_in_the_graph() {
     let g = build_three_node_path();
     let initial = build_initial();
     let out = g.evaluate_subgraph_from_cause_stateful(99, &initial);
-    let err = out.error.expect("missing start errors");
+    let err = out.error().expect("missing start errors");
     assert!(format!("{err:?}").contains("does not contain"));
 }
 
@@ -322,8 +314,10 @@ fn evaluate_subgraph_stateful_rejects_a_relay_to_a_missing_target() {
     g.freeze();
 
     let out = g.evaluate_subgraph_from_cause_stateful(0, &build_initial());
-    let err = out.error.expect("relay to a missing target errors");
+    let err = out.error().expect("relay to a missing target errors");
     assert!(format!("{err:?}").contains("RelayTo target"));
+    // The errored carrier holds no value: the stale relay value is not preserved.
+    assert!(out.value().is_none());
 }
 
 // --- shortest-path specific branches ---
@@ -332,15 +326,15 @@ fn evaluate_subgraph_stateful_rejects_a_relay_to_a_missing_target() {
 fn evaluate_shortest_path_stateful_start_equals_stop_runs_only_that_node() {
     let g = build_three_node_path();
     let out = g.evaluate_shortest_path_between_causes_stateful(1, 1, &build_initial());
-    assert!(out.error.is_none(), "got {:?}", out.error);
-    assert_eq!(out.state.count, 1, "exactly one node runs");
+    assert!(out.is_ok(), "got {:?}", out.error());
+    assert_eq!(out.state().count, 1, "exactly one node runs");
 }
 
 #[test]
 fn evaluate_shortest_path_stateful_errors_when_no_path_exists() {
     let g = build_two_unconnected();
     let out = g.evaluate_shortest_path_between_causes_stateful(0, 1, &build_initial());
-    assert!(out.error.is_some(), "no path between disconnected nodes");
+    assert!(out.is_err(), "no path between disconnected nodes");
 }
 
 #[test]
@@ -358,8 +352,8 @@ fn evaluate_shortest_path_stateful_short_circuits_on_a_failing_node() {
     g.freeze();
 
     let out = g.evaluate_shortest_path_between_causes_stateful(0, 2, &build_initial());
-    assert!(out.error.is_some(), "a failing node aborts the path walk");
-    assert_eq!(out.state.count, 1, "only node 0 advanced state");
+    assert!(out.is_err(), "a failing node aborts the path walk");
+    assert_eq!(out.state().count, 1, "only node 0 advanced state");
 }
 
 #[test]
@@ -378,9 +372,9 @@ fn evaluate_shortest_path_stateful_returns_on_a_relay() {
     g.freeze();
 
     let out = g.evaluate_shortest_path_between_causes_stateful(0, 2, &build_initial());
-    assert!(out.error.is_none(), "got {:?}", out.error);
+    assert!(out.is_ok(), "got {:?}", out.error());
     assert!(
-        matches!(out.value, EffectValue::RelayTo(2, _)),
+        matches!(out.effect(), Some(EffectValue::RelayTo(2, _))),
         "the walk returns the relaying node's process"
     );
 }

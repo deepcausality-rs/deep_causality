@@ -68,24 +68,15 @@ impl<Value, State, Context> CausalFlow<Value, State, Context> {
         F: FnOnce(Value) -> U,
     {
         let inner = self.inner.bind(|ev, state, context| {
-            let (value, error) = match ev {
-                EffectValue::Value(v) => (EffectValue::Value(f(v)), None),
-                EffectValue::None => (EffectValue::None, None),
-                EffectValue::ContextualLink(a, b) => (EffectValue::ContextualLink(a, b), None),
+            let outcome = match ev {
+                EffectValue::Value(v) => Ok(EffectValue::Value(f(v))),
+                EffectValue::None => Ok(EffectValue::None),
+                EffectValue::ContextualLink(a, b) => Ok(EffectValue::ContextualLink(a, b)),
                 // RelayTo / Map carry a `PropagatingEffect<Value>` a value-level map cannot
                 // retype; surface the dropped dispatch command instead of collapsing to `None`.
-                _ => (
-                    EffectValue::None,
-                    Some(CausalityError::new(CausalityErrorEnum::ValueNotAvailable)),
-                ),
+                _ => Err(CausalityError::new(CausalityErrorEnum::ValueNotAvailable)),
             };
-            CausalEffectPropagationProcess {
-                value,
-                state,
-                context,
-                error,
-                logs: EffectLog::new(),
-            }
+            CausalEffectPropagationProcess::new(outcome, state, context, EffectLog::new())
         });
         CausalFlow { inner }
     }
@@ -110,17 +101,23 @@ impl<Value, State, Context> CausalFlow<Value, State, Context> {
     where
         F: FnOnce(CausalityError) -> Value,
     {
-        match self.inner.error {
-            Some(err) => CausalFlow {
-                inner: CausalEffectPropagationProcess {
-                    value: EffectValue::Value(f(err)),
-                    state: self.inner.state,
-                    context: self.inner.context,
-                    error: None,
-                    logs: self.inner.logs,
-                },
+        match self.inner.outcome {
+            Err(err) => CausalFlow {
+                inner: CausalEffectPropagationProcess::new(
+                    Ok(EffectValue::Value(f(err))),
+                    self.inner.state,
+                    self.inner.context,
+                    self.inner.logs,
+                ),
             },
-            None => self,
+            Ok(value) => CausalFlow {
+                inner: CausalEffectPropagationProcess::new(
+                    Ok(value),
+                    self.inner.state,
+                    self.inner.context,
+                    self.inner.logs,
+                ),
+            },
         }
     }
 

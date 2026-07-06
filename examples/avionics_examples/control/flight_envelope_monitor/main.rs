@@ -66,13 +66,12 @@ fn run_pipeline(
     config: AircraftConfig,
     failing_airspeed: bool,
 ) -> FlightProcess<FlightStateEstimate> {
-    let initial: FlightProcess<SensorReading> = PropagatingProcess {
-        value: EffectValue::Value(reading),
-        state: FlightState::default(),
-        context: Some(config),
-        error: None,
-        logs: EffectLog::new(),
-    };
+    let initial: FlightProcess<SensorReading> = PropagatingProcess::new(
+        Ok(EffectValue::Value(reading)),
+        FlightState::default(),
+        Some(config),
+        EffectLog::new(),
+    );
 
     // Drive the stateful chain through CausalFlow. The existing
     // `(value, state, ctx) -> FlightProcess<_>` stages drop in unchanged via the `bind`
@@ -107,23 +106,24 @@ fn run_pipeline(
 /// accumulated `EffectLog` split onto one entry per line.
 fn print_section(label: &str, process: &FlightProcess<FlightStateEstimate>) {
     println!("\n--- {label} ---");
-    match &process.error {
+    match process.error() {
         Some(err) => {
             println!("  result: ERROR — {err:?}");
         }
         None => {
-            let verdict = SafetyVerdict::from_risk(process.state.risk);
+            let verdict = SafetyVerdict::from_risk(process.state().risk);
             println!(
                 "  result: verdict={:?}  (risk={:.3})",
-                verdict, process.state.risk
+                verdict,
+                process.state().risk
             );
         }
     }
-    println!("  state.estimate:   {:?}", process.state.estimate);
-    println!("  state.covariance: {:?}", process.state.covariance);
-    println!("  state.risk:       {:.3}", process.state.risk);
+    println!("  state.estimate:   {:?}", process.state().estimate);
+    println!("  state.covariance: {:?}", process.state().covariance);
+    println!("  state.risk:       {:.3}", process.state().risk);
     println!("  EffectLog:");
-    let log_text = format!("{:?}", process.logs);
+    let log_text = format!("{:?}", process.logs());
     for line in log_text.split(',').map(|s| s.trim()) {
         if !line.is_empty() {
             println!("    {line}");

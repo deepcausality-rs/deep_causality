@@ -41,14 +41,20 @@ where
         B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnOnce(A) -> B,
     {
-        CausalEffectPropagationProcess {
-            value: EffectValue::Value(f(m_a
-                .value
+        // Error short-circuits: `f` is not invoked; the error propagates (left zero).
+        // A value-less Ok carrier still panics: the error type `E` is generic here, so no
+        // substitute error can be manufactured (the alias witnesses with concrete
+        // `CausalityError` surface `InternalLogicError` instead).
+        let outcome = match m_a.outcome {
+            Err(error) => Err(error),
+            Ok(value) => Ok(EffectValue::Value(f(value
                 .into_value()
-                .expect("Functor fmap on a non-error process should contain a value"))),
+                .expect("Functor fmap on a non-error process should contain a value")))),
+        };
+        CausalEffectPropagationProcess {
+            outcome,
             state: m_a.state,
             context: m_a.context,
-            error: m_a.error,
             logs: m_a.logs,
         }
     }
@@ -66,10 +72,9 @@ where
         T: Satisfies<<Self as HKT>::Constraint>,
     {
         CausalEffectPropagationProcess {
-            value: EffectValue::Value(value),
+            outcome: Ok(EffectValue::Value(value)),
             state: S::default(),
             context: None,
-            error: None,
             logs: L::default(),
         }
     }
@@ -93,18 +98,24 @@ where
     {
         let mut combined_logs = f_ab.logs;
         combined_logs.append(&mut f_a.logs);
+        let context = f_ab.context.or(f_a.context);
 
-        let error = f_ab.error.or(f_a.error);
-
-        let value = (f_ab.value.into_value().expect("Value expected in apply"))(
-            f_a.value.into_value().expect("Value expected in apply"),
-        );
+        // Error short-circuits: the function is not invoked; the first error propagates
+        // (left zero). See the note on `fmap` for the value-less Ok panic.
+        let outcome = match (f_ab.outcome, f_a.outcome) {
+            (Err(error), _) | (_, Err(error)) => Err(error),
+            (Ok(func), Ok(arg)) => {
+                let value = (func.into_value().expect("Value expected in apply"))(
+                    arg.into_value().expect("Value expected in apply"),
+                );
+                Ok(EffectValue::Value(value))
+            }
+        };
 
         CausalEffectPropagationProcess {
-            value: EffectValue::Value(value),
+            outcome,
             state: f_ab.state,
-            context: f_ab.context.or(f_a.context),
-            error,
+            context,
             logs: combined_logs,
         }
     }

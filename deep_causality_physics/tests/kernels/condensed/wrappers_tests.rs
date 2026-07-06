@@ -2,7 +2,6 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_core::EffectValue;
 use deep_causality_haft::Functor;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_num::Complex;
@@ -47,7 +46,7 @@ fn test_wrapper_quasi_qgt() {
     let effect = quasi_qgt::<f64>(&energies, &u, &v, &v, 0, 1e-12);
     assert!(effect.is_ok());
 
-    if let EffectValue::Value(q) = effect.value() {
+    if let Some(q) = effect.value() {
         // Check that we got a valid complex number
         assert!(q.re.is_finite());
         assert!(q.im.is_finite());
@@ -65,7 +64,7 @@ fn test_wrapper_effective_band_drude_weight() {
     let effect = effective_band_drude_weight::<f64>(energy_n, energy_0, curvature, metric, lattice);
     assert!(effect.is_ok());
 
-    if let EffectValue::Value(bdw) = effect.value() {
+    if let Some(bdw) = effect.value() {
         // (0.5 + 1.0*2.0) * 1.0^2 = 2.5
         assert!((bdw.value() - 2.5).abs() < 1e-10);
     }
@@ -174,7 +173,7 @@ fn test_wrapper_cahn_hilliard_flux() {
     let effect = cahn_hilliard_flux::<f64>(&conc, m, &grad);
     assert!(effect.is_ok());
 
-    if let EffectValue::Value(flux) = effect.value() {
+    if let Some(flux) = effect.value() {
         // M(0.5) = 0.5 * 0.5 * 2.0 = 0.5
         // J = -0.5 * 10 = -5.0
         assert!((flux.data()[0] - (-5.0)).abs() < 1e-10);

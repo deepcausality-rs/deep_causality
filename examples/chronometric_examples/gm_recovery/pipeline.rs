@@ -229,7 +229,7 @@ where
     let mut estimates = Vec::with_capacity(set.pairs.len());
     for (a, b) in &set.pairs {
         let effect = solve_gm_analytical(a, b, &body);
-        if let EffectValue::Value(gm) = effect.value {
+        if let Ok(EffectValue::Value(gm)) = effect.into_parts().0 {
             // Drop NaNs and major outliers that come from poorly conditioned
             // input pairs (near-coincident orbital states, IGS sentinel artifacts),
             // not from the inversion itself. MAD filter in stage_aggregate

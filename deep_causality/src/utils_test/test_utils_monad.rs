@@ -22,9 +22,7 @@ pub fn smoking_logic(
         nicotine_val, threshold, high_nicotine
     ));
 
-    let mut effect = PropagatingEffect::pure(high_nicotine);
-    effect.logs = log;
-    effect
+    PropagatingEffect::from_value_with_log(high_nicotine, log)
 }
 
 // f(Smoking) -> Tar
@@ -39,9 +37,7 @@ pub fn tar_logic(
     let smoking = is_smoking.into_value().unwrap_or(false);
     log.add_entry(&format!("Has tar in lung {}", smoking));
 
-    let mut effect = PropagatingEffect::pure(smoking);
-    effect.logs = log;
-    effect
+    PropagatingEffect::from_value_with_log(smoking, log)
 }
 
 pub fn error_logic(
@@ -52,9 +48,12 @@ pub fn error_logic(
     let mut log = EffectLog::new();
     log.add_entry("Error logic applied");
 
-    let mut effect = PropagatingEffect::from_error(CausalityError::new(
-        CausalityErrorEnum::Custom("Simulated error".to_string()),
-    ));
-    effect.logs = log;
-    effect
+    PropagatingEffect::new(
+        Err(CausalityError::new(CausalityErrorEnum::Custom(
+            "Simulated error".to_string(),
+        ))),
+        (),
+        None,
+        log,
+    )
 }

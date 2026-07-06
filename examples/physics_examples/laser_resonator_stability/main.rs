@@ -59,7 +59,7 @@ fn main() -> Result<(), PhysicsError> {
         .bind(stage_mirror)
         .into_process();
 
-    if let EffectValue::Value(final_q) = process.value() {
+    if let Some(final_q) = process.value() {
         println!("\n=== Final State ===");
         report_beam(*final_q, wavelength, "Round Trip Half-Way");
     } else {
@@ -82,12 +82,12 @@ fn stage_drift_l1(
     println!("\n[1] Propagating Drift L1 ({} m)...", L1);
     let next_q_eff = gaussian_q_propagation(q, &mat);
     report_beam(
-        next_q_eff.value().clone().into_value().unwrap(),
+        next_q_eff.value_cloned().unwrap(),
         laser_wavelength(),
         "After Drift L1",
     );
 
-    PropagatingEffect::pure(next_q_eff.value().clone().into_value().unwrap())
+    PropagatingEffect::pure(next_q_eff.value_cloned().unwrap())
 }
 
 /// Step 2: thermal lens. Focal length from the lens-maker equation; ABCD = [1, 0; -1/f, 1].
@@ -99,7 +99,7 @@ fn stage_thermal_lens(
     let q = value.into_value().unwrap();
 
     let power_eff = lens_maker(n_lens(), R_LENS, -R_LENS); // Biconvex
-    let power = power_eff.value().clone().into_value().unwrap().value();
+    let power = power_eff.value_cloned().unwrap().value();
     let f = 1.0 / power;
 
     println!("\n[2] Transmitting Lens (f = {:.2} m)...", f);
@@ -109,12 +109,12 @@ fn stage_thermal_lens(
 
     let next_q_eff = gaussian_q_propagation(q, &mat);
     report_beam(
-        next_q_eff.value().clone().into_value().unwrap(),
+        next_q_eff.value_cloned().unwrap(),
         laser_wavelength(),
         "After Lens",
     );
 
-    PropagatingEffect::pure(next_q_eff.value().clone().into_value().unwrap())
+    PropagatingEffect::pure(next_q_eff.value_cloned().unwrap())
 }
 
 /// Step 3: drift through free space L2. ABCD = [1, L; 0, 1].
@@ -130,12 +130,12 @@ fn stage_drift_l2(
     println!("\n[3] Propagating Drift L2 ({} m)...", L2);
     let next_q_eff = gaussian_q_propagation(q, &mat);
     report_beam(
-        next_q_eff.value().clone().into_value().unwrap(),
+        next_q_eff.value_cloned().unwrap(),
         laser_wavelength(),
         "At Mirror",
     );
 
-    PropagatingEffect::pure(next_q_eff.value().clone().into_value().unwrap())
+    PropagatingEffect::pure(next_q_eff.value_cloned().unwrap())
 }
 
 /// Step 4: reflection off a flat mirror. The beam is confined iff Im(q) > 0; otherwise the
@@ -159,7 +159,7 @@ fn stage_mirror(
 
 fn report_beam(q: ComplexBeamParameter<FloatType>, lambda: Wavelength<FloatType>, label: &str) {
     let w_eff = beam_spot_size(q, lambda);
-    if let EffectValue::Value(w) = w_eff.value() {
+    if let Some(w) = w_eff.value() {
         println!(
             "    {}: Spot Size w = {:.3} mm, Curvature R = {:.2} m",
             label,

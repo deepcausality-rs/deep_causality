@@ -13,9 +13,7 @@
 //! This example supports `f32`, `f64`, and `DoubleFloat` by changing the `FloatType`
 //! type alias. All numeric literals are converted using the `flt!` macro.
 //!
-use deep_causality_core::{
-    CausalEffectPropagationProcess, CausalFlow, EffectValue, PropagatingEffect,
-};
+use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow, PropagatingEffect};
 use deep_causality_num::{Dual, Float, Float106};
 use deep_causality_physics::{AdmOps, GrOps, LorentzianMetric};
 use deep_causality_physics::{AdmState, EastCoastMetric, GR, SPEED_OF_LIGHT};
@@ -480,7 +478,7 @@ fn print_summary(result: &PropagatingEffect<GRState>) {
     println!("═══════════════════════════════════════════════════════════════");
 
     match result.value() {
-        EffectValue::Value(state) => {
+        Some(state) => {
             println!("\n  ┌─────────────────────────────────────────────────────────┐");
             println!("  │  Schwarzschild Black Hole Parameters                    │");
             println!("  ├─────────────────────────────────────────────────────────┤");

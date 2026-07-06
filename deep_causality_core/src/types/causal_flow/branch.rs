@@ -26,11 +26,8 @@ impl<Value, State, Context> CausalFlow<Value, State, Context> {
         T: FnOnce(Self) -> Self,
         F: FnOnce(Self) -> Self,
     {
-        if self.is_err() {
-            return self;
-        }
-        let take_true = match &self.inner.value {
-            EffectValue::Value(v) => Some(cond(v)),
+        let take_true = match &self.inner.outcome {
+            Ok(EffectValue::Value(v)) => Some(cond(v)),
             _ => None,
         };
         match take_true {
@@ -48,11 +45,10 @@ impl<Value, State, Context> CausalFlow<Value, State, Context> {
         T: FnOnce(Self) -> Self,
         F: FnOnce(Self) -> Self,
     {
-        if self.is_err() {
-            return self;
-        }
-        let take_true = match &self.inner.value {
-            EffectValue::Value(v) => Some(cond(v, &self.inner.state, self.inner.context.as_ref())),
+        let take_true = match &self.inner.outcome {
+            Ok(EffectValue::Value(v)) => {
+                Some(cond(v, &self.inner.state, self.inner.context.as_ref()))
+            }
             _ => None,
         };
         match take_true {
@@ -74,78 +70,57 @@ impl<L, R, State, Context> CausalFlow<Either<L, R>, State, Context> {
         FL: FnOnce(CausalFlow<L, State, Context>) -> CausalFlow<U, State, Context>,
         FR: FnOnce(CausalFlow<R, State, Context>) -> CausalFlow<U, State, Context>,
     {
-        let inner = self.inner;
-        // An errored or value-less carrier carries no `Either`, so re-thread state/context/logs into
-        // a `CausalFlow<U>` without running an arm.
-        let (value, state, context, error, logs) = (
-            inner.value,
-            inner.state,
-            inner.context,
-            inner.error,
-            inner.logs,
-        );
-        if error.is_some() {
-            return CausalFlow {
-                inner: CausalEffectPropagationProcess {
-                    value: EffectValue::None,
+        let (outcome, state, context, logs) = self.inner.into_parts();
+        match outcome {
+            // An errored carrier carries no `Either`: short-circuit without running an arm.
+            Err(error) => CausalFlow {
+                inner: CausalEffectPropagationProcess::new(Err(error), state, context, logs),
+            },
+            Ok(EffectValue::Value(Either::Left(l))) => left(CausalFlow {
+                inner: CausalEffectPropagationProcess::new(
+                    Ok(EffectValue::Value(l)),
                     state,
                     context,
-                    error,
                     logs,
-                },
-            };
-        }
-        match value {
-            EffectValue::Value(Either::Left(l)) => left(CausalFlow {
-                inner: CausalEffectPropagationProcess {
-                    value: EffectValue::Value(l),
-                    state,
-                    context,
-                    error: None,
-                    logs,
-                },
+                ),
             }),
-            EffectValue::Value(Either::Right(r)) => right(CausalFlow {
-                inner: CausalEffectPropagationProcess {
-                    value: EffectValue::Value(r),
+            Ok(EffectValue::Value(Either::Right(r))) => right(CausalFlow {
+                inner: CausalEffectPropagationProcess::new(
+                    Ok(EffectValue::Value(r)),
                     state,
                     context,
-                    error: None,
                     logs,
-                },
+                ),
             }),
             // No value to route: thread the empty carrier through as a value-less `CausalFlow<U>`.
-            EffectValue::None => CausalFlow {
-                inner: CausalEffectPropagationProcess {
-                    value: EffectValue::None,
+            Ok(EffectValue::None) => CausalFlow {
+                inner: CausalEffectPropagationProcess::new(
+                    Ok(EffectValue::None),
                     state,
                     context,
-                    error: None,
                     logs,
-                },
+                ),
             },
             // A structured-result link carries no `Either` to route; preserve its routing metadata
             // (the contextoid ids) rather than discarding it.
-            EffectValue::ContextualLink(a, b) => CausalFlow {
-                inner: CausalEffectPropagationProcess {
-                    value: EffectValue::ContextualLink(a, b),
+            Ok(EffectValue::ContextualLink(a, b)) => CausalFlow {
+                inner: CausalEffectPropagationProcess::new(
+                    Ok(EffectValue::ContextualLink(a, b)),
                     state,
                     context,
-                    error: None,
                     logs,
-                },
+                ),
             },
             // `RelayTo` / `Map` carry a `PropagatingEffect<Either<L, R>>` a value-level route cannot
             // retype to `U`; surface the dropped dispatch command as an error instead of silently
             // collapsing it to `None`.
-            _ => CausalFlow {
-                inner: CausalEffectPropagationProcess {
-                    value: EffectValue::None,
+            Ok(_) => CausalFlow {
+                inner: CausalEffectPropagationProcess::new(
+                    Err(CausalityError::new(CausalityErrorEnum::ValueNotAvailable)),
                     state,
                     context,
-                    error: Some(CausalityError::new(CausalityErrorEnum::ValueNotAvailable)),
                     logs,
-                },
+                ),
             },
         }
     }

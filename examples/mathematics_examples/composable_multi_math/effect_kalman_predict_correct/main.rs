@@ -23,9 +23,7 @@ use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::Real;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
-use mathematics_examples::effect_helpers::{
-    Process, ProcessWitness, expect_value, fail, ok, print_log,
-};
+use mathematics_examples::effect_helpers::{Process, ProcessWitness, fail, ok, print_log};
 
 /// `f64` is the right precision here: only two rotation steps, not a long
 /// chain. Float106 yields no observable gain.
@@ -49,12 +47,12 @@ fn main() {
         .bind(|v, _, _| verify(v.into_value().expect("corrected state")));
 
     println!("Chained log:");
-    print_log(&result.logs);
+    print_log(result.logs());
 
-    match result.error {
+    match result.error() {
         Some(e) => println!("\nPipeline errored: {}", e),
         None => {
-            let final_state = expect_value(&result.value);
+            let final_state = result.value_cloned().unwrap();
             println!("\nFinal state: {:?}", final_state.as_slice());
         }
     }

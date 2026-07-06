@@ -83,32 +83,31 @@ fn test_fmap_success() {
         TestContext,
         CausalityError,
         EffectLog,
-    > = CausalEffectPropagationProcess {
-        value: EffectValue::Value(5),
-        state: TestState(1),
-        context: Some(TestContext("initial".to_string())),
-        error: None,
-        logs: {
+    > = CausalEffectPropagationProcess::new(
+        Ok(EffectValue::Value(5)),
+        TestState(1),
+        Some(TestContext("initial".to_string())),
+        {
             let mut log = EffectLog::new();
             log.add_entry("Initial log");
             log
         },
-    };
+    );
 
     let fmapped_process = <PropagatingProcessWitness<TestState, TestContext> as Functor<_>>::fmap(
         initial_process,
         |x| x * 2,
     );
 
-    assert_eq!(fmapped_process.value, EffectValue::Value(10));
-    assert_eq!(fmapped_process.state, TestState(1));
+    assert_eq!(fmapped_process.value(), Some(&10));
+    assert_eq!(*fmapped_process.state(), TestState(1));
     assert_eq!(
-        fmapped_process.context,
+        *fmapped_process.context(),
         Some(TestContext("initial".to_string()))
     );
-    assert_eq!(fmapped_process.error, None);
-    assert_eq!(fmapped_process.logs.len(), 1);
-    assert!(format!("{}", fmapped_process.logs).contains("Initial log"));
+    assert!(fmapped_process.error().is_none());
+    assert_eq!(fmapped_process.logs().len(), 1);
+    assert!(format!("{}", fmapped_process.logs()).contains("Initial log"));
 }
 
 #[test]
@@ -119,36 +118,36 @@ fn test_fmap_on_error() {
         TestContext,
         CausalityError,
         EffectLog,
-    > = CausalEffectPropagationProcess {
-        value: EffectValue::Value(5),
-        state: TestState(1),
-        context: Some(TestContext("initial".to_string())),
-        error: Some(CausalityError(CausalityErrorEnum::InternalLogicError)),
-        logs: {
+    > = CausalEffectPropagationProcess::new(
+        Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+        TestState(1),
+        Some(TestContext("initial".to_string())),
+        {
             let mut log = EffectLog::new();
             log.add_entry("Error log");
             log
         },
-    };
+    );
 
     let fmapped_process = <PropagatingProcessWitness<TestState, TestContext> as Functor<_>>::fmap(
         initial_process,
         |x| x * 2,
     );
 
-    // Function should not be applied, error and logs preserved
-    assert_eq!(fmapped_process.value, EffectValue::None);
-    assert_eq!(fmapped_process.state, TestState(1));
+    // Function should not be applied; error, state, context, and logs preserved
+    assert!(fmapped_process.is_err());
+    assert_eq!(fmapped_process.value(), None);
+    assert_eq!(*fmapped_process.state(), TestState(1));
     assert_eq!(
-        fmapped_process.context,
+        *fmapped_process.context(),
         Some(TestContext("initial".to_string()))
     );
     assert_eq!(
-        fmapped_process.error,
-        Some(CausalityError::new(CausalityErrorEnum::InternalLogicError))
+        fmapped_process.error(),
+        Some(&CausalityError::new(CausalityErrorEnum::InternalLogicError))
     );
-    assert_eq!(fmapped_process.logs.len(), 1);
-    assert!(format!("{}", fmapped_process.logs).contains("Error log"));
+    assert_eq!(fmapped_process.logs().len(), 1);
+    assert!(format!("{}", fmapped_process.logs()).contains("Error log"));
 }
 
 #[test]
@@ -159,17 +158,16 @@ fn test_fmap_on_none_value_produces_internal_logic_error() {
         TestContext,
         CausalityError,
         EffectLog,
-    > = CausalEffectPropagationProcess {
-        value: EffectValue::None,
-        state: TestState(1),
-        context: Some(TestContext("initial".to_string())),
-        error: None, // No error initially
-        logs: {
+    > = CausalEffectPropagationProcess::new(
+        Ok(EffectValue::None), // No value, no error
+        TestState(1),
+        Some(TestContext("initial".to_string())),
+        {
             let mut log = EffectLog::new();
             log.add_entry("None value log");
             log
         },
-    };
+    );
 
     let fmapped_process = <PropagatingProcessWitness<TestState, TestContext> as Functor<_>>::fmap(
         initial_process,
@@ -177,18 +175,19 @@ fn test_fmap_on_none_value_produces_internal_logic_error() {
     );
 
     // Expecting an InternalLogicError because fmap tried to unwrap a None value
-    assert_eq!(fmapped_process.value, EffectValue::None);
-    assert_eq!(fmapped_process.state, TestState(1));
+    assert!(fmapped_process.is_err());
+    assert_eq!(fmapped_process.value(), None);
+    assert_eq!(*fmapped_process.state(), TestState(1));
     assert_eq!(
-        fmapped_process.context,
+        *fmapped_process.context(),
         Some(TestContext("initial".to_string()))
     );
     assert_eq!(
-        fmapped_process.error,
-        Some(CausalityError::new(CausalityErrorEnum::InternalLogicError))
+        fmapped_process.error(),
+        Some(&CausalityError::new(CausalityErrorEnum::InternalLogicError))
     );
-    assert_eq!(fmapped_process.logs.len(), 1);
-    assert!(format!("{}", fmapped_process.logs).contains("None value log"));
+    assert_eq!(fmapped_process.logs().len(), 1);
+    assert!(format!("{}", fmapped_process.logs()).contains("None value log"));
 }
 
 // --- Applicative Trait Tests ---
@@ -203,11 +202,11 @@ fn test_applicative_pure() {
         EffectLog,
     > = CausalEffectPropagationProcess::pure(100);
 
-    assert_eq!(process.value, EffectValue::Value(100));
-    assert_eq!(process.state, TestState::default());
-    assert_eq!(process.context, None);
-    assert_eq!(process.error, None);
-    assert_eq!(process.logs.len(), 0);
+    assert_eq!(process.value(), Some(&100));
+    assert_eq!(*process.state(), TestState::default());
+    assert_eq!(*process.context(), None);
+    assert!(process.error().is_none());
+    assert_eq!(process.logs().len(), 0);
 }
 
 #[test]
@@ -218,17 +217,16 @@ fn test_applicative_apply_success() {
         TestContext,
         CausalityError,
         EffectLog,
-    > = CausalEffectPropagationProcess {
-        value: EffectValue::Value(|x| x + 1),
-        state: TestState(10),
-        context: Some(TestContext("func_ctx".to_string())),
-        error: None,
-        logs: {
+    > = CausalEffectPropagationProcess::new(
+        Ok(EffectValue::Value(|x| x + 1)),
+        TestState(10),
+        Some(TestContext("func_ctx".to_string())),
+        {
             let mut log = EffectLog::new();
             log.add_entry("Func process log");
             log
         },
-    };
+    );
 
     let a_process: CausalEffectPropagationProcess<
         i32,
@@ -236,33 +234,32 @@ fn test_applicative_apply_success() {
         TestContext,
         CausalityError,
         EffectLog,
-    > = CausalEffectPropagationProcess {
-        value: EffectValue::Value(5),
-        state: TestState(20), // Should be ignored, f_ab's state takes precedence
-        context: Some(TestContext("val_ctx".to_string())),
-        error: None,
-        logs: {
+    > = CausalEffectPropagationProcess::new(
+        Ok(EffectValue::Value(5)),
+        TestState(20), // Should be ignored, f_ab's state takes precedence
+        Some(TestContext("val_ctx".to_string())),
+        {
             let mut log = EffectLog::new();
             log.add_entry("Value process log");
             log
         },
-    };
+    );
 
     let result_process =
         <PropagatingProcessWitness<TestState, TestContext> as Applicative<_>>::apply(
             f_process, a_process,
         );
 
-    assert_eq!(result_process.value, EffectValue::Value(6));
-    assert_eq!(result_process.state, TestState(10)); // State from f_ab is carried over
+    assert_eq!(result_process.value(), Some(&6));
+    assert_eq!(*result_process.state(), TestState(10)); // State from f_ab is carried over
     assert_eq!(
-        result_process.context,
+        *result_process.context(),
         Some(TestContext("func_ctx".to_string()))
     ); // Context from f_ab
-    assert_eq!(result_process.error, None);
-    assert_eq!(result_process.logs.len(), 2);
-    assert!(format!("{}", result_process.logs).contains("Func process log"));
-    assert!(format!("{}", result_process.logs).contains("Value process log"));
+    assert!(result_process.error().is_none());
+    assert_eq!(result_process.logs().len(), 2);
+    assert!(format!("{}", result_process.logs()).contains("Func process log"));
+    assert!(format!("{}", result_process.logs()).contains("Value process log"));
 }
 
 #[test]
@@ -273,17 +270,16 @@ fn test_applicative_apply_with_func_error() {
         TestContext,
         CausalityError,
         EffectLog,
-    > = CausalEffectPropagationProcess {
-        value: EffectValue::Value(|x| x + 1),
-        state: TestState(10),
-        context: Some(TestContext("func_ctx".to_string())),
-        error: Some(CausalityError::new(CausalityErrorEnum::TypeConversionError)),
-        logs: {
+    > = CausalEffectPropagationProcess::new(
+        Err(CausalityError::new(CausalityErrorEnum::TypeConversionError)),
+        TestState(10),
+        Some(TestContext("func_ctx".to_string())),
+        {
             let mut log = EffectLog::new();
             log.add_entry("Func process error log");
             log
         },
-    };
+    );
 
     let a_process: CausalEffectPropagationProcess<
         i32,
@@ -291,36 +287,39 @@ fn test_applicative_apply_with_func_error() {
         TestContext,
         CausalityError,
         EffectLog,
-    > = CausalEffectPropagationProcess {
-        value: EffectValue::Value(5),
-        state: TestState(20),
-        context: Some(TestContext("val_ctx".to_string())),
-        error: None,
-        logs: {
+    > = CausalEffectPropagationProcess::new(
+        Ok(EffectValue::Value(5)),
+        TestState(20),
+        Some(TestContext("val_ctx".to_string())),
+        {
             let mut log = EffectLog::new();
             log.add_entry("Value process log");
             log
         },
-    };
+    );
 
     let result_process =
         <PropagatingProcessWitness<TestState, TestContext> as Applicative<_>>::apply(
             f_process, a_process,
         );
 
-    assert_eq!(result_process.value, EffectValue::None);
-    assert_eq!(result_process.state, TestState(10));
+    // The function carrier's error short-circuits; no value is produced
+    assert!(result_process.is_err());
+    assert_eq!(result_process.value(), None);
+    assert_eq!(*result_process.state(), TestState(10));
     assert_eq!(
-        result_process.context,
+        *result_process.context(),
         Some(TestContext("func_ctx".to_string()))
     );
     assert_eq!(
-        result_process.error,
-        Some(CausalityError::new(CausalityErrorEnum::TypeConversionError))
+        result_process.error(),
+        Some(&CausalityError::new(
+            CausalityErrorEnum::TypeConversionError
+        ))
     );
-    assert_eq!(result_process.logs.len(), 2);
-    assert!(format!("{}", result_process.logs).contains("Func process error log"));
-    assert!(format!("{}", result_process.logs).contains("Value process log"));
+    assert_eq!(result_process.logs().len(), 2);
+    assert!(format!("{}", result_process.logs()).contains("Func process error log"));
+    assert!(format!("{}", result_process.logs()).contains("Value process log"));
 }
 
 #[test]
@@ -331,17 +330,16 @@ fn test_applicative_apply_with_value_error() {
         TestContext,
         CausalityError,
         EffectLog,
-    > = CausalEffectPropagationProcess {
-        value: EffectValue::Value(|x| x + 1),
-        state: TestState(10),
-        context: Some(TestContext("func_ctx".to_string())),
-        error: None,
-        logs: {
+    > = CausalEffectPropagationProcess::new(
+        Ok(EffectValue::Value(|x| x + 1)),
+        TestState(10),
+        Some(TestContext("func_ctx".to_string())),
+        {
             let mut log = EffectLog::new();
             log.add_entry("Func process log");
             log
         },
-    };
+    );
 
     let a_process: CausalEffectPropagationProcess<
         i32,
@@ -349,36 +347,37 @@ fn test_applicative_apply_with_value_error() {
         TestContext,
         CausalityError,
         EffectLog,
-    > = CausalEffectPropagationProcess {
-        value: EffectValue::Value(5),
-        state: TestState(20),
-        context: Some(TestContext("val_ctx".to_string())),
-        error: Some(CausalityError::new(CausalityErrorEnum::MaxStepsExceeded)),
-        logs: {
+    > = CausalEffectPropagationProcess::new(
+        Err(CausalityError::new(CausalityErrorEnum::MaxStepsExceeded)),
+        TestState(20),
+        Some(TestContext("val_ctx".to_string())),
+        {
             let mut log = EffectLog::new();
             log.add_entry("Value process error log");
             log
         },
-    };
+    );
 
     let result_process =
         <PropagatingProcessWitness<TestState, TestContext> as Applicative<_>>::apply(
             f_process, a_process,
         );
 
-    assert_eq!(result_process.value, EffectValue::None);
-    assert_eq!(result_process.state, TestState(10));
+    // The value carrier's error short-circuits; the function is not applied
+    assert!(result_process.is_err());
+    assert_eq!(result_process.value(), None);
+    assert_eq!(*result_process.state(), TestState(10));
     assert_eq!(
-        result_process.context,
+        *result_process.context(),
         Some(TestContext("func_ctx".to_string()))
     );
     assert_eq!(
-        result_process.error,
-        Some(CausalityError::new(CausalityErrorEnum::MaxStepsExceeded))
+        result_process.error(),
+        Some(&CausalityError::new(CausalityErrorEnum::MaxStepsExceeded))
     );
-    assert_eq!(result_process.logs.len(), 2);
-    assert!(format!("{}", result_process.logs).contains("Func process log"));
-    assert!(format!("{}", result_process.logs).contains("Value process error log"));
+    assert_eq!(result_process.logs().len(), 2);
+    assert!(format!("{}", result_process.logs()).contains("Func process log"));
+    assert!(format!("{}", result_process.logs()).contains("Value process error log"));
 }
 
 #[test]
@@ -389,17 +388,16 @@ fn test_applicative_apply_with_both_errors() {
         TestContext,
         CausalityError,
         EffectLog,
-    > = CausalEffectPropagationProcess {
-        value: EffectValue::Value(|x| x + 1),
-        state: TestState(10),
-        context: Some(TestContext("func_ctx".to_string())),
-        error: Some(CausalityError::new(CausalityErrorEnum::TypeConversionError)),
-        logs: {
+    > = CausalEffectPropagationProcess::new(
+        Err(CausalityError::new(CausalityErrorEnum::TypeConversionError)),
+        TestState(10),
+        Some(TestContext("func_ctx".to_string())),
+        {
             let mut log = EffectLog::new();
             log.add_entry("Func process error log");
             log
         },
-    };
+    );
 
     let a_process: CausalEffectPropagationProcess<
         i32,
@@ -407,37 +405,39 @@ fn test_applicative_apply_with_both_errors() {
         TestContext,
         CausalityError,
         EffectLog,
-    > = CausalEffectPropagationProcess {
-        value: EffectValue::Value(5),
-        state: TestState(20),
-        context: Some(TestContext("val_ctx".to_string())),
-        error: Some(CausalityError::new(CausalityErrorEnum::MaxStepsExceeded)),
-        logs: {
+    > = CausalEffectPropagationProcess::new(
+        Err(CausalityError::new(CausalityErrorEnum::MaxStepsExceeded)),
+        TestState(20),
+        Some(TestContext("val_ctx".to_string())),
+        {
             let mut log = EffectLog::new();
             log.add_entry("Value process error log");
             log
         },
-    };
+    );
 
     let result_process =
         <PropagatingProcessWitness<TestState, TestContext> as Applicative<_>>::apply(
             f_process, a_process,
         );
 
-    assert_eq!(result_process.value, EffectValue::None);
-    assert_eq!(result_process.state, TestState(10));
+    assert!(result_process.is_err());
+    assert_eq!(result_process.value(), None);
+    assert_eq!(*result_process.state(), TestState(10));
     assert_eq!(
-        result_process.context,
+        *result_process.context(),
         Some(TestContext("func_ctx".to_string()))
     );
     // Should prioritize f_ab's error
     assert_eq!(
-        result_process.error,
-        Some(CausalityError::new(CausalityErrorEnum::TypeConversionError))
+        result_process.error(),
+        Some(&CausalityError::new(
+            CausalityErrorEnum::TypeConversionError
+        ))
     );
-    assert_eq!(result_process.logs.len(), 2);
-    assert!(format!("{}", result_process.logs).contains("Func process error log"));
-    assert!(format!("{}", result_process.logs).contains("Value process error log"));
+    assert_eq!(result_process.logs().len(), 2);
+    assert!(format!("{}", result_process.logs()).contains("Func process error log"));
+    assert!(format!("{}", result_process.logs()).contains("Value process error log"));
 }
 
 #[test]
@@ -448,17 +448,16 @@ fn test_applicative_apply_with_func_none_value_produces_internal_logic_error() {
         TestContext,
         CausalityError,
         EffectLog,
-    > = CausalEffectPropagationProcess {
-        value: EffectValue::None, // No function
-        state: TestState(10),
-        context: Some(TestContext("func_ctx".to_string())),
-        error: None,
-        logs: {
+    > = CausalEffectPropagationProcess::new(
+        Ok(EffectValue::None), // No function
+        TestState(10),
+        Some(TestContext("func_ctx".to_string())),
+        {
             let mut log = EffectLog::new();
             log.add_entry("Func process log");
             log
         },
-    };
+    );
 
     let a_process: CausalEffectPropagationProcess<
         i32,
@@ -466,34 +465,34 @@ fn test_applicative_apply_with_func_none_value_produces_internal_logic_error() {
         TestContext,
         CausalityError,
         EffectLog,
-    > = CausalEffectPropagationProcess {
-        value: EffectValue::Value(5),
-        state: TestState(20),
-        context: Some(TestContext("val_ctx".to_string())),
-        error: None,
-        logs: {
+    > = CausalEffectPropagationProcess::new(
+        Ok(EffectValue::Value(5)),
+        TestState(20),
+        Some(TestContext("val_ctx".to_string())),
+        {
             let mut log = EffectLog::new();
             log.add_entry("Value process log");
             log
         },
-    };
+    );
 
     let result_process =
         <PropagatingProcessWitness<TestState, TestContext> as Applicative<_>>::apply(
             f_process, a_process,
         );
 
-    assert_eq!(result_process.value, EffectValue::None);
-    assert_eq!(result_process.state, TestState(10));
+    assert!(result_process.is_err());
+    assert_eq!(result_process.value(), None);
+    assert_eq!(*result_process.state(), TestState(10));
     assert_eq!(
-        result_process.context,
+        *result_process.context(),
         Some(TestContext("func_ctx".to_string()))
     );
     assert_eq!(
-        result_process.error,
-        Some(CausalityError::new(CausalityErrorEnum::InternalLogicError))
+        result_process.error(),
+        Some(&CausalityError::new(CausalityErrorEnum::InternalLogicError))
     );
-    assert_eq!(result_process.logs.len(), 2);
+    assert_eq!(result_process.logs().len(), 2);
 }
 
 #[test]
@@ -504,17 +503,16 @@ fn test_applicative_apply_with_value_none_value_produces_internal_logic_error() 
         TestContext,
         CausalityError,
         EffectLog,
-    > = CausalEffectPropagationProcess {
-        value: EffectValue::Value(|x| x + 1),
-        state: TestState(10),
-        context: Some(TestContext("func_ctx".to_string())),
-        error: None,
-        logs: {
+    > = CausalEffectPropagationProcess::new(
+        Ok(EffectValue::Value(|x| x + 1)),
+        TestState(10),
+        Some(TestContext("func_ctx".to_string())),
+        {
             let mut log = EffectLog::new();
             log.add_entry("Func process log");
             log
         },
-    };
+    );
 
     let a_process: CausalEffectPropagationProcess<
         i32,
@@ -522,32 +520,32 @@ fn test_applicative_apply_with_value_none_value_produces_internal_logic_error() 
         TestContext,
         CausalityError,
         EffectLog,
-    > = CausalEffectPropagationProcess {
-        value: EffectValue::None, // No value
-        state: TestState(20),
-        context: Some(TestContext("val_ctx".to_string())),
-        error: None,
-        logs: {
+    > = CausalEffectPropagationProcess::new(
+        Ok(EffectValue::None), // No value
+        TestState(20),
+        Some(TestContext("val_ctx".to_string())),
+        {
             let mut log = EffectLog::new();
             log.add_entry("Value process log");
             log
         },
-    };
+    );
 
     let result_process =
         <PropagatingProcessWitness<TestState, TestContext> as Applicative<_>>::apply(
             f_process, a_process,
         );
 
-    assert_eq!(result_process.value, EffectValue::None);
-    assert_eq!(result_process.state, TestState(10));
+    assert!(result_process.is_err());
+    assert_eq!(result_process.value(), None);
+    assert_eq!(*result_process.state(), TestState(10));
     assert_eq!(
-        result_process.context,
+        *result_process.context(),
         Some(TestContext("func_ctx".to_string()))
     );
     assert_eq!(
-        result_process.error,
-        Some(CausalityError::new(CausalityErrorEnum::InternalLogicError))
+        result_process.error(),
+        Some(&CausalityError::new(CausalityErrorEnum::InternalLogicError))
     );
-    assert_eq!(result_process.logs.len(), 2);
+    assert_eq!(result_process.logs().len(), 2);
 }

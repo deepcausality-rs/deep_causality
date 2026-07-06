@@ -50,8 +50,8 @@ pub fn run_rung3_counterfactual(_explain: bool) {
     let factual_result = factual_causaloid.evaluate(&input_effect);
     let counterfactual_result = counterfactual_causaloid.evaluate(&input_effect);
 
-    let factual_risk = factual_result.value.into_value().unwrap_or(false);
-    let counterfactual_risk = counterfactual_result.value.into_value().unwrap_or(false);
+    let factual_risk = factual_result.value_cloned().unwrap_or(false);
+    let counterfactual_risk = counterfactual_result.value_cloned().unwrap_or(false);
 
     // 5. Assert and Explain
     println!(

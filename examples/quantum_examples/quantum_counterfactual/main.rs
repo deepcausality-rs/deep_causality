@@ -54,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .into_process();
 
     // Verification: access final state from the process struct.
-    let final_state_struct = &result.state;
+    let final_state_struct = result.state();
     let final_quantum_state = final_state_struct.states.last().unwrap();
     let prob_0 = final_quantum_state.as_inner().data()[0].norm_sqr();
 

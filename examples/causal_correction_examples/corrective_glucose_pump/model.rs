@@ -49,13 +49,7 @@ pub fn simulate_step(
         marker
     ));
 
-    PumpProcess::<FloatType> {
-        value: EffectValue::Value(next),
-        state,
-        context: ctx,
-        error: None,
-        logs,
-    }
+    PumpProcess::<FloatType>::new(Ok(EffectValue::Value(next)), state, ctx, logs)
 }
 
 /// Corrective bolus calculation. The pump infuses enough fast-acting
@@ -70,11 +64,10 @@ pub fn corrective_bolus(current: FloatType, cfg: &PumpConfig) -> (FloatType, Flo
 }
 
 pub fn initial_process() -> PumpProcess<FloatType> {
-    PumpProcess::<FloatType> {
-        value: EffectValue::Value(100.0), // fasting baseline
-        state: PatientState::default(),
-        context: Some(nominal_pump_config()),
-        error: None,
-        logs: EffectLog::new(),
-    }
+    PumpProcess::<FloatType>::new(
+        Ok(EffectValue::Value(100.0)), // fasting baseline
+        PatientState::default(),
+        Some(nominal_pump_config()),
+        EffectLog::new(),
+    )
 }

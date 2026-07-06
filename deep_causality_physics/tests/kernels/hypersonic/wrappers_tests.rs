@@ -3,7 +3,6 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::EffectValue;
 use deep_causality_physics::{
     ElectronTemperature, EquilibriumConstant, IonizationFraction, NO_IONIZATION_ENERGY_EV,
     THETA_VIB_N2, Temperature, VibrationalTemperature, arrhenius_rate,
@@ -20,7 +19,7 @@ fn test_vibrational_relaxation_wrapper() {
     let t_tr = Temperature::<f64>::new(7000.0).unwrap();
     let ok = vibrational_relaxation(t_ve, t_tr, 1.0, 14.0, THETA_VIB_N2, 1.0);
     assert!(ok.is_ok());
-    if let EffectValue::Value(v) = ok.value() {
+    if let Some(v) = ok.value() {
         assert!((v.value() - 7000.0).abs() < 1.0);
     } else {
         panic!("expected Value");
@@ -35,7 +34,7 @@ fn test_arrhenius_rate_wrapper() {
     let t = Temperature::<f64>::new(7000.0).unwrap();
     let ok = arrhenius_rate(t, 9.03e9, 0.5, 32400.0);
     assert!(ok.is_ok());
-    if let EffectValue::Value(v) = ok.value() {
+    if let Some(v) = ok.value() {
         assert!(v.value() > 0.0);
     } else {
         panic!("expected Value");
@@ -58,7 +57,7 @@ fn test_surrogate_wrapper() {
     let t = Temperature::<f64>::new(8000.0).unwrap();
     let ok = park2t_ionization_surrogate(t, 1.0e22);
     assert!(ok.is_ok());
-    if let EffectValue::Value(v) = ok.value() {
+    if let Some(v) = ok.value() {
         assert!(v.value() > 0.0);
     } else {
         panic!("expected Value");
@@ -81,7 +80,7 @@ fn test_rankine_hugoniot_wrapper() {
     let t_inf = Temperature::<f64>::new(200.0).unwrap();
     let ok = rankine_hugoniot_temperature(t_inf, 25.0, 1.4);
     assert!(ok.is_ok());
-    if let EffectValue::Value(v) = ok.value() {
+    if let Some(v) = ok.value() {
         assert!(v.value() > 1.0e4);
     } else {
         panic!("expected Value");

@@ -28,12 +28,12 @@ pub fn run_rung1_association(_explain: bool) {
         graph.evaluate_shortest_path_between_causes(smoke_idx, cancer_idx, &initial_effect);
 
     if final_effect.is_err() {
-        eprintln!("Evaluation failed: {:?}", final_effect.error);
+        eprintln!("Evaluation failed: {:?}", final_effect.error());
         return;
     }
 
     // 3. Assert and Explain
-    let result = final_effect.value.into_value().unwrap_or(initial_state);
+    let result = final_effect.value_cloned().unwrap_or(initial_state);
     assert!(result.cancer_risk, "Expected high cancer risk");
     println!("Result: Observation of high nicotine level is associated with high cancer risk.");
     println!("\n");

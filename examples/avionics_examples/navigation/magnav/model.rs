@@ -193,7 +193,7 @@ impl ParticleFilter {
         });
 
         // Apply weights
-        if let EffectValue::Value(new_weights) = effect.value() {
+        if let Some(new_weights) = effect.value() {
             // Update and Normalize
             let total_weight: f64 = new_weights.iter().sum();
             if total_weight > 1e-12 {

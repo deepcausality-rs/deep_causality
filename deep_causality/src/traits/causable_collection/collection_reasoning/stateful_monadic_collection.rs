@@ -70,85 +70,79 @@ where
         threshold_value: Option<NumericalValue>,
     ) -> PropagatingProcess<O, S, C> {
         // Short-circuit if the incoming process already carries an error.
-        if let Some(err) = incoming.error.clone() {
-            return PropagatingProcess {
-                value: EffectValue::None,
-                state: incoming.state.clone(),
-                context: incoming.context.clone(),
-                error: Some(err),
-                logs: incoming.logs.clone(),
-            };
-        }
+        let incoming_value = match incoming.outcome() {
+            Err(err) => {
+                return PropagatingProcess::new(
+                    Err(err.clone()),
+                    incoming.state().clone(),
+                    incoming.context().clone(),
+                    incoming.logs().clone(),
+                );
+            }
+            Ok(value) => value.clone(),
+        };
 
         let items = self.get_all_items();
 
         if items.is_empty() {
-            return PropagatingProcess {
-                value: EffectValue::None,
-                state: incoming.state.clone(),
-                context: incoming.context.clone(),
-                error: Some(CausalityError(CausalityErrorEnum::Custom(
+            return PropagatingProcess::new(
+                Err(CausalityError(CausalityErrorEnum::Custom(
                     "Cannot evaluate an empty collection".to_string(),
                 ))),
-                logs: incoming.logs.clone(),
-            };
+                incoming.state().clone(),
+                incoming.context().clone(),
+                incoming.logs().clone(),
+            );
         }
 
         // Accumulator: process carrying (Vec<EffectValue<O>>, threaded S, C, logs).
         let mut acc_values: Vec<EffectValue<O>> = Vec::with_capacity(items.len());
-        let mut acc_state: S = incoming.state.clone();
-        let mut acc_context: Option<C> = incoming.context.clone();
-        let mut acc_logs = incoming.logs.clone();
+        let mut acc_state: S = incoming.state().clone();
+        let mut acc_context: Option<C> = incoming.context().clone();
+        let mut acc_logs = incoming.logs().clone();
 
         for item in items.into_iter() {
             // Build a per-item incoming process that carries the threaded state.
-            let item_in: PropagatingProcess<I, S, C> = PropagatingProcess {
-                value: incoming.value.clone(),
-                state: acc_state.clone(),
-                context: acc_context.clone(),
-                error: None,
-                logs: Default::default(),
-            };
+            let item_in: PropagatingProcess<I, S, C> = PropagatingProcess::new(
+                Ok(incoming_value.clone()),
+                acc_state.clone(),
+                acc_context.clone(),
+                Default::default(),
+            );
 
-            let mut item_out = item.evaluate_stateful(&item_in);
+            let item_out = item.evaluate_stateful(&item_in);
+            let (item_outcome, item_state, item_context, item_logs) = item_out.into_parts();
 
             // Always merge the item's logs into the accumulator first.
-            acc_logs.append(&mut item_out.logs);
+            let mut item_logs = item_logs;
+            acc_logs.append(&mut item_logs);
 
-            if let Some(err) = item_out.error.take() {
-                return PropagatingProcess {
-                    value: EffectValue::None,
-                    // State at moment of failure: the state the failing item
-                    // received as input (i.e. the accumulator before this item).
-                    state: acc_state,
-                    context: acc_context,
-                    error: Some(err),
-                    logs: acc_logs,
-                };
+            match item_outcome {
+                Err(err) => {
+                    return PropagatingProcess::new(
+                        // State at moment of failure: the state the failing item
+                        // received as input (i.e. the accumulator before this item).
+                        Err(err),
+                        acc_state,
+                        acc_context,
+                        acc_logs,
+                    );
+                }
+                Ok(item_value) => {
+                    // Advance the accumulator state and context to the item's outputs.
+                    acc_state = item_state;
+                    acc_context = item_context;
+                    acc_values.push(item_value);
+                }
             }
-
-            // Advance the accumulator state and context to the item's outputs.
-            acc_state = item_out.state;
-            acc_context = item_out.context;
-            acc_values.push(item_out.value);
         }
 
         // Aggregate the per-item values.
         match monadic_collection_utils::aggregate_effects(&acc_values, logic, threshold_value) {
-            Ok(aggregated_value) => PropagatingProcess {
-                value: aggregated_value,
-                state: acc_state,
-                context: acc_context,
-                error: None,
-                logs: acc_logs,
-            },
-            Err(e) => PropagatingProcess {
-                value: EffectValue::None,
-                state: acc_state,
-                context: acc_context,
-                error: Some(e),
-                logs: acc_logs,
-            },
+            Ok(aggregated_value) => {
+                PropagatingProcess::new(Ok(aggregated_value), acc_state, acc_context, acc_logs)
+            }
+            Err(e) => PropagatingProcess::new(Err(e), acc_state, acc_context, acc_logs),
         }
     }
 }

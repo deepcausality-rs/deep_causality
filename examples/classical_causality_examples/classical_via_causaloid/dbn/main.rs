@@ -58,11 +58,11 @@ fn main() {
             causal_graph_arc.evaluate_subgraph_from_cause(RAIN_CAUSE_ID as usize, &input_effect);
 
         if rain_res.is_err() {
-            eprintln!("Rain evaluation failed: {:?}", rain_res.error);
+            eprintln!("Rain evaluation failed: {:?}", rain_res.error());
             continue;
         }
 
-        let output_state = rain_res.value.into_value().unwrap_or(input_state);
+        let output_state = rain_res.value_cloned().unwrap_or(input_state);
         let prob_rain_today = output_state.rain_probability;
 
         // Sample from the probability to determine if it actually rained

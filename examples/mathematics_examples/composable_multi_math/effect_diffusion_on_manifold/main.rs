@@ -22,7 +22,7 @@ use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
 };
-use mathematics_examples::effect_helpers::{Process, ProcessWitness, expect_value, fail, ok};
+use mathematics_examples::effect_helpers::{Process, ProcessWitness, fail, ok};
 
 /// `f64` is the right precision here: `alpha = 0.25` and integer initial data
 /// produce exactly representable binary fractions at every step. Float106
@@ -52,20 +52,20 @@ fn main() {
 
     for step in 1..=N_STEPS {
         process = process.bind(|m, _, _| diffuse_one_step(m.into_value().expect("manifold")));
-        if process.error.is_some() {
+        if process.error().is_some() {
             break;
         }
         // Peek at the current value without consuming the chain.
-        if let deep_causality_core::EffectValue::Value(ref m) = process.value {
+        if let Some(m) = process.value() {
             println!("t={} phi: {:?}", step, snapshot(m));
         }
     }
 
     println!();
-    match process.error {
+    match process.error() {
         Some(e) => println!("Diffusion errored: {}", e),
         None => {
-            let final_m = expect_value(&process.value);
+            let final_m = process.value_cloned().unwrap();
             let total: FloatType = snapshot(&final_m)
                 .into_iter()
                 .fold(FloatType::from(0.0), |acc, v| acc + v);

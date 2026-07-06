@@ -22,11 +22,11 @@ fn main() {
     // 1. Create a pure effect (Success)
     // PropagatingEffect is a type alias for CausalEffectPropagationProcess with unit state/context.
     let effect_a: PropagatingEffect<i32> = PropagatingEffect::pure(10);
-    println!("Effect A: {:?}", effect_a.value);
+    println!("Effect A: {:?}", effect_a.value().unwrap());
 
     // 2. Map over the value with the fluent `fmap` (the Functor operation).
     let effect_b = effect_a.fmap(|x| x * 2);
-    println!("Effect B (A * 2): {:?}", effect_b.value);
+    println!("Effect B (A * 2): {:?}", effect_b.value().unwrap());
 
     // 3. Chain operations with the fluent `bind` (the Monad operation).
     // The closure receives the wrapped value, the threaded state, and the context;
@@ -39,5 +39,5 @@ fn main() {
             PropagatingEffect::pure(x)
         }
     });
-    println!("Effect C (B + 5 if > 15): {:?}", effect_c.value);
+    println!("Effect C (B + 5 if > 15): {:?}", effect_c.value().unwrap());
 }

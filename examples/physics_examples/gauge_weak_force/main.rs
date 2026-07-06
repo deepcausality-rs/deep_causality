@@ -14,9 +14,7 @@
 //! 3. **Neutral Current**: Compute Z-mediated scattering (Neutrino scattering)
 //! 4. **Analysis**: Lifetime and width calculations
 
-use deep_causality_core::{
-    CausalEffectPropagationProcess, CausalFlow, EffectValue, PropagatingEffect,
-};
+use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow, PropagatingEffect};
 use deep_causality_num::Float106;
 use deep_causality_physics::{WeakField, WeakFieldOps, WeakIsospin};
 
@@ -194,7 +192,7 @@ fn stage_decay_properties(
 
 fn print_summary(result: &PropagatingEffect<WeakState>) {
     match result.value() {
-        EffectValue::Value(state) => {
+        Some(state) => {
             println!("[SUCCESS] Weak Force Analysis Complete.");
             println!("  W Width: {} GeV (PDG: ~2.085 GeV)", state.w_width);
             println!(

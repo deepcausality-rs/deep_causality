@@ -14,7 +14,7 @@ where
 {
     fn alternate_context(mut self, new_context: Context) -> Self {
         // If there is already an error, propagate it and apply nothing.
-        if self.error.is_some() {
+        if self.outcome.is_err() {
             return self;
         }
 

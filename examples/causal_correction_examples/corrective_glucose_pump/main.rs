@@ -58,7 +58,7 @@ fn main() {
     );
 
     println!("\n--- Closed-loop EffectLog (per-tick readings and bolus events) ---");
-    print_utils::print_effect_log(&closed.logs);
+    print_utils::print_effect_log(closed.logs());
 }
 
 /// Open loop: each tick is just `simulate_step`, run `N_TICKS` times. No monitor, no bolus.

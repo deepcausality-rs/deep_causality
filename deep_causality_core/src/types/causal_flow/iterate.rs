@@ -94,8 +94,8 @@ impl<Value, State, Context> CausalFlow<Value, State, Context> {
     /// A reference to the carried value, if the flow holds one.
     #[inline]
     fn peek_value(&self) -> Option<&Value> {
-        match &self.inner.value {
-            EffectValue::Value(v) => Some(v),
+        match &self.inner.outcome {
+            Ok(EffectValue::Value(v)) => Some(v),
             _ => None,
         }
     }
@@ -110,13 +110,12 @@ impl<Value, State, Context> CausalFlow<Value, State, Context> {
     #[inline]
     fn fail_not_converged(self) -> Self {
         CausalFlow {
-            inner: CausalEffectPropagationProcess {
-                value: EffectValue::None,
-                state: self.inner.state,
-                context: self.inner.context,
-                error: Some(CausalityError::new(CausalityErrorEnum::MaxStepsExceeded)),
-                logs: self.inner.logs,
-            },
+            inner: CausalEffectPropagationProcess::new(
+                Err(CausalityError::new(CausalityErrorEnum::MaxStepsExceeded)),
+                self.inner.state,
+                self.inner.context,
+                self.inner.logs,
+            ),
         }
     }
 }

@@ -28,9 +28,7 @@ fn test_new() {
         let mut log = EffectLog::new();
         log.add_entry("Causal function executed successfully");
 
-        let mut effect = PropagatingEffect::pure(is_active);
-        effect.logs = log;
-        effect
+        PropagatingEffect::from_value_with_log(is_active, log)
     }
 
     let causaloid = BaseCausaloid::<NumericalValue, bool>::new(id, causal_fn, description);
@@ -90,9 +88,7 @@ fn test_new_with_context() {
         let mut log = EffectLog::new();
         log.add_entry("Contextual causal function executed successfully");
 
-        let mut process = PropagatingProcess::pure(is_active);
-        process.logs = log;
-        process
+        PropagatingProcess::from_value_with_log(is_active, log)
     }
 
     let causaloid = BaseCausaloid::<NumericalValue, bool>::new_with_context(
@@ -128,8 +124,8 @@ fn test_evaluate_singleton() {
     let res = causaloid.evaluate(&effect);
     assert!(res.is_ok());
 
-    let actual = res.value;
-    let expected = EffectValue::Value(true);
+    let actual = res.value();
+    let expected = Some(&true);
     assert_eq!(actual, expected);
 }
 
@@ -161,9 +157,7 @@ fn test_evaluate_singleton_with_context() {
         let mut log = EffectLog::new();
         log.add_entry("Contextual causal function executed successfully");
 
-        let mut process = PropagatingProcess::pure(is_active);
-        process.logs = log;
-        process
+        PropagatingProcess::from_value_with_log(is_active, log)
     }
 
     let causaloid = BaseCausaloid::<NumericalValue, bool>::new_with_context(
@@ -176,12 +170,12 @@ fn test_evaluate_singleton_with_context() {
     // Evaluate with evidence that should result in true (1.5 >= 1.0)
     let effect_true = PropagatingEffect::from_value(1.5);
     let res_true = causaloid.evaluate(&effect_true);
-    assert_eq!(res_true.value, EffectValue::Value(true));
+    assert_eq!(res_true.value(), Some(&true));
 
     // Evaluate with evidence that should result in false (0.5 < 1.0)
     let effect_false = PropagatingEffect::from_value(0.5);
     let res_false = causaloid.evaluate(&effect_false);
-    assert_eq!(res_false.value, EffectValue::Value(false));
+    assert_eq!(res_false.value(), Some(&false));
 }
 
 // Removed test_evaluate_singleton_err as it was testing compile-time type mismatch with runtime logic.
@@ -205,7 +199,7 @@ fn test_evaluate_collection_error() {
     let res = c_coll.evaluate(&effect);
 
     assert!(res.is_err());
-    let err_msg = res.error.unwrap().to_string();
+    let err_msg = res.error().unwrap().to_string();
     assert!(err_msg.contains("Collection evaluation is not available"));
 }
 
@@ -220,7 +214,7 @@ fn test_evaluate_graph_error() {
     let res = c_graph.evaluate(&effect);
 
     assert!(res.is_err());
-    let err_msg = res.error.unwrap().to_string();
+    let err_msg = res.error().unwrap().to_string();
     assert!(err_msg.contains("Graph evaluation is not available"));
 }
 
@@ -251,14 +245,17 @@ fn test_contextual_fn_returning_none() {
     let res = causaloid.evaluate(&effect);
 
     assert!(res.is_err());
-    let err = res.error.unwrap().to_string();
+    let err = res.error().unwrap().to_string();
     assert!(err.contains("context_fn returned None value"));
 }
 
 #[test]
-fn test_error_priority_over_value() {
+fn test_errored_process_propagates_error_without_value() {
+    // A carrier holding a value AND an error at once is unrepresentable now:
+    // the outcome channel is value XOR error. An errored closure output must
+    // propagate the error and carry no value.
     let id: IdentificationValue = 100;
-    let description = "test error priority";
+    let description = "test error propagation";
     let context = get_base_context();
 
     fn problematic_fn(
@@ -266,11 +263,9 @@ fn test_error_priority_over_value() {
         _state: (),
         _ctx: Option<Arc<RwLock<BaseContext>>>,
     ) -> PropagatingProcess<f64, (), Arc<RwLock<BaseContext>>> {
-        let mut process = PropagatingProcess::pure(42.0);
-        process.error = Some(CausalityError::new(CausalityErrorEnum::Custom(
+        PropagatingProcess::from_error(CausalityError::new(CausalityErrorEnum::Custom(
             "This error should take priority".into(),
-        )));
-        process
+        )))
     }
 
     let causaloid = BaseCausaloid::<f64, f64>::new_with_context(
@@ -283,11 +278,12 @@ fn test_error_priority_over_value() {
     let effect = PropagatingEffect::from_value(1.0);
     let result = causaloid.evaluate(&effect);
 
+    assert!(result.is_err(), "Error must be propagated");
     assert!(
-        result.error.is_some(),
-        "Error should be preserved even when value is present"
+        result.value().is_none(),
+        "An errored carrier must hold no value"
     );
-    let err_msg = result.error.unwrap().to_string();
+    let err_msg = result.error().unwrap().to_string();
     assert!(err_msg.contains("This error should take priority"));
 }
 
@@ -317,7 +313,10 @@ fn test_contextual_link_preservation() {
     let result = causaloid.evaluate(&effect);
 
     assert!(result.is_ok());
-    assert!(matches!(result.value, EffectValue::ContextualLink(42, 100)));
+    assert!(matches!(
+        result.effect(),
+        Some(EffectValue::ContextualLink(42, 100))
+    ));
 }
 
 #[test]
@@ -347,7 +346,7 @@ fn test_relay_to_preservation() {
     let result = causaloid.evaluate(&effect);
 
     assert!(result.is_ok());
-    assert!(matches!(result.value, EffectValue::RelayTo(5, _)));
+    assert!(matches!(result.effect(), Some(EffectValue::RelayTo(5, _))));
 }
 
 #[test]
@@ -368,6 +367,6 @@ fn test_none_output_error() {
         result.is_err(),
         "Result should be an error when causal function returns None"
     );
-    let err_msg = result.error.unwrap().to_string();
+    let err_msg = result.error().unwrap().to_string();
     assert!(err_msg.contains("causal_fn returned None output"));
 }

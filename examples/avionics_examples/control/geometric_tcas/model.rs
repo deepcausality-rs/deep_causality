@@ -111,7 +111,7 @@ impl GeometricTCAS {
 
         // 4. Formulate Report
         let level = match assessment.value() {
-            EffectValue::Value(l) => *l,
+            Some(l) => *l,
             _ => AdvisoryLevel::None,
         };
 

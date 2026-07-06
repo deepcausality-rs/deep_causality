@@ -33,9 +33,10 @@ fn inverter(obs: bool) -> PropagatingEffect<bool> {
 
 fn relayer(_: bool) -> PropagatingEffect<bool> {
     // Relay to node 2 with value false
-    let mut eff = PropagatingEffect::pure(false);
-    eff.value = EffectValue::RelayTo(2, Box::new(PropagatingEffect::pure(false)));
-    eff
+    PropagatingEffect::from_effect_value(EffectValue::RelayTo(
+        2,
+        Box::new(PropagatingEffect::pure(false)),
+    ))
 }
 
 #[test]
@@ -53,7 +54,7 @@ fn test_evaluate_single_cause() {
     let res = graph.evaluate_single_cause(idx1, &PropagatingEffect::pure(true));
     assert!(res.is_err());
     assert!(
-        res.error
+        res.error()
             .unwrap()
             .to_string()
             .contains("Graph is not frozen")
@@ -63,16 +64,16 @@ fn test_evaluate_single_cause() {
 
     // Verify success true
     let res1 = graph.evaluate_single_cause(idx1, &PropagatingEffect::pure(false));
-    assert!(res1.value.into_value().unwrap());
+    assert!(res1.value_cloned().unwrap());
 
     // Verify success false
     let res2 = graph.evaluate_single_cause(idx2, &PropagatingEffect::pure(true));
-    assert!(!res2.value.into_value().unwrap());
+    assert!(!res2.value_cloned().unwrap());
 
     // Verify index not found
     let res_err = graph.evaluate_single_cause(999, &PropagatingEffect::pure(true));
     assert!(res_err.is_err());
-    assert!(res_err.error.unwrap().to_string().contains("not found"));
+    assert!(res_err.error().unwrap().to_string().contains("not found"));
 }
 
 #[test]
@@ -101,7 +102,7 @@ fn test_evaluate_subgraph_from_cause() {
     graph.freeze();
 
     let res = graph.evaluate_subgraph_from_cause(idx0, &PropagatingEffect::pure(true));
-    assert!(res.value.into_value().unwrap()); // Expect True
+    assert!(res.value_cloned().unwrap()); // Expect True
 
     // Check RelayTo logic
     // Create new graph with Relay
@@ -126,13 +127,13 @@ fn test_evaluate_subgraph_from_cause() {
     let r_res = relay_graph.evaluate_subgraph_from_cause(ridx0, &PropagatingEffect::pure(true));
 
     if r_res.is_err() {
-        panic!("Evaluate failed: {:?}", r_res.error);
+        panic!("Evaluate failed: {:?}", r_res.error());
     }
 
-    if let EffectValue::Value(val) = r_res.value {
-        assert!(val, "Expected True from RelayTo flow");
+    if let Some(val) = r_res.value() {
+        assert!(*val, "Expected True from RelayTo flow");
     } else {
-        panic!("Expected Value(True) but got {:?}", r_res.value);
+        panic!("Expected Value(True) but got {:?}", r_res.value());
     }
 }
 
@@ -172,7 +173,7 @@ fn test_evaluate_shortest_path_between_causes() {
 
     // Shortest path: 0->1->2. 1 inverts True -> False. Result False.
     assert!(
-        !res_logic.value.into_value().unwrap(),
+        !res_logic.value_cloned().unwrap(),
         "Expected False from shortest path"
     );
 }

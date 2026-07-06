@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{CausalFlow, EffectValue};
+use deep_causality_core::CausalFlow;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::Graph;
 
@@ -120,7 +120,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Log the intervention result
         match healed_effect.value() {
-            EffectValue::Value(Some(v)) => {
+            Some(Some(v)) => {
                 println!(
                     "\n    [\x1b[32mSUCCESS\x1b[0m] Stress reduced to {:.1} MPa.",
                     v

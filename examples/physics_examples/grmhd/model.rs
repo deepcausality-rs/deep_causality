@@ -73,7 +73,7 @@ pub fn calculate_curvature(state: GrmhdState) -> PropagatingEffect<GrmhdState> {
     // Calculate Einstein tensor G_uv using physics kernel
     let g_tensor_wrapper = einstein_tensor(&ricci, scalar_r, &g_uv);
 
-    let g_tensor = match g_tensor_wrapper.value.into_value() {
+    let g_tensor = match g_tensor_wrapper.value_cloned() {
         Some(t) => t,
         None => {
             return PropagatingEffect::from_error(deep_causality::CausalityError(
@@ -144,7 +144,7 @@ pub fn calculate_lorentz_force(state: GrmhdState) -> PropagatingEffect<GrmhdStat
     // 3. Compute Lorentz Force using Wrapper: F = J ^ B
     let f_effect = lorentz_force(&j_vec, &b_vec);
 
-    match f_effect.value.into_value() {
+    match f_effect.value_cloned() {
         Some(f_field) => {
             // Extract force component (e12 bivector)
             let idx_force = idx_current | idx_b;
@@ -194,7 +194,7 @@ pub fn calculate_energy_momentum(state: GrmhdState) -> PropagatingEffect<GrmhdSt
     // Calculate T^uv
     let t_effect = energy_momentum_tensor_em(&f_tensor, g_uv);
 
-    match t_effect.value.into_value() {
+    match t_effect.value_cloned() {
         Some(t_tensor) => {
             // Extract energy density T^00
             let energy_density = t_tensor.data()[0];

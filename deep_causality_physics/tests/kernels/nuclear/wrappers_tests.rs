@@ -20,7 +20,7 @@ fn test_radioactive_decay_wrapper_success() {
     let effect = radioactive_decay(&n0, &half_life, &time);
     assert!(effect.is_ok());
 
-    let n = effect.value().clone().into_value().unwrap();
+    let n = effect.value_cloned().unwrap();
     assert!(n.value() > 0.0);
     assert!(n.value() < 1000.0);
 }
@@ -51,7 +51,7 @@ fn test_binding_energy_wrapper_success() {
     let effect = binding_energy(&mass_defect);
     assert!(effect.is_ok());
 
-    let energy = effect.value().clone().into_value().unwrap();
+    let energy = effect.value_cloned().unwrap();
     assert!(energy.value() > 0.0);
 }
 

@@ -115,15 +115,14 @@ fn error_process<'m, const D: usize, R: DecNsScalar + ProbabilisticType>(
     context: Option<InflowContext<R>>,
     message: &str,
 ) -> InflowProcess<'m, D, R> {
-    PropagatingProcess {
-        value: EffectValue::None,
-        state,
-        context,
-        error: Some(CausalityError::new(CausalityErrorEnum::Custom(
+    PropagatingProcess::new(
+        Err(CausalityError::new(CausalityErrorEnum::Custom(
             message.to_string(),
         ))),
-        logs: EffectLog::new(),
-    }
+        state,
+        context,
+        EffectLog::new(),
+    )
 }
 
 /// One uncertain-inflow march step (the `CausalFlow` bind stage). See the module docs.
@@ -261,17 +260,16 @@ where
         step: step + 1,
         in_dropout,
     };
-    let process = PropagatingProcess {
-        value: if dropout {
+    let process = PropagatingProcess::new(
+        Ok(if dropout {
             EffectValue::None
         } else {
             EffectValue::Value(inflow)
-        },
-        state: next,
-        context: Some(context),
-        error: None,
+        }),
+        next,
+        Some(context),
         logs,
-    };
+    );
     if dropout {
         process.intervene(inflow)
     } else {
@@ -321,13 +319,12 @@ where
 
     let initial = InflowMarchState::new(solver, field, zone.default_inflow());
     let context = InflowContext::new(zone, stream);
-    let seed = PropagatingProcess {
-        value: EffectValue::Value(zone.default_inflow()),
-        state: initial,
-        context: Some(context),
-        error: None,
-        logs: EffectLog::new(),
-    };
+    let seed = PropagatingProcess::new(
+        Ok(EffectValue::Value(zone.default_inflow())),
+        initial,
+        Some(context),
+        EffectLog::new(),
+    );
 
     let flow = CausalFlow::from(seed).iterate_n(steps, |flow| flow.bind(inflow_march_step));
     Ok(flow.into_process())

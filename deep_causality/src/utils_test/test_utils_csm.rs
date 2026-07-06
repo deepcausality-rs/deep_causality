@@ -29,9 +29,7 @@ pub fn get_test_error_action() -> CausalAction {
 pub fn get_test_probabilistic_causaloid() -> BaseCausaloid<f64, f64> {
     fn causal_fn(_: f64) -> PropagatingEffect<f64> {
         let log = EffectLog::new();
-        let mut effect = PropagatingEffect::pure(0.5);
-        effect.logs = log;
-        effect
+        PropagatingEffect::from_value_with_log(0.5, log)
     }
     Causaloid::new(99, causal_fn, "Probabilistic Causaloid")
 }
@@ -55,9 +53,7 @@ pub fn get_test_causaloid(with_context: bool) -> BaseCausaloid<bool, bool> {
         fn causal_fn(_effect: bool) -> PropagatingEffect<bool> {
             let mut log = EffectLog::new();
             log.add_entry("Just return true");
-            let mut effect = PropagatingEffect::pure(true);
-            effect.logs = log;
-            effect
+            PropagatingEffect::from_value_with_log(true, log)
         }
         Causaloid::new(1, causal_fn, "Test Causaloid")
     }

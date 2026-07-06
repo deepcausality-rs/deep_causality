@@ -50,7 +50,8 @@ fn main() {
 
     println!(
         "Initial Process: Value={:?}, State={:?}",
-        process.value, process.state
+        process.value().unwrap(),
+        process.state()
     );
 
     // 3. Chain Stateful Computations using inherent `bind`
@@ -64,18 +65,18 @@ fn main() {
         state.last_op = "Multiply".into();
 
         // Return new process with updated value and state
-        deep_causality_core::CausalEffectPropagationProcess {
-            value: EffectValue::Value(v * mult),
+        deep_causality_core::CausalEffectPropagationProcess::new(
+            Ok(EffectValue::Value(v * mult)),
             state,
-            context: ctx, // Pass context along
-            error: None,
-            logs: Default::default(),
-        }
+            ctx, // Pass context along
+            Default::default(),
+        )
     });
 
     println!(
         "Step 1: Value={:?}, State={:?}",
-        process_step1.value, process_step1.state
+        process_step1.value().unwrap(),
+        process_step1.state()
     );
 
     let process_step2 = process_step1.bind(|val, mut state, ctx| {
@@ -85,17 +86,17 @@ fn main() {
         state.counter += 1;
         state.last_op = "Add".into();
 
-        deep_causality_core::CausalEffectPropagationProcess {
-            value: EffectValue::Value(v + 5),
+        deep_causality_core::CausalEffectPropagationProcess::new(
+            Ok(EffectValue::Value(v + 5)),
             state,
-            context: ctx,
-            error: None,
-            logs: Default::default(),
-        }
+            ctx,
+            Default::default(),
+        )
     });
 
     println!(
         "Step 2: Value={:?}, State={:?}",
-        process_step2.value, process_step2.state
+        process_step2.value().unwrap(),
+        process_step2.state()
     );
 }

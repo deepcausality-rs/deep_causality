@@ -2,9 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{
-    ActionError, CSM, CausalState, CsmError, CsmEvaluable, EffectValue, PropagatingEffect,
-};
+use crate::{ActionError, CSM, CausalState, CsmError, CsmEvaluable, PropagatingEffect};
 use std::fmt::Debug;
 
 impl<I, O, C> CSM<I, O, C>
@@ -37,8 +35,8 @@ where
         })?;
 
         let effect = state.eval_with_data(data)?; // Use eval_with_data for single state evaluation
-        if effect.is_err() {
-            return Err(CsmError::Causal(effect.error.unwrap()));
+        if let Err(err) = effect.outcome() {
+            return Err(CsmError::Causal(err.clone()));
         }
 
         // Probabilistic check removed or needs to be handled via CsmEvaluable if needed.
@@ -57,8 +55,8 @@ where
 
         for (_id, (state, action)) in binding.iter() {
             let effect = state.eval()?;
-            if effect.is_err() {
-                return Err(CsmError::Causal(effect.error.unwrap()));
+            if let Err(err) = effect.outcome() {
+                return Err(CsmError::Causal(err.clone()));
             }
             self.evaluate_and_fire_action(state, action, &effect)?;
         }
@@ -73,11 +71,12 @@ where
         action: &crate::CausalAction,
         effect: &PropagatingEffect<O>,
     ) -> Result<(), CsmError> {
-        let is_active = match &effect.value {
-            EffectValue::Value(val) => val
+        let is_active = match effect.value() {
+            Some(val) => val
                 .is_active(state.uncertain_parameter().as_ref())
                 .map_err(CsmError::Causal)?,
-            // Other effect types (RelayTo, Error, etc.) are considered inactive for triggering actions here.
+            // Other effect kinds (RelayTo, errored carriers, etc.) are considered inactive for
+            // triggering actions here.
             _ => false,
         };
 

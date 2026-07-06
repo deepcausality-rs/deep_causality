@@ -51,7 +51,7 @@ fn main() {
         })
         .into_effect();
 
-    match pipeline.value.into_value() {
+    match pipeline.value_cloned() {
         Some(r) => {
             println!("\n=== Optimization Complete ===");
             println!(
@@ -63,7 +63,7 @@ fn main() {
                 r.initial, r.final_score, r.steps
             );
         }
-        None => eprintln!("Optimization failed: {:?}", pipeline.error),
+        None => eprintln!("Optimization failed: {:?}", pipeline.error()),
     }
 }
 

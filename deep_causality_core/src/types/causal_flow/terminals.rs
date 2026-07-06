@@ -14,13 +14,11 @@ use crate::{
 impl<Value, State, Context> CausalFlow<Value, State, Context> {
     /// Extract the final value, or the error the flow short-circuited with.
     pub fn finish(self) -> Result<Value, CausalityError> {
-        if let Some(err) = self.inner.error {
-            return Err(err);
-        }
-        self.inner
-            .value
-            .into_value()
-            .ok_or_else(|| CausalityError::new(CausalityErrorEnum::ValueNotAvailable))
+        self.inner.outcome.and_then(|value| {
+            value
+                .into_value()
+                .ok_or_else(|| CausalityError::new(CausalityErrorEnum::ValueNotAvailable))
+        })
     }
 
     /// Consume the flow, dispatching to `on_ok` or `on_err` by outcome.
@@ -37,7 +35,7 @@ impl<Value, State, Context> CausalFlow<Value, State, Context> {
 
     /// Whether the flow is in the error channel.
     pub fn is_err(&self) -> bool {
-        self.inner.error.is_some()
+        self.inner.is_err()
     }
 
     /// Drop back to the underlying process for interop with code that expects the concrete type.

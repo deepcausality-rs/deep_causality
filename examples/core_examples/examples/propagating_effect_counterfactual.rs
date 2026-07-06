@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{Intervenable, PropagatingEffect};
+use deep_causality_core::{EffectLog, Intervenable, PropagatingEffect};
 use deep_causality_haft::LogAddEntry;
 
 fn main() {
@@ -33,10 +33,9 @@ fn main() {
     let a_factual = 10;
 
     // Start with pure value and Log initialization
-    let mut effect_a: PropagatingEffect<i32> = PropagatingEffect::pure(a_factual);
-    effect_a
-        .logs
-        .add_entry(&format!("Initialized A with value: {}", a_factual));
+    let mut log_a = EffectLog::new();
+    log_a.add_entry(&format!("Initialized A with value: {}", a_factual));
+    let effect_a: PropagatingEffect<i32> = PropagatingEffect::from_value_with_log(a_factual, log_a);
 
     // Chain computations with the fluent `bind`. The closure receives the wrapped value, the
     // threaded state, and the context; for a stateless effect the latter two are `()`.
@@ -45,37 +44,33 @@ fn main() {
         // Step B: A * 2
         let val_b = val_a * 2;
         // Create effect and add log
-        let mut effect_b = PropagatingEffect::pure(val_b);
-        effect_b
-            .logs
-            .add_entry(&format!("Computed B (A*2): {} * 2 = {}", val_a, val_b));
+        let mut log_b = EffectLog::new();
+        log_b.add_entry(&format!("Computed B (A*2): {} * 2 = {}", val_a, val_b));
+        let effect_b = PropagatingEffect::from_value_with_log(val_b, log_b);
 
         // Step C: B + 5
         effect_b.bind(|val_b, _state, _ctx| {
             let val_b = val_b.into_value().unwrap_or_default();
             let val_c = val_b + 5;
-            let mut effect_c = PropagatingEffect::pure(val_c);
-            effect_c
-                .logs
-                .add_entry(&format!("Computed C (B+5): {} + 5 = {}", val_b, val_c));
-            effect_c
+            let mut log_c = EffectLog::new();
+            log_c.add_entry(&format!("Computed C (B+5): {} + 5 = {}", val_b, val_c));
+            PropagatingEffect::from_value_with_log(val_c, log_c)
         })
     });
 
     println!(
         "  Factual Result: {:?}",
-        effect_c_factual.value.into_value().unwrap()
+        effect_c_factual.value_cloned().unwrap()
     );
-    println!("  Factual Logs:\n{}", effect_c_factual.logs);
+    println!("  Factual Logs:\n{}", effect_c_factual.logs());
 
     println!("\n2. Counterfactual World (Intervention):");
     println!("  Scenario: What if A had been 5?");
 
     // Start with the SAME initial setup
-    let mut effect_a: PropagatingEffect<i32> = PropagatingEffect::pure(a_factual); // Actually 10
-    effect_a
-        .logs
-        .add_entry(&format!("Initialized A with value: {}", a_factual));
+    let mut log_a = EffectLog::new();
+    log_a.add_entry(&format!("Initialized A with value: {}", a_factual));
+    let effect_a: PropagatingEffect<i32> = PropagatingEffect::from_value_with_log(a_factual, log_a); // Actually 10
 
     // INTERVENE immediately to change the value from 10 to 5
     // The intervene method automatically adds a log entry "Intervened: value set to 5"
@@ -87,29 +82,26 @@ fn main() {
         // Step B: A * 2
         let val_b = val_a * 2;
 
-        let mut effect_b = PropagatingEffect::pure(val_b);
-        effect_b
-            .logs
-            .add_entry(&format!("Computed B (A*2): {} * 2 = {}", val_a, val_b));
+        let mut log_b = EffectLog::new();
+        log_b.add_entry(&format!("Computed B (A*2): {} * 2 = {}", val_a, val_b));
+        let effect_b = PropagatingEffect::from_value_with_log(val_b, log_b);
 
         // Step C: B + 5
         effect_b.bind(|val_b, _state, _ctx| {
             let val_b = val_b.into_value().unwrap_or_default();
             let val_c = val_b + 5;
-            let mut effect_c = PropagatingEffect::pure(val_c);
-            effect_c
-                .logs
-                .add_entry(&format!("Computed C (B+5): {} + 5 = {}", val_b, val_c));
-            effect_c
+            let mut log_c = EffectLog::new();
+            log_c.add_entry(&format!("Computed C (B+5): {} + 5 = {}", val_b, val_c));
+            PropagatingEffect::from_value_with_log(val_c, log_c)
         })
     });
 
     println!(
         "  Counterfactual Result: {:?}",
-        effect_c_counterfactual.value.into_value().unwrap()
+        effect_c_counterfactual.value_cloned().unwrap()
     );
 
     // Inspect logs to see the full audit trail including initialization, intervention, and re-computation
     println!("\n3. Full Audit Trail (Counterfactual):");
-    println!("{}", effect_c_counterfactual.logs);
+    println!("{}", effect_c_counterfactual.logs());
 }

@@ -4,7 +4,7 @@
  */
 
 use crate::{CausalityError, Causaloid};
-use deep_causality_core::{EffectValue, PropagatingEffect, PropagatingProcess};
+use deep_causality_core::{EffectLog, EffectValue, PropagatingEffect, PropagatingProcess};
 use deep_causality_haft::LogAddEntry;
 use std::fmt::Debug;
 
@@ -35,26 +35,22 @@ where
             // context_fn signature: fn(EffectValue<I>, PS, Option<C>) -> PropagatingProcess<O, PS, C>
             // We invoke it with default state and the context.
             // The result is PropagatingProcess<O, PS, C>.
-            // We need to convert it to PropagatingEffect<O>.
+            // We need to convert it to PropagatingEffect<O>, preserving logs.
 
             let ev = EffectValue::from(input);
             let process = context_fn(ev, PS::default(), Some(context.clone()));
 
-            // Convert PropagatingProcess to PropagatingEffect, preserving logs.
-            // Convert PropagatingProcess to PropagatingEffect, preserving logs.
-            let mut effect = if let Some(error) = process.error {
-                PropagatingEffect::from_error(error)
-            } else if process.value.is_none() {
-                PropagatingEffect::from_error(CausalityError(
+            let (outcome, _state, _context, logs) = process.into_parts();
+            let outcome = match outcome {
+                Err(error) => Err(error),
+                Ok(value) if value.is_none() => Err(CausalityError(
                     deep_causality_core::CausalityErrorEnum::Custom(
                         "execute_causal_logic: context_fn returned None value and no error".into(),
                     ),
-                ))
-            } else {
-                PropagatingEffect::from_effect_value(process.value)
+                )),
+                Ok(value) => Ok(value),
             };
-            effect.logs = process.logs;
-            effect
+            PropagatingEffect::new(outcome, (), None, logs)
         } else {
             PropagatingEffect::from_error(CausalityError(
                 deep_causality_core::CausalityErrorEnum::Custom(
@@ -87,13 +83,11 @@ pub(super) fn log_input<I>(input: I, id: u64) -> PropagatingEffect<I>
 where
     I: Debug + Clone + Default,
 {
-    let mut effect = PropagatingEffect::pure(input.clone());
     // Format must match expectation: "Causaloid {}: Incoming effect: {:?}"
-    let ev = EffectValue::from(input);
-    effect
-        .logs
-        .add_entry(&format!("Causaloid {}: Incoming effect: {:?}", id, ev));
-    effect
+    let ev = EffectValue::from(input.clone());
+    let mut logs = EffectLog::new();
+    logs.add_entry(&format!("Causaloid {}: Incoming effect: {:?}", id, ev));
+    PropagatingEffect::from_value_with_log(input, logs)
 }
 
 /// Stateful sibling of [`execute_causal_logic`].
@@ -110,7 +104,7 @@ where
 ///   returned to the caller intact (logs preserved, state preserved).
 /// * Otherwise, if the stateless `causaloid.causal_fn` is set, it is invoked on
 ///   the value and the resulting `PropagatingEffect<O>` is lifted into a
-///   `PropagatingProcess<O, S, C>` whose `state` and `context` fields are the
+///   `PropagatingProcess<O, S, C>` whose `state` and `context` channels are the
 ///   pass-through arguments supplied by the caller.
 /// * If neither closure is set, an error process is returned with the caller's
 ///   `state` and `context` preserved.
@@ -138,28 +132,22 @@ where
 
     if let Some(causal_fn) = &causaloid.causal_fn {
         let stateless: PropagatingEffect<O> = causal_fn(input);
-        return PropagatingProcess {
-            value: stateless.value,
-            state,
-            context,
-            error: stateless.error,
-            logs: stateless.logs,
-        };
+        let (outcome, _unit_state, _no_context, logs) = stateless.into_parts();
+        return PropagatingProcess::new(outcome, state, context, logs);
     }
 
     let err_msg = format!(
         "Causaloid {} is missing both causal_fn and context_causal_fn",
         causaloid.id
     );
-    PropagatingProcess {
-        value: EffectValue::None,
-        state,
-        context,
-        error: Some(CausalityError(
+    PropagatingProcess::new(
+        Err(CausalityError(
             deep_causality_core::CausalityErrorEnum::Custom(err_msg),
         )),
-        logs: Default::default(),
-    }
+        state,
+        context,
+        EffectLog::new(),
+    )
 }
 
 /// Stateful sibling of [`log_input`]. Records the input on the process log
@@ -176,17 +164,9 @@ where
     C: Clone,
 {
     let ev = EffectValue::from(input.clone());
-    let mut process: PropagatingProcess<I, PS, C> = PropagatingProcess {
-        value: EffectValue::Value(input),
-        state,
-        context,
-        error: None,
-        logs: Default::default(),
-    };
-    process
-        .logs
-        .add_entry(&format!("Causaloid {}: Incoming effect: {:?}", id, ev));
-    process
+    let mut logs = EffectLog::new();
+    logs.add_entry(&format!("Causaloid {}: Incoming effect: {:?}", id, ev));
+    PropagatingProcess::new(Ok(EffectValue::Value(input)), state, context, logs)
 }
 
 /// Stateful sibling of [`log_output`]. Records the output on the process log
@@ -203,17 +183,9 @@ where
     C: Clone,
 {
     let ev = EffectValue::from(output.clone());
-    let mut process: PropagatingProcess<O, PS, C> = PropagatingProcess {
-        value: EffectValue::Value(output),
-        state,
-        context,
-        error: None,
-        logs: Default::default(),
-    };
-    process
-        .logs
-        .add_entry(&format!("Causaloid {}: Outgoing effect: {:?}", id, ev));
-    process
+    let mut logs = EffectLog::new();
+    logs.add_entry(&format!("Causaloid {}: Outgoing effect: {:?}", id, ev));
+    PropagatingProcess::new(Ok(EffectValue::Value(output)), state, context, logs)
 }
 
 /// Logs the output from a causaloid.
@@ -228,11 +200,9 @@ pub(super) fn log_output<O>(output: O, id: u64) -> PropagatingEffect<O>
 where
     O: Debug + Clone + Default,
 {
-    let mut effect = PropagatingEffect::pure(output.clone());
     // Format must match expectation: "Causaloid {}: Outgoing effect: {:?}"
-    let ev = EffectValue::from(output);
-    effect
-        .logs
-        .add_entry(&format!("Causaloid {}: Outgoing effect: {:?}", id, ev));
-    effect
+    let ev = EffectValue::from(output.clone());
+    let mut logs = EffectLog::new();
+    logs.add_entry(&format!("Causaloid {}: Outgoing effect: {:?}", id, ev));
+    PropagatingEffect::from_value_with_log(output, logs)
 }

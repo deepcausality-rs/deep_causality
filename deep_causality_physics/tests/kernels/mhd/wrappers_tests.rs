@@ -3,7 +3,6 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::EffectValue;
 use deep_causality_metric::EastCoastMetric;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
@@ -28,7 +27,7 @@ fn test_alfven_speed_wrapper_success() {
     let result = alfven_speed(&b, &rho, 1.0);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(va) = result.value() {
+    if let Some(va) = result.value() {
         assert!(va.value() > 0.0);
     } else {
         panic!("Expected Value variant");
@@ -48,7 +47,7 @@ fn test_alfven_speed_wrapper_with_physical_values() {
     assert!(result.is_ok());
 
     // v_A = B / sqrt(mu0 * rho) ≈ 1 / sqrt(4*pi*1e-7 * 1000) ≈ 28.2 m/s
-    if let EffectValue::Value(va) = result.value() {
+    if let Some(va) = result.value() {
         assert!((va.value() - 28.2).abs() < 1.0);
     }
 }
@@ -63,7 +62,7 @@ fn test_magnetic_pressure_wrapper_success() {
     assert!(result.is_ok());
 
     // P = B² / (2 * mu0) = 4 / 4 = 1.0
-    if let EffectValue::Value(p) = result.value() {
+    if let Some(p) = result.value() {
         assert!((p.value() - 1.0).abs() < 1e-10);
     }
 }
@@ -77,7 +76,7 @@ fn test_magnetic_pressure_wrapper_zero_field() {
     let result = magnetic_pressure(&b, 1.0);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(p) = result.value() {
+    if let Some(p) = result.value() {
         assert!((p.value()).abs() < 1e-10);
     }
 }
@@ -92,17 +91,13 @@ fn test_magnetic_reconnection_rate_wrapper_success() {
         CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
     let rho = Density::<f64>::new(1.0).unwrap();
-    let va = alfven_speed(&b, &rho, 1.0)
-        .value()
-        .clone()
-        .into_value()
-        .unwrap();
+    let va = alfven_speed(&b, &rho, 1.0).value_cloned().unwrap();
 
     let result = magnetic_reconnection_rate(va, 100.0);
     assert!(result.is_ok());
 
     // v_in = v_A / sqrt(S) = 1.0 / 10.0 = 0.1
-    if let EffectValue::Value(v) = result.value() {
+    if let Some(v) = result.value() {
         assert!((v.value() - 0.1).abs() < 1e-10);
     }
 }
@@ -113,17 +108,13 @@ fn test_magnetic_reconnection_rate_wrapper_high_lundquist() {
         CausalMultiVector::new(vec![0.0, 10.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
     let rho = Density::<f64>::new(1.0).unwrap();
-    let va = alfven_speed(&b, &rho, 1.0)
-        .value()
-        .clone()
-        .into_value()
-        .unwrap();
+    let va = alfven_speed(&b, &rho, 1.0).value_cloned().unwrap();
 
     // High Lundquist number → slow reconnection
     let result = magnetic_reconnection_rate(va, 10000.0);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(v) = result.value() {
+    if let Some(v) = result.value() {
         // v_A ≈ 10, S = 10000, v_in = 10/100 = 0.1
         assert!(v.value() < 0.2);
     }
@@ -275,7 +266,7 @@ fn test_energy_momentum_tensor_em_wrapper_minkowski() {
     let result = energy_momentum_tensor_em(&em, &metric);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(t) = result.value() {
+    if let Some(t) = result.value() {
         // Should be a 4x4 tensor
         assert_eq!(t.shape(), &[4, 4]);
     }
@@ -306,7 +297,7 @@ fn test_debye_length_wrapper_success() {
     let result = debye_length(temp, n, eps0, e);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(lambda) = result.value() {
+    if let Some(lambda) = result.value() {
         // Typical Debye length in plasma ~ 7e-5 m for these parameters
         assert!(lambda.value() > 0.0);
         assert!(lambda.value() < 1.0); // Should be small (meters)
@@ -323,7 +314,7 @@ fn test_debye_length_wrapper_cold_plasma() {
     let result = debye_length(temp, n, eps0, e);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(lambda) = result.value() {
+    if let Some(lambda) = result.value() {
         // Cold plasma → smaller Debye length
         assert!(lambda.value() > 0.0);
     }
@@ -341,7 +332,7 @@ fn test_larmor_radius_wrapper_success() {
     let result = larmor_radius(mass, v, charge, &b);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(r) = result.value() {
+    if let Some(r) = result.value() {
         // r_L = m*v / (q*B) = 9.1e-31 * 1e6 / (1.6e-19 * 1) ≈ 5.7e-6 m
         assert!(r.value() > 0.0);
         assert!(r.value() < 1e-3); // Should be very small
@@ -360,7 +351,7 @@ fn test_larmor_radius_wrapper_proton() {
     let result = larmor_radius(mass, v, charge, &b);
     assert!(result.is_ok());
 
-    if let EffectValue::Value(r) = result.value() {
+    if let Some(r) = result.value() {
         // Proton has larger radius than electron
         assert!(r.value() > 0.0);
     }
@@ -400,11 +391,7 @@ fn test_reconnection_rate_error_negative_lundquist() {
         CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
     );
     let rho = Density::<f64>::new(1.0).unwrap();
-    let va = alfven_speed(&b, &rho, 1.0)
-        .value()
-        .clone()
-        .into_value()
-        .unwrap();
+    let va = alfven_speed(&b, &rho, 1.0).value_cloned().unwrap();
 
     let result = magnetic_reconnection_rate(va, -1.0);
     assert!(result.is_err());

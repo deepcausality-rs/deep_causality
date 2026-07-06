@@ -26,7 +26,7 @@ fn test_kinetic_energy_wrapper_success() {
     let effect = kinetic_energy(&mass, &velocity);
     assert!(effect.is_ok());
 
-    let energy = effect.value().clone().into_value().unwrap();
+    let energy = effect.value_cloned().unwrap();
     assert!(energy.value() > 0.0);
 }
 
@@ -42,7 +42,7 @@ fn test_rotational_kinetic_energy_wrapper_success() {
     let effect = rotational_kinetic_energy(&inertia, &omega);
     assert!(effect.is_ok());
 
-    let energy = effect.value().clone().into_value().unwrap();
+    let energy = effect.value_cloned().unwrap();
     assert!(energy.value() > 0.0);
 }
 
@@ -108,7 +108,7 @@ fn test_kalman_filter_linear_wrapper_success() {
     let effect = kalman_filter_linear(&x_pred, &p_pred, &measurement, &h, &r, &q);
     assert!(effect.is_ok());
 
-    let (x_new, p_new) = effect.value().clone().into_value().unwrap();
+    let (x_new, p_new) = effect.value_cloned().unwrap();
     // Verify state was updated towards measurement (12.0)
     assert!(x_new.data()[0] > 10.0);
     // Verify covariance decreased
@@ -174,7 +174,7 @@ fn test_generalized_master_equation_wrapper_success() {
     let effect = generalized_master_equation(&state, &history, None, &mk);
 
     assert!(effect.is_ok());
-    let res = effect.value().clone().into_value().unwrap();
+    let res = effect.value_cloned().unwrap();
     assert_eq!(res.len(), 1);
     assert_eq!(res[0].value(), 0.0);
 }

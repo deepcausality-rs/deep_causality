@@ -59,7 +59,7 @@ fn main() {
     );
 
     println!("\n--- Closed-loop EffectLog (per-tick reading + every stop) ---");
-    print_utils::print_effect_log(&closed.logs);
+    print_utils::print_effect_log(closed.logs());
 }
 
 /// Open loop: each tick is just `simulate_step`, run `N_TICKS` times. Continuous ascent, no stops.

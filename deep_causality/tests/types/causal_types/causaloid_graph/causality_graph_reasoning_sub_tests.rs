@@ -33,7 +33,7 @@ fn test_evaluate_subgraph_requires_a_frozen_graph() {
     // Not frozen.
     let res = g.evaluate_subgraph_from_cause(idx, &PropagatingEffect::from_value(true));
     assert!(res.is_err());
-    assert!(res.error.unwrap().to_string().contains("not frozen"));
+    assert!(res.error().unwrap().to_string().contains("not frozen"));
 }
 
 #[test]
@@ -42,7 +42,12 @@ fn test_evaluate_subgraph_rejects_a_missing_start_index() {
     g.freeze();
     let res = g.evaluate_subgraph_from_cause(99, &PropagatingEffect::from_value(true));
     assert!(res.is_err());
-    assert!(res.error.unwrap().to_string().contains("does not contain"));
+    assert!(
+        res.error()
+            .unwrap()
+            .to_string()
+            .contains("does not contain")
+    );
 }
 
 #[test]
@@ -57,7 +62,7 @@ fn test_evaluate_subgraph_short_circuits_on_a_node_error() {
 
     let res = g.evaluate_subgraph_from_cause(i0, &PropagatingEffect::from_value(true));
     assert!(res.is_err());
-    assert!(res.error.unwrap().to_string().contains("Test error"));
+    assert!(res.error().unwrap().to_string().contains("Test error"));
 }
 
 #[test]
@@ -77,7 +82,7 @@ fn test_evaluate_subgraph_follows_a_relay_to_a_valid_target() {
     g.freeze();
 
     let res = g.evaluate_subgraph_from_cause(i0, &PropagatingEffect::from_value(true));
-    assert!(res.is_ok(), "got {:?}", res.error);
+    assert!(res.is_ok(), "got {:?}", res.error());
     let _ = i2;
 }
 
@@ -96,7 +101,7 @@ fn test_evaluate_subgraph_rejects_a_relay_to_a_missing_target() {
 
     let res = g.evaluate_subgraph_from_cause(i0, &PropagatingEffect::from_value(true));
     assert!(res.is_err());
-    assert!(res.error.unwrap().to_string().contains("RelayTo target"));
+    assert!(res.error().unwrap().to_string().contains("RelayTo target"));
 }
 
 #[test]
@@ -140,5 +145,5 @@ fn test_evaluate_subgraph_from_cause() {
     // A evaluates from Boolean true to Boolean false;
     // B evaluates from Boolean false to Boolean true;
     // Thus the final effect is Boolean(true)
-    assert_eq!(res.value, EffectValue::Value(true));
+    assert_eq!(res.value(), Some(&true));
 }

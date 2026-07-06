@@ -23,9 +23,7 @@ use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::{Float106, Real};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
-use mathematics_examples::effect_helpers::{
-    Process, ProcessWitness, expect_value, fail, ok, print_log,
-};
+use mathematics_examples::effect_helpers::{Process, ProcessWitness, fail, ok, print_log};
 
 /// Switch this alias to `f32` for low precision, `f64` for standard precision,
 /// or `Float106` for high precision.
@@ -61,12 +59,12 @@ fn main() {
         .bind(|v, _, _| lower_to_tensor(v.into_value().expect("rotated multivector")))
         .bind(|v, _, _| norm_squared(v.into_value().expect("lowered tensor")));
 
-    print_log(&result.logs);
+    print_log(result.logs());
 
-    match result.error {
+    match result.error() {
         Some(e) => println!("\nChain errored: {}", e),
         None => {
-            let final_norm_sq = expect_value(&result.value);
+            let final_norm_sq = result.value_cloned().unwrap();
             let drift = (final_norm_sq - initial_norm_sq).abs();
             println!("\nFinal |v|^2 = {}", final_norm_sq);
             println!(

@@ -39,14 +39,14 @@ fn test_propagating_process_satisfies_full_alternatable_via_blanket_impl() {
     let new_cfg = Cfg { label: "b" };
     let alternated = triple_alternate(process, 99_i32, new_cfg.clone(), new_state.clone());
 
-    if let EffectValue::Value(v) = alternated.value {
-        assert_eq!(v, 99);
+    if let Some(v) = alternated.value() {
+        assert_eq!(*v, 99);
     } else {
         panic!("Expected Value(99)");
     }
-    assert_eq!(alternated.context.clone().unwrap(), new_cfg);
-    assert_eq!(alternated.state, new_state);
-    assert!(alternated.error.is_none());
+    assert_eq!(alternated.context().clone().unwrap(), new_cfg);
+    assert_eq!(*alternated.state(), new_state);
+    assert!(alternated.is_ok());
 }
 
 #[test]
@@ -57,8 +57,8 @@ fn test_propagating_effect_also_satisfies_full_alternatable_via_unit_channels() 
     let effect = PropagatingEffect::pure(1_i32);
     let alternated = triple_alternate(effect, 42_i32, (), ());
 
-    if let EffectValue::Value(v) = alternated.value {
-        assert_eq!(v, 42);
+    if let Some(v) = alternated.value() {
+        assert_eq!(*v, 42);
     } else {
         panic!("Expected Value(42)");
     }

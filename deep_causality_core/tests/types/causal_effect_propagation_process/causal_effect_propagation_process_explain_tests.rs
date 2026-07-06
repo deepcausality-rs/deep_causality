@@ -9,13 +9,8 @@ use deep_causality_haft::LogAddEntry;
 
 #[test]
 fn test_explain_value_only() {
-    let process = CausalEffectPropagationProcess {
-        value: EffectValue::Value(42),
-        state: (),
-        context: None::<()>,
-        error: None::<CausalityError>,
-        logs: EffectLog::new(),
-    };
+    let process: CausalEffectPropagationProcess<i32, (), (), CausalityError, EffectLog> =
+        CausalEffectPropagationProcess::new(Ok(EffectValue::Value(42)), (), None, EffectLog::new());
 
     let explanation = process.explain();
 
@@ -26,18 +21,15 @@ fn test_explain_value_only() {
 
 #[test]
 fn test_explain_with_error() {
+    // Value and error are one channel: an errored process holds no value, so
+    // explain() prints the error arm INSTEAD of a final value.
     let error = CausalityError::new(CausalityErrorEnum::InternalLogicError);
-    let process = CausalEffectPropagationProcess {
-        value: EffectValue::Value(42),
-        state: (),
-        context: None::<()>,
-        error: Some(error),
-        logs: EffectLog::new(),
-    };
+    let process: CausalEffectPropagationProcess<i32, (), (), CausalityError, EffectLog> =
+        CausalEffectPropagationProcess::new(Err(error), (), None, EffectLog::new());
 
     let explanation = process.explain();
 
-    assert!(explanation.contains("Final Value: Value(42)"));
+    assert!(!explanation.contains("Final Value:"));
     assert!(explanation.contains("Error:"));
     assert!(explanation.contains("InternalLogicError"));
     assert!(!explanation.contains("--- Logs ---"));
@@ -49,13 +41,8 @@ fn test_explain_with_logs() {
     logs.add_entry("Step 1: Processing data");
     logs.add_entry("Step 2: Computing result");
 
-    let process = CausalEffectPropagationProcess {
-        value: EffectValue::Value(100),
-        state: (),
-        context: None::<()>,
-        error: None::<CausalityError>,
-        logs,
-    };
+    let process: CausalEffectPropagationProcess<i32, (), (), CausalityError, EffectLog> =
+        CausalEffectPropagationProcess::new(Ok(EffectValue::Value(100)), (), None, logs);
 
     let explanation = process.explain();
 
@@ -67,23 +54,20 @@ fn test_explain_with_logs() {
 }
 
 #[test]
-fn test_explain_with_all_fields() {
+fn test_explain_with_error_and_logs() {
+    // Formerly "with_all_fields": a process can no longer hold a value AND an
+    // error, so the richest errored explanation is the error arm plus the logs.
     let mut logs = EffectLog::new();
     logs.add_entry("Initial computation");
     logs.add_entry("Final computation");
 
     let error = CausalityError::new(CausalityErrorEnum::InternalLogicError);
-    let process = CausalEffectPropagationProcess {
-        value: EffectValue::Value(999),
-        state: (),
-        context: None::<()>,
-        error: Some(error),
-        logs,
-    };
+    let process: CausalEffectPropagationProcess<i32, (), (), CausalityError, EffectLog> =
+        CausalEffectPropagationProcess::new(Err(error), (), None, logs);
 
     let explanation = process.explain();
 
-    assert!(explanation.contains("Final Value: Value(999)"));
+    assert!(!explanation.contains("Final Value:"));
     assert!(explanation.contains("Error:"));
     assert!(explanation.contains("InternalLogicError"));
     assert!(explanation.contains("--- Logs ---"));
@@ -93,13 +77,8 @@ fn test_explain_with_all_fields() {
 
 #[test]
 fn test_explain_with_effect_value_none() {
-    let process = CausalEffectPropagationProcess {
-        value: EffectValue::<i32>::None,
-        state: (),
-        context: None::<()>,
-        error: None::<CausalityError>,
-        logs: EffectLog::new(),
-    };
+    let process: CausalEffectPropagationProcess<i32, (), (), CausalityError, EffectLog> =
+        CausalEffectPropagationProcess::new(Ok(EffectValue::None), (), None, EffectLog::new());
 
     let explanation = process.explain();
 
@@ -112,13 +91,8 @@ fn test_explain_with_effect_value_none() {
 fn test_explain_empty_logs_no_section() {
     let logs = EffectLog::new();
 
-    let process = CausalEffectPropagationProcess {
-        value: EffectValue::Value(1),
-        state: (),
-        context: None::<()>,
-        error: None::<CausalityError>,
-        logs,
-    };
+    let process: CausalEffectPropagationProcess<i32, (), (), CausalityError, EffectLog> =
+        CausalEffectPropagationProcess::new(Ok(EffectValue::Value(1)), (), None, logs);
 
     let explanation = process.explain();
 

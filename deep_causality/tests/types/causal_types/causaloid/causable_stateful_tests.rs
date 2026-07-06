@@ -28,30 +28,23 @@ fn stateful_increment(
     let val = match obs.into_value() {
         Some(v) => v,
         None => {
-            return PropagatingProcess {
-                value: EffectValue::None,
-                state,
-                context: ctx,
-                error: Some(CausalityError::new(CausalityErrorEnum::Custom(
+            return PropagatingProcess::new(
+                Err(CausalityError::new(CausalityErrorEnum::Custom(
                     "stateful_increment: value is None".into(),
                 ))),
-                logs: EffectLog::new(),
-            };
+                state,
+                ctx,
+                EffectLog::new(),
+            );
         }
     };
 
     let m = ctx.as_ref().map(|c| c.multiplier).unwrap_or(1);
     state.count += 1;
 
-    let mut process: PropagatingProcess<u64, CounterState, ConfigCtx> = PropagatingProcess {
-        value: EffectValue::Value(val * m),
-        state,
-        context: ctx,
-        error: None,
-        logs: EffectLog::new(),
-    };
-    process.logs.add_entry("stateful_increment: state advanced");
-    process
+    let mut logs = EffectLog::new();
+    logs.add_entry("stateful_increment: state advanced");
+    PropagatingProcess::new(Ok(EffectValue::Value(val * m)), state, ctx, logs)
 }
 
 fn stateful_failing(
@@ -59,18 +52,16 @@ fn stateful_failing(
     state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
-    let mut p: PropagatingProcess<u64, CounterState, ConfigCtx> = PropagatingProcess {
-        value: EffectValue::None,
-        state,
-        context: ctx,
-        error: Some(CausalityError::new(CausalityErrorEnum::Custom(
+    let mut logs = EffectLog::new();
+    logs.add_entry("stateful_failing: closure invoked, returning error");
+    PropagatingProcess::new(
+        Err(CausalityError::new(CausalityErrorEnum::Custom(
             "stateful_failing: deliberate failure".into(),
         ))),
-        logs: EffectLog::new(),
-    };
-    p.logs
-        .add_entry("stateful_failing: closure invoked, returning error");
-    p
+        state,
+        ctx,
+        logs,
+    )
 }
 
 fn stateless_passthrough(input: u64) -> PropagatingEffect<u64> {
@@ -82,13 +73,12 @@ fn build_incoming(
     context: Option<ConfigCtx>,
     value: u64,
 ) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
-    PropagatingProcess {
-        value: EffectValue::Value(value),
+    PropagatingProcess::new(
+        Ok(EffectValue::Value(value)),
         state,
         context,
-        error: None,
-        logs: EffectLog::new(),
-    }
+        EffectLog::new(),
+    )
 }
 
 #[test]
@@ -105,16 +95,12 @@ fn evaluate_stateful_threads_state_and_context_through_closure() {
 
     let out = causaloid.evaluate_stateful(&incoming);
 
+    assert!(out.is_ok(), "expected no error, got {:?}", out.error());
+    assert_eq!(*out.state(), CounterState { count: 42 });
+    assert_ne!(*out.state(), CounterState::default());
+    assert_eq!(out.value(), Some(&15));
     assert!(
-        out.error.is_none(),
-        "expected no error, got {:?}",
-        out.error
-    );
-    assert_eq!(out.state, CounterState { count: 42 });
-    assert_ne!(out.state, CounterState::default());
-    assert_eq!(out.value, EffectValue::Value(15));
-    assert!(
-        !out.logs.is_empty(),
+        !out.logs().is_empty(),
         "expected log entries from input/output/closure logging"
     );
 }
@@ -130,13 +116,14 @@ fn evaluate_stateful_passes_state_through_when_closure_is_stateless() {
 
     let out = causaloid.evaluate_stateful(&incoming);
 
-    assert!(out.error.is_none());
+    assert!(out.is_ok());
     assert_eq!(
-        out.state, initial_state,
+        *out.state(),
+        initial_state,
         "stateless closure must not perturb caller state"
     );
-    assert_eq!(out.context, initial_ctx);
-    assert_eq!(out.value, EffectValue::Value(8));
+    assert_eq!(*out.context(), initial_ctx);
+    assert_eq!(out.value(), Some(&8));
 }
 
 #[test]
@@ -153,13 +140,15 @@ fn evaluate_stateful_short_circuits_with_state_preserved_on_error() {
 
     let out = causaloid.evaluate_stateful(&incoming);
 
-    assert!(out.error.is_some());
+    assert!(out.is_err());
+    assert!(out.value().is_none(), "errored carrier holds no value");
     assert_eq!(
-        out.state, initial_state,
+        *out.state(),
+        initial_state,
         "state at moment of failure must be preserved (not defaulted)"
     );
     assert!(
-        !out.logs.is_empty(),
+        !out.logs().is_empty(),
         "logs accumulated up to and including failing step must be preserved"
     );
 }
@@ -175,8 +164,8 @@ fn stateless_evaluate_unchanged_for_existing_callers() {
     let in_eff: PropagatingEffect<u64> = PropagatingEffect::from_value(123);
     let out_eff = causaloid.evaluate(&in_eff);
 
-    assert!(out_eff.error.is_none());
-    assert_eq!(out_eff.value, EffectValue::Value(123));
+    assert!(out_eff.is_ok());
+    assert_eq!(out_eff.value(), Some(&123));
 }
 
 #[test]
@@ -193,24 +182,25 @@ fn evaluate_stateful_passes_through_existing_error_unchanged() {
     let initial_state = CounterState { count: 9 };
     let pre_existing_err =
         CausalityError::new(CausalityErrorEnum::Custom("upstream stage failed".into()));
-    let errored_incoming: PropagatingProcess<u64, CounterState, ConfigCtx> = PropagatingProcess {
-        value: EffectValue::None,
-        state: initial_state.clone(),
-        context: Some(ConfigCtx { multiplier: 4 }),
-        error: Some(pre_existing_err.clone()),
-        logs: EffectLog::new(),
-    };
+    let errored_incoming: PropagatingProcess<u64, CounterState, ConfigCtx> =
+        PropagatingProcess::new(
+            Err(pre_existing_err.clone()),
+            initial_state.clone(),
+            Some(ConfigCtx { multiplier: 4 }),
+            EffectLog::new(),
+        );
 
     let out = causaloid.evaluate_stateful(&errored_incoming);
 
     assert_eq!(
-        out.error.as_ref().map(|e| format!("{:?}", e)),
+        out.error().map(|e| format!("{:?}", e)),
         Some(format!("{:?}", pre_existing_err)),
         "incoming error must pass through unchanged"
     );
-    assert_eq!(out.state, initial_state, "state must be preserved");
+    assert!(out.value().is_none(), "errored carrier holds no value");
+    assert_eq!(*out.state(), initial_state, "state must be preserved");
     // The closure should not have logged anything.
-    let log_text = format!("{:?}", out.logs);
+    let log_text = format!("{:?}", out.logs());
     assert!(
         !log_text.contains("Causaloid 29: Incoming"),
         "closure must not have run: {log_text}"
@@ -224,13 +214,7 @@ fn closure_none_output(
     state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
-    PropagatingProcess {
-        value: EffectValue::None,
-        state,
-        context: ctx,
-        error: None,
-        logs: EffectLog::new(),
-    }
+    PropagatingProcess::new(Ok(EffectValue::None), state, ctx, EffectLog::new())
 }
 
 /// A stateful closure whose output is a structural `RelayTo` (drives the output pass-through arm).
@@ -239,50 +223,53 @@ fn closure_relay_output(
     state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
-    PropagatingProcess {
-        value: EffectValue::RelayTo(3, Box::new(PropagatingEffect::from_value(1u64))),
+    PropagatingProcess::new(
+        Ok(EffectValue::RelayTo(
+            3,
+            Box::new(PropagatingEffect::from_value(1u64)),
+        )),
         state,
-        context: ctx,
-        error: None,
-        logs: EffectLog::new(),
-    }
+        ctx,
+        EffectLog::new(),
+    )
 }
 
 #[test]
 fn evaluate_stateful_errors_on_a_none_input_value() {
     let causaloid: Causaloid<u64, u64, CounterState, ConfigCtx> =
         Causaloid::new_with_context(31, stateful_increment, ConfigCtx { multiplier: 1 }, "n");
-    let incoming = PropagatingProcess {
-        value: EffectValue::None,
-        state: CounterState { count: 3 },
-        context: Some(ConfigCtx { multiplier: 1 }),
-        error: None,
-        logs: EffectLog::new(),
-    };
+    let incoming = PropagatingProcess::new(
+        Ok(EffectValue::None),
+        CounterState { count: 3 },
+        Some(ConfigCtx { multiplier: 1 }),
+        EffectLog::new(),
+    );
 
     let out = causaloid.evaluate_stateful(&incoming);
-    let err = out.error.expect("a None input value errors");
+    let err = out.error().expect("a None input value errors");
     assert!(format!("{err:?}").contains("input value is None"));
-    assert_eq!(out.state, CounterState { count: 3 }, "state preserved");
+    assert_eq!(*out.state(), CounterState { count: 3 }, "state preserved");
 }
 
 #[test]
 fn evaluate_stateful_passes_a_relay_input_through_unchanged() {
     let causaloid: Causaloid<u64, u64, CounterState, ConfigCtx> =
         Causaloid::new_with_context(32, stateful_increment, ConfigCtx { multiplier: 1 }, "n");
-    let incoming = PropagatingProcess {
-        value: EffectValue::RelayTo(5, Box::new(PropagatingEffect::from_value(1u64))),
-        state: CounterState { count: 4 },
-        context: Some(ConfigCtx { multiplier: 1 }),
-        error: None,
-        logs: EffectLog::new(),
-    };
+    let incoming = PropagatingProcess::new(
+        Ok(EffectValue::RelayTo(
+            5,
+            Box::new(PropagatingEffect::from_value(1u64)),
+        )),
+        CounterState { count: 4 },
+        Some(ConfigCtx { multiplier: 1 }),
+        EffectLog::new(),
+    );
 
     let out = causaloid.evaluate_stateful(&incoming);
-    assert!(out.error.is_none(), "structural input flows through");
+    assert!(out.is_ok(), "structural input flows through");
     // `cast_effect_value` collapses structural input variants to `None` on the output channel.
-    assert_eq!(out.value, EffectValue::None);
-    assert_eq!(out.state, CounterState { count: 4 }, "state untouched");
+    assert_eq!(out.effect(), Some(&EffectValue::None));
+    assert_eq!(*out.state(), CounterState { count: 4 }, "state untouched");
 }
 
 #[test]
@@ -296,7 +283,7 @@ fn evaluate_stateful_errors_when_the_closure_returns_a_none_output() {
     );
 
     let out = causaloid.evaluate_stateful(&incoming);
-    let err = out.error.expect("a None output errors");
+    let err = out.error().expect("a None output errors");
     assert!(format!("{err:?}").contains("returned None output"));
 }
 
@@ -311,9 +298,9 @@ fn evaluate_stateful_passes_a_relay_output_through_unchanged() {
     );
 
     let out = causaloid.evaluate_stateful(&incoming);
-    assert!(out.error.is_none());
+    assert!(out.is_ok());
     assert!(
-        matches!(out.value, EffectValue::RelayTo(3, _)),
+        matches!(out.effect(), Some(EffectValue::RelayTo(3, _))),
         "a structural output is passed through without output logging"
     );
 }
@@ -337,7 +324,7 @@ fn evaluate_stateful_rejects_a_collection_causaloid() {
 
     let out = causaloid.evaluate_stateful(&incoming);
     let err = out
-        .error
+        .error()
         .expect("collection stateful eval is unsupported here");
     assert!(format!("{err:?}").contains("collection"));
 }
@@ -355,7 +342,9 @@ fn evaluate_stateful_rejects_a_graph_causaloid() {
     );
 
     let out = causaloid.evaluate_stateful(&incoming);
-    let err = out.error.expect("graph stateful eval is unsupported here");
+    let err = out
+        .error()
+        .expect("graph stateful eval is unsupported here");
     assert!(format!("{err:?}").contains("graph"));
 }
 
@@ -375,7 +364,7 @@ fn same_causaloid_evaluable_via_both_evaluate_and_evaluate_stateful() {
     // existing trait method.
     let in_eff: PropagatingEffect<u64> = PropagatingEffect::from_value(10);
     let out_eff = causaloid.evaluate(&in_eff);
-    assert!(out_eff.error.is_none());
+    assert!(out_eff.is_ok());
 
     // Stateful evaluation: the same causaloid threads state/context.
     let incoming = build_incoming(
@@ -384,6 +373,6 @@ fn same_causaloid_evaluable_via_both_evaluate_and_evaluate_stateful() {
         10,
     );
     let out_proc = causaloid.evaluate_stateful(&incoming);
-    assert!(out_proc.error.is_none());
-    assert_eq!(out_proc.state, CounterState { count: 1 });
+    assert!(out_proc.is_ok());
+    assert_eq!(*out_proc.state(), CounterState { count: 1 });
 }

@@ -52,12 +52,12 @@ impl EventHandler {
         let res = bc.evaluate(&input_effect);
 
         if res.is_ok() {
-            let value = res.value.into_value().unwrap_or(false);
+            let value = res.value_cloned().unwrap_or(false);
             println!("EventHandler: Inference successful with res: {}", value)
         } else {
             println!(
                 "EventHandler: Inference failed with error: {}",
-                res.error.unwrap()
+                res.error().unwrap()
             )
         }
 

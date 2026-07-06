@@ -65,7 +65,7 @@ cargo test -p deep_causality_haft --test '*' formalization_lean
 | `Profunctor` (dimap identity + contravariant-twist composition) | Loregian, *(Co)end Calculus* §5 | laws stated & hold |
 | `ParametricMonad` (indexed Kleisli laws) | Atkey, JFP 19 2009 | laws stated & hold |
 | `MonoidalMerge` (binaturality of `merge`; renamed from `Promonad`) | McBride–Paterson 2008 §7 | law stated & holds |
-| `Arrow` (category + `arr` functoriality + 5 strength laws + derived `second`/`***`/`&&&`) | Hughes, SCP 37 2000; Paterson, ICFP 2001 | **fully conformant** — all 10 laws + 3 derived identities proved |
+| `Arrow` (category + `arr` functoriality + 5 strength laws + derived `second`/`***`/`&&&`) | Hughes, SCP 37 2000; Paterson, ICFP 2001 | law stated & holds|
 | `Morphism` / `Endomorphism` (identity law; `End(T)` monoid; power law `f^(m+n) = f^n ∘ f^m`) | Mac Lane §I.1 | laws stated & hold |
 | `Adjunction` (triangle identities + adjunct bijection) | Mac Lane §IV.1 | laws stated & hold |
 | `Foldable` (fold–pure compatibility) | — (catamorphism folklore) | law stated & holds |

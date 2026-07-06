@@ -32,13 +32,12 @@ fn main() {
     let factual = factual_series();
     let counterfactual = without_oil(&factual);
 
-    let factual_pred = unwrap_pred(&run(factual.clone()).value);
-    let counter_pred = unwrap_pred(
-        &start(factual)
-            .alternate_context(counterfactual)
-            .bind(predict_shipping)
-            .value,
-    );
+    let factual_pred = run(factual.clone()).value_cloned().unwrap();
+    let counter_pred = start(factual)
+        .alternate_context(counterfactual)
+        .bind(predict_shipping)
+        .value_cloned()
+        .unwrap();
 
     let actual_q5 = 105.0;
     let err_factual = (factual_pred - actual_q5).abs();
@@ -66,13 +65,6 @@ fn main() {
 /// Run the seed-plus-bind chain on a fresh factual context.
 fn run(series: SeriesContext) -> PropagatingProcess<f64, (), SeriesContext> {
     start(series).bind(predict_shipping)
-}
-
-fn unwrap_pred(value: &EffectValue<f64>) -> f64 {
-    match value {
-        EffectValue::Value(v) => *v,
-        other => panic!("chain produced non-Value effect: {other:?}"),
-    }
 }
 
 // --- Model: series context, chain seed, predictor bind, fixtures ---

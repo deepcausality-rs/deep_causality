@@ -18,7 +18,6 @@
 //! - `Probability` - Type-safe probability values in [0,1]
 //! - `CausalTensor` - Transition and memory kernel matrices
 
-use deep_causality_core::EffectValue;
 use deep_causality_physics::{Probability, generalized_master_equation};
 use deep_causality_tensor::CausalTensor;
 
@@ -100,7 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             generalized_master_equation(&state, &history, Some(&markov_operator), &memory_kernels);
 
         match effect.value() {
-            EffectValue::Value(new_state) => {
+            Some(new_state) => {
                 // Normalize to ensure probabilities sum to 1
                 let total: f64 = new_state.iter().map(|p| p.value()).sum();
 
@@ -130,8 +129,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("[t={:>2}] Distribution:", t);
                 print_state(&state);
             }
-            _ => {
-                eprintln!("[t={}] GME computation failed: {:?}", t, effect.error);
+            None => {
+                eprintln!("[t={}] GME computation failed: {:?}", t, effect.error());
             }
         }
     }

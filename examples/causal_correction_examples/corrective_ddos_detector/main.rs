@@ -90,5 +90,5 @@ fn main() {
     print_utils::print_explenation();
 
     println!("\n--- EffectLog (per-tick analysis + mitigation event) ---");
-    print_utils::print_effect_log(&result.logs);
+    print_utils::print_effect_log(result.logs());
 }

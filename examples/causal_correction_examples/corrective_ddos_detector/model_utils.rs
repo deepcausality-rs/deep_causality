@@ -8,10 +8,9 @@
 
 use crate::model_types::{DetectorProcess, THROTTLE_ON, ThrottleState, WINDOW_SIZE};
 use causal_correction_examples::print_utils;
-use deep_causality_core::EffectValue;
 
 pub fn summary_line(label: &str, process: &DetectorProcess<ThrottleState>) {
-    let st = &process.state;
+    let st = process.state();
     let first_anomaly = match st.first_anomaly_at {
         Some(t) => format!("first anomaly at tick {t}"),
         None => "no anomaly".to_string(),
@@ -33,8 +32,8 @@ pub fn summary_line(label: &str, process: &DetectorProcess<ThrottleState>) {
 
 pub fn print_section(label: &str, process: &DetectorProcess<ThrottleState>) {
     print_utils::print_section_header(label);
-    let st = &process.state;
-    let cfg = process.context.as_ref().unwrap();
+    let st = process.state();
+    let cfg = process.context().as_ref().unwrap();
     println!(
         "  ticks={}  window_size={}  sigma_threshold={}  trigger_slots={}  overload_budget={}",
         st.tick, WINDOW_SIZE, cfg.sigma_threshold, cfg.trigger_slots, cfg.overload_budget_ticks,
@@ -61,10 +60,10 @@ pub fn print_section(label: &str, process: &DetectorProcess<ThrottleState>) {
         Some(t) => println!("  result: OVERLOAD breached at tick {t}"),
         None => println!("  result: within service objective"),
     }
-    if let EffectValue::Value(v) = process.value {
+    if let Some(v) = process.value() {
         println!(
             "  throttle at end: {}",
-            if v == THROTTLE_ON { "ON" } else { "OFF" }
+            if *v == THROTTLE_ON { "ON" } else { "OFF" }
         );
     }
     print_utils::print_section_footer();

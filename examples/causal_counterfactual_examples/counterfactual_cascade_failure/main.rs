@@ -65,12 +65,11 @@ fn main() {
 }
 
 fn run_factual(cfg: NetworkConfig) -> NetworkProcess<FlowSolution> {
-    NetworkProcess::<Vec<u32>> {
-        value: EffectValue::Value(Vec::new()),
-        state: NetworkState::default(),
-        context: Some(cfg),
-        error: None,
-        logs: EffectLog::new(),
-    }
+    NetworkProcess::<Vec<u32>>::new(
+        Ok(EffectValue::Value(Vec::new())),
+        NetworkState::default(),
+        Some(cfg),
+        EffectLog::new(),
+    )
     .bind(resolve_stage)
 }

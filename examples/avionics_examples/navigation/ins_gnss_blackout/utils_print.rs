@@ -40,7 +40,7 @@ pub fn print_stream_summary(stream: &[Epoch], threshold: FloatType) {
 /// Print the result block, the gates, the EffectLog head, and the finding. Returns whether all gates
 /// passed (so `main` can set the exit status).
 pub fn report(sat: &str, open: &NavProcess, closed: &NavProcess) -> bool {
-    let (os, cs) = (&open.state, &closed.state);
+    let (os, cs) = (open.state(), closed.state());
 
     println!("--- Result (real {sat}, day-long stream, extended GNSS outage) ---");
     println!(
@@ -84,7 +84,7 @@ pub fn report(sat: &str, open: &NavProcess, closed: &NavProcess) -> bool {
     );
 
     println!("\n--- Closed-loop EffectLog (regime changes + interventions; head) ---");
-    let log_text = format!("{:?}", closed.logs);
+    let log_text = format!("{:?}", closed.logs());
     for line in log_text
         .split(',')
         .map(str::trim)
