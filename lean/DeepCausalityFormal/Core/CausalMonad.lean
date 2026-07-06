@@ -9,14 +9,25 @@ Rust source: `deep_causality_core/src/types/causal_effect_propagation_process/mo
 
 With precondition P2 of the Causal Algebra program enforced
 (`openspec/notes/causal-algebra/Formalization.md` §2; change `enforce-w-invariant`), the Rust
-carrier encodes value-XOR-error as ONE channel — `outcome: Result<EffectValue<Value>, Error>`,
-i.e. `Either E (Maybe T)` — so the W-invariant (`error ⇒ no value`) holds by construction and
-the invalid state the original walking skeleton had to exclude is unrepresentable.
+carrier encodes value-XOR-error as ONE channel — so the W-invariant (`error ⇒ no value`) holds
+by construction and the invalid state the original walking skeleton had to exclude is
+unrepresentable.
 
-The model below transcribes the Rust carrier channel-for-channel:
-  * `outcome : Except E (Option V)` — the value-XOR-error channel. `Option` models the
-    value-or-absent content of `EffectValue` (its `RelayTo`/`Map` control variants are
-    precondition P1's business and are not part of the monad-law surface).
+Post the `separate-control-channel` change the Rust carrier is
+`outcome: Result<CausalEffect<Value>, Error>` where
+`CausalEffect<V> = Free<CausalCommandWitness, Option<V>>` — i.e. the full transformer stack
+`Except E (Free CausalCommand (Maybe V))`. This model is **congruent** with that carrier: it is
+its restriction to the `Pure` fragment. `Free CausalCommand (Maybe V)` restricted to `Pure` **is**
+`Option V`, so `Except E (Option V)` = the carrier whenever there is no command. Control (a
+`RelayTo` jump) is the `Free`'s `Suspend` layer — a SECOND left zero of `bind`, interpreted by the
+reasoning engine's `Free::fold` handler (laws from `haft.free_monad.*`) and NOT part of the value
+monad-law surface. So the three monad laws below hold over the value fragment exactly as before;
+`EPP = CausalMonad ⊕ CausalEffect`.
+
+The model below transcribes the Rust carrier's value fragment channel-for-channel:
+  * `outcome : Except E (Option V)` — the value-XOR-error channel; `Option` is the `Maybe` value
+    content (`Pure(Some v)` = a value, `Pure(None)` = the `None` effect). The `Free`'s `Suspend`
+    control layer is the free-monad extension, orthogonal to these laws.
   * `state : S` — the threaded Markovian state.
   * `ctx : Option C` — the read context threaded by `bind`.
   * `logs : List Λ` — the append-only audit log (Writer over the `List` monoid).
@@ -31,8 +42,10 @@ right identity for `eta`).
 
 Theorems: left identity, right identity, associativity — all three now hold, right identity
 UNCONDITIONALLY (the theorem `bind_right_id` closes the id `core.causal_monad.right_id`,
-formerly blocked on P2, and `bind_assoc` closes `core.causal_monad.assoc`). The full
-`LawfulMonad`-with-effect-equations claim (`core.causal_monad.lawful`) remains gated on P1.
+formerly blocked on P2, and `bind_assoc` closes `core.causal_monad.assoc`). Precondition P1 is now
+resolved — control (`RelayTo`) is separated into `CausalCommand` / `CausalEffect` and is a lawful
+free monad (`haft.free_monad.*`), no longer a non-lawful variant fused into the value type — so the
+value monad here composes cleanly with it (`Except ∘ Free ∘ Maybe`, each layer already proved).
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
