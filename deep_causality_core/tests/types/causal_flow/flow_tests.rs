@@ -4,8 +4,8 @@
  */
 
 use deep_causality_core::{
-    CausalEffectPropagationProcess, CausalFlow, CausalityError, CausalityErrorEnum, EffectLog,
-    EffectValue, PropagatingEffect, PropagatingProcess,
+    CausalEffect, CausalEffectPropagationProcess, CausalFlow, CausalityError, CausalityErrorEnum,
+    EffectLog, PropagatingEffect, PropagatingProcess,
 };
 use std::cell::Cell;
 
@@ -209,31 +209,11 @@ fn alternate_value_if_skips_errored_flow() {
 }
 
 #[test]
-fn map_preserves_contextual_link_carrier() {
-    // `ContextualLink` is not a plain value; `map` must pass it through, not drop it to `None`.
-    let linked: PropagatingEffect<i64> = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::ContextualLink(7, 9)),
-        (),
-        None,
-        EffectLog::new(),
-    );
-    let out = CausalFlow::from(linked).map(|x: i64| x + 1).into_effect();
-    assert!(matches!(
-        out.effect(),
-        Some(EffectValue::ContextualLink(7, 9))
-    ));
-    assert!(out.is_ok());
-}
-
-#[test]
 fn map_surfaces_error_on_dispatch_variant() {
-    // `RelayTo` embeds a `PropagatingEffect` a value-level map cannot retype; `map` must surface
-    // `ValueNotAvailable` rather than silently dropping the dispatch command.
+    // A command effect carries a control sub-program a value-level `map` cannot retype; `map` must
+    // surface `ValueNotAvailable` rather than silently dropping the command.
     let dispatch: PropagatingEffect<i64> = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::RelayTo(
-            3,
-            Box::new(PropagatingEffect::from_value(42)),
-        )),
+        Ok(CausalEffect::relay_to(3, CausalEffect::value(42))),
         (),
         None,
         EffectLog::new(),
@@ -246,7 +226,7 @@ fn map_surfaces_error_on_dispatch_variant() {
 #[test]
 fn bind_or_error_passthrough_runs_existing_stage() {
     fn stage(x: i64, s: (), c: Option<()>) -> PropagatingProcess<i64, (), ()> {
-        CausalEffectPropagationProcess::new(Ok(EffectValue::Value(x * 2)), s, c, EffectLog::new())
+        CausalEffectPropagationProcess::new(Ok(CausalEffect::value(x * 2)), s, c, EffectLog::new())
     }
     let out = CausalFlow::value(21i64)
         .bind_or_error(stage, "fail")
@@ -260,7 +240,7 @@ fn bind_passthrough_runs_existing_stage() {
         .bind(|ev, s, c| {
             let v = ev.into_value().unwrap_or_default();
             CausalEffectPropagationProcess::new(
-                Ok(EffectValue::Value(v + 1)),
+                Ok(CausalEffect::value(v + 1)),
                 s,
                 c,
                 EffectLog::new(),
@@ -313,7 +293,7 @@ fn flow_chain_matches_raw_bind_chain() {
     let via_raw: PropagatingEffect<i64> = PropagatingEffect::from_value(2i64).bind_or_error(
         |x, s, c| {
             CausalEffectPropagationProcess::new(
-                Ok(EffectValue::Value(x + 3)),
+                Ok(CausalEffect::value(x + 3)),
                 s,
                 c,
                 EffectLog::new(),
@@ -346,7 +326,7 @@ fn step_does_not_invoke_closure_on_a_failed_flow() {
 fn finish_on_none_value_yields_error() {
     // A flow whose value is None (not an error) still finishes as an error.
     let none_flow: CausalFlow<i64> =
-        CausalFlow::from(PropagatingEffect::from_effect_value(EffectValue::None));
+        CausalFlow::from(PropagatingEffect::from_effect(CausalEffect::none()));
     assert!(none_flow.finish().is_err());
 }
 

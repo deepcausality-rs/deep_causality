@@ -11,7 +11,7 @@ extern crate alloc;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use deep_causality_core::{
-    CausalEffectPropagationProcess, CausalityError, CausalityErrorEnum, EffectLog, EffectValue,
+    CausalEffect, CausalEffectPropagationProcess, CausalityError, CausalityErrorEnum, EffectLog,
     PropagatingProcessWitness,
 };
 use deep_causality_haft::{
@@ -84,7 +84,7 @@ fn test_fmap_success() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(5)),
+        Ok(CausalEffect::value(5)),
         TestState(1),
         Some(TestContext("initial".to_string())),
         {
@@ -159,7 +159,7 @@ fn test_fmap_on_none_value_produces_internal_logic_error() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::None), // No value, no error
+        Ok(CausalEffect::none()), // No value, no error
         TestState(1),
         Some(TestContext("initial".to_string())),
         {
@@ -218,7 +218,7 @@ fn test_applicative_apply_success() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(|x| x + 1)),
+        Ok(CausalEffect::value(|x| x + 1)),
         TestState(10),
         Some(TestContext("func_ctx".to_string())),
         {
@@ -235,7 +235,7 @@ fn test_applicative_apply_success() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(5)),
+        Ok(CausalEffect::value(5)),
         TestState(20), // Should be ignored, f_ab's state takes precedence
         Some(TestContext("val_ctx".to_string())),
         {
@@ -288,7 +288,7 @@ fn test_applicative_apply_with_func_error() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(5)),
+        Ok(CausalEffect::value(5)),
         TestState(20),
         Some(TestContext("val_ctx".to_string())),
         {
@@ -331,7 +331,7 @@ fn test_applicative_apply_with_value_error() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(|x| x + 1)),
+        Ok(CausalEffect::value(|x| x + 1)),
         TestState(10),
         Some(TestContext("func_ctx".to_string())),
         {
@@ -449,7 +449,7 @@ fn test_applicative_apply_with_func_none_value_produces_internal_logic_error() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::None), // No function
+        Ok(CausalEffect::none()), // No function
         TestState(10),
         Some(TestContext("func_ctx".to_string())),
         {
@@ -466,7 +466,7 @@ fn test_applicative_apply_with_func_none_value_produces_internal_logic_error() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(5)),
+        Ok(CausalEffect::value(5)),
         TestState(20),
         Some(TestContext("val_ctx".to_string())),
         {
@@ -504,7 +504,7 @@ fn test_applicative_apply_with_value_none_value_produces_internal_logic_error() 
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(|x| x + 1)),
+        Ok(CausalEffect::value(|x| x + 1)),
         TestState(10),
         Some(TestContext("func_ctx".to_string())),
         {
@@ -521,7 +521,7 @@ fn test_applicative_apply_with_value_none_value_produces_internal_logic_error() 
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::None), // No value
+        Ok(CausalEffect::none()), // No value
         TestState(20),
         Some(TestContext("val_ctx".to_string())),
         {

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CausalityError, CausalityErrorEnum, EffectLog, EffectValue, PropagatingProcess};
+use crate::{CausalEffect, CausalityError, CausalityErrorEnum, EffectLog, PropagatingProcess};
 use core::marker::PhantomData;
 use deep_causality_haft::{
     Applicative, Functor, HKT, LogAppend, NoConstraint, Placeholder, Pure, Satisfies,
@@ -31,7 +31,7 @@ where
         let outcome = match m_a.outcome {
             Err(error) => Err(error),
             Ok(value) => match value.into_value() {
-                Some(a) => Ok(EffectValue::Value(f(a))),
+                Some(a) => Ok(CausalEffect::value(f(a))),
                 None => Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
             },
         };
@@ -50,7 +50,7 @@ where
         T: Satisfies<<Self as HKT>::Constraint>,
     {
         PropagatingProcess::new(
-            Ok(EffectValue::Value(value)),
+            Ok(CausalEffect::value(value)),
             S::default(),
             None,
             EffectLog::default(),
@@ -80,7 +80,7 @@ where
         let outcome = match (f_ab.outcome, f_a.outcome) {
             (Err(error), _) | (_, Err(error)) => Err(error),
             (Ok(func), Ok(arg)) => match (func.into_value(), arg.into_value()) {
-                (Some(mut f), Some(a)) => Ok(EffectValue::Value(f(a))),
+                (Some(mut f), Some(a)) => Ok(CausalEffect::value(f(a))),
                 _ => Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
             },
         };

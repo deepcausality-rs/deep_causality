@@ -5,7 +5,7 @@
 
 use super::CausalEffectPropagationProcess;
 use crate::AlternatableValue;
-use crate::EffectValue;
+use crate::CausalEffect;
 use alloc::format;
 use core::fmt::Debug;
 use deep_causality_haft::{LogAddEntry, LogAppend};
@@ -22,7 +22,7 @@ where
             return self;
         };
 
-        let new_value = EffectValue::from(new_value);
+        let new_value = CausalEffect::value(new_value);
 
         self.logs.add_entry(&format!(
             "!!ValueAlternation!!: {:?} replaced with {:?}",

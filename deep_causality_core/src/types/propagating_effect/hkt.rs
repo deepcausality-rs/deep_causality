@@ -12,7 +12,7 @@
 //!
 
 use crate::{
-    CausalEffectPropagationProcess, CausalityError, CausalityErrorEnum, EffectLog, EffectValue,
+    CausalEffect, CausalEffectPropagationProcess, CausalityError, CausalityErrorEnum, EffectLog,
 };
 use core::marker::PhantomData;
 use deep_causality_haft::{
@@ -41,7 +41,7 @@ impl Functor<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
         let outcome = match m_a.outcome {
             Err(error) => Err(error),
             Ok(value) => match value.into_value() {
-                Some(a) => Ok(EffectValue::Value(f(a))),
+                Some(a) => Ok(CausalEffect::value(f(a))),
                 None => Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
             },
         };
@@ -56,7 +56,7 @@ impl Pure<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
         T: Satisfies<<Self as HKT>::Constraint>,
     {
         CausalEffectPropagationProcess::new(
-            Ok(EffectValue::Value(value)),
+            Ok(CausalEffect::value(value)),
             (),
             None,
             EffectLog::new(),
@@ -81,7 +81,7 @@ impl Applicative<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
         let outcome = match (f_ab.outcome, f_a.outcome) {
             (Err(error), _) | (_, Err(error)) => Err(error),
             (Ok(func), Ok(arg)) => match (func.into_value(), arg.into_value()) {
-                (Some(mut f), Some(a)) => Ok(EffectValue::Value(f(a))),
+                (Some(mut f), Some(a)) => Ok(CausalEffect::value(f(a))),
                 _ => Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
             },
         };

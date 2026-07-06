@@ -4,7 +4,7 @@
  */
 
 use deep_causality_core::{
-    CausalArrow, CausalFlow, CausalityError, CausalityErrorEnum, EffectLog, EffectValue,
+    CausalArrow, CausalEffect, CausalFlow, CausalityError, CausalityErrorEnum, EffectLog,
     causal_arrow,
 };
 use deep_causality_haft::Arrow;
@@ -106,7 +106,7 @@ fn arrow_threads_accumulated_state() {
     // State is a running sum; each stage adds the incoming value to the state and passes the value
     // on. Composition must thread the state `s0 -> s1 -> s2` — the D2 fix.
     let step = |x: i64, s: i64, _c: Option<()>| {
-        CausalFlow::from_parts(Ok(EffectValue::Value(x)), s + x, None, EffectLog::new())
+        CausalFlow::from_parts(Ok(CausalEffect::value(x)), s + x, None, EffectLog::new())
     };
     let pipeline = causal_arrow(step).next(step).build();
     // value 5, initial state 0: state 0 -> +5 -> 5 (stage 1) -> +5 -> 10 (stage 2).
@@ -122,7 +122,7 @@ fn arrow_threads_accumulated_state() {
 fn arrow_error_short_circuit_preserves_state() {
     // A first-stage error must short-circuit AND preserve the state accumulated so far.
     let acc = |x: i64, s: i64, _c: Option<()>| {
-        CausalFlow::from_parts(Ok(EffectValue::Value(x)), s + x, None, EffectLog::new())
+        CausalFlow::from_parts(Ok(CausalEffect::value(x)), s + x, None, EffectLog::new())
     };
     let boom = |_x: i64, s: i64, _c: Option<()>| {
         CausalFlow::<i64, i64, ()>::from_parts(Err(err("boom")), s, None, EffectLog::new())
@@ -132,7 +132,7 @@ fn arrow_error_short_circuit_preserves_state() {
         .next(boom)
         .next(|x, s: i64, _c| {
             ran.set(true);
-            CausalFlow::from_parts(Ok(EffectValue::Value(x)), s, None, EffectLog::new())
+            CausalFlow::from_parts(Ok(CausalEffect::value(x)), s, None, EffectLog::new())
         })
         .build();
     let out = pipeline.run((7, 0, None)).into_process();

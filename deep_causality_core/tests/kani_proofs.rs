@@ -18,13 +18,13 @@
 // representative continuation and verifies the law over all carried values.
 //
 // NOTE on the former W-well-formedness harness obligation: with value-XOR-error encoded as ONE
-// channel (`outcome: Result<EffectValue<T>, E>`, precondition P2), the invalid state
+// channel (`outcome: Result<CausalEffect<T>, E>`, precondition P2), the invalid state
 // "value AND error" is unrepresentable — there is nothing left to model-check. The obligation
 // is discharged by construction.
 #![cfg(kani)]
 
 use deep_causality_core::{
-    CausalMonad, CausalityError, CausalityErrorEnum, EffectLog, EffectValue, PropagatingProcess,
+    CausalEffect, CausalMonad, CausalityError, CausalityErrorEnum, EffectLog, PropagatingProcess,
 };
 use deep_causality_haft::{LogAddEntry, LogSize};
 
@@ -34,10 +34,10 @@ type P = PropagatingProcess<i32, i32, ()>;
 /// A fixed, representative continuation: increments both the carried value and the threaded
 /// state, contributes an empty log, and preserves context. Mirrors the arbitrary `f` in the
 /// Lean theorem `bind_left_id`.
-fn cont(v: EffectValue<i32>, state: i32, ctx: Option<()>) -> P {
+fn cont(v: CausalEffect<i32>, state: i32, ctx: Option<()>) -> P {
     let val = v.into_value().unwrap_or_default();
     P::new(
-        Ok(EffectValue::Value(val.wrapping_add(1))),
+        Ok(CausalEffect::value(val.wrapping_add(1))),
         state.wrapping_add(1),
         ctx,
         EffectLog::new(),
@@ -48,10 +48,10 @@ fn cont(v: EffectValue<i32>, state: i32, ctx: Option<()>) -> P {
 /// carrying an arbitrary value — with arbitrary state and a log of bounded length.
 fn any_process() -> P {
     let state: i32 = kani::any();
-    let outcome: Result<EffectValue<i32>, CausalityError> = match kani::any::<u8>() % 3 {
+    let outcome: Result<CausalEffect<i32>, CausalityError> = match kani::any::<u8>() % 3 {
         0 => Err(CausalityError::new(CausalityErrorEnum::ValueNotAvailable)),
-        1 => Ok(EffectValue::None),
-        _ => Ok(EffectValue::Value(kani::any())),
+        1 => Ok(CausalEffect::none()),
+        _ => Ok(CausalEffect::value(kani::any())),
     };
     let mut logs = EffectLog::new();
     if kani::any() {
@@ -73,7 +73,7 @@ fn causal_monad_left_identity() {
     let lhs = <P as CausalMonad>::pure(a).bind(cont);
 
     // RHS: cont applied where `pure` injects — value = Value(a), state = default, context = None.
-    let rhs = cont(EffectValue::Value(a), i32::default(), None);
+    let rhs = cont(CausalEffect::value(a), i32::default(), None);
 
     assert!(lhs == rhs);
 }
@@ -100,12 +100,12 @@ fn causal_monad_right_identity() {
 /// shape, with two distinct representative continuations.
 #[kani::proof]
 fn causal_monad_associativity() {
-    fn g(v: EffectValue<i32>, state: i32, ctx: Option<()>) -> P {
+    fn g(v: CausalEffect<i32>, state: i32, ctx: Option<()>) -> P {
         let val = v.into_value().unwrap_or_default();
         let mut logs = EffectLog::new();
         logs.add_entry("g");
         P::new(
-            Ok(EffectValue::Value(val.wrapping_mul(2))),
+            Ok(CausalEffect::value(val.wrapping_mul(2))),
             state.wrapping_sub(1),
             ctx,
             logs,

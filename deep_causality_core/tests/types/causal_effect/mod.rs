@@ -3,5 +3,4 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-#[cfg(test)]
-mod effect_value_tests;
+pub mod causal_effect_tests;

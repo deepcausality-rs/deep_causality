@@ -4,8 +4,8 @@
  */
 
 use deep_causality_core::{
-    CausalEffectPropagationProcess, CausalEffectPropagationProcessWitness, CausalityError,
-    CausalityErrorEnum, EffectValue,
+    CausalEffect, CausalEffectPropagationProcess, CausalEffectPropagationProcessWitness,
+    CausalityError, CausalityErrorEnum,
 };
 use deep_causality_haft::{Applicative, Functor, LogAppend, Pure};
 
@@ -21,12 +21,8 @@ impl LogAppend for TestLog {
 type TestProcess<T> = CausalEffectPropagationProcess<T, i32, String, CausalityError, TestLog>;
 type TestWitness = CausalEffectPropagationProcessWitness<i32, String, CausalityError, TestLog>;
 
-fn unwrap_value<T: std::fmt::Debug + Clone>(val: EffectValue<T>) -> T {
-    if let EffectValue::Value(v) = val {
-        v
-    } else {
-        panic!("Expected EffectValue::Value, got {:?}", val)
-    }
+fn unwrap_value<T: std::fmt::Debug + Clone>(val: CausalEffect<T>) -> T {
+    val.into_value().expect("expected a value effect")
 }
 
 fn double(x: i32) -> i32 {
@@ -36,7 +32,7 @@ fn double(x: i32) -> i32 {
 #[test]
 fn test_functor_fmap() {
     let process: TestProcess<i32> = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(10)),
+        Ok(CausalEffect::value(10)),
         1,
         Some("ctx".to_string()),
         TestLog(vec!["log1".to_string()]),
@@ -81,14 +77,17 @@ fn test_functor_fmap_short_circuits_on_error() {
 }
 
 #[test]
-#[should_panic(expected = "Functor fmap on a non-error process should contain a value")]
-fn test_functor_fmap_panics_on_value_less_ok() {
-    // The generic witness cannot manufacture an error of type `E` for a value-less
-    // Ok carrier, so it still panics via `expect`.
+fn test_functor_fmap_on_value_less_ok_yields_none() {
+    // The witness `fmap` is now total: a value-less (`None`) Ok carrier maps to a `None` effect —
+    // no panic (the former `.expect` bug, deviation D15), and no manufactured error (generic `E`).
     let process: TestProcess<i32> =
-        CausalEffectPropagationProcess::new(Ok(EffectValue::None), 1, None, TestLog::default());
+        CausalEffectPropagationProcess::new(Ok(CausalEffect::none()), 1, None, TestLog::default());
 
-    let _mapped: TestProcess<String> = TestWitness::fmap(process, |x| x.to_string());
+    let mapped: TestProcess<String> = TestWitness::fmap(process, |x| x.to_string());
+
+    assert!(mapped.is_ok());
+    assert!(mapped.effect().is_some_and(CausalEffect::is_none));
+    assert_eq!(*mapped.state(), 1); // state preserved
 }
 
 #[test]
@@ -104,14 +103,14 @@ fn test_applicative_pure() {
 #[test]
 fn test_applicative_apply() {
     let func_process: TestProcess<fn(i32) -> i32> = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(double)),
+        Ok(CausalEffect::value(double)),
         10,
         Some("ctx1".to_string()),
         TestLog(vec!["func_log".to_string()]),
     );
 
     let arg_process: TestProcess<i32> = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(5)),
+        Ok(CausalEffect::value(5)),
         20,
         Some("ctx2".to_string()),
         TestLog(vec!["arg_log".to_string()]),
@@ -165,7 +164,7 @@ fn test_applicative_apply_short_circuits_on_error() {
 #[test]
 fn test_applicative_apply_propagates_argument_error() {
     let func_process: TestProcess<fn(i32) -> i32> = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(double)),
+        Ok(CausalEffect::value(double)),
         10,
         None,
         TestLog::default(),

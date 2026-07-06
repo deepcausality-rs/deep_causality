@@ -3,12 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{CausalEffectPropagationProcess, EffectValue};
+use deep_causality_core::{CausalEffect, CausalEffectPropagationProcess};
 
 #[test]
 fn test_causal_effect_propagation_process_getters() {
     // Setup test data
-    let value = EffectValue::Value(42);
+    let value = CausalEffect::value(42);
     let state = "TestState".to_string();
     let context = Some("TestContext".to_string());
     let logs = vec!["Log1".to_string(), "Log2".to_string()];
@@ -57,7 +57,7 @@ fn test_causal_effect_propagation_process_getters_error() {
 #[test]
 fn test_causal_effect_propagation_process_getters_defaults() {
     // Setup test data with "None" options/empty logs
-    let value = EffectValue::Value(100);
+    let value = CausalEffect::value(100);
     let state = 0;
     let context: Option<i32> = None;
     let logs: Vec<String> = Vec::new();

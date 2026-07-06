@@ -41,9 +41,9 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "types_effect_value",
+    name = "types_causal_effect",
     srcs = glob([
-        "types/effect_value/*_tests.rs",
+        "types/causal_effect/*_tests.rs",
     ]),
     crate_features = [
         "std",
