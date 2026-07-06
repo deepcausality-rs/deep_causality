@@ -1,0 +1,32 @@
+openspec/changes/separate-control-channel/tasks.md
+  s_cefbd789296ae8::t_cf501525174be9 3-5,7,9-11,13,15-18,20,22-25,27,29-32,34,36-52
+openspec/changes/separate-control-channel/specs/control-channel/spec.md
+  s_cefbd789296ae8::t_0d02b325048a31 5-8,10-13,15-20,22-24,26-33,35-44,47-51,62-66,69-71
+openspec/changes/separate-control-channel/design.md
+  s_cefbd789296ae8::t_a39bf7b474c1c4 7-21,26-35,38-41,46-99,103-115,119-122,124-129,131,135-136
+openspec/changes/separate-control-channel/specs/lawful-effect-channel/spec.md
+  s_cefbd789296ae8::t_33ca7f600a62a2 8-13
+  s_cefbd789296ae8::t_ea7512670d3327 56-57
+  s_cefbd789296ae8::t_cb12dcd8fbfd0f 27-29
+  s_cefbd789296ae8::t_97557668c943a3 40-41
+openspec/changes/separate-control-channel/proposal.md
+  s_cefbd789296ae8::t_c1a60e0e560aa2 44-48
+  s_cefbd789296ae8::t_d69f0b589c608a 20-30,32-39
+  s_cefbd789296ae8::t_3815480e2685ec 62-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "32b126bc2231a52c9aa265051c5893437ab16522",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
