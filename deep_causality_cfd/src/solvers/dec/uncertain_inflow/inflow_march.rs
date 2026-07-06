@@ -18,13 +18,13 @@
 //! 3. reconfigures the prescribed wall BC to that value through the solver's existing
 //!    `with_moving_wall` builder, then calls the unchanged `step(&self, field)`;
 //! 4. carries the new divergence-free field forward as `State`, and — on a dropout — marks the
-//!    substitution as a value alternation via [`Intervenable::intervene`].
+//!    substitution as a counterfactual value substitution via [`AlternatableValue::alternate_value`].
 //!
 //! The uncertain types never enter the solver core (design D6/C3): the collapse to `R` happens
 //! entirely in this stage, above `step`.
 
 use deep_causality_core::{
-    CausalFlow, CausalityError, CausalityErrorEnum, EffectLog, EffectValue, Intervenable,
+    AlternatableValue, CausalFlow, CausalityError, CausalityErrorEnum, EffectLog, EffectValue,
     PropagatingProcess,
 };
 use deep_causality_uncertain::{MaybeUncertain, ProbabilisticType};
@@ -252,7 +252,7 @@ where
     };
 
     // 4. Carry the new field forward. On a dropout, the substitution is recorded as a value
-    //    alternation: the absent reading (None) is overridden by the fallback via `intervene`.
+    //    alternation: the absent reading (None) is overridden by the fallback via `alternate_value`.
     let next = InflowMarchState {
         solver: Some(solver),
         field: advanced,
@@ -271,7 +271,7 @@ where
         logs,
     );
     if dropout {
-        process.intervene(inflow)
+        process.alternate_value(inflow)
     } else {
         process
     }
