@@ -1,0 +1,98 @@
+deep_causality/tests/types/causal_types/causaloid/causaloid_singleton_tests.rs
+  s_cefbd789296ae8::t_2c1ff6ece1d160 49,139,228,262,297,324
+  s_cefbd789296ae8::t_f56fa1d7ee1127 315
+  s_cefbd789296ae8::t_b91da8b71e3eab 301
+deep_causality/src/traits/causable_collection/collection_reasoning/stateful_monadic_collection.rs
+  s_cefbd789296ae8::t_6d55341d2f71f2 22,98-99
+deep_causality/tests/traits/causable_graph/graph_reasoning/stateful_tests.rs
+  s_cefbd789296ae8::t_b91da8b71e3eab 65
+  s_cefbd789296ae8::t_f56fa1d7ee1127 377
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 61
+  s_cefbd789296ae8::t_2c1ff6ece1d160 26,34,38,55,96
+deep_causality/tests/types/causal_types/causaloid_graph/causality_graph_reasoning_tests.rs
+  s_cefbd789296ae8::t_b91da8b71e3eab 36
+  s_cefbd789296ae8::t_2c1ff6ece1d160 9
+deep_causality/benches/benchmarks/bench_multi_cause_graph.rs
+  s_cefbd789296ae8::t_ce5fb4ada0bf91 14
+deep_causality/src/types/causal_types/causaloid/causable.rs
+  s_cefbd789296ae8::t_a740a484a7549a 91-103
+deep_causality/src/types/causal_types/causaloid/causable_stateful.rs
+  s_cefbd789296ae8::t_a9b00f0823acde 120-121,123,129-142
+  s_cefbd789296ae8::t_6d55341d2f71f2 187,191,195-196
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 18
+  s_cefbd789296ae8::t_e6f0abab30480c 55-66
+deep_causality/tests/types/causal_types/causaloid_graph/causality_graph_reasoning_sub_tests.rs
+  s_cefbd789296ae8::t_d213316a1d4946 15,19
+deep_causality/src/traits/causable_graph/graph_reasoning/stateful.rs
+  s_cefbd789296ae8::t_2af6ece42717f4 12
+  s_cefbd789296ae8::t_de317526ce20bc 270
+  s_cefbd789296ae8::t_21bb74233c9d59 146-148,163-170,172,175,179
+deep_causality/tests/traits/causable_collection/collection_reasoning/stateful_monadic_collection_tests.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 77-79
+  s_cefbd789296ae8::t_2c1ff6ece1d160 23,31,35,42,46,64,72,147
+deep_causality/tests/types/causal_types/causaloid_graph/causality_graph_reasoning_shortest_tests.rs
+  s_cefbd789296ae8::t_d213316a1d4946 60
+  s_cefbd789296ae8::t_f56fa1d7ee1127 82
+deep_causality/src/utils_test/test_utils.rs
+  s_cefbd789296ae8::t_6d55341d2f71f2 168,196
+deep_causality/tests/utils_test/test_utils_monad_tests.rs
+  s_cefbd789296ae8::t_2c1ff6ece1d160 7,13,20,27,36,43,49,57
+deep_causality/src/traits/causable_graph/graph_reasoning/mod.rs
+  s_cefbd789296ae8::t_0b8529f5c5e02a 176
+  s_cefbd789296ae8::t_a505759d412798 139-143,163-170,172-173,177,180
+  s_cefbd789296ae8::t_3126e0bce781ab 283-284
+  s_cefbd789296ae8::t_98252db29a48ed 171,174-175
+  s_cefbd789296ae8::t_c9458e89f60382 74-76
+deep_causality/src/types/causal_types/causaloid/causable_utils.rs
+  s_cefbd789296ae8::t_6d55341d2f71f2 35,40,87,103,124,166,169,185,188,204
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 7
+deep_causality/tests/types/csm_types/csm/csm_single_state_tests.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 9
+  s_cefbd789296ae8::t_b91da8b71e3eab 337
+deep_causality/tests/utils/monadic_collection_utils_tests.rs
+  s_cefbd789296ae8::t_2c1ff6ece1d160 8,13-14,20,25,31,36,42,47,53,57,62-63,70,75,80,84,89,94,101-102,143,155,167,176,202
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 189-190
+deep_causality/benches/benchmarks/bench_graph.rs
+  s_cefbd789296ae8::t_ce5fb4ada0bf91 17,43,69
+deep_causality/benches/benchmarks/bench_monad.rs
+  s_cefbd789296ae8::t_ce5fb4ada0bf91 47
+deep_causality/benches/benchmarks/bench_collection.rs
+  s_cefbd789296ae8::t_ce5fb4ada0bf91 16,25,34
+deep_causality/tests/types/causal_types/causaloid/causaloid_getters_tests.rs
+  s_cefbd789296ae8::t_2c1ff6ece1d160 42
+deep_causality/src/utils_test/test_utils_monad.rs
+  s_cefbd789296ae8::t_6d55341d2f71f2 12,32,44
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 5
+deep_causality/src/traits/causable_collection/collection_reasoning/monadic_collection.rs
+  s_cefbd789296ae8::t_6d55341d2f71f2 59-60,86,103
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 9
+deep_causality/tests/types/causal_types/causaloid/causable_stateful_tests.rs
+  s_cefbd789296ae8::t_2c1ff6ece1d160 24,47,51,77,213,217,222,239,265
+  s_cefbd789296ae8::t_f56fa1d7ee1127 297
+  s_cefbd789296ae8::t_d213316a1d4946 227,256
+deep_causality/src/alias/alias_function.rs
+  s_cefbd789296ae8::t_6d55341d2f71f2 6,40,58,67
+deep_causality/src/lib.rs
+  s_cefbd789296ae8::t_081f283960e8bf 29-30
+deep_causality/src/utils/monadic_collection_utils.rs
+  s_cefbd789296ae8::t_e1a8f6b1b8ad8e 40-46,69-75,107-113
+  s_cefbd789296ae8::t_6d55341d2f71f2 6,12,15,20,23,34,37,57,63,66,89,95,98,157,163,166
+deep_causality/benches/benchmarks/bench_map.rs
+  s_cefbd789296ae8::t_ce5fb4ada0bf91 19,33,47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "987ee5f35c78d4ae330831c3fea647c335ecca9d",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
