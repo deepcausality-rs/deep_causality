@@ -1,0 +1,33 @@
+deep_causality_core/tests/traits/alternatable_context_tests.rs
+  s_cefbd789296ae8::t_5b3fea77a4bd83 63-90
+deep_causality_core/src/traits/alternatable_value/mod.rs
+  s_cefbd789296ae8::t_9cabb3c9018ff9 13,15-17
+deep_causality_core/tests/types/causal_monad/causal_monad_tests.rs
+  s_cefbd789296ae8::t_f49b16bcaed6f5 7-8
+  s_cefbd789296ae8::t_670ebb322bf836 135,138,140-141
+deep_causality_core/tests/types/causal_flow/flow_tests.rs
+  s_cefbd789296ae8::t_47cbedea4c7c15 177-178,184,186,190,196
+  s_cefbd789296ae8::t_57aacf7dec1545 203
+deep_causality_core/src/types/causal_flow/intervene.rs
+  s_cefbd789296ae8::t_35ed58b97bccb0 7,9-13,15,22-25,27,36,38,44,46,49
+deep_causality_core/src/types/causal_flow/steps.rs
+  s_cefbd789296ae8::t_a4f4df7e584a04 20-31,36-64
+deep_causality_core/src/types/causal_effect_propagation_process/alternatable_context.rs
+  s_cefbd789296ae8::t_7876bc08380dd7 27-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "909e81b9c483fcb5266abaee6a7ee53cfb69fe0a",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
