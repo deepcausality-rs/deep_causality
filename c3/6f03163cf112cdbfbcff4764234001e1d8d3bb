@@ -1,0 +1,40 @@
+deep_causality_haft/src/lib.rs
+  s_cefbd789296ae8::t_6c1c5f851ef6de 108
+  s_cefbd789296ae8::t_d769c1ce1a4572 107
+deep_causality_haft/src/monad/free_monad.rs
+  s_cefbd789296ae8::t_a38cf91165c2d0 37
+  s_cefbd789296ae8::t_eb75a97222221a 117-120
+  s_cefbd789296ae8::t_de6d3bfd560647 121
+  s_cefbd789296ae8::t_2a8807b5dde55b 6-36,38-116,122-142
+  s_cefbd789296ae8::t_d22397d86b36e8 3-5
+  s_cefbd789296ae8::t_205d515906e52a 1-2
+deep_causality_haft/tests/formalization_lean/free_monad_tests.rs
+  s_cefbd789296ae8::t_ea83cba2ce1d91 12-15,19-28,30-38,40-43,52,55,63-65,70-73,81-83,85-87,92-94,96-98,101,107-110,118-120,127,130-131,141
+  s_cefbd789296ae8::t_612ff4c460d69a 49,60,78,103,115
+  s_cefbd789296ae8::t_b5a14dad04f2da 1-11,16-18,29,39,44-48,50-51,53-54,56-59,61-62,66-69,74-77,79-80,84,88-91,95,99-100,102,104-106,111-114,116-117,121-126,128-129,132-140,142-143
+  s_cefbd789296ae8::t_f9a17bb378d8ef 144-146
+  s_cefbd789296ae8::t_51ba2388b36ad8 147-148
+deep_causality_haft/src/monad/mod.rs
+  s_cefbd789296ae8::t_ad30216d4f768f 10-12
+  s_cefbd789296ae8::t_7cfc68b01cda45 13
+deep_causality_haft/tests/BUILD.bazel
+  s_cefbd789296ae8::t_58e509c5392c42 53-58
+deep_causality_haft/tests/formalization_lean/mod.rs
+  s_cefbd789296ae8::t_3baa18c783499a 34-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c36f03163cf112cdbfbcff4764234001e1d8d3bb",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
