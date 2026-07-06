@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.3.3...deep_causality_num-v0.4.0) - 2026-07-06
+
+### Added
+
+- *(deep_causality_num,deep_causality_tensor)* complex-capable SVD/QR kernels via ConjugateScalar
+- *(deep_causality_tensor)* tensor-network Stage 1 — CausalTensorTrain (MPS) state
+- *(deep_causality_num)* double-double erf/erfc for Float106
+
+### Fixed
+
+- *(formalization)* repair Lean Core build + review follow-ups
+- *(deep_causality_num)* Fixed miri test config
+- *(deep_causality_num)* Fixed miri test config
+- *(deep_causality_num)* Fixed miri test config
+- *(deep_causality_num)* Fixed miri test config
+
+### Other
+
+- *(formalization)* scaffold Lean proof project + Rust witness bridge
+- *(deep_causality_num)* [**breaking**] remove unused EuclideanDomain trait
+- *(deep_causality_tensor)* tensor-network — document Stage-4 scalar generality
+- *(deep_causality_num)* restructured internal code modules.
+- Generated new SBOM for all crates.
+- *(deep_causality_num)* skip cos_val under Miri
+- Updated README file across multiple crates to meet project standard.
+- *(deep_causality_num)* Add table-based fast path for Float106::sin_cos
+
 ## [0.3.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.3.1...deep_causality_num-v0.3.2) - 2026-05-26
 
 ### Added

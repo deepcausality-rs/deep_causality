@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.3.16...deep_causality_uncertain-v0.4.0) - 2026-07-06
+
+### Added
+
+- *(deep_causality_uncertain)* QmcSampler as an alternative Sampler
+- *(deep_causality_uncertain)* deterministic sampler seeding (seed_sampler / clear_sampler_seed)
+- *(deep_causality_uncertain)* Generalize the uncertain engine over RealField (Float106)
+
+### Fixed
+
+- *(deep_causality_uncertain)* Fixed miri test config
+- *(deep_causality_uncertain)* Fixed miri test config
+- *(deep_causality_uncertain)* Fixed miri test config
+
+### Other
+
+- raise test coverage across 8 crates.
+- Generated new SBOM for all crates.
+- *(papers)* Reorganized publication by moving each paper into the crate where it is actually implemented.
+- *(deep_causality_uncertain)* QmcSampler::new takes &Uncertain<T>; root_node() is crate-internal
+- *(deep_causality_uncertain)* Generalize the lift, sampling, and statistics surface over the value type
+- *(deep_causality_uncertain)* Make lift_to_uncertain generic over ProbabilisticType
+- Updated README file across multiple crates to meet project standard.
+
 ## [0.3.16](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.3.15...deep_causality_uncertain-v0.3.16) - 2026-06-09
 
 ### Other
