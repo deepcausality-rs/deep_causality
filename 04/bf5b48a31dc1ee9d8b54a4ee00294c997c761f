@@ -1,0 +1,20 @@
+lean/DeepCausalityFormal/Core/CausalMonad.lean
+  s_cefbd789296ae8::t_8c2a2ed5f7b37a 45-48
+  s_cefbd789296ae8::t_b66f6af9dbfb48 12-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "04bf5b48a31dc1ee9d8b54a4ee00294c997c761f",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
