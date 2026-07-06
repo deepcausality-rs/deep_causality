@@ -1,0 +1,44 @@
+lean/DeepCausalityFormal/Core/CausalMonad.lean
+  s_cefbd789296ae8::t_af77cf5537d1df 119-121
+deep_causality/CHANGELOG.md
+  s_cefbd789296ae8::t_91c73965977d38 10-20
+lean/THEOREM_MAP.md
+  s_cefbd789296ae8::t_386844033d188f 96
+  s_cefbd789296ae8::t_78059c425e7cd9 33-35
+.github/workflows/formalization.yml
+  s_cefbd789296ae8::t_89625c4f6504a8 6-9,13-20
+  s_cefbd789296ae8::t_b948909542ebb8 48-50,53
+deep_causality_core/README.md
+  s_cefbd789296ae8::t_e39000fa5effd6 77
+  s_cefbd789296ae8::t_7ca1f54aa96b96 97-98,101-102,104-106,109
+deep_causality_core/Notes.md
+  s_cefbd789296ae8::t_9ac36f5cf3fe00 16-21,27-31,34-37
+openspec/notes/causal-algebra/Formalization.md
+  s_cefbd789296ae8::t_cfb74ade6ae02f 63-74
+  s_cefbd789296ae8::t_b0974c95be5921 163
+deep_causality_core/CHANGELOG.md
+  s_cefbd789296ae8::t_d0a6c64908e6cc 10-30
+openspec/changes/enforce-w-invariant/tasks.md
+  s_cefbd789296ae8::t_42626fee4f3aa0 40
+  s_cefbd789296ae8::t_80042836b94d30 39
+  s_cefbd789296ae8::t_11d1c2da5a8af1 32,34-35
+  s_cefbd789296ae8::t_eedd966ce72ca2 33
+deep_causality_core/tests/kani_proofs.rs
+  s_cefbd789296ae8::t_1f6490df55863b 126-127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "198ba950f41c6ae46718cc1116e5ab3acb7658f8",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
