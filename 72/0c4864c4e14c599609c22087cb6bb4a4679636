@@ -1,0 +1,23 @@
+examples/core_examples/examples/propagating_effect_counterfactual.rs
+  s_11c7c0118037b7::t_0a36e3ac2b4b25 76-77
+lean/DeepCausalityFormal/Core/EffectLog.lean
+  s_11c7c0118037b7::t_ea4523063785f0 66
+examples/causal_counterfactual_examples/counterfactual_treatment_effect/main.rs
+  s_11c7c0118037b7::t_7ebf24d94058fe 27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "720c4864c4e14c599609c22087cb6bb4a4679636",
+  "prompts": {},
+  "sessions": {
+    "s_11c7c0118037b7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b8e17320-8758-4423-8727-07d91187e4af",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
