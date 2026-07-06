@@ -1,0 +1,36 @@
+lean/THEOREM_MAP.md
+  s_cefbd789296ae8::t_0cd92552a662dd 59-63
+openspec/notes/causal-algebra/core-formalization-plan.md
+  s_cefbd789296ae8::t_a4435ba277c1a3 206
+  s_cefbd789296ae8::t_2002933fe136ec 209
+  s_cefbd789296ae8::t_55369549ec92d4 204-205
+  s_cefbd789296ae8::t_ac0394f067ef3c 201
+  s_cefbd789296ae8::t_2f7300dfee3754 104-120
+  s_cefbd789296ae8::t_bf501c05bfea04 1-103,121-160,227-233
+  s_cefbd789296ae8::t_73b8bcc54a2699 161-200,202-203,207-208,210-226
+lean/DeepCausalityFormal/Core/EffectLog.lean
+  s_cefbd789296ae8::t_76b889f7a53a6a 1-42,44-48,50-55,57-64,66-69
+  s_cefbd789296ae8::t_31b67085a1e3fe 43,49,56,65
+lean/DeepCausalityFormal/Haft/FreeMonad.lean
+  s_cefbd789296ae8::t_a9b5984c84070f 1-102
+openspec/notes/causal-algebra/causal-arrow-state-threading-plan.md
+  s_cefbd789296ae8::t_a486955e80c4f4 1-119
+lean/DeepCausalityFormal.lean
+  s_cefbd789296ae8::t_0d411b246450b7 54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "7d628a361b8bb89230f8d63d1b33efc5f6bf97ae",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
