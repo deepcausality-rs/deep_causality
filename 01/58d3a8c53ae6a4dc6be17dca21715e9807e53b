@@ -1,0 +1,82 @@
+examples/avionics_examples/control/geometric_tcas/main.rs
+  s_cefbd789296ae8::t_5b1e0a6f41d5a6 9,13
+examples/causal_counterfactual_examples/counterfactual_treatment_effect/model.rs
+  s_cefbd789296ae8::t_02e99e27d1c8d5 27
+  s_cefbd789296ae8::t_b181e3dbf7b4cc 25,35
+examples/material_examples/structural_health_monitor/main.rs
+  s_cefbd789296ae8::t_7f55a828757e1e 166
+  s_cefbd789296ae8::t_fb6fa1016efb8c 109
+  s_cefbd789296ae8::t_2c5245d32f5232 167-168
+examples/causal_counterfactual_examples/counterfactual_cascade_failure/model.rs
+  s_cefbd789296ae8::t_f1b9188899e740 13
+  s_cefbd789296ae8::t_b181e3dbf7b4cc 148
+examples/causal_counterfactual_examples/counterfactual_treatment_options/main.rs
+  s_cefbd789296ae8::t_b181e3dbf7b4cc 78,90
+  s_cefbd789296ae8::t_02e99e27d1c8d5 15
+examples/causal_counterfactual_examples/counterfactual_envelope_fault/main.rs
+  s_cefbd789296ae8::t_b181e3dbf7b4cc 25,75
+examples/causal_correction_examples/corrective_network_failover/main.rs
+  s_cefbd789296ae8::t_7f55a828757e1e 23,93
+examples/core_examples/examples/propagating_effect_counterfactual.rs
+  s_cefbd789296ae8::t_adbd0517ba6efd 75-77
+  s_cefbd789296ae8::t_c67e236e089f4e 6
+  s_cefbd789296ae8::t_0b77a4f5144f0f 18-20
+examples/avionics_examples/navigation/ins_gnss_blackout/main.rs
+  s_cefbd789296ae8::t_9b408415087c1c 19
+  s_cefbd789296ae8::t_16ae3f9e2d6c40 86
+  s_cefbd789296ae8::t_288842957198ea 117
+  s_cefbd789296ae8::t_590f49bb9d275a 24
+  s_cefbd789296ae8::t_6a9ac78f8c862a 101
+examples/starter_example/src/main.rs
+  s_cefbd789296ae8::t_5c33029742b54b 136
+  s_cefbd789296ae8::t_bc74ac63950ec8 9
+  s_cefbd789296ae8::t_128283d9813020 100
+  s_cefbd789296ae8::t_06720ed19e9783 156
+  s_cefbd789296ae8::t_4d8097720f7e76 76
+  s_cefbd789296ae8::t_367ef50d938802 15
+examples/causal_counterfactual_examples/counterfactual_treatment_effect/main.rs
+  s_cefbd789296ae8::t_02e99e27d1c8d5 32
+  s_cefbd789296ae8::t_b181e3dbf7b4cc 23
+examples/causal_correction_examples/corrective_lane_keeping/main.rs
+  s_cefbd789296ae8::t_b181e3dbf7b4cc 13,54,87
+  s_cefbd789296ae8::t_02e99e27d1c8d5 26
+examples/classical_causality_examples/classical_via_causal_monad/scm/main.rs
+  s_cefbd789296ae8::t_23a6735bdebc84 14
+  s_cefbd789296ae8::t_2c547e0713bbae 28
+  s_cefbd789296ae8::t_ea1555eabd980a 70
+  s_cefbd789296ae8::t_6c8127700f3b7c 168
+examples/causal_counterfactual_examples/counterfactual_resection_intervention/main.rs
+  s_cefbd789296ae8::t_b181e3dbf7b4cc 65
+examples/core_examples/examples/propagating_process_counterfactual.rs
+  s_cefbd789296ae8::t_a73bb5a5c1c48b 24-25
+  s_cefbd789296ae8::t_2e29e2ded3cb42 87-89
+  s_cefbd789296ae8::t_cec66e4674f912 7
+  s_cefbd789296ae8::t_3ffc9b9a2fe338 30
+examples/causal_correction_examples/corrective_glucose_pump/main.rs
+  s_cefbd789296ae8::t_02e99e27d1c8d5 27
+  s_cefbd789296ae8::t_b181e3dbf7b4cc 14,56,89
+  s_cefbd789296ae8::t_b7148372f4ec5d 90-92
+examples/causal_correction_examples/corrective_ddos_detector/main.rs
+  s_cefbd789296ae8::t_7f55a828757e1e 15,77
+examples/causal_counterfactual_examples/counterfactual_cascade_failure/main.rs
+  s_cefbd789296ae8::t_02e99e27d1c8d5 18
+  s_cefbd789296ae8::t_b181e3dbf7b4cc 10
+examples/causal_correction_examples/corrective_decompression_stops/main.rs
+  s_cefbd789296ae8::t_7f55a828757e1e 30,56,88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0158d3a8c53ae6a4dc6be17dca21715e9807e53b",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
