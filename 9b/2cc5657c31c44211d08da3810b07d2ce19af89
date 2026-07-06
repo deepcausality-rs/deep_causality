@@ -1,0 +1,65 @@
+lean/DeepCausalityFormal/Haft/Morphism.lean
+  s_cefbd789296ae8::t_19844cded999c6 19
+lean/DeepCausalityFormal/Haft/NaturalIso.lean
+  s_cefbd789296ae8::t_19844cded999c6 22
+deep_causality_haft/tests/utils_tests.rs
+  s_cefbd789296ae8::t_63c2c3f9706a9b 874,881-883
+  s_cefbd789296ae8::t_b03865f3ea26cd 541,547-549
+  s_cefbd789296ae8::t_4641cc7b6fc947 227,232-235
+  s_cefbd789296ae8::t_38ca5fe9882ce5 228,542,875
+lean/DeepCausalityFormal/Haft/Foldable.lean
+  s_cefbd789296ae8::t_19844cded999c6 22
+lean/DeepCausalityFormal/Haft/ParametricMonad.lean
+  s_cefbd789296ae8::t_19844cded999c6 24
+lean/DeepCausalityFormal/Haft/Profunctor.lean
+  s_cefbd789296ae8::t_19844cded999c6 24
+lean/DeepCausalityFormal/Haft/EffectSystem.lean
+  s_cefbd789296ae8::t_19844cded999c6 32
+lean/DeepCausalityFormal/Haft/Signatures.lean
+  s_cefbd789296ae8::t_19844cded999c6 28
+lean/DeepCausalityFormal.lean
+  s_cefbd789296ae8::t_3ebdf8c8e2a5e6 15-28
+lean/DeepCausalityFormal/Haft/Pure.lean
+  s_cefbd789296ae8::t_19844cded999c6 20
+lean/DeepCausalityFormal/Haft/Endomorphism.lean
+  s_cefbd789296ae8::t_19844cded999c6 23
+lean/DeepCausalityFormal/Haft/Arrow.lean
+  s_cefbd789296ae8::t_4b86d767358c94 52-59
+  s_cefbd789296ae8::t_19844cded999c6 27
+lean/DeepCausalityFormal/Haft/Functor.lean
+  s_cefbd789296ae8::t_19844cded999c6 21
+lean/DeepCausalityFormal/Haft/Adjunction.lean
+  s_cefbd789296ae8::t_19844cded999c6 26
+lean/DeepCausalityFormal/Haft/Monad.lean
+  s_cefbd789296ae8::t_19844cded999c6 27
+lean/DeepCausalityFormal/Haft/Io.lean
+  s_cefbd789296ae8::t_19844cded999c6 23
+lean/DeepCausalityFormal/Haft/Applicative.lean
+  s_cefbd789296ae8::t_19844cded999c6 21
+lean/DeepCausalityFormal/Haft/Traversable.lean
+  s_cefbd789296ae8::t_19844cded999c6 30
+lean/DeepCausalityFormal/Haft/Comonad.lean
+  s_cefbd789296ae8::t_19844cded999c6 25
+lean/DeepCausalityFormal/Haft/Bifunctor.lean
+  s_cefbd789296ae8::t_19844cded999c6 23
+openspec/notes/causal-algebra/haft-formalization-deviations.md
+  s_cefbd789296ae8::t_a97423fe3cdd02 173,176-185
+lean/DeepCausalityFormal/Haft/Either.lean
+  s_cefbd789296ae8::t_19844cded999c6 21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "9b2cc5657c31c44211d08da3810b07d2ce19af89",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
