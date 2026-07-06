@@ -33,6 +33,8 @@ same **id**. CI (`.github/workflows/formalization.yml`) fails if an id lacks eit
 | `core.causal_monad.right_id` | `m >>= pure = m` (unconditional — holds on errored carriers) | proved | `DeepCausalityFormal/Core/CausalMonad.lean :: bind_right_id` | `deep_causality_core/tests/types/causal_monad/causal_monad_tests.rs :: test_right_identity_unconditional` | ✓ | ✓ | — |
 | `core.causal_monad.assoc` | `(m >>= f) >>= g = m >>= (λx. f x >>= g)` | proved | `DeepCausalityFormal/Core/CausalMonad.lean :: bind_assoc` | `deep_causality_core/tests/types/causal_monad/causal_monad_tests.rs :: test_associativity_across_erroring_continuation` | ✓ | ✓ | — |
 | `core.causal_monad.left_zero` | `raise e >>= f = raise e` (error short-circuit) | proved | `DeepCausalityFormal/Core/CausalMonad.lean :: bind_raise_left_zero` | `deep_causality_core/tests/kani_proofs.rs :: causal_monad_short_circuit` | n/a | ✓ | — |
+| `core.causal_arrow.category_laws` | Kleisli category laws (left/right identity, associativity) threading state/context over arbitrary `S`, `C` | proved | `DeepCausalityFormal/Core/CausalArrow.lean :: kcomp_left_id / kcomp_right_id / kcomp_assoc` | `deep_causality_core/tests/types/causal_arrow/causal_arrow_tests.rs :: arrow_threads_accumulated_state` | ✓ | — | — |
+| `core.causal_arrow.left_zero` | errored stage short-circuits composition; state preserved, downstream not run | proved | `DeepCausalityFormal/Core/CausalArrow.lean :: kcomp_left_zero` | `deep_causality_core/tests/types/causal_arrow/causal_arrow_tests.rs :: arrow_error_short_circuit_preserves_state` | ✓ | — | — |
 
 ### Haft layer (`deep_causality_haft`)
 

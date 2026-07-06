@@ -30,6 +30,7 @@ remaining layers are described in `openspec/notes/causal-algebra/Formalization.m
 
 import DeepCausalityFormal.Num.Monoid
 import DeepCausalityFormal.Core.CausalMonad
+import DeepCausalityFormal.Core.CausalArrow
 import DeepCausalityFormal.Haft.Hkt
 import DeepCausalityFormal.Haft.Functor
 import DeepCausalityFormal.Haft.Pure
