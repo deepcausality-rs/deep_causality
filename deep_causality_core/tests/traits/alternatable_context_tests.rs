@@ -61,6 +61,34 @@ fn test_alternate_context_appends_log_marker() {
 }
 
 #[test]
+fn test_clear_context_sets_none_and_logs() {
+    let initial = PropagatingProcess::pure(42_i32);
+    let process = PropagatingProcess::with_state(initial, "running", Some(Cfg { threshold: 10 }));
+    assert!(process.context().is_some());
+
+    let cleared = process.clear_context();
+
+    // Context is cleared to None (the capability `alternate_context` lacked).
+    assert!(cleared.context().is_none());
+    // Value and state preserved; no error introduced.
+    assert_eq!(cleared.value(), Some(&42));
+    assert_eq!(*cleared.state(), "running");
+    assert!(cleared.is_ok());
+    // The clear is recorded in the audit log.
+    assert!(cleared.logs().to_string().contains("!!ContextCleared!!"));
+}
+
+#[test]
+fn test_clear_context_on_error_is_noop() {
+    let err = CausalityError::new(CausalityErrorEnum::Custom("upstream failure".into()));
+    let process = PropagatingProcess::<i32, &'static str, Cfg>::from_error(err);
+    let cleared = process.clear_context();
+    // A no-op on an errored carrier — no log entry, error preserved.
+    assert!(cleared.is_err());
+    assert!(!cleared.logs().to_string().contains("!!ContextCleared!!"));
+}
+
+#[test]
 fn test_alternate_context_on_propagating_effect_is_unit_only() {
     // Documented behaviour: PropagatingEffect (Context = ()) accepts the
     // call but only the audit log changes.

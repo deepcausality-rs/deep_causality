@@ -49,8 +49,8 @@ fn main() {
     // The workflow is a causal-monad chain: forecast at three precisions, then (only if every
     // trajectory stayed finite) analyse the divergence. A blow-up short-circuits the error channel.
     CausalFlow::effect()
-        .and_then(move |_| simulate(&params, dt, ic, samples, steps_per_sample).into())
-        .and_then(move |sims| analyse(sims, sample_dt).into())
+        .next(move |_| simulate(&params, dt, ic, samples, steps_per_sample).into())
+        .next(move |sims| analyse(sims, sample_dt).into())
         .run(
             |report| print_utils::print_report(&report),
             |err| eprintln!("Turbulence-forecast pipeline failed: {err:?}"),

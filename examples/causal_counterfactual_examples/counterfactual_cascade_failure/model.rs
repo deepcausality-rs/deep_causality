@@ -10,7 +10,7 @@ use crate::model_types::{
     NetworkState,
 };
 use causal_counterfactual_examples::math_utils;
-use deep_causality_core::{EffectLog, EffectValue, Intervenable};
+use deep_causality_core::{AlternatableValue, EffectLog, EffectValue};
 use deep_causality_haft::LogAddEntry;
 use std::collections::HashSet;
 
@@ -145,7 +145,7 @@ pub fn run_cascade(trigger_edge: u32, cfg: NetworkConfig) -> NetworkProcess<Flow
             context,
             logs,
         )
-        .intervene(vec![next_failure]);
+        .alternate_value(vec![next_failure]);
 
         result = process.bind(resolve_stage);
     }

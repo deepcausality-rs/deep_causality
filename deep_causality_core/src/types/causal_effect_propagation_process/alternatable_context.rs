@@ -24,3 +24,25 @@ where
         self
     }
 }
+
+impl<Value, State, Context, Error, Log>
+    CausalEffectPropagationProcess<Value, State, Context, Error, Log>
+where
+    Log: LogAddEntry,
+{
+    /// Clear the carried context to `None` — the absence-setting counterpart to
+    /// [`alternate_context`](AlternatableContext::alternate_context), whose codomain is `Some(_)`
+    /// only. Resolves the gap where a context set mid-chain could never be removed again.
+    ///
+    /// Symmetric contract with `alternate_context`: a no-op on an errored carrier (an alternation
+    /// cannot repair a broken chain), value/state preserved, and one `!!ContextCleared!!` audit
+    /// entry appended on success so the substitution is recorded.
+    pub fn clear_context(mut self) -> Self {
+        if self.outcome.is_err() {
+            return self;
+        }
+        self.logs.add_entry("!!ContextCleared!!: context cleared");
+        self.context = None;
+        self
+    }
+}

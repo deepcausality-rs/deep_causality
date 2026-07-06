@@ -106,7 +106,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // The intervention is recorded in the effect's causal log.
 
         let healed_effect = stress_effect
-            .intervene(Some(SAFE_STRESS_LIMIT))
+            .alternate_value(Some(SAFE_STRESS_LIMIT))
             .into_effect();
 
         println!("    > [BLACKBOX AUDIT]: Autonomous Intervention Recorded.");
@@ -163,7 +163,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n================================================================");
     println!("   Simulation Complete");
     println!("================================================================");
-    println!("   The Intervenable trait enabled AUTONOMOUS, LOCAL decision-making.");
+    println!(
+        "   Counterfactual value substitution (alternate_value) enabled AUTONOMOUS, LOCAL decision-making."
+    );
     println!("   Latency-critical interventions saved the structure.");
 
     Ok(())

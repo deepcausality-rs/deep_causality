@@ -10,11 +10,11 @@
 /// logs). It is the mid-chain mechanism by which a hypothetical or corrective
 /// value can be threaded into a running causal chain.
 ///
-/// This is semantically equivalent to [`crate::Intervenable::intervene`] and
-/// is provided as the value-channel member of the symmetric
+/// It is the value-channel member of the symmetric
 /// [`AlternatableValue`] / [`crate::AlternatableContext`] /
-/// [`crate::AlternatableState`] family. `Intervenable` is retained as a
-/// causal-inference vocabulary trait (it speaks Pearl's `do(...)` language).
+/// [`crate::AlternatableState`] family — counterfactual substitution on one channel. This is the
+/// value-level substitution lens; Pearl's `do(...)` operator (graph surgery / variable isolation)
+/// lives at the `deep_causality` Causaloid + hypergraph layer, where a graph is in scope.
 ///
 /// # Contract
 ///

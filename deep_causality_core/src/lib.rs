@@ -25,7 +25,6 @@ pub use crate::traits::alternatable_context::AlternatableContext;
 pub use crate::traits::alternatable_state::AlternatableState;
 pub use crate::traits::alternatable_value::AlternatableValue;
 pub use crate::traits::causal_monad::CausalMonad;
-pub use crate::traits::intervenable::Intervenable;
 
 // Re-export types
 pub use crate::types::causal_arrow::{

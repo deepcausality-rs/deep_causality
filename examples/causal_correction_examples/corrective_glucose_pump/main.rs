@@ -11,7 +11,7 @@
 //! eventually crosses the ketoacidosis threshold. The monitor watches
 //! the post-tick glucose reading. When it climbs above 180 mg/dL, the
 //! pump computes the bolus units needed to reach target and applies
-//! `.intervene(target)` on the chain. The next tick advances from the
+//! `.alternate_value(target)` on the chain. The next tick advances from the
 //! corrected glucose level.
 //!
 //! Two trajectories run side by side.
@@ -24,7 +24,7 @@
 //!   records every bolus event with its timestamp and dose.
 //!
 //! Same chain, same perturbation schedule, same patient parameters.
-//! The only difference is whether the corrective `.intervene` fires.
+//! The only difference is whether the corrective `.alternate_value` fires.
 //! The catastrophic outcome of the open-loop run is the failure the
 //! corrective interventions prevent.
 
@@ -53,7 +53,7 @@ fn main() {
         "\nThe open-loop trajectory crosses the ketoacidosis threshold\n\
          (300 mg/dL) within the six-hour window. The closed-loop run\n\
          uses the same meal schedule, but each hyperglycemic excursion\n\
-         triggers an `.intervene(target)` call. Glucose stays bounded\n\
+         triggers an `.alternate_value(target)` call. Glucose stays bounded\n\
          and the patient finishes the window in normoglycemia."
     );
 
@@ -86,7 +86,10 @@ fn run_closed_loop() -> PumpProcess<FloatType> {
                         state.total_insulin_units += units;
                         state
                     })
-                    .intervene_if(|_| true, |glucose| model::corrective_bolus(glucose, &cfg).0)
+                    .alternate_value_if(
+                        |_| true,
+                        |glucose| model::corrective_bolus(glucose, &cfg).0,
+                    )
                 },
                 |cold| cold,
             )

@@ -62,7 +62,7 @@ fn run_counterfactual(
     resected: Connectome,
 ) -> PropagatingEffect<SeizureResult> {
     CausalFlow::value(factual)
-        .intervene(resected)
+        .alternate_value(resected)
         .map(simulate_seizure)
         .into_effect()
 }

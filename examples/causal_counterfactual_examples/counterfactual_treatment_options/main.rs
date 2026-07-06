@@ -12,7 +12,7 @@
 //!
 //! * **Medication arm.** `intervene(systolic_bp = 120)` fires between
 //!   blood pressure and wall shear stress. The downstream stress falls
-//!   because of the intervened pressure, not by direct edict; a
+//!   because of the alternate pressure, not by direct edict; a
 //!   beta-blocker reduces pressure, and the model's pressure-to-stress
 //!   relationship carries the effect from there.
 //! * **Surgical arm.** `intervene(wall_shear_stress = clipped)` fires
@@ -75,7 +75,7 @@ fn run_medication_counterfactual(
     controlled_bp: FloatType,
 ) -> PropagatingEffect<CycleSummary> {
     CausalFlow::value(baseline_bp)
-        .intervene(controlled_bp)
+        .alternate_value(controlled_bp)
         .map(shear_stress_stage)
         .map(fatigue_stage)
         .into_effect()
@@ -87,7 +87,7 @@ fn run_surgical_counterfactual(
 ) -> PropagatingEffect<CycleSummary> {
     CausalFlow::value(baseline_bp)
         .map(shear_stress_stage)
-        .intervene(clipped_wss)
+        .alternate_value(clipped_wss)
         .map(fatigue_stage)
         .into_effect()
 }

@@ -17,28 +17,65 @@ use crate::{
 // through the carrier — they never clone them — so they impose no `Clone` bound on either. The loop
 // and branch combinators do not call `bind` and likewise carry no such bound.
 impl<Value, State, Context> CausalFlow<Value, State, Context> {
-    /// Full monadic step: the closure receives the unwrapped value and returns the next flow.
-    /// Effect-returning stages adapt with [`From`] / `.into()`. Short-circuits on error / no value.
+    /// The Kleisli bind of the causal monad — the one lawful sequencing step.
+    ///
+    /// The continuation receives `(value, state, context)` and returns the next flow, whose
+    /// state/context are threaded **forward** (`s0 → s1 → s2`) exactly as the monad's
+    /// [`bind`](crate::CausalEffectPropagationProcess::bind) threads them (`CausalMonad.lean ::
+    /// bind'`). The stateless case is a *specialization*, not a separate operation: with
+    /// `State = Context = ()` there is nothing to thread, so a stage written `|v, _, _| …` behaves
+    /// exactly as a value-only step would — which is why there is a single `and_then`, not a
+    /// value-only/stateful pair.
+    ///
+    /// A value-less carrier short-circuits *lawfully*, mirroring [`map`](Self::map) and the Maybe
+    /// monad: `None` and `ContextualLink` pass through unchanged (the continuation is NOT run and no
+    /// error is manufactured), which is what makes right identity `f >=> η = f` hold. The `RelayTo` /
+    /// `Map` dispatch variants carry a `PropagatingEffect<Value>` a value-level step cannot retype to
+    /// `U`, so they surface a `ValueNotAvailable` error rather than being dropped (residue removed
+    /// once the control channel is separated). An upstream error short-circuits (left zero, handled
+    /// by `bind`). Effect-returning stages adapt with [`From`] / `.into()`.
     pub fn and_then<U, F>(self, f: F) -> CausalFlow<U, State, Context>
     where
-        F: FnOnce(Value) -> CausalFlow<U, State, Context>,
+        F: FnOnce(Value, State, Option<Context>) -> CausalFlow<U, State, Context>,
     {
-        let inner = self.inner.bind_or_error(
-            |v, _state, _context| f(v).inner,
-            "and_then received no value",
-        );
+        let inner = self.inner.bind(|ev, state, context| match ev {
+            // Run the continuation on the threaded `(value, state, context)` and thread its returned
+            // state/context forward; `bind` prepends the upstream logs.
+            EffectValue::Value(v) => f(v, state, context).inner,
+            // Value-less carriers short-circuit lawfully: continuation not run, channel preserved.
+            EffectValue::None => CausalEffectPropagationProcess::new(
+                Ok(EffectValue::None),
+                state,
+                context,
+                EffectLog::new(),
+            ),
+            EffectValue::ContextualLink(a, b) => CausalEffectPropagationProcess::new(
+                Ok(EffectValue::ContextualLink(a, b)),
+                state,
+                context,
+                EffectLog::new(),
+            ),
+            // RelayTo / Map cannot be retyped by a value-level step; surface the dropped command.
+            _ => CausalEffectPropagationProcess::new(
+                Err(CausalityError::new(CausalityErrorEnum::ValueNotAvailable)),
+                state,
+                context,
+                EffectLog::new(),
+            ),
+        });
         CausalFlow { inner }
     }
 
-    /// Compose the next sub-process (a whole pipeline) onto the flow. A pipeline is a function
-    /// `Value -> CausalFlow<U>`; `next` is the pipeline-composition verb, lowering to `bind` exactly
-    /// as [`and_then`](Self::and_then) does. A reified `CausalArrow` engine value is applied the same
-    /// way, with `and_then(|v| arrow.run(v))`.
+    /// The everyday value-only step: a stage `Fn(Value) -> CausalFlow<U>` that ignores state/context,
+    /// i.e. exactly `and_then(|v, _, _| pipeline(v))`. This is the drop-in for the vast majority of
+    /// pipelines; [`and_then`](Self::and_then) is the rarely-needed stateful form for stages that must
+    /// read or evolve state. It is **not** a second bind — just `and_then` with the state/context
+    /// inputs pre-ignored — so for stateless flows (`State = Context = ()`) the two coincide.
     pub fn next<U, F>(self, pipeline: F) -> CausalFlow<U, State, Context>
     where
         F: FnOnce(Value) -> CausalFlow<U, State, Context>,
     {
-        self.and_then(pipeline)
+        self.and_then(|v, _state, _context| pipeline(v))
     }
 
     /// Common stateless step: `Ok` lifts to a value, `Err` to the error channel.

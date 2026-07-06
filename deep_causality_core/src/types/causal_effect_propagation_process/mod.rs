@@ -13,7 +13,6 @@ mod display;
 mod explain;
 mod getters;
 pub mod hkt;
-mod intervenable;
 mod predicates;
 
 /// The fundamental unit of causal computation in DeepCausality.

@@ -11,7 +11,7 @@
 //! family:
 //!
 //! * **Rung 1 (Association)**: plain `bind` chain; no alternation.
-//! * **Rung 2 (Intervention)**: `intervene` mid-chain to apply
+//! * **Rung 2 (Intervention)**: `alternate_value` mid-chain to apply
 //!   `do(Tar := 0.0)`; the Smoking -> Tar link is severed before stage 2
 //!   reads the tar indicator.
 //! * **Rung 3 (Counterfactual)**: `alternate_context` at the seed to
@@ -25,7 +25,7 @@
 //! scaffolding.
 
 use deep_causality_core::{
-    AlternatableContext, EffectValue, Intervenable, PropagatingEffect, PropagatingProcess,
+    AlternatableContext, AlternatableValue, EffectValue, PropagatingEffect, PropagatingProcess,
 };
 
 fn main() {
@@ -67,7 +67,7 @@ fn run_rung2_intervention() {
 
     let final_effect = start(world)
         .bind(stage_has_tar)
-        .intervene(0.0_f64) // do(Tar := 0.0); alias for alternate_value(0.0)
+        .alternate_value(0.0_f64) // do(Tar := 0.0)
         .bind(stage_cancer_risk);
 
     let cancer_risk = cancer_risk_from(final_effect.value().unwrap());
@@ -165,7 +165,7 @@ fn stage_has_tar(
 
 /// Stage 2 (`Tar -> Cancer`): cancer risk follows from the tar indicator
 /// the upstream stage produced. Reading from the value (not the Context)
-/// is what makes `intervene(...)` between the two stages a clean
+/// is what makes `alternate_value(...)` between the two stages a clean
 /// `do(Tar := x)`.
 fn stage_cancer_risk(
     value: EffectValue<f64>,

@@ -18,12 +18,12 @@
 //!
 //! ```
 //! use deep_causality_core::{causal_arrow, CausalFlow};
-//! use deep_causality_haft::Arrow;
 //!
-//! let inc = causal_arrow(|x: i64| CausalFlow::value(x + 1));
-//! let dbl = inc.next(|x| CausalFlow::value(x * 2)).build(); // (x + 1) * 2, reusable
-//! assert_eq!(dbl.run(3).finish(), Ok(8));
-//! assert_eq!(dbl.run(4).finish(), Ok(10));
+//! // Stages receive `(value, state, context)`; a stateless stage ignores the last two.
+//! let inc = causal_arrow(|x: i64, _s, _c| CausalFlow::value(x + 1));
+//! let dbl = inc.next(|x, _s, _c| CausalFlow::value(x * 2)); // (x + 1) * 2, reusable
+//! assert_eq!(dbl.run_value(3).finish(), Ok(8));
+//! assert_eq!(dbl.run_value(4).finish(), Ok(10));
 //! ```
 
 mod builder;
@@ -64,11 +64,17 @@ impl<V, S, C> CausalFlowOut for CausalFlow<V, S, C> {
     }
 }
 
-/// A reusable Kleisli arrow `A -> CausalFlow<B, S, C>`: the engine's nameable bound.
+/// A reusable Kleisli arrow `(A, S, Option<C>) -> CausalFlow<B, S, C>`: the engine's nameable bound.
 ///
-/// Any [`Arrow`] whose output is a `CausalFlow` is a `CausalArrow`. Use it as a bound (for example
-/// `impl CausalArrow<Raw, Command>`) to name an engine composite without spelling out the nested
-/// combinator types.
-pub trait CausalArrow<A, B, S = (), C = ()>: Arrow<In = A, Out = CausalFlow<B, S, C>> {}
+/// Any [`Arrow`] whose input is `(A, S, Option<C>)` and whose output is a `CausalFlow<B, S, C>` is a
+/// `CausalArrow`. Use it as a bound (for example `impl CausalArrow<Raw, Command>`) to name an engine
+/// composite without spelling out the nested combinator types.
+pub trait CausalArrow<A, B, S = (), C = ()>:
+    Arrow<In = (A, S, Option<C>), Out = CausalFlow<B, S, C>>
+{
+}
 
-impl<T, A, B, S, C> CausalArrow<A, B, S, C> for T where T: Arrow<In = A, Out = CausalFlow<B, S, C>> {}
+impl<T, A, B, S, C> CausalArrow<A, B, S, C> for T where
+    T: Arrow<In = (A, S, Option<C>), Out = CausalFlow<B, S, C>>
+{
+}

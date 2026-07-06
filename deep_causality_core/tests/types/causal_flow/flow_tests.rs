@@ -72,7 +72,7 @@ fn try_step_err_short_circuits() {
 #[test]
 fn and_then_chains_flows() {
     let out = CausalFlow::value(2i64)
-        .and_then(|x| CausalFlow::value(x * 5))
+        .next(|x| CausalFlow::value(x * 5))
         .finish();
     assert_eq!(out, Ok(10));
 }
@@ -174,33 +174,33 @@ fn update_value_state_context_rewrites_all_three() {
 }
 
 #[test]
-fn intervene_substitutes_value_and_logs_override() {
-    let p = CausalFlow::value(1i64).intervene(99).into_effect();
+fn alternate_value_substitutes_value_and_logs_override() {
+    let p = CausalFlow::value(1i64).alternate_value(99).into_effect();
     assert_eq!(p.value(), Some(&99));
     assert!(format!("{:?}", p.logs()).contains("ValueAlternation"));
 }
 
 #[test]
-fn intervene_if_fires_only_on_condition() {
+fn alternate_value_if_fires_only_on_condition() {
     let fired = CausalFlow::value(10i64)
-        .intervene_if(|v| *v > 5, |_| 0)
+        .alternate_value_if(|v| *v > 5, |_| 0)
         .finish();
     assert_eq!(fired, Ok(0));
     let passthrough = CausalFlow::value(3i64)
-        .intervene_if(|v| *v > 5, |_| 0)
+        .alternate_value_if(|v| *v > 5, |_| 0)
         .finish();
     assert_eq!(passthrough, Ok(3));
 }
 
 #[test]
-fn intervene_if_skips_errored_flow() {
+fn alternate_value_if_skips_errored_flow() {
     // An errored carrier: the error takes precedence so neither closure runs (they panic if
     // invoked). Value AND error is unrepresentable now; the lawful errored carrier holds only
     // the error in the single outcome channel.
     let errored: PropagatingEffect<i64> =
         CausalEffectPropagationProcess::new(Err(err("boom")), (), None, EffectLog::new());
     let out = CausalFlow::from(errored)
-        .intervene_if(
+        .alternate_value_if(
             |_| panic!("cond ran on an errored flow"),
             |_| panic!("f ran on an errored flow"),
         )
@@ -352,7 +352,7 @@ fn finish_on_none_value_yields_error() {
 
 #[test]
 fn next_composes_whole_pipelines() {
-    // Each pipeline is a Value -> CausalFlow function; `next` wires them like stages.
+    // Each pipeline is a `Value -> CausalFlow` function; `next` wires them like stages.
     fn add_one(x: i64) -> CausalFlow<i64> {
         CausalFlow::value(x).map(|v| v + 1)
     }

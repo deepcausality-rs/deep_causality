@@ -22,7 +22,7 @@
 //!   stages now reflects the alternate sensor world; `FlightState` and
 //!   any covariance carry residue from the other history.
 //!
-//! `.intervene(value)` swaps only the value passed to the next bind.
+//! `.alternate_value(value)` swaps only the value passed to the next bind.
 //! `FlightState` and `AircraftConfig` are untouched. The envelope graph
 //! runs the factual aircraft against the counterfactual airspeed. That
 //! is the question an operational what-if analysis actually asks.
@@ -72,7 +72,7 @@ fn run_factual(reading: SensorReading, cfg: AircraftConfig) -> FlightProcess<Ver
 fn run_counterfactual(reading: SensorReading, cfg: AircraftConfig) -> FlightProcess<Verdict> {
     let stall_kn = cfg.stall_kn;
     CausalFlow::from(build_chain(reading, cfg))
-        .intervene(stall_kn - 25.0)
+        .alternate_value(stall_kn - 25.0)
         .bind(airspeed_margin)
         .bind(envelope_eval)
         .into_process()
