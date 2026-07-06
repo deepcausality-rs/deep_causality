@@ -27,7 +27,7 @@ mod model_config;
 mod model_types;
 mod print_util;
 
-use deep_causality_core::{CausalFlow, EffectLog, EffectValue, PropagatingProcess};
+use deep_causality_core::{CausalEffect, CausalFlow, EffectLog, PropagatingProcess};
 use model::{
     anomaly_stage, fallback_stage, fusion_stage, process_stage, reliability_stage, validate_stage,
 };
@@ -39,7 +39,7 @@ fn main() {
     println!("=======================================================================\n");
 
     let initial: FleetProcess<RawReadings> = PropagatingProcess::new(
-        Ok(EffectValue::Value(seed_readings())),
+        Ok(CausalEffect::value(seed_readings())),
         FleetState::default(),
         Some(nominal_fleet_config()),
         EffectLog::new(),

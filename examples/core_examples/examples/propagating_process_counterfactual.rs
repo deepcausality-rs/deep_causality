@@ -4,7 +4,7 @@
  */
 
 use deep_causality_core::{
-    AlternatableValue, EffectLog, EffectValue, PropagatingEffect, PropagatingProcess,
+    AlternatableValue, CausalEffect, EffectLog, PropagatingEffect, PropagatingProcess,
 };
 use deep_causality_haft::LogAddEntry;
 
@@ -63,7 +63,7 @@ fn main() {
 
         let mut log = EffectLog::new();
         log.add_entry(&format!("Operation 1 Executed. Result: {}", msg));
-        PropagatingProcess::new(Ok(EffectValue::Value(success)), state, None, log)
+        PropagatingProcess::new(Ok(CausalEffect::value(success)), state, None, log)
     });
 
     println!(
@@ -106,7 +106,7 @@ fn main() {
 
         let mut log = EffectLog::new();
         log.add_entry(&msg);
-        PropagatingProcess::new(Ok(EffectValue::Value(status)), state, None, log)
+        PropagatingProcess::new(Ok(CausalEffect::value(status)), state, None, log)
     });
 
     println!(

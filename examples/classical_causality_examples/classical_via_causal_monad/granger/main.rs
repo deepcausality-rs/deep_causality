@@ -23,7 +23,7 @@
 //! bind.
 
 use deep_causality_core::{
-    AlternatableContext, EffectValue, PropagatingEffect, PropagatingProcess,
+    AlternatableContext, CausalEffect, PropagatingEffect, PropagatingProcess,
 };
 
 fn main() {
@@ -91,7 +91,7 @@ fn start(series: SeriesContext) -> PropagatingProcess<f64, (), SeriesContext> {
 /// One-stage predictor: average past shipping, add a small upward trend,
 /// adjust by (avg_oil - baseline) when oil history is available.
 fn predict_shipping(
-    _value: EffectValue<f64>,
+    _value: CausalEffect<f64>,
     state: (),
     context: Option<SeriesContext>,
 ) -> PropagatingProcess<f64, (), SeriesContext> {

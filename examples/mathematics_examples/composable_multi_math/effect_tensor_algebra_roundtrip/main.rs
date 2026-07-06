@@ -52,7 +52,7 @@ fn main() {
     // One straight-line monadic chain. The carried value type changes at every
     // step (Tensor -> MultiVector -> Tensor -> scalar); `bind` threads the
     // value, state, context, error, and log automatically. The closure receives
-    // the upstream `EffectValue`; an error in any step short-circuits the rest.
+    // the upstream `CausalEffect`; an error in any step short-circuits the rest.
     let result: Process<FloatType> = ProcessWitness::pure(initial)
         .bind(|v, _, _| lift_to_algebra(v.into_value().expect("initial tensor")))
         .bind(|v, _, _| rotate_in_xy(v.into_value().expect("lifted multivector")))

@@ -8,7 +8,7 @@
 use crate::model_types::{
     NetworkPlan, NetworkProcess, NetworkState, PRIMARY_SWITCH, SwitchId, nominal_network_plan,
 };
-use deep_causality_core::{EffectLog, EffectValue};
+use deep_causality_core::{CausalEffect, EffectLog};
 use deep_causality_haft::LogAddEntry;
 
 /// Reports whether a given switch is up at the given tick. The primary
@@ -29,7 +29,7 @@ fn switch_is_up(switch: SwitchId, tick: u32, plan: &NetworkPlan) -> bool {
 /// the tick, so without an intervention the same active switch sees
 /// every subsequent tick of traffic.
 pub fn forward_traffic(
-    value: EffectValue<SwitchId>,
+    value: CausalEffect<SwitchId>,
     mut state: NetworkState,
     ctx: Option<NetworkPlan>,
 ) -> NetworkProcess<SwitchId> {
@@ -66,12 +66,12 @@ pub fn forward_traffic(
         state.tick, active, delivered, dropped, marker
     ));
 
-    NetworkProcess::<SwitchId>::new(Ok(EffectValue::Value(active)), state, ctx, logs)
+    NetworkProcess::<SwitchId>::new(Ok(CausalEffect::value(active)), state, ctx, logs)
 }
 
 pub fn initial_process() -> NetworkProcess<SwitchId> {
     NetworkProcess::<SwitchId>::new(
-        Ok(EffectValue::Value(PRIMARY_SWITCH)),
+        Ok(CausalEffect::value(PRIMARY_SWITCH)),
         NetworkState::default(),
         Some(nominal_network_plan()),
         EffectLog::new(),

@@ -23,11 +23,11 @@
 //! Generic over the precision type `R` (`f64`, `Float106`, …) so the same
 //! pipeline composes at any precision the framework supports. Because each
 //! stage returns a `Result`, `CausalFlow::try_step` unwraps the value and
-//! short-circuits the error channel; no stage touches `EffectValue`.
+//! short-circuits the error channel; no stage touches `CausalEffect`.
 
 use chronometric_examples::{ClockData, OrbitData};
 use core::fmt::Debug;
-use deep_causality_core::{CausalityError, CausalityErrorEnum, EffectValue};
+use deep_causality_core::{CausalityError, CausalityErrorEnum};
 use deep_causality_num::{FromPrimitive, RealField};
 use deep_causality_physics::{
     CentralBody, EARTH_GM, EARTH_J2, EARTH_MASS_KG, EARTH_RADIUS_EQUATORIAL,
@@ -229,7 +229,7 @@ where
     let mut estimates = Vec::with_capacity(set.pairs.len());
     for (a, b) in &set.pairs {
         let effect = solve_gm_analytical(a, b, &body);
-        if let Ok(EffectValue::Value(gm)) = effect.into_parts().0 {
+        if let Some(gm) = effect.into_value() {
             // Drop NaNs and major outliers that come from poorly conditioned
             // input pairs (near-coincident orbital states, IGS sentinel artifacts),
             // not from the inversion itself. MAD filter in stage_aggregate

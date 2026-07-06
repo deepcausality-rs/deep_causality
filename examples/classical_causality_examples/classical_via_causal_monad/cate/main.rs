@@ -28,7 +28,7 @@
 //! pinpointing the switch from treatment to control.
 
 use deep_causality_core::{
-    AlternatableContext, EffectValue, PropagatingEffect, PropagatingProcess,
+    AlternatableContext, CausalEffect, PropagatingEffect, PropagatingProcess,
 };
 
 fn main() {
@@ -120,7 +120,7 @@ fn start(patient: PatientContext) -> PropagatingProcess<f64, (), PatientContext>
 
 /// Stage 1: drug effect from the treatment assignment.
 fn stage_drug_effect(
-    _value: EffectValue<f64>,
+    _value: CausalEffect<f64>,
     state: (),
     context: Option<PatientContext>,
 ) -> PropagatingProcess<f64, (), PatientContext> {
@@ -136,7 +136,7 @@ fn stage_drug_effect(
 
 /// Stage 2: add the drug effect to the patient's initial BP.
 fn stage_final_bp(
-    value: EffectValue<f64>,
+    value: CausalEffect<f64>,
     state: (),
     context: Option<PatientContext>,
 ) -> PropagatingProcess<f64, (), PatientContext> {

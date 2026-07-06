@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality::{
-    BaseContext, CausalAction, CausalityError, CausalityErrorEnum, Causaloid, Context, Contextoid,
-    ContextoidType, ContextuableGraph, EffectValue, IdentificationValue, NumericalValue,
+    BaseContext, CausalAction, CausalEffect, CausalityError, CausalityErrorEnum, Causaloid,
+    Context, Contextoid, ContextoidType, ContextuableGraph, IdentificationValue, NumericalValue,
     PropagatingProcess, Root,
 };
 use deep_causality_ethos::{EffectEthos, TeloidModal};
@@ -44,9 +44,9 @@ pub(crate) fn get_test_causaloid(context: Arc<RwLock<BaseContext>>) -> CsmCausal
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    // New API: fn(EffectValue<I>, S, Option<C>) -> PropagatingProcess<O, S, C>
+    // New API: fn(CausalEffect<I>, S, Option<C>) -> PropagatingProcess<O, S, C>
     fn context_causal_fn(
-        effect: EffectValue<f64>,
+        effect: CausalEffect<f64>,
         _state: (),
         _context: Option<Arc<RwLock<BaseContext>>>,
     ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {

@@ -13,7 +13,7 @@
 //! - **Fluid Dynamics**: Calculates velocity gradients and shear stress.
 //! - **Material Fatigue**: Causally accumulates damage when Wall Shear Stress (WSS) is high.
 
-use deep_causality_core::{CausalityError, CausalityErrorEnum, EffectValue, PropagatingEffect};
+use deep_causality_core::{CausalityError, CausalityErrorEnum, PropagatingEffect};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
 
@@ -57,10 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // B. Causal Risk Analysis Monad
         // We use PropagatingEffect to handle the logic and potential failure
         let effect = PropagatingEffect::pure(current_fatigue).bind(|val_ref, _, _| {
-            let old_fatigue = match val_ref {
-                EffectValue::Value(v) => v,
-                _ => 0.0,
-            };
+            let old_fatigue: f64 = val_ref.into_value().unwrap_or(0.0);
 
             let mut new_fatigue = old_fatigue;
 

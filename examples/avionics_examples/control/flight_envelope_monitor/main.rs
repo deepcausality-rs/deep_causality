@@ -67,7 +67,7 @@ fn run_pipeline(
     failing_airspeed: bool,
 ) -> FlightProcess<FlightStateEstimate> {
     let initial: FlightProcess<SensorReading> = PropagatingProcess::new(
-        Ok(EffectValue::Value(reading)),
+        Ok(CausalEffect::value(reading)),
         FlightState::default(),
         Some(config),
         EffectLog::new(),

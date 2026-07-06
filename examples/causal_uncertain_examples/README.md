@@ -22,7 +22,7 @@ The three examples have genuinely different shapes:
 - **gps_navigation** is one-shot data flow with no accumulated state. A
   stateless `PropagatingEffect::pure(x).bind(...).bind(...)` chain is the
   minimum-ceremony structure. Each stage pulls an `Uncertain<f64>` out of
-  `EffectValue::Value` and re-lifts a transformed one.
+  `CausalEffect::Value` and re-lifts a transformed one.
 - **sensor_processing** has real per-stage state (`healthy_count`,
   `failed_count`, `total_uncertainty`, `fused_temp`, `anomalies`, `verdict`)
   and a read-only configuration (plausibility bands, calibration offsets)
@@ -34,9 +34,9 @@ The three examples have genuinely different shapes:
   pipeline.
 - **clinical_trial** uses `MaybeUncertain<f64>` because data presence is
   itself uncertain. The chain's short-circuit semantics
-  (`EffectValue::None`) mirror the `None` propagation that
+  (`CausalEffect::none()`) mirror the `None` propagation that
   `MaybeUncertain` arithmetic already implements; failed `lift_to_uncertain`
-  calls become `EffectValue::None` and skip downstream verdict stages
+  calls become `CausalEffect::none()` and skip downstream verdict stages
   without an explicit `if let Err(_) = ... { return; }` ladder.
 
 ## Layout
