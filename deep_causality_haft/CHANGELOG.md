@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.3.3...deep_causality_haft-v0.4.0) - 2026-07-06
+
+### Added
+
+- *(haft)* add the free monad on a functor (algebraic-effects base)
+- *(formalization)* formalize deep_causality_haft in Lean + mirrored Rust witnesses
+- *(deep_causality_haft)* formatting
+- *(deep_causality_haft)* add lazy IoAction effect (the Arrow twin)
+- *(deep_causality_haft)* To reorganize source code structure
+
+### Fixed
+
+- *(haft)* [**breaking**] align law docs with proved theory; make effect-system reference impl lawful
+
+### Other
+
+- Code formatting and linting.
+- Fixed multiple issues in the HAFT formalization.
+- *(core)* [**breaking**] enforce the W-invariant — value-XOR-error as one channel
+- chorde(deep_causality_haft); reorganized source code
+- Generated new SBOM for all crates.
+- Updated README file across multiple crates to meet project standard.
+
 ## [0.3.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.3.1...deep_causality_haft-v0.3.2) - 2026-05-26
 
 ### Fixed

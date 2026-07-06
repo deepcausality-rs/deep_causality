@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.10.0...deep_causality_core-v0.11.0) - 2026-07-06
+
+### Added
+
+- *(file,cfd)* CFD file IO seams — typed tables, sensor traces, snapshot/resume
+- *(deep_causality_core)* file IO actions + CausalFlow read/write bridge
+
+### Fixed
+
+- fixed sone doctest warnings
+
+### Other
+
+- *(core)* [**breaking**] thread state through the causal arrow (D2, one bind)
+- *(core)* [**breaking**] causal-arrow lawfulness + replace Intervenable with alternate_value
+- *(formalization)* [**breaking**] close out enforce-w-invariant — proofs, witnesses, CI
+- *(core)* [**breaking**] enforce the W-invariant — value-XOR-error as one channel
+- *(formalization)* scaffold Lean proof project + Rust witness bridge
+- Generated new SBOM for all crates.
+- Updated README file across multiple crates to meet project standard.
+
 ### Changed
 
 - **[BREAKING]** *(deep_causality_core)* `CausalEffectPropagationProcess` now encodes value-XOR-error
