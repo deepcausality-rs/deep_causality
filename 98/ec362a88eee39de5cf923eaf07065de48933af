@@ -1,0 +1,72 @@
+openspec/changes/formalize-deep-causality-core/proposal.md
+  s_cefbd789296ae8::t_63f773e3ddde41 24-29,32-40,43-44,46-47
+  s_cefbd789296ae8::t_716fd3442cf0c5 75-86,88
+  s_cefbd789296ae8::t_12f4076b3ecbb6 6-11,16-20
+  s_cefbd789296ae8::t_df2239577a6513 57
+  s_cefbd789296ae8::t_988da8fd90e9e7 98-100
+openspec/specs/control-channel/spec.md
+  s_cefbd789296ae8::t_473fccb3a1100c 3-10,12-14,19-21,27-35,37-41,43-46,48-56,58-61,64-67,70-72,77
+  s_cefbd789296ae8::t_7fefa96db8067a 1-2,11,15-18,22-26,36,42,47,57,62-63,68-69,73-76
+openspec/changes/formalize-deep-causality-core/design.md
+  s_cefbd789296ae8::t_2a2b89d7ab505b 121-123,125-126
+  s_cefbd789296ae8::t_643500d09029c3 41,43,46-67
+  s_cefbd789296ae8::t_1701cd83e3d655 105-108
+  s_cefbd789296ae8::t_d21f2fe7b5ac0d 98-101
+  s_cefbd789296ae8::t_eac4598566dc16 33-34
+  s_cefbd789296ae8::t_43921069e140fc 6-9,13-14
+openspec/specs/lawful-effect-channel/spec.md
+  s_cefbd789296ae8::t_473fccb3a1100c 7-15,18-20,23-30,50-52,55-57,59-60,64,68-73
+openspec/changes/formalize-deep-causality-core/core-formalization-plan.md
+  s_cefbd789296ae8::t_9998c8eca4296f 215
+  s_cefbd789296ae8::t_2d7abb8e2685e6 27
+  s_cefbd789296ae8::t_589db04f5669ca 43-58,60,65-67,69-71
+  s_cefbd789296ae8::t_e62e524d454938 219-220
+  s_cefbd789296ae8::t_1ef7241b72fc64 228-229
+  s_cefbd789296ae8::t_d90f8201995457 95,99-101,104-105
+  s_cefbd789296ae8::t_6311fdbe8b0539 237-243
+  s_cefbd789296ae8::t_95f1a2af858fa1 126-128
+  s_cefbd789296ae8::t_d0d50b7140811a 170,172-178,181-187,191-205
+openspec/changes/formalize-deep-causality-core/specs/core-formalization/spec.md
+  s_cefbd789296ae8::t_86b36116d5aa1d 31-34
+  s_cefbd789296ae8::t_31502c8b1500a0 132
+  s_cefbd789296ae8::t_bd4ad7f2184ba3 42
+  s_cefbd789296ae8::t_f95e9c6e6b994e 57-64,66-69,72-74,81-83
+  s_cefbd789296ae8::t_1fb900ab7727e7 167
+  s_cefbd789296ae8::t_39d2c2fa291374 86-90
+  s_cefbd789296ae8::t_d1b2775777feda 77
+  s_cefbd789296ae8::t_a2c2968a635f85 122-124
+  s_cefbd789296ae8::t_a7ceda97ade339 151,153
+openspec/changes/formalize-deep-causality-core/tasks.md
+  s_cefbd789296ae8::t_57406e105de527 1,3-5
+  s_cefbd789296ae8::t_ef40afbefe0297 20,22-26
+  s_cefbd789296ae8::t_99b37fce55975b 29,31,33-34
+  s_cefbd789296ae8::t_7dc46a105b12a6 13
+openspec/changes/archive/2026-07-06-separate-control-channel/design.md
+  s_cefbd789296ae8::t_af4e6853f0a4b9 45-83
+openspec/changes/archive/2026-07-06-separate-control-channel/proposal.md
+  s_cefbd789296ae8::t_5d60605d788dfc 11-13,16-17,21-44,49-54,57-59,65-79
+openspec/changes/archive/2026-07-06-separate-control-channel/specs/control-channel/spec.md
+  s_cefbd789296ae8::t_89a29429d1ff59 5-9,11-13,18-20,26-34,36-40,42-45,47-55,57-60,63-66,69-71
+openspec/changes/archive/2026-07-06-separate-control-channel/specs/lawful-effect-channel/spec.md
+  s_cefbd789296ae8::t_3e9b48e2520bce 7-14,18-19,22,26-29,33-35,38-40,47,51-52,54-56
+openspec/changes/archive/2026-07-06-separate-control-channel/tasks.md
+  s_cefbd789296ae8::t_ae75cbc208b230 1-50
+openspec/notes/causal-algebra/deepcausality-formalization.md
+  s_cefbd789296ae8::t_3217c3c0676b06 1-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "98ec362a88eee39de5cf923eaf07065de48933af",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
