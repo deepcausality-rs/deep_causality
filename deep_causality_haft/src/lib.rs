@@ -104,6 +104,8 @@ pub use crate::functor::functor_base::Functor;
 pub use crate::functor::profunctor::Profunctor;
 pub use crate::monad::Monad;
 pub use crate::monad::comonad::CoMonad;
+#[cfg(feature = "alloc")]
+pub use crate::monad::free_monad::{Free, FreeWitness};
 pub use crate::monad::monoidal_merge::MonoidalMerge;
 pub use crate::monad::parametric_monad::ParametricMonad;
 pub use crate::morphism::morphism_base::{FnMorphism, Morphism};
