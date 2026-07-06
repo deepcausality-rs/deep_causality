@@ -1,0 +1,22 @@
+deep_causality_cfd/src/solvers/dec/uncertain_inflow/inflow_march.rs
+  s_cefbd789296ae8::t_babeb3973e1306 21
+  s_cefbd789296ae8::t_9ce0da12248d52 274
+  s_cefbd789296ae8::t_dc8445873ca0fb 255
+  s_cefbd789296ae8::t_1642f63fb5df54 27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "95f8fc284287551976f19e4d12b95721021c087a",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
