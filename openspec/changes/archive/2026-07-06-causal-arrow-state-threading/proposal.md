@@ -13,20 +13,23 @@ the Lean model already describes. Full plan: `openspec/notes/causal-algebra/caus
 
 ## What Changes
 
-- **Widen the Kleisli stage** to `(A, S, Option<C>) -> CausalFlow<B, S, C>` (in
-  `deep_causality_haft::Arrow` terms, `In = (A, S, Option<C>)`, `Out = CausalFlow<B, S, C>`) — the
-  stage now *receives* the incoming state/context and produces the next.
-- **Unit** `η(a, s, c) = CausalFlow::from_parts(Ok(EffectValue::Value(a)), s, c, EffectLog::new())` and
-  **composition** `f >=> g = λ(a,s,c). bind_stateful(f(a,s,c), g)` threading `(b, s1, c1)` into `g`,
-  short-circuiting on error and propagating `None`/`ContextualLink` lawfully.
-- Add `CausalFlow::and_then_stateful` (the state-threading Kleisli bind lowering to the monad `bind`)
-  and `CausalFlow::with_state` / confirm `from_parts` (build/rebind a flow with explicit state/context).
-- Add the state-receiving builder `causal_arrow_stateful(f)` + `.next_stateful(g)`; **keep** the
-  value-only `causal_arrow(f)` + `.next(g)` as the lawful **state-preserving** special case
-  (`|a,s,c| f(a).with_state(s,c)`), so the ~125 value-only callers are unaffected.
-- Add a `run_value(a)` convenience (`run((a, (), None))`) for the `S = C = ()` case.
-- Update `CausalLift`, `KleisliCompose`, the `CausalArrow` marker, and the `lib.rs` re-exports for the
-  widened stage; update `mod.rs`/`compose.rs` docs so the state/context-threading claim is now true.
+- **One Kleisli bind:** `CausalFlow::and_then` becomes the single stateful bind
+  `Fn(Value, State, Option<Context>) -> CausalFlow<U, S, C>`, threading the continuation's
+  state/context forward exactly as the monad's `bind` does. The stateless case is a *specialization*
+  (`S = C = ()`), not a separate operation; the former state-discarding value-only `and_then` (the D2
+  bug) is removed. No `and_then_stateful` is introduced.
+- **`next` is the value-only sugar:** `next(pipeline: Fn(Value) -> CausalFlow<U>)` =
+  `and_then(|v, _, _| pipeline(v))` — the everyday drop-in for stateless pipelines. Migration is
+  therefore `.and_then(|x| …)` → `.next(|x| …)`, and every pre-existing `.next(…)` (closures and named
+  `Fn(Value)` stage fns) compiles unchanged.
+- **One arrow stage:** the reified stage becomes `(A, S, Option<C>) -> CausalFlow<B, S, C>` (one type;
+  stateless via `|a, _, _|`). `CausalLift::In = (A, S, Option<C>)`; `KleisliCompose::run` threads
+  `P`'s `(value, state, context)` into `Q` via `and_then`; the `CausalArrow` marker and builder
+  (`causal_arrow`, `.next`) use this stage. Add `run_value(a) = run((a, (), None))` for `S = C = ()`.
+- Add `CausalFlow::from_parts` (the general constructor / arrow unit `η`). Update `mod.rs`/`compose.rs`
+  docs so the state/context-threading claim is now true.
+- **Prove it here:** author `lean/DeepCausalityFormal/Core/CausalArrow.lean`, reducing the arrow laws
+  to the monad theorems already proved.
 
 ## Capabilities
 
