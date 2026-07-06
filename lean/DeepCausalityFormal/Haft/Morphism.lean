@@ -16,7 +16,7 @@ under `apply` — the unit law of the (external) category whose hom-carrier it n
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/algebra/formalization_law_tests.rs`.
+Rust witness: `deep_causality_haft/tests/formalization_lean/morphism_tests.rs`.
 -/
 
 namespace DeepCausalityFormal.Haft.Morphism

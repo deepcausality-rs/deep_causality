@@ -21,7 +21,7 @@ Both laws are proved below; the recommendation is to add them to the docstring a
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/algebra/formalization_law_tests.rs`.
+Rust witness: `deep_causality_haft/tests/formalization_lean/profunctor_tests.rs`.
 -/
 
 namespace DeepCausalityFormal.Haft.Profunctor

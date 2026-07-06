@@ -170,18 +170,19 @@ the workspace). Semver: breaking for external *implementors* (impl signatures mu
 trait), non-breaking for callers → bundle with P-1's release.
 **Effort:** ~15 minutes.
 
-### P-3 — State the tensor laws at the concrete `RiemannMap` implementations
+### P-3 — State the tensor laws at the concrete `RiemannMap` implementations — **EXECUTED** (see D10)
 **What:** where the types actually carry algebra — `deep_causality_topology`
 (`CurvatureTensor`, `hkt_curvature.rs`) and `deep_causality_physics` (`gr_ops*.rs`) — state
-and test: antisymmetry `R(u,v)w = -R(v,u)w`, linearity in each slot, and (where the concrete
-representation supports it) the first Bianchi identity `R(u,v)w + R(v,w)u + R(w,u)v = 0`
-(do Carmo Ch. 4). These become Topology/Physics-layer THEOREM_MAP entries when the
-formalization program reaches those crates (natural home: a future
-`lean/DeepCausalityFormal/Topology/`).
-**Why not now:** it is the first work item of the *next* formalization layer, not a haft fix;
-doing it properly needs the topology crate's carrier semantics in view.
-**Effort:** ~1–2 days including Lean models; recommend scheduling with the topology-layer
-formalization rather than as a standalone patch.
+and test antisymmetry `R(u,v)w = -R(v,u)w`, linearity in each slot, and the first Bianchi
+identity `R(u,v)w + R(v,w)u + R(w,u)v = 0` (do Carmo Ch. 4).
+**Outcome:** done. The laws are proved in `lean/DeepCausalityFormal/Topology/RiemannCurvature.lean`
+for the canonical constant-curvature operator `R(u,v)w = g(v,w)·u − g(u,w)·v` (antisymmetry, first
+Bianchi identity, linearity in `w`), each with its `g`-symmetry/bilinearity hypothesis carrying its
+law; the Rust witness `deep_causality_topology/tests/types/curvature_tensor/curvature_tensor_law_tests.rs`
+checks the same statements on the concrete `CurvatureTensor` via `contract` and
+`check_bianchi_identity`. This opened the Topology layer of `THEOREM_MAP.md` (ids
+`topology.curvature.*`). Physics-side (`gr_ops`) Bianchi checks on computed Schwarzschild curvature
+remain a natural follow-up within that layer.
 
 ### Explicitly not proposed
 - **D2's hierarchy** (`Monad: Functor + Pure`) stays — justified by the constraint system,

@@ -24,7 +24,7 @@ laws hold — proved below — so the Rust `Arrow` is a strong category as claim
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/algebra/formalization_law_tests.rs`.
+Rust witness: `deep_causality_haft/tests/formalization_lean/arrow_tests.rs`.
 -/
 
 namespace DeepCausalityFormal.Haft.Arrow
@@ -49,7 +49,14 @@ def second (f : A → B) : C × A → C × B := fun p => (p.1, f p.2)
 /-- `Split::run` — the monoidal product `***`. -/
 def split (f : A → B) (g : C → D) : A × C → B × D := fun p => (f p.1, g p.2)
 
-/-- `Fanout::run` — `&&&` (input duplicated to both arrows). -/
+/-- `Fanout::run` — `&&&` (input duplicated to both arrows).
+
+    Modelling note: the Rust `Fanout::run` feeds the *cloned* input to `f` and the *original* to
+    `g` (`(self.0.run(input.clone()), self.1.run(input))`, requiring `F::In: Clone`). This proof
+    duplicates the same Lean value `a` to both arrows, so the `&&&` laws below hold under the
+    standard **lawful-`Clone`** assumption `input.clone() = input` — i.e. `Clone` is a pure copy
+    with no observable effect. For a type whose `Clone` is non-lawful, the Rust `&&&` may diverge
+    from what is proved here; such types are outside the modelled fragment. -/
 def fanout (f : A → B) (g : A → C) : A → B × C := fun a => (f a, g a)
 
 -- ------------------------------------------------------------------

@@ -12,9 +12,20 @@ Layered to mirror the Rust crate tiers:
 
 Each theorem is bound to a Rust witness via `lean/THEOREM_MAP.md`. See `lean/README.md`.
 
-This walking skeleton proves exactly two exemplar theorems end-to-end (num add-monoid laws,
-core bind left-identity). The full program is described in
-`openspec/notes/causal-algebra/Formalization.md`.
+Scope (what is proved end-to-end here, each bound to a Rust witness):
+  * `Num`      — the add-monoid laws (associativity, identity).
+  * `Core`     — the causal-monad laws over the single-channel carrier: bind left identity,
+                 bind right identity (unconditional, including errored carriers), associativity,
+                 and the error left-zero.
+  * `Haft`     — the algebraic-layer laws (functor, pure, applicative, monad, comonad, bifunctor,
+                 profunctor, monoidal-merge, parametric-monad, arrow, morphism, endomorphism,
+                 adjunction, foldable, traversable, natural-iso, either, effect-system, io,
+                 signatures) — ~60 theorems.
+  * `Topology` — the curvature laws at the concrete carrier (antisymmetry, first Bianchi identity,
+                 linearity).
+Deviations from accepted category theory are recorded in
+`openspec/notes/causal-algebra/haft-formalization-deviations.md`; the full program and its
+remaining layers are described in `openspec/notes/causal-algebra/Formalization.md`.
 -/
 
 import DeepCausalityFormal.Num.Monoid

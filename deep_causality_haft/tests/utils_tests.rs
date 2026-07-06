@@ -224,13 +224,15 @@ fn test_my_effect_hkt_witness_monad_bind_function_error() {
         error: None,
         warnings: vec!["W1".to_string()],
     };
-    let bound = MyEffectHktWitness::bind(initial, |x| MyCustomEffectType {
-        value: Some(x + 1),
+    let bound = MyEffectHktWitness::bind(initial, |_| MyCustomEffectType {
+        value: None::<i32>,
         error: Some("E2".to_string()),
         warnings: vec!["W2".to_string()],
     });
-    // The continuation ran (input had no error) and itself produced an error carrier.
-    assert_eq!(bound.value, Some(6));
+    // The continuation ran (input had no error) and itself produced a *well-formed* error
+    // carrier: the value is absent when the error is present (the documented invariant
+    // `error.is_some() ⇒ value.is_none()`). The combined warnings prove the continuation ran.
+    assert_eq!(bound.value, None);
     assert_eq!(bound.error, Some("E2".to_string()));
     assert_eq!(bound.warnings, vec!["W1".to_string(), "W2".to_string()]);
 }
@@ -536,13 +538,15 @@ fn test_my_effect_hkt_witness4_monad_bind_function_error() {
         f2: vec!["L1".to_string()],
         f3: vec![10],
     };
-    let bound = MyEffectHktWitness4::bind(initial, |x| MyCustomEffectType4 {
-        value: Some(x + 1),
+    let bound = MyEffectHktWitness4::bind(initial, |_| MyCustomEffectType4 {
+        value: None::<i32>,
         f1: Some("E2".to_string()),
         f2: vec!["L2".to_string()],
         f3: vec![20],
     });
-    assert_eq!(bound.value, Some(6));
+    // The continuation ran and produced a well-formed error carrier (value absent when the
+    // error is present); the combined f2/f3 accumulators prove it ran.
+    assert_eq!(bound.value, None);
     assert_eq!(bound.f1, Some("E2".to_string()));
     assert_eq!(bound.f2, vec!["L1".to_string(), "L2".to_string()]);
     assert_eq!(bound.f3, vec![10, 20]);
@@ -867,14 +871,16 @@ fn test_my_effect_hkt_witness5_monad_bind_function_error() {
         f3: vec![10],
         f4: vec!["T1".to_string()],
     };
-    let bound = MyEffectHktWitness5::bind(initial, |x| MyCustomEffectType5 {
-        value: Some(x + 1),
+    let bound = MyEffectHktWitness5::bind(initial, |_| MyCustomEffectType5 {
+        value: None::<i32>,
         f1: Some("E2".to_string()),
         f2: vec!["L2".to_string()],
         f3: vec![20],
         f4: vec!["T2".to_string()],
     });
-    assert_eq!(bound.value, Some(6));
+    // The continuation ran and produced a well-formed error carrier (value absent when the
+    // error is present); the combined f2/f3/f4 accumulators prove it ran.
+    assert_eq!(bound.value, None);
     assert_eq!(bound.f1, Some("E2".to_string()));
     assert_eq!(bound.f2, vec!["L1".to_string(), "L2".to_string()]);
     assert_eq!(bound.f3, vec![10, 20]);

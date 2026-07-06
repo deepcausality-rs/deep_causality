@@ -20,7 +20,7 @@ in the docstring means formally).
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/algebra/formalization_law_tests.rs`.
+Rust witness: `deep_causality_haft/tests/formalization_lean/bifunctor_tests.rs`.
 -/
 
 namespace DeepCausalityFormal.Haft.Bifunctor

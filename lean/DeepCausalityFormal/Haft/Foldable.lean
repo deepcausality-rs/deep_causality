@@ -19,7 +19,7 @@ recommendation is to drop it or define the missing operations. (Law 2 is real an
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/algebra/formalization_law_tests.rs`.
+Rust witness: `deep_causality_haft/tests/formalization_lean/foldable_tests.rs`.
 -/
 
 namespace DeepCausalityFormal.Haft.Foldable

@@ -27,7 +27,7 @@ both `M` and `N`; tracked in THEOREM_MAP's deferred section).
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/algebra/formalization_law_tests.rs`.
+Rust witness: `deep_causality_haft/tests/formalization_lean/traversable_tests.rs`.
 -/
 
 namespace DeepCausalityFormal.Haft.Traversable
