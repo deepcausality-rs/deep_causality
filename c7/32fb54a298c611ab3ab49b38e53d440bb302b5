@@ -1,0 +1,20 @@
+README.md
+  s_49a3a205df45af::t_7dd4c41e123451 396-397
+  s_49a3a205df45af::t_bb62201aafe606 50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c732fb54a298c611ab3ab49b38e53d440bb302b5",
+  "prompts": {},
+  "sessions": {
+    "s_49a3a205df45af": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "78b57f06-ac64-4fb0-95cc-bfd4b3d7931b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
