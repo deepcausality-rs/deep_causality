@@ -30,8 +30,6 @@ impl<P, Q> Arrow for KleisliCompose<P, Q>
 where
     P: Arrow,
     P::Out: CausalFlowOut,
-    <P::Out as CausalFlowOut>::State: Clone,
-    <P::Out as CausalFlowOut>::Context: Clone,
     Q: Arrow<In = <P::Out as CausalFlowOut>::Value>,
     Q::Out: CausalFlowOut<
             State = <P::Out as CausalFlowOut>::State,

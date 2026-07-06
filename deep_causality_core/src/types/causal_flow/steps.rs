@@ -17,16 +17,51 @@ use crate::{
 // through the carrier — they never clone them — so they impose no `Clone` bound on either. The loop
 // and branch combinators do not call `bind` and likewise carry no such bound.
 impl<Value, State, Context> CausalFlow<Value, State, Context> {
-    /// Full monadic step: the closure receives the unwrapped value and returns the next flow.
-    /// Effect-returning stages adapt with [`From`] / `.into()`. Short-circuits on error / no value.
+    /// Full monadic (Kleisli) step: run the continuation on the carried value and sequence its
+    /// result. This is the lawful Kleisli bind over the causal monad — it lowers to the state-
+    /// threading [`bind`](crate::CausalEffectPropagationProcess::bind), so the **state, context,
+    /// and log** channels thread through (the upstream state/context are preserved across a value
+    /// step) and an upstream error short-circuits the continuation (left zero).
+    ///
+    /// A value-less carrier short-circuits *lawfully*, mirroring [`map`](Self::map) and the Maybe
+    /// monad: `None` and `ContextualLink` pass through unchanged (the continuation is NOT run and
+    /// no error is manufactured), which is what makes right identity `f >=> value = f` hold. The
+    /// `RelayTo` / `Map` dispatch variants carry a `PropagatingEffect<Value>` a value-level step
+    /// cannot retype to `U`, so they surface a `ValueNotAvailable` error rather than being dropped.
+    /// Effect-returning stages adapt with [`From`] / `.into()`.
     pub fn and_then<U, F>(self, f: F) -> CausalFlow<U, State, Context>
     where
         F: FnOnce(Value) -> CausalFlow<U, State, Context>,
     {
-        let inner = self.inner.bind_or_error(
-            |v, _state, _context| f(v).inner,
-            "and_then received no value",
-        );
+        let inner = self.inner.bind(|ev, state, context| match ev {
+            EffectValue::Value(v) => {
+                // Run the continuation; thread the upstream state/context (a value step does not
+                // re-derive them), keeping the continuation's outcome and logs. `bind` prepends
+                // the upstream logs.
+                let next = f(v).inner;
+                CausalEffectPropagationProcess::new(next.outcome, state, context, next.logs)
+            }
+            // Value-less carriers short-circuit lawfully: continuation not run, channel preserved.
+            EffectValue::None => CausalEffectPropagationProcess::new(
+                Ok(EffectValue::None),
+                state,
+                context,
+                EffectLog::new(),
+            ),
+            EffectValue::ContextualLink(a, b) => CausalEffectPropagationProcess::new(
+                Ok(EffectValue::ContextualLink(a, b)),
+                state,
+                context,
+                EffectLog::new(),
+            ),
+            // RelayTo / Map cannot be retyped by a value-level step; surface the dropped command.
+            _ => CausalEffectPropagationProcess::new(
+                Err(CausalityError::new(CausalityErrorEnum::ValueNotAvailable)),
+                state,
+                context,
+                EffectLog::new(),
+            ),
+        });
         CausalFlow { inner }
     }
 
