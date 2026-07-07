@@ -1,0 +1,19 @@
+.github/workflows/rust_miri.yml
+  s_20d5509e212cf5::t_1b7693abe96112 64-65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "504664228f62d748fdf03dcd2b35c455fcc535d3",
+  "prompts": {},
+  "sessions": {
+    "s_20d5509e212cf5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4f746af3-d910-4267-b785-b5bb44447a22",
+        "model": "unknown"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
