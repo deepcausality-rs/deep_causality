@@ -1,15 +1,15 @@
 ## 1. Scan & decide
 
-- [ ] 1.1 Enumerate all reconvergent (≥2 in-edges) graphs in `deep_causality/tests` and `examples/`; classify each: multi-fired vs single-fired at run time, stateless vs stateful. Record the affected tests.
-- [ ] 1.2 Confirm the D4 policy against the scan: descriptive `CausalityError` for undeclared multi-fired reconvergence (no silent default). If the scan surfaces a strong reason for a documented default instead, stop and ask.
-- [ ] 1.3 Kernel set is decided (D9: `LinearJoin<R: Scalar>`); confirm whether any stateful multi-parent graph forces a stateful join decision now; record in design.md Open Questions.
+- [x] 1.1 Enumerate all reconvergent (≥2 in-edges) graphs in `deep_causality/tests` and `examples/`; classify each: multi-fired vs single-fired at run time, stateless vs stateful. Record the affected tests. **Done (design.md Blast-radius scan): all existing reconvergent graphs resolve single-fired at runtime; zero multi-fired cases exist → diamond multi-fired test coverage is MISSING and is added in group 5.**
+- [x] 1.2 Confirm the D4 policy against the scan: descriptive `CausalityError` for undeclared multi-fired reconvergence (no silent default). **Confirmed — zero migration cost.**
+- [x] 1.3 Kernel set is decided (D9: `LinearJoin<R: Scalar>`); confirm whether any stateful multi-parent graph forces a stateful join decision now. **No stateful multi-parent graph exists → stateful join kernel deferred; recorded in design.md.**
 
 ## 2. Types: labeled parent surface (additive API)
 
-- [ ] 2.1 `ParentEffects<V>` in `deep_causality/src/types/`: wrapper over `BTreeMap<usize, PropagatingEffect<V>>` (fired parents only, keyed by parent node index), with accessors; export from `lib.rs`.
-- [ ] 2.2 `JoinFn<I, O>` and `ContextualJoinFn<I, O, STATE, CTX>` type aliases following the `CausalFn`/`ContextualCausalFn` fn-pointer pattern; `join_fn` field on `Causaloid` + `new_join*` constructors (plain and with-context) + getters. Existing constructors set `None`; no existing signature changes.
-- [ ] 2.3a Prerequisite (investigated 2026-07-07): add `impl<T: Real> Default for Dual<T> { fn default() -> Self { Self::zero() } }` in `deep_causality_num/src/dual/dual_number/default.rs`, register in the `dual_number` mod, add a test under `tests/dual/dual_number/`. This is the sole missing bound for `Dual<S>` to serve as the graph value `V` (`Clone`/`Debug` derived; `Send`/`Sync`/`'static` auto; `Dual: Scalar` already holds). Without it the differentiability witness (5.4) cannot compile.
-- [ ] 2.3 Kernel per D9: `LinearJoin<R: Scalar> { weights: BTreeMap<usize, R>, bias: R }` config type + shipped `linear_join` fn (`bias + Σ weights[p]·v_p`, ascending key order; command → error, `Pure(None)`/missing weight → no contribution, missing config → error); coefficients via `FromPrimitive`; docstring cites Pearl (2009) and Lorenz (2022). After 2.3a, `Dual<f64>` meets the full engine `V` bound (compile-verified).
+- [x] 2.1 `ParentEffects<V>` in `deep_causality/src/types/`: wrapper over `BTreeMap<usize, PropagatingEffect<V>>` (fired parents only, keyed by parent node index), with accessors; export from `lib.rs`.
+- [x] 2.2 `JoinFn<I, O>` and `ContextualJoinFn<I, O, STATE, CTX>` type aliases following the `CausalFn`/`ContextualCausalFn` fn-pointer pattern; `join_fn` field on `Causaloid` + `new_join*` constructors (plain and with-context) + getters. Existing constructors set `None`; no existing signature changes.
+- [x] 2.3a Prerequisite (investigated 2026-07-07): add `impl<T: Real> Default for Dual<T> { fn default() -> Self { Self::zero() } }` in `deep_causality_num/src/dual/dual_number/default.rs`, register in the `dual_number` mod, add a test under `tests/dual/dual_number/`. This is the sole missing bound for `Dual<S>` to serve as the graph value `V` (`Clone`/`Debug` derived; `Send`/`Sync`/`'static` auto; `Dual: Scalar` already holds). Without it the differentiability witness (5.4) cannot compile.
+- [x] 2.3 Kernel per D9: `LinearJoin<R: Scalar> { weights: BTreeMap<usize, R>, bias: R }` config type + shipped `linear_join` fn (`bias + Σ weights[p]·v_p`, ascending key order; command → error, `Pure(None)`/missing weight → no contribution, missing config → error); coefficients via `FromPrimitive`; docstring cites Pearl (2009) and Lorenz (2022). After 2.3a, `Dual<f64>` meets the full engine `V` bound (compile-verified).
 
 ## 3. Engine: wire-slot evaluation (stateless)
 
@@ -26,7 +26,7 @@
 ## 5. Tests updated to declared-join semantics
 
 - [ ] 5.1 Update the `logic_graph` diamond and every multi-fired graph from 1.1: declare a join mechanism, assert the mechanism-derived result. Confirm single-fired reconvergent graphs pass unchanged.
-- [ ] 5.2 New tests: asymmetric join distinguishes parents; join-of-one identity; undeclared multi-fired error; parent-error short-circuit (canonical order); log canonical-order concat; mid-graph start with out-of-cone parent (no deadlock); relay mid-diamond liveness; all-`Inactive` discard propagation.
+- [ ] 5.2 New tests (the MISSING diamond multi-fired coverage, per scan): **root-start diamond** — `evaluate_subgraph_from_cause(0)` on `build_multi_cause_graph` with a declared join on C(3), asserting the joined result (both A and B fire); asymmetric join distinguishes parents; join-of-one identity; undeclared multi-fired error (root-start diamond, no join → `CausalityError`); parent-error short-circuit (canonical order); log canonical-order concat; mid-graph start with out-of-cone parent (no deadlock, single-fired); relay mid-diamond liveness; all-`Inactive` discard propagation.
 - [ ] 5.4 Kernel tests: `LinearJoin` weighted diamond (`b + w1·x1 + w2·x4`); surgery locality (cut wire / `Inactive` parent drops exactly that term); `Dual<S>` sensitivity (`ε` channel = seeded parent's weight); degenerate-parent policy (command → error; `Pure(None)` and missing weight → no contribution; missing config → error).
 - [ ] 5.3 Determinism test: same diamond model under two node-index assignments agrees modulo relabeling.
 

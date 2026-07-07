@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::AssumptionError;
+use crate::{AssumptionError, ParentEffects};
 use deep_causality_core::{CausalEffect, PropagatingEffect, PropagatingProcess};
 
 // Fn aliases for assumable, assumption, & assumption collection
@@ -66,3 +66,46 @@ pub type ContextualCausalFn<I, O, S, C> =
 /// the caller intact (no defaulting, no discarding).
 pub type StatefulContextualCausalFn<I, O, S, C> =
     fn(CausalEffect<I>, S, Option<C>) -> PropagatingProcess<O, S, C>;
+
+/// The join mechanism at a reconvergence node: reduces the labeled effects of the
+/// parents that fired to the single effect the node consumes as input.
+///
+/// At a fan-in the reasoning engine hands the node its fired parents keyed by parent
+/// node index (a [`ParentEffects`]); this function collapses them to one
+/// `PropagatingEffect<I>` — the node's incoming effect — after which the node is
+/// evaluated normally by its `causal_fn` / `context_causal_fn`. Because the parents
+/// are keyed, any function is admissible (asymmetric mechanisms are the norm), and
+/// determinism comes from the keying, not from any algebraic law on the mechanism.
+///
+/// A join of one fired parent is the identity (the engine passes that parent's effect
+/// through unchanged and never invokes this function), so linear/tree graphs are
+/// unaffected.
+///
+/// # Arguments
+///
+/// * `parents` - The fired parent effects, keyed by parent node index.
+///
+/// # Returns
+///
+/// The single `PropagatingEffect<I>` fed to the node as its incoming effect.
+pub type JoinFn<I> = fn(&ParentEffects<I>) -> PropagatingEffect<I>;
+
+/// A join mechanism that additionally reads static per-node configuration carried on
+/// the causaloid's context channel (mirroring the [`ContextualCausalFn`] config-on-
+/// context pattern).
+///
+/// The kernel joins (e.g. a linear structural-equation combine) need weights/coefficients
+/// that a bare `fn` pointer cannot capture; those ride the causaloid's `context: Option<CTX>`
+/// field and are passed to this function as `Option<&CTX>`. `None` means no context was
+/// configured — a kernel treats that as a configuration error.
+///
+/// # Arguments
+///
+/// * `parents` - The fired parent effects, keyed by parent node index.
+/// * `context` - The causaloid's configuration carried on its context channel.
+///
+/// # Returns
+///
+/// The single `PropagatingEffect<I>` fed to the node as its incoming effect.
+pub type ContextualJoinFn<I, CTX> =
+    fn(&ParentEffects<I>, Option<&CTX>) -> PropagatingEffect<I>;

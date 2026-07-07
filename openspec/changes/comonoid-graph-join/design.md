@@ -67,8 +67,19 @@ The design is therefore a **structure/interpretation split**: the substrate reif
 
 Land before `formalize-main-crate`. Steps: (1) blast-radius scan; (2) `ParentEffects` + Causaloid join surface; (3) wire-slot engine in `graph_reasoning/{mod,stateful}.rs`; (4) kernels (per scan decision); (5) tests updated + liveness/golden/determinism suites; (6) `Core/GraphJoin.lean` + witnesses + `THEOREM_MAP`/`LEAN_CORE` rows; (7) `bazel test //...` green. Rollback = revert engine + additive API (no signature changed, so downstream compiles either way); linear graphs unaffected throughout.
 
+## Blast-radius scan (task 1, completed 2026-07-07)
+
+Reconvergent (≥2 in-edge) graphs fed to the fan-in engine (`evaluate_subgraph_from_cause`):
+
+- `build_multi_cause_graph` (`utils_test/test_utils_graph.rs`): root(0)→{A(1),B(2)}→C(3); C has parents {1,2}. Exercised only via `evaluate_subgraph_from_cause(2)` (start B) — A is not reachable from B, so C is **single-fired** at runtime.
+- `build_multi_layer_cause_graph`: E(5)←{A(1),B(2)}, F(6)←{B(2),C(3)}. Exercised via starts 3 and 2 — each reconvergence node has exactly one reachable parent → **single-fired**.
+- `logic_graph` (`causality_graph_reasoning_tests.rs`): idx2←{idx1,idx4}. Exercised **only** via `evaluate_shortest_path_between_causes` (single path), which never enters the fan-in engine.
+- Examples `rcm`/`dbn`: single linear edges. Stateful tests: all linear 3-node paths or two unconnected nodes.
+
+**Result:** no existing test or example triggers *multi-fired* reconvergence at runtime; every reconvergent structure resolves to a single reachable parent (identity) or uses shortest-path. Breaking blast radius on the existing suite = **zero**; task 3.4 golden-checks this empirically. True multi-fired behaviour is introduced only by the new tests (5.2/5.4), e.g. starting `evaluate_subgraph_from_cause(0)` on `build_multi_cause_graph` with a declared join on C.
+
 ## Open Questions
 
-- Error-vs-default for undeclared multi-fired reconvergence: **decided error (D4)**; flagged reversible if a documented default is preferred after the scan.
+- Error-vs-default for undeclared multi-fired reconvergence: **decided error (D4)** — confirmed against the scan: nothing currently produces undeclared multi-fired at runtime, so the loud-error policy has zero migration cost.
 - Kernel set: **decided (D9)** — `LinearJoin<R: Scalar>` ships with the change as the defined multi-parent kernel and QCM lift target.
-- Does any existing stateful multi-parent graph fire ≥ 2 parents simultaneously (forcing a stateful join decision now)? — settle in the scan.
+- Stateful multi-parent graph: **none exists** (scan). The stateful path (task 4) mirrors wire-slot scheduling and single-fired identity; a stateful ≥2-fired join returns the same descriptive error as the stateless path, and a stateful join *kernel* is deferred until a real stateful diamond exists.

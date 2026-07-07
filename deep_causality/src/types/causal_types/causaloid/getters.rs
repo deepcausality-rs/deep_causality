@@ -29,6 +29,14 @@ where
         self.context_causal_fn.as_ref()
     }
 
+    pub fn join_fn(&self) -> Option<&JoinFn<I>> {
+        self.join_fn.as_ref()
+    }
+
+    pub fn context_join_fn(&self) -> Option<&ContextualJoinFn<I, C>> {
+        self.context_join_fn.as_ref()
+    }
+
     pub fn context(&self) -> Option<&C> {
         self.context.as_ref()
     }

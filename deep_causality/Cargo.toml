@@ -53,6 +53,10 @@ path = "../deep_causality_core"
 version = "0.10"
 default-features = true
 
+[dependencies.deep_causality_num]
+path = "../deep_causality_num"
+version = "0.3"
+
 [dependencies.deep_causality_data_structures]
 path = "../deep_causality_data_structures"
 version = "0.10"

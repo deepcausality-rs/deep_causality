@@ -16,7 +16,7 @@
 use crate::MonadicCausable;
 use crate::{
     AggregateLogic, CausalFn, CausaloidGraph, CausaloidType, ContextualCausalFn,
-    IdentificationValue, NumericalValue,
+    ContextualJoinFn, IdentificationValue, JoinFn, NumericalValue,
 };
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
@@ -78,6 +78,13 @@ where
     coll_threshold_value: Option<NumericalValue>,
     /// An optional context-aware causal function, used when `causal_type` is `Singleton`.
     context_causal_fn: Option<ContextualCausalFn<I, O, STATE, CTX>>,
+    /// An optional fan-in join mechanism, invoked by the reasoning engine when this node
+    /// is a reconvergence point reached by two or more fired parents. Combines the labeled
+    /// parent effects into the single effect this node consumes as input.
+    join_fn: Option<JoinFn<I>>,
+    /// An optional context-configured fan-in join mechanism. Like `join_fn`, but reads its
+    /// static configuration (e.g. linear-combine weights) from this causaloid's `context` field.
+    context_join_fn: Option<ContextualJoinFn<I, CTX>>,
     /// An optional shared context object, used by context-aware causaloids.
     context: Option<CTX>,
     /// An optional collection of child `Causaloid`s, used when `causal_type` is `Collection`.
@@ -116,6 +123,8 @@ where
             id,
             causal_type: CausaloidType::Singleton,
             causal_fn: Some(causal_fn),
+            join_fn: None,
+            context_join_fn: None,
             context_causal_fn: None,
             context: None,
             coll_aggregate_logic: None,
@@ -151,7 +160,83 @@ where
             id,
             causal_type: CausaloidType::Singleton,
             causal_fn: None,
+            join_fn: None,
+            context_join_fn: None,
             context_causal_fn: Some(context_causal_fn),
+            context: Some(context),
+            coll_aggregate_logic: None,
+            coll_threshold_value: None,
+            causal_coll: None,
+            causal_graph: None,
+            description: description.to_string(),
+            _phantom: PhantomData,
+        }
+    }
+
+    /// Creates a new singleton `Causaloid` that also carries a fan-in **join** mechanism.
+    ///
+    /// When the reasoning engine reaches this node as a reconvergence point with two or
+    /// more fired parents, it invokes `join_fn` on the labeled parent effects to produce
+    /// the single effect this node consumes, then evaluates `causal_fn` as usual. With a
+    /// single fired parent the join is skipped (identity). The join needs no configuration;
+    /// for a configured kernel (e.g. a linear combine) use
+    /// [`new_with_context_join`](Self::new_with_context_join).
+    ///
+    /// # Arguments
+    /// * `id` - A unique identifier for the causaloid.
+    /// * `causal_fn` - The node's own causal logic, applied after the join.
+    /// * `join_fn` - The fan-in mechanism combining fired parents into this node's input.
+    /// * `description` - A human-readable description of the causaloid.
+    pub fn new_join(
+        id: IdentificationValue,
+        causal_fn: CausalFn<I, O>,
+        join_fn: JoinFn<I>,
+        description: &str,
+    ) -> Self {
+        Causaloid {
+            id,
+            causal_type: CausaloidType::Singleton,
+            causal_fn: Some(causal_fn),
+            join_fn: Some(join_fn),
+            context_join_fn: None,
+            context_causal_fn: None,
+            context: None,
+            coll_aggregate_logic: None,
+            coll_threshold_value: None,
+            causal_coll: None,
+            causal_graph: None,
+            description: description.to_string(),
+            _phantom: PhantomData,
+        }
+    }
+
+    /// Creates a new singleton `Causaloid` with a **configured** fan-in join mechanism.
+    ///
+    /// The join reads its static configuration (e.g. per-parent weights) from the
+    /// `context` carried here, mirroring [`new_with_context`](Self::new_with_context).
+    /// At a multi-fired reconvergence the engine invokes `context_join_fn` with the
+    /// labeled parents and this context, then evaluates `causal_fn` on the result.
+    ///
+    /// # Arguments
+    /// * `id` - A unique identifier for the causaloid.
+    /// * `causal_fn` - The node's own causal logic, applied after the join.
+    /// * `context_join_fn` - The configured fan-in mechanism.
+    /// * `context` - The join configuration carried on this node's context channel.
+    /// * `description` - A human-readable description of the causaloid.
+    pub fn new_with_context_join(
+        id: IdentificationValue,
+        causal_fn: CausalFn<I, O>,
+        context_join_fn: ContextualJoinFn<I, CTX>,
+        context: CTX,
+        description: &str,
+    ) -> Self {
+        Causaloid {
+            id,
+            causal_type: CausaloidType::Singleton,
+            causal_fn: Some(causal_fn),
+            join_fn: None,
+            context_join_fn: Some(context_join_fn),
+            context_causal_fn: None,
             context: Some(context),
             coll_aggregate_logic: None,
             coll_threshold_value: None,
@@ -209,6 +294,8 @@ where
             id,
             causal_type: CausaloidType::Collection,
             causal_fn: None,
+            join_fn: None,
+            context_join_fn: None,
             context_causal_fn: None,
             context: None,
             coll_aggregate_logic: Some(aggregate_logic),
@@ -261,6 +348,8 @@ where
             id,
             causal_type: CausaloidType::Collection,
             causal_fn: None,
+            join_fn: None,
+            context_join_fn: None,
             coll_aggregate_logic: Some(aggregate_logic),
             coll_threshold_value: Some(threshold_value),
             causal_coll: Some(causal_coll),
@@ -295,6 +384,8 @@ where
             id,
             causal_type: CausaloidType::Graph,
             causal_fn: None,
+            join_fn: None,
+            context_join_fn: None,
             causal_coll: None,
             coll_aggregate_logic: None,
             coll_threshold_value: None,
@@ -332,6 +423,8 @@ where
             id,
             causal_type: CausaloidType::Graph,
             causal_fn: None,
+            join_fn: None,
+            context_join_fn: None,
             causal_coll: None,
             coll_aggregate_logic: None,
             coll_threshold_value: None,
@@ -356,6 +449,8 @@ where
             id: self.id,
             causal_type: self.causal_type,
             causal_fn: self.causal_fn,
+            join_fn: self.join_fn,
+            context_join_fn: self.context_join_fn,
             coll_aggregate_logic: self.coll_aggregate_logic,
             coll_threshold_value: self.coll_threshold_value,
             context_causal_fn: self.context_causal_fn,
