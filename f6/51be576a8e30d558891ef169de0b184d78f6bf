@@ -1,0 +1,19 @@
+.github/workflows/rust_release_plz.yml
+  s_8dc679626b1a53::t_57fc71a709fba3 33-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f651be576a8e30d558891ef169de0b184d78f6bf",
+  "prompts": {},
+  "sessions": {
+    "s_8dc679626b1a53": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3a37f5cd-e14c-4d3f-8284-bf7824827dbc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
