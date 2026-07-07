@@ -1,0 +1,64 @@
+deep_causality_core/tests/formalization_lean/consistency_tests.rs
+  s_cefbd789296ae8::t_40758ee3e74e3c 10-14
+  s_cefbd789296ae8::t_7f91a48dc15233 75-103
+examples/causal_uncertain_examples/README.md
+  s_cefbd789296ae8::t_3ebad82a215591 25
+deep_causality/src/types/causal_types/causaloid/causable_stateful.rs
+  s_cefbd789296ae8::t_1d37e28a0b2c71 193-194
+  s_cefbd789296ae8::t_9d5ed8664fb9a0 55-59
+deep_causality_core/tests/formalization_lean/causal_flow_tests.rs
+  s_cefbd789296ae8::t_d26a8c0e05be55 34,36-42
+openspec/notes/causal-algebra/core-formalization-deviations.md
+  s_cefbd789296ae8::t_f3db24c9ef95b8 48-50,53-57,61,65,69,71
+lean/DeepCausalityFormal/Core/Consistency.lean
+  s_cefbd789296ae8::t_ca1acfed4c3a16 5,9-27,38-51,53-54,56-57,59-61,64,66-68,75-80,82-85
+  s_cefbd789296ae8::t_a5672c368bdaf5 81,86
+deep_causality_core/src/types/causal_flow/steps.rs
+  s_cefbd789296ae8::t_fa67a2c89ac3c4 95-101,103-105,111-112
+deep_causality_core/tests/types/causal_flow/branch_tests.rs
+  s_cefbd789296ae8::t_759ebd997a1f11 172
+lean/THEOREM_MAP.md
+  s_cefbd789296ae8::t_7837db76d4ccf8 47
+  s_cefbd789296ae8::t_6f4cb604f0f21f 45
+deep_causality_core/tests/formalization_lean/csv_tests.rs
+  s_cefbd789296ae8::t_a9619f4dc63849 15-31,38
+deep_causality_core/src/types/causal_effect/mod.rs
+  s_cefbd789296ae8::t_7c015fcc895062 132-137,139,141
+  s_cefbd789296ae8::t_e57dde62c1669f 156-159,161,164
+deep_causality_core/src/types/causal_effect_propagation_process/mod.rs
+  s_cefbd789296ae8::t_030a8fa9563b66 5
+  s_cefbd789296ae8::t_d7a41380dc5f1d 26-29
+  s_cefbd789296ae8::t_5114d30bbbacea 227-238,249-250
+deep_causality/src/traits/causable_graph/graph_reasoning/mod.rs
+  s_cefbd789296ae8::t_848c0f5afcf97a 163-166,171-172,175
+deep_causality/src/traits/causable_graph/graph_reasoning/stateful.rs
+  s_cefbd789296ae8::t_077cae17e30c49 163-167,172-173,175
+lean/DeepCausalityFormal/Core/CausalFlow.lean
+  s_cefbd789296ae8::t_79724dbb73b4b5 15-22
+lean/DeepCausalityFormal/Core/Csv.lean
+  s_cefbd789296ae8::t_38d4acda0f7972 14-18
+  s_cefbd789296ae8::t_6efd8836dc690c 153-163,169,171,174-178
+lean/DeepCausalityFormal/Core/Alternatable.lean
+  s_cefbd789296ae8::t_898da6018d0464 11-21
+  s_cefbd789296ae8::t_ff68cec8f473b6 112-119
+deep_causality/src/alias/alias_function.rs
+  s_cefbd789296ae8::t_04d2443db3ddbf 28-29,33-35,39
+deep_causality_core/src/types/causal_effect_propagation_process/hkt.rs
+  s_cefbd789296ae8::t_4fd33b06aecca1 44-47,50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "878b6ac6f7d0dd62fdce1a7b94b118e7d5443d69",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
