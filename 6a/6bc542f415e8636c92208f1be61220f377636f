@@ -1,0 +1,78 @@
+deep_causality_num/tests/BUILD.bazel
+  s_81989c6ac315d4::t_067b7d6a42839c 23,25,42,145-175
+deep_causality/tests/BUILD.bazel
+  s_81989c6ac315d4::t_067b7d6a42839c 460-574
+deep_causality_num/tests/iso/witness/group_iso_tests.rs
+  s_81989c6ac315d4::t_8ca2f3ad2d0fe4 7,12
+  s_81989c6ac315d4::t_56c17b268c29f5 11
+deep_causality_num/src/utils_tests/mod.rs
+  s_81989c6ac315d4::t_56c17b268c29f5 6-7
+deep_causality_topology/tests/BUILD.bazel
+  s_81989c6ac315d4::t_067b7d6a42839c 382-450
+deep_causality_num/tests/iso/algebra_iso_tests.rs
+  s_81989c6ac315d4::t_8ca2f3ad2d0fe4 9
+  s_81989c6ac315d4::t_56c17b268c29f5 15
+deep_causality_num/tests/iso/witness/test_support_tests.rs
+  s_81989c6ac315d4::t_d0d9f25938d131 18
+  s_81989c6ac315d4::t_56c17b268c29f5 17
+deep_causality_num/src/utils_tests/utils_iso_witness_tests.rs
+  s_81989c6ac315d4::t_986f30b8e8e91c 1-178
+deep_causality_rand/tests/BUILD.bazel
+  s_81989c6ac315d4::t_067b7d6a42839c 81-112
+deep_causality_fft/tests/BUILD.bazel
+  s_81989c6ac315d4::t_067b7d6a42839c 97-112
+deep_causality_num/tests/iso/witness/division_algebra_iso_tests.rs
+  s_81989c6ac315d4::t_56c17b268c29f5 19
+  s_81989c6ac315d4::t_fd1a10b57b131d 20-22
+deep_causality_num/tests/iso/witness/ring_iso_tests.rs
+  s_81989c6ac315d4::t_56c17b268c29f5 11
+  s_81989c6ac315d4::t_fd1a10b57b131d 12-14
+deep_causality_discovery/tests/BUILD.bazel
+  s_81989c6ac315d4::t_5538d3b0b0a030 229
+  s_81989c6ac315d4::t_067b7d6a42839c 174-187,189-228,230-255
+  s_81989c6ac315d4::t_aca775b5ba53d6 188
+deep_causality_haft/tests/BUILD.bazel
+  s_81989c6ac315d4::t_067b7d6a42839c 128-142
+deep_causality_num/tests/iso/division_algebra_iso_tests.rs
+  s_81989c6ac315d4::t_56c17b268c29f5 16
+  s_81989c6ac315d4::t_8ca2f3ad2d0fe4 9
+deep_causality_num/tests/iso/witness/standard_tests.rs
+  s_81989c6ac315d4::t_56c17b268c29f5 18
+deep_causality_uncertain/tests/BUILD.bazel
+  s_81989c6ac315d4::t_067b7d6a42839c 183-220
+deep_causality_num/tests/iso/witness/iso_tests.rs
+  s_81989c6ac315d4::t_56c17b268c29f5 12
+  s_81989c6ac315d4::t_fd1a10b57b131d 13-15
+deep_causality_num/src/utils_tests/utils_iso_tests.rs
+  s_81989c6ac315d4::t_12fe0c368bb780 1-160,171-308
+  s_81989c6ac315d4::t_bd6c34aad3d0ee 161-170
+deep_causality_num/tests/iso/witness/algebra_iso_tests.rs
+  s_81989c6ac315d4::t_8ca2f3ad2d0fe4 11
+  s_81989c6ac315d4::t_56c17b268c29f5 10
+deep_causality_ethos/tests/BUILD.bazel
+  s_81989c6ac315d4::t_067b7d6a42839c 180-196
+deep_causality_multivector/tests/BUILD.bazel
+  s_81989c6ac315d4::t_067b7d6a42839c 96-114
+deep_causality_num/tests/iso/witness/field_iso_tests.rs
+  s_81989c6ac315d4::t_56c17b268c29f5 10
+  s_81989c6ac315d4::t_8ca2f3ad2d0fe4 11
+deep_causality_num/tests/iso/field_iso_tests.rs
+  s_81989c6ac315d4::t_8ca2f3ad2d0fe4 9
+  s_81989c6ac315d4::t_56c17b268c29f5 16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6a6bc542f415e8636c92208f1be61220f377636f",
+  "prompts": {},
+  "sessions": {
+    "s_81989c6ac315d4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bacebabe-fc1b-4795-8ec4-bd890e96a629",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
