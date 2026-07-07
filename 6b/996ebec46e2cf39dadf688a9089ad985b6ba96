@@ -1,0 +1,62 @@
+deep_causality/Cargo.toml
+  s_81989c6ac315d4::t_dace449fc314eb 56-59
+deep_causality/src/types/causal_types/causaloid/getters.rs
+  s_81989c6ac315d4::t_7dd86ae5fd2d06 32-39
+deep_causality/src/types/causal_types/causaloid/mod.rs
+  s_81989c6ac315d4::t_6fdbe59c4722b0 175-248
+  s_81989c6ac315d4::t_e0a268a03ec100 81-87
+  s_81989c6ac315d4::t_f77fdb7e02d047 452-453
+  s_81989c6ac315d4::t_4270da43eb98c1 19
+  s_81989c6ac315d4::t_c6b3093dbbf1bf 387-388,426-427
+  s_81989c6ac315d4::t_41dc296aa0e3c0 126-127
+  s_81989c6ac315d4::t_b787d775db78c8 163-164
+  s_81989c6ac315d4::t_0adccf474793a7 297-298,351-352
+deep_causality/src/traits/causable_graph/graph_reasoning/mod.rs
+  s_81989c6ac315d4::t_ce208e8e0f41e4 9
+  s_81989c6ac315d4::t_8f4b67a7bfdbed 11
+  s_81989c6ac315d4::t_4d148f520bc8fd 104-112,114,116-120,122-137,140-230,232,234-250,252-259,261-263,269-302,308-310
+deep_causality/src/types/causal_types/mod.rs
+  s_81989c6ac315d4::t_bcd04bf1d4e488 9
+  s_81989c6ac315d4::t_e6c6d0e7b64ea2 10
+openspec/changes/comonoid-graph-join/design.md
+  s_81989c6ac315d4::t_b66569b28e6615 70-80,83,85
+deep_causality/src/types/causal_types/join_kernels/mod.rs
+  s_81989c6ac315d4::t_9706d581ee11ef 1-12
+deep_causality/src/lib.rs
+  s_81989c6ac315d4::t_cefe7020627b00 106
+  s_81989c6ac315d4::t_3f574d9f67e341 105
+deep_causality/src/types/causal_types/join_kernels/linear_join.rs
+  s_81989c6ac315d4::t_1b0647ce499ae1 25
+  s_81989c6ac315d4::t_dcdf90845ae3a5 74
+  s_81989c6ac315d4::t_f556379db198a8 98
+  s_81989c6ac315d4::t_71d8fc0ce88ffb 1-24,26-73,75-97,99-103
+deep_causality/BUILD.bazel
+  s_81989c6ac315d4::t_7cf1f55ee8da3d 23
+openspec/changes/comonoid-graph-join/tasks.md
+  s_81989c6ac315d4::t_3a0f082061935a 3-5
+  s_81989c6ac315d4::t_13f7bf9162d5e1 9-12
+  s_81989c6ac315d4::t_e3f97360a3d04b 29
+deep_causality/src/alias/alias_function.rs
+  s_81989c6ac315d4::t_f53bfe7bccfdcb 5
+  s_81989c6ac315d4::t_c62c7020c41f16 69-111
+deep_causality/src/types/causal_types/parent_effects/mod.rs
+  s_81989c6ac315d4::t_a0abe056f0ed54 1-69
+Cargo.lock
+  s_81989c6ac315d4::t_1fe37767a845b5 527
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6b996ebec46e2cf39dadf688a9089ad985b6ba96",
+  "prompts": {},
+  "sessions": {
+    "s_81989c6ac315d4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bacebabe-fc1b-4795-8ec4-bd890e96a629",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
