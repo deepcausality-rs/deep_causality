@@ -25,7 +25,7 @@ The formalization SHALL define `NoInfluence U A D`, `DirectCause`, and the paren
 
 ### Requirement: Quantum Markov condition as factorize-and-commute
 
-The formalization SHALL define `IsMarkov σ G := Factorizes σ G ∧ PairwiseCommute (factors σ G)`, where `Factorizes` is `σ = ∏_i ρ_{A_i | Pa(A_i)}` (identity-padded) and `PairwiseCommute` is `∀ i j, [ρ_i, ρ_j] = 0`. The `n = 2` commutativity SHALL be provided as a derived lemma (from Hermiticity of the product); for `n ≥ 3` commutativity SHALL be an explicit axiom/obligation, since it does not follow from Hermiticity of `σ` when parental sets overlap.
+The formalization SHALL define `IsMarkov σ G := Factorizes σ G ∧ PairwiseCommute (factors σ G)`, where `Factorizes` is `σ = ∏_i ρ_{A_i | Pa(A_i)}` (identity-padded) and `PairwiseCommute` is `∀ i j, [ρ_i, ρ_j] = 0`. The parent sets `Pa(A_i)` SHALL be the same labeled (parent-index-keyed) sets exposed by the `comonoid-graph-join` substrate — one attachment surface for classical evaluation and quantum factorization, with overlapping parent sets expressible because contributions are keyed. `PairwiseCommute` plays for the operator product the role `schedule_invariance` plays for the classical fold: both state that the chosen linearization does not matter. The `n = 2` commutativity SHALL be provided as a derived lemma (from Hermiticity of the product); for `n ≥ 3` commutativity SHALL be an explicit axiom/obligation, since it does not follow from Hermiticity of `σ` when parental sets overlap.
 
 #### Scenario: Two-factor commutativity is derived
 

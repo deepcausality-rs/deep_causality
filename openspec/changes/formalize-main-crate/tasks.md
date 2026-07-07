@@ -14,21 +14,21 @@
 
 ## 3. Graph-reasoning engine (`Core/GraphReasoning.lean`)
 
-- [ ] 3.1 Model the engine as `Free::fold`; define the `jump` algebra (`fold(Suspend(RelayTo(t,k))) = jump(t, fold(k))`); reduce to `Haft/FreeMonad.lean` fold laws.
-- [ ] 3.2 Reference the reconvergence join `∇_G` from the prerequisite `comonoid-graph-join` change (comonoid + order-invariance already proved there); compose the `Free::fold` catamorphism with that join rather than re-deriving it.
+- [ ] 3.1 Model the engine as `Free::fold` over the canonical topological linearization — a sequential, single-hole program whose reconvergent sharing lives in the keyed valuation (let-environment), never in duplicated subterms; define the `jump` algebra (`fold(Suspend(RelayTo(t,k))) = jump(t, fold(k))`); reduce to `Haft/FreeMonad.lean` fold laws.
+- [ ] 3.2 Compose with the prerequisite `comonoid-graph-join` theorems (`unique_valuation`, `schedule_invariance`, disjoint-key union lemmas) rather than re-deriving fan-in; state the copy/discard laws as laws of the classical interpreter only (interpreter-neutral substrate — no substrate-level duplication law a quantum instantiation would violate).
 - [ ] 3.3 Prove local `jump` correctness (state/context/log threading) matching the single-level relay; state the nested-relay-folds-structurally property.
 - [ ] 3.4 Rust witnesses for the fold/jump on the linear+relay fragment; `THEOREM_MAP.md` rows.
 - [ ] 3.5 Confirm `comonoid-graph-join` has landed (engine is comonoid-correct) before finalizing this group; no engine-gap remains to flag.
 
 ## 4. Context hypergraph (`Core/ContextGraph.lean`)
 
-- [ ] 4.1 Model the contextoid hypergraph with parent-set map `Pa` and the hyperedge-threading = `bind` correspondence; encapsulation-equals-flat via `core.causal_monad.assoc`.
+- [ ] 4.1 Model the contextoid hypergraph with parent-set map `Pa` keyed by parent index (the same labeled-wire surface `comonoid-graph-join` exposes) and the hyperedge-threading = `bind` correspondence; encapsulation-equals-flat via `core.causal_monad.assoc`.
 - [ ] 4.2 Model acyclicity as a separable constraint; map the acyclic case to `ultragraph::has_cycle`/`freeze`; show the cyclic case reuses the same definitions.
 - [ ] 4.3 Rust witnesses (parent-set threading; freeze acyclicity gate); `THEOREM_MAP.md` rows.
 
 ## 5. Intervention / do-operator (`Core/Intervention.lean`)
 
-- [ ] 5.1 Define `do(X=x)` as total graph surgery (cut `Pa(X)`, pin output `x`) on the reified hypergraph.
+- [ ] 5.1 Define `do(X=x)` as total graph surgery on the reified hypergraph, built from the `comonoid-graph-join` D10 primitive: delete every in-wire key of `X`, pin `X`'s mechanism to the constant `x`; keep the single-edge cut (`delete (P1, X)`, keep `(P2, X)`) as the expressible finer operation.
 - [ ] 5.2 Prove acyclic surgery stays acyclic (maps to `has_cycle` acceptance at freeze).
 - [ ] 5.3 Define the intervention handler as an alternate `Free::fold` algebra over the `RelayTo` program.
 - [ ] 5.4 Prove intervention commutes with encapsulation (functoriality; via `core.causal_monad.assoc`).

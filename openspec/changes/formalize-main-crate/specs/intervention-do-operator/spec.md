@@ -2,12 +2,17 @@
 
 ### Requirement: do-operator formalized as graph surgery
 
-The formalization SHALL model Pearl's `do(X = x)` as a total surgery on the causal hypergraph: remove the incoming hyperedges to `X` and pin its output to `x` (the JKZ "intervention = endofunctor cutting wires" / Lorenz–Tull "opening a mechanism"). `Core/Intervention.lean` SHALL define the surgery as a total function on the reified graph and SHALL record that, in the acyclic regime, the surgical result's acyclicity is checkable via the `ultragraph::has_cycle` freeze gate. Each theorem MUST carry a `THEOREM_MAP.md` row and a Rust witness, and the file MUST typecheck standalone with bare `lean`.
+The formalization SHALL model Pearl's `do(X = x)` as a total surgery on the causal hypergraph, built from the substrate primitive defined in `comonoid-graph-join` D10: delete every in-wire key of `X` and pin `X`'s mechanism to the constant `x` (the JKZ "intervention = endofunctor cutting wires" / Lorenz–Tull "opening a mechanism"). Because parent contributions are keyed, the finer single-edge cut — delete wire key `(P1, X)` while keeping `(P2, X)` — SHALL be expressible as its own operation. The surgery is one operation on the substrate, respected by both interpreters (truncated factorization under the classical fold; the Lorenz–Tull opening under the deferred QCM fold). `Core/Intervention.lean` SHALL define the surgery as a total function on the reified graph and SHALL record that, in the acyclic regime, the surgical result's acyclicity is checkable via the `ultragraph::has_cycle` freeze gate. Each theorem MUST carry a `THEOREM_MAP.md` row and a Rust witness, and the file MUST typecheck standalone with bare `lean`.
 
 #### Scenario: Intervention cuts incoming edges and pins the output
 
 - **WHEN** `do(X = x)` is applied to a formalized causal graph
 - **THEN** the model yields a graph with `Pa(X) = ∅` and `X` fixed to `x`, and the surgery is total (defined for every node and value)
+
+#### Scenario: Single-edge cut is expressible
+
+- **WHEN** an intervention severs only the influence of parent `P1` on `X`, preserving `P2`
+- **THEN** the model expresses it as deletion of the wire key `(P1, X)`, and the next evaluation of `X` joins over the remaining fired parents
 
 #### Scenario: Acyclic surgery stays acyclic
 

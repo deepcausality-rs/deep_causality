@@ -1,8 +1,8 @@
 ## ADDED Requirements
 
-### Requirement: Reasoning engine formalized as a Free::fold catamorphism
+### Requirement: Reasoning engine formalized as a Free::fold catamorphism with keyed-valuation sharing
 
-The formalization SHALL model the graph-reasoning engine as a catamorphism (`Free::fold`) over the reified `RelayTo` program, with the adaptive-jump semantics given by the recursive equation `fold(Suspend(RelayTo(t, k))) = jump(t, fold(k))`. `Core/GraphReasoning.lean` SHALL reduce engine correctness to (i) the free-monad fold laws already in `Haft/FreeMonad.lean` and (ii) the local correctness of the single `jump` algebra step (thread state, context, logs). Each theorem MUST carry a `THEOREM_MAP.md` row and a Rust witness, and the file MUST typecheck standalone with bare `lean`.
+The formalization SHALL model the graph-reasoning engine as a catamorphism (`Free::fold`) over the canonical topological linearization of the frozen graph — a sequential, single-hole program of the form "run node `nᵢ`'s mechanism against the valuation restricted to `Pa(nᵢ)`, extend the valuation, continue" — with reconvergent sharing carried by the keyed valuation (the let-environment), never by duplicated subterms (a tree-shaped `Free` cannot carry reconvergence: `bind` threads the continuation through every hole). The adaptive-jump semantics is the recursive equation `fold(Suspend(RelayTo(t, k))) = jump(t, fold(k))`. `Core/GraphReasoning.lean` SHALL reduce engine correctness to (i) the free-monad fold laws already in `Haft/FreeMonad.lean`, (ii) the `unique_valuation`/`schedule_invariance` theorems from the prerequisite `comonoid-graph-join` change, and (iii) the local correctness of the single `jump` algebra step (thread state, context, logs). Each theorem MUST carry a `THEOREM_MAP.md` row and a Rust witness, and the file MUST typecheck standalone with bare `lean`.
 
 #### Scenario: Adaptive relay is a fold step
 
@@ -14,16 +14,26 @@ The formalization SHALL model the graph-reasoning engine as a catamorphism (`Fre
 - **WHEN** a nested `RelayTo` program is folded
 - **THEN** the catamorphism resolves it structurally (`CausalEffect::fold`), consistent with the engine inlining a single-level jump and feeding the sub-program as the next node's input
 
-### Requirement: Reconvergence join is a copy/discard comonoid
+#### Scenario: Sharing lives in the environment
 
-The formalization SHALL model multi-node reconvergence `∇_G` as the copy/discard comonoid of a free Markov category / cPROP (Fritz 2020; JKZ 2019/2021), so the join is constrained by the comonoid laws rather than defined ad hoc. `Core/GraphReasoning.lean` SHALL state the comonoid laws the join must satisfy and prove the fold respects them on the branch/reconverge shape.
+- **WHEN** a diamond (branch then reconverge) subgraph is modeled
+- **THEN** the shared ancestor appears once in the linearized program and its output is read from the keyed valuation by each dependent, with no duplicated sub-program
 
-#### Scenario: Join obeys the comonoid laws
+### Requirement: Fan-in composed from the prerequisite; copy/discard scoped to the classical interpreter
 
-- **WHEN** a diamond (branch then reconverge) subgraph is folded
-- **THEN** the join is the comonoid combine and the associativity/commutativity/counit laws it must satisfy are stated and proved in the model
+The formalization SHALL compose the fold with the labeled fan-in delivered by the prerequisite `comonoid-graph-join` change — wire-slot resolution (`Fired`/`Inactive`), per-node join mechanisms over parent-indexed effects, and the proved `unique_valuation` + `schedule_invariance` (command-free) theorems — rather than re-deriving a join. The copy law (every out-wire of `n` carries `σ(n)`) and the discard law (all-`Inactive` parents resolve the node `Inactive`) SHALL be stated as laws of the **classical interpreter's algebra**, not of the substrate, so that the quantum instantiation — where fan-out is commuting access to a shared parent output (`PairwiseCommute`), per the verified `ctx/papers/` sources — folds the same structure without violating any substrate law. No commutativity, associativity, or symmetry obligation SHALL be imposed on join mechanisms by the model.
 
-#### Scenario: Engine join is supplied by the prerequisite change
+#### Scenario: Engine fan-in is supplied by the prerequisite
 
-- **WHEN** the fold's reconvergence join is needed
-- **THEN** it composes the comonoid join delivered by the prerequisite `comonoid-graph-join` change (already implemented and order-invariance-proved), so the formalization describes real engine behaviour rather than an intended-but-unimplemented semantics
+- **WHEN** the fold reaches a node with multiple fired parents
+- **THEN** it consumes the `comonoid-graph-join` labeled join (parent-indexed effects into the node's declared mechanism), and the model cites that change's theorems for determinism, so the formalization describes real engine behaviour
+
+#### Scenario: Copy law is classical-scoped
+
+- **WHEN** the fan-out law is stated in `Core/GraphReasoning.lean`
+- **THEN** it is a theorem about the classical evaluation algebra, and the substrate carries no duplication law — the linearization-invariance role is played by `schedule_invariance` classically and by the `PairwiseCommute` predicate quantumly (same theorem shape, stated in the file as a remark linking the two capabilities)
+
+#### Scenario: Asymmetric mechanisms are admitted by the model
+
+- **WHEN** a join mechanism is an arbitrary non-commutative function of its labeled parents
+- **THEN** the fold's determinism theorems apply unchanged, because they carry no algebraic hypotheses on mechanisms
