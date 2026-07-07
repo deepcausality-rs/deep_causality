@@ -1,0 +1,77 @@
+openspec/specs/num-verdict-algebra/spec.md
+  s_81989c6ac315d4::t_2e1836164de6b1 1-33
+deep_causality_num/src/algebra/bounded_semilattice.rs
+  s_81989c6ac315d4::t_eb0c4bf1d82ce4 1-15
+lean/DeepCausalityFormal.lean
+  s_81989c6ac315d4::t_f15fd00e81a438 32-34
+deep_causality_num/tests/algebra/mod.rs
+  s_81989c6ac315d4::t_ce2c0ee7708e03 30-33
+  s_81989c6ac315d4::t_a30f1fba0592e3 40-41
+lean/THEOREM_MAP.md
+  s_81989c6ac315d4::t_29ad32d99508e9 32-40
+deep_causality_num/src/algebra/mod.rs
+  s_81989c6ac315d4::t_ce2c0ee7708e03 68,70-73,84,88,90
+  s_81989c6ac315d4::t_b78db7858d123f 99
+lean/DeepCausalityFormal/Num/MonoidGeneric.lean
+  s_81989c6ac315d4::t_f954afb12d90ec 1-38
+lean/DeepCausalityFormal/Num/Verdict.lean
+  s_81989c6ac315d4::t_59f43bfe72ed83 1-7,16-21,23-24,27,29-30,33,35-36,39,41-42,45-46
+  s_81989c6ac315d4::t_c83c8a8ebe4ba7 8-15,22,25-26,28,31-32,34,37-38,40,43-44
+deep_causality_num/tests/algebra/verdict_tests.rs
+  s_81989c6ac315d4::t_d45468cfc79d8d 38,41-44,49-50
+  s_81989c6ac315d4::t_ce2c0ee7708e03 25-28,30-33,45-48
+  s_81989c6ac315d4::t_906d60822e4b4e 15-16,21-22,24,34
+  s_81989c6ac315d4::t_a30f1fba0592e3 1-14,17-20,23,29,35-37,39-40,51-53
+deep_causality_num/src/algebra/disjunction.rs
+  s_81989c6ac315d4::t_231d8e69b47da5 1-26
+deep_causality_num/src/algebra/idempotent.rs
+  s_81989c6ac315d4::t_eb0c4bf1d82ce4 1-17
+deep_causality_num/src/algebra/verdict.rs
+  s_81989c6ac315d4::t_eb0c4bf1d82ce4 1-54
+deep_causality_num/src/algebra/prob.rs
+  s_81989c6ac315d4::t_231d8e69b47da5 1-50
+deep_causality_num/src/algebra/count.rs
+  s_81989c6ac315d4::t_231d8e69b47da5 1-26
+deep_causality_num/src/algebra/conjunction.rs
+  s_81989c6ac315d4::t_231d8e69b47da5 1-26
+openspec/specs/num-commutative-semilattice/spec.md
+  s_81989c6ac315d4::t_2e1836164de6b1 1-28
+deep_causality_num/src/lib.rs
+  s_81989c6ac315d4::t_ce2c0ee7708e03 45,49,51,60
+  s_81989c6ac315d4::t_b78db7858d123f 29,31-34
+lean/DeepCausalityFormal/Num/CommutativeMonoid.lean
+  s_81989c6ac315d4::t_0973efdf464d1e 1-7,14-28,30-31,34,36-37,40,42-43,46-47
+  s_81989c6ac315d4::t_9a78e35890b158 8-13,29,32-33,35,38-39,41,44-45
+deep_causality_num/src/algebra/monoid_generic.rs
+  s_81989c6ac315d4::t_9ff9929d93e5ef 1-31
+openspec/specs/num-generic-monoid/spec.md
+  s_81989c6ac315d4::t_2e1836164de6b1 1-28
+deep_causality_num/src/algebra/commutative_monoid.rs
+  s_81989c6ac315d4::t_eb0c4bf1d82ce4 1-17
+deep_causality_num/tests/algebra/commutative_semilattice_tests.rs
+  s_81989c6ac315d4::t_ce2c0ee7708e03 9-11,50-58
+  s_81989c6ac315d4::t_a30f1fba0592e3 1-8,12-49,59-61
+deep_causality_num/tests/algebra/monoid_generic_tests.rs
+  s_81989c6ac315d4::t_a30f1fba0592e3 1-33,38-42,47-60
+  s_81989c6ac315d4::t_ce2c0ee7708e03 34-37,43-46
+openspec/changes/archive/2026-07-07-num-generic-monoid-tower/tasks.md
+  s_81989c6ac315d4::t_93d040ab4966cd 3-5,9-11,15-17,21-23,27-30,34-36
+openspec/changes/archive/2026-07-07-num-generic-monoid-tower/design.md
+  s_81989c6ac315d4::t_e5a95d2eba52ea 44,46-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a043cdf8ac074cbab6b154ed492202edee22f6d1",
+  "prompts": {},
+  "sessions": {
+    "s_81989c6ac315d4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bacebabe-fc1b-4795-8ec4-bd890e96a629",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
