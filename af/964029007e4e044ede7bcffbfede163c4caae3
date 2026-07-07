@@ -1,0 +1,20 @@
+.github/workflows/formalization.yml
+  s_cefbd789296ae8::t_c99c6c7a7b7f8f 4-5,7-10
+  s_cefbd789296ae8::t_4f46e71c75abf8 25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "af964029007e4e044ede7bcffbfede163c4caae3",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
