@@ -1,0 +1,19 @@
+deep_causality_core/tests/iso/effect_process_consistency_tests.rs
+  s_1917bd160a9cdd::t_7746541e8f75cd 103-116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "66e89207b5f3e8e812296cb922be10ca4d24a5ca",
+  "prompts": {},
+  "sessions": {
+    "s_1917bd160a9cdd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4a6666ac-1c73-48df-9c7a-ac93f7f76654",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
