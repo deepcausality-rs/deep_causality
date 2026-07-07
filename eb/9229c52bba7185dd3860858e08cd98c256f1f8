@@ -1,0 +1,22 @@
+deep_causality/src/types/causal_types/causaloid/causable_stateful.rs
+  s_41407eebb4bfb2::t_5e45b5c0265511 55-62,65-70
+  s_41407eebb4bfb2::t_92d5e7a6792d13 18
+deep_causality/tests/types/causal_types/causaloid/causable_stateful_tests.rs
+  s_41407eebb4bfb2::t_1f41514e1e36af 252,263-269
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "eb9229c52bba7185dd3860858e08cd98c256f1f8",
+  "prompts": {},
+  "sessions": {
+    "s_41407eebb4bfb2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2396a365-46b3-4c5c-b2ae-f0293b435e02",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
