@@ -1,0 +1,21 @@
+deep_causality_cfd/tests/solvers/dec/energy_budget_tests.rs
+  s_41407eebb4bfb2::t_02a48469c65dea 79-82,85
+deep_causality_cfd/tests/solvers/qtt/compressible_marcher3d_fitted_tests.rs
+  s_41407eebb4bfb2::t_16f1fd5d0e56e1 185,187-189,192
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "45da464da1d1fe87d4890a59e8dee07e3906b069",
+  "prompts": {},
+  "sessions": {
+    "s_41407eebb4bfb2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2396a365-46b3-4c5c-b2ae-f0293b435e02",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
