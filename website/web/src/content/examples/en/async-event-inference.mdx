@@ -150,17 +150,17 @@ fn handle_inference(
     let input_effect: PropagatingEffect<NumericalValue> = PropagatingEffect::pure(data);
     let res = bc.evaluate(&input_effect);
 
-    if res.is_ok() {
-        let value = res.value.into_value().unwrap_or(false);
-        println!("EventHandler: Inference successful with res: {}", value)
+    if let Some(err) = res.error() {
+        println!("EventHandler: Inference failed with error: {}", err)
     } else {
-        println!("EventHandler: Inference failed with error: {}", res.error.unwrap())
+        let value = res.value().copied().unwrap_or(false);
+        println!("EventHandler: Inference successful with res: {}", value)
     }
     Ok(())
 }
 ```
 
-[`handler.rs:45`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/tokio_example/src/handler.rs#L45). One value in, one effect out. The error case branches on `res.is_ok()` and reaches into `res.error` for the failure reason; the success case pulls the boolean out of `res.value`. No `?` propagation, no async hops, no awaits. The inference is synchronous; the asynchrony is at the runtime boundary, not inside it.
+[`handler.rs:45`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/tokio_example/src/handler.rs#L45). One value in, one effect out. The error case branches on `res.error()` for the failure reason; the success case pulls the boolean out of `res.value()`. No `?` propagation, no async hops, no awaits. The inference is synchronous; the asynchrony is at the runtime boundary, not inside it.
 
 ## The data — `src/utils.rs`
 

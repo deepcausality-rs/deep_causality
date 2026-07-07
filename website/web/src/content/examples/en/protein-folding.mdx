@@ -32,7 +32,6 @@ P(t+Δt) = T · P(t)  +  Σ K(τ) · P(t−τ)
 The example tracks four states: Unfolded, Intermediate 1, Intermediate 2, and Native (Folded). The initial distribution puts 100% of the probability mass at Unfolded. The Markov operator carries some of that mass forward each step; the memory kernels favor forward progression, so the path through I1 and I2 to Native gradually accumulates probability.
 
 ```rust
-use deep_causality_core::EffectValue;
 use deep_causality_physics::{Probability, generalized_master_equation};
 use deep_causality_tensor::CausalTensor;
 
@@ -96,7 +95,7 @@ for t in 1..=15 {
     let effect = generalized_master_equation(
         &state, &history, Some(&markov_operator), &memory_kernels,
     );
-    if let EffectValue::Value(new_state) = effect.value() {
+    if let Some(new_state) = effect.value() {
         // normalize, then update history (sliding window)
         history.remove(0);
         history.push(state.clone());
@@ -104,7 +103,7 @@ for t in 1..=15 {
 }
 ```
 
-The function returns a `PropagatingEffect`. Pattern-matching on `EffectValue::Value` gives you the next state vector; an error variant short-circuits without the surrounding loop having to know.
+The function returns a `PropagatingEffect`. Reading the value with `effect.value()` gives you the next state vector; an error short-circuits without the surrounding loop having to know.
 
 ## Run it
 

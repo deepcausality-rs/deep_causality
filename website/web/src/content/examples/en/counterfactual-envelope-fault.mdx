@@ -32,20 +32,20 @@ fn run_factual(reading: SensorReading, cfg: AircraftConfig) -> FlightProcess<Ver
 fn run_counterfactual(reading: SensorReading, cfg: AircraftConfig) -> FlightProcess<Verdict> {
     let stall_kn = cfg.stall_kn;
     CausalFlow::from(build_chain(reading, cfg))
-        .intervene(stall_kn - 25.0)
+        .alternate_value(stall_kn - 25.0)
         .bind(airspeed_margin)
         .bind(envelope_eval)
         .into_process()
 }
 ```
 
-[`main.rs:65`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_intervention_examples/counterfactual_envelope_fault/main.rs#L65). Two functions, identical except for the single `.intervene(stall_kn - 25.0)` call between Stage 1 (sensor collection inside `build_chain`) and Stage 2 (the margin calculation). The intervention replaces the value coming out of the sensor collection with an airspeed 25 knots below the aircraft's published stall speed. From there, the margin calculation and the envelope graph evaluate against this injected value as if it were the natural output of Stage 1.
+[`main.rs:65`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_intervention_examples/counterfactual_envelope_fault/main.rs#L65). Two functions, identical except for the single `.alternate_value(stall_kn - 25.0)` call between Stage 1 (sensor collection inside `build_chain`) and Stage 2 (the margin calculation). The substitution replaces the value coming out of the sensor collection with an airspeed 25 knots below the aircraft's published stall speed. From there, the margin calculation and the envelope graph evaluate against this injected value as if it were the natural output of Stage 1.
 
-## What `intervene` preserves that input substitution does not
+## What `alternate_value` preserves that input substitution does not
 
 A naive way to "inject a fault" is to feed a different `SensorReading` into the chain. That is the trap. A `PropagatingProcess` carries three things alongside the value: state, context, and an `EffectLog`. Restarting the chain with a different input produces a different history; the `FlightState` accumulated by Stage 1 reflects the alternate sensor world; the log records the alternate run as if it had always happened.
 
-`.intervene(value)` swaps only the value channel. The state Stage 1 produced from the nominal sensor reading is preserved. The context (the `AircraftConfig` describing the actual aircraft) is preserved. The log gains one new entry: `!!Intervention!!: <prior airspeed> replaced with <stall_kn - 25.0>`. The envelope graph then runs against the factual aircraft and its factual state with one counterfactual quantity, which is the question operational what-if analysis actually asks.
+`.alternate_value(value)` swaps only the value channel. The state Stage 1 produced from the nominal sensor reading is preserved. The context (the `AircraftConfig` describing the actual aircraft) is preserved. The log gains one new entry: `!!ValueAlternation!!: <prior airspeed> replaced with <stall_kn - 25.0>`. The envelope graph then runs against the factual aircraft and its factual state with one counterfactual quantity, which is the question operational what-if analysis actually asks.
 
 ## The verdict difference
 

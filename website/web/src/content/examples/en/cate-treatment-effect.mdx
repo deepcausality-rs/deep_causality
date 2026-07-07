@@ -27,7 +27,7 @@ CATE(S) = E[ Y(do(T=1)) − Y(do(T=0)) | X ∈ S ]
 
 Two potential outcomes per patient, one under each value of the treatment indicator, taken from the same data-generating process. The difference between them is the patient's individual treatment effect. Average over the subgroup, and you get the conditional average. That is the whole formula.
 
-Most code that estimates CATE buries it under propensity scoring, two-model architectures, or doubly-robust estimators. Those exist to handle observational data where the treatment is not randomly assigned. The example here strips all of that away. It runs a single causal chain twice, once with `intervene(1.0)` and once with `intervene(0.0)`, and reads the difference.
+Most code that estimates CATE buries it under propensity scoring, two-model architectures, or doubly-robust estimators. Those exist to handle observational data where the treatment is not randomly assigned. The example here strips all of that away. It runs a single causal chain twice, once with `alternate_value(1.0)` and once with `alternate_value(0.0)`, and reads the difference.
 
 ## The chain run twice
 
@@ -39,15 +39,15 @@ print_cate_summary(&all, &over_65, &under_65);
 
 [`main.rs:43`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_intervention_examples/counterfactual_treatment_effect/main.rs#L43). The synthetic cohort holds patients with age, baseline blood pressure, and a covariate set. Inside `evaluate_and_print_cohort`, the same `PropagatingEffect` chain runs for every patient under both interventions. The age strata over and under 65 are computed once at the end from the per-patient deltas.
 
-The pattern matters because there is no second model. The intervention on `T=1` and the intervention on `T=0` go through identical bind steps. Any difference in the outcome can only be attributed to the value that was intervened, because everything else in the chain is held constant by construction. The factual data-generating process and the counterfactual one are the same function; the inputs differ by exactly one value.
+The pattern matters because there is no second model. The intervention on `T=1` and the intervention on `T=0` go through identical bind steps. Any difference in the outcome can only be attributed to the value that was substituted, because everything else in the chain is held constant by construction. The factual data-generating process and the counterfactual one are the same function; the inputs differ by exactly one value.
 
-## What intervene adds over bind
+## What `alternate_value` adds over bind
 
 You could write two `bind` chains, one for each arm. Two things go wrong with that.
 
-The first is bookkeeping. Two chains means two implementations; a future change to the mechanism has to be applied to both, and a divergence is a silent bug. The `.intervene` call collapses this to one definition that runs twice.
+The first is bookkeeping. Two chains means two implementations; a future change to the mechanism has to be applied to both, and a divergence is a silent bug. The `.alternate_value` call collapses this to one definition that runs twice.
 
-The second is the audit trail. Every `intervene` call appends an entry to the chain's `EffectLog`: which value was replaced, with what, at which step. The example's `print_audit_trail(&cohort[0])` call walks the log for the first patient and prints both worlds, with the intervention sites visible. A regulator reviewing the analysis can see the substitution that produced each counterfactual outcome.
+The second is the audit trail. Every `alternate_value` call appends a `!!ValueAlternation!!` entry to the chain's `EffectLog`: which value was replaced, with what, at which step. The example's `print_audit_trail(&cohort[0])` call walks the log for the first patient and prints both worlds, with the substitution sites visible. A regulator reviewing the analysis can see the substitution that produced each counterfactual outcome.
 
 ## Heterogeneity emerges from the same chain
 
@@ -67,4 +67,4 @@ The run prints each patient's two interventional outcomes, the per-patient ITE, 
 
 ## Why this is the example to read first
 
-CATE is the simplest estimand for which `intervene` does real work. The Pearl ladder example demonstrates that the operation exists; this example demonstrates that it produces the estimand researchers already care about, with no extra machinery. Once this shape is clear, the four other counterfactual examples in the crate are variations on it: a stateful process instead of a stateless effect, a connectome instead of a treatment indicator, a cascade failure instead of a single intervention site. The calling convention does not change.
+CATE is the simplest estimand for which `alternate_value` does real work. The Pearl ladder example demonstrates that the operation exists; this example demonstrates that it produces the estimand researchers already care about, with no extra machinery. Once this shape is clear, the four other counterfactual examples in the crate are variations on it: a stateful process instead of a stateless effect, a connectome instead of a treatment indicator, a cascade failure instead of a single substitution site. The calling convention does not change.

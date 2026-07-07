@@ -27,7 +27,7 @@ Pearl named three rungs:
 2. **Intervention (Doing).** What happens if I *force* a value mid-process? A causal effect.
 3. **Counterfactual (Imagining).** Given that I observed a specific history, what would have happened under a different choice?
 
-The implementation difference between rungs 2 and 3 turns out to be exactly one thing: *where* in the chain you call `intervene`. Mid-chain is intervention. At the start is counterfactual.
+The implementation difference between rungs 2 and 3 turns out to be exactly one thing: *where* in the chain you call `alternate_value`. Mid-chain is intervention. At the start is counterfactual.
 
 ## The two underlying functions (`src/main.rs:194-228`)
 
@@ -61,11 +61,11 @@ fn causal_chain(nicotine: f64) -> f64 {
             PropagatingEffect::pure(tar_to_cancer(t))
         });
 
-    result.value.into_value().unwrap_or_default()
+    result.into_value().unwrap_or_default()
 }
 ```
 
-[`main.rs:194`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L194). `PropagatingEffect::pure` lifts the input into the monad. Two `bind` calls thread the value through the two mechanism functions. The result is read off the final `value` field. This shape, `pure(input).bind(step1).bind(step2)`, is the entire DeepCausality calling convention for stateless causal computation.
+[`main.rs:194`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L194). `PropagatingEffect::pure` lifts the input into the monad. Two `bind` calls thread the value through the two mechanism functions. The result is read off the final effect with `into_value()`. This shape, `pure(input).bind(step1).bind(step2)`, is the entire DeepCausality calling convention for stateless causal computation.
 
 ## Rung 1: association (`src/main.rs:47-68`)
 
@@ -91,26 +91,26 @@ let after = PropagatingEffect::pure(0.8_f64)
         let n = nic.into_value().unwrap_or_default();
         PropagatingEffect::pure(nicotine_to_tar(n))   // would produce tar = 0.8
     })
-    .intervene(0.1)   // ← INTERVENTION: force tar to 0.1
+    .alternate_value(0.1) // ← INTERVENTION: force tar to 0.1
     .bind(|tar, _, _| {
         let t = tar.into_value().unwrap_or_default();
         PropagatingEffect::pure(tar_to_cancer(t))
     });
 ```
 
-[`main.rs:95`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L95). The chain is identical to rung 1 up to `nicotine_to_tar`. After that step, `.intervene(0.1)` replaces the propagating value with the constant `0.1`. The next `bind` operates on the substituted value as if it were the natural output.
+[`main.rs:95`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L95). The chain is identical to rung 1 up to `nicotine_to_tar`. After that step, `.alternate_value(0.1)` replaces the propagating value with the constant `0.1`. The next `bind` operates on the substituted value as if it were the natural output.
 
-In Pearl's notation this is `do(Tar := 0.1)`. The intervention says: *forget what the upstream computation produced; pretend tar was 0.1*. Downstream behaviour is whatever the rest of the chain computes from that injected value.
+For this chain that value substitution realizes Pearl's `do(Tar := 0.1)`: *forget what the upstream computation produced; pretend tar was 0.1*. Downstream behaviour is whatever the rest of the chain computes from that injected value. (`alternate_value` is the value-level substitution; the full `do()` operator — graph surgery and variable isolation over the causal hypergraph — lives at the `deep_causality` graph layer, and this is its scalar form on a single chain.)
 
-The output for this run: nicotine `0.8` → tar would have been `0.8` → intervened to `0.1` → cancer risk `0.15`. The intervention drops cancer risk from 85% to 15% without changing the smoker's nicotine level at all. The chain is telling you that the *tar* is the proximate cause, not the nicotine itself; remove the tar and the cancer risk follows.
+The output for this run: nicotine `0.8` → tar would have been `0.8` → substituted to `0.1` → cancer risk `0.15`. The substitution drops cancer risk from 85% to 15% without changing the smoker's nicotine level at all. The chain is telling you that the *tar* is the proximate cause, not the nicotine itself; remove the tar and the cancer risk follows.
 
-The `intervene` method comes from the `Intervenable` trait in [`deep_causality_core`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core). Importing the trait is what makes the call work: [`main.rs:15`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L15) reads `use deep_causality_core::{Intervenable, PropagatingEffect};`.
+The `alternate_value` method comes from the `AlternatableValue` trait in [`deep_causality_core`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core). Importing the trait is what makes the call work: [`main.rs:15`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L15) reads `use deep_causality_core::{AlternatableValue, PropagatingEffect};`.
 
 ## Rung 3: counterfactual (`src/main.rs:136-187`)
 
 ```rust
 let counterfactual = PropagatingEffect::pure(0.8_f64)
-    .intervene(0.0)    // ← Counterfactual: "Had they never smoked"
+    .alternate_value(0.0) // ← Counterfactual: "Had they never smoked"
     .bind(|nic, _, _| {
         let n = nic.into_value().unwrap_or_default();
         PropagatingEffect::pure(nicotine_to_tar(n))
@@ -121,11 +121,11 @@ let counterfactual = PropagatingEffect::pure(0.8_f64)
     });
 ```
 
-[`main.rs:154`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L154). Same syntax as rung 2. The only difference: `intervene(0.0)` runs *before* the first `bind`. The counterfactual question is "what if the patient had never smoked?", and "never smoked" is encoded as substituting zero for the original nicotine value at the very start of the chain.
+[`main.rs:154`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/starter_example/src/main.rs#L154). Same syntax as rung 2. The only difference: `alternate_value(0.0)` runs *before* the first `bind`. The counterfactual question is "what if the patient had never smoked?", and "never smoked" is encoded as substituting zero for the original nicotine value at the very start of the chain.
 
 The factual run uses `nicotine = 0.8` and reaches a cancer risk of 85%. The counterfactual run substitutes `nicotine := 0`, walks the same mechanism, and reaches a cancer risk of 15%. The 70-percentage-point difference is what the example calls the **Individual Causal Effect (ICE)**.
 
-Position matters. Intervene early and you change the input the chain reasons from. Intervene mid-chain and you change the intermediate state. Intervene late and you change the output before it reaches consumers. The library does not distinguish "intervention" from "counterfactual" at the type level; the position of the call is the only difference, and that mirrors Pearl's formal treatment.
+Position matters. Substitute at the start and you change the input the chain reasons from. Substitute mid-chain and you change the intermediate state. Substitute late and you change the output before it reaches consumers. The library does not distinguish "intervention" from "counterfactual" at the type level; the position of the `alternate_value` call is the only difference, and that mirrors Pearl's formal treatment.
 
 ## The full output of the example
 
@@ -166,8 +166,8 @@ The chain has two stages. Add a third. A real model has more than three; a clini
 
 The mechanism functions are pure. They take a `f64` and return a `f64`. Replace them with regression fits, with conditional probability tables, with calls into a learned model. The chain consumes the return value, not the implementation.
 
-`intervene` is one of several methods on the `Intervenable` trait. A real counterfactual analysis often replaces a *variable* rather than a *value*: the patient took aspirin instead of warfarin, the operator ran the slow query instead of the fast one. Composing two interventions, or interrogating which intervention dominates, is straightforward once the chain is in this shape.
+`alternate_value` is one of the substitution methods on the carrier (alongside `alternate_state` and `alternate_context`), each of which records its override in the audit log. A real counterfactual analysis often replaces a *variable* rather than a *value*: the patient took aspirin instead of warfarin, the operator ran the slow query instead of the fast one. That variable-level surgery is the graph-layer `do()` operator; here, value substitution is its scalar form on a single chain. Composing two substitutions, or interrogating which one dominates, is straightforward once the chain is in this shape.
 
 ## Why this is the example to start with
 
-Three rungs of Pearl's ladder in 230 lines of Rust, with one new method (`intervene`) standing for the entire conceptual jump from correlation to causation. Engineers who have read Pearl's *Book of Why* recognize the model instantly. Engineers who have not get a self-contained tour. Either way, the next example they read is the same calling convention applied to a different domain.
+Three rungs of Pearl's ladder in 230 lines of Rust, with one method (`alternate_value`) marking the value substitution that turns seeing into doing. Engineers who have read Pearl's *Book of Why* recognize the model instantly. Engineers who have not get a self-contained tour. Either way, the next example they read is the same calling convention applied to a different domain.

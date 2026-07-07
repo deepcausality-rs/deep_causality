@@ -17,7 +17,7 @@ further:
 
 The example lives at [`counterfactual_resection_intervention`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_intervention_examples/counterfactual_resection_intervention). It applies counterfactual intervention to a clinical question: in a patient with refractory focal epilepsy, which candidate region, if surgically removed, would suppress the seizure dynamics most effectively?
 
-The answer is computed by simulating Kuramoto-style synchronization on the patient's connectome. The factual run uses the intact connectome and shows synchronization climbing above the seizure threshold. Each candidate resection is one `.intervene(connectome_resected_at_R)` call on the same chain. The simulation then evaluates post-resection synchronization. The candidate with the largest drop is the model's recommendation.
+The answer is computed by simulating Kuramoto-style synchronization on the patient's connectome. The factual run uses the intact connectome and shows synchronization climbing above the seizure threshold. Each candidate resection is one `.alternate_value(connectome_resected_at_R)` call on the same chain. The simulation then evaluates post-resection synchronization. The candidate with the largest drop is the model's recommendation.
 
 ## The factual and counterfactual chains
 
@@ -33,23 +33,23 @@ fn run_counterfactual(
     resected: Connectome,
 ) -> PropagatingEffect<SeizureResult> {
     CausalFlow::value(factual)
-        .intervene(resected)
+        .alternate_value(resected)
         .map(simulate_seizure)
         .into_effect()
 }
 ```
 
-[`main.rs:54`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_intervention_examples/counterfactual_resection_intervention/main.rs#L54). Two functions, identical except that the counterfactual replaces the connectome value with a modified copy before the seizure simulation runs. The intervention site is between `CausalFlow::value` (which lifts the connectome into the flow) and `simulate_seizure` (the Kuramoto-style dynamics evaluator) reached via `map`. The dynamics themselves are unchanged across candidates; only the network they run on differs.
+[`main.rs:54`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_intervention_examples/counterfactual_resection_intervention/main.rs#L54). Two functions, identical except that the counterfactual replaces the connectome value with a modified copy before the seizure simulation runs. The substitution site is between `CausalFlow::value` (which lifts the connectome into the flow) and `simulate_seizure` (the Kuramoto-style dynamics evaluator) reached via `map`. The dynamics themselves are unchanged across candidates; only the network they run on differs.
 
 ## Why this matters clinically
 
-A surgical-planning workflow does not need just a final synchronization number. It needs the audit trail that records which region was virtually resected and what the model predicted for that resection. The `EffectLog` provides this automatically. Every `.intervene` call appends a `!!Intervention!!` entry naming the substitution. When the screening loop runs through all candidate regions, the resulting log carries one entry per candidate, with the connectome modification and the resulting `SeizureResult` linked at the chain level.
+A surgical-planning workflow does not need just a final synchronization number. It needs the audit trail that records which region was virtually resected and what the model predicted for that resection. The `EffectLog` provides this automatically. Every `.alternate_value` call appends a `!!ValueAlternation!!` entry naming the substitution. When the screening loop runs through all candidate regions, the resulting log carries one entry per candidate, with the connectome modification and the resulting `SeizureResult` linked at the chain level.
 
 A re-run loop that does the same numerical work loses this link. Each candidate would run its own chain from scratch; the connection between "which region" and "which outcome" lives only in the calling code that orchestrates the runs. If the model is later audited, that orchestration has to be reconstructed. The monad preserves the link by design.
 
 ## Patient-specific dynamics are held constant
 
-The intervention modifies the connectome value the chain carries. It does not modify the patient's intrinsic oscillator frequencies, initial phases, or coupling strength. Those live in the data-generating process the chain implements; they are the same across the factual run and every counterfactual candidate. The screening compares resections, not patient models.
+The substitution modifies the connectome value the chain carries. It does not modify the patient's intrinsic oscillator frequencies, initial phases, or coupling strength. Those live in the data-generating process the chain implements; they are the same across the factual run and every counterfactual candidate. The screening compares resections, not patient models.
 
 This is what makes the comparison interpretable. If two candidates produce different post-resection synchronization, the difference is attributable to the connectome modification and only the connectome modification, because the rest of the simulation is held constant by the chain's structure.
 
@@ -71,4 +71,4 @@ The output prints the factual run first, then the per-candidate screening with s
 
 ## Where this generalizes
 
-The shape, `CausalFlow::value(factual).intervene(modified).map(dynamics)`, is reusable across any problem where the dynamics are well-understood but the structural input is what the analyst is choosing. Tumor resection planning, control-system tuning where the actuator topology is the design variable, ecological intervention modeling where species removal is the question. The connectome here is a stand-in for any structured input the dynamics consume.
+The shape, `CausalFlow::value(factual).alternate_value(modified).map(dynamics)`, is reusable across any problem where the dynamics are well-understood but the structural input is what the analyst is choosing. Tumor resection planning, control-system tuning where the actuator topology is the design variable, ecological intervention modeling where species removal is the question. The connectome here is a stand-in for any structured input the dynamics consume.

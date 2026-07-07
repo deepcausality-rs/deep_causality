@@ -31,7 +31,7 @@ let m2 = m1.bind(|v, _state, _ctx| {
     PropagatingEffect::pure(v.into_value().unwrap_or_default() + 1)
 });
 
-assert_eq!(m2.value.into_value(), Some(11));
+assert_eq!(m2.into_value(), Some(11));
 ```
 
 ### 02 — Two Unifications
@@ -48,22 +48,21 @@ The [propagating effect](/concepts/effect-propagation-process/) folds causal *in
 cause  ⇄ effect    Causaloid · one entity
 input  ⇄ output    propagating effect · one carrier
 
-carrier: value · state · context · error · log
+carrier: outcome (value-or-error) · state · context · log
 ```
 
-The function `f` operates on a carrier of five fields.
+The function `f` operates on a carrier of four fields.
 
 ```rust
 pub struct CausalEffectPropagationProcess<Value, State, Context, Error, Log> {
-    pub value:   EffectValue<Value>, // the propagating effect
-    pub state:   State,              // Markovian state
-    pub context: Option<Context>,    // the explicit world
-    pub error:   Option<Error>,      // short-circuits the chain
-    pub logs:    Log,                // append-only audit trail
+    outcome: Result<CausalEffect<Value>, Error>, // value-XOR-error, short-circuits on Err
+    state:   State,                              // Markovian state
+    context: Option<Context>,                    // the explicit world
+    logs:    Log,                                // append-only audit trail
 }
 ```
 
-The carrier specializes into two subtypes. The propagating effect encapsulates only the value, error, and log; the propagating process covers all five fields. This split is deliberate. By excluding state and context, the propagating effect applies to the large class of problems that need neither, without adding complexity, while more demanding problems, which require state, context, or both, use the propagating process. The two compose cleanly because they derive from the same carrier, so stateless and stateful processes can be combined as the problem requires. This design is also what resolves Russell's contradiction.
+The carrier specializes into two subtypes. The propagating effect pins state and context to `()`, carrying only the outcome and log; the propagating process keeps all four channels. This split is deliberate. By excluding state and context, the propagating effect applies to the large class of problems that need neither, without adding complexity, while more demanding problems, which require state, context, or both, use the propagating process. The two compose cleanly because they derive from the same carrier, so stateless and stateful processes can be combined as the problem requires. This design is also what resolves Russell's contradiction.
 
 A physical law is *time-symmetric* when it runs equally well forward and backward; Newton's equations, Maxwell's equations, and the Schrödinger equation do not record which way time flows. Film an elastic collision, play it in reverse, and the reversed motion still satisfies the same equations. Causation insists on the opposite: a cause precedes its effect, and no effect runs backward into its cause. In 1912 Bertrand Russell pressed the contradiction to its logical conclusion. If fundamental physics is time-symmetric and causation is not, then causation and modern physics are mutually exclusive.
 
@@ -109,7 +108,7 @@ fn run_factual(baseline_bp: f64) -> PropagatingEffect<CycleSummary> {
 // do(BP = 120): a beta-blocker sets blood pressure before the chain runs.
 fn run_medication(baseline_bp: f64, controlled_bp: f64) -> PropagatingEffect<CycleSummary> {
     CausalFlow::value(baseline_bp)
-        .intervene(controlled_bp)
+        .alternate_value(controlled_bp)
         .map(shear_stress_stage)
         .map(fatigue_stage)
         .into_effect()
@@ -119,15 +118,15 @@ fn run_medication(baseline_bp: f64, controlled_bp: f64) -> PropagatingEffect<Cyc
 fn run_surgical(baseline_bp: f64, clipped_wss: f64) -> PropagatingEffect<CycleSummary> {
     CausalFlow::value(baseline_bp)
         .map(shear_stress_stage)
-        .intervene(clipped_wss)
+        .alternate_value(clipped_wss)
         .map(fatigue_stage)
         .into_effect()
 }
 
-// value is Pearl's do(x); context and state use alternate_context / alternate_state.
+// alternate_value is the value-level do(x); context and state use alternate_context / alternate_state.
 ```
 
-In the example above, the factual run gives the outcome as it stands; each counterfactual gives the outcome that a different action would have produced. The causal effect of a treatment is the difference between the two arterial-fatigue summaries, and because the stages, the chain, and the model are identical across runs, that difference is attributable to the intervention alone. The three runs walk Pearl's ladder in order: the factual run observes, the `.intervene` call does, and the comparison of their outcomes is the counterfactual. Setting the medication result beside the surgical one then ranks the two treatments by effect, and the audit log records each `do(...)`, so every verdict traces to the substitution that produced it.
+In the example above, the factual run gives the outcome as it stands; each counterfactual gives the outcome that a different action would have produced. The causal effect of a treatment is the difference between the two arterial-fatigue summaries, and because the stages, the chain, and the model are identical across runs, that difference is attributable to the intervention alone. The three runs walk Pearl's ladder in order: the factual run observes, the `.alternate_value` call does, and the comparison of their outcomes is the counterfactual. Setting the medication result beside the surgical one then ranks the two treatments by effect, and the audit log records each `do(...)`, so every verdict traces to the substitution that produced it.
 
 Pearl's operator reaches exactly one thing: the value of a single variable. A full counterfactual then needs more apparatus. The model graph is surgically altered, and the unobserved background is recovered by abduction, a posterior over hidden noise reconstructed from what was seen. The reach is one value at a time, the world is inferred rather than held, and the surgery occurs at the level of the model.
 
@@ -139,7 +138,7 @@ The two added channels change the category of question that can be asked. A *con
 
 Intervention so far has been analysis: a person poses a what-if question and reads the answer. The same operation becomes control once the chain performs it on itself. Because value, state, and context are externalized on the carrier, a step can read them mid-flow and branch on what it finds, and a branch that ends in an intervention is a correction. The chain watches its own trajectory and intervenes the moment an intervention becomes necessary.
 
-The shape is the control loop, written in the DSL. Each tick advances the model, then branches on the carried value: inside the safe envelope the tick passes through untouched; outside it, the corrective arm fires `intervene`, and the next tick continues from the corrected value.
+The shape is the control loop, written in the DSL. Each tick advances the model, then branches on the carried value: inside the safe envelope the tick passes through untouched; outside it, the corrective arm fires `alternate_value`, and the next tick continues from the corrected value.
 
 ```rust
 use deep_causality::CausalFlow;
@@ -152,7 +151,7 @@ CausalFlow::from(model::initial_process())
             // necessity condition detected?
             |offset| offset.abs() > cfg.anomaly_threshold,
             // if so, self-correct
-            |hot|  hot.intervene_if(|_| true, |o| model::correction(o, &cfg)),
+            |hot|  hot.alternate_value_if(|_| true, |o| model::correction(o, &cfg)),
             // if not, no action
             |cold| cold,
         )

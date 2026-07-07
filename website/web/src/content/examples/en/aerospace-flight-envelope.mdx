@@ -26,18 +26,17 @@ The pipeline does five things, in order:
 4. **Estimate step** that writes the resulting estimate vector into `state.estimate`.
 5. **Envelope hypergraph**: BFS over six risk nodes that produces the final verdict.
 
-The five steps are defined as ordinary functions in the example's `model.rs`. `CausalFlow::from` lifts the seed process into the fluent API, the five `bind` calls thread the state, context, value, and log through the same five-field `PropagatingProcess` shape, and `into_process()` hands the raw process back for inspection.
+The five steps are defined as ordinary functions in the example's `model.rs`. `CausalFlow::from` lifts the seed process into the fluent API, the five `bind` calls thread the value, state, context, and log through the same five-parameter `PropagatingProcess` shape, and `into_process()` hands the raw process back for inspection.
 
 ```rust
-use deep_causality_core::CausalFlow;
+use deep_causality_core::{CausalEffect, CausalFlow};
 
-let initial: FlightProcess<SensorReading> = PropagatingProcess {
-    value: EffectValue::Value(reading),
-    state: FlightState::default(),
-    context: Some(config),
-    error: None,
-    logs: EffectLog::new(),
-};
+let initial: FlightProcess<SensorReading> = PropagatingProcess::new(
+    Ok(CausalEffect::value(reading)),
+    FlightState::default(),
+    Some(config),
+    EffectLog::new(),
+);
 
 CausalFlow::from(initial)
     .bind(|v, s, c| run_sensor_collection(v, s, c, failing_airspeed))

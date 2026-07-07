@@ -49,7 +49,7 @@ use deep_causality::PropagatingEffect;
 
 fn main() {
     let effect: PropagatingEffect<f64> = PropagatingEffect::pure(42.0);
-    println!("ok: {:?}", effect.value);
+    println!("ok: {:?}", effect.value());
 }
 ```
 

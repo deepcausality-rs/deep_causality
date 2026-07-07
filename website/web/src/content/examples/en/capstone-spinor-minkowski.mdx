@@ -41,7 +41,7 @@ The `Float106` type comes from `deep_causality_num`. It is a double-double: two 
 let mut process: Process<CausalMultiVector<FloatType>> = ProcessWitness::pure(psi);
 for e in 0..N_EDGES {
     process = ProcessWitness::bind(process, |p| transport_across_edge(p, &manifold, e));
-    if process.error.is_some() {
+    if process.error().is_some() {
         break;
     }
 }
