@@ -1,0 +1,44 @@
+examples/classical_causality_examples/README.md
+  s_cefbd789296ae8::t_cea7745d65fe73 31,60,80
+examples/material_examples/structural_health_monitor/README.md
+  s_cefbd789296ae8::t_cea7745d65fe73 3,11,32,43
+examples/causal_counterfactual_examples/README.md
+  s_cefbd789296ae8::t_cea7745d65fe73 4,16,18,27-28,73,87-88
+examples/material_examples/README.md
+  s_cefbd789296ae8::t_cea7745d65fe73 43-44,66
+examples/classical_causality_examples/classical_via_causal_monad/granger/README.md
+  s_cefbd789296ae8::t_59def194aa5fc3 23-28
+examples/README.md
+  s_cefbd789296ae8::t_cea7745d65fe73 14,125,128,183,187
+examples/causal_correction_examples/corrective_ddos_detector/README.md
+  s_cefbd789296ae8::t_cea7745d65fe73 4,18,68,81
+examples/mathematics_examples/composable_multi_math/effect_kalman_predict_correct/README.md
+  s_cefbd789296ae8::t_476d35dc27c729 21
+examples/causal_correction_examples/README.md
+  s_cefbd789296ae8::t_cea7745d65fe73 4,16,18,27-28,37,49-50,81,95-96
+  s_cefbd789296ae8::t_ef18e97950df4c 55
+examples/avionics_examples/navigation/ins_gnss_blackout/README.md
+  s_cefbd789296ae8::t_cea7745d65fe73 26,33,66
+examples/avionics_examples/README.md
+  s_cefbd789296ae8::t_cea7745d65fe73 20,26,36,38,42,60
+examples/classical_causality_examples/classical_via_causal_monad/scm/README.md
+  s_cefbd789296ae8::t_cea7745d65fe73 16,28,30
+examples/avionics_examples/control/geometric_tcas/README.md
+  s_cefbd789296ae8::t_cea7745d65fe73 33-34,36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "66206504397612b2c05b45317201616f81d18db1",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
