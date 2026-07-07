@@ -4,7 +4,6 @@
  */
 
 mod algebra_iso_tests;
-mod common;
 mod division_algebra_iso_tests;
 mod field_iso_tests;
 mod group_iso_tests;

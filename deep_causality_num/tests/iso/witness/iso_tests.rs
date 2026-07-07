@@ -9,8 +9,10 @@
 use deep_causality_num::iso::witness::Iso;
 use deep_causality_num::iso::witness::test_support::assert_witness_iso_round_trip;
 
-use super::super::common::FloatWrap;
-use super::common::{AbsReverseWitness, BadReverseWitness, BadWitness, IdWitness};
+use deep_causality_num::utils_tests::utils_iso_tests::FloatWrap;
+use deep_causality_num::utils_tests::utils_iso_witness_tests::{
+    AbsReverseWitness, BadReverseWitness, BadWitness, IdWitness,
+};
 // BadWitness imported for the `round_trips_cleanly_despite_homomorphism_break`
 // test below; not consumed in the round-trip-panic test (BadWitness has a
 // symmetric +1/-1 pair that round-trips cleanly).

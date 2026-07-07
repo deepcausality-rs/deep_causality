@@ -20,7 +20,9 @@ rust_test_suite(
     srcs = glob([
         "casts/as_primitive/*_tests.rs",
         "casts/from_primitive/*_tests.rs",
+        "casts/as_scalar/*_tests.rs",
         "casts/num_cast/*_tests.rs",
+        "casts/to_float/*_tests.rs",
         "casts/to_primitive/*_tests.rs",
     ]),
     tags = [
@@ -37,6 +39,7 @@ rust_test_suite(
     name = "complex",
     srcs = glob([
         "complex/complex_number/*_tests.rs",
+        "complex/octonion_number/*_tests.rs",
         "complex/quaternion_number/*_tests.rs",
     ]),
     tags = [
@@ -129,6 +132,37 @@ rust_test_suite(
     name = "ops",
     srcs = glob([
         "ops/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "integer",
+    srcs = glob([
+        "integer/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "iso",
+    srcs = glob([
+        "iso/*_tests.rs",
+        "iso/witness/*_tests.rs",
     ]),
     tags = [
         "unit-test",

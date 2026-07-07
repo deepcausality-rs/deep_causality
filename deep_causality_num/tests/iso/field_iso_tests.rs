@@ -6,20 +6,16 @@
 //! Tests for `deep_causality_num::iso::FieldIso<T>` and the helper
 //! `assert_field_iso_from_laws`.
 //!
-//! Uses the shared `FloatWrap(f64)` newtype from `super::common`. The
+//! Uses the shared `FloatWrap(f64)` newtype from `deep_causality_num::utils_tests::utils_iso_tests`. The
 //! identity iso preserves multiplicative inverses; the broken `BadFieldWrap`
 //! variant breaks the inverse law because the shifted `From` mapping doesn't
 //! commute with `1.0 / x`.
 
 use deep_causality_num::iso::test_support::assert_field_iso_from_laws;
-use deep_causality_num::iso::{FieldIso, GroupIso, RingIso};
 
-use super::common::{BadFieldWrap, FloatWrap};
+use deep_causality_num::utils_tests::utils_iso_tests::{BadFieldWrap, FloatWrap};
 
 // Tier-1 inheritance chain: each marker is implemented separately.
-impl GroupIso<f64> for FloatWrap {}
-impl RingIso<f64> for FloatWrap {}
-impl FieldIso<f64> for FloatWrap {}
 
 #[test]
 fn field_iso_laws_hold_for_identity_iso() {

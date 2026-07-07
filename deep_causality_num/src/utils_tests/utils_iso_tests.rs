@@ -6,28 +6,28 @@
 //! Shared test types for the Field / Algebra / DivisionAlgebra iso tests.
 //!
 //! `FloatWrap` is a newtype around `f64` that satisfies the full algebraic
-//! hierarchy used in this module (`Field`, `Algebra<f64>`, `DivisionAlgebra<f64>`).
-//! It serves as both source and target type for identity-iso tests of the
-//! corresponding marker subtraits.
+//! hierarchy used by the iso tests (`Field`, `Algebra<f64>`,
+//! `DivisionAlgebra<f64>`). It serves as both source and target type for
+//! identity-iso tests of the corresponding marker subtraits.
 //!
 //! `BadFieldWrap` is a similar newtype with a deliberately broken
 //! `From<BadFieldWrap> for f64` (returns `value + 1.0`) so that homomorphism
 //! assertions fail. Used in `#[should_panic]` tests across multiple files.
 //!
-//! Wrapper types are defined here rather than duplicated across the three
-//! algebraic-hierarchy test files because the trait boilerplate is the same
-//! for each and replicating it three times would obscure the test logic.
+//! These live under `src/utils_tests/` (not the `tests/` tree) so that Bazel's
+//! per-file `rust_test_suite` compilation can reach them via the crate path
+//! `deep_causality_num::utils_tests::utils_iso_tests` instead of a `tests/`
+//! sibling module.
 
 #![allow(dead_code)]
 
+use crate::{AbelianGroup, Associative, Commutative, Distributive, DivisionAlgebra, One, Zero};
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-use deep_causality_num::{
-    AbelianGroup, Associative, Commutative, Distributive, DivisionAlgebra, One, Zero,
-};
+
 // ---------- FloatWrap: well-behaved identity iso to/from f64 ----------
 
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub(crate) struct FloatWrap(pub f64);
+pub struct FloatWrap(pub f64);
 
 impl Add for FloatWrap {
     type Output = Self;
@@ -158,6 +158,16 @@ impl From<FloatWrap> for f64 {
     }
 }
 
+// Tier-1 identity-iso markers on the well-behaved `FloatWrap`. These live with
+// the type (the orphan rule forbids implementing these foreign-to-the-test-crate
+// traits on `FloatWrap` from the `tests/` tree once the type moved here). The
+// corresponding `_iso_tests.rs` files assert the laws these markers claim.
+impl crate::iso::GroupIso<f64> for FloatWrap {}
+impl crate::iso::RingIso<f64> for FloatWrap {}
+impl crate::iso::FieldIso<f64> for FloatWrap {}
+impl crate::iso::AlgebraIso<f64, f64> for FloatWrap {}
+impl crate::iso::DivisionAlgebraIso<f64, f64> for FloatWrap {}
+
 // ---------- BadFieldWrap: identity From in one direction, +1.0 in the other ----------
 //
 // `f64::from(BadFieldWrap(x)) = x + 1.0`. This breaks every algebraic
@@ -166,7 +176,7 @@ impl From<FloatWrap> for f64 {
 // tests that exercise the panic branches of every helper.
 
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub(crate) struct BadFieldWrap(pub f64);
+pub struct BadFieldWrap(pub f64);
 
 impl Add for BadFieldWrap {
     type Output = Self;

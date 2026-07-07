@@ -180,3 +180,41 @@ rust_test_suite(
         "//thirdparty/crates:rusty-fork",
     ],
 )
+
+rust_test_suite(
+    name = "extensions",
+    srcs = glob([
+        "extensions/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_ast",
+        "//deep_causality_num",
+        "//deep_causality_rand",
+        "//deep_causality_uncertain",
+        "//thirdparty/crates:rusty-fork",
+    ],
+)
+
+rust_test_suite(
+    name = "types_computation_uncertain_node_content",
+    srcs = glob([
+        "types/computation/uncertain_node_content/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_ast",
+        "//deep_causality_num",
+        "//deep_causality_rand",
+        "//deep_causality_uncertain",
+        "//thirdparty/crates:rusty-fork",
+    ],
+)

@@ -379,3 +379,72 @@ rust_test_suite(
         "//deep_causality_sparse",
     ],
 )
+
+rust_test_suite(
+    name = "types/cell_complex",
+    srcs = glob([
+        "types/cell_complex/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_haft",
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
+        "//deep_causality_num",
+        "//deep_causality_par",
+        "//deep_causality_rand",
+        "//deep_causality_sparse",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_test_suite(
+    name = "types/hodge_decomposition",
+    srcs = glob([
+        "types/hodge_decomposition/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_haft",
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
+        "//deep_causality_num",
+        "//deep_causality_par",
+        "//deep_causality_rand",
+        "//deep_causality_sparse",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_test_suite(
+    name = "types/topological_invariants",
+    srcs = glob([
+        "types/topological_invariants/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_haft",
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
+        "//deep_causality_num",
+        "//deep_causality_par",
+        "//deep_causality_rand",
+        "//deep_causality_sparse",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)

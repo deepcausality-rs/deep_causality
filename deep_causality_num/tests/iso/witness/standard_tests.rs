@@ -15,7 +15,7 @@ use deep_causality_num::iso::witness::test_support::{
 };
 use deep_causality_num::iso::witness::{Iso, StandardIso};
 
-use super::super::common::FloatWrap;
+use deep_causality_num::utils_tests::utils_iso_tests::FloatWrap;
 
 // =============================================================================
 // Constructor / trait derivations

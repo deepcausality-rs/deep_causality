@@ -4,12 +4,12 @@
  */
 
 //! Tests for `GroupIso<S, T>` (witness-typed) via the `IdWitness` and
-//! `BadWitness` test types from `super::common`.
+//! `BadWitness` test types from `deep_causality_num::utils_tests::utils_iso_witness_tests`.
 
 use deep_causality_num::iso::witness::test_support::assert_witness_group_iso_law;
 
-use super::super::common::FloatWrap;
-use super::common::{BadWitness, IdWitness};
+use deep_causality_num::utils_tests::utils_iso_tests::FloatWrap;
+use deep_causality_num::utils_tests::utils_iso_witness_tests::{BadWitness, IdWitness};
 
 #[test]
 fn witness_group_iso_law_holds_for_id_witness() {

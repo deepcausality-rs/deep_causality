@@ -94,3 +94,19 @@ rust_test_suite(
         "//deep_causality_num",
     ],
 )
+
+rust_test_suite(
+    name = "types_dct_plan",
+    srcs = glob([
+        "types/dct_plan/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_fft",
+        "//deep_causality_num",
+    ],
+)

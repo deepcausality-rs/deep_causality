@@ -171,3 +171,85 @@ rust_test_suite(
         "//deep_causality_tensor",
     ],
 )
+
+rust_test_suite(
+    name = "types_cdl_effect",
+    srcs = glob([
+        "types/cdl_effect/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_algorithms",
+        "//deep_causality_discovery",
+        "//deep_causality_haft",
+        "//deep_causality_tensor",
+        "//thirdparty/crates:csv",
+        "//thirdparty/crates:parquet",
+        "//thirdparty/crates:tempfile",
+    ],
+)
+
+rust_test_suite(
+    name = "types_cdl_report",
+    srcs = glob([
+        "types/cdl_report/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_algorithms",
+        "//deep_causality_discovery",
+        "//deep_causality_tensor",
+        "//thirdparty/crates:csv",
+        "//thirdparty/crates:parquet",
+        "//thirdparty/crates:tempfile",
+    ],
+)
+
+rust_test_suite(
+    name = "types_cdl_warning",
+    srcs = glob([
+        "types/cdl_warning/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_algorithms",
+        "//deep_causality_discovery",
+        "//deep_causality_haft",
+        "//deep_causality_tensor",
+        "//thirdparty/crates:csv",
+        "//thirdparty/crates:parquet",
+        "//thirdparty/crates:tempfile",
+    ],
+)
+
+rust_test_suite(
+    name = "types_data_cleaner",
+    srcs = glob([
+        "types/data_cleaner/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_algorithms",
+        "//deep_causality_discovery",
+        "//deep_causality_tensor",
+        "//thirdparty/crates:csv",
+        "//thirdparty/crates:parquet",
+        "//thirdparty/crates:tempfile",
+    ],
+)

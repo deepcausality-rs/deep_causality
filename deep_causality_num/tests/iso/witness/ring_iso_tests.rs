@@ -8,8 +8,10 @@
 
 use deep_causality_num::iso::witness::test_support::assert_witness_ring_iso_laws;
 
-use super::super::common::FloatWrap;
-use super::common::{BadWitness, DoubleWitness, IdWitness};
+use deep_causality_num::utils_tests::utils_iso_tests::FloatWrap;
+use deep_causality_num::utils_tests::utils_iso_witness_tests::{
+    BadWitness, DoubleWitness, IdWitness,
+};
 
 #[test]
 fn witness_ring_iso_laws_hold_for_id_witness() {

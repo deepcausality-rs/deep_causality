@@ -7,8 +7,8 @@
 
 use deep_causality_num::iso::witness::test_support::assert_witness_algebra_iso_law;
 
-use super::super::common::FloatWrap;
-use super::common::{BadWitness, IdWitness};
+use deep_causality_num::utils_tests::utils_iso_tests::FloatWrap;
+use deep_causality_num::utils_tests::utils_iso_witness_tests::{BadWitness, IdWitness};
 
 #[test]
 fn witness_algebra_iso_law_holds_for_id_witness() {

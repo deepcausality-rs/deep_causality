@@ -125,3 +125,18 @@ rust_test_suite(
         "//deep_causality_haft",
     ],
 )
+
+rust_test_suite(
+    name = "alias",
+    srcs = glob([
+        "alias/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_haft",
+    ],
+)

@@ -6,17 +6,14 @@
 //! Tests for `deep_causality_num::iso::DivisionAlgebraIso<T, R>` and the
 //! helper `assert_division_algebra_iso_from_law`.
 //!
-//! Uses the shared `FloatWrap(f64)` newtype from `super::common`. For
+//! Uses the shared `FloatWrap(f64)` newtype from `deep_causality_num::utils_tests::utils_iso_tests`. For
 //! real-valued division algebras the conjugate is the identity, so the
 //! identity iso trivially preserves conjugation. `BadFieldWrap` claims
 //! `conjugate = negation`, which breaks the law.
 
-use deep_causality_num::iso::DivisionAlgebraIso;
 use deep_causality_num::iso::test_support::assert_division_algebra_iso_from_law;
 
-use super::common::{BadFieldWrap, FloatWrap};
-
-impl DivisionAlgebraIso<f64, f64> for FloatWrap {}
+use deep_causality_num::utils_tests::utils_iso_tests::{BadFieldWrap, FloatWrap};
 
 #[test]
 fn division_algebra_iso_law_holds_for_identity_iso() {

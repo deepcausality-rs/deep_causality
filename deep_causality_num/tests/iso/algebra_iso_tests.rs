@@ -6,16 +6,13 @@
 //! Tests for `deep_causality_num::iso::AlgebraIso<T, R>` and the helper
 //! `assert_algebra_iso_from_law`.
 //!
-//! Uses the shared `FloatWrap(f64)` newtype from `super::common`. `FloatWrap`
+//! Uses the shared `FloatWrap(f64)` newtype from `deep_causality_num::utils_tests::utils_iso_tests`. `FloatWrap`
 //! is an `Algebra<f64>` (Module<f64> + Mul<Output = Self> + One + Distributive).
 //! The identity iso preserves scalar multiplication trivially.
 
-use deep_causality_num::iso::AlgebraIso;
 use deep_causality_num::iso::test_support::assert_algebra_iso_from_law;
 
-use super::common::{BadFieldWrap, FloatWrap};
-
-impl AlgebraIso<f64, f64> for FloatWrap {}
+use deep_causality_num::utils_tests::utils_iso_tests::{BadFieldWrap, FloatWrap};
 
 #[test]
 fn algebra_iso_law_holds_for_identity_iso() {
