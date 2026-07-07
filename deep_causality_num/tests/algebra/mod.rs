@@ -27,9 +27,15 @@ mod monoid_tests;
 // results for transcendental ops, so exact equality cannot hold. The test
 // itself is correct and runs under normal CI.
 #[cfg(test)]
+mod commutative_semilattice_tests;
+#[cfg(test)]
+mod monoid_generic_tests;
+#[cfg(test)]
 #[cfg(not(miri))]
 mod real_tests;
 #[cfg(test)]
 mod scalar_conjugate_tests;
 #[cfg(test)]
 mod scalar_normed_tests;
+#[cfg(test)]
+mod verdict_tests;

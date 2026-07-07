@@ -29,6 +29,9 @@ remaining layers are described in `openspec/notes/causal-algebra/Formalization.m
 -/
 
 import DeepCausalityFormal.Num.Monoid
+import DeepCausalityFormal.Num.MonoidGeneric
+import DeepCausalityFormal.Num.CommutativeMonoid
+import DeepCausalityFormal.Num.Verdict
 import DeepCausalityFormal.Core.EffectLog
 import DeepCausalityFormal.Core.CausalEffect
 import DeepCausalityFormal.Core.CausalCommand

@@ -41,8 +41,9 @@ The formalization target (`algebraic-causaloid.md` Part 2, gaps A1–A3, #5) is 
 
 Additive: new traits + instances + Lean files + tests. Steps: (1) settle the receiver shape, the `bool` two-monoid resolution, and the probability carrier class against `monadic_collection_utils.rs` and the `haft` `fold_map` signature; (2) `Monoid` + laws + Lean + witness; (3) `CommutativeMonoid`/`Idempotent`/`BoundedSemilattice` + laws + Lean + witnesses; (4) `Verdict` + lattice/complement laws + Lean + witnesses; (5) instances (`bool`, `Count`, probability); (6) `bazel test //deep_causality_num/...` green, bare-`lean` on the new `Num/*.lean` exit 0. Rollback = remove the new files; the numeric tower is unaffected.
 
-## Open Questions
+## Open Questions (settled during implementation)
 
-- `Monoid::combine` receiver: `self` or `&self`? — settle against `aggregate_effects` + `haft::fold_map`.
-- `bool`'s two monoids: `Verdict`-methods vs `All`/`Any` newtypes? — lean to `Verdict`-methods (D4).
-- Probability carrier: Boolean algebra or MV-algebra (complement `1−p`)? — pin the class; record the caveat (assumption #5 Q2).
+- `Monoid::combine` receiver — **DECIDED: by-value `fn combine(self, Self) -> Self`** (the standard functional monoid; folds via `acc.combine(f(x))`, matches the intended `fold_map`).
+- `bool`'s two monoids — **DECIDED: both.** `Verdict for bool` carries `meet`/`join`/`complement` as methods; the `Monoid`/`BoundedSemilattice` *instances* are the `Conjunction(bool)` (∧) and `Disjunction(bool)` (∨) newtypes, avoiding the coherence clash of two `Monoid for bool`.
+- Probability carrier — **DECIDED: MV-algebra.** `Prob(f64)` is a product `CommutativeMonoid` (the `All` reducer) and a `Verdict` with `meet=min`, `join=max`, `complement = 1 − p` (an MV-algebra complement, not Boolean — recorded per assumption #5 Q2; the involution holds up to floating-point rounding, so `Prob` witnesses use a tolerance).
+- Lean environment note — the `num` layer uses Mathlib (`lake env lean`), like the existing `Num/Monoid.lean`. The generic-monoid + commutativity laws are stated over Mathlib's `Monoid`/`CommMonoid`; the bounded-semilattice and verdict laws are proved concretely on `Bool` (`by cases … <;> rfl`) because the `Mathlib.Order.*` olean cache is unavailable in this environment (the `lake exe cache` binary is broken on this macOS), and the concrete `Bool` proofs mirror the Rust `Conjunction`/`Disjunction`/`bool`-`Verdict` instances exactly.
