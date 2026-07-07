@@ -1,7 +1,7 @@
 # corrective_ddos_detector
 
 Volumetric DDoS detection and mitigation as a closed-loop corrective
-`intervene` over the causal monad.
+`alternate_value` over the causal monad.
 
 ```
 cargo run -p causal_correction_examples --example corrective_ddos_detector
@@ -15,7 +15,7 @@ recent throughput as a rolling baseline. Each second the new measured
 throughput is scored as a z-score against that baseline. When the score
 stays above the parametric threshold (`sigma_threshold`, 3σ) for
 `trigger_slots` consecutive seconds (5), a volumetric attack is declared and
-the loop fires `.intervene(THROTTLE_ON)`. The NIC's regulator reads that
+the loop fires `.alternate_value(THROTTLE_ON)`. The NIC's regulator reads that
 command from the value channel and rate-limits the interface to the throttle
 ceiling, mitigating the flood from the next tick.
 
@@ -65,7 +65,7 @@ CausalFlow::from(initial_process())
                 state.consecutive_anomalies >= cfg.trigger_slots && *throttle == THROTTLE_OFF
             },
             // mitigate: record it, then intervene the throttle ON
-            |anomaly| anomaly.update_state(record_mitigation).intervene(THROTTLE_ON),
+            |anomaly| anomaly.update_state(record_mitigation).alternate_value(THROTTLE_ON),
             // no detection: business as usual
             |normal| normal,
         )
@@ -78,7 +78,7 @@ The `throttle == OFF` guard makes the mitigation fire exactly once.
 ## Reading the output
 
 The run prints the per-tick throughput, z-score, and throttle trajectories, a
-summary line, and the per-tick `EffectLog` (including the `!!Intervention!!`
+summary line, and the per-tick `EffectLog` (including the `!!ValueAlternation!!`
 entry). With the default configuration:
 
 - the baseline holds ~385–415 Mbps (z ≈ 0) while nominal;

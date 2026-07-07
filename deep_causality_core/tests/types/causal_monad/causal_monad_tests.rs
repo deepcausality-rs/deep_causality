@@ -4,8 +4,8 @@
  */
 
 use deep_causality_core::{
-    AlternatableValue, CausalEffectPropagationProcess, CausalMonad, CausalityError,
-    CausalityErrorEnum, EffectLog, EffectValue, PropagatingProcess,
+    AlternatableValue, CausalEffect, CausalEffectPropagationProcess, CausalMonad, CausalityError,
+    CausalityErrorEnum, EffectLog, PropagatingProcess,
 };
 use deep_causality_haft::{LogAddEntry, LogSize};
 
@@ -41,7 +41,7 @@ fn test_bind() {
         let val = v.into_value().unwrap_or_default();
         let mut logs = EffectLog::new();
         logs.add_entry("step1");
-        CausalEffectPropagationProcess::new(Ok(EffectValue::Value(val + 1)), state, ctx, logs)
+        CausalEffectPropagationProcess::new(Ok(CausalEffect::value(val + 1)), state, ctx, logs)
     });
 
     assert!(matches!(next.value(), Some(&11)));
@@ -49,10 +49,10 @@ fn test_bind() {
 }
 
 /// A step that increments both the value and the Markovian state.
-fn inc_step(v: EffectValue<i32>, state: i32, ctx: Option<String>) -> P<i32> {
+fn inc_step(v: CausalEffect<i32>, state: i32, ctx: Option<String>) -> P<i32> {
     let val = v.into_value().unwrap_or_default();
     CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(val + 1)),
+        Ok(CausalEffect::value(val + 1)),
         state + 10,
         ctx,
         EffectLog::new(),
@@ -91,7 +91,7 @@ fn test_bind_error() {
         called = true;
         let val = v.into_value().unwrap_or_default();
         CausalEffectPropagationProcess::new(
-            Ok(EffectValue::Value(val + 1)),
+            Ok(CausalEffect::value(val + 1)),
             state,
             ctx,
             EffectLog::new(),
@@ -146,7 +146,7 @@ fn test_fmap_maps_value_and_preserves_state_context_logs() {
     let mut logs = EffectLog::new();
     logs.add_entry("upstream");
     let initial: P<i32> = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(10)),
+        Ok(CausalEffect::value(10)),
         7,
         Some("ctx".to_string()),
         logs,
@@ -214,7 +214,7 @@ fn test_fmap_passes_none_through() {
     });
 
     assert!(!called, "there is no value to map, so f must not run");
-    assert!(matches!(mapped.effect(), Some(EffectValue::None)));
+    assert!(mapped.effect().is_some_and(CausalEffect::is_none));
     assert!(mapped.error().is_none(), "a None carrier is not an error");
 }
 
@@ -234,7 +234,7 @@ fn test_right_identity_unconditional() {
         PropagatingProcess::pure(42),
         PropagatingProcess::none(),
         PropagatingProcess::new(
-            Ok(EffectValue::Value(7)),
+            Ok(CausalEffect::value(7)),
             3,
             Some("ctx".to_string()),
             logs.clone(),
@@ -263,7 +263,7 @@ fn test_right_identity_unconditional() {
 /// Lean proof: `Core/CausalMonad.lean :: bind_assoc`.
 #[test]
 fn test_associativity_across_erroring_continuation() {
-    let erroring_f = |_v: EffectValue<i32>, s: i32, c: Option<String>| -> P<i32> {
+    let erroring_f = |_v: CausalEffect<i32>, s: i32, c: Option<String>| -> P<i32> {
         let mut logs = EffectLog::new();
         logs.add_entry("f raised");
         PropagatingProcess::new(
@@ -273,16 +273,16 @@ fn test_associativity_across_erroring_continuation() {
             logs,
         )
     };
-    let g = |v: EffectValue<i32>, s: i32, c: Option<String>| -> P<i32> {
+    let g = |v: CausalEffect<i32>, s: i32, c: Option<String>| -> P<i32> {
         let val = v.into_value().unwrap_or_default();
         let mut logs = EffectLog::new();
         logs.add_entry("g ran");
-        PropagatingProcess::new(Ok(EffectValue::Value(val * 10)), s + 1, c, logs)
+        PropagatingProcess::new(Ok(CausalEffect::value(val * 10)), s + 1, c, logs)
     };
 
     let mut in_logs = EffectLog::new();
     in_logs.add_entry("start");
-    let m: P<i32> = PropagatingProcess::new(Ok(EffectValue::Value(5)), 1, None, in_logs);
+    let m: P<i32> = PropagatingProcess::new(Ok(CausalEffect::value(5)), 1, None, in_logs);
     let m2 = m.clone();
 
     let lhs = m.bind(erroring_f).bind(g);
@@ -293,9 +293,9 @@ fn test_associativity_across_erroring_continuation() {
     assert_eq!(lhs.logs().len(), 2, "logs: start + f raised; g never ran");
 
     // And the plain (non-erroring) chain agrees too.
-    let ok_f = |v: EffectValue<i32>, s: i32, c: Option<String>| -> P<i32> {
+    let ok_f = |v: CausalEffect<i32>, s: i32, c: Option<String>| -> P<i32> {
         let val = v.into_value().unwrap_or_default();
-        PropagatingProcess::new(Ok(EffectValue::Value(val + 1)), s, c, EffectLog::new())
+        PropagatingProcess::new(Ok(CausalEffect::value(val + 1)), s, c, EffectLog::new())
     };
     let m3: P<i32> = PropagatingProcess::pure(5);
     let m4 = m3.clone();

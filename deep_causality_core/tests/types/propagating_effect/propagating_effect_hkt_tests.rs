@@ -4,7 +4,7 @@
  */
 
 use deep_causality_core::{
-    CausalityError, CausalityErrorEnum, EffectLog, EffectValue, PropagatingEffect,
+    CausalEffect, CausalityError, CausalityErrorEnum, EffectLog, PropagatingEffect,
     PropagatingEffectWitness,
 };
 use deep_causality_haft::{Applicative, Functor, HKT, LogAddEntry, LogSize, Monad, Pure};
@@ -13,7 +13,7 @@ type TestPropagatingEffect<T> = PropagatingEffect<T>;
 type TestWitness = PropagatingEffectWitness<CausalityError, EffectLog>;
 
 fn setup_effect_with_value<T: Default + Clone>(value: T) -> TestPropagatingEffect<T> {
-    PropagatingEffect::new(Ok(EffectValue::Value(value)), (), None, EffectLog::new())
+    PropagatingEffect::new(Ok(CausalEffect::value(value)), (), None, EffectLog::new())
 }
 
 fn setup_effect_with_error<T: Default + Clone>(
@@ -28,7 +28,7 @@ fn setup_effect_with_error<T: Default + Clone>(
 }
 
 fn setup_effect_with_none_value<T: Default + Clone>() -> TestPropagatingEffect<T> {
-    PropagatingEffect::new(Ok(EffectValue::None), (), None, EffectLog::new())
+    PropagatingEffect::new(Ok(CausalEffect::none()), (), None, EffectLog::new())
 }
 
 #[test]
@@ -62,23 +62,22 @@ fn test_functor_fmap_with_error() {
 }
 
 #[test]
-fn test_functor_fmap_with_none_value() {
+fn test_functor_fmap_with_none_value_passes_through() {
+    // Totality invariant: `fmap` is total — a `None` effect passes through unchanged (no value, no
+    // fabricated error). The continuation is not invoked.
     let m_a = setup_effect_with_none_value::<i32>();
     let f = |a: i32| a * 2;
     let m_b = TestWitness::fmap(m_a, f);
-    assert!(m_b.is_err());
-    assert_eq!(
-        m_b.error().unwrap().0,
-        CausalityErrorEnum::InternalLogicError
-    );
+    assert!(m_b.is_ok());
     assert!(m_b.value().is_none());
+    assert!(m_b.effect().unwrap().is_none());
 }
 
 #[test]
 fn test_functor_fmap_logs_preserved() {
     let mut logs = EffectLog::new();
     logs.add_entry("Initial log");
-    let m_a = PropagatingEffect::new(Ok(EffectValue::Value(5)), (), None, logs);
+    let m_a = PropagatingEffect::new(Ok(CausalEffect::value(5)), (), None, logs);
     let f = |a: i32| a * 2;
     let m_b = TestWitness::fmap(m_a, f);
     assert_eq!(m_b.logs().len(), 1);
@@ -97,7 +96,7 @@ fn test_applicative_pure() {
 fn test_applicative_apply_with_values() {
     let f_ab_func = |a: i32| a + 1;
     let f_ab = PropagatingEffect::new(
-        Ok(EffectValue::Value(f_ab_func)),
+        Ok(CausalEffect::value(f_ab_func)),
         (),
         None,
         EffectLog::new(),
@@ -131,7 +130,7 @@ fn test_applicative_apply_with_f_ab_error() {
 fn test_applicative_apply_with_f_a_error() {
     let f_ab_func = |a: i32| a + 1;
     let f_ab = PropagatingEffect::new(
-        Ok(EffectValue::Value(f_ab_func)),
+        Ok(CausalEffect::value(f_ab_func)),
         (),
         None,
         EffectLog::new(),
@@ -167,40 +166,36 @@ fn test_applicative_apply_with_both_errors() {
 }
 
 #[test]
-fn test_applicative_apply_with_f_ab_none_value() {
+fn test_applicative_apply_with_f_ab_none_value_yields_none() {
+    // Totality invariant: a value-less function operand yields absence (`none()`), not an error.
     let f_ab: PropagatingEffect<fn(i32) -> i32> = PropagatingEffect::new(
-        Ok(EffectValue::None), // Explicitly type None for the function
+        Ok(CausalEffect::none()), // Explicitly type None for the function
         (),
         None,
         EffectLog::new(),
     );
     let f_a = setup_effect_with_value(10);
     let m_b = TestWitness::apply(f_ab, f_a);
-    assert!(m_b.is_err());
-    assert_eq!(
-        m_b.error().unwrap().0,
-        CausalityErrorEnum::InternalLogicError
-    );
+    assert!(m_b.is_ok());
     assert!(m_b.value().is_none());
+    assert!(m_b.effect().unwrap().is_none());
 }
 
 #[test]
-fn test_applicative_apply_with_f_a_none_value() {
+fn test_applicative_apply_with_f_a_none_value_yields_none() {
+    // Totality invariant: a value-less argument operand yields absence (`none()`), not an error.
     let f_ab_func = |a: i32| a + 1;
     let f_ab = PropagatingEffect::new(
-        Ok(EffectValue::Value(f_ab_func)),
+        Ok(CausalEffect::value(f_ab_func)),
         (),
         None,
         EffectLog::new(),
     );
     let f_a = setup_effect_with_none_value::<i32>();
     let m_b = TestWitness::apply(f_ab, f_a);
-    assert!(m_b.is_err());
-    assert_eq!(
-        m_b.error().unwrap().0,
-        CausalityErrorEnum::InternalLogicError
-    );
+    assert!(m_b.is_ok());
     assert!(m_b.value().is_none());
+    assert!(m_b.effect().unwrap().is_none());
 }
 
 #[test]
@@ -208,11 +203,11 @@ fn test_applicative_apply_logs_combined() {
     let mut logs1 = EffectLog::new();
     logs1.add_entry("Log 1");
     let f_ab_func = |a: i32| a + 1;
-    let f_ab = PropagatingEffect::new(Ok(EffectValue::Value(f_ab_func)), (), None, logs1);
+    let f_ab = PropagatingEffect::new(Ok(CausalEffect::value(f_ab_func)), (), None, logs1);
 
     let mut logs2 = EffectLog::new();
     logs2.add_entry("Log 2");
-    let f_a = PropagatingEffect::new(Ok(EffectValue::Value(10)), (), None, logs2);
+    let f_a = PropagatingEffect::new(Ok(CausalEffect::value(10)), (), None, logs2);
 
     let m_b = TestWitness::apply(f_ab, f_a);
     assert_eq!(m_b.logs().len(), 2);
@@ -255,28 +250,27 @@ fn test_monad_bind_with_error_in_f_result() {
 }
 
 #[test]
-fn test_monad_bind_with_none_value_in_m_a() {
+fn test_monad_bind_with_none_value_in_m_a_passes_through() {
+    // Lawful `Maybe`/free-monad short-circuit: `None >>= f = None` (right identity). The continuation
+    // is not invoked and no error is fabricated.
     let m_a = setup_effect_with_none_value::<i32>();
     let f = |a: i32| setup_effect_with_value(a * 2);
     let m_b = TestWitness::bind(m_a, f);
-    assert!(m_b.is_err());
-    assert_eq!(
-        m_b.error().unwrap().0,
-        CausalityErrorEnum::InternalLogicError
-    );
+    assert!(m_b.is_ok());
     assert!(m_b.value().is_none());
+    assert!(m_b.effect().unwrap().is_none());
 }
 
 #[test]
 fn test_monad_bind_logs_combined() {
     let mut logs1 = EffectLog::new();
     logs1.add_entry("Log 1 from m_a");
-    let m_a = PropagatingEffect::new(Ok(EffectValue::Value(5)), (), None, logs1);
+    let m_a = PropagatingEffect::new(Ok(CausalEffect::value(5)), (), None, logs1);
 
     let f = |a: i32| {
         let mut logs2 = EffectLog::new();
         logs2.add_entry("Log 2 from f");
-        PropagatingEffect::new(Ok(EffectValue::Value(a * 2)), (), None, logs2)
+        PropagatingEffect::new(Ok(CausalEffect::value(a * 2)), (), None, logs2)
     };
 
     let m_b = TestWitness::bind(m_a, f);

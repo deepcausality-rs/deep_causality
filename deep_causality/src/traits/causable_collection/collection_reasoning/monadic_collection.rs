@@ -6,7 +6,7 @@ use crate::{
     AggregateLogic, Causable, CausableCollectionAccessor, CausalityError, MonadicCausable,
     NumericalValue, PropagatingEffect, monadic_collection_utils,
 };
-use deep_causality_core::{CausalityErrorEnum, EffectValue};
+use deep_causality_core::{CausalEffect, CausalityErrorEnum};
 
 pub trait MonadicCausableCollection<I, O, T>: CausableCollectionAccessor<I, O, T>
 where
@@ -56,8 +56,8 @@ where
             return PropagatingEffect::from_error(err);
         }
         // 1. Monadic fold to collect all effects.
-        // We start with a pure effect containing an empty vector of EffectValue<O>.
-        let initial_effect: PropagatingEffect<Vec<EffectValue<O>>> =
+        // We start with a pure effect containing an empty vector of CausalEffect<O>.
+        let initial_effect: PropagatingEffect<Vec<CausalEffect<O>>> =
             PropagatingEffect::pure(Vec::new());
 
         let final_effect = items.into_iter().fold(initial_effect, |acc_effect, item| {
@@ -83,7 +83,7 @@ where
                         acc_values.push(item_value);
                         // Carry the item's logs forward alongside the grown accumulator.
                         PropagatingEffect::new(
-                            Ok(EffectValue::Value(acc_values)),
+                            Ok(CausalEffect::value(acc_values)),
                             (),
                             None,
                             item_logs,
@@ -100,7 +100,7 @@ where
         let carried_logs = final_effect.logs().clone();
 
         final_effect.bind(move |effect_values_effect_value, _, _| {
-            // effect_values_effect_value is EffectValue<Vec<EffectValue<O>>>
+            // effect_values_effect_value is CausalEffect<Vec<CausalEffect<O>>>
             // We need to extract the Vec from it
             let effect_values = match effect_values_effect_value.into_value() {
                 Some(v) => v,

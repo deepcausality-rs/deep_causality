@@ -25,7 +25,7 @@
 //! scaffolding.
 
 use deep_causality_core::{
-    AlternatableContext, AlternatableValue, EffectValue, PropagatingEffect, PropagatingProcess,
+    AlternatableContext, AlternatableValue, CausalEffect, PropagatingEffect, PropagatingProcess,
 };
 
 fn main() {
@@ -151,7 +151,7 @@ fn start(world: SmokingContext) -> PropagatingProcess<f64, (), SmokingContext> {
 /// or tar has already accumulated. Emits a numeric tar indicator so the
 /// value channel is alternable mid-chain.
 fn stage_has_tar(
-    _value: EffectValue<f64>,
+    _value: CausalEffect<f64>,
     state: (),
     context: Option<SmokingContext>,
 ) -> PropagatingProcess<f64, (), SmokingContext> {
@@ -168,7 +168,7 @@ fn stage_has_tar(
 /// is what makes `alternate_value(...)` between the two stages a clean
 /// `do(Tar := x)`.
 fn stage_cancer_risk(
-    value: EffectValue<f64>,
+    value: CausalEffect<f64>,
     state: (),
     context: Option<SmokingContext>,
 ) -> PropagatingProcess<f64, (), SmokingContext> {

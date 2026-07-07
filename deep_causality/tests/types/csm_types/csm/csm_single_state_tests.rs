@@ -6,7 +6,7 @@
 use deep_causality::utils_test::test_utils;
 use deep_causality::utils_test::test_utils_csm;
 use deep_causality::{
-    BaseCausaloid, CSM, CausalState, Causaloid, EffectValue, PropagatingEffect, UncertainParameter,
+    BaseCausaloid, CSM, CausalEffect, CausalState, Causaloid, PropagatingEffect, UncertainParameter,
 };
 
 #[test]
@@ -334,8 +334,7 @@ fn eval_single_state_error_action_fails() {
 // the overall result is `Ok`.
 fn relay_causaloid() -> BaseCausaloid<bool, bool> {
     fn causal_fn(_: bool) -> PropagatingEffect<bool> {
-        let inner = PropagatingEffect::from_value(true);
-        PropagatingEffect::from_effect_value(EffectValue::RelayTo(7, Box::new(inner)))
+        PropagatingEffect::relay_to(7, CausalEffect::value(true))
     }
     Causaloid::new(55, causal_fn, "Relay Causaloid")
 }

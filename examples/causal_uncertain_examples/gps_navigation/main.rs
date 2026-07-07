@@ -8,7 +8,7 @@
 //! Reworks the original straight-line `Uncertain<f64>` example into a four-stage
 //! stateless chain over `CausalFlow`. Each stage receives the previous stage's
 //! `Uncertain<f64>` directly and returns the next uncertain quantity; the flow
-//! supplies the plumbing, so no stage touches `EffectValue` or `PropagatingEffect`.
+//! supplies the plumbing, so no stage touches `CausalEffect` or `PropagatingEffect`.
 //!
 //! Pipeline:
 //!

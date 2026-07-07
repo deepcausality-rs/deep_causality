@@ -28,7 +28,7 @@ DeepCausality takes a different foundational move: it **separates the causal law
 That "clone + modify + re-evaluate" pattern is **contextual alternation**, and it is the mechanism both approaches use. The difference is only where it happens:
 
 - **`via_causaloid`**: alternation happens *outside* the carrier. You clone a `BaseContext`, modify a `Contextoid` (a `Datoid` value, a `Spaceoid` location, a `Tempoid` time slice, etc.), then evaluate a `Causaloid` against the new Context.
-- **`via_monad`**: alternation happens *on the carrier itself*. The `Context` is a Rust struct carried through the `PropagatingProcess`; `.alternate_context(other)`, `.intervene(value)`, or `.alternate_state(state)` swap one channel mid-chain and emit a distinctive audit-log entry recording the switch.
+- **`via_monad`**: alternation happens *on the carrier itself*. The `Context` is a Rust struct carried through the `PropagatingProcess`; `.alternate_context(other)`, `.alternate_value(value)`, or `.alternate_state(state)` swap one channel mid-chain and emit a distinctive audit-log entry recording the switch.
 
 Either way, both approaches sidestep abduction because the world state is explicitly stated upfront. For engineering systems where state is what your software already records (sensor logs, patient histories, network topology), this is a straight win.
 
@@ -57,7 +57,7 @@ LOC counts include all `.rs` files in the example directory (main, model, suppor
 | **Number of causal units** | Dozens to hundreds of first-class `Causaloid` values; register, hot-swap, store in collections. | A handful of stages inlined as `bind` closures. |
 | **Context heterogeneity** | Multiple `Contextoid` types in one `BaseContext` (`Datoid` + `Spaceoid` + `Tempoid` + `SpaceTempoid` + `Symboid`). | A single `Context` Rust struct carries the world. |
 | **Alternation granularity** | Coarse, infrequent world rebuilds (clone Context, modify, build a new contextual `Causaloid`). | Fine, frequent channel substitutions (`alternate_value`, `alternate_context`, `alternate_state`) emitted with one method call. |
-| **Audit trail style** | Structural attribution: which `Causaloid` produced which effect. | Linear log of alternation events with distinctive markers (`!!Intervention!!`, `!!ContextAlternation!!`, `!!StateAlternation!!`) emitted automatically. |
+| **Audit trail style** | Structural attribution: which `Causaloid` produced which effect. | Linear log of alternation events with distinctive markers (`!!ValueAlternation!!`, `!!ContextAlternation!!`, `!!StateAlternation!!`) emitted automatically. |
 | **Reuse across models** | The same `Causaloid` can appear in many graphs. | The chain is defined once per problem; closures are inlined. |
 | **Ceremony per pipeline** | Graph construction (`new`, `add_causaloid`, `add_edge`, `freeze`) plus an evaluation strategy. | `start(ctx).bind(...).bind(...)`. |
 | **Type system carries the world** | Contextoid IDs + `Data::get_data()` lookups (runtime). | Plain Rust struct fields (compile-time). |
@@ -77,7 +77,7 @@ Pick **`via_monad`** when **all** of these are true:
 - The pipeline is sequential or near-sequential.
 - The world state fits in a single Rust struct (no need for multiple `Contextoid` kinds).
 - The audit trail of *alternation events* matters more than structural attribution to named units.
-- You want minimal ceremony and the alternation operator visible at the call site (`.intervene(x)`, `.alternate_context(c)`, `.alternate_state(s)`).
+- You want minimal ceremony and the alternation operator visible at the call site (`.alternate_value(x)`, `.alternate_context(c)`, `.alternate_state(s)`).
 - The team prefers plain Rust structs and `bind` chains over graph construction.
 
 ### Hybrid is a real option

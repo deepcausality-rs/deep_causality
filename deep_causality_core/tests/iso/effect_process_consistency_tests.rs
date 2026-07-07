@@ -28,8 +28,8 @@
 //! rationale.
 
 use deep_causality_core::{
-    CausalityError, EffectLog, PropagatingEffect, PropagatingEffectWitness, PropagatingProcess,
-    PropagatingProcessWitness,
+    CausalEffect, CausalityError, EffectLog, PropagatingEffect, PropagatingEffectWitness,
+    PropagatingProcess, PropagatingProcessWitness,
 };
 use deep_causality_haft::{Functor, Pure};
 
@@ -67,6 +67,56 @@ fn fmap_type_changing_agrees_across_witnesses() {
         via_effect, via_process,
         "fmap diverges between PropagatingEffectWitness and PropagatingProcessWitness \
          on the shared carrier (type-changing closure)"
+    );
+}
+
+/// `fmap` consistency on a `None` (absence) carrier — the case that used to diverge
+/// (`InternalLogicError`). Both witnesses are now total: a `None` effect passes through unchanged.
+#[test]
+fn fmap_on_none_agrees_across_witnesses() {
+    let val: PropagatingEffect<i32> =
+        PropagatingEffect::new(Ok(CausalEffect::none()), (), None, EffectLog::new());
+    let proc: PropagatingProcess<i32, (), ()> = val.clone();
+
+    let via_effect = <EffectW as Functor<EffectW>>::fmap(val, |x| x * 2);
+    let via_process = <ProcessW as Functor<ProcessW>>::fmap(proc, |x| x * 2);
+
+    assert!(via_effect.is_ok() && via_effect.value().is_none());
+    assert_eq!(
+        via_effect, via_process,
+        "fmap on a `None` carrier diverges between the two witnesses"
+    );
+}
+
+/// `fmap` consistency on a command (`RelayTo`) carrier — the case that used to diverge. Both
+/// witnesses are now total: the command is preserved (its value leaf mapped through the tree).
+#[test]
+fn fmap_on_command_agrees_across_witnesses() {
+    let cmd = || CausalEffect::relay_to(2, CausalEffect::value(7_i32));
+    let val: PropagatingEffect<i32> = PropagatingEffect::new(Ok(cmd()), (), None, EffectLog::new());
+    let proc: PropagatingProcess<i32, (), ()> = val.clone();
+
+    let via_effect = <EffectW as Functor<EffectW>>::fmap(val, |x| x + 1);
+    let via_process = <ProcessW as Functor<ProcessW>>::fmap(proc, |x| x + 1);
+
+    // The command survives with its target intact and its leaf mapped: RelayTo(2, value(8)).
+    // Assert the mapped leaf independently: if `map` were silently skipped on command carriers,
+    // both witnesses would produce `RelayTo(2, value(7))` and the cross-witness equality below
+    // would still pass. Pin the leaf value so that regression is caught.
+    let (target, inner) = via_effect
+        .effect()
+        .cloned()
+        .and_then(CausalEffect::into_command)
+        .expect("fmap dropped the command carrier");
+    assert_eq!(target, 2);
+    assert_eq!(
+        inner.into_value(),
+        Some(8),
+        "fmap did not map the command's value leaf from 7 to 8"
+    );
+    assert_eq!(
+        via_effect, via_process,
+        "fmap on a command carrier diverges between the two witnesses"
     );
 }
 

@@ -46,7 +46,7 @@ fn test_new_with_context() {
     let context = get_base_context();
 
     fn contextual_causal_fn(
-        obs: EffectValue<NumericalValue>,
+        obs: CausalEffect<NumericalValue>,
         _state: (),
         ctx: Option<Arc<RwLock<BaseContext>>>,
     ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
@@ -130,13 +130,30 @@ fn test_evaluate_singleton() {
 }
 
 #[test]
+fn test_evaluate_singleton_errors_on_a_relay_command_input() {
+    let causaloid = test_utils::get_test_causaloid_deterministic(23);
+
+    // A command (`RelayTo`) on the input channel cannot be consumed by a singleton: it carries no
+    // input value and cannot be retyped `I -> O`. The stateless path surfaces a clear,
+    // command-specific error (mirroring `evaluate_stateful`) rather than reporting a generic
+    // "input value is None", which would conflate a dropped command with absence of evidence.
+    let effect: PropagatingEffect<NumericalValue> =
+        PropagatingEffect::from_effect(CausalEffect::relay_to(5, CausalEffect::value(0.78)));
+    let res = causaloid.evaluate(&effect);
+
+    assert!(res.is_err());
+    let err = res.error().expect("a command input errors");
+    assert!(format!("{err:?}").contains("received a command"));
+}
+
+#[test]
 fn test_evaluate_singleton_with_context() {
     let id: IdentificationValue = 1;
     let description = "tests a causaloid with a context";
     let context = get_base_context();
 
     fn contextual_causal_fn(
-        obs: EffectValue<NumericalValue>,
+        obs: CausalEffect<NumericalValue>,
         _state: (),
         ctx: Option<Arc<RwLock<BaseContext>>>,
     ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
@@ -225,7 +242,7 @@ fn test_contextual_fn_returning_none() {
     let context = get_base_context();
 
     fn bad_fn(
-        _obs: EffectValue<NumericalValue>,
+        _obs: CausalEffect<NumericalValue>,
         _state: (),
         _ctx: Option<Arc<RwLock<BaseContext>>>,
     ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
@@ -259,7 +276,7 @@ fn test_errored_process_propagates_error_without_value() {
     let context = get_base_context();
 
     fn problematic_fn(
-        _obs: EffectValue<f64>,
+        _obs: CausalEffect<f64>,
         _state: (),
         _ctx: Option<Arc<RwLock<BaseContext>>>,
     ) -> PropagatingProcess<f64, (), Arc<RwLock<BaseContext>>> {
@@ -288,51 +305,17 @@ fn test_errored_process_propagates_error_without_value() {
 }
 
 #[test]
-fn test_contextual_link_preservation() {
-    let id: IdentificationValue = 101;
-    let description = "test contextual link preservation";
-    let context = get_base_context();
-
-    fn contextual_causal_fn(
-        _obs: EffectValue<NumericalValue>,
-        _state: (),
-        _ctx: Option<Arc<RwLock<BaseContext>>>,
-    ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
-        let contextual_link = EffectValue::ContextualLink(42, 100);
-        PropagatingProcess::from_effect_value(contextual_link)
-    }
-
-    let causaloid = BaseCausaloid::<NumericalValue, bool>::new_with_context(
-        id,
-        contextual_causal_fn,
-        Arc::new(RwLock::new(context)),
-        description,
-    );
-
-    let effect = PropagatingEffect::from_value(0.5);
-    let result = causaloid.evaluate(&effect);
-
-    assert!(result.is_ok());
-    assert!(matches!(
-        result.effect(),
-        Some(EffectValue::ContextualLink(42, 100))
-    ));
-}
-
-#[test]
 fn test_relay_to_preservation() {
     let id: IdentificationValue = 102;
     let description = "test relay_to preservation";
     let context = get_base_context();
 
     fn relay_causal_fn(
-        _obs: EffectValue<NumericalValue>,
+        _obs: CausalEffect<NumericalValue>,
         _state: (),
         _ctx: Option<Arc<RwLock<BaseContext>>>,
     ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
-        let relay_effect = PropagatingEffect::from_value(true);
-        let relay_to = EffectValue::RelayTo(5, Box::new(relay_effect));
-        PropagatingProcess::from_effect_value(relay_to)
+        PropagatingProcess::from_effect(CausalEffect::relay_to(5, CausalEffect::value(true)))
     }
 
     let causaloid = BaseCausaloid::<NumericalValue, bool>::new_with_context(
@@ -346,7 +329,7 @@ fn test_relay_to_preservation() {
     let result = causaloid.evaluate(&effect);
 
     assert!(result.is_ok());
-    assert!(matches!(result.effect(), Some(EffectValue::RelayTo(5, _))));
+    assert!(result.command_target() == Some(5));
 }
 
 #[test]
@@ -355,7 +338,7 @@ fn test_none_output_error() {
     let description = "test none output error";
 
     fn none_fn(_obs: NumericalValue) -> PropagatingEffect<bool> {
-        PropagatingEffect::from_effect_value(EffectValue::None)
+        PropagatingEffect::from_effect(CausalEffect::none())
     }
 
     let causaloid = BaseCausaloid::<NumericalValue, bool>::new(id, none_fn, description);

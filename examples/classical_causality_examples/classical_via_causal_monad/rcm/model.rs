@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{EffectValue, PropagatingEffect, PropagatingProcess};
+use deep_causality_core::{CausalEffect, PropagatingEffect, PropagatingProcess};
 
 /// Treatment assignment carried in the Context channel. Alternation between
 /// treatment and control is the only thing that differs between the two
@@ -28,7 +28,7 @@ pub fn start(treatment: TreatmentContext) -> PropagatingProcess<f64, (), Treatme
 
 /// Stage 1: produce the drug-induced BP change for the current Context.
 pub fn apply_drug_effect(
-    _value: EffectValue<f64>,
+    _value: CausalEffect<f64>,
     state: (),
     context: Option<TreatmentContext>,
 ) -> PropagatingProcess<f64, (), TreatmentContext> {
@@ -44,7 +44,7 @@ pub fn apply_drug_effect(
 
 /// Stage 2: add the drug effect to the baseline blood pressure.
 pub fn compute_final_bp(
-    value: EffectValue<f64>,
+    value: CausalEffect<f64>,
     state: (),
     context: Option<TreatmentContext>,
 ) -> PropagatingProcess<f64, (), TreatmentContext> {

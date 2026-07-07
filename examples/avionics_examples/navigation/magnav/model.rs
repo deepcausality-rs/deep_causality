@@ -4,9 +4,7 @@
  */
 
 use deep_causality_calculus::{DifferentiableField, Euler, Scalar};
-use deep_causality_core::{
-    CausalFlow, CausalityError, CausalityErrorEnum, EffectValue, PropagatingEffect,
-};
+use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum, PropagatingEffect};
 use deep_causality_haft::Arrow;
 use deep_causality_tensor::CausalTensor;
 use std::error::Error;
@@ -171,10 +169,7 @@ impl ParticleFilter {
         // We lift the update into a causal effect
         // The observation is the "cause" of the weight change.
         let effect = PropagatingEffect::pure(measured_mag).bind(|obs_ref, _, _| {
-            let z = match obs_ref {
-                EffectValue::Value(v) => v,
-                _ => 0.0,
-            };
+            let z: f64 = obs_ref.into_value().unwrap_or(0.0);
 
             // Compute unnormalized likelihoods
             // P(z|x) ~ exp( - (z - h(x))^2 / 2R )

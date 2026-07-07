@@ -39,7 +39,7 @@ pub mod model_config;
 pub mod model_types;
 mod model_utils;
 
-use deep_causality_core::{EffectLog, EffectValue};
+use deep_causality_core::{CausalEffect, EffectLog};
 use model::{resolve_stage, run_cascade};
 use model_config::build_network;
 use model_types::{FlowSolution, NetworkConfig, NetworkProcess, NetworkState};
@@ -66,7 +66,7 @@ fn main() {
 
 fn run_factual(cfg: NetworkConfig) -> NetworkProcess<FlowSolution> {
     NetworkProcess::<Vec<u32>>::new(
-        Ok(EffectValue::Value(Vec::new())),
+        Ok(CausalEffect::value(Vec::new())),
         NetworkState::default(),
         Some(cfg),
         EffectLog::new(),

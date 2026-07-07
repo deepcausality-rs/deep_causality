@@ -19,7 +19,7 @@ use crate::{
     AggregateLogic, Causable, CausableCollectionAccessor, CausalityError, CausalityErrorEnum,
     MonadicCausable, NumericalValue, StatefulMonadicCausable, monadic_collection_utils,
 };
-use deep_causality_core::{EffectValue, PropagatingProcess};
+use deep_causality_core::{CausalEffect, PropagatingProcess};
 use deep_causality_haft::LogAppend;
 use std::fmt::Debug;
 
@@ -95,8 +95,8 @@ where
             );
         }
 
-        // Accumulator: process carrying (Vec<EffectValue<O>>, threaded S, C, logs).
-        let mut acc_values: Vec<EffectValue<O>> = Vec::with_capacity(items.len());
+        // Accumulator: process carrying (Vec<CausalEffect<O>>, threaded S, C, logs).
+        let mut acc_values: Vec<CausalEffect<O>> = Vec::with_capacity(items.len());
         let mut acc_state: S = incoming.state().clone();
         let mut acc_context: Option<C> = incoming.context().clone();
         let mut acc_logs = incoming.logs().clone();

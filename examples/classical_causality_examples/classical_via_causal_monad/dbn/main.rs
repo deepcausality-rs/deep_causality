@@ -33,7 +33,7 @@
 //! example is reproducible without an RNG.
 
 use deep_causality_core::{
-    AlternatableContext, EffectValue, PropagatingEffect, PropagatingProcess,
+    AlternatableContext, CausalEffect, PropagatingEffect, PropagatingProcess,
 };
 
 fn main() {
@@ -150,7 +150,7 @@ fn start_in(climate: WeatherContext) -> PropagatingProcess<f64, WeatherState, We
 /// the deterministic rain outcome, and the umbrella decision; updates
 /// the State and emits the probability as the next value.
 fn step_day(
-    _value: EffectValue<f64>,
+    _value: CausalEffect<f64>,
     state: WeatherState,
     context: Option<WeatherContext>,
 ) -> PropagatingProcess<f64, WeatherState, WeatherContext> {

@@ -3,31 +3,28 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CausalEffectPropagationProcess, EffectValue};
+use crate::{CausalEffect, CausalEffectPropagationProcess};
 
 impl<Value, State, Context, Error, Log>
     CausalEffectPropagationProcess<Value, State, Context, Error, Log>
 {
-    /// The value-XOR-error channel: an effect value, or the error that ended the computation.
-    pub const fn outcome(&self) -> &Result<EffectValue<Value>, Error> {
+    /// The effect-XOR-error channel: a [`CausalEffect`] (value or command), or the error that ended
+    /// the computation.
+    pub const fn outcome(&self) -> &Result<CausalEffect<Value>, Error> {
         &self.outcome
     }
 
-    /// The carried scalar, if the process holds a plain [`EffectValue::Value`].
+    /// The carried scalar, if the process holds a value effect.
     ///
-    /// This is the everyday accessor: it lends `Some(&v)` only when the process carries an
-    /// ordinary value, and `None` for an errored process or any non-`Value` effect
-    /// (`None`, `ContextualLink`, `RelayTo`, `Map`). Reach for [`value_cloned`](Self::value_cloned)
-    /// or [`into_value`](Self::into_value) when you need the value by value, and for
-    /// [`effect`](Self::effect) when you need to discriminate the effect variants.
+    /// This is the everyday accessor: it lends `Some(&v)` only when the process carries an ordinary
+    /// value, and `None` for an errored process, a `None` effect, or a command effect. Reach for
+    /// [`value_cloned`](Self::value_cloned) / [`into_value`](Self::into_value) for the value by
+    /// value, and [`effect`](Self::effect) / [`command_target`](Self::command_target) to discriminate.
     pub fn value(&self) -> Option<&Value> {
-        match self.outcome.as_ref().ok()? {
-            EffectValue::Value(v) => Some(v),
-            _ => None,
-        }
+        self.outcome.as_ref().ok()?.as_value()
     }
 
-    /// The carried scalar cloned out, if the process holds a plain [`EffectValue::Value`].
+    /// The carried scalar cloned out, if the process holds a value effect.
     ///
     /// The borrowing, owned-result counterpart to [`value`](Self::value); the non-consuming
     /// counterpart to [`into_value`](Self::into_value).
@@ -38,14 +35,19 @@ impl<Value, State, Context, Error, Log>
         self.value().cloned()
     }
 
-    /// The carried effect value, or `None` if the process holds an error.
+    /// The carried [`CausalEffect`] (value or command), or `None` if the process holds an error.
     ///
-    /// Yields the full [`EffectValue`] wrapper so callers can discriminate its variants
-    /// (`Value`, `None`, `ContextualLink`, `RelayTo`, `Map`) — for dispatch and routing logic.
-    /// Most callers want the plain scalar instead: use [`value`](Self::value). An errored process
-    /// has no effect to lend — value and error are one channel (the W-invariant, by construction).
-    pub fn effect(&self) -> Option<&EffectValue<Value>> {
+    /// Yields the whole effect so callers can discriminate value / none / command (via
+    /// [`CausalEffect::is_command`] etc.). Most callers want the plain scalar instead: use
+    /// [`value`](Self::value). An errored process has no effect to lend — effect and error are one
+    /// channel (the W-invariant, by construction).
+    pub fn effect(&self) -> Option<&CausalEffect<Value>> {
         self.outcome.as_ref().ok()
+    }
+
+    /// The target causaloid index if this process carries a `RelayTo` command effect, else `None`.
+    pub fn command_target(&self) -> Option<usize> {
+        self.outcome.as_ref().ok()?.command_target()
     }
 
     pub const fn state(&self) -> &State {

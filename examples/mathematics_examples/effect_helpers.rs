@@ -18,8 +18,8 @@
 //! `StepLog` for why that matters here.
 
 use deep_causality_core::{
-    CausalEffectPropagationProcess, CausalEffectPropagationProcessWitness, CausalityError,
-    CausalityErrorEnum, EffectValue,
+    CausalEffect, CausalEffectPropagationProcess, CausalEffectPropagationProcessWitness,
+    CausalityError, CausalityErrorEnum,
 };
 use deep_causality_haft::LogAppend;
 
@@ -66,7 +66,7 @@ pub type ProcessWitness = CausalEffectPropagationProcessWitness<(), (), Causalit
 
 /// Build a successful step result with an accompanying log line.
 pub fn ok<T, S: Into<String>>(value: T, msg: S) -> Process<T> {
-    CausalEffectPropagationProcess::new(Ok(EffectValue::Value(value)), (), None, StepLog::one(msg))
+    CausalEffectPropagationProcess::new(Ok(CausalEffect::value(value)), (), None, StepLog::one(msg))
 }
 
 /// Build a failing step. The error short-circuits subsequent `bind` calls.

@@ -4,7 +4,7 @@
  */
 
 use deep_causality_core::{
-    CausalArrow, CausalFlow, CausalityError, CausalityErrorEnum, EffectLog, EffectValue,
+    CausalArrow, CausalEffect, CausalFlow, CausalityError, CausalityErrorEnum, EffectLog,
     causal_arrow,
 };
 use deep_causality_haft::Arrow;
@@ -106,13 +106,57 @@ fn arrow_threads_accumulated_state() {
     // State is a running sum; each stage adds the incoming value to the state and passes the value
     // on. Composition must thread the state `s0 -> s1 -> s2` — the D2 fix.
     let step = |x: i64, s: i64, _c: Option<()>| {
-        CausalFlow::from_parts(Ok(EffectValue::Value(x)), s + x, None, EffectLog::new())
+        CausalFlow::from_parts(Ok(CausalEffect::value(x)), s + x, None, EffectLog::new())
     };
     let pipeline = causal_arrow(step).next(step).build();
     // value 5, initial state 0: state 0 -> +5 -> 5 (stage 1) -> +5 -> 10 (stage 2).
     let out = pipeline.run((5, 0, None)).into_process();
     assert_eq!(*out.state(), 10, "state must thread across both stages");
     assert_eq!(out.into_value(), Some(5));
+}
+
+/// Additional case of `THEOREM_MAP: core.causal_arrow.category_laws` (Lean:
+/// `DeepCausalityFormal/Core/CausalArrow.lean :: kcomp_right_id`, the `none` branch). Right identity
+/// `f >>> arr id = f` holds UNCONDITIONALLY — including when `f` emits a `None` effect: there is no
+/// `None → Err` collapse, so composing a value-less stage with the identity arrow leaves it a
+/// value-less (but non-errored) carrier with its state intact.
+#[test]
+fn arrow_right_identity_on_none_emitting_stage() {
+    // f emits `None` (and bumps the state); `arr id` re-emits value/state/context untouched.
+    let none_stage = |_x: i64, s: i64, _c: Option<()>| {
+        CausalFlow::from_parts(Ok(CausalEffect::none()), s + 1, None, EffectLog::new())
+    };
+    let id_stage = |x: i64, s: i64, _c: Option<()>| {
+        CausalFlow::from_parts(Ok(CausalEffect::value(x)), s, None, EffectLog::new())
+    };
+
+    // f alone.
+    let out_f = causal_arrow(none_stage)
+        .build()
+        .run((5, 0, None))
+        .into_process();
+    // f >>> arr id.
+    let out_c = causal_arrow(none_stage)
+        .next(id_stage)
+        .build()
+        .run((5, 0, None))
+        .into_process();
+
+    assert!(
+        !out_f.is_err() && !out_c.is_err(),
+        "a None effect is not an error"
+    );
+    let (sf, sc) = (*out_f.state(), *out_c.state());
+    assert_eq!(
+        sf, sc,
+        "state threads identically on both sides of f >>> arr id = f"
+    );
+    assert_eq!(sc, 1);
+    assert!(out_f.into_value().is_none(), "f yields no value");
+    assert!(
+        out_c.into_value().is_none(),
+        "f >>> arr id yields the same — no None→Err collapse"
+    );
 }
 
 /// Witness for `THEOREM_MAP: core.causal_arrow.left_zero` (Lean:
@@ -122,7 +166,7 @@ fn arrow_threads_accumulated_state() {
 fn arrow_error_short_circuit_preserves_state() {
     // A first-stage error must short-circuit AND preserve the state accumulated so far.
     let acc = |x: i64, s: i64, _c: Option<()>| {
-        CausalFlow::from_parts(Ok(EffectValue::Value(x)), s + x, None, EffectLog::new())
+        CausalFlow::from_parts(Ok(CausalEffect::value(x)), s + x, None, EffectLog::new())
     };
     let boom = |_x: i64, s: i64, _c: Option<()>| {
         CausalFlow::<i64, i64, ()>::from_parts(Err(err("boom")), s, None, EffectLog::new())
@@ -132,7 +176,7 @@ fn arrow_error_short_circuit_preserves_state() {
         .next(boom)
         .next(|x, s: i64, _c| {
             ran.set(true);
-            CausalFlow::from_parts(Ok(EffectValue::Value(x)), s, None, EffectLog::new())
+            CausalFlow::from_parts(Ok(CausalEffect::value(x)), s, None, EffectLog::new())
         })
         .build();
     let out = pipeline.run((7, 0, None)).into_process();

@@ -9,14 +9,32 @@ Rust source: `deep_causality_core/src/types/causal_effect_propagation_process/mo
 
 With precondition P2 of the Causal Algebra program enforced
 (`openspec/notes/causal-algebra/Formalization.md` §2; change `enforce-w-invariant`), the Rust
-carrier encodes value-XOR-error as ONE channel — `outcome: Result<EffectValue<Value>, Error>`,
-i.e. `Either E (Maybe T)` — so the W-invariant (`error ⇒ no value`) holds by construction and
-the invalid state the original walking skeleton had to exclude is unrepresentable.
+carrier encodes value-XOR-error as ONE channel — so the W-invariant (`error ⇒ no value`) holds
+by construction and the invalid state the original walking skeleton had to exclude is
+unrepresentable.
 
-The model below transcribes the Rust carrier channel-for-channel:
-  * `outcome : Except E (Option V)` — the value-XOR-error channel. `Option` models the
-    value-or-absent content of `EffectValue` (its `RelayTo`/`Map` control variants are
-    precondition P1's business and are not part of the monad-law surface).
+Post the `separate-control-channel` change the Rust carrier is
+`outcome: Result<CausalEffect<Value>, Error>` where
+`CausalEffect<V> = Free<CausalCommandWitness, Option<V>>` — i.e. the full transformer stack
+`Except E (Free CausalCommand (Maybe V))`. This model is **congruent** with that carrier: it is
+its restriction to the `Pure` fragment. `Free CausalCommand (Maybe V)` restricted to `Pure` **is**
+`Option V`, so `Except E (Option V)` = the carrier whenever there is no command. Control (a
+`RelayTo` jump) is the `Free`'s `Suspend` layer — a SECOND left zero of `bind`, interpreted by the
+reasoning engine's `Free::fold` handler (laws from `haft.free_monad.*`) and NOT part of the value
+monad-law surface. So the three monad laws below hold over the value fragment exactly as before;
+`EPP = CausalMonad ⊕ CausalEffect`.
+
+Layering: the *base* is the lawful monad proved in `Haft/Monad.lean` (`haft.monad.laws`); this file
+proves only the causal *extension* of it — the state/context/log/error channels threaded by `bind'`
+(a delta over the base, in the haft house style). The value-XOR-error object is `Except E`
+(`haft.effect3.monad_laws`), the log channel is the free monoid `Core/EffectLog.lean`
+(`core.effect_log.*`), and the control layer is the free monad `haft.free_monad.*`; nothing the base
+already establishes is re-proved here.
+
+The model below transcribes the Rust carrier's value fragment channel-for-channel:
+  * `outcome : Except E (Option V)` — the value-XOR-error channel; `Option` is the `Maybe` value
+    content (`Pure(Some v)` = a value, `Pure(None)` = the `None` effect). The `Free`'s `Suspend`
+    control layer is the free-monad extension, orthogonal to these laws.
   * `state : S` — the threaded Markovian state.
   * `ctx : Option C` — the read context threaded by `bind`.
   * `logs : List Λ` — the append-only audit log (Writer over the `List` monoid).
@@ -31,8 +49,10 @@ right identity for `eta`).
 
 Theorems: left identity, right identity, associativity — all three now hold, right identity
 UNCONDITIONALLY (the theorem `bind_right_id` closes the id `core.causal_monad.right_id`,
-formerly blocked on P2, and `bind_assoc` closes `core.causal_monad.assoc`). The full
-`LawfulMonad`-with-effect-equations claim (`core.causal_monad.lawful`) remains gated on P1.
+formerly blocked on P2, and `bind_assoc` closes `core.causal_monad.assoc`). Precondition P1 is now
+resolved — control (`RelayTo`) is separated into `CausalCommand` / `CausalEffect` and is a lawful
+free monad (`haft.free_monad.*`), no longer a non-lawful variant fused into the value type — so the
+value monad here composes cleanly with it (`Except ∘ Free ∘ Maybe`, each layer already proved).
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
@@ -123,5 +143,26 @@ theorem bind_raise_left_zero (e : E) (s : S) (c : Option C) (l : List Λ)
     (f : Option V → S → Option C → Process W S C E Λ) :
     bind' { outcome := .error e, state := s, ctx := c, logs := l } f
       = { outcome := .error e, state := s, ctx := c, logs := l } := rfl
+
+/-- The carrier is a **lawful monad**: left identity, (unconditional) right identity, and
+    associativity hold *together* over one carrier — the `LawfulMonad`-with-effect claim.
+
+    This is the theorem that was blocked on P1. While control (`RelayTo`/`Map`) lived fused into the
+    value channel, no single carrier satisfied all three laws at once (a `Map` node broke
+    reflexivity / the value law). With P1 resolved (`separate-control-channel`, landed) control is
+    the free monad's `Suspend` layer (`haft.free_monad.*`, orthogonal to `bind`) and the value
+    carrier is the transformer stack `Except ∘ Free ∘ Maybe` of already-proven monads — so the three
+    value laws co-hold. Bundled here from the theorems above (no new obligation, just the joint
+    statement that was previously unattainable).
+
+    THEOREM_MAP: `core.causal_monad.lawful` -/
+theorem causal_monad_lawful
+    (f : Option V → S → Option C → Process W S C E Λ)
+    (g : Option W → S → Option C → Process X S C E Λ) :
+    (∀ (v : V) (s : S), bind' (pure' v s) f = f (some v) s none)
+      ∧ (∀ (m : Process V S C E Λ), bind' m eta = m)
+      ∧ (∀ (m : Process V S C E Λ),
+          bind' (bind' m f) g = bind' m (fun v s c => bind' (f v s c) g)) :=
+  ⟨fun v s => bind_left_id v s f, bind_right_id, fun m => bind_assoc m f g⟩
 
 end DeepCausalityFormal.Core

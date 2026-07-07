@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CausalEffectPropagationProcess, EffectValue};
+use crate::{CausalEffect, CausalEffectPropagationProcess};
 use core::marker::PhantomData;
 use deep_causality_haft::{
     Applicative, Functor, HKT, HKT5, LogAppend, NoConstraint, Placeholder, Pure, Satisfies,
@@ -41,15 +41,13 @@ where
         B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnOnce(A) -> B,
     {
-        // Error short-circuits: `f` is not invoked; the error propagates (left zero).
-        // A value-less Ok carrier still panics: the error type `E` is generic here, so no
-        // substitute error can be manufactured (the alias witnesses with concrete
-        // `CausalityError` surface `InternalLogicError` instead).
+        // Error short-circuits: `f` is not invoked; the error propagates (left zero). Otherwise the
+        // total `CausalEffect::map` handles value/none/command uniformly — a value maps its leaf, a
+        // `None` passes through, and a command is preserved (its sub-program leaf mapped). No panic,
+        // no manufactured error. This matches the inherent `fmap` exactly (see `Core/Consistency.lean`).
         let outcome = match m_a.outcome {
             Err(error) => Err(error),
-            Ok(value) => Ok(EffectValue::Value(f(value
-                .into_value()
-                .expect("Functor fmap on a non-error process should contain a value")))),
+            Ok(effect) => Ok(effect.map(f)),
         };
         CausalEffectPropagationProcess {
             outcome,
@@ -72,7 +70,7 @@ where
         T: Satisfies<<Self as HKT>::Constraint>,
     {
         CausalEffectPropagationProcess {
-            outcome: Ok(EffectValue::Value(value)),
+            outcome: Ok(CausalEffect::value(value)),
             state: S::default(),
             context: None,
             logs: L::default(),
@@ -100,16 +98,14 @@ where
         combined_logs.append(&mut f_a.logs);
         let context = f_ab.context.or(f_a.context);
 
-        // Error short-circuits: the function is not invoked; the first error propagates
-        // (left zero). See the note on `fmap` for the value-less Ok panic.
+        // Error short-circuits: the function is not invoked; the first error propagates (left zero).
+        // If either side lacks a value (a `None` or command effect), the result is `None` — no panic.
         let outcome = match (f_ab.outcome, f_a.outcome) {
             (Err(error), _) | (_, Err(error)) => Err(error),
-            (Ok(func), Ok(arg)) => {
-                let value = (func.into_value().expect("Value expected in apply"))(
-                    arg.into_value().expect("Value expected in apply"),
-                );
-                Ok(EffectValue::Value(value))
-            }
+            (Ok(func), Ok(arg)) => match (func.into_value(), arg.into_value()) {
+                (Some(mut func), Some(arg)) => Ok(CausalEffect::value(func(arg))),
+                _ => Ok(CausalEffect::none()),
+            },
         };
 
         CausalEffectPropagationProcess {

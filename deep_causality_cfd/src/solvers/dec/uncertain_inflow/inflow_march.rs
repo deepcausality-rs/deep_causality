@@ -24,7 +24,7 @@
 //! entirely in this stage, above `step`.
 
 use deep_causality_core::{
-    AlternatableValue, CausalFlow, CausalityError, CausalityErrorEnum, EffectLog, EffectValue,
+    AlternatableValue, CausalEffect, CausalFlow, CausalityError, CausalityErrorEnum, EffectLog,
     PropagatingProcess,
 };
 use deep_causality_uncertain::{MaybeUncertain, ProbabilisticType};
@@ -127,7 +127,7 @@ fn error_process<'m, const D: usize, R: DecNsScalar + ProbabilisticType>(
 
 /// One uncertain-inflow march step (the `CausalFlow` bind stage). See the module docs.
 pub fn inflow_march_step<'m, const D: usize, R>(
-    _incoming: EffectValue<R>,
+    _incoming: CausalEffect<R>,
     state: InflowMarchState<'m, D, R>,
     context: Option<InflowContext<R>>,
 ) -> InflowProcess<'m, D, R>
@@ -262,9 +262,9 @@ where
     };
     let process = PropagatingProcess::new(
         Ok(if dropout {
-            EffectValue::None
+            CausalEffect::none()
         } else {
-            EffectValue::Value(inflow)
+            CausalEffect::value(inflow)
         }),
         next,
         Some(context),
@@ -320,7 +320,7 @@ where
     let initial = InflowMarchState::new(solver, field, zone.default_inflow());
     let context = InflowContext::new(zone, stream);
     let seed = PropagatingProcess::new(
-        Ok(EffectValue::Value(zone.default_inflow())),
+        Ok(CausalEffect::value(zone.default_inflow())),
         initial,
         Some(context),
         EffectLog::new(),

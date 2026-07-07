@@ -1,7 +1,7 @@
 # Causal Counterfactual Examples
 
 Five worked examples showing counterfactual intervention with the causal
-monad: what `intervene` gives you beyond `bind`.
+monad: what `alternate_value` gives you beyond `bind`.
 
 These follow the Judea Pearl tradition. Hold a factual world in mind,
 hypothetically substitute a different value, read off the difference. The
@@ -13,9 +13,9 @@ This crate sits alongside
 [`causal_discovery_examples`](../causal_discovery_examples) and
 [`causal_uncertain_examples`](../causal_uncertain_examples).
 
-## What `intervene` does that `bind` cannot
+## What `alternate_value` does that `bind` cannot
 
-`Intervenable::intervene(self, new_value)` replaces the value carried by
+`AlternatableValue::alternate_value(self, new_value)` replaces the value carried by
 an in-flight chain. Several properties follow from that contract; `bind`
 chains can fake any of them with branching code or external state, but
 the monad makes them properties of the type instead of properties of the
@@ -24,8 +24,8 @@ program.
 | Property | Demonstrated by |
 |---|---|
 | Same chain, different worlds. Replay the same `bind` pipeline under several interventions without branching code. | All five examples |
-| Audit trail in `EffectLog`. Every `intervene` appends `!!Intervention!!: <old> replaced with <new>`. The intervention history becomes inspectable. | `counterfactual_envelope_fault`, `counterfactual_cascade_failure`, `counterfactual_resection_intervention` |
-| Error-state preservation. If the chain is already in error, `intervene` is a no-op. Intervention cannot paper over an upstream bug. | (Property of the trait; not the punchline of a dedicated example.) |
+| Audit trail in `EffectLog`. Every `alternate_value` appends `!!ValueAlternation!!: <old> replaced with <new>`. The intervention history becomes inspectable. | `counterfactual_envelope_fault`, `counterfactual_cascade_failure`, `counterfactual_resection_intervention` |
+| Error-state preservation. If the chain is already in error, `alternate_value` is a no-op. Intervention cannot paper over an upstream bug. | (Property of the trait; not the punchline of a dedicated example.) |
 | State and Context preservation. On `PropagatingProcess`, only the value swaps. Accumulated `State` and read-only `Context` are untouched. | `counterfactual_envelope_fault`, `counterfactual_cascade_failure` |
 | Intervention site encodes a causal claim. Where in the chain you intervene says what counts as upstream of the manipulated quantity. | `counterfactual_treatment_options` |
 | Comparative evaluation as the estimand. The difference between factual and counterfactual is the causal quantity you wanted. | `counterfactual_treatment_effect`, `counterfactual_treatment_options`, `counterfactual_cascade_failure` |
@@ -70,7 +70,7 @@ interventions, see
 
 ## How this differs from the existing intervene examples
 
-The codebase already has small demonstrations of `intervene` in:
+The codebase already has small demonstrations of `alternate_value` in:
 
 * [`starter_example`](../starter_example), which walks Pearl's three
   rungs on a smoking-tar-cancer chain.
@@ -84,8 +84,8 @@ The codebase already has small demonstrations of `intervene` in:
 * [`material_examples/structural_health_monitor`](../material_examples/structural_health_monitor),
   which asks what would have happened without the observed crack.
 
-Those are the *what is `intervene`* examples. The five here are the
-*what does `intervene` give you that `bind` cannot* examples, drawn from
+Those are the *what is `alternate_value`* examples. The five here are the
+*what does `alternate_value` give you that `bind` cannot* examples, drawn from
 domains that were not built around intervention from the start: clinical
 trial design, avionics, hemodynamics, distribution-network reliability,
 and surgical planning.

@@ -4,13 +4,13 @@
  */
 
 // =============================================================================
-// Fluent steps (hide `EffectValue` + auto short-circuit)
+// Fluent steps (hide `CausalEffect` + auto short-circuit)
 // =============================================================================
 
 use crate::types::causal_flow::{err_leaf, ok_leaf};
 use crate::{
-    CausalEffectPropagationProcess, CausalFlow, CausalityError, CausalityErrorEnum, EffectLog,
-    EffectValue, PropagatingProcess,
+    CausalEffect, CausalEffectPropagationProcess, CausalFlow, CausalityError, CausalityErrorEnum,
+    EffectLog, PropagatingProcess,
 };
 
 // The fluent steps lower to the monad's `bind` / `bind_or_error`, which *move* state and context
@@ -27,41 +27,40 @@ impl<Value, State, Context> CausalFlow<Value, State, Context> {
     /// exactly as a value-only step would — which is why there is a single `and_then`, not a
     /// value-only/stateful pair.
     ///
-    /// A value-less carrier short-circuits *lawfully*, mirroring [`map`](Self::map) and the Maybe
-    /// monad: `None` and `ContextualLink` pass through unchanged (the continuation is NOT run and no
-    /// error is manufactured), which is what makes right identity `f >=> η = f` hold. The `RelayTo` /
-    /// `Map` dispatch variants carry a `PropagatingEffect<Value>` a value-level step cannot retype to
-    /// `U`, so they surface a `ValueNotAvailable` error rather than being dropped (residue removed
-    /// once the control channel is separated). An upstream error short-circuits (left zero, handled
-    /// by `bind`). Effect-returning stages adapt with [`From`] / `.into()`.
+    /// A `None` effect short-circuits *lawfully*, mirroring [`map`](Self::map) and the Maybe monad:
+    /// it passes through unchanged (the continuation is NOT run and no error is manufactured), which
+    /// is what makes right identity `f >=> η = f` hold. A command effect carries a control
+    /// sub-program a value-level step cannot retype to `U`, so it surfaces a `ValueNotAvailable`
+    /// error rather than being dropped (unreachable-defensive — the reasoning engine folds commands
+    /// first). An upstream error short-circuits (left zero, handled by `bind`). Effect-returning
+    /// stages adapt with [`From`] / `.into()`.
     pub fn and_then<U, F>(self, f: F) -> CausalFlow<U, State, Context>
     where
         F: FnOnce(Value, State, Option<Context>) -> CausalFlow<U, State, Context>,
     {
-        let inner = self.inner.bind(|ev, state, context| match ev {
-            // Run the continuation on the threaded `(value, state, context)` and thread its returned
-            // state/context forward; `bind` prepends the upstream logs.
-            EffectValue::Value(v) => f(v, state, context).inner,
-            // Value-less carriers short-circuit lawfully: continuation not run, channel preserved.
-            EffectValue::None => CausalEffectPropagationProcess::new(
-                Ok(EffectValue::None),
-                state,
-                context,
-                EffectLog::new(),
-            ),
-            EffectValue::ContextualLink(a, b) => CausalEffectPropagationProcess::new(
-                Ok(EffectValue::ContextualLink(a, b)),
-                state,
-                context,
-                EffectLog::new(),
-            ),
-            // RelayTo / Map cannot be retyped by a value-level step; surface the dropped command.
-            _ => CausalEffectPropagationProcess::new(
-                Err(CausalityError::new(CausalityErrorEnum::ValueNotAvailable)),
-                state,
-                context,
-                EffectLog::new(),
-            ),
+        let inner = self.inner.bind(|effect, state, context| {
+            if effect.is_command() {
+                // A command cannot be retyped by a value-level step; the reasoning engine folds it
+                // first, so this is unreachable-defensive.
+                return CausalEffectPropagationProcess::new(
+                    Err(CausalityError::new(CausalityErrorEnum::ValueNotAvailable)),
+                    state,
+                    context,
+                    EffectLog::new(),
+                );
+            }
+            match effect.into_value() {
+                // Run the continuation on the threaded `(value, state, context)`, threading its
+                // returned state/context forward; `bind` prepends the upstream logs.
+                Some(v) => f(v, state, context).inner,
+                // A `None` effect short-circuits lawfully: continuation not run, channel preserved.
+                None => CausalEffectPropagationProcess::new(
+                    Ok(CausalEffect::none()),
+                    state,
+                    context,
+                    EffectLog::new(),
+                ),
+            }
         });
         CausalFlow { inner }
     }
@@ -93,27 +92,24 @@ impl<Value, State, Context> CausalFlow<Value, State, Context> {
         CausalFlow { inner }
     }
 
-    /// Value transform that mirrors the monad's [`fmap`] contract: apply `f` to a `Value`, pass
-    /// `None` and `ContextualLink` carriers through unchanged, and surface a `ValueNotAvailable`
-    /// error for the `RelayTo` / `Map` dispatch variants — whose embedded `PropagatingEffect`
-    /// cannot be retyped by a value-level map — rather than silently dropping the routing command.
-    /// An errored carrier short-circuits (handled by `bind`).
+    /// Value transform — the fluent functor. Maps the carried value through the **total**
+    /// [`CausalEffect::map`]: a value maps its leaf, a `None` passes through unchanged, and a command
+    /// is **preserved** (its sub-program's value leaf mapped through the `RelayTo` tree). It never
+    /// errors on a command and never panics; an errored carrier short-circuits (via `bind`). Contrast
+    /// [`and_then`](Self::and_then), a value-level Kleisli step whose continuation needs a value, so
+    /// it cannot run under a command (the engine folds commands first) — hence `map` and
+    /// `and_then(pure ∘ f)` coincide on the value fragment but not on a command.
     ///
-    /// [`fmap`]: crate::CausalEffectPropagationProcess::fmap
+    /// (This is the loose-bounds sibling of the carrier's
+    /// [`fmap`](crate::CausalEffectPropagationProcess::fmap); both route through `CausalEffect::map`,
+    /// so the value/none/command mapping lives in one place.)
     pub fn map<U, F>(self, f: F) -> CausalFlow<U, State, Context>
     where
         F: FnOnce(Value) -> U,
     {
-        let inner = self.inner.bind(|ev, state, context| {
-            let outcome = match ev {
-                EffectValue::Value(v) => Ok(EffectValue::Value(f(v))),
-                EffectValue::None => Ok(EffectValue::None),
-                EffectValue::ContextualLink(a, b) => Ok(EffectValue::ContextualLink(a, b)),
-                // RelayTo / Map carry a `PropagatingEffect<Value>` a value-level map cannot
-                // retype; surface the dropped dispatch command instead of collapsing to `None`.
-                _ => Err(CausalityError::new(CausalityErrorEnum::ValueNotAvailable)),
-            };
-            CausalEffectPropagationProcess::new(outcome, state, context, EffectLog::new())
+        let inner = self.inner.bind(|effect, state, context| {
+            // Total functor: value/none/command are all handled by `CausalEffect::map`.
+            CausalEffectPropagationProcess::new(Ok(effect.map(f)), state, context, EffectLog::new())
         });
         CausalFlow { inner }
     }
@@ -141,7 +137,7 @@ impl<Value, State, Context> CausalFlow<Value, State, Context> {
         match self.inner.outcome {
             Err(err) => CausalFlow {
                 inner: CausalEffectPropagationProcess::new(
-                    Ok(EffectValue::Value(f(err))),
+                    Ok(CausalEffect::value(f(err))),
                     self.inner.state,
                     self.inner.context,
                     self.inner.logs,
@@ -255,7 +251,7 @@ impl<Value, State, Context> CausalFlow<Value, State, Context> {
     pub fn bind<U, F>(self, f: F) -> CausalFlow<U, State, Context>
     where
         F: FnOnce(
-            EffectValue<Value>,
+            CausalEffect<Value>,
             State,
             Option<Context>,
         ) -> PropagatingProcess<U, State, Context>,

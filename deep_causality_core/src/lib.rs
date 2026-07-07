@@ -30,12 +30,12 @@ pub use crate::traits::causal_monad::CausalMonad;
 pub use crate::types::causal_arrow::{
     CausalArrow, CausalArrowBuilder, CausalFlowOut, CausalLift, KleisliCompose, causal_arrow,
 };
+pub use crate::types::causal_command::{CausalCommand, CausalCommandWitness};
+pub use crate::types::causal_effect::CausalEffect;
 pub use crate::types::causal_effect_propagation_process::CausalEffectPropagationProcess;
 pub use crate::types::causal_effect_propagation_process::hkt::CausalEffectPropagationProcessWitness;
 pub use crate::types::causal_flow::CausalFlow;
 pub use crate::types::effect_log::log_effect::EffectLog;
-// The choice sum used by `CausalFlow::either`, re-exported from `deep_causality_haft`.
-pub use crate::types::effect_value::EffectValue;
 // IO file actions (std-only): concrete `IoAction`s reading/writing files, fixing
 // `Error = CausalityError`. The `IoAction` trait itself lives in `deep_causality_haft`.
 #[cfg(feature = "std")]

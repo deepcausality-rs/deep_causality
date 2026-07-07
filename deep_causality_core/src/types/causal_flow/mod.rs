@@ -7,7 +7,7 @@
 //!
 //! [`CausalFlow`] is a thin builder over [`CausalEffectPropagationProcess`] (through the
 //! [`PropagatingEffect`] / [`PropagatingProcess`] aliases). It hides the HKT witness types, the
-//! verbose constructors (`pure` / `with_state`), the [`EffectValue`] wrapping, and the manual error
+//! verbose constructors (`pure` / `with_state`), the [`CausalEffect`](crate::CausalEffect) wrapping, and the manual error
 //! short-circuit, so a pipeline reads as a clean flow. Every method lowers to an existing monad
 //! operation, so the facade adds sugar, not new semantics.
 //!
@@ -43,7 +43,7 @@ mod steps;
 mod terminals;
 
 use crate::{
-    CausalEffectPropagationProcess, CausalityError, EffectLog, EffectValue, PropagatingProcess,
+    CausalEffect, CausalEffectPropagationProcess, CausalityError, EffectLog, PropagatingProcess,
 };
 use core::fmt::Debug;
 
@@ -65,7 +65,7 @@ fn ok_leaf<U, State, Context>(
     context: Option<Context>,
 ) -> PropagatingProcess<U, State, Context> {
     CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(value)),
+        Ok(CausalEffect::value(value)),
         state,
         context,
         EffectLog::new(),

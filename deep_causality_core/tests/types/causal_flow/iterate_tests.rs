@@ -4,8 +4,8 @@
  */
 
 use deep_causality_core::{
-    CausalEffectPropagationProcess, CausalFlow, CausalityError, CausalityErrorEnum, EffectLog,
-    EffectValue,
+    CausalEffect, CausalEffectPropagationProcess, CausalFlow, CausalityError, CausalityErrorEnum,
+    EffectLog,
 };
 
 fn errored() -> CausalFlow<i64> {
@@ -16,7 +16,7 @@ fn errored() -> CausalFlow<i64> {
 
 fn none_valued() -> CausalFlow<i64> {
     CausalFlow::from(CausalEffectPropagationProcess::new(
-        Ok(EffectValue::None),
+        Ok(CausalEffect::none()),
         (),
         None,
         EffectLog::new(),

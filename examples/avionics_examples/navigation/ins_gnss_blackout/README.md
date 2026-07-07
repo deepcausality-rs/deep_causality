@@ -23,14 +23,14 @@ simulation drives the navigation loop from real satellite products and runs the 
 3. The **grmhd `select_metric` regime detector** flips GNSS available ↔ denied from a **denial indicator**
    (an interference / jamming / signal-shadowing level) vs a critical threshold — the **two regime
    changes** (blackout entry, exit).
-4. The **`intervene` / `branch_with`** corrective loop applies the GNSS fix when available and is
+4. The **`alternate_value` / `branch_with`** corrective loop applies the GNSS fix when available and is
    **withheld** during the blackout: the chain runs **open-loop** (drift) through the dark, then snaps
    back on reacquisition. Every regime change and every intervention is recorded in the **`EffectLog`**.
 
 Two runs side by side make the lever concrete (the airplane-INS insight: a continuously GPS-recalibrated
 INS survives a short gap; a *pure* INS drifts away over hours):
 
-| | Open loop (no GNSS coupling) | Closed loop (regime-gated `intervene`) |
+| | Open loop (no GNSS coupling) | Closed loop (regime-gated `alternate_value`) |
 |---|---|---|
 | INS position error | ~**375 km** (full-day pure dead-reckoning) | **bounded** (~m), snaps back after the outage |
 | Clock across the outage | undisciplined | **relativistic carry beats naive last-rate hold** vs the real measured E14 clock |
@@ -63,5 +63,5 @@ the dark — is what keeps reacquisition fast. This example is that mechanism, o
 
 - `main.rs` — orchestration: load real data → build stream → run open/closed loops → report + gate.
 - `model.rs` — the `Epoch` stream prep from real SP3/CLK, and the `CausalFlow` stages (`advance`,
-  `detect_regime` = the grmhd pattern, `gps_fix`/`apply_fix` = the `intervene` correction).
+  `detect_regime` = the grmhd pattern, `gps_fix`/`apply_fix` = the `alternate_value` correction).
 - `utils_print.rs` — all console output and the gate evaluation.

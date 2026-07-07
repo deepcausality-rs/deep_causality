@@ -8,7 +8,7 @@
 use crate::model_types::{
     FloatType, LaneConfig, LaneProcess, VehicleState, drift_at, nominal_lane_config,
 };
-use deep_causality_core::{EffectLog, EffectValue};
+use deep_causality_core::{CausalEffect, EffectLog};
 use deep_causality_haft::LogAddEntry;
 
 /// One simulation tick. The value channel carries the current lateral
@@ -16,7 +16,7 @@ use deep_causality_haft::LogAddEntry;
 /// appends the new offset to `state.trajectory`, and records whether the
 /// vehicle has now left the lane.
 pub fn simulate_step(
-    value: EffectValue<FloatType>,
+    value: CausalEffect<FloatType>,
     mut state: VehicleState,
     ctx: Option<LaneConfig>,
 ) -> LaneProcess<FloatType> {
@@ -46,7 +46,7 @@ pub fn simulate_step(
         state.tick, next_offset, marker
     ));
 
-    LaneProcess::<FloatType>::new(Ok(EffectValue::Value(next_offset)), state, ctx, logs)
+    LaneProcess::<FloatType>::new(Ok(CausalEffect::value(next_offset)), state, ctx, logs)
 }
 
 /// The corrective P-controller. Given the post-step offset, return the
@@ -59,7 +59,7 @@ pub fn correction(offset: FloatType, cfg: &LaneConfig) -> FloatType {
 /// Initial process at offset 0 (vehicle centred at the start).
 pub fn initial_process() -> LaneProcess<FloatType> {
     LaneProcess::<FloatType>::new(
-        Ok(EffectValue::Value(0.0)),
+        Ok(CausalEffect::value(0.0)),
         VehicleState::default(),
         Some(nominal_lane_config()),
         EffectLog::new(),

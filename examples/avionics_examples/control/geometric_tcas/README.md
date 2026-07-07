@@ -30,10 +30,10 @@ The safety logic is encapsulated in a causal workflow:
 3.  **Resolve**: The system propagates a **Resolution Advisory (RA)** (e.g., `CLIMB`, `DESCEND`).
     *   *Implementation Note*: The example uses a simplified heuristic (vertical preference), but GA allows calculating the optimal avoidance vector by simply rotating $V_{rel}$ in the plane defined by $M$.
 
-### 4. Automatic Intervention via `Intervenable`
-The system utilizes the **`Intervenable` trait**, a core mechanism of the `deep_causality_core` library (based on Pearl's Causal Hierarchy, specifically Layer 2: Intervention), to implement a **Closed Loop Safety Interlock**:
+### 4. Automatic Intervention via `AlternatableValue`
+The system utilizes the **`AlternatableValue` trait**, a core mechanism of the `deep_causality_core` library (based on Pearl's Causal Hierarchy, specifically Layer 2: Intervention), to implement a **Closed Loop Safety Interlock**:
 
-*   **Universal Mechanism**: The intervention logic is not a hacked "if-statement" but a formal operation on the causal chain. `effect.intervene(new_value)` produces a distinct causal history, separating "what naturally happened" from "what was forced to happen".
+*   **Universal Mechanism**: The intervention logic is not a hacked "if-statement" but a formal operation on the causal chain. `effect.alternate_value(new_value)` produces a distinct causal history, separating "what naturally happened" from "what was forced to happen".
 *   **Safety-Critical Implications**: This allows for a **Dual-Path Architecture**:
     1.  **Prediction Path**: Calculate the collision course (Factual).
     2.  **Intervention Path**: Calculate the avoidance maneuver (Counterfactual).

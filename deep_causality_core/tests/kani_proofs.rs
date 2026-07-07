@@ -18,15 +18,16 @@
 // representative continuation and verifies the law over all carried values.
 //
 // NOTE on the former W-well-formedness harness obligation: with value-XOR-error encoded as ONE
-// channel (`outcome: Result<EffectValue<T>, E>`, precondition P2), the invalid state
+// channel (`outcome: Result<CausalEffect<T>, E>`, precondition P2), the invalid state
 // "value AND error" is unrepresentable — there is nothing left to model-check. The obligation
 // is discharged by construction.
 #![cfg(kani)]
 
 use deep_causality_core::{
-    CausalMonad, CausalityError, CausalityErrorEnum, EffectLog, EffectValue, PropagatingProcess,
+    CausalEffect, CausalFlow, CausalMonad, CausalityError, CausalityErrorEnum, EffectLog,
+    PropagatingProcess, causal_arrow,
 };
-use deep_causality_haft::{LogAddEntry, LogSize};
+use deep_causality_haft::{Arrow, LogAddEntry, LogSize};
 
 /// Stateful carrier: `i32` value, `i32` Markovian state, `()` context.
 type P = PropagatingProcess<i32, i32, ()>;
@@ -34,10 +35,10 @@ type P = PropagatingProcess<i32, i32, ()>;
 /// A fixed, representative continuation: increments both the carried value and the threaded
 /// state, contributes an empty log, and preserves context. Mirrors the arbitrary `f` in the
 /// Lean theorem `bind_left_id`.
-fn cont(v: EffectValue<i32>, state: i32, ctx: Option<()>) -> P {
+fn cont(v: CausalEffect<i32>, state: i32, ctx: Option<()>) -> P {
     let val = v.into_value().unwrap_or_default();
     P::new(
-        Ok(EffectValue::Value(val.wrapping_add(1))),
+        Ok(CausalEffect::value(val.wrapping_add(1))),
         state.wrapping_add(1),
         ctx,
         EffectLog::new(),
@@ -48,10 +49,10 @@ fn cont(v: EffectValue<i32>, state: i32, ctx: Option<()>) -> P {
 /// carrying an arbitrary value — with arbitrary state and a log of bounded length.
 fn any_process() -> P {
     let state: i32 = kani::any();
-    let outcome: Result<EffectValue<i32>, CausalityError> = match kani::any::<u8>() % 3 {
+    let outcome: Result<CausalEffect<i32>, CausalityError> = match kani::any::<u8>() % 3 {
         0 => Err(CausalityError::new(CausalityErrorEnum::ValueNotAvailable)),
-        1 => Ok(EffectValue::None),
-        _ => Ok(EffectValue::Value(kani::any())),
+        1 => Ok(CausalEffect::none()),
+        _ => Ok(CausalEffect::value(kani::any())),
     };
     let mut logs = EffectLog::new();
     if kani::any() {
@@ -73,7 +74,7 @@ fn causal_monad_left_identity() {
     let lhs = <P as CausalMonad>::pure(a).bind(cont);
 
     // RHS: cont applied where `pure` injects — value = Value(a), state = default, context = None.
-    let rhs = cont(EffectValue::Value(a), i32::default(), None);
+    let rhs = cont(CausalEffect::value(a), i32::default(), None);
 
     assert!(lhs == rhs);
 }
@@ -100,12 +101,12 @@ fn causal_monad_right_identity() {
 /// shape, with two distinct representative continuations.
 #[kani::proof]
 fn causal_monad_associativity() {
-    fn g(v: EffectValue<i32>, state: i32, ctx: Option<()>) -> P {
+    fn g(v: CausalEffect<i32>, state: i32, ctx: Option<()>) -> P {
         let val = v.into_value().unwrap_or_default();
         let mut logs = EffectLog::new();
         logs.add_entry("g");
         P::new(
-            Ok(EffectValue::Value(val.wrapping_mul(2))),
+            Ok(CausalEffect::value(val.wrapping_mul(2))),
             state.wrapping_sub(1),
             ctx,
             logs,
@@ -146,6 +147,40 @@ fn causal_monad_short_circuit() {
 
     assert!(!ran);
     assert!(result == expected);
+}
+
+/// Witness for `THEOREM_MAP: core.causal_arrow.category_laws` (bounded, beyond the Rust
+/// point-witness). Right identity `f >>> arr id = f` over the REIFIED causal arrow (the real
+/// `causal_arrow(..).next(..).build()` composition path, not just the monad `bind`), for all input
+/// value and initial state. `f` threads state (`s -> s + x`); the identity arrow re-emits
+/// value/state/context untouched, so composing it on the right leaves `f`'s carrier unchanged.
+#[kani::proof]
+fn causal_arrow_right_identity() {
+    let x: i32 = kani::any();
+    let s: i32 = kani::any();
+
+    // A representative state-threading stage.
+    let f = |x: i32, s: i32, _c: Option<()>| {
+        CausalFlow::from_parts(
+            Ok(CausalEffect::value(x.wrapping_add(1))),
+            s.wrapping_add(x),
+            None,
+            EffectLog::new(),
+        )
+    };
+    // The identity arrow `arr id` / η: re-emit value, thread state/context, empty log.
+    let id_stage = |x: i32, s: i32, _c: Option<()>| {
+        CausalFlow::from_parts(Ok(CausalEffect::value(x)), s, None, EffectLog::new())
+    };
+
+    let lhs = causal_arrow(f)
+        .next(id_stage)
+        .build()
+        .run((x, s, None))
+        .into_process();
+    let rhs = causal_arrow(f).build().run((x, s, None)).into_process();
+
+    assert!(lhs == rhs);
 }
 
 /// Log monotonicity: `bind` never loses audit history — the output log is at least as long

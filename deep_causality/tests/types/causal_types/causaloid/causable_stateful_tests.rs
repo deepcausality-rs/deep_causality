@@ -21,7 +21,7 @@ struct ConfigCtx {
 }
 
 fn stateful_increment(
-    obs: EffectValue<u64>,
+    obs: CausalEffect<u64>,
     mut state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
@@ -44,11 +44,11 @@ fn stateful_increment(
 
     let mut logs = EffectLog::new();
     logs.add_entry("stateful_increment: state advanced");
-    PropagatingProcess::new(Ok(EffectValue::Value(val * m)), state, ctx, logs)
+    PropagatingProcess::new(Ok(CausalEffect::value(val * m)), state, ctx, logs)
 }
 
 fn stateful_failing(
-    _obs: EffectValue<u64>,
+    _obs: CausalEffect<u64>,
     state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
@@ -74,7 +74,7 @@ fn build_incoming(
     value: u64,
 ) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
     PropagatingProcess::new(
-        Ok(EffectValue::Value(value)),
+        Ok(CausalEffect::value(value)),
         state,
         context,
         EffectLog::new(),
@@ -210,24 +210,21 @@ fn evaluate_stateful_passes_through_existing_error_unchanged() {
 /// A stateful closure whose output value is `None` but carries no error (drives the
 /// "causal_fn returned None output" arm).
 fn closure_none_output(
-    _obs: EffectValue<u64>,
+    _obs: CausalEffect<u64>,
     state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
-    PropagatingProcess::new(Ok(EffectValue::None), state, ctx, EffectLog::new())
+    PropagatingProcess::new(Ok(CausalEffect::none()), state, ctx, EffectLog::new())
 }
 
 /// A stateful closure whose output is a structural `RelayTo` (drives the output pass-through arm).
 fn closure_relay_output(
-    _obs: EffectValue<u64>,
+    _obs: CausalEffect<u64>,
     state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
     PropagatingProcess::new(
-        Ok(EffectValue::RelayTo(
-            3,
-            Box::new(PropagatingEffect::from_value(1u64)),
-        )),
+        Ok(CausalEffect::relay_to(3, CausalEffect::value(1u64))),
         state,
         ctx,
         EffectLog::new(),
@@ -239,7 +236,7 @@ fn evaluate_stateful_errors_on_a_none_input_value() {
     let causaloid: Causaloid<u64, u64, CounterState, ConfigCtx> =
         Causaloid::new_with_context(31, stateful_increment, ConfigCtx { multiplier: 1 }, "n");
     let incoming = PropagatingProcess::new(
-        Ok(EffectValue::None),
+        Ok(CausalEffect::none()),
         CounterState { count: 3 },
         Some(ConfigCtx { multiplier: 1 }),
         EffectLog::new(),
@@ -252,24 +249,24 @@ fn evaluate_stateful_errors_on_a_none_input_value() {
 }
 
 #[test]
-fn evaluate_stateful_passes_a_relay_input_through_unchanged() {
+fn evaluate_stateful_errors_on_a_relay_command_input() {
     let causaloid: Causaloid<u64, u64, CounterState, ConfigCtx> =
         Causaloid::new_with_context(32, stateful_increment, ConfigCtx { multiplier: 1 }, "n");
     let incoming = PropagatingProcess::new(
-        Ok(EffectValue::RelayTo(
-            5,
-            Box::new(PropagatingEffect::from_value(1u64)),
-        )),
+        Ok(CausalEffect::relay_to(5, CausalEffect::value(1u64))),
         CounterState { count: 4 },
         Some(ConfigCtx { multiplier: 1 }),
         EffectLog::new(),
     );
 
     let out = causaloid.evaluate_stateful(&incoming);
-    assert!(out.is_ok(), "structural input flows through");
-    // `cast_effect_value` collapses structural input variants to `None` on the output channel.
-    assert_eq!(out.effect(), Some(&EffectValue::None));
-    assert_eq!(*out.state(), CounterState { count: 4 }, "state untouched");
+    // A command (`RelayTo`) on the input channel cannot be consumed by a singleton: it carries no
+    // `I` value and cannot be retyped `I -> O`. It surfaces a clear error rather than being
+    // silently collapsed to `None`, which would drop the relay target and sub-effect so downstream
+    // reasoning would see absence of evidence instead of a dropped command.
+    let err = out.error().expect("a command input errors");
+    assert!(format!("{err:?}").contains("received a command"));
+    assert_eq!(*out.state(), CounterState { count: 4 }, "state preserved");
 }
 
 #[test]
@@ -300,7 +297,7 @@ fn evaluate_stateful_passes_a_relay_output_through_unchanged() {
     let out = causaloid.evaluate_stateful(&incoming);
     assert!(out.is_ok());
     assert!(
-        matches!(out.effect(), Some(EffectValue::RelayTo(3, _))),
+        out.command_target() == Some(3),
         "a structural output is passed through without output logging"
     );
 }

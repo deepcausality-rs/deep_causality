@@ -76,10 +76,13 @@ fn budget_identity_on_divergence_free_state() {
     assert_eq!(b.body_force(), 0.0);
 }
 
-/// The two assemblies must report the same budget to rounding.
+/// The two assemblies must report the same budget to rounding. This is a
+/// resolution-independent algebraic identity (fused vs generic assembly of
+/// the same operators), so it runs on a small 4³ torus to keep the generic
+/// Hodge solve cheap.
 #[test]
 fn budget_agrees_between_fused_and_generic() {
-    let n = 8usize;
+    let n = 4usize;
     let m = torus3(n);
     let solver = DecNsSolver::new(&m, nu_for(n), 0.1, None).unwrap();
     let state = solver

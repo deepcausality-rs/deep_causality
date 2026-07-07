@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{CausalityError, CausalityErrorEnum, EffectValue, PropagatingEffect};
+use deep_causality_core::{CausalityError, CausalityErrorEnum, PropagatingEffect};
 use deep_causality_haft::LogSize;
 
 #[test]
@@ -25,7 +25,7 @@ fn test_bind() {
     let initial = PropagatingEffect::pure(10);
 
     let next = PropagatingEffect::bind(initial, |val, _state, _ctx| {
-        if let EffectValue::Value(v) = val {
+        if let Some(v) = val.into_value() {
             PropagatingEffect::pure(v + 1)
         } else {
             panic!("Expected Value");
@@ -46,7 +46,7 @@ fn test_bind_with_error() {
 
     // The continuation is not invoked on an errored effect (left zero).
     let next = PropagatingEffect::bind(effect, |val, _state, _ctx| {
-        if let EffectValue::Value(v) = val {
+        if let Some(v) = val.into_value() {
             PropagatingEffect::pure(v + 1)
         } else {
             panic!("Expected Value");

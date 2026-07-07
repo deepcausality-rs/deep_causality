@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{CPU_TEMP_ID, FAN_SPEED_ID, POWER_DRAW_ID, SERVER_HIGH_LOAD_STATE_ID};
-use deep_causality::EffectValue;
+use deep_causality::CausalEffect;
 use deep_causality::{
     BaseContext, CSM, CausalAction, CausalState, CausalityError, CausalityErrorEnum, Causaloid,
     Contextoid, ContextoidType, ContextuableGraph, Data, Datable, Identifiable,
@@ -114,9 +114,9 @@ pub(crate) fn get_server_causaloid(context: Arc<RwLock<BaseContext>>) -> CsmCaus
     let id: IdentificationValue = 1;
     let description = "Fused Server Sensors Logic";
 
-    // New API: fn(EffectValue<I>, S, Option<C>) -> PropagatingProcess<O, S, C>
+    // New API: fn(CausalEffect<I>, S, Option<C>) -> PropagatingProcess<O, S, C>
     fn context_causal_fn(
-        _effect: EffectValue<f64>,
+        _effect: CausalEffect<f64>,
         _state: (),
         context: Option<Arc<RwLock<BaseContext>>>,
     ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {

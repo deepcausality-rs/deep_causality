@@ -15,7 +15,7 @@
 
 use crate::types::causal_types::causaloid::causable_utils;
 use crate::{Causaloid, CausaloidType, StatefulMonadicCausable};
-use deep_causality_core::{CausalityError, CausalityErrorEnum, EffectValue, PropagatingProcess};
+use deep_causality_core::{CausalityError, CausalityErrorEnum, PropagatingProcess};
 use std::fmt::Debug;
 
 impl<I, O, PS, C> StatefulMonadicCausable<I, O, PS, C> for Causaloid<I, O, PS, C>
@@ -52,22 +52,34 @@ where
                 let id = self.id;
 
                 // Step 1: log the input. Threads incoming state, context, and logs.
-                let input_value: I = match incoming_value {
-                    EffectValue::Value(v) => v,
-                    EffectValue::None => {
+                // A command input (`RelayTo`) cannot be consumed by a singleton: it carries no `I`
+                // value to evaluate, and it cannot be retyped `I -> O` (its sub-program has
+                // `Option<I>` leaves and no `I -> O` map exists before evaluation). The reasoning
+                // engine relays a command's sub-value, so a singleton never receives a live command
+                // on its input channel in normal operation; surfacing it as a clear error preserves
+                // the signal (target + sub-effect) instead of silently manufacturing `None` — which
+                // would read downstream as absence of evidence rather than a dropped command. This
+                // mirrors the stateless `Causable::evaluate` path, where a command input errors.
+                if incoming_value.is_command() {
+                    return PropagatingProcess::new(
+                        Err(CausalityError(CausalityErrorEnum::Custom(
+                            "Causaloid::evaluate_stateful: singleton received a command (RelayTo) \
+                             on its input channel; commands are relayed by the reasoning engine, \
+                             not consumed by a singleton"
+                                .into(),
+                        ))),
+                        incoming.state().clone(),
+                        incoming.context().clone(),
+                        incoming.logs().clone(),
+                    );
+                }
+                let input_value: I = match incoming_value.into_value() {
+                    Some(v) => v,
+                    None => {
                         return PropagatingProcess::new(
                             Err(CausalityError(CausalityErrorEnum::Custom(
                                 "Cannot evaluate: input value is None".into(),
                             ))),
-                            incoming.state().clone(),
-                            incoming.context().clone(),
-                            incoming.logs().clone(),
-                        );
-                    }
-                    other => {
-                        // RelayTo / ContextualLink / Map flow through unchanged.
-                        return PropagatingProcess::new(
-                            Ok(cast_effect_value(other)),
                             incoming.state().clone(),
                             incoming.context().clone(),
                             incoming.logs().clone(),
@@ -117,27 +129,29 @@ where
                             combined_logs,
                         );
                     }
-                    Ok(EffectValue::Value(v)) => v,
-                    Ok(EffectValue::None) => {
+                    // A command output passes through unchanged (same `O`) without further logging.
+                    Ok(effect) if effect.is_command() => {
                         return PropagatingProcess::new(
-                            Err(CausalityError(CausalityErrorEnum::Custom(
-                                "Causaloid::evaluate_stateful: causal_fn returned None output"
-                                    .into(),
-                            ))),
+                            Ok(effect),
                             stage2_state,
                             stage2_context,
                             combined_logs,
                         );
                     }
-                    Ok(other) => {
-                        // Pass through structural variants (RelayTo etc.) without further logging.
-                        return PropagatingProcess::new(
-                            Ok(other),
-                            stage2_state,
-                            stage2_context,
-                            combined_logs,
-                        );
-                    }
+                    Ok(effect) => match effect.into_value() {
+                        Some(v) => v,
+                        None => {
+                            return PropagatingProcess::new(
+                                Err(CausalityError(CausalityErrorEnum::Custom(
+                                    "Causaloid::evaluate_stateful: causal_fn returned None output"
+                                        .into(),
+                                ))),
+                                stage2_state,
+                                stage2_context,
+                                combined_logs,
+                            );
+                        }
+                    },
                 };
 
                 // Step 3: log the output.
@@ -180,16 +194,4 @@ where
             ),
         }
     }
-}
-
-/// Pass through structural [`EffectValue`] variants from input to output type.
-///
-/// `RelayTo`, `ContextualLink`, and `Map` carry no payload of type `I` that
-/// would need transformation to `O`; they are control-flow markers. Returning
-/// `EffectValue::None` here is the conservative choice that surfaces a clear
-/// signal at the next reasoning step (the caller can detect the change of
-/// kind). For singleton evaluation these variants are not expected on the
-/// input channel; the branch exists for completeness.
-fn cast_effect_value<I, O>(_v: EffectValue<I>) -> EffectValue<O> {
-    EffectValue::None
 }

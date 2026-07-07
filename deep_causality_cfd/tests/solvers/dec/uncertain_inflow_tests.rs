@@ -19,7 +19,7 @@ use deep_causality_cfd::{
     DecNsSolver, DropoutVerbosity, InflowContext, InflowMarchState, UncertainInflowZone,
     inflow_march_step, march_inflow,
 };
-use deep_causality_core::EffectValue;
+use deep_causality_core::CausalEffect;
 use deep_causality_haft::LogSize;
 use deep_causality_physics::PhysicsErrorEnum;
 use deep_causality_tensor::CausalTensor;
@@ -260,7 +260,7 @@ fn march_inflow_rejects_a_stream_shorter_than_the_horizon() {
 fn inflow_step_without_context_short_circuits() {
     let m = wall_manifold();
     let state = InflowMarchState::new(base_solver(&m), rest_seed(&m), U_IN);
-    let process = inflow_march_step::<2, f64>(EffectValue::Value(U_IN), state, None);
+    let process = inflow_march_step::<2, f64>(CausalEffect::value(U_IN), state, None);
     assert!(
         process.error().is_some(),
         "a missing context short-circuits the step"
@@ -273,7 +273,7 @@ fn inflow_step_with_exhausted_stream_short_circuits() {
     let state = InflowMarchState::new(base_solver(&m), rest_seed(&m), U_IN);
     // Step 0 against an empty stream is past the horizon.
     let context = InflowContext::new(fast_zone(U_IN), Vec::new());
-    let process = inflow_march_step(EffectValue::Value(U_IN), state, Some(context));
+    let process = inflow_march_step(CausalEffect::value(U_IN), state, Some(context));
     assert!(
         process.error().is_some(),
         "an exhausted stream short-circuits the step"
@@ -289,7 +289,7 @@ fn inflow_step_rejects_an_invalid_wall_reconfiguration() {
         .with_presence_gate(0.5, 0.9, 0.1, 64)
         .with_collapse_samples(8);
     let context = InflowContext::new(zone, vec![MaybeUncertain::<f64>::from_value(U_IN)]);
-    let process = inflow_march_step(EffectValue::Value(U_IN), state, Some(context));
+    let process = inflow_march_step(CausalEffect::value(U_IN), state, Some(context));
     assert!(
         process.error().is_some(),
         "reconfiguring a moving wall on a periodic axis is rejected"
@@ -307,7 +307,7 @@ fn inflow_step_on_a_consumed_solver_short_circuits() {
         .with_presence_gate(0.5, 0.9, 0.1, 64)
         .with_collapse_samples(8);
     let context = InflowContext::new(zone, vec![MaybeUncertain::<f64>::from_value(U_IN); 2]);
-    let failed = inflow_march_step(EffectValue::Value(U_IN), state, Some(context.clone()));
+    let failed = inflow_march_step(CausalEffect::value(U_IN), state, Some(context.clone()));
     assert!(
         failed.error().is_some(),
         "the reconfiguration must fail first"
@@ -315,7 +315,7 @@ fn inflow_step_on_a_consumed_solver_short_circuits() {
 
     // Re-bind the errored state (its solver was consumed).
     let again = inflow_march_step(
-        EffectValue::Value(U_IN),
+        CausalEffect::value(U_IN),
         failed.into_parts().1,
         Some(context),
     );
@@ -348,7 +348,7 @@ fn inflow_step_short_circuits_when_sample_resolution_fails() {
     );
     let context = InflowContext::new(zone, vec![MaybeUncertain::<f64>::from_uncertain(dynamic)]);
 
-    let process = inflow_march_step(EffectValue::Value(U_IN), state, Some(context));
+    let process = inflow_march_step(CausalEffect::value(U_IN), state, Some(context));
     let err = process
         .error()
         .expect("a resolution failure short-circuits the step");

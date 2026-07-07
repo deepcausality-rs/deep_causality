@@ -20,13 +20,12 @@ The error of each prediction is compared against the actual Q5 shipping value. I
 ## The mechanism
 
 ```rust
-let factual_pred = unwrap_pred(&run(factual_series()).value);                       // start + bind, then unwrap f64
-let counter_pred = unwrap_pred(
-    &start(factual_series())
-        .alternate_context(without_oil(&factual_series()))                          // swap world
-        .bind(predict_shipping)                                                     // same predictor
-        .value,
-);
+let factual_pred = run(factual_series()).value_cloned().unwrap();                   // start + bind, then read the f64
+let counter_pred = start(factual_series())
+    .alternate_context(without_oil(&factual_series()))                              // swap world
+    .bind(predict_shipping)                                                         // same predictor
+    .value_cloned()
+    .unwrap();
 ```
 
 The single-stage `predict_shipping` bind reads the series from the Context. It averages past shipping, adds a trend, and adjusts by `(mean(oil_prices) - 50.0) * 0.5` *only when* the oil series is non-empty. The counterfactual world emits its prediction without that oil-driven adjustment.

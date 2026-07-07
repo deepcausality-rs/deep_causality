@@ -39,7 +39,7 @@ fn test_causaloid_getters_contextual() {
     let context = BaseContext::with_capacity(99, "test_ctx", 10);
 
     fn context_fn(
-        _obs: EffectValue<()>,
+        _obs: CausalEffect<()>,
         _state: (),
         _ctx: Option<Arc<RwLock<BaseContext>>>,
     ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
