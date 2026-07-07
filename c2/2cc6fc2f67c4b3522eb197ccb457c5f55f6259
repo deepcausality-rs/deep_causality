@@ -1,0 +1,118 @@
+deep_causality_core/tests/formalization_lean/causal_monad_tests.rs
+  s_cefbd789296ae8::t_fbb9fedfa44521 15
+  s_cefbd789296ae8::t_fbce95fa836db3 36-41,64-69
+  s_cefbd789296ae8::t_44bcfc81297f36 17,20-26
+  s_cefbd789296ae8::t_295c48c233671c 1-14,16,18-19,27-35,42-63,70-85
+lean/DeepCausalityFormal.lean
+  s_cefbd789296ae8::t_05fee2d56d4174 32
+  s_cefbd789296ae8::t_f6fe65561b6c58 37-39
+  s_cefbd789296ae8::t_a9689379f75071 33-34,40
+deep_causality_core/tests/formalization_lean/causal_command_tests.rs
+  s_cefbd789296ae8::t_a0d4ac753384e6 1-39
+lean/DeepCausalityFormal/Core/EffectLog.lean
+  s_cefbd789296ae8::t_b21c9402edfcec 43
+  s_cefbd789296ae8::t_1a6e3748de3f11 65
+  s_cefbd789296ae8::t_7d2fe7906a8f35 20
+  s_cefbd789296ae8::t_49d9f82253944b 56
+  s_cefbd789296ae8::t_ba63d83be6890d 49
+deep_causality_core/tests/types/causal_arrow/causal_arrow_tests.rs
+  s_cefbd789296ae8::t_429c72058451ba 118-133,138-144,149,154-155,160-161
+  s_cefbd789296ae8::t_fbce95fa836db3 134-137,145-148,150-153,156-159
+lean/DeepCausalityFormal/Core/CausalCommand.lean
+  s_cefbd789296ae8::t_96aa1102b5d214 1-105
+deep_causality_core/tests/mod.rs
+  s_cefbd789296ae8::t_bebfefb2d7bf8a 6
+deep_causality_core/tests/BUILD.bazel
+  s_cefbd789296ae8::t_be9a0a0f96d5c6 4-23
+  s_cefbd789296ae8::t_17308b7b84ab0e 3
+deep_causality_core/tests/kani_proofs.rs
+  s_cefbd789296ae8::t_ddc095283fa06a 27-28,30
+  s_cefbd789296ae8::t_fbce95fa836db3 176-180
+  s_cefbd789296ae8::t_55cb9754203445 152-175,181-183
+  s_cefbd789296ae8::t_91c2189766cf5f 184-185
+lean/DeepCausalityFormal/Core/CausalEffect.lean
+  s_cefbd789296ae8::t_e79b53fd315f05 1-116
+lean/DeepCausalityFormal/Core/CausalMonad.lean
+  s_cefbd789296ae8::t_598eff24f9cef8 147-166
+  s_cefbd789296ae8::t_8ef69ce67bb348 27-33
+  s_cefbd789296ae8::t_3213a7e2cf4091 167
+deep_causality_core/tests/formalization_lean/causal_flow_tests.rs
+  s_cefbd789296ae8::t_3c8b380e8a0b2a 1-31,33-70,74-95,100-146
+  s_cefbd789296ae8::t_0de6ff892440e6 32
+  s_cefbd789296ae8::t_fbce95fa836db3 71-73,96-99
+deep_causality_core/tests/formalization_lean/csv_tests.rs
+  s_cefbd789296ae8::t_f6a4adb0172954 1-30,34-41
+  s_cefbd789296ae8::t_fbce95fa836db3 31-33
+lean/DeepCausalityFormal/Core/CausalFlow.lean
+  s_cefbd789296ae8::t_bf5f6d4c359074 1-173
+deep_causality_core/tests/formalization_lean/effect_log_tests.rs
+  s_cefbd789296ae8::t_b6a6419d5245c3 1-82,84-87
+  s_cefbd789296ae8::t_87c0b705e7836c 83
+lean/DeepCausalityFormal/Core/Alternatable.lean
+  s_cefbd789296ae8::t_a4d28934524368 1-182
+deep_causality_core/tests/formalization_lean/causal_effect_tests.rs
+  s_cefbd789296ae8::t_1926117aa59bb7 1-37,46-52
+  s_cefbd789296ae8::t_fbce95fa836db3 38-45
+lean/DeepCausalityFormal/Core/Csv.lean
+  s_cefbd789296ae8::t_fd944246e1d895 1-97,101-128,130-135,148-163,166-167
+  s_cefbd789296ae8::t_91867e2f1ab134 136-147
+  s_cefbd789296ae8::t_b1550aaf43f0e4 164-165
+  s_cefbd789296ae8::t_a5ee8e5d9cb993 98-100
+  s_cefbd789296ae8::t_9f24189c0f75dc 129
+openspec/notes/causal-algebra/core-formalization-deviations.md
+  s_cefbd789296ae8::t_6330953b1ae1d8 6-17
+  s_cefbd789296ae8::t_5b9e328ffb0191 233
+  s_cefbd789296ae8::t_8e0de8f89f3b1f 3-5
+  s_cefbd789296ae8::t_f6cf69bcfc4577 18-20,230-232
+  s_cefbd789296ae8::t_b44349a6bc0939 234-236
+  s_cefbd789296ae8::t_fbbef92432364b 1-2,21-229,237-254
+deep_causality_core/tests/formalization_lean/mod.rs
+  s_cefbd789296ae8::t_55d7fde430bc91 1-20,35
+  s_cefbd789296ae8::t_01dc9082e7a2f2 29-30
+  s_cefbd789296ae8::t_c0b438abb140d2 23-26,31,34
+  s_cefbd789296ae8::t_b4773944c02aff 21-22,27-28,32-33
+deep_causality_core/LEAN_CORE.md
+  s_cefbd789296ae8::t_e8802451ff655b 1-99
+lean/DeepCausalityFormal/Core/Consistency.lean
+  s_cefbd789296ae8::t_6b832a33e211bf 1-66
+deep_causality_core/tests/formalization_lean/consistency_tests.rs
+  s_cefbd789296ae8::t_f27fcde17539eb 37-45
+  s_cefbd789296ae8::t_f54274b5d8182d 1-36,46-72
+lean/THEOREM_MAP.md
+  s_cefbd789296ae8::t_a4a1b7358b59f3 43-45
+  s_cefbd789296ae8::t_60951ad98600ac 39-42
+  s_cefbd789296ae8::t_84880559eb26ca 46-57
+  s_cefbd789296ae8::t_71e1b75dd43704 36
+  s_cefbd789296ae8::t_68f6f870997268 37
+deep_causality_core/tests/formalization_lean/alternatable_tests.rs
+  s_cefbd789296ae8::t_e88ddcd930321e 1-102,109-112
+  s_cefbd789296ae8::t_fbce95fa836db3 103-108
+openspec/changes/archive/2026-07-07-formalize-deep-causality-core/.openspec.yaml
+  s_cefbd789296ae8::t_f5a61d66c5706a 1-2
+openspec/specs/core-formalization/spec.md
+  s_cefbd789296ae8::t_4dd88f8a542781 1-182
+openspec/changes/archive/2026-07-07-formalize-deep-causality-core/design.md
+  s_cefbd789296ae8::t_07584316941dbc 5
+openspec/changes/archive/2026-07-07-formalize-deep-causality-core/proposal.md
+  s_cefbd789296ae8::t_1ac7bb9541534e 11
+openspec/changes/archive/2026-07-07-formalize-deep-causality-core/specs/core-formalization/spec.md
+  s_cefbd789296ae8::t_a4cce3e5d53049 1-180
+openspec/changes/archive/2026-07-07-formalize-deep-causality-core/tasks.md
+  s_cefbd789296ae8::t_0c88f112e773f6 9-11,15-18,22-27,31-35,39-44,48-50,54-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c22cc6fc2f67c4b3522eb197ccb457c5f55f6259",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
