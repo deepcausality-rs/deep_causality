@@ -5,9 +5,10 @@
 
 use crate::GaugeEmOps;
 use crate::error::PhysicsError;
+use deep_causality_algebra::RealField;
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     BaseTopology, GaugeField, GaugeFieldWitness, Manifold, Simplex, SimplicialComplexBuilder,

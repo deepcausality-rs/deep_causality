@@ -34,7 +34,7 @@
 //! entry point below is a bit-exact no-op, preserving the periodic path.
 
 use alloc::collections::BTreeSet;
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_topology::{
     CutCellRegistry, CutConstraintKind, CutFaceConstraint, LatticeComplex,
 };

@@ -23,7 +23,7 @@
 //! * Groves, P. D., *Principles of GNSS, Inertial, and Multisensor Integrated Navigation Systems*,
 //!   2nd ed., Artech House (2013) — the error-state (ψ-angle) INS model and the `t²`/`t³` drift laws.
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 /// The 17-element strapdown-INS error state carried through the filter.
 #[derive(Clone, Copy, Debug, PartialEq)]

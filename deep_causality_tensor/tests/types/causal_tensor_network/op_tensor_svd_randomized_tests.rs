@@ -10,7 +10,9 @@
 //! untouched, and (d) be reproducible for a fixed seed. Exercised at `f64`/`Float106` (real) and
 //! `Complex<f64>` (Hermitian).
 
-use deep_causality_num::{Complex, ConjugateScalar, Float106, FromPrimitive, RealField};
+use deep_causality_algebra::{ConjugateScalar, RealField};
+use deep_causality_num::{Float106, FromPrimitive};
+use deep_causality_num_complex::Complex;
 use deep_causality_tensor::{
     CausalTensor, CausalTensorTrain, RoundStrategy, TensorTrain, Truncation,
 };

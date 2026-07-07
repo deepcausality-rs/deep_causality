@@ -11,7 +11,8 @@ use crate::constants::{
     BOLTZMANN_CONSTANT, ELECTRON_MASS, ELEMENTARY_CHARGE, NO_IONIZATION_ENERGY_EV, PLANCK_CONSTANT,
 };
 use crate::{ElectronDensity, IonizationFraction, PhysicsError, Temperature};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Saha-equilibrium ionization fraction `α = n_e / n_tot` for a singly-ionized
 /// gas, from

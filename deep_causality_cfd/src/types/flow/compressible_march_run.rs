@@ -36,9 +36,9 @@ use crate::types::flow_config::{
     CompressibleMarchConfig, DescentSchedule, MarchStop, QttObserve, ReferenceScales,
 };
 use alloc::vec::Vec;
+use deep_causality_algebra::ConjugateScalar;
 use deep_causality_core::{AlternatableContext, AlternatableState, AlternatableValue, EffectLog};
 use deep_causality_haft::{LogAddEntry, LogAppend};
-use deep_causality_num::ConjugateScalar;
 use deep_causality_physics::{BOLTZMANN_CONSTANT, PhysicsError};
 use deep_causality_tensor::{CausalTensor, Truncation};
 

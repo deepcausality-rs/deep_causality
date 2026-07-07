@@ -4,7 +4,7 @@
  */
 
 use deep_causality_fft::{FftError, RfftPlan, naive_dft};
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 fn rbuf(n: usize) -> Vec<f64> {
     (0..n)

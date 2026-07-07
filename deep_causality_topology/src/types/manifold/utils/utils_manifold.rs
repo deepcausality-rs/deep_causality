@@ -9,7 +9,7 @@ use crate::SimplicialComplex;
 use crate::traits::chain_complex::ChainComplex;
 
 /// Checks if the simplicial complex is oriented.
-pub(crate) fn is_oriented<T: deep_causality_num::RealField>(
+pub(crate) fn is_oriented<T: deep_causality_algebra::RealField>(
     complex: &SimplicialComplex<T>,
 ) -> bool {
     let max_dim = complex.max_simplex_dimension();
@@ -43,7 +43,7 @@ pub(crate) fn is_oriented<T: deep_causality_num::RealField>(
 }
 
 /// Checks if the simplicial complex satisfies the link condition for manifolds.
-pub(crate) fn satisfies_link_condition<T: deep_causality_num::RealField>(
+pub(crate) fn satisfies_link_condition<T: deep_causality_algebra::RealField>(
     complex: &SimplicialComplex<T>,
 ) -> bool {
     let max_dim = complex.max_simplex_dimension();
@@ -90,7 +90,7 @@ pub(crate) fn satisfies_link_condition<T: deep_causality_num::RealField>(
 
 /// Computes the Euler characteristic of the simplicial complex.
 #[allow(dead_code)]
-pub(crate) fn euler_characteristic<T: deep_causality_num::RealField>(
+pub(crate) fn euler_characteristic<T: deep_causality_algebra::RealField>(
     complex: &SimplicialComplex<T>,
 ) -> isize {
     let mut chi: isize = 0;
@@ -107,7 +107,7 @@ pub(crate) fn euler_characteristic<T: deep_causality_num::RealField>(
 
 /// Checks if the simplicial complex has a boundary.
 #[allow(dead_code)]
-pub(crate) fn has_boundary<T: deep_causality_num::RealField>(
+pub(crate) fn has_boundary<T: deep_causality_algebra::RealField>(
     complex: &SimplicialComplex<T>,
 ) -> bool {
     let max_dim = complex.max_simplex_dimension();

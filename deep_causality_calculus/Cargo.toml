@@ -27,7 +27,7 @@ exclude = [
 
 [features]
 default = ["std"]
-std = ["alloc", "deep_causality_haft/std", "deep_causality_num/std"]
+std = ["alloc", "deep_causality_haft/std", "deep_causality_num/std", "deep_causality_algebra/std", "deep_causality_num_dual/std"]
 alloc = ["deep_causality_haft/alloc"]
 
 
@@ -39,6 +39,14 @@ version = "0.3"
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
 version = "0.3"
+
+[dependencies.deep_causality_algebra]
+path = "../deep_causality_algebra"
+version = "0.1"
+
+[dependencies.deep_causality_num_dual]
+path = "../deep_causality_num_dual"
+version = "0.1"
 
 [lints]
 workspace = true

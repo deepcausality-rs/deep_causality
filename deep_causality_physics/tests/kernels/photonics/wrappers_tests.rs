@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
     AbcdMatrix, ComplexBeamParameter, IndexOfRefraction, JonesVector, Length, RayAngle, RayHeight,
     StokesVector, Wavelength, beam_spot_size, degree_of_polarization, gaussian_q_propagation,

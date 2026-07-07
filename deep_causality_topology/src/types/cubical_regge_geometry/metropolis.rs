@@ -47,7 +47,8 @@
 use super::{CubicalReggeGeometry, EdgeLengths, Euclidean};
 use crate::traits::chain_complex::ChainComplex;
 use crate::types::lattice_complex::LatticeComplex;
-use deep_causality_num::{Float, FromPrimitive, Real, RealField};
+use deep_causality_algebra::{Real, RealField};
+use deep_causality_num::{Float, FromPrimitive};
 use deep_causality_rand::{Distribution, Normal, Rng, StandardUniform};
 
 /// Outcome of a single Metropolis-Hastings step.

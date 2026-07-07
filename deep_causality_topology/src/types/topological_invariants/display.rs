@@ -5,9 +5,8 @@
 
 use core::fmt;
 
-use deep_causality_num::RealField;
-
 use crate::types::topological_invariants::TopologicalInvariants;
+use deep_causality_algebra::RealField;
 
 impl<R: RealField + fmt::Display> fmt::Display for TopologicalInvariants<R> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

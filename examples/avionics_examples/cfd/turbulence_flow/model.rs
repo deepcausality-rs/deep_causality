@@ -16,8 +16,9 @@
 //! `Rk4` march run at `f32`, `f64`, or `Float106`. Precision is a type parameter, nothing more.
 
 use core::ops::{Add, Mul};
+use deep_causality_algebra::Real;
 use deep_causality_calculus::{EndoArrow, Rk4, Scalar};
-use deep_causality_num::{Float106, Real};
+use deep_causality_num::Float106;
 
 /// A point in the convective-flow state space, generic over the working scalar `S`.
 #[derive(Clone, Copy, Default, Debug)]

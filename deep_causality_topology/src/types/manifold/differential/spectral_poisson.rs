@@ -33,8 +33,10 @@
 //! weight tables (`Σ N_d` entries), never materialized as a full
 //! `O(N)` table.
 
+use deep_causality_algebra::RealField;
 use deep_causality_fft::RfftPlanNd;
-use deep_causality_num::{Complex, FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
+use deep_causality_num_complex::Complex;
 use deep_causality_par::MaybeParallel;
 
 use crate::errors::topology_error::TopologyError;

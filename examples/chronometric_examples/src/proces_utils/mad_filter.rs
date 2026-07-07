@@ -4,7 +4,7 @@
  */
 
 use crate::types::gravity_types::GmDataPoint;
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 /// Apply MAD (Median Absolute Deviation) filtering to remove outliers.
 ///

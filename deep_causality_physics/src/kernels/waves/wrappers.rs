@@ -6,8 +6,9 @@
 use crate::kernels::waves::general;
 use crate::{Frequency, Length, Speed};
 use core::fmt::Debug;
+use deep_causality_algebra::RealField;
 use deep_causality_core::PropagatingEffect;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 
 /// Monadic wrapper for [`general::wave_speed_kernel`].
 pub fn wave_speed<R>(

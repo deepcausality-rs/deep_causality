@@ -25,8 +25,10 @@
 //! Lattice vertex indexing is axis-0-fastest, so the pipelines run over
 //! the *reversed* shape (lattice axis `d` is walk axis `D−1−d`).
 
+use deep_causality_algebra::RealField;
 use deep_causality_fft::{DctPlan, DctType, FftPlan};
-use deep_causality_num::{Complex, FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
+use deep_causality_num_complex::Complex;
 use deep_causality_par::MaybeParallel;
 
 use crate::errors::topology_error::TopologyError;

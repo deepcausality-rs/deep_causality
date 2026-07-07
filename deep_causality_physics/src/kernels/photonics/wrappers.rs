@@ -9,8 +9,10 @@ use crate::{
 };
 use crate::{IndexOfRefraction, Length, Ratio};
 use core::fmt::Debug;
+use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
-use deep_causality_num::{Complex, FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
+use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
 
 // Import all kernels from their respective modules

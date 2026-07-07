@@ -7,8 +7,10 @@ use crate::{
     ChemicalPotentialGradient, Concentration, Energy, Mobility, OrderParameter, PhysicsError,
     VectorPotential,
 };
+use deep_causality_algebra::{DivisionAlgebra, RealField};
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::{Complex, DivisionAlgebra, FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
+use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
 use std::iter::Sum;
 

@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{FromPrimitive, RealField, ToPrimitive};
+use deep_causality_algebra::RealField;
+use deep_causality_num::{FromPrimitive, ToPrimitive};
 
 /// Precision bound for the CDL compute pipeline.
 ///

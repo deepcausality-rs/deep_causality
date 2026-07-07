@@ -7,7 +7,7 @@
 //! across multiple physics domains.
 
 use crate::PhysicsError;
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 /// A generic dimensionless ratio (no physical unit).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]

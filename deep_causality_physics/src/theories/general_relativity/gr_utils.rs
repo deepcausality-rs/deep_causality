@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::PhysicsError;
-use deep_causality_num::{Field, Float};
+use deep_causality_algebra::Field;
+use deep_causality_num::Float;
 use deep_causality_tensor::CausalTensor;
 
 /// Computes the inverse of a 4x4 matrix, extracting it from a potentially larger tensor (e.g. 4x6 connection).

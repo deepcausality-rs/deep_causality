@@ -3,7 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{CausalMultiVector, CausalMultiVectorError, Metric};
-use deep_causality_num::{Complex, RealField, Zero};
+use deep_causality_algebra::RealField;
+use deep_causality_num::Zero;
+use deep_causality_num_complex::Complex;
 use std::fmt::{Display, Formatter};
 
 /// A strong type representing a Quantum State Vector (Ket) |ψ>.

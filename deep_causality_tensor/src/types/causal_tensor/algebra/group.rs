@@ -4,7 +4,7 @@
  */
 
 use crate::CausalTensor;
-use deep_causality_num::{AbelianGroup, AddGroup};
+use deep_causality_algebra::{AbelianGroup, AddGroup};
 
 /// Marker trait for Abelian Group.
 /// CausalTensor addition is commutative if T's addition is commutative.

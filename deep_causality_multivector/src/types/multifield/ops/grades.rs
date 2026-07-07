@@ -9,7 +9,7 @@
 
 use crate::CausalMultiField;
 use crate::traits::multi_vector::MultiVector;
-use deep_causality_num::Field;
+use deep_causality_algebra::Field;
 
 impl<T> CausalMultiField<T>
 where

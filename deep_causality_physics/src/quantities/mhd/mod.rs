@@ -8,15 +8,15 @@ use crate::PhysicsError;
 /// Alfven Speed ($v_A$). Characteristic speed of magnetic waves in plasma.
 /// Unit: m/s. Constraint: >= 0.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct AlfvenSpeed<R: deep_causality_num::RealField>(R);
+pub struct AlfvenSpeed<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for AlfvenSpeed<R> {
+impl<R: deep_causality_algebra::RealField> Default for AlfvenSpeed<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> AlfvenSpeed<R> {
+impl<R: deep_causality_algebra::RealField> AlfvenSpeed<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -40,7 +40,7 @@ impl<R: deep_causality_num::RealField> AlfvenSpeed<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<AlfvenSpeed<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<AlfvenSpeed<R>> for f64 {
     fn from(val: AlfvenSpeed<R>) -> Self {
         val.0.into()
     }
@@ -49,15 +49,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<AlfvenSpeed<R>> for f64 
 /// Plasma Beta ($\beta$). Ratio of thermal to magnetic pressure.
 /// Unit: Dimensionless. Constraint: >= 0.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct PlasmaBeta<R: deep_causality_num::RealField>(R);
+pub struct PlasmaBeta<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for PlasmaBeta<R> {
+impl<R: deep_causality_algebra::RealField> Default for PlasmaBeta<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> PlasmaBeta<R> {
+impl<R: deep_causality_algebra::RealField> PlasmaBeta<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -79,7 +79,7 @@ impl<R: deep_causality_num::RealField> PlasmaBeta<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<PlasmaBeta<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<PlasmaBeta<R>> for f64 {
     fn from(val: PlasmaBeta<R>) -> Self {
         val.0.into()
     }
@@ -88,15 +88,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<PlasmaBeta<R>> for f64 {
 /// Magnetic Pressure ($P_B$). Energy density of the magnetic field.
 /// Unit: Pascals (Pa). Constraint: >= 0.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct MagneticPressure<R: deep_causality_num::RealField>(R);
+pub struct MagneticPressure<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for MagneticPressure<R> {
+impl<R: deep_causality_algebra::RealField> Default for MagneticPressure<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> MagneticPressure<R> {
+impl<R: deep_causality_algebra::RealField> MagneticPressure<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -118,7 +118,7 @@ impl<R: deep_causality_num::RealField> MagneticPressure<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<MagneticPressure<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<MagneticPressure<R>> for f64 {
     fn from(val: MagneticPressure<R>) -> Self {
         val.0.into()
     }
@@ -127,9 +127,9 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<MagneticPressure<R>> for
 /// Larmor Radius ($r_L$). Gyroradius of a charged particle.
 /// Unit: Meters (m). Constraint: > 0.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct LarmorRadius<R: deep_causality_num::RealField>(R);
+pub struct LarmorRadius<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> LarmorRadius<R> {
+impl<R: deep_causality_algebra::RealField> LarmorRadius<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -151,7 +151,7 @@ impl<R: deep_causality_num::RealField> LarmorRadius<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> Default for LarmorRadius<R> {
+impl<R: deep_causality_algebra::RealField> Default for LarmorRadius<R> {
     /// Returns machine epsilon as the smallest representable positive value
     /// that satisfies the > 0 constraint.
     fn default() -> Self {
@@ -159,7 +159,7 @@ impl<R: deep_causality_num::RealField> Default for LarmorRadius<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<LarmorRadius<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<LarmorRadius<R>> for f64 {
     fn from(val: LarmorRadius<R>) -> Self {
         val.0.into()
     }
@@ -168,9 +168,9 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<LarmorRadius<R>> for f64
 /// Debye Length ($\lambda_D$). Screening length in plasma.
 /// Unit: Meters (m). Constraint: > 0.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct DebyeLength<R: deep_causality_num::RealField>(R);
+pub struct DebyeLength<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> DebyeLength<R> {
+impl<R: deep_causality_algebra::RealField> DebyeLength<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -192,7 +192,7 @@ impl<R: deep_causality_num::RealField> DebyeLength<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> Default for DebyeLength<R> {
+impl<R: deep_causality_algebra::RealField> Default for DebyeLength<R> {
     /// Returns machine epsilon as the smallest representable positive value
     /// that satisfies the > 0 constraint.
     fn default() -> Self {
@@ -200,7 +200,7 @@ impl<R: deep_causality_num::RealField> Default for DebyeLength<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<DebyeLength<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<DebyeLength<R>> for f64 {
     fn from(val: DebyeLength<R>) -> Self {
         val.0.into()
     }
@@ -209,9 +209,9 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<DebyeLength<R>> for f64 
 /// Plasma Frequency ($\omega_{pe}$). Natural oscillation frequency.
 /// Unit: Rad/s. Constraint: > 0.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct PlasmaFrequency<R: deep_causality_num::RealField>(R);
+pub struct PlasmaFrequency<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> PlasmaFrequency<R> {
+impl<R: deep_causality_algebra::RealField> PlasmaFrequency<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -233,7 +233,7 @@ impl<R: deep_causality_num::RealField> PlasmaFrequency<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> Default for PlasmaFrequency<R> {
+impl<R: deep_causality_algebra::RealField> Default for PlasmaFrequency<R> {
     /// Returns machine epsilon as the smallest representable positive value
     /// that satisfies the > 0 constraint.
     fn default() -> Self {
@@ -241,7 +241,7 @@ impl<R: deep_causality_num::RealField> Default for PlasmaFrequency<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<PlasmaFrequency<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<PlasmaFrequency<R>> for f64 {
     fn from(val: PlasmaFrequency<R>) -> Self {
         val.0.into()
     }
@@ -250,9 +250,9 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<PlasmaFrequency<R>> for 
 /// Electrical Conductivity ($\sigma$).
 /// Unit: Siemens/m (S/m). Constraint: > 0.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Conductivity<R: deep_causality_num::RealField>(R);
+pub struct Conductivity<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Conductivity<R> {
+impl<R: deep_causality_algebra::RealField> Conductivity<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -274,7 +274,7 @@ impl<R: deep_causality_num::RealField> Conductivity<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> Default for Conductivity<R> {
+impl<R: deep_causality_algebra::RealField> Default for Conductivity<R> {
     /// Returns machine epsilon as the smallest representable positive value
     /// that satisfies the > 0 constraint.
     fn default() -> Self {
@@ -282,7 +282,7 @@ impl<R: deep_causality_num::RealField> Default for Conductivity<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<Conductivity<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<Conductivity<R>> for f64 {
     fn from(val: Conductivity<R>) -> Self {
         val.0.into()
     }
@@ -291,15 +291,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<Conductivity<R>> for f64
 /// Magnetic Diffusivity ($\eta$).
 /// Unit: $m^2/s$. Constraint: >= 0.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Diffusivity<R: deep_causality_num::RealField>(R);
+pub struct Diffusivity<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for Diffusivity<R> {
+impl<R: deep_causality_algebra::RealField> Default for Diffusivity<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> Diffusivity<R> {
+impl<R: deep_causality_algebra::RealField> Diffusivity<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -321,7 +321,7 @@ impl<R: deep_causality_num::RealField> Diffusivity<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<Diffusivity<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<Diffusivity<R>> for f64 {
     fn from(val: Diffusivity<R>) -> Self {
         val.0.into()
     }

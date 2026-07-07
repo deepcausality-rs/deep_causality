@@ -72,13 +72,6 @@ fn test_module_scale_f64() {
     assert_eq!(scaled.shape(), &[2, 2]);
 }
 
-#[test]
-fn test_module_scale_i64() {
-    let a = CausalTensor::new(vec![1_i64, 2, 3], vec![3]).unwrap();
-    let scaled = a.scale(3_i64);
-    assert_eq!(scaled.as_slice(), &[3, 6, 9]);
-}
-
 // --- ring.rs: mul / one / ones / identity ---
 
 #[test]
@@ -141,7 +134,7 @@ fn test_ring_identity_not_square() {
 
 #[test]
 fn test_blanket_add_group_via_num_trait() {
-    use deep_causality_num::AddGroup;
+    use deep_causality_algebra::AddGroup;
     // Exercises the blanket AddGroup impl: Zero + Add + Sub + Neg.
     let a = CausalTensor::new(vec![1.0, 2.0], vec![2]).unwrap();
     let b = CausalTensor::new(vec![3.0, 4.0], vec![2]).unwrap();

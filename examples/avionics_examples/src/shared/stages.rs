@@ -15,8 +15,8 @@ use super::constants::{
     SUTTON_GRAVES_K,
 };
 use super::utils;
+use deep_causality_algebra::Real;
 use deep_causality_cfd::{CoupledField, PhysicsError, PhysicsStage, StepContext};
-use deep_causality_num::Real;
 use deep_causality_physics::{EARTH_GM, ks_strang_step};
 
 /// Derives the per-step freestream feeds from the carrier's published flight scalars:

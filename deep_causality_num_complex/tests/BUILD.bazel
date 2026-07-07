@@ -1,0 +1,34 @@
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
+rust_test_suite(
+    name = "complex",
+    srcs = glob([
+        "complex/complex_number/*_tests.rs",
+        "complex/octonion_number/*_tests.rs",
+        "complex/quaternion_number/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algebra",
+        "//deep_causality_num",
+        "//deep_causality_num_complex",
+    ],
+)
+
+rust_test_suite(
+    name = "algebra_impls",
+    srcs = glob([
+        "algebra_impls/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algebra",
+        "//deep_causality_num_complex",
+    ],
+)

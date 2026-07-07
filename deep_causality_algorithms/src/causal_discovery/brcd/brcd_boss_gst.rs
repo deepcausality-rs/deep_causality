@@ -20,7 +20,7 @@
 
 use crate::brcd::BrcdError;
 use crate::brcd::brcd_boss_score::FamilyScorer;
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use std::cmp::Ordering;
 
 /// A node in the grow-shrink tree.

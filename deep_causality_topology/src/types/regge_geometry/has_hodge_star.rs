@@ -6,7 +6,8 @@
 use crate::TopologyError;
 use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::{ReggeGeometry, SimplicialComplex};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_sparse::CsrMatrix;
 use std::borrow::Cow;
 

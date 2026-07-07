@@ -14,8 +14,9 @@
 //! 3. **Gauge Mixing**: Confirm W/Z mass ratio and ρ parameter
 //! 4. **Resonance**: Compute Z pole cross-section
 
+use deep_causality_algebra::Real;
 use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow, PropagatingEffect};
-use deep_causality_num::{Float106, Real};
+use deep_causality_num::Float106;
 use deep_causality_physics::ElectroweakParams;
 
 // =============================================================================

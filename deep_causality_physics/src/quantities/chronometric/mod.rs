@@ -4,7 +4,8 @@
  */
 use crate::{EARTH_GM, EARTH_J2, EARTH_RADIUS_EQUATORIAL, SPEED_OF_LIGHT};
 use core::ops::Div;
-use deep_causality_num::{FromPrimitive, Real};
+use deep_causality_algebra::Real;
+use deep_causality_num::FromPrimitive;
 
 /// Parameters describing a central gravitating body for weak-field GM recovery.
 ///

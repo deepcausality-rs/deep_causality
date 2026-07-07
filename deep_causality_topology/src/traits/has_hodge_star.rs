@@ -5,7 +5,7 @@
 
 use crate::TopologyError;
 use crate::traits::chain_complex::ChainComplex;
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_sparse::CsrMatrix;
 use std::borrow::Cow;
 

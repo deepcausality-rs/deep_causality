@@ -6,7 +6,8 @@
 use crate::{Simplex, Skeleton, Topology, TopologyError};
 use core::fmt::Debug;
 use core::ops::Mul;
-use deep_causality_num::{Field, Zero};
+use deep_causality_algebra::Field;
+use deep_causality_num::Zero;
 use deep_causality_tensor::CausalTensor;
 use std::sync::Arc;
 

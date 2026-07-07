@@ -21,7 +21,8 @@
 //!
 //! M. Creutz, *Quarks, Gluons and Lattices*, Cambridge University Press (1983), Chapter 8
 
-use deep_causality_num::{Complex, Float, Float106};
+use deep_causality_num::{Float, Float106};
+use deep_causality_num_complex::Complex;
 use deep_causality_topology::{CubicalComplex, LatticeGaugeField, U1};
 use std::sync::Arc;
 

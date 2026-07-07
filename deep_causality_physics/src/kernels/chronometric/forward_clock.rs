@@ -14,7 +14,8 @@
 //! [`solve_gm_analytical_kernel`]: crate::solve_gm_analytical_kernel
 
 use crate::{PhysicsError, SPEED_OF_LIGHT};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// The fractional proper-time rate offset `dτ/dt − 1` of a clock at radius `r` moving at speed `v`, to
 /// first post-Newtonian (1PN) order in a monopole field:

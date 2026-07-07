@@ -4,7 +4,8 @@
  */
 
 use core::fmt::{Debug, Display};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_par::MaybeParallel;
 
 /// Scalar bound for every CFD theory and solver: precision as a parameter (`f32`,

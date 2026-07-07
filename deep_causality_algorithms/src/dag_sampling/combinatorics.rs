@@ -19,7 +19,8 @@
 //!   as in the reference.
 
 use crate::dag_sampling::memoization::Memoization;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Converts a `usize` into the count type `T`. Counts arising here (small
 /// integers and factorials) are representable in every supported `RealField`.

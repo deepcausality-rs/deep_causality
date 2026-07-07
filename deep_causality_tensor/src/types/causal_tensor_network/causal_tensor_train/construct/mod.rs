@@ -9,7 +9,7 @@ use crate::types::causal_tensor_network::canonical_form::CanonicalForm;
 use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor};
-use deep_causality_num::ConjugateScalar;
+use deep_causality_algebra::ConjugateScalar;
 
 /// Guard on dense materialization: constructors/contractions that would form more than this many
 /// elements fail with [`CausalTensorError::RankExceeded`] rather than allocate `nᵈ`.

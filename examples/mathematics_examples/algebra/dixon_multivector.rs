@@ -4,7 +4,7 @@
  */
 
 use deep_causality_multivector::{DixonAlgebra, MultiVector};
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 // -----------------------------------------------------------------------------------------
 // ENGINEERING VALUE:

@@ -29,6 +29,7 @@ rust_test_suite(
         "//deep_causality_rand",
         # Float106 + Real/RealField precision targets
         "//deep_causality_num",
+        "//deep_causality_algebra",
     ],
 )
 

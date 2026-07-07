@@ -7,10 +7,10 @@
 //! [`CausalMultiField<T>`] and its carrier tuple
 //! `(CausalTensor<T>, Metric, [T; 3], [usize; 3])`.
 
+use deep_causality_algebra::iso::witness::StandardIso;
+use deep_causality_algebra::iso::witness::test_support::assert_witness_iso_round_trip;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::{CausalMultiField, MultiFieldCarrier};
-use deep_causality_num::iso::witness::StandardIso;
-use deep_causality_num::iso::witness::test_support::assert_witness_iso_round_trip;
 use deep_causality_tensor::CausalTensor;
 
 fn make_field() -> CausalMultiField<f32> {

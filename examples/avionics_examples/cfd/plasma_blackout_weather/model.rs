@@ -186,7 +186,7 @@ fn mean_sd(xs: &[FloatType]) -> (FloatType, FloatType) {
         .map(|&x| (x - mean) * (x - mean))
         .sum::<FloatType>()
         / (n - ft(1.0));
-    (mean, deep_causality_num::Real::sqrt(var))
+    (mean, deep_causality_algebra::Real::sqrt(var))
 }
 
 /// The ensemble reduction: one condition's finished draw set (the reference draw first) collapses
@@ -346,7 +346,7 @@ fn gate_cold_sigma(v: &StudyView<'_, WorldRow>) -> (bool, String) {
         .iter()
         .find(|r| r.name == "polar_winter")
         .unwrap_or(standard);
-    let combined_sd = deep_causality_num::Real::sqrt(
+    let combined_sd = deep_causality_algebra::Real::sqrt(
         polar.drift_sd_m * polar.drift_sd_m + standard.drift_sd_m * standard.drift_sd_m,
     );
     let separation = polar.drift_mean_m - standard.drift_mean_m;

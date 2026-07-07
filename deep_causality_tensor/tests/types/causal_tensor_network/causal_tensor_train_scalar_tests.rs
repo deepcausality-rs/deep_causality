@@ -8,7 +8,9 @@
 //! differentiation flows through the network with no change to the library code. Derivatives are
 //! checked against central finite differences.
 
-use deep_causality_num::{ConjugateScalar, Dual, FromPrimitive, Scalar};
+use deep_causality_algebra::{ConjugateScalar, Scalar};
+use deep_causality_num::FromPrimitive;
+use deep_causality_num_dual::Dual;
 use deep_causality_tensor::{CausalTensor, CausalTensorTrain, TensorTrain, Truncation};
 
 fn c<T: FromPrimitive>(x: f64) -> T {

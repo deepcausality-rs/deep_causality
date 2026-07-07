@@ -6,8 +6,9 @@
 //! `StepOutput` / `RunOutput` accessor tests. Both types are produced only
 //! by the solver, so the fixtures run one real (tiny) march.
 
+use deep_causality_algebra::RealField;
 use deep_causality_cfd::{DecNsSolver, dec_divergence_residual};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
 

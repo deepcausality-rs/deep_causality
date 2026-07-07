@@ -17,7 +17,8 @@ use super::registry::CutCellRegistry;
 use crate::TopologyError;
 use crate::types::cubical_regge_geometry::{CubicalReggeGeometry, SignatureMarker};
 use crate::types::lattice_complex::LatticeComplex;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Length of `[seg_lo, seg_hi]` covered by the disk's chord at a fixed perpendicular
 /// coordinate: the disk spans `[perp_center − h, perp_center + h]` along the segment axis,

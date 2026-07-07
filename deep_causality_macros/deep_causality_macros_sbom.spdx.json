@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-06-18T02:06:54Z",
+    "created": "2026-07-07T22:29:37Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_macros-6b58b26f-8493-427d-81c6-66c536387866",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_macros-b341560a-c23c-4f1e-bb2c-671092cf4be3",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_macros",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "f7392f65d6a746809c1b6aa004c46d8a28b1299b"
+          "checksumValue": "5c3b88158295f2a586b267227fe36c51700f799e"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -38,14 +38,14 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-File-deep_causality_macros",
-      "relationshipType": "DESCRIBES",
-      "spdxElementId": "SPDXRef-DOCUMENT"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--macros-0.9.4",
       "relationshipType": "GENERATED_FROM",
       "spdxElementId": "SPDXRef-File-deep_causality_macros"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-File-deep_causality_macros",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
     }
   ],
   "spdxVersion": "SPDX-2.3"

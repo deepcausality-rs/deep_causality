@@ -21,7 +21,8 @@ use crate::{
     AccelerationVector, Density, KinematicViscosity, Pressure, Velocity3, VelocityGradient,
     ViscousStress, VorticityVector,
 };
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 // =============================================================================
 // Momentum equation building blocks

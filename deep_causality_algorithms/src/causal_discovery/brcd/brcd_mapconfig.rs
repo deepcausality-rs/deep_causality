@@ -36,7 +36,7 @@
 use crate::brcd::brcd_augment::incident_undirected_edges;
 use crate::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use crate::brcd::brcd_validity::{baseline_parents, is_valid_configuration};
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_topology::MixedGraph;
 use std::collections::{BTreeMap, BTreeSet};
 

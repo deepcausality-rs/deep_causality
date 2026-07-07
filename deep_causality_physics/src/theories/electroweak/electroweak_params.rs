@@ -8,7 +8,7 @@ use crate::{
 };
 
 use crate::theories::electroweak::radiative::{RadiativeCorrections, solve_w_mass};
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use std::f64::consts::PI;
 
 /// Electroweak theory configuration and symmetry breaking parameters.

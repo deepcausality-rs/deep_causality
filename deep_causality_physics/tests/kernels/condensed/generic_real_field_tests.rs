@@ -12,9 +12,11 @@
 //! the `f64` physical constants into the target precision. Tolerances are kept
 //! loose so a single generic body is valid at both precisions.
 
+use deep_causality_algebra::RealField;
 use deep_causality_haft::Functor;
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, Metric};
-use deep_causality_num::{Complex, FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
+use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
     Concentration, Displacement, Energy, GRAPHENE_LATTICE_CONST, Length, Mobility, Momentum,
     OrderParameter, QuantumEigenvector, QuantumMetric, QuantumVelocity, REDUCED_PLANCK_CONSTANT,

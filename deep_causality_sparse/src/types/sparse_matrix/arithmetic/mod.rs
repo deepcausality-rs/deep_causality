@@ -4,7 +4,7 @@
  */
 
 use crate::CsrMatrix;
-use deep_causality_num::{AbelianGroup, Ring};
+use deep_causality_algebra::{AbelianGroup, Ring};
 use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 // ============================================================================

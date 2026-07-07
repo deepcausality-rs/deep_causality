@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-06-18T02:06:54Z",
+    "created": "2026-07-07T22:29:37Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_data_structures-1678fa02-717f-4e85-8d81-d8344713acf2",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_data_structures-2633076c-8565-4b79-a080-0aed495d38e0",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_data_structures",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "f7392f65d6a746809c1b6aa004c46d8a28b1299b"
+          "checksumValue": "5c3b88158295f2a586b267227fe36c51700f799e"
         }
       ],
       "fileName": "./Cargo.lock",

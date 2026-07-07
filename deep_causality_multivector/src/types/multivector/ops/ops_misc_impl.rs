@@ -4,7 +4,7 @@
  */
 use crate::CausalMultiVector;
 use core::ops::Neg;
-use deep_causality_num::Field;
+use deep_causality_algebra::Field;
 
 impl<T> CausalMultiVector<T> {
     /// Projects the multivector onto a specific grade $k$.

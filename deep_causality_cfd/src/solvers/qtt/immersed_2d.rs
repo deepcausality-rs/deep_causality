@@ -18,7 +18,7 @@ use crate::tensor_bridge::{dequantize_2d, quantize_2d};
 use crate::traits::Marcher;
 use crate::types::CfdScalar;
 use alloc::format;
-use deep_causality_num::ConjugateScalar;
+use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{CausalTensor, CausalTensorTrain, TensorTrain, Truncation};
 

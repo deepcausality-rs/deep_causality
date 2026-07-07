@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 /// Defines binary arithmetic operations on any real scalar.
 #[derive(Debug, Clone, Copy, PartialEq)]

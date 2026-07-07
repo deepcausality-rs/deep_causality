@@ -9,8 +9,9 @@
 //! These actions reduce discretization errors from $O(a^2)$ to $O(a^4)$ or better.
 
 use crate::{ChainComplex, GaugeGroup, LatticeGaugeField, TopologyError};
-use deep_causality_num::Field; // TensorData removed
-use deep_causality_num::{ComplexField, DivisionAlgebra, FromPrimitive, RealField, ToPrimitive};
+use deep_causality_algebra::Field; // TensorData removed
+use deep_causality_algebra::{ComplexField, DivisionAlgebra, RealField};
+use deep_causality_num::{FromPrimitive, ToPrimitive};
 use std::fmt::Debug;
 
 /// Coefficients for improved gauge actions.
@@ -117,7 +118,7 @@ impl<
     /// Returns error if plaquette/rectangle computation fails.
     pub fn try_improved_action(&self, coeffs: &ActionCoeffs<R>) -> Result<R, TopologyError>
     where
-        M: deep_causality_num::ComplexField<R>,
+        M: deep_causality_algebra::ComplexField<R>,
         R: RealField,
     {
         let n = G::matrix_dim();

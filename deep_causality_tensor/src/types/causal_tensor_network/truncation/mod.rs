@@ -4,7 +4,7 @@
  */
 
 use crate::CausalTensorError;
-use deep_causality_num::Real;
+use deep_causality_algebra::Real;
 
 /// Truncation policy for any SVD-based tensor-network step (TT-SVD, rounding, MPO apply).
 ///

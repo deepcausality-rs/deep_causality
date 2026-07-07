@@ -7,8 +7,9 @@ use crate::constants::{
 };
 use crate::{DebyeLength, ElectronDensity, LarmorRadius, PlasmaFrequency};
 use crate::{Mass, PhysicalField, PhysicsError, Speed, Temperature};
+use deep_causality_algebra::RealField;
 use deep_causality_multivector::MultiVector;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 
 /// Calculates the Debye Length $\lambda_D$.
 /// $$ \lambda_D = \sqrt{\frac{\epsilon_0 k_B T_e}{n_e e^2}} $$

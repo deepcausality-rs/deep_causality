@@ -19,7 +19,7 @@
 //! * Stiefel, E. L. & Scheifele, G., *Linear and Regular Celestial Mechanics*, Springer (1971), §19.
 
 use crate::PhysicsError;
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 /// The KS bilinear constraint residual `b(u, w) = u₄w₁ − u₃w₂ + u₂w₃ − u₁w₄`. Zero iff `(u, w)` maps to
 /// a physical 3-D `(r, v)`.

@@ -7,7 +7,8 @@
 
 use crate::types::simplicial_complex::lazy_hodge_star::build_lumped_mass_hodge_star;
 use crate::{SimplicialComplex, Skeleton, TopologyError};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_sparse::CsrMatrix;
 
 impl<T> SimplicialComplex<T> {

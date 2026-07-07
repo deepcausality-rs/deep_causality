@@ -9,7 +9,7 @@
 //! and Doppler effects. The implementation prioritizes type safety and physical correctness,
 //! ensuring that operations respect domain limits (e.g., sonic singularities).
 use crate::{Frequency, Length, PhysicsError, Speed};
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 /// Calculates the speed of a wave given its frequency and wavelength.
 pub fn wave_speed_kernel<R>(

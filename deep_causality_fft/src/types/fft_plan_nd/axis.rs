@@ -18,7 +18,7 @@
 //! threshold). Parallel sections allocate per-thread scratch; the serial
 //! path allocates nothing.
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 use crate::traits::fft_scalar::FftScalar;
 use crate::types::fft_plan::FftPlan;

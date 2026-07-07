@@ -11,7 +11,7 @@
 //! operates on any `MultiVector` handles scalars seamlessly with no per-type implementations.
 
 use crate::{CausalMultiVectorError, MultiVector};
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 impl<T> MultiVector<T> for T
 where

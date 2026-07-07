@@ -7,7 +7,8 @@ use crate::{
     BandDrudeWeight, Energy, Length, PhysicsError, QuantumEigenvector, QuantumMetric,
     QuantumVelocity,
 };
-use deep_causality_num::{Complex, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
 
 /// Calculates the Quantum Geometric Tensor (QGT) component $Q_{ij}^n(\mathbf{k})$ for band $n$.

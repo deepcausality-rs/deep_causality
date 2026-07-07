@@ -9,9 +9,8 @@
 
 use crate::traits::chain_complex::ChainComplex;
 use crate::{GaugeGroup, LatticeGaugeField, LinkVariable, TopologyError};
-use deep_causality_num::{
-    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
-};
+use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
+use deep_causality_num::{FromPrimitive, ToPrimitive};
 
 use std::fmt::Debug;
 

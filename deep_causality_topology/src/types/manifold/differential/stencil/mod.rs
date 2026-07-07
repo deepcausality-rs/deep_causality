@@ -28,7 +28,8 @@ mod stencil_op;
 
 use core::fmt::Debug;
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_par::MaybeParallel;
 
 use crate::errors::topology_error::TopologyError;

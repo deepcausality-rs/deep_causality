@@ -4,7 +4,7 @@
  */
 use crate::{Diff, DifferentiableArrow, Scalar};
 use deep_causality_haft::Arrow;
-use deep_causality_num::Dual;
+use deep_causality_num_dual::Dual;
 
 impl<A, R> Arrow for Diff<A, R>
 where

@@ -40,7 +40,7 @@ use rayon::prelude::*;
 
 use deep_causality_par::MaybeParallel;
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_tensor::CausalTensor;
 
 use crate::errors::topology_error::TopologyError;

@@ -7,7 +7,6 @@
 
 use crate::{Graph, TopologyError};
 use deep_causality_num::Zero;
-
 impl<T> Graph<T>
 where
     T: Default + Copy + Clone + PartialEq + Zero,

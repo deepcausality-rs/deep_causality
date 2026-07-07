@@ -8,9 +8,8 @@
 //! Note: For robust gauge transformations with error handling, see `ops_gauge_transform.rs`.
 
 use crate::{GaugeGroup, LatticeGaugeField, LinkVariable};
-use deep_causality_num::{
-    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
-};
+use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
+use deep_causality_num::{FromPrimitive, ToPrimitive};
 
 use std::collections::HashMap;
 use std::fmt::Debug;

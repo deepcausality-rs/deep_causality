@@ -3,8 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_algebra::Real;
 use deep_causality_calculus::quadrature;
-use deep_causality_num::{Dual, Real};
+use deep_causality_num_dual::Dual;
 use std::f64::consts::PI;
 
 #[test]

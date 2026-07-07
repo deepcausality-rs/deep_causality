@@ -8,9 +8,10 @@
 
 use alloc::format;
 
+use deep_causality_algebra::RealField;
 use deep_causality_core::EffectLog;
 use deep_causality_haft::LogAddEntry;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 use deep_causality_uncertain::{MaybeUncertain, ProbabilisticType, UncertainError};
 
 use super::dropout_verbosity::DropoutVerbosity;

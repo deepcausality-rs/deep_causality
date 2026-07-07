@@ -15,11 +15,12 @@
 //! The episode is one `CausalFlow` pipeline: the quantum history rides the state channel,
 //! each step is a named stage, and the value channel carries the "error detected" flag.
 
+use deep_causality_algebra::DivisionAlgebra;
 use deep_causality_core::{
     CausalEffect, CausalEffectPropagationProcess, CausalFlow, PropagatingProcess,
 };
 use deep_causality_multivector::{HilbertState, Metric};
-use deep_causality_num::{Complex, DivisionAlgebra};
+use deep_causality_num_complex::Complex;
 
 /// Switch this alias to `f32` for low precision, `f64` for standard precision,
 /// or `Float106` for high precision.

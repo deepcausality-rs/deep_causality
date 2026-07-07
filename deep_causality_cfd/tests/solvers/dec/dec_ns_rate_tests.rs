@@ -9,12 +9,13 @@
 //! rejection. The in-loop `expect`s of `eval` are documented coverage
 //! exemptions (their invariants are construction-validated here).
 
+use deep_causality_algebra::RealField;
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
 use deep_causality_cfd::{
     AccelerationVector, BodyForceOneForm, DecNsRate, Density, KinematicViscosity, Velocity3,
     VelocityGradient, VelocityOneForm, dec_kinetic_energy, incompressible_ns_rhs,
 };
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
 

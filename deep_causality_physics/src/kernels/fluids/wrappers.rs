@@ -13,8 +13,9 @@ use crate::{
     VelocityGradient, Viscosity, ViscousStress, VorticityVector, WallShearStress,
 };
 use core::fmt::Debug;
+use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 
 /// Causal wrapper for [`mechanics::hydrostatic_pressure_kernel`].
 pub fn hydrostatic_pressure<R>(

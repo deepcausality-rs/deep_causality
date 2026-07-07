@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_physics::utils_tests::{divergence, random_cochain, sup_norm, unit_manifold};
 use deep_causality_physics::{SolenoidalField, VelocityOneForm};
 use deep_causality_tensor::CausalTensor;

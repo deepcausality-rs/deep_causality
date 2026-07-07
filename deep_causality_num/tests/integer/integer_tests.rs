@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Integer, One, Ring, Zero};
+use deep_causality_num::{Integer, One, Zero};
 
 /// Test that constants are correct for various integer types.
 #[test]
@@ -125,25 +125,6 @@ fn test_euclidean_div_rem() {
     assert_eq!(7i32.rem_euclid(-3), 1);
 }
 
-/// Test that Integer implies Ring (algebraic hierarchy).
-#[test]
-fn test_integer_is_ring() {
-    fn require_ring<T: Ring>() {}
-
-    require_ring::<i8>();
-    require_ring::<i16>();
-    require_ring::<i32>();
-    require_ring::<i64>();
-    require_ring::<i128>();
-    require_ring::<isize>();
-    require_ring::<u8>();
-    require_ring::<u16>();
-    require_ring::<u32>();
-    require_ring::<u64>();
-    require_ring::<u128>();
-    require_ring::<usize>();
-}
-
 /// Test that Integer types have Zero and One.
 #[test]
 fn test_integer_identity() {
@@ -163,7 +144,7 @@ fn test_integer_identity() {
 /// Generic function test - demonstrates using Integer bound.
 #[test]
 fn test_generic_function() {
-    fn safe_increment<T: Integer>(val: T) -> Option<T> {
+    fn safe_increment<T: Integer + One>(val: T) -> Option<T> {
         val.checked_add(T::one())
     }
 

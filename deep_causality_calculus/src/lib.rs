@@ -50,7 +50,7 @@ pub use crate::traits::differentiable_arrow::{DifferentiableArrow, Differentiabl
 
 // `Scalar` is a numeric trait (Real + Div + FromPrimitive) and lives in the algebra tower in
 // `deep_causality_num`; re-exported here so the operators and `crate::Scalar` imports keep resolving.
-pub use deep_causality_num::Scalar;
+pub use deep_causality_algebra::Scalar;
 
 // Constructed arrows.
 pub use crate::types::diff::Diff;

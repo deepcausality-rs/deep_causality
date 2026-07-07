@@ -10,7 +10,7 @@
 //! pathological numerics. This is the `if !delta_s.is_finite() { false }` branch
 //! in `ops_metropolis.rs`.
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_rand::types::Xoshiro256;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, LatticeComplex, LatticeGaugeField, LinkVariable, U1};

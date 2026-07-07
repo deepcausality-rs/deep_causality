@@ -4,7 +4,7 @@
  */
 
 use crate::{DifferentiableArrow, DifferentiableField, Scalar};
-use deep_causality_num::Dual;
+use deep_causality_num_dual::Dual;
 
 /// The tangent functor as a fluent type extension on any [`DifferentiableArrow`].
 ///

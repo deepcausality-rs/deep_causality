@@ -16,10 +16,10 @@
 //! - `CausalTensorWitness::fmap` (Functor over the outer container)
 //! - `CausalMultiVector::new`, `geometric_product` (Clifford algebra)
 
+use deep_causality_algebra::Real;
 use deep_causality_haft::Functor;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::Real;
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 /// `f64` is the right precision here: the rotation result is a permutation of

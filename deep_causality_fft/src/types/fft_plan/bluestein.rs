@@ -12,7 +12,7 @@
 //! angle is reduced as `π·t²/n = 2π·(t² mod 2n)/(2n)` in integer
 //! arithmetic before any trigonometry.
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 use crate::traits::fft_scalar::FftScalar;
 use crate::types::fft_plan::FftPlan;

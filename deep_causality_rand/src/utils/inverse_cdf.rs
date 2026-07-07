@@ -14,7 +14,8 @@
 //! the `Float106` variant then refines it to double-double precision with Halley iteration on
 //! `Φ(x) − u = 0`, using the double-double `erfc`/`exp`.
 
-use deep_causality_num::{Float, Float106, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::{Float, Float106};
 
 /// Smallest `u` admitted by the standard-normal quantile; keeps the result finite at the
 /// open-interval endpoints (`u = 0` would map to `−∞`).

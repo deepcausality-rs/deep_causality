@@ -5,7 +5,8 @@
 use crate::causal_discovery::surd::surd_utils;
 use crate::causal_discovery::surd::surd_utils::surd_utils_cdl;
 use crate::causal_discovery::surd::{MaxOrder, SurdResult};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::{CausalTensor, CausalTensorError, Tensor};
 use std::collections::HashMap;
 

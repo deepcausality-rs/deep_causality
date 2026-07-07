@@ -9,7 +9,7 @@
 //! - smearing dimension guard (D <= 1)
 //! - empty-plane average-plaquette short circuit (count == 0)
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_rand::types::Xoshiro256;
 use deep_causality_topology::{
     LatticeComplex, LatticeGaugeField, SU2, SmearingParams, TopologyErrorEnum, U1,

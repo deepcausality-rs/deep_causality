@@ -4,7 +4,8 @@
  */
 
 use crate::{Density, G, Length, PhysicsError, Pressure, Speed};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Calculates hydrostatic pressure: $P = P_0 + \rho g h$.
 ///

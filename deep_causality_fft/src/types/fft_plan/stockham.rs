@@ -13,7 +13,7 @@
 //! between the data buffer and the caller's scratch; if the stage count
 //! is odd the result is copied back once.
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 use crate::traits::fft_scalar::FftScalar;
 use crate::utils::complex_ops::{mul_i, mul_neg_i};

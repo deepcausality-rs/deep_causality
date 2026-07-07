@@ -6,8 +6,9 @@
 use crate::kernels::astro::mechanics;
 use crate::kernels::dynamics::{Length, Mass, Speed};
 use core::fmt::Debug;
+use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 
 /// Causal wrapper for [`mechanics::orbital_velocity_kernel`].
 pub fn orbital_velocity<R>(mass: &Mass<R>, radius: &Length<R>) -> PropagatingEffect<Speed<R>>

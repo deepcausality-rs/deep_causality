@@ -3,7 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Complex, ConjugateScalar, Dual, Float106};
+use deep_causality_algebra::ConjugateScalar;
+use deep_causality_num::Float106;
+use deep_causality_num_complex::Complex;
+use deep_causality_num_dual::Dual;
 
 fn assert_conj<T: ConjugateScalar>() {}
 

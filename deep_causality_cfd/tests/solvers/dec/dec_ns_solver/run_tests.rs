@@ -6,8 +6,9 @@
 //! Run-loop tests: fixed-horizon count, predicate stop, bound exhaustion,
 //! and the failing-step index in both loops.
 
+use deep_causality_algebra::RealField;
 use deep_causality_cfd::DecNsSolver;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
 

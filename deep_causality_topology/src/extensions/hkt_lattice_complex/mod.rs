@@ -4,8 +4,8 @@
  */
 
 use crate::LatticeComplex;
+use deep_causality_algebra::RealField;
 use deep_causality_haft::{HKT, NoConstraint, Satisfies};
-use deep_causality_num::RealField;
 use std::sync::Arc;
 
 /// HKT witness for `LatticeComplex<D, R>` as a functor over field values.

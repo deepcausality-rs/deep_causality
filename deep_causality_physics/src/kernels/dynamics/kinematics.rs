@@ -4,8 +4,8 @@
  */
 
 use crate::{Frequency, Mass, MomentOfInertia, PhysicsError};
+use deep_causality_algebra::RealField;
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
-use deep_causality_num::RealField;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PhysicalVector<R: RealField>(pub CausalMultiVector<R>);
@@ -48,7 +48,7 @@ pub fn kinetic_energy_kernel<R>(
     velocity: &CausalMultiVector<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: deep_causality_num::RealField + deep_causality_num::FromPrimitive,
+    R: deep_causality_algebra::RealField + deep_causality_num::FromPrimitive,
 {
     let v_sq = velocity.squared_magnitude();
     if !v_sq.is_finite() {
@@ -83,7 +83,7 @@ pub fn rotational_kinetic_energy_kernel<R>(
     omega: Frequency<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: deep_causality_num::RealField + deep_causality_num::FromPrimitive,
+    R: deep_causality_algebra::RealField + deep_causality_num::FromPrimitive,
 {
     let w = omega.value();
     let half = R::from_f64(0.5)

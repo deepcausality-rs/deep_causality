@@ -16,10 +16,9 @@
 //!   tensor does not have the required Lorentzian signature `(1 timelike,
 //!   D−1 spacelike)`.
 
-use core::fmt;
-use deep_causality_num::RealField;
-
 use crate::traits::neighborhood::CellId;
+use core::fmt;
+use deep_causality_algebra::RealField;
 
 /// Failure mode of the Lorentzian constructor on `CubicalReggeGeometry`.
 #[derive(Debug, Clone, PartialEq)]

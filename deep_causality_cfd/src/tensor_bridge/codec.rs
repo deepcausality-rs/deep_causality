@@ -6,7 +6,7 @@
 use crate::types::CfdScalar;
 use alloc::format;
 use alloc::vec;
-use deep_causality_num::ConjugateScalar;
+use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{CausalTensor, CausalTensorTrain, Tensor, TensorTrain, Truncation};
 

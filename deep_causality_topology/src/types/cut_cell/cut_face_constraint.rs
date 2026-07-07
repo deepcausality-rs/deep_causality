@@ -5,8 +5,7 @@
 
 //! A single aperture-resolved immersed-wall constraint row.
 
-use deep_causality_num::RealField;
-
+use deep_causality_algebra::RealField;
 /// Which wall condition a [`CutFaceConstraint`] row enforces.
 ///
 /// The split lets the physics layer ablate the **no-penetration** row independently of the

@@ -20,7 +20,8 @@
 //! previous `(z >> 11) / 2^53` mapping — the change is transparent at `f64` and only *adds* precision
 //! at higher-precision scalars.
 
-use deep_causality_num::{ConjugateScalar, FromPrimitive, One, Real, Scalar, Zero};
+use deep_causality_algebra::{ConjugateScalar, Real, Scalar};
+use deep_causality_num::{FromPrimitive, One, Zero};
 
 type Re<T> = <T as ConjugateScalar>::Real;
 

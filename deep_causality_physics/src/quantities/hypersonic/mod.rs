@@ -12,15 +12,15 @@ use crate::PhysicsError;
 
 /// Electron number density $n_e$. Unit: $m^{-3}$. Constraint: finite, $\geq 0$.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct ElectronDensity<R: deep_causality_num::RealField>(R);
+pub struct ElectronDensity<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for ElectronDensity<R> {
+impl<R: deep_causality_algebra::RealField> Default for ElectronDensity<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> ElectronDensity<R> {
+impl<R: deep_causality_algebra::RealField> ElectronDensity<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -44,7 +44,7 @@ impl<R: deep_causality_num::RealField> ElectronDensity<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<ElectronDensity<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<ElectronDensity<R>> for f64 {
     fn from(val: ElectronDensity<R>) -> Self {
         val.0.into()
     }
@@ -53,15 +53,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<ElectronDensity<R>> for 
 /// Ionization fraction $\alpha = n_e / n_{tot}$. Unit: dimensionless.
 /// Constraint: finite, $\in [0, 1]$.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct IonizationFraction<R: deep_causality_num::RealField>(R);
+pub struct IonizationFraction<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for IonizationFraction<R> {
+impl<R: deep_causality_algebra::RealField> Default for IonizationFraction<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> IonizationFraction<R> {
+impl<R: deep_causality_algebra::RealField> IonizationFraction<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::NormalizationError(
@@ -85,7 +85,7 @@ impl<R: deep_causality_num::RealField> IonizationFraction<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<IonizationFraction<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<IonizationFraction<R>> for f64 {
     fn from(val: IonizationFraction<R>) -> Self {
         val.0.into()
     }
@@ -93,15 +93,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<IonizationFraction<R>> f
 
 /// Free-electron translational temperature $T_e$. Unit: K. Constraint: finite, $\geq 0$.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct ElectronTemperature<R: deep_causality_num::RealField>(R);
+pub struct ElectronTemperature<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for ElectronTemperature<R> {
+impl<R: deep_causality_algebra::RealField> Default for ElectronTemperature<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> ElectronTemperature<R> {
+impl<R: deep_causality_algebra::RealField> ElectronTemperature<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -123,7 +123,7 @@ impl<R: deep_causality_num::RealField> ElectronTemperature<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<ElectronTemperature<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<ElectronTemperature<R>> for f64 {
     fn from(val: ElectronTemperature<R>) -> Self {
         val.0.into()
     }
@@ -132,15 +132,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<ElectronTemperature<R>> 
 /// Vibrational (vibrational–electronic) temperature $T_{ve}$. Unit: K.
 /// Constraint: finite, $\geq 0$.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct VibrationalTemperature<R: deep_causality_num::RealField>(R);
+pub struct VibrationalTemperature<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for VibrationalTemperature<R> {
+impl<R: deep_causality_algebra::RealField> Default for VibrationalTemperature<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> VibrationalTemperature<R> {
+impl<R: deep_causality_algebra::RealField> VibrationalTemperature<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -162,7 +162,7 @@ impl<R: deep_causality_num::RealField> VibrationalTemperature<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<VibrationalTemperature<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<VibrationalTemperature<R>> for f64 {
     fn from(val: VibrationalTemperature<R>) -> Self {
         val.0.into()
     }
@@ -171,15 +171,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<VibrationalTemperature<R
 /// Species mass fraction $Y_s = \rho_s / \rho$. Unit: dimensionless.
 /// Constraint: finite, $\in [0, 1]$.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct MassFraction<R: deep_causality_num::RealField>(R);
+pub struct MassFraction<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for MassFraction<R> {
+impl<R: deep_causality_algebra::RealField> Default for MassFraction<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> MassFraction<R> {
+impl<R: deep_causality_algebra::RealField> MassFraction<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::NormalizationError(
@@ -203,7 +203,7 @@ impl<R: deep_causality_num::RealField> MassFraction<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<MassFraction<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<MassFraction<R>> for f64 {
     fn from(val: MassFraction<R>) -> Self {
         val.0.into()
     }
@@ -213,15 +213,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<MassFraction<R>> for f64
 /// rate-controlling temperature). Unit: model-dependent (e.g. $m^3 mol^{-1} s^{-1}$).
 /// Constraint: finite, $\geq 0$.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct ReactionRate<R: deep_causality_num::RealField>(R);
+pub struct ReactionRate<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for ReactionRate<R> {
+impl<R: deep_causality_algebra::RealField> Default for ReactionRate<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> ReactionRate<R> {
+impl<R: deep_causality_algebra::RealField> ReactionRate<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -245,7 +245,7 @@ impl<R: deep_causality_num::RealField> ReactionRate<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<ReactionRate<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<ReactionRate<R>> for f64 {
     fn from(val: ReactionRate<R>) -> Self {
         val.0.into()
     }
@@ -256,15 +256,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<ReactionRate<R>> for f64
 /// for two-body/two-body reactions; a concentration for dissociation).
 /// Constraint: finite, $\geq 0$.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct EquilibriumConstant<R: deep_causality_num::RealField>(R);
+pub struct EquilibriumConstant<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for EquilibriumConstant<R> {
+impl<R: deep_causality_algebra::RealField> Default for EquilibriumConstant<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> EquilibriumConstant<R> {
+impl<R: deep_causality_algebra::RealField> EquilibriumConstant<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -288,7 +288,7 @@ impl<R: deep_causality_num::RealField> EquilibriumConstant<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<EquilibriumConstant<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<EquilibriumConstant<R>> for f64 {
     fn from(val: EquilibriumConstant<R>) -> Self {
         val.0.into()
     }
@@ -298,15 +298,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<EquilibriumConstant<R>> 
 /// bound in atoms rather than the parent molecule. Constraint: finite, in
 /// $[0, 1]$.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct DissociationFraction<R: deep_causality_num::RealField>(R);
+pub struct DissociationFraction<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for DissociationFraction<R> {
+impl<R: deep_causality_algebra::RealField> Default for DissociationFraction<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> DissociationFraction<R> {
+impl<R: deep_causality_algebra::RealField> DissociationFraction<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::NormalizationError(
@@ -330,7 +330,7 @@ impl<R: deep_causality_num::RealField> DissociationFraction<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<DissociationFraction<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<DissociationFraction<R>> for f64 {
     fn from(val: DissociationFraction<R>) -> Self {
         val.0.into()
     }

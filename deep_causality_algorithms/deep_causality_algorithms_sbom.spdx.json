@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-06-18T02:06:53Z",
+    "created": "2026-07-07T22:29:36Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_algorithms-40598735-6d7a-41d3-8002-43fbaa8b2552",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_algorithms-b2351265-d836-4be5-b1fa-bad485be4e4a",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_algorithms",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "f7392f65d6a746809c1b6aa004c46d8a28b1299b"
+          "checksumValue": "5c3b88158295f2a586b267227fe36c51700f799e"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,14 +27,88 @@
   "name": "deep_causality_algorithms",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--algorithms-0.3.0",
-      "description": "Computational causality algorithms and utils used in the DeepCausality project.",
-      "downloadLocation": "NONE",
-      "homepage": "https://deepcausality.com/",
+      "SPDXID": "SPDXRef-Package-libm-0.2.16",
+      "description": "libm in pure Rust",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/libm@0.2.16",
+          "referenceType": "purl"
+        }
+      ],
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_algorithms",
-      "versionInfo": "0.3.0"
+      "name": "libm",
+      "versionInfo": "0.2.16"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--rand-0.1.16",
+      "description": "Random number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_rand",
+      "versionInfo": "0.1.16"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-getrandom-0.4.3",
+      "description": "A small cross-platform library for retrieving random data from system source",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/getrandom@0.4.3",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "getrandom",
+      "versionInfo": "0.4.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-cfg-if-1.0.4",
+      "description": "A macro to ergonomically define an item depending on a large number of #[cfg]\nparameters. Structured like an if-else chain, the first matching branch is the\nitem that gets emitted.\n",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/cfg-if@1.0.4",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "cfg-if",
+      "versionInfo": "1.0.4"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "description": "HKT traits for for the deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_haft",
+      "versionInfo": "0.3.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--fft-0.1.0",
+      "description": "Fast Fourier transform (FFT, rFFT, N-dimensional) for the deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_fft",
+      "versionInfo": "0.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--multivector-0.5.2",
+      "description": "Multivector and MultiField implementation for DeepCausality",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_multivector",
+      "versionInfo": "0.5.2"
     },
     {
       "SPDXID": "SPDXRef-Package-rayon-core-1.13.0",
@@ -53,39 +127,41 @@
       "versionInfo": "1.13.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-crossbeam-epoch-0.9.18",
-      "description": "Epoch-based garbage collection",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/crossbeam-epoch@0.9.18",
-          "referenceType": "purl"
-        }
-      ],
-      "homepage": "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-epoch",
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "crossbeam-epoch",
-      "versionInfo": "0.9.18"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--multivector-0.5.2",
-      "description": "Multivector and MultiField implementation for DeepCausality",
+      "SPDXID": "SPDXRef-Package-deep--causality--par-0.1.0",
+      "description": "Shared parallelism primitives (MaybeParallel marker, scoped fork-join) for the deep_causality crates.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_multivector",
-      "versionInfo": "0.5.2"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--fft-0.1.0",
-      "description": "Fast Fourier transform (FFT, rFFT, N-dimensional) for the deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_fft",
+      "name": "deep_causality_par",
       "versionInfo": "0.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--algorithms-0.3.0",
+      "description": "Computational causality algorithms and utils used in the DeepCausality project.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_algorithms",
+      "versionInfo": "0.3.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--metric-0.2.2",
+      "description": "Metric signature types and sign conventions for Clifford algebras and physics",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_metric",
+      "versionInfo": "0.2.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--sparse-0.2.0",
+      "description": "Spare matrix data structure for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_sparse",
+      "versionInfo": "0.2.0"
     },
     {
       "SPDXID": "SPDXRef-Package-libc-0.2.186",
@@ -104,42 +180,6 @@
       "versionInfo": "0.2.186"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--tensor-0.4.4",
-      "description": "Tensor data structure for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_tensor",
-      "versionInfo": "0.4.4"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--topology-0.6.1",
-      "description": "Topological data structures for the DeepCausality project",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_topology",
-      "versionInfo": "0.6.1"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "description": "Number utils for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.3.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.3.3",
-      "description": "HKT traits for for the deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_haft",
-      "versionInfo": "0.3.3"
-    },
-    {
       "SPDXID": "SPDXRef-Package-deep--causality--ast-0.1.7",
       "description": "AST data structure for deep_causality crate.",
       "downloadLocation": "NONE",
@@ -149,13 +189,38 @@
       "versionInfo": "0.1.7"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--rand-0.1.16",
-      "description": "Random number utils for for deep_causality crate.",
+      "SPDXID": "SPDXRef-Package-deep--causality--num--complex-0.1.0",
+      "description": "Complex, quaternion, and octonion number types for deep_causality.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_rand",
-      "versionInfo": "0.1.16"
+      "name": "deep_causality_num_complex",
+      "versionInfo": "0.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-rayon-1.12.0",
+      "description": "Simple work-stealing parallelism for Rust",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/rayon@1.12.0",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "rayon",
+      "versionInfo": "1.12.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--topology-0.6.1",
+      "description": "Topological data structures for the DeepCausality project",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_topology",
+      "versionInfo": "0.6.1"
     },
     {
       "SPDXID": "SPDXRef-Package-r-efi-6.0.0",
@@ -175,36 +240,39 @@
       "versionInfo": "6.0.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-libm-0.2.16",
-      "description": "libm in pure Rust",
+      "SPDXID": "SPDXRef-Package-crossbeam-epoch-0.9.18",
+      "description": "Epoch-based garbage collection",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/libm@0.2.16",
+          "referenceLocator": "pkg:cargo/crossbeam-epoch@0.9.18",
           "referenceType": "purl"
         }
       ],
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "libm",
-      "versionInfo": "0.2.16"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-either-1.16.0",
-      "description": "The enum `Either` with variants `Left` and `Right` is a general purpose sum type with two cases.\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/either@1.16.0",
-          "referenceType": "purl"
-        }
-      ],
+      "homepage": "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-epoch",
       "licenseConcluded": "MIT OR Apache-2.0",
       "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "either",
-      "versionInfo": "1.16.0"
+      "name": "crossbeam-epoch",
+      "versionInfo": "0.9.18"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "description": "Number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num",
+      "versionInfo": "0.3.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--tensor-0.4.4",
+      "description": "Tensor data structure for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_tensor",
+      "versionInfo": "0.4.4"
     },
     {
       "SPDXID": "SPDXRef-Package-crossbeam-deque-0.8.6",
@@ -224,40 +292,6 @@
       "versionInfo": "0.8.6"
     },
     {
-      "SPDXID": "SPDXRef-Package-getrandom-0.4.3",
-      "description": "A small cross-platform library for retrieving random data from system source",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/getrandom@0.4.3",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "getrandom",
-      "versionInfo": "0.4.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--par-0.1.0",
-      "description": "Shared parallelism primitives (MaybeParallel marker) for the deep_causality crates.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_par",
-      "versionInfo": "0.1.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--sparse-0.2.0",
-      "description": "Spare matrix data structure for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_sparse",
-      "versionInfo": "0.2.0"
-    },
-    {
       "SPDXID": "SPDXRef-Package-crossbeam-utils-0.8.21",
       "description": "Utilities for concurrent programming",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
@@ -275,127 +309,60 @@
       "versionInfo": "0.8.21"
     },
     {
-      "SPDXID": "SPDXRef-Package-cfg-if-1.0.4",
-      "description": "A macro to ergonomically define an item depending on a large number of #[cfg]\nparameters. Structured like an if-else chain, the first matching branch is the\nitem that gets emitted.\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/cfg-if@1.0.4",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "cfg-if",
-      "versionInfo": "1.0.4"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--metric-0.2.2",
-      "description": "Metric signature types and sign conventions for Clifford algebras and physics",
+      "SPDXID": "SPDXRef-Package-deep--causality--num--dual-0.1.0",
+      "description": "Dual number type (forward-mode automatic differentiation) for deep_causality.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_metric",
-      "versionInfo": "0.2.2"
+      "name": "deep_causality_num_dual",
+      "versionInfo": "0.1.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-rayon-1.12.0",
-      "description": "Simple work-stealing parallelism for Rust",
+      "SPDXID": "SPDXRef-Package-either-1.16.0",
+      "description": "The enum `Either` with variants `Left` and `Right` is a general purpose sum type with two cases.\n",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/rayon@1.12.0",
+          "referenceLocator": "pkg:cargo/either@1.16.0",
           "referenceType": "purl"
         }
       ],
       "licenseConcluded": "MIT OR Apache-2.0",
       "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "rayon",
-      "versionInfo": "1.12.0"
+      "name": "either",
+      "versionInfo": "1.16.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "description": "Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers for deep_causality.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_algebra",
+      "versionInfo": "0.1.0"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-either-1.16.0",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-rayon-1.12.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--algorithms-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.21",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-rayon-core-1.13.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--algorithms-0.3.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--dual-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.21",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-crossbeam-epoch-0.9.18"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-libc-0.2.186",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--sparse-0.2.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--algorithms-0.3.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.16",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--algorithms-0.3.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-rayon-1.12.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.16"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-getrandom-0.4.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.16"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--topology-0.6.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--algorithms-0.3.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.2.2",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.16",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
@@ -408,9 +375,14 @@
       "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.21",
+      "relatedSpdxElement": "SPDXRef-Package-either-1.16.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-crossbeam-deque-0.8.6"
+      "spdxElementId": "SPDXRef-Package-rayon-1.12.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-crossbeam-epoch-0.9.18",
@@ -418,74 +390,39 @@
       "spdxElementId": "SPDXRef-Package-crossbeam-deque-0.8.6"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algorithms-0.3.0",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_algorithms"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-rayon-1.12.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--algorithms-0.3.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relatedSpdxElement": "SPDXRef-Package-getrandom-0.4.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.16"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--complex-0.1.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
+      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relatedSpdxElement": "SPDXRef-Package-libc-0.2.186",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.16",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--algorithms-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-File-deep_causality_algorithms",
-      "relationshipType": "DESCRIBES",
-      "spdxElementId": "SPDXRef-DOCUMENT"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.0",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--fft-0.1.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-rayon-1.12.0",
@@ -493,19 +430,19 @@
       "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-deque-0.8.6",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-rayon-core-1.13.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-rayon-core-1.13.0",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-rayon-1.12.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--algorithms-0.3.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-r-efi-6.0.0",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--complex-0.1.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--multivector-0.5.2",
@@ -513,14 +450,119 @@
       "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algorithms-0.3.0",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_algorithms"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.3.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.16",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--complex-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.21",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-rayon-core-1.13.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-r-efi-6.0.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--dual-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-deque-0.8.6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-rayon-core-1.13.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-File-deep_causality_algorithms",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-rayon-1.12.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--algorithms-0.3.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--sparse-0.2.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.2.2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.2.2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--complex-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.16"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.21",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-crossbeam-deque-0.8.6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.0",
@@ -528,9 +570,84 @@
       "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.2.2",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--algebra-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.16"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--topology-0.6.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--algorithms-0.3.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--complex-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--algorithms-0.3.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-rayon-core-1.13.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-rayon-1.12.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--fft-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-rayon-1.12.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--complex-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--dual-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.3.3"
     }
   ],
   "spdxVersion": "SPDX-2.3"

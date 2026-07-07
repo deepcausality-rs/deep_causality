@@ -5,7 +5,7 @@
 
 //! Velocity as an edge 1-form: the DEC solver's marching state.
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{LatticeComplex, Manifold};
 use std::ops::{Add, Mul};

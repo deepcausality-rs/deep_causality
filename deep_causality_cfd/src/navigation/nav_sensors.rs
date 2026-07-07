@@ -18,7 +18,7 @@
 //! The GNSS/optical fixes here are the ground-truth position; their 1σ accuracy is carried as the
 //! measurement variance `r` passed to [`ReentryNavEngine::correct_position`](super::ReentryNavEngine).
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 /// A strapdown-IMU model: a constant accelerometer + gyro bias and the process noise its grade implies.
 #[derive(Clone, Copy, Debug)]

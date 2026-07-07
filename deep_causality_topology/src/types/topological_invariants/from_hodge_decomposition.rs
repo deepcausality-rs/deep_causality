@@ -3,13 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::RealField;
-
 use crate::errors::topology_error::TopologyError;
 use crate::traits::chain_complex::ChainComplex;
 use crate::types::hodge_decomposition::HodgeDecomposition;
 use crate::types::manifold::Manifold;
 use crate::types::topological_invariants::TopologicalInvariants;
+use deep_causality_algebra::RealField;
 
 impl<R: RealField> HodgeDecomposition<R> {
     /// Extracts the pure-topology invariants of this decomposition on the given

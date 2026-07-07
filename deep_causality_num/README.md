@@ -30,38 +30,25 @@
 A comprehensive numerical foundation library for the [DeepCausality project](http://www.deepcausality.com). This crate
 provides:
 
-- **Algebraic Traits:** A complete hierarchy of abstract algebra structures (Magma → Monoid → Group → Ring → Field) with
-  rigorous mathematical foundations
 - **Cast Traits:** Safe primitive type conversions (`AsPrimitive`, `FromPrimitive`, `ToPrimitive`, `NumCast`)
 - **Identity Traits:** Zero and One with const variants for compile-time evaluation
 - **Float Types:** Standard floating-point abstractions plus `Float106` for double-double precision arithmetic
-- **Complex Types:** Full implementations of `Complex`, `Quaternion`, and `Octonion` number systems
+- **Integer Traits:** Type-safe abstractions over the primitive integer types
 
 The implementation is **macro-free**, **unsafe-free**, and **dependency-free** (with optional `libm` for no-std float
 support). Compiles for std, no-std, and no-std without float.
 
-### Algebraic Traits
+The abstract algebra traits, the hypercomplex number types, and the dual number type used to live here. They now have
+their own crates:
 
-The algebra module provides a rigorous type-safe hierarchy of abstract algebraic structures:
-
-| Structure           | Description                                            |
-|---------------------|--------------------------------------------------------|
-| **Magma**           | Set with a closed binary operation                     |
-| **Monoid**          | Magma + associativity + identity                       |
-| **Group**           | Monoid + inverses                                      |
-| **Ring**            | Abelian group + multiplicative monoid + distributivity |
-| **Field**           | Commutative ring + multiplicative inverses             |
-| **RealField**       | Field + ordering + transcendental functions            |
-| **Module**          | Vector-like structure over a ring                      |
-| **Algebra**         | Module with bilinear product                           |
-| **DivisionAlgebra** | Algebra with inverses (Complex, Quaternion, Octonion)  |
-
-See [Algebraic Traits Reference](README_ALGEBRA_TRAITS.md) for the complete hierarchy diagram and mathematical
-documentation.
+- [`deep_causality_algebra`](../deep_causality_algebra/README.md) — the algebra trait tower (Magma → Group → Ring →
+  Field), the scalar traits, and the isomorphism markers.
+- [`deep_causality_num_complex`](../deep_causality_num_complex/README.md) — `Complex`, `Quaternion`, and `Octonion`.
+- [`deep_causality_num_dual`](../deep_causality_num_dual/README.md) — the `Dual` number for forward-mode autodiff.
 
 ### Integer Traits
 
-Type-safe abstractions over Rust's primitive integer types, extending the `Ring` algebraic structure:
+Type-safe abstractions over Rust's primitive integer types:
 
 | Trait           | Covers               | Key Operations                                                      |
 |-----------------|----------------------|---------------------------------------------------------------------|
@@ -73,9 +60,12 @@ Type-safe abstractions over Rust's primitive integer types, extending the `Ring`
 
 | Type            | Description                                                | Key Traits                          |
 |-----------------|------------------------------------------------------------|-------------------------------------|
-| **Float**       | Trait for `f32` and `f64`                                  | `RealField`, `Field`, `Float`       |
-| **Float106**    | High-precision (~31 digits) using double-double arithmetic | `RealField`, `Field`, `Float`       |
+| **Float**       | Trait for `f32` and `f64`                                  | `Float`, `Num`                      |
+| **Float106**    | High-precision (~31 digits) using double-double arithmetic | `Float`, `Num`                      |
 | **FloatOption** | Abstracts over floats and their `Option` variants          | Utility trait for nullable numerics |
+
+The real fields (`f32`, `f64`, `Float106`) also implement the full algebra tower (`RealField`, `Field`, `Scalar`, and
+the rest); those trait implementations live in [`deep_causality_algebra`](../deep_causality_algebra/README.md).
 
 #### Float106 vs f128 Comparison
 
@@ -98,14 +88,6 @@ Type-safe abstractions over Rust's primitive integer types, extending the `Ring`
 Float106 provides precision comparable to f128 while being significantly faster
 on most hardware since it uses native f64 FMA operations.
 
-### Complex Types
-
-| Type           | Algebra          | Associative | Commutative | Key Traits                                       |
-|----------------|------------------|:-----------:|:-----------:|--------------------------------------------------|
-| **Complex**    | Division Algebra |      ✅      |      ✅      | `Field`, `DivisionAlgebra`, `Rotation`           |
-| **Quaternion** | Division Algebra |      ✅      |      ❌      | `AssociativeRing`, `DivisionAlgebra`, `Rotation` |
-| **Octonion**   | Division Algebra |      ❌      |      ❌      | `DivisionAlgebra` (non-associative)              |
-
 ### Numerical Traits:
 
 **Cast Traits:**
@@ -127,21 +109,6 @@ on most hardware since it uses native f64 FMA operations.
 
 * One / OneConst
 * Zero / Zero Const
-
-### Isomorphism Traits
-
-A two-tier vocabulary for declaring **isomorphisms** between algebraic structures. The result is a type-checked, structure-preserving bijection that lets generic code accept either representation transparently.
-
-| Tier | Module | Foundation | Use when |
-|---|---|---|---|
-| **Tier 1** | `iso::*` | Bidirectional `From` + empty marker subtraits | Both types live in (or are reachable from) your crate |
-| **Tier 2** | `iso::witness::*` | Witness-typed `Iso<S, T>` with `to_target` / `to_source` | Cross-crate isos blocked by the orphan rule |
-
-Both tiers expose the same algebraic hierarchy (`GroupIso` -> `RingIso` -> `FieldIso`; `AlgebraIso` -> `DivisionAlgebraIso`) and a matching suite of property-test helpers under `iso::test_support` and `iso::witness::test_support`. Tier 2 also provides `StandardIso<S, T>`: a zero-sized generic witness with blanket impls that automatically satisfy every marker subtrait when bidirectional `From` exists.
-
-A companion **Tier 3** (`NaturalIso<F, G>` through `NaturalIso5`) lifts the same vocabulary to type constructors (HKTs); it lives in [`deep_causality_haft`](../deep_causality_haft/README.md#natural-isomorphisms-tier-3-iso-traits).
-
-See [Isomorphism Reference](README_ISOMORPHISM.md) for the full three-tier design, trait-by-trait usage, helper signatures, and worked examples.
 
 ## non-std support
 

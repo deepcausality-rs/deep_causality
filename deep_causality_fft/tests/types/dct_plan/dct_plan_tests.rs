@@ -4,7 +4,8 @@
  */
 
 use deep_causality_fft::{DctPlan, DctType, FftError, naive_dct_i, naive_dct_ii, naive_dct_iii};
-use deep_causality_num::{Complex, Float106};
+use deep_causality_num::Float106;
+use deep_causality_num_complex::Complex;
 
 fn rbuf(n: usize) -> Vec<f64> {
     (0..n)
@@ -100,7 +101,7 @@ fn float106_accuracy() {
         .map(|i| {
             let v = Float106::from_f64(i as f64);
             let a = Float106::from_f64(0.37);
-            deep_causality_num::Real::sin(v * a)
+            deep_causality_algebra::Real::sin(v * a)
         })
         .collect();
     let mut out = vec![Float106::from_f64(0.0); n];

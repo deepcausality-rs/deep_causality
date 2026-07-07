@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-06-18T02:06:53Z",
+    "created": "2026-07-07T22:29:37Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_cfd-558c972a-0750-49d9-a67e-82d40f34fa20",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_cfd-c113dc97-17c6-4c63-a830-0868331fddd4",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_cfd",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "f7392f65d6a746809c1b6aa004c46d8a28b1299b"
+          "checksumValue": "5c3b88158295f2a586b267227fe36c51700f799e"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,251 +27,53 @@
   "name": "deep_causality_cfd",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-getrandom-0.4.3",
-      "description": "A small cross-platform library for retrieving random data from system source",
+      "SPDXID": "SPDXRef-Package-wasm-bindgen-macro-support-0.2.125",
+      "description": "Implementation APIs for the `#[wasm_bindgen]` attribute",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/getrandom@0.4.3",
+          "referenceLocator": "pkg:cargo/wasm-bindgen-macro-support@0.2.125",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://wasm-bindgen.github.io/wasm-bindgen/",
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "wasm-bindgen-macro-support",
+      "versionInfo": "0.2.125"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-syn-2.0.118",
+      "description": "Parser for Rust source code",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/syn@2.0.118",
           "referenceType": "purl"
         }
       ],
       "licenseConcluded": "MIT OR Apache-2.0",
       "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "getrandom",
-      "versionInfo": "0.4.3"
+      "name": "syn",
+      "versionInfo": "2.0.118"
     },
     {
-      "SPDXID": "SPDXRef-Package-rayon-core-1.13.0",
-      "description": "Core APIs for Rayon",
+      "SPDXID": "SPDXRef-Package-once--cell-1.21.4",
+      "description": "Single assignment cells and lazy values.",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/rayon-core@1.13.0",
+          "referenceLocator": "pkg:cargo/once_cell@1.21.4",
           "referenceType": "purl"
         }
       ],
       "licenseConcluded": "MIT OR Apache-2.0",
       "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "rayon-core",
-      "versionInfo": "1.13.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--topology-0.6.1",
-      "description": "Topological data structures for the DeepCausality project",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_topology",
-      "versionInfo": "0.6.1"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.3.3",
-      "description": "HKT traits for for the deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_haft",
-      "versionInfo": "0.3.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-libm-0.2.16",
-      "description": "libm in pure Rust",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/libm@0.2.16",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "libm",
-      "versionInfo": "0.2.16"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--multivector-0.5.2",
-      "description": "Multivector and MultiField implementation for DeepCausality",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_multivector",
-      "versionInfo": "0.5.2"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-libc-0.2.186",
-      "description": "Raw FFI bindings to platform libraries like libc.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/libc@0.2.186",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "libc",
-      "versionInfo": "0.2.186"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--ast-0.1.7",
-      "description": "AST data structure for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_ast",
-      "versionInfo": "0.1.7"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--cfd-0.1.0",
-      "description": "Computational fluid dynamics solvers and the Flow DSL for DeepCausality.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_cfd",
-      "versionInfo": "0.1.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--fft-0.1.0",
-      "description": "Fast Fourier transform (FFT, rFFT, N-dimensional) for the deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_fft",
-      "versionInfo": "0.1.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--core-0.10.0",
-      "description": "Core types for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_core",
-      "versionInfo": "0.10.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--calculus-0.1.1",
-      "description": "Arrow-native differentiation and integration operators (the tangent functor over Dual, endomorphism iteration over endo-arrows, and quadrature) for the deep_causality project.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_calculus",
-      "versionInfo": "0.1.1"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--tensor-0.4.4",
-      "description": "Tensor data structure for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_tensor",
-      "versionInfo": "0.4.4"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--par-0.1.0",
-      "description": "Shared parallelism primitives (MaybeParallel marker) for the deep_causality crates.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_par",
-      "versionInfo": "0.1.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "description": "Number utils for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.3.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-crossbeam-epoch-0.9.18",
-      "description": "Epoch-based garbage collection",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/crossbeam-epoch@0.9.18",
-          "referenceType": "purl"
-        }
-      ],
-      "homepage": "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-epoch",
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "crossbeam-epoch",
-      "versionInfo": "0.9.18"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--physics-0.6.3",
-      "description": "Standard library of physics formulas and engineering primitives for DeepCausality.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_physics",
-      "versionInfo": "0.6.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--metric-0.2.2",
-      "description": "Metric signature types and sign conventions for Clifford algebras and physics",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_metric",
-      "versionInfo": "0.2.2"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-either-1.16.0",
-      "description": "The enum `Either` with variants `Left` and `Right` is a general purpose sum type with two cases.\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/either@1.16.0",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "either",
-      "versionInfo": "1.16.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-cfg-if-1.0.4",
-      "description": "A macro to ergonomically define an item depending on a large number of #[cfg]\nparameters. Structured like an if-else chain, the first matching branch is the\nitem that gets emitted.\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/cfg-if@1.0.4",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "cfg-if",
-      "versionInfo": "1.0.4"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-r-efi-6.0.0",
-      "description": "UEFI Reference Specification Protocol Constants and Definitions",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/r-efi@6.0.0",
-          "referenceType": "purl"
-        }
-      ],
-      "homepage": "https://github.com/r-efi/r-efi/wiki",
-      "licenseConcluded": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
-      "licenseDeclared": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
-      "name": "r-efi",
-      "versionInfo": "6.0.0"
+      "name": "once_cell",
+      "versionInfo": "1.21.4"
     },
     {
       "SPDXID": "SPDXRef-Package-rayon-1.12.0",
@@ -288,6 +90,57 @@
       "licenseDeclared": "MIT OR Apache-2.0",
       "name": "rayon",
       "versionInfo": "1.12.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--tensor-0.4.4",
+      "description": "Tensor data structure for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_tensor",
+      "versionInfo": "0.4.4"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-windows-link-0.2.1",
+      "description": "Linking for Windows",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/windows-link@0.2.1",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "windows-link",
+      "versionInfo": "0.2.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--rand-0.1.16",
+      "description": "Random number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_rand",
+      "versionInfo": "0.1.16"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-wasm-bindgen-0.2.125",
+      "description": "Easy support for interacting between JS and Rust.\n",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/wasm-bindgen@0.2.125",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://wasm-bindgen.github.io/wasm-bindgen",
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "wasm-bindgen",
+      "versionInfo": "0.2.125"
     },
     {
       "SPDXID": "SPDXRef-Package-crossbeam-utils-0.8.21",
@@ -307,6 +160,349 @@
       "versionInfo": "0.8.21"
     },
     {
+      "SPDXID": "SPDXRef-Package-pin-project-lite-0.2.17",
+      "description": "A lightweight version of pin-project written with declarative macros.\n",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/pin-project-lite@0.2.17",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "Apache-2.0 OR MIT",
+      "licenseDeclared": "Apache-2.0 OR MIT",
+      "name": "pin-project-lite",
+      "versionInfo": "0.2.17"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--multivector-0.5.2",
+      "description": "Multivector and MultiField implementation for DeepCausality",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_multivector",
+      "versionInfo": "0.5.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-either-1.16.0",
+      "description": "The enum `Either` with variants `Left` and `Right` is a general purpose sum type with two cases.\n",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/either@1.16.0",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "either",
+      "versionInfo": "1.16.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-crossbeam-epoch-0.9.18",
+      "description": "Epoch-based garbage collection",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/crossbeam-epoch@0.9.18",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-epoch",
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "crossbeam-epoch",
+      "versionInfo": "0.9.18"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--num--complex-0.1.0",
+      "description": "Complex, quaternion, and octonion number types for deep_causality.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num_complex",
+      "versionInfo": "0.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-wasm-bindgen-macro-0.2.125",
+      "description": "Definition of the `#[wasm_bindgen]` attribute, an internal dependency\n",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/wasm-bindgen-macro@0.2.125",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://wasm-bindgen.github.io/wasm-bindgen/",
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "wasm-bindgen-macro",
+      "versionInfo": "0.2.125"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-unicode-ident-1.0.24",
+      "description": "Determine whether characters have the XID_Start or XID_Continue properties according to Unicode Standard Annex #31",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/unicode-ident@1.0.24",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "(MIT OR Apache-2.0) AND Unicode-3.0",
+      "licenseDeclared": "(MIT OR Apache-2.0) AND Unicode-3.0",
+      "name": "unicode-ident",
+      "versionInfo": "1.0.24"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-windows-interface-0.59.3",
+      "description": "The interface macro for the Windows crates",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/windows-interface@0.59.3",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "windows-interface",
+      "versionInfo": "0.59.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-futures-task-0.3.32",
+      "description": "Tools for working with tasks.\n",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/futures-task@0.3.32",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://rust-lang.github.io/futures-rs",
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "futures-task",
+      "versionInfo": "0.3.32"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-wasm-bindgen-shared-0.2.125",
+      "description": "Shared support between wasm-bindgen and wasm-bindgen cli, an internal\ndependency.\n",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/wasm-bindgen-shared@0.2.125",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://wasm-bindgen.github.io/wasm-bindgen/",
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "wasm-bindgen-shared",
+      "versionInfo": "0.2.125"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "description": "HKT traits for for the deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_haft",
+      "versionInfo": "0.3.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-chrono-0.4.45",
+      "description": "Date and time library for Rust",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/chrono@0.4.45",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://github.com/chronotope/chrono",
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "chrono",
+      "versionInfo": "0.4.45"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--file-0.1.1",
+      "description": "File and receiver-data (RINEX GNSS SP3/CLK) loaders over the haft IO monad for DeepCausality",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_file",
+      "versionInfo": "0.1.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-windows-core-0.62.2",
+      "description": "Core type support for COM and Windows",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/windows-core@0.62.2",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "windows-core",
+      "versionInfo": "0.62.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-windows-implement-0.60.2",
+      "description": "The implement macro for the Windows crates",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/windows-implement@0.60.2",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "windows-implement",
+      "versionInfo": "0.60.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-futures-util-0.3.32",
+      "description": "Common utilities and extension traits for the futures-rs library.\n",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/futures-util@0.3.32",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://rust-lang.github.io/futures-rs",
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "futures-util",
+      "versionInfo": "0.3.32"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "description": "Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers for deep_causality.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_algebra",
+      "versionInfo": "0.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--core-0.10.0",
+      "description": "Core types for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_core",
+      "versionInfo": "0.10.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-iana-time-zone-0.1.65",
+      "description": "get the IANA time zone for the current system",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/iana-time-zone@0.1.65",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "iana-time-zone",
+      "versionInfo": "0.1.65"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "description": "Number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num",
+      "versionInfo": "0.3.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-iana-time-zone-haiku-0.1.2",
+      "description": "iana-time-zone support crate for Haiku OS",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/iana-time-zone-haiku@0.1.2",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "iana-time-zone-haiku",
+      "versionInfo": "0.1.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-libc-0.2.186",
+      "description": "Raw FFI bindings to platform libraries like libc.",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/libc@0.2.186",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "libc",
+      "versionInfo": "0.2.186"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-r-efi-6.0.0",
+      "description": "UEFI Reference Specification Protocol Constants and Definitions",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/r-efi@6.0.0",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://github.com/r-efi/r-efi/wiki",
+      "licenseConcluded": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
+      "licenseDeclared": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
+      "name": "r-efi",
+      "versionInfo": "6.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-js-sys-0.3.102",
+      "description": "Bindings for all JS global objects and functions in all JS environments like\nNode.js and browsers, built on `#[wasm_bindgen]` using the `wasm-bindgen` crate.\n",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/js-sys@0.3.102",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://wasm-bindgen.github.io/wasm-bindgen/",
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "js-sys",
+      "versionInfo": "0.3.102"
+    },
+    {
       "SPDXID": "SPDXRef-Package-deep--causality--sparse-0.2.0",
       "description": "Spare matrix data structure for for deep_causality crate.",
       "downloadLocation": "NONE",
@@ -316,6 +512,178 @@
       "versionInfo": "0.2.0"
     },
     {
+      "SPDXID": "SPDXRef-Package-proc-macro2-1.0.106",
+      "description": "A substitute implementation of the compiler's `proc_macro` API to decouple token-based libraries from the procedural macro use case.",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/proc-macro2@1.0.106",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "proc-macro2",
+      "versionInfo": "1.0.106"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-windows-result-0.4.1",
+      "description": "Windows error handling",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/windows-result@0.4.1",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "windows-result",
+      "versionInfo": "0.4.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-slab-0.4.12",
+      "description": "Pre-allocated storage for a uniform data type",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/slab@0.4.12",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "slab",
+      "versionInfo": "0.4.12"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--ast-0.1.7",
+      "description": "AST data structure for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_ast",
+      "versionInfo": "0.1.7"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-quote-1.0.45",
+      "description": "Quasi-quoting macro quote!(...)",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/quote@1.0.45",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "quote",
+      "versionInfo": "1.0.45"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-core-foundation-sys-0.8.7",
+      "description": "Bindings to Core Foundation for macOS",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/core-foundation-sys@0.8.7",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://github.com/servo/core-foundation-rs",
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "core-foundation-sys",
+      "versionInfo": "0.8.7"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-libm-0.2.16",
+      "description": "libm in pure Rust",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/libm@0.2.16",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "libm",
+      "versionInfo": "0.2.16"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-rayon-core-1.13.0",
+      "description": "Core APIs for Rayon",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/rayon-core@1.13.0",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "rayon-core",
+      "versionInfo": "1.13.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--par-0.1.0",
+      "description": "Shared parallelism primitives (MaybeParallel marker, scoped fork-join) for the deep_causality crates.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_par",
+      "versionInfo": "0.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--num--dual-0.1.0",
+      "description": "Dual number type (forward-mode automatic differentiation) for deep_causality.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num_dual",
+      "versionInfo": "0.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-bumpalo-3.20.3",
+      "description": "A fast bump allocation arena for Rust.",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/bumpalo@3.20.3",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "bumpalo",
+      "versionInfo": "3.20.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-windows-strings-0.5.1",
+      "description": "Windows string types",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/windows-strings@0.5.1",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "windows-strings",
+      "versionInfo": "0.5.1"
+    },
+    {
       "SPDXID": "SPDXRef-Package-deep--causality--uncertain-0.3.16",
       "description": "A First-Order Type for Uncertain Programming for the DeepCausality project.'",
       "downloadLocation": "NONE",
@@ -323,6 +691,159 @@
       "licenseDeclared": "MIT",
       "name": "deep_causality_uncertain",
       "versionInfo": "0.3.16"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--calculus-0.1.1",
+      "description": "Arrow-native differentiation and integration operators (the tangent functor over Dual, endomorphism iteration over endo-arrows, and quadrature) for the deep_causality project.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_calculus",
+      "versionInfo": "0.1.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-getrandom-0.4.3",
+      "description": "A small cross-platform library for retrieving random data from system source",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/getrandom@0.4.3",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "getrandom",
+      "versionInfo": "0.4.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-num-traits-0.2.19",
+      "description": "Numeric traits for generic mathematics",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/num-traits@0.2.19",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://github.com/rust-num/num-traits",
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "num-traits",
+      "versionInfo": "0.2.19"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--fft-0.1.0",
+      "description": "Fast Fourier transform (FFT, rFFT, N-dimensional) for the deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_fft",
+      "versionInfo": "0.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-android--system--properties-0.1.5",
+      "description": "Minimal Android system properties wrapper",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/android_system_properties@0.1.5",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://github.com/nical/android_system_properties",
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "android_system_properties",
+      "versionInfo": "0.1.5"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-futures-core-0.3.32",
+      "description": "The core traits and types in for the `futures` library.\n",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/futures-core@0.3.32",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://rust-lang.github.io/futures-rs",
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "futures-core",
+      "versionInfo": "0.3.32"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--metric-0.2.2",
+      "description": "Metric signature types and sign conventions for Clifford algebras and physics",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_metric",
+      "versionInfo": "0.2.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-log-0.4.32",
+      "description": "A lightweight logging facade for Rust\n",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/log@0.4.32",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "log",
+      "versionInfo": "0.4.32"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--cfd-0.1.0",
+      "description": "Computational fluid dynamics solvers and the Flow DSL for DeepCausality.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_cfd",
+      "versionInfo": "0.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-cfg-if-1.0.4",
+      "description": "A macro to ergonomically define an item depending on a large number of #[cfg]\nparameters. Structured like an if-else chain, the first matching branch is the\nitem that gets emitted.\n",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/cfg-if@1.0.4",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "cfg-if",
+      "versionInfo": "1.0.4"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--physics-0.6.3",
+      "description": "Standard library of physics formulas and engineering primitives for DeepCausality.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_physics",
+      "versionInfo": "0.6.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--topology-0.6.1",
+      "description": "Topological data structures for the DeepCausality project",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_topology",
+      "versionInfo": "0.6.1"
     },
     {
       "SPDXID": "SPDXRef-Package-crossbeam-deque-0.8.6",
@@ -340,72 +861,23 @@
       "licenseDeclared": "MIT OR Apache-2.0",
       "name": "crossbeam-deque",
       "versionInfo": "0.8.6"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--rand-0.1.16",
-      "description": "Random number utils for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_rand",
-      "versionInfo": "0.1.16"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--complex-0.1.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-epoch-0.9.18",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-crossbeam-deque-0.8.6"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-r-efi-6.0.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.16",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-rayon-core-1.13.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-rayon-1.12.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--calculus-0.1.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.21",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-rayon-core-1.13.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--multivector-0.5.2",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--physics-0.6.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--sparse-0.2.0",
@@ -413,39 +885,9 @@
       "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--sparse-0.2.0",
+      "relatedSpdxElement": "SPDXRef-Package-js-sys-0.3.102",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.3.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-cfg-if-1.0.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-File-deep_causality_cfd",
-      "relationshipType": "DESCRIBES",
-      "spdxElementId": "SPDXRef-DOCUMENT"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.2.2",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+      "spdxElementId": "SPDXRef-Package-chrono-0.4.45"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--fft-0.1.0",
@@ -453,14 +895,134 @@
       "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--dual-0.1.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--core-0.10.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.7",
+      "relatedSpdxElement": "SPDXRef-Package-unicode-ident-1.0.24",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-wasm-bindgen-shared-0.2.125"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--complex-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-slab-0.4.12",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-futures-util-0.3.32"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-js-sys-0.3.102",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-iana-time-zone-0.1.65"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-windows-link-0.2.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-windows-core-0.62.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--dual-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--complex-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--complex-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-wasm-bindgen-shared-0.2.125",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-wasm-bindgen-0.2.125"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-wasm-bindgen-macro-support-0.2.125",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-wasm-bindgen-macro-0.2.125"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-rayon-1.12.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.3.16"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-wasm-bindgen-0.2.125",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-chrono-0.4.45"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--file-0.1.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--algebra-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--dual-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.16",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.21",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-crossbeam-deque-0.8.6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-wasm-bindgen-shared-0.2.125",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-wasm-bindgen-macro-support-0.2.125"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--multivector-0.5.2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
@@ -468,24 +1030,124 @@
       "spdxElementId": "SPDXRef-Package-deep--causality--calculus-0.1.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--calculus-0.1.1",
+      "relatedSpdxElement": "SPDXRef-Package-proc-macro2-1.0.106",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+      "spdxElementId": "SPDXRef-Package-windows-interface-0.59.3"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.2.2",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--complex-0.1.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.0"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.16"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-wasm-bindgen-0.2.125",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-js-sys-0.3.102"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--complex-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-cfg-if-1.0.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-js-sys-0.3.102"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.10.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-syn-2.0.118",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-wasm-bindgen-macro-support-0.2.125"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-quote-1.0.45",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-syn-2.0.118"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-proc-macro2-1.0.106",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-syn-2.0.118"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-windows-link-0.2.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-windows-result-0.4.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-File-deep_causality_cfd",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-core-foundation-sys-0.8.7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-iana-time-zone-0.1.65"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-windows-strings-0.5.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-windows-core-0.62.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-windows-interface-0.59.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-windows-core-0.62.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-wasm-bindgen-0.2.125",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-iana-time-zone-0.1.65"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-epoch-0.9.18",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-crossbeam-deque-0.8.6"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.21",
@@ -495,77 +1157,12 @@
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
+      "spdxElementId": "SPDXRef-Package-deep--causality--calculus-0.1.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--physics-0.6.3",
+      "relatedSpdxElement": "SPDXRef-Package-proc-macro2-1.0.106",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-libc-0.2.186",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.3.16"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.16",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-rayon-1.12.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--topology-0.6.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.10.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--fft-0.1.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-rayon-1.12.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-either-1.16.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-rayon-1.12.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-deque-0.8.6",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-rayon-core-1.13.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.16"
+      "spdxElementId": "SPDXRef-Package-quote-1.0.45"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--multivector-0.5.2",
@@ -573,29 +1170,114 @@
       "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.0",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.16"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--fft-0.1.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-either-1.16.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-rayon-1.12.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-rayon-core-1.13.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-rayon-1.12.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-bumpalo-3.20.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-wasm-bindgen-macro-support-0.2.125"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--complex-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--file-0.1.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-wasm-bindgen-macro-0.2.125",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-wasm-bindgen-0.2.125"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--calculus-0.1.1"
+      "spdxElementId": "SPDXRef-Package-deep--causality--core-0.10.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-deque-0.8.6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-rayon-core-1.13.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-windows-core-0.62.2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-iana-time-zone-0.1.65"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--file-0.1.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--calculus-0.1.1",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-quote-1.0.45",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-windows-implement-0.60.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-rayon-1.12.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.21",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-rayon-core-1.13.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-pin-project-lite-0.2.17",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-futures-util-0.3.32"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-chrono-0.4.45",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--file-0.1.1"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.7",
@@ -603,69 +1285,94 @@
       "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.0",
+      "relatedSpdxElement": "SPDXRef-Package-num-traits-0.2.19",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+      "spdxElementId": "SPDXRef-Package-chrono-0.4.45"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--cfd-0.1.0",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_cfd"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.10.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.2.2",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--topology-0.6.1",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.0",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--dual-0.1.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--calculus-0.1.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--uncertain-0.3.16",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--file-0.1.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.21",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-crossbeam-deque-0.8.6"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--complex-0.1.0",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-getrandom-0.4.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.16"
+      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.3.16"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.0",
+      "relatedSpdxElement": "SPDXRef-Package-proc-macro2-1.0.106",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+      "spdxElementId": "SPDXRef-Package-windows-implement-0.60.2"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-windows-link-0.2.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-chrono-0.4.45"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-iana-time-zone-0.1.65",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-chrono-0.4.45"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-once--cell-1.21.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-wasm-bindgen-0.2.125"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-android--system--properties-0.1.5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-iana-time-zone-0.1.65"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-cfg-if-1.0.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--dual-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--topology-0.6.1",
@@ -673,9 +1380,219 @@
       "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--calculus-0.1.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-windows-implement-0.60.2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-windows-core-0.62.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.16",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--dual-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-r-efi-6.0.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-unicode-ident-1.0.24",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-proc-macro2-1.0.106"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-windows-result-0.4.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-windows-core-0.62.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-syn-2.0.118",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-windows-interface-0.59.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-proc-macro2-1.0.106",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-wasm-bindgen-macro-support-0.2.125"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.16",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.3.16"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--uncertain-0.3.16",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-cfg-if-1.0.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-wasm-bindgen-0.2.125"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.2.2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-quote-1.0.45",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-wasm-bindgen-macro-support-0.2.125"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-syn-2.0.118",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-windows-implement-0.60.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-windows-link-0.2.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-windows-strings-0.5.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-unicode-ident-1.0.24",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-syn-2.0.118"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--sparse-0.2.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-getrandom-0.4.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.16"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libc-0.2.186",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.3.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--calculus-0.1.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-iana-time-zone-haiku-0.1.2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-iana-time-zone-0.1.65"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-num-traits-0.2.19"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-log-0.4.32",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-iana-time-zone-0.1.65"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.2.2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--cfd-0.1.0",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_cfd"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libc-0.2.186",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-android--system--properties-0.1.5"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-quote-1.0.45",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-windows-interface-0.59.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.3.16"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-futures-util-0.3.32",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-js-sys-0.3.102"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-quote-1.0.45",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-wasm-bindgen-macro-0.2.125"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-futures-task-0.3.32",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-futures-util-0.3.32"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.2.2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.6.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.10.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-futures-core-0.3.32",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-futures-util-0.3.32"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.5.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--cfd-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.6.1"
     }
   ],
   "spdxVersion": "SPDX-2.3"

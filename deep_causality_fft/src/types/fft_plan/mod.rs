@@ -9,7 +9,7 @@ mod bluestein;
 mod small;
 mod stockham;
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 use crate::errors::fft_error::FftError;
 use crate::traits::fft_scalar::FftScalar;

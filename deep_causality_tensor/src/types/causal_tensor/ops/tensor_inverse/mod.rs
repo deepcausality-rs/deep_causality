@@ -3,7 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{CausalTensor, CausalTensorError};
-use deep_causality_num::{One, RealField, Zero};
+use deep_causality_algebra::RealField;
+use deep_causality_num::{One, Zero};
 
 impl<T> CausalTensor<T> {
     pub(in crate::types::causal_tensor) fn inverse_impl(&self) -> Result<Self, CausalTensorError>

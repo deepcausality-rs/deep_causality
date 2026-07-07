@@ -11,7 +11,8 @@ use crate::constants::{
     MILLIKAN_WHITE_A_COEFFICIENT, MILLIKAN_WHITE_LOG_OFFSET, MILLIKAN_WHITE_MU_OFFSET,
 };
 use crate::{PhysicsError, ReactionRate, Temperature, VibrationalTemperature};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Vibrational relaxation toward the translational temperature, integrated over
 /// `dt` by the **closed-form Lagging-Equilibrium Relaxation (LER) exponential**

@@ -7,15 +7,15 @@ use crate::error::PhysicsError;
 
 /// Amount of Substance (Moles).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct AmountOfSubstance<R: deep_causality_num::RealField>(R);
+pub struct AmountOfSubstance<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for AmountOfSubstance<R> {
+impl<R: deep_causality_algebra::RealField> Default for AmountOfSubstance<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> AmountOfSubstance<R> {
+impl<R: deep_causality_algebra::RealField> AmountOfSubstance<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -32,7 +32,7 @@ impl<R: deep_causality_num::RealField> AmountOfSubstance<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<AmountOfSubstance<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<AmountOfSubstance<R>> for f64 {
     fn from(val: AmountOfSubstance<R>) -> Self {
         val.0.into()
     }
@@ -40,15 +40,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<AmountOfSubstance<R>> fo
 
 /// Half-Life (Seconds).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct HalfLife<R: deep_causality_num::RealField>(R);
+pub struct HalfLife<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for HalfLife<R> {
+impl<R: deep_causality_algebra::RealField> Default for HalfLife<R> {
     fn default() -> Self {
         Self(R::epsilon())
     }
 }
 
-impl<R: deep_causality_num::RealField> HalfLife<R> {
+impl<R: deep_causality_algebra::RealField> HalfLife<R> {
     /// Creates a new `HalfLife` instance.
     ///
     /// # Errors
@@ -74,7 +74,7 @@ impl<R: deep_causality_num::RealField> HalfLife<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<HalfLife<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<HalfLife<R>> for f64 {
     fn from(val: HalfLife<R>) -> Self {
         val.0.into()
     }
@@ -82,15 +82,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<HalfLife<R>> for f64 {
 
 /// Radioactivity (Becquerels).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Activity<R: deep_causality_num::RealField>(R);
+pub struct Activity<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for Activity<R> {
+impl<R: deep_causality_algebra::RealField> Default for Activity<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> Activity<R> {
+impl<R: deep_causality_algebra::RealField> Activity<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -107,7 +107,7 @@ impl<R: deep_causality_num::RealField> Activity<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<Activity<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<Activity<R>> for f64 {
     fn from(val: Activity<R>) -> Self {
         val.0.into()
     }
@@ -115,15 +115,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<Activity<R>> for f64 {
 
 /// Energy Density (Joules per cubic meter).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct EnergyDensity<R: deep_causality_num::RealField>(R);
+pub struct EnergyDensity<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for EnergyDensity<R> {
+impl<R: deep_causality_algebra::RealField> Default for EnergyDensity<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> EnergyDensity<R> {
+impl<R: deep_causality_algebra::RealField> EnergyDensity<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -140,7 +140,7 @@ impl<R: deep_causality_num::RealField> EnergyDensity<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<EnergyDensity<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<EnergyDensity<R>> for f64 {
     fn from(val: EnergyDensity<R>) -> Self {
         val.0.into()
     }
@@ -157,7 +157,7 @@ use core::ops::{Add, Sub};
 /// Components are stored in (+---) signature convention (particle physics).
 /// Energy E is component 0, spatial momentum (px, py, pz) are components 1-3.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct FourMomentum<R: deep_causality_num::RealField> {
+pub struct FourMomentum<R: deep_causality_algebra::RealField> {
     /// Energy component E (GeV)
     e: R,
     /// x-component of 3-momentum px (GeV/c)
@@ -168,7 +168,7 @@ pub struct FourMomentum<R: deep_causality_num::RealField> {
     pz: R,
 }
 
-impl<R: deep_causality_num::RealField> Default for FourMomentum<R> {
+impl<R: deep_causality_algebra::RealField> Default for FourMomentum<R> {
     fn default() -> Self {
         Self {
             e: R::zero(),
@@ -179,7 +179,7 @@ impl<R: deep_causality_num::RealField> Default for FourMomentum<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> FourMomentum<R> {
+impl<R: deep_causality_algebra::RealField> FourMomentum<R> {
     /// Creates a new 4-momentum.
     pub const fn new(e: R, px: R, py: R, pz: R) -> Self {
         Self { e, px, py, pz }
@@ -274,7 +274,7 @@ impl<R: deep_causality_num::RealField> FourMomentum<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + deep_causality_num::FromPrimitive> FourMomentum<R> {
+impl<R: deep_causality_algebra::RealField + deep_causality_num::FromPrimitive> FourMomentum<R> {
     /// Rapidity: y = 0.5 * ln((E + pz) / (E - pz))
     ///
     /// Returns 0.0 if denominator is near zero.
@@ -316,7 +316,7 @@ impl<R: deep_causality_num::RealField + deep_causality_num::FromPrimitive> FourM
     }
 }
 
-impl<R: deep_causality_num::RealField> Add for FourMomentum<R> {
+impl<R: deep_causality_algebra::RealField> Add for FourMomentum<R> {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -329,7 +329,7 @@ impl<R: deep_causality_num::RealField> Add for FourMomentum<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> Sub for FourMomentum<R> {
+impl<R: deep_causality_algebra::RealField> Sub for FourMomentum<R> {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -344,14 +344,14 @@ impl<R: deep_causality_num::RealField> Sub for FourMomentum<R> {
 
 /// A produced hadron from string fragmentation.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Hadron<R: deep_causality_num::RealField> {
+pub struct Hadron<R: deep_causality_algebra::RealField> {
     /// PDG Monte Carlo particle ID
     pdg_id: i32,
     /// 4-momentum in the lab frame
     momentum: FourMomentum<R>,
 }
 
-impl<R: deep_causality_num::RealField> Hadron<R> {
+impl<R: deep_causality_algebra::RealField> Hadron<R> {
     /// Creates a new hadron.
     pub const fn new(pdg_id: i32, momentum: FourMomentum<R>) -> Self {
         Self { pdg_id, momentum }
@@ -383,7 +383,7 @@ impl<R: deep_causality_num::RealField> Hadron<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + deep_causality_num::FromPrimitive> Hadron<R> {
+impl<R: deep_causality_algebra::RealField + deep_causality_num::FromPrimitive> Hadron<R> {
     /// Rapidity.
     pub fn rapidity(&self) -> R {
         self.momentum.rapidity()
@@ -397,7 +397,7 @@ impl<R: deep_causality_num::RealField + deep_causality_num::FromPrimitive> Hadro
 ///
 /// where z is the lightcone momentum fraction and mT is the transverse mass.
 #[derive(Debug, Clone, PartialEq)]
-pub struct LundParameters<R: deep_causality_num::RealField> {
+pub struct LundParameters<R: deep_causality_algebra::RealField> {
     /// String tension κ (GeV/fm) - energy per unit length of the color flux tube
     kappa: R,
     /// Lund 'a' parameter - controls the shape of the fragmentation function
@@ -416,7 +416,7 @@ pub struct LundParameters<R: deep_causality_num::RealField> {
     min_invariant_mass: R,
 }
 
-impl<R: deep_causality_num::RealField + deep_causality_num::FromPrimitive> Default
+impl<R: deep_causality_algebra::RealField + deep_causality_num::FromPrimitive> Default
     for LundParameters<R>
 {
     /// Default parameters tuned to LEP e+e- data.
@@ -438,7 +438,7 @@ impl<R: deep_causality_num::RealField + deep_causality_num::FromPrimitive> Defau
     }
 }
 
-impl<R: deep_causality_num::RealField> LundParameters<R> {
+impl<R: deep_causality_algebra::RealField> LundParameters<R> {
     /// Creates new Lund parameters.
     #[allow(clippy::too_many_arguments)]
     pub const fn new(

@@ -9,7 +9,8 @@ pub const G: f64 = 9.80665; // m s^-2 (exact)
 
 pub const SPEED_OF_LIGHT: f64 = 299_792_458.0; // m s^-1 (exact)
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Returns [`SPEED_OF_LIGHT`] (c) at the target real-field precision `R`.
 ///

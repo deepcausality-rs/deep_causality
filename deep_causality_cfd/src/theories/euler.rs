@@ -15,7 +15,7 @@
 //! in this regime, so the signature omits both `ν` and `∇²u`. Errors propagate
 //! from [`pressure_gradient_force_kernel`] when `ρ = 0`.
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_physics::PhysicsError;
 use deep_causality_physics::{AccelerationVector, Density, Velocity3, VelocityGradient};
 use deep_causality_physics::{convective_acceleration_kernel, pressure_gradient_force_kernel};

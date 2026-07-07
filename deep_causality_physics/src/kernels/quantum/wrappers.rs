@@ -6,10 +6,11 @@
 use crate::kernels::quantum::mechanics;
 use crate::{Gate, Operator};
 use core::fmt::Debug;
+use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_multivector::HilbertState;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 
 use crate::Probability;
 use deep_causality_par::MaybeParallel;

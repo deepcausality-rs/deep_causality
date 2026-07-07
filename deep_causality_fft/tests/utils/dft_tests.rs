@@ -4,7 +4,7 @@
  */
 
 use deep_causality_fft::{naive_dft, naive_idft};
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 fn buf(n: usize) -> Vec<Complex<f64>> {
     (0..n)

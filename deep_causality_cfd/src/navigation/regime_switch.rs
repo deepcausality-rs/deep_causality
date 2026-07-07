@@ -16,7 +16,7 @@
 //! chatter near `ε_switch`. In the overlap band the two integrators agree (the KS Strang split is
 //! 2nd-order against a direct solve), so the handover is seamless.
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_physics::PhysicsError;
 
 /// Which trajectory integrator the regime detector has selected.

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Field, RealField};
+use deep_causality_algebra::{Field, RealField};
 
 /// Defines L2 norm operations for multivectors, treating their coefficients as a vector space.
 pub trait MultiVectorL2Norm<T>

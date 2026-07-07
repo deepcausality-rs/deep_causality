@@ -5,8 +5,8 @@
 
 //! Tests for the mixed-tier `CausalTensor<F>` <-> `CsrMatrix<F>` iso.
 
-use deep_causality_num::iso::witness::Iso;
-use deep_causality_num::iso::witness::test_support::assert_witness_iso_round_trip;
+use deep_causality_algebra::iso::witness::Iso;
+use deep_causality_algebra::iso::witness::test_support::assert_witness_iso_round_trip;
 use deep_causality_sparse::{CsrFromTensorError, CsrMatrix};
 use deep_causality_tensor::CausalTensor;
 

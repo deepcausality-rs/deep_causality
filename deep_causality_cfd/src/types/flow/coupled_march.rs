@@ -26,7 +26,8 @@ use crate::types::flow::{
     PhysicsStage, Report,
 };
 use crate::types::flow_config::MarchStop;
-use deep_causality_num::{ConjugateScalar, FromPrimitive};
+use deep_causality_algebra::ConjugateScalar;
+use deep_causality_num::FromPrimitive;
 use deep_causality_physics::PhysicsError;
 
 /// A never-firing blackout trigger: a comms threshold so high the plasma sheath never denies the

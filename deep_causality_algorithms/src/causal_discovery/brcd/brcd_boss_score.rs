@@ -35,7 +35,8 @@
 
 use crate::brcd::brcd_boss_config::BossConfig;
 use crate::brcd::{BrcdError, BrcdErrorEnum};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::{CausalTensor, CausalTensorError, CausalTensorStatsExt};
 
 /// A family scorer the grow-shrink tree and order search query.

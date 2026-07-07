@@ -6,7 +6,8 @@
 use std::collections::HashSet;
 use std::f64::consts::PI;
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 
 use crate::TopologyError;

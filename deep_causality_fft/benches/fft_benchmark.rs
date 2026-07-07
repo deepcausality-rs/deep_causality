@@ -12,7 +12,7 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
 
 use deep_causality_fft::{DctPlan, DctType, FftPlan, FftPlanNd, RfftPlanNd};
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 fn cbuf_f64(n: usize) -> Vec<Complex<f64>> {
     (0..n)

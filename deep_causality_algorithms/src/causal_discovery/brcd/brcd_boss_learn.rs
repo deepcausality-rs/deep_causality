@@ -23,7 +23,8 @@ use crate::brcd::brcd_boss_cpdag::dag_to_cpdag;
 use crate::brcd::brcd_boss_score::BicScorer;
 use crate::brcd::brcd_boss_search::best_order_search;
 use crate::brcd::{BrcdError, BrcdErrorEnum};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::{CausalTensor, CausalTensorStatsExt};
 use deep_causality_topology::MixedGraph;
 

@@ -25,9 +25,8 @@
 //! - **Monad::bind**: Chain field transformations
 
 use crate::{GaugeGroup, LatticeComplex, LatticeGaugeField, LinkVariable, TopologyError};
-use deep_causality_num::{
-    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
-};
+use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
+use deep_causality_num::{FromPrimitive, ToPrimitive};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::marker::PhantomData;

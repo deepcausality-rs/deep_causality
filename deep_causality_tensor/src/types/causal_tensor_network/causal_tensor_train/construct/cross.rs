@@ -8,7 +8,8 @@ use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::causal_tensor_train::linalg::matmul;
 use crate::types::causal_tensor_network::cross_config::CrossConfig;
 use crate::{CausalTensor, CausalTensorError};
-use deep_causality_num::{ConjugateScalar, Real, Zero};
+use deep_causality_algebra::{ConjugateScalar, Real};
+use deep_causality_num::Zero;
 
 /// The real magnitude type of a conjugate scalar.
 type Re<T> = <T as ConjugateScalar>::Real;

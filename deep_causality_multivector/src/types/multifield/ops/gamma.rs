@@ -8,8 +8,8 @@
 //! This module provides generator matrices (gamma matrices) for matrix representations
 //! of Clifford algebras. These are used to convert between coefficient and matrix forms.
 
+use deep_causality_algebra::Field;
 use deep_causality_metric::Metric;
-use deep_causality_num::Field;
 use deep_causality_tensor::CausalTensor;
 
 // =============================================================================

@@ -29,8 +29,7 @@
 //! returns `+1`. This is the dispatch point that lets the cubical
 //! `HasHodgeStar<R>` impl be generic over `S` (R5.4).
 
-use deep_causality_num::RealField;
-
+use deep_causality_algebra::RealField;
 mod sealed {
     pub trait Sealed {}
 }

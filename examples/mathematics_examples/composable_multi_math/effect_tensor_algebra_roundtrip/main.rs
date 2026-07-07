@@ -18,10 +18,11 @@
 //! - `CausalMultiVector::geometric_product`
 //! - `EinSumOp::dot_prod` for the norm check
 
+use deep_causality_algebra::Real;
 use deep_causality_haft::Pure;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::{Float106, Real};
+use deep_causality_num::Float106;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 use mathematics_examples::effect_helpers::{Process, ProcessWitness, fail, ok, print_log};
 

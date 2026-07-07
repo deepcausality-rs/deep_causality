@@ -4,7 +4,7 @@
  */
 
 use crate::CsrMatrix;
-use deep_causality_num::AbelianGroup;
+use deep_causality_algebra::AbelianGroup;
 use std::ops::Sub;
 
 // AbelianGroup for CsrMatrix

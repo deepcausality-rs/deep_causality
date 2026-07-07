@@ -13,7 +13,8 @@
 //! bits).
 
 use crate::{Distribution, Open01, OpenClosed01, Rng, StandardNormal, StandardUniform};
-use deep_causality_num::{Float106, One, Real};
+use deep_causality_algebra::Real;
+use deep_causality_num::{Float106, One};
 
 /// `2^-53`, exact in `f64` (a power of two), used to place the low 53 bits below the high part.
 const SCALE_LO: f64 = 1.0 / ((1_u64 << 53) as f64);

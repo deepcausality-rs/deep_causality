@@ -29,7 +29,7 @@ use super::metric_provider_3d::{MetricProvider3d, PhysicalGradient3d};
 use super::sample_grid_3d;
 use crate::tensor_bridge::{gradient_x_3d, gradient_y_3d, gradient_z_3d, quantize_3d};
 use crate::types::CfdScalar;
-use deep_causality_num::{ConjugateScalar, RealField};
+use deep_causality_algebra::{ConjugateScalar, RealField};
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{
     CausalTensorTrain, CausalTensorTrainOperator, TensorTrain, TensorTrainOperator, Truncation,

@@ -7,7 +7,7 @@ use crate::{GaugeGroup, LatticeCell, LatticeComplex, LatticeGaugeField, LinkVari
 use std::collections::HashMap;
 use std::sync::Arc;
 
-impl<G: GaugeGroup, const D: usize, M, R: deep_causality_num::RealField, S>
+impl<G: GaugeGroup, const D: usize, M, R: deep_causality_algebra::RealField, S>
     LatticeGaugeField<G, D, M, R, S>
 {
     /// The underlying lattice (dereferenced for convenience).

@@ -34,7 +34,8 @@ use crate::{
     DissociationFraction, ElectronDensity, ElectronTemperature, EquilibriumConstant, PhysicsError,
     ReactionRate, Temperature,
 };
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Lift a plain numeral into `R` (model coefficients come through the
 /// real-field constant accessors in `constants::hypersonic`).

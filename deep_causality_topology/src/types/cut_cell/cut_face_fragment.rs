@@ -6,8 +6,7 @@
 //! A single piece of immersed surface inside one lattice cell.
 
 use super::source_geometry::SourceGeometry;
-use deep_causality_num::RealField;
-
+use deep_causality_algebra::RealField;
 /// A cut-face fragment: the portion of an immersed surface that lies inside one lattice
 /// cell, summarised as a flat facet.
 ///

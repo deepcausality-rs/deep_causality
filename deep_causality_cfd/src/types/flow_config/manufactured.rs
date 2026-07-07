@@ -18,7 +18,7 @@
 
 use crate::types::CfdScalar;
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
-use deep_causality_num::Dual;
+use deep_causality_num_dual::Dual;
 use deep_causality_physics::PhysicsError;
 
 /// The pointwise inputs an MMS kernel residual needs at a sample point, plus the exact reference.

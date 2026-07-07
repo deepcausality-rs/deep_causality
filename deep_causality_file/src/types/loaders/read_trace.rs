@@ -14,8 +14,8 @@
 
 use crate::DataLoadingError;
 use crate::types::trace_types::{SensorChannel, SensorTraceSet};
+use deep_causality_algebra::RealField;
 use deep_causality_haft::IoAction;
-use deep_causality_num::RealField;
 use std::fs;
 use std::marker::PhantomData;
 use std::path::{Path, PathBuf};

@@ -4,8 +4,9 @@
  */
 
 use crate::PhysicsError;
+use deep_causality_algebra::RealField;
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 
 /// A standard solver for Maxwell's Equations in Geometric Algebra.
 ///

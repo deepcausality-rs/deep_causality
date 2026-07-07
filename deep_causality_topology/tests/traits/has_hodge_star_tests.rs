@@ -57,7 +57,7 @@ fn has_hodge_star_is_publicly_re_exported_from_crate_root() {
     // fails. Reaching this test body means the re-export is intact.
     fn _accepts_impl<R, M>(_m: &M)
     where
-        R: deep_causality_num::RealField,
+        R: deep_causality_algebra::RealField,
         M: HasHodgeStar<R>,
     {
     }
@@ -70,7 +70,7 @@ fn associated_complex_type_compiles_through_generic_bound() {
     // Exercises the `Self::Complex: ChainComplex` bound at the call site.
     fn _accepts_paired<R, M>(_m: &M)
     where
-        R: deep_causality_num::RealField,
+        R: deep_causality_algebra::RealField,
         M: HasHodgeStar<R>,
         M::Complex: ChainComplex,
     {

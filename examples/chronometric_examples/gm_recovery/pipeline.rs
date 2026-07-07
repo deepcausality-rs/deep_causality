@@ -27,8 +27,9 @@
 
 use chronometric_examples::{ClockData, OrbitData};
 use core::fmt::Debug;
+use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, CausalityErrorEnum};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 use deep_causality_physics::{
     CentralBody, EARTH_GM, EARTH_J2, EARTH_MASS_KG, EARTH_RADIUS_EQUATORIAL,
     NEWTONIAN_CONSTANT_OF_GRAVITATION, SpaceTimeCoordinate, solve_gm_analytical,

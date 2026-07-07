@@ -5,7 +5,7 @@
 
 use deep_causality_calculus::{Diff, DifferentiableArrow, Scalar};
 use deep_causality_haft::{Arrow, Lift};
-use deep_causality_num::Dual;
+use deep_causality_num_dual::Dual;
 
 struct Square;
 impl DifferentiableArrow for Square {

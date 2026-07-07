@@ -25,7 +25,8 @@
 
 use crate::causal_discovery::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use crate::causal_discovery::brcd::brcd_linalg::solve_linear;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Configuration for the logistic-gate fit.
 #[derive(Debug, Clone, Copy)]

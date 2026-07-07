@@ -5,8 +5,9 @@
 use crate::{AlfvenSpeed, MagneticPressure};
 use crate::{Density, PhysicalField, PhysicsError};
 use core::fmt::Debug;
+use deep_causality_algebra::RealField;
 use deep_causality_multivector::MultiVector;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{SimplicialComplex, SimplicialManifold};

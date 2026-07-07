@@ -8,11 +8,12 @@
 //! helicity dimension guard and the helical ABC value, max speed, and
 //! every error branch.
 
+use deep_causality_algebra::RealField;
 use deep_causality_cfd::{
     dec_divergence_residual, dec_enstrophy, dec_helicity, dec_kinetic_energy, dec_max_speed,
     dec_sample_velocity,
 };
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
 

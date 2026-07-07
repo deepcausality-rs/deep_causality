@@ -12,7 +12,7 @@ use crate::traits::neighborhood::CellId;
 use crate::types::cubical_regge_geometry::CubicalReggeGeometry;
 use crate::types::cubical_regge_geometry::SignatureMarker;
 use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use std::collections::HashMap;
 
 /// A sparse map from a top `D`-cell's index (in the lattice's `iter_cells(D)` ordering) to

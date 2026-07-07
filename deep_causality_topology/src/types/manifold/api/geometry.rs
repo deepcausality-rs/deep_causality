@@ -6,7 +6,8 @@
 //! Public geometry API for Manifold.
 
 use crate::{Manifold, Simplex, SimplicialComplex, TopologyError};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
 where

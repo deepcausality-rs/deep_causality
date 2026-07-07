@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-06-18T02:06:54Z",
+    "created": "2026-07-07T22:29:37Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_core-ba4a57db-1447-42c7-b531-915a8a42bc9d",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_core-2f551f06-329d-412d-9d1d-95e72f01e793",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_core",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "f7392f65d6a746809c1b6aa004c46d8a28b1299b"
+          "checksumValue": "5c3b88158295f2a586b267227fe36c51700f799e"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -47,11 +47,6 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-File-deep_causality_core",
-      "relationshipType": "DESCRIBES",
-      "spdxElementId": "SPDXRef-DOCUMENT"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.10.0",
       "relationshipType": "GENERATED_FROM",
       "spdxElementId": "SPDXRef-File-deep_causality_core"
@@ -60,6 +55,11 @@
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--core-0.10.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-File-deep_causality_core",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
     }
   ],
   "spdxVersion": "SPDX-2.3"

@@ -9,7 +9,7 @@
 //! tests, the same role the naïve DFT plays in RustFFT. The planner never
 //! selects them.
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 use crate::traits::fft_scalar::FftScalar;
 use crate::utils::complex_ops::{czero, scale};

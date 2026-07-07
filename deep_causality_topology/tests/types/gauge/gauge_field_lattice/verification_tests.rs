@@ -11,7 +11,7 @@
 //! ## Reference
 //! M. Creutz, *Quarks, Gluons and Lattices*, Cambridge University Press (1983)
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_topology::{ActionCoeffs, LatticeComplex, LatticeGaugeField, U1};
 use std::sync::Arc;
 

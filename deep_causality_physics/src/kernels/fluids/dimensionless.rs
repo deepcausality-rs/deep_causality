@@ -18,7 +18,7 @@
 use crate::PhysicsError;
 use crate::{Density, KinematicViscosity, Viscosity};
 use crate::{Length, Speed};
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 #[inline]
 fn ensure_nonzero<R: RealField>(val: R, ctx: &str) -> Result<R, PhysicsError> {

@@ -8,7 +8,8 @@
 //! every comparison is measure-vs-measure, never against a pointwise value (the lesson the
 //! `graded-metrics` study established).
 
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_topology::{CellClass, CutCell, Primitive, SourceGeometry};
 
 fn r<R: RealField + FromPrimitive>(x: f64) -> R {

@@ -7,7 +7,7 @@
 //!
 //! Covers constructors, matrix operations, and SU(N) projection.
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{LinkVariable, LinkVariableError, SU2, U1};
 

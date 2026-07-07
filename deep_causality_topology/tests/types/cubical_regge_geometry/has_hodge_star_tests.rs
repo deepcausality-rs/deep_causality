@@ -59,7 +59,7 @@ fn clip_factor<const D: usize>(
 
 fn assert_diagonal<R>(matrix: &deep_causality_sparse::CsrMatrix<R>, n: usize)
 where
-    R: deep_causality_num::RealField + std::fmt::Debug,
+    R: deep_causality_algebra::RealField + std::fmt::Debug,
 {
     assert_eq!(matrix.shape(), (n, n), "matrix must be n × n");
     assert_eq!(

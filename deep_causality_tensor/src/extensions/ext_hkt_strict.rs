@@ -5,7 +5,7 @@
 
 use crate::CausalTensor;
 use deep_causality_haft::{Foldable, Functor, HKT, Pure, Satisfies};
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 //  **Strict GAT HKTs are Solved in the Next-Generation Trait Solver**
 //

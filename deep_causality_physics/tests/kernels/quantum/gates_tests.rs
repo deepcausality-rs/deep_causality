@@ -4,7 +4,7 @@
  */
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_physics::QuantumOps;
 
 fn create_complex_mv() -> CausalMultiVector<Complex<f64>> {

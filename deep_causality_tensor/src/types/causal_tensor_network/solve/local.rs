@@ -11,7 +11,8 @@ use crate::types::causal_tensor_network::causal_tensor_train_operator::CausalTen
 use crate::types::causal_tensor_network::solve_config::SolveConfig;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor};
-use deep_causality_num::{ConjugateScalar, One, Real, Zero};
+use deep_causality_algebra::{ConjugateScalar, Real};
+use deep_causality_num::{One, Zero};
 
 /// The real magnitude type of a conjugate scalar.
 type Re<T> = <T as ConjugateScalar>::Real;

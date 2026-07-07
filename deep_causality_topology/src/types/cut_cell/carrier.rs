@@ -7,8 +7,7 @@
 
 use super::cell_class::CellClass;
 use super::cut_face_fragment::CutFaceFragment;
-use deep_causality_num::RealField;
-
+use deep_causality_algebra::RealField;
 /// The cut-geometry overlay for a single intersected lattice cell.
 ///
 /// A `CutCell` is the fractional-aperture generalisation of the Stage-3 axis-aligned wall

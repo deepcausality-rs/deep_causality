@@ -67,8 +67,9 @@ use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::types::cut_cell::CutCellRegistry;
 use crate::types::lattice_complex::LatticeCell;
 use crate::types::lattice_complex::LatticeComplex;
+use deep_causality_algebra::RealField;
 use deep_causality_metric::Metric;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 use deep_causality_sparse::CsrMatrix;
 use std::borrow::Cow;
 

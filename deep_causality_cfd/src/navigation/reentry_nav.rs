@@ -22,7 +22,8 @@
 //! trajectory stays on the valid-orbit manifold.
 
 use super::eskf::NavFilter;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_physics::{
     KsPropagator, PhysicsError, ks_strang_step, relativistic_clock_drift_rate_kernel,
 };

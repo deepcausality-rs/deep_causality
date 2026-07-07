@@ -7,7 +7,7 @@ use crate::{GaugeField, GaugeGroup, Manifold, SimplicialComplex};
 use deep_causality_metric::Metric;
 use deep_causality_tensor::CausalTensor;
 
-impl<G: GaugeGroup, M, R: deep_causality_num::RealField> GaugeField<G, M, R> {
+impl<G: GaugeGroup, M, R: deep_causality_algebra::RealField> GaugeField<G, M, R> {
     /// Returns a reference to the base manifold.
     ///
     /// # Returns

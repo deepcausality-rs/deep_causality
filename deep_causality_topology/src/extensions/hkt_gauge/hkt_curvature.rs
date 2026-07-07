@@ -44,8 +44,9 @@
 //! 3. **Future resolution**: This limitation may be resolved with Rust's new trait
 //!    solver (`-Ztrait-solver=next`), which enables more expressive GAT constraints.
 use crate::CurvatureTensor;
+use deep_causality_algebra::Field;
 use deep_causality_haft::{HKT4Unbound, NoConstraint, RiemannMap, Satisfies};
-use deep_causality_num::{Field, Float};
+use deep_causality_num::Float;
 // use deep_causality_tensor::CausalTensor; // Removed unused
 use std::marker::PhantomData;
 

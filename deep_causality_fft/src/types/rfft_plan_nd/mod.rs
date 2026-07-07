@@ -8,7 +8,7 @@
 //! then complex transforms run along every other axis of that array.
 //! This is the transform pair the spectral Poisson solve consumes.
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 use crate::errors::fft_error::FftError;
 use crate::traits::fft_scalar::FftScalar;

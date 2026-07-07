@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{CausalTensor, CausalTensorError, Tensor};
-use deep_causality_num::{One, RealField, Zero};
+use deep_causality_algebra::RealField;
+use deep_causality_num::{One, Zero};
 
 impl<T: Default> CausalTensor<T> {
     pub(in crate::types::causal_tensor) fn solve_least_squares_cholsky_impl(

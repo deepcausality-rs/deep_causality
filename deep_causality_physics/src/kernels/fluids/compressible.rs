@@ -17,7 +17,8 @@ use crate::PhysicsError;
 use crate::Speed;
 use crate::Temperature;
 use crate::{Pressure, SpecificEnthalpy, Velocity3, VelocityGradient, ViscousStress};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Ideal-gas speed of sound `a = √(γ · R_s · T)`.
 ///

@@ -7,7 +7,8 @@
 
 use crate::{CausalMultiVector, CausalMultiVectorError};
 use crate::{MultiVector, MultiVectorL2Norm, ScalarEval};
-use deep_causality_num::{Field, One, Real, Zero};
+use deep_causality_algebra::{Field, Real};
+use deep_causality_num::{One, Zero};
 use std::iter::Sum;
 use std::ops::{AddAssign, Neg, SubAssign};
 

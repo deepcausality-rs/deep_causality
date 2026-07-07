@@ -6,7 +6,8 @@
 use crate::{LorentzianMetric, PhysicsError};
 use core::fmt::Debug;
 use core::iter::Sum;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 use deep_causality_topology::SimplicialManifold;

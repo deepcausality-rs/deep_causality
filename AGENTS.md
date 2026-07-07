@@ -178,7 +178,7 @@ It uses three main components:
 
 ## Project Structure
 
-The project is a monorepo containing 24 library crates:
+The project is a monorepo containing 27 library crates:
 
 ### Core Crates
 * `deep_causality`: Computational causality library. Provides causality graph, collections, context and causal reasoning.
@@ -198,9 +198,12 @@ The project is a monorepo containing 24 library crates:
 * `deep_causality_discovery`: Causality discovery DSL for the DeepCausality project.
 
 ### Math and Numerics Crates
+* `deep_causality_algebra`: Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers.
 * `deep_causality_calculus`: "Arrow-native differentiation and integration operators.
 * `deep_causality_fft`: Fast Fourier transform (FFT, rFFT, N-dimensional).
-* `deep_causality_num`: Numerical traits and utils used across all crates.
+* `deep_causality_num`: Numerical traits and utils (casts, identity, float, integer) used across all crates.
+* `deep_causality_num_complex`: Complex, quaternion, and octonion number types.
+* `deep_causality_num_dual`: Dual number type (forward-mode automatic differentiation).
 * `deep_causality_rand`: Random number generator and statistical distributions.
 * `deep_causality_sparse`: Sparse matrix data structure (CSR format) for deep_causality.
 * `deep_causality_tensor`: Tensors 
@@ -242,23 +245,33 @@ Tier 0 — Foundational (no internal runtime dependencies)
 
 Tier 1
   deep_causality_core        → deep_causality_haft
-  deep_causality_calculus    → deep_causality_haft, deep_causality_num
-  deep_causality_fft         → deep_causality_num, deep_causality_par
-  deep_causality_file        → deep_causality_haft, deep_causality_num
-  deep_causality_rand        → deep_causality_num
-  deep_causality_tensor      → deep_causality_ast, deep_causality_haft, deep_causality_num
+  deep_causality_algebra     → deep_causality_num
 
-Tier 2
-  deep_causality_sparse      → deep_causality_num, deep_causality_haft, deep_causality_tensor (opt)
+Tier 2 (number types layered on the algebra trait tower)
+  deep_causality_num_complex → deep_causality_num, deep_causality_algebra
+  deep_causality_num_dual    → deep_causality_num, deep_causality_algebra
+
+  deep_causality_calculus    → deep_causality_haft, deep_causality_num, deep_causality_algebra,
+                               deep_causality_num_dual
+  deep_causality_fft         → deep_causality_num, deep_causality_par, deep_causality_algebra,
+                               deep_causality_num_complex
+  deep_causality_file        → deep_causality_haft, deep_causality_num, deep_causality_algebra
+  deep_causality_rand        → deep_causality_num, deep_causality_algebra
+  deep_causality_tensor      → deep_causality_ast, deep_causality_haft, deep_causality_num,
+                               deep_causality_algebra, deep_causality_num_complex, deep_causality_num_dual
+  deep_causality_sparse      → deep_causality_num, deep_causality_haft, deep_causality_algebra,
+                               deep_causality_tensor (opt)
   deep_causality_multivector → deep_causality_haft, deep_causality_num, deep_causality_tensor,
-                               deep_causality_metric
-  deep_causality_uncertain   → deep_causality_ast, deep_causality_num, deep_causality_rand
+                               deep_causality_metric, deep_causality_algebra, deep_causality_num_complex
+  deep_causality_uncertain   → deep_causality_ast, deep_causality_num, deep_causality_rand,
+                               deep_causality_algebra
 
 Tier 3
   deep_causality_topology    → deep_causality_num, deep_causality_haft, deep_causality_metric,
                                deep_causality_tensor, deep_causality_multivector,
                                deep_causality_sparse, deep_causality_rand,
-                               deep_causality_par, deep_causality_fft
+                               deep_causality_par, deep_causality_fft,
+                               deep_causality_algebra, deep_causality_num_complex
   deep_causality             → deep_causality_ast, deep_causality_core,
                                deep_causality_data_structures, deep_causality_haft,
                                deep_causality_uncertain, ultragraph
@@ -266,23 +279,27 @@ Tier 3
 Tier 4
   deep_causality_algorithms  → deep_causality_num, deep_causality_rand,
                                deep_causality_tensor, deep_causality_topology,
-                               deep_causality_par
+                               deep_causality_par, deep_causality_algebra
   deep_causality_physics     → deep_causality_calculus, deep_causality_core,
                                deep_causality_haft, deep_causality_metric,
                                deep_causality_multivector, deep_causality_num,
                                deep_causality_sparse, deep_causality_tensor,
                                deep_causality_topology, deep_causality_par,
-                               deep_causality_rand (opt)
+                               deep_causality_algebra, deep_causality_num_complex,
+                               deep_causality_num_dual, deep_causality_rand (opt)
   deep_causality_ethos       → deep_causality, ultragraph
 
 Tier 5
   deep_causality_discovery   → deep_causality_algorithms, deep_causality_haft,
-                               deep_causality_num, deep_causality_tensor
+                               deep_causality_num, deep_causality_tensor,
+                               deep_causality_algebra
   deep_causality_cfd         → deep_causality_physics, deep_causality_topology,
                                deep_causality_calculus, deep_causality_core,
                                deep_causality_haft, deep_causality_num,
                                deep_causality_tensor, deep_causality_par,
-                               deep_causality_fft, deep_causality_uncertain (opt)
+                               deep_causality_fft, deep_causality_algebra,
+                               deep_causality_num_complex, deep_causality_num_dual,
+                               deep_causality_uncertain (opt)
 ```
 
 Internal dev-only dependency (tests/benches, not part of any published runtime):
@@ -292,7 +309,7 @@ Internal dev-only dependency (tests/benches, not part of any published runtime):
 ### External Dependencies
 
 Only crates with at least one external (crates.io) runtime dependency are listed.
-The other 18 library crates have no external runtime dependencies.
+The other 21 library crates have no external runtime dependencies.
 
 | Crate | External dependency | Status |
 |-------|---------------------|--------|

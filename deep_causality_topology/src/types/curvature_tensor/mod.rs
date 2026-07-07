@@ -9,8 +9,9 @@
 //! around infinitesimal loops in a manifold.
 
 use crate::TensorVector;
+use deep_causality_algebra::Field;
 use deep_causality_metric::Metric;
-use deep_causality_num::{Field, Float};
+use deep_causality_num::Float;
 use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 

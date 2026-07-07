@@ -4,7 +4,8 @@
  */
 
 use crate::{CausalTensor, CausalTensorError};
-use deep_causality_num::{ConjugateScalar, One, Real, Zero};
+use deep_causality_algebra::{ConjugateScalar, Real};
+use deep_causality_num::{One, Zero};
 
 /// The real magnitude type of a conjugate scalar.
 type Re<T> = <T as ConjugateScalar>::Real;

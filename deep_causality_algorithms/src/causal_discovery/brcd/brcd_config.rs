@@ -7,7 +7,8 @@
 
 use crate::brcd::brcd_gate::GateConfig;
 use crate::brcd::brcd_gaussian::{RIDGE_DEFAULT, Transform};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// The likelihood family BRCD scores each node with.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

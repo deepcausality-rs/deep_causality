@@ -6,8 +6,8 @@
 //! Fast Fourier transforms for the DeepCausality stack.
 //!
 //! The crate provides plan-based forward and inverse transforms, generic
-//! over [`deep_causality_num::RealField`] and operating on
-//! [`deep_causality_num::Complex`]:
+//! over [`deep_causality_algebra::RealField`] and operating on
+//! [`deep_causality_num_complex::Complex`]:
 //!
 //! * [`FftPlan`] — 1-D complex FFT/inverse FFT for any length.
 //! * [`RfftPlan`] — 1-D real-to-complex forward (rFFT) and complex-to-real

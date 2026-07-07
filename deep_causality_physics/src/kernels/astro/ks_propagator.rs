@@ -23,7 +23,8 @@
 //! * Battin, R. H., *An Introduction to the Mathematics and Methods of Astrodynamics*, AIAA (1999).
 
 use crate::PhysicsError;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// An exact 3-D two-body (Kepler) propagator via KS regularisation, built from a single physical
 /// state. Propagation is the constant-generator matrix exponential in the KS fictitious time; it is

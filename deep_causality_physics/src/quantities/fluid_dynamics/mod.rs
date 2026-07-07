@@ -29,7 +29,7 @@ pub mod vorticity_two_form;
 
 use alloc::format;
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, LatticeComplex, Manifold};
 

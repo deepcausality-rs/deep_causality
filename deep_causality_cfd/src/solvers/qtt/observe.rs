@@ -13,7 +13,7 @@
 
 use crate::tensor_bridge::{QttProjector2d, dequantize_2d};
 use crate::types::CfdScalar;
-use deep_causality_num::ConjugateScalar;
+use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{CausalTensorTrain, TensorTrain};
 

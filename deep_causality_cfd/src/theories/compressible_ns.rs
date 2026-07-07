@@ -27,7 +27,7 @@
 //! `∇·(τ·u)`, `∇·(ρ u E)`) at the sample point; these kernels do not
 //! discretise space.
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_physics::PhysicsError;
 use deep_causality_physics::{AccelerationVector, Density, Velocity3, VelocityGradient};
 use deep_causality_physics::{

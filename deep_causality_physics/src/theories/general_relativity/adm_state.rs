@@ -4,7 +4,7 @@
  */
 
 use crate::{AdmOps, PhysicsError};
-use deep_causality_num::Field;
+use deep_causality_algebra::Field;
 use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 

@@ -5,7 +5,7 @@
 
 use crate::CausalMultiVector;
 use core::ops::{AddAssign, Neg, SubAssign};
-use deep_causality_num::Field;
+use deep_causality_algebra::Field;
 
 impl<T> CausalMultiVector<T> {
     // Threshold for sparse algorithm (CPU-based)

@@ -7,15 +7,15 @@ use crate::PhysicsError;
 
 /// Pressure (Pascals).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Pressure<R: deep_causality_num::RealField>(R);
+pub struct Pressure<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for Pressure<R> {
+impl<R: deep_causality_algebra::RealField> Default for Pressure<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> Pressure<R> {
+impl<R: deep_causality_algebra::RealField> Pressure<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -37,7 +37,7 @@ impl<R: deep_causality_num::RealField> Pressure<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<Pressure<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<Pressure<R>> for f64 {
     fn from(val: Pressure<R>) -> Self {
         val.0.into()
     }
@@ -45,15 +45,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<Pressure<R>> for f64 {
 
 /// Density (kg/m^3).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Density<R: deep_causality_num::RealField>(R);
+pub struct Density<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for Density<R> {
+impl<R: deep_causality_algebra::RealField> Default for Density<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> Density<R> {
+impl<R: deep_causality_algebra::RealField> Density<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -75,7 +75,7 @@ impl<R: deep_causality_num::RealField> Density<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<Density<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<Density<R>> for f64 {
     fn from(val: Density<R>) -> Self {
         val.0.into()
     }
@@ -83,15 +83,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<Density<R>> for f64 {
 
 /// Dynamic Viscosity (Pa·s).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Viscosity<R: deep_causality_num::RealField>(R);
+pub struct Viscosity<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for Viscosity<R> {
+impl<R: deep_causality_algebra::RealField> Default for Viscosity<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> Viscosity<R> {
+impl<R: deep_causality_algebra::RealField> Viscosity<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -113,7 +113,7 @@ impl<R: deep_causality_num::RealField> Viscosity<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<Viscosity<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<Viscosity<R>> for f64 {
     fn from(val: Viscosity<R>) -> Self {
         val.0.into()
     }
@@ -121,15 +121,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<Viscosity<R>> for f64 {
 
 /// Kinematic Viscosity (m^2/s). Equals dynamic viscosity divided by density.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct KinematicViscosity<R: deep_causality_num::RealField>(R);
+pub struct KinematicViscosity<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for KinematicViscosity<R> {
+impl<R: deep_causality_algebra::RealField> Default for KinematicViscosity<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> KinematicViscosity<R> {
+impl<R: deep_causality_algebra::RealField> KinematicViscosity<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -151,7 +151,7 @@ impl<R: deep_causality_num::RealField> KinematicViscosity<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<KinematicViscosity<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<KinematicViscosity<R>> for f64 {
     fn from(val: KinematicViscosity<R>) -> Self {
         val.0.into()
     }
@@ -159,15 +159,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<KinematicViscosity<R>> f
 
 /// Specific Enthalpy (J/kg). Reference-state dependent; may be negative.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct SpecificEnthalpy<R: deep_causality_num::RealField>(R);
+pub struct SpecificEnthalpy<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for SpecificEnthalpy<R> {
+impl<R: deep_causality_algebra::RealField> Default for SpecificEnthalpy<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> SpecificEnthalpy<R> {
+impl<R: deep_causality_algebra::RealField> SpecificEnthalpy<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -184,7 +184,7 @@ impl<R: deep_causality_num::RealField> SpecificEnthalpy<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<SpecificEnthalpy<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<SpecificEnthalpy<R>> for f64 {
     fn from(val: SpecificEnthalpy<R>) -> Self {
         val.0.into()
     }
@@ -193,15 +193,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<SpecificEnthalpy<R>> for
 /// Wall Shear Stress magnitude (Pa). Stored as magnitude; sign convention is
 /// carried by the calling context, not by this type.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct WallShearStress<R: deep_causality_num::RealField>(R);
+pub struct WallShearStress<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for WallShearStress<R> {
+impl<R: deep_causality_algebra::RealField> Default for WallShearStress<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> WallShearStress<R> {
+impl<R: deep_causality_algebra::RealField> WallShearStress<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -223,7 +223,7 @@ impl<R: deep_causality_num::RealField> WallShearStress<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<WallShearStress<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<WallShearStress<R>> for f64 {
     fn from(val: WallShearStress<R>) -> Self {
         val.0.into()
     }
@@ -238,15 +238,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<WallShearStress<R>> for 
 
 /// Fluid velocity vector (m/s).
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Velocity3<R: deep_causality_num::RealField>([R; 3]);
+pub struct Velocity3<R: deep_causality_algebra::RealField>([R; 3]);
 
-impl<R: deep_causality_num::RealField> Default for Velocity3<R> {
+impl<R: deep_causality_algebra::RealField> Default for Velocity3<R> {
     fn default() -> Self {
         Self([R::zero(); 3])
     }
 }
 
-impl<R: deep_causality_num::RealField> Velocity3<R> {
+impl<R: deep_causality_algebra::RealField> Velocity3<R> {
     pub fn new(raw: [R; 3]) -> Result<Self, PhysicsError> {
         if !raw[0].is_finite() || !raw[1].is_finite() || !raw[2].is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -266,7 +266,7 @@ impl<R: deep_causality_num::RealField> Velocity3<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> From<Velocity3<R>> for [R; 3] {
+impl<R: deep_causality_algebra::RealField> From<Velocity3<R>> for [R; 3] {
     fn from(val: Velocity3<R>) -> Self {
         val.0
     }
@@ -274,15 +274,15 @@ impl<R: deep_causality_num::RealField> From<Velocity3<R>> for [R; 3] {
 
 /// Vorticity vector `ω = ∇ × u` (1/s). Pseudovector under spatial reflection.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct VorticityVector<R: deep_causality_num::RealField>([R; 3]);
+pub struct VorticityVector<R: deep_causality_algebra::RealField>([R; 3]);
 
-impl<R: deep_causality_num::RealField> Default for VorticityVector<R> {
+impl<R: deep_causality_algebra::RealField> Default for VorticityVector<R> {
     fn default() -> Self {
         Self([R::zero(); 3])
     }
 }
 
-impl<R: deep_causality_num::RealField> VorticityVector<R> {
+impl<R: deep_causality_algebra::RealField> VorticityVector<R> {
     pub fn new(raw: [R; 3]) -> Result<Self, PhysicsError> {
         if !raw[0].is_finite() || !raw[1].is_finite() || !raw[2].is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -302,7 +302,7 @@ impl<R: deep_causality_num::RealField> VorticityVector<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> From<VorticityVector<R>> for [R; 3] {
+impl<R: deep_causality_algebra::RealField> From<VorticityVector<R>> for [R; 3] {
     fn from(val: VorticityVector<R>) -> Self {
         val.0
     }
@@ -310,15 +310,15 @@ impl<R: deep_causality_num::RealField> From<VorticityVector<R>> for [R; 3] {
 
 /// Acceleration vector (m/s²). Return type of momentum-equation RHS evaluators.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct AccelerationVector<R: deep_causality_num::RealField>([R; 3]);
+pub struct AccelerationVector<R: deep_causality_algebra::RealField>([R; 3]);
 
-impl<R: deep_causality_num::RealField> Default for AccelerationVector<R> {
+impl<R: deep_causality_algebra::RealField> Default for AccelerationVector<R> {
     fn default() -> Self {
         Self([R::zero(); 3])
     }
 }
 
-impl<R: deep_causality_num::RealField> AccelerationVector<R> {
+impl<R: deep_causality_algebra::RealField> AccelerationVector<R> {
     pub fn new(raw: [R; 3]) -> Result<Self, PhysicsError> {
         if !raw[0].is_finite() || !raw[1].is_finite() || !raw[2].is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -338,7 +338,7 @@ impl<R: deep_causality_num::RealField> AccelerationVector<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> From<AccelerationVector<R>> for [R; 3] {
+impl<R: deep_causality_algebra::RealField> From<AccelerationVector<R>> for [R; 3] {
     fn from(val: AccelerationVector<R>) -> Self {
         val.0
     }
@@ -346,15 +346,15 @@ impl<R: deep_causality_num::RealField> From<AccelerationVector<R>> for [R; 3] {
 
 /// Body force per unit volume (N/m³).
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct BodyForceDensity<R: deep_causality_num::RealField>([R; 3]);
+pub struct BodyForceDensity<R: deep_causality_algebra::RealField>([R; 3]);
 
-impl<R: deep_causality_num::RealField> Default for BodyForceDensity<R> {
+impl<R: deep_causality_algebra::RealField> Default for BodyForceDensity<R> {
     fn default() -> Self {
         Self([R::zero(); 3])
     }
 }
 
-impl<R: deep_causality_num::RealField> BodyForceDensity<R> {
+impl<R: deep_causality_algebra::RealField> BodyForceDensity<R> {
     pub fn new(raw: [R; 3]) -> Result<Self, PhysicsError> {
         if !raw[0].is_finite() || !raw[1].is_finite() || !raw[2].is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -374,7 +374,7 @@ impl<R: deep_causality_num::RealField> BodyForceDensity<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> From<BodyForceDensity<R>> for [R; 3] {
+impl<R: deep_causality_algebra::RealField> From<BodyForceDensity<R>> for [R; 3] {
     fn from(val: BodyForceDensity<R>) -> Self {
         val.0
     }
@@ -386,7 +386,7 @@ impl<R: deep_causality_num::RealField> From<BodyForceDensity<R>> for [R; 3] {
 // =============================================================================
 
 #[inline]
-fn all_finite_3x3<R: deep_causality_num::RealField>(raw: &[[R; 3]; 3]) -> bool {
+fn all_finite_3x3<R: deep_causality_algebra::RealField>(raw: &[[R; 3]; 3]) -> bool {
     raw[0][0].is_finite()
         && raw[0][1].is_finite()
         && raw[0][2].is_finite()
@@ -402,15 +402,15 @@ fn all_finite_3x3<R: deep_causality_num::RealField>(raw: &[[R; 3]; 3]) -> bool {
 /// `value[i][j] = ∂u_i / ∂x_j`. Construction-time check is finiteness only —
 /// any finite 3×3 matrix is a valid velocity gradient.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct VelocityGradient<R: deep_causality_num::RealField>([[R; 3]; 3]);
+pub struct VelocityGradient<R: deep_causality_algebra::RealField>([[R; 3]; 3]);
 
-impl<R: deep_causality_num::RealField> Default for VelocityGradient<R> {
+impl<R: deep_causality_algebra::RealField> Default for VelocityGradient<R> {
     fn default() -> Self {
         Self([[R::zero(); 3]; 3])
     }
 }
 
-impl<R: deep_causality_num::RealField> VelocityGradient<R> {
+impl<R: deep_causality_algebra::RealField> VelocityGradient<R> {
     pub fn new(raw: [[R; 3]; 3]) -> Result<Self, PhysicsError> {
         if !all_finite_3x3(&raw) {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -430,7 +430,7 @@ impl<R: deep_causality_num::RealField> VelocityGradient<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> From<VelocityGradient<R>> for [[R; 3]; 3] {
+impl<R: deep_causality_algebra::RealField> From<VelocityGradient<R>> for [[R; 3]; 3] {
     fn from(val: VelocityGradient<R>) -> Self {
         val.0
     }
@@ -441,15 +441,15 @@ impl<R: deep_causality_num::RealField> From<VelocityGradient<R>> for [[R; 3]; 3]
 /// construction `0.5·(G + Gᵀ)` produces in IEEE 754. Use `new_unchecked` to
 /// bypass the check in hot kernels where symmetry is guaranteed by the algebra.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct StrainRateTensor<R: deep_causality_num::RealField>([[R; 3]; 3]);
+pub struct StrainRateTensor<R: deep_causality_algebra::RealField>([[R; 3]; 3]);
 
-impl<R: deep_causality_num::RealField> Default for StrainRateTensor<R> {
+impl<R: deep_causality_algebra::RealField> Default for StrainRateTensor<R> {
     fn default() -> Self {
         Self([[R::zero(); 3]; 3])
     }
 }
 
-impl<R: deep_causality_num::RealField> StrainRateTensor<R> {
+impl<R: deep_causality_algebra::RealField> StrainRateTensor<R> {
     pub fn new(raw: [[R; 3]; 3]) -> Result<Self, PhysicsError> {
         if !all_finite_3x3(&raw) {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -474,7 +474,7 @@ impl<R: deep_causality_num::RealField> StrainRateTensor<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> From<StrainRateTensor<R>> for [[R; 3]; 3] {
+impl<R: deep_causality_algebra::RealField> From<StrainRateTensor<R>> for [[R; 3]; 3] {
     fn from(val: StrainRateTensor<R>) -> Self {
         val.0
     }
@@ -484,15 +484,15 @@ impl<R: deep_causality_num::RealField> From<StrainRateTensor<R>> for [[R; 3]; 3]
 /// `Ω_ji = −Ω_ij`, with `Ω_ii = 0`. `new` checks the antisymmetry invariant
 /// by exact equality.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct RotationRateTensor<R: deep_causality_num::RealField>([[R; 3]; 3]);
+pub struct RotationRateTensor<R: deep_causality_algebra::RealField>([[R; 3]; 3]);
 
-impl<R: deep_causality_num::RealField> Default for RotationRateTensor<R> {
+impl<R: deep_causality_algebra::RealField> Default for RotationRateTensor<R> {
     fn default() -> Self {
         Self([[R::zero(); 3]; 3])
     }
 }
 
-impl<R: deep_causality_num::RealField> RotationRateTensor<R> {
+impl<R: deep_causality_algebra::RealField> RotationRateTensor<R> {
     pub fn new(raw: [[R; 3]; 3]) -> Result<Self, PhysicsError> {
         if !all_finite_3x3(&raw) {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -523,7 +523,7 @@ impl<R: deep_causality_num::RealField> RotationRateTensor<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> From<RotationRateTensor<R>> for [[R; 3]; 3] {
+impl<R: deep_causality_algebra::RealField> From<RotationRateTensor<R>> for [[R; 3]; 3] {
     fn from(val: RotationRateTensor<R>) -> Self {
         val.0
     }
@@ -531,15 +531,15 @@ impl<R: deep_causality_num::RealField> From<RotationRateTensor<R>> for [[R; 3]; 
 
 /// Cauchy stress tensor (Pa). Symmetric, positive-in-tension sign convention.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct CauchyStress<R: deep_causality_num::RealField>([[R; 3]; 3]);
+pub struct CauchyStress<R: deep_causality_algebra::RealField>([[R; 3]; 3]);
 
-impl<R: deep_causality_num::RealField> Default for CauchyStress<R> {
+impl<R: deep_causality_algebra::RealField> Default for CauchyStress<R> {
     fn default() -> Self {
         Self([[R::zero(); 3]; 3])
     }
 }
 
-impl<R: deep_causality_num::RealField> CauchyStress<R> {
+impl<R: deep_causality_algebra::RealField> CauchyStress<R> {
     pub fn new(raw: [[R; 3]; 3]) -> Result<Self, PhysicsError> {
         if !all_finite_3x3(&raw) {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -564,7 +564,7 @@ impl<R: deep_causality_num::RealField> CauchyStress<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> From<CauchyStress<R>> for [[R; 3]; 3] {
+impl<R: deep_causality_algebra::RealField> From<CauchyStress<R>> for [[R; 3]; 3] {
     fn from(val: CauchyStress<R>) -> Self {
         val.0
     }
@@ -574,15 +574,15 @@ impl<R: deep_causality_num::RealField> From<CauchyStress<R>> for [[R; 3]; 3] {
 /// full Cauchy stress `σ = −p I + τ` — only the viscous part appears in the
 /// dissipation `Φ = τ:∇u ≥ 0` and entropy-production guarantees.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct ViscousStress<R: deep_causality_num::RealField>([[R; 3]; 3]);
+pub struct ViscousStress<R: deep_causality_algebra::RealField>([[R; 3]; 3]);
 
-impl<R: deep_causality_num::RealField> Default for ViscousStress<R> {
+impl<R: deep_causality_algebra::RealField> Default for ViscousStress<R> {
     fn default() -> Self {
         Self([[R::zero(); 3]; 3])
     }
 }
 
-impl<R: deep_causality_num::RealField> ViscousStress<R> {
+impl<R: deep_causality_algebra::RealField> ViscousStress<R> {
     pub fn new(raw: [[R; 3]; 3]) -> Result<Self, PhysicsError> {
         if !all_finite_3x3(&raw) {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -607,7 +607,7 @@ impl<R: deep_causality_num::RealField> ViscousStress<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> From<ViscousStress<R>> for [[R; 3]; 3] {
+impl<R: deep_causality_algebra::RealField> From<ViscousStress<R>> for [[R; 3]; 3] {
     fn from(val: ViscousStress<R>) -> Self {
         val.0
     }
@@ -620,15 +620,15 @@ impl<R: deep_causality_num::RealField> From<ViscousStress<R>> for [[R; 3]; 3] {
 /// that violates the diagonal-positivity property are responsible for
 /// downstream interpretation.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct ReynoldsStress<R: deep_causality_num::RealField>([[R; 3]; 3]);
+pub struct ReynoldsStress<R: deep_causality_algebra::RealField>([[R; 3]; 3]);
 
-impl<R: deep_causality_num::RealField> Default for ReynoldsStress<R> {
+impl<R: deep_causality_algebra::RealField> Default for ReynoldsStress<R> {
     fn default() -> Self {
         Self([[R::zero(); 3]; 3])
     }
 }
 
-impl<R: deep_causality_num::RealField> ReynoldsStress<R> {
+impl<R: deep_causality_algebra::RealField> ReynoldsStress<R> {
     pub fn new(raw: [[R; 3]; 3]) -> Result<Self, PhysicsError> {
         if !all_finite_3x3(&raw) {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -653,7 +653,7 @@ impl<R: deep_causality_num::RealField> ReynoldsStress<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField> From<ReynoldsStress<R>> for [[R; 3]; 3] {
+impl<R: deep_causality_algebra::RealField> From<ReynoldsStress<R>> for [[R; 3]; 3] {
     fn from(val: ReynoldsStress<R>) -> Self {
         val.0
     }

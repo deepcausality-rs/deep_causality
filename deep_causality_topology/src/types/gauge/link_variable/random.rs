@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_rand::Rng;
 
 /// A trait for generating random field elements uniformly.
@@ -25,7 +25,7 @@ impl RandomField for f64 {
 
 impl<T> RandomField for Complex<T>
 where
-    T: RandomField + deep_causality_num::RealField + Copy,
+    T: RandomField + deep_causality_algebra::RealField + Copy,
 {
     fn generate_uniform<R: Rng>(rng: &mut R) -> Self {
         // Generate random real and imaginary parts

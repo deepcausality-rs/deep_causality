@@ -4,7 +4,8 @@
  */
 
 use crate::CsrMatrix;
-use deep_causality_num::{AbelianGroup, One, Ring, Zero};
+use deep_causality_algebra::{AbelianGroup, Ring};
+use deep_causality_num::{One, Zero};
 use std::ops::Neg;
 
 // Implements Zero trait for CsrMatrix.

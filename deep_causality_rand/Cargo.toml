@@ -28,6 +28,10 @@ exclude = [
 path = "../deep_causality_num"
 version = "0.3.2"
 
+[dependencies.deep_causality_algebra]
+path = "../deep_causality_algebra"
+version = "0.1"
+
 
 [features]
 # Enables random number generator from the host OS.

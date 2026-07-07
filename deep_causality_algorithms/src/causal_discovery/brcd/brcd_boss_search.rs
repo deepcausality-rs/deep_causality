@@ -20,7 +20,8 @@
 use crate::brcd::BrcdError;
 use crate::brcd::brcd_boss_gst::Gst;
 use crate::brcd::brcd_boss_score::FamilyScorer;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_rand::{Rng, Xoshiro256};
 use std::cmp::Ordering;
 use std::collections::BTreeSet;

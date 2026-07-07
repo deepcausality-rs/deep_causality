@@ -3,8 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_algebra::DivisionAlgebra;
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar, quadrature};
-use deep_causality_num::{Complex64, DivisionAlgebra};
+use deep_causality_num_complex::Complex64;
 use std::f64::consts::PI;
 
 // ----------------------------------------------------------------

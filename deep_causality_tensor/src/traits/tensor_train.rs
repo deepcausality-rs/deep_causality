@@ -5,7 +5,7 @@
 
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError};
-use deep_causality_num::ConjugateScalar;
+use deep_causality_algebra::ConjugateScalar;
 
 /// Behaviour of a tensor train (matrix-product state).
 ///

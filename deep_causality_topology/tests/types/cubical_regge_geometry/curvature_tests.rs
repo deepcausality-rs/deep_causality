@@ -21,7 +21,7 @@ fn find_cell<const D: usize, R>(
     target: &LatticeCell<D>,
 ) -> (usize, LatticeCell<D>)
 where
-    R: deep_causality_num::RealField,
+    R: deep_causality_algebra::RealField,
 {
     let id = lattice
         .cells(grade)
@@ -36,7 +36,7 @@ fn fetch_cell<const D: usize, R>(
     id: usize,
 ) -> LatticeCell<D>
 where
-    R: deep_causality_num::RealField,
+    R: deep_causality_algebra::RealField,
 {
     lattice.cells(grade).nth(id).expect("cell id out of range")
 }

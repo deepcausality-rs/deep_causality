@@ -20,7 +20,7 @@
 //! contribution turns positive on a marched trajectory is the defect
 //! (the 2026-06-12 TGV instability finding).
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 /// Per-term M-inner products of a state against the marched rate's
 /// terms; see the module doc for the sign convention.

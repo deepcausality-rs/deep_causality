@@ -32,7 +32,7 @@ impl Iterator for VonNeumannIter {
     }
 }
 
-impl<const D: usize, R: deep_causality_num::RealField> Neighborhood<LatticeComplex<D, R>>
+impl<const D: usize, R: deep_causality_algebra::RealField> Neighborhood<LatticeComplex<D, R>>
     for VonNeumann
 {
     type Iter<'a>

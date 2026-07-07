@@ -5,7 +5,7 @@
 
 //! Algebra module for CausalMultiVector.
 use crate::{CausalMultiVector, CausalMultiVectorError, Metric};
-use deep_causality_num::{AbelianGroup, AssociativeRing, Field, Module, RealField, Ring};
+use deep_causality_algebra::{AbelianGroup, AssociativeRing, Field, Module, RealField, Ring};
 use std::ops::{AddAssign, Neg, SubAssign};
 
 // Algebraic Composition

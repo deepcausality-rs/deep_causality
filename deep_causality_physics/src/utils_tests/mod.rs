@@ -12,7 +12,8 @@
 //! across one another — only the crate under test is visible to all of them.
 
 use alloc::{vec, vec::Vec};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
 

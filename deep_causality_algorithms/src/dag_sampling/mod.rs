@@ -74,7 +74,8 @@ pub use graph::Graph;
 pub use sample::{representative_dag, sample_dag};
 
 use crate::dag_sampling::graph::Graph as InternalGraph;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_topology::MixedGraph;
 
 /// Returns the size of the Markov equivalence class of `graph`'s undirected

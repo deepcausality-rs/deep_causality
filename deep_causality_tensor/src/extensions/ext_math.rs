@@ -4,7 +4,7 @@
  */
 use crate::CausalTensor;
 use crate::CausalTensorError;
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 pub trait CausalTensorMathExt<T> {
     /// Computes the element-wise natural logarithm of the tensor.
