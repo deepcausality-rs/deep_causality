@@ -74,7 +74,8 @@ fn fmap_type_changing_agrees_across_witnesses() {
 /// (`InternalLogicError`). Both witnesses are now total: a `None` effect passes through unchanged.
 #[test]
 fn fmap_on_none_agrees_across_witnesses() {
-    let val: PropagatingEffect<i32> = PropagatingEffect::new(Ok(CausalEffect::none()), (), None, EffectLog::new());
+    let val: PropagatingEffect<i32> =
+        PropagatingEffect::new(Ok(CausalEffect::none()), (), None, EffectLog::new());
     let proc: PropagatingProcess<i32, (), ()> = val.clone();
 
     let via_effect = <EffectW as Functor<EffectW>>::fmap(val, |x| x * 2);
