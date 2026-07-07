@@ -1,0 +1,20 @@
+deep_causality_core/LEAN_CORE.md
+  s_cefbd789296ae8::t_4444fa572e0d79 31-32
+  s_cefbd789296ae8::t_c48319044ea8c2 62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a1881b94955b2ae61b2be85b538258424cbe6cf2",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
