@@ -1,0 +1,1698 @@
+deep_causality_topology/src/types/manifold/differential/interior_product.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 35-36
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_solve_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+  s_543ee5cdecd2c1::t_4e04739ed068e0 6
+examples/mathematics_examples/composable_multi_math/tensor_x_algebra_rotation_field/main.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 19
+deep_causality_fft/src/utils/twiddles.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 14
+deep_causality_topology/src/types/lattice_complex/dual_lattice_complex.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 15,19
+deep_causality_physics/src/kernels/astro/mechanics.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 8-9
+deep_causality_physics/Cargo.toml
+  s_543ee5cdecd2c1::t_887a7e249c8572 73-84
+  s_543ee5cdecd2c1::t_54c293c4bc1a6f 31-33
+deep_causality_num_complex/src/complex/quaternion_number/identity.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-111
+deep_causality_num_complex/tests/complex/octonion_number/arithmetic_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-6,9-196
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7-8
+deep_causality_rand/tests/types/dist/uniform/uniform_tests.rs
+  s_543ee5cdecd2c1::t_cee23ec77130ab 190-191
+deep_causality_topology/src/types/manifold/differential/exterior.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 9
+deep_causality_topology/src/types/manifold/topology/topology_simplicial.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 7-9
+deep_causality_fft/src/types/fft_plan/mod.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 12
+deep_causality_algorithms/src/causal_discovery/surd/surd_utils/surd_utils_cdl.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 5
+deep_causality_topology/src/types/hodge_decomposition/display.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 9
+deep_causality_num_complex/src/complex/octonion_number/ops.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-89
+deep_causality_num_dual/tests/dual/dual_number/from_primitive_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+  s_543ee5cdecd2c1::t_3c56ceee36cf72 1-6,8-76
+deep_causality_cfd/src/solvers/dec/uncertain_inflow/uncertain_boundary_source.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 11
+  s_543ee5cdecd2c1::t_51661524c02b1d 14
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_svd_truncated/mod.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 11
+  s_543ee5cdecd2c1::t_4e04739ed068e0 10
+deep_causality_algorithms/src/dag_sampling/count.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 39-40
+deep_causality_core/deep_causality_core_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_ops_tests.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 6
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+deep_causality_fft/tests/types/rfft_plan/rfft_plan_tests.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 7
+deep_causality_topology/tests/types/manifold/spectral_poisson_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 14
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 13
+deep_causality_algebra/tests/float106/double_algebra_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-8,10-307
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 9
+deep_causality_topology/tests/types/cut_cell/cut_face_constraint_tests.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 15
+  s_543ee5cdecd2c1::t_743bfc851cef0d 16
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_boss_score.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 38-39
+deep_causality_physics/tests/kernels/quantum/gates_haruna_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7
+deep_causality_sparse/src/types/sparse_matrix/algebra/ring.rs
+  s_543ee5cdecd2c1::t_58f1cb6bbc66df 7-8
+deep_causality_topology/tests/types/cubical_regge_geometry/curvature_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 24,39
+deep_causality_topology/src/types/cubical_regge_geometry/metropolis.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 51
+  s_543ee5cdecd2c1::t_743bfc851cef0d 50
+deep_causality_num/tests/float_double/double_transcendental_tests.rs
+  s_543ee5cdecd2c1::t_0b3a7bd10d9b06 8
+deep_causality_physics/src/theories/general_relativity/adm_ops.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 11
+deep_causality_multivector/src/traits/scalar_eval.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 5
+deep_causality_num_dual/deep_causality_num_dual_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_algorithms/src/dag_sampling/memoization.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 20-21
+deep_causality_physics/tests/kernels/chronometric/solve_gm_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 13
+deep_causality_algebra/deep_causality_algebra_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_topology/src/types/gauge/gauge_field_lattice/ops_actions.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 14
+  s_543ee5cdecd2c1::t_743bfc851cef0d 12-13,121
+deep_causality_fft/deep_causality_fft_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,30-49,54,58-61,73-74,79,83,86-87,107-117,122,128-129,132-133,138,142-145,148-149,154,160-161,164-165,170,174,177-187,192-197,202,204,207,209,212-214,217,219,222,224,227-229,232,242,244,247-252,254,257,262-277
+deep_causality_algebra/tests/algebra/algebra_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-5,7,9-31
+  s_543ee5cdecd2c1::t_04b827b855c599 6
+  s_543ee5cdecd2c1::t_eae79890b9271b 8
+deep_causality_num_dual/Cargo.toml
+  s_543ee5cdecd2c1::t_a685d5ade4b9e8 1-31
+deep_causality_fft/src/utils/dft.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 12
+examples/quantum_examples/quantum_geometric_tensor/main.rs
+  s_543ee5cdecd2c1::t_832fcde4845e86 15
+deep_causality_uncertain/deep_causality_uncertain_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,30-40,45,49-53,90-91,96,100-103,129-153,158,160,163,167-171,178-188,193,195,198,200,203,208,210,213-215,218-220,223
+deep_causality_topology/src/types/gauge/link_variable/ops.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 8
+  s_543ee5cdecd2c1::t_743bfc851cef0d 7
+deep_causality_physics/src/kernels/hypersonic/wrappers.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 15,17
+deep_causality_physics/tests/kernels/photonics/beam_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 6
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_linalg.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 19
+deep_causality_topology/src/types/topological_invariants/mod.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 28
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_boss_gst.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 23
+deep_causality_num_complex/tests/complex/complex_number/num_cast_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-5,8-14
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6-7
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/linalg/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 12
+deep_causality_num_dual/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_85216ec402e617 1-32
+deep_causality_rand/deep_causality_rand_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_physics/src/quantities/fluid_dynamics/pressure_zero_form.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 8
+examples/chronometric_examples/src/proces_utils/mad_filter.rs
+  s_543ee5cdecd2c1::t_46cceb4b05da95 7
+deep_causality_physics/src/constants/hypersonic.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 203-204
+deep_causality_topology/src/types/manifold/topology/topology_manifold.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 9-11
+deep_causality_multivector/src/extensions/hkt_multifield/mod.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 43
+deep_causality_algorithms/Cargo.toml
+  s_543ee5cdecd2c1::t_f713c01e2f78a2 27-30
+deep_causality_fft/src/lib.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 9-10
+examples/physics_examples/gauge_lattice_u1_2d/main.rs
+  s_543ee5cdecd2c1::t_41f69a938d1b92 24-25
+deep_causality_num_complex/src/complex/octonion_number/algebra.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-122
+deep_causality_multivector/src/types/multifield/arithmetic/mod.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 10-11
+deep_causality_num_dual/tests/dual/dual_number/display_tests.rs
+  s_543ee5cdecd2c1::t_3c56ceee36cf72 1-18
+deep_causality_num_dual/deep_causality_num_dual_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1-106
+deep_causality_topology/src/types/gauge/gauge_field_lattice/ops_wilson.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 12
+  s_543ee5cdecd2c1::t_743bfc851cef0d 11
+deep_causality_topology/src/types/manifold/differential/neumann_poisson.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 28,30-31
+deep_causality_num_complex/src/complex/octonion_number/debug.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-53
+deep_causality_num/deep_causality_num_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,44-52,61-65
+deep_causality_algebra/Cargo.toml
+  s_543ee5cdecd2c1::t_5c4f06deff0e29 1-27
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_complex_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 11
+  s_543ee5cdecd2c1::t_4e04739ed068e0 10,12
+deep_causality_num_complex/tests/complex/octonion_number/rotation_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-6,8-192
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+deep_causality_num_complex/tests/complex/complex_number/constructors_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-19
+deep_causality_num_complex/tests/complex/octonion_number/debug_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-35
+deep_causality_physics/src/kernels/waves/general.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 12
+deep_causality_topology/src/traits/has_hodge_star.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 8
+examples/chronometric_examples/gm_recovery/pipeline.rs
+  s_543ee5cdecd2c1::t_ff9799831cdbab 30,32
+deep_causality_physics/tests/kernels/nuclear/generic_real_field_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 15-16
+deep_causality_num_complex/tests/complex/quaternion_number/rotation_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-5,8-372
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6-7
+deep_causality_rand/src/utils/inverse_cdf.rs
+  s_543ee5cdecd2c1::t_cee23ec77130ab 17-18
+deep_causality_physics/src/kernels/mhd/ideal.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 8,10
+deep_causality_tensor/src/types/causal_tensor_network/solve_config/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 7
+deep_causality_topology/src/types/chain/arithmetic/mod.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 8
+deep_causality_num_complex/tests/complex/octonion_number/identity_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+  s_543ee5cdecd2c1::t_68037816b32b06 1-6,8-53
+examples/chronometric_examples/gm_recovery/display.rs
+  s_543ee5cdecd2c1::t_c9f79dc43a1638 10
+deep_causality_par/deep_causality_par_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,31
+deep_causality_topology/src/types/cubical_regge_geometry/volumes.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 18
+deep_causality_topology/src/types/manifold/differential/stencil/mod.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 31-32
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_scalar_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 12
+  s_543ee5cdecd2c1::t_4e04739ed068e0 11,13
+deep_causality_physics/src/kernels/nuclear/lund/string.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 15-16
+deep_causality_topology/tests/types/gauge/gauge_field_lattice/verification_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 14
+deep_causality_physics/src/kernels/chronometric/solve_gm.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7
+deep_causality_multivector/src/types/multivector/mod.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 8-9
+deep_causality_topology/src/types/curvature_tensor/mod.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 12,14
+deep_causality_num_complex/src/complex/quaternion_number/neg.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-38
+deep_causality_physics/src/kernels/thermodynamics/stats.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 10-11
+deep_causality_algebra/tests/iso/field_iso_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-43
+deep_causality_calculus/src/lib.rs
+  s_543ee5cdecd2c1::t_f0b05a36d9ffea 53
+deep_causality_topology/tests/types/cubical_regge_geometry/has_hodge_star_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 62
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_boss_bootstrap.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 41-42
+deep_causality_topology/src/types/gauge/gauge_field_lattice/ops_plague.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 14
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 15
+deep_causality_num_complex/src/complex/complex_number/normed.rs
+  s_543ee5cdecd2c1::t_eb725bf1efdac3 1-22
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/construct/cross.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 12
+  s_543ee5cdecd2c1::t_4e04739ed068e0 11
+deep_causality_num_complex/tests/complex/complex_number/rotation_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-6,9-119
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7-8
+deep_causality_physics/deep_causality_physics_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_physics/src/theories/general_relativity/gr_lie_mapping.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 26-27
+deep_causality_cfd/tests/solvers/dec/diagnostics_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 11
+  s_543ee5cdecd2c1::t_ba42283838fb01 16
+deep_causality_topology/tests/types/gauge/gauge_field_lattice/metropolis_coverage_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 13
+deep_causality_topology/tests/types/manifold/stencil_tests.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 13
+  s_543ee5cdecd2c1::t_743bfc851cef0d 14
+deep_causality_num_complex/tests/complex/complex_number/arithmetic_complex_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6-7
+  s_543ee5cdecd2c1::t_68037816b32b06 1-5,8-34
+deep_causality_multivector/src/types/multivector/ops/ops_product_impl.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 8
+deep_causality_physics/src/kernels/nuclear/qcd.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 21-22
+deep_causality_calculus/tests/extensions/differentiate_ext_tests.rs
+  s_543ee5cdecd2c1::t_ef81959ca93a85 12
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+deep_causality_cfd/tests/solvers/dec/step_output_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 9
+  s_543ee5cdecd2c1::t_44bfd361f591a2 11
+examples/mathematics_examples/Cargo.toml
+  s_543ee5cdecd2c1::t_86a2c67e02656a 19-21
+deep_causality_fft/src/types/rfft_plan/mod.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 20
+deep_causality_topology/src/types/cubical_regge_geometry/signature.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 32
+deep_causality_physics/src/kernels/photonics/diffraction.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 9-10
+deep_causality_algebra/src/utils_tests/mod.rs
+  s_543ee5cdecd2c1::t_71fd59e3901648 1-6
+deep_causality_algebra/tests/iso/ring_iso_tests.rs
+  s_543ee5cdecd2c1::t_5780e0718c4809 9,11,15,32,75,78,81,87,90,100-101,106,112-113,117-120,125-126,130-131,134,177,180,183,189,192,202-203,208,210,217,221-223,225,268,271,274,280,283,293-294,299,301,312
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 26-28
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-8,10,12-14,16-25,29-31,33-74,76-77,79-80,82-86,88-89,91-99,102-105,107-111,114-116,121-124,127-129,132-133,135-176,178-179,181-182,184-188,190-191,193-201,204-207,209,211-216,218-220,224,226-267,269-270,272-273,275-279,281-282,284-292,295-298,300,302-311,313
+deep_causality_physics/src/kernels/fluids/constitutive.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 23-24
+deep_causality_physics/src/kernels/nuclear/lund/fragmentation.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 20-21,198
+deep_causality_topology/src/extensions/hkt_manifold/mod.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 39-41,83-85
+  s_543ee5cdecd2c1::t_743bfc851cef0d 56,101,125,160,199
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_algebra_tests.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 6
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+deep_causality_file/BUILD.bazel
+  s_543ee5cdecd2c1::t_5919894efc16c7 17
+deep_causality_multivector/src/alias/alias_hopf_state.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 7-9
+examples/avionics_examples/cfd/plasma_blackout_weather/model.rs
+  s_543ee5cdecd2c1::t_16e2468c737ca5 189
+  s_543ee5cdecd2c1::t_68e738cece2117 349
+deep_causality_tensor/src/types/causal_tensor_network/solve/local.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 15
+  s_543ee5cdecd2c1::t_4e04739ed068e0 14
+deep_causality_ethos/deep_causality_ethos_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,29-38,49-50,54-55,58-59,63-64,67-69,72-73,76-77,81-82,85-86,90-116,136-137,142,146-149,152-153,158,164-165,168-169,171,174-175,178-188,193,199-200,203-204,206,209-210,215,220,222,225-235,240,242,245,249-253,260,262,270,272,275,277,282,285,287,290,292,295,300,302,305,307,310,312,315,320,322-327
+deep_causality_metric/deep_causality_metric_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_physics/src/kernels/relativity/spacetime.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 10,12
+deep_causality_num_complex/deep_causality_num_complex_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_algebra/LICENSE
+  s_543ee5cdecd2c1::t_1504d57e59061a 1-23
+deep_causality_tensor/src/extensions/ext_hkt_strict.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 8
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_mapconfig.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 39
+deep_causality_algebra/tests/iso/division_algebra_iso_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-44
+deep_causality_algebra/tests/algebra/scalar_conjugate_tests.rs
+  s_543ee5cdecd2c1::t_42bc1874fd2e91 6-14
+  s_543ee5cdecd2c1::t_559ba5fafe4c23 3-5
+  s_543ee5cdecd2c1::t_5f2802889bd067 15-17
+  s_7cd4820447b22c::t_e05994226e5efb 1-2,18-27
+deep_causality_topology/src/types/manifold/api/constructors.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 9-10
+examples/chronometric_examples/Cargo.toml
+  s_543ee5cdecd2c1::t_fe2a3c2d8b2487 16
+deep_causality_fft/src/types/fft_plan/stockham.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 16
+deep_causality_topology/src/extensions/hkt_gauge/hkt_lattice_gauge.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 29
+  s_543ee5cdecd2c1::t_743bfc851cef0d 28
+deep_causality_topology/src/types/cubical_regge_geometry/metric_tensor.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 21-22
+deep_causality_rand/Cargo.toml
+  s_543ee5cdecd2c1::t_1d2b2fb14c7591 31-34
+deep_causality_file/src/types/orbit_types.rs
+  s_543ee5cdecd2c1::t_62d362d06d4b7f 8
+deep_causality_multivector/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_868f5fb0ec4540 34
+  s_543ee5cdecd2c1::t_9de0a8b6ff11d0 56
+  s_543ee5cdecd2c1::t_69313075243152 92,97
+  s_543ee5cdecd2c1::t_6578bc61a1cc00 116
+deep_causality_cfd/src/types/flow/compressible_march_run.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 39
+deep_causality_physics/src/kernels/astro/wrappers.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 9,11
+deep_causality_physics/src/kernels/photonics/ray.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 9
+deep_causality_physics/tests/kernels/condensed/generic_real_field_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 15,19
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 18
+deep_causality_num_complex/src/complex/quaternion_number/ops.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-374
+deep_causality_topology/src/types/regge_geometry/has_hodge_star.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 9-10
+deep_causality_rand/src/types/distr/normal/mod.rs
+  s_543ee5cdecd2c1::t_cee23ec77130ab 9
+deep_causality_algebra/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_7fc5ada2ecf7b0 1-47
+deep_causality_fft/deep_causality_fft_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_multivector/deep_causality_multivector_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_num_complex/tests/algebra_impls/conjugate_scalar_tests.rs
+  s_543ee5cdecd2c1::t_50babcabba39fa 1-29
+deep_causality_physics/src/kernels/mhd/wrappers.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 13,15
+deep_causality_physics/src/kernels/em/fields.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 12-13
+deep_causality_algorithms/src/causal_discovery/surd/surd_algo_cdl.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 8-9
+deep_causality_num_complex/src/complex/octonion_number/arithmetic.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-547
+deep_causality_algorithms/deep_causality_algorithms_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_topology/src/types/manifold/differential/stencil/build.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 13-14
+deep_causality_physics/src/quantities/nuclear/mod.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 10,12,18,35,43,45,51,77,85,87,93,110,118,120,126,143,160,171,182,277,319,332,347,354,386,400,419,441
+deep_causality_tensor/tests/types/causal_tensor/algebra_tests.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 137
+deep_causality_algebra/tests/iso/witness/ring_iso_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-41
+deep_causality_topology/tests/types/gauge/gauge_field_lattice/metropolis_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 6
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train_operator/arrow/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 16
+examples/chronometric_examples/src/proces_utils/lagrange.rs
+  s_543ee5cdecd2c1::t_fb32dd90e0231d 7-8
+deep_causality_fft/src/types/fft_plan/small.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 15
+deep_causality_num_complex/src/complex/quaternion_number/mod.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-174
+deep_causality_topology/src/types/gauge/gauge_field_lattice/getters.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 10
+deep_causality_physics/src/kernels/quantum/gates_haruna.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7,15
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 14
+deep_causality_physics/src/theories/electromagnetism/gauge_em_ops.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 6
+deep_causality_calculus/deep_causality_calculus_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,39-40,44,47-55,73-74,78-87,93,102-111,117-131,138-140
+deep_causality_physics/src/kernels/nuclear/lund/flavor.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 23-24
+deep_causality_topology/src/types/topological_invariants/part_eq.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 7
+deep_causality_topology/src/types/cubical_regge_geometry/gradient.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 60-62
+deep_causality_algebra/src/algebra/real.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-404
+deep_causality_num_complex/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_cc84b409f6a0a8 1-34
+deep_causality_physics/tests/kernels/condensed/wrappers_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7
+deep_causality_num_complex/src/complex/octonion_number/cast.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-692
+deep_causality_num_complex/tests/algebra_impls/mod.rs
+  s_543ee5cdecd2c1::t_b374ded6904ae1 1-13
+AGENTS.md
+  s_543ee5cdecd2c1::t_d9a09f5458f3ba 312
+  s_543ee5cdecd2c1::t_a306ebcb061b91 201,204-206
+  s_543ee5cdecd2c1::t_b913598b6fcea9 300-302
+  s_543ee5cdecd2c1::t_4338b5417a3c38 294-295
+  s_543ee5cdecd2c1::t_c69dbbc726b52c 181
+  s_543ee5cdecd2c1::t_7403bd6c1d73a7 248-263,265
+  s_543ee5cdecd2c1::t_5f054d93ac4515 273-274
+  s_543ee5cdecd2c1::t_cb6ed46a4092d5 288-289
+  s_543ee5cdecd2c1::t_1506f0a52020e5 266-267
+  s_543ee5cdecd2c1::t_415a4d53c4fb56 282
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_qr/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 7
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 8
+deep_causality_rand/src/traits/real_rng.rs
+  s_543ee5cdecd2c1::t_cee23ec77130ab 8
+deep_causality_physics/src/kernels/photonics/wrappers.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 12,14
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 15
+deep_causality_cfd/src/types/flow/qtt_march_run.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 31
+deep_causality_core/deep_causality_core_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,58-62
+deep_causality_physics/src/quantities/photonics/mod.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 8
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7,14,16,22,31,40,42,48,57,66,68,74,91,100,102,108,125,134,136,142,159,168,170,176,185,194,196,202,211,219,221,232,234,246,248,276,278
+deep_causality_physics/src/kernels/dynamics/kinematics.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7,51,86
+deep_causality_topology/src/types/manifold/differential/stencil/stencil_op.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 12
+deep_causality_uncertain/src/types/computation/operator/comparison_operator.rs
+  s_543ee5cdecd2c1::t_23c091d2b5e106 6
+deep_causality_physics/tests/quantities/photonics_quantities/complex_beam_parameter_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 6
+deep_causality_fft/src/types/fft_plan_nd/axis.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 21
+deep_causality_fft/tests/types/fft_plan/fft_plan_tests.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 7-8,134-135
+examples/physics_examples/multi_physics_pipeline/main.rs
+  s_543ee5cdecd2c1::t_bd0f72577fceea 33
+deep_causality_algebra/tests/algebra/field_real_f64_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-161
+deep_causality_multivector/src/types/multivector/ops/ops_matrix_rep.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 13
+deep_causality_tensor/src/traits/tensor_train_operator.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 9
+deep_causality_tensor/tests/types/causal_tensor_network/op_tensor_complex_tests.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 10,12
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 11
+deep_causality_physics/src/theories/electroweak/electroweak_ops.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 6
+deep_causality_topology/src/types/cut_cell/geometry.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 21-22
+deep_causality_multivector/src/alias/alias_complex.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 6
+examples/chronometric_examples/src/types/gravity_types.rs
+  s_543ee5cdecd2c1::t_dc4debd3aea834 6
+deep_causality_cfd/src/tensor_bridge/projection.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 21
+  s_543ee5cdecd2c1::t_1af55a78153e28 23-24
+deep_causality_topology/src/types/manifold/differential/hodge.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 10-11
+deep_causality_ast/deep_causality_ast_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,44-48
+examples/mathematics_examples/calculus/leibniz_dual_integration.rs
+  s_543ee5cdecd2c1::t_7905cba4f589c4 16,18
+deep_causality_num_complex/tests/complex/quaternion_number/num_cast_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-19
+deep_causality_algebra/tests/algebra/monoid_generic_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-60
+deep_causality_physics/src/kernels/chronometric/wrapper.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7
+deep_causality_topology/tests/types/gauge/gauge_field/gauge_field_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 7
+deep_causality_num_complex/tests/complex/quaternion_number/ops_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-5,8,10-965
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6-7,9
+deep_causality_multivector/src/alias/alias_hilbert_state.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 6-8
+deep_causality_physics/src/theories/general_relativity/adm_state.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7
+deep_causality_topology/src/types/gauge/gauge_field_lattice/ops_gradient_flow.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 13
+  s_543ee5cdecd2c1::t_743bfc851cef0d 12
+deep_causality_topology/src/types/cubical_regge_geometry/curvature.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 39-40
+deep_causality/deep_causality_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_physics/tests/kernels/condensed/phase_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_inverse/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 6
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+deep_causality_num_complex/tests/complex/complex_number/complex_impl_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 8-10
+  s_543ee5cdecd2c1::t_68037816b32b06 1-7,11-201
+deep_causality_num_complex/tests/complex/quaternion_number/neg_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-13
+deep_causality_physics/src/kernels/hypersonic/ionization.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 14-15
+deep_causality_physics/src/kernels/nuclear/lund/kinematics.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 23-24
+deep_causality_num_complex/tests/complex/quaternion_number/quaternion_number_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6,8
+  s_543ee5cdecd2c1::t_68037816b32b06 1-5,7,9-85
+deep_causality_num_dual/README.md
+  s_543ee5cdecd2c1::t_78fff77c2cc3ad 1-51
+deep_causality_ast/deep_causality_ast_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_tensor/deep_causality_tensor_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_algebra/tests/iso/group_iso_tests.rs
+  s_543ee5cdecd2c1::t_24213aecc2fe0d 10-11,16,19,27,57,60,63,67-68,73,79-81,85-88,93-94,97-99,101,131,134,137,141-142,147,149,156-157
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-9,12-15,17-18,20-23,25-26,28-56,58-59,61-62,64-66,69-72,74-78,82-84,89-92,95-96,100,102-130,132-133,135-136,138-140,143-146,148,150-155,158
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 24
+deep_causality_topology/tests/types/manifold/wedge_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 23
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 22
+deep_causality_topology/src/types/gauge/gauge_field_lattice/ops_gauge_transform.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 12
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 13
+deep_causality_topology/Cargo.toml
+  s_543ee5cdecd2c1::t_d47a957bcb122b 46-55
+deep_causality_physics/src/kernels/quantum/gates.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 8
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6
+deep_causality_discovery/BUILD.bazel
+  s_543ee5cdecd2c1::t_cf387d6435c18d 17
+deep_causality_topology/src/types/gauge/link_variable/mod.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 14,280
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 15
+deep_causality_topology/src/types/chain/algebra/group.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 7
+deep_causality_num_complex/tests/complex/octonion_number/octonion_number_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-5,9-117
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6-8
+deep_causality_num_dual/tests/algebra_impls/mod.rs
+  s_543ee5cdecd2c1::t_e8f6b62e85e126 1-8
+deep_causality_cfd/src/solvers/dec/mod.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 43
+  s_543ee5cdecd2c1::t_cd0fc1c004958a 42
+deep_causality_sparse/src/solver/cg.rs
+  s_543ee5cdecd2c1::t_58f1cb6bbc66df 22-23
+deep_causality_physics/src/kernels/materials/wrappers.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 9,11,45
+deep_causality_num_complex/tests/complex/quaternion_number/as_primitive_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-35
+deep_causality_topology/tests/types/gauge/link_variable/link_variable_coverage_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 9
+deep_causality_physics/src/quantities/fluid_dynamics/vorticity_two_form.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 8
+deep_causality_topology/src/types/hodge_decomposition/mod.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 35
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/construct/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 12
+deep_causality_physics/src/theories/weak_force/weak_field_ops.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 11-12
+deep_causality_topology/src/types/gauge/link_variable/random.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 6,28
+deep_causality_topology/tests/extensions/hkt_lattice_gauge_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 20
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 15
+deep_causality_topology/src/types/simplicial_complex/lazy_hodge_star.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 22-23
+deep_causality_algorithms/src/causal_discovery/surd/surd_utils/mod.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 5
+deep_causality_physics/src/kernels/condensed/moire.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 8-9
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 10
+deep_causality_physics/src/utils_tests/mod.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 15-16
+deep_causality_tensor/src/types/causal_tensor_network/truncation/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 7
+deep_causality_physics/src/kernels/condensed/qgt.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 10
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 11
+deep_causality_physics/tests/kernels/condensed/qgt_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 6
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_tests.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 6
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_algo.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 40-41
+deep_causality_physics/src/kernels/mhd/plasma.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 10,12
+deep_causality_physics/src/kernels/relativity/gravity.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7-8
+deep_causality_calculus/src/extensions/differentiate_ext.rs
+  s_543ee5cdecd2c1::t_c197413d6fd85f 7
+deep_causality_topology/src/extensions/hkt_gauge/hkt_gauge_witness.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 6-7,567
+deep_causality_topology/tests/types/manifold/de_rham_tests.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 17
+  s_543ee5cdecd2c1::t_743bfc851cef0d 18
+deep_causality_physics/src/kernels/fluids/ideal_flow.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 18-19
+deep_causality_tensor/src/types/causal_tensor/algebra/group.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 7
+deep_causality_tensor/Cargo.toml
+  s_543ee5cdecd2c1::t_5d49c7995f72ef 38-49
+deep_causality_algorithms/src/dag_sampling/sample.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 71-72
+examples/quantum_examples/ikkt_matrix_model/main.rs
+  s_543ee5cdecd2c1::t_7e12ee66ceb22e 20,22
+deep_causality_physics/src/kernels/hypersonic/thermochemistry.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 14-15
+deep_causality_physics/src/constants/mod.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 33-34
+deep_causality_num_complex/tests/complex/complex_number/identity_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-6,8-23
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+deep_causality_topology/src/types/cut_cell/primitive.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 9
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_product/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 6
+deep_causality_topology/deep_causality_topology_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,46-47,51-52,55-56,61,67-68,71-72,76-77,80-81,86,90,93-94,122-147,158-159,164,170-171,174-175,179,183-189,192-193,198,204-205,208-209,214,220-248,267-277,282,288-289,292-293,297-316,337-346,352-356,363,365,373,375,378,380,383,385,388,390,393,398,400,403,405-410,415,418-423,428,430,433,435,438-443,448,450,458,460,463,465,468,473,475,478,480,483,485,488,492-496,500,503,505-510,515-520,528-543,547-551,558,560,563,565,568,570,573,578,583,585,588,590-605
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_cross_complex_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 10
+  s_543ee5cdecd2c1::t_4e04739ed068e0 9,11
+deep_causality_calculus/tests/types/rk4_tests.rs
+  s_543ee5cdecd2c1::t_f9a3f813a5fb20 7
+deep_causality_multivector/src/types/multifield/ops/grades.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 12
+deep_causality_topology/BUILD.bazel
+  s_543ee5cdecd2c1::t_f8d4b1d73a42f2 14,20
+deep_causality_topology/src/utils/cg_solver.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 15-16
+deep_causality_sparse/BUILD.bazel
+  s_543ee5cdecd2c1::t_051fbd76ac4498 19
+deep_causality_uncertain/Cargo.toml
+  s_543ee5cdecd2c1::t_e3f8e8b08ac032 38-41
+ultragraph/ultragraph_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_uncertain/src/types/uncertain/uncertain_op_arithmetic.rs
+  s_543ee5cdecd2c1::t_fa626c931ef30e 7
+deep_causality_physics/src/quantities/fluid_dynamics/solenoidal_field.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 27-28
+deep_causality_topology/src/types/neighborhood/von_neumann.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 35
+deep_causality_physics/src/kernels/mhd/resistive.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 9-10
+deep_causality_physics/src/quantities/dimensionless/mod.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 10
+deep_causality_topology/src/types/gauge/gauge_field/display.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 8-10
+deep_causality_multivector/src/types/multifield/algebra/mod.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 25
+deep_causality_sparse/src/extensions/ext_iso.rs
+  s_543ee5cdecd2c1::t_58f1cb6bbc66df 44
+deep_causality_algebra/tests/iso/witness/group_iso_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-29
+deep_causality_algebra/deep_causality_algebra_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1-87
+deep_causality_cfd/src/types/cfd_scalar.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 8
+  s_543ee5cdecd2c1::t_5f807a8e299cbd 7
+deep_causality_multivector/src/extensions/scalar_eval/mod.rs
+  s_543ee5cdecd2c1::t_428458fe823204 9
+  s_543ee5cdecd2c1::t_abb8b7d6d2cb4a 6
+deep_causality_metric/deep_causality_metric_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17
+deep_causality_topology/src/types/neighborhood/k_ring.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 33
+deep_causality_physics/src/kernels/fluids/dimensionless.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 21
+deep_causality_algebra/src/algebra/group_abelian.rs
+  s_543ee5cdecd2c1::t_d485e71223afc0 30
+deep_causality_algorithms/BUILD.bazel
+  s_543ee5cdecd2c1::t_d8e3dec667a359 18
+deep_causality_discovery/Cargo.toml
+  s_543ee5cdecd2c1::t_d5ac850e89831d 28-31
+deep_causality_num_complex/tests/complex/complex_number/display_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-36
+deep_causality_multivector/deep_causality_multivector_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,30-31,35-36,39-40,44-45,64-65,69-70,82-83,87-106,116-124,129-139,144-146,149-154,159,164,169,171,174,181-191,196-215,219-226
+deep_causality_topology/src/types/manifold/differential/codifferential.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 9-10
+deep_causality_topology/src/types/neighborhood/mod.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 43,59,78,97
+deep_causality_num_complex/tests/complex/quaternion_number/constructors_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-64
+deep_causality_multivector/src/types/multifield/ops/products.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 17
+deep_causality_num_complex/src/complex/quaternion_number/algebra.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-83
+deep_causality_physics/src/quantities/thermodynamics/mod.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7
+deep_causality_topology/src/types/neighborhood/moore.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 46
+deep_causality_num_dual/tests/dual/dual_number/real_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6-7
+  s_543ee5cdecd2c1::t_3c56ceee36cf72 1-5,8-167
+deep_causality_num_complex/src/complex/complex_number/mod.rs
+  s_543ee5cdecd2c1::t_7997c7987b70ad 11-14
+  s_543ee5cdecd2c1::t_68037816b32b06 36
+deep_causality_physics/src/kernels/nuclear/physics.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 9-10
+deep_causality_physics/src/kernels/nuclear/wrappers.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 9,11
+deep_causality_sparse/src/types/sparse_matrix/arithmetic/mod.rs
+  s_543ee5cdecd2c1::t_58f1cb6bbc66df 7
+deep_causality_sparse/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_255abce1d1e399 68
+deep_causality_num_complex/tests/complex/complex_number/arithmetic_assign_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 5-6
+  s_543ee5cdecd2c1::t_68037816b32b06 1-4,7-106
+deep_causality_physics/src/theories/electroweak/radiative.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 8
+deep_causality_algebra/tests/algebra/real_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-14,16-80
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 15
+build/scripts/sbom.sh
+  s_543ee5cdecd2c1::t_e70b0dfba93b41 12
+  s_543ee5cdecd2c1::t_21683fef81d515 28-29
+deep_causality_cfd/deep_causality_cfd_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_num_complex/tests/complex/quaternion_number/display_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-17
+deep_causality_tensor/src/traits/tensor_train.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 8
+deep_causality_physics/src/kernels/fluids/compressible.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 20-21
+deep_causality_topology/src/types/topology/ops/cup_product.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 9-10
+deep_causality_num_complex/tests/complex/complex_number/arithmetic_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-5,8-128
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6-7
+deep_causality_num_complex/tests/complex/complex_number/to_primitive_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+  s_543ee5cdecd2c1::t_68037816b32b06 1-6,8-188
+deep_causality_physics/src/kernels/mhd/grmhd.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 9-10
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train_operator/getters/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 9
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/round_rand/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 20
+deep_causality_num_complex/tests/complex/octonion_number/arithmetic_assign_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-89
+deep_causality_num_complex/tests/mod.rs
+  s_543ee5cdecd2c1::t_d840561f208130 1-6
+deep_causality_calculus/Cargo.toml
+  s_543ee5cdecd2c1::t_8e7adfa4678484 30
+  s_543ee5cdecd2c1::t_dadd8202ca1ec9 43-50
+examples/avionics_examples/Cargo.toml
+  s_543ee5cdecd2c1::t_c78a28c7908bf8 62
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_boss_search.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 23-24
+examples/quantum_examples/Cargo.toml
+  s_543ee5cdecd2c1::t_6c811afc86081b 17-18
+deep_causality_algebra/tests/iso/witness/algebra_iso_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-29
+deep_causality_physics/src/kernels/materials/mechanics.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7-8,127
+deep_causality_num_complex/deep_causality_num_complex_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1-106
+deep_causality_physics/src/kernels/quantum/wrappers.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 13
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 9
+deep_causality_num_complex/tests/complex/complex_number/from_primitives_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-6,8-135
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+deep_causality_topology/tests/types/gauge/gauge_field_lattice/lattice_coverage_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 12
+deep_causality_physics/src/kernels/fluids/wrappers.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 16,18
+deep_causality_rand/src/extensions/distribution/dist_float_106.rs
+  s_543ee5cdecd2c1::t_cee23ec77130ab 16-17
+deep_causality_topology/src/types/manifold/api/covariance.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 8-9
+deep_causality_physics/src/kernels/fluids/governing.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 24-25
+deep_causality_calculus/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_d2b938059e4b1e 54,57
+  s_543ee5cdecd2c1::t_2c47028955eff9 35
+  s_543ee5cdecd2c1::t_587f45c7ca0470 18
+deep_causality_file/src/types/clock_types.rs
+  s_543ee5cdecd2c1::t_62d362d06d4b7f 8
+deep_causality_topology/src/types/cubical_regge_geometry/mod.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 89
+deep_causality_num_dual/tests/dual/dual_number/default_tests.rs
+  s_543ee5cdecd2c1::t_3c56ceee36cf72 1-5,8-42
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6-7
+deep_causality_multivector/src/types/multivector/arithmetic/mod.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 7-8
+deep_causality_sparse/src/types/sparse_matrix/identity/mod.rs
+  s_543ee5cdecd2c1::t_58f1cb6bbc66df 7-8
+deep_causality_discovery/src/traits/precision.rs
+  s_543ee5cdecd2c1::t_07608f7f18c5c7 6-7
+deep_causality_num_complex/tests/complex/quaternion_number/arithmetic_assign_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-67
+deep_causality_tensor/src/types/causal_tensor/algebra/module.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 7
+deep_causality_algorithms/src/dag_sampling/mod.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 77-78
+deep_causality_uncertain/src/types/computation/operator/arithmetic_operator.rs
+  s_543ee5cdecd2c1::t_3194c5865277de 6
+deep_causality_discovery/deep_causality_discovery_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality/deep_causality_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,29-53,71-72,77,81-85,88-89,91,94-95,98-99,104,108-111,114-115,119-120,139-145,148-149,153-154,157-158,162-163,166-167,171-172,175-176,178,181-182,185-186,190-191,194-195,199-200,205,207,210,215,217,220,222,225,227,230,232,235-237,240,242,245,247,250,252,260,262,265,267,270,272-277,285-290,295,297,300,302-307
+examples/avionics_examples/cfd/turbulence_flow/model.rs
+  s_543ee5cdecd2c1::t_ac09691c8954cc 19,21
+deep_causality_physics/src/kernels/hypersonic/shock.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 11-12
+deep_causality_file/Cargo.toml
+  s_543ee5cdecd2c1::t_62d362d06d4b7f 37-40
+deep_causality_num_complex/tests/algebra_impls/iso_division_algebra_tests.rs
+  s_543ee5cdecd2c1::t_e25d3ce9ee2bd3 1-78
+deep_causality_tensor/tests/types/causal_tensor_network/op_tensor_svd_truncated_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+  s_543ee5cdecd2c1::t_4e04739ed068e0 6
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_operator_complex_tests.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 9,11
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 10
+deep_causality_topology/src/types/gauge/gauge_field_lattice/utils.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 6-7
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 8
+deep_causality_algebra/tests/iso/witness/iso_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-88
+deep_causality_ethos/deep_causality_ethos_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_cfd/tests/solvers/dec/dec_ns_rate_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 12
+  s_543ee5cdecd2c1::t_03f6fd716f24e6 18
+deep_causality_cfd/src/solvers/dec/spectral_diffusion.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 29
+  s_543ee5cdecd2c1::t_5841d88267cdcc 31-32
+deep_causality_calculus/src/types/diff_arrow.rs
+  s_543ee5cdecd2c1::t_d8798febf2df2b 7
+deep_causality_topology/src/types/gauge/gauge_field_lattice/mod.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 39
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 40
+deep_causality_topology/tests/types/manifold/leray_tests.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 17
+  s_543ee5cdecd2c1::t_743bfc851cef0d 18
+deep_causality_uncertain/src/types/uncertain/uncertain_statistics.rs
+  s_543ee5cdecd2c1::t_9f5ca370c2e31f 7-8
+deep_causality_algebra/src/utils_tests/utils_iso_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-308
+deep_causality_topology/src/types/gauge/gauge_field_lattice/ops_continuum.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 12
+  s_543ee5cdecd2c1::t_743bfc851cef0d 11
+deep_causality_num_complex/src/complex/complex_number/conjugate_scalar.rs
+  s_543ee5cdecd2c1::t_5dd3177ef3a44d 8
+  s_543ee5cdecd2c1::t_b04d75d6705095 1-7,9-30
+deep_causality_tensor/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_987dd3918df737 53,56-57
+  s_543ee5cdecd2c1::t_a90689bfd40e45 33
+deep_causality_topology/src/types/gauge/gauge_field_lattice/ops_metropolis.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 14
+  s_543ee5cdecd2c1::t_743bfc851cef0d 13
+deep_causality_topology/src/types/manifold/display/mod.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 14
+deep_causality_physics/src/quantities/fluids/mod.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 10,12,18,40,48,50,56,78,86,88,94,116,124,126,132,154,162,164,170,187,196,198,204,226,241,243,249,269,277,279,285,305,313,315,321,341,349,351,357,377,389,405,407,413,433,444,446,452,477,487,489,495,526,534,536,542,567,577,579,585,610,623,625,631,656
+examples/mathematics_examples/composable_multi_math/effect_tensor_algebra_roundtrip/main.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 21
+  s_543ee5cdecd2c1::t_5d347b1da88d28 25
+deep_causality_algebra/tests/algebra/field_real_f32_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-162
+deep_causality_algebra/tests/algebra/monoid_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 11
+  s_543ee5cdecd2c1::t_c89ea135de8ae6 15-16
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-10,12-14,17-32
+deep_causality_num_dual/tests/algebra_impls/conjugate_scalar_tests.rs
+  s_543ee5cdecd2c1::t_9743328bb1da62 1-26
+deep_causality_cfd/tests/solvers/dec/dec_ns_solver/dec_ns_solver_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 9
+  s_543ee5cdecd2c1::t_5d6b75c4dba3a9 11
+deep_causality_physics/src/kernels/fluids/turbulence.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 23-24
+deep_causality_multivector/tests/traits/l2_norm_tests.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 7
+deep_causality_physics/tests/quantities/condensed_quantities/order_parameter_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 6
+deep_causality_num_dual/tests/dual/dual_number/arithmetic_tests.rs
+  s_543ee5cdecd2c1::t_3c56ceee36cf72 1-96
+deep_causality_num_complex/tests/complex/octonion_number/multiplication_bug_repro_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-72
+deep_causality_num_complex/tests/complex/octonion_number/to_primitive_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+  s_543ee5cdecd2c1::t_68037816b32b06 1-6,8-188
+deep_causality_num_dual/LICENSE
+  s_543ee5cdecd2c1::t_1504d57e59061a 1-23
+deep_causality_physics/src/constants/condensed.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 8-9
+deep_causality_num_complex/tests/algebra_impls/normed_scalar_tests.rs
+  s_543ee5cdecd2c1::t_e73f2c5198ecbb 1-34
+deep_causality_topology/src/types/manifold/topology/topology_base.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 8
+deep_causality_multivector/tests/alias/alias_complex_tests.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 7
+deep_causality_topology/src/types/lattice_complex/mod.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 15
+deep_causality_physics/src/kernels/quantum/mechanics.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 10-11,16
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 15
+deep_causality_topology/src/extensions/iso_de_rham/mod.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 23,25
+  s_543ee5cdecd2c1::t_743bfc851cef0d 11,24
+deep_causality_topology/src/types/gauge/gauge_field/mod.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 14
+deep_causality_num_complex/README.md
+  s_543ee5cdecd2c1::t_90ebc8ac494e0e 1-50
+deep_causality_physics/src/theories/general_relativity/gr_ops_impl.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 16
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 19,28
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_reduction/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 7
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 8
+examples/mathematics_examples/topology/lattice_gauge_simulation.rs
+  s_543ee5cdecd2c1::t_b555be70b27c07 23
+deep_causality_algebra/tests/mod.rs
+  s_543ee5cdecd2c1::t_087d51627b1d0d 1-7
+deep_causality_file/src/types/loaders/read_trace.rs
+  s_543ee5cdecd2c1::t_62d362d06d4b7f 17
+deep_causality_file/deep_causality_file_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_num_complex/tests/complex/quaternion_number/from_primitives_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-103
+deep_causality_multivector/Cargo.toml
+  s_543ee5cdecd2c1::t_c2459cd319630a 36-43
+deep_causality_calculus/BUILD.bazel
+  s_543ee5cdecd2c1::t_9ae62e6f757444 18,21
+deep_causality_fft/tests/types/fft_plan_nd/fft_plan_nd_tests.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 7
+deep_causality_topology/src/types/manifold/differential/laplacian.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 11-12
+examples/avionics_examples/src/shared/world.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 21
+deep_causality_rand/BUILD.bazel
+  s_543ee5cdecd2c1::t_a6af6f6e80535f 14
+deep_causality_haft/deep_causality_haft_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_physics/tests/kernels/quantum/gates_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7
+deep_causality_physics/src/kernels/chronometric/forward_clock.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 17-18
+deep_causality_calculus/tests/ops/quadrature_tests.rs
+  s_543ee5cdecd2c1::t_2ba8315028000c 6,8
+deep_causality_tensor/tests/types/causal_tensor/op_tensor_inverse_tests.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 5
+deep_causality_num_dual/src/lib.rs
+  s_543ee5cdecd2c1::t_6909a2a187844d 1-10,12-18
+  s_543ee5cdecd2c1::t_4a7cd213c1b863 11
+deep_causality_physics/tests/kernels/quantum/wrappers_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7
+deep_causality_algebra/src/iso/witness/mod.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-57
+examples/avionics_examples/cfd/flight_envelope_placard/model.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 13
+deep_causality_num_complex/tests/complex/complex_number/neg_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-13
+deep_causality_physics/src/quantities/fluid_dynamics/velocity_one_form.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 8
+deep_causality_cfd/src/navigation/reentry_nav.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 26
+  s_543ee5cdecd2c1::t_71890707289105 25
+deep_causality_algorithms/deep_causality_algorithms_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,30-47,51-52,55-56,61,67-68,71-72,77,83-84,87-88,92-93,105-115,120,126-127,130-131,135-136,139-140,142,145-146,149-150,154-155,158-159,163-180,192-193,197-198,201-202,207,211-214,217-219,222-223,226-227,232,236-240,243-244,249,253,256-257,260-261,265-266,269-270,274-275,278-279,284,288,291-292,295-296,301,305,308-309,312-313,317-318,321-322,327,333-343,348,350,353,355-360,368,370,373,378,380,383,387-391,395-410,418,420,425,428,430,433-438,443,445,448-458,468,470,473,475,480,483,485,488-495,500-519,528,530,533,535,538,543,545,550,553-555,558,560,567-571,575,578,580-585,590,593-603,608,610,613,615,618,620,623,628,633,635,638,640,643,645-650
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_config.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 10-11
+deep_causality_tensor/tests/types/causal_tensor_network/op_tensor_qr_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+  s_543ee5cdecd2c1::t_4e04739ed068e0 6
+deep_causality_physics/src/theories/weak_force/weak_field_ops_impl.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 10,12
+deep_causality_topology/src/types/topological_invariants/getters.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 7
+deep_causality_file/src/types/loaders/read_gnss.rs
+  s_543ee5cdecd2c1::t_62d362d06d4b7f 12
+deep_causality_num_complex/tests/complex/octonion_number/part_ord_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-45
+deep_causality_physics/tests/quantities/solenoidal_field/divergence_free_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 6-7
+deep_causality_topology/src/types/cut_cell/registry.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 15
+deep_causality_physics/src/kernels/fluids/mechanics.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7-8
+deep_causality_topology/tests/extensions/iso_de_rham_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 12
+deep_causality_tensor/src/types/causal_tensor/api/mod.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 9
+  s_543ee5cdecd2c1::t_4e04739ed068e0 8
+deep_causality_topology/src/types/hodge_decomposition/getters.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 6
+deep_causality_physics/src/kernels/photonics/polarization.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 9
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7-8
+deep_causality_algebra/tests/float106/double_traits_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-7,11-314
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 8-10
+deep_causality_num_complex/tests/complex/complex_number/debug_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-21
+deep_causality_algebra/tests/iso/algebra_iso_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-39
+deep_causality_physics/src/kernels/hypersonic/finite_rate.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 37-38
+deep_causality_physics/src/kernels/waves/wrappers.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 9,11
+deep_causality_physics/src/quantities/relativity/mod.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 10,12,18,30,36
+deep_causality_topology/src/types/hodge_decomposition/part_eq.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 7
+deep_causality_num_complex/LICENSE
+  s_543ee5cdecd2c1::t_1504d57e59061a 1-23
+deep_causality_physics/src/quantities/fluid_dynamics/body_force_one_form.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 8
+deep_causality_topology/src/types/manifold/covariance/mod.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 9-10
+deep_causality_physics/src/theories/electroweak/electroweak_impl.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 9
+deep_causality_topology/tests/types/gauge/gauge_field_lattice/gradient_flow_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 6
+deep_causality_tensor/src/types/causal_tensor/algebra/ring.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 7
+deep_causality_tensor/tests/types/causal_tensor_network/conjugate_scalar_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+  s_543ee5cdecd2c1::t_4e04739ed068e0 6,8-9
+deep_causality_num_complex/src/complex/octonion_number/identity.rs
+  s_543ee5cdecd2c1::t_1fadc0f9700131 8
+  s_543ee5cdecd2c1::t_68037816b32b06 19-163
+deep_causality_physics/src/constants/universal.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 12-13
+deep_causality_cfd/BUILD.bazel
+  s_543ee5cdecd2c1::t_07dd8fec97c896 17,26-27
+deep_causality_multivector/src/types/multifield/ops/conversions.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 14
+examples/physics_examples/Cargo.toml
+  s_543ee5cdecd2c1::t_30bd7f4b169974 25-27
+deep_causality_physics/src/kernels/em/wrappers.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 12
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 9
+deep_causality_cfd/tests/solvers/dec/dec_ns_solver/seed_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 10
+  s_543ee5cdecd2c1::t_ef0fb153915334 12
+deep_causality_topology/src/extensions/hkt_gauge/hkt_curvature.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 47,49
+deep_causality_physics/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_77171ce5b30a21 80
+  s_543ee5cdecd2c1::t_6da374406be68c 459-460
+  s_543ee5cdecd2c1::t_9e52e663f43304 262
+  s_543ee5cdecd2c1::t_f5294a838a5e7a 309
+  s_543ee5cdecd2c1::t_193bd74ded54aa 285
+  s_543ee5cdecd2c1::t_45687bf400b2db 105-106
+deep_causality_algebra/tests/iso/witness/standard_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-157
+deep_causality_num_complex/tests/complex/quaternion_number/arithmetic_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-124
+deep_causality_rand/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_58006548d86478 32
+deep_causality_rand/deep_causality_rand_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,46-56,61,67-68,71-81,86,90-93,105-106,111,115-119,122-123,128,134-135,139-148,155-157,160,162,165-170,175,177,180
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_canonical_tests.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 6
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+deep_causality_cfd/tests/solvers/dec/dec_ns_solver/run_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 9
+  s_543ee5cdecd2c1::t_e4dc94da424a09 11
+examples/mathematics_examples/composable_multi_math/effect_kalman_predict_correct/main.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 21
+deep_causality_multivector/src/traits/l2_norm.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 6
+deep_causality_num_complex/tests/complex/quaternion_number/algebra_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-5,7,9-131
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6,8
+deep_causality_physics/src/theories/general_relativity/gr_ops.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 15-16
+deep_causality_cfd/tests/solvers/dec/dec_ns_solver/step_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 10
+  s_543ee5cdecd2c1::t_7c0ce8b86120b3 12
+deep_causality_topology/src/types/gauge/gauge_field_lattice/display.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 8-14
+deep_causality_num/deep_causality_num_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_svd/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 6
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_cross_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+  s_543ee5cdecd2c1::t_4e04739ed068e0 6
+deep_causality_num_complex/tests/complex/complex_number/complex_field_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 8
+  s_543ee5cdecd2c1::t_68037816b32b06 1-7,9-301
+deep_causality_topology/src/types/cubical_regge_geometry/graded.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 23-24
+deep_causality_fft/Cargo.toml
+  s_543ee5cdecd2c1::t_8a528933e83ba8 28-32
+  s_543ee5cdecd2c1::t_a20bfaa8829f10 45-54
+deep_causality_topology/src/errors/light_cone_violation.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 21
+  s_543ee5cdecd2c1::t_9b60214f1d2217 20
+deep_causality_num_complex/src/utils_tests/mod.rs
+  s_543ee5cdecd2c1::t_e7905f61fe99b7 1-6
+deep_causality_num_complex/tests/complex/quaternion_number/debug_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-13
+deep_causality_cfd/deep_causality_cfd_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,30-31,36,40,43-44,47-48,53,59-60,63-64,69,73-76,79-80,85,91-92,95-96,100-101,104-117,120-121,125-126,129-143,146-160,163-176,179-180,184-185,188-201,221-222,226-227,230-231,236,240,243-244,247-248,253,257-260,263-264,269,273-276,279-280,285,289,292-293,296-297,302,306,309-310,313-314,318-319,322-340,344-1190,1193-1195,1198-1201,1205,1208,1210,1213,1215,1218,1223,1225,1228,1230,1233,1235-1240,1245-1255,1263,1265,1268,1270,1273,1275,1278,1280,1283,1285-1290,1295,1298,1300-1310,1318-1320,1323,1325,1328,1330,1335,1338,1340,1343,1345,1348,1350,1353,1358,1360,1363,1365,1368,1370,1373,1375,1378,1383,1385,1388,1390-1395,1400,1403,1405,1408,1410,1413,1415,1418,1420,1423,1425,1428,1430,1433,1435,1438,1440,1443,1445,1448,1450,1453,1458,1460,1463,1465,1468,1470,1473,1475,1478,1483,1485,1488,1490,1493-1495,1498,1500-1515,1523-1528,1530,1533,1535,1538,1540,1543,1545,1548,1550,1553,1555,1558,1560,1563,1568,1570,1573-1583,1588,1590-1595
+deep_causality_algebra/README.md
+  s_543ee5cdecd2c1::t_80b73276bcaaea 42-48
+  s_543ee5cdecd2c1::t_c958cc9f933c91 1-41,49-60
+deep_causality_multivector/tests/alias/alias_hopf_state_tests.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 6
+deep_causality_num_dual/tests/dual/dual_number/convert_tests.rs
+  s_543ee5cdecd2c1::t_3c56ceee36cf72 1-32
+examples/mathematics_examples/composable_multi_math/capstone_spinor_minkowski/main.rs
+  s_543ee5cdecd2c1::t_26224d5f4dc8a0 33
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 29
+deep_causality_num_complex/tests/complex/quaternion_number/part_ord_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-39
+deep_causality_physics/src/kernels/dynamics/estimation.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 8
+deep_causality_topology/src/types/manifold/utils/utils_manifold.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 12,46,93,110
+deep_causality_haft/deep_causality_haft_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17
+deep_causality_num/README.md
+  s_543ee5cdecd2c1::t_06e0348177f1c4 36,41-42,44-47,51
+  s_543ee5cdecd2c1::t_8a8fb139c7245a 63-64,67-68
+  s_543ee5cdecd2c1::t_20b66cca16c5b6 69
+deep_causality_par/deep_causality_par_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_physics/src/theories/general_relativity/gr_utils.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 6-7
+deep_causality_sparse/deep_causality_sparse_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_cfd/tests/solvers/dec/wrappers_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 9
+  s_543ee5cdecd2c1::t_f864ee81d5715f 11
+deep_causality_multivector/src/extensions/scalar_multivector/mod.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 14
+deep_causality_multivector/src/types/multivector/ops/ops_misc_impl.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 7
+deep_causality_num_complex/tests/complex/quaternion_number/identity_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+  s_543ee5cdecd2c1::t_68037816b32b06 1-6,8-47
+deep_causality_multivector/src/traits/multi_vector.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 10
+deep_causality_physics/deep_causality_physics_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,30-31,36,40,43-44,47-48,52-53,56-57,62,66-70,73-74,78-88,107-108,112-113,116-126,131,137-165,177-178,183,189-190,193-210,214-224,236-237,241-242,245-246,250-251,254-264,269,273-276,279-280,285,291-292,295-296,301,307-308,311-312,317,321,324-325,328-329,334,338,341-342,345-346,350-372,375-377,380-382,385-388,390-395,400,402,410,415,417-432,437,440,442,445-450,455,457,460,462,465,467,470,472,475,477,482,485-490,495,497,500,502,507,510,512,515,517,525,527,530,532,535,537,540,545,547,550,555,557,560,562,565,567,570,580,582,585-587,590,592,595,597,600,602,605,607,610,612,615,617,620,625,630,635,637,640,642,647-667,680,682,685,687-707,714-718,722-727
+deep_causality_topology/src/extensions/hkt_lattice_complex/mod.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 7
+deep_causality_num/tests/integer/integer_tests.rs
+  s_543ee5cdecd2c1::t_64ad6b05fec814 147
+  s_543ee5cdecd2c1::t_ecc790670df81b 6
+deep_causality_topology/src/types/regge_geometry/mod.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 6,8
+  s_543ee5cdecd2c1::t_743bfc851cef0d 288
+deep_causality_tensor/BUILD.bazel
+  s_543ee5cdecd2c1::t_e153a824ff1584 14,18-19
+deep_causality_algebra/tests/iso/witness/test_support_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-39
+deep_causality_physics/src/kernels/fluids/coherent_structures.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 30-31
+deep_causality_physics/src/quantities/materials/mod.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_boss_learn.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 26-27
+deep_causality_num_complex/src/lib.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 12,15-18
+  s_543ee5cdecd2c1::t_dd2dbf3c56b922 1-11,13-14,19-26
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_solve_complex_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 11
+  s_543ee5cdecd2c1::t_4e04739ed068e0 10,12
+deep_causality_physics/src/kernels/relativity/wrappers.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 14
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 11
+deep_causality_physics/src/kernels/fluids/kinematics.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 17-18
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_operator_tests.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 8
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6
+deep_causality_cfd/src/types/flow/coupled_march.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 30
+  s_543ee5cdecd2c1::t_f6228e3cd9d0e0 29
+deep_causality_physics/src/quantities/em/mod.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6
+deep_causality_topology/src/types/manifold/differential/de_rham.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 32-33
+examples/physics_examples/gauge_gr/main.rs
+  s_543ee5cdecd2c1::t_67df9151a32a59 17-18
+deep_causality_physics/tests/quantities/photonics_quantities/jones_vector_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 6
+deep_causality_topology/tests/types/manifold/interior_product_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 23
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 22
+deep_causality_physics/src/quantities/mhd/mod.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 11,13,19,43,52,54,60,82,91,93,99,121,130,132,154,162,171,173,195,203,212,214,236,244,253,255,277,285,294,296,302,324
+deep_causality_topology/src/types/cut_cell/intersection.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 20-21
+deep_causality_physics/src/kernels/photonics/beam.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 9
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 10
+deep_causality_tensor/src/types/causal_tensor_network/rng/mod.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 24
+  s_543ee5cdecd2c1::t_4e04739ed068e0 23
+deep_causality_sparse/src/types/sparse_matrix/algebra/module.rs
+  s_543ee5cdecd2c1::t_58f1cb6bbc66df 7
+deep_causality_num_complex/tests/complex/octonion_number/constructors_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-31
+deep_causality_physics/src/theories/electroweak/electroweak_params.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 11
+examples/quantum_examples/topological_insulator/model.rs
+  s_543ee5cdecd2c1::t_f3eb91ac1e448d 6,8
+deep_causality_fft/src/types/fft_plan_nd/mod.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 12
+deep_causality_algebra/tests/algebra/commutative_semilattice_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-8,12-61
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 9-11
+deep_causality_num_complex/tests/complex/complex_number/ordering_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-148
+ultragraph/ultragraph_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17
+deep_causality_num_complex/tests/complex/complex_number/algebra_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6
+  s_543ee5cdecd2c1::t_68037816b32b06 1-5,7-113
+deep_causality_cfd/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_b7edc2b929c593 86
+deep_causality_physics/src/kernels/thermodynamics/wrappers.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 13-14
+examples/quantum_examples/hopf_fibration_multivector/main.rs
+  s_543ee5cdecd2c1::t_be034fd739ed6f 6
+deep_causality_num_complex/tests/complex/octonion_number/num_cast_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-6,8-25
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+examples/mathematics_examples/algebra/dixon_multivector.rs
+  s_543ee5cdecd2c1::t_4cb9cfc39713f9 7
+deep_causality_physics/src/quantities/dynamics/mod.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 13,15,21,38,46,48,54,71,79,81,87,104,112,114,120,142
+deep_causality_fft/tests/types/dct_plan/dct_plan_tests.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 7-8,104
+deep_causality_rand/src/types/distr/uniform/mod.rs
+  s_543ee5cdecd2c1::t_cee23ec77130ab 11
+deep_causality_fft/src/traits/fft_scalar.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+  s_543ee5cdecd2c1::t_fe94d041580c66 6
+deep_causality_file/src/types/loaders/read_clk.rs
+  s_543ee5cdecd2c1::t_62d362d06d4b7f 10
+deep_causality_topology/src/types/gauge/gauge_field_lattice/ops_monte_carlo.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 12
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 13
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_gaussian.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 33-34
+deep_causality_topology/tests/types/gauge/gauge_field_lattice/lattice_gauge_field_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 11
+deep_causality_physics/src/quantities/hypersonic/mod.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 15,17,23,47,56,58,64,88,96,98,104,126,135,137,143,165,174,176,182,206,216,218,224,248,259,261,267,291,301,303,309,333
+deep_causality_topology/src/types/manifold/differential/hodge_decomposition_impl.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 40-41
+deep_causality_topology/tests/types/cut_cell/intersection_tests.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 11
+  s_543ee5cdecd2c1::t_743bfc851cef0d 12
+deep_causality_physics/tests/quantities/velocity_one_form/velocity_one_form_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 9
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 12
+deep_causality_algebra/src/iso/mod.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-84
+deep_causality_num_dual/tests/mod.rs
+  s_543ee5cdecd2c1::t_a1850edbe7c8d7 1-6
+examples/quantum_examples/gauge_electroweak/main.rs
+  s_543ee5cdecd2c1::t_83afea6fe85355 17,19
+deep_causality_file/deep_causality_file_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,30-31,36,42-102,122-123,128,134-135,138-139,144,148-151,154-155,160,164,167-168,187-188,193,197,200-201,204-205,210,216-217,220-221,226,232-233,236-237,242,248-249,269-270,275,281-282,285-286,291,298,302-303,308,312,315-316,319-320,325,331-332,351-357,360-361,366,370,373-374,377-387,392,398-399,402-403,408,414-415,418-419,424,430-431,434-435,440,446-447,459-460,465,471-472,491-492,497,503-504,507-508,513,519-520,523-524,529,535-536,539-540,545,549-553,556-557,562,566,569-570,573-574,579,583,586-587,597,599,602,604,607-612,614,617,619,622,624,627,629,632,634,637-642,647,649,652,654,657,659,662,664,667,672,674,677,679,682,684,687-689,697,699,707,709,712,719,722,724,727,729,732,734,737,739,742,744,747,749,757,759,762-764,767,769,772-777,782,784,787,789,792,794,802,804,812,814,817,819,822,824,827,829,832,834,837,839,842,844,847,849,852,854,857,859,862,864,867,869,877-879,882,884
+deep_causality_algebra/tests/algebra/verdict_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-53
+deep_causality_physics/tests/kernels/quantum/mechanics_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7
+deep_causality_topology/src/types/manifold/differential/leray.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 23-24
+deep_causality_topology/tests/types/gauge/link_variable/link_variable_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 10
+deep_causality_multivector/src/types/multivector/algebra/mod.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 8
+deep_causality_num_dual/BUILD.bazel
+  s_543ee5cdecd2c1::t_417f8be8fe4076 1-32
+deep_causality_algebra/tests/algebra/scalar_normed_tests.rs
+  s_543ee5cdecd2c1::t_1407a80d7ea535 6-14
+deep_causality_num_complex/BUILD.bazel
+  s_543ee5cdecd2c1::t_c53a129631030d 1-32
+deep_causality_algebra/tests/iso/witness/division_algebra_iso_tests.rs
+  s_543ee5cdecd2c1::t_8c6ddb4e23ca2e 10-17
+  s_543ee5cdecd2c1::t_1e77a416e186e7 7-9
+  s_543ee5cdecd2c1::t_e822c4c79c3f2c 18-20
+  s_543ee5cdecd2c1::t_b7eee2afb8785d 1-6,21-25
+examples/physics_examples/laser_resonator_stability/main.rs
+  s_543ee5cdecd2c1::t_f09c4428bf9699 13,15
+examples/quantum_examples/quantum_counterfactual/main.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 18
+  s_543ee5cdecd2c1::t_fcdc08c587fed3 23
+deep_causality_calculus/deep_causality_calculus_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_sparse/deep_causality_sparse_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,29-46,64-65,69-70,90-98,109-110,114-115,120,124-133,139-168,175,180,185,187,192,195,197,200,203-207
+deep_causality_algebra/src/algebra/normed.rs
+  s_543ee5cdecd2c1::t_476b9afedf1266 6
+deep_causality_multivector/src/types/multivector/api/mod.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 10-11
+deep_causality_topology/src/types/simplicial_complex/getters/mod.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 10-11
+deep_causality_multivector/BUILD.bazel
+  s_543ee5cdecd2c1::t_47e1c5a2a090fa 14,18
+deep_causality_topology/src/types/manifold/api/geometry.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 9-10
+deep_causality_num_complex/tests/complex/quaternion_number/to_primitive_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-6,8-175
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+deep_causality_tensor/src/extensions/ext_math.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 7
+deep_causality_topology/src/types/manifold/differential/utils_differential.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 9
+deep_causality_num_complex/tests/complex/octonion_number/display_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-42
+deep_causality_cfd/src/solvers/dec/uncertain_inflow/uncertain_inflow_zone.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 9
+  s_543ee5cdecd2c1::t_5bfaace3b41ce6 8
+deep_causality_cfd/tests/solvers/dec/dec_ns_solver/pressure_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 10
+  s_543ee5cdecd2c1::t_23b43e441ce709 12
+deep_causality_topology/src/types/manifold/geometry/mod.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 12-13
+deep_causality_num_complex/Cargo.toml
+  s_543ee5cdecd2c1::t_f87a3dcb9ce6f3 1-31
+deep_causality_topology/src/types/chain/algebra/module.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 6
+deep_causality_topology/src/types/topological_invariants/display.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 9
+deep_causality_physics/src/quantities/fluid_dynamics/mod.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 32
+deep_causality_multivector/tests/types/multivector/algebra/algebra_tests.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 6,8-9
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_gate.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 28-29
+deep_causality_sparse/Cargo.toml
+  s_543ee5cdecd2c1::t_d123a9713fd113 28
+  s_543ee5cdecd2c1::t_2d9b6f3e7a32a2 41-45
+deep_causality_num_complex/tests/complex/complex_number/as_primitive_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6-7
+  s_543ee5cdecd2c1::t_68037816b32b06 1-5,8-14
+deep_causality_num_complex/src/complex/octonion_number/neg.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-47
+deep_causality_tensor/tests/extensions/causal_tensor_ext_stats_sweep_tests.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 10
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 11
+deep_causality_algebra/tests/float106/mod.rs
+  s_543ee5cdecd2c1::t_2cd6a9ada63479 1-11
+deep_causality_num_dual/tests/dual/dual_number/dual_number_tests.rs
+  s_543ee5cdecd2c1::t_3c56ceee36cf72 1-6,9-92
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7-8
+deep_causality_physics/src/quantities/chronometric/mod.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7-8
+deep_causality_algorithms/src/dag_sampling/combinatorics.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 22-23
+deep_causality_rand/tests/types/dist/normal/standard_normal_tests.rs
+  s_543ee5cdecd2c1::t_cee23ec77130ab 91-92
+deep_causality_tensor/tests/types/causal_tensor/op_tensor_svd_tests.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 5
+deep_causality_physics/src/kernels/condensed/phase.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 10,12
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 13
+deep_causality_topology/src/types/gauge/gauge_field_lattice/ops_gauge.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 12
+  s_543ee5cdecd2c1::t_743bfc851cef0d 11
+deep_causality_topology/src/types/manifold/constructors/constructors_impl.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 9-10
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/algebra/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 22
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 19-20
+deep_causality_num_complex/src/complex/octonion_number/display.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-81
+deep_causality_file/src/types/loaders/read_sp3.rs
+  s_543ee5cdecd2c1::t_62d362d06d4b7f 10
+deep_causality_algebra/src/lib.rs
+  s_543ee5cdecd2c1::t_cd465bb31de36c 1-57
+deep_causality_physics/src/quantities/condensed/mod.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 9,23,25,31,41,54,56,62,71,82,84,90,99,109,111,117,126,136,138,144,161,171,173,179,196,206,208,214,223,236,247,249,271,273,288,290,303,305,311,324,326,340,342,368,370,383,385,391
+deep_causality_topology/src/types/manifold/differential/wedge.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 43
+deep_causality_algebra/tests/iso/witness/field_iso_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-29
+deep_causality_multivector/tests/alias/alias_hilbert_state_tests.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 7
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_dirichlet.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 24-25
+deep_causality_fft/benches/fft_benchmark.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 15
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train_operator/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 14
+deep_causality_topology/src/types/manifold/differential/spectral_poisson.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 36,38-39
+deep_causality_num_dual/src/dual/dual_number/mod.rs
+  s_543ee5cdecd2c1::t_3c56ceee36cf72 37
+  s_543ee5cdecd2c1::t_d4519ded9b304a 10
+  s_543ee5cdecd2c1::t_31ff36f55edb31 31
+deep_causality_uncertain/deep_causality_uncertain_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_physics/BUILD.bazel
+  s_543ee5cdecd2c1::t_e753634b9474c5 18,26-27
+deep_causality_cfd/tests/solvers/dec/taylor_green_2d_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 21
+  s_543ee5cdecd2c1::t_5cb88037158e2b 23
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/api/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 14
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 15
+deep_causality_fft/src/types/rfft_plan_nd/mod.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 11
+deep_causality_physics/tests/kernels/photonics/wrappers_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 6
+deep_causality_fft/src/types/fft_plan/bluestein.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 15
+deep_causality_num_dual/src/dual/dual_number/conjugate_scalar.rs
+  s_543ee5cdecd2c1::t_1b3900a29a3618 1-30
+deep_causality_topology/tests/types/gauge/gauge_field_lattice/continuum_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 6
+deep_causality_physics/src/kernels/astro/two_body.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 28-29
+deep_causality_data_structures/deep_causality_data_structures_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17
+deep_causality_fft/src/utils/complex_ops.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 10
+deep_causality_num/src/integer/mod.rs
+  s_543ee5cdecd2c1::t_5f70da775696e5 27
+  s_543ee5cdecd2c1::t_9bb03788be397a 39
+deep_causality_fft/tests/types/rfft_plan_nd/rfft_plan_nd_tests.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 7
+deep_causality_fft/BUILD.bazel
+  s_543ee5cdecd2c1::t_1360fa945e90ae 18,20
+deep_causality_topology/src/types/regge_geometry/curvature.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 9-10
+deep_causality_multivector/src/types/multifield/ops/differential.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 12
+deep_causality_topology/src/types/cubical_regge_geometry/star_cache.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 32
+deep_causality_topology/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_1fcd0682d62863 205
+  s_543ee5cdecd2c1::t_9b3766b4229e70 227
+  s_543ee5cdecd2c1::t_068ee0d54a1b83 261
+  s_543ee5cdecd2c1::t_2fcbbadd5a9610 131
+  s_543ee5cdecd2c1::t_3fe847c3157eea 34,36
+  s_543ee5cdecd2c1::t_20d1174be226cc 58
+deep_causality_discovery/deep_causality_discovery_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,30-31,36,40-43,46-47,52,56-59,62-63,68,72,75,79-80,85,91-92,95-96,101,105-108,111-112,117,123-124,127-128,133,137-141,144-145,150,154,157-158,161-174,177-178,183,189-190,193-194,199,205-206,209-210,215,219,222-223,226-227,232,236-240,243-244,248-249,252-253,258,264-265,268-269,274,278-281,284-285,290,294,297-298,301-302,307,311,314-315,318-319,324,330-331,334-344,349,355-356,359-360,365-382,388-389,392-403,408,414-415,418-419,424,428-432,435-436,441,445-449,452-453,458,464-465,468-469,474,478-482,485-486,491,497-498,501-502,507,513-514,517-518,523,527-531,534-535,540,544-547,550-551,556,560,563-564,567-568,573,577-581,616-617,622,626-629,632-633,638,642-646,649-650,655,659,662-663,666-667,672,676,679-680,683-684,689,693-697,700-701,706,712-713,716-717,722,726-729,732-733,738,742,745-746,749-750,755,761-762,765-766,771,775-794,814-815,819-837,856-857,862,866-869,872-882,887,893-894,897-925,930,934-937,940-941,946,950,953-954,957-958,963,969-970,973-974,979,983-987,990-991,996,1002-1003,1006-1007,1012,1016,1019-1020,1023-1033,1038,1042,1045-1046,1049-1060,1065,1069,1072-1073,1076-1082,1085-1086,1091,1097-1098,1101-1102,1107,1111-1114,1117-1118,1123,1129-1130,1133-1134,1139,1143-1147,1150-1178,1183,1187-1190,1193-1194,1199,1203,1206-1207,1210-1211,1216,1220-1223,1226-1227,1232,1238-1239,1242-1243,1248,1254-1255,1258-1259,1264,1270-1271,1274-1275,1280,1286-1287,1290-1291,1296,1302-1303,1306-1307,1312,1316,1319-1320,1323-1324,1329,1333-1337,1340-1341,1346,1350,1353-1354,1357-1358,1363,1367,1370-1371,1374-1375,1380,1386-1387,1390-1391,1396,1400,1403-1404,1407-1408,1413,1419-1420,1423-1424,1428-1429,1443-1468,1473,1475,1478-1480,1483,1485-1495,1503,1505,1508,1510,1513,1515,1518,1520,1523,1528,1530,1533,1535,1538,1540,1543,1545,1548,1550,1558,1560,1563,1565,1568,1570,1573,1578,1580,1583,1585,1588,1590,1593,1595,1598,1600,1603,1605,1608,1610-1630,1635,1638,1640,1643,1645,1648,1650,1653-1663,1668-1678,1680,1683,1685,1688,1690,1693,1695,1698,1700,1703,1705,1708,1710,1713,1715,1718,1720,1723,1725,1730,1733,1735,1738,1740,1743,1745,1748,1750,1753,1755,1758,1760,1763,1765,1768,1770,1773,1775,1778,1780,1783,1785,1788,1790,1793,1795,1798,1800,1803,1805,1808,1810,1813,1815,1818,1820,1823,1825,1828,1830,1838,1840,1843,1845,1848,1850,1853,1855,1858,1860,1863,1865,1868,1870,1873,1875,1878,1883,1885,1888,1890,1893,1895,1898,1900,1908,1910,1913,1915,1918,1920,1923,1925,1928,1930,1933,1935,1940,1943,1945-1950,1958,1960,1963,1965-1970,1975,1978,1980,1985,1988,1993,1995,1998,2000,2003,2005,2008,2010,2013,2015,2018-2023,2025,2028,2030,2033,2038,2040,2043,2045,2048,2050,2053,2058,2060,2063,2065,2068,2070,2073,2075,2078,2080,2083,2085,2088,2090,2093,2095,2098,2100,2103,2105,2108,2110,2113,2115,2118,2120,2123,2125,2128,2130,2133,2135,2138,2140,2143,2145,2148,2150,2153,2155,2158,2160,2163,2165,2170,2173,2175,2178,2180,2183,2185,2188,2190,2193,2195,2198,2200,2203,2205,2208,2210,2213,2215,2218,2220,2223,2225,2228,2230,2233,2235,2238,2240,2243,2248,2250,2253,2255,2258,2260,2263,2265,2268,2270,2273,2275,2278,2280,2283,2285,2288,2290,2293-2298,2303,2308,2310,2313,2315,2318,2320,2323,2325,2328,2330,2335,2338,2340,2343,2345,2348,2350,2353,2358,2360,2363,2365,2368,2370-2375
+deep_causality_topology/src/types/cut_cell/carrier.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 10
+deep_causality_calculus/tests/types/diff_tests.rs
+  s_543ee5cdecd2c1::t_f1b94d6835ef79 8
+deep_causality_sparse/src/types/sparse_matrix/algebra/group.rs
+  s_543ee5cdecd2c1::t_58f1cb6bbc66df 7
+deep_causality_tensor/src/types/causal_tensor_network/cross_config/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 7
+deep_causality_algorithms/src/causal_discovery/surd/surd_algo.rs
+  s_543ee5cdecd2c1::t_15c665c3d6a6d1 7-8
+deep_causality_physics/src/kernels/fluids/boundary_layer.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 21
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_svd_decomp/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 6
+Cargo.toml
+  s_543ee5cdecd2c1::t_f80cb88e04067b 8
+  s_543ee5cdecd2c1::t_e46dabf2fc2722 25
+  s_543ee5cdecd2c1::t_5c890f8ebdde0c 24
+deep_causality_physics/src/kernels/condensed/wrappers.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 18
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 15,19
+deep_causality_tensor/tests/types/causal_tensor_network/op_tensor_svd_randomized_tests.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 14
+  s_543ee5cdecd2c1::t_4e04739ed068e0 13,15
+deep_causality_topology/src/types/topological_invariants/from_hodge_decomposition.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 11
+deep_causality_num_complex/src/complex/octonion_number/mod.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-207
+deep_causality_topology/src/types/cut_cell/cut_face_constraint.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 8
+deep_causality_cfd/Cargo.toml
+  s_543ee5cdecd2c1::t_6881ef8365683d 81-92
+  s_543ee5cdecd2c1::t_1e37a93d96c7de 41-43
+deep_causality_physics/src/kernels/astro/ks_constraint.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 22
+deep_causality_topology/src/types/gauge/gauge_field/getters.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 10
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train_operator/api/mod.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 13
+deep_causality_sparse/tests/extensions/ext_iso_tests.rs
+  s_543ee5cdecd2c1::t_58f1cb6bbc66df 8-9
+deep_causality_num_complex/tests/complex/octonion_number/neg_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-19
+deep_causality_macros/deep_causality_macros_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,44-48
+deep_causality_multivector/src/alias/mod.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 12
+deep_causality_num_complex/tests/complex/octonion_number/from_primitives_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-6,8-107
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+deep_causality_physics/src/quantities/si_primitives/mod.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 11-12
+deep_causality_uncertain/BUILD.bazel
+  s_543ee5cdecd2c1::t_f14992cc85a58c 18
+deep_causality_tensor/src/extensions/ext_stats.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 7
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 8
+deep_causality_num_complex/tests/complex/octonion_number/as_primitive_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-5,8-37
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6-7
+deep_causality_algebra/src/algebra/scalar_conjugate.rs
+  s_543ee5cdecd2c1::t_76c3f32ebf2247 6
+deep_causality_multivector/src/types/multifield/ops/batched_matmul.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 6
+deep_causality_topology/tests/types/gauge/gauge_field_lattice/wilson_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 6
+deep_causality_topology/src/types/simplicial_complex/topology/chain_complex_impl.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 36
+deep_causality_fft/tests/utils/dft_tests.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 7
+deep_causality_num_complex/tests/complex/octonion_number/algebra_tests.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-5,7-148
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 6
+deep_causality_topology/tests/traits/has_hodge_star_tests.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 60,73
+deep_causality_algebra/BUILD.bazel
+  s_543ee5cdecd2c1::t_c8b5e8e477c27d 1-31
+deep_causality_physics/src/kernels/em/solver.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7,9
+deep_causality_tensor/tests/types/causal_tensor_network/truncation_tests.rs
+  s_543ee5cdecd2c1::t_4e04739ed068e0 6
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+deep_causality_topology/src/types/cubical_regge_geometry/has_hodge_star.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 70,72
+deep_causality_num_complex/src/complex/quaternion_number/cast.rs
+  s_543ee5cdecd2c1::t_68037816b32b06 1-342
+deep_causality_macros/deep_causality_macros_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_topology/src/types/cut_cell/cut_face_fragment.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 9
+deep_causality_physics/src/kernels/dynamics/wrappers.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 12
+deep_causality_topology/deep_causality_topology_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_physics/tests/kernels/photonics/polarization_tests.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 6
+deep_causality_topology/tests/types/manifold/hodge_decomposition_property_tests.rs
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 22
+  s_543ee5cdecd2c1::t_743bfc851cef0d 23
+deep_causality_data_structures/deep_causality_data_structures_sbom.spdx.json.sha
+  s_543ee5cdecd2c1::t_72a8995fd8113a 1
+deep_causality_tensor/deep_causality_tensor_sbom.spdx.json
+  s_543ee5cdecd2c1::t_72a8995fd8113a 4,10,17,30-31,35-54,65-73,84-85,89-90,110-119,131,133,136-141,146-153,159-178
+deep_causality_physics/src/theories/electromagnetism/gauge_em_ops_impl.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 8
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 11
+deep_causality_physics/src/kernels/astro/ks_propagator.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 26-27
+examples/avionics_examples/src/shared/utils.rs
+  s_543ee5cdecd2c1::t_ab2c30cfbff6ea 10,12
+deep_causality_topology/src/types/manifold/differential/stencil/bilinear_op.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 11
+examples/avionics_examples/src/shared/stages.rs
+  s_543ee5cdecd2c1::t_fcd59d7ee21960 18
+deep_causality_multivector/tests/extensions/iso_multifield/iso_multifield_tests.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 10-11
+deep_causality_topology/src/types/gauge/gauge_field_lattice/ops_smearing.rs
+  s_543ee5cdecd2c1::t_743bfc851cef0d 12
+  s_543ee5cdecd2c1::t_c5bd3f1078530e 13
+deep_causality_fft/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_6ca947d3c14b3c 31,49,66,83,100,118
+  s_543ee5cdecd2c1::t_0a525ec50556e7 115
+  s_543ee5cdecd2c1::t_71f910ef445b28 46
+deep_causality_tensor/src/traits/tensor.rs
+  s_543ee5cdecd2c1::t_ae2a9bcf42caed 7
+  s_543ee5cdecd2c1::t_4e04739ed068e0 6
+deep_causality_algebra/tests/iso/test_support_tests.rs
+  s_543ee5cdecd2c1::t_46db72337f9d14 1-124
+deep_causality_multivector/src/types/multifield/ops/gamma.rs
+  s_543ee5cdecd2c1::t_6c01a4245dad35 11
+deep_causality_physics/src/kernels/em/forces.rs
+  s_543ee5cdecd2c1::t_ab8d967dbabd34 7
+deep_causality_algebra/README_ALGEBRA_TRAITS.md
+  s_543ee5cdecd2c1::t_26141728221ff3 3
+  s_543ee5cdecd2c1::t_bcb9de82b57376 542-545
+  s_543ee5cdecd2c1::t_272eb7ec87b4a0 546
+deep_causality_fft/src/types/dct_plan/mod.rs
+  s_543ee5cdecd2c1::t_fe94d041580c66 40
+Cargo.lock
+  s_543ee5cdecd2c1::t_59e19b3e8c3a7f 77,255,533-539,545,562,565,573,580-581,610,634,636,646,669,673,684-699,708,715-716,728,738,750,754-755,763,769,782,1273,1280-1281,1511,1516-1517,1610,1615
+deep_causality_algebra/README_ISOMORPHISM.md
+  s_543ee5cdecd2c1::t_750c4b56fd2950 9,15-16,43,63,77,115,122,139,155,169-170,296,302
+deep_causality_cfd/src/coordinate/blended.rs
+  s_543ee5cdecd2c1::t_a7060606a0f48f 33
+deep_causality_cfd/src/coordinate/body_fitted_3d.rs
+  s_543ee5cdecd2c1::t_dc2b5036592a91 32
+deep_causality_cfd/src/coordinate/cartesian.rs
+  s_543ee5cdecd2c1::t_fe11450f05cff4 17
+deep_causality_cfd/src/coordinate/cartesian_3d.rs
+  s_543ee5cdecd2c1::t_1822dac89d55e1 17
+deep_causality_cfd/src/coordinate/metric_provider.rs
+  s_543ee5cdecd2c1::t_12de3f934da659 20
+deep_causality_cfd/src/coordinate/metric_provider_3d.rs
+  s_543ee5cdecd2c1::t_bc347d37d807f1 18
+deep_causality_cfd/src/coordinate/mod.rs
+  s_543ee5cdecd2c1::t_b95ea2d202eac0 44
+deep_causality_cfd/src/navigation/eskf.rs
+  s_543ee5cdecd2c1::t_4a918aa9533a2e 22
+deep_causality_cfd/src/navigation/ins_error_state.rs
+  s_543ee5cdecd2c1::t_49dead2d5b7810 26
+deep_causality_cfd/src/navigation/nav_sensors.rs
+  s_543ee5cdecd2c1::t_c8b760b6008161 21
+deep_causality_cfd/src/navigation/regime_switch.rs
+  s_543ee5cdecd2c1::t_abfcb165fb2d26 19
+deep_causality_cfd/src/solvers/dec/dec_ns_solver/no_slip.rs
+  s_543ee5cdecd2c1::t_98bdfad6eecd4e 37
+deep_causality_cfd/src/solvers/dec/energy_budget.rs
+  s_543ee5cdecd2c1::t_b7fc0bc7f32e9f 23
+deep_causality_cfd/src/solvers/dec/step_output.rs
+  s_543ee5cdecd2c1::t_d2a46db802b642 8
+deep_causality_cfd/src/solvers/qtt/compressible/euler_1d.rs
+  s_543ee5cdecd2c1::t_278726c5f45e08 28
+deep_causality_cfd/src/solvers/qtt/compressible/fitting.rs
+  s_543ee5cdecd2c1::t_b577926348894e 19
+deep_causality_cfd/src/solvers/qtt/compressible/imex.rs
+  s_543ee5cdecd2c1::t_28b70c8eaa6bf5 30
+deep_causality_cfd/src/solvers/qtt/compressible/marcher_2d.rs
+  s_543ee5cdecd2c1::t_6a174ed6f00512 31
+deep_causality_cfd/src/solvers/qtt/compressible/marcher_3d.rs
+  s_543ee5cdecd2c1::t_df70b1e437942a 26
+deep_causality_cfd/src/solvers/qtt/compressible/marcher_3d_fitted.rs
+  s_543ee5cdecd2c1::t_61a413ff29d090 30
+deep_causality_cfd/src/solvers/qtt/immersed_2d.rs
+  s_543ee5cdecd2c1::t_f62dcc783616e3 21
+deep_causality_cfd/src/solvers/qtt/incompressible_2d.rs
+  s_543ee5cdecd2c1::t_705fba714bf5d6 14
+deep_causality_cfd/src/solvers/qtt/mod.rs
+  s_543ee5cdecd2c1::t_3c3053df3a6a5a 31
+deep_causality_cfd/src/solvers/qtt/observe.rs
+  s_543ee5cdecd2c1::t_a40beaea81381f 16
+deep_causality_cfd/src/tensor_bridge/acoustic_inverse.rs
+  s_543ee5cdecd2c1::t_203bf3c6eb2e8e 44
+deep_causality_cfd/src/tensor_bridge/codec.rs
+  s_543ee5cdecd2c1::t_cbc259507209b6 9
+deep_causality_cfd/src/tensor_bridge/mask.rs
+  s_543ee5cdecd2c1::t_720a34ecfe1782 23
+deep_causality_cfd/src/tensor_bridge/operators.rs
+  s_543ee5cdecd2c1::t_bb5b4754f5fdd9 10
+deep_causality_cfd/src/theories/compressible_ns.rs
+  s_543ee5cdecd2c1::t_6be25be0b1afd3 30
+deep_causality_cfd/src/theories/euler.rs
+  s_543ee5cdecd2c1::t_22014f6151b9e9 18
+deep_causality_cfd/src/theories/incompressible_ns.rs
+  s_543ee5cdecd2c1::t_5abd93c09ed4b9 23
+deep_causality_cfd/src/theories/stokes.rs
+  s_543ee5cdecd2c1::t_c35d207c58235a 19
+deep_causality_cfd/src/theories/wrappers.rs
+  s_543ee5cdecd2c1::t_0d8f7646ccfb5d 13
+deep_causality_cfd/src/traits/marchable.rs
+  s_543ee5cdecd2c1::t_e4e2f1eb3843bf 23
+deep_causality_cfd/src/types/flow_config/compressible_march_config.rs
+  s_543ee5cdecd2c1::t_0f68f382190e06 20
+deep_causality_cfd/src/types/flow_config/manufactured.rs
+  s_543ee5cdecd2c1::t_68abec234d48d1 21
+deep_causality_cfd/src/types/flow_config/qtt_march_config.rs
+  s_543ee5cdecd2c1::t_ccb832b844f291 18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5a4dce4b82dc5f9449cc5592d7dba8c48365e6e5",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_7cd4820447b22c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-ad3401b8fc1e95cbb",
+        "model": "unknown"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
