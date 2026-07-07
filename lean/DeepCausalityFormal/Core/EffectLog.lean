@@ -17,7 +17,7 @@ Modeling (faithful to the Rust): `EffectLog` is a `Vec<LogEntry>`; `append` is e
 `Vec::append` (order-preserving concatenation, no dedup / cap / reorder). Its `PartialEq`
 compares the MESSAGE sequence only, quotienting away timestamps (`log_effect.rs:45-54`) — this is
 precisely what makes the value-level abstraction `List Λ` (Λ = opaque message label) faithful. See
-deviation D17 in `openspec/notes/causal-algebra/core-formalization-plan.md`.
+deviation D17 in `openspec/notes/causal-algebra/core-formalization-deviations.md`.
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
@@ -40,20 +40,20 @@ def append (x y : Log Λ) : Log Λ := x ++ y
 
 /-- Left identity: `append empty x = x`.
 
-    THEOREM_MAP (staged — bridged in the core-formalization phase): `core.effect_log.left_id` -/
+    THEOREM_MAP: `core.effect_log.left_id` -/
 theorem append_left_id (x : Log Λ) : append empty x = x := by
   simp [append, empty]
 
 /-- Right identity: `append x empty = x`.
 
-    THEOREM_MAP (staged — bridged in the core-formalization phase): `core.effect_log.right_id` -/
+    THEOREM_MAP: `core.effect_log.right_id` -/
 theorem append_right_id (x : Log Λ) : append x empty = x := by
   simp [append, empty]
 
 /-- Associativity: `append (append x y) z = append x (append y z)` — the Writer monoid law that
     `Core/CausalMonad.lean :: bind_assoc` relies on for the log channel.
 
-    THEOREM_MAP (staged — bridged in the core-formalization phase): `core.effect_log.assoc` -/
+    THEOREM_MAP: `core.effect_log.assoc` -/
 theorem append_assoc (x y z : Log Λ) :
     append (append x y) z = append x (append y z) := by
   simp [append, List.append_assoc]
@@ -62,7 +62,7 @@ theorem append_assoc (x y z : Log Λ) :
     `bind` threads logs (`self.logs ++ next.logs`, `causal_effect_propagation_process/mod.rs:150`),
     so no audit history is ever lost. Witnessed by the existence of the remaining suffix.
 
-    THEOREM_MAP (staged — bridged in the core-formalization phase): `core.effect_log.monotone` -/
+    THEOREM_MAP: `core.effect_log.monotone` -/
 theorem append_monotone (x y : Log Λ) : ∃ z, x ++ z = append x y :=
   ⟨y, rfl⟩
 

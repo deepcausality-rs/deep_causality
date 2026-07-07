@@ -8,7 +8,7 @@ files exist (`Core/CausalMonad.lean` proved and congruence-noted, `Core/CausalAr
 `Core/EffectLog.lean` staged/un-bridged), covering the monad/arrow surface but not the ~30 laws the
 crate actually relies on. The rest of the causal extension (the success-channel functor, the command
 functor, the lens/alternatable family, the flow facade, the IO codecs) is unverified, and the
-deviation survey in `core-formalization-plan.md` found 17 gaps between the code and its accepted
+deviation survey in `core-formalization-deviations.md` found 17 gaps between the code and its accepted
 mathematical definition. This change closes that gap: it brings core to full parity with haft —
 every mechanism proven, witnessed, bridged, and its deviation resolved.
 

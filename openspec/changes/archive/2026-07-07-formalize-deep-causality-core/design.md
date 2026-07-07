@@ -2,7 +2,7 @@
 
 `deep_causality_core` sits one tier above `deep_causality_haft` (AGENTS.md dependency graph, Tier 1 →
 Tier 0). Haft is fully formalized (21 Lean files, 28 witnessed ids, deviations audit); core is not.
-The survey in `openspec/notes/causal-algebra/core-formalization-plan.md` enumerates the base→extension
+The survey in `openspec/notes/causal-algebra/core-formalization-deviations.md` enumerates the base→extension
 layering (§0), the Lean file plan (§1), 17 deviations D1–D17 (§2), the control-channel decision (§2A,
 LANDED as `separate-control-channel`), and a per-deviation resolution ledger (§2B). Three Core Lean
 files already exist: `CausalMonad.lean` (proved, 5 ids, congruence-noted), `CausalArrow.lean` (proved,

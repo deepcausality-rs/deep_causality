@@ -24,9 +24,10 @@
 #![cfg(kani)]
 
 use deep_causality_core::{
-    CausalEffect, CausalMonad, CausalityError, CausalityErrorEnum, EffectLog, PropagatingProcess,
+    CausalEffect, CausalFlow, CausalMonad, CausalityError, CausalityErrorEnum, EffectLog,
+    PropagatingProcess, causal_arrow,
 };
-use deep_causality_haft::{LogAddEntry, LogSize};
+use deep_causality_haft::{Arrow, LogAddEntry, LogSize};
 
 /// Stateful carrier: `i32` value, `i32` Markovian state, `()` context.
 type P = PropagatingProcess<i32, i32, ()>;
@@ -146,6 +147,40 @@ fn causal_monad_short_circuit() {
 
     assert!(!ran);
     assert!(result == expected);
+}
+
+/// Witness for `THEOREM_MAP: core.causal_arrow.category_laws` (bounded, beyond the Rust
+/// point-witness). Right identity `f >>> arr id = f` over the REIFIED causal arrow (the real
+/// `causal_arrow(..).next(..).build()` composition path, not just the monad `bind`), for all input
+/// value and initial state. `f` threads state (`s -> s + x`); the identity arrow re-emits
+/// value/state/context untouched, so composing it on the right leaves `f`'s carrier unchanged.
+#[kani::proof]
+fn causal_arrow_right_identity() {
+    let x: i32 = kani::any();
+    let s: i32 = kani::any();
+
+    // A representative state-threading stage.
+    let f = |x: i32, s: i32, _c: Option<()>| {
+        CausalFlow::from_parts(
+            Ok(CausalEffect::value(x.wrapping_add(1))),
+            s.wrapping_add(x),
+            None,
+            EffectLog::new(),
+        )
+    };
+    // The identity arrow `arr id` / η: re-emit value, thread state/context, empty log.
+    let id_stage = |x: i32, s: i32, _c: Option<()>| {
+        CausalFlow::from_parts(Ok(CausalEffect::value(x)), s, None, EffectLog::new())
+    };
+
+    let lhs = causal_arrow(f)
+        .next(id_stage)
+        .build()
+        .run((x, s, None))
+        .into_process();
+    let rhs = causal_arrow(f).build().run((x, s, None)).into_process();
+
+    assert!(lhs == rhs);
 }
 
 /// Log monotonicity: `bind` never loses audit history — the output log is at least as long
