@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalEffect, CausalMonad, CausalityError, CausalityErrorEnum, EffectLog};
+use crate::{CausalEffect, CausalMonad, CausalityError, EffectLog};
 use core::fmt::Debug;
 use deep_causality_haft::LogAppend;
 
@@ -23,9 +23,10 @@ mod predicates;
 ///
 /// # Concepts
 ///
-/// *   **Outcome**: The value-XOR-error channel — `Result<CausalEffect<Value>, Error>`, the
-///     `Either E (Maybe T)` encoding. A process either carries an effect value (possibly
-///     `None`) or an error, never both: the W-invariant
+/// *   **Outcome**: The value/control-XOR-error channel — `Result<CausalEffect<Value>, Error>`,
+///     the `Except E (Free CausalCommand (Maybe T))` encoding. On the success side a process
+///     carries a `CausalEffect<Value>` — a value, `None`, or a control command (`RelayTo`); on
+///     the failure side it carries an error, never both: the W-invariant
 ///     (`error present ⇒ no value`) holds **by construction**, not by discipline.
 /// *   **State**: Persistent data that evolves as the process moves through the graph (Markovian state).
 /// *   **Context**: Read-only configuration or environment data available to all steps.
@@ -223,14 +224,18 @@ where
 
     /// Maps the carried value with `f`, preserving state, context, and logs.
     ///
-    /// The fluent `Functor` operation on the carrier, the value-only counterpart to
-    /// [`bind`](Self::bind). It never panics. An error carrier short-circuits (error + logs
-    /// preserved, `f` not invoked); a `None` effect passes through unchanged. A command effect
-    /// carries a control sub-program a single-shot value map cannot retype, so `fmap` over it
-    /// surfaces a `ValueNotAvailable` error — unreachable in practice, since the reasoning engine
-    /// interprets commands (via [`CausalEffect::fold`]) before any value-level map.
-    /// ([`CausalEffect::map`] is the total functor that also maps command leaves; the carrier `fmap`
-    /// stays single-shot for `FnOnce`.)
+    /// The fluent `Functor` operation on the carrier. It is **total**: it delegates to the total
+    /// [`CausalEffect::map`], so a value maps its leaf (`Some(v) → Some(f(v))`), a `None` passes
+    /// through, and a **command is preserved** — its sub-program's value leaf is mapped through the
+    /// `RelayTo` tree, so the command survives with its target intact. It never panics and never
+    /// manufactures an error; an errored carrier short-circuits (`f` not invoked, error + logs
+    /// preserved).
+    ///
+    /// This is the functor, not the monad: [`bind`](Self::bind) is a value-level Kleisli step whose
+    /// continuation needs a *value*, so — unlike `fmap` — it cannot run under a command and the
+    /// reasoning engine folds commands (via [`CausalEffect::fold`]) before `bind` sees them. Hence
+    /// `fmap f` and `bind(pure ∘ f)` coincide on the value fragment but diverge on a command (`fmap`
+    /// preserves it; `bind` defers it).
     pub fn fmap<NewValue, F>(
         self,
         f: F,
@@ -241,11 +246,8 @@ where
         let outcome = match self.outcome {
             // Error short-circuits: `f` is not invoked; the error is preserved.
             Err(error) => Err(error),
-            Ok(effect) if effect.is_command() => {
-                Err(CausalityError::new(CausalityErrorEnum::ValueNotAvailable))
-            }
-            // `Pure(Some(v)) → Some(f(v))`; `Pure(None) → None`.
-            Ok(effect) => Ok(CausalEffect::from_option(effect.into_value().map(f))),
+            // Total functor: value/none/command are all handled by `CausalEffect::map`.
+            Ok(effect) => Ok(effect.map(f)),
         };
 
         CausalEffectPropagationProcess {

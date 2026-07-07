@@ -31,8 +31,15 @@ fn none_flow() -> CausalFlow<i64> {
 fn test_causal_flow_iso() {
     let p: PropagatingProcess<i64, (), ()> =
         CausalEffectPropagationProcess::new(Ok(CausalEffect::value(7)), (), None, EffectLog::new());
-    // wrap-then-unwrap is the identity.
+    // wrap-then-unwrap is the identity (wrap ∘ unwrap = id).
     assert_eq!(CausalFlow::from(p.clone()).into_process(), p);
+    // unwrap-then-wrap is the identity too (unwrap ∘ wrap = id): re-wrapping the unwrapped
+    // process and unwrapping again returns the same process, so `CausalFlow::from` is a stable
+    // two-way isomorphism — `flow_iso` pins both directions.
+    assert_eq!(
+        CausalFlow::from(CausalFlow::from(p.clone()).into_process()).into_process(),
+        p
+    );
 }
 
 // ---- core.causal_flow.map_id -------------------------------------------------------------------

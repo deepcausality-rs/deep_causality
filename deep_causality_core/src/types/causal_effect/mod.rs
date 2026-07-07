@@ -129,13 +129,16 @@ impl<V> CausalEffect<V> {
 
     // -- Functor / handler ----------------------------------------------------------------------
 
-    /// The **total** functor map: apply `f` to every `Option<V>` value leaf, threading through the
-    /// command tree. No error, no panic — commands map their sub-programs' leaves.
-    pub fn map<U, F>(self, mut f: F) -> CausalEffect<U>
+    /// The **total** functor map: apply `f` to the `Option<V>` value leaf, threading through the
+    /// command tree so a command is preserved (its single sub-program leaf is mapped). No error, no
+    /// panic. `FnOnce` suffices and is the most permissive bound: the `RelayTo` operation is
+    /// single-hole, so the program is a linear chain with exactly one `Pure` value leaf, and `f` is
+    /// applied at most once.
+    pub fn map<U, F>(self, f: F) -> CausalEffect<U>
     where
-        F: FnMut(V) -> U,
+        F: FnOnce(V) -> U,
     {
-        CausalEffect(map_program(self.0, &mut f))
+        CausalEffect(map_program(self.0, f))
     }
 
     /// The catamorphism / algebraic-effect handler: interpret the program. `pure_case` gives meaning
@@ -150,13 +153,15 @@ impl<V> CausalEffect<V> {
     }
 }
 
-/// Map every value leaf of a program (single-hole `RelayTo`, so `FnMut` threads in order).
-fn map_program<V, U, F>(p: Program<V>, f: &mut F) -> Program<U>
+/// Map the single value leaf of a program. `RelayTo` is single-hole, so the program is a linear
+/// chain: `f` is moved down through the command nodes to the one `Pure` leaf and applied there once
+/// (hence `FnOnce`).
+fn map_program<V, U, F>(p: Program<V>, f: F) -> Program<U>
 where
-    F: FnMut(V) -> U,
+    F: FnOnce(V) -> U,
 {
     match p {
-        Free::Pure(opt) => Free::Pure(opt.map(&mut *f)),
+        Free::Pure(opt) => Free::Pure(opt.map(f)),
         Free::Suspend(CausalCommand::RelayTo(t, sub)) => {
             Free::Suspend(CausalCommand::RelayTo(t, Box::new(map_program(*sub, f))))
         }

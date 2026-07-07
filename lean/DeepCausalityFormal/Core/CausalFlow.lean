@@ -12,8 +12,14 @@ Layering: `CausalFlow<V,S,C>` is a **newtype** over `PropagatingProcess<V,S,C>` 
 `Core/CausalMonad.lean`). The facade *lowers* to the monad — it adds no new algebra — so:
   * the `≅ Process` iso is the newtype wrap/unwrap (`rfl`);
   * `map`/`and_then` are the monad's `fmap`/`bind` with the boilerplate hidden, and the corrected
-    law `map f = and_then (pure ∘ f)` now holds on the `None` effect as well as a value (D14: `map`
-    is the total value functor, not a partial one).
+    law `map f = and_then (pure ∘ f)` holds on the **value fragment** (`Value` and `None`; D14: `map`
+    is the total value functor, not a partial one). NB: in the Rust code `map` is now the *total*
+    functor over the whole success channel — it also **preserves commands** (mapping a `RelayTo`
+    node's leaf via `CausalEffect::map`, see `Core/Consistency.lean`), whereas `and_then` is a
+    value-level Kleisli step whose continuation needs a value and so defers commands to the reasoning
+    engine. So on a command `map` and `and_then (pure ∘ f)` *diverge* (the functor preserves; the
+    bind defers) — the identity is stated here on the value fragment the model covers, where they
+    agree.
 Operations that EXCEED the base monad are formalized as **documented extensions** with their own
 stated contracts, not as monad sugar: `recover` (`MonadError.catch`), the bounded `iterate*`
 combinators (`MaxStepsExceeded` on budget exhaustion — D11/D12), and `finish` (a value-observation

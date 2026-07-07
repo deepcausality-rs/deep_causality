@@ -169,7 +169,7 @@ fn either_passes_through_value_less_flow() {
 
 #[test]
 fn either_errors_on_dispatch_carrier() {
-    // A command carrier a value-level `either` cannot retype to `U`; `either` surfaces a
+    // A command carrier that a value-level `either` cannot retype to `U`; `either` surfaces a
     // `ValueNotAvailable` error instead of dropping it to `None`.
     let relay: CausalFlow<Either<i64, String>> =
         CausalFlow::from(CausalEffectPropagationProcess::new(

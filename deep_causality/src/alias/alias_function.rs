@@ -25,17 +25,18 @@ pub type CausalFn<I, O> = fn(I) -> PropagatingEffect<O>;
 
 /// The unified function signature for all singleton causaloids that require access to a shared, external context.
 ///
-/// It evaluates runtime evidence against its own static configuration and the shared context
-/// to produce a causal effect.
+/// It evaluates the incoming `CausalEffect<I>` against its own static configuration and the shared
+/// context to produce a `PropagatingProcess<O, S, C>`.
 ///
 /// # Arguments
 ///
-/// * `effect` - A reference to the `PropagatingEffect` flowing through the graph during reasoning.
-/// * `context` - A reference to the shared `Context` object.
+/// * `effect` - The `CausalEffect<I>` flowing through the graph during reasoning.
+/// * `state`  - The state `S` carried by the incoming process (preserved across evaluation).
+/// * `context` - The optional `Option<C>` context carried by the incoming process.
 ///
 /// # Returns
 ///
-/// A `PropagatingEffect`.
+/// A `PropagatingProcess<O, S, C>` whose `state` and `context` are returned to the caller.
 pub type ContextualCausalFn<I, O, S, C> =
     fn(CausalEffect<I>, S, Option<C>) -> PropagatingProcess<O, S, C>;
 

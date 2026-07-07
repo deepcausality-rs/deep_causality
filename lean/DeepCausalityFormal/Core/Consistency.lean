@@ -2,28 +2,29 @@
 SPDX-License-Identifier: MIT
 Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
 
-Core — Consistency: the HKT witness `fmap` agrees with the inherent `fmap`.
+Core — Consistency: the HKT witness `fmap` agrees with the inherent `fmap`, TOTALLY over commands.
 
 Rust source: `deep_causality_core/src/types/causal_effect_propagation_process/hkt.rs`
 (`CausalEffectPropagationProcessWitness::fmap` — the process witness) and
-`src/types/causal_flow/steps.rs` (`CausalFlow::map` — the inherent value map) over
-`CausalEffect::{map,from_option,into_value}` (`src/types/causal_effect/mod.rs` — the total value
-functor, `Core/CausalEffect.lean`).
+`src/types/causal_effect_propagation_process/mod.rs` (`CausalEffectPropagationProcess::fmap` — the
+inherent functor), both of which now delegate to the **total** `CausalEffect::map`
+(`src/types/causal_effect/mod.rs`), and `src/types/causal_flow/steps.rs` (`CausalFlow::map`, the same
+`effect.map(f)` under `bind`).
 
-The value functor acts on the value-XOR-error fragment `Except E (Option V)` — the `Pure` leaves of
-the carrier, since the reasoning engine folds every command (`RelayTo`) *before* the value functor
-is reached (`CausalFlow::map`/the witness never run on a live command). Over that fragment both maps
-are the same function:
-  * process witness (`hkt.rs`): `Err e ↦ Err e`; `Ok effect ↦` (`into_value`: `Some v ↦ Ok(value (f v))`,
-    `None ↦ Ok none`),
-  * inherent (`CausalFlow::map`): `Err e ↦ Err e`; `Ok o ↦ Ok(from_option (o.map f))`.
+The value functor is total over the whole success channel `CausalEffect<V> = Free CausalCommand
+(Option V)` — a value, an absence, or a **command** (`RelayTo`). `CausalEffect::map` maps the single
+`Option` value leaf through the `RelayTo` tree, so:
+  * `Pure(Some v) ↦ Pure(Some (f v))`,
+  * `Pure(None)   ↦ Pure(None)`,
+  * `RelayTo(t, k) ↦ RelayTo(t, map f k)` — the **command is preserved**, its leaf mapped.
 
-Deviation D15 is retired: the four `fmap`s that formerly diverged — one of them **panicking** via
-`.expect` on the arity-5 witness — are gone. With control lifted out of the value channel
-(`separate-control-channel`, landed), the map is total on `Some`/`None`/`Err` alike (no
-`Ok(Value _)`-only restriction) and there is **no reachable panic**: this file proves the two
-transcribed maps are equal on every carrier of the fragment. The total `CausalEffect::map` that lifts
-this action through the command tree is proved total (`map_id`) in `Core/CausalEffect.lean`.
+Both the process witness `fmap` and the inherent `fmap` are `Err e ↦ Err e` on the error channel and
+`Ok eff ↦ Ok (map f eff)` on success — i.e. **the same function** (`Except.map (CausalEffect.map f)`).
+Deviation D15 is fully retired: the four `fmap`s that once diverged — one **panicking** via `.expect`,
+others collapsing a command to `None` or a `ValueNotAvailable` error — are gone. This file proves the
+witness and inherent maps agree on EVERY carrier, including commands (no `Ok(Value _)`-only
+restriction, no panic, no `None`-collapse), and that the functor **preserves commands** rather than
+erasing them.
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
@@ -34,33 +35,54 @@ namespace DeepCausalityFormal.Core.Consistency
 
 variable {V W E : Type}
 
-/-- The value-XOR-error fragment the value functor acts on — the `Pure` leaves of the carrier
-    (`Except E (Option V)`), commands having been folded first. -/
-abbrev Carrier (E V : Type) := Except E (Option V)
+/-- `CausalEffect<V> = Free CausalCommand (Option V)`: `Option` value leaves and `RelayTo` control
+    nodes (the `relay` node is `Suspend(RelayTo(target, sub))`), as in `Core/CausalEffect.lean`. -/
+inductive CEffect (V : Type) where
+  | pure  : Option V → CEffect V
+  | relay : Nat → CEffect V → CEffect V
 
-/-- The **process witness** `fmap` (`hkt.rs`), transcribed on the `Pure` fragment: error
-    short-circuits (left zero, `f` not invoked); `into_value` splits the value case from the `None`
-    case, rebuilding `value`/`none`. No panic, no manufactured error. -/
+/-- The **total** value functor (`CausalEffect::map`): map the single `Option` value leaf through the
+    `RelayTo` tree; a command is preserved with its target intact. -/
+def mapEffect (f : V → W) : CEffect V → CEffect W
+  | .pure o    => .pure (o.map f)
+  | .relay t k => .relay t (mapEffect f k)
+
+/-- The success-or-error carrier (`outcome : Result<CausalEffect<V>, E>`). -/
+abbrev Carrier (E V : Type) := Except E (CEffect V)
+
+/-- The **process witness** `fmap` (`hkt.rs`): error short-circuits; otherwise map the effect with the
+    total `CausalEffect::map`. -/
 def witnessFmap (f : V → W) : Carrier E V → Carrier E W
-  | .error e       => .error e
-  | .ok (some v)   => .ok (some (f v))
-  | .ok Option.none => .ok Option.none
+  | .error e => .error e
+  | .ok eff  => .ok (mapEffect f eff)
 
-/-- The **inherent** `fmap` (`CausalFlow::map`), transcribed on the `Pure` fragment:
-    `Ok(from_option (into_value ().map f))` = `Ok (o.map f)`; error short-circuits. -/
+/-- The **inherent** `fmap` (`mod.rs` / `CausalFlow::map`): error short-circuits; otherwise map the
+    effect with the total `CausalEffect::map`. Post-refactor this is the *same* function as the
+    witness. -/
 def inherentFmap (f : V → W) : Carrier E V → Carrier E W
   | .error e => .error e
-  | .ok o    => .ok (o.map f)
+  | .ok eff  => .ok (mapEffect f eff)
 
-/-- The witness and inherent functors coincide on EVERY carrier of the fragment — value (`Some`),
-    absence (`None`), and error (`Err`) — with no `Ok(Value _)`-only restriction and no reachable
-    panic. This is the retirement of D15 (the former four-way `fmap` divergence + `.expect` panic).
+/-- The witness and inherent functors coincide on EVERY carrier — value (`Some`), absence (`None`),
+    error (`Err`), AND command (`RelayTo`). No `Ok(Value _)`-only restriction, no reachable panic,
+    no `None`-collapse: the retirement of D15.
 
     THEOREM_MAP: `core.witness.agree` -/
 theorem witness_agree (f : V → W) (m : Carrier E V) :
     witnessFmap f m = inherentFmap f m := by
   cases m with
   | error e => rfl
-  | ok o => cases o <;> rfl
+  | ok eff => rfl
+
+/-- Totality over commands: mapping a command carrier **preserves the command** (same target,
+    sub-program leaf mapped) — it is neither collapsed to `None` nor turned into an error. This is the
+    concrete content of the D15 fix. -/
+theorem fmap_preserves_command (f : V → W) (t : Nat) (k : CEffect V) :
+    (witnessFmap f (.ok (.relay t k)) : Carrier E W) = .ok (.relay t (mapEffect f k)) := rfl
+
+/-- On the `Pure` value fragment the maps behave exactly as the pre-command functor did — a value
+    maps its leaf and a `None` passes through — so the earlier value-fragment agreement is subsumed. -/
+theorem fmap_value_fragment (f : V → W) (o : Option V) :
+    (witnessFmap f (.ok (.pure o)) : Carrier E W) = .ok (.pure (o.map f)) := rfl
 
 end DeepCausalityFormal.Core.Consistency

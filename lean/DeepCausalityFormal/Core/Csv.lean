@@ -11,10 +11,11 @@ line, `'\n'`-terminate every line including the last) and `read_csv.rs` (`ReadCs
 Layering: the base is the IO action monad `haft.io.laws` (`Haft/Io.lean`); the codec is a pure
 `render`/`parse` pair observed through `IoAction::run`. This file proves the *content* law: `parse`
 is a left inverse of `render` — `parse (render header rows) = header :: rows` — under the EXPLICIT
-precondition that no field contains the separator `','` or the line terminator `'\n'` (the Rust
-codec applies no quoting/escaping; deviation D16 accepts this as conditional). The precondition is a
-theorem **hypothesis**, not assumed away: without it the round-trip genuinely fails (a comma in a
-field would split into two).
+precondition that no field contains the separator `','`, the line terminator `'\n'`, or a carriage
+return `'\r'` (the Rust codec applies no quoting/escaping; deviation D16 accepts this as
+conditional). The precondition is a theorem **hypothesis**, not assumed away: without it the
+round-trip genuinely fails (a comma in a field would split into two; a `'\r'` before the writer's
+`'\n'` would be eaten by Rust's `str::lines()` CRLF handling).
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
@@ -149,17 +150,32 @@ theorem map_split_join : ∀ (rows : List (List (List Char))),
 -- The round-trip.
 -- ------------------------------------------------------------------
 
-/-- The CSV codec round-trips under the no-comma/no-newline precondition:
-    `parse (render header rows) = header :: rows`, provided every field is separator-free and every
-    rendered line is newline-free, and both the header and every row have at least one field.
+/-- The CSV codec round-trips under the no-`','`/no-`'\n'`/no-`'\r'` precondition:
+    `parse (render header rows) = header :: rows`, provided every field is separator-free (no `sep`)
+    and carriage-return-free (no `'\r'`), every rendered line is newline-free (no `nl`), and both the
+    header and every row have at least one field.
+
+    The `'\r'`-freeness hypotheses (`hHeadCr` / `hRowsCr`) are load-bearing for the *fidelity* of the
+    claim even though the Lean model's `splitOn nl` does not consume them: the real Rust codec parses
+    with `str::lines()`, which treats `'\r''\n'` as a single CRLF line terminator and strips a
+    trailing `'\r'` from every line. A field ending in `'\r'` immediately before the writer's `'\n'`
+    would therefore be silently eaten by Rust, breaking the round-trip. Requiring `'\r'`-freeness
+    keeps this theorem's stated precondition no weaker than what the Rust code actually guarantees.
 
     THEOREM_MAP: `core.io.csv_roundtrip` -/
 theorem csv_roundtrip
     (header : List (List Char)) (rows : List (List (List Char)))
     (hHeadNe : header ≠ []) (hHeadSep : RowFree sep header)
+    (hHeadCr : RowFree '\r' header)
     (hRowsNe : ∀ r ∈ rows, r ≠ []) (hRowsSep : ∀ r ∈ rows, RowFree sep r)
+    (hRowsCr : ∀ r ∈ rows, RowFree '\r' r)
     (hLinesNl : ∀ l ∈ (joinRow sep header :: rows.map (joinRow sep)), Free nl l) :
     parse sep nl (render sep nl header rows) = header :: rows := by
+  -- `'\r'`-freeness bounds the STATED precondition to what Rust's `str::lines()` CRLF handling
+  -- actually round-trips; the model's `splitOn nl` does not consume `'\r'`, so it is not needed by
+  -- the proof term itself.
+  have _hHeadCr := hHeadCr
+  have _hRowsCr := hRowsCr
   unfold parse render
   rw [lines_unlines _ hLinesNl, List.map_cons, splitOn_joinRow header hHeadNe hHeadSep,
     map_split_join rows hRowsNe hRowsSep]

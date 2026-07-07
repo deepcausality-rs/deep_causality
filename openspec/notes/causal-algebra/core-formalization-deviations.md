@@ -45,27 +45,30 @@ new `deep_causality_core/tests/formalization_lean/` mirror (matching the haft co
    ids `core.effect_log.{left_id,right_id,assoc,monotone}`.
 3. **`Core/CausalEffect.lean`** — the success channel `CausalEffect<V> = Free CausalCommand (Maybe V)`
    (post `separate-control-channel`; `EffectValue` is deleted). The value functor is `Option`, so
-   `fmap_id`/`fmap_comp` cite haft's `Option` functor rather than a bespoke type; the free-monad laws
-   over `CausalCommand` cite `haft.free_monad.*`. Prove the single-hole **`CausalCommand` functor
-   laws** (identity + composition on the one hole) and `into_value = Maybe` projection. ids
-   `core.causal_command.functor_laws`, `core.causal_effect.into_value`. (Replaces the old
+   `fmap_id`/`fmap_comp` cite haft's `Option` functor (`haft.functor.laws`) rather than a bespoke
+   type; the free-monad laws over `CausalCommand` cite `haft.free_monad.*`. Prove
+   `into_value = Maybe` projection. id `core.causal_effect.into_value`. (Replaces the old
    `EffectValue.lean`; no fragment/`relay_eq_target_only` refutation — the deviations are fixed, not
    documented.)
-4. **`Core/CausalArrow.lean`** — *exists (landed in `causal-arrow-state-threading`).* Kleisli category
+4. **`Core/CausalCommand.lean`** — the single-hole control functor `CausalCommand` and the free
+   monad over it (`Free CausalCommand`, citing `haft.free_monad.*`). Prove the **`CausalCommand`
+   functor laws** — identity + composition on the one hole (`cmap_id`/`cmap_comp`). id
+   `core.causal_command.functor_laws`.
+5. **`Core/CausalArrow.lean`** — *exists (landed in `causal-arrow-state-threading`).* Kleisli category
    of the state-threading causal monad: `category_laws` (left/right id + assoc, threading state) and
    `left_zero`, **unconditional** (no D1 `None`-collapse refutation — D1/D2 are fixed). ids
    `core.causal_arrow.{category_laws,left_zero}`.
-5. **`Core/Alternatable.lean`** — the lens-setter family (value/state/context + `clear_context`):
+6. **`Core/Alternatable.lean`** — the lens-setter family (value/state/context + `clear_context`):
    `set_get`, `set_set_proj` (idempotence up-to-log), `channel_independence`, `error_noop`, and the
    honest `not_setset_with_logs`. (No `intervene` alias — `Intervenable` was removed from core.) ids
    `core.alternatable.*`.
-6. **`Core/CausalFlow.lean`** — facade lowering: `flow_iso` (≅ Process, `rfl`), `map_id`/`map_comp`,
+7. **`Core/CausalFlow.lean`** — facade lowering: `flow_iso` (≅ Process, `rfl`), `map_id`/`map_comp`,
    `map_eq_andThen` on the value fragment, `iterate_n_zero`/`iterate_n_succ`, `branch_noop_on_error`/
    `branch_selects`, `recover_escapes_kleisli` (deviation D11, refutation), `finish_*` (projection,
    note log-drop). ids `core.causal_flow.*`.
-7. **`Core/Csv.lean`** — conditional codec round-trip `parse (render h rows) = h :: rows` under the
+8. **`Core/Csv.lean`** — conditional codec round-trip `parse (render h rows) = h :: rows` under the
    comma/newline-free precondition (deviation D16). id `core.io.csv_roundtrip`.
-8. **`Core/Consistency.lean`** *(small)* — witness `pure`/`fmap` **agreement** (`rfl`): post
+9. **`Core/Consistency.lean`** *(small)* — witness `pure`/`fmap` **agreement** (`rfl`): post
    `separate-control-channel` the witness `fmap`s are total and uniform (no panic, no seam), so this
    proves agreement rather than the former disagreement (D15 fixed). id `core.witness.agree`.
 

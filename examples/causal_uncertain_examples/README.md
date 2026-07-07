@@ -22,7 +22,7 @@ The three examples have genuinely different shapes:
 - **gps_navigation** is one-shot data flow with no accumulated state. A
   stateless `PropagatingEffect::pure(x).bind(...).bind(...)` chain is the
   minimum-ceremony structure. Each stage pulls an `Uncertain<f64>` out of
-  `CausalEffect::Value` and re-lifts a transformed one.
+  the `CausalEffect` via `.into_value()` and re-lifts a transformed one.
 - **sensor_processing** has real per-stage state (`healthy_count`,
   `failed_count`, `total_uncertainty`, `fused_temp`, `anomalies`, `verdict`)
   and a read-only configuration (plausibility bands, calibration offsets)

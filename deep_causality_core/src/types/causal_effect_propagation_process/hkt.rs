@@ -41,16 +41,13 @@ where
         B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnOnce(A) -> B,
     {
-        // Error short-circuits: `f` is not invoked; the error propagates (left zero). A value-less
-        // effect (`None` or a command) maps to `None` — no panic (the former `.expect` bug), and no
-        // manufactured error (the error type `E` is generic). Commands never reach the value functor
-        // (the reasoning engine folds them first), so mapping one to `None` is unreachable-defensive.
+        // Error short-circuits: `f` is not invoked; the error propagates (left zero). Otherwise the
+        // total `CausalEffect::map` handles value/none/command uniformly — a value maps its leaf, a
+        // `None` passes through, and a command is preserved (its sub-program leaf mapped). No panic,
+        // no manufactured error. This matches the inherent `fmap` exactly (see `Core/Consistency.lean`).
         let outcome = match m_a.outcome {
             Err(error) => Err(error),
-            Ok(effect) => match effect.into_value() {
-                Some(v) => Ok(CausalEffect::value(f(v))),
-                None => Ok(CausalEffect::none()),
-            },
+            Ok(effect) => Ok(effect.map(f)),
         };
         CausalEffectPropagationProcess {
             outcome,

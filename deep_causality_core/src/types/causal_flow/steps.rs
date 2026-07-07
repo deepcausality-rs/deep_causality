@@ -92,24 +92,24 @@ impl<Value, State, Context> CausalFlow<Value, State, Context> {
         CausalFlow { inner }
     }
 
-    /// Value transform that mirrors the monad's [`fmap`] contract: apply `f` to a `Value`, pass a
-    /// `None` effect through unchanged, and surface a `ValueNotAvailable` error for a command effect
-    /// (whose control sub-program a single-shot value map cannot retype) — unreachable-defensive,
-    /// since the reasoning engine folds commands first. An errored carrier short-circuits (via `bind`).
+    /// Value transform — the fluent functor. Maps the carried value through the **total**
+    /// [`CausalEffect::map`]: a value maps its leaf, a `None` passes through unchanged, and a command
+    /// is **preserved** (its sub-program's value leaf mapped through the `RelayTo` tree). It never
+    /// errors on a command and never panics; an errored carrier short-circuits (via `bind`). Contrast
+    /// [`and_then`](Self::and_then), a value-level Kleisli step whose continuation needs a value, so
+    /// it cannot run under a command (the engine folds commands first) — hence `map` and
+    /// `and_then(pure ∘ f)` coincide on the value fragment but not on a command.
     ///
-    /// [`fmap`]: crate::CausalEffectPropagationProcess::fmap
+    /// (This is the loose-bounds sibling of the carrier's
+    /// [`fmap`](crate::CausalEffectPropagationProcess::fmap); both route through `CausalEffect::map`,
+    /// so the value/none/command mapping lives in one place.)
     pub fn map<U, F>(self, f: F) -> CausalFlow<U, State, Context>
     where
         F: FnOnce(Value) -> U,
     {
         let inner = self.inner.bind(|effect, state, context| {
-            let outcome = if effect.is_command() {
-                Err(CausalityError::new(CausalityErrorEnum::ValueNotAvailable))
-            } else {
-                // `Pure(Some(v)) → Some(f(v))`; `Pure(None) → None`.
-                Ok(CausalEffect::from_option(effect.into_value().map(f)))
-            };
-            CausalEffectPropagationProcess::new(outcome, state, context, EffectLog::new())
+            // Total functor: value/none/command are all handled by `CausalEffect::map`.
+            CausalEffectPropagationProcess::new(Ok(effect.map(f)), state, context, EffectLog::new())
         });
         CausalFlow { inner }
     }

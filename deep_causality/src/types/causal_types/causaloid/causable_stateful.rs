@@ -52,7 +52,11 @@ where
                 let id = self.id;
 
                 // Step 1: log the input. Threads incoming state, context, and logs.
-                // A command input flows through unchanged (recast to `O`); a `None` input is an error.
+                // A command input cannot be retyped `I -> O` (its sub-program carries `Option<I>`
+                // leaves and no `I -> O` map exists before evaluation), so `cast_effect_value`
+                // collapses it to the conservative `none()` signal; a `None` input is an error.
+                // Not reached in normal engine operation — the reasoning engine relays the command's
+                // sub-value, so a singleton never receives a live command on its input channel.
                 if incoming_value.is_command() {
                     return PropagatingProcess::new(
                         Ok(cast_effect_value(incoming_value)),
@@ -186,8 +190,8 @@ where
 
 /// Pass through structural [`CausalEffect`] variants from input to output type.
 ///
-/// `RelayTo`, `ContextualLink`, and `Map` carry no payload of type `I` that
-/// would need transformation to `O`; they are control-flow markers. Returning
+/// The `RelayTo` command carries no payload of type `I` that
+/// would need transformation to `O`; it is a control-flow marker. Returning
 /// `CausalEffect::none()` here is the conservative choice that surfaces a clear
 /// signal at the next reasoning step (the caller can detect the change of
 /// kind). For singleton evaluation these variants are not expected on the

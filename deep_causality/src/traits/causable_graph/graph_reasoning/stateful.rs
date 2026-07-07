@@ -160,16 +160,19 @@ where
 
                     visited[target_idx] = true;
 
-                    // The relayed input is the command's sub-program folded to its value, lifted into
-                    // a stateful process with the state, context, and logs the relaying node carried.
-                    let sub_value = result
+                    // The relayed input is the command's sub-program itself: a value/`None` is fed to
+                    // the target as-is, and a NESTED command is preserved (not collapsed to `None`) so
+                    // the engine's next iteration relays it in turn — recursion via the BFS loop. The
+                    // relaying node's state, context, and logs are carried forward.
+                    let relayed_effect = result
                         .into_parts()
                         .0
                         .ok()
                         .and_then(CausalEffect::into_command)
-                        .and_then(|(_, sub)| sub.into_value());
+                        .map(|(_, sub)| sub)
+                        .unwrap_or_else(CausalEffect::none);
                     let relayed: PropagatingProcess<V, S, C> = PropagatingProcess::new(
-                        Ok(CausalEffect::from_option(sub_value)),
+                        Ok(relayed_effect),
                         last_propagated.state().clone(),
                         last_propagated.context().clone(),
                         last_propagated.logs().clone(),

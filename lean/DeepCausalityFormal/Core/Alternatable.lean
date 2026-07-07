@@ -8,14 +8,17 @@ Rust source: `deep_causality_core/src/types/causal_effect_propagation_process/`
 (`alternatable_value.rs`, `alternatable_state.rs`, `alternatable_context.rs` — the latter also
 carries `clear_context`) and the traits under `src/traits/alternatable*`.
 
-Layering: the base is the very-well-behaved lens (set-get, set-set, get-set — Foster et al.,
-*Combinators for Bidirectional Tree Transformations*, POPL 2005). The causal setters are lenses on
-the (value | state | context) channels **up to the audit log**: every successful `alternate_*`
-appends one `!!…Alternation!!` / `!!ContextCleared!!` entry (deviation D9, an accepted Writer
-property — the log is a monotone side-output, never overwritten). So the lens laws hold on the
-log-erasing projection `proj = (outcome, state, ctx)`, and a companion lemma shows the full carrier
-grows the log (the laws are up-to-log, not on-the-nose). Every setter is a **no-op on an errored
-carrier** (an alternation cannot repair a broken chain — the Rust early-returns `self`).
+Layering: the lens concept is Foster et al., *Combinators for Bidirectional Tree Transformations*,
+POPL 2005. The causal setters are lenses on the (value | state | context) channels **up to the
+audit log**: every successful `alternate_*` appends one `!!…Alternation!!` / `!!ContextCleared!!`
+entry (deviation D9, an accepted Writer property — the log is a monotone side-output, never
+overwritten). This file proves the laws that actually hold for these setters: set-get, set-set
+(up-to-log, on the log-erasing projection `proj = (outcome, state, ctx)`), channel independence, and
+error no-op; a companion lemma shows the full carrier grows the log (so set-set is up-to-log, not
+on-the-nose). No get-set (put-get / GetPut) law is claimed — the value setter always produces
+`.ok (some v)` and so cannot restore an `.ok none` carrier, so these are NOT full very-well-behaved
+lenses. Every setter is a **no-op on an errored carrier** (an alternation cannot repair a broken
+chain — the Rust early-returns `self`).
 
 `clear_context` is the `None`-setting counterpart `alternate_context` (codomain `Some _`) lacked.
 The Pearl do-operator (D8) is NOT formalized here: intervention on the causal *hypergraph* belongs
@@ -105,6 +108,14 @@ theorem set_set_value_proj (a b : Λ) (v1 v2 : V) (m : Carrier V S C E Λ) :
 theorem set_set_state_proj (a b : Λ) (s1 s2 : S) (m : Carrier V S C E Λ) :
     proj (alternateState b s2 (alternateState a s1 m)) = proj (alternateState b s2 m) := by
   cases h : m.outcome <;> simp [alternateState, proj, h]
+
+/-- Set-set (context), projected: the second context write wins — `proj` erases the two accumulated
+    entries.
+
+    THEOREM_MAP: `core.alternatable.set_set_proj` -/
+theorem set_set_context_proj (a b : Λ) (c1 c2 : C) (m : Carrier V S C E Λ) :
+    proj (alternateContext b c2 (alternateContext a c1 m)) = proj (alternateContext b c2 m) := by
+  cases h : m.outcome <;> simp [alternateContext, proj, h]
 
 -- ------------------------------------------------------------------
 -- Channel independence: each setter touches only its own channel.
