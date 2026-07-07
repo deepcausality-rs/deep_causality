@@ -1,0 +1,29 @@
+deep_causality_tensor/tests/types/causal_tensor_network/op_tensor_svd_randomized_tests.rs
+  s_cb4ce8c9f6dd9a::t_708a385f01c22a 210
+deep_causality_file/tests/load_real_galileo.rs
+  s_cb4ce8c9f6dd9a::t_257c2898b7ca45 18
+deep_causality_physics/tests/kernels/astro/two_body_tests.rs
+  s_cb4ce8c9f6dd9a::t_b065b36fac9cf4 62
+deep_causality_physics/tests/kernels/astro/ks_propagator_tests.rs
+  s_cb4ce8c9f6dd9a::t_ff0f1f86f7d8ba 197
+deep_causality_physics/tests/kernels/hypersonic/ionization_tests.rs
+  s_cb4ce8c9f6dd9a::t_095547a086f64a 44
+deep_causality_tensor/tests/types/causal_tensor_network/causal_tensor_train_cross_tests.rs
+  s_cb4ce8c9f6dd9a::t_abc7515d766a67 97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "176b7c66f218bb80967ecf622b9bf940ad9f75fb",
+  "prompts": {},
+  "sessions": {
+    "s_cb4ce8c9f6dd9a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "358e0783-72a7-4f72-994c-31a008938bfb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
