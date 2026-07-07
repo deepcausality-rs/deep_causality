@@ -11,7 +11,7 @@ This directory contains examples demonstrating various features and applications
 | [Causal Discovery](#causal-discovery-examples) | SURD decomposition, mRMR feature selection, and the CDL pipeline    |
 | [Causal Uncertain](#causal-uncertain-examples) | Uncertain<T> / MaybeUncertain<T> as monadic propagation chains      |
 | [Causal Counterfactual](#causal-counterfactual-examples) | Pearl-style one-shot `do`-operator interventions (estimand = difference between worlds) |
-| [Causal Correction](#causal-correction-examples) | Closed-loop corrective `intervene` (monitor a trajectory; snap it back inside the safe envelope) |
+| [Causal Correction](#causal-correction-examples) | Closed-loop corrective `alternate_value` (monitor a trajectory; snap it back inside the safe envelope) |
 | [CSM Examples](#csm-examples) | Causal State Machine patterns                                       |
 | [Core Examples](#core-examples) | PropagatingEffect and PropagatingProcess fundamentals               |
 | [Avionics Examples](#avionics-examples) | High-assurance GNC and Safety Critical Systems                      |
@@ -122,10 +122,10 @@ See [causal_counterfactual_examples/README.md](causal_counterfactual_examples/RE
 **Location:** `examples/causal_correction_examples`
 
 Five worked examples in the control-theory tradition: monitor a trajectory
-tick by tick; when the value drifts outside the safe envelope, `intervene`
+tick by tick; when the value drifts outside the safe envelope, `alternate_value`
 snaps it back and the chain continues from the corrected state. The first
 four run the same chain twice: open loop (no monitor, catastrophic failure)
-and closed loop (monitor + `intervene`, failure averted). The fifth,
+and closed loop (monitor + `alternate_value`, failure averted). The fifth,
 `corrective_ddos_detector`, runs closed loop only. Its point is the stateful
 sliding-window detector that drives the intervention.
 
@@ -180,11 +180,11 @@ High-assurance examples for Aerospace, Defense, and Safety Critical systems.
 | Example | Domain | Description | Command |
 |---------|--------|-------------|---------|
 | magnav | Navigation | Magnetic Navigation using Causal Particle Filters (Bayesian estimation) | `cargo run -p avionics_examples --example magnav` |
-| geometric_tcas | Collision Avoidance | NextGen TCAS using Geometric Algebra collision detection and `Intervenable` safety interlocks | `cargo run -p avionics_examples --example geometric_tcas` |
+| geometric_tcas | Collision Avoidance | NextGen TCAS using Geometric Algebra collision detection and `AlternatableValue` safety interlocks | `cargo run -p avionics_examples --example geometric_tcas` |
 | hypersonic_2t | Defense/Tracking | Tracking Hypersonic Glide Vehicles (HGV) using Dual-Time (2T) Physics in 6D phase space | `cargo run -p avionics_examples --example hypersonic_2t` |
 | flight_envelope_monitor | Health Monitoring | Three-stage stateful pipeline (sensor collection → bind chain → envelope hypergraph) demonstrating uniform composition through `PropagatingProcess<_, FlightState, AircraftConfig>` | `cargo run -p avionics_examples --example flight_envelope_monitor` |
 | turbulence_flow | Turbulence / Chaos | Forecast horizon of a chaotic convective flow (Lorenz / Rayleigh–Bénard truncation); the same `Rk4` march at f32/f64/Float106 shows precision setting how far ahead a turbulent flow can be trusted | `cargo run -p avionics_examples --example turbulence_flow` |
-| ins_gnss_blackout | Navigation / Timing | INS clock holdover through a GPS-denial blackout (jamming / urban canyon / tunnel) on **real Galileo** data: a grmhd-style regime detector + the `intervene` corrective loop (withheld through the dark) + a carried relativistic clock kernel, in one auditable `CausalFlow` — the navigation/timing core of any GPS-denied flight | `cargo run -p avionics_examples --example ins_gnss_blackout` |
+| ins_gnss_blackout | Navigation / Timing | INS clock holdover through a GPS-denial blackout (jamming / urban canyon / tunnel) on **real Galileo** data: a grmhd-style regime detector + the `alternate_value` corrective loop (withheld through the dark) + a carried relativistic clock kernel, in one auditable `CausalFlow` — the navigation/timing core of any GPS-denied flight | `cargo run -p avionics_examples --example ins_gnss_blackout` |
 
 See [avionics_examples/README.md](avionics_examples/README.md) for detailed documentation.
 

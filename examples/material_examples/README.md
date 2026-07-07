@@ -40,8 +40,8 @@ let hyperbolic = Metric::Generic { p: 1, q: 2, r: 0 }; // (+−−)
 *   **Manifold**: Continuous surfaces with differential structure (hyperlens geometry).
 *   **Graph**: Discrete networks (structural lattices, molecular bonds).
 
-### 3. `Intervenable` for Active Materials
-Smart materials that can **autonomously respond** to stimuli use the `Intervenable` trait to formally separate:
+### 3. `AlternatableValue` for Active Materials
+Smart materials that can **autonomously respond** to stimuli use the `AlternatableValue` trait to formally separate:
 *   **Observation** (what is happening)
 *   **Intervention** (what we force to happen)
 *   **Counterfactual** (what would have happened otherwise)
@@ -63,7 +63,7 @@ Smart materials that can **autonomously respond** to stimuli use the `Intervenab
 *   **`deep_causality_multivector`**: Geometric Algebra for anisotropic field representations.
 *   **`deep_causality_topology`**: `Graph`, `Manifold`, `SimplicialComplex` for structural modeling.
 *   **`deep_causality_num`**: High-precision Complex number arithmetic for quantum calculations.
-*   **`deep_causality_core`**: `PropagatingEffect`, `Intervenable` for monadic state and interventions.
+*   **`deep_causality_core`**: `PropagatingEffect`, `AlternatableValue` for monadic state and interventions.
 
 ---
 
