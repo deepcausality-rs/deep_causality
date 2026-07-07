@@ -59,6 +59,7 @@ fn one_period_returns_to_start_to_round_off() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)] // Miri's non-deterministic float emulation makes two identical propagate() calls diverge past 1e-9; test is correct under normal CI.
 fn forward_then_backward_is_identity() {
     let orbit = leo();
     let dt = 1234.5;

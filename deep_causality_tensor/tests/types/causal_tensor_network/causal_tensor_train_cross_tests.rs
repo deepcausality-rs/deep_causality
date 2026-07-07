@@ -94,6 +94,7 @@ fn test_cross_rank2_f64() {
     check_rank2::<f64>();
 }
 #[test]
+#[cfg_attr(miri, ignore)] // Miri's soft-float emulation drifts the Float106 double-double residual across the rank-selection threshold; test is correct under normal CI.
 fn test_cross_rank2_float106() {
     check_rank2::<Float106>();
 }

@@ -207,6 +207,7 @@ fn default_strategy_is_deterministic() {
 // ---- (d) reproducible for a fixed seed --------------------------------------------------------
 
 #[test]
+#[cfg_attr(miri, ignore)] // Miri's non-deterministic float emulation makes two identical SVD runs differ bit-for-bit, breaking the reproducibility assert; test is correct under normal CI.
 fn randomized_is_reproducible() {
     let (data, m, n) = low_rank(12, 10, 4);
     let mat = tensor::<f64>(&data, &[m, n]);

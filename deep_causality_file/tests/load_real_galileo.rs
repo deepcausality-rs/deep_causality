@@ -15,6 +15,7 @@ fn data_dir() -> PathBuf {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)] // Reads real files; the `statx`/`stat` syscalls are unsupported under Miri's isolation. Correct under normal CI.
 fn loads_e14_clock_and_orbit_from_real_data() {
     let clk = data_dir().join("gbm18770.clk");
     let sp3 = data_dir().join("gbm18770.sp3");
